@@ -72,7 +72,7 @@ public class DefaultEvictEventListener implements EvictEventListener {
 				throw new IllegalArgumentException("null identifier");
 			}
 
-			EntityKey key = new EntityKey( id, persister, source.getEntityMode() );
+			final EntityKey key = source.generateEntityKey( id, persister );
 			persistenceContext.removeProxy( key );
 
 			if ( !li.isUninitialized() ) {

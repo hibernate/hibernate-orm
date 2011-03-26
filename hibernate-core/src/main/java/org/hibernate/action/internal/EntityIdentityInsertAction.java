@@ -188,7 +188,7 @@ public final class EntityIdentityInsertAction extends EntityAction  {
 		if ( !isDelayed ) {
 			throw new AssertionFailure( "cannot request delayed entity-key for non-delayed post-insert-id generation" );
 		}
-		return new EntityKey( getDelayedId(), getPersister(), getSession().getEntityMode() );
+		return getSession().generateEntityKey( getDelayedId(), getPersister() );
 	}
 
 	@Override

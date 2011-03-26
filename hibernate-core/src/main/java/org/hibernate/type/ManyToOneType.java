@@ -22,11 +22,13 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.type;
+
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -165,8 +167,8 @@ public class ManyToOneType extends EntityType {
 	private void scheduleBatchLoadIfNeeded(Serializable id, SessionImplementor session) throws MappingException {
 		//cannot batch fetch by unique key (property-ref associations)
 		if ( uniqueKeyPropertyName == null && id != null ) {
-			EntityPersister persister = session.getFactory().getEntityPersister( getAssociatedEntityName() );
-			EntityKey entityKey = new EntityKey( id, persister, session.getEntityMode() );
+			final EntityPersister persister = session.getFactory().getEntityPersister( getAssociatedEntityName() );
+			final EntityKey entityKey = session.generateEntityKey( id, persister );
 			if ( !session.getPersistenceContext().containsEntity( entityKey ) ) {
 				session.getPersistenceContext().getBatchFetchQueue().addBatchLoadableEntityKey( entityKey );
 			}

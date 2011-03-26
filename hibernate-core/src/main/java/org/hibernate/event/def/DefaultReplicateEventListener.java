@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,10 +20,13 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.event.def;
+
 import java.io.Serializable;
+
+import org.jboss.logging.Logger;
+
 import org.hibernate.HibernateException;
 import org.hibernate.HibernateLogger;
 import org.hibernate.LockMode;
@@ -40,7 +43,6 @@ import org.hibernate.event.ReplicateEventListener;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.Type;
-import org.jboss.logging.Logger;
 
 /**
  * Defines the default replicate event listener used by Hibernate to replicate
@@ -125,8 +127,7 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
                                                 + MessageHelper.infoString(persister, id, source.getFactory()));
 
 			final boolean regenerate = persister.isIdentifierAssignedByInsert(); // prefer re-generation of identity!
-			final EntityKey key = regenerate ?
-					null : new EntityKey( id, persister, source.getEntityMode() );
+			final EntityKey key = regenerate ? null : source.generateEntityKey( id, persister );
 
 			performSaveOrReplicate(
 					entity,
@@ -181,7 +182,7 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
 				entity,
 				( persister.isMutable() ? Status.MANAGED : Status.READ_ONLY ),
 				null,
-				new EntityKey( id, persister, source.getEntityMode() ),
+				source.generateEntityKey( id, persister ),
 				version,
 				LockMode.NONE,
 				true,

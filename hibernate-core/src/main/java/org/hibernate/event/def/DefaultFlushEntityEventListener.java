@@ -558,7 +558,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
             return snapshot;
 		}
         // TODO: optimize away this lookup for entities w/o unsaved-value="undefined"
-        EntityKey entityKey = new EntityKey(id, persister, session.getEntityMode());
+        final EntityKey entityKey = session.generateEntityKey( id, persister );
         return session.getPersistenceContext().getCachedDatabaseSnapshot(entityKey);
 	}
 }

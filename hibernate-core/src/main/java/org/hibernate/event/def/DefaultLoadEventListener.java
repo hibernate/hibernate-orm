@@ -22,7 +22,11 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.event.def;
+
 import java.io.Serializable;
+
+import org.jboss.logging.Logger;
+
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.HibernateLogger;
@@ -54,7 +58,6 @@ import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
-import org.jboss.logging.Logger;
 
 /**
  * Defines the default load event listeners used by hibernate for loading entities
@@ -137,7 +140,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 			}
 		}
 
-		EntityKey keyToLoad = new EntityKey( event.getEntityId(), persister, source.getEntityMode()  );
+		final  EntityKey keyToLoad = source.generateEntityKey( event.getEntityId(), persister );
 
 		try {
 			if ( loadType.isNakedEntityReturned() ) {
@@ -167,38 +170,19 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 			EntityPersister dependentPersister,
 			EmbeddedComponentType dependentIdType,
 			EntityPersister parentPersister) {
-		final EntityKey parentEntityKey = new EntityKey(
-				event.getEntityId(),
-				parentPersister,
-				event.getSession().getEntityMode()
-		);
-		final Object parent = doLoad(
-				event,
-				parentPersister,
-				parentEntityKey,
-				options
-		);
+		final EntityKey parentEntityKey = event.getSession().generateEntityKey( event.getEntityId(), parentPersister );
+		final Object parent = doLoad( event, parentPersister, parentEntityKey, options );
 
-		Serializable dependent = (Serializable) dependentIdType.instantiate( parent, event.getSession() );
+		final Serializable dependent = (Serializable) dependentIdType.instantiate( parent, event.getSession() );
 		dependentIdType.setPropertyValues( dependent, new Object[] {parent}, event.getSession().getEntityMode() );
-		final EntityKey dependentEntityKey = new EntityKey(
-				dependent,
-				dependentPersister,
-				event.getSession().getEntityMode()
-		);
+		final EntityKey dependentEntityKey = event.getSession().generateEntityKey( dependent, dependentPersister );
 		event.setEntityId( dependent );
-		dependent = (Serializable) doLoad(
-				event,
-				dependentPersister,
-				dependentEntityKey,
-				options
-		);
 
-		event.setResult( dependent );
+		event.setResult( doLoad( event, dependentPersister, dependentEntityKey, options ) );
 	}
 
 	/**
-	 * Perfoms the load of an entity.
+	 * Performs the load of an entity.
 	 *
 	 * @param event The initiating load request event
 	 * @param persister The persister corresponding to the entity to be loaded
@@ -606,7 +590,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 				session.instantiate( subclassPersister, id ) : optionalObject;
 
 		// make it circular-reference safe
-		EntityKey entityKey = new EntityKey( id, subclassPersister, session.getEntityMode() );
+		final EntityKey entityKey = session.generateEntityKey( id, subclassPersister );
 		TwoPhaseLoad.addUninitializedCachedEntity(
 				entityKey,
 				result,

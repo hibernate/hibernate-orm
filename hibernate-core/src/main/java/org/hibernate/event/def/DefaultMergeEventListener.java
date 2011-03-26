@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,14 +20,17 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.event.def;
+
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+
+import org.jboss.logging.Logger;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.HibernateLogger;
@@ -37,6 +40,7 @@ import org.hibernate.StaleObjectStateException;
 import org.hibernate.TransientObjectException;
 import org.hibernate.WrongClassException;
 import org.hibernate.bytecode.instrumentation.internal.FieldInterceptionHelper;
+import org.hibernate.bytecode.instrumentation.spi.FieldInterceptor;
 import org.hibernate.engine.Cascade;
 import org.hibernate.engine.CascadingAction;
 import org.hibernate.engine.EntityEntry;
@@ -46,14 +50,12 @@ import org.hibernate.engine.Status;
 import org.hibernate.event.EventSource;
 import org.hibernate.event.MergeEvent;
 import org.hibernate.event.MergeEventListener;
-import org.hibernate.bytecode.instrumentation.spi.FieldInterceptor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
-import org.jboss.logging.Logger;
 
 /**
  * Defines the default copy event listener used by hibernate for copying entities
@@ -227,8 +229,8 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 					EntityPersister persister = source.getEntityPersister( event.getEntityName(), entity );
 					Serializable id = persister.getIdentifier( entity, source );
 					if ( id != null ) {
-						EntityKey key = new EntityKey( id, persister, source.getEntityMode() );
-						Object managedEntity = source.getPersistenceContext().getEntity( key );
+						final EntityKey key = source.generateEntityKey( id, persister );
+						final Object managedEntity = source.getPersistenceContext().getEntity( key );
 						entry = source.getPersistenceContext().getEntry( managedEntity );
 						if ( entry != null ) {
 							// we have specialized case of a detached entity from the
@@ -536,29 +538,21 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 		if ( entry == null ) {
 			Serializable id = persister.getIdentifier( entity, source );
 			if ( id != null ) {
-				EntityKey key = new EntityKey( id, persister, source.getEntityMode() );
-				Object managedEntity = source.getPersistenceContext().getEntity( key );
+				final EntityKey key = source.generateEntityKey( id, persister );
+				final Object managedEntity = source.getPersistenceContext().getEntity( key );
 				entry = source.getPersistenceContext().getEntry( managedEntity );
 			}
 		}
 
-		if ( entry == null ) {
-			// perhaps this should be an exception since it is only ever used
-			// in the above method?
-			return false;
-		}
-		else {
-			return entry.isExistsInDatabase();
-		}
+		return entry != null && entry.isExistsInDatabase();
 	}
 
 	protected void copyValues(
-		final EntityPersister persister,
-		final Object entity,
-		final Object target,
-		final SessionImplementor source,
-		final Map copyCache
-	) {
+			final EntityPersister persister,
+			final Object entity,
+			final Object target,
+			final SessionImplementor source,
+			final Map copyCache) {
 		final Object[] copiedValues = TypeHelper.replace(
 				persister.getPropertyValues( entity, source.getEntityMode() ),
 				persister.getPropertyValues( target, source.getEntityMode() ),
@@ -566,7 +560,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 				source,
 				target,
 				copyCache
-			);
+		);
 
 		persister.setPropertyValues( target, copiedValues, source.getEntityMode() );
 	}

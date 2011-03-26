@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,18 +20,19 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.persister.entity;
+
 import java.io.Serializable;
+
+import org.jboss.logging.Logger;
+
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateLogger;
 import org.hibernate.LockOptions;
-import org.hibernate.engine.EntityKey;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.impl.AbstractQueryImpl;
 import org.hibernate.loader.entity.UniqueEntityLoader;
-import org.jboss.logging.Logger;
 
 /**
  * Not really a <tt>Loader</tt>, just a wrapper around a
@@ -78,10 +79,8 @@ public final class NamedQueryLoader implements UniqueEntityLoader {
 		query.list();
 
 		// now look up the object we are really interested in!
-		// (this lets us correctly handle proxies and multi-row
-		// or multi-column queries)
-		return session.getPersistenceContext()
-				.getEntity( new EntityKey( id, persister, session.getEntityMode() ) );
+		// (this lets us correctly handle proxies and multi-row or multi-column queries)
+		return session.getPersistenceContext().getEntity( session.generateEntityKey( id, persister ) );
 
 	}
 }

@@ -36,6 +36,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.jboss.logging.Logger;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.HibernateLogger;
@@ -81,7 +84,6 @@ import org.hibernate.type.AssociationType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.type.VersionType;
-import org.jboss.logging.Logger;
 
 /**
  * Abstract superclass of object loading (and querying) strategies. This class implements
@@ -588,11 +590,7 @@ public abstract class Loader {
 		final String optionalEntityName = queryParameters.getOptionalEntityName();
 
 		if ( optionalObject != null && optionalEntityName != null ) {
-			return new EntityKey(
-					optionalId,
-					session.getEntityPersister( optionalEntityName, optionalObject ),
-					session.getEntityMode()
-				);
+			return session.generateEntityKey( optionalId, session.getEntityPersister( optionalEntityName, optionalObject ) );
 		}
 		else {
 			return null;
@@ -689,7 +687,7 @@ public abstract class Loader {
 		final int numberOfPersistersToProcess;
 		final Serializable optionalId = queryParameters.getOptionalId();
 		if ( isSingleRowLoader() && optionalId != null ) {
-			keys[ entitySpan - 1 ] = new EntityKey( optionalId, persisters[ entitySpan - 1 ], session.getEntityMode() );
+			keys[ entitySpan - 1 ] = session.generateEntityKey( optionalId, persisters[ entitySpan - 1 ] );
 			// skip the last persister below...
 			numberOfPersistersToProcess = entitySpan - 1;
 		}
@@ -721,7 +719,7 @@ public abstract class Loader {
 									null
 							);
 							// todo : need a way to signal that this key is resolved and its data resolved
-							keys[targetIndex] = new EntityKey( targetId, persisters[targetIndex], session.getEntityMode() );
+							keys[targetIndex] = session.generateEntityKey( targetId, persisters[targetIndex] );
 						}
 
 						// this part copied from #getRow, this section could be refactored out
@@ -739,7 +737,7 @@ public abstract class Loader {
 							);
 						}
 						else {
-							object = instanceNotYetLoaded(
+							instanceNotYetLoaded(
 									resultSet,
 									targetIndex,
 									persisters[targetIndex],
@@ -756,7 +754,7 @@ public abstract class Loader {
 				}
 			}
 			final Serializable resolvedId = (Serializable) idType.resolve( hydratedKeyState[i], session, null );
-			keys[i] = resolvedId == null ? null : new EntityKey( resolvedId, persisters[i], session.getEntityMode() );
+			keys[i] = resolvedId == null ? null : session.generateEntityKey( resolvedId, persisters[i] );
 		}
 	}
 
@@ -1299,9 +1297,7 @@ public abstract class Loader {
 			if ( idIsResultId ) resultId = id; //use the id passed in
 		}
 
-		return resultId == null ?
-				null :
-				new EntityKey( resultId, persister, session.getEntityMode() );
+		return resultId == null ? null : session.generateEntityKey( resultId, persister );
 	}
 
 	/**

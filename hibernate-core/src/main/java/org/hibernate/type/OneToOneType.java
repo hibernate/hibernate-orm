@@ -22,10 +22,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.type;
+
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.engine.EntityKey;
@@ -66,23 +68,15 @@ public class OneToOneType extends EntityType {
 	}
 	
 	public boolean isNull(Object owner, SessionImplementor session) {
-		
 		if ( propertyName != null ) {
-			
-			EntityPersister ownerPersister = session.getFactory()
-					.getEntityPersister(entityName); 
-			Serializable id = session.getContextEntityIdentifier(owner);
-
-			EntityKey entityKey = new EntityKey( id, ownerPersister, session.getEntityMode() );
-			
-			return session.getPersistenceContext()
-					.isPropertyNull( entityKey, getPropertyName() );
-			
+			final EntityPersister ownerPersister = session.getFactory().getEntityPersister( entityName );
+			final Serializable id = session.getContextEntityIdentifier( owner );
+			final EntityKey entityKey = session.generateEntityKey( id, ownerPersister );
+			return session.getPersistenceContext().isPropertyNull( entityKey, getPropertyName() );
 		}
 		else {
 			return false;
 		}
-
 	}
 
 	public int getColumnSpan(Mapping session) throws MappingException {

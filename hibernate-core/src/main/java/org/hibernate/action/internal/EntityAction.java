@@ -29,7 +29,6 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.action.spi.Executable;
-import org.hibernate.engine.EntityKey;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.entity.EntityPersister;
@@ -183,7 +182,7 @@ public abstract class EntityAction
 		if ( session != null ) {
 			this.session = session;
 			this.persister = session.getFactory().getEntityPersister( entityName );
-			this.instance = session.getPersistenceContext().getEntity( new EntityKey( id, persister, session.getEntityMode() ) );
+			this.instance = session.getPersistenceContext().getEntity( session.generateEntityKey( id, persister ) );
 		}
 	}
 }

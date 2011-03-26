@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.impl;
 
@@ -28,6 +27,7 @@ import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
+
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.MultiTenancyStrategy;
@@ -36,13 +36,14 @@ import org.hibernate.SQLQuery;
 import org.hibernate.ScrollableResults;
 import org.hibernate.SessionException;
 import org.hibernate.SharedSessionContract;
-import org.hibernate.engine.jdbc.spi.JdbcConnectionAccess;
+import org.hibernate.engine.EntityKey;
 import org.hibernate.engine.NamedQueryDefinition;
 import org.hibernate.engine.NamedSQLQueryDefinition;
 import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.jdbc.LobCreationContext;
+import org.hibernate.engine.jdbc.spi.JdbcConnectionAccess;
 import org.hibernate.engine.query.HQLQueryPlan;
 import org.hibernate.engine.query.NativeSQLQueryPlan;
 import org.hibernate.engine.query.sql.NativeSQLQuerySpecification;
@@ -50,6 +51,7 @@ import org.hibernate.engine.transaction.spi.TransactionContext;
 import org.hibernate.engine.transaction.spi.TransactionEnvironment;
 import org.hibernate.jdbc.WorkExecutor;
 import org.hibernate.jdbc.WorkExecutorVisitable;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.jdbc.connections.spi.MultiTenantConnectionProvider;
 
@@ -59,7 +61,6 @@ import org.hibernate.service.jdbc.connections.spi.MultiTenantConnectionProvider;
  * @author Gavin King
  */
 public abstract class AbstractSessionImpl implements Serializable, SharedSessionContract, SessionImplementor, TransactionContext {
-
 	protected transient SessionFactoryImpl factory;
 	private String tenantIdentifier;
 	private boolean closed = false;
@@ -97,6 +98,7 @@ public abstract class AbstractSessionImpl implements Serializable, SharedSession
 		);
 	}
 
+	@Override
 	public boolean isClosed() {
 		return closed;
 	}
@@ -111,6 +113,7 @@ public abstract class AbstractSessionImpl implements Serializable, SharedSession
 		}
 	}
 
+	@Override
 	public Query getNamedQuery(String queryName) throws MappingException {
 		errorIfClosed();
 		NamedQueryDefinition nqd = factory.getNamedQuery( queryName );
@@ -142,6 +145,7 @@ public abstract class AbstractSessionImpl implements Serializable, SharedSession
 		return query;
 	}
 
+	@Override
 	public Query getNamedSQLQuery(String queryName) throws MappingException {
 		errorIfClosed();
 		NamedSQLQueryDefinition nsqlqd = factory.getNamedSQLQuery( queryName );
@@ -168,6 +172,7 @@ public abstract class AbstractSessionImpl implements Serializable, SharedSession
 		if ( nqd.getComment() != null ) query.setComment( nqd.getComment() );
 	}
 
+	@Override
 	public Query createQuery(String queryString) {
 		errorIfClosed();
 		QueryImpl query = new QueryImpl(
@@ -179,6 +184,7 @@ public abstract class AbstractSessionImpl implements Serializable, SharedSession
 		return query;
 	}
 
+	@Override
 	public SQLQuery createSQLQuery(String sql) {
 		errorIfClosed();
 		SQLQueryImpl query = new SQLQueryImpl(
@@ -198,11 +204,13 @@ public abstract class AbstractSessionImpl implements Serializable, SharedSession
 		return factory.getQueryPlanCache().getNativeSQLQueryPlan( spec );
 	}
 
+	@Override
 	public List list(NativeSQLQuerySpecification spec, QueryParameters queryParameters)
 			throws HibernateException {
 		return listCustomQuery( getNativeSQLQueryPlan( spec ).getCustomQuery(), queryParameters );
 	}
 
+	@Override
 	public ScrollableResults scroll(NativeSQLQuerySpecification spec, QueryParameters queryParameters)
 			throws HibernateException {
 		return scrollCustomQuery( getNativeSQLQueryPlan( spec ).getCustomQuery(), queryParameters );
@@ -219,6 +227,11 @@ public abstract class AbstractSessionImpl implements Serializable, SharedSession
 			throw new HibernateException( "SessionFactory was not configured for multi-tenancy" );
 		}
 		this.tenantIdentifier = identifier;
+	}
+
+	@Override
+	public EntityKey generateEntityKey(Serializable id, EntityPersister persister) {
+		return new EntityKey( id, persister, getEntityMode(), getTenantIdentifier() );
 	}
 
 	private transient JdbcConnectionAccess jdbcConnectionAccess;

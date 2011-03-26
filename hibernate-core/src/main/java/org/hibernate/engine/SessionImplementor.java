@@ -57,11 +57,28 @@ import org.hibernate.type.Type;
  */
 public interface SessionImplementor extends Serializable, LobCreationContext {
 	/**
+	 * Match te method on {@link org.hibernate.Session} and {@link org.hibernate.StatelessSession}
+	 *
+	 * @return The tenant identifier of this session
+	 */
+	public String getTenantIdentifier();
+
+	/**
 	 * Provides access to JDBC connections
 	 *
 	 * @return The contract for accessing JDBC connections.
 	 */
 	public JdbcConnectionAccess getJdbcConnectionAccess();
+
+	/**
+	 * Hide the changing requirements of entity key creation
+	 *
+	 * @param id The entity id
+	 * @param persister The entity persister
+	 *
+	 * @return The entity key
+	 */
+	public EntityKey generateEntityKey(Serializable id, EntityPersister persister);
 
 	/**
 	 * Retrieves the interceptor currently in use by this event source.

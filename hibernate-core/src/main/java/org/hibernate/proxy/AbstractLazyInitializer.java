@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,10 +20,11 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.proxy;
+
 import java.io.Serializable;
+
 import org.hibernate.HibernateException;
 import org.hibernate.LazyInitializationException;
 import org.hibernate.SessionException;
@@ -74,44 +75,32 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public final String getEntityName() {
 		return entityName;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public final Serializable getIdentifier() {
 		return id;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public final void setIdentifier(Serializable id) {
 		this.id = id;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public final boolean isUninitialized() {
 		return !initialized;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public final SessionImplementor getSession() {
 		return session;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public final void setSession(SessionImplementor s) throws HibernateException {
 		if ( s != session ) {
 			// check for s == null first, since it is least expensive
@@ -143,21 +132,17 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 		if ( id == null || s == null || entityName == null ) {
 			return null;
 		}
-		return new EntityKey( id, s.getFactory().getEntityPersister( entityName ), s.getEntityMode() );
+		return s.generateEntityKey( id, s.getFactory().getEntityPersister( entityName ) );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public final void unsetSession() {
 		session = null;
 		readOnly = false;
 		readOnlyBeforeAttachedToSession = null;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public final void initialize() throws HibernateException {
 		if (!initialized) {
 			if ( session==null ) {
@@ -205,26 +190,19 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 		return null;
 	}
 
-	/**
-	 * Return the underlying persistent object, initializing if necessary
-	 */
+	@Override
 	public final Object getImplementation() {
 		initialize();
 		return target;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public final void setImplementation(Object target) {
 		this.target = target;
 		initialized = true;
 	}
 
-	/**
-	 * Return the underlying persistent object in the given <tt>Session</tt>, or null,
-	 * do not initialize the proxy
-	 */
+	@Override
 	public final Object getImplementation(SessionImplementor s) throws HibernateException {
 		final EntityKey entityKey = generateEntityKeyOrNull( getIdentifier(), s, getEntityName() );
 		return ( entityKey == null ? null : s.getPersistenceContext().getEntity( entityKey ) );
@@ -241,9 +219,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 		return target;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public final boolean isReadOnlySettingAvailable() {
 		return ( session != null && ! session.isClosed() );
 	}
@@ -259,17 +235,13 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public final boolean isReadOnly() {
 		errorIfReadOnlySettingNotAvailable();
 		return readOnly;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public final void setReadOnly(boolean readOnly) {
 		errorIfReadOnlySettingNotAvailable();
 		// only update if readOnly is different from current setting
@@ -330,16 +302,12 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 		this.readOnlyBeforeAttachedToSession = readOnlyBeforeAttachedToSession;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public boolean isUnwrap() {
 		return unwrap;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public void setUnwrap(boolean unwrap) {
 		this.unwrap = unwrap;
 	}

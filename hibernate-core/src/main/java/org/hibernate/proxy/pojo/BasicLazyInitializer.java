@@ -25,6 +25,7 @@ package org.hibernate.proxy.pojo;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
+
 import org.hibernate.engine.EntityKey;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.internal.util.MarkerObject;
@@ -107,14 +108,12 @@ public abstract class BasicLazyInitializer extends AbstractLazyInitializer {
 	}
 
 	private Object getReplacement() {
-
 		final SessionImplementor session = getSession();
 		if ( isUninitialized() && session != null && session.isOpen()) {
-			final EntityKey key = new EntityKey(
+			final EntityKey key = session.generateEntityKey(
 					getIdentifier(),
-			        session.getFactory().getEntityPersister( getEntityName() ),
-			        session.getEntityMode()
-				);
+					session.getFactory().getEntityPersister( getEntityName() )
+			);
 			final Object entity = session.getPersistenceContext().getEntity(key);
 			if (entity!=null) setImplementation( entity );
 		}

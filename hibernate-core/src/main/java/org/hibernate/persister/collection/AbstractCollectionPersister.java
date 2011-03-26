@@ -31,6 +31,9 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+
+import org.jboss.logging.Logger;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
@@ -85,7 +88,6 @@ import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
-import org.jboss.logging.Logger;
 
 
 /**
@@ -647,7 +649,7 @@ public abstract class AbstractCollectionPersister
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
 
 		SubselectFetch subselect = persistenceContext.getBatchFetchQueue()
-			.getSubselect( new EntityKey( key, getOwnerEntityPersister(), session.getEntityMode() ) );
+				.getSubselect( session.generateEntityKey( key, getOwnerEntityPersister() ) );
 
 		if (subselect == null) {
 			return null;

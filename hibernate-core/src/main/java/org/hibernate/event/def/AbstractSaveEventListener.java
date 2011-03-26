@@ -165,11 +165,13 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 			EventSource source,
 			boolean requiresImmediateIdAccess) {
 
-        if (LOG.isTraceEnabled()) LOG.trace("Saving " + MessageHelper.infoString(persister, id, source.getFactory()));
+        if ( LOG.isTraceEnabled() ) {
+			LOG.trace("Saving " + MessageHelper.infoString(persister, id, source.getFactory()));
+		}
 
-		EntityKey key;
+		final EntityKey key;
 		if ( !useIdentityColumn ) {
-			key = new EntityKey( id, persister, source.getEntityMode() );
+			key = source.generateEntityKey( id, persister );
 			Object old = source.getPersistenceContext().getEntity( key );
 			if ( old != null ) {
 				if ( source.getPersistenceContext().getEntry( old ).getStatus() == Status.DELETED ) {
@@ -300,7 +302,7 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
                 LOG.debugf("Executing identity-insert immediately");
 				source.getActionQueue().execute( insert );
 				id = insert.getGeneratedId();
-				key = new EntityKey( id, persister, source.getEntityMode() );
+				key = source.generateEntityKey( id, persister );
 				source.getPersistenceContext().checkUniqueness( key, entity );
 			}
 			else {

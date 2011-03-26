@@ -25,6 +25,9 @@ package org.hibernate.event.def;
 
 import java.io.Serializable;
 import java.util.Map;
+
+import org.jboss.logging.Logger;
+
 import org.hibernate.HibernateException;
 import org.hibernate.HibernateLogger;
 import org.hibernate.PersistentObjectException;
@@ -44,7 +47,6 @@ import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
-import org.jboss.logging.Logger;
 
 /**
  * Defines the default refresh event listener used by hibernate for refreshing entities
@@ -94,7 +96,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 			id = persister.getIdentifier( object, event.getSession() );
             if (LOG.isTraceEnabled()) LOG.trace("Refreshing transient "
                                                 + MessageHelper.infoString(persister, id, source.getFactory()));
-			EntityKey key = new EntityKey( id, persister, source.getEntityMode() );
+			final EntityKey key = source.generateEntityKey( id, persister );
 			if ( source.getPersistenceContext().getEntry(key) != null ) {
 				throw new PersistentObjectException(
 						"attempted to refresh transient instance when persistent instance was already associated with the Session: " +
@@ -119,7 +121,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 				.cascade( persister, object, refreshedAlready );
 
 		if ( e != null ) {
-			EntityKey key = new EntityKey( id, persister, source.getEntityMode() );
+			final EntityKey key = source.generateEntityKey( id, persister );
 			source.getPersistenceContext().removeEntity(key);
 			if ( persister.hasCollections() ) new EvictVisitor( source ).process(object, persister);
 		}

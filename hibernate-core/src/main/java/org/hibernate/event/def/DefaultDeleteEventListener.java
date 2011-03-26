@@ -25,6 +25,9 @@ package org.hibernate.event.def;
 
 import java.io.Serializable;
 import java.util.Set;
+
+import org.jboss.logging.Logger;
+
 import org.hibernate.CacheMode;
 import org.hibernate.HibernateException;
 import org.hibernate.HibernateLogger;
@@ -48,7 +51,6 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
-import org.jboss.logging.Logger;
 
 /**
  * Defines the default delete event listener used by hibernate for deleting entities
@@ -112,7 +114,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 				);
 			}
 
-			EntityKey key = new EntityKey( id, persister, source.getEntityMode() );
+			final EntityKey key = source.generateEntityKey( id, persister );
 
 			persistenceContext.checkUniqueness( key, entity );
 
@@ -255,7 +257,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 
 		// before any callbacks, etc, so subdeletions see that this deletion happened first
 		persistenceContext.setEntryStatus( entityEntry, Status.DELETED );
-		EntityKey key = new EntityKey( entityEntry.getId(), persister, session.getEntityMode() );
+		final EntityKey key = session.generateEntityKey( entityEntry.getId(), persister );
 
 		cascadeBeforeDelete( session, persister, entity, entityEntry, transientEntities );
 

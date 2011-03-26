@@ -1,4 +1,3 @@
-//$Id: CustomPersister.java 11398 2007-04-10 14:54:07Z steve.ebersole@jboss.com $
 package org.hibernate.test.legacy;
 
 import java.io.Serializable;
@@ -335,7 +334,7 @@ public class CustomPersister implements EntityPersister {
 		if (obj!=null) {
 			clone = (Custom) obj.clone();
 			TwoPhaseLoad.addUninitializedEntity(
-					new EntityKey( id, this, session.getEntityMode() ),
+					session.generateEntityKey( id, this ),
 					clone,
 					this,
 					LockMode.NONE,

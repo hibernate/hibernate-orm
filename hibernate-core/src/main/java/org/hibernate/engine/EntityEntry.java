@@ -22,10 +22,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.engine;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -35,13 +37,11 @@ import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.pretty.MessageHelper;
 
 /**
- * We need an entry to tell us all about the current state
- * of an object with respect to its persistent state
+ * We need an entry to tell us all about the current state of an object with respect to its persistent state
  * 
  * @author Gavin King
  */
 public final class EntityEntry implements Serializable {
-
 	private LockMode lockMode;
 	private Status status;
 	private Status previousStatus;
@@ -52,6 +52,7 @@ public final class EntityEntry implements Serializable {
 	private Object version;
 	private transient EntityPersister persister; // for convenience to save some lookups
 	private final EntityMode entityMode;
+	private final String tenantId;
 	private final String entityName;
 	private transient EntityKey cachedEntityKey; // cached EntityKey (lazy-initialized)
 	private boolean isBeingReplicated;
@@ -68,6 +69,7 @@ public final class EntityEntry implements Serializable {
 			final boolean existsInDatabase,
 			final EntityPersister persister,
 			final EntityMode entityMode,
+			final String tenantId,
 			final boolean disableVersionIncrement,
 			final boolean lazyPropertiesAreUnfetched) {
 		this.status=status;
@@ -83,6 +85,7 @@ public final class EntityEntry implements Serializable {
 		this.loadedWithLazyPropertiesUnfetched = lazyPropertiesAreUnfetched;
 		this.persister=persister;
 		this.entityMode = entityMode;
+		this.tenantId = tenantId;
 		this.entityName = persister == null ? null : persister.getEntityName();
 	}
 
@@ -91,6 +94,7 @@ public final class EntityEntry implements Serializable {
 			final String entityName,
 			final Serializable id,
 			final EntityMode entityMode,
+			final String tenantId,
 			final Status status,
 			final Status previousStatus,
 			final Object[] loadedState,
@@ -105,6 +109,7 @@ public final class EntityEntry implements Serializable {
 		this.persister = ( factory == null ? null : factory.getEntityPersister( entityName ) );
 		this.id = id;
 		this.entityMode = entityMode;
+		this.tenantId = tenantId;
 		this.status = status;
 		this.previousStatus = previousStatus;
 		this.loadedState = loadedState;
@@ -177,7 +182,7 @@ public final class EntityEntry implements Serializable {
 			if ( getId() == null ) {
 				throw new IllegalStateException( "cannot generate an EntityKey when id is null.");
 			}
-			cachedEntityKey = new EntityKey( getId(), getPersister(), entityMode );
+			cachedEntityKey = new EntityKey( getId(), getPersister(), entityMode, tenantId );
 		}
 		return cachedEntityKey;
 	}
@@ -335,16 +340,17 @@ public final class EntityEntry implements Serializable {
 	 * @throws IOException If a stream error occurs
 	 */
 	void serialize(ObjectOutputStream oos) throws IOException {
-		oos.writeObject( entityName );
+		oos.writeUTF( entityName );
 		oos.writeObject( id );
-		oos.writeObject( entityMode.toString() );
-		oos.writeObject( status.toString() );
-		oos.writeObject( ( previousStatus == null ? "" : previousStatus.toString() ) );
+		oos.writeUTF( entityMode.toString() );
+		oos.writeUTF( tenantId );
+		oos.writeUTF( status.toString() );
+		oos.writeUTF( ( previousStatus == null ? "" : previousStatus.toString() ) );
 		// todo : potentially look at optimizing these two arrays
 		oos.writeObject( loadedState );
 		oos.writeObject( deletedState );
 		oos.writeObject( version );
-		oos.writeObject( lockMode.toString() );
+		oos.writeUTF( lockMode.toString() );
 		oos.writeBoolean( existsInDatabase );
 		oos.writeBoolean( isBeingReplicated );
 		oos.writeBoolean( loadedWithLazyPropertiesUnfetched );
@@ -369,10 +375,11 @@ public final class EntityEntry implements Serializable {
 		String previousStatusString = null;
 		return new EntityEntry(
 				( session == null ? null : session.getFactory() ),
-		        ( String ) ois.readObject(),
+		        ois.readUTF(),
 				( Serializable ) ois.readObject(),
-	            EntityMode.parse( ( String ) ois.readObject() ),
-				Status.parse( ( String ) ois.readObject() ),
+	            EntityMode.parse( ois.readUTF() ),
+				ois.readUTF(),
+				Status.parse( ois.readUTF() ),
 				( ( previousStatusString = ( String ) ois.readObject() ).length() == 0 ?
 							null :
 							Status.parse( previousStatusString ) 
@@ -380,7 +387,7 @@ public final class EntityEntry implements Serializable {
 	            ( Object[] ) ois.readObject(),
 	            ( Object[] ) ois.readObject(),
 	            ois.readObject(),
-	            LockMode.parse( ( String ) ois.readObject() ),
+	            LockMode.parse( ois.readUTF() ),
 	            ois.readBoolean(),
 	            ois.readBoolean(),
 	            ois.readBoolean()

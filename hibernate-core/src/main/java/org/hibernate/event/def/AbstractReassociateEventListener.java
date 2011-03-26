@@ -22,7 +22,11 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.event.def;
+
 import java.io.Serializable;
+
+import org.jboss.logging.Logger;
+
 import org.hibernate.HibernateLogger;
 import org.hibernate.LockMode;
 import org.hibernate.engine.EntityEntry;
@@ -34,7 +38,6 @@ import org.hibernate.event.EventSource;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.TypeHelper;
-import org.jboss.logging.Logger;
 
 /**
  * A convenience base class for listeners that respond to requests to reassociate an entity
@@ -63,8 +66,8 @@ public class AbstractReassociateEventListener implements Serializable {
         if (LOG.isTraceEnabled()) LOG.trace("Reassociating transient instance: "
                                             + MessageHelper.infoString(persister, id, event.getSession().getFactory()));
 
-		EventSource source = event.getSession();
-		EntityKey key = new EntityKey( id, persister, source.getEntityMode() );
+		final EventSource source = event.getSession();
+		final EntityKey key = source.generateEntityKey( id, persister );
 
 		source.getPersistenceContext().checkUniqueness( key, object );
 

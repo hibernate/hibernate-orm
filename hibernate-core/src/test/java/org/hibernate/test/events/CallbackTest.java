@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.events;
+import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
@@ -31,8 +32,10 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.event.DeleteEvent;
 import org.hibernate.event.DeleteEventListener;
 import org.hibernate.event.Destructible;
+import org.hibernate.event.EventListenerRegistration;
 import org.hibernate.event.EventType;
 import org.hibernate.event.Initializable;
+import org.hibernate.service.StandardServiceInitiators;
 import org.hibernate.service.event.spi.EventListenerRegistry;
 import org.hibernate.service.internal.BasicServiceRegistryImpl;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -65,7 +68,17 @@ public class CallbackTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected void applyServices(BasicServiceRegistryImpl serviceRegistry) {
 		super.applyServices( serviceRegistry );
-		serviceRegistry.getService( EventListenerRegistry.class ).setListeners( EventType.DELETE, listener );
+		serviceRegistry.getService( StandardServiceInitiators.EventListenerRegistrationService.class ).attachEventListenerRegistration(
+				new EventListenerRegistration() {
+					@Override
+					public void apply(
+							ServiceRegistryImplementor serviceRegistry,
+							Configuration configuration,
+							Map<?, ?> configValues) {
+						serviceRegistry.getService( EventListenerRegistry.class ).setListeners( EventType.DELETE, listener );
+					}
+				}
+		);
 	}
 
 	@Test

@@ -25,11 +25,13 @@ package org.hibernate.test.jpa;
 
 import javax.persistence.EntityNotFoundException;
 import java.io.Serializable;
+import java.util.Map;
 
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.CascadingAction;
 import org.hibernate.event.AutoFlushEventListener;
+import org.hibernate.event.EventListenerRegistration;
 import org.hibernate.event.EventType;
 import org.hibernate.event.FlushEntityEventListener;
 import org.hibernate.event.FlushEventListener;
@@ -40,8 +42,10 @@ import org.hibernate.event.def.DefaultFlushEventListener;
 import org.hibernate.event.def.DefaultPersistEventListener;
 import org.hibernate.internal.util.collections.IdentityMap;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.service.StandardServiceInitiators;
 import org.hibernate.service.event.spi.EventListenerRegistry;
 import org.hibernate.service.internal.BasicServiceRegistryImpl;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -67,13 +71,22 @@ public abstract class AbstractJPATest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected void applyServices(BasicServiceRegistryImpl serviceRegistry) {
 		super.applyServices( serviceRegistry );
-
-		EventListenerRegistry eventListenerRegistry = serviceRegistry.getService( EventListenerRegistry.class );
-		eventListenerRegistry.setListeners( EventType.PERSIST, buildPersistEventListeners() );
-		eventListenerRegistry.setListeners( EventType.PERSIST_ONFLUSH, buildPersisOnFlushEventListeners() );
-		eventListenerRegistry.setListeners( EventType.AUTO_FLUSH, buildAutoFlushEventListeners() );
-		eventListenerRegistry.setListeners( EventType.FLUSH, buildFlushEventListeners() );
-		eventListenerRegistry.setListeners( EventType.FLUSH_ENTITY, buildFlushEntityEventListeners() );
+		serviceRegistry.getService( StandardServiceInitiators.EventListenerRegistrationService.class ).attachEventListenerRegistration(
+				new EventListenerRegistration() {
+					@Override
+					public void apply(
+							ServiceRegistryImplementor serviceRegistry,
+							Configuration configuration,
+							Map<?, ?> configValues) {
+						EventListenerRegistry eventListenerRegistry = serviceRegistry.getService( EventListenerRegistry.class );
+						eventListenerRegistry.setListeners( EventType.PERSIST, buildPersistEventListeners() );
+						eventListenerRegistry.setListeners( EventType.PERSIST_ONFLUSH, buildPersisOnFlushEventListeners() );
+						eventListenerRegistry.setListeners( EventType.AUTO_FLUSH, buildAutoFlushEventListeners() );
+						eventListenerRegistry.setListeners( EventType.FLUSH, buildFlushEventListeners() );
+						eventListenerRegistry.setListeners( EventType.FLUSH_ENTITY, buildFlushEntityEventListeners() );
+					}
+				}
+		);
 	}
 
 	@Override

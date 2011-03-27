@@ -30,5 +30,5 @@ package org.hibernate.service.spi;
  * @author Steve Ebersole
  */
 public interface SessionFactoryServiceRegistry extends ServiceRegistryImplementor {
-	// todo : add regsitration of service initiator
+	public void registerServiceInitiator(SessionFactoryServiceInitiator initiator);
 }

@@ -29,14 +29,26 @@ import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
 /**
  * Contract for stuff that integrates with Hibernate.
+ * <p/>
+ * IMPL NOTE: called during session factory initialization (constructor), so not all parts of the passed session factory
+ * will be available.
  *
- * @todo : obviously, come up with a better name :)
+ * @todo : the signature here *will* change, guaranteed
+ *
+ * @todo : better name ?
  *
  * @author Steve Ebersole
  * @since 4.0
  * @jira HHH-5562
  */
 public interface Integrator {
+	/**
+	 * Perform integration.
+	 *
+	 * @param configuration The configuration used to create the session factory
+	 * @param sessionFactory The session factory being created
+	 * @param serviceRegistry The session factory's service registry
+	 */
 	public void integrate(
 			Configuration configuration,
 			SessionFactoryImplementor sessionFactory,

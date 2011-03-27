@@ -27,11 +27,13 @@ import javax.naming.NamingException;
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InvalidObjectException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.ObjectStreamException;
 import java.io.Serializable;
+import java.net.URL;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -39,6 +41,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -117,9 +120,11 @@ import org.hibernate.persister.spi.PersisterFactory;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.jta.platform.spi.JtaPlatform;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 import org.hibernate.service.spi.SessionFactoryServiceRegistryFactory;
 import org.hibernate.stat.Statistics;
 import org.hibernate.stat.internal.ConcurrentStatisticsImpl;
@@ -209,6 +214,7 @@ public final class SessionFactoryImpl
 			SessionFactoryObserver observer) throws HibernateException {
         LOG.buildingSessionFactory();
 
+		// todo : move stats building to SF service reg building
 		this.statistics = buildStatistics( settings, serviceRegistry );
 
 		this.properties = new Properties();
@@ -238,6 +244,12 @@ public final class SessionFactoryImpl
 		// Caches
 		settings.getRegionFactory().start( settings, properties );
 		this.queryPlanCache = new QueryPlanCache( this );
+
+		// todo : everything above here consider implementing as standard SF service.  specifically: stats, caches, types, function-reg
+
+		for ( Integrator integrator : locateIntegrators( this.serviceRegistry ) ) {
+			integrator.integrate( cfg, this, (SessionFactoryServiceRegistry) this.serviceRegistry );
+		}
 
 		//Generators:
 
@@ -475,6 +487,46 @@ public final class SessionFactoryImpl
 
 		this.transactionEnvironment = new TransactionEnvironmentImpl( this );
 		this.observer.sessionFactoryCreated( this );
+	}
+
+	private Iterable<Integrator> locateIntegrators(ServiceRegistryImplementor serviceRegistry) {
+		List<Integrator> integrators = new ArrayList<Integrator>();
+
+		// todo : add "known" integrators -> BV, hibernate validation, search, envers
+
+		final Properties properties = new Properties();
+
+		ClassLoaderService classLoader = serviceRegistry.getService( ClassLoaderService.class );
+		List<URL> urls = classLoader.locateResources( "META-INF/hibernate/org.hibernate.impl.Integrator" );
+		for ( URL url : urls ) {
+			try {
+				final InputStream propertyStream = url.openStream();
+				try {
+					properties.clear();
+					properties.load( propertyStream );
+					// for now we only understand 'implClass' as key
+					final String implClass = properties.getProperty( "implClass" );
+					Class integratorClass = classLoader.classForName( implClass );
+					try {
+						integrators.add( (Integrator) integratorClass.newInstance() );
+					}
+					catch (Exception e) {
+						throw new HibernateException( "Unable to instantiate specified Integrator class [" + implClass + "]", e );
+					}
+				}
+				finally {
+					try {
+						propertyStream.close();
+					}
+					catch (IOException ignore) {
+					}
+				}
+			}
+			catch ( IOException ioe ) {
+				LOG.debugf( ioe, "Unable to process Integrator service file [%s], skipping" , url.toExternalForm() );
+			}
+		}
+		return integrators;
 	}
 
 	@Override
@@ -751,7 +803,7 @@ public final class SessionFactoryImpl
 
 	// from javax.naming.Referenceable
 	public Reference getReference() throws NamingException {
-        LOG.debugf("Returning a Reference to the SessionFactory");
+        LOG.debugf( "Returning a Reference to the SessionFactory" );
 		return new Reference(
 			SessionFactoryImpl.class.getName(),
 		    new StringRefAddr("uuid", uuid),
@@ -794,9 +846,9 @@ public final class SessionFactoryImpl
 	}
 
 	private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-        LOG.trace("Deserializing");
+        LOG.trace( "Deserializing" );
 		in.defaultReadObject();
-        LOG.debugf("Deserialized: %s", uuid);
+        LOG.debugf( "Deserialized: %s", uuid );
 	}
 
 	private void writeObject(ObjectOutputStream out) throws IOException {
@@ -906,7 +958,7 @@ public final class SessionFactoryImpl
 
 	public Type getReferencedPropertyType(String className, String propertyName)
 		throws MappingException {
-		return getEntityPersister(className).getPropertyType(propertyName);
+		return getEntityPersister( className ).getPropertyType( propertyName );
 	}
 
 	public ConnectionProvider getConnectionProvider() {

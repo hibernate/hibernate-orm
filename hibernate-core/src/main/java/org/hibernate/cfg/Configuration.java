@@ -35,8 +35,6 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.io.StringReader;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -50,7 +48,6 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Properties;
-import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
@@ -83,7 +80,6 @@ import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.java.JavaReflectionManager;
 import org.hibernate.cfg.annotations.reflection.JPAMetadataProvider;
-import org.hibernate.cfg.beanvalidation.BeanValidationActivator;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.function.SQLFunction;
@@ -92,10 +88,6 @@ import org.hibernate.engine.Mapping;
 import org.hibernate.engine.NamedQueryDefinition;
 import org.hibernate.engine.NamedSQLQueryDefinition;
 import org.hibernate.engine.ResultSetMappingDefinition;
-import org.hibernate.event.EventListenerRegistration;
-import org.hibernate.event.EventType;
-import org.hibernate.event.PreInsertEventListener;
-import org.hibernate.event.PreUpdateEventListener;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.IdentifierGeneratorAggregator;
 import org.hibernate.id.PersistentIdentifierGenerator;
@@ -138,11 +130,7 @@ import org.hibernate.mapping.UniqueKey;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.secure.JACCConfiguration;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.service.StandardServiceInitiators;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
-import org.hibernate.service.event.spi.EventListenerRegistry;
 import org.hibernate.service.internal.BasicServiceRegistryImpl;
-import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.tool.hbm2ddl.DatabaseMetadata;
 import org.hibernate.tool.hbm2ddl.IndexMetadata;
 import org.hibernate.tool.hbm2ddl.TableMetadata;
@@ -1378,8 +1366,6 @@ public class Configuration implements Serializable {
 				buildUniqueKeyFromColumnNames( table, keyName, holder.getColumns() );
 			}
 		}
-
-		applyConstraintsToDDL();
 	}
 
 	private void processSecondPassesOfType(Class<? extends SecondPass> type) {
@@ -1577,68 +1563,6 @@ public class Configuration implements Serializable {
 		}
 	}
 
-	private void applyConstraintsToDDL() {
-		boolean applyOnDdl = getProperties().getProperty(
-				"hibernate.validator.apply_to_ddl",
-				"true"
-		)
-				.equalsIgnoreCase( "true" );
-
-		if ( !applyOnDdl ) {
-			return; // nothing to do in this case
-		}
-		applyHibernateValidatorLegacyConstraintsOnDDL();
-		applyBeanValidationConstraintsOnDDL();
-	}
-
-	@SuppressWarnings({ "unchecked" })
-	private void applyHibernateValidatorLegacyConstraintsOnDDL() {
-		//TODO search for the method only once and cache it?
-		Constructor validatorCtr = null;
-		Method applyMethod = null;
-		try {
-			Class classValidator = ReflectHelper.classForName(
-					"org.hibernate.validator.ClassValidator", this.getClass()
-			);
-			Class messageInterpolator = ReflectHelper.classForName(
-					"org.hibernate.validator.MessageInterpolator", this.getClass()
-			);
-			validatorCtr = classValidator.getDeclaredConstructor(
-					Class.class, ResourceBundle.class, messageInterpolator, Map.class, ReflectionManager.class
-			);
-			applyMethod = classValidator.getMethod( "apply", PersistentClass.class );
-		}
-		catch ( ClassNotFoundException e ) {
-            if (!isValidatorNotPresentLogged) LOG.validatorNotFound();
-			isValidatorNotPresentLogged = true;
-		}
-		catch ( NoSuchMethodException e ) {
-			throw new AnnotationException( e );
-		}
-		if ( applyMethod != null ) {
-			for ( PersistentClass persistentClazz : classes.values() ) {
-				//integrate the validate framework
-				String className = persistentClazz.getClassName();
-				if ( StringHelper.isNotEmpty( className ) ) {
-					try {
-						Object validator = validatorCtr.newInstance(
-								ReflectHelper.classForName( className ), null, null, null, reflectionManager
-						);
-						applyMethod.invoke( validator, persistentClazz );
-					}
-					catch ( Exception e ) {
-                        LOG.unableToApplyConstraints(className, e);
-					}
-				}
-			}
-		}
-	}
-
-	@SuppressWarnings({ "unchecked" })
-	private void applyBeanValidationConstraintsOnDDL() {
-		BeanValidationActivator.applyDDL( classes.values(), getProperties() );
-	}
-
 	private void originalSecondPassCompile() throws MappingException {
         LOG.debugf("Processing extends queue");
 		processExtendsQueue();
@@ -1789,12 +1713,8 @@ public class Configuration implements Serializable {
 		secondPassCompile();
         if (!metadataSourceQueue.isEmpty()) LOG.incompleteMappingMetadataCacheProcessing();
 
-// todo : processing listeners for validator and search (and envers) requires HHH-5562
-		enableLegacyHibernateValidator( serviceRegistry );
-		enableBeanValidation( serviceRegistry );
-//		enableHibernateSearch();
-
 		validate();
+
 		Environment.verifyProperties( properties );
 		Properties copy = new Properties();
 		copy.putAll( properties );
@@ -1839,118 +1759,6 @@ public class Configuration implements Serializable {
 		);
 		return buildSessionFactory( serviceRegistry );
 	}
-
-	private static final String LEGACY_VALIDATOR_EVENT_LISTENER = "org.hibernate.validator.event.ValidateEventListener";
-
-	private void enableLegacyHibernateValidator(ServiceRegistry serviceRegistry) {
-		serviceRegistry.getService( StandardServiceInitiators.EventListenerRegistrationService.class )
-				.attachEventListenerRegistration( new LegacyHibernateValidatorEventListenerRegistration( properties ) );
-	}
-
-	public static class LegacyHibernateValidatorEventListenerRegistration implements EventListenerRegistration {
-		private final Properties configurationProperties;
-
-		public LegacyHibernateValidatorEventListenerRegistration(Properties configurationProperties) {
-			this.configurationProperties = configurationProperties;
-		}
-
-		@Override
-		public void apply(
-				EventListenerRegistry eventListenerRegistry,
-				Configuration configuration, Map<?, ?> configValues, ServiceRegistryImplementor serviceRegistry
-		) {
-			boolean loadLegacyValidator = ConfigurationHelper.getBoolean( "hibernate.validator.autoregister_listeners", configurationProperties, false );
-
-			Class validateEventListenerClass = null;
-			try {
-				validateEventListenerClass = serviceRegistry.getService( ClassLoaderService.class ).classForName( LEGACY_VALIDATOR_EVENT_LISTENER );
-			}
-			catch ( Exception ignored) {
-			}
-
-			if ( ! loadLegacyValidator || validateEventListenerClass == null) {
-				LOG.debugf( "Skipping legacy validator loading" );
-				return;
-			}
-
-			final Object validateEventListener;
-			try {
-				validateEventListener = validateEventListenerClass.newInstance();
-			}
-			catch ( Exception e ) {
-				throw new AnnotationException( "Unable to load Validator event listener", e );
-			}
-
-			EventListenerRegistry listenerRegistry = serviceRegistry.getService( EventListenerRegistry.class );
-			// todo : duplication strategy
-
-			listenerRegistry.appendListeners( EventType.PRE_INSERT, (PreInsertEventListener) validateEventListener );
-			listenerRegistry.appendListeners( EventType.PRE_UPDATE, (PreUpdateEventListener) validateEventListener );
-		}
-	}
-
-	private void enableBeanValidation(ServiceRegistry serviceRegistry) {
-		serviceRegistry.getService( StandardServiceInitiators.EventListenerRegistrationService.class ).attachEventListenerRegistration(
-				new EventListenerRegistration() {
-					@Override
-					public void apply(
-							EventListenerRegistry eventListenerRegistry,
-							Configuration configuration,
-							Map<?, ?> configValues,
-							ServiceRegistryImplementor serviceRegistry) {
-						BeanValidationActivator.activateBeanValidation( eventListenerRegistry, getProperties() );
-					}
-				}
-		);
-	}
-
-	private static final String SEARCH_EVENT_LISTENER_REGISTERER_CLASS = "org.hibernate.cfg.search.HibernateSearchEventListenerRegister";
-
-	/**
-	 * Tries to automatically register Hibernate Search event listeners by locating the
-	 * appropriate bootstrap class and calling the <code>enableHibernateSearch</code> method.
-	 */
-//	private void enableHibernateSearch() {
-//		// load the bootstrap class
-//		Class searchStartupClass;
-//		try {
-//			searchStartupClass = ReflectHelper.classForName( SEARCH_STARTUP_CLASS, getClass() );
-//		}
-//		catch ( ClassNotFoundException e ) {
-//			// TODO remove this together with SearchConfiguration after 3.1.0 release of Search
-//			// try loading deprecated HibernateSearchEventListenerRegister
-//			try {
-//				searchStartupClass = ReflectHelper.classForName( SEARCH_EVENT_LISTENER_REGISTERER_CLASS, getClass() );
-//			}
-//			catch ( ClassNotFoundException cnfe ) {
-//                LOG.debugf("Search not present in classpath, ignoring event listener registration.");
-//				return;
-//			}
-//		}
-//
-//		// call the method for registering the listeners
-//		try {
-//			Object searchStartupInstance = searchStartupClass.newInstance();
-//			Method enableSearchMethod = searchStartupClass.getDeclaredMethod(
-//					SEARCH_STARTUP_METHOD,
-//					EventListeners.class,
-//					Properties.class
-//			);
-//			enableSearchMethod.invoke( searchStartupInstance, getEventListeners(), getProperties() );
-//		}
-//		catch ( InstantiationException e ) {
-//            LOG.debugf("Unable to instantiate %s, ignoring event listener registration.", SEARCH_STARTUP_CLASS);
-//		}
-//		catch ( IllegalAccessException e ) {
-//            LOG.debugf("Unable to instantiate %s, ignoring event listener registration.", SEARCH_STARTUP_CLASS);
-//		}
-//		catch ( NoSuchMethodException e ) {
-//            LOG.debugf("Method %s() not found in %s", SEARCH_STARTUP_METHOD, SEARCH_STARTUP_CLASS);
-//		}
-//		catch ( InvocationTargetException e ) {
-//            LOG.debugf("Unable to execute %s, ignoring event listener registration.", SEARCH_STARTUP_METHOD);
-//		}
-//	}
 
 	/**
 	 * Rterieve the configured {@link Interceptor}.

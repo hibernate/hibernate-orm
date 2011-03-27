@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.service.classloading.internal;
+
 import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
@@ -29,6 +30,7 @@ import java.util.Enumeration;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.classloading.spi.ClassLoadingException;
 
@@ -50,7 +52,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 		this( determineClassLoaders( configVales ) );
 	}
 
-	private ClassLoaderServiceImpl(ClassLoader[] classLoaders) {
+	private ClassLoaderServiceImpl(ClassLoader... classLoaders) {
 		this( classLoaders[0], classLoaders[1], classLoaders[2], classLoaders[3] );
 	}
 
@@ -128,7 +130,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 			try {
 				return classLoader.loadClass( className );
 			}
-			catch ( Exception e ) {
+			catch ( Exception ignore) {
 			}
 		}
 		throw new ClassLoadingException( "Unable to load class [" + className + "]" );
@@ -140,13 +142,13 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 		try {
 			return new URL( name );
 		}
-		catch ( Exception e ) {
+		catch ( Exception ignore ) {
 		}
 
 		try {
 			return resourcesClassLoader.getResource( name );
 		}
-		catch ( Exception e ) {
+		catch ( Exception ignore ) {
 		}
 
 		return null;
@@ -158,13 +160,13 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 		try {
 			return new URL( name ).openStream();
 		}
-		catch ( Exception e ) {
+		catch ( Exception ignore ) {
 		}
 
 		try {
 			return resourcesClassLoader.getResourceAsStream( name );
 		}
-		catch ( Exception e ) {
+		catch ( Exception ignore ) {
 		}
 
 		return null;
@@ -172,20 +174,19 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 
 	@Override
 	public List<URL> locateResources(String name) {
+		ArrayList<URL> urls = new ArrayList<URL>();
 		try {
 			Enumeration<URL> urlEnumeration = resourcesClassLoader.getResources( name );
 			if ( urlEnumeration != null && urlEnumeration.hasMoreElements() ) {
-				ArrayList<URL> urls = new ArrayList<URL>();
 				while ( urlEnumeration.hasMoreElements() ) {
 					urls.add( urlEnumeration.nextElement() );
 				}
-				return urls;
 			}
 		}
-		catch ( Exception e ) {
+		catch ( Exception ignore ) {
 		}
 
-		return null;
+		return urls;
 	}
 
 }

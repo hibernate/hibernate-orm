@@ -79,6 +79,9 @@ import org.hibernate.cache.impl.CacheDataDescriptionImpl;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Settings;
+import org.hibernate.cfg.beanvalidation.BeanValidationIntegrator;
+import org.hibernate.cfg.beanvalidation.LegacyHibernateValidationIntegrator;
+import org.hibernate.cfg.search.HibernateSearchIntegrator;
 import org.hibernate.context.CurrentSessionContext;
 import org.hibernate.context.JTASessionContext;
 import org.hibernate.context.ManagedSessionContext;
@@ -488,7 +491,10 @@ public final class SessionFactoryImpl
 	private Iterable<Integrator> locateIntegrators(ServiceRegistryImplementor serviceRegistry) {
 		List<Integrator> integrators = new ArrayList<Integrator>();
 
-		// todo : add "known" integrators -> BV, hibernate validation, search, envers
+		// todo : Envers needs to bbe handled by discovery to be because it is in a separate project
+		integrators.add( new LegacyHibernateValidationIntegrator() );
+		integrators.add( new BeanValidationIntegrator() );
+		integrators.add( new HibernateSearchIntegrator() );
 
 		final Properties properties = new Properties();
 

@@ -1,0 +1,234 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
+package org.hibernate.cfg.beanvalidation;
+
+import java.lang.reflect.Method;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Properties;
+import java.util.Set;
+
+import org.jboss.logging.Logger;
+
+import org.hibernate.HibernateException;
+import org.hibernate.HibernateLogger;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.Environment;
+import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.impl.Integrator;
+import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.service.classloading.spi.ClassLoaderService;
+import org.hibernate.service.event.spi.EventListenerRegistry;
+import org.hibernate.service.spi.SessionFactoryServiceRegistry;
+
+/**
+ * @author Steve Ebersole
+ */
+public class BeanValidationIntegrator implements Integrator {
+	private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, BeanValidationIntegrator.class.getName());
+
+	public static final String MODE_PROPERTY = "javax.persistence.validation.mode";
+
+	private static final String ACTIVATOR_CLASS = "org.hibernate.cfg.beanvalidation.TypeSafeActivator";
+	private static final String DDL_METHOD = "applyDDL";
+	private static final String ACTIVATE_METHOD = "activateBeanValidation";
+
+	@Override
+	public void integrate(
+			Configuration configuration,
+			SessionFactoryImplementor sessionFactory,
+			SessionFactoryServiceRegistry serviceRegistry) {
+		// determine requested validation modes.
+		final Set<ValidationMode> modes = ValidationMode.getModes( configuration.getProperties().get( MODE_PROPERTY ) );
+
+		// locate the type safe activator class
+		final Class typeSafeActivatorClass = loadTypeSafeActivatorClass( serviceRegistry );
+
+		// todo : if this works out, probably better to simply alter TypeSafeActivator into a single method...
+
+		applyRelationalConstraints(
+				modes,
+				typeSafeActivatorClass,
+				configuration
+		);
+		applyHibernateListeners(
+				modes,
+				typeSafeActivatorClass,
+				configuration,
+				sessionFactory,
+				serviceRegistry
+		);
+	}
+
+	private Class loadTypeSafeActivatorClass(SessionFactoryServiceRegistry serviceRegistry) {
+		try {
+			return serviceRegistry.getService( ClassLoaderService.class ).classForName( ACTIVATOR_CLASS );
+		}
+		catch (Exception e) {
+			// might be ok for the class loading to fail depending on what validation modes were requested...
+			return null;
+		}
+	}
+
+	private void applyRelationalConstraints(
+			Set<ValidationMode> modes,
+			Class typeSafeActivatorClass,
+			Configuration configuration) {
+		if ( ! ConfigurationHelper.getBoolean( LegacyHibernateValidationIntegrator.APPLY_CONSTRAINTS, configuration.getProperties(), true ) ){
+			LOG.debug( "Skipping application of relational constraints from legacy Hibernate Validator" );
+			return;
+		}
+
+		if ( ! ( modes.contains( ValidationMode.DDL ) || modes.contains( ValidationMode.AUTO ) ) ) {
+			return;
+		}
+		if ( typeSafeActivatorClass == null ) {
+			if ( modes.contains( ValidationMode.DDL ) ) {
+				throw new HibernateException( "Bean Validation not available in the class path but required in " + MODE_PROPERTY );
+			}
+			else if (modes.contains( ValidationMode.AUTO ) ) {
+				//nothing to activate
+				return;
+			}
+		}
+
+		try {
+			Method applyDDLMethod = typeSafeActivatorClass.getMethod( DDL_METHOD, Collection.class, Properties.class );
+			try {
+				applyDDLMethod.invoke(
+						null,
+						configuration.createMappings().getClasses().values(),
+						configuration.getProperties()
+				);
+			}
+			catch (HibernateException e) {
+				throw e;
+			}
+			catch (Exception e) {
+				throw new HibernateException( "Error applying BeanValidation relational constraints", e );
+			}
+		}
+		catch (HibernateException e) {
+			throw e;
+		}
+		catch (Exception e) {
+			throw new HibernateException( "Unable to locate TypeSafeActivator#applyDDL method", e );
+		}
+	}
+
+	private void applyHibernateListeners(
+			Set<ValidationMode> modes,
+			Class typeSafeActivatorClass,
+			Configuration configuration,
+			SessionFactoryImplementor sessionFactory,
+			SessionFactoryServiceRegistry serviceRegistry) {
+		// de-activate not-null tracking at the core level when Bean Validation is present unless the user explicitly
+		// asks for it
+		if ( configuration.getProperty( Environment.CHECK_NULLABILITY ) == null ) {
+			sessionFactory.getSettings().setCheckNullability( false );
+		}
+
+		if ( ! ( modes.contains( ValidationMode.CALLBACK ) || modes.contains( ValidationMode.AUTO ) ) ) {
+			return;
+		}
+
+		if ( typeSafeActivatorClass == null ) {
+			if ( modes.contains( ValidationMode.CALLBACK ) ) {
+				throw new HibernateException( "Bean Validation not available in the class path but required in " + MODE_PROPERTY );
+			}
+			else if (modes.contains( ValidationMode.AUTO ) ) {
+				//nothing to activate
+				return;
+			}
+		}
+
+		try {
+			Method activateMethod = typeSafeActivatorClass.getMethod( ACTIVATE_METHOD, EventListenerRegistry.class, Properties.class );
+			try {
+				activateMethod.invoke(
+						null,
+						serviceRegistry.getService( EventListenerRegistry.class ),
+						configuration.getProperties()
+				);
+			}
+			catch (HibernateException e) {
+				throw e;
+			}
+			catch (Exception e) {
+				throw new HibernateException( "Error applying BeanValidation relational constraints", e );
+			}
+		}
+		catch (HibernateException e) {
+			throw e;
+		}
+		catch (Exception e) {
+			throw new HibernateException( "Unable to locate TypeSafeActivator#applyDDL method", e );
+		}
+	}
+
+
+	// Because the javax validation classes might not be on the runtime classpath
+	private static enum ValidationMode {
+		AUTO,
+		CALLBACK,
+		NONE,
+		DDL;
+
+		public static Set<ValidationMode> getModes(Object modeProperty) {
+			Set<ValidationMode> modes = new HashSet<ValidationMode>(3);
+			if (modeProperty == null) {
+				modes.add(ValidationMode.AUTO);
+			}
+			else {
+				final String[] modesInString = modeProperty.toString().split( "," );
+				for ( String modeInString : modesInString ) {
+					modes.add( getMode(modeInString) );
+				}
+			}
+			if ( modes.size() > 1 && ( modes.contains( ValidationMode.AUTO ) || modes.contains( ValidationMode.NONE ) ) ) {
+				StringBuilder message = new StringBuilder( "Incompatible validation modes mixed: " );
+				for (ValidationMode mode : modes) {
+					message.append( mode ).append( ", " );
+				}
+				throw new HibernateException( message.substring( 0, message.length() - 2 ) );
+			}
+			return modes;
+		}
+
+		private static ValidationMode getMode(String modeProperty) {
+			if (modeProperty == null || modeProperty.length() == 0) {
+				return AUTO;
+			}
+			else {
+				try {
+					return valueOf( modeProperty.trim().toUpperCase() );
+				}
+				catch ( IllegalArgumentException e ) {
+					throw new HibernateException( "Unknown validation mode in " + MODE_PROPERTY + ": " + modeProperty );
+				}
+			}
+		}
+	}
+
+}

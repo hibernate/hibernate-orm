@@ -25,6 +25,7 @@
 package org.hibernate.engine;
 
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.sql.Connection;
 
@@ -219,5 +220,7 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	public EntityNotFoundDelegate getEntityNotFoundDelegate();
 
 	public SQLFunctionRegistry getSqlFunctionRegistry();
+
+	public Properties getProperties();
 		
 }

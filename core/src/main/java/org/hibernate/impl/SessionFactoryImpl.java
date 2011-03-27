@@ -179,7 +179,7 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 	private final transient SessionFactoryObserver observer;
 	private final transient HashMap entityNameResolvers = new HashMap();
 
-	private final QueryPlanCache queryPlanCache = new QueryPlanCache( this );
+	private final QueryPlanCache queryPlanCache;
 
 	private transient boolean isClosed = false;
 
@@ -219,6 +219,7 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 
 		// Caches
 		settings.getRegionFactory().start( settings, properties );
+		queryPlanCache = new QueryPlanCache( this );
 
 		//Generators:
 
@@ -1153,5 +1154,9 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 
 	public SQLFunctionRegistry getSqlFunctionRegistry() {
 		return sqlFunctionRegistry;
+	}
+
+	public Properties getProperties() {
+		return this.properties;
 	}
 }

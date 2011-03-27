@@ -43,6 +43,7 @@ import org.hibernate.bytecode.BytecodeProvider;
 import org.hibernate.util.ConfigHelper;
 import org.hibernate.util.PropertiesHelper;
 
+import org.hibernate.util.SoftLimitMRUCache;
 
 /**
  * Provides access to configuration info passed in <tt>Properties</tt> objects.
@@ -166,6 +167,14 @@ import org.hibernate.util.PropertiesHelper;
  *   <td><tt>hibernate.transaction.factory_class</tt></td>
  *   <td>the factory to use for instantiating <tt>Transaction</tt>s.
  *   (Defaults to <tt>JDBCTransactionFactory</tt>.)</td>
+ * </tr>
+ * <tr>
+ *   <td><tt>hibernate.query.plan_cache_max_strong_references</tt></td>
+ *   <td>The maximum number of strong references maintained by {@link SoftLimitMRUCache}. Default is 128.</td>
+ * </tr>
+ * <tr>
+ *   <td><tt>hibernate.query.plan_cache_max_soft_references</tt></td>
+ *   <td>The maximum number of soft references maintained by {@link SoftLimitMRUCache}. Default is 2048.</td>
  * </tr>
  * <tr>
  *   <td><tt>hibernate.query.substitutions</tt></td><td>query language token substitutions</td>
@@ -515,6 +524,16 @@ public final class Environment {
 
 	public static final String JPAQL_STRICT_COMPLIANCE= "hibernate.query.jpaql_strict_compliance";
 
+	/**
+	 * The maximum number of strong references maintained by {@link SoftLimitMRUCache}. Default is 128.
+	 */
+	public static final String QUERY_PLAN_CACHE_MAX_STRONG_REFERENCES = "hibernate.query.plan_cache_max_strong_references";
+
+	/**
+	 * The maximum number of soft references maintained by {@link SoftLimitMRUCache}. Default is 2048.
+	 */
+	public static final String QUERY_PLAN_CACHE_MAX_SOFT_REFERENCES = "hibernate.query.plan_cache_max_soft_references";
+
 	private static final BytecodeProvider BYTECODE_PROVIDER_INSTANCE;
 	private static final boolean ENABLE_BINARY_STREAMS;
 	private static final boolean ENABLE_REFLECTION_OPTIMIZER;
@@ -527,6 +546,7 @@ public final class Environment {
 	private static final HashMap ISOLATION_LEVELS = new HashMap();
 	private static final Map OBSOLETE_PROPERTIES = new HashMap();
 	private static final Map RENAMED_PROPERTIES = new HashMap();
+
 
 	private static final Logger log = LoggerFactory.getLogger(Environment.class);
 

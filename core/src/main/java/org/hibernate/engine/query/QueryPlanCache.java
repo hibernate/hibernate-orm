@@ -27,6 +27,7 @@ package org.hibernate.engine.query;
 import org.hibernate.util.SimpleMRUCache;
 import org.hibernate.util.SoftLimitMRUCache;
 import org.hibernate.util.CollectionHelper;
+import org.hibernate.cfg.Environment;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.query.sql.NativeSQLQuerySpecification;
 import org.hibernate.QueryException;
@@ -44,9 +45,13 @@ import java.util.Set;
 import java.util.HashSet;
 import java.util.Collections;
 import java.util.Collection;
+import java.util.Properties;
 
 /**
  * Acts as a cache for compiled query plans, as well as query-parameter metadata.
+ *
+ * @see Environment#QUERY_PLAN_CACHE_MAX_STRONG_REFERENCES
+ * @see Environment#QUERY_PLAN_CACHE_MAX_SOFT_REFERENCES
  *
  * @author Steve Ebersole
  */
@@ -57,7 +62,21 @@ public class QueryPlanCache implements Serializable {
 	private SessionFactoryImplementor factory;
 
 	public QueryPlanCache(SessionFactoryImplementor factory) {
+		Properties properties = factory.getProperties();
+
+		String maxStrongReferencesProperty = properties.getProperty(
+				Environment.QUERY_PLAN_CACHE_MAX_STRONG_REFERENCES);
+		int maxStrongReferences = (maxStrongReferencesProperty != null) ?
+				Integer.valueOf(maxStrongReferencesProperty).intValue() : SoftLimitMRUCache.DEFAULT_STRONG_REF_COUNT;
+
+		String maxSoftReferencesProperty = properties.getProperty(
+				Environment.QUERY_PLAN_CACHE_MAX_SOFT_REFERENCES);
+		int maxSoftReferences = (maxSoftReferencesProperty != null) ?
+				Integer.valueOf(maxSoftReferencesProperty).intValue() : SoftLimitMRUCache.DEFAULT_SOFT_REF_COUNT;
+
 		this.factory = factory;
+		this.sqlParamMetadataCache = new SimpleMRUCache(maxStrongReferences);
+		this.planCache = new SoftLimitMRUCache(maxStrongReferences, maxSoftReferences);
 	}
 
 	// simple cache of param metadata based on query string.  Ideally, the
@@ -66,10 +85,10 @@ public class QueryPlanCache implements Serializable {
 	// unnecessary cache entries.
 	// Used solely for caching param metadata for native-sql queries, see
 	// getSQLParameterMetadata() for a discussion as to why...
-	private final SimpleMRUCache sqlParamMetadataCache = new SimpleMRUCache();
+	private final SimpleMRUCache sqlParamMetadataCache;
 
 	// the cache of the actual plans...
-	private final SoftLimitMRUCache planCache = new SoftLimitMRUCache( 128 );
+	private final SoftLimitMRUCache planCache;
 
 
 	public ParameterMetadata getSQLParameterMetadata(String query) {

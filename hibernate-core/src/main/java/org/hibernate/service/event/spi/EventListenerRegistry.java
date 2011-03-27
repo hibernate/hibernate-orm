@@ -26,7 +26,7 @@ package org.hibernate.service.event.spi;
 import java.io.Serializable;
 
 import org.hibernate.event.EventType;
-import org.hibernate.service.spi.Service;
+import org.hibernate.service.Service;
 
 /**
  * Service for accessing each {@link EventListenerGroup} by {@link EventType}, as well as convenience
@@ -35,7 +35,6 @@ import org.hibernate.service.spi.Service;
  * @author Steve Ebersole
  */
 public interface EventListenerRegistry extends Service, Serializable {
-	// todo : rename this to getEventListenerGroup
 	public <T> EventListenerGroup<T> getEventListenerGroup(EventType<T> eventType);
 
 	public void addDuplicationStrategy(DuplicationStrategy strategy);

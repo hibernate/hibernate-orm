@@ -29,6 +29,7 @@ import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Mappings;
 import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.event.EventListenerRegistration;
@@ -43,7 +44,7 @@ import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.event.spi.DuplicationStrategy;
 import org.hibernate.service.event.spi.EventListenerGroup;
 import org.hibernate.service.event.spi.EventListenerRegistry;
-import org.hibernate.service.spi.ServiceRegistry;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
  * Prepare the HEM-specific event listeners.
@@ -81,7 +82,7 @@ public class JpaEventListenerRegistration implements EventListenerRegistration {
 
 	@Override
 	@SuppressWarnings( {"unchecked"})
-	public void apply(ServiceRegistry serviceRegistry, Mappings mappings, Map<?,?> configValues) {
+	public void apply(ServiceRegistryImplementor serviceRegistry, Configuration configuration, Map<?, ?> configValues) {
 		boolean isSecurityEnabled = configValues.containsKey( AvailableSettings.JACC_ENABLED );
 
 		EventListenerRegistry eventListenerRegistry = serviceRegistry.getService( EventListenerRegistry.class );
@@ -133,8 +134,8 @@ public class JpaEventListenerRegistration implements EventListenerRegistration {
 		// todo : we may need to account for callback handlers previously set (shared across EMFs)
 
 		final EntityCallbackHandler callbackHandler = new EntityCallbackHandler();
-		Iterator classes = mappings.iterateClasses();
-		ReflectionManager reflectionManager = mappings.getReflectionManager();
+		Iterator classes = configuration.getClassMappings();
+		ReflectionManager reflectionManager = configuration.getReflectionManager();
 		while ( classes.hasNext() ) {
 			PersistentClass clazz = (PersistentClass) classes.next();
 			if ( clazz.getClassName() == null ) {
@@ -159,7 +160,7 @@ public class JpaEventListenerRegistration implements EventListenerRegistration {
 		}
 	}
 
-	private Object instantiate(String listenerImpl, ServiceRegistry serviceRegistry) {
+	private Object instantiate(String listenerImpl, ServiceRegistryImplementor serviceRegistry) {
 		try {
 			return serviceRegistry.getService( ClassLoaderService.class ).classForName( listenerImpl ).newInstance();
 		}

@@ -23,16 +23,21 @@
  */
 package org.hibernate.test.keymanytoone.bidir.component;
 
+import java.util.Map;
+
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.event.EventListenerRegistration;
 import org.hibernate.event.EventType;
 import org.hibernate.event.LoadEvent;
 import org.hibernate.event.LoadEventListener;
 import org.hibernate.event.def.DefaultLoadEventListener;
+import org.hibernate.service.StandardServiceInitiators;
 import org.hibernate.service.event.spi.EventListenerRegistry;
-import org.hibernate.service.internal.ServiceRegistryImpl;
+import org.hibernate.service.internal.BasicServiceRegistryImpl;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 import org.junit.Test;
 
@@ -57,11 +62,22 @@ public class EagerKeyManyToOneTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Override
-	protected void applyServices(ServiceRegistryImpl serviceRegistry) {
+	protected void applyServices(BasicServiceRegistryImpl serviceRegistry) {
 		super.applyServices( serviceRegistry );
 
-		EventListenerRegistry eventListenerRegistry = serviceRegistry.getService( EventListenerRegistry.class );
-		eventListenerRegistry.prependListeners( EventType.LOAD, new CustomLoadListener() );
+		// (they are different service registries!)
+		serviceRegistry.getService( StandardServiceInitiators.EventListenerRegistrationService.class ).attachEventListenerRegistration(
+				new EventListenerRegistration() {
+					@Override
+					public void apply(
+							ServiceRegistryImplementor serviceRegistry,
+							Configuration configuration,
+							Map<?, ?> configValues) {
+						EventListenerRegistry eventListenerRegistry = serviceRegistry.getService( EventListenerRegistry.class );
+						eventListenerRegistry.prependListeners( EventType.LOAD, new CustomLoadListener() );
+					}
+				}
+		);
 	}
 
 	@Test

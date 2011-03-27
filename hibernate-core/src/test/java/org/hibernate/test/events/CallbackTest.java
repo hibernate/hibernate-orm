@@ -34,7 +34,8 @@ import org.hibernate.event.Destructible;
 import org.hibernate.event.EventType;
 import org.hibernate.event.Initializable;
 import org.hibernate.service.event.spi.EventListenerRegistry;
-import org.hibernate.service.internal.ServiceRegistryImpl;
+import org.hibernate.service.internal.BasicServiceRegistryImpl;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 import org.junit.Test;
 
@@ -62,7 +63,7 @@ public class CallbackTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Override
-	protected void applyServices(ServiceRegistryImpl serviceRegistry) {
+	protected void applyServices(BasicServiceRegistryImpl serviceRegistry) {
 		super.applyServices( serviceRegistry );
 		serviceRegistry.getService( EventListenerRegistry.class ).setListeners( EventType.DELETE, listener );
 	}

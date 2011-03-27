@@ -41,7 +41,7 @@ import org.hibernate.event.def.DefaultPersistEventListener;
 import org.hibernate.internal.util.collections.IdentityMap;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.service.event.spi.EventListenerRegistry;
-import org.hibernate.service.internal.ServiceRegistryImpl;
+import org.hibernate.service.internal.BasicServiceRegistryImpl;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -65,7 +65,7 @@ public abstract class AbstractJPATest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Override
-	protected void applyServices(ServiceRegistryImpl serviceRegistry) {
+	protected void applyServices(BasicServiceRegistryImpl serviceRegistry) {
 		super.applyServices( serviceRegistry );
 
 		EventListenerRegistry eventListenerRegistry = serviceRegistry.getService( EventListenerRegistry.class );

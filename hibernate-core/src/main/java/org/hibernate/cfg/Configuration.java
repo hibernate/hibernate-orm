@@ -23,6 +23,9 @@
  */
 package org.hibernate.cfg;
 
+import javax.persistence.Embeddable;
+import javax.persistence.Entity;
+import javax.persistence.MapsId;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -32,9 +35,7 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.io.StringReader;
-import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.ArrayList;
@@ -55,13 +56,15 @@ import java.util.StringTokenizer;
 import java.util.TreeMap;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
-import javax.persistence.Embeddable;
-import javax.persistence.Entity;
-import javax.persistence.MapsId;
+
 import org.dom4j.Attribute;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
+import org.jboss.logging.Logger;
+import org.xml.sax.EntityResolver;
+import org.xml.sax.InputSource;
+
 import org.hibernate.AnnotationException;
 import org.hibernate.DuplicateMappingException;
 import org.hibernate.EmptyInterceptor;
@@ -89,36 +92,10 @@ import org.hibernate.engine.Mapping;
 import org.hibernate.engine.NamedQueryDefinition;
 import org.hibernate.engine.NamedSQLQueryDefinition;
 import org.hibernate.engine.ResultSetMappingDefinition;
-import org.hibernate.event.AutoFlushEventListener;
-import org.hibernate.event.DeleteEventListener;
-import org.hibernate.event.DirtyCheckEventListener;
-import org.hibernate.event.EventListeners;
+import org.hibernate.event.EventListenerRegistration;
 import org.hibernate.event.EventType;
-import org.hibernate.event.EvictEventListener;
-import org.hibernate.event.FlushEntityEventListener;
-import org.hibernate.event.FlushEventListener;
-import org.hibernate.event.InitializeCollectionEventListener;
-import org.hibernate.event.LoadEventListener;
-import org.hibernate.event.LockEventListener;
-import org.hibernate.event.MergeEventListener;
-import org.hibernate.event.PersistEventListener;
-import org.hibernate.event.PostCollectionRecreateEventListener;
-import org.hibernate.event.PostCollectionRemoveEventListener;
-import org.hibernate.event.PostCollectionUpdateEventListener;
-import org.hibernate.event.PostDeleteEventListener;
-import org.hibernate.event.PostInsertEventListener;
-import org.hibernate.event.PostLoadEventListener;
-import org.hibernate.event.PostUpdateEventListener;
-import org.hibernate.event.PreCollectionRecreateEventListener;
-import org.hibernate.event.PreCollectionRemoveEventListener;
-import org.hibernate.event.PreCollectionUpdateEventListener;
-import org.hibernate.event.PreDeleteEventListener;
 import org.hibernate.event.PreInsertEventListener;
-import org.hibernate.event.PreLoadEventListener;
 import org.hibernate.event.PreUpdateEventListener;
-import org.hibernate.event.RefreshEventListener;
-import org.hibernate.event.ReplicateEventListener;
-import org.hibernate.event.SaveOrUpdateEventListener;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.IdentifierGeneratorAggregator;
 import org.hibernate.id.PersistentIdentifierGenerator;
@@ -160,15 +137,12 @@ import org.hibernate.mapping.TypeDef;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.secure.JACCConfiguration;
-<<<<<<< HEAD
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.service.internal.BasicServiceRegistryImpl;
-=======
+import org.hibernate.service.StandardServiceInitiators;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.event.spi.EventListenerRegistry;
-import org.hibernate.service.internal.ServiceRegistryImpl;
-import org.hibernate.service.spi.ServiceRegistry;
->>>>>>> HHH-5913 - Implement set of event listeners as a service
+import org.hibernate.service.internal.BasicServiceRegistryImpl;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.tool.hbm2ddl.DatabaseMetadata;
 import org.hibernate.tool.hbm2ddl.IndexMetadata;
 import org.hibernate.tool.hbm2ddl.TableMetadata;
@@ -179,9 +153,6 @@ import org.hibernate.type.Type;
 import org.hibernate.type.TypeResolver;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
-import org.jboss.logging.Logger;
-import org.xml.sax.EntityResolver;
-import org.xml.sax.InputSource;
 
 /**
  * An instance of <tt>Configuration</tt> allows the application
@@ -1872,39 +1843,63 @@ public class Configuration implements Serializable {
 	private static final String LEGACY_VALIDATOR_EVENT_LISTENER = "org.hibernate.validator.event.ValidateEventListener";
 
 	private void enableLegacyHibernateValidator(ServiceRegistry serviceRegistry) {
-		boolean loadLegacyValidator = ConfigurationHelper.getBoolean( "hibernate.validator.autoregister_listeners", properties, false );
+		serviceRegistry.getService( StandardServiceInitiators.EventListenerRegistrationService.class )
+				.attachEventListenerRegistration( new LegacyHibernateValidatorEventListenerRegistration( properties ) );
+	}
 
-		Class validateEventListenerClass = null;
-		try {
-			validateEventListenerClass = serviceRegistry.getService( ClassLoaderService.class ).classForName( LEGACY_VALIDATOR_EVENT_LISTENER );
-		}
-		catch ( Exception ignored) {
-		}
+	public static class LegacyHibernateValidatorEventListenerRegistration implements EventListenerRegistration {
+		private final Properties configurationProperties;
 
-		if ( ! loadLegacyValidator || validateEventListenerClass == null) {
-			LOG.debugf( "Skipping legacy validator loading" );
-			return;
+		public LegacyHibernateValidatorEventListenerRegistration(Properties configurationProperties) {
+			this.configurationProperties = configurationProperties;
 		}
 
-		final Object validateEventListener;
-		try {
-			validateEventListener = validateEventListenerClass.newInstance();
-		}
-		catch ( Exception e ) {
-			throw new AnnotationException( "Unable to load Validator event listener", e );
-		}
+		@Override
+		public void apply(ServiceRegistryImplementor serviceRegistry, Configuration configuration, Map<?, ?> configValues) {
+			boolean loadLegacyValidator = ConfigurationHelper.getBoolean( "hibernate.validator.autoregister_listeners", configurationProperties, false );
 
-		EventListenerRegistry listenerRegistry = serviceRegistry.getService( EventListenerRegistry.class );
-		// todo : duplication strategy
+			Class validateEventListenerClass = null;
+			try {
+				validateEventListenerClass = serviceRegistry.getService( ClassLoaderService.class ).classForName( LEGACY_VALIDATOR_EVENT_LISTENER );
+			}
+			catch ( Exception ignored) {
+			}
 
-		listenerRegistry.appendListeners( EventType.PRE_INSERT, (PreInsertEventListener) validateEventListener );
-		listenerRegistry.appendListeners( EventType.PRE_UPDATE, (PreUpdateEventListener) validateEventListener );
+			if ( ! loadLegacyValidator || validateEventListenerClass == null) {
+				LOG.debugf( "Skipping legacy validator loading" );
+				return;
+			}
+
+			final Object validateEventListener;
+			try {
+				validateEventListener = validateEventListenerClass.newInstance();
+			}
+			catch ( Exception e ) {
+				throw new AnnotationException( "Unable to load Validator event listener", e );
+			}
+
+			EventListenerRegistry listenerRegistry = serviceRegistry.getService( EventListenerRegistry.class );
+			// todo : duplication strategy
+
+			listenerRegistry.appendListeners( EventType.PRE_INSERT, (PreInsertEventListener) validateEventListener );
+			listenerRegistry.appendListeners( EventType.PRE_UPDATE, (PreUpdateEventListener) validateEventListener );
+		}
 	}
 
 	private void enableBeanValidation(ServiceRegistry serviceRegistry) {
-		BeanValidationActivator.activateBeanValidation(
-				serviceRegistry.getService( EventListenerRegistry.class ),
-				getProperties()
+		serviceRegistry.getService( StandardServiceInitiators.EventListenerRegistrationService.class ).attachEventListenerRegistration(
+				new EventListenerRegistration() {
+					@Override
+					public void apply(
+							ServiceRegistryImplementor serviceRegistry,
+							Configuration configuration,
+							Map<?, ?> configValues) {
+						BeanValidationActivator.activateBeanValidation(
+								serviceRegistry.getService( EventListenerRegistry.class ),
+								getProperties()
+						);
+					}
+				}
 		);
 	}
 

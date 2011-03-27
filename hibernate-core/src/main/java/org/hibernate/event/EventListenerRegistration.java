@@ -25,8 +25,8 @@ package org.hibernate.event;
 
 import java.util.Map;
 
-import org.hibernate.cfg.Mappings;
-import org.hibernate.service.spi.ServiceRegistry;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
  * Contract for performing event listener registration.  This is completely a work in progress for now.  The
@@ -35,5 +35,5 @@ import org.hibernate.service.spi.ServiceRegistry;
  * @author Steve Ebersole
  */
 public interface EventListenerRegistration {
-	public void apply(ServiceRegistry serviceRegistry, Mappings mappings, Map<?,?> configValues);
+	public void apply(ServiceRegistryImplementor serviceRegistry, Configuration configuration, Map<?,?> configValues);
 }

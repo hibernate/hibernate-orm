@@ -21,33 +21,34 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.service.event.internal;
+package org.hibernate.service.spi;
 
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.service.event.spi.EventListenerRegistry;
-import org.hibernate.service.spi.ServiceRegistryImplementor;
-import org.hibernate.service.spi.SessionFactoryServiceInitiator;
+import org.hibernate.service.Service;
 
 /**
- * Service initiator for {@link EventListenerRegistry}
- *
  * @author Steve Ebersole
  */
-public class EventListenerServiceInitiator implements SessionFactoryServiceInitiator<EventListenerRegistry> {
-	public static final EventListenerServiceInitiator INSTANCE = new EventListenerServiceInitiator();
+public interface SessionFactoryServiceInitiator<R extends Service> {
+	/**
+	 * Obtains the service role initiated by this initiator.  Should be unique within a registry
+	 *
+	 * @return The service role.
+	 */
+	public Class<R> getServiceInitiated();
 
-	@Override
-	public Class<EventListenerRegistry> getServiceInitiated() {
-		return EventListenerRegistry.class;
-	}
-
-	@Override
-	public EventListenerRegistry initiateService(
-			SessionFactoryImplementor sessionFactory,
-			Configuration configuration,
-			ServiceRegistryImplementor registry) {
-		return new EventListenerRegistryImpl();
-	}
-
+	/**
+	 * Initiates the managed service.
+	 * <p/>
+	 * Note for implementors: signature is guaranteed to change once redesign of SessionFactory building is complete
+	 *
+	 * @param sessionFactory The session factory.  Note the the session factory is still in flux; care needs to be taken
+	 * in regards to what you call.
+	 * @param configuration The configuration.
+	 * @param registry The service registry.  Can be used to locate services needed to fulfill initiation.
+	 *
+	 * @return The initiated service.
+	 */
+	public R initiateService(SessionFactoryImplementor sessionFactory, Configuration configuration, ServiceRegistryImplementor registry);
 }

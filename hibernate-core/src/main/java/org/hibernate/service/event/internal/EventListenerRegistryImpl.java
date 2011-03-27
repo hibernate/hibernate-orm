@@ -29,6 +29,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.event.EventListenerRegistration;
 import org.hibernate.event.EventType;
 import org.hibernate.event.def.DefaultAutoFlushEventListener;
 import org.hibernate.event.def.DefaultDeleteEventListener;
@@ -49,9 +52,12 @@ import org.hibernate.event.def.DefaultReplicateEventListener;
 import org.hibernate.event.def.DefaultSaveEventListener;
 import org.hibernate.event.def.DefaultSaveOrUpdateEventListener;
 import org.hibernate.event.def.DefaultUpdateEventListener;
+import org.hibernate.service.StandardServiceInitiators;
 import org.hibernate.service.event.spi.DuplicationStrategy;
 import org.hibernate.service.event.spi.EventListenerRegistrationException;
 import org.hibernate.service.event.spi.EventListenerRegistry;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.service.StandardServiceInitiators.EventListenerRegistrationService;
 
 import static org.hibernate.event.EventType.AUTO_FLUSH;
 import static org.hibernate.event.EventType.DELETE;
@@ -409,7 +415,7 @@ public class EventListenerRegistryImpl implements EventListenerRegistry {
 	}
 
 	private static <T> void prepareListeners(EventType<T> type, Map<EventType,EventListenerGroupImpl> map) {
-		prepareListeners( type, null, map  );
+		prepareListeners( type, null, map );
 	}
 
 	private static <T> void prepareListeners(EventType<T> type, T defaultListener, Map<EventType,EventListenerGroupImpl> map) {
@@ -419,4 +425,19 @@ public class EventListenerRegistryImpl implements EventListenerRegistry {
 		}
 		map.put( type, listeners  );
 	}
+
+	public static EventListenerRegistryImpl buildEventListenerRegistry(
+			SessionFactoryImplementor sessionFactory,
+			Configuration configuration,
+			ServiceRegistryImplementor serviceRegistry) {
+		final EventListenerRegistryImpl registry = new EventListenerRegistryImpl();
+
+		final EventListenerRegistrationService registrationService =  serviceRegistry.getService( EventListenerRegistrationService.class );
+		for ( EventListenerRegistration registration : registrationService.getEventListenerRegistrations() ) {
+			registration.apply( serviceRegistry, configuration, null );
+		}
+
+		return registry;
+	}
+
 }

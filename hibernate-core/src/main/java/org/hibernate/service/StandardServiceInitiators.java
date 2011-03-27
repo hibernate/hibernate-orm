@@ -26,6 +26,7 @@ package org.hibernate.service;
 import org.hibernate.engine.jdbc.batch.internal.BatchBuilderInitiator;
 import org.hibernate.engine.jdbc.internal.JdbcServicesInitiator;
 import org.hibernate.engine.transaction.internal.TransactionFactoryInitiator;
+import org.hibernate.event.EventListenerRegistration;
 import org.hibernate.persister.internal.PersisterClassResolverInitiator;
 import org.hibernate.persister.internal.PersisterFactoryInitiator;
 import org.hibernate.service.classloading.internal.ClassLoaderServiceInitiator;
@@ -39,9 +40,11 @@ import org.hibernate.service.jmx.internal.JmxServiceInitiator;
 import org.hibernate.service.jndi.internal.JndiServiceInitiator;
 import org.hibernate.service.jta.platform.internal.JtaPlatformInitiator;
 import org.hibernate.service.spi.BasicServiceInitiator;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author Steve Ebersole
@@ -71,6 +74,49 @@ public class StandardServiceInitiators {
 
 		serviceInitiators.add( SessionFactoryServiceRegistryFactoryInitiator.INSTANCE );
 
+		serviceInitiators.add( EventListenerRegistrationServiceInitiator.INSTANCE );
+
 		return serviceInitiators;
+	}
+
+
+	// todo : completely temporary.  See HHH-5562 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	/**
+	 * Acts as a service in the basic registry to which users/integrators can attach things that perform event listener
+	 * registration.  The event listeners live in the SessionFactory registry, but it has access to the basic registry.
+	 * So when it starts up, it looks in the basic registry for this service and does the requested  registrations.
+	 */
+	public static interface EventListenerRegistrationService extends Service {
+		public void attachEventListenerRegistration(EventListenerRegistration registration);
+		public Iterable<EventListenerRegistration> getEventListenerRegistrations();
+	}
+
+	public static class EventListenerRegistrationServiceImpl implements EventListenerRegistrationService {
+		private List<EventListenerRegistration> registrations = new ArrayList<EventListenerRegistration>();
+
+		@Override
+		public void attachEventListenerRegistration(EventListenerRegistration registration) {
+			registrations.add( registration );
+		}
+
+		@Override
+		public Iterable<EventListenerRegistration> getEventListenerRegistrations() {
+			return registrations;
+		}
+	}
+
+	public static class EventListenerRegistrationServiceInitiator implements BasicServiceInitiator<EventListenerRegistrationService> {
+		public static final EventListenerRegistrationServiceInitiator INSTANCE = new EventListenerRegistrationServiceInitiator();
+
+		@Override
+		public Class<EventListenerRegistrationService> getServiceInitiated() {
+			return EventListenerRegistrationService.class;
+		}
+
+		@Override
+		public EventListenerRegistrationService initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
+			return new EventListenerRegistrationServiceImpl();
+		}
 	}
 }

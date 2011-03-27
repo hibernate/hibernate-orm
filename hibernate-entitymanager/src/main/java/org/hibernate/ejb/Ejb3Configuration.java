@@ -99,6 +99,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.secure.JACCConfiguration;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.service.StandardServiceInitiators;
 import org.hibernate.service.internal.BasicServiceRegistryImpl;
 import org.hibernate.service.jdbc.connections.internal.DatasourceConnectionProviderImpl;
 
@@ -882,7 +883,8 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 			configure( (Properties)null, null );
 			NamingHelper.bind(this);
 			// todo : temporary -> HHH-5562
-			new JpaEventListenerRegistration().apply( serviceRegistry, cfg.createMappings(), cfg.getProperties() );
+			serviceRegistry.getService( StandardServiceInitiators.EventListenerRegistrationService.class )
+					.attachEventListenerRegistration( new JpaEventListenerRegistration() );
 			return new EntityManagerFactoryImpl(
 					transactionType,
 					discardOnClose,

@@ -22,20 +22,31 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.test.ejb3configuration;
-import java.util.Collections;
+
 import javax.persistence.SharedCacheMode;
 import javax.persistence.ValidationMode;
+import java.util.Collections;
+
 import org.hibernate.HibernateException;
 import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.ejb.packaging.PersistenceMetadata;
+
+import org.junit.Test;
+
+import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 /**
  * Test passing along various config settings that take objects other than strings as values.
  *
  * @author Steve Ebersole
  */
-public class ConfigurationObjectSettingTest extends junit.framework.TestCase {
+public class ConfigurationObjectSettingTest extends BaseUnitTestCase {
+	@Test
 	public void testContainerBootstrapSharedCacheMode() {
 		// first, via the integration vars
 		PersistenceUnitInfoAdapter empty = new PersistenceUnitInfoAdapter();
@@ -46,7 +57,7 @@ public class ConfigurationObjectSettingTest extends junit.framework.TestCase {
 					empty,
 					Collections.singletonMap( AvailableSettings.SHARED_CACHE_MODE, SharedCacheMode.DISABLE_SELECTIVE )
 			);
-			assertEquals( SharedCacheMode.DISABLE_SELECTIVE.name(), configured.getProperties().get( AvailableSettings.SHARED_CACHE_MODE ) );
+			assertEquals( SharedCacheMode.DISABLE_SELECTIVE.name(),configured.getProperties().get( AvailableSettings.SHARED_CACHE_MODE ) );
 		}
 		{
 			// as string
@@ -82,6 +93,7 @@ public class ConfigurationObjectSettingTest extends junit.framework.TestCase {
 		}
 	}
 
+	@Test
 	public void testContainerBootstrapValidationMode() {
 		// first, via the integration vars
 		PersistenceUnitInfoAdapter empty = new PersistenceUnitInfoAdapter();
@@ -128,6 +140,8 @@ public class ConfigurationObjectSettingTest extends junit.framework.TestCase {
 		}
 	}
 
+	@Test
+	@FailureExpected( jiraKey = "HHH-6061")
 	public void testContainerBootstrapValidationFactory() {
 		final Object token = new Object();
 		PersistenceUnitInfoAdapter adapter = new PersistenceUnitInfoAdapter();
@@ -145,6 +159,7 @@ public class ConfigurationObjectSettingTest extends junit.framework.TestCase {
 		}
 	}
 
+	@Test
 	public void testStandaloneBootstrapSharedCacheMode() {
 		// first, via the integration vars
 		PersistenceMetadata metadata = new PersistenceMetadata();
@@ -186,6 +201,7 @@ public class ConfigurationObjectSettingTest extends junit.framework.TestCase {
 		}
 	}
 
+	@Test
 	public void testStandaloneBootstrapValidationMode() {
 		// first, via the integration vars
 		PersistenceMetadata metadata = new PersistenceMetadata();
@@ -227,6 +243,8 @@ public class ConfigurationObjectSettingTest extends junit.framework.TestCase {
 		}
 	}
 
+	@Test
+	@FailureExpected( jiraKey = "HHH-6061")
 	public void testStandaloneBootstrapValidationFactory() {
 		final Object token = new Object();
 		PersistenceMetadata metadata = new PersistenceMetadata();

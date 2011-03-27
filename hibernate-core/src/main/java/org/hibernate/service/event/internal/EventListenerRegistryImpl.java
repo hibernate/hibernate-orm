@@ -435,7 +435,7 @@ public class EventListenerRegistryImpl implements EventListenerRegistry {
 				EventListenerRegistrationService.class
 		);
 		for ( EventListenerRegistration registration : registrationService.getEventListenerRegistrations() ) {
-			registration.apply( registry, configuration, null, serviceRegistry );
+			registration.apply( registry, configuration, configuration.getProperties(), serviceRegistry );
 		}
 
 		return registry;

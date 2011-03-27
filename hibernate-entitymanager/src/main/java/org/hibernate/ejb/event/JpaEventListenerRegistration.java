@@ -47,8 +47,8 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
  * Prepare the HEM-specific event listeners.
- * 
- * @todo : tie this in with the "service locator" pattern defined by HHH-5562
+ *
+ * @todo : make this into Integrator per HHH-5562 ?? 
  * 
  * @author Steve Ebersole
  */
@@ -83,11 +83,11 @@ public class JpaEventListenerRegistration implements EventListenerRegistration {
 	@SuppressWarnings( {"unchecked"})
 	public void apply(
 			EventListenerRegistry eventListenerRegistry,
-			Configuration configuration, Map<?, ?> configValues, ServiceRegistryImplementor serviceRegistry
-	) {
+			Configuration configuration,
+			Map<?, ?> configValues,
+			ServiceRegistryImplementor serviceRegistry) {
 		boolean isSecurityEnabled = configValues.containsKey( AvailableSettings.JACC_ENABLED );
 
-		EventListenerRegistry eventListenerRegistry = serviceRegistry.getService( EventListenerRegistry.class );
 		eventListenerRegistry.addDuplicationStrategy( JPA_DUPLICATION_STRATEGY );
 		eventListenerRegistry.addDuplicationStrategy( JACC_DUPLICATION_STRATEGY );
 

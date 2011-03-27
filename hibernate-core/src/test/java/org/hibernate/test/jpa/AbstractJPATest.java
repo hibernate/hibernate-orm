@@ -75,10 +75,10 @@ public abstract class AbstractJPATest extends BaseCoreFunctionalTestCase {
 				new EventListenerRegistration() {
 					@Override
 					public void apply(
-							ServiceRegistryImplementor serviceRegistry,
+							EventListenerRegistry eventListenerRegistry,
 							Configuration configuration,
-							Map<?, ?> configValues) {
-						EventListenerRegistry eventListenerRegistry = serviceRegistry.getService( EventListenerRegistry.class );
+							Map<?, ?> configValues,
+							ServiceRegistryImplementor serviceRegistry) {
 						eventListenerRegistry.setListeners( EventType.PERSIST, buildPersistEventListeners() );
 						eventListenerRegistry.setListeners( EventType.PERSIST_ONFLUSH, buildPersisOnFlushEventListeners() );
 						eventListenerRegistry.setListeners( EventType.AUTO_FLUSH, buildAutoFlushEventListeners() );

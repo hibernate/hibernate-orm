@@ -1855,7 +1855,10 @@ public class Configuration implements Serializable {
 		}
 
 		@Override
-		public void apply(ServiceRegistryImplementor serviceRegistry, Configuration configuration, Map<?, ?> configValues) {
+		public void apply(
+				EventListenerRegistry eventListenerRegistry,
+				Configuration configuration, Map<?, ?> configValues, ServiceRegistryImplementor serviceRegistry
+		) {
 			boolean loadLegacyValidator = ConfigurationHelper.getBoolean( "hibernate.validator.autoregister_listeners", configurationProperties, false );
 
 			Class validateEventListenerClass = null;
@@ -1891,13 +1894,11 @@ public class Configuration implements Serializable {
 				new EventListenerRegistration() {
 					@Override
 					public void apply(
-							ServiceRegistryImplementor serviceRegistry,
+							EventListenerRegistry eventListenerRegistry,
 							Configuration configuration,
-							Map<?, ?> configValues) {
-						BeanValidationActivator.activateBeanValidation(
-								serviceRegistry.getService( EventListenerRegistry.class ),
-								getProperties()
-						);
+							Map<?, ?> configValues,
+							ServiceRegistryImplementor serviceRegistry) {
+						BeanValidationActivator.activateBeanValidation( eventListenerRegistry, getProperties() );
 					}
 				}
 		);

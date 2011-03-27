@@ -26,7 +26,6 @@ package org.hibernate.envers.event;
 import java.util.Map;
 
 import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Mappings;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.event.EventListenerRegistration;
 import org.hibernate.event.EventType;
@@ -40,7 +39,10 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
  */
 public class EnversEventListenerRegistration implements EventListenerRegistration {
 	@Override
-	public void apply(ServiceRegistryImplementor serviceRegistry, Configuration configuration, Map<?, ?> configValues) {
+	public void apply(
+			EventListenerRegistry eventListenerRegistry,
+			Configuration configuration, Map<?, ?> configValues, ServiceRegistryImplementor serviceRegistry
+	) {
 		EventListenerRegistry listenerRegistry = serviceRegistry.getService( EventListenerRegistry.class );
 		listenerRegistry.addDuplicationStrategy( EnversListenerDuplicationStrategy.INSTANCE );
 

@@ -52,7 +52,6 @@ import org.hibernate.event.def.DefaultReplicateEventListener;
 import org.hibernate.event.def.DefaultSaveEventListener;
 import org.hibernate.event.def.DefaultSaveOrUpdateEventListener;
 import org.hibernate.event.def.DefaultUpdateEventListener;
-import org.hibernate.service.StandardServiceInitiators;
 import org.hibernate.service.event.spi.DuplicationStrategy;
 import org.hibernate.service.event.spi.EventListenerRegistrationException;
 import org.hibernate.service.event.spi.EventListenerRegistry;
@@ -432,9 +431,11 @@ public class EventListenerRegistryImpl implements EventListenerRegistry {
 			ServiceRegistryImplementor serviceRegistry) {
 		final EventListenerRegistryImpl registry = new EventListenerRegistryImpl();
 
-		final EventListenerRegistrationService registrationService =  serviceRegistry.getService( EventListenerRegistrationService.class );
+		final EventListenerRegistrationService registrationService =  serviceRegistry.getService(
+				EventListenerRegistrationService.class
+		);
 		for ( EventListenerRegistration registration : registrationService.getEventListenerRegistrations() ) {
-			registration.apply( serviceRegistry, configuration, null );
+			registration.apply( registry, configuration, null, serviceRegistry );
 		}
 
 		return registry;

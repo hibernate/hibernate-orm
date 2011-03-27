@@ -47,7 +47,7 @@ public class EventListenerServiceInitiator implements SessionFactoryServiceIniti
 			SessionFactoryImplementor sessionFactory,
 			Configuration configuration,
 			ServiceRegistryImplementor registry) {
-		return new EventListenerRegistryImpl();
+		return EventListenerRegistryImpl.buildEventListenerRegistry( sessionFactory, configuration, registry );
 	}
 
 }

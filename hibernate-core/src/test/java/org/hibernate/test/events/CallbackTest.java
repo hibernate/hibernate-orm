@@ -72,9 +72,10 @@ public class CallbackTest extends BaseCoreFunctionalTestCase {
 				new EventListenerRegistration() {
 					@Override
 					public void apply(
-							ServiceRegistryImplementor serviceRegistry,
+							EventListenerRegistry eventListenerRegistry,
 							Configuration configuration,
-							Map<?, ?> configValues) {
+							Map<?, ?> configValues, ServiceRegistryImplementor serviceRegistry
+					) {
 						serviceRegistry.getService( EventListenerRegistry.class ).setListeners( EventType.DELETE, listener );
 					}
 				}

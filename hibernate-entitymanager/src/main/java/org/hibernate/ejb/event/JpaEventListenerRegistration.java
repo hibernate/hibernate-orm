@@ -30,7 +30,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Mappings;
 import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.event.EventListenerRegistration;
 import org.hibernate.event.EventType;
@@ -82,7 +81,10 @@ public class JpaEventListenerRegistration implements EventListenerRegistration {
 
 	@Override
 	@SuppressWarnings( {"unchecked"})
-	public void apply(ServiceRegistryImplementor serviceRegistry, Configuration configuration, Map<?, ?> configValues) {
+	public void apply(
+			EventListenerRegistry eventListenerRegistry,
+			Configuration configuration, Map<?, ?> configValues, ServiceRegistryImplementor serviceRegistry
+	) {
 		boolean isSecurityEnabled = configValues.containsKey( AvailableSettings.JACC_ENABLED );
 
 		EventListenerRegistry eventListenerRegistry = serviceRegistry.getService( EventListenerRegistry.class );

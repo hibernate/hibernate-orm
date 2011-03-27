@@ -70,10 +70,10 @@ public class EagerKeyManyToOneTest extends BaseCoreFunctionalTestCase {
 				new EventListenerRegistration() {
 					@Override
 					public void apply(
-							ServiceRegistryImplementor serviceRegistry,
+							EventListenerRegistry eventListenerRegistry,
 							Configuration configuration,
-							Map<?, ?> configValues) {
-						EventListenerRegistry eventListenerRegistry = serviceRegistry.getService( EventListenerRegistry.class );
+							Map<?, ?> configValues,
+							ServiceRegistryImplementor serviceRegistry) {
 						eventListenerRegistry.prependListeners( EventType.LOAD, new CustomLoadListener() );
 					}
 				}

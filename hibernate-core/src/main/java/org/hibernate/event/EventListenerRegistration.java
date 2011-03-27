@@ -26,6 +26,7 @@ package org.hibernate.event;
 import java.util.Map;
 
 import org.hibernate.cfg.Configuration;
+import org.hibernate.service.event.spi.EventListenerRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
@@ -35,5 +36,10 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
  * @author Steve Ebersole
  */
 public interface EventListenerRegistration {
-	public void apply(ServiceRegistryImplementor serviceRegistry, Configuration configuration, Map<?,?> configValues);
+	public void apply(
+			EventListenerRegistry eventListenerRegistry,
+			Configuration configuration,
+			Map<?, ?> configValues,
+			ServiceRegistryImplementor serviceRegistry
+	);
 }

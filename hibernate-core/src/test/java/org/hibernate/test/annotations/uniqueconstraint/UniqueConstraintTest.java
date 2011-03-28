@@ -1,14 +1,17 @@
 package org.hibernate.test.annotations.uniqueconstraint;
 
+import org.junit.Test;
+
 import org.hibernate.JDBCException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.test.annotations.TestCase;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import static org.junit.Assert.fail;
 
 /**
  * @author Manuel Bernhardt <bernhardt.manuel@gmail.com>
  */
-public class UniqueConstraintTest extends TestCase {
+public class UniqueConstraintTest extends BaseCoreFunctionalTestCase {
 
     protected Class[] getAnnotatedClasses() {
         return new Class[]{
@@ -18,6 +21,7 @@ public class UniqueConstraintTest extends TestCase {
         };
     }
 
+	@Test
     public void testUniquenessConstraintWithSuperclassProperty() throws Exception {
         Session s = openSession();
         Transaction tx = s.beginTransaction();

@@ -46,7 +46,18 @@
 			<key column="studentId"/>
 			<one-to-many class="Enrolment"/>
 		</set>
-        <many-to-one name="preferredCourse" column="preferredCourseCode"/>
+	        <many-to-one name="preferredCourse" column="preferredCourseCode"/>
+		<map name="addresses" table="studentAddresses">
+			<key column="studentId" />
+			<map-key type="string" column="addressType" />
+			<composite-element class="org.hibernate.test.criteria.StudentAddress" >
+				<property name="line1" />
+				<property name="line2" />
+				<property name="city" />
+				<property name="state" />
+				<property name="zip" />
+			</composite-element>
+		</map>
 	</class>
 
 	<class name="Enrolment">

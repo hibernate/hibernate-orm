@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.HashSet;
+import java.util.HashMap;
 
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
@@ -1704,6 +1705,70 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 		assertEquals( 2, course.getCrossListedAs().size() );
 
 		session.delete(course);
+		
+		t.commit();
+		session.close();
+		
+	}
+
+        @Test
+	public void testCriteriaCollectionOfComponent() {
+		Session session = openSession();
+		Transaction t = session.beginTransaction();
+
+		Student gavin = new Student();
+		gavin.setName("Gavin King");
+		gavin.setStudentNumber(232);
+
+		Map addresses = new HashMap();
+		StudentAddress addr = new StudentAddress();
+		addr.setLine1("101 Main St.");
+		addr.setCity("Anytown");
+		addr.setState("NY");
+		addr.setZip("10016");
+		addresses.put("HOME", addr);
+		
+		addr = new StudentAddress();
+		addr.setLine1("202 Spring St.");
+		addr.setCity("Springfield");
+		addr.setState("MA");
+		addr.setZip("99999");
+		addresses.put("SCHOOL", addr);
+	       
+		gavin.setAddresses(addresses);
+		session.persist(gavin);
+
+		Student xam = new Student();
+		xam.setName("Max Rydahl Andersen");
+		xam.setStudentNumber(101);
+
+		addresses = new HashMap();
+		addr = new StudentAddress();
+		addr.setLine1("123 3rd Ave");
+		addr.setCity("New York");
+		addr.setState("NY");
+		addr.setZip("10004");
+		addresses.put("HOME", addr);
+
+		xam.setAddresses(addresses);
+		session.persist(xam);
+
+		session.flush();
+		session.clear();
+
+		// search on a component property
+		List results = session.createCriteria(Student.class)
+		    .createCriteria("addresses")
+		    .add(Restrictions.eq("state", "MA"))
+		    .list();
+
+		assertEquals(1, results.size());
+
+		gavin = (Student)results.get(0);
+		assertEquals(2, gavin.getAddresses().keySet().size());
+
+		session.delete(gavin);
+		session.delete(xam);
 		
 		t.commit();
 		session.close();

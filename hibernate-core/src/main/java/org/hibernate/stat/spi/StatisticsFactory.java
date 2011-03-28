@@ -21,27 +21,14 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.service;
+package org.hibernate.stat.spi;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.hibernate.service.event.internal.EventListenerServiceInitiator;
-import org.hibernate.service.spi.SessionFactoryServiceInitiator;
-import org.hibernate.stat.internal.StatisticsInitiator;
+import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.stat.Statistics;
 
 /**
  * @author Steve Ebersole
  */
-public class StandardSessionFactoryServiceInitiators {
-	public static List<SessionFactoryServiceInitiator> LIST = buildStandardServiceInitiatorList();
-
-	private static List<SessionFactoryServiceInitiator> buildStandardServiceInitiatorList() {
-		final List<SessionFactoryServiceInitiator> serviceInitiators = new ArrayList<SessionFactoryServiceInitiator>();
-
-		serviceInitiators.add( EventListenerServiceInitiator.INSTANCE );
-		serviceInitiators.add( StatisticsInitiator.INSTANCE );
-
-		return serviceInitiators;
-	}
+public interface StatisticsFactory {
+	public StatisticsImplementor buildStatistics(SessionFactoryImplementor sessionFactory);
 }

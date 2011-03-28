@@ -23,6 +23,7 @@
  */
 package org.hibernate.stat.spi;
 
+import org.hibernate.service.Service;
 import org.hibernate.stat.Statistics;
 
 /**
@@ -31,7 +32,7 @@ import org.hibernate.stat.Statistics;
  * 
  * @author Emmanuel Bernard
  */
-public interface StatisticsImplementor extends Statistics {
+public interface StatisticsImplementor extends Statistics, Service {
 	/**
 	 * Callback about a session being opened.
 	 */

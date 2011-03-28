@@ -193,7 +193,6 @@ public final class SessionFactoryImpl
 	private final transient UpdateTimestampsCache updateTimestampsCache;
 	private final transient Map<String,QueryCache> queryCaches;
 	private final transient ConcurrentMap<String,Region> allCacheRegions = new ConcurrentHashMap<String, Region>();
-	private final transient Statistics statistics;
 	private final transient CurrentSessionContext currentSessionContext;
 	private final transient EntityNotFoundDelegate entityNotFoundDelegate;
 	private final transient SQLFunctionRegistry sqlFunctionRegistry;
@@ -214,18 +213,16 @@ public final class SessionFactoryImpl
 			SessionFactoryObserver observer) throws HibernateException {
         LOG.buildingSessionFactory();
 
-		// todo : move stats building to SF service reg building
-		this.statistics = buildStatistics( settings, serviceRegistry );
+		this.settings = settings;
+		this.interceptor = cfg.getInterceptor();
 
 		this.properties = new Properties();
 		this.properties.putAll( cfg.getProperties() );
-		this.interceptor = cfg.getInterceptor();
 
 		this.serviceRegistry = serviceRegistry.getService( SessionFactoryServiceRegistryFactory.class ).buildServiceRegistry(
 				this,
 				cfg
 		);
-		this.settings = settings;
 		this.sqlFunctionRegistry = new SQLFunctionRegistry( getDialect(), cfg.getSqlFunctions() );
 		if ( observer != null ) {
 			this.observer.addObserver( observer );
@@ -534,13 +531,6 @@ public final class SessionFactoryImpl
 	@Override
 	public void addObserver(SessionFactoryObserver observer) {
 		this.observer.addObserver( observer );
-	}
-
-	private Statistics buildStatistics(Settings settings, ServiceRegistry serviceRegistry) {
-		Statistics statistics = new ConcurrentStatisticsImpl( this );
-		statistics.setStatisticsEnabled( settings.isStatisticsEnabled() );
-		LOG.debugf("Statistics initialized [enabled=%s]", settings.isStatisticsEnabled());
-		return statistics;
 	}
 
 	public TransactionEnvironment getTransactionEnvironment() {
@@ -1235,11 +1225,11 @@ public final class SessionFactoryImpl
 	}
 
 	public Statistics getStatistics() {
-		return statistics;
+		return getStatisticsImplementor();
 	}
 
 	public StatisticsImplementor getStatisticsImplementor() {
-		return (StatisticsImplementor) statistics;
+		return serviceRegistry.getService( StatisticsImplementor.class );
 	}
 
 	public FilterDefinition getFilterDefinition(String filterName) throws HibernateException {

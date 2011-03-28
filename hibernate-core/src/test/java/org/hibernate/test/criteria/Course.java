@@ -10,6 +10,7 @@ public class Course {
 	private String courseCode;
 	private String description;
 	private Set courseMeetings = new HashSet();
+	private Set crossListedAs;
 
 	public String getCourseCode() {
 		return courseCode;
@@ -28,5 +29,11 @@ public class Course {
 	}
 	public void setCourseMeetings(Set courseMeetings) {
 		this.courseMeetings = courseMeetings;
+	}
+	public Set getCrossListedAs() {
+		return crossListedAs;
+	}
+	public void setCrossListedAs(Set crossListedAs) {
+		this.crossListedAs = crossListedAs;
 	}
 }

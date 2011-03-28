@@ -172,11 +172,13 @@ public class IsolatedClassLoaderTest extends DualNodeTestCase {
 
 	@Test
 	public void testClassLoaderHandlingNamedQueryRegion() throws Exception {
+      rebuildSessionFactory();
 		queryTest( true );
 	}
 
 	@Test
 	public void testClassLoaderHandlingStandardQueryCache() throws Exception {
+      rebuildSessionFactory();
 		queryTest( false );
 	}
 

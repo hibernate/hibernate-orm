@@ -2,6 +2,7 @@
 package org.hibernate.test.criteria;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.Map;
 
 /**
  * @author Gavin King
@@ -12,6 +13,7 @@ public class Student {
 	private CityState cityState;
 	private Course preferredCourse;
 	private Set enrolments = new HashSet();
+	private Map addresses;
 
 	public String getName() {
 		return name;
@@ -51,5 +53,13 @@ public class Student {
 
 	public void setEnrolments(Set employments) {
 		this.enrolments = employments;
+	}
+
+	public Map getAddresses()  {
+		return addresses;
+	}
+
+	public void setAddresses(Map addresses) {
+		this.addresses = addresses;
 	}
 }

@@ -26,6 +26,8 @@ package org.hibernate.test.criteria;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.HashSet;
 
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
@@ -1675,6 +1677,37 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 		session.delete(courseB);
 		t.commit();
 		session.close();
+	}
+
+        @Test
+	public void testCriteriaCollectionOfValue() {
+		Session session = openSession();
+		Transaction t = session.beginTransaction();
+
+		Course course = new Course();
+		course.setCourseCode("HIB");
+		course.setDescription("Hibernate Training");
+		Set crossListedAs = new HashSet();
+		crossListedAs.add("Java Persistence 101");
+		crossListedAs.add("CS101");
+		course.setCrossListedAs(crossListedAs);
+		session.persist(course);
+		session.flush();
+		session.clear();
+		List results = session.createCriteria(Course.class)
+		    .createCriteria("crossListedAs")
+		    .add(Restrictions.eq("elements", "CS101"))
+		    .list();
+
+		assertEquals( 1, results.size() );
+		course = (Course)results.get(0);
+		assertEquals( 2, course.getCrossListedAs().size() );
+
+		session.delete(course);
+		
+		t.commit();
+		session.close();
+		
 	}
 }
 

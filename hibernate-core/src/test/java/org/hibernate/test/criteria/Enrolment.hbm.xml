@@ -14,6 +14,10 @@
             <key column="courseCode"/>
             <one-to-many class="CourseMeeting"/>
         </set>
+        <set name="crossListedAs">
+            <key />
+            <element type="string" />
+        </set>
 	</class>
 
     <class name="CourseMeeting">

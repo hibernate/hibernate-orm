@@ -23,10 +23,13 @@
  */
 package org.hibernate.envers.event;
 
+import org.hibernate.envers.configuration.AuditConfiguration;
+
 /**
  * Marker interface for Envers listeners for duplication handling.
  *
  * @author Steve Ebersole
  */
 public interface EnversListener {
+	public AuditConfiguration getAuditConfiguration();
 }

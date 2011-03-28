@@ -23,24 +23,5 @@
         <!--<property name="connection.password"></property>-->
 
         <!--<property name="hibernate.jdbc.batch_size">100</property>-->
-
-        <event type="post-insert">
-            <listener class="org.hibernate.envers.event.AuditEventListener" />
-        </event>
-        <event type="post-update">
-            <listener class="org.hibernate.envers.event.AuditEventListener" />
-        </event>
-        <event type="post-delete">
-            <listener class="org.hibernate.envers.event.AuditEventListener" />
-        </event>
-        <event type="pre-collection-update">
-            <listener class="org.hibernate.envers.event.AuditEventListener" />
-        </event>
-        <event type="pre-collection-remove">
-            <listener class="org.hibernate.envers.event.AuditEventListener" />
-        </event>
-        <event type="post-collection-recreate">
-            <listener class="org.hibernate.envers.event.AuditEventListener" />
-        </event>
     </session-factory>
 </hibernate-configuration>

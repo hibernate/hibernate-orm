@@ -50,7 +50,8 @@ public abstract class BaseEnversEventListener implements EnversListener {
 		this.enversConfiguration = enversConfiguration;
 	}
 
-	protected AuditConfiguration enversConfiguration() {
+	@Override
+	public AuditConfiguration getAuditConfiguration() {
 		return enversConfiguration;
 	}
 

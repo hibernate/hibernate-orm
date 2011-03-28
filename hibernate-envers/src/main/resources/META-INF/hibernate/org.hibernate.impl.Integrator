@@ -1,0 +1,1 @@
+implClass = org.hibernate.envers.event.EnversIntegrator

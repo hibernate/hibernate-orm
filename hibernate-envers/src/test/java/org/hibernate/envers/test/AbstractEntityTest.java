@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -38,13 +38,7 @@ import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
-import org.hibernate.envers.event.AuditEventListener;
-import org.hibernate.event.PostCollectionRecreateEventListener;
-import org.hibernate.event.PostDeleteEventListener;
-import org.hibernate.event.PostInsertEventListener;
-import org.hibernate.event.PostUpdateEventListener;
-import org.hibernate.event.PreCollectionRemoveEventListener;
-import org.hibernate.event.PreCollectionUpdateEventListener;
+import org.hibernate.envers.event.EnversIntegrator;
 import org.hibernate.service.internal.BasicServiceRegistryImpl;
 
 import org.hibernate.testing.jta.TestingJtaBootstrap;
@@ -61,16 +55,6 @@ public abstract class AbstractEntityTest {
     private boolean audited;
 
     public abstract void configure(Ejb3Configuration cfg);
-
-    private void initListeners() {
-        AuditEventListener listener = new AuditEventListener();
-        cfg.getEventListeners().setPostInsertEventListeners(new PostInsertEventListener[] { listener });
-        cfg.getEventListeners().setPostUpdateEventListeners(new PostUpdateEventListener[] { listener });
-        cfg.getEventListeners().setPostDeleteEventListeners(new PostDeleteEventListener[] { listener });
-        cfg.getEventListeners().setPreCollectionUpdateEventListeners(new PreCollectionUpdateEventListener[] { listener });
-        cfg.getEventListeners().setPreCollectionRemoveEventListeners(new PreCollectionRemoveEventListener[] { listener });
-        cfg.getEventListeners().setPostCollectionRecreateEventListeners(new PostCollectionRecreateEventListener[] { listener });
-    }
 
     private void closeEntityManager() {
         if (entityManager != null) {
@@ -100,8 +84,8 @@ public abstract class AbstractEntityTest {
         this.audited = audited;
 
         cfg = new Ejb3Configuration();
-        if (audited) {
-            initListeners();
+        if ( ! audited ) {
+			cfg.setProperty( EnversIntegrator.AUTO_REGISTER, "false" );
         }
 
         cfg.configure( "hibernate.test.cfg.xml" );

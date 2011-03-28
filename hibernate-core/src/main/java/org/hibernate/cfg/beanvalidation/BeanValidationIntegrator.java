@@ -48,6 +48,8 @@ import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 public class BeanValidationIntegrator implements Integrator {
 	private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, BeanValidationIntegrator.class.getName());
 
+	public static final String BV_CHECK_CLASS = "javax.validation.Validation";
+
 	public static final String MODE_PROPERTY = "javax.persistence.validation.mode";
 
 	private static final String ACTIVATOR_CLASS = "org.hibernate.cfg.beanvalidation.TypeSafeActivator";
@@ -62,6 +64,18 @@ public class BeanValidationIntegrator implements Integrator {
 		// determine requested validation modes.
 		final Set<ValidationMode> modes = ValidationMode.getModes( configuration.getProperties().get( MODE_PROPERTY ) );
 
+		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+
+		// try to locate a BV class to see if it is available on the classpath
+		boolean isBeanValidationAvailable;
+		try {
+			classLoaderService.classForName( BV_CHECK_CLASS );
+			isBeanValidationAvailable = true;
+		}
+		catch ( Exception e ) {
+			isBeanValidationAvailable = false;
+		}
+
 		// locate the type safe activator class
 		final Class typeSafeActivatorClass = loadTypeSafeActivatorClass( serviceRegistry );
 
@@ -69,11 +83,13 @@ public class BeanValidationIntegrator implements Integrator {
 
 		applyRelationalConstraints(
 				modes,
+				isBeanValidationAvailable,
 				typeSafeActivatorClass,
 				configuration
 		);
 		applyHibernateListeners(
 				modes,
+				isBeanValidationAvailable,
 				typeSafeActivatorClass,
 				configuration,
 				sessionFactory,
@@ -86,13 +102,13 @@ public class BeanValidationIntegrator implements Integrator {
 			return serviceRegistry.getService( ClassLoaderService.class ).classForName( ACTIVATOR_CLASS );
 		}
 		catch (Exception e) {
-			// might be ok for the class loading to fail depending on what validation modes were requested...
 			return null;
 		}
 	}
 
 	private void applyRelationalConstraints(
 			Set<ValidationMode> modes,
+			boolean beanValidationAvailable,
 			Class typeSafeActivatorClass,
 			Configuration configuration) {
 		if ( ! ConfigurationHelper.getBoolean( LegacyHibernateValidationIntegrator.APPLY_CONSTRAINTS, configuration.getProperties(), true ) ){
@@ -103,7 +119,8 @@ public class BeanValidationIntegrator implements Integrator {
 		if ( ! ( modes.contains( ValidationMode.DDL ) || modes.contains( ValidationMode.AUTO ) ) ) {
 			return;
 		}
-		if ( typeSafeActivatorClass == null ) {
+
+		if ( ! beanValidationAvailable ) {
 			if ( modes.contains( ValidationMode.DDL ) ) {
 				throw new HibernateException( "Bean Validation not available in the class path but required in " + MODE_PROPERTY );
 			}
@@ -139,6 +156,7 @@ public class BeanValidationIntegrator implements Integrator {
 
 	private void applyHibernateListeners(
 			Set<ValidationMode> modes,
+			boolean beanValidationAvailable,
 			Class typeSafeActivatorClass,
 			Configuration configuration,
 			SessionFactoryImplementor sessionFactory,
@@ -153,7 +171,7 @@ public class BeanValidationIntegrator implements Integrator {
 			return;
 		}
 
-		if ( typeSafeActivatorClass == null ) {
+		if ( ! beanValidationAvailable ) {
 			if ( modes.contains( ValidationMode.CALLBACK ) ) {
 				throw new HibernateException( "Bean Validation not available in the class path but required in " + MODE_PROPERTY );
 			}

@@ -44,13 +44,13 @@ public class EnversPostUpdateEventListenerImpl extends BaseEnversEventListener i
 	public void onPostUpdate(PostUpdateEvent event) {
         String entityName = event.getPersister().getEntityName();
 
-        if ( enversConfiguration().getEntCfg().isVersioned(entityName) ) {
-            AuditProcess auditProcess = enversConfiguration().getSyncManager().get(event.getSession());
+        if ( getAuditConfiguration().getEntCfg().isVersioned(entityName) ) {
+            AuditProcess auditProcess = getAuditConfiguration().getSyncManager().get(event.getSession());
 
             AuditWorkUnit workUnit = new ModWorkUnit(
 					event.getSession(),
 					event.getPersister().getEntityName(),
-					enversConfiguration(),
+					getAuditConfiguration(),
                     event.getId(),
 					event.getPersister(),
 					event.getState(),

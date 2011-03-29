@@ -251,7 +251,7 @@ while ( iter.hasNext() ) {
     
     </section>
 
-    <section>
+    <section id="querycriteria-components" revision="2">
         <title>Components</title>
 
         <para>
@@ -268,6 +268,39 @@ while ( iter.hasNext() ) {
 			.list();]]>
 	</programlisting>
 	
+	<para>
+		Note: this does not apply when querying collections of components, for that see below 
+		<xref linkend="querycriteria-collections"/>
+	</para>
+
+    </section>
+
+    <section id="querycriteria-collections" revision="1">
+	<title>Collections</title>
+	<para>
+		When using criteria against collections, there are two distinct cases.  One is if
+		the collection contains entities (eg. <literal>&lt;one-to-many/&gt;</literal> 
+		or <literal>&lt;many-to-many/&gt;</literal>) or components 
+		(<literal>&lt;composite-element/&gt;</literal> ),
+		and the second is if the collection contains scalar values 
+		(<literal>&lt;element/&gt;</literal>).
+		In the first case, the syntax is as given above in the section 
+		<xref linkend="querycriteria-associations"/> where we restrict the <literal>kittens</literal>
+		collection. Essentially we create a <literal>Criteria</literal> object against the collection
+		property and restrict the entity or component properties using that instance.
+	</para>
+	<para>
+		For queryng a collection of basic values, we still create the <literal>Criteria</literal>
+		object against the collection, but to reference the value, we use the special property 
+		&quot;elements&quot;.  For an indexed collection, we can also reference the index property using
+		the special property &quot;indices&quot;.
+	</para>
+	<programlisting><![CDATA[
+		List cats = session.createCriteria(Cat.class)
+			.createCriteria("nickNames")
+				.add(Restrictions.eq("elements", "BadBoy"))
+			.list();]]>
+	</programlisting>
     </section>
 
     <section id="querycriteria-examples">

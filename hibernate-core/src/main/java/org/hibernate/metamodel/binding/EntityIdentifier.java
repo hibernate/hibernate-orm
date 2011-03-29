@@ -28,7 +28,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.jboss.logging.Logger;
 
 /**
- * TODO : javadoc
+ * Binds the entity identifier.
  *
  * @author Steve Ebersole
  */
@@ -42,7 +42,8 @@ public class EntityIdentifier {
 
 	/**
 	 * Create an identifier
-	 * @param entityBinding
+	 *
+	 * @param entityBinding the entity binding for which this instance is the id
 	 */
 	public EntityIdentifier(EntityBinding entityBinding) {
 		this.entityBinding = entityBinding;
@@ -54,7 +55,8 @@ public class EntityIdentifier {
 
 	public void setValueBinding(AttributeBinding attributeBinding) {
 		if ( this.attributeBinding != null ) {
-			// todo : error?  or just log?  for now just log
+			// todo : error?  or just log?  For now throw exception and see what happens. Easier to see whether this
+			// method gets called multiple times
 			LOG.entityIdentifierValueBindingExists( entityBinding.getEntity().getName() );
 		}
 		this.attributeBinding = attributeBinding;

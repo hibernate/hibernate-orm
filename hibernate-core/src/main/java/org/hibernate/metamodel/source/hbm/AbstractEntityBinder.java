@@ -568,22 +568,6 @@ abstract class AbstractEntityBinder {
 //		return prop;
 //	}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 	protected Value processValues(Element identifierElement, TableSpecification baseTable, String propertyPath) {
 		// first boolean (false here) indicates that by default columns are nullable
 		// second boolean (true here) indicates that by default column names should be guessed

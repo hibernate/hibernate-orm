@@ -30,75 +30,32 @@ import org.hibernate.internal.util.xml.MappingReader;
 import org.hibernate.internal.util.xml.Origin;
 import org.hibernate.internal.util.xml.XMLHelper;
 import org.hibernate.internal.util.xml.XmlDocument;
-import org.hibernate.metamodel.relational.Column;
 import org.hibernate.metamodel.source.Metadata;
 
-import org.junit.Test;
-
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-
 /**
- * Basic tests of {@code hbm.xml} beinding code
+ * Basic tests of {@code hbm.xml} binding code
  *
  * @author Steve Ebersole
  */
-public class BasicHbmBindingTests extends BaseUnitTestCase {
-	@Test
-	public void testSuperSimpleMapping() {
+public class BasicHbmBindingTests extends AbstractBasicBindingTests {
+
+	public EntityBinding buildSimpleEntityBinding() {
 		Metadata metadata = new Metadata();
 
-		{
-			XmlDocument xmlDocument = readResource( "/org/hibernate/metamodel/binding/SimpleEntity.hbm.xml" );
-			metadata.getHibernateXmlBinder().bindRoot( xmlDocument );
-			EntityBinding entityBinding = metadata.getEntityBinding( SimpleEntity.class.getName() );
-			assertNotNull( entityBinding );
-			assertNotNull( entityBinding.getEntityIdentifier() );
-			assertNotNull( entityBinding.getEntityIdentifier().getValueBinding() );
-			assertNull( entityBinding.getVersioningValueBinding() );
+		XmlDocument xmlDocument = readResource( "/org/hibernate/metamodel/binding/SimpleEntity.hbm.xml" );
+		metadata.getHibernateXmlBinder().bindRoot( xmlDocument );
+		return metadata.getEntityBinding( SimpleEntity.class.getName() );
+	}
 
-			AttributeBinding idAttributeBinding = entityBinding.getAttributeBinding( "id" );
-			assertNotNull( idAttributeBinding );
-			assertSame( idAttributeBinding, entityBinding.getEntityIdentifier().getValueBinding() );
-			assertNotNull( idAttributeBinding.getAttribute() );
-			assertNotNull( idAttributeBinding.getValue() );
-			assertTrue( idAttributeBinding.getValue() instanceof Column );
+	public EntityBinding buildSimpleVersionedEntityBinding() {
+		Metadata metadata = new Metadata();
 
-			AttributeBinding nameBinding = entityBinding.getAttributeBinding( "name" );
-			assertNotNull( nameBinding );
-			assertNotNull( nameBinding.getAttribute() );
-			assertNotNull( nameBinding.getValue() );
-		}
-		{
-			XmlDocument xmlDocument = readResource( "/org/hibernate/metamodel/binding/SimpleVersionedEntity.hbm.xml" );
-			metadata.getHibernateXmlBinder().bindRoot( xmlDocument );
-			EntityBinding entityBinding = metadata.getEntityBinding( SimpleVersionedEntity.class.getName() );
-			assertNotNull( entityBinding );
-			assertNotNull( entityBinding.getEntityIdentifier() );
-			assertNotNull( entityBinding.getEntityIdentifier().getValueBinding() );
-			assertNotNull( entityBinding.getVersioningValueBinding() );
-			assertNotNull( entityBinding.getVersioningValueBinding().getAttribute() );
-
-			AttributeBinding idAttributeBinding = entityBinding.getAttributeBinding( "id" );
-			assertNotNull( idAttributeBinding );
-			assertSame( idAttributeBinding, entityBinding.getEntityIdentifier().getValueBinding() );
-			assertNotNull( idAttributeBinding.getAttribute() );
-			assertNotNull( idAttributeBinding.getValue() );
-			assertTrue( idAttributeBinding.getValue() instanceof Column );
-
-			AttributeBinding nameBinding = entityBinding.getAttributeBinding( "name" );
-			assertNotNull( nameBinding );
-			assertNotNull( nameBinding.getAttribute() );
-			assertNotNull( nameBinding.getValue() );
-		}
+		XmlDocument xmlDocument = readResource( "/org/hibernate/metamodel/binding/SimpleVersionedEntity.hbm.xml" );
+		metadata.getHibernateXmlBinder().bindRoot( xmlDocument );
+		return metadata.getEntityBinding( SimpleVersionedEntity.class.getName() );
 	}
 
 	private XmlDocument readResource(final String name) {
-		final String path = "/org/hibernate/test/id/Car.hbm.xml";
 		Origin origin = new Origin() {
 			@Override
 			public String getType() {

@@ -24,37 +24,13 @@
 package org.hibernate.metamodel.binding;
 
 import javax.persistence.Entity;
-import javax.persistence.Id;
 
 /**
  * @author Steve Ebersole
  */
 @Entity
-public class SimpleEntity {
-	@Id
-	private Long id;
-	private String name;
+public class SimpleEntitySubClass extends SimpleEntity {
 
-	public SimpleEntity() {
-	}
-
-	public SimpleEntity(String name) {
-		this.name = name;
-	}
-
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
+	public SimpleEntitySubClass() {
 	}
 }

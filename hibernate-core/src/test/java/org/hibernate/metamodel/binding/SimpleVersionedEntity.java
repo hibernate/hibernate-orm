@@ -24,6 +24,8 @@
 package org.hibernate.metamodel.binding;
 
 /**
+ * TODO : javadoc
+ *
  * @author Steve Ebersole
  */
 public class SimpleVersionedEntity {

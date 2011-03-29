@@ -34,20 +34,20 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.persistence.Entity;
 
 import org.dom4j.Attribute;
 import org.dom4j.Document;
 import org.dom4j.Element;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.InvalidMappingException;
 import org.hibernate.MappingException;
-import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.cfg.MetadataSourceType;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.internal.util.xml.XmlDocument;
-import org.jboss.logging.Logger;
+
 
 /**
  * TODO : javadoc
@@ -55,19 +55,14 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class MetadataSourceQueue implements Serializable {
-
+	private static final Logger log = LoggerFactory.getLogger( MetadataSourceQueue.class );
     private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, MetadataSourceQueue.class.getName());
-
 	private final Metadata metadata;
 
 	private LinkedHashMap<XmlDocument, Set<String>> hbmMetadataToEntityNamesMap
 			= new LinkedHashMap<XmlDocument, Set<String>>();
 	private Map<String, XmlDocument> hbmMetadataByEntityNameXRef = new HashMap<String, XmlDocument>();
-
-	//XClass are not serializable by default
-	private transient List<XClass> annotatedClasses = new ArrayList<XClass>();
-	//only used during the secondPhaseCompile pass, hence does not need to be serialized
-	private transient Map<String, XClass> annotatedClassesByEntityNameMap = new HashMap<String, XClass>();
+	private transient List<Class> annotatedClasses = new ArrayList<Class>();
 
 	public MetadataSourceQueue(Metadata metadata) {
 		this.metadata = metadata;
@@ -75,24 +70,10 @@ public class MetadataSourceQueue implements Serializable {
 
 	private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException {
 		ois.defaultReadObject();
-		annotatedClassesByEntityNameMap = new HashMap<String, XClass>();
-
-		//build back annotatedClasses
-		@SuppressWarnings("unchecked")
-		List<Class> serializableAnnotatedClasses = (List<Class>) ois.readObject();
-		annotatedClasses = new ArrayList<XClass>( serializableAnnotatedClasses.size() );
-		for ( Class clazz : serializableAnnotatedClasses ) {
-			annotatedClasses.add( metadata.getReflectionManager().toXClass( clazz ) );
-		}
 	}
 
 	private void writeObject(java.io.ObjectOutputStream out) throws IOException {
 		out.defaultWriteObject();
-		List<Class> serializableAnnotatedClasses = new ArrayList<Class>( annotatedClasses.size() );
-		for ( XClass xClass : annotatedClasses ) {
-			serializableAnnotatedClasses.add( metadata.getReflectionManager().toClass( xClass ) );
-		}
-		out.writeObject( serializableAnnotatedClasses );
 	}
 
 	public void add(XmlDocument metadataXml) {
@@ -143,28 +124,11 @@ public class MetadataSourceQueue implements Serializable {
 		return unqualifiedName;
 	}
 
-	public void add(XClass annotatedClass) {
+	public void add(Class annotatedClass) {
 		annotatedClasses.add( annotatedClass );
 	}
 
-	protected void syncAnnotatedClasses() {
-		final Iterator<XClass> itr = annotatedClasses.iterator();
-		while ( itr.hasNext() ) {
-			final XClass annotatedClass = itr.next();
-			if ( annotatedClass.isAnnotationPresent( Entity.class ) ) {
-				annotatedClassesByEntityNameMap.put( annotatedClass.getName(), annotatedClass );
-				continue;
-			}
-
-			if ( !annotatedClass.isAnnotationPresent( javax.persistence.MappedSuperclass.class ) ) {
-				itr.remove();
-			}
-		}
-	}
-
 	protected void processMetadata(List<MetadataSourceType> order) {
-		syncAnnotatedClasses();
-
 		for ( MetadataSourceType type : order ) {
 			if ( MetadataSourceType.HBM.equals( type ) ) {
 				processHbmXmlQueue();
@@ -176,7 +140,7 @@ public class MetadataSourceQueue implements Serializable {
 	}
 
 	private void processHbmXmlQueue() {
-		LOG.debug( "Processing hbm.xml files" );
+		log.debug( "Processing hbm.xml files" );
 		for ( Map.Entry<XmlDocument, Set<String>> entry : hbmMetadataToEntityNamesMap.entrySet() ) {
 			// Unfortunately we have to create a Mappings instance for each iteration here
 			processHbmXml( entry.getKey(), entry.getValue() );
@@ -196,83 +160,14 @@ public class MetadataSourceQueue implements Serializable {
 					me
 			);
 		}
-
-		for ( String entityName : entityNames ) {
-			if ( annotatedClassesByEntityNameMap.containsKey( entityName ) ) {
-				annotatedClasses.remove( annotatedClassesByEntityNameMap.get( entityName ) );
-				annotatedClassesByEntityNameMap.remove( entityName );
-			}
-		}
 	}
 
 	private void processAnnotatedClassesQueue() {
-		LOG.debug( "Process annotated classes" );
-		//bind classes in the correct order calculating some inheritance state
-		List<XClass> orderedClasses = orderAndFillHierarchy( annotatedClasses );
-//		Map<XClass, InheritanceState> inheritanceStatePerClass = AnnotationBinder.buildInheritanceStates(
-//				orderedClasses, mappings
-//		);
-
-
-		for ( XClass clazz : orderedClasses ) {
-// todo : replace this with similar non-static code.
-//			AnnotationBinder.bindClass( clazz, inheritanceStatePerClass, mappings );
-
-			final String entityName = clazz.getName();
-			if ( hbmMetadataByEntityNameXRef.containsKey( entityName ) ) {
-				hbmMetadataToEntityNamesMap.remove( hbmMetadataByEntityNameXRef.get( entityName ) );
-				hbmMetadataByEntityNameXRef.remove( entityName );
-			}
-		}
+		log.debug( "Process annotated classes" );
 		annotatedClasses.clear();
-		annotatedClassesByEntityNameMap.clear();
-	}
-
-	private List<XClass> orderAndFillHierarchy(List<XClass> original) {
-		List<XClass> copy = new ArrayList<XClass>( original );
-		insertMappedSuperclasses( original, copy );
-
-		// order the hierarchy
-		List<XClass> workingCopy = new ArrayList<XClass>( copy );
-		List<XClass> newList = new ArrayList<XClass>( copy.size() );
-		while ( workingCopy.size() > 0 ) {
-			XClass clazz = workingCopy.get( 0 );
-			orderHierarchy( workingCopy, newList, copy, clazz );
-		}
-		return newList;
-	}
-
-	private void insertMappedSuperclasses(List<XClass> original, List<XClass> copy) {
-		for ( XClass clazz : original ) {
-			XClass superClass = clazz.getSuperclass();
-			while ( superClass != null
-					&& !metadata.getReflectionManager().equals( superClass, Object.class )
-					&& !copy.contains( superClass ) ) {
-				if ( superClass.isAnnotationPresent( Entity.class )
-						|| superClass.isAnnotationPresent( javax.persistence.MappedSuperclass.class ) ) {
-					copy.add( superClass );
-				}
-				superClass = superClass.getSuperclass();
-			}
-		}
-	}
-
-	private void orderHierarchy(List<XClass> copy, List<XClass> newList, List<XClass> original, XClass clazz) {
-		if ( clazz == null || metadata.getReflectionManager().equals( clazz, Object.class ) ) {
-			return;
-		}
-		//process superclass first
-		orderHierarchy( copy, newList, original, clazz.getSuperclass() );
-		if ( original.contains( clazz ) ) {
-			if ( !newList.contains( clazz ) ) {
-				newList.add( clazz );
-			}
-			copy.remove( clazz );
-		}
 	}
 
 	public boolean isEmpty() {
 		return hbmMetadataToEntityNamesMap.isEmpty() && annotatedClasses.isEmpty();
 	}
-
 }

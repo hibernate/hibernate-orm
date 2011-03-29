@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,40 +21,21 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.binding;
+package org.hibernate.metamodel.source.annotations;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import org.jboss.jandex.ClassInfo;
 
 /**
- * @author Steve Ebersole
+ * Represents an entity or mapped superclass which needs to be mapped.
+ *
+ * @author Hardy Ferentschik
  */
-@Entity
-public class SimpleEntity {
-	@Id
-	private Long id;
-	private String name;
+public class Entity {
+	private ClassInfo classInfo;
 
-	public SimpleEntity() {
-	}
-
-	public SimpleEntity(String name) {
-		this.name = name;
-	}
-
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
+	public ClassInfo getClassInfo() {
+		return classInfo;
 	}
 }
+
+

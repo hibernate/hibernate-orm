@@ -29,23 +29,21 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.hibernate.DuplicateMappingException;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.annotations.common.reflection.MetadataProvider;
-import org.hibernate.annotations.common.reflection.MetadataProviderInjector;
-import org.hibernate.annotations.common.reflection.ReflectionManager;
-import org.hibernate.annotations.common.reflection.java.JavaReflectionManager;
 import org.hibernate.cfg.EJB3NamingStrategy;
 import org.hibernate.cfg.NamingStrategy;
-import org.hibernate.cfg.annotations.reflection.JPAMetadataProvider;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.MetadataSource;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.relational.Database;
+import org.hibernate.metamodel.source.annotations.AnnotationBinder;
 import org.hibernate.metamodel.source.hbm.HibernateXmlBinder;
 
-import org.jboss.logging.Logger;
 
 /**
  * TODO : javadoc
@@ -53,17 +51,34 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class Metadata implements Serializable {
+	private static final Logger log = LoggerFactory.getLogger( Metadata.class );
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, Metadata.class.getName());
+        private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, Metadata.class.getName());
+	private final AnnotationBinder annotationBinder;
+	private final HibernateXmlBinder hibernateXmlBinder;
+	private final ExtendsQueue extendsQueue;
+	private final MetadataSourceQueue metadataSourceQueue;
+	private final Database database = new Database();
 
-	private final HibernateXmlBinder hibernateXmlBinder = new HibernateXmlBinder( this );
-	private final ExtendsQueue extendsQueue = new ExtendsQueue( this );
-	private final MetadataSourceQueue metadataSourceQueue = new MetadataSourceQueue( this );
+	private NamingStrategy namingStrategy = EJB3NamingStrategy.INSTANCE;
+	private Map<String, EntityBinding> entityBindingMap = new HashMap<String, EntityBinding>();
+	private Map<String, PluralAttributeBinding> collectionBindingMap = new HashMap<String, PluralAttributeBinding>();
+	private Map<String, FetchProfile> fetchProfiles = new HashMap<String, FetchProfile>();
+	private Map<String, String> imports;
 
-	private transient ReflectionManager reflectionManager = createReflectionManager();
+	public Metadata() {
+		annotationBinder = new AnnotationBinder( this );
+		hibernateXmlBinder = new HibernateXmlBinder( this );
+		extendsQueue = new ExtendsQueue( this );
+		metadataSourceQueue = new MetadataSourceQueue( this );
+	}
 
 	public HibernateXmlBinder getHibernateXmlBinder() {
 		return hibernateXmlBinder;
+	}
+
+	public AnnotationBinder getAnnotationBinder() {
+		return annotationBinder;
 	}
 
 	public ExtendsQueue getExtendsQueue() {
@@ -74,31 +89,9 @@ public class Metadata implements Serializable {
 		return metadataSourceQueue;
 	}
 
-	public ReflectionManager getReflectionManager() {
-		return reflectionManager;
-	}
-
-	public void setReflectionManager(ReflectionManager reflectionManager) {
-		this.reflectionManager = reflectionManager;
-	}
-
-	private ReflectionManager createReflectionManager() {
-		return createReflectionManager( new JPAMetadataProvider() );
-	}
-
-	private ReflectionManager createReflectionManager(MetadataProvider metadataProvider) {
-		ReflectionManager reflectionManager = new JavaReflectionManager();
-		( (MetadataProviderInjector) reflectionManager ).setMetadataProvider( metadataProvider );
-		return reflectionManager;
-	}
-
-	private final Database database = new Database();
-
 	public Database getDatabase() {
 		return database;
 	}
-
-	private NamingStrategy namingStrategy = EJB3NamingStrategy.INSTANCE;
 
 	public NamingStrategy getNamingStrategy() {
 		return namingStrategy;
@@ -107,8 +100,6 @@ public class Metadata implements Serializable {
 	public void setNamingStrategy(NamingStrategy namingStrategy) {
 		this.namingStrategy = namingStrategy;
 	}
-
-	private Map<String,EntityBinding> entityBindingMap = new HashMap<String, EntityBinding>();
 
 	public EntityBinding getEntityBinding(String entityName) {
 		return entityBindingMap.get( entityName );
@@ -125,8 +116,6 @@ public class Metadata implements Serializable {
 		}
 		entityBindingMap.put( entityName, entityBinding );
 	}
-
-	private Map<String,PluralAttributeBinding> collectionBindingMap = new HashMap<String, PluralAttributeBinding>();
 
 	public PluralAttributeBinding getCollection(String collectionRole) {
 		return collectionBindingMap.get( collectionRole );
@@ -146,20 +135,16 @@ public class Metadata implements Serializable {
 		collectionBindingMap.put( collectionRole, pluralAttributeBinding );
 	}
 
-	private Map<String,String> imports;
-
 	public void addImport(String importName, String entityName) {
 		if ( imports == null ) {
 			imports = new HashMap<String, String>();
 		}
-		LOG.tracef( "Import: %s -> %s", importName, entityName );
+		log.trace( "Import: " + importName + " -> " + entityName );
 		String old = imports.put( importName, entityName );
 		if ( old != null ) {
-			LOG.debugf( "import name [%s] overrode previous [%s]", importName, old  );
+			log.debug( "import name [{}] overrode previous [{}]", importName, old );
 		}
 	}
-
-	private Map<String,FetchProfile> fetchProfiles = new HashMap<String, FetchProfile>();
 
 	public Iterable<FetchProfile> getFetchProfiles() {
 		return fetchProfiles.values();
@@ -175,16 +160,10 @@ public class Metadata implements Serializable {
 	}
 
 	private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException {
-		//we need  reflectionManager before reading the other components (MetadataSourceQueue in particular)
-		final MetadataProvider metadataProvider = (MetadataProvider) ois.readObject();
-		this.reflectionManager = createReflectionManager( metadataProvider );
 		ois.defaultReadObject();
 	}
 
 	private void writeObject(java.io.ObjectOutputStream out) throws IOException {
-		//We write MetadataProvider first as we need  reflectionManager before reading the other components
-		final MetadataProvider metadataProvider = ( ( MetadataProviderInjector ) reflectionManager ).getMetadataProvider();
-		out.writeObject( metadataProvider );
 		out.defaultWriteObject();
 	}
 }

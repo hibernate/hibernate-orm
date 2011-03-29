@@ -9,6 +9,7 @@ dependencies {
         transitive = false
     }
     compile( libraries.commons_annotations )
+    compile( libraries.jandex )
     compile( libraries.jpa )
     compile( libraries.javassist )
     antlr( libraries.antlr )
@@ -41,5 +42,18 @@ sourceSets {
 ideaModule {
     sourceDirs.add( file( '$buildDir/generated-src/antlr/main' ) )
 }
+
+
+task jaxb << {
+    jaxbTargetDir = file( "${buildDir}/generated-src/jaxb" )
+    jaxbTargetDir.mkdirs()
+
+    ant.taskdef(name: 'xjc', classname: 'com.sun.tools.xjc.XJCTask', classpath: configurations.jaxb.asPath)
+    ant.jaxbTargetDir = jaxbTargetDir
+    ant.xjc(destdir: '${jaxbTargetDir}', package: 'org.hibernate.metamodel.source.xml') {
+        schema(dir: 'src/main/resources/org/hibernate/ejb', includes: 'orm_2_0.xsd')
+    }
+}
+compileJava.dependsOn jaxb
 
 

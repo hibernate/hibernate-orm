@@ -65,6 +65,7 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 		s.persist( p );
 		Query q = s.getNamedQuery( "plane.getAll" );
 		assertEquals( 1, q.list().size() );
+		s.delete( q.list().get( 0 ) );
 		tx.commit();
 		s.close();
 	}
@@ -140,6 +141,8 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 		List areas = s.getNamedQuery( "getAreaByNative" ).list();
 		assertTrue( 1 == areas.size() );
 		assertEquals( area.getName(), ( ( Area ) areas.get( 0 ) ).getName() );
+		s.delete( areas.get(0) );
+		s.delete( n2 );
 		tx.commit();
 		s.close();
 	}
@@ -198,6 +201,8 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 		assertEquals( 1, stats.getQueryCacheHitCount() );
 		Night n2 = ( Night ) ( ( Object[] ) result.get( 0 ) )[0];
 		assertEquals( n2.getDuration(), n.getDuration() );
+		s.delete( n2.getArea() );
+		s.delete( n2 );
 		tx.commit();
 		s.close();
 	}
@@ -291,6 +296,8 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 				results.get( 0 ) instanceof SynonymousDictionary
 						|| results.get( 1 ) instanceof SynonymousDictionary
 		);
+		s.delete( results.get( 0 ) );
+		s.delete( results.get( 1 ) );
 		tx.commit();
 		s.close();
 	}

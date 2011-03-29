@@ -85,6 +85,7 @@ public class LazyKeyManyToOneTest extends BaseCoreFunctionalTestCase {
 		Customer cust = new Customer( "Acme, Inc." );
 		Order order = new Order( new Order.Id( cust, 1 ) );
 		cust.getOrders().add( order );
+		sessionFactory().getStatistics().clear();
 		s.save( cust );
 		s.flush();
 		assertEquals( 2, sessionFactory().getStatistics().getEntityInsertCount() );

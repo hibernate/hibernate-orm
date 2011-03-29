@@ -10,7 +10,7 @@
     <title>Connection</title>
     <para>
       Hibernate connects to databases on behalf of your applications. It can connect through a variety of different
-      machanisms, including:
+      mechanisms, including:
     </para>
     <itemizedlist>
       <listitem><para>Stand-alone built-in connection pool</para></listitem>
@@ -47,11 +47,6 @@
           The DTD in the configuration file used in this example is required.
         </para>
       </note>
-      <warning>
-        <para>
-          Do not use the HSQL database for production.
-        </para>
-      </warning>
 
       <section>
         <title>Programatic configuration</title>
@@ -244,15 +239,11 @@
   <section id="configuring-dialects">
     <title>Dialects</title>
     <para>
-      Although SQL is relatively standardized, each database vendor uses a subset of supported syntax. This is reffered
-      to as a <firstterm>dialect</firstterm>.
+        Although SQL is relatively standardized, each database vendor uses a subset of supported syntax. This is referred
+        to as a <firstterm>dialect</firstterm>.  Hibernate handles variations across these dialects through its
+        <classname>org.hibernate.dialect.Dialect</classname> class and the various subclasses for each vendor dialect.
     </para>
-    <para>
-      Always set the <property>hibernate.dialect</property> property to the correct
-      <classname>org.hibernate.dialect.Dialect</classname> subclass for your database. If you specify a dialect,
-      Hibernate uses sensible defaults for some of the other properties listed above, saving you the effort of setting
-      them manually.
-    </para>
+
     <table>
       <title>Supported database dialects</title>
       <tgroup cols="2">
@@ -322,8 +313,8 @@
             <entry>org.hibernate.dialect.MySQLMyISAMDialect</entry>
           </row>
           <row>
-            <entry>Oracle (any version)</entry>
-            <entry>org.hibernate.dialect.OracleDialect</entry>
+            <entry>Oracle 8i</entry>
+            <entry>org.hibernate.dialect.Oracle8iDialect</entry>
           </row>
           <row>
             <entry>Oracle 9i</entry>
@@ -360,8 +351,41 @@
         </tbody>
       </tgroup>
     </table>
+
+      <section>
+          <title>Specifying the Dialect to use</title>
+          <para>
+              The developer may manually specify the Dialect to use by setting the
+              <property>hibernate.dialect</property> configuration property to the name of a specific
+              <classname>org.hibernate.dialect.Dialect</classname> class to use.
+          </para>
+      </section>
+
+      <section>
+          <title>Dialect resolution</title>
+          <para>
+              Assuming a <interfacename>org.hibernate.connection.ConnectionProvider</interfacename> has been
+              set up, Hibernate will attempt to automatically determine the Dialect to use based on the
+              <interfacename>java.sql.DatabaseMetaData</interfacename> reported by a
+              <interfacename>java.sql.Connection</interfacename> obtained from that
+              <interfacename>org.hibernate.connection.ConnectionProvider</interfacename>.
+          </para>
+          <para>
+                This functionality is provided by a series of
+                <interfacename>org.hibernate.dialect.resolver.DialectResolver</interfacename> instances registered
+                with Hibernate internally.  Hibernate comes with a standard set of recognitions.  If your application
+                requires extra Dialect resolution capabilities, it would simply register a custom implementation
+                of <interfacename>org.hibernate.dialect.resolver.DialectResolver</interfacename> as follows:
+          </para>
+          <!-- document an example using the service registry -->
+            <para>
+                Registered <interfacename>org.hibernate.dialect.resolver.DialectResolver</interfacename> are
+                <emphasis>prepended</emphasis> to an internal list of resolvers, so they take precedence
+                before any already registered resolvers including the standard one.
+            </para>
+      </section>
   </section>
-  
+
   <section>
     <title>Automatic schema generation with SchemaExport</title>
     <para>

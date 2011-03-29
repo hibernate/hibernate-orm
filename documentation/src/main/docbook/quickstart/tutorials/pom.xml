@@ -28,7 +28,7 @@
 
     <groupId>org.hibernate.tutorials</groupId>
     <artifactId>hibernate-tutorials</artifactId>
-    <version>3.6.0-SNAPSHOT</version>
+    <version>@VERSION@</version>
     <packaging>pom</packaging>
 
     <name>Hibernate Getting Started Guide Tutorials</name>
@@ -50,21 +50,14 @@
         <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-core</artifactId>
-            <version>${project.version}</version>
+            <version>@VERSION@</version>
         </dependency>
 
-        <!-- Hibernate uses slf4j for logging, for our purposes here use the simple backend -->
+        <!-- Hibernate uses jboss-logging for logging, for the tutorials we will use the sl4fj-simple backend -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
             <version>1.6.1</version>
-        </dependency>
-
-        <!-- Hibernate gives you a choice of bytecode providers between cglib and javassist -->
-        <dependency>
-            <groupId>javassist</groupId>
-            <artifactId>javassist</artifactId>
-            <version>3.12.0.GA</version>
         </dependency>
 
         <!-- The tutorials use JUnit test cases to illustrate usage -->

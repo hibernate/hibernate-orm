@@ -27,9 +27,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <artifactId>hibernate-tutorials</artifactId>
         <groupId>org.hibernate.tutorials</groupId>
-        <version>3.6.0-SNAPSHOT</version>
+        <artifactId>hibernate-tutorials</artifactId>
+        <version>@VERSION@</version>
     </parent>
 
     <artifactId>hibernate-tutorial-envers</artifactId>
@@ -44,13 +44,13 @@
     <dependencies>
         <dependency>
             <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-entitymanager</artifactId>
-            <version>${project.version}</version>
+            <artifactId>hibernate-envers</artifactId>
+            <version>@VERSION@</version>
         </dependency>
         <dependency>
             <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-envers</artifactId>
-            <version>${project.version}</version>
+            <artifactId>hibernate-entitymanager</artifactId>
+            <version>@VERSION@</version>
         </dependency>
     </dependencies>
 

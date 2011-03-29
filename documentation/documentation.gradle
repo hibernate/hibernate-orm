@@ -1,20 +1,26 @@
 buildscript {
   repositories {
       mavenCentral()
+      mavenLocal()
       mavenRepo name: "jboss", urls: "http://repository.jboss.org/nexus/content/groups/public/"
-      mavenRepo urls: "file://" + System.getProperty('user.home') + "/.m2/repository/"
   }
   dependencies {
       classpath 'org.jboss.jdocbook:gradle-jdocbook:1.1.0'
   }
 }
+
+apply plugin: "java"
 apply plugin: "jdocbook"
+
 dependencies {
 	jdocbookStyles "org.hibernate:hibernate-jdocbook-style:2.0.1"
 }
+
 defaultTasks 'buildDocs'
+
 jdocbook {
-	format('html_single') {
+    // apply shared formatting config ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    format('html_single') {
 		finalName = "index.html"
 		stylesheet = "classpath:/xslt/org/hibernate/jdocbook/xslt/xhtml-single.xsl"
 	}
@@ -22,30 +28,50 @@ jdocbook {
 		finalName = "index.html"
 		stylesheet = "classpath:/xslt/org/hibernate/jdocbook/xslt/xhtml.xsl"
 	}
-	format {
-		name = "pdf"
-		finalName = "hibernate_reference.pdf"
-		stylesheet = "classpath:/xslt/org/hibernate/jdocbook/xslt/pdf.xsl"
-	}
-	
+
+    // book-specific config ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    quickstart {
+        masterSourceDocumentName = 'Hibernate_Getting_Started_Guide.xml'
+        // only html supported due to tutorials.zip
+//        formats.pdf.enable = false
+    }
 	devguide {
 		masterSourceDocumentName = 'Hibernate_Development_Guide.xml'
-		formats.pdf.enable = false
 	}
-	envers {
-		masterSourceDocumentName = 'Hibernate_Envers_-_Easy_Entity_Auditing.xml'
-		formats.pdf.finalName = "hibernate_envers_reference.pdf"
-	}
-	jbosscache2 {
-		masterSourceDocumentName = 'Hibernate_JBC_Reference.xml'
-		formats.pdf.finalName = "hibernate_jbc_reference.pdf"
-	}
-	manual {
-		masterSourceDocumentName = 'HIBERNATE_-_Relational_Persistence_for_Idiomatic_Java.xml'
-		translation = ['de-DE','es-ES','fr-FR','ja-JP','pt-BR','zh-CN']
-	}
-	quickstart {
-		masterSourceDocumentName = 'Hibernate_Getting_Started_Guide.xml'
-		formats.pdf.enable = false
-	}
+// todo : need to remove this once all content moved to devguide
+//	manual {
+//		masterSourceDocumentName = 'HIBERNATE_-_Relational_Persistence_for_Idiomatic_Java.xml'
+//		translation = ['de-DE','es-ES','fr-FR','ja-JP','pt-BR','zh-CN']
+//	}
+}
+
+task buildTutorialZip(type: Zip) {
+    destinationDir = file( "target/work/tutorials" )
+    archiveName = 'hibernate-tutorials.zip'
+    from 'src/main/docbook/quickstart/tutorials'
+    // todo : this part does not work.  Asked on mailing list
+    filter(
+            org.apache.tools.ant.filters.ReplaceTokens,
+            tokens: [VERSION: project.version]
+    )
+}
+
+buildDocs.dependsOn buildTutorialZip
+
+buildDocs.doLast {
+    for ( File languageDir : dirList( "target/docbook/publish/quickstart" ) ) {
+        for ( File formatDir : dirList( languageDir ) ) {
+            final File copyDir = new File( formatDir, "files" );
+            copyDir.mkdirs();
+            ant.copy( file: buildTutorialZip.archivePath.getAbsolutePath(), todir: copyDir.getAbsolutePath() )
+        }
+    }
+}
+
+File[] dirList(String dirName) {
+    return dirList( (File) file(dirName) );
+}
+
+File[] dirList(File dir) {
+    return dir.listFiles({file -> file.isDirectory() } as FileFilter).sort();
 }

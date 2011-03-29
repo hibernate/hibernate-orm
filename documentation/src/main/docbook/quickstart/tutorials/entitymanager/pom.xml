@@ -27,9 +27,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <artifactId>hibernate-tutorials</artifactId>
         <groupId>org.hibernate.tutorials</groupId>
-        <version>3.6.0-SNAPSHOT</version>
+        <artifactId>hibernate-tutorials</artifactId>
+        <version>@VERSION@</version>
     </parent>
 
     <artifactId>hibernate-tutorial-entitymanager</artifactId>
@@ -45,7 +45,7 @@
         <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-entitymanager</artifactId>
-            <version>${project.version}</version>
+            <version>@VERSION@</version>
         </dependency>
     </dependencies>
 

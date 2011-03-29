@@ -6,7 +6,6 @@
 <book>
   <xi:include href="Book_Info.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
   <xi:include href="Preface.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-  <!--  <xi:include href="Chapter.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />-->
   <xi:include href="Database_Access.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
   <xi:include href="Transactions.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
   <xi:include href="Batch_Processing.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
@@ -19,6 +18,7 @@
   <xi:include href="Criteria.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
   <xi:include href="Native_SQL.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
   <xi:include href="JMX.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+  <xi:include href="Envers.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
   <xi:include href="appendix-Configuration_Properties.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
   <xi:include href="Revision_History.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
   <index />

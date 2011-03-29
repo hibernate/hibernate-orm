@@ -117,15 +117,13 @@ releaseCopySpec = copySpec {
             from parent.project( 'hibernate-core' ).configurations.provided.files { dep -> dep.name == 'jta' }
             from parent.project( 'hibernate-core' ).configurations.runtime
             from parent.project( 'hibernate-core' ).configurations.archives.allArtifactFiles.filter{ file -> !file.name.endsWith('-sources.jar') }
-        }
-
-        into('lib/bytecode/cglib') {
-            from parent.project( 'hibernate-core' ).configurations.provided.files { dep -> dep.name == 'cglib' }
-        }
-
-        into('lib/bytecode/javassist') {
+            // for now, 
             from parent.project( 'hibernate-core' ).configurations.provided.files { dep -> dep.name == 'javassist' }
         }
+
+//        into('lib/bytecode/javassist') {
+//            from parent.project( 'hibernate-core' ).configurations.provided.files { dep -> dep.name == 'javassist' }
+//        }
 
         into( 'lib/jpa' ) {
             from parent.project( 'hibernate-entitymanager' ).configurations.archives.allArtifactFiles.filter{ file -> !file.name.endsWith('-sources.jar') }
@@ -158,11 +156,9 @@ releaseCopySpec = copySpec {
             }
         }
 
-	into('documentation') {
-          from new File( parent.project( 'documentation' ).buildDir, 'docbook/publish' )
-       }
-
-
+        into('documentation') {
+            from new File( parent.project( 'documentation' ).buildDir, 'docbook/publish' )
+        }
 
         into('documentation/javadocs') {
             from javadocBuildDir.dir

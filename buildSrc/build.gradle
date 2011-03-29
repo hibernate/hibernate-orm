@@ -6,6 +6,7 @@ buildDir = "target"
 repositories {
     mavenCentral()
     mavenLocal()
+    mavenRepo name: "jboss", urls: "http://repository.jboss.org/nexus/content/groups/public/"
 }
 
 

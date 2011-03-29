@@ -25,9 +25,7 @@
       <title><filename>persistence.xml</filename></title>
       <para>
         This file was discussed in the <systemitem>JPA</systemitem> tutorial in <xref
-        linkend="hibernate-gsg-tutorial-jpa-config" />, and is largely the same here.  The major difference is the set
-        of properties defining <firstterm>listeners</firstterm>.  Listeners enable Envers to receive notfications from
-        Hibernate processing about <firstterm>events</firstterm> such as saving or updating of entities.
+        linkend="hibernate-gsg-tutorial-jpa-config" />, and is essentially the same here.
       </para>
     </section>
 
@@ -44,7 +42,7 @@
       <title>Example code</title>
       <para>
         Again, this tutorial makes use of the <systemitem>JPA</systemitem> APIs.  However, the code also makes a change to one
-        of the entites, then uses the Envers API to pull back the initial <firstterm>revision</firstterm> as well as the updated
+        of the entities, then uses the Envers API to pull back the initial <firstterm>revision</firstterm> as well as the updated
         revision. A revision refers to a version of an entity.
       </para>
       <example id="hibernate-gsg-tutorial-envers-test-api">
@@ -82,15 +80,15 @@
       <itemizedlist>
         <title>Practice Exercises</title>
         <listitem>
-          <para>
-
-          </para>
+            <para>
+                Provide a custom revision entity to additionally capture who made the changes.
+            </para>
         </listitem>
-        <listitem>
-          <para>
-
-          </para>
-        </listitem>
+          <listitem>
+              <para>
+                  todo : adam, another?
+              </para>
+          </listitem>
       </itemizedlist>
     </section>
 

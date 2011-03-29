@@ -25,13 +25,21 @@ package org.hibernate.metamodel.binding;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.engine.ExecuteUpdateResultCheckStyle;
+import org.dom4j.Attribute;
+import org.dom4j.Element;
+
+import org.hibernate.MappingException;
+import org.hibernate.engine.Versioning;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.MetaAttribute;
 import org.hibernate.metamodel.domain.Entity;
 import org.hibernate.metamodel.relational.TableSpecification;
+import org.hibernate.metamodel.source.hbm.HbmHelper;
+import org.hibernate.metamodel.source.util.DomHelper;
 
 /**
  * TODO : javadoc
@@ -64,12 +72,73 @@ public class EntityBinding {
 
 	private int batchSize;
 	private boolean selectBeforeUpdate;
+	private boolean hasSubselectLoadableCollections;
 	private int optimisticLockMode;
 
 	private Class entityPersisterClass;
 	private Boolean isAbstract;
 
+	private CustomSQL customInsert;
+	private CustomSQL customUpdate;
+	private CustomSQL customDelete;
+
 	private List<String> synchronizedTableNames;
+
+	public void fromHbmXml(MappingDefaults defaults, Element node, Entity entity) {
+		this.entity = entity;
+		metaAttributes = HbmHelper.extractMetas( node, true, defaults.getMappingMetas() );
+
+		// go ahead and set the lazy here, since pojo.proxy can override it.
+		lazy = DomHelper.extractBooleanAttributeValue( node, "lazy", defaults.isDefaultLazy()  );
+
+		discriminatorValue = DomHelper.extractAttributeValue( node, "discriminator-value", entity.getName() );
+		dynamicUpdate = DomHelper.extractBooleanAttributeValue( node, "dynamic-update", false );
+		dynamicInsert = DomHelper.extractBooleanAttributeValue( node, "dynamic-insert", false );
+		batchSize = DomHelper.extractIntAttributeValue( node, "batch-size", 0 );
+		selectBeforeUpdate = DomHelper.extractBooleanAttributeValue( node, "select-before-update", false );
+
+		// OPTIMISTIC LOCK MODE
+		String optimisticLockModeString = DomHelper.extractAttributeValue( node,  "optimistic-lock", "version" );
+		if ( "version".equals( optimisticLockModeString ) ) {
+			optimisticLockMode = Versioning.OPTIMISTIC_LOCK_VERSION;
+		}
+		else if ( "dirty".equals( optimisticLockModeString ) ) {
+			optimisticLockMode = Versioning.OPTIMISTIC_LOCK_DIRTY;
+		}
+		else if ( "all".equals( optimisticLockModeString ) ) {
+			optimisticLockMode = Versioning.OPTIMISTIC_LOCK_ALL;
+		}
+		else if ( "none".equals( optimisticLockModeString ) ) {
+			optimisticLockMode = Versioning.OPTIMISTIC_LOCK_NONE;
+		}
+		else {
+			throw new MappingException( "Unsupported optimistic-lock style: " + optimisticLockModeString );
+		}
+
+		// PERSISTER
+		Attribute persisterNode = node.attribute( "persister" );
+		if ( persisterNode != null ) {
+			try {
+				entityPersisterClass = ReflectHelper.classForName( persisterNode.getValue() );
+			}
+			catch (ClassNotFoundException cnfe) {
+				throw new MappingException( "Could not find persister class: "
+					+ persisterNode.getValue() );
+			}
+		}
+
+		// CUSTOM SQL
+		customInsert = HbmHelper.getCustomSql( node.element( "sql-insert" ) );
+		customDelete = HbmHelper.getCustomSql( node.element( "sql-delete" ) );
+		customUpdate = HbmHelper.getCustomSql( node.element( "sql-update" ) );
+
+		Iterator tables = node.elementIterator( "synchronize" );
+		while ( tables.hasNext() ) {
+			addSynchronizedTable( ( ( Element ) tables.next() ).attributeValue( "table" ) );
+		}
+
+		isAbstract = DomHelper.extractBooleanAttributeValue( node, "abstract", false );
+	}
 
 	public Entity getEntity() {
 		return entity;
@@ -226,6 +295,15 @@ public class EntityBinding {
 		this.selectBeforeUpdate = selectBeforeUpdate;
 	}
 
+	public boolean hasSubselectLoadableCollections() {
+		return hasSubselectLoadableCollections;
+	}
+
+	/* package-protected */
+	void setSubselectLoadableCollections(boolean hasSubselectLoadableCollections) {
+		this.hasSubselectLoadableCollections = hasSubselectLoadableCollections;
+	}
+
 	public int getOptimisticLockMode() {
 		return optimisticLockMode;
 	}
@@ -246,11 +324,7 @@ public class EntityBinding {
 		return isAbstract;
 	}
 
-	public void setAbstract(Boolean isAbstract) {
-		this.isAbstract = isAbstract;
-	}
-
-	public void addSynchronizedTable(String tablename) {
+	protected void addSynchronizedTable(String tablename) {
 		if ( synchronizedTableNames == null ) {
 			synchronizedTableNames = new ArrayList<String>();
 		}
@@ -270,31 +344,15 @@ public class EntityBinding {
 		this.loaderName = loaderName;
 	}
 
-	private CustomSQL customInsert;
-	private CustomSQL customUpdate;
-	private CustomSQL customDelete;
-
 	public CustomSQL getCustomInsert() {
 		return customInsert;
-	}
-
-	public void setCustomSqlInsert(String sql, boolean callable, ExecuteUpdateResultCheckStyle resultCheckStyle) {
-		customInsert = new CustomSQL( sql, callable, resultCheckStyle );
 	}
 
 	public CustomSQL getCustomUpdate() {
 		return customUpdate;
 	}
 
-	public void setCustomSqlUpdate(String sql, boolean callable, ExecuteUpdateResultCheckStyle resultCheckStyle) {
-		customUpdate = new CustomSQL( sql, callable, resultCheckStyle );
-	}
-
 	public CustomSQL getCustomDelete() {
 		return customDelete;
-	}
-
-	public void setCustomSqlDelete(String sql, boolean callable, ExecuteUpdateResultCheckStyle resultCheckStyle) {
-		customDelete = new CustomSQL( sql, callable, resultCheckStyle );
 	}
 }

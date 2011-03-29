@@ -35,12 +35,13 @@ import org.hibernate.internal.util.xml.XmlDocument;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.MetaAttribute;
 import org.hibernate.mapping.MetadataSource;
+import org.hibernate.metamodel.binding.MappingDefaults;
 import org.hibernate.metamodel.source.util.DomHelper;
 
 /**
  * Responsible for performing binding of the {@code <hibernate-mapping/>} DOM element
  */
-class HibernateMappingBinder {
+class HibernateMappingBinder implements MappingDefaults {
 	private final HibernateXmlBinder hibernateXmlBinder;
 	private final XmlDocument xmlDocument;
 	private final Element hibernateMappingElement;
@@ -79,23 +80,23 @@ class HibernateMappingBinder {
 		return xmlDocument;
 	}
 
-	String getDefaultSchemaName() {
+	public String getDefaultSchemaName() {
 		return defaultSchemaName;
 	}
 
-	String getDefaultCatalogName() {
+	public String getDefaultCatalogName() {
 		return defaultCatalogName;
 	}
 
-	String getDefaultCascade() {
+	public String getDefaultCascade() {
 		return defaultCascade;
 	}
 
-	String getDefaultAccess() {
+	public String getDefaultAccess() {
 		return defaultAccess;
 	}
 
-	boolean isDefaultLazy() {
+	public boolean isDefaultLazy() {
 		return defaultLazy;
 	}
 
@@ -107,7 +108,7 @@ class HibernateMappingBinder {
 		return autoImport;
 	}
 
-	Map<String, MetaAttribute> getMappingMetas() {
+	public Map<String, MetaAttribute> getMappingMetas() {
 		return mappingMetas;
 	}
 

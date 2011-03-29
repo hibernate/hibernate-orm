@@ -32,7 +32,10 @@ import org.dom4j.Element;
 
 import org.hibernate.MappingException;
 import org.hibernate.engine.ExecuteUpdateResultCheckStyle;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.MetaAttribute;
+import org.hibernate.metamodel.binding.CustomSQL;
+import org.hibernate.metamodel.source.util.DomHelper;
 
 /**
  * TODO : javadoc
@@ -124,4 +127,11 @@ public class HbmHelper {
 		return unqualifiedName;
 	}
 
+	public static CustomSQL getCustomSql(Element element )  {
+		if ( element == null ) {
+			return null; // EARLY EXIT!!!
+		}
+		boolean callable = DomHelper.extractBooleanAttributeValue( element, "callable", false );
+		return new CustomSQL( element.getTextTrim(), callable, getResultCheckStyle( element, callable ) );
+	}
 }

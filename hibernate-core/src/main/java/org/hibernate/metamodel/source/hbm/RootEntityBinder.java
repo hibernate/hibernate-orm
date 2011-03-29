@@ -33,6 +33,7 @@ import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.binding.Caching;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.SimpleAttributeBinding;
+import org.hibernate.metamodel.domain.Entity;
 import org.hibernate.metamodel.relational.Column;
 import org.hibernate.metamodel.relational.Identifier;
 import org.hibernate.metamodel.relational.InLineView;
@@ -52,6 +53,11 @@ class RootEntityBinder extends AbstractEntityBinder {
 	}
 
 	public void process(Element entityElement) {
+		String entityName = getHibernateMappingBinder().extractEntityName( entityElement );
+		if ( entityName == null ) {
+			throw new MappingException( "Unable to determine entity name" );
+		}
+
 		EntityBinding entityBinding = new EntityBinding();
 		basicEntityBinding( entityElement, entityBinding, null );
 		basicTableBinding( entityElement, entityBinding );
@@ -88,7 +94,7 @@ class RootEntityBinder extends AbstractEntityBinder {
 	}
 
 	private void basicTableBinding(Element entityElement, EntityBinding entityBinding) {
-		final Schema schema = getHibernateXmlBinder().getMetadata().getDatabase().getSchema( schemaName );
+		final Schema schema = getHibernateXmlBinder().getMetadata().getDatabase().getSchema( getSchemaName() );
 
 		final String subSelect = HbmHelper.getSubselect( entityElement );
 		if ( subSelect != null ) {
@@ -131,7 +137,7 @@ class RootEntityBinder extends AbstractEntityBinder {
 
 		throw new InvalidMappingException(
 				"Entity [" + entityBinding.getEntity().getName() + "] did not contain identifier mapping",
-				hibernateMappingBinder.getXmlDocument()
+				getHibernateMappingBinder().getXmlDocument()
 		);
 	}
 
@@ -143,7 +149,7 @@ class RootEntityBinder extends AbstractEntityBinder {
 
 		SimpleAttributeBinding idBinding = entityBinding.makeSimpleAttributeBinding( attributeName );
 
-		basicAttributeBinding( identifierElement, idBinding );
+		bindSimpleAttribute( identifierElement, idBinding, entityBinding, attributeName );
 
 		// Handle the relational portion of the binding...
 		Value idValue = processValues( identifierElement, entityBinding.getBaseTable(), attributeName );
@@ -253,7 +259,8 @@ class RootEntityBinder extends AbstractEntityBinder {
 		entityBinding.getEntity().getOrCreateSingularAttribute( attributeName );
 
 		SimpleAttributeBinding discriminatorBinding = entityBinding.makeSimpleAttributeBinding( attributeName );
-		basicAttributeBinding( discriminatorElement, discriminatorBinding );
+
+		bindSimpleAttribute( discriminatorElement, discriminatorBinding, entityBinding, attributeName );
 		if ( discriminatorBinding.getHibernateTypeDescriptor().getTypeName() == null ) {
 			discriminatorBinding.getHibernateTypeDescriptor().setTypeName( "string" );
 		}
@@ -291,7 +298,7 @@ class RootEntityBinder extends AbstractEntityBinder {
 		}
 		entityBinding.getEntity().getOrCreateSingularAttribute( explicitName );
 		SimpleAttributeBinding versionBinding = entityBinding.makeSimpleAttributeBinding( explicitName );
-		basicAttributeBinding( versioningElement, versionBinding );
+		bindSimpleAttribute( versioningElement, versionBinding, entityBinding, explicitName );
 
 		if ( versionBinding.getHibernateTypeDescriptor().getTypeName() == null ) {
 			if ( isVersion ) {

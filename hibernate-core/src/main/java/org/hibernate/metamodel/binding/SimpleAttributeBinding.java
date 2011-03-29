@@ -23,29 +23,72 @@
  */
 package org.hibernate.metamodel.binding;
 
+import org.dom4j.Attribute;
+import org.dom4j.Element;
+
+import org.hibernate.MappingException;
 import org.hibernate.mapping.PropertyGeneration;
+import org.hibernate.metamodel.source.hbm.HbmHelper;
+import org.hibernate.metamodel.source.util.DomHelper;
 
 /**
  * TODO : javadoc
  *
  * @author Steve Ebersole
  */
-public class SimpleAttributeBinding extends AbstractAttributeBinding implements KeyValueBinding {
-	private String propertyAccessorName;
-	private String cascade;
+public class SimpleAttributeBinding extends SingularAttributeBinding {
 	private PropertyGeneration generation;
-	private boolean insertable;
-	private boolean updateable;
-	private boolean optimisticLockable;
 	private boolean isLazy;
-	private boolean keyCasadeDeleteEnabled;
-	private String unsaveValue;
-
-	// DOM4J specific...
-	private String nodeName;
 
 	SimpleAttributeBinding(EntityBinding entityBinding) {
 		super( entityBinding );
+	}
+
+	public void fromHbmXml(MappingDefaults defaults, Element element, org.hibernate.metamodel.domain.Attribute attribute) {
+		super.fromHbmXml( defaults, element, attribute );
+		this.isLazy = DomHelper.extractBooleanAttributeValue( element, "lazy", false );
+		this.generation = PropertyGeneration.parse( DomHelper.extractAttributeValue( element, "generated", null ) );
+        if ( generation == PropertyGeneration.ALWAYS || generation == PropertyGeneration.INSERT ) {
+	        // generated properties can *never* be insertable...
+	        if ( isInsertable() ) {
+				final Attribute insertAttribute = element.attribute( "insert" );
+		        if ( insertAttribute == null ) {
+			        // insertable simply because the user did not specify anything; just override it
+					setInsertable( false );
+		        }
+		        else {
+			        // the user specifically supplied insert="true", which constitutes an illegal combo
+					throw new MappingException(
+							"cannot specify both insert=\"true\" and generated=\"" + generation.getName() +
+							"\" for property: " +
+							getAttribute().getName()
+					);
+		        }
+	        }
+
+	        // properties generated on update can never be updateable...
+	        if ( isUpdateable() && generation == PropertyGeneration.ALWAYS ) {
+				final Attribute updateAttribute = element.attribute( "update" );
+		        if ( updateAttribute == null ) {
+			        // updateable only because the user did not specify
+			        // anything; just override it
+			        setUpdateable( false );
+		        }
+		        else {
+			        // the user specifically supplied update="true",
+			        // which constitutes an illegal combo
+					throw new MappingException(
+							"cannot specify both update=\"true\" and generated=\"" + generation.getName() +
+							"\" for property: " +
+							getAttribute().getName()
+					);
+		        }
+	        }
+        }
+	}
+
+	protected boolean isLazyDefault(MappingDefaults defaults) {
+		return false;
 	}
 
 	@Override
@@ -53,85 +96,17 @@ public class SimpleAttributeBinding extends AbstractAttributeBinding implements 
 		return true;
 	}
 
-	public String getPropertyAccessorName() {
-		return propertyAccessorName;
-	}
-
-	public void setPropertyAccessorName(String propertyAccessorName) {
-		this.propertyAccessorName = propertyAccessorName;
-	}
-
-	public String getCascade() {
-		return cascade;
-	}
-
-	public void setCascade(String cascade) {
-		this.cascade = cascade;
-	}
-
 	public PropertyGeneration getGeneration() {
 		return generation;
 	}
 
-	public void setGeneration(PropertyGeneration generation) {
-		this.generation = generation;
-	}
-
-	public boolean isInsertable() {
-		return insertable;
-	}
-
-	public void setInsertable(boolean insertable) {
-		this.insertable = insertable;
-	}
-
 	@Override
-	public boolean isKeyCasadeDeleteEnabled() {
-		return keyCasadeDeleteEnabled;
-	}
-
-	public void setKeyCasadeDeleteEnabled(boolean keyCasadeDeleteEnabled) {
-		this.keyCasadeDeleteEnabled = keyCasadeDeleteEnabled;
-	}
-
-	@Override
-	public String getUnsavedValue() {
-		return unsaveValue;
-	}
-
-	public void setUnsaveValue(String unsaveValue) {
-		this.unsaveValue = unsaveValue;
-	}
-
-	public boolean isUpdateable() {
-		return updateable;
-	}
-
-	public void setUpdateable(boolean updateable) {
-		this.updateable = updateable;
-	}
-
-	public boolean isOptimisticLockable() {
-		return optimisticLockable;
-	}
-
-	public void setOptimisticLockable(boolean optimisticLockable) {
-		this.optimisticLockable = optimisticLockable;
-	}
-
 	public boolean isLazy() {
 		return isLazy;
 	}
 
-	public void setLazy(boolean lazy) {
-		isLazy = lazy;
-	}
-
-	public String getNodeName() {
-		return nodeName;
-	}
-
-	public void setNodeName(String nodeName) {
-		this.nodeName = nodeName;
+	@Override
+	public boolean isEmbedded() {
+		return false;
 	}
 }

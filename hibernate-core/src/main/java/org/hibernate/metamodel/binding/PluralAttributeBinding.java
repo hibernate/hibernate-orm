@@ -26,23 +26,37 @@ package org.hibernate.metamodel.binding;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+
+import org.dom4j.Attribute;
+import org.dom4j.Element;
+import org.jboss.logging.Logger;
 
 import org.hibernate.FetchMode;
+import org.hibernate.HibernateLogger;
+import org.hibernate.MappingException;
 import org.hibernate.metamodel.relational.Table;
+import org.hibernate.metamodel.source.hbm.HbmHelper;
+import org.hibernate.metamodel.source.util.DomHelper;
 
 /**
  * TODO : javadoc
  *
  * @author Steve Ebersole
  */
-public abstract class PluralAttributeBinding extends AbstractAttributeBinding implements AttributeBinding {
+public abstract class PluralAttributeBinding extends AbstractAttributeBinding {
+
+	private static final HibernateLogger LOG = Logger.getMessageLogger(
+				HibernateLogger.class, PluralAttributeBinding.class.getName()
+	);
+
 	private Table collectionTable;
 
 	private CollectionKey collectionKey;
 	private CollectionElement collectionElement;
 
 //	private String role;
-	private boolean lazy;
+	private FetchMode fetchMode;
 	private boolean extraLazy;
 	private boolean inverse;
 	private boolean mutable = true;
@@ -51,23 +65,17 @@ public abstract class PluralAttributeBinding extends AbstractAttributeBinding im
 	private String cacheRegionName;
 	private String orderBy;
 	private String where;
-	private String manyToManyWhere;
-	private String manyToManyOrderBy;
 	private String referencedPropertyName;
-	private String nodeName;
-	private String elementNodeName;
 	private boolean sorted;
 	private Comparator comparator;
 	private String comparatorClassName;
 	private boolean orphanDelete;
 	private int batchSize = -1;
-	private FetchMode fetchMode;
 	private boolean embedded = true;
 	private boolean optimisticLocked = true;
 	private Class collectionPersisterClass;
 	private String typeName;
 	private final java.util.Map filters = new HashMap();
-	private final java.util.Map manyToManyFilters = new HashMap();
 	private final java.util.Set synchronizedTables = new HashSet();
 
 	private CustomSQL customSQLInsert;
@@ -79,6 +87,112 @@ public abstract class PluralAttributeBinding extends AbstractAttributeBinding im
 
 	protected PluralAttributeBinding(EntityBinding entityBinding) {
 		super( entityBinding );
+		collectionElement = new CollectionElement( this );
+	}
+
+	public void fromHbmXml(MappingDefaults defaults, Element element, org.hibernate.metamodel.domain.Attribute attribute) {
+		super.fromHbmXml( defaults, element, attribute );
+		inverse = DomHelper.extractBooleanAttributeValue( element, "inverse", false );
+		mutable = DomHelper.extractBooleanAttributeValue( element, "mutable", true );
+		if ( "subselect".equals( element.attributeValue("fetch") ) ) {
+			subselectLoadable = true;
+			getEntityBinding().setSubselectLoadableCollections( true );
+		}
+		orderBy = DomHelper.extractAttributeValue( element, "order-by", null );
+		where = DomHelper.extractAttributeValue( element, "where", null );
+		batchSize = DomHelper.extractIntAttributeValue( element, "batch-size", 0 );
+		embedded = DomHelper.extractBooleanAttributeValue( element, "embed-xml", true );
+		try {
+			collectionPersisterClass = DomHelper.extractClassAttributeValue( element, "persister" );
+		}
+		catch (ClassNotFoundException cnfe) {
+			throw new MappingException( "Could not find collection persister class: "
+				+ element.attributeValue( "persister" ) );
+		}
+
+		//Attribute typeNode = collectionElement.attribute( "collection-type" );
+		//if ( typeNode != null ) {
+			// TODO: implement when typedef binding is implemented
+			/*
+			String typeName = typeNode.getValue();
+			TypeDef typeDef = mappings.getTypeDef( typeName );
+			if ( typeDef != null ) {
+				collectionBinding.setTypeName( typeDef.getTypeClass() );
+				collectionBinding.setTypeParameters( typeDef.getParameters() );
+			}
+			else {
+				collectionBinding.setTypeName( typeName );
+			}
+			*/
+		//}
+
+		// SORT
+		// unsorted, natural, comparator.class.name
+		String sortString = DomHelper.extractAttributeValue( element, "sort", "unsorted" );
+		sorted = ( ! "unsorted".equals( sortString ) );
+		if ( sorted && ! "natural".equals( sortString ) ) {
+			comparatorClassName = sortString;
+		}
+
+		// ORPHAN DELETE (used for programmer error detection)
+		String cascadeString = DomHelper.extractAttributeValue( element, "cascade", "none"  );
+		orphanDelete = ( cascadeString.indexOf( "delete-orphan" ) >= 0 );
+
+		// CUSTOM SQL
+		customSQLInsert = HbmHelper.getCustomSql( element.element( "sql-insert" ) );
+		customSQLDelete = HbmHelper.getCustomSql( element.element( "sql-delete" ) );
+		customSQLUpdate = HbmHelper.getCustomSql( element.element( "sql-update" ) );
+		customSQLDeleteAll = HbmHelper.getCustomSql( element.element( "sql-delete-all" ) );
+
+		// TODO: IMPLEMENT
+		//Iterator iter = collectionElement.elementIterator( "filter" );
+		//while ( iter.hasNext() ) {
+		//	final Element filter = (Element) iter.next();
+		//	parseFilter( filter, collectionElement, collectionBinding );
+		//}
+
+		Iterator tables = element.elementIterator( "synchronize" );
+		while ( tables.hasNext() ) {
+			synchronizedTables.add( ( (Element ) tables.next() ).attributeValue( "table" ) );
+		}
+
+		loaderName = DomHelper.extractAttributeValue( element.element( "loader" ), "query-ref" );
+		referencedPropertyName = element.element( "key" ).attributeValue( "property-ref" );
+
+		Element cacheElement = element.element( "cache" );
+		if ( cacheElement != null ) {
+				cacheConcurrencyStrategy = cacheElement.attributeValue( "usage" );
+				cacheRegionName = cacheElement.attributeValue( "region" );
+		}
+
+		Attribute fetchNode = element.attribute( "fetch" );
+		if ( fetchNode != null ) {
+			fetchMode = "join".equals( fetchNode.getValue() ) ? FetchMode.JOIN : FetchMode.SELECT;
+		}
+		else {
+			Attribute jfNode = element.attribute( "outer-join" );
+			String jfNodeValue = ( jfNode == null ? "auto" : jfNode.getValue() );
+			if ( "auto".equals( jfNodeValue ) ) {
+				fetchMode = FetchMode.DEFAULT;
+			}
+			else if ( "true".equals( jfNodeValue ) ) {
+				fetchMode = FetchMode.JOIN;
+			}
+			else {
+				fetchMode = FetchMode.SELECT;
+			}
+		}
+
+		String lazyString = DomHelper.extractAttributeValue( element, "lazy" );
+		extraLazy = ( "extra".equals( lazyString ) );
+		if ( extraLazy && ! isLazy() ) {
+			// explicitly make lazy
+			setLazy( true );
+		}
+	}
+
+	protected boolean isLazyDefault(MappingDefaults defaults) {
+		return defaults.isDefaultLazy();
 	}
 
 	@Override
@@ -109,125 +223,44 @@ public abstract class PluralAttributeBinding extends AbstractAttributeBinding im
 	public void setCollectionElement(CollectionElement collectionElement) {
 		this.collectionElement = collectionElement;
 	}
-
-	public boolean isLazy() {
-		return lazy;
-	}
-
-	public void setLazy(boolean lazy) {
-		this.lazy = lazy;
-	}
-
 	public boolean isExtraLazy() {
 		return extraLazy;
-	}
-
-	public void setExtraLazy(boolean extraLazy) {
-		this.extraLazy = extraLazy;
 	}
 
 	public boolean isInverse() {
 		return inverse;
 	}
 
-	public void setInverse(boolean inverse) {
-		this.inverse = inverse;
-	}
-
 	public boolean isMutable() {
 		return mutable;
-	}
-
-	public void setMutable(boolean mutable) {
-		this.mutable = mutable;
 	}
 
 	public boolean isSubselectLoadable() {
 		return subselectLoadable;
 	}
 
-	public void setSubselectLoadable(boolean subselectLoadable) {
-		this.subselectLoadable = subselectLoadable;
-	}
-
 	public String getCacheConcurrencyStrategy() {
 		return cacheConcurrencyStrategy;
-	}
-
-	public void setCacheConcurrencyStrategy(String cacheConcurrencyStrategy) {
-		this.cacheConcurrencyStrategy = cacheConcurrencyStrategy;
 	}
 
 	public String getCacheRegionName() {
 		return cacheRegionName;
 	}
 
-	public void setCacheRegionName(String cacheRegionName) {
-		this.cacheRegionName = cacheRegionName;
-	}
-
 	public String getOrderBy() {
 		return orderBy;
-	}
-
-	public void setOrderBy(String orderBy) {
-		this.orderBy = orderBy;
 	}
 
 	public String getWhere() {
 		return where;
 	}
 
-	public void setWhere(String where) {
-		this.where = where;
-	}
-
-	public String getManyToManyWhere() {
-		return manyToManyWhere;
-	}
-
-	public void setManyToManyWhere(String manyToManyWhere) {
-		this.manyToManyWhere = manyToManyWhere;
-	}
-
-	public String getManyToManyOrderBy() {
-		return manyToManyOrderBy;
-	}
-
-	public void setManyToManyOrderBy(String manyToManyOrderBy) {
-		this.manyToManyOrderBy = manyToManyOrderBy;
-	}
-
 	public String getReferencedPropertyName() {
 		return referencedPropertyName;
 	}
 
-	public void setReferencedPropertyName(String referencedPropertyName) {
-		this.referencedPropertyName = referencedPropertyName;
-	}
-
-	public String getNodeName() {
-		return nodeName;
-	}
-
-	public void setNodeName(String nodeName) {
-		this.nodeName = nodeName;
-	}
-
-	public String getElementNodeName() {
-		return elementNodeName;
-	}
-
-	public void setElementNodeName(String elementNodeName) {
-		this.elementNodeName = elementNodeName;
-	}
-
 	public boolean isSorted() {
 		return sorted;
-	}
-
-	public void setSorted(boolean sorted) {
-		this.sorted = sorted;
 	}
 
 	public Comparator getComparator() {
@@ -242,103 +275,56 @@ public abstract class PluralAttributeBinding extends AbstractAttributeBinding im
 		return comparatorClassName;
 	}
 
-	public void setComparatorClassName(String comparatorClassName) {
-		this.comparatorClassName = comparatorClassName;
-	}
-
 	public boolean isOrphanDelete() {
 		return orphanDelete;
-	}
-
-	public void setOrphanDelete(boolean orphanDelete) {
-		this.orphanDelete = orphanDelete;
 	}
 
 	public int getBatchSize() {
 		return batchSize;
 	}
 
-	public void setBatchSize(int batchSize) {
-		this.batchSize = batchSize;
-	}
-
-	public FetchMode getFetchMode() {
-		return fetchMode;
-	}
-
-	public void setFetchMode(FetchMode fetchMode) {
-		this.fetchMode = fetchMode;
-	}
-
+	@Override
 	public boolean isEmbedded() {
 		return embedded;
-	}
-
-	public void setEmbedded(boolean embedded) {
-		this.embedded = embedded;
 	}
 
 	public boolean isOptimisticLocked() {
 		return optimisticLocked;
 	}
 
-	public void setOptimisticLocked(boolean optimisticLocked) {
-		this.optimisticLocked = optimisticLocked;
-	}
-
 	public Class getCollectionPersisterClass() {
 		return collectionPersisterClass;
-	}
-
-	public void setCollectionPersisterClass(Class collectionPersisterClass) {
-		this.collectionPersisterClass = collectionPersisterClass;
 	}
 
 	public String getTypeName() {
 		return typeName;
 	}
 
-	public void setTypeName(String typeName) {
-		this.typeName = typeName;
+	public void addFilter(String name, String condition) {
+		filters.put( name, condition );
+	}
+
+	public java.util.Map getFilterMap() {
+		return filters;
 	}
 
 	public CustomSQL getCustomSQLInsert() {
 		return customSQLInsert;
 	}
 
-	public void setCustomSQLInsert(CustomSQL customSQLInsert) {
-		this.customSQLInsert = customSQLInsert;
-	}
-
 	public CustomSQL getCustomSQLUpdate() {
 		return customSQLUpdate;
-	}
-
-	public void setCustomSQLUpdate(CustomSQL customSQLUpdate) {
-		this.customSQLUpdate = customSQLUpdate;
 	}
 
 	public CustomSQL getCustomSQLDelete() {
 		return customSQLDelete;
 	}
 
-	public void setCustomSQLDelete(CustomSQL customSQLDelete) {
-		this.customSQLDelete = customSQLDelete;
-	}
-
 	public CustomSQL getCustomSQLDeleteAll() {
 		return customSQLDeleteAll;
 	}
 
-	public void setCustomSQLDeleteAll(CustomSQL customSQLDeleteAll) {
-		this.customSQLDeleteAll = customSQLDeleteAll;
-	}
-
 	public String getLoaderName() {
 		return loaderName;
-	}
-
-	public void setLoaderName(String loaderName) {
-		this.loaderName = loaderName;
 	}
 }

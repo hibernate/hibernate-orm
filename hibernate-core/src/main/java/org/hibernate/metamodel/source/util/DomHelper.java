@@ -26,6 +26,8 @@ package org.hibernate.metamodel.source.util;
 import org.dom4j.Attribute;
 import org.dom4j.Element;
 
+import org.hibernate.internal.util.ReflectHelper;
+
 /**
  * Helper class for working with DOM documents.
  *
@@ -40,8 +42,8 @@ public class DomHelper {
 	}
 
 	public static String extractAttributeValue(Element element, String attributeName, String defaultValue) {
-		Attribute attribute = element.attribute( attributeName );
-		return attribute == null ? defaultValue : attribute.getValue();
+		String attributeValue = ( element == null ? null : element.attributeValue( attributeName ) );
+		return attributeValue == null ? defaultValue : attributeValue;
 	}
 
 	public static int extractIntAttributeValue(Element element, String attributeName) {
@@ -49,8 +51,8 @@ public class DomHelper {
 	}
 
 	public static int extractIntAttributeValue(Element element, String attributeName, int defaultValue) {
-		Attribute attribute = element.attribute( attributeName );
-		return attribute == null ? defaultValue : Integer.valueOf( attribute.getValue() );
+		String attributeValue = ( element == null ? null : element.attributeValue( attributeName ) );
+		return attributeValue == null ? defaultValue : Integer.valueOf( attributeValue );
 	}
 
 	public static boolean extractBooleanAttributeValue(Element element, String attributeName) {
@@ -58,7 +60,19 @@ public class DomHelper {
 	}
 
 	public static boolean extractBooleanAttributeValue(Element element, String attributeName, boolean defaultValue) {
-		Attribute attribute = element.attribute( attributeName );
-		return attribute == null ? defaultValue : Boolean.valueOf( attribute.getValue() );
+		String attributeValue = ( element == null ? null : element.attributeValue( attributeName ) );
+		return attributeValue == null ? defaultValue : Boolean.valueOf( attributeValue );
 	}
+
+	public static Class extractClassAttributeValue(Element element, String attributeName)
+	throws ClassNotFoundException {
+		String attributeValue = ( element == null ? null : element.attributeValue( attributeName ) );
+		return (
+				attributeValue == null ?
+				null :
+				ReflectHelper.classForName( attributeValue )
+		);
+	}
+
+
 }

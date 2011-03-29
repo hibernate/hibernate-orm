@@ -32,25 +32,25 @@ import java.util.StringTokenizer;
 
 import org.dom4j.Attribute;
 import org.dom4j.Element;
-
+import org.jboss.logging.Logger;
 import org.hibernate.EntityMode;
+import org.hibernate.HibernateLogger;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.engine.Versioning;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.MetaAttribute;
-import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.binding.AttributeBinding;
 import org.hibernate.metamodel.binding.BagBinding;
+import org.hibernate.metamodel.binding.CollectionElement;
+import org.hibernate.metamodel.binding.ElementCollectionElement;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.binding.SimpleAttributeBinding;
 import org.hibernate.metamodel.domain.Entity;
 import org.hibernate.metamodel.domain.Hierarchical;
-import org.hibernate.metamodel.domain.PluralAttribute;
 import org.hibernate.metamodel.domain.PluralAttributeNature;
-import org.hibernate.metamodel.domain.SingularAttribute;
 import org.hibernate.metamodel.relational.Column;
 import org.hibernate.metamodel.relational.Index;
 import org.hibernate.metamodel.relational.Schema;
@@ -69,15 +69,15 @@ import org.hibernate.metamodel.source.util.DomHelper;
 * @author Steve Ebersole
 */
 abstract class AbstractEntityBinder {
+	private static final HibernateLogger LOG = Logger.getMessageLogger(
+			HibernateLogger.class, AbstractEntityBinder.class.getName()
+	);
 
-	protected final HibernateMappingBinder hibernateMappingBinder;
-	protected final Map<String, MetaAttribute> entityMetas;
-	protected final Schema.Name schemaName;
+	private final HibernateMappingBinder hibernateMappingBinder;
+	private final Schema.Name schemaName;
 
 	AbstractEntityBinder(HibernateMappingBinder hibernateMappingBinder, Element entityElement) {
 		this.hibernateMappingBinder = hibernateMappingBinder;
-
-		entityMetas = HbmHelper.extractMetas( entityElement, true, hibernateMappingBinder.getMappingMetas() );
 
 		final Attribute schemaAttribute = entityElement.attribute( "schema" );
 		String schemaName = ( schemaAttribute == null )
@@ -92,6 +92,10 @@ abstract class AbstractEntityBinder {
 		this.schemaName = new Schema.Name( schemaName, catalogName );
 	}
 
+	protected HibernateMappingBinder getHibernateMappingBinder() {
+		return hibernateMappingBinder;
+	}
+
 	protected HibernateXmlBinder getHibernateXmlBinder() {
 		return hibernateMappingBinder.getHibernateXmlBinder();
 	}
@@ -100,40 +104,31 @@ abstract class AbstractEntityBinder {
 		return hibernateMappingBinder.getHibernateXmlBinder().getMetadata();
 	}
 
+	protected Schema.Name getSchemaName() {
+		return schemaName;
+	}
 	protected NamingStrategy getNamingStrategy() {
 		return getMetadata().getNamingStrategy();
 	}
 
 	protected void basicEntityBinding(Element node, EntityBinding entityBinding, Hierarchical superType) {
-		entityBinding.setMetaAttributes( entityMetas );
-
+		entityBinding.fromHbmXml(
+				hibernateMappingBinder,
+				node,
+				new Entity( hibernateMappingBinder.extractEntityName( node ), superType )
+		);
+		// TODO: move this stuff out
 		// transfer an explicitly defined lazy attribute
-		Attribute lazyNode = node.attribute( "lazy" );
-		boolean lazy = ( lazyNode == null )
-				? hibernateMappingBinder.isDefaultLazy()
-				: Boolean.valueOf( lazyNode.getValue() );
-		// go ahead and set the lazy here, since pojo.proxy can override it.
-		entityBinding.setLazy( lazy );
-
-		String entityName = hibernateMappingBinder.extractEntityName( node );
-		if ( entityName == null ) {
-			throw new MappingException( "Unable to determine entity name" );
-		}
-		entityBinding.setEntity( new Entity( entityName, superType ) );
-
 		bindPojoRepresentation( node, entityBinding );
 		bindDom4jRepresentation( node, entityBinding );
 		bindMapRepresentation( node, entityBinding );
 
+		final String entityName = entityBinding.getEntity().getName();
 		Iterator itr = node.elementIterator( "fetch-profile" );
 		while ( itr.hasNext() ) {
 			final Element profileElement = ( Element ) itr.next();
 			hibernateMappingBinder.parseFetchProfile( profileElement, entityName );
 		}
-
-		entityBinding.setDiscriminatorValue( DomHelper.extractAttributeValue( node, "discriminator-value", entityName ) );
-		entityBinding.setDynamicUpdate( DomHelper.extractBooleanAttributeValue( node, "dynamic-update", false ) );
-		entityBinding.setDynamicInsert( DomHelper.extractBooleanAttributeValue( node, "dynamic-insert", false ) );
 
 		getMetadata().addImport( entityName, entityName );
 		if ( hibernateMappingBinder.isAutoImport() ) {
@@ -141,53 +136,14 @@ abstract class AbstractEntityBinder {
 				getMetadata().addImport( StringHelper.unqualify( entityName ), entityName );
 			}
 		}
+	}
 
-		final Attribute batchNode = node.attribute( "batch-size" );
-		if ( batchNode != null ) {
-			entityBinding.setBatchSize( Integer.parseInt( batchNode.getValue() ) );
-		}
+	protected String getDefaultAccess() {
+		return hibernateMappingBinder.getDefaultAccess();
+	}
 
-		final Attribute sbuNode = node.attribute( "select-before-update" );
-		if ( sbuNode != null ) {
-			entityBinding.setSelectBeforeUpdate( Boolean.valueOf( sbuNode.getValue() ) );
-		}
-
-		// OPTIMISTIC LOCK MODE
-		Attribute olNode = node.attribute( "optimistic-lock" );
-		entityBinding.setOptimisticLockMode( getOptimisticLockMode( olNode ) );
-
-
-		// PERSISTER
-		Attribute persisterNode = node.attribute( "persister" );
-		if ( persisterNode != null ) {
-			try {
-				entityBinding.setEntityPersisterClass(
-						ReflectHelper.classForName( persisterNode.getValue() )
-				);
-			}
-			catch (ClassNotFoundException cnfe) {
-				throw new MappingException( "Could not find persister class: "
-					+ persisterNode.getValue() );
-			}
-		}
-
-		// CUSTOM SQL
-		handleCustomSQL( node, entityBinding );
-
-		Iterator tables = node.elementIterator( "synchronize" );
-		while ( tables.hasNext() ) {
-			entityBinding.addSynchronizedTable( ( (Element) tables.next() ).attributeValue( "table" ) );
-		}
-
-		Attribute abstractNode = node.attribute( "abstract" );
-		Boolean isAbstract = abstractNode == null
-				? null
-		        : "true".equals( abstractNode.getValue() )
-						? Boolean.TRUE
-	                    : "false".equals( abstractNode.getValue() )
-								? Boolean.FALSE
-	                            : null;
-		entityBinding.setAbstract( isAbstract );
+	protected boolean isDefaultLazy() {
+		return hibernateMappingBinder.isDefaultLazy();
 	}
 
 	private void bindPojoRepresentation(Element node, EntityBinding entityBinding) {
@@ -268,32 +224,6 @@ abstract class AbstractEntityBinder {
 		}
 		else {
 			throw new MappingException( "Unsupported optimistic-lock style: " + olMode );
-		}
-	}
-
-	private static void handleCustomSQL(Element entityElement, EntityBinding entityBinding)
-			throws MappingException {
-		Element element = entityElement.element( "sql-insert" );
-		if ( element != null ) {
-			boolean callable = HbmHelper.isCallable( element );
-			entityBinding.setCustomSqlInsert( element.getTextTrim(), callable, HbmHelper.getResultCheckStyle( element, callable ) );
-		}
-
-		element = entityElement.element( "sql-delete" );
-		if ( element != null ) {
-			boolean callable = HbmHelper.isCallable( element );
-			entityBinding.setCustomSqlDelete( element.getTextTrim(), callable, HbmHelper.getResultCheckStyle( element, callable ) );
-		}
-
-		element = entityElement.element( "sql-update" );
-		if ( element != null ) {
-			boolean callable = HbmHelper.isCallable( element );
-			entityBinding.setCustomSqlUpdate( element.getTextTrim(), callable, HbmHelper.getResultCheckStyle( element, callable ) );
-		}
-
-		element = entityElement.element( "loader" );
-		if ( element != null ) {
-			entityBinding.setLoaderName( element.attributeValue( "query-ref" ) );
 		}
 	}
 
@@ -497,9 +427,11 @@ abstract class AbstractEntityBinder {
 	protected void bindSimpleAttribute(Element propertyElement, SimpleAttributeBinding attributeBinding, EntityBinding entityBinding, String attributeName) {
 		if ( attributeBinding.getAttribute() == null ) {
 			// attribute has not been bound yet
-			SingularAttribute attribute = entityBinding.getEntity().getOrCreateSingularAttribute( attributeName );
-			attributeBinding.setAttribute( attribute );
-			basicAttributeBinding( propertyElement, attributeBinding );
+			attributeBinding.fromHbmXml(
+					hibernateMappingBinder,
+					propertyElement,
+					entityBinding.getEntity().getOrCreateSingularAttribute( attributeName )
+			);
 		}
 
 		if ( attributeBinding.getValue() == null ) {
@@ -510,25 +442,42 @@ abstract class AbstractEntityBinder {
 	}
 
 	protected void bindCollection(
-			Element collectionElement,
+			Element collectionNode,
 			PluralAttributeBinding collectionBinding,
 			EntityBinding entityBinding,
 			PluralAttributeNature attributeNature,
 			String attributeName) {
 		if ( collectionBinding.getAttribute() == null ) {
 			// domain model has not been bound yet
-			PluralAttribute attribute = entityBinding.getEntity().getOrCreatePluralAttribute( attributeName, attributeNature );
-			collectionBinding.setAttribute( attribute );
-			basicCollectionBinding( collectionElement, collectionBinding );
+			collectionBinding.fromHbmXml(
+					hibernateMappingBinder,
+					collectionNode,
+					entityBinding.getEntity().getOrCreatePluralAttribute( attributeName, attributeNature )
+			);
+			bindCollectionElement( collectionNode, collectionBinding );
 		}
 
-		// todo : relational model binding
+		if ( collectionBinding.getValue() == null ) {
+			// todo : relational model binding
+		}
 	}
 
-	protected void basicCollectionBinding(Element collectionElement, PluralAttributeBinding collectionBinding) {
-		// todo : implement
+	private void bindCollectionElement(
+			Element collectionNode,
+			PluralAttributeBinding collectionBinding) {
+		CollectionElement collectionElement = createCollectionElement( collectionNode, collectionBinding);
+		collectionElement.fromHbmXml( collectionNode );
+		collectionBinding.setCollectionElement( collectionElement );
 	}
 
+	private CollectionElement createCollectionElement(Element collectionNode, PluralAttributeBinding collectionBinding) {
+		Element element = collectionNode.element( "element" );
+		if ( element != null ) {
+			return new ElementCollectionElement( collectionBinding );
+		}
+		// TODO: implement other types of collection elements
+		return null;
+	}
 //	private static Property createProperty(
 //			final Value value,
 //	        final String propertyName,
@@ -751,95 +700,5 @@ abstract class AbstractEntityBinder {
 		if ( comment != null ) {
 			column.setComment( comment.getTextTrim() );
 		}
-	}
-
-	protected void basicAttributeBinding(Element propertyElement, SimpleAttributeBinding valueBinding) {
-		Attribute typeAttribute = propertyElement.attribute( "type" );
-		if ( typeAttribute != null ) {
-			valueBinding.getHibernateTypeDescriptor().setTypeName( typeAttribute.getValue() );
-		}
-
-		valueBinding.setMetaAttributes( HbmHelper.extractMetas( propertyElement, entityMetas ) );
-
-		final String propertyName = valueBinding.getAttribute().getName();
-		final String explicitNodename = propertyElement.attributeValue( "node" );
-		final String nodeName = explicitNodename != null ? explicitNodename : propertyName;
-		valueBinding.setNodeName( nodeName );
-
-		final Attribute accessNode = propertyElement.attribute( "access" );
-		if ( accessNode != null ) {
-			valueBinding.setPropertyAccessorName( accessNode.getValue() );
-		}
-		else if ( propertyElement.getName().equals( "properties" ) ) {
-			valueBinding.setPropertyAccessorName( "embedded" );
-		}
-		else {
-			valueBinding.setPropertyAccessorName( hibernateMappingBinder.getDefaultAccess() );
-		}
-
-		final String explicitCascade = propertyElement.attributeValue( "cascade" );
-		final String cascade = StringHelper.isNotEmpty( explicitCascade ) ? explicitCascade : hibernateMappingBinder.getDefaultCascade();
-		valueBinding.setCascade( cascade );
-
-		final Attribute updateAttribute = propertyElement.attribute( "update" );
-		valueBinding.setUpdateable( updateAttribute == null || "true".equals( updateAttribute.getValue() ) );
-
-		final Attribute insertAttribute = propertyElement.attribute( "insert" );
-		valueBinding.setInsertable( insertAttribute == null || "true".equals( insertAttribute.getValue() ) );
-
-		final Attribute optimisticLockAttribute = propertyElement.attribute( "optimistic-lock" );
-		valueBinding.setOptimisticLockable( optimisticLockAttribute == null || "true".equals( optimisticLockAttribute.getValue() ) );
-
-		final Attribute generatedAttribute= propertyElement.attribute( "generated" );
-        final String generationName = generatedAttribute == null ? null : generatedAttribute.getValue();
-        final PropertyGeneration generation = PropertyGeneration.parse( generationName );
-		valueBinding.setGeneration( generation );
-
-        if ( generation == PropertyGeneration.ALWAYS || generation == PropertyGeneration.INSERT ) {
-	        // generated properties can *never* be insertable...
-	        if ( valueBinding.isInsertable() ) {
-		        if ( insertAttribute == null ) {
-			        // insertable simply because the user did not specify anything; just override it
-					valueBinding.setInsertable( false );
-		        }
-		        else {
-			        // the user specifically supplied insert="true", which constitutes an illegal combo
-					throw new MappingException(
-							"cannot specify both insert=\"true\" and generated=\"" + generation.getName() +
-							"\" for property: " +
-							propertyName
-					);
-		        }
-	        }
-
-	        // properties generated on update can never be updateable...
-	        if ( valueBinding.isUpdateable() && generation == PropertyGeneration.ALWAYS ) {
-		        if ( updateAttribute == null ) {
-			        // updateable only because the user did not specify
-			        // anything; just override it
-			        valueBinding.setUpdateable( false );
-		        }
-		        else {
-			        // the user specifically supplied update="true",
-			        // which constitutes an illegal combo
-					throw new MappingException(
-							"cannot specify both update=\"true\" and generated=\"" + generation.getName() +
-							"\" for property: " +
-							propertyName
-					);
-		        }
-	        }
-        }
-
-		boolean isLazyable = "property".equals( propertyElement.getName() )
-				|| "component".equals( propertyElement.getName() )
-				|| "many-to-one".equals( propertyElement.getName() )
-				|| "one-to-one".equals( propertyElement.getName() )
-				|| "any".equals( propertyElement.getName() );
-		if ( isLazyable ) {
-			Attribute lazyNode = propertyElement.attribute( "lazy" );
-			valueBinding.setLazy( lazyNode != null && "true".equals( lazyNode.getValue() ) );
-		}
-
 	}
 }

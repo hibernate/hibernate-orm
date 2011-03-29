@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -23,30 +23,45 @@
  */
 package org.hibernate.metamodel.binding;
 
-import org.dom4j.Element;
-
-import org.hibernate.mapping.Value;
-import org.hibernate.metamodel.source.hbm.HbmHelper;
-import org.hibernate.metamodel.source.util.DomHelper;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
- * TODO : javadoc
- *
- * @author Steve Ebersole
+ * @author Gail Badner
  */
-public class CollectionElement {
-	private final HibernateTypeDescriptor hibernateTypeDescriptor = new HibernateTypeDescriptor();
-	private final PluralAttributeBinding collectionBinding;
+public class EntityWithCollection {
+	private Long id;
+	private String name;
+	Set<String> otherNames = new HashSet<String>();
 
-	private String nodeName;
-
-	private Value elementValue;
-
-	CollectionElement(PluralAttributeBinding collectionBinding) {
-		this.collectionBinding = collectionBinding;
+	public EntityWithCollection() {
 	}
 
-	public void fromHbmXml(Element node) {
-		nodeName = DomHelper.extractAttributeValue( node, "node", null );
+	public EntityWithCollection(String name) {
+		this.name = name;
+	}
+
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public Set<String> getOtherNames() {
+		return otherNames;
+	}
+
+	public void setOtherNames(Set<String> otherNames) {
+		this.otherNames = otherNames;
 	}
 }

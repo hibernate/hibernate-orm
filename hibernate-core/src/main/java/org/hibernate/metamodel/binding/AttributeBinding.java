@@ -88,14 +88,7 @@ public interface AttributeBinding {
 	public Map<String, MetaAttribute> getMetaAttributes();
 
 	/**
-	 * Set the meta attribute map associated with this binding
-	 *
-	 * @param metaAttributes The meta attributes
-	 */
-	public void setMetaAttributes(Map<String, MetaAttribute> metaAttributes);
-
-	/**
-	 * In the case that {@link #getValue()} represnets a {@link org.hibernate.metamodel.relational.Tuple} this method
+	 * In the case that {@link #getValue()} represents a {@link org.hibernate.metamodel.relational.Tuple} this method
 	 * gives access to its compound values.  In the case of {@link org.hibernate.metamodel.relational.SimpleValue},
 	 * we return an Iterable over that single simple value.
 	 *
@@ -110,8 +103,7 @@ public interface AttributeBinding {
 	@Deprecated
 	public TableSpecification getTable();
 
-	public FetchMode getFetchMode();
-	public void setFetchMode(FetchMode fetchMode);
+	public String getPropertyAccessorName();
 
 	/**
 	 *
@@ -124,4 +116,6 @@ public interface AttributeBinding {
 	public boolean[] getColumnUpdateability();
 	public boolean[] getColumnInsertability();
 	public boolean isSimpleValue();
+	public boolean isEmbedded();
+	public boolean isLazy();
 }

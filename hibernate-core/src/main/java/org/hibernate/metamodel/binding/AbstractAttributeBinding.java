@@ -28,7 +28,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.FetchMode;
+import org.dom4j.Element;
+
 import org.hibernate.mapping.MetaAttribute;
 import org.hibernate.metamodel.domain.Attribute;
 import org.hibernate.metamodel.relational.Column;
@@ -37,6 +38,8 @@ import org.hibernate.metamodel.relational.SimpleValue;
 import org.hibernate.metamodel.relational.TableSpecification;
 import org.hibernate.metamodel.relational.Tuple;
 import org.hibernate.metamodel.relational.Value;
+import org.hibernate.metamodel.source.hbm.HbmHelper;
+import org.hibernate.metamodel.source.util.DomHelper;
 
 /**
  * TODO : javadoc
@@ -50,13 +53,37 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 	private Attribute attribute;
 	private Value value;
 
-	private FetchMode fetchMode;
+	private boolean isLazy;
+	private String propertyAccessorName;
 	private boolean alternateUniqueKey;
+	private String cascade;
+	private boolean optimisticLockable;
+
+	// DOM4J specific...
+	private String nodeName;
 
 	private Map<String, MetaAttribute> metaAttributes;
 
 	protected AbstractAttributeBinding(EntityBinding entityBinding) {
 		this.entityBinding = entityBinding;
+	}
+
+	public void fromHbmXml(MappingDefaults defaults, Element element, Attribute attribute) {
+		this.attribute = attribute;
+		hibernateTypeDescriptor.setTypeName( DomHelper.extractAttributeValue( element, "type", null ) );
+
+		metaAttributes = HbmHelper.extractMetas( element, entityBinding.getMetaAttributes() );
+		nodeName = DomHelper.extractAttributeValue( element, "node", attribute.getName() );
+		isLazy = DomHelper.extractBooleanAttributeValue( element, "lazy", isLazyDefault( defaults ) );
+		propertyAccessorName =  (
+				DomHelper.extractAttributeValue(
+						element,
+						"access",
+						isEmbedded() ? "embedded" : defaults.getDefaultAccess()
+				)
+		);
+		cascade = DomHelper.extractAttributeValue( element, "cascade", defaults.getDefaultCascade() );
+		optimisticLockable = DomHelper.extractBooleanAttributeValue( element, "optimistic-lock", true );
 	}
 
 	@Override
@@ -89,14 +116,21 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 		return hibernateTypeDescriptor;
 	}
 
-	@Override
-	public Map<String, MetaAttribute> getMetaAttributes() {
-		return metaAttributes;
+	public String getCascade() {
+		return cascade;
+	}
+
+	public boolean isOptimisticLockable() {
+		return optimisticLockable;
+	}
+
+	public String getNodeName() {
+		return nodeName;
 	}
 
 	@Override
-	public void setMetaAttributes(Map<String, MetaAttribute> metaAttributes) {
-		this.metaAttributes = metaAttributes;
+	public Map<String, MetaAttribute> getMetaAttributes() {
+		return metaAttributes;
 	}
 
 	@Override
@@ -114,13 +148,8 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 	}
 
 	@Override
-	public FetchMode getFetchMode() {
-		return fetchMode;
-	}
-
-	@Override
-	public void setFetchMode(FetchMode fetchMode) {
-		this.fetchMode = fetchMode;
+	public String getPropertyAccessorName() {
+		return propertyAccessorName;
 	}
 
 	@Override
@@ -173,5 +202,16 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 	@Override
 	public boolean[] getColumnUpdateability() {
 		return getColumnInsertability();
+	}
+
+	@Override
+	public boolean isLazy() {
+		return isLazy;
+	}
+
+	protected abstract boolean isLazyDefault(MappingDefaults defaults);
+
+	protected void setLazy(boolean isLazy) {
+		this.isLazy = isLazy;
 	}
 }

@@ -55,6 +55,8 @@ import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.type.AssociationType;
+import org.hibernate.type.CollectionType;
+import org.hibernate.type.ComponentType;
 import org.hibernate.type.StringRepresentableType;
 import org.hibernate.type.Type;
 import org.hibernate.internal.util.StringHelper;
@@ -73,7 +75,8 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 	private final String rootSQLAlias;
 	private int aliasCount = 0;
 
-	private final Map criteriaEntityNames = new LinkedHashMap();
+	private final Map /* <Criteria, CriteriaInfoProvider> */ criteriaInfoMap = new LinkedHashMap();
+	private final Map /* <String, CriteriaInfoProvider> */ nameCriteriaInfoMap = new LinkedHashMap();
 	private final Map criteriaSQLAliasMap = new HashMap();
 	private final Map aliasCriteriaMap = new HashMap();
 	private final Map associationPathCriteriaMap = new LinkedHashMap();
@@ -81,6 +84,7 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 	private final Map withClauseMap = new HashMap();
 	
 	private final SessionFactoryImplementor sessionFactory;
+	private final SessionFactoryHelper helper;
 
 	public CriteriaQueryTranslator(
 			final SessionFactoryImplementor factory,
@@ -101,6 +105,7 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 		this.rootEntityName = rootEntityName;
 		this.sessionFactory = factory;
 		this.rootSQLAlias = rootSQLAlias;
+		this.helper = new SessionFactoryHelper(factory);
 		createAliasCriteriaMap();
 		createAssociationPathCriteriaMap();
 		createCriteriaEntityNameMap();
@@ -134,10 +139,10 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 
 	public Set getQuerySpaces() {
 		Set result = new HashSet();
-		Iterator iter = criteriaEntityNames.values().iterator();
+		Iterator iter = criteriaInfoMap.values().iterator();
 		while ( iter.hasNext() ) {
-			String entityName = ( String ) iter.next();
-			result.addAll( Arrays.asList( getFactory().getEntityPersister( entityName ).getQuerySpaces() ) );
+			CriteriaInfoProvider info = ( CriteriaInfoProvider )iter.next();
+			result.addAll( Arrays.asList( info.getSpaces() ) );
 		}
 		return result;
 	}
@@ -213,29 +218,54 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 	}
 
 	private void createCriteriaEntityNameMap() {
-		criteriaEntityNames.put( rootCriteria, rootEntityName );
+		// initialize the rootProvider first
+		CriteriaInfoProvider rootProvider = new EntityCriteriaInfoProvider(( Queryable ) sessionFactory.getEntityPersister( rootEntityName ) );
+		criteriaInfoMap.put( rootCriteria, rootProvider);
+		nameCriteriaInfoMap.put ( rootProvider.getName(), rootProvider );
+
 		Iterator iter = associationPathCriteriaMap.entrySet().iterator();
 		while ( iter.hasNext() ) {
 			Map.Entry me = ( Map.Entry ) iter.next();
-			criteriaEntityNames.put(
+			CriteriaInfoProvider info = getPathInfo((String)me.getKey());
+
+			criteriaInfoMap.put(
 					me.getValue(), //the criteria instance
-			        getPathEntityName( ( String ) me.getKey() )
+					info
 			);
+
+			nameCriteriaInfoMap.put( info.getName(), info );
 		}
 	}
 
-	private String getPathEntityName(String path) {
-		Queryable persister = ( Queryable ) sessionFactory.getEntityPersister( rootEntityName );
+
+	private CriteriaInfoProvider getPathInfo(String path) {
 		StringTokenizer tokens = new StringTokenizer( path, "." );
 		String componentPath = "";
+
+		// start with the 'rootProvider'
+		CriteriaInfoProvider provider = ( CriteriaInfoProvider )nameCriteriaInfoMap.get( rootEntityName );
+
 		while ( tokens.hasMoreTokens() ) {
 			componentPath += tokens.nextToken();
-			Type type = persister.toType( componentPath );
+			Type type = provider.getType( componentPath );
 			if ( type.isAssociationType() ) {
+				// CollectionTypes are always also AssociationTypes - but there's not always an associated entity...
 				AssociationType atype = ( AssociationType ) type;
-				persister = ( Queryable ) sessionFactory.getEntityPersister(
-						atype.getAssociatedEntityName( sessionFactory )
-				);
+				CollectionType ctype = type.isCollectionType() ? (CollectionType)type : null;
+				Type elementType = (ctype != null) ? ctype.getElementType( sessionFactory ) : null;
+				// is the association a collection of components or value-types? (i.e a colloction of valued types?)
+				if ( ctype != null  && elementType.isComponentType() ) {
+					provider = new ComponentCollectionCriteriaInfoProvider( helper.getCollectionPersister(ctype.getRole()) );
+				}
+				else if ( ctype != null && !elementType.isEntityType() ) {
+					provider = new ScalarCollectionCriteriaInfoProvider( helper, ctype.getRole() );
+				}
+				else {
+					provider = new EntityCriteriaInfoProvider(( Queryable ) sessionFactory.getEntityPersister(
+											  atype.getAssociatedEntityName( sessionFactory )
+											  ));
+				}
+				
 				componentPath = "";
 			}
 			else if ( type.isComponentType() ) {
@@ -245,7 +275,8 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 				throw new QueryException( "not an association: " + componentPath );
 			}
 		}
-		return persister.getEntityName();
+		
+		return provider;
 	}
 
 	public int getSQLAliasCount() {
@@ -254,13 +285,13 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 
 	private void createCriteriaSQLAliasMap() {
 		int i = 0;
-		Iterator criteriaIterator = criteriaEntityNames.entrySet().iterator();
+		Iterator criteriaIterator = criteriaInfoMap.entrySet().iterator();
 		while ( criteriaIterator.hasNext() ) {
 			Map.Entry me = ( Map.Entry ) criteriaIterator.next();
 			Criteria crit = ( Criteria ) me.getKey();
 			String alias = crit.getAlias();
 			if ( alias == null ) {
-				alias = ( String ) me.getValue(); // the entity name
+				alias = (( CriteriaInfoProvider ) me.getValue()).getName(); // the entity name
 			}
 			criteriaSQLAliasMap.put( crit, StringHelper.generateAlias( alias, i++ ) );
 		}
@@ -411,7 +442,7 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 	}
 
 	public String getEntityName(Criteria criteria) {
-		return ( String ) criteriaEntityNames.get( criteria );
+		return (( CriteriaInfoProvider ) criteriaInfoMap.get( criteria )).getName();
 	}
 
 	public String getColumn(Criteria criteria, String propertyName) {
@@ -596,7 +627,8 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 
 	private PropertyMapping getPropertyMapping(String entityName)
 			throws MappingException {
-		return ( PropertyMapping ) sessionFactory.getEntityPersister( entityName );
+		CriteriaInfoProvider info = ( CriteriaInfoProvider )nameCriteriaInfoMap.get(entityName);
+		return info.getPropertyMapping();
 	}
 
 	//TODO: use these in methods above

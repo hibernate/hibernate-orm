@@ -32,7 +32,7 @@
     <section id="hibernate-gsg-tutorial-envers-entity">
       <title>The annotated entity Java class</title>
       <para>
-        Again, the entity is largely the same as in <xref linkend="hibernate-gsg-tutorial-jpa-entity" /> .  The major
+        Again, the entity is largely the same as in <xref linkend="hibernate-gsg-tutorial-jpa-entity" />.  The major
         difference is the addition of the <interfacename>@org.hibernate.envers.Audited</interfacename> annotation, which
         tells Envers to automatically track changes to this entity.
       </para>
@@ -67,7 +67,7 @@
         </step>
         <step>
           <para>
-            Next,the <methodname>find</methodname> method retrieves specific revisions of the entity.  The first call
+            Next, the <methodname>find</methodname> method retrieves specific revisions of the entity.  The first call
             reads <literal>find revision number 1 of Event with id 2</literal>.  The second call reads <literal>find
             revision number 2 of Event with id 2</literal>.
           </para>
@@ -84,11 +84,17 @@
                 Provide a custom revision entity to additionally capture who made the changes.
             </para>
         </listitem>
-          <listitem>
-              <para>
-                  todo : adam, another?
-              </para>
-          </listitem>
+        <listitem>
+            <para>
+                Write a query to retrieve only historical data which meets some criteria.
+            </para>
+        </listitem>
+        <listitem>
+            <para>
+                Experiment with auditing entities which have many-to-one, many-to-many relations as well as collections.
+                Try retrieving historical versions (revisions) of such entities and navigating the object tree.
+            </para>
+        </listitem>
       </itemizedlist>
     </section>
 

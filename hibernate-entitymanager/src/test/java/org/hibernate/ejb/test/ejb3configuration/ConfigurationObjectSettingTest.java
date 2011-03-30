@@ -141,7 +141,6 @@ public class ConfigurationObjectSettingTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-6061")
 	public void testContainerBootstrapValidationFactory() {
 		final Object token = new Object();
 		PersistenceUnitInfoAdapter adapter = new PersistenceUnitInfoAdapter();
@@ -244,7 +243,6 @@ public class ConfigurationObjectSettingTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-6061")
 	public void testStandaloneBootstrapValidationFactory() {
 		final Object token = new Object();
 		PersistenceMetadata metadata = new PersistenceMetadata();

@@ -23,6 +23,7 @@
  */
 package org.hibernate.cfg.beanvalidation;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.HashSet;
@@ -55,6 +56,43 @@ public class BeanValidationIntegrator implements Integrator {
 	private static final String ACTIVATOR_CLASS = "org.hibernate.cfg.beanvalidation.TypeSafeActivator";
 	private static final String DDL_METHOD = "applyDDL";
 	private static final String ACTIVATE_METHOD = "activateBeanValidation";
+	private static final String VALIDATE_METHOD = "validateFactory";
+
+	public static void validateFactory(Object object) {
+		try {
+			final Class activatorClass = BeanValidationIntegrator.class.getClassLoader().loadClass( ACTIVATOR_CLASS );
+			try {
+				final Method validateMethod = activatorClass.getMethod( VALIDATE_METHOD, Object.class );
+				if ( ! validateMethod.isAccessible() ) {
+					validateMethod.setAccessible( true );
+				}
+				try {
+					validateMethod.invoke( null, object );
+				}
+				catch (InvocationTargetException e) {
+					if ( e.getTargetException() instanceof HibernateException ) {
+						throw (HibernateException) e.getTargetException();
+					}
+					throw new HibernateException( "Unable to check validity of passed ValidatorFactory", e );
+				}
+				catch (IllegalAccessException e) {
+					throw new HibernateException( "Unable to check validity of passed ValidatorFactory", e );
+				}
+			}
+			catch (HibernateException e) {
+				throw e;
+			}
+			catch (Exception e) {
+				throw new HibernateException( "Could not locate method needed for ValidatorFactory validation", e );
+			}
+		}
+		catch (HibernateException e) {
+			throw e;
+		}
+		catch (Exception e) {
+			throw new HibernateException( "Could not locate TypeSafeActivator class", e );
+		}
+	}
 
 	@Override
 	public void integrate(

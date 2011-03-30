@@ -70,6 +70,16 @@ class TypeSafeActivator {
 	private static final String FACTORY_PROPERTY = "javax.persistence.validation.factory";
 
 	@SuppressWarnings( {"UnusedDeclaration"})
+	public static void validateFactory(Object object) {
+		if ( ! ValidatorFactory.class.isInstance( object ) ) {
+			throw new HibernateException(
+					"Given object was not an instance of " + ValidatorFactory.class.getName()
+							+ "[" + object.getClass().getName() + "]"
+			);
+		}
+	}
+
+	@SuppressWarnings( {"UnusedDeclaration"})
 	public static void activateBeanValidation(EventListenerRegistry listenerRegistry, Properties properties) {
 		ValidatorFactory factory = getValidatorFactory( properties );
 		BeanValidationEventListener listener = new BeanValidationEventListener(

@@ -435,7 +435,7 @@ public class EntityTest extends BaseCoreFunctionalTestCase {
 	}
 
 	private SchemaExport schemaExport() {
-		return new SchemaExport( serviceRegistry().getService( JdbcServices.class ), configuration() );
+		return new SchemaExport( serviceRegistry(), configuration() );
 	}
 
 	@After

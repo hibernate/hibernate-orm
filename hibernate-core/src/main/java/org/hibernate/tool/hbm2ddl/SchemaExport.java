@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,14 +20,12 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.tool.hbm2ddl;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -40,9 +38,11 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+
+import org.jboss.logging.Logger;
+
 import org.hibernate.HibernateException;
 import org.hibernate.HibernateLogger;
-import org.hibernate.JDBCException;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.NamingStrategy;
@@ -55,106 +55,136 @@ import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.internal.util.ConfigHelper;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.internal.BasicServiceRegistryImpl;
-
-import org.jboss.logging.Logger;
+import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 
 /**
  * Commandline tool to export table schema to the database. This class may also be called from inside an application.
  *
  * @author Daniel Bradby
  * @author Gavin King
+ * @author Steve Ebersole
  */
 public class SchemaExport {
-
     private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, SchemaExport.class.getName());
-
-	private ConnectionHelper connectionHelper;
-	private String[] dropSQL;
-	private String[] createSQL;
-	private String outputFile = null;
-	private String importFiles;
-	private Dialect dialect;
-	private String delimiter;
-	private final List exceptions = new ArrayList();
-	private boolean haltOnError = false;
-	private Formatter formatter;
-	private SqlStatementLogger sqlStatementLogger;
 	private static final String DEFAULT_IMPORT_FILE = "/import.sql";
+
+	public static enum Type {
+		CREATE,
+		DROP,
+		NONE,
+		BOTH;
+
+		public boolean doCreate() {
+			return this == BOTH || this == CREATE;
+		}
+
+		public boolean doDrop() {
+			return this == BOTH || this == DROP;
+		}
+	}
+
+	private final ConnectionHelper connectionHelper;
+	private final SqlStatementLogger sqlStatementLogger;
+	private final SqlExceptionHelper sqlExceptionHelper;
+	private final String[] dropSQL;
+	private final String[] createSQL;
+	private final String importFiles;
+
+	private final List<Exception> exceptions = new ArrayList<Exception>();
+
+	private Formatter formatter;
+
+	private String outputFile = null;
+	private String delimiter;
+	private boolean haltOnError = false;
+
+	public SchemaExport(ServiceRegistry serviceRegistry, Configuration configuration) {
+		this.connectionHelper = new SuppliedConnectionProviderConnectionHelper(
+				serviceRegistry.getService( ConnectionProvider.class )
+		);
+		this.sqlStatementLogger = serviceRegistry.getService( JdbcServices.class ).getSqlStatementLogger();
+		this.formatter = ( sqlStatementLogger.isFormat() ? FormatStyle.DDL : FormatStyle.NONE ).getFormatter();
+		this.sqlExceptionHelper = serviceRegistry.getService( JdbcServices.class ).getSqlExceptionHelper();
+
+		this.importFiles = ConfigurationHelper.getString(
+				Environment.HBM2DDL_IMPORT_FILES,
+				configuration.getProperties(),
+				DEFAULT_IMPORT_FILE
+		);
+
+		final Dialect dialect = serviceRegistry.getService( JdbcServices.class ).getDialect();
+		this.dropSQL = configuration.generateDropSchemaScript( dialect );
+		this.createSQL = configuration.generateSchemaCreationScript( dialect );
+	}
 
 	/**
 	 * Create a schema exporter for the given Configuration
 	 *
-	 * @param cfg The configuration from which to build a schema export.
+	 * @param configuration The configuration from which to build a schema export.
 	 * @throws HibernateException Indicates problem preparing for schema export.
 	 */
-	public SchemaExport(Configuration cfg) throws HibernateException {
-		this( cfg, cfg.getProperties() );
-	}
-
-	/**
-	 * Create a schema exporter for the given Configuration and given settings
-	 *
-	 * @param cfg The configuration from which to build a schema export.
-	 * @param jdbcServices The jdbc services
-	 * @throws HibernateException Indicates problem preparing for schema export.
-	 */
-	public SchemaExport(JdbcServices jdbcServices, Configuration cfg) throws HibernateException {
-		dialect = jdbcServices.getDialect();
-		connectionHelper = new SuppliedConnectionProviderConnectionHelper( jdbcServices.getConnectionProvider() );
-		dropSQL = cfg.generateDropSchemaScript( dialect );
-		createSQL = cfg.generateSchemaCreationScript( dialect );
-		sqlStatementLogger = jdbcServices.getSqlStatementLogger();
-		formatter = ( sqlStatementLogger.isFormat() ? FormatStyle.DDL : FormatStyle.NONE ).getFormatter();
-		importFiles = ConfigurationHelper.getString(
-				Environment.HBM2DDL_IMPORT_FILES, cfg.getProperties(),
-				DEFAULT_IMPORT_FILE
-		);
+	public SchemaExport(Configuration configuration) {
+		this( configuration, configuration.getProperties() );
 	}
 
 	/**
 	 * Create a schema exporter for the given Configuration, with the given
 	 * database connection properties.
 	 *
-	 * @param cfg The configuration from which to build a schema export.
+	 * @param configuration The configuration from which to build a schema export.
 	 * @param properties The properties from which to configure connectivity etc.
 	 * @throws HibernateException Indicates problem preparing for schema export.
 	 *
 	 * @deprecated properties may be specified via the Configuration object
 	 */
 	@Deprecated
-    public SchemaExport(Configuration cfg, Properties properties) throws HibernateException {
-		dialect = Dialect.getDialect( properties );
+    public SchemaExport(Configuration configuration, Properties properties) throws HibernateException {
+		final Dialect dialect = Dialect.getDialect( properties );
 
 		Properties props = new Properties();
 		props.putAll( dialect.getDefaultProperties() );
 		props.putAll( properties );
+		this.connectionHelper = new ManagedProviderConnectionHelper( props );
 
-		connectionHelper = new ManagedProviderConnectionHelper( props );
-		dropSQL = cfg.generateDropSchemaScript( dialect );
-		createSQL = cfg.generateSchemaCreationScript( dialect );
+		this.sqlStatementLogger = new SqlStatementLogger( false, true );
+		this.formatter = FormatStyle.DDL.getFormatter();
+		this.sqlExceptionHelper = new SqlExceptionHelper();
 
-		formatter = ( ConfigurationHelper.getBoolean( Environment.FORMAT_SQL, props ) ? FormatStyle.DDL : FormatStyle.NONE ).getFormatter();
+		this.importFiles = ConfigurationHelper.getString(
+				Environment.HBM2DDL_IMPORT_FILES,
+				properties,
+				DEFAULT_IMPORT_FILE
+		);
 
-		importFiles = ConfigurationHelper.getString( Environment.HBM2DDL_IMPORT_FILES, props, DEFAULT_IMPORT_FILE );
+		this.dropSQL = configuration.generateDropSchemaScript( dialect );
+		this.createSQL = configuration.generateSchemaCreationScript( dialect );
 	}
 
 	/**
 	 * Create a schema exporter for the given Configuration, using the supplied connection for connectivity.
 	 *
-	 * @param cfg The configuration to use.
+	 * @param configuration The configuration to use.
 	 * @param connection The JDBC connection to use.
 	 * @throws HibernateException Indicates problem preparing for schema export.
 	 */
-	public SchemaExport(Configuration cfg, Connection connection) throws HibernateException {
+	public SchemaExport(Configuration configuration, Connection connection) throws HibernateException {
 		this.connectionHelper = new SuppliedConnectionHelper( connection );
-		dialect = Dialect.getDialect( cfg.getProperties() );
-		dropSQL = cfg.generateDropSchemaScript( dialect );
-		createSQL = cfg.generateSchemaCreationScript( dialect );
-		formatter = ( ConfigurationHelper.getBoolean( Environment.FORMAT_SQL, cfg.getProperties() ) ? FormatStyle.DDL : FormatStyle.NONE ).getFormatter();
-		importFiles = ConfigurationHelper.getString( Environment.HBM2DDL_IMPORT_FILES, cfg.getProperties(),
+
+		this.sqlStatementLogger = new SqlStatementLogger( false, true );
+		this.formatter = FormatStyle.DDL.getFormatter();
+		this.sqlExceptionHelper = new SqlExceptionHelper();
+
+		this.importFiles = ConfigurationHelper.getString(
+				Environment.HBM2DDL_IMPORT_FILES,
+				configuration.getProperties(),
 				DEFAULT_IMPORT_FILE
 		);
+
+		final Dialect dialect = Dialect.getDialect( configuration.getProperties() );
+		this.dropSQL = configuration.generateDropSchemaScript( dialect );
+		this.createSQL = configuration.generateSchemaCreationScript( dialect );
 	}
 
 	public SchemaExport(
@@ -165,6 +195,8 @@ public class SchemaExport {
 		this.dropSQL = dropSql;
 		this.createSQL = createSql;
 		this.importFiles = "";
+		this.sqlStatementLogger = new SqlStatementLogger( false, true );
+		this.sqlExceptionHelper = new SqlExceptionHelper();
 		this.formatter = FormatStyle.DDL.getFormatter();
 	}
 
@@ -176,19 +208,6 @@ public class SchemaExport {
 	 */
 	public SchemaExport setOutputFile(String filename) {
 		outputFile = filename;
-		return this;
-	}
-
-	/**
-	 * An import file, containing raw SQL statements to be executed.
-	 *
-	 * @param filename The import file name.
-	 * @return this
-	 * @deprecated use {@link org.hibernate.cfg.Environment#HBM2DDL_IMPORT_FILES}
-	 */
-	@Deprecated
-    public SchemaExport setImportFile(String filename) {
-		importFiles = filename;
 		return this;
 	}
 
@@ -232,7 +251,11 @@ public class SchemaExport {
 	 * @param export export the script to the database
 	 */
 	public void create(boolean script, boolean export) {
-		execute( script, export, false, false );
+		create( Target.interpret( script, export ) );
+	}
+
+	public void create(Target output) {
+		execute( output, Type.CREATE );
 	}
 
 	/**
@@ -242,103 +265,154 @@ public class SchemaExport {
 	 * @param export export the script to the database
 	 */
 	public void drop(boolean script, boolean export) {
-		execute( script, export, true, false );
+		drop( Target.interpret( script, export ) );
+	}
+
+	public void drop(Target output) {
+		execute( output, Type.DROP );
 	}
 
 	public void execute(boolean script, boolean export, boolean justDrop, boolean justCreate) {
+		execute( Target.interpret( script, export ), interpretType( justDrop, justCreate ) );
+	}
 
-        LOG.runningHbm2ddlSchemaExport();
-
-		Connection connection = null;
-		Writer outputFileWriter = null;
-		List<NamedReader> importFileReaders = new ArrayList<NamedReader>();
-		Statement statement = null;
-
-		exceptions.clear();
-
-		try {
-
-			for ( String currentFile : importFiles.split(",") ) {
-				try {
-					final String resourceName = currentFile.trim();
-					InputStream stream = ConfigHelper.getResourceAsStream( resourceName );
-					importFileReaders.add( new NamedReader( resourceName, stream ) );
-				}
-				catch ( HibernateException e ) {
-                    LOG.debugf("Import file not found: %s", currentFile);
-				}
-			}
-
-			if ( outputFile != null ) {
-                LOG.writingGeneratedSchemaToFile(outputFile);
-				outputFileWriter = new FileWriter( outputFile );
-			}
-
-			if ( export ) {
-                LOG.exportingGeneratedSchemaToDatabase();
-				connectionHelper.prepare( true );
-				connection = connectionHelper.getConnection();
-				statement = connection.createStatement();
-			}
-
-			if ( !justCreate ) {
-				drop( script, export, outputFileWriter, statement );
-			}
-
-			if ( !justDrop ) {
-				create( script, export, outputFileWriter, statement );
-				if ( export && importFileReaders.size() > 0 ) {
-					for (NamedReader reader : importFileReaders) {
-						importScript( reader, statement );
-					}
-				}
-			}
-
-            LOG.schemaExportComplete();
-
+	private Type interpretType(boolean justDrop, boolean justCreate) {
+		if ( justDrop ) {
+			return Type.DROP;
 		}
-
-		catch ( Exception e ) {
-			exceptions.add( e );
-            LOG.schemaExportUnsuccessful(e);
+		else if ( justCreate ) {
+			return Type.CREATE;
 		}
-
-		finally {
-
-			try {
-				if ( statement != null ) {
-					statement.close();
-				}
-				if ( connection != null ) {
-					connectionHelper.release();
-				}
-			}
-			catch ( Exception e ) {
-				exceptions.add( e );
-                LOG.unableToCloseConnection(e);
-			}
-
-			try {
-				if ( outputFileWriter != null ) {
-					outputFileWriter.close();
-				}
-			}
-			catch ( IOException ioe ) {
-				exceptions.add( ioe );
-                LOG.unableToCloseOutputFile(outputFile, ioe);
-			}
-            for (NamedReader reader : importFileReaders) {
-                try {
-                    reader.getReader().close();
-                } catch (IOException ioe) {
-                    exceptions.add(ioe);
-                    LOG.unableToCloseInputFiles(reader.getName(), ioe);
-				}
-            }
+		else {
+			return Type.BOTH;
 		}
 	}
 
-	private class NamedReader {
+	public void execute(Target output, Type type) {
+		if ( output == Target.NONE || type == SchemaExport.Type.NONE ) {
+			return;
+		}
+		exceptions.clear();
+
+		LOG.runningHbm2ddlSchemaExport();
+
+		final List<NamedReader> importFileReaders = new ArrayList<NamedReader>();
+		for ( String currentFile : importFiles.split(",") ) {
+			try {
+				final String resourceName = currentFile.trim();
+				InputStream stream = ConfigHelper.getResourceAsStream( resourceName );
+				importFileReaders.add( new NamedReader( resourceName, stream ) );
+			}
+			catch ( HibernateException e ) {
+				LOG.debugf("Import file not found: %s", currentFile);
+			}
+		}
+
+		final List<Exporter> exporters = new ArrayList<Exporter>();
+		try {
+			// prepare exporters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+			if ( output.doScript() ) {
+				exporters.add( new ScriptExporter() );
+			}
+			if ( outputFile != null ) {
+				exporters.add( new FileExporter( outputFile ) );
+			}
+			if ( output.doExport() ) {
+				exporters.add( new DatabaseExporter( connectionHelper, sqlExceptionHelper ) );
+			}
+
+			// perform exporters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+			if ( type.doDrop() ) {
+				perform( dropSQL, exporters );
+			}
+			if ( type.doCreate() ) {
+				perform( createSQL, exporters );
+				if ( ! importFileReaders.isEmpty() ) {
+					for ( NamedReader namedReader : importFileReaders ) {
+						importScript( namedReader, exporters );
+					}
+				}
+			}
+		}
+		catch (Exception e) {
+			exceptions.add( e );
+			LOG.schemaExportUnsuccessful( e );
+		}
+		finally {
+			// release exporters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+			for ( Exporter exporter : exporters ) {
+				try {
+					exporter.release();
+				}
+				catch (Exception ignore) {
+				}
+			}
+
+			// release the named readers from import scripts
+			for ( NamedReader namedReader : importFileReaders ) {
+				try {
+					namedReader.getReader().close();
+				}
+				catch (Exception ignore) {
+				}
+			}
+            LOG.schemaExportComplete();
+		}
+	}
+
+	private void perform(String[] sqlCommands, List<Exporter> exporters) {
+		for ( String sqlCommand : sqlCommands ) {
+			String formatted = formatter.format( sqlCommand );
+	        if ( delimiter != null ) {
+				formatted += delimiter;
+			}
+			sqlStatementLogger.logStatement( formatted );
+			for ( Exporter exporter : exporters ) {
+				try {
+					exporter.export( formatted );
+				}
+				catch (Exception e) {
+					if ( haltOnError ) {
+						throw new HibernateException( "Error during DDL export", e );
+					}
+					exceptions.add( e );
+					LOG.unsuccessfulCreate( sqlCommand );
+					LOG.error( e.getMessage() );
+				}
+			}
+		}
+	}
+
+	private void importScript(NamedReader namedReader, List<Exporter> exporters) throws Exception {
+		BufferedReader reader = new BufferedReader( namedReader.getReader() );
+		long lineNo = 0;
+		for ( String sql = reader.readLine(); sql != null; sql = reader.readLine() ) {
+			try {
+				lineNo++;
+				String trimmedSql = sql.trim();
+				if ( trimmedSql.length() == 0 ||
+						trimmedSql.startsWith( "--" ) ||
+						trimmedSql.startsWith( "//" ) ||
+						trimmedSql.startsWith( "/*" ) ) {
+					continue;
+				}
+                if ( trimmedSql.endsWith(";") ) {
+					trimmedSql = trimmedSql.substring(0, trimmedSql.length() - 1);
+				}
+                LOG.debugf( trimmedSql );
+				for ( Exporter exporter: exporters ) {
+					if ( exporter.acceptsImportScripts() ) {
+						exporter.export( trimmedSql );
+					}
+				}
+			}
+			catch ( Exception e ) {
+				throw new ImportScriptException( "Error during import script execution at line " + lineNo, e );
+			}
+		}
+	}
+
+	private static class NamedReader {
 		private final Reader reader;
 		private final String name;
 
@@ -353,62 +427,6 @@ public class SchemaExport {
 
 		public String getName() {
 			return name;
-		}
-	}
-
-	private void importScript(NamedReader importFileReader, Statement statement)
-			throws IOException {
-        LOG.executingImportScript(importFileReader.getName());
-		BufferedReader reader = new BufferedReader( importFileReader.getReader() );
-		long lineNo = 0;
-		for ( String sql = reader.readLine(); sql != null; sql = reader.readLine() ) {
-			try {
-				lineNo++;
-				String trimmedSql = sql.trim();
-				if ( trimmedSql.length() == 0 ||
-				     trimmedSql.startsWith( "--" ) ||
-				     trimmedSql.startsWith( "//" ) ||
-				     trimmedSql.startsWith( "/*" ) ) {
-					continue;
-				}
-                if (trimmedSql.endsWith(";")) trimmedSql = trimmedSql.substring(0, trimmedSql.length() - 1);
-                LOG.debugf(trimmedSql);
-                statement.execute(trimmedSql);
-			}
-			catch ( SQLException e ) {
-				throw new JDBCException( "Error during import script execution at line " + lineNo, e );
-			}
-		}
-	}
-
-	private void create(boolean script, boolean export, Writer fileOutput, Statement statement)
-			throws IOException {
-		for ( int j = 0; j < createSQL.length; j++ ) {
-			try {
-				execute( script, export, fileOutput, statement, createSQL[j] );
-			}
-			catch ( SQLException e ) {
-				if ( haltOnError ) {
-					throw new JDBCException( "Error during DDL export", e );
-				}
-				exceptions.add( e );
-                LOG.unsuccessfulCreate(createSQL[j]);
-                LOG.error(e.getMessage());
-			}
-		}
-	}
-
-	private void drop(boolean script, boolean export, Writer fileOutput, Statement statement)
-			throws IOException {
-		for ( int i = 0; i < dropSQL.length; i++ ) {
-			try {
-				execute( script, export, fileOutput, statement, dropSQL[i] );
-			}
-			catch ( SQLException e ) {
-				exceptions.add( e );
-                LOG.debugf("Unsuccessful: %s", dropSQL[i]);
-                LOG.debugf(e.getMessage());
-			}
 		}
 	}
 
@@ -436,7 +454,6 @@ public class SchemaExport {
                 LOG.unableToLogSqlWarnings(sqle);
 			}
 		}
-
 
 	}
 
@@ -528,7 +545,7 @@ public class SchemaExport {
 
 			BasicServiceRegistryImpl serviceRegistry = createServiceRegistry( cfg.getProperties() );
 			try {
-				SchemaExport se = new SchemaExport( serviceRegistry.getService( JdbcServices.class ), cfg )
+				SchemaExport se = new SchemaExport( serviceRegistry, cfg )
 						.setHaltOnError( halt )
 						.setOutputFile( outFile )
 						.setDelimiter( delim );
@@ -555,4 +572,5 @@ public class SchemaExport {
 	public List getExceptions() {
 		return exceptions;
 	}
+
 }

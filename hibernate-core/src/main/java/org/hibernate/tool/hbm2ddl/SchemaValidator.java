@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.tool.hbm2ddl;
 
@@ -28,6 +27,9 @@ import java.io.FileInputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Properties;
+
+import org.jboss.logging.Logger;
+
 import org.hibernate.HibernateException;
 import org.hibernate.HibernateLogger;
 import org.hibernate.cfg.Configuration;
@@ -37,9 +39,8 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.internal.BasicServiceRegistryImpl;
-
-import org.jboss.logging.Logger;
 
 /**
  * A commandline tool to update a database schema. May also be called from
@@ -48,7 +49,6 @@ import org.jboss.logging.Logger;
  * @author Christoph Sturm
  */
 public class SchemaValidator {
-
     private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, SchemaValidator.class.getName());
 
 	private ConnectionHelper connectionHelper;
@@ -68,12 +68,11 @@ public class SchemaValidator {
 		connectionHelper = new ManagedProviderConnectionHelper( props );
 	}
 
-	public SchemaValidator(JdbcServices jdbcServices, Configuration cfg ) throws HibernateException {
+	public SchemaValidator(ServiceRegistry serviceRegistry, Configuration cfg ) throws HibernateException {
 		this.configuration = cfg;
-		dialect = jdbcServices.getDialect();
-		connectionHelper = new SuppliedConnectionProviderConnectionHelper(
-				jdbcServices.getConnectionProvider()
-		);
+		final JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
+		this.dialect = jdbcServices.getDialect();
+		this.connectionHelper = new SuppliedConnectionProviderConnectionHelper( jdbcServices.getConnectionProvider() );
 	}
 
 	private static BasicServiceRegistryImpl createServiceRegistry(Properties properties) {
@@ -117,7 +116,7 @@ public class SchemaValidator {
 
 			BasicServiceRegistryImpl serviceRegistry = createServiceRegistry( cfg.getProperties() );
 			try {
-				new SchemaValidator( serviceRegistry.getService( JdbcServices.class ), cfg ).validate();
+				new SchemaValidator( serviceRegistry, cfg ).validate();
 			}
 			finally {
 				serviceRegistry.destroy();

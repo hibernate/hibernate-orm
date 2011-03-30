@@ -388,16 +388,16 @@ public final class SessionFactoryImpl
         LOG.debugf("Instantiated session factory");
 
 		if ( settings.isAutoCreateSchema() ) {
-			new SchemaExport( getJdbcServices(), cfg ).create( false, true );
+			new SchemaExport( serviceRegistry, cfg ).create( false, true );
 		}
 		if ( settings.isAutoUpdateSchema() ) {
-			new SchemaUpdate( getJdbcServices(), cfg ).execute( false, true );
+			new SchemaUpdate( serviceRegistry, cfg ).execute( false, true );
 		}
 		if ( settings.isAutoValidateSchema() ) {
-			new SchemaValidator( getJdbcServices(), cfg ).validate();
+			new SchemaValidator( serviceRegistry, cfg ).validate();
 		}
 		if ( settings.isAutoDropSchema() ) {
-			schemaExport = new SchemaExport( getJdbcServices(), cfg );
+			schemaExport = new SchemaExport( serviceRegistry, cfg );
 		}
 
 		currentSessionContext = buildCurrentSessionContext();

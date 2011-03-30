@@ -1277,7 +1277,7 @@ public class Person {
 
             <programlisting role="XML"><![CDATA[        <set name="participants" table="PERSON_EVENT" inverse="true">
             <key column="EVENT_ID"/>
-            <many-to-many column="PERSON_ID" class="events.Person"/>
+            <many-to-many column="PERSON_ID" class="Person"/>
         </set>]]></programlisting>
 
             <para>

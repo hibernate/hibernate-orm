@@ -96,6 +96,10 @@ public class EntitiesConfigurations {
         return get(entityName) != null;
     }
 
+    public boolean hasAuditedEntities() {
+        return entitiesConfigurations.size() != 0;
+    }
+
     public RelationDescription getRelationDescription(String entityName, String propertyName) {
         EntityConfiguration entCfg = entitiesConfigurations.get(entityName);
         RelationDescription relDesc = entCfg.getRelationDescription(propertyName);

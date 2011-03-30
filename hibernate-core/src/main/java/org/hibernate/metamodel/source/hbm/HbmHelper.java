@@ -134,4 +134,12 @@ public class HbmHelper {
 		boolean callable = DomHelper.extractBooleanAttributeValue( element, "callable", false );
 		return new CustomSQL( element.getTextTrim(), callable, getResultCheckStyle( element, callable ) );
 	}
+
+	public static String getPropertyAccessorName(Element element, boolean isEmbedded, String defaultAccess) {
+		return DomHelper.extractAttributeValue(
+				element,
+				"access",
+				isEmbedded ? "embedded" : defaultAccess
+		);
+	}
 }

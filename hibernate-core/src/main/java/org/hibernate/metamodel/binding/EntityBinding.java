@@ -84,6 +84,7 @@ public class EntityBinding {
 
 	private List<String> synchronizedTableNames;
 
+	// TODO: change to initialize from DomainState
 	public void fromHbmXml(MappingDefaults defaults, Element node, Entity entity) {
 		this.entity = entity;
 		metaAttributes = HbmHelper.extractMetas( node, true, defaults.getMappingMetas() );

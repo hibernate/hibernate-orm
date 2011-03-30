@@ -47,6 +47,18 @@ import org.hibernate.metamodel.source.util.DomHelper;
  * @author Steve Ebersole
  */
 public abstract class AbstractAttributeBinding implements AttributeBinding {
+	public static interface DomainState {
+		HibernateTypeDescriptor getHibernateTypeDescriptor();
+		Attribute getAttribute();
+		boolean isLazy();
+		String getPropertyAccessorName();
+		boolean isAlternateUniqueKey();
+		String getCascade();
+		boolean isOptimisticLockable();
+		String getNodeName();
+		Map<String, MetaAttribute> getMetaAttributes(EntityBinding entityBinding);
+	}
+
 	private final HibernateTypeDescriptor hibernateTypeDescriptor = new HibernateTypeDescriptor();
 	private final EntityBinding entityBinding;
 
@@ -55,7 +67,7 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 
 	private boolean isLazy;
 	private String propertyAccessorName;
-	private boolean alternateUniqueKey;
+	private boolean isAlternateUniqueKey;
 	private String cascade;
 	private boolean optimisticLockable;
 
@@ -68,22 +80,16 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 		this.entityBinding = entityBinding;
 	}
 
-	public void fromHbmXml(MappingDefaults defaults, Element element, Attribute attribute) {
-		this.attribute = attribute;
-		hibernateTypeDescriptor.setTypeName( DomHelper.extractAttributeValue( element, "type", null ) );
-
-		metaAttributes = HbmHelper.extractMetas( element, entityBinding.getMetaAttributes() );
-		nodeName = DomHelper.extractAttributeValue( element, "node", attribute.getName() );
-		isLazy = DomHelper.extractBooleanAttributeValue( element, "lazy", isLazyDefault( defaults ) );
-		propertyAccessorName =  (
-				DomHelper.extractAttributeValue(
-						element,
-						"access",
-						isEmbedded() ? "embedded" : defaults.getDefaultAccess()
-				)
-		);
-		cascade = DomHelper.extractAttributeValue( element, "cascade", defaults.getDefaultCascade() );
-		optimisticLockable = DomHelper.extractBooleanAttributeValue( element, "optimistic-lock", true );
+	public void initialize(DomainState state) {
+		hibernateTypeDescriptor.intialize( state.getHibernateTypeDescriptor() );
+		attribute = state.getAttribute();
+		isLazy = state.isLazy();
+		propertyAccessorName = state.getPropertyAccessorName();
+		isAlternateUniqueKey = state.isAlternateUniqueKey();
+		cascade = state.getCascade();
+		optimisticLockable = state.isOptimisticLockable();
+		nodeName = state.getNodeName();
+		metaAttributes = state.getMetaAttributes( entityBinding );
 	}
 
 	@Override
@@ -164,11 +170,11 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 
 	@Override
 	public boolean isAlternateUniqueKey() {
-		return alternateUniqueKey;
+		return isAlternateUniqueKey;
 	}
 
 	public void setAlternateUniqueKey(boolean alternateUniqueKey) {
-		this.alternateUniqueKey = alternateUniqueKey;
+		this.isAlternateUniqueKey = alternateUniqueKey;
 	}
 
 	@Override

@@ -52,4 +52,10 @@ public class HibernateTypeDescriptor {
 	public void setExplicitType(Type explicitType) {
 		this.explicitType = explicitType;
 	}
+
+	public void intialize(HibernateTypeDescriptor hibernateTypeDescriptor) {
+		typeName = hibernateTypeDescriptor.typeName;
+		explicitType = hibernateTypeDescriptor.explicitType;
+		typeParameters = hibernateTypeDescriptor.typeParameters;
+	}
 }

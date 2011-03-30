@@ -27,7 +27,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.StringTokenizer;
 
 import org.dom4j.Attribute;
@@ -38,13 +37,9 @@ import org.hibernate.HibernateLogger;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.engine.Versioning;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.mapping.MetaAttribute;
 import org.hibernate.metamodel.binding.AttributeBinding;
 import org.hibernate.metamodel.binding.BagBinding;
-import org.hibernate.metamodel.binding.CollectionElement;
-import org.hibernate.metamodel.binding.ElementCollectionElement;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.binding.SimpleAttributeBinding;
@@ -61,7 +56,8 @@ import org.hibernate.metamodel.relational.Tuple;
 import org.hibernate.metamodel.relational.UniqueKey;
 import org.hibernate.metamodel.relational.Value;
 import org.hibernate.metamodel.source.Metadata;
-import org.hibernate.metamodel.source.util.DomHelper;
+import org.hibernate.metamodel.source.hbm.state.domain.HbmPluralAttributeDomainState;
+import org.hibernate.metamodel.source.hbm.state.domain.HbmSimpleAttributeDomainState;
 
 /**
 * TODO : javadoc
@@ -140,10 +136,6 @@ abstract class AbstractEntityBinder {
 
 	protected String getDefaultAccess() {
 		return hibernateMappingBinder.getDefaultAccess();
-	}
-
-	protected boolean isDefaultLazy() {
-		return hibernateMappingBinder.isDefaultLazy();
 	}
 
 	private void bindPojoRepresentation(Element node, EntityBinding entityBinding) {
@@ -426,11 +418,12 @@ abstract class AbstractEntityBinder {
 
 	protected void bindSimpleAttribute(Element propertyElement, SimpleAttributeBinding attributeBinding, EntityBinding entityBinding, String attributeName) {
 		if ( attributeBinding.getAttribute() == null ) {
-			// attribute has not been bound yet
-			attributeBinding.fromHbmXml(
-					hibernateMappingBinder,
-					propertyElement,
-					entityBinding.getEntity().getOrCreateSingularAttribute( attributeName )
+			attributeBinding.initialize(
+					new HbmSimpleAttributeDomainState(
+							hibernateMappingBinder,
+							propertyElement,
+							entityBinding.getEntity().getOrCreateSingularAttribute( attributeName )
+					)
 			);
 		}
 
@@ -449,12 +442,13 @@ abstract class AbstractEntityBinder {
 			String attributeName) {
 		if ( collectionBinding.getAttribute() == null ) {
 			// domain model has not been bound yet
-			collectionBinding.fromHbmXml(
-					hibernateMappingBinder,
-					collectionNode,
-					entityBinding.getEntity().getOrCreatePluralAttribute( attributeName, attributeNature )
+			collectionBinding.initialize(
+					new HbmPluralAttributeDomainState(
+							hibernateMappingBinder,
+							collectionNode,
+							entityBinding.getEntity().getOrCreatePluralAttribute( attributeName, attributeNature )
+					)
 			);
-			bindCollectionElement( collectionNode, collectionBinding );
 		}
 
 		if ( collectionBinding.getValue() == null ) {
@@ -462,22 +456,6 @@ abstract class AbstractEntityBinder {
 		}
 	}
 
-	private void bindCollectionElement(
-			Element collectionNode,
-			PluralAttributeBinding collectionBinding) {
-		CollectionElement collectionElement = createCollectionElement( collectionNode, collectionBinding);
-		collectionElement.fromHbmXml( collectionNode );
-		collectionBinding.setCollectionElement( collectionElement );
-	}
-
-	private CollectionElement createCollectionElement(Element collectionNode, PluralAttributeBinding collectionBinding) {
-		Element element = collectionNode.element( "element" );
-		if ( element != null ) {
-			return new ElementCollectionElement( collectionBinding );
-		}
-		// TODO: implement other types of collection elements
-		return null;
-	}
 //	private static Property createProperty(
 //			final Value value,
 //	        final String propertyName,

@@ -116,6 +116,5 @@ public interface AttributeBinding {
 	public boolean[] getColumnUpdateability();
 	public boolean[] getColumnInsertability();
 	public boolean isSimpleValue();
-	public boolean isEmbedded();
 	public boolean isLazy();
 }

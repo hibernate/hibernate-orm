@@ -83,6 +83,9 @@ public class BasicAnnotationBindingTests extends AbstractBasicBindingTests {
 				fail( "Unable to index" );
 			}
 		}
-		return indexer.complete();
+
+		List<Index> indexList = new ArrayList<Index>();
+		indexList.add( indexer.complete() );
+		return new AnnotationIndex( indexList );
 	}
 }

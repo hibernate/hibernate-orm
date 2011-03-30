@@ -26,7 +26,6 @@ package org.hibernate.metamodel.binding;
 import org.dom4j.Element;
 
 import org.hibernate.metamodel.domain.Attribute;
-import org.hibernate.metamodel.source.hbm.HbmHelper;
 import org.hibernate.metamodel.source.util.DomHelper;
 
 /**
@@ -35,6 +34,13 @@ import org.hibernate.metamodel.source.util.DomHelper;
  * @author Gail Badner
  */
 public abstract class SingularAttributeBinding extends AbstractAttributeBinding implements KeyValueBinding {
+	public static interface DomainState extends AbstractAttributeBinding.DomainState {
+		boolean isInsertable();
+		boolean isUpdateable();
+		boolean isKeyCasadeDeleteEnabled();
+		String getUnsavedValue();
+	}
+
 	private boolean insertable;
 	private boolean updateable;
 	private boolean keyCasadeDeleteEnabled;
@@ -44,10 +50,12 @@ public abstract class SingularAttributeBinding extends AbstractAttributeBinding 
 		super( entityBinding );
 	}
 
-	public void fromHbmXml(MappingDefaults defaults, Element element, Attribute attribute) {
-		super.fromHbmXml( defaults, element, attribute );
-		insertable = DomHelper.extractBooleanAttributeValue( element, "insert", true );
-		updateable = DomHelper.extractBooleanAttributeValue( element, "update", true );
+	public final void initialize(DomainState state) {
+		super.initialize( state );
+		insertable = state.isInsertable();
+		updateable = state.isUpdateable();
+		keyCasadeDeleteEnabled = state.isKeyCasadeDeleteEnabled();
+		unsavedValue = state.getUnsavedValue();
 	}
 
 	public boolean isInsertable() {

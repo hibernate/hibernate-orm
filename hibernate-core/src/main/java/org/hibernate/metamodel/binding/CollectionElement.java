@@ -25,6 +25,7 @@ package org.hibernate.metamodel.binding;
 
 import org.dom4j.Element;
 
+import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.source.hbm.HbmHelper;
 import org.hibernate.metamodel.source.util.DomHelper;
@@ -35,6 +36,11 @@ import org.hibernate.metamodel.source.util.DomHelper;
  * @author Steve Ebersole
  */
 public class CollectionElement {
+	public static interface DomainState {
+		HibernateTypeDescriptor getHibernateTypeDescriptor();
+		String getNodeName();
+	}
+
 	private final HibernateTypeDescriptor hibernateTypeDescriptor = new HibernateTypeDescriptor();
 	private final PluralAttributeBinding collectionBinding;
 
@@ -46,7 +52,8 @@ public class CollectionElement {
 		this.collectionBinding = collectionBinding;
 	}
 
-	public void fromHbmXml(Element node) {
-		nodeName = DomHelper.extractAttributeValue( node, "node", null );
+	public void initialize(DomainState state) {
+		hibernateTypeDescriptor.intialize( state.getHibernateTypeDescriptor() );
+		nodeName = state.getNodeName();
 	}
 }

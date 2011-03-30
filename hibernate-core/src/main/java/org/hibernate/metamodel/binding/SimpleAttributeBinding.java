@@ -28,7 +28,6 @@ import org.dom4j.Element;
 
 import org.hibernate.MappingException;
 import org.hibernate.mapping.PropertyGeneration;
-import org.hibernate.metamodel.source.hbm.HbmHelper;
 import org.hibernate.metamodel.source.util.DomHelper;
 
 /**
@@ -37,54 +36,18 @@ import org.hibernate.metamodel.source.util.DomHelper;
  * @author Steve Ebersole
  */
 public class SimpleAttributeBinding extends SingularAttributeBinding {
+	public static interface DomainState extends SingularAttributeBinding.DomainState {
+		public abstract PropertyGeneration getPropertyGeneration();
+	}
 	private PropertyGeneration generation;
-	private boolean isLazy;
 
 	SimpleAttributeBinding(EntityBinding entityBinding) {
 		super( entityBinding );
 	}
 
-	public void fromHbmXml(MappingDefaults defaults, Element element, org.hibernate.metamodel.domain.Attribute attribute) {
-		super.fromHbmXml( defaults, element, attribute );
-		this.isLazy = DomHelper.extractBooleanAttributeValue( element, "lazy", false );
-		this.generation = PropertyGeneration.parse( DomHelper.extractAttributeValue( element, "generated", null ) );
-        if ( generation == PropertyGeneration.ALWAYS || generation == PropertyGeneration.INSERT ) {
-	        // generated properties can *never* be insertable...
-	        if ( isInsertable() ) {
-				final Attribute insertAttribute = element.attribute( "insert" );
-		        if ( insertAttribute == null ) {
-			        // insertable simply because the user did not specify anything; just override it
-					setInsertable( false );
-		        }
-		        else {
-			        // the user specifically supplied insert="true", which constitutes an illegal combo
-					throw new MappingException(
-							"cannot specify both insert=\"true\" and generated=\"" + generation.getName() +
-							"\" for property: " +
-							getAttribute().getName()
-					);
-		        }
-	        }
-
-	        // properties generated on update can never be updateable...
-	        if ( isUpdateable() && generation == PropertyGeneration.ALWAYS ) {
-				final Attribute updateAttribute = element.attribute( "update" );
-		        if ( updateAttribute == null ) {
-			        // updateable only because the user did not specify
-			        // anything; just override it
-			        setUpdateable( false );
-		        }
-		        else {
-			        // the user specifically supplied update="true",
-			        // which constitutes an illegal combo
-					throw new MappingException(
-							"cannot specify both update=\"true\" and generated=\"" + generation.getName() +
-							"\" for property: " +
-							getAttribute().getName()
-					);
-		        }
-	        }
-        }
+	public final void initialize(DomainState state) {
+		super.initialize( state );
+		generation = state.getPropertyGeneration();
 	}
 
 	protected boolean isLazyDefault(MappingDefaults defaults) {
@@ -98,15 +61,5 @@ public class SimpleAttributeBinding extends SingularAttributeBinding {
 
 	public PropertyGeneration getGeneration() {
 		return generation;
-	}
-
-	@Override
-	public boolean isLazy() {
-		return isLazy;
-	}
-
-	@Override
-	public boolean isEmbedded() {
-		return false;
 	}
 }

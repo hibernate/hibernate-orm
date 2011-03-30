@@ -27,6 +27,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 
 import org.dom4j.Attribute;
 import org.dom4j.Element;
@@ -35,7 +36,9 @@ import org.jboss.logging.Logger;
 import org.hibernate.FetchMode;
 import org.hibernate.HibernateLogger;
 import org.hibernate.MappingException;
+import org.hibernate.mapping.MetaAttribute;
 import org.hibernate.metamodel.relational.Table;
+import org.hibernate.metamodel.relational.Value;
 import org.hibernate.metamodel.source.hbm.HbmHelper;
 import org.hibernate.metamodel.source.util.DomHelper;
 
@@ -45,6 +48,36 @@ import org.hibernate.metamodel.source.util.DomHelper;
  * @author Steve Ebersole
  */
 public abstract class PluralAttributeBinding extends AbstractAttributeBinding {
+
+	public static interface DomainState extends AbstractAttributeBinding.DomainState {
+		FetchMode getFetchMode();
+		boolean isExtraLazy();
+		CollectionElement getCollectionElement(PluralAttributeBinding binding);
+		boolean isInverse();
+		boolean isMutable();
+		boolean isSubselectLoadable();
+		String getCacheConcurrencyStrategy();
+		String getCacheRegionName();
+		String getOrderBy();
+		String getWhere();
+		String getReferencedPropertyName();
+		boolean isSorted();
+		Comparator getComparator();
+		String getComparatorClassName();
+		boolean isOrphanDelete();
+		int getBatchSize();
+		boolean isEmbedded();
+		boolean isOptimisticLocked();
+		Class getCollectionPersisterClass();
+		String getTypeName();
+		java.util.Map getFilters();
+		java.util.Set getSynchronizedTables();
+		CustomSQL getCustomSQLInsert();
+		CustomSQL getCustomSQLUpdate();
+		CustomSQL getCustomSQLDelete();
+		CustomSQL getCustomSQLDeleteAll();
+		String getLoaderName();
+	}
 
 	private static final HibernateLogger LOG = Logger.getMessageLogger(
 				HibernateLogger.class, PluralAttributeBinding.class.getName()
@@ -76,7 +109,7 @@ public abstract class PluralAttributeBinding extends AbstractAttributeBinding {
 	private Class collectionPersisterClass;
 	private String typeName;
 	private final java.util.Map filters = new HashMap();
-	private final java.util.Set synchronizedTables = new HashSet();
+	private final java.util.Set<String> synchronizedTables = new HashSet<String>();
 
 	private CustomSQL customSQLInsert;
 	private CustomSQL customSQLUpdate;
@@ -90,8 +123,42 @@ public abstract class PluralAttributeBinding extends AbstractAttributeBinding {
 		collectionElement = new CollectionElement( this );
 	}
 
+	public void initialize(DomainState state) {
+		super.initialize( state );
+		fetchMode = state.getFetchMode();
+		extraLazy = state.isExtraLazy();
+		collectionElement = state.getCollectionElement( this );
+		inverse = state.isInverse();
+		mutable = state.isMutable();
+		subselectLoadable = state.isSubselectLoadable();
+		if ( isSubselectLoadable() ) {
+			getEntityBinding().setSubselectLoadableCollections( true );
+		}
+		cacheConcurrencyStrategy = state.getCacheConcurrencyStrategy();
+		cacheRegionName = state.getCacheRegionName();
+		orderBy = state.getOrderBy();
+		where = state.getWhere();
+		referencedPropertyName = state.getReferencedPropertyName();
+		sorted = state.isSorted();
+		comparator = state.getComparator();
+		comparatorClassName = state.getComparatorClassName();
+		orphanDelete = state.isOrphanDelete();
+		batchSize = state.getBatchSize();
+		embedded = state.isEmbedded();
+		optimisticLocked = state.isOptimisticLocked();
+		collectionPersisterClass = state.getCollectionPersisterClass();
+		typeName = state.getTypeName();
+		filters.putAll( state.getFilters() );
+		synchronizedTables.addAll( state.getSynchronizedTables() );
+		customSQLInsert = state.getCustomSQLInsert();
+		customSQLUpdate = state.getCustomSQLUpdate();
+		customSQLDelete = state.getCustomSQLDelete();
+		customSQLDeleteAll = state.getCustomSQLDeleteAll();
+		loaderName = state.getLoaderName();
+	}
+
+
 	public void fromHbmXml(MappingDefaults defaults, Element element, org.hibernate.metamodel.domain.Attribute attribute) {
-		super.fromHbmXml( defaults, element, attribute );
 		inverse = DomHelper.extractBooleanAttributeValue( element, "inverse", false );
 		mutable = DomHelper.extractBooleanAttributeValue( element, "mutable", true );
 		if ( "subselect".equals( element.attributeValue("fetch") ) ) {
@@ -281,11 +348,6 @@ public abstract class PluralAttributeBinding extends AbstractAttributeBinding {
 
 	public int getBatchSize() {
 		return batchSize;
-	}
-
-	@Override
-	public boolean isEmbedded() {
-		return embedded;
 	}
 
 	public boolean isOptimisticLocked() {

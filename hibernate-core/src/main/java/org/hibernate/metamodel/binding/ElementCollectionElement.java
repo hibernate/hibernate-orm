@@ -32,8 +32,4 @@ public class ElementCollectionElement extends CollectionElement {
 	public ElementCollectionElement(PluralAttributeBinding binding) {
 		super( binding );
 	}
-
-	public void fromHbmXml() {
-		//TODO:
-	}
 }

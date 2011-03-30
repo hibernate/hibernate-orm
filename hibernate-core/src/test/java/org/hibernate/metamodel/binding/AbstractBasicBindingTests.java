@@ -83,7 +83,31 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 		assertNotNull( nameBinding.getValue() );
 	}
 
+	@Test
+	public void testEntityWithElementCollection() {
+		EntityBinding entityBinding = buildEntityWithElementCollectionBinding();
+
+		assertNotNull( entityBinding );
+		assertNotNull( entityBinding.getEntityIdentifier() );
+		assertNotNull( entityBinding.getEntityIdentifier().getValueBinding() );
+		assertNull( entityBinding.getVersioningValueBinding() );
+
+		AttributeBinding idAttributeBinding = entityBinding.getAttributeBinding( "id" );
+		assertNotNull( idAttributeBinding );
+		assertSame( idAttributeBinding, entityBinding.getEntityIdentifier().getValueBinding() );
+		assertNotNull( idAttributeBinding.getAttribute() );
+		assertNotNull( idAttributeBinding.getValue() );
+		assertTrue( idAttributeBinding.getValue() instanceof Column );
+
+		AttributeBinding nameBinding = entityBinding.getAttributeBinding( "name" );
+		assertNotNull( nameBinding );
+		assertNotNull( nameBinding.getAttribute() );
+		assertNotNull( nameBinding.getValue() );
+	}
+
 	public abstract EntityBinding buildSimpleVersionedEntityBinding();
 
 	public abstract EntityBinding buildSimpleEntityBinding();
+
+	public abstract EntityBinding buildEntityWithElementCollectionBinding();
 }

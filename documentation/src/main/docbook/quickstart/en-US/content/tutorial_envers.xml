@@ -86,7 +86,8 @@
         </listitem>
         <listitem>
             <para>
-                Write a query to retrieve only historical data which meets some criteria.
+                Write a query to retrieve only historical data which meets some criteria. Use the
+                <citetitle pubwork="book">Envers User Guide</citetitle> to see how Envers queries are constructed.
             </para>
         </listitem>
         <listitem>

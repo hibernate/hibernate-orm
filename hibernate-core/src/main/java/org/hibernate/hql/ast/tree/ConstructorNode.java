@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,13 +20,17 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.hql.ast.tree;
 
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+
+import antlr.SemanticException;
+import antlr.collections.AST;
+
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.QueryException;
 import org.hibernate.hql.ast.DetailedSemanticException;
@@ -36,8 +40,6 @@ import org.hibernate.transform.AliasToBeanConstructorResultTransformer;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.transform.Transformers;
 import org.hibernate.type.Type;
-import antlr.SemanticException;
-import antlr.collections.AST;
 
 /**
  * Represents a constructor (new) in a SELECT.
@@ -45,11 +47,11 @@ import antlr.collections.AST;
  * @author josh
  */
 public class ConstructorNode extends SelectExpressionList implements AggregatedSelectExpression {
+	private Class resultType;
 	private Constructor constructor;
 	private Type[] constructorArgumentTypes;
 	private boolean isMap;
 	private boolean isList;
-	private int scalarColumnIndex = -1;
 
 	public ResultTransformer getResultTransformer() {
 		if ( constructor != null ) {
@@ -62,14 +64,6 @@ public class ConstructorNode extends SelectExpressionList implements AggregatedS
 			return Transformers.TO_LIST;
 		}
 		throw new QueryException( "Unable to determine proper dynamic-instantiation tranformer to use." );
-	}
-
-	public boolean isMap() {
-		return isMap;
-	}
-
-	public boolean isList() {
-		return isList;
 	}
 
 	private String[] aggregatedAliases;
@@ -101,7 +95,7 @@ public class ConstructorNode extends SelectExpressionList implements AggregatedS
 	}
 
 	public int getScalarColumnIndex() {
-		return scalarColumnIndex;
+		return -1;
 	}
 
 	public void setScalarColumnText(int i) throws SemanticException {
@@ -117,6 +111,11 @@ public class ConstructorNode extends SelectExpressionList implements AggregatedS
     protected AST getFirstSelectExpression() {
 		// Collect the select expressions, skip the first child because it is the class name.
 		return getFirstChild().getNextSibling();
+	}
+
+	@Override
+	public Class getAggregationResultType() {
+		return resultType;
 	}
 
 	/**
@@ -143,12 +142,15 @@ public class ConstructorNode extends SelectExpressionList implements AggregatedS
 		String path = ( ( PathNode ) getFirstChild() ).getPath();
 		if ( "map".equals( path.toLowerCase() ) ) {
 			isMap = true;
+			resultType = Map.class;
 		}
 		else if ( "list".equals( path.toLowerCase() ) ) {
 			isList = true;
+			resultType = List.class;
 		}
 		else {
-			constructor = resolveConstructor(path);
+			constructor = resolveConstructor( path );
+			resultType = constructor.getDeclaringClass();
 		}
 	}
 

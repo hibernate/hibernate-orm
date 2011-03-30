@@ -26,6 +26,7 @@ package org.hibernate.ejb.test.query;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.persistence.TemporalType;
+import javax.persistence.Tuple;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -516,6 +517,33 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 		item = em.createNamedQuery( "nativeItem2", Item.class ).getSingleResult();
 		assertNotNull( item );
 		assertEquals( "Micro$oft mouse", item.getDescr() );
+		em.remove( item );
+		em.getTransaction().commit();
+
+		em.close();
+	}
+
+	@Test
+	public void testTypedScalarQueries() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		Item item = new Item( "Mouse", "Micro$oft mouse" );
+		em.persist( item );
+		assertTrue( em.contains( item ) );
+		em.getTransaction().commit();
+
+		em.getTransaction().begin();
+		Object[] itemData = em.createQuery( "select i.name,i.descr from Item i", Object[].class ).getSingleResult();
+		assertEquals( 2, itemData.length );
+		assertEquals( String.class, itemData[0].getClass() );
+		assertEquals( String.class, itemData[1].getClass() );
+		Tuple itemTuple = em.createQuery( "select i.name,i.descr from Item i", Tuple.class ).getSingleResult();
+		assertEquals( 2, itemTuple.getElements().size() );
+		assertEquals( String.class, itemTuple.get( 0 ).getClass() );
+		assertEquals( String.class, itemTuple.get( 1 ).getClass() );
+		Item itemView = em.createQuery( "select new Item(i.name,i.descr) from Item i", Item.class ).getSingleResult();
+		assertNotNull( itemView );
+		assertEquals( "Micro$oft mouse", itemView.getDescr() );
 		em.remove( item );
 		em.getTransaction().commit();
 

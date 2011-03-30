@@ -1193,6 +1193,11 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 		return false;
 	}
 
+	@Override
+	public Class getDynamicInstantiationResultType() {
+		return holderClass;
+	}
+
 	public ParameterTranslations getParameterTranslations() {
 		return new ParameterTranslations() {
 

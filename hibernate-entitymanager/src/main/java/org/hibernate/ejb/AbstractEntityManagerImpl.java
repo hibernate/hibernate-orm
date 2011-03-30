@@ -23,15 +23,6 @@
  */
 package org.hibernate.ejb;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import javax.persistence.CacheRetrieveMode;
 import javax.persistence.CacheStoreMode;
 import javax.persistence.EntityManager;
@@ -60,6 +51,18 @@ import javax.persistence.metamodel.Metamodel;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 import javax.transaction.SystemException;
 import javax.transaction.TransactionManager;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.jboss.logging.Logger;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -88,6 +91,7 @@ import org.hibernate.engine.NamedSQLQueryDefinition;
 import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.query.HQLQueryPlan;
 import org.hibernate.engine.query.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.query.sql.NativeSQLQueryRootReturn;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
@@ -99,10 +103,11 @@ import org.hibernate.engine.transaction.synchronization.spi.ExceptionMapper;
 import org.hibernate.engine.transaction.synchronization.spi.ManagedFlushChecker;
 import org.hibernate.engine.transaction.synchronization.spi.SynchronizationCallbackCoordinator;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.service.jta.platform.spi.JtaPlatform;
 import org.hibernate.transform.BasicTransformerAdapter;
-import org.jboss.logging.Logger;
+import org.hibernate.type.Type;
 
 /**
  * @author <a href="mailto:gavin@hibernate.org">Gavin King</a>
@@ -279,22 +284,188 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 
 	public <T> TypedQuery<T> createQuery(String jpaqlString, Class<T> resultClass) {
 		try {
+			// do the translation
 			org.hibernate.Query hqlQuery = getSession().createQuery( jpaqlString );
-			if ( hqlQuery.getReturnTypes().length != 1 ) {
-				throw new IllegalArgumentException( "Cannot create TypedQuery for query with more than one return" );
+
+			// do some validation checking
+			if ( Object[].class.equals( resultClass ) ) {
+				// no validation needed
 			}
-			if ( !resultClass.isAssignableFrom( hqlQuery.getReturnTypes()[0].getReturnedClass() ) ) {
-				throw new IllegalArgumentException(
-						"Type specified for TypedQuery [" +
-								resultClass.getName() +
-								"] is incompatible with query return type [" +
-								hqlQuery.getReturnTypes()[0].getReturnedClass() + "]"
-				);
+			else if ( Tuple.class.equals( resultClass ) ) {
+				TupleBuilderTransformer tupleTransformer = new TupleBuilderTransformer( hqlQuery );
+				hqlQuery.setResultTransformer( tupleTransformer  );
 			}
+			else {
+				final HQLQueryPlan queryPlan = unwrap( SessionImplementor.class )
+						.getFactory()
+						.getQueryPlanCache()
+						.getHQLQueryPlan( jpaqlString, false, null );
+				final Class dynamicInstantiationClass = queryPlan.getDynamicInstantiationResultType();
+				if ( dynamicInstantiationClass != null ) {
+					if ( ! resultClass.isAssignableFrom( dynamicInstantiationClass ) ) {
+						throw new IllegalArgumentException(
+								"Mismatch in requested result type [" + resultClass.getName() +
+										"] and actual result type [" + dynamicInstantiationClass.getName() + "]"
+						);
+					}
+				}
+				else if ( hqlQuery.getReturnTypes().length == 1 ) {
+					// if we have only a single return expression, its java type should match with the requested type
+					if ( !resultClass.isAssignableFrom( hqlQuery.getReturnTypes()[0].getReturnedClass() ) ) {
+						throw new IllegalArgumentException(
+								"Type specified for TypedQuery [" +
+										resultClass.getName() +
+										"] is incompatible with query return type [" +
+										hqlQuery.getReturnTypes()[0].getReturnedClass() + "]"
+						);
+					}
+				}
+				else {
+					throw new IllegalArgumentException(
+							"Cannot create TypedQuery for query with more than one return using requested result type [" +
+									resultClass.getName() + "]"
+					);
+				}
+			}
+
+			// finally, build/return the query instance
 			return new QueryImpl<T>( hqlQuery, this );
 		}
 		catch ( HibernateException he ) {
 			throw convert( he );
+		}
+	}
+
+	public static class TupleBuilderTransformer extends BasicTransformerAdapter {
+		private List<TupleElement<?>> tupleElements;
+		private Map<String,HqlTupleElementImpl> tupleElementsByAlias;
+
+		public TupleBuilderTransformer(org.hibernate.Query hqlQuery) {
+			final Type[] resultTypes = hqlQuery.getReturnTypes();
+			final int tupleSize = resultTypes.length;
+
+			this.tupleElements = CollectionHelper.arrayList( tupleSize );
+
+			final String[] aliases = hqlQuery.getReturnAliases();
+			final boolean hasAliases = aliases != null && aliases.length > 0;
+			this.tupleElementsByAlias = hasAliases
+					? CollectionHelper.mapOfSize( tupleSize )
+					: Collections.<String, HqlTupleElementImpl>emptyMap();
+
+			for ( int i = 0; i < tupleSize; i++ ) {
+				final HqlTupleElementImpl tupleElement = new HqlTupleElementImpl(
+						i,
+						aliases == null ? null : aliases[i],
+						resultTypes[i]
+				);
+				tupleElements.add( tupleElement );
+				if ( hasAliases ) {
+					final String alias = aliases[i];
+					if ( alias != null ) {
+						tupleElementsByAlias.put( alias, tupleElement );
+					}
+				}
+			}
+		}
+
+		@Override
+		public Object transformTuple(Object[] tuple, String[] aliases) {
+			if ( tuple.length != tupleElements.size() ) {
+				throw new IllegalArgumentException(
+						"Size mismatch between tuple result [" + tuple.length + "] and expected tuple elements [" +
+								tupleElements.size() + "]"
+				);
+			}
+			return new HqlTupleImpl( tuple );
+		}
+
+		public static class HqlTupleElementImpl<X> implements TupleElement<X> {
+			private final int position;
+			private final String alias;
+			private final Type hibernateType;
+
+			public HqlTupleElementImpl(int position, String alias, Type hibernateType) {
+				this.position = position;
+				this.alias = alias;
+				this.hibernateType = hibernateType;
+			}
+
+			@Override
+			public Class getJavaType() {
+				return hibernateType.getReturnedClass();
+			}
+
+			@Override
+			public String getAlias() {
+				return alias;
+			}
+
+			public int getPosition() {
+				return position;
+			}
+
+			public Type getHibernateType() {
+				return hibernateType;
+			}
+		}
+
+		public class HqlTupleImpl implements Tuple {
+			private Object[] tuple;
+
+			public HqlTupleImpl(Object[] tuple) {
+				this.tuple = tuple;
+			}
+
+			@Override
+			public <X> X get(String alias, Class<X> type) {
+				return (X) get( alias );
+			}
+
+			@Override
+			public Object get(String alias) {
+				HqlTupleElementImpl tupleElement = tupleElementsByAlias.get( alias );
+				if ( tupleElement == null ) {
+					throw new IllegalArgumentException( "Unknown alias [" + alias + "]" );
+				}
+				return tuple[ tupleElement.getPosition() ];
+			}
+
+			@Override
+			public <X> X get(int i, Class<X> type) {
+				return (X) get( i );
+			}
+
+			@Override
+			public Object get(int i) {
+				if ( i < 0 ) {
+					throw new IllegalArgumentException( "requested tuple index must be greater than zero" );
+				}
+				if ( i > tuple.length ) {
+					throw new IllegalArgumentException( "requested tuple index exceeds actual tuple size" );
+				}
+				return tuple[i];
+			}
+
+			@Override
+			public Object[] toArray() {
+				// todo : make a copy?
+				return tuple;
+			}
+
+			@Override
+			public List<TupleElement<?>> getElements() {
+				return tupleElements;
+			}
+
+			@Override
+			public <X> X get(TupleElement<X> tupleElement) {
+				if ( HqlTupleElementImpl.class.isInstance( tupleElement ) ) {
+					return get( ( (HqlTupleElementImpl) tupleElement ).getPosition(), tupleElement.getJavaType() );
+				}
+				else {
+					return get( tupleElement.getAlias(), tupleElement.getJavaType() );
+				}
+			}
 		}
 	}
 

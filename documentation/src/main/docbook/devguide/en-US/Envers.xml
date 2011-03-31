@@ -21,6 +21,36 @@
     </preface>
 
     <section>
+        <title>Basics</title>
+
+        <para>
+            To audit changes that are performed on an entity, you only need two things: the
+            <literal>hibernate-envers</literal> jar on the classpath and an <literal>@Audited</literal> annotation
+            on the entity.
+        </para>
+
+        <para>
+            And that's all - you can create, modify and delete the entites as always. If you look at the generated
+            schema for your entities, or at the data persisted by Hibernate, you will notice that there are no changes.
+            However, for each audited entity, a new table is introduced - <literal>entity_table_AUD</literal>,
+            which stores the historical data, whenever you commit a transaction.
+        </para>
+
+        <para>
+            Instead of annotating the whole class and auditing all properties, you can annotate
+            only some persistent properties with <literal>@Audited</literal>. This will cause only
+            these properties to be audited.
+        </para>
+
+        <para>
+            The audit (history) of an entity can be accessed using the <literal>AuditReader</literal> interface, which
+            can be obtained having an open <listeral>EntityManager</listeral> or <literal>Session</literal> via
+            the <literal>AuditReaderFactory</literal>. See the javadocs for these classes for details on the
+            functionality offered.
+        </para>
+    </section>
+
+    <section>
         <title>Configuration</title>
         <para>
             It is possible to configure various aspects of Hibernate Envers behavior, such as table names, etc.

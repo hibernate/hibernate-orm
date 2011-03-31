@@ -1193,4 +1193,43 @@ query.add(AuditEntity.relatedId("address").eq(relatedEntityId));]]></programlist
         </section>
     </section>
 
+    <section id="envers-links">
+        <title>Envers links</title>
+
+        <orderedlist>
+            <listitem>
+                <para>
+                    <ulink url="http://hibernate.org">Hibernate main page</ulink>
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    <ulink url="http://community.jboss.org/en/envers?view=discussions">Forum</ulink>
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    <ulink url="http://opensource.atlassian.com/projects/hibernate/browse/HHH">JIRA issue tracker</ulink>
+                    (when adding issues concerning Envers, be sure to select the "envers" component!)
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    <ulink url="irc://irc.freenode.net:6667/envers">IRC channel</ulink>
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    <ulink url="http://www.jboss.org/feeds/view/envers">Envers Blog</ulink>
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    <ulink url="https://community.jboss.org/wiki/EnversFAQ">FAQ</ulink>
+                </para>
+            </listitem>
+        </orderedlist>
+
+    </section>
+
 </chapter>

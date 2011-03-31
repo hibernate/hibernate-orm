@@ -147,9 +147,9 @@ public class CMTTransaction extends AbstractTransactionImpl {
 		}
 
 		if ( JtaStatusHelper.isActive( transactionManager() ) ) {
-			joinStatus = JoinStatus.JOINED;
 			// register synchronization if needed
 			transactionCoordinator().pulse();
+			joinStatus = JoinStatus.JOINED;
 		}
 		else {
 			joinStatus = JoinStatus.NOT_JOINED;

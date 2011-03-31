@@ -108,6 +108,15 @@ public interface Transaction {
 	public boolean isActive();
 
 	/**
+	 * Is Hibernate participating in the underlying transaction?
+	 * <p/>
+	 * Generally speaking this will be the same as {@link #isActive()}.
+	 * 
+	 * @return
+	 */
+	public boolean isParticipating();
+
+	/**
 	 * Was this transaction committed?
 	 * <p/>
 	 * Answers on a best effort basis.  For example, in the case of JDBC based transactions we cannot know that a

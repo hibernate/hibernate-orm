@@ -223,7 +223,7 @@ public final class SessionImpl
 	 *
 	 * @param connection The user-supplied connection to use for this session.
 	 * @param factory The factory from which this session was obtained
-	 * @param autoclose NOT USED
+	 * @param autoClose NOT USED
 	 * @param timestamp The timestamp for this session
 	 * @param interceptor The interceptor to be applied to this session
 	 * @param entityMode The entity-mode for this session
@@ -234,7 +234,8 @@ public final class SessionImpl
 	SessionImpl(
 			final Connection connection,
 			final SessionFactoryImpl factory,
-			final boolean autoclose,
+			final boolean autoClose,
+			final boolean autoJoinTransactions,
 			final long timestamp,
 			final Interceptor interceptor,
 			final EntityMode entityMode,
@@ -251,6 +252,7 @@ public final class SessionImpl
 		this.flushBeforeCompletionEnabled = flushBeforeCompletionEnabled;
 		this.autoCloseSessionEnabled = autoCloseSessionEnabled;
 		this.connectionReleaseMode = connectionReleaseMode;
+		this.autoJoinTransactions = autoJoinTransactions;
 
 		this.transactionCoordinator = new TransactionCoordinatorImpl( connection, this );
 		this.transactionCoordinator.getJdbcCoordinator().getLogicalConnection().addObserver(

@@ -82,7 +82,7 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 
 	@Before
 	@SuppressWarnings( {"UnusedDeclaration"})
-	public void buildSessionFactory() throws Exception {
+	public void buildEntityManagerFactory() throws Exception {
 		LOG.trace( "Building session factory" );
 		ejb3Configuration = buildConfiguration();
 		ejb3Configuration.configure( getConfig() );

@@ -217,6 +217,10 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	 */
 	public Session openTemporarySession() throws HibernateException;
 
+	public Session openSession(boolean autoJoinTransaction);
+
+	public Session openSession(Interceptor sessionLocalInterceptor, boolean autoJoinTransaction);
+
 	/**
 	 * Open a session conforming to the given parameters.  Used mainly by
 	 * {@link org.hibernate.context.JTASessionContext} for current session processing.

@@ -118,6 +118,11 @@ public abstract class AbstractTransactionImpl implements TransactionImplementor 
 	}
 
 	@Override
+	public boolean isParticipating() {
+		return getJoinStatus() == JoinStatus.JOINED && isActive();
+	}
+
+	@Override
 	public boolean wasCommitted() {
 		return localStatus == LocalStatus.COMMITTED;
 	}

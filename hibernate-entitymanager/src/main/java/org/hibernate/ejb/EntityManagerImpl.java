@@ -1,8 +1,10 @@
 /*
- * Copyright (c) 2009, Red Hat Middleware LLC or third-party contributors as
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2009-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,18 +22,22 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb;
-import java.util.Map;
+
 import javax.persistence.PersistenceContextType;
 import javax.persistence.PersistenceException;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 import javax.transaction.Synchronization;
+import java.util.Map;
+
+import org.jboss.logging.Logger;
+
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
 import org.hibernate.annotations.common.util.ReflectHelper;
 import org.hibernate.cfg.Environment;
+import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
-import org.jboss.logging.Logger;
 
 /**
  * Hibernate implementation of {@link javax.persistence.EntityManager}.
@@ -109,12 +115,11 @@ public class EntityManagerImpl extends AbstractEntityManagerImpl {
 					throw new PersistenceException("Session interceptor does not implement Interceptor: " + sessionInterceptorClass, e);
 				}
 			}
-			session = getEntityManagerFactory().getSessionFactory().openSession( interceptor );
+			final boolean autoJoinTransactions = ( getTransactionType() != PersistenceUnitTransactionType.JTA );
+			final SessionFactoryImplementor sfi = ( (SessionFactoryImplementor) getEntityManagerFactory().getSessionFactory() );
+			session = sfi.openSession( interceptor, autoJoinTransactions );
 			if ( persistenceContextType == PersistenceContextType.TRANSACTION ) {
 				( (SessionImplementor) session ).setAutoClear( true );
-			}
-			if ( getTransactionType() == PersistenceUnitTransactionType.JTA ) {
-				( (SessionImplementor) session ).disableTransactionAutoJoin();
 			}
 		}
 		return session;

@@ -209,6 +209,13 @@ public class TransactionCoordinatorImpl implements TransactionCoordinator {
 			return;
 		}
 
+		if ( ! transactionContext.shouldAutoJoinTransaction() ) {
+			if ( currentHibernateTransaction.getJoinStatus() != JoinStatus.MARKED_FOR_JOINED ) {
+				LOG.debug( "Skipping JTA sync registration due to auto join checking" );
+				return;
+			}
+		}
+
 		// IMPL NOTE : At this point the local callback is the "maybe" one.  The only time that needs to change is if
 		// we are able to successfully register the transaction synchronization in which case the local callback would  become
 		// non driving.  To that end, the following checks are simply opt outs where we are unable to register the

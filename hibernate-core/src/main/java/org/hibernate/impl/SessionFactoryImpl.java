@@ -667,35 +667,58 @@ public final class SessionFactoryImpl
 	}
 
 	private SessionImpl openSession(
-		Connection connection,
-	    boolean autoClose,
-	    long timestamp,
-	    Interceptor sessionLocalInterceptor
-	) {
+			Connection connection,
+			boolean autoClose,
+			long timestamp,
+			Interceptor sessionLocalInterceptor) {
+		return openSession(
+				connection,
+				autoClose,
+				true,
+				timestamp,
+				sessionLocalInterceptor
+		);
+	}
+
+	private SessionImpl openSession(
+			Connection connection,
+			boolean autoClose,
+			boolean autoJoinTransactions,
+			long timestamp,
+			Interceptor sessionLocalInterceptor) {
 		return new SessionImpl(
 		        connection,
 		        this,
 		        autoClose,
+				autoJoinTransactions,
 		        timestamp,
 		        sessionLocalInterceptor == null ? interceptor : sessionLocalInterceptor,
 		        settings.getDefaultEntityMode(),
 		        settings.isFlushBeforeCompletionEnabled(),
 		        settings.isAutoCloseSessionEnabled(),
 		        settings.getConnectionReleaseMode()
-			);
+		);
 	}
 
 	public Session openSession(Connection connection, Interceptor sessionLocalInterceptor) {
-		return openSession(connection, false, Long.MIN_VALUE, sessionLocalInterceptor);
+		return openSession( connection, false, Long.MIN_VALUE, sessionLocalInterceptor );
 	}
 
 	public Session openSession(Interceptor sessionLocalInterceptor) throws HibernateException {
+		return openSession( sessionLocalInterceptor, true );
+	}
+
+	public Session openSession(boolean autoJoinTransaction) {
+		return openSession( null, autoJoinTransaction );
+	}
+
+	public Session openSession(Interceptor sessionLocalInterceptor, boolean autoJoinTransaction) {
 		// note that this timestamp is not correct if the connection provider
 		// returns an older JDBC connection that was associated with a
 		// transaction that was already begun before openSession() was called
 		// (don't know any possible solution to this!)
 		long timestamp = settings.getRegionFactory().nextTimestamp();
-		return openSession( null, true, timestamp, sessionLocalInterceptor );
+		return openSession( null, true, autoJoinTransaction, timestamp, sessionLocalInterceptor );
 	}
 
 	public Session openSession(Connection connection) {
@@ -711,6 +734,7 @@ public final class SessionFactoryImpl
 				null,
 		        this,
 		        true,
+				true,
 		        settings.getRegionFactory().nextTimestamp(),
 		        interceptor,
 		        settings.getDefaultEntityMode(),
@@ -729,13 +753,14 @@ public final class SessionFactoryImpl
 				connection,
 		        this,
 		        true,
+				true,
 		        settings.getRegionFactory().nextTimestamp(),
 		        interceptor,
 		        settings.getDefaultEntityMode(),
 		        flushBeforeCompletionEnabled,
 		        autoCloseSessionEnabled,
 		        connectionReleaseMode
-			);
+		);
 	}
 
 	public Session getCurrentSession() throws HibernateException {

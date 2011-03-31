@@ -32,68 +32,56 @@ public class CustomSQLTest extends LegacyTestCase {
 	}
 
 	@Test
+	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testInsert() throws HibernateException, SQLException {
 		if ( isUsingIdentity() ) {
 			SkipLog.reportSkip( "hand sql expecting non-identity id gen", "Custom SQL" );
 			return;
 		}
 
-		Role p = new Role();
-
-		p.setName("Patient");
-
 		Session s = openSession();
-
-		s.save(p);
-		s.flush();
-
-		s.connection().commit();
+		s.beginTransaction();
+		Role p = new Role();
+		p.setName("Patient");
+		s.save( p );
+		s.getTransaction().commit();
 		s.close();
 
-		sessionFactory().evict(Role.class);
-		s = openSession();
+		sessionFactory().getCache().evictEntityRegion( Role.class );
 
-		Role p2 = (Role) s.get(Role.class, new Long(p.getId()));
+		s = openSession();
+		s.beginTransaction();
+		Role p2 = (Role) s.get(Role.class, Long.valueOf(p.getId()));
 		assertNotSame(p, p2);
 		assertEquals(p2.getId(),p.getId());
 		assertTrue(p2.getName().equalsIgnoreCase(p.getName()));
 		s.delete(p2);
-		s.flush();
-
-
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
 	@Test
 	public void testJoinedSubclass() throws HibernateException, SQLException {
-		Medication m = new Medication();
-
-		m.setPrescribedDrug(new Drug());
-
-		m.getPrescribedDrug().setName("Morphine");
-
-
 		Session s = openSession();
-
-		s.save(m.getPrescribedDrug());
-		s.save(m);
-
-		s.flush();
-		s.connection().commit();
+		s.beginTransaction();
+		Medication m = new Medication();
+		m.setPrescribedDrug(new Drug());
+		m.getPrescribedDrug().setName( "Morphine" );
+		s.save( m.getPrescribedDrug() );
+		s.save( m );
+		s.getTransaction().commit();
 		s.close();
-		s = openSession();
 
+		s = openSession();
+		s.beginTransaction();
 		Medication m2  = (Medication) s.get(Medication.class, m.getId());
 		assertNotSame(m, m2);
-
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
-
 	}
 
 	@Test
+	@SuppressWarnings( {"UnnecessaryBoxing", "unchecked"})
 	public void testCollectionCUD() throws HibernateException, SQLException {
 		if ( isUsingIdentity() ) {
 			SkipLog.reportSkip( "hand sql expecting non-identity id gen", "Custom SQL" );
@@ -101,12 +89,9 @@ public class CustomSQLTest extends LegacyTestCase {
 		}
 
 		Role role = new Role();
-
 		role.setName("Jim Flanders");
-
 		Intervention iv = new Medication();
 		iv.setDescription("JF medical intervention");
-
 		role.getInterventions().add(iv);
 
 		List sx = new ArrayList();
@@ -116,28 +101,23 @@ public class CustomSQLTest extends LegacyTestCase {
 		role.setBunchOfStrings(sx);
 
 		Session s = openSession();
-
+		s.beginTransaction();
 		s.save(role);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
-
-		Role r = (Role) s.get(Role.class,new Long(role.getId()));
+		s.beginTransaction();
+		Role r = (Role) s.get(Role.class, Long.valueOf(role.getId()));
 		assertNotSame(role,r);
-
 		assertEquals(1,r.getInterventions().size());
-
 		assertEquals(3, r.getBunchOfStrings().size());
-
 		r.getBunchOfStrings().set(1, "replacement");
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
-
+		s.beginTransaction();
 		r = (Role) s.get(Role.class,new Long(role.getId()));
 		assertNotSame(role,r);
 
@@ -150,11 +130,8 @@ public class CustomSQLTest extends LegacyTestCase {
 		s.flush();
 
 		r.getBunchOfStrings().clear();
-		s.flush();
-
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
-
 	}
 
 	@Test
@@ -165,23 +142,21 @@ public class CustomSQLTest extends LegacyTestCase {
 		}
 
 		Person p = new Person();
-
 		p.setName("Max");
 		p.setLastName("Andersen");
 		p.setNationalID("110974XYZ�");
 		p.setAddress("P. P. Street 8");
 
 		Session s = openSession();
-
+		s.beginTransaction();
 		s.save(p);
-		s.flush();
-
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
-		sessionFactory().evict(Person.class);
-		s = openSession();
+		sessionFactory().getCache().evictEntityRegion( Person.class );
 
+		s = openSession();
+		s.beginTransaction();
 		Person p2 = (Person) s.get(Person.class, p.getId());
 		assertNotSame(p, p2);
 		assertEquals(p2.getId(),p.getId());
@@ -191,11 +166,11 @@ public class CustomSQLTest extends LegacyTestCase {
 		List list = s.createQuery( "select p from Party as p" ).list();
 		assertTrue(list.size() == 1);
 
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
-
+		s.beginTransaction();
 		list = s.createQuery( "select p from Person as p where p.address = 'L�rkev�nget 1'" ).list();
 		assertTrue(list.size() == 0);
 		p.setAddress("L�rkev�nget 1");
@@ -209,7 +184,7 @@ public class CustomSQLTest extends LegacyTestCase {
 		list = s.createQuery( "select p from Person as p" ).list();
 		assertTrue(list.size() == 0);
 
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 }

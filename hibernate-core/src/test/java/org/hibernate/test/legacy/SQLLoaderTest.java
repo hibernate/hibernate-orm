@@ -63,6 +63,7 @@ public class SQLLoaderTest extends LegacyTestCase {
 	@Test
 	public void testFindBySQLStar() throws HibernateException, SQLException {
 		Session session = openSession();
+		session.beginTransaction();
 		for ( Object entity : session.createQuery( "from Assignable" ).list() ) {
 			session.delete( entity );
 		}
@@ -95,13 +96,14 @@ public class SQLLoaderTest extends LegacyTestCase {
 		session.createSQLQuery( "select {simple.*} from Simple {simple}" ).addEntity( "simple", Simple.class ).list();
 		session.createSQLQuery( "select {a.*} from TA {a}" ).addEntity( "a", A.class ).list();
 
-		session.connection().commit();
+		session.getTransaction().commit();
 		session.close();
 	}
 
 	@Test
 	public void testFindBySQLProperties() throws HibernateException, SQLException {
 		Session session = openSession();
+		session.beginTransaction();
 		for ( Object entity : session.createQuery( "from Category" ).list() ) {
 			session.delete( entity );
 		}
@@ -144,13 +146,14 @@ public class SQLLoaderTest extends LegacyTestCase {
 		query.setParameterList("names", str);
 		query.uniqueResult();
 
-		session.connection().commit();
+		session.getTransaction().commit();
 		session.close();
 	}
 
 	@Test
 	public void testFindBySQLAssociatedObjects() throws HibernateException, SQLException {
 		Session s = openSession();
+		s.beginTransaction();
 		for ( Object entity : s.createQuery( "from Assignable" ).list() ) {
 			s.delete( entity );
 		}
@@ -167,19 +170,22 @@ public class SQLLoaderTest extends LegacyTestCase {
 		assn.setCategories(l);
 		c.setAssignable(assn);
 		s.save(assn);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		List list = s.createSQLQuery( "select {category.*} from category {category}" ).addEntity( "category", Category.class ).list();
 		list.get(0);
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 		
-		if ( getDialect() instanceof MySQLDialect ) return;
+		if ( getDialect() instanceof MySQLDialect ) {
+			return;
+		}
 
 		s = openSession();
+		s.beginTransaction();
 
 		Query query = s.getNamedQuery("namedsql");
 		assertNotNull(query);
@@ -191,8 +197,8 @@ public class SQLLoaderTest extends LegacyTestCase {
 		assertNotNull(values[1]);
 		assertTrue("wrong type: " + values[0].getClass(), values[0] instanceof Category);
 		assertTrue("wrong type: " + values[1].getClass(), values[1] instanceof Assignable);
-		
-		s.connection().commit();
+
+		s.getTransaction().commit();
 		s.close();
 
 	}
@@ -201,6 +207,7 @@ public class SQLLoaderTest extends LegacyTestCase {
 	@SkipForDialect( MySQLDialect.class )
 	public void testPropertyResultSQL() throws HibernateException, SQLException {
 		Session s = openSession();
+		s.beginTransaction();
 		for ( Object entity : s.createQuery( "from Assignable" ).list() ) {
 			s.delete( entity );
 		}
@@ -217,20 +224,17 @@ public class SQLLoaderTest extends LegacyTestCase {
 		assn.setCategories(l);
 		c.setAssignable(assn);
 		s.save(assn);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
-
+		s.beginTransaction();
 		Query query = s.getNamedQuery("nonaliasedsql");
 		assertNotNull(query);
 		List list = query.list();
         assertNotNull(list);
-		
 		assertTrue(list.get(0) instanceof Category);
-		
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 	}
@@ -238,17 +242,18 @@ public class SQLLoaderTest extends LegacyTestCase {
 	@Test
 	public void testFindBySQLMultipleObject() throws HibernateException, SQLException {
 		Session s = openSession();
+		s.beginTransaction();
 		for ( Object entity : s.createQuery( "from Assignable" ).list() ) {
 			s.delete( entity );
 		}
 		for ( Object entity : s.createQuery( "from Category" ).list() ) {
 			s.delete( entity );
 		}
-
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
+
 		s = openSession();
+		s.beginTransaction();
 		Category c = new Category();
 		c.setName("NAME");
 		Assignable assn = new Assignable();
@@ -273,36 +278,40 @@ public class SQLLoaderTest extends LegacyTestCase {
 		assn = new Assignable();
 		assn.setId("i.d.3");
 		s.save(assn);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
-		if ( getDialect() instanceof MySQLDialect ) return;
+		if ( getDialect() instanceof MySQLDialect ) {
+			return;
+		}
 
 		s = openSession();
+		s.beginTransaction();
 		String sql = "select {category.*}, {assignable.*} from category {category}, \"assign-able\" {assignable}";
 
 		List list = s.createSQLQuery( sql ).addEntity( "category", Category.class ).addEntity( "assignable", Assignable.class ).list();
 
 		assertTrue(list.size() == 6); // crossproduct of 2 categories x 3 assignables
 		assertTrue(list.get(0) instanceof Object[]);
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
 	@Test
 	public void testFindBySQLParameters() throws HibernateException, SQLException {
 		Session s = openSession();
+		s.beginTransaction();
 		for ( Object entity : s.createQuery( "from Assignable" ).list() ) {
 			s.delete( entity );
 		}
 		for ( Object entity : s.createQuery( "from Category" ).list() ) {
 			s.delete( entity );
 		}
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
+
 		s = openSession();
+		s.beginTransaction();
 		Category c = new Category();
 		c.setName("Good");
 		Assignable assn = new Assignable();
@@ -337,11 +346,11 @@ public class SQLLoaderTest extends LegacyTestCase {
 		assn = new Assignable();
 		assn.setId("i.d.3");
 		s.save(assn);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		Query basicParam = s.createSQLQuery( "select {category.*} from category {category} where {category}.name = 'Best'" )
 				.addEntity( "category", Category.class );
 		List list = basicParam.list();
@@ -360,8 +369,7 @@ public class SQLLoaderTest extends LegacyTestCase {
 		namedParam.setString("secondCat", "Best");
 		list = namedParam.list();
 		assertEquals(2, list.size());
-
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
@@ -369,6 +377,7 @@ public class SQLLoaderTest extends LegacyTestCase {
 	@SkipForDialect( { HSQLDialect.class, PostgreSQLDialect.class } )
 	public void testEscapedJDBC() throws HibernateException, SQLException {
 		Session session = openSession();
+		session.beginTransaction();
 		for ( Object entity : session.createQuery( "from A" ).list() ) {
 			session.delete( entity );
 		}
@@ -381,9 +390,11 @@ public class SQLLoaderTest extends LegacyTestCase {
 		session.flush();
 
 		int count = session.createQuery("from A").list().size();
+		session.getTransaction().commit();
 		session.close();
 
 		session = openSession();
+		session.beginTransaction();
 
 		Query query;
 		if( getDialect() instanceof TimesTenDialect) {
@@ -400,13 +411,14 @@ public class SQLLoaderTest extends LegacyTestCase {
 
 		assertNotNull(list);
 		assertEquals(1, list.size());
-		session.connection().commit();
+		session.getTransaction().commit();
 		session.close();
 	}
 
 	@Test
 	public void testDoubleAliasing() throws HibernateException, SQLException {
 		Session session = openSession();
+		session.beginTransaction();
 		for ( Object entity : session.createQuery( "from A" ).list() ) {
 			session.delete( entity );
 		}
@@ -419,10 +431,11 @@ public class SQLLoaderTest extends LegacyTestCase {
 		session.flush();
 
 		int count = session.createQuery("from A").list().size();
+		session.getTransaction().commit();
 		session.close();
 
 		session = openSession();
-
+		session.beginTransaction();
 		String sql = "select a.identifier_column as {a1.id}, " +
 				"    a.clazz_discriminata as {a1.class}, " +
 				"    a.count_ as {a1.count}, " +
@@ -438,67 +451,63 @@ public class SQLLoaderTest extends LegacyTestCase {
 
 		assertNotNull(list);
 		assertEquals(2, list.size());
-		session.connection().commit();
+		session.getTransaction().commit();
 		session.close();
 	}
 
 	@Test
 	public void testEmbeddedCompositeProperties() throws HibernateException, SQLException {
-	   Session session = openSession();
+		Session session = openSession();
+		session.beginTransaction();
+		Single s = new Single();
+		s.setId("my id");
+		s.setString("string 1");
+		session.save(s);
+		session.getTransaction().commit();
 
-	   Single s = new Single();
-	   s.setId("my id");
-	   s.setString("string 1");
-	   session.save(s);
-	   session.flush();
-	   session.connection().commit();
+		session = openSession();
+		session.beginTransaction();
 
-	   session.clear();
+		SQLQuery query = session.createSQLQuery( "select {sing.*} from Single {sing}" ).addEntity( "sing", Single.class );
+		List list = query.list();
+		assertTrue(list.size()==1);
 
-	   SQLQuery query = session.createSQLQuery( "select {sing.*} from Single {sing}" ).addEntity( "sing", Single.class );
+		session.clear();
 
-	   List list = query.list();
+		query = session.createSQLQuery( "select {sing.*} from Single {sing} where sing.id = ?" ).addEntity( "sing", Single.class );
+	   	query.setString(0, "my id");
+	   	list = query.list();
+		assertTrue(list.size()==1);
 
-	   assertTrue(list.size()==1);
+		session.clear();
 
-	   session.clear();
-
-	   query = session.createSQLQuery( "select {sing.*} from Single {sing} where sing.id = ?" ).addEntity( "sing", Single.class );
-	   query.setString(0, "my id");
-	   list = query.list();
-
-	   assertTrue(list.size()==1);
-
-	   session.clear();
-
-	   query = session.createSQLQuery( "select s.id as {sing.id}, s.string_ as {sing.string}, s.prop as {sing.prop} from Single s where s.id = ?" )
+		query = session.createSQLQuery( "select s.id as {sing.id}, s.string_ as {sing.string}, s.prop as {sing.prop} from Single s where s.id = ?" )
 			   .addEntity( "sing", Single.class );
-	   query.setString(0, "my id");
-	   list = query.list();
+		query.setString(0, "my id");
+	   	list = query.list();
+		assertTrue(list.size()==1);
 
-	   assertTrue(list.size()==1);
+		session.clear();
 
-	   session.clear();
-
-	   query = session.createSQLQuery( "select s.id as {sing.id}, s.string_ as {sing.string}, s.prop as {sing.prop} from Single s where s.id = ?" )
+		query = session.createSQLQuery( "select s.id as {sing.id}, s.string_ as {sing.string}, s.prop as {sing.prop} from Single s where s.id = ?" )
 			   .addEntity( "sing", Single.class );
-	   query.setString(0, "my id");
-	   list = query.list();
+		query.setString(0, "my id");
+		list = query.list();
 
-	   assertTrue(list.size()==1);
+		assertTrue(list.size()==1);
 
-	   session.connection().commit();
-	   session.close();
-
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	@Test
 	@FailureExpected( jiraKey = "unknown" )
 	public void testReturnPropertyComponentRename() throws HibernateException, SQLException {
 		// failure expected because this was a regression introduced previously which needs to get tracked down.
-		Session session = openSession();
-		Componentizable componentizable = setupComponentData(session);
+		Componentizable componentizable = setupComponentData();
 		
+		Session session = openSession();
+		session.beginTransaction();
 		Query namedQuery = session.getNamedQuery("queryComponentWithOtherColumn");
 		List list = namedQuery.list();
 		
@@ -506,11 +515,8 @@ public class SQLLoaderTest extends LegacyTestCase {
 		assertEquals( "flakky comp", ( (Componentizable) list.get(0) ).getComponent().getName() );
 		
 		session.clear();
-		
 		session.delete(componentizable);
-		session.flush();
-		
-		session.connection().commit();
+		session.getTransaction().commit();
 		session.close();
 	}
 	
@@ -525,29 +531,28 @@ public class SQLLoaderTest extends LegacyTestCase {
 	}
 
 	private void componentTest(String sql) throws SQLException {
-        Session session = openSession();
-	    
-	    Componentizable c = setupComponentData( session );
+	    Componentizable c = setupComponentData();
 
-		SQLQuery q = session.createSQLQuery( sql )
-				.addEntity( "comp", Componentizable.class );
+		Session session = openSession();
+		session.beginTransaction();
+		SQLQuery q = session.createSQLQuery( sql ).addEntity( "comp", Componentizable.class );
 	    List list = q.list();
-	    
 	    assertEquals(list.size(),1);
-	    
+
 	    Componentizable co = (Componentizable) list.get(0);
-	    
 	    assertEquals(c.getNickName(), co.getNickName());
 	    assertEquals(c.getComponent().getName(), co.getComponent().getName());
 	    assertEquals(c.getComponent().getSubComponent().getSubName(), co.getComponent().getSubComponent().getSubName());
-	    
-	    session.delete(co);
-	    session.flush();
-	    session.connection().commit();
+
+	    session.delete( co );
+		session.getTransaction().commit();
 	    session.close();
     }
 
-	private Componentizable setupComponentData(Session session) throws SQLException {
+	private Componentizable setupComponentData() throws SQLException {
+		Session session = sessionFactory().openSession();
+		session.beginTransaction();
+
 		Componentizable c = new Componentizable();
 	    c.setNickName("Flacky");
 	    Component component = new Component();
@@ -559,11 +564,9 @@ public class SQLLoaderTest extends LegacyTestCase {
         c.setComponent(component);
         
         session.save(c);
-        
-        session.flush();
-        session.connection().commit();
-        
+		session.getTransaction().commit();
         session.clear();
+
 		return c;
 	}
 
@@ -571,6 +574,7 @@ public class SQLLoaderTest extends LegacyTestCase {
 	@SkipForDialect( MySQLDialect.class )
     public void testFindSimpleBySQL() throws Exception {
 		Session session = openSession();
+		session.beginTransaction();
 		Category s = new Category();
 		s.setName(String.valueOf(nextLong++));
 		session.save(s);
@@ -583,7 +587,7 @@ public class SQLLoaderTest extends LegacyTestCase {
 		assertNotNull(list);
 		assertTrue(list.size() > 0);
 		assertTrue(list.get(0) instanceof Category);
-		session.connection().commit();
+		session.getTransaction().commit();
 		session.close();
 		// How do we handle objects with composite id's ? (such as Single)
 	}
@@ -591,16 +595,19 @@ public class SQLLoaderTest extends LegacyTestCase {
 	@Test
 	public void testFindBySQLSimpleByDiffSessions() throws Exception {
 		Session session = openSession();
+		session.beginTransaction();
 		Category s = new Category();
 		s.setName(String.valueOf(nextLong++));
 		session.save(s);
-		session.flush();
-		session.connection().commit();
+		session.getTransaction().commit();
 		session.close();
 
-		if ( getDialect() instanceof MySQLDialect ) return;
+		if ( getDialect() instanceof MySQLDialect ) {
+			return;
+		}
 
 		session = openSession();
+		session.beginTransaction();
 
 		Query query = session.createSQLQuery( "select s.category_key_col as {category.id}, s.name as {category.name}, s.\"assign-able-id\" as {category.assignable} from {category} s" )
 				.addEntity( "category", Category.class );
@@ -612,13 +619,14 @@ public class SQLLoaderTest extends LegacyTestCase {
 
 		// How do we handle objects that does not have id property (such as Simple ?)
 		// How do we handle objects with composite id's ? (such as Single)
-		session.connection().commit();
+		session.getTransaction().commit();
 		session.close();
 	}
 
 	@Test
 	public void testFindBySQLDiscriminatedSameSession() throws Exception {
 		Session session = openSession();
+		session.beginTransaction();
 		for ( Object entity : session.createQuery( "from A" ).list() ) {
 			session.delete( entity );
 		}
@@ -655,13 +663,14 @@ public class SQLLoaderTest extends LegacyTestCase {
 		List list2 = session.getNamedQuery("propertyResultDiscriminator").list();
 		assertEquals(2, list2.size());
 		
-		session.connection().commit();
+		session.getTransaction().commit();
 		session.close();
 	}
 
 	@Test
 	public void testFindBySQLDiscriminatedDiffSession() throws Exception {
 		Session session = openSession();
+		session.beginTransaction();
 		for ( Object entity : session.createQuery( "from A" ).list() ) {
 			session.delete( entity );
 		}
@@ -670,20 +679,19 @@ public class SQLLoaderTest extends LegacyTestCase {
 
 		B savedB = new B();
 		session.save(savedB);
-		session.flush();
-
+		session.getTransaction().commit();
 		int count = session.createQuery("from A").list().size();
 		session.close();
 
 		session = openSession();
-
+		session.beginTransaction();
 		Query query = session.createSQLQuery( "select identifier_column as {a.id}, clazz_discriminata as {a.class}, count_ as {a.count}, name as {a.name} from TA" )
 				.addEntity( "a", A.class );
 		List list = query.list();
 
 		assertNotNull(list);
 		assertEquals(count, list.size());
-		session.connection().commit();
+		session.getTransaction().commit();
 		session.close();
 	}
 
@@ -691,18 +699,17 @@ public class SQLLoaderTest extends LegacyTestCase {
 	@TestForIssue( jiraKey = "HHH-21" )
     public void testCompositeIdId() throws HibernateException, SQLException {
         Session s = openSession();
-
+		s.beginTransaction();
         CompositeIdId id = new CompositeIdId();
         id.setName("Max");
         id.setSystem("c64");
         id.setId("games");
-
         s.save(id);
-        s.flush();
-        s.connection().commit();
+		s.getTransaction().commit();
         s.close();
 
         s = openSession();
+		s.beginTransaction();
         // having a composite id with one property named id works since the map used by sqlloader to map names to properties handles it.
 		String sql = "select system as {c.system}, id as {c.id}, name as {c.name}, foo as {c.composite.foo}, bar as {c.composite.bar} from CompositeIdId where system=? and id=?";
 		SQLQuery query = s.createSQLQuery( sql ).addEntity( "c", CompositeIdId.class );
@@ -712,23 +719,19 @@ public class SQLLoaderTest extends LegacyTestCase {
         CompositeIdId id2 = (CompositeIdId) query.uniqueResult();
         check(id, id2);
 
-        s.flush();
-        s.connection().commit();
+		s.getTransaction().commit();
         s.close();
 
         s = openSession();
-
+		s.beginTransaction();
         CompositeIdId useForGet = new CompositeIdId();
         useForGet.setSystem("c64");
         useForGet.setId("games");
         // this doesn't work since the verification does not take column span into respect!
         CompositeIdId getted = (CompositeIdId) s.get(CompositeIdId.class, useForGet);
         check(id,getted);
-
-
-        s.connection().commit();
+		s.getTransaction().commit();
         s.close();
-
     }
 
     private void check(CompositeIdId id, CompositeIdId id2) {

@@ -52,6 +52,13 @@ import org.hibernate.stat.Statistics;
  */
 public interface SessionFactory extends Referenceable, Serializable {
 	/**
+	 * Obtain a {@link Session} builder.
+	 *
+	 * @return The session builder
+	 */
+	public SessionBuilder withOptions();
+
+	/**
 	 * Open a {@link Session}.
 	 * <p/>
 	 * JDBC {@link Connection connection(s} will be obtained from the
@@ -60,56 +67,9 @@ public interface SessionFactory extends Referenceable, Serializable {
 	 *
 	 * @return The created session.
 	 *
-	 * @throws HibernateException Indicates a peroblem opening the session; pretty rare here.
+	 * @throws HibernateException Indicates a problem opening the session; pretty rare here.
 	 */
 	public Session openSession() throws HibernateException;
-
-	/**
-	 * Open a {@link Session}, utilizing the specified {@link Interceptor}.
-	 * <p/>
-	 * JDBC {@link Connection connection(s} will be obtained from the
-	 * configured {@link org.hibernate.service.jdbc.connections.spi.ConnectionProvider} as needed
-	 * to perform requested work.
-	 *
-	 * @param interceptor a session-scoped interceptor
-	 *
-	 * @return The created session.
-	 *
-	 * @throws HibernateException Indicates a peroblem opening the session; pretty rare here.
-	 */
-	public Session openSession(Interceptor interceptor) throws HibernateException;
-
-	/**
-	 * Open a {@link Session}, utilizing the specfied JDBC {@link Connection}.
-	 * <p>
-	 * Note that the second-level cache will be disabled if you supply a JDBC
-	 * connection. Hibernate will not be able to track any statements you might
-	 * have executed in the same transaction.  Consider implementing your own
-	 * {@link org.hibernate.service.jdbc.connections.spi.ConnectionProvider} instead as a highly
-	 * recommended alternative.
-	 *
-	 * @param connection a connection provided by the application.
-	 *
-	 * @return The created session.
-	 */
-	public Session openSession(Connection connection);
-
-	/**
-	 * Open a {@link Session}, utilizing the specfied JDBC {@link Connection} and
-	 * specified {@link Interceptor}.
-	 * <p>
-	 * Note that the second-level cache will be disabled if you supply a JDBC
-	 * connection. Hibernate will not be able to track any statements you might
-	 * have executed in the same transaction.  Consider implementing your own
-	 * {@link org.hibernate.service.jdbc.connections.spi.ConnectionProvider} instead as a highly
-	 * recommended alternative.
-	 *
-	 * @param connection a connection provided by the application.
-	 * @param interceptor a session-scoped interceptor
-	 *
-	 * @return The created session.
-	 */
-	public Session openSession(Connection connection, Interceptor interceptor);
 
 	/**
 	 * Obtains the current session.  The definition of what exactly "current"

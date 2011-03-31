@@ -25,6 +25,7 @@ package org.hibernate.test.legacy;
 
 import java.io.Serializable;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -43,6 +44,8 @@ import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MckoiDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.SAPDBDialect;
+import org.hibernate.jdbc.AbstractWork;
+import org.hibernate.jdbc.Work;
 import org.hibernate.mapping.MetaAttribute;
 import org.hibernate.mapping.PersistentClass;
 
@@ -73,28 +76,29 @@ public class MasterDetailTest extends LegacyTestCase {
 	@Test
 	public void testOuterJoin() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Eye e = new Eye();
 		e.setName("Eye Eye");
 		Jay jay = new Jay(e);
-		e.setJay(jay);
-		s.saveOrUpdate(e);
-		s.flush();
-		s.connection().commit();
+		e.setJay( jay );
+		s.saveOrUpdate( e );
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		e = (Eye) s.createCriteria(Eye.class).uniqueResult();
 		assertTrue( Hibernate.isInitialized( e.getJay() ) );
 		assertTrue( Hibernate.isInitialized( e.getJays() ) );
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		jay = (Jay) s.createQuery("select new Jay(eye) from Eye eye").uniqueResult();
 		assertTrue( "Eye Eye".equals( jay.getEye().getName() ) );
 		s.delete( jay.getEye() );
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
@@ -108,6 +112,7 @@ public class MasterDetailTest extends LegacyTestCase {
 	}
 
 	@Test
+	@SuppressWarnings( {"unchecked"})
 	public void testCopy() throws Exception {
 		Category catWA = new Category();
 		catWA.setName("HSQL workaround");
@@ -119,11 +124,12 @@ public class MasterDetailTest extends LegacyTestCase {
 		subCatBaz.setName("baz");
 		cat.getSubcategories().add(subCatBar);
 		cat.getSubcategories().add(subCatBaz);
+
 		Session s = openSession();
-		s.save(catWA);
-		s.save(cat);
-		s.flush();
-		s.connection().commit();
+		s.beginTransaction();
+		s.save( catWA );
+		s.save( cat );
+		s.getTransaction().commit();
 		s.close();
 
 		cat.setName("new foo");
@@ -137,9 +143,9 @@ public class MasterDetailTest extends LegacyTestCase {
 		newCat.getSubcategories().add(newSubCat);
 
 		s = openSession();
+		s.beginTransaction();
 		Category copiedCat = (Category) s.merge( cat );
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		assertFalse( copiedCat==cat );
@@ -156,11 +162,11 @@ public class MasterDetailTest extends LegacyTestCase {
 		cat.setName("new new foo");
 
 		s = openSession();
+		s.beginTransaction();
 		s.delete(cat);
-		s.delete(subCatBaz);
-		s.delete(catWA);
-		s.flush();
-		s.connection().commit();
+		s.delete( subCatBaz );
+		s.delete( catWA );
+		s.getTransaction().commit();
 		s.close();
 	}
 
@@ -491,6 +497,7 @@ public class MasterDetailTest extends LegacyTestCase {
 	@Test
 	public void testIncomingOutgoing() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Master master1 = new Master();
 		Master master2 = new Master();
 		Master master3 = new Master();
@@ -502,12 +509,16 @@ public class MasterDetailTest extends LegacyTestCase {
 		master1.addIncoming(master3);
 		master3.addOutgoing(master1);
 		Serializable m1id = s.getIdentifier(master1);
-		assertTrue( s.createFilter( master1.getIncoming(), "where this.id > 0 and this.name is not null" ).list().size()==2 );
-		s.flush();
-		s.connection().commit();
+		assertTrue(
+				s.createFilter( master1.getIncoming(), "where this.id > 0 and this.name is not null" )
+						.list()
+						.size() == 2
+		);
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		master1 = (Master) s.load(Master.class, m1id);
 		Iterator iter = master1.getIncoming().iterator();
 		int i=0;
@@ -518,16 +529,16 @@ public class MasterDetailTest extends LegacyTestCase {
 			s.delete(m);
 			i++;
 		}
-		assertTrue( "incoming-outgoing", i==2 );
-		s.delete(master1);
-		s.flush();
-		s.connection().commit();
+		assertTrue( "incoming-outgoing", i == 2 );
+		s.delete( master1 );
+		s.getTransaction().commit();
 		s.close();
 	}
 
 	@Test
 	public void testCascading() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Detail d1 = new Detail();
 		Detail d2 = new Detail();
 		d2.setI(22);
@@ -539,55 +550,57 @@ public class MasterDetailTest extends LegacyTestCase {
 		m.getMoreDetails().add(d1);
 		m.getMoreDetails().add(d2);
 		Serializable mid = s.save(m);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
+
 		s = openSession();
+		s.beginTransaction();
 		m = (Master) s.load(Master.class, mid);
 		assertTrue( "cascade save", m.getMoreDetails().size()==2 );
 		assertTrue( "cascade save", ( (Detail) m.getMoreDetails().iterator().next() ).getMaster().getDetails().size()==2 );
-
-		s.delete(m);
-		s.delete( s.load(Master.class, m0id) );
-
-		s.flush();
-		s.connection().commit();
+		s.delete( m );
+		s.delete( s.load( Master.class, m0id ) );
+		s.getTransaction().commit();
 		s.close();
 	}
 
 	@Test
 	public void testNamedQuery() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Query q = s.getNamedQuery("all_details");
 		q.list();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
 	@Test
 	public void testUpdateLazyCollections() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Master m = new Master();
 		s.save( m );
 		Detail d1 = new Detail();
 		Detail d2 = new Detail();
-		d2.setX(14);
-		d1.setMaster(m);
-		d2.setMaster(m);
-		s.save(d1);
-		s.save(d2);
-		m.addDetail(d1);
-		m.addDetail(d2);
-		s.flush();
-		s.connection().commit();
+		d2.setX( 14 );
+		d1.setMaster( m );
+		d2.setMaster( m );
+		s.save( d1 );
+		s.save( d2 );
+		m.addDetail( d1 );
+		m.addDetail( d2 );
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		m = (Master) s.load( Master.class, m.getId() );
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 		m.setName("New Name");
+
 		s = openSession();
+		s.beginTransaction();
 		s.update( m );
 		Iterator iter = m.getDetails().iterator();
 		int i=0;
@@ -598,9 +611,8 @@ public class MasterDetailTest extends LegacyTestCase {
 		assertTrue(i==2);
 		iter = m.getDetails().iterator();
 		while ( iter.hasNext() ) s.delete( iter.next() );
-		s.delete(m);
-		s.flush();
-		s.connection().commit();
+		s.delete( m );
+		s.getTransaction().commit();
 		s.close();
 	}
 
@@ -637,22 +649,23 @@ public class MasterDetailTest extends LegacyTestCase {
 	@Test
 	public void testMixNativeAssigned() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Category c = new Category();
 		c.setName("NAME");
 		Assignable assn = new Assignable();
 		assn.setId("i.d.");
 		List l = new ArrayList();
-		l.add(c);
-		assn.setCategories(l);
-		c.setAssignable(assn);
-		s.save(assn);
-		s.flush();
-		s.connection().commit();
+		l.add( c );
+		assn.setCategories( l );
+		c.setAssignable( assn );
+		s.save( assn );
+		s.getTransaction().commit();
 		s.close();
+
 		s = openSession();
-		s.delete(assn);
-		s.flush();
-		s.connection().commit();
+		s.beginTransaction();
+		s.delete( assn );
+		s.getTransaction().commit();
 		s.close();
 	}
 
@@ -785,6 +798,7 @@ public class MasterDetailTest extends LegacyTestCase {
 	@Test
 	public void testCategories() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Category c = new Category();
 		c.setName(Category.ROOT_CATEGORY);
 		Category c1 = new Category();
@@ -792,38 +806,40 @@ public class MasterDetailTest extends LegacyTestCase {
 		Category c3 = new Category();
 		c.getSubcategories().add(c1);
 		c.getSubcategories().add(c2);
-		c2.getSubcategories().add(null);
-		c2.getSubcategories().add(c3);
-		s.save(c);
-		s.flush();
-		s.connection().commit();
+		c2.getSubcategories().add( null );
+		c2.getSubcategories().add( c3 );
+		s.save( c );
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
-		Transaction tx = s.beginTransaction();
+		s.beginTransaction();
 		s.lock(c, LockMode.UPGRADE);
 		Category loaded = (Category) s.load( Category.class, new Long( c3.getId() ) );
 		assertTrue( s.contains(c3) );
 		assertTrue(loaded==c3);
 		assertTrue( s.getCurrentLockMode(c3)==LockMode.NONE );
-		assertTrue( s.getCurrentLockMode(c)==LockMode.UPGRADE );
+		assertTrue( s.getCurrentLockMode( c ) == LockMode.UPGRADE );
 		s.flush();
-		tx.commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		loaded = (Category) s.load( Category.class, new Long( c.getId() ) );
 		assertFalse( Hibernate.isInitialized( loaded.getSubcategories() ) );
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
+
 		s = openSession();
+		s.beginTransaction();
 		s.lock(loaded, LockMode.NONE);
 		assertTrue( loaded.getSubcategories().size()==2 );
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
-
 		s = openSession();
+		s.beginTransaction();
 		c = (Category) s.load( Category.class, new Long( c.getId() ) );
 		System.out.println( c.getSubcategories() );
 		assertTrue( c.getSubcategories().get(0)!=null && c.getSubcategories().get(1)!=null );
@@ -834,38 +850,39 @@ public class MasterDetailTest extends LegacyTestCase {
 				s.createQuery( "from Category c where c.name = org.hibernate.test.legacy.Category.ROOT_CATEGORY" )
 						.iterate().hasNext()
 		);
-		s.delete(c);
-		s.flush();
-		s.connection().commit();
+		s.delete( c );
+		s.getTransaction().commit();
 		s.close();
 	}
 
 	@Test
 	public void testCollectionRefresh() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Category c = new Category();
 		List list = new ArrayList();
 		c.setSubcategories(list);
 		list.add( new Category() );
 		c.setName("root");
 		Serializable id = s.save(c);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
+
 		s = openSession();
+		s.beginTransaction();
 		c = (Category) s.load(Category.class, id);
-		s.refresh(c);
+		s.refresh( c );
 		s.flush();
-		assertTrue( c.getSubcategories().size()==1 );
-		s.flush();
-		s.connection().commit();
+		assertTrue( c.getSubcategories().size() == 1 );
+		s.getTransaction().commit();
 		s.close();
+
 		s = openSession();
+		s.beginTransaction();
 		c = (Category) s.load(Category.class, id);
-		assertTrue( c.getSubcategories().size()==1 );
-		s.delete(c);
-		s.flush();
-		s.connection().commit();
+		assertTrue( c.getSubcategories().size() == 1 );
+		s.delete( c );
+		s.getTransaction().commit();
 		s.close();
 	}
 
@@ -894,61 +911,69 @@ public class MasterDetailTest extends LegacyTestCase {
 			return;
 		}
 		Session s = openSession();
+		s.beginTransaction();
 		Category c = new Category();
 		List list = new ArrayList();
 		c.setSubcategories(list);
 		list.add( new Category() );
 		c.setName("root");
 		Serializable id = s.save(c);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		c = (Category) s.load(Category.class, id);
 		c.getSubcategories().size(); //force load and cache
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 		
 		s = openSession();
 		if ( (getDialect() instanceof MySQLDialect) ) {
-			s.connection().setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
+			s.doWork(
+					new AbstractWork() {
+						@Override
+						public void execute(Connection connection) throws SQLException {
+							connection.setTransactionIsolation( Connection.TRANSACTION_READ_COMMITTED );
+						}
+					}
+			);
 		}
+		s.beginTransaction();
 		c = (Category) s.load(Category.class, id);
 		c.getSubcategories().size(); //force load
 
 		Session ss = openSession();
+		ss.beginTransaction();
 		Category c2 = (Category) ss.load(Category.class, id);
 		ss.delete( c2.getSubcategories().get(0) );
 		c2.getSubcategories().clear();
-		ss.flush();
-		ss.connection().commit();
+		ss.getTransaction().commit();
 		ss.close();
 
 		s.refresh(c);
 		assertTrue( c.getSubcategories().size()==0 );
 
 		ss = openSession();
+		ss.beginTransaction();
 		c2 = (Category) ss.load(Category.class, id);
 		c2.getSubcategories().add( new Category() );
 		c2.getSubcategories().add( new Category() );
-		ss.flush();
-		ss.connection().commit();
+		ss.getTransaction().commit();
 		ss.close();
 
 		s.refresh(c);
 		assertEquals( 2, c.getSubcategories().size() );
 
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		c = (Category) s.load(Category.class, id);
 		assertEquals( 2, c.getSubcategories().size() );
 		s.delete(c);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
@@ -990,21 +1015,23 @@ public class MasterDetailTest extends LegacyTestCase {
 	@Test
 	public void testInterface() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Serializable id = s.save( new BasicNameable() );
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
+
 		s = openSession();
+		s.beginTransaction();
 		Nameable n = (Nameable) s.load(Nameable.class, id);
 		s.delete(n);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
 	@Test
 	public void testNoUpdateManyToOne() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		W w1 = new W();
 		W w2 = new W();
 		Z z = new Z();
@@ -1012,25 +1039,25 @@ public class MasterDetailTest extends LegacyTestCase {
 		s.save(z);
 		s.flush();
 		z.setW(w2);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		s.update(z);
 		s.flush();
 		s.delete(z);
 		for ( Object entity : s.createQuery( "from W" ).list() ) {
 			s.delete( entity );
 		}
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
 	@Test
 	public void testQueuedBagAdds() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		Assignable a = new Assignable();
 		a.setId("foo");
 		a.setCategories( new ArrayList() );
@@ -1038,26 +1065,26 @@ public class MasterDetailTest extends LegacyTestCase {
 		c.setAssignable(a);
 		a.getCategories().add(c);
 		s.save(a);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
-		sessionFactory().evictCollection("org.hibernate.test.legacy.Assignable.categories");
+		sessionFactory().getCache().evictCollectionRegion( "org.hibernate.test.legacy.Assignable.categories" );
 
 		s = openSession();
+		s.beginTransaction();
 		a = (Assignable) s.get(Assignable.class, "foo");
 		c = new Category();
 		c.setAssignable(a);
 		a.getCategories().add(c);
 		assertFalse( Hibernate.isInitialized( a.getCategories() ) );
 		assertTrue( a.getCategories().size()==2 );
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
-		sessionFactory().evictCollection("org.hibernate.test.legacy.Assignable.categories");
+		sessionFactory().getCache().evictCollectionRegion( "org.hibernate.test.legacy.Assignable.categories" );
 
 		s = openSession();
+		s.beginTransaction();
 		a = (Assignable) s.get(Assignable.class, "foo");
 		c = new Category();
 		c.setAssignable(a);
@@ -1066,17 +1093,17 @@ public class MasterDetailTest extends LegacyTestCase {
 		s.flush();
 		assertFalse( Hibernate.isInitialized( a.getCategories() ) );
 		assertTrue( a.getCategories().size()==3 );
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
-		sessionFactory().evictCollection("org.hibernate.test.legacy.Assignable.categories");
+		sessionFactory().getCache().evictCollectionRegion( "org.hibernate.test.legacy.Assignable.categories" );
 
 		s = openSession();
+		s.beginTransaction();
 		a = (Assignable) s.get(Assignable.class, "foo");
 		assertTrue( a.getCategories().size()==3 );
 		s.delete(a);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 	}

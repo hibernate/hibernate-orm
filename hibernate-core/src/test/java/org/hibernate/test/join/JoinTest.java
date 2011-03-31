@@ -22,6 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.join;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.List;
 
@@ -29,6 +31,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.jdbc.AbstractWork;
 
 import org.junit.Test;
 
@@ -137,7 +140,14 @@ public class JoinTest extends BaseCoreFunctionalTestCase {
 		s.clear();
 
 		// Remove the optional row from the join table and requery the User obj
-		s.connection().prepareStatement("delete from t_user").execute();
+		s.doWork(
+				new AbstractWork() {
+					@Override
+					public void execute(Connection connection) throws SQLException {
+						connection.prepareStatement("delete from t_user").execute();
+					}
+				}
+		);
 		s.clear();
 
 		jesus = (User) s.get( Person.class, new Long( jesus.getId() ) );

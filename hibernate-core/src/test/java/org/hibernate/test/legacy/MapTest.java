@@ -53,6 +53,7 @@ public class MapTest extends LegacyTestCase {
 	@Test
 	public void testMap() throws Exception {
 		Session s = openSession().getSession(EntityMode.MAP);
+		s.beginTransaction();
 		Map map = new HashMap();
 		map.put("$type$", "TestMap");
 		map.put("name", "foo");
@@ -62,21 +63,22 @@ public class MapTest extends LegacyTestCase {
 		cmp.put( "b", new Float(1.0) );
 		map.put("cmp", cmp);
 		s.save(map);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession().getSession(EntityMode.MAP);
+		s.beginTransaction();
 		map = (Map) s.get( "TestMap", (Serializable) map.get("id") );
 		assertTrue( map!=null && "foo".equals( map.get("name") ) );
 		assertTrue( map.get("$type$").equals("TestMap") );
 
 		int size = s.createCriteria("TestMap").add( Example.create(map) ).list().size();
 		assertTrue(size==1);
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession().getSession(EntityMode.MAP);
+		s.beginTransaction();
 		List list = s.createQuery("from TestMap").list();
 		map = (Map) list.get(0);
 		assertTrue( "foo".equals( map.get("name") ) );
@@ -88,11 +90,11 @@ public class MapTest extends LegacyTestCase {
 		map.put("parent", map);
 		List bag = (List) map.get("children");
 		bag.add(map);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		list = s.createQuery("from TestMap tm where tm.address = 'bar'").list();
 		map = (Map) list.get(0);
 		assertTrue( "foobar".equals( map.get("name") ) );
@@ -110,8 +112,7 @@ public class MapTest extends LegacyTestCase {
 		assertTrue(size==1);
 
 		s.delete(map);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 	}
@@ -121,41 +122,41 @@ public class MapTest extends LegacyTestCase {
 		Map child = new HashMap();
 		Map parent = new HashMap();
 		Session s = openSession();
+		s.beginTransaction();
 		child.put("parent", parent);
 		child.put("$type$", "ChildMap");
 		parent.put("child", child);
 		parent.put("$type$", "ParentMap");
 		s.save(parent);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		Map cm = (Map) s.createQuery("from ChildMap cm where cm.parent is not null").uniqueResult();
 		s.delete(cm);
 		s.delete( cm.get("parent") );
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		child = new HashMap();
 		parent = new HashMap();
 		s = openSession();
+		s.beginTransaction();
 		child.put("parent", parent);
 		child.put("$type$", "ChildMap");
 		parent.put("child", child);
 		parent.put("$type$", "ParentMap");
 		s.save(child);
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		Map pm = (Map) s.createQuery("from ParentMap cm where cm.child is not null").uniqueResult();
 		s.delete(pm);
 		s.delete( pm.get("child") );
-		s.flush();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 	}
@@ -163,6 +164,7 @@ public class MapTest extends LegacyTestCase {
 	@Test
 	public void testOneToOnePropertyRef() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		s.createQuery("from Commento c where c.marelo.mlmag = 0").list();
 		s.createQuery("from Commento c where c.marelo.commento.mcompr is null").list();
 		s.createQuery("from Commento c where c.marelo.mlink = 0").list();
@@ -172,7 +174,7 @@ public class MapTest extends LegacyTestCase {
 		s.createQuery("from Commento c where c.marelo.commento.mclink = c.mclink").list();
 		s.createQuery("from Marelo m where m.commento.id > 0").list();
 		s.createQuery("from Marelo m where m.commento.marelo.commento.marelo.mlmag is not null").list();
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 

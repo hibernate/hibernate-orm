@@ -196,7 +196,7 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 		prepare();
 
 		Connection originalConnection = sessionFactory().getServiceRegistry().getService( ConnectionProvider.class ).getConnection();
-		Session session = sessionFactory().openSession( originalConnection );
+		Session session = sessionFactory().withOptions().connection( originalConnection ).openSession();
 
 		Silly silly = new Silly( "silly" );
 		session.save( silly );
@@ -213,36 +213,6 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 		done();
 
 		sessionFactory().getServiceRegistry().getService( ConnectionProvider.class ).closeConnection( originalConnection );
-	}
-
-	@Test
-	public void testBorrowedConnections() throws Throwable {
-		prepare();
-		Session s = getSessionUnderTest();
-
-		// todo : may need to come back here and make sure that closing the connection handles do not close the physical cached connection on LogicalConnection...
-
-		Connection conn = s.connection();
-		assertFalse( conn.isClosed() );
-		assertFalse(
-				((SessionImpl) s).getTransactionCoordinator()
-						.getJdbcCoordinator()
-						.getLogicalConnection()
-						.isPhysicallyConnected()
-		);
-		conn.getCatalog();
-		assertTrue(
-				((SessionImpl) s).getTransactionCoordinator()
-						.getJdbcCoordinator()
-						.getLogicalConnection()
-						.isPhysicallyConnected()
-		);
-		conn.close();
-		assertTrue( conn.isClosed() );
-		assertTrue( ( ( SessionImpl ) s ).getTransactionCoordinator().getJdbcCoordinator().getLogicalConnection().isPhysicallyConnected() );
-
-		release( s );
-		done();
 	}
 
 	@Test

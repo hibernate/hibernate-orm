@@ -2,6 +2,8 @@
 package org.hibernate.test.legacy;
 
 import java.io.Serializable;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
@@ -16,6 +18,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.jdbc.Work;
 
 import org.junit.Test;
 
@@ -122,9 +125,16 @@ public class MultiTableTest extends LegacyTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		s.connection().createStatement().executeQuery(
-			"select * from leafsubsubclass sm, nonleafsubclass m, rootclass s where sm.sid=m.sid and sm.sid=s.id1_ and sm.sid=1"
-		).next();
+		s.doWork(
+				new Work() {
+					@Override
+					public void execute(Connection connection) throws SQLException {
+						final String sql = "select * from leafsubsubclass sm, nonleafsubclass m, rootclass s " +
+								"where sm.sid=m.sid and sm.sid=s.id1_ and sm.sid=1";
+						connection.createStatement().executeQuery( sql ).next();
+					}
+				}
+		);
 		assertTrue(
 				s.createQuery(
 						"select s from SubMulti as sm join sm.children as s where s.amount>-1 and s.name is null"

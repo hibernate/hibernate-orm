@@ -68,6 +68,7 @@ import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.SessionException;
+import org.hibernate.SharedSessionBuilder;
 import org.hibernate.Transaction;
 import org.hibernate.TransientObjectException;
 import org.hibernate.TypeHelper;
@@ -179,12 +180,13 @@ public final class SessionImpl
 	private transient FlushMode flushMode = FlushMode.AUTO;
 	private transient CacheMode cacheMode = CacheMode.NORMAL;
 	private transient EntityMode entityMode = EntityMode.POJO;
+
 	private transient boolean autoClear; //for EJB3
 	private transient boolean autoJoinTransactions = true;
-
-	private transient int dontFlushFromFind = 0;
 	private transient boolean flushBeforeCompletionEnabled;
 	private transient boolean autoCloseSessionEnabled;
+
+	private transient int dontFlushFromFind = 0;
 
 	private transient LoadQueryInfluencers loadQueryInfluencers;
 
@@ -223,7 +225,9 @@ public final class SessionImpl
 	 *
 	 * @param connection The user-supplied connection to use for this session.
 	 * @param factory The factory from which this session was obtained
-	 * @param autoClose NOT USED
+	 * @param transactionCoordinator The transaction coordinator to use, may be null to indicate that a new transaction
+	 * coordinator should get created.
+	 * @param autoJoinTransactions Should the session automatically join JTA transactions?
 	 * @param timestamp The timestamp for this session
 	 * @param interceptor The interceptor to be applied to this session
 	 * @param entityMode The entity-mode for this session
@@ -234,7 +238,7 @@ public final class SessionImpl
 	SessionImpl(
 			final Connection connection,
 			final SessionFactoryImpl factory,
-			final boolean autoClose,
+			final TransactionCoordinatorImpl transactionCoordinator,
 			final boolean autoJoinTransactions,
 			final long timestamp,
 			final Interceptor interceptor,
@@ -254,16 +258,29 @@ public final class SessionImpl
 		this.connectionReleaseMode = connectionReleaseMode;
 		this.autoJoinTransactions = autoJoinTransactions;
 
-		this.transactionCoordinator = new TransactionCoordinatorImpl( connection, this );
-		this.transactionCoordinator.getJdbcCoordinator().getLogicalConnection().addObserver(
-				new ConnectionObserverStatsBridge( factory )
-		);
+		if ( transactionCoordinator == null ) {
+			this.transactionCoordinator = new TransactionCoordinatorImpl( connection, this );
+			this.transactionCoordinator.getJdbcCoordinator().getLogicalConnection().addObserver(
+					new ConnectionObserverStatsBridge( factory )
+			);
+		}
+		else {
+			if ( connection != null ) {
+				throw new SessionException( "Cannot simultaneously share transaction context and specify connection" );
+			}
+			this.transactionCoordinator = transactionCoordinator;
+		}
 
 		loadQueryInfluencers = new LoadQueryInfluencers( factory );
 
         if (factory.getStatistics().isStatisticsEnabled()) factory.getStatisticsImplementor().openSession();
 
         LOG.debugf("Opened session at timestamp: %s", timestamp);
+	}
+
+	@Override
+	public SharedSessionBuilder sessionWithOptions() {
+		return new SharedSessionBuilderImpl( this );
 	}
 
 	public Session getSession(EntityMode entityMode) {
@@ -2104,6 +2121,102 @@ public final class SessionImpl
 		 */
 		public Clob createNClob(Reader reader, long length) {
 			return lobCreator().createNClob( reader, length );
+		}
+	}
+
+	private static class SharedSessionBuilderImpl extends SessionFactoryImpl.SessionBuilderImpl implements SharedSessionBuilder {
+		private final SessionImpl session;
+		private boolean shareTransactionContext;
+
+		private SharedSessionBuilderImpl(SessionImpl session) {
+			super( session.factory );
+			this.session = session;
+		}
+
+		@Override
+		protected TransactionCoordinatorImpl getTransactionCoordinator() {
+			return shareTransactionContext ? session.transactionCoordinator : super.getTransactionCoordinator();
+		}
+
+		@Override
+		public SharedSessionBuilder interceptor() {
+			return interceptor( session.interceptor );
+		}
+
+		@Override
+		public SharedSessionBuilder connection() {
+			return connection(
+					session.transactionCoordinator
+							.getJdbcCoordinator()
+							.getLogicalConnection()
+							.getDistinctConnectionProxy()
+			);
+		}
+
+		@Override
+		public SharedSessionBuilder connectionReleaseMode() {
+			return connectionReleaseMode( session.connectionReleaseMode );
+		}
+
+		@Override
+		public SharedSessionBuilder entityMode() {
+			return entityMode( session.entityMode );
+		}
+
+		@Override
+		public SharedSessionBuilder autoJoinTransactions() {
+			return autoJoinTransactions( session.autoJoinTransactions );
+		}
+
+		@Override
+		public SharedSessionBuilder autoClose() {
+			return autoClose( session.autoCloseSessionEnabled );
+		}
+
+		@Override
+		public SharedSessionBuilder flushBeforeCompletion() {
+			return flushBeforeCompletion( session.flushBeforeCompletionEnabled );
+		}
+
+		@Override
+		public SharedSessionBuilder transactionContext() {
+			this.shareTransactionContext = true;
+			return this;
+		}
+
+		@Override
+		public SharedSessionBuilder interceptor(Interceptor interceptor) {
+			return (SharedSessionBuilder) super.interceptor( interceptor );
+		}
+
+		@Override
+		public SharedSessionBuilder connection(Connection connection) {
+			return (SharedSessionBuilder) super.connection( connection );
+		}
+
+		@Override
+		public SharedSessionBuilder connectionReleaseMode(ConnectionReleaseMode connectionReleaseMode) {
+			return (SharedSessionBuilder) super.connectionReleaseMode( connectionReleaseMode );
+		}
+
+		@Override
+		public SharedSessionBuilder entityMode(EntityMode entityMode) {
+			return (SharedSessionBuilder) super.entityMode( entityMode );
+		}
+
+		@Override
+		public SharedSessionBuilder autoJoinTransactions(boolean autoJoinTransactions) {
+			return (SharedSessionBuilder) super.autoJoinTransactions( autoJoinTransactions );
+		}
+
+		@Override
+		public SharedSessionBuilder autoClose(boolean autoClose) {
+			return (SharedSessionBuilder) super.autoClose( autoClose );
+		}
+
+		@Override
+		public SharedSessionBuilder flushBeforeCompletion(boolean flushBeforeCompletion) {
+			return (SharedSessionBuilder) super.flushBeforeCompletion( flushBeforeCompletion );
 		}
 	}
 

@@ -492,35 +492,5 @@ public class CMTTest extends BaseCoreFunctionalTestCase {
 		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 	}
 
-	@Test
-	public void testAggressiveReleaseWithConnectionRetreival() throws Exception {
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
-		Session s = openSession();
-		Map item1 = new HashMap();
-		item1.put( "name", "Item - 1" );
-		item1.put( "description", "The first item" );
-		s.save( "Item", item1 );
-
-		Map item2 = new HashMap();
-		item2.put( "name", "Item - 2" );
-		item2.put( "description", "The second item" );
-		s.save( "Item", item2 );
-		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
-
-		try {
-			TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
-			s = sessionFactory().getCurrentSession();
-			s.createQuery( "from Item" ).scroll().next();
-			s.connection();
-			TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
-		}
-		finally {
-			TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
-			s = openSession();
-			s.createQuery( "delete from Item" ).executeUpdate();
-			TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
-		}
-	}
-
 }
 

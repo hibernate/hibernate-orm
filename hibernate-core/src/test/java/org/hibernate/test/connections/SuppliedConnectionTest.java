@@ -23,6 +23,7 @@
  */
 
 package org.hibernate.test.connections;
+
 import java.sql.Connection;
 import java.sql.ResultSet;
 
@@ -34,8 +35,6 @@ import org.hibernate.service.jdbc.connections.internal.UserSuppliedConnectionPro
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.spi.Stoppable;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
-
-import org.junit.Before;
 
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
@@ -70,7 +69,7 @@ public class SuppliedConnectionTest extends ConnectionManagementTestCase {
 	@Override
 	protected Session getSessionUnderTest() throws Throwable {
 		connectionUnderTest = cp.getConnection();
-		return sessionFactory().openSession( connectionUnderTest );
+		return sessionFactory().withOptions().connection( connectionUnderTest ).openSession();
 	}
 
 	@Override

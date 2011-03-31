@@ -91,6 +91,13 @@ import org.hibernate.stat.SessionStatistics;
  */
 public interface Session extends SharedSessionContract {
 	/**
+	 * Obtain a {@link Session} builder with the ability to grab certain information from this session.
+	 *
+	 * @return The session builder
+	 */
+	public SharedSessionBuilder sessionWithOptions();
+
+	/**
 	 * Retrieve the entity mode in effect for this session.
 	 *
 	 * @return The entity mode for this session.
@@ -105,7 +112,9 @@ public interface Session extends SharedSessionContract {
 	 * 
 	 * @param entityMode The entity mode to use for the new session.
 	 * @return The new session
+	 * @deprecated
 	 */
+	@Deprecated
 	public Session getSession(EntityMode entityMode);
 
 	/**
@@ -169,21 +178,6 @@ public interface Session extends SharedSessionContract {
 	 * @see SessionFactory
 	 */
 	public SessionFactory getSessionFactory();
-
-	/**
-	 * Get the JDBC connection of this Session.<br>
-	 * <br>
-	 * If the session is using aggressive collection release (as in a
-	 * CMT environment), it is the application's responsibility to
-	 * close the connection returned by this call. Otherwise, the
-	 * application should not close the connection.
-	 *
-	 * @return the JDBC connection in use by the <tt>Session</tt>
-	 * @throws HibernateException if the <tt>Session</tt> is disconnected
-	 * @deprecated (scheduled for removal in 4.x).  Replacement depends on need; for doing direct JDBC stuff use
-	 * {@link #doWork}; for opening a 'temporary Session' use (TBD).
-	 */
-	public Connection connection() throws HibernateException;
 
 	/**
 	 * End the session by releasing the JDBC connection and cleaning up.  It is
@@ -856,8 +850,6 @@ public interface Session extends SharedSessionContract {
 	 *
 	 * @return the application-supplied connection or {@literal null}
 	 *
-	 * @see SessionFactory#openSession(java.sql.Connection)
-	 * @see SessionFactory#openSession(java.sql.Connection, Interceptor)
 	 * @see #reconnect(Connection)
 	 */
 	Connection disconnect() throws HibernateException;
@@ -866,6 +858,7 @@ public interface Session extends SharedSessionContract {
 	 * Reconnect to the given JDBC connection.
 	 *
 	 * @param connection a JDBC connection
+	 * 
 	 * @see #disconnect()
 	 */
 	void reconnect(Connection connection) throws HibernateException;
@@ -971,11 +964,11 @@ public interface Session extends SharedSessionContract {
 
 		/**
 		 * Specify if LockMode should be cascaded to owned collections and relationships.
-		 * The association must be mapped with <tt>cascade="lock" for scope=true to work.
+		 * The association must be mapped with {@code cascade="lock"} for scope=true to work.
 		 *
-		 * @param scope
+		 * @param scope {@code true} to cascade locks; {@code false} to not.
 		 *
-		 * @return
+		 * @return {@code this}, for method chaining
 		 */
 		LockRequest setScope(boolean scope);
 

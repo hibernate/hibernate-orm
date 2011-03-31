@@ -217,29 +217,6 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	 */
 	public Session openTemporarySession() throws HibernateException;
 
-	public Session openSession(boolean autoJoinTransaction);
-
-	public Session openSession(Interceptor sessionLocalInterceptor, boolean autoJoinTransaction);
-
-	/**
-	 * Open a session conforming to the given parameters.  Used mainly by
-	 * {@link org.hibernate.context.JTASessionContext} for current session processing.
-	 *
-	 * @param connection The external jdbc connection to use, if one (i.e., optional).
-	 * @param flushBeforeCompletionEnabled Should the session be auto-flushed
-	 * prior to transaction completion?
-	 * @param autoCloseSessionEnabled Should the session be auto-closed after
-	 * transaction completion?
-	 * @param connectionReleaseMode The release mode for managed jdbc connections.
-	 * @return An appropriate session.
-	 * @throws HibernateException
-	 */
-	public Session openSession(
-			final Connection connection,
-			final boolean flushBeforeCompletionEnabled,
-			final boolean autoCloseSessionEnabled,
-			final ConnectionReleaseMode connectionReleaseMode) throws HibernateException;
-
 	/**
 	 * Retrieves a set of all the collection roles in which the given entity
 	 * is a participant, as either an index or an element.

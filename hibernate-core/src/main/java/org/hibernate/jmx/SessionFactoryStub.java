@@ -22,21 +22,25 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.jmx;
+
+import javax.naming.NamingException;
+import javax.naming.Reference;
+import javax.naming.StringRefAddr;
 import java.io.InvalidObjectException;
 import java.io.ObjectStreamException;
 import java.io.Serializable;
 import java.sql.Connection;
 import java.util.Map;
 import java.util.Set;
-import javax.naming.NamingException;
-import javax.naming.Reference;
-import javax.naming.StringRefAddr;
+
+import org.jboss.logging.Logger;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.Cache;
 import org.hibernate.HibernateException;
 import org.hibernate.HibernateLogger;
-import org.hibernate.Interceptor;
 import org.hibernate.Session;
+import org.hibernate.SessionBuilder;
 import org.hibernate.SessionFactory;
 import org.hibernate.StatelessSession;
 import org.hibernate.TypeHelper;
@@ -47,7 +51,6 @@ import org.hibernate.impl.SessionFactoryObjectFactory;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.stat.Statistics;
-import org.jboss.logging.Logger;
 
 /**
  * A flyweight for <tt>SessionFactory</tt>. If the MBean itself does not
@@ -79,20 +82,13 @@ public class SessionFactoryStub implements SessionFactory {
 		SessionFactoryObjectFactory.addInstance( uuid, name, this, service.getProperties() );
 	}
 
-	public Session openSession(Connection connection, Interceptor interceptor) {
-		return getImpl().openSession(connection, interceptor);
-	}
-
-	public Session openSession(Interceptor interceptor) throws HibernateException {
-		return getImpl().openSession(interceptor);
+	@Override
+	public SessionBuilder withOptions() {
+		return getImpl().withOptions();
 	}
 
 	public Session openSession() throws HibernateException {
 		return getImpl().openSession();
-	}
-
-	public Session openSession(Connection conn) {
-		return getImpl().openSession(conn);
 	}
 
 	public Session getCurrentSession() {

@@ -45,6 +45,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.jdbc.Work;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
@@ -100,7 +101,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	}
 
 	protected Session openSession(Interceptor interceptor) throws HibernateException {
-		session = sessionFactory().openSession(interceptor);
+		session = sessionFactory().withOptions().interceptor( interceptor ).openSession();
 		return session;
 	}
 
@@ -108,6 +109,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	// before/after test class ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@BeforeClassOnce
+	@SuppressWarnings( {"UnusedDeclaration"})
 	private void buildSessionFactory() {
 		configuration = buildConfiguration();
 		serviceRegistry = buildServiceRegistry( configuration );
@@ -266,6 +268,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	}
 
 	@AfterClassOnce
+	@SuppressWarnings( {"UnusedDeclaration"})
 	private void releaseSessionFactory() {
 		if ( sessionFactory == null ) {
 			return;
@@ -277,6 +280,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 
 	@OnFailure
 	@OnExpectedFailure
+	@SuppressWarnings( {"UnusedDeclaration"})
 	public void onFailure() {
 		if ( rebuildSessionFactoryOnError() ) {
 			rebuildSessionFactory();
@@ -350,7 +354,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 			Map<String,Integer> items = new HashMap<String,Integer>();
 			if ( !list.isEmpty() ) {
 				for ( Object element : list ) {
-					Integer l = (Integer) items.get( tmpSession.getEntityName( element ) );
+					Integer l = items.get( tmpSession.getEntityName( element ) );
 					if ( l == null ) {
 						l = Integer.valueOf( 0 );
 					}
@@ -376,7 +380,14 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		Session testSession = null;
 		try {
 			testSession = openSession();
-			isolation = testSession.connection().getTransactionIsolation();
+			isolation = testSession.doReturningWork(
+					new AbstractReturningWork<Integer>() {
+						@Override
+						public Integer execute(Connection connection) throws SQLException {
+							return connection.getTransactionIsolation();
+						}
+					}
+			);
 		}
 		catch( Throwable ignore ) {
 		}

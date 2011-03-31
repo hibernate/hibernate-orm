@@ -341,13 +341,6 @@ public abstract class ConnectionManagementTestCase extends BaseCoreFunctionalTes
 		}
 
 		try {
-			s.connection();
-			fail( "allowed to access connection on closed session" );
-		}
-		catch( Throwable ignore ) {
-		}
-
-		try {
 			s.close();
 			fail( "allowed to close already closed session" );
 		}

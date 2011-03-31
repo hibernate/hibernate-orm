@@ -146,12 +146,11 @@ public class JTASessionContext implements CurrentSessionContext {
 	 * @return the built or (re)obtained session.
 	 */
 	protected Session buildOrObtainSession() {
-		return factory.openSession(
-				null,
-		        isAutoFlushEnabled(),
-		        isAutoCloseEnabled(),
-		        getConnectionReleaseMode()
-			);
+		return factory.withOptions()
+				.autoClose( isAutoCloseEnabled() )
+				.connectionReleaseMode( getConnectionReleaseMode() )
+				.flushBeforeCompletion( isAutoFlushEnabled() )
+				.openSession();
 	}
 
 	/**

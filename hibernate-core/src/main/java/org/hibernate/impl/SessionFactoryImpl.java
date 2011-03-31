@@ -62,6 +62,7 @@ import org.hibernate.MappingException;
 import org.hibernate.ObjectNotFoundException;
 import org.hibernate.QueryException;
 import org.hibernate.Session;
+import org.hibernate.SessionBuilder;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.StatelessSession;
@@ -101,6 +102,7 @@ import org.hibernate.engine.profile.Fetch;
 import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.query.QueryPlanCache;
 import org.hibernate.engine.query.sql.NativeSQLQuerySpecification;
+import org.hibernate.engine.transaction.internal.TransactionCoordinatorImpl;
 import org.hibernate.engine.transaction.spi.TransactionEnvironment;
 import org.hibernate.exception.SQLExceptionConverter;
 import org.hibernate.id.IdentifierGenerator;
@@ -129,7 +131,6 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 import org.hibernate.service.spi.SessionFactoryServiceRegistryFactory;
 import org.hibernate.stat.Statistics;
-import org.hibernate.stat.internal.ConcurrentStatisticsImpl;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
@@ -528,6 +529,38 @@ public final class SessionFactoryImpl
 		return integrators;
 	}
 
+	public Session openSession() throws HibernateException {
+		return withOptions().openSession();
+	}
+
+	public Session openTemporarySession() throws HibernateException {
+		return withOptions()
+				.autoClose( false )
+				.flushBeforeCompletion( false )
+				.connectionReleaseMode( ConnectionReleaseMode.AFTER_STATEMENT )
+				.openSession();
+	}
+
+	public Session getCurrentSession() throws HibernateException {
+		if ( currentSessionContext == null ) {
+			throw new HibernateException( "No CurrentSessionContext configured!" );
+		}
+		return currentSessionContext.currentSession();
+	}
+
+	@Override
+	public SessionBuilder withOptions() {
+		return new SessionBuilderImpl( this );
+	}
+
+	public StatelessSession openStatelessSession() {
+		return new StatelessSessionImpl( null, this );
+	}
+
+	public StatelessSession openStatelessSession(Connection connection) {
+		return new StatelessSessionImpl( connection, this );
+	}
+
 	@Override
 	public void addObserver(SessionFactoryObserver observer) {
 		this.observer.addObserver( observer );
@@ -656,118 +689,6 @@ public final class SessionFactoryImpl
 		}
 
 		return errors;
-	}
-
-	public StatelessSession openStatelessSession() {
-		return new StatelessSessionImpl( null, this );
-	}
-
-	public StatelessSession openStatelessSession(Connection connection) {
-		return new StatelessSessionImpl( connection, this );
-	}
-
-	private SessionImpl openSession(
-			Connection connection,
-			boolean autoClose,
-			long timestamp,
-			Interceptor sessionLocalInterceptor) {
-		return openSession(
-				connection,
-				autoClose,
-				true,
-				timestamp,
-				sessionLocalInterceptor
-		);
-	}
-
-	private SessionImpl openSession(
-			Connection connection,
-			boolean autoClose,
-			boolean autoJoinTransactions,
-			long timestamp,
-			Interceptor sessionLocalInterceptor) {
-		return new SessionImpl(
-		        connection,
-		        this,
-		        autoClose,
-				autoJoinTransactions,
-		        timestamp,
-		        sessionLocalInterceptor == null ? interceptor : sessionLocalInterceptor,
-		        settings.getDefaultEntityMode(),
-		        settings.isFlushBeforeCompletionEnabled(),
-		        settings.isAutoCloseSessionEnabled(),
-		        settings.getConnectionReleaseMode()
-		);
-	}
-
-	public Session openSession(Connection connection, Interceptor sessionLocalInterceptor) {
-		return openSession( connection, false, Long.MIN_VALUE, sessionLocalInterceptor );
-	}
-
-	public Session openSession(Interceptor sessionLocalInterceptor) throws HibernateException {
-		return openSession( sessionLocalInterceptor, true );
-	}
-
-	public Session openSession(boolean autoJoinTransaction) {
-		return openSession( null, autoJoinTransaction );
-	}
-
-	public Session openSession(Interceptor sessionLocalInterceptor, boolean autoJoinTransaction) {
-		// note that this timestamp is not correct if the connection provider
-		// returns an older JDBC connection that was associated with a
-		// transaction that was already begun before openSession() was called
-		// (don't know any possible solution to this!)
-		long timestamp = settings.getRegionFactory().nextTimestamp();
-		return openSession( null, true, autoJoinTransaction, timestamp, sessionLocalInterceptor );
-	}
-
-	public Session openSession(Connection connection) {
-		return openSession(connection, interceptor); //prevents this session from adding things to cache
-	}
-
-	public Session openSession() throws HibernateException {
-		return openSession(interceptor);
-	}
-
-	public Session openTemporarySession() throws HibernateException {
-		return new SessionImpl(
-				null,
-		        this,
-		        true,
-				true,
-		        settings.getRegionFactory().nextTimestamp(),
-		        interceptor,
-		        settings.getDefaultEntityMode(),
-		        false,
-		        false,
-		        ConnectionReleaseMode.AFTER_STATEMENT
-			);
-	}
-
-	public Session openSession(
-			final Connection connection,
-	        final boolean flushBeforeCompletionEnabled,
-	        final boolean autoCloseSessionEnabled,
-	        final ConnectionReleaseMode connectionReleaseMode) throws HibernateException {
-		return new SessionImpl(
-				connection,
-		        this,
-		        true,
-				true,
-		        settings.getRegionFactory().nextTimestamp(),
-		        interceptor,
-		        settings.getDefaultEntityMode(),
-		        flushBeforeCompletionEnabled,
-		        autoCloseSessionEnabled,
-		        connectionReleaseMode
-		);
-	}
-
-	public Session getCurrentSession() throws HibernateException {
-		if ( currentSessionContext == null ) {
-			throw new HibernateException( "No CurrentSessionContext configured!" );
-		}
-		return currentSessionContext.currentSession();
 	}
 
 	public EntityPersister getEntityPersister(String entityName) throws MappingException {
@@ -1390,5 +1311,90 @@ public final class SessionFactoryImpl
 			}
 		}
 		return ( SessionFactoryImpl ) result;
+	}
+
+	static class SessionBuilderImpl implements SessionBuilder {
+		private final SessionFactoryImpl sessionFactory;
+		private Interceptor interceptor;
+		private Connection connection;
+		private ConnectionReleaseMode connectionReleaseMode;
+		private EntityMode entityMode;
+		private boolean autoClose;
+		private boolean autoJoinTransactions = true;
+		private boolean flushBeforeCompletion;
+
+		SessionBuilderImpl(SessionFactoryImpl sessionFactory) {
+			this.sessionFactory = sessionFactory;
+			final Settings settings = sessionFactory.settings;
+
+			// set up default builder values...
+			this.interceptor = sessionFactory.getInterceptor();
+			this.connectionReleaseMode = settings.getConnectionReleaseMode();
+			this.entityMode = settings.getDefaultEntityMode();
+			this.autoClose = settings.isAutoCloseSessionEnabled();
+			this.flushBeforeCompletion = settings.isFlushBeforeCompletionEnabled();
+		}
+
+		protected TransactionCoordinatorImpl getTransactionCoordinator() {
+			return null;
+		}
+
+		@Override
+		public Session openSession() {
+			return new SessionImpl(
+					connection,
+					sessionFactory,
+					getTransactionCoordinator(),
+					autoJoinTransactions,
+					sessionFactory.settings.getRegionFactory().nextTimestamp(),
+					interceptor,
+					entityMode,
+					flushBeforeCompletion,
+					autoClose,
+					connectionReleaseMode
+			);
+		}
+
+		@Override
+		public SessionBuilder interceptor(Interceptor interceptor) {
+			this.interceptor = interceptor;
+			return this;
+		}
+
+		@Override
+		public SessionBuilder connection(Connection connection) {
+			this.connection = connection;
+			return this;
+		}
+
+		@Override
+		public SessionBuilder connectionReleaseMode(ConnectionReleaseMode connectionReleaseMode) {
+			this.connectionReleaseMode = connectionReleaseMode;
+			return this;
+		}
+
+		@Override
+		public SessionBuilder autoJoinTransactions(boolean autoJoinTransactions) {
+			this.autoJoinTransactions = autoJoinTransactions;
+			return this;
+		}
+
+		@Override
+		public SessionBuilder autoClose(boolean autoClose) {
+			this.autoClose = autoClose;
+			return this;
+		}
+
+		@Override
+		public SessionBuilder flushBeforeCompletion(boolean flushBeforeCompletion) {
+			this.flushBeforeCompletion = flushBeforeCompletion;
+			return this;
+		}
+
+		@Override
+		public SessionBuilder entityMode(EntityMode entityMode) {
+			this.entityMode = entityMode;
+			return this;
+		}
 	}
 }

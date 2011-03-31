@@ -54,7 +54,7 @@ public class TransactionJoiningTest extends AbstractJPATest {
 	public void testExplicitJoining() throws Exception {
 		assertFalse( JtaStatusHelper.isActive( TestingJtaBootstrap.INSTANCE.getTransactionManager() ) );
 
-		SessionImplementor session = (SessionImplementor) sessionFactory().openSession( false );
+		SessionImplementor session = (SessionImplementor) sessionFactory().withOptions().autoJoinTransactions( false ).openSession();
 		TransactionImplementor transaction = (TransactionImplementor) ( (Session) session ).getTransaction();
 
 		assertFalse( session.getTransactionCoordinator().isSynchronizationRegistered() );
@@ -100,7 +100,7 @@ public class TransactionJoiningTest extends AbstractJPATest {
 		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		assertTrue( JtaStatusHelper.isActive( TestingJtaBootstrap.INSTANCE.getTransactionManager() ) );
 
-		SessionImplementor session = (SessionImplementor) sessionFactory().openSession( false );
+		SessionImplementor session = (SessionImplementor) sessionFactory().withOptions().autoJoinTransactions( false ).openSession();
 
 		session.getFlushMode();
 	}

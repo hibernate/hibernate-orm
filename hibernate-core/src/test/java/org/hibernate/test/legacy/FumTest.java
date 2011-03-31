@@ -862,10 +862,11 @@ public class FumTest extends LegacyTestCase {
 		s.close();
 
 		s = sessionFactory().openSession();
+		s.beginTransaction();
 		s.setFlushMode(FlushMode.MANUAL);
 		fum = (Fum) s.load( Fum.class, fum.getId() );
 		assertTrue("the Fum.friends is not empty", fum.getFriends() == null || fum.getFriends().size() == 0);
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 

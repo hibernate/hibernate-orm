@@ -25,6 +25,7 @@ package org.hibernate.test.legacy;
 
 import java.io.Serializable;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.sql.Time;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -75,6 +76,8 @@ import org.hibernate.dialect.TimesTenDialect;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.internal.util.collections.JoinedIterator;
+import org.hibernate.jdbc.AbstractReturningWork;
+import org.hibernate.jdbc.AbstractWork;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 
@@ -2094,10 +2097,16 @@ public class FooBarTest extends LegacyTestCase {
 		assertTrue( s.createFilter( baz.getFooArray(), "" ).list().size() == 1 );
 		//assertTrue( s.delete("from java.lang.Object o")==9 );
 		doDelete( s, "from Foo foo" );
-		String bazid = baz.getCode();
+		final String bazid = baz.getCode();
 		s.delete( baz );
-		int rows=s.connection().createStatement().executeUpdate(
-			"delete from FOO_ARRAY where id_='" + bazid + "' and i>=8"
+		int rows = s.doReturningWork(
+				new AbstractReturningWork<Integer>() {
+					@Override
+					public Integer execute(Connection connection) throws SQLException {
+						return connection.createStatement()
+								.executeUpdate( "delete from FOO_ARRAY where id_='" + bazid + "' and i>=8" );
+					}
+				}
 		);
 		assertTrue( rows == 1 );
 		s.getTransaction().commit();
@@ -2463,6 +2472,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@SuppressWarnings( {"UnnecessaryBoxing", "unchecked"})
 	public void testPersistCollections() throws Exception {
 		Session s = openSession();
 		Transaction txn = s.beginTransaction();
@@ -2486,7 +2496,7 @@ public class FooBarTest extends LegacyTestCase {
 
 		s = openSession();
 		txn = s.beginTransaction();
-		assertTrue( ( (Long) s.createQuery( "select count(*) from Bar" ).iterate().next() ).longValue()==1 );
+		assertEquals( 1L, ((Long) s.createQuery( "select count(*) from Bar" ).iterate().next()).longValue() );
 		baz = (Baz) ( (Object[]) s.createQuery( "select baz, baz from Baz baz" ).list().get(0) )[1];
 		assertTrue( baz.getCascadingBars().size()==1 );
 		//System.out.println( s.print(baz) );
@@ -2525,7 +2535,7 @@ public class FooBarTest extends LegacyTestCase {
 
 		s = openSession();
 		txn = s.beginTransaction();
-		assertTrue( ( (Long) s.createQuery( "select count(*) from Bar" ).iterate().next() ).longValue()==1 );
+		assertEquals( 1, ((Long) s.createQuery( "select count(*) from Bar" ).iterate().next()).longValue() );
 		baz = (Baz) s.createQuery( "select baz from Baz baz order by baz" ).list().get(0);
 		assertTrue( "collection of custom types - added element", baz.getCustoms().size()==4 && baz.getCustoms().get(0)!=null );
 		assertTrue ( "component of component in collection", baz.getComponents()[1].getSubcomponent()!=null );
@@ -2557,7 +2567,7 @@ public class FooBarTest extends LegacyTestCase {
 
 		s = openSession();
 		txn = s.beginTransaction();
-		assertTrue( ( (Long) s.createQuery( "select count(*) from Bar" ).iterate().next() ).longValue()==1 );
+		assertEquals( 1, ((Long) s.createQuery( "select count(*) from Bar" ).iterate().next()).longValue() );
 		baz = (Baz) s.load(Baz.class, baz.getCode());
 		assertTrue( baz.getCascadingBars().size()==1 );
 		Bar bar = new Bar();
@@ -2592,7 +2602,7 @@ public class FooBarTest extends LegacyTestCase {
 
 		Session s2 = openSession();
 		Transaction txn2 = s2.beginTransaction();
-		assertTrue( ( (Long) s2.createQuery( "select count(*) from Bar" ).iterate().next() ).longValue()==3 );
+		assertEquals( 3, ((Long) s2.createQuery( "select count(*) from Bar" ).iterate().next()).longValue() );
 		Baz baz2 = (Baz) s2.createQuery( "select baz from Baz baz order by baz" ).list().get(0);
 		Object o = baz2.getFooComponentToFoo().get( new FooComponent("name", 123, null, null) );
 		assertTrue(
@@ -2636,7 +2646,7 @@ public class FooBarTest extends LegacyTestCase {
 
 		s = openSession();
 		txn = s.beginTransaction();
-		assertTrue( ( (Long) s.createQuery( "select count(*) from Bar" ).iterate().next() ).longValue()==3 );
+		assertEquals( 3, ((Long) s.createQuery( "select count(*) from Bar" ).iterate().next()).longValue() );
 		baz = (Baz) s.createQuery( "select baz from Baz baz order by baz" ).list().get(0);
 		assertTrue( baz.getTopGlarchez().size()==2 );
 		assertTrue( baz.getCascadingBars().size()==1 );
@@ -2647,11 +2657,19 @@ public class FooBarTest extends LegacyTestCase {
 
 		txn2 = s2.beginTransaction();
 		baz = (Baz) s2.load(Baz.class, baz.getCode());
-		assertTrue( ( (Long) s2.createQuery( "select count(*) from Bar" ).iterate().next() ).longValue()==3 );
+		assertEquals( 3, ((Long) s2.createQuery( "select count(*) from Bar" ).iterate().next()).longValue() );
 		s2.delete(baz);
-		s2.delete( baz.getTopGlarchez().get( new Character('G') ) );
-		s2.delete( baz.getTopGlarchez().get( new Character('H') ) );
-		int rows = s2.connection().createStatement().executeUpdate("update " + getDialect().openQuote() + "glarchez" + getDialect().closeQuote() + " set baz_map_id=null where baz_map_index='a'");
+		s2.delete( baz.getTopGlarchez().get( Character.valueOf('G') ) );
+		s2.delete( baz.getTopGlarchez().get( Character.valueOf('H') ) );
+		int rows = s2.doReturningWork(
+				new AbstractReturningWork<Integer>() {
+					@Override
+					public Integer execute(Connection connection) throws SQLException {
+						final String sql = "update " + getDialect().openQuote() + "glarchez" + getDialect().closeQuote() + " set baz_map_id=null where baz_map_index='a'";
+						return connection.createStatement().executeUpdate( sql );
+					}
+				}
+		);
 		assertTrue(rows==1);
 		assertEquals( 2, doDelete( s2, "from Bar bar" ) );
 		FooProxy[] arr = baz.getFooArray();
@@ -2735,6 +2753,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@SuppressWarnings( {"unchecked"})
 	public void testUpdateCollections() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -2892,6 +2911,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+	@SuppressWarnings( {"unchecked"})
 	public void testCollectionOfSelf() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -2913,9 +2933,8 @@ public class FooBarTest extends LegacyTestCase {
 		s.load( bar, bar.getKey() );
 		assertTrue( "collection contains self", bar.getAbstracts().size() == 2 && bar.getAbstracts().contains( bar ) );
 		assertTrue( "association to self", bar.getFoo()==bar );
-		Iterator iter = bar.getAbstracts().iterator();
-		while ( iter.hasNext() ) {
-			s.delete( iter.next() );
+		for ( Object o : bar.getAbstracts() ) {
+			s.delete( o );
 		}
 		s.getTransaction().commit();
 		s.close();
@@ -3242,6 +3261,7 @@ public class FooBarTest extends LegacyTestCase {
 	@Test
 	public void testVersionedCollections() throws Exception {
 		Session s = openSession();
+		s.beginTransaction();
 		GlarchProxy g = new Glarch();
 		s.save(g);
 		g.setProxyArray( new GlarchProxy[] { g } );
@@ -3250,66 +3270,66 @@ public class FooBarTest extends LegacyTestCase {
 		list.add("foo");
 		g.setStrings(list);
 		HashSet set = new HashSet();
-		set.add(g);
-		g.setProxySet(set);
-		s.flush();
-		s.connection().commit();
+		set.add( g );
+		g.setProxySet( set );
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		g = (GlarchProxy) s.load(Glarch.class, gid);
 		assertTrue( g.getStrings().size()==1 );
 		assertTrue( g.getProxyArray().length==1 );
 		assertTrue( g.getProxySet().size()==1 );
-		assertTrue( "versioned collection before", g.getVersion()==1 );
-		s.flush();
-		s.connection().commit();
+		assertTrue( "versioned collection before", g.getVersion() == 1 );
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		g = (GlarchProxy) s.load(Glarch.class, gid);
 		assertTrue( g.getStrings().get(0).equals("foo") );
 		assertTrue( g.getProxyArray()[0]==g );
 		assertTrue( g.getProxySet().iterator().next()==g );
-		assertTrue( "versioned collection before", g.getVersion()==1 );
-		s.flush();
-		s.connection().commit();
+		assertTrue( "versioned collection before", g.getVersion() == 1 );
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		g = (GlarchProxy) s.load(Glarch.class, gid);
-		assertTrue( "versioned collection before", g.getVersion()==1 );
-		g.getStrings().add("bar");
-		s.flush();
-		s.connection().commit();
+		assertTrue( "versioned collection before", g.getVersion() == 1 );
+		g.getStrings().add( "bar" );
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		g = (GlarchProxy) s.load(Glarch.class, gid);
 		assertTrue( "versioned collection after", g.getVersion()==2 );
-		assertTrue( "versioned collection after", g.getStrings().size()==2 );
-		g.setProxyArray(null);
-		s.flush();
-		s.connection().commit();
+		assertTrue( "versioned collection after", g.getStrings().size() == 2 );
+		g.setProxyArray( null );
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		g = (GlarchProxy) s.load(Glarch.class, gid);
 		assertTrue( "versioned collection after", g.getVersion()==3 );
-		assertTrue( "versioned collection after", g.getProxyArray().length==0 );
+		assertTrue( "versioned collection after", g.getProxyArray().length == 0 );
 		g.setFooComponents( new ArrayList() );
-		g.setProxyArray(null);
-		s.flush();
-		s.connection().commit();
+		g.setProxyArray( null );
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+		s.beginTransaction();
 		g = (GlarchProxy) s.load(Glarch.class, gid);
 		assertTrue( "versioned collection after", g.getVersion()==4 );
 		s.delete(g);
 		s.flush();
 		assertTrue( s.createQuery( "from java.lang.Object" ).list().size()==0 );
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
@@ -4148,9 +4168,18 @@ public class FooBarTest extends LegacyTestCase {
 		assertEquals(
 				"cached object identity",
 				im,
-				s.createQuery( "from Immutable im where im = ?" ).setParameter( 0, im, Hibernate.entity(Immutable.class) ).uniqueResult()
+				s.createQuery( "from Immutable im where im = ?" ).setParameter(
+						0, im, Hibernate.entity( Immutable.class )
+				).uniqueResult()
 		);
-		s.connection().createStatement().executeUpdate("delete from immut");
+		s.doWork(
+				new AbstractWork() {
+					@Override
+					public void execute(Connection connection) throws SQLException {
+						connection.createStatement().executeUpdate("delete from immut");
+					}
+				}
+		);
 		s.getTransaction().commit();
 		s.close();
 	}
@@ -4187,9 +4216,17 @@ public class FooBarTest extends LegacyTestCase {
 		Session s = openSession();
 		s.beginTransaction();
 		Foo foo = new Foo();
-		s.save(foo);
+		s.save( foo );
 		s.flush();
-		s.connection().createStatement().executeUpdate( "update " + getDialect().openQuote() + "foos" + getDialect().closeQuote() + " set long_ = -3" );
+		s.doWork(
+				new AbstractWork() {
+					@Override
+					public void execute(Connection connection) throws SQLException {
+						final String sql = "update " + getDialect().openQuote() + "foos" + getDialect().closeQuote() + " set long_ = -3";
+						connection.createStatement().executeUpdate( sql );
+					}
+				}
+		);
 		s.refresh(foo);
 		assertTrue( foo.getLong().longValue() == -3l );
 		assertTrue( s.getCurrentLockMode(foo)==LockMode.READ );
@@ -4344,7 +4381,7 @@ public class FooBarTest extends LegacyTestCase {
 	@Test
 	public void testUserProvidedConnection() throws Exception {
 		ConnectionProvider dcp = ConnectionProviderBuilder.buildConnectionProvider();
-		Session s = sessionFactory().openSession( dcp.getConnection() );
+		Session s = sessionFactory().withOptions().connection( dcp.getConnection() ).openSession();
 		Transaction tx = s.beginTransaction();
 		s.createQuery( "from Fo" ).list();
 		tx.commit();

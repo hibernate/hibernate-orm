@@ -34,6 +34,7 @@ import org.jboss.logging.Logger;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
+import org.hibernate.SessionBuilder;
 import org.hibernate.annotations.common.util.ReflectHelper;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.SessionFactoryImplementor;
@@ -100,10 +101,11 @@ public class EntityManagerImpl extends AbstractEntityManagerImpl {
 	@Override
     protected Session getRawSession() {
 		if ( session == null ) {
-			Interceptor interceptor = null;
+			SessionBuilder sessionBuilder = getEntityManagerFactory().getSessionFactory().withOptions();
 			if (sessionInterceptorClass != null) {
 				try {
-					interceptor = (Interceptor) sessionInterceptorClass.newInstance();
+					Interceptor interceptor = (Interceptor) sessionInterceptorClass.newInstance();
+					sessionBuilder.interceptor( interceptor );
 				}
 				catch (InstantiationException e) {
 					throw new PersistenceException("Unable to instanciate session interceptor: " + sessionInterceptorClass, e);
@@ -115,9 +117,8 @@ public class EntityManagerImpl extends AbstractEntityManagerImpl {
 					throw new PersistenceException("Session interceptor does not implement Interceptor: " + sessionInterceptorClass, e);
 				}
 			}
-			final boolean autoJoinTransactions = ( getTransactionType() != PersistenceUnitTransactionType.JTA );
-			final SessionFactoryImplementor sfi = ( (SessionFactoryImplementor) getEntityManagerFactory().getSessionFactory() );
-			session = sfi.openSession( interceptor, autoJoinTransactions );
+			sessionBuilder.autoJoinTransactions( getTransactionType() != PersistenceUnitTransactionType.JTA );
+			session = sessionBuilder.openSession();
 			if ( persistenceContextType == PersistenceContextType.TRANSACTION ) {
 				( (SessionImplementor) session ).setAutoClear( true );
 			}

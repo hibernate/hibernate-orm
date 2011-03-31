@@ -50,6 +50,7 @@ import org.hibernate.dialect.IngresDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.engine.EntityEntry;
 import org.hibernate.impl.SessionImpl;
+import org.hibernate.jdbc.AbstractWork;
 import org.hibernate.proxy.HibernateProxy;
 
 import org.junit.Test;
@@ -1194,7 +1195,14 @@ public class ParentChildTest extends LegacyTestCase {
 	public void testLoadAfterNonExists() throws HibernateException, SQLException {
 		Session session = openSession();
 		if ( ( getDialect() instanceof MySQLDialect ) || ( getDialect() instanceof IngresDialect ) ) {
-			session.connection().setTransactionIsolation( Connection.TRANSACTION_READ_COMMITTED );
+			session.doWork(
+					new AbstractWork() {
+						@Override
+						public void execute(Connection connection) throws SQLException {
+							connection.setTransactionIsolation( Connection.TRANSACTION_READ_COMMITTED );
+						}
+					}
+			);
 		}
 		session.getTransaction().begin();
 

@@ -263,22 +263,21 @@
         </para>
         <orderedlist>
             <listitem>
-                <para>
-                    <term>revision number</term> - An integral value (<literal>int/Integer</literal> or
-                    <literal>long/Long</literal>).  Essentially the primary key of the revision
-                </para>
-                <para>
-                    <term>revision timestamp</term> - either a <literal>long/Long</literal> or
-                    <classname>java.util.Date</classname> value representing the instant at which the revision was made.
-                    When using a <classname>java.util.Date</classname>, instead of a <literal>long/Long</literal> for
-                    the revision timestamp, take care not to store it to a column data type which will loose precision.
-                </para>
+                <firstterm>revision number</firstterm> - An integral value (<literal>int/Integer</literal> or
+                <literal>long/Long</literal>).  Essentially the primary key of the revision
+            </listitem>
+            <listitem>
+                <firstterm>revision timestamp</firstterm> - either a <literal>long/Long</literal> or
+                <classname>java.util.Date</classname> value representing the instant at which the revision was made.
+                When using a <classname>java.util.Date</classname>, instead of a <literal>long/Long</literal> for
+                the revision timestamp, take care not to store it to a column data type which will loose precision.
             </listitem>
         </orderedlist>
 
         <para>
             Envers handles this information as an entity.  By default it uses its own internal class to act as the
-            entity.  You can, however, supply your own approach to collecting this information which might be useful to
+            entity, mapped to the <literal>REVINFO</literal> table.
+            You can, however, supply your own approach to collecting this information which might be useful to
             capture additional details such as who made a change or the ip address from which the request came.  There
             are 2 things you need to make this work.
         </para>
@@ -331,9 +330,9 @@ public class MyCustomRevisionListener implements RevisionListener {
             is to instead call the <methodname>getCurrentRevision</methodname> method of the
             <interfacename>org.hibernate.envers.AuditReader</interfacename> interface to obtain the current revision,
             and fill it with desired information.  The method accepts a <literal>persist</literal> parameter indicating
-            whether the revision entity should be persisted prior to returning from this method.  <literal>true</literal>
-            which will ensure the returned entity has access to its identifier value (revision number), but the revision
-            entity will be persisted regardless of whether there are any audited entities changed.  <literal>false</literal>
+            whether the revision entity should be persisted prior to returning from this method. <literal>true</literal>
+            ensures that the returned entity has access to its identifier value (revision number), but the revision
+            entity will be persisted regardless of whether there are any audited entities changed. <literal>false</literal>
             means that the revision number will be <literal>null</literal>, but the revision entity will be persisted
             only if some audited entities have changed.
         </para>
@@ -343,7 +342,9 @@ public class MyCustomRevisionListener implements RevisionListener {
             <title>Example of storing username with revision</title>
 
             <programlisting>
-                <filename>ExampleRevEntity.java</filename><![CDATA[package org.hibernate.envers.example;
+                <filename>ExampleRevEntity.java</filename><![CDATA[
+
+package org.hibernate.envers.example;
 
 import org.hibernate.envers.RevisionEntity;
 import org.hibernate.envers.DefaultRevisionEntity;
@@ -360,7 +361,9 @@ public class ExampleRevEntity extends DefaultRevisionEntity {
 }]]></programlisting>
 
             <programlisting>
-                <filename>ExampleListener.java</filename><![CDATA[package org.hibernate.envers.example;
+                <filename>ExampleListener.java</filename><![CDATA[
+
+package org.hibernate.envers.example;
 
 import org.hibernate.envers.RevisionListener;
 import org.jboss.seam.security.Identity;
@@ -369,7 +372,8 @@ import org.jboss.seam.Component;
 public class ExampleListener implements RevisionListener {
     public void newRevision(Object revisionEntity) {
         ExampleRevEntity exampleRevEntity = (ExampleRevEntity) revisionEntity;
-        Identity identity = (Identity) Component.getInstance("org.jboss.seam.security.identity");
+        Identity identity =
+            (Identity) Component.getInstance("org.jboss.seam.security.identity");
 
         exampleRevEntity.setUsername(identity.getUsername());
     }

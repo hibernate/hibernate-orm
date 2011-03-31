@@ -1,8 +1,12 @@
 package org.hibernate.envers.test.integration.jta;
 
 import javax.persistence.EntityManager;
+import javax.transaction.NotSupportedException;
+import javax.transaction.SystemException;
+import javax.transaction.TransactionManager;
 import java.util.Arrays;
 
+import org.hibernate.envers.test.EnversTestingJtaBootstrap;
 import org.testng.annotations.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
@@ -16,42 +20,42 @@ import org.hibernate.testing.jta.TestingJtaBootstrap;
  * @author Adam Warski (adam at warski dot org)
  */
 public class JtaTransaction extends AbstractEntityTest {
+    private TransactionManager tm;
     private Integer id1;
 
     public void configure(Ejb3Configuration cfg) {
         cfg.addAnnotatedClass(IntTestEntity.class);
 
-        addJTAConfig(cfg);
+        tm = addJTAConfig(cfg);
     }
 
     @Test
     public void initData() throws Exception {
-        TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
+        tm.begin();
 
         newEntityManager();
         EntityManager em = getEntityManager();
-        em.joinTransaction();
         IntTestEntity ite = new IntTestEntity(10);
         em.persist(ite);
         id1 = ite.getId();
 
-        TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
+        tm.commit();
 
         //
 
-        TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
+        tm.begin();
 
         newEntityManager();
         em = getEntityManager();
         ite = em.find(IntTestEntity.class, id1);
         ite.setNumber(20);
 
-        TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
+        tm.commit();
     }
 
     @Test(dependsOnMethods = "initData")
     public void testRevisionsCounts() throws Exception {
-        assert Arrays.asList(1, 2).equals(getAuditReader().getRevisions(IntTestEntity.class, id1)); 
+        assert Arrays.asList(1, 2).equals(getAuditReader().getRevisions(IntTestEntity.class, id1));
     }
 
     @Test(dependsOnMethods = "initData")

@@ -25,8 +25,12 @@ package org.hibernate.envers.test;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import javax.transaction.TransactionManager;
 import java.io.IOException;
 
+import org.hibernate.ejb.AvailableSettings;
+import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
+import org.hibernate.engine.transaction.internal.jta.JtaTransactionFactory;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -40,8 +44,6 @@ import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.event.EnversIntegrator;
 import org.hibernate.service.internal.BasicServiceRegistryImpl;
-
-import org.hibernate.testing.jta.TestingJtaBootstrap;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -99,8 +101,6 @@ public abstract class AbstractEntityTest {
 
         configure( cfg );
 
-		cfg.configure( cfg.getHibernateConfiguration().getProperties() );
-
 		serviceRegistry = new BasicServiceRegistryImpl( cfg.getProperties() );
 
         emf = cfg.buildEntityManagerFactory( serviceRegistry );
@@ -127,10 +127,8 @@ public abstract class AbstractEntityTest {
         return cfg;
     }
 
-    protected void addJTAConfig(Ejb3Configuration cfg) {
-		TestingJtaBootstrap.prepare( cfg.getProperties() );
-		cfg.getProperties().remove( Environment.USER );
-		cfg.getProperties().remove( Environment.PASS );
-		cfg.setProperty( AvailableSettings.TRANSACTION_TYPE, "JTA" );
+    protected TransactionManager addJTAConfig(Ejb3Configuration cfg) {
+        cfg.getProperties().put(AvailableSettings.TRANSACTION_TYPE, "JTA");
+        return EnversTestingJtaBootstrap.updateConfigAndCreateTM(cfg.getProperties());
     }
 }

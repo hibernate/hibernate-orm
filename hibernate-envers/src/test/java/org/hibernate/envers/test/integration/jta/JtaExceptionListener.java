@@ -24,7 +24,9 @@
 package org.hibernate.envers.test.integration.jta;
 
 import javax.persistence.EntityManager;
+import javax.transaction.TransactionManager;
 
+import org.hibernate.envers.test.EnversTestingJtaBootstrap;
 import org.testng.annotations.Test;
 
 import org.hibernate.ejb.Ejb3Configuration;
@@ -39,31 +41,32 @@ import org.hibernate.testing.jta.TestingJtaBootstrap;
  * @author Adam Warski (adam at warski dot org)
  */
 public class JtaExceptionListener extends AbstractEntityTest {
+    private TransactionManager tm;
+
     public void configure(Ejb3Configuration cfg) {
         cfg.addAnnotatedClass(StrTestEntity.class);
         cfg.addAnnotatedClass(ExceptionListenerRevEntity.class);
 
-        addJTAConfig(cfg);
+        tm = addJTAConfig(cfg);
     }
 
     @Test(expectedExceptions = RuntimeException.class)
     public void testTransactionRollback() throws Exception {
-        TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
+        tm.begin();
 
         // Trying to persist an entity - however the listener should throw an exception, so the entity
 		// shouldn't be persisted
         newEntityManager();
         EntityManager em = getEntityManager();
-        em.getTransaction().begin();
         StrTestEntity te = new StrTestEntity("x");
         em.persist(te);
 
-        TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
+        tm.commit();
     }
 
     @Test(dependsOnMethods = "testTransactionRollback")
     public void testDataNotPersisted() throws Exception {
-        TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
+        tm.begin();
 
 		// Checking if the entity became persisted
         newEntityManager();
@@ -71,6 +74,6 @@ public class JtaExceptionListener extends AbstractEntityTest {
         Long count = (Long) em.createQuery("select count(s) from StrTestEntity s where s.str = 'x'").getSingleResult();
 		assert count == 0l;
 
-        TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
+        tm.commit();
     }
 }

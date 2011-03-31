@@ -456,4 +456,88 @@ public class ExampleListener implements RevisionListener {
 
     </section>
 
+    <section id="envers-mappingexceptions">
+        <title>Mapping exceptions</title>
+
+        <section>
+
+            <title>What isn't and will not be supported</title>
+
+            <para>
+                Bags (the corresponding Java type is List), as they can contain non-unique elements.
+                The reason is that persisting, for example a bag of String-s, violates a principle
+                of relational databases: that each table is a set of tuples. In case of bags,
+                however (which require a join table), if there is a duplicate element, the two
+                tuples corresponding to the elements will be the same. Hibernate allows this,
+                however Envers (or more precisely: the database connector) will throw an exception
+                when trying to persist two identical elements, because of a unique constraint violation.
+            </para>
+
+            <para>
+                There are at least two ways out if you need bag semantics:
+            </para>
+
+            <orderedlist>
+                <listitem>
+                    <para>
+                        use an indexed collection, with the <literal>@IndexColumn</literal> annotation, or
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        provide a unique id for your elements with the <literal>@CollectionId</literal> annotation.
+                    </para>
+                </listitem>
+            </orderedlist>
+
+        </section>
+
+        <section>
+
+            <title>What isn't and <emphasis>will</emphasis> be supported</title>
+
+            <orderedlist>
+                <listitem>
+                    <para>
+                        collections of components
+                    </para>
+                </listitem>
+            </orderedlist>
+
+        </section>
+
+        <section>
+
+            <title><literal>@OneToMany</literal>+<literal>@JoinColumn</literal></title>
+
+            <para>
+                When a collection is mapped using these two annotations, Hibernate doesn't
+                generate a join table. Envers, however, has to do this, so that when you read the
+                revisions in which the related entity has changed, you don't get false results.
+            </para>
+            <para>
+                To be able to name the additional join table, there is a special annotation:
+                <literal>@AuditJoinTable</literal>, which has similar semantics to JPA's
+                <literal>@JoinTable</literal>.
+            </para>
+
+            <para>
+                One special case are relations mapped with <literal>@OneToMany</literal>+<literal>@JoinColumn</literal> on
+                the one side, and <literal>@ManyToOne</literal>+<literal>@JoinColumn(insertable=false, updatable=false</literal>)
+                on the many side.
+                Such relations are in fact bidirectional, but the owning side is the collection (see alse
+                <ulink url="http://docs.jboss.org/hibernate/stable/annotations/reference/en/html_single/#entity-hibspec-collection-extratype">here</ulink>).
+            </para>
+            <para>
+                To properly audit such relations with Envers, you can use the <literal>@AuditMappedBy</literal> annotation.
+                It enables you to specify the reverse property (using the <literal>mappedBy</literal> element). In case
+                of indexed collections, the index column must also be mapped in the referenced entity (using
+                <literal>@Column(insertable=false, updatable=false)</literal>, and specified using
+                <literal>positionMappedBy</literal>. This annotation will affect only the way
+                Envers works. Please note that the annotation is experimental and may change in the future.
+            </para>
+
+        </section>
+    </section>
+
 </chapter>

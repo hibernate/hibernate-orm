@@ -219,6 +219,41 @@
     </section>
 
     <section>
+        <title>Additional mapping annotations</title>
+
+        <para>
+            The name of the audit table can be set on a per-entity basis, using the
+            <literal>@AuditTable</literal> annotation. It may be tedious to add this
+            annotation to every audited entity, so if possible, it's better to use a prefix/suffix.
+        </para>
+
+        <para>
+            If you have a mapping with secondary tables, audit tables for them will be generated in
+            the same way (by adding the prefix and suffix). If you wish to overwrite this behaviour,
+            you can use the <literal>@SecondaryAuditTable</literal> and
+            <literal>@SecondaryAuditTables</literal> annotations.
+        </para>
+
+        <para>
+            If you'd like to override auditing behaviour of some fields/properties in an embedded component, you can use
+            the <literal>@AuditOverride(s)</literal> annotation on the usage site of the component.
+        </para>
+
+        <para>
+            If you want to audit a relation mapped with <literal>@OneToMany+@JoinColumn</literal>,
+            please see <xref linkend="envers-mappingexceptions"/> for a description of the additional
+            <literal>@AuditJoinTable</literal> annotation that you'll probably want to use.
+        </para>
+
+        <para>
+            If you want to audit a relation, where the target entity is not audited (that is the case for example with
+            dictionary-like entities, which don't change and don't have to be audited), just annotate it with
+            <literal>@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)</literal>. Then, when reading historic
+            versions of your entity, the relation will always point to the "current" related entity.
+        </para>
+    </section>
+
+    <section>
         <title>Choosing an audit strategy</title>
         <para>
             After the basic configuration it is important to choose the audit strategy that will be used to persist

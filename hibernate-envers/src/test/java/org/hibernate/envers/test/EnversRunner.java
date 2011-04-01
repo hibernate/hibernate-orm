@@ -12,6 +12,7 @@ import org.junit.runners.model.TestClass;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -65,9 +66,28 @@ public class EnversRunner extends Suite {
 		@Override
 		protected String testName(final FrameworkMethod method) {
 			return String.format("%s[%s]", method.getName(),
-					fParameterSetNumber);
+                    fParameterSetNumber);
 		}
-	}
+
+        @Override
+        protected List<FrameworkMethod> doComputation() {
+            List<FrameworkMethod> frameworkMethods = super.doComputation();
+
+            Collections.sort(frameworkMethods, new Comparator<FrameworkMethod>() {
+                private int getPriority(FrameworkMethod fm) {
+                    Priority p = fm.getAnnotation(Priority.class);
+                    return p == null ? 0 : p.value();
+                }
+
+                @Override
+                public int compare(FrameworkMethod fm1, FrameworkMethod fm2) {
+                    return getPriority(fm2) - getPriority(fm1);
+                }
+            });
+
+            return frameworkMethods;
+        }
+    }
 
 	private final ArrayList<Runner> runners= new ArrayList<Runner>();
 

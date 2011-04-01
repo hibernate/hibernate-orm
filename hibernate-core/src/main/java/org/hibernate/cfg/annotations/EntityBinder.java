@@ -23,10 +23,6 @@
  */
 package org.hibernate.cfg.annotations;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 import javax.persistence.Access;
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
@@ -34,6 +30,13 @@ import javax.persistence.JoinTable;
 import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.SecondaryTable;
 import javax.persistence.SecondaryTables;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import org.jboss.logging.Logger;
+
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
@@ -49,6 +52,7 @@ import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.annotations.Persister;
 import org.hibernate.annotations.PolymorphismType;
 import org.hibernate.annotations.Proxy;
+import org.hibernate.annotations.RowId;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLDeleteAll;
 import org.hibernate.annotations.SQLInsert;
@@ -85,7 +89,6 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.TableOwner;
 import org.hibernate.mapping.Value;
-import org.jboss.logging.Logger;
 
 /**
  * Stateful holder and processor for binding Entity information
@@ -123,8 +126,6 @@ public class EntityBinder {
 	private AccessType propertyAccessType = AccessType.DEFAULT;
 	private boolean wrapIdsInEmbeddedComponents;
 	private String subselect;
-	private String rowId;
-
 
 	public boolean wrapIdsInEmbeddedComponents() {
 		return wrapIdsInEmbeddedComponents;
@@ -156,7 +157,6 @@ public class EntityBinder {
 			optimisticLockType = hibAnn.optimisticLock();
 			selectBeforeUpdate = hibAnn.selectBeforeUpdate();
 			polymorphismType = hibAnn.polymorphism();
-			rowId = hibAnn.rowId();
 			explicitHibernateEntityAnnotation = true;
 			//persister handled in bind
 		}
@@ -167,7 +167,6 @@ public class EntityBinder {
 			optimisticLockType = OptimisticLockType.VERSION;
 			polymorphismType = PolymorphismType.IMPLICIT;
 			selectBeforeUpdate = false;
-			rowId = "";
 		}
 	}
 
@@ -239,8 +238,12 @@ public class EntityBinder {
 			}
 		}
 		else {
-            if (explicitHibernateEntityAnnotation) LOG.entityAnnotationOnNonRoot(annotatedClass.getName());
-            if (annotatedClass.isAnnotationPresent(Immutable.class)) LOG.immutableAnnotationOnNonRoot(annotatedClass.getName());
+            if (explicitHibernateEntityAnnotation) {
+				LOG.entityAnnotationOnNonRoot(annotatedClass.getName());
+			}
+            if (annotatedClass.isAnnotationPresent(Immutable.class)) {
+				LOG.immutableAnnotationOnNonRoot(annotatedClass.getName());
+			}
 		}
 		persistentClass.setOptimisticLockMode( getVersioning( optimisticLockType ) );
 		persistentClass.setSelectBeforeUpdate( selectBeforeUpdate );
@@ -507,7 +510,10 @@ public class EntityBinder {
 				mappings,
 				this.subselect
 		);
-		table.setRowId( rowId );
+		final RowId rowId = annotatedClass.getAnnotation( RowId.class );
+		if ( rowId != null ) {
+			table.setRowId( rowId.value() );
+		}
 
 		if ( persistentClass instanceof TableOwner ) {
             LOG.bindEntityOnTable(persistentClass.getEntityName(), table.getName());

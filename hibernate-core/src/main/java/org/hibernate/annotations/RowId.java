@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -24,35 +24,22 @@
 package org.hibernate.annotations;
 
 import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
 
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Extends {@link javax.persistence.Entity} with Hibernate features
+ * Support for {@literal ROWID} mapping feature of Hibernate.
  *
- * @author Emmanuel Bernard
+ * @author Steve Ebersole
  */
-@Target(TYPE)
+@java.lang.annotation.Target({TYPE})
 @Retention(RUNTIME)
-public @interface Entity {
+public @interface RowId {
 	/**
-	 * Is this entity mutable (read only) or not
+	 * Names the {@literal ROWID} identifier
 	 *
-	 * @deprecated use {@link org.hibernate.annotations.Immutable} 
+	 * @return The {@literal ROWID} identifier
 	 */
-	boolean mutable() default true;
-	/** Needed column only in SQL on insert */
-	boolean dynamicInsert() default false;
-	/** Needed column only in SQL on update */
-	boolean dynamicUpdate() default false;
-	/** Do a select to retrieve the entity before any potential update */
-	boolean selectBeforeUpdate() default false;
-	/** polymorphism strategy for this entity */
-	PolymorphismType polymorphism() default PolymorphismType.IMPLICIT;
-	/** persister of this entity, default is hibernate internal one */
-	String persister() default "";
-	/** optimistic locking strategy */
-	OptimisticLockType optimisticLock() default OptimisticLockType.VERSION;
+	String value();
 }

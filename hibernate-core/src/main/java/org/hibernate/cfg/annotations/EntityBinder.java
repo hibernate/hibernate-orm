@@ -123,6 +123,7 @@ public class EntityBinder {
 	private AccessType propertyAccessType = AccessType.DEFAULT;
 	private boolean wrapIdsInEmbeddedComponents;
 	private String subselect;
+	private String rowId;
 
 
 	public boolean wrapIdsInEmbeddedComponents() {
@@ -155,6 +156,7 @@ public class EntityBinder {
 			optimisticLockType = hibAnn.optimisticLock();
 			selectBeforeUpdate = hibAnn.selectBeforeUpdate();
 			polymorphismType = hibAnn.polymorphism();
+			rowId = hibAnn.rowId();
 			explicitHibernateEntityAnnotation = true;
 			//persister handled in bind
 		}
@@ -165,6 +167,7 @@ public class EntityBinder {
 			optimisticLockType = OptimisticLockType.VERSION;
 			polymorphismType = PolymorphismType.IMPLICIT;
 			selectBeforeUpdate = false;
+			rowId = "";
 		}
 	}
 
@@ -504,6 +507,7 @@ public class EntityBinder {
 				mappings,
 				this.subselect
 		);
+		table.setRowId( rowId );
 
 		if ( persistentClass instanceof TableOwner ) {
             LOG.bindEntityOnTable(persistentClass.getEntityName(), table.getName());

@@ -53,4 +53,5 @@ public @interface Entity {
 	String persister() default "";
 	/** optimistic locking strategy */
 	OptimisticLockType optimisticLock() default OptimisticLockType.VERSION;
+	String rowId() default "";
 }

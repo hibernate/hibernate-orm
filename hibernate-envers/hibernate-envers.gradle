@@ -11,18 +11,19 @@ dependencies {
         trasitive = false
     }
     compile( libraries.ant )
-    testCompile( libraries.testng )
+    testCompile( libraries.junit )
     testCompile( project(':hibernate-testing') )
     testCompile( libraries.jpa )
     testRuntime( libraries.h2 )
     testRuntime( libraries.javassist )
 }
 
-// todo : align testing with other modules
-
-test {
-    useTestNG() {
-         suites 'src/test/resources/testng.xml'
+sourceSets {
+    test {
+        // resources inherently exclude sources
+        resources {
+            setSrcDirs( ['src/test/java','src/test/resources'] )
+        }
     }
 }
 

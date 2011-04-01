@@ -22,11 +22,13 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.integration.reventity;
-import javax.persistence.EntityManager;
+
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.entities.StrTestEntity;
-import org.testng.annotations.Test;
+import org.junit.Test;
+
+import javax.persistence.EntityManager;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -37,7 +39,7 @@ public class ExceptionListener extends AbstractEntityTest {
         cfg.addAnnotatedClass(ExceptionListenerRevEntity.class);
     }
 
-    @Test(expectedExceptions = RuntimeException.class)
+    @Test(expected = RuntimeException.class)
     public void testTransactionRollback() throws InterruptedException {
         // Trying to persist an entity - however the listener should throw an exception, so the entity
 		// shouldn't be persisted
@@ -48,7 +50,7 @@ public class ExceptionListener extends AbstractEntityTest {
         em.getTransaction().commit();
     }
 
-    @Test(dependsOnMethods = "testTransactionRollback")
+    @Test
     public void testDataNotPersisted() {
 		// Checking if the entity became persisted
 		EntityManager em = getEntityManager();

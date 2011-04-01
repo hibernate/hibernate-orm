@@ -22,12 +22,14 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.integration.basic;
-import java.util.Arrays;
-import javax.persistence.EntityManager;
+
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.entities.IntTestEntity;
-import org.testng.annotations.Test;
+import org.junit.Test;
+
+import javax.persistence.EntityManager;
+import java.util.Arrays;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -54,12 +56,12 @@ public class Simple extends AbstractEntityTest {
         em.getTransaction().commit();
     }
 
-    @Test(dependsOnMethods = "initData")
+    @Test
     public void testRevisionsCounts() {
         assert Arrays.asList(1, 2).equals(getAuditReader().getRevisions(IntTestEntity.class, id1));
     }
 
-    @Test(dependsOnMethods = "initData")
+    @Test
     public void testHistoryOfId1() {
         IntTestEntity ver1 = new IntTestEntity(10, id1);
         IntTestEntity ver2 = new IntTestEntity(20, id1);

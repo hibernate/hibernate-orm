@@ -1,19 +1,13 @@
 package org.hibernate.envers.test.integration.jta;
 
-import javax.persistence.EntityManager;
-import javax.transaction.NotSupportedException;
-import javax.transaction.SystemException;
-import javax.transaction.TransactionManager;
-import java.util.Arrays;
-
-import org.hibernate.envers.test.EnversTestingJtaBootstrap;
-import org.testng.annotations.Test;
-
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.entities.IntTestEntity;
+import org.junit.Test;
 
-import org.hibernate.testing.jta.TestingJtaBootstrap;
+import javax.persistence.EntityManager;
+import javax.transaction.TransactionManager;
+import java.util.Arrays;
 
 /**
  * Same as {@link org.hibernate.envers.test.integration.basic.Simple}, but in a JTA environment.
@@ -53,12 +47,12 @@ public class JtaTransaction extends AbstractEntityTest {
         tm.commit();
     }
 
-    @Test(dependsOnMethods = "initData")
+    @Test
     public void testRevisionsCounts() throws Exception {
         assert Arrays.asList(1, 2).equals(getAuditReader().getRevisions(IntTestEntity.class, id1));
     }
 
-    @Test(dependsOnMethods = "initData")
+    @Test
     public void testHistoryOfId1() {
         IntTestEntity ver1 = new IntTestEntity(10, id1);
         IntTestEntity ver2 = new IntTestEntity(20, id1);

@@ -22,14 +22,15 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.integration.naming;
-import java.util.Arrays;
-import java.util.Iterator;
-import javax.persistence.EntityManager;
+
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.mapping.Column;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
+import org.junit.Test;
+
+import javax.persistence.EntityManager;
+import java.util.Arrays;
+import java.util.Iterator;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -44,7 +45,7 @@ public class JoinNaming extends AbstractEntityTest {
         cfg.addAnnotatedClass(JoinNamingRefIngEntity.class);
     }
 
-    @BeforeClass(dependsOnMethods = "init")
+    @Test
     public void initData() {
         JoinNamingRefEdEntity ed1 = new JoinNamingRefEdEntity("data1");
         JoinNamingRefEdEntity ed2 = new JoinNamingRefEdEntity("data2");

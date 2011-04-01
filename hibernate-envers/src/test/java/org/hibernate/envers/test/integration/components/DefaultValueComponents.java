@@ -22,17 +22,19 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.integration.components;
-import static org.hibernate.testing.TestLogger.LOG;
-import java.math.BigInteger;
-import java.util.Arrays;
-import javax.persistence.EntityManager;
+
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.entities.components.DefaultValueComponent1;
 import org.hibernate.envers.test.entities.components.DefaultValueComponent2;
 import org.hibernate.envers.test.entities.components.DefaultValueComponentTestEntity;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
+import org.junit.Test;
+
+import javax.persistence.EntityManager;
+import java.math.BigInteger;
+import java.util.Arrays;
+
+import static org.hibernate.testing.TestLogger.*;
 
 /**
  * Test class for components with default values.
@@ -58,7 +60,7 @@ public class DefaultValueComponents extends AbstractEntityTest {
 		cfg.addAnnotatedClass(DefaultValueComponentTestEntity.class);
 	}
 
-	@BeforeClass(dependsOnMethods = "init")
+	@Test
 	public void initData() {
 		// Revision 1
 		EntityManager em = getEntityManager();

@@ -22,14 +22,16 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.integration.flush;
-import java.io.IOException;
-import javax.persistence.EntityManager;
+
 import org.hibernate.FlushMode;
 import org.hibernate.Session;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.entities.StrTestEntity;
-import org.testng.annotations.BeforeClass;
+import org.junit.Test;
+
+import javax.persistence.EntityManager;
+import java.io.IOException;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -56,7 +58,7 @@ public abstract class AbstractFlushTest extends AbstractEntityTest {
         throw new RuntimeException("Invalid entity manager");
     }
 
-    @BeforeClass(dependsOnMethods = "init")
+    @Test
     public void initFlush() throws IOException {
         Session session = getSession(getEntityManager());
         session.setFlushMode(getFlushMode());

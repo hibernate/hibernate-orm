@@ -1,10 +1,11 @@
 package org.hibernate.envers.test.integration.interfaces.hbm.allAudited.subclass;
+
+import org.hibernate.ejb.Ejb3Configuration;
+import org.hibernate.envers.test.integration.interfaces.hbm.allAudited.AbstractAllAuditedTest;
+
 import java.io.File;
 import java.net.URISyntaxException;
 import java.net.URL;
-import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.integration.interfaces.hbm.allAudited.AbstractAllAuditedTest;
-import org.testng.annotations.Test;
 
 /**
  * @author Hern�n Chanfreau
@@ -18,24 +19,6 @@ public class SubclassAllAuditedTest extends AbstractAllAuditedTest {
 		} catch (URISyntaxException e) {
 			e.printStackTrace();
 		}
-    }
-
-    @Test
-    @Override
-    public void testRetrieveAudited() {
-    	super.testRetrieveAudited();
-    }
-
-    @Test
-    @Override
-    public void testRetrieveNonAudited() {
-        super.testRetrieveNonAudited();
-    }
-
-    @Test
-    @Override
-    public void testRevisions() {
-        super.testRevisions();
     }
     
 }

@@ -22,16 +22,18 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.integration.onetomany.detached;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
-import java.util.Arrays;
-import javax.persistence.EntityManager;
+
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.entities.onetomany.detached.inheritance.ChildIndexedListJoinColumnBidirectionalRefIngEntity;
 import org.hibernate.envers.test.entities.onetomany.detached.inheritance.ParentIndexedListJoinColumnBidirectionalRefIngEntity;
 import org.hibernate.envers.test.entities.onetomany.detached.inheritance.ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity;
-import org.testng.annotations.Test;
+import org.junit.Test;
+
+import javax.persistence.EntityManager;
+import java.util.Arrays;
+
+import static org.junit.Assert.*;
 
 /**
  * Test for a "fake" bidirectional mapping where one side uses @OneToMany+@JoinColumn (and thus owns the relation),
@@ -52,7 +54,7 @@ public class InheritanceIndexedJoinColumnBidirectionalList extends AbstractEntit
         cfg.addAnnotatedClass(ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity.class);
     }
 
-    @Test(enabled = true)
+    @Test
     public void createData() {
         EntityManager em = getEntityManager();
 
@@ -127,7 +129,7 @@ public class InheritanceIndexedJoinColumnBidirectionalList extends AbstractEntit
         ed3_id = ed3.getId();
     }
 
-    @Test(enabled = true, dependsOnMethods = "createData")
+    @Test
     public void testRevisionsCounts() {
         assertEquals(Arrays.asList(1, 2, 3, 4), getAuditReader().getRevisions(ChildIndexedListJoinColumnBidirectionalRefIngEntity.class, ing1_id));
         assertEquals(Arrays.asList(1, 2, 4), getAuditReader().getRevisions(ChildIndexedListJoinColumnBidirectionalRefIngEntity.class, ing2_id));
@@ -137,7 +139,7 @@ public class InheritanceIndexedJoinColumnBidirectionalList extends AbstractEntit
         assertEquals(Arrays.asList(1, 2, 3, 4), getAuditReader().getRevisions(ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity.class, ed3_id));
     }
 
-    @Test(enabled = true, dependsOnMethods = "createData")
+    @Test
     public void testHistoryOfIng1() {
         ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity ed1 = getEntityManager().find(ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity.class, ed1_id);
         ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity ed2 = getEntityManager().find(ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity.class, ed2_id);
@@ -167,7 +169,7 @@ public class InheritanceIndexedJoinColumnBidirectionalList extends AbstractEntit
         assertEquals(rev4.getReferences().get(2), ed1);
     }
 
-    @Test(enabled = true, dependsOnMethods = "createData")
+    @Test
     public void testHistoryOfIng2() {
         ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity ed2 = getEntityManager().find(ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity.class, ed2_id);
 
@@ -187,7 +189,7 @@ public class InheritanceIndexedJoinColumnBidirectionalList extends AbstractEntit
         assertEquals(rev4.getReferences().size(), 0);
     }
 
-    @Test(enabled = true, dependsOnMethods = "createData")
+    @Test
     public void testHistoryOfEd1() {
         ChildIndexedListJoinColumnBidirectionalRefIngEntity ing1 = getEntityManager().find(ChildIndexedListJoinColumnBidirectionalRefIngEntity.class, ing1_id);
 
@@ -207,7 +209,7 @@ public class InheritanceIndexedJoinColumnBidirectionalList extends AbstractEntit
         assertEquals(rev4.getPosition(), new Integer(2));
     }
 
-    @Test(enabled = true, dependsOnMethods = "createData")
+    @Test
     public void testHistoryOfEd2() {
         ChildIndexedListJoinColumnBidirectionalRefIngEntity ing1 = getEntityManager().find(ChildIndexedListJoinColumnBidirectionalRefIngEntity.class, ing1_id);
         ChildIndexedListJoinColumnBidirectionalRefIngEntity ing2 = getEntityManager().find(ChildIndexedListJoinColumnBidirectionalRefIngEntity.class, ing2_id);
@@ -228,7 +230,7 @@ public class InheritanceIndexedJoinColumnBidirectionalList extends AbstractEntit
         assertEquals(rev4.getPosition(), new Integer(0));
     }
 
-    @Test(enabled = true, dependsOnMethods = "createData")
+    @Test
     public void testHistoryOfEd3() {
         ChildIndexedListJoinColumnBidirectionalRefIngEntity ing1 = getEntityManager().find(ChildIndexedListJoinColumnBidirectionalRefIngEntity.class, ing1_id);
 

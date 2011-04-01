@@ -22,16 +22,18 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.integration.manytomany.biowned;
-import static org.testng.Assert.assertEquals;
-import java.util.Arrays;
-import javax.persistence.EntityManager;
+
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.entities.manytomany.biowned.ListBiowning1Entity;
 import org.hibernate.envers.test.entities.manytomany.biowned.ListBiowning2Entity;
 import org.hibernate.envers.test.tools.TestTools;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
+import org.junit.Test;
+
+import javax.persistence.EntityManager;
+import java.util.Arrays;
+
+import static org.junit.Assert.*;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -47,7 +49,7 @@ public class BasicBiowned extends AbstractEntityTest {
         cfg.addAnnotatedClass(ListBiowning2Entity.class);
     }
 
-    @BeforeClass(dependsOnMethods = "init")
+    @Test
     public void initData() {
         EntityManager em = getEntityManager();
 
@@ -130,7 +132,7 @@ public class BasicBiowned extends AbstractEntityTest {
         o2_2_id = o2_2.getId();
     }
 
-    @Test(enabled = true)
+    @Test
     public void testRevisionsCounts() {
         // Although it would seem that when modifying references both entities should be marked as modified, because
         // ownly the owning side is notified (because of the bi-owning mapping), a revision is created only for
@@ -143,7 +145,7 @@ public class BasicBiowned extends AbstractEntityTest {
         assertEquals(Arrays.asList(1, 4), getAuditReader().getRevisions(ListBiowning2Entity.class, o2_2_id));
     }
 
-    @Test(enabled = true)
+    @Test
     public void testHistoryOfO1_1() {
         ListBiowning2Entity o2_1 = getEntityManager().find(ListBiowning2Entity.class, o2_1_id);
         ListBiowning2Entity o2_2 = getEntityManager().find(ListBiowning2Entity.class, o2_2_id);
@@ -161,7 +163,7 @@ public class BasicBiowned extends AbstractEntityTest {
         assert TestTools.checkList(rev5.getReferences(), o2_2);
     }
 
-    @Test(enabled = true)
+    @Test
     public void testHistoryOfO1_2() {
         ListBiowning2Entity o2_1 = getEntityManager().find(ListBiowning2Entity.class, o2_1_id);
         ListBiowning2Entity o2_2 = getEntityManager().find(ListBiowning2Entity.class, o2_2_id);
@@ -180,7 +182,7 @@ public class BasicBiowned extends AbstractEntityTest {
         assert TestTools.checkList(rev5.getReferences(), o2_2);
     }
 
-    @Test(enabled = true)
+    @Test
     public void testHistoryOfO2_1() {
         ListBiowning1Entity o1_1 = getEntityManager().find(ListBiowning1Entity.class, o1_1_id);
         ListBiowning1Entity o1_2 = getEntityManager().find(ListBiowning1Entity.class, o1_2_id);
@@ -198,7 +200,7 @@ public class BasicBiowned extends AbstractEntityTest {
         assert TestTools.checkList(rev5.getReferences());
     }
 
-    @Test(enabled = true)
+    @Test
     public void testHistoryOfO2_2() {
         ListBiowning1Entity o1_1 = getEntityManager().find(ListBiowning1Entity.class, o1_1_id);
         ListBiowning1Entity o1_2 = getEntityManager().find(ListBiowning1Entity.class, o1_2_id);

@@ -1,20 +1,19 @@
 package org.hibernate.envers.test.integration.entityNames.oneToManyAudited;
+
+import org.hibernate.MappingException;
+import org.hibernate.envers.test.AbstractOneSessionTest;
+import org.junit.Test;
+
 import java.io.File;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import org.hibernate.MappingException;
-import org.hibernate.envers.test.AbstractOneSessionTest;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
 
 /**
  * @author Hern&aacute;n Chanfreau
  * 
  */
-
-@Test(sequential=true)
 public class ReadEntityWithAuditedCollectionTest extends AbstractOneSessionTest{
 
 	private long id_car1;
@@ -34,7 +33,7 @@ public class ReadEntityWithAuditedCollectionTest extends AbstractOneSessionTest{
 	}
 
 	
-    @BeforeClass(dependsOnMethods = "init")
+    @Test
     public void initData() {
     	
     	initializeSession();
@@ -112,7 +111,7 @@ public class ReadEntityWithAuditedCollectionTest extends AbstractOneSessionTest{
 
 
     
-    @Test(dependsOnMethods="testObtainEntityNameAuditedCollectionWithEntityName")
+    @Test
     public void testObtainEntityNameAuditedCollectionWithEntityNameInNewSession() {
     	// force a new session and AR
     	forceNewSession();

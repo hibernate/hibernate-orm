@@ -22,18 +22,19 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.integration.onetomany;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
-import javax.persistence.EntityManager;
+
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.entities.ids.MulId;
 import org.hibernate.envers.test.entities.onetomany.ids.SetRefEdMulIdEntity;
 import org.hibernate.envers.test.entities.onetomany.ids.SetRefIngMulIdEntity;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
+import org.junit.Test;
+
+import javax.persistence.EntityManager;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -50,7 +51,7 @@ public class BasicSetWithMulId extends AbstractEntityTest {
         cfg.addAnnotatedClass(SetRefIngMulIdEntity.class);
     }
 
-    @BeforeClass(dependsOnMethods = "init")
+    @Test
     public void initData() {
         ed1_id = new MulId(0, 1);
         ed2_id = new MulId(2, 3);

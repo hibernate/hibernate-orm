@@ -22,17 +22,19 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.integration.onetomany.detached;
-import static org.hibernate.envers.test.tools.TestTools.checkList;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
-import java.util.Arrays;
-import javax.persistence.EntityManager;
+
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.entities.onetomany.detached.DoubleListJoinColumnBidirectionalRefEdEntity1;
 import org.hibernate.envers.test.entities.onetomany.detached.DoubleListJoinColumnBidirectionalRefEdEntity2;
 import org.hibernate.envers.test.entities.onetomany.detached.DoubleListJoinColumnBidirectionalRefIngEntity;
-import org.testng.annotations.Test;
+import org.junit.Test;
+
+import javax.persistence.EntityManager;
+import java.util.Arrays;
+
+import static org.hibernate.envers.test.tools.TestTools.*;
+import static org.junit.Assert.*;
 
 /**
  * Test for a double "fake" bidirectional mapping where one side uses @OneToMany+@JoinColumn
@@ -54,7 +56,7 @@ public class DoubleJoinColumnBidirectionalList extends AbstractEntityTest {
         cfg.addAnnotatedClass(DoubleListJoinColumnBidirectionalRefEdEntity2.class);
     }
 
-    @Test(enabled = true)
+    @Test
     public void createData() {
         EntityManager em = getEntityManager();
 
@@ -151,7 +153,7 @@ public class DoubleJoinColumnBidirectionalList extends AbstractEntityTest {
         ed2_2_id = ed2_2.getId();
     }
 
-    @Test(enabled = true, dependsOnMethods = "createData")
+    @Test
     public void testRevisionsCounts() {
         assertEquals(Arrays.asList(1, 2, 4), getAuditReader().getRevisions(DoubleListJoinColumnBidirectionalRefIngEntity.class, ing1_id));
         assertEquals(Arrays.asList(1, 2, 4), getAuditReader().getRevisions(DoubleListJoinColumnBidirectionalRefIngEntity.class, ing2_id));
@@ -163,7 +165,7 @@ public class DoubleJoinColumnBidirectionalList extends AbstractEntityTest {
         assertEquals(Arrays.asList(1, 2, 3), getAuditReader().getRevisions(DoubleListJoinColumnBidirectionalRefEdEntity2.class, ed2_2_id));
     }
 
-    @Test(enabled = true, dependsOnMethods = "createData")
+    @Test
     public void testHistoryOfIng1() {
         DoubleListJoinColumnBidirectionalRefEdEntity1 ed1_1_fromRev1 = new DoubleListJoinColumnBidirectionalRefEdEntity1(ed1_1_id, "ed1_1", null);
         DoubleListJoinColumnBidirectionalRefEdEntity1 ed1_1_fromRev3 = new DoubleListJoinColumnBidirectionalRefEdEntity1(ed1_1_id, "ed1_1 bis", null);
@@ -188,7 +190,7 @@ public class DoubleJoinColumnBidirectionalList extends AbstractEntityTest {
         assertTrue(checkList(rev4.getReferences2(), ed2_2_fromRev3));
     }
 
-    @Test(enabled = true, dependsOnMethods = "createData")
+    @Test
     public void testHistoryOfIng2() {
         DoubleListJoinColumnBidirectionalRefEdEntity1 ed1_1_fromRev3 = new DoubleListJoinColumnBidirectionalRefEdEntity1(ed1_1_id, "ed1_1 bis", null);
         DoubleListJoinColumnBidirectionalRefEdEntity1 ed1_2 = getEntityManager().find(DoubleListJoinColumnBidirectionalRefEdEntity1.class, ed1_2_id);
@@ -211,7 +213,7 @@ public class DoubleJoinColumnBidirectionalList extends AbstractEntityTest {
         assertTrue(checkList(rev4.getReferences2(), ed2_1));
     }
 
-    @Test(enabled = true, dependsOnMethods = "createData")
+    @Test
     public void testHistoryOfEd1_1() {
         DoubleListJoinColumnBidirectionalRefIngEntity ing1 = getEntityManager().find(DoubleListJoinColumnBidirectionalRefIngEntity.class, ing1_id);
         DoubleListJoinColumnBidirectionalRefIngEntity ing2 = getEntityManager().find(DoubleListJoinColumnBidirectionalRefIngEntity.class, ing2_id);
@@ -232,7 +234,7 @@ public class DoubleJoinColumnBidirectionalList extends AbstractEntityTest {
         assertEquals(rev4.getData(), "ed1_1 bis");
     }
 
-    @Test(enabled = true, dependsOnMethods = "createData")
+    @Test
     public void testHistoryOfEd1_2() {
         DoubleListJoinColumnBidirectionalRefIngEntity ing1 = getEntityManager().find(DoubleListJoinColumnBidirectionalRefIngEntity.class, ing1_id);
         DoubleListJoinColumnBidirectionalRefIngEntity ing2 = getEntityManager().find(DoubleListJoinColumnBidirectionalRefIngEntity.class, ing2_id);
@@ -253,7 +255,7 @@ public class DoubleJoinColumnBidirectionalList extends AbstractEntityTest {
         assertEquals(rev4.getData(), "ed1_2");
     }
 
-    @Test(enabled = true, dependsOnMethods = "createData")
+    @Test
     public void testHistoryOfEd2_1() {
         DoubleListJoinColumnBidirectionalRefIngEntity ing1 = getEntityManager().find(DoubleListJoinColumnBidirectionalRefIngEntity.class, ing1_id);
         DoubleListJoinColumnBidirectionalRefIngEntity ing2 = getEntityManager().find(DoubleListJoinColumnBidirectionalRefIngEntity.class, ing2_id);
@@ -274,7 +276,7 @@ public class DoubleJoinColumnBidirectionalList extends AbstractEntityTest {
         assertEquals(rev4.getData(), "ed2_1");
     }
 
-    @Test(enabled = true, dependsOnMethods = "createData")
+    @Test
     public void testHistoryOfEd2_2() {
         DoubleListJoinColumnBidirectionalRefIngEntity ing1 = getEntityManager().find(DoubleListJoinColumnBidirectionalRefIngEntity.class, ing1_id);
         DoubleListJoinColumnBidirectionalRefIngEntity ing2 = getEntityManager().find(DoubleListJoinColumnBidirectionalRefIngEntity.class, ing2_id);

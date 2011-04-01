@@ -1,18 +1,17 @@
 package org.hibernate.envers.test.integration.entityNames.singleAssociatedNotAudited;
+
+import org.hibernate.MappingException;
+import org.hibernate.envers.test.AbstractOneSessionTest;
+import org.junit.Test;
+
 import java.io.File;
 import java.net.URISyntaxException;
 import java.net.URL;
-import org.hibernate.MappingException;
-import org.hibernate.envers.test.AbstractOneSessionTest;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
 
 /**
  * @author Hern&aacute;n Chanfreau
  * 
  */
-
-@Test(sequential=true)
 public class ReadEntityAssociatedNotAuditedTest extends AbstractOneSessionTest {
 
 	private long id_car1;
@@ -34,7 +33,7 @@ public class ReadEntityAssociatedNotAuditedTest extends AbstractOneSessionTest {
         config.addFile(new File(url.toURI()));
 	}
 
-    @BeforeClass(dependsOnMethods = "init")
+    @Test
     public void initData() {
     	
     	initializeSession();
@@ -105,7 +104,7 @@ public class ReadEntityAssociatedNotAuditedTest extends AbstractOneSessionTest {
     }
     
 
-    @Test(dependsOnMethods="testObtainEntityNameAssociationWithEntityNameAndNotAuditedMode")
+    @Test
     public void testObtainEntityNameAssociationWithEntityNameAndNotAuditedModeInNewSession() {
     	//force a new session and AR
     	forceNewSession();

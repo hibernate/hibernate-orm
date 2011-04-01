@@ -23,13 +23,14 @@
  */
 
 package org.hibernate.envers.test.integration.inheritance.tableperclass.childrelation;
-import java.util.Arrays;
-import javax.persistence.EntityManager;
+
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.tools.TestTools;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
+import org.junit.Test;
+
+import javax.persistence.EntityManager;
+import java.util.Arrays;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -45,7 +46,7 @@ public class ChildReferencing extends AbstractEntityTest {
         cfg.addAnnotatedClass(ReferencedEntity.class);
     }
 
-    @BeforeClass(dependsOnMethods = "init")
+    @Test
     public void initData() {
         EntityManager em = getEntityManager();
 

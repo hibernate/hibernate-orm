@@ -22,14 +22,15 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.integration.secondary;
-import java.util.Arrays;
-import java.util.Iterator;
-import javax.persistence.EntityManager;
+
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.mapping.Join;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
+import org.junit.Test;
+
+import javax.persistence.EntityManager;
+import java.util.Arrays;
+import java.util.Iterator;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -41,7 +42,7 @@ public class NamingSecondary extends AbstractEntityTest {
         cfg.addAnnotatedClass(SecondaryNamingTestEntity.class);
     }
 
-    @BeforeClass(dependsOnMethods = "init")
+    @Test
     public void initData() {
         SecondaryNamingTestEntity ste = new SecondaryNamingTestEntity("a", "1");
 

@@ -1,10 +1,11 @@
 package org.hibernate.envers.test.integration.collection.norevision;
-import java.net.URISyntaxException;
-import java.util.List;
+
 import org.hibernate.MappingException;
 import org.hibernate.envers.test.AbstractSessionTest;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
+import org.junit.Test;
+
+import java.net.URISyntaxException;
+import java.util.List;
 
 public abstract class AbstractCollectionChangeTest extends AbstractSessionTest {
     protected Integer personId;
@@ -20,7 +21,7 @@ public abstract class AbstractCollectionChangeTest extends AbstractSessionTest {
 
     protected abstract List<Integer> getExpectedPersonRevisions();
 
-    @BeforeClass(dependsOnMethods = "init")
+    @Test
     public void initData() {
     	newSessionFactory();
 

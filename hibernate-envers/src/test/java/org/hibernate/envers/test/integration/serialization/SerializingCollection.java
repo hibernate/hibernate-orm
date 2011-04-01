@@ -22,17 +22,18 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.integration.serialization;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import javax.persistence.EntityManager;
+
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.entities.onetomany.CollectionRefEdEntity;
 import org.hibernate.envers.test.entities.onetomany.CollectionRefIngEntity;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
+import org.junit.Test;
+
+import javax.persistence.EntityManager;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -46,7 +47,7 @@ public class SerializingCollection extends AbstractEntityTest {
         cfg.addAnnotatedClass(CollectionRefIngEntity.class);
     }
 
-    @BeforeClass(dependsOnMethods = "init")
+    @Test
     public void initData() {
         EntityManager em = getEntityManager();
 

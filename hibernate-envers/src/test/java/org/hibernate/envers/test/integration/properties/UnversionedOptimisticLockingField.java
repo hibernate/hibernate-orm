@@ -22,15 +22,16 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.integration.properties;
-import java.util.Arrays;
-import java.util.Iterator;
-import javax.persistence.EntityManager;
+
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
+import org.junit.Test;
+
+import javax.persistence.EntityManager;
+import java.util.Arrays;
+import java.util.Iterator;
 
 /**
  * @author Nicolas Doroskevich
@@ -44,7 +45,7 @@ public class UnversionedOptimisticLockingField extends AbstractEntityTest {
 		cfg.setProperty("org.hibernate.envers.doNotAuditOptimisticLockingField", "true");
 	}
 
-	@BeforeClass(dependsOnMethods = "init")
+	@Test
 	public void initData() {
 		EntityManager em = getEntityManager();
 		em.getTransaction().begin();

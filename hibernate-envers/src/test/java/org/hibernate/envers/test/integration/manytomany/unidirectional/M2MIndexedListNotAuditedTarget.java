@@ -1,17 +1,17 @@
 package org.hibernate.envers.test.integration.manytomany.unidirectional;
-import static org.hibernate.envers.test.tools.TestTools.checkList;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNull;
-import static org.testng.Assert.assertTrue;
-import java.util.Arrays;
-import java.util.List;
-import javax.persistence.EntityManager;
+
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.entities.UnversionedStrTestEntity;
 import org.hibernate.envers.test.entities.manytomany.unidirectional.M2MIndexedListTargetNotAuditedEntity;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
+import org.junit.Test;
+
+import javax.persistence.EntityManager;
+import java.util.Arrays;
+import java.util.List;
+
+import static org.hibernate.envers.test.tools.TestTools.*;
+import static org.junit.Assert.*;
 
 /**
  * A test for auditing a many-to-many indexed list where the target entity is not audited.
@@ -32,7 +32,7 @@ public class M2MIndexedListNotAuditedTarget extends AbstractEntityTest {
         cfg.addAnnotatedClass(M2MIndexedListTargetNotAuditedEntity.class);
     }
 
-    @BeforeClass(dependsOnMethods = "init")
+    @Test
     public void initData() {
         EntityManager em = getEntityManager();
 

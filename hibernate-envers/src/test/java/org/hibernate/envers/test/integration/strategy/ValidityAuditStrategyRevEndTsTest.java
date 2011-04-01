@@ -22,14 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.integration.strategy;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
+
 import org.hibernate.Session;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.DefaultRevisionEntity;
@@ -39,8 +32,11 @@ import org.hibernate.envers.test.entities.manytomany.sametable.Child1Entity;
 import org.hibernate.envers.test.entities.manytomany.sametable.Child2Entity;
 import org.hibernate.envers.test.entities.manytomany.sametable.ParentEntity;
 import org.hibernate.envers.test.tools.TestTools;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
+import org.junit.Test;
+
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
+import java.util.*;
 
 /**
  * Test which checks that the revision end timestamp is correctly set for
@@ -76,7 +72,7 @@ public class ValidityAuditStrategyRevEndTsTest extends AbstractEntityTest {
 						revendTimestampColumName);
 	}
 
-	@BeforeClass(enabled = true, dependsOnMethods = "init")
+	@Test
 	public void initData() {
 		EntityManager em = getEntityManager();
 
@@ -200,7 +196,7 @@ public class ValidityAuditStrategyRevEndTsTest extends AbstractEntityTest {
 		assert revisions.size() == 5;
 	}
 
-	@Test(enabled = true)
+	@Test
 	public void testRevisionsCounts() {
 		assert Arrays.asList(1, 2, 3, 4).equals(
 				getAuditReader().getRevisions(ParentEntity.class, p1_id));
@@ -218,7 +214,7 @@ public class ValidityAuditStrategyRevEndTsTest extends AbstractEntityTest {
 				getAuditReader().getRevisions(Child2Entity.class, c2_2_id));
 	}
 
-	@Test(enabled = true)
+	@Test
 	public void testAllRevEndTimeStamps() {
 		List<Map<String, Object>> p1RevList = getRevisions(ParentEntity.class,
 				p1_id);
@@ -242,7 +238,7 @@ public class ValidityAuditStrategyRevEndTsTest extends AbstractEntityTest {
 
 	}
 
-	@Test(enabled = true)
+	@Test
 	public void testHistoryOfParent1() {
 
 		Child1Entity c1_1 = getEntityManager()
@@ -271,7 +267,7 @@ public class ValidityAuditStrategyRevEndTsTest extends AbstractEntityTest {
 		assert TestTools.checkList(rev5.getChildren2(), c2_2);
 	}
 
-	@Test(enabled = true)
+	@Test
 	public void testHistoryOfParent2() {
 		Child1Entity c1_1 = getEntityManager()
 				.find(Child1Entity.class, c1_1_id);
@@ -299,7 +295,7 @@ public class ValidityAuditStrategyRevEndTsTest extends AbstractEntityTest {
 		assert TestTools.checkList(rev5.getChildren2(), c2_1);
 	}
 
-	@Test(enabled = true)
+	@Test
 	public void testHistoryOfChild1_1() {
 		ParentEntity p1 = getEntityManager().find(ParentEntity.class, p1_id);
 		ParentEntity p2 = getEntityManager().find(ParentEntity.class, p2_id);
@@ -322,7 +318,8 @@ public class ValidityAuditStrategyRevEndTsTest extends AbstractEntityTest {
 		assert TestTools.checkList(rev5.getParents(), p2);
 	}
 
-	@Test(enabled = false)
+    // TODO: this was disabled?
+	@Test
 	public void testHistoryOfChild1_2() {
 		ParentEntity p1 = getEntityManager().find(ParentEntity.class, p1_id);
 
@@ -344,7 +341,7 @@ public class ValidityAuditStrategyRevEndTsTest extends AbstractEntityTest {
 		assert TestTools.checkList(rev5.getParents());
 	}
 
-	@Test(enabled = true)
+	@Test
 	public void testHistoryOfChild2_1() {
 		ParentEntity p2 = getEntityManager().find(ParentEntity.class, p2_id);
 
@@ -366,7 +363,7 @@ public class ValidityAuditStrategyRevEndTsTest extends AbstractEntityTest {
 		assert TestTools.checkList(rev5.getParents(), p2);
 	}
 
-	@Test(enabled = true)
+	@Test
 	public void testHistoryOfChild2_2() {
 		ParentEntity p1 = getEntityManager().find(ParentEntity.class, p1_id);
 		ParentEntity p2 = getEntityManager().find(ParentEntity.class, p2_id);

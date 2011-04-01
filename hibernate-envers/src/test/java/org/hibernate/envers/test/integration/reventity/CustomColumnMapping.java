@@ -22,17 +22,18 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.integration.reventity;
-import java.util.Arrays;
-import java.util.Date;
-import javax.persistence.EntityManager;
+
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.exception.RevisionDoesNotExistException;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.envers.test.entities.reventity.CustomRevEntityColumnMapping;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
+import org.junit.Test;
+
+import javax.persistence.EntityManager;
+import java.util.Arrays;
+import java.util.Date;
 
 /**
  * Test which checks if auditing when the revision number in the revision entity has a @Column annotation with
@@ -50,7 +51,7 @@ public class CustomColumnMapping extends AbstractEntityTest {
         cfg.addAnnotatedClass(CustomRevEntityColumnMapping.class);
     }
 
-    @BeforeClass(dependsOnMethods = "init")
+    @Test
     public void initData() throws InterruptedException {
         timestamp1 = System.currentTimeMillis();
 
@@ -77,7 +78,7 @@ public class CustomColumnMapping extends AbstractEntityTest {
         timestamp3 = System.currentTimeMillis();
     }
 
-    @Test(expectedExceptions = RevisionDoesNotExistException.class)
+    @Test(expected = RevisionDoesNotExistException.class)
     public void testTimestamps1() {
         getAuditReader().getRevisionNumberForDate(new Date(timestamp1));
     }

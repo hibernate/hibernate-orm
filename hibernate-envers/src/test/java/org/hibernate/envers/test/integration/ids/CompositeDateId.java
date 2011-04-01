@@ -22,15 +22,16 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.integration.ids;
-import java.util.Arrays;
-import java.util.Date;
-import javax.persistence.EntityManager;
+
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.entities.ids.CompositeDateIdTestEntity;
 import org.hibernate.envers.test.entities.ids.DateEmbId;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
+import org.junit.Test;
+
+import javax.persistence.EntityManager;
+import java.util.Arrays;
+import java.util.Date;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -42,7 +43,7 @@ public class CompositeDateId extends AbstractEntityTest {
         cfg.addAnnotatedClass(CompositeDateIdTestEntity.class);
     }
 
-    @BeforeClass(dependsOnMethods = "init")
+    @Test
     public void initData() {
 
         // Revision 1

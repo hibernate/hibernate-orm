@@ -1,13 +1,14 @@
 package org.hibernate.envers.test.integration.onetomany.inverseToSuperclass;
+
+import org.hibernate.ejb.Ejb3Configuration;
+import org.hibernate.envers.test.AbstractEntityTest;
+import org.junit.Test;
+
+import javax.persistence.EntityManager;
 import java.io.File;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
-import javax.persistence.EntityManager;
-import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
 
 /**
  * @author Hern�n Chanfreau
@@ -29,7 +30,7 @@ public class OneToManyInverseToSuperclassTest extends AbstractEntityTest {
 		}
 	}
 
-	@BeforeClass(dependsOnMethods = "init")
+	@Test
 	public void initData() {
 		EntityManager em = getEntityManager();
 

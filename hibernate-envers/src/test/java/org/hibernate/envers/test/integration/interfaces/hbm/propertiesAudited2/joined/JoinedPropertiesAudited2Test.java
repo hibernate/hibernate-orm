@@ -1,10 +1,11 @@
 package org.hibernate.envers.test.integration.interfaces.hbm.propertiesAudited2.joined;
+
+import org.hibernate.ejb.Ejb3Configuration;
+import org.hibernate.envers.test.integration.interfaces.hbm.propertiesAudited2.AbstractPropertiesAudited2Test;
+
 import java.io.File;
 import java.net.URISyntaxException;
 import java.net.URL;
-import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.integration.interfaces.hbm.propertiesAudited2.AbstractPropertiesAudited2Test;
-import org.testng.annotations.Test;
 
 /**
  * @author Hern�n Chanfreau
@@ -19,9 +20,4 @@ public class JoinedPropertiesAudited2Test extends AbstractPropertiesAudited2Test
 			e.printStackTrace();
 		}
     }
-
-    @Test
-    public void testRetrieveAudited() {
-    	super.testRetrieveAudited();
-    }  
 }

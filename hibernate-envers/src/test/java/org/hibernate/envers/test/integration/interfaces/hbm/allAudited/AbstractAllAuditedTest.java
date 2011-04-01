@@ -1,11 +1,12 @@
 package org.hibernate.envers.test.integration.interfaces.hbm.allAudited;
-import java.util.Arrays;
-import javax.persistence.EntityManager;
+
 import org.hibernate.envers.exception.NotAuditedException;
 import org.hibernate.envers.test.AbstractEntityTest;
-import org.testng.Assert;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
+import org.junit.Assert;
+import org.junit.Test;
+
+import javax.persistence.EntityManager;
+import java.util.Arrays;
 
 /**
  * @author Hern�n Chanfreau
@@ -15,7 +16,7 @@ public abstract class AbstractAllAuditedTest extends AbstractEntityTest {
 	private long ai_id;
 	private long nai_id;
 	
-    @BeforeClass(dependsOnMethods = "init")
+    @Test
     public void initData() {
         EntityManager em = getEntityManager();
 

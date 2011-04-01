@@ -22,16 +22,19 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.integration.manytomany.ternary;
-import static org.testng.Assert.assertEquals;
-import java.util.Arrays;
-import java.util.HashMap;
-import javax.persistence.EntityManager;
+
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.entities.IntTestEntity;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.envers.test.tools.TestTools;
-import org.testng.annotations.Test;
+import org.junit.Test;
+
+import javax.persistence.EntityManager;
+import java.util.Arrays;
+import java.util.HashMap;
+
+import static org.junit.Assert.*;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -115,7 +118,7 @@ public class TernaryMapFlush extends AbstractEntityTest {
         int2_id = int2.getId();
     }
 
-    @Test(dependsOnMethods = "createData")
+    @Test
     public void testRevisionsCounts() {
         assertEquals(Arrays.asList(1, 2, 3), getAuditReader().getRevisions(TernaryMapEntity.class, map1_id));
         assertEquals(Arrays.asList(1), getAuditReader().getRevisions(StrTestEntity.class, str1_id));
@@ -124,7 +127,7 @@ public class TernaryMapFlush extends AbstractEntityTest {
         assertEquals(Arrays.asList(1) ,getAuditReader().getRevisions(IntTestEntity.class, int2_id));
     }
 
-    @Test(dependsOnMethods = "createData")
+    @Test
     public void testHistoryOfMap1() {
         StrTestEntity str1 = getEntityManager().find(StrTestEntity.class, str1_id);
         StrTestEntity str2 = getEntityManager().find(StrTestEntity.class, str2_id);

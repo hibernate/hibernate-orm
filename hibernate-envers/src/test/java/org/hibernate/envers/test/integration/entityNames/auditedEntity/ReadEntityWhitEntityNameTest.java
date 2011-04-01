@@ -1,19 +1,18 @@
 package org.hibernate.envers.test.integration.entityNames.auditedEntity;
+
+import org.hibernate.MappingException;
+import org.hibernate.envers.test.AbstractOneSessionTest;
+import org.junit.Test;
+
 import java.io.File;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.List;
-import org.hibernate.MappingException;
-import org.hibernate.envers.test.AbstractOneSessionTest;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
 
 /**
  * @author Hern&aacute;n Chanfreau
  * 
  */
-
-@Test(sequential=true)
 public class ReadEntityWhitEntityNameTest extends AbstractOneSessionTest{
 
 	private long id_pers1;
@@ -32,7 +31,7 @@ public class ReadEntityWhitEntityNameTest extends AbstractOneSessionTest{
 	}
 	
 	
-    @BeforeClass(dependsOnMethods = "init")
+    @Test
     public void initData() {
     	
     	initializeSession();
@@ -86,7 +85,7 @@ public class ReadEntityWhitEntityNameTest extends AbstractOneSessionTest{
     	assert(pers3Revs.size() == 1);
     }
     
-    @Test(dependsOnMethods="testRetrieveRevisionsWithEntityName")
+    @Test
     public void testRetrieveAuditedEntityWithEntityName() {
     	person1_1 = getAuditReader().find(Person.class, "Personaje", id_pers1, 1);
     	person1_2 = getAuditReader().find(Person.class, "Personaje", id_pers1, 2);
@@ -98,7 +97,7 @@ public class ReadEntityWhitEntityNameTest extends AbstractOneSessionTest{
     	
     }
     
-    @Test(dependsOnMethods="testRetrieveAuditedEntityWithEntityName")
+    @Test
     public void testObtainEntityNameAuditedEntityWithEntityName() {
     	
     	String currentPers1EN = getSession().getEntityName(currentPers1);
@@ -114,7 +113,7 @@ public class ReadEntityWhitEntityNameTest extends AbstractOneSessionTest{
 
     }    
     
-    @Test(dependsOnMethods="testObtainEntityNameAuditedEntityWithEntityName")
+    @Test
     public void testRetrieveAuditedEntityWithEntityNameWithNewSession() {
     	
     	// force a new session and AR

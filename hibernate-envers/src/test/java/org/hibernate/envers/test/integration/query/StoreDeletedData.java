@@ -22,14 +22,15 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.integration.query;
-import java.util.List;
-import javax.persistence.EntityManager;
+
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.entities.StrIntTestEntity;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
+import org.junit.Test;
+
+import javax.persistence.EntityManager;
+import java.util.List;
 
 /**
  * A test which checks if the data of a deleted entity is stored when the setting is on.
@@ -44,7 +45,7 @@ public class StoreDeletedData extends AbstractEntityTest {
 		cfg.setProperty("org.hibernate.envers.storeDataAtDelete", "true");
     }
 
-    @BeforeClass(dependsOnMethods = "init")
+    @Test
     public void initData() {
         // Revision 1
         EntityManager em = getEntityManager();

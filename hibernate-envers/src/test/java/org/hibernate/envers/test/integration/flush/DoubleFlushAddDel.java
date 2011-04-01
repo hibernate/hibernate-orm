@@ -22,12 +22,13 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.integration.flush;
-import java.util.Arrays;
-import javax.persistence.EntityManager;
+
 import org.hibernate.FlushMode;
 import org.hibernate.envers.test.entities.StrTestEntity;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
+import org.junit.Test;
+
+import javax.persistence.EntityManager;
+import java.util.Arrays;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -39,7 +40,7 @@ public class DoubleFlushAddDel extends AbstractFlushTest {
         return FlushMode.MANUAL;
     }
 
-    @BeforeClass(dependsOnMethods = "initFlush")
+    @Test
     public void initData() {
         // Revision 1
         EntityManager em = getEntityManager();

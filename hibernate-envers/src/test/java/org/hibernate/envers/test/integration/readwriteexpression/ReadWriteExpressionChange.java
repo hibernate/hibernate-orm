@@ -2,9 +2,7 @@ package org.hibernate.envers.test.integration.readwriteexpression;
 
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
-import org.hibernate.envers.test.integration.basic.BasicTestEntity2;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
+import org.junit.Test;
 
 import javax.persistence.EntityManager;
 import java.util.List;
@@ -21,7 +19,7 @@ public class ReadWriteExpressionChange extends AbstractEntityTest {
         cfg.addAnnotatedClass(Staff.class);
     }
 
-    @BeforeClass(dependsOnMethods = "init")
+    @Test
     public void initData() {
         EntityManager em = getEntityManager();
         em.getTransaction().begin();

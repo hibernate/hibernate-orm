@@ -1,10 +1,11 @@
 package org.hibernate.envers.test.integration.notinsertable.manytoone;
-import java.util.Arrays;
-import javax.persistence.EntityManager;
+
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
+import org.junit.Test;
+
+import javax.persistence.EntityManager;
+import java.util.Arrays;
 
 public class ManyToOneNotInsertable extends AbstractEntityTest {
     private Integer mto_id1;
@@ -16,7 +17,7 @@ public class ManyToOneNotInsertable extends AbstractEntityTest {
         cfg.addAnnotatedClass(NotInsertableEntityType.class);
     }
 
-    @BeforeClass(dependsOnMethods = "init")
+    @Test
     public void initData() {
         EntityManager em = getEntityManager();
 

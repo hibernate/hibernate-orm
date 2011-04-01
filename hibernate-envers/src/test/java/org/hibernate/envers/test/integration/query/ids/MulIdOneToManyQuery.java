@@ -22,10 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.integration.query.ids;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import javax.persistence.EntityManager;
+
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.test.AbstractEntityTest;
@@ -33,8 +30,12 @@ import org.hibernate.envers.test.entities.ids.MulId;
 import org.hibernate.envers.test.entities.onetomany.ids.SetRefEdMulIdEntity;
 import org.hibernate.envers.test.entities.onetomany.ids.SetRefIngMulIdEntity;
 import org.hibernate.envers.test.tools.TestTools;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
+import org.junit.Test;
+
+import javax.persistence.EntityManager;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -52,7 +53,7 @@ public class MulIdOneToManyQuery extends AbstractEntityTest {
         cfg.addAnnotatedClass(SetRefIngMulIdEntity.class);
     }
 
-    @BeforeClass(dependsOnMethods = "init")
+    @Test
     public void initData() {
         id1 = new MulId(0, 1);
         id2 = new MulId(10, 11);

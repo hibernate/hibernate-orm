@@ -22,15 +22,16 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.integration.onetomany;
-import java.util.Arrays;
-import javax.persistence.EntityManager;
+
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.entities.onetomany.ListRefEdEntity;
 import org.hibernate.envers.test.entities.onetomany.ListRefIngEntity;
 import org.hibernate.envers.test.tools.TestTools;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
+import org.junit.Test;
+
+import javax.persistence.EntityManager;
+import java.util.Arrays;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -47,7 +48,7 @@ public class BasicList extends AbstractEntityTest {
         cfg.addAnnotatedClass(ListRefIngEntity.class);
     }
 
-    @BeforeClass(dependsOnMethods = "init")
+    @Test
     public void initData() {
         EntityManager em = getEntityManager();
 

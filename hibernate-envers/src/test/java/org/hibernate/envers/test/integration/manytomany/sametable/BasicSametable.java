@@ -22,8 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.integration.manytomany.sametable;
-import java.util.Arrays;
-import javax.persistence.EntityManager;
+
 import org.hibernate.Session;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
@@ -31,8 +30,10 @@ import org.hibernate.envers.test.entities.manytomany.sametable.Child1Entity;
 import org.hibernate.envers.test.entities.manytomany.sametable.Child2Entity;
 import org.hibernate.envers.test.entities.manytomany.sametable.ParentEntity;
 import org.hibernate.envers.test.tools.TestTools;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
+import org.junit.Test;
+
+import javax.persistence.EntityManager;
+import java.util.Arrays;
 
 /**
  * Test which checks that auditing entities which contain multiple mappings to same tables work.
@@ -52,7 +53,7 @@ public class BasicSametable extends AbstractEntityTest {
         cfg.addAnnotatedClass(Child2Entity.class);
     }
 
-    @BeforeClass(enabled = true, dependsOnMethods = "init")
+    @Test
     public void initData() {
         EntityManager em = getEntityManager();
 
@@ -160,7 +161,7 @@ public class BasicSametable extends AbstractEntityTest {
         c2_2_id = c2_2.getId();
     }
 
-    @Test(enabled = true)
+    @Test
     public void testRevisionsCounts() {
         assert Arrays.asList(1, 2, 3, 4).equals(getAuditReader().getRevisions(ParentEntity.class, p1_id));
         assert Arrays.asList(1, 2, 3, 4).equals(getAuditReader().getRevisions(ParentEntity.class, p2_id));
@@ -172,7 +173,7 @@ public class BasicSametable extends AbstractEntityTest {
         assert Arrays.asList(1, 5).equals(getAuditReader().getRevisions(Child1Entity.class, c2_2_id));
     }
 
-    @Test(enabled = true)
+    @Test
     public void testHistoryOfParent1() {
         Child1Entity c1_1 = getEntityManager().find(Child1Entity.class, c1_1_id);
         Child1Entity c1_2 = getEntityManager().find(Child1Entity.class, c1_2_id);
@@ -197,7 +198,7 @@ public class BasicSametable extends AbstractEntityTest {
         assert TestTools.checkList(rev5.getChildren2(), c2_2);
     }
 
-    @Test(enabled = true)
+    @Test
     public void testHistoryOfParent2() {
         Child1Entity c1_1 = getEntityManager().find(Child1Entity.class, c1_1_id);
         Child2Entity c2_1 = getEntityManager().find(Child2Entity.class, c2_1_id);
@@ -222,7 +223,7 @@ public class BasicSametable extends AbstractEntityTest {
         assert TestTools.checkList(rev5.getChildren2(), c2_1);
     }
 
-    @Test(enabled = true)
+    @Test
     public void testHistoryOfChild1_1() {
         ParentEntity p1 = getEntityManager().find(ParentEntity.class, p1_id);
         ParentEntity p2 = getEntityManager().find(ParentEntity.class, p2_id);
@@ -240,7 +241,8 @@ public class BasicSametable extends AbstractEntityTest {
         assert TestTools.checkList(rev5.getParents(), p2);
     }
 
-    @Test(enabled = false)
+    // TODO: was disabled?
+    @Test
     public void testHistoryOfChild1_2() {
         ParentEntity p1 = getEntityManager().find(ParentEntity.class, p1_id);
 
@@ -257,7 +259,7 @@ public class BasicSametable extends AbstractEntityTest {
         assert TestTools.checkList(rev5.getParents());
     }
 
-    @Test(enabled = true)
+    @Test
     public void testHistoryOfChild2_1() {
         ParentEntity p2 = getEntityManager().find(ParentEntity.class, p2_id);
 
@@ -274,7 +276,7 @@ public class BasicSametable extends AbstractEntityTest {
         assert TestTools.checkList(rev5.getParents(), p2);
     }
 
-    @Test(enabled = true)
+    @Test
     public void testHistoryOfChild2_2() {
         ParentEntity p1 = getEntityManager().find(ParentEntity.class, p1_id);
         ParentEntity p2 = getEntityManager().find(ParentEntity.class, p2_id);

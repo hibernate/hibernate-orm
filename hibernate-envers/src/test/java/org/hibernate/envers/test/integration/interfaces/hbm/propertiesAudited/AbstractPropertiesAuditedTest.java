@@ -1,9 +1,10 @@
 package org.hibernate.envers.test.integration.interfaces.hbm.propertiesAudited;
-import javax.persistence.EntityManager;
+
 import org.hibernate.envers.exception.NotAuditedException;
 import org.hibernate.envers.test.AbstractEntityTest;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
+import org.junit.Test;
+
+import javax.persistence.EntityManager;
 
 /**
  * @author Hern�n Chanfreau
@@ -15,7 +16,7 @@ public abstract class AbstractPropertiesAuditedTest extends AbstractEntityTest {
 
 	private static int NUMERITO = 555;
 
-	@BeforeClass(dependsOnMethods = "init")
+	@Test
 	public void initData() {
 		EntityManager em = getEntityManager();
 

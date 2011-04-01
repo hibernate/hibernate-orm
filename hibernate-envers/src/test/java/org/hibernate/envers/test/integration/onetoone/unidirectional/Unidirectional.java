@@ -22,12 +22,13 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.integration.onetoone.unidirectional;
-import java.util.Arrays;
-import javax.persistence.EntityManager;
+
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
+import org.junit.Test;
+
+import javax.persistence.EntityManager;
+import java.util.Arrays;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -46,7 +47,7 @@ public class Unidirectional extends AbstractEntityTest {
         cfg.addAnnotatedClass(UniRefIngEntity.class);
     }
 
-    @BeforeClass(dependsOnMethods = "init")
+    @Test
     public void initData() {
         UniRefEdEntity ed1 = new UniRefEdEntity(1, "data_ed_1");
         UniRefEdEntity ed2 = new UniRefEdEntity(2, "data_ed_2");

@@ -22,13 +22,15 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.integration.primitive;
-import java.util.Arrays;
-import java.util.List;
-import javax.persistence.EntityManager;
+
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.entities.PrimitiveTestEntity;
-import org.testng.annotations.Test;
+import org.junit.Test;
+
+import javax.persistence.EntityManager;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -65,12 +67,12 @@ public class PrimitiveAddDelete extends AbstractEntityTest {
         em.getTransaction().commit();		
     }
 
-    @Test(dependsOnMethods = "initData")
+    @Test
     public void testRevisionsCounts() {
         assert Arrays.asList(1, 2, 3).equals(getAuditReader().getRevisions(PrimitiveTestEntity.class, id1));
     }
 
-    @Test(dependsOnMethods = "initData")
+    @Test
     public void testHistoryOfId1() {
         PrimitiveTestEntity ver1 = new PrimitiveTestEntity(id1, 10, 0);
         PrimitiveTestEntity ver2 = new PrimitiveTestEntity(id1, 20, 0);
@@ -80,7 +82,7 @@ public class PrimitiveAddDelete extends AbstractEntityTest {
         assert getAuditReader().find(PrimitiveTestEntity.class, id1, 3) == null;
     }
 
-	@Test(dependsOnMethods = "initData")
+	@Test
 	public void testQueryWithDeleted() {
 		// Selecting all entities, also the deleted ones
 		List entities = getAuditReader().createQuery().forRevisionsOfEntity(PrimitiveTestEntity.class, true, true)

@@ -25,8 +25,7 @@ package org.hibernate.envers.test.integration.data;
 
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
+import org.junit.Test;
 
 import javax.persistence.EntityManager;
 import java.util.Arrays;
@@ -41,7 +40,7 @@ public class LobSerializables extends AbstractEntityTest {
         cfg.addAnnotatedClass(LobSerializableTestEntity.class);
     }
 
-    @BeforeClass(dependsOnMethods = "init")
+    @Test
     public void initData() {
         EntityManager em = getEntityManager();
         em.getTransaction().begin();

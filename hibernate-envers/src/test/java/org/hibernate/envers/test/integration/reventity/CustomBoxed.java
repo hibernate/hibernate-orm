@@ -22,19 +22,16 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.integration.reventity;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import javax.persistence.EntityManager;
+
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.exception.RevisionDoesNotExistException;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.entities.StrTestEntity;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
+import org.junit.Test;
+
+import javax.persistence.EntityManager;
+import java.util.*;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -50,7 +47,7 @@ public class CustomBoxed extends AbstractEntityTest {
         cfg.addAnnotatedClass(CustomBoxedRevEntity.class);
     }
 
-    @BeforeClass(dependsOnMethods = "init")
+    @Test
     public void initData() throws InterruptedException {
         timestamp1 = System.currentTimeMillis();
 
@@ -77,7 +74,7 @@ public class CustomBoxed extends AbstractEntityTest {
         timestamp3 = System.currentTimeMillis();
     }
 
-    @Test(expectedExceptions = RevisionDoesNotExistException.class)
+    @Test(expected = RevisionDoesNotExistException.class)
     public void testTimestamps1() {
         getAuditReader().getRevisionNumberForDate(new Date(timestamp1));
     }

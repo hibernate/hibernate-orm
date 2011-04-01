@@ -22,20 +22,23 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.integration.components.collections;
-import java.util.Arrays;
-import java.util.Set;
-import javax.persistence.EntityManager;
+
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.entities.components.Component1;
 import org.hibernate.envers.test.entities.components.ComponentSetTestEntity;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
+import org.junit.Ignore;
+import org.junit.Test;
+
+import javax.persistence.EntityManager;
+import java.util.Arrays;
+import java.util.Set;
 
 /**
  * TODO: enable and implement
  * @author Adam Warski (adam at warski dot org)
  */
+@Ignore
 public class CollectionOfComponents extends AbstractEntityTest {
     private Integer id1;
 
@@ -43,7 +46,7 @@ public class CollectionOfComponents extends AbstractEntityTest {
         cfg.addAnnotatedClass(ComponentSetTestEntity.class);
     }
 
-    @BeforeClass(dependsOnMethods = "init")
+    @Test
     public void initData() {
         // Revision 1
         EntityManager em = getEntityManager();
@@ -68,12 +71,12 @@ public class CollectionOfComponents extends AbstractEntityTest {
         id1 = cte1.getId();
     }
 
-    @Test(enabled = false)
+    @Test
     public void testRevisionsCounts() {
         assert Arrays.asList(1, 2).equals(getAuditReader().getRevisions(ComponentSetTestEntity.class, id1));
     }
 
-    @Test(enabled = false)
+    @Test
     public void testHistoryOfId1() {
         assert getAuditReader().find(ComponentSetTestEntity.class, id1, 1).getComps().size() == 0;
 		

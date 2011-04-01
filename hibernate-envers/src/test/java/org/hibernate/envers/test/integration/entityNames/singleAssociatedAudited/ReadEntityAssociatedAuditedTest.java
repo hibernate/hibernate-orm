@@ -1,18 +1,17 @@
 package org.hibernate.envers.test.integration.entityNames.singleAssociatedAudited;
+
+import org.hibernate.MappingException;
+import org.hibernate.envers.test.AbstractOneSessionTest;
+import org.junit.Test;
+
 import java.io.File;
 import java.net.URISyntaxException;
 import java.net.URL;
-import org.hibernate.MappingException;
-import org.hibernate.envers.test.AbstractOneSessionTest;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
 
 /**
  * @author Hern&aacute;n Chanfreau
  * 
  */
-
-@Test(sequential=true)
 public class ReadEntityAssociatedAuditedTest extends AbstractOneSessionTest{
 
 	private long id_car1;
@@ -36,7 +35,7 @@ public class ReadEntityAssociatedAuditedTest extends AbstractOneSessionTest{
 	}
 
 	
-    @BeforeClass(dependsOnMethods = "init")
+    @Test
     public void initData() {
     	
     	initializeSession();
@@ -105,7 +104,7 @@ public class ReadEntityAssociatedAuditedTest extends AbstractOneSessionTest{
     }
 
 
-    @Test(dependsOnMethods="testGetAssociationWithEntityName")
+    @Test
     public void testGetAssociationWithEntityNameInNewSession() {
     	//force a new session and AR
     	forceNewSession();
@@ -115,15 +114,6 @@ public class ReadEntityAssociatedAuditedTest extends AbstractOneSessionTest{
     	checkEntities();
     	
     	checkEntityNames();
-
-//
-//    	Car car1 = getAuditReader().find(Car.class, id_car1, 1);
-//    	car1.getOwner().getName();
-//    	Car car2 = getAuditReader().find(Car.class, id_car2, 2);
-//    	car2.getOwner().getName();
-//    	
-//    	Person person = getAuditReader().find(Person.class, "Personaje", id_car2, 2);
-//    	person.getName();
     	 
     }    
 

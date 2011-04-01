@@ -22,12 +22,13 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.integration.basic;
-import javax.persistence.EntityManager;
+
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.exception.NotAuditedException;
 import org.hibernate.envers.test.AbstractEntityTest;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
+import org.junit.Test;
+
+import javax.persistence.EntityManager;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -36,10 +37,11 @@ public class NotVersioned extends AbstractEntityTest {
     private Integer id1;
 
     public void configure(Ejb3Configuration cfg) {
+        cfg.addAnnotatedClass(BasicTestEntity1.class);
         cfg.addAnnotatedClass(BasicTestEntity3.class);
     }
 
-    @BeforeClass(dependsOnMethods = "init")
+    @Test
     public void initData() {
         EntityManager em = getEntityManager();
         em.getTransaction().begin();
@@ -55,12 +57,12 @@ public class NotVersioned extends AbstractEntityTest {
         em.getTransaction().commit();
     }
 
-    @Test(expectedExceptions = NotAuditedException.class)
+    @Test(expected = NotAuditedException.class)
     public void testRevisionsCounts() {
         getAuditReader().getRevisions(BasicTestEntity3.class, id1);
     }
 
-    @Test(expectedExceptions = NotAuditedException.class)
+    @Test(expected = NotAuditedException.class)
     public void testHistoryOfId1() {
         getAuditReader().find(BasicTestEntity3.class, id1, 1);
     }

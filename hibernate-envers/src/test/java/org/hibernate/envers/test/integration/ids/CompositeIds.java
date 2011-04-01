@@ -22,19 +22,14 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.integration.ids;
-import java.util.Arrays;
-import javax.persistence.EntityManager;
+
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
-import org.hibernate.envers.test.entities.ids.CustomEnum;
-import org.hibernate.envers.test.entities.ids.EmbId;
-import org.hibernate.envers.test.entities.ids.EmbIdTestEntity;
-import org.hibernate.envers.test.entities.ids.EmbIdWithCustomType;
-import org.hibernate.envers.test.entities.ids.EmbIdWithCustomTypeTestEntity;
-import org.hibernate.envers.test.entities.ids.MulId;
-import org.hibernate.envers.test.entities.ids.MulIdTestEntity;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
+import org.hibernate.envers.test.entities.ids.*;
+import org.junit.Test;
+
+import javax.persistence.EntityManager;
+import java.util.Arrays;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -53,7 +48,7 @@ public class CompositeIds extends AbstractEntityTest {
         cfg.addAnnotatedClass(EmbIdWithCustomTypeTestEntity.class);
     }
 
-    @BeforeClass(dependsOnMethods = "init")
+    @Test
     public void initData() {
         id1 = new EmbId(1, 2);
         id2 = new EmbId(10, 20);

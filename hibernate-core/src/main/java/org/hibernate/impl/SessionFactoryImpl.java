@@ -53,6 +53,7 @@ import org.jboss.logging.Logger;
 import org.hibernate.AssertionFailure;
 import org.hibernate.Cache;
 import org.hibernate.ConnectionReleaseMode;
+import org.hibernate.EmptyInterceptor;
 import org.hibernate.EntityMode;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
@@ -1358,6 +1359,12 @@ public final class SessionFactoryImpl
 		@Override
 		public SessionBuilder interceptor(Interceptor interceptor) {
 			this.interceptor = interceptor;
+			return this;
+		}
+
+		@Override
+		public SessionBuilder noInterceptor() {
+			this.interceptor = EmptyInterceptor.INSTANCE;
 			return this;
 		}
 

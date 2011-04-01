@@ -48,6 +48,19 @@ public interface SessionBuilder {
 	public SessionBuilder interceptor(Interceptor interceptor);
 
 	/**
+	 * Signifies that no {@link Interceptor} should be used.
+	 * <p/>
+	 * By default the {@link Interceptor} associated with the {@link SessionFactory} is passed to the
+	 * {@link Session} whenever we open one without the user having specified a specific interceptor to
+	 * use.
+	 * <p/>
+	 * Calling {@link #interceptor(Interceptor)} with null has the same net effect.
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	public SessionBuilder noInterceptor();
+
+	/**
 	 * Adds a specific connection to the session options
 	 *
 	 * @param connection The connection to use.

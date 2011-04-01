@@ -48,6 +48,7 @@ import org.jboss.logging.Logger;
 import org.hibernate.CacheMode;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.Criteria;
+import org.hibernate.EmptyInterceptor;
 import org.hibernate.EntityMode;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.Filter;
@@ -67,6 +68,7 @@ import org.hibernate.SQLQuery;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
+import org.hibernate.SessionBuilder;
 import org.hibernate.SessionException;
 import org.hibernate.SharedSessionBuilder;
 import org.hibernate.Transaction;
@@ -250,7 +252,7 @@ public final class SessionImpl
 		this.rootSession = null;
 		this.timestamp = timestamp;
 		this.entityMode = entityMode;
-		this.interceptor = interceptor;
+		this.interceptor = interceptor == null ? EmptyInterceptor.INSTANCE : interceptor;
 		this.actionQueue = new ActionQueue( this );
 		this.persistenceContext = new StatefulPersistenceContext( this );
 		this.flushBeforeCompletionEnabled = flushBeforeCompletionEnabled;
@@ -2187,6 +2189,11 @@ public final class SessionImpl
 		@Override
 		public SharedSessionBuilder interceptor(Interceptor interceptor) {
 			return (SharedSessionBuilder) super.interceptor( interceptor );
+		}
+
+		@Override
+		public SharedSessionBuilder noInterceptor() {
+			return (SharedSessionBuilder) super.noInterceptor();
 		}
 
 		@Override

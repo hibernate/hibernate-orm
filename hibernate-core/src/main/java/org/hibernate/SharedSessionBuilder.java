@@ -31,24 +31,67 @@ import java.sql.Connection;
  * @author Steve Ebersole
  */
 public interface SharedSessionBuilder extends SessionBuilder {
+	/**
+	 * Signifies the interceptor from the original session should be used to create the new session
+	 *
+	 * @return {@code this}, for method chaining
+	 */
 	public SharedSessionBuilder interceptor();
 
+	/**
+	 * Signifies that the connection from the original session should be used to create the new session
+	 *
+	 * @return {@code this}, for method chaining
+	 */
 	public SharedSessionBuilder connection();
 
+	/**
+	 * Signifies that the connection release mode from the original session should be used to create the new session
+	 *
+	 * @return {@code this}, for method chaining
+	 */
 	public SharedSessionBuilder connectionReleaseMode();
 
+	/**
+	 * Signifies that the entity mode from the original session should be used to create the new session
+	 *
+	 * @return {@code this}, for method chaining
+	 */
 	public SharedSessionBuilder entityMode();
 
+	/**
+	 * Signifies that the autoJoinTransaction flag from the original session should be used to create the new session
+	 *
+	 * @return {@code this}, for method chaining
+	 */
 	public SharedSessionBuilder autoJoinTransactions();
 
+	/**
+	 * Signifies that the autoClose flag from the original session should be used to create the new session
+	 *
+	 * @return {@code this}, for method chaining
+	 */
 	public SharedSessionBuilder autoClose();
 
+	/**
+	 * Signifies that the flushBeforeCompletion flag from the original session should be used to create the new session
+	 *
+	 * @return {@code this}, for method chaining
+	 */
 	public SharedSessionBuilder flushBeforeCompletion();
 
+	/**
+	 * Signifies that the transaction context from the original session should be used to create the new session
+	 *
+	 * @return {@code this}, for method chaining
+	 */
 	public SharedSessionBuilder transactionContext();
 
 	@Override
 	SharedSessionBuilder interceptor(Interceptor interceptor);
+
+	@Override
+	SharedSessionBuilder noInterceptor();
 
 	@Override
 	SharedSessionBuilder connection(Connection connection);

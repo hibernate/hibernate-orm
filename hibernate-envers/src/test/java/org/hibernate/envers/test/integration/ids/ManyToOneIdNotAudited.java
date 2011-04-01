@@ -2,6 +2,7 @@ package org.hibernate.envers.test.integration.ids;
 
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.envers.test.entities.UnversionedStrTestEntity;
 import org.hibernate.envers.test.entities.ids.ManyToOneIdNotAuditedTestEntity;
@@ -25,6 +26,7 @@ public class ManyToOneIdNotAudited extends AbstractEntityTest {
     }
 
     @Test
+    @Priority(10)
     public void initData() {
         // Revision 1
         EntityManager em = getEntityManager();

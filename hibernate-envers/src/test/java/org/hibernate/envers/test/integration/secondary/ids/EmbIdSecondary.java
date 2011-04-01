@@ -25,6 +25,7 @@ package org.hibernate.envers.test.integration.secondary.ids;
 
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.ids.EmbId;
 import org.hibernate.mapping.Join;
 import org.junit.Test;
@@ -44,6 +45,7 @@ public class EmbIdSecondary extends AbstractEntityTest {
     }
 
     @Test
+    @Priority(10)
     public void initData() {
         id = new EmbId(1, 2);
 

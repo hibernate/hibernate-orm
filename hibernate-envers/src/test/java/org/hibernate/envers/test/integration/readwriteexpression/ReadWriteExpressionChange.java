@@ -2,6 +2,7 @@ package org.hibernate.envers.test.integration.readwriteexpression;
 
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.Priority;
 import org.junit.Test;
 
 import javax.persistence.EntityManager;
@@ -20,6 +21,7 @@ public class ReadWriteExpressionChange extends AbstractEntityTest {
     }
 
     @Test
+    @Priority(10)
     public void initData() {
         EntityManager em = getEntityManager();
         em.getTransaction().begin();

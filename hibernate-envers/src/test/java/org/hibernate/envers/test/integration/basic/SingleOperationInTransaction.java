@@ -26,6 +26,7 @@ package org.hibernate.envers.test.integration.basic;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.exception.RevisionDoesNotExistException;
 import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.Priority;
 import org.junit.Test;
 
 import javax.persistence.EntityManager;
@@ -63,6 +64,7 @@ public class SingleOperationInTransaction extends AbstractEntityTest {
     }
 
     @Test
+    @Priority(10)
     public void initData() {
         id1 = addNewEntity("x", 1); // rev 1
         id2 = addNewEntity("y", 20); // rev 2

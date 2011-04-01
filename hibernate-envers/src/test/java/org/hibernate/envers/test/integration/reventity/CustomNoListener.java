@@ -26,6 +26,7 @@ package org.hibernate.envers.test.integration.reventity;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.envers.test.entities.reventity.CustomDataRevEntity;
 import org.junit.Test;
@@ -45,6 +46,7 @@ public class CustomNoListener extends AbstractEntityTest {
     }
 
     @Test
+    @Priority(10)
     public void initData() throws InterruptedException {        
         EntityManager em = getEntityManager();
 

@@ -27,6 +27,7 @@ import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.exception.RevisionDoesNotExistException;
 import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.envers.test.entities.reventity.CustomDateRevEntity;
 import org.junit.Test;
@@ -50,6 +51,7 @@ public class CustomDate extends AbstractEntityTest {
     }
 
     @Test
+    @Priority(10)
     public void initData() throws InterruptedException {
         timestamp1 = System.currentTimeMillis();
 

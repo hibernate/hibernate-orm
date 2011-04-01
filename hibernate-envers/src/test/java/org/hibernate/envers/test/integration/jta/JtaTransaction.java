@@ -2,6 +2,7 @@ package org.hibernate.envers.test.integration.jta;
 
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.IntTestEntity;
 import org.junit.Test;
 
@@ -24,6 +25,7 @@ public class JtaTransaction extends AbstractEntityTest {
     }
 
     @Test
+    @Priority(10)
     public void initData() throws Exception {
         tm.begin();
 

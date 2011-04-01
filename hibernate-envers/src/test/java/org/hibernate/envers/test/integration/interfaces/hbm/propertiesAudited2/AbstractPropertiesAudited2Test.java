@@ -2,6 +2,7 @@ package org.hibernate.envers.test.integration.interfaces.hbm.propertiesAudited2;
 
 import org.hibernate.envers.exception.NotAuditedException;
 import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.Priority;
 import org.junit.Test;
 
 import javax.persistence.EntityManager;
@@ -17,6 +18,7 @@ public abstract class AbstractPropertiesAudited2Test extends AbstractEntityTest 
 	private static int NUMERITO = 555;
 
 	@Test
+    @Priority(10)
 	public void initData() {
 		EntityManager em = getEntityManager();
 

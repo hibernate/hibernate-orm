@@ -25,6 +25,7 @@ package org.hibernate.envers.test.integration.onetomany.detached;
 
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.envers.test.entities.onetomany.detached.SetRefCollEntity;
 import org.hibernate.envers.test.tools.TestTools;
@@ -48,6 +49,7 @@ public class DataChangesDetachedSet extends AbstractEntityTest {
     }
 
     @Test
+    @Priority(10)
     public void initData() {
         EntityManager em = getEntityManager();
 

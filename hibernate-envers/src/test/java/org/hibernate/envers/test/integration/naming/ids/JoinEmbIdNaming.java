@@ -25,6 +25,7 @@ package org.hibernate.envers.test.integration.naming.ids;
 
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.Priority;
 import org.hibernate.mapping.Column;
 import org.junit.Test;
 
@@ -46,6 +47,7 @@ public class JoinEmbIdNaming extends AbstractEntityTest {
     }
 
     @Test
+    @Priority(10)
     public void initData() {
         ed_id1 = new EmbIdNaming(10, 20);
         ed_id2 = new EmbIdNaming(11, 21);

@@ -26,6 +26,7 @@ package org.hibernate.envers.test.integration.query.ids;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.ids.EmbId;
 import org.hibernate.envers.test.entities.onetomany.ids.SetRefEdEmbIdEntity;
 import org.hibernate.envers.test.entities.onetomany.ids.SetRefIngEmbIdEntity;
@@ -54,6 +55,7 @@ public class EmbIdOneToManyQuery extends AbstractEntityTest {
     }
 
     @Test
+    @Priority(10)
     public void initData() {
         id1 = new EmbId(0, 1);
         id2 = new EmbId(10, 11);

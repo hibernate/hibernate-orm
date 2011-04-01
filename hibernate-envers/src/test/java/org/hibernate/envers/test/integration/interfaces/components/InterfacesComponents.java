@@ -25,6 +25,7 @@ package org.hibernate.envers.test.integration.interfaces.components;
 
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.Priority;
 import org.junit.Test;
 
 import javax.persistence.EntityManager;
@@ -41,6 +42,7 @@ public class InterfacesComponents extends AbstractEntityTest {
     }
 
     @Test
+    @Priority(10)
     public void initData() {
         // Revision 1
         EntityManager em = getEntityManager();

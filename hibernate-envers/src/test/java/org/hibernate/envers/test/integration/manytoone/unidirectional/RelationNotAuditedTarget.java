@@ -26,6 +26,7 @@ package org.hibernate.envers.test.integration.manytoone.unidirectional;
 import org.hibernate.Hibernate;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.UnversionedStrTestEntity;
 import org.hibernate.envers.test.entities.manytoone.unidirectional.TargetNotAuditedEntity;
 import org.hibernate.proxy.HibernateProxy;
@@ -52,6 +53,7 @@ public class RelationNotAuditedTarget extends AbstractEntityTest {
 	}
 
 	@Test
+    @Priority(10)
 	public void initData() {
 		EntityManager em = getEntityManager();
 

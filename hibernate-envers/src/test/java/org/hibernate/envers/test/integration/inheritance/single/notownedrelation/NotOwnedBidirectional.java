@@ -26,6 +26,7 @@ package org.hibernate.envers.test.integration.inheritance.single.notownedrelatio
 
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.tools.TestTools;
 import org.junit.Test;
 
@@ -47,6 +48,7 @@ public class NotOwnedBidirectional extends AbstractEntityTest {
     }
 
     @Test
+    @Priority(10)
     public void initData() {
         EntityManager em = getEntityManager();
 

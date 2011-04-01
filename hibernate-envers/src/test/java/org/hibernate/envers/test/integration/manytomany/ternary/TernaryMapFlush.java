@@ -25,6 +25,7 @@ package org.hibernate.envers.test.integration.manytomany.ternary;
 
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.IntTestEntity;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.envers.test.tools.TestTools;
@@ -53,6 +54,7 @@ public class TernaryMapFlush extends AbstractEntityTest {
     }
 
     @Test
+    @Priority(10)
     public void createData() {
         EntityManager em = getEntityManager();
 

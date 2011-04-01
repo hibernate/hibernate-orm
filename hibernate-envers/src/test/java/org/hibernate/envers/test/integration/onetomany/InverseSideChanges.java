@@ -26,6 +26,7 @@ package org.hibernate.envers.test.integration.onetomany;
 
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.onetomany.SetRefEdEntity;
 import org.hibernate.envers.test.entities.onetomany.SetRefIngEntity;
 import org.junit.Test;
@@ -49,6 +50,7 @@ public class InverseSideChanges extends AbstractEntityTest {
     }
 
     @Test
+    @Priority(10)
     public void initData() {
         EntityManager em = getEntityManager();
 

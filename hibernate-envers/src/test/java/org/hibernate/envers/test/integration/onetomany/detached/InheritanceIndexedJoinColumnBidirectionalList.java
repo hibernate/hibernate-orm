@@ -25,6 +25,7 @@ package org.hibernate.envers.test.integration.onetomany.detached;
 
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.onetomany.detached.inheritance.ChildIndexedListJoinColumnBidirectionalRefIngEntity;
 import org.hibernate.envers.test.entities.onetomany.detached.inheritance.ParentIndexedListJoinColumnBidirectionalRefIngEntity;
 import org.hibernate.envers.test.entities.onetomany.detached.inheritance.ParentOwnedIndexedListJoinColumnBidirectionalRefEdEntity;
@@ -55,6 +56,7 @@ public class InheritanceIndexedJoinColumnBidirectionalList extends AbstractEntit
     }
 
     @Test
+    @Priority(10)
     public void createData() {
         EntityManager em = getEntityManager();
 

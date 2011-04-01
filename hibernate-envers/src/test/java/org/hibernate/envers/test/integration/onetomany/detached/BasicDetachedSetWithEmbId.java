@@ -25,6 +25,7 @@ package org.hibernate.envers.test.integration.onetomany.detached;
 
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.ids.EmbId;
 import org.hibernate.envers.test.entities.ids.EmbIdTestEntity;
 import org.hibernate.envers.test.entities.onetomany.detached.ids.SetRefCollEntityEmbId;
@@ -50,6 +51,7 @@ public class BasicDetachedSetWithEmbId extends AbstractEntityTest {
     }
 
     @Test
+    @Priority(10)
     public void initData() {
         EntityManager em = getEntityManager();
 

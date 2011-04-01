@@ -26,6 +26,7 @@ package org.hibernate.envers.test.integration.inheritance.joined.primarykeyjoin;
 
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.integration.inheritance.joined.ParentEntity;
 import org.hibernate.mapping.Column;
 import org.junit.Assert;
@@ -46,6 +47,7 @@ public class ChildPrimaryKeyJoinAuditing extends AbstractEntityTest {
     }
 
     @Test
+    @Priority(10)
     public void initData() {
         EntityManager em = getEntityManager();
 

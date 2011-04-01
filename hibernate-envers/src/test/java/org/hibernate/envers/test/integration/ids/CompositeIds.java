@@ -25,6 +25,7 @@ package org.hibernate.envers.test.integration.ids;
 
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.ids.*;
 import org.junit.Test;
 
@@ -49,6 +50,7 @@ public class CompositeIds extends AbstractEntityTest {
     }
 
     @Test
+    @Priority(10)
     public void initData() {
         id1 = new EmbId(1, 2);
         id2 = new EmbId(10, 20);

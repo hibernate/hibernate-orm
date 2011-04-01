@@ -25,6 +25,7 @@ package org.hibernate.envers.test.integration.cache;
 
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.integration.onetoone.bidirectional.BiRefEdEntity;
 import org.hibernate.envers.test.integration.onetoone.bidirectional.BiRefIngEntity;
 import org.junit.Test;
@@ -47,6 +48,7 @@ public class OneToOneCache extends AbstractEntityTest {
     }
 
     @Test
+    @Priority(10)
     public void initData() {
         BiRefEdEntity ed1 = new BiRefEdEntity(1, "data_ed_1");
         BiRefEdEntity ed2 = new BiRefEdEntity(2, "data_ed_2");

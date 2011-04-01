@@ -28,6 +28,7 @@ import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.DefaultRevisionEntity;
 import org.hibernate.envers.strategy.ValidityAuditStrategy;
 import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.manytomany.sametable.Child1Entity;
 import org.hibernate.envers.test.entities.manytomany.sametable.Child2Entity;
 import org.hibernate.envers.test.entities.manytomany.sametable.ParentEntity;
@@ -73,6 +74,7 @@ public class ValidityAuditStrategyRevEndTsTest extends AbstractEntityTest {
 	}
 
 	@Test
+    @Priority(10)
 	public void initData() {
 		EntityManager em = getEntityManager();
 

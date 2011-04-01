@@ -26,6 +26,7 @@ package org.hibernate.envers.test.integration.flush;
 import org.hibernate.FlushMode;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.query.AuditEntity;
+import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.junit.Test;
 
@@ -46,6 +47,7 @@ public class ManualFlush extends AbstractFlushTest {
     }
 
     @Test
+    @Priority(10)
     public void initData() {
         // Revision 1
         EntityManager em = getEntityManager();

@@ -2,6 +2,7 @@ package org.hibernate.envers.test.integration.manytomany.unidirectional;
 
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.UnversionedStrTestEntity;
 import org.hibernate.envers.test.entities.manytomany.unidirectional.M2MIndexedListTargetNotAuditedEntity;
 import org.junit.Test;
@@ -33,6 +34,7 @@ public class M2MIndexedListNotAuditedTarget extends AbstractEntityTest {
     }
 
     @Test
+    @Priority(10)
     public void initData() {
         EntityManager em = getEntityManager();
 

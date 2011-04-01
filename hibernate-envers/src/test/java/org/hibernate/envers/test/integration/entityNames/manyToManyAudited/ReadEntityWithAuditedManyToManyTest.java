@@ -2,6 +2,7 @@ package org.hibernate.envers.test.integration.entityNames.manyToManyAudited;
 
 import org.hibernate.MappingException;
 import org.hibernate.envers.test.AbstractOneSessionTest;
+import org.hibernate.envers.test.Priority;
 import org.junit.Test;
 
 import java.io.File;
@@ -34,6 +35,7 @@ public class ReadEntityWithAuditedManyToManyTest extends AbstractOneSessionTest{
 	
 	
     @Test
+    @Priority(10)
     public void initData() {
     	
     	initializeSession();

@@ -27,6 +27,7 @@ import org.hibernate.FlushMode;
 import org.hibernate.Session;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.junit.Test;
 
@@ -59,6 +60,7 @@ public abstract class AbstractFlushTest extends AbstractEntityTest {
     }
 
     @Test
+    @Priority(20)
     public void initFlush() throws IOException {
         Session session = getSession(getEntityManager());
         session.setFlushMode(getFlushMode());

@@ -25,6 +25,7 @@ package org.hibernate.envers.test.integration.onetomany;
 
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.ids.MulId;
 import org.hibernate.envers.test.entities.onetomany.ids.SetRefEdMulIdEntity;
 import org.hibernate.envers.test.entities.onetomany.ids.SetRefIngMulIdEntity;
@@ -52,6 +53,7 @@ public class BasicSetWithMulId extends AbstractEntityTest {
     }
 
     @Test
+    @Priority(10)
     public void initData() {
         ed1_id = new MulId(0, 1);
         ed2_id = new MulId(2, 3);

@@ -25,6 +25,7 @@ package org.hibernate.envers.test.integration.onetoone.bidirectional.ids;
 
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.ids.MulId;
 import org.junit.Test;
 
@@ -46,6 +47,7 @@ public class MulIdBidirectional extends AbstractEntityTest {
     }
 
     @Test
+    @Priority(10)
     public void initData() {
         ed1_id = new MulId(1, 2);
         ed2_id = new MulId(3, 4);

@@ -26,6 +26,7 @@ package org.hibernate.envers.test.integration.query;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrIntTestEntity;
 import org.hibernate.envers.test.entities.reventity.CustomRevEntity;
 import org.junit.Test;
@@ -48,6 +49,7 @@ public class CustomRevEntityQuery extends AbstractEntityTest {
     }
 
     @Test
+    @Priority(10)
     public void initData() throws InterruptedException {
         // Revision 1
         EntityManager em = getEntityManager();

@@ -25,6 +25,7 @@ package org.hibernate.envers.test.integration.manytomany;
 
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.IntNoAutoIdTestEntity;
 import org.hibernate.envers.test.entities.manytomany.WhereJoinTableEntity;
 import org.hibernate.envers.test.tools.TestTools;
@@ -53,6 +54,7 @@ public class BasicWhereJoinTable extends AbstractEntityTest {
     }
 
     @Test
+    @Priority(10)
     public void initData() {
         EntityManager em = getEntityManager();
 

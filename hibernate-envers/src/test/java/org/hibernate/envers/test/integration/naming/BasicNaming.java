@@ -25,6 +25,7 @@ package org.hibernate.envers.test.integration.naming;
 
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.Priority;
 import org.junit.Test;
 
 import javax.persistence.EntityManager;
@@ -42,6 +43,7 @@ public class BasicNaming extends AbstractEntityTest {
     }
 
     @Test
+    @Priority(10)
     public void initData() {
         NamingTestEntity1 nte1 = new NamingTestEntity1("data1");
         NamingTestEntity1 nte2 = new NamingTestEntity1("data2");

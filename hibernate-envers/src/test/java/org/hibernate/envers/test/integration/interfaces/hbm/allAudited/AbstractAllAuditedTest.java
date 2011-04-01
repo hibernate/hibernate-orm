@@ -2,6 +2,7 @@ package org.hibernate.envers.test.integration.interfaces.hbm.allAudited;
 
 import org.hibernate.envers.exception.NotAuditedException;
 import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.Priority;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -17,6 +18,7 @@ public abstract class AbstractAllAuditedTest extends AbstractEntityTest {
 	private long nai_id;
 	
     @Test
+    @Priority(10)
     public void initData() {
         EntityManager em = getEntityManager();
 

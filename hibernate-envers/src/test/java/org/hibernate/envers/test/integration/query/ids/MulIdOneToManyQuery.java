@@ -26,6 +26,7 @@ package org.hibernate.envers.test.integration.query.ids;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.ids.MulId;
 import org.hibernate.envers.test.entities.onetomany.ids.SetRefEdMulIdEntity;
 import org.hibernate.envers.test.entities.onetomany.ids.SetRefIngMulIdEntity;
@@ -54,6 +55,7 @@ public class MulIdOneToManyQuery extends AbstractEntityTest {
     }
 
     @Test
+    @Priority(10)
     public void initData() {
         id1 = new MulId(0, 1);
         id2 = new MulId(10, 11);

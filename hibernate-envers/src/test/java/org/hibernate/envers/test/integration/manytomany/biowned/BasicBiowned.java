@@ -25,6 +25,7 @@ package org.hibernate.envers.test.integration.manytomany.biowned;
 
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.manytomany.biowned.ListBiowning1Entity;
 import org.hibernate.envers.test.entities.manytomany.biowned.ListBiowning2Entity;
 import org.hibernate.envers.test.tools.TestTools;
@@ -50,6 +51,7 @@ public class BasicBiowned extends AbstractEntityTest {
     }
 
     @Test
+    @Priority(10)
     public void initData() {
         EntityManager em = getEntityManager();
 

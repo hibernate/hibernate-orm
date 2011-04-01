@@ -26,6 +26,7 @@ package org.hibernate.envers.test.integration.superclass.auditedAtSuperclassLeve
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.exception.NotAuditedException;
 import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.integration.superclass.auditedAtSuperclassLevel.AuditedAllMappedSuperclass;
 import org.hibernate.envers.test.integration.superclass.auditedAtSuperclassLevel.NotAuditedSubclassEntity;
 import org.junit.Test;
@@ -50,6 +51,7 @@ public class MappedSubclassingAllAuditedTest extends AbstractEntityTest {
 	}
 
 	@Test
+    @Priority(10)
 	public void initData() {
 		// Revision 1
 		EntityManager em = getEntityManager();

@@ -24,6 +24,7 @@
 package org.hibernate.envers.test.integration.flush;
 
 import org.hibernate.FlushMode;
+import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.junit.Test;
 
@@ -41,6 +42,7 @@ public class DoubleFlushAddDel extends AbstractFlushTest {
     }
 
     @Test
+    @Priority(10)
     public void initData() {
         // Revision 1
         EntityManager em = getEntityManager();

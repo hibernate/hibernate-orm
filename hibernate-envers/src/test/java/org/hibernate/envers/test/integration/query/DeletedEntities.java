@@ -28,6 +28,7 @@ import org.hibernate.envers.DefaultRevisionEntity;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrIntTestEntity;
 import org.junit.Test;
 
@@ -45,6 +46,7 @@ public class DeletedEntities extends AbstractEntityTest {
     }
 
     @Test
+    @Priority(10)
     public void initData() {
         // Revision 1
         EntityManager em = getEntityManager();

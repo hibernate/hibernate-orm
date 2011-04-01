@@ -27,28 +27,27 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.transaction.TransactionManager;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 
 import org.hibernate.ejb.AvailableSettings;
-import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
-import org.hibernate.engine.transaction.internal.jta.JtaTransactionFactory;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Optional;
-import org.testng.annotations.Parameters;
+import org.hibernate.testing.AfterClassOnce;
+import org.hibernate.testing.BeforeClassOnce;
+import org.junit.Before;
+import org.junit.runner.RunWith;
 
 import org.hibernate.cfg.Environment;
-import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.event.EnversIntegrator;
 import org.hibernate.service.internal.BasicServiceRegistryImpl;
+import org.junit.runners.Parameterized;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public abstract class AbstractEntityTest {
+public abstract class AbstractEntityTest extends AbstractEnversTest {
     private EntityManagerFactory emf;
     private EntityManager entityManager;
     private AuditReader auditReader;
@@ -65,7 +64,7 @@ public abstract class AbstractEntityTest {
         }
     }
 
-    @BeforeMethod
+    @Before
     public void newEntityManager() {
         closeEntityManager();
         
@@ -76,10 +75,9 @@ public abstract class AbstractEntityTest {
         }
     }
 
-    @BeforeClass
-    @Parameters("auditStrategy")    
-    public void init(@Optional String auditStrategy) throws IOException {
-        init(true, auditStrategy);
+    @BeforeClassOnce
+    public void init() throws IOException {
+        init(true, getAuditStrategy());
     }
 
     protected void init(boolean audited, String auditStrategy) throws IOException {
@@ -108,7 +106,7 @@ public abstract class AbstractEntityTest {
         newEntityManager();
     }
 
-    @AfterClass
+    @AfterClassOnce
     public void close() {
         closeEntityManager();
         emf.close();

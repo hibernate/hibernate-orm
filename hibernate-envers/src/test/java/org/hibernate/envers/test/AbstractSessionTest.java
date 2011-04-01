@@ -10,12 +10,10 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.testing.AfterClassOnce;
+import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.ServiceRegistryBuilder;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Optional;
-import org.testng.annotations.Parameters;
+import org.junit.Before;
 
 /**
  * Base class for testing envers with Session.
@@ -23,7 +21,7 @@ import org.testng.annotations.Parameters;
  * @author Hern&aacute;n Chanfreau
  *
  */
-public abstract class AbstractSessionTest {
+public abstract class AbstractSessionTest extends AbstractEnversTest {
 
 	protected Configuration config;
 	private ServiceRegistry serviceRegistry;
@@ -32,13 +30,13 @@ public abstract class AbstractSessionTest {
 	private AuditReader auditReader;
 
 
-	@BeforeClass
-    @Parameters("auditStrategy")
-    public void init(@Optional String auditStrategy) throws URISyntaxException {
+	@BeforeClassOnce
+    public void init() throws URISyntaxException {
         config = new Configuration();
         URL url = Thread.currentThread().getContextClassLoader().getResource(getHibernateConfigurationFileName());
         config.configure(new File(url.toURI()));
 
+        String auditStrategy = getAuditStrategy();
         if (auditStrategy != null && !"".equals(auditStrategy)) {
             config.setProperty("org.hibernate.envers.audit_strategy", auditStrategy);
         }
@@ -61,13 +59,13 @@ public abstract class AbstractSessionTest {
     }
 
 
-    @BeforeMethod
+    @Before
     public void newSessionFactory() {
       session = getSessionFactory().openSession();
       auditReader = AuditReaderFactory.get(session);
     }
 
-	@AfterClass
+	@AfterClassOnce
 	public void closeSessionFactory() {
 		try {
 	   		sessionFactory.close();

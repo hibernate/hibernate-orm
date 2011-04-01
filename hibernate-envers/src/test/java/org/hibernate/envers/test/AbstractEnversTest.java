@@ -11,7 +11,7 @@ import java.util.List;
  * @author Adam Warski (adam at warski dot org)
  */
 @RunWith(EnversRunner.class)
-public class AbstractEnversTest {
+public abstract class AbstractEnversTest {
     private String auditStrategy;
 
     @Parameterized.Parameters

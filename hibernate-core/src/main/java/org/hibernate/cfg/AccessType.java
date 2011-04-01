@@ -21,14 +21,10 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-
-// $Id$
-
 package org.hibernate.cfg;
 
-
 /**
- * Enum defining deifferent access strategies for accessing entity values.
+ * Enum defining different access strategies for accessing entity values.
  *
  * @author Hardy Ferentschik
  */

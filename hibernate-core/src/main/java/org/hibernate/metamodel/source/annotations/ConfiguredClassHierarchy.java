@@ -23,18 +23,46 @@
  */
 package org.hibernate.metamodel.source.annotations;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
 import org.jboss.jandex.ClassInfo;
 
+import org.hibernate.cfg.AccessType;
+
 /**
- * Represents an entity or mapped superclass which needs to be mapped.
- *
  * @author Hardy Ferentschik
  */
-public class Entity {
-	private ClassInfo classInfo;
+public class ConfiguredClassHierarchy implements Iterable<ConfiguredClass> {
+	private final AccessType defaultAccessType;
+	private final List<ConfiguredClass> configuredClasses;
 
-	public ClassInfo getClassInfo() {
-		return classInfo;
+	ConfiguredClassHierarchy(List<ClassInfo> classes) {
+		configuredClasses = new ArrayList<ConfiguredClass>();
+		for ( ClassInfo info : classes ) {
+			configuredClasses.add( new ConfiguredClass( info, this ) );
+		}
+		defaultAccessType = determineDefaultAccessType();
+	}
+
+	private AccessType determineDefaultAccessType() {
+		return null;
+	}
+
+	@Override
+	public Iterator<ConfiguredClass> iterator() {
+		return configuredClasses.iterator();
+	}
+
+	@Override
+	public String toString() {
+		final StringBuilder sb = new StringBuilder();
+		sb.append( "ConfiguredClassHierarchy" );
+		sb.append( "{defaultAccessType=" ).append( defaultAccessType );
+		sb.append( ", configuredClasses=" ).append( configuredClasses );
+		sb.append( '}' );
+		return sb.toString();
 	}
 }
 

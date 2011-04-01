@@ -1,0 +1,112 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
+package org.hibernate.metamodel.source.annotations;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.DotName;
+import org.jboss.jandex.Index;
+
+import org.hibernate.internal.util.ReflectHelper;
+
+/**
+ * Given a annotation index build a list of class hierarchies.
+ *
+ * @author Hardy Ferentschik
+ */
+public class ConfiguredClassHierarchyBuilder {
+
+	public Set<ConfiguredClassHierarchy> createEntityHierarchies(Index index) {
+		Map<ClassInfo, List<ClassInfo>> processedClassInfos = new HashMap<ClassInfo, List<ClassInfo>>();
+
+		for ( ClassInfo info : index.getKnownClasses() ) {
+			if ( processedClassInfos.containsKey( info ) ) {
+				continue;
+			}
+			List<ClassInfo> configuredClassList = new ArrayList<ClassInfo>();
+			ClassInfo tmpClassInfo = info;
+			Class<?> clazz = classForName( tmpClassInfo );
+			while ( clazz != null && !clazz.equals( Object.class ) ) {
+				tmpClassInfo = index.getClassByName( DotName.createSimple( clazz.getName() ) );
+				clazz = clazz.getSuperclass();
+				if ( tmpClassInfo == null ) {
+					continue;
+				}
+
+				if ( existsHierarchyWithClassInfoAsLeaf( processedClassInfos, tmpClassInfo ) ) {
+					List<ClassInfo> classInfoList = processedClassInfos.get( tmpClassInfo );
+					for ( ClassInfo tmpInfo : configuredClassList ) {
+						classInfoList.add( tmpInfo );
+						processedClassInfos.put( tmpInfo, classInfoList );
+					}
+					break;
+				}
+				else {
+					configuredClassList.add( 0, tmpClassInfo );
+					processedClassInfos.put( tmpClassInfo, configuredClassList );
+				}
+			}
+
+		}
+
+		Set<ConfiguredClassHierarchy> hierarchies = new HashSet<ConfiguredClassHierarchy>();
+		List<List<ClassInfo>> processedList = new ArrayList<List<ClassInfo>>();
+		for ( List<ClassInfo> classInfoList : processedClassInfos.values() ) {
+			if ( !processedList.contains( classInfoList ) ) {
+				hierarchies.add( new ConfiguredClassHierarchy( classInfoList ) );
+				processedList.add( classInfoList );
+			}
+		}
+
+		return hierarchies;
+	}
+
+	private boolean existsHierarchyWithClassInfoAsLeaf(Map<ClassInfo, List<ClassInfo>> processedClassInfos, ClassInfo tmpClassInfo) {
+		if ( !processedClassInfos.containsKey( tmpClassInfo ) ) {
+			return false;
+		}
+
+		List<ClassInfo> classInfoList = processedClassInfos.get( tmpClassInfo );
+		return classInfoList.get( classInfoList.size() - 1 ).equals( tmpClassInfo );
+	}
+
+	private Class<?> classForName(ClassInfo info) {
+		Class<?> clazz = null;
+		try {
+			clazz = ReflectHelper.classForName( info.toString() );
+		}
+		catch ( ClassNotFoundException e ) {
+			// todo what to do here!?i
+		}
+		return clazz;
+	}
+}
+
+

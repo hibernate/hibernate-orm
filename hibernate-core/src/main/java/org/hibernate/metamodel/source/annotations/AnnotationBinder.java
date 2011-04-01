@@ -24,18 +24,14 @@
 package org.hibernate.metamodel.source.annotations;
 
 import java.util.Iterator;
-import java.util.List;
-import javax.persistence.MappedSuperclass;
+import java.util.Set;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.ClassInfo;
-import org.jboss.jandex.DotName;
 import org.jboss.jandex.Index;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.hibernate.AnnotationException;
-import org.hibernate.AssertionFailure;
 import org.hibernate.metamodel.source.Metadata;
 
 /**
@@ -48,10 +44,6 @@ import org.hibernate.metamodel.source.Metadata;
  * @todo The annotation index should really be passed at construction time
  */
 public class AnnotationBinder {
-	public static final DotName ENTITY = DotName.createSimple( Entity.class.getName() );
-	public static final DotName HIBERNATE_ENTITY = DotName.createSimple( org.hibernate.annotations.Entity.class.getName() );
-	public static final DotName MAPPED_SUPER_CLASS = DotName.createSimple( MappedSuperclass.class.getName() );
-
 	private static final Logger log = LoggerFactory.getLogger( AnnotationBinder.class );
 	private final Metadata metadata;
 
@@ -61,33 +53,30 @@ public class AnnotationBinder {
 
 	public void bindMappedClasses(Index annotationIndex) {
 		// need to order our annotated entities into an order we can process
-		EntityHierarchyBuilder builder = new EntityHierarchyBuilder();
-		List<EntityHierarchy> hierarchies = builder.createEntityHierarchies( annotationIndex );
+		ConfiguredClassHierarchyBuilder builder = new ConfiguredClassHierarchyBuilder();
+		Set<ConfiguredClassHierarchy> hierarchies = builder.createEntityHierarchies( annotationIndex );
 
 		// now we process each hierarchy one at the time
-		for ( EntityHierarchy hierarchy : hierarchies ) {
-			Iterator<Entity> iter = hierarchy.iterator();
+		for ( ConfiguredClassHierarchy hierarchy : hierarchies ) {
+			Iterator<ConfiguredClass> iter = hierarchy.iterator();
 			while ( iter.hasNext() ) {
-				Entity entity = iter.next();
+				ConfiguredClass entity = iter.next();
 				bindEntity( entity );
 			}
 		}
 	}
 
-	public void bindEntity(Entity entity) {
+	public void bindEntity(ConfiguredClass entity) {
 		ClassInfo classInfo = entity.getClassInfo();
 
 		//@Entity and @MappedSuperclass on the same class leads to a NPE down the road
-		AnnotationInstance jpaEntityAnnotation = getSingleAnnotation( classInfo, ENTITY );
-		AnnotationInstance mappedSuperClassAnnotation = getSingleAnnotation( classInfo, MAPPED_SUPER_CLASS );
-		AnnotationInstance hibernateEntityAnnotation = getSingleAnnotation( classInfo, HIBERNATE_ENTITY );
-
-		if ( jpaEntityAnnotation != null && mappedSuperClassAnnotation != null ) {
-			throw new AnnotationException(
-					"An entity cannot be annotated with both @Entity and @MappedSuperclass: "
-							+ classInfo.name().toString()
-			);
-		}
+		AnnotationInstance jpaEntityAnnotation = JandexHelper.getSingleAnnotation( classInfo, ConfiguredClass.ENTITY );
+		AnnotationInstance mappedSuperClassAnnotation = JandexHelper.getSingleAnnotation(
+				classInfo, ConfiguredClass.MAPPED_SUPER_CLASS
+		);
+		AnnotationInstance hibernateEntityAnnotation = JandexHelper.getSingleAnnotation(
+				classInfo, ConfiguredClass.HIBERNATE_ENTITY
+		);
 
 
 //		//TODO: be more strict with secondarytable allowance (not for ids, not for secondary table join columns etc)
@@ -306,30 +295,6 @@ public class AnnotationBinder {
 //		//add process complementary Table definition (index & all)
 //		entityBinder.processComplementaryTableDefinitions( clazzToProcess.getAnnotation( org.hibernate.annotations.Table.class ) );
 //		entityBinder.processComplementaryTableDefinitions( clazzToProcess.getAnnotation( org.hibernate.annotations.Tables.class ) );
-	}
-
-	/**
-	 * @param classInfo the class info from which to retrieve the annotation instance
-	 * @param annotationName the annotation to retrieve from the class info
-	 *
-	 * @return the single annotation defined on the class or {@code null} in case the annotation is not specified at all
-	 *
-	 * @throws AssertionFailure in case there is
-	 */
-	private AnnotationInstance getSingleAnnotation(ClassInfo classInfo, DotName annotationName)
-			throws AssertionFailure {
-		List<AnnotationInstance> annotationList = classInfo.annotations().get( annotationName );
-		if ( annotationList == null ) {
-			return null;
-		}
-		else if ( annotationList.size() == 1 ) {
-			return annotationList.get( 0 );
-		}
-		else {
-			throw new AssertionFailure(
-					"There should be only one annotation of type " + annotationName + " defined on" + classInfo.name()
-			);
-		}
 	}
 }
 

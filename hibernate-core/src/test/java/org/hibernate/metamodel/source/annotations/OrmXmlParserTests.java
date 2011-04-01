@@ -17,7 +17,14 @@ public class OrmXmlParserTests extends BaseUnitTestCase {
 		Set<String> xmlFiles = new HashSet<String>();
 		xmlFiles.add( "org/hibernate/metamodel/source/annotations/orm.xml" );
 		parser.parseAndUpdateIndex( xmlFiles, null );
+	}
 
+	@Test
+	public void testOrmXmlWithOldSchema() {
+		OrmXmlParser parser = new OrmXmlParser();
+		Set<String> xmlFiles = new HashSet<String>();
+		xmlFiles.add( "org/hibernate/metamodel/source/annotations/orm2.xml" );
+		parser.parseAndUpdateIndex( xmlFiles, null );
 	}
 }
 

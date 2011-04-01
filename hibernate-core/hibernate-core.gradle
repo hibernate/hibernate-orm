@@ -30,19 +30,21 @@ manifest.mainAttributes(
         'Main-Class': 'org.hibernate.Version'
 )
 
-sourceSets {
-    test {
-        // resources inherently exclude sources
-        resources {
-            setSrcDirs( ['src/test/java','src/test/resources'] )
-        }
-    }
+
+sourceSets.main {
+    originalJavaSrcDirs = java.srcDirs
+    jaxbTargetDir = file( "${buildDir}/generated-src/jaxb" )
+    java.srcDir jaxbTargetDir
+}
+
+// resources inherently exclude sources
+sourceSets.test.resources {
+    setSrcDirs( ['src/test/java','src/test/resources'] )
 }
 
 ideaModule {
     sourceDirs.add( file( '$buildDir/generated-src/antlr/main' ) )
 }
-
 
 task jaxb << {
     jaxbTargetDir = file( "${buildDir}/generated-src/jaxb" )

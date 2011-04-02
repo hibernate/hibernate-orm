@@ -25,11 +25,13 @@ package org.hibernate.envers.test.integration.jta;
 
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.envers.test.integration.reventity.ExceptionListenerRevEntity;
 import org.junit.Test;
 
 import javax.persistence.EntityManager;
+import javax.transaction.RollbackException;
 import javax.transaction.TransactionManager;
 
 import static org.hibernate.envers.test.EnversTestingJtaBootstrap.*;
@@ -48,7 +50,8 @@ public class JtaExceptionListener extends AbstractEntityTest {
         cfg.addAnnotatedClass(ExceptionListenerRevEntity.class);
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test(expected = RollbackException.class)
+    @Priority(5) // must run before testDataNotPersisted()
     public void testTransactionRollback() throws Exception {
         tm.begin();
 

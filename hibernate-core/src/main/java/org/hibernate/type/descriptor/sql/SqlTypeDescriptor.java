@@ -42,6 +42,16 @@ public interface SqlTypeDescriptor extends Serializable {
 	 */
 	public int getSqlType();
 
+	/**
+	 * Is this descriptor available for remapping?
+	 *
+	 * @return
+	 *
+	 * @see org.hibernate.type.descriptor.WrapperOptions#remapSqlTypeDescriptor
+	 * @see org.hibernate.dialect.Dialect#remapSqlTypeDescriptor
+	 */
+	public boolean canBeRemapped();
+
 	public <X> ValueBinder<X> getBinder(JavaTypeDescriptor<X> javaTypeDescriptor);
 
 	public <X> ValueExtractor<X> getExtractor(JavaTypeDescriptor<X> javaTypeDescriptor);

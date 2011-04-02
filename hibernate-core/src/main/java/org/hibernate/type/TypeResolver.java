@@ -24,18 +24,14 @@
 package org.hibernate.type;
 
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Properties;
-import org.hibernate.HibernateLogger;
+
 import org.hibernate.MappingException;
 import org.hibernate.classic.Lifecycle;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
-import org.jboss.logging.Logger;
 
 /**
  * Acts as the contract for getting types and as the mediator between {@link BasicTypeRegistry} and {@link TypeFactory}.
@@ -43,32 +39,21 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class TypeResolver implements Serializable {
-
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, TypeResolver.class.getName());
-
 	private final BasicTypeRegistry basicTypeRegistry;
 	private final TypeFactory typeFactory;
-	private final Map<SqlTypeDescriptor, SqlTypeDescriptor> resolvedSqlTypeDescriptors;
 
 	public TypeResolver() {
-		this(  new BasicTypeRegistry(), new TypeFactory(), null );
+		this(  new BasicTypeRegistry(), new TypeFactory() );
 	}
 
-	public TypeResolver(BasicTypeRegistry basicTypeRegistry,
-						TypeFactory typeFactory,
-						Map<SqlTypeDescriptor, SqlTypeDescriptor> resolvedSqlTypeDescriptors) {
+	public TypeResolver(BasicTypeRegistry basicTypeRegistry, TypeFactory typeFactory) {
 		this.basicTypeRegistry = basicTypeRegistry;
 		this.typeFactory = typeFactory;
-		this.resolvedSqlTypeDescriptors = resolvedSqlTypeDescriptors;
 	}
 
 	public TypeResolver scope(SessionFactoryImplementor factory) {
 		typeFactory.injectSessionFactory( factory );
-		return new TypeResolver(
-				basicTypeRegistry.shallowCopy(),
-				typeFactory,
-				new HashMap<SqlTypeDescriptor, SqlTypeDescriptor>( 25 )
-		);
+		return new TypeResolver( basicTypeRegistry.shallowCopy(), typeFactory );
 	}
 
 	public void registerTypeOverride(BasicType type) {
@@ -149,30 +134,5 @@ public class TypeResolver implements Serializable {
 		}
 
 		return null;
-	}
-
-	public SqlTypeDescriptor resolveSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
-		if ( resolvedSqlTypeDescriptors == null ) {
-			throw new IllegalStateException( "cannot resolve a SqlTypeDescriptor until the TypeResolver is scoped." );
-		}
-		SqlTypeDescriptor resolvedDescriptor = resolvedSqlTypeDescriptors.get( sqlTypeDescriptor );
-		if ( resolvedDescriptor == null ) {
-			resolvedDescriptor =
-					typeFactory.resolveSessionFactory().getDialect().resolveSqlTypeDescriptor( sqlTypeDescriptor );
-			if ( resolvedDescriptor == null ) {
-				throw new IllegalStateException( "dialect returned a resolved SqlTypeDescriptor that was null." );
-			}
-			if ( sqlTypeDescriptor != resolvedDescriptor ) {
-                LOG.addingOverrideFor(sqlTypeDescriptor.getClass().getName(), resolvedDescriptor.getClass().getName());
-				if ( sqlTypeDescriptor.getSqlType() != resolvedDescriptor.getSqlType() ) {
-                    LOG.resolvedSqlTypeDescriptorForDifferentSqlCode(sqlTypeDescriptor.getClass().getName(),
-                                                                     String.valueOf(sqlTypeDescriptor.getSqlType()),
-                                                                     resolvedDescriptor.getClass().getName(),
-                                                                     String.valueOf(resolvedDescriptor.getSqlType()));
-				}
-			}
-			resolvedSqlTypeDescriptors.put( sqlTypeDescriptor, resolvedDescriptor );
-		}
-		return resolvedDescriptor;
 	}
 }

@@ -94,6 +94,11 @@ public abstract class ClobTypeDescriptor implements SqlTypeDescriptor {
 		return Types.CLOB;
 	}
 
+	@Override
+	public boolean canBeRemapped() {
+		return true;
+	}
+
 	public <X> ValueExtractor<X> getExtractor(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
 			@Override

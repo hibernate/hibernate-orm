@@ -33,10 +33,10 @@ import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
  */
 public class H2DialectOverridePrefixedVarcharSqlTypeDesc extends H2Dialect {
 	@Override
-    public SqlTypeDescriptor resolveSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
+    public SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
 		return  sqlTypeDescriptor == StoredPrefixedStringType.INSTANCE.getSqlTypeDescriptor() ?
 				VarcharTypeDescriptor.INSTANCE :
-				super.resolveSqlTypeDescriptor( sqlTypeDescriptor );
+				super.remapSqlTypeDescriptor( sqlTypeDescriptor );
 	}
 }
 

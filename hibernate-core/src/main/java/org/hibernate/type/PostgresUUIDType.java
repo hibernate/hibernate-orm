@@ -62,6 +62,11 @@ public class PostgresUUIDType extends AbstractSingleColumnStandardBasicType<UUID
 			return Types.OTHER;
 		}
 
+		@Override
+		public boolean canBeRemapped() {
+			return true;
+		}
+
 		public <X> ValueBinder<X> getBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 			return new BasicBinder<X>( javaTypeDescriptor, this ) {
 				@Override

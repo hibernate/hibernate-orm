@@ -324,15 +324,16 @@ public abstract class Dialect {
 	 * @see {@link #getSqlTypeDescriptorOverride}
 	 * @see {@link StandardBasicTypes#isStandardBasicSqlTypeDescriptor(org.hibernate.type.descriptor.sql.SqlTypeDescriptor)}
 	 */
-	public SqlTypeDescriptor resolveSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
+	public SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
 		if ( sqlTypeDescriptor == null ) {
 			throw new IllegalArgumentException( "sqlTypeDescriptor is null" );
 		}
-		SqlTypeDescriptor overrideBySqlCode = null;
-		if ( StandardBasicTypes.isStandardBasicSqlTypeDescriptor( sqlTypeDescriptor ) ) {
-			overrideBySqlCode = getSqlTypeDescriptorOverride( sqlTypeDescriptor.getSqlType() );
+		if ( ! sqlTypeDescriptor.canBeRemapped() ) {
+			return sqlTypeDescriptor;
 		}
-		return overrideBySqlCode == null ? sqlTypeDescriptor : overrideBySqlCode;
+
+		final SqlTypeDescriptor overridden = getSqlTypeDescriptorOverride( sqlTypeDescriptor.getSqlType() );
+		return overridden == null ? sqlTypeDescriptor : overridden;
 	}
 
 	/**

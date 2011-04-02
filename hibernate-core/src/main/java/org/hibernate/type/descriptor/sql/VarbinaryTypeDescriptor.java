@@ -43,6 +43,11 @@ public class VarbinaryTypeDescriptor implements SqlTypeDescriptor {
 		return Types.VARBINARY;
 	}
 
+	@Override
+	public boolean canBeRemapped() {
+		return true;
+	}
+
 	public <X> ValueBinder<X> getBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 		return new BasicBinder<X>( javaTypeDescriptor, this ) {
 			@Override

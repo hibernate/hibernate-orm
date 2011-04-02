@@ -123,6 +123,11 @@ public abstract class BlobTypeDescriptor implements SqlTypeDescriptor {
 		return Types.BLOB;
 	}
 
+	@Override
+	public boolean canBeRemapped() {
+		return true;
+	}
+
 	public <X> ValueBinder<X> getBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 		return getBlobBinder( javaTypeDescriptor );
 	}

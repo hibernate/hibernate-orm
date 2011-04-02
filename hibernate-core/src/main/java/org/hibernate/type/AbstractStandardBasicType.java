@@ -264,8 +264,11 @@ public abstract class AbstractStandardBasicType<T>
 				return Hibernate.getLobCreator( session );
 			}
 
-			public SqlTypeDescriptor resolveSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
-				return session.getFactory().getTypeResolver().resolveSqlTypeDescriptor( sqlTypeDescriptor );
+			public SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
+				final SqlTypeDescriptor remapped = sqlTypeDescriptor.canBeRemapped()
+						? session.getFactory().getDialect().remapSqlTypeDescriptor( sqlTypeDescriptor )
+						: sqlTypeDescriptor;
+				return remapped == null ? sqlTypeDescriptor : remapped;
 			}
 		};
 
@@ -273,7 +276,7 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	protected final T nullSafeGet(ResultSet rs, String name, WrapperOptions options) throws SQLException {
-		return resolveSqlTypeDescriptor( options ).getExtractor( javaTypeDescriptor ).extract( rs, name, options );
+		return remapSqlTypeDescriptor( options ).getExtractor( javaTypeDescriptor ).extract( rs, name, options );
 	}
 
 	public Object get(ResultSet rs, String name, SessionImplementor session) throws HibernateException, SQLException {
@@ -296,8 +299,11 @@ public abstract class AbstractStandardBasicType<T>
 				return Hibernate.getLobCreator( session );
 			}
 
-			public SqlTypeDescriptor resolveSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
-				return session.getFactory().getTypeResolver().resolveSqlTypeDescriptor( sqlTypeDescriptor );
+			public SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
+				final SqlTypeDescriptor remapped = sqlTypeDescriptor.canBeRemapped()
+						? session.getFactory().getDialect().remapSqlTypeDescriptor( sqlTypeDescriptor )
+						: sqlTypeDescriptor;
+				return remapped == null ? sqlTypeDescriptor : remapped;
 			}
 		};
 
@@ -306,11 +312,11 @@ public abstract class AbstractStandardBasicType<T>
 
 	@SuppressWarnings({ "unchecked" })
 	protected final void nullSafeSet(PreparedStatement st, Object value, int index, WrapperOptions options) throws SQLException {
-		resolveSqlTypeDescriptor( options ).getBinder( javaTypeDescriptor ).bind( st, ( T ) value, index, options );
+		remapSqlTypeDescriptor( options ).getBinder( javaTypeDescriptor ).bind( st, ( T ) value, index, options );
 	}
 
-	private SqlTypeDescriptor resolveSqlTypeDescriptor(WrapperOptions options) {
-		return options.resolveSqlTypeDescriptor( sqlTypeDescriptor );
+	protected SqlTypeDescriptor remapSqlTypeDescriptor(WrapperOptions options) {
+		return options.remapSqlTypeDescriptor( sqlTypeDescriptor );
 	}
 
 	public void set(PreparedStatement st, T value, int index, SessionImplementor session) throws HibernateException, SQLException {

@@ -25,11 +25,9 @@ package org.hibernate.test.typeoverride;
 
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.sql.BlobTypeDescriptor;
-import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
 import org.hibernate.type.descriptor.sql.IntegerTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
@@ -42,7 +40,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author Gail Badner
@@ -61,28 +58,26 @@ public class TypeOverrideTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testStandardBasicSqlTypeDescriptor() {
 		// no override
-		assertTrue( StandardBasicTypes.isStandardBasicSqlTypeDescriptor( IntegerTypeDescriptor.INSTANCE ) );
-		assertSame( IntegerTypeDescriptor.INSTANCE, getResolvedSqlTypeDescriptor( IntegerTypeDescriptor.INSTANCE ) );
+		assertSame( IntegerTypeDescriptor.INSTANCE, remapSqlTypeDescriptor( IntegerTypeDescriptor.INSTANCE ) );
 
 		// override depends on Dialect.useInputStreamToInsertBlob();
 		// Postgresql explicitly overrides BlobTypeDescriptor.DEFAULT
-		assertTrue( StandardBasicTypes.isStandardBasicSqlTypeDescriptor( BlobTypeDescriptor.DEFAULT ) );
 		if ( getDialect().useInputStreamToInsertBlob() ) {
 			assertSame(
 					BlobTypeDescriptor.STREAM_BINDING,
-					getDialect().resolveSqlTypeDescriptor( BlobTypeDescriptor.DEFAULT )
+					getDialect().remapSqlTypeDescriptor( BlobTypeDescriptor.DEFAULT )
 			);
 		}
 		else if ( PostgreSQLDialect.class.isInstance( getDialect() ) )  {
 			assertSame(
 					BlobTypeDescriptor.BLOB_BINDING,
-					getDialect().resolveSqlTypeDescriptor( BlobTypeDescriptor.DEFAULT )
+					getDialect().remapSqlTypeDescriptor( BlobTypeDescriptor.DEFAULT )
 			);
 		}
 		else {
 			assertSame(
 					BlobTypeDescriptor.DEFAULT,
-					getDialect().resolveSqlTypeDescriptor( BlobTypeDescriptor.DEFAULT )
+					getDialect().remapSqlTypeDescriptor( BlobTypeDescriptor.DEFAULT )
 			);
 		}
 	}
@@ -90,52 +85,29 @@ public class TypeOverrideTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testNonStandardSqlTypeDescriptor() {
 		// no override
-		SqlTypeDescriptor sqlTypeDescriptor = new IntegerTypeDescriptor();
-		assertFalse( StandardBasicTypes.isStandardBasicSqlTypeDescriptor( sqlTypeDescriptor ) );
-		assertSame( sqlTypeDescriptor, getResolvedSqlTypeDescriptor( sqlTypeDescriptor ) );
-
-		// no override; (ClobTypeDescriptor.DEFAULT	is overridden
-		// if Dialect.useInputStreamToInsertBlob() is true)
-		assertFalse( StandardBasicTypes.isStandardBasicSqlTypeDescriptor( ClobTypeDescriptor.CLOB_BINDING ) );
-		assertSame( ClobTypeDescriptor.CLOB_BINDING, getResolvedSqlTypeDescriptor( ClobTypeDescriptor.CLOB_BINDING ) );
+		SqlTypeDescriptor sqlTypeDescriptor = new IntegerTypeDescriptor() {
+			@Override
+			public boolean canBeRemapped() {
+				return false;
+			}
+		};
+		assertSame( sqlTypeDescriptor, remapSqlTypeDescriptor( sqlTypeDescriptor ) );
 	}
 
 	@Test
 	public void testDialectWithNonStandardSqlTypeDescriptor() {
 		assertNotSame( VarcharTypeDescriptor.INSTANCE, StoredPrefixedStringType.INSTANCE.getSqlTypeDescriptor() );
-		if ( H2DialectOverridePrefixedVarcharSqlTypeDesc.class.isInstance( getDialect() ) ) {
-			// TODO: dialect is currently a global; how can this be tested in the testsuite?
-			assertSame(
-					VarcharTypeDescriptor.INSTANCE,
-					getResolvedSqlTypeDescriptor( StoredPrefixedStringType.INSTANCE.getSqlTypeDescriptor() )
-			);
-		}
-		else {
-			assertSame(
-					StoredPrefixedStringType.INSTANCE.getSqlTypeDescriptor(),
-					getResolvedSqlTypeDescriptor( StoredPrefixedStringType.INSTANCE.getSqlTypeDescriptor() )
-			);
-		}
-
-		if ( H2DialectOverrideVarcharSqlCode.class.isInstance( getDialect() ) ) {
-			// TODO: dialect is currently a global; how can this be tested in the testsuite?
-			assertSame(
-					StoredPrefixedStringType.INSTANCE.getSqlTypeDescriptor(),
-					getResolvedSqlTypeDescriptor( VarcharTypeDescriptor.INSTANCE )
-			);
-		}
-		else {
-			assertSame(
-					VarcharTypeDescriptor.INSTANCE,
-					getResolvedSqlTypeDescriptor( VarcharTypeDescriptor.INSTANCE )
-			);
-		}
+		final Dialect dialect = new H2DialectOverridePrefixedVarcharSqlTypeDesc();
+		final SqlTypeDescriptor remapped = remapSqlTypeDescriptor( dialect, StoredPrefixedStringType.PREFIXED_VARCHAR_TYPE_DESCRIPTOR );
+		assertSame( VarcharTypeDescriptor.INSTANCE, remapped );
 	}
 
-	private SqlTypeDescriptor getResolvedSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
-		return ( ( SessionFactoryImplementor ) sessionFactory() )
-				.getTypeResolver()
-				.resolveSqlTypeDescriptor( sqlTypeDescriptor );
+	private SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
+		return remapSqlTypeDescriptor( sessionFactory().getDialect(), sqlTypeDescriptor );
+	}
+
+	private SqlTypeDescriptor remapSqlTypeDescriptor(Dialect dialect, SqlTypeDescriptor sqlTypeDescriptor) {
+		return dialect.remapSqlTypeDescriptor( sqlTypeDescriptor );
 	}
 
 	@Test
@@ -176,34 +148,6 @@ public class TypeOverrideTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		s.getTransaction().begin();
-		String trimmedName = ( String ) s.createQuery( "select trim( TRAILING from e.name ) from Entity e" ).uniqueResult();
-		// trim(...) is a "standard" DB function returning VarcharTypeDescriptor.INSTANCE,
-		// so the prefix will not be removed unless
-		// 1) getDialect().getSqlTypeDescriptorOverride( VarcharTypeDescriptor.INSTANCE )
-		// returns StoredPrefixedStringType.INSTANCE.getSqlTypeDescriptor()
-		// (H2DialectOverrideVarcharSqlCode does this)
-		// or 2) getDialect().getSqlTypeDescriptorOverride( StoredPrefixedStringType.INSTANCE.getSqlTypeDescriptor() )
-		// returns VarcharTypeDescriptor.INSTANCE
-		// (H2DialectOverridePrefixedVarcharSqlTypeDesc does this)
-		// TODO: dialect is currently a global; how can this be tested in the testsuite?
-		assertNotSame( VarcharTypeDescriptor.INSTANCE, StoredPrefixedStringType.INSTANCE.getSqlTypeDescriptor() );
-		if ( getDialect().resolveSqlTypeDescriptor( VarcharTypeDescriptor.INSTANCE ) ==
-				StoredPrefixedStringType.INSTANCE.getSqlTypeDescriptor() ||
-				getDialect().resolveSqlTypeDescriptor( StoredPrefixedStringType.INSTANCE.getSqlTypeDescriptor() ) ==
-						VarcharTypeDescriptor.INSTANCE ) {
-			assertFalse( trimmedName.startsWith( StoredPrefixedStringType.PREFIX ) );
-			assertEquals( "name", trimmedName );
-		}
-		else {
-			assertSame(
-					VarcharTypeDescriptor.INSTANCE,
-					( ( SessionFactoryImplementor ) sessionFactory() )
-							.getTypeResolver()
-							.resolveSqlTypeDescriptor( VarcharTypeDescriptor.INSTANCE )
-			);
-			assertTrue( trimmedName.startsWith( StoredPrefixedStringType.PREFIX ) );
-			assertEquals( StoredPrefixedStringType.PREFIX + "name", trimmedName );
-		}
 		s.delete( e );
 		s.getTransaction().commit();
 		s.close();

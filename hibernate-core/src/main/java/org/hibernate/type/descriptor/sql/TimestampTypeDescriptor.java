@@ -44,6 +44,11 @@ public class TimestampTypeDescriptor implements SqlTypeDescriptor {
 		return Types.TIMESTAMP;
 	}
 
+	@Override
+	public boolean canBeRemapped() {
+		return true;
+	}
+
 	public <X> ValueBinder<X> getBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 		return new BasicBinder<X>( javaTypeDescriptor, this ) {
 			@Override

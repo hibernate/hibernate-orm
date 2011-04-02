@@ -27,12 +27,33 @@ import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**
- * TODO : javadoc
+ * Gives binding (nullSafeSet) and extracting (nullSafeGet) code access to options.
+ *
+ * @todo Definitely could use a better name
  *
  * @author Steve Ebersole
  */
 public interface WrapperOptions {
+	/**
+	 * Should streams be used for binding LOB values.
+	 *
+	 * @return {@code true}/{@code false}
+	 */
 	public boolean useStreamForLobBinding();
+
+	/**
+	 * Obtain access to the {@link LobCreator}
+	 *
+	 * @return The LOB creator
+	 */
 	public LobCreator getLobCreator();
-	public SqlTypeDescriptor resolveSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor);
+
+	/**
+	 * Allow remapping of descriptors for dealing with sql type.
+	 *
+	 * @param sqlTypeDescriptor The known descriptor
+	 *
+	 * @return The remapped descriptor.  May be the same as the known descriptor indicating no remapping.
+	 */
+	public SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor);
 }

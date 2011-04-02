@@ -44,6 +44,11 @@ public class DateTypeDescriptor implements SqlTypeDescriptor {
 		return Types.DATE;
 	}
 
+	@Override
+	public boolean canBeRemapped() {
+		return true;
+	}
+
 	public <X> ValueBinder<X> getBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 		return new BasicBinder<X>( javaTypeDescriptor, this ) {
 			@Override

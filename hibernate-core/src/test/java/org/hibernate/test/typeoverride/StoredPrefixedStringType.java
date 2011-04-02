@@ -48,8 +48,10 @@ import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
 public class StoredPrefixedStringType
 		extends AbstractSingleColumnStandardBasicType<String>
 		implements DiscriminatorType<String> {
+
 	public static final String PREFIX = "PRE:";
-	private static final SqlTypeDescriptor PREFIXED_VARCHAR_TYPE_DESCRIPTOR =
+
+	public static final SqlTypeDescriptor PREFIXED_VARCHAR_TYPE_DESCRIPTOR =
 			new VarcharTypeDescriptor() {
 				public <X> ValueBinder<X> getBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 					return new BasicBinder<X>( javaTypeDescriptor, this ) {

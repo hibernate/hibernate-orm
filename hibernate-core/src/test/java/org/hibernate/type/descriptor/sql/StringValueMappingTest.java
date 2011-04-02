@@ -57,7 +57,7 @@ public class StringValueMappingTest extends BaseUnitTestCase {
 			return NonContextualLobCreator.INSTANCE;
 		}
 
-		public SqlTypeDescriptor resolveSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
+		public SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
 			return sqlTypeDescriptor;
 		}
 	};

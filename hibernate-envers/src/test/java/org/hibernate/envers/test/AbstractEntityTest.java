@@ -23,26 +23,20 @@
  */
 package org.hibernate.envers.test;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.transaction.TransactionManager;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-
-import org.hibernate.ejb.AvailableSettings;
-import org.hibernate.testing.AfterClassOnce;
-import org.hibernate.testing.BeforeClassOnce;
-import org.junit.Before;
-import org.junit.runner.RunWith;
-
 import org.hibernate.cfg.Environment;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.event.EnversIntegrator;
 import org.hibernate.service.internal.BasicServiceRegistryImpl;
-import org.junit.runners.Parameterized;
+import org.hibernate.testing.AfterClassOnce;
+import org.hibernate.testing.BeforeClassOnce;
+import org.junit.Before;
+
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import java.io.IOException;
+import java.util.Properties;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -84,22 +78,26 @@ public abstract class AbstractEntityTest extends AbstractEnversTest {
         this.audited = audited;
 
         cfg = new Ejb3Configuration();
-        if ( ! audited ) {
-			cfg.setProperty( EnversIntegrator.AUTO_REGISTER, "false" );
+        Properties configValues = cfg.getProperties();
+        if (!audited) {
+			configValues.setProperty(EnversIntegrator.AUTO_REGISTER, "false");
         }
 
-        cfg.configure( "hibernate.test.cfg.xml" );
+        configValues.setProperty(Environment.HBM2DDL_AUTO, "create-drop");
+        configValues.setProperty(Environment.DIALECT, "org.hibernate.dialect.H2Dialect");
+        configValues.setProperty(Environment.DRIVER, "org.h2.Driver");
+        configValues.setProperty(Environment.USER, "sa");
+
+        // Separate database for each test class
+        configValues.setProperty(Environment.URL, "jdbc:h2:mem:" + this.getClass().getName());
 
         if (auditStrategy != null && !"".equals(auditStrategy)) {
             cfg.setProperty("org.hibernate.envers.audit_strategy", auditStrategy);
         }
 
-        // Separate database for each test class
-        cfg.setProperty( Environment.URL, "jdbc:h2:mem:" + this.getClass().getName() );
-
         configure( cfg );
 
-		serviceRegistry = new BasicServiceRegistryImpl( cfg.getProperties() );
+		serviceRegistry = new BasicServiceRegistryImpl(configValues);
 
         emf = cfg.buildEntityManagerFactory( serviceRegistry );
 
@@ -123,10 +121,5 @@ public abstract class AbstractEntityTest extends AbstractEnversTest {
 
     public Ejb3Configuration getCfg() {
         return cfg;
-    }
-
-    protected TransactionManager addJTAConfig(Ejb3Configuration cfg) {
-        cfg.getProperties().put(AvailableSettings.TRANSACTION_TYPE, "JTA");
-        return EnversTestingJtaBootstrap.updateConfigAndCreateTM(cfg.getProperties());
     }
 }

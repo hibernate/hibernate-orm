@@ -2,6 +2,7 @@ package org.hibernate.envers.test.integration.jta;
 
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.EnversTestingJtaBootstrap;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.IntTestEntity;
 import org.junit.Test;
@@ -9,6 +10,8 @@ import org.junit.Test;
 import javax.persistence.EntityManager;
 import javax.transaction.TransactionManager;
 import java.util.Arrays;
+
+import static org.hibernate.envers.test.EnversTestingJtaBootstrap.*;
 
 /**
  * Same as {@link org.hibernate.envers.test.integration.basic.Simple}, but in a JTA environment.
@@ -20,8 +23,7 @@ public class JtaTransaction extends AbstractEntityTest {
 
     public void configure(Ejb3Configuration cfg) {
         cfg.addAnnotatedClass(IntTestEntity.class);
-
-        tm = addJTAConfig(cfg);
+        tm = EnversTestingJtaBootstrap.updateConfigAndCreateTM(cfg.getProperties());
     }
 
     @Test
@@ -29,24 +31,30 @@ public class JtaTransaction extends AbstractEntityTest {
     public void initData() throws Exception {
         tm.begin();
 
-        newEntityManager();
-        EntityManager em = getEntityManager();
-        IntTestEntity ite = new IntTestEntity(10);
-        em.persist(ite);
-        id1 = ite.getId();
-
-        tm.commit();
+        EntityManager em;
+        IntTestEntity ite;
+        try {
+            newEntityManager();
+            em = getEntityManager();
+            ite = new IntTestEntity(10);
+            em.persist(ite);
+            id1 = ite.getId();
+        } finally {
+            tryCommit(tm);
+        }
 
         //
 
         tm.begin();
 
-        newEntityManager();
-        em = getEntityManager();
-        ite = em.find(IntTestEntity.class, id1);
-        ite.setNumber(20);
-
-        tm.commit();
+        try {
+            newEntityManager();
+            em = getEntityManager();
+            ite = em.find(IntTestEntity.class, id1);
+            ite.setNumber(20);
+        } finally {
+            tryCommit(tm);
+        }
     }
 
     @Test

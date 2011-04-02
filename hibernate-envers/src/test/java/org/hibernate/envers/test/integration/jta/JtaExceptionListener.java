@@ -32,6 +32,8 @@ import org.junit.Test;
 import javax.persistence.EntityManager;
 import javax.transaction.TransactionManager;
 
+import static org.hibernate.envers.test.EnversTestingJtaBootstrap.*;
+
 /**
  * Same as {@link org.hibernate.envers.test.integration.reventity.ExceptionListener}, but in a JTA environment.
  * @author Adam Warski (adam at warski dot org)
@@ -40,36 +42,40 @@ public class JtaExceptionListener extends AbstractEntityTest {
     private TransactionManager tm;
 
     public void configure(Ejb3Configuration cfg) {
+        tm = updateConfigAndCreateTM(cfg.getProperties());
+
         cfg.addAnnotatedClass(StrTestEntity.class);
         cfg.addAnnotatedClass(ExceptionListenerRevEntity.class);
-
-        tm = addJTAConfig(cfg);
     }
 
     @Test(expected = RuntimeException.class)
     public void testTransactionRollback() throws Exception {
         tm.begin();
 
-        // Trying to persist an entity - however the listener should throw an exception, so the entity
-		// shouldn't be persisted
-        newEntityManager();
-        EntityManager em = getEntityManager();
-        StrTestEntity te = new StrTestEntity("x");
-        em.persist(te);
-
-        tm.commit();
+        try {
+            // Trying to persist an entity - however the listener should throw an exception, so the entity
+		    // shouldn't be persisted
+            newEntityManager();
+            EntityManager em = getEntityManager();
+            StrTestEntity te = new StrTestEntity("x");
+            em.persist(te);
+        } finally {
+            tryCommit(tm);
+        }
     }
 
     @Test
     public void testDataNotPersisted() throws Exception {
         tm.begin();
 
-		// Checking if the entity became persisted
-        newEntityManager();
-		EntityManager em = getEntityManager();
-        Long count = (Long) em.createQuery("select count(s) from StrTestEntity s where s.str = 'x'").getSingleResult();
-		assert count == 0l;
-
-        tm.commit();
+        try {
+    		// Checking if the entity became persisted
+            newEntityManager();
+		    EntityManager em = getEntityManager();
+            Long count = (Long) em.createQuery("select count(s) from StrTestEntity s where s.str = 'x'").getSingleResult();
+		    assert count == 0l;
+        } finally {
+            tryCommit(tm);
+        }
     }
 }

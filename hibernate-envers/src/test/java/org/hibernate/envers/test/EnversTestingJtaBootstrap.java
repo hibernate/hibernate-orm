@@ -5,16 +5,15 @@ import com.arjuna.ats.internal.arjuna.objectstore.VolatileStore;
 import com.arjuna.common.internal.util.propertyservice.BeanPopulator;
 import org.enhydra.jdbc.standard.StandardXADataSource;
 import org.hibernate.cfg.Environment;
+import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.service.jdbc.connections.internal.DatasourceConnectionProviderImpl;
 import org.hibernate.service.jta.platform.internal.JBossStandAloneJtaPlatform;
 import org.hibernate.service.jta.platform.internal.JtaPlatformInitiator;
 
-import javax.sql.DataSource;
+import javax.transaction.Status;
 import javax.transaction.TransactionManager;
-import javax.transaction.UserTransaction;
 import java.sql.SQLException;
 import java.util.Map;
-import java.util.Properties;
 
 /**
  * Copied from {@link org.hibernate.testing.jta.TestingJtaBootstrap}, as Envers tests use a different URL for
@@ -48,10 +47,24 @@ public class EnversTestingJtaBootstrap {
 		dataSource.setUrl(configValues.get(Environment.URL).toString());
 		dataSource.setUser(configValues.get(Environment.USER).toString());
 
+        configValues.remove(Environment.URL);
+        configValues.remove(Environment.USER);
+        configValues.remove(Environment.DRIVER);
+
 		configValues.put( JtaPlatformInitiator.JTA_PLATFORM, new JBossStandAloneJtaPlatform() );
 		configValues.put( Environment.CONNECTION_PROVIDER, DatasourceConnectionProviderImpl.class.getName() );
 		configValues.put( Environment.DATASOURCE, dataSource );
 
+        configValues.put(AvailableSettings.TRANSACTION_TYPE, "JTA");
+
         return transactionManager;
 	}
+
+    public static void tryCommit(TransactionManager tm) throws Exception {
+        if (tm.getStatus() == Status.STATUS_MARKED_ROLLBACK) {
+            tm.rollback();
+        } else {
+            tm.commit();
+        }
+    }
 }

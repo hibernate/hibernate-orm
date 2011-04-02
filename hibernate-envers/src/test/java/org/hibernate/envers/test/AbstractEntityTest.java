@@ -89,7 +89,7 @@ public abstract class AbstractEntityTest extends AbstractEnversTest {
         configValues.setProperty(Environment.USER, "sa");
 
         // Separate database for each test class
-        configValues.setProperty(Environment.URL, "jdbc:h2:mem:" + this.getClass().getName());
+        configValues.setProperty(Environment.URL, "jdbc:h2:mem:" + this.getClass().getName() + ";DB_CLOSE_DELAY=-1");
 
         if (auditStrategy != null && !"".equals(auditStrategy)) {
             cfg.setProperty("org.hibernate.envers.audit_strategy", auditStrategy);

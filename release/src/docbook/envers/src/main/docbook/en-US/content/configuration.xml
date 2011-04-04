@@ -276,6 +276,31 @@
                         org.hibernate.envers.audit_strategy_validity_store_revend_timestamp evaluates to true
                     </entry>
                 </row>
+                <row>
+                    <entry>
+                        <property>org.hibernate.envers.column_index_prefix</property>
+                    </entry>
+                    <entry>
+                    </entry>
+                    <entry>
+                        String that will be prepended to the name of a corresponding index from audited table,
+						that will be applied to audit table's column definition.
+                    </entry>
+                </row>
+                <row>
+                    <entry>
+                        <property>org.hibernate.envers.column_index_suffix</property>
+                    </entry>
+                    <entry>
+                        _AUD
+                    </entry>
+                    <entry>
+                        String that will be appended to the name of an index copied from audited table's
+						definition. If you audit a property that has HOUSENBR_IDX index specified, in the default
+						setting Envers will generate a <literal>HOUSENBR_IDX_AUD</literal> index on
+						a corresponding column in the audit table.
+                    </entry>
+                </row>
             </tbody>
         </tgroup>
     </table>

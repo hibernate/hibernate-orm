@@ -62,6 +62,12 @@
             </listitem>
         </orderedlist>
 
+        <para>
+            Preserve the order of columns in database indexes copied from audited tables. The reason is that
+            Envers uses XML configuration to register audit table's metadata. The order of columns in
+            multi-column index can be preserved only with annotations.
+        </para>
+
     </section>
 
     <section id="exceptions-willbesupported" revision="2">

@@ -57,6 +57,7 @@
             <package name="org.hibernate.envers.test.integration.onetoone.bidirectional" />
             <package name="org.hibernate.envers.test.integration.onetoone.bidirectional.ids" />
             <package name="org.hibernate.envers.test.integration.onetoone.unidirectional" />
+            <package name="org.hibernate.envers.test.integration.index" />
             <package name="org.hibernate.envers.test.integration.primitive" />
             <package name="org.hibernate.envers.test.integration.properties" />
             <package name="org.hibernate.envers.test.integration.proxy" />
@@ -71,10 +72,10 @@
             <package name="org.hibernate.envers.test.integration.secondary.ids" />
             <package name="org.hibernate.envers.test.integration.serialization" />
             <package name="org.hibernate.envers.test.integration.strategy" />
-            
+
             <package name="org.hibernate.envers.test.integration.superclass.auditAtMethodSuperclassLevel" />
-            <package name="org.hibernate.envers.test.integration.superclass.auditAtMethodSuperclassLevel.auditAllSubclass" />            
-            <package name="org.hibernate.envers.test.integration.superclass.auditedAtSuperclassLevel.auditAllSubclass" /> 
+            <package name="org.hibernate.envers.test.integration.superclass.auditAtMethodSuperclassLevel.auditAllSubclass" />
+            <package name="org.hibernate.envers.test.integration.superclass.auditedAtSuperclassLevel.auditAllSubclass" />
             <package name="org.hibernate.envers.test.integration.superclass.auditedAtSuperclassLevel.auditMethodSubclass" />
 
             <package name="org.hibernate.envers.test.integration.entityNames.auditedEntity" />

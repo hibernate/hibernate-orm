@@ -116,11 +116,11 @@ public class AuditEntitiesConfiguration {
 
         columnIndexPrefix = getProperty(properties,
                 "org.hibernate.envers.column_index_prefix",
-                "org.hibernate.envers.columnIndexPrefix",
+                "org.hibernate.envers.column_index_prefix",
                 "");
         columnIndexSuffix = getProperty(properties,
                 "org.hibernate.envers.column_index_suffix",
-                "org.hibernate.envers.columnIndexSuffix",
+                "org.hibernate.envers.column_index_suffix",
                 "_AUD");
     }
 

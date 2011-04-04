@@ -462,9 +462,6 @@ public final class AuditMetadataGenerator {
         createJoins(pc, class_mapping, auditingData);
         addJoins(pc, propertyMapper, auditingData, pc.getEntityName(), xmlMappingData, true);
 
-        // Copy database indexes
-        addIndexes(pc, class_mapping);
-
         // Storing the generated configuration
         EntityConfiguration entityCfg = new EntityConfiguration(auditEntityName,pc.getClassName(), idMapper,
                 propertyMapper, parentEntityName);
@@ -504,6 +501,9 @@ public final class AuditMetadataGenerator {
 
         // Mapping joins (second pass)
         addJoins(pc, propertyMapper, auditingData, entityName, xmlMappingData, false);
+
+        // Copy database indexes
+        addIndexes(pc, xmlMappingData.getClassMapping());
     }
 
     public Map<String, EntityConfiguration> getEntitiesConfigurations() {

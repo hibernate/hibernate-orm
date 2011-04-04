@@ -284,7 +284,7 @@
                     </entry>
                     <entry>
                         String that will be prepended to the name of a corresponding index from audited table,
-						that will be applied to audit table's column definition.
+                        that will be applied to audit table's column definition.
                     </entry>
                 </row>
                 <row>
@@ -296,9 +296,9 @@
                     </entry>
                     <entry>
                         String that will be appended to the name of an index copied from audited table's
-						definition. If you audit a property that has HOUSENBR_IDX index specified, in the default
-						setting Envers will generate a <literal>HOUSENBR_IDX_AUD</literal> index on
-						a corresponding column in the audit table.
+                        definition. If you audit a property that has HOUSENBR_IDX index specified, in the default
+                        setting Envers will generate a <literal>HOUSENBR_IDX_AUD</literal> index on
+                        a corresponding column in the audit table.
                     </entry>
                 </row>
             </tbody>

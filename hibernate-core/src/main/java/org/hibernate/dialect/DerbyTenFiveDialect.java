@@ -23,10 +23,8 @@
  */
 package org.hibernate.dialect;
 
-import org.hibernate.HibernateLogger;
 import org.hibernate.dialect.function.AnsiTrimFunction;
 import org.hibernate.dialect.function.DerbyConcatFunction;
-import org.jboss.logging.Logger;
 
 
 /**
@@ -39,9 +37,6 @@ import org.jboss.logging.Logger;
  * @author Scott Marlow
  */
 public class DerbyTenFiveDialect extends DerbyDialect {
-
-	private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, DerbyTenFiveDialect.class.getName());
-
 	public DerbyTenFiveDialect() {
 		super();
 		registerFunction( "concat", new DerbyConcatFunction() );

@@ -23,9 +23,6 @@
  */
 package org.hibernate.dialect;
 
-import org.hibernate.HibernateLogger;
-import org.jboss.logging.Logger;
-
 /**
  * Hibernate Dialect for Cloudscape 10 - aka Derby. This implements both an
  * override for the identity column generator as well as for the case statement
@@ -36,19 +33,12 @@ import org.jboss.logging.Logger;
  * @author Scott Marlow
  */
 public class DerbyTenSixDialect extends DerbyTenFiveDialect {
-
-	private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, DerbyTenSixDialect.class.getName());
-
 	public DerbyTenSixDialect() {
 		super();
 	}
 
-	private boolean isTenPointFiveReleaseOrNewer() {
-		return true;
-	}
-
 	@Override
 	public boolean supportsSequences() {
-		return  true;
+		return true;
 	}
 }

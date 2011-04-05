@@ -1858,4 +1858,8 @@ public interface HibernateLogger extends BasicLogger {
     @LogMessage( level = WARN )
     @Message( value = "Setting entity-identifier value binding where one already existed : %s.", id = 429 )
 	void entityIdentifierValueBindingExists(String name);
+
+    @LogMessage( level = WARN )
+    @Message( value = "The DerbyDialect dialect has been deprecated; use one of the version-specific dialects instead", id = 430 )
+    void deprecatedDerbyDialect();
 }

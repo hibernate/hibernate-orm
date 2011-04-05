@@ -36,7 +36,7 @@ import org.hibernate.event.PostCollectionUpdateEventListener;
 import org.hibernate.event.PostDeleteEventListener;
 import org.hibernate.event.PostInsertEventListener;
 import org.hibernate.event.PostUpdateEventListener;
-import org.hibernate.impl.Integrator;
+import org.hibernate.spi.Integrator;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.event.spi.DuplicationStrategy;
@@ -125,5 +125,10 @@ public class HibernateSearchIntegrator implements Integrator {
 		public Action getAction() {
 			return Action.KEEP_ORIGINAL;
 		}
+	}
+
+	@Override
+	public void disintegrate(SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry) {
+		// nothing to do here afaik
 	}
 }

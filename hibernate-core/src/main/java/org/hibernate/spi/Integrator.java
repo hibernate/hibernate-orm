@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.impl;
+package org.hibernate.spi;
 
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.SessionFactoryImplementor;
@@ -40,6 +40,7 @@ import org.hibernate.service.spi.SessionFactoryServiceRegistry;
  * @author Steve Ebersole
  * @since 4.0
  * @jira HHH-5562
+ * @jira HHH-6081
  */
 public interface Integrator {
 	/**
@@ -53,4 +54,12 @@ public interface Integrator {
 			Configuration configuration,
 			SessionFactoryImplementor sessionFactory,
 			SessionFactoryServiceRegistry serviceRegistry);
+
+	/**
+	 * Tongue-in-cheek name for a shutdown callback.
+	 *
+	 * @param sessionFactory The session factory being closed.
+	 * @param serviceRegistry That session factory's service registry
+	 */
+	public void disintegrate(SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry);
 }

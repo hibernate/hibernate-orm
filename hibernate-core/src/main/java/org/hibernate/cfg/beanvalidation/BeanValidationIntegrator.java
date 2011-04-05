@@ -37,7 +37,7 @@ import org.hibernate.HibernateLogger;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.impl.Integrator;
+import org.hibernate.spi.Integrator;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.event.spi.EventListenerRegistry;
@@ -48,6 +48,8 @@ import org.hibernate.service.spi.SessionFactoryServiceRegistry;
  */
 public class BeanValidationIntegrator implements Integrator {
 	private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, BeanValidationIntegrator.class.getName());
+
+	public static final String APPLY_CONSTRAINTS = "hibernate.validator.apply_to_ddl";
 
 	public static final String BV_CHECK_CLASS = "javax.validation.Validation";
 
@@ -149,7 +151,7 @@ public class BeanValidationIntegrator implements Integrator {
 			boolean beanValidationAvailable,
 			Class typeSafeActivatorClass,
 			Configuration configuration) {
-		if ( ! ConfigurationHelper.getBoolean( LegacyHibernateValidationIntegrator.APPLY_CONSTRAINTS, configuration.getProperties(), true ) ){
+		if ( ! ConfigurationHelper.getBoolean( APPLY_CONSTRAINTS, configuration.getProperties(), true ) ){
 			LOG.debug( "Skipping application of relational constraints from legacy Hibernate Validator" );
 			return;
 		}
@@ -287,4 +289,8 @@ public class BeanValidationIntegrator implements Integrator {
 		}
 	}
 
+	@Override
+	public void disintegrate(SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry) {
+		// nothing to do here afaik
+	}
 }

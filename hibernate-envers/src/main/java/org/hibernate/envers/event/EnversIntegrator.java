@@ -30,7 +30,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.event.EventType;
-import org.hibernate.impl.Integrator;
+import org.hibernate.spi.Integrator;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.event.spi.EventListenerRegistry;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
@@ -69,5 +69,10 @@ public class EnversIntegrator implements Integrator {
 		    listenerRegistry.appendListeners( EventType.PRE_COLLECTION_REMOVE, new EnversPreCollectionRemoveEventListenerImpl( enversConfiguration ) );
 		    listenerRegistry.appendListeners( EventType.PRE_COLLECTION_UPDATE, new EnversPreCollectionUpdateEventListenerImpl( enversConfiguration ) );
         }
+	}
+
+	@Override
+	public void disintegrate(SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry) {
+		// nothing to do afaik
 	}
 }

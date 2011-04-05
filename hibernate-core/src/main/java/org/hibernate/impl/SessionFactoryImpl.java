@@ -27,13 +27,11 @@ import javax.naming.NamingException;
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InvalidObjectException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.ObjectStreamException;
 import java.io.Serializable;
-import java.net.URL;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -44,6 +42,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -82,7 +81,6 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Settings;
 import org.hibernate.cfg.beanvalidation.BeanValidationIntegrator;
-import org.hibernate.cfg.beanvalidation.LegacyHibernateValidationIntegrator;
 import org.hibernate.cfg.search.HibernateSearchIntegrator;
 import org.hibernate.context.CurrentSessionContext;
 import org.hibernate.context.JTASessionContext;
@@ -125,12 +123,12 @@ import org.hibernate.persister.spi.PersisterFactory;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.jta.platform.spi.JtaPlatform;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 import org.hibernate.service.spi.SessionFactoryServiceRegistryFactory;
+import org.hibernate.spi.Integrator;
 import org.hibernate.stat.Statistics;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
@@ -245,8 +243,26 @@ public final class SessionFactoryImpl
 
 		// todo : everything above here consider implementing as standard SF service.  specifically: stats, caches, types, function-reg
 
+		class IntegratorObserver implements SessionFactoryObserver {
+			private ArrayList<Integrator> integrators = new ArrayList<Integrator>();
+
+			@Override
+			public void sessionFactoryCreated(SessionFactory factory) {
+			}
+
+			@Override
+			public void sessionFactoryClosed(SessionFactory factory) {
+				for ( Integrator integrator : integrators ) {
+					integrator.disintegrate( SessionFactoryImpl.this, SessionFactoryImpl.this.serviceRegistry );
+				}
+			}
+		}
+
+		final IntegratorObserver integratorObserver = new IntegratorObserver();
+		this.observer.addObserver( integratorObserver );
 		for ( Integrator integrator : locateIntegrators( this.serviceRegistry ) ) {
-			integrator.integrate( cfg, this, (SessionFactoryServiceRegistry) this.serviceRegistry );
+			integrator.integrate( cfg, this, this.serviceRegistry );
+			integratorObserver.integrators.add( integrator );
 		}
 
 		//Generators:
@@ -490,43 +506,14 @@ public final class SessionFactoryImpl
 	private Iterable<Integrator> locateIntegrators(ServiceRegistryImplementor serviceRegistry) {
 		List<Integrator> integrators = new ArrayList<Integrator>();
 
-		// todo : Envers needs to bbe handled by discovery to be because it is in a separate project
-		integrators.add( new LegacyHibernateValidationIntegrator() );
+		// todo : Envers needs to be handled by discovery to be because it is in a separate project
 		integrators.add( new BeanValidationIntegrator() );
 		integrators.add( new HibernateSearchIntegrator() );
 
-		final Properties properties = new Properties();
-
-		ClassLoaderService classLoader = serviceRegistry.getService( ClassLoaderService.class );
-		List<URL> urls = classLoader.locateResources( "META-INF/hibernate/org.hibernate.impl.Integrator" );
-		for ( URL url : urls ) {
-			try {
-				final InputStream propertyStream = url.openStream();
-				try {
-					properties.clear();
-					properties.load( propertyStream );
-					// for now we only understand 'implClass' as key
-					final String implClass = properties.getProperty( "implClass" );
-					Class integratorClass = classLoader.classForName( implClass );
-					try {
-						integrators.add( (Integrator) integratorClass.newInstance() );
-					}
-					catch (Exception e) {
-						throw new HibernateException( "Unable to instantiate specified Integrator class [" + implClass + "]", e );
-					}
-				}
-				finally {
-					try {
-						propertyStream.close();
-					}
-					catch (IOException ignore) {
-					}
-				}
-			}
-			catch ( IOException ioe ) {
-				LOG.debugf( ioe, "Unable to process Integrator service file [%s], skipping" , url.toExternalForm() );
-			}
+		for ( Integrator integrator : ServiceLoader.load( Integrator.class ) ) {
+			integrators.add( integrator );
 		}
+
 		return integrators;
 	}
 

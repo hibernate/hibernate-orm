@@ -2,6 +2,7 @@
 
 dependencies {
     compile( project( ':hibernate-core' ) )
-    compile( [group: 'net.sf.ehcache', name: 'ehcache-core', version: '2.3.1'] )
+    compile( [group: 'net.sf.ehcache', name: 'ehcache-core', version: '2.4.1'] )
     testCompile( project(':hibernate-testing') )
+    testRuntime( [group: 'org.slf4j', name: 'slf4j-simple', version: '1.6.1'] )
 }

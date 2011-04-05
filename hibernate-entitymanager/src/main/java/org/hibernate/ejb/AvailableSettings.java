@@ -253,6 +253,12 @@ public class AvailableSettings {
 	public static final String NAMING_STRATEGY = "hibernate.ejb.naming_strategy";
 
 	/**
+	 * IdentifierGeneratorStrategyProvider class name, the class must have a no-arg constructor
+	 * @deprecated if possible wait of Hibernate 4.1 and theService registry (MutableIdentifierGeneratorStrategy service)
+	 */
+	public static final String IDENTIFIER_GENERATOR_STRATEGY_PROVIDER = "hibernate.ejb.identifier_generator_strategy_provider";
+
+	/**
 	 * Event configuration should follow the following pattern
 	 * hibernate.ejb.event.[eventType] f.q.c.n.EventListener1, f.q.c.n.EventListener12 ...
 	 */

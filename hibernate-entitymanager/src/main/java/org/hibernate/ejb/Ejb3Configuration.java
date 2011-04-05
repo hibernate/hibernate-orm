@@ -74,6 +74,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.cfg.annotations.reflection.XMLContext;
 import org.hibernate.cfg.beanvalidation.BeanValidationIntegrator;
+import org.hibernate.ejb.cfg.spi.IdentifierGeneratorStrategyProvider;
 import org.hibernate.ejb.connection.InjectedDataSourceConnectionProvider;
 import org.hibernate.ejb.event.JpaIntegrator;
 import org.hibernate.ejb.instrument.InterceptFieldClassFileTransformer;
@@ -90,6 +91,7 @@ import org.hibernate.ejb.util.NamingHelper;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.transaction.internal.jdbc.JdbcTransactionFactory;
 import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
+import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
 import org.hibernate.integrator.spi.IntegratorService;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
@@ -1069,6 +1071,21 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 		);
 		if ( observer != null ) {
 			cfg.setSessionFactoryObserver( observer );
+		}
+
+		final IdentifierGeneratorStrategyProvider strategyProvider = instantiateCustomClassFromConfiguration(
+				preparedProperties,
+				null,
+				null,
+				AvailableSettings.IDENTIFIER_GENERATOR_STRATEGY_PROVIDER,
+				"Identifier generator strategy provider",
+				IdentifierGeneratorStrategyProvider.class
+		);
+		if ( strategyProvider != null ) {
+			final MutableIdentifierGeneratorFactory identifierGeneratorFactory = cfg.getIdentifierGeneratorFactory();
+			for ( Map.Entry<String,Class<?>> entry : strategyProvider.getStrategies().entrySet() ) {
+				identifierGeneratorFactory.register( entry.getKey(), entry.getValue() );
+			}
 		}
 
 		if ( jaccKeys.size() > 0 ) {

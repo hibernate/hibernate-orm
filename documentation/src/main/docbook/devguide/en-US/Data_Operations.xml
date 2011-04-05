@@ -1,0 +1,310 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "Hibernate_Development_Guide.ent">
+%BOOK_ENTITIES;
+]>
+<chapter id="devguide-dataOperations">
+    <title>Working with entities</title>
+
+    <para>
+        Both the <interfacename>org.hibernate.Session</interfacename> API and
+        <interfacename>javax.persistence.EntityManager</interfacename> API provide methods for working with entities.
+        This chapter will explore the available operations in each.
+    </para>
+
+    <itemizedlist>
+        <title>Entity states</title>
+        <listitem>
+            <para>
+                <literal>new</literal>, or <literal>transient</literal> - the entity has just been instantiated and is
+                not associated with a persistence context.  It has no persistent representation in the database and no
+                identifier value has been assigned.
+            </para>
+        </listitem>
+        <listitem>
+            <para>
+                <literal>managed</literal>, or <literal>persistent</literal> - the entity has an associated identifier
+                and is associated with a persistence context.
+            </para>
+        </listitem>
+        <listitem>
+            <para>
+                <literal>detached</literal> - the entity has an associated identifier, but is no longer associated with
+                a persistence context (usually because the persistence context was closed or the instance was evicted
+                from the context)
+            </para>
+        </listitem>
+        <listitem>
+            <para>
+                <literal>removed</literal> - the entity has an associated identifier and is associated with a persistence
+                context, however it is scheduled for removal from the database.
+            </para>
+        </listitem>
+    </itemizedlist>
+
+    <!-- todo : need a "see also" link to cascading chapter -->
+
+    <para>
+        In Hibernate native APIs, the persistence context is defined as the
+        <interfacename>org.hibernate.Session</interfacename>.  In JPA, the persistence context is defined by
+        <interfacename>javax.persistence.EntityManager</interfacename>.  Much of the
+        <interfacename>org.hibernate.Session</interfacename> and
+        <interfacename>javax.persistence.EntityManager</interfacename> methods deal with moving entities between these
+        states.
+    </para>
+
+    <section>
+        <title>Making entities persistent</title>
+
+        <para>
+            Once you've created a new entity instance (using the standard <literal>new</literal> operator) it is in
+            <literal>new</literal> state.   You can make it persistent by associating it to either a
+            <interfacename>org.hibernate.Session</interfacename> or
+            <interfacename>javax.persistence.EntityManager</interfacename>
+        </para>
+
+        <example>
+            <title>Example of making an entity persistent</title>
+            <programlisting>
+<![CDATA[DomesticCat fritz = new DomesticCat();
+fritz.setColor(Color.GINGER);
+fritz.setSex('M');
+fritz.setName("Fritz");
+session.save(fritz);]]>
+            </programlisting>
+            <programlisting>
+<![CDATA[DomesticCat fritz = new DomesticCat();
+fritz.setColor(Color.GINGER);
+fritz.setSex('M');
+fritz.setName("Fritz");
+entityManager.persist(fritz);]]>
+            </programlisting>
+        </example>
+
+        <sidebar>
+            <para>
+                <interfacename>org.hibernate.Session</interfacename> also has a method named <methodname>persist</methodname>
+                which follows the exact semantic defined in the JPA specification for the <methodname>persist</methodname>
+                method.  It is this method on <interfacename>org.hibernate.Session</interfacename> to which the
+                Hibernate <interfacename>javax.persistence.EntityManager</interfacename> implementation delegates.
+            </para>
+        </sidebar>
+
+        <para>
+            If the <classname>DomesticCat</classname> entity type has a generated identifier, the value is associated
+            to the instance when the <methodname>save</methodname> or <methodname>persist</methodname> is called.  If the
+            identifier is not automatically generated, the application-assigned (usually natural) key value has to be
+            set on the instance before <methodname>save</methodname> or <methodname>persist</methodname> is called.
+        </para>
+    </section>
+
+    <section>
+        <title>Deleting entities</title>
+        <para>
+            Entities can also be deleted.
+        </para>
+        <example>
+            <title>Example of deleting an entity</title>
+            <programlisting>
+<![CDATA[session.delete( anAuthor );]]>
+            </programlisting>
+            <programlisting>
+<![CDATA[entityManager.remove( anAuthor );]]>
+            </programlisting>
+        </example>
+        <para>
+            It is important to note that Hibernate itself can handle deleting detached state.  JPA, however, disallows
+            it.  The implication here is that the entity instance passed to the
+            <interfacename>org.hibernate.Session</interfacename> <methodname>delete</methodname> method can be either
+            in managed or detached state, while the entity instance passed to <methodname>remove</methodname> on
+            <interfacename>javax.persistence.EntityManager</interfacename> must be in managed state.
+        </para>
+    </section>
+
+    <section>
+        <title>Obtain an entity reference without initializing its data</title>
+        <para>
+            Sometimes referred to as lazy loading, the ability to obtain a reference to an entity without having to
+            load its data is hugely important.  The most common case being the need to create an association between
+            an entity and another, existing entity.
+        </para>
+        <example>
+            <title>Example of obtaining an entity reference without initializing its data</title>
+            <programlisting>
+<![CDATA[Book book = new Book();
+book.setAuthor( session.load( Author.class, authorId ) );]]>
+            </programlisting>
+            <programlisting>
+<![CDATA[Book book = new Book();
+book.setAuthor( entityManager.getReference( Author.class, authorId ) );]]>
+            </programlisting>
+        </example>
+        <para>
+            The above works on the assumption that the entity is defined to allow lazy loading, generally through
+            use of runtime proxies.  For more information see <xref linkend="devguide-mappingEntities"/>.  In both
+            cases an exception will be thrown later if the given entity does not refer to actual database state if and
+            when the application attempts to use the returned proxy.
+        </para>
+    </section>
+
+    <section>
+        <title>Obtain an entity with its data initialized</title>
+
+        <para>
+            It is also quite common to want to obtain an entity along with with its data, for display for example.
+        </para>
+        <example>
+            <title>Example of obtaining an entity reference with its data initialized</title>
+            <programlisting>
+<![CDATA[return session.get( Author.class, authorId );]]>
+            </programlisting>
+            <programlisting>
+<![CDATA[return entityManager.find( Author.class, authorId );]]>
+            </programlisting>
+        </example>
+        <para>
+            In both cases null is returned if no matching database row was found.
+        </para>
+    </section>
+
+    <section>
+        <title>Refresh entity state</title>
+
+        <para>
+            You can reload an entity instance and it's collections at any time.
+        </para>
+
+        <example>
+            <title>Example of refreshing entity state</title>
+            <programlisting>
+<![CDATA[Cat cat = session.get( Cat.class, catId );
+...
+session.refresh( cat );]]>
+            </programlisting>
+            <programlisting>
+<![CDATA[Cat cat = entityManager.find( Cat.class, catId );
+...
+entityManager.refresh( cat );]]>
+            </programlisting>
+        </example>
+
+        <para>
+            One case where this is useful is when it is known that the database state has changed since the data was
+            read.  Refreshing allows the current database state to be pulled into the entity instance and the
+            persistence context.
+        </para>
+
+        <para>
+            Another case where this might be useful is when database triggers are used to initialize some of the
+            properties of the entity.  Note that only the entity instance and its collections are refreshed unless you
+            specify <literal>REFRESH</literal> as a cascade style of any associations.  However, please note that
+            Hibernate has the capability to handle this automatically through its notion of generated properties.
+            See <xref linkend="devguide-mappingEntities"/> for information.
+        </para>
+    </section>
+
+    <section>
+        <title>Modifying managed/persistent state</title>
+
+        <para>
+            Entities in managed/persistent state may be manipulated by the application and any changes will be
+            automatically detected and persisted when the persistence context is flushed. There is no need to call a
+            particular method to make your modifications persistent.
+        </para>
+
+        <example>
+            <title>Example of modifying managed state</title>
+            <programlisting>
+<![CDATA[Cat cat = session.get( Cat.class, catId );
+cat.setName( "Garfield" );
+session.flush(); // generally this is not explicitly needed]]>
+            </programlisting>
+            <programlisting>
+<![CDATA[Cat cat = entityManager.find( Cat.class, catId );
+cat.setName( "Garfield" );
+entityManager.flush(); // generally this is not explicitly needed]]>
+            </programlisting>
+        </example>
+    </section>
+
+    <section>
+        <title>Working with detached data</title>
+
+        <para>
+            Detachment is the process of working with data outside the scope of any persistence context.  Data becomes
+            detached in a number of ways.  Once the persistence context is closed, all data that was associated with it
+            becomes detached.  Clearing the persistence context has the same effect.  Evicting a particular entity
+            from the persistence context makes it detached.  And finally, serialization will make the deserialized form
+            be detached (the original instance is still managed).
+        </para>
+
+        <para>
+            Detached data can still be manipulated, however the persistence context will no longer automatically know
+            about these modification and the application will need to intervene to make the changes persistent.
+        </para>
+
+        <section>
+            <title>Reattaching detached data</title>
+            <para>
+                Reattachment is the process of taking an incoming entity instance that is in detached state
+                and re-associating it with the current persistence context.
+            </para>
+            <important>
+                <para>
+                    JPA does not provide for this model.  This is only available through Hibernate
+                    <interfacename>org.hibernate.Session</interfacename>.
+                </para>
+            </important>
+            <example>
+                <title>Example of reattaching a detached entity</title>
+                <programlisting>
+    <![CDATA[session.update( someDetachedCat );]]>
+                </programlisting>
+                <programlisting>
+    <![CDATA[session.saveOrUpdate( someDetachedCat );]]>
+                </programlisting>
+            </example>
+            <para>
+                The method name <methodname>update</methodname> is a bit misleading here.  It does not mean that an
+                <literal>SQL</literal> <literal>UPDATE</literal> is immediately performed.  It does, however, mean that an
+                <literal>SQL</literal> <literal>UPDATE</literal> will be performed when the persistence context is flushed
+                since Hibernate does not know its previous state against which to compare for changes.
+            </para>
+            <para>
+                Provided the entity is detached, <methodname>update</methodname> and <methodname>saveOrUpdate</methodname>
+                operate exactly the same.
+            </para>
+        </section>
+
+        <section>
+            <title>Merging detached data</title>
+            <para>
+                Merging is the process of taking an incoming entity instance that is in detached state and copying its
+                data over onto a new instance that is in managed state.
+            </para>
+            <example>
+                <title>Visualizing merge</title>
+                <programlisting>
+<![CDATA[Object detached = ...;
+Object managed = entityManager.find( detached.getClass(), detached.getId() );
+managed.setXyz( detached.getXyz() );
+...
+return managed;]]>
+                </programlisting>
+            </example>
+            <para>
+                That is not exactly what happens, but its a good visualization.
+            </para>
+            <example>
+                <title>Example of merging a detached entity</title>
+                <programlisting>
+<![CDATA[Cat theManagedInstance = session.merge( someDetachedCat );]]>
+                </programlisting>
+                <programlisting>
+<![CDATA[Cat theManagedInstance = entityManager.merge( someDetachedCat );]]>
+                </programlisting>
+            </example>
+        </section>
+
+    </section>
+</chapter>

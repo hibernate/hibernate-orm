@@ -257,6 +257,11 @@ public class AvailableSettings {
 	public static final String SESSION_FACTORY_OBSERVER = "hibernate.ejb.session_factory_observer";
 
 	/**
+	 * IdentifierGeneratorStrategyRegisterer class name, the class must have a no-arg constructor
+	 */
+	public static final String IDENTIFIER_GENERATOR_STRATEGY_PROVIDER = "hibernate.ejb.identifier_generator_strategy_provider";
+
+	/**
 	 * Event configuration should follow the following pattern
 	 * hibernate.ejb.event.[eventType] f.q.c.n.EventListener1, f.q.c.n.EventListener12 ...
 	 */

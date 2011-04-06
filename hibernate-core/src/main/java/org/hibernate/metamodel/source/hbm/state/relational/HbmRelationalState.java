@@ -21,22 +21,31 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.binding;
+package org.hibernate.metamodel.source.hbm.state.relational;
 
-import java.util.Map;
+import java.util.Set;
 
+import org.dom4j.Element;
+
+import org.hibernate.MappingException;
 import org.hibernate.cfg.NamingStrategy;
-import org.hibernate.mapping.MetaAttribute;
+import org.hibernate.metamodel.binding.MappingDefaults;
+import org.hibernate.metamodel.binding.SimpleAttributeBinding;
+import org.hibernate.metamodel.relational.Size;
+import org.hibernate.metamodel.relational.TableSpecification;
+import org.hibernate.metamodel.source.util.DomHelper;
 
 /**
  * @author Gail Badner
  */
-public interface MappingDefaults {
-	Map<String, MetaAttribute> getMappingMetas();
-	String getDefaultSchemaName();
-	String getDefaultCatalogName();
-	String getDefaultCascade();
-	String getDefaultAccess();
-	boolean isDefaultLazy();
-	NamingStrategy getNamingStrategy();
+public class HbmRelationalState {
+	private final Element element;
+
+	public HbmRelationalState(Element element) {
+		this.element = element;
+	}
+
+	protected Element getElement() {
+		return element;
+	}
 }

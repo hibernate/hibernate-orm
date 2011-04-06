@@ -53,25 +53,11 @@ public interface AttributeBinding {
 	public Attribute getAttribute();
 
 	/**
-	 * Set the attribute being bound.
-	 *
-	 * @param attribute The attribute
-	 */
-	public void setAttribute(Attribute attribute);
-
-	/**
 	 * Obtain the value bound
 	 *
 	 * @return The value
 	 */
 	public Value getValue();
-
-	/**
-	 * Set the value being bound.
-	 *
-	 * @param value The value
-	 */
-	public void setValue(Value value);
 
 	/**
 	 * Obtain the descriptor for the Hibernate Type for this binding.

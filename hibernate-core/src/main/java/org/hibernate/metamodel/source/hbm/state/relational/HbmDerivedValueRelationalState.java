@@ -21,22 +21,22 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.binding;
+package org.hibernate.metamodel.source.hbm.state.relational;
 
-import java.util.Map;
+import org.dom4j.Element;
 
-import org.hibernate.cfg.NamingStrategy;
-import org.hibernate.mapping.MetaAttribute;
+import org.hibernate.metamodel.binding.SimpleAttributeBinding;
 
 /**
  * @author Gail Badner
  */
-public interface MappingDefaults {
-	Map<String, MetaAttribute> getMappingMetas();
-	String getDefaultSchemaName();
-	String getDefaultCatalogName();
-	String getDefaultCascade();
-	String getDefaultAccess();
-	boolean isDefaultLazy();
-	NamingStrategy getNamingStrategy();
+public class HbmDerivedValueRelationalState extends HbmRelationalState implements SimpleAttributeBinding.DerivedRelationalState {
+
+	public HbmDerivedValueRelationalState(Element element, HbmSimpleValueRelationalStateContainer container) {
+		super( element );
+	}
+
+	public String getFormula() {
+		return getElement().getTextTrim();
+	}
 }

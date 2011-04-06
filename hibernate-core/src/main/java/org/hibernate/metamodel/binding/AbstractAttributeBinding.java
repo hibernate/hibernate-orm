@@ -102,8 +102,7 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 		return attribute;
 	}
 
-	@Override
-	public void setAttribute(Attribute attribute) {
+	protected void setAttribute(Attribute attribute) {
 		this.attribute = attribute;
 	}
 
@@ -112,8 +111,7 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 		return value;
 	}
 
-	@Override
-	public void setValue(Value value) {
+	protected void setValue(Value value) {
 		this.value = value;
 	}
 
@@ -214,8 +212,6 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 	public boolean isLazy() {
 		return isLazy;
 	}
-
-	protected abstract boolean isLazyDefault(MappingDefaults defaults);
 
 	protected void setLazy(boolean isLazy) {
 		this.isLazy = isLazy;

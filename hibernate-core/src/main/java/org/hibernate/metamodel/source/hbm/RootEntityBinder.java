@@ -33,12 +33,10 @@ import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.binding.Caching;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.SimpleAttributeBinding;
-import org.hibernate.metamodel.domain.Entity;
 import org.hibernate.metamodel.relational.Column;
 import org.hibernate.metamodel.relational.Identifier;
 import org.hibernate.metamodel.relational.InLineView;
 import org.hibernate.metamodel.relational.Schema;
-import org.hibernate.metamodel.relational.Tuple;
 import org.hibernate.metamodel.relational.Value;
 
 /**
@@ -147,27 +145,16 @@ class RootEntityBinder extends AbstractEntityBinder {
 		final String attributeName = explicitName == null ? RootClass.DEFAULT_IDENTIFIER_COLUMN_NAME : explicitName;
 		entityBinding.getEntity().getOrCreateSingularAttribute( attributeName );
 
-		SimpleAttributeBinding idBinding = entityBinding.makeSimpleAttributeBinding( attributeName );
+		SimpleAttributeBinding idBinding = entityBinding.makeSimplePrimaryKeyAttributeBinding( attributeName );
 
 		bindSimpleAttribute( identifierElement, idBinding, entityBinding, attributeName );
 
-		// Handle the relational portion of the binding...
-		Value idValue = processValues( identifierElement, entityBinding.getBaseTable(), attributeName );
-		idBinding.setValue( idValue );
-
-		// ear-mark this value binding as the identifier...
-		entityBinding.getEntityIdentifier().setValueBinding( idBinding );
-
-		if ( idValue instanceof Tuple ) {
+		if ( ! Column.class.isInstance( idBinding.getValue() ) ) {
 			// this should never ever happen..
 			throw new MappingException( "Unanticipated situation" );
 		}
 
-		entityBinding.getBaseTable().getPrimaryKey().addColumn( (Column) idValue );
-
-//		SimpleValue id = new SimpleValue( mappings, entity.getTable() );
-//		entity.setIdentifier( id );
-
+		entityBinding.getBaseTable().getPrimaryKey().addColumn( Column.class.cast( idBinding.getValue() ) );
 		// if ( propertyName == null || entity.getPojoRepresentation() == null ) {
 		// bindSimpleValue( idNode, id, false, RootClass.DEFAULT_IDENTIFIER_COLUMN_NAME, mappings );
 		// if ( !id.isTypeSpecified() ) {
@@ -258,20 +245,13 @@ class RootEntityBinder extends AbstractEntityBinder {
 		final String attributeName = explicitName == null ? RootClass.DEFAULT_DISCRIMINATOR_COLUMN_NAME : explicitName;
 		entityBinding.getEntity().getOrCreateSingularAttribute( attributeName );
 
-		SimpleAttributeBinding discriminatorBinding = entityBinding.makeSimpleAttributeBinding( attributeName );
+		SimpleAttributeBinding discriminatorBinding = entityBinding.makeEntityDiscriminatorBinding( attributeName );
 
+		// Handle the relational portion of the binding...
 		bindSimpleAttribute( discriminatorElement, discriminatorBinding, entityBinding, attributeName );
 		if ( discriminatorBinding.getHibernateTypeDescriptor().getTypeName() == null ) {
 			discriminatorBinding.getHibernateTypeDescriptor().setTypeName( "string" );
 		}
-
-		// Handle the relational portion of the binding...
-		Value discriminatorValue = processValues( discriminatorElement, entityBinding.getBaseTable(), attributeName );
-		discriminatorBinding.setValue( discriminatorValue );
-
-		// ear-mark this value binding as the discriminator...
-		entityBinding.makeEntityDiscriminator();
-		entityBinding.getEntityDiscriminator().setValueBinding( discriminatorBinding );
 
 		if ( "true".equals( discriminatorElement.attributeValue( "force" ) ) ) {
 			entityBinding.getEntityDiscriminator().setForced( true );
@@ -297,7 +277,7 @@ class RootEntityBinder extends AbstractEntityBinder {
 			throw new MappingException( "Mising property name for version/timestamp mapping [" + entityBinding.getEntity().getName() + "]" );
 		}
 		entityBinding.getEntity().getOrCreateSingularAttribute( explicitName );
-		SimpleAttributeBinding versionBinding = entityBinding.makeSimpleAttributeBinding( explicitName );
+		SimpleAttributeBinding versionBinding = entityBinding.makeVersionBinding( explicitName );
 		bindSimpleAttribute( versioningElement, versionBinding, entityBinding, explicitName );
 
 		if ( versionBinding.getHibernateTypeDescriptor().getTypeName() == null ) {
@@ -315,18 +295,12 @@ class RootEntityBinder extends AbstractEntityBinder {
 			}
 		}
 
-		// Handle the relational portion of the binding...
-		Value discriminatorValue = processValues( versioningElement, entityBinding.getBaseTable(), explicitName );
-		versionBinding.setValue( discriminatorValue );
-
 		// for version properties marked as being generated, make sure they are "always"
 		// generated; aka, "insert" is invalid; this is dis-allowed by the DTD,
 		// but just to make sure...
 		if ( versionBinding.getGeneration() == PropertyGeneration.INSERT ) {
 			throw new MappingException( "'generated' attribute cannot be 'insert' for versioning property" );
 		}
-
-		entityBinding.setVersioningValueBinding( versionBinding );
 	}
 
 	private void bindCaching(Element entityElement, EntityBinding entityBinding) {

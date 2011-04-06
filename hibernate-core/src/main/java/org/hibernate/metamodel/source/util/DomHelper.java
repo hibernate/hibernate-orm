@@ -23,6 +23,12 @@
  */
 package org.hibernate.metamodel.source.util;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.StringTokenizer;
+
 import org.dom4j.Attribute;
 import org.dom4j.Element;
 
@@ -74,5 +80,18 @@ public class DomHelper {
 		);
 	}
 
-
+	public static Set<String> extractUniqueAttributeValueTokens(Element element, String attributeName, String delimiters) {
+		String attributeValue = element.attributeValue( attributeName );
+		if ( attributeValue == null ) {
+			return Collections.emptySet();
+		}
+		else {
+			StringTokenizer tokenizer = new StringTokenizer( attributeValue, delimiters );
+			Set<String> tokens = new HashSet<String>();
+			while ( tokenizer.hasMoreTokens() ) {
+				tokens.add( tokenizer.nextToken() );
+			}
+			return tokens;
+		}
+	}
 }

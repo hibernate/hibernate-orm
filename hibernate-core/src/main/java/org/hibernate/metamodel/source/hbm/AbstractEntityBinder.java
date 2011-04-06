@@ -23,11 +23,7 @@
  */
 package org.hibernate.metamodel.source.hbm;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
-import java.util.List;
-import java.util.StringTokenizer;
 
 import org.dom4j.Attribute;
 import org.dom4j.Element;
@@ -46,18 +42,14 @@ import org.hibernate.metamodel.binding.SimpleAttributeBinding;
 import org.hibernate.metamodel.domain.Entity;
 import org.hibernate.metamodel.domain.Hierarchical;
 import org.hibernate.metamodel.domain.PluralAttributeNature;
-import org.hibernate.metamodel.relational.Column;
-import org.hibernate.metamodel.relational.Index;
 import org.hibernate.metamodel.relational.Schema;
-import org.hibernate.metamodel.relational.SimpleValue;
 import org.hibernate.metamodel.relational.Table;
 import org.hibernate.metamodel.relational.TableSpecification;
-import org.hibernate.metamodel.relational.Tuple;
 import org.hibernate.metamodel.relational.UniqueKey;
-import org.hibernate.metamodel.relational.Value;
 import org.hibernate.metamodel.source.Metadata;
 import org.hibernate.metamodel.source.hbm.state.domain.HbmPluralAttributeDomainState;
 import org.hibernate.metamodel.source.hbm.state.domain.HbmSimpleAttributeDomainState;
+import org.hibernate.metamodel.source.hbm.state.relational.HbmSimpleValueRelationalStateContainer;
 
 /**
 * TODO : javadoc
@@ -416,7 +408,10 @@ abstract class AbstractEntityBinder {
 		}
 	}
 
-	protected void bindSimpleAttribute(Element propertyElement, SimpleAttributeBinding attributeBinding, EntityBinding entityBinding, String attributeName) {
+	protected void bindSimpleAttribute(Element propertyElement,
+									   SimpleAttributeBinding attributeBinding,
+									   EntityBinding entityBinding,
+									   String attributeName) {
 		if ( attributeBinding.getAttribute() == null ) {
 			attributeBinding.initialize(
 					new HbmSimpleAttributeDomainState(
@@ -429,8 +424,14 @@ abstract class AbstractEntityBinder {
 
 		if ( attributeBinding.getValue() == null ) {
 			// relational model has not been bound yet
-			Value idValue = processValues( propertyElement, entityBinding.getBaseTable(), attributeName );
-			attributeBinding.setValue( idValue );
+			// boolean (true here) indicates that by default column names should be guessed
+			attributeBinding.initializeTupleValue(
+					new HbmSimpleValueRelationalStateContainer(
+							getHibernateMappingBinder(),
+							propertyElement,
+							true
+					)
+			);
 		}
 	}
 
@@ -495,57 +496,10 @@ abstract class AbstractEntityBinder {
 //		return prop;
 //	}
 
-	protected Value processValues(Element identifierElement, TableSpecification baseTable, String propertyPath) {
+
+//	protected HbmRelationalState processValues(Element identifierElement, TableSpecification baseTable, String propertyPath, boolean isSimplePrimaryKey) {
 		// first boolean (false here) indicates that by default columns are nullable
 		// second boolean (true here) indicates that by default column names should be guessed
-		return processValues( identifierElement, baseTable, false, true, propertyPath );
-	}
-
-	protected Value processValues(
-			Element propertyElement,
-			TableSpecification table,
-			boolean isNullableByDefault,
-			boolean autoColumnCreation,
-			String propertyPath) {
-		final UniqueKeyBinder propertyUniqueKeyBinder = new UniqueKeyBinder( propertyElement.attribute( "unique-key" ), table );
-		final IndexBinder propertyIndexBinder = new IndexBinder( propertyElement.attribute( "index" ), table );
-
-		final Attribute columnAttribute = propertyElement.attribute( "column" );
-
-		if ( columnAttribute == null ) {
-			SimpleValue value = null;
-			Tuple tuple = null;
-			final Iterator valueElements = propertyElement.elementIterator();
-			while ( valueElements.hasNext() ) {
-				if ( value != null ) {
-					if ( tuple == null ) {
-						tuple = table.createTuple( "[" + propertyPath + "]" );
-					}
-					tuple.addValue( value );
-				}
-
-				final Element valueElement = (Element) valueElements.next();
-				if ( "column".equals( valueElement.getName() ) ) {
-					final Element columnElement = valueElement;
-					final String explicitName = columnElement.attributeValue( "name" );
-					final String logicalColumnName = getNamingStrategy().logicalColumnName( explicitName, propertyPath );
-					final String columnName = getNamingStrategy().columnName( explicitName );
-// todo : find out the purpose of these logical bindings
-//				mappings.addColumnBinding( logicalColumnName, column, table );
-					Column column = table.createColumn( columnName );
-					value = column;
-					basicColumnBinding( columnElement, column, isNullableByDefault );
-
-					propertyUniqueKeyBinder.bindColumn( column );
-					propertyIndexBinder.bindColumn( column );
-					new UniqueKeyBinder( columnElement.attribute( "unique-key" ), table ).bindColumn( column );
-					new IndexBinder( columnElement.attribute( "index" ), table ).bindColumn( column );
-				}
-				else if ( "formula".equals( valueElement.getName() ) ) {
-					value = table.createDerivedValue( valueElement.getTextTrim() );
-				}
-			}
-
 // todo : logical 1-1 handling
 //			final Attribute uniqueAttribute = node.attribute( "unique" );
 //			if ( uniqueAttribute != null
@@ -553,130 +507,8 @@ abstract class AbstractEntityBinder {
 //					&& ManyToOne.class.isInstance( simpleValue ) ) {
 //				( (ManyToOne) simpleValue ).markAsLogicalOneToOne();
 //			}
+		//return processValues( identifierElement, baseTable, false, true, propertyPath, isSimplePrimaryKey );
 
-			if ( tuple != null ) {
-				return tuple;
-			}
-			else if ( value != null ) {
-				return value;
-			}
-			else if ( autoColumnCreation  ) {
-				final String columnName = getNamingStrategy().propertyToColumnName( propertyPath );
-				final String logicalColumnName = getNamingStrategy().logicalColumnName( null, propertyPath );
-// todo : find out the purpose of these logical bindings
-//				mappings.addColumnBinding( logicalColumnName, column, table );
-				Column column = table.createColumn( columnName );
-				basicColumnBinding( propertyElement, column, isNullableByDefault );
-				propertyUniqueKeyBinder.bindColumn( column );
-				propertyIndexBinder.bindColumn( column );
-				return column;
-			}
-		}
 
-		if ( propertyElement.elementIterator( "column" ).hasNext() ) {
-			throw new MappingException( "column attribute may not be used together with <column> subelement" );
-		}
 
-		if ( propertyElement.elementIterator( "formula" ).hasNext() ) {
-			throw new MappingException( "column attribute may not be used together with <formula> subelement" );
-		}
-
-		final String explicitName = columnAttribute.getValue();
-		final String logicalColumnName = getNamingStrategy().logicalColumnName( explicitName, propertyPath );
-		final String columnName = getNamingStrategy().columnName( explicitName );
-// todo : find out the purpose of these logical bindings
-//		mappings.addColumnBinding( logicalColumnName, column, table );
-		Column column = table.createColumn( columnName );
-		basicColumnBinding( propertyElement, column, isNullableByDefault );
-		propertyUniqueKeyBinder.bindColumn( column );
-		propertyIndexBinder.bindColumn( column );
-		return column;
-	}
-
-	protected static class UniqueKeyBinder {
-		private final List<UniqueKey> uniqueKeys;
-
-		UniqueKeyBinder(Attribute uniqueKeyAttribute, TableSpecification table) {
-			if ( uniqueKeyAttribute == null ) {
-				uniqueKeys = Collections.emptyList();
-			}
-			else {
-				uniqueKeys = new ArrayList<UniqueKey>();
-				StringTokenizer uniqueKeyNames = new StringTokenizer( uniqueKeyAttribute.getValue(), ", " );
-				while ( uniqueKeyNames.hasMoreTokens() ) {
-					uniqueKeys.add( table.getOrCreateUniqueKey( uniqueKeyNames.nextToken() ) );
-				}
-			}
-		}
-
-		void bindColumn(Column column) {
-			for ( UniqueKey uniqueKey : uniqueKeys ) {
-				uniqueKey.addColumn( column );
-			}
-		}
-	}
-
-	protected static class IndexBinder {
-		private final List<Index> indexes;
-
-		IndexBinder(Attribute indexAttribute, TableSpecification table) {
-			if ( indexAttribute == null ) {
-				indexes = Collections.emptyList();
-			}
-			else {
-				indexes = new ArrayList<Index>();
-				StringTokenizer indexNames = new StringTokenizer( indexAttribute.getValue(), ", " );
-				while ( indexNames.hasMoreTokens() ) {
-					indexes.add( table.getOrCreateIndex( indexNames.nextToken() ) );
-				}
-			}
-		}
-
-		void bindColumn(Column column) {
-			for ( Index index : indexes ) {
-				index.addColumn( column );
-			}
-		}
-	}
-
-	public static void basicColumnBinding(Element node, Column column, boolean isNullable) throws MappingException {
-		Attribute lengthNode = node.attribute( "length" );
-		if ( lengthNode != null ) {
-			column.getSize().setLength( Integer.parseInt( lengthNode.getValue() ) );
-		}
-		Attribute scalNode = node.attribute( "scale" );
-		if ( scalNode != null ) {
-			column.getSize().setScale( Integer.parseInt( scalNode.getValue() ) );
-		}
-		Attribute precNode = node.attribute( "precision" );
-		if ( precNode != null ) {
-			column.getSize().setPrecision( Integer.parseInt( precNode.getValue() ) );
-		}
-
-		Attribute nullNode = node.attribute( "not-null" );
-		column.setNullable( nullNode == null ? isNullable : nullNode.getValue().equals( "false" ) );
-
-		Attribute unqNode = node.attribute( "unique" );
-		if ( unqNode != null ) {
-			column.setUnique( unqNode.getValue().equals( "true" ) );
-		}
-
-		column.setCheckCondition( node.attributeValue( "check" ) );
-		column.setDefaultValue( node.attributeValue( "default" ) );
-
-		Attribute typeNode = node.attribute( "sql-type" );
-		if ( typeNode != null ) column.setSqlType( typeNode.getValue() );
-
-		String customWrite = node.attributeValue( "write" );
-		if(customWrite != null && !customWrite.matches("[^?]*\\?[^?]*")) {
-			throw new MappingException("write expression must contain exactly one value placeholder ('?') character");
-		}
-		column.setWriteFragment( customWrite );
-		column.setReadFragment( node.attributeValue( "read" ) );
-
-		Element comment = node.element("comment");
-		if ( comment != null ) {
-			column.setComment( comment.getTextTrim() );
-		}
-	}
 }

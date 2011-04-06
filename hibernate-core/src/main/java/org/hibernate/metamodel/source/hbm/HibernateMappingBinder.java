@@ -30,6 +30,7 @@ import org.dom4j.Attribute;
 import org.dom4j.Element;
 
 import org.hibernate.MappingException;
+import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.xml.XmlDocument;
 import org.hibernate.mapping.FetchProfile;
@@ -98,6 +99,10 @@ class HibernateMappingBinder implements MappingDefaults {
 
 	public boolean isDefaultLazy() {
 		return defaultLazy;
+	}
+
+	public NamingStrategy getNamingStrategy() {
+		return hibernateXmlBinder.getMetadata().getNamingStrategy();
 	}
 
 	String getPackageName() {

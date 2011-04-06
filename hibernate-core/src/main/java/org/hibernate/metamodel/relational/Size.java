@@ -107,6 +107,12 @@ public class Size implements Serializable {
 		return lobMultiplier;
 	}
 
+	public void initialize(Size size) {
+		this.precision = size.precision;
+		this.scale =  size.scale;
+		this.length = size.length;
+	}
+
 	public void setPrecision(int precision) {
 		this.precision = precision;
 	}

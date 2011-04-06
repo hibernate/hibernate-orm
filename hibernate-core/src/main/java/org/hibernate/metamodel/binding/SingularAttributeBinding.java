@@ -41,13 +41,17 @@ public abstract class SingularAttributeBinding extends AbstractAttributeBinding 
 		String getUnsavedValue();
 	}
 
+	private final boolean forceNonNullable;
+	private final boolean forceUnique;
 	private boolean insertable;
 	private boolean updateable;
 	private boolean keyCasadeDeleteEnabled;
 	private String unsavedValue;
 
-	SingularAttributeBinding(EntityBinding entityBinding) {
+	SingularAttributeBinding(EntityBinding entityBinding, boolean forceNonNullable, boolean forceUnique) {
 		super( entityBinding );
+		this.forceNonNullable = forceNonNullable;
+		this.forceUnique = forceUnique;
 	}
 
 	public final void initialize(DomainState state) {
@@ -90,5 +94,13 @@ public abstract class SingularAttributeBinding extends AbstractAttributeBinding 
 
 	public void setUnsavedValue(String unsaveValue) {
 		this.unsavedValue = unsaveValue;
+	}
+
+	public boolean forceNonNullable() {
+		return forceNonNullable;
+	}
+
+	public boolean forceUnique() {
+		return forceUnique;
 	}
 }

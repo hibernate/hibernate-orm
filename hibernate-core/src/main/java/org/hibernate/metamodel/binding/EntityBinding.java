@@ -37,6 +37,7 @@ import org.hibernate.engine.Versioning;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.MetaAttribute;
 import org.hibernate.metamodel.domain.Entity;
+import org.hibernate.metamodel.relational.Column;
 import org.hibernate.metamodel.relational.TableSpecification;
 import org.hibernate.metamodel.source.hbm.HbmHelper;
 import org.hibernate.metamodel.source.util.DomHelper;
@@ -84,7 +85,7 @@ public class EntityBinding {
 
 	private List<String> synchronizedTableNames;
 
-	// TODO: change to initialize from DomainState
+	// TODO: change to intialize from Doimain
 	public void fromHbmXml(MappingDefaults defaults, Element node, Entity entity) {
 		this.entity = entity;
 		metaAttributes = HbmHelper.extractMetas( node, true, defaults.getMappingMetas() );
@@ -161,21 +162,33 @@ public class EntityBinding {
 		return entityIdentifier;
 	}
 
-	public EntityDiscriminator makeEntityDiscriminator() {
-		entityDiscriminator = new EntityDiscriminator( this );
-		return entityDiscriminator;
+	public void bindEntityIdentifier(SimpleAttributeBinding attributeBinding) {
+		if ( ! Column.class.isInstance( attributeBinding.getValue() ) ) {
+			throw new MappingException(
+					"Identifier value must be a Column; instead it is: " + attributeBinding.getValue().getClass()
+			);
+		}
+		entityIdentifier.setValueBinding( attributeBinding );
+		baseTable.getPrimaryKey().addColumn( Column.class.cast( attributeBinding.getValue() ) );
 	}
 
 	public EntityDiscriminator getEntityDiscriminator() {
 		return entityDiscriminator;
 	}
 
-	public SimpleAttributeBinding getVersioningValueBinding() {
-		return versionBinding;
+	public void bindEntityDiscriminator(SimpleAttributeBinding attributeBinding) {
+		if ( ! Column.class.isInstance( attributeBinding.getValue() ) ) {
+			throw new MappingException(
+					"Identifier value must be a Column; instead it is: " + attributeBinding.getValue().getClass()
+			);
+		}
+		entityDiscriminator.setValueBinding( attributeBinding );
+		baseTable.getPrimaryKey().addColumn( Column.class.cast( attributeBinding.getValue() ) );
 	}
 
-	public void setVersioningValueBinding(SimpleAttributeBinding versionBinding) {
-		this.versionBinding = versionBinding;
+
+	public SimpleAttributeBinding getVersioningValueBinding() {
+		return versionBinding;
 	}
 
 	public Iterable<AttributeBinding> getAttributeBindings() {
@@ -186,8 +199,34 @@ public class EntityBinding {
 		return attributeBindingMap.get( name );
 	}
 
+	public SimpleAttributeBinding makeSimplePrimaryKeyAttributeBinding(String name) {
+		final SimpleAttributeBinding binding = makeSimpleAttributeBinding( name, true, true  );
+		getEntityIdentifier().setValueBinding( binding );
+		return binding;
+	}
+
+	public SimpleAttributeBinding makeEntityDiscriminatorBinding(String name) {
+		if ( entityDiscriminator != null ) {
+			// TODO: LOG this!!!
+		}
+		entityDiscriminator = new EntityDiscriminator( this );
+		entityDiscriminator.setValueBinding( makeSimpleAttributeBinding( name, true, false  ) );
+		return entityDiscriminator.getValueBinding();
+	}
+
+	public SimpleAttributeBinding makeVersionBinding(String name) {
+		versionBinding = makeSimpleAttributeBinding( name, true, false  );
+		return versionBinding;
+	}
+
+
+
 	public SimpleAttributeBinding makeSimpleAttributeBinding(String name) {
-		final SimpleAttributeBinding binding = new SimpleAttributeBinding( this );
+		return makeSimpleAttributeBinding( name, false, false );
+	}
+
+	private SimpleAttributeBinding makeSimpleAttributeBinding(String name, boolean forceNonNullable, boolean forceUnique) {
+		final SimpleAttributeBinding binding = new SimpleAttributeBinding( this, forceNonNullable, forceUnique  );
 		attributeBindingMap.put( name, binding );
 		binding.setAttribute( entity.getAttribute( name ) );
 		return binding;

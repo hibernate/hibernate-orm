@@ -49,8 +49,5 @@ test {
    systemProperties['jgroups.bind_addr'] = 'localhost'
    //   systemProperties['log4j.configuration'] = 'file:/log4j/log4j-infinispan.xml'
    enabled = true
-   afterTest { desc, result -> 
-      println "Executing test ${desc.name} [${desc.className}] with result: ${result.resultType}"
-   }
 }
 

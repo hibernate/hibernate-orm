@@ -1685,16 +1685,15 @@ public abstract class Loader {
 		return dialect.supportsLimit() && hasMaxRows( selection );
 	}
 
-	private ScrollMode getScrollMode(boolean scroll, QueryParameters queryParameters, boolean hasFirstRow, boolean useLimitOffSet) {
+	private ScrollMode getScrollMode(boolean scroll, boolean hasFirstRow, boolean useLimitOffSet, QueryParameters queryParameters) {
 		final boolean canScroll = getFactory().getSettings().isScrollableResultSetsEnabled();
-		if ( !canScroll ) {
-			return null;
-		}
-		if ( scroll ) {
-			return queryParameters.getScrollMode();
-		}
-		if ( hasFirstRow && !useLimitOffSet ) {
-			return ScrollMode.SCROLL_INSENSITIVE;
+		if ( canScroll ) {
+			if ( scroll ) {
+				return queryParameters.getScrollMode();
+			}
+			if ( hasFirstRow && !useLimitOffSet ) {
+				return ScrollMode.SCROLL_INSENSITIVE;
+			}
 		}
 		return null;
 	}
@@ -1720,7 +1719,7 @@ public abstract class Loader {
 		final boolean canScroll = getFactory().getSettings().isScrollableResultSetsEnabled();
 		final boolean useScrollableResultSetToSkip = hasFirstRow &&
 				!useLimitOffset && canScroll;
-		ScrollMode scrollMode = getScrollMode(scroll,queryParameters,hasFirstRow,useLimit);
+		final ScrollMode scrollMode = getScrollMode( scroll, hasFirstRow, useLimit, queryParameters );
 //
 //		if(canScroll && ( scroll || useScrollableResultSetToSkip )){
 //			 scrollMode = scroll ? queryParameters.getScrollMode() : ScrollMode.SCROLL_INSENSITIVE;

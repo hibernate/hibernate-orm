@@ -1685,6 +1685,19 @@ public abstract class Loader {
 		return dialect.supportsLimit() && hasMaxRows( selection );
 	}
 
+	private ScrollMode getScrollMode(boolean scroll, QueryParameters queryParameters, boolean hasFirstRow, boolean useLimitOffSet) {
+		final boolean canScroll = getFactory().getSettings().isScrollableResultSetsEnabled();
+		if ( !canScroll ) {
+			return null;
+		}
+		if ( scroll ) {
+			return queryParameters.getScrollMode();
+		}
+		if ( hasFirstRow && !useLimitOffSet ) {
+			return ScrollMode.SCROLL_INSENSITIVE;
+		}
+		return null;
+	}
 	/**
 	 * Obtain a <tt>PreparedStatement</tt> with all parameters pre-bound.
 	 * Bind JDBC-style <tt>?</tt> parameters, named parameters, and
@@ -1701,24 +1714,23 @@ public abstract class Loader {
 		final RowSelection selection = queryParameters.getRowSelection();
 		boolean useLimit = useLimit( selection, dialect );
 		boolean hasFirstRow = getFirstRow( selection ) > 0;
-		boolean useOffset = hasFirstRow && useLimit && dialect.supportsLimitOffset();
+		boolean useLimitOffset = hasFirstRow && useLimit && dialect.supportsLimitOffset();
 		boolean callable = queryParameters.isCallable();
 
 		final boolean canScroll = getFactory().getSettings().isScrollableResultSetsEnabled();
 		final boolean useScrollableResultSetToSkip = hasFirstRow &&
-				!useOffset &&
-				getFactory().getSettings().isScrollableResultSetsEnabled();
-		final ScrollMode scrollMode =
-				canScroll
-						? scroll || useScrollableResultSetToSkip
-								? queryParameters.getScrollMode()
-								: ScrollMode.SCROLL_INSENSITIVE
-						: null;
-
+				!useLimitOffset && canScroll;
+		ScrollMode scrollMode = getScrollMode(scroll,queryParameters,hasFirstRow,useLimit);
+//
+//		if(canScroll && ( scroll || useScrollableResultSetToSkip )){
+//			 scrollMode = scroll ? queryParameters.getScrollMode() : ScrollMode.SCROLL_INSENSITIVE;
+//		}else{
+//			scrollMode = null;
+//		}
 		if ( useLimit ) {
 			sql = dialect.getLimitString(
 					sql.trim(), //use of trim() here is ugly?
-					useOffset ? getFirstRow(selection) : 0,
+					useLimitOffset ? getFirstRow(selection) : 0,
 					getMaxOrLimit(selection, dialect)
 				);
 		}

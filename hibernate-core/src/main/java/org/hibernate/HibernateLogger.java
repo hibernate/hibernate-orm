@@ -1862,4 +1862,8 @@ public interface HibernateLogger extends BasicLogger {
     @LogMessage( level = WARN )
     @Message( value = "The DerbyDialect dialect has been deprecated; use one of the version-specific dialects instead", id = 430 )
     void deprecatedDerbyDialect();
+
+	@LogMessage( level = WARN )
+	@Message( value = "Unable to determine H2 database version, certain features may not work", id = 431 )
+	void undeterminedH2Version();
 }

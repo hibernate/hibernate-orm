@@ -5,6 +5,34 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 3.6.3 (2011.04.06)
+-------------------------------------------
+http://opensource.atlassian.com/projects/hibernate/browse/HHH/fixforversion/11211
+
+** Bug
+    * [HHH-4999] - createSQLQuery(query).list() result screw up when when columns in different tables have same name
+    * [HHH-5803] - Better handling of implicit literal numeric expression typing
+    * [HHH-5915] - Bug with MSSQL Paging released in 3.6.1
+    * [HHH-5940] - @MapKeyJoinColumns always throws an exception
+    * [HHH-5974] - unnecessary import which crashes the system in OSGi environement
+    * [HHH-5978] - TS: Postgresql 8.x - CustomSQLTest fails because UPPER()'s result is not converted to number.
+    * [HHH-6057] - hibernate.cfg.xml references wrong hbm.xml files and doesn't include reference to DTD file
+    * [HHH-6058] - Error in mapping file in Event.hbm.xml file for documentation in download
+
+** Improvement
+    * [HHH-5993] - Expose SessionFactoryObserver to Hibernate EntityManager configuration
+    * [HHH-6022] - Harden the JBossTSStandaloneTransactionManagerLookup implementation to better support JBoss TS version changes
+
+** New Feature
+    * [HHH-6084] - Provide an identifier generator strategy provider component for EntityManager
+
+** Patch
+    * [HHH-5348] - support for TypedQuery jpaql/hql "scalar" queries
+
+** Task
+    * [HHH-6009] - Rename module directories on 3.6 branch to match master
+
+
 Changes in version 3.6.2 (2011.03.09)
 -------------------------------------------
 http://opensource.atlassian.com/projects/hibernate/browse/HHH/fixforversion/11206

@@ -8,6 +8,7 @@ import java.util.List;
 import junit.framework.Test;
 
 import org.hibernate.HibernateException;
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.id.PostInsertIdentifierGenerator;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.classic.Session;
@@ -39,7 +40,10 @@ public class CustomSQLTest extends LegacyTestCase {
 			reportSkip( "hand sql expecting non-identity id gen", "Custom SQL" );
 			return;
 		}
-
+		if ( getDialect() instanceof PostgreSQLDialect ){
+			reportSkip( "PostgreSQL requires explicit cast", "Custom SQL" );
+			return;
+		}
 		Role p = new Role();
 
 		p.setName("Patient");
@@ -101,7 +105,10 @@ public class CustomSQLTest extends LegacyTestCase {
 			reportSkip( "hand sql expecting non-identity id gen", "Custom SQL" );
 			return;
 		}
-
+		if ( getDialect() instanceof PostgreSQLDialect ){
+			reportSkip( "PostgreSQL requires explicit cast", "Custom SQL" );
+			return;
+		}
 		Role role = new Role();
 
 		role.setName("Jim Flanders");

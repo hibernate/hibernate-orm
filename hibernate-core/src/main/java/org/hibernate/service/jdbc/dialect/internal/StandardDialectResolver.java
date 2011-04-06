@@ -80,12 +80,11 @@ public class StandardDialectResolver extends AbstractDialectResolver {
 		}
 
 		if ( "Apache Derby".equals( databaseName ) ) {
-			int driverVersionMajor = metaData.getDriverMajorVersion();
-			int driverVersionMinor = metaData.getDriverMinorVersion();
-			if ( driverVersionMajor > 10 || ( driverVersionMajor == 10 && driverVersionMinor >= 6 ) ) {
+			final int databaseMinorVersion = metaData.getDatabaseMinorVersion();
+			if ( databaseMajorVersion > 10 || ( databaseMajorVersion == 10 && databaseMinorVersion >= 6 ) ) {
 				return new DerbyTenSixDialect();
 			}
-			else if ( driverVersionMajor == 10 && driverVersionMinor == 5 ) {
+			else if ( databaseMajorVersion == 10 && databaseMinorVersion == 5 ) {
 				return new DerbyTenFiveDialect();
 			}
 			else {

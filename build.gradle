@@ -71,13 +71,12 @@ libraries = [
         logging:        'org.jboss.logging:jboss-logging:3.0.0.Beta5',
         logging_tools:  'org.jboss.logging:jboss-logging-tools:1.0.0.Beta4',
         slf4j_api:      'org.slf4j:slf4j-api:' + slf4jVersion,
-        slf4j_simple:   'org.slf4j:slf4j-simple:' + slf4jVersion,
+        slf4j_log4j12:  'org.slf4j:slf4j-log4j12:' + slf4jVersion,
         jcl_slf4j:      'org.slf4j:jcl-over-slf4j:' + slf4jVersion,
         jcl_api:        'commons-logging:commons-logging-api:99.0-does-not-exist',
         jcl:            'commons-logging:commons-logging:99.0-does-not-exist',
 
         // testing
-        atomikos:       'com.atomikos:transactions-jdbc:3.7.0',
         junit:          'junit:junit:4.8.2',
         jpa_modelgen:   'org.hibernate:hibernate-jpamodelgen:1.1.1.Final',
         shrinkwrap_api: 'org.jboss.shrinkwrap:shrinkwrap-api:1.0.0-alpha-6',
@@ -121,9 +120,8 @@ subprojects { subProject ->
         dependencies {
 		    compile( libraries.logging )
             testCompile( libraries.junit )
-            testCompile( libraries.atomikos )
             testRuntime( libraries.slf4j_api )
-            testRuntime( libraries.slf4j_simple )
+            testRuntime( libraries.slf4j_log4j12 )
             testRuntime( libraries.jcl_slf4j )
             testRuntime( libraries.jcl_api )
             testRuntime( libraries.jcl )

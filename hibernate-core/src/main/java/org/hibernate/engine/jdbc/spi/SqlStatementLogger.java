@@ -100,7 +100,7 @@ public class SqlStatementLogger {
 				statement = formatter.format( statement );
 			}
 		}
-        LOG.debugf(statement);
+        LOG.debug( statement );
 		if ( logToStdout ) {
 			System.out.println( "Hibernate: " + statement );
 		}

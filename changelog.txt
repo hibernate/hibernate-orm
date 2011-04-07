@@ -5,6 +5,67 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 4.0.0.Alpha2 (2011.04.06)
+------------------------------------------------------------------------------------------------------------------------
+
+** Bug
+    * [HHH-4999] - createSQLQuery(query).list() result screw up when when columns in different tables have same name
+    * [HHH-5803] - Better handling of implicit literal numeric expression typing
+    * [HHH-5940] - @MapKeyJoinColumns always throws an exception
+    * [HHH-5989] - Add tests of JPA-style transaction joining
+    * [HHH-5996] - Wire in JdbcServices into SchemaUpdateTask, SchemaExportTask,  SchemaValidatorTask, HibernateService.dropSchema(), HibernateService.createSchema()
+    * [HHH-6001] - Add a top-level directory inside the release bundle archives
+    * [HHH-6002] - Use today's year when building copyright footer for aggregated javadocs
+    * [HHH-6028] - Remove o.h.classic stuff
+    * [HHH-6057] - hibernate.cfg.xml references wrong hbm.xml files and doesn't include reference to DTD file
+    * [HHH-6058] - Error in mapping file in Event.hbm.xml file for documentation in download
+    * [HHH-6061] - ValidatoryFactory type checking
+    * [HHH-6076] - query with setFirstResult throws Exception on derby
+
+** Improvement
+    * [HHH-2680] - Blobs not updated on Session.merge() for detached instances
+    * [HHH-2860] - Consolidate Session creation options/parameters
+    * [HHH-4362] - @RowId
+    * [HHH-5244] - Flesh out H2Dialect temp table support
+    * [HHH-5284] - Allow Type to dictate the default length/scale/precision
+    * [HHH-5562] - Introduce a locator pattern for integrators to be able to leverage to more easily integrate with Hibernate
+    * [HHH-5947] - Improve error message, documentation and tests on @UniqueConstraint
+    * [HHH-5993] - Expose SessionFactoryObserver to Hibernate EntityManager configuration
+    * [HHH-6053] - Create an interface for centralizing the contract that is shared between Session and StatelessSession
+
+** New Feature
+    * [HHH-5697] - Support for multi-tenancy
+
+** Patch
+    * [HHH-3646] - implement Criteria API querying of collection-of-component (David Mansfield)
+    * [HHH-5348] - support for TypedQuery jpaql/hql "scalar" queries
+
+** Task
+    * [HHH-5650] - Pull documentation building into 'release' module
+    * [HHH-5682] - Modify service infrastructure to leverage CDI annotations
+    * [HHH-5683] - Create Weld-specific ServiceRegistry
+    * [HHH-5913] - Implement set of event listeners as a service
+    * [HHH-5942] - Migrate to JUnit 4
+    * [HHH-5966] - Finish up loose ends for overriding a SqlTypeDescriptor
+    * [HHH-6010] - Remove duplication in code involving Work and ReturningWork
+    * [HHH-6013] - Consolidate on single JTA impl for testing
+    * [HHH-6015] - Investigate hibernate-infinispan test failures since migration to JUnit4
+    * [HHH-6016] - Migrate version injection plugin to Gradle
+    * [HHH-6025] - Remove cglib dependencies
+    * [HHH-6026] - Migrate bytecode provider integrations to api/spi/internal split
+    * [HHH-6027] - Migrate o.h.action pakcage to api/spi/internal split
+    * [HHH-6033] - Migrate stats to api/spi/internal split
+    * [HHH-6036] - integration documentation generation
+    * [HHH-6038] - Migrate to use newly separated gradle-upload-auth-plugin
+    * [HHH-6047] - allow nesting of ServiceRegistry
+    * [HHH-6050] - Remove direct compile-time dependencies to slf4j from build
+    * [HHH-6051] - Create a SessionFactory scoped ServiceRegistry
+    * [HHH-6052] - Make statistics a service
+    * [HHH-6073] - Dialects cannot use the Thread Context ClassLoader with AS7, please change to use the
+    * [HHH-6081] - Finish up Integrator
+    * [HHH-6088] - Move to slf4j-log4j12 for test logging
+
+
 Changes in version 4.0.0.Alpha1 (2011.03.09)
 ------------------------------------------------------------------------------------------------------------------------
 http://opensource.atlassian.com/projects/hibernate/browse/HHH/fixforversion/11161

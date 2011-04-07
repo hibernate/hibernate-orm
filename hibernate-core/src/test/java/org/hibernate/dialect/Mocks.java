@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.dialect;
+import javax.persistence.criteria.CriteriaBuilder;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -35,8 +36,12 @@ import java.sql.SQLException;
 @SuppressWarnings( {"UnnecessaryBoxing"})
 public class Mocks {
 
-	public static Connection createConnection(String dbName, int version) {
-		DatabaseMetaDataHandler metadataHandler = new DatabaseMetaDataHandler( dbName, version );
+	public static Connection createConnection(String databaseName, int majorVersion) {
+		return createConnection( databaseName, majorVersion, -9999 );
+	}
+
+	public static Connection createConnection(String databaseName, int majorVersion, int minorVersion) {
+		DatabaseMetaDataHandler metadataHandler = new DatabaseMetaDataHandler( databaseName, majorVersion, minorVersion );
 		ConnectionHandler connectionHandler = new ConnectionHandler();
 
 		DatabaseMetaData metadataProxy = ( DatabaseMetaData ) Proxy.newProxyInstance(
@@ -90,6 +95,7 @@ public class Mocks {
 	private static class DatabaseMetaDataHandler implements InvocationHandler {
 		private final String databaseName;
 		private final int majorVersion;
+		private final int minorVersion;
 
 		private Connection connectionProxy;
 
@@ -98,8 +104,13 @@ public class Mocks {
 		}
 
 		private DatabaseMetaDataHandler(String databaseName, int majorVersion) {
+			this( databaseName, majorVersion, -9999 );
+		}
+
+		private DatabaseMetaDataHandler(String databaseName, int majorVersion, int minorVersion) {
 			this.databaseName = databaseName;
 			this.majorVersion = majorVersion;
+			this.minorVersion = minorVersion;
 		}
 
 		public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
@@ -110,6 +121,10 @@ public class Mocks {
 
 			if ( "getDatabaseMajorVersion".equals( methodName ) ) {
 				return Integer.valueOf( majorVersion );
+			}
+
+			if ( "getDatabaseMinorVersion".equals( methodName ) ) {
+				return Integer.valueOf( minorVersion );
 			}
 
 			if ( "getConnection".equals( methodName ) ) {

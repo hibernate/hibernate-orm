@@ -91,6 +91,23 @@ public class PaginationTest extends BaseCoreFunctionalTestCase {
 
 		cleanupTestData();
 	}
+	@Test
+	public void testOffset(){
+		prepareTestData();
+		Session session = openSession();
+		session.beginTransaction();
+		List result;
+
+		result = generateBaseHQLQuery( session )
+				.setFirstResult( 3 )
+				.list();
+		result = generateBaseCriteria( session )
+				.setFirstResult( 3 )
+				.list();
+		session.getTransaction().commit();
+		session.close();
+		cleanupTestData();
+	}
 
 	@Test
 	@RequiresDialectFeature(

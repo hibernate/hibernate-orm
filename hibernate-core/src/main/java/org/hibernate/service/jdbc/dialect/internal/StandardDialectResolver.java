@@ -27,6 +27,8 @@ import java.sql.SQLException;
 import org.hibernate.HibernateLogger;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.dialect.DerbyTenFiveDialect;
+import org.hibernate.dialect.DerbyTenSixDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
@@ -78,7 +80,16 @@ public class StandardDialectResolver extends AbstractDialectResolver {
 		}
 
 		if ( "Apache Derby".equals( databaseName ) ) {
-			return new DerbyDialect();
+			final int databaseMinorVersion = metaData.getDatabaseMinorVersion();
+			if ( databaseMajorVersion > 10 || ( databaseMajorVersion == 10 && databaseMinorVersion >= 6 ) ) {
+				return new DerbyTenSixDialect();
+			}
+			else if ( databaseMajorVersion == 10 && databaseMinorVersion == 5 ) {
+				return new DerbyTenFiveDialect();
+			}
+			else {
+				return new DerbyDialect();
+			}
 		}
 
 		if ( "ingres".equalsIgnoreCase( databaseName ) ) {

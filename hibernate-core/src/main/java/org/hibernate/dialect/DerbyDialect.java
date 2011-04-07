@@ -40,7 +40,10 @@ import org.jboss.logging.Logger;
  * http://www.jroller.com/comments/kenlars99/Weblog/cloudscape_soon_to_be_derby
  *
  * @author Simon Johnston
+ *
+ * @deprecated HHH-6073
  */
+@Deprecated
 public class DerbyDialect extends DB2Dialect {
 
     private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, DerbyDialect.class.getName());
@@ -50,6 +53,7 @@ public class DerbyDialect extends DB2Dialect {
 
 	public DerbyDialect() {
 		super();
+		LOG.deprecatedDerbyDialect();
 		registerFunction( "concat", new DerbyConcatFunction() );
 		registerFunction( "trim", new AnsiTrimFunction() );
 		determineDriverVersion();

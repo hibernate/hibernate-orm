@@ -249,7 +249,7 @@ public class QueryTranslatorImpl implements FilterTranslator {
 
         if (LOG.isDebugEnabled()) {
 			ASTPrinter printer = new ASTPrinter( SqlTokenTypes.class );
-            LOG.debugf(printer.showAsString(w.getAST(), "--- SQL AST ---"));
+            LOG.debug( printer.showAsString( w.getAST(), "--- SQL AST ---" ) );
 		}
 
 		w.getParseErrorHandler().throwQueryException();
@@ -280,7 +280,7 @@ public class QueryTranslatorImpl implements FilterTranslator {
 	void showHqlAst(AST hqlAst) {
         if (LOG.isDebugEnabled()) {
 			ASTPrinter printer = new ASTPrinter( HqlTokenTypes.class );
-            LOG.debugf(printer.showAsString(hqlAst, "--- HQL AST ---"));
+            LOG.debug( printer.showAsString( hqlAst, "--- HQL AST ---" ) );
 		}
 	}
 

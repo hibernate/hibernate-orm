@@ -165,7 +165,17 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 		}
 	}
 
-	private static Dialect dialect = Dialect.getDialect();
+	private static Dialect dialect = determineDialect();
+
+	private static Dialect determineDialect() {
+		try {
+			return Dialect.getDialect();
+		}
+		catch( Exception e ) {
+			return new Dialect() {
+			};
+		}
+	}
 
 	protected Ignore convertSkipToIgnore(FrameworkMethod frameworkMethod) {
 		// @Skip

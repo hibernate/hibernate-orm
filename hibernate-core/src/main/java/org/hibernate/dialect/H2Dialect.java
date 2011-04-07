@@ -46,28 +46,32 @@ public class H2Dialect extends Dialect {
 
     private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, H2Dialect.class.getName());
 
-	private String querySequenceString;
+	private final String querySequenceString;
 
 	public H2Dialect() {
 		super();
 
-		querySequenceString = "select sequence_name from information_schema.sequences";
+		String querySequenceString = "select sequence_name from information_schema.sequences";
 		try {
 			// HHH-2300
-			final Class constants = ReflectHelper.classForName( "org.h2.engine.Constants" );
-			final int majorVersion = ( Integer ) constants.getDeclaredField( "VERSION_MAJOR" ).get( null );
-			final int minorVersion = ( Integer ) constants.getDeclaredField( "VERSION_MINOR" ).get( null );
-			final int buildId = ( Integer ) constants.getDeclaredField( "BUILD_ID" ).get( null );
+			final Class h2ConstantsClass = ReflectHelper.classForName( "org.h2.engine.Constants" );
+			final int majorVersion = ( Integer ) h2ConstantsClass.getDeclaredField( "VERSION_MAJOR" ).get( null );
+			final int minorVersion = ( Integer ) h2ConstantsClass.getDeclaredField( "VERSION_MINOR" ).get( null );
+			final int buildId = ( Integer ) h2ConstantsClass.getDeclaredField( "BUILD_ID" ).get( null );
 			if ( buildId < 32 ) {
 				querySequenceString = "select name from information_schema.sequences";
 			}
-            if (!(majorVersion > 1 || minorVersion > 2 || buildId >= 139)) LOG.unsupportedMultiTableBulkHqlJpaql(majorVersion,
-                                                                                                                 minorVersion,
-                                                                                                                 buildId);
+            if ( ! ( majorVersion > 1 || minorVersion > 2 || buildId >= 139 ) ) {
+				LOG.unsupportedMultiTableBulkHqlJpaql( majorVersion, minorVersion, buildId );
+			}
 		}
 		catch ( Exception e ) {
-			// ignore (probably H2 not in the classpath)
+			// probably H2 not in the classpath, though in certain app server environments it might just mean we are
+			// not using the correct classloader
+			LOG.undeterminedH2Version();
 		}
+
+		this.querySequenceString = querySequenceString;
 
 		registerColumnType( Types.BOOLEAN, "boolean" );
 		registerColumnType( Types.BIGINT, "bigint" );
@@ -298,7 +302,16 @@ public class H2Dialect extends Dialect {
 	}
 
 	@Override
+	public String getCreateTemporaryTablePostfix() {
+		// actually 2 different options are specified here:
+		//		1) [on commit drop] - says to drop the table on transaction commit
+		//		2) [transactional] - says to not perform an implicit commit of any current transaction
+		return "on commit drop transactional";
+	}
+
+	@Override
 	public Boolean performTemporaryTableDDLInIsolation() {
+		// explicitly create the table using the same connection and transaction
 		return Boolean.FALSE;
 	}
 

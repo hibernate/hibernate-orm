@@ -958,10 +958,10 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	}
 
 	public void flush() {
+		if ( !isTransactionInProgress() ) {
+			throw new TransactionRequiredException( "no transaction is in progress" );
+		}
 		try {
-			if ( !isTransactionInProgress() ) {
-				throw new TransactionRequiredException( "no transaction is in progress" );
-			}
 			getSession().flush();
 		}
 		catch ( RuntimeException e ) {
@@ -1074,10 +1074,11 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 
 	public void lock(Object entity, LockModeType lockModeType, Map<String, Object> properties) {
 		LockOptions lockOptions = null;
+		if ( !isTransactionInProgress() ) {
+			throw new TransactionRequiredException( "no transaction is in progress" );
+		}
+
 		try {
-			if ( !isTransactionInProgress() ) {
-				throw new TransactionRequiredException( "no transaction is in progress" );
-			}
 			if ( !contains( entity ) ) {
 				throw new IllegalArgumentException( "entity not in the persistence context" );
 			}

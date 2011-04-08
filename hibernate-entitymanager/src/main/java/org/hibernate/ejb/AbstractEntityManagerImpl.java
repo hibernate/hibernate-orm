@@ -1143,6 +1143,9 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	}
 
 	public void joinTransaction() {
+		if( !isOpen() ){
+			throw new IllegalStateException( "EntityManager is closed" );
+		}
 		joinTransaction( false );
 	}
 

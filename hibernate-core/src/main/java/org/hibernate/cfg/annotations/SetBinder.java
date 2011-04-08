@@ -22,13 +22,13 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg.annotations;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.annotations.OrderBy;
-import org.hibernate.cfg.Environment;
-import org.hibernate.mapping.Collection;
-import org.hibernate.mapping.PersistentClass;
 
 import org.jboss.logging.Logger;
+
+import org.hibernate.annotations.OrderBy;
+import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.PersistentClass;
 
 /**
  * Bind a set.
@@ -52,10 +52,8 @@ public class SetBinder extends CollectionBinder {
 
 	@Override
     public void setSqlOrderBy(OrderBy orderByAnn) {
-		// *annotation* binder, jdk 1.5, ... am i missing something?
 		if ( orderByAnn != null ) {
-            if (Environment.jvmSupportsLinkedHashCollections()) super.setSqlOrderBy(orderByAnn);
-            else LOG.orderByAttributeIgnored();
+            super.setSqlOrderBy( orderByAnn );
 		}
 	}
 }

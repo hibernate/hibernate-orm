@@ -93,11 +93,6 @@ public class JdbcTimestampTypeDescriptor extends AbstractTypeDescriptor<Date> {
 		int n1 = oneIsTimestamp ? ( (Timestamp) one ).getNanos() : 0;
 		int n2 = anotherIsTimestamp ? ( (Timestamp) another ).getNanos() : 0;
 
-		if ( !Environment.jvmHasJDK14Timestamp() ) {
-			t1 += n1 / 1000000;
-			t2 += n2 / 1000000;
-		}
-
 		if ( t1 != t2 ) {
 			return false;
 		}

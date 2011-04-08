@@ -561,10 +561,7 @@ public final class Environment {
 	private static final BytecodeProvider BYTECODE_PROVIDER_INSTANCE;
 	private static final boolean ENABLE_BINARY_STREAMS;
 	private static final boolean ENABLE_REFLECTION_OPTIMIZER;
-	private static final boolean JVM_SUPPORTS_LINKED_HASH_COLLECTIONS;
 	private static final boolean JVM_HAS_TIMESTAMP_BUG;
-	private static final boolean JVM_HAS_JDK14_TIMESTAMP;
-	private static final boolean JVM_SUPPORTS_GET_GENERATED_KEYS;
 
 	private static final Properties GLOBAL_PROPERTIES;
 	private static final HashMap ISOLATION_LEVELS = new HashMap();
@@ -642,43 +639,22 @@ public final class Environment {
 		verifyProperties(GLOBAL_PROPERTIES);
 
 		ENABLE_BINARY_STREAMS = ConfigurationHelper.getBoolean(USE_STREAMS_FOR_BINARY, GLOBAL_PROPERTIES);
+        if (ENABLE_BINARY_STREAMS) {
+			LOG.usingStreams();
+		}
+
 		ENABLE_REFLECTION_OPTIMIZER = ConfigurationHelper.getBoolean(USE_REFLECTION_OPTIMIZER, GLOBAL_PROPERTIES);
+        if (ENABLE_REFLECTION_OPTIMIZER) {
+			LOG.usingReflectionOptimizer();
+		}
 
-        if (ENABLE_BINARY_STREAMS) LOG.usingStreams();
-        if (ENABLE_REFLECTION_OPTIMIZER) LOG.usingReflectionOptimizer();
 		BYTECODE_PROVIDER_INSTANCE = buildBytecodeProvider( GLOBAL_PROPERTIES );
-
-		boolean getGeneratedKeysSupport;
-		try {
-			Statement.class.getMethod("getGeneratedKeys", (Class[])null);
-			getGeneratedKeysSupport = true;
-		}
-		catch (NoSuchMethodException nsme) {
-			getGeneratedKeysSupport = false;
-		}
-		JVM_SUPPORTS_GET_GENERATED_KEYS = getGeneratedKeysSupport;
-        if (!JVM_SUPPORTS_GET_GENERATED_KEYS) LOG.generatedKeysNotSupported();
-
-		boolean linkedHashSupport;
-		try {
-			Class.forName("java.util.LinkedHashSet");
-			linkedHashSupport = true;
-		}
-		catch (ClassNotFoundException cnfe) {
-			linkedHashSupport = false;
-		}
-		JVM_SUPPORTS_LINKED_HASH_COLLECTIONS = linkedHashSupport;
-        if (!JVM_SUPPORTS_LINKED_HASH_COLLECTIONS) LOG.linkedMapsAndSetsNotSupported();
 
 		long x = 123456789;
 		JVM_HAS_TIMESTAMP_BUG = new Timestamp(x).getTime() != x;
-        if (JVM_HAS_TIMESTAMP_BUG) LOG.usingTimestampWorkaround();
-
-		Timestamp t = new Timestamp(0);
-		t.setNanos(5 * 1000000);
-		JVM_HAS_JDK14_TIMESTAMP = t.getTime() == 5;
-        if (JVM_HAS_JDK14_TIMESTAMP) LOG.usingJdk14TimestampHandling();
-        else LOG.usingPreJdk14TimestampHandling();
+        if (JVM_HAS_TIMESTAMP_BUG) {
+			LOG.usingTimestampWorkaround();
+		}
 	}
 
 	public static BytecodeProvider getBytecodeProvider() {
@@ -696,49 +672,6 @@ public final class Environment {
 	 */
 	public static boolean jvmHasTimestampBug() {
 		return JVM_HAS_TIMESTAMP_BUG;
-	}
-
-	/**
-	 * Does this JVM handle {@link java.sql.Timestamp} in the JDK 1.4 compliant way wrt to nano rolling>
-	 *
-	 * @return True if the JDK 1.4 (JDBC3) specification for {@link java.sql.Timestamp} nano rolling is adhered to.
-	 *
-	 * @deprecated Starting with 3.3 Hibernate requires JDK 1.4 or higher
-	 */
-	@Deprecated
-    public static boolean jvmHasJDK14Timestamp() {
-		return JVM_HAS_JDK14_TIMESTAMP;
-	}
-
-	/**
-	 * Does this JVM support {@link java.util.LinkedHashSet} and {@link java.util.LinkedHashMap}?
-	 * <p/>
-	 * Note, this is true for JDK 1.4 and above; hence the deprecation.
-	 *
-	 * @return True if {@link java.util.LinkedHashSet} and {@link java.util.LinkedHashMap} are available.
-	 *
-	 * @deprecated Starting with 3.3 Hibernate requires JDK 1.4 or higher
-	 * @see java.util.LinkedHashSet
-	 * @see java.util.LinkedHashMap
-	 */
-	@Deprecated
-    public static boolean jvmSupportsLinkedHashCollections() {
-		return JVM_SUPPORTS_LINKED_HASH_COLLECTIONS;
-	}
-
-	/**
-	 * Does this JDK/JVM define the JDBC {@link Statement} interface with a 'getGeneratedKeys' method?
-	 * <p/>
-	 * Note, this is true for JDK 1.4 and above; hence the deprecation.
-	 *
-	 * @return True if generated keys can be retrieved via Statement; false otherwise.
-	 *
-	 * @see Statement
-	 * @deprecated Starting with 3.3 Hibernate requires JDK 1.4 or higher
-	 */
-	@Deprecated
-    public static boolean jvmSupportsGetGeneratedKeys() {
-		return JVM_SUPPORTS_GET_GENERATED_KEYS;
 	}
 
 	/**

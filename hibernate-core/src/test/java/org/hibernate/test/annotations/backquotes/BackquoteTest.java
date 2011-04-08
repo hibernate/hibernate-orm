@@ -34,12 +34,12 @@ public class BackquoteTest extends BaseUnitTestCase {
 	private ServiceRegistry serviceRegistry;
 
 	@Before
-    protected void setUp() {
+    public void setUp() {
 		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() );
 	}
 
 	@After
-    protected void tearDown() {
+    public void tearDown() {
         if (serviceRegistry != null) ServiceRegistryBuilder.destroy(serviceRegistry);
 	}
 

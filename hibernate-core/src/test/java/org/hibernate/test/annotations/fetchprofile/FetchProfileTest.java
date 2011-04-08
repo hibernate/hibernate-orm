@@ -35,6 +35,7 @@ import org.hibernate.service.ServiceRegistry;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Test;
 
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.TestForIssue;
@@ -56,15 +57,16 @@ public class FetchProfileTest extends BaseUnitTestCase {
 	private ServiceRegistry serviceRegistry;
 
 	@Before
-    protected void setUp() {
+    public void setUp() {
 		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() );
 	}
 
 	@After
-    protected void tearDown() {
+    public void tearDown() {
         if (serviceRegistry != null) ServiceRegistryBuilder.destroy(serviceRegistry);
 	}
 
+	@Test
 	public void testFetchProfileConfigured() {
 		Configuration config = new Configuration();
 		config.addAnnotatedClass( Customer.class );
@@ -85,6 +87,7 @@ public class FetchProfileTest extends BaseUnitTestCase {
 		);
 	}
 
+	@Test
 	public void testWrongAssociationName() {
 		Configuration config = new Configuration();
 		config.addAnnotatedClass( Customer2.class );
@@ -100,6 +103,7 @@ public class FetchProfileTest extends BaseUnitTestCase {
 		}
 	}
 
+	@Test
 	public void testWrongClass() {
 		Configuration config = new Configuration();
 		config.addAnnotatedClass( Customer3.class );
@@ -115,6 +119,7 @@ public class FetchProfileTest extends BaseUnitTestCase {
 		}
 	}
 
+	@Test
 	public void testUnsupportedFetchMode() {
 		Configuration config = new Configuration();
 		config.addAnnotatedClass( Customer4.class );
@@ -130,6 +135,7 @@ public class FetchProfileTest extends BaseUnitTestCase {
 		}
 	}
 
+	@Test
 	public void testXmlOverride() {
 		Configuration config = new Configuration();
 		config.addAnnotatedClass( Customer5.class );
@@ -162,6 +168,7 @@ public class FetchProfileTest extends BaseUnitTestCase {
 		}
 	}
 
+	@Test
 	public void testPackageConfiguredFetchProfile() {
 		Configuration config = new Configuration();
 		config.addAnnotatedClass( Customer.class );

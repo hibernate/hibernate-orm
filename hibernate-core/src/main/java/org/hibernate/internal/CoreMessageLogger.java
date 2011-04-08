@@ -90,10 +90,6 @@ public interface CoreMessageLogger extends BasicLogger {
     void attemptToMapColumnToNoTargetColumn( String loggableString,
                                              String name );
 
-    @LogMessage( level = WARN )
-    @Message( value = "Attribute \"order-by\" ignored in JDK1.3 or less", id = 5 )
-    void attributeIgnored();
-
     @LogMessage( level = INFO )
     @Message( value = "Autocommit mode: %s", id = 6 )
     void autoCommitMode( boolean autocommit );
@@ -525,10 +521,6 @@ public interface CoreMessageLogger extends BasicLogger {
     void foundMappingDocument( String name );
 
     @LogMessage( level = INFO )
-    @Message( value = "JVM does not support Statement.getGeneratedKeys()", id = 110 )
-    void generatedKeysNotSupported();
-
-    @LogMessage( level = INFO )
     @Message( value = "Generate SQL with comments: %s", id = 111 )
     void generateSqlWithComments( String enabledDisabled );
 
@@ -724,10 +716,6 @@ public interface CoreMessageLogger extends BasicLogger {
     @Message( value = "Lazy property fetching available for: %s", id = 157 )
     void lazyPropertyFetchingAvailable( String name );
 
-    @LogMessage( level = INFO )
-    @Message( value = "JVM does not support LinkedHashMap, LinkedHashSet - ordered maps and sets disabled", id = 158 )
-    void linkedMapsAndSetsNotSupported();
-
     @LogMessage( level = WARN )
     @Message( value = "In CollectionLoadContext#endLoadingCollections, localLoadingCollectionKeys contained [%s], but no LoadingCollectionEntry was found in loadContexts", id = 159 )
     void loadingCollectionKeyNotFound( CollectionKey collectionKey );
@@ -860,10 +848,6 @@ public interface CoreMessageLogger extends BasicLogger {
     @LogMessage( level = WARN )
     @Message( value = "@OrderBy not allowed for an indexed collection, annotation ignored.", id = 189 )
     void orderByAnnotationIndexedCollection();
-
-    @LogMessage( level = WARN )
-    @Message( value = "Attribute \"order-by\" ignored in JDK1.3 or less", id = 190 )
-    void orderByAttributeIgnored();
 
     @LogMessage( level = INFO )
     @Message( value = "Order SQL inserts for batching: %s", id = 191 )
@@ -1744,17 +1728,9 @@ public interface CoreMessageLogger extends BasicLogger {
     @Message( value = "Using Hibernate built-in connection pool (not for production use!)", id = 402 )
     void usingHibernateBuiltInConnectionPool();
 
-    @LogMessage( level = INFO )
-    @Message( value = "Using JDK 1.4 java.sql.Timestamp handling", id = 403 )
-    void usingJdk14TimestampHandling();
-
     @LogMessage( level = ERROR )
     @Message( value = "Don't use old DTDs, read the Hibernate 3.x Migration Guide!", id = 404 )
     void usingOldDtd();
-
-    @LogMessage( level = INFO )
-    @Message( value = "Using pre JDK 1.4 java.sql.Timestamp handling", id = 405 )
-    void usingPreJdk14TimestampHandling();
 
     @LogMessage( level = INFO )
     @Message( value = "Using bytecode reflection optimizer", id = 406 )

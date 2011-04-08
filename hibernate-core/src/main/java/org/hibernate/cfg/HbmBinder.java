@@ -1361,10 +1361,7 @@ public final class HbmBinder {
 
 		Attribute orderNode = node.attribute( "order-by" );
 		if ( orderNode != null ) {
-			if ( Environment.jvmSupportsLinkedHashCollections() || ( collection instanceof Bag ) ) {
-				collection.setOrderBy( orderNode.getValue() );
-			}
- else LOG.attributeIgnored();
+			collection.setOrderBy( orderNode.getValue() );
 		}
 		Attribute whereNode = node.attribute( "where" );
 		if ( whereNode != null ) {

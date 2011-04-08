@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.StringTokenizer;
 import org.hibernate.AssertionFailure;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.JoinSequence;
 import org.hibernate.engine.LoadQueryInfluencers;
@@ -60,7 +60,7 @@ import org.jboss.logging.Logger;
  */
 public class JoinProcessor implements SqlTokenTypes {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, JoinProcessor.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, JoinProcessor.class.getName());
 
 	private final HqlSqlWalker walker;
 	private final SyntheticAndFactory syntheticAndFactory;

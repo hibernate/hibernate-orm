@@ -21,13 +21,17 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.cache;
+package org.hibernate.cache.internal;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
 import org.jboss.logging.Logger;
+
+import org.hibernate.cache.Cache;
+import org.hibernate.cache.CacheException;
+import org.hibernate.cache.Timestamper;
 
 /**
  * EHCache plugin for Hibernate
@@ -43,7 +47,7 @@ import org.jboss.logging.Logger;
  */
 public class EhCache implements Cache {
 
-    private static final EhCacheLogger LOG = Logger.getMessageLogger(EhCacheLogger.class, EhCache.class.getName());
+    private static final EhCacheMessageLogger LOG = Logger.getMessageLogger(EhCacheMessageLogger.class, EhCache.class.getName());
 
 	private static final int SIXTY_THOUSAND_MS = 60000;
 
@@ -64,7 +68,7 @@ public class EhCache implements Cache {
 	 *
 	 * @param key the key of the element to return.
 	 * @return The value placed into the cache with an earlier put, or null if not found or expired
-	 * @throws CacheException
+	 * @throws org.hibernate.cache.CacheException
 	 */
 	public Object get(Object key) throws CacheException {
 		try {

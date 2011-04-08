@@ -23,10 +23,11 @@
  */
 package org.hibernate.ejb.test.emops;
 
-import static org.hibernate.testing.TestLogger.LOG;
 import java.util.Map;
 import javax.persistence.EntityManager;
 import javax.persistence.OptimisticLockException;
+
+import org.jboss.logging.Logger;
 
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
@@ -37,6 +38,8 @@ import org.junit.Test;
  * @author Emmanuel Bernard
  */
 public class RemoveTest extends BaseEntityManagerFunctionalTestCase {
+	private static final Logger log = Logger.getLogger( RemoveTest.class );
+
 	@Test
 	public void testRemove() {
 		Race race = new Race();
@@ -100,7 +103,7 @@ public class RemoveTest extends BaseEntityManagerFunctionalTestCase {
 			Assert.fail( "should have an optimistic lock exception" );
 		}
         catch( OptimisticLockException e ) {
-            LOG.debug("success");
+            log.debug("success");
 		}
 		finally {
 			em2.getTransaction().rollback();

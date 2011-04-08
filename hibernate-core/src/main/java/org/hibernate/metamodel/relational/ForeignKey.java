@@ -26,7 +26,8 @@ package org.hibernate.metamodel.relational;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
+
 import org.jboss.logging.Logger;
 import org.jboss.logging.Logger.Level;
 
@@ -41,7 +42,7 @@ import org.jboss.logging.Logger.Level;
  */
 public class ForeignKey extends AbstractConstraint implements Constraint, Exportable {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, AbstractConstraint.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, AbstractConstraint.class.getName());
 
 	private final TableSpecification targetTable;
 	private List<Column> targetColumns;
@@ -83,7 +84,7 @@ public class ForeignKey extends AbstractConstraint implements Constraint, Export
 	public void addColumnMapping(Column sourceColumn, Column targetColumn) {
 		if ( targetColumn == null ) {
 			if ( targetColumns != null ) {
-				if (LOG.isEnabled(Level.WARN)) LOG.attemptToMapColumnToNoTargetColumn(sourceColumn.toLoggableString(), getName());
+				if (LOG.isEnabled( Level.WARN )) LOG.attemptToMapColumnToNoTargetColumn(sourceColumn.toLoggableString(), getName());
 			}
 		}
 		else {

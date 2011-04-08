@@ -36,7 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.QueryException;
 import org.hibernate.engine.JoinSequence;
 import org.hibernate.engine.ParameterBinder;
@@ -117,7 +117,7 @@ import antlr.collections.AST;
  */
 public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, ParameterBinder.NamedParameterSource {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, HqlSqlWalker.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, HqlSqlWalker.class.getName());
 
 	private final QueryTranslatorImpl queryTranslatorImpl;
 	private final HqlParser hqlParser;

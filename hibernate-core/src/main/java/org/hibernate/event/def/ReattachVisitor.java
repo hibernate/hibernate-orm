@@ -24,7 +24,7 @@
 package org.hibernate.event.def;
 import java.io.Serializable;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.event.EventSource;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -40,7 +40,7 @@ import org.jboss.logging.Logger;
  */
 public abstract class ReattachVisitor extends ProxyVisitor {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, ReattachVisitor.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, ReattachVisitor.class.getName());
 
 	private final Serializable ownerIdentifier;
 	private final Object owner;

@@ -30,7 +30,8 @@ import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.junit.After;
 import org.junit.runner.RunWith;
 
-import org.hibernate.testing.TestLogger;
+import org.jboss.logging.Logger;
+
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 
 /**
@@ -40,10 +41,12 @@ import org.hibernate.testing.jta.TestingJtaBootstrap;
  */
 @RunWith( CustomRunner.class )
 public abstract class BaseUnitTestCase {
+	private static final Logger log = Logger.getLogger( BaseUnitTestCase.class );
+
 	@After
 	public void releaseTransactions() {
 		if ( JtaStatusHelper.isActive( TestingJtaBootstrap.INSTANCE.getTransactionManager() ) ) {
-			TestLogger.LOG.warn( "Cleaning up unfinished transaction" );
+			log.warn( "Cleaning up unfinished transaction" );
 			try {
 				TestingJtaBootstrap.INSTANCE.getTransactionManager().rollback();
 			}

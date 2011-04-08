@@ -25,23 +25,20 @@ package org.hibernate.test.cache.infinispan.functional.classloader;
 
 import javax.transaction.TransactionManager;
 
-import org.hibernate.test.cache.infinispan.functional.Item;
 import org.infinispan.Cache;
 import org.infinispan.manager.CacheContainer;
 import org.infinispan.manager.EmbeddedCacheManager;
+import org.jboss.logging.Logger;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.cache.StandardQueryCache;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cfg.Configuration;
 
-import static org.hibernate.testing.TestLogger.LOG;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-import org.junit.After;
 import org.junit.AfterClass;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -61,6 +58,8 @@ import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeTestCase;
  * @since 3.5
  */
 public class IsolatedClassLoaderTest extends DualNodeTestCase {
+	private static final Logger log = Logger.getLogger( IsolatedClassLoaderTest.class );
+
 	protected static final long SLEEP_TIME = 300L;
 
 	private Cache localQueryCache;
@@ -144,7 +143,7 @@ public class IsolatedClassLoaderTest extends DualNodeTestCase {
 
 		ClassLoader cl = Thread.currentThread().getContextClassLoader();
 		Thread.currentThread().setContextClassLoader( cl.getParent() );
-		LOG.info( "TCCL is " + cl.getParent() );
+		log.info( "TCCL is " + cl.getParent() );
 
 		Account acct = new Account();
 		acct.setAccountHolder( new AccountHolder() );
@@ -157,7 +156,7 @@ public class IsolatedClassLoaderTest extends DualNodeTestCase {
 		}
 		catch (Exception e) {
 			if ( e.getCause() instanceof ClassNotFoundException ) {
-				LOG.info( "Caught exception as desired", e );
+				log.info( "Caught exception as desired", e );
 			}
 			else {
 				throw new IllegalStateException( "Unexpected exception", e );
@@ -165,7 +164,7 @@ public class IsolatedClassLoaderTest extends DualNodeTestCase {
 		}
 
 		Thread.currentThread().setContextClassLoader( cl );
-		LOG.info( "TCCL is " + cl );
+		log.info( "TCCL is " + cl );
 		localReplicatedCache.put( "isolated2", acct );
 		assertEquals( acct.getClass().getName(), remoteReplicatedCache.get( "isolated2" ).getClass().getName() );
 	}
@@ -231,7 +230,7 @@ public class IsolatedClassLoaderTest extends DualNodeTestCase {
 		assertEquals( "Query cache used", 1, localQueryListener.getSawRegionModificationCount() );
 		localQueryListener.clearSawRegionModification();
 
-//      LOG.info("First query (get count for branch + " + branch + " ) on node0 done, contents of local query cache are: " + TestingUtil.printCache(localQueryCache));
+//      log.info("First query (get count for branch + " + branch + " ) on node0 done, contents of local query cache are: " + TestingUtil.printCache(localQueryCache));
 
 		// Sleep a bit to allow async repl to happen
 		sleep( SLEEP_TIME );
@@ -240,7 +239,7 @@ public class IsolatedClassLoaderTest extends DualNodeTestCase {
 		remoteQueryListener.clearSawRegionModification();
 
 		// Do query again from node 1
-		LOG.info( "Repeat first query (get count for branch + " + branch + " ) on remote node" );
+		log.info( "Repeat first query (get count for branch + " + branch + " ) on remote node" );
 		assertEquals( "63088 has correct # of accounts", 6, dao1.getCountForBranch( branch, useNamedRegion ) );
 		assertEquals( "Query cache used", 1, remoteQueryListener.getSawRegionModificationCount() );
 		remoteQueryListener.clearSawRegionModification();
@@ -250,15 +249,15 @@ public class IsolatedClassLoaderTest extends DualNodeTestCase {
 		assertEquals( "Query cache used", 1, localQueryListener.getSawRegionModificationCount() );
 		localQueryListener.clearSawRegionModification();
 
-		LOG.info( "First query on node 1 done" );
+		log.info( "First query on node 1 done" );
 
 		// Sleep a bit to allow async repl to happen
 		sleep( SLEEP_TIME );
 
 		// Do some more queries on node 0
-		LOG.info( "Do query Smith's branch" );
+		log.info( "Do query Smith's branch" );
 		assertEquals( "Correct branch for Smith", "94536", dao0.getBranch( dao0.getSmith(), useNamedRegion ) );
-		LOG.info( "Do query Jone's balance" );
+		log.info( "Do query Jone's balance" );
 		assertEquals( "Correct high balances for Jones", 40, dao0.getTotalBalance( dao0.getJones(), useNamedRegion ) );
 
 		assertEquals( "Query cache used", 2, localQueryListener.getSawRegionModificationCount() );
@@ -266,7 +265,7 @@ public class IsolatedClassLoaderTest extends DualNodeTestCase {
 //      // Clear the access state
 //      localQueryListener.getSawRegionAccess("???");
 
-		LOG.info( "Second set of queries on node0 done" );
+		log.info( "Second set of queries on node0 done" );
 
 		// Sleep a bit to allow async repl to happen
 		sleep( SLEEP_TIME );
@@ -275,12 +274,12 @@ public class IsolatedClassLoaderTest extends DualNodeTestCase {
 		assertEquals( "Query cache remotely modified", 2, remoteQueryListener.getSawRegionModificationCount() );
 		remoteQueryListener.clearSawRegionModification();
 
-		LOG.info( "Repeat second set of queries on node1" );
+		log.info( "Repeat second set of queries on node1" );
 
 		// Do queries again from node 1
-		LOG.info( "Again query Smith's branch" );
+		log.info( "Again query Smith's branch" );
 		assertEquals( "Correct branch for Smith", "94536", dao1.getBranch( dao1.getSmith(), useNamedRegion ) );
-		LOG.info( "Again query Jone's balance" );
+		log.info( "Again query Jone's balance" );
 		assertEquals( "Correct high balances for Jones", 40, dao1.getTotalBalance( dao1.getJones(), useNamedRegion ) );
 
 		// Should be no change; query was already there
@@ -288,7 +287,7 @@ public class IsolatedClassLoaderTest extends DualNodeTestCase {
 		assertEquals( "Query cache accessed", 2, remoteQueryListener.getSawRegionAccessCount() );
 		remoteQueryListener.clearSawRegionAccess();
 
-		LOG.info( "Second set of queries on node1 done" );
+		log.info( "Second set of queries on node1 done" );
 
 		// allow async to propagate
 		sleep( SLEEP_TIME );
@@ -303,7 +302,7 @@ public class IsolatedClassLoaderTest extends DualNodeTestCase {
 		assertEquals( "63088 has correct # of accounts", 7, dao0.getCountForBranch( "63088", useNamedRegion ) );
 		assertEquals( "Correct branch for Smith", "63088", dao0.getBranch( dao0.getSmith(), useNamedRegion ) );
 		assertEquals( "Correct high balances for Jones", 50, dao0.getTotalBalance( dao0.getJones(), useNamedRegion ) );
-		LOG.info( "Third set of queries on node0 done" );
+		log.info( "Third set of queries on node0 done" );
 	}
 
 	protected void setupEntities(ClassLoaderTestDAO dao) throws Exception {
@@ -321,7 +320,7 @@ public class IsolatedClassLoaderTest extends DualNodeTestCase {
 		dao.createAccount( dao.getBarney(), new Integer( 3002 ), new Integer( 15 ), "63088" );
 		dao.createAccount( dao.getBarney(), new Integer( 3003 ), new Integer( 20 ), "63088" );
 
-		LOG.info( "Standard entities created" );
+		log.info( "Standard entities created" );
 	}
 
 	protected void resetRegionUsageState(CacheAccessListener localListener, CacheAccessListener remoteListener) {
@@ -340,13 +339,13 @@ public class IsolatedClassLoaderTest extends DualNodeTestCase {
 		remoteListener.getSawRegionAccess( stdName );
 		remoteListener.getSawRegionAccess( acctName );
 
-		LOG.info( "Region usage state cleared" );
+		log.info( "Region usage state cleared" );
 	}
 
 	protected void modifyEntities(ClassLoaderTestDAO dao) throws Exception {
 		dao.updateAccountBranch( 1001, "63088" );
 		dao.updateAccountBalance( 2001, 15 );
 
-		LOG.info( "Entities modified" );
+		log.info( "Entities modified" );
 	}
 }

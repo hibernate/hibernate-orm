@@ -25,7 +25,7 @@ package org.hibernate.dialect;
 
 import java.sql.SQLException;
 import java.sql.Types;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.AvgWithArgumentCastFunction;
 import org.hibernate.dialect.function.NoArgSQLFunction;
@@ -44,7 +44,7 @@ import org.jboss.logging.Logger;
  */
 public class H2Dialect extends Dialect {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, H2Dialect.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, H2Dialect.class.getName());
 
 	private final String querySequenceString;
 

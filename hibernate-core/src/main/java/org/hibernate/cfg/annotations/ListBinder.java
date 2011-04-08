@@ -25,7 +25,7 @@ package org.hibernate.cfg.annotations;
 
 import java.util.Map;
 import org.hibernate.AnnotationException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.OrderBy;
 import org.hibernate.annotations.Sort;
@@ -55,7 +55,7 @@ import org.jboss.logging.Logger;
  */
 @SuppressWarnings({"unchecked", "serial"})
 public class ListBinder extends CollectionBinder {
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, ListBinder.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, ListBinder.class.getName());
 
 	public ListBinder() {
 	}

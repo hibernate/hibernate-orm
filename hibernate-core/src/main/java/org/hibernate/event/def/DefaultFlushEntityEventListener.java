@@ -30,7 +30,7 @@ import org.jboss.logging.Logger;
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.action.internal.DelayedPostInsertIdentifier;
 import org.hibernate.action.internal.EntityUpdateAction;
@@ -56,7 +56,7 @@ import org.hibernate.type.Type;
  */
 public class DefaultFlushEntityEventListener implements FlushEntityEventListener {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
                                                                        DefaultFlushEntityEventListener.class.getName());
 
 	/**

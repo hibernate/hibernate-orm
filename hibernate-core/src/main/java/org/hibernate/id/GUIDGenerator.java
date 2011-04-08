@@ -27,7 +27,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.engine.SessionImplementor;
 import org.jboss.logging.Logger;
 
@@ -38,7 +38,7 @@ import org.jboss.logging.Logger;
  */
 public class GUIDGenerator implements IdentifierGenerator {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, GUIDGenerator.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, GUIDGenerator.class.getName());
 	private static boolean warned = false;
 
 	public GUIDGenerator() {

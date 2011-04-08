@@ -24,7 +24,8 @@
 package org.hibernate.cache.impl.bridge;
 
 import java.util.Properties;
-import org.hibernate.HibernateLogger;
+
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.cache.CacheDataDescription;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.CacheProvider;
@@ -50,7 +51,7 @@ import org.jboss.logging.Logger;
 public class RegionFactoryCacheProviderBridge implements RegionFactory {
 	public static final String DEF_PROVIDER = NoCacheProvider.class.getName();
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
                                                                        RegionFactoryCacheProviderBridge.class.getName());
 
 	private CacheProvider cacheProvider;

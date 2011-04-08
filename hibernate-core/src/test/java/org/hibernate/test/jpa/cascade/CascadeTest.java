@@ -23,10 +23,11 @@
  */
 package org.hibernate.test.jpa.cascade;
 
+import org.jboss.logging.Logger;
+
 import org.hibernate.Session;
 import org.hibernate.TransientObjectException;
 
-import static org.hibernate.testing.TestLogger.LOG;
 import static org.junit.Assert.fail;
 
 import org.junit.Test;
@@ -47,6 +48,8 @@ import org.hibernate.test.jpa.AbstractJPATest;
  * @author Steve Ebersole
  */
 public class CascadeTest extends AbstractJPATest {
+	private static final Logger log = Logger.getLogger( CascadeTest.class );
+
 	public String[] getMappings() {
 		return new String[] { "jpa/cascade/ParentChild.hbm.xml" };
 	}
@@ -69,7 +72,7 @@ public class CascadeTest extends AbstractJPATest {
 			}
 			catch( TransientObjectException e ) {
 				// expected result
-				LOG.trace( "handled expected exception", e );
+				log.trace( "handled expected exception", e );
 				s.getTransaction().rollback();
 			}
 			finally {
@@ -98,7 +101,7 @@ public class CascadeTest extends AbstractJPATest {
 			}
 			catch( TransientObjectException e ) {
 				// expected result
-				LOG.trace( "handled expected exception", e );
+				log.trace( "handled expected exception", e );
 				s.getTransaction().rollback();
 			}
 			finally {
@@ -127,7 +130,7 @@ public class CascadeTest extends AbstractJPATest {
 			}
 			catch( TransientObjectException e ) {
 				// expected result
-				LOG.trace( "handled expected exception", e );
+				log.trace( "handled expected exception", e );
 				s.getTransaction().rollback();
 			}
 			finally {
@@ -154,7 +157,7 @@ public class CascadeTest extends AbstractJPATest {
 			}
 			catch( TransientObjectException e ) {
 				// expected result
-				LOG.trace( "handled expected exception", e );
+				log.trace( "handled expected exception", e );
 				s.getTransaction().rollback();
 			}
 			finally {
@@ -181,7 +184,7 @@ public class CascadeTest extends AbstractJPATest {
 			}
 			catch( TransientObjectException e ) {
 				// expected result
-				LOG.trace( "handled expected exception", e );
+				log.trace( "handled expected exception", e );
 				s.getTransaction().rollback();
 			}
 			finally {
@@ -207,7 +210,7 @@ public class CascadeTest extends AbstractJPATest {
 			}
 			catch( TransientObjectException e ) {
 				// expected result
-				LOG.trace( "handled expected exception", e );
+				log.trace( "handled expected exception", e );
 				s.getTransaction().rollback();
 			}
 			finally {
@@ -233,7 +236,7 @@ public class CascadeTest extends AbstractJPATest {
 			}
 			catch( TransientObjectException e ) {
 				// expected result
-				LOG.trace( "handled expected exception", e );
+				log.trace( "handled expected exception", e );
 				s.getTransaction().rollback();
 			}
 			finally {
@@ -260,7 +263,7 @@ public class CascadeTest extends AbstractJPATest {
 			}
 			catch( TransientObjectException e ) {
 				// expected result
-				LOG.trace( "handled expected exception : " + e );
+				log.trace( "handled expected exception : " + e );
 				s.getTransaction().rollback();
 			}
 			finally {
@@ -287,7 +290,7 @@ public class CascadeTest extends AbstractJPATest {
 			}
 			catch( TransientObjectException e ) {
 				// expected result
-				LOG.trace( "handled expected exception : " + e );
+				log.trace( "handled expected exception : " + e );
 				s.getTransaction().rollback();
 			}
 			finally {
@@ -314,7 +317,7 @@ public class CascadeTest extends AbstractJPATest {
 			s.getTransaction().commit();
 		}
 		catch( Throwable t ) {
-			LOG.warn( "unable to cleanup test data : " + t );
+			log.warn( "unable to cleanup test data : " + t );
 		}
 		finally {
 			if ( s != null ) {

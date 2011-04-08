@@ -32,7 +32,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.loader.CollectionAliases;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -49,7 +49,7 @@ import org.jboss.logging.Logger;
 public class PersistentArrayHolder extends AbstractPersistentCollection {
 	protected Object array;
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, PersistentArrayHolder.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, PersistentArrayHolder.class.getName());
 
 	//just to help out during the load (ugly, i know)
 	private transient Class elementClass;

@@ -40,7 +40,7 @@ import org.jboss.logging.Logger;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cache;
@@ -96,7 +96,7 @@ import org.hibernate.mapping.Value;
  * @author Emmanuel Bernard
  */
 public class EntityBinder {
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, EntityBinder.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, EntityBinder.class.getName());
 
 	private String name;
 	private XClass annotatedClass;
@@ -516,7 +516,7 @@ public class EntityBinder {
 		}
 
 		if ( persistentClass instanceof TableOwner ) {
-            LOG.bindEntityOnTable(persistentClass.getEntityName(), table.getName());
+            LOG.bindEntityOnTable( persistentClass.getEntityName(), table.getName() );
 			( (TableOwner) persistentClass ).setTable( table );
 		}
 		else {
@@ -746,7 +746,7 @@ public class EntityBinder {
 
 		//somehow keep joins() for later.
 		//Has to do the work later because it needs persistentClass id!
-        LOG.addingSecondaryTableToEntity(persistentClass.getEntityName(), join.getTable().getName());
+        LOG.addingSecondaryTableToEntity( persistentClass.getEntityName(), join.getTable().getName() );
 		org.hibernate.annotations.Table matchingTable = findMatchingComplimentTableAnnotation( join );
 		if ( matchingTable != null ) {
 			join.setSequentialSelect( FetchMode.JOIN != matchingTable.fetch() );

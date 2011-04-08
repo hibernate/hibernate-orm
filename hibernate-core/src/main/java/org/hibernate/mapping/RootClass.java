@@ -26,7 +26,8 @@ import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-import org.hibernate.HibernateLogger;
+
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.MappingException;
 import org.hibernate.engine.Mapping;
 import org.hibernate.internal.util.ReflectHelper;
@@ -39,7 +40,7 @@ import org.jboss.logging.Logger;
  */
 public class RootClass extends PersistentClass implements TableOwner {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, RootClass.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, RootClass.class.getName());
 
 	public static final String DEFAULT_IDENTIFIER_COLUMN_NAME = "id";
 	public static final String DEFAULT_DISCRIMINATOR_COLUMN_NAME = "class";

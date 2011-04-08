@@ -28,10 +28,9 @@ import java.util.Iterator;
 import java.util.Set;
 
 import org.infinispan.Cache;
+import org.jboss.logging.Logger;
 
 import org.hibernate.cache.RegionFactory;
-
-import static org.hibernate.testing.TestLogger.LOG;
 
 /**
  * Support class for tracking and cleaning up objects used in tests.
@@ -39,8 +38,9 @@ import static org.hibernate.testing.TestLogger.LOG;
  * @author <a href="brian.stansberry@jboss.com">Brian Stansberry</a>
  */
 public class CacheTestSupport {
+	private static final Logger log = Logger.getLogger( CacheTestSupport.class );
 
-    private static final String PREFER_IPV4STACK = "java.net.preferIPv4Stack";
+	private static final String PREFER_IPV4STACK = "java.net.preferIPv4Stack";
 
     private Set<Cache> caches = new HashSet();
     private Set<RegionFactory> factories = new HashSet();
@@ -95,7 +95,7 @@ public class CacheTestSupport {
             Thread.sleep(ms);
         }
         catch (InterruptedException e) {
-            LOG.warn("Interrupted during sleep", e);
+            log.warn("Interrupted during sleep", e);
         }
     }
 

@@ -31,6 +31,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.jboss.logging.Logger;
+
 import org.hibernate.Query;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
@@ -51,7 +53,6 @@ import org.hibernate.dialect.function.SQLFunction;
 
 import org.junit.Test;
 
-import static org.hibernate.testing.TestLogger.LOG;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -59,6 +60,7 @@ import static org.junit.Assert.assertTrue;
 
 @SuppressWarnings( {"UnnecessaryUnboxing", "UnnecessaryBoxing"})
 public class SQLFunctionsTest extends LegacyTestCase {
+	private static final Logger log = Logger.getLogger( SQLFunctionsTest.class );
 
 	@Override
 	public String[] getMappings() {
@@ -608,11 +610,11 @@ public class SQLFunctionsTest extends LegacyTestCase {
 	public void testSqlFunctionAsAlias() throws Exception {
 		String functionName = locateAppropriateDialectFunctionNameForAliasTest();
 		if (functionName == null) {
-            LOG.info("Dialect does not list any no-arg functions");
+            log.info("Dialect does not list any no-arg functions");
 			return;
 		}
 
-        LOG.info("Using function named [" + functionName + "] for 'function as alias' test");
+        log.info("Using function named [" + functionName + "] for 'function as alias' test");
 		String query = "select " + functionName + " from Simple as " + functionName + " where " + functionName + ".id = 10";
 
 		Session s = openSession();

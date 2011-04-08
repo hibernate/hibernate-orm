@@ -30,7 +30,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.hql.ast.HqlSqlWalker;
@@ -50,7 +50,7 @@ import org.jboss.logging.Logger;
  */
 public class MultiTableUpdateExecutor extends AbstractStatementExecutor {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
                                                                        MultiTableUpdateExecutor.class.getName());
 
 	private final Queryable persister;

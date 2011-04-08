@@ -30,7 +30,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.DuplicateMappingException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.annotations.common.reflection.MetadataProvider;
 import org.hibernate.annotations.common.reflection.MetadataProviderInjector;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
@@ -44,6 +44,7 @@ import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.relational.Database;
 import org.hibernate.metamodel.source.hbm.HibernateXmlBinder;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -53,7 +54,7 @@ import org.jboss.logging.Logger;
  */
 public class Metadata implements Serializable {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, Metadata.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, Metadata.class.getName());
 
 	private final HibernateXmlBinder hibernateXmlBinder = new HibernateXmlBinder( this );
 	private final ExtendsQueue extendsQueue = new ExtendsQueue( this );

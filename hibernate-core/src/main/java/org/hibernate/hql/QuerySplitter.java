@@ -27,7 +27,8 @@ package org.hibernate.hql;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
-import org.hibernate.HibernateLogger;
+
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.MappingException;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.hql.classic.ParserHelper;
@@ -43,7 +44,7 @@ import org.jboss.logging.Logger;
  */
 public final class QuerySplitter {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, QuerySplitter.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, QuerySplitter.class.getName());
 
 	private static final Set BEFORE_CLASS_TOKENS = new HashSet();
 	private static final Set NOT_AFTER_CLASS_TOKENS = new HashSet();

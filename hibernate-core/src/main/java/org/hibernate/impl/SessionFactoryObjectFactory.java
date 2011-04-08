@@ -37,9 +37,11 @@ import javax.naming.event.NamingEvent;
 import javax.naming.event.NamingExceptionEvent;
 import javax.naming.event.NamingListener;
 import javax.naming.spi.ObjectFactory;
-import org.hibernate.HibernateLogger;
+
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.SessionFactory;
 import org.hibernate.internal.util.jndi.JndiHelper;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -50,7 +52,7 @@ public class SessionFactoryObjectFactory implements ObjectFactory {
 	@SuppressWarnings({ "UnusedDeclaration" })
 	private static final SessionFactoryObjectFactory INSTANCE; //to stop the class from being unloaded
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
                                                                        SessionFactoryObjectFactory.class.getName());
 
 	static {

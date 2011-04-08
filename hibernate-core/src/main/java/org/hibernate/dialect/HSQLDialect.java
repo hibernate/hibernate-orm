@@ -26,7 +26,8 @@ package org.hibernate.dialect;
 import java.io.Serializable;
 import java.sql.SQLException;
 import java.sql.Types;
-import org.hibernate.HibernateLogger;
+
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
 import org.hibernate.StaleObjectStateException;
@@ -66,7 +67,7 @@ import org.jboss.logging.Logger;
  */
 public class HSQLDialect extends Dialect {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, HSQLDialect.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, HSQLDialect.class.getName());
 
 	/**
 	 * version is 18 for 1.8 or 20 for 2.0

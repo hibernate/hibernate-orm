@@ -46,6 +46,7 @@ import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.TypeMismatchException;
+import org.hibernate.ejb.internal.EntityManagerMessageLogger;
 import org.hibernate.ejb.util.CacheModeHelper;
 import org.hibernate.ejb.util.ConfigurationHelper;
 import org.hibernate.ejb.util.LockModeTypeHelper;
@@ -63,7 +64,7 @@ import org.jboss.logging.Logger;
  */
 public abstract class AbstractQueryImpl<X> implements TypedQuery<X> {
 
-    private static final EntityManagerLogger LOG = Logger.getMessageLogger(EntityManagerLogger.class,
+    private static final EntityManagerMessageLogger LOG = Logger.getMessageLogger(EntityManagerMessageLogger.class,
                                                                            AbstractQueryImpl.class.getName());
 
 	private final HibernateEntityManagerImplementor entityManager;

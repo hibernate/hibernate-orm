@@ -28,7 +28,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-import org.hibernate.HibernateLogger;
+
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.QueryException;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.engine.SessionFactoryImplementor;
@@ -56,7 +57,7 @@ import antlr.collections.AST;
  */
 public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, SqlGenerator.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, SqlGenerator.class.getName());
 
 	public static boolean REGRESSION_STYLE_CROSS_JOINS = false;
 

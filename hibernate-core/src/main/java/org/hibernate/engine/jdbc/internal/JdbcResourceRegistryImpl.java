@@ -31,11 +31,12 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.engine.jdbc.spi.InvalidatableWrapper;
 import org.hibernate.engine.jdbc.spi.JdbcResourceRegistry;
 import org.hibernate.engine.jdbc.spi.JdbcWrapper;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
+
 import org.jboss.logging.Logger;
 import org.jboss.logging.Logger.Level;
 
@@ -46,7 +47,7 @@ import org.jboss.logging.Logger.Level;
  */
 public class JdbcResourceRegistryImpl implements JdbcResourceRegistry {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
                                                                        JdbcResourceRegistryImpl.class.getName());
 
 	private final HashMap<Statement,Set<ResultSet>> xref = new HashMap<Statement,Set<ResultSet>>();

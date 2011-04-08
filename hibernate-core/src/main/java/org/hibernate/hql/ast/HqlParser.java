@@ -27,13 +27,15 @@ package org.hibernate.hql.ast;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringReader;
-import org.hibernate.HibernateLogger;
+
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.QueryException;
 import org.hibernate.hql.antlr.HqlBaseParser;
 import org.hibernate.hql.antlr.HqlTokenTypes;
 import org.hibernate.hql.ast.util.ASTPrinter;
 import org.hibernate.hql.ast.util.ASTUtil;
 import org.hibernate.internal.util.StringHelper;
+
 import org.jboss.logging.Logger;
 import antlr.ASTPair;
 import antlr.MismatchedTokenException;
@@ -51,7 +53,7 @@ import antlr.collections.AST;
  */
 public final class HqlParser extends HqlBaseParser {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, HqlParser.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, HqlParser.class.getName());
 
 	private ParseErrorHandler parseErrorHandler;
 	private ASTPrinter printer = getASTPrinter();

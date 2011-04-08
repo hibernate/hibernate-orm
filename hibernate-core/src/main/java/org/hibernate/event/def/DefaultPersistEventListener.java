@@ -25,7 +25,7 @@ package org.hibernate.event.def;
 
 import java.util.Map;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.ObjectDeletedException;
 import org.hibernate.PersistentObjectException;
 import org.hibernate.engine.CascadingAction;
@@ -39,6 +39,7 @@ import org.hibernate.internal.util.collections.IdentityMap;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -49,7 +50,7 @@ import org.jboss.logging.Logger;
  */
 public class DefaultPersistEventListener extends AbstractSaveEventListener implements PersistEventListener {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
                                                                        DefaultPersistEventListener.class.getName());
 
 	/**

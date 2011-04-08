@@ -24,7 +24,7 @@
  */
 package org.hibernate.hql.ast.util;
 
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.hql.antlr.HqlSqlTokenTypes;
 import org.hibernate.internal.util.StringHelper;
 import org.jboss.logging.Logger;
@@ -38,7 +38,7 @@ import antlr.collections.AST;
  */
 public final class PathHelper {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, PathHelper.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, PathHelper.class.getName());
 
 	private PathHelper() {
 	}

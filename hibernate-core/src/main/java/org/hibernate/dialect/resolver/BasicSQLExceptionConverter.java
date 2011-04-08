@@ -23,10 +23,12 @@
  */
 package org.hibernate.dialect.resolver;
 import java.sql.SQLException;
-import org.hibernate.HibernateLogger;
+
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.JDBCException;
 import org.hibernate.exception.SQLStateConverter;
 import org.hibernate.exception.ViolatedConstraintNameExtracter;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -36,7 +38,7 @@ import org.jboss.logging.Logger;
  */
 public class BasicSQLExceptionConverter {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
                                                                        BasicSQLExceptionConverter.class.getName());
 	public static final BasicSQLExceptionConverter INSTANCE = new BasicSQLExceptionConverter();
     public static final String MSG = LOG.unableToQueryDatabaseMetadata();

@@ -24,7 +24,7 @@
  */
 package org.hibernate.event.def;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.engine.CollectionEntry;
 import org.hibernate.engine.CollectionKey;
@@ -42,7 +42,7 @@ import org.jboss.logging.Logger;
  */
 public class EvictVisitor extends AbstractVisitor {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, EvictVisitor.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, EvictVisitor.class.getName());
 
 	EvictVisitor(EventSource session) {
 		super(session);

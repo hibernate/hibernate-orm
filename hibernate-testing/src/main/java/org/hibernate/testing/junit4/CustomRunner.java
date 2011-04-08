@@ -23,11 +23,11 @@
  */
 package org.hibernate.testing.junit4;
 
-import static org.hibernate.testing.TestLogger.LOG;
-
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.jboss.logging.Logger;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.StringHelper;
@@ -52,6 +52,7 @@ import org.junit.runners.model.Statement;
  * @author Steve Ebersole
  */
 public class CustomRunner extends BlockJUnit4ClassRunner {
+	private static final Logger log = Logger.getLogger( CustomRunner.class );
 
 	private TestClassMetadata testClassMetadata;
 
@@ -140,7 +141,7 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 			}
 
 			testCount++;
-			LOG.trace( "adding test " + Helper.extractTestName( frameworkMethod ) + " [#" + testCount + "]" );
+			log.trace( "adding test " + Helper.extractTestName( frameworkMethod ) + " [#" + testCount + "]" );
 			result.add( new ExtendedFrameworkMethod( frameworkMethod, virtualIgnore, failureExpected ) );
 		}
 		return result;

@@ -27,11 +27,12 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.id.IntegralDataTypeHolder;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -41,7 +42,7 @@ import org.jboss.logging.Logger;
  */
 public class SequenceStructure implements DatabaseStructure {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, SequenceStructure.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, SequenceStructure.class.getName());
 
 	private final String sequenceName;
 	private final int initialValue;

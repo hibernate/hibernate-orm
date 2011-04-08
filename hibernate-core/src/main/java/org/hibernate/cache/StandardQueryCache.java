@@ -29,7 +29,7 @@ import java.util.Properties;
 import java.util.Set;
 import javax.persistence.EntityNotFoundException;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.UnresolvableObjectException;
 import org.hibernate.cfg.Settings;
 import org.hibernate.engine.SessionImplementor;
@@ -48,7 +48,7 @@ import org.jboss.logging.Logger;
  */
 public class StandardQueryCache implements QueryCache {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, StandardQueryCache.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, StandardQueryCache.class.getName());
 
 	private QueryResultsRegion cacheRegion;
 	private UpdateTimestampsCache updateTimestampsCache;

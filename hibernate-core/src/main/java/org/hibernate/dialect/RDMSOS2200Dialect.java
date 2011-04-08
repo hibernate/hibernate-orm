@@ -23,7 +23,8 @@
  */
 package org.hibernate.dialect;
 import java.sql.Types;
-import org.hibernate.HibernateLogger;
+
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.LockMode;
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
@@ -56,7 +57,7 @@ import org.jboss.logging.Logger;
  */
 public class RDMSOS2200Dialect extends Dialect {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, RDMSOS2200Dialect.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, RDMSOS2200Dialect.class.getName());
 
 	public RDMSOS2200Dialect() {
 		super();

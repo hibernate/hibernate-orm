@@ -22,10 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.cache.infinispan.functional.classloader;
-import static org.hibernate.testing.TestLogger.LOG;
+
 import java.util.HashSet;
 import java.util.Set;
-import org.hibernate.cache.infinispan.util.CacheHelper;
+
 import org.infinispan.notifications.Listener;
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryCreated;
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryModified;
@@ -33,11 +33,15 @@ import org.infinispan.notifications.cachelistener.annotation.CacheEntryVisited;
 import org.infinispan.notifications.cachelistener.event.CacheEntryCreatedEvent;
 import org.infinispan.notifications.cachelistener.event.CacheEntryModifiedEvent;
 import org.infinispan.notifications.cachelistener.event.CacheEntryVisitedEvent;
+import org.jboss.logging.Logger;
+
+import org.hibernate.cache.infinispan.util.CacheHelper;
 
 @Listener
 public class CacheAccessListener {
+	private static final Logger log = Logger.getLogger( CacheAccessListener.class );
 
-    HashSet modified = new HashSet();
+	HashSet modified = new HashSet();
     HashSet accessed = new HashSet();
 
     public void clear() {
@@ -49,7 +53,7 @@ public class CacheAccessListener {
     public void nodeModified( CacheEntryModifiedEvent event ) {
         if (!event.isPre() && !CacheHelper.isEvictAllNotification(event.getKey())) {
             Object key = event.getKey();
-            LOG.info("Modified node " + key);
+            log.info("Modified node " + key);
             modified.add(key.toString());
         }
     }
@@ -58,7 +62,7 @@ public class CacheAccessListener {
     public void nodeCreated( CacheEntryCreatedEvent event ) {
         if (!event.isPre() && !CacheHelper.isEvictAllNotification(event.getKey())) {
             Object key = event.getKey();
-            LOG.info("Created node " + key);
+            log.info("Created node " + key);
             modified.add(key.toString());
         }
     }
@@ -67,7 +71,7 @@ public class CacheAccessListener {
     public void nodeVisited( CacheEntryVisitedEvent event ) {
         if (!event.isPre() && !CacheHelper.isEvictAllNotification(event.getKey())) {
             Object key = event.getKey();
-            LOG.info("Visited node " + key);
+            log.info("Visited node " + key);
             accessed.add(key.toString());
         }
     }

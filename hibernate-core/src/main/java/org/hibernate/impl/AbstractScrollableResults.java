@@ -36,7 +36,7 @@ import java.util.Locale;
 import java.util.TimeZone;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.MappingException;
 import org.hibernate.ScrollableResults;
 import org.hibernate.engine.QueryParameters;
@@ -53,7 +53,7 @@ import org.jboss.logging.Logger;
  */
 public abstract class AbstractScrollableResults implements ScrollableResults {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
                                                                        AbstractScrollableResults.class.getName());
 
 	private final ResultSet resultSet;

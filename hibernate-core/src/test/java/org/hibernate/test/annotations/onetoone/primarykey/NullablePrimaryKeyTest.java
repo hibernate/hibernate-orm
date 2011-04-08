@@ -1,7 +1,8 @@
 //$Id: A320.java 14736 2008-06-04 14:23:42Z hardy.ferentschik $
 package org.hibernate.test.annotations.onetoone.primarykey;
 
-import static org.hibernate.testing.TestLogger.LOG;
+import org.jboss.logging.Logger;
+
 import junit.framework.TestCase;
 import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.cfg.Environment;
@@ -16,6 +17,7 @@ import org.hibernate.testing.ServiceRegistryBuilder;
  *
  */
 public class NullablePrimaryKeyTest extends TestCase {
+	private static final Logger log = Logger.getLogger( NullablePrimaryKeyTest.class );
 
 	public void testGeneratedSql() {
 
@@ -29,7 +31,7 @@ public class NullablePrimaryKeyTest extends TestCase {
 			String[] schema = config
 					.generateSchemaCreationScript(new SQLServerDialect());
 			for (String s : schema) {
-                LOG.debug(s);
+                log.debug(s);
 			}
 			String expectedMappingTableSql = "create table personAddress (address_id numeric(19,0) null, " +
 					"person_id numeric(19,0) not null, primary key (person_id))";

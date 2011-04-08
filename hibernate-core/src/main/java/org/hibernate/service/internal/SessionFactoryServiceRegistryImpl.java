@@ -29,13 +29,12 @@ import java.util.Map;
 
 import org.jboss.logging.Logger;
 
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.service.Service;
 import org.hibernate.service.StandardSessionFactoryServiceInitiators;
 import org.hibernate.service.UnknownServiceException;
-import org.hibernate.service.spi.BasicServiceInitiator;
 import org.hibernate.service.spi.ServiceException;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -49,7 +48,7 @@ public class SessionFactoryServiceRegistryImpl
 		extends AbstractServiceRegistryImpl
 		implements SessionFactoryServiceRegistry {
 
-	private static final HibernateLogger LOG = Logger.getMessageLogger( HibernateLogger.class, SessionFactoryServiceRegistryImpl.class.getName() );
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, SessionFactoryServiceRegistryImpl.class.getName() );
 
 	private final Map<Class,SessionFactoryServiceInitiator> serviceInitiatorMap;
 

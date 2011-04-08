@@ -26,10 +26,11 @@ package org.hibernate.persister.collection;
 import java.io.Serializable;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.impl.AbstractQueryImpl;
 import org.hibernate.loader.collection.CollectionInitializer;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -38,7 +39,7 @@ import org.jboss.logging.Logger;
  */
 public final class NamedQueryCollectionInitializer implements CollectionInitializer {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
                                                                        NamedQueryCollectionInitializer.class.getName());
 
     private final String queryName;

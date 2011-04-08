@@ -26,8 +26,10 @@ package org.hibernate.hql.ast;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import org.hibernate.HibernateLogger;
+
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.QueryException;
+
 import org.jboss.logging.Logger;
 import antlr.RecognitionException;
 
@@ -36,7 +38,7 @@ import antlr.RecognitionException;
  */
 public class ErrorCounter implements ParseErrorHandler {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, ErrorCounter.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, ErrorCounter.class.getName());
 
 	private List errorList = new ArrayList();
 	private List warningList = new ArrayList();

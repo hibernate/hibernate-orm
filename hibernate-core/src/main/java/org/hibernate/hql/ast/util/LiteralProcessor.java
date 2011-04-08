@@ -28,7 +28,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.text.DecimalFormat;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.dialect.Dialect;
@@ -73,7 +73,7 @@ public class LiteralProcessor implements HqlSqlTokenTypes {
 	 */
 	public static int DECIMAL_LITERAL_FORMAT = EXACT;
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, LiteralProcessor.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, LiteralProcessor.class.getName());
 
 	private HqlSqlWalker walker;
 

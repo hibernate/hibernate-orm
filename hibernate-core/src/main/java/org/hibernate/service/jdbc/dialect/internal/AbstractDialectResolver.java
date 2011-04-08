@@ -24,12 +24,14 @@
 package org.hibernate.service.jdbc.dialect.internal;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
-import org.hibernate.HibernateLogger;
+
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.JDBCException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.resolver.BasicSQLExceptionConverter;
 import org.hibernate.exception.JDBCConnectionException;
 import org.hibernate.service.jdbc.dialect.spi.DialectResolver;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -40,7 +42,7 @@ import org.jboss.logging.Logger;
  */
 public abstract class AbstractDialectResolver implements DialectResolver {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
                                                                        AbstractDialectResolver.class.getName());
 
 	/**

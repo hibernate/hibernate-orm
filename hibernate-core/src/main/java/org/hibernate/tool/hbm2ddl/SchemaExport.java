@@ -42,7 +42,7 @@ import java.util.Properties;
 import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.NamingStrategy;
@@ -67,7 +67,7 @@ import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
  * @author Steve Ebersole
  */
 public class SchemaExport {
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, SchemaExport.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, SchemaExport.class.getName());
 	private static final String DEFAULT_IMPORT_FILE = "/import.sql";
 
 	public static enum Type {

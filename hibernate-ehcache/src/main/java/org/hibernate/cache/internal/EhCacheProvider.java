@@ -21,11 +21,16 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.cache;
+package org.hibernate.cache.internal;
 
 import java.net.URL;
 import java.util.Properties;
 import net.sf.ehcache.CacheManager;
+
+import org.hibernate.cache.Cache;
+import org.hibernate.cache.CacheException;
+import org.hibernate.cache.CacheProvider;
+import org.hibernate.cache.Timestamper;
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.util.ConfigHelper;
 import org.hibernate.internal.util.StringHelper;
@@ -34,7 +39,7 @@ import org.jboss.logging.Logger;
 /**
  * Cache Provider plugin for Hibernate
  *
- * Use <code>hibernate.cache.provider_class=org.hibernate.cache.EhCacheProvider</code>
+ * Use <code>hibernate.cache.provider_class=org.hibernate.cache.internal.EhCacheProvider</code>
  * in Hibernate 3.x or later
  *
  * Taken from EhCache 0.9 distribution
@@ -47,7 +52,7 @@ import org.jboss.logging.Logger;
  * Ehcache-1.2 also has many other features such as cluster support and listeners, which can be used seamlessly simply
  * by configurion in ehcache.xml.
  * <p/>
- * Use <code>hibernate.cache.provider_class=org.hibernate.cache.EhCacheProvider</code> in the Hibernate configuration
+ * Use <code>hibernate.cache.provider_class=org.hibernate.cache.internal.EhCacheProvider</code> in the Hibernate configuration
  * to enable this provider for Hibernate's second level cache.
  * <p/>
  * When configuring multiple ehcache CacheManagers, as you would where you have multiple Hibernate Configurations and
@@ -67,7 +72,7 @@ import org.jboss.logging.Logger;
  */
 public class EhCacheProvider implements CacheProvider {
 
-    private static final EhCacheLogger LOG = Logger.getMessageLogger(EhCacheLogger.class, EhCacheProvider.class.getName());
+    private static final EhCacheMessageLogger LOG = Logger.getMessageLogger(EhCacheMessageLogger.class, EhCacheProvider.class.getName());
 
 	private CacheManager manager;
 
@@ -82,7 +87,7 @@ public class EhCacheProvider implements CacheProvider {
      * @param name the name of the cache. Must match a cache configured in ehcache.xml
      * @param properties not used
      * @return a newly built cache will be built and initialised
-     * @throws CacheException inter alia, if a cache of the same name already exists
+     * @throws org.hibernate.cache.CacheException inter alia, if a cache of the same name already exists
      */
     public Cache buildCache(String name, Properties properties) throws CacheException {
 	    try {

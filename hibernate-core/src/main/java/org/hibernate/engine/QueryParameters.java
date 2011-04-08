@@ -32,7 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.LockOptions;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollMode;
@@ -50,7 +50,7 @@ import org.jboss.logging.Logger;
  */
 public final class QueryParameters {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, QueryParameters.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, QueryParameters.class.getName());
 
 	private Type[] positionalParameterTypes;
 	private Object[] positionalParameterValues;

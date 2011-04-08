@@ -30,14 +30,14 @@ import java.sql.Statement;
 
 import org.jboss.logging.Logger;
 
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 
 /**
 * @author Steve Ebersole
 */
 class DatabaseExporter implements Exporter {
-	private static final HibernateLogger LOG = Logger.getMessageLogger( HibernateLogger.class, DatabaseExporter.class.getName() );
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, DatabaseExporter.class.getName() );
 
 	private final ConnectionHelper connectionHelper;
 	private final SqlExceptionHelper sqlExceptionHelper;

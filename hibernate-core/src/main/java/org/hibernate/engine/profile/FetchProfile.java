@@ -24,7 +24,7 @@
 package org.hibernate.engine.profile;
 import java.util.HashMap;
 import java.util.Map;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.type.BagType;
 import org.hibernate.type.Type;
@@ -40,7 +40,7 @@ import org.jboss.logging.Logger;
  */
 public class FetchProfile {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, FetchProfile.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, FetchProfile.class.getName());
 
 	private final String name;
 	private Map<String,Fetch> fetches = new HashMap<String,Fetch>();

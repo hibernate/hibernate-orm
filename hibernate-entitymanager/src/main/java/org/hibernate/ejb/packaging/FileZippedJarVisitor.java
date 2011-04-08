@@ -30,7 +30,9 @@ import java.util.Enumeration;
 import java.util.jar.JarFile;
 import java.util.jar.JarInputStream;
 import java.util.zip.ZipEntry;
-import org.hibernate.ejb.EntityManagerLogger;
+
+import org.hibernate.ejb.internal.EntityManagerMessageLogger;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -40,7 +42,7 @@ import org.jboss.logging.Logger;
  */
 public class FileZippedJarVisitor extends AbstractJarVisitor {
 
-    private static final EntityManagerLogger LOG = Logger.getMessageLogger(EntityManagerLogger.class,
+    private static final EntityManagerMessageLogger LOG = Logger.getMessageLogger(EntityManagerMessageLogger.class,
                                                                            FileZippedJarVisitor.class.getName());
 
     private String entry;

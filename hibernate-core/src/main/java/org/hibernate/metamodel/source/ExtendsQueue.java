@@ -28,7 +28,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.ExtendsQueueEntry;
 import org.hibernate.metamodel.source.hbm.HbmHelper;
@@ -41,7 +41,7 @@ import org.jboss.logging.Logger;
  */
 public class ExtendsQueue implements Serializable {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, ExtendsQueue.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, ExtendsQueue.class.getName());
 
 	private final Metadata metadata;
 	private Set<ExtendsQueueEntry> extendsQueue = new HashSet<ExtendsQueueEntry>();

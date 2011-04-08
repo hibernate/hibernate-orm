@@ -32,7 +32,7 @@ import java.util.Map;
 import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.action.internal.CollectionRecreateAction;
 import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.action.internal.CollectionUpdateAction;
@@ -66,8 +66,8 @@ import org.hibernate.service.event.spi.EventListenerRegistry;
  */
 public abstract class AbstractFlushingEventListener implements Serializable {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(
-			HibernateLogger.class,
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
 			AbstractFlushingEventListener.class.getName()
 	);
 

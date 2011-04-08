@@ -24,8 +24,10 @@
  */
 package org.hibernate.cache;
 import java.util.Comparator;
-import org.hibernate.HibernateLogger;
+
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.cache.access.SoftLock;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -40,7 +42,7 @@ import org.jboss.logging.Logger;
  */
 public class NonstrictReadWriteCache implements CacheConcurrencyStrategy {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
                                                                        NonstrictReadWriteCache.class.getName());
 
 	private Cache cache;

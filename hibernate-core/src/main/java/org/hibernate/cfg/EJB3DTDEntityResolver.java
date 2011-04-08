@@ -24,8 +24,10 @@
 package org.hibernate.cfg;
 
 import java.io.InputStream;
-import org.hibernate.HibernateLogger;
+
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.xml.DTDEntityResolver;
+
 import org.jboss.logging.Logger;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
@@ -39,7 +41,7 @@ import org.xml.sax.InputSource;
 public class EJB3DTDEntityResolver extends DTDEntityResolver {
 	public static final EntityResolver INSTANCE = new EJB3DTDEntityResolver();
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, EJB3DTDEntityResolver.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, EJB3DTDEntityResolver.class.getName());
 
 	boolean resolved = false;
 

@@ -30,7 +30,7 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.Properties;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
@@ -52,7 +52,7 @@ import org.jboss.logging.Logger;
 @SuppressWarnings( {"UnnecessaryUnboxing"})
 public class DriverManagerConnectionProviderImpl implements ConnectionProvider, Configurable, Stoppable {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
                                                                        DriverManagerConnectionProviderImpl.class.getName());
 
 	private String url;
@@ -108,7 +108,7 @@ public class DriverManagerConnectionProviderImpl implements ConnectionProvider, 
         LOG.hibernateConnectionPoolSize(poolSize);
 
 		autocommit = ConfigurationHelper.getBoolean( Environment.AUTOCOMMIT, configurationValues );
-        LOG.autoCommitMode(autocommit);
+        LOG.autoCommitMode( autocommit );
 
 		isolation = ConfigurationHelper.getInteger( Environment.ISOLATION, configurationValues );
         if (isolation != null) LOG.jdbcIsolationLevel(Environment.isolationLevelToString(isolation.intValue()));

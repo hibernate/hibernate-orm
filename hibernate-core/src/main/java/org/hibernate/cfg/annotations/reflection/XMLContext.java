@@ -35,7 +35,7 @@ import javax.persistence.AccessType;
 import org.dom4j.Document;
 import org.dom4j.Element;
 import org.hibernate.AnnotationException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.jboss.logging.Logger;
 
@@ -43,7 +43,7 @@ import org.jboss.logging.Logger;
  * @author Emmanuel Bernard
  */
 public class XMLContext implements Serializable {
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, XMLContext.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, XMLContext.class.getName());
 	private Default globalDefaults;
 	private Map<String, Element> classOverriding = new HashMap<String, Element>();
 	private Map<String, Default> defaultsOverriding = new HashMap<String, Default>();

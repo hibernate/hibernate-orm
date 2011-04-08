@@ -28,7 +28,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Properties;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.dialect.Dialect;
@@ -52,7 +52,7 @@ import org.jboss.logging.Logger;
  */
 public class SequenceGenerator implements PersistentIdentifierGenerator, Configurable {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, SequenceGenerator.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, SequenceGenerator.class.getName());
 
 	/**
 	 * The sequence parameter

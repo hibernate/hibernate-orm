@@ -31,8 +31,9 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Properties;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.cfg.Environment;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -44,7 +45,7 @@ import org.jboss.logging.Logger;
  */
 public final class ConfigHelper {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, ConfigHelper.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, ConfigHelper.class.getName());
 
 	/** Try to locate a local URL representing the incoming path.  The first attempt
 	 * assumes that the incoming path is an actual URL string (file://, etc).  If this

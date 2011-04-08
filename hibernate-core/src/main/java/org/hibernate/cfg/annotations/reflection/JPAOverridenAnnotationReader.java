@@ -118,7 +118,7 @@ import javax.persistence.Version;
 import org.dom4j.Attribute;
 import org.dom4j.Element;
 import org.hibernate.AnnotationException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CollectionOfElements;
 import org.hibernate.annotations.Columns;
@@ -142,7 +142,7 @@ import org.jboss.logging.Logger;
 @SuppressWarnings("unchecked")
 public class JPAOverridenAnnotationReader implements AnnotationReader {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
                                                                        JPAOverridenAnnotationReader.class.getName());
 	private static final Map<Class, String> annotationToXml;
 	private static final String SCHEMA_VALIDATION = "Activate schema validation for more information";

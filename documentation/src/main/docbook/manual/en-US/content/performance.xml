@@ -764,7 +764,7 @@ Customer customer = (Customer) session.get( Customer.class, customerId );
           <row>
             <entry>EHCache</entry>
 
-            <entry><literal>org.hibernate.cache.EhCacheProvider</literal></entry>
+            <entry><literal>org.hibernate.cache.internal.EhCacheProvider</literal></entry>
 
             <entry>memory, disk</entry>
 

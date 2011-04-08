@@ -23,9 +23,10 @@
  */
 package org.hibernate.engine.jdbc.spi;
 
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.internal.Formatter;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -35,7 +36,7 @@ import org.jboss.logging.Logger;
  */
 public class SqlStatementLogger {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, SqlStatementLogger.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, SqlStatementLogger.class.getName());
 
 	private boolean logToStdout;
 	private boolean format;

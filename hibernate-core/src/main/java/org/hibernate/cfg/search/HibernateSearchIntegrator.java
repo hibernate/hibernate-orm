@@ -26,7 +26,7 @@ package org.hibernate.cfg.search;
 import org.jboss.logging.Logger;
 
 import org.hibernate.AnnotationException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.event.EventType;
@@ -54,7 +54,7 @@ import org.hibernate.service.spi.SessionFactoryServiceRegistry;
  * @author Steve Ebersole
  */
 public class HibernateSearchIntegrator implements Integrator {
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, HibernateSearchIntegrator.class.getName() );
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, HibernateSearchIntegrator.class.getName() );
 
 	public static final String AUTO_REGISTER = "hibernate.search.autoregister_listeners";
 	public static final String LISTENER_CLASS = "org.hibernate.search.event.FullTextIndexEventListener";

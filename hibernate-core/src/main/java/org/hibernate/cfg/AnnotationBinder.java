@@ -82,7 +82,7 @@ import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.FetchMode;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cache;
@@ -182,7 +182,7 @@ import org.jboss.logging.Logger;
 @SuppressWarnings("unchecked")
 public final class AnnotationBinder {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, AnnotationBinder.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, AnnotationBinder.class.getName());
 
     /*
      * Some design description
@@ -517,7 +517,7 @@ public final class AnnotationBinder {
 			return;
 		}
 
-        LOG.bindingEntityFromClass(clazzToProcess.getName());
+        LOG.bindingEntityFromClass( clazzToProcess.getName() );
 
 		PersistentClass superEntity = getSuperEntity(
 				clazzToProcess, inheritanceStatePerClass, mappings, inheritanceState
@@ -1234,7 +1234,7 @@ public final class AnnotationBinder {
 			params.put( param.name(), mappings.getTypeResolver().heuristicType( param.type() ) );
 		}
 		FilterDefinition def = new FilterDefinition( defAnn.name(), defAnn.defaultCondition(), params );
-        LOG.bindingFilterDefinition(def.getFilterName());
+        LOG.bindingFilterDefinition( def.getFilterName() );
 		mappings.addFilterDefinition( def );
 	}
 
@@ -1290,11 +1290,11 @@ public final class AnnotationBinder {
 		}
 
 		if ( !BinderHelper.isEmptyAnnotationValue( defAnn.name() ) ) {
-            LOG.bindingTypeDefinition(defAnn.name());
+            LOG.bindingTypeDefinition( defAnn.name() );
 			mappings.addTypeDef( defAnn.name(), defAnn.typeClass().getName(), params );
 		}
 		if ( !defAnn.defaultForType().equals( void.class ) ) {
-            LOG.bindingTypeDefinition(defAnn.defaultForType().getName());
+            LOG.bindingTypeDefinition( defAnn.defaultForType().getName() );
 			mappings.addTypeDef( defAnn.defaultForType().getName(), defAnn.typeClass().getName(), params );
 		}
 

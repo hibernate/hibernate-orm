@@ -25,7 +25,7 @@ package org.hibernate.event.def;
 
 import org.jboss.logging.Logger;
 
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.ObjectDeletedException;
@@ -45,7 +45,7 @@ import org.hibernate.pretty.MessageHelper;
  */
 public class AbstractLockUpgradeEventListener extends AbstractReassociateEventListener {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
                                                                        AbstractLockUpgradeEventListener.class.getName());
 
 	/**

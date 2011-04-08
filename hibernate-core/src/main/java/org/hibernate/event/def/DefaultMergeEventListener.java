@@ -33,7 +33,7 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.ObjectDeletedException;
 import org.hibernate.PropertyValueException;
 import org.hibernate.StaleObjectStateException;
@@ -66,7 +66,7 @@ import org.hibernate.type.TypeHelper;
 public class DefaultMergeEventListener extends AbstractSaveEventListener
 	implements MergeEventListener {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
                                                                        DefaultMergeEventListener.class.getName());
 
 	@Override

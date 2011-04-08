@@ -33,7 +33,7 @@ import java.util.Map;
 import java.util.Set;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.MappingException;
 import org.hibernate.engine.CascadeStyle;
 import org.hibernate.engine.SessionFactoryImplementor;
@@ -63,7 +63,7 @@ import org.jboss.logging.Logger;
  */
 public class EntityMetamodel implements Serializable {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, EntityMetamodel.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, EntityMetamodel.class.getName());
 
 	private static final int NO_VERSION_INDX = -66;
 

@@ -26,7 +26,7 @@ package org.hibernate.engine.transaction.spi;
 import javax.transaction.Status;
 import javax.transaction.Synchronization;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.TransactionException;
 import org.hibernate.service.jta.platform.spi.JtaPlatform;
 import org.jboss.logging.Logger;
@@ -38,7 +38,7 @@ import org.jboss.logging.Logger;
  */
 public abstract class AbstractTransactionImpl implements TransactionImplementor {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
                                                                        AbstractTransactionImpl.class.getName());
 
 	private final TransactionCoordinator transactionCoordinator;

@@ -29,6 +29,8 @@ import javax.persistence.OptimisticLockException;
 import javax.persistence.PersistenceException;
 import java.util.Map;
 
+import org.jboss.logging.Logger;
+
 import org.hibernate.cfg.Environment;
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.exception.ConstraintViolationException;
@@ -37,7 +39,6 @@ import org.junit.Test;
 
 import org.hibernate.testing.TestForIssue;
 
-import static org.hibernate.testing.TestLogger.LOG;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -47,6 +48,8 @@ import static org.junit.Assert.fail;
  */
 @SuppressWarnings("unchecked")
 public class ExceptionTest extends BaseEntityManagerFunctionalTestCase {
+	private static final Logger log = Logger.getLogger( ExceptionTest.class );
+
 	@Test
 	public void testOptimisticLockingException() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
@@ -100,7 +103,7 @@ public class ExceptionTest extends BaseEntityManagerFunctionalTestCase {
 			fail( "Non existent entity should raise an exception when state is accessed" );
 		}
 		catch ( EntityNotFoundException e ) {
-            LOG.debug("success");
+            log.debug("success");
 		}
 		finally {
 			em.close();

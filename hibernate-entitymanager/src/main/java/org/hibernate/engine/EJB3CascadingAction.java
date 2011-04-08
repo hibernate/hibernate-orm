@@ -23,7 +23,7 @@ package org.hibernate.engine;
 import java.util.Iterator;
 import java.util.Map;
 import org.hibernate.HibernateException;
-import org.hibernate.ejb.EntityManagerLogger;
+import org.hibernate.ejb.internal.EntityManagerMessageLogger;
 import org.hibernate.event.EventSource;
 import org.hibernate.type.CollectionType;
 import org.jboss.logging.Logger;
@@ -36,7 +36,7 @@ import org.jboss.logging.Logger;
  */
 public abstract class EJB3CascadingAction extends CascadingAction {
 
-    private static final EntityManagerLogger LOG = Logger.getMessageLogger(EntityManagerLogger.class,
+    private static final EntityManagerMessageLogger LOG = Logger.getMessageLogger(EntityManagerMessageLogger.class,
                                                                            EJB3CascadingAction.class.getName());
 	/**
 	 * @see org.hibernate.Session#persist(Object)

@@ -37,7 +37,7 @@ import org.hibernate.Session;
 import org.hibernate.SessionBuilder;
 import org.hibernate.annotations.common.util.ReflectHelper;
 import org.hibernate.cfg.Environment;
-import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.ejb.internal.EntityManagerMessageLogger;
 import org.hibernate.engine.SessionImplementor;
 
 /**
@@ -47,7 +47,7 @@ import org.hibernate.engine.SessionImplementor;
  */
 public class EntityManagerImpl extends AbstractEntityManagerImpl {
 
-    public static final EntityManagerLogger LOG = Logger.getMessageLogger(EntityManagerLogger.class,
+    public static final EntityManagerMessageLogger LOG = Logger.getMessageLogger(EntityManagerMessageLogger.class,
                                                                           EntityManagerImpl.class.getName());
 
 	protected Session session;

@@ -28,7 +28,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Iterator;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.hql.ast.HqlSqlWalker;
@@ -47,7 +47,7 @@ import org.jboss.logging.Logger;
  */
 public class MultiTableDeleteExecutor extends AbstractStatementExecutor {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
                                                                        MultiTableDeleteExecutor.class.getName());
 
 	private final Queryable persister;

@@ -25,7 +25,7 @@ package org.hibernate.id.enhanced;
 import java.io.Serializable;
 import java.util.Properties;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.ObjectNameNormalizer;
@@ -95,7 +95,7 @@ import org.jboss.logging.Logger;
  */
 public class SequenceStyleGenerator implements PersistentIdentifierGenerator, Configurable {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
                                                                        SequenceStyleGenerator.class.getName());
 
 	// general purpose parameters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

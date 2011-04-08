@@ -21,20 +21,24 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.cache;
+package org.hibernate.cache.internal;
 
 import static org.jboss.logging.Logger.Level.WARN;
-import org.hibernate.HibernateLogger;
+
+import org.hibernate.internal.CoreMessageLogger;
+
 import org.jboss.logging.LogMessage;
 import org.jboss.logging.Message;
 import org.jboss.logging.MessageLogger;
 
 /**
- * Defines internationalized messages for this hibernate-ehcache, with IDs ranging from 20001 to 25000 inclusively. New messages
- * must be added after the last message defined to ensure message codes are unique.
+ * The jboss-logging {@link MessageLogger} for the hibernate-ehcache module.  It reserves message ids ranging from
+ * 20001 to 25000 inclusively.
+ * <p/>
+ * New messages must be added after the last message defined to ensure message codes are unique.
  */
 @MessageLogger( projectCode = "HHH" )
-public interface EhCacheLogger extends HibernateLogger {
+public interface EhCacheMessageLogger extends CoreMessageLogger {
 
     @LogMessage( level = WARN )
     @Message( value = "Attempt to restart an already started EhCacheProvider. Use sessionFactory.close() between repeated calls to "

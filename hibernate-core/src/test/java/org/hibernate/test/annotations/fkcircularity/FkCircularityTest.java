@@ -1,9 +1,11 @@
 // $Id$
 package org.hibernate.test.annotations.fkcircularity;
 
-import static org.hibernate.testing.TestLogger.LOG;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+
+import org.jboss.logging.Logger;
+
 import junit.framework.TestCase;
 import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.cfg.Environment;
@@ -12,6 +14,7 @@ import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.service.ServiceRegistry;
 
 import org.hibernate.testing.ServiceRegistryBuilder;
+import org.hibernate.testing.TestForIssue;
 
 /**
  * Test case for ANN-722 and ANN-730.
@@ -19,6 +22,7 @@ import org.hibernate.testing.ServiceRegistryBuilder;
  * @author Hardy Ferentschik
  */
 public class FkCircularityTest extends TestCase {
+	private static final Logger log = Logger.getLogger( FkCircularityTest.class );
 
 	private ServiceRegistry serviceRegistry;
 
@@ -43,13 +47,13 @@ public class FkCircularityTest extends TestCase {
 			String[] schema = config
 					.generateSchemaCreationScript(new SQLServerDialect());
 			for (String s : schema) {
-                LOG.debug(s);
+                log.debug(s);
 			}
-            LOG.debug("success");
+            log.debug("success");
 		} catch (Exception e) {
 			StringWriter writer = new StringWriter();
 			e.printStackTrace(new PrintWriter(writer));
-            LOG.debug(writer.toString());
+            log.debug(writer.toString());
 			fail(e.getMessage());
 		}
 	}
@@ -65,13 +69,13 @@ public class FkCircularityTest extends TestCase {
 			String[] schema = config
 					.generateSchemaCreationScript(new HSQLDialect());
 			for (String s : schema) {
-                LOG.debug(s);
+                log.debug(s);
 			}
-            LOG.debug("success");
+            log.debug("success");
 		} catch (Exception e) {
 			StringWriter writer = new StringWriter();
 			e.printStackTrace(new PrintWriter(writer));
-            LOG.debug(writer.toString());
+            log.debug(writer.toString());
 			fail(e.getMessage());
 		}
 	}

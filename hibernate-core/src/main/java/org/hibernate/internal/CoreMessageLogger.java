@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate;
+package org.hibernate.internal;
 
 import static org.jboss.logging.Logger.Level.ERROR;
 import static org.jboss.logging.Logger.Level.INFO;
@@ -42,6 +42,9 @@ import javax.naming.NameNotFoundException;
 import javax.naming.NamingException;
 import javax.transaction.Synchronization;
 import javax.transaction.SystemException;
+
+import org.hibernate.EntityMode;
+import org.hibernate.HibernateException;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cfg.AccessType;
 import org.hibernate.dialect.Dialect;
@@ -61,12 +64,13 @@ import org.jboss.logging.Message;
 import org.jboss.logging.MessageLogger;
 
 /**
- * Defines internationalized messages for this hibernate-core, with IDs ranging from 00001 to 10000 inclusively. New messages must
- * be added after the last message defined to ensure message codes are unique.
+ * The jboss-logging {@link MessageLogger} for the hibernate-core module.  It reserves message ids ranging from
+ * 00001 to 10000 inclusively.
+ * <p/>
+ * New messages must be added after the last message defined to ensure message codes are unique.
  */
-// TODO: tracef
 @MessageLogger( projectCode = "HHH" )
-public interface HibernateLogger extends BasicLogger {
+public interface CoreMessageLogger extends BasicLogger {
 
     @LogMessage( level = INFO )
     @Message( value = "Adding secondary table to entity %s -> %s", id = 1 )

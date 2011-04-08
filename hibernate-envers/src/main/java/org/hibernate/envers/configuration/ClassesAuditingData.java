@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.hibernate.MappingException;
-import org.hibernate.envers.EnversLogger;
+import org.hibernate.envers.internal.EnversMessageLogger;
 import org.hibernate.envers.configuration.metadata.reader.ClassAuditingData;
 import org.hibernate.envers.configuration.metadata.reader.PropertyAuditingData;
 import org.hibernate.envers.tools.MappingTools;
@@ -17,7 +17,7 @@ import org.jboss.logging.Logger;
  */
 public class ClassesAuditingData {
 
-    public static final EnversLogger LOG = Logger.getMessageLogger(EnversLogger.class, ClassesAuditingData.class.getName());
+    public static final EnversMessageLogger LOG = Logger.getMessageLogger(EnversMessageLogger.class, ClassesAuditingData.class.getName());
 
     private final Map<String, ClassAuditingData> entityNameToAuditingData = new HashMap<String, ClassAuditingData>();
     private final Map<PersistentClass, ClassAuditingData> persistentClassToAuditingData = new LinkedHashMap<PersistentClass, ClassAuditingData>();

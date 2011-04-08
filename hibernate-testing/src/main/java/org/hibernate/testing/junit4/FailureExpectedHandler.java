@@ -23,16 +23,19 @@
  */
 package org.hibernate.testing.junit4;
 
+import org.jboss.logging.Logger;
+
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 
 import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.TestLogger;
 
 /**
 * @author Steve Ebersole
 */
 class FailureExpectedHandler extends Statement {
+	private static final Logger log = Logger.getLogger( FailureExpectedHandler.class );
+
 	private final TestClassMetadata testClassMetadata;
 	private final ExtendedFrameworkMethod extendedFrameworkMethod;
 	private final Statement realInvoker;
@@ -66,8 +69,9 @@ class FailureExpectedHandler extends Statement {
 		catch (Throwable e) {
 			// on error handling is very different based on whether the test was marked as an expected failure
 			if ( failureExpected != null ) {
+
 				// handle the expected failure case
-				TestLogger.LOG.infof(
+				log.infof(
 						"Ignoring expected failure [{}] : {}",
 						Helper.extractTestName( extendedFrameworkMethod ),
 						Helper.extractMessage( failureExpected )

@@ -26,13 +26,14 @@ package org.hibernate.engine.transaction.internal.jdbc;
 import java.sql.Connection;
 import java.sql.SQLException;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.TransactionException;
 import org.hibernate.engine.transaction.spi.AbstractTransactionImpl;
 import org.hibernate.engine.transaction.spi.IsolationDelegate;
 import org.hibernate.engine.transaction.spi.JoinStatus;
 import org.hibernate.engine.transaction.spi.LocalStatus;
 import org.hibernate.engine.transaction.spi.TransactionCoordinator;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -46,7 +47,7 @@ import org.jboss.logging.Logger;
  */
 public class JdbcTransaction extends AbstractTransactionImpl {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, JdbcTransaction.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, JdbcTransaction.class.getName());
 
 	private Connection managedConnection;
 	private boolean wasInitiallyAutoCommit;

@@ -34,7 +34,8 @@ import javax.persistence.ColumnResult;
 import javax.persistence.EntityResult;
 import javax.persistence.FieldResult;
 import javax.persistence.SqlResultSetMapping;
-import org.hibernate.HibernateLogger;
+
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.BinderHelper;
@@ -55,7 +56,7 @@ import org.jboss.logging.Logger;
  * @author Emmanuel Bernard
  */
 public class ResultsetMappingSecondPass implements QuerySecondPass {
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
                                                                        ResultsetMappingSecondPass.class.getName());
 
 	private SqlResultSetMapping ann;
@@ -72,7 +73,7 @@ public class ResultsetMappingSecondPass implements QuerySecondPass {
 		//TODO add parameters checkings
 		if ( ann == null ) return;
 		ResultSetMappingDefinition definition = new ResultSetMappingDefinition( ann.name() );
-        LOG.bindingResultSetMapping(definition.getName());
+        LOG.bindingResultSetMapping( definition.getName() );
 
 		int entityAliasIndex = 0;
 

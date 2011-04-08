@@ -4,7 +4,8 @@ import javax.naming.InitialContext;
 import javax.naming.NameNotFoundException;
 import javax.naming.NamingException;
 import javax.naming.Reference;
-import org.hibernate.HibernateLogger;
+
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.SessionFactory;
 import org.hibernate.impl.SessionFactoryObjectFactory;
 import org.hibernate.stat.CollectionStatistics;
@@ -50,7 +51,7 @@ import org.jboss.logging.Logger;
  */
 public class StatisticsService implements StatisticsServiceMBean {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, StatisticsService.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, StatisticsService.class.getName());
 	//TODO: We probably should have a StatisticsNotPublishedException, to make it clean
 
 	SessionFactory sf;

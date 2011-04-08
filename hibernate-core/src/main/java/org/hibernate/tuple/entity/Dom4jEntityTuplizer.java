@@ -31,7 +31,7 @@ import org.dom4j.Element;
 import org.hibernate.EntityMode;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.mapping.PersistentClass;
@@ -56,7 +56,7 @@ import org.jboss.logging.Logger;
  */
 public class Dom4jEntityTuplizer extends AbstractEntityTuplizer {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, Dom4jEntityTuplizer.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, Dom4jEntityTuplizer.class.getName());
 
 	private Map inheritenceNodeNameMap = new HashMap();
 

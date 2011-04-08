@@ -27,13 +27,14 @@ package org.hibernate.tuple;
 import java.io.IOException;
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.InstantiationException;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -41,7 +42,7 @@ import org.jboss.logging.Logger;
  */
 public class PojoInstantiator implements Instantiator, Serializable {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, PojoInstantiator.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, PojoInstantiator.class.getName());
 
 	private transient Constructor constructor;
 

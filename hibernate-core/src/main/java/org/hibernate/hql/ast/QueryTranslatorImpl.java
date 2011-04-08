@@ -37,7 +37,7 @@ import antlr.collections.AST;
 import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollableResults;
@@ -78,7 +78,7 @@ import org.hibernate.type.Type;
  */
 public class QueryTranslatorImpl implements FilterTranslator {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, QueryTranslatorImpl.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, QueryTranslatorImpl.class.getName());
 
 	private SessionFactoryImplementor factory;
 

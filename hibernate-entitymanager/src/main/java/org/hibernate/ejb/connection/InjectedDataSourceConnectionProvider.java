@@ -26,7 +26,7 @@ import java.util.Properties;
 import javax.sql.DataSource;
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
-import org.hibernate.ejb.EntityManagerLogger;
+import org.hibernate.ejb.internal.EntityManagerMessageLogger;
 import org.hibernate.service.jdbc.connections.internal.DatasourceConnectionProviderImpl;
 import org.jboss.logging.Logger;
 
@@ -42,7 +42,7 @@ import org.jboss.logging.Logger;
  */
 public class InjectedDataSourceConnectionProvider extends DatasourceConnectionProviderImpl {
 
-    private static final EntityManagerLogger LOG = Logger.getMessageLogger(EntityManagerLogger.class,
+    private static final EntityManagerMessageLogger LOG = Logger.getMessageLogger(EntityManagerMessageLogger.class,
                                                                            InjectedDataSourceConnectionProvider.class.getName());
 
 	private String user;

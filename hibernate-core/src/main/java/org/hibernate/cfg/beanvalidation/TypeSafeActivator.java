@@ -47,7 +47,7 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.MappingException;
 import org.hibernate.event.EventType;
 import org.hibernate.internal.util.ReflectHelper;
@@ -65,7 +65,7 @@ import org.hibernate.service.event.spi.EventListenerRegistry;
  */
 class TypeSafeActivator {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, TypeSafeActivator.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, TypeSafeActivator.class.getName());
 
 	private static final String FACTORY_PROPERTY = "javax.persistence.validation.factory";
 

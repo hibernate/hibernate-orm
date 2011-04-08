@@ -33,7 +33,7 @@ import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 import org.hibernate.EntityMode;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.event.Initializable;
@@ -44,6 +44,7 @@ import org.hibernate.event.PreInsertEventListener;
 import org.hibernate.event.PreUpdateEvent;
 import org.hibernate.event.PreUpdateEventListener;
 import org.hibernate.persister.entity.EntityPersister;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -56,7 +57,7 @@ import org.jboss.logging.Logger;
 public class BeanValidationEventListener implements
 		PreInsertEventListener, PreUpdateEventListener, PreDeleteEventListener, Initializable {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
                                                                        BeanValidationEventListener.class.getName());
 
 	private ValidatorFactory factory;

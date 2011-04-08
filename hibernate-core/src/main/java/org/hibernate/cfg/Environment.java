@@ -33,11 +33,12 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.Version;
 import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.internal.util.ConfigHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+
 import org.jboss.logging.Logger;
 
 
@@ -570,7 +571,7 @@ public final class Environment {
 	private static final Map OBSOLETE_PROPERTIES = new HashMap();
 	private static final Map RENAMED_PROPERTIES = new HashMap();
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, Environment.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, Environment.class.getName());
 
 	/**
 	 * Issues warnings to the user when any obsolete or renamed property names are used.

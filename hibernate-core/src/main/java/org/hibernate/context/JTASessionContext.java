@@ -33,7 +33,7 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.Session;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
@@ -63,7 +63,7 @@ import org.hibernate.service.jta.platform.spi.JtaPlatform;
  * @author Steve Ebersole
  */
 public class JTASessionContext implements CurrentSessionContext {
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, JTASessionContext.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, JTASessionContext.class.getName());
 
 	protected final SessionFactoryImplementor factory;
 	private transient Map currentSessionMap = new Hashtable();

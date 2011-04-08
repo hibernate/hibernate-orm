@@ -25,7 +25,8 @@
 package org.hibernate.hql.ast.util;
 
 import java.util.Map;
-import org.hibernate.HibernateLogger;
+
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.hql.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.ast.HqlSqlWalker;
 import org.hibernate.hql.ast.tree.FromElement;
@@ -48,7 +49,7 @@ import antlr.collections.AST;
  */
 public class SyntheticAndFactory implements HqlSqlTokenTypes {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, SyntheticAndFactory.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, SyntheticAndFactory.class.getName());
 
 	private HqlSqlWalker hqlSqlWalker;
 	private AST thetaJoins;

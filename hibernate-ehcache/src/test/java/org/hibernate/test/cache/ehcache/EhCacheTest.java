@@ -26,7 +26,7 @@ package org.hibernate.test.cache.ehcache;
 import java.util.Map;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.cache.EhCacheProvider;
+import org.hibernate.cache.internal.EhCacheProvider;
 import org.hibernate.cache.ReadWriteCache;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;

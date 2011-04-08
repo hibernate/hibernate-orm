@@ -1,23 +1,25 @@
 //$Id$
 package org.hibernate.test.annotations.reflection;
-import static org.hibernate.testing.TestLogger.LOG;
+
 import javax.persistence.PostPersist;
 import javax.persistence.PrePersist;
+
+import org.jboss.logging.Logger;
 
 
 /**
  * @author Emmanuel Bernard
  */
 public class LogListener {
+	private static final Logger log = Logger.getLogger( LogListener.class );
 
 	@PrePersist
 	@PostPersist
 	public void log(Object entity) {
-        LOG.debug("Logging entity " + entity.getClass().getName() + " with hashCode: " + entity.hashCode());
+        log.debug("Logging entity " + entity.getClass().getName() + " with hashCode: " + entity.hashCode());
 	}
 
-
 	public void noLog(Object entity) {
-        LOG.debug("NoLogging entity " + entity.getClass().getName() + " with hashCode: " + entity.hashCode());
+        log.debug("NoLogging entity " + entity.getClass().getName() + " with hashCode: " + entity.hashCode());
 	}
 }

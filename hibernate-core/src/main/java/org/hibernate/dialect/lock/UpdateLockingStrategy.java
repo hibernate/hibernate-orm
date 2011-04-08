@@ -26,7 +26,7 @@ import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
 import org.hibernate.StaleObjectStateException;
@@ -48,7 +48,7 @@ import org.jboss.logging.Logger;
  */
 public class UpdateLockingStrategy implements LockingStrategy {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, UpdateLockingStrategy.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, UpdateLockingStrategy.class.getName());
 
 	private final Lockable lockable;
 	private final LockMode lockMode;

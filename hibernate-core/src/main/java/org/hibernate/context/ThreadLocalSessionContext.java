@@ -39,7 +39,7 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.engine.SessionFactoryImplementor;
@@ -76,7 +76,7 @@ import org.hibernate.event.EventSource;
  */
 public class ThreadLocalSessionContext implements CurrentSessionContext {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
                                                                        ThreadLocalSessionContext.class.getName());
 	private static final Class[] SESSION_PROXY_INTERFACES = new Class[] {
 			Session.class,

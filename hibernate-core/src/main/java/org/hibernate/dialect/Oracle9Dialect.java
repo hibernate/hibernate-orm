@@ -28,7 +28,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.NvlFunction;
@@ -51,7 +51,7 @@ import org.jboss.logging.Logger;
 @Deprecated
 public class Oracle9Dialect extends Dialect {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, Oracle9Dialect.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, Oracle9Dialect.class.getName());
 
 	public Oracle9Dialect() {
 		super();

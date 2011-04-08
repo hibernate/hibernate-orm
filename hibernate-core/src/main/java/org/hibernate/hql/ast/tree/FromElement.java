@@ -27,7 +27,8 @@ package org.hibernate.hql.ast.tree;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import org.hibernate.HibernateLogger;
+
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.QueryException;
 import org.hibernate.engine.JoinSequence;
 import org.hibernate.hql.CollectionProperties;
@@ -61,7 +62,7 @@ import org.jboss.logging.Logger;
  */
 public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, ParameterContainer {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, FromElement.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, FromElement.class.getName());
 
 	private String className;
 	private String classAlias;

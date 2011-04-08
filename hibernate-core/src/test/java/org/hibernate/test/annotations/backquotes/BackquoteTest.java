@@ -1,15 +1,26 @@
 //$Id$
 package org.hibernate.test.annotations.backquotes;
 
-import static org.hibernate.testing.TestLogger.LOG;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import junit.framework.TestCase;
+
+import org.jboss.logging.Logger;
+
 import org.hibernate.MappingException;
-import org.hibernate.cfg.AnnotationConfiguration;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.service.ServiceRegistry;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
 import org.hibernate.testing.ServiceRegistryBuilder;
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
+
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Testcase for ANN-718 - @JoinTable / @JoinColumn fail when using backquotes in PK field name.
@@ -17,23 +28,26 @@ import org.hibernate.testing.ServiceRegistryBuilder;
  * @author Hardy Ferentschik
  *
  */
-public class BackquoteTest extends TestCase {
+public class BackquoteTest extends BaseUnitTestCase {
+	private static final Logger log = Logger.getLogger( BackquoteTest.class );
 
 	private ServiceRegistry serviceRegistry;
 
-	@Override
+	@Before
     protected void setUp() {
 		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() );
 	}
 
-	@Override
+	@After
     protected void tearDown() {
         if (serviceRegistry != null) ServiceRegistryBuilder.destroy(serviceRegistry);
 	}
 
+	@Test
+	@TestForIssue( jiraKey = "ANN-718" )
 	public void testBackquotes() {
 		try {
-			AnnotationConfiguration config = new AnnotationConfiguration();
+			Configuration config = new Configuration();
 			config.addAnnotatedClass(Bug.class);
 			config.addAnnotatedClass(Category.class);
 			config.buildSessionFactory( serviceRegistry );
@@ -41,7 +55,7 @@ public class BackquoteTest extends TestCase {
 		catch( Exception e ) {
 			StringWriter writer = new StringWriter();
 			e.printStackTrace(new PrintWriter(writer));
-            LOG.debug(writer.toString());
+            log.debug(writer.toString());
 			fail(e.getMessage());
 		}
 	}
@@ -53,9 +67,11 @@ public class BackquoteTest extends TestCase {
 	 *  infinite loop in o.h.c.Configuration$MappingsImpl#getPhysicalColumnName().
 	 *  The same issue exists with getLogicalColumnName()
 	 */
+	@Test
+	@TestForIssue( jiraKey = "HHH-4647" )
 	public void testInvalidReferenceToQuotedTableName() {
     	try {
-    		AnnotationConfiguration config = new AnnotationConfiguration();
+    		Configuration config = new Configuration();
     		config.addAnnotatedClass(Printer.class);
     		config.addAnnotatedClass(PrinterCable.class);
     		config.buildSessionFactory( serviceRegistry );
@@ -68,7 +84,7 @@ public class BackquoteTest extends TestCase {
         catch(Exception e) {
         	StringWriter writer = new StringWriter();
 			e.printStackTrace(new PrintWriter(writer));
-            LOG.debug(writer.toString());
+            log.debug(writer.toString());
         	fail(e.getMessage());
         }
 	}

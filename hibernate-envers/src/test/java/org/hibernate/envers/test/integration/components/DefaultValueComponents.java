@@ -35,7 +35,7 @@ import javax.persistence.EntityManager;
 import java.math.BigInteger;
 import java.util.Arrays;
 
-import static org.hibernate.testing.TestLogger.*;
+import org.jboss.logging.Logger;
 
 /**
  * Test class for components with default values.
@@ -47,6 +47,7 @@ import static org.hibernate.testing.TestLogger.*;
  * @author Erik-Berndt Scheper
  */
 public class DefaultValueComponents extends AbstractEntityTest {
+	private static final Logger log = Logger.getLogger( DefaultValueComponents.class );
 
 	private Integer id0;
 	private Integer id1;
@@ -139,19 +140,19 @@ public class DefaultValueComponents extends AbstractEntityTest {
 
 	@Test
 	public void testRevisionsCounts() {
-        LOG.error(getAuditReader().getRevisions(
+        log.error(getAuditReader().getRevisions(
 				DefaultValueComponentTestEntity.class, id0).toString());
-        LOG.error(getAuditReader().getRevisions(
+        log.error(getAuditReader().getRevisions(
 				DefaultValueComponentTestEntity.class, id1).toString());
-        LOG.error(getAuditReader().getRevisions(
+        log.error(getAuditReader().getRevisions(
 				DefaultValueComponentTestEntity.class, id2).toString());
-        LOG.error(getAuditReader().getRevisions(
+        log.error(getAuditReader().getRevisions(
 				DefaultValueComponentTestEntity.class, id3).toString());
-        LOG.error(getAuditReader().getRevisions(
+        log.error(getAuditReader().getRevisions(
 				DefaultValueComponentTestEntity.class, id4).toString());
-        LOG.error(getAuditReader().getRevisions(
+        log.error(getAuditReader().getRevisions(
 				DefaultValueComponentTestEntity.class, id5).toString());
-        LOG.error(getAuditReader().getRevisions(
+        log.error(getAuditReader().getRevisions(
 				DefaultValueComponentTestEntity.class, id6).toString());
 
 		assert Arrays.asList(1, 2).equals(
@@ -191,9 +192,9 @@ public class DefaultValueComponents extends AbstractEntityTest {
 		DefaultValueComponentTestEntity ent2 = getAuditReader().find(
 				DefaultValueComponentTestEntity.class, id0, 2);
 
-        LOG.error("------------ id0 -------------");
-        LOG.error(ent1.toString());
-        LOG.error(ent2.toString());
+        log.error("------------ id0 -------------");
+        log.error(ent1.toString());
+        log.error(ent2.toString());
 
 		checkCorrectlyPersisted(id0, null, null);
 
@@ -214,9 +215,9 @@ public class DefaultValueComponents extends AbstractEntityTest {
 		DefaultValueComponentTestEntity ent2 = getAuditReader().find(
 				DefaultValueComponentTestEntity.class, id1, 2);
 
-        LOG.error("------------ id1 -------------");
-        LOG.error(ent1.toString());
-        LOG.error(ent2.toString());
+        log.error("------------ id1 -------------");
+        log.error(ent1.toString());
+        log.error(ent2.toString());
 
 		checkCorrectlyPersisted(id1, null, "upd-c2-str1");
 
@@ -238,9 +239,9 @@ public class DefaultValueComponents extends AbstractEntityTest {
 		DefaultValueComponentTestEntity ent2 = getAuditReader().find(
 				DefaultValueComponentTestEntity.class, id2, 2);
 
-        LOG.error("------------ id2 -------------");
-        LOG.error(ent1.toString());
-        LOG.error(ent2.toString());
+        log.error("------------ id2 -------------");
+        log.error(ent1.toString());
+        log.error(ent2.toString());
 
 		DefaultValueComponentTestEntity expectedVer1 = DefaultValueComponentTestEntity
 				.of(id2, DefaultValueComponent1.of("c1-str1",
@@ -261,9 +262,9 @@ public class DefaultValueComponents extends AbstractEntityTest {
 		DefaultValueComponentTestEntity ent2 = getAuditReader().find(
 				DefaultValueComponentTestEntity.class, id3, 2);
 
-        LOG.error("------------ id3 -------------");
-        LOG.error(ent1.toString());
-        LOG.error(ent2.toString());
+        log.error("------------ id3 -------------");
+        log.error(ent1.toString());
+        log.error(ent2.toString());
 
 		DefaultValueComponentTestEntity expectedVer1 = DefaultValueComponentTestEntity
 				.of(id3, DefaultValueComponent1.of(null, DefaultValueComponent2
@@ -284,9 +285,9 @@ public class DefaultValueComponents extends AbstractEntityTest {
 		DefaultValueComponentTestEntity ent2 = getAuditReader().find(
 				DefaultValueComponentTestEntity.class, id4, 2);
 
-        LOG.error("------------ id4 -------------");
-        LOG.error(ent1.toString());
-        LOG.error(ent2.toString());
+        log.error("------------ id4 -------------");
+        log.error(ent1.toString());
+        log.error(ent2.toString());
 
 		DefaultValueComponentTestEntity expectedVer1 = DefaultValueComponentTestEntity
 				.of(id4, DefaultValueComponent1.of(null, DefaultValueComponent2
@@ -307,9 +308,9 @@ public class DefaultValueComponents extends AbstractEntityTest {
 		DefaultValueComponentTestEntity ent2 = getAuditReader().find(
 				DefaultValueComponentTestEntity.class, id5, 2);
 
-        LOG.error("------------ id5 -------------");
-        LOG.error(ent1.toString());
-        LOG.error(ent2.toString());
+        log.error("------------ id5 -------------");
+        log.error(ent1.toString());
+        log.error(ent2.toString());
 
 		DefaultValueComponentTestEntity expectedVer1 = DefaultValueComponentTestEntity
 				.of(id5, DefaultValueComponent1.of(null, DefaultValueComponent2
@@ -330,9 +331,9 @@ public class DefaultValueComponents extends AbstractEntityTest {
 		DefaultValueComponentTestEntity ent2 = getAuditReader().find(
 				DefaultValueComponentTestEntity.class, id6, 2);
 
-        LOG.error("------------ id6 -------------");
-        LOG.error(ent1.toString());
-        LOG.error(ent2.toString());
+        log.error("------------ id6 -------------");
+        log.error(ent1.toString());
+        log.error(ent2.toString());
 
 		DefaultValueComponentTestEntity expectedVer1 = DefaultValueComponentTestEntity
 				.of(id6, DefaultValueComponent1.of(null, null));

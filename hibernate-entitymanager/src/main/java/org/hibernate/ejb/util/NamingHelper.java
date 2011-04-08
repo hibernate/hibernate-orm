@@ -32,7 +32,7 @@ import javax.naming.event.NamingExceptionEvent;
 import javax.naming.event.NamingListener;
 import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.ejb.EntityManagerLogger;
+import org.hibernate.ejb.internal.EntityManagerMessageLogger;
 import org.hibernate.internal.util.jndi.JndiHelper;
 import org.jboss.logging.Logger;
 
@@ -42,7 +42,7 @@ import org.jboss.logging.Logger;
 public class NamingHelper {
 	private NamingHelper() {}
 
-    private static final EntityManagerLogger LOG = Logger.getMessageLogger(EntityManagerLogger.class, NamingHelper.class.getName());
+    private static final EntityManagerMessageLogger LOG = Logger.getMessageLogger(EntityManagerMessageLogger.class, NamingHelper.class.getName());
 
 	/** bind the configuration to the JNDI */
 	public static void bind(Ejb3Configuration cfg) {

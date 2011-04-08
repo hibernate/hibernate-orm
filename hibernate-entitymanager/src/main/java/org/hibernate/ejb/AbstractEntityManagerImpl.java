@@ -84,6 +84,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.ValueHandlerFactory;
 import org.hibernate.ejb.criteria.expression.CompoundSelectionImpl;
+import org.hibernate.ejb.internal.EntityManagerMessageLogger;
 import org.hibernate.ejb.util.CacheModeHelper;
 import org.hibernate.ejb.util.ConfigurationHelper;
 import org.hibernate.ejb.util.LockModeTypeHelper;
@@ -118,7 +119,7 @@ import org.hibernate.type.Type;
 @SuppressWarnings("unchecked")
 public abstract class AbstractEntityManagerImpl implements HibernateEntityManagerImplementor, Serializable {
 
-    private static final EntityManagerLogger LOG = Logger.getMessageLogger(EntityManagerLogger.class,
+    private static final EntityManagerMessageLogger LOG = Logger.getMessageLogger(EntityManagerMessageLogger.class,
                                                                            AbstractEntityManagerImpl.class.getName());
 
 	private static final List<String> entityManagerSpecificProperties = new ArrayList<String>();

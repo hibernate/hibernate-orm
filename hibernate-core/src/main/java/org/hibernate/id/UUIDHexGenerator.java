@@ -24,7 +24,8 @@
 package org.hibernate.id;
 import java.io.Serializable;
 import java.util.Properties;
-import org.hibernate.HibernateLogger;
+
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.internal.util.config.ConfigurationHelper;
@@ -45,7 +46,7 @@ import org.jboss.logging.Logger;
  */
 public class UUIDHexGenerator extends AbstractUUIDGenerator implements Configurable {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, UUIDHexGenerator.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, UUIDHexGenerator.class.getName());
 
 	private static boolean warned = false;
 

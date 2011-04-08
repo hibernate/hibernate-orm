@@ -27,7 +27,8 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import org.hibernate.ejb.EntityManagerLogger;
+
+import org.hibernate.ejb.internal.EntityManagerMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.jboss.logging.Logger;
 
@@ -36,7 +37,7 @@ import org.jboss.logging.Logger;
  */
 public class JarVisitorFactory {
 
-    private static final EntityManagerLogger LOG = Logger.getMessageLogger(EntityManagerLogger.class,
+    private static final EntityManagerMessageLogger LOG = Logger.getMessageLogger(EntityManagerMessageLogger.class,
                                                                            JarVisitorFactory.class.getName());
 
 	/**

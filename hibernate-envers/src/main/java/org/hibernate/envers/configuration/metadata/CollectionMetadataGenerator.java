@@ -34,7 +34,7 @@ import java.util.TreeSet;
 import javax.persistence.JoinColumn;
 import org.dom4j.Element;
 import org.hibernate.MappingException;
-import org.hibernate.envers.EnversLogger;
+import org.hibernate.envers.internal.EnversMessageLogger;
 import org.hibernate.envers.ModificationStore;
 import org.hibernate.envers.RelationTargetAuditMode;
 import org.hibernate.envers.configuration.metadata.reader.PropertyAuditingData;
@@ -92,7 +92,7 @@ import org.jboss.logging.Logger;
  */
 public final class CollectionMetadataGenerator {
 
-    public static final EnversLogger LOG = Logger.getMessageLogger(EnversLogger.class, CollectionMetadataGenerator.class.getName());
+    public static final EnversMessageLogger LOG = Logger.getMessageLogger(EnversMessageLogger.class, CollectionMetadataGenerator.class.getName());
 
     private final AuditMetadataGenerator mainGenerator;
     private final String propertyName;

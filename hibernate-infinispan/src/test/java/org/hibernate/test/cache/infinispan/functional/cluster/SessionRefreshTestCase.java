@@ -28,6 +28,7 @@ import javax.transaction.TransactionManager;
 import org.infinispan.Cache;
 import org.infinispan.manager.CacheContainer;
 import org.infinispan.test.TestingUtil;
+import org.jboss.logging.Logger;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
@@ -39,7 +40,6 @@ import org.junit.Test;
 import org.hibernate.test.cache.infinispan.functional.classloader.Account;
 import org.hibernate.test.cache.infinispan.functional.classloader.ClassLoaderTestDAO;
 
-import static org.hibernate.testing.TestLogger.LOG;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -50,6 +50,8 @@ import static org.junit.Assert.assertNotNull;
  * @since 3.5
  */
 public class SessionRefreshTestCase extends DualNodeTestCase {
+	private static final Logger log = Logger.getLogger( SessionRefreshTestCase.class );
+
 	static int test = 0;
 	private Cache localCache;
 
@@ -115,13 +117,13 @@ public class SessionRefreshTestCase extends DualNodeTestCase {
 		Account acct0 = dao0.getAccount( id );
 		assertNotNull( acct0 );
 		assertEquals( DualNodeTestCase.LOCAL, acct0.getBranch() );
-		LOG.debug( "Contents when re-reading from local: " + TestingUtil.printCache( localCache ) );
+		log.debug( "Contents when re-reading from local: " + TestingUtil.printCache( localCache ) );
 
 		// Now call session.refresh and confirm we get the correct value
 		acct0 = dao0.getAccountWithRefresh( id );
 		assertNotNull( acct0 );
 		assertEquals( DualNodeTestCase.REMOTE, acct0.getBranch() );
-		LOG.debug( "Contents after refreshing in remote: " + TestingUtil.printCache( localCache ) );
+		log.debug( "Contents after refreshing in remote: " + TestingUtil.printCache( localCache ) );
 
 		// Double check with a brand new session, in case the other session
 		// for some reason bypassed the 2nd level cache
@@ -129,6 +131,6 @@ public class SessionRefreshTestCase extends DualNodeTestCase {
 		Account acct0A = dao0A.getAccount( id );
 		assertNotNull( acct0A );
 		assertEquals( DualNodeTestCase.REMOTE, acct0A.getBranch() );
-		LOG.debug( "Contents after creating a new session: " + TestingUtil.printCache( localCache ) );
+		log.debug( "Contents after creating a new session: " + TestingUtil.printCache( localCache ) );
 	}
 }

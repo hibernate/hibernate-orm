@@ -31,12 +31,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.query.sql.NativeSQLQueryReturn;
 import org.hibernate.loader.custom.CustomQuery;
 import org.hibernate.persister.collection.SQLLoadableCollection;
 import org.hibernate.persister.entity.SQLLoadable;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -50,7 +51,7 @@ import org.jboss.logging.Logger;
  */
 public class SQLCustomQuery implements CustomQuery {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, SQLCustomQuery.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, SQLCustomQuery.class.getName());
 
 	private final String sql;
 	private final Set querySpaces = new HashSet();

@@ -28,10 +28,12 @@ import java.util.Properties;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
-import org.hibernate.HibernateLogger;
+
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.jndi.JndiHelper;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -42,7 +44,7 @@ import org.jboss.logging.Logger;
  */
 public abstract class AbstractJndiBoundCacheProvider implements CacheProvider {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
                                                                        AbstractJndiBoundCacheProvider.class.getName());
 
 	private Object cache;

@@ -28,7 +28,7 @@ import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.Statement;
 
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.JDBCException;
 import org.hibernate.exception.SQLExceptionConverter;
 import org.hibernate.exception.SQLStateConverter;
@@ -44,7 +44,7 @@ import org.jboss.logging.Logger.Level;
  */
 public class SqlExceptionHelper {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, SqlExceptionHelper.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, SqlExceptionHelper.class.getName());
 
 	public static final String DEFAULT_EXCEPTION_MSG = "SQL Exception";
 	public static final String DEFAULT_WARNING_MSG = "SQL Warning";

@@ -31,7 +31,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Properties;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.ObjectNameNormalizer;
@@ -82,7 +82,7 @@ import org.jboss.logging.Logger;
  */
 public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenerator, Configurable {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
                                                                        MultipleHiLoPerTableGenerator.class.getName());
 
 	public static final String ID_TABLE = "table";

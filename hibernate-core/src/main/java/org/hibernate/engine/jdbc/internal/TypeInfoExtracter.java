@@ -27,8 +27,10 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.LinkedHashSet;
-import org.hibernate.HibernateLogger;
+
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.ArrayHelper;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -38,7 +40,7 @@ import org.jboss.logging.Logger;
  */
 public class TypeInfoExtracter {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, TypeInfoExtracter.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, TypeInfoExtracter.class.getName());
 
 	private TypeInfoExtracter() {
 	}

@@ -46,7 +46,7 @@ import com.mchange.v2.c3p0.DataSources;
  */
 public class C3P0ConnectionProvider implements ConnectionProvider {
 
-    private static final C3P0Logger LOG = Logger.getMessageLogger(C3P0Logger.class, C3P0ConnectionProvider.class.getName());
+    private static final C3P0MessageLogger LOG = Logger.getMessageLogger(C3P0MessageLogger.class, C3P0ConnectionProvider.class.getName());
 
 	//swaldman 2006-08-28: define c3p0-style configuration parameters for properties with
 	//                     hibernate-specific overrides to detect and warn about conflicting
@@ -123,7 +123,7 @@ public class C3P0ConnectionProvider implements ConnectionProvider {
         LOG.connectionProperties(ConfigurationHelper.maskOut(connectionProps, "password"));
 
 		autocommit = ConfigurationHelper.getBoolean( Environment.AUTOCOMMIT, props );
-        LOG.autoCommitMode(autocommit);
+        LOG.autoCommitMode( autocommit );
 
         if (jdbcDriverClass == null) LOG.jdbcDriverNotSpecified(Environment.DRIVER);
 		else {

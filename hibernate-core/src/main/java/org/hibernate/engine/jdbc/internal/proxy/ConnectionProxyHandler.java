@@ -32,11 +32,12 @@ import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.engine.jdbc.spi.JdbcResourceRegistry;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.engine.jdbc.spi.NonDurableConnectionObserver;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -48,7 +49,7 @@ public class ConnectionProxyHandler
 		extends AbstractProxyHandler
 		implements InvocationHandler, NonDurableConnectionObserver {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
                                                                        ConnectionProxyHandler.class.getName());
 
 	private LogicalConnectionImplementor logicalConnection;

@@ -33,7 +33,7 @@ import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.SingularAttribute;
 import org.hibernate.annotations.common.AssertionFailure;
-import org.hibernate.ejb.EntityManagerLogger;
+import org.hibernate.ejb.internal.EntityManagerMessageLogger;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.KeyValue;
@@ -57,7 +57,7 @@ import org.jboss.logging.Logger;
  */
 class MetadataContext {
 
-    private static final EntityManagerLogger LOG = Logger.getMessageLogger(EntityManagerLogger.class,
+    private static final EntityManagerMessageLogger LOG = Logger.getMessageLogger(EntityManagerMessageLogger.class,
                                                                            MetadataContext.class.getName());
 
 	private final SessionFactoryImplementor sessionFactory;

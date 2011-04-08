@@ -26,10 +26,12 @@ import java.sql.DatabaseMetaData;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import org.hibernate.HibernateLogger;
+
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.exception.JDBCConnectionException;
 import org.hibernate.service.jdbc.dialect.spi.DialectResolver;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -40,7 +42,7 @@ import org.jboss.logging.Logger;
  */
 public class DialectResolverSet implements DialectResolver {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, DialectResolverSet.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, DialectResolverSet.class.getName());
 
 	private List<DialectResolver> resolvers;
 

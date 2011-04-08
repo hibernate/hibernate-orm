@@ -36,7 +36,7 @@ import org.jboss.logging.Logger;
 import org.hibernate.CacheMode;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.cache.CacheKey;
 import org.hibernate.cache.entry.CollectionCacheEntry;
 import org.hibernate.collection.PersistentCollection;
@@ -60,7 +60,7 @@ import org.hibernate.pretty.MessageHelper;
  */
 public class CollectionLoadContext {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, CollectionLoadContext.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, CollectionLoadContext.class.getName());
 
 	private final LoadContexts loadContexts;
 	private final ResultSet resultSet;

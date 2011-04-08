@@ -30,7 +30,7 @@ import java.io.Serializable;
 import java.util.Collection;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.MappingException;
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -45,7 +45,7 @@ import org.jboss.logging.Logger;
  */
 public final class CollectionEntry implements Serializable {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, CollectionEntry.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, CollectionEntry.class.getName());
 
 	//ATTRIBUTES MAINTAINED BETWEEN FLUSH CYCLES
 

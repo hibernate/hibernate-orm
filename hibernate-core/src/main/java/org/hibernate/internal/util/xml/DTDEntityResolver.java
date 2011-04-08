@@ -25,8 +25,9 @@ package org.hibernate.internal.util.xml;
 
 import java.io.InputStream;
 import java.io.Serializable;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ConfigHelper;
+
 import org.jboss.logging.Logger;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
@@ -54,7 +55,7 @@ import org.xml.sax.InputSource;
  */
 public class DTDEntityResolver implements EntityResolver, Serializable {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, DTDEntityResolver.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, DTDEntityResolver.class.getName());
 
 	private static final String HIBERNATE_NAMESPACE = "http://www.hibernate.org/dtd/";
 	private static final String OLD_HIBERNATE_NAMESPACE = "http://hibernate.sourceforge.net/";

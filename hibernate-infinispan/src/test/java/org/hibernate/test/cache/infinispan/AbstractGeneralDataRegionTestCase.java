@@ -26,6 +26,7 @@ package org.hibernate.test.cache.infinispan;
 import java.util.Set;
 
 import org.infinispan.transaction.tm.BatchModeTransactionManager;
+import org.jboss.logging.Logger;
 
 import org.hibernate.cache.GeneralDataRegion;
 import org.hibernate.cache.QueryResultsRegion;
@@ -39,7 +40,6 @@ import org.junit.Test;
 
 import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
 
-import static org.hibernate.testing.TestLogger.LOG;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
@@ -50,6 +50,8 @@ import static org.junit.Assert.assertNull;
  * @since 3.5
  */
 public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionImplTestCase {
+	private static final Logger log = Logger.getLogger( AbstractGeneralDataRegionTestCase.class );
+
 	protected static final String KEY = "Key";
 
 	protected static final String VALUE1 = "value1";
@@ -218,7 +220,7 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
 			BatchModeTransactionManager.getInstance().rollback();
 		}
 		catch (Exception e) {
-			LOG.error( e.getMessage(), e );
+			log.error( e.getMessage(), e );
 		}
 	}
 }

@@ -30,7 +30,7 @@ import org.jboss.logging.Logger;
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.pretty.MessageHelper;
@@ -42,7 +42,7 @@ import org.hibernate.type.CollectionType;
  */
 public final class Collections {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, Collections.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, Collections.class.getName());
 
 	private Collections() {}
 

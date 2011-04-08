@@ -40,7 +40,7 @@ import org.dom4j.Attribute;
 import org.dom4j.Document;
 import org.dom4j.Element;
 
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.InvalidMappingException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.XClass;
@@ -56,7 +56,7 @@ import org.jboss.logging.Logger;
  */
 public class MetadataSourceQueue implements Serializable {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, MetadataSourceQueue.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, MetadataSourceQueue.class.getName());
 
 	private final Metadata metadata;
 

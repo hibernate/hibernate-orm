@@ -34,7 +34,7 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.AnyMetaDef;
 import org.hibernate.annotations.AnyMetaDefs;
@@ -62,6 +62,7 @@ import org.hibernate.mapping.SyntheticProperty;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -71,7 +72,7 @@ public class BinderHelper {
 
 	public static final String ANNOTATION_STRING_DEFAULT = "";
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, BinderHelper.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, BinderHelper.class.getName());
 
 	private BinderHelper() {
 	}
@@ -637,7 +638,7 @@ public class BinderHelper {
 
 	private static void bindAnyMetaDef(AnyMetaDef defAnn, Mappings mappings) {
 		if ( isEmptyAnnotationValue( defAnn.name() ) ) return; //don't map not named definitions
-        LOG.bindingAnyMetaDefinition(defAnn.name());
+        LOG.bindingAnyMetaDefinition( defAnn.name() );
 		mappings.addAnyMetaDef( defAnn );
 	}
 

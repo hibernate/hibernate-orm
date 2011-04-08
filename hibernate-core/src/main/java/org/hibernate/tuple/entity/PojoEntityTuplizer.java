@@ -35,7 +35,7 @@ import org.jboss.logging.Logger;
 import org.hibernate.EntityMode;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.MappingException;
 import org.hibernate.bytecode.instrumentation.internal.FieldInterceptionHelper;
 import org.hibernate.bytecode.instrumentation.spi.FieldInterceptor;
@@ -64,7 +64,7 @@ import org.hibernate.type.CompositeType;
  */
 public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, PojoEntityTuplizer.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, PojoEntityTuplizer.class.getName());
 
 	private final Class mappedClass;
 	private final Class proxyInterface;

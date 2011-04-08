@@ -24,7 +24,8 @@
 package org.hibernate.service.jdbc.dialect.internal;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
-import org.hibernate.HibernateLogger;
+
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.DerbyTenFiveDialect;
@@ -46,6 +47,7 @@ import org.hibernate.dialect.SQLServer2008Dialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseAnywhereDialect;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -55,7 +57,7 @@ import org.jboss.logging.Logger;
  */
 public class StandardDialectResolver extends AbstractDialectResolver {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
                                                                        StandardDialectResolver.class.getName());
 
 	@Override

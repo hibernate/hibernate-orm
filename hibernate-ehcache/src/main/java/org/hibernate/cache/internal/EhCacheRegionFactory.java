@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2007-2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Inc.
+ * distributed under license by Red Hat Middleware LLC.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,23 +20,21 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
+ *
  */
-package org.hibernate.envers;
-
-import static org.jboss.logging.Logger.Level.WARN;
-import org.hibernate.HibernateLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
+package org.hibernate.cache.internal;
+import java.util.Properties;
 
 /**
- * Defines internationalized messages for this hibernate-envers, with IDs ranging from 25001 to 30000 inclusively. New messages must
- * be added after the last message defined to ensure message codes are unique.
+ * Thin wrapper class around the within Ehcache-core packaged EhCacheRegionFactory.
+ * It directly delegates to the wrapped instance, enabling users to upgrade Ehcache-core versions
+ * by simply dropping in the new jar.
+ *
+ * @author Alex Snaps
  */
-@MessageLogger( projectCode = "HHH" )
-public interface EnversLogger extends HibernateLogger {
+public final class EhCacheRegionFactory extends AbstractEhCacheRegionFactory {
 
-    @LogMessage( level = WARN )
-    @Message( value = "ValidTimeAuditStrategy is deprecated, please use ValidityAuditStrategy instead", id = 25001 )
-    void validTimeAuditStrategyDeprecated();
+	public EhCacheRegionFactory(Properties properties) {
+		super(new net.sf.ehcache.hibernate.EhCacheRegionFactory(properties));
+	}
 }

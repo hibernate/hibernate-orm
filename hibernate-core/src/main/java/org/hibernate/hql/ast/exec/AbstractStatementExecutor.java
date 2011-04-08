@@ -30,7 +30,7 @@ import java.sql.Statement;
 import java.util.Collections;
 import java.util.List;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.action.internal.BulkOperationCleanupAction;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
@@ -56,14 +56,14 @@ import antlr.collections.AST;
  */
 public abstract class AbstractStatementExecutor implements StatementExecutor {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
                                                                        AbstractStatementExecutor.class.getName());
 
 	private final HqlSqlWalker walker;
 	private List idSelectParameterSpecifications = Collections.EMPTY_LIST;
 
     public AbstractStatementExecutor( HqlSqlWalker walker,
-                                      HibernateLogger log ) {
+                                      CoreMessageLogger log ) {
 		this.walker = walker;
 	}
 

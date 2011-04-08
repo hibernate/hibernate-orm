@@ -30,13 +30,14 @@ import javax.transaction.SystemException;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.transaction.spi.IsolationDelegate;
 import org.hibernate.engine.transaction.spi.TransactionCoordinator;
 import org.hibernate.jdbc.WorkExecutorVisitable;
 import org.hibernate.jdbc.WorkExecutor;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -46,7 +47,7 @@ import org.jboss.logging.Logger;
  */
 public class JtaIsolationDelegate implements IsolationDelegate {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, JtaIsolationDelegate.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, JtaIsolationDelegate.class.getName());
 
 	private final TransactionCoordinator transactionCoordinator;
 

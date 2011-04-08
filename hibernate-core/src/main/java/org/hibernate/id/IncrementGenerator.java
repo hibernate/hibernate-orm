@@ -29,7 +29,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Properties;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.dialect.Dialect;
@@ -54,7 +54,7 @@ import org.jboss.logging.Logger;
  */
 public class IncrementGenerator implements IdentifierGenerator, Configurable {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, IncrementGenerator.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, IncrementGenerator.class.getName());
 
 	private Class returnClass;
 	private String sql;

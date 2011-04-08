@@ -24,7 +24,7 @@
  */
 package org.hibernate.hql.ast.tree;
 
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.engine.JoinSequence;
 import org.hibernate.hql.antlr.SqlTokenTypes;
 import org.hibernate.hql.ast.util.ASTUtil;
@@ -54,7 +54,7 @@ import antlr.collections.AST;
  */
 public class FromElementFactory implements SqlTokenTypes {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, FromElementFactory.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, FromElementFactory.class.getName());
 
 	private FromClause fromClause;
 	private FromElement origin;

@@ -25,6 +25,8 @@ package org.hibernate.test.annotations.naturalid;
 
 import java.util.List;
 
+import org.jboss.logging.Logger;
+
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -38,7 +40,6 @@ import org.junit.Test;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
-import static org.hibernate.testing.TestLogger.LOG;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -51,9 +52,11 @@ import static org.junit.Assert.assertTrue;
 @SuppressWarnings("unchecked")
 @TestForIssue( jiraKey = "ANN-750" )
 public class NaturalIdOnSingleManyToOneTest extends BaseCoreFunctionalTestCase {
+	private static final Logger log = Logger.getLogger( NaturalIdOnSingleManyToOneTest.class );
+
 	@Test
 	public void testMappingProperties() {
-        LOG.warn("Commented out test");
+        log.warn("Commented out test");
 
 		ClassMetadata metaData = sessionFactory().getClassMetadata(
 				NaturalIdOnManyToOne.class

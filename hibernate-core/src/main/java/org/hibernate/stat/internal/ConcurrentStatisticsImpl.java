@@ -29,7 +29,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.jboss.logging.Logger;
 
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.cache.Region;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
@@ -48,7 +48,7 @@ import org.hibernate.stat.spi.StatisticsImplementor;
 @SuppressWarnings({ "unchecked" })
 public class ConcurrentStatisticsImpl implements StatisticsImplementor, Service {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, ConcurrentStatisticsImpl.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, ConcurrentStatisticsImpl.class.getName());
 
 	private SessionFactoryImplementor sessionFactory;
 

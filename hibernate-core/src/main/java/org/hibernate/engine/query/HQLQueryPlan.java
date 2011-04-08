@@ -35,7 +35,7 @@ import java.util.Set;
 import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollableResults;
 import org.hibernate.engine.QueryParameters;
@@ -62,7 +62,7 @@ public class HQLQueryPlan implements Serializable {
 
     // TODO : keep separate notions of QT[] here for shallow/non-shallow queries...
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, HQLQueryPlan.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, HQLQueryPlan.class.getName());
 
 	private final String sourceQuery;
 	private final QueryTranslator[] translators;

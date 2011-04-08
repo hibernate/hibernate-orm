@@ -1,9 +1,8 @@
 header
 {
-// $Id: hql-sql.g 10001 2006-06-08 21:08:04Z steve.ebersole@jboss.com $
 package org.hibernate.hql.antlr;
 
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.jboss.logging.Logger;
 }
 
@@ -56,7 +55,7 @@ tokens
 
 // -- Declarations --
 {
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, HqlSqlBaseWalker.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, HqlSqlBaseWalker.class.getName());
 
 	private int level = 0;
 	private boolean inSelect = false;

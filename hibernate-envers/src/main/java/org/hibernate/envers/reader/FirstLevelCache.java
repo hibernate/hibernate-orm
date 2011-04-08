@@ -25,7 +25,7 @@ package org.hibernate.envers.reader;
 import static org.hibernate.envers.tools.Tools.newHashMap;
 import static org.hibernate.envers.tools.Triple.make;
 import java.util.Map;
-import org.hibernate.envers.EnversLogger;
+import org.hibernate.envers.internal.EnversMessageLogger;
 import org.hibernate.envers.tools.Triple;
 import org.jboss.logging.Logger;
 
@@ -37,7 +37,7 @@ import org.jboss.logging.Logger;
  */
 public class FirstLevelCache {
 
-    public static final EnversLogger LOG = Logger.getMessageLogger(EnversLogger.class, FirstLevelCache.class.getName());
+    public static final EnversMessageLogger LOG = Logger.getMessageLogger(EnversMessageLogger.class, FirstLevelCache.class.getName());
 
     /**
      * cache for resolve an object for a given id, revision and entityName.

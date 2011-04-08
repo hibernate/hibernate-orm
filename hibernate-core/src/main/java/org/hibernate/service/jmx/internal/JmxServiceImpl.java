@@ -30,13 +30,14 @@ import javax.management.MBeanServerFactory;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.Service;
 import org.hibernate.service.jmx.spi.JmxService;
 import org.hibernate.service.spi.Manageable;
 import org.hibernate.service.spi.Stoppable;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -46,7 +47,7 @@ import org.jboss.logging.Logger;
  */
 public class JmxServiceImpl implements JmxService, Stoppable {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, JmxServiceImpl.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, JmxServiceImpl.class.getName());
 
 	public static final String JMX_PLATFORM_SERVER = "hibernate.jmx.usePlatformServer";
 	public static final String JMX_AGENT_ID = "hibernate.jmx.agentId";

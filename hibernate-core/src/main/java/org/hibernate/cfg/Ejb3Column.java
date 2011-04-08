@@ -26,7 +26,7 @@ package org.hibernate.cfg;
 import java.util.Map;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.ColumnTransformers;
 import org.hibernate.annotations.Index;
@@ -38,6 +38,7 @@ import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -48,7 +49,7 @@ import org.jboss.logging.Logger;
  */
 public class Ejb3Column {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, Ejb3Column.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, Ejb3Column.class.getName());
 
 	private Column mappingColumn;
 	private boolean insertable = true;

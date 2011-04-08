@@ -21,25 +21,28 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.ejb;
+package org.hibernate.ejb.internal;
 
 import static org.jboss.logging.Logger.Level.ERROR;
 import static org.jboss.logging.Logger.Level.INFO;
 import static org.jboss.logging.Logger.Level.WARN;
 import java.net.URISyntaxException;
 import java.net.URL;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
+
 import org.jboss.logging.Cause;
 import org.jboss.logging.LogMessage;
 import org.jboss.logging.Message;
 import org.jboss.logging.MessageLogger;
 
 /**
- * Defines internationalized messages for this hibernate-entitymanager, with IDs ranging from 15001 to 20000 inclusively. New
- * messages must be added after the last message defined to ensure message codes are unique.
+ * The jboss-logging {@link MessageLogger} for the hibernate-entitymanager module.  It reserves message ids ranging from
+ * 15001 to 20000 inclusively.
+ * <p/>
+ * New messages must be added after the last message defined to ensure message codes are unique.
  */
 @MessageLogger( projectCode = "HHH" )
-public interface EntityManagerLogger extends HibernateLogger {
+public interface EntityManagerMessageLogger extends CoreMessageLogger {
 
     @LogMessage( level = INFO )
     @Message( value = "Bound Ejb3Configuration to JNDI name: %s", id = 15001 )

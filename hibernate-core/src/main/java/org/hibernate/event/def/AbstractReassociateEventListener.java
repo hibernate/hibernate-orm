@@ -27,7 +27,7 @@ import java.io.Serializable;
 
 import org.jboss.logging.Logger;
 
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.LockMode;
 import org.hibernate.engine.EntityEntry;
 import org.hibernate.engine.EntityKey;
@@ -47,7 +47,7 @@ import org.hibernate.type.TypeHelper;
  */
 public class AbstractReassociateEventListener implements Serializable {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
                                                                        AbstractReassociateEventListener.class.getName());
 
 	/**

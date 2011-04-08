@@ -24,7 +24,9 @@
 package org.hibernate.internal.util.xml;
 
 import java.io.Serializable;
-import org.hibernate.HibernateLogger;
+
+import org.hibernate.internal.CoreMessageLogger;
+
 import org.jboss.logging.Logger;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXParseException;
@@ -37,7 +39,7 @@ import org.xml.sax.SAXParseException;
  */
 public class ErrorLogger implements ErrorHandler, Serializable {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, ErrorLogger.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, ErrorLogger.class.getName());
 
 	private SAXParseException error; // capture the initial error
 

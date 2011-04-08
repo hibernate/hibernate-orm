@@ -29,7 +29,7 @@ import java.io.ObjectOutputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
@@ -56,7 +56,7 @@ import org.jboss.logging.Logger;
  */
 public class JdbcCoordinatorImpl implements JdbcCoordinator {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, JdbcCoordinatorImpl.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, JdbcCoordinatorImpl.class.getName());
 
 	private transient TransactionCoordinatorImpl transactionCoordinator;
 

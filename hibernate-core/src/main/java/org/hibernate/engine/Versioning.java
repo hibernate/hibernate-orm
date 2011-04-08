@@ -23,7 +23,7 @@
  *
  */
 package org.hibernate.engine;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.VersionType;
 import org.jboss.logging.Logger;
@@ -57,7 +57,7 @@ public final class Versioning {
 	 */
 	public static final int OPTIMISTIC_LOCK_DIRTY = 1;
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, Versioning.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, Versioning.class.getName());
 
 	/**
 	 * Private constructor disallowing instantiation.

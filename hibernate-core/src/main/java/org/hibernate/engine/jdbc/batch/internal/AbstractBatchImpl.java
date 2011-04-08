@@ -27,13 +27,15 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import org.hibernate.HibernateLogger;
+
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.batch.spi.BatchObserver;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -43,7 +45,7 @@ import org.jboss.logging.Logger;
  */
 public abstract class AbstractBatchImpl implements Batch {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, AbstractBatchImpl.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, AbstractBatchImpl.class.getName());
 
 	private final BatchKey key;
 	private final JdbcCoordinator jdbcCoordinator;

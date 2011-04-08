@@ -23,6 +23,8 @@
  */
 package org.hibernate.test.annotations.id;
 
+import org.jboss.logging.Logger;
+
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 
@@ -33,7 +35,6 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.test.annotations.id.entities.Planet;
 import org.hibernate.test.annotations.id.entities.PlanetCheatSheet;
 
-import static org.hibernate.testing.TestLogger.LOG;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
@@ -45,6 +46,8 @@ import static org.junit.Assert.assertNull;
 @SuppressWarnings("unchecked")
 @TestForIssue( jiraKey = "ANN-744" )
 public class EnumIdTest extends BaseCoreFunctionalTestCase {
+	private static final Logger log = Logger.getLogger( EnumIdTest.class );
+
 	@Test
 	public void testEnumAsId() throws Exception {
 		Session s = openSession();
@@ -62,7 +65,7 @@ public class EnumIdTest extends BaseCoreFunctionalTestCase {
 		tx = s.beginTransaction();
 		PlanetCheatSheet mercuryFromDb = (PlanetCheatSheet) s.get(PlanetCheatSheet.class, mercury.getPlanet());
 		assertNotNull(mercuryFromDb);
-        LOG.debug(mercuryFromDb.toString());
+        log.debug(mercuryFromDb.toString());
 		s.delete(mercuryFromDb);
 		tx.commit();
 		s.close();

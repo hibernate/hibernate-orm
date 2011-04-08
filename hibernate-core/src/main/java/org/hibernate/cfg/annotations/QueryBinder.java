@@ -34,7 +34,7 @@ import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.LockMode;
 import org.hibernate.annotations.CacheModeType;
 import org.hibernate.annotations.FlushModeType;
@@ -45,6 +45,7 @@ import org.hibernate.engine.NamedQueryDefinition;
 import org.hibernate.engine.NamedSQLQueryDefinition;
 import org.hibernate.engine.query.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.query.sql.NativeSQLQueryRootReturn;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -53,7 +54,7 @@ import org.jboss.logging.Logger;
  * @author Emmanuel Bernard
  */
 public abstract class QueryBinder {
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, QueryBinder.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, QueryBinder.class.getName());
 
 	public static void bindQuery(NamedQuery queryAnn, Mappings mappings, boolean isDefault) {
 		if ( queryAnn == null ) return;
@@ -80,7 +81,7 @@ public abstract class QueryBinder {
 		else {
 			mappings.addQuery( queryAnn.name(), query );
 		}
-        LOG.bindingNamedQuery(queryAnn.name(), queryAnn.query());
+        LOG.bindingNamedQuery( queryAnn.name(), queryAnn.query() );
 	}
 
 
@@ -141,7 +142,7 @@ public abstract class QueryBinder {
 		else {
 			mappings.addSQLQuery( queryAnn.name(), query );
 		}
-        LOG.bindingNamedNativeQuery(queryAnn.name(), queryAnn.query());
+        LOG.bindingNamedNativeQuery( queryAnn.name(), queryAnn.query() );
 	}
 
 	public static void bindNativeQuery(org.hibernate.annotations.NamedNativeQuery queryAnn, Mappings mappings) {
@@ -194,7 +195,7 @@ public abstract class QueryBinder {
 			throw new NotYetImplementedException( "Pure native scalar queries are not yet supported" );
 		}
 		mappings.addSQLQuery( queryAnn.name(), query );
-        LOG.bindingNamedNativeQuery(queryAnn.name(), queryAnn.query());
+        LOG.bindingNamedNativeQuery( queryAnn.name(), queryAnn.query() );
 	}
 
 	public static void bindQueries(NamedQueries queriesAnn, Mappings mappings, boolean isDefault) {
@@ -241,7 +242,7 @@ public abstract class QueryBinder {
 		);
 
 		mappings.addQuery( queryAnn.name(), query );
-        LOG.bindingNamedQuery(queryAnn.name(), queryAnn.query());
+        LOG.bindingNamedQuery( queryAnn.name(), queryAnn.query() );
 	}
 
 	private static FlushMode getFlushMode(FlushModeType flushModeType) {

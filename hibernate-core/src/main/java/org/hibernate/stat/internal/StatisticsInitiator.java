@@ -26,7 +26,7 @@ package org.hibernate.stat.internal;
 import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
@@ -39,7 +39,7 @@ import org.hibernate.stat.spi.StatisticsImplementor;
  * @author Steve Ebersole
  */
 public class StatisticsInitiator implements SessionFactoryServiceInitiator<StatisticsImplementor> {
-	private static final HibernateLogger LOG = Logger.getMessageLogger( HibernateLogger.class, StatisticsInitiator.class.getName() );
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, StatisticsInitiator.class.getName() );
 
 	public static final StatisticsInitiator INSTANCE = new StatisticsInitiator();
 

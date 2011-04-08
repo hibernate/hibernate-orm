@@ -25,8 +25,9 @@
 package org.hibernate.sql.ordering.antlr;
 import java.io.StringReader;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.hql.ast.util.ASTPrinter;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -36,7 +37,7 @@ import org.jboss.logging.Logger;
  */
 public class OrderByFragmentTranslator {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
                                                                        OrderByFragmentTranslator.class.getName());
 
 	public final TranslationContext context;

@@ -31,7 +31,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import org.hibernate.EntityMode;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.engine.CollectionKey;
 import org.hibernate.engine.PersistenceContext;
@@ -39,6 +39,7 @@ import org.hibernate.engine.SessionImplementor;
 import org.hibernate.internal.util.collections.IdentityMap;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.pretty.MessageHelper;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -59,7 +60,7 @@ import org.jboss.logging.Logger;
  */
 public class LoadContexts {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, LoadContexts.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, LoadContexts.class.getName());
 
 	private final PersistenceContext persistenceContext;
 	private Map collectionLoadContexts;

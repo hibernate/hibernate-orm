@@ -41,7 +41,7 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.QueryException;
@@ -101,7 +101,7 @@ import org.hibernate.type.VersionType;
  */
 public abstract class Loader {
 
-    protected static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, Loader.class.getName());
+    protected static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, Loader.class.getName());
 
 	private final SessionFactoryImplementor factory;
 	private ColumnNameCache columnNameCache;

@@ -34,12 +34,13 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.exception.SQLExceptionConverter;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Table;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -48,7 +49,7 @@ import org.jboss.logging.Logger;
  */
 public class DatabaseMetadata {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, DatabaseMetaData.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, DatabaseMetaData.class.getName());
 
 	private final Map tables = new HashMap();
 	private final Set sequences = new HashSet();

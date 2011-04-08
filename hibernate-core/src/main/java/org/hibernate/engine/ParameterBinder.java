@@ -28,7 +28,7 @@ import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.Map;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.type.Type;
 import org.jboss.logging.Logger;
 
@@ -43,7 +43,7 @@ import org.jboss.logging.Logger;
  */
 public class ParameterBinder {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, ParameterBinder.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, ParameterBinder.class.getName());
 
 	public static interface NamedParameterSource {
 		public int[] getNamedParameterLocations(String name);

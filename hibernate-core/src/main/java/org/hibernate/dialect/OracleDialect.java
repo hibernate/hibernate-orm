@@ -23,7 +23,8 @@
  */
 package org.hibernate.dialect;
 import java.sql.Types;
-import org.hibernate.HibernateLogger;
+
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.DecodeCaseFragment;
 import org.hibernate.sql.JoinFragment;
@@ -39,7 +40,7 @@ import org.jboss.logging.Logger;
 @Deprecated
 public class OracleDialect extends Oracle9Dialect {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, OracleDialect.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, OracleDialect.class.getName());
 
 	public OracleDialect() {
 		super();

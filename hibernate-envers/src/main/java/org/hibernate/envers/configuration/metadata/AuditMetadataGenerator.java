@@ -28,7 +28,7 @@ import java.util.Map;
 import org.dom4j.Element;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.envers.EnversLogger;
+import org.hibernate.envers.internal.EnversMessageLogger;
 import org.hibernate.envers.RelationTargetAuditMode;
 import org.hibernate.envers.configuration.AuditEntitiesConfiguration;
 import org.hibernate.envers.configuration.GlobalConfiguration;
@@ -67,7 +67,7 @@ import org.jboss.logging.Logger;
  */
 public final class AuditMetadataGenerator {
 
-    public static final EnversLogger LOG = Logger.getMessageLogger(EnversLogger.class, AuditMetadataGenerator.class.getName());
+    public static final EnversMessageLogger LOG = Logger.getMessageLogger(EnversMessageLogger.class, AuditMetadataGenerator.class.getName());
 
     private final Configuration cfg;
     private final GlobalConfiguration globalCfg;

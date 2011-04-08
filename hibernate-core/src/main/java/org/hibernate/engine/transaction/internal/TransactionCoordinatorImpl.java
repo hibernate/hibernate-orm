@@ -24,7 +24,7 @@
 package org.hibernate.engine.transaction.internal;
 
 import org.hibernate.ConnectionReleaseMode;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.ResourceClosedException;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.jdbc.internal.JdbcCoordinatorImpl;
@@ -61,7 +61,7 @@ import java.util.List;
  */
 public class TransactionCoordinatorImpl implements TransactionCoordinator {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, TransactionCoordinatorImpl.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, TransactionCoordinatorImpl.class.getName());
 
 	private final transient TransactionContext transactionContext;
 	private final transient JdbcCoordinatorImpl jdbcCoordinator;

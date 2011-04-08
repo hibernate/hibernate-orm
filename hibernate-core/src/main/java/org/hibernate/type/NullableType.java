@@ -32,7 +32,7 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.MappingException;
 import org.hibernate.engine.Mapping;
 import org.hibernate.engine.SessionFactoryImplementor;
@@ -50,7 +50,7 @@ import org.hibernate.metamodel.relational.Size;
  */
 @Deprecated
 public abstract class NullableType extends AbstractType implements StringRepresentableType, XmlRepresentableType {
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, NullableType.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, NullableType.class.getName());
 
 	private final Size dictatedSize = new Size();
 

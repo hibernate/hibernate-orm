@@ -26,9 +26,10 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Map;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -39,7 +40,7 @@ import org.jboss.logging.Logger;
  */
 public class BatchingBatch extends AbstractBatchImpl {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, BatchingBatch.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, BatchingBatch.class.getName());
 
 	// IMPL NOTE : Until HHH-5797 is fixed, there will only be 1 statement in a batch
 

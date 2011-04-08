@@ -1,17 +1,20 @@
 // $Id$
 package org.hibernate.test.annotations.namingstrategy;
 
-import static org.hibernate.testing.TestLogger.LOG;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Iterator;
-import junit.framework.TestCase;
+
+import org.jboss.logging.Logger;
+
 import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.cfg.EJB3NamingStrategy;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Mappings;
 import org.hibernate.mapping.Table;
 import org.hibernate.service.ServiceRegistry;
+
+import junit.framework.TestCase;
 
 import org.hibernate.testing.ServiceRegistryBuilder;
 
@@ -21,6 +24,7 @@ import org.hibernate.testing.ServiceRegistryBuilder;
  * @author Hardy Ferentschik
  */
 public class NamingStrategyTest extends TestCase {
+	private static final Logger log = Logger.getLogger( NamingStrategyTest.class );
 
 	private ServiceRegistry serviceRegistry;
 
@@ -45,7 +49,7 @@ public class NamingStrategyTest extends TestCase {
 		catch( Exception e ) {
 			StringWriter writer = new StringWriter();
 			e.printStackTrace(new PrintWriter(writer));
-            LOG.debug(writer.toString());
+            log.debug(writer.toString());
 			fail(e.getMessage());
 		}
 	}
@@ -62,7 +66,7 @@ public class NamingStrategyTest extends TestCase {
 
 			for ( Iterator iter = mappings.iterateTables(); iter.hasNext();  ) {
 				Table table = (Table) iter.next();
-                LOG.info("testWithEJB3NamingStrategy table = " + table.getName());
+                log.info("testWithEJB3NamingStrategy table = " + table.getName());
 				if ( table.getName().equalsIgnoreCase("A_ADDRESS")) {
 					foundIt = true;
 				}
@@ -74,7 +78,7 @@ public class NamingStrategyTest extends TestCase {
 		catch( Exception e ) {
 			StringWriter writer = new StringWriter();
 			e.printStackTrace(new PrintWriter(writer));
-            LOG.debug(writer.toString());
+            log.debug(writer.toString());
 			fail(e.getMessage());
 		}
 	}
@@ -89,7 +93,7 @@ public class NamingStrategyTest extends TestCase {
 		catch( Exception e ) {
 			StringWriter writer = new StringWriter();
 			e.printStackTrace(new PrintWriter(writer));
-            LOG.debug(writer.toString());
+            log.debug(writer.toString());
 			fail(e.getMessage());
 		}
 	}

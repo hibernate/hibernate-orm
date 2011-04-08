@@ -23,7 +23,7 @@
  *
  */
 package org.hibernate.engine;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.MappingException;
 import org.hibernate.id.IdentifierGeneratorHelper;
 import org.jboss.logging.Logger;
@@ -38,7 +38,7 @@ import org.jboss.logging.Logger;
  */
 public class VersionValue {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, VersionValue.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, VersionValue.class.getName());
 
 	private final Object value;
 	/**

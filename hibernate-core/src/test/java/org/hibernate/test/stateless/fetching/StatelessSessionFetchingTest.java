@@ -25,6 +25,8 @@ package org.hibernate.test.stateless.fetching;
 
 import java.util.Date;
 
+import org.jboss.logging.Logger;
+
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.StatelessSession;
@@ -36,7 +38,6 @@ import org.junit.Test;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
-import static org.hibernate.testing.TestLogger.LOG;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -44,6 +45,8 @@ import static org.junit.Assert.assertTrue;
  * @author Steve Ebersole
  */
 public class StatelessSessionFetchingTest extends BaseCoreFunctionalTestCase {
+	private static final Logger log = Logger.getLogger( StatelessSessionFetchingTest.class );
+
 	@Override
 	public String[] getMappings() {
 		return new String[] { "stateless/fetching/Mappings.hbm.xml" };
@@ -60,7 +63,7 @@ public class StatelessSessionFetchingTest extends BaseCoreFunctionalTestCase {
 
 		protected String applyPrefix(String baseTableName) {
 			String prefixed = prefix + '_' + baseTableName;
-            LOG.debug("prefixed table name : " + baseTableName + " -> " + prefixed);
+            log.debug("prefixed table name : " + baseTableName + " -> " + prefixed);
 			return prefixed;
 		}
 

@@ -30,7 +30,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.Type;
 import org.jboss.logging.Logger;
@@ -43,7 +43,7 @@ import org.jboss.logging.Logger;
  */
 public final class IdentifierGeneratorHelper {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
                                                                        IdentifierGeneratorHelper.class.getName());
 
 	/**

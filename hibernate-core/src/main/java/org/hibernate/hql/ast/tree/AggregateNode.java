@@ -22,7 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.hql.ast.tree;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.hql.ast.util.ColumnHelper;
@@ -38,7 +38,7 @@ import antlr.collections.AST;
  */
 public class AggregateNode extends AbstractSelectExpression implements SelectExpression, FunctionNode {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, AggregateNode.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, AggregateNode.class.getName());
 
 	private SQLFunction sqlFunction;
 

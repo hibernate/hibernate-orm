@@ -22,10 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.testing.tm;
-import static org.hibernate.testing.TestLogger.LOG;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.LinkedList;
+
 import javax.transaction.HeuristicMixedException;
 import javax.transaction.HeuristicRollbackException;
 import javax.transaction.RollbackException;
@@ -34,6 +31,11 @@ import javax.transaction.Synchronization;
 import javax.transaction.SystemException;
 import javax.transaction.Transaction;
 import javax.transaction.xa.XAResource;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.LinkedList;
+
+import org.jboss.logging.Logger;
 
 /**
  * SimpleJtaTransactionImpl implementation
@@ -41,6 +43,7 @@ import javax.transaction.xa.XAResource;
  * @author Steve Ebersole
  */
 public class SimpleJtaTransactionImpl implements Transaction {
+	private static final Logger log = Logger.getLogger( SimpleJtaTransactionImpl.class );
 
 	private int status;
 	private LinkedList synchronizations;
@@ -60,7 +63,7 @@ public class SimpleJtaTransactionImpl implements Transaction {
 			throws RollbackException, HeuristicMixedException, HeuristicRollbackException, IllegalStateException, SystemException {
 
 		if ( status == Status.STATUS_MARKED_ROLLBACK ) {
-            LOG.trace("on commit, status was marked for rollback-only");
+            log.trace("on commit, status was marked for rollback-only");
 			rollback();
 		}
 		else {

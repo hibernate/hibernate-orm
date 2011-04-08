@@ -26,6 +26,8 @@ package org.hibernate.test.annotations.immutable;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.jboss.logging.Logger;
+
 import org.hibernate.AnnotationException;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
@@ -37,7 +39,6 @@ import org.junit.Test;
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
-import static org.hibernate.testing.TestLogger.LOG;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -50,6 +51,8 @@ import static org.junit.Assert.fail;
  */
 @SuppressWarnings("unchecked")
 public class ImmutableTest extends BaseCoreFunctionalTestCase {
+	private static final Logger log = Logger.getLogger( ImmutableTest.class );
+
 	@Test
 	public void testImmutableEntity() throws Exception {
 		Session s = openSession();
@@ -120,7 +123,7 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 		}
 		catch (HibernateException e) {
 			assertTrue(e.getMessage().contains("changed an immutable collection instance"));
-            LOG.debug("success");
+            log.debug("success");
 		}
 		s.close();
 
@@ -137,7 +140,7 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 			fail();
 		} catch (HibernateException e) {
 			assertTrue(e.getMessage().contains("changed an immutable collection instance"));
-            LOG.debug("success");
+            log.debug("success");
 		}
 		s.close();
 
@@ -159,7 +162,7 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 			fail();
 		}
 		catch (AnnotationException ae) {
-            LOG.debug("succes");
+            log.debug("succes");
 		}
 	}
 

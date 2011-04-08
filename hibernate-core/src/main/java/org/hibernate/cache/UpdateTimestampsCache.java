@@ -27,8 +27,9 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.cfg.Settings;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -44,7 +45,7 @@ import org.jboss.logging.Logger;
 public class UpdateTimestampsCache {
 
 	public static final String REGION_NAME = UpdateTimestampsCache.class.getName();
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
                                                                                 UpdateTimestampsCache.class.getName());
 
 	private ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();

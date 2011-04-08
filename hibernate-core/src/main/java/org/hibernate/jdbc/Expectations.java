@@ -29,11 +29,12 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Types;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.StaleStateException;
 import org.hibernate.engine.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.exception.GenericJDBCException;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -43,7 +44,7 @@ import org.jboss.logging.Logger;
  */
 public class Expectations {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, Expectations.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, Expectations.class.getName());
 	private static SqlExceptionHelper sqlExceptionHelper = new SqlExceptionHelper();
 
 	public static final int USUAL_EXPECTED_COUNT = 1;

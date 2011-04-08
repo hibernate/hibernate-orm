@@ -24,8 +24,10 @@
 package org.hibernate.engine.transaction.synchronization.internal;
 
 import javax.transaction.Synchronization;
-import org.hibernate.HibernateLogger;
+
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.engine.transaction.synchronization.spi.SynchronizationCallbackCoordinator;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -35,7 +37,7 @@ import org.jboss.logging.Logger;
  */
 public class RegisteredSynchronization implements Synchronization {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
                                                                        RegisteredSynchronization.class.getName());
 
 	private final SynchronizationCallbackCoordinator synchronizationCallbackCoordinator;

@@ -28,12 +28,13 @@ import java.lang.reflect.Constructor;
 import java.sql.SQLException;
 import java.util.Properties;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.JDBCException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -43,7 +44,7 @@ import org.jboss.logging.Logger;
  */
 public class SQLExceptionConverterFactory {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
                                                                        SQLExceptionConverterFactory.class.getName());
 
 	private SQLExceptionConverterFactory() {

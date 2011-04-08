@@ -39,7 +39,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
@@ -79,7 +79,7 @@ import org.jboss.logging.Logger;
  */
 public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, QueryTranslatorImpl.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, QueryTranslatorImpl.class.getName());
 
 	private static final String[] NO_RETURN_ALIASES = new String[] {};
 

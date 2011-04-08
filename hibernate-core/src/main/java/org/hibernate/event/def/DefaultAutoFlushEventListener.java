@@ -25,10 +25,11 @@
 package org.hibernate.event.def;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.event.AutoFlushEvent;
 import org.hibernate.event.AutoFlushEventListener;
 import org.hibernate.event.EventSource;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -39,7 +40,7 @@ import org.jboss.logging.Logger;
  */
 public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener implements AutoFlushEventListener {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
                                                                        DefaultAutoFlushEventListener.class.getName());
 
     /** Handle the given auto-flush event.

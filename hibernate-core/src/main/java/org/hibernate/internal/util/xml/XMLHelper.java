@@ -30,7 +30,9 @@ import org.dom4j.io.DOMReader;
 import org.dom4j.io.OutputFormat;
 import org.dom4j.io.SAXReader;
 import org.dom4j.io.XMLWriter;
-import org.hibernate.HibernateLogger;
+
+import org.hibernate.internal.CoreMessageLogger;
+
 import org.jboss.logging.Logger;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.ErrorHandler;
@@ -42,7 +44,7 @@ import org.xml.sax.SAXParseException;
  */
 public final class XMLHelper {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, XMLHelper.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, XMLHelper.class.getName());
 
 	public static final EntityResolver DEFAULT_DTD_RESOLVER = new DTDEntityResolver();
 

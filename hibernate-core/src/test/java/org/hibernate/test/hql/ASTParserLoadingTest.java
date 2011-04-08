@@ -35,6 +35,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.jboss.logging.Logger;
+
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Query;
@@ -66,16 +68,6 @@ import org.hibernate.type.ComponentType;
 import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.Type;
 
-import static org.hibernate.testing.TestLogger.LOG;
-import static org.hibernate.testing.junit4.ExtraAssertions.assertClassAssignability;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import org.junit.Test;
 
 import org.hibernate.testing.DialectChecks;
@@ -94,6 +86,15 @@ import org.hibernate.test.cid.LineItem.Id;
 import org.hibernate.test.cid.Order;
 import org.hibernate.test.cid.Product;
 
+import static org.hibernate.testing.junit4.ExtraAssertions.assertClassAssignability;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 /**
  * Tests the integration of the new AST parser into the loading of query results using
  * the Hibernate persisters and loaders.
@@ -105,6 +106,8 @@ import org.hibernate.test.cid.Product;
  * @author Steve
  */
 public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
+	private static final Logger log = Logger.getLogger( ASTParserLoadingTest.class );
+
 	private List<Long> createdAnimalIds = new ArrayList<Long>();
 
 	@Override
@@ -374,7 +377,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 			fail( "illegal collection dereference semantic did not cause failure" );
 		}
 		catch( QueryException qe ) {
-            LOG.trace("expected failure...", qe);
+            log.trace("expected failure...", qe);
 		}
 
 		try {
@@ -382,7 +385,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 			fail( "illegal collection dereference semantic did not cause failure" );
 		}
 		catch( QueryException qe ) {
-            LOG.trace("expected failure...", qe);
+            log.trace("expected failure...", qe);
 		}
 
 		try {
@@ -390,7 +393,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 			fail( "illegal collection dereference semantic did not cause failure" );
 		}
 		catch( QueryException qe ) {
-            LOG.trace("expected failure...", qe);
+            log.trace("expected failure...", qe);
 		}
 
 		try {
@@ -398,7 +401,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 			fail( "illegal collection dereference semantic did not cause failure" );
 		}
 		catch( QueryException qe ) {
-            LOG.trace("expected failure...", qe);
+            log.trace("expected failure...", qe);
 		}
 
 		s.getTransaction().commit();

@@ -1774,7 +1774,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect</programlisting>
 
     &lt;!-- Second-level caching --&gt;
     &lt;attribute name="SecondLevelCacheEnabled"&gt;true&lt;/attribute&gt;
-    &lt;attribute name="CacheProviderClass"&gt;org.hibernate.cache.EhCacheProvider&lt;/attribute&gt;
+    &lt;attribute name="CacheProviderClass"&gt;org.hibernate.cache.internal.EhCacheProvider&lt;/attribute&gt;
     &lt;attribute name="QueryCacheEnabled"&gt;true&lt;/attribute&gt;
 
     &lt;!-- Logging --&gt;

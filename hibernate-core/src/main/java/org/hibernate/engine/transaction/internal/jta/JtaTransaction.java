@@ -28,13 +28,14 @@ import javax.transaction.SystemException;
 import javax.transaction.TransactionManager;
 import javax.transaction.UserTransaction;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.TransactionException;
 import org.hibernate.engine.transaction.spi.AbstractTransactionImpl;
 import org.hibernate.engine.transaction.spi.IsolationDelegate;
 import org.hibernate.engine.transaction.spi.JoinStatus;
 import org.hibernate.engine.transaction.spi.LocalStatus;
 import org.hibernate.engine.transaction.spi.TransactionCoordinator;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -46,7 +47,7 @@ import org.jboss.logging.Logger;
  */
 public class JtaTransaction extends AbstractTransactionImpl {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, JtaTransaction.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, JtaTransaction.class.getName());
 
 	private UserTransaction userTransaction;
 

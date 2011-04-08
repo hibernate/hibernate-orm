@@ -30,7 +30,7 @@ import org.jboss.logging.Logger;
 import org.hibernate.AssertionFailure;
 import org.hibernate.CacheMode;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.LockMode;
 import org.hibernate.bytecode.instrumentation.spi.LazyPropertyInitializer;
 import org.hibernate.cache.CacheKey;
@@ -58,8 +58,8 @@ import org.hibernate.type.TypeHelper;
  */
 public final class TwoPhaseLoad {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(
-			HibernateLogger.class, TwoPhaseLoad.class.getName()
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class, TwoPhaseLoad.class.getName()
 	);
 
 	private TwoPhaseLoad() {}

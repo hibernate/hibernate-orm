@@ -22,12 +22,14 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.cache.infinispan.functional.classloader;
-import static org.hibernate.testing.TestLogger.LOG;
+
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
+
+import org.jboss.logging.Logger;
 
 /**
  * A ClassLoader that loads classes whose classname begins with one of a given set of strings, without attempting first to delegate
@@ -47,8 +49,9 @@ import java.util.Map;
  * @author Brian Stansberry
  */
 public class SelectedClassnameClassLoader extends ClassLoader {
+	private static final Logger log = Logger.getLogger( SelectedClassnameClassLoader.class );
 
-    private String[] includedClasses = null;
+	private String[] includedClasses = null;
     private String[] excludedClasses = null;
     private String[] notFoundClasses = null;
 
@@ -94,13 +97,13 @@ public class SelectedClassnameClassLoader extends ClassLoader {
         this.excludedClasses = excludedClasses;
         this.notFoundClasses = notFoundClasses;
 
-        LOG.debug("created " + this);
+        log.debug("created " + this);
     }
 
     @Override
     protected synchronized Class<?> loadClass( String name,
                                                boolean resolve ) throws ClassNotFoundException {
-        LOG.trace("loadClass(" + name + "," + resolve + ")");
+        log.trace("loadClass(" + name + "," + resolve + ")");
         if (isIncluded(name) && (isExcluded(name) == false)) {
             Class c = findClass(name);
 
@@ -117,7 +120,7 @@ public class SelectedClassnameClassLoader extends ClassLoader {
 
     @Override
     protected Class<?> findClass( String name ) throws ClassNotFoundException {
-        LOG.trace("findClass(" + name + ")");
+        log.trace("findClass(" + name + ")");
         Class result = classes.get(name);
         if (result != null) {
             return result;
@@ -137,7 +140,7 @@ public class SelectedClassnameClassLoader extends ClassLoader {
     }
 
     protected Class createClass( String name ) throws ClassFormatError, ClassNotFoundException {
-        LOG.info("createClass(" + name + ")");
+        log.info("createClass(" + name + ")");
         try {
             InputStream is = getResourceAsStream(name.replace('.', '/').concat(".class"));
             byte[] bytes = new byte[1024];

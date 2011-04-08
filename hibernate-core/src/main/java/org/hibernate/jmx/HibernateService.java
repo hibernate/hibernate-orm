@@ -5,7 +5,7 @@ import java.util.Map;
 import java.util.Properties;
 import javax.naming.InitialContext;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.ExternalSessionFactoryConfig;
@@ -27,7 +27,7 @@ import org.jboss.logging.Logger;
  */
 public class HibernateService extends ExternalSessionFactoryConfig implements HibernateServiceMBean {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, HibernateService.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, HibernateService.class.getName());
 
 	private String boundName;
 	private Properties properties = new Properties();

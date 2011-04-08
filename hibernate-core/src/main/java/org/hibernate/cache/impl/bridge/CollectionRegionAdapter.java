@@ -23,7 +23,7 @@
  *
  */
 package org.hibernate.cache.impl.bridge;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.cache.Cache;
 import org.hibernate.cache.CacheConcurrencyStrategy;
 import org.hibernate.cache.CacheDataDescription;
@@ -37,6 +37,7 @@ import org.hibernate.cache.TransactionalCache;
 import org.hibernate.cache.access.AccessType;
 import org.hibernate.cache.access.CollectionRegionAccessStrategy;
 import org.hibernate.cfg.Settings;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -46,7 +47,7 @@ import org.jboss.logging.Logger;
  */
 public class CollectionRegionAdapter extends BaseTransactionalDataRegionAdapter implements CollectionRegion {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
                                                                        CollectionRegionAdapter.class.getName());
 
 	public CollectionRegionAdapter(Cache underlyingCache, Settings settings, CacheDataDescription metadata) {

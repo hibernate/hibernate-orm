@@ -25,7 +25,8 @@ package org.hibernate.engine.transaction.internal;
 
 import java.util.LinkedHashSet;
 import javax.transaction.Synchronization;
-import org.hibernate.HibernateLogger;
+
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.engine.transaction.spi.SynchronizationRegistry;
 import org.jboss.logging.Logger;
 
@@ -36,7 +37,7 @@ import org.jboss.logging.Logger;
  */
 public class SynchronizationRegistryImpl implements SynchronizationRegistry {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
                                                                        SynchronizationRegistryImpl.class.getName());
 
 	private LinkedHashSet<Synchronization> synchronizations;

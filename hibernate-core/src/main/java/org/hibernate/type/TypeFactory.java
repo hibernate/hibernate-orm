@@ -30,7 +30,7 @@ import java.util.Properties;
 import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.MappingException;
 import org.hibernate.classic.Lifecycle;
 import org.hibernate.engine.SessionFactoryImplementor;
@@ -53,7 +53,7 @@ import org.hibernate.usertype.UserType;
 @SuppressWarnings({ "unchecked" })
 public final class TypeFactory implements Serializable {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, TypeFactory.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, TypeFactory.class.getName());
 
 	private final TypeScopeImpl typeScope = new TypeScopeImpl();
 

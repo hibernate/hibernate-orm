@@ -23,12 +23,13 @@
  *
  */
 package org.hibernate.loader.collection;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.MappingException;
 import org.hibernate.engine.LoadQueryInfluencers;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.loader.JoinWalker;
 import org.hibernate.persister.collection.QueryableCollection;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -42,7 +43,7 @@ import org.jboss.logging.Logger;
  */
 public class BasicCollectionLoader extends CollectionLoader {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, BasicCollectionLoader.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, BasicCollectionLoader.class.getName());
 
 	public BasicCollectionLoader(
 			QueryableCollection collectionPersister,

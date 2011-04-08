@@ -31,7 +31,7 @@ import java.util.Properties;
 import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.NamingStrategy;
@@ -49,7 +49,7 @@ import org.hibernate.service.internal.BasicServiceRegistryImpl;
  * @author Christoph Sturm
  */
 public class SchemaValidator {
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, SchemaValidator.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, SchemaValidator.class.getName());
 
 	private ConnectionHelper connectionHelper;
 	private Configuration configuration;

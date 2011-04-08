@@ -41,14 +41,14 @@ import org.jboss.logging.Logger;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XMethod;
-import org.hibernate.ejb.EntityManagerLogger;
+import org.hibernate.ejb.internal.EntityManagerMessageLogger;
 
 /**
  * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>
  */
 public final class CallbackResolver {
 
-    private static final EntityManagerLogger LOG = Logger.getMessageLogger(EntityManagerLogger.class,
+    private static final EntityManagerMessageLogger LOG = Logger.getMessageLogger(EntityManagerMessageLogger.class,
                                                                            CallbackResolver.class.getName());
 
 	private static boolean useAnnotationAnnotatedByListener;

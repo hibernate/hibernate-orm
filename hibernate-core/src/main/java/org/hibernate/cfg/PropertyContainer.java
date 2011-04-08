@@ -38,7 +38,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Transient;
 import org.hibernate.AnnotationException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.ManyToAny;
 import org.hibernate.annotations.Target;
@@ -46,6 +46,7 @@ import org.hibernate.annotations.Type;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.internal.util.StringHelper;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -59,7 +60,7 @@ class PropertyContainer {
         System.setProperty("jboss.i18n.generate-proxies", "true");
     }
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, PropertyContainer.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, PropertyContainer.class.getName());
 
 	private final AccessType explicitClassDefinedAccessType;
 

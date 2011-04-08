@@ -27,6 +27,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import org.infinispan.transaction.tm.BatchModeTransactionManager;
+import org.jboss.logging.Logger;
 
 import org.hibernate.cache.CacheDataDescription;
 import org.hibernate.cache.access.AccessType;
@@ -46,7 +47,6 @@ import org.hibernate.test.cache.infinispan.AbstractNonFunctionalTestCase;
 import org.hibernate.test.cache.infinispan.NodeEnvironment;
 import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
 
-import static org.hibernate.testing.TestLogger.LOG;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -58,6 +58,7 @@ import static org.junit.Assert.assertTrue;
  * @since 3.5
  */
 public abstract class AbstractEntityRegionAccessStrategyTestCase extends AbstractNonFunctionalTestCase {
+	private static final Logger log = Logger.getLogger( AbstractEntityRegionAccessStrategyTestCase.class );
 
 	public static final String REGION_NAME = "test/com.foo.test";
 	public static final String KEY_BASE = "KEY";
@@ -152,12 +153,12 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
 		}
 
 		if ( node1Exception != null ) {
-            LOG.error("node1 saw an exception", node1Exception);
+            log.error("node1 saw an exception", node1Exception);
 			assertEquals( "node1 saw no exceptions", null, node1Exception );
 		}
 
 		if ( node2Exception != null ) {
-            LOG.error("node2 saw an exception", node2Exception);
+            log.error("node2 saw an exception", node2Exception);
 			assertEquals( "node2 saw no exceptions", null, node2Exception );
 		}
 	}
@@ -223,7 +224,7 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
 					BatchModeTransactionManager.getInstance().commit();
 				}
 				catch (Exception e) {
-                    LOG.error("node1 caught exception", e);
+                    log.error("node1 caught exception", e);
 					node1Exception = e;
 					rollback();
 				}
@@ -265,7 +266,7 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
 					BatchModeTransactionManager.getInstance().commit();
 				}
 				catch (Exception e) {
-                    LOG.error("node2 caught exception", e);
+                    log.error("node2 caught exception", e);
 					node2Exception = e;
 					rollback();
 				}
@@ -330,7 +331,7 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
 					BatchModeTransactionManager.getInstance().commit();
 				}
 				catch (Exception e) {
-                    LOG.error("node1 caught exception", e);
+                    log.error("node1 caught exception", e);
 					node1Exception = e;
 					rollback();
 				}
@@ -367,7 +368,7 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
 					BatchModeTransactionManager.getInstance().commit();
 				}
 				catch (Exception e) {
-                    LOG.error("node1 caught exception", e);
+                    log.error("node1 caught exception", e);
 					node1Exception = e;
 					rollback();
 				}
@@ -421,19 +422,19 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
 				try {
 					long txTimestamp = System.currentTimeMillis();
 					BatchModeTransactionManager.getInstance().begin();
-                    LOG.debug("Transaction began, get initial value");
+                    log.debug("Transaction began, get initial value");
 					assertEquals( "Correct initial value", VALUE1, localAccessStrategy.get( KEY, txTimestamp ) );
-                    LOG.debug("Now update value");
+                    log.debug("Now update value");
 					localAccessStrategy.update( KEY, VALUE2, new Integer( 2 ), new Integer( 1 ) );
-                    LOG.debug("Notify the read latch");
+                    log.debug("Notify the read latch");
 					readLatch.countDown();
 					readerUnlocked = true;
-                    LOG.debug("Await commit");
+                    log.debug("Await commit");
 					commitLatch.await();
 					BatchModeTransactionManager.getInstance().commit();
 				}
 				catch (Exception e) {
-                    LOG.error("node1 caught exception", e);
+                    log.error("node1 caught exception", e);
 					node1Exception = e;
 					rollback();
 				}
@@ -445,7 +446,7 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
 					if ( !readerUnlocked ) {
 						readLatch.countDown();
 					}
-                    LOG.debug("Completion latch countdown");
+                    log.debug("Completion latch countdown");
 					completionLatch.countDown();
 				}
 			}
@@ -458,9 +459,9 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
 				try {
 					long txTimestamp = System.currentTimeMillis();
 					BatchModeTransactionManager.getInstance().begin();
-                    LOG.debug("Transaction began, await read latch");
+                    log.debug("Transaction began, await read latch");
 					readLatch.await();
-                    LOG.debug("Read latch acquired, verify local access strategy");
+                    log.debug("Read latch acquired, verify local access strategy");
 
 					// This won't block w/ mvc and will read the old value
 					Object expected = VALUE1;
@@ -469,7 +470,7 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
 					BatchModeTransactionManager.getInstance().commit();
 				}
 				catch (Exception e) {
-                    LOG.error("node1 caught exception", e);
+                    log.error("node1 caught exception", e);
 					node1Exception = e;
 					rollback();
 				}
@@ -479,7 +480,7 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
 				}
 				finally {
 					commitLatch.countDown();
-                    LOG.debug("Completion latch countdown");
+                    log.debug("Completion latch countdown");
 					completionLatch.countDown();
 				}
 			}
@@ -567,7 +568,7 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
 		sleep( 250 );
 
 		if ( evict ) {
-            LOG.debug("Call evict all locally");
+            log.debug("Call evict all locally");
 			localAccessStrategy.evictAll();
 		}
 		else {
@@ -608,7 +609,7 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
 			BatchModeTransactionManager.getInstance().rollback();
 		}
 		catch (Exception e) {
-            LOG.error(e.getMessage(), e);
+            log.error(e.getMessage(), e);
 		}
 	}
 }

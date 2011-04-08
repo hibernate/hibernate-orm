@@ -26,9 +26,11 @@ package org.hibernate.engine.jdbc.batch.internal;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Map;
-import org.hibernate.HibernateLogger;
+
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -39,7 +41,7 @@ import org.jboss.logging.Logger;
  */
 public class NonBatchingBatch extends AbstractBatchImpl {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, NonBatchingBatch.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, NonBatchingBatch.class.getName());
 
 	protected NonBatchingBatch(BatchKey key, JdbcCoordinator jdbcCoordinator) {
 		super( key, jdbcCoordinator );

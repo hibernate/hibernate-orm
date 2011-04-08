@@ -38,7 +38,8 @@ import javax.persistence.TemporalType;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.ParameterExpression;
-import org.hibernate.ejb.EntityManagerLogger;
+
+import org.hibernate.ejb.internal.EntityManagerMessageLogger;
 import org.hibernate.ejb.HibernateEntityManagerImplementor;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
@@ -56,7 +57,7 @@ import org.jboss.logging.Logger;
  */
 public class CriteriaQueryCompiler implements Serializable {
 
-    private static final EntityManagerLogger LOG = Logger.getMessageLogger(EntityManagerLogger.class,
+    private static final EntityManagerMessageLogger LOG = Logger.getMessageLogger(EntityManagerMessageLogger.class,
                                                                            CriteriaQueryCompiler.class.getName());
 
 	/**

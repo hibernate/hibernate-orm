@@ -32,6 +32,7 @@ import org.infinispan.notifications.cachelistener.annotation.CacheEntryVisited;
 import org.infinispan.notifications.cachelistener.event.CacheEntryVisitedEvent;
 import org.infinispan.transaction.tm.BatchModeTransactionManager;
 import org.infinispan.util.concurrent.IsolationLevel;
+import org.jboss.logging.Logger;
 
 import org.hibernate.cache.CacheDataDescription;
 import org.hibernate.cache.QueryResultsRegion;
@@ -48,7 +49,6 @@ import junit.framework.AssertionFailedError;
 import org.hibernate.test.cache.infinispan.AbstractGeneralDataRegionTestCase;
 import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
 
-import static org.hibernate.testing.TestLogger.LOG;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -60,6 +60,7 @@ import static org.junit.Assert.assertTrue;
  * @since 3.5
  */
 public class QueryRegionImplTestCase extends AbstractGeneralDataRegionTestCase {
+	private static final Logger log = Logger.getLogger( QueryRegionImplTestCase.class );
 
 	@Override
 	protected Region createRegion(
@@ -114,7 +115,7 @@ public class QueryRegionImplTestCase extends AbstractGeneralDataRegionTestCase {
 			public void run() {
 				try {
 					BatchModeTransactionManager.getInstance().begin();
-					LOG.debug( "Transaction began, get value for key" );
+					log.debug( "Transaction began, get value for key" );
 					assertTrue( VALUE2.equals( region.get( KEY ) ) == false );
 					BatchModeTransactionManager.getInstance().commit();
 				}
@@ -137,13 +138,13 @@ public class QueryRegionImplTestCase extends AbstractGeneralDataRegionTestCase {
 			public void run() {
 				try {
 					BatchModeTransactionManager.getInstance().begin();
-					LOG.debug( "Put value2" );
+					log.debug( "Put value2" );
 					region.put( KEY, VALUE2 );
-					LOG.debug( "Put finished for value2, await writer latch" );
+					log.debug( "Put finished for value2, await writer latch" );
 					writerLatch.await();
-					LOG.debug( "Writer latch finished" );
+					log.debug( "Writer latch finished" );
 					BatchModeTransactionManager.getInstance().commit();
-					LOG.debug( "Transaction committed" );
+					log.debug( "Transaction committed" );
 				}
 				catch (Exception e) {
 					holder.e2 = e;
@@ -318,7 +319,7 @@ public class QueryRegionImplTestCase extends AbstractGeneralDataRegionTestCase {
 					latch.await();
 				}
 				catch (InterruptedException e) {
-					LOG.error( "Interrupted waiting for latch", e );
+					log.error( "Interrupted waiting for latch", e );
 				}
 			}
 		}

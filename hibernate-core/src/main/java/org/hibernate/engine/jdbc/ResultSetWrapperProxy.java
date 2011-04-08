@@ -29,8 +29,10 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import org.hibernate.HibernateLogger;
+
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -42,7 +44,7 @@ import org.jboss.logging.Logger;
  */
 public class ResultSetWrapperProxy implements InvocationHandler {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, ResultSetWrapperProxy.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, ResultSetWrapperProxy.class.getName());
 	private static final Class[] PROXY_INTERFACES = new Class[] { ResultSet.class };
 	private static final SqlExceptionHelper sqlExceptionHelper = new SqlExceptionHelper();
 

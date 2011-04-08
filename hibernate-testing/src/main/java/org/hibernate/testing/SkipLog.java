@@ -23,9 +23,9 @@
  */
 package org.hibernate.testing;
 
-import org.hibernate.testing.junit4.SkipMarker;
+import org.jboss.logging.Logger;
 
-import static org.hibernate.testing.TestLogger.LOG;
+import org.hibernate.testing.junit4.SkipMarker;
 
 /**
  * Well-known-location lookup for the test-skip log...
@@ -33,12 +33,14 @@ import static org.hibernate.testing.TestLogger.LOG;
  * @author Steve Ebersole
  */
 public class SkipLog {
+	private static final Logger log = Logger.getLogger( SkipLog.class );
+
 	public static void reportSkip(SkipMarker skipMarker) {
-		LOG.info( "*** skipping test [" + skipMarker.getTestName() + "] - " + skipMarker.getReason(), new Exception() );
+		log.info( "*** skipping test [" + skipMarker.getTestName() + "] - " + skipMarker.getReason(), new Exception() );
 	}
 
 	public static void reportSkip(String message) {
-		LOG.info( "*** skipping test - " + message, new Exception() );
+		log.info( "*** skipping test - " + message, new Exception() );
 	}
 
 	public static void reportSkip(String reason, String testDescription) {

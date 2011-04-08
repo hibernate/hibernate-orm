@@ -42,6 +42,8 @@ import java.util.TimeZone;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+import org.jboss.logging.Logger;
+
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
 import org.hibernate.FlushMode;
@@ -87,7 +89,6 @@ import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.env.ConnectionProviderBuilder;
 
-import static org.hibernate.testing.TestLogger.LOG;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -96,6 +97,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 public class FooBarTest extends LegacyTestCase {
+	private static final Logger log = Logger.getLogger( FooBarTest.class );
 
 	@Override
 	public String[] getMappings() {
@@ -2404,7 +2406,7 @@ public class FooBarTest extends LegacyTestCase {
 		).iterate();
 		while ( iter.hasNext() ) {
 			Object[] arr = (Object[]) iter.next();
-            LOG.info(arr[0] + " " + arr[1] + " " + arr[2] + " " + arr[3]);
+            log.info(arr[0] + " " + arr[1] + " " + arr[2] + " " + arr[3]);
 		}
 
 		s.delete(baz);

@@ -77,6 +77,7 @@ import org.hibernate.cfg.beanvalidation.BeanValidationIntegrator;
 import org.hibernate.ejb.connection.InjectedDataSourceConnectionProvider;
 import org.hibernate.ejb.event.JpaEventListenerRegistration;
 import org.hibernate.ejb.instrument.InterceptFieldClassFileTransformer;
+import org.hibernate.ejb.internal.EntityManagerMessageLogger;
 import org.hibernate.ejb.packaging.JarVisitorFactory;
 import org.hibernate.ejb.packaging.NamedInputStream;
 import org.hibernate.ejb.packaging.NativeScanner;
@@ -123,8 +124,8 @@ import org.hibernate.service.jdbc.connections.internal.DatasourceConnectionProvi
  */
 public class Ejb3Configuration implements Serializable, Referenceable {
 
-    private static final EntityManagerLogger LOG = Logger.getMessageLogger(
-			EntityManagerLogger.class,
+    private static final EntityManagerMessageLogger LOG = Logger.getMessageLogger(
+			EntityManagerMessageLogger.class,
 			Ejb3Configuration.class.getName()
 	);
 	private static final String IMPLEMENTATION_NAME = HibernatePersistence.class.getName();

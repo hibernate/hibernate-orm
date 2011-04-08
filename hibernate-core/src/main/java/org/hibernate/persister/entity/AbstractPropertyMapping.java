@@ -26,7 +26,8 @@ package org.hibernate.persister.entity;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.hibernate.HibernateLogger;
+
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.engine.Mapping;
@@ -46,7 +47,7 @@ import org.jboss.logging.Logger;
  */
 public abstract class AbstractPropertyMapping implements PropertyMapping {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
                                                                        AbstractPropertyMapping.class.getName());
 
 	private final Map typesByPropertyPath = new HashMap();

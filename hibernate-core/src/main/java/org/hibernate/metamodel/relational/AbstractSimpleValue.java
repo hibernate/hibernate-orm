@@ -23,7 +23,7 @@
  */
 package org.hibernate.metamodel.relational;
 
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.ValidationException;
 import org.jboss.logging.Logger;
 
@@ -34,7 +34,7 @@ import org.jboss.logging.Logger;
  */
 public abstract class AbstractSimpleValue implements SimpleValue {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, AbstractSimpleValue.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, AbstractSimpleValue.class.getName());
 
 	private final TableSpecification table;
 	private final int position;

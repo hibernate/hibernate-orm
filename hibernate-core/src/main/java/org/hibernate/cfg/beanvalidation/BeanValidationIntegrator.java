@@ -33,7 +33,7 @@ import java.util.Set;
 import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.SessionFactoryImplementor;
@@ -47,7 +47,7 @@ import org.hibernate.service.spi.SessionFactoryServiceRegistry;
  * @author Steve Ebersole
  */
 public class BeanValidationIntegrator implements Integrator {
-	private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, BeanValidationIntegrator.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, BeanValidationIntegrator.class.getName());
 
 	public static final String APPLY_CONSTRAINTS = "hibernate.validator.apply_to_ddl";
 

@@ -28,7 +28,7 @@ import java.io.Serializable;
 import org.jboss.logging.Logger;
 
 import org.hibernate.FlushMode;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.impl.AbstractQueryImpl;
@@ -45,7 +45,7 @@ public final class NamedQueryLoader implements UniqueEntityLoader {
 	private final String queryName;
 	private final EntityPersister persister;
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, NamedQueryLoader.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, NamedQueryLoader.class.getName());
 
 	public NamedQueryLoader(String queryName, EntityPersister persister) {
 		super();

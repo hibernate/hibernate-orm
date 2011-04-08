@@ -25,7 +25,8 @@ package org.hibernate.cfg;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
-import org.hibernate.HibernateLogger;
+
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.MappingException;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.IndexedCollection;
@@ -41,7 +42,7 @@ import org.jboss.logging.Logger;
  */
 public abstract class CollectionSecondPass implements SecondPass {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, CollectionSecondPass.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, CollectionSecondPass.class.getName());
 
 	Mappings mappings;
 	Collection collection;

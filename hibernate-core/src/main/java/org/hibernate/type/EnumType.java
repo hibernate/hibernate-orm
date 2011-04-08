@@ -30,7 +30,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Properties;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.usertype.EnhancedUserType;
@@ -49,7 +49,7 @@ import org.jboss.logging.Logger;
 @SuppressWarnings("unchecked")
 public class EnumType implements EnhancedUserType, ParameterizedType, Serializable {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, EnumType.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, EnumType.class.getName());
 
 	public static final String ENUM = "enumClass";
 	public static final String SCHEMA = "schema";

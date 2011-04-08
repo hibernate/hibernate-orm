@@ -23,7 +23,7 @@
  *
  */
 package org.hibernate.hql.ast.tree;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.hql.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.ast.util.ASTUtil;
 import antlr.collections.AST;
@@ -41,7 +41,7 @@ public abstract class AbstractRestrictableStatement extends AbstractStatement im
 
 	protected abstract int getWhereClauseParentTokenType();
 
-    protected abstract HibernateLogger getLog();
+    protected abstract CoreMessageLogger getLog();
 
 	/**
 	 * @see org.hibernate.hql.ast.tree.RestrictableStatement#getFromClause

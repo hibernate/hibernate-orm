@@ -24,7 +24,8 @@
 package org.hibernate.type.descriptor.sql;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import org.hibernate.HibernateLogger;
+
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.type.descriptor.JdbcTypeNameMapper;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -38,7 +39,7 @@ import org.jboss.logging.Logger;
  */
 public abstract class BasicBinder<J> implements ValueBinder<J> {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, BasicBinder.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, BasicBinder.class.getName());
 
     private static final String BIND_MSG_TEMPLATE = "binding parameter [%s] as [%s] - %s";
     private static final String NULL_BIND_MSG_TEMPLATE = "binding parameter [%s] as [%s] - <null>";

@@ -27,7 +27,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.engine.LoadQueryInfluencers;
@@ -49,7 +49,7 @@ import org.jboss.logging.Logger;
  */
 public class CollectionElementLoader extends OuterJoinLoader {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
                                                                        CollectionElementLoader.class.getName());
 
 	private final OuterJoinLoadable persister;

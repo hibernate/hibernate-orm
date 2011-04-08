@@ -41,7 +41,7 @@ import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
 import org.hibernate.ejb.AvailableSettings;
-import org.hibernate.ejb.EntityManagerLogger;
+import org.hibernate.ejb.internal.EntityManagerMessageLogger;
 import org.hibernate.ejb.util.ConfigurationHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.jboss.logging.Logger;
@@ -62,7 +62,7 @@ import org.xml.sax.SAXParseException;
  */
 public final class PersistenceXmlLoader {
 
-    private static final EntityManagerLogger LOG = Logger.getMessageLogger(EntityManagerLogger.class,
+    private static final EntityManagerMessageLogger LOG = Logger.getMessageLogger(EntityManagerMessageLogger.class,
                                                                            PersistenceXmlLoader.class.getName());
 
 	private PersistenceXmlLoader() {

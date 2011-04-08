@@ -47,7 +47,7 @@ import org.logicalcobwebs.proxool.configuration.PropertyConfigurator;
  */
 public class ProxoolConnectionProvider implements ConnectionProvider {
 
-    public static final ProxoolLogger LOG = Logger.getMessageLogger(ProxoolLogger.class, ProxoolConnectionProvider.class.getName());
+    public static final ProxoolMessageLogger LOG = Logger.getMessageLogger(ProxoolMessageLogger.class, ProxoolConnectionProvider.class.getName());
 
 	private static final String PROXOOL_JDBC_STEM = "proxool.";
 

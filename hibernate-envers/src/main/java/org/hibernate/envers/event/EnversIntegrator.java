@@ -25,7 +25,7 @@ package org.hibernate.envers.event;
 
 import org.jboss.logging.Logger;
 
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.envers.configuration.AuditConfiguration;
@@ -41,7 +41,7 @@ import org.hibernate.service.spi.SessionFactoryServiceRegistry;
  * @author Steve Ebersole
  */
 public class EnversIntegrator implements Integrator {
-	private static final HibernateLogger LOG = Logger.getMessageLogger( HibernateLogger.class, EnversIntegrator.class.getName() );
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, EnversIntegrator.class.getName() );
 
 	public static final String AUTO_REGISTER = "hibernate.listeners.envers.autoRegister";
 

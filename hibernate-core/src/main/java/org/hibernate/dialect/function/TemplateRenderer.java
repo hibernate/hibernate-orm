@@ -24,8 +24,10 @@
 package org.hibernate.dialect.function;
 import java.util.ArrayList;
 import java.util.List;
-import org.hibernate.HibernateLogger;
+
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.engine.SessionFactoryImplementor;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -35,7 +37,7 @@ import org.jboss.logging.Logger;
  */
 public class TemplateRenderer {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, TemplateRenderer.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, TemplateRenderer.class.getName());
 
 	private final String template;
 	private final String[] chunks;

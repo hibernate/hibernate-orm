@@ -28,7 +28,7 @@ import java.util.Map;
 import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.util.jndi.JndiHelper;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
@@ -47,7 +47,7 @@ public class JtaPlatformInitiator implements BasicServiceInitiator<JtaPlatform> 
 	public static final JtaPlatformInitiator INSTANCE = new JtaPlatformInitiator();
 	public static final String JTA_PLATFORM = "hibernate.jta.platform";
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, JtaPlatformInitiator.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, JtaPlatformInitiator.class.getName());
 
 	@Override
 	public Class<JtaPlatform> getServiceInitiated() {

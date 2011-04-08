@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.Map;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.TypedValue;
 import org.hibernate.bytecode.instrumentation.spi.LazyPropertyInitializer;
@@ -44,7 +44,7 @@ import org.jboss.logging.Logger;
  */
 public final class Printer {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, Printer.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, Printer.class.getName());
 
     private SessionFactoryImplementor factory;
 

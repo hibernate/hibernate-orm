@@ -29,7 +29,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Properties;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionImplementor;
@@ -56,7 +56,7 @@ import org.jboss.logging.Logger;
 public class SequenceIdentityGenerator extends SequenceGenerator
 		implements PostInsertIdentifierGenerator {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
                                                                        SequenceIdentityGenerator.class.getName());
 
 	@Override

@@ -34,7 +34,7 @@ import javassist.bytecode.ClassFile;
 import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.bytecode.buildtime.spi.ClassFilter;
 import org.hibernate.bytecode.spi.AbstractClassTransformerImpl;
 
@@ -47,7 +47,7 @@ import org.hibernate.bytecode.spi.AbstractClassTransformerImpl;
  */
 public class JavassistClassTransformer extends AbstractClassTransformerImpl {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
                                                                        JavassistClassTransformer.class.getName());
 
 	public JavassistClassTransformer(ClassFilter classFilter, org.hibernate.bytecode.buildtime.spi.FieldFilter fieldFilter) {

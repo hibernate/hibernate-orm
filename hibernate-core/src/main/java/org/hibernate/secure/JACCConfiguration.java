@@ -29,7 +29,8 @@ import javax.security.jacc.PolicyConfiguration;
 import javax.security.jacc.PolicyConfigurationFactory;
 import javax.security.jacc.PolicyContextException;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -39,7 +40,7 @@ import org.jboss.logging.Logger;
  */
 public class JACCConfiguration {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, JACCConfiguration.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, JACCConfiguration.class.getName());
 
 	private final PolicyConfiguration policyConfiguration;
 

@@ -1,13 +1,6 @@
 //$Id$
 package org.hibernate.ejb.test;
-import static org.hibernate.testing.TestLogger.LOG;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.List;
+
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
@@ -21,6 +14,15 @@ import javax.persistence.PostUpdate;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.List;
+
+import org.jboss.logging.Logger;
 
 /**
  * @author Emmanuel Bernard
@@ -29,6 +31,7 @@ import javax.persistence.Transient;
 @Entity
 @EntityListeners( LastUpdateListener.class )
 public class Cat implements Serializable {
+	private static final Logger log = Logger.getLogger( Cat.class );
 
 	private static final List ids = new ArrayList(); 	// used for assertions
 	public static int postVersion = 0;	// used for assertions
@@ -97,7 +100,7 @@ public class Cat implements Serializable {
 
 	@PostUpdate
 	private void someLateUpdateWorking() {
-        LOG.debug("PostUpdate for: " + this.toString());
+        log.debug("PostUpdate for: " + this.toString());
 		postVersion++;
 	}
 

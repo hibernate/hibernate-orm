@@ -26,8 +26,10 @@ package org.hibernate.internal.util.xml;
 import java.io.StringReader;
 import org.dom4j.Document;
 import org.dom4j.io.SAXReader;
-import org.hibernate.HibernateLogger;
+
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.InvalidMappingException;
+
 import org.jboss.logging.Logger;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
@@ -40,7 +42,7 @@ import org.xml.sax.SAXException;
  */
 public class MappingReader {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, MappingReader.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, MappingReader.class.getName());
 
 	public static final String ASSUMED_ORM_XSD_VERSION = "2.0";
 	public static final MappingReader INSTANCE = new MappingReader();

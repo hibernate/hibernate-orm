@@ -24,9 +24,10 @@
  */
 package org.hibernate.event.def;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.event.DirtyCheckEvent;
 import org.hibernate.event.DirtyCheckEventListener;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -38,7 +39,7 @@ import org.jboss.logging.Logger;
  */
 public class DefaultDirtyCheckEventListener extends AbstractFlushingEventListener implements DirtyCheckEventListener {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
                                                                        DefaultDirtyCheckEventListener.class.getName());
 
     /** Handle the given dirty-check event.

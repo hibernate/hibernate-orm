@@ -36,7 +36,7 @@ import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.Type;
 import org.hibernate.EntityMode;
 import org.hibernate.annotations.common.AssertionFailure;
-import org.hibernate.ejb.EntityManagerLogger;
+import org.hibernate.ejb.internal.EntityManagerMessageLogger;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Map;
@@ -62,7 +62,7 @@ import org.jboss.logging.Logger;
  */
 public class AttributeFactory {
 
-    private static final EntityManagerLogger LOG = Logger.getMessageLogger(EntityManagerLogger.class,
+    private static final EntityManagerMessageLogger LOG = Logger.getMessageLogger(EntityManagerMessageLogger.class,
                                                                            AttributeFactory.class.getName());
 
 	private final MetadataContext context;

@@ -24,17 +24,21 @@
 package org.hibernate.service.jdbc.connections.internal;
 
 import static org.jboss.logging.Logger.Level.INFO;
-import org.hibernate.HibernateLogger;
+
+import org.hibernate.internal.CoreMessageLogger;
+
 import org.jboss.logging.LogMessage;
 import org.jboss.logging.Message;
 import org.jboss.logging.MessageLogger;
 
 /**
- * Defines internationalized messages for this hibernate-proxool, with IDs ranging from 30001 to 35000 inclusively. New messages
- * must be added after the last message defined to ensure message codes are unique.
+ * The jboss-logging {@link MessageLogger} for the hibernate-proxool module.  It reserves message ids ranging from
+ * 30001 to 35000 inclusively.
+ * <p/>
+ * New messages must be added after the last message defined to ensure message codes are unique.
  */
 @MessageLogger( projectCode = "HHH" )
-public interface ProxoolLogger extends HibernateLogger {
+public interface ProxoolMessageLogger extends CoreMessageLogger {
 
     @LogMessage( level = INFO )
     @Message( value = "Autocommit mode: %s", id = 30001 )

@@ -26,6 +26,7 @@ package org.hibernate.test.cache.infinispan;
 import java.util.Set;
 
 import org.infinispan.Cache;
+import org.jboss.logging.Logger;
 
 import org.hibernate.cache.RegionFactory;
 import org.hibernate.cache.infinispan.util.CacheHelper;
@@ -35,8 +36,6 @@ import org.junit.Before;
 
 import org.hibernate.test.cache.infinispan.util.CacheTestSupport;
 
-import static org.hibernate.testing.TestLogger.LOG;
-
 /**
  * Base class for all non-functional tests of Infinispan integration.
  *
@@ -44,7 +43,9 @@ import static org.hibernate.testing.TestLogger.LOG;
  * @since 3.5
  */
 public abstract class AbstractNonFunctionalTestCase extends org.hibernate.testing.junit4.BaseUnitTestCase {
-    public static final String REGION_PREFIX = "test";
+	private static final Logger log = Logger.getLogger( AbstractNonFunctionalTestCase.class );
+
+	public static final String REGION_PREFIX = "test";
 
 	private static final String PREFER_IPV4STACK = "java.net.preferIPv4Stack";
 	private String preferIPv4Stack;
@@ -96,7 +97,7 @@ public abstract class AbstractNonFunctionalTestCase extends org.hibernate.testin
             Thread.sleep(ms);
         }
         catch (InterruptedException e) {
-            LOG.warn("Interrupted during sleep", e);
+            log.warn("Interrupted during sleep", e);
         }
     }
 

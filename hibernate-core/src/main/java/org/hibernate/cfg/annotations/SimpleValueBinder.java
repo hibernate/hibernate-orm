@@ -37,7 +37,7 @@ import javax.persistence.TemporalType;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.Hibernate;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.common.reflection.XClass;
@@ -63,7 +63,7 @@ import org.jboss.logging.Logger;
  * @author Emmanuel Bernard
  */
 public class SimpleValueBinder {
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, SimpleValueBinder.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, SimpleValueBinder.class.getName());
 
 	private String propertyName;
 	private String returnedClassName;

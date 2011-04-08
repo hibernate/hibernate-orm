@@ -29,7 +29,7 @@ import java.util.Map;
 
 import org.jboss.logging.Logger;
 
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.BasicServiceRegistry;
 import org.hibernate.service.Service;
 import org.hibernate.service.StandardServiceInitiators;
@@ -45,7 +45,7 @@ import org.hibernate.service.spi.ServiceRegistryAwareService;
  * @author Steve Ebersole
  */
 public class BasicServiceRegistryImpl extends AbstractServiceRegistryImpl implements BasicServiceRegistry {
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, BasicServiceRegistryImpl.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, BasicServiceRegistryImpl.class.getName());
 
 	private final Map<Class,BasicServiceInitiator> serviceInitiatorMap;
 	private final Map configurationValues;

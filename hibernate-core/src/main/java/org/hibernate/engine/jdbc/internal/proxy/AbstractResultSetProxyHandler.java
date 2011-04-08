@@ -27,9 +27,11 @@ import java.lang.reflect.Method;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import org.hibernate.HibernateLogger;
+
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.engine.jdbc.spi.JdbcResourceRegistry;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -39,7 +41,7 @@ import org.jboss.logging.Logger;
  */
 public abstract class AbstractResultSetProxyHandler extends AbstractProxyHandler {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
                                                                        AbstractResultSetProxyHandler.class.getName());
 
 	private ResultSet resultSet;

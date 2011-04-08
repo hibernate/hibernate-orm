@@ -23,7 +23,7 @@
  *
  */
 package org.hibernate.loader.collection;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.MappingException;
 import org.hibernate.engine.LoadQueryInfluencers;
 import org.hibernate.engine.SessionFactoryImplementor;
@@ -42,7 +42,7 @@ import org.jboss.logging.Logger;
  */
 public class OneToManyLoader extends CollectionLoader {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, OneToManyLoader.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, OneToManyLoader.class.getName());
 
 	public OneToManyLoader(
 			QueryableCollection oneToManyPersister,

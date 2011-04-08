@@ -26,7 +26,8 @@ package org.hibernate.hql.ast.tree;
 
 import java.util.List;
 import java.util.Map;
-import org.hibernate.HibernateLogger;
+
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.engine.JoinSequence;
@@ -54,7 +55,7 @@ import org.jboss.logging.Logger;
  */
 class FromElementType {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, FromElementType.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, FromElementType.class.getName());
 
 	private FromElement fromElement;
 	private EntityType entityType;

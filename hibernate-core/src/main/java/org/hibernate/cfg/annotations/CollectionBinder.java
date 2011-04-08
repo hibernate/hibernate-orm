@@ -44,7 +44,7 @@ import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
 import org.hibernate.AnnotationException;
 import org.hibernate.FetchMode;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cache;
@@ -109,6 +109,7 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.SingleTableSubclass;
 import org.hibernate.mapping.Table;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -119,7 +120,7 @@ import org.jboss.logging.Logger;
  */
 @SuppressWarnings({"unchecked", "serial"})
 public abstract class CollectionBinder {
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, CollectionBinder.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, CollectionBinder.class.getName());
 
 	protected Collection collection;
 	protected String propertyName;

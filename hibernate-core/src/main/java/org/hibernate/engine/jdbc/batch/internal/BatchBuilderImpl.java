@@ -24,7 +24,8 @@
 package org.hibernate.engine.jdbc.batch.internal;
 
 import java.util.Map;
-import org.hibernate.HibernateLogger;
+
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
@@ -41,7 +42,7 @@ import org.jboss.logging.Logger;
  */
 public class BatchBuilderImpl implements BatchBuilder, Configurable {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, BatchBuilderImpl.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, BatchBuilderImpl.class.getName());
 
 	private int size;
 

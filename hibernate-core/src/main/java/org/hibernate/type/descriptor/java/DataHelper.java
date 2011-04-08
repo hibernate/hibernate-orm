@@ -29,7 +29,7 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.io.StringReader;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.type.descriptor.BinaryStream;
 import org.jboss.logging.Logger;
@@ -41,7 +41,7 @@ import org.jboss.logging.Logger;
  */
 public class DataHelper {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, DataHelper.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, DataHelper.class.getName());
 
 	private static Class nClobClass;
 	static {

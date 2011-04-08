@@ -34,7 +34,7 @@ import java.io.ObjectStreamClass;
 import java.io.OutputStream;
 import java.io.Serializable;
 import org.hibernate.Hibernate;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.type.SerializationException;
 import org.jboss.logging.Logger;
 
@@ -62,7 +62,7 @@ import org.jboss.logging.Logger;
  */
 public final class SerializationHelper {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, SerializationHelper.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, SerializationHelper.class.getName());
 
 	private SerializationHelper() {
 	}

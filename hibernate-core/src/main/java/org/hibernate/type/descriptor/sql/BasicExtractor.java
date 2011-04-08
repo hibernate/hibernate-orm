@@ -24,7 +24,8 @@
 package org.hibernate.type.descriptor.sql;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import org.hibernate.HibernateLogger;
+
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
@@ -37,7 +38,7 @@ import org.jboss.logging.Logger;
  */
 public abstract class BasicExtractor<J> implements ValueExtractor<J> {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, BasicExtractor.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, BasicExtractor.class.getName());
 
 	private final JavaTypeDescriptor<J> javaDescriptor;
 	private final SqlTypeDescriptor sqlDescriptor;

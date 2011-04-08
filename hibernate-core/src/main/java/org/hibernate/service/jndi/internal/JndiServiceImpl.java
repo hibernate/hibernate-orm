@@ -26,10 +26,12 @@ import java.util.Hashtable;
 import java.util.Map;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
-import org.hibernate.HibernateLogger;
+
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.jndi.JndiException;
 import org.hibernate.internal.util.jndi.JndiHelper;
 import org.hibernate.service.jndi.spi.JndiService;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -39,7 +41,7 @@ import org.jboss.logging.Logger;
  */
 public class JndiServiceImpl implements JndiService {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, JndiServiceImpl.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, JndiServiceImpl.class.getName());
 
 	private final Hashtable initialContextSettings;
 

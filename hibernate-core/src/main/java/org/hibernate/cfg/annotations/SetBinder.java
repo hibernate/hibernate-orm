@@ -22,11 +22,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg.annotations;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.annotations.OrderBy;
 import org.hibernate.cfg.Environment;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -35,7 +36,7 @@ import org.jboss.logging.Logger;
  * @author Matthew Inger
  */
 public class SetBinder extends CollectionBinder {
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, SetBinder.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, SetBinder.class.getName());
 
 	public SetBinder() {
 	}

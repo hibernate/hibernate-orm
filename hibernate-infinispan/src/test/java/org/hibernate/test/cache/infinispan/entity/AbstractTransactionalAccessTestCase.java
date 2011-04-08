@@ -27,12 +27,12 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import org.infinispan.transaction.tm.BatchModeTransactionManager;
+import org.jboss.logging.Logger;
 
 import org.hibernate.cache.access.AccessType;
 
 import junit.framework.AssertionFailedError;
 
-import static org.hibernate.testing.TestLogger.LOG;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -43,7 +43,9 @@ import static org.junit.Assert.assertTrue;
  * @since 3.5
  */
 public abstract class AbstractTransactionalAccessTestCase extends AbstractEntityRegionAccessStrategyTestCase {
-   @Override
+	private static final Logger log = Logger.getLogger( AbstractTransactionalAccessTestCase.class );
+
+	@Override
    protected AccessType getAccessType() {
       return AccessType.TRANSACTIONAL;
    }
@@ -77,7 +79,7 @@ public abstract class AbstractTransactionalAccessTestCase extends AbstractEntity
 
                     BatchModeTransactionManager.getInstance().commit();
                 } catch (Exception e) {
-                    LOG.error("node1 caught exception", e);
+                    log.error("node1 caught exception", e);
                     node1Exception = e;
                     rollback();
                 } catch (AssertionFailedError e) {
@@ -102,7 +104,7 @@ public abstract class AbstractTransactionalAccessTestCase extends AbstractEntity
 
                     BatchModeTransactionManager.getInstance().commit();
                 } catch (Exception e) {
-                    LOG.error("node1 caught exception", e);
+                    log.error("node1 caught exception", e);
                     node1Exception = e;
                     rollback();
                 } catch (AssertionFailedError e) {

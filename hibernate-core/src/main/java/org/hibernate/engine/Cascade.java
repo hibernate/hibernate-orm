@@ -30,7 +30,7 @@ import java.util.Iterator;
 import java.util.Stack;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.event.EventSource;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -96,7 +96,7 @@ public final class Cascade {
 	 */
 	public static final int BEFORE_MERGE = 0;
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, Cascade.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, Cascade.class.getName());
 
 
 	private int cascadeTo;

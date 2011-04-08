@@ -25,6 +25,8 @@
 package org.hibernate;
 import org.jboss.logging.Logger;
 
+import org.hibernate.internal.CoreMessageLogger;
+
 /**
  * Indicates access to unfetched data outside of a session context.
  * For example, when an uninitialized proxy or collection is accessed
@@ -36,7 +38,7 @@ import org.jboss.logging.Logger;
  */
 public class LazyInitializationException extends HibernateException {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
                                                                        LazyInitializationException.class.getName());
 
 	public LazyInitializationException(String msg) {

@@ -22,7 +22,7 @@
  * Boston, MA  02110-1301  USA
  *
  */
-package org.hibernate.cache;
+package org.hibernate.cache.internal;
 import java.util.Properties;
 
 /**

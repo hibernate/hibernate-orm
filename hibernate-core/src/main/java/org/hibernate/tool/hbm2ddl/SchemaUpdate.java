@@ -36,7 +36,7 @@ import java.util.Properties;
 import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.JDBCException;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
@@ -59,7 +59,7 @@ import org.hibernate.service.internal.BasicServiceRegistryImpl;
  * @author Steve Ebersole
  */
 public class SchemaUpdate {
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, SchemaUpdate.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, SchemaUpdate.class.getName());
 
 	private final Configuration configuration;
 	private final ConnectionHelper connectionHelper;

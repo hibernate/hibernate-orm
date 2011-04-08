@@ -28,7 +28,8 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import org.hibernate.HibernateLogger;
+
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.ForeignKey;
 import org.jboss.logging.Logger;
 
@@ -40,7 +41,7 @@ import org.jboss.logging.Logger;
  */
 public class TableMetadata {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, TableMetadata.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, TableMetadata.class.getName());
 
 	private final String catalog;
 	private final String schema;
@@ -60,11 +61,11 @@ public class TableMetadata {
 		}
 		String cat = catalog==null ? "" : catalog + '.';
 		String schem = schema==null ? "" : schema + '.';
-        LOG.tableFound(cat + schem + name);
-        LOG.columns(columns.keySet());
+        LOG.tableFound( cat + schem + name );
+        LOG.columns( columns.keySet() );
 		if (extras) {
-            LOG.foreignKeys(foreignKeys.keySet());
-            LOG.indexes(indexes.keySet());
+            LOG.foreignKeys( foreignKeys.keySet() );
+            LOG.indexes( indexes.keySet() );
 		}
 	}
 

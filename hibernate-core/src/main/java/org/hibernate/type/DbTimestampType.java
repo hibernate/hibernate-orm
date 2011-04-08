@@ -28,9 +28,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.Date;
-import org.hibernate.HibernateLogger;
+
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionImplementor;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -47,7 +49,7 @@ import org.jboss.logging.Logger;
 public class DbTimestampType extends TimestampType {
 	public static final DbTimestampType INSTANCE = new DbTimestampType();
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, DbTimestampType.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, DbTimestampType.class.getName());
 
 	@Override
     public String getName() {

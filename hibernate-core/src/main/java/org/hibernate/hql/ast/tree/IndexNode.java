@@ -27,7 +27,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.List;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.QueryException;
 import org.hibernate.engine.JoinSequence;
 import org.hibernate.engine.QueryParameters;
@@ -50,7 +50,7 @@ import antlr.collections.AST;
  */
 public class IndexNode extends FromReferenceNode {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, IndexNode.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, IndexNode.class.getName());
 
 	public void setScalarColumnText(int i) throws SemanticException {
 		throw new UnsupportedOperationException( "An IndexNode cannot generate column text!" );

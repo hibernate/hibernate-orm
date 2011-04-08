@@ -23,7 +23,8 @@
  */
 package org.hibernate.metamodel.binding;
 
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -33,7 +34,7 @@ import org.jboss.logging.Logger;
  */
 public class EntityIdentifier {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, EntityIdentifier.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, EntityIdentifier.class.getName());
 
 	private final EntityBinding entityBinding;
 	private AttributeBinding attributeBinding;

@@ -30,7 +30,9 @@ import java.util.List;
 import java.util.Set;
 import javassist.bytecode.AnnotationsAttribute;
 import javassist.bytecode.ClassFile;
-import org.hibernate.ejb.EntityManagerLogger;
+
+import org.hibernate.ejb.internal.EntityManagerMessageLogger;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -44,7 +46,7 @@ public abstract class AbstractJarVisitor implements JarVisitor {
 
 	//TODO shortcut when filters are null or empty
 
-    private static final EntityManagerLogger LOG = Logger.getMessageLogger(EntityManagerLogger.class,
+    private static final EntityManagerMessageLogger LOG = Logger.getMessageLogger(EntityManagerMessageLogger.class,
                                                                            AbstractJarVisitor.class.getName());
 
 	protected String unqualifiedJarName;

@@ -34,6 +34,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import org.jboss.logging.Logger;
+
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
@@ -47,8 +49,6 @@ import org.junit.Before;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
-import static org.hibernate.testing.TestLogger.LOG;
-
 /**
  * A base class for all ejb tests.
  *
@@ -56,6 +56,8 @@ import static org.hibernate.testing.TestLogger.LOG;
  * @author Hardy Ferentschik
  */
 public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCase {
+	private static final Logger log = Logger.getLogger( BaseEntityManagerFunctionalTestCase.class );
+
 	// IMPL NOTE : Here we use @Before and @After (instead of @BeforeClassOnce and @AfterClassOnce like we do in
 	// BaseCoreFunctionalTestCase) because the old HEM test methodology was to create an EMF for each test method.
 
@@ -83,7 +85,7 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 	@Before
 	@SuppressWarnings( {"UnusedDeclaration"})
 	public void buildEntityManagerFactory() throws Exception {
-		LOG.trace( "Building session factory" );
+		log.trace( "Building session factory" );
 		ejb3Configuration = buildConfiguration();
 		ejb3Configuration.configure( getConfig() );
 		afterConfigurationBuilt( ejb3Configuration );
@@ -244,13 +246,13 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 		}
 		if ( em.getTransaction().isActive() ) {
 			em.getTransaction().rollback();
-            LOG.warn("You left an open transaction! Fix your test case. For now, we are closing it for you.");
+            log.warn("You left an open transaction! Fix your test case. For now, we are closing it for you.");
 		}
 		if ( em.isOpen() ) {
 			// as we open an EM before the test runs, it will still be open if the test uses a custom EM.
 			// or, the person may have forgotten to close. So, do not raise a "fail", but log the fact.
 			em.close();
-            LOG.warn("The EntityManager is not closed. Closing it.");
+            log.warn("The EntityManager is not closed. Closing it.");
 		}
 	}
 

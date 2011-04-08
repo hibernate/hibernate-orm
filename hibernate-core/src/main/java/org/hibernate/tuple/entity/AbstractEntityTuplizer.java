@@ -32,7 +32,7 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.MappingException;
 import org.hibernate.bytecode.instrumentation.spi.LazyPropertyInitializer;
 import org.hibernate.engine.EntityEntry;
@@ -69,8 +69,8 @@ import org.hibernate.type.Type;
  */
 public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(
-			HibernateLogger.class,
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
 			AbstractEntityTuplizer.class.getName()
 	);
 

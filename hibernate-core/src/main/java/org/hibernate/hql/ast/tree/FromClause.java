@@ -30,7 +30,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.hibernate.HibernateLogger;
+
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.hql.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.ast.util.ASTIterator;
 import org.hibernate.hql.ast.util.ASTUtil;
@@ -45,7 +46,7 @@ import antlr.collections.AST;
  */
 public class FromClause extends HqlSqlWalkerNode implements HqlSqlTokenTypes, DisplayableNode {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, FromClause.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, FromClause.class.getName());
 	public static final int ROOT_LEVEL = 1;
 
 	private int level = ROOT_LEVEL;

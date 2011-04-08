@@ -24,7 +24,9 @@
  */
 package org.hibernate.engine;
 import java.io.Serializable;
-import org.hibernate.HibernateLogger;
+
+import org.hibernate.internal.CoreMessageLogger;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -37,7 +39,7 @@ import org.jboss.logging.Logger;
  */
 public class IdentifierValue {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, IdentifierValue.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, IdentifierValue.class.getName());
 
 	private final Serializable value;
 

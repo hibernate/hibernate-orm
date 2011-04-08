@@ -26,8 +26,9 @@ package org.hibernate.service.jta.platform.internal;
 import java.lang.reflect.Method;
 import javax.transaction.TransactionManager;
 import javax.transaction.UserTransaction;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.jta.platform.spi.JtaPlatformException;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -38,7 +39,7 @@ import org.jboss.logging.Logger;
  */
 public class WebSphereJtaPlatform extends AbstractJtaPlatform {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, WebSphereJtaPlatform.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, WebSphereJtaPlatform.class.getName());
 
 	public static final String VERSION_5_UT_NAME = "java:comp/UserTransaction";
 	public static final String VERSION_4_UT_NAME = "jta/usertransaction";

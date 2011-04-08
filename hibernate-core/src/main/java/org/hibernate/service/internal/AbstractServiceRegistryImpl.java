@@ -32,7 +32,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.service.Service;
 import org.hibernate.service.ServiceRegistry;
@@ -50,7 +50,7 @@ import org.hibernate.service.spi.proxy.ServiceProxyFactory;
  * @author Steve Ebersole
  */
 public abstract class AbstractServiceRegistryImpl implements ServiceRegistryImplementor {
-	private static final HibernateLogger LOG = Logger.getMessageLogger( HibernateLogger.class, AbstractServiceRegistryImpl.class.getName() );
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, AbstractServiceRegistryImpl.class.getName() );
 
 	private final ServiceRegistryImplementor parent;
 

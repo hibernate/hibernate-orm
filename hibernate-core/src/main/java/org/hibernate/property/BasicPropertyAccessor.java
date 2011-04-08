@@ -28,12 +28,13 @@ import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.util.Map;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.PropertyAccessException;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.internal.util.ReflectHelper;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -44,7 +45,7 @@ import org.jboss.logging.Logger;
  */
 public class BasicPropertyAccessor implements PropertyAccessor {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, BasicPropertyAccessor.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, BasicPropertyAccessor.class.getName());
 
 	public static final class BasicSetter implements Setter {
 		private Class clazz;

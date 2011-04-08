@@ -34,7 +34,7 @@ import java.util.List;
 import java.util.Set;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.action.internal.BulkOperationCleanupAction;
 import org.hibernate.action.internal.CollectionAction;
 import org.hibernate.action.internal.CollectionRecreateAction;
@@ -63,7 +63,7 @@ import org.jboss.logging.Logger;
  */
 public class ActionQueue {
 
-    static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, ActionQueue.class.getName());
+    static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, ActionQueue.class.getName());
 	private static final int INIT_QUEUE_LIST_SIZE = 5;
 
 	private SessionImplementor session;

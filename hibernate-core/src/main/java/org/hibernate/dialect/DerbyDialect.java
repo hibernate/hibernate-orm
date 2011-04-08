@@ -24,7 +24,8 @@
 package org.hibernate.dialect;
 
 import java.lang.reflect.Method;
-import org.hibernate.HibernateLogger;
+
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.function.AnsiTrimFunction;
 import org.hibernate.dialect.function.DerbyConcatFunction;
@@ -46,7 +47,7 @@ import org.jboss.logging.Logger;
 @Deprecated
 public class DerbyDialect extends DB2Dialect {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, DerbyDialect.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, DerbyDialect.class.getName());
 
 	private int driverVersionMajor;
 	private int driverVersionMinor;

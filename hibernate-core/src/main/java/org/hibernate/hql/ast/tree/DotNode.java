@@ -24,7 +24,7 @@
  */
 package org.hibernate.hql.ast.tree;
 
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.QueryException;
 import org.hibernate.engine.JoinSequence;
 import org.hibernate.hql.CollectionProperties;
@@ -69,7 +69,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 	public static IllegalCollectionDereferenceExceptionBuilder ILLEGAL_COLL_DEREF_EXCP_BUILDER = DEF_ILLEGAL_COLL_DEREF_EXCP_BUILDER;
 	///////////////////////////////////////////////////////////////////////////
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, DotNode.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, DotNode.class.getName());
 
 	private static final int DEREF_UNKNOWN = 0;
 	private static final int DEREF_ENTITY = 1;

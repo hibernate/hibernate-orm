@@ -31,7 +31,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.QueryException;
 import org.hibernate.action.internal.BulkOperationCleanupAction;
 import org.hibernate.engine.QueryParameters;
@@ -55,7 +55,7 @@ public class NativeSQLQueryPlan implements Serializable {
 
 	private final SQLCustomQuery customQuery;
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, NativeSQLQueryPlan.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, NativeSQLQueryPlan.class.getName());
 
 	public NativeSQLQueryPlan(
 			NativeSQLQuerySpecification specification,

@@ -28,7 +28,7 @@ import java.util.Map;
 
 import org.jboss.logging.Logger;
 
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.LockMode;
 import org.hibernate.NonUniqueObjectException;
 import org.hibernate.action.internal.EntityIdentityInsertAction;
@@ -65,7 +65,7 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 	protected static final int DETACHED = 2;
 	protected static final int DELETED = 3;
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
                                                                        AbstractSaveEventListener.class.getName());
 
 	/**

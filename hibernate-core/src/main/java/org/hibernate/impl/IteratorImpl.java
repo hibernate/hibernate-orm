@@ -28,7 +28,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.NoSuchElementException;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.JDBCException;
 import org.hibernate.engine.HibernateIterator;
 import org.hibernate.event.EventSource;
@@ -44,7 +44,7 @@ import org.jboss.logging.Logger;
  */
 public final class IteratorImpl implements HibernateIterator {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, IteratorImpl.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, IteratorImpl.class.getName());
 
 	private ResultSet rs;
 	private final EventSource session;

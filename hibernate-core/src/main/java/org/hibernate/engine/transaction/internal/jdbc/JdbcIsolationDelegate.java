@@ -26,13 +26,14 @@ package org.hibernate.engine.transaction.internal.jdbc;
 import java.sql.Connection;
 import java.sql.SQLException;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.transaction.spi.IsolationDelegate;
 import org.hibernate.engine.transaction.spi.TransactionCoordinator;
 import org.hibernate.jdbc.WorkExecutorVisitable;
 import org.hibernate.jdbc.WorkExecutor;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -42,7 +43,7 @@ import org.jboss.logging.Logger;
  */
 public class JdbcIsolationDelegate implements IsolationDelegate {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, JdbcIsolationDelegate.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, JdbcIsolationDelegate.class.getName());
 
 	private final TransactionCoordinator transactionCoordinator;
 

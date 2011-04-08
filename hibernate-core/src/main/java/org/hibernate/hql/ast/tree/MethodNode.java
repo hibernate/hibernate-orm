@@ -24,7 +24,8 @@
  */
 package org.hibernate.hql.ast.tree;
 import java.util.Arrays;
-import org.hibernate.HibernateLogger;
+
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.hql.CollectionProperties;
 import org.hibernate.hql.antlr.SqlTokenTypes;
@@ -45,7 +46,7 @@ import antlr.collections.AST;
  */
 public class MethodNode extends AbstractSelectExpression implements FunctionNode {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, MethodNode.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, MethodNode.class.getName());
 
 	private String methodName;
 	private FromElement fromElement;

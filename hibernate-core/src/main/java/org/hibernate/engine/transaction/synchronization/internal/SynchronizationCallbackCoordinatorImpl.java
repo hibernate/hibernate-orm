@@ -24,7 +24,8 @@
 package org.hibernate.engine.transaction.synchronization.internal;
 
 import javax.transaction.SystemException;
-import org.hibernate.HibernateLogger;
+
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.TransactionException;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.spi.TransactionContext;
@@ -33,6 +34,7 @@ import org.hibernate.engine.transaction.synchronization.spi.AfterCompletionActio
 import org.hibernate.engine.transaction.synchronization.spi.ExceptionMapper;
 import org.hibernate.engine.transaction.synchronization.spi.ManagedFlushChecker;
 import org.hibernate.engine.transaction.synchronization.spi.SynchronizationCallbackCoordinator;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -42,7 +44,7 @@ import org.jboss.logging.Logger;
  */
 public class SynchronizationCallbackCoordinatorImpl implements SynchronizationCallbackCoordinator {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, SynchronizationCallbackCoordinatorImpl.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, SynchronizationCallbackCoordinatorImpl.class.getName());
 
 	private final TransactionCoordinator transactionCoordinator;
 

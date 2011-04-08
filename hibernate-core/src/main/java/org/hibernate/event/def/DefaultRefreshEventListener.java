@@ -29,7 +29,7 @@ import java.util.Map;
 import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.PersistentObjectException;
 import org.hibernate.UnresolvableObjectException;
 import org.hibernate.cache.CacheKey;
@@ -56,7 +56,7 @@ import org.hibernate.type.Type;
  */
 public class DefaultRefreshEventListener implements RefreshEventListener {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
                                                                        DefaultRefreshEventListener.class.getName());
 
 	public void onRefresh(RefreshEvent event) throws HibernateException {

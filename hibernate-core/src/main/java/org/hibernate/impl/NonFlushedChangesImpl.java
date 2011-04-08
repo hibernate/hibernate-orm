@@ -30,16 +30,17 @@ import java.util.HashMap;
 import java.util.Map;
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.engine.ActionQueue;
 import org.hibernate.engine.NonFlushedChanges;
 import org.hibernate.engine.StatefulPersistenceContext;
 import org.hibernate.event.EventSource;
+
 import org.jboss.logging.Logger;
 
 public final class NonFlushedChangesImpl implements NonFlushedChanges {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, NonFlushedChangesImpl.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, NonFlushedChangesImpl.class.getName());
 
 	private static class SessionNonFlushedChanges implements Serializable {
 		private transient EntityMode entityMode;

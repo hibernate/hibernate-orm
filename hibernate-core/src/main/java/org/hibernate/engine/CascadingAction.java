@@ -27,7 +27,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.ReplicationMode;
@@ -48,7 +48,7 @@ import org.jboss.logging.Logger;
  */
 public abstract class CascadingAction {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, CascadingAction.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, CascadingAction.class.getName());
 
 
 	// the CascadingAction contract ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

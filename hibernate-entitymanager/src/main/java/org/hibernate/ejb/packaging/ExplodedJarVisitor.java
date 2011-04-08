@@ -29,7 +29,9 @@ import java.net.URL;
 import java.util.Enumeration;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
-import org.hibernate.ejb.EntityManagerLogger;
+
+import org.hibernate.ejb.internal.EntityManagerMessageLogger;
+
 import org.jboss.logging.Logger;
 
 
@@ -38,7 +40,7 @@ import org.jboss.logging.Logger;
  */
 public class ExplodedJarVisitor extends AbstractJarVisitor {
 
-    private static final EntityManagerLogger LOG = Logger.getMessageLogger(EntityManagerLogger.class,
+    private static final EntityManagerMessageLogger LOG = Logger.getMessageLogger(EntityManagerMessageLogger.class,
                                                                            ExplodedJarVisitor.class.getName());
 
     private String entry;

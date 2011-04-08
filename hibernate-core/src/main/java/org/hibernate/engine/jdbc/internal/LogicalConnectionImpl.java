@@ -33,7 +33,7 @@ import java.util.Iterator;
 import java.util.List;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.JDBCException;
 import org.hibernate.engine.jdbc.internal.proxy.ProxyBuilder;
 import org.hibernate.engine.jdbc.spi.ConnectionObserver;
@@ -44,6 +44,7 @@ import org.hibernate.engine.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.engine.jdbc.spi.NonDurableConnectionObserver;
 import org.hibernate.engine.transaction.spi.TransactionContext;
 import org.hibernate.internal.util.collections.CollectionHelper;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -55,7 +56,7 @@ import org.jboss.logging.Logger;
  */
 public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, LogicalConnectionImpl.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, LogicalConnectionImpl.class.getName());
 
 	private transient Connection physicalConnection;
 	private transient Connection shareableConnectionProxy;

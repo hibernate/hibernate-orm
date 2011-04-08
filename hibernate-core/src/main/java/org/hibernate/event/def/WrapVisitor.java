@@ -24,7 +24,7 @@
 package org.hibernate.event.def;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.engine.PersistenceContext;
 import org.hibernate.engine.SessionImplementor;
@@ -43,7 +43,7 @@ import org.jboss.logging.Logger;
  */
 public class WrapVisitor extends ProxyVisitor {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, WrapVisitor.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, WrapVisitor.class.getName());
 
 	boolean substitute = false;
 

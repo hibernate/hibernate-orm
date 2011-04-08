@@ -29,7 +29,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import org.hibernate.HibernateException;
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.LockMode;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionImplementor;
@@ -40,6 +40,7 @@ import org.hibernate.id.IdentifierGenerationException;
 import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.id.IntegralDataTypeHolder;
 import org.hibernate.jdbc.AbstractReturningWork;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -49,7 +50,7 @@ import org.jboss.logging.Logger;
  */
 public class TableStructure implements DatabaseStructure {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, TableStructure.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, TableStructure.class.getName());
 
 	private final String tableName;
 	private final String valueColumnName;

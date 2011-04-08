@@ -22,13 +22,18 @@
  * Boston, MA  02110-1301  USA
  *
  */
-package org.hibernate.cache;
+package org.hibernate.cache.internal;
 import java.net.URL;
 import java.util.Properties;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.util.ClassLoaderUtil;
 import org.jboss.logging.Logger;
 import org.jboss.logging.Logger.Level;
+
+import org.hibernate.cache.Cache;
+import org.hibernate.cache.CacheException;
+import org.hibernate.cache.CacheProvider;
+import org.hibernate.cache.Timestamper;
 
 /**
  * Singleton cache Provider plugin for Hibernate 3.2 and ehcache-1.2. New in this provider is support for
@@ -62,7 +67,7 @@ public final class SingletonEhCacheProvider implements CacheProvider {
 	 */
 	public static final String NET_SF_EHCACHE_CONFIGURATION_RESOURCE_NAME = "net.sf.ehcache.configurationResourceName";
 
-    private static final EhCacheLogger LOG = Logger.getMessageLogger(EhCacheLogger.class, SingletonEhCacheProvider.class.getName());
+    private static final EhCacheMessageLogger LOG = Logger.getMessageLogger(EhCacheMessageLogger.class, SingletonEhCacheProvider.class.getName());
 
 	/**
 	 * To be backwardly compatible with a lot of Hibernate code out there, allow multiple starts and stops on the

@@ -27,7 +27,7 @@ import java.lang.reflect.Modifier;
 
 import org.jboss.logging.Logger;
 
-import org.hibernate.HibernateLogger;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.bytecode.buildtime.spi.ClassFilter;
 import org.hibernate.bytecode.buildtime.spi.FieldFilter;
 import org.hibernate.bytecode.spi.BytecodeProvider;
@@ -43,7 +43,7 @@ import org.hibernate.internal.util.StringHelper;
  */
 public class BytecodeProviderImpl implements BytecodeProvider {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, BytecodeProviderImpl.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, BytecodeProviderImpl.class.getName());
 
 	public ProxyFactoryFactory getProxyFactoryFactory() {
 		return new ProxyFactoryFactoryImpl();

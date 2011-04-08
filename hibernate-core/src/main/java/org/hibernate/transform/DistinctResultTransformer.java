@@ -27,7 +27,9 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.hibernate.HibernateLogger;
+
+import org.hibernate.internal.CoreMessageLogger;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -43,7 +45,7 @@ public class DistinctResultTransformer extends BasicTransformerAdapter {
 
 	public static final DistinctResultTransformer INSTANCE = new DistinctResultTransformer();
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
                                                                        DistinctResultTransformer.class.getName());
 
 	/**

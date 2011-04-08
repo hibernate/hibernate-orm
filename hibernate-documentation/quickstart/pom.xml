@@ -30,7 +30,7 @@
         <groupId>org.hibernate</groupId>
         <artifactId>hibernate-parent</artifactId>
         <version>3.6.4-SNAPSHOT</version>
-        <relativePath>../../parent/pom.xml</relativePath>
+        <relativePath>../../hibernate-parent/pom.xml</relativePath>
     </parent>
 
     <artifactId>hibernate-quickstart</artifactId>

@@ -39,7 +39,7 @@ import org.hibernate.testing.junit4.BaseUnitTestCase;
 import static org.junit.Assert.assertSame;
 
 /**
- * Basic binding "smopke" tests
+ * Basic binding "smoke" tests
  *
  * @author Steve Ebersole
  */
@@ -48,6 +48,7 @@ public class SimpleValueBindingTests extends BaseUnitTestCase {
 	public static final Datatype VARCHAR = new Datatype( Types.VARCHAR, "VARCHAR", String.class );
 
 
+	@Test
 	public void testBasicMiddleOutBuilding() {
 		Table table = new Table( new Schema( null, null ), "the_table" );
 		Entity entity = new Entity( "TheEntity", null );

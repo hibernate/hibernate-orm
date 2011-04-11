@@ -83,6 +83,7 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 		assertNotNull( nameBinding.getValue() );
 	}
 
+	/*
 	@Test
 	public void testEntityWithElementCollection() {
 		EntityBinding entityBinding = buildEntityWithElementCollectionBinding();
@@ -104,10 +105,11 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 		assertNotNull( nameBinding.getAttribute() );
 		assertNotNull( nameBinding.getValue() );
 	}
+	*/
 
 	public abstract EntityBinding buildSimpleVersionedEntityBinding();
 
 	public abstract EntityBinding buildSimpleEntityBinding();
 
-	public abstract EntityBinding buildEntityWithElementCollectionBinding();
+	//public abstract EntityBinding buildEntityWithElementCollectionBinding();
 }

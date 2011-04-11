@@ -27,9 +27,7 @@ import java.util.Iterator;
 
 import org.dom4j.Attribute;
 import org.dom4j.Element;
-import org.jboss.logging.Logger;
 import org.hibernate.EntityMode;
-import org.hibernate.HibernateLogger;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.engine.Versioning;
@@ -57,10 +55,6 @@ import org.hibernate.metamodel.source.hbm.state.relational.HbmSimpleValueRelatio
 * @author Steve Ebersole
 */
 abstract class AbstractEntityBinder {
-	private static final HibernateLogger LOG = Logger.getMessageLogger(
-			HibernateLogger.class, AbstractEntityBinder.class.getName()
-	);
-
 	private final HibernateMappingBinder hibernateMappingBinder;
 	private final Schema.Name schemaName;
 

@@ -34,11 +34,9 @@ import org.dom4j.Element;
 import org.jboss.logging.Logger;
 
 import org.hibernate.FetchMode;
-import org.hibernate.HibernateLogger;
 import org.hibernate.MappingException;
-import org.hibernate.mapping.MetaAttribute;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.relational.Table;
-import org.hibernate.metamodel.relational.Value;
 import org.hibernate.metamodel.source.hbm.HbmHelper;
 import org.hibernate.metamodel.source.util.DomHelper;
 
@@ -79,8 +77,8 @@ public abstract class PluralAttributeBinding extends AbstractAttributeBinding {
 		String getLoaderName();
 	}
 
-	private static final HibernateLogger LOG = Logger.getMessageLogger(
-				HibernateLogger.class, PluralAttributeBinding.class.getName()
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class, PluralAttributeBinding.class.getName()
 	);
 
 	private Table collectionTable;

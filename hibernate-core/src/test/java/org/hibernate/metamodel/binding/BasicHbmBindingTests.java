@@ -23,8 +23,12 @@
  */
 package org.hibernate.metamodel.binding;
 
+import javax.xml.bind.JAXBException;
+
+import org.jboss.logging.Logger;
 import org.xml.sax.InputSource;
 
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ConfigHelper;
 import org.hibernate.internal.util.xml.MappingReader;
 import org.hibernate.internal.util.xml.Origin;
@@ -42,7 +46,7 @@ import static org.junit.Assert.fail;
  * @author Steve Ebersole
  */
 public class BasicHbmBindingTests extends AbstractBasicBindingTests {
-	private static final Logger log = LoggerFactory.getLogger( BasicHbmBindingTests.class );
+	private static final Logger log = Logger.getLogger( BasicHbmBindingTests.class.getName() );
 
 	public EntityBinding buildSimpleEntityBinding() {
 		Metadata metadata = new Metadata();

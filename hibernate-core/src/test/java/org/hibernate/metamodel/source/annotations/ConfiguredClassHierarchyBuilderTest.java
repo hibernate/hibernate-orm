@@ -75,7 +75,6 @@ public class ConfiguredClassHierarchyBuilderTest extends BaseUnitTestCase {
 		assertEquals( "wrong class", DotName.createSimple( MappedSuperClass.class.getName() ), info.name() );
 		info = iter.next().getClassInfo();
 		assertEquals( "wrong class", DotName.createSimple( UnmappedSubClass.class.getName() ), info.name() );
-		assertFalse( iter.hasNext() );
 		info = iter.next().getClassInfo();
 		assertEquals( "wrong class", DotName.createSimple( MappedSubClass.class.getName() ), info.name() );
 		assertFalse( iter.hasNext() );

@@ -38,25 +38,24 @@ import java.util.Set;
 import org.dom4j.Attribute;
 import org.dom4j.Document;
 import org.dom4j.Element;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.jboss.logging.Logger;
 
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.InvalidMappingException;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.MetadataSourceType;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.internal.util.xml.XmlDocument;
 
-
 /**
- * TODO : javadoc
+ * Container for xml configuration documents and annotated classes.
  *
  * @author Steve Ebersole
  */
 public class MetadataSourceQueue implements Serializable {
-	private static final Logger log = LoggerFactory.getLogger( MetadataSourceQueue.class );
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, MetadataSourceQueue.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class, MetadataSourceQueue.class.getName()
+	);
 	private final Metadata metadata;
 
 	private LinkedHashMap<XmlDocument, Set<String>> hbmMetadataToEntityNamesMap
@@ -140,7 +139,7 @@ public class MetadataSourceQueue implements Serializable {
 	}
 
 	private void processHbmXmlQueue() {
-		log.debug( "Processing hbm.xml files" );
+		LOG.debug( "Processing hbm.xml files" );
 		for ( Map.Entry<XmlDocument, Set<String>> entry : hbmMetadataToEntityNamesMap.entrySet() ) {
 			// Unfortunately we have to create a Mappings instance for each iteration here
 			processHbmXml( entry.getKey(), entry.getValue() );
@@ -163,7 +162,7 @@ public class MetadataSourceQueue implements Serializable {
 	}
 
 	private void processAnnotatedClassesQueue() {
-		log.debug( "Process annotated classes" );
+		LOG.debug( "Process annotated classes" );
 		annotatedClasses.clear();
 	}
 

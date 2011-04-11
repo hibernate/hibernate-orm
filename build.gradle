@@ -123,7 +123,7 @@ subprojects { subProject ->
 
         // appropriately inject the common dependencies into each sub-project
         dependencies {
-	    compile( libraries.logging )
+	        compile( libraries.logging )
             testCompile( libraries.junit )
             testRuntime( libraries.slf4j_api )
             testRuntime( libraries.slf4j_log4j12 )

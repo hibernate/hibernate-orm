@@ -32,6 +32,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.dom4j.Element;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.hibernate.cfg.ExtendsQueueEntry;
 import org.hibernate.internal.util.StringHelper;
@@ -39,6 +41,7 @@ import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.internal.util.xml.XmlDocument;
 import org.hibernate.mapping.MetaAttribute;
 import org.hibernate.metamodel.source.Metadata;
+import org.hibernate.metamodel.source.hbm.xml.mapping.HibernateMapping;
 
 /**
  * Binder for {@code hbm.xml} files
@@ -46,6 +49,8 @@ import org.hibernate.metamodel.source.Metadata;
  * @author Steve Ebersole
  */
 public class HibernateXmlBinder {
+	private static final Logger log = LoggerFactory.getLogger( HibernateXmlBinder.class );
+
 	private final Metadata metadata;
 	private final Map<String, MetaAttribute> globalMetas;
 
@@ -62,6 +67,11 @@ public class HibernateXmlBinder {
 		bindRoot( metadataXml, Collections.<String>emptySet() );
 	}
 
+	public void bindRoot(HibernateMapping mapping) {
+		// todo - process the mapping
+		log.debug( mapping.toString() );
+	}
+
 	public void bindRoot(XmlDocument metadataXml, Set<String> entityNames) {
 		final HibernateMappingBinder mappingBinder = new HibernateMappingBinder( this, metadataXml );
 
@@ -69,7 +79,8 @@ public class HibernateXmlBinder {
 		if ( !names.isEmpty() ) {
 			// classes mentioned in extends not available - so put it in queue
 			for ( String name : names ) {
-				metadata.getExtendsQueue().add( new ExtendsQueueEntry( name, mappingBinder.getPackageName(), metadataXml, entityNames ) );
+				metadata.getExtendsQueue()
+						.add( new ExtendsQueueEntry( name, mappingBinder.getPackageName(), metadataXml, entityNames ) );
 			}
 			return;
 		}
@@ -106,7 +117,11 @@ public class HibernateXmlBinder {
 			// mappings might contain either the "raw" extends name (in the case of
 			// an entity-name mapping) or a FQN (in the case of a POJO mapping).
 			if ( getMetadata().getEntityBinding( extendsName ) == null
-					&& getMetadata().getEntityBinding( HbmHelper.getClassName( extendsName, unqualifiedPackageName ) ) == null ) {
+					&& getMetadata().getEntityBinding(
+					HbmHelper.getClassName(
+							extendsName, unqualifiedPackageName
+					)
+			) == null ) {
 				awaitingExtends.add( extendsName );
 			}
 		}
@@ -160,7 +175,7 @@ public class HibernateXmlBinder {
 			Element element = (Element) classIterator.next();
 			handler.handleEntity(
 					element.attributeValue( "entity-name" ),
-		            element.attributeValue( "name" )
+					element.attributeValue( "name" )
 			);
 			recognizeEntities( element, handler );
 		}

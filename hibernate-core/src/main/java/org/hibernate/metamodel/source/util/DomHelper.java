@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -27,11 +27,14 @@ import org.dom4j.Attribute;
 import org.dom4j.Element;
 
 /**
- * TODO : javadoc
+ * Helper class for working with DOM documents.
  *
  * @author Steve Ebersole
  */
 public class DomHelper {
+	private DomHelper() {
+	}
+
 	public static String extractAttributeValue(Element element, String attributeName) {
 		return extractAttributeValue( element, attributeName, null );
 	}

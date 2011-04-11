@@ -23,6 +23,10 @@
  */
 package org.hibernate.metamodel.binding;
 
+import javax.xml.bind.JAXBException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.InputSource;
 
 import org.hibernate.internal.util.ConfigHelper;
@@ -31,6 +35,10 @@ import org.hibernate.internal.util.xml.Origin;
 import org.hibernate.internal.util.xml.XMLHelper;
 import org.hibernate.internal.util.xml.XmlDocument;
 import org.hibernate.metamodel.source.Metadata;
+import org.hibernate.metamodel.source.hbm.xml.mapping.HibernateMapping;
+import org.hibernate.metamodel.source.util.xml.XmlHelper;
+
+import static org.junit.Assert.fail;
 
 /**
  * Basic tests of {@code hbm.xml} binding code
@@ -38,6 +46,7 @@ import org.hibernate.metamodel.source.Metadata;
  * @author Steve Ebersole
  */
 public class BasicHbmBindingTests extends AbstractBasicBindingTests {
+	private static final Logger log = LoggerFactory.getLogger( BasicHbmBindingTests.class );
 
 	public EntityBinding buildSimpleEntityBinding() {
 		Metadata metadata = new Metadata();
@@ -50,8 +59,23 @@ public class BasicHbmBindingTests extends AbstractBasicBindingTests {
 	public EntityBinding buildSimpleVersionedEntityBinding() {
 		Metadata metadata = new Metadata();
 
-		XmlDocument xmlDocument = readResource( "/org/hibernate/metamodel/binding/SimpleVersionedEntity.hbm.xml" );
+		String fileName = "/org/hibernate/metamodel/binding/SimpleVersionedEntity.hbm.xml";
+		XmlDocument xmlDocument = readResource( fileName );
 		metadata.getHibernateXmlBinder().bindRoot( xmlDocument );
+
+		// todo - just temporary to show how things would look like with JAXB
+		fileName = "/org/hibernate/metamodel/binding/SimpleVersionedEntity.xml";
+		final String HIBERNATE_MAPPING_XSD = "org/hibernate/hibernate-mapping-3.0.xsd";
+		HibernateMapping mapping = null;
+		try {
+			mapping = XmlHelper.unmarshallXml( fileName, HIBERNATE_MAPPING_XSD, HibernateMapping.class ).getRoot();
+		}
+		catch ( JAXBException e ) {
+			log.debug( e.getMessage() );
+			fail( "Unable to load xml " + fileName );
+		}
+		metadata.getHibernateXmlBinder().bindRoot( mapping );
+
 		return metadata.getEntityBinding( SimpleVersionedEntity.class.getName() );
 	}
 

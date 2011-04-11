@@ -29,13 +29,12 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.jboss.logging.Logger;
 
 import org.hibernate.DuplicateMappingException;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.cfg.EJB3NamingStrategy;
 import org.hibernate.cfg.NamingStrategy;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.MetadataSource;
 import org.hibernate.metamodel.binding.EntityBinding;
@@ -44,16 +43,16 @@ import org.hibernate.metamodel.relational.Database;
 import org.hibernate.metamodel.source.annotations.AnnotationBinder;
 import org.hibernate.metamodel.source.hbm.HibernateXmlBinder;
 
-
 /**
- * TODO : javadoc
+ * Container for configuration data while building and binding the metamodel
  *
  * @author Steve Ebersole
  */
 public class Metadata implements Serializable {
-	private static final Logger log = LoggerFactory.getLogger( Metadata.class );
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class, Metadata.class.getName()
+	);
 
-        private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, Metadata.class.getName());
 	private final AnnotationBinder annotationBinder;
 	private final HibernateXmlBinder hibernateXmlBinder;
 	private final ExtendsQueue extendsQueue;
@@ -139,10 +138,10 @@ public class Metadata implements Serializable {
 		if ( imports == null ) {
 			imports = new HashMap<String, String>();
 		}
-		log.trace( "Import: " + importName + " -> " + entityName );
+		LOG.trace( "Import: " + importName + " -> " + entityName );
 		String old = imports.put( importName, entityName );
 		if ( old != null ) {
-			log.debug( "import name [{}] overrode previous [{}]", importName, old );
+			LOG.debug( "import name [" + importName + "] overrode previous [{" + old + "}]" );
 		}
 	}
 

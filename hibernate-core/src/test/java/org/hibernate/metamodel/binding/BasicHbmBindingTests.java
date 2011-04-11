@@ -49,7 +49,7 @@ public class BasicHbmBindingTests extends AbstractBasicBindingTests {
 	private static final Logger log = Logger.getLogger( BasicHbmBindingTests.class.getName() );
 
 	public EntityBinding buildSimpleEntityBinding() {
-		Metadata metadata = new Metadata();
+		Metadata metadata = new Metadata( basicServiceRegistry() );
 
 		XmlDocument xmlDocument = readResource( "/org/hibernate/metamodel/binding/SimpleEntity.hbm.xml" );
 		metadata.getHibernateXmlBinder().bindRoot( xmlDocument );
@@ -57,7 +57,7 @@ public class BasicHbmBindingTests extends AbstractBasicBindingTests {
 	}
 
 	public EntityBinding buildSimpleVersionedEntityBinding() {
-		Metadata metadata = new Metadata();
+		Metadata metadata = new Metadata( basicServiceRegistry() );
 
 		String fileName = "/org/hibernate/metamodel/binding/SimpleVersionedEntity.hbm.xml";
 		XmlDocument xmlDocument = readResource( fileName );

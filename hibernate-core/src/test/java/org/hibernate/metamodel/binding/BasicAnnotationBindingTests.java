@@ -56,7 +56,7 @@ public class BasicAnnotationBindingTests extends AbstractBasicBindingTests {
 
 	public EntityBinding buildSimpleEntityBinding() {
 		Index index = indexForClass( SimpleEntity.class );
-		Metadata metadata = new Metadata();
+		Metadata metadata = new Metadata( basicServiceRegistry() );
 		metadata.getAnnotationBinder().bindMappedClasses( index );
 
 		return metadata.getEntityBinding( SimpleEntity.class.getSimpleName() );
@@ -64,7 +64,7 @@ public class BasicAnnotationBindingTests extends AbstractBasicBindingTests {
 
 	public EntityBinding buildSimpleVersionedEntityBinding() {
 		Index index = indexForClass( SimpleEntity.class );
-		Metadata metadata = new Metadata();
+		Metadata metadata = new Metadata( basicServiceRegistry() );
 		metadata.getAnnotationBinder().bindMappedClasses( index );
 
 		return metadata.getEntityBinding( SimpleVersionedEntity.class.getSimpleName() );

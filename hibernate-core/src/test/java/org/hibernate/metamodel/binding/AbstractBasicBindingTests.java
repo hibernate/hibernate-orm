@@ -23,9 +23,16 @@
  */
 package org.hibernate.metamodel.binding;
 
+import java.util.Collections;
+
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import org.hibernate.metamodel.relational.Column;
+import org.hibernate.service.BasicServiceRegistry;
+import org.hibernate.service.internal.BasicServiceRegistryImpl;
+
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static junit.framework.Assert.assertNotNull;
@@ -39,6 +46,22 @@ import static org.junit.Assert.assertTrue;
  * @author Steve Ebersole
  */
 public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
+
+	private BasicServiceRegistryImpl serviceRegistry;
+
+	@Before
+	public void setUp() {
+		serviceRegistry = new BasicServiceRegistryImpl( Collections.emptyMap() );
+	}
+
+	@After
+	public void tearDown() {
+		serviceRegistry.destroy();
+	}
+
+	protected BasicServiceRegistry basicServiceRegistry() {
+		return serviceRegistry;
+	}
 
 	@Test
 	public void testSimpleEntityMapping() {

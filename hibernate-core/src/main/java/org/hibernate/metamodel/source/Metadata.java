@@ -42,6 +42,7 @@ import org.hibernate.metamodel.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.relational.Database;
 import org.hibernate.metamodel.source.annotations.AnnotationBinder;
 import org.hibernate.metamodel.source.hbm.HibernateXmlBinder;
+import org.hibernate.service.BasicServiceRegistry;
 
 /**
  * Container for configuration data while building and binding the metamodel
@@ -49,15 +50,17 @@ import org.hibernate.metamodel.source.hbm.HibernateXmlBinder;
  * @author Steve Ebersole
  */
 public class Metadata implements Serializable {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class, Metadata.class.getName()
-	);
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, Metadata.class.getName() );
+
+	private final BasicServiceRegistry serviceRegistry;
 
 	private final AnnotationBinder annotationBinder;
 	private final HibernateXmlBinder hibernateXmlBinder;
+
+	private final Database database = new Database();
+
 	private final ExtendsQueue extendsQueue;
 	private final MetadataSourceQueue metadataSourceQueue;
-	private final Database database = new Database();
 
 	private NamingStrategy namingStrategy = EJB3NamingStrategy.INSTANCE;
 	private Map<String, EntityBinding> entityBindingMap = new HashMap<String, EntityBinding>();
@@ -65,11 +68,12 @@ public class Metadata implements Serializable {
 	private Map<String, FetchProfile> fetchProfiles = new HashMap<String, FetchProfile>();
 	private Map<String, String> imports;
 
-	public Metadata() {
-		annotationBinder = new AnnotationBinder( this );
-		hibernateXmlBinder = new HibernateXmlBinder( this );
-		extendsQueue = new ExtendsQueue( this );
-		metadataSourceQueue = new MetadataSourceQueue( this );
+	public Metadata(BasicServiceRegistry serviceRegistry) {
+		this.serviceRegistry = serviceRegistry;
+		this.annotationBinder = new AnnotationBinder( this );
+		this.hibernateXmlBinder = new HibernateXmlBinder( this );
+		this.extendsQueue = new ExtendsQueue( this );
+		this.metadataSourceQueue = new MetadataSourceQueue( this );
 	}
 
 	public HibernateXmlBinder getHibernateXmlBinder() {

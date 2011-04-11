@@ -174,32 +174,6 @@ subprojects { subProject ->
 		compileJava.dependsOn generateMainLoggingClasses
         compileJava.options.define(compilerArgs: ["-proc:none"])
 
-
-        task generateTestLoggingClasses(type: Compile) {
-		    classpath = compileTestJava.classpath + configurations.jbossLoggingTool
-            source = sourceSets.test.originalJavaSrcDirs
-            destinationDir = aptDumpDir
-		    options.define(
-                    compilerArgs: [
-                            "-nowarn",
-                            "-proc:only",
-                            "-processor", "org.jboss.logging.LoggingToolsProcessor",
-                            "-s", "$sourceSets.test.generatedLoggingSrcDir.absolutePath"
-                    ]
-            );
-            outputs.dir sourceSets.test.generatedLoggingSrcDir;
-            doFirst {
-                sourceSets.test.generatedLoggingSrcDir.mkdirs()
-            }
-        }
-
-        // for the time being eat the annoying output from running the annotation processors
-        generateTestLoggingClasses.logging.captureStandardError(LogLevel.INFO)
-
-		compileTestJava.dependsOn generateTestLoggingClasses
-        compileTestJava.options.define(compilerArgs: ["-proc:none"])
-
-
         manifest.mainAttributes(
                 provider: 'gradle',
                 'Implementation-Url': 'http://hibernate.org',
@@ -230,7 +204,9 @@ subprojects { subProject ->
         sourceCompatibility = "1.6"
 
         ideaModule {
-            // treat our "provided" configuration dependencies as "compile" scope dependencies in IntelliJ
+            beforeConfigured { module ->
+                module.excludeFolders.clear()
+            }
             scopes.COMPILE.plus.add( configurations.provided )
             whenConfigured { module ->
                 module.dependencies*.exported = true

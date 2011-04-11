@@ -33,7 +33,7 @@ manifest.mainAttributes(
 
 sourceSets.main {
     originalJavaSrcDirs = java.srcDirs
-    jaxbTargetDir = file( "${buildDir}/generated-src/jaxb" )
+    jaxbTargetDir = file( "${buildDir}/generated-src/jaxb/main" )
     java.srcDir jaxbTargetDir
 }
 
@@ -47,7 +47,7 @@ ideaModule {
 }
 
 task jaxb << {
-    jaxbTargetDir = file( "${buildDir}/generated-src/jaxb" )
+    jaxbTargetDir = file( "${buildDir}/generated-src/jaxb/main" )
     jaxbTargetDir.mkdirs()
 
     ant.taskdef(name: 'xjc', classname: 'com.sun.tools.xjc.XJCTask', classpath: configurations.jaxb.asPath)

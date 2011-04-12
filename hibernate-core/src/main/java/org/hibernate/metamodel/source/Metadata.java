@@ -76,6 +76,10 @@ public class Metadata implements Serializable {
 		this.metadataSourceQueue = new MetadataSourceQueue( this );
 	}
 
+	public BasicServiceRegistry getServiceRegistry() {
+		return serviceRegistry;
+	}
+
 	public HibernateXmlBinder getHibernateXmlBinder() {
 		return hibernateXmlBinder;
 	}

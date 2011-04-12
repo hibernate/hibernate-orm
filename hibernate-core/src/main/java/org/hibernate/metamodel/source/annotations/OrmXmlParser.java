@@ -8,8 +8,10 @@ import javax.xml.bind.JAXBException;
 import org.jboss.jandex.Index;
 
 import org.hibernate.AnnotationException;
+import org.hibernate.metamodel.source.Metadata;
 import org.hibernate.metamodel.source.annotation.xml.EntityMappings;
 import org.hibernate.metamodel.source.util.xml.XmlHelper;
+import org.hibernate.service.classloading.spi.ClassLoaderService;
 
 /**
  * @author Hardy Ferentschik
@@ -18,6 +20,12 @@ import org.hibernate.metamodel.source.util.xml.XmlHelper;
 public class OrmXmlParser {
 	private static final String ORM1_MAPPING_XSD = "org/hibernate/ejb/orm_1_0.xsd";
 	private static final String ORM2_MAPPING_XSD = "org/hibernate/ejb/orm_2_0.xsd";
+
+	private final Metadata meta;
+
+	public OrmXmlParser(Metadata meta) {
+		this.meta = meta;
+	}
 
 	/**
 	 * Parses the given xml configuration files and returns a updated annotation index
@@ -28,18 +36,22 @@ public class OrmXmlParser {
 	 * @return a new updated annotation index, enhancing and modifying the existing ones according to the jpa xml rules
 	 */
 	public Index parseAndUpdateIndex(Set<String> mappingFileNames, Index annotationIndex) {
-
+		ClassLoaderService classLoaderService = meta.getServiceRegistry().getService( ClassLoaderService.class );
 		Set<InputStream> mappingStreams = new HashSet<InputStream>();
 		for ( String fileName : mappingFileNames ) {
 
 			EntityMappings entityMappings;
 			try {
-				entityMappings = XmlHelper.unmarshallXml( fileName, ORM2_MAPPING_XSD, EntityMappings.class ).getRoot();
+				entityMappings = XmlHelper.unmarshallXml(
+						fileName, ORM2_MAPPING_XSD, EntityMappings.class, classLoaderService
+				).getRoot();
 			}
 			catch ( JAXBException orm2Exception ) {
 				// if we cannot parse against orm_2_0.xsd we try orm_1_0.xsd for backwards compatibility
 				try {
-					entityMappings = XmlHelper.unmarshallXml( fileName, ORM1_MAPPING_XSD, EntityMappings.class ).getRoot();
+					entityMappings = XmlHelper.unmarshallXml(
+							fileName, ORM1_MAPPING_XSD, EntityMappings.class, classLoaderService
+					).getRoot();
 				}
 				catch ( JAXBException orm1Exception ) {
 					throw new AnnotationException( "Unable to parse xml configuration.", orm1Exception );

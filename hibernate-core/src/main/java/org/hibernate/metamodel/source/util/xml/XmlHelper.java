@@ -37,6 +37,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 
+import org.hibernate.service.classloading.spi.ClassLoaderService;
+
 /**
  * @author Hardy Ferentschik
  */
@@ -46,10 +48,10 @@ public class XmlHelper {
 	private XmlHelper() {
 	}
 
-	public static <T> JaxbRoot<T> unmarshallXml(String fileName, String schemaName, Class<T> clazz)
+	public static <T> JaxbRoot<T> unmarshallXml(String fileName, String schemaName, Class<T> clazz, ClassLoaderService classLoaderService)
 			throws JAXBException {
-		Schema schema = getMappingSchema( schemaName );
-		InputStream in = getInputStreamForPath( fileName );
+		Schema schema = getMappingSchema( schemaName, classLoaderService );
+		InputStream in = classLoaderService.locateResourceStream( fileName );
 		JAXBContext jc = JAXBContext.newInstance( clazz );
 		Unmarshaller unmarshaller = jc.createUnmarshaller();
 		unmarshaller.setSchema( schema );
@@ -59,10 +61,8 @@ public class XmlHelper {
 		return new JaxbRootImpl<T>( elem.getValue(), origin );
 	}
 
-	private static Schema getMappingSchema(String schemaVersion) {
-		// todo - think about class loading. does this have to go via the class loader service?
-		ClassLoader loader = XmlHelper.class.getClassLoader();
-		URL schemaUrl = loader.getResource( schemaVersion );
+	private static Schema getMappingSchema(String schemaVersion, ClassLoaderService classLoaderService) {
+		URL schemaUrl = classLoaderService.locateResource( schemaVersion );
 		SchemaFactory sf = SchemaFactory.newInstance( javax.xml.XMLConstants.W3C_XML_SCHEMA_NS_URI );
 		Schema schema = null;
 		try {
@@ -72,17 +72,6 @@ public class XmlHelper {
 			log.debug( "Unable to create schema for {}: {}", schemaVersion, e.getMessage() );
 		}
 		return schema;
-	}
-
-	private static InputStream getInputStreamForPath(String path) {
-		// try the context class loader first
-		InputStream inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream( path );
-
-		// try the current class loader
-		if ( inputStream == null ) {
-			inputStream = XmlHelper.class.getResourceAsStream( path );
-		}
-		return inputStream;
 	}
 }
 

@@ -28,7 +28,6 @@ import javax.xml.bind.JAXBException;
 import org.jboss.logging.Logger;
 import org.xml.sax.InputSource;
 
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ConfigHelper;
 import org.hibernate.internal.util.xml.MappingReader;
 import org.hibernate.internal.util.xml.Origin;
@@ -37,6 +36,7 @@ import org.hibernate.internal.util.xml.XmlDocument;
 import org.hibernate.metamodel.source.Metadata;
 import org.hibernate.metamodel.source.hbm.xml.mapping.HibernateMapping;
 import org.hibernate.metamodel.source.util.xml.XmlHelper;
+import org.hibernate.service.classloading.spi.ClassLoaderService;
 
 import static org.junit.Assert.fail;
 
@@ -64,11 +64,15 @@ public class BasicHbmBindingTests extends AbstractBasicBindingTests {
 		metadata.getHibernateXmlBinder().bindRoot( xmlDocument );
 
 		// todo - just temporary to show how things would look like with JAXB
-		fileName = "/org/hibernate/metamodel/binding/SimpleVersionedEntity.xml";
+		fileName = "org/hibernate/metamodel/binding/SimpleVersionedEntity.xml";
 		final String HIBERNATE_MAPPING_XSD = "org/hibernate/hibernate-mapping-3.0.xsd";
 		HibernateMapping mapping = null;
 		try {
-			mapping = XmlHelper.unmarshallXml( fileName, HIBERNATE_MAPPING_XSD, HibernateMapping.class ).getRoot();
+			ClassLoaderService classLoaderService = metadata.getServiceRegistry()
+					.getService( ClassLoaderService.class );
+			mapping = XmlHelper.unmarshallXml(
+					fileName, HIBERNATE_MAPPING_XSD, HibernateMapping.class, classLoaderService
+			).getRoot();
 		}
 		catch ( JAXBException e ) {
 			log.debug( e.getMessage() );

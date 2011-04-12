@@ -730,7 +730,7 @@ public final class AnnotationBinder {
 					discriminatorType, discAnn, discFormulaAnn, mappings
 			);
 		}
-        if (discAnn != null && inheritanceState.hasParents()) LOG.invalidDescriminatorAnnotation(clazzToProcess.getName());
+        if (discAnn != null && inheritanceState.hasParents()) LOG.invalidDiscriminatorAnnotation( clazzToProcess.getName() );
 
 		String discrimValue = clazzToProcess.isAnnotationPresent( DiscriminatorValue.class ) ?
 				clazzToProcess.getAnnotation( DiscriminatorValue.class ).value() :

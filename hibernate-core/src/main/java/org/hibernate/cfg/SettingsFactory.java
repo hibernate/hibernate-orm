@@ -89,41 +89,54 @@ public class SettingsFactory implements Serializable {
 		settings.setJtaPlatform( serviceRegistry.getService( JtaPlatform.class ) );
 
 		boolean flushBeforeCompletion = ConfigurationHelper.getBoolean(Environment.FLUSH_BEFORE_COMPLETION, properties);
-        LOG.autoFlush(enabledDisabled(flushBeforeCompletion));
+        LOG.debugf( "Automatic flush during beforeCompletion(): %s", enabledDisabled(flushBeforeCompletion) );
 		settings.setFlushBeforeCompletionEnabled(flushBeforeCompletion);
 
 		boolean autoCloseSession = ConfigurationHelper.getBoolean(Environment.AUTO_CLOSE_SESSION, properties);
-        LOG.autoSessionClose(enabledDisabled(autoCloseSession));
+        LOG.debugf( "Automatic session close at end of transaction: %s", enabledDisabled(autoCloseSession) );
 		settings.setAutoCloseSessionEnabled(autoCloseSession);
 
 		//JDBC and connection settings:
 
 		int batchSize = ConfigurationHelper.getInt(Environment.STATEMENT_BATCH_SIZE, properties, 0);
-		if ( !meta.supportsBatchUpdates() ) batchSize = 0;
-		if (batchSize>0) LOG.jdbcBatchSize(batchSize);
+		if ( !meta.supportsBatchUpdates() ) {
+			batchSize = 0;
+		}
+		if ( batchSize > 0 ) {
+			LOG.debugf( "JDBC batch size: %s", batchSize );
+		}
 		settings.setJdbcBatchSize(batchSize);
+
 		boolean jdbcBatchVersionedData = ConfigurationHelper.getBoolean(Environment.BATCH_VERSIONED_DATA, properties, false);
-        if (batchSize > 0) LOG.jdbcBatchUpdates(enabledDisabled(jdbcBatchVersionedData));
+        if ( batchSize > 0 ) {
+			LOG.debugf( "JDBC batch updates for versioned data: %s", enabledDisabled(jdbcBatchVersionedData) );
+		}
 		settings.setJdbcBatchVersionedData(jdbcBatchVersionedData);
 
-		boolean useScrollableResultSets = ConfigurationHelper.getBoolean(Environment.USE_SCROLLABLE_RESULTSET, properties, meta.supportsScrollableResults());
-        LOG.scrollabelResultSets(enabledDisabled(useScrollableResultSets));
+		boolean useScrollableResultSets = ConfigurationHelper.getBoolean(
+				Environment.USE_SCROLLABLE_RESULTSET,
+				properties,
+				meta.supportsScrollableResults()
+		);
+        LOG.debugf( "Scrollable result sets: %s", enabledDisabled(useScrollableResultSets) );
 		settings.setScrollableResultSetsEnabled(useScrollableResultSets);
 
 		boolean wrapResultSets = ConfigurationHelper.getBoolean(Environment.WRAP_RESULT_SETS, properties, false);
-        LOG.wrapResultSets(enabledDisabled(wrapResultSets));
+        LOG.debugf( "Wrap result sets: %s", enabledDisabled(wrapResultSets) );
 		settings.setWrapResultSetsEnabled(wrapResultSets);
 
 		boolean useGetGeneratedKeys = ConfigurationHelper.getBoolean(Environment.USE_GET_GENERATED_KEYS, properties, meta.supportsGetGeneratedKeys());
-        LOG.jdbc3GeneratedKeys(enabledDisabled(useGetGeneratedKeys));
+        LOG.debugf( "JDBC3 getGeneratedKeys(): %s", enabledDisabled(useGetGeneratedKeys) );
 		settings.setGetGeneratedKeysEnabled(useGetGeneratedKeys);
 
 		Integer statementFetchSize = ConfigurationHelper.getInteger(Environment.STATEMENT_FETCH_SIZE, properties);
-        if (statementFetchSize != null) LOG.jdbcResultSetFetchSize(statementFetchSize);
+        if (statementFetchSize != null) {
+			LOG.debugf( "JDBC result set fetch size: %s", statementFetchSize );
+		}
 		settings.setJdbcFetchSize(statementFetchSize);
 
 		String releaseModeName = ConfigurationHelper.getString( Environment.RELEASE_CONNECTIONS, properties, "auto" );
-        LOG.connectionReleaseMode(releaseModeName);
+        LOG.debugf( "Connection release mode: %s", releaseModeName );
 		ConnectionReleaseMode releaseMode;
 		if ( "auto".equals(releaseModeName) ) {
 			releaseMode = serviceRegistry.getService( TransactionFactory.class ).getDefaultReleaseMode();
@@ -140,53 +153,63 @@ public class SettingsFactory implements Serializable {
 
 		//SQL Generation settings:
 
-		String defaultSchema = properties.getProperty(Environment.DEFAULT_SCHEMA);
-		String defaultCatalog = properties.getProperty(Environment.DEFAULT_CATALOG);
-        if (defaultSchema != null) LOG.defaultSchema(defaultSchema);
-        if (defaultCatalog != null) LOG.defaultCatalog(defaultCatalog);
-		settings.setDefaultSchemaName(defaultSchema);
-		settings.setDefaultCatalogName(defaultCatalog);
+		String defaultSchema = properties.getProperty( Environment.DEFAULT_SCHEMA );
+		String defaultCatalog = properties.getProperty( Environment.DEFAULT_CATALOG );
+        if ( defaultSchema != null ) {
+			LOG.debugf( "Default schema: %s", defaultSchema );
+		}
+        if (defaultCatalog != null) {
+			LOG.debugf( "Default catalog: %s", defaultCatalog );
+		}
+		settings.setDefaultSchemaName( defaultSchema );
+		settings.setDefaultCatalogName( defaultCatalog );
 
-		Integer maxFetchDepth = ConfigurationHelper.getInteger(Environment.MAX_FETCH_DEPTH, properties);
-        if (maxFetchDepth != null) LOG.maxOuterJoinFetchDepth(maxFetchDepth);
-		settings.setMaximumFetchDepth(maxFetchDepth);
+		Integer maxFetchDepth = ConfigurationHelper.getInteger( Environment.MAX_FETCH_DEPTH, properties );
+        if ( maxFetchDepth != null ) {
+			LOG.debugf( "Maximum outer join fetch depth: %s", maxFetchDepth );
+		}
+		settings.setMaximumFetchDepth( maxFetchDepth );
+
 		int batchFetchSize = ConfigurationHelper.getInt(Environment.DEFAULT_BATCH_FETCH_SIZE, properties, 1);
-        LOG.defaultBatchFetchSize(batchFetchSize);
-		settings.setDefaultBatchFetchSize(batchFetchSize);
+        LOG.debugf( "Default batch fetch size: %s", batchFetchSize );
+		settings.setDefaultBatchFetchSize( batchFetchSize );
 
-		boolean comments = ConfigurationHelper.getBoolean(Environment.USE_SQL_COMMENTS, properties);
-        LOG.generateSqlWithComments(enabledDisabled(comments));
-		settings.setCommentsEnabled(comments);
+		boolean comments = ConfigurationHelper.getBoolean( Environment.USE_SQL_COMMENTS, properties );
+        LOG.debugf( "Generate SQL with comments: %s", enabledDisabled(comments) );
+		settings.setCommentsEnabled( comments );
 
-		boolean orderUpdates = ConfigurationHelper.getBoolean(Environment.ORDER_UPDATES, properties);
-        LOG.orderSqlUpdatesByPrimaryKey(enabledDisabled(orderUpdates));
-		settings.setOrderUpdatesEnabled(orderUpdates);
+		boolean orderUpdates = ConfigurationHelper.getBoolean( Environment.ORDER_UPDATES, properties );
+        LOG.debugf( "Order SQL updates by primary key: %s", enabledDisabled(orderUpdates) );
+		settings.setOrderUpdatesEnabled( orderUpdates );
 
 		boolean orderInserts = ConfigurationHelper.getBoolean(Environment.ORDER_INSERTS, properties);
-        LOG.orderSqlInsertsForBatching(enabledDisabled(orderInserts));
+        LOG.debugf( "Order SQL inserts for batching: %s", enabledDisabled(orderInserts) );
 		settings.setOrderInsertsEnabled( orderInserts );
 
 		//Query parser settings:
 
 		settings.setQueryTranslatorFactory( createQueryTranslatorFactory(properties) );
 
-        Map querySubstitutions = ConfigurationHelper.toMap(Environment.QUERY_SUBSTITUTIONS, " ,=;:\n\t\r\f", properties);
-        LOG.queryLanguageSubstitutions(querySubstitutions);
-		settings.setQuerySubstitutions(querySubstitutions);
+        Map querySubstitutions = ConfigurationHelper.toMap( Environment.QUERY_SUBSTITUTIONS, " ,=;:\n\t\r\f", properties );
+        LOG.debugf( "Query language substitutions: %s", querySubstitutions );
+		settings.setQuerySubstitutions( querySubstitutions );
 
 		boolean jpaqlCompliance = ConfigurationHelper.getBoolean( Environment.JPAQL_STRICT_COMPLIANCE, properties, false );
+		LOG.debugf( "JPA-QL strict compliance: %s", enabledDisabled(jpaqlCompliance) );
 		settings.setStrictJPAQLCompliance( jpaqlCompliance );
-        LOG.jpaQlStrictCompliance(enabledDisabled(jpaqlCompliance));
 
 		// Second-level / query cache:
 
-		boolean useSecondLevelCache = ConfigurationHelper.getBoolean(Environment.USE_SECOND_LEVEL_CACHE, properties, true);
-        LOG.secondLevelCache(enabledDisabled(useSecondLevelCache));
-		settings.setSecondLevelCacheEnabled(useSecondLevelCache);
+		boolean useSecondLevelCache = ConfigurationHelper.getBoolean( Environment.USE_SECOND_LEVEL_CACHE, properties, true );
+        LOG.debugf( "Second-level cache: %s", enabledDisabled(useSecondLevelCache) );
+		settings.setSecondLevelCacheEnabled( useSecondLevelCache );
 
 		boolean useQueryCache = ConfigurationHelper.getBoolean(Environment.USE_QUERY_CACHE, properties);
-        LOG.queryCache(enabledDisabled(useQueryCache));
-		settings.setQueryCacheEnabled(useQueryCache);
+        LOG.debugf( "Query cache: %s", enabledDisabled(useQueryCache) );
+		settings.setQueryCacheEnabled( useQueryCache );
+		if (useQueryCache) {
+			settings.setQueryCacheFactory( createQueryCacheFactory(properties) );
+		}
 
 		// The cache provider is needed when we either have second-level cache enabled
 		// or query cache enabled.  Note that useSecondLevelCache is enabled by default
@@ -195,56 +218,65 @@ public class SettingsFactory implements Serializable {
 		boolean useMinimalPuts = ConfigurationHelper.getBoolean(
 				Environment.USE_MINIMAL_PUTS, properties, settings.getRegionFactory().isMinimalPutsEnabledByDefault()
 		);
-        LOG.optimizeCacheForMinimalInputs(enabledDisabled(useMinimalPuts));
-		settings.setMinimalPutsEnabled(useMinimalPuts);
+        LOG.debugf( "Optimize cache for minimal puts: %s", enabledDisabled(useMinimalPuts) );
+		settings.setMinimalPutsEnabled( useMinimalPuts );
 
-		String prefix = properties.getProperty(Environment.CACHE_REGION_PREFIX);
-		if ( StringHelper.isEmpty(prefix) ) prefix=null;
-        if (prefix != null) LOG.cacheRegionPrefix(prefix);
-		settings.setCacheRegionPrefix(prefix);
+		String prefix = properties.getProperty( Environment.CACHE_REGION_PREFIX );
+		if ( StringHelper.isEmpty(prefix) ) {
+			prefix=null;
+		}
+        if (prefix != null) {
+			LOG.debugf( "Cache region prefix: %s", prefix );
+		}
+		settings.setCacheRegionPrefix( prefix );
 
-		boolean useStructuredCacheEntries = ConfigurationHelper.getBoolean(Environment.USE_STRUCTURED_CACHE, properties, false);
-        LOG.structuredSecondLevelCacheEntries(enabledDisabled(useStructuredCacheEntries));
-		settings.setStructuredCacheEntriesEnabled(useStructuredCacheEntries);
+		boolean useStructuredCacheEntries = ConfigurationHelper.getBoolean( Environment.USE_STRUCTURED_CACHE, properties, false );
+        LOG.debugf( "Structured second-level cache entries: %s", enabledDisabled(useStructuredCacheEntries) );
+		settings.setStructuredCacheEntriesEnabled( useStructuredCacheEntries );
 
-		if (useQueryCache) settings.setQueryCacheFactory( createQueryCacheFactory(properties) );
 
 		//Statistics and logging:
 
-		boolean useStatistics = ConfigurationHelper.getBoolean(Environment.GENERATE_STATISTICS, properties);
-		LOG.statistics( enabledDisabled(useStatistics) );
-		settings.setStatisticsEnabled(useStatistics);
+		boolean useStatistics = ConfigurationHelper.getBoolean( Environment.GENERATE_STATISTICS, properties );
+		LOG.debugf( "Statistics: %s", enabledDisabled(useStatistics) );
+		settings.setStatisticsEnabled( useStatistics );
 
-		boolean useIdentifierRollback = ConfigurationHelper.getBoolean(Environment.USE_IDENTIFIER_ROLLBACK, properties);
-        LOG.deletedEntitySyntheticIdentifierRollback(enabledDisabled(useIdentifierRollback));
-		settings.setIdentifierRollbackEnabled(useIdentifierRollback);
+		boolean useIdentifierRollback = ConfigurationHelper.getBoolean( Environment.USE_IDENTIFIER_ROLLBACK, properties );
+        LOG.debugf( "Deleted entity synthetic identifier rollback: %s", enabledDisabled(useIdentifierRollback) );
+		settings.setIdentifierRollbackEnabled( useIdentifierRollback );
 
 		//Schema export:
 
-		String autoSchemaExport = properties.getProperty(Environment.HBM2DDL_AUTO);
-		if ( "validate".equals(autoSchemaExport) ) settings.setAutoValidateSchema(true);
-		if ( "update".equals(autoSchemaExport) ) settings.setAutoUpdateSchema(true);
-		if ( "create".equals(autoSchemaExport) ) settings.setAutoCreateSchema(true);
-		if ( "create-drop".equals(autoSchemaExport) ) {
-			settings.setAutoCreateSchema(true);
-			settings.setAutoDropSchema(true);
+		String autoSchemaExport = properties.getProperty( Environment.HBM2DDL_AUTO );
+		if ( "validate".equals(autoSchemaExport) ) {
+			settings.setAutoValidateSchema( true );
+		}
+		if ( "update".equals(autoSchemaExport) ) {
+			settings.setAutoUpdateSchema( true );
+		}
+		if ( "create".equals(autoSchemaExport) ) {
+			settings.setAutoCreateSchema( true );
+		}
+		if ( "create-drop".equals( autoSchemaExport ) ) {
+			settings.setAutoCreateSchema( true );
+			settings.setAutoDropSchema( true );
 		}
 		settings.setImportFiles( properties.getProperty( Environment.HBM2DDL_IMPORT_FILES ) );
 
 		EntityMode defaultEntityMode = EntityMode.parse( properties.getProperty( Environment.DEFAULT_ENTITY_MODE ) );
-        LOG.defaultEntityMode(defaultEntityMode);
+        LOG.debugf( "Default entity-mode: %s", defaultEntityMode );
 		settings.setDefaultEntityMode( defaultEntityMode );
 
 		boolean namedQueryChecking = ConfigurationHelper.getBoolean( Environment.QUERY_STARTUP_CHECKING, properties, true );
-        LOG.namedQueryChecking(enabledDisabled(namedQueryChecking));
+        LOG.debugf( "Named query checking : %s", enabledDisabled(namedQueryChecking) );
 		settings.setNamedQueryStartupCheckingEnabled( namedQueryChecking );
 
 		boolean checkNullability = ConfigurationHelper.getBoolean(Environment.CHECK_NULLABILITY, properties, true);
-        LOG.checkNullability(enabledDisabled(checkNullability));
+        LOG.debugf( "Check Nullability in Core (should be disabled when Bean Validation is on): %s", enabledDisabled(checkNullability) );
 		settings.setCheckNullability(checkNullability);
 
 		MultiTenancyStrategy multiTenancyStrategy = MultiTenancyStrategy.determineMultiTenancyStrategy( properties );
-		LOG.debug( "multi-tenancy strategy : " + multiTenancyStrategy );
+		LOG.debugf( "multi-tenancy strategy : %s", multiTenancyStrategy );
 		settings.setMultiTenancyStrategy( multiTenancyStrategy );
 
 //		String provider = properties.getProperty( Environment.BYTECODE_PROVIDER );
@@ -274,12 +306,12 @@ public class SettingsFactory implements Serializable {
 		String queryCacheFactoryClassName = ConfigurationHelper.getString(
 				Environment.QUERY_CACHE_FACTORY, properties, "org.hibernate.cache.StandardQueryCacheFactory"
 		);
-        LOG.queryCacheFactory(queryCacheFactoryClassName);
+        LOG.debugf( "Query cache factory: %s", queryCacheFactoryClassName );
 		try {
 			return (QueryCacheFactory) ReflectHelper.classForName(queryCacheFactoryClassName).newInstance();
 		}
-		catch (Exception cnfe) {
-			throw new HibernateException("could not instantiate QueryCacheFactory: " + queryCacheFactoryClassName, cnfe);
+		catch (Exception e) {
+			throw new HibernateException( "could not instantiate QueryCacheFactory: " + queryCacheFactoryClassName, e );
 		}
 	}
 
@@ -297,16 +329,19 @@ public class SettingsFactory implements Serializable {
 		if ( regionFactoryClassName == null ) {
 			regionFactoryClassName = DEF_CACHE_REG_FACTORY;
 		}
-        LOG.cacheRegionFactory( regionFactoryClassName );
+        LOG.debugf( "Cache region factory : %s", regionFactoryClassName );
 		try {
 			try {
 				return (RegionFactory) ReflectHelper.classForName( regionFactoryClassName )
 						.getConstructor( Properties.class )
 						.newInstance( properties );
 			}
-			catch ( NoSuchMethodException nsme ) {
+			catch ( NoSuchMethodException e ) {
 				// no constructor accepting Properties found, try no arg constructor
-                LOG.constructorWithPropertiesNotFound(regionFactoryClassName);
+                LOG.debugf(
+						"%s did not provide constructor accepting java.util.Properties; attempting no-arg constructor.",
+						regionFactoryClassName
+				);
 				return (RegionFactory) ReflectHelper.classForName( regionFactoryClassName ).newInstance();
 			}
 		}
@@ -319,12 +354,12 @@ public class SettingsFactory implements Serializable {
 		String className = ConfigurationHelper.getString(
 				Environment.QUERY_TRANSLATOR, properties, "org.hibernate.hql.ast.ASTQueryTranslatorFactory"
 		);
-        LOG.queryTranslator( className );
+        LOG.debugf( "Query translator: %s", className );
 		try {
 			return (QueryTranslatorFactory) ReflectHelper.classForName(className).newInstance();
 		}
-		catch (Exception cnfe) {
-			throw new HibernateException("could not instantiate QueryTranslatorFactory: " + className, cnfe);
+		catch (Exception e) {
+			throw new HibernateException( "could not instantiate QueryTranslatorFactory: " + className, e );
 		}
 	}
 }

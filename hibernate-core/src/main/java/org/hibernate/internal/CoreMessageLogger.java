@@ -23,9 +23,11 @@
  */
 package org.hibernate.internal;
 
-import static org.jboss.logging.Logger.Level.ERROR;
-import static org.jboss.logging.Logger.Level.INFO;
-import static org.jboss.logging.Logger.Level.WARN;
+import javax.naming.InvalidNameException;
+import javax.naming.NameNotFoundException;
+import javax.naming.NamingException;
+import javax.transaction.Synchronization;
+import javax.transaction.SystemException;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -34,19 +36,17 @@ import java.net.URL;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.util.Hashtable;
-import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import javax.naming.InvalidNameException;
-import javax.naming.NameNotFoundException;
-import javax.naming.NamingException;
-import javax.transaction.Synchronization;
-import javax.transaction.SystemException;
 
-import org.hibernate.EntityMode;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.Cause;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
+
 import org.hibernate.HibernateException;
 import org.hibernate.cache.CacheException;
-import org.hibernate.cfg.AccessType;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.CollectionKey;
 import org.hibernate.engine.SessionFactoryImplementor;
@@ -57,11 +57,10 @@ import org.hibernate.service.jdbc.dialect.internal.AbstractDialectResolver;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SerializationException;
 import org.hibernate.type.Type;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.Cause;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
+
+import static org.jboss.logging.Logger.Level.ERROR;
+import static org.jboss.logging.Logger.Level.INFO;
+import static org.jboss.logging.Logger.Level.WARN;
 
 /**
  * The jboss-logging {@link MessageLogger} for the hibernate-core module.  It reserves message ids ranging from
@@ -72,47 +71,21 @@ import org.jboss.logging.MessageLogger;
 @MessageLogger( projectCode = "HHH" )
 public interface CoreMessageLogger extends BasicLogger {
 
-    @LogMessage( level = INFO )
-    @Message( value = "Adding secondary table to entity %s -> %s", id = 1 )
-    void addingSecondaryTableToEntity( String entity,
-                                       String table );
-
     @LogMessage( level = WARN )
     @Message( value = "Already session bound on call to bind(); make sure you clean up your sessions!", id = 2 )
     void alreadySessionBound();
 
-    @LogMessage( level = WARN )
-    @Message( value = "Placing @Access(AccessType.%s) on a field does not have any effect.", id = 3 )
-    void annotationHasNoEffect( AccessType type );
-
-    @LogMessage( level = WARN )
-    @Message( value = "Attempt to map column [%s] to no target column after explicit target column(s) named for FK [name=%s]", id = 4 )
-    void attemptToMapColumnToNoTargetColumn( String loggableString,
-                                             String name );
-
     @LogMessage( level = INFO )
     @Message( value = "Autocommit mode: %s", id = 6 )
     void autoCommitMode( boolean autocommit );
-
-    @LogMessage( level = INFO )
-    @Message( value = "Automatic flush during beforeCompletion(): %s", id = 7 )
-    void autoFlush( String enabledDisabled );
 
     @LogMessage( level = WARN )
     @Message( value = "JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()", id = 8 )
     void autoFlushWillNotWork();
 
     @LogMessage( level = INFO )
-    @Message( value = "Automatic session close at end of transaction: %s", id = 9 )
-    void autoSessionClose( String enabledDisabled );
-
-    @LogMessage( level = INFO )
     @Message( value = "On release of batch it still contained JDBC statements", id = 10 )
     void batchContainedStatementsOnRelease();
-
-    @LogMessage( level = INFO )
-    @Message( value = "Batcher factory: %s", id = 11 )
-    void batcherFactory( String batcherClass );
 
     @LogMessage( level = INFO )
     @Message( value = "Bind entity %s on table %s", id = 12 )
@@ -170,24 +143,9 @@ public interface CoreMessageLogger extends BasicLogger {
     @Message( value = "Cache provider: %s", id = 24 )
     void cacheProvider( String name );
 
-    @LogMessage( level = INFO )
-    @Message( value = "Cache region factory : %s", id = 25 )
-    void cacheRegionFactory( String regionFactoryClassName );
-
-    @LogMessage( level = INFO )
-    @Message( value = "Cache region prefix: %s", id = 26 )
-    void cacheRegionPrefix( String prefix );
-
     @LogMessage( level = WARN )
     @Message( value = "Calling joinTransaction() on a non JTA EntityManager", id = 27 )
     void callingJoinTransactionOnNonJtaEntityManager();
-
-    @Message( value = "CGLIB Enhancement failed: %s", id = 28 )
-    String cglibEnhancementFailed( String entityName );
-
-    @LogMessage( level = INFO )
-    @Message( value = "Check Nullability in Core (should be disabled when Bean Validation is on): %s", id = 29 )
-    void checkNullability( String enabledDisabled );
 
     @LogMessage( level = INFO )
     @Message( value = "Cleaning up connection pool [%s]", id = 30 )
@@ -258,16 +216,8 @@ public interface CoreMessageLogger extends BasicLogger {
     void connectionProperties( Properties connectionProps );
 
     @LogMessage( level = INFO )
-    @Message( value = "Connection release mode: %s", id = 47 )
-    void connectionReleaseMode( String releaseModeName );
-
-    @LogMessage( level = INFO )
     @Message( value = "Connections obtained: %s", id = 48 )
     void connectionsObtained( long connectCount );
-
-    @LogMessage( level = INFO )
-    @Message( value = "%s did not provide constructor accepting java.util.Properties; attempting no-arg constructor.", id = 49 )
-    void constructorWithPropertiesNotFound( String regionFactoryClassName );
 
     @LogMessage( level = ERROR )
     @Message( value = "Container is providing a null PersistenceUnitRootUrl: discovery impossible", id = 50 )
@@ -276,9 +226,6 @@ public interface CoreMessageLogger extends BasicLogger {
     @LogMessage( level = WARN )
     @Message( value = "Ignoring bag join fetch [%s] due to prior collection join fetch", id = 51 )
     void containsJoinFetchedCollection( String role );
-
-    @Message( value = "Could not close connection", id = 52 )
-    Object couldNotCloseConnection();
 
     @LogMessage( level = INFO )
     @Message( value = "Creating subcontext: %s", id = 53 )
@@ -291,29 +238,9 @@ public interface CoreMessageLogger extends BasicLogger {
                    int databaseMajorVersion,
                    int databaseMinorVersion );
 
-    @LogMessage( level = INFO )
-    @Message( value = "Default batch fetch size: %s", id = 55 )
-    void defaultBatchFetchSize( int batchFetchSize );
-
-    @LogMessage( level = INFO )
-    @Message( value = "Default catalog: %s", id = 56 )
-    void defaultCatalog( String defaultCatalog );
-
-    @LogMessage( level = INFO )
-    @Message( value = "Default entity-mode: %s", id = 57 )
-    void defaultEntityMode( EntityMode defaultEntityMode );
-
-    @LogMessage( level = INFO )
-    @Message( value = "Default schema: %s", id = 58 )
-    void defaultSchema( String defaultSchema );
-
     @LogMessage( level = WARN )
     @Message( value = "Defining %s=true ignored in HEM", id = 59 )
     void definingFlushBeforeCompletionIgnoredInHem( String flushBeforeCompletion );
-
-    @LogMessage( level = INFO )
-    @Message( value = "Deleted entity synthetic identifier rollback: %s", id = 60 )
-    void deletedEntitySyntheticIdentifierRollback( String enabledDisabled );
 
     @LogMessage( level = WARN )
     @Message( value = "Per HHH-5451 support for cglib as a bytecode provider has been deprecated.", id = 61 )
@@ -335,10 +262,6 @@ public interface CoreMessageLogger extends BasicLogger {
     @Message( value = "DEPRECATED : use {} instead with custom {} implementation", id = 65 )
     void deprecatedUuidGenerator( String name,
                                   String name2 );
-
-    @LogMessage( level = WARN )
-    @Message( value = "Dialect resolver class not found: %s", id = 66 )
-    void dialectResolverNotFound( String resolverName );
 
     @LogMessage( level = INFO )
     @Message( value = "Disallowing insert statement comment for select-identity due to Oracle driver bug", id = 67 )
@@ -377,10 +300,6 @@ public interface CoreMessageLogger extends BasicLogger {
     void duplicateMetadata();
 
     @LogMessage( level = INFO )
-    @Message( value = "Echoing all SQL to stdout", id = 75 )
-    void echoingSql();
-
-    @LogMessage( level = INFO )
     @Message( value = "Entities deleted: %s", id = 76 )
     void entitiesDeleted( long entityDeleteCount );
 
@@ -408,10 +327,6 @@ public interface CoreMessageLogger extends BasicLogger {
     @Message( value = "Entity Manager closed by someone else (%s must not be used)", id = 82 )
     void entityManagerClosedBySomeoneElse( String autoCloseSession );
 
-    @LogMessage( level = INFO )
-    @Message( value = "Hibernate EntityManager %s", id = 83 )
-    void entityManagerVersion( String versionString );
-
     @LogMessage( level = WARN )
     @Message( value = "Entity [%s] is abstract-class/interface explicitly mapped as non-abstract; be sure to supply entity-names", id = 84 )
     void entityMappedAsNonAbstract( String name );
@@ -438,10 +353,6 @@ public interface CoreMessageLogger extends BasicLogger {
     @Message( value = "Sub-resolver threw unexpected exception, continuing to next : %s", id = 89 )
     void exceptionInSubResolver( String message );
 
-    @LogMessage( level = INFO )
-    @Message( value = "Executing import script: %s", id = 90 )
-    void executingImportScript( String name );
-
     @LogMessage( level = ERROR )
     @Message( value = "Expected type: %s, actual value: %s", id = 91 )
     void expectedType( String name,
@@ -450,10 +361,6 @@ public interface CoreMessageLogger extends BasicLogger {
     @LogMessage( level = WARN )
     @Message( value = "An item was expired by the cache while it was locked (increase your cache timeout): %s", id = 92 )
     void expired( Object key );
-
-    @LogMessage( level = INFO )
-    @Message( value = "Exporting generated schema to database", id = 93 )
-    void exportingGeneratedSchemaToDatabase();
 
     @LogMessage( level = INFO )
     @Message( value = "Bound factory to JNDI name: %s", id = 94 )
@@ -519,10 +426,6 @@ public interface CoreMessageLogger extends BasicLogger {
     @LogMessage( level = INFO )
     @Message( value = "Found mapping document in jar: %s", id = 109 )
     void foundMappingDocument( String name );
-
-    @LogMessage( level = INFO )
-    @Message( value = "Generate SQL with comments: %s", id = 111 )
-    void generateSqlWithComments( String enabledDisabled );
 
     @LogMessage( level = ERROR )
     @Message( value = "Getters of lazy classes cannot be final: %s.%s", id = 112 )
@@ -600,16 +503,8 @@ public interface CoreMessageLogger extends BasicLogger {
     void initialContextDoesNotImplementEventContext();
 
     @LogMessage( level = INFO )
-    @Message( value = "Instantiated TransactionManagerLookup", id = 129 )
-    void instantiatedTransactionManagerLookup();
-
-    @LogMessage( level = INFO )
     @Message( value = "Instantiating explicit connection provider: %s", id = 130 )
-    void instantiatingExplicitConnectinProvider( String providerClassName );
-
-    @LogMessage( level = INFO )
-    @Message( value = "Instantiating TransactionManagerLookup: %s", id = 131 )
-    void instantiatingTransactionManagerLookup( String tmLookupClass );
+    void instantiatingExplicitConnectionProvider(String providerClassName);
 
     @LogMessage( level = ERROR )
     @Message( value = "Array element type error\n%s", id = 132 )
@@ -617,7 +512,7 @@ public interface CoreMessageLogger extends BasicLogger {
 
     @LogMessage( level = WARN )
     @Message( value = "Discriminator column has to be defined in the root entity, it will be ignored in subclass: %s", id = 133 )
-    void invalidDescriminatorAnnotation( String className );
+    void invalidDiscriminatorAnnotation(String className);
 
     @LogMessage( level = ERROR )
     @Message( value = "Application attempted to edit read only item: %s", id = 134 )
@@ -657,24 +552,9 @@ public interface CoreMessageLogger extends BasicLogger {
     @Message( value = "Javassist Enhancement failed: %s", id = 142 )
     String javassistEnhancementFailed( String entityName );
 
-    @LogMessage( level = INFO )
-    @Message( value = "JDBC3 getGeneratedKeys(): %s", id = 143 )
-    void jdbc3GeneratedKeys( String enabledDisabled );
-
     @LogMessage( level = WARN )
     @Message( value = "%s = false breaks the EJB3 specification", id = 144 )
     void jdbcAutoCommitFalseBreaksEjb3Spec( String autocommit );
-
-    @LogMessage( level = INFO )
-    @Message( value = "JDBC batch size: %s", id = 145 )
-    void jdbcBatchSize( int batchSize );
-
-    @LogMessage( level = INFO )
-    @Message( value = "JDBC batch updates for versioned data: %s", id = 146 )
-    void jdbcBatchUpdates( String enabledDisabled );
-
-    @Message( value = "JDBC begin failed", id = 147 )
-    String jdbcBeginFailed();
 
     @LogMessage( level = WARN )
     @Message( value = "No JDBC Driver class was specified by property %s", id = 148 )
@@ -683,10 +563,6 @@ public interface CoreMessageLogger extends BasicLogger {
     @LogMessage( level = INFO )
     @Message( value = "JDBC isolation level: %s", id = 149 )
     void jdbcIsolationLevel( String isolationLevelToString );
-
-    @LogMessage( level = INFO )
-    @Message( value = "JDBC result set fetch size: %s", id = 150 )
-    void jdbcResultSetFetchSize( Integer statementFetchSize );
 
     @Message( value = "JDBC rollback failed", id = 151 )
     String jdbcRollbackFailed();
@@ -707,10 +583,6 @@ public interface CoreMessageLogger extends BasicLogger {
     @Message( value = "JNDI name %s does not handle a session factory reference", id = 155 )
     void jndiNameDoesNotHandleSessionFactoryReference( String sfJNDIName,
                                                        @Cause ClassCastException e );
-
-    @LogMessage( level = INFO )
-    @Message( value = "JPA-QL strict compliance: %s", id = 156 )
-    void jpaQlStrictCompliance( String enabledDisabled );
 
     @LogMessage( level = INFO )
     @Message( value = "Lazy property fetching available for: %s", id = 157 )
@@ -735,10 +607,6 @@ public interface CoreMessageLogger extends BasicLogger {
     @LogMessage( level = INFO )
     @Message( value = "Logical connection releasing its physical connection", id = 163 )
     void logicalConnectionReleasingPhysicalConnection();
-
-    @LogMessage( level = WARN )
-    @Message( value = "You should set hibernate.transaction.manager_lookup_class if cache is enabled", id = 164 )
-    void managerLookupClassShouldBeSet();
 
     @LogMessage( level = INFO )
     @Message( value = "Mapping class: %s -> %s", id = 165 )
@@ -775,10 +643,6 @@ public interface CoreMessageLogger extends BasicLogger {
                                String name );
 
     @LogMessage( level = INFO )
-    @Message( value = "Maximum outer join fetch depth: %s", id = 172 )
-    void maxOuterJoinFetchDepth( Integer maxFetchDepth );
-
-    @LogMessage( level = INFO )
     @Message( value = "Max query time: %sms", id = 173 )
     void maxQueryTime( long queryExecutionMaxTime );
 
@@ -791,9 +655,6 @@ public interface CoreMessageLogger extends BasicLogger {
     @Message( value = "Class annotated @org.hibernate.annotations.Entity but not javax.persistence.Entity (most likely a user error): %s", id = 175 )
     void missingEntityAnnotation( String className );
 
-    @LogMessage( level = INFO )
-    @Message( value = "Named query checking : %s", id = 176 )
-    void namedQueryChecking( String enabledDisabled );
 
     @LogMessage( level = ERROR )
     @Message( value = "Error in named query: %s", id = 177 )
@@ -834,28 +695,12 @@ public interface CoreMessageLogger extends BasicLogger {
     void notBindingFactoryToJndi();
 
     @LogMessage( level = INFO )
-    @Message( value = "Obtaining TransactionManager", id = 186 )
-    void obtainingTransactionManager();
-
-    @LogMessage( level = INFO )
     @Message( value = "Optimistic lock failures: %s", id = 187 )
     void optimisticLockFailures( long optimisticFailureCount );
-
-    @LogMessage( level = INFO )
-    @Message( value = "Optimize cache for minimal puts: %s", id = 188 )
-    void optimizeCacheForMinimalInputs( String enabledDisabled );
 
     @LogMessage( level = WARN )
     @Message( value = "@OrderBy not allowed for an indexed collection, annotation ignored.", id = 189 )
     void orderByAnnotationIndexedCollection();
-
-    @LogMessage( level = INFO )
-    @Message( value = "Order SQL inserts for batching: %s", id = 191 )
-    void orderSqlInsertsForBatching( String enabledDisabled );
-
-    @LogMessage( level = INFO )
-    @Message( value = "Order SQL updates by primary key: %s", id = 192 )
-    void orderSqlUpdatesByPrimaryKey( String enabledDisabled );
 
     @LogMessage( level = WARN )
     @Message( value = "Overriding %s is dangerous, this might break the EJB3 specification implementation", id = 193 )
@@ -938,14 +783,6 @@ public interface CoreMessageLogger extends BasicLogger {
     void queriesExecuted( long queryExecutionCount );
 
     @LogMessage( level = INFO )
-    @Message( value = "Query cache: %s", id = 211 )
-    void queryCache( String enabledDisabled );
-
-    @LogMessage( level = INFO )
-    @Message( value = "Query cache factory: %s", id = 212 )
-    void queryCacheFactory( String queryCacheFactoryClassName );
-
-    @LogMessage( level = INFO )
     @Message( value = "Query cache hits: %s", id = 213 )
     void queryCacheHits( long queryCacheHitCount );
 
@@ -956,14 +793,6 @@ public interface CoreMessageLogger extends BasicLogger {
     @LogMessage( level = INFO )
     @Message( value = "Query cache puts: %s", id = 215 )
     void queryCachePuts( long queryCachePutCount );
-
-    @LogMessage( level = INFO )
-    @Message( value = "Query language substitutions: %s", id = 216 )
-    void queryLanguageSubstitutions( Map querySubstitutions );
-
-    @LogMessage( level = INFO )
-    @Message( value = "Query translator: %s", id = 217 )
-    void queryTranslator( String className );
 
     @LogMessage( level = INFO )
     @Message( value = "RDMSOS2200Dialect version: 1.0", id = 218 )
@@ -989,10 +818,6 @@ public interface CoreMessageLogger extends BasicLogger {
     @Message( value = "Recognized obsolete hibernate namespace %s. Use namespace %s instead. Refer to Hibernate 3.6 Migration Guide!", id = 223 )
     void recognizedObsoleteHibernateNamespace( String oldHibernateNamespace,
                                                String hibernateNamespace );
-
-    @LogMessage( level = WARN )
-    @Message( value = "Reconnecting the same connection that is already connected; should this connection have been disconnected?", id = 224 )
-    void reconnectingConnectedConnection();
 
     @LogMessage( level = WARN )
     @Message( value = "Property [%s] has been renamed to [%s]; update your properties appropriately", id = 225 )
@@ -1033,16 +858,8 @@ public interface CoreMessageLogger extends BasicLogger {
                                                          SessionFactoryImplementor factory2 );
 
     @LogMessage( level = INFO )
-    @Message( value = "Scrollable result sets: %s", id = 234 )
-    void scrollabelResultSets( String enabledDisabled );
-
-    @LogMessage( level = INFO )
     @Message( value = "Searching for mapping documents in jar: %s", id = 235 )
     void searchingForMappingDocuments( String name );
-
-    @LogMessage( level = INFO )
-    @Message( value = "Second-level cache: %s", id = 236 )
-    void secondLevelCache( String enabledDisabled );
 
     @LogMessage( level = INFO )
     @Message( value = "Second level cache hits: %s", id = 237 )
@@ -1116,16 +933,8 @@ public interface CoreMessageLogger extends BasicLogger {
     void statementsPrepared( long prepareStatementCount );
 
     @LogMessage( level = INFO )
-    @Message( value = "Statistics: %s", id = 254 )
-    void statistics( String enabledDisabled );
-
-    @LogMessage( level = INFO )
     @Message( value = "Stopping service", id = 255 )
     void stoppingService();
-
-    @LogMessage( level = INFO )
-    @Message( value = "Structured second-level cache entries: %s", id = 256 )
-    void structuredSecondLevelCacheEntries( String enabledDisabled );
 
     @LogMessage( level = INFO )
     @Message( value = "sub-resolver threw unexpected exception, continuing to next : %s", id = 257 )
@@ -1151,17 +960,6 @@ public interface CoreMessageLogger extends BasicLogger {
     @LogMessage( level = INFO )
     @Message( value = "Table not found: %s", id = 262 )
     void tableNotFound( String name );
-
-    @Message( value = "TransactionFactory class not found: %s", id = 263 )
-    String transactionFactoryClassNotFound( String strategyClassName );
-
-    @LogMessage( level = INFO )
-    @Message( value = "No TransactionManagerLookup configured (in JTA environment, use of read-write or transactional second-level cache is not recommended)", id = 264 )
-    void transactionManagerLookupNotConfigured();
-
-    @LogMessage( level = WARN )
-    @Message( value = "Transaction not available on beforeCompletion: assuming valid", id = 265 )
-    void transactionNotAvailableOnBeforeCompletion();
 
     @LogMessage( level = INFO )
     @Message( value = "Transactions: %s", id = 266 )
@@ -1201,9 +999,6 @@ public interface CoreMessageLogger extends BasicLogger {
     @Message( value = "Unable to apply constraints on DDL for %s", id = 274 )
     void unableToApplyConstraints( String className,
                                    @Cause Exception e );
-
-    @Message( value = "JTA transaction begin failed", id = 275 )
-    String unableToBeginJtaTransaction();
 
     @LogMessage( level = WARN )
     @Message( value = "Could not bind Ejb3Configuration to JNDI", id = 276 )
@@ -1753,12 +1548,6 @@ public interface CoreMessageLogger extends BasicLogger {
     @Message( value = "Hibernate Validator not found: ignoring", id = 410 )
     void validatorNotFound();
 
-    @LogMessage( level = WARN )
-    @Message( value = "Value mapping mismatch as part of FK [table=%s, name=%s] while adding source column [%s]", id = 411 )
-    void valueMappingMismatch( String loggableString,
-                               String name,
-                               String loggableString2 );
-
     @LogMessage( level = INFO )
     @Message( value = "Hibernate %s", id = 412 )
     void version( String versionString );
@@ -1770,10 +1559,6 @@ public interface CoreMessageLogger extends BasicLogger {
     @LogMessage( level = INFO )
     @Message( value = "Property hibernate.search.autoregister_listeners is set to false. No attempt will be made to register Hibernate Search event listeners.", id = 414 )
     void willNotRegisterListeners();
-
-    @LogMessage( level = INFO )
-    @Message( value = "Wrap result sets: %s", id = 415 )
-    void wrapResultSets( String enabledDisabled );
 
     @LogMessage( level = WARN )
     @Message( value = "Write locks via update not supported for non-versioned entities [%s]", id = 416 )

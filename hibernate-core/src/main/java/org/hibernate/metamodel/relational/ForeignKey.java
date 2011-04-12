@@ -84,12 +84,23 @@ public class ForeignKey extends AbstractConstraint implements Constraint, Export
 	public void addColumnMapping(Column sourceColumn, Column targetColumn) {
 		if ( targetColumn == null ) {
 			if ( targetColumns != null ) {
-				if (LOG.isEnabled( Level.WARN )) LOG.attemptToMapColumnToNoTargetColumn(sourceColumn.toLoggableString(), getName());
+				LOG.debugf(
+						"Attempt to map column [%s] to no target column after explicit target column(s) named for FK [name=%s]",
+						sourceColumn.toLoggableString(),
+						getName()
+				);
 			}
 		}
 		else {
 			if ( targetColumns == null ) {
-				if (!internalColumnAccess().isEmpty()) LOG.valueMappingMismatch(getTable().toLoggableString(), getName(), sourceColumn.toLoggableString());
+				if (!internalColumnAccess().isEmpty()) {
+					LOG.debugf(
+							"Value mapping mismatch as part of FK [table=%s, name=%s] while adding source column [%s]",
+							getTable().toLoggableString(),
+							getName(),
+							sourceColumn.toLoggableString()
+					);
+				}
 				targetColumns = new ArrayList<Column>();
 			}
 			targetColumns.add( targetColumn );

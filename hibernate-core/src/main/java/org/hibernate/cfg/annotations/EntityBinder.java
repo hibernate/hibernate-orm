@@ -746,7 +746,7 @@ public class EntityBinder {
 
 		//somehow keep joins() for later.
 		//Has to do the work later because it needs persistentClass id!
-        LOG.addingSecondaryTableToEntity( persistentClass.getEntityName(), join.getTable().getName() );
+		LOG.debugf( "Adding secondary table to entity %s -> %s", persistentClass.getEntityName(), join.getTable().getName() );
 		org.hibernate.annotations.Table matchingTable = findMatchingComplimentTableAnnotation( join );
 		if ( matchingTable != null ) {
 			join.setSequentialSelect( FetchMode.JOIN != matchingTable.fetch() );

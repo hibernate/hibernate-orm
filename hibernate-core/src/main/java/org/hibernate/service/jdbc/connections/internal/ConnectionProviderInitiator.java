@@ -184,7 +184,7 @@ public class ConnectionProviderInitiator implements BasicServiceInitiator<Connec
 			String providerClassName,
 			ClassLoaderService classLoaderService) {
 		try {
-            LOG.instantiatingExplicitConnectinProvider(providerClassName);
+            LOG.instantiatingExplicitConnectionProvider( providerClassName );
 			return (ConnectionProvider) classLoaderService.classForName( providerClassName ).newInstance();
 		}
 		catch ( Exception e ) {

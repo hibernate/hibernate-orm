@@ -517,7 +517,7 @@ public final class AnnotationBinder {
 			return;
 		}
 
-        LOG.bindingEntityFromClass( clazzToProcess.getName() );
+        LOG.debugf( "Binding entity from annotated class: %s", clazzToProcess.getName() );
 
 		PersistentClass superEntity = getSuperEntity(
 				clazzToProcess, inheritanceStatePerClass, mappings, inheritanceState
@@ -1234,7 +1234,7 @@ public final class AnnotationBinder {
 			params.put( param.name(), mappings.getTypeResolver().heuristicType( param.type() ) );
 		}
 		FilterDefinition def = new FilterDefinition( defAnn.name(), defAnn.defaultCondition(), params );
-        LOG.bindingFilterDefinition( def.getFilterName() );
+        LOG.debugf( "Binding filter definition: %s", def.getFilterName() );
 		mappings.addFilterDefinition( def );
 	}
 
@@ -1289,12 +1289,13 @@ public final class AnnotationBinder {
 			);
 		}
 
+		final String typeBindMessageF = "Binding type definition: %s";
 		if ( !BinderHelper.isEmptyAnnotationValue( defAnn.name() ) ) {
-            LOG.bindingTypeDefinition( defAnn.name() );
+            LOG.debugf( typeBindMessageF, defAnn.name() );
 			mappings.addTypeDef( defAnn.name(), defAnn.typeClass().getName(), params );
 		}
 		if ( !defAnn.defaultForType().equals( void.class ) ) {
-            LOG.bindingTypeDefinition( defAnn.defaultForType().getName() );
+            LOG.debugf( typeBindMessageF, defAnn.defaultForType().getName() );
 			mappings.addTypeDef( defAnn.defaultForType().getName(), defAnn.typeClass().getName(), params );
 		}
 

@@ -88,45 +88,6 @@ public interface CoreMessageLogger extends BasicLogger {
     void batchContainedStatementsOnRelease();
 
     @LogMessage( level = INFO )
-    @Message( value = "Bind entity %s on table %s", id = 12 )
-    void bindEntityOnTable( String entity,
-                            String table );
-
-    @LogMessage( level = INFO )
-    @Message( value = "Binding Any Meta definition: %s", id = 13 )
-    void bindingAnyMetaDefinition( String name );
-
-    @LogMessage( level = INFO )
-    @Message( value = "Binding entity from annotated class: %s", id = 14 )
-    void bindingEntityFromClass( String className );
-
-    @LogMessage( level = INFO )
-    @Message( value = "Binding filter definition: %s", id = 15 )
-    void bindingFilterDefinition( String name );
-
-    @LogMessage( level = INFO )
-    @Message( value = "Binding named native query: %s => %s", id = 16 )
-    void bindingNamedNativeQuery( String name,
-                                  String query );
-
-    @LogMessage( level = INFO )
-    @Message( value = "Binding named query: %s => %s", id = 17 )
-    void bindingNamedQuery( String name,
-                            String query );
-
-    @LogMessage( level = INFO )
-    @Message( value = "Binding result set mapping: %s", id = 18 )
-    void bindingResultSetMapping( String mapping );
-
-    @LogMessage( level = INFO )
-    @Message( value = "Binding type definition: %s", id = 19 )
-    void bindingTypeDefinition( String name );
-
-    @LogMessage( level = INFO )
-    @Message( value = "Building session factory", id = 20 )
-    void buildingSessionFactory();
-
-    @LogMessage( level = INFO )
     @Message( value = "Bytecode provider name : %s", id = 21 )
     void bytecodeProvider( String provider );
 
@@ -231,20 +192,9 @@ public interface CoreMessageLogger extends BasicLogger {
     @Message( value = "Creating subcontext: %s", id = 53 )
     void creatingSubcontextInfo( String intermediateContextName );
 
-    @LogMessage( level = INFO )
-    @Message( value = "Database ->\n" + "       name : %s\n" + "    version : %s\n" + "      major : %s\n" + "      minor : %s", id = 54 )
-    void database( String databaseProductName,
-                   String databaseProductVersion,
-                   int databaseMajorVersion,
-                   int databaseMinorVersion );
-
     @LogMessage( level = WARN )
     @Message( value = "Defining %s=true ignored in HEM", id = 59 )
     void definingFlushBeforeCompletionIgnoredInHem( String flushBeforeCompletion );
-
-    @LogMessage( level = WARN )
-    @Message( value = "Per HHH-5451 support for cglib as a bytecode provider has been deprecated.", id = 61 )
-    void deprecated();
 
     @LogMessage( level = WARN )
     @Message( value = "@ForceDiscriminator is deprecated use @DiscriminatorOptions instead.", id = 62 )
@@ -266,13 +216,6 @@ public interface CoreMessageLogger extends BasicLogger {
     @LogMessage( level = INFO )
     @Message( value = "Disallowing insert statement comment for select-identity due to Oracle driver bug", id = 67 )
     void disallowingInsertStatementComment();
-
-    @LogMessage( level = INFO )
-    @Message( value = "Driver ->\n" + "       name : %s\n" + "    version : %s\n" + "      major : %s\n" + "      minor : %s", id = 68 )
-    void driver( String driverProductName,
-                 String driverProductVersion,
-                 int driverMajorVersion,
-                 int driverMinorVersion );
 
     @LogMessage( level = WARN )
     @Message( value = "Duplicate generator name %s", id = 69 )
@@ -571,11 +514,6 @@ public interface CoreMessageLogger extends BasicLogger {
     String jdbcUrlNotSpecified( String url );
 
     @LogMessage( level = INFO )
-    @Message( value = "JDBC version : %s.%s", id = 153 )
-    void jdbcVersion( int jdbcMajorVersion,
-                      int jdbcMinorVersion );
-
-    @LogMessage( level = INFO )
     @Message( value = "JNDI InitialContext properties:%s", id = 154 )
     void jndiInitialContextProperties( Hashtable hash );
 
@@ -607,40 +545,6 @@ public interface CoreMessageLogger extends BasicLogger {
     @LogMessage( level = INFO )
     @Message( value = "Logical connection releasing its physical connection", id = 163 )
     void logicalConnectionReleasingPhysicalConnection();
-
-    @LogMessage( level = INFO )
-    @Message( value = "Mapping class: %s -> %s", id = 165 )
-    void mappingClass( String entityName,
-                       String name );
-
-    @LogMessage( level = INFO )
-    @Message( value = "Mapping class join: %s -> %s", id = 166 )
-    void mappingClassJoin( String entityName,
-                           String name );
-
-    @LogMessage( level = INFO )
-    @Message( value = "Mapping collection: %s -> %s", id = 167 )
-    void mappingCollection( String name1,
-                            String name2 );
-
-    @LogMessage( level = INFO )
-    @Message( value = "Mapping joined-subclass: %s -> %s", id = 168 )
-    void mappingJoinedSubclass( String entityName,
-                                String name );
-
-    @LogMessage( level = INFO )
-    @Message( value = "Mapping Package %s", id = 169 )
-    void mappingPackage( String packageName );
-
-    @LogMessage( level = INFO )
-    @Message( value = "Mapping subclass: %s -> %s", id = 170 )
-    void mappingSubclass( String entityName,
-                          String name );
-
-    @LogMessage( level = INFO )
-    @Message( value = "Mapping union-subclass: %s -> %s", id = 171 )
-    void mappingUnionSubclass( String entityName,
-                               String name );
 
     @LogMessage( level = INFO )
     @Message( value = "Max query time: %sms", id = 173 )
@@ -1174,10 +1078,6 @@ public interface CoreMessageLogger extends BasicLogger {
                                   String message );
 
     @LogMessage( level = INFO )
-    @Message( value = "Unable to find %s on the classpath. Hibernate Search is not enabled.", id = 317 )
-    void unableToFindListenerClass( String className );
-
-    @LogMessage( level = INFO )
     @Message( value = "Could not find any META-INF/persistence.xml file in the classpath", id = 318 )
     void unableToFindPersistenceXmlInClasspath();
 
@@ -1191,18 +1091,8 @@ public interface CoreMessageLogger extends BasicLogger {
                                                           String message );
 
     @LogMessage( level = WARN )
-    @Message( value = "Could not instantiate dialect resolver class : %s", id = 321 )
-    void unableToInstantiateDialectResolver( String message );
-
-    @LogMessage( level = WARN )
     @Message( value = "Unable to instantiate specified optimizer [%s], falling back to noop", id = 322 )
     void unableToInstantiateOptimizer( String type );
-
-    @Message( value = "Failed to instantiate TransactionFactory", id = 323 )
-    String unableToInstantiateTransactionFactory();
-
-    @Message( value = "Failed to instantiate TransactionManagerLookup '%s'", id = 324 )
-    String unableToInstantiateTransactionManagerLookup( String tmLookupClass );
 
     @LogMessage( level = WARN )
     @Message( value = "Unable to instantiate UUID generation strategy class : %s", id = 325 )
@@ -1222,7 +1112,7 @@ public interface CoreMessageLogger extends BasicLogger {
 
     @LogMessage( level = ERROR )
     @Message( value = "Problem loading properties from hibernate.properties", id = 329 )
-    void unableToloadProperties();
+    void unableToLoadProperties();
 
     @Message( value = "Unable to locate config file: %s", id = 330 )
     String unableToLocateConfigFile( String path );

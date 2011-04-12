@@ -638,7 +638,7 @@ public class BinderHelper {
 
 	private static void bindAnyMetaDef(AnyMetaDef defAnn, Mappings mappings) {
 		if ( isEmptyAnnotationValue( defAnn.name() ) ) return; //don't map not named definitions
-        LOG.bindingAnyMetaDefinition( defAnn.name() );
+        LOG.debugf( "Binding Any Meta definition: %s", defAnn.name() );
 		mappings.addAnyMetaDef( defAnn );
 	}
 

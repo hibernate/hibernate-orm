@@ -113,15 +113,19 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 				Connection connection = jdbcConnectionAccess.obtainConnection();
 				try {
 					DatabaseMetaData meta = connection.getMetaData();
-                    LOG.database(meta.getDatabaseProductName(),
-                                 meta.getDatabaseProductVersion(),
-                                 meta.getDatabaseMajorVersion(),
-                                 meta.getDatabaseMinorVersion());
-                    LOG.driver(meta.getDriverName(),
-                               meta.getDriverVersion(),
-                               meta.getDriverMajorVersion(),
-                               meta.getDriverMinorVersion());
-                    LOG.jdbcVersion(meta.getJDBCMajorVersion(), meta.getJDBCMinorVersion());
+                    LOG.debugf( "Database ->\n" + "       name : %s\n" + "    version : %s\n" + "      major : %s\n" + "      minor : %s",
+								meta.getDatabaseProductName(),
+								meta.getDatabaseProductVersion(),
+								meta.getDatabaseMajorVersion(),
+								meta.getDatabaseMinorVersion()
+					);
+                    LOG.debugf( "Driver ->\n" + "       name : %s\n" + "    version : %s\n" + "      major : %s\n" + "      minor : %s",
+								meta.getDriverName(),
+								meta.getDriverVersion(),
+								meta.getDriverMajorVersion(),
+								meta.getDriverMinorVersion()
+					);
+                    LOG.debugf( "JDBC version : %s.%s", meta.getJDBCMajorVersion(), meta.getJDBCMinorVersion() );
 
 					metaSupportsScrollable = meta.supportsResultSetType( ResultSet.TYPE_SCROLL_INSENSITIVE );
 					metaSupportsBatchUpdates = meta.supportsBatchUpdates();

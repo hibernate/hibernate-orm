@@ -73,7 +73,7 @@ public class ResultsetMappingSecondPass implements QuerySecondPass {
 		//TODO add parameters checkings
 		if ( ann == null ) return;
 		ResultSetMappingDefinition definition = new ResultSetMappingDefinition( ann.name() );
-        LOG.bindingResultSetMapping( definition.getName() );
+        LOG.debugf( "Binding result set mapping: %s", definition.getName() );
 
 		int entityAliasIndex = 0;
 

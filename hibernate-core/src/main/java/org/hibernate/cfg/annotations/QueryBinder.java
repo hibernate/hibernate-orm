@@ -81,7 +81,7 @@ public abstract class QueryBinder {
 		else {
 			mappings.addQuery( queryAnn.name(), query );
 		}
-        LOG.bindingNamedQuery( queryAnn.name(), queryAnn.query() );
+        LOG.debugf( "Binding named query: %s => %s", queryAnn.name(), queryAnn.query() );
 	}
 
 
@@ -142,7 +142,7 @@ public abstract class QueryBinder {
 		else {
 			mappings.addSQLQuery( queryAnn.name(), query );
 		}
-        LOG.bindingNamedNativeQuery( queryAnn.name(), queryAnn.query() );
+        LOG.debugf( "Binding named native query: %s => %s", queryAnn.name(), queryAnn.query() );
 	}
 
 	public static void bindNativeQuery(org.hibernate.annotations.NamedNativeQuery queryAnn, Mappings mappings) {
@@ -195,7 +195,7 @@ public abstract class QueryBinder {
 			throw new NotYetImplementedException( "Pure native scalar queries are not yet supported" );
 		}
 		mappings.addSQLQuery( queryAnn.name(), query );
-        LOG.bindingNamedNativeQuery( queryAnn.name(), queryAnn.query() );
+        LOG.debugf( "Binding named native query: %s => %s", queryAnn.name(), queryAnn.query() );
 	}
 
 	public static void bindQueries(NamedQueries queriesAnn, Mappings mappings, boolean isDefault) {
@@ -242,7 +242,7 @@ public abstract class QueryBinder {
 		);
 
 		mappings.addQuery( queryAnn.name(), query );
-        LOG.bindingNamedQuery( queryAnn.name(), queryAnn.query() );
+        LOG.debugf( "Binding named query: %s => %s", queryAnn.name(), queryAnn.query() );
 	}
 
 	private static FlushMode getFlushMode(FlushModeType flushModeType) {

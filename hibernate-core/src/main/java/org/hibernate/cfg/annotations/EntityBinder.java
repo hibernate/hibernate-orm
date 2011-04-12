@@ -516,7 +516,7 @@ public class EntityBinder {
 		}
 
 		if ( persistentClass instanceof TableOwner ) {
-            LOG.bindEntityOnTable( persistentClass.getEntityName(), table.getName() );
+            LOG.debugf( "Bind entity %s on table %s", persistentClass.getEntityName(), table.getName() );
 			( (TableOwner) persistentClass ).setTable( table );
 		}
 		else {

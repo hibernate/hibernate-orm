@@ -211,7 +211,7 @@ public final class SessionFactoryImpl
 			ServiceRegistry serviceRegistry,
 	        Settings settings,
 			SessionFactoryObserver observer) throws HibernateException {
-        LOG.buildingSessionFactory();
+        LOG.debug( "Building session factory" );
 
 		this.settings = settings;
 		this.interceptor = cfg.getInterceptor();

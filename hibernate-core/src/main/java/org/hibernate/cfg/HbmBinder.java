@@ -29,20 +29,23 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Properties;
 import java.util.StringTokenizer;
+
 import org.dom4j.Attribute;
 import org.dom4j.Document;
 import org.dom4j.Element;
+import org.jboss.logging.Logger;
+
 import org.hibernate.CacheMode;
 import org.hibernate.EntityMode;
 import org.hibernate.FetchMode;
 import org.hibernate.FlushMode;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.MappingException;
 import org.hibernate.engine.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.FilterDefinition;
 import org.hibernate.engine.NamedQueryDefinition;
 import org.hibernate.engine.Versioning;
 import org.hibernate.id.PersistentIdentifierGenerator;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.JoinedIterator;
@@ -97,7 +100,6 @@ import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 import org.hibernate.type.DiscriminatorType;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.Type;
-import org.jboss.logging.Logger;
 
 /**
  * Walks an XML mapping document and produces the Hibernate configuration-time metamodel (the
@@ -345,7 +347,7 @@ public final class HbmBinder {
 		entity.setTable( table );
 		bindComment(table, node);
 
-        LOG.mappingClass(entity.getEntityName(), entity.getTable().getName());
+        LOG.debugf( "Mapping class: %s -> %s", entity.getEntityName(), entity.getTable().getName() );
 
 		// MUTABLE
 		Attribute mutableNode = node.attribute( "mutable" );
@@ -843,7 +845,9 @@ public final class HbmBinder {
 			);
 		unionSubclass.setTable( mytable );
 
-        LOG.mappingUnionSubclass(unionSubclass.getEntityName(), unionSubclass.getTable().getName());
+        LOG.debugf(
+				"Mapping union-subclass: %s -> %s", unionSubclass.getEntityName(), unionSubclass.getTable().getName()
+		);
 
 		createClassProperties( node, unionSubclass, mappings, inheritedMetas );
 
@@ -860,16 +864,19 @@ public final class HbmBinder {
 					.setEntityPersisterClass( SingleTableEntityPersister.class );
 		}
 
-        LOG.mappingSubclass(subclass.getEntityName(), subclass.getTable().getName());
+        LOG.debugf( "Mapping subclass: %s -> %s", subclass.getEntityName(), subclass.getTable().getName() );
 
 		// properties
 		createClassProperties( node, subclass, mappings, inheritedMetas );
 	}
 
 	private static String getClassTableName(
-			PersistentClass model, Element node, String schema, String catalog, Table denormalizedSuperTable,
-			Mappings mappings
-	) {
+			PersistentClass model,
+			Element node,
+			String schema,
+			String catalog,
+			Table denormalizedSuperTable,
+			Mappings mappings) {
 		Attribute tableNameNode = node.attribute( "table" );
 		String logicalTableName;
 		String physicalTableName;
@@ -916,7 +923,9 @@ public final class HbmBinder {
 		joinedSubclass.setTable( mytable );
 		bindComment(mytable, node);
 
-        LOG.mappingJoinedSubclass(joinedSubclass.getEntityName(), joinedSubclass.getTable().getName());
+        LOG.debugf(
+				"Mapping joined-subclass: %s -> %s", joinedSubclass.getEntityName(), joinedSubclass.getTable().getName()
+		);
 
 		// KEY
 		Element keyNode = node.element( "key" );
@@ -979,7 +988,7 @@ public final class HbmBinder {
 		}
 
 
-        LOG.mappingClassJoin(persistentClass.getEntityName(), join.getTable().getName());
+        LOG.debugf( "Mapping class join: %s -> %s", persistentClass.getEntityName(), join.getTable().getName() );
 
 		// KEY
 		Element keyNode = node.element( "key" );
@@ -1470,7 +1479,9 @@ public final class HbmBinder {
 			collection.setCollectionTable( table );
 			bindComment(table, node);
 
-            LOG.mappingCollection(collection.getRole(), collection.getCollectionTable().getName());
+            LOG.debugf(
+					"Mapping collection: %s -> %s", collection.getRole(), collection.getCollectionTable().getName()
+			);
 		}
 
 		// SORT
@@ -2453,7 +2464,9 @@ public final class HbmBinder {
 			oneToMany.setAssociatedClass( persistentClass );
 			collection.setCollectionTable( persistentClass.getTable() );
 
-            LOG.mappingCollection(collection.getRole(), collection.getCollectionTable().getName());
+            LOG.debugf(
+					"Mapping collection: %s -> %s", collection.getRole(), collection.getCollectionTable().getName()
+			);
 		}
 
 		// CHECK

@@ -26,7 +26,6 @@ package org.hibernate.cfg;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
-import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -614,7 +613,7 @@ public final class Environment {
                 LOG.propertiesLoaded(ConfigurationHelper.maskOut(GLOBAL_PROPERTIES, PASS));
 			}
 			catch (Exception e) {
-                LOG.unableToloadProperties();
+                LOG.unableToLoadProperties();
 			}
 			finally {
 				try{

@@ -38,10 +38,6 @@ import org.hibernate.AnnotationException;
  * @author Hardy Ferentschik
  */
 public class ConfiguredClass {
-	public static final DotName ENTITY = DotName.createSimple( Entity.class.getName() );
-	public static final DotName HIBERNATE_ENTITY = DotName.createSimple( org.hibernate.annotations.Entity.class.getName() );
-	public static final DotName MAPPED_SUPER_CLASS = DotName.createSimple( MappedSuperclass.class.getName() );
-
 	private final ClassInfo classInfo;
 	private final ConfiguredClassHierarchy hierarchy;
 
@@ -53,9 +49,9 @@ public class ConfiguredClass {
 
 	private void init() {
 		//@Entity and @MappedSuperclass on the same class leads to a NPE down the road
-		AnnotationInstance jpaEntityAnnotation = JandexHelper.getSingleAnnotation( classInfo, ENTITY );
-		AnnotationInstance mappedSuperClassAnnotation = JandexHelper.getSingleAnnotation( classInfo, MAPPED_SUPER_CLASS );
-		AnnotationInstance hibernateEntityAnnotation = JandexHelper.getSingleAnnotation( classInfo, HIBERNATE_ENTITY );
+		AnnotationInstance jpaEntityAnnotation = JandexHelper.getSingleAnnotation( classInfo, JPADotNames.ENTITY );
+		AnnotationInstance mappedSuperClassAnnotation = JandexHelper.getSingleAnnotation( classInfo, JPADotNames.MAPPED_SUPER_CLASS );
+		AnnotationInstance hibernateEntityAnnotation = JandexHelper.getSingleAnnotation( classInfo, JPADotNames.HIBERNATE_ENTITY );
 
 		if ( jpaEntityAnnotation != null && mappedSuperClassAnnotation != null ) {
 			throw new AnnotationException(

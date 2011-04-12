@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Iterator;
 import java.util.Set;
+import javax.persistence.AccessType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -19,6 +20,7 @@ import org.hibernate.AnnotationException;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;
 
@@ -65,6 +67,22 @@ public class ConfiguredClassHierarchyBuilderTest extends BaseUnitTestCase {
 
 	@Test
 	public void testMappedSuperClass() {
+		@MappedSuperclass
+		class MappedSuperClass {
+			@Id
+			@GeneratedValue
+			private int id;
+		}
+
+		class UnmappedSubClass extends MappedSuperClass {
+			private String unmappedProperty;
+		}
+
+		@Entity
+		class MappedSubClass extends UnmappedSubClass {
+			private String mappedProperty;
+		}
+
 		Index index = indexForClass( MappedSubClass.class, MappedSuperClass.class, UnmappedSubClass.class );
 		ConfiguredClassHierarchyBuilder builder = new ConfiguredClassHierarchyBuilder();
 		Set<ConfiguredClassHierarchy> hierarchies = builder.createEntityHierarchies( index );
@@ -82,9 +100,79 @@ public class ConfiguredClassHierarchyBuilderTest extends BaseUnitTestCase {
 
 	@Test(expected = AnnotationException.class)
 	public void testEntityAndMappedSuperClassAnnotations() {
+		@Entity
+		@MappedSuperclass
+		class EntityAndMappedSuperClass {
+		}
+
 		Index index = indexForClass( EntityAndMappedSuperClass.class );
 		ConfiguredClassHierarchyBuilder builder = new ConfiguredClassHierarchyBuilder();
 		builder.createEntityHierarchies( index );
+	}
+
+	@Test(expected = AnnotationException.class)
+	public void testNoIdAnnotation() {
+
+		@Entity
+		class A {
+			String id;
+		}
+
+		@Entity
+		class B extends A {
+		}
+
+		Index index = indexForClass( B.class, A.class );
+		ConfiguredClassHierarchyBuilder builder = new ConfiguredClassHierarchyBuilder();
+		builder.createEntityHierarchies( index );
+	}
+
+	@Test
+	public void testDefaultFieldAccess() {
+		@Entity
+		class A {
+			@Id
+			String id;
+		}
+
+		@Entity
+		class B extends A {
+		}
+
+		Index index = indexForClass( B.class, A.class );
+		ConfiguredClassHierarchyBuilder builder = new ConfiguredClassHierarchyBuilder();
+		Set<ConfiguredClassHierarchy> hierarchies = builder.createEntityHierarchies( index );
+		assertTrue( hierarchies.size() == 1 );
+		ConfiguredClassHierarchy hierarchy = hierarchies.iterator().next();
+		assertEquals( "Wrong default access type", AccessType.FIELD, hierarchy.getDefaultAccessType() );
+	}
+
+	@Test
+	public void testDefaultPropertyAccess() {
+		@Entity
+		class A {
+			String id;
+
+			@Id
+			public String getId() {
+				return id;
+			}
+
+			public void setId(String id) {
+				this.id = id;
+			}
+		}
+
+		@Entity
+		class B extends A {
+		}
+
+		Index index = indexForClass( B.class, A.class );
+		ConfiguredClassHierarchyBuilder builder = new ConfiguredClassHierarchyBuilder();
+		Set<ConfiguredClassHierarchy> hierarchies = builder.createEntityHierarchies( index );
+		assertTrue( hierarchies.size() == 1 );
+		ConfiguredClassHierarchy hierarchy = hierarchies.iterator().next();
+		assertEquals( "Wrong default access type", AccessType.PROPERTY, hierarchy.getDefaultAccessType() );
 	}
 
 	private Index indexForClass(Class<?>... classes) {
@@ -120,27 +208,6 @@ public class ConfiguredClassHierarchyBuilderTest extends BaseUnitTestCase {
 	@Entity
 	public class B extends A {
 		private String name;
-	}
-
-	@MappedSuperclass
-	public class MappedSuperClass {
-		@Id
-		@GeneratedValue
-		private int id;
-	}
-
-	public class UnmappedSubClass extends MappedSuperClass {
-		private String unmappedProperty;
-	}
-
-	@Entity
-	public class MappedSubClass extends UnmappedSubClass {
-		private String mappedProperty;
-	}
-
-	@Entity
-	@MappedSuperclass
-	public class EntityAndMappedSuperClass {
 	}
 }
 

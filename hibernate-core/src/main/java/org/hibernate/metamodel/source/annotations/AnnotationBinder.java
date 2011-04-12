@@ -70,12 +70,12 @@ public class AnnotationBinder {
 		ClassInfo classInfo = entity.getClassInfo();
 
 		//@Entity and @MappedSuperclass on the same class leads to a NPE down the road
-		AnnotationInstance jpaEntityAnnotation = JandexHelper.getSingleAnnotation( classInfo, ConfiguredClass.ENTITY );
+		AnnotationInstance jpaEntityAnnotation = JandexHelper.getSingleAnnotation( classInfo, JPADotNames.ENTITY );
 		AnnotationInstance mappedSuperClassAnnotation = JandexHelper.getSingleAnnotation(
-				classInfo, ConfiguredClass.MAPPED_SUPER_CLASS
+				classInfo, JPADotNames.MAPPED_SUPER_CLASS
 		);
 		AnnotationInstance hibernateEntityAnnotation = JandexHelper.getSingleAnnotation(
-				classInfo, ConfiguredClass.HIBERNATE_ENTITY
+				classInfo, JPADotNames.HIBERNATE_ENTITY
 		);
 
 

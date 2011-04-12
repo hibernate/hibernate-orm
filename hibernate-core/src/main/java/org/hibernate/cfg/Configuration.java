@@ -568,26 +568,53 @@ public class Configuration implements Serializable {
 		}
 
 		final String name = xmlFile.getAbsolutePath();
-		final InputSource inputSource;
+		final FileInputStream fileInputStream;
 		try {
-			inputSource = new InputSource( new FileInputStream( xmlFile ) );
+			fileInputStream = new FileInputStream( xmlFile );
 		}
 		catch ( FileNotFoundException e ) {
 			throw new MappingNotFoundException( "file", xmlFile.toString() );
 		}
-
-		log.info( "Reading mappings from file: " + xmlFile );
-		XmlDocument metadataXml = add( inputSource, "file", name );
-
+		final XmlDocument metadataXml;
 		try {
-			log.debug( "Writing cache file for: " + xmlFile + " to: " + cachedFile );
-			SerializationHelper.serialize( ( Serializable ) metadataXml.getDocumentTree(), new FileOutputStream( cachedFile ) );
+			final InputSource inputSource = new InputSource( fileInputStream );
+			log.info( "Reading mappings from file: " + xmlFile );
+			metadataXml = add( inputSource, "file", name );
 		}
-		catch ( SerializationException e ) {
-			log.warn( "Could not write cached file: " + cachedFile, e );
+		finally {
+			try {
+				fileInputStream.close();
+			}
+			catch ( IOException e ) {
+				log.warn( "I/O exception while closing mapping file : " + cachedFile.getPath() + " : " + e );
+			}
+		}
+
+		FileOutputStream fileOutputStream = null;
+		try {
+			fileOutputStream = new FileOutputStream( cachedFile );
 		}
 		catch ( FileNotFoundException e ) {
 			log.warn( "I/O reported error writing cached file : " + cachedFile.getPath(), e );
+		}
+		if ( fileInputStream != null ) {
+			try {
+				if ( log.isDebugEnabled() ) {
+					log.debug( "Writing cache file for: " + xmlFile + " to: " + cachedFile );
+				}
+				SerializationHelper.serialize( ( Serializable ) metadataXml.getDocumentTree(), fileOutputStream );
+			}
+			catch ( SerializationException e ) {
+				log.warn( "Could not write cached file: " + cachedFile, e );
+			}
+			finally {
+				try {
+					fileInputStream.close();
+				}
+				catch ( IOException e ) {
+					log.warn( "I/O exception while closing cache for mapping file : " + cachedFile + " : " + e );
+				}
+			}
 		}
 
 		return this;

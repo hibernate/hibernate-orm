@@ -66,8 +66,7 @@ public class ConfiguredClassHierarchy implements Iterable<ConfiguredClass> {
 	/**
 	 * @return An iterator iterating in top down manner over the configured classes in this hierarchy.
 	 */
-	public Iterator<ConfiguredClass> iterator
-	() {
+	public Iterator<ConfiguredClass> iterator() {
 		return configuredClasses.iterator();
 	}
 
@@ -97,28 +96,7 @@ public class ConfiguredClassHierarchy implements Iterable<ConfiguredClass> {
 			if ( idAnnotations == null || idAnnotations.size() == 0 ) {
 				continue;
 			}
-
-			for ( AnnotationInstance annotation : idAnnotations ) {
-				AccessType tmpAccessType;
-				if ( annotation.target() instanceof FieldInfo ) {
-					tmpAccessType = AccessType.FIELD;
-				}
-				else if ( annotation.target() instanceof MethodInfo ) {
-					tmpAccessType = AccessType.PROPERTY;
-				}
-				else {
-					throw new AnnotationException( "Invalid placement of @Id annotation" );
-				}
-
-				if ( accessType == null ) {
-					accessType = tmpAccessType;
-				}
-				else {
-					if ( !accessType.equals( tmpAccessType ) ) {
-						throw new AnnotationException( "Inconsistent placement of @Id annotation within hierarchy " + hierarchyListString() );
-					}
-				}
-			}
+			accessType = processIdAnnotations( idAnnotations );
 		}
 
 		if ( accessType == null ) {
@@ -128,8 +106,71 @@ public class ConfiguredClassHierarchy implements Iterable<ConfiguredClass> {
 		return accessType;
 	}
 
+	private AccessType processIdAnnotations(List<AnnotationInstance> idAnnotations) {
+		AccessType accessType = null;
+		for ( AnnotationInstance annotation : idAnnotations ) {
+			AccessType tmpAccessType;
+			if ( annotation.target() instanceof FieldInfo ) {
+				tmpAccessType = AccessType.FIELD;
+			}
+			else if ( annotation.target() instanceof MethodInfo ) {
+				tmpAccessType = AccessType.PROPERTY;
+			}
+			else {
+				throw new AnnotationException( "Invalid placement of @Id annotation" );
+			}
+
+			if ( accessType == null ) {
+				accessType = tmpAccessType;
+			}
+			else {
+				if ( !accessType.equals( tmpAccessType ) ) {
+					throw new AnnotationException( "Inconsistent placement of @Id annotation within hierarchy " + hierarchyListString() );
+				}
+			}
+		}
+		return accessType;
+	}
+
 	private InheritanceType determineInheritanceType() {
-		return null;  //To change body of created methods use File | Settings | File Templates.
+		Iterator<ConfiguredClass> iter = iterator();
+		InheritanceType inheritanceType = null;
+		while ( iter.hasNext() ) {
+			ConfiguredClass configuredClass = iter.next();
+			ClassInfo info = configuredClass.getClassInfo();
+			AnnotationInstance inheritanceAnnotation = JandexHelper.getSingleAnnotation(
+					info, JPADotNames.INHERITANCE
+			);
+			if ( inheritanceAnnotation == null ) {
+				continue;
+			}
+
+			InheritanceType tmpInheritanceType = Enum.valueOf(
+					InheritanceType.class, inheritanceAnnotation.value( "strategy" ).asEnum()
+			);
+			if ( tmpInheritanceType == null ) {
+				// default inheritance type is single table
+				inheritanceType = InheritanceType.SINGLE_TABLE;
+			}
+
+			if ( inheritanceType == null ) {
+				inheritanceType = tmpInheritanceType;
+			}
+			else {
+				if ( !inheritanceType.equals( tmpInheritanceType ) ) {
+					throw new AnnotationException(
+							"Multiple incompatible instances of @Inheritance specified within hierarchy " + hierarchyListString()
+					);
+				}
+			}
+		}
+
+		if ( inheritanceType == null ) {
+			// default inheritance type is single table
+			inheritanceType = InheritanceType.SINGLE_TABLE;
+		}
+
+		return inheritanceType;
 	}
 
 	private AccessType throwIdNotFoundAnnotationException() {

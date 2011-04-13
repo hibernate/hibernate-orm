@@ -23,12 +23,11 @@
  */
 package org.hibernate.metamodel.source.annotations;
 
-import javax.persistence.Entity;
-import javax.persistence.MappedSuperclass;
+import java.util.List;
+import javax.persistence.AccessType;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.ClassInfo;
-import org.jboss.jandex.DotName;
 
 import org.hibernate.AnnotationException;
 
@@ -39,19 +38,20 @@ import org.hibernate.AnnotationException;
  */
 public class ConfiguredClass {
 	private final ClassInfo classInfo;
+	private final AccessType classAccessType;
 	private final ConfiguredClassHierarchy hierarchy;
+	private final boolean isMappedSuperClass;
+	private final List<MappedProperty> mappedProperties;
 
 	public ConfiguredClass(ClassInfo info, ConfiguredClassHierarchy hierarchy) {
 		this.classInfo = info;
 		this.hierarchy = hierarchy;
-		init();
-	}
 
-	private void init() {
 		//@Entity and @MappedSuperclass on the same class leads to a NPE down the road
 		AnnotationInstance jpaEntityAnnotation = JandexHelper.getSingleAnnotation( classInfo, JPADotNames.ENTITY );
-		AnnotationInstance mappedSuperClassAnnotation = JandexHelper.getSingleAnnotation( classInfo, JPADotNames.MAPPED_SUPER_CLASS );
-		AnnotationInstance hibernateEntityAnnotation = JandexHelper.getSingleAnnotation( classInfo, JPADotNames.HIBERNATE_ENTITY );
+		AnnotationInstance mappedSuperClassAnnotation = JandexHelper.getSingleAnnotation(
+				classInfo, JPADotNames.MAPPED_SUPER_CLASS
+		);
 
 		if ( jpaEntityAnnotation != null && mappedSuperClassAnnotation != null ) {
 			throw new AnnotationException(
@@ -60,11 +60,17 @@ public class ConfiguredClass {
 			);
 		}
 
-
+		isMappedSuperClass = mappedSuperClassAnnotation != null;
+		classAccessType = determineClassAccessType( hierarchy.getDefaultAccessType() );
+		mappedProperties = collectMappedProperties();
 	}
 
 	public ClassInfo getClassInfo() {
 		return classInfo;
+	}
+
+	public boolean isMappedSuperClass() {
+		return isMappedSuperClass;
 	}
 
 	@Override
@@ -74,6 +80,22 @@ public class ConfiguredClass {
 		sb.append( "{classInfo=" ).append( classInfo );
 		sb.append( '}' );
 		return sb.toString();
+	}
+
+	private AccessType determineClassAccessType(AccessType hierarchyAccessType) {
+		// default to the hierarchy access type to start with
+		AccessType accessType = hierarchyAccessType;
+
+		AnnotationInstance accessAnnotation = JandexHelper.getSingleAnnotation( classInfo, JPADotNames.ACCESS );
+		if ( accessAnnotation != null ) {
+			accessType = Enum.valueOf( AccessType.class, accessAnnotation.value( "value" ).asEnum() );
+		}
+
+		return accessType;
+	}
+
+	private List<MappedProperty> collectMappedProperties() {
+		return null;  //To change body of created methods use File | Settings | File Templates.
 	}
 }
 

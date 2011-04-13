@@ -8,6 +8,8 @@ import javax.persistence.AccessType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
 import javax.persistence.MappedSuperclass;
 
 import org.jboss.jandex.ClassInfo;
@@ -173,6 +175,72 @@ public class ConfiguredClassHierarchyBuilderTest extends BaseUnitTestCase {
 		assertTrue( hierarchies.size() == 1 );
 		ConfiguredClassHierarchy hierarchy = hierarchies.iterator().next();
 		assertEquals( "Wrong default access type", AccessType.PROPERTY, hierarchy.getDefaultAccessType() );
+	}
+
+	@Test
+	public void testDefaultInheritanceStrategy() {
+		@Entity
+		class A {
+			@Id
+			String id;
+		}
+
+		@Entity
+		class B extends A {
+		}
+
+		Index index = indexForClass( B.class, A.class );
+		ConfiguredClassHierarchyBuilder builder = new ConfiguredClassHierarchyBuilder();
+		Set<ConfiguredClassHierarchy> hierarchies = builder.createEntityHierarchies( index );
+		assertTrue( hierarchies.size() == 1 );
+		ConfiguredClassHierarchy hierarchy = hierarchies.iterator().next();
+		assertEquals( "Wrong inheritance type", InheritanceType.SINGLE_TABLE, hierarchy.getInheritanceType() );
+	}
+
+
+	@Test
+	public void testExplicitInheritanceStrategy() {
+		@MappedSuperclass
+		class MappedSuperClass {
+
+		}
+
+		@Entity
+		@Inheritance(strategy = InheritanceType.JOINED)
+		class A extends MappedSuperClass {
+			@Id
+			String id;
+		}
+
+		@Entity
+		class B extends A {
+		}
+
+		Index index = indexForClass( B.class, MappedSuperClass.class, A.class );
+		ConfiguredClassHierarchyBuilder builder = new ConfiguredClassHierarchyBuilder();
+		Set<ConfiguredClassHierarchy> hierarchies = builder.createEntityHierarchies( index );
+		assertTrue( hierarchies.size() == 1 );
+		ConfiguredClassHierarchy hierarchy = hierarchies.iterator().next();
+		assertEquals( "Wrong inheritance type", InheritanceType.JOINED, hierarchy.getInheritanceType() );
+	}
+
+	@Test(expected = AnnotationException.class)
+	public void testMultipleConflictingInheritanceDefinitions() {
+
+		@Entity
+		@Inheritance(strategy = InheritanceType.JOINED)
+		class A {
+			String id;
+		}
+
+		@Entity
+		@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
+		class B extends A {
+		}
+
+		Index index = indexForClass( B.class, A.class );
+		ConfiguredClassHierarchyBuilder builder = new ConfiguredClassHierarchyBuilder();
+		builder.createEntityHierarchies( index );
 	}
 
 	private Index indexForClass(Class<?>... classes) {

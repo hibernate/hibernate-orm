@@ -23,28 +23,12 @@
  */
 package org.hibernate.metamodel.source.annotations;
 
-import javax.persistence.Access;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Inheritance;
-import javax.persistence.MappedSuperclass;
-
-import org.jboss.jandex.DotName;
-
 /**
- * Defines the dot names for the JPA annotations
+ * Represent a mapped property (explicitly or implicitly mapped).
  *
  * @author Hardy Ferentschik
  */
-public interface JPADotNames {
-	public static final DotName ENTITY = DotName.createSimple( Entity.class.getName() );
-	public static final DotName HIBERNATE_ENTITY = DotName.createSimple( org.hibernate.annotations.Entity.class.getName() );
-	public static final DotName MAPPED_SUPER_CLASS = DotName.createSimple( MappedSuperclass.class.getName() );
-
-	public static final DotName INHERITANCE = DotName.createSimple( Inheritance.class.getName() );
-	public static final DotName ACCESS = DotName.createSimple( Access.class.getName() );
-
-	public static final DotName ID = DotName.createSimple( Id.class.getName() );
+public class MappedProperty {
 }
 
 

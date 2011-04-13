@@ -137,15 +137,6 @@ public interface Metadata {
 	public Metadata addURL(URL url);
 
 	/**
-	 * Read mappings from a string representation of the XML
-	 *
-	 * @param xml an XML string
-	 *
-	 * @return this (for method chaining purposes)
-	 */
-	public Metadata addXML(String xml);
-
-	/**
 	 * Read mappings from a DOM {@link Document}
 	 *
 	 * @param doc The DOM document

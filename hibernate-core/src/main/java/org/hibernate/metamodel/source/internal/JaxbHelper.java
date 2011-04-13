@@ -28,8 +28,12 @@ import javax.xml.XMLConstants;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.namespace.QName;
+import javax.xml.stream.XMLEventReader;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.events.Attribute;
+import javax.xml.stream.events.XMLEvent;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
@@ -41,15 +45,10 @@ import java.net.URL;
 import org.jboss.logging.Logger;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
-import org.hibernate.HibernateException;
-import org.hibernate.cfg.EJB3DTDEntityResolver;
-import org.hibernate.internal.util.xml.ErrorLogger;
 import org.hibernate.metamodel.source.MappingException;
 import org.hibernate.metamodel.source.Origin;
-import org.hibernate.metamodel.source.SourceType;
 import org.hibernate.metamodel.source.XsdException;
 import org.hibernate.metamodel.source.annotation.xml.EntityMappings;
 import org.hibernate.metamodel.source.hbm.xml.mapping.HibernateMapping;
@@ -69,23 +68,88 @@ class JaxbHelper {
 		this.metadata = metadata;
 	}
 
-	public JaxbRoot unmarshal(InputSource source, Origin origin) {
-		ErrorLogger errorHandler = new ErrorLogger();
-
-		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-		factory.setValidating( false ); // we will validate separately
+	public JaxbRoot unmarshal(InputStream stream, Origin origin) {
 		try {
-			DocumentBuilder builder = factory.newDocumentBuilder();
-			builder.setEntityResolver( metadata.getEntityResolver() );
-			builder.setErrorHandler( errorHandler );
-			return unmarshal( builder.parse( source ), origin );
-        }
-		catch ( HibernateException e ) {
-			throw e;
+			XMLEventReader staxReader = staxFactory().createXMLEventReader( stream );
+			try {
+				return unmarshal( staxReader, origin );
+			}
+			finally {
+				try {
+					staxReader.close();
+				}
+				catch (Exception ignore) {
+				}
+			}
+		}
+		catch (XMLStreamException e) {
+			throw new MappingException( "Unable to create stax reader", e, origin );
+		}
+	}
+
+	private XMLInputFactory staxFactory;
+
+	private XMLInputFactory staxFactory() {
+		if ( staxFactory == null ) {
+			staxFactory = buildStaxFactory();
+		}
+		return staxFactory;
+	}
+
+	@SuppressWarnings( {"UnnecessaryLocalVariable"})
+	private XMLInputFactory buildStaxFactory() {
+		XMLInputFactory staxFactory = XMLInputFactory.newInstance();
+		return staxFactory;
+	}
+
+	private static final QName ORM_VERSION_ATTRIBUTE_QNAME = new QName( "http://java.sun.com/xml/ns/persistence/orm", "version" );
+
+	@SuppressWarnings( {"unchecked"})
+	private JaxbRoot unmarshal(XMLEventReader staxEventReader, Origin origin) {
+		XMLEvent event;
+		try {
+			event = staxEventReader.peek();
+			while ( event != null && ! event.isStartElement() ) {
+				staxEventReader.nextEvent();
+				event = staxEventReader.peek();
+			}
 		}
 		catch (Exception e) {
-			throw new MappingException( "Unable to read DOM via JAXP", e, origin );
+			throw new MappingException( "Error accessing stax stream", e, origin );
 		}
+
+		if ( event == null ) {
+			throw new MappingException( "Could not locate root element", origin );
+		}
+
+		final Schema validationSchema;
+		final Class jaxbTarget;
+
+		final String elementName = event.asStartElement().getName().getLocalPart();
+
+		if ( "entity-mappings".equals( elementName ) ) {
+			final Attribute attribute = event.asStartElement().getAttributeByName( ORM_VERSION_ATTRIBUTE_QNAME );
+			final String explicitVersion = attribute == null ? null : attribute.getValue();
+			validationSchema = resolveSupportedOrmXsd( explicitVersion );
+			jaxbTarget = EntityMappings.class;
+		}
+		else {
+			validationSchema = hbmSchema();
+			jaxbTarget = HibernateMapping.class;
+		}
+
+		final Object target;
+		try {
+			JAXBContext jaxbContext = JAXBContext.newInstance( jaxbTarget );
+			Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
+			unmarshaller.setSchema( validationSchema );
+			target = unmarshaller.unmarshal( staxEventReader );
+		}
+		catch (JAXBException e) {
+			throw new MappingException( "Unable to perform unmarshalling", e, origin );
+		}
+
+		return new JaxbRoot( target, origin );
 	}
 
 	@SuppressWarnings( {"unchecked"})
@@ -98,7 +162,7 @@ class JaxbHelper {
 		final Schema validationSchema;
 		final Class jaxbTarget;
 
-		if ( "entity-mappings".equals( rootElement.getLocalName() ) ) {
+		if ( "entity-mappings".equals( rootElement.getNodeName() ) ) {
 			final String explicitVersion = rootElement.getAttribute( "version" );
 			validationSchema = resolveSupportedOrmXsd( explicitVersion );
 			jaxbTarget = EntityMappings.class;
@@ -108,21 +172,12 @@ class JaxbHelper {
 			jaxbTarget = HibernateMapping.class;
 		}
 
-		try {
-			validationSchema.newValidator().validate( new DOMSource( rootElement.getOwnerDocument() ) );
-		}
-		catch ( SAXException e ) {
-			throw new MappingException( "Validation problem", e, origin );
-		}
-		catch ( IOException e ) {
-			throw new MappingException( "Validation problem", e, origin );
-		}
-
 		final Object target;
 		try {
 			JAXBContext jaxbContext = JAXBContext.newInstance( jaxbTarget );
 			Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
-			target = unmarshaller.unmarshal( document );
+			unmarshaller.setSchema( validationSchema );
+			target = unmarshaller.unmarshal( new DOMSource( document ) );
 		}
 		catch (JAXBException e) {
 			throw new MappingException( "Unable to perform unmarshalling", e, origin );
@@ -142,7 +197,7 @@ class JaxbHelper {
 		throw new IllegalArgumentException( "Unsupported orm.xml XSD version encountered [" + xsdVersionString + "]" );
 	}
 
-	public static final String HBM_SCHEMA_NAME = "/org/hibernate/hibernate-mapping-4.0.xsd";
+	public static final String HBM_SCHEMA_NAME = "org/hibernate/hibernate-mapping-4.0.xsd";
 	public static final String ORM_1_SCHEMA_NAME = "org/hibernate/ejb/orm_1_0.xsd";
 	public static final String ORM_2_SCHEMA_NAME = "org/hibernate/ejb/orm_2_0.xsd";
 

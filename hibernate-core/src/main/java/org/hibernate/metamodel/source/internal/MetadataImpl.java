@@ -23,14 +23,12 @@
  */
 package org.hibernate.metamodel.source.internal;
 
-import javax.xml.transform.dom.DOMSource;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
-import java.io.StringReader;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -43,14 +41,12 @@ import java.util.zip.ZipEntry;
 import org.jboss.logging.Logger;
 import org.w3c.dom.Document;
 import org.xml.sax.EntityResolver;
-import org.xml.sax.InputSource;
 
 import org.hibernate.DuplicateMappingException;
 import org.hibernate.cfg.EJB3DTDEntityResolver;
 import org.hibernate.cfg.EJB3NamingStrategy;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.xml.XmlDocumentImpl;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.MetadataSource;
 import org.hibernate.metamodel.binding.EntityBinding;
@@ -196,6 +192,13 @@ public class MetadataImpl implements Metadata, MetadataImplementor, Serializable
 
 	private List<JaxbRoot> jaxbRootList = new ArrayList<JaxbRoot>();
 
+	/**
+	 * TODO : STRICTLY FOR TESTING PURPOSES, REMOVE AFTER JAXB AND BINDING STUFF HAS BEEN VALIDATED!!!!!!!
+	 */
+	public List<JaxbRoot> getJaxbRootList() {
+		return jaxbRootList;
+	}
+
 	@Override
 	public Metadata addAnnotatedClass(Class annotatedClass) {
 		return null; // todo : implement method body
@@ -215,7 +218,7 @@ public class MetadataImpl implements Metadata, MetadataImplementor, Serializable
 		if ( resourceInputStream == null ) {
 			throw new MappingNotFoundException( origin );
 		}
-		add( resourceInputStream, origin );
+		add( resourceInputStream, origin, true );
 
 		return this;
 	}
@@ -224,25 +227,22 @@ public class MetadataImpl implements Metadata, MetadataImplementor, Serializable
 		return serviceRegistry.getService( ClassLoaderService.class );
 	}
 
-	private JaxbRoot add(InputStream inputStream, Origin origin) {
-		final InputSource inputSource = new InputSource( inputStream );
+	private JaxbRoot add(InputStream inputStream, Origin origin, boolean close) {
 		try {
-			return add( inputSource, origin );
+			JaxbRoot jaxbRoot = jaxbHelper.unmarshal( inputStream, origin );
+			jaxbRootList.add( jaxbRoot );
+			return jaxbRoot;
 		}
 		finally {
-			try {
-				inputStream.close();
-			}
-			catch ( IOException ignore ) {
-                LOG.trace( "Was unable to close input stream" );
+			if ( close ) {
+				try {
+					inputStream.close();
+				}
+				catch ( IOException ignore ) {
+					LOG.trace( "Was unable to close input stream" );
+				}
 			}
 		}
-	}
-
-	private JaxbRoot add(InputSource inputSource, Origin origin) {
-		JaxbRoot jaxbRoot = jaxbHelper.unmarshal( inputSource, origin );
-		jaxbRootList.add( jaxbRoot );
-		return jaxbRoot;
 	}
 
 	@Override
@@ -263,14 +263,12 @@ public class MetadataImpl implements Metadata, MetadataImplementor, Serializable
 		final String name =  file.getAbsolutePath();
 		LOG.tracef( "reading mappings from file : %s", name );
 		final Origin origin = new Origin( SourceType.FILE, name );
-		final InputSource inputSource;
 		try {
-			inputSource = new InputSource( new FileInputStream( file ) );
+			add( new FileInputStream( file ), origin, true );
 		}
 		catch ( FileNotFoundException e ) {
 			throw new MappingNotFoundException( e, origin );
 		}
-		add( inputSource, origin );
 		return this;
 	}
 
@@ -286,29 +284,22 @@ public class MetadataImpl implements Metadata, MetadataImplementor, Serializable
 
 	@Override
 	public Metadata addInputStream(InputStream xmlInputStream) {
-		add( xmlInputStream, new Origin( SourceType.INPUT_STREAM, "<unknown>" ) );
+		add( xmlInputStream, new Origin( SourceType.INPUT_STREAM, "<unknown>" ), false );
 		return this;
 	}
 
 	@Override
 	public Metadata addURL(URL url) {
 		final String urlExternalForm = url.toExternalForm();
-		LOG.debugf("Reading mapping document from URL : %s", urlExternalForm);
+		LOG.debugf( "Reading mapping document from URL : %s", urlExternalForm );
 
 		final Origin origin = new Origin( SourceType.URL, urlExternalForm );
 		try {
-			add( url.openStream(), origin );
+			add( url.openStream(), origin, true );
 		}
 		catch ( IOException e ) {
 			throw new MappingNotFoundException( "Unable to open url stream [" + urlExternalForm + "]", e, origin );
 		}
-		return this;
-	}
-
-	@Override
-	public Metadata addXML(String xml) {
-		final InputSource inputSource = new InputSource( new StringReader( xml ) );
-		add( inputSource, new Origin( SourceType.STRING, "<xml string>" ) );
 		return this;
 	}
 
@@ -333,7 +324,7 @@ public class MetadataImpl implements Metadata, MetadataImplementor, Serializable
 					if ( zipEntry.getName().endsWith( ".hbm.xml" ) ) {
 						LOG.tracef( "found mapping document : %s", zipEntry.getName() );
 						try {
-							add( jarFile.getInputStream( zipEntry ), origin );
+							add( jarFile.getInputStream( zipEntry ), origin, true );
 						}
 						catch (Exception e) {
 							throw new MappingException( "could not read mapping documents", e, origin );

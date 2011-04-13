@@ -25,12 +25,16 @@ package org.hibernate.metamodel.binding;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
 
 import org.jboss.jandex.Index;
 import org.jboss.jandex.Indexer;
-import org.junit.Test;
 
+import org.hibernate.metamodel.source.MetadataSources;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
+import org.hibernate.service.internal.BasicServiceRegistryImpl;
+
+import org.junit.Test;
 
 import org.hibernate.testing.FailureExpected;
 
@@ -57,7 +61,7 @@ public class BasicAnnotationBindingTests extends AbstractBasicBindingTests {
 
 	public EntityBinding buildSimpleEntityBinding() {
 		Index index = indexForClass( SimpleEntity.class );
-		MetadataImpl metadata = new MetadataImpl( basicServiceRegistry() );
+		MetadataImpl metadata = (MetadataImpl) new MetadataSources(  new BasicServiceRegistryImpl( Collections.emptyMap() ) ).buildMetadata();
 		metadata.getAnnotationBinder().bindMappedClasses( index );
 
 		return metadata.getEntityBinding( SimpleEntity.class.getSimpleName() );
@@ -65,7 +69,7 @@ public class BasicAnnotationBindingTests extends AbstractBasicBindingTests {
 
 	public EntityBinding buildSimpleVersionedEntityBinding() {
 		Index index = indexForClass( SimpleEntity.class );
-		MetadataImpl metadata = new MetadataImpl( basicServiceRegistry() );
+		MetadataImpl metadata = (MetadataImpl) new MetadataSources(  new BasicServiceRegistryImpl( Collections.emptyMap() ) ).buildMetadata();
 		metadata.getAnnotationBinder().bindMappedClasses( index );
 
 		return metadata.getEntityBinding( SimpleVersionedEntity.class.getSimpleName() );

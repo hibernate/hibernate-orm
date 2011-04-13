@@ -31,6 +31,7 @@ import org.hibernate.internal.util.xml.MappingReader;
 import org.hibernate.internal.util.xml.Origin;
 import org.hibernate.internal.util.xml.XMLHelper;
 import org.hibernate.internal.util.xml.XmlDocument;
+import org.hibernate.metamodel.source.MetadataSources;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
 
 import org.junit.Test;
@@ -46,7 +47,7 @@ public class BasicHbmBindingTests extends AbstractBasicBindingTests {
 	private static final Logger log = Logger.getLogger( BasicHbmBindingTests.class.getName() );
 
 	public EntityBinding buildSimpleEntityBinding() {
-		MetadataImpl metadata = new MetadataImpl( basicServiceRegistry() );
+		MetadataImpl metadata = (MetadataImpl) new MetadataSources( basicServiceRegistry() ).buildMetadata();
 
 		XmlDocument xmlDocument = readResource( "/org/hibernate/metamodel/binding/SimpleEntity.hbm.xml" );
 		metadata.getHibernateXmlBinder().bindRoot( xmlDocument );
@@ -54,7 +55,7 @@ public class BasicHbmBindingTests extends AbstractBasicBindingTests {
 	}
 
 	public EntityBinding buildSimpleVersionedEntityBinding() {
-		MetadataImpl metadata = new MetadataImpl( basicServiceRegistry() );
+		MetadataImpl metadata = (MetadataImpl) new MetadataSources( basicServiceRegistry() ).buildMetadata();
 
 		String fileName = "/org/hibernate/metamodel/binding/SimpleVersionedEntity.hbm.xml";
 		XmlDocument xmlDocument = readResource( fileName );
@@ -65,11 +66,11 @@ public class BasicHbmBindingTests extends AbstractBasicBindingTests {
 
 	@Test
 	public void testJaxbApproach() {
-		final MetadataImpl metadata = new MetadataImpl( basicServiceRegistry() );
-
 		final String resourceName = "org/hibernate/metamodel/binding/SimpleVersionedEntity.xml";
-		metadata.addResource( resourceName );
-		assertEquals( 1, metadata.getJaxbRootList().size() );
+
+		MetadataSources metadataSources = new MetadataSources( basicServiceRegistry() );
+		metadataSources.addResource( resourceName );
+		assertEquals( 1, metadataSources.getJaxbRootList().size() );
 	}
 
 	private XmlDocument readResource(final String name) {

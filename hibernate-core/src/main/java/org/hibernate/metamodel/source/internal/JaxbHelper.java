@@ -48,6 +48,7 @@ import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 
 import org.hibernate.metamodel.source.MappingException;
+import org.hibernate.metamodel.source.MetadataSources;
 import org.hibernate.metamodel.source.Origin;
 import org.hibernate.metamodel.source.XsdException;
 import org.hibernate.metamodel.source.annotation.xml.EntityMappings;
@@ -57,15 +58,15 @@ import org.hibernate.service.classloading.spi.ClassLoaderService;
 /**
  * @author Steve Ebersole
  */
-class JaxbHelper {
+public class JaxbHelper {
 	private static final Logger log = Logger.getLogger( JaxbHelper.class );
 
 	public static final String ASSUMED_ORM_XSD_VERSION = "2.0";
 
-	private final MetadataImpl metadata;
+	private final MetadataSources metadataSources;
 
-	JaxbHelper(MetadataImpl metadata) {
-		this.metadata = metadata;
+	public JaxbHelper(MetadataSources metadataSources) {
+		this.metadataSources = metadataSources;
 	}
 
 	public JaxbRoot unmarshal(InputStream stream, Origin origin) {
@@ -233,7 +234,7 @@ class JaxbHelper {
 	}
 
 	private Schema resolveLocalSchema(String schemaName, String schemaLanguage) {
-        URL url = metadata.getServiceRegistry().getService( ClassLoaderService.class ).locateResource( schemaName );
+        URL url = metadataSources.getServiceRegistry().getService( ClassLoaderService.class ).locateResource( schemaName );
 		if ( url == null ) {
 			throw new XsdException( "Unable to locate schema [" + schemaName + "] via classpath", schemaName );
 		}

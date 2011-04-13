@@ -99,16 +99,21 @@ public abstract class AbstractPathImpl<X>
 	protected abstract boolean canBeDereferenced();
 
 	protected final RuntimeException illegalDereference() {
-		return new IllegalArgumentException(
-				"Illegal attempt to dereference path source [" + getPathSource().getPathIdentifier() + "]"
-		);
+		String message = "Illegal attempt to dereference path source";
+		PathSource<?> source = getPathSource();
+		if ( source != null ) {
+			message += " [" + getPathSource().getPathIdentifier() + "]";
+		}
+		return new IllegalArgumentException(message);
 	}
 
 	protected final RuntimeException unknownAttribute(String attributeName) {
-		return new IllegalArgumentException(
-				"Unable to resolve attribute [" + attributeName + "] against path [" +
-						getPathSource().getPathIdentifier() + "]"
-		);
+		String message = "Unable to resolve attribute [" + attributeName + "] against path";
+		PathSource<?> source = getPathSource();
+		if ( source != null ) {
+			message += " [" + source.getPathIdentifier() + "]";
+		}
+		return new IllegalArgumentException(message);
 	}
 
 	protected final Path resolveCachedAttributePath(String attributeName) {
@@ -241,15 +246,23 @@ public abstract class AbstractPathImpl<X>
 	public void prepareAlias(CriteriaQueryCompiler.RenderingContext renderingContext) {
 		// Make sure we delegate up to our source (eventually up to the path root) to
 		// prepare the path properly.
-		getPathSource().prepareAlias( renderingContext );
+		PathSource<?> source = getPathSource();
+		if ( source != null ) {
+			source.prepareAlias( renderingContext );
+		}
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
-		getPathSource().prepareAlias( renderingContext );
-		return getPathSource().getPathIdentifier() + "." + getAttribute().getName();
+		PathSource<?> source = getPathSource();
+		if ( source != null ) {
+			source.prepareAlias( renderingContext );
+			return source.getPathIdentifier() + "." + getAttribute().getName();
+		} else {
+			return getAttribute().getName();
+		}
 	}
 
 	/**

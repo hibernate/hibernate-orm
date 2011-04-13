@@ -66,6 +66,7 @@ import org.slf4j.LoggerFactory;
  * @author Tomasz Bech
  * @author Stephanie Pau at Markit Group Plc
  * @author Hern&aacute;n Chanfreau
+ * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public final class AuditMetadataGenerator {
     private static final Logger log = LoggerFactory.getLogger(AuditMetadataGenerator.class);
@@ -332,7 +333,8 @@ public final class AuditMetadataGenerator {
         // Checking if there is a discriminator column
         if (pc.getDiscriminator() != null) {
             Element discriminator_element = class_mapping.addElement("discriminator");
-            MetadataTools.addColumns(discriminator_element, pc.getDiscriminator().getColumnIterator());
+            // Database column or SQL formula allowed to distinguish entity types
+            MetadataTools.addColumnsOrFormulas(discriminator_element, pc.getDiscriminator().getColumnIterator());
             discriminator_element.addAttribute("type", pc.getDiscriminator().getType().getName());
         }
 

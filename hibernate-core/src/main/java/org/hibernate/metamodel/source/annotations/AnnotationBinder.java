@@ -32,7 +32,7 @@ import org.jboss.jandex.Index;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.hibernate.metamodel.source.Metadata;
+import org.hibernate.metamodel.source.internal.MetadataImpl;
 
 /**
  * Main class responsible to creating and binding the Hibernate meta-model from annotations.
@@ -45,9 +45,9 @@ import org.hibernate.metamodel.source.Metadata;
  */
 public class AnnotationBinder {
 	private static final Logger log = LoggerFactory.getLogger( AnnotationBinder.class );
-	private final Metadata metadata;
+	private final MetadataImpl metadata;
 
-	public AnnotationBinder(Metadata metadata) {
+	public AnnotationBinder(MetadataImpl metadata) {
 		this.metadata = metadata;
 	}
 

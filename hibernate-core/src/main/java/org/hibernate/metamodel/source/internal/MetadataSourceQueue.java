@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source;
+package org.hibernate.metamodel.source.internal;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -56,14 +56,14 @@ public class MetadataSourceQueue implements Serializable {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
 			CoreMessageLogger.class, MetadataSourceQueue.class.getName()
 	);
-	private final Metadata metadata;
+	private final MetadataImpl metadata;
 
 	private LinkedHashMap<XmlDocument, Set<String>> hbmMetadataToEntityNamesMap
 			= new LinkedHashMap<XmlDocument, Set<String>>();
 	private Map<String, XmlDocument> hbmMetadataByEntityNameXRef = new HashMap<String, XmlDocument>();
 	private transient List<Class> annotatedClasses = new ArrayList<Class>();
 
-	public MetadataSourceQueue(Metadata metadata) {
+	public MetadataSourceQueue(MetadataImpl metadata) {
 		this.metadata = metadata;
 	}
 

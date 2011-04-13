@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2007-2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,35 +21,20 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate;
 
+package org.hibernate.metamodel.source;
 
 /**
- * The base {@link Throwable} type for Hibernate.
- * <p/>
- * Note that all {@link java.sql.SQLException SQLExceptions} will be wrapped in some form of 
- * {@link JDBCException}.
- * 
- * @see JDBCException
- * 
- * @author Gavin King
+ * From where did the metadata come from?
+ *
+ * @author Steve Ebersole
  */
-public class HibernateException extends RuntimeException {
-	public HibernateException(String message) {
-		super( message );
-	}
-
-	public HibernateException(Throwable root) {
-		super( root );
-	}
-
-	public HibernateException(String message, Throwable root) {
-		super( message, root );
-	}
+public enum SourceType {
+	RESOURCE,
+	FILE,
+	INPUT_STREAM,
+	URL,
+	STRING,
+	DOM,
+	JAR
 }
-
-
-
-
-
-

@@ -44,7 +44,7 @@ import org.hibernate.metamodel.relational.Schema;
 import org.hibernate.metamodel.relational.Table;
 import org.hibernate.metamodel.relational.TableSpecification;
 import org.hibernate.metamodel.relational.UniqueKey;
-import org.hibernate.metamodel.source.Metadata;
+import org.hibernate.metamodel.source.internal.MetadataImpl;
 import org.hibernate.metamodel.source.hbm.state.domain.HbmPluralAttributeDomainState;
 import org.hibernate.metamodel.source.hbm.state.domain.HbmSimpleAttributeDomainState;
 import org.hibernate.metamodel.source.hbm.state.relational.HbmSimpleValueRelationalStateContainer;
@@ -82,7 +82,7 @@ abstract class AbstractEntityBinder {
 		return hibernateMappingBinder.getHibernateXmlBinder();
 	}
 
-	protected Metadata getMetadata() {
+	protected MetadataImpl getMetadata() {
 		return hibernateMappingBinder.getHibernateXmlBinder().getMetadata();
 	}
 

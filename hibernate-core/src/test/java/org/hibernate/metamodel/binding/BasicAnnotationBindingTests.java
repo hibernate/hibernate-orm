@@ -30,7 +30,8 @@ import org.jboss.jandex.Index;
 import org.jboss.jandex.Indexer;
 import org.junit.Test;
 
-import org.hibernate.metamodel.source.Metadata;
+import org.hibernate.metamodel.source.internal.MetadataImpl;
+
 import org.hibernate.testing.FailureExpected;
 
 import static org.junit.Assert.fail;
@@ -56,7 +57,7 @@ public class BasicAnnotationBindingTests extends AbstractBasicBindingTests {
 
 	public EntityBinding buildSimpleEntityBinding() {
 		Index index = indexForClass( SimpleEntity.class );
-		Metadata metadata = new Metadata( basicServiceRegistry() );
+		MetadataImpl metadata = new MetadataImpl( basicServiceRegistry() );
 		metadata.getAnnotationBinder().bindMappedClasses( index );
 
 		return metadata.getEntityBinding( SimpleEntity.class.getSimpleName() );
@@ -64,7 +65,7 @@ public class BasicAnnotationBindingTests extends AbstractBasicBindingTests {
 
 	public EntityBinding buildSimpleVersionedEntityBinding() {
 		Index index = indexForClass( SimpleEntity.class );
-		Metadata metadata = new Metadata( basicServiceRegistry() );
+		MetadataImpl metadata = new MetadataImpl( basicServiceRegistry() );
 		metadata.getAnnotationBinder().bindMappedClasses( index );
 
 		return metadata.getEntityBinding( SimpleVersionedEntity.class.getSimpleName() );

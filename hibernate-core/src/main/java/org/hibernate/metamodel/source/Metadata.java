@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,156 +21,160 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
+
 package org.hibernate.metamodel.source;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
+import java.io.File;
+import java.io.InputStream;
+import java.net.URL;
 
-import org.jboss.logging.Logger;
-
-import org.hibernate.DuplicateMappingException;
-import org.hibernate.cfg.EJB3NamingStrategy;
-import org.hibernate.cfg.NamingStrategy;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.mapping.FetchProfile;
-import org.hibernate.mapping.MetadataSource;
-import org.hibernate.metamodel.binding.EntityBinding;
-import org.hibernate.metamodel.binding.PluralAttributeBinding;
-import org.hibernate.metamodel.relational.Database;
-import org.hibernate.metamodel.source.annotations.AnnotationBinder;
-import org.hibernate.metamodel.source.hbm.HibernateXmlBinder;
-import org.hibernate.service.BasicServiceRegistry;
+import org.w3c.dom.Document;
 
 /**
- * Container for configuration data while building and binding the metamodel
- *
  * @author Steve Ebersole
  */
-public class Metadata implements Serializable {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, Metadata.class.getName() );
+public interface Metadata {
+	/**
+	 * Read metadata from the annotations attached to the given class.
+	 *
+	 * @param annotatedClass The class containing annotations
+	 *
+	 * @return this (for method chaining)
+	 */
+	public Metadata addAnnotatedClass(Class annotatedClass);
 
-	private final BasicServiceRegistry serviceRegistry;
+	/**
+	 * Read package-level metadata.
+	 *
+	 * @param packageName java package name
+	 *
+	 * @return this (for method chaining)
+	 */
+	public Metadata addPackage(String packageName);
 
-	private final AnnotationBinder annotationBinder;
-	private final HibernateXmlBinder hibernateXmlBinder;
+	/**
+	 * Read mappings as a application resourceName (i.e. classpath lookup).
+	 *
+	 * @param name The resource name
+	 *
+	 * @return this (for method chaining purposes)
+	 */
+	public Metadata addResource(String name);
 
-	private final Database database = new Database();
+	/**
+	 * Read a mapping as an application resource using the convention that a class named {@code foo.bar.Foo} is
+	 * mapped by a file named {@code foo/bar/Foo.hbm.xml} which can be resolved as a classpath resource.
+	 *
+	 * @param entityClass The mapped class
+	 *
+	 * @return this (for method chaining purposes)
+	 */
+	public Metadata addClass(Class entityClass);
 
-	private final ExtendsQueue extendsQueue;
-	private final MetadataSourceQueue metadataSourceQueue;
+	/**
+	 * Read mappings from a particular XML file
+	 *
+	 * @param path The path to a file.  Expected to be resolvable by {@link File#File(String)}
+	 *
+	 * @return this (for method chaining purposes)
+	 *
+	 * @see #addFile(java.io.File)
+	 */
+	public Metadata addFile(String path);
 
-	private NamingStrategy namingStrategy = EJB3NamingStrategy.INSTANCE;
-	private Map<String, EntityBinding> entityBindingMap = new HashMap<String, EntityBinding>();
-	private Map<String, PluralAttributeBinding> collectionBindingMap = new HashMap<String, PluralAttributeBinding>();
-	private Map<String, FetchProfile> fetchProfiles = new HashMap<String, FetchProfile>();
-	private Map<String, String> imports;
+	/**
+	 * Read mappings from a particular XML file
+	 *
+	 * @param file The reference to the XML file
+	 *
+	 * @return this (for method chaining purposes)
+	 */
+	public Metadata addFile(File file);
 
-	public Metadata(BasicServiceRegistry serviceRegistry) {
-		this.serviceRegistry = serviceRegistry;
-		this.annotationBinder = new AnnotationBinder( this );
-		this.hibernateXmlBinder = new HibernateXmlBinder( this );
-		this.extendsQueue = new ExtendsQueue( this );
-		this.metadataSourceQueue = new MetadataSourceQueue( this );
-	}
+	/**
+	 * See {@link #addCacheableFile(java.io.File)} for description
+	 *
+	 * @param path The path to a file.  Expected to be resolvable by {@link File#File(String)}
+	 *
+	 * @return this (for method chaining purposes)
+	 *
+	 * @see #addCacheableFile(java.io.File)
+	 */
+	public Metadata addCacheableFile(String path);
 
-	public BasicServiceRegistry getServiceRegistry() {
-		return serviceRegistry;
-	}
+	/**
+	 * Add a cached mapping file.  A cached file is a serialized representation of the DOM structure of a
+	 * particular mapping.  It is saved from a previous call as a file with the name {@code {xmlFile}.bin}
+	 * where {@code {xmlFile}} is the name of the original mapping file.
+	 * </p>
+	 * If a cached {@code {xmlFile}.bin} exists and is newer than {@code {xmlFile}}, the {@code {xmlFile}.bin}
+	 * file will be read directly. Otherwise {@code {xmlFile}} is read and then serialized to {@code {xmlFile}.bin} for
+	 * use the next time.
+	 *
+	 * @param file The cacheable mapping file to be added, {@code {xmlFile}} in above discussion.
+	 *
+	 * @return this (for method chaining purposes)
+	 */
+	public Metadata addCacheableFile(File file);
 
-	public HibernateXmlBinder getHibernateXmlBinder() {
-		return hibernateXmlBinder;
-	}
+	/**
+	 * Read metadata from an {@link InputStream}.
+	 *
+	 * @param xmlInputStream The input stream containing a DOM.
+	 *
+	 * @return this (for method chaining purposes)
+	 */
+	public Metadata addInputStream(InputStream xmlInputStream);
 
-	public AnnotationBinder getAnnotationBinder() {
-		return annotationBinder;
-	}
 
-	public ExtendsQueue getExtendsQueue() {
-		return extendsQueue;
-	}
+	/**
+	 * Read mappings from a {@link URL}
+	 *
+	 * @param url The url for the mapping document to be read.
+	 *
+	 * @return this (for method chaining purposes)
+	 */
+	public Metadata addURL(URL url);
 
-	public MetadataSourceQueue getMetadataSourceQueue() {
-		return metadataSourceQueue;
-	}
+	/**
+	 * Read mappings from a string representation of the XML
+	 *
+	 * @param xml an XML string
+	 *
+	 * @return this (for method chaining purposes)
+	 */
+	public Metadata addXML(String xml);
 
-	public Database getDatabase() {
-		return database;
-	}
+	/**
+	 * Read mappings from a DOM {@link Document}
+	 *
+	 * @param doc The DOM document
+	 *
+	 * @return this (for method chaining purposes)
+	 */
+	public Metadata addDocument(Document doc);
 
-	public NamingStrategy getNamingStrategy() {
-		return namingStrategy;
-	}
 
-	public void setNamingStrategy(NamingStrategy namingStrategy) {
-		this.namingStrategy = namingStrategy;
-	}
+	/**
+	 * Read all mappings from a jar file.
+	 * <p/>
+	 * Assumes that any file named <tt>*.hbm.xml</tt> is a mapping document.
+	 *
+	 * @param jar a jar file
+	 *
+	 * @return this (for method chaining purposes)
+	 */
+	public Metadata addJar(File jar);
 
-	public EntityBinding getEntityBinding(String entityName) {
-		return entityBindingMap.get( entityName );
-	}
-
-	public Iterable<EntityBinding> getEntityBindings() {
-		return entityBindingMap.values();
-	}
-
-	public void addEntity(EntityBinding entityBinding) {
-		final String entityName = entityBinding.getEntity().getName();
-		if ( entityBindingMap.containsKey( entityName ) ) {
-			throw new DuplicateMappingException( DuplicateMappingException.Type.ENTITY, entityName );
-		}
-		entityBindingMap.put( entityName, entityBinding );
-	}
-
-	public PluralAttributeBinding getCollection(String collectionRole) {
-		return collectionBindingMap.get( collectionRole );
-	}
-
-	public Iterable<PluralAttributeBinding> getCollections() {
-		return collectionBindingMap.values();
-	}
-
-	public void addCollection(PluralAttributeBinding pluralAttributeBinding) {
-		final String owningEntityName = pluralAttributeBinding.getEntityBinding().getEntity().getName();
-		final String attributeName = pluralAttributeBinding.getAttribute().getName();
-		final String collectionRole = owningEntityName + '.' + attributeName;
-		if ( collectionBindingMap.containsKey( collectionRole ) ) {
-			throw new DuplicateMappingException( DuplicateMappingException.Type.ENTITY, collectionRole );
-		}
-		collectionBindingMap.put( collectionRole, pluralAttributeBinding );
-	}
-
-	public void addImport(String importName, String entityName) {
-		if ( imports == null ) {
-			imports = new HashMap<String, String>();
-		}
-		LOG.trace( "Import: " + importName + " -> " + entityName );
-		String old = imports.put( importName, entityName );
-		if ( old != null ) {
-			LOG.debug( "import name [" + importName + "] overrode previous [{" + old + "}]" );
-		}
-	}
-
-	public Iterable<FetchProfile> getFetchProfiles() {
-		return fetchProfiles.values();
-	}
-
-	public FetchProfile findOrCreateFetchProfile(String profileName, MetadataSource source) {
-		FetchProfile profile = fetchProfiles.get( profileName );
-		if ( profile == null ) {
-			profile = new FetchProfile( profileName, source );
-			fetchProfiles.put( profileName, profile );
-		}
-		return profile;
-	}
-
-	private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException {
-		ois.defaultReadObject();
-	}
-
-	private void writeObject(java.io.ObjectOutputStream out) throws IOException {
-		out.defaultWriteObject();
-	}
+	/**
+	 * Read all mapping documents from a directory tree.
+	 * <p/>
+	 * Assumes that any file named <tt>*.hbm.xml</tt> is a mapping document.
+	 *
+	 * @param dir The directory
+	 * @return this (for method chaining purposes)
+	 * @throws org.hibernate.MappingException Indicates problems reading the jar file or
+	 * processing the contained mapping documents.
+	 */
+	public Metadata addDirectory(File dir);
 }

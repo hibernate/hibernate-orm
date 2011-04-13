@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.util.xml;
+package org.hibernate.metamodel.source;
 
 import java.io.Serializable;
 
@@ -30,14 +30,23 @@ import java.io.Serializable;
  *
  * @author Steve Ebersole
  */
-public interface Origin extends Serializable {
+public class Origin implements Serializable {
+	private final SourceType type;
+	private final String name;
+
+	public Origin(SourceType type, String name) {
+		this.type = type;
+		this.name = name;
+	}
+
 	/**
-	 * Retrieve the type of origin.  This is not a discrete set, but might be somethign like
-	 * {@code file} for file protocol URLs, or {@code resource} for classpath resource lookups.
+	 * Retrieve the type of origin.
 	 *
 	 * @return The origin type.
 	 */
-	public String getType();
+	public SourceType getType() {
+		return type;
+	}
 
 	/**
 	 * The name of the document origin.  Interpretation is relative to the type, but might be the
@@ -45,5 +54,7 @@ public interface Origin extends Serializable {
 	 *
 	 * @return The name.
 	 */
-	public String getName();
+	public String getName() {
+		return name;
+	}
 }

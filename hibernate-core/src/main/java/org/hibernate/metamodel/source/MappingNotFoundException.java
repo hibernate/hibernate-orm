@@ -21,25 +21,26 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.util.xml;
+
+package org.hibernate.metamodel.source;
 
 /**
- * Describes a parsed xml document.
- *
- * @author Hardy Ferentschik
+ * @author Steve Ebersole
  */
-public interface JaxbRoot<T> {
-	/**
-	 * Retrieve the jaxb root
-	 *
-	 * @return the jaxb root object
-	 */
-	public T getRoot();
+public class MappingNotFoundException extends MappingException {
+	public MappingNotFoundException(String message, Origin origin) {
+		super( message, origin );
+	}
 
-	/**
-	 * Retrieve the document's origin.
-	 *
-	 * @return The origin
-	 */
-	public Origin getOrigin();
+	public MappingNotFoundException(Origin origin) {
+		super( String.format( "Mapping (%s) not found : %s", origin.getType(), origin.getName() ), origin );
+	}
+
+	public MappingNotFoundException(String message, Throwable root, Origin origin) {
+		super( message, root, origin );
+	}
+
+	public MappingNotFoundException(Throwable root, Origin origin) {
+		super( String.format( "Mapping (%s) not found : %s", origin.getType(), origin.getName() ), root, origin );
+	}
 }

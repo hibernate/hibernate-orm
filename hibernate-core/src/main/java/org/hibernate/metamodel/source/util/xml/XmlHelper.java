@@ -37,6 +37,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 
+import org.hibernate.metamodel.source.Origin;
+import org.hibernate.metamodel.source.internal.JaxbRoot;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 
 /**
@@ -57,8 +59,8 @@ public class XmlHelper {
 		unmarshaller.setSchema( schema );
 		StreamSource stream = new StreamSource( in );
 		JAXBElement<T> elem = unmarshaller.unmarshal( stream, clazz );
-		Origin origin = new OriginImpl( "", fileName );
-		return new JaxbRootImpl<T>( elem.getValue(), origin );
+		Origin origin = new Origin( null, fileName );
+		return new JaxbRoot<T>( elem.getValue(), origin );
 	}
 
 	private static Schema getMappingSchema(String schemaVersion, ClassLoaderService classLoaderService) {

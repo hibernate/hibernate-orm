@@ -30,7 +30,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.domain.Entity;
-import org.hibernate.metamodel.source.Metadata;
+import org.hibernate.metamodel.source.internal.MetadataImpl;
 
 /**
  * @author Hardy Ferentschik
@@ -38,7 +38,7 @@ import org.hibernate.metamodel.source.Metadata;
 public class EntityBinder {
 	private final ClassInfo classToBind;
 
-	public EntityBinder(Metadata metadata, ClassInfo classInfo, AnnotationInstance jpaEntityAnnotation, AnnotationInstance hibernateEntityAnnotation) {
+	public EntityBinder(MetadataImpl metadata, ClassInfo classInfo, AnnotationInstance jpaEntityAnnotation, AnnotationInstance hibernateEntityAnnotation) {
 		this.classToBind = classInfo;
 		EntityBinding entityBinding = new EntityBinding();
 		bindJpaAnnotation( jpaEntityAnnotation, entityBinding );

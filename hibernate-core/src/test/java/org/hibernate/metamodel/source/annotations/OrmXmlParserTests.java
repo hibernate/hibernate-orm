@@ -6,7 +6,7 @@ import java.util.Set;
 
 import org.junit.Test;
 
-import org.hibernate.metamodel.source.Metadata;
+import org.hibernate.metamodel.source.internal.MetadataImpl;
 import org.hibernate.service.internal.BasicServiceRegistryImpl;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
@@ -16,7 +16,7 @@ import org.hibernate.testing.junit4.BaseUnitTestCase;
 public class OrmXmlParserTests extends BaseUnitTestCase {
 	@Test
 	public void testSingleOrmXml() {
-		OrmXmlParser parser = new OrmXmlParser( new Metadata( new BasicServiceRegistryImpl( Collections.emptyMap() ) ) );
+		OrmXmlParser parser = new OrmXmlParser( new MetadataImpl( new BasicServiceRegistryImpl( Collections.emptyMap() ) ) );
 		Set<String> xmlFiles = new HashSet<String>();
 		xmlFiles.add( "org/hibernate/metamodel/source/annotations/orm.xml" );
 		parser.parseAndUpdateIndex( xmlFiles, null );
@@ -24,7 +24,7 @@ public class OrmXmlParserTests extends BaseUnitTestCase {
 
 	@Test
 	public void testOrmXmlWithOldSchema() {
-		OrmXmlParser parser = new OrmXmlParser( new Metadata( new BasicServiceRegistryImpl( Collections.emptyMap() ) ) );
+		OrmXmlParser parser = new OrmXmlParser( new MetadataImpl( new BasicServiceRegistryImpl( Collections.emptyMap() ) ) );
 		Set<String> xmlFiles = new HashSet<String>();
 		xmlFiles.add( "org/hibernate/metamodel/source/annotations/orm2.xml" );
 		parser.parseAndUpdateIndex( xmlFiles, null );

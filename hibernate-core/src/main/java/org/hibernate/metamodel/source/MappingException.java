@@ -21,32 +21,29 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.util.xml;
+
+package org.hibernate.metamodel.source;
+
+import org.hibernate.HibernateException;
 
 /**
- * Basic implementation of {@link JaxbRoot}.
+ * Indicates a problem parsing a mapping document.
  *
- * @author Hardy Ferentschik
+ * @author Steve Ebersole
  */
-public class JaxbRootImpl<T> implements JaxbRoot<T> {
-	private final T root;
+public class MappingException extends HibernateException {
 	private final Origin origin;
 
-	public JaxbRootImpl(T root, Origin origin) {
-		this.root = root;
+	public MappingException(String message, Origin origin) {
+		super( message );
 		this.origin = origin;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
-	public T getRoot() {
-		return root;
+	public MappingException(String message, Throwable root, Origin origin) {
+		super( message, root );
+		this.origin = origin;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public Origin getOrigin() {
 		return origin;
 	}

@@ -8,7 +8,7 @@ import javax.xml.bind.JAXBException;
 import org.jboss.jandex.Index;
 
 import org.hibernate.AnnotationException;
-import org.hibernate.metamodel.source.Metadata;
+import org.hibernate.metamodel.source.internal.MetadataImpl;
 import org.hibernate.metamodel.source.annotation.xml.EntityMappings;
 import org.hibernate.metamodel.source.util.xml.XmlHelper;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
@@ -21,9 +21,9 @@ public class OrmXmlParser {
 	private static final String ORM1_MAPPING_XSD = "org/hibernate/ejb/orm_1_0.xsd";
 	private static final String ORM2_MAPPING_XSD = "org/hibernate/ejb/orm_2_0.xsd";
 
-	private final Metadata meta;
+	private final MetadataImpl meta;
 
-	public OrmXmlParser(Metadata meta) {
+	public OrmXmlParser(MetadataImpl meta) {
 		this.meta = meta;
 	}
 

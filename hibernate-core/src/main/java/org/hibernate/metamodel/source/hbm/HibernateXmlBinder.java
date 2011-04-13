@@ -40,7 +40,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.internal.util.xml.XmlDocument;
 import org.hibernate.mapping.MetaAttribute;
-import org.hibernate.metamodel.source.Metadata;
+import org.hibernate.metamodel.source.internal.MetadataImpl;
 import org.hibernate.metamodel.source.hbm.xml.mapping.HibernateMapping;
 
 /**
@@ -51,14 +51,14 @@ import org.hibernate.metamodel.source.hbm.xml.mapping.HibernateMapping;
 public class HibernateXmlBinder {
 	private static final Logger log = LoggerFactory.getLogger( HibernateXmlBinder.class );
 
-	private final Metadata metadata;
+	private final MetadataImpl metadata;
 	private final Map<String, MetaAttribute> globalMetas;
 
-	public HibernateXmlBinder(Metadata metadata) {
+	public HibernateXmlBinder(MetadataImpl metadata) {
 		this( metadata, Collections.<String, MetaAttribute>emptyMap() );
 	}
 
-	public HibernateXmlBinder(Metadata metadata, Map<String, MetaAttribute> globalMetas) {
+	public HibernateXmlBinder(MetadataImpl metadata, Map<String, MetaAttribute> globalMetas) {
 		this.metadata = metadata;
 		this.globalMetas = globalMetas;
 	}
@@ -75,20 +75,21 @@ public class HibernateXmlBinder {
 	public void bindRoot(XmlDocument metadataXml, Set<String> entityNames) {
 		final HibernateMappingBinder mappingBinder = new HibernateMappingBinder( this, metadataXml );
 
-		List<String> names = locateEntityNamesAwaitingExtends( metadataXml, mappingBinder );
-		if ( !names.isEmpty() ) {
-			// classes mentioned in extends not available - so put it in queue
-			for ( String name : names ) {
-				metadata.getExtendsQueue()
-						.add( new ExtendsQueueEntry( name, mappingBinder.getPackageName(), metadataXml, entityNames ) );
-			}
-			return;
-		}
+// this is irrelevant due to HHH-6118 and the fact that now all sources should be 
+//		List<String> names = locateEntityNamesAwaitingExtends( metadataXml, mappingBinder );
+//		if ( !names.isEmpty() ) {
+//			// classes mentioned in extends not available - so put it in queue
+//			for ( String name : names ) {
+//				metadata.getExtendsQueue()
+//						.add( new ExtendsQueueEntry( name, mappingBinder.getPackageName(), metadataXml, entityNames ) );
+//			}
+//			return;
+//		}
 
 		mappingBinder.processElement();
 	}
 
-	Metadata getMetadata() {
+	MetadataImpl getMetadata() {
 		return metadata;
 	}
 

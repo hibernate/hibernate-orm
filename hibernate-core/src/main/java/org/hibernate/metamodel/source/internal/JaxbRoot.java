@@ -21,33 +21,40 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.util.xml;
+package org.hibernate.metamodel.source.internal;
+
+import org.hibernate.metamodel.source.Origin;
 
 /**
- * Basic implementation of {@link org.hibernate.internal.util.xml.Origin}
+ * Holds information about a JAXB-unmarshalled XML document.
  *
+ * @author Hardy Ferentschik
  * @author Steve Ebersole
  */
-public class OriginImpl implements Origin {
-	private final String type;
-	private final String name;
+public class JaxbRoot<T> {
+	private final T root;
+	private final Origin origin;
 
-	public OriginImpl(String type, String name) {
-		this.type = type;
-		this.name = name;
+	public JaxbRoot(T root, Origin origin) {
+		this.root = root;
+		this.origin = origin;
 	}
 
 	/**
-	 * {@inheritDoc}
+	 * Obtain the root JAXB bound object
+	 *
+	 * @return The JAXB root object
 	 */
-	public String getType() {
-		return type;
+	public T getRoot() {
+		return root;
 	}
 
 	/**
-	 * {@inheritDoc}
+	 * Obtain the metadata about the document's origin
+	 *
+	 * @return The origin
 	 */
-	public String getName() {
-		return name;
+	public Origin getOrigin() {
+		return origin;
 	}
 }

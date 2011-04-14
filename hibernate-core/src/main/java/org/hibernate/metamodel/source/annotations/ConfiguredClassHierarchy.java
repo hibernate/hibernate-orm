@@ -35,6 +35,7 @@ import org.jboss.jandex.FieldInfo;
 import org.jboss.jandex.MethodInfo;
 
 import org.hibernate.AnnotationException;
+import org.hibernate.service.ServiceRegistry;
 
 /**
  * Represents the inheritance structure of the configured classes within a class hierarchy.
@@ -46,13 +47,14 @@ public class ConfiguredClassHierarchy implements Iterable<ConfiguredClass> {
 	private final InheritanceType inheritanceType;
 	private final List<ConfiguredClass> configuredClasses;
 
-	ConfiguredClassHierarchy(List<ClassInfo> classes) {
+	ConfiguredClassHierarchy(List<ClassInfo> classes, ServiceRegistry serviceRegistry) {
+		defaultAccessType = determineDefaultAccessType( classes );
+		inheritanceType = determineInheritanceType( classes );
+
 		configuredClasses = new ArrayList<ConfiguredClass>();
 		for ( ClassInfo info : classes ) {
-			configuredClasses.add( new ConfiguredClass( info, this ) );
+			configuredClasses.add( new ConfiguredClass( info, this, serviceRegistry ) );
 		}
-		defaultAccessType = determineDefaultAccessType();
-		inheritanceType = determineInheritanceType();
 	}
 
 	public AccessType getDefaultAccessType() {
@@ -66,8 +68,7 @@ public class ConfiguredClassHierarchy implements Iterable<ConfiguredClass> {
 	/**
 	 * @return An iterator iterating in top down manner over the configured classes in this hierarchy.
 	 */
-	public Iterator<ConfiguredClass> iterator
-	() {
+	public Iterator<ConfiguredClass> iterator() {
 		return configuredClasses.iterator();
 	}
 
@@ -83,72 +84,112 @@ public class ConfiguredClassHierarchy implements Iterable<ConfiguredClass> {
 	}
 
 	/**
+	 * @param classes the classes in the hierarchy
+	 *
 	 * @return Returns the default access type for the configured class hierarchy independent of explicit
 	 *         {@code AccessType} annotations. The default access type is determined by the placement of the
 	 *         annotations.
 	 */
-	private AccessType determineDefaultAccessType() {
-		Iterator<ConfiguredClass> iter = iterator();
+	private AccessType determineDefaultAccessType(List<ClassInfo> classes) {
 		AccessType accessType = null;
-		while ( iter.hasNext() ) {
-			ConfiguredClass configuredClass = iter.next();
-			ClassInfo info = configuredClass.getClassInfo();
+		for ( ClassInfo info : classes ) {
 			List<AnnotationInstance> idAnnotations = info.annotations().get( JPADotNames.ID );
 			if ( idAnnotations == null || idAnnotations.size() == 0 ) {
 				continue;
 			}
-
-			for ( AnnotationInstance annotation : idAnnotations ) {
-				AccessType tmpAccessType;
-				if ( annotation.target() instanceof FieldInfo ) {
-					tmpAccessType = AccessType.FIELD;
-				}
-				else if ( annotation.target() instanceof MethodInfo ) {
-					tmpAccessType = AccessType.PROPERTY;
-				}
-				else {
-					throw new AnnotationException( "Invalid placement of @Id annotation" );
-				}
-
-				if ( accessType == null ) {
-					accessType = tmpAccessType;
-				}
-				else {
-					if ( !accessType.equals( tmpAccessType ) ) {
-						throw new AnnotationException( "Inconsistent placement of @Id annotation within hierarchy " + hierarchyListString() );
-					}
-				}
-			}
+			accessType = processIdAnnotations( idAnnotations );
 		}
 
 		if ( accessType == null ) {
-			return throwIdNotFoundAnnotationException();
+			return throwIdNotFoundAnnotationException( classes );
 		}
 
 		return accessType;
 	}
 
-	private InheritanceType determineInheritanceType() {
-		return null;  //To change body of created methods use File | Settings | File Templates.
+	private AccessType processIdAnnotations(List<AnnotationInstance> idAnnotations) {
+		AccessType accessType = null;
+		for ( AnnotationInstance annotation : idAnnotations ) {
+			AccessType tmpAccessType;
+			if ( annotation.target() instanceof FieldInfo ) {
+				tmpAccessType = AccessType.FIELD;
+			}
+			else if ( annotation.target() instanceof MethodInfo ) {
+				tmpAccessType = AccessType.PROPERTY;
+			}
+			else {
+				throw new AnnotationException( "Invalid placement of @Id annotation" );
+			}
+
+			if ( accessType == null ) {
+				accessType = tmpAccessType;
+			}
+			else {
+				if ( !accessType.equals( tmpAccessType ) ) {
+					throw new AnnotationException( "Inconsistent placement of @Id annotation within hierarchy " );
+				}
+			}
+		}
+		return accessType;
 	}
 
-	private AccessType throwIdNotFoundAnnotationException() {
+	private InheritanceType determineInheritanceType(List<ClassInfo> classes) {
+		InheritanceType inheritanceType = null;
+		for ( ClassInfo info : classes ) {
+			AnnotationInstance inheritanceAnnotation = JandexHelper.getSingleAnnotation(
+					info, JPADotNames.INHERITANCE
+			);
+			if ( inheritanceAnnotation == null ) {
+				continue;
+			}
+
+			InheritanceType tmpInheritanceType = Enum.valueOf(
+					InheritanceType.class, inheritanceAnnotation.value( "strategy" ).asEnum()
+			);
+			if ( tmpInheritanceType == null ) {
+				// default inheritance type is single table
+				inheritanceType = InheritanceType.SINGLE_TABLE;
+			}
+
+			if ( inheritanceType == null ) {
+				inheritanceType = tmpInheritanceType;
+			}
+			else {
+				if ( !inheritanceType.equals( tmpInheritanceType ) ) {
+					throw new AnnotationException(
+							"Multiple incompatible instances of @Inheritance specified within classes "
+									+ hierarchyListString( classes )
+					);
+				}
+			}
+		}
+
+		if ( inheritanceType == null ) {
+			// default inheritance type is single table
+			inheritanceType = InheritanceType.SINGLE_TABLE;
+		}
+
+		return inheritanceType;
+	}
+
+	private AccessType throwIdNotFoundAnnotationException(List<ClassInfo> classes) {
 		StringBuilder builder = new StringBuilder();
 		builder.append( "Unable to find Id property for class hierarchy " );
-		builder.append( hierarchyListString() );
+		builder.append( hierarchyListString( classes ) );
 		throw new AnnotationException( builder.toString() );
 	}
 
-	private String hierarchyListString() {
-		Iterator<ConfiguredClass> iter;
+	private String hierarchyListString(List<ClassInfo> classes) {
 		StringBuilder builder = new StringBuilder();
 		builder.append( "[" );
-		iter = iterator();
-		while ( iter.hasNext() ) {
-			builder.append( iter.next().getClassInfo().name().toString() );
-			if ( iter.hasNext() ) {
+
+		int count = 0;
+		for ( ClassInfo info : classes ) {
+			builder.append( info.name().toString() );
+			if ( count < classes.size() ) {
 				builder.append( ", " );
 			}
+			count++;
 		}
 		builder.append( "]" );
 		return builder.toString();

@@ -29,9 +29,11 @@ import org.dom4j.Document;
 import org.dom4j.Element;
 import org.hibernate.envers.tools.StringTools;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Formula;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public class MetadataTools {
     public static Element addNativelyGeneratedId(Element parent, String name, String type) {
@@ -182,10 +184,20 @@ public class MetadataTools {
 
     public static void addColumns(Element any_mapping, Iterator<Column> columns) {
         while (columns.hasNext()) {
-            Column column = columns.next();
-            addColumn(any_mapping, column.getName(), column.getLength(), column.getScale(), column.getPrecision(),
-					column.getSqlType(), column.getCustomRead(), column.getCustomWrite());
+            addColumn(any_mapping, columns.next());
         }
+    }
+
+    /**
+     * Adds <code>column</code> element with the following attributes (unless empty): <code>name</code>,
+     * <code>length</code>, <code>scale</code>, <code>precision</code>, <code>sql-type</code>, <code>read</code>
+     * and <code>write</code>.
+     * @param any_mapping Parent element.
+     * @param column Column descriptor.
+     */
+    public static void addColumn(Element any_mapping, Column column) {
+        addColumn(any_mapping, column.getName(), column.getLength(), column.getScale(), column.getPrecision(),
+                  column.getSqlType(), column.getCustomRead(), column.getCustomWrite());
     }
 
     @SuppressWarnings({"unchecked"})
@@ -224,6 +236,32 @@ public class MetadataTools {
 
 				Attribute insert = property.attribute("insert");
 				insert.setText(Boolean.toString(insertable));
+            }
+        }
+    }
+
+    /**
+     * Adds <code>formula</code> element.
+     * @param element Parent element.
+     * @param formula Formula descriptor.
+     */
+    public static void addFormula(Element element, Formula formula) {
+        element.addElement("formula").setText(formula.getText());
+    }
+
+    /**
+     * Adds all <code>column</code> or <code>formula</code> elements.
+     * @param element Parent element.
+     * @param columnIterator Iterator pointing at {@link org.hibernate.mapping.Column} and/or
+     *                       {@link org.hibernate.mapping.Formula} objects.
+     */
+    public static void addColumnsOrFormulas(Element element, Iterator columnIterator) {
+        while (columnIterator.hasNext()) {
+            Object o = columnIterator.next();
+            if (o instanceof Column) {
+                addColumn(element, (Column) o);
+            } else if (o instanceof Formula) {
+                addFormula(element, (Formula) o);
             }
         }
     }

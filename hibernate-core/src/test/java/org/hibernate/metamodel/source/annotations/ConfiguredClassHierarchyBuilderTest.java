@@ -2,21 +2,28 @@ package org.hibernate.metamodel.source.annotations;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Set;
 import javax.persistence.AccessType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
 import javax.persistence.MappedSuperclass;
 
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.Index;
 import org.jboss.jandex.Indexer;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import org.hibernate.AnnotationException;
+import org.hibernate.metamodel.source.Metadata;
+import org.hibernate.service.internal.BasicServiceRegistryImpl;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static junit.framework.Assert.assertEquals;
@@ -29,11 +36,24 @@ import static org.junit.Assert.fail;
  */
 public class ConfiguredClassHierarchyBuilderTest extends BaseUnitTestCase {
 
+	private BasicServiceRegistryImpl serviceRegistry;
+
+	@Before
+	public void setUp() {
+		serviceRegistry = new BasicServiceRegistryImpl( Collections.emptyMap() );
+	}
+
+	@After
+	public void tearDown() {
+		serviceRegistry.destroy();
+	}
+
 	@Test
 	public void testSingleEntity() {
 		Index index = indexForClass( Foo.class );
-		ConfiguredClassHierarchyBuilder builder = new ConfiguredClassHierarchyBuilder();
-		Set<ConfiguredClassHierarchy> hierarchies = builder.createEntityHierarchies( index );
+		Set<ConfiguredClassHierarchy> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
+				index, serviceRegistry
+		);
 		assertEquals( "There should be only one hierarchy", 1, hierarchies.size() );
 
 		Iterator<ConfiguredClass> iter = hierarchies.iterator().next().iterator();
@@ -45,8 +65,9 @@ public class ConfiguredClassHierarchyBuilderTest extends BaseUnitTestCase {
 	@Test
 	public void testSimpleInheritance() {
 		Index index = indexForClass( B.class, A.class );
-		ConfiguredClassHierarchyBuilder builder = new ConfiguredClassHierarchyBuilder();
-		Set<ConfiguredClassHierarchy> hierarchies = builder.createEntityHierarchies( index );
+		Set<ConfiguredClassHierarchy> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
+				index, serviceRegistry
+		);
 		assertEquals( "There should be only one hierarchy", 1, hierarchies.size() );
 
 		Iterator<ConfiguredClass> iter = hierarchies.iterator().next().iterator();
@@ -60,8 +81,9 @@ public class ConfiguredClassHierarchyBuilderTest extends BaseUnitTestCase {
 	@Test
 	public void testMultipleHierarchies() {
 		Index index = indexForClass( B.class, A.class, Foo.class );
-		ConfiguredClassHierarchyBuilder builder = new ConfiguredClassHierarchyBuilder();
-		Set<ConfiguredClassHierarchy> hierarchies = builder.createEntityHierarchies( index );
+		Set<ConfiguredClassHierarchy> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
+				index, serviceRegistry
+		);
 		assertEquals( "There should be only one hierarchy", 2, hierarchies.size() );
 	}
 
@@ -84,8 +106,9 @@ public class ConfiguredClassHierarchyBuilderTest extends BaseUnitTestCase {
 		}
 
 		Index index = indexForClass( MappedSubClass.class, MappedSuperClass.class, UnmappedSubClass.class );
-		ConfiguredClassHierarchyBuilder builder = new ConfiguredClassHierarchyBuilder();
-		Set<ConfiguredClassHierarchy> hierarchies = builder.createEntityHierarchies( index );
+		Set<ConfiguredClassHierarchy> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
+				index, serviceRegistry
+		);
 		assertEquals( "There should be only one hierarchy", 1, hierarchies.size() );
 
 		Iterator<ConfiguredClass> iter = hierarchies.iterator().next().iterator();
@@ -106,8 +129,7 @@ public class ConfiguredClassHierarchyBuilderTest extends BaseUnitTestCase {
 		}
 
 		Index index = indexForClass( EntityAndMappedSuperClass.class );
-		ConfiguredClassHierarchyBuilder builder = new ConfiguredClassHierarchyBuilder();
-		builder.createEntityHierarchies( index );
+		ConfiguredClassHierarchyBuilder.createEntityHierarchies( index, serviceRegistry );
 	}
 
 	@Test(expected = AnnotationException.class)
@@ -123,8 +145,7 @@ public class ConfiguredClassHierarchyBuilderTest extends BaseUnitTestCase {
 		}
 
 		Index index = indexForClass( B.class, A.class );
-		ConfiguredClassHierarchyBuilder builder = new ConfiguredClassHierarchyBuilder();
-		builder.createEntityHierarchies( index );
+		ConfiguredClassHierarchyBuilder.createEntityHierarchies( index, serviceRegistry );
 	}
 
 	@Test
@@ -140,8 +161,9 @@ public class ConfiguredClassHierarchyBuilderTest extends BaseUnitTestCase {
 		}
 
 		Index index = indexForClass( B.class, A.class );
-		ConfiguredClassHierarchyBuilder builder = new ConfiguredClassHierarchyBuilder();
-		Set<ConfiguredClassHierarchy> hierarchies = builder.createEntityHierarchies( index );
+		Set<ConfiguredClassHierarchy> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
+				index, serviceRegistry
+		);
 		assertTrue( hierarchies.size() == 1 );
 		ConfiguredClassHierarchy hierarchy = hierarchies.iterator().next();
 		assertEquals( "Wrong default access type", AccessType.FIELD, hierarchy.getDefaultAccessType() );
@@ -168,11 +190,79 @@ public class ConfiguredClassHierarchyBuilderTest extends BaseUnitTestCase {
 		}
 
 		Index index = indexForClass( B.class, A.class );
-		ConfiguredClassHierarchyBuilder builder = new ConfiguredClassHierarchyBuilder();
-		Set<ConfiguredClassHierarchy> hierarchies = builder.createEntityHierarchies( index );
+		Set<ConfiguredClassHierarchy> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
+				index, serviceRegistry
+		);
 		assertTrue( hierarchies.size() == 1 );
 		ConfiguredClassHierarchy hierarchy = hierarchies.iterator().next();
 		assertEquals( "Wrong default access type", AccessType.PROPERTY, hierarchy.getDefaultAccessType() );
+	}
+
+	@Test
+	public void testDefaultInheritanceStrategy() {
+		@Entity
+		class A {
+			@Id
+			String id;
+		}
+
+		@Entity
+		class B extends A {
+		}
+
+		Index index = indexForClass( B.class, A.class );
+		Set<ConfiguredClassHierarchy> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
+				index, serviceRegistry
+		);
+		assertTrue( hierarchies.size() == 1 );
+		ConfiguredClassHierarchy hierarchy = hierarchies.iterator().next();
+		assertEquals( "Wrong inheritance type", InheritanceType.SINGLE_TABLE, hierarchy.getInheritanceType() );
+	}
+
+
+	@Test
+	public void testExplicitInheritanceStrategy() {
+		@MappedSuperclass
+		class MappedSuperClass {
+
+		}
+
+		@Entity
+		@Inheritance(strategy = InheritanceType.JOINED)
+		class A extends MappedSuperClass {
+			@Id
+			String id;
+		}
+
+		@Entity
+		class B extends A {
+		}
+
+		Index index = indexForClass( B.class, MappedSuperClass.class, A.class );
+		Set<ConfiguredClassHierarchy> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
+				index, serviceRegistry
+		);
+		assertTrue( hierarchies.size() == 1 );
+		ConfiguredClassHierarchy hierarchy = hierarchies.iterator().next();
+		assertEquals( "Wrong inheritance type", InheritanceType.JOINED, hierarchy.getInheritanceType() );
+	}
+
+	@Test(expected = AnnotationException.class)
+	public void testMultipleConflictingInheritanceDefinitions() {
+
+		@Entity
+		@Inheritance(strategy = InheritanceType.JOINED)
+		class A {
+			String id;
+		}
+
+		@Entity
+		@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
+		class B extends A {
+		}
+
+		Index index = indexForClass( B.class, A.class );
+		ConfiguredClassHierarchyBuilder.createEntityHierarchies( index, serviceRegistry );
 	}
 
 	private Index indexForClass(Class<?>... classes) {

@@ -23,28 +23,21 @@
  */
 package org.hibernate.metamodel.source.annotations;
 
-import javax.persistence.Access;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Inheritance;
-import javax.persistence.MappedSuperclass;
-import javax.persistence.Transient;
-
 import org.jboss.jandex.DotName;
 
+import org.hibernate.annotations.Entity;
+import org.hibernate.annotations.FetchProfile;
+import org.hibernate.annotations.FetchProfiles;
+
 /**
- * Defines the dot names for the JPA annotations
+ * Defines the dot names for the Hibernate specific annotations.
  *
  * @author Hardy Ferentschik
  */
-public interface JPADotNames {
+public interface HibernateDotNames {
 	public static final DotName ENTITY = DotName.createSimple( Entity.class.getName() );
-	public static final DotName MAPPED_SUPER_CLASS = DotName.createSimple( MappedSuperclass.class.getName() );
-	public static final DotName INHERITANCE = DotName.createSimple( Inheritance.class.getName() );
-
-	public static final DotName ID = DotName.createSimple( Id.class.getName() );
-	public static final DotName ACCESS = DotName.createSimple( Access.class.getName() );
-	public static final DotName TRANSIENT = DotName.createSimple( Transient.class.getName() );
+	public static final DotName FETCH_PROFILES = DotName.createSimple( FetchProfiles.class.getName() );
+	public static final DotName FETCH_PROFILE = DotName.createSimple( FetchProfile.class.getName() );
 }
 
 

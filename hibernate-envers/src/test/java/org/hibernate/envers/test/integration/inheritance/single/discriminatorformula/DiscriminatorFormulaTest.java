@@ -2,10 +2,11 @@ package org.hibernate.envers.test.integration.inheritance.single.discriminatorfo
 
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
-import org.hibernate.envers.test.Priority;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.PersistentClass;
-import org.junit.Test;
+
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
 
 import javax.persistence.EntityManager;
 import java.util.Arrays;
@@ -29,8 +30,7 @@ public class DiscriminatorFormulaTest extends AbstractEntityTest {
         cfg.addAnnotatedClass(ChildEntity.class);
     }
 
-    @Test
-    @Priority(10)
+    @BeforeClass(dependsOnMethods = "init")
     public void initData() {
         parentAudit = getCfg().getClassMapping("org.hibernate.envers.test.integration.inheritance.single.discriminatorformula.ParentEntity_AUD");
 

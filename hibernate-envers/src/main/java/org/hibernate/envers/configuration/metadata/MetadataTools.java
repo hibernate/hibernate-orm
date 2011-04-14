@@ -80,6 +80,9 @@ public class MetadataTools {
         }
     }
 
+    /**
+     * Column name shall be wrapped with '`' signs if quotation required.
+     */
     public static Element addOrModifyColumn(Element parent, String name) {
         Element column_mapping = parent.element("column");
 
@@ -94,11 +97,21 @@ public class MetadataTools {
         return column_mapping;
     }
 
+    /**
+     * Adds new <code>column</code> element. Method assumes that the value of <code>name</code> attribute is already
+     * wrapped with '`' signs if quotation required. It shall be invoked when column name is taken directly from configuration
+     * file and not from {@link org.hibernate.mapping.PersistentClass} descriptor.
+     */
     public static Element addColumn(Element parent, String name, Integer length, Integer scale, Integer precision,
 									String sqlType, String customRead, String customWrite) {
+        return addColumn(parent, name, length, scale, precision, sqlType, customRead, customWrite, false);
+    }
+
+    public static Element addColumn(Element parent, String name, Integer length, Integer scale, Integer precision,
+									String sqlType, String customRead, String customWrite, boolean quoted) {
         Element column_mapping = parent.addElement("column");
 
-        column_mapping.addAttribute("name", name);
+        column_mapping.addAttribute("name", quoted ? "`" + name + "`" : name);
         if (length != null) {
             column_mapping.addAttribute("length", length.toString());
         }
@@ -197,7 +210,7 @@ public class MetadataTools {
      */
     public static void addColumn(Element any_mapping, Column column) {
         addColumn(any_mapping, column.getName(), column.getLength(), column.getScale(), column.getPrecision(),
-                  column.getSqlType(), column.getCustomRead(), column.getCustomWrite());
+                  column.getSqlType(), column.getCustomRead(), column.getCustomWrite(), column.isQuoted());
     }
 
     @SuppressWarnings({"unchecked"})

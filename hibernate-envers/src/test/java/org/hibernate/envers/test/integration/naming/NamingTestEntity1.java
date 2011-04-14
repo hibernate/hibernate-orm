@@ -34,6 +34,7 @@ import org.hibernate.envers.AuditTable;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @Entity
 @Table(name="naming_test_entity_1")
@@ -48,6 +49,10 @@ public class NamingTestEntity1 {
     @Audited
     private String data;
 
+    @Column(name = "`nte_number#`")
+    @Audited
+    private Integer number;
+
     public NamingTestEntity1() {
     }
 
@@ -58,6 +63,12 @@ public class NamingTestEntity1 {
     public NamingTestEntity1(Integer id, String data) {
         this.id = id;
         this.data = data;
+    }
+
+    public NamingTestEntity1(Integer id, String data, Integer number) {
+        this.id = id;
+        this.data = data;
+        this.number = number;
     }
 
     public Integer getId() {
@@ -76,6 +87,14 @@ public class NamingTestEntity1 {
         this.data = data;
     }
 
+    public Integer getNumber() {
+        return number;
+    }
+
+    public void setNumber(Integer number) {
+        this.number = number;
+    }
+
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof NamingTestEntity1)) return false;
@@ -83,6 +102,7 @@ public class NamingTestEntity1 {
         NamingTestEntity1 that = (NamingTestEntity1) o;
 
         if (data != null ? !data.equals(that.data) : that.data != null) return false;
+        if (number != null ? !number.equals(that.number) : that.number != null) return false;
         if (id != null ? !id.equals(that.id) : that.id != null) return false;
 
         return true;
@@ -92,6 +112,7 @@ public class NamingTestEntity1 {
         int result;
         result = (id != null ? id.hashCode() : 0);
         result = 31 * result + (data != null ? data.hashCode() : 0);
+        result = 31 * result + (number != null ? number.hashCode() : 0);
         return result;
     }
 }

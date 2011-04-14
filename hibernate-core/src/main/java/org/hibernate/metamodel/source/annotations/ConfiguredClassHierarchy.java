@@ -35,6 +35,7 @@ import org.jboss.jandex.FieldInfo;
 import org.jboss.jandex.MethodInfo;
 
 import org.hibernate.AnnotationException;
+import org.hibernate.service.ServiceRegistry;
 
 /**
  * Represents the inheritance structure of the configured classes within a class hierarchy.
@@ -46,13 +47,14 @@ public class ConfiguredClassHierarchy implements Iterable<ConfiguredClass> {
 	private final InheritanceType inheritanceType;
 	private final List<ConfiguredClass> configuredClasses;
 
-	ConfiguredClassHierarchy(List<ClassInfo> classes) {
+	ConfiguredClassHierarchy(List<ClassInfo> classes, ServiceRegistry serviceRegistry) {
+		defaultAccessType = determineDefaultAccessType( classes );
+		inheritanceType = determineInheritanceType( classes );
+
 		configuredClasses = new ArrayList<ConfiguredClass>();
 		for ( ClassInfo info : classes ) {
-			configuredClasses.add( new ConfiguredClass( info, this ) );
+			configuredClasses.add( new ConfiguredClass( info, this, serviceRegistry ) );
 		}
-		defaultAccessType = determineDefaultAccessType();
-		inheritanceType = determineInheritanceType();
 	}
 
 	public AccessType getDefaultAccessType() {
@@ -82,16 +84,15 @@ public class ConfiguredClassHierarchy implements Iterable<ConfiguredClass> {
 	}
 
 	/**
+	 * @param classes the classes in the hierarchy
+	 *
 	 * @return Returns the default access type for the configured class hierarchy independent of explicit
 	 *         {@code AccessType} annotations. The default access type is determined by the placement of the
 	 *         annotations.
 	 */
-	private AccessType determineDefaultAccessType() {
-		Iterator<ConfiguredClass> iter = iterator();
+	private AccessType determineDefaultAccessType(List<ClassInfo> classes) {
 		AccessType accessType = null;
-		while ( iter.hasNext() ) {
-			ConfiguredClass configuredClass = iter.next();
-			ClassInfo info = configuredClass.getClassInfo();
+		for ( ClassInfo info : classes ) {
 			List<AnnotationInstance> idAnnotations = info.annotations().get( JPADotNames.ID );
 			if ( idAnnotations == null || idAnnotations.size() == 0 ) {
 				continue;
@@ -100,7 +101,7 @@ public class ConfiguredClassHierarchy implements Iterable<ConfiguredClass> {
 		}
 
 		if ( accessType == null ) {
-			return throwIdNotFoundAnnotationException();
+			return throwIdNotFoundAnnotationException( classes );
 		}
 
 		return accessType;
@@ -125,19 +126,16 @@ public class ConfiguredClassHierarchy implements Iterable<ConfiguredClass> {
 			}
 			else {
 				if ( !accessType.equals( tmpAccessType ) ) {
-					throw new AnnotationException( "Inconsistent placement of @Id annotation within hierarchy " + hierarchyListString() );
+					throw new AnnotationException( "Inconsistent placement of @Id annotation within hierarchy " );
 				}
 			}
 		}
 		return accessType;
 	}
 
-	private InheritanceType determineInheritanceType() {
-		Iterator<ConfiguredClass> iter = iterator();
+	private InheritanceType determineInheritanceType(List<ClassInfo> classes) {
 		InheritanceType inheritanceType = null;
-		while ( iter.hasNext() ) {
-			ConfiguredClass configuredClass = iter.next();
-			ClassInfo info = configuredClass.getClassInfo();
+		for ( ClassInfo info : classes ) {
 			AnnotationInstance inheritanceAnnotation = JandexHelper.getSingleAnnotation(
 					info, JPADotNames.INHERITANCE
 			);
@@ -159,7 +157,8 @@ public class ConfiguredClassHierarchy implements Iterable<ConfiguredClass> {
 			else {
 				if ( !inheritanceType.equals( tmpInheritanceType ) ) {
 					throw new AnnotationException(
-							"Multiple incompatible instances of @Inheritance specified within hierarchy " + hierarchyListString()
+							"Multiple incompatible instances of @Inheritance specified within classes "
+									+ hierarchyListString( classes )
 					);
 				}
 			}
@@ -173,23 +172,24 @@ public class ConfiguredClassHierarchy implements Iterable<ConfiguredClass> {
 		return inheritanceType;
 	}
 
-	private AccessType throwIdNotFoundAnnotationException() {
+	private AccessType throwIdNotFoundAnnotationException(List<ClassInfo> classes) {
 		StringBuilder builder = new StringBuilder();
 		builder.append( "Unable to find Id property for class hierarchy " );
-		builder.append( hierarchyListString() );
+		builder.append( hierarchyListString( classes ) );
 		throw new AnnotationException( builder.toString() );
 	}
 
-	private String hierarchyListString() {
-		Iterator<ConfiguredClass> iter;
+	private String hierarchyListString(List<ClassInfo> classes) {
 		StringBuilder builder = new StringBuilder();
 		builder.append( "[" );
-		iter = iterator();
-		while ( iter.hasNext() ) {
-			builder.append( iter.next().getClassInfo().name().toString() );
-			if ( iter.hasNext() ) {
+
+		int count = 0;
+		for ( ClassInfo info : classes ) {
+			builder.append( info.name().toString() );
+			if ( count < classes.size() ) {
 				builder.append( ", " );
 			}
+			count++;
 		}
 		builder.append( "]" );
 		return builder.toString();

@@ -28,7 +28,21 @@ package org.hibernate.metamodel.source.annotations;
  *
  * @author Hardy Ferentschik
  */
-public class MappedProperty {
+public class MappedProperty implements Comparable<MappedProperty> {
+	private final String name;
+
+	MappedProperty(String name) {
+		this.name = name;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	@Override
+	public int compareTo(MappedProperty mappedProperty) {
+		return name.compareTo( mappedProperty.getName() );
+	}
 }
 
 

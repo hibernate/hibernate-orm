@@ -53,8 +53,9 @@ public class AnnotationBinder {
 
 	public void bindMappedClasses(Index annotationIndex) {
 		// need to order our annotated entities into an order we can process
-		ConfiguredClassHierarchyBuilder builder = new ConfiguredClassHierarchyBuilder();
-		Set<ConfiguredClassHierarchy> hierarchies = builder.createEntityHierarchies( annotationIndex );
+		Set<ConfiguredClassHierarchy> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
+				annotationIndex, metadata.getServiceRegistry()
+		);
 
 		// now we process each hierarchy one at the time
 		for ( ConfiguredClassHierarchy hierarchy : hierarchies ) {
@@ -75,7 +76,7 @@ public class AnnotationBinder {
 				classInfo, JPADotNames.MAPPED_SUPER_CLASS
 		);
 		AnnotationInstance hibernateEntityAnnotation = JandexHelper.getSingleAnnotation(
-				classInfo, JPADotNames.HIBERNATE_ENTITY
+				classInfo, HibernateDotNames.ENTITY
 		);
 
 

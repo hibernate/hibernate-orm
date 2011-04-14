@@ -34,7 +34,8 @@ import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.Index;
 
-import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.service.ServiceRegistry;
+import org.hibernate.service.classloading.spi.ClassLoaderService;
 
 /**
  * Given a annotation index build a list of class hierarchies.
@@ -43,7 +44,17 @@ import org.hibernate.internal.util.ReflectHelper;
  */
 public class ConfiguredClassHierarchyBuilder {
 
-	public Set<ConfiguredClassHierarchy> createEntityHierarchies(Index index) {
+	/**
+	 * This methods pre-processes the annotated entities from the index and put them into a structure which can
+	 * bound to the Hibernate metamodel.
+	 *
+	 * @param index The annotation index
+	 * @param serviceRegistry The service registry
+	 *
+	 * @return a set of {@code ConfiguredClassHierarchy}s. One for each configured "leaf" entity.
+	 */
+	public static Set<ConfiguredClassHierarchy> createEntityHierarchies(Index index, ServiceRegistry serviceRegistry) {
+		ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
 		Map<ClassInfo, List<ClassInfo>> processedClassInfos = new HashMap<ClassInfo, List<ClassInfo>>();
 
 		for ( ClassInfo info : index.getKnownClasses() ) {
@@ -52,7 +63,7 @@ public class ConfiguredClassHierarchyBuilder {
 			}
 			List<ClassInfo> configuredClassList = new ArrayList<ClassInfo>();
 			ClassInfo tmpClassInfo = info;
-			Class<?> clazz = classForName( tmpClassInfo );
+			Class<?> clazz = classLoaderService.classForName( tmpClassInfo.toString() );
 			while ( clazz != null && !clazz.equals( Object.class ) ) {
 				tmpClassInfo = index.getClassByName( DotName.createSimple( clazz.getName() ) );
 				clazz = clazz.getSuperclass();
@@ -73,14 +84,13 @@ public class ConfiguredClassHierarchyBuilder {
 					processedClassInfos.put( tmpClassInfo, configuredClassList );
 				}
 			}
-
 		}
 
 		Set<ConfiguredClassHierarchy> hierarchies = new HashSet<ConfiguredClassHierarchy>();
 		List<List<ClassInfo>> processedList = new ArrayList<List<ClassInfo>>();
 		for ( List<ClassInfo> classInfoList : processedClassInfos.values() ) {
 			if ( !processedList.contains( classInfoList ) ) {
-				hierarchies.add( new ConfiguredClassHierarchy( classInfoList ) );
+				hierarchies.add( new ConfiguredClassHierarchy( classInfoList, serviceRegistry ) );
 				processedList.add( classInfoList );
 			}
 		}
@@ -88,24 +98,13 @@ public class ConfiguredClassHierarchyBuilder {
 		return hierarchies;
 	}
 
-	private boolean existsHierarchyWithClassInfoAsLeaf(Map<ClassInfo, List<ClassInfo>> processedClassInfos, ClassInfo tmpClassInfo) {
+	private static boolean existsHierarchyWithClassInfoAsLeaf(Map<ClassInfo, List<ClassInfo>> processedClassInfos, ClassInfo tmpClassInfo) {
 		if ( !processedClassInfos.containsKey( tmpClassInfo ) ) {
 			return false;
 		}
 
 		List<ClassInfo> classInfoList = processedClassInfos.get( tmpClassInfo );
 		return classInfoList.get( classInfoList.size() - 1 ).equals( tmpClassInfo );
-	}
-
-	private Class<?> classForName(ClassInfo info) {
-		Class<?> clazz = null;
-		try {
-			clazz = ReflectHelper.classForName( info.toString() );
-		}
-		catch ( ClassNotFoundException e ) {
-			// todo what to do here!?i
-		}
-		return clazz;
 	}
 }
 

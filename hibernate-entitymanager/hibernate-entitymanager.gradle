@@ -19,12 +19,16 @@ dependencies {
     testRuntime( libraries.validator )
 }
 
-aptDumpDir = file( buildDirName + "/temp/apt" )
+aptDumpDir = file( buildDirName + "/tmp/apt" )
 
 sourceSets.test {
     originalJavaSrcDirs = java.srcDirs
     generatedJpaMetamodelSrcDir = file( "${buildDir}/generated-src/jpamodelgen/${name}" )
     java.srcDir generatedJpaMetamodelSrcDir
+}
+
+ideaModule {
+    excludeDirs += file("$buildDir/bundles")
 }
 
 task generateJpaMetamodelClasses(type: Compile) {

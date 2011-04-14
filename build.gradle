@@ -28,9 +28,13 @@ ideaProject {
         def vcsConfig = node.component.find { it.'@name' == 'VcsDirectoryMappings' }
         vcsConfig.mapping[0].'@vcs' = 'Git'
     }
+    beforeConfigured { module ->
+        module.modulePaths.removeAll { it.filePath.endsWith('hibernate-core.iml') }
+    }
 }
 
 ideaModule {
+    moduleName = 'hibernate-core-root'
 }
 
 // build a map of the dependency artifacts to use.  Allows centralized definition of the version of artifacts to
@@ -138,7 +142,7 @@ subprojects { subProject ->
             deployerJars "org.apache.maven.wagon:wagon-http:1.0-beta-6"
         }
 
-        aptDumpDir = file( buildDirName + "/temp/apt" )
+        aptDumpDir = file( buildDirName + "/tmp/apt" )
 
         sourceSets.main {
             compileClasspath += configurations.provided
@@ -211,9 +215,17 @@ subprojects { subProject ->
             whenConfigured { module ->
                 module.dependencies*.exported = true
             }
-//	        testSourceDirs.add( file( generatedSrcDirName ) )
-//	        testSourceDirs.add( file( generatedTestSrcDirName ) )
+            excludeDirs = [
+                    file(".gradle"),
+                    file("$buildDir/classes"),
+                    file("$buildDir/dependency-cache"),
+                    file("$buildDir/libs"),
+                    file("$buildDir/reports"),
+                    file("$buildDir/test-results"),
+                    file("$buildDir/tmp")
+            ] as Set
         }
+
 		eclipseClasspath {
 			plusConfigurations.add( configurations.provided )
 		}
@@ -280,10 +292,11 @@ dependsOnChildren()
 
 // This is a task that generates the gradlew scripts, allowing users to run gradle without having gradle installed
 // on their system.
-// This task should be run by "build master" and the resulting ouput committed to source control.  Its outputs include:
+// This task should be run by "build master" and the resulting output committed to source control.  Its outputs include:
 //  1) /gradlew which is the *NIX shell script for executing builds
 //  2) /gradlew.bat which is the windows bat script for for executing builds
 //  3) /wrapper which is a directory named by the "jarPath" config which contains other needed files.
 task wrapper(type: Wrapper) {
-    gradleVersion = '0.9.2'
+    // HHH-6106 - this is needed for IntellJ generation until 1.0-milestone-3 is released.
+    gradleVersion = '1.0-milestone-3-20110411214339+0200'
 }

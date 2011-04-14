@@ -25,11 +25,10 @@ package org.hibernate.type;
 import java.io.Serializable;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.java.BooleanTypeDescriptor;
-import org.hibernate.type.descriptor.sql.BitTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**
- * A type that maps between {@link java.sql.Types#BIT BIT} and {@link Boolean}
+ * A type that maps between {@link java.sql.Types#BOOLEAN BOOLEAN} and {@link Boolean}
  *
  * @author Gavin King
  * @author Steve Ebersole
@@ -40,7 +39,7 @@ public class BooleanType
 	public static final BooleanType INSTANCE = new BooleanType();
 
 	public BooleanType() {
-		this( BitTypeDescriptor.INSTANCE, BooleanTypeDescriptor.INSTANCE );
+		this( org.hibernate.type.descriptor.sql.BooleanTypeDescriptor.INSTANCE, BooleanTypeDescriptor.INSTANCE );
 	}
 
 	protected BooleanType(SqlTypeDescriptor sqlTypeDescriptor, BooleanTypeDescriptor javaTypeDescriptor) {

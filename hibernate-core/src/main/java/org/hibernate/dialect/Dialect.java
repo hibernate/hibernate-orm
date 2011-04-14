@@ -144,10 +144,40 @@ public abstract class Dialect {
 
 		registerFunction( "str", new SQLFunctionTemplate(StandardBasicTypes.STRING, "cast(?1 as char)") );
 
+		registerColumnType( Types.BIT, "bit" );
+		registerColumnType( Types.BOOLEAN, "boolean" );
+		registerColumnType( Types.TINYINT, "tinyint" );
+		registerColumnType( Types.SMALLINT, "smallint" );
+		registerColumnType( Types.INTEGER, "integer" );
+		registerColumnType( Types.BIGINT, "bigint" );
+		registerColumnType( Types.FLOAT, "float($p)" );
+		registerColumnType( Types.DOUBLE, "double precision" );
+		registerColumnType( Types.NUMERIC, "numeric($p,$s)" );
+		registerColumnType( Types.REAL, "real" );
+
+		registerColumnType( Types.DATE, "date" );
+		registerColumnType( Types.TIME, "time" );
+		registerColumnType( Types.TIMESTAMP, "timestamp" );
+
+		registerColumnType( Types.VARBINARY, "bit varying($l)" );
+		registerColumnType( Types.LONGVARBINARY, "bit varying($l)" );
+		registerColumnType( Types.BLOB, "blob" );
+
+		registerColumnType( Types.CHAR, "char($l)" );
+		registerColumnType( Types.VARCHAR, "varchar($l)" );
+		registerColumnType( Types.LONGVARCHAR, "varchar($l)" );
+		registerColumnType( Types.CLOB, "clob" );
+
+		registerColumnType( Types.NCHAR, "nchar($l)" );
+		registerColumnType( Types.NVARCHAR, "nvarchar($l)" );
+		registerColumnType( Types.LONGNVARCHAR, "nvarchar($l)" );
+		registerColumnType( Types.NCLOB, "nclob" );
+
         // register hibernate types for default use in scalar sqlquery type auto detection
 		registerHibernateType( Types.BIGINT, StandardBasicTypes.BIG_INTEGER.getName() );
 		registerHibernateType( Types.BINARY, StandardBasicTypes.BINARY.getName() );
 		registerHibernateType( Types.BIT, StandardBasicTypes.BOOLEAN.getName() );
+		registerHibernateType( Types.BOOLEAN, StandardBasicTypes.BOOLEAN.getName() );
 		registerHibernateType( Types.CHAR, StandardBasicTypes.CHARACTER.getName() );
 		registerHibernateType( Types.DATE, StandardBasicTypes.DATE.getName() );
 		registerHibernateType( Types.DOUBLE, StandardBasicTypes.DOUBLE.getName() );
@@ -320,9 +350,7 @@ public abstract class Dialect {
 	 *         if there is no override, then <code>sqlTypeDescriptor</code> is returned.
 	 * @throws IllegalArgumentException if <code>sqlTypeDescriptor</code> is null.
 	 *
-	 * @see {@link SqlTypeDescriptor}
 	 * @see {@link #getSqlTypeDescriptorOverride}
-	 * @see {@link StandardBasicTypes#isStandardBasicSqlTypeDescriptor(org.hibernate.type.descriptor.sql.SqlTypeDescriptor)}
 	 */
 	public SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
 		if ( sqlTypeDescriptor == null ) {
@@ -344,9 +372,6 @@ public abstract class Dialect {
 	 * @param sqlCode A {@link Types} constant indicating the SQL column type
 	 * @return The {@link SqlTypeDescriptor} that should override the
 	 * "standard basic" SQL type descriptor, or null, if there is no override.
-	 *
-	 * @see {@link SqlTypeDescriptor}
-	 * @see {@link StandardBasicTypes#isStandardBasicSqlTypeDescriptor(org.hibernate.type.descriptor.sql.SqlTypeDescriptor)}
 	 */
 	protected SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
 		SqlTypeDescriptor descriptor;

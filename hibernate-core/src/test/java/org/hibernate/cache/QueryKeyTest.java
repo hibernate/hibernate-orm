@@ -236,6 +236,7 @@ public class QueryKeyTest extends BaseUnitTestCase {
 				null,								// maxRows selection
 				Collections.EMPTY_SET, 				// filter keys
 				EntityMode.POJO,					// entity mode
+				null,								// tenantIdentifier
 				resultTransformer					// the result transformer
 		);
 	}

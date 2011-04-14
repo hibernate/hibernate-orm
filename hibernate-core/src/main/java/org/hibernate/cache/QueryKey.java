@@ -53,6 +53,7 @@ public class QueryKey implements Serializable {
 	private final Integer firstRow;
 	private final Integer maxRows;
 	private final EntityMode entityMode;
+	private final String tenantIdentifier;
 	private final Set filterKeys;
 
 	// the user provided resulttransformer, not the one used with "select new". Here to avoid mangling
@@ -136,6 +137,7 @@ public class QueryKey implements Serializable {
 				maxRows,
 				filterKeys,
 				session.getEntityMode(),
+				session.getTenantIdentifier(),
 				customTransformer
 		);
 	}
@@ -162,6 +164,7 @@ public class QueryKey implements Serializable {
 			Integer maxRows,
 			Set filterKeys,
 			EntityMode entityMode,
+			String tenantIdentifier,
 			CacheableResultTransformer customTransformer) {
 		this.sqlQueryString = sqlQueryString;
 		this.positionalParameterTypes = positionalParameterTypes;
@@ -170,6 +173,7 @@ public class QueryKey implements Serializable {
 		this.firstRow = firstRow;
 		this.maxRows = maxRows;
 		this.entityMode = entityMode;
+		this.tenantIdentifier = tenantIdentifier;
 		this.filterKeys = filterKeys;
 		this.customTransformer = customTransformer;
 		this.hashCode = generateHashCode();
@@ -202,6 +206,7 @@ public class QueryKey implements Serializable {
 		result = 37 * result + ( namedParameters==null ? 0 : namedParameters.hashCode() );
 		result = 37 * result + ( filterKeys ==null ? 0 : filterKeys.hashCode() );
 		result = 37 * result + ( customTransformer==null ? 0 : customTransformer.hashCode() );
+		result = 37 * result + ( tenantIdentifier==null ? 0 : tenantIdentifier.hashCode() );
 		result = 37 * result + sqlQueryString.hashCode();
 		return result;
 	}
@@ -247,7 +252,9 @@ public class QueryKey implements Serializable {
 		}
 
 		return EqualsHelper.equals( filterKeys, that.filterKeys )
-				&& EqualsHelper.equals( namedParameters, that.namedParameters );
+				&& EqualsHelper.equals( namedParameters, that.namedParameters )
+				&& EqualsHelper.equals( entityMode, that.entityMode )
+				&& EqualsHelper.equals( tenantIdentifier, that.tenantIdentifier );
 	}
 
 	/**

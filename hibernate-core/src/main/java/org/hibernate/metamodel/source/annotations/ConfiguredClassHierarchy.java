@@ -57,8 +57,11 @@ public class ConfiguredClassHierarchy implements Iterable<ConfiguredClass> {
 		inheritanceType = determineInheritanceType( classes );
 
 		configuredClasses = new ArrayList<ConfiguredClass>();
+		ConfiguredClass parent = null;
 		for ( ClassInfo info : classes ) {
-			configuredClasses.add( new ConfiguredClass( info, this, serviceRegistry ) );
+			ConfiguredClass configuredClass = new ConfiguredClass( info, parent, defaultAccessType, serviceRegistry );
+			configuredClasses.add( configuredClass );
+			parent = configuredClass;
 		}
 	}
 

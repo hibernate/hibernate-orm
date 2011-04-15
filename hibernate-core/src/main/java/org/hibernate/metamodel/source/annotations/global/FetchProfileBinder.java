@@ -42,6 +42,9 @@ import org.hibernate.metamodel.source.internal.MetadataImpl;
  * @author Hardy Ferentschik
  */
 public class FetchProfileBinder {
+	private FetchProfileBinder() {
+	}
+
 	/**
 	 * Binds all {@link org.hibernate.annotations.FetchProfiles} and {@link org.hibernate.annotations.FetchProfile} \
 	 * annotations to the specified meta data instance.

@@ -26,14 +26,12 @@ package org.hibernate.metamodel.source.annotations;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.Index;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.hibernate.metamodel.source.annotations.util.ConfiguredClassHierarchyBuilder;
-import org.hibernate.metamodel.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
 
 /**
@@ -70,34 +68,9 @@ public class AnnotationBinder {
 	}
 
 	public void bindEntity(ConfiguredClass entity) {
-		ClassInfo classInfo = entity.getClassInfo();
+		log.info( "Binding entity from annotated class: {}", entity.getName() );
+		EntityBinder entityBinder = new EntityBinder( metadata, entity );
 
-		//@Entity and @MappedSuperclass on the same class leads to a NPE down the road
-		AnnotationInstance jpaEntityAnnotation = JandexHelper.getSingleAnnotation( classInfo, JPADotNames.ENTITY );
-		AnnotationInstance mappedSuperClassAnnotation = JandexHelper.getSingleAnnotation(
-				classInfo, JPADotNames.MAPPED_SUPER_CLASS
-		);
-		AnnotationInstance hibernateEntityAnnotation = JandexHelper.getSingleAnnotation(
-				classInfo, HibernateDotNames.ENTITY
-		);
-
-
-//		//TODO: be more strict with secondarytable allowance (not for ids, not for secondary table join columns etc)
-//		InheritanceState inheritanceState = inheritanceStatePerClass.get( clazzToProcess );
-//		AnnotatedClassType classType = mappings.getClassType( clazzToProcess );
-//
-//		//Queries declared in MappedSuperclass should be usable in Subclasses
-//		if ( AnnotatedClassType.EMBEDDABLE_SUPERCLASS.equals( classType ) ) {
-//			bindQueries( clazzToProcess, mappings );
-//			bindTypeDefs( clazzToProcess, mappings );
-//			bindFilterDefs( clazzToProcess, mappings );
-//		}
-//
-//		if ( !isEntityClassType( clazzToProcess, classType ) ) {
-//			return;
-//		}
-//
-		log.info( "Binding entity from annotated class: {}", classInfo.name() );
 //
 //		PersistentClass superEntity = getSuperEntity(
 //				clazzToProcess, inheritanceStatePerClass, mappings, inheritanceState
@@ -106,9 +79,8 @@ public class AnnotationBinder {
 //		PersistentClass persistentClass = makePersistentClass( inheritanceState, superEntity );
 
 
-		EntityBinder entityBinder = new EntityBinder(
-				metadata, classInfo, jpaEntityAnnotation, hibernateEntityAnnotation
-		);
+
+
 //		entityBinder.setInheritanceState( inheritanceState );
 //
 //		bindQueries( clazzToProcess, mappings );

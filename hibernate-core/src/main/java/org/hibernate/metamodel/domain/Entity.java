@@ -29,13 +29,19 @@ import org.hibernate.EntityMode;
  * Models the notion of an entity
  *
  * @author Steve Ebersole
+ * @author Hardy Ferentschik
  */
 public class Entity extends AbstractAttributeContainer {
 	private final PojoEntitySpecifics pojoEntitySpecifics = new PojoEntitySpecifics();
 	private final Dom4jEntitySpecifics dom4jEntitySpecifics = new Dom4jEntitySpecifics();
 	private final MapEntitySpecifics mapEntitySpecifics = new MapEntitySpecifics();
 
-
+	/**
+	 * Constructor for the entity
+	 *
+	 * @param name the name of the entity
+	 * @param superType the super type for this entity. If there is not super type {@code null} needs to be passed.
+	 */
 	public Entity(String name, Hierarchical superType) {
 		super( name, superType );
 	}
@@ -61,6 +67,7 @@ public class Entity extends AbstractAttributeContainer {
 
 	public static interface EntityModeEntitySpecifics {
 		public EntityMode getEntityMode();
+
 		public String getTuplizerClassName();
 	}
 

@@ -23,30 +23,89 @@
  */
 package org.hibernate.metamodel.source.annotations;
 
+import java.util.List;
+
 import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.ClassInfo;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.MappingException;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.binding.EntityBinding;
+import org.hibernate.metamodel.binding.SimpleAttributeBinding;
 import org.hibernate.metamodel.domain.Entity;
+import org.hibernate.metamodel.domain.Hierarchical;
+import org.hibernate.metamodel.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
 
 /**
+ * Creates the domain and relational metamodel for a configured class and binds them together.
+ *
  * @author Hardy Ferentschik
  */
 public class EntityBinder {
-	private final ClassInfo classToBind;
+	private final ConfiguredClass entity;
+	private final MetadataImpl meta;
 
-	public EntityBinder(MetadataImpl metadata, ClassInfo classInfo, AnnotationInstance jpaEntityAnnotation, AnnotationInstance hibernateEntityAnnotation) {
-		this.classToBind = classInfo;
+	public EntityBinder(MetadataImpl metadata, ConfiguredClass configuredClass) {
+		this.entity = configuredClass;
+		this.meta = metadata;
 		EntityBinding entityBinding = new EntityBinding();
-		bindJpaAnnotation( jpaEntityAnnotation, entityBinding );
-		bindHibernateAnnotation( hibernateEntityAnnotation, entityBinding );
-		metadata.addEntity( entityBinding );
+		bindJpaEntityAnnotation( entityBinding );
+		// we also have to take care of an optional Hibernate specific @Id
+		bindHibernateEntityAnnotation( entityBinding );
+		if ( configuredClass.isRoot() ) {
+			bindId( entityBinding );
+		}
+		meta.addEntity( entityBinding );
 	}
 
-	private void bindHibernateAnnotation(AnnotationInstance annotation, EntityBinding entityBinding) {
+	private void bindId(EntityBinding entityBinding) {
+		switch ( determineIdType() ) {
+			case SIMPLE: {
+				bindSingleIdAnnotation( entityBinding );
+				break;
+			}
+			case COMPOSED: {
+				// todo
+				break;
+			}
+			case EMBEDDED: {
+				// todo
+				break;
+			}
+			default: {
+			}
+		}
+	}
+
+	private void bindJpaEntityAnnotation(EntityBinding entityBinding) {
+		AnnotationInstance jpaEntityAnnotation = JandexHelper.getSingleAnnotation(
+				entity.getClassInfo(), JPADotNames.ENTITY
+		);
+		String name;
+		if ( jpaEntityAnnotation.value( "name" ) == null ) {
+			name = StringHelper.unqualify( entity.getName() );
+		}
+		else {
+			name = jpaEntityAnnotation.value( "name" ).asString();
+		}
+		entityBinding.setEntity( new Entity( name, getSuperType() ) );
+	}
+
+	private void bindSingleIdAnnotation(EntityBinding entityBinding) {
+		AnnotationInstance idAnnotation = JandexHelper.getSingleAnnotation(
+				entity.getClassInfo(), JPADotNames.ID
+		);
+
+		String idName = JandexHelper.getPropertyName( idAnnotation.target() );
+		entityBinding.getEntity().getOrCreateSingularAttribute( idName );
+		SimpleAttributeBinding idBinding = entityBinding.makeSimplePrimaryKeyAttributeBinding( idName );
+	}
+
+	private void bindHibernateEntityAnnotation(EntityBinding entityBinding) {
+		AnnotationInstance hibernateEntityAnnotation = JandexHelper.getSingleAnnotation(
+				entity.getClassInfo(), HibernateDotNames.ENTITY
+		);
 //		if ( hibAnn != null ) {
 //			dynamicInsert = hibAnn.dynamicInsert();
 //			dynamicUpdate = hibAnn.dynamicUpdate();
@@ -66,18 +125,64 @@ public class EntityBinder {
 //		}
 	}
 
-	private void bindJpaAnnotation(AnnotationInstance annotation, EntityBinding entityBinding) {
-		if ( annotation == null ) {
-			throw new AssertionFailure( "@Entity cannot be not null when binding an entity" );
+	private Hierarchical getSuperType() {
+		ConfiguredClass parent = entity.getParent();
+		if ( parent == null ) {
+			return null;
 		}
-		String name;
-		if ( annotation.value( "name" ) == null ) {
-			name = StringHelper.unqualify( classToBind.name().toString() );
+
+		EntityBinding parentBinding = meta.getEntityBinding( parent.getName() );
+		if ( parentBinding == null ) {
+			throw new AssertionFailure(
+					"Parent entity " + parent.getName() + " of entity " + entity.getName() + "not yet created!"
+			);
 		}
-		else {
-			name = annotation.value( "name" ).asString();
+
+		return parentBinding.getEntity();
+	}
+
+	private IdType determineIdType() {
+		List<AnnotationInstance> idAnnotations = entity.getClassInfo().annotations().get( JPADotNames.ENTITY );
+		List<AnnotationInstance> embeddedIdAnnotations = entity.getClassInfo()
+				.annotations()
+				.get( JPADotNames.EMBEDDED_ID );
+
+		if ( idAnnotations != null && embeddedIdAnnotations != null ) {
+			throw new MappingException(
+					"@EmbeddedId and @Id cannot be used together. Check the configuration for " + entity.getName() + "."
+			);
 		}
-		entityBinding.setEntity( new Entity( name, null ) );
+
+		if ( embeddedIdAnnotations != null ) {
+			if ( embeddedIdAnnotations.size() == 1 ) {
+				return IdType.EMBEDDED;
+			}
+			else {
+				throw new MappingException( "Multiple @EmbeddedId annotations are not allowed" );
+			}
+		}
+
+		if ( idAnnotations != null ) {
+			if ( idAnnotations.size() == 1 ) {
+				return IdType.SIMPLE;
+			}
+			else {
+				return IdType.COMPOSED;
+			}
+		}
+
+		return IdType.NONE;
+	}
+
+	enum IdType {
+		// single @Id annotation
+		SIMPLE,
+		// multiple @Id annotations
+		COMPOSED,
+		// @EmbeddedId annotation
+		EMBEDDED,
+		// does not contain any identifier mappings
+		NONE
 	}
 }
 

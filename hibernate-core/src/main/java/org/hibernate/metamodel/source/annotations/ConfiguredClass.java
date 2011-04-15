@@ -52,40 +52,45 @@ import org.hibernate.service.classloading.spi.ClassLoaderService;
  * @author Hardy Ferentschik
  */
 public class ConfiguredClass {
+	private final ConfiguredClass parent;
 	private final ClassInfo classInfo;
 	private final Class<?> clazz;
+	private final boolean isRoot;
 	private final AccessType classAccessType;
-	private final ConfiguredClassHierarchy hierarchy;
+	private final AccessType hierarchyAccessType;
 	private final boolean isMappedSuperClass;
 	private final List<MappedProperty> mappedProperties;
 
-	public ConfiguredClass(ClassInfo info, ConfiguredClassHierarchy hierarchy, ServiceRegistry serviceRegistry) {
+	public ConfiguredClass(ClassInfo info, ConfiguredClass parent, AccessType hierarchyAccessType, ServiceRegistry serviceRegistry) {
 		this.classInfo = info;
-		this.hierarchy = hierarchy;
+		this.parent = parent;
+		this.isRoot = parent == null;
+		this.hierarchyAccessType = hierarchyAccessType;
 
-		//@Entity and @MappedSuperclass on the same class leads to a NPE down the road
-		AnnotationInstance jpaEntityAnnotation = JandexHelper.getSingleAnnotation( classInfo, JPADotNames.ENTITY );
-		AnnotationInstance mappedSuperClassAnnotation = JandexHelper.getSingleAnnotation(
-				classInfo, JPADotNames.MAPPED_SUPER_CLASS
-		);
-
-		if ( jpaEntityAnnotation != null && mappedSuperClassAnnotation != null ) {
-			throw new AnnotationException(
-					"An entity cannot be annotated with both @Entity and @MappedSuperclass: "
-							+ classInfo.name().toString()
-			);
-		}
+		AnnotationInstance mappedSuperClassAnnotation = assertNotEntityAndMAppedSuperClass();
 
 		this.clazz = serviceRegistry.getService( ClassLoaderService.class ).classForName( info.toString() );
 		isMappedSuperClass = mappedSuperClassAnnotation != null;
-		classAccessType = determineClassAccessType( hierarchy.getDefaultAccessType() );
+		classAccessType = determineClassAccessType();
 		mappedProperties = collectMappedProperties();
 		// make sure the properties are ordered by property name
 		Collections.sort( mappedProperties );
 	}
 
+	public String getName() {
+		return clazz.getName();
+	}
+
 	public ClassInfo getClassInfo() {
 		return classInfo;
+	}
+
+	public ConfiguredClass getParent() {
+		return parent;
+	}
+
+	public boolean isRoot() {
+		return isRoot;
 	}
 
 	public boolean isMappedSuperClass() {
@@ -101,7 +106,7 @@ public class ConfiguredClass {
 		return sb.toString();
 	}
 
-	private AccessType determineClassAccessType(AccessType hierarchyAccessType) {
+	private AccessType determineClassAccessType() {
 		// default to the hierarchy access type to start with
 		AccessType accessType = hierarchyAccessType;
 
@@ -230,6 +235,22 @@ public class ConfiguredClass {
 				transientMethodNames.add( ( (MethodInfo) target ).name() );
 			}
 		}
+	}
+
+	private AnnotationInstance assertNotEntityAndMAppedSuperClass() {
+		//@Entity and @MappedSuperclass on the same class leads to a NPE down the road
+		AnnotationInstance jpaEntityAnnotation = JandexHelper.getSingleAnnotation( classInfo, JPADotNames.ENTITY );
+		AnnotationInstance mappedSuperClassAnnotation = JandexHelper.getSingleAnnotation(
+				classInfo, JPADotNames.MAPPED_SUPER_CLASS
+		);
+
+		if ( jpaEntityAnnotation != null && mappedSuperClassAnnotation != null ) {
+			throw new AnnotationException(
+					"An entity cannot be annotated with both @Entity and @MappedSuperclass: "
+							+ classInfo.name().toString()
+			);
+		}
+		return mappedSuperClassAnnotation;
 	}
 }
 

@@ -21,15 +21,21 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.annotations;
+package org.hibernate.metamodel.source.annotations.util;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
+import org.jboss.jandex.Index;
+import org.jboss.jandex.Indexer;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.HibernateException;
+import org.hibernate.service.classloading.spi.ClassLoaderService;
 
 /**
  * Utility methods for working with the jandex annotation index.
@@ -48,7 +54,7 @@ public class JandexHelper {
 	 *
 	 * @throws org.hibernate.AssertionFailure in case there is
 	 */
-	static public AnnotationInstance getSingleAnnotation(ClassInfo classInfo, DotName annotationName)
+	public static AnnotationInstance getSingleAnnotation(ClassInfo classInfo, DotName annotationName)
 			throws AssertionFailure {
 		List<AnnotationInstance> annotationList = classInfo.annotations().get( annotationName );
 		if ( annotationList == null ) {
@@ -64,6 +70,40 @@ public class JandexHelper {
 							+ ". Expected was one."
 			);
 		}
+	}
+
+	/**
+	 * Creates a jandex index for the specified classes
+	 *
+	 * @param classLoaderService  class loader service
+	 * @param classes the classes to index
+	 * @return an annotation repository w/ all the annotation discovered in the specified classes
+	 */
+	public static Index indexForClass(ClassLoaderService classLoaderService, Class<?>... classes) {
+		Indexer indexer = new Indexer();
+		for ( Class<?> clazz : classes ) {
+			InputStream stream = classLoaderService.locateResourceStream(
+					clazz.getName().replace( '.', '/' ) + ".class"
+			);
+			try {
+				indexer.index( stream );
+			}
+			catch ( IOException e ) {
+				StringBuilder builder = new StringBuilder();
+				builder.append( "[" );
+				int count = 0;
+				for ( Class<?> c : classes ) {
+					builder.append( c.getName() );
+					if ( count < classes.length - 1 ) {
+						builder.append( "," );
+					}
+					count++;
+				}
+				builder.append( "]" );
+				throw new HibernateException( "Unable to create annotation index for " + builder.toString());
+			}
+		}
+		return indexer.complete();
 	}
 }
 

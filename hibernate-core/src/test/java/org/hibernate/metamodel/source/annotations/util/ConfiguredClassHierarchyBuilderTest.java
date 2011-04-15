@@ -1,7 +1,5 @@
-package org.hibernate.metamodel.source.annotations;
+package org.hibernate.metamodel.source.annotations.util;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Set;
@@ -16,20 +14,20 @@ import javax.persistence.MappedSuperclass;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.Index;
-import org.jboss.jandex.Indexer;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import org.hibernate.AnnotationException;
-import org.hibernate.metamodel.source.Metadata;
+import org.hibernate.metamodel.source.annotations.ConfiguredClass;
+import org.hibernate.metamodel.source.annotations.ConfiguredClassHierarchy;
+import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.internal.BasicServiceRegistryImpl;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.fail;
 
 /**
  * @author Hardy Ferentschik
@@ -37,10 +35,12 @@ import static org.junit.Assert.fail;
 public class ConfiguredClassHierarchyBuilderTest extends BaseUnitTestCase {
 
 	private BasicServiceRegistryImpl serviceRegistry;
+	private ClassLoaderService service;
 
 	@Before
 	public void setUp() {
 		serviceRegistry = new BasicServiceRegistryImpl( Collections.emptyMap() );
+		service = serviceRegistry.getService( ClassLoaderService.class );
 	}
 
 	@After
@@ -50,7 +50,7 @@ public class ConfiguredClassHierarchyBuilderTest extends BaseUnitTestCase {
 
 	@Test
 	public void testSingleEntity() {
-		Index index = indexForClass( Foo.class );
+		Index index = JandexHelper.indexForClass( service, Foo.class );
 		Set<ConfiguredClassHierarchy> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
 				index, serviceRegistry
 		);
@@ -64,7 +64,7 @@ public class ConfiguredClassHierarchyBuilderTest extends BaseUnitTestCase {
 
 	@Test
 	public void testSimpleInheritance() {
-		Index index = indexForClass( B.class, A.class );
+		Index index = JandexHelper.indexForClass( service, B.class, A.class );
 		Set<ConfiguredClassHierarchy> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
 				index, serviceRegistry
 		);
@@ -80,7 +80,7 @@ public class ConfiguredClassHierarchyBuilderTest extends BaseUnitTestCase {
 
 	@Test
 	public void testMultipleHierarchies() {
-		Index index = indexForClass( B.class, A.class, Foo.class );
+		Index index = JandexHelper.indexForClass( service, B.class, A.class, Foo.class );
 		Set<ConfiguredClassHierarchy> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
 				index, serviceRegistry
 		);
@@ -105,7 +105,9 @@ public class ConfiguredClassHierarchyBuilderTest extends BaseUnitTestCase {
 			private String mappedProperty;
 		}
 
-		Index index = indexForClass( MappedSubClass.class, MappedSuperClass.class, UnmappedSubClass.class );
+		Index index = JandexHelper.indexForClass(
+				service, MappedSubClass.class, MappedSuperClass.class, UnmappedSubClass.class
+		);
 		Set<ConfiguredClassHierarchy> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
 				index, serviceRegistry
 		);
@@ -128,7 +130,7 @@ public class ConfiguredClassHierarchyBuilderTest extends BaseUnitTestCase {
 		class EntityAndMappedSuperClass {
 		}
 
-		Index index = indexForClass( EntityAndMappedSuperClass.class );
+		Index index = JandexHelper.indexForClass( service, EntityAndMappedSuperClass.class );
 		ConfiguredClassHierarchyBuilder.createEntityHierarchies( index, serviceRegistry );
 	}
 
@@ -144,7 +146,7 @@ public class ConfiguredClassHierarchyBuilderTest extends BaseUnitTestCase {
 		class B extends A {
 		}
 
-		Index index = indexForClass( B.class, A.class );
+		Index index = JandexHelper.indexForClass( service, B.class, A.class );
 		ConfiguredClassHierarchyBuilder.createEntityHierarchies( index, serviceRegistry );
 	}
 
@@ -160,7 +162,7 @@ public class ConfiguredClassHierarchyBuilderTest extends BaseUnitTestCase {
 		class B extends A {
 		}
 
-		Index index = indexForClass( B.class, A.class );
+		Index index = JandexHelper.indexForClass( service, B.class, A.class );
 		Set<ConfiguredClassHierarchy> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
 				index, serviceRegistry
 		);
@@ -189,7 +191,7 @@ public class ConfiguredClassHierarchyBuilderTest extends BaseUnitTestCase {
 		class B extends A {
 		}
 
-		Index index = indexForClass( B.class, A.class );
+		Index index = JandexHelper.indexForClass( service, B.class, A.class );
 		Set<ConfiguredClassHierarchy> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
 				index, serviceRegistry
 		);
@@ -210,7 +212,7 @@ public class ConfiguredClassHierarchyBuilderTest extends BaseUnitTestCase {
 		class B extends A {
 		}
 
-		Index index = indexForClass( B.class, A.class );
+		Index index = JandexHelper.indexForClass( service, B.class, A.class );
 		Set<ConfiguredClassHierarchy> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
 				index, serviceRegistry
 		);
@@ -238,7 +240,7 @@ public class ConfiguredClassHierarchyBuilderTest extends BaseUnitTestCase {
 		class B extends A {
 		}
 
-		Index index = indexForClass( B.class, MappedSuperClass.class, A.class );
+		Index index = JandexHelper.indexForClass( service, B.class, MappedSuperClass.class, A.class );
 		Set<ConfiguredClassHierarchy> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
 				index, serviceRegistry
 		);
@@ -261,24 +263,8 @@ public class ConfiguredClassHierarchyBuilderTest extends BaseUnitTestCase {
 		class B extends A {
 		}
 
-		Index index = indexForClass( B.class, A.class );
+		Index index = JandexHelper.indexForClass( service, B.class, A.class );
 		ConfiguredClassHierarchyBuilder.createEntityHierarchies( index, serviceRegistry );
-	}
-
-	private Index indexForClass(Class<?>... classes) {
-		Indexer indexer = new Indexer();
-		for ( Class<?> clazz : classes ) {
-			InputStream stream = getClass().getClassLoader().getResourceAsStream(
-					clazz.getName().replace( '.', '/' ) + ".class"
-			);
-			try {
-				indexer.index( stream );
-			}
-			catch ( IOException e ) {
-				fail( "Unable to index" );
-			}
-		}
-		return indexer.complete();
 	}
 
 	@Entity

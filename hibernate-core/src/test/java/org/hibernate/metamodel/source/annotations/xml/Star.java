@@ -1,4 +1,4 @@
-package org.hibernate.metamodel.source.annotations;
+package org.hibernate.metamodel.source.annotations.xml;
 
 import javax.persistence.Entity;
 

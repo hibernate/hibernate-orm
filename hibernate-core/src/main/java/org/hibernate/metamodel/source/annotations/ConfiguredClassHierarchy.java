@@ -35,6 +35,7 @@ import org.jboss.jandex.FieldInfo;
 import org.jboss.jandex.MethodInfo;
 
 import org.hibernate.AnnotationException;
+import org.hibernate.metamodel.source.annotations.util.JandexHelper;
 import org.hibernate.service.ServiceRegistry;
 
 /**
@@ -47,7 +48,11 @@ public class ConfiguredClassHierarchy implements Iterable<ConfiguredClass> {
 	private final InheritanceType inheritanceType;
 	private final List<ConfiguredClass> configuredClasses;
 
-	ConfiguredClassHierarchy(List<ClassInfo> classes, ServiceRegistry serviceRegistry) {
+	public static ConfiguredClassHierarchy create(List<ClassInfo> classes, ServiceRegistry serviceRegistry) {
+		return new ConfiguredClassHierarchy( classes, serviceRegistry );
+	}
+
+	private ConfiguredClassHierarchy(List<ClassInfo> classes, ServiceRegistry serviceRegistry) {
 		defaultAccessType = determineDefaultAccessType( classes );
 		inheritanceType = determineInheritanceType( classes );
 

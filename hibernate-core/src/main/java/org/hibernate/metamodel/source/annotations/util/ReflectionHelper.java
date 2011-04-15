@@ -1,4 +1,4 @@
-package org.hibernate.metamodel.source.annotations;
+package org.hibernate.metamodel.source.annotations.util;
 
 import java.beans.Introspector;
 import java.lang.reflect.Field;

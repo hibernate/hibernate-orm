@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.annotations;
+package org.hibernate.metamodel.source.annotations.util;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -34,6 +34,7 @@ import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.Index;
 
+import org.hibernate.metamodel.source.annotations.ConfiguredClassHierarchy;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 
@@ -90,7 +91,7 @@ public class ConfiguredClassHierarchyBuilder {
 		List<List<ClassInfo>> processedList = new ArrayList<List<ClassInfo>>();
 		for ( List<ClassInfo> classInfoList : processedClassInfos.values() ) {
 			if ( !processedList.contains( classInfoList ) ) {
-				hierarchies.add( new ConfiguredClassHierarchy( classInfoList, serviceRegistry ) );
+				hierarchies.add( ConfiguredClassHierarchy.create( classInfoList, serviceRegistry ) );
 				processedList.add( classInfoList );
 			}
 		}

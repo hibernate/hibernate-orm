@@ -1,4 +1,4 @@
-package org.hibernate.metamodel.source.annotations;
+package org.hibernate.metamodel.source.annotations.xml;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -20,7 +20,7 @@ public class OrmXmlParserTests extends BaseUnitTestCase {
 		MetadataImpl metadata = (MetadataImpl) new MetadataSources(  new BasicServiceRegistryImpl( Collections.emptyMap() ) ).buildMetadata();
 		OrmXmlParser parser = new OrmXmlParser( metadata );
 		Set<String> xmlFiles = new HashSet<String>();
-		xmlFiles.add( "org/hibernate/metamodel/source/annotations/orm.xml" );
+		xmlFiles.add( "org/hibernate/metamodel/source/annotations/xml/orm.xml" );
 		parser.parseAndUpdateIndex( xmlFiles, null );
 	}
 
@@ -29,7 +29,7 @@ public class OrmXmlParserTests extends BaseUnitTestCase {
 		MetadataImpl metadata = (MetadataImpl) new MetadataSources(  new BasicServiceRegistryImpl( Collections.emptyMap() ) ).buildMetadata();
 		OrmXmlParser parser = new OrmXmlParser( metadata );
 		Set<String> xmlFiles = new HashSet<String>();
-		xmlFiles.add( "org/hibernate/metamodel/source/annotations/orm2.xml" );
+		xmlFiles.add( "org/hibernate/metamodel/source/annotations/xml/orm-star.xml" );
 		parser.parseAndUpdateIndex( xmlFiles, null );
 	}
 }

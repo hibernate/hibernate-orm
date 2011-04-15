@@ -32,6 +32,8 @@ import org.jboss.jandex.Index;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.hibernate.metamodel.source.annotations.util.ConfiguredClassHierarchyBuilder;
+import org.hibernate.metamodel.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
 
 /**

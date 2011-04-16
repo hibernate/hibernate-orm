@@ -26,13 +26,10 @@ package org.hibernate.envers.test.integration.naming;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.Priority;
-import org.hibernate.mapping.Column;
-import org.hibernate.mapping.Table;
 import org.junit.Test;
 
 import javax.persistence.EntityManager;
 import java.util.Arrays;
-import java.util.Iterator;
 
 /**
  * @author Adam Warski (adam at warski dot org)

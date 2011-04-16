@@ -72,10 +72,10 @@ public class RevisionInfoConfiguration {
         revisionPropType = "integer";
     }
 
-    private Document generateDefaultRevisionInfoXmlMapping() {
+    private Document generateDefaultRevisionInfoXmlMapping(Configuration cfg) {
         Document document = DocumentHelper.createDocument();
 
-        Element class_mapping = MetadataTools.createEntity(document, new AuditTableData(null, null, null, null), null);
+        Element class_mapping = MetadataTools.createEntity(document, new AuditTableData(null, null, cfg.getProperty("org.hibernate.envers.default_schema"), cfg.getProperty("org.hibernate.envers.default_catalog")), null);
 
         class_mapping.addAttribute("name", revisionInfoEntityName);
         class_mapping.addAttribute("table", "REVINFO");
@@ -236,7 +236,7 @@ public class RevisionInfoConfiguration {
             revisionInfoClass = DefaultRevisionEntity.class;
             revisionInfoGenerator = new DefaultRevisionInfoGenerator(revisionInfoEntityName, revisionInfoClass,
                     RevisionListener.class, revisionInfoTimestampData, isTimestampAsDate());
-            revisionInfoXmlMapping = generateDefaultRevisionInfoXmlMapping();
+            revisionInfoXmlMapping = generateDefaultRevisionInfoXmlMapping(cfg);
         }
 
         return new RevisionInfoConfigurationResult(
@@ -244,10 +244,10 @@ public class RevisionInfoConfiguration {
                 new RevisionInfoQueryCreator(revisionInfoEntityName, revisionInfoIdData.getName(),
                         revisionInfoTimestampData.getName(), isTimestampAsDate()),
                 generateRevisionInfoRelationMapping(),
-                new RevisionInfoNumberReader(revisionInfoClass, revisionInfoIdData), revisionInfoEntityName, 
+                new RevisionInfoNumberReader(revisionInfoClass, revisionInfoIdData), revisionInfoEntityName,
                 revisionInfoClass, revisionInfoTimestampData);
     }
-    
+
     private boolean isTimestampAsDate() {
     	String typename = revisionInfoTimestampType.getName();
     	return "date".equals(typename) || "time".equals(typename) || "timestamp".equals(typename);
@@ -310,5 +310,5 @@ class RevisionInfoConfigurationResult {
 	public PropertyData getRevisionInfoTimestampData() {
 		return revisionInfoTimestampData;
 	}
-    
+
 }

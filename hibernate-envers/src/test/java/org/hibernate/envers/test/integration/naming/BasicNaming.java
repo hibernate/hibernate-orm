@@ -36,7 +36,6 @@ import java.util.Iterator;
 
 /**
  * @author Adam Warski (adam at warski dot org)
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public class BasicNaming extends AbstractEntityTest {
     private Integer id1;
@@ -115,19 +114,5 @@ public class BasicNaming extends AbstractEntityTest {
         assert "naming_test_entity_1_versions".equals(
                 getCfg().getClassMapping("org.hibernate.envers.test.integration.naming.NamingTestEntity1_AUD")
                         .getTable().getName());
-    }
-
-    @Test
-    public void testEscapeEntityField() {
-        Table table = getCfg().getClassMapping("org.hibernate.envers.test.integration.naming.NamingTestEntity1_AUD").getTable();
-        Iterator<Column> columnIterator = table.getColumnIterator();
-        while (columnIterator.hasNext()) {
-            Column column = columnIterator.next();
-            if ("nte_number#".equals(column.getName())) {
-                assert column.isQuoted();
-                return;
-            }
-        }
-        assert false;
     }
 }

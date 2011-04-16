@@ -36,7 +36,6 @@ import org.hibernate.mapping.Table;
 
 import javax.persistence.EntityManager;
 import java.util.Arrays;
-import java.util.Iterator;
 
 /**
  * @author Adam Warski (adam at warski dot org)

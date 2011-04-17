@@ -22,10 +22,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate;
+
 import java.io.InputStream;
 import java.io.Reader;
 import java.sql.Blob;
 import java.sql.Clob;
+import java.sql.NClob;
 
 /**
  * A {@link Session session's} helper for creating LOB data
@@ -73,27 +75,21 @@ public interface LobHelper {
 	public Clob createClob(Reader reader, long length);
 
 	/**
-	 * Create a new {@link java.sql.Clob} from content.
-	 * <p/>
-	 * Note, on JDK 1.6+ environments will
-	 * create and return a NClob instead (NClob extends the Clob interface).
+	 * Create a new {@link NClob} from content.
 	 *
 	 * @param string The string data
 	 *
-	 * @return The created {@link java.sql.Clob}/NClob
+	 * @return The created {@link NClob}
 	 */
-	public Clob createNClob(String string);
+	public NClob createNClob(String string);
 
 	/**
-	 * Create a new {@link Clob} from character reader.
-	 * <p/>
-	 * Note, on JDK 1.6+ environments will
-	 * create and return a NClob instead (NClob extends the Clob interface).
+	 * Create a new {@link NClob} from character reader.
 	 *
 	 * @param reader a character stream
 	 * @param length the number of characters in the stream
 	 *
-	 * @return The created {@link java.sql.Clob}/NClob
+	 * @return The created {@link NClob}
 	 */
-	public Clob createNClob(Reader reader, long length);
+	public NClob createNClob(Reader reader, long length);
 }

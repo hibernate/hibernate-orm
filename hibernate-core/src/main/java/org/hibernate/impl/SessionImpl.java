@@ -34,6 +34,7 @@ import java.io.Serializable;
 import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.Connection;
+import java.sql.NClob;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.HashMap;
@@ -2059,9 +2060,7 @@ public final class SessionImpl
 		return getSessionFactory().getTypeHelper();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public LobHelper getLobHelper() {
 		if ( lobHelper == null ) {
 			lobHelper = new LobHelperImpl( this );
@@ -2078,9 +2077,7 @@ public final class SessionImpl
 			this.session = session;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public Blob createBlob(byte[] bytes) {
 			return lobCreator().createBlob( bytes );
 		}
@@ -2089,38 +2086,28 @@ public final class SessionImpl
 			return session.getFactory().getJdbcServices().getLobCreator( session );
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public Blob createBlob(InputStream stream, long length) {
 			return lobCreator().createBlob( stream, length );
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public Clob createClob(String string) {
 			return lobCreator().createClob( string );
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public Clob createClob(Reader reader, long length) {
 			return lobCreator().createClob( reader, length );
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
-		public Clob createNClob(String string) {
+		@Override
+		public NClob createNClob(String string) {
 			return lobCreator().createNClob( string );
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
-		public Clob createNClob(Reader reader, long length) {
+		@Override
+		public NClob createNClob(Reader reader, long length) {
 			return lobCreator().createNClob( reader, length );
 		}
 	}

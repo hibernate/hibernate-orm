@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,13 +20,13 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.hql.ast.tree;
-import org.hibernate.Hibernate;
+
 import org.hibernate.QueryException;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.type.LiteralType;
+import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 
 /**
@@ -38,30 +38,25 @@ public class BooleanLiteralNode extends LiteralNode implements ExpectedTypeAware
 	private Type expectedType;
 
 	public Type getDataType() {
-		return expectedType == null ? Hibernate.BOOLEAN : expectedType;
+		return expectedType == null ? StandardBasicTypes.BOOLEAN : expectedType;
 	}
 
 	public Boolean getValue() {
 		return getType() == TRUE ? Boolean.TRUE : Boolean.FALSE;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public void setExpectedType(Type expectedType) {
 		this.expectedType = expectedType;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Type getExpectedType() {
 		return expectedType;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
+	@SuppressWarnings( {"unchecked"})
 	public String getRenderText(SessionFactoryImplementor sessionFactory) {
 		try {
 			return typeAsLiteralType().objectToSQLString( getValue(), sessionFactory.getDialect() );

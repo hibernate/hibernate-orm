@@ -1,14 +1,16 @@
 //$Id$
 package org.hibernate.test.annotations.entity;
+
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Currency;
-import org.hibernate.Hibernate;
+
 import org.hibernate.HibernateException;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 import org.hibernate.usertype.CompositeUserType;
 
@@ -22,12 +24,12 @@ public class MonetaryAmountUserType implements CompositeUserType {
 	}
 
 	public Type[] getPropertyTypes() {
-		return new Type[]{Hibernate.BIG_DECIMAL, Hibernate.CURRENCY};
+		return new Type[]{ StandardBasicTypes.BIG_DECIMAL, StandardBasicTypes.CURRENCY };
 	}
 
 	public Object getPropertyValue(Object component, int property) throws HibernateException {
 		MonetaryAmount ma = (MonetaryAmount) component;
-		return property == 0 ? (Object) ma.getAmount() : (Object) ma.getCurrency();
+		return property == 0 ? ma.getAmount() : ma.getCurrency();
 	}
 
 	public void setPropertyValue(Object component, int property, Object value)
@@ -60,8 +62,8 @@ public class MonetaryAmountUserType implements CompositeUserType {
 
 	public Object nullSafeGet(ResultSet rs, String[] names, SessionImplementor session, Object owner)
 			throws HibernateException, SQLException {
-		BigDecimal amt = (BigDecimal) Hibernate.BIG_DECIMAL.nullSafeGet( rs, names[0], session);
-		Currency cur = (Currency) Hibernate.CURRENCY.nullSafeGet( rs, names[1], session );
+		BigDecimal amt = StandardBasicTypes.BIG_DECIMAL.nullSafeGet( rs, names[0], session);
+		Currency cur = StandardBasicTypes.CURRENCY.nullSafeGet( rs, names[1], session );
 		if ( amt == null ) return null;
 		return new MonetaryAmount( amt, cur );
 	}
@@ -73,8 +75,8 @@ public class MonetaryAmountUserType implements CompositeUserType {
 		MonetaryAmount ma = (MonetaryAmount) value;
 		BigDecimal amt = ma == null ? null : ma.getAmount();
 		Currency cur = ma == null ? null : ma.getCurrency();
-		Hibernate.BIG_DECIMAL.nullSafeSet( st, amt, index, session );
-		Hibernate.CURRENCY.nullSafeSet( st, cur, index + 1, session );
+		StandardBasicTypes.BIG_DECIMAL.nullSafeSet( st, amt, index, session );
+		StandardBasicTypes.CURRENCY.nullSafeSet( st, cur, index + 1, session );
 	}
 
 	public Object deepCopy(Object value) throws HibernateException {

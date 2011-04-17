@@ -22,8 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.dialect;
+
 import java.sql.Types;
-import org.hibernate.Hibernate;
+
 import org.hibernate.LockMode;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.NoArgSQLFunction;
@@ -39,6 +40,7 @@ import org.hibernate.dialect.lock.UpdateLockingStrategy;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.OracleJoinFragment;
+import org.hibernate.type.StandardBasicTypes;
 
 /**
  * A SQL dialect for TimesTen 5.1.
@@ -83,12 +85,12 @@ public class TimesTenDialect extends Dialect {
 		registerFunction( "lower", new StandardSQLFunction("lower") );
 		registerFunction( "upper", new StandardSQLFunction("upper") );
 		registerFunction( "rtrim", new StandardSQLFunction("rtrim") );
-		registerFunction( "concat", new StandardSQLFunction("concat", Hibernate.STRING) );
+		registerFunction( "concat", new StandardSQLFunction("concat", StandardBasicTypes.STRING) );
 		registerFunction( "mod", new StandardSQLFunction("mod") );
-		registerFunction( "to_char", new StandardSQLFunction("to_char",Hibernate.STRING) );
-		registerFunction( "to_date", new StandardSQLFunction("to_date",Hibernate.TIMESTAMP) );
-		registerFunction( "sysdate", new NoArgSQLFunction("sysdate", Hibernate.TIMESTAMP, false) );
-		registerFunction( "getdate", new NoArgSQLFunction("getdate", Hibernate.TIMESTAMP, false) );
+		registerFunction( "to_char", new StandardSQLFunction("to_char",StandardBasicTypes.STRING) );
+		registerFunction( "to_date", new StandardSQLFunction("to_date",StandardBasicTypes.TIMESTAMP) );
+		registerFunction( "sysdate", new NoArgSQLFunction("sysdate", StandardBasicTypes.TIMESTAMP, false) );
+		registerFunction( "getdate", new NoArgSQLFunction("getdate", StandardBasicTypes.TIMESTAMP, false) );
 		registerFunction( "nvl", new StandardSQLFunction("nvl") );
 
 	}

@@ -52,6 +52,7 @@ import org.hibernate.criterion.Subqueries;
 import org.hibernate.exception.SQLGrammarException;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.transform.Transformers;
+import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 
 import org.junit.Test;
@@ -658,7 +659,7 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 			.add( Projections.sqlProjection(
 					"1 as constOne, count(*) as countStar",
 					new String[] { "constOne", "countStar" },
-					new Type[] { Hibernate.INTEGER, Hibernate.INTEGER }
+					new Type[] { StandardBasicTypes.INTEGER, StandardBasicTypes.INTEGER }
 			) );
 
 		Object[] array = (Object[]) s.createCriteria(Enrolment.class)
@@ -930,7 +931,7 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 			.add( Projections.sqlProjection(
 					"1 as constOne, count(*) as countStar",
 					new String[] { "constOne", "countStar" },
-					new Type[] { Hibernate.INTEGER, Hibernate.INTEGER }
+					new Type[] { StandardBasicTypes.INTEGER, StandardBasicTypes.INTEGER }
 			) );
 
 		Object[] array = (Object[]) s.createCriteria(Enrolment.class)

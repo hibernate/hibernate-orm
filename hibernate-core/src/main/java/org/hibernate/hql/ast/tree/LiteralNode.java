@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,14 +20,15 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.hql.ast.tree;
-import org.hibernate.Hibernate;
+
+import antlr.SemanticException;
+
 import org.hibernate.hql.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.ast.util.ColumnHelper;
+import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
-import antlr.SemanticException;
 
 /**
  * Represents a literal.
@@ -43,22 +44,22 @@ public class LiteralNode extends AbstractSelectExpression implements HqlSqlToken
 	public Type getDataType() {
 		switch ( getType() ) {
 			case NUM_INT:
-				return Hibernate.INTEGER;
+				return StandardBasicTypes.INTEGER;
 			case NUM_FLOAT:
-				return Hibernate.FLOAT;
+				return StandardBasicTypes.FLOAT;
 			case NUM_LONG:
-				return Hibernate.LONG;
+				return StandardBasicTypes.LONG;
 			case NUM_DOUBLE:
-				return Hibernate.DOUBLE;
+				return StandardBasicTypes.DOUBLE;
 			case NUM_BIG_INTEGER:
-				return Hibernate.BIG_INTEGER;
+				return StandardBasicTypes.BIG_INTEGER;
 			case NUM_BIG_DECIMAL:
-				return Hibernate.BIG_DECIMAL;
+				return StandardBasicTypes.BIG_DECIMAL;
 			case QUOTED_STRING:
-				return Hibernate.STRING;
+				return StandardBasicTypes.STRING;
 			case TRUE:
 			case FALSE:
-				return Hibernate.BOOLEAN;
+				return StandardBasicTypes.BOOLEAN;
 			default:
 				return null;
 		}

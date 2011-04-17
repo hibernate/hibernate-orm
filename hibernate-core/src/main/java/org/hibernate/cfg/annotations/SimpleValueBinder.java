@@ -23,21 +23,22 @@
  */
 package org.hibernate.cfg.annotations;
 
-import java.io.Serializable;
-import java.sql.Types;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Properties;
 import javax.persistence.Enumerated;
 import javax.persistence.Lob;
 import javax.persistence.MapKeyEnumerated;
 import javax.persistence.MapKeyTemporal;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import java.io.Serializable;
+import java.sql.Types;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Properties;
+
+import org.jboss.logging.Logger;
+
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
-import org.hibernate.Hibernate;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.common.reflection.XClass;
@@ -49,6 +50,7 @@ import org.hibernate.cfg.Mappings;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.cfg.PkDrivenByDefaultMapsIdSecondPass;
 import org.hibernate.cfg.SetSimpleValueTypeSecondPass;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
@@ -56,8 +58,8 @@ import org.hibernate.type.CharacterArrayClobType;
 import org.hibernate.type.EnumType;
 import org.hibernate.type.PrimitiveCharacterArrayClobType;
 import org.hibernate.type.SerializableToBlobType;
+import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.WrappedMaterializedBlobType;
-import org.jboss.logging.Logger;
 
 /**
  * @author Emmanuel Bernard
@@ -178,7 +180,7 @@ public class SimpleValueBinder {
 				type = "blob";
 			}
 			else if ( mappings.getReflectionManager().equals( returnedClassOrElement, String.class ) ) {
-				type = Hibernate.MATERIALIZED_CLOB.getName();
+				type = StandardBasicTypes.MATERIALIZED_CLOB.getName();
 			}
 			else if ( mappings.getReflectionManager().equals( returnedClassOrElement, Character.class ) && isArray ) {
 				type = CharacterArrayClobType.class.getName();
@@ -190,7 +192,7 @@ public class SimpleValueBinder {
 				type = WrappedMaterializedBlobType.class.getName();
 			}
 			else if ( mappings.getReflectionManager().equals( returnedClassOrElement, byte.class ) && isArray ) {
-				type = Hibernate.MATERIALIZED_BLOB.getName();
+				type = StandardBasicTypes.MATERIALIZED_BLOB.getName();
 			}
 			else if ( mappings.getReflectionManager()
 					.toXClass( Serializable.class )

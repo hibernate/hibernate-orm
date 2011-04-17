@@ -22,11 +22,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.version.db;
+
 import java.sql.Timestamp;
 
-import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.type.StandardBasicTypes;
 
 import org.junit.Test;
 
@@ -70,7 +71,7 @@ public class DbVersionTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 		s.close();
 
-		assertFalse( "owner version not incremented", Hibernate.TIMESTAMP.isEqual( steveTimestamp, steve.getTimestamp() ) );
+		assertFalse( "owner version not incremented", StandardBasicTypes.TIMESTAMP.isEqual( steveTimestamp, steve.getTimestamp() ) );
 
 		steveTimestamp = steve.getTimestamp();
 		Thread.sleep( 1500 );
@@ -82,7 +83,7 @@ public class DbVersionTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 		s.close();
 
-		assertFalse( "owner version not incremented", Hibernate.TIMESTAMP.isEqual( steveTimestamp, steve.getTimestamp() ) );
+		assertFalse( "owner version not incremented", StandardBasicTypes.TIMESTAMP.isEqual( steveTimestamp, steve.getTimestamp() ) );
 
 		s = openSession();
 		t = s.beginTransaction();
@@ -103,7 +104,7 @@ public class DbVersionTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 		s.close();
 
-		Timestamp steveTimestamp = ( Timestamp ) steve.getTimestamp();
+		Timestamp steveTimestamp = steve.getTimestamp();
 
 		s = openSession();
 		t = s.beginTransaction();
@@ -113,7 +114,7 @@ public class DbVersionTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 		s.close();
 
-		assertTrue( "owner version was incremented", Hibernate.TIMESTAMP.isEqual( steveTimestamp, steve.getTimestamp() ) );
+		assertTrue( "owner version was incremented", StandardBasicTypes.TIMESTAMP.isEqual( steveTimestamp, steve.getTimestamp() ) );
 
 		s = openSession();
 		t = s.beginTransaction();
@@ -122,7 +123,7 @@ public class DbVersionTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 		s.close();
 
-		assertTrue( "owner version was incremented", Hibernate.TIMESTAMP.isEqual( steveTimestamp, steve.getTimestamp() ) );
+		assertTrue( "owner version was incremented", StandardBasicTypes.TIMESTAMP.isEqual( steveTimestamp, steve.getTimestamp() ) );
 
 		s = openSession();
 		t = s.beginTransaction();

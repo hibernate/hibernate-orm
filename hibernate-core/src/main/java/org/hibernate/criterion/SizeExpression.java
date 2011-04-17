@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,17 +20,17 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.criterion;
+
 import org.hibernate.Criteria;
 import org.hibernate.EntityMode;
-import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.TypedValue;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.sql.ConditionFragment;
+import org.hibernate.type.StandardBasicTypes;
 
 /**
  * @author Gavin King
@@ -77,7 +77,7 @@ public class SizeExpression implements Criterion {
 	public TypedValue[] getTypedValues(Criteria criteria, CriteriaQuery criteriaQuery) 
 	throws HibernateException {
 		return new TypedValue[] { 
-			new TypedValue( Hibernate.INTEGER, new Integer(size), EntityMode.POJO ) 
+			new TypedValue( StandardBasicTypes.INTEGER, size, EntityMode.POJO )
 		};
 	}
 

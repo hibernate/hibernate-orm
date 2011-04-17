@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,12 +20,12 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.persister.collection;
-import org.hibernate.Hibernate;
+
 import org.hibernate.QueryException;
 import org.hibernate.persister.entity.PropertyMapping;
+import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 
 /**
@@ -48,7 +48,7 @@ public class CollectionPropertyMapping implements PropertyMapping {
 			return memberPersister.getIndexType();
 		}
 		else if ( propertyName.equals(CollectionPropertyNames.COLLECTION_SIZE) ) {
-			return Hibernate.INTEGER;
+			return StandardBasicTypes.INTEGER;
 		}
 		else if ( propertyName.equals(CollectionPropertyNames.COLLECTION_MAX_INDEX) ) {
 			return memberPersister.getIndexType();

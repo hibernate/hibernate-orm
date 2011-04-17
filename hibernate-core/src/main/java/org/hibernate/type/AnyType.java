@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.type;
+
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.sql.PreparedStatement;
@@ -29,10 +30,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Map;
+
 import org.dom4j.Node;
+
 import org.hibernate.EntityMode;
 import org.hibernate.FetchMode;
-import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.TransientObjectException;
@@ -196,10 +198,11 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 	public String toLoggableString(Object value, SessionFactoryImplementor factory) 
 	throws HibernateException {
 		//TODO: terrible implementation!
-		return value==null ?
-				"null" :
-				Hibernate.entity( HibernateProxyHelper.getClassWithoutInitializingProxy(value) )
-						.toLoggableString(value, factory);
+		return value == null
+				? "null"
+				: factory.getTypeHelper()
+						.entity( HibernateProxyHelper.getClassWithoutInitializingProxy( value ) )
+						.toLoggableString( value, factory );
 	}
 
 	public Object fromXMLNode(Node xml, Mapping factory) throws HibernateException {

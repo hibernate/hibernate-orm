@@ -1,12 +1,13 @@
-//$Id$
 package org.hibernate.test.annotations.type;
+
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import org.hibernate.Hibernate;
+
 import org.hibernate.HibernateException;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 import org.hibernate.usertype.CompositeUserType;
 
@@ -15,9 +16,12 @@ import org.hibernate.usertype.CompositeUserType;
  */
 public class MyOidType implements CompositeUserType {
 
-	public static final String[] PROPERTY_NAMES = new String[]{"high", "middle", "low", "other"};
-	public static final Type[] TYPES = new Type[]{Hibernate.INTEGER, Hibernate.INTEGER, Hibernate.INTEGER, Hibernate.INTEGER};
-
+	public static final String[] PROPERTY_NAMES = new String[]{
+			"high", "middle", "low", "other"
+	};
+	public static final Type[] TYPES = new Type[]{
+			StandardBasicTypes.INTEGER, StandardBasicTypes.INTEGER, StandardBasicTypes.INTEGER, StandardBasicTypes.INTEGER
+	};
 
 	public String[] getPropertyNames() {
 		return PROPERTY_NAMES;
@@ -91,10 +95,10 @@ public class MyOidType implements CompositeUserType {
 	public Object nullSafeGet(
 			ResultSet aResultSet, String[] names, SessionImplementor aSessionImplementor, Object aObject
 	) throws HibernateException, SQLException {
-		Integer highval = (Integer) Hibernate.INTEGER.nullSafeGet( aResultSet, names[0], aSessionImplementor );
-		Integer midval = (Integer) Hibernate.INTEGER.nullSafeGet( aResultSet, names[1], aSessionImplementor );
-		Integer lowval = (Integer) Hibernate.INTEGER.nullSafeGet( aResultSet, names[2], aSessionImplementor );
-		Integer other = (Integer) Hibernate.INTEGER.nullSafeGet( aResultSet, names[3], aSessionImplementor );
+		Integer highval = StandardBasicTypes.INTEGER.nullSafeGet( aResultSet, names[0], aSessionImplementor );
+		Integer midval = StandardBasicTypes.INTEGER.nullSafeGet( aResultSet, names[1], aSessionImplementor );
+		Integer lowval = StandardBasicTypes.INTEGER.nullSafeGet( aResultSet, names[2], aSessionImplementor );
+		Integer other = StandardBasicTypes.INTEGER.nullSafeGet( aResultSet, names[3], aSessionImplementor );
 
 		return new MyOid( highval, midval, lowval, other );
 	}
@@ -111,10 +115,10 @@ public class MyOidType implements CompositeUserType {
 			c = (MyOid) value;
 		}
 
-		Hibernate.INTEGER.nullSafeSet( aPreparedStatement, c.getHigh(), index, aSessionImplementor );
-		Hibernate.INTEGER.nullSafeSet( aPreparedStatement, c.getMiddle(), index + 1, aSessionImplementor );
-		Hibernate.INTEGER.nullSafeSet( aPreparedStatement, c.getLow(), index + 2, aSessionImplementor );
-		Hibernate.INTEGER.nullSafeSet( aPreparedStatement, c.getOther(), index + 3, aSessionImplementor );
+		StandardBasicTypes.INTEGER.nullSafeSet( aPreparedStatement, c.getHigh(), index, aSessionImplementor );
+		StandardBasicTypes.INTEGER.nullSafeSet( aPreparedStatement, c.getMiddle(), index + 1, aSessionImplementor );
+		StandardBasicTypes.INTEGER.nullSafeSet( aPreparedStatement, c.getLow(), index + 2, aSessionImplementor );
+		StandardBasicTypes.INTEGER.nullSafeSet( aPreparedStatement, c.getOther(), index + 3, aSessionImplementor );
 	}
 
 	public Object deepCopy(Object aObject) throws HibernateException {

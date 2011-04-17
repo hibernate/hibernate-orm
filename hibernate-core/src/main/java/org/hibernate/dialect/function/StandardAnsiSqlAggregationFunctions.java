@@ -22,19 +22,21 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.dialect.function;
+
 import java.sql.Types;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import org.hibernate.Hibernate;
+
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.engine.Mapping;
 import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 
 /**
- * TODO : javadoc
+ * Centralized definition of standard ANSI SQL aggregation functions
  *
  * @author Steve Ebersole
  */
@@ -46,7 +48,7 @@ public class StandardAnsiSqlAggregationFunctions {
 		public static final CountFunction INSTANCE = new CountFunction();
 
 		public CountFunction() {
-			super( "count", Hibernate.LONG );
+			super( "count", StandardBasicTypes.LONG );
 		}
 
 		@Override
@@ -82,7 +84,7 @@ public class StandardAnsiSqlAggregationFunctions {
 		public static final AvgFunction INSTANCE = new AvgFunction();
 
 		public AvgFunction() {
-			super( "avg", Hibernate.DOUBLE );
+			super( "avg", StandardBasicTypes.DOUBLE );
 		}
 
 		@Override
@@ -156,19 +158,19 @@ public class StandardAnsiSqlAggregationFunctions {
 
 			// First allow the actual type to control the return value; the underlying sqltype could
 			// actually be different
-			if ( firstArgumentType == Hibernate.BIG_INTEGER ) {
-				return Hibernate.BIG_INTEGER;
+			if ( firstArgumentType == StandardBasicTypes.BIG_INTEGER ) {
+				return StandardBasicTypes.BIG_INTEGER;
 			}
-			else if ( firstArgumentType == Hibernate.BIG_DECIMAL ) {
-				return Hibernate.BIG_DECIMAL;
+			else if ( firstArgumentType == StandardBasicTypes.BIG_DECIMAL ) {
+				return StandardBasicTypes.BIG_DECIMAL;
 			}
-			else if ( firstArgumentType == Hibernate.LONG
-					|| firstArgumentType == Hibernate.SHORT
-					|| firstArgumentType == Hibernate.INTEGER ) {
-				return Hibernate.LONG;
+			else if ( firstArgumentType == StandardBasicTypes.LONG
+					|| firstArgumentType == StandardBasicTypes.SHORT
+					|| firstArgumentType == StandardBasicTypes.INTEGER ) {
+				return StandardBasicTypes.LONG;
 			}
-			else if ( firstArgumentType == Hibernate.FLOAT || firstArgumentType == Hibernate.DOUBLE)  {
-				return Hibernate.DOUBLE;
+			else if ( firstArgumentType == StandardBasicTypes.FLOAT || firstArgumentType == StandardBasicTypes.DOUBLE)  {
+				return StandardBasicTypes.DOUBLE;
 			}
 
 			// finally use the jdbcType if == on Hibernate types did not find a match.
@@ -179,13 +181,13 @@ public class StandardAnsiSqlAggregationFunctions {
 					|| jdbcType == Types.DOUBLE
 					|| jdbcType == Types.DECIMAL
 					|| jdbcType == Types.REAL) {
-				return Hibernate.DOUBLE;
+				return StandardBasicTypes.DOUBLE;
 			}
 			else if ( jdbcType == Types.BIGINT
 					|| jdbcType == Types.INTEGER
 					|| jdbcType == Types.SMALLINT
 					|| jdbcType == Types.TINYINT ) {
-				return Hibernate.LONG;
+				return StandardBasicTypes.LONG;
 			}
 
 			// as a last resort, return the type of the first argument

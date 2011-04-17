@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,9 +20,9 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.impl;
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Blob;
@@ -34,17 +34,19 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
-import org.hibernate.Hibernate;
+
+import org.jboss.logging.Logger;
+
 import org.hibernate.HibernateException;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.MappingException;
 import org.hibernate.ScrollableResults;
 import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.hql.HolderInstantiator;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.loader.Loader;
+import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
-import org.jboss.logging.Logger;
 
 /**
  * Implementation of the <tt>ScrollableResults</tt> interface
@@ -187,75 +189,75 @@ public abstract class AbstractScrollableResults implements ScrollableResults {
 	}
 
 	public final BigDecimal getBigDecimal(int col) throws HibernateException {
-		return (BigDecimal) getFinal(col, Hibernate.BIG_DECIMAL);
+		return (BigDecimal) getFinal(col, StandardBasicTypes.BIG_DECIMAL);
 	}
 
 	public final BigInteger getBigInteger(int col) throws HibernateException {
-		return (BigInteger) getFinal(col, Hibernate.BIG_INTEGER);
+		return (BigInteger) getFinal(col, StandardBasicTypes.BIG_INTEGER);
 	}
 
 	public final byte[] getBinary(int col) throws HibernateException {
-		return (byte[]) getFinal(col, Hibernate.BINARY);
+		return (byte[]) getFinal(col, StandardBasicTypes.BINARY);
 	}
 
 	public final String getText(int col) throws HibernateException {
-		return (String) getFinal(col, Hibernate.TEXT);
+		return (String) getFinal(col, StandardBasicTypes.TEXT);
 	}
 
 	public final Blob getBlob(int col) throws HibernateException {
-		return (Blob) getNonFinal(col, Hibernate.BLOB);
+		return (Blob) getNonFinal(col, StandardBasicTypes.BLOB);
 	}
 
 	public final Clob getClob(int col) throws HibernateException {
-		return (Clob) getNonFinal(col, Hibernate.CLOB);
+		return (Clob) getNonFinal(col, StandardBasicTypes.CLOB);
 	}
 
 	public final Boolean getBoolean(int col) throws HibernateException {
-		return (Boolean) getFinal(col, Hibernate.BOOLEAN);
+		return (Boolean) getFinal(col, StandardBasicTypes.BOOLEAN);
 	}
 
 	public final Byte getByte(int col) throws HibernateException {
-		return (Byte) getFinal(col, Hibernate.BYTE);
+		return (Byte) getFinal(col, StandardBasicTypes.BYTE);
 	}
 
 	public final Character getCharacter(int col) throws HibernateException {
-		return (Character) getFinal(col, Hibernate.CHARACTER);
+		return (Character) getFinal(col, StandardBasicTypes.CHARACTER);
 	}
 
 	public final Date getDate(int col) throws HibernateException {
-		return (Date) getNonFinal(col, Hibernate.TIMESTAMP);
+		return (Date) getNonFinal(col, StandardBasicTypes.TIMESTAMP);
 	}
 
 	public final Calendar getCalendar(int col) throws HibernateException {
-		return (Calendar) getNonFinal(col, Hibernate.CALENDAR);
+		return (Calendar) getNonFinal(col, StandardBasicTypes.CALENDAR);
 	}
 
 	public final Double getDouble(int col) throws HibernateException {
-		return (Double) getFinal(col, Hibernate.DOUBLE);
+		return (Double) getFinal(col, StandardBasicTypes.DOUBLE);
 	}
 
 	public final Float getFloat(int col) throws HibernateException {
-		return (Float) getFinal(col, Hibernate.FLOAT);
+		return (Float) getFinal(col, StandardBasicTypes.FLOAT);
 	}
 
 	public final Integer getInteger(int col) throws HibernateException {
-		return (Integer) getFinal(col, Hibernate.INTEGER);
+		return (Integer) getFinal(col, StandardBasicTypes.INTEGER);
 	}
 
 	public final Long getLong(int col) throws HibernateException {
-		return (Long) getFinal(col, Hibernate.LONG);
+		return (Long) getFinal(col, StandardBasicTypes.LONG);
 	}
 
 	public final Short getShort(int col) throws HibernateException {
-		return (Short) getFinal(col, Hibernate.SHORT);
+		return (Short) getFinal(col, StandardBasicTypes.SHORT);
 	}
 
 	public final String getString(int col) throws HibernateException {
-		return (String) getFinal(col, Hibernate.STRING);
+		return (String) getFinal(col, StandardBasicTypes.STRING);
 	}
 
 	public final Locale getLocale(int col) throws HibernateException {
-		return (Locale) getFinal(col, Hibernate.LOCALE);
+		return (Locale) getFinal(col, StandardBasicTypes.LOCALE);
 	}
 
 	/*public final Currency getCurrency(int col) throws HibernateException {
@@ -263,7 +265,7 @@ public abstract class AbstractScrollableResults implements ScrollableResults {
 	}*/
 
 	public final TimeZone getTimeZone(int col) throws HibernateException {
-		return (TimeZone) getNonFinal(col, Hibernate.TIMEZONE);
+		return (TimeZone) getNonFinal(col, StandardBasicTypes.TIMEZONE);
 	}
 
 	public final Type getType(int i) {

@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,14 +20,15 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.hql.ast.tree;
-import org.hibernate.Hibernate;
+
+import antlr.SemanticException;
+
 import org.hibernate.hql.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.ast.util.ColumnHelper;
+import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
-import antlr.SemanticException;
 
 /**
  * Nodes which represent binary arithmetic operators.
@@ -58,7 +59,7 @@ public class BinaryArithmeticOperatorNode extends AbstractSelectExpression imple
 				//          some datetime type
 				//      2) if the operator is PLUS, the param needs to be of
 				//          some numeric type
-				expectedType = getType() == HqlSqlTokenTypes.PLUS ? Hibernate.DOUBLE : rhType;
+				expectedType = getType() == HqlSqlTokenTypes.PLUS ? StandardBasicTypes.DOUBLE : rhType;
 			}
 			else {
 				expectedType = rhType;
@@ -76,7 +77,7 @@ public class BinaryArithmeticOperatorNode extends AbstractSelectExpression imple
 				//      2) if the operator is PLUS, the param needs to be of
 				//          some numeric type
 				if ( getType() == HqlSqlTokenTypes.PLUS ) {
-					expectedType = Hibernate.DOUBLE;
+					expectedType = StandardBasicTypes.DOUBLE;
 				}
 			}
 			else {
@@ -113,7 +114,7 @@ public class BinaryArithmeticOperatorNode extends AbstractSelectExpression imple
 			if ( lhType == null ) {
 				if ( rhType == null ) {
 					// we do not know either type
-					return Hibernate.DOUBLE; //BLIND GUESS!
+					return StandardBasicTypes.DOUBLE; //BLIND GUESS!
 				}
 				else {
 					// we know only the rhs-hand type, so use that
@@ -126,12 +127,24 @@ public class BinaryArithmeticOperatorNode extends AbstractSelectExpression imple
 					return lhType;
 				}
 				else {
-					if ( lhType==Hibernate.DOUBLE || rhType==Hibernate.DOUBLE ) return Hibernate.DOUBLE;
-					if ( lhType==Hibernate.FLOAT || rhType==Hibernate.FLOAT ) return Hibernate.FLOAT;
-					if ( lhType==Hibernate.BIG_DECIMAL || rhType==Hibernate.BIG_DECIMAL ) return Hibernate.BIG_DECIMAL;
-					if ( lhType==Hibernate.BIG_INTEGER || rhType==Hibernate.BIG_INTEGER ) return Hibernate.BIG_INTEGER;
-					if ( lhType==Hibernate.LONG || rhType==Hibernate.LONG ) return Hibernate.LONG;
-					if ( lhType==Hibernate.INTEGER || rhType==Hibernate.INTEGER ) return Hibernate.INTEGER;
+					if ( lhType== StandardBasicTypes.DOUBLE || rhType==StandardBasicTypes.DOUBLE ) {
+						return StandardBasicTypes.DOUBLE;
+					}
+					if ( lhType==StandardBasicTypes.FLOAT || rhType==StandardBasicTypes.FLOAT ) {
+						return StandardBasicTypes.FLOAT;
+					}
+					if ( lhType==StandardBasicTypes.BIG_DECIMAL || rhType==StandardBasicTypes.BIG_DECIMAL ) {
+						return StandardBasicTypes.BIG_DECIMAL;
+					}
+					if ( lhType==StandardBasicTypes.BIG_INTEGER || rhType==StandardBasicTypes.BIG_INTEGER ) {
+						return StandardBasicTypes.BIG_INTEGER;
+					}
+					if ( lhType==StandardBasicTypes.LONG || rhType==StandardBasicTypes.LONG ) {
+						return StandardBasicTypes.LONG;
+					}
+					if ( lhType==StandardBasicTypes.INTEGER || rhType==StandardBasicTypes.INTEGER ) {
+						return StandardBasicTypes.INTEGER;
+					}
 					return lhType;
 				}
 			}
@@ -178,7 +191,7 @@ public class BinaryArithmeticOperatorNode extends AbstractSelectExpression imple
 			}
 			// #2
 			if ( lhsIsDateTime && rhsIsDateTime ) {
-				return Hibernate.DOUBLE;
+				return StandardBasicTypes.DOUBLE;
 			}
 		}
 		return null;

@@ -22,12 +22,14 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.dialect.function;
+
 import java.util.ArrayList;
 import java.util.List;
-import org.hibernate.Hibernate;
+
 import org.hibernate.QueryException;
 import org.hibernate.engine.Mapping;
 import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 
 /**
@@ -41,30 +43,22 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  */
 public abstract class AbstractAnsiTrimEmulationFunction implements SQLFunction {
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public final boolean hasArguments() {
 		return true;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public final boolean hasParenthesesIfNoArguments() {
 		return false;
 	}
 
-	/**
-	 * {@inheritDoc} 
-	 */
+	@Override
 	public final Type getReturnType(Type argumentType, Mapping mapping) throws QueryException {
-		return Hibernate.STRING;
+		return StandardBasicTypes.STRING;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public final String render(Type argumentType, List args, SessionFactoryImplementor factory) throws QueryException {
 		// According to both the ANSI-SQL and JPA specs, trim takes a variable number of parameters between 1 and 4.
 		// at least one paramer (trimSource) is required.  From the SQL spec:
@@ -137,7 +131,7 @@ public abstract class AbstractAnsiTrimEmulationFunction implements SQLFunction {
 				}
 			}
 
-			List argsToUse = new ArrayList();
+			List<String> argsToUse = new ArrayList<String>();
 			argsToUse.add( trimSource );
 			argsToUse.add( trimCharacter );
 

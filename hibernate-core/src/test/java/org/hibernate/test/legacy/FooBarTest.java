@@ -82,6 +82,7 @@ import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.jdbc.AbstractWork;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.type.StandardBasicTypes;
 
 import org.junit.Test;
 
@@ -413,7 +414,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.createQuery( "from Baz baz left outer join fetch baz.fooToGlarch" ).list();
 
 		list = s.createQuery( "select foo, bar from Foo foo left outer join foo.foo bar where foo = ?" )
-				.setParameter( 0, foo, Hibernate.entity(Foo.class) )
+				.setParameter( 0, foo, s.getTypeHelper().entity(Foo.class) )
 				.list();
 		Object[] row1 = (Object[]) list.get(0);
 		assertTrue( row1[0]==foo && row1[1]==foo2 );
@@ -491,7 +492,7 @@ public class FooBarTest extends LegacyTestCase {
 			// && !db.equals("weblogic") {
 			if ( !( getDialect() instanceof InterbaseDialect ) ) {
 				list = s.createQuery( "from Foo foo where ? = some elements(foo.component.importantDates)" )
-						.setParameter( 0, new Date(), Hibernate.DATE )
+						.setParameter( 0, new Date(), StandardBasicTypes.DATE )
 						.list();
 				assertTrue( "component query", list.size()==2 );
 			}
@@ -541,11 +542,11 @@ public class FooBarTest extends LegacyTestCase {
 		list = s.createQuery( "select foo.foo from Foo foo" ).list();
 		assertTrue( "query", list.size()==2 );
 		list = s.createQuery( "from Foo foo where foo.id=?" )
-				.setParameter( 0, foo.getKey(), Hibernate.STRING )
+				.setParameter( 0, foo.getKey(), StandardBasicTypes.STRING )
 				.list();
 		assertTrue( "id query", list.size()==1 );
 		list = s.createQuery( "from Foo foo where foo.key=?" )
-				.setParameter( 0, foo.getKey(), Hibernate.STRING )
+				.setParameter( 0, foo.getKey(), StandardBasicTypes.STRING )
 				.list();
 		assertTrue( "named id query", list.size()==1 );
 		assertTrue( "id query", list.get(0)==foo );
@@ -555,19 +556,19 @@ public class FooBarTest extends LegacyTestCase {
 		list = s.createQuery( "from Foo foo where foo.component.subcomponent.name='bar'" ).list();
 		assertTrue( "components of components", list.size()==2 );
 		list = s.createQuery( "select foo.foo from Foo foo where foo.foo.id=?" )
-				.setParameter( 0, foo.getFoo().getKey(), Hibernate.STRING )
+				.setParameter( 0, foo.getFoo().getKey(), StandardBasicTypes.STRING )
 				.list();
 		assertTrue( "by id query", list.size()==1 );
 		assertTrue( "by id returned object", list.get(0)==foo.getFoo() );
 
-		s.createQuery( "from Foo foo where foo.foo = ?" ).setParameter( 0, foo.getFoo(), Hibernate.entity(Foo.class) ).list();
+		s.createQuery( "from Foo foo where foo.foo = ?" ).setParameter( 0, foo.getFoo(), s.getTypeHelper().entity(Foo.class) ).list();
 
 		assertTrue( !s.createQuery( "from Bar bar where bar.string='a string' or bar.string='a string'" )
 				.iterate()
 				.hasNext() );
 
 		iter = s.createQuery( "select foo.component.name, elements(foo.component.importantDates) from Foo foo where foo.foo.id=?" )
-				.setParameter( 0, foo.getFoo().getKey(), Hibernate.STRING )
+				.setParameter( 0, foo.getFoo().getKey(), StandardBasicTypes.STRING )
 				.iterate();
 		int i=0;
 		while ( iter.hasNext() ) {
@@ -628,13 +629,13 @@ public class FooBarTest extends LegacyTestCase {
 		assertTrue( "sum", ( (Long) rs.next() ).longValue()==4 );
 		assertTrue( !rs.hasNext() );
 		rs = s.createQuery( "select count(foo) from Foo foo where foo.id=?" )
-				.setParameter( 0, foo.getKey(), Hibernate.STRING )
+				.setParameter( 0, foo.getKey(), StandardBasicTypes.STRING )
 				.iterate();
 		assertTrue( "id query count", ( (Long) rs.next() ).longValue()==1 );
 		assertTrue( !rs.hasNext() );
 
 		s.createQuery( "from Foo foo where foo.boolean = ?" )
-				.setParameter( 0, new Boolean(true), Hibernate.BOOLEAN )
+				.setParameter( 0, new Boolean(true), StandardBasicTypes.BOOLEAN )
 				.list();
 
 		s.createQuery( "select new Foo(fo.x) from Fo fo" ).list();
@@ -734,7 +735,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.createQuery( "select baz.code, min(baz.count) from Baz baz group by baz.code" ).iterate();
 
 		iter = s.createQuery( "selecT baz from Baz baz where baz.stringDateMap['foo'] is not null or baz.stringDateMap['bar'] = ?" )
-				.setParameter( 0, new Date(), Hibernate.DATE )
+				.setParameter( 0, new Date(), StandardBasicTypes.DATE )
 				.iterate();
 		assertFalse( iter.hasNext() );
 		list = s.createQuery( "select baz from Baz baz where baz.stringDateMap['now'] is not null" ).list();
@@ -2189,16 +2190,16 @@ public class FooBarTest extends LegacyTestCase {
 		List results = s.createQuery(
 				"from Stuff as s where s.foo.id = ? and s.id.id = ? and s.moreStuff.id.intId = ? and s.moreStuff.id.stringId = ?"
 		)
-				.setParameter( 0, bar, Hibernate.entity(Foo.class) )
-				.setParameter( 1, new Long(1234), Hibernate.LONG )
-				.setParameter( 2, new Integer(12), Hibernate.INTEGER )
-				.setParameter( 3, "id", Hibernate.STRING )
+				.setParameter( 0, bar, s.getTypeHelper().entity(Foo.class) )
+				.setParameter( 1, new Long(1234), StandardBasicTypes.LONG )
+				.setParameter( 2, new Integer(12), StandardBasicTypes.INTEGER )
+				.setParameter( 3, "id", StandardBasicTypes.STRING )
 				.list();
 		assertEquals( 1, results.size() );
 		results = s.createQuery( "from Stuff as s where s.foo.id = ? and s.id.id = ? and s.moreStuff.name = ?" )
-				.setParameter( 0, bar, Hibernate.entity(Foo.class) )
-				.setParameter( 1, new Long(1234), Hibernate.LONG )
-				.setParameter( 2, "More Stuff", Hibernate.STRING )
+				.setParameter( 0, bar, s.getTypeHelper().entity(Foo.class) )
+				.setParameter( 1, new Long(1234), StandardBasicTypes.LONG )
+				.setParameter( 2, "More Stuff", StandardBasicTypes.STRING )
 				.list();
 		assertEquals( 1, results.size() );
 		s.createQuery( "from Stuff as s where s.foo.string is not null" ).list();
@@ -2382,20 +2383,20 @@ public class FooBarTest extends LegacyTestCase {
 		s.createQuery( "select max( elements(one.manies) ) from One one" ).iterate();
 		s.createQuery( "select one, elements(one.manies) from One one" ).list();
 		Iterator iter = s.createQuery( "select elements(baz.fooArray) from Baz baz where baz.id=?" )
-				.setParameter( 0, baz.getCode(), Hibernate.STRING )
+				.setParameter( 0, baz.getCode(), StandardBasicTypes.STRING )
 				.iterate();
 		assertTrue( iter.next()==foos[1] && !iter.hasNext() );
 		list = s.createQuery( "select elements(baz.fooArray) from Baz baz where baz.id=?" )
-				.setParameter( 0, baz.getCode(), Hibernate.STRING )
+				.setParameter( 0, baz.getCode(), StandardBasicTypes.STRING )
 				.list();
 		assertEquals( 1, list.size() );
 		iter = s.createQuery( "select indices(baz.fooArray) from Baz baz where baz.id=?" )
-				.setParameter( 0, baz.getCode(), Hibernate.STRING )
+				.setParameter( 0, baz.getCode(), StandardBasicTypes.STRING )
 				.iterate();
 		assertTrue( iter.next().equals( new Integer(1) ) && !iter.hasNext() );
 
 		iter = s.createQuery( "select size(baz.stringSet) from Baz baz where baz.id=?" )
-				.setParameter( 0, baz.getCode(), Hibernate.STRING )
+				.setParameter( 0, baz.getCode(), StandardBasicTypes.STRING )
 				.iterate();
 		assertEquals( new Integer(3), iter.next() );
 
@@ -2990,7 +2991,7 @@ public class FooBarTest extends LegacyTestCase {
 		doDelete( s, "from Trivial" );
 
 		list2 = s.createQuery( "from Foo foo where foo.date = ?" )
-				.setParameter( 0, new java.sql.Date(123), Hibernate.DATE )
+				.setParameter( 0, new java.sql.Date(123), StandardBasicTypes.DATE )
 				.list();
 		assertTrue ( "find by date", list2.size()==4 );
 		Iterator iter = list2.iterator();
@@ -3198,7 +3199,7 @@ public class FooBarTest extends LegacyTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		assertEquals( 8, doDelete( s, "from Qux q where q.stuff=?", "foo", Hibernate.STRING ) );
+		assertEquals( 8, doDelete( s, "from Qux q where q.stuff=?", "foo", StandardBasicTypes.STRING ) );
 		s.getTransaction().commit();
 		s.close();
 
@@ -4171,7 +4172,7 @@ public class FooBarTest extends LegacyTestCase {
 				"cached object identity",
 				im,
 				s.createQuery( "from Immutable im where im = ?" ).setParameter(
-						0, im, Hibernate.entity( Immutable.class )
+						0, im, s.getTypeHelper().entity( Immutable.class )
 				).uniqueResult()
 		);
 		s.doWork(
@@ -4366,7 +4367,7 @@ public class FooBarTest extends LegacyTestCase {
 				&& !(getDialect() instanceof SAPDBDialect) )  {
 			baz.getFooArray()[0] = null;
 			i = s.createQuery( "from Baz baz where ? in elements(baz.fooArray)" )
-					.setParameter( 0, foo, Hibernate.entity( Foo.class ) )
+					.setParameter( 0, foo, s.getTypeHelper().entity( Foo.class ) )
 					.iterate();
 			assertTrue( !i.hasNext() );
 			baz.getFooArray()[0] = foo;
@@ -4532,8 +4533,8 @@ public class FooBarTest extends LegacyTestCase {
 		s = openSession();
 		s.beginTransaction();
 		List results = s.createQuery( "from Bar bar where bar.object.id = ? and bar.object.class = ?" )
-				.setParameter( 0, oid, Hibernate.LONG )
-				.setParameter( 1, new Character('O'), Hibernate.CHARACTER )
+				.setParameter( 0, oid, StandardBasicTypes.LONG )
+				.setParameter( 1, new Character('O'), StandardBasicTypes.CHARACTER )
 				.list();
 		assertEquals( 1, results.size() );
 		results = s.createQuery( "select one from One one, Bar bar where bar.object.id = one.id and bar.object.class = 'O'" )

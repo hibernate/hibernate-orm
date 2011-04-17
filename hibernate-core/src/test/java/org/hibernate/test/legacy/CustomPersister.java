@@ -4,8 +4,8 @@ import java.io.Serializable;
 import java.util.Comparator;
 import java.util.Hashtable;
 import java.util.Map;
+
 import org.hibernate.EntityMode;
-import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -14,7 +14,6 @@ import org.hibernate.cache.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.entry.CacheEntryStructure;
 import org.hibernate.cache.entry.UnstructuredCacheEntry;
 import org.hibernate.engine.CascadeStyle;
-import org.hibernate.engine.EntityKey;
 import org.hibernate.engine.Mapping;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
@@ -32,6 +31,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.QuerySelect;
 import org.hibernate.sql.Select;
 import org.hibernate.tuple.entity.EntityMetamodel;
+import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 import org.hibernate.type.VersionType;
 
@@ -434,7 +434,7 @@ public class CustomPersister implements EntityPersister {
 
 	}
 
-	private static final Type[] TYPES = new Type[] { Hibernate.STRING };
+	private static final Type[] TYPES = new Type[] { StandardBasicTypes.STRING };
 	private static final String[] NAMES = new String[] { "name" };
 	private static final boolean[] MUTABILITY = new boolean[] { true };
 	private static final boolean[] GENERATION = new boolean[] { false };
@@ -464,7 +464,7 @@ public class CustomPersister implements EntityPersister {
 	 * @see EntityPersister#getIdentifierType()
 	 */
 	public Type getIdentifierType() {
-		return Hibernate.STRING;
+		return StandardBasicTypes.STRING;
 	}
 
 	/**

@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,15 +20,16 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.hql.ast.tree;
-import org.hibernate.Hibernate;
-import org.hibernate.type.Type;
+
 import antlr.SemanticException;
 
+import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.Type;
+
 /**
- * Contract for nodes representing logcial BETWEEN (ternary) operators.
+ * Contract for nodes representing logical BETWEEN (ternary) operators.
  *
  * @author Steve Ebersole
  */
@@ -54,7 +55,7 @@ public class BetweenOperatorNode extends SqlNode implements OperatorNode {
 
 	public Type getDataType() {
 		// logic operators by definition resolve to boolean.
-		return Hibernate.BOOLEAN;
+		return StandardBasicTypes.BOOLEAN;
 	}
 
 	public Node getFixtureOperand() {

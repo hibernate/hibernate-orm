@@ -5,10 +5,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
-import org.hibernate.Hibernate;
+
 import org.hibernate.HibernateException;
 import org.hibernate.engine.SessionImplementor;
-import org.hibernate.type.IntegerType;
+import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.usertype.EnhancedUserType;
 
 /**
@@ -47,13 +47,13 @@ public class ClassificationType implements EnhancedUserType {
 	}
 
 	public Object nullSafeGet(ResultSet rs, String[] names, SessionImplementor session, Object owner) throws HibernateException, SQLException {
-		Integer ordinal = IntegerType.INSTANCE.nullSafeGet( rs, names[0], session );
+		Integer ordinal = StandardBasicTypes.INTEGER.nullSafeGet( rs, names[0], session );
 		return Classification.valueOf( ordinal );
 	}
 
 	public void nullSafeSet(PreparedStatement st, Object value, int index, SessionImplementor session) throws HibernateException, SQLException {
 		Integer ordinal = value == null ? null : new Integer( ( ( Classification ) value ).ordinal() );
-		Hibernate.INTEGER.nullSafeSet( st, ordinal, index, session );
+		StandardBasicTypes.INTEGER.nullSafeSet( st, ordinal, index, session );
 	}
 
 	public Object deepCopy(Object value) throws HibernateException {

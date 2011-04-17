@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,9 +20,9 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.impl;
+
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -38,9 +38,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
-import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
@@ -48,21 +48,23 @@ import org.hibernate.NonUniqueResultException;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.Query;
 import org.hibernate.QueryException;
+import org.hibernate.Session;
 import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.RowSelection;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.TypedValue;
 import org.hibernate.engine.query.ParameterMetadata;
 import org.hibernate.hql.classic.ParserHelper;
+import org.hibernate.internal.util.MarkerObject;
+import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.property.Getter;
 import org.hibernate.proxy.HibernateProxyHelper;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.SerializableType;
+import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
-import org.hibernate.internal.util.MarkerObject;
-import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.internal.util.StringHelper;
 
 /**
  * Abstract implementation of the Query interface.
@@ -408,7 +410,7 @@ public abstract class AbstractQueryImpl implements Query {
 
 	public Query setParameter(int position, Object val) throws HibernateException {
 		if (val == null) {
-			setParameter( position, val, Hibernate.SERIALIZABLE );
+			setParameter( position, val, StandardBasicTypes.SERIALIZABLE );
 		}
 		else {
 			setParameter( position, val, determineType( position, val ) );
@@ -420,7 +422,7 @@ public abstract class AbstractQueryImpl implements Query {
 		if (val == null) {
 			Type type = parameterMetadata.getNamedParameterExpectedType( name );
 			if ( type == null ) {
-				type = Hibernate.SERIALIZABLE;
+				type = StandardBasicTypes.SERIALIZABLE;
 			}
 			setParameter( name, val, type );
 		}
@@ -491,7 +493,7 @@ public abstract class AbstractQueryImpl implements Query {
 					throw new HibernateException("Could not determine a type for class: " + typename);
 				}
 			}
-			return Hibernate.entity(clazz);
+			return ( (Session) session ).getTypeHelper().entity( clazz );
 		}
 		else {
 			return type;
@@ -499,84 +501,84 @@ public abstract class AbstractQueryImpl implements Query {
 	}
 
 	public Query setString(int position, String val) {
-		setParameter(position, val, Hibernate.STRING);
+		setParameter(position, val, StandardBasicTypes.STRING);
 		return this;
 	}
 
 	public Query setCharacter(int position, char val) {
-		setParameter(position, new Character(val), Hibernate.CHARACTER);
+		setParameter(position, new Character(val), StandardBasicTypes.CHARACTER);
 		return this;
 	}
 
 	public Query setBoolean(int position, boolean val) {
 		Boolean valueToUse = val ? Boolean.TRUE : Boolean.FALSE;
-		Type typeToUse = determineType( position, valueToUse, Hibernate.BOOLEAN );
+		Type typeToUse = determineType( position, valueToUse, StandardBasicTypes.BOOLEAN );
 		setParameter( position, valueToUse, typeToUse );
 		return this;
 	}
 
 	public Query setByte(int position, byte val) {
-		setParameter(position, new Byte(val), Hibernate.BYTE);
+		setParameter(position, new Byte(val), StandardBasicTypes.BYTE);
 		return this;
 	}
 
 	public Query setShort(int position, short val) {
-		setParameter(position, new Short(val), Hibernate.SHORT);
+		setParameter(position, new Short(val), StandardBasicTypes.SHORT);
 		return this;
 	}
 
 	public Query setInteger(int position, int val) {
-		setParameter(position, new Integer(val), Hibernate.INTEGER);
+		setParameter(position, new Integer(val), StandardBasicTypes.INTEGER);
 		return this;
 	}
 
 	public Query setLong(int position, long val) {
-		setParameter(position, new Long(val), Hibernate.LONG);
+		setParameter(position, new Long(val), StandardBasicTypes.LONG);
 		return this;
 	}
 
 	public Query setFloat(int position, float val) {
-		setParameter(position, new Float(val), Hibernate.FLOAT);
+		setParameter(position, new Float(val), StandardBasicTypes.FLOAT);
 		return this;
 	}
 
 	public Query setDouble(int position, double val) {
-		setParameter(position, new Double(val), Hibernate.DOUBLE);
+		setParameter(position, new Double(val), StandardBasicTypes.DOUBLE);
 		return this;
 	}
 
 	public Query setBinary(int position, byte[] val) {
-		setParameter(position, val, Hibernate.BINARY);
+		setParameter(position, val, StandardBasicTypes.BINARY);
 		return this;
 	}
 
 	public Query setText(int position, String val) {
-		setParameter(position, val, Hibernate.TEXT);
+		setParameter(position, val, StandardBasicTypes.TEXT);
 		return this;
 	}
 
 	public Query setSerializable(int position, Serializable val) {
-		setParameter(position, val, Hibernate.SERIALIZABLE);
+		setParameter(position, val, StandardBasicTypes.SERIALIZABLE);
 		return this;
 	}
 
 	public Query setDate(int position, Date date) {
-		setParameter(position, date, Hibernate.DATE);
+		setParameter(position, date, StandardBasicTypes.DATE);
 		return this;
 	}
 
 	public Query setTime(int position, Date date) {
-		setParameter(position, date, Hibernate.TIME);
+		setParameter(position, date, StandardBasicTypes.TIME);
 		return this;
 	}
 
 	public Query setTimestamp(int position, Date date) {
-		setParameter(position, date, Hibernate.TIMESTAMP);
+		setParameter(position, date, StandardBasicTypes.TIMESTAMP);
 		return this;
 	}
 
 	public Query setEntity(int position, Object val) {
-		setParameter( position, val, Hibernate.entity( resolveEntityName( val ) ) );
+		setParameter( position, val, ( (Session) session ).getTypeHelper().entity( resolveEntityName( val ) ) );
 		return this;
 	}
 
@@ -588,134 +590,134 @@ public abstract class AbstractQueryImpl implements Query {
 	}
 
 	public Query setLocale(int position, Locale locale) {
-		setParameter(position, locale, Hibernate.LOCALE);
+		setParameter(position, locale, StandardBasicTypes.LOCALE);
 		return this;
 	}
 
 	public Query setCalendar(int position, Calendar calendar) {
-		setParameter(position, calendar, Hibernate.CALENDAR);
+		setParameter(position, calendar, StandardBasicTypes.CALENDAR);
 		return this;
 	}
 
 	public Query setCalendarDate(int position, Calendar calendar) {
-		setParameter(position, calendar, Hibernate.CALENDAR_DATE);
+		setParameter(position, calendar, StandardBasicTypes.CALENDAR_DATE);
 		return this;
 	}
 
 	public Query setBinary(String name, byte[] val) {
-		setParameter(name, val, Hibernate.BINARY);
+		setParameter(name, val, StandardBasicTypes.BINARY);
 		return this;
 	}
 
 	public Query setText(String name, String val) {
-		setParameter(name, val, Hibernate.TEXT);
+		setParameter(name, val, StandardBasicTypes.TEXT);
 		return this;
 	}
 
 	public Query setBoolean(String name, boolean val) {
 		Boolean valueToUse = val ? Boolean.TRUE : Boolean.FALSE;
-		Type typeToUse = determineType( name, valueToUse, Hibernate.BOOLEAN );
+		Type typeToUse = determineType( name, valueToUse, StandardBasicTypes.BOOLEAN );
 		setParameter( name, valueToUse, typeToUse );
 		return this;
 	}
 
 	public Query setByte(String name, byte val) {
-		setParameter(name, new Byte(val), Hibernate.BYTE);
+		setParameter(name, new Byte(val), StandardBasicTypes.BYTE);
 		return this;
 	}
 
 	public Query setCharacter(String name, char val) {
-		setParameter(name, new Character(val), Hibernate.CHARACTER);
+		setParameter(name, new Character(val), StandardBasicTypes.CHARACTER);
 		return this;
 	}
 
 	public Query setDate(String name, Date date) {
-		setParameter(name, date, Hibernate.DATE);
+		setParameter(name, date, StandardBasicTypes.DATE);
 		return this;
 	}
 
 	public Query setDouble(String name, double val) {
-		setParameter(name, new Double(val), Hibernate.DOUBLE);
+		setParameter(name, new Double(val), StandardBasicTypes.DOUBLE);
 		return this;
 	}
 
 	public Query setEntity(String name, Object val) {
-		setParameter( name, val, Hibernate.entity( resolveEntityName( val ) ) );
+		setParameter( name, val, ( (Session) session ).getTypeHelper().entity( resolveEntityName( val ) ) );
 		return this;
 	}
 
 	public Query setFloat(String name, float val) {
-		setParameter(name, new Float(val), Hibernate.FLOAT);
+		setParameter(name, new Float(val), StandardBasicTypes.FLOAT);
 		return this;
 	}
 
 	public Query setInteger(String name, int val) {
-		setParameter(name, new Integer(val), Hibernate.INTEGER);
+		setParameter(name, new Integer(val), StandardBasicTypes.INTEGER);
 		return this;
 	}
 
 	public Query setLocale(String name, Locale locale) {
-		setParameter(name, locale, Hibernate.LOCALE);
+		setParameter(name, locale, StandardBasicTypes.LOCALE);
 		return this;
 	}
 
 	public Query setCalendar(String name, Calendar calendar) {
-		setParameter(name, calendar, Hibernate.CALENDAR);
+		setParameter(name, calendar, StandardBasicTypes.CALENDAR);
 		return this;
 	}
 
 	public Query setCalendarDate(String name, Calendar calendar) {
-		setParameter(name, calendar, Hibernate.CALENDAR_DATE);
+		setParameter(name, calendar, StandardBasicTypes.CALENDAR_DATE);
 		return this;
 	}
 
 	public Query setLong(String name, long val) {
-		setParameter(name, new Long(val), Hibernate.LONG);
+		setParameter(name, new Long(val), StandardBasicTypes.LONG);
 		return this;
 	}
 
 	public Query setSerializable(String name, Serializable val) {
-		setParameter(name, val, Hibernate.SERIALIZABLE);
+		setParameter(name, val, StandardBasicTypes.SERIALIZABLE);
 		return this;
 	}
 
 	public Query setShort(String name, short val) {
-		setParameter(name, new Short(val), Hibernate.SHORT);
+		setParameter(name, new Short(val), StandardBasicTypes.SHORT);
 		return this;
 	}
 
 	public Query setString(String name, String val) {
-		setParameter(name, val, Hibernate.STRING);
+		setParameter(name, val, StandardBasicTypes.STRING);
 		return this;
 	}
 
 	public Query setTime(String name, Date date) {
-		setParameter(name, date, Hibernate.TIME);
+		setParameter(name, date, StandardBasicTypes.TIME);
 		return this;
 	}
 
 	public Query setTimestamp(String name, Date date) {
-		setParameter(name, date, Hibernate.TIMESTAMP);
+		setParameter(name, date, StandardBasicTypes.TIMESTAMP);
 		return this;
 	}
 
 	public Query setBigDecimal(int position, BigDecimal number) {
-		setParameter(position, number, Hibernate.BIG_DECIMAL);
+		setParameter(position, number, StandardBasicTypes.BIG_DECIMAL);
 		return this;
 	}
 
 	public Query setBigDecimal(String name, BigDecimal number) {
-		setParameter(name, number, Hibernate.BIG_DECIMAL);
+		setParameter(name, number, StandardBasicTypes.BIG_DECIMAL);
 		return this;
 	}
 
 	public Query setBigInteger(int position, BigInteger number) {
-		setParameter(position, number, Hibernate.BIG_INTEGER);
+		setParameter(position, number, StandardBasicTypes.BIG_INTEGER);
 		return this;
 	}
 
 	public Query setBigInteger(String name, BigInteger number) {
-		setParameter(name, number, Hibernate.BIG_INTEGER);
+		setParameter(name, number, StandardBasicTypes.BIG_INTEGER);
 		return this;
 	}
 

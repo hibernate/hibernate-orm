@@ -22,11 +22,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.dialect;
+
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
-import org.hibernate.Hibernate;
+
 import org.hibernate.LockOptions;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.NoArgSQLFunction;
@@ -38,6 +39,7 @@ import org.hibernate.exception.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.ViolatedConstraintNameExtracter;
 import org.hibernate.id.SequenceGenerator;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.sql.BlobTypeDescriptor;
 import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
@@ -76,73 +78,73 @@ public class PostgreSQLDialect extends Dialect {
 		registerColumnType( Types.OTHER, "uuid" );
 
 		registerFunction( "abs", new StandardSQLFunction("abs") );
-		registerFunction( "sign", new StandardSQLFunction("sign", Hibernate.INTEGER) );
+		registerFunction( "sign", new StandardSQLFunction("sign", StandardBasicTypes.INTEGER) );
 
-		registerFunction( "acos", new StandardSQLFunction("acos", Hibernate.DOUBLE) );
-		registerFunction( "asin", new StandardSQLFunction("asin", Hibernate.DOUBLE) );
-		registerFunction( "atan", new StandardSQLFunction("atan", Hibernate.DOUBLE) );
-		registerFunction( "cos", new StandardSQLFunction("cos", Hibernate.DOUBLE) );
-		registerFunction( "cot", new StandardSQLFunction("cot", Hibernate.DOUBLE) );
-		registerFunction( "exp", new StandardSQLFunction("exp", Hibernate.DOUBLE) );
-		registerFunction( "ln", new StandardSQLFunction("ln", Hibernate.DOUBLE) );
-		registerFunction( "log", new StandardSQLFunction("log", Hibernate.DOUBLE) );
-		registerFunction( "sin", new StandardSQLFunction("sin", Hibernate.DOUBLE) );
-		registerFunction( "sqrt", new StandardSQLFunction("sqrt", Hibernate.DOUBLE) );
-		registerFunction( "cbrt", new StandardSQLFunction("cbrt", Hibernate.DOUBLE) );
-		registerFunction( "tan", new StandardSQLFunction("tan", Hibernate.DOUBLE) );
-		registerFunction( "radians", new StandardSQLFunction("radians", Hibernate.DOUBLE) );
-		registerFunction( "degrees", new StandardSQLFunction("degrees", Hibernate.DOUBLE) );
+		registerFunction( "acos", new StandardSQLFunction("acos", StandardBasicTypes.DOUBLE) );
+		registerFunction( "asin", new StandardSQLFunction("asin", StandardBasicTypes.DOUBLE) );
+		registerFunction( "atan", new StandardSQLFunction("atan", StandardBasicTypes.DOUBLE) );
+		registerFunction( "cos", new StandardSQLFunction("cos", StandardBasicTypes.DOUBLE) );
+		registerFunction( "cot", new StandardSQLFunction("cot", StandardBasicTypes.DOUBLE) );
+		registerFunction( "exp", new StandardSQLFunction("exp", StandardBasicTypes.DOUBLE) );
+		registerFunction( "ln", new StandardSQLFunction("ln", StandardBasicTypes.DOUBLE) );
+		registerFunction( "log", new StandardSQLFunction("log", StandardBasicTypes.DOUBLE) );
+		registerFunction( "sin", new StandardSQLFunction("sin", StandardBasicTypes.DOUBLE) );
+		registerFunction( "sqrt", new StandardSQLFunction("sqrt", StandardBasicTypes.DOUBLE) );
+		registerFunction( "cbrt", new StandardSQLFunction("cbrt", StandardBasicTypes.DOUBLE) );
+		registerFunction( "tan", new StandardSQLFunction("tan", StandardBasicTypes.DOUBLE) );
+		registerFunction( "radians", new StandardSQLFunction("radians", StandardBasicTypes.DOUBLE) );
+		registerFunction( "degrees", new StandardSQLFunction("degrees", StandardBasicTypes.DOUBLE) );
 
-		registerFunction( "stddev", new StandardSQLFunction("stddev", Hibernate.DOUBLE) );
-		registerFunction( "variance", new StandardSQLFunction("variance", Hibernate.DOUBLE) );
+		registerFunction( "stddev", new StandardSQLFunction("stddev", StandardBasicTypes.DOUBLE) );
+		registerFunction( "variance", new StandardSQLFunction("variance", StandardBasicTypes.DOUBLE) );
 
-		registerFunction( "random", new NoArgSQLFunction("random", Hibernate.DOUBLE) );
+		registerFunction( "random", new NoArgSQLFunction("random", StandardBasicTypes.DOUBLE) );
 
 		registerFunction( "round", new StandardSQLFunction("round") );
 		registerFunction( "trunc", new StandardSQLFunction("trunc") );
 		registerFunction( "ceil", new StandardSQLFunction("ceil") );
 		registerFunction( "floor", new StandardSQLFunction("floor") );
 
-		registerFunction( "chr", new StandardSQLFunction("chr", Hibernate.CHARACTER) );
+		registerFunction( "chr", new StandardSQLFunction("chr", StandardBasicTypes.CHARACTER) );
 		registerFunction( "lower", new StandardSQLFunction("lower") );
 		registerFunction( "upper", new StandardSQLFunction("upper") );
-		registerFunction( "substr", new StandardSQLFunction("substr", Hibernate.STRING) );
+		registerFunction( "substr", new StandardSQLFunction("substr", StandardBasicTypes.STRING) );
 		registerFunction( "initcap", new StandardSQLFunction("initcap") );
 		registerFunction( "to_ascii", new StandardSQLFunction("to_ascii") );
-		registerFunction( "quote_ident", new StandardSQLFunction("quote_ident", Hibernate.STRING) );
-		registerFunction( "quote_literal", new StandardSQLFunction("quote_literal", Hibernate.STRING) );
+		registerFunction( "quote_ident", new StandardSQLFunction("quote_ident", StandardBasicTypes.STRING) );
+		registerFunction( "quote_literal", new StandardSQLFunction("quote_literal", StandardBasicTypes.STRING) );
 		registerFunction( "md5", new StandardSQLFunction("md5") );
-		registerFunction( "ascii", new StandardSQLFunction("ascii", Hibernate.INTEGER) );
-		registerFunction( "char_length", new StandardSQLFunction("char_length", Hibernate.LONG) );
-		registerFunction( "bit_length", new StandardSQLFunction("bit_length", Hibernate.LONG) );
-		registerFunction( "octet_length", new StandardSQLFunction("octet_length", Hibernate.LONG) );
+		registerFunction( "ascii", new StandardSQLFunction("ascii", StandardBasicTypes.INTEGER) );
+		registerFunction( "char_length", new StandardSQLFunction("char_length", StandardBasicTypes.LONG) );
+		registerFunction( "bit_length", new StandardSQLFunction("bit_length", StandardBasicTypes.LONG) );
+		registerFunction( "octet_length", new StandardSQLFunction("octet_length", StandardBasicTypes.LONG) );
 
 		registerFunction( "age", new StandardSQLFunction("age") );
-		registerFunction( "current_date", new NoArgSQLFunction("current_date", Hibernate.DATE, false) );
-		registerFunction( "current_time", new NoArgSQLFunction("current_time", Hibernate.TIME, false) );
-		registerFunction( "current_timestamp", new NoArgSQLFunction("current_timestamp", Hibernate.TIMESTAMP, false) );
-		registerFunction( "date_trunc", new StandardSQLFunction( "date_trunc", Hibernate.TIMESTAMP ) );
-		registerFunction( "localtime", new NoArgSQLFunction("localtime", Hibernate.TIME, false) );
-		registerFunction( "localtimestamp", new NoArgSQLFunction("localtimestamp", Hibernate.TIMESTAMP, false) );
-		registerFunction( "now", new NoArgSQLFunction("now", Hibernate.TIMESTAMP) );
-		registerFunction( "timeofday", new NoArgSQLFunction("timeofday", Hibernate.STRING) );
+		registerFunction( "current_date", new NoArgSQLFunction("current_date", StandardBasicTypes.DATE, false) );
+		registerFunction( "current_time", new NoArgSQLFunction("current_time", StandardBasicTypes.TIME, false) );
+		registerFunction( "current_timestamp", new NoArgSQLFunction("current_timestamp", StandardBasicTypes.TIMESTAMP, false) );
+		registerFunction( "date_trunc", new StandardSQLFunction( "date_trunc", StandardBasicTypes.TIMESTAMP ) );
+		registerFunction( "localtime", new NoArgSQLFunction("localtime", StandardBasicTypes.TIME, false) );
+		registerFunction( "localtimestamp", new NoArgSQLFunction("localtimestamp", StandardBasicTypes.TIMESTAMP, false) );
+		registerFunction( "now", new NoArgSQLFunction("now", StandardBasicTypes.TIMESTAMP) );
+		registerFunction( "timeofday", new NoArgSQLFunction("timeofday", StandardBasicTypes.STRING) );
 
-		registerFunction( "current_user", new NoArgSQLFunction("current_user", Hibernate.STRING, false) );
-		registerFunction( "session_user", new NoArgSQLFunction("session_user", Hibernate.STRING, false) );
-		registerFunction( "user", new NoArgSQLFunction("user", Hibernate.STRING, false) );
-		registerFunction( "current_database", new NoArgSQLFunction("current_database", Hibernate.STRING, true) );
-		registerFunction( "current_schema", new NoArgSQLFunction("current_schema", Hibernate.STRING, true) );
+		registerFunction( "current_user", new NoArgSQLFunction("current_user", StandardBasicTypes.STRING, false) );
+		registerFunction( "session_user", new NoArgSQLFunction("session_user", StandardBasicTypes.STRING, false) );
+		registerFunction( "user", new NoArgSQLFunction("user", StandardBasicTypes.STRING, false) );
+		registerFunction( "current_database", new NoArgSQLFunction("current_database", StandardBasicTypes.STRING, true) );
+		registerFunction( "current_schema", new NoArgSQLFunction("current_schema", StandardBasicTypes.STRING, true) );
 		
-		registerFunction( "to_char", new StandardSQLFunction("to_char", Hibernate.STRING) );
-		registerFunction( "to_date", new StandardSQLFunction("to_date", Hibernate.DATE) );
-		registerFunction( "to_timestamp", new StandardSQLFunction("to_timestamp", Hibernate.TIMESTAMP) );
-		registerFunction( "to_number", new StandardSQLFunction("to_number", Hibernate.BIG_DECIMAL) );
+		registerFunction( "to_char", new StandardSQLFunction("to_char", StandardBasicTypes.STRING) );
+		registerFunction( "to_date", new StandardSQLFunction("to_date", StandardBasicTypes.DATE) );
+		registerFunction( "to_timestamp", new StandardSQLFunction("to_timestamp", StandardBasicTypes.TIMESTAMP) );
+		registerFunction( "to_number", new StandardSQLFunction("to_number", StandardBasicTypes.BIG_DECIMAL) );
 
-		registerFunction( "concat", new VarArgsSQLFunction( Hibernate.STRING, "(","||",")" ) );
+		registerFunction( "concat", new VarArgsSQLFunction( StandardBasicTypes.STRING, "(","||",")" ) );
 
 		registerFunction( "locate", new PositionSubstringFunction() );
 
-		registerFunction( "str", new SQLFunctionTemplate(Hibernate.STRING, "cast(?1 as varchar)") );
+		registerFunction( "str", new SQLFunctionTemplate(StandardBasicTypes.STRING, "cast(?1 as varchar)") );
 
 		getDefaultProperties().setProperty(Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE);
 		getDefaultProperties().setProperty( Environment.NON_CONTEXTUAL_LOB_CREATION, "true" );
@@ -328,7 +330,7 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	/**
-	 * Constraint-name extractor for Postgres contraint violation exceptions.
+	 * Constraint-name extractor for Postgres constraint violation exceptions.
 	 * Orginally contributed by Denny Bartelt.
 	 */
 	private static ViolatedConstraintNameExtracter EXTRACTER = new TemplatedViolatedConstraintNameExtracter() {

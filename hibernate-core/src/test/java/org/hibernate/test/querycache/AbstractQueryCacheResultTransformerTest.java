@@ -49,6 +49,7 @@ import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.transform.AliasToBeanConstructorResultTransformer;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.transform.Transformers;
+import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 
 import org.junit.Test;
@@ -1789,7 +1790,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 								.add( Projections.sqlProjection(
 										"'lame description' as courseDescription",
 										new String[] { "courseDescription" },
-										new Type[] { Hibernate.STRING }
+										new Type[] { StandardBasicTypes.STRING }
 								)
 						)
 				)
@@ -1966,7 +1967,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 				return s.createCriteria( Student.class, "s" )
 				.setProjection(
 						Projections.projectionList()
-								.add( Projections.sqlProjection( "555 as studentNumber", new String[]{ "studentNumber" }, new Type[] { Hibernate.LONG } ) )
+								.add( Projections.sqlProjection( "555 as studentNumber", new String[]{ "studentNumber" }, new Type[] { StandardBasicTypes.LONG } ) )
 								.add( Property.forName( "s.name" ).as( "name" ) )
 				)
 				.addOrder( Order.asc( "s.studentNumber" ) )
@@ -2222,7 +2223,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 						( ( SessionFactoryImpl ) sessionFactory() )
 								.getEntityPersister( Student.class.getName() )
 								.getPropertyType( "name" );
-				return ReflectHelper.getConstructor( Student.class, new Type[] {Hibernate.LONG, studentNametype} );
+				return ReflectHelper.getConstructor( Student.class, new Type[] {StandardBasicTypes.LONG, studentNametype} );
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {

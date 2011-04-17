@@ -38,6 +38,7 @@ import org.hibernate.StaleStateException;
 import org.hibernate.Transaction;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
+import org.hibernate.type.StandardBasicTypes;
 
 import org.junit.After;
 import org.junit.Before;
@@ -377,7 +378,7 @@ public class EntityTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		tx = s.beginTransaction();
 		Query q = s.createQuery( "from Flight f where f.departureDate = :departureDate" );
-		q.setParameter( "departureDate", airFrance.getDepartureDate(), Hibernate.DATE );
+		q.setParameter( "departureDate", airFrance.getDepartureDate(), StandardBasicTypes.DATE );
 		Flight copyAirFrance = (Flight) q.uniqueResult();
 		assertNotNull( copyAirFrance );
 		assertEquals(

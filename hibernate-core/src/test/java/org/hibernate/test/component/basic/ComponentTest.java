@@ -40,6 +40,7 @@ import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.type.StandardBasicTypes;
 
 import org.junit.Test;
 
@@ -88,7 +89,7 @@ public class ComponentTest extends BaseCoreFunctionalTestCase {
 		else {
 			List args = new ArrayList();
 			args.add( "dob" );
-			f.setFormula( yearFunction.render( Hibernate.INTEGER, args, null ) );
+			f.setFormula( yearFunction.render( StandardBasicTypes.INTEGER, args, null ) );
 		}
 	}
 

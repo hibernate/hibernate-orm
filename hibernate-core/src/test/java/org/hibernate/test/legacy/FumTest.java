@@ -38,6 +38,7 @@ import org.hibernate.dialect.TimesTenDialect;
 import org.hibernate.transform.Transformers;
 import org.hibernate.type.DateType;
 import org.hibernate.type.EntityType;
+import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.StringType;
 import org.hibernate.type.Type;
 
@@ -425,7 +426,7 @@ public class FumTest extends LegacyTestCase {
 
 		// Try to find the Fum object "fi" that we inserted searching by the date in the id
 		vList = s.createQuery( "from Fum fum where fum.id.short = ?" )
-				.setParameter( 0, new Short(fiShort), Hibernate.SHORT )
+				.setParameter( 0, new Short(fiShort), StandardBasicTypes.SHORT )
 				.list();
 		assertEquals( "find by composite key query (find fi object)", 1, vList.size() );
 		fi = (Fum)vList.get(0);
@@ -433,7 +434,7 @@ public class FumTest extends LegacyTestCase {
 
 		// Make sure we can return all of the objects by searching by the date id
 		vList = s.createQuery( "from Fum fum where fum.id.date <= ? and not fum.fum='FRIEND'" )
-				.setParameter( 0, new Date(), Hibernate.DATE )
+				.setParameter( 0, new Date(), StandardBasicTypes.DATE )
 				.list();
 		assertEquals( "find by composite key query with arguments", 4, vList.size() );
 		s.getTransaction().commit();
@@ -468,7 +469,7 @@ public class FumTest extends LegacyTestCase {
 		fum = (Fum) s.load( Fum.class, fum.getId() );
 		s.createFilter( fum.getQuxArray(), "where this.foo is null" ).list();
 		s.createFilter( fum.getQuxArray(), "where this.foo.id = ?" )
-				.setParameter( 0, "fooid", Hibernate.STRING )
+				.setParameter( 0, "fooid", StandardBasicTypes.STRING )
 				.list();
 		Query f = s.createFilter( fum.getQuxArray(), "where this.foo.id = :fooId" );
 		f.setString("fooId", "abc");
@@ -681,7 +682,7 @@ public class FumTest extends LegacyTestCase {
 		s = openSession();
 		s.beginTransaction();
 		d = (Outer) s.createQuery( "from Outer o where o.id.detailId = ?" )
-				.setParameter( 0, d.getId().getDetailId(), Hibernate.STRING )
+				.setParameter( 0, d.getId().getDetailId(), StandardBasicTypes.STRING )
 				.list()
 				.get(0);
 		s.createQuery( "from Outer o where o.id.master.id.sup.dudu is not null" ).list();

@@ -67,7 +67,7 @@ public class DerbyConcatFunction implements SQLFunction {
 	/**
 	 * {@inheritDoc}
 	 * <p/>
-	 * Here we always return {@link Hibernate#STRING}.
+	 * Here we always return {@link StandardBasicTypes#STRING}.
 	 */
 	public Type getReturnType(Type argumentType, Mapping mapping) throws QueryException {
 		return StandardBasicTypes.STRING;

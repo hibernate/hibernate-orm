@@ -102,10 +102,10 @@
   <xi:include href="modules/architecture.xml"
               xmlns:xi="http://www.w3.org/2001/XInclude" />
 
-  <xi:include href="modules/configuration.xml"
+  <xi:include href="modules/migrated/configuration.xml"
               xmlns:xi="http://www.w3.org/2001/XInclude" />
 
-  <xi:include href="modules/entitymanagerapi.xml"
+  <xi:include href="modules/migrated/entitymanagerapi.xml"
               xmlns:xi="http://www.w3.org/2001/XInclude" />
 
   <xi:include href="modules/metamodel.xml"
@@ -117,7 +117,7 @@
   <xi:include href="modules/listeners.xml"
               xmlns:xi="http://www.w3.org/2001/XInclude" />
 
-  <xi:include href="modules/batch.xml"
+  <xi:include href="modules/migrated/batch.xml"
               xmlns:xi="http://www.w3.org/2001/XInclude" />
 
   <xi:include href="modules/query_ejbql.xml"

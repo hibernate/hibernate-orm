@@ -8,8 +8,9 @@
 
     <para>
         Both the <interfacename>org.hibernate.Session</interfacename> API and
-        <interfacename>javax.persistence.EntityManager</interfacename> API provide methods for working with entities.
-        This chapter will explore the available operations in each.
+        <interfacename>javax.persistence.EntityManager</interfacename> API represent a context for dealing with
+        persistent data.  This concept is called a <literal>persistence context</literal>.  Persistent data has a
+        state in relation to both a persistence context and the underlying database.
     </para>
 
     <itemizedlist>
@@ -306,5 +307,80 @@ return managed;]]>
             </example>
         </section>
 
+    </section>
+
+
+    <section>
+        <title>Checking persistent state</title>
+
+        <para>
+            An application can verify the state of entities and collections in relation to the persistence context.
+        </para>
+        <example>
+            <title>Examples of verifying managed state</title>
+            <programlisting><![CDATA[assert session.contains( cat );]]></programlisting>
+            <programlisting><![CDATA[assert entityManager.contains( cat );]]></programlisting>
+        </example>
+        <example>
+            <title>Examples of verifying laziness</title>
+            <programlisting>
+<![CDATA[if ( Hibernate.isInitialized( customer.getAddress() ) {
+    //display address if loaded
+}
+if ( Hibernate.isInitialized( customer.getOrders ) ) {
+    //display orders if loaded
+}
+if (Hibernate.isPropertyInitialized(customer, "detailedBio") ) {
+    //display property detailedBio if loaded
+}]]>
+            </programlisting>
+            <programlisting>
+<![CDATA[javax.persistence.PersistenceUnitUtil jpaUtil = entityManager.getEntityManagerFactory().getPersistenceUnitUtil();
+if ( jpaUtil.isLoaded( customer.getAddress() ) {
+    //display address if loaded
+}
+if ( jpaUtil.isLoaded( customer.getOrders ) ) {
+    //display orders if loaded
+}
+if (jpaUtil.isLoaded(customer, "detailedBio") ) {
+    //display property detailedBio if loaded
+}]]>
+            </programlisting>
+        </example>
+        <para>
+            In JPA there is an alternative means to check laziness using the following
+            <interfacename>javax.persistence.PersistenceUtil</interfacename> pattern.  However, the
+            <interfacename>javax.persistence.PersistenceUnitUtil</interfacename> is recommended where ever possible
+        </para>
+        <example>
+            <title>Alternative JPA means to verify laziness</title>
+            <programlisting>
+<![CDATA[javax.persistence.PersistenceUtil jpaUtil = javax.persistence.Persistence.getPersistenceUtil();
+if ( jpaUtil.isLoaded( customer.getAddress() ) {
+    //display address if loaded
+}
+if ( jpaUtil.isLoaded( customer.getOrders ) ) {
+    //display orders if loaded
+}
+if (jpaUtil.isLoaded(customer, "detailedBio") ) {
+    //display property detailedBio if loaded
+}]]>
+            </programlisting>
+        </example>
+
+    </section>
+
+    <section>
+        <title>Accessing Hibernate APIs from JPA</title>
+        <para>
+            JPA defines an incredibly useful method to allow applications access to the APIs of the underlying provider.
+        </para>
+        <example>
+            <title>Usage of EntityManager.unwrap</title>
+            <programlisting>
+<![CDATA[Session session = entityManager.unwrap( Session.class );
+SessionImplementor sessionImplementor = entityManager.unwrap( SessionImplementor.class );]]>
+            </programlisting>
+        </example>
     </section>
 </chapter>

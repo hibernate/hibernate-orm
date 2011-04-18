@@ -23,69 +23,150 @@
  */
 package org.hibernate.metamodel.source.hbm.state.relational;
 
-import java.util.Iterator;
+import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
-
-import org.dom4j.Attribute;
-import org.dom4j.Element;
 
 import org.hibernate.MappingException;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.metamodel.binding.MappingDefaults;
 import org.hibernate.metamodel.binding.SimpleAttributeBinding;
-import org.hibernate.metamodel.source.util.DomHelper;
 
 /**
  * @author Gail Badner
  */
-public class HbmSimpleValueRelationalStateContainer extends HbmRelationalState implements SimpleAttributeBinding.TupleRelationalState {
+public class HbmSimpleValueRelationalStateContainer implements SimpleAttributeBinding.TupleRelationalState {
 	private final MappingDefaults defaults;
 	private final Set<String> propertyUniqueKeys;
 	private final Set<String> propertyIndexes;
-	private final LinkedHashSet<SimpleAttributeBinding.SingleValueRelationalState> singleValueStates =
-			new LinkedHashSet<SimpleAttributeBinding.SingleValueRelationalState>();
+	private final Set<SimpleAttributeBinding.SingleValueRelationalState> singleValueStates;
 
 	public NamingStrategy getNamingStrategy() {
 		return defaults.getNamingStrategy();
 	}
 
+	// TODO: remove duplication after Id, Discriminator, Version, Timestamp, and Property extend a common interface.
+
 	public HbmSimpleValueRelationalStateContainer(MappingDefaults defaults,
-												  Element propertyElement,
-												  boolean autoColumnCreation) {
-		super( propertyElement );
-		this.defaults = defaults;
-		this.propertyUniqueKeys = DomHelper.extractUniqueAttributeValueTokens( propertyElement, "unique-key", ", " );
-		this.propertyIndexes = DomHelper.extractUniqueAttributeValueTokens( propertyElement, "index", ", " );
-		final Attribute columnAttribute = getElement().attribute( "column" );
-		if ( columnAttribute == null ) {
-			final Iterator valueElements = getElement().elementIterator();
-			while ( valueElements.hasNext() ) {
-				final Element valueElement = (Element) valueElements.next();
-				if ( "column".equals( valueElement.getName() ) ) {
-					singleValueStates.add( new HbmColumnRelationalState( valueElement, this  ) );
-				}
-				else if ( "formula".equals( valueElement.getName() ) ) {
-					singleValueStates.add( new HbmDerivedValueRelationalState( valueElement, this ) );
-				}
+												  boolean autoColumnCreation,
+												  org.hibernate.metamodel.source.hbm.xml.mapping.Id id) {
+		this( defaults, id.getColumnElement() );
+		if ( singleValueStates.isEmpty() ) {
+			if ( id.getColumn() == null && ! autoColumnCreation ) {
+				throw new MappingException( "No columns to map and auto column creation is disabled." );
 			}
+			singleValueStates.add( new HbmColumnRelationalState( id, this ) );
 		}
-		else {
-			if ( propertyElement.elementIterator( "column" ).hasNext() ) {
-				throw new MappingException( "column attribute may not be used together with <column> subelement" );
-			}
-			if ( propertyElement.elementIterator( "formula" ).hasNext() ) {
-				throw new MappingException( "column attribute may not be used together with <formula> subelement" );
-			}
-			singleValueStates.add( new HbmColumnRelationalState( propertyElement, this ) );
-		}
-		// TODO: should it actually check for 0 columns???
-		if ( singleValueStates.isEmpty() && autoColumnCreation ) {
-			singleValueStates.add( new HbmColumnRelationalState( propertyElement, this ) );
+		else if ( id.getColumn() != null ) {
+			throw new MappingException( "column attribute may not be used together with <column> subelement" );
 		}
 	}
 
-	public LinkedHashSet<SimpleAttributeBinding.SingleValueRelationalState> getSingleValueRelationalStates() {
+	public HbmSimpleValueRelationalStateContainer(MappingDefaults defaults,
+												  boolean autoColumnCreation,
+												  org.hibernate.metamodel.source.hbm.xml.mapping.Discriminator discriminator) {
+		this( defaults, discriminator.getFormulaElement(), discriminator.getColumnElement() );
+		if ( singleValueStates.isEmpty() ) {
+			if ( discriminator.getColumn() == null && discriminator.getFormula() == null &&  ! autoColumnCreation ) {
+				throw new MappingException( "No column or formula to map and auto column creation is disabled." );
+			}
+			singleValueStates.add( new HbmColumnRelationalState( discriminator, this ) );
+		}
+		else if ( discriminator.getColumn() != null || discriminator.getFormula() != null) {
+			throw new MappingException( "column/formula attribute may not be used together with <column>/<formula> subelement" );
+		}
+	}
+
+	public HbmSimpleValueRelationalStateContainer(MappingDefaults defaults,
+												  boolean autoColumnCreation,
+												  org.hibernate.metamodel.source.hbm.xml.mapping.Version version) {
+		this( defaults, version.getColumnElement() );
+		if ( singleValueStates.isEmpty() ) {
+			if ( version.getColumn() == null && ! autoColumnCreation ) {
+				throw new MappingException( "No column or formula to map and auto column creation is disabled." );
+			}
+			singleValueStates.add( new HbmColumnRelationalState( version, this ) );
+		}
+		else if ( version.getColumn() != null ) {
+			throw new MappingException( "column attribute may not be used together with <column> subelement" );
+		}
+	}
+
+	public HbmSimpleValueRelationalStateContainer(MappingDefaults defaults,
+												  boolean autoColumnCreation,
+												  org.hibernate.metamodel.source.hbm.xml.mapping.Timestamp timestamp) {
+		this( defaults, null );
+		if ( singleValueStates.isEmpty() ) {
+			if ( timestamp.getColumn() == null && ! autoColumnCreation ) {
+				throw new MappingException( "No columns to map and auto column creation is disabled." );
+			}
+			singleValueStates.add( new HbmColumnRelationalState( timestamp, this ) );
+		}
+		else if ( timestamp.getColumn() != null ) {
+			throw new MappingException( "column attribute may not be used together with <column> subelement" );
+		}
+	}
+
+	public HbmSimpleValueRelationalStateContainer(MappingDefaults defaults,
+												  boolean autoColumnCreation,
+												  org.hibernate.metamodel.source.hbm.xml.mapping.Property property) {
+		this( defaults, property.getColumnElementOrFormulaElement() );
+		if ( singleValueStates.isEmpty() ) {
+			if ( property.getColumn() == null && property.getFormula() == null &&  ! autoColumnCreation ) {
+				throw new MappingException( "No column or formula to map and auto column creation is disabled." );
+			}
+			singleValueStates.add( new HbmColumnRelationalState( property, this ) );
+		}
+		else if ( property.getColumn() != null || property.getFormula() != null) {
+			throw new MappingException( "column/formula attribute may not be used together with <column>/<formula> subelement" );
+		}
+	}
+
+	private HbmSimpleValueRelationalStateContainer(MappingDefaults defaults,
+												   String formulaElement,
+												   org.hibernate.metamodel.source.hbm.xml.mapping.ColumnElement columnElement
+	) {
+		this( defaults,
+				formulaElement != null ?
+						Collections.singletonList( formulaElement ) :
+						columnElement != null ? Collections.singletonList( columnElement ) : Collections.<Object>emptyList()
+		);
+	}
+
+	private HbmSimpleValueRelationalStateContainer(MappingDefaults defaults,
+												  List mappedColumnsOrFormulas) {
+		this.defaults = defaults;
+		this.propertyUniqueKeys = Collections.emptySet();
+		this.propertyIndexes = Collections.emptySet();
+		singleValueStates = new LinkedHashSet<SimpleAttributeBinding.SingleValueRelationalState>(
+							mappedColumnsOrFormulas == null || mappedColumnsOrFormulas.isEmpty() ?
+									1 :
+									mappedColumnsOrFormulas.size()
+		);
+		if ( mappedColumnsOrFormulas != null && ! mappedColumnsOrFormulas.isEmpty() ) {
+			for ( Object mappedColumnOrFormula : mappedColumnsOrFormulas ) {
+				singleValueStates.add( createColumnOrFormulaRelationalState( this, mappedColumnOrFormula ) );
+			}
+		}
+	}
+
+	private static SimpleAttributeBinding.SingleValueRelationalState createColumnOrFormulaRelationalState(
+			HbmSimpleValueRelationalStateContainer container,
+			Object columnOrFormula) {
+		if ( org.hibernate.metamodel.source.hbm.xml.mapping.ColumnElement.class.isInstance( columnOrFormula ) ) {
+			return new HbmColumnRelationalState(
+					org.hibernate.metamodel.source.hbm.xml.mapping.ColumnElement.class.cast( columnOrFormula ),
+					container
+			);
+		}
+		else if ( String.class.isInstance( columnOrFormula ) ) {
+			return new HbmDerivedValueRelationalState( String.class.cast( columnOrFormula ) );
+		}
+		throw new MappingException( "unknown type of column or formula: " + columnOrFormula.getClass().getName() );
+	}
+
+	public Set<SimpleAttributeBinding.SingleValueRelationalState> getSingleValueRelationalStates() {
 		return singleValueStates;
 	}
 

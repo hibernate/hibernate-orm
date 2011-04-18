@@ -21,28 +21,53 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.hbm.state.domain;
-
-import org.hibernate.metamodel.binding.CollectionElement;
-import org.hibernate.metamodel.binding.HibernateTypeDescriptor;
+package org.hibernate.metamodel.binding;
+import java.io.Serializable;
+import java.util.Properties;
 
 /**
- * @author Gail Badner
+ * Identifier generator container,
+ * Useful to keep named generator in annotations
+ *
+ * @author Emmanuel Bernard
  */
-public class HbmCollectionElementDomainState implements CollectionElement.DomainState {
-	private final org.hibernate.metamodel.source.hbm.xml.mapping.Element element;
+public class IdGenerator implements Serializable {
+	private String name;
+	private String identifierGeneratorStrategy;
+	private Properties params = new Properties();
 
-	HbmCollectionElementDomainState(org.hibernate.metamodel.source.hbm.xml.mapping.Element element) {
-		this.element = element;
+
+	/**
+	 * @return identifier generator strategy
+	 */
+	public String getIdentifierGeneratorStrategy() {
+		return identifierGeneratorStrategy;
 	}
 
-	public final HibernateTypeDescriptor getHibernateTypeDescriptor() {
-		HibernateTypeDescriptor hibernateTypeDescriptor = new HibernateTypeDescriptor();
-		hibernateTypeDescriptor.setTypeName( element.getType() );
-		return hibernateTypeDescriptor;
+	/**
+	 * @return generator name
+	 */
+	public String getName() {
+		return name;
 	}
 
-	public final String getNodeName() {
-		return element.getNode();
+	/**
+	 * @return generator configuration parameters
+	 */
+	public Properties getParams() {
+		return params;
 	}
+
+	public void setIdentifierGeneratorStrategy(String string) {
+		identifierGeneratorStrategy = string;
+	}
+
+	public void setName(String string) {
+		name = string;
+	}
+
+	public void addParam(String key, String value) {
+		params.setProperty( key, value );
+	}
+
 }

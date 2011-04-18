@@ -25,6 +25,7 @@ package org.hibernate.metamodel.source.hbm;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import org.dom4j.Attribute;
@@ -33,9 +34,10 @@ import org.dom4j.Element;
 import org.hibernate.MappingException;
 import org.hibernate.engine.ExecuteUpdateResultCheckStyle;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.mapping.MetaAttribute;
 import org.hibernate.metamodel.binding.CustomSQL;
+import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.metamodel.source.util.DomHelper;
+import org.hibernate.metamodel.source.util.MappingHelper;
 
 /**
  * TODO : javadoc
@@ -58,58 +60,43 @@ public class HbmHelper {
 		return false;
 	}
 
-	public static ExecuteUpdateResultCheckStyle getResultCheckStyle(Element element, boolean callable) {
-		Attribute attr = element.attribute( "check" );
-		if ( attr == null ) {
+	public static ExecuteUpdateResultCheckStyle getResultCheckStyle(String check, boolean callable) {
+		if ( check == null ) {
 			// use COUNT as the default.  This mimics the old behavior, although
 			// NONE might be a better option moving forward in the case of callable
 			return ExecuteUpdateResultCheckStyle.COUNT;
 		}
-		return ExecuteUpdateResultCheckStyle.parse( attr.getValue() );
+		return ExecuteUpdateResultCheckStyle.parse( check );
 	}
 
-	public static final Map<String, MetaAttribute> extractMetas(Element node, Map<String, MetaAttribute> baseline) {
-		return extractMetas( node, false, baseline );
+	public static final Map<String, MetaAttribute> extractMetas(List<org.hibernate.metamodel.source.hbm.xml.mapping.Meta> meta, Map<String, MetaAttribute> baseline) {
+		return extractMetas( meta, false, baseline );
 	}
 
-	public static final Map<String, MetaAttribute> extractMetas(Element node, boolean onlyInheritable, Map<String, MetaAttribute> baseline) {
+	public static final Map<String, MetaAttribute> extractMetas(List<org.hibernate.metamodel.source.hbm.xml.mapping.Meta> metaList, boolean onlyInheritable, Map<String, MetaAttribute> baseline) {
 		Map<String, MetaAttribute> extractedMetas = new HashMap<String, MetaAttribute>();
 		extractedMetas.putAll( baseline );
-
-		Iterator iter = node.elementIterator( "meta" );
-		while ( iter.hasNext() ) {
-			Element metaNode = (Element) iter.next();
-			boolean inheritable = Boolean.valueOf( metaNode.attributeValue( "inherit" ) ).booleanValue();
+		for ( org.hibernate.metamodel.source.hbm.xml.mapping.Meta meta : metaList) {
+			boolean inheritable = Boolean.valueOf( meta.getInherit() );
 			if ( onlyInheritable & !inheritable ) {
 				continue;
 			}
 
-			final String name = metaNode.attributeValue( "attribute" );
-			final MetaAttribute inheritedMetaAttribute = (MetaAttribute) baseline.get( name );
-			MetaAttribute metaAttribute = (MetaAttribute) extractedMetas.get( name );
+			final String name = meta.getAttribute();
+			final MetaAttribute inheritedMetaAttribute = baseline.get( name );
+			MetaAttribute metaAttribute = extractedMetas.get( name );
 			if ( metaAttribute == null || metaAttribute == inheritedMetaAttribute ) {
 				metaAttribute = new MetaAttribute( name );
 				extractedMetas.put( name, metaAttribute );
 			}
-			metaAttribute.addValue( metaNode.getText() );
+			metaAttribute.addValue( meta.getContent() );
 		}
 		return extractedMetas;
 	}
 
-	public static String getSubselect(Element element) {
-		String subselect = element.attributeValue( "subselect" );
-		if ( subselect != null ) {
-			return subselect;
-		}
-		else {
-			Element subselectElement = element.element( "subselect" );
-			return subselectElement == null ? null : subselectElement.getText();
-		}
-	}
-
-	public static String extractEntityName(Element elem, String unqualifiedPackageName) {
-		String entityName = elem.attributeValue( "entity-name" );
-		return entityName == null ? getClassName( elem.attribute( "name" ), unqualifiedPackageName ) : entityName;
+	public static String extractEntityName( org.hibernate.metamodel.source.hbm.xml.mapping.Class entityClazz, String unqualifiedPackageName) {
+		String entityName = entityClazz.getEntityName();
+		return entityName == null ? getClassName( entityClazz.getName(), unqualifiedPackageName ) : entityName;
 	}
 
 	public static String getClassName(Attribute att, String unqualifiedPackageName) {
@@ -127,18 +114,21 @@ public class HbmHelper {
 		return unqualifiedName;
 	}
 
-	public static CustomSQL getCustomSql(Element element )  {
-		if ( element == null ) {
-			return null; // EARLY EXIT!!!
-		}
-		boolean callable = DomHelper.extractBooleanAttributeValue( element, "callable", false );
-		return new CustomSQL( element.getTextTrim(), callable, getResultCheckStyle( element, callable ) );
+	public static CustomSQL getCustomSql(String sql, boolean isCallable, String check )  {
+		return new CustomSQL( sql.trim(), isCallable, getResultCheckStyle( check, isCallable ) );
 	}
 
 	public static String getPropertyAccessorName(Element element, boolean isEmbedded, String defaultAccess) {
 		return DomHelper.extractAttributeValue(
 				element,
 				"access",
+				isEmbedded ? "embedded" : defaultAccess
+		);
+	}
+
+	public static String getPropertyAccessorName(String access, boolean isEmbedded, String defaultAccess) {
+		return MappingHelper.getStringValue(
+				access,
 				isEmbedded ? "embedded" : defaultAccess
 		);
 	}

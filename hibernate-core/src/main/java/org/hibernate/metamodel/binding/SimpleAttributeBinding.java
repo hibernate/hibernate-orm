@@ -69,7 +69,7 @@ public class SimpleAttributeBinding extends SingularAttributeBinding {
 	}
 
 	public static interface TupleRelationalState {
-		LinkedHashSet<SingleValueRelationalState> getSingleValueRelationalStates();
+		Set<SingleValueRelationalState> getSingleValueRelationalStates();
 	}
 
 	private PropertyGeneration generation;

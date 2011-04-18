@@ -28,18 +28,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import org.dom4j.Element;
-
-import org.hibernate.mapping.MetaAttribute;
 import org.hibernate.metamodel.domain.Attribute;
+import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.metamodel.relational.Column;
 import org.hibernate.metamodel.relational.DerivedValue;
 import org.hibernate.metamodel.relational.SimpleValue;
 import org.hibernate.metamodel.relational.TableSpecification;
 import org.hibernate.metamodel.relational.Tuple;
 import org.hibernate.metamodel.relational.Value;
-import org.hibernate.metamodel.source.hbm.HbmHelper;
-import org.hibernate.metamodel.source.util.DomHelper;
 
 /**
  * TODO : javadoc

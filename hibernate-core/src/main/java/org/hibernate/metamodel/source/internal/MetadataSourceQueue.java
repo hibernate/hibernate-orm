@@ -44,8 +44,9 @@ import org.hibernate.InvalidMappingException;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.MetadataSourceType;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.collections.JoinedIterator;
-import org.hibernate.internal.util.xml.XmlDocument;
+import org.hibernate.metamodel.source.hbm.HibernateMappingJaxbRoot;
+import org.hibernate.metamodel.source.hbm.xml.mapping.HibernateMapping;
+import org.hibernate.metamodel.source.util.MappingHelper;
 
 /**
  * Container for xml configuration documents and annotated classes.
@@ -58,9 +59,9 @@ public class MetadataSourceQueue implements Serializable {
 	);
 	private final MetadataImpl metadata;
 
-	private LinkedHashMap<XmlDocument, Set<String>> hbmMetadataToEntityNamesMap
-			= new LinkedHashMap<XmlDocument, Set<String>>();
-	private Map<String, XmlDocument> hbmMetadataByEntityNameXRef = new HashMap<String, XmlDocument>();
+	private LinkedHashMap<JaxbRoot, Set<String>> hbmMetadataToEntityNamesMap
+			= new LinkedHashMap<JaxbRoot, Set<String>>();
+	private Map<String, JaxbRoot> hbmMetadataByEntityNameXRef = new HashMap<String, JaxbRoot>();
 	private transient List<Class> annotatedClasses = new ArrayList<Class>();
 
 	public MetadataSourceQueue(MetadataImpl metadata) {
@@ -75,6 +76,7 @@ public class MetadataSourceQueue implements Serializable {
 		out.defaultWriteObject();
 	}
 
+	/* TODO: needed anymore???
 	public void add(XmlDocument metadataXml) {
 		final Document document = metadataXml.getDocumentTree();
 		final Element hmNode = document.getRootElement();
@@ -83,37 +85,79 @@ public class MetadataSourceQueue implements Serializable {
 		Set<String> entityNames = new HashSet<String>();
 		findClassNames( defaultPackage, hmNode, entityNames );
 		for ( String entity : entityNames ) {
-			hbmMetadataByEntityNameXRef.put( entity, metadataXml );
+			hbmMetadataByEntityNameXRef.put( entity, jaxbRoot );
 		}
-		this.hbmMetadataToEntityNamesMap.put( metadataXml, entityNames );
+		this.hbmMetadataToEntityNamesMap.put( jaxbRoot, entityNames );
+	}
+	*/
+
+	public void add(HibernateMappingJaxbRoot jaxbRoot) {
+		final HibernateMapping hibernateMapping = jaxbRoot.getRoot();
+		String defaultPackage = MappingHelper.getStringValue( hibernateMapping.getPackage(), "" );
+		Set<String> entityNames = new HashSet<String>();
+		findClassNames( defaultPackage,  jaxbRoot.getRoot().getClazzOrSubclassOrJoinedSubclass(), entityNames );
+		for ( String entity : entityNames ) {
+			hbmMetadataByEntityNameXRef.put( entity, jaxbRoot );
+		}
+		this.hbmMetadataToEntityNamesMap.put( jaxbRoot, entityNames );
 	}
 
-	private void findClassNames(String defaultPackage, Element startNode, Set<String> names) {
+	private void findClassNames(String defaultPackage, List entityClasses, Set<String> names) {
 		// if we have some extends we need to check if those classes possibly could be inside the
 		// same hbm.xml file...
-		Iterator[] classes = new Iterator[4];
-		classes[0] = startNode.elementIterator( "class" );
-		classes[1] = startNode.elementIterator( "subclass" );
-		classes[2] = startNode.elementIterator( "joined-subclass" );
-		classes[3] = startNode.elementIterator( "union-subclass" );
 
-		Iterator classIterator = new JoinedIterator( classes );
-		while ( classIterator.hasNext() ) {
-			Element element = (Element) classIterator.next();
-			String entityName = element.attributeValue( "entity-name" );
-			if ( entityName == null ) {
-				entityName = getClassName( element.attribute( "name" ), defaultPackage );
+		// HibernateMapping.getClazzOrSubclassOrJoinedSubclass returns union-subclass objects
+		// as well as class, subclass, and joined-subclass objects
+		for ( Object entityClass : entityClasses) {
+			String entityName;
+			// TODO: can Class, Subclass, JoinedSubclass, and UnionSubclass implement the same interface
+			// so this stuff doesn't need to be duplicated?
+			if ( org.hibernate.metamodel.source.hbm.xml.mapping.Subclass.class.isInstance( entityClass ) ) {
+				org.hibernate.metamodel.source.hbm.xml.mapping.Subclass clazz = org.hibernate.metamodel.source.hbm.xml.mapping.Subclass.class.cast( entityClass );
+				names.add(
+						clazz.getEntityName() != null ?
+								clazz.getEntityName() :
+								getClassName( clazz.getName(), defaultPackage )
+				);
+				findClassNames( defaultPackage, clazz.getSubclass(), names );
 			}
-			names.add( entityName );
-			findClassNames( defaultPackage, element, names );
+			else if ( org.hibernate.metamodel.source.hbm.xml.mapping.Class.class.isInstance( entityClass ) ) {
+				org.hibernate.metamodel.source.hbm.xml.mapping.Class clazz = org.hibernate.metamodel.source.hbm.xml.mapping.Class.class.cast( entityClass );
+				names.add(
+						clazz.getEntityName() != null ?
+								clazz.getEntityName() :
+								getClassName( clazz.getName(), defaultPackage )
+				);
+				findClassNames( defaultPackage, clazz.getSubclass(), names );
+				findClassNames( defaultPackage, clazz.getJoinedSubclass(), names );
+				findClassNames( defaultPackage, clazz.getUnionSubclass(), names );
+
+			}
+			else if ( org.hibernate.metamodel.source.hbm.xml.mapping.UnionSubclass.class.isInstance( entityClass ) ) {
+				org.hibernate.metamodel.source.hbm.xml.mapping.UnionSubclass clazz = org.hibernate.metamodel.source.hbm.xml.mapping.UnionSubclass.class.cast( entityClass );
+				names.add(
+						clazz.getEntityName() != null ?
+								clazz.getEntityName() :
+								getClassName( clazz.getName(), defaultPackage )
+				);
+				findClassNames( defaultPackage, clazz.getUnionSubclass(), names );
+			}
+			else if ( org.hibernate.metamodel.source.hbm.xml.mapping.JoinedSubclass.class.isInstance( entityClass ) ) {
+				org.hibernate.metamodel.source.hbm.xml.mapping.JoinedSubclass clazz = org.hibernate.metamodel.source.hbm.xml.mapping.JoinedSubclass.class.cast( entityClass );
+				names.add(
+						clazz.getEntityName() != null ?
+								clazz.getEntityName() :
+								getClassName( clazz.getName(), defaultPackage )
+				);
+				findClassNames( defaultPackage, clazz.getJoinedSubclass(), names );
+			}
+			else {
+				throw new InvalidMappingException( "unknown type of entity class", entityClass.getClass().getName() );
+			}
 		}
 	}
 
-	private String getClassName(Attribute name, String defaultPackage) {
-		if ( name == null ) {
-			return null;
-		}
-		String unqualifiedName = name.getValue();
+	private String getClassName(String unqualifiedName, String defaultPackage) {
 		if ( unqualifiedName == null ) {
 			return null;
 		}
@@ -140,7 +184,7 @@ public class MetadataSourceQueue implements Serializable {
 
 	private void processHbmXmlQueue() {
 		LOG.debug( "Processing hbm.xml files" );
-		for ( Map.Entry<XmlDocument, Set<String>> entry : hbmMetadataToEntityNamesMap.entrySet() ) {
+		for ( Map.Entry<JaxbRoot, Set<String>> entry : hbmMetadataToEntityNamesMap.entrySet() ) {
 			// Unfortunately we have to create a Mappings instance for each iteration here
 			processHbmXml( entry.getKey(), entry.getValue() );
 		}
@@ -148,14 +192,14 @@ public class MetadataSourceQueue implements Serializable {
 		hbmMetadataByEntityNameXRef.clear();
 	}
 
-	public void processHbmXml(XmlDocument metadataXml, Set<String> entityNames) {
+	public void processHbmXml(JaxbRoot jaxbRoot, Set<String> entityNames) {
 		try {
-			metadata.getHibernateXmlBinder().bindRoot( metadataXml, entityNames );
+			metadata.getHibernateXmlBinder().bindRoot( jaxbRoot, entityNames );
 		}
 		catch ( MappingException me ) {
 			throw new InvalidMappingException(
-					metadataXml.getOrigin().getType(),
-					metadataXml.getOrigin().getName(),
+					jaxbRoot.getOrigin().getType().toString(),
+					jaxbRoot.getOrigin().getName(),
 					me
 			);
 		}

@@ -29,18 +29,15 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.dom4j.Attribute;
-import org.dom4j.Element;
-
 import org.hibernate.MappingException;
 import org.hibernate.engine.Versioning;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.mapping.MetaAttribute;
 import org.hibernate.metamodel.domain.Entity;
+import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.metamodel.relational.Column;
 import org.hibernate.metamodel.relational.TableSpecification;
 import org.hibernate.metamodel.source.hbm.HbmHelper;
-import org.hibernate.metamodel.source.util.DomHelper;
+import org.hibernate.metamodel.source.util.MappingHelper;
 
 /**
  * TODO : javadoc
@@ -86,21 +83,20 @@ public class EntityBinding {
 	private List<String> synchronizedTableNames;
 
 	// TODO: change to intialize from Doimain
-	public void fromHbmXml(MappingDefaults defaults, Element node, Entity entity) {
+	public void fromHbmXml(MappingDefaults defaults, org.hibernate.metamodel.source.hbm.xml.mapping.Class entityClazz, Entity entity) {
 		this.entity = entity;
-		metaAttributes = HbmHelper.extractMetas( node, true, defaults.getMappingMetas() );
+		metaAttributes = HbmHelper.extractMetas( entityClazz.getMeta(), true, defaults.getMappingMetas() );
 
 		// go ahead and set the lazy here, since pojo.proxy can override it.
-		lazy = DomHelper.extractBooleanAttributeValue( node, "lazy", defaults.isDefaultLazy()  );
-
-		discriminatorValue = DomHelper.extractAttributeValue( node, "discriminator-value", entity.getName() );
-		dynamicUpdate = DomHelper.extractBooleanAttributeValue( node, "dynamic-update", false );
-		dynamicInsert = DomHelper.extractBooleanAttributeValue( node, "dynamic-insert", false );
-		batchSize = DomHelper.extractIntAttributeValue( node, "batch-size", 0 );
-		selectBeforeUpdate = DomHelper.extractBooleanAttributeValue( node, "select-before-update", false );
+		lazy = MappingHelper.getBooleanValue( entityClazz.getLazy(), defaults.isDefaultLazy() );
+		discriminatorValue = MappingHelper.getStringValue( entityClazz.getDiscriminatorValue(), entity.getName() );
+		dynamicUpdate = MappingHelper.getBooleanValue( entityClazz.getDynamicUpdate(), false );
+		dynamicInsert = MappingHelper.getBooleanValue( entityClazz.getDynamicInsert(), false );
+		batchSize = MappingHelper.getIntValue( entityClazz.getBatchSize(), 0 );
+		selectBeforeUpdate = MappingHelper.getBooleanValue( entityClazz.getSelectBeforeUpdate(), false );
 
 		// OPTIMISTIC LOCK MODE
-		String optimisticLockModeString = DomHelper.extractAttributeValue( node,  "optimistic-lock", "version" );
+		String optimisticLockModeString = MappingHelper.getStringValue( entityClazz.getOptimisticLock(), "version" );
 		if ( "version".equals( optimisticLockModeString ) ) {
 			optimisticLockMode = Versioning.OPTIMISTIC_LOCK_VERSION;
 		}
@@ -118,28 +114,51 @@ public class EntityBinding {
 		}
 
 		// PERSISTER
-		Attribute persisterNode = node.attribute( "persister" );
-		if ( persisterNode != null ) {
+		if ( entityClazz.getPersister() != null ) {
 			try {
-				entityPersisterClass = ReflectHelper.classForName( persisterNode.getValue() );
+				entityPersisterClass = ReflectHelper.classForName( entityClazz.getPersister() );
 			}
 			catch (ClassNotFoundException cnfe) {
 				throw new MappingException( "Could not find persister class: "
-					+ persisterNode.getValue() );
+					+ entityClazz.getPersister() );
 			}
 		}
 
 		// CUSTOM SQL
-		customInsert = HbmHelper.getCustomSql( node.element( "sql-insert" ) );
-		customDelete = HbmHelper.getCustomSql( node.element( "sql-delete" ) );
-		customUpdate = HbmHelper.getCustomSql( node.element( "sql-update" ) );
-
-		Iterator tables = node.elementIterator( "synchronize" );
-		while ( tables.hasNext() ) {
-			addSynchronizedTable( ( ( Element ) tables.next() ).attributeValue( "table" ) );
+		org.hibernate.metamodel.source.hbm.xml.mapping.SqlInsert sqlInsert = entityClazz.getSqlInsert();
+		if ( sqlInsert != null ) {
+			customInsert = HbmHelper.getCustomSql(
+					sqlInsert.getContent(),
+					MappingHelper.getBooleanValue( sqlInsert.getCallable(), false ),
+					sqlInsert.getCheck()
+			);
 		}
 
-		isAbstract = DomHelper.extractBooleanAttributeValue( node, "abstract", false );
+		org.hibernate.metamodel.source.hbm.xml.mapping.SqlDelete sqlDelete = entityClazz.getSqlDelete();
+		if ( sqlDelete != null ) {
+			customDelete = HbmHelper.getCustomSql(
+					sqlDelete.getContent(),
+					MappingHelper.getBooleanValue( sqlDelete.getCallable(), false ),
+					sqlDelete.getCheck()
+			);
+		}
+
+		org.hibernate.metamodel.source.hbm.xml.mapping.SqlUpdate sqlUpdate = entityClazz.getSqlUpdate();
+		if ( sqlUpdate != null ) {
+			customUpdate = HbmHelper.getCustomSql(
+					sqlUpdate.getContent(),
+					MappingHelper.getBooleanValue( sqlUpdate.getCallable(), false ),
+					sqlUpdate.getCheck()
+			);
+		}
+
+		if ( entityClazz.getSynchronize() != null ) {
+			for ( org.hibernate.metamodel.source.hbm.xml.mapping.Synchronize synchronize : entityClazz.getSynchronize() ) {
+				addSynchronizedTable( synchronize.getTable() );
+			}
+		}
+
+		isAbstract = MappingHelper.getBooleanValue( entityClazz.getAbstract(), false );
 	}
 
 	public Entity getEntity() {

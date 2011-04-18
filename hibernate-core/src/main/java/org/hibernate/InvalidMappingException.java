@@ -24,6 +24,9 @@
 package org.hibernate;
 
 import org.hibernate.internal.util.xml.XmlDocument;
+import org.hibernate.metamodel.source.Origin;
+import org.hibernate.metamodel.source.hbm.xml.mapping.HibernateMapping;
+import org.hibernate.metamodel.source.internal.JaxbRoot;
 
 /**
  * Thrown when a mapping is found to be invalid.
@@ -55,7 +58,11 @@ public class InvalidMappingException extends MappingException {
 	public InvalidMappingException(String customMessage, XmlDocument xmlDocument) {
 		this( customMessage, xmlDocument.getOrigin().getType(), xmlDocument.getOrigin().getName() );
 	}
-	
+
+	public InvalidMappingException(String customMessage, Origin origin) {
+		this( customMessage, origin.getType().toString(), origin.getName() );
+	}
+
 	public InvalidMappingException(String type, String path) {
 		this("Could not parse mapping document from " + type + (path==null?"":" " + path), type, path);
 	}

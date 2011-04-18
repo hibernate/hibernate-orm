@@ -23,6 +23,7 @@
  */
 package org.hibernate.metamodel.source.hbm;
 
+import java.sql.ResultSet;
 import java.util.Iterator;
 
 import org.dom4j.Attribute;
@@ -31,6 +32,7 @@ import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.engine.Versioning;
+import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.binding.AttributeBinding;
 import org.hibernate.metamodel.binding.BagBinding;
@@ -39,6 +41,7 @@ import org.hibernate.metamodel.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.binding.SimpleAttributeBinding;
 import org.hibernate.metamodel.domain.Entity;
 import org.hibernate.metamodel.domain.Hierarchical;
+import org.hibernate.metamodel.domain.PluralAttribute;
 import org.hibernate.metamodel.domain.PluralAttributeNature;
 import org.hibernate.metamodel.relational.Schema;
 import org.hibernate.metamodel.relational.Table;
@@ -58,20 +61,17 @@ abstract class AbstractEntityBinder {
 	private final HibernateMappingBinder hibernateMappingBinder;
 	private final Schema.Name schemaName;
 
-	AbstractEntityBinder(HibernateMappingBinder hibernateMappingBinder, Element entityElement) {
+	AbstractEntityBinder(HibernateMappingBinder hibernateMappingBinder,
+						 org.hibernate.metamodel.source.hbm.xml.mapping.Class entityClazz) {
 		this.hibernateMappingBinder = hibernateMappingBinder;
-
-		final Attribute schemaAttribute = entityElement.attribute( "schema" );
-		String schemaName = ( schemaAttribute == null )
-				? hibernateMappingBinder.getDefaultSchemaName()
-				: schemaAttribute.getValue();
-
-		final Attribute catalogAttribute = entityElement.attribute( "catalog" );
-		String catalogName = ( catalogAttribute == null )
-				? hibernateMappingBinder.getDefaultCatalogName()
-				: catalogAttribute.getValue();
-
-		this.schemaName = new Schema.Name( schemaName, catalogName );
+		this.schemaName = new Schema.Name(
+				( entityClazz.getSchema() == null ?
+						hibernateMappingBinder.getDefaultSchemaName() :
+						entityClazz.getSchema() ),
+				( entityClazz.getCatalog() == null ?
+						hibernateMappingBinder.getDefaultCatalogName() :
+						entityClazz.getCatalog() )
+		);
 	}
 
 	protected HibernateMappingBinder getHibernateMappingBinder() {
@@ -93,23 +93,24 @@ abstract class AbstractEntityBinder {
 		return getMetadata().getNamingStrategy();
 	}
 
-	protected void basicEntityBinding(Element node, EntityBinding entityBinding, Hierarchical superType) {
+	protected void basicEntityBinding(org.hibernate.metamodel.source.hbm.xml.mapping.Class entityClazz,
+									  EntityBinding entityBinding,
+									  Hierarchical superType) {
 		entityBinding.fromHbmXml(
 				hibernateMappingBinder,
-				node,
-				new Entity( hibernateMappingBinder.extractEntityName( node ), superType )
+				entityClazz,
+				new Entity( hibernateMappingBinder.extractEntityName( entityClazz ), superType )
 		);
 		// TODO: move this stuff out
 		// transfer an explicitly defined lazy attribute
-		bindPojoRepresentation( node, entityBinding );
-		bindDom4jRepresentation( node, entityBinding );
-		bindMapRepresentation( node, entityBinding );
+		bindPojoRepresentation( entityClazz, entityBinding );
+		bindDom4jRepresentation( entityClazz, entityBinding );
+		bindMapRepresentation( entityClazz, entityBinding );
 
 		final String entityName = entityBinding.getEntity().getName();
-		Iterator itr = node.elementIterator( "fetch-profile" );
-		while ( itr.hasNext() ) {
-			final Element profileElement = ( Element ) itr.next();
-			hibernateMappingBinder.parseFetchProfile( profileElement, entityName );
+
+		if ( entityClazz.getFetchProfile() != null ) {
+			hibernateMappingBinder.parseFetchProfiles( entityClazz.getFetchProfile(), entityName );
 		}
 
 		getMetadata().addImport( entityName, entityName );
@@ -124,9 +125,10 @@ abstract class AbstractEntityBinder {
 		return hibernateMappingBinder.getDefaultAccess();
 	}
 
-	private void bindPojoRepresentation(Element node, EntityBinding entityBinding) {
-		String className = hibernateMappingBinder.getClassName( node.attribute( "name" ) );
-		String proxyName = hibernateMappingBinder.getClassName( node.attribute( "proxy" ) );
+	private void bindPojoRepresentation(org.hibernate.metamodel.source.hbm.xml.mapping.Class entityClazz,
+										EntityBinding entityBinding) {
+		String className = hibernateMappingBinder.getClassName( entityClazz.getName() );
+		String proxyName = hibernateMappingBinder.getClassName( entityClazz.getProxy() );
 
 		entityBinding.getEntity().getPojoEntitySpecifics().setClassName( className );
 
@@ -138,29 +140,31 @@ abstract class AbstractEntityBinder {
 			entityBinding.getEntity().getPojoEntitySpecifics().setProxyInterfaceName( className );
 		}
 
-		Element tuplizer = locateTuplizerDefinition( node, EntityMode.POJO );
+		org.hibernate.metamodel.source.hbm.xml.mapping.Tuplizer tuplizer = locateTuplizerDefinition( entityClazz, EntityMode.POJO );
 		if ( tuplizer != null ) {
-			entityBinding.getEntity().getPojoEntitySpecifics().setTuplizerClassName( tuplizer.attributeValue( "class" ) );
+			entityBinding.getEntity().getPojoEntitySpecifics().setTuplizerClassName( tuplizer.getClazz() );
 		}
 	}
 
-	private void bindDom4jRepresentation(Element node, EntityBinding entityBinding) {
-		String nodeName = node.attributeValue( "node" );
+	private void bindDom4jRepresentation(org.hibernate.metamodel.source.hbm.xml.mapping.Class entityClazz,
+										 EntityBinding entityBinding) {
+		String nodeName = entityClazz.getNode();
 		if ( nodeName == null ) {
 			nodeName = StringHelper.unqualify( entityBinding.getEntity().getName() );
 		}
 		entityBinding.getEntity().getDom4jEntitySpecifics().setNodeName(nodeName);
 
-		Element tuplizer = locateTuplizerDefinition( node, EntityMode.DOM4J );
+		org.hibernate.metamodel.source.hbm.xml.mapping.Tuplizer tuplizer = locateTuplizerDefinition( entityClazz, EntityMode.DOM4J );
 		if ( tuplizer != null ) {
-			entityBinding.getEntity().getDom4jEntitySpecifics().setTuplizerClassName( tuplizer.attributeValue( "class" ) );
+			entityBinding.getEntity().getDom4jEntitySpecifics().setTuplizerClassName( tuplizer.getClazz() );
 		}
 	}
 
-	private void bindMapRepresentation(Element node, EntityBinding entityBinding) {
-		Element tuplizer = locateTuplizerDefinition( node, EntityMode.MAP );
+	private void bindMapRepresentation(org.hibernate.metamodel.source.hbm.xml.mapping.Class entityClazz,
+									   EntityBinding entityBinding) {
+		org.hibernate.metamodel.source.hbm.xml.mapping.Tuplizer tuplizer = locateTuplizerDefinition( entityClazz, EntityMode.MAP );
 		if ( tuplizer != null ) {
-			entityBinding.getEntity().getMapEntitySpecifics().setTuplizerClassName( tuplizer.attributeValue( "class" ) );
+			entityBinding.getEntity().getMapEntitySpecifics().setTuplizerClassName( tuplizer.getClazz() );
 		}
 	}
 
@@ -172,12 +176,11 @@ abstract class AbstractEntityBinder {
 	 *
 	 * @return The tuplizer element, or null.
 	 */
-	private static Element locateTuplizerDefinition(Element container, EntityMode entityMode) {
-		Iterator itr = container.elementIterator( "tuplizer" );
-		while( itr.hasNext() ) {
-			final Element tuplizerElem = ( Element ) itr.next();
-			if ( entityMode.toString().equals( tuplizerElem.attributeValue( "entity-mode") ) ) {
-				return tuplizerElem;
+	private static org.hibernate.metamodel.source.hbm.xml.mapping.Tuplizer locateTuplizerDefinition(org.hibernate.metamodel.source.hbm.xml.mapping.Class container,
+													EntityMode entityMode) {
+		for ( org.hibernate.metamodel.source.hbm.xml.mapping.Tuplizer tuplizer : container.getTuplizer() ) {
+			if ( entityMode.toString().equals( tuplizer.getEntityMode() ) ) {
+				return tuplizer;
 			}
 		}
 		return null;
@@ -206,19 +209,18 @@ abstract class AbstractEntityBinder {
 	}
 
 	protected String getClassTableName(
-			Element entityElement,
+			org.hibernate.metamodel.source.hbm.xml.mapping.Class entityClazz,
 			EntityBinding entityBinding,
 			Table denormalizedSuperTable) {
 		final String entityName = entityBinding.getEntity().getName();
-		final Attribute tableNameNode = entityElement.attribute( "table" );
 		String logicalTableName;
 		String physicalTableName;
-		if ( tableNameNode == null ) {
+		if ( entityClazz.getTable() == null ) {
 			logicalTableName = StringHelper.unqualify( entityName );
 			physicalTableName = getHibernateXmlBinder().getMetadata().getNamingStrategy().classToTableName( entityName );
 		}
 		else {
-			logicalTableName = tableNameNode.getValue();
+			logicalTableName = entityClazz.getTable();
 			physicalTableName = getHibernateXmlBinder().getMetadata().getNamingStrategy().tableName( logicalTableName );
 		}
 // todo : find out the purpose of these logical bindings
@@ -226,25 +228,26 @@ abstract class AbstractEntityBinder {
 		return physicalTableName;
 	}
 
-	protected void buildAttributeBindings(Element entityElement, EntityBinding entityBinding) {
+	protected void buildAttributeBindings(org.hibernate.metamodel.source.hbm.xml.mapping.Class entityClazz,
+										  EntityBinding entityBinding) {
 		// null = UniqueKey (we are not binding a natural-id mapping)
 		// true = mutable, by default properties are mutable
 		// true = nullable, by default properties are nullable.
-		buildAttributeBindings( entityElement, entityBinding, null, true, true );
+		buildAttributeBindings( entityClazz, entityBinding, null, true, true );
 	}
 
 	/**
 	 * This form is essentially used to create natural-id mappings.  But the processing is the same, aside from these
 	 * extra parameterized values, so we encapsulate it here.
 	 *
-	 * @param entityElement
+	 * @param entityClazz
 	 * @param entityBinding
 	 * @param uniqueKey
 	 * @param mutable
 	 * @param nullable
 	 */
 	protected void buildAttributeBindings(
-			Element entityElement,
+			org.hibernate.metamodel.source.hbm.xml.mapping.Class entityClazz,
 			EntityBinding entityBinding,
 			UniqueKey uniqueKey,
 			boolean mutable,
@@ -255,69 +258,68 @@ abstract class AbstractEntityBinder {
 		final TableSpecification tabe = entityBinding.getBaseTable();
 
 		AttributeBinding attributeBinding = null;
-
-		Iterator iter = entityElement.elementIterator();
-		while ( iter.hasNext() ) {
-			final Element subElement = (Element) iter.next();
-			final String subElementName = subElement.getName();
-			final String propertyName = subElement.attributeValue( "name" );
-
-			if ( "bag".equals( subElementName ) ) {
-				BagBinding bagBinding = entityBinding.makeBagAttributeBinding( propertyName );
-				bindCollection( subElement, bagBinding, entityBinding, PluralAttributeNature.BAG, propertyName );
-				hibernateMappingBinder.getHibernateXmlBinder().getMetadata().addCollection( bagBinding );
-				attributeBinding = bagBinding;
+		for ( Object attribute : entityClazz.getPropertyOrManyToOneOrOneToOne() ) {
+			if ( org.hibernate.metamodel.source.hbm.xml.mapping.Bag.class.isInstance( attribute ) ) {
+				org.hibernate.metamodel.source.hbm.xml.mapping.Bag collection = org.hibernate.metamodel.source.hbm.xml.mapping.Bag.class.cast( attribute );
+				BagBinding collectionBinding = entityBinding.makeBagAttributeBinding( collection.getName() );
+				bindBag( collection, collectionBinding, entityBinding );
+				hibernateMappingBinder.getHibernateXmlBinder().getMetadata().addCollection( collectionBinding );
+				attributeBinding = collectionBinding;
 			}
-			else if ( "idbag".equals( subElementName ) ) {
-				BagBinding bagBinding = entityBinding.makeBagAttributeBinding( propertyName );
-				bindCollection( subElement, bagBinding, entityBinding, PluralAttributeNature.BAG, propertyName );
-				hibernateMappingBinder.getHibernateXmlBinder().getMetadata().addCollection( bagBinding );
-				attributeBinding = bagBinding;
+			else if ( org.hibernate.metamodel.source.hbm.xml.mapping.Idbag.class.isInstance( attribute ) ) {
+				org.hibernate.metamodel.source.hbm.xml.mapping.Idbag collection = org.hibernate.metamodel.source.hbm.xml.mapping.Idbag.class.cast( attribute );
+				//BagBinding collectionBinding = entityBinding.makeBagAttributeBinding( collection.getName() );
+				//bindIdbag( collection, bagBinding, entityBinding, PluralAttributeNature.BAG, collection.getName() );
 				// todo: handle identifier
+				//attributeBinding = collectionBinding;
+				//hibernateMappingBinder.getHibernateXmlBinder().getMetadata().addCollection( attributeBinding );
 			}
-			else if ( "set".equals( subElementName ) ) {
-				BagBinding bagBinding = entityBinding.makeBagAttributeBinding( propertyName );
-				bindCollection( subElement, bagBinding, entityBinding, PluralAttributeNature.SET, propertyName );
-				hibernateMappingBinder.getHibernateXmlBinder().getMetadata().addCollection( bagBinding );
-				attributeBinding = bagBinding;
+			else if ( org.hibernate.metamodel.source.hbm.xml.mapping.Set.class.isInstance( attribute ) ) {
+				org.hibernate.metamodel.source.hbm.xml.mapping.Set collection = org.hibernate.metamodel.source.hbm.xml.mapping.Set.class.cast( attribute );
+				//BagBinding collectionBinding = entityBinding.makeBagAttributeBinding( collection.getName() );
+				//bindSet( collection, collectionBinding, entityBinding, PluralAttributeNature.SET, collection.getName() );
+				//attributeBinding = collectionBinding;
+				//hibernateMappingBinder.getHibernateXmlBinder().getMetadata().addCollection( attributeBinding );
 			}
-			else if ( "list".equals( subElementName ) ) {
-				BagBinding bagBinding = entityBinding.makeBagAttributeBinding( propertyName );
-				bindCollection( subElement, bagBinding, entityBinding, PluralAttributeNature.LIST, propertyName );
-				hibernateMappingBinder.getHibernateXmlBinder().getMetadata().addCollection( bagBinding );
-				attributeBinding = bagBinding;
+			else if ( org.hibernate.metamodel.source.hbm.xml.mapping.List.class.isInstance( attribute ) ) {
+				org.hibernate.metamodel.source.hbm.xml.mapping.List collection = org.hibernate.metamodel.source.hbm.xml.mapping.List.class.cast( attribute );
+				//ListBinding collectionBinding = entityBinding.makeBagAttributeBinding( collection.getName() );
+				//bindList( collection, bagBinding, entityBinding, PluralAttributeNature.LIST, collection.getName() );
 				// todo : handle list index
+				//attributeBinding = collectionBinding;
+				//hibernateMappingBinder.getHibernateXmlBinder().getMetadata().addCollection( attributeBinding );
 			}
-			else if ( "map".equals( subElementName ) ) {
-				BagBinding bagBinding = entityBinding.makeBagAttributeBinding( propertyName );
-				bindCollection( subElement, bagBinding, entityBinding, PluralAttributeNature.MAP, propertyName );
-				hibernateMappingBinder.getHibernateXmlBinder().getMetadata().addCollection( bagBinding );
-				attributeBinding = bagBinding;
+			else if ( org.hibernate.metamodel.source.hbm.xml.mapping.Map.class.isInstance( attribute ) ) {
+				org.hibernate.metamodel.source.hbm.xml.mapping.Map collection = org.hibernate.metamodel.source.hbm.xml.mapping.Map.class.cast( attribute );
+				//BagBinding bagBinding = entityBinding.makeBagAttributeBinding( collection.getName() );
+				//bindMap( collection, bagBinding, entityBinding, PluralAttributeNature.MAP, collection.getName() );
 				// todo : handle map key
+				//hibernateMappingBinder.getHibernateXmlBinder().getMetadata().addCollection( attributeBinding );
 			}
-			else if ( "many-to-one".equals( subElementName ) ) {
+			else if ( org.hibernate.metamodel.source.hbm.xml.mapping.ManyToOne.class.isInstance( attribute ) ) {
 // todo : implement
 //				value = new ManyToOne( mappings, table );
 //				bindManyToOne( subElement, (ManyToOne) value, propertyName, nullable, mappings );
 			}
-			else if ( "any".equals( subElementName ) ) {
+			else if ( org.hibernate.metamodel.source.hbm.xml.mapping.Any.class.isInstance( attribute ) ) {
 // todo : implement
 //				value = new Any( mappings, table );
 //				bindAny( subElement, (Any) value, nullable, mappings );
 			}
-			else if ( "one-to-one".equals( subElementName ) ) {
+			else if ( org.hibernate.metamodel.source.hbm.xml.mapping.OneToOne.class.isInstance( attribute ) ) {
 // todo : implement
 //				value = new OneToOne( mappings, table, persistentClass );
 //				bindOneToOne( subElement, (OneToOne) value, propertyName, true, mappings );
 			}
-			else if ( "property".equals( subElementName ) ) {
-				SimpleAttributeBinding binding = entityBinding.makeSimpleAttributeBinding( propertyName );
-				bindSimpleAttribute( subElement, binding, entityBinding, propertyName );
+			else if ( org.hibernate.metamodel.source.hbm.xml.mapping.Property.class.isInstance( attribute ) ) {
+				org.hibernate.metamodel.source.hbm.xml.mapping.Property property = org.hibernate.metamodel.source.hbm.xml.mapping.Property.class.cast( attribute );
+				SimpleAttributeBinding binding = entityBinding.makeSimpleAttributeBinding( property.getName() );
+				bindSimpleAttribute( property, binding, entityBinding );
 				attributeBinding = binding;
 			}
-			else if ( "component".equals( subElementName )
-					|| "dynamic-component".equals( subElementName )
-					|| "properties".equals( subElementName ) ) {
+			else if ( org.hibernate.metamodel.source.hbm.xml.mapping.Component.class.isInstance( attribute )
+					|| org.hibernate.metamodel.source.hbm.xml.mapping.DynamicComponent.class.isInstance( attribute )
+					|| org.hibernate.metamodel.source.hbm.xml.mapping.Properties.class.isInstance( attribute ) ) {
 // todo : implement
 //				String subpath = StringHelper.qualify( entityName, propertyName );
 //				value = new Component( mappings, persistentClass );
@@ -335,30 +337,36 @@ abstract class AbstractEntityBinder {
 //						false
 //					);
 			}
-			else if ( "join".equals( subElementName ) ) {
+		}
+
+		/*
+Array
+PrimitiveArray
+*/
+		for ( org.hibernate.metamodel.source.hbm.xml.mapping.Join join : entityClazz.getJoin() ) {
 // todo : implement
-//				Join join = new Join();
-//				join.setPersistentClass( persistentClass );
-//				bindJoin( subElement, join, mappings, inheritedMetas );
-//				persistentClass.addJoin( join );
-			}
-			else if ( "subclass".equals( subElementName ) ) {
+//			Join join = new Join();
+//			join.setPersistentClass( persistentClass );
+//			bindJoin( subElement, join, mappings, inheritedMetas );
+//			persistentClass.addJoin( join );
+		}
+		for ( org.hibernate.metamodel.source.hbm.xml.mapping.Subclass subclass : entityClazz.getSubclass() ) {
 // todo : implement
-//				handleSubclass( persistentClass, mappings, subElement, inheritedMetas );
-			}
-			else if ( "joined-subclass".equals( subElementName ) ) {
+//			handleSubclass( persistentClass, mappings, subElement, inheritedMetas );
+		}
+		for ( org.hibernate.metamodel.source.hbm.xml.mapping.JoinedSubclass subclass : entityClazz.getJoinedSubclass() ) {
 // todo : implement
-//				handleJoinedSubclass( persistentClass, mappings, subElement, inheritedMetas );
-			}
-			else if ( "union-subclass".equals( subElementName ) ) {
+//			handleJoinedSubclass( persistentClass, mappings, subElement, inheritedMetas );
+		}
+		for ( org.hibernate.metamodel.source.hbm.xml.mapping.UnionSubclass subclass : entityClazz.getUnionSubclass() ) {
 // todo : implement
-//				handleUnionSubclass( persistentClass, mappings, subElement, inheritedMetas );
-			}
-			else if ( "filter".equals( subElementName ) ) {
+//			handleUnionSubclass( persistentClass, mappings, subElement, inheritedMetas );
+		}
+		for ( org.hibernate.metamodel.source.hbm.xml.mapping.Filter filter : entityClazz.getFilter() ) {
 // todo : implement
 //				parseFilter( subElement, entityBinding );
-			}
-			else if ( "natural-id".equals( subElementName ) ) {
+		}
+		if ( entityClazz.getNaturalId() != null ) {
 // todo : implement
 //				UniqueKey uk = new UniqueKey();
 //				uk.setName("_UniqueKey");
@@ -376,20 +384,25 @@ abstract class AbstractEntityBinder {
 //						true
 //					);
 //				table.addUniqueKey(uk);
-			}
-			else if ( "query".equals(subElementName) ) {
+		}
+		if ( entityClazz.getQueryOrSqlQuery() != null ) {
+			for ( Object queryOrSqlQuery : entityClazz.getQueryOrSqlQuery() ) {
+				if ( org.hibernate.metamodel.source.hbm.xml.mapping.Query.class.isInstance( queryOrSqlQuery ) ) {
 // todo : implement
 //				bindNamedQuery(subElement, persistentClass.getEntityName(), mappings);
-			}
-			else if ( "sql-query".equals(subElementName) ) {
+				}
+				else if ( org.hibernate.metamodel.source.hbm.xml.mapping.SqlQuery.class.isInstance( queryOrSqlQuery ) ) {
 // todo : implement
-//				bindNamedSQLQuery(subElement, persistentClass.getEntityName(), mappings);
+//			bindNamedSQLQuery(subElement, persistentClass.getEntityName(), mappings);
+				}
 			}
-			else if ( "resultset".equals(subElementName) ) {
+		}
+		if ( entityClazz.getResultset() != null ) {
+			for ( org.hibernate.metamodel.source.hbm.xml.mapping.Resultset resultSet : entityClazz.getResultset() ) {
 // todo : implement
 //				bindResultSetMappingDefinition( subElement, persistentClass.getEntityName(), mappings );
 			}
-
+		}
 //			if ( value != null ) {
 //				Property property = createProperty( value, propertyName, persistentClass
 //					.getClassName(), subElement, mappings, inheritedMetas );
@@ -399,10 +412,9 @@ abstract class AbstractEntityBinder {
 //				if ( uniqueKey!=null ) uniqueKey.addColumns( property.getColumnIterator() );
 //			}
 
-		}
 	}
 
-	protected void bindSimpleAttribute(Element propertyElement,
+	protected void bindSimpleAttribute(org.hibernate.metamodel.source.hbm.xml.mapping.Id id,
 									   SimpleAttributeBinding attributeBinding,
 									   EntityBinding entityBinding,
 									   String attributeName) {
@@ -410,8 +422,9 @@ abstract class AbstractEntityBinder {
 			attributeBinding.initialize(
 					new HbmSimpleAttributeDomainState(
 							hibernateMappingBinder,
-							propertyElement,
-							entityBinding.getEntity().getOrCreateSingularAttribute( attributeName )
+							entityBinding.getEntity().getOrCreateSingularAttribute( attributeName ),
+							entityBinding.getMetaAttributes(),
+							id
 					)
 			);
 		}
@@ -422,26 +435,139 @@ abstract class AbstractEntityBinder {
 			attributeBinding.initializeTupleValue(
 					new HbmSimpleValueRelationalStateContainer(
 							getHibernateMappingBinder(),
-							propertyElement,
-							true
+							true,
+							id
 					)
 			);
 		}
 	}
 
-	protected void bindCollection(
-			Element collectionNode,
+	protected void bindSimpleAttribute(org.hibernate.metamodel.source.hbm.xml.mapping.Discriminator discriminator,
+									   SimpleAttributeBinding attributeBinding,
+									   EntityBinding entityBinding,
+									   String attributeName) {
+		if ( attributeBinding.getAttribute() == null ) {
+			attributeBinding.initialize(
+					new HbmSimpleAttributeDomainState(
+							hibernateMappingBinder,
+							entityBinding.getEntity().getOrCreateSingularAttribute( attributeName ),
+							entityBinding.getMetaAttributes(),
+							discriminator
+					)
+			);
+		}
+
+		if ( attributeBinding.getValue() == null ) {
+			// relational model has not been bound yet
+			// boolean (true here) indicates that by default column names should be guessed
+			attributeBinding.initializeTupleValue(
+					new HbmSimpleValueRelationalStateContainer(
+							getHibernateMappingBinder(),
+							true,
+							discriminator
+					)
+			);
+		}
+	}
+
+	protected void bindSimpleAttribute(org.hibernate.metamodel.source.hbm.xml.mapping.Version version,
+									   SimpleAttributeBinding attributeBinding,
+									   EntityBinding entityBinding,
+									   String attributeName) {
+		if ( attributeBinding.getAttribute() == null ) {
+			attributeBinding.initialize(
+					new HbmSimpleAttributeDomainState(
+							hibernateMappingBinder,
+							entityBinding.getEntity().getOrCreateSingularAttribute( attributeName ),
+							entityBinding.getMetaAttributes(),
+							version
+					)
+			);
+		}
+
+		if ( attributeBinding.getValue() == null ) {
+			// relational model has not been bound yet
+			// boolean (true here) indicates that by default column names should be guessed
+			attributeBinding.initializeTupleValue(
+					new HbmSimpleValueRelationalStateContainer(
+							getHibernateMappingBinder(),
+							true,
+							version
+					)
+			);
+		}
+	}
+
+	protected void bindSimpleAttribute(org.hibernate.metamodel.source.hbm.xml.mapping.Timestamp timestamp,
+									   SimpleAttributeBinding attributeBinding,
+									   EntityBinding entityBinding,
+									   String attributeName) {
+		if ( attributeBinding.getAttribute() == null ) {
+			attributeBinding.initialize(
+					new HbmSimpleAttributeDomainState(
+							hibernateMappingBinder,
+							entityBinding.getEntity().getOrCreateSingularAttribute( attributeName ),
+							entityBinding.getMetaAttributes(),
+							timestamp
+					)
+			);
+		}
+
+		if ( attributeBinding.getValue() == null ) {
+			// relational model has not been bound yet
+			// boolean (true here) indicates that by default column names should be guessed
+			attributeBinding.initializeTupleValue(
+					new HbmSimpleValueRelationalStateContainer(
+							getHibernateMappingBinder(),
+							true,
+							timestamp
+					)
+			);
+		}
+	}
+
+	protected void bindSimpleAttribute(org.hibernate.metamodel.source.hbm.xml.mapping.Property property,
+									   SimpleAttributeBinding attributeBinding,
+									   EntityBinding entityBinding) {
+		if ( attributeBinding.getAttribute() == null ) {
+			attributeBinding.initialize(
+					new HbmSimpleAttributeDomainState(
+							hibernateMappingBinder,
+							entityBinding.getEntity().getOrCreateSingularAttribute( property.getName() ),
+							entityBinding.getMetaAttributes(),
+							property
+					)
+			);
+		}
+
+		if ( attributeBinding.getValue() == null ) {
+			// relational model has not been bound yet
+			// boolean (true here) indicates that by default column names should be guessed
+			attributeBinding.initializeTupleValue(
+					new HbmSimpleValueRelationalStateContainer(
+							getHibernateMappingBinder(),
+							true,
+							property
+					)
+			);
+		}
+	}
+
+	protected void bindBag(
+			org.hibernate.metamodel.source.hbm.xml.mapping.Bag collection,
 			PluralAttributeBinding collectionBinding,
-			EntityBinding entityBinding,
-			PluralAttributeNature attributeNature,
-			String attributeName) {
+			EntityBinding entityBinding) {
 		if ( collectionBinding.getAttribute() == null ) {
 			// domain model has not been bound yet
 			collectionBinding.initialize(
 					new HbmPluralAttributeDomainState(
 							hibernateMappingBinder,
-							collectionNode,
-							entityBinding.getEntity().getOrCreatePluralAttribute( attributeName, attributeNature )
+							collection,
+							entityBinding.getMetaAttributes(),
+							entityBinding.getEntity().getOrCreatePluralAttribute(
+									collection.getName(),
+									PluralAttributeNature.BAG
+							)
 					)
 			);
 		}

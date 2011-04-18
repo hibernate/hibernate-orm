@@ -30,13 +30,14 @@ import org.hibernate.metamodel.binding.SimpleAttributeBinding;
 /**
  * @author Gail Badner
  */
-public class HbmDerivedValueRelationalState extends HbmRelationalState implements SimpleAttributeBinding.DerivedRelationalState {
+public class HbmDerivedValueRelationalState implements SimpleAttributeBinding.DerivedRelationalState {
+	private final String formula;
 
-	public HbmDerivedValueRelationalState(Element element, HbmSimpleValueRelationalStateContainer container) {
-		super( element );
+	public HbmDerivedValueRelationalState(String formula) {
+		this.formula = formula.trim();
 	}
 
 	public String getFormula() {
-		return getElement().getTextTrim();
+		return formula;
 	}
 }

@@ -187,6 +187,19 @@ public class JaxbHelper {
 		return new JaxbRoot( target, origin );
 	}
 
+	private Object createTarget(Document document, Origin origin, Schema validationSchema, Class targetClass ) {
+		final Object target;
+		try {
+			JAXBContext jaxbContext = JAXBContext.newInstance( targetClass );
+			Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
+			unmarshaller.setSchema( validationSchema );
+			return unmarshaller.unmarshal( new DOMSource( document ) );
+		}
+		catch (JAXBException e) {
+			throw new MappingException( "Unable to perform unmarshalling", e, origin );
+		}
+	}
+
 	private Schema resolveSupportedOrmXsd(String explicitVersion) {
 		final String xsdVersionString = explicitVersion == null ? ASSUMED_ORM_XSD_VERSION : explicitVersion;
 		if ( "1.0".equals( xsdVersionString ) ) {

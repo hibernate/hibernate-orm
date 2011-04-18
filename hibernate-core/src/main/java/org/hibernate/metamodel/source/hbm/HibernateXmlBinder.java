@@ -35,11 +35,11 @@ import org.dom4j.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.hibernate.cfg.ExtendsQueueEntry;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.internal.util.xml.XmlDocument;
-import org.hibernate.mapping.MetaAttribute;
+import org.hibernate.metamodel.domain.MetaAttribute;
+import org.hibernate.metamodel.source.internal.JaxbRoot;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
 import org.hibernate.metamodel.source.hbm.xml.mapping.HibernateMapping;
 
@@ -63,19 +63,15 @@ public class HibernateXmlBinder {
 		this.globalMetas = globalMetas;
 	}
 
-	public void bindRoot(XmlDocument metadataXml) {
-		bindRoot( metadataXml, Collections.<String>emptySet() );
+	public void bindRoot(JaxbRoot<HibernateMapping> jaxbRoot) {
+		log.debug( jaxbRoot.toString() );
+		bindRoot( jaxbRoot, Collections.<String>emptySet() );
 	}
 
-	public void bindRoot(HibernateMapping mapping) {
-		// todo - process the mapping
-		log.debug( mapping.toString() );
-	}
+	public void bindRoot(JaxbRoot<HibernateMapping> jaxbRoot, Set<String> entityNames) {
+		final HibernateMappingBinder mappingBinder = new HibernateMappingBinder( this, jaxbRoot );
 
-	public void bindRoot(XmlDocument metadataXml, Set<String> entityNames) {
-		final HibernateMappingBinder mappingBinder = new HibernateMappingBinder( this, metadataXml );
-
-// this is irrelevant due to HHH-6118 and the fact that now all sources should be 
+// this is irrelevant due to HHH-6118 and the fact that now all sources should be
 //		List<String> names = locateEntityNamesAwaitingExtends( metadataXml, mappingBinder );
 //		if ( !names.isEmpty() ) {
 //			// classes mentioned in extends not available - so put it in queue
@@ -86,7 +82,7 @@ public class HibernateXmlBinder {
 //			return;
 //		}
 
-		mappingBinder.processElement();
+		mappingBinder.processHibernateMapping();
 	}
 
 	MetadataImpl getMetadata() {

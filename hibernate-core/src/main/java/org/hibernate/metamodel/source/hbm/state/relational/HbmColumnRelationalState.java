@@ -25,92 +25,215 @@ package org.hibernate.metamodel.source.hbm.state.relational;
 
 import java.util.Set;
 
-import org.dom4j.Element;
-
 import org.hibernate.MappingException;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.metamodel.binding.SimpleAttributeBinding;
 import org.hibernate.metamodel.relational.Size;
-import org.hibernate.metamodel.source.util.DomHelper;
+import org.hibernate.metamodel.source.util.MappingHelper;
+
+// TODO: remove duplication after Id, Discriminator, Version, Timestamp, and Property extend a common interface.
 
 /**
  * @author Gail Badner
  */
-public class HbmColumnRelationalState extends HbmRelationalState implements SimpleAttributeBinding.ColumnRelationalState {
+public class HbmColumnRelationalState implements SimpleAttributeBinding.ColumnRelationalState {
 	private final HbmSimpleValueRelationalStateContainer container;
+	private final String explicitColumnName;
+	private final Size size;
+	private final boolean isNullable;
+	private final boolean isUnique;
+	private final String checkCondition;
+	private final String defaultColumnValue;
+	private final String sqlType;
+	private final String customWrite;
+	private final String customRead;
+	private final String comment;
+	private final Set<String> uniqueKeys;
+	private final Set<String> indexes;
 
 	/* package-protected */
-	HbmColumnRelationalState(Element columnElement,
+	HbmColumnRelationalState(org.hibernate.metamodel.source.hbm.xml.mapping.ColumnElement columnElement,
 							HbmSimpleValueRelationalStateContainer container) {
-		super( columnElement );
 		this.container = container;
+		this.explicitColumnName = columnElement.getName();
+		this.size = createSize( columnElement.getLength(), columnElement.getScale(), columnElement.getPrecision() );
+		this.isNullable = createNullable( columnElement.getNotNull() );
+		this.isUnique = createUnique( columnElement.getUnique() );
+		this.checkCondition = columnElement.getCheck();
+		this.defaultColumnValue = columnElement.getDefault();
+		this.sqlType = columnElement.getSqlType();
+		this.customWrite = columnElement.getWrite();
+		if ( customWrite != null && ! customWrite.matches("[^?]*\\?[^?]*") ) {
+			throw new MappingException("write expression must contain exactly one value placeholder ('?') character");
+		}
+		this.customRead = columnElement.getRead();
+		this.comment = columnElement.getComment() == null ? null : columnElement.getComment().trim();
+		this.uniqueKeys = MappingHelper.getStringValueTokens( columnElement.getUniqueKey(), ", " );
+		this.uniqueKeys.addAll( container.getPropertyUniqueKeys() );
+		this.indexes = MappingHelper.getStringValueTokens( columnElement.getIndex(), ", " );
+		this.indexes.addAll( container.getPropertyIndexes() );
+	}
+
+	HbmColumnRelationalState(org.hibernate.metamodel.source.hbm.xml.mapping.Property property,
+							HbmSimpleValueRelationalStateContainer container) {
+		this.container = container;
+		this.explicitColumnName = property.getName();
+		this.size = createSize( property.getLength(), property.getScale(), property.getPrecision() );
+		this.isNullable = createNullable( property.getNotNull() );
+		this.isUnique = createUnique( property.getUnique() );
+		this.checkCondition = null;
+		this.defaultColumnValue = null;
+		this.sqlType = null;
+		this.customWrite = null;
+		this.customRead = null;
+		this.comment = null;
+		this.uniqueKeys = MappingHelper.getStringValueTokens( property.getUniqueKey(), ", " );
+		this.uniqueKeys.addAll( container.getPropertyUniqueKeys() );
+		this.indexes = MappingHelper.getStringValueTokens( property.getIndex(), ", " );
+		this.indexes.addAll( container.getPropertyIndexes() );
+	}
+
+	HbmColumnRelationalState(org.hibernate.metamodel.source.hbm.xml.mapping.Id id,
+							HbmSimpleValueRelationalStateContainer container) {
+		if ( id.getColumnElement() != null && ! id.getColumnElement().isEmpty() ) {
+			throw new IllegalArgumentException( "This method should not be called with non-empty id.getColumnElement()" );
+		}
+		this.container = container;
+		this.explicitColumnName = id.getName();
+		this.size = createSize( id.getLength(), null, null );
+		this.isNullable = false;
+		this.isUnique = true;
+		this.checkCondition = null;
+		this.defaultColumnValue = null;
+		this.sqlType = null;
+		this.customWrite = null;
+		this.customRead = null;
+		this.comment = null;
+		this.uniqueKeys = container.getPropertyUniqueKeys();
+		this.indexes = container.getPropertyIndexes();
+	}
+
+	HbmColumnRelationalState(org.hibernate.metamodel.source.hbm.xml.mapping.Discriminator discriminator,
+							HbmSimpleValueRelationalStateContainer container) {
+		if ( discriminator.getColumnElement() != null  ) {
+			throw new IllegalArgumentException( "This method should not be called with null discriminator.getColumnElement()" );
+		}
+		this.container = container;
+		this.explicitColumnName = null;
+		this.size = createSize( discriminator.getLength(), null, null );
+		this.isNullable = false;
+		this.isUnique = true;
+		this.checkCondition = null;
+		this.defaultColumnValue = null;
+		this.sqlType = null;
+		this.customWrite = null;
+		this.customRead = null;
+		this.comment = null;
+		this.uniqueKeys = container.getPropertyUniqueKeys();
+		this.indexes = container.getPropertyIndexes();
+	}
+
+	HbmColumnRelationalState(org.hibernate.metamodel.source.hbm.xml.mapping.Version version,
+							HbmSimpleValueRelationalStateContainer container) {
+		this.container = container;
+		this.explicitColumnName = version.getColumn();
+		if ( version.getColumnElement() != null && ! version.getColumnElement().isEmpty() ) {
+			throw new IllegalArgumentException( "This method should not be called with non-empty version.getColumnElement()" );
+		}
+		// TODO: should set default
+		this.size = new Size();
+		this.isNullable = false;
+		this.isUnique = false;
+		this.checkCondition = null;
+		this.defaultColumnValue = null;
+		this.sqlType = null; // TODO: figure out the correct setting
+		this.customWrite = null;
+		this.customRead = null;
+		this.comment = null;
+		this.uniqueKeys = container.getPropertyUniqueKeys();
+		this.indexes = container.getPropertyIndexes();
+	}
+
+	HbmColumnRelationalState(org.hibernate.metamodel.source.hbm.xml.mapping.Timestamp timestamp,
+							HbmSimpleValueRelationalStateContainer container) {
+		this.container = container;
+		this.explicitColumnName = timestamp.getColumn();
+		// TODO: should set default
+		this.size = new Size();
+		this.isNullable = false;
+		this.isUnique = true; // well, it should hopefully be unique...
+		this.checkCondition = null;
+		this.defaultColumnValue = null;
+		this.sqlType = null; // TODO: figure out the correct setting
+		this.customWrite = null;
+		this.customRead = null;
+		this.comment = null;
+		this.uniqueKeys = container.getPropertyUniqueKeys();
+		this.indexes = container.getPropertyIndexes();
 	}
 
 	public NamingStrategy getNamingStrategy() {
 		return container.getNamingStrategy();
 	}
 	public String getExplicitColumnName() {
-		return getElement().attributeValue( "name" );
+		return explicitColumnName;
 	}
 	public Size getSize() {
+		return size;
+	}
+	private static Size createSize(String length, String scale, String precision) {
 		// TODO: should this set defaults if length, scale, precision is not specified?
 		Size size = new Size();
-		org.dom4j.Attribute lengthNode = getElement().attribute( "length" );
-		if ( lengthNode != null ) {
-			size.setLength( Integer.parseInt( lengthNode.getValue() ) );
+		if ( length != null ) {
+			size.setLength( Integer.parseInt( length ) );
 		}
-		org.dom4j.Attribute scaleNode = getElement().attribute( "scale" );
-		if ( scaleNode != null ) {
-			size.setScale( Integer.parseInt( scaleNode.getValue() ) );
+		if ( scale != null ) {
+			size.setScale( Integer.parseInt( scale ) );
 		}
-		org.dom4j.Attribute precisionNode = getElement().attribute( "precision" );
-		if ( precisionNode != null ) {
-			size.setPrecision( Integer.parseInt( precisionNode.getValue() ) );
+		if ( precision != null ) {
+			size.setPrecision( Integer.parseInt( precision ) );
 		}
 		// TODO: is there an attribute for lobMultiplier?
 		return size;
 	}
 	public boolean isNullable() {
-		return ! DomHelper.extractBooleanAttributeValue( getElement(), "not-null", false );
+		return isNullable;
+	}
+
+	private static boolean createNullable(String notNullString ) {
+		return ! MappingHelper.getBooleanValue( notNullString, false );
 	}
 
 	public boolean isUnique() {
-		return ! DomHelper.extractBooleanAttributeValue( getElement(), "unique", false );
+		return isUnique;
+	}
+
+	private boolean createUnique(String uniqueString) {
+		return ! MappingHelper.getBooleanValue( uniqueString, false );
 	}
 
 	public String getCheckCondition() {
-		return getElement().attributeValue( "check" );
+		return checkCondition;
 	}
 	public String getDefault() {
-		return getElement().attributeValue( "default" );
+		return defaultColumnValue;
 	}
 	public String getSqlType() {
-		return getElement().attributeValue( "sql-type" );
+		return sqlType;
 	}
 	public String getCustomWriteFragment() {
-		String customWrite = getElement().attributeValue( "write" );
-		if ( customWrite != null && ! customWrite.matches("[^?]*\\?[^?]*") ) {
-			throw new MappingException("write expression must contain exactly one value placeholder ('?') character");
-		}
 		return customWrite;
 	}
 	public String getCustomReadFragment() {
-		return getElement().attributeValue( "read" );
+		return customRead;
 	}
 	public String getComment() {
-		Element comment = getElement().element( "comment" );
-		return comment == null ?
-				null :
-				comment.getTextTrim();
+		return comment;
 	}
 	public Set<String> getUniqueKeys() {
-		Set<String> uniqueKeys = DomHelper.extractUniqueAttributeValueTokens( getElement(), "unique-key", ", " );
-		uniqueKeys.addAll( container.getPropertyUniqueKeys() );
 		return uniqueKeys;
 	}
 	public Set<String> getIndexes() {
-		Set<String> indexes = DomHelper.extractUniqueAttributeValueTokens( getElement(), "index", ", " );
-		indexes.addAll( container.getPropertyIndexes() );
 		return indexes;
 	}
 }

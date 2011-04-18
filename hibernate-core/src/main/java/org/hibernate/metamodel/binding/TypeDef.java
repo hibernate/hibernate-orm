@@ -21,28 +21,28 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.hbm.state.domain;
-
-import org.hibernate.metamodel.binding.CollectionElement;
-import org.hibernate.metamodel.binding.HibernateTypeDescriptor;
+package org.hibernate.metamodel.binding;
+import java.io.Serializable;
+import java.util.Properties;
 
 /**
- * @author Gail Badner
+ * Placeholder for typedef information
  */
-public class HbmCollectionElementDomainState implements CollectionElement.DomainState {
-	private final org.hibernate.metamodel.source.hbm.xml.mapping.Element element;
+public class TypeDef implements Serializable {
 
-	HbmCollectionElementDomainState(org.hibernate.metamodel.source.hbm.xml.mapping.Element element) {
-		this.element = element;
+	private String typeClass;
+	private Properties parameters;
+
+	public TypeDef(String typeClass, Properties parameters) {
+		this.typeClass = typeClass;
+		this.parameters = parameters;
 	}
 
-	public final HibernateTypeDescriptor getHibernateTypeDescriptor() {
-		HibernateTypeDescriptor hibernateTypeDescriptor = new HibernateTypeDescriptor();
-		hibernateTypeDescriptor.setTypeName( element.getType() );
-		return hibernateTypeDescriptor;
+	public Properties getParameters() {
+		return parameters;
+	}
+	public String getTypeClass() {
+		return typeClass;
 	}
 
-	public final String getNodeName() {
-		return element.getNode();
-	}
 }

@@ -21,28 +21,18 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.hbm.state.domain;
+package org.hibernate.metamodel.source.hbm;
 
-import org.hibernate.metamodel.binding.CollectionElement;
-import org.hibernate.metamodel.binding.HibernateTypeDescriptor;
+import org.hibernate.metamodel.source.Origin;
+import org.hibernate.metamodel.source.hbm.xml.mapping.HibernateMapping;
+import org.hibernate.metamodel.source.internal.JaxbRoot;
 
 /**
  * @author Gail Badner
  */
-public class HbmCollectionElementDomainState implements CollectionElement.DomainState {
-	private final org.hibernate.metamodel.source.hbm.xml.mapping.Element element;
+public class HibernateMappingJaxbRoot extends JaxbRoot<HibernateMapping> {
 
-	HbmCollectionElementDomainState(org.hibernate.metamodel.source.hbm.xml.mapping.Element element) {
-		this.element = element;
-	}
-
-	public final HibernateTypeDescriptor getHibernateTypeDescriptor() {
-		HibernateTypeDescriptor hibernateTypeDescriptor = new HibernateTypeDescriptor();
-		hibernateTypeDescriptor.setTypeName( element.getType() );
-		return hibernateTypeDescriptor;
-	}
-
-	public final String getNodeName() {
-		return element.getNode();
+	public HibernateMappingJaxbRoot(HibernateMapping root, Origin origin) {
+		super(root, origin);
 	}
 }

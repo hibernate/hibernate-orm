@@ -21,31 +21,34 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.hbm.state.relational;
+package org.hibernate.metamodel.relational;
 
-import java.util.Set;
+import java.io.Serializable;
 
-import org.dom4j.Element;
-
-import org.hibernate.MappingException;
-import org.hibernate.cfg.NamingStrategy;
-import org.hibernate.metamodel.binding.MappingDefaults;
-import org.hibernate.metamodel.binding.SimpleAttributeBinding;
-import org.hibernate.metamodel.relational.Size;
-import org.hibernate.metamodel.relational.TableSpecification;
-import org.hibernate.metamodel.source.util.DomHelper;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.mapping.RelationalModel;
 
 /**
- * @author Gail Badner
+ * Auxiliary database objects (i.e., triggers, stored procedures, etc) defined
+ * in the mappings.  Allows Hibernate to manage their lifecycle as part of
+ * creating/dropping the schema.
+ *
+ * @author Steve Ebersole
  */
-public class HbmRelationalState {
-	private final Element element;
+public interface AuxiliaryDatabaseObject extends RelationalModel, Serializable {
+	/**
+	 * Add the given dialect name to the scope of dialects to which
+	 * this database object applies.
+	 *
+	 * @param dialectName The name of a dialect.
+	 */
+	void addDialectScope(String dialectName);
 
-	public HbmRelationalState(Element element) {
-		this.element = element;
-	}
-
-	protected Element getElement() {
-		return element;
-	}
+	/**
+	 * Does this database object apply to the given dialect?
+	 *
+	 * @param dialect The dialect to check against.
+	 * @return True if this database object does apply to the given dialect.
+	 */
+	boolean appliesToDialect(Dialect dialect);
 }

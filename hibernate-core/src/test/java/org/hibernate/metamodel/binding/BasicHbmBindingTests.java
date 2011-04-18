@@ -31,7 +31,8 @@ import org.hibernate.internal.util.xml.MappingReader;
 import org.hibernate.internal.util.xml.Origin;
 import org.hibernate.internal.util.xml.XMLHelper;
 import org.hibernate.internal.util.xml.XmlDocument;
-import org.hibernate.metamodel.source.MetadataSources;
+import org.hibernate.metamodel.source.hbm.xml.mapping.HibernateMapping;
+import org.hibernate.metamodel.source.internal.JaxbRoot;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
 
 import org.junit.Test;
@@ -47,45 +48,35 @@ public class BasicHbmBindingTests extends AbstractBasicBindingTests {
 	private static final Logger log = Logger.getLogger( BasicHbmBindingTests.class.getName() );
 
 	public EntityBinding buildSimpleEntityBinding() {
-		MetadataImpl metadata = (MetadataImpl) new MetadataSources( basicServiceRegistry() ).buildMetadata();
-
-		XmlDocument xmlDocument = readResource( "/org/hibernate/metamodel/binding/SimpleEntity.hbm.xml" );
-		metadata.getHibernateXmlBinder().bindRoot( xmlDocument );
-		return metadata.getEntityBinding( SimpleEntity.class.getName() );
+		return getEntityBinding(
+				"org/hibernate/metamodel/binding/SimpleEntity.hbm.xml",
+				SimpleEntity.class
+		);
 	}
 
 	public EntityBinding buildSimpleVersionedEntityBinding() {
-		MetadataImpl metadata = (MetadataImpl) new MetadataSources( basicServiceRegistry() ).buildMetadata();
-
-		String fileName = "/org/hibernate/metamodel/binding/SimpleVersionedEntity.hbm.xml";
-		XmlDocument xmlDocument = readResource( fileName );
-		metadata.getHibernateXmlBinder().bindRoot( xmlDocument );
-
-		return metadata.getEntityBinding( SimpleVersionedEntity.class.getName() );
+		return getEntityBinding(
+				"org/hibernate/metamodel/binding/SimpleVersionedEntity.hbm.xml",
+				SimpleVersionedEntity.class
+		);
 	}
 
 	@Test
+	@SuppressWarnings({ "unchecked" })
 	public void testJaxbApproach() {
 		final String resourceName = "org/hibernate/metamodel/binding/SimpleVersionedEntity.xml";
-
-		MetadataSources metadataSources = new MetadataSources( basicServiceRegistry() );
-		metadataSources.addResource( resourceName );
-		assertEquals( 1, metadataSources.getJaxbRootList().size() );
+		metadata.addResource( resourceName );
+		assertEquals( 1, metadata.getJaxbRootList().size() );
+		JaxbRoot jaxbRoot = metadata.getJaxbRootList().get( 0 );
+		metadata.getHibernateXmlBinder().bindRoot( jaxbRoot  );
 	}
 
-	private XmlDocument readResource(final String name) {
-		Origin origin = new Origin() {
-			@Override
-			public String getType() {
-				return "resource";
-			}
-
-			@Override
-			public String getName() {
-				return name;
-			}
-		};
-		InputSource inputSource = new InputSource( ConfigHelper.getResourceAsStream( name ) );
-		return MappingReader.INSTANCE.readMappingDocument( XMLHelper.DEFAULT_DTD_RESOLVER, inputSource, origin );
+	private EntityBinding getEntityBinding(String resourceName, Class entityClass ) {
+		final MetadataImpl metadata = new MetadataImpl( basicServiceRegistry() );
+		metadata.addResource( resourceName );
+		assertEquals( 1, metadata.getJaxbRootList().size() );
+		JaxbRoot jaxbRoot = metadata.getJaxbRootList().get( 0 );
+		metadata.getHibernateXmlBinder().bindRoot( jaxbRoot  );
+		return metadata.getEntityBinding( entityClass.getName() );
 	}
 }

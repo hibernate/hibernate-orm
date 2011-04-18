@@ -25,8 +25,7 @@ package org.hibernate.metamodel.binding;
 
 import org.dom4j.Element;
 
-import org.hibernate.mapping.PropertyGeneration;
-import org.hibernate.mapping.Value;
+import org.hibernate.metamodel.relational.Value;
 import org.hibernate.metamodel.source.hbm.HbmHelper;
 import org.hibernate.metamodel.source.util.DomHelper;
 

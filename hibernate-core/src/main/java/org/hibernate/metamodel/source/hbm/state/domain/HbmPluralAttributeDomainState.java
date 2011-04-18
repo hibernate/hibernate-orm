@@ -27,6 +27,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.HashMap;
+import java.util.Map;
 
 import org.dom4j.Element;
 
@@ -38,28 +39,32 @@ import org.hibernate.metamodel.binding.ElementCollectionElement;
 import org.hibernate.metamodel.binding.MappingDefaults;
 import org.hibernate.metamodel.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.domain.Attribute;
+import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.metamodel.source.hbm.HbmHelper;
-import org.hibernate.metamodel.source.util.DomHelper;
+import org.hibernate.metamodel.source.util.MappingHelper;
+
 
 /**
  * @author Gail Badner
  */
 public class HbmPluralAttributeDomainState extends AbstractHbmAttributeDomainState implements PluralAttributeBinding.DomainState {
+	private final org.hibernate.metamodel.source.hbm.xml.mapping.Bag collection;
+
 	public HbmPluralAttributeDomainState(MappingDefaults defaults,
-										 Element element,
+										 org.hibernate.metamodel.source.hbm.xml.mapping.Bag collection,
+										 Map<String, MetaAttribute> entityMetaAttributes,
 										 Attribute attribute) {
-		super( defaults, element, attribute );
+		super( defaults, attribute, entityMetaAttributes, collection );
+		this.collection = collection;
 	}
 
 	public FetchMode getFetchMode() {
 		FetchMode fetchMode;
-		org.dom4j.Attribute fetchModeAttribute = getElement().attribute( "fetch" );
-		if ( fetchModeAttribute != null ) {
-			fetchMode = "join".equals( fetchModeAttribute.getValue() ) ? FetchMode.JOIN : FetchMode.SELECT;
+		if ( collection.getFetch() != null ) {
+			fetchMode = "join".equals( collection.getFetch() ) ? FetchMode.JOIN : FetchMode.SELECT;
 		}
 		else {
-			org.dom4j.Attribute jfNode = getElement().attribute( "outer-join" );
-			String jfNodeValue = ( jfNode == null ? "auto" : jfNode.getValue() );
+			String jfNodeValue = ( collection.getOuterJoin() == null ? "auto" : collection.getOuterJoin() );
 			if ( "auto".equals( jfNodeValue ) ) {
 				fetchMode = FetchMode.DEFAULT;
 			}
@@ -75,48 +80,48 @@ public class HbmPluralAttributeDomainState extends AbstractHbmAttributeDomainSta
 
 	public boolean isLazy() {
 		return isExtraLazy() ||
-				DomHelper.extractBooleanAttributeValue( getElement(), "lazy", getDefaults().isDefaultLazy() );
+				MappingHelper.getBooleanValue( collection.getLazy(), getDefaults().isDefaultLazy());
 	}
 
 	public boolean isExtraLazy() {
-		String lazyString = DomHelper.extractAttributeValue( getElement(), "lazy" );
-		return ( "extra".equals( lazyString ) );
+		return  ( "extra".equals( collection.getLazy() ) );
 	}
+
 	public CollectionElement getCollectionElement(PluralAttributeBinding binding) {
-		Element element = getElement().element( "element" );
-		if ( element != null ) {
-			ElementCollectionElement collectionElement = new ElementCollectionElement( binding );
-			collectionElement.initialize( new HbmCollectionElementDomainState( element ) );
-		}
-		// TODO: implement other types of collection elements
-		return null;
+		ElementCollectionElement collectionElement = new ElementCollectionElement( binding );
+		collectionElement.initialize( new HbmCollectionElementDomainState( collection.getElement() ) );
+		return collectionElement;
 	}
 
 	public boolean isInverse() {
-		return DomHelper.extractBooleanAttributeValue( getElement(), "inverse", false );
+		return MappingHelper.getBooleanValue( collection.getInverse(), false );
 	}
+
 	public boolean isMutable() {
-		return DomHelper.extractBooleanAttributeValue( getElement(), "mutable", true );
+		return MappingHelper.getBooleanValue( collection.getMutable(), true );
 	}
+
 	public boolean isSubselectLoadable() {
-		return "subselect".equals( getElement().attributeValue( "fetch" ) );
+		return "subselect".equals( collection.getFetch() );
 	}
 	public String getCacheConcurrencyStrategy() {
-		Element cacheElement = getElement().element( "cache" );
-		return cacheElement == null ? null : cacheElement.attributeValue( "usage" );
+		return collection.getCache() == null ?
+				null :
+				collection.getCache().getUsage();
 	}
 	public String getCacheRegionName() {
-		Element cacheElement = getElement().element( "cache" );
-		return cacheElement == null ? null : cacheElement.attributeValue( "region" );
+		return collection.getCache() == null ?
+				null :
+				collection.getCache().getRegion();
 	}
 	public String getOrderBy() {
-		return DomHelper.extractAttributeValue( getElement(), "order-by", null );
+		return collection.getOrderBy();
 	}
 	public String getWhere() {
-		return DomHelper.extractAttributeValue( getElement(), "where", null );
+		return collection.getWhere();
 	}
 	public String getReferencedPropertyName() {
-		return getElement().element( "key" ).attributeValue( "property-ref" );
+		return collection.getKey().getPropertyRef();
 	}
 	public boolean isSorted() {
 		// SORT
@@ -137,29 +142,31 @@ public class HbmPluralAttributeDomainState extends AbstractHbmAttributeDomainSta
 	}
 
 	private String getSortString() {
-		return DomHelper.extractAttributeValue( getElement(), "sort", "unsorted" );
+		//TODO: Bag does not define getSort(); update this when there is a Collection subtype
+		// collection.getSort() == null ? "unsorted" : collection.getSort();
+		return "unsorted";
 	}
 	public boolean isOrphanDelete() {
 		// ORPHAN DELETE (used for programmer error detection)
 		return ( getCascade().indexOf( "delete-orphan" ) >= 0 );
 	}
 	public int getBatchSize() {
-		return DomHelper.extractIntAttributeValue( getElement(), "batch-size", 0 );
+		return MappingHelper.getIntValue( collection.getBatchSize(), 0 );
 	}
 	public boolean isEmbedded() {
-		return DomHelper.extractBooleanAttributeValue( getElement(), "embed-xml", true );
+		return MappingHelper.getBooleanValue( collection.getEmbedXml(), true );
 	}
 	public boolean isOptimisticLocked() {
-		return true;
+		return MappingHelper.getBooleanValue( collection.getOptimisticLock(), true );
 	}
 
 	public Class getCollectionPersisterClass() {
 		try {
-			return DomHelper.extractClassAttributeValue( getElement(), "persister" );
+			return MappingHelper.getClassValue( collection.getPersister() );
 		}
 		catch (ClassNotFoundException cnfe) {
 			throw new MappingException( "Could not find collection persister class: "
-				+ getElement().attributeValue( "persister" ) );
+				+ collection.getPersister() );
 		}
 	}
 	public String getTypeName() {
@@ -193,28 +200,56 @@ public class HbmPluralAttributeDomainState extends AbstractHbmAttributeDomainSta
 	}
 	public java.util.Set getSynchronizedTables() {
 		java.util.Set<String> synchronizedTables = new HashSet<String>();
-		Iterator tables = getElement().elementIterator( "synchronize" );
-		while ( tables.hasNext() ) {
-			synchronizedTables.add( ( ( Element ) tables.next() ).attributeValue( "table" ) );
+		for ( org.hibernate.metamodel.source.hbm.xml.mapping.Synchronize sync : collection.getSynchronize() ) {
+			synchronizedTables.add( sync.getTable() );
 		}
 		return synchronizedTables;
 	}
 
 	public CustomSQL getCustomSQLInsert() {
-		return HbmHelper.getCustomSql( getElement().element( "sql-insert" ) );
+		org.hibernate.metamodel.source.hbm.xml.mapping.SqlInsert sqlInsert = collection.getSqlInsert();
+		return sqlInsert == null ?
+				null :
+				HbmHelper.getCustomSql(
+						collection.getSqlInsert().getContent(),
+						MappingHelper.getBooleanValue( collection.getSqlInsert().getCallable(), false ),
+						collection.getSqlInsert().getCheck()
+				);
 	}
 	public CustomSQL getCustomSQLUpdate() {
-		return HbmHelper.getCustomSql( getElement().element( "sql-update" ) );
+		org.hibernate.metamodel.source.hbm.xml.mapping.SqlUpdate sqlUpdate = collection.getSqlUpdate();
+		return sqlUpdate == null ?
+				null :
+				HbmHelper.getCustomSql(
+						collection.getSqlUpdate().getContent(),
+						MappingHelper.getBooleanValue( collection.getSqlUpdate().getCallable(), false ),
+						collection.getSqlUpdate().getCheck()
+				);
 	}
 	public CustomSQL getCustomSQLDelete() {
-		return HbmHelper.getCustomSql( getElement().element( "sql-delete" ) );
-
+		org.hibernate.metamodel.source.hbm.xml.mapping.SqlDelete sqlDelete = collection.getSqlDelete();
+		return sqlDelete == null ?
+				null :
+				HbmHelper.getCustomSql(
+						collection.getSqlDelete().getContent(),
+						MappingHelper.getBooleanValue( collection.getSqlDelete().getCallable(), false ),
+						collection.getSqlDelete().getCheck()
+				);
 	}
 	public CustomSQL getCustomSQLDeleteAll() {
-		return HbmHelper.getCustomSql( getElement().element( "sql-delete-all" ) );
+		org.hibernate.metamodel.source.hbm.xml.mapping.SqlDeleteAll sqlDeleteAll = collection.getSqlDeleteAll();
+		return sqlDeleteAll == null ?
+				null :
+				HbmHelper.getCustomSql(
+						collection.getSqlDeleteAll().getContent(),
+						MappingHelper.getBooleanValue( collection.getSqlDeleteAll().getCallable(), false ),
+						collection.getSqlDeleteAll().getCheck()
+				);
 	}
 	public String getLoaderName() {
-		return DomHelper.extractAttributeValue( getElement().element( "loader" ), "query-ref" );
+		return collection.getLoader() == null ?
+				null :
+				collection.getLoader().getQueryRef();
 	}
 
 	public boolean isKeyCasadeDeleteEnabled() {

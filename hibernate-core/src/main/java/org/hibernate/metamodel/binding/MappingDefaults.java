@@ -26,7 +26,7 @@ package org.hibernate.metamodel.binding;
 import java.util.Map;
 
 import org.hibernate.cfg.NamingStrategy;
-import org.hibernate.mapping.MetaAttribute;
+import org.hibernate.metamodel.domain.MetaAttribute;
 
 /**
  * @author Gail Badner

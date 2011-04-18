@@ -23,29 +23,29 @@
  */
 package org.hibernate.metamodel.source.hbm;
 
-import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import org.dom4j.Attribute;
-import org.dom4j.Element;
 
 import org.hibernate.MappingException;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.xml.XmlDocument;
-import org.hibernate.mapping.FetchProfile;
-import org.hibernate.mapping.MetaAttribute;
 import org.hibernate.mapping.MetadataSource;
 import org.hibernate.metamodel.binding.MappingDefaults;
-import org.hibernate.metamodel.source.util.DomHelper;
+import org.hibernate.metamodel.domain.MetaAttribute;
+import org.hibernate.metamodel.source.Origin;
+import org.hibernate.metamodel.source.internal.JaxbRoot;
+import org.hibernate.metamodel.source.hbm.xml.mapping.HibernateMapping;
+import org.hibernate.metamodel.source.util.MappingHelper;
 
 /**
  * Responsible for performing binding of the {@code <hibernate-mapping/>} DOM element
  */
 class HibernateMappingBinder implements MappingDefaults {
 	private final HibernateXmlBinder hibernateXmlBinder;
-	private final XmlDocument xmlDocument;
-	private final Element hibernateMappingElement;
+	private final JaxbRoot<HibernateMapping> jaxbRoot;
+	private final HibernateMapping hibernateMapping;
 
 	private final String defaultSchemaName;
 	private final String defaultCatalogName;
@@ -57,28 +57,34 @@ class HibernateMappingBinder implements MappingDefaults {
 
 	private Map<String, MetaAttribute> mappingMetas;
 
-	HibernateMappingBinder(HibernateXmlBinder hibernateXmlBinder, XmlDocument xmlDocument) {
+
+	HibernateMappingBinder(HibernateXmlBinder hibernateXmlBinder, JaxbRoot<HibernateMapping> jaxbRoot) {
 		this.hibernateXmlBinder = hibernateXmlBinder;
-		this.xmlDocument = xmlDocument;
-		this.hibernateMappingElement = xmlDocument.getDocumentTree().getRootElement();
+		this.jaxbRoot = jaxbRoot;
+		this.hibernateMapping = jaxbRoot.getRoot();
 
-		defaultSchemaName = DomHelper.extractAttributeValue( hibernateMappingElement, "schema" );
-		defaultCatalogName = DomHelper.extractAttributeValue( hibernateMappingElement, "catalog" );
-		defaultCascade = DomHelper.extractAttributeValue( hibernateMappingElement, "default-cascade", "none" );
-		defaultAccess = DomHelper.extractAttributeValue( hibernateMappingElement, "default-access", "property" );
-		defaultLazy = "true".equals( DomHelper.extractAttributeValue( hibernateMappingElement, "default-lazy", "false" ) );
-		packageName = DomHelper.extractAttributeValue( hibernateMappingElement, "package" );
-		autoImport = "true".equals( DomHelper.extractAttributeValue( hibernateMappingElement, "auto-import", "false" ) );
+		defaultSchemaName = hibernateMapping.getSchema();
+		defaultCatalogName = hibernateMapping.getCatalog();
+		defaultCascade = MappingHelper.getStringValue( hibernateMapping.getDefaultCascade(), "none" );
+		defaultAccess = MappingHelper.getStringValue( hibernateMapping.getDefaultAccess(), "property" );
+		//TODO: shouldn't default-lazy default to true???
+		defaultLazy = MappingHelper.getBooleanValue( hibernateMapping.getDefaultLazy(), false );
+		packageName = hibernateMapping.getPackage();
+		autoImport = MappingHelper.getBooleanValue( hibernateMapping.getAutoImport(), false );
 
-		mappingMetas = HbmHelper.extractMetas( hibernateMappingElement, true, hibernateXmlBinder.getGlobalMetas() );
+		mappingMetas = HbmHelper.extractMetas( hibernateMapping.getMeta(), true, hibernateXmlBinder.getGlobalMetas() );
 	}
 
 	HibernateXmlBinder getHibernateXmlBinder() {
 		return hibernateXmlBinder;
 	}
 
-	XmlDocument getXmlDocument() {
-		return xmlDocument;
+	HibernateMapping getHibernateMapping() {
+		return hibernateMapping;
+	}
+
+	Origin getOrigin() {
+		return jaxbRoot.getOrigin();
 	}
 
 	public String getDefaultSchemaName() {
@@ -117,85 +123,96 @@ class HibernateMappingBinder implements MappingDefaults {
 		return mappingMetas;
 	}
 
-	void processElement() {
-		Iterator rootChildren = hibernateMappingElement.elementIterator();
-		while ( rootChildren.hasNext() ) {
-			final Element element = (Element) rootChildren.next();
-			final String elementName = element.getName();
-
-			if ( "filter-def".equals( elementName ) ) {
-//				parseFilterDef( element, mappings );
+	void processHibernateMapping() {
+		if ( hibernateMapping.getFilterDef() != null ) {
+//			parseFilterDefs(  hibernateMapping.getFilterDef() );
+		}
+		if ( hibernateMapping.getFetchProfile() != null ) {
+			parseFetchProfiles( hibernateMapping.getFetchProfile(), null );
+		}
+		if ( hibernateMapping.getIdentifierGenerator() != null )  {
+//			parseIdentifierGeneratorRegistrations( hibernateMapping.getIdentifierGenerator() );
+		}
+		if ( hibernateMapping.getTypedef() != null ) {
+//			bindTypeDef( hibernateMapping.getTypedefs() );
+		}
+		if ( hibernateMapping.getClazzOrSubclassOrJoinedSubclass() != null ) {
+			for ( Object clazzOrSubclass : hibernateMapping.getClazzOrSubclassOrJoinedSubclass() ) {
+				if ( org.hibernate.metamodel.source.hbm.xml.mapping.Class.class.isInstance( clazzOrSubclass ) ) {
+					org.hibernate.metamodel.source.hbm.xml.mapping.Class clazz =
+							org.hibernate.metamodel.source.hbm.xml.mapping.Class.class.cast( clazzOrSubclass );
+					new RootEntityBinder( this, clazz ).process( clazz );
+				}
+				else if ( org.hibernate.metamodel.source.hbm.xml.mapping.Subclass.class.isInstance( clazzOrSubclass ) ) {
+//					PersistentClass superModel = getSuperclass( mappings, element );
+//					handleSubclass( superModel, mappings, element, inheritedMetas );
+				}
+				else if ( org.hibernate.metamodel.source.hbm.xml.mapping.JoinedSubclass.class.isInstance( clazzOrSubclass ) ) {
+//					PersistentClass superModel = getSuperclass( mappings, element );
+//					handleJoinedSubclass( superModel, mappings, element, inheritedMetas );
+				}
+				else if ( org.hibernate.metamodel.source.hbm.xml.mapping.UnionSubclass.class.isInstance( clazzOrSubclass ) ) {
+//					PersistentClass superModel = getSuperclass( mappings, element );
+//					handleUnionSubclass( superModel, mappings, element, inheritedMetas );
+				}
+				else {
+					throw new org.hibernate.metamodel.source.MappingException( "unknown type of class or subclass: " +
+							clazzOrSubclass.getClass().getName(), jaxbRoot.getOrigin()
+					);
+				}
 			}
-			else if ( "fetch-profile".equals( elementName ) ) {
-				parseFetchProfile( element, null );
-			}
-			else if ( "identifier-generator".equals( elementName ) ) {
-//				parseIdentifierGeneratorRegistration( element, mappings );
-			}
-			else if ( "typedef".equals( elementName ) ) {
-//				bindTypeDef( element, mappings );
-			}
-			else if ( "class".equals( elementName ) ) {
-				new RootEntityBinder( this, element ).process( element );
-			}
-			else if ( "subclass".equals( elementName ) ) {
-//				PersistentClass superModel = getSuperclass( mappings, element );
-//				handleSubclass( superModel, mappings, element, inheritedMetas );
-			}
-			else if ( "joined-subclass".equals( elementName ) ) {
-//				PersistentClass superModel = getSuperclass( mappings, element );
-//				handleJoinedSubclass( superModel, mappings, element, inheritedMetas );
-			}
-			else if ( "union-subclass".equals( elementName ) ) {
-//				PersistentClass superModel = getSuperclass( mappings, element );
-//				handleUnionSubclass( superModel, mappings, element, inheritedMetas );
-			}
-			else if ( "query".equals( elementName ) ) {
-//				bindNamedQuery( element, null, mappings );
-			}
-			else if ( "sql-query".equals( elementName ) ) {
+		}
+		if ( hibernateMapping.getQueryOrSqlQuery() != null ) {
+			for ( Object queryOrSqlQuery : hibernateMapping.getQueryOrSqlQuery() ) {
+				if ( org.hibernate.metamodel.source.hbm.xml.mapping.Query.class.isInstance( queryOrSqlQuery ) ) {
+//					bindNamedQuery( element, null, mappings );
+				}
+				else if ( org.hibernate.metamodel.source.hbm.xml.mapping.SqlQuery.class.isInstance( queryOrSqlQuery ) ) {
 //				bindNamedSQLQuery( element, null, mappings );
+				}
+				else {
+					throw new org.hibernate.metamodel.source.MappingException( "unknown type of query: " +
+							queryOrSqlQuery.getClass().getName(), jaxbRoot.getOrigin()
+					);
+				}
 			}
-			else if ( "resultset".equals( elementName ) ) {
-//				bindResultSetMappingDefinition( element, null, mappings );
-			}
-			else if ( "import".equals( elementName ) ) {
-				processImport( element );
-			}
-			else if ( "database-object".equals( elementName ) ) {
-//				bindAuxiliaryDatabaseObject( element, mappings );
+		}
+		if ( hibernateMapping.getResultset() != null ) {
+//			bindResultSetMappingDefinitions( element, null, mappings );
+		}
+		if ( hibernateMapping.getImport() != null ) {
+			processImports( hibernateMapping.getImport() );
+		}
+		if ( hibernateMapping.getDatabaseObject() != null ) {
+//			bindAuxiliaryDatabaseObjects( element, mappings );
+		}
+	}
+
+	private void processImports(List<org.hibernate.metamodel.source.hbm.xml.mapping.Import> imports) {
+		for ( org.hibernate.metamodel.source.hbm.xml.mapping.Import importValue : imports ) {
+			String className = getClassName( importValue.getClazz() );
+			String rename = importValue.getRename();
+			rename = ( rename == null ) ? StringHelper.unqualify( className ) : rename;
+			hibernateXmlBinder.getMetadata().addImport( className, rename );
+		}
+	}
+
+	protected void parseFetchProfiles(List<org.hibernate.metamodel.source.hbm.xml.mapping.FetchProfile> fetchProfiles, String containingEntityName) {
+		for ( org.hibernate.metamodel.source.hbm.xml.mapping.FetchProfile fetchProfile : fetchProfiles ) {
+			String profileName = fetchProfile.getName();
+			org.hibernate.metamodel.binding.FetchProfile profile = hibernateXmlBinder.getMetadata().findOrCreateFetchProfile( profileName, MetadataSource.HBM );
+			for (  org.hibernate.metamodel.source.hbm.xml.mapping.Fetch fetch : fetchProfile.getFetch() ) {
+				String entityName = fetch.getEntity() == null ? containingEntityName : fetch.getEntity();
+				if ( entityName == null ) {
+					throw new MappingException( "could not determine entity for fetch-profile fetch [" + profileName + "]:[" + fetch.getAssociation() + "]" );
+				}
+				profile.addFetch( entityName, fetch.getAssociation(), fetch.getStyle() );
 			}
 		}
 	}
 
-	private void processImport(Element importNode) {
-		String className = getClassName( importNode.attribute( "class" ) );
-		Attribute renameNode = importNode.attribute( "rename" );
-		String rename = ( renameNode == null ) ? StringHelper.unqualify( className ) : renameNode.getValue();
-		hibernateXmlBinder.getMetadata().addImport( className, rename );
-	}
-
-	protected void parseFetchProfile(Element element, String containingEntityName) {
-		String profileName = element.attributeValue( "name" );
-		FetchProfile profile = hibernateXmlBinder.getMetadata().findOrCreateFetchProfile( profileName, MetadataSource.HBM );
-		Iterator itr = element.elementIterator( "fetch" );
-		while ( itr.hasNext() ) {
-			final Element fetchElement = ( Element ) itr.next();
-			final String association = fetchElement.attributeValue( "association" );
-			final String style = fetchElement.attributeValue( "style" );
-			String entityName = fetchElement.attributeValue( "entity" );
-			if ( entityName == null ) {
-				entityName = containingEntityName;
-			}
-			if ( entityName == null ) {
-				throw new MappingException( "could not determine entity for fetch-profile fetch [" + profileName + "]:[" + association + "]" );
-			}
-			profile.addFetch( entityName, association, style );
-		}
-	}
-
-	String extractEntityName(Element element) {
-		return HbmHelper.extractEntityName( element, packageName );
+	String extractEntityName( org.hibernate.metamodel.source.hbm.xml.mapping.Class entityClazz) {
+		return HbmHelper.extractEntityName( entityClazz, packageName );
 	}
 
 	String getClassName(Attribute attribute) {

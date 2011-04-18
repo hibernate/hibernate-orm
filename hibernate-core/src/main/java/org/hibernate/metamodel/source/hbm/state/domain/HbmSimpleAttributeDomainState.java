@@ -23,22 +23,127 @@
  */
 package org.hibernate.metamodel.source.hbm.state.domain;
 
-import org.dom4j.Element;
+import java.util.Map;
 
 import org.hibernate.MappingException;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.binding.MappingDefaults;
 import org.hibernate.metamodel.binding.SimpleAttributeBinding;
-import org.hibernate.metamodel.source.util.DomHelper;
+import org.hibernate.metamodel.domain.MetaAttribute;
+import org.hibernate.metamodel.source.util.MappingHelper;
 
 /**
  * @author Gail Badner
  */
 public class HbmSimpleAttributeDomainState extends AbstractHbmAttributeDomainState implements SimpleAttributeBinding.DomainState {
+	private final boolean isLazy;
+	private final PropertyGeneration propertyGeneration;
+	private final boolean isInsertable;
+	private final boolean isUpdateable;
+
 	public HbmSimpleAttributeDomainState(MappingDefaults defaults,
-										 final Element element,
-										 org.hibernate.metamodel.domain.Attribute attribute) {
-		super( defaults, element, attribute );
+										 org.hibernate.metamodel.domain.Attribute attribute,
+										 Map<String, MetaAttribute> entityMetaAttributes,
+										 org.hibernate.metamodel.source.hbm.xml.mapping.Id id) {
+		super( defaults, attribute, entityMetaAttributes, id );
+		this.isLazy = false;
+
+		// TODO: how should these be set???
+		this.propertyGeneration = PropertyGeneration.parse( null );
+		this.isInsertable = true;
+
+		this.isUpdateable = false;
+	}
+
+	public HbmSimpleAttributeDomainState(MappingDefaults defaults,
+										 org.hibernate.metamodel.domain.Attribute attribute,
+										 Map<String, MetaAttribute> entityMetaAttributes,
+										 org.hibernate.metamodel.source.hbm.xml.mapping.Discriminator discriminator) {
+		super( defaults, attribute, discriminator );
+		this.isLazy = false;
+
+		this.propertyGeneration = PropertyGeneration.NEVER;
+		this.isInsertable = MappingHelper.getBooleanValue( discriminator.getInsert(), true );
+		this.isUpdateable = false;
+	}
+
+	public HbmSimpleAttributeDomainState(MappingDefaults defaults,
+										 org.hibernate.metamodel.domain.Attribute attribute,
+										 Map<String, MetaAttribute> entityMetaAttributes,
+										 org.hibernate.metamodel.source.hbm.xml.mapping.Version version) {
+
+		super( defaults, attribute, entityMetaAttributes, version );
+		this.isLazy = false;
+
+		// for version properties marked as being generated, make sure they are "always"
+		// generated; aka, "insert" is invalid; this is dis-allowed by the DTD,
+		// but just to make sure.
+		this.propertyGeneration = PropertyGeneration.parse(  version.getGenerated()  );
+		if ( propertyGeneration == PropertyGeneration.INSERT ) {
+			throw new MappingException( "'generated' attribute cannot be 'insert' for versioning property" );
+		}
+		this.isInsertable = MappingHelper.getBooleanValue( version.getInsert(), true );
+		this.isUpdateable = true;
+	}
+
+	public HbmSimpleAttributeDomainState(MappingDefaults defaults,
+										 org.hibernate.metamodel.domain.Attribute attribute,
+										 Map<String, MetaAttribute> entityMetaAttributes,
+										 org.hibernate.metamodel.source.hbm.xml.mapping.Timestamp timestamp) {
+
+		super( defaults, attribute, entityMetaAttributes, timestamp );
+		this.isLazy = false;
+
+		// for version properties marked as being generated, make sure they are "always"
+		// generated; aka, "insert" is invalid; this is dis-allowed by the DTD,
+		// but just to make sure.
+		this.propertyGeneration = PropertyGeneration.parse(  timestamp.getGenerated()  );
+		if ( propertyGeneration == PropertyGeneration.INSERT ) {
+			throw new MappingException( "'generated' attribute cannot be 'insert' for versioning property" );
+		}
+		this.isInsertable = true; //TODO: is this right????
+		this.isUpdateable = true;
+	}
+
+	public HbmSimpleAttributeDomainState(MappingDefaults defaults,
+										 org.hibernate.metamodel.domain.Attribute attribute,
+										 Map<String, MetaAttribute> entityMetaAttributes,
+										 org.hibernate.metamodel.source.hbm.xml.mapping.Property property) {
+		super( defaults, attribute, entityMetaAttributes, property );
+		this.isLazy = MappingHelper.getBooleanValue( property.getLazy(), false );
+;
+		this.propertyGeneration = PropertyGeneration.parse( property.getGenerated() );
+
+		if ( propertyGeneration == PropertyGeneration.ALWAYS || propertyGeneration == PropertyGeneration.INSERT ) {
+			// generated properties can *never* be insertable.
+			if ( property.getInsert() != null && Boolean.parseBoolean( property.getInsert() ) ) {
+				// the user specifically supplied insert="true", which constitutes an illegal combo
+				throw new MappingException(
+						"cannot specify both insert=\"true\" and generated=\"" + propertyGeneration.getName() +
+						"\" for property: " +
+						getAttribute().getName()
+				);
+			}
+			isInsertable = false;
+		}
+		else {
+			isInsertable = MappingHelper.getBooleanValue( property.getInsert(), true );
+		}
+		if ( propertyGeneration == PropertyGeneration.ALWAYS ) {
+			if ( property.getUpdate() != null && Boolean.parseBoolean( property.getUpdate() ) ) {
+				// the user specifically supplied update="true",
+				// which constitutes an illegal combo
+				throw new MappingException(
+						"cannot specify both update=\"true\" and generated=\"" + propertyGeneration.getName() +
+						"\" for property: " +
+						getAttribute().getName()
+				);
+			}
+			isUpdateable = false;
+		}
+		else {
+			isUpdateable = MappingHelper.getBooleanValue( property.getUpdate(), true );
+		}
 	}
 
 	protected boolean isEmbedded() {
@@ -46,56 +151,16 @@ public class HbmSimpleAttributeDomainState extends AbstractHbmAttributeDomainSta
 	}
 
 	public boolean isLazy() {
-		return DomHelper.extractBooleanAttributeValue( getElement(), "lazy", false );
+		return isLazy;
 	}
 
 	public PropertyGeneration getPropertyGeneration() {
-		return PropertyGeneration.parse( DomHelper.extractAttributeValue( getElement(), "generated", null ) );
+		return propertyGeneration;
 	}
 	public boolean isInsertable() {
-		//TODO: implement
-		PropertyGeneration generation = getPropertyGeneration();
-		boolean isInsertable = DomHelper.extractBooleanAttributeValue( getElement(), "insert", true );
-		if ( generation == PropertyGeneration.ALWAYS || generation == PropertyGeneration.INSERT ) {
-			// generated properties can *never* be insertable...
-			if ( isInsertable ) {
-				final org.dom4j.Attribute insertAttribute = getElement().attribute( "insert" );
-				if ( insertAttribute == null ) {
-					// insertable simply because the user did not specify anything; just override it
-					isInsertable = false;
-				}
-				else {
-					// the user specifically supplied insert="true", which constitutes an illegal combo
-					throw new MappingException(
-							"cannot specify both insert=\"true\" and generated=\"" + generation.getName() +
-							"\" for property: " +
-							getAttribute().getName()
-					);
-				}
-			}
-		}
 		return isInsertable;
 	}
 	public boolean isUpdateable() {
-		PropertyGeneration generation = getPropertyGeneration();
-		boolean isUpdateable = DomHelper.extractBooleanAttributeValue( getElement(), "update", true );
-		if ( isUpdateable && generation == PropertyGeneration.ALWAYS ) {
-			final org.dom4j.Attribute updateAttribute = getElement().attribute( "update" );
-			if ( updateAttribute == null ) {
-				// updateable only because the user did not specify
-				// anything; just override it
-				isUpdateable = false;
-			}
-			else {
-				// the user specifically supplied update="true",
-				// which constitutes an illegal combo
-				throw new MappingException(
-						"cannot specify both update=\"true\" and generated=\"" + generation.getName() +
-						"\" for property: " +
-						getAttribute().getName()
-				);
-			}
-		}
 		return isUpdateable;
 	}
 	public boolean isKeyCasadeDeleteEnabled() {

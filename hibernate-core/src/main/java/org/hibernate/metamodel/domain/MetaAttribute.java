@@ -21,28 +21,47 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.hbm.state.domain;
-
-import org.hibernate.metamodel.binding.CollectionElement;
-import org.hibernate.metamodel.binding.HibernateTypeDescriptor;
+package org.hibernate.metamodel.domain;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collections;
 
 /**
- * @author Gail Badner
+ * A meta attribute is a named value or values.
+ * @author Gavin King
  */
-public class HbmCollectionElementDomainState implements CollectionElement.DomainState {
-	private final org.hibernate.metamodel.source.hbm.xml.mapping.Element element;
+public class MetaAttribute implements Serializable {
+	private String name;
+	private java.util.List values = new ArrayList();
 
-	HbmCollectionElementDomainState(org.hibernate.metamodel.source.hbm.xml.mapping.Element element) {
-		this.element = element;
+	public MetaAttribute(String name) {
+		this.name = name;
+	}
+	
+	public String getName() {
+		return name;
+	}	
+
+	public java.util.List getValues() {
+		return Collections.unmodifiableList(values);
 	}
 
-	public final HibernateTypeDescriptor getHibernateTypeDescriptor() {
-		HibernateTypeDescriptor hibernateTypeDescriptor = new HibernateTypeDescriptor();
-		hibernateTypeDescriptor.setTypeName( element.getType() );
-		return hibernateTypeDescriptor;
+	public void addValue(String value) {
+		values.add(value);
 	}
 
-	public final String getNodeName() {
-		return element.getNode();
+	public String getValue() {
+		if ( values.size()!=1 ) {
+			throw new IllegalStateException("no unique value");
+		}
+		return (String) values.get(0);
+	}
+
+	public boolean isMultiValued() {
+		return values.size()>1;
+	}
+
+	public String toString() {
+		return "[" + name + "=" + values + "]";
 	}
 }

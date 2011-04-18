@@ -37,7 +37,7 @@ import org.hibernate.metamodel.relational.Column;
 import org.hibernate.metamodel.relational.Identifier;
 import org.hibernate.metamodel.relational.InLineView;
 import org.hibernate.metamodel.relational.Schema;
-import org.hibernate.metamodel.relational.Value;
+import org.hibernate.metamodel.source.util.MappingHelper;
 
 /**
 * TODO : javadoc
@@ -46,55 +46,53 @@ import org.hibernate.metamodel.relational.Value;
 */
 class RootEntityBinder extends AbstractEntityBinder {
 
-	RootEntityBinder(HibernateMappingBinder hibernateMappingBinder, Element entityElement) {
-		super( hibernateMappingBinder, entityElement );
+	RootEntityBinder(HibernateMappingBinder hibernateMappingBinder, org.hibernate.metamodel.source.hbm.xml.mapping.Class xmlClazz) {
+		super( hibernateMappingBinder, xmlClazz );
 	}
 
-	public void process(Element entityElement) {
-		String entityName = getHibernateMappingBinder().extractEntityName( entityElement );
+	public void process(org.hibernate.metamodel.source.hbm.xml.mapping.Class xmlClazz) {
+		String entityName = getHibernateMappingBinder().extractEntityName( xmlClazz );
 		if ( entityName == null ) {
 			throw new MappingException( "Unable to determine entity name" );
 		}
 
 		EntityBinding entityBinding = new EntityBinding();
-		basicEntityBinding( entityElement, entityBinding, null );
-		basicTableBinding( entityElement, entityBinding );
+		basicEntityBinding( xmlClazz, entityBinding, null );
+		basicTableBinding( xmlClazz, entityBinding );
 
-		Attribute mutableAttribute = entityElement.attribute( "mutable" );
-		if ( mutableAttribute != null ) {
-			entityBinding.setMutable( Boolean.valueOf( mutableAttribute.getValue() ) );
+		if ( xmlClazz.getMutable() != null ) {
+			entityBinding.setMutable( Boolean.valueOf( xmlClazz.getMutable() ) );
 		}
 
-		Attribute whereAttribute = entityElement.attribute( "where" );
-		if ( whereAttribute != null ) {
-			entityBinding.setWhereFilter( whereAttribute.getValue() );
+		if ( xmlClazz.getWhere() != null ) {
+			entityBinding.setWhereFilter( xmlClazz.getWhere() );
 		}
 
-		Attribute polymorphismAttribute = entityElement.attribute( "polymorphism" );
-		if ( polymorphismAttribute != null ) {
-			entityBinding.setExplicitPolymorphism( "explicit".equals( polymorphismAttribute.getValue() ) );
+		if ( xmlClazz.getPolymorphism() != null ) {
+			entityBinding.setExplicitPolymorphism( "explicit".equals(  xmlClazz.getPolymorphism() ) );
 		}
 
-		Attribute rowidAttribute = entityElement.attribute( "rowid" );
-		if ( rowidAttribute != null ) {
-			entityBinding.setRowId( rowidAttribute.getValue() );
+		if ( xmlClazz.getRowid() != null ) {
+			entityBinding.setRowId( xmlClazz.getRowid() );
 		}
 
-		bindIdentifier( entityElement, entityBinding );
-		bindDiscriminator( entityElement, entityBinding );
-		bindVersion( entityElement, entityBinding );
-		bindCaching( entityElement, entityBinding );
+		bindIdentifier( xmlClazz, entityBinding );
+		bindDiscriminator( xmlClazz, entityBinding );
+		bindVersion( xmlClazz, entityBinding );
+		bindCaching( xmlClazz, entityBinding );
 
 		// called createClassProperties in HBMBinder...
-		buildAttributeBindings( entityElement, entityBinding );
+		buildAttributeBindings( xmlClazz, entityBinding );
 
 		getHibernateXmlBinder().getMetadata().addEntity( entityBinding );
 	}
 
-	private void basicTableBinding(Element entityElement, EntityBinding entityBinding) {
+	private void basicTableBinding(org.hibernate.metamodel.source.hbm.xml.mapping.Class xmlClazz,
+								   EntityBinding entityBinding) {
 		final Schema schema = getHibernateXmlBinder().getMetadata().getDatabase().getSchema( getSchemaName() );
 
-		final String subSelect = HbmHelper.getSubselect( entityElement );
+		final String subSelect =
+				xmlClazz.getSubselect() == null ? xmlClazz.getSubselectElement() : xmlClazz.getSubselect();
 		if ( subSelect != null ) {
 			final String logicalName = entityBinding.getEntity().getName();
 			InLineView inLineView = schema.getInLineView( logicalName );
@@ -104,50 +102,46 @@ class RootEntityBinder extends AbstractEntityBinder {
 			entityBinding.setBaseTable( inLineView );
 		}
 		else {
-			final Identifier tableName = Identifier.toIdentifier( getClassTableName( entityElement, entityBinding, null ) );
+			final Identifier tableName = Identifier.toIdentifier( getClassTableName( xmlClazz, entityBinding, null ) );
 			org.hibernate.metamodel.relational.Table table = schema.getTable( tableName );
 			if ( table == null ) {
 				table = schema.createTable( tableName );
 			}
 			entityBinding.setBaseTable( table );
-			Element comment = entityElement.element( "comment" );
+			String comment = xmlClazz.getComment();
 			if ( comment != null ) {
-				table.addComment( comment.getTextTrim() );
+				table.addComment( comment.trim() );
 			}
-			Attribute checkAttribute = entityElement.attribute( "check" );
-			if ( checkAttribute != null ) {
-				table.addCheckConstraint( checkAttribute.getValue() );
+			String check = xmlClazz.getCheck();
+			if ( check != null ) {
+				table.addCheckConstraint( check );
 			}
 		}
 	}
 
-	private void bindIdentifier(Element entityElement, EntityBinding entityBinding) {
-		final Element idElement = entityElement.element( "id" );
-		if ( idElement != null ) {
-			bindSimpleId( idElement, entityBinding );
+	private void bindIdentifier(org.hibernate.metamodel.source.hbm.xml.mapping.Class xmlClazz,
+								EntityBinding entityBinding) {
+		if ( xmlClazz.getId() != null ) {
+			bindSimpleId( xmlClazz.getId(), entityBinding );
 			return;
 		}
 
-		final Element compositeIdElement = entityElement.element( "composite-id" );
-		if ( compositeIdElement != null ) {
-			bindCompositeId( compositeIdElement, entityBinding );
+		if ( xmlClazz.getCompositeId() != null ) {
+			bindCompositeId( xmlClazz.getCompositeId(), entityBinding );
 		}
 
 		throw new InvalidMappingException(
 				"Entity [" + entityBinding.getEntity().getName() + "] did not contain identifier mapping",
-				getHibernateMappingBinder().getXmlDocument()
+				getHibernateMappingBinder().getOrigin()
 		);
 	}
 
-	private void bindSimpleId(Element identifierElement, EntityBinding entityBinding) {
+	private void bindSimpleId(org.hibernate.metamodel.source.hbm.xml.mapping.Id id, EntityBinding entityBinding) {
 		// Handle the domain portion of the binding...
-		final String explicitName = identifierElement.attributeValue( "name" );
+		final String explicitName = id.getName();
 		final String attributeName = explicitName == null ? RootClass.DEFAULT_IDENTIFIER_COLUMN_NAME : explicitName;
-		entityBinding.getEntity().getOrCreateSingularAttribute( attributeName );
-
 		SimpleAttributeBinding idBinding = entityBinding.makeSimplePrimaryKeyAttributeBinding( attributeName );
-
-		bindSimpleAttribute( identifierElement, idBinding, entityBinding, attributeName );
+		bindSimpleAttribute( id, idBinding, entityBinding, attributeName );
 
 		if ( ! Column.class.isInstance( idBinding.getValue() ) ) {
 			// this should never ever happen..
@@ -205,8 +199,8 @@ class RootEntityBinder extends AbstractEntityBinder {
 //		makeIdentifier( idNode, id, mappings );
 	}
 
-	private static void bindCompositeId(Element identifierElement, EntityBinding entityBinding) {
-		final String explicitName = identifierElement.attributeValue( "name" );
+	private static void bindCompositeId(org.hibernate.metamodel.source.hbm.xml.mapping.CompositeId compositeId, EntityBinding entityBinding) {
+		final String explicitName = compositeId.getName();
 
 //		String propertyName = idNode.attributeValue( "name" );
 //		Component id = new Component( mappings, entity );
@@ -235,83 +229,60 @@ class RootEntityBinder extends AbstractEntityBinder {
 
 	}
 
-	private void bindDiscriminator(Element entityElement, EntityBinding entityBinding) {
-		Element discriminatorElement = entityElement.element( "discriminator" );
-		if ( discriminatorElement == null ) {
+	private void bindDiscriminator(org.hibernate.metamodel.source.hbm.xml.mapping.Class xmlEntityClazz,
+								   EntityBinding entityBinding) {
+		if ( xmlEntityClazz.getDiscriminator() == null ) {
 			return;
 		}
 
-		final String explicitName = discriminatorElement.attributeValue( "name" );
-		final String attributeName = explicitName == null ? RootClass.DEFAULT_DISCRIMINATOR_COLUMN_NAME : explicitName;
-		entityBinding.getEntity().getOrCreateSingularAttribute( attributeName );
-
-		SimpleAttributeBinding discriminatorBinding = entityBinding.makeEntityDiscriminatorBinding( attributeName );
+		// Discriminator.getName() is not defined, so the attribute will always be RootClass.DEFAULT_DISCRIMINATOR_COLUMN_NAME
+		SimpleAttributeBinding discriminatorBinding = entityBinding.makeEntityDiscriminatorBinding( RootClass.DEFAULT_DISCRIMINATOR_COLUMN_NAME );
 
 		// Handle the relational portion of the binding...
-		bindSimpleAttribute( discriminatorElement, discriminatorBinding, entityBinding, attributeName );
-		if ( discriminatorBinding.getHibernateTypeDescriptor().getTypeName() == null ) {
-			discriminatorBinding.getHibernateTypeDescriptor().setTypeName( "string" );
-		}
+		bindSimpleAttribute( xmlEntityClazz.getDiscriminator(), discriminatorBinding, entityBinding, RootClass.DEFAULT_DISCRIMINATOR_COLUMN_NAME );
 
-		if ( "true".equals( discriminatorElement.attributeValue( "force" ) ) ) {
-			entityBinding.getEntityDiscriminator().setForced( true );
-		}
-		if ( "false".equals( discriminatorElement.attributeValue( "insert" ) ) ) {
-			entityBinding.getEntityDiscriminator().setInserted( false );
-		}
+		entityBinding.getEntityDiscriminator().setForced( MappingHelper.getBooleanValue( xmlEntityClazz.getDiscriminator().getForce(), false ) );
 	}
 
-	private void bindVersion(Element entityElement, EntityBinding entityBinding) {
-		Element versioningElement = entityElement.element( "version" );
-		if ( versioningElement == null ) {
-			versioningElement = entityElement.element( "timestamp" );
-		}
-		if ( versioningElement == null ) {
+	private void bindVersion(org.hibernate.metamodel.source.hbm.xml.mapping.Class xmlEntityClazz,
+							 EntityBinding entityBinding) {
+		if ( xmlEntityClazz.getVersion() == null && xmlEntityClazz.getTimestamp() == null ) {
 			return;
 		}
 
-		boolean isVersion = "version".equals( versioningElement.getName() );
-
-		final String explicitName = versioningElement.attributeValue( "name" );
+		boolean isVersion = xmlEntityClazz.getVersion() != null;
+		String explicitName = isVersion ? xmlEntityClazz.getVersion().getName() : xmlEntityClazz.getTimestamp().getName();
 		if ( explicitName == null ) {
 			throw new MappingException( "Mising property name for version/timestamp mapping [" + entityBinding.getEntity().getName() + "]" );
 		}
-		entityBinding.getEntity().getOrCreateSingularAttribute( explicitName );
 		SimpleAttributeBinding versionBinding = entityBinding.makeVersionBinding( explicitName );
-		bindSimpleAttribute( versioningElement, versionBinding, entityBinding, explicitName );
-
-		if ( versionBinding.getHibernateTypeDescriptor().getTypeName() == null ) {
-			if ( isVersion ) {
-				versionBinding.getHibernateTypeDescriptor().setTypeName( "integer" );
-			}
-			else {
-				final String tsSource = versioningElement.attributeValue( "source" );
-				if ( "db".equals( tsSource ) ) {
-					versionBinding.getHibernateTypeDescriptor().setTypeName( "dbtimestamp" );
-				}
-				else {
-					versionBinding.getHibernateTypeDescriptor().setTypeName( "timestamp" );
-				}
-			}
+		if ( isVersion ) {
+			bindSimpleAttribute(
+					xmlEntityClazz.getVersion(),
+					versionBinding,
+					entityBinding,
+					explicitName
+			);
 		}
-
-		// for version properties marked as being generated, make sure they are "always"
-		// generated; aka, "insert" is invalid; this is dis-allowed by the DTD,
-		// but just to make sure...
-		if ( versionBinding.getGeneration() == PropertyGeneration.INSERT ) {
-			throw new MappingException( "'generated' attribute cannot be 'insert' for versioning property" );
+		else {
+			bindSimpleAttribute(
+					xmlEntityClazz.getTimestamp(),
+					versionBinding,
+					entityBinding,
+					explicitName
+			);
 		}
 	}
 
-	private void bindCaching(Element entityElement, EntityBinding entityBinding) {
-		final Element cacheElement = entityElement.element( "cache" );
-		if ( cacheElement == null ) {
+	private void bindCaching(org.hibernate.metamodel.source.hbm.xml.mapping.Class xmlClazz,
+							 EntityBinding entityBinding) {
+		org.hibernate.metamodel.source.hbm.xml.mapping.Cache cache = xmlClazz.getCache();
+		if ( cache == null ) {
 			return;
 		}
-		final String explicitRegion = cacheElement.attributeValue( "region" );
-		final String region = explicitRegion != null ? explicitRegion : entityBinding.getEntity().getName();
-		final String strategy = cacheElement.attributeValue( "usage" );
-		final boolean cacheLazyProps = !"non-lazy".equals( cacheElement.attributeValue( "include" ) );
+		final String region = cache.getRegion() != null ? cache.getRegion() : entityBinding.getEntity().getName();
+		final String strategy = cache.getUsage();
+		final boolean cacheLazyProps = !"non-lazy".equals( cache.getInclude() );
 		entityBinding.setCaching( new Caching( region, strategy, cacheLazyProps ) );
 	}
 

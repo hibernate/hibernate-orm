@@ -59,11 +59,13 @@ public class RevisionInfoConfiguration {
     private PropertyData revisionInfoIdData;
     private PropertyData revisionInfoTimestampData;
     private Type revisionInfoTimestampType;
+    private GlobalConfiguration globalCfg;
 
     private String revisionPropType;
     private String revisionPropSqlType;
 
-    public RevisionInfoConfiguration() {
+    public RevisionInfoConfiguration(GlobalConfiguration globalCfg) {
+        this.globalCfg = globalCfg;
         revisionInfoEntityName = "org.hibernate.envers.DefaultRevisionEntity";
         revisionInfoIdData = new PropertyData("id", "id", "field", null);
         revisionInfoTimestampData = new PropertyData("timestamp", "timestamp", "field", null);
@@ -72,10 +74,10 @@ public class RevisionInfoConfiguration {
         revisionPropType = "integer";
     }
 
-    private Document generateDefaultRevisionInfoXmlMapping(Configuration cfg) {
+    private Document generateDefaultRevisionInfoXmlMapping() {
         Document document = DocumentHelper.createDocument();
 
-        Element class_mapping = MetadataTools.createEntity(document, new AuditTableData(null, null, cfg.getProperty("org.hibernate.envers.default_schema"), cfg.getProperty("org.hibernate.envers.default_catalog")), null);
+        Element class_mapping = MetadataTools.createEntity(document, new AuditTableData(null, null, globalCfg.getDefaultSchemaName(), globalCfg.getDefaultCatalogName()), null);
 
         class_mapping.addAttribute("name", revisionInfoEntityName);
         class_mapping.addAttribute("table", "REVINFO");
@@ -236,7 +238,7 @@ public class RevisionInfoConfiguration {
             revisionInfoClass = DefaultRevisionEntity.class;
             revisionInfoGenerator = new DefaultRevisionInfoGenerator(revisionInfoEntityName, revisionInfoClass,
                     RevisionListener.class, revisionInfoTimestampData, isTimestampAsDate());
-            revisionInfoXmlMapping = generateDefaultRevisionInfoXmlMapping(cfg);
+            revisionInfoXmlMapping = generateDefaultRevisionInfoXmlMapping();
         }
 
         return new RevisionInfoConfigurationResult(

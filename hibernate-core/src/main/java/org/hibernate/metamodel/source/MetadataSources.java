@@ -81,6 +81,14 @@ public class MetadataSources {
 		return jaxbRootList;
 	}
 
+	public Iterable<String> getAnnotatedPackages() {
+		return annotatedPackages;
+	}
+
+	public Iterable<Class> getAnnotatedClasses() {
+		return annotatedClasses;
+	}
+
 	public BasicServiceRegistry getServiceRegistry() {
 		return serviceRegistry;
 	}

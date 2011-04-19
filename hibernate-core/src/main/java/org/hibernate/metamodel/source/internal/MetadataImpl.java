@@ -24,7 +24,9 @@
 package org.hibernate.metamodel.source.internal;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.jboss.logging.Logger;
@@ -55,8 +57,7 @@ public class MetadataImpl implements Metadata, MetadataImplementor, Serializable
 	private final BasicServiceRegistry serviceRegistry;
 	private final NamingStrategy namingStrategy;
 
-	private final AnnotationBinder annotationBinder;
-	private final HibernateXmlBinder hibernateXmlBinder;
+	final AnnotationBinder annotationBinder = new AnnotationBinder( this );
 
 	private final Database database = new Database();
 
@@ -69,16 +70,33 @@ public class MetadataImpl implements Metadata, MetadataImplementor, Serializable
 		this.serviceRegistry = metadataSources.getServiceRegistry();
 		this.namingStrategy = metadataSources.getNamingStrategy();
 
-		this.annotationBinder = new AnnotationBinder( this );
-		this.hibernateXmlBinder = new HibernateXmlBinder( this );
+		final ArrayList<String> processedEntityNames = new ArrayList<String>();
+		if ( preferredProcessingOrder == ProcessingOrder.HBM_FIRST ) {
+			applyHibernateMappings( metadataSources, processedEntityNames );
+			applyAnnotationMappings( metadataSources, processedEntityNames );
+		}
+		else {
+			applyAnnotationMappings( metadataSources, processedEntityNames );
+			applyHibernateMappings( metadataSources, processedEntityNames );
+		}
 	}
+
+	private void applyHibernateMappings(MetadataSources metadataSources, List<String> processedEntityNames) {
+		final HibernateXmlBinder hibernateXmlBinder = new HibernateXmlBinder( this );
+		for ( JaxbRoot jaxbRoot : metadataSources.getJaxbRootList() ) {
+			// filter to just hbm-based roots
+			hibernateXmlBinder.bindRoot( jaxbRoot );
+		}
+	}
+
+	private void applyAnnotationMappings(MetadataSources metadataSources, List<String> processedEntityNames) {
+		// todo : not sure how to best mesh what we have here with what AnnotationBinder is expecting...  hardy?
+		// also, AnnotationBinder should become method local
+	}
+
 
 	public BasicServiceRegistry getServiceRegistry() {
 		return serviceRegistry;
-	}
-
-	public HibernateXmlBinder getHibernateXmlBinder() {
-		return hibernateXmlBinder;
 	}
 
 	public AnnotationBinder getAnnotationBinder() {

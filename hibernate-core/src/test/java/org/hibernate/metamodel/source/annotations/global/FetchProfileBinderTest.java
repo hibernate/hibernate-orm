@@ -36,7 +36,7 @@ public class FetchProfileBinderTest extends BaseUnitTestCase {
 	public void setUp() {
 		serviceRegistry = new BasicServiceRegistryImpl( Collections.emptyMap() );
 		service = serviceRegistry.getService( ClassLoaderService.class );
-		meta = new MetadataImpl( new MetadataSources( serviceRegistry ) );
+		meta = (MetadataImpl) new MetadataSources( serviceRegistry ).buildMetadata();
 	}
 
 	@After

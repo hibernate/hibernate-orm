@@ -62,9 +62,8 @@ public class BasicHbmBindingTests extends AbstractBasicBindingTests {
 	private EntityBinding getEntityBinding(String resourceName, String entityName ) {
 		MetadataSources metadataSources = new MetadataSources(  basicServiceRegistry() );
 		metadataSources.addResource( resourceName );
-		MetadataImpl metadata = ( MetadataImpl ) metadataSources.buildMetadata();
 		assertEquals( 1, metadataSources.getJaxbRootList().size() );
-		metadata.getHibernateXmlBinder().bindRoot( metadataSources.getJaxbRootList().get( 0 ) );
+		MetadataImpl metadata = ( MetadataImpl ) metadataSources.buildMetadata();
 		return metadata.getEntityBinding( entityName );
 	}
 }

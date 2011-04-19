@@ -23,15 +23,13 @@
  */
 package org.hibernate.metamodel.binding;
 
-import org.jboss.logging.Logger;
-import org.xml.sax.InputSource;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
 
-import org.hibernate.internal.util.ConfigHelper;
-import org.hibernate.internal.util.xml.MappingReader;
-import org.hibernate.internal.util.xml.Origin;
-import org.hibernate.internal.util.xml.XMLHelper;
-import org.hibernate.internal.util.xml.XmlDocument;
-import org.hibernate.metamodel.source.hbm.xml.mapping.HibernateMapping;
+import org.jboss.logging.Logger;
+
+import org.hibernate.metamodel.source.MetadataSources;
 import org.hibernate.metamodel.source.internal.JaxbRoot;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
 
@@ -50,33 +48,23 @@ public class BasicHbmBindingTests extends AbstractBasicBindingTests {
 	public EntityBinding buildSimpleEntityBinding() {
 		return getEntityBinding(
 				"org/hibernate/metamodel/binding/SimpleEntity.hbm.xml",
-				SimpleEntity.class
+				SimpleEntity.class.getName()
 		);
 	}
 
 	public EntityBinding buildSimpleVersionedEntityBinding() {
 		return getEntityBinding(
 				"org/hibernate/metamodel/binding/SimpleVersionedEntity.hbm.xml",
-				SimpleVersionedEntity.class
+				SimpleVersionedEntity.class.getName()
 		);
 	}
 
-	@Test
-	@SuppressWarnings({ "unchecked" })
-	public void testJaxbApproach() {
-		final String resourceName = "org/hibernate/metamodel/binding/SimpleVersionedEntity.xml";
-		metadata.addResource( resourceName );
-		assertEquals( 1, metadata.getJaxbRootList().size() );
-		JaxbRoot jaxbRoot = metadata.getJaxbRootList().get( 0 );
-		metadata.getHibernateXmlBinder().bindRoot( jaxbRoot  );
-	}
-
-	private EntityBinding getEntityBinding(String resourceName, Class entityClass ) {
-		final MetadataImpl metadata = new MetadataImpl( basicServiceRegistry() );
-		metadata.addResource( resourceName );
-		assertEquals( 1, metadata.getJaxbRootList().size() );
-		JaxbRoot jaxbRoot = metadata.getJaxbRootList().get( 0 );
-		metadata.getHibernateXmlBinder().bindRoot( jaxbRoot  );
-		return metadata.getEntityBinding( entityClass.getName() );
+	private EntityBinding getEntityBinding(String resourceName, String entityName ) {
+		MetadataSources metadataSources = new MetadataSources(  basicServiceRegistry() );
+		metadataSources.addResource( resourceName );
+		MetadataImpl metadata = ( MetadataImpl ) metadataSources.buildMetadata();
+		assertEquals( 1, metadataSources.getJaxbRootList().size() );
+		metadata.getHibernateXmlBinder().bindRoot( metadataSources.getJaxbRootList().get( 0 ) );
+		return metadata.getEntityBinding( entityName );
 	}
 }

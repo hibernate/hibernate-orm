@@ -55,11 +55,11 @@ public class FetchProfileBinderTest extends BaseUnitTestCase {
 
 		FetchProfileBinder.bindFetchProfiles( meta, index );
 
-		Iterator<org.hibernate.mapping.FetchProfile> mappedFetchProfiles = meta.getFetchProfiles().iterator();
+		Iterator<org.hibernate.metamodel.binding.FetchProfile> mappedFetchProfiles = meta.getFetchProfiles().iterator();
 		assertTrue( mappedFetchProfiles.hasNext() );
-		org.hibernate.mapping.FetchProfile profile = mappedFetchProfiles.next();
+		org.hibernate.metamodel.binding.FetchProfile profile = mappedFetchProfiles.next();
 		assertEquals( "Wrong fetch profile name", "foo", profile.getName() );
-		org.hibernate.mapping.FetchProfile.Fetch fetch = profile.getFetches().iterator().next();
+		org.hibernate.metamodel.binding.FetchProfile.Fetch fetch = profile.getFetches().iterator().next();
 		assertEquals( "Wrong association name", "bar", fetch.getAssociation() );
 		assertEquals( "Wrong association type", Foo.class.getName(), fetch.getEntity() );
 	}
@@ -69,9 +69,9 @@ public class FetchProfileBinderTest extends BaseUnitTestCase {
 		Index index = JandexHelper.indexForClass( service, FooBar.class );
 		FetchProfileBinder.bindFetchProfiles( meta, index );
 
-		Iterator<org.hibernate.mapping.FetchProfile> mappedFetchProfiles = meta.getFetchProfiles().iterator();
+		Iterator<org.hibernate.metamodel.binding.FetchProfile> mappedFetchProfiles = meta.getFetchProfiles().iterator();
 		assertTrue( mappedFetchProfiles.hasNext() );
-		org.hibernate.mapping.FetchProfile profile = mappedFetchProfiles.next();
+		org.hibernate.metamodel.binding.FetchProfile profile = mappedFetchProfiles.next();
 		assertProfiles( profile );
 
 		assertTrue( mappedFetchProfiles.hasNext() );
@@ -79,14 +79,14 @@ public class FetchProfileBinderTest extends BaseUnitTestCase {
 		assertProfiles( profile );
 	}
 
-	private void assertProfiles(org.hibernate.mapping.FetchProfile profile) {
+	private void assertProfiles(org.hibernate.metamodel.binding.FetchProfile profile) {
 		if ( profile.getName().equals( "foobar" ) ) {
-			org.hibernate.mapping.FetchProfile.Fetch fetch = profile.getFetches().iterator().next();
+			org.hibernate.metamodel.binding.FetchProfile.Fetch fetch = profile.getFetches().iterator().next();
 			assertEquals( "Wrong association name", "foobar", fetch.getAssociation() );
 			assertEquals( "Wrong association type", FooBar.class.getName(), fetch.getEntity() );
 		}
 		else if ( profile.getName().equals( "fubar" ) ) {
-			org.hibernate.mapping.FetchProfile.Fetch fetch = profile.getFetches().iterator().next();
+			org.hibernate.metamodel.binding.FetchProfile.Fetch fetch = profile.getFetches().iterator().next();
 			assertEquals( "Wrong association name", "fubar", fetch.getAssociation() );
 			assertEquals( "Wrong association type", FooBar.class.getName(), fetch.getEntity() );
 		}

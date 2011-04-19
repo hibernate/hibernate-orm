@@ -44,7 +44,6 @@ import org.hibernate.InvalidMappingException;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.MetadataSourceType;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.metamodel.source.hbm.HibernateMappingJaxbRoot;
 import org.hibernate.metamodel.source.hbm.xml.mapping.HibernateMapping;
 import org.hibernate.metamodel.source.util.MappingHelper;
 
@@ -91,11 +90,12 @@ public class MetadataSourceQueue implements Serializable {
 	}
 	*/
 
-	public void add(HibernateMappingJaxbRoot jaxbRoot) {
-		final HibernateMapping hibernateMapping = jaxbRoot.getRoot();
+	public void add(JaxbRoot jaxbRoot) {
+		// TODO: does this have to work for EntityMappings also?
+		final HibernateMapping hibernateMapping = ( HibernateMapping ) jaxbRoot.getRoot();
 		String defaultPackage = MappingHelper.getStringValue( hibernateMapping.getPackage(), "" );
 		Set<String> entityNames = new HashSet<String>();
-		findClassNames( defaultPackage,  jaxbRoot.getRoot().getClazzOrSubclassOrJoinedSubclass(), entityNames );
+		findClassNames( defaultPackage, hibernateMapping.getClazzOrSubclassOrJoinedSubclass(), entityNames );
 		for ( String entity : entityNames ) {
 			hbmMetadataByEntityNameXRef.put( entity, jaxbRoot );
 		}

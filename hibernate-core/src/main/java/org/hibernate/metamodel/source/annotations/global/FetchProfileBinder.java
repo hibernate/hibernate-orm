@@ -31,8 +31,8 @@ import org.jboss.jandex.Index;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.FetchMode;
-import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.MetadataSource;
+import org.hibernate.metamodel.binding.FetchProfile;
 import org.hibernate.metamodel.source.annotations.HibernateDotNames;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
 

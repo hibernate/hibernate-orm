@@ -2,10 +2,10 @@ package org.hibernate.envers.test.integration.naming.quotation;
 
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
-import org.hibernate.envers.test.Priority;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
-import org.junit.Test;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
 
 import javax.persistence.EntityManager;
 import java.util.Arrays;
@@ -22,8 +22,7 @@ public class QuotedFieldsTest extends AbstractEntityTest {
         cfg.addAnnotatedClass(QuotedFieldsEntity.class);
     }
 
-    @Test
-    @Priority(10)
+    @BeforeClass(dependsOnMethods = "init")
     public void initData() {
         QuotedFieldsEntity qfe1 = new QuotedFieldsEntity("data1", 1);
         QuotedFieldsEntity qfe2 = new QuotedFieldsEntity("data2", 2);

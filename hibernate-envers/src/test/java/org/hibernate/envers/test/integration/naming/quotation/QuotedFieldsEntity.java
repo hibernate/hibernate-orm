@@ -2,7 +2,10 @@ package org.hibernate.envers.test.integration.naming.quotation;
 
 import org.hibernate.envers.Audited;
 
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
@@ -79,5 +82,14 @@ public class QuotedFieldsEntity {
         result = 31 * result + (data1 != null ? data1.hashCode() : 0);
         result = 31 * result + (data2 != null ? data2.hashCode() : 0);
         return result;
+    }
+
+    @Override
+    public String toString() {
+        return "QuotedFieldsEntity{" +
+                "id=" + id +
+                ", data1='" + data1 + '\'' +
+                ", data2=" + data2 +
+                '}';
     }
 }

@@ -59,7 +59,7 @@ public class QuotedFieldsTest extends AbstractEntityTest {
 
     @Test
     public void testHistoryOfId1() {
-        QuotedFieldsEntity ver1 = new QuotedFieldsEntity(qfeId1, "data2", 1);
+        QuotedFieldsEntity ver1 = new QuotedFieldsEntity(qfeId1, "data1", 1);
         QuotedFieldsEntity ver2 = new QuotedFieldsEntity(qfeId1, "data1 changed", 1);
 
         assert getAuditReader().find(QuotedFieldsEntity.class, qfeId1, 1).equals(ver1);

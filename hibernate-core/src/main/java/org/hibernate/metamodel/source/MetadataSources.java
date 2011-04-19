@@ -31,6 +31,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
@@ -55,6 +56,8 @@ public class MetadataSources {
 	private static final Logger LOG = Logger.getLogger( MetadataSources.class );
 
 	private List<JaxbRoot> jaxbRootList = new ArrayList<JaxbRoot>();
+	private LinkedHashSet<Class> annotatedClasses = new LinkedHashSet<Class>();
+	private LinkedHashSet<String> annotatedPackages = new LinkedHashSet<String>();
 
 	private final JaxbHelper jaxbHelper;
 
@@ -98,7 +101,8 @@ public class MetadataSources {
 	 * @return this (for method chaining)
 	 */
 	public MetadataSources addAnnotatedClass(Class annotatedClass) {
-		return this; // todo : implement method body
+		annotatedClasses.add( annotatedClass );
+		return this;
 	}
 
 	/**
@@ -109,7 +113,8 @@ public class MetadataSources {
 	 * @return this (for method chaining)
 	 */
 	public MetadataSources addPackage(String packageName) {
-		return this; // todo : implement method body
+		annotatedPackages.add( packageName );
+		return this;
 	}
 
 	/**

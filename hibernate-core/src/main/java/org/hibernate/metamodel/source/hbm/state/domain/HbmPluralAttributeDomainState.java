@@ -25,11 +25,8 @@ package org.hibernate.metamodel.source.hbm.state.domain;
 
 import java.util.Comparator;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.HashMap;
 import java.util.Map;
-
-import org.dom4j.Element;
 
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
@@ -41,6 +38,13 @@ import org.hibernate.metamodel.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.domain.Attribute;
 import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.metamodel.source.hbm.HbmHelper;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLBag;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSynchronize;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlDelete;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlDeleteAll;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlInsert;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlUpdate;
+
 import org.hibernate.metamodel.source.util.MappingHelper;
 
 
@@ -48,10 +52,10 @@ import org.hibernate.metamodel.source.util.MappingHelper;
  * @author Gail Badner
  */
 public class HbmPluralAttributeDomainState extends AbstractHbmAttributeDomainState implements PluralAttributeBinding.DomainState {
-	private final org.hibernate.metamodel.source.hbm.xml.mapping.Bag collection;
+	private final XMLBag collection;
 
 	public HbmPluralAttributeDomainState(MappingDefaults defaults,
-										 org.hibernate.metamodel.source.hbm.xml.mapping.Bag collection,
+										 XMLBag collection,
 										 Map<String, MetaAttribute> entityMetaAttributes,
 										 Attribute attribute) {
 		super( defaults, attribute, entityMetaAttributes, collection );
@@ -200,14 +204,14 @@ public class HbmPluralAttributeDomainState extends AbstractHbmAttributeDomainSta
 	}
 	public java.util.Set getSynchronizedTables() {
 		java.util.Set<String> synchronizedTables = new HashSet<String>();
-		for ( org.hibernate.metamodel.source.hbm.xml.mapping.Synchronize sync : collection.getSynchronize() ) {
+		for ( XMLSynchronize sync : collection.getSynchronize() ) {
 			synchronizedTables.add( sync.getTable() );
 		}
 		return synchronizedTables;
 	}
 
 	public CustomSQL getCustomSQLInsert() {
-		org.hibernate.metamodel.source.hbm.xml.mapping.SqlInsert sqlInsert = collection.getSqlInsert();
+		XMLSqlInsert sqlInsert = collection.getSqlInsert();
 		return sqlInsert == null ?
 				null :
 				HbmHelper.getCustomSql(
@@ -217,7 +221,7 @@ public class HbmPluralAttributeDomainState extends AbstractHbmAttributeDomainSta
 				);
 	}
 	public CustomSQL getCustomSQLUpdate() {
-		org.hibernate.metamodel.source.hbm.xml.mapping.SqlUpdate sqlUpdate = collection.getSqlUpdate();
+		XMLSqlUpdate sqlUpdate = collection.getSqlUpdate();
 		return sqlUpdate == null ?
 				null :
 				HbmHelper.getCustomSql(
@@ -227,7 +231,7 @@ public class HbmPluralAttributeDomainState extends AbstractHbmAttributeDomainSta
 				);
 	}
 	public CustomSQL getCustomSQLDelete() {
-		org.hibernate.metamodel.source.hbm.xml.mapping.SqlDelete sqlDelete = collection.getSqlDelete();
+		XMLSqlDelete sqlDelete = collection.getSqlDelete();
 		return sqlDelete == null ?
 				null :
 				HbmHelper.getCustomSql(
@@ -237,7 +241,7 @@ public class HbmPluralAttributeDomainState extends AbstractHbmAttributeDomainSta
 				);
 	}
 	public CustomSQL getCustomSQLDeleteAll() {
-		org.hibernate.metamodel.source.hbm.xml.mapping.SqlDeleteAll sqlDeleteAll = collection.getSqlDeleteAll();
+		XMLSqlDeleteAll sqlDeleteAll = collection.getSqlDeleteAll();
 		return sqlDeleteAll == null ?
 				null :
 				HbmHelper.getCustomSql(

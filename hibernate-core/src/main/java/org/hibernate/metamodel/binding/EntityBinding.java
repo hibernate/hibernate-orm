@@ -25,7 +25,6 @@ package org.hibernate.metamodel.binding;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -37,6 +36,11 @@ import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.metamodel.relational.Column;
 import org.hibernate.metamodel.relational.TableSpecification;
 import org.hibernate.metamodel.source.hbm.HbmHelper;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLClass;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlDelete;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlInsert;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlUpdate;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSynchronize;
 import org.hibernate.metamodel.source.util.MappingHelper;
 
 /**
@@ -83,7 +87,7 @@ public class EntityBinding {
 	private List<String> synchronizedTableNames;
 
 	// TODO: change to intialize from Doimain
-	public void fromHbmXml(MappingDefaults defaults, org.hibernate.metamodel.source.hbm.xml.mapping.Class entityClazz, Entity entity) {
+	public void fromHbmXml(MappingDefaults defaults, XMLClass entityClazz, Entity entity) {
 		this.entity = entity;
 		metaAttributes = HbmHelper.extractMetas( entityClazz.getMeta(), true, defaults.getMappingMetas() );
 
@@ -125,7 +129,7 @@ public class EntityBinding {
 		}
 
 		// CUSTOM SQL
-		org.hibernate.metamodel.source.hbm.xml.mapping.SqlInsert sqlInsert = entityClazz.getSqlInsert();
+		XMLSqlInsert sqlInsert = entityClazz.getSqlInsert();
 		if ( sqlInsert != null ) {
 			customInsert = HbmHelper.getCustomSql(
 					sqlInsert.getContent(),
@@ -134,7 +138,7 @@ public class EntityBinding {
 			);
 		}
 
-		org.hibernate.metamodel.source.hbm.xml.mapping.SqlDelete sqlDelete = entityClazz.getSqlDelete();
+		XMLSqlDelete sqlDelete = entityClazz.getSqlDelete();
 		if ( sqlDelete != null ) {
 			customDelete = HbmHelper.getCustomSql(
 					sqlDelete.getContent(),
@@ -143,7 +147,7 @@ public class EntityBinding {
 			);
 		}
 
-		org.hibernate.metamodel.source.hbm.xml.mapping.SqlUpdate sqlUpdate = entityClazz.getSqlUpdate();
+		XMLSqlUpdate sqlUpdate = entityClazz.getSqlUpdate();
 		if ( sqlUpdate != null ) {
 			customUpdate = HbmHelper.getCustomSql(
 					sqlUpdate.getContent(),
@@ -153,7 +157,7 @@ public class EntityBinding {
 		}
 
 		if ( entityClazz.getSynchronize() != null ) {
-			for ( org.hibernate.metamodel.source.hbm.xml.mapping.Synchronize synchronize : entityClazz.getSynchronize() ) {
+			for ( XMLSynchronize synchronize : entityClazz.getSynchronize() ) {
 				addSynchronizedTable( synchronize.getTable() );
 			}
 		}

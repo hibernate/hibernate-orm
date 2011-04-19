@@ -32,6 +32,12 @@ import org.hibernate.metamodel.binding.MappingDefaults;
 import org.hibernate.metamodel.domain.Attribute;
 import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.metamodel.source.hbm.HbmHelper;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLBag;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLDiscriminator;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLId;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLProperty;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLTimestamp;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLVersion;
 import org.hibernate.metamodel.source.util.MappingHelper;
 
 /**
@@ -50,7 +56,7 @@ public abstract class AbstractHbmAttributeDomainState implements AbstractAttribu
 	public AbstractHbmAttributeDomainState(MappingDefaults defaults,
 										   Attribute attribute,
 										   Map<String, MetaAttribute> entityMetaAttributes,
-										   org.hibernate.metamodel.source.hbm.xml.mapping.Id id) {
+										   XMLId id) {
 		this.defaults = defaults;
 		this.attribute = attribute;
 		this.hibernateTypeDescriptor = new HibernateTypeDescriptor();
@@ -66,7 +72,7 @@ public abstract class AbstractHbmAttributeDomainState implements AbstractAttribu
 
 	public AbstractHbmAttributeDomainState(MappingDefaults defaults,
 										   Attribute attribute,
-										   org.hibernate.metamodel.source.hbm.xml.mapping.Discriminator discriminator) {
+										   XMLDiscriminator discriminator) {
 
 		this.defaults = defaults;
 		this.attribute = attribute;
@@ -83,7 +89,7 @@ public abstract class AbstractHbmAttributeDomainState implements AbstractAttribu
 	public AbstractHbmAttributeDomainState(MappingDefaults defaults,
 										   Attribute attribute,
 										   Map<String, MetaAttribute> entityMetaAttributes,
-										   org.hibernate.metamodel.source.hbm.xml.mapping.Version version) {
+										   XMLVersion version) {
 		this.defaults = defaults;
 		this.attribute = attribute;
 		this.hibernateTypeDescriptor = new HibernateTypeDescriptor();
@@ -102,7 +108,7 @@ public abstract class AbstractHbmAttributeDomainState implements AbstractAttribu
 	public AbstractHbmAttributeDomainState(MappingDefaults defaults,
 										   Attribute attribute,
 										   Map<String, MetaAttribute> entityMetaAttributes,
-										   org.hibernate.metamodel.source.hbm.xml.mapping.Timestamp timestamp) {
+										   XMLTimestamp timestamp) {
 		this.defaults = defaults;
 		this.attribute = attribute;
 		this.hibernateTypeDescriptor = new HibernateTypeDescriptor();
@@ -124,7 +130,7 @@ public abstract class AbstractHbmAttributeDomainState implements AbstractAttribu
 	public AbstractHbmAttributeDomainState(MappingDefaults defaults,
 										   Attribute attribute,
 										   Map<String, MetaAttribute> entityMetaAttributes,
-										   org.hibernate.metamodel.source.hbm.xml.mapping.Property property) {
+										   XMLProperty property) {
 		this.defaults = defaults;
 		this.attribute = attribute;
 		this.hibernateTypeDescriptor = new HibernateTypeDescriptor();
@@ -141,7 +147,7 @@ public abstract class AbstractHbmAttributeDomainState implements AbstractAttribu
 	public AbstractHbmAttributeDomainState(MappingDefaults defaults,
 										   Attribute attribute,
 										   Map<String, MetaAttribute> entityMetaAttributes,
-										   org.hibernate.metamodel.source.hbm.xml.mapping.Bag collection) {
+										   XMLBag collection) {
 		this.defaults = defaults;
 		this.attribute = attribute;
 		this.hibernateTypeDescriptor = new HibernateTypeDescriptor();

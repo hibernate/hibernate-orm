@@ -51,8 +51,8 @@ import org.hibernate.metamodel.source.MappingException;
 import org.hibernate.metamodel.source.MetadataSources;
 import org.hibernate.metamodel.source.Origin;
 import org.hibernate.metamodel.source.XsdException;
-import org.hibernate.metamodel.source.annotation.xml.EntityMappings;
-import org.hibernate.metamodel.source.hbm.xml.mapping.HibernateMapping;
+import org.hibernate.metamodel.source.annotation.xml.XMLEntityMappings;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 
 /**
@@ -132,11 +132,11 @@ public class JaxbHelper {
 			final Attribute attribute = event.asStartElement().getAttributeByName( ORM_VERSION_ATTRIBUTE_QNAME );
 			final String explicitVersion = attribute == null ? null : attribute.getValue();
 			validationSchema = resolveSupportedOrmXsd( explicitVersion );
-			jaxbTarget = EntityMappings.class;
+			jaxbTarget = XMLEntityMappings.class;
 		}
 		else {
 			validationSchema = hbmSchema();
-			jaxbTarget = HibernateMapping.class;
+			jaxbTarget = XMLHibernateMapping.class;
 		}
 
 		final Object target;
@@ -166,11 +166,11 @@ public class JaxbHelper {
 		if ( "entity-mappings".equals( rootElement.getNodeName() ) ) {
 			final String explicitVersion = rootElement.getAttribute( "version" );
 			validationSchema = resolveSupportedOrmXsd( explicitVersion );
-			jaxbTarget = EntityMappings.class;
+			jaxbTarget = XMLEntityMappings.class;
 		}
 		else {
 			validationSchema = hbmSchema();
-			jaxbTarget = HibernateMapping.class;
+			jaxbTarget = XMLHibernateMapping.class;
 		}
 
 		final Object target;

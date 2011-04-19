@@ -24,7 +24,6 @@
 package org.hibernate.metamodel.source.hbm;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -33,9 +32,10 @@ import org.dom4j.Element;
 
 import org.hibernate.MappingException;
 import org.hibernate.engine.ExecuteUpdateResultCheckStyle;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.metamodel.binding.CustomSQL;
 import org.hibernate.metamodel.domain.MetaAttribute;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLClass;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLMeta;
 import org.hibernate.metamodel.source.util.DomHelper;
 import org.hibernate.metamodel.source.util.MappingHelper;
 
@@ -69,14 +69,14 @@ public class HbmHelper {
 		return ExecuteUpdateResultCheckStyle.parse( check );
 	}
 
-	public static final Map<String, MetaAttribute> extractMetas(List<org.hibernate.metamodel.source.hbm.xml.mapping.Meta> meta, Map<String, MetaAttribute> baseline) {
+	public static final Map<String, MetaAttribute> extractMetas(List<XMLMeta> meta, Map<String, MetaAttribute> baseline) {
 		return extractMetas( meta, false, baseline );
 	}
 
-	public static final Map<String, MetaAttribute> extractMetas(List<org.hibernate.metamodel.source.hbm.xml.mapping.Meta> metaList, boolean onlyInheritable, Map<String, MetaAttribute> baseline) {
+	public static final Map<String, MetaAttribute> extractMetas(List<XMLMeta> metaList, boolean onlyInheritable, Map<String, MetaAttribute> baseline) {
 		Map<String, MetaAttribute> extractedMetas = new HashMap<String, MetaAttribute>();
 		extractedMetas.putAll( baseline );
-		for ( org.hibernate.metamodel.source.hbm.xml.mapping.Meta meta : metaList) {
+		for ( XMLMeta meta : metaList) {
 			boolean inheritable = Boolean.valueOf( meta.getInherit() );
 			if ( onlyInheritable & !inheritable ) {
 				continue;
@@ -94,7 +94,7 @@ public class HbmHelper {
 		return extractedMetas;
 	}
 
-	public static String extractEntityName( org.hibernate.metamodel.source.hbm.xml.mapping.Class entityClazz, String unqualifiedPackageName) {
+	public static String extractEntityName( XMLClass entityClazz, String unqualifiedPackageName) {
 		String entityName = entityClazz.getEntityName();
 		return entityName == null ? getClassName( entityClazz.getName(), unqualifiedPackageName ) : entityName;
 	}

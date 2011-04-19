@@ -9,7 +9,7 @@ import org.jboss.jandex.Index;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
-import org.hibernate.metamodel.source.annotation.xml.EntityMappings;
+import org.hibernate.metamodel.source.annotation.xml.XMLEntityMappings;
 import org.hibernate.metamodel.source.util.xml.XmlHelper;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 
@@ -40,17 +40,17 @@ public class OrmXmlParser {
 		Set<InputStream> mappingStreams = new HashSet<InputStream>();
 		for ( String fileName : mappingFileNames ) {
 
-			EntityMappings entityMappings;
+			XMLEntityMappings entityMappings;
 			try {
 				entityMappings = XmlHelper.unmarshallXml(
-						fileName, ORM2_MAPPING_XSD, EntityMappings.class, classLoaderService
+						fileName, ORM2_MAPPING_XSD, XMLEntityMappings.class, classLoaderService
 				).getRoot();
 			}
 			catch ( JAXBException orm2Exception ) {
 				// if we cannot parse against orm_2_0.xsd we try orm_1_0.xsd for backwards compatibility
 				try {
 					entityMappings = XmlHelper.unmarshallXml(
-							fileName, ORM1_MAPPING_XSD, EntityMappings.class, classLoaderService
+							fileName, ORM1_MAPPING_XSD, XMLEntityMappings.class, classLoaderService
 					).getRoot();
 				}
 				catch ( JAXBException orm1Exception ) {

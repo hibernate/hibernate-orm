@@ -25,8 +25,6 @@ package org.hibernate;
 
 import org.hibernate.internal.util.xml.XmlDocument;
 import org.hibernate.metamodel.source.Origin;
-import org.hibernate.metamodel.source.hbm.xml.mapping.HibernateMapping;
-import org.hibernate.metamodel.source.internal.JaxbRoot;
 
 /**
  * Thrown when a mapping is found to be invalid.

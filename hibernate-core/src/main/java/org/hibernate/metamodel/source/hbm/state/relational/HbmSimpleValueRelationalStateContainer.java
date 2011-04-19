@@ -32,6 +32,12 @@ import org.hibernate.MappingException;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.metamodel.binding.MappingDefaults;
 import org.hibernate.metamodel.binding.SimpleAttributeBinding;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLColumnElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLDiscriminator;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLId;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLProperty;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLTimestamp;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLVersion;
 
 /**
  * @author Gail Badner
@@ -50,7 +56,7 @@ public class HbmSimpleValueRelationalStateContainer implements SimpleAttributeBi
 
 	public HbmSimpleValueRelationalStateContainer(MappingDefaults defaults,
 												  boolean autoColumnCreation,
-												  org.hibernate.metamodel.source.hbm.xml.mapping.Id id) {
+												  XMLId id) {
 		this( defaults, id.getColumnElement() );
 		if ( singleValueStates.isEmpty() ) {
 			if ( id.getColumn() == null && ! autoColumnCreation ) {
@@ -65,7 +71,7 @@ public class HbmSimpleValueRelationalStateContainer implements SimpleAttributeBi
 
 	public HbmSimpleValueRelationalStateContainer(MappingDefaults defaults,
 												  boolean autoColumnCreation,
-												  org.hibernate.metamodel.source.hbm.xml.mapping.Discriminator discriminator) {
+												  XMLDiscriminator discriminator) {
 		this( defaults, discriminator.getFormulaElement(), discriminator.getColumnElement() );
 		if ( singleValueStates.isEmpty() ) {
 			if ( discriminator.getColumn() == null && discriminator.getFormula() == null &&  ! autoColumnCreation ) {
@@ -80,7 +86,7 @@ public class HbmSimpleValueRelationalStateContainer implements SimpleAttributeBi
 
 	public HbmSimpleValueRelationalStateContainer(MappingDefaults defaults,
 												  boolean autoColumnCreation,
-												  org.hibernate.metamodel.source.hbm.xml.mapping.Version version) {
+												  XMLVersion version) {
 		this( defaults, version.getColumnElement() );
 		if ( singleValueStates.isEmpty() ) {
 			if ( version.getColumn() == null && ! autoColumnCreation ) {
@@ -95,7 +101,7 @@ public class HbmSimpleValueRelationalStateContainer implements SimpleAttributeBi
 
 	public HbmSimpleValueRelationalStateContainer(MappingDefaults defaults,
 												  boolean autoColumnCreation,
-												  org.hibernate.metamodel.source.hbm.xml.mapping.Timestamp timestamp) {
+												  XMLTimestamp timestamp) {
 		this( defaults, null );
 		if ( singleValueStates.isEmpty() ) {
 			if ( timestamp.getColumn() == null && ! autoColumnCreation ) {
@@ -110,7 +116,7 @@ public class HbmSimpleValueRelationalStateContainer implements SimpleAttributeBi
 
 	public HbmSimpleValueRelationalStateContainer(MappingDefaults defaults,
 												  boolean autoColumnCreation,
-												  org.hibernate.metamodel.source.hbm.xml.mapping.Property property) {
+												  XMLProperty property) {
 		this( defaults, property.getColumnElementOrFormulaElement() );
 		if ( singleValueStates.isEmpty() ) {
 			if ( property.getColumn() == null && property.getFormula() == null &&  ! autoColumnCreation ) {
@@ -125,7 +131,7 @@ public class HbmSimpleValueRelationalStateContainer implements SimpleAttributeBi
 
 	private HbmSimpleValueRelationalStateContainer(MappingDefaults defaults,
 												   String formulaElement,
-												   org.hibernate.metamodel.source.hbm.xml.mapping.ColumnElement columnElement
+												   XMLColumnElement columnElement
 	) {
 		this( defaults,
 				formulaElement != null ?
@@ -154,9 +160,9 @@ public class HbmSimpleValueRelationalStateContainer implements SimpleAttributeBi
 	private static SimpleAttributeBinding.SingleValueRelationalState createColumnOrFormulaRelationalState(
 			HbmSimpleValueRelationalStateContainer container,
 			Object columnOrFormula) {
-		if ( org.hibernate.metamodel.source.hbm.xml.mapping.ColumnElement.class.isInstance( columnOrFormula ) ) {
+		if ( XMLColumnElement.class.isInstance( columnOrFormula ) ) {
 			return new HbmColumnRelationalState(
-					org.hibernate.metamodel.source.hbm.xml.mapping.ColumnElement.class.cast( columnOrFormula ),
+					XMLColumnElement.class.cast( columnOrFormula ),
 					container
 			);
 		}

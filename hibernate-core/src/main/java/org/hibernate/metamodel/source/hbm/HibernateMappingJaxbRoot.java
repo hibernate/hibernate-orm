@@ -24,15 +24,15 @@
 package org.hibernate.metamodel.source.hbm;
 
 import org.hibernate.metamodel.source.Origin;
-import org.hibernate.metamodel.source.hbm.xml.mapping.HibernateMapping;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping;
 import org.hibernate.metamodel.source.internal.JaxbRoot;
 
 /**
  * @author Gail Badner
  */
-public class HibernateMappingJaxbRoot extends JaxbRoot<HibernateMapping> {
+public class HibernateMappingJaxbRoot extends JaxbRoot<XMLHibernateMapping> {
 
-	public HibernateMappingJaxbRoot(HibernateMapping root, Origin origin) {
+	public HibernateMappingJaxbRoot(XMLHibernateMapping root, Origin origin) {
 		super(root, origin);
 	}
 }

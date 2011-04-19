@@ -41,7 +41,7 @@ import org.hibernate.internal.util.xml.XmlDocument;
 import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.metamodel.source.internal.JaxbRoot;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
-import org.hibernate.metamodel.source.hbm.xml.mapping.HibernateMapping;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping;
 
 /**
  * Binder for {@code hbm.xml} files
@@ -63,12 +63,12 @@ public class HibernateXmlBinder {
 		this.globalMetas = globalMetas;
 	}
 
-	public void bindRoot(JaxbRoot<HibernateMapping> jaxbRoot) {
+	public void bindRoot(JaxbRoot<XMLHibernateMapping> jaxbRoot) {
 		log.debug( jaxbRoot.toString() );
 		bindRoot( jaxbRoot, Collections.<String>emptySet() );
 	}
 
-	public void bindRoot(JaxbRoot<HibernateMapping> jaxbRoot, Set<String> entityNames) {
+	public void bindRoot(JaxbRoot<XMLHibernateMapping> jaxbRoot, Set<String> entityNames) {
 		final HibernateMappingBinder mappingBinder = new HibernateMappingBinder( this, jaxbRoot );
 
 // this is irrelevant due to HHH-6118 and the fact that now all sources should be

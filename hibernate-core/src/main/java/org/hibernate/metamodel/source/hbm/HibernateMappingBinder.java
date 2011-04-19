@@ -36,7 +36,16 @@ import org.hibernate.metamodel.binding.MappingDefaults;
 import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.metamodel.source.Origin;
 import org.hibernate.metamodel.source.internal.JaxbRoot;
-import org.hibernate.metamodel.source.hbm.xml.mapping.HibernateMapping;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLClass;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLFetch;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLFetchProfile;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLImport;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLJoinedSubclass;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLQuery;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlQuery;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSubclass;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLUnionSubclass;
 import org.hibernate.metamodel.source.util.MappingHelper;
 
 /**
@@ -44,8 +53,8 @@ import org.hibernate.metamodel.source.util.MappingHelper;
  */
 class HibernateMappingBinder implements MappingDefaults {
 	private final HibernateXmlBinder hibernateXmlBinder;
-	private final JaxbRoot<HibernateMapping> jaxbRoot;
-	private final HibernateMapping hibernateMapping;
+	private final JaxbRoot<XMLHibernateMapping> jaxbRoot;
+	private final XMLHibernateMapping hibernateMapping;
 
 	private final String defaultSchemaName;
 	private final String defaultCatalogName;
@@ -58,7 +67,7 @@ class HibernateMappingBinder implements MappingDefaults {
 	private Map<String, MetaAttribute> mappingMetas;
 
 
-	HibernateMappingBinder(HibernateXmlBinder hibernateXmlBinder, JaxbRoot<HibernateMapping> jaxbRoot) {
+	HibernateMappingBinder(HibernateXmlBinder hibernateXmlBinder, JaxbRoot<XMLHibernateMapping> jaxbRoot) {
 		this.hibernateXmlBinder = hibernateXmlBinder;
 		this.jaxbRoot = jaxbRoot;
 		this.hibernateMapping = jaxbRoot.getRoot();
@@ -79,7 +88,7 @@ class HibernateMappingBinder implements MappingDefaults {
 		return hibernateXmlBinder;
 	}
 
-	HibernateMapping getHibernateMapping() {
+	XMLHibernateMapping getHibernateMapping() {
 		return hibernateMapping;
 	}
 
@@ -138,20 +147,20 @@ class HibernateMappingBinder implements MappingDefaults {
 		}
 		if ( hibernateMapping.getClazzOrSubclassOrJoinedSubclass() != null ) {
 			for ( Object clazzOrSubclass : hibernateMapping.getClazzOrSubclassOrJoinedSubclass() ) {
-				if ( org.hibernate.metamodel.source.hbm.xml.mapping.Class.class.isInstance( clazzOrSubclass ) ) {
-					org.hibernate.metamodel.source.hbm.xml.mapping.Class clazz =
-							org.hibernate.metamodel.source.hbm.xml.mapping.Class.class.cast( clazzOrSubclass );
+				if ( XMLClass.class.isInstance( clazzOrSubclass ) ) {
+					XMLClass clazz =
+							XMLClass.class.cast( clazzOrSubclass );
 					new RootEntityBinder( this, clazz ).process( clazz );
 				}
-				else if ( org.hibernate.metamodel.source.hbm.xml.mapping.Subclass.class.isInstance( clazzOrSubclass ) ) {
+				else if ( XMLSubclass.class.isInstance( clazzOrSubclass ) ) {
 //					PersistentClass superModel = getSuperclass( mappings, element );
 //					handleSubclass( superModel, mappings, element, inheritedMetas );
 				}
-				else if ( org.hibernate.metamodel.source.hbm.xml.mapping.JoinedSubclass.class.isInstance( clazzOrSubclass ) ) {
+				else if ( XMLJoinedSubclass.class.isInstance( clazzOrSubclass ) ) {
 //					PersistentClass superModel = getSuperclass( mappings, element );
 //					handleJoinedSubclass( superModel, mappings, element, inheritedMetas );
 				}
-				else if ( org.hibernate.metamodel.source.hbm.xml.mapping.UnionSubclass.class.isInstance( clazzOrSubclass ) ) {
+				else if ( XMLUnionSubclass.class.isInstance( clazzOrSubclass ) ) {
 //					PersistentClass superModel = getSuperclass( mappings, element );
 //					handleUnionSubclass( superModel, mappings, element, inheritedMetas );
 				}
@@ -164,10 +173,10 @@ class HibernateMappingBinder implements MappingDefaults {
 		}
 		if ( hibernateMapping.getQueryOrSqlQuery() != null ) {
 			for ( Object queryOrSqlQuery : hibernateMapping.getQueryOrSqlQuery() ) {
-				if ( org.hibernate.metamodel.source.hbm.xml.mapping.Query.class.isInstance( queryOrSqlQuery ) ) {
+				if ( XMLQuery.class.isInstance( queryOrSqlQuery ) ) {
 //					bindNamedQuery( element, null, mappings );
 				}
-				else if ( org.hibernate.metamodel.source.hbm.xml.mapping.SqlQuery.class.isInstance( queryOrSqlQuery ) ) {
+				else if ( XMLSqlQuery.class.isInstance( queryOrSqlQuery ) ) {
 //				bindNamedSQLQuery( element, null, mappings );
 				}
 				else {
@@ -188,8 +197,8 @@ class HibernateMappingBinder implements MappingDefaults {
 		}
 	}
 
-	private void processImports(List<org.hibernate.metamodel.source.hbm.xml.mapping.Import> imports) {
-		for ( org.hibernate.metamodel.source.hbm.xml.mapping.Import importValue : imports ) {
+	private void processImports(List<XMLImport> imports) {
+		for ( XMLImport importValue : imports ) {
 			String className = getClassName( importValue.getClazz() );
 			String rename = importValue.getRename();
 			rename = ( rename == null ) ? StringHelper.unqualify( className ) : rename;
@@ -197,11 +206,11 @@ class HibernateMappingBinder implements MappingDefaults {
 		}
 	}
 
-	protected void parseFetchProfiles(List<org.hibernate.metamodel.source.hbm.xml.mapping.FetchProfile> fetchProfiles, String containingEntityName) {
-		for ( org.hibernate.metamodel.source.hbm.xml.mapping.FetchProfile fetchProfile : fetchProfiles ) {
+	protected void parseFetchProfiles(List<XMLFetchProfile> fetchProfiles, String containingEntityName) {
+		for ( XMLFetchProfile fetchProfile : fetchProfiles ) {
 			String profileName = fetchProfile.getName();
 			org.hibernate.metamodel.binding.FetchProfile profile = hibernateXmlBinder.getMetadata().findOrCreateFetchProfile( profileName, MetadataSource.HBM );
-			for (  org.hibernate.metamodel.source.hbm.xml.mapping.Fetch fetch : fetchProfile.getFetch() ) {
+			for (  XMLFetch fetch : fetchProfile.getFetch() ) {
 				String entityName = fetch.getEntity() == null ? containingEntityName : fetch.getEntity();
 				if ( entityName == null ) {
 					throw new MappingException( "could not determine entity for fetch-profile fetch [" + profileName + "]:[" + fetch.getAssociation() + "]" );
@@ -211,7 +220,7 @@ class HibernateMappingBinder implements MappingDefaults {
 		}
 	}
 
-	String extractEntityName( org.hibernate.metamodel.source.hbm.xml.mapping.Class entityClazz) {
+	String extractEntityName( XMLClass entityClazz) {
 		return HbmHelper.extractEntityName( entityClazz, packageName );
 	}
 

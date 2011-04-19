@@ -23,12 +23,8 @@
  */
 package org.hibernate.metamodel.source.hbm;
 
-import org.dom4j.Attribute;
-import org.dom4j.Element;
-
 import org.hibernate.InvalidMappingException;
 import org.hibernate.MappingException;
-import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.binding.Caching;
 import org.hibernate.metamodel.binding.EntityBinding;
@@ -37,6 +33,10 @@ import org.hibernate.metamodel.relational.Column;
 import org.hibernate.metamodel.relational.Identifier;
 import org.hibernate.metamodel.relational.InLineView;
 import org.hibernate.metamodel.relational.Schema;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLCache;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLClass;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLCompositeId;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLId;
 import org.hibernate.metamodel.source.util.MappingHelper;
 
 /**
@@ -46,11 +46,11 @@ import org.hibernate.metamodel.source.util.MappingHelper;
 */
 class RootEntityBinder extends AbstractEntityBinder {
 
-	RootEntityBinder(HibernateMappingBinder hibernateMappingBinder, org.hibernate.metamodel.source.hbm.xml.mapping.Class xmlClazz) {
+	RootEntityBinder(HibernateMappingBinder hibernateMappingBinder, XMLClass xmlClazz) {
 		super( hibernateMappingBinder, xmlClazz );
 	}
 
-	public void process(org.hibernate.metamodel.source.hbm.xml.mapping.Class xmlClazz) {
+	public void process(XMLClass xmlClazz) {
 		String entityName = getHibernateMappingBinder().extractEntityName( xmlClazz );
 		if ( entityName == null ) {
 			throw new MappingException( "Unable to determine entity name" );
@@ -87,7 +87,7 @@ class RootEntityBinder extends AbstractEntityBinder {
 		getHibernateXmlBinder().getMetadata().addEntity( entityBinding );
 	}
 
-	private void basicTableBinding(org.hibernate.metamodel.source.hbm.xml.mapping.Class xmlClazz,
+	private void basicTableBinding(XMLClass xmlClazz,
 								   EntityBinding entityBinding) {
 		final Schema schema = getHibernateXmlBinder().getMetadata().getDatabase().getSchema( getSchemaName() );
 
@@ -119,7 +119,7 @@ class RootEntityBinder extends AbstractEntityBinder {
 		}
 	}
 
-	private void bindIdentifier(org.hibernate.metamodel.source.hbm.xml.mapping.Class xmlClazz,
+	private void bindIdentifier(XMLClass xmlClazz,
 								EntityBinding entityBinding) {
 		if ( xmlClazz.getId() != null ) {
 			bindSimpleId( xmlClazz.getId(), entityBinding );
@@ -136,7 +136,7 @@ class RootEntityBinder extends AbstractEntityBinder {
 		);
 	}
 
-	private void bindSimpleId(org.hibernate.metamodel.source.hbm.xml.mapping.Id id, EntityBinding entityBinding) {
+	private void bindSimpleId(XMLId id, EntityBinding entityBinding) {
 		// Handle the domain portion of the binding...
 		final String explicitName = id.getName();
 		final String attributeName = explicitName == null ? RootClass.DEFAULT_IDENTIFIER_COLUMN_NAME : explicitName;
@@ -199,7 +199,7 @@ class RootEntityBinder extends AbstractEntityBinder {
 //		makeIdentifier( idNode, id, mappings );
 	}
 
-	private static void bindCompositeId(org.hibernate.metamodel.source.hbm.xml.mapping.CompositeId compositeId, EntityBinding entityBinding) {
+	private static void bindCompositeId(XMLCompositeId compositeId, EntityBinding entityBinding) {
 		final String explicitName = compositeId.getName();
 
 //		String propertyName = idNode.attributeValue( "name" );
@@ -229,7 +229,7 @@ class RootEntityBinder extends AbstractEntityBinder {
 
 	}
 
-	private void bindDiscriminator(org.hibernate.metamodel.source.hbm.xml.mapping.Class xmlEntityClazz,
+	private void bindDiscriminator(XMLClass xmlEntityClazz,
 								   EntityBinding entityBinding) {
 		if ( xmlEntityClazz.getDiscriminator() == null ) {
 			return;
@@ -244,7 +244,7 @@ class RootEntityBinder extends AbstractEntityBinder {
 		entityBinding.getEntityDiscriminator().setForced( MappingHelper.getBooleanValue( xmlEntityClazz.getDiscriminator().getForce(), false ) );
 	}
 
-	private void bindVersion(org.hibernate.metamodel.source.hbm.xml.mapping.Class xmlEntityClazz,
+	private void bindVersion(XMLClass xmlEntityClazz,
 							 EntityBinding entityBinding) {
 		if ( xmlEntityClazz.getVersion() == null && xmlEntityClazz.getTimestamp() == null ) {
 			return;
@@ -274,9 +274,9 @@ class RootEntityBinder extends AbstractEntityBinder {
 		}
 	}
 
-	private void bindCaching(org.hibernate.metamodel.source.hbm.xml.mapping.Class xmlClazz,
+	private void bindCaching(XMLClass xmlClazz,
 							 EntityBinding entityBinding) {
-		org.hibernate.metamodel.source.hbm.xml.mapping.Cache cache = xmlClazz.getCache();
+		XMLCache cache = xmlClazz.getCache();
 		if ( cache == null ) {
 			return;
 		}

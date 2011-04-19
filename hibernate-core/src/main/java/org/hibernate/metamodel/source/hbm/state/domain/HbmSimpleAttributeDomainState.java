@@ -30,6 +30,11 @@ import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.binding.MappingDefaults;
 import org.hibernate.metamodel.binding.SimpleAttributeBinding;
 import org.hibernate.metamodel.domain.MetaAttribute;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLId;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLDiscriminator;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLProperty;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLTimestamp;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLVersion;
 import org.hibernate.metamodel.source.util.MappingHelper;
 
 /**
@@ -44,7 +49,7 @@ public class HbmSimpleAttributeDomainState extends AbstractHbmAttributeDomainSta
 	public HbmSimpleAttributeDomainState(MappingDefaults defaults,
 										 org.hibernate.metamodel.domain.Attribute attribute,
 										 Map<String, MetaAttribute> entityMetaAttributes,
-										 org.hibernate.metamodel.source.hbm.xml.mapping.Id id) {
+										 XMLId id) {
 		super( defaults, attribute, entityMetaAttributes, id );
 		this.isLazy = false;
 
@@ -58,7 +63,7 @@ public class HbmSimpleAttributeDomainState extends AbstractHbmAttributeDomainSta
 	public HbmSimpleAttributeDomainState(MappingDefaults defaults,
 										 org.hibernate.metamodel.domain.Attribute attribute,
 										 Map<String, MetaAttribute> entityMetaAttributes,
-										 org.hibernate.metamodel.source.hbm.xml.mapping.Discriminator discriminator) {
+										 XMLDiscriminator discriminator) {
 		super( defaults, attribute, discriminator );
 		this.isLazy = false;
 
@@ -70,7 +75,7 @@ public class HbmSimpleAttributeDomainState extends AbstractHbmAttributeDomainSta
 	public HbmSimpleAttributeDomainState(MappingDefaults defaults,
 										 org.hibernate.metamodel.domain.Attribute attribute,
 										 Map<String, MetaAttribute> entityMetaAttributes,
-										 org.hibernate.metamodel.source.hbm.xml.mapping.Version version) {
+										 XMLVersion version) {
 
 		super( defaults, attribute, entityMetaAttributes, version );
 		this.isLazy = false;
@@ -89,7 +94,7 @@ public class HbmSimpleAttributeDomainState extends AbstractHbmAttributeDomainSta
 	public HbmSimpleAttributeDomainState(MappingDefaults defaults,
 										 org.hibernate.metamodel.domain.Attribute attribute,
 										 Map<String, MetaAttribute> entityMetaAttributes,
-										 org.hibernate.metamodel.source.hbm.xml.mapping.Timestamp timestamp) {
+										 XMLTimestamp timestamp) {
 
 		super( defaults, attribute, entityMetaAttributes, timestamp );
 		this.isLazy = false;
@@ -108,7 +113,7 @@ public class HbmSimpleAttributeDomainState extends AbstractHbmAttributeDomainSta
 	public HbmSimpleAttributeDomainState(MappingDefaults defaults,
 										 org.hibernate.metamodel.domain.Attribute attribute,
 										 Map<String, MetaAttribute> entityMetaAttributes,
-										 org.hibernate.metamodel.source.hbm.xml.mapping.Property property) {
+										 XMLProperty property) {
 		super( defaults, attribute, entityMetaAttributes, property );
 		this.isLazy = MappingHelper.getBooleanValue( property.getLazy(), false );
 ;

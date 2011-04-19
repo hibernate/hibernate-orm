@@ -23,15 +23,24 @@
  */
 package org.hibernate.metamodel.source.annotations;
 
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+
+import javax.persistence.GeneratedValue;
 
 import org.jboss.jandex.AnnotationInstance;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
+import org.hibernate.cfg.BinderHelper;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.mapping.MetaAttribute;
+import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.binding.EntityBinding;
+import org.hibernate.metamodel.binding.HibernateTypeDescriptor;
 import org.hibernate.metamodel.binding.SimpleAttributeBinding;
+import org.hibernate.metamodel.domain.Attribute;
 import org.hibernate.metamodel.domain.Entity;
 import org.hibernate.metamodel.domain.Hierarchical;
 import org.hibernate.metamodel.source.annotations.util.JandexHelper;
@@ -100,6 +109,9 @@ public class EntityBinder {
 		String idName = JandexHelper.getPropertyName( idAnnotation.target() );
 		entityBinding.getEntity().getOrCreateSingularAttribute( idName );
 		SimpleAttributeBinding idBinding = entityBinding.makeSimplePrimaryKeyAttributeBinding( idName );
+
+		idBinding.initialize( new AnnotationSimpleAttributeDomainState() );
+		idBinding.initializeTupleValue( new AnnotationSimpleAttributeRelationalState() );
 	}
 
 	private void bindHibernateEntityAnnotation(EntityBinding entityBinding) {
@@ -183,6 +195,95 @@ public class EntityBinder {
 		EMBEDDED,
 		// does not contain any identifier mappings
 		NONE
+	}
+
+	public static class AnnotationSimpleAttributeDomainState implements SimpleAttributeBinding.DomainState {
+		@Override
+		public PropertyGeneration getPropertyGeneration() {
+
+//		GeneratedValue generatedValue = property.getAnnotation( GeneratedValue.class );
+//		String generatorType = generatedValue != null ?
+//				generatorType( generatedValue.strategy(), mappings ) :
+//				"assigned";
+//		String generatorName = generatedValue != null ?
+//				generatedValue.generator() :
+//				BinderHelper.ANNOTATION_STRING_DEFAULT;
+			return PropertyGeneration.ALWAYS;
+		}
+
+		@Override
+		public boolean isInsertable() {
+			return false;  //To change body of implemented methods use File | Settings | File Templates.
+		}
+
+		@Override
+		public boolean isUpdateable() {
+			return false;  //To change body of implemented methods use File | Settings | File Templates.
+		}
+
+		@Override
+		public boolean isKeyCasadeDeleteEnabled() {
+			return false;  //To change body of implemented methods use File | Settings | File Templates.
+		}
+
+		@Override
+		public String getUnsavedValue() {
+			return null;  //To change body of implemented methods use File | Settings | File Templates.
+		}
+
+		@Override
+		public HibernateTypeDescriptor getHibernateTypeDescriptor() {
+			return null;  //To change body of implemented methods use File | Settings | File Templates.
+		}
+
+		@Override
+		public Attribute getAttribute() {
+			return null;  //To change body of implemented methods use File | Settings | File Templates.
+		}
+
+		@Override
+		public boolean isLazy() {
+			return false;  //To change body of implemented methods use File | Settings | File Templates.
+		}
+
+		@Override
+		public String getPropertyAccessorName() {
+			return null;  //To change body of implemented methods use File | Settings | File Templates.
+		}
+
+		@Override
+		public boolean isAlternateUniqueKey() {
+			return false;  //To change body of implemented methods use File | Settings | File Templates.
+		}
+
+		@Override
+		public String getCascade() {
+			return null;  //To change body of implemented methods use File | Settings | File Templates.
+		}
+
+		@Override
+		public boolean isOptimisticLockable() {
+			return false;  //To change body of implemented methods use File | Settings | File Templates.
+		}
+
+		@Override
+		public String getNodeName() {
+			return null;  //To change body of implemented methods use File | Settings | File Templates.
+		}
+
+		@Override
+		public Map<String, MetaAttribute> getMetaAttributes(EntityBinding entityBinding) {
+			return null;  //To change body of implemented methods use File | Settings | File Templates.
+		}
+	}
+
+	public static class AnnotationSimpleAttributeRelationalState
+			implements SimpleAttributeBinding.TupleRelationalState {
+
+		@Override
+		public LinkedHashSet<SimpleAttributeBinding.SingleValueRelationalState> getSingleValueRelationalStates() {
+			return null;  //To change body of implemented methods use File | Settings | File Templates.
+		}
 	}
 }
 

@@ -28,4 +28,9 @@ package org.hibernate.metamodel.source;
  * @author Steve Ebersole
  */
 public interface Metadata {
+	public static enum ProcessingOrder {
+		ANNOTATIONS_FIRST,
+		HBM_FIRST
+	}
+
 }

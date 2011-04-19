@@ -90,7 +90,11 @@ public class MetadataSources {
 	}
 
 	public Metadata buildMetadata() {
-		return new MetadataImpl( this );
+		return buildMetadata( Metadata.ProcessingOrder.ANNOTATIONS_FIRST );
+	}
+
+	public Metadata buildMetadata(Metadata.ProcessingOrder preferredProcessingOrder) {
+		return new MetadataImpl( this, preferredProcessingOrder );
 	}
 
 	/**

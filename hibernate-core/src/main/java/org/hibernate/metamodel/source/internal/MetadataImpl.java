@@ -65,7 +65,7 @@ public class MetadataImpl implements Metadata, MetadataImplementor, Serializable
 	private Map<String, FetchProfile> fetchProfiles = new HashMap<String, FetchProfile>();
 	private Map<String, String> imports;
 
-	public MetadataImpl(MetadataSources metadataSources) {
+	public MetadataImpl(MetadataSources metadataSources, ProcessingOrder preferredProcessingOrder) {
 		this.serviceRegistry = metadataSources.getServiceRegistry();
 		this.namingStrategy = metadataSources.getNamingStrategy();
 

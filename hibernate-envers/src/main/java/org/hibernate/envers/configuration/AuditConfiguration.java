@@ -83,10 +83,10 @@ public class AuditConfiguration {
         Properties properties = cfg.getProperties();
 
         ReflectionManager reflectionManager = cfg.getReflectionManager();
-        RevisionInfoConfiguration revInfoCfg = new RevisionInfoConfiguration();
+        globalCfg = new GlobalConfiguration(properties);
+        RevisionInfoConfiguration revInfoCfg = new RevisionInfoConfiguration(globalCfg);
         RevisionInfoConfigurationResult revInfoCfgResult = revInfoCfg.configure(cfg, reflectionManager);
         auditEntCfg = new AuditEntitiesConfiguration(properties, revInfoCfgResult.getRevisionInfoEntityName());
-        globalCfg = new GlobalConfiguration(properties);
         auditProcessManager = new AuditProcessManager(revInfoCfgResult.getRevisionInfoGenerator());
         revisionInfoQueryCreator = revInfoCfgResult.getRevisionInfoQueryCreator();
         revisionInfoNumberReader = revInfoCfgResult.getRevisionInfoNumberReader();

@@ -111,7 +111,7 @@
   <xi:include href="modules/metamodel.xml"
               xmlns:xi="http://www.w3.org/2001/XInclude" />
 
-  <xi:include href="modules/transactions.xml"
+  <xi:include href="modules/migrated/transactions.xml"
               xmlns:xi="http://www.w3.org/2001/XInclude" />
 
   <xi:include href="modules/listeners.xml"

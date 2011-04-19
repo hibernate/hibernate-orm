@@ -4,56 +4,202 @@
 %BOOK_ENTITIES;
 ]>
 <chapter>
-  <title>Transactions and concurrency control</title>
-  <section>
-    <title>Defining a transaction</title>
-    <para>
-      A transaction, or unit of work, encompasses a group of potential decisions between your application and the datasources it
-      uses to store information. The role of a transaction is to ensure data integrity by causing the datasources to all
-      commit, or all roll back, in agreement with each other and your application.
-    </para>
-    <para>
-      An example of when transactions might be useful is a travel agency, which only charges a customer's credit card if
-      the plane tickets are available and the credit card has adequate funds to pay for the tickets. If the card is
-      charged, but the tickets are not available, data integrity is not maintained.
-    </para>
-  </section>
-  <section>
-    <title>How Hibernate uses transactions</title>
-    <para>
-      Hibernate uses JDBC connections and JTA resources directly, without adding any additional locking behavior. It is
-      important for you to become familiar with the JBDC, ANSI, and transaction isolation specification of your database
-      management system.
-    </para>
-    <para>
-      Hibernate does not lock objects in memory. The behavior defined by the isolation level of your database transactions
-      does not change when you use Hibernate. Through <classname>Session</classname>, which is also a transaction-scoped
-      cache, Hibernate provides repeatable reads for lookup by identifier and entity queries and not-reporting queries
-      that return scalar values.
-    </para>
-  </section>
-  <section>
-    <title>Transaction Scopes</title>
-    <para>
-      A <classname>SessionFactory</classname> is an expensive-to-create, thread-safe object, which all application
-      threads can share. It is created once, usually on application startup, from a <classname>Configuration</classname>
-      instance.
-    </para>
-    <para>
-      A <classname>Session</classname> is an inexpensive, non-thread-safe object. Use it once and then discard it. You
-      can use it for a single request, a conversation, or a single unit of work. A <classname>Session</classname> does
-      not obtain a JDBC Connection, or a Datasource, unless it is needed. It does not consume any resources until you
-      use it.
-    </para>
-    <para>
-      To reduce lock contention in the database, a database transaction needs to be as short as possible. Long database
-      transactions prevent your application from scaling to a highly-concurrent load. Do not hold a database transaction
-      open during user-level work, but open it after the user-level work is finished.
-    </para>
-    
-    <section id="session-per-operation">
-      <title>Session-per-operation</title>
-      <subtitle>Antipatterns to avoid</subtitle>
+    <title>Transactions and concurrency control</title>
+
+    <section>
+        <title>Defining Transaction</title>
+        <para>
+            It is important to understand that the term transaction has many related, yet different meanings in relation
+            to persistence and Object/Relational Mapping.  In most use cases these definitions align, but that is not
+            always the case.
+        </para>
+        <itemizedlist>
+            <listitem>
+                <para>
+                    It might refer to the physical transaction with the database.
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    It might refer to the logical notion of a transaction as related to a persistence context.
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    It might refer to the application notion of a Unit-of-Work, as defined by the archetypal pattern.
+                </para>
+            </listitem>
+            <note>
+                <para>
+                    This documentation largely treats the physical and logic notions of transaction as one-in-the-same.
+                </para>
+            </note>
+        </itemizedlist>
+
+    </section>
+
+    <section>
+        <title>Physical Transactions</title>
+        <para>
+            Hibernate uses the JDBC API for persistence.  In the world of Java there are 2 well defined mechanism
+            for dealing with transactions in JDBC: JDBC, itself, and JTA.  Hibernate supports both mechanisms for
+            integrating with transactions and allowing applications to manage physical transactions.
+        </para>
+        <para>
+            The first concept in understanding Hibernate transaction support is the
+            <interfacename>org.hibernate.engine.transaction.spi.TransactionFactory</interfacename> interface which
+            serves 2 main functions:
+        </para>
+        <itemizedlist>
+            <listitem>
+                <para>
+                    It allows Hibernate to understand the transaction semantics of the environment.  Are we operating
+                    in a JTA environment?  Is a physical transaction already currently active?  etc.
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    It acts as a factory for <interfacename>org.hibernate.Transaction</interfacename> instances which
+                    are used to allow applications to manage and check the state of transactions.
+                    <interfacename>org.hibernate.Transaction</interfacename> is Hibernate's notion of a logical
+                    transaction.  JPA has a similar notion in the
+                    <interfacename>javax.persistence.EntityTransaction</interfacename> interface.
+                </para>
+            </listitem>
+        </itemizedlist>
+        <para>
+            <interfacename>org.hibernate.engine.transaction.spi.TransactionFactory</interfacename> is a
+            standard Hibernate service.  The default initiator,
+            <classname>org.hibernate.engine.transaction.internal.TransactionFactoryInitiator</classname>,
+            looks for a <literal>hibernate.transaction.factory_class</literal> configuration setting to determine
+            the factory to use.
+            <!-- todo : see service registry appendix -->
+        </para>
+
+        <section>
+            <title>Physical Transactions - JDBC</title>
+            <para>
+                JDBC-based transaction management leverages the JDBC defined methods
+                <methodname>java.sql.Connection.commit()</methodname> and
+                <methodname>java.sql.Connection.rollback()</methodname> (JDBC does not define and explicit
+                method of beginning a transaction).  In Hibernate, this approach is represented by the
+                <classname>org.hibernate.engine.transaction.internal.jdbc.JdbcTransactionFactory</classname> class.
+            </para>
+        </section>
+
+        <section>
+            <title>Physical Transactions - JTA</title>
+            <para>
+                JTA-based transaction management leverages the
+                <interfacename>javax.transaction.TransactionManager</interfacename> interface as obtained from
+                <interfacename>org.hibernate.service.jta.platform.spi.JtaPlatform</interfacename> API.  This approach
+                is represented by the
+                <classname>org.hibernate.engine.transaction.internal.jta.JtaTransactionFactory</classname> class.
+                <!-- todo : see service registry appendix -->
+            </para>
+        </section>
+
+
+        <section>
+            <title>Physical Transactions - CMT</title>
+            <para>
+                CMT-based transaction management leverages the
+                <interfacename>javax.transaction.UserTransaction</interfacename> interface as obtained from
+                <interfacename>org.hibernate.service.jta.platform.spi.JtaPlatform</interfacename> API.  This approach
+                is represented by the
+                <classname>org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory</classname> class.
+                <!-- todo : see service registry appendix -->
+            </para>
+        </section>
+
+        <section>
+            <title>Physical Transactions - Custom</title>
+            <para>
+                Its is also possible to plug in ones own transaction approach by implementing the
+                <interfacename>org.hibernate.engine.transaction.spi.TransactionFactory</interfacename> contract.
+                The default service initiator has built-in support for understanding custom transaction approaches
+                via the <literal>hibernate.transaction.factory_class</literal> which can name either:
+            </para>
+            <itemizedlist>
+                <listitem>
+                    <para>
+                        The instance of <interfacename>org.hibernate.engine.transaction.spi.TransactionFactory</interfacename>
+                        to use.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        The name of a class implementing
+                        <interfacename>org.hibernate.engine.transaction.spi.TransactionFactory</interfacename>
+                        to use.  The expectation is that the implementation class have a no-argument constructor.
+                    </para>
+                </listitem>
+            </itemizedlist>
+        </section>
+
+        <section>
+            <title>Physical Transactions - Legacy</title>
+            <para>
+                During development of 4.0, most of these classes named here were moved to new packages.  To help
+                facilitate upgrading, Hibernate will also recognize the legacy names here for a short period of time.
+            </para>
+            <itemizedlist>
+                <listitem>
+                    <para>
+                        <literal>org.hibernate.transaction.JDBCTransactionFactory</literal> is mapped to
+                        <classname>org.hibernate.engine.transaction.internal.jdbc.JdbcTransactionFactory</classname>
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <literal>org.hibernate.transaction.JTATransactionFactory</literal> is mapped to
+                        <classname>org.hibernate.engine.transaction.internal.jta.JtaTransactionFactory</classname>
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <literal>org.hibernate.transaction.CMTTransactionFactory</literal> is mapped to
+                        <classname>org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory</classname>
+                    </para>
+                </listitem>
+            </itemizedlist>
+        </section>
+
+    </section>
+
+
+    <section>
+        <title>Hibernate Transaction Usage</title>
+        <para>
+            Hibernate uses JDBC connections and JTA resources directly, without adding any additional locking behavior.
+            It is important for you to become familiar with the JBDC, ANSI SQL, and transaction isolation specification
+            of your database management system.
+        </para>
+        <para>
+            Hibernate does not lock objects in memory.  The behavior defined by the isolation level of your database
+            transactions does not change when you use Hibernate.  The Hibernate
+            <interfacename>org.hibernate.Session</interfacename> acts as a transaction-scoped cache providing
+            repeatable reads for lookup by identifier and entity queries and not-reporting queries that return scalar
+            values.
+        </para>
+    </section>
+
+    <sidebar>
+        <para>
+            To reduce lock contention in the database, a database transaction needs to be as short as possible.  Long
+            database transactions prevent your application from scaling to a highly-concurrent load.  Do not hold a
+            database transaction open during end-user-level work, but open it after the end-user-level work is finished.
+            This is concept is referred to as <literal>transactional write-behind</literal>.
+        </para>
+    </sidebar>
+
+
+    <section>
+        <title>Transaction Scopes</title>
+
+        <section id="session-per-operation">
+            <title>Session-per-operation</title>
+            <subtitle>Antipatterns to avoid</subtitle>
       <para>
         <firstterm>Session-per-operation</firstterm> refers to the antipattern of opening and closing a
         <classname>Session</classname> for each database call in a single thread. It is also an antipattern in terms of
@@ -322,13 +468,6 @@
     </section>
   </section>
 
-  <section>
-    <title>Types</title>
-    <para>
-      
-    </para>
-  </section>
-  
   
   <section id="hibernate-transaction-api">
     <title>Hibernate Transaction API (JTA)</title>

@@ -3,8 +3,8 @@
 <!ENTITY % BOOK_ENTITIES SYSTEM "Hibernate_Development_Guide.ent">
 %BOOK_ENTITIES;
 ]>
-<chapter id="devguide-dataOperations">
-    <title>Working with entities</title>
+<chapter>
+    <title>Persistence Contexts</title>
 
     <para>
         Both the <interfacename>org.hibernate.Session</interfacename> API and

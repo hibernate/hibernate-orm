@@ -4,34 +4,35 @@
 %BOOK_ENTITIES;
 ]>
 <chapter>
-  <title>Database access</title>
-  
-  <section>
-    <title>Connection</title>
-    <para>
-      Hibernate connects to databases on behalf of your applications. It can connect through a variety of different
-      mechanisms, including:
-    </para>
-    <itemizedlist>
-      <listitem><para>Stand-alone built-in connection pool</para></listitem>
-      <listitem><para><classname>javax.sql.DataSource</classname></para></listitem>
-      <listitem><para>Two different third-party opensource JDBC connection pools:</para>
-      <itemizedlist>
-        <listitem><para>c3p0</para></listitem>
-        <listitem><para>proxool</para></listitem>
-      </itemizedlist>
-      </listitem>
-    </itemizedlist>
-    <note>
-      <para>
-        The built-in connection pool is not intended for production environments.
-      </para>
-    </note>
-    
+    <title>Database access</title>
+
     <section>
-      <title>Configuring database connections</title>
-      <para>
-        You can configure database connections using a properties file, an XML deployment descriptor, programmatically.
+        <title>Connecting</title>
+        <para>
+            Hibernate connects to databases on behalf of your application. It can connect through a variety of mechanisms,
+            including:
+        </para>
+        <itemizedlist>
+            <listitem><para>Stand-alone built-in connection pool</para></listitem>
+            <listitem><para><classname>javax.sql.DataSource</classname></para></listitem>
+            <listitem><para>Two different third-party opensource JDBC connection pools:</para>
+                <itemizedlist>
+                    <listitem><para>c3p0</para></listitem>
+                    <listitem><para>proxool</para></listitem>
+                </itemizedlist>
+            </listitem>
+        </itemizedlist>
+
+        <note>
+            <para>The built-in connection pool is not intended for production environments.</para>
+        </note>
+
+        <!-- todo : discuss servies -->
+
+        <section>
+            <title>Configuration</title>
+            <para>
+                You can configure database connections using a properties file, an XML deployment descriptor, programmatically.
       </para>
       <example>
         <title><filename>hibernate.properties</filename> for a c3p0 connection pool</title>

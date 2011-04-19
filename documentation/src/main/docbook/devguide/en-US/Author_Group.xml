@@ -22,8 +22,7 @@
   ~ 51 Franklin Street, Fifth Floor
   ~ Boston, MA  02110-1301  USA
   -->
-<!DOCTYPE authorgroup PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-]>
+<!DOCTYPE authorgroup PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <authorgroup>
    <author>
       <firstname>Gavin</firstname>
@@ -33,18 +32,18 @@
       <firstname>Christian</firstname>
       <surname>Bauer</surname>
    </author>
-   <author>
-      <firstname>Max</firstname>
-      <othername>Rydahl</othername>
-      <surname>Andersen</surname>
+    <author>
+        <firstname>Steve</firstname>
+        <surname>Ebersole</surname>
+    </author>
+    <author>
+       <firstname>Max</firstname>
+       <othername>Rydahl</othername>
+       <surname>Andersen</surname>
    </author>
-   <author>
-      <firstname>Emmanuel</firstname>
-      <surname>Bernard</surname>
-   </author>
-   <author>
-      <firstname>Steve</firstname>
-      <surname>Ebersole</surname>
+    <author>
+       <firstname>Emmanuel</firstname>
+       <surname>Bernard</surname>
    </author>
    <author>
       <firstname>Hardy</firstname>
@@ -53,6 +52,10 @@
    <author>
       <firstname>Adam</firstname>
       <surname>Warski</surname>
+   </author>
+   <author>
+      <firstname>Gail</firstname>
+      <surname>Badner</surname>
    </author>
 
    <othercredit>
@@ -70,191 +73,9 @@
       </affiliation>
    </othercredit>
 
-    <!--
-        #######################################################################
-        # Spanish
-        #######################################################################
-    -->
-    <othercredit class="translator" lang="es-ES">
-        <othername><![CDATA[Bernardo Antonio Buffa Colom&#x00e9]]></othername>
-        <email>kreimer@bbs.frc.utn.edu.ar</email>
-        <affiliation>
-           <shortaffil>Translation</shortaffil>
-        </affiliation>
-    </othercredit>
-
-    <!--
-        #######################################################################
-        # French
-        #######################################################################
-    -->
-    <othercredit class="translator" lang="fr-FR">
-        <firstname>Vincent</firstname>
-        <surname>Ricard</surname>
-        <affiliation>
-           <shortaffil>Translation</shortaffil>
-        </affiliation>
-    </othercredit>
-    <othercredit class="translator" lang="fr-FR">
-        <firstname>Sebastien</firstname>
-        <surname>Cesbron</surname>
-        <affiliation>
-           <shortaffil>Translation</shortaffil>
-        </affiliation>
-    </othercredit>
-    <othercredit class="translator" lang="fr-FR">
-        <firstname>Michael</firstname>
-        <surname>Courcy</surname>
-        <affiliation>
-           <shortaffil>Translation</shortaffil>
-        </affiliation>
-    </othercredit>
-    <othercredit class="translator" lang="fr-FR">
-        <firstname>Vincent</firstname>
-        <surname>Giguère</surname>
-        <affiliation>
-           <shortaffil>Translation</shortaffil>
-        </affiliation>
-    </othercredit>
-    <othercredit class="translator" lang="fr-FR">
-        <firstname>Baptiste</firstname>
-        <surname>Mathus</surname>
-        <affiliation>
-           <shortaffil>Translation</shortaffil>
-        </affiliation>
-    </othercredit>
-    <othercredit class="translator" lang="fr-FR">
-        <firstname>Emmanuel</firstname>
-        <surname>Bernard</surname>
-        <affiliation>
-           <shortaffil>Translation</shortaffil>
-        </affiliation>
-    </othercredit>
-    <othercredit class="translator" lang="fr-FR">
-        <firstname>Anthony</firstname>
-        <surname>Patricio</surname>
-        <affiliation>
-           <shortaffil>Translation</shortaffil>
-        </affiliation>
-    </othercredit>
-
-    <!--
-        #######################################################################
-        # Portugese
-        #######################################################################
-    -->
-    <othercredit class="translator" lang="pt-BR">
-        <firstname>Alvaro</firstname>
-        <surname>Netto</surname>
-        <email>alvaronetto@cetip.com.br</email>
-        <affiliation>
-           <shortaffil>Translation</shortaffil>
-        </affiliation>
-    </othercredit>
-    <othercredit class="translator" lang="pt-BR">
-        <firstname>Anderson</firstname>
-        <surname>Braulio</surname>
-        <email>andersonbraulio@gmail.com</email>
-        <affiliation>
-           <shortaffil>Translation</shortaffil>
-        </affiliation>
-    </othercredit>
-    <othercredit class="translator" lang="pt-BR">
-        <firstname>Daniel Vieira</firstname>
-        <surname>Costa</surname>
-        <email>danielvc@gmail.com</email>
-        <affiliation>
-           <shortaffil>Translation</shortaffil>
-        </affiliation>
-    </othercredit>
-    <othercredit class="translator" lang="pt-BR">
-        <firstname>Francisco</firstname>
-        <surname>gamarra</surname>
-        <email>francisco.gamarra@gmail.com</email>
-        <affiliation>
-           <shortaffil>Translation</shortaffil>
-        </affiliation>
-    </othercredit>
-    <othercredit class="translator" lang="pt-BR">
-        <firstname>Gamarra</firstname>
-        <email>mauricio.gamarra@gmail.com</email>
-        <affiliation>
-           <shortaffil>Translation</shortaffil>
-        </affiliation>
-    </othercredit>
-    <othercredit class="translator" lang="pt-BR">
-        <firstname>Luiz Carlos</firstname>
-        <surname>Rodrigues</surname>
-        <email>luizcarlos_rodrigues@yahoo.com.br</email>
-        <affiliation>
-           <shortaffil>Translation</shortaffil>
-        </affiliation>
-    </othercredit>
-    <othercredit class="translator" lang="pt-BR">
-        <firstname>Marcel</firstname>
-        <surname>Castelo</surname>
-        <email>marcel.castelo@gmail.com</email>
-        <affiliation>
-           <shortaffil>Translation</shortaffil>
-        </affiliation>
-    </othercredit>
-    <othercredit class="translator" lang="pt-BR">
-        <firstname>Paulo</firstname>
-        <surname>César</surname>
-        <email>paulocol@gmail.com</email>
-        <affiliation>
-           <shortaffil>Translation</shortaffil>
-        </affiliation>
-    </othercredit>
-    <othercredit class="translator" lang="pt-BR">
-        <firstname>Pablo L.</firstname>
-        <surname>de Miranda</surname>
-        <email>pablolmiranda@gmail.com</email>
-        <affiliation>
-           <shortaffil>Translation</shortaffil>
-        </affiliation>
-    </othercredit>
-    <othercredit class="translator" lang="pt-BR">
-        <firstname>Renato</firstname>
-        <surname>Deggau</surname>
-        <email>rdeggau@gmail.com</email>
-        <affiliation>
-           <shortaffil>Translation</shortaffil>
-        </affiliation>
-    </othercredit>
-    <othercredit class="translator" lang="pt-BR">
-        <firstname>Rogério</firstname>
-        <surname>Araújo</surname>
-        <email>rgildoaraujo@yahoo.com.br</email>
-        <affiliation>
-           <shortaffil>Translation</shortaffil>
-        </affiliation>
-    </othercredit>
-    <othercredit class="translator" lang="pt-BR">
-        <firstname>Wanderson</firstname>
-        <surname>Siqueira</surname>
-        <email>wandersonxs@gmail.com</email>
-        <affiliation>
-           <shortaffil>Translation</shortaffil>
-        </affiliation>
-    </othercredit>
-
-    <!--
-        #######################################################################
-        # Chinese
-        #######################################################################
-    -->
-    <othercredit class="translator" lang="zh-CN">
-        <firstname>Cao</firstname>
-        <surname>Xiaogang</surname>
-        <affiliation>
-            <orgname>RedSaga</orgname>
-        </affiliation>
-        <contrib>Translation Lead</contrib>
-        <email>caoxg@yahoo.com</email>
-        <affiliation>
-           <shortaffil>Translation</shortaffil>
-        </affiliation>
-    </othercredit>
+    <editor>
+        <firstname>Misty</firstname>
+        <surname>Stanley-Jones</surname>
+    </editor>
 
 </authorgroup>

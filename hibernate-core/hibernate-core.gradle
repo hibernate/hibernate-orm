@@ -53,13 +53,13 @@ task jaxb << {
     ant.taskdef(name: 'xjc', classname: 'com.sun.tools.xjc.XJCTask', classpath: configurations.jaxb.asPath)
     ant.jaxbTargetDir = jaxbTargetDir
 
-    ant.xjc(destdir: '${jaxbTargetDir}', package: 'org.hibernate.metamodel.source.hbm.xml.config') {
+    ant.xjc(destdir: '${jaxbTargetDir}', package: 'org.hibernate.metamodel.source.hbm.xml.config', binding: 'src/main/xjb/hbm-configuration-bindings.xjb') {
         schema(dir: 'src/main/resources/org/hibernate', includes: 'hibernate-configuration-4.0.xsd')
     }
-    ant.xjc(destdir: '${jaxbTargetDir}', package: 'org.hibernate.metamodel.source.hbm.xml.mapping') {
+    ant.xjc(destdir: '${jaxbTargetDir}', package: 'org.hibernate.metamodel.source.hbm.xml.mapping', binding: 'src/main/xjb/hbm-mapping-bindings.xjb') {
         schema(dir: 'src/main/resources/org/hibernate', includes: 'hibernate-mapping-4.0.xsd')
     }
-    ant.xjc(destdir: '${jaxbTargetDir}', package: 'org.hibernate.metamodel.source.annotation.xml') {
+    ant.xjc(destdir: '${jaxbTargetDir}', package: 'org.hibernate.metamodel.source.annotation.xml', binding: 'src/main/xjb/orm-bindings.xjb') {
         schema(dir: 'src/main/resources/org/hibernate/ejb', includes: 'orm_2_0.xsd')
     }
 }

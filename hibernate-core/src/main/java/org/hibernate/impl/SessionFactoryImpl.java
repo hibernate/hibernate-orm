@@ -525,11 +525,11 @@ public final class SessionFactoryImpl
 	}
 
 	public StatelessSession openStatelessSession() {
-		return new StatelessSessionImpl( null, this );
+		return new StatelessSessionImpl( null, null, this );
 	}
 
 	public StatelessSession openStatelessSession(Connection connection) {
-		return new StatelessSessionImpl( connection, this );
+		return new StatelessSessionImpl( connection, null, this );
 	}
 
 	@Override
@@ -1293,6 +1293,7 @@ public final class SessionFactoryImpl
 		private boolean autoClose;
 		private boolean autoJoinTransactions = true;
 		private boolean flushBeforeCompletion;
+		private String tenantIdentifier;
 
 		SessionBuilderImpl(SessionFactoryImpl sessionFactory) {
 			this.sessionFactory = sessionFactory;
@@ -1322,7 +1323,8 @@ public final class SessionFactoryImpl
 					entityMode,
 					flushBeforeCompletion,
 					autoClose,
-					connectionReleaseMode
+					connectionReleaseMode,
+					tenantIdentifier
 			);
 		}
 
@@ -1371,6 +1373,12 @@ public final class SessionFactoryImpl
 		@Override
 		public SessionBuilder entityMode(EntityMode entityMode) {
 			this.entityMode = entityMode;
+			return this;
+		}
+
+		@Override
+		public SessionBuilder tenantIdentifier(String tenantIdentifier) {
+			this.tenantIdentifier = tenantIdentifier;
 			return this;
 		}
 	}

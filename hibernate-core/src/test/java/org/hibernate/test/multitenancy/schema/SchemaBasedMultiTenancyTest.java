@@ -173,23 +173,17 @@ public class SchemaBasedMultiTenancyTest extends BaseUnitTestCase {
 		}
 	}
 
-	private Session openSession() {
-		return sessionFactory.openSession();
-	}
-
 	@Test
 	public void testBasicExpectedBehavior() {
-		Session session = openSession();
-		session.setTenantIdentifier( "jboss" );
+		Session session = sessionFactory.withOptions().tenantIdentifier( "jboss" ).openSession();
 		session.beginTransaction();
 		Customer steve = new Customer( 1L, "steve" );
 		session.save( steve );
 		session.getTransaction().commit();
 		session.close();
 
-		session = openSession();
+		session = sessionFactory.withOptions().tenantIdentifier( "acme" ).openSession();
 		try {
-			session.setTenantIdentifier( "acme" );
 			session.beginTransaction();
 			Customer check = (Customer) session.get( Customer.class, steve.getId() );
 			Assert.assertNull( "tenancy not properly isolated", check );
@@ -199,8 +193,7 @@ public class SchemaBasedMultiTenancyTest extends BaseUnitTestCase {
 			session.close();
 		}
 
-		session = openSession();
-		session.setTenantIdentifier( "jboss" );
+		session = sessionFactory.withOptions().tenantIdentifier( "jboss" ).openSession();
 		session.beginTransaction();
 		session.delete( steve );
 		session.getTransaction().commit();
@@ -210,8 +203,7 @@ public class SchemaBasedMultiTenancyTest extends BaseUnitTestCase {
 	@Test
 	public void testSameIdentifiers() {
 		// create a customer 'steve' in jboss
-		Session session = openSession();
-		session.setTenantIdentifier( "jboss" );
+		Session session = sessionFactory.withOptions().tenantIdentifier( "jboss" ).openSession();
 		session.beginTransaction();
 		Customer steve = new Customer( 1L, "steve" );
 		session.save( steve );
@@ -219,8 +211,7 @@ public class SchemaBasedMultiTenancyTest extends BaseUnitTestCase {
 		session.close();
 
 		// now, create a customer 'john' in acme
-		session = openSession();
-		session.setTenantIdentifier( "acme" );
+		session = sessionFactory.withOptions().tenantIdentifier( "acme" ).openSession();
 		session.beginTransaction();
 		Customer john = new Customer( 1L, "john" );
 		session.save( john );
@@ -232,8 +223,7 @@ public class SchemaBasedMultiTenancyTest extends BaseUnitTestCase {
 		// make sure we get the correct people back, from cache
 		// first, jboss
 		{
-			session = openSession();
-			session.setTenantIdentifier( "jboss" );
+			session = sessionFactory.withOptions().tenantIdentifier( "jboss" ).openSession();
 			session.beginTransaction();
 			Customer customer = (Customer) session.load( Customer.class, 1L );
 			Assert.assertEquals( "steve", customer.getName() );
@@ -245,8 +235,7 @@ public class SchemaBasedMultiTenancyTest extends BaseUnitTestCase {
 		sessionFactory.getStatisticsImplementor().clear();
 		// then, acme
 		{
-			session = openSession();
-			session.setTenantIdentifier( "acme" );
+			session = sessionFactory.withOptions().tenantIdentifier( "acme" ).openSession();
 			session.beginTransaction();
 			Customer customer = (Customer) session.load( Customer.class, 1L );
 			Assert.assertEquals( "john", customer.getName() );
@@ -261,8 +250,7 @@ public class SchemaBasedMultiTenancyTest extends BaseUnitTestCase {
 		sessionFactory.getCache().evictEntityRegions();
 		// first jboss
 		{
-			session = openSession();
-			session.setTenantIdentifier( "jboss" );
+			session = sessionFactory.withOptions().tenantIdentifier( "jboss" ).openSession();
 			session.beginTransaction();
 			Customer customer = (Customer) session.load( Customer.class, 1L );
 			Assert.assertEquals( "steve", customer.getName() );
@@ -274,8 +262,7 @@ public class SchemaBasedMultiTenancyTest extends BaseUnitTestCase {
 		sessionFactory.getStatisticsImplementor().clear();
 		// then, acme
 		{
-			session = openSession();
-			session.setTenantIdentifier( "acme" );
+			session = sessionFactory.withOptions().tenantIdentifier( "acme" ).openSession();
 			session.beginTransaction();
 			Customer customer = (Customer) session.load( Customer.class, 1L );
 			Assert.assertEquals( "john", customer.getName() );
@@ -285,15 +272,13 @@ public class SchemaBasedMultiTenancyTest extends BaseUnitTestCase {
 			session.close();
 		}
 
-		session = openSession();
-		session.setTenantIdentifier( "jboss" );
+		session = sessionFactory.withOptions().tenantIdentifier( "jboss" ).openSession();
 		session.beginTransaction();
 		session.delete( steve );
 		session.getTransaction().commit();
 		session.close();
 
-		session = openSession();
-		session.setTenantIdentifier( "acme" );
+		session = sessionFactory.withOptions().tenantIdentifier( "acme" ).openSession();
 		session.beginTransaction();
 		session.delete( john );
 		session.getTransaction().commit();

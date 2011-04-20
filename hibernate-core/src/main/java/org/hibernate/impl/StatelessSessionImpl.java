@@ -87,8 +87,8 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 	private TransactionCoordinator transactionCoordinator;
 	private PersistenceContext temporaryPersistenceContext = new StatefulPersistenceContext( this );
 
-	StatelessSessionImpl(Connection connection, SessionFactoryImpl factory) {
-		super( factory );
+	StatelessSessionImpl(Connection connection, String tenantIdentifier, SessionFactoryImpl factory) {
+		super( factory, tenantIdentifier );
 		this.transactionCoordinator = new TransactionCoordinatorImpl( connection, this );
 	}
 

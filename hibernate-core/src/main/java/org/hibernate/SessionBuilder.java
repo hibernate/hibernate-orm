@@ -113,4 +113,11 @@ public interface SessionBuilder {
 	 * @return {@code this}, for method chaining
 	 */
 	public SessionBuilder flushBeforeCompletion(boolean flushBeforeCompletion);
+
+	/**
+	 * Define the tenant identifier to be associated with the opened session.
+	 *
+	 * @param tenantIdentifier The tenant identifier.
+	 */
+	public SessionBuilder tenantIdentifier(String tenantIdentifier);
 }

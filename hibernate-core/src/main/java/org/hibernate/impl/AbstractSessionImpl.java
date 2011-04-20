@@ -64,11 +64,22 @@ import org.hibernate.type.Type;
  */
 public abstract class AbstractSessionImpl implements Serializable, SharedSessionContract, SessionImplementor, TransactionContext {
 	protected transient SessionFactoryImpl factory;
-	private String tenantIdentifier;
+	private final String tenantIdentifier;
 	private boolean closed = false;
 
-	protected AbstractSessionImpl(SessionFactoryImpl factory) {
+	protected AbstractSessionImpl(SessionFactoryImpl factory, String tenantIdentifier) {
 		this.factory = factory;
+		this.tenantIdentifier = tenantIdentifier;
+		if ( MultiTenancyStrategy.NONE == factory.getSettings().getMultiTenancyStrategy() ) {
+			if ( tenantIdentifier != null ) {
+				throw new HibernateException( "SessionFactory was not configured for multi-tenancy" );
+			}
+		}
+		else {
+			if ( tenantIdentifier == null ) {
+				throw new HibernateException( "SessionFactory configured for multi-tenancy, but no tenant identifier specified" );
+			}
+		}
 	}
 
 	public SessionFactoryImplementor getFactory() {
@@ -221,14 +232,6 @@ public abstract class AbstractSessionImpl implements Serializable, SharedSession
 	@Override
 	public String getTenantIdentifier() {
 		return tenantIdentifier;
-	}
-
-	@Override
-	public void setTenantIdentifier(String identifier) {
-		if ( MultiTenancyStrategy.NONE == factory.getSettings().getMultiTenancyStrategy() ) {
-			throw new HibernateException( "SessionFactory was not configured for multi-tenancy" );
-		}
-		this.tenantIdentifier = identifier;
 	}
 
 	@Override

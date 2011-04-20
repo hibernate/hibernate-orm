@@ -55,6 +55,7 @@ import org.hibernate.EntityNameResolver;
 import org.hibernate.Filter;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
+import org.hibernate.SessionBuilder;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.Interceptor;
 import org.hibernate.LobHelper;
@@ -202,7 +203,7 @@ public final class SessionImpl
 	 * @param entityMode
 	 */
 	private SessionImpl(SessionImpl parent, EntityMode entityMode) {
-		super( parent.factory );
+		super( parent.factory, parent.getTenantIdentifier() );
 		this.rootSession = parent;
 		this.timestamp = parent.timestamp;
 		this.transactionCoordinator = parent.transactionCoordinator;
@@ -247,8 +248,9 @@ public final class SessionImpl
 			final EntityMode entityMode,
 			final boolean flushBeforeCompletionEnabled,
 			final boolean autoCloseSessionEnabled,
-			final ConnectionReleaseMode connectionReleaseMode) {
-		super( factory );
+			final ConnectionReleaseMode connectionReleaseMode,
+			final String tenantIdentifier) {
+		super( factory, tenantIdentifier );
 		this.rootSession = null;
 		this.timestamp = timestamp;
 		this.entityMode = entityMode;
@@ -2119,6 +2121,13 @@ public final class SessionImpl
 		private SharedSessionBuilderImpl(SessionImpl session) {
 			super( session.factory );
 			this.session = session;
+			super.tenantIdentifier( session.getTenantIdentifier() );
+		}
+
+		@Override
+		public SessionBuilder tenantIdentifier(String tenantIdentifier) {
+			// todo : is this always true?  Or just in the case of sharing JDBC resources?
+			throw new SessionException( "Cannot redefine tenant identifier on child session" );
 		}
 
 		@Override

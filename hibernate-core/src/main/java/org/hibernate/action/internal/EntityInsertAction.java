@@ -33,15 +33,13 @@ import org.hibernate.engine.EntityEntry;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.Versioning;
-import org.hibernate.event.EventSource;
 import org.hibernate.event.EventType;
 import org.hibernate.event.PostInsertEvent;
 import org.hibernate.event.PostInsertEventListener;
 import org.hibernate.event.PreInsertEvent;
 import org.hibernate.event.PreInsertEventListener;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.service.event.spi.EventListenerGroup;
-import org.hibernate.service.event.spi.EventListenerRegistry;
+import org.hibernate.event.service.spi.EventListenerGroup;
 
 public final class EntityInsertAction extends EntityAction {
 

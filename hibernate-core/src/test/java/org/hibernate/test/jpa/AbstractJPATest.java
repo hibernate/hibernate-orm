@@ -25,13 +25,12 @@ package org.hibernate.test.jpa;
 
 import javax.persistence.EntityNotFoundException;
 import java.io.Serializable;
-import java.util.Map;
 
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.CascadingAction;
+import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.event.AutoFlushEventListener;
-import org.hibernate.event.EventListenerRegistration;
 import org.hibernate.event.EventType;
 import org.hibernate.event.FlushEntityEventListener;
 import org.hibernate.event.FlushEventListener;
@@ -40,12 +39,13 @@ import org.hibernate.event.def.DefaultAutoFlushEventListener;
 import org.hibernate.event.def.DefaultFlushEntityEventListener;
 import org.hibernate.event.def.DefaultFlushEventListener;
 import org.hibernate.event.def.DefaultPersistEventListener;
+import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.internal.util.collections.IdentityMap;
 import org.hibernate.proxy.EntityNotFoundDelegate;
-import org.hibernate.service.StandardServiceInitiators;
-import org.hibernate.service.event.spi.EventListenerRegistry;
+import org.hibernate.event.service.spi.EventListenerRegistry;
+import org.hibernate.integrator.spi.IntegratorService;
 import org.hibernate.service.internal.BasicServiceRegistryImpl;
-import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -71,19 +71,26 @@ public abstract class AbstractJPATest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected void applyServices(BasicServiceRegistryImpl serviceRegistry) {
 		super.applyServices( serviceRegistry );
-		serviceRegistry.getService( StandardServiceInitiators.EventListenerRegistrationService.class ).attachEventListenerRegistration(
-				new EventListenerRegistration() {
+		serviceRegistry.getService( IntegratorService.class ).addIntegrator(
+				new Integrator() {
 					@Override
-					public void apply(
-							EventListenerRegistry eventListenerRegistry,
+					public void integrate(
 							Configuration configuration,
-							Map<?, ?> configValues,
-							ServiceRegistryImplementor serviceRegistry) {
+							SessionFactoryImplementor sessionFactory,
+							SessionFactoryServiceRegistry serviceRegistry) {
+						EventListenerRegistry eventListenerRegistry = serviceRegistry.getService( EventListenerRegistry.class );
 						eventListenerRegistry.setListeners( EventType.PERSIST, buildPersistEventListeners() );
-						eventListenerRegistry.setListeners( EventType.PERSIST_ONFLUSH, buildPersisOnFlushEventListeners() );
+						eventListenerRegistry.setListeners(
+								EventType.PERSIST_ONFLUSH, buildPersisOnFlushEventListeners()
+						);
 						eventListenerRegistry.setListeners( EventType.AUTO_FLUSH, buildAutoFlushEventListeners() );
 						eventListenerRegistry.setListeners( EventType.FLUSH, buildFlushEventListeners() );
 						eventListenerRegistry.setListeners( EventType.FLUSH_ENTITY, buildFlushEntityEventListeners() );
+					}
+
+					@Override
+					public void disintegrate(
+							SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry) {
 					}
 				}
 		);

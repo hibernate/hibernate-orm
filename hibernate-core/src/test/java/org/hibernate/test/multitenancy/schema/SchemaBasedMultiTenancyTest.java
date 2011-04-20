@@ -29,14 +29,12 @@ import java.sql.SQLException;
 import org.hibernate.HibernateException;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.Session;
-import org.hibernate.SessionFactory;
 import org.hibernate.cache.HashtableCacheProvider;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
-import org.hibernate.service.internal.BasicServiceRegistryImpl;
+import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.service.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
 import org.hibernate.service.jdbc.connections.spi.AbstractMultiTenantConnectionProvider;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
@@ -152,8 +150,9 @@ public class SchemaBasedMultiTenancyTest extends BaseUnitTestCase {
 				false	// do not *just* perform the create
 		);
 
-		serviceRegistry = new BasicServiceRegistryImpl( cfg.getProperties() );
-		serviceRegistry.registerService( MultiTenantConnectionProvider.class, multiTenantConnectionProvider );
+		serviceRegistry = (ServiceRegistryImplementor) new ServiceRegistryBuilder( cfg.getProperties() )
+				.addService( MultiTenantConnectionProvider.class, multiTenantConnectionProvider )
+				.buildServiceRegistry();
 
 		sessionFactory = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry );
 	}

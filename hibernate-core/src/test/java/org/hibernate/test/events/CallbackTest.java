@@ -22,23 +22,24 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.events;
-import java.util.Map;
+
 import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.event.DeleteEvent;
 import org.hibernate.event.DeleteEventListener;
 import org.hibernate.event.Destructible;
-import org.hibernate.event.EventListenerRegistration;
 import org.hibernate.event.EventType;
 import org.hibernate.event.Initializable;
-import org.hibernate.service.StandardServiceInitiators;
-import org.hibernate.service.event.spi.EventListenerRegistry;
+import org.hibernate.event.service.spi.EventListenerRegistry;
+import org.hibernate.integrator.spi.IntegratorService;
 import org.hibernate.service.internal.BasicServiceRegistryImpl;
-import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.service.spi.SessionFactoryServiceRegistry;
+import org.hibernate.integrator.spi.Integrator;
 
 import org.junit.Test;
 
@@ -68,15 +69,21 @@ public class CallbackTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected void applyServices(BasicServiceRegistryImpl serviceRegistry) {
 		super.applyServices( serviceRegistry );
-		serviceRegistry.getService( StandardServiceInitiators.EventListenerRegistrationService.class ).attachEventListenerRegistration(
-				new EventListenerRegistration() {
+		serviceRegistry.getService( IntegratorService.class ).addIntegrator(
+				new Integrator() {
 					@Override
-					public void apply(
-							EventListenerRegistry eventListenerRegistry,
+					public void integrate(
 							Configuration configuration,
-							Map<?, ?> configValues,
-							ServiceRegistryImplementor serviceRegistry) {
-						eventListenerRegistry.setListeners( EventType.DELETE, listener );
+							SessionFactoryImplementor sessionFactory,
+							SessionFactoryServiceRegistry serviceRegistry) {
+						serviceRegistry.getService( EventListenerRegistry.class ).setListeners(
+								EventType.DELETE, listener
+						);
+					}
+
+					@Override
+					public void disintegrate(
+							SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry) {
 					}
 				}
 		);

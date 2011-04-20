@@ -42,7 +42,7 @@ import org.hibernate.event.PostUpdateEventListener;
 import org.hibernate.event.PreUpdateEvent;
 import org.hibernate.event.PreUpdateEventListener;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.service.event.spi.EventListenerGroup;
+import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.type.TypeHelper;
 
 public final class EntityUpdateAction extends EntityAction {

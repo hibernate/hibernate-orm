@@ -21,33 +21,27 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.service.event.internal;
+package org.hibernate.integrator.internal;
 
-import org.hibernate.cfg.Configuration;
-import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.service.event.spi.EventListenerRegistry;
+import java.util.Map;
+
+import org.hibernate.integrator.spi.IntegratorService;
+import org.hibernate.service.spi.BasicServiceInitiator;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
-import org.hibernate.service.spi.SessionFactoryServiceInitiator;
 
 /**
- * Service initiator for {@link EventListenerRegistry}
- *
  * @author Steve Ebersole
  */
-public class EventListenerServiceInitiator implements SessionFactoryServiceInitiator<EventListenerRegistry> {
-	public static final EventListenerServiceInitiator INSTANCE = new EventListenerServiceInitiator();
+public class IntegratorServiceInitiator implements BasicServiceInitiator<IntegratorService> {
+	public static final IntegratorServiceInitiator INSTANCE = new IntegratorServiceInitiator();
 
 	@Override
-	public Class<EventListenerRegistry> getServiceInitiated() {
-		return EventListenerRegistry.class;
+	public Class<IntegratorService> getServiceInitiated() {
+		return IntegratorService.class;
 	}
 
 	@Override
-	public EventListenerRegistry initiateService(
-			SessionFactoryImplementor sessionFactory,
-			Configuration configuration,
-			ServiceRegistryImplementor registry) {
-		return EventListenerRegistryImpl.buildEventListenerRegistry( sessionFactory, configuration, registry );
+	public IntegratorService initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
+		return new IntegratorServiceImpl( registry );
 	}
-
 }

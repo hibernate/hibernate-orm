@@ -23,21 +23,20 @@
  */
 package org.hibernate.test.keymanytoone.bidir.component;
 
-import java.util.Map;
-
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.event.EventListenerRegistration;
+import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.event.EventType;
 import org.hibernate.event.LoadEvent;
 import org.hibernate.event.LoadEventListener;
 import org.hibernate.event.def.DefaultLoadEventListener;
-import org.hibernate.service.StandardServiceInitiators;
-import org.hibernate.service.event.spi.EventListenerRegistry;
+import org.hibernate.event.service.spi.EventListenerRegistry;
+import org.hibernate.integrator.spi.IntegratorService;
 import org.hibernate.service.internal.BasicServiceRegistryImpl;
-import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.service.spi.SessionFactoryServiceRegistry;
+import org.hibernate.integrator.spi.Integrator;
 
 import org.junit.Test;
 
@@ -65,16 +64,21 @@ public class EagerKeyManyToOneTest extends BaseCoreFunctionalTestCase {
 	protected void applyServices(BasicServiceRegistryImpl serviceRegistry) {
 		super.applyServices( serviceRegistry );
 
-		// (they are different service registries!)
-		serviceRegistry.getService( StandardServiceInitiators.EventListenerRegistrationService.class ).attachEventListenerRegistration(
-				new EventListenerRegistration() {
+		serviceRegistry.getService( IntegratorService.class ).addIntegrator(
+				new Integrator() {
 					@Override
-					public void apply(
-							EventListenerRegistry eventListenerRegistry,
+					public void integrate(
 							Configuration configuration,
-							Map<?, ?> configValues,
-							ServiceRegistryImplementor serviceRegistry) {
-						eventListenerRegistry.prependListeners( EventType.LOAD, new CustomLoadListener() );
+							SessionFactoryImplementor sessionFactory,
+							SessionFactoryServiceRegistry serviceRegistry) {
+						serviceRegistry.getService( EventListenerRegistry.class ).prependListeners(
+								EventType.LOAD, new CustomLoadListener()
+						);
+					}
+
+					@Override
+					public void disintegrate(
+							SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry) {
 					}
 				}
 		);

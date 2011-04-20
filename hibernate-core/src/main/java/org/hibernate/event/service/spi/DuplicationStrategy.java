@@ -21,27 +21,38 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.service.event.internal;
-
-import org.hibernate.event.EventType;
-import org.hibernate.service.event.spi.EventListenerRegistry;
+package org.hibernate.event.service.spi;
 
 /**
- * Helper for handling various aspects of event listeners.  Temporary because generally speaking this is legacy stuff
- * that should change as we move forward
+ * Defines listener duplication checking strategy, both in terms of when a duplication is detected (see
+ * {@link #areMatch}) as well as how to handle a duplication (see {@link #getAction}).
  *
  * @author Steve Ebersole
  */
-public class TemporaryListenerHelper {
-	public static interface ListenerProcessor {
-		public void processListener(Object listener);
+public interface DuplicationStrategy {
+	/**
+	 * The enumerated list of actions available on duplication match
+	 */
+	public static enum Action {
+		ERROR,
+		KEEP_ORIGINAL,
+		REPLACE_ORIGINAL
 	}
 
-	public static void processListeners(EventListenerRegistry registryRegistry, ListenerProcessor processer) {
-		for ( EventType eventType : EventType.values() ) {
-			for ( Object listener : registryRegistry.getEventListenerGroup( eventType ).listeners() ) {
-				processer.processListener( listener );
-			}
-		}
-	}
+	/**
+	 * Are the two listener instances considered a duplication?
+	 *
+	 * @param listener The listener we are currently trying to register
+	 * @param original An already registered listener
+	 *
+	 * @return {@literal true} if the two instances are considered a duplication; {@literal false} otherwise
+	 */
+	public boolean areMatch(Object listener, Object original);
+
+	/**
+	 * How should a duplication be handled?
+	 *
+	 * @return The strategy for handling duplication
+	 */
+	public Action getAction();
 }

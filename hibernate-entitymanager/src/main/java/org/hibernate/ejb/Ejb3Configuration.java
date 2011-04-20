@@ -75,7 +75,7 @@ import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.cfg.annotations.reflection.XMLContext;
 import org.hibernate.cfg.beanvalidation.BeanValidationIntegrator;
 import org.hibernate.ejb.connection.InjectedDataSourceConnectionProvider;
-import org.hibernate.ejb.event.JpaEventListenerRegistration;
+import org.hibernate.ejb.event.JpaIntegrator;
 import org.hibernate.ejb.instrument.InterceptFieldClassFileTransformer;
 import org.hibernate.ejb.internal.EntityManagerMessageLogger;
 import org.hibernate.ejb.packaging.JarVisitorFactory;
@@ -90,6 +90,7 @@ import org.hibernate.ejb.util.NamingHelper;
 import org.hibernate.engine.FilterDefinition;
 import org.hibernate.engine.transaction.internal.jdbc.JdbcTransactionFactory;
 import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
+import org.hibernate.integrator.spi.IntegratorService;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -101,8 +102,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.secure.JACCConfiguration;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.service.StandardServiceInitiators;
-import org.hibernate.service.internal.BasicServiceRegistryImpl;
+import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.service.jdbc.connections.internal.DatasourceConnectionProviderImpl;
 
 /**
@@ -872,7 +872,7 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 	}
 
 	public EntityManagerFactory buildEntityManagerFactory() {
-		return buildEntityManagerFactory( new BasicServiceRegistryImpl( cfg.getProperties() ) );
+		return buildEntityManagerFactory( new ServiceRegistryBuilder( cfg.getProperties() ).buildServiceRegistry() );
 	}
 
 	public EntityManagerFactory buildEntityManagerFactory(ServiceRegistry serviceRegistry) {
@@ -886,9 +886,7 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 		try {
 			configure( (Properties)null, null );
 			NamingHelper.bind(this);
-			// todo : temporary -> HHH-5562
-			serviceRegistry.getService( StandardServiceInitiators.EventListenerRegistrationService.class )
-					.attachEventListenerRegistration( new JpaEventListenerRegistration() );
+			serviceRegistry.getService( IntegratorService.class ).addIntegrator( new JpaIntegrator() );
 			return new EntityManagerFactoryImpl(
 					transactionType,
 					discardOnClose,

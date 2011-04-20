@@ -1,12 +1,8 @@
 package org.hibernate.metamodel.source.annotations.global;
 
-import java.util.Collections;
 import java.util.Iterator;
 
 import org.jboss.jandex.Index;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.FetchMode;
@@ -15,8 +11,14 @@ import org.hibernate.annotations.FetchProfiles;
 import org.hibernate.metamodel.source.MetadataSources;
 import org.hibernate.metamodel.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
+import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.internal.BasicServiceRegistryImpl;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static junit.framework.Assert.fail;
@@ -34,7 +36,7 @@ public class FetchProfileBinderTest extends BaseUnitTestCase {
 
 	@Before
 	public void setUp() {
-		serviceRegistry = new BasicServiceRegistryImpl( Collections.emptyMap() );
+		serviceRegistry = (BasicServiceRegistryImpl) new ServiceRegistryBuilder().buildServiceRegistry();
 		service = serviceRegistry.getService( ClassLoaderService.class );
 		meta = (MetadataImpl) new MetadataSources( serviceRegistry ).buildMetadata();
 	}

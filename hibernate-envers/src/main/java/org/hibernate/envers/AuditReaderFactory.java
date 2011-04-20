@@ -32,7 +32,7 @@ import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.reader.AuditReaderImpl;
 import org.hibernate.event.EventType;
 import org.hibernate.event.PostInsertEventListener;
-import org.hibernate.service.event.spi.EventListenerRegistry;
+import org.hibernate.event.service.spi.EventListenerRegistry;
 
 /**
  * @author Adam Warski (adam at warski dot org)

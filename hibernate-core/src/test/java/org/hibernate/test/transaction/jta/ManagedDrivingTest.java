@@ -38,7 +38,7 @@ import org.hibernate.engine.transaction.internal.TransactionCoordinatorImpl;
 import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
 import org.hibernate.engine.transaction.spi.TransactionContext;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
-import org.hibernate.service.StandardServiceInitiators;
+import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.service.internal.BasicServiceRegistryImpl;
 import org.hibernate.service.internal.ServiceProxy;
 import org.hibernate.service.jta.platform.spi.JtaPlatform;
@@ -71,10 +71,9 @@ public class ManagedDrivingTest extends BaseUnitTestCase {
 	public void setUp() throws Exception {
 		Map configValues = new HashMap();
 		TestingJtaBootstrap.prepare( configValues );
-//		configValues.putAll( ConnectionProviderBuilder.getConnectionProviderProperties() );
 		configValues.put( Environment.TRANSACTION_STRATEGY, CMTTransactionFactory.class.getName() );
 
-		serviceRegistry = new BasicServiceRegistryImpl( StandardServiceInitiators.LIST, configValues );
+		serviceRegistry = (BasicServiceRegistryImpl) new ServiceRegistryBuilder( configValues ).buildServiceRegistry();
 	}
 
 	@After

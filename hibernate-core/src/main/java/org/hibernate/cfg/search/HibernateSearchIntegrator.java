@@ -36,11 +36,11 @@ import org.hibernate.event.PostCollectionUpdateEventListener;
 import org.hibernate.event.PostDeleteEventListener;
 import org.hibernate.event.PostInsertEventListener;
 import org.hibernate.event.PostUpdateEventListener;
-import org.hibernate.spi.Integrator;
+import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
-import org.hibernate.service.event.spi.DuplicationStrategy;
-import org.hibernate.service.event.spi.EventListenerRegistry;
+import org.hibernate.event.service.spi.DuplicationStrategy;
+import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
 /**

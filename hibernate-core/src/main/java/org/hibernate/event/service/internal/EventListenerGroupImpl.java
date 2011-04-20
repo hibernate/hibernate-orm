@@ -21,9 +21,8 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.service.event.internal;
+package org.hibernate.event.service.internal;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -32,9 +31,9 @@ import java.util.ListIterator;
 import java.util.Set;
 
 import org.hibernate.event.EventType;
-import org.hibernate.service.event.spi.DuplicationStrategy;
-import org.hibernate.service.event.spi.EventListenerGroup;
-import org.hibernate.service.event.spi.EventListenerRegistrationException;
+import org.hibernate.event.service.spi.DuplicationStrategy;
+import org.hibernate.event.service.spi.EventListenerGroup;
+import org.hibernate.event.service.spi.EventListenerRegistrationException;
 
 /**
  * @author Steve Ebersole

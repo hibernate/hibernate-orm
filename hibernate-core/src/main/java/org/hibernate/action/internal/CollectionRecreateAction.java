@@ -35,7 +35,7 @@ import org.hibernate.event.PostCollectionRecreateEventListener;
 import org.hibernate.event.PreCollectionRecreateEvent;
 import org.hibernate.event.PreCollectionRecreateEventListener;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.service.event.spi.EventListenerGroup;
+import org.hibernate.event.service.spi.EventListenerGroup;
 
 public final class CollectionRecreateAction extends CollectionAction {
 

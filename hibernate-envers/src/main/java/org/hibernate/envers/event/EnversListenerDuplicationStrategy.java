@@ -23,7 +23,7 @@
  */
 package org.hibernate.envers.event;
 
-import org.hibernate.service.event.spi.DuplicationStrategy;
+import org.hibernate.event.service.spi.DuplicationStrategy;
 
 /**
  * Event listener duplication strategy for envers

@@ -21,21 +21,27 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.service.event.spi;
-
-import org.hibernate.HibernateException;
+package org.hibernate.service.internal;
 
 /**
- * Indicates a problem registering an event listener.
- * 
+ * A service provided as-is.
+ *
  * @author Steve Ebersole
  */
-public class EventListenerRegistrationException extends HibernateException {
-	public EventListenerRegistrationException(String s) {
-		super( s );
+public class ProvidedService<T> {
+	private final Class<T> serviceRole;
+	private final T service;
+
+	public ProvidedService(Class<T> serviceRole, T service) {
+		this.serviceRole = serviceRole;
+		this.service = service;
 	}
 
-	public EventListenerRegistrationException(String string, Throwable root) {
-		super( string, root );
+	public Class<T> getServiceRole() {
+		return serviceRole;
+	}
+
+	public T getService() {
+		return service;
 	}
 }

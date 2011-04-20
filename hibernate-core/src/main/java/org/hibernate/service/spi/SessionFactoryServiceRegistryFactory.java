@@ -23,8 +23,6 @@
  */
 package org.hibernate.service.spi;
 
-import java.util.List;
-
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.service.Service;

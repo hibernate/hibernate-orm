@@ -36,6 +36,7 @@ import org.hibernate.engine.transaction.internal.TransactionCoordinatorImpl;
 import org.hibernate.engine.transaction.internal.jta.JtaTransactionFactory;
 import org.hibernate.engine.transaction.spi.TransactionContext;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
+import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.service.internal.ServiceProxy;
 import org.hibernate.service.internal.BasicServiceRegistryImpl;
 import org.hibernate.service.jta.platform.spi.JtaPlatform;
@@ -71,7 +72,7 @@ public class BasicDrivingTest extends BaseUnitTestCase {
 		configValues.putAll( ConnectionProviderBuilder.getConnectionProviderProperties() );
 		configValues.put( Environment.TRANSACTION_STRATEGY, JtaTransactionFactory.class.getName() );
 		TestingJtaBootstrap.prepare( configValues );
-		serviceRegistry = new BasicServiceRegistryImpl( configValues );
+		serviceRegistry = (BasicServiceRegistryImpl) new ServiceRegistryBuilder( configValues ).buildServiceRegistry();
 	}
 
 	@After

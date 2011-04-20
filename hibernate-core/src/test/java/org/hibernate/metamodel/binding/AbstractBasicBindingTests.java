@@ -23,15 +23,14 @@
  */
 package org.hibernate.metamodel.binding;
 
-import java.util.Collections;
+import org.hibernate.metamodel.relational.Column;
+import org.hibernate.service.BasicServiceRegistry;
+import org.hibernate.service.ServiceRegistryBuilder;
+import org.hibernate.service.internal.BasicServiceRegistryImpl;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import org.hibernate.metamodel.relational.Column;
-import org.hibernate.service.BasicServiceRegistry;
-import org.hibernate.service.internal.BasicServiceRegistryImpl;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
@@ -51,7 +50,7 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 
 	@Before
 	public void setUp() {
-		serviceRegistry = new BasicServiceRegistryImpl( Collections.emptyMap() );
+		serviceRegistry = (BasicServiceRegistryImpl) new ServiceRegistryBuilder().buildServiceRegistry();
 	}
 
 	@After

@@ -42,6 +42,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.service.internal.BasicServiceRegistryImpl;
 
 import org.junit.After;
@@ -203,7 +204,7 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 		properties.putAll( configuration.getProperties() );
 		Environment.verifyProperties( properties );
 		ConfigurationHelper.resolvePlaceHolders( properties );
-		return new BasicServiceRegistryImpl( properties );
+		return (BasicServiceRegistryImpl) new ServiceRegistryBuilder( properties ).buildServiceRegistry();
 	}
 
 	@SuppressWarnings( {"UnusedParameters"})

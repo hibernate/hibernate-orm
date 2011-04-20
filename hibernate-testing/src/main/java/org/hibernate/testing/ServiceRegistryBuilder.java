@@ -44,7 +44,7 @@ public class ServiceRegistryBuilder {
 		properties.putAll( serviceRegistryConfig );
 		Environment.verifyProperties( properties );
 		ConfigurationHelper.resolvePlaceHolders( properties );
-		return new BasicServiceRegistryImpl( properties );
+		return (BasicServiceRegistryImpl) new org.hibernate.service.ServiceRegistryBuilder( properties ).buildServiceRegistry();
 	}
 
 	public static void destroy(ServiceRegistry serviceRegistry) {

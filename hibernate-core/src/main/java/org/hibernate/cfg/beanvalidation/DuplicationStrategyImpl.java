@@ -23,7 +23,7 @@
  */
 package org.hibernate.cfg.beanvalidation;
 
-import org.hibernate.service.event.spi.DuplicationStrategy;
+import org.hibernate.event.service.spi.DuplicationStrategy;
 
 /**
  * @author Steve Ebersole

@@ -1,19 +1,21 @@
 //$Id: HibernateService.java 6100 2005-03-17 10:48:03Z turin42 $
 package org.hibernate.jmx;
 
+import javax.naming.InitialContext;
 import java.util.Map;
 import java.util.Properties;
-import javax.naming.InitialContext;
+
+import org.jboss.logging.Logger;
+
 import org.hibernate.HibernateException;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.ExternalSessionFactoryConfig;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.jndi.JndiHelper;
-import org.hibernate.service.internal.BasicServiceRegistryImpl;
+import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.service.jta.platform.internal.JtaPlatformInitiator;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
-import org.jboss.logging.Logger;
 
 
 /**
@@ -59,9 +61,11 @@ public class HibernateService extends ExternalSessionFactoryConfig implements Hi
 	}
 
 	SessionFactory buildSessionFactory() throws HibernateException {
-        LOG.startingServiceAtJndiName(boundName);
-        LOG.serviceProperties(properties);
-        return buildConfiguration().buildSessionFactory(new BasicServiceRegistryImpl(properties));
+        LOG.startingServiceAtJndiName( boundName );
+        LOG.serviceProperties( properties );
+        return buildConfiguration().buildSessionFactory(
+				new ServiceRegistryBuilder( properties ).buildServiceRegistry()
+		);
 	}
 
 	@Override

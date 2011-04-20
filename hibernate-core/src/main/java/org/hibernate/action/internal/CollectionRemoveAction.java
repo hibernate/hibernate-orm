@@ -35,7 +35,7 @@ import org.hibernate.event.PostCollectionRemoveEventListener;
 import org.hibernate.event.PreCollectionRemoveEvent;
 import org.hibernate.event.PreCollectionRemoveEventListener;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.service.event.spi.EventListenerGroup;
+import org.hibernate.event.service.spi.EventListenerGroup;
 
 public final class CollectionRemoveAction extends CollectionAction {
 

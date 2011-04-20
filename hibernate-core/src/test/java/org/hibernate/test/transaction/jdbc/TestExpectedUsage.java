@@ -33,22 +33,23 @@ import org.hibernate.engine.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.engine.transaction.internal.TransactionCoordinatorImpl;
 import org.hibernate.engine.transaction.spi.TransactionContext;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
-import org.hibernate.service.StandardServiceInitiators;
+import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.service.internal.BasicServiceRegistryImpl;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import org.hibernate.testing.env.ConnectionProviderBuilder;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.test.common.JournalingTransactionObserver;
+import org.hibernate.test.common.TransactionContextImpl;
+import org.hibernate.test.common.TransactionEnvironmentImpl;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.testing.env.ConnectionProviderBuilder;
-import org.hibernate.test.common.JournalingTransactionObserver;
-import org.hibernate.test.common.TransactionContextImpl;
-import org.hibernate.test.common.TransactionEnvironmentImpl;
 
 /**
  * @author Steve Ebersole
@@ -58,10 +59,8 @@ public class TestExpectedUsage extends BaseUnitTestCase {
 
 	@Before
 	public void setUp() throws Exception {
-		serviceRegistry = new BasicServiceRegistryImpl(
-				StandardServiceInitiators.LIST,
-				ConnectionProviderBuilder.getConnectionProviderProperties()
-		);
+		serviceRegistry = (BasicServiceRegistryImpl) new ServiceRegistryBuilder( ConnectionProviderBuilder.getConnectionProviderProperties() )
+				.buildServiceRegistry();
 	}
 
 	@After

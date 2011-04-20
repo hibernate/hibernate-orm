@@ -21,27 +21,21 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.service;
+package org.hibernate.event.service.spi;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.hibernate.event.service.internal.EventListenerServiceInitiator;
-import org.hibernate.service.spi.SessionFactoryServiceInitiator;
-import org.hibernate.stat.internal.StatisticsInitiator;
+import org.hibernate.HibernateException;
 
 /**
+ * Indicates a problem registering an event listener.
+ * 
  * @author Steve Ebersole
  */
-public class StandardSessionFactoryServiceInitiators {
-	public static List<SessionFactoryServiceInitiator> LIST = buildStandardServiceInitiatorList();
+public class EventListenerRegistrationException extends HibernateException {
+	public EventListenerRegistrationException(String s) {
+		super( s );
+	}
 
-	private static List<SessionFactoryServiceInitiator> buildStandardServiceInitiatorList() {
-		final List<SessionFactoryServiceInitiator> serviceInitiators = new ArrayList<SessionFactoryServiceInitiator>();
-
-		serviceInitiators.add( EventListenerServiceInitiator.INSTANCE );
-		serviceInitiators.add( StatisticsInitiator.INSTANCE );
-
-		return serviceInitiators;
+	public EventListenerRegistrationException(String string, Throwable root) {
+		super( string, root );
 	}
 }

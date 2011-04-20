@@ -248,7 +248,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		properties.putAll( configuration.getProperties() );
 		Environment.verifyProperties( properties );
 		ConfigurationHelper.resolvePlaceHolders( properties );
-		BasicServiceRegistryImpl serviceRegistry = new BasicServiceRegistryImpl( properties );
+		BasicServiceRegistryImpl serviceRegistry = (BasicServiceRegistryImpl) new org.hibernate.service.ServiceRegistryBuilder( properties ).buildServiceRegistry();
 		applyServices( serviceRegistry );
 		return serviceRegistry;
 	}

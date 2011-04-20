@@ -28,6 +28,7 @@ import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.event.EnversIntegrator;
+import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.service.internal.BasicServiceRegistryImpl;
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
@@ -97,7 +98,7 @@ public abstract class AbstractEntityTest extends AbstractEnversTest {
 
         configure( cfg );
 
-		serviceRegistry = new BasicServiceRegistryImpl(configValues);
+		serviceRegistry = (BasicServiceRegistryImpl) new ServiceRegistryBuilder( configValues ).buildServiceRegistry();
 
         emf = cfg.buildEntityManagerFactory( serviceRegistry );
 

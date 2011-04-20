@@ -31,8 +31,9 @@ import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.ejb.AvailableSettings;
-import org.hibernate.event.EventListenerRegistration;
+import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.event.EventType;
+import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.secure.JACCPreDeleteEventListener;
 import org.hibernate.secure.JACCPreInsertEventListener;
@@ -40,19 +41,18 @@ import org.hibernate.secure.JACCPreLoadEventListener;
 import org.hibernate.secure.JACCPreUpdateEventListener;
 import org.hibernate.secure.JACCSecurityListener;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
-import org.hibernate.service.event.spi.DuplicationStrategy;
-import org.hibernate.service.event.spi.EventListenerGroup;
-import org.hibernate.service.event.spi.EventListenerRegistry;
+import org.hibernate.event.service.spi.DuplicationStrategy;
+import org.hibernate.event.service.spi.EventListenerGroup;
+import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
 /**
  * Prepare the HEM-specific event listeners.
- *
- * @todo : make this into Integrator per HHH-5562 ?? 
  * 
  * @author Steve Ebersole
  */
-public class JpaEventListenerRegistration implements EventListenerRegistration {
+public class JpaIntegrator implements Integrator {
 	private static final DuplicationStrategy JPA_DUPLICATION_STRATEGY = new DuplicationStrategy() {
 		@Override
 		public boolean areMatch(Object listener, Object original) {
@@ -81,12 +81,13 @@ public class JpaEventListenerRegistration implements EventListenerRegistration {
 
 	@Override
 	@SuppressWarnings( {"unchecked"})
-	public void apply(
-			EventListenerRegistry eventListenerRegistry,
+	public void integrate(
 			Configuration configuration,
-			Map<?, ?> configValues,
-			ServiceRegistryImplementor serviceRegistry) {
-		boolean isSecurityEnabled = configValues.containsKey( AvailableSettings.JACC_ENABLED );
+			SessionFactoryImplementor sessionFactory,
+			SessionFactoryServiceRegistry serviceRegistry) {
+		final EventListenerRegistry eventListenerRegistry = serviceRegistry.getService( EventListenerRegistry.class );
+
+		boolean isSecurityEnabled = configuration.getProperties().containsKey( AvailableSettings.JACC_ENABLED );
 
 		eventListenerRegistry.addDuplicationStrategy( JPA_DUPLICATION_STRATEGY );
 		eventListenerRegistry.addDuplicationStrategy( JACC_DUPLICATION_STRATEGY );
@@ -116,7 +117,7 @@ public class JpaEventListenerRegistration implements EventListenerRegistration {
 		eventListenerRegistry.prependListeners( EventType.POST_LOAD, new EJB3PostLoadEventListener() );
 		eventListenerRegistry.prependListeners( EventType.POST_UPDATE, new EJB3PostUpdateEventListener() );
 
-		for ( Map.Entry<?,?> entry : configValues.entrySet() ) {
+		for ( Map.Entry<?,?> entry : configuration.getProperties().entrySet() ) {
 			if ( ! String.class.isInstance( entry.getKey() ) ) {
 				continue;
 			}
@@ -127,13 +128,10 @@ public class JpaEventListenerRegistration implements EventListenerRegistration {
 			final String eventTypeName = propertyName.substring( AvailableSettings.EVENT_LISTENER_PREFIX.length() + 1 );
 			final EventType eventType = EventType.resolveEventTypeByName( eventTypeName );
 			final EventListenerGroup eventListenerGroup = eventListenerRegistry.getEventListenerGroup( eventType );
-			eventListenerGroup.clear();
 			for ( String listenerImpl : ( (String) entry.getValue() ).split( " ," ) ) {
 				eventListenerGroup.appendListener( instantiate( listenerImpl, serviceRegistry ) );
 			}
 		}
-
-		// todo : we may need to account for callback handlers previously set (shared across EMFs)
 
 		final EntityCallbackHandler callbackHandler = new EntityCallbackHandler();
 		Iterator classes = configuration.getClassMappings();
@@ -160,6 +158,10 @@ public class JpaEventListenerRegistration implements EventListenerRegistration {
 				}
 			}
 		}
+	}
+
+	@Override
+	public void disintegrate(SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry) {
 	}
 
 	private Object instantiate(String listenerImpl, ServiceRegistryImplementor serviceRegistry) {

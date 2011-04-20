@@ -21,25 +21,33 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.event;
-
-import java.util.Map;
+package org.hibernate.event.service.internal;
 
 import org.hibernate.cfg.Configuration;
-import org.hibernate.service.event.spi.EventListenerRegistry;
+import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.service.spi.SessionFactoryServiceInitiator;
 
 /**
- * Contract for performing event listener registration.  This is completely a work in progress for now.  The
- * expectation is that this gets tied in with the "service locator" pattern defined by HHH-5562
+ * Service initiator for {@link EventListenerRegistry}
  *
  * @author Steve Ebersole
  */
-public interface EventListenerRegistration {
-	public void apply(
-			EventListenerRegistry eventListenerRegistry,
+public class EventListenerServiceInitiator implements SessionFactoryServiceInitiator<EventListenerRegistry> {
+	public static final EventListenerServiceInitiator INSTANCE = new EventListenerServiceInitiator();
+
+	@Override
+	public Class<EventListenerRegistry> getServiceInitiated() {
+		return EventListenerRegistry.class;
+	}
+
+	@Override
+	public EventListenerRegistry initiateService(
+			SessionFactoryImplementor sessionFactory,
 			Configuration configuration,
-			Map<?, ?> configValues,
-			ServiceRegistryImplementor serviceRegistry
-	);
+			ServiceRegistryImplementor registry) {
+		return new EventListenerRegistryImpl();
+	}
+
 }

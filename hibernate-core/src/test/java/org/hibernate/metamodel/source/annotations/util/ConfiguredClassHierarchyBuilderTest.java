@@ -21,6 +21,7 @@ import org.junit.Test;
 import org.hibernate.AnnotationException;
 import org.hibernate.metamodel.source.annotations.ConfiguredClass;
 import org.hibernate.metamodel.source.annotations.ConfiguredClassHierarchy;
+import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.internal.BasicServiceRegistryImpl;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -39,7 +40,7 @@ public class ConfiguredClassHierarchyBuilderTest extends BaseUnitTestCase {
 
 	@Before
 	public void setUp() {
-		serviceRegistry = new BasicServiceRegistryImpl( Collections.emptyMap() );
+		serviceRegistry = (BasicServiceRegistryImpl) new ServiceRegistryBuilder().buildServiceRegistry();
 		service = serviceRegistry.getService( ClassLoaderService.class );
 	}
 

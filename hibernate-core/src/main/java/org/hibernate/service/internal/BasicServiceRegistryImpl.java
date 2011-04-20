@@ -32,7 +32,6 @@ import org.jboss.logging.Logger;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.BasicServiceRegistry;
 import org.hibernate.service.Service;
-import org.hibernate.service.StandardServiceInitiators;
 import org.hibernate.service.UnknownServiceException;
 import org.hibernate.service.spi.BasicServiceInitiator;
 import org.hibernate.service.spi.Configurable;
@@ -50,18 +49,24 @@ public class BasicServiceRegistryImpl extends AbstractServiceRegistryImpl implem
 	private final Map<Class,BasicServiceInitiator> serviceInitiatorMap;
 	private final Map configurationValues;
 
-	public BasicServiceRegistryImpl(Map configurationValues) {
-		this( StandardServiceInitiators.LIST, configurationValues );
-	}
-
 	@SuppressWarnings( {"unchecked"})
-	public BasicServiceRegistryImpl(List<BasicServiceInitiator> serviceInitiators, Map configurationValues) {
+	public BasicServiceRegistryImpl(
+			List<BasicServiceInitiator> serviceInitiators,
+			List<ProvidedService> providedServices,
+			Map configurationValues) {
 		super();
-		this.serviceInitiatorMap = toMap( serviceInitiators );
+
 		this.configurationValues = configurationValues;
+
+		this.serviceInitiatorMap = toMap( serviceInitiators );
 		for ( BasicServiceInitiator initiator : serviceInitiatorMap.values() ) {
 			// create the bindings up front to help identify to which registry services belong
 			createServiceBinding( initiator.getServiceInitiated() );
+		}
+
+		for ( ProvidedService providedService : providedServices ) {
+			ServiceBinding binding = locateOrCreateServiceBinding( providedService.getServiceRole(), false );
+			binding.setTarget( providedService.getService() );
 		}
 	}
 
@@ -133,4 +138,5 @@ public class BasicServiceRegistryImpl extends AbstractServiceRegistryImpl implem
 			( (Configurable) service ).configure( configurationValues );
 		}
 	}
+
 }

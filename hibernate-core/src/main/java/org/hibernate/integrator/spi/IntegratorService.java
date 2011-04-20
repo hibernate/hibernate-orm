@@ -21,38 +21,27 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.service.event.spi;
+package org.hibernate.integrator.spi;
+
+import org.hibernate.service.Service;
 
 /**
- * Defines listener duplication checking strategy, both in terms of when a duplication is detected (see
- * {@link #areMatch}) as well as how to handle a duplication (see {@link #getAction}).
- *
  * @author Steve Ebersole
  */
-public interface DuplicationStrategy {
+public interface IntegratorService extends Service {
 	/**
-	 * The enumerated list of actions available on duplication match
+	 * Manually add an integrator.  Added integrators supplement the set of discovered ones.
+	 * <p/>
+	 * This is mostly an internal contract used between modules.
+	 *
+	 * @param integrator The integrator
 	 */
-	public static enum Action {
-		ERROR,
-		KEEP_ORIGINAL,
-		REPLACE_ORIGINAL
-	}
+	public void addIntegrator(Integrator integrator);
 
 	/**
-	 * Are the two listener instances considered a duplication?
+	 * Retrieve all integrators.
 	 *
-	 * @param listener The listener we are currently trying to register
-	 * @param original An already registered listener
-	 *
-	 * @return {@literal true} if the two instances are considered a duplication; {@literal false} otherwise
+	 * @return All integrators.
 	 */
-	public boolean areMatch(Object listener, Object original);
-
-	/**
-	 * How should a duplication be handled?
-	 *
-	 * @return The strategy for handling duplication
-	 */
-	public Action getAction();
+	public Iterable<Integrator> getIntegrators();
 }

@@ -41,7 +41,7 @@ import org.hibernate.engine.transaction.spi.TransactionContext;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.Expectations;
-import org.hibernate.service.StandardServiceInitiators;
+import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.service.internal.BasicServiceRegistryImpl;
 
 import org.junit.After;
@@ -68,10 +68,8 @@ public class BatchingTest extends BaseUnitTestCase implements BatchKey {
 
 	@Before
 	public void setUp() throws Exception {
-		serviceRegistry = new BasicServiceRegistryImpl(
-				StandardServiceInitiators.LIST,
-				ConnectionProviderBuilder.getConnectionProviderProperties()
-		);
+		serviceRegistry = (BasicServiceRegistryImpl) new ServiceRegistryBuilder( ConnectionProviderBuilder.getConnectionProviderProperties() )
+				.buildServiceRegistry();
 	}
 
 	@After

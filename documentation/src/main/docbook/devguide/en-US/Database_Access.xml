@@ -15,11 +15,14 @@
         <itemizedlist>
             <listitem><para>Stand-alone built-in connection pool</para></listitem>
             <listitem><para><classname>javax.sql.DataSource</classname></para></listitem>
-            <listitem><para>Two different third-party opensource JDBC connection pools:</para>
+            <listitem><para>Connection pools, including support for two different third-party opensource JDBC connection pools:</para>
                 <itemizedlist>
                     <listitem><para>c3p0</para></listitem>
                     <listitem><para>proxool</para></listitem>
                 </itemizedlist>
+            </listitem>
+            <listitem>
+                <para>Application-supplied JDBC connections.  This is not a recommended approach and exists for legacy reasons</para>
             </listitem>
         </itemizedlist>
 
@@ -27,27 +30,35 @@
             <para>The built-in connection pool is not intended for production environments.</para>
         </note>
 
+        <para>
+            Hibernate obtains JDBC connections as needed though the
+            <interfacename>org.hibernate.service.jdbc.connections.spi.ConnectionProvider</interfacename> interface
+            which is a service contract.  Applications may also supply their own
+            <interfacename>org.hibernate.service.jdbc.connections.spi.ConnectionProvider</interfacename> implementation
+            to define a custom approach for supplying connections to Hibernate (from a different connection pool
+            implementation, for example).
+        </para>
+
         <!-- todo : discuss servies -->
 
         <section>
             <title>Configuration</title>
             <para>
-                You can configure database connections using a properties file, an XML deployment descriptor, programmatically.
-      </para>
-      <example>
-        <title><filename>hibernate.properties</filename> for a c3p0 connection pool</title>
-        <programlisting><xi:include href="extras/hibernate.properties" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text" /></programlisting>
-      </example>
-      <example>
-        <title><filename>hibernate.cfg.xml</filename> for a connection to the bundled HSQL database</title>
-        <programlisting language="XML" role="XML"><xi:include href="extras/hibernate.cfg.xml"
-        xmlns:xi="http://www.w3.org/2001/XInclude" parse="text" /></programlisting>
-      </example>
-      <note>
-        <para>
-          The DTD in the configuration file used in this example is required.
-        </para>
-      </note>
+                You can configure database connections using a properties file, an XML deployment descriptor or
+                programmatically.
+              </para>
+                <example>
+                    <title><filename>hibernate.properties</filename> for a c3p0 connection pool</title>
+                    <programlisting>
+                        <xi:include href="extras/hibernate.properties" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text" />
+                    </programlisting>
+                </example>
+                <example>
+                    <title><filename>hibernate.cfg.xml</filename> for a connection to the bundled HSQL database</title>
+                    <programlisting language="XML" role="XML">
+                        <xi:include href="extras/hibernate.cfg.xml" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text" />
+                    </programlisting>
+                </example>
 
       <section>
         <title>Programatic configuration</title>

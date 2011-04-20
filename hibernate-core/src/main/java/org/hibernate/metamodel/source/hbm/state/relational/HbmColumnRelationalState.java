@@ -29,12 +29,12 @@ import org.hibernate.MappingException;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.metamodel.binding.SimpleAttributeBinding;
 import org.hibernate.metamodel.relational.Size;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLColumnElement;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLDiscriminator;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLId;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLColumn;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLDiscriminator;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLId;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLTimestamp;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLVersion;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLProperty;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLTimestamp;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLVersion;
 import org.hibernate.metamodel.source.util.MappingHelper;
 
 // TODO: remove duplication after Id, Discriminator, Version, Timestamp, and Property extend a common interface.
@@ -58,7 +58,7 @@ public class HbmColumnRelationalState implements SimpleAttributeBinding.ColumnRe
 	private final Set<String> indexes;
 
 	/* package-protected */
-	HbmColumnRelationalState(XMLColumnElement columnElement,
+	HbmColumnRelationalState(XMLColumn columnElement,
 							HbmSimpleValueRelationalStateContainer container) {
 		this.container = container;
 		this.explicitColumnName = columnElement.getName();
@@ -101,7 +101,7 @@ public class HbmColumnRelationalState implements SimpleAttributeBinding.ColumnRe
 
 	HbmColumnRelationalState(XMLId id,
 							HbmSimpleValueRelationalStateContainer container) {
-		if ( id.getColumnElement() != null && ! id.getColumnElement().isEmpty() ) {
+		if ( id.getColumn() != null && ! id.getColumn().isEmpty() ) {
 			throw new IllegalArgumentException( "This method should not be called with non-empty id.getColumnElement()" );
 		}
 		this.container = container;
@@ -121,7 +121,7 @@ public class HbmColumnRelationalState implements SimpleAttributeBinding.ColumnRe
 
 	HbmColumnRelationalState(XMLDiscriminator discriminator,
 							HbmSimpleValueRelationalStateContainer container) {
-		if ( discriminator.getColumnElement() != null  ) {
+		if ( discriminator.getColumn() != null  ) {
 			throw new IllegalArgumentException( "This method should not be called with null discriminator.getColumnElement()" );
 		}
 		this.container = container;
@@ -142,8 +142,8 @@ public class HbmColumnRelationalState implements SimpleAttributeBinding.ColumnRe
 	HbmColumnRelationalState(XMLVersion version,
 							HbmSimpleValueRelationalStateContainer container) {
 		this.container = container;
-		this.explicitColumnName = version.getColumn();
-		if ( version.getColumnElement() != null && ! version.getColumnElement().isEmpty() ) {
+		this.explicitColumnName = version.getColumnAttribute();
+		if ( version.getColumn() != null && ! version.getColumn().isEmpty() ) {
 			throw new IllegalArgumentException( "This method should not be called with non-empty version.getColumnElement()" );
 		}
 		// TODO: should set default
@@ -163,7 +163,7 @@ public class HbmColumnRelationalState implements SimpleAttributeBinding.ColumnRe
 	HbmColumnRelationalState(XMLTimestamp timestamp,
 							HbmSimpleValueRelationalStateContainer container) {
 		this.container = container;
-		this.explicitColumnName = timestamp.getColumn();
+		this.explicitColumnName = timestamp.getColumnAttribute();
 		// TODO: should set default
 		this.size = new Size();
 		this.isNullable = false;

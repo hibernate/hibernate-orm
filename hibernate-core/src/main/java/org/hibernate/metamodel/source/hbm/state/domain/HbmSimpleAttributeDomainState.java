@@ -30,11 +30,11 @@ import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.binding.MappingDefaults;
 import org.hibernate.metamodel.binding.SimpleAttributeBinding;
 import org.hibernate.metamodel.domain.MetaAttribute;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLId;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLDiscriminator;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLDiscriminator;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLId;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLTimestamp;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLVersion;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLProperty;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLTimestamp;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLVersion;
 import org.hibernate.metamodel.source.util.MappingHelper;
 
 /**
@@ -151,6 +151,7 @@ public class HbmSimpleAttributeDomainState extends AbstractHbmAttributeDomainSta
 		}
 	}
 
+	@Override
 	protected boolean isEmbedded() {
 		return false;
 	}

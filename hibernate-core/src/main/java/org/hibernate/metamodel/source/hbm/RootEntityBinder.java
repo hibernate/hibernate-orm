@@ -34,9 +34,9 @@ import org.hibernate.metamodel.relational.Identifier;
 import org.hibernate.metamodel.relational.InLineView;
 import org.hibernate.metamodel.relational.Schema;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLCache;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLClass;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLCompositeId;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLId;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLCompositeId;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLId;
 import org.hibernate.metamodel.source.util.MappingHelper;
 
 /**
@@ -92,7 +92,7 @@ class RootEntityBinder extends AbstractEntityBinder {
 		final Schema schema = getHibernateXmlBinder().getMetadata().getDatabase().getSchema( getSchemaName() );
 
 		final String subSelect =
-				xmlClazz.getSubselect() == null ? xmlClazz.getSubselectElement() : xmlClazz.getSubselect();
+				xmlClazz.getSubselectAttribute() == null ? xmlClazz.getSubselect() : xmlClazz.getSubselectAttribute();
 		if ( subSelect != null ) {
 			final String logicalName = entityBinding.getEntity().getName();
 			InLineView inLineView = schema.getInLineView( logicalName );

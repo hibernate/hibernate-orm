@@ -30,8 +30,6 @@ import org.hibernate.envers.tools.query.Parameters;
 import org.hibernate.envers.tools.query.QueryBuilder;
 import org.hibernate.envers.query.property.PropertyNameGetter;
 
-import java.util.List;
-
 /**
  * @author Adam Warski (adam at warski dot org)
  */

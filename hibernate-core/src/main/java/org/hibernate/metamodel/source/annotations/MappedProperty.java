@@ -23,6 +23,8 @@
  */
 package org.hibernate.metamodel.source.annotations;
 
+import java.lang.reflect.Type;
+
 /**
  * Represent a mapped property (explicitly or implicitly mapped).
  *
@@ -30,18 +32,34 @@ package org.hibernate.metamodel.source.annotations;
  */
 public class MappedProperty implements Comparable<MappedProperty> {
 	private final String name;
+	private final Type type;
 
-	MappedProperty(String name) {
+	MappedProperty(String name, Type type) {
 		this.name = name;
+		this.type = type;
 	}
 
 	public String getName() {
 		return name;
 	}
 
+	public Type getType() {
+		return type;
+	}
+
 	@Override
 	public int compareTo(MappedProperty mappedProperty) {
 		return name.compareTo( mappedProperty.getName() );
+	}
+
+	@Override
+	public String toString() {
+		final StringBuilder sb = new StringBuilder();
+		sb.append( "MappedProperty" );
+		sb.append( "{name='" ).append( name ).append( '\'' );
+		sb.append( ", type=" ).append( type );
+		sb.append( '}' );
+		return sb.toString();
 	}
 }
 

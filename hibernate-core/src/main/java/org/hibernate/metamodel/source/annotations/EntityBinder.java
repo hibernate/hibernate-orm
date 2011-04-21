@@ -27,15 +27,11 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
-import javax.persistence.GeneratedValue;
-
 import org.jboss.jandex.AnnotationInstance;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
-import org.hibernate.cfg.BinderHelper;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.mapping.MetaAttribute;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.HibernateTypeDescriptor;
@@ -110,7 +106,11 @@ public class EntityBinder {
 		entityBinding.getEntity().getOrCreateSingularAttribute( idName );
 		SimpleAttributeBinding idBinding = entityBinding.makeSimplePrimaryKeyAttributeBinding( idName );
 
-		idBinding.initialize( new AnnotationSimpleAttributeDomainState() );
+
+		AnnotationSimpleAttributeDomainState domainState = new AnnotationSimpleAttributeDomainState();
+		//domainState.propertyGeneration =
+
+		idBinding.initialize( domainState );
 		idBinding.initializeTupleValue( new AnnotationSimpleAttributeRelationalState() );
 	}
 
@@ -198,6 +198,8 @@ public class EntityBinder {
 	}
 
 	public static class AnnotationSimpleAttributeDomainState implements SimpleAttributeBinding.DomainState {
+		PropertyGeneration propertyGeneration;
+
 		@Override
 		public PropertyGeneration getPropertyGeneration() {
 
@@ -208,7 +210,7 @@ public class EntityBinder {
 //		String generatorName = generatedValue != null ?
 //				generatedValue.generator() :
 //				BinderHelper.ANNOTATION_STRING_DEFAULT;
-			return PropertyGeneration.ALWAYS;
+			return propertyGeneration;
 		}
 
 		@Override
@@ -272,7 +274,7 @@ public class EntityBinder {
 		}
 
 		@Override
-		public Map<String, MetaAttribute> getMetaAttributes(EntityBinding entityBinding) {
+		public Map<String, org.hibernate.metamodel.domain.MetaAttribute> getMetaAttributes(EntityBinding entityBinding) {
 			return null;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 	}

@@ -10,6 +10,7 @@ dependencies {
     }
     compile( libraries.commons_annotations )
     compile( libraries.jandex )
+    compile( libraries.classmate )
     compile( libraries.jpa )
     compile( libraries.javassist )
     antlr( libraries.antlr )

@@ -116,7 +116,6 @@ public class HbmSimpleAttributeDomainState extends AbstractHbmAttributeDomainSta
 										 XMLPropertyElement property) {
 		super( defaults, attribute, entityMetaAttributes, property );
 		this.isLazy = property.isLazy();
-;
 		this.propertyGeneration = PropertyGeneration.parse( property.getGenerated() );
 
 		if ( propertyGeneration == PropertyGeneration.ALWAYS || propertyGeneration == PropertyGeneration.INSERT ) {

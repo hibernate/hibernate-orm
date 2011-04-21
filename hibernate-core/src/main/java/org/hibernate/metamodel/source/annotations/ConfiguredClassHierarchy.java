@@ -29,6 +29,7 @@ import java.util.List;
 import javax.persistence.AccessType;
 import javax.persistence.InheritanceType;
 
+import com.fasterxml.classmate.ResolvedTypeWithMembers;
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.FieldInfo;
@@ -36,7 +37,9 @@ import org.jboss.jandex.MethodInfo;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.metamodel.source.annotations.util.JandexHelper;
+import org.hibernate.metamodel.source.annotations.util.ReflectionHelper;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.service.classloading.spi.ClassLoaderService;
 
 /**
  * Represents the inheritance structure of the configured classes within a class hierarchy.
@@ -56,10 +59,14 @@ public class ConfiguredClassHierarchy implements Iterable<ConfiguredClass> {
 		defaultAccessType = determineDefaultAccessType( classes );
 		inheritanceType = determineInheritanceType( classes );
 
+		ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+		Class<?> clazz = classLoaderService.classForName( classes.get( classes.size() - 1 ).name().toString() );
+		ResolvedTypeWithMembers resolvedMembers = ReflectionHelper.resolveMemberTypes( clazz );
+
 		configuredClasses = new ArrayList<ConfiguredClass>();
 		ConfiguredClass parent = null;
 		for ( ClassInfo info : classes ) {
-			ConfiguredClass configuredClass = new ConfiguredClass( info, parent, defaultAccessType, serviceRegistry );
+			ConfiguredClass configuredClass = new ConfiguredClass( info, parent, defaultAccessType, serviceRegistry, resolvedMembers );
 			configuredClasses.add( configuredClass );
 			parent = configuredClass;
 		}
@@ -81,8 +88,7 @@ public class ConfiguredClassHierarchy implements Iterable<ConfiguredClass> {
 	}
 
 	@Override
-	public String toString
-			() {
+	public String toString() {
 		final StringBuilder sb = new StringBuilder();
 		sb.append( "ConfiguredClassHierarchy" );
 		sb.append( "{defaultAccessType=" ).append( defaultAccessType );

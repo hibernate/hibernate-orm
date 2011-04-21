@@ -1,0 +1,233 @@
+package org.hibernate.metamodel.source.annotations.util;
+
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.ManyToOne;
+import javax.persistence.MappedSuperclass;
+
+import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.DotName;
+import org.jboss.jandex.Index;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
+import org.hibernate.metamodel.source.annotations.ConfiguredClass;
+import org.hibernate.metamodel.source.annotations.ConfiguredClassHierarchy;
+import org.hibernate.metamodel.source.annotations.MappedProperty;
+import org.hibernate.service.ServiceRegistryBuilder;
+import org.hibernate.service.classloading.spi.ClassLoaderService;
+import org.hibernate.service.internal.BasicServiceRegistryImpl;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
+
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertFalse;
+import static junit.framework.Assert.assertTrue;
+
+/**
+ * @author Hardy Ferentschik
+ */
+public class GenericTypeDiscoveryTest extends BaseUnitTestCase {
+	private BasicServiceRegistryImpl serviceRegistry;
+	private ClassLoaderService service;
+
+	@Before
+	public void setUp() {
+		serviceRegistry = (BasicServiceRegistryImpl) new ServiceRegistryBuilder().buildServiceRegistry();
+		service = serviceRegistry.getService( ClassLoaderService.class );
+	}
+
+	@After
+	public void tearDown() {
+		serviceRegistry.destroy();
+	}
+
+	@Test
+	public void testSingleEntity() {
+		Index index = JandexHelper.indexForClass( service, Paper.class, Stuff.class, Item.class, PricedStuff.class );
+		Set<ConfiguredClassHierarchy> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
+				index, serviceRegistry
+		);
+		assertEquals( "There should be only one hierarchy", 1, hierarchies.size() );
+
+		Iterator<ConfiguredClass> iter = hierarchies.iterator().next().iterator();
+		ConfiguredClass configuredClass = iter.next();
+		ClassInfo info = configuredClass.getClassInfo();
+		assertEquals( "wrong class", DotName.createSimple( Stuff.class.getName() ), info.name() );
+		List<MappedProperty> mappedProperties = configuredClass.getMappedProperties();
+		assertTrue( "Stuff should have one mapped property", mappedProperties.size() == 1 );
+		MappedProperty property = mappedProperties.get( 0 );
+		assertEquals( Price.class, property.getType() );
+
+		assertTrue( iter.hasNext() );
+		configuredClass = iter.next();
+		info = configuredClass.getClassInfo();
+		assertEquals( "wrong class", DotName.createSimple( PricedStuff.class.getName() ), info.name() );
+		mappedProperties = configuredClass.getMappedProperties();
+		assertTrue( "PricedStuff should not mapped properties", mappedProperties.size() == 0 );
+
+		assertTrue( iter.hasNext() );
+		configuredClass = iter.next();
+		info = configuredClass.getClassInfo();
+		assertEquals( "wrong class", DotName.createSimple( Item.class.getName() ), info.name() );
+		mappedProperties = configuredClass.getMappedProperties();
+		assertTrue( "Item should have 4 mapped properties", mappedProperties.size() == 4 );
+		// properties are alphabetically ordered!
+		property = mappedProperties.get( 2 );
+		assertEquals( SomeGuy.class, property.getType() );
+		property = mappedProperties.get( 3 );
+		assertEquals( PaperType.class, property.getType() );
+
+		assertTrue( iter.hasNext() );
+		configuredClass = iter.next();
+		info = configuredClass.getClassInfo();
+		assertEquals( "wrong class", DotName.createSimple( Paper.class.getName() ), info.name() );
+		mappedProperties = configuredClass.getMappedProperties();
+		assertTrue( "Paper should not mapped properties", mappedProperties.size() == 0 );
+
+		assertFalse( iter.hasNext() );
+	}
+
+	@MappedSuperclass
+	public class Stuff<Value> {
+		private Value value;
+
+		@ManyToOne
+		public Value getValue() {
+			return value;
+		}
+
+		public void setValue(Value value) {
+			this.value = value;
+		}
+	}
+
+	@MappedSuperclass
+	public class PricedStuff extends Stuff<Price> {
+	}
+
+	@MappedSuperclass
+	public class Item<Type, Owner> extends PricedStuff {
+		private Integer id;
+		private String name;
+		private Type type;
+		private Owner owner;
+
+		@Id
+		@GeneratedValue
+		public Integer getId() {
+			return id;
+		}
+
+		public void setId(Integer id) {
+			this.id = id;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		@ManyToOne
+		public Type getType() {
+			return type;
+		}
+
+		public void setType(Type type) {
+			this.type = type;
+		}
+
+		@ManyToOne
+		public Owner getOwner() {
+			return owner;
+		}
+
+		public void setOwner(Owner owner) {
+			this.owner = owner;
+		}
+	}
+
+	@Entity
+	public class Paper extends Item<PaperType, SomeGuy> {
+	}
+
+	@Entity
+	public class PaperType {
+		private Integer id;
+		private String name;
+
+		@Id
+		@GeneratedValue
+		public Integer getId() {
+			return id;
+		}
+
+		public void setId(Integer id) {
+			this.id = id;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+	}
+
+	@Entity
+	public class Price {
+		private Integer id;
+		private Double amount;
+		private String currency;
+
+		@Id
+		@GeneratedValue
+		public Integer getId() {
+			return id;
+		}
+
+		public void setId(Integer id) {
+			this.id = id;
+		}
+
+		public Double getAmount() {
+			return amount;
+		}
+
+		public void setAmount(Double amount) {
+			this.amount = amount;
+		}
+
+		public String getCurrency() {
+			return currency;
+		}
+
+		public void setCurrency(String currency) {
+			this.currency = currency;
+		}
+	}
+
+	@Entity
+	public class SomeGuy {
+		private Integer id;
+
+		@Id
+		@GeneratedValue
+		public Integer getId() {
+			return id;
+		}
+
+		public void setId(Integer id) {
+			this.id = id;
+		}
+	}
+}

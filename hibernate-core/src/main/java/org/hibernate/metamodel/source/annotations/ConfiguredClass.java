@@ -26,6 +26,7 @@ package org.hibernate.metamodel.source.annotations;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -33,6 +34,9 @@ import java.util.List;
 import java.util.Set;
 import javax.persistence.AccessType;
 
+import com.fasterxml.classmate.ResolvedTypeWithMembers;
+import com.fasterxml.classmate.members.HierarchicType;
+import com.fasterxml.classmate.members.ResolvedMember;
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;
 import org.jboss.jandex.ClassInfo;
@@ -40,6 +44,7 @@ import org.jboss.jandex.FieldInfo;
 import org.jboss.jandex.MethodInfo;
 
 import org.hibernate.AnnotationException;
+import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.metamodel.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.source.annotations.util.ReflectionHelper;
@@ -61,20 +66,22 @@ public class ConfiguredClass {
 	private final boolean isMappedSuperClass;
 	private final List<MappedProperty> mappedProperties;
 
-	public ConfiguredClass(ClassInfo info, ConfiguredClass parent, AccessType hierarchyAccessType, ServiceRegistry serviceRegistry) {
+	public ConfiguredClass(ClassInfo info, ConfiguredClass parent, AccessType hierarchyAccessType, ServiceRegistry serviceRegistry, ResolvedTypeWithMembers resolvedType) {
 		this.classInfo = info;
 		this.parent = parent;
 		this.isRoot = parent == null;
 		this.hierarchyAccessType = hierarchyAccessType;
 
-		AnnotationInstance mappedSuperClassAnnotation = assertNotEntityAndMAppedSuperClass();
+		AnnotationInstance mappedSuperClassAnnotation = assertNotEntityAndMappedSuperClass();
 
 		this.clazz = serviceRegistry.getService( ClassLoaderService.class ).classForName( info.toString() );
 		isMappedSuperClass = mappedSuperClassAnnotation != null;
 		classAccessType = determineClassAccessType();
-		mappedProperties = collectMappedProperties();
+
+		List<MappedProperty> tmpProperties = collectMappedProperties( resolvedType );
 		// make sure the properties are ordered by property name
-		Collections.sort( mappedProperties );
+		Collections.sort( tmpProperties );
+		mappedProperties = Collections.unmodifiableList( tmpProperties );
 	}
 
 	public String getName() {
@@ -97,11 +104,18 @@ public class ConfiguredClass {
 		return isMappedSuperClass;
 	}
 
+	public List<MappedProperty> getMappedProperties() {
+		return mappedProperties;
+	}
+
 	@Override
 	public String toString() {
 		final StringBuilder sb = new StringBuilder();
 		sb.append( "ConfiguredClass" );
-		sb.append( "{classInfo=" ).append( classInfo );
+		sb.append( "{clazz=" ).append( clazz );
+		sb.append( ", mappedProperties=" ).append( mappedProperties );
+		sb.append( ", classAccessType=" ).append( classAccessType );
+		sb.append( ", isRoot=" ).append( isRoot );
 		sb.append( '}' );
 		return sb.toString();
 	}
@@ -118,41 +132,78 @@ public class ConfiguredClass {
 		return accessType;
 	}
 
-	private List<MappedProperty> collectMappedProperties() {
+	/**
+	 * @return A list of the persistent properties of this configured class
+	 */
+	private List<MappedProperty> collectMappedProperties(ResolvedTypeWithMembers resolvedTypes) {
+		// create sets of transient field and method names
 		Set<String> transientFieldNames = new HashSet<String>();
 		Set<String> transientMethodNames = new HashSet<String>();
 		populateTransientFieldAndMethodLists( transientFieldNames, transientMethodNames );
 
-		List<Member> classMembers = new ArrayList<Member>();
-		Set<String> explicitlyConfiguredAccessMemberNames;
+		// use the class mate library to generic types
+		ResolvedTypeWithMembers resolvedType = null;
+		for ( HierarchicType hierarchicType : resolvedTypes.allTypesAndOverrides() ) {
+			if ( hierarchicType.getType().getErasedType().equals( clazz ) ) {
+				resolvedType = ReflectionHelper.resolveMemberTypes( hierarchicType.getType() );
+				break;
+			}
+		}
+
+		if ( resolvedType == null ) {
+			throw new AssertionFailure( "Unable to resolve types for " + clazz.getName() );
+		}
+
+		List<MappedProperty> properties = new ArrayList<MappedProperty>();
+		Set<String> explicitlyConfiguredMemberNames = createExplicitlyConfiguredAccessProperties(
+				properties, resolvedType
+		);
+
 		if ( AccessType.FIELD.equals( classAccessType ) ) {
-			explicitlyConfiguredAccessMemberNames = addExplicitAccessMembers( classMembers, MethodInfo.class );
 			Field fields[] = clazz.getDeclaredFields();
 			Field.setAccessible( fields, true );
 			for ( Field field : fields ) {
-				if ( !transientFieldNames.contains( field.getName() )
-						&& !explicitlyConfiguredAccessMemberNames.contains( field.getName() ) ) {
-					classMembers.add( field );
+				if ( isPersistentMember( transientFieldNames, explicitlyConfiguredMemberNames, field ) ) {
+					properties.add( createMappedProperty( field, resolvedType ) );
 				}
 			}
 		}
 		else {
-			explicitlyConfiguredAccessMemberNames = addExplicitAccessMembers( classMembers, FieldInfo.class );
 			Method[] methods = clazz.getDeclaredMethods();
 			Method.setAccessible( methods, true );
 			for ( Method method : methods ) {
-				if ( !transientMethodNames.contains( method.getName() )
-						&& !explicitlyConfiguredAccessMemberNames.contains( ReflectionHelper.getPropertyName( method ) ) ) {
-					classMembers.add( method );
+				if ( isPersistentMember( transientMethodNames, explicitlyConfiguredMemberNames, method ) ) {
+					properties.add( createMappedProperty( method, resolvedType ) );
 				}
 			}
 		}
-
-		List<MappedProperty> properties = new ArrayList<MappedProperty>();
 		return properties;
 	}
 
-	private Set<String> addExplicitAccessMembers(List<Member> classMembers, Class<? extends AnnotationTarget> targetClass) {
+	private boolean isPersistentMember(Set<String> transientNames, Set<String> explicitlyConfiguredMemberNames, Member member) {
+		if ( !ReflectionHelper.isProperty( member ) ) {
+			return false;
+		}
+
+		if ( transientNames.contains( member.getName() ) ) {
+			return false;
+		}
+
+		if ( explicitlyConfiguredMemberNames.contains( member.getName() ) ) {
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * Creates {@code MappedProperty} instances for the explicitly configured persistent properties
+	 *
+	 * @param mappedProperties list to which to add the explicitly configured mapped properties
+	 *
+	 * @return the property names of the explicitly configured class names in a set
+	 */
+	private Set<String> createExplicitlyConfiguredAccessProperties(List<MappedProperty> mappedProperties, ResolvedTypeWithMembers resolvedMembers) {
 		Set<String> explicitAccessMembers = new HashSet<String>();
 
 		List<AnnotationInstance> accessAnnotations = classInfo.annotations().get( JPADotNames.ACCESS );
@@ -160,58 +211,104 @@ public class ConfiguredClass {
 			return explicitAccessMembers;
 		}
 
+		// iterate over all @Access annotations defined on the current class
 		for ( AnnotationInstance accessAnnotation : accessAnnotations ) {
-			// at this stage we are only interested at annotations defined on fields and methods
-			AnnotationTarget target = accessAnnotation.target();
-			if ( !target.getClass().equals( targetClass ) ) {
+			// we are only interested at annotations defined on fields and methods
+			AnnotationTarget annotationTarget = accessAnnotation.target();
+			if ( !( annotationTarget.getClass().equals( MethodInfo.class ) || annotationTarget.getClass()
+					.equals( FieldInfo.class ) ) ) {
 				continue;
 			}
 
 			AccessType accessType = Enum.valueOf( AccessType.class, accessAnnotation.value().asEnum() );
 
-			if ( target instanceof MethodInfo && MethodInfo.class.equals( targetClass ) ) {
-				// annotating a field with @AccessType(PROPERTY) has not effect
-				if ( !AccessType.PROPERTY.equals( accessType ) ) {
+			// when class access type is field
+			// overriding access annotations must be placed on properties and have the access type PROPERTY
+			if ( AccessType.FIELD.equals( classAccessType ) ) {
+				if ( !( annotationTarget instanceof MethodInfo ) ) {
+					// todo log warning !?
 					continue;
 				}
+
+				if ( !AccessType.PROPERTY.equals( accessType ) ) {
+					// todo log warning !?
+					continue;
+				}
+			}
+
+			// when class access type is property
+			// overriding access annotations must be placed on fields and have the access type FIELD
+			if ( AccessType.PROPERTY.equals( classAccessType ) ) {
+				if ( !( annotationTarget instanceof FieldInfo ) ) {
+					// todo log warning !?
+					continue;
+				}
+
+				if ( !AccessType.FIELD.equals( accessType ) ) {
+					// todo log warning !?
+					continue;
+				}
+			}
+
+			// the placement is correct, get the member
+			Member member;
+			if ( annotationTarget instanceof MethodInfo ) {
 				Method m;
 				try {
-					m = clazz.getMethod( ( (MethodInfo) target ).name() );
+					m = clazz.getMethod( ( (MethodInfo) annotationTarget ).name() );
 				}
 				catch ( NoSuchMethodException e ) {
 					throw new HibernateException(
 							"Unable to load method "
-									+ ( (MethodInfo) target ).name()
+									+ ( (MethodInfo) annotationTarget ).name()
 									+ " of class " + clazz.getName()
 					);
 				}
-				classMembers.add( m );
-				explicitAccessMembers.add( ReflectionHelper.getPropertyName( m ) );
-				continue;
+				member = m;
 			}
-
-			if ( target instanceof FieldInfo && FieldInfo.class.equals( targetClass ) ) {
-				// annotating a method w/ @AccessType(FIELD) has no effect
-				if ( !AccessType.FIELD.equals( accessType ) ) {
-					continue;
-				}
+			else {
 				Field f;
 				try {
-					f = clazz.getField( ( (FieldInfo) target ).name() );
+					f = clazz.getField( ( (FieldInfo) annotationTarget ).name() );
 				}
 				catch ( NoSuchFieldException e ) {
 					throw new HibernateException(
 							"Unable to load field "
-									+ ( (FieldInfo) target ).name()
+									+ ( (FieldInfo) annotationTarget ).name()
 									+ " of class " + clazz.getName()
 					);
 				}
-				classMembers.add( f );
-				explicitAccessMembers.add( f.getName() );
-				continue;
+				member = f;
+			}
+			if ( ReflectionHelper.isProperty( member ) ) {
+				mappedProperties.add( createMappedProperty( member, resolvedMembers ) );
+				explicitAccessMembers.add( member.getName() );
 			}
 		}
 		return explicitAccessMembers;
+	}
+
+	private MappedProperty createMappedProperty(Member member, ResolvedTypeWithMembers resolvedType) {
+		String name = ReflectionHelper.getPropertyName( member );
+		ResolvedMember[] resolvedMembers;
+		if ( member instanceof Field ) {
+			resolvedMembers = resolvedType.getMemberFields();
+		}
+		else {
+			resolvedMembers = resolvedType.getMemberMethods();
+		}
+		Type type = findResolvedType( member.getName(), resolvedMembers );
+		return new MappedProperty( name, type );
+	}
+
+	private Type findResolvedType(String name, ResolvedMember[] resolvedMembers) {
+		for ( ResolvedMember resolvedMember : resolvedMembers ) {
+			if ( resolvedMember.getName().equals( name ) ) {
+				return resolvedMember.getType().getErasedType();
+			}
+		}
+		// todo - what to do here
+		return null;
 	}
 
 	/**
@@ -237,7 +334,7 @@ public class ConfiguredClass {
 		}
 	}
 
-	private AnnotationInstance assertNotEntityAndMAppedSuperClass() {
+	private AnnotationInstance assertNotEntityAndMappedSuperClass() {
 		//@Entity and @MappedSuperclass on the same class leads to a NPE down the road
 		AnnotationInstance jpaEntityAnnotation = JandexHelper.getSingleAnnotation( classInfo, JPADotNames.ENTITY );
 		AnnotationInstance mappedSuperClassAnnotation = JandexHelper.getSingleAnnotation(

@@ -24,9 +24,12 @@
 package org.hibernate.envers.query.criteria;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.entities.RelationDescription;
+import org.hibernate.envers.entities.mapper.id.QueryParameterData;
 import org.hibernate.envers.query.property.PropertyNameGetter;
 import org.hibernate.envers.tools.query.Parameters;
 import org.hibernate.envers.tools.query.QueryBuilder;
+
+import java.util.List;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -43,7 +46,7 @@ public class NotNullAuditExpression implements AuditCriterion {
         RelationDescription relatedEntity = CriteriaTools.getRelatedEntity(auditCfg, entityName, propertyName);
 
         if (relatedEntity == null) {
-            parameters.addWhereWithParam(propertyName, "<>", null);
+            parameters.addNotNullRestriction(propertyName, true);
         } else {
             relatedEntity.getIdMapper().addIdEqualsToQuery(parameters, null, propertyName, false);
         }

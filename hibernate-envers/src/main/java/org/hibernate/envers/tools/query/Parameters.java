@@ -114,6 +114,24 @@ public class Parameters {
         addWhere(left, true, op, right, true);
     }
 
+    /**
+     * Adds <code>IS NULL</code> restriction.
+     * @param propertyName Property name.
+     * @param addAlias Positive if alias to property name shall be added.
+     */
+    public void addNullRestriction(String propertyName, boolean addAlias) {
+        addWhere(propertyName, addAlias, "is", "null", false);
+    }
+
+    /**
+     * Adds <code>IS NOT NULL</code> restriction.
+     * @param propertyName Property name.
+     * @param addAlias Positive if alias to property name shall be added.
+     */
+    public void addNotNullRestriction(String propertyName, boolean addAlias) {
+        addWhere(propertyName, addAlias, "is not", "null", false);
+    }
+
     public void addWhere(String left, boolean addAliasLeft, String op, String right, boolean addAliasRight) {
         StringBuilder expression = new StringBuilder();
 

@@ -33,11 +33,11 @@ import org.hibernate.metamodel.domain.Attribute;
 import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.metamodel.source.hbm.HbmHelper;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLBag;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLDiscriminator;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLId;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLTimestamp;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLVersion;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLDiscriminator;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLId;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLProperty;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLTimestamp;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLVersion;
 import org.hibernate.metamodel.source.util.MappingHelper;
 
 /**
@@ -60,7 +60,7 @@ public abstract class AbstractHbmAttributeDomainState implements AbstractAttribu
 		this.defaults = defaults;
 		this.attribute = attribute;
 		this.hibernateTypeDescriptor = new HibernateTypeDescriptor();
-		this.hibernateTypeDescriptor.setTypeName( id.getTypeAttribute() );
+		this.hibernateTypeDescriptor.setTypeName( id.getType() );
 		this.accessorName =  HbmHelper.getPropertyAccessorName(
 				id.getAccess(), isEmbedded(), defaults.getDefaultAccess()
 		);
@@ -77,7 +77,7 @@ public abstract class AbstractHbmAttributeDomainState implements AbstractAttribu
 		this.defaults = defaults;
 		this.attribute = attribute;
 		this.hibernateTypeDescriptor = new HibernateTypeDescriptor();
-		this.hibernateTypeDescriptor.setTypeName( discriminator.getTypeAttribute() == null ? "string" : discriminator.getTypeAttribute() );
+		this.hibernateTypeDescriptor.setTypeName( discriminator.getType() == null ? "string" : discriminator.getType() );
 		// the following does not apply to discriminators
 		this.accessorName = null;
 		this.nodeName = null;
@@ -93,7 +93,7 @@ public abstract class AbstractHbmAttributeDomainState implements AbstractAttribu
 		this.defaults = defaults;
 		this.attribute = attribute;
 		this.hibernateTypeDescriptor = new HibernateTypeDescriptor();
-		this.hibernateTypeDescriptor.setTypeName( version.getTypeAttribute() == null ? "integer" : version.getTypeAttribute() );
+		this.hibernateTypeDescriptor.setTypeName( version.getType() == null ? "integer" : version.getType() );
 
 		// the following does not apply to discriminators
 		this.accessorName =  HbmHelper.getPropertyAccessorName(
@@ -134,7 +134,7 @@ public abstract class AbstractHbmAttributeDomainState implements AbstractAttribu
 		this.defaults = defaults;
 		this.attribute = attribute;
 		this.hibernateTypeDescriptor = new HibernateTypeDescriptor();
-		this.hibernateTypeDescriptor.setTypeName( property.getTypeAttribute() );
+		this.hibernateTypeDescriptor.setTypeName( property.getType() );
 		this.accessorName =  HbmHelper.getPropertyAccessorName(
 				property.getAccess(), isEmbedded(), defaults.getDefaultAccess()
 		);

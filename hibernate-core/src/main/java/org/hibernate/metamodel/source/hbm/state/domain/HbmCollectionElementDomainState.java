@@ -39,7 +39,7 @@ public class HbmCollectionElementDomainState implements CollectionElement.Domain
 
 	public final HibernateTypeDescriptor getHibernateTypeDescriptor() {
 		HibernateTypeDescriptor hibernateTypeDescriptor = new HibernateTypeDescriptor();
-		hibernateTypeDescriptor.setTypeName( element.getTypeAttribute() );
+		hibernateTypeDescriptor.setTypeName( element.getType() );
 		return hibernateTypeDescriptor;
 	}
 

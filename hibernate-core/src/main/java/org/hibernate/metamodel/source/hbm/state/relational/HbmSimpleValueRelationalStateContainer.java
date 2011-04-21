@@ -32,12 +32,12 @@ import org.hibernate.MappingException;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.metamodel.binding.MappingDefaults;
 import org.hibernate.metamodel.binding.SimpleAttributeBinding;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLColumn;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLDiscriminator;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLId;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLTimestamp;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLVersion;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLColumnElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLDiscriminator;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLId;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLProperty;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLTimestamp;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLVersion;
 
 /**
  * @author Gail Badner
@@ -57,7 +57,7 @@ public class HbmSimpleValueRelationalStateContainer implements SimpleAttributeBi
 	public HbmSimpleValueRelationalStateContainer(MappingDefaults defaults,
 												  boolean autoColumnCreation,
 												  XMLId id) {
-		this( defaults, id.getColumn() );
+		this( defaults, id.getColumnElement() );
 		if ( singleValueStates.isEmpty() ) {
 			if ( id.getColumn() == null && ! autoColumnCreation ) {
 				throw new MappingException( "No columns to map and auto column creation is disabled." );
@@ -72,7 +72,7 @@ public class HbmSimpleValueRelationalStateContainer implements SimpleAttributeBi
 	public HbmSimpleValueRelationalStateContainer(MappingDefaults defaults,
 												  boolean autoColumnCreation,
 												  XMLDiscriminator discriminator) {
-		this( defaults, discriminator.getFormulaAttribute(), discriminator.getColumn() );
+		this( defaults, discriminator.getFormulaElement(), discriminator.getColumnElement() );
 		if ( singleValueStates.isEmpty() ) {
 			if ( discriminator.getColumn() == null && discriminator.getFormula() == null &&  ! autoColumnCreation ) {
 				throw new MappingException( "No column or formula to map and auto column creation is disabled." );
@@ -87,7 +87,7 @@ public class HbmSimpleValueRelationalStateContainer implements SimpleAttributeBi
 	public HbmSimpleValueRelationalStateContainer(MappingDefaults defaults,
 												  boolean autoColumnCreation,
 												  XMLVersion version) {
-		this( defaults, version.getColumn() );
+		this( defaults, version.getColumnElement() );
 		if ( singleValueStates.isEmpty() ) {
 			if ( version.getColumn() == null && ! autoColumnCreation ) {
 				throw new MappingException( "No column or formula to map and auto column creation is disabled." );
@@ -104,12 +104,12 @@ public class HbmSimpleValueRelationalStateContainer implements SimpleAttributeBi
 												  XMLTimestamp timestamp) {
 		this( defaults, null );
 		if ( singleValueStates.isEmpty() ) {
-			if ( timestamp.getColumnAttribute() == null && ! autoColumnCreation ) {
+			if ( timestamp.getColumn() == null && ! autoColumnCreation ) {
 				throw new MappingException( "No columns to map and auto column creation is disabled." );
 			}
 			singleValueStates.add( new HbmColumnRelationalState( timestamp, this ) );
 		}
-		else if ( timestamp.getColumnAttribute() != null ) {
+		else if ( timestamp.getColumn() != null ) {
 			throw new MappingException( "column attribute may not be used together with <column> subelement" );
 		}
 	}
@@ -117,21 +117,21 @@ public class HbmSimpleValueRelationalStateContainer implements SimpleAttributeBi
 	public HbmSimpleValueRelationalStateContainer(MappingDefaults defaults,
 												  boolean autoColumnCreation,
 												  XMLProperty property) {
-		this( defaults, property.getColumnOrFormula() );
+		this( defaults, property.getColumnElementOrFormulaElement() );
 		if ( singleValueStates.isEmpty() ) {
-			if ( property.getColumnAttribute() == null && property.getFormulaAttribute() == null &&  ! autoColumnCreation ) {
+			if ( property.getColumn() == null && property.getFormula() == null &&  ! autoColumnCreation ) {
 				throw new MappingException( "No column or formula to map and auto column creation is disabled." );
 			}
 			singleValueStates.add( new HbmColumnRelationalState( property, this ) );
 		}
-		else if ( property.getColumnAttribute() != null || property.getFormulaAttribute() != null) {
+		else if ( property.getColumn() != null || property.getFormula() != null) {
 			throw new MappingException( "column/formula attribute may not be used together with <column>/<formula> subelement" );
 		}
 	}
 
 	private HbmSimpleValueRelationalStateContainer(MappingDefaults defaults,
 												   String formulaElement,
-												   XMLColumn columnElement
+												   XMLColumnElement columnElement
 	) {
 		this( defaults,
 				formulaElement != null ?
@@ -160,9 +160,9 @@ public class HbmSimpleValueRelationalStateContainer implements SimpleAttributeBi
 	private static SimpleAttributeBinding.SingleValueRelationalState createColumnOrFormulaRelationalState(
 			HbmSimpleValueRelationalStateContainer container,
 			Object columnOrFormula) {
-		if ( XMLColumn.class.isInstance( columnOrFormula ) ) {
+		if ( XMLColumnElement.class.isInstance( columnOrFormula ) ) {
 			return new HbmColumnRelationalState(
-					XMLColumn.class.cast( columnOrFormula ),
+					XMLColumnElement.class.cast( columnOrFormula ),
 					container
 			);
 		}

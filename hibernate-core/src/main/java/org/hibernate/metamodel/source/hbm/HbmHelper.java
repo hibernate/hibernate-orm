@@ -34,7 +34,7 @@ import org.hibernate.MappingException;
 import org.hibernate.engine.ExecuteUpdateResultCheckStyle;
 import org.hibernate.metamodel.binding.CustomSQL;
 import org.hibernate.metamodel.domain.MetaAttribute;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLClass;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLMeta;
 import org.hibernate.metamodel.source.util.DomHelper;
 import org.hibernate.metamodel.source.util.MappingHelper;

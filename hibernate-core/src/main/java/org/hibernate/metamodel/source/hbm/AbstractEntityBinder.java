@@ -47,36 +47,11 @@ import org.hibernate.metamodel.relational.Schema;
 import org.hibernate.metamodel.relational.Table;
 import org.hibernate.metamodel.relational.TableSpecification;
 import org.hibernate.metamodel.relational.UniqueKey;
+import org.hibernate.metamodel.source.hbm.xml.mapping.*;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
 import org.hibernate.metamodel.source.hbm.state.domain.HbmPluralAttributeDomainState;
 import org.hibernate.metamodel.source.hbm.state.domain.HbmSimpleAttributeDomainState;
 import org.hibernate.metamodel.source.hbm.state.relational.HbmSimpleValueRelationalStateContainer;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLAny;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLBag;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLComponent;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLDynamicComponent;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLFilter;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLDiscriminator;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLId;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLTimestamp;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLVersion;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLIdbag;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLJoin;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLJoinedSubclass;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLList;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLManyToOne;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLMap;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLOneToOne;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLProperties;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLProperty;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLQuery;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLResultset;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSet;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlQuery;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSubclass;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLTuplizer;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLUnionSubclass;
 
 /**
 * TODO : javadoc

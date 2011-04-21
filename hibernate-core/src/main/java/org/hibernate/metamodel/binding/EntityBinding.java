@@ -36,7 +36,7 @@ import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.metamodel.relational.Column;
 import org.hibernate.metamodel.relational.TableSpecification;
 import org.hibernate.metamodel.source.hbm.HbmHelper;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLClass;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlDelete;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlInsert;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlUpdate;

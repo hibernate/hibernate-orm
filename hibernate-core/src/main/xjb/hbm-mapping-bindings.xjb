@@ -14,18 +14,6 @@
                 <jxb:anonymousTypeName prefix="XML"/>
             </jxb:nameXmlTransform>
         </jxb:schemaBindings>
-        <jxb:bindings node=".//xs:attribute[@name='subselect']">
-            <jxb:property name="subselectAttribute"/>
-        </jxb:bindings> 
-        <jxb:bindings node=".//xs:attribute[@name='column']">
-            <jxb:property name="columnAttribute"/>
-        </jxb:bindings> 
-        <jxb:bindings node=".//xs:attribute[@name='type']">
-            <jxb:property name="typeAttribute"/>
-        </jxb:bindings> 
-        <jxb:bindings node=".//xs:attribute[@name='formula']">
-            <jxb:property name="formulaAttribute"/>
-        </jxb:bindings> 
     </jxb:bindings>
 
 </jxb:bindings>

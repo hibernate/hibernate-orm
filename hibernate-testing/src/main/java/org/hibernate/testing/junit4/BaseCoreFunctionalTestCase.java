@@ -38,6 +38,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
 import org.hibernate.cache.HashtableCacheProvider;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Mappings;
@@ -130,7 +131,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	protected Configuration constructConfiguration() {
 		Configuration configuration = new Configuration()
 				.setProperty( Environment.CACHE_PROVIDER, HashtableCacheProvider.class.getName() );
-		configuration.setProperty( Configuration.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
+		configuration.setProperty( AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
 		if ( createSchema() ) {
 			configuration.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
 		}

@@ -514,4 +514,18 @@ public interface AvailableSettings {
 	 * @since 4.0
 	 */
 	public static final String JTA_CACHE_UT = "hibernate.jta.cacheUserTransaction";
+
+	/**
+	 * Setting used to give the name of the default {@link org.hibernate.annotations.CacheConcurrencyStrategy}
+	 * to use when either {@link javax.persistence.Cacheable @Cacheable} or
+	 * {@link org.hibernate.annotations.Cache @Cache} is used.  {@link org.hibernate.annotations.Cache @Cache(strategy="..")} is used to override.
+	 */
+	public static final String DEFAULT_CACHE_CONCURRENCY_STRATEGY = "hibernate.cache.default_cache_concurrency_strategy";
+
+	/**
+	 * Setting which indicates whether or not the new {@link org.hibernate.id.IdentifierGenerator} are used
+	 * for AUTO, TABLE and SEQUENCE.
+	 * Default to false to keep backward compatibility.
+	 */
+	public static final String USE_NEW_ID_GENERATOR_MAPPINGS = "hibernate.id.new_generator_mappings";
 }

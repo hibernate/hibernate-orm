@@ -461,7 +461,7 @@ public final class AnnotationBinder {
 				}
 				//FIXME: work on initialValue() through SequenceGenerator.PARAMETERS
 				//		steve : or just use o.h.id.enhanced.SequenceStyleGenerator
-                if (seqGen.initialValue() != 1) LOG.unsupportedInitialValue(Configuration.USE_NEW_ID_GENERATOR_MAPPINGS);
+                if (seqGen.initialValue() != 1) LOG.unsupportedInitialValue( AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS);
 				idGen.addParam( SequenceHiLoGenerator.MAX_LO, String.valueOf( seqGen.allocationSize() - 1 ) );
                 LOG.trace("Add sequence generator with name: " + idGen.getName());
 			}
@@ -1020,12 +1020,12 @@ public final class AnnotationBinder {
 			return;
 		}
 
-		if ( !properties.containsKey( Configuration.DEFAULT_CACHE_CONCURRENCY_STRATEGY ) ) {
+		if ( !properties.containsKey( AvailableSettings.DEFAULT_CACHE_CONCURRENCY_STRATEGY ) ) {
             LOG.trace("Given properties did not contain any default cache concurrency strategy setting");
 			return;
 		}
 
-		final String strategyName = properties.getProperty( Configuration.DEFAULT_CACHE_CONCURRENCY_STRATEGY );
+		final String strategyName = properties.getProperty( AvailableSettings.DEFAULT_CACHE_CONCURRENCY_STRATEGY );
         LOG.trace("Discovered default cache concurrency strategy via config [" + strategyName + "]");
 		CacheConcurrencyStrategy strategy = CacheConcurrencyStrategy.parse( strategyName );
 		if ( strategy == null ) {

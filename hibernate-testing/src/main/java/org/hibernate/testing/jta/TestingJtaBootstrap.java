@@ -31,15 +31,14 @@ import java.util.Map;
 import java.util.Properties;
 
 import com.arjuna.ats.arjuna.common.ObjectStoreEnvironmentBean;
-import com.arjuna.ats.arjuna.common.arjPropertyManager;
 import com.arjuna.ats.internal.arjuna.objectstore.VolatileStore;
 import com.arjuna.common.internal.util.propertyservice.BeanPopulator;
 import org.enhydra.jdbc.standard.StandardXADataSource;
 
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.service.jdbc.connections.internal.DatasourceConnectionProviderImpl;
 import org.hibernate.service.jta.platform.internal.JBossStandAloneJtaPlatform;
-import org.hibernate.service.jta.platform.internal.JtaPlatformInitiator;
 
 /**
  * Manages the {@link TransactionManager}, {@link UserTransaction} and {@link DataSource} instances used for testing.
@@ -102,7 +101,7 @@ public class TestingJtaBootstrap {
 	}
 
 	public static void prepare(Map configValues) {
-		configValues.put( JtaPlatformInitiator.JTA_PLATFORM, new JBossStandAloneJtaPlatform() );
+		configValues.put( AvailableSettings.JTA_PLATFORM, new JBossStandAloneJtaPlatform() );
 		configValues.put( Environment.CONNECTION_PROVIDER, DatasourceConnectionProviderImpl.class.getName() );
 		configValues.put( Environment.DATASOURCE, INSTANCE.getDataSource() );
 	}

@@ -26,12 +26,12 @@ package org.hibernate.test.cache.infinispan.functional.cluster;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
 import org.hibernate.service.internal.BasicServiceRegistryImpl;
-import org.hibernate.service.jta.platform.internal.JtaPlatformInitiator;
 
 import org.junit.After;
 import org.junit.Before;
@@ -134,7 +134,7 @@ public abstract class DualNodeTestCase extends BaseCoreFunctionalTestCase {
 		super.configure( cfg );
 
 		cfg.setProperty( Environment.CONNECTION_PROVIDER, getConnectionProviderClass().getName() );
-		cfg.setProperty( JtaPlatformInitiator.JTA_PLATFORM, getJtaPlatformClass().getName() );
+		cfg.setProperty( AvailableSettings.JTA_PLATFORM, getJtaPlatformClass().getName() );
 		cfg.setProperty( Environment.TRANSACTION_STRATEGY, getTransactionFactoryClass().getName() );
 		cfg.setProperty( Environment.CACHE_REGION_FACTORY, getCacheRegionFactory().getName() );
 		cfg.setProperty( Environment.USE_QUERY_CACHE, String.valueOf( getUseQueryCache() ) );

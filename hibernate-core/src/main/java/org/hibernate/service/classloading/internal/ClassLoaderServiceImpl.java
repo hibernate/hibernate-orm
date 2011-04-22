@@ -31,6 +31,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.classloading.spi.ClassLoadingException;
 
@@ -40,11 +41,6 @@ import org.hibernate.service.classloading.spi.ClassLoadingException;
  * @author Steve Ebersole
  */
 public class ClassLoaderServiceImpl implements ClassLoaderService {
-	public static final String APP_CL = "hibernate.classLoader.application";
-	public static final String RESOURCES_CL = "hibernate.classLoader.resources";
-	public static final String HIB_CL = "hibernate.classLoader.hibernate";
-	public static final String ENV_CL = "hibernate.classLoader.environment";
-
 	private final LinkedHashSet<ClassLoader> classLoadingClassLoaders;
 	private final ClassLoader resourcesClassLoader;
 
@@ -57,10 +53,10 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 	}
 
 	private static ClassLoader[] determineClassLoaders(Map configVales) {
-		ClassLoader applicationClassLoader = (ClassLoader) configVales.get( APP_CL );
-		ClassLoader resourcesClassLoader = (ClassLoader) configVales.get( RESOURCES_CL );
-		ClassLoader hibernateClassLoader = (ClassLoader) configVales.get( HIB_CL );
-		ClassLoader environmentClassLoader = (ClassLoader) configVales.get( ENV_CL );
+		ClassLoader applicationClassLoader = (ClassLoader) configVales.get( AvailableSettings.APP_CLASSLOADER );
+		ClassLoader resourcesClassLoader = (ClassLoader) configVales.get( AvailableSettings.RESOURCES_CLASSLOADER );
+		ClassLoader hibernateClassLoader = (ClassLoader) configVales.get( AvailableSettings.HIBERNATE_CLASSLOADER );
+		ClassLoader environmentClassLoader = (ClassLoader) configVales.get( AvailableSettings.ENVIRONMENT_CLASSLOADER );
 
 		if ( hibernateClassLoader == null ) {
 			hibernateClassLoader = ClassLoaderServiceImpl.class.getClassLoader();

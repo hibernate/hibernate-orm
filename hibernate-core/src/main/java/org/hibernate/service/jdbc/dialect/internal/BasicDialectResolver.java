@@ -22,8 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.service.jdbc.dialect.internal;
+
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
+
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
 

@@ -26,10 +26,12 @@ package org.hibernate.cfg;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.Properties;
+
+import org.jboss.logging.Logger;
+
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.cache.QueryCacheFactory;
 import org.hibernate.cache.RegionFactory;
@@ -39,13 +41,12 @@ import org.hibernate.engine.jdbc.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.transaction.spi.TransactionFactory;
 import org.hibernate.hql.QueryTranslatorFactory;
-import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.service.jta.platform.spi.JtaPlatform;
 import org.hibernate.service.ServiceRegistry;
-
-import org.jboss.logging.Logger;
+import org.hibernate.service.classloading.spi.ClassLoaderService;
+import org.hibernate.service.jta.platform.spi.JtaPlatform;
 
 /**
  * Reads configuration properties and builds a {@link Settings} instance.
@@ -188,7 +189,7 @@ public class SettingsFactory implements Serializable {
 
 		//Query parser settings:
 
-		settings.setQueryTranslatorFactory( createQueryTranslatorFactory(properties) );
+		settings.setQueryTranslatorFactory( createQueryTranslatorFactory( properties, serviceRegistry ) );
 
         Map querySubstitutions = ConfigurationHelper.toMap( Environment.QUERY_SUBSTITUTIONS, " ,=;:\n\t\r\f", properties );
         LOG.debugf( "Query language substitutions: %s", querySubstitutions );
@@ -208,12 +209,12 @@ public class SettingsFactory implements Serializable {
         LOG.debugf( "Query cache: %s", enabledDisabled(useQueryCache) );
 		settings.setQueryCacheEnabled( useQueryCache );
 		if (useQueryCache) {
-			settings.setQueryCacheFactory( createQueryCacheFactory(properties) );
+			settings.setQueryCacheFactory( createQueryCacheFactory( properties, serviceRegistry ) );
 		}
 
 		// The cache provider is needed when we either have second-level cache enabled
 		// or query cache enabled.  Note that useSecondLevelCache is enabled by default
-		settings.setRegionFactory( createRegionFactory( properties, ( useSecondLevelCache || useQueryCache ) ) );
+		settings.setRegionFactory( createRegionFactory( properties, ( useSecondLevelCache || useQueryCache ), serviceRegistry ) );
 
 		boolean useMinimalPuts = ConfigurationHelper.getBoolean(
 				Environment.USE_MINIMAL_PUTS, properties, settings.getRegionFactory().isMinimalPutsEnabledByDefault()
@@ -302,20 +303,22 @@ public class SettingsFactory implements Serializable {
 		return value ? "enabled" : "disabled";
 	}
 
-	protected QueryCacheFactory createQueryCacheFactory(Properties properties) {
+	protected QueryCacheFactory createQueryCacheFactory(Properties properties, ServiceRegistry serviceRegistry) {
 		String queryCacheFactoryClassName = ConfigurationHelper.getString(
 				Environment.QUERY_CACHE_FACTORY, properties, "org.hibernate.cache.StandardQueryCacheFactory"
 		);
         LOG.debugf( "Query cache factory: %s", queryCacheFactoryClassName );
 		try {
-			return (QueryCacheFactory) ReflectHelper.classForName(queryCacheFactoryClassName).newInstance();
+			return (QueryCacheFactory) serviceRegistry.getService( ClassLoaderService.class )
+					.classForName( queryCacheFactoryClassName )
+					.newInstance();
 		}
 		catch (Exception e) {
 			throw new HibernateException( "could not instantiate QueryCacheFactory: " + queryCacheFactoryClassName, e );
 		}
 	}
 
-	public static RegionFactory createRegionFactory(Properties properties, boolean cachingEnabled) {
+	public static RegionFactory createRegionFactory(Properties properties, boolean cachingEnabled, ServiceRegistry serviceRegistry) {
 		String regionFactoryClassName = ConfigurationHelper.getString(
 				Environment.CACHE_REGION_FACTORY, properties, null
 		);
@@ -332,7 +335,8 @@ public class SettingsFactory implements Serializable {
         LOG.debugf( "Cache region factory : %s", regionFactoryClassName );
 		try {
 			try {
-				return (RegionFactory) ReflectHelper.classForName( regionFactoryClassName )
+				return (RegionFactory) serviceRegistry.getService( ClassLoaderService.class )
+						.classForName( regionFactoryClassName )
 						.getConstructor( Properties.class )
 						.newInstance( properties );
 			}
@@ -342,7 +346,9 @@ public class SettingsFactory implements Serializable {
 						"%s did not provide constructor accepting java.util.Properties; attempting no-arg constructor.",
 						regionFactoryClassName
 				);
-				return (RegionFactory) ReflectHelper.classForName( regionFactoryClassName ).newInstance();
+				return (RegionFactory) serviceRegistry.getService( ClassLoaderService.class )
+						.classForName( regionFactoryClassName )
+						.newInstance();
 			}
 		}
 		catch ( Exception e ) {
@@ -350,16 +356,55 @@ public class SettingsFactory implements Serializable {
 		}
 	}
 
-	protected QueryTranslatorFactory createQueryTranslatorFactory(Properties properties) {
+	protected QueryTranslatorFactory createQueryTranslatorFactory(Properties properties, ServiceRegistry serviceRegistry) {
 		String className = ConfigurationHelper.getString(
 				Environment.QUERY_TRANSLATOR, properties, "org.hibernate.hql.ast.ASTQueryTranslatorFactory"
 		);
         LOG.debugf( "Query translator: %s", className );
 		try {
-			return (QueryTranslatorFactory) ReflectHelper.classForName(className).newInstance();
+			return (QueryTranslatorFactory) serviceRegistry.getService( ClassLoaderService.class )
+					.classForName( className )
+					.newInstance();
 		}
 		catch (Exception e) {
 			throw new HibernateException( "could not instantiate QueryTranslatorFactory: " + className, e );
+		}
+	}
+
+	public static RegionFactory createRegionFactory(Properties properties, boolean cachingEnabled) {
+		// todo : REMOVE!  THIS IS TOTALLY A TEMPORARY HACK FOR org.hibernate.cfg.AnnotationBinder which will be going away
+		String regionFactoryClassName = ConfigurationHelper.getString(
+				Environment.CACHE_REGION_FACTORY, properties, null
+		);
+		if ( regionFactoryClassName == null && cachingEnabled ) {
+			String providerClassName = ConfigurationHelper.getString( Environment.CACHE_PROVIDER, properties, null );
+			if ( providerClassName != null ) {
+				// legacy behavior, apply the bridge...
+				regionFactoryClassName = RegionFactoryCacheProviderBridge.class.getName();
+			}
+		}
+		if ( regionFactoryClassName == null ) {
+			regionFactoryClassName = DEF_CACHE_REG_FACTORY;
+		}
+        LOG.debugf( "Cache region factory : %s", regionFactoryClassName );
+		try {
+			try {
+				return (RegionFactory) org.hibernate.internal.util.ReflectHelper.classForName( regionFactoryClassName )
+						.getConstructor( Properties.class )
+						.newInstance( properties );
+			}
+			catch ( NoSuchMethodException e ) {
+				// no constructor accepting Properties found, try no arg constructor
+                LOG.debugf(
+						"%s did not provide constructor accepting java.util.Properties; attempting no-arg constructor.",
+						regionFactoryClassName
+				);
+				return (RegionFactory) org.hibernate.internal.util.ReflectHelper.classForName( regionFactoryClassName )
+						.newInstance();
+			}
+		}
+		catch ( Exception e ) {
+			throw new HibernateException( "could not instantiate RegionFactory [" + regionFactoryClassName + "]", e );
 		}
 	}
 }

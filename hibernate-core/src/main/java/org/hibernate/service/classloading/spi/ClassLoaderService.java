@@ -35,6 +35,7 @@ import org.hibernate.service.Service;
  * @author Steve Ebersole
  */
 public interface ClassLoaderService extends Service {
+
 	/**
 	 * Locate a class by name
 	 *

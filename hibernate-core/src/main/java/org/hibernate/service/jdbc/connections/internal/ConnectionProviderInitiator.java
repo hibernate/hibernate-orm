@@ -35,6 +35,7 @@ import java.util.Set;
 import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.cfg.Environment;
@@ -55,11 +56,9 @@ public class ConnectionProviderInitiator implements BasicServiceInitiator<Connec
 
     private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
                                                                        ConnectionProviderInitiator.class.getName());
-	public static final String C3P0_CONFIG_PREFIX = "hibernate.c3p0";
 	public static final String C3P0_PROVIDER_CLASS_NAME =
 			"org.hibernate.service.jdbc.connections.internal.C3P0ConnectionProvider";
 
-	public static final String PROXOOL_CONFIG_PREFIX = "hibernate.proxool";
 	public static final String PROXOOL_PROVIDER_CLASS_NAME =
 			"org.hibernate.service.jdbc.connections.internal.ProxoolConnectionProvider";
 
@@ -206,7 +205,7 @@ public class ConnectionProviderInitiator implements BasicServiceInitiator<Connec
 	private static boolean c3p0ConfigDefined(Map configValues) {
 		for ( Object key : configValues.keySet() ) {
 			if ( String.class.isInstance( key )
-					&& ( (String) key ).startsWith( C3P0_CONFIG_PREFIX ) ) {
+					&& ( (String) key ).startsWith( AvailableSettings.C3P0_CONFIG_PREFIX ) ) {
 				return true;
 			}
 		}
@@ -227,7 +226,7 @@ public class ConnectionProviderInitiator implements BasicServiceInitiator<Connec
 	private static boolean proxoolConfigDefined(Map configValues) {
 		for ( Object key : configValues.keySet() ) {
 			if ( String.class.isInstance( key )
-					&& ( (String) key ).startsWith( PROXOOL_CONFIG_PREFIX ) ) {
+					&& ( (String) key ).startsWith( AvailableSettings.PROXOOL_CONFIG_PREFIX ) ) {
 				return true;
 			}
 		}

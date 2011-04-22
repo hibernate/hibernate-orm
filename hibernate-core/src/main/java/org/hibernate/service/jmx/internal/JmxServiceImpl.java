@@ -30,6 +30,7 @@ import javax.management.MBeanServerFactory;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import org.hibernate.HibernateException;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.util.config.ConfigurationHelper;
@@ -46,13 +47,9 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class JmxServiceImpl implements JmxService, Stoppable {
-
     private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, JmxServiceImpl.class.getName());
 
-	public static final String JMX_PLATFORM_SERVER = "hibernate.jmx.usePlatformServer";
-	public static final String JMX_AGENT_ID = "hibernate.jmx.agentId";
-	public static final String JMX_DOMAIN_NAME = "hibernate.jmx.defaultDomain";
-	public static final String JMX_SF_NAME = "hibernate.jmx.sessionFactoryName";
+	public static final String OBJ_NAME_TEMPLATE = "%s:sessionFactory=%s,serviceRole=%s,serviceType=%s";
 
 	private final boolean usePlatformServer;
 	private final String agentId;
@@ -60,11 +57,11 @@ public class JmxServiceImpl implements JmxService, Stoppable {
 	private final String sessionFactoryName;
 
 	public JmxServiceImpl(Map configValues) {
-		usePlatformServer = ConfigurationHelper.getBoolean( JMX_PLATFORM_SERVER, configValues );
-		agentId = (String) configValues.get( JMX_AGENT_ID );
-		defaultDomain = (String) configValues.get( JMX_DOMAIN_NAME );
+		usePlatformServer = ConfigurationHelper.getBoolean( AvailableSettings.JMX_PLATFORM_SERVER, configValues );
+		agentId = (String) configValues.get( AvailableSettings.JMX_AGENT_ID );
+		defaultDomain = (String) configValues.get( AvailableSettings.JMX_DOMAIN_NAME );
 		sessionFactoryName = ConfigurationHelper.getString(
-				JMX_SF_NAME,
+				AvailableSettings.JMX_SF_NAME,
 				configValues,
 				ConfigurationHelper.getString( Environment.SESSION_FACTORY_NAME, configValues )
 		);
@@ -77,7 +74,7 @@ public class JmxServiceImpl implements JmxService, Stoppable {
 	public void stop() {
 		try {
 			// if we either started the JMX server or we registered some MBeans we at least need to look up
-			// MBean server and do *some* work on shutdwon.
+			// MBean server and do *some* work on shutdown.
 			if ( startedServer || registeredMBeans != null ) {
 				MBeanServer mBeanServer = findServer();
 				if ( mBeanServer == null ) {
@@ -119,8 +116,6 @@ public class JmxServiceImpl implements JmxService, Stoppable {
 		}
 	}
 
-	public static final String DEFAULT_OBJ_NAME_DOMAIN = "org.hibernate.core";
-	public static final String OBJ_NAME_TEMPLATE = "%s:sessionFactory=%s,serviceRole=%s,serviceType=%s";
 
 	// todo : should serviceRole come first in ObjectName template?  depends on the groupings we want in the UI.
 	// 		as-is mbeans from each sessionFactory are grouped primarily.
@@ -128,7 +123,7 @@ public class JmxServiceImpl implements JmxService, Stoppable {
 	@Override
 	public void registerService(Manageable service, Class<? extends Service> serviceRole) {
 		final String domain = service.getManagementDomain() == null
-				? DEFAULT_OBJ_NAME_DOMAIN
+				? AvailableSettings.JMX_DEFAULT_OBJ_NAME_DOMAIN
 				: service.getManagementDomain();
 		final String serviceType = service.getManagementServiceType() == null
 				? service.getClass().getName()
@@ -144,9 +139,6 @@ public class JmxServiceImpl implements JmxService, Stoppable {
 					)
 			);
 			registerMBean( objectName, service.getManagementBean() );
-		}
-		catch ( HibernateException e ) {
-			throw e;
 		}
 		catch ( MalformedObjectNameException e ) {
 			throw new HibernateException( "Unable to generate service IbjectName", e );
@@ -209,8 +201,7 @@ public class JmxServiceImpl implements JmxService, Stoppable {
 
 	private MBeanServer startMBeanServer() {
 		try {
-			MBeanServer mbeanServer = MBeanServerFactory.createMBeanServer( defaultDomain );
-			return mbeanServer;
+			return MBeanServerFactory.createMBeanServer( defaultDomain );
 		}
 		catch ( Exception e ) {
 			throw new HibernateException( "Unable to start MBeanServer", e );

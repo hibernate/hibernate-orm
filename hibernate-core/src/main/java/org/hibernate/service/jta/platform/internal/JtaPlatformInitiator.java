@@ -28,6 +28,7 @@ import java.util.Map;
 import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.util.jndi.JndiHelper;
@@ -45,9 +46,8 @@ import org.hibernate.transaction.TransactionManagerLookup;
  */
 public class JtaPlatformInitiator implements BasicServiceInitiator<JtaPlatform> {
 	public static final JtaPlatformInitiator INSTANCE = new JtaPlatformInitiator();
-	public static final String JTA_PLATFORM = "hibernate.jta.platform";
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, JtaPlatformInitiator.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, JtaPlatformInitiator.class.getName());
 
 	@Override
 	public Class<JtaPlatform> getServiceInitiated() {
@@ -91,14 +91,14 @@ public class JtaPlatformInitiator implements BasicServiceInitiator<JtaPlatform> 
 	}
 
 	private Object getConfiguredPlatform(Map configVales, ServiceRegistryImplementor registry) {
-		Object platform = configVales.get( JTA_PLATFORM );
+		Object platform = configVales.get( AvailableSettings.JTA_PLATFORM );
 		if ( platform == null ) {
 			final String transactionManagerLookupImplName = (String) configVales.get( Environment.TRANSACTION_MANAGER_STRATEGY );
 			if ( transactionManagerLookupImplName != null ) {
                 LOG.deprecatedTransactionManagerStrategy(TransactionManagerLookup.class.getName(),
                                                          Environment.TRANSACTION_MANAGER_STRATEGY,
                                                          JtaPlatform.class.getName(),
-                                                         JTA_PLATFORM);
+                                                         AvailableSettings.JTA_PLATFORM);
 				platform = mapLegacyClasses( transactionManagerLookupImplName, configVales, registry );
                 LOG.debugf("Mapped %s -> %s", transactionManagerLookupImplName, platform);
 			}
@@ -111,7 +111,7 @@ public class JtaPlatformInitiator implements BasicServiceInitiator<JtaPlatform> 
 			return null;
 		}
 
-        LOG.legacyTransactionManagerStrategy(JtaPlatform.class.getName(), JTA_PLATFORM);
+        LOG.legacyTransactionManagerStrategy(JtaPlatform.class.getName(), AvailableSettings.JTA_PLATFORM);
 
 		if ( "org.hibernate.transaction.BESTransactionManagerLookup".equals( tmlImplName ) ) {
 			return new BorlandEnterpriseServerJtaPlatform();

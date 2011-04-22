@@ -22,12 +22,14 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.service.jdbc.dialect.internal;
+
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.util.Map;
+
 import org.hibernate.HibernateException;
-import org.hibernate.cfg.Environment;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.classloading.spi.ClassLoadingException;
@@ -55,11 +57,9 @@ public class DialectFactoryImpl implements DialectFactory {
 		this.dialectResolver = dialectResolver;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Dialect buildDialect(Map configValues, Connection connection) throws HibernateException {
-		final String dialectName = (String) configValues.get( Environment.DIALECT );
+		final String dialectName = (String) configValues.get( AvailableSettings.DIALECT );
 		if ( dialectName != null ) {
 			return constructDialect( dialectName );
 		}

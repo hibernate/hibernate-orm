@@ -22,10 +22,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.service.jdbc.dialect.internal;
+
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 
-import org.hibernate.internal.CoreMessageLogger;
+import org.jboss.logging.Logger;
+
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.DerbyTenFiveDialect;
@@ -47,8 +49,7 @@ import org.hibernate.dialect.SQLServer2008Dialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseAnywhereDialect;
-
-import org.jboss.logging.Logger;
+import org.hibernate.internal.CoreMessageLogger;
 
 /**
  * The standard Hibernate Dialect resolver.

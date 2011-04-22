@@ -22,17 +22,18 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.service.jdbc.dialect.internal;
+
 import java.sql.DatabaseMetaData;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.hibernate.internal.CoreMessageLogger;
+import org.jboss.logging.Logger;
+
 import org.hibernate.dialect.Dialect;
 import org.hibernate.exception.JDBCConnectionException;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.jdbc.dialect.spi.DialectResolver;
-
-import org.jboss.logging.Logger;
 
 /**
  * A {@link DialectResolver} implementation which coordinates resolution by delegating to sub-resolvers.

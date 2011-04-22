@@ -25,6 +25,7 @@ package org.hibernate.service.jmx.internal;
 
 import java.util.Map;
 
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.jmx.spi.JmxService;
@@ -36,7 +37,6 @@ import org.hibernate.service.spi.BasicServiceInitiator;
  * @author Steve Ebersole
  */
 public class JmxServiceInitiator implements BasicServiceInitiator<JmxService> {
-	public static final String JMX_ENABLED = "hibernate.jmx.enabled";
 	public static final JmxServiceInitiator INSTANCE = new JmxServiceInitiator();
 
 	@Override
@@ -46,7 +46,7 @@ public class JmxServiceInitiator implements BasicServiceInitiator<JmxService> {
 
 	@Override
 	public JmxService initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
-		return ConfigurationHelper.getBoolean( JMX_ENABLED, configurationValues, false )
+		return ConfigurationHelper.getBoolean( AvailableSettings.JMX_ENABLED, configurationValues, false )
 				? new JmxServiceImpl( configurationValues )
 				: DisabledJmxServiceImpl.INSTANCE;
 	}

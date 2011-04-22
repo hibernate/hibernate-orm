@@ -37,16 +37,6 @@ import org.hibernate.service.Service;
  * @author Steve Ebersole
  */
 public interface JtaPlatform extends Service {
-	/**
-	 * A configuration value key used to indicate that it is safe to cache
-	 * {@link TransactionManager} references.
-	 */
-	public static final String CACHE_TM = "hibernate.jta.cacheTransactionManager";
-	/**
-	 * A configuration value key used to indicate that it is safe to cache
-	 * {@link UserTransaction} references.
-	 */
-	public static final String CACHE_UT = "hibernate.jta.cacheUserTransaction";
 
 	/**
 	 * Locate the {@link TransactionManager}

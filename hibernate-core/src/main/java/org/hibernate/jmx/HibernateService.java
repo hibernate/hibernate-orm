@@ -9,12 +9,12 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
 import org.hibernate.SessionFactory;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.ExternalSessionFactoryConfig;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.jndi.JndiHelper;
 import org.hibernate.service.ServiceRegistryBuilder;
-import org.hibernate.service.jta.platform.internal.JtaPlatformInitiator;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 
 
@@ -95,12 +95,12 @@ public class HibernateService extends ExternalSessionFactoryConfig implements Hi
 
 	@Override
 	public String getJtaPlatformName() {
-		return getProperty( JtaPlatformInitiator.JTA_PLATFORM );
+		return getProperty( AvailableSettings.JTA_PLATFORM );
 	}
 
 	@Override
 	public void setJtaPlatformName(String name) {
-		setProperty( JtaPlatformInitiator.JTA_PLATFORM, name );
+		setProperty( AvailableSettings.JTA_PLATFORM, name );
 	}
 
 	@Override

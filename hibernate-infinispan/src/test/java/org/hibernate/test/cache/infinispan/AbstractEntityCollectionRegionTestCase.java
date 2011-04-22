@@ -30,8 +30,8 @@ import org.hibernate.cache.RegionFactory;
 import org.hibernate.cache.TransactionalDataRegion;
 import org.hibernate.cache.access.AccessType;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.service.jta.platform.internal.JtaPlatformInitiator;
 
 import org.junit.Test;
 
@@ -89,7 +89,7 @@ public abstract class AbstractEntityCollectionRegionTestCase extends AbstractReg
 		CacheTestUtil.stopRegionFactory( regionFactory, getCacheTestSupport() );
 		cfg = CacheTestUtil.buildConfiguration( "test", InfinispanRegionFactory.class, true, false );
 		// Make it non-transactional
-		cfg.getProperties().remove( JtaPlatformInitiator.JTA_PLATFORM );
+		cfg.getProperties().remove( AvailableSettings.JTA_PLATFORM );
 		regionFactory = CacheTestUtil.startRegionFactory(
 				ServiceRegistryBuilder.buildServiceRegistry( cfg.getProperties() ),
 				cfg,

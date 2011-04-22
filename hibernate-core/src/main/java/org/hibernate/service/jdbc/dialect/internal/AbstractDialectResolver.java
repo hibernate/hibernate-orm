@@ -22,17 +22,18 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.service.jdbc.dialect.internal;
+
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 
-import org.hibernate.internal.CoreMessageLogger;
+import org.jboss.logging.Logger;
+
 import org.hibernate.JDBCException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.resolver.BasicSQLExceptionConverter;
 import org.hibernate.exception.JDBCConnectionException;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.jdbc.dialect.spi.DialectResolver;
-
-import org.jboss.logging.Logger;
 
 /**
  * A templated resolver impl which delegates to the {@link #resolveDialectInternal} method

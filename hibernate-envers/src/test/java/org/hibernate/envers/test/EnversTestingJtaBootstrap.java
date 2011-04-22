@@ -8,7 +8,6 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.service.jdbc.connections.internal.DatasourceConnectionProviderImpl;
 import org.hibernate.service.jta.platform.internal.JBossStandAloneJtaPlatform;
-import org.hibernate.service.jta.platform.internal.JtaPlatformInitiator;
 
 import javax.transaction.Status;
 import javax.transaction.TransactionManager;
@@ -51,7 +50,7 @@ public class EnversTestingJtaBootstrap {
         configValues.remove(Environment.USER);
         configValues.remove(Environment.DRIVER);
 
-		configValues.put( JtaPlatformInitiator.JTA_PLATFORM, new JBossStandAloneJtaPlatform() );
+		configValues.put( org.hibernate.cfg.AvailableSettings.JTA_PLATFORM, new JBossStandAloneJtaPlatform() );
 		configValues.put( Environment.CONNECTION_PROVIDER, DatasourceConnectionProviderImpl.class.getName() );
 		configValues.put( Environment.DATASOURCE, dataSource );
 

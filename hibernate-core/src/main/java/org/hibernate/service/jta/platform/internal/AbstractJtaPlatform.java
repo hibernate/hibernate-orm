@@ -23,6 +23,7 @@
  */
 package org.hibernate.service.jta.platform.internal;
 
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.jndi.spi.JndiService;
 import org.hibernate.service.jta.platform.spi.JtaPlatform;
@@ -64,8 +65,8 @@ public abstract class AbstractJtaPlatform
 	protected abstract UserTransaction locateUserTransaction();
 
 	public void configure(Map configValues) {
-		cacheTransactionManager = ConfigurationHelper.getBoolean( CACHE_TM, configValues, true );
-		cacheUserTransaction = ConfigurationHelper.getBoolean( CACHE_UT, configValues, false );
+		cacheTransactionManager = ConfigurationHelper.getBoolean( AvailableSettings.JTA_CACHE_TM, configValues, true );
+		cacheUserTransaction = ConfigurationHelper.getBoolean( AvailableSettings.JTA_CACHE_UT, configValues, false );
 	}
 
 	protected boolean canCacheTransactionManager() {

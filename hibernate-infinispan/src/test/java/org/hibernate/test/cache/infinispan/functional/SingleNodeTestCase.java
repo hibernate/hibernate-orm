@@ -31,12 +31,12 @@ import org.infinispan.util.logging.LogFactory;
 
 import org.hibernate.cache.RegionFactory;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
 import org.hibernate.engine.transaction.spi.TransactionFactory;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.service.jta.platform.internal.JtaPlatformInitiator;
 import org.hibernate.service.jta.platform.spi.JtaPlatform;
 
 import org.junit.Before;
@@ -116,7 +116,7 @@ public abstract class SingleNodeTestCase extends BaseCoreFunctionalTestCase {
 		cfg.setProperty( Environment.CACHE_REGION_FACTORY, getCacheRegionFactory().getName() );
 
 		if ( getJtaPlatform() != null ) {
-			cfg.getProperties().put( JtaPlatformInitiator.JTA_PLATFORM, getJtaPlatform() );
+			cfg.getProperties().put( AvailableSettings.JTA_PLATFORM, getJtaPlatform() );
 		}
 		cfg.setProperty( Environment.TRANSACTION_STRATEGY, getTransactionFactoryClass().getName() );
 		cfg.setProperty( Environment.CONNECTION_PROVIDER, getConnectionProviderClass().getName() );

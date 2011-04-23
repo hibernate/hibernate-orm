@@ -36,8 +36,12 @@ import org.hibernate.FlushMode;
  * @author Emmanuel Bernard
  */
 public abstract class ConfigurationHelper {
-	public static void overrideProperties(Properties properties, Map overrides) {
-		properties.putAll( overrides );
+	public static void overrideProperties(Properties properties, Map<?,?> overrides) {
+		for ( Map.Entry entry : overrides.entrySet() ) {
+			if ( entry.getKey() != null && entry.getValue() != null ) {
+				properties.put( entry.getKey(), entry.getValue() );
+			}
+		}
 	}
 
 	public static FlushMode getFlushMode(Object value) {

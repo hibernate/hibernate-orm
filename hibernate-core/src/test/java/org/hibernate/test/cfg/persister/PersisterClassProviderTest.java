@@ -24,11 +24,11 @@ import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.persister.spi.PersisterClassResolver;
-import org.hibernate.service.ServiceRegistry;
+import org.hibernate.service.BasicServiceRegistry;
+import org.hibernate.service.ServiceRegistryBuilder;
 
 import org.junit.Test;
 
-import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -42,14 +42,15 @@ public class PersisterClassProviderTest extends BaseUnitTestCase {
 
 		Configuration cfg = new Configuration();
 		cfg.addAnnotatedClass( Gate.class );
-		ServiceRegistry serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( cfg.getProperties() );
+		BasicServiceRegistry serviceRegistry = new ServiceRegistryBuilder( cfg.getProperties() ).buildServiceRegistry();
 		//no exception as the GoofyPersisterClassProvider is not set
 		SessionFactory sessionFactory = cfg.buildSessionFactory( serviceRegistry );
 		sessionFactory.close();
 		ServiceRegistryBuilder.destroy( serviceRegistry );
 
-		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( cfg.getProperties() );
-		serviceRegistry.registerService( PersisterClassResolver.class, new GoofyPersisterClassProvider() );
+		serviceRegistry = new ServiceRegistryBuilder( cfg.getProperties() )
+				.addService( PersisterClassResolver.class, new GoofyPersisterClassProvider() )
+				.buildServiceRegistry();
 		cfg = new Configuration();
 		cfg.addAnnotatedClass( Gate.class );
 		try {
@@ -70,8 +71,9 @@ public class PersisterClassProviderTest extends BaseUnitTestCase {
 		cfg = new Configuration();
 		cfg.addAnnotatedClass( Portal.class );
 		cfg.addAnnotatedClass( Window.class );
-		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( cfg.getProperties() );
-		serviceRegistry.registerService( PersisterClassResolver.class, new GoofyPersisterClassProvider() );
+		serviceRegistry = new ServiceRegistryBuilder( cfg.getProperties() )
+				.addService( PersisterClassResolver.class, new GoofyPersisterClassProvider() )
+				.buildServiceRegistry();
 		try {
 			sessionFactory = cfg.buildSessionFactory( serviceRegistry );
 			sessionFactory.close();

@@ -190,24 +190,22 @@ public final class Environment implements AvailableSettings {
 	/**
 	 * Issues warnings to the user when any obsolete or renamed property names are used.
 	 *
-	 * @param props The specified properties.
+	 * @param configurationValues The specified properties.
 	 */
-	public static void verifyProperties(Properties props) {
-		Iterator iter = props.keySet().iterator();
-		Map propertiesToAdd = new HashMap();
-		while ( iter.hasNext() ) {
-			final Object propertyName = iter.next();
-			Object newPropertyName = OBSOLETE_PROPERTIES.get( propertyName );
-            if (newPropertyName != null) LOG.unsupportedProperty(propertyName, newPropertyName);
-			newPropertyName = RENAMED_PROPERTIES.get( propertyName );
-			if ( newPropertyName != null ) {
-                LOG.renamedProperty(propertyName, newPropertyName);
-				if ( ! props.containsKey( newPropertyName ) ) {
-					propertiesToAdd.put( newPropertyName, props.get( propertyName ) );
-				}
+	public static void verifyProperties(Map<?,?> configurationValues) {
+		final Map propertiesToAdd = new HashMap();
+		for ( Map.Entry entry : configurationValues.entrySet() ) {
+			final Object replacementKey = OBSOLETE_PROPERTIES.get( entry.getKey() );
+			if ( replacementKey != null ) {
+				LOG.unsupportedProperty( entry.getKey(), replacementKey );
+			}
+			final Object renamedKey = RENAMED_PROPERTIES.get( entry.getKey() );
+			if ( renamedKey != null ) {
+				LOG.renamedProperty( entry.getKey(), renamedKey );
+				propertiesToAdd.put( renamedKey, entry.getValue() );
 			}
 		}
-		props.putAll(propertiesToAdd);
+		configurationValues.putAll( propertiesToAdd );
 	}
 
 	static {

@@ -28,24 +28,38 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.cfg.Environment;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.internal.BasicServiceRegistryImpl;
 import org.hibernate.service.internal.ProvidedService;
 import org.hibernate.service.spi.BasicServiceInitiator;
 
 /**
+ * Builder for basic service registry instances.
+ *
  * @author Steve Ebersole
  */
 public class ServiceRegistryBuilder {
-	private final Map configurationValues;
-	private final List<BasicServiceInitiator> initiators = standardInitiatorList();
-	private final List<ProvidedService> services = new ArrayList<ProvidedService>();
+	public static final String DEFAULT_CFG_RESOURCE_NAME = "hibernate.cfg.xml";
 
+	private final Map settings;
+	private final List<BasicServiceInitiator> initiators = standardInitiatorList();
+	private final List<ProvidedService> providedServices = new ArrayList<ProvidedService>();
+
+	/**
+	 * Create a default builder
+	 */
 	public ServiceRegistryBuilder() {
-		this( new HashMap() );
+		this( Environment.getProperties() );
 	}
 
-	public ServiceRegistryBuilder(Map configurationValues) {
-		this.configurationValues = configurationValues;
+	/**
+	 * Create a builder with the specified settings
+	 *
+	 * @param settings The initial set of settings to use.
+	 */
+	public ServiceRegistryBuilder(Map settings) {
+		this.settings = settings;
 	}
 
 	private static List<BasicServiceInitiator> standardInitiatorList() {
@@ -54,18 +68,104 @@ public class ServiceRegistryBuilder {
 		return initiators;
 	}
 
+	/**
+	 * Read setting information from the standard resource location
+	 *
+	 * @return this, for method chaining
+	 *
+	 * @see #DEFAULT_CFG_RESOURCE_NAME
+	 */
+	public ServiceRegistryBuilder configure() {
+		return configure( DEFAULT_CFG_RESOURCE_NAME );
+	}
+
+	/**
+	 * Read setting information from the named resource location
+	 *
+	 * @param resourceName The named resource
+	 *
+	 * @return this, for method chaining
+	 */
+	public ServiceRegistryBuilder configure(String resourceName) {
+		// todo : parse and apply XML
+		// we run into a chicken-egg problem here, in that we need the service registry in order to know how to do this
+		// resource lookup (ClassLoaderService)
+		return this;
+	}
+
+	/**
+	 * Apply a setting value
+	 *
+	 * @param settingName The name of the setting
+	 * @param value The value to use.
+	 *
+	 * @return this, for method chaining
+	 */
+	@SuppressWarnings( {"unchecked", "UnusedDeclaration"})
+	public ServiceRegistryBuilder applySetting(String settingName, Object value) {
+		settings.put( settingName, value );
+		return this;
+	}
+
+	/**
+	 * Apply a groups of setting values
+	 *
+	 * @param settings The incoming settings to apply
+	 *
+	 * @return this, for method chaining
+	 */
+	@SuppressWarnings( {"unchecked", "UnusedDeclaration"})
+	public ServiceRegistryBuilder applySettings(Map settings) {
+		this.settings.putAll( settings );
+		return this;
+	}
+
+	/**
+	 * Adds a service initiator.
+	 *
+	 * @param initiator The initiator to be added
+	 *
+	 * @return this, for method chaining
+	 */
+	@SuppressWarnings( {"UnusedDeclaration"})
 	public ServiceRegistryBuilder addInitiator(BasicServiceInitiator initiator) {
 		initiators.add( initiator );
 		return this;
 	}
 
+	/**
+	 * Adds a user-provided service
+	 *
+	 * @param serviceRole The role of the service being added
+	 * @param service The service implementation
+	 *
+	 * @return this, for method chaining
+	 */
 	@SuppressWarnings( {"unchecked"})
 	public ServiceRegistryBuilder addService(final Class serviceRole, final Service service) {
-		services.add( new ProvidedService( serviceRole, service ) );
+		providedServices.add( new ProvidedService( serviceRole, service ) );
 		return this;
 	}
 
+	/**
+	 * Build the service registry accounting for all settings and service initiators and services.
+	 *
+	 * @return The built service registry
+	 */
 	public BasicServiceRegistry buildServiceRegistry() {
-		return new BasicServiceRegistryImpl( initiators, services, configurationValues );
+		Map<?,?> settingsCopy = new HashMap();
+		settingsCopy.putAll( settings );
+		Environment.verifyProperties( settingsCopy );
+		ConfigurationHelper.resolvePlaceHolders( settingsCopy );
+		return new BasicServiceRegistryImpl( initiators, providedServices, settingsCopy );
+	}
+
+	/**
+	 * Destroy a service registry.  Applications should only destroy registries they have explicitly created.
+	 *
+	 * @param serviceRegistry The registry to be closed.
+	 */
+	public static void destroy(BasicServiceRegistry serviceRegistry) {
+		( (BasicServiceRegistryImpl) serviceRegistry ).destroy();
 	}
 }

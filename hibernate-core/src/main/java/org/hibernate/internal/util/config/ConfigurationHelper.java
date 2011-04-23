@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.internal.util.config;
 
@@ -298,10 +297,10 @@ public final class ConfigurationHelper {
 	/**
 	 * Handles interpolation processing for all entries in a properties object.
 	 *
-	 * @param properties The properties object.
+	 * @param configurationValues The configuration map.
 	 */
-	public static void resolvePlaceHolders(Properties properties) {
-		Iterator itr = properties.entrySet().iterator();
+	public static void resolvePlaceHolders(Map<?,?> configurationValues) {
+		Iterator itr = configurationValues.entrySet().iterator();
 		while ( itr.hasNext() ) {
 			final Map.Entry entry = ( Map.Entry ) itr.next();
 			final Object value = entry.getValue();

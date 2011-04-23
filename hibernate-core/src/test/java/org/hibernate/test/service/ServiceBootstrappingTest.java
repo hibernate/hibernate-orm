@@ -77,15 +77,20 @@ public class ServiceBootstrappingTest extends BaseUnitTestCase {
 
 	@Test
 	public void testBuildWithServiceOverride() {
-		Properties props = ConnectionProviderBuilder.getConnectionProviderProperties();
-
-		BasicServiceRegistryImpl serviceRegistry = (BasicServiceRegistryImpl) new ServiceRegistryBuilder( props ).buildServiceRegistry();
+		BasicServiceRegistryImpl serviceRegistry = (BasicServiceRegistryImpl) new ServiceRegistryBuilder( ConnectionProviderBuilder.getConnectionProviderProperties() )
+				.buildServiceRegistry();
 		JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
 
 		assertTrue( jdbcServices.getDialect() instanceof H2Dialect );
 		assertTrue( jdbcServices.getConnectionProvider().isUnwrappableAs( DriverManagerConnectionProviderImpl.class ) );
 
-		serviceRegistry.registerService( ConnectionProvider.class, new UserSuppliedConnectionProviderImpl() );
+		Properties props = ConnectionProviderBuilder.getConnectionProviderProperties();
+		props.setProperty( Environment.DIALECT, H2Dialect.class.getName() );
+
+		serviceRegistry = (BasicServiceRegistryImpl) new ServiceRegistryBuilder( props )
+				.addService( ConnectionProvider.class, new UserSuppliedConnectionProviderImpl() )
+				.buildServiceRegistry();
+		jdbcServices = serviceRegistry.getService( JdbcServices.class );
 
 		assertTrue( jdbcServices.getDialect() instanceof H2Dialect );
 		assertTrue( jdbcServices.getConnectionProvider().isUnwrappableAs( UserSuppliedConnectionProviderImpl.class ) );

@@ -50,13 +50,4 @@ public interface ServiceRegistry {
 	 * @throws UnknownServiceException Indicates the service was not known.
 	 */
 	public <R extends Service> R getService(Class<R> serviceRole);
-
-	/**
-	 * Register a service into the registry.
-	 *
-	 * @param serviceRole The service role.
-	 * @param service The service to register
-	 * @param <R> The service role type
-	 */
-	public <R extends Service> void registerService(Class<R> serviceRole, R service);
 }

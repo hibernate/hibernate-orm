@@ -116,8 +116,7 @@ public abstract class AbstractServiceRegistryImpl implements ServiceRegistryImpl
 		return serviceBinding;
 	}
 
-	@Override
-	public <R extends Service> void registerService(Class<R> serviceRole, R service) {
+	protected <R extends Service> void registerService(Class<R> serviceRole, R service) {
 		ServiceBinding<R> serviceBinding = locateOrCreateServiceBinding( serviceRole, false );
 		R priorServiceInstance = serviceBinding.getTarget();
 		serviceBinding.setTarget( service );

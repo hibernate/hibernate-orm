@@ -1,8 +1,10 @@
 /*
- * Copyright (c) 2009, Red Hat Middleware LLC or third-party contributors as
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2009-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,11 +22,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.util;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
+
 import javax.persistence.FlushModeType;
 import javax.persistence.PersistenceException;
+import java.util.Map;
+import java.util.Properties;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -34,11 +37,7 @@ import org.hibernate.FlushMode;
  */
 public abstract class ConfigurationHelper {
 	public static void overrideProperties(Properties properties, Map overrides) {
-		for ( Map.Entry entry : (Set<Map.Entry>) overrides.entrySet() ) {
-			if ( entry.getKey() instanceof String && entry.getValue() instanceof String ) {
-				properties.setProperty( (String) entry.getKey(), (String) entry.getValue() );
-			}
-		}
+		properties.putAll( overrides );
 	}
 
 	public static FlushMode getFlushMode(Object value) {

@@ -121,6 +121,7 @@ import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.integrator.spi.IntegratorService;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.service.jndi.spi.JndiService;
 import org.hibernate.service.jta.platform.spi.JtaPlatform;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
@@ -397,7 +398,7 @@ public final class SessionFactoryImpl
 		catch (Exception e) {
 			throw new AssertionFailure("Could not generate UUID");
 		}
-		SessionFactoryObjectFactory.addInstance(uuid, name, this, properties);
+		SessionFactoryRegistry.INSTANCE.addSessionFactory( uuid, name, this, serviceRegistry.getService( JndiService.class ) );
 
         LOG.debugf("Instantiated session factory");
 
@@ -709,28 +710,34 @@ public final class SessionFactoryImpl
 		return collectionRolesByEntityParticipant.get( entityName );
 	}
 
-	// from javax.naming.Referenceable
+	@Override
 	public Reference getReference() throws NamingException {
-        LOG.debugf( "Returning a Reference to the SessionFactory" );
+		// from javax.naming.Referenceable
+        LOG.debug( "Returning a Reference to the SessionFactory" );
 		return new Reference(
-			SessionFactoryImpl.class.getName(),
-		    new StringRefAddr("uuid", uuid),
-		    SessionFactoryObjectFactory.class.getName(),
-		    null
+				SessionFactoryImpl.class.getName(),
+				new StringRefAddr("uuid", uuid),
+				SessionFactoryRegistry.ObjectFactoryImpl.class.getName(),
+				null
 		);
 	}
 
 	private Object readResolve() throws ObjectStreamException {
         LOG.trace("Resolving serialized SessionFactory");
 		// look for the instance by uuid
-		Object result = SessionFactoryObjectFactory.getInstance(uuid);
-		if (result==null) {
+		Object result = SessionFactoryRegistry.INSTANCE.getSessionFactory( uuid );
+		if ( result == null ) {
 			// in case we were deserialized in a different JVM, look for an instance with the same name
 			// (alternatively we could do an actual JNDI lookup here....)
-			result = SessionFactoryObjectFactory.getNamedInstance(name);
-            if (result == null) throw new InvalidObjectException("Could not find a SessionFactory named: " + name);
+			result = SessionFactoryRegistry.INSTANCE.getNamedSessionFactory( name );
+            if ( result == null ) {
+				throw new InvalidObjectException( "Could not find a SessionFactory [uuid=" + uuid + ",name=" + name + "]" );
+			}
             LOG.debugf("Resolved SessionFactory by name");
-        } else LOG.debugf("Resolved SessionFactory by UID");
+        }
+		else {
+			LOG.debugf("Resolved SessionFactory by UUID");
+		}
 		return result;
 	}
 
@@ -931,7 +938,9 @@ public final class SessionFactoryImpl
 			schemaExport.drop( false, true );
 		}
 
-		SessionFactoryObjectFactory.removeInstance(uuid, name, properties);
+		SessionFactoryRegistry.INSTANCE.removeSessionFactory(
+				uuid, name, serviceRegistry.getService( JndiService.class )
+		);
 
 		observer.sessionFactoryClosed( this );
 		serviceRegistry.destroy();
@@ -1264,17 +1273,14 @@ public final class SessionFactoryImpl
 	 * @throws ClassNotFoundException indicates problems reading back serial data stream
 	 */
 	static SessionFactoryImpl deserialize(ObjectInputStream ois) throws IOException, ClassNotFoundException {
-		String uuid = ois.readUTF();
+		final String uuid = ois.readUTF();
 		boolean isNamed = ois.readBoolean();
-		String name = null;
-		if ( isNamed ) {
-			name = ois.readUTF();
-		}
-		Object result = SessionFactoryObjectFactory.getInstance( uuid );
+		final String name = isNamed ? ois.readUTF() : null;
+		Object result = SessionFactoryRegistry.INSTANCE.getSessionFactory( uuid );
 		if ( result == null ) {
             LOG.trace("Could not locate session factory by uuid [" + uuid + "] during session deserialization; trying name");
 			if ( isNamed ) {
-				result = SessionFactoryObjectFactory.getNamedInstance( name );
+				result = SessionFactoryRegistry.INSTANCE.getNamedSessionFactory( name );
 			}
 			if ( result == null ) {
 				throw new InvalidObjectException( "could not resolve session factory during session deserialization [uuid=" + uuid + ", name=" + name + "]" );

@@ -47,9 +47,10 @@ import org.hibernate.TypeHelper;
 import org.hibernate.engine.FilterDefinition;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.UUIDGenerator;
-import org.hibernate.internal.SessionFactoryObjectFactory;
+import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
+import org.hibernate.service.jndi.internal.JndiServiceImpl;
 import org.hibernate.stat.Statistics;
 
 /**
@@ -79,7 +80,7 @@ public class SessionFactoryStub implements SessionFactory {
 			throw new AssertionFailure("Could not generate UUID");
 		}
 
-		SessionFactoryObjectFactory.addInstance( uuid, name, this, service.getProperties() );
+		SessionFactoryRegistry.INSTANCE.addSessionFactory( uuid, name, this, new JndiServiceImpl( service.getProperties() )  );
 	}
 
 	@Override
@@ -103,26 +104,32 @@ public class SessionFactoryStub implements SessionFactory {
 	//readResolveObject
 	private Object readResolve() throws ObjectStreamException {
 		// look for the instance by uuid
-		Object result = SessionFactoryObjectFactory.getInstance(uuid);
-		if (result==null) {
+		Object result = SessionFactoryRegistry.INSTANCE.getSessionFactory( uuid ) ;
+		if ( result == null ) {
             // in case we were deserialized in a different JVM, look for an instance with the same name
 			// (alternatively we could do an actual JNDI lookup here....)
-			result = SessionFactoryObjectFactory.getNamedInstance(name);
-            if (result == null) throw new InvalidObjectException("Could not find a stub SessionFactory named: " + name);
+			result = SessionFactoryRegistry.INSTANCE.getNamedSessionFactory( name );
+			if ( result == null ) {
+				throw new InvalidObjectException( "Could not find a SessionFactory [uuid=" + uuid + ",name=" + name + "]" );
+			}
             LOG.debugf("Resolved stub SessionFactory by name");
-        } else LOG.debugf("Resolved stub SessionFactory by uid");
+        }
+		else {
+			LOG.debugf("Resolved stub SessionFactory by UUID");
+		}
 		return result;
 	}
 
 	/**
 	 * @see javax.naming.Referenceable#getReference()
 	 */
+	@Override
 	public Reference getReference() throws NamingException {
 		return new Reference(
-			SessionFactoryStub.class.getName(),
-			new StringRefAddr("uuid", uuid),
-			SessionFactoryObjectFactory.class.getName(),
-			null
+				SessionFactoryStub.class.getName(),
+				new StringRefAddr("uuid", uuid),
+				SessionFactoryRegistry.ObjectFactoryImpl.class.getName(),
+				null
 		);
 	}
 

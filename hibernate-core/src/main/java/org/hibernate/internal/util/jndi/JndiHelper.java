@@ -22,33 +22,35 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.internal.util.jndi;
-import java.util.Hashtable;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
+
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.Name;
 import javax.naming.NameNotFoundException;
 import javax.naming.NamingException;
+import java.util.Hashtable;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.cfg.Environment;
 
-import org.jboss.logging.Logger;
-
+/**
+ * Helper for dealing with JNDI.
+ *
+ * @deprecated As JNDI access should get routed through {@link org.hibernate.service.jndi.spi.JndiService}
+ */
+@Deprecated
 public final class JndiHelper {
-
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, JndiHelper.class.getName());
-
 	private JndiHelper() {
 	}
 
 	/**
-	 * Given a hodge-podge of properties, extract out the ones relevant for JNDI interaction.
+	 * Given a hodgepodge of properties, extract out the ones relevant for JNDI interaction.
 	 *
-	 * @param properties
-	 * @return
+	 * @param configurationValues The map of config values
+	 *
+	 * @return The extracted JNDI specific properties.
 	 */
 	@SuppressWarnings({ "unchecked" })
 	public static Properties extractJndiProperties(Map configurationValues) {
@@ -83,116 +85,11 @@ public final class JndiHelper {
 		return jndiProperties;
 	}
 
-	/**
-	 * Do a JNDI lookup.  Mainly we are handling {@link NamingException}
-	 *
-	 * @param jndiName The namespace of the object to locate
-	 * @param context The context in which to resolve the namespace.
-	 *
-	 * @return The located object; may be null.
-	 *
-	 * @throws JndiException if a {@link NamingException} occurs
-	 */
-	public static Object locate(String jndiName, Context context) {
-		try {
-			return context.lookup( jndiName );
-		}
-		catch ( NamingException e ) {
-			throw new JndiException( "Unable to lookup JNDI name [" + jndiName + "]", e );
-		}
-	}
-
-	/**
-	 * Bind val to name in ctx, and make sure that all intermediate contexts exist.
-	 *
-	 * @param ctx the root context
-	 * @param name the name as a string
-	 * @param val the object to be bound
-	 *
-	 * @throws JndiException if a {@link NamingException} occurs
-	 */
-	public static void bind(String jndiName, Object value, Context context) {
-		try {
-            LOG.trace("Binding : " + jndiName);
-			context.rebind( jndiName, value );
-		}
-		catch ( Exception initialException ) {
-			// We had problems doing a simple bind operation.  This could very well be caused by missing intermediate
-			// contexts, so we attempt to create those intermmediate contexts and bind again
-			Name n = tokenizeName( jndiName, context );
-			Context intermediateContextBase = context;
-			while ( n.size() > 1 ) {
-				final String intermediateContextName = n.get( 0 );
-
-				Context intermediateContext = null;
-				try {
-                    LOG.trace("Intermediate lookup: " + intermediateContextName);
-					intermediateContext = (Context) intermediateContextBase.lookup( intermediateContextName );
-				}
-				catch ( NameNotFoundException handledBelow ) {
-					// ok as we will create it below if not found
-				}
-				catch ( NamingException e ) {
-					throw new JndiException( "Unaniticipated error doing intermediate lookup", e );
-				}
-
-                if (intermediateContext != null) LOG.trace("Found intermediate context: " + intermediateContextName);
-				else {
-                    LOG.trace("Creating subcontext: " + intermediateContextName);
-					try {
-						intermediateContext = intermediateContextBase.createSubcontext( intermediateContextName );
-					}
-					catch ( NamingException e ) {
-						throw new JndiException( "Error creating intermediate context [" + intermediateContextName + "]", e );
-					}
-				}
-				intermediateContextBase = intermediateContext;
-				n = n.getSuffix( 1 );
-			}
-            LOG.trace("Binding : " + n);
-			try {
-				intermediateContextBase.rebind( n, value );
-			}
-			catch ( NamingException e ) {
-				throw new JndiException( "Error performing intermediate bind [" + n + "]", e );
-			}
-		}
-        LOG.debugf("Bound name: %s", jndiName);
-	}
-
-	private static Name tokenizeName(String jndiName, Context context) {
-		try {
-			return context.getNameParser( "" ).parse( jndiName );
-		}
-		catch ( NamingException e ) {
-			throw new JndiException( "Unable to tokenize JNDI name [" + jndiName + "]", e );
-		}
-	}
-
-
-
-
-
-	// todo : remove these once we get the services in place and integrated into the SessionFactory
-
-
-
-
-
-
 	public static InitialContext getInitialContext(Properties props) throws NamingException {
-
 		Hashtable hash = extractJndiProperties(props);
-        LOG.jndiInitialContextProperties(hash);
-		try {
-			return hash.size()==0 ?
-					new InitialContext() :
-					new InitialContext(hash);
-		}
-		catch (NamingException e) {
-            LOG.unableToObtainInitialContext(e);
-			throw e;
-		}
+		return hash.size()==0 ?
+				new InitialContext() :
+				new InitialContext(hash);
 	}
 
 	/**
@@ -201,11 +98,11 @@ public final class JndiHelper {
 	 * @param ctx the root context
 	 * @param name the name as a string
 	 * @param val the object to be bound
-	 * @throws NamingException
+	 *
+	 * @throws NamingException Indicates a problem performing the bind.
 	 */
 	public static void bind(Context ctx, String name, Object val) throws NamingException {
 		try {
-            LOG.trace("Binding : " + name);
 			ctx.rebind(name, val);
 		}
 		catch (Exception e) {
@@ -215,25 +112,21 @@ public final class JndiHelper {
 
 				Context subctx=null;
 				try {
-                    LOG.trace("Lookup: " + ctxName);
 					subctx = (Context) ctx.lookup(ctxName);
 				}
-				catch (NameNotFoundException nfe) {}
+				catch (NameNotFoundException ignore) {
+				}
 
 				if (subctx!=null) {
-                    LOG.debugf("Found subcontext: %s", ctxName);
 					ctx = subctx;
 				}
 				else {
-                    LOG.creatingSubcontextInfo(ctxName);
 					ctx = ctx.createSubcontext(ctxName);
 				}
 				n = n.getSuffix(1);
 			}
-            LOG.trace("Binding : " + n);
 			ctx.rebind(n, val);
 		}
-        LOG.debugf("Bound name: %s", name);
 	}
 }
 

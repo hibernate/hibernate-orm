@@ -54,6 +54,8 @@ import org.hibernate.engine.loading.CollectionLoadContext;
 import org.hibernate.engine.loading.EntityLoadContext;
 import org.hibernate.id.IntegralDataTypeHolder;
 import org.hibernate.service.jdbc.dialect.internal.AbstractDialectResolver;
+import org.hibernate.service.jndi.JndiException;
+import org.hibernate.service.jndi.JndiNameException;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SerializationException;
 import org.hibernate.type.Type;
@@ -310,12 +312,8 @@ public interface CoreMessageLogger extends BasicLogger {
     void factoryBoundToJndiName( String name );
 
     @LogMessage( level = INFO )
-    @Message( value = "Factory name: %s", id = 95 )
-    void factoryName( String name );
-
-    @LogMessage( level = INFO )
-    @Message( value = "A factory was renamed from name: %s", id = 96 )
-    void factoryRenamedFromName( String name );
+    @Message( value = "A factory was renamed from [%s] to [%s] in JNDI", id = 96 )
+    void factoryJndiRename(String oldName, String newName);
 
     @LogMessage( level = INFO )
     @Message( value = "Unbound factory from JNDI name: %s", id = 97 )
@@ -438,8 +436,8 @@ public interface CoreMessageLogger extends BasicLogger {
     void indexes( Set keySet );
 
     @LogMessage( level = WARN )
-    @Message( value = "InitialContext did not implement EventContext", id = 127 )
-    void initialContextDidNotImplementEventContext();
+    @Message( value = "Could not bind JNDI listener", id = 127 )
+    void couldNotBindJndiListener();
 
     @LogMessage( level = WARN )
     @Message( value = "InitialContext did not implement EventContext", id = 128 )
@@ -464,7 +462,7 @@ public interface CoreMessageLogger extends BasicLogger {
     @LogMessage( level = ERROR )
     @Message( value = "Invalid JNDI name: %s", id = 135 )
     void invalidJndiName( String name,
-                          @Cause InvalidNameException e );
+                          @Cause JndiNameException e );
 
     @LogMessage( level = WARN )
     @Message( value = "Inapropriate use of @OnDelete on entity, annotation ignored: %s", id = 136 )
@@ -593,10 +591,6 @@ public interface CoreMessageLogger extends BasicLogger {
     @Message( value = "No session factory with JNDI name %s", id = 184 )
     void noSessionFactoryWithJndiName( String sfJNDIName,
                                        @Cause NameNotFoundException e );
-
-    @LogMessage( level = INFO )
-    @Message( value = "Not binding factory to JNDI, no JNDI name configured", id = 185 )
-    void notBindingFactoryToJndi();
 
     @LogMessage( level = INFO )
     @Message( value = "Optimistic lock failures: %s", id = 187 )
@@ -910,7 +904,7 @@ public interface CoreMessageLogger extends BasicLogger {
 
     @LogMessage( level = WARN )
     @Message( value = "Could not bind factory to JNDI", id = 277 )
-    void unableToBindFactoryToJndi( @Cause NamingException e );
+    void unableToBindFactoryToJndi( @Cause JndiException e );
 
     @LogMessage( level = INFO )
     @Message( value = "Could not bind value '%s' to parameter: %s; %s", id = 278 )
@@ -1292,7 +1286,7 @@ public interface CoreMessageLogger extends BasicLogger {
 
     @LogMessage( level = WARN )
     @Message( value = "Could not unbind factory from JNDI", id = 374 )
-    void unableToUnbindFactoryFromJndi( @Cause NamingException e );
+    void unableToUnbindFactoryFromJndi( @Cause JndiException e );
 
     @Message( value = "Could not update hi value in: %s", id = 375 )
     Object unableToUpdateHiValue( String tableName );
@@ -1310,10 +1304,6 @@ public interface CoreMessageLogger extends BasicLogger {
     @Message( value = "I/O reported error writing cached file : %s: %s", id = 378 )
     void unableToWriteCachedFile( String path,
                                   String message );
-
-    @LogMessage( level = INFO )
-    @Message( value = "Unbinding factory from JNDI name: %s", id = 379 )
-    void unbindingFactoryFromJndiName( String name );
 
     @LogMessage( level = WARN )
     @Message( value = "Unexpected literal token type [%s] passed for numeric processing", id = 380 )

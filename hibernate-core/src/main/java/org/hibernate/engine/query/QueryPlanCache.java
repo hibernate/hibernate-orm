@@ -38,7 +38,7 @@ import org.hibernate.QueryException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.query.sql.NativeSQLQuerySpecification;
-import org.hibernate.impl.FilterImpl;
+import org.hibernate.internal.FilterImpl;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.collections.SimpleMRUCache;
 import org.hibernate.internal.util.collections.SoftLimitMRUCache;

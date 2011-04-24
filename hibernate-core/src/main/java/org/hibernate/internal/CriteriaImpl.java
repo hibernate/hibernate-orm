@@ -22,7 +22,7 @@
  * Boston, MA  02110-1301  USA
  *
  */
-package org.hibernate.impl;
+package org.hibernate.internal;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;

@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.impl;
+package org.hibernate.internal;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -30,7 +30,6 @@ import java.util.HashMap;
 import java.util.Map;
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.engine.ActionQueue;
 import org.hibernate.engine.NonFlushedChanges;
 import org.hibernate.engine.StatefulPersistenceContext;

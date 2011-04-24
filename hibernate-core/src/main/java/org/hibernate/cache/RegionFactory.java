@@ -49,7 +49,7 @@ public interface RegionFactory {
 	/**
 	 * Lifecycle callback to perform any necessary initialization of the
 	 * underlying cache implementation(s).  Called exactly once during the
-	 * construction of a {@link org.hibernate.impl.SessionFactoryImpl}.
+	 * construction of a {@link org.hibernate.internal.SessionFactoryImpl}.
 	 *
 	 * @param settings The settings in effect.
 	 * @param properties The defined cfg properties

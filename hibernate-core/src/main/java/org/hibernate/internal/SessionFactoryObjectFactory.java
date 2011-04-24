@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.impl;
+package org.hibernate.internal;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Properties;
@@ -38,7 +38,6 @@ import javax.naming.event.NamingExceptionEvent;
 import javax.naming.event.NamingListener;
 import javax.naming.spi.ObjectFactory;
 
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.SessionFactory;
 import org.hibernate.internal.util.jndi.JndiHelper;
 

@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.impl;
+package org.hibernate.internal;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -43,7 +43,6 @@ import org.hibernate.ScrollableResults;
 import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.hql.HolderInstantiator;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.loader.Loader;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;

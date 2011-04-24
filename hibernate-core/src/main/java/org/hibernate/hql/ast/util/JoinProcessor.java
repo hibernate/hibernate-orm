@@ -43,7 +43,7 @@ import org.hibernate.hql.ast.tree.FromElement;
 import org.hibernate.hql.ast.tree.ParameterContainer;
 import org.hibernate.hql.ast.tree.QueryNode;
 import org.hibernate.hql.classic.ParserHelper;
-import org.hibernate.impl.FilterImpl;
+import org.hibernate.internal.FilterImpl;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.param.DynamicFilterParameterSpecification;

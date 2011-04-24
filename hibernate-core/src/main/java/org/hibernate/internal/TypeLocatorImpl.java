@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.impl;
+package org.hibernate.internal;
 import java.io.Serializable;
 import java.util.Properties;
 import org.hibernate.TypeHelper;

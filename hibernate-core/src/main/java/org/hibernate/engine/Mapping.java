@@ -33,7 +33,7 @@ import org.hibernate.type.Type;
  * implementors of <tt>Type</tt>.
  *
  * @see org.hibernate.type.Type
- * @see org.hibernate.impl.SessionFactoryImpl
+ * @see org.hibernate.internal.SessionFactoryImpl
  * @see org.hibernate.cfg.Configuration
  * @author Gavin King
  */

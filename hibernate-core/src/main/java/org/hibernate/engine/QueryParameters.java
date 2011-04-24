@@ -38,7 +38,7 @@ import org.hibernate.QueryException;
 import org.hibernate.ScrollMode;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.hql.classic.ParserHelper;
-import org.hibernate.impl.FilterImpl;
+import org.hibernate.internal.FilterImpl;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.pretty.Printer;
 import org.hibernate.transform.ResultTransformer;

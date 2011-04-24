@@ -7,7 +7,7 @@ import javax.naming.Reference;
 
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.SessionFactory;
-import org.hibernate.impl.SessionFactoryObjectFactory;
+import org.hibernate.internal.SessionFactoryObjectFactory;
 import org.hibernate.stat.CollectionStatistics;
 import org.hibernate.stat.EntityStatistics;
 import org.hibernate.stat.QueryStatistics;

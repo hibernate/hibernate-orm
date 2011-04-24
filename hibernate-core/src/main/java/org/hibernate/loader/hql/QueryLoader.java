@@ -48,7 +48,7 @@ import org.hibernate.hql.ast.tree.AggregatedSelectExpression;
 import org.hibernate.hql.ast.tree.FromElement;
 import org.hibernate.hql.ast.tree.QueryNode;
 import org.hibernate.hql.ast.tree.SelectClause;
-import org.hibernate.impl.IteratorImpl;
+import org.hibernate.internal.IteratorImpl;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.BasicLoader;
 import org.hibernate.param.ParameterSpecification;

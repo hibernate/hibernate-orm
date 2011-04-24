@@ -42,8 +42,7 @@ import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.spi.JdbcConnectionAccess;
 import org.hibernate.engine.query.sql.NativeSQLQuerySpecification;
 import org.hibernate.engine.transaction.spi.TransactionCoordinator;
-import org.hibernate.event.EventListeners;
-import org.hibernate.impl.CriteriaImpl;
+import org.hibernate.internal.CriteriaImpl;
 import org.hibernate.loader.custom.CustomQuery;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.Type;
@@ -278,7 +277,7 @@ public interface SessionImplementor extends Serializable, LobCreationContext {
 
 	/**
 	 * Return the currently enabled filters.  The filter map is keyed by filter
-	 * name, with values corresponding to the {@link org.hibernate.impl.FilterImpl}
+	 * name, with values corresponding to the {@link org.hibernate.internal.FilterImpl}
 	 * instance.
 	 * @return The currently enabled filters.
 	 * @deprecated use #getLoadQueryInfluencers instead

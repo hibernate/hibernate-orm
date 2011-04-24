@@ -40,7 +40,7 @@ import org.hibernate.ejb.metamodel.AbstractMetamodelSpecificTest;
 import org.hibernate.ejb.metamodel.Phone;
 import org.hibernate.ejb.metamodel.Product;
 import org.hibernate.ejb.metamodel.Product_;
-import org.hibernate.impl.AbstractQueryImpl;
+import org.hibernate.internal.AbstractQueryImpl;
 
 import org.junit.After;
 import org.junit.Before;

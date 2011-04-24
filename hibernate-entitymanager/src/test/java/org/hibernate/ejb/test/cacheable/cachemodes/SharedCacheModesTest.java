@@ -34,7 +34,7 @@ import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.HibernateEntityManager;
 import org.hibernate.ejb.HibernateQuery;
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.impl.AbstractQueryImpl;
+import org.hibernate.internal.AbstractQueryImpl;
 
 import org.junit.Test;
 

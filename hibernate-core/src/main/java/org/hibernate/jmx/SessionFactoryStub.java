@@ -47,7 +47,7 @@ import org.hibernate.TypeHelper;
 import org.hibernate.engine.FilterDefinition;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.UUIDGenerator;
-import org.hibernate.impl.SessionFactoryObjectFactory;
+import org.hibernate.internal.SessionFactoryObjectFactory;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.stat.Statistics;

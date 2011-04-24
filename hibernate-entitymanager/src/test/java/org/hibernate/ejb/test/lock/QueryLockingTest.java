@@ -31,7 +31,7 @@ import org.hibernate.LockMode;
 import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.QueryImpl;
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.impl.SessionImpl;
+import org.hibernate.internal.SessionImpl;
 
 import org.junit.Test;
 
@@ -62,7 +62,7 @@ public class QueryLockingTest extends BaseEntityManagerFunctionalTestCase {
 		em.getTransaction().begin();
 		QueryImpl jpaQuery = em.createQuery( "from Lockable l" ).unwrap( QueryImpl.class );
 
-		org.hibernate.impl.QueryImpl hqlQuery = (org.hibernate.impl.QueryImpl) jpaQuery.getHibernateQuery();
+		org.hibernate.internal.QueryImpl hqlQuery = (org.hibernate.internal.QueryImpl) jpaQuery.getHibernateQuery();
 		assertEquals( LockMode.NONE, hqlQuery.getLockOptions().getLockMode() );
 		assertNull( hqlQuery.getLockOptions().getAliasSpecificLockMode( "l" ) );
 		assertEquals( LockMode.NONE, hqlQuery.getLockOptions().getEffectiveLockMode( "l" ) );

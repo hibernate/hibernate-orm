@@ -80,6 +80,10 @@ public class MappingHelper {
 		return value == null ? defaultValue : Boolean.valueOf( value );
 	}
 
+	public static boolean getBooleanValue(Boolean value, boolean defaultValue) {
+		return value == null ? defaultValue : value;
+	}
+
 	public static Class extractClassAttributeValue(Element element, String attributeName)
 	throws ClassNotFoundException {
 		String attributeValue = ( element == null ? null : element.attributeValue( attributeName ) );

@@ -32,12 +32,12 @@ import org.hibernate.metamodel.binding.MappingDefaults;
 import org.hibernate.metamodel.domain.Attribute;
 import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.metamodel.source.hbm.HbmHelper;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLBag;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLDiscriminator;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLId;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLProperty;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLTimestamp;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLVersion;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLBagElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLDiscriminator;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLId;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLTimestamp;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLVersion;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLPropertyElement;
 import org.hibernate.metamodel.source.util.MappingHelper;
 
 /**
@@ -60,7 +60,7 @@ public abstract class AbstractHbmAttributeDomainState implements AbstractAttribu
 		this.defaults = defaults;
 		this.attribute = attribute;
 		this.hibernateTypeDescriptor = new HibernateTypeDescriptor();
-		this.hibernateTypeDescriptor.setTypeName( id.getType() );
+		this.hibernateTypeDescriptor.setTypeName( id.getTypeAttribute() );
 		this.accessorName =  HbmHelper.getPropertyAccessorName(
 				id.getAccess(), isEmbedded(), defaults.getDefaultAccess()
 		);
@@ -130,24 +130,24 @@ public abstract class AbstractHbmAttributeDomainState implements AbstractAttribu
 	public AbstractHbmAttributeDomainState(MappingDefaults defaults,
 										   Attribute attribute,
 										   Map<String, MetaAttribute> entityMetaAttributes,
-										   XMLProperty property) {
+										   XMLPropertyElement property) {
 		this.defaults = defaults;
 		this.attribute = attribute;
 		this.hibernateTypeDescriptor = new HibernateTypeDescriptor();
-		this.hibernateTypeDescriptor.setTypeName( property.getType() );
+		this.hibernateTypeDescriptor.setTypeName( property.getTypeAttribute() );
 		this.accessorName =  HbmHelper.getPropertyAccessorName(
 				property.getAccess(), isEmbedded(), defaults.getDefaultAccess()
 		);
 		this.nodeName = MappingHelper.getStringValue( property.getNode(), attribute.getName() );
 		this.metaAttributes = HbmHelper.extractMetas( property.getMeta(), entityMetaAttributes );
 		this.cascade = defaults.getDefaultCascade();
-		this.isOptimisticLockable = MappingHelper.getBooleanValue( property.getOptimisticLock(), true );
+		this.isOptimisticLockable = property.isOptimisticLock();
 	}
 
 	public AbstractHbmAttributeDomainState(MappingDefaults defaults,
 										   Attribute attribute,
 										   Map<String, MetaAttribute> entityMetaAttributes,
-										   XMLBag collection) {
+										   XMLBagElement collection) {
 		this.defaults = defaults;
 		this.attribute = attribute;
 		this.hibernateTypeDescriptor = new HibernateTypeDescriptor();
@@ -159,7 +159,7 @@ public abstract class AbstractHbmAttributeDomainState implements AbstractAttribu
 		this.nodeName = MappingHelper.getStringValue( collection.getNode(), attribute.getName() );
 		this.metaAttributes = HbmHelper.extractMetas( collection.getMeta(), entityMetaAttributes );
 		this.cascade = defaults.getDefaultCascade();
-		this.isOptimisticLockable = MappingHelper.getBooleanValue( collection.getOptimisticLock(), true );
+		this.isOptimisticLockable = collection.isOptimisticLock();
 	}
 
 	protected final MappingDefaults getDefaults() {

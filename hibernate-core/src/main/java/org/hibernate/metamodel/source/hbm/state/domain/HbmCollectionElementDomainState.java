@@ -25,21 +25,21 @@ package org.hibernate.metamodel.source.hbm.state.domain;
 
 import org.hibernate.metamodel.binding.CollectionElement;
 import org.hibernate.metamodel.binding.HibernateTypeDescriptor;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLElementElement;
 
 /**
  * @author Gail Badner
  */
 public class HbmCollectionElementDomainState implements CollectionElement.DomainState {
-	private final XMLElement element;
+	private final XMLElementElement element;
 
-	HbmCollectionElementDomainState(XMLElement element) {
+	HbmCollectionElementDomainState(XMLElementElement element) {
 		this.element = element;
 	}
 
 	public final HibernateTypeDescriptor getHibernateTypeDescriptor() {
 		HibernateTypeDescriptor hibernateTypeDescriptor = new HibernateTypeDescriptor();
-		hibernateTypeDescriptor.setTypeName( element.getType() );
+		hibernateTypeDescriptor.setTypeName( element.getTypeAttribute() );
 		return hibernateTypeDescriptor;
 	}
 

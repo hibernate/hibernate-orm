@@ -47,11 +47,36 @@ import org.hibernate.metamodel.relational.Schema;
 import org.hibernate.metamodel.relational.Table;
 import org.hibernate.metamodel.relational.TableSpecification;
 import org.hibernate.metamodel.relational.UniqueKey;
-import org.hibernate.metamodel.source.hbm.xml.mapping.*;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
 import org.hibernate.metamodel.source.hbm.state.domain.HbmPluralAttributeDomainState;
 import org.hibernate.metamodel.source.hbm.state.domain.HbmSimpleAttributeDomainState;
 import org.hibernate.metamodel.source.hbm.state.relational.HbmSimpleValueRelationalStateContainer;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLAnyElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLBagElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLComponentElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLDynamicComponentElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLFilterElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLDiscriminator;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLId;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLTimestamp;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLVersion;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLIdbagElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLJoinElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLJoinedSubclassElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLListElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLManyToOneElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLMapElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLOneToOneElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLPropertiesElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLPropertyElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLQueryElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLResultsetElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSetElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlQueryElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSubclassElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLTuplizerElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLUnionSubclassElement;
 
 /**
 * TODO : javadoc
@@ -141,7 +166,7 @@ abstract class AbstractEntityBinder {
 			entityBinding.getEntity().getPojoEntitySpecifics().setProxyInterfaceName( className );
 		}
 
-		XMLTuplizer tuplizer = locateTuplizerDefinition( entityClazz, EntityMode.POJO );
+		XMLTuplizerElement tuplizer = locateTuplizerDefinition( entityClazz, EntityMode.POJO );
 		if ( tuplizer != null ) {
 			entityBinding.getEntity().getPojoEntitySpecifics().setTuplizerClassName( tuplizer.getClazz() );
 		}
@@ -155,7 +180,7 @@ abstract class AbstractEntityBinder {
 		}
 		entityBinding.getEntity().getDom4jEntitySpecifics().setNodeName(nodeName);
 
-		XMLTuplizer tuplizer = locateTuplizerDefinition( entityClazz, EntityMode.DOM4J );
+		XMLTuplizerElement tuplizer = locateTuplizerDefinition( entityClazz, EntityMode.DOM4J );
 		if ( tuplizer != null ) {
 			entityBinding.getEntity().getDom4jEntitySpecifics().setTuplizerClassName( tuplizer.getClazz() );
 		}
@@ -163,7 +188,7 @@ abstract class AbstractEntityBinder {
 
 	private void bindMapRepresentation(XMLClass entityClazz,
 									   EntityBinding entityBinding) {
-		XMLTuplizer tuplizer = locateTuplizerDefinition( entityClazz, EntityMode.MAP );
+		XMLTuplizerElement tuplizer = locateTuplizerDefinition( entityClazz, EntityMode.MAP );
 		if ( tuplizer != null ) {
 			entityBinding.getEntity().getMapEntitySpecifics().setTuplizerClassName( tuplizer.getClazz() );
 		}
@@ -177,9 +202,9 @@ abstract class AbstractEntityBinder {
 	 *
 	 * @return The tuplizer element, or null.
 	 */
-	private static XMLTuplizer locateTuplizerDefinition(XMLClass container,
+	private static XMLTuplizerElement locateTuplizerDefinition(XMLClass container,
 													EntityMode entityMode) {
-		for ( XMLTuplizer tuplizer : container.getTuplizer() ) {
+		for ( XMLTuplizerElement tuplizer : container.getTuplizer() ) {
 			if ( entityMode.toString().equals( tuplizer.getEntityMode() ) ) {
 				return tuplizer;
 			}
@@ -260,67 +285,67 @@ abstract class AbstractEntityBinder {
 
 		AttributeBinding attributeBinding = null;
 		for ( Object attribute : entityClazz.getPropertyOrManyToOneOrOneToOne() ) {
-			if ( XMLBag.class.isInstance( attribute ) ) {
-				XMLBag collection = XMLBag.class.cast( attribute );
+			if ( XMLBagElement.class.isInstance( attribute ) ) {
+				XMLBagElement collection = XMLBagElement.class.cast( attribute );
 				BagBinding collectionBinding = entityBinding.makeBagAttributeBinding( collection.getName() );
 				bindBag( collection, collectionBinding, entityBinding );
 				hibernateMappingBinder.getHibernateXmlBinder().getMetadata().addCollection( collectionBinding );
 				attributeBinding = collectionBinding;
 			}
-			else if ( XMLIdbag.class.isInstance( attribute ) ) {
-				XMLIdbag collection = XMLIdbag.class.cast( attribute );
+			else if ( XMLIdbagElement.class.isInstance( attribute ) ) {
+				XMLIdbagElement collection = XMLIdbagElement.class.cast( attribute );
 				//BagBinding collectionBinding = entityBinding.makeBagAttributeBinding( collection.getName() );
 				//bindIdbag( collection, bagBinding, entityBinding, PluralAttributeNature.BAG, collection.getName() );
 				// todo: handle identifier
 				//attributeBinding = collectionBinding;
 				//hibernateMappingBinder.getHibernateXmlBinder().getMetadata().addCollection( attributeBinding );
 			}
-			else if ( XMLSet.class.isInstance( attribute ) ) {
-				XMLSet collection = XMLSet.class.cast( attribute );
+			else if ( XMLSetElement.class.isInstance( attribute ) ) {
+				XMLSetElement collection = XMLSetElement.class.cast( attribute );
 				//BagBinding collectionBinding = entityBinding.makeBagAttributeBinding( collection.getName() );
 				//bindSet( collection, collectionBinding, entityBinding, PluralAttributeNature.SET, collection.getName() );
 				//attributeBinding = collectionBinding;
 				//hibernateMappingBinder.getHibernateXmlBinder().getMetadata().addCollection( attributeBinding );
 			}
-			else if ( XMLList.class.isInstance( attribute ) ) {
-				XMLList collection = XMLList.class.cast( attribute );
+			else if ( XMLListElement.class.isInstance( attribute ) ) {
+				XMLListElement collection = XMLListElement.class.cast( attribute );
 				//ListBinding collectionBinding = entityBinding.makeBagAttributeBinding( collection.getName() );
 				//bindList( collection, bagBinding, entityBinding, PluralAttributeNature.LIST, collection.getName() );
 				// todo : handle list index
 				//attributeBinding = collectionBinding;
 				//hibernateMappingBinder.getHibernateXmlBinder().getMetadata().addCollection( attributeBinding );
 			}
-			else if ( XMLMap.class.isInstance( attribute ) ) {
-				XMLMap collection = XMLMap.class.cast( attribute );
+			else if ( XMLMapElement.class.isInstance( attribute ) ) {
+				XMLMapElement collection = XMLMapElement.class.cast( attribute );
 				//BagBinding bagBinding = entityBinding.makeBagAttributeBinding( collection.getName() );
 				//bindMap( collection, bagBinding, entityBinding, PluralAttributeNature.MAP, collection.getName() );
 				// todo : handle map key
 				//hibernateMappingBinder.getHibernateXmlBinder().getMetadata().addCollection( attributeBinding );
 			}
-			else if ( XMLManyToOne.class.isInstance( attribute ) ) {
+			else if ( XMLManyToOneElement.class.isInstance( attribute ) ) {
 // todo : implement
 //				value = new ManyToOne( mappings, table );
 //				bindManyToOne( subElement, (ManyToOne) value, propertyName, nullable, mappings );
 			}
-			else if ( XMLAny.class.isInstance( attribute ) ) {
+			else if ( XMLAnyElement.class.isInstance( attribute ) ) {
 // todo : implement
 //				value = new Any( mappings, table );
 //				bindAny( subElement, (Any) value, nullable, mappings );
 			}
-			else if ( XMLOneToOne.class.isInstance( attribute ) ) {
+			else if ( XMLOneToOneElement.class.isInstance( attribute ) ) {
 // todo : implement
 //				value = new OneToOne( mappings, table, persistentClass );
 //				bindOneToOne( subElement, (OneToOne) value, propertyName, true, mappings );
 			}
-			else if ( XMLProperty.class.isInstance( attribute ) ) {
-				XMLProperty property = XMLProperty.class.cast( attribute );
+			else if ( XMLPropertyElement.class.isInstance( attribute ) ) {
+				XMLPropertyElement property = XMLPropertyElement.class.cast( attribute );
 				SimpleAttributeBinding binding = entityBinding.makeSimpleAttributeBinding( property.getName() );
 				bindSimpleAttribute( property, binding, entityBinding );
 				attributeBinding = binding;
 			}
-			else if ( XMLComponent.class.isInstance( attribute )
-					|| XMLDynamicComponent.class.isInstance( attribute )
-					|| XMLProperties.class.isInstance( attribute ) ) {
+			else if ( XMLComponentElement.class.isInstance( attribute )
+					|| XMLDynamicComponentElement.class.isInstance( attribute )
+					|| XMLPropertiesElement.class.isInstance( attribute ) ) {
 // todo : implement
 //				String subpath = StringHelper.qualify( entityName, propertyName );
 //				value = new Component( mappings, persistentClass );
@@ -344,26 +369,26 @@ abstract class AbstractEntityBinder {
 Array
 PrimitiveArray
 */
-		for ( XMLJoin join : entityClazz.getJoin() ) {
+		for ( XMLJoinElement join : entityClazz.getJoin() ) {
 // todo : implement
 //			Join join = new Join();
 //			join.setPersistentClass( persistentClass );
 //			bindJoin( subElement, join, mappings, inheritedMetas );
 //			persistentClass.addJoin( join );
 		}
-		for ( XMLSubclass subclass : entityClazz.getSubclass() ) {
+		for ( XMLSubclassElement subclass : entityClazz.getSubclass() ) {
 // todo : implement
 //			handleSubclass( persistentClass, mappings, subElement, inheritedMetas );
 		}
-		for ( XMLJoinedSubclass subclass : entityClazz.getJoinedSubclass() ) {
+		for ( XMLJoinedSubclassElement subclass : entityClazz.getJoinedSubclass() ) {
 // todo : implement
 //			handleJoinedSubclass( persistentClass, mappings, subElement, inheritedMetas );
 		}
-		for ( XMLUnionSubclass subclass : entityClazz.getUnionSubclass() ) {
+		for ( XMLUnionSubclassElement subclass : entityClazz.getUnionSubclass() ) {
 // todo : implement
 //			handleUnionSubclass( persistentClass, mappings, subElement, inheritedMetas );
 		}
-		for ( XMLFilter filter : entityClazz.getFilter() ) {
+		for ( XMLFilterElement filter : entityClazz.getFilter() ) {
 // todo : implement
 //				parseFilter( subElement, entityBinding );
 		}
@@ -388,18 +413,18 @@ PrimitiveArray
 		}
 		if ( entityClazz.getQueryOrSqlQuery() != null ) {
 			for ( Object queryOrSqlQuery : entityClazz.getQueryOrSqlQuery() ) {
-				if ( XMLQuery.class.isInstance( queryOrSqlQuery ) ) {
+				if ( XMLQueryElement.class.isInstance( queryOrSqlQuery ) ) {
 // todo : implement
 //				bindNamedQuery(subElement, persistentClass.getEntityName(), mappings);
 				}
-				else if ( XMLSqlQuery.class.isInstance( queryOrSqlQuery ) ) {
+				else if ( XMLSqlQueryElement.class.isInstance( queryOrSqlQuery ) ) {
 // todo : implement
 //			bindNamedSQLQuery(subElement, persistentClass.getEntityName(), mappings);
 				}
 			}
 		}
 		if ( entityClazz.getResultset() != null ) {
-			for ( XMLResultset resultSet : entityClazz.getResultset() ) {
+			for ( XMLResultsetElement resultSet : entityClazz.getResultset() ) {
 // todo : implement
 //				bindResultSetMappingDefinition( subElement, persistentClass.getEntityName(), mappings );
 			}
@@ -527,7 +552,7 @@ PrimitiveArray
 		}
 	}
 
-	protected void bindSimpleAttribute(XMLProperty property,
+	protected void bindSimpleAttribute(XMLPropertyElement property,
 									   SimpleAttributeBinding attributeBinding,
 									   EntityBinding entityBinding) {
 		if ( attributeBinding.getAttribute() == null ) {
@@ -555,7 +580,7 @@ PrimitiveArray
 	}
 
 	protected void bindBag(
-			XMLBag collection,
+			XMLBagElement collection,
 			PluralAttributeBinding collectionBinding,
 			EntityBinding entityBinding) {
 		if ( collectionBinding.getAttribute() == null ) {

@@ -34,8 +34,8 @@ import org.hibernate.MappingException;
 import org.hibernate.engine.ExecuteUpdateResultCheckStyle;
 import org.hibernate.metamodel.binding.CustomSQL;
 import org.hibernate.metamodel.domain.MetaAttribute;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLClass;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLMeta;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLMetaElement;
 import org.hibernate.metamodel.source.util.DomHelper;
 import org.hibernate.metamodel.source.util.MappingHelper;
 
@@ -69,15 +69,15 @@ public class HbmHelper {
 		return ExecuteUpdateResultCheckStyle.parse( check );
 	}
 
-	public static final Map<String, MetaAttribute> extractMetas(List<XMLMeta> meta, Map<String, MetaAttribute> baseline) {
+	public static final Map<String, MetaAttribute> extractMetas(List<XMLMetaElement> meta, Map<String, MetaAttribute> baseline) {
 		return extractMetas( meta, false, baseline );
 	}
 
-	public static final Map<String, MetaAttribute> extractMetas(List<XMLMeta> metaList, boolean onlyInheritable, Map<String, MetaAttribute> baseline) {
+	public static final Map<String, MetaAttribute> extractMetas(List<XMLMetaElement> metaList, boolean onlyInheritable, Map<String, MetaAttribute> baseline) {
 		Map<String, MetaAttribute> extractedMetas = new HashMap<String, MetaAttribute>();
 		extractedMetas.putAll( baseline );
-		for ( XMLMeta meta : metaList) {
-			boolean inheritable = Boolean.valueOf( meta.getInherit() );
+		for ( XMLMetaElement meta : metaList) {
+			boolean inheritable = meta.isInherit();
 			if ( onlyInheritable & !inheritable ) {
 				continue;
 			}
@@ -89,7 +89,7 @@ public class HbmHelper {
 				metaAttribute = new MetaAttribute( name );
 				extractedMetas.put( name, metaAttribute );
 			}
-			metaAttribute.addValue( meta.getContent() );
+			metaAttribute.addValue( meta.getValue() );
 		}
 		return extractedMetas;
 	}

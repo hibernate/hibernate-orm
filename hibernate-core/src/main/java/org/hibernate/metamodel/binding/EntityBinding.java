@@ -36,11 +36,11 @@ import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.metamodel.relational.Column;
 import org.hibernate.metamodel.relational.TableSpecification;
 import org.hibernate.metamodel.source.hbm.HbmHelper;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLClass;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlDelete;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlInsert;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlUpdate;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSynchronize;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlDeleteElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlInsertElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlUpdateElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSynchronizeElement;
 import org.hibernate.metamodel.source.util.MappingHelper;
 
 /**
@@ -92,12 +92,12 @@ public class EntityBinding {
 		metaAttributes = HbmHelper.extractMetas( entityClazz.getMeta(), true, defaults.getMappingMetas() );
 
 		// go ahead and set the lazy here, since pojo.proxy can override it.
-		lazy = MappingHelper.getBooleanValue( entityClazz.getLazy(), defaults.isDefaultLazy() );
+		lazy = MappingHelper.getBooleanValue( entityClazz.isLazy(), defaults.isDefaultLazy() );
 		discriminatorValue = MappingHelper.getStringValue( entityClazz.getDiscriminatorValue(), entity.getName() );
-		dynamicUpdate = MappingHelper.getBooleanValue( entityClazz.getDynamicUpdate(), false );
-		dynamicInsert = MappingHelper.getBooleanValue( entityClazz.getDynamicInsert(), false );
+		dynamicUpdate = entityClazz.isDynamicUpdate();
+		dynamicInsert = entityClazz.isDynamicInsert();
 		batchSize = MappingHelper.getIntValue( entityClazz.getBatchSize(), 0 );
-		selectBeforeUpdate = MappingHelper.getBooleanValue( entityClazz.getSelectBeforeUpdate(), false );
+		selectBeforeUpdate = entityClazz.isSelectBeforeUpdate();
 
 		// OPTIMISTIC LOCK MODE
 		String optimisticLockModeString = MappingHelper.getStringValue( entityClazz.getOptimisticLock(), "version" );
@@ -129,40 +129,40 @@ public class EntityBinding {
 		}
 
 		// CUSTOM SQL
-		XMLSqlInsert sqlInsert = entityClazz.getSqlInsert();
+		XMLSqlInsertElement sqlInsert = entityClazz.getSqlInsert();
 		if ( sqlInsert != null ) {
 			customInsert = HbmHelper.getCustomSql(
-					sqlInsert.getContent(),
-					MappingHelper.getBooleanValue( sqlInsert.getCallable(), false ),
-					sqlInsert.getCheck()
+					sqlInsert.getValue(),
+					sqlInsert.isCallable(),
+					sqlInsert.getCheck().value()
 			);
 		}
 
-		XMLSqlDelete sqlDelete = entityClazz.getSqlDelete();
+		XMLSqlDeleteElement sqlDelete = entityClazz.getSqlDelete();
 		if ( sqlDelete != null ) {
 			customDelete = HbmHelper.getCustomSql(
-					sqlDelete.getContent(),
-					MappingHelper.getBooleanValue( sqlDelete.getCallable(), false ),
-					sqlDelete.getCheck()
+					sqlDelete.getValue(),
+					sqlDelete.isCallable(),
+					sqlDelete.getCheck().value()
 			);
 		}
 
-		XMLSqlUpdate sqlUpdate = entityClazz.getSqlUpdate();
+		XMLSqlUpdateElement sqlUpdate = entityClazz.getSqlUpdate();
 		if ( sqlUpdate != null ) {
 			customUpdate = HbmHelper.getCustomSql(
-					sqlUpdate.getContent(),
-					MappingHelper.getBooleanValue( sqlUpdate.getCallable(), false ),
-					sqlUpdate.getCheck()
+					sqlUpdate.getValue(),
+					sqlUpdate.isCallable(),
+					sqlUpdate.getCheck().value()
 			);
 		}
 
 		if ( entityClazz.getSynchronize() != null ) {
-			for ( XMLSynchronize synchronize : entityClazz.getSynchronize() ) {
+			for ( XMLSynchronizeElement synchronize : entityClazz.getSynchronize() ) {
 				addSynchronizedTable( synchronize.getTable() );
 			}
 		}
 
-		isAbstract = MappingHelper.getBooleanValue( entityClazz.getAbstract(), false );
+		isAbstract = entityClazz.isAbstract();
 	}
 
 	public Entity getEntity() {

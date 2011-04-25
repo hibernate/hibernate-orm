@@ -30,11 +30,11 @@ import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.binding.MappingDefaults;
 import org.hibernate.metamodel.binding.SimpleAttributeBinding;
 import org.hibernate.metamodel.domain.MetaAttribute;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLId;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLDiscriminator;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLProperty;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLTimestamp;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLVersion;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLDiscriminator;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLId;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLTimestamp;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLVersion;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLPropertyElement;
 import org.hibernate.metamodel.source.util.MappingHelper;
 
 /**
@@ -68,7 +68,7 @@ public class HbmSimpleAttributeDomainState extends AbstractHbmAttributeDomainSta
 		this.isLazy = false;
 
 		this.propertyGeneration = PropertyGeneration.NEVER;
-		this.isInsertable = MappingHelper.getBooleanValue( discriminator.getInsert(), true );
+		this.isInsertable = discriminator.isInsert();
 		this.isUpdateable = false;
 	}
 
@@ -83,11 +83,11 @@ public class HbmSimpleAttributeDomainState extends AbstractHbmAttributeDomainSta
 		// for version properties marked as being generated, make sure they are "always"
 		// generated; aka, "insert" is invalid; this is dis-allowed by the DTD,
 		// but just to make sure.
-		this.propertyGeneration = PropertyGeneration.parse(  version.getGenerated()  );
+		this.propertyGeneration = PropertyGeneration.parse(  version.getGenerated().value()  );
 		if ( propertyGeneration == PropertyGeneration.INSERT ) {
 			throw new MappingException( "'generated' attribute cannot be 'insert' for versioning property" );
 		}
-		this.isInsertable = MappingHelper.getBooleanValue( version.getInsert(), true );
+		this.isInsertable = MappingHelper.getBooleanValue( version.isInsert(), true );
 		this.isUpdateable = true;
 	}
 
@@ -102,7 +102,7 @@ public class HbmSimpleAttributeDomainState extends AbstractHbmAttributeDomainSta
 		// for version properties marked as being generated, make sure they are "always"
 		// generated; aka, "insert" is invalid; this is dis-allowed by the DTD,
 		// but just to make sure.
-		this.propertyGeneration = PropertyGeneration.parse(  timestamp.getGenerated()  );
+		this.propertyGeneration = PropertyGeneration.parse(  timestamp.getGenerated().value()  );
 		if ( propertyGeneration == PropertyGeneration.INSERT ) {
 			throw new MappingException( "'generated' attribute cannot be 'insert' for versioning property" );
 		}
@@ -113,15 +113,15 @@ public class HbmSimpleAttributeDomainState extends AbstractHbmAttributeDomainSta
 	public HbmSimpleAttributeDomainState(MappingDefaults defaults,
 										 org.hibernate.metamodel.domain.Attribute attribute,
 										 Map<String, MetaAttribute> entityMetaAttributes,
-										 XMLProperty property) {
+										 XMLPropertyElement property) {
 		super( defaults, attribute, entityMetaAttributes, property );
-		this.isLazy = MappingHelper.getBooleanValue( property.getLazy(), false );
+		this.isLazy = property.isLazy();
 ;
 		this.propertyGeneration = PropertyGeneration.parse( property.getGenerated() );
 
 		if ( propertyGeneration == PropertyGeneration.ALWAYS || propertyGeneration == PropertyGeneration.INSERT ) {
 			// generated properties can *never* be insertable.
-			if ( property.getInsert() != null && Boolean.parseBoolean( property.getInsert() ) ) {
+			if (property.isInsert() != null && property.isInsert()) {
 				// the user specifically supplied insert="true", which constitutes an illegal combo
 				throw new MappingException(
 						"cannot specify both insert=\"true\" and generated=\"" + propertyGeneration.getName() +
@@ -132,10 +132,10 @@ public class HbmSimpleAttributeDomainState extends AbstractHbmAttributeDomainSta
 			isInsertable = false;
 		}
 		else {
-			isInsertable = MappingHelper.getBooleanValue( property.getInsert(), true );
+			isInsertable = MappingHelper.getBooleanValue( property.isInsert(), true );
 		}
 		if ( propertyGeneration == PropertyGeneration.ALWAYS ) {
-			if ( property.getUpdate() != null && Boolean.parseBoolean( property.getUpdate() ) ) {
+			if (property.isUpdate() != null && property.isUpdate()) {
 				// the user specifically supplied update="true",
 				// which constitutes an illegal combo
 				throw new MappingException(
@@ -147,10 +147,11 @@ public class HbmSimpleAttributeDomainState extends AbstractHbmAttributeDomainSta
 			isUpdateable = false;
 		}
 		else {
-			isUpdateable = MappingHelper.getBooleanValue( property.getUpdate(), true );
+			isUpdateable = MappingHelper.getBooleanValue( property.isUpdate(), true );
 		}
 	}
 
+	@Override
 	protected boolean isEmbedded() {
 		return false;
 	}

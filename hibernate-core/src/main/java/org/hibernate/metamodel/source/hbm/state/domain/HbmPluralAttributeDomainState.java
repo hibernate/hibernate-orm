@@ -38,12 +38,12 @@ import org.hibernate.metamodel.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.domain.Attribute;
 import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.metamodel.source.hbm.HbmHelper;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLBag;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSynchronize;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlDelete;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlDeleteAll;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlInsert;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlUpdate;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLBagElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlDeleteAllElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlDeleteElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlInsertElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlUpdateElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSynchronizeElement;
 
 import org.hibernate.metamodel.source.util.MappingHelper;
 
@@ -52,10 +52,10 @@ import org.hibernate.metamodel.source.util.MappingHelper;
  * @author Gail Badner
  */
 public class HbmPluralAttributeDomainState extends AbstractHbmAttributeDomainState implements PluralAttributeBinding.DomainState {
-	private final XMLBag collection;
+	private final XMLBagElement collection;
 
 	public HbmPluralAttributeDomainState(MappingDefaults defaults,
-										 XMLBag collection,
+										 XMLBagElement collection,
 										 Map<String, MetaAttribute> entityMetaAttributes,
 										 Attribute attribute) {
 		super( defaults, attribute, entityMetaAttributes, collection );
@@ -68,7 +68,7 @@ public class HbmPluralAttributeDomainState extends AbstractHbmAttributeDomainSta
 			fetchMode = "join".equals( collection.getFetch() ) ? FetchMode.JOIN : FetchMode.SELECT;
 		}
 		else {
-			String jfNodeValue = ( collection.getOuterJoin() == null ? "auto" : collection.getOuterJoin() );
+			String jfNodeValue = ( collection.getOuterJoin().value() == null ? "auto" : collection.getOuterJoin().value() );
 			if ( "auto".equals( jfNodeValue ) ) {
 				fetchMode = FetchMode.DEFAULT;
 			}
@@ -84,7 +84,7 @@ public class HbmPluralAttributeDomainState extends AbstractHbmAttributeDomainSta
 
 	public boolean isLazy() {
 		return isExtraLazy() ||
-				MappingHelper.getBooleanValue( collection.getLazy(), getDefaults().isDefaultLazy());
+				MappingHelper.getBooleanValue( collection.getLazy().value(), getDefaults().isDefaultLazy());
 	}
 
 	public boolean isExtraLazy() {
@@ -98,11 +98,11 @@ public class HbmPluralAttributeDomainState extends AbstractHbmAttributeDomainSta
 	}
 
 	public boolean isInverse() {
-		return MappingHelper.getBooleanValue( collection.getInverse(), false );
+		return collection.isInverse();
 	}
 
 	public boolean isMutable() {
-		return MappingHelper.getBooleanValue( collection.getMutable(), true );
+		return collection.isMutable();
 	}
 
 	public boolean isSubselectLoadable() {
@@ -157,11 +157,12 @@ public class HbmPluralAttributeDomainState extends AbstractHbmAttributeDomainSta
 	public int getBatchSize() {
 		return MappingHelper.getIntValue( collection.getBatchSize(), 0 );
 	}
+	@Override
 	public boolean isEmbedded() {
-		return MappingHelper.getBooleanValue( collection.getEmbedXml(), true );
+		return collection.isEmbedXml();
 	}
 	public boolean isOptimisticLocked() {
-		return MappingHelper.getBooleanValue( collection.getOptimisticLock(), true );
+		return collection.isOptimisticLock();
 	}
 
 	public Class getCollectionPersisterClass() {
@@ -204,50 +205,50 @@ public class HbmPluralAttributeDomainState extends AbstractHbmAttributeDomainSta
 	}
 	public java.util.Set getSynchronizedTables() {
 		java.util.Set<String> synchronizedTables = new HashSet<String>();
-		for ( XMLSynchronize sync : collection.getSynchronize() ) {
+		for ( XMLSynchronizeElement sync : collection.getSynchronize() ) {
 			synchronizedTables.add( sync.getTable() );
 		}
 		return synchronizedTables;
 	}
 
 	public CustomSQL getCustomSQLInsert() {
-		XMLSqlInsert sqlInsert = collection.getSqlInsert();
+		XMLSqlInsertElement sqlInsert = collection.getSqlInsert();
 		return sqlInsert == null ?
 				null :
 				HbmHelper.getCustomSql(
-						collection.getSqlInsert().getContent(),
-						MappingHelper.getBooleanValue( collection.getSqlInsert().getCallable(), false ),
-						collection.getSqlInsert().getCheck()
+						collection.getSqlInsert().getValue(),
+						collection.getSqlInsert().isCallable(),
+						collection.getSqlInsert().getCheck().value()
 				);
 	}
 	public CustomSQL getCustomSQLUpdate() {
-		XMLSqlUpdate sqlUpdate = collection.getSqlUpdate();
+		XMLSqlUpdateElement sqlUpdate = collection.getSqlUpdate();
 		return sqlUpdate == null ?
 				null :
 				HbmHelper.getCustomSql(
-						collection.getSqlUpdate().getContent(),
-						MappingHelper.getBooleanValue( collection.getSqlUpdate().getCallable(), false ),
-						collection.getSqlUpdate().getCheck()
+						collection.getSqlUpdate().getValue(),
+						collection.getSqlUpdate().isCallable(),
+						collection.getSqlUpdate().getCheck().value()
 				);
 	}
 	public CustomSQL getCustomSQLDelete() {
-		XMLSqlDelete sqlDelete = collection.getSqlDelete();
+		XMLSqlDeleteElement sqlDelete = collection.getSqlDelete();
 		return sqlDelete == null ?
 				null :
 				HbmHelper.getCustomSql(
-						collection.getSqlDelete().getContent(),
-						MappingHelper.getBooleanValue( collection.getSqlDelete().getCallable(), false ),
-						collection.getSqlDelete().getCheck()
+						collection.getSqlDelete().getValue(),
+						collection.getSqlDelete().isCallable(),
+						collection.getSqlDelete().getCheck().value()
 				);
 	}
 	public CustomSQL getCustomSQLDeleteAll() {
-		XMLSqlDeleteAll sqlDeleteAll = collection.getSqlDeleteAll();
+		XMLSqlDeleteAllElement sqlDeleteAll = collection.getSqlDeleteAll();
 		return sqlDeleteAll == null ?
 				null :
 				HbmHelper.getCustomSql(
-						collection.getSqlDeleteAll().getContent(),
-						MappingHelper.getBooleanValue( collection.getSqlDeleteAll().getCallable(), false ),
-						collection.getSqlDeleteAll().getCheck()
+						collection.getSqlDeleteAll().getValue(),
+						collection.getSqlDeleteAll().isCallable(),
+						collection.getSqlDeleteAll().getCheck().value()
 				);
 	}
 	public String getLoaderName() {

@@ -1,255 +1,147 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-  ~ Hibernate, Relational Persistence for Idiomatic Java
-  ~
-  ~ Copyright (c) 2011, Red Hat Inc. or third-party contributors as
-  ~ indicated by the @author tags or express copyright attribution
-  ~ statements applied by the authors.  All third-party contributions are
-  ~ distributed under license by Red Hat Inc.
-  ~
-  ~ This copyrighted material is made available to anyone wishing to use, modify,
-  ~ copy, or redistribute it subject to the terms and conditions of the GNU
-  ~ Lesser General Public License, as published by the Free Software Foundation.
-  ~
-  ~ This program is distributed in the hope that it will be useful,
-  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-  ~ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
-  ~ for more details.
-  ~
-  ~ You should have received a copy of the GNU Lesser General Public License
-  ~ along with this distribution; if not, write to:
-  ~ Free Software Foundation, Inc.
-  ~ 51 Franklin Street, Fifth Floor
-  ~ Boston, MA  02110-1301  USA
-  -->
 
-<!--
-  Hibernate file-based configuration document.
-  
-  <!DOCTYPE hibernate-configuration PUBLIC
-  	"-//Hibernate/Hibernate Configuration DTD 3.0//EN"
-  	"http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
-  
-  An instance of this document contains property settings and references
-  to mapping files for a number of SessionFactory instances to be listed
-  in JNDI.
-  
+<!-- Hibernate file-based configuration document.
+
+An instance of this document contains property settings and references
+to mapping files for a number of SessionFactory instances to be listed
+in JNDI.
+
 -->
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified"
-  targetNamespace="http://www.hibernate.org/xsd/hibernate-configuration"
-  xmlns:config="http://www.hibernate.org/xsd/hibernate-configuration" version="4.0">
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns="http://www.hibernate.org/xsd/hibernate-configuration"
+           targetNamespace="http://www.hibernate.org/xsd/hibernate-configuration"
+           version="4.0">
+
   <xs:element name="hibernate-configuration">
     <xs:complexType>
       <xs:sequence>
-        <xs:element ref="config:session-factory"/>
-        <xs:element minOccurs="0" ref="config:security"/>
+        <xs:element name="session-factory">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="property" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType mixed="true">
+                  <xs:simpleContent>
+                    <xs:extension base="xs:string">
+                      <xs:attribute name="name" use="required" type="xs:string"/> <!-- reference to a mapping file -->
+                    </xs:extension>
+                  </xs:simpleContent>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="mapping" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:attribute name="class" type="xs:string"/>
+                  <xs:attribute name="file" type="xs:string"/>
+                  <xs:attribute name="jar" type="xs:string"/>
+                  <xs:attribute name="package" type="xs:string"/>
+                  <xs:attribute name="resource" type="xs:string"/>
+                </xs:complexType>
+              </xs:element>
+              <xs:choice minOccurs="0" maxOccurs="unbounded">
+                <xs:element name="class-cache">
+                  <xs:complexType>
+                    <xs:attribute name="class" use="required" type="xs:string"/>
+                    <xs:attribute name="include" default="all">
+                      <xs:simpleType>
+                        <xs:restriction base="xs:token">
+                          <xs:enumeration value="all"/>
+                          <xs:enumeration value="non-lazy"/>
+                        </xs:restriction>
+                      </xs:simpleType>
+                    </xs:attribute>
+                    <xs:attribute name="region" type="xs:string"/>
+                    <xs:attribute name="usage" use="required" type="usage-attribute"/>
+                  </xs:complexType>
+                </xs:element>
+                <xs:element name="collection-cache">
+                  <xs:complexType>
+                    <xs:attribute name="collection" use="required" type="xs:string"/>
+                    <xs:attribute name="region" type="xs:string"/>
+                    <xs:attribute name="usage" use="required" type="usage-attribute"/>
+                  </xs:complexType>
+                </xs:element>
+              </xs:choice>
+              <xs:element name="event" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="listener" minOccurs="0" maxOccurs="unbounded" type="listener-element"/>
+                  </xs:sequence>
+                  <xs:attribute name="type" use="required" type="type-attribute"/>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="listener" minOccurs="0" maxOccurs="unbounded" type="listener-element"/>
+            </xs:sequence>
+            <xs:attribute name="name" type="xs:string"/> <!-- the JNDI name -->
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="security" minOccurs="0">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="grant" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:attribute name="actions" use="required" type="xs:string"/>
+                  <xs:attribute name="entity-name" use="required" type="xs:string"/>
+                  <xs:attribute name="role" use="required" type="xs:string"/>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+            <xs:attribute name="context" use="required" type="xs:string"/> <!--the JACC contextID-->
+          </xs:complexType>
+        </xs:element>
       </xs:sequence>
     </xs:complexType>
   </xs:element>
-  <xs:element name="property">
-    <xs:complexType mixed="true">
-      <xs:attributeGroup ref="config:attlist.property"/>
-    </xs:complexType>
-  </xs:element>
-  <xs:attributeGroup name="attlist.property">
-    <xs:attribute name="name" use="required"/>
-  </xs:attributeGroup>
-  <xs:element name="mapping">
-    <xs:complexType>
-      <xs:attributeGroup ref="config:attlist.mapping"/>
-    </xs:complexType>
-  </xs:element>
-  <!-- reference to a mapping file -->
-  <xs:attributeGroup name="attlist.mapping">
-    <xs:attribute name="resource"/>
-    <xs:attribute name="file"/>
-    <xs:attribute name="jar"/>
-    <xs:attribute name="package"/>
-    <xs:attribute name="class"/>
-  </xs:attributeGroup>
-  <xs:element name="class-cache">
-    <xs:complexType>
-      <xs:attributeGroup ref="config:attlist.class-cache"/>
-    </xs:complexType>
-  </xs:element>
-  <xs:attributeGroup name="attlist.class-cache">
-    <xs:attribute name="class" use="required"/>
-    <xs:attribute name="region"/>
-    <xs:attribute name="usage" use="required">
-      <xs:simpleType>
-        <xs:restriction base="xs:token">
-          <xs:enumeration value="read-only"/>
-          <xs:enumeration value="read-write"/>
-          <xs:enumeration value="nonstrict-read-write"/>
-          <xs:enumeration value="transactional"/>
-        </xs:restriction>
-      </xs:simpleType>
-    </xs:attribute>
-    <xs:attribute name="include" default="all">
-      <xs:simpleType>
-        <xs:restriction base="xs:token">
-          <xs:enumeration value="all"/>
-          <xs:enumeration value="non-lazy"/>
-        </xs:restriction>
-      </xs:simpleType>
-    </xs:attribute>
-  </xs:attributeGroup>
-  <xs:element name="collection-cache">
-    <xs:complexType>
-      <xs:attributeGroup ref="config:attlist.collection-cache"/>
-    </xs:complexType>
-  </xs:element>
-  <xs:attributeGroup name="attlist.collection-cache">
-    <xs:attribute name="collection" use="required"/>
-    <xs:attribute name="region"/>
-    <xs:attribute name="usage" use="required">
-      <xs:simpleType>
-        <xs:restriction base="xs:token">
-          <xs:enumeration value="read-only"/>
-          <xs:enumeration value="read-write"/>
-          <xs:enumeration value="nonstrict-read-write"/>
-          <xs:enumeration value="transactional"/>
-        </xs:restriction>
-      </xs:simpleType>
-    </xs:attribute>
-  </xs:attributeGroup>
-  <xs:element name="event">
-    <xs:complexType>
-      <xs:sequence>
-        <xs:element minOccurs="0" maxOccurs="unbounded" ref="config:listener"/>
-      </xs:sequence>
-      <xs:attributeGroup ref="config:attlist.event"/>
-    </xs:complexType>
-  </xs:element>
-  <xs:attributeGroup name="attlist.event">
-    <xs:attribute name="type" use="required">
-      <xs:simpleType>
-        <xs:restriction base="xs:token">
-          <xs:enumeration value="auto-flush"/>
-          <xs:enumeration value="merge"/>
-          <xs:enumeration value="create"/>
-          <xs:enumeration value="create-onflush"/>
-          <xs:enumeration value="delete"/>
-          <xs:enumeration value="dirty-check"/>
-          <xs:enumeration value="evict"/>
-          <xs:enumeration value="flush"/>
-          <xs:enumeration value="flush-entity"/>
-          <xs:enumeration value="load"/>
-          <xs:enumeration value="load-collection"/>
-          <xs:enumeration value="lock"/>
-          <xs:enumeration value="refresh"/>
-          <xs:enumeration value="replicate"/>
-          <xs:enumeration value="save-update"/>
-          <xs:enumeration value="save"/>
-          <xs:enumeration value="update"/>
-          <xs:enumeration value="pre-load"/>
-          <xs:enumeration value="pre-update"/>
-          <xs:enumeration value="pre-insert"/>
-          <xs:enumeration value="pre-delete"/>
-          <xs:enumeration value="pre-collection-recreate"/>
-          <xs:enumeration value="pre-collection-remove"/>
-          <xs:enumeration value="pre-collection-update"/>
-          <xs:enumeration value="post-load"/>
-          <xs:enumeration value="post-update"/>
-          <xs:enumeration value="post-insert"/>
-          <xs:enumeration value="post-delete"/>
-          <xs:enumeration value="post-collection-recreate"/>
-          <xs:enumeration value="post-collection-remove"/>
-          <xs:enumeration value="post-collection-update"/>
-          <xs:enumeration value="post-commit-update"/>
-          <xs:enumeration value="post-commit-insert"/>
-          <xs:enumeration value="post-commit-delete"/>
-        </xs:restriction>
-      </xs:simpleType>
-    </xs:attribute>
-  </xs:attributeGroup>
-  <xs:element name="listener">
-    <xs:complexType>
-      <xs:attributeGroup ref="config:attlist.listener"/>
-    </xs:complexType>
-  </xs:element>
-  <xs:attributeGroup name="attlist.listener">
-    <xs:attribute name="type">
-      <xs:simpleType>
-        <xs:restriction base="xs:token">
-          <xs:enumeration value="auto-flush"/>
-          <xs:enumeration value="merge"/>
-          <xs:enumeration value="create"/>
-          <xs:enumeration value="create-onflush"/>
-          <xs:enumeration value="delete"/>
-          <xs:enumeration value="dirty-check"/>
-          <xs:enumeration value="evict"/>
-          <xs:enumeration value="flush"/>
-          <xs:enumeration value="flush-entity"/>
-          <xs:enumeration value="load"/>
-          <xs:enumeration value="load-collection"/>
-          <xs:enumeration value="lock"/>
-          <xs:enumeration value="refresh"/>
-          <xs:enumeration value="replicate"/>
-          <xs:enumeration value="save-update"/>
-          <xs:enumeration value="save"/>
-          <xs:enumeration value="update"/>
-          <xs:enumeration value="pre-load"/>
-          <xs:enumeration value="pre-update"/>
-          <xs:enumeration value="pre-insert"/>
-          <xs:enumeration value="pre-delete"/>
-          <xs:enumeration value="pre-collection-recreate"/>
-          <xs:enumeration value="pre-collection-remove"/>
-          <xs:enumeration value="pre-collection-update"/>
-          <xs:enumeration value="post-load"/>
-          <xs:enumeration value="post-update"/>
-          <xs:enumeration value="post-insert"/>
-          <xs:enumeration value="post-delete"/>
-          <xs:enumeration value="post-collection-recreate"/>
-          <xs:enumeration value="post-collection-remove"/>
-          <xs:enumeration value="post-collection-update"/>
-          <xs:enumeration value="post-commit-update"/>
-          <xs:enumeration value="post-commit-insert"/>
-          <xs:enumeration value="post-commit-delete"/>
-        </xs:restriction>
-      </xs:simpleType>
-    </xs:attribute>
-    <xs:attribute name="class" use="required"/>
-  </xs:attributeGroup>
-  <xs:element name="session-factory">
-    <xs:complexType>
-      <xs:sequence>
-        <xs:element minOccurs="0" maxOccurs="unbounded" ref="config:property"/>
-        <xs:element minOccurs="0" maxOccurs="unbounded" ref="config:mapping"/>
-        <xs:choice minOccurs="0" maxOccurs="unbounded">
-          <xs:element ref="config:class-cache"/>
-          <xs:element ref="config:collection-cache"/>
-        </xs:choice>
-        <xs:element minOccurs="0" maxOccurs="unbounded" ref="config:event"/>
-        <xs:element minOccurs="0" maxOccurs="unbounded" ref="config:listener"/>
-      </xs:sequence>
-      <xs:attributeGroup ref="config:attlist.session-factory"/>
-    </xs:complexType>
-  </xs:element>
-  <xs:attributeGroup name="attlist.session-factory">
-    <xs:attribute name="name"/>
-  </xs:attributeGroup>
-  <!-- the JNDI name -->
-  <xs:element name="security">
-    <xs:complexType>
-      <xs:sequence>
-        <xs:element minOccurs="0" maxOccurs="unbounded" ref="config:grant"/>
-      </xs:sequence>
-      <xs:attributeGroup ref="config:attlist.security"/>
-    </xs:complexType>
-  </xs:element>
-  <xs:attributeGroup name="attlist.security">
-    <xs:attribute name="context" use="required"/>
-  </xs:attributeGroup>
-  <!-- the JACC contextID -->
-  <xs:element name="grant">
-    <xs:complexType>
-      <xs:attributeGroup ref="config:attlist.grant"/>
-    </xs:complexType>
-  </xs:element>
-  <xs:attributeGroup name="attlist.grant">
-    <xs:attribute name="role" use="required"/>
-    <xs:attribute name="entity-name" use="required"/>
-    <xs:attribute name="actions" use="required"/>
-  </xs:attributeGroup>
+
+  <xs:complexType name="listener-element">
+    <xs:attribute name="class" use="required" type="xs:string"/>
+    <xs:attribute name="type" type="type-attribute"/>
+  </xs:complexType>
+
+  <xs:simpleType name="type-attribute">
+    <xs:restriction base="xs:token">
+      <xs:enumeration value="auto-flush"/>
+      <xs:enumeration value="create"/>
+      <xs:enumeration value="create-onflush"/>
+      <xs:enumeration value="delete"/>
+      <xs:enumeration value="dirty-check"/>
+      <xs:enumeration value="evict"/>
+      <xs:enumeration value="flush"/>
+      <xs:enumeration value="flush-entity"/>
+      <xs:enumeration value="load"/>
+      <xs:enumeration value="load-collection"/>
+      <xs:enumeration value="lock"/>
+      <xs:enumeration value="merge"/>
+      <xs:enumeration value="post-collection-recreate"/>
+      <xs:enumeration value="post-collection-remove"/>
+      <xs:enumeration value="post-collection-update"/>
+      <xs:enumeration value="post-commit-delete"/>
+      <xs:enumeration value="post-commit-insert"/>
+      <xs:enumeration value="post-commit-update"/>
+      <xs:enumeration value="post-delete"/>
+      <xs:enumeration value="post-insert"/>
+      <xs:enumeration value="post-load"/>
+      <xs:enumeration value="post-update"/>
+      <xs:enumeration value="pre-collection-recreate"/>
+      <xs:enumeration value="pre-collection-remove"/>
+      <xs:enumeration value="pre-collection-update"/>
+      <xs:enumeration value="pre-delete"/>
+      <xs:enumeration value="pre-insert"/>
+      <xs:enumeration value="pre-load"/>
+      <xs:enumeration value="pre-update"/>
+      <xs:enumeration value="refresh"/>
+      <xs:enumeration value="replicate"/>
+      <xs:enumeration value="save"/>
+      <xs:enumeration value="save-update"/>
+      <xs:enumeration value="update"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="usage-attribute">
+    <xs:restriction base="xs:token">
+      <xs:enumeration value="nonstrict-read-write"/>
+      <xs:enumeration value="read-only"/>
+      <xs:enumeration value="read-write"/>
+      <xs:enumeration value="transactional"/>
+    </xs:restriction>
+  </xs:simpleType>
+
 </xs:schema>

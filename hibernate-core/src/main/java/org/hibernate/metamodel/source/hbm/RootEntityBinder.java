@@ -33,10 +33,10 @@ import org.hibernate.metamodel.relational.Column;
 import org.hibernate.metamodel.relational.Identifier;
 import org.hibernate.metamodel.relational.InLineView;
 import org.hibernate.metamodel.relational.Schema;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLCache;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLClass;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLCompositeId;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLId;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLCacheElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLCompositeId;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLId;
 import org.hibernate.metamodel.source.util.MappingHelper;
 
 /**
@@ -60,9 +60,7 @@ class RootEntityBinder extends AbstractEntityBinder {
 		basicEntityBinding( xmlClazz, entityBinding, null );
 		basicTableBinding( xmlClazz, entityBinding );
 
-		if ( xmlClazz.getMutable() != null ) {
-			entityBinding.setMutable( Boolean.valueOf( xmlClazz.getMutable() ) );
-		}
+		entityBinding.setMutable( xmlClazz.isMutable() );
 
 		if ( xmlClazz.getWhere() != null ) {
 			entityBinding.setWhereFilter( xmlClazz.getWhere() );
@@ -92,7 +90,7 @@ class RootEntityBinder extends AbstractEntityBinder {
 		final Schema schema = getHibernateXmlBinder().getMetadata().getDatabase().getSchema( getSchemaName() );
 
 		final String subSelect =
-				xmlClazz.getSubselect() == null ? xmlClazz.getSubselectElement() : xmlClazz.getSubselect();
+				xmlClazz.getSubselectAttribute() == null ? xmlClazz.getSubselect() : xmlClazz.getSubselectAttribute();
 		if ( subSelect != null ) {
 			final String logicalName = entityBinding.getEntity().getName();
 			InLineView inLineView = schema.getInLineView( logicalName );
@@ -241,7 +239,7 @@ class RootEntityBinder extends AbstractEntityBinder {
 		// Handle the relational portion of the binding...
 		bindSimpleAttribute( xmlEntityClazz.getDiscriminator(), discriminatorBinding, entityBinding, RootClass.DEFAULT_DISCRIMINATOR_COLUMN_NAME );
 
-		entityBinding.getEntityDiscriminator().setForced( MappingHelper.getBooleanValue( xmlEntityClazz.getDiscriminator().getForce(), false ) );
+		entityBinding.getEntityDiscriminator().setForced(xmlEntityClazz.getDiscriminator().isForce());
 	}
 
 	private void bindVersion(XMLClass xmlEntityClazz,
@@ -276,7 +274,7 @@ class RootEntityBinder extends AbstractEntityBinder {
 
 	private void bindCaching(XMLClass xmlClazz,
 							 EntityBinding entityBinding) {
-		XMLCache cache = xmlClazz.getCache();
+		XMLCacheElement cache = xmlClazz.getCache();
 		if ( cache == null ) {
 			return;
 		}

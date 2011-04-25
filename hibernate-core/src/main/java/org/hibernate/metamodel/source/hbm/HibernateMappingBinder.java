@@ -36,16 +36,16 @@ import org.hibernate.metamodel.binding.MappingDefaults;
 import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.metamodel.source.Origin;
 import org.hibernate.metamodel.source.internal.JaxbRoot;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLClass;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLFetch;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLFetchProfile;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLFetchProfileElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLFetchProfileElement.XMLFetch;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLImport;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLJoinedSubclass;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLQuery;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlQuery;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSubclass;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLUnionSubclass;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLImport;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLJoinedSubclassElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLQueryElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlQueryElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSubclassElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLUnionSubclassElement;
 import org.hibernate.metamodel.source.util.MappingHelper;
 
 /**
@@ -76,10 +76,9 @@ class HibernateMappingBinder implements MappingDefaults {
 		defaultCatalogName = hibernateMapping.getCatalog();
 		defaultCascade = MappingHelper.getStringValue( hibernateMapping.getDefaultCascade(), "none" );
 		defaultAccess = MappingHelper.getStringValue( hibernateMapping.getDefaultAccess(), "property" );
-		//TODO: shouldn't default-lazy default to true???
-		defaultLazy = MappingHelper.getBooleanValue( hibernateMapping.getDefaultLazy(), false );
+		defaultLazy = hibernateMapping.isDefaultLazy();
 		packageName = hibernateMapping.getPackage();
-		autoImport = MappingHelper.getBooleanValue( hibernateMapping.getAutoImport(), false );
+		autoImport = hibernateMapping.isAutoImport();
 
 		mappingMetas = HbmHelper.extractMetas( hibernateMapping.getMeta(), true, hibernateXmlBinder.getGlobalMetas() );
 	}
@@ -152,15 +151,15 @@ class HibernateMappingBinder implements MappingDefaults {
 							XMLClass.class.cast( clazzOrSubclass );
 					new RootEntityBinder( this, clazz ).process( clazz );
 				}
-				else if ( XMLSubclass.class.isInstance( clazzOrSubclass ) ) {
+				else if ( XMLSubclassElement.class.isInstance( clazzOrSubclass ) ) {
 //					PersistentClass superModel = getSuperclass( mappings, element );
 //					handleSubclass( superModel, mappings, element, inheritedMetas );
 				}
-				else if ( XMLJoinedSubclass.class.isInstance( clazzOrSubclass ) ) {
+				else if ( XMLJoinedSubclassElement.class.isInstance( clazzOrSubclass ) ) {
 //					PersistentClass superModel = getSuperclass( mappings, element );
 //					handleJoinedSubclass( superModel, mappings, element, inheritedMetas );
 				}
-				else if ( XMLUnionSubclass.class.isInstance( clazzOrSubclass ) ) {
+				else if ( XMLUnionSubclassElement.class.isInstance( clazzOrSubclass ) ) {
 //					PersistentClass superModel = getSuperclass( mappings, element );
 //					handleUnionSubclass( superModel, mappings, element, inheritedMetas );
 				}
@@ -173,10 +172,10 @@ class HibernateMappingBinder implements MappingDefaults {
 		}
 		if ( hibernateMapping.getQueryOrSqlQuery() != null ) {
 			for ( Object queryOrSqlQuery : hibernateMapping.getQueryOrSqlQuery() ) {
-				if ( XMLQuery.class.isInstance( queryOrSqlQuery ) ) {
+				if ( XMLQueryElement.class.isInstance( queryOrSqlQuery ) ) {
 //					bindNamedQuery( element, null, mappings );
 				}
-				else if ( XMLSqlQuery.class.isInstance( queryOrSqlQuery ) ) {
+				else if ( XMLSqlQueryElement.class.isInstance( queryOrSqlQuery ) ) {
 //				bindNamedSQLQuery( element, null, mappings );
 				}
 				else {
@@ -206,8 +205,8 @@ class HibernateMappingBinder implements MappingDefaults {
 		}
 	}
 
-	protected void parseFetchProfiles(List<XMLFetchProfile> fetchProfiles, String containingEntityName) {
-		for ( XMLFetchProfile fetchProfile : fetchProfiles ) {
+	protected void parseFetchProfiles(List<XMLFetchProfileElement> fetchProfiles, String containingEntityName) {
+		for ( XMLFetchProfileElement fetchProfile : fetchProfiles ) {
 			String profileName = fetchProfile.getName();
 			org.hibernate.metamodel.binding.FetchProfile profile = hibernateXmlBinder.getMetadata().findOrCreateFetchProfile( profileName, MetadataSource.HBM );
 			for (  XMLFetch fetch : fetchProfile.getFetch() ) {

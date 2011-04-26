@@ -23,7 +23,6 @@
  */
 package org.hibernate.internal;
 
-import javax.naming.InvalidNameException;
 import javax.naming.NameNotFoundException;
 import javax.naming.NamingException;
 import javax.transaction.Synchronization;
@@ -438,10 +437,6 @@ public interface CoreMessageLogger extends BasicLogger {
     @LogMessage( level = WARN )
     @Message( value = "Could not bind JNDI listener", id = 127 )
     void couldNotBindJndiListener();
-
-    @LogMessage( level = WARN )
-    @Message( value = "InitialContext did not implement EventContext", id = 128 )
-    void initialContextDoesNotImplementEventContext();
 
     @LogMessage( level = INFO )
     @Message( value = "Instantiating explicit connection provider: %s", id = 130 )
@@ -900,7 +895,7 @@ public interface CoreMessageLogger extends BasicLogger {
 
     @LogMessage( level = WARN )
     @Message( value = "Could not bind Ejb3Configuration to JNDI", id = 276 )
-    void unableToBindEjb3ConfigurationToJndi( @Cause NamingException e );
+    void unableToBindEjb3ConfigurationToJndi( @Cause JndiException e );
 
     @LogMessage( level = WARN )
     @Message( value = "Could not bind factory to JNDI", id = 277 )

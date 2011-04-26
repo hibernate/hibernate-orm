@@ -23,21 +23,12 @@
  */
 package org.hibernate.metamodel.binding;
 
-import java.io.IOException;
-import java.io.InputStream;
-
-import org.jboss.jandex.Index;
-import org.jboss.jandex.Indexer;
+import org.junit.Test;
 
 import org.hibernate.metamodel.source.MetadataSources;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
 import org.hibernate.service.ServiceRegistryBuilder;
-
-import org.junit.Test;
-
 import org.hibernate.testing.FailureExpected;
-
-import static org.junit.Assert.fail;
 
 /**
  * Basic tests of annotation based binding code
@@ -59,34 +50,18 @@ public class BasicAnnotationBindingTests extends AbstractBasicBindingTests {
 	}
 
 	public EntityBinding buildSimpleEntityBinding() {
-		Index index = indexForClass( SimpleEntity.class );
-		MetadataImpl metadata = (MetadataImpl) new MetadataSources( new ServiceRegistryBuilder().buildServiceRegistry() ).buildMetadata();
-		metadata.getAnnotationBinder().bindMappedClasses( index );
+		MetadataSources sources = new MetadataSources( new ServiceRegistryBuilder().buildServiceRegistry() );
+		sources.addAnnotatedClass( SimpleEntity.class );
+		MetadataImpl metadata = (MetadataImpl) sources.buildMetadata();
 
 		return metadata.getEntityBinding( SimpleEntity.class.getSimpleName() );
 	}
 
 	public EntityBinding buildSimpleVersionedEntityBinding() {
-		Index index = indexForClass( SimpleEntity.class );
-		MetadataImpl metadata = (MetadataImpl) new MetadataSources( new ServiceRegistryBuilder().buildServiceRegistry() ).buildMetadata();
-		metadata.getAnnotationBinder().bindMappedClasses( index );
+		MetadataSources sources = new MetadataSources( new ServiceRegistryBuilder().buildServiceRegistry() );
+		sources.addAnnotatedClass( SimpleVersionedEntity.class );
+		MetadataImpl metadata = (MetadataImpl) sources.buildMetadata();
 
 		return metadata.getEntityBinding( SimpleVersionedEntity.class.getSimpleName() );
-	}
-
-	private Index indexForClass(Class<?>... classes) {
-		Indexer indexer = new Indexer();
-		for ( Class<?> clazz : classes ) {
-			InputStream stream = getClass().getClassLoader().getResourceAsStream(
-					clazz.getName().replace( '.', '/' ) + ".class"
-			);
-			try {
-				indexer.index( stream );
-			}
-			catch ( IOException e ) {
-				fail( "Unable to index" );
-			}
-		}
-		return indexer.complete();
 	}
 }

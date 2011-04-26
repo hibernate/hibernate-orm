@@ -56,7 +56,7 @@ public class MetadataSources {
 	private static final Logger LOG = Logger.getLogger( MetadataSources.class );
 
 	private List<JaxbRoot> jaxbRootList = new ArrayList<JaxbRoot>();
-	private LinkedHashSet<Class> annotatedClasses = new LinkedHashSet<Class>();
+	private LinkedHashSet<Class<?>> annotatedClasses = new LinkedHashSet<Class<?>>();
 	private LinkedHashSet<String> annotatedPackages = new LinkedHashSet<String>();
 
 	private final JaxbHelper jaxbHelper;
@@ -85,7 +85,7 @@ public class MetadataSources {
 		return annotatedPackages;
 	}
 
-	public Iterable<Class> getAnnotatedClasses() {
+	public Iterable<Class<?>> getAnnotatedClasses() {
 		return annotatedClasses;
 	}
 

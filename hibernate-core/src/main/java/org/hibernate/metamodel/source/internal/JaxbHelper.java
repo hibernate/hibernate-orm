@@ -24,10 +24,16 @@
 
 package org.hibernate.metamodel.source.internal;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import javax.xml.XMLConstants;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.bind.ValidationEvent;
+import javax.xml.bind.ValidationEventHandler;
+import javax.xml.bind.ValidationEventLocator;
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLInputFactory;
@@ -38,9 +44,6 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
 
 import org.jboss.logging.Logger;
 import org.w3c.dom.Document;
@@ -56,7 +59,10 @@ import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 
 /**
+ * Helper class for unmarshalling xml configuration using StAX and JAXB.
+ *
  * @author Steve Ebersole
+ * @author Hardy Ferentschik
  */
 public class JaxbHelper {
 	private static final Logger log = Logger.getLogger( JaxbHelper.class );
@@ -79,11 +85,11 @@ public class JaxbHelper {
 				try {
 					staxReader.close();
 				}
-				catch (Exception ignore) {
+				catch ( Exception ignore ) {
 				}
 			}
 		}
-		catch (XMLStreamException e) {
+		catch ( XMLStreamException e ) {
 			throw new MappingException( "Unable to create stax reader", e, origin );
 		}
 	}
@@ -97,25 +103,25 @@ public class JaxbHelper {
 		return staxFactory;
 	}
 
-	@SuppressWarnings( {"UnnecessaryLocalVariable"})
+	@SuppressWarnings( { "UnnecessaryLocalVariable" })
 	private XMLInputFactory buildStaxFactory() {
 		XMLInputFactory staxFactory = XMLInputFactory.newInstance();
 		return staxFactory;
 	}
 
-	private static final QName ORM_VERSION_ATTRIBUTE_QNAME = new QName( "http://java.sun.com/xml/ns/persistence/orm", "version" );
+	private static final QName ORM_VERSION_ATTRIBUTE_QNAME = new QName( "version" );
 
-	@SuppressWarnings( {"unchecked"})
-	private JaxbRoot unmarshal(XMLEventReader staxEventReader, Origin origin) {
+	@SuppressWarnings( { "unchecked" })
+	private JaxbRoot unmarshal(XMLEventReader staxEventReader, final Origin origin) {
 		XMLEvent event;
 		try {
 			event = staxEventReader.peek();
-			while ( event != null && ! event.isStartElement() ) {
+			while ( event != null && !event.isStartElement() ) {
 				staxEventReader.nextEvent();
 				event = staxEventReader.peek();
 			}
 		}
-		catch (Exception e) {
+		catch ( Exception e ) {
 			throw new MappingException( "Error accessing stax stream", e, origin );
 		}
 
@@ -140,23 +146,33 @@ public class JaxbHelper {
 		}
 
 		final Object target;
+		final ContextProvidingValidationEventHandler handler = new ContextProvidingValidationEventHandler();
 		try {
 			JAXBContext jaxbContext = JAXBContext.newInstance( jaxbTarget );
 			Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
 			unmarshaller.setSchema( validationSchema );
+			unmarshaller.setEventHandler( handler );
 			target = unmarshaller.unmarshal( staxEventReader );
 		}
-		catch (JAXBException e) {
-			throw new MappingException( "Unable to perform unmarshalling", e, origin );
+
+		catch ( JAXBException e ) {
+			StringBuilder builder = new StringBuilder();
+			builder.append( "Unable to perform unmarshalling at line number " );
+			builder.append( handler.getLineNumber() );
+			builder.append( " and column " );
+			builder.append( handler.getColumnNumber() );
+			builder.append( ". Message: " );
+			builder.append( handler.getMessage() );
+			throw new MappingException( builder.toString(), e, origin );
 		}
 
 		return new JaxbRoot( target, origin );
 	}
 
-	@SuppressWarnings( {"unchecked"})
+	@SuppressWarnings( { "unchecked" })
 	public JaxbRoot unmarshal(Document document, Origin origin) {
 		Element rootElement = document.getDocumentElement();
-		if ( rootElement ==  null ) {
+		if ( rootElement == null ) {
 			throw new MappingException( "No root element found", origin );
 		}
 
@@ -180,7 +196,7 @@ public class JaxbHelper {
 			unmarshaller.setSchema( validationSchema );
 			target = unmarshaller.unmarshal( new DOMSource( document ) );
 		}
-		catch (JAXBException e) {
+		catch ( JAXBException e ) {
 			throw new MappingException( "Unable to perform unmarshalling", e, origin );
 		}
 
@@ -193,7 +209,7 @@ public class JaxbHelper {
 			return orm1Schema();
 		}
 		else if ( "2.0".equals( xsdVersionString ) ) {
-			return orm1Schema();
+			return orm2Schema();
 		}
 		throw new IllegalArgumentException( "Unsupported orm.xml XSD version encountered [" + xsdVersionString + "]" );
 	}
@@ -234,16 +250,18 @@ public class JaxbHelper {
 	}
 
 	private Schema resolveLocalSchema(String schemaName, String schemaLanguage) {
-        URL url = metadataSources.getServiceRegistry().getService( ClassLoaderService.class ).locateResource( schemaName );
+		URL url = metadataSources.getServiceRegistry()
+				.getService( ClassLoaderService.class )
+				.locateResource( schemaName );
 		if ( url == null ) {
 			throw new XsdException( "Unable to locate schema [" + schemaName + "] via classpath", schemaName );
 		}
 		try {
 			InputStream schemaStream = url.openStream();
 			try {
-				StreamSource source = new StreamSource(url.openStream());
+				StreamSource source = new StreamSource( url.openStream() );
 				SchemaFactory schemaFactory = SchemaFactory.newInstance( schemaLanguage );
-				return schemaFactory.newSchema(source);
+				return schemaFactory.newSchema( source );
 			}
 			catch ( SAXException e ) {
 				throw new XsdException( "Unable to load schema [" + schemaName + "]", e, schemaName );
@@ -265,5 +283,30 @@ public class JaxbHelper {
 		}
 	}
 
+	static class ContextProvidingValidationEventHandler implements ValidationEventHandler {
+		private int lineNumber;
+		private int columnNumber;
+		private String message;
 
+		@Override
+		public boolean handleEvent(ValidationEvent validationEvent) {
+			ValidationEventLocator locator = validationEvent.getLocator();
+			lineNumber = locator.getLineNumber();
+			columnNumber = locator.getColumnNumber();
+			message = validationEvent.getMessage();
+			return false;
+		}
+
+		public int getLineNumber() {
+			return lineNumber;
+		}
+
+		public int getColumnNumber() {
+			return columnNumber;
+		}
+
+		public String getMessage() {
+			return message;
+		}
+	}
 }

@@ -1,26 +1,18 @@
 package org.hibernate.metamodel.source.annotations.xml;
 
-import java.io.InputStream;
-import java.util.HashSet;
-import java.util.Set;
-import javax.xml.bind.JAXBException;
+import java.util.List;
 
 import org.jboss.jandex.Index;
 
-import org.hibernate.AnnotationException;
-import org.hibernate.metamodel.source.internal.MetadataImpl;
 import org.hibernate.metamodel.source.annotation.xml.XMLEntityMappings;
-import org.hibernate.metamodel.source.util.xml.XmlHelper;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
+import org.hibernate.metamodel.source.internal.JaxbRoot;
+import org.hibernate.metamodel.source.internal.MetadataImpl;
 
 /**
  * @author Hardy Ferentschik
  * @todo Need some create some XMLContext as well which can be populated w/ information which can not be expressed via annotations
  */
 public class OrmXmlParser {
-	private static final String ORM1_MAPPING_XSD = "org/hibernate/ejb/orm_1_0.xsd";
-	private static final String ORM2_MAPPING_XSD = "org/hibernate/ejb/orm_2_0.xsd";
-
 	private final MetadataImpl meta;
 
 	public OrmXmlParser(MetadataImpl meta) {
@@ -30,38 +22,16 @@ public class OrmXmlParser {
 	/**
 	 * Parses the given xml configuration files and returns a updated annotation index
 	 *
-	 * @param mappingFileNames the file names of the xml files to parse
+	 * @param mappings list of {@code XMLEntityMappings} created from the specified orm xml files
 	 * @param annotationIndex the annotation index based on scanned annotations
 	 *
 	 * @return a new updated annotation index, enhancing and modifying the existing ones according to the jpa xml rules
 	 */
-	public Index parseAndUpdateIndex(Set<String> mappingFileNames, Index annotationIndex) {
-		ClassLoaderService classLoaderService = meta.getServiceRegistry().getService( ClassLoaderService.class );
-		Set<InputStream> mappingStreams = new HashSet<InputStream>();
-		for ( String fileName : mappingFileNames ) {
-
-			XMLEntityMappings entityMappings;
-			try {
-				entityMappings = XmlHelper.unmarshallXml(
-						fileName, ORM2_MAPPING_XSD, XMLEntityMappings.class, classLoaderService
-				).getRoot();
-			}
-			catch ( JAXBException orm2Exception ) {
-				// if we cannot parse against orm_2_0.xsd we try orm_1_0.xsd for backwards compatibility
-				try {
-					entityMappings = XmlHelper.unmarshallXml(
-							fileName, ORM1_MAPPING_XSD, XMLEntityMappings.class, classLoaderService
-					).getRoot();
-				}
-				catch ( JAXBException orm1Exception ) {
-					throw new AnnotationException( "Unable to parse xml configuration.", orm1Exception );
-				}
-			}
-
-			entityMappings.toString();
+	public Index parseAndUpdateIndex(List<JaxbRoot<XMLEntityMappings>> mappings, Index annotationIndex) {
+		for ( JaxbRoot<XMLEntityMappings> root : mappings ) {
+			root.getRoot().toString();
 		}
-
-		return null;
+		return annotationIndex;
 	}
 }
 

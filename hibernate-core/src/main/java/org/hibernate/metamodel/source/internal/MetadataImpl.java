@@ -23,15 +23,20 @@
  */
 package org.hibernate.metamodel.source.internal;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.jboss.jandex.Index;
+import org.jboss.jandex.Indexer;
 import org.jboss.logging.Logger;
 
 import org.hibernate.DuplicateMappingException;
+import org.hibernate.HibernateException;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.MetadataSource;
@@ -41,8 +46,11 @@ import org.hibernate.metamodel.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.relational.Database;
 import org.hibernate.metamodel.source.Metadata;
 import org.hibernate.metamodel.source.MetadataSources;
+import org.hibernate.metamodel.source.annotation.xml.XMLEntityMappings;
 import org.hibernate.metamodel.source.annotations.AnnotationBinder;
+import org.hibernate.metamodel.source.annotations.xml.OrmXmlParser;
 import org.hibernate.metamodel.source.hbm.HibernateXmlBinder;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping;
 import org.hibernate.metamodel.source.spi.MetadataImplementor;
 import org.hibernate.service.BasicServiceRegistry;
 
@@ -50,15 +58,15 @@ import org.hibernate.service.BasicServiceRegistry;
  * Container for configuration data while building and binding the metamodel
  *
  * @author Steve Ebersole
+ * @author Hardy Ferentschik
  */
 public class MetadataImpl implements Metadata, MetadataImplementor, Serializable {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, MetadataImpl.class.getName() );
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class, MetadataImpl.class.getName()
+	);
 
 	private final BasicServiceRegistry serviceRegistry;
 	private final NamingStrategy namingStrategy;
-
-	final AnnotationBinder annotationBinder = new AnnotationBinder( this );
-
 	private final Database database = new Database();
 
 	private Map<String, EntityBinding> entityBindingMap = new HashMap<String, EntityBinding>();
@@ -85,22 +93,47 @@ public class MetadataImpl implements Metadata, MetadataImplementor, Serializable
 		final HibernateXmlBinder hibernateXmlBinder = new HibernateXmlBinder( this );
 		for ( JaxbRoot jaxbRoot : metadataSources.getJaxbRootList() ) {
 			// filter to just hbm-based roots
-			hibernateXmlBinder.bindRoot( jaxbRoot );
+			if ( jaxbRoot.getRoot() instanceof XMLHibernateMapping ) {
+				hibernateXmlBinder.bindRoot( jaxbRoot );
+			}
 		}
 	}
 
 	private void applyAnnotationMappings(MetadataSources metadataSources, List<String> processedEntityNames) {
-		// todo : not sure how to best mesh what we have here with what AnnotationBinder is expecting...  hardy?
-		// also, AnnotationBinder should become method local
-	}
+		// create a jandex index from the annotated classes
+		Indexer indexer = new Indexer();
+		for ( Class<?> clazz : metadataSources.getAnnotatedClasses() ) {
+			InputStream stream = getClass().getClassLoader().getResourceAsStream(
+					clazz.getName().replace( '.', '/' ) + ".class"
+			);
+			try {
+				indexer.index( stream );
+			}
+			catch ( IOException e ) {
+				// Todo which exception to throw here? (HF)
+				throw new HibernateException( "Unable to index" );
+			}
+		}
 
+		// Todo - take care of packages (HF)
+		Index index = indexer.complete();
+
+		// process the orm.xml files
+		final OrmXmlParser ormParser = new OrmXmlParser( this );
+		List<JaxbRoot<XMLEntityMappings>> mappings = new ArrayList<JaxbRoot<XMLEntityMappings>>();
+		for ( JaxbRoot<?> root : metadataSources.getJaxbRootList() ) {
+			if ( root.getRoot() instanceof XMLEntityMappings ) {
+				mappings.add( (JaxbRoot<XMLEntityMappings>) root );
+			}
+		}
+		index = ormParser.parseAndUpdateIndex( mappings, index );
+
+		final AnnotationBinder annotationBinder = new AnnotationBinder( this );
+		annotationBinder.bindMappedClasses( index );
+	}
 
 	public BasicServiceRegistry getServiceRegistry() {
 		return serviceRegistry;
-	}
-
-	public AnnotationBinder getAnnotationBinder() {
-		return annotationBinder;
 	}
 
 	public Database getDatabase() {

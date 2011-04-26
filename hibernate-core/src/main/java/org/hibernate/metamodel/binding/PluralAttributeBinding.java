@@ -67,7 +67,6 @@ public abstract class PluralAttributeBinding extends AbstractAttributeBinding {
 		boolean isEmbedded();
 		boolean isOptimisticLocked();
 		Class getCollectionPersisterClass();
-		String getTypeName();
 		java.util.Map getFilters();
 		java.util.Set getSynchronizedTables();
 		CustomSQL getCustomSQLInsert();
@@ -105,7 +104,6 @@ public abstract class PluralAttributeBinding extends AbstractAttributeBinding {
 	private boolean embedded = true;
 	private boolean optimisticLocked = true;
 	private Class collectionPersisterClass;
-	private String typeName;
 	private final java.util.Map filters = new HashMap();
 	private final java.util.Set<String> synchronizedTables = new HashSet<String>();
 
@@ -145,7 +143,6 @@ public abstract class PluralAttributeBinding extends AbstractAttributeBinding {
 		embedded = state.isEmbedded();
 		optimisticLocked = state.isOptimisticLocked();
 		collectionPersisterClass = state.getCollectionPersisterClass();
-		typeName = state.getTypeName();
 		filters.putAll( state.getFilters() );
 		synchronizedTables.addAll( state.getSynchronizedTables() );
 		customSQLInsert = state.getCustomSQLInsert();
@@ -255,10 +252,6 @@ public abstract class PluralAttributeBinding extends AbstractAttributeBinding {
 
 	public Class getCollectionPersisterClass() {
 		return collectionPersisterClass;
-	}
-
-	public String getTypeName() {
-		return typeName;
 	}
 
 	public void addFilter(String name, String condition) {

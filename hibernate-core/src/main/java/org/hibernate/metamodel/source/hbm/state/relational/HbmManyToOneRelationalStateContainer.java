@@ -21,18 +21,34 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.hbm;
+package org.hibernate.metamodel.source.hbm.state.relational;
 
-import org.hibernate.metamodel.source.Origin;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping;
-import org.hibernate.metamodel.source.internal.JaxbRoot;
+import org.hibernate.metamodel.binding.ManyToOneAttributeBinding;
+import org.hibernate.metamodel.binding.MappingDefaults;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLManyToOneElement;
 
 /**
  * @author Gail Badner
  */
-public class HibernateMappingJaxbRoot extends JaxbRoot<XMLHibernateMapping> {
+public class HbmManyToOneRelationalStateContainer extends HbmSimpleValueRelationalStateContainer
+implements ManyToOneAttributeBinding.RelationalState {
 
-	public HibernateMappingJaxbRoot(XMLHibernateMapping root, Origin origin) {
-		super(root, origin);
+	private final boolean isLogicalOneToOne;
+	private final String foreignKeyName;
+
+	public HbmManyToOneRelationalStateContainer(MappingDefaults defaults,
+												boolean autoColumnCreation,
+												XMLManyToOneElement manyToOne ) {
+		super( defaults, autoColumnCreation, manyToOne );
+		this.isLogicalOneToOne = manyToOne.isUnique();
+		this.foreignKeyName = manyToOne.getForeignKey();
+	}
+
+	public boolean isLogicalOneToOne() {
+		return isLogicalOneToOne;
+	}
+
+	public String getForeignKeyName() {
+		return foreignKeyName;
 	}
 }

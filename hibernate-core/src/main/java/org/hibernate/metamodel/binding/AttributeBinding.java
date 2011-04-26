@@ -102,4 +102,8 @@ public interface AttributeBinding {
 	public boolean[] getColumnInsertability();
 	public boolean isSimpleValue();
 	public boolean isLazy();
+
+	public void addEntityReferencingAttributeBinding(EntityReferencingAttributeBinding attributeBinding);
+
+	public void validate();
 }

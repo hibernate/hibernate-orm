@@ -37,6 +37,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.binding.AttributeBinding;
 import org.hibernate.metamodel.binding.BagBinding;
 import org.hibernate.metamodel.binding.EntityBinding;
+import org.hibernate.metamodel.binding.ManyToOneAttributeBinding;
 import org.hibernate.metamodel.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.binding.SimpleAttributeBinding;
 import org.hibernate.metamodel.domain.Entity;
@@ -47,36 +48,13 @@ import org.hibernate.metamodel.relational.Schema;
 import org.hibernate.metamodel.relational.Table;
 import org.hibernate.metamodel.relational.TableSpecification;
 import org.hibernate.metamodel.relational.UniqueKey;
+import org.hibernate.metamodel.source.hbm.state.domain.HbmManyToOneAttributeDomainState;
+import org.hibernate.metamodel.source.hbm.state.relational.HbmManyToOneRelationalStateContainer;
+import org.hibernate.metamodel.source.hbm.xml.mapping.*;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
 import org.hibernate.metamodel.source.hbm.state.domain.HbmPluralAttributeDomainState;
 import org.hibernate.metamodel.source.hbm.state.domain.HbmSimpleAttributeDomainState;
 import org.hibernate.metamodel.source.hbm.state.relational.HbmSimpleValueRelationalStateContainer;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLAnyElement;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLBagElement;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLComponentElement;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLDynamicComponentElement;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLFilterElement;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLDiscriminator;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLId;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLTimestamp;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLVersion;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLIdbagElement;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLJoinElement;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLJoinedSubclassElement;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLListElement;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLManyToOneElement;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLMapElement;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLOneToOneElement;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLPropertiesElement;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLPropertyElement;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLQueryElement;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLResultsetElement;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSetElement;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlQueryElement;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSubclassElement;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLTuplizerElement;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLUnionSubclassElement;
 
 /**
 * TODO : javadoc
@@ -88,7 +66,7 @@ abstract class AbstractEntityBinder {
 	private final Schema.Name schemaName;
 
 	AbstractEntityBinder(HibernateMappingBinder hibernateMappingBinder,
-						 XMLClass entityClazz) {
+						 XMLHibernateMapping.XMLClass entityClazz) {
 		this.hibernateMappingBinder = hibernateMappingBinder;
 		this.schemaName = new Schema.Name(
 				( entityClazz.getSchema() == null ?
@@ -119,7 +97,7 @@ abstract class AbstractEntityBinder {
 		return getMetadata().getNamingStrategy();
 	}
 
-	protected void basicEntityBinding(XMLClass entityClazz,
+	protected void basicEntityBinding(XMLHibernateMapping.XMLClass entityClazz,
 									  EntityBinding entityBinding,
 									  Hierarchical superType) {
 		entityBinding.fromHbmXml(
@@ -151,7 +129,7 @@ abstract class AbstractEntityBinder {
 		return hibernateMappingBinder.getDefaultAccess();
 	}
 
-	private void bindPojoRepresentation(XMLClass entityClazz,
+	private void bindPojoRepresentation(XMLHibernateMapping.XMLClass entityClazz,
 										EntityBinding entityBinding) {
 		String className = hibernateMappingBinder.getClassName( entityClazz.getName() );
 		String proxyName = hibernateMappingBinder.getClassName( entityClazz.getProxy() );
@@ -172,7 +150,7 @@ abstract class AbstractEntityBinder {
 		}
 	}
 
-	private void bindDom4jRepresentation(XMLClass entityClazz,
+	private void bindDom4jRepresentation(XMLHibernateMapping.XMLClass entityClazz,
 										 EntityBinding entityBinding) {
 		String nodeName = entityClazz.getNode();
 		if ( nodeName == null ) {
@@ -186,7 +164,7 @@ abstract class AbstractEntityBinder {
 		}
 	}
 
-	private void bindMapRepresentation(XMLClass entityClazz,
+	private void bindMapRepresentation(XMLHibernateMapping.XMLClass entityClazz,
 									   EntityBinding entityBinding) {
 		XMLTuplizerElement tuplizer = locateTuplizerDefinition( entityClazz, EntityMode.MAP );
 		if ( tuplizer != null ) {
@@ -202,7 +180,7 @@ abstract class AbstractEntityBinder {
 	 *
 	 * @return The tuplizer element, or null.
 	 */
-	private static XMLTuplizerElement locateTuplizerDefinition(XMLClass container,
+	private static XMLTuplizerElement locateTuplizerDefinition(XMLHibernateMapping.XMLClass container,
 													EntityMode entityMode) {
 		for ( XMLTuplizerElement tuplizer : container.getTuplizer() ) {
 			if ( entityMode.toString().equals( tuplizer.getEntityMode() ) ) {
@@ -235,7 +213,7 @@ abstract class AbstractEntityBinder {
 	}
 
 	protected String getClassTableName(
-			XMLClass entityClazz,
+			XMLHibernateMapping.XMLClass entityClazz,
 			EntityBinding entityBinding,
 			Table denormalizedSuperTable) {
 		final String entityName = entityBinding.getEntity().getName();
@@ -254,7 +232,7 @@ abstract class AbstractEntityBinder {
 		return physicalTableName;
 	}
 
-	protected void buildAttributeBindings(XMLClass entityClazz,
+	protected void buildAttributeBindings(XMLHibernateMapping.XMLClass entityClazz,
 										  EntityBinding entityBinding) {
 		// null = UniqueKey (we are not binding a natural-id mapping)
 		// true = mutable, by default properties are mutable
@@ -273,7 +251,7 @@ abstract class AbstractEntityBinder {
 	 * @param nullable
 	 */
 	protected void buildAttributeBindings(
-			XMLClass entityClazz,
+			XMLHibernateMapping.XMLClass entityClazz,
 			EntityBinding entityBinding,
 			UniqueKey uniqueKey,
 			boolean mutable,
@@ -323,6 +301,10 @@ abstract class AbstractEntityBinder {
 				//hibernateMappingBinder.getHibernateXmlBinder().getMetadata().addCollection( attributeBinding );
 			}
 			else if ( XMLManyToOneElement.class.isInstance( attribute ) ) {
+				XMLManyToOneElement  manyToOne = XMLManyToOneElement.class.cast( attribute );
+				ManyToOneAttributeBinding manyToOneBinding = entityBinding.makeManyToOneAttributeBinding( manyToOne.getName() );
+				bindManyToOne( manyToOne, manyToOneBinding, entityBinding );
+				attributeBinding = manyToOneBinding;
 // todo : implement
 //				value = new ManyToOne( mappings, table );
 //				bindManyToOne( subElement, (ManyToOne) value, propertyName, nullable, mappings );
@@ -440,7 +422,7 @@ PrimitiveArray
 
 	}
 
-	protected void bindSimpleAttribute(XMLId id,
+	protected void bindSimpleAttribute(XMLHibernateMapping.XMLClass.XMLId id,
 									   SimpleAttributeBinding attributeBinding,
 									   EntityBinding entityBinding,
 									   String attributeName) {
@@ -468,7 +450,7 @@ PrimitiveArray
 		}
 	}
 
-	protected void bindSimpleAttribute(XMLDiscriminator discriminator,
+	protected void bindSimpleAttribute(XMLHibernateMapping.XMLClass.XMLDiscriminator discriminator,
 									   SimpleAttributeBinding attributeBinding,
 									   EntityBinding entityBinding,
 									   String attributeName) {
@@ -496,7 +478,7 @@ PrimitiveArray
 		}
 	}
 
-	protected void bindSimpleAttribute(XMLVersion version,
+	protected void bindSimpleAttribute(XMLHibernateMapping.XMLClass.XMLVersion version,
 									   SimpleAttributeBinding attributeBinding,
 									   EntityBinding entityBinding,
 									   String attributeName) {
@@ -524,7 +506,7 @@ PrimitiveArray
 		}
 	}
 
-	protected void bindSimpleAttribute(XMLTimestamp timestamp,
+	protected void bindSimpleAttribute(XMLHibernateMapping.XMLClass.XMLTimestamp timestamp,
 									   SimpleAttributeBinding attributeBinding,
 									   EntityBinding entityBinding,
 									   String attributeName) {
@@ -600,6 +582,33 @@ PrimitiveArray
 
 		if ( collectionBinding.getValue() == null ) {
 			// todo : relational model binding
+		}
+	}
+
+	private void bindManyToOne(XMLManyToOneElement manyToOne,
+							   ManyToOneAttributeBinding attributeBinding,
+							   EntityBinding entityBinding) {
+		if ( attributeBinding.getAttribute() == null ) {
+			attributeBinding.initialize(
+					new HbmManyToOneAttributeDomainState(
+							hibernateMappingBinder,
+							entityBinding.getEntity().getOrCreateSingularAttribute( manyToOne.getName() ),
+							entityBinding.getMetaAttributes(),
+							manyToOne
+					)
+			);
+		}
+
+		if ( attributeBinding.getValue() == null ) {
+			// relational model has not been bound yet
+			// boolean (true here) indicates that by default column names should be guessed
+			attributeBinding.initialize(
+					new HbmManyToOneRelationalStateContainer(
+							getHibernateMappingBinder(),
+							true,
+							manyToOne
+					)
+			);
 		}
 	}
 

@@ -27,13 +27,14 @@ import java.util.Set;
 
 import org.hibernate.MappingException;
 import org.hibernate.cfg.NamingStrategy;
-import org.hibernate.metamodel.binding.SimpleAttributeBinding;
+import org.hibernate.metamodel.binding.AbstractAttributeBinding;
 import org.hibernate.metamodel.relational.Size;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLColumnElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLDiscriminator;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLId;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLTimestamp;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLVersion;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLManyToOneElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLPropertyElement;
 import org.hibernate.metamodel.source.util.MappingHelper;
 
@@ -42,7 +43,7 @@ import org.hibernate.metamodel.source.util.MappingHelper;
 /**
  * @author Gail Badner
  */
-public class HbmColumnRelationalState implements SimpleAttributeBinding.ColumnRelationalState {
+public class HbmColumnRelationalState implements AbstractAttributeBinding.ColumnRelationalState {
 	private final HbmSimpleValueRelationalStateContainer container;
 	private final String explicitColumnName;
 	private final Size size;
@@ -99,6 +100,25 @@ public class HbmColumnRelationalState implements SimpleAttributeBinding.ColumnRe
 		this.indexes.addAll( container.getPropertyIndexes() );
 	}
 
+	HbmColumnRelationalState(XMLManyToOneElement manyToOne,
+							HbmSimpleValueRelationalStateContainer container) {
+		this.container = container;
+		this.explicitColumnName = manyToOne.getName();
+		this.size = new Size();
+		this.isNullable =!  MappingHelper.getBooleanValue( manyToOne.isNotNull(), false );
+		this.isUnique = manyToOne.isUnique();
+		this.checkCondition = null;
+		this.defaultColumnValue = null;
+		this.sqlType = null;
+		this.customWrite = null;
+		this.customRead = null;
+		this.comment = null;
+		this.uniqueKeys = MappingHelper.getStringValueTokens( manyToOne.getUniqueKey(), ", " );
+		this.uniqueKeys.addAll( container.getPropertyUniqueKeys() );
+		this.indexes = MappingHelper.getStringValueTokens( manyToOne.getIndex(), ", " );
+		this.indexes.addAll( container.getPropertyIndexes() );
+	}
+
 	HbmColumnRelationalState(XMLId id,
 							HbmSimpleValueRelationalStateContainer container) {
 		if ( id.getColumn() != null && ! id.getColumn().isEmpty() ) {
@@ -152,7 +172,7 @@ public class HbmColumnRelationalState implements SimpleAttributeBinding.ColumnRe
 		this.isUnique = false;
 		this.checkCondition = null;
 		this.defaultColumnValue = null;
-		this.sqlType = null; // TODO: figure out the correct setting
+		this.sqlType = null;
 		this.customWrite = null;
 		this.customRead = null;
 		this.comment = null;
@@ -170,7 +190,7 @@ public class HbmColumnRelationalState implements SimpleAttributeBinding.ColumnRe
 		this.isUnique = true; // well, it should hopefully be unique...
 		this.checkCondition = null;
 		this.defaultColumnValue = null;
-		this.sqlType = null; // TODO: figure out the correct setting
+		this.sqlType = null;
 		this.customWrite = null;
 		this.customRead = null;
 		this.comment = null;
@@ -187,7 +207,7 @@ public class HbmColumnRelationalState implements SimpleAttributeBinding.ColumnRe
 	public Size getSize() {
 		return size;
 	}
-	private static Size createSize(String length, String scale, String precision) {
+	protected static Size createSize(String length, String scale, String precision) {
 		// TODO: should this set defaults if length, scale, precision is not specified?
 		Size size = new Size();
 		if ( length != null ) {

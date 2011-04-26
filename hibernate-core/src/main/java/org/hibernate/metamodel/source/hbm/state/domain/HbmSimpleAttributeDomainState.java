@@ -27,9 +27,11 @@ import java.util.Map;
 
 import org.hibernate.MappingException;
 import org.hibernate.mapping.PropertyGeneration;
+import org.hibernate.metamodel.binding.HibernateTypeDescriptor;
 import org.hibernate.metamodel.binding.MappingDefaults;
 import org.hibernate.metamodel.binding.SimpleAttributeBinding;
 import org.hibernate.metamodel.domain.MetaAttribute;
+import org.hibernate.metamodel.source.hbm.HbmHelper;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLDiscriminator;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLId;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLTimestamp;
@@ -41,6 +43,7 @@ import org.hibernate.metamodel.source.util.MappingHelper;
  * @author Gail Badner
  */
 public class HbmSimpleAttributeDomainState extends AbstractHbmAttributeDomainState implements SimpleAttributeBinding.DomainState {
+	private final HibernateTypeDescriptor hibernateTypeDescriptor = new HibernateTypeDescriptor();
 	private final boolean isLazy;
 	private final PropertyGeneration propertyGeneration;
 	private final boolean isInsertable;
@@ -50,8 +53,19 @@ public class HbmSimpleAttributeDomainState extends AbstractHbmAttributeDomainSta
 										 org.hibernate.metamodel.domain.Attribute attribute,
 										 Map<String, MetaAttribute> entityMetaAttributes,
 										 XMLId id) {
-		super( defaults, attribute, entityMetaAttributes, id );
+		super(
+				defaults,
+				attribute,
+				id.getNode(),
+				HbmHelper.extractMetas( id.getMeta(), entityMetaAttributes ),
+				HbmHelper.getPropertyAccessorName( id.getAccess(), false, defaults.getDefaultAccess() ) ,
+				true
+		);
+
 		this.isLazy = false;
+		if ( id.getType() != null ) {
+			this.hibernateTypeDescriptor.setTypeName( id.getType().getName() );
+		}
 
 		// TODO: how should these be set???
 		this.propertyGeneration = PropertyGeneration.parse( null );
@@ -64,7 +78,10 @@ public class HbmSimpleAttributeDomainState extends AbstractHbmAttributeDomainSta
 										 org.hibernate.metamodel.domain.Attribute attribute,
 										 Map<String, MetaAttribute> entityMetaAttributes,
 										 XMLDiscriminator discriminator) {
-		super( defaults, attribute, discriminator );
+		super(
+				defaults, attribute, null, null, null, true
+		);
+		this.hibernateTypeDescriptor.setTypeName( discriminator.getType() == null ? "string" : discriminator.getType() );
 		this.isLazy = false;
 
 		this.propertyGeneration = PropertyGeneration.NEVER;
@@ -77,7 +94,15 @@ public class HbmSimpleAttributeDomainState extends AbstractHbmAttributeDomainSta
 										 Map<String, MetaAttribute> entityMetaAttributes,
 										 XMLVersion version) {
 
-		super( defaults, attribute, entityMetaAttributes, version );
+		super(
+				defaults,
+				attribute,
+				version.getNode(),
+				HbmHelper.extractMetas( version.getMeta(), entityMetaAttributes ),
+				HbmHelper.getPropertyAccessorName( version.getAccess(), false, defaults.getDefaultAccess() ) ,
+				true
+		);
+		this.hibernateTypeDescriptor.setTypeName( version.getType() == null ? "integer" : version.getType() );
 		this.isLazy = false;
 
 		// for version properties marked as being generated, make sure they are "always"
@@ -96,7 +121,16 @@ public class HbmSimpleAttributeDomainState extends AbstractHbmAttributeDomainSta
 										 Map<String, MetaAttribute> entityMetaAttributes,
 										 XMLTimestamp timestamp) {
 
-		super( defaults, attribute, entityMetaAttributes, timestamp );
+		super(
+				defaults,
+				attribute,
+				timestamp.getNode(),
+				HbmHelper.extractMetas( timestamp.getMeta(), entityMetaAttributes ),
+				HbmHelper.getPropertyAccessorName( timestamp.getAccess(), false, defaults.getDefaultAccess() ),
+				true
+		);
+		// Timestamp.getType() is not defined
+		this.hibernateTypeDescriptor.setTypeName( "db".equals( timestamp.getSource() ) ? "dbtimestamp" : "timestamp" );
 		this.isLazy = false;
 
 		// for version properties marked as being generated, make sure they are "always"
@@ -114,7 +148,14 @@ public class HbmSimpleAttributeDomainState extends AbstractHbmAttributeDomainSta
 										 org.hibernate.metamodel.domain.Attribute attribute,
 										 Map<String, MetaAttribute> entityMetaAttributes,
 										 XMLPropertyElement property) {
-		super( defaults, attribute, entityMetaAttributes, property );
+		super(
+				defaults,
+				attribute,
+				property.getNode(),
+				HbmHelper.extractMetas( property.getMeta(), entityMetaAttributes ),
+				HbmHelper.getPropertyAccessorName( property.getAccess(), false, defaults.getDefaultAccess() ),
+				property.isOptimisticLock()
+		);
 		this.isLazy = property.isLazy();
 		this.propertyGeneration = PropertyGeneration.parse( property.getGenerated() );
 
@@ -150,9 +191,12 @@ public class HbmSimpleAttributeDomainState extends AbstractHbmAttributeDomainSta
 		}
 	}
 
-	@Override
 	protected boolean isEmbedded() {
 		return false;
+	}
+
+	public HibernateTypeDescriptor getHibernateTypeDescriptor() {
+		return hibernateTypeDescriptor;
 	}
 
 	public boolean isLazy() {
@@ -168,6 +212,11 @@ public class HbmSimpleAttributeDomainState extends AbstractHbmAttributeDomainSta
 	public boolean isUpdateable() {
 		return isUpdateable;
 	}
+
+	public String getCascade() {
+		return null;
+	}
+
 	public boolean isKeyCasadeDeleteEnabled() {
 		//TODO: implement
 		return false;

@@ -33,6 +33,7 @@ import org.hibernate.MappingException;
 import org.hibernate.metamodel.binding.CollectionElement;
 import org.hibernate.metamodel.binding.CustomSQL;
 import org.hibernate.metamodel.binding.ElementCollectionElement;
+import org.hibernate.metamodel.binding.HibernateTypeDescriptor;
 import org.hibernate.metamodel.binding.MappingDefaults;
 import org.hibernate.metamodel.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.domain.Attribute;
@@ -53,13 +54,42 @@ import org.hibernate.metamodel.source.util.MappingHelper;
  */
 public class HbmPluralAttributeDomainState extends AbstractHbmAttributeDomainState implements PluralAttributeBinding.DomainState {
 	private final XMLBagElement collection;
+	private final HibernateTypeDescriptor hibernateTypeDescriptor = new HibernateTypeDescriptor();
+	private final String cascade;
 
 	public HbmPluralAttributeDomainState(MappingDefaults defaults,
 										 XMLBagElement collection,
 										 Map<String, MetaAttribute> entityMetaAttributes,
 										 Attribute attribute) {
-		super( defaults, attribute, entityMetaAttributes, collection );
+		super(
+				defaults,
+				attribute,
+				collection.getNode(),
+				HbmHelper.extractMetas( collection.getMeta(), entityMetaAttributes ),
+				HbmHelper.getPropertyAccessorName( collection.getAccess(), collection.isEmbedXml(), defaults.getDefaultAccess() ),
+				collection.isOptimisticLock()
+		);
 		this.collection = collection;
+		// TODO: is collection.getCollectionType() correct here?
+		this.hibernateTypeDescriptor.setTypeName( collection.getCollectionType() );
+		this.cascade = MappingHelper.getStringValue( collection.getCascade(), defaults.getDefaultCascade() );
+		//Attribute typeNode = collectionElement.attribute( "collection-type" );
+		//if ( typeNode != null ) {
+			// TODO: implement when typedef binding is implemented
+			/*
+			String typeName = typeNode.getValue();
+			TypeDef typeDef = mappings.getTypeDef( typeName );
+			if ( typeDef != null ) {
+				collectionBinding.setTypeName( typeDef.getTypeClass() );
+				collectionBinding.setTypeParameters( typeDef.getParameters() );
+			}
+			else {
+				collectionBinding.setTypeName( typeName );
+			}
+			*/
+		//}
+		//TODO: fix this!!!
+		this.hibernateTypeDescriptor.setTypeName( collection.getCollectionType() );
 	}
 
 	public FetchMode getFetchMode() {
@@ -174,24 +204,9 @@ public class HbmPluralAttributeDomainState extends AbstractHbmAttributeDomainSta
 				+ collection.getPersister() );
 		}
 	}
-	public String getTypeName() {
-		// TODO: does this go here???
-		//Attribute typeNode = collectionElement.attribute( "collection-type" );
-		//if ( typeNode != null ) {
-			// TODO: implement when typedef binding is implemented
-			/*
-			String typeName = typeNode.getValue();
-			TypeDef typeDef = mappings.getTypeDef( typeName );
-			if ( typeDef != null ) {
-				collectionBinding.setTypeName( typeDef.getTypeClass() );
-				collectionBinding.setTypeParameters( typeDef.getParameters() );
-			}
-			else {
-				collectionBinding.setTypeName( typeName );
-			}
-			*/
-		//}
-		return null;
+
+	public HibernateTypeDescriptor getHibernateTypeDescriptor() {
+		return hibernateTypeDescriptor;
 	}
 
 	public java.util.Map getFilters() {
@@ -255,6 +270,10 @@ public class HbmPluralAttributeDomainState extends AbstractHbmAttributeDomainSta
 		return collection.getLoader() == null ?
 				null :
 				collection.getLoader().getQueryRef();
+	}
+
+	public String getCascade() {
+		return cascade;
 	}
 
 	public boolean isKeyCasadeDeleteEnabled() {

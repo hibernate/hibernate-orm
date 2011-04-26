@@ -21,21 +21,19 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.hbm.state.relational;
+package org.hibernate.metamodel.binding;
 
-import org.hibernate.metamodel.binding.SimpleAttributeBinding;
+import org.hibernate.metamodel.relational.Value;
 
 /**
+ * TODO : javadoc
+ *
  * @author Gail Badner
  */
-public class HbmDerivedValueRelationalState implements SimpleAttributeBinding.DerivedRelationalState {
-	private final String formula;
-
-	public HbmDerivedValueRelationalState(String formula) {
-		this.formula = formula.trim();
-	}
-
-	public String getFormula() {
-		return formula;
-	}
+public interface EntityReferencingAttributeBinding extends AttributeBinding {
+	boolean isReferenceResolved();
+	String getReferencedEntityName();
+	String getReferencedAttributeName();
+	EntityBinding getReferencedEntityBinding();
+	void resolveReference(AttributeBinding attributeBinding);
 }

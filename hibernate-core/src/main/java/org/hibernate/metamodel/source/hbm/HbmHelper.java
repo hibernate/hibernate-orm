@@ -95,8 +95,11 @@ public class HbmHelper {
 	}
 
 	public static String extractEntityName( XMLClass entityClazz, String unqualifiedPackageName) {
-		String entityName = entityClazz.getEntityName();
-		return entityName == null ? getClassName( entityClazz.getName(), unqualifiedPackageName ) : entityName;
+		return extractEntityName( entityClazz.getEntityName(), entityClazz.getName(), unqualifiedPackageName );
+	}
+
+	public static String extractEntityName( String entityName, String entityClassName, String unqualifiedPackageName) {
+		return entityName == null ? getClassName( entityClassName, unqualifiedPackageName ) : entityName;
 	}
 
 	public static String getClassName(Attribute att, String unqualifiedPackageName) {

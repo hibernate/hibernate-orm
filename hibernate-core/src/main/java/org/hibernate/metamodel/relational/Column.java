@@ -23,6 +23,11 @@
  */
 package org.hibernate.metamodel.relational;
 
+import java.util.Set;
+
+import org.hibernate.cfg.NamingStrategy;
+import org.hibernate.metamodel.binding.SimpleAttributeBinding;
+
 /**
  * Models a physical column
  *

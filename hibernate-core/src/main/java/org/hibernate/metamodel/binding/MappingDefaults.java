@@ -33,6 +33,7 @@ import org.hibernate.metamodel.domain.MetaAttribute;
  */
 public interface MappingDefaults {
 	Map<String, MetaAttribute> getMappingMetas();
+	String getPackageName();
 	String getDefaultSchemaName();
 	String getDefaultCatalogName();
 	String getDefaultCascade();

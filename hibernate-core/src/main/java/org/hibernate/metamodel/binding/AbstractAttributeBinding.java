@@ -25,14 +25,19 @@ package org.hibernate.metamodel.binding;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import org.hibernate.MappingException;
+import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.metamodel.domain.Attribute;
 import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.metamodel.relational.Column;
 import org.hibernate.metamodel.relational.DerivedValue;
 import org.hibernate.metamodel.relational.SimpleValue;
+import org.hibernate.metamodel.relational.Size;
 import org.hibernate.metamodel.relational.TableSpecification;
 import org.hibernate.metamodel.relational.Tuple;
 import org.hibernate.metamodel.relational.Value;
@@ -57,6 +62,8 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 
 	private final HibernateTypeDescriptor hibernateTypeDescriptor = new HibernateTypeDescriptor();
 	private final EntityBinding entityBinding;
+	private final Set<EntityReferencingAttributeBinding> entityReferencingAttributeBindings =
+			new HashSet<EntityReferencingAttributeBinding>();
 
 	private Attribute attribute;
 	private Value value;
@@ -100,6 +107,72 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 
 	protected void setAttribute(Attribute attribute) {
 		this.attribute = attribute;
+	}
+
+	protected void initializeColumnValue(ColumnRelationalState state, boolean forceNonNullable, boolean forceUnique) {
+		Column columnValue = createColumn( state, forceNonNullable, forceUnique );
+		setValue( columnValue );
+	}
+
+	private Column createColumn(ColumnRelationalState state, boolean forceNonNullable, boolean forceUnique) {
+		final String explicitName = state.getExplicitColumnName();
+		final String logicalColumnName = state.getNamingStrategy().logicalColumnName( explicitName, getAttribute().getName() );
+		final TableSpecification table = getEntityBinding().getBaseTable();
+		final String columnName =
+				explicitName == null ?
+						state.getNamingStrategy().propertyToColumnName( getAttribute().getName() ) :
+						state.getNamingStrategy().columnName( explicitName );
+// todo : find out the purpose of these logical bindings
+//			mappings.addColumnBinding( logicalColumnName, column, table );
+		Column columnValue = table.createColumn( columnName );
+		columnValue.getSize().initialize( state.getSize() );
+		columnValue.setNullable( ! forceNonNullable &&  state.isNullable() );
+		columnValue.setUnique( ! forceUnique && state.isUnique()  );
+		columnValue.setCheckCondition( state.getCheckCondition() );
+		columnValue.setDefaultValue( state.getDefault() );
+		columnValue.setSqlType( state.getSqlType() );
+		columnValue.setWriteFragment( state.getCustomWriteFragment() );
+		columnValue.setReadFragment( state.getCustomReadFragment() );
+		columnValue.setComment( state.getComment() );
+		for ( String uniqueKey : state.getUniqueKeys() ) {
+			table.getOrCreateUniqueKey( uniqueKey ).addColumn( columnValue );
+		}
+		for ( String index : state.getIndexes() ) {
+			table.getOrCreateIndex( index ).addColumn( columnValue );
+		}
+		return columnValue;
+	}
+
+	public final <T extends DerivedRelationalState> void initializeDerivedValue(T state) {
+		value = createDerivedValue( state );
+	}
+
+	private DerivedValue createDerivedValue(DerivedRelationalState state) {
+		return getEntityBinding().getBaseTable().createDerivedValue( state.getFormula() );
+	}
+
+	public final void initializeSingleValue(SingleValueRelationalState state, boolean forceNonNullable, boolean forceUnique) {
+		value = createSingleValue( state,  forceNonNullable, forceUnique );
+	}
+
+	protected SimpleValue createSingleValue(SingleValueRelationalState state, boolean forceNonNullable, boolean forceUnique) {
+		if ( state instanceof ColumnRelationalState ) {
+			return createColumn( ColumnRelationalState.class.cast( state ), forceNonNullable, forceUnique );
+		}
+		else if ( state instanceof DerivedRelationalState ) {
+			return createDerivedValue( DerivedRelationalState.class.cast( state ) );
+		}
+		else {
+			throw new MappingException( "unknown relational state:" + state.getClass().getName() );
+		}
+	}
+
+	protected final void initializeTupleValue(Set<SingleValueRelationalState> singleValueStates, boolean forceNonNullable, boolean forceUnique) {
+		Tuple tuple = getEntityBinding().getBaseTable().createTuple(  "[" + getAttribute().getName() + "]" );
+		for ( SingleValueRelationalState singleValueState : singleValueStates ) {
+			tuple.addValue( createSingleValue( singleValueState, forceNonNullable, forceUnique ) );
+		}
+		value = tuple;
 	}
 
 	@Override
@@ -212,4 +285,39 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 	protected void setLazy(boolean isLazy) {
 		this.isLazy = isLazy;
 	}
+
+	public void addEntityReferencingAttributeBinding(EntityReferencingAttributeBinding referencingAttributeBinding) {
+		entityReferencingAttributeBindings.add( referencingAttributeBinding );
+	}
+
+	public void validate() {
+		if ( ! entityReferencingAttributeBindings.isEmpty() ) {
+			// TODO; validate that this AttributeBinding can be a target of an entity reference
+			// (e.g., this attribute is the primary key or there is a unique-key)
+			// can a unique attribute be used as a target? if so, does it need to be non-null?
+		}
+	}
+
+	public static interface SingleValueRelationalState {}
+
+	public static interface ColumnRelationalState extends SimpleAttributeBinding.SingleValueRelationalState {
+		NamingStrategy getNamingStrategy();
+		String getExplicitColumnName();
+		boolean isUnique();
+		Size getSize();
+		boolean isNullable();
+		String getCheckCondition();
+		String getDefault();
+		String getSqlType();
+		String getCustomWriteFragment();
+		String getCustomReadFragment();
+		String getComment();
+		Set<String> getUniqueKeys();
+		Set<String> getIndexes();
+	}
+
+	public static interface DerivedRelationalState extends SingleValueRelationalState {
+		String getFormula();
+	}
+
 }

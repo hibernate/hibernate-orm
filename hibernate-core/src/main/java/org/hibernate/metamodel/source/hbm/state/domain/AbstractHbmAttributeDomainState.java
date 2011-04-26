@@ -27,17 +27,9 @@ import java.util.Map;
 
 import org.hibernate.metamodel.binding.AbstractAttributeBinding;
 import org.hibernate.metamodel.binding.EntityBinding;
-import org.hibernate.metamodel.binding.HibernateTypeDescriptor;
 import org.hibernate.metamodel.binding.MappingDefaults;
 import org.hibernate.metamodel.domain.Attribute;
 import org.hibernate.metamodel.domain.MetaAttribute;
-import org.hibernate.metamodel.source.hbm.HbmHelper;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLBagElement;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLDiscriminator;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLId;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLTimestamp;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLVersion;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLPropertyElement;
 import org.hibernate.metamodel.source.util.MappingHelper;
 
 /**
@@ -46,120 +38,23 @@ import org.hibernate.metamodel.source.util.MappingHelper;
 public abstract class AbstractHbmAttributeDomainState implements AbstractAttributeBinding.DomainState {
 	private final MappingDefaults defaults;
 	private final Attribute attribute;
-	private final HibernateTypeDescriptor hibernateTypeDescriptor;
-	private final String accessorName;
-	private final String cascade;
-	private final boolean isOptimisticLockable;
 	private final String nodeName;
+	private final String accessorName;
+	private final boolean isOptimisticLockable;
 	private final Map<String, MetaAttribute> metaAttributes;
 
 	public AbstractHbmAttributeDomainState(MappingDefaults defaults,
 										   Attribute attribute,
-										   Map<String, MetaAttribute> entityMetaAttributes,
-										   XMLId id) {
+										   String nodeName,
+										   Map<String, MetaAttribute> metaAttributes,
+										   String accessorName,
+										   boolean isOptimisticLockable) {
 		this.defaults = defaults;
 		this.attribute = attribute;
-		this.hibernateTypeDescriptor = new HibernateTypeDescriptor();
-		this.hibernateTypeDescriptor.setTypeName( id.getTypeAttribute() );
-		this.accessorName =  HbmHelper.getPropertyAccessorName(
-				id.getAccess(), isEmbedded(), defaults.getDefaultAccess()
-		);
-		this.nodeName = MappingHelper.getStringValue( id.getNode(), attribute.getName() );
-		this.metaAttributes = HbmHelper.extractMetas( id.getMeta(), entityMetaAttributes );
-		this.cascade = defaults.getDefaultCascade();
-		this.isOptimisticLockable = true;
-	}
-
-	public AbstractHbmAttributeDomainState(MappingDefaults defaults,
-										   Attribute attribute,
-										   XMLDiscriminator discriminator) {
-
-		this.defaults = defaults;
-		this.attribute = attribute;
-		this.hibernateTypeDescriptor = new HibernateTypeDescriptor();
-		this.hibernateTypeDescriptor.setTypeName( discriminator.getType() == null ? "string" : discriminator.getType() );
-		// the following does not apply to discriminators
-		this.accessorName = null;
-		this.nodeName = null;
-		this.metaAttributes = null;
-		this.cascade = null;
-		this.isOptimisticLockable = true;
-	}
-
-	public AbstractHbmAttributeDomainState(MappingDefaults defaults,
-										   Attribute attribute,
-										   Map<String, MetaAttribute> entityMetaAttributes,
-										   XMLVersion version) {
-		this.defaults = defaults;
-		this.attribute = attribute;
-		this.hibernateTypeDescriptor = new HibernateTypeDescriptor();
-		this.hibernateTypeDescriptor.setTypeName( version.getType() == null ? "integer" : version.getType() );
-
-		// the following does not apply to discriminators
-		this.accessorName =  HbmHelper.getPropertyAccessorName(
-				version.getAccess(), isEmbedded(), defaults.getDefaultAccess()
-		);
-		this.nodeName = version.getNode();
-		this.metaAttributes = HbmHelper.extractMetas( version.getMeta(), entityMetaAttributes );
-		this.cascade = null;
-		this.isOptimisticLockable = true;
-	}
-
-	public AbstractHbmAttributeDomainState(MappingDefaults defaults,
-										   Attribute attribute,
-										   Map<String, MetaAttribute> entityMetaAttributes,
-										   XMLTimestamp timestamp) {
-		this.defaults = defaults;
-		this.attribute = attribute;
-		this.hibernateTypeDescriptor = new HibernateTypeDescriptor();
-
-		// Timestamp.getType() is not defined
-		this.hibernateTypeDescriptor.setTypeName( "db".equals( timestamp.getSource() ) ? "dbtimestamp" : "timestamp" );
-
-		// the following does not apply to discriminators
-		this.accessorName =  HbmHelper.getPropertyAccessorName(
-				timestamp.getAccess(), isEmbedded(), defaults.getDefaultAccess()
-		);
-		this.nodeName = timestamp.getNode();
-		this.metaAttributes = HbmHelper.extractMetas( timestamp.getMeta(), entityMetaAttributes );
-		this.cascade = null;
-		this.isOptimisticLockable = true;
-	}
-
-
-	public AbstractHbmAttributeDomainState(MappingDefaults defaults,
-										   Attribute attribute,
-										   Map<String, MetaAttribute> entityMetaAttributes,
-										   XMLPropertyElement property) {
-		this.defaults = defaults;
-		this.attribute = attribute;
-		this.hibernateTypeDescriptor = new HibernateTypeDescriptor();
-		this.hibernateTypeDescriptor.setTypeName( property.getTypeAttribute() );
-		this.accessorName =  HbmHelper.getPropertyAccessorName(
-				property.getAccess(), isEmbedded(), defaults.getDefaultAccess()
-		);
-		this.nodeName = MappingHelper.getStringValue( property.getNode(), attribute.getName() );
-		this.metaAttributes = HbmHelper.extractMetas( property.getMeta(), entityMetaAttributes );
-		this.cascade = defaults.getDefaultCascade();
-		this.isOptimisticLockable = property.isOptimisticLock();
-	}
-
-	public AbstractHbmAttributeDomainState(MappingDefaults defaults,
-										   Attribute attribute,
-										   Map<String, MetaAttribute> entityMetaAttributes,
-										   XMLBagElement collection) {
-		this.defaults = defaults;
-		this.attribute = attribute;
-		this.hibernateTypeDescriptor = new HibernateTypeDescriptor();
-		// TODO: is collection.getCollectionType() correct here?
-		this.hibernateTypeDescriptor.setTypeName( collection.getCollectionType() );
-		this.accessorName =  HbmHelper.getPropertyAccessorName(
-				collection.getAccess(), isEmbedded(), defaults.getDefaultAccess()
-		);
-		this.nodeName = MappingHelper.getStringValue( collection.getNode(), attribute.getName() );
-		this.metaAttributes = HbmHelper.extractMetas( collection.getMeta(), entityMetaAttributes );
-		this.cascade = defaults.getDefaultCascade();
-		this.isOptimisticLockable = collection.isOptimisticLock();
+		this.nodeName = MappingHelper.getStringValue( nodeName, attribute.getName() );
+		this.metaAttributes = metaAttributes;
+		this.accessorName = accessorName;
+		this.isOptimisticLockable = isOptimisticLockable;
 	}
 
 	protected final MappingDefaults getDefaults() {
@@ -168,21 +63,13 @@ public abstract class AbstractHbmAttributeDomainState implements AbstractAttribu
 	public final Attribute getAttribute() {
 		return attribute;
 	}
-	public final HibernateTypeDescriptor getHibernateTypeDescriptor() {
-		return hibernateTypeDescriptor;
-	}
 	public final String getPropertyAccessorName() {
 		return accessorName;
 	}
 
-	protected abstract boolean isEmbedded();
-
 	public final boolean isAlternateUniqueKey() {
 		//TODO: implement
 		return false;
-	}
-	public final String getCascade() {
-		return cascade;
 	}
 	public final boolean isOptimisticLockable() {
 		return isOptimisticLockable;

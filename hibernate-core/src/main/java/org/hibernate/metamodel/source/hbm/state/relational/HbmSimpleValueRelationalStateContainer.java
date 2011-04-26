@@ -30,13 +30,16 @@ import java.util.Set;
 
 import org.hibernate.MappingException;
 import org.hibernate.cfg.NamingStrategy;
+import org.hibernate.metamodel.binding.HibernateTypeDescriptor;
 import org.hibernate.metamodel.binding.MappingDefaults;
 import org.hibernate.metamodel.binding.SimpleAttributeBinding;
+import org.hibernate.metamodel.relational.Size;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLColumnElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLDiscriminator;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLId;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLTimestamp;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLVersion;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLManyToOneElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLPropertyElement;
 
 /**
@@ -47,6 +50,7 @@ public class HbmSimpleValueRelationalStateContainer implements SimpleAttributeBi
 	private final Set<String> propertyUniqueKeys;
 	private final Set<String> propertyIndexes;
 	private final Set<SimpleAttributeBinding.SingleValueRelationalState> singleValueStates;
+	private final HibernateTypeDescriptor hibernateTypeDescriptor = new HibernateTypeDescriptor();
 
 	public NamingStrategy getNamingStrategy() {
 		return defaults.getNamingStrategy();
@@ -67,6 +71,7 @@ public class HbmSimpleValueRelationalStateContainer implements SimpleAttributeBi
 		else if ( id.getColumn() != null ) {
 			throw new MappingException( "column attribute may not be used together with <column> subelement" );
 		}
+		this.hibernateTypeDescriptor.setTypeName( id.getTypeAttribute() );
 	}
 
 	public HbmSimpleValueRelationalStateContainer(MappingDefaults defaults,
@@ -82,6 +87,7 @@ public class HbmSimpleValueRelationalStateContainer implements SimpleAttributeBi
 		else if ( discriminator.getColumn() != null || discriminator.getFormula() != null) {
 			throw new MappingException( "column/formula attribute may not be used together with <column>/<formula> subelement" );
 		}
+		this.hibernateTypeDescriptor.setTypeName( discriminator.getType() == null ? "string" : discriminator.getType() );
 	}
 
 	public HbmSimpleValueRelationalStateContainer(MappingDefaults defaults,
@@ -97,6 +103,7 @@ public class HbmSimpleValueRelationalStateContainer implements SimpleAttributeBi
 		else if ( version.getColumn() != null ) {
 			throw new MappingException( "column attribute may not be used together with <column> subelement" );
 		}
+		this.hibernateTypeDescriptor.setTypeName( version.getType() == null ? "integer" : version.getType() );
 	}
 
 	public HbmSimpleValueRelationalStateContainer(MappingDefaults defaults,
@@ -112,6 +119,7 @@ public class HbmSimpleValueRelationalStateContainer implements SimpleAttributeBi
 		else if ( timestamp.getColumn() != null ) {
 			throw new MappingException( "column attribute may not be used together with <column> subelement" );
 		}
+		this.hibernateTypeDescriptor.setTypeName( "db".equals( timestamp.getSource() ) ? "dbtimestamp" : "timestamp" );
 	}
 
 	public HbmSimpleValueRelationalStateContainer(MappingDefaults defaults,
@@ -125,6 +133,22 @@ public class HbmSimpleValueRelationalStateContainer implements SimpleAttributeBi
 			singleValueStates.add( new HbmColumnRelationalState( property, this ) );
 		}
 		else if ( property.getColumn() != null || property.getFormula() != null) {
+			throw new MappingException( "column/formula attribute may not be used together with <column>/<formula> subelement" );
+		}
+		this.hibernateTypeDescriptor.setTypeName( property.getTypeAttribute() );
+	}
+
+	public HbmSimpleValueRelationalStateContainer(MappingDefaults defaults,
+												  boolean autoColumnCreation,
+												  XMLManyToOneElement manyToOne) {
+		this( defaults, manyToOne.getColumnOrFormula() );
+		if ( singleValueStates.isEmpty() ) {
+			if ( manyToOne.getColumn() == null && manyToOne.getFormula() == null &&  ! autoColumnCreation ) {
+				throw new MappingException( "No column or formula to map and auto column creation is disabled." );
+			}
+			singleValueStates.add( new HbmColumnRelationalState( manyToOne, this ) );
+		}
+		else if ( manyToOne.getColumn() != null || manyToOne.getFormula() != null) {
 			throw new MappingException( "column/formula attribute may not be used together with <column>/<formula> subelement" );
 		}
 	}

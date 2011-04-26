@@ -25,8 +25,11 @@ package org.hibernate.metamodel.binding;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.MappingException;
 import org.hibernate.engine.Versioning;
@@ -41,6 +44,7 @@ import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlDeleteElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlInsertElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlUpdateElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSynchronizeElement;
+import org.hibernate.metamodel.source.spi.MetadataImplementor;
 import org.hibernate.metamodel.source.util.MappingHelper;
 
 /**
@@ -57,6 +61,8 @@ public class EntityBinding {
 	private TableSpecification baseTable;
 
 	private Map<String,AttributeBinding> attributeBindingMap = new HashMap<String, AttributeBinding>();
+	private Set<EntityReferencingAttributeBinding> entityReferencingAttributeBindings =
+			new HashSet<EntityReferencingAttributeBinding>();
 
 	private Caching caching;
 
@@ -222,6 +228,10 @@ public class EntityBinding {
 		return attributeBindingMap.get( name );
 	}
 
+	public Iterable<EntityReferencingAttributeBinding> getEntityReferencingAttributeBindings() {
+		return entityReferencingAttributeBindings;
+	}
+
 	public SimpleAttributeBinding makeSimplePrimaryKeyAttributeBinding(String name) {
 		final SimpleAttributeBinding binding = makeSimpleAttributeBinding( name, true, true  );
 		getEntityIdentifier().setValueBinding( binding );
@@ -250,16 +260,32 @@ public class EntityBinding {
 
 	private SimpleAttributeBinding makeSimpleAttributeBinding(String name, boolean forceNonNullable, boolean forceUnique) {
 		final SimpleAttributeBinding binding = new SimpleAttributeBinding( this, forceNonNullable, forceUnique  );
-		attributeBindingMap.put( name, binding );
+		registerAttributeBinding( name, binding );
+		binding.setAttribute( entity.getAttribute( name ) );
+		return binding;
+	}
+
+	public ManyToOneAttributeBinding makeManyToOneAttributeBinding(String name) {
+		final ManyToOneAttributeBinding binding = new ManyToOneAttributeBinding( this );
+		registerAttributeBinding( name, binding );
 		binding.setAttribute( entity.getAttribute( name ) );
 		return binding;
 	}
 
 	public BagBinding makeBagAttributeBinding(String name) {
 		final BagBinding binding = new BagBinding( this );
-		attributeBindingMap.put( name, binding );
+		registerAttributeBinding( name, binding );
 		binding.setAttribute( entity.getAttribute( name ) );
 		return binding;
+	}
+
+	private void registerAttributeBinding(String name, EntityReferencingAttributeBinding attributeBinding) {
+		entityReferencingAttributeBindings.add( attributeBinding );
+		registerAttributeBinding( name, (AttributeBinding) attributeBinding );
+	}
+
+	private void registerAttributeBinding(String name, AttributeBinding attributeBinding) {
+		attributeBindingMap.put( name, attributeBinding );
 	}
 
 	public Caching getCaching() {

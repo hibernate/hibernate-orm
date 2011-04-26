@@ -41,6 +41,7 @@ import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.MetadataSource;
 import org.hibernate.metamodel.binding.EntityBinding;
+import org.hibernate.metamodel.binding.EntityReferencingAttributeBinding;
 import org.hibernate.metamodel.binding.FetchProfile;
 import org.hibernate.metamodel.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.relational.Database;
@@ -88,6 +89,8 @@ public class MetadataImpl implements Metadata, MetadataImplementor, Serializable
 			applyAnnotationMappings( metadataSources, processedEntityNames );
 			applyHibernateMappings( metadataSources, processedEntityNames );
 		}
+
+		new EntityReferenceResolver( this ).resolve();
 	}
 
 	private void applyHibernateMappings(MetadataSources metadataSources, List<String> processedEntityNames) {

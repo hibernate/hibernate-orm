@@ -60,7 +60,7 @@ public abstract class AbstractIdMapper implements IdMapper {
             QueryParameterData paramData1 = paramDataIter1.next();
             QueryParameterData paramData2 = paramDataIter2.next();
 
-            parametersToUse.addWhere(paramData1.getProperty(prefix1), false, "=", paramData2.getProperty(prefix2), false);
+            parametersToUse.addWhere(paramData1.getProperty(prefix1), false, "=", paramData2.getProperty(prefix2), false); 
         }
     }
 
@@ -70,7 +70,11 @@ public abstract class AbstractIdMapper implements IdMapper {
         Parameters parametersToUse = getParametersToUse(parameters, paramDatas);
 
         for (QueryParameterData paramData : paramDatas) {
-            parametersToUse.addWhereWithParam(paramData.getProperty(prefix), equals ? "=" : "<>", paramData.getValue());
+            if (paramData.getValue() == null) {
+                handleNullValue(parametersToUse, paramData.getProperty(prefix), equals);
+            } else {
+                parametersToUse.addWhereWithParam(paramData.getProperty(prefix), equals ? "=" : "<>", paramData.getValue());
+            }
         }
     }
 
@@ -81,6 +85,14 @@ public abstract class AbstractIdMapper implements IdMapper {
 
         for (QueryParameterData paramData : paramDatas) {
             parametersToUse.addWhereWithNamedParam(paramData.getProperty(prefix), equals ? "=" : "<>", paramData.getQueryParameterName());
+        }
+    }
+
+    private void handleNullValue(Parameters parameters, String propertyName, boolean equals) {
+        if (equals) {
+            parameters.addNullRestriction(propertyName, equals);
+        } else {
+            parameters.addNotNullRestriction(propertyName, equals);
         }
     }
 }

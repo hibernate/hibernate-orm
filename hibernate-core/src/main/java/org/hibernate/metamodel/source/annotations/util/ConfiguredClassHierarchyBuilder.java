@@ -30,11 +30,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.Index;
 
 import org.hibernate.metamodel.source.annotations.ConfiguredClassHierarchy;
+import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 
@@ -59,6 +61,15 @@ public class ConfiguredClassHierarchyBuilder {
 		Map<ClassInfo, List<ClassInfo>> processedClassInfos = new HashMap<ClassInfo, List<ClassInfo>>();
 
 		for ( ClassInfo info : index.getKnownClasses() ) {
+			AnnotationInstance jpaEntityAnnotation = JandexHelper.getSingleAnnotation( info, JPADotNames.ENTITY );
+			AnnotationInstance mappedSuperClassAnnotation = JandexHelper.getSingleAnnotation(
+					info, JPADotNames.MAPPED_SUPER_CLASS
+			);
+			// we are only interested in building the class hierarchies for @Entity or @MappedSuperclass w
+			if ( jpaEntityAnnotation == null && mappedSuperClassAnnotation == null ) {
+				continue;
+			}
+
 			if ( processedClassInfos.containsKey( info ) ) {
 				continue;
 			}

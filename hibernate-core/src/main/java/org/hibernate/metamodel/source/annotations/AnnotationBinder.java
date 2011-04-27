@@ -26,11 +26,11 @@ package org.hibernate.metamodel.source.annotations;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.Index;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.hibernate.metamodel.source.annotations.global.FetchProfileBinder;
 import org.hibernate.metamodel.source.annotations.util.ConfiguredClassHierarchyBuilder;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
 
@@ -49,6 +49,16 @@ public class AnnotationBinder {
 
 	public AnnotationBinder(MetadataImpl metadata) {
 		this.metadata = metadata;
+	}
+
+	/**
+	 * Binds global configuration data. This includes mappings which live outside of the configuration for a single
+	 * entity or entity hierarchy, for example sequence generators, fetch profiles, etc
+	 *
+	 * @param annotationIndex the annotation repository/index
+	 */
+	public void bindGlobalAnnotations(Index annotationIndex) {
+		FetchProfileBinder.bindFetchProfiles( metadata, annotationIndex );
 	}
 
 	public void bindMappedClasses(Index annotationIndex) {
@@ -77,8 +87,6 @@ public class AnnotationBinder {
 //		);
 //
 //		PersistentClass persistentClass = makePersistentClass( inheritanceState, superEntity );
-
-
 
 
 //		entityBinder.setInheritanceState( inheritanceState );

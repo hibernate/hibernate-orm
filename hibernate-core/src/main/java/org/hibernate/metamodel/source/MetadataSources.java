@@ -120,11 +120,17 @@ public class MetadataSources {
 	/**
 	 * Read package-level metadata.
 	 *
-	 * @param packageName java package name
+	 * @param packageName java package name without trailing '.', cannot be {@code null}
 	 *
 	 * @return this (for method chaining)
 	 */
 	public MetadataSources addPackage(String packageName) {
+		if ( packageName == null ) {
+			throw new IllegalArgumentException( "The specified package name cannot be null" );
+		}
+		if ( packageName.endsWith( "." ) ) {
+			packageName = packageName.substring( 0, packageName.length() - 1 );
+		}
 		annotatedPackages.add( packageName );
 		return this;
 	}
@@ -175,11 +181,14 @@ public class MetadataSources {
 	 * Read a mapping as an application resource using the convention that a class named {@code foo.bar.Foo} is
 	 * mapped by a file named {@code foo/bar/Foo.hbm.xml} which can be resolved as a classpath resource.
 	 *
-	 * @param entityClass The mapped class
+	 * @param entityClass The mapped class. Cannot be {@code null} null.
 	 *
 	 * @return this (for method chaining purposes)
 	 */
 	public MetadataSources addClass(Class entityClass) {
+		if ( entityClass == null ) {
+			throw new IllegalArgumentException( "The specified class cannot be null" );
+		}
 		LOG.debugf( "adding resource mappings from class convention : %s", entityClass.getName() );
 		final String mappingResourceName = entityClass.getName().replace( '.', '/' ) + ".hbm.xml";
 		addResource( mappingResourceName );
@@ -207,7 +216,7 @@ public class MetadataSources {
 	 * @return this (for method chaining purposes)
 	 */
 	public MetadataSources addFile(File file) {
-		final String name =  file.getAbsolutePath();
+		final String name = file.getAbsolutePath();
 		LOG.tracef( "reading mappings from file : %s", name );
 		final Origin origin = new Origin( SourceType.FILE, name );
 		try {
@@ -319,7 +328,7 @@ public class MetadataSources {
 						try {
 							add( jarFile.getInputStream( zipEntry ), origin, true );
 						}
-						catch (Exception e) {
+						catch ( Exception e ) {
 							throw new MappingException( "could not read mapping documents", e, origin );
 						}
 					}
@@ -329,11 +338,11 @@ public class MetadataSources {
 				try {
 					jarFile.close();
 				}
-				catch (Exception ignore) {
+				catch ( Exception ignore ) {
 				}
 			}
 		}
-		catch (IOException e) {
+		catch ( IOException e ) {
 			throw new MappingNotFoundException( e, origin );
 		}
 		return this;
@@ -345,7 +354,9 @@ public class MetadataSources {
 	 * Assumes that any file named <tt>*.hbm.xml</tt> is a mapping document.
 	 *
 	 * @param dir The directory
+	 *
 	 * @return this (for method chaining purposes)
+	 *
 	 * @throws org.hibernate.MappingException Indicates problems reading the jar file or
 	 * processing the contained mapping documents.
 	 */

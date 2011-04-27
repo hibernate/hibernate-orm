@@ -53,6 +53,7 @@ import org.hibernate.metamodel.source.hbm.HibernateXmlBinder;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping;
 import org.hibernate.metamodel.source.spi.MetadataImplementor;
 import org.hibernate.service.BasicServiceRegistry;
+import org.hibernate.service.classloading.spi.ClassLoaderService;
 
 /**
  * Container for configuration data while building and binding the metamodel
@@ -103,22 +104,16 @@ public class MetadataImpl implements Metadata, MetadataImplementor, Serializable
 		// create a jandex index from the annotated classes
 		Indexer indexer = new Indexer();
 		for ( Class<?> clazz : metadataSources.getAnnotatedClasses() ) {
-			InputStream stream = getClass().getClassLoader().getResourceAsStream(
-					clazz.getName().replace( '.', '/' ) + ".class"
-			);
-			try {
-				indexer.index( stream );
-			}
-			catch ( IOException e ) {
-				// Todo which exception to throw here? (HF)
-				throw new HibernateException( "Unable to index" );
-			}
+			indexClass( indexer, clazz.getName().replace( '.', '/' ) + ".class" );
 		}
 
-		// Todo - take care of packages (HF)
+		// add package-info from the configured packages
+		for ( String packageName : metadataSources.getAnnotatedPackages() ) {
+			indexClass( indexer, packageName.replace( '.', '/' ) + "/package-info.class" );
+		}
 		Index index = indexer.complete();
 
-		// process the orm.xml files
+		// process the xml configuration
 		final OrmXmlParser ormParser = new OrmXmlParser( this );
 		List<JaxbRoot<XMLEntityMappings>> mappings = new ArrayList<JaxbRoot<XMLEntityMappings>>();
 		for ( JaxbRoot<?> root : metadataSources.getJaxbRootList() ) {
@@ -128,8 +123,27 @@ public class MetadataImpl implements Metadata, MetadataImplementor, Serializable
 		}
 		index = ormParser.parseAndUpdateIndex( mappings, index );
 
+		// create the annotation binder and pass it the final annotation index
 		final AnnotationBinder annotationBinder = new AnnotationBinder( this );
+		annotationBinder.bindGlobalAnnotations( index );
 		annotationBinder.bindMappedClasses( index );
+	}
+
+	/**
+	 * Adds a single class to the jandex index
+	 *
+	 * @param indexer the jandex indexer
+	 * @param className the fully qualified name of the class
+	 */
+	private void indexClass(Indexer indexer, String className) {
+		ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+		InputStream stream = classLoaderService.locateResourceStream( className );
+		try {
+			indexer.index( stream );
+		}
+		catch ( IOException e ) {
+			throw new HibernateException( "Unable to open input stream for class " + className, e );
+		}
 	}
 
 	public BasicServiceRegistry getServiceRegistry() {
@@ -201,5 +215,4 @@ public class MetadataImpl implements Metadata, MetadataImplementor, Serializable
 		}
 		return profile;
 	}
-
 }

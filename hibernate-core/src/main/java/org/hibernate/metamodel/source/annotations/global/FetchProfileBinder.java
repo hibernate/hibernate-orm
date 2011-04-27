@@ -67,7 +67,7 @@ public class FetchProfileBinder {
 		bindFetchProfileAnnotations( meta, fetchProfileAnnotations );
 	}
 
-	public static void bindFetchProfileAnnotations(MetadataImpl meta, List<AnnotationInstance> fetchProfileAnnotations) {
+	private static void bindFetchProfileAnnotations(MetadataImpl meta, List<AnnotationInstance> fetchProfileAnnotations) {
 		for ( AnnotationInstance fetchProfileAnnotation : fetchProfileAnnotations ) {
 			String name = fetchProfileAnnotation.value( "name" ).asString();
 			FetchProfile profile = meta.findOrCreateFetchProfile( name, MetadataSource.ANNOTATIONS );

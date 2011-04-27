@@ -24,6 +24,8 @@
 package org.hibernate.envers.query;
 import static org.hibernate.envers.tools.ArgumentsTools.checkNotNull;
 import static org.hibernate.envers.tools.ArgumentsTools.checkPositive;
+
+import org.hibernate.Query;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.query.impl.EntitiesAtRevisionQuery;
 import org.hibernate.envers.query.impl.RevisionsOfEntityQuery;
@@ -32,6 +34,7 @@ import org.hibernate.envers.reader.AuditReaderImplementor;
 /**
  * @author Adam Warski (adam at warski dot org)
  * @author Hern�n Chanfreau
+ * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public class AuditQueryCreator {
     private final AuditConfiguration auditCfg;
@@ -52,9 +55,18 @@ public class AuditQueryCreator {
      * projection is added.
      */
     public AuditQuery forEntitiesAtRevision(Class<?> c, Number revision) {
+        return forEntitiesAtRevision(c, revision, false);
+    }
+
+    /**
+     * Returns deleted entities as well. Removed entities data depends on the value of
+     * <code>org.hibernate.envers.store_data_at_delete</code> parameter.
+     * @see #forEntitiesAtRevision(Class, Number)
+     */
+    public AuditQuery forEntitiesAtRevision(Class<?> c, Number revision, boolean selectDeletedEntities) {
         checkNotNull(revision, "Entity revision");
         checkPositive(revision, "Entity revision");
-        return new EntitiesAtRevisionQuery(auditCfg, auditReaderImplementor, c, revision);
+        return new EntitiesAtRevisionQuery(auditCfg, auditReaderImplementor, c, revision, selectDeletedEntities);
     }
     
     /**
@@ -121,5 +133,4 @@ public class AuditQueryCreator {
     public AuditQuery forRevisionsOfEntity(Class<?> c, String entityName, boolean selectEntitiesOnly, boolean selectDeletedEntities) {
         return new RevisionsOfEntityQuery(auditCfg, auditReaderImplementor, c, entityName, selectEntitiesOnly,selectDeletedEntities);
     }
-    
 }

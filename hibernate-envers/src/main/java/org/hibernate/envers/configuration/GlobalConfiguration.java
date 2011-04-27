@@ -28,6 +28,7 @@ import java.util.Properties;
 /**
  * @author Adam Warski (adam at warski dot org)
  * @author Nicolas Doroskevich
+ * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public class GlobalConfiguration {
     // Should a revision be generated when a not-owned relation field changes
@@ -44,6 +45,9 @@ public class GlobalConfiguration {
 
     // The default name of the catalog of the audit tables.
     private final String defaultCatalogName;
+
+    // Should Envers track (persist) entity types that have been changed during each revision.
+    private boolean trackEntitiesChangedInRevisionEnabled;
 
     /*
      Which operator to use in correlated subqueries (when we want a property to be equal to the result of
@@ -77,6 +81,12 @@ public class GlobalConfiguration {
 
         correlatedSubqueryOperator = "org.hibernate.dialect.HSQLDialect".equals(
                 properties.getProperty("hibernate.dialect")) ? "in" : "=";
+
+        String trackEntitiesChangedInRevisionEnabledStr = getProperty(properties,
+        		"org.hibernate.envers.track_entities_changed_in_revision",
+        		"org.hibernate.envers.track_entities_changed_in_revision",
+        		"false");
+        trackEntitiesChangedInRevisionEnabled = Boolean.parseBoolean(trackEntitiesChangedInRevisionEnabledStr);
     }
 
     public boolean isGenerateRevisionsForCollections() {
@@ -101,5 +111,13 @@ public class GlobalConfiguration {
 
     public String getDefaultCatalogName() {
         return defaultCatalogName;
+    }
+
+    public boolean isTrackEntitiesChangedInRevisionEnabled() {
+        return trackEntitiesChangedInRevisionEnabled;
+    }
+
+    public void setTrackEntitiesChangedInRevisionEnabled(boolean trackEntitiesChangedInRevisionEnabled) {
+        this.trackEntitiesChangedInRevisionEnabled = trackEntitiesChangedInRevisionEnabled;
     }
 }

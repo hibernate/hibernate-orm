@@ -23,8 +23,10 @@
  */
 package org.hibernate.envers.revisioninfo;
 import java.util.Date;
+
 import org.hibernate.MappingException;
 import org.hibernate.Session;
+import org.hibernate.envers.EntityTrackingRevisionListener;
 import org.hibernate.envers.RevisionListener;
 import org.hibernate.envers.entities.PropertyData;
 import org.hibernate.envers.tools.reflection.ReflectionTools;
@@ -32,6 +34,7 @@ import org.hibernate.property.Setter;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public class DefaultRevisionInfoGenerator implements RevisionInfoGenerator {
     private final String revisionInfoEntityName;
@@ -85,5 +88,17 @@ public class DefaultRevisionInfoGenerator implements RevisionInfoGenerator {
         }
 
         return revisionInfo;
+    }
+
+    public void addEntityToRevision(String entityName, Object revisionInfo) {
+        if (listener instanceof EntityTrackingRevisionListener) {
+            ((EntityTrackingRevisionListener) listener).addEntityToRevision(entityName, revisionInfo);
+        }
+    }
+
+    public void removeEntityFromRevision(String entityName, Object revisionInfo) {
+        if (listener instanceof EntityTrackingRevisionListener) {
+            ((EntityTrackingRevisionListener) listener).removeEntityFromRevision(entityName, revisionInfo);
+        }
     }
 }

@@ -98,17 +98,19 @@ public class AuditProcess implements BeforeTransactionCompletionProcess {
 
     private void executeInSession(Session session) {
 		// Making sure the revision data is persisted.
-        getCurrentRevisionData(session, true);
+        Object currentRevisionData = getCurrentRevisionData(session, true);
 
         AuditWorkUnit vwu;
 
         // First undoing any performed work units
         while ((vwu = undoQueue.poll()) != null) {
             vwu.undo(session);
+            revisionInfoGenerator.removeEntityFromRevision(vwu.getEntityName(), currentRevisionData);
         }
 
         while ((vwu = workUnits.poll()) != null) {
             vwu.perform(session, revisionData);
+            revisionInfoGenerator.addEntityToRevision(vwu.getEntityName(), currentRevisionData);
         }
     }
 

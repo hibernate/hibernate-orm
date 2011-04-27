@@ -30,4 +30,14 @@ import org.hibernate.Session;
 public interface RevisionInfoGenerator {
 	void saveRevisionData(Session session, Object revisionData);
     Object generate();
+
+    /**
+     * @see org.hibernate.envers.EntityTrackingRevisionListener#addEntityToRevision(String, Object)
+     */
+    void addEntityToRevision(String entityName, Object revisionInfo);
+
+    /**
+     * @see org.hibernate.envers.EntityTrackingRevisionListener#removeEntityFromRevision(String, Object)
+     */
+    void removeEntityFromRevision(String entityName, Object revisionInfo);
 }

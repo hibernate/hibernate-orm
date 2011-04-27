@@ -3,14 +3,15 @@ package org.hibernate.envers.test.integration.query;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.test.AbstractEntityTest;
-import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrIntTestEntity;
 import org.hibernate.envers.test.entities.ids.EmbId;
 import org.hibernate.envers.test.entities.onetomany.CollectionRefEdEntity;
 import org.hibernate.envers.test.entities.onetomany.CollectionRefIngEntity;
 import org.hibernate.envers.test.entities.onetomany.ids.SetRefEdEmbIdEntity;
 import org.hibernate.envers.test.entities.onetomany.ids.SetRefIngEmbIdEntity;
-import org.junit.Test;
+
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
 
 import javax.persistence.EntityManager;
 
@@ -32,8 +33,7 @@ public class NullPropertyQuery extends AbstractEntityTest {
         cfg.addAnnotatedClass(CollectionRefIngEntity.class);
     }
 
-    @Test
-    @Priority(10)
+    @BeforeClass(dependsOnMethods = "init")
     public void initData() {
         // Revision 1
         EntityManager em = getEntityManager();

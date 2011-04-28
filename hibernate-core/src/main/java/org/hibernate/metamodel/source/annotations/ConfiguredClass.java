@@ -30,7 +30,9 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import javax.persistence.AccessType;
 
@@ -64,7 +66,7 @@ public class ConfiguredClass {
 	private final AccessType classAccessType;
 	private final AccessType hierarchyAccessType;
 	private final boolean isMappedSuperClass;
-	private final List<MappedProperty> mappedProperties;
+	private final Map<String, MappedProperty> mappedProperties;
 
 	public ConfiguredClass(ClassInfo info, ConfiguredClass parent, AccessType hierarchyAccessType, ServiceRegistry serviceRegistry, ResolvedTypeWithMembers resolvedType) {
 		this.classInfo = info;
@@ -78,10 +80,14 @@ public class ConfiguredClass {
 		isMappedSuperClass = mappedSuperClassAnnotation != null;
 		classAccessType = determineClassAccessType();
 
-		List<MappedProperty> tmpProperties = collectMappedProperties( resolvedType );
+		List<MappedProperty> properties = collectMappedProperties( resolvedType );
 		// make sure the properties are ordered by property name
-		Collections.sort( tmpProperties );
-		mappedProperties = Collections.unmodifiableList( tmpProperties );
+		Collections.sort( properties );
+		Map<String, MappedProperty> tmpMap = new LinkedHashMap<String, MappedProperty>();
+		for ( MappedProperty property : properties ) {
+			tmpMap.put( property.getName(), property );
+		}
+		mappedProperties = Collections.unmodifiableMap( tmpMap );
 	}
 
 	public String getName() {
@@ -104,8 +110,12 @@ public class ConfiguredClass {
 		return isMappedSuperClass;
 	}
 
-	public List<MappedProperty> getMappedProperties() {
-		return mappedProperties;
+	public Iterable<MappedProperty> getMappedProperties() {
+		return mappedProperties.values();
+	}
+
+	public MappedProperty getMappedProperty(String propertyName) {
+		return mappedProperties.get( propertyName );
 	}
 
 	@Override
@@ -298,7 +308,7 @@ public class ConfiguredClass {
 			resolvedMembers = resolvedType.getMemberMethods();
 		}
 		Type type = findResolvedType( member.getName(), resolvedMembers );
-		return new MappedProperty( name, type );
+		return new MappedProperty( name, (Class) type );
 	}
 
 	private Type findResolvedType(String name, ResolvedMember[] resolvedMembers) {

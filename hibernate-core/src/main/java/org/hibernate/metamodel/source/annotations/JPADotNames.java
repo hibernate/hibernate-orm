@@ -29,6 +29,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.MappedSuperclass;
+import javax.persistence.Table;
 import javax.persistence.Transient;
 
 import org.jboss.jandex.DotName;
@@ -47,6 +48,8 @@ public interface JPADotNames {
 	public static final DotName EMBEDDED_ID = DotName.createSimple( EmbeddedId.class.getName() );
 	public static final DotName ACCESS = DotName.createSimple( Access.class.getName() );
 	public static final DotName TRANSIENT = DotName.createSimple( Transient.class.getName() );
+
+	public static final DotName TABLE = DotName.createSimple( Table.class.getName() );
 }
 
 

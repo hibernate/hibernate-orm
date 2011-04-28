@@ -77,7 +77,7 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 	}
 
 	public void initialize(DomainState state) {
-		hibernateTypeDescriptor.intialize( state.getHibernateTypeDescriptor() );
+		hibernateTypeDescriptor.initialize( state.getHibernateTypeDescriptor() );
 		attribute = state.getAttribute();
 		isLazy = state.isLazy();
 		propertyAccessorName = state.getPropertyAccessorName();

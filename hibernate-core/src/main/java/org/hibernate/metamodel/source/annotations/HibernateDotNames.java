@@ -25,6 +25,7 @@ package org.hibernate.metamodel.source.annotations;
 
 import org.jboss.jandex.DotName;
 
+import org.hibernate.annotations.Check;
 import org.hibernate.annotations.Entity;
 import org.hibernate.annotations.FetchProfile;
 import org.hibernate.annotations.FetchProfiles;
@@ -38,6 +39,8 @@ public interface HibernateDotNames {
 	public static final DotName ENTITY = DotName.createSimple( Entity.class.getName() );
 	public static final DotName FETCH_PROFILES = DotName.createSimple( FetchProfiles.class.getName() );
 	public static final DotName FETCH_PROFILE = DotName.createSimple( FetchProfile.class.getName() );
+
+	public static final DotName CHECK = DotName.createSimple( Check.class.getName() );
 }
 
 

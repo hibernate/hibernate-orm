@@ -23,11 +23,7 @@
  */
 package org.hibernate.metamodel.binding;
 
-import org.dom4j.Element;
-
 import org.hibernate.metamodel.relational.Value;
-import org.hibernate.metamodel.source.hbm.HbmHelper;
-import org.hibernate.metamodel.source.util.DomHelper;
 
 /**
  * TODO : javadoc
@@ -52,7 +48,7 @@ public class CollectionElement {
 	}
 
 	public void initialize(DomainState state) {
-		hibernateTypeDescriptor.intialize( state.getHibernateTypeDescriptor() );
+		hibernateTypeDescriptor.initialize( state.getHibernateTypeDescriptor() );
 		nodeName = state.getNodeName();
 	}
 }

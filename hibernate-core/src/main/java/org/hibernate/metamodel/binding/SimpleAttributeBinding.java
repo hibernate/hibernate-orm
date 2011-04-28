@@ -23,7 +23,6 @@
  */
 package org.hibernate.metamodel.binding;
 
-import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.hibernate.MappingException;
@@ -35,7 +34,6 @@ import org.hibernate.metamodel.relational.SimpleValue;
 import org.hibernate.metamodel.relational.Size;
 import org.hibernate.metamodel.relational.TableSpecification;
 import org.hibernate.metamodel.relational.Tuple;
-import org.hibernate.metamodel.relational.Value;
 
 /**
  * TODO : javadoc
@@ -47,20 +45,34 @@ public class SimpleAttributeBinding extends SingularAttributeBinding {
 		public PropertyGeneration getPropertyGeneration();
 	}
 
-	public static interface SingleValueRelationalState {}
+	public static interface SingleValueRelationalState {
+	}
+
 	public static interface ColumnRelationalState extends SingleValueRelationalState {
 		NamingStrategy getNamingStrategy();
+
 		String getExplicitColumnName();
+
 		boolean isUnique();
+
 		Size getSize();
+
 		boolean isNullable();
+
 		String getCheckCondition();
+
 		String getDefault();
+
 		String getSqlType();
+
 		String getCustomWriteFragment();
+
 		String getCustomReadFragment();
+
 		String getComment();
+
 		Set<String> getUniqueKeys();
+
 		Set<String> getIndexes();
 	}
 
@@ -90,7 +102,8 @@ public class SimpleAttributeBinding extends SingularAttributeBinding {
 
 	private Column createColumn(ColumnRelationalState state) {
 		final String explicitName = state.getExplicitColumnName();
-		final String logicalColumnName = state.getNamingStrategy().logicalColumnName( explicitName, getAttribute().getName() );
+		final String logicalColumnName = state.getNamingStrategy()
+				.logicalColumnName( explicitName, getAttribute().getName() );
 		final TableSpecification table = getEntityBinding().getBaseTable();
 		final String columnName =
 				explicitName == null ?
@@ -100,8 +113,8 @@ public class SimpleAttributeBinding extends SingularAttributeBinding {
 //			mappings.addColumnBinding( logicalColumnName, column, table );
 		Column columnValue = table.createColumn( columnName );
 		columnValue.getSize().initialize( state.getSize() );
-		columnValue.setNullable( ! forceNonNullable() &&  state.isNullable() );
-		columnValue.setUnique( ! forceUnique() && state.isUnique()  );
+		columnValue.setNullable( !forceNonNullable() && state.isNullable() );
+		columnValue.setUnique( !forceUnique() && state.isUnique() );
 		columnValue.setCheckCondition( state.getCheckCondition() );
 		columnValue.setDefaultValue( state.getDefault() );
 		columnValue.setSqlType( state.getSqlType() );
@@ -138,7 +151,7 @@ public class SimpleAttributeBinding extends SingularAttributeBinding {
 			setValue( createSingleValue( state.getSingleValueRelationalStates().iterator().next() ) );
 		}
 		else {
-			Tuple tuple = getEntityBinding().getBaseTable().createTuple(  "[" + getAttribute().getName() + "]" );
+			Tuple tuple = getEntityBinding().getBaseTable().createTuple( "[" + getAttribute().getName() + "]" );
 			for ( SingleValueRelationalState singleValueState : state.getSingleValueRelationalStates() ) {
 				tuple.addValue( createSingleValue( singleValueState ) );
 			}

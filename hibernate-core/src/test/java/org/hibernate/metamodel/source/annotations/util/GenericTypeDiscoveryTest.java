@@ -24,7 +24,6 @@
 package org.hibernate.metamodel.source.annotations.util;
 
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -81,36 +80,32 @@ public class GenericTypeDiscoveryTest extends BaseUnitTestCase {
 		ConfiguredClass configuredClass = iter.next();
 		ClassInfo info = configuredClass.getClassInfo();
 		assertEquals( "wrong class", DotName.createSimple( Stuff.class.getName() ), info.name() );
-		List<MappedProperty> mappedProperties = configuredClass.getMappedProperties();
-		assertTrue( "Stuff should have one mapped property", mappedProperties.size() == 1 );
-		MappedProperty property = mappedProperties.get( 0 );
+		MappedProperty property = configuredClass.getMappedProperty( "value" );
 		assertEquals( Price.class, property.getType() );
 
 		assertTrue( iter.hasNext() );
 		configuredClass = iter.next();
 		info = configuredClass.getClassInfo();
 		assertEquals( "wrong class", DotName.createSimple( PricedStuff.class.getName() ), info.name() );
-		mappedProperties = configuredClass.getMappedProperties();
-		assertTrue( "PricedStuff should not mapped properties", mappedProperties.size() == 0 );
+		assertFalse(
+				"PricedStuff should not mapped properties", configuredClass.getMappedProperties().iterator().hasNext()
+		);
 
 		assertTrue( iter.hasNext() );
 		configuredClass = iter.next();
 		info = configuredClass.getClassInfo();
 		assertEquals( "wrong class", DotName.createSimple( Item.class.getName() ), info.name() );
-		mappedProperties = configuredClass.getMappedProperties();
-		assertTrue( "Item should have 4 mapped properties", mappedProperties.size() == 4 );
 		// properties are alphabetically ordered!
-		property = mappedProperties.get( 2 );
+		property = configuredClass.getMappedProperty( "owner" );
 		assertEquals( SomeGuy.class, property.getType() );
-		property = mappedProperties.get( 3 );
+		property = configuredClass.getMappedProperty( "type" );
 		assertEquals( PaperType.class, property.getType() );
 
 		assertTrue( iter.hasNext() );
 		configuredClass = iter.next();
 		info = configuredClass.getClassInfo();
 		assertEquals( "wrong class", DotName.createSimple( Paper.class.getName() ), info.name() );
-		mappedProperties = configuredClass.getMappedProperties();
-		assertTrue( "Paper should not mapped properties", mappedProperties.size() == 0 );
+		assertFalse( "Paper should not mapped properties", configuredClass.getMappedProperties().iterator().hasNext() );
 
 		assertFalse( iter.hasNext() );
 	}

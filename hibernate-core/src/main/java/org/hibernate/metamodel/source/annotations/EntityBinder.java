@@ -26,11 +26,13 @@ package org.hibernate.metamodel.source.annotations;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.jboss.jandex.AnnotationInstance;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
+import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.binding.EntityBinding;
@@ -39,6 +41,8 @@ import org.hibernate.metamodel.binding.SimpleAttributeBinding;
 import org.hibernate.metamodel.domain.Attribute;
 import org.hibernate.metamodel.domain.Entity;
 import org.hibernate.metamodel.domain.Hierarchical;
+import org.hibernate.metamodel.relational.Schema;
+import org.hibernate.metamodel.relational.Size;
 import org.hibernate.metamodel.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
 
@@ -56,12 +60,17 @@ public class EntityBinder {
 		this.meta = metadata;
 		EntityBinding entityBinding = new EntityBinding();
 		bindJpaEntityAnnotation( entityBinding );
-		// we also have to take care of an optional Hibernate specific @Id
-		bindHibernateEntityAnnotation( entityBinding );
+		bindHibernateEntityAnnotation( entityBinding ); // optional hibernate specific @org.hibernate.annotations.Entity
+		bindTable( entityBinding );
+
 		if ( configuredClass.isRoot() ) {
 			bindId( entityBinding );
 		}
 		meta.addEntity( entityBinding );
+	}
+
+	private void bindTable(EntityBinding entityBinding) {
+		final Schema schema = meta.getDatabase().getSchema( null );
 	}
 
 	private void bindId(EntityBinding entityBinding) {
@@ -106,12 +115,25 @@ public class EntityBinder {
 		entityBinding.getEntity().getOrCreateSingularAttribute( idName );
 		SimpleAttributeBinding idBinding = entityBinding.makeSimplePrimaryKeyAttributeBinding( idName );
 
+		MappedProperty idProperty = entity.getMappedProperty( idName );
 
 		AnnotationSimpleAttributeDomainState domainState = new AnnotationSimpleAttributeDomainState();
-		//domainState.propertyGeneration =
+		HibernateTypeDescriptor typeDescriptor = new HibernateTypeDescriptor();
+		typeDescriptor.setTypeName( idProperty.getType().getName() );
+		domainState.typeDescriptor = typeDescriptor;
+		domainState.attribute = entityBinding.getEntity().getOrCreateSingularAttribute( idProperty.getName() );
 
 		idBinding.initialize( domainState );
-		idBinding.initializeTupleValue( new AnnotationSimpleAttributeRelationalState() );
+
+		AnnotationColumnRelationalState columnRelationsState = new AnnotationColumnRelationalState();
+		columnRelationsState.namingStrategy = meta.getNamingStrategy();
+		columnRelationsState.columnName = idProperty.getColumnName();
+		columnRelationsState.unique = true;
+		columnRelationsState.nullable = false;
+
+		AnnotationSimpleAttributeRelationalState relationalState = new AnnotationSimpleAttributeRelationalState();
+		relationalState.valueStates.add( columnRelationsState );
+		idBinding.initializeTupleValue( relationalState );
 	}
 
 	private void bindHibernateEntityAnnotation(EntityBinding entityBinding) {
@@ -199,6 +221,8 @@ public class EntityBinder {
 
 	public static class AnnotationSimpleAttributeDomainState implements SimpleAttributeBinding.DomainState {
 		PropertyGeneration propertyGeneration;
+		HibernateTypeDescriptor typeDescriptor;
+		Attribute attribute;
 
 		@Override
 		public PropertyGeneration getPropertyGeneration() {
@@ -235,12 +259,12 @@ public class EntityBinder {
 
 		@Override
 		public HibernateTypeDescriptor getHibernateTypeDescriptor() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+			return typeDescriptor;
 		}
 
 		@Override
 		public Attribute getAttribute() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+			return attribute;
 		}
 
 		@Override
@@ -281,9 +305,84 @@ public class EntityBinder {
 
 	public static class AnnotationSimpleAttributeRelationalState
 			implements SimpleAttributeBinding.TupleRelationalState {
+		LinkedHashSet<SimpleAttributeBinding.SingleValueRelationalState> valueStates = new LinkedHashSet<SimpleAttributeBinding.SingleValueRelationalState>();
 
 		@Override
 		public LinkedHashSet<SimpleAttributeBinding.SingleValueRelationalState> getSingleValueRelationalStates() {
+			return valueStates;
+		}
+	}
+
+	public static class AnnotationColumnRelationalState
+			implements SimpleAttributeBinding.ColumnRelationalState {
+
+		NamingStrategy namingStrategy;
+		String columnName;
+		boolean unique;
+		boolean nullable;
+
+		@Override
+		public NamingStrategy getNamingStrategy() {
+			return namingStrategy;
+		}
+
+		@Override
+		public String getExplicitColumnName() {
+			return columnName;
+		}
+
+		@Override
+		public boolean isUnique() {
+			return unique;
+		}
+
+		@Override
+		public Size getSize() {
+			return null;  //To change body of implemented methods use File | Settings | File Templates.
+		}
+
+		@Override
+		public boolean isNullable() {
+			return nullable;
+		}
+
+		@Override
+		public String getCheckCondition() {
+			return null;  //To change body of implemented methods use File | Settings | File Templates.
+		}
+
+		@Override
+		public String getDefault() {
+			return null;  //To change body of implemented methods use File | Settings | File Templates.
+		}
+
+		@Override
+		public String getSqlType() {
+			return null;  //To change body of implemented methods use File | Settings | File Templates.
+		}
+
+		@Override
+		public String getCustomWriteFragment() {
+			return null;  //To change body of implemented methods use File | Settings | File Templates.
+		}
+
+		@Override
+		public String getCustomReadFragment() {
+			return null;  //To change body of implemented methods use File | Settings | File Templates.
+		}
+
+		@Override
+		public String getComment() {
+			return null;  //To change body of implemented methods use File | Settings | File Templates.
+		}
+
+		@Override
+		public Set<String> getUniqueKeys() {
+			return null;  //To change body of implemented methods use File | Settings | File Templates.
+		}
+
+		@Override
+		public Set<String> getIndexes() {
 			return null;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 	}

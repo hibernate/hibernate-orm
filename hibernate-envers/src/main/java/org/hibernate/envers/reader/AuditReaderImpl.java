@@ -239,7 +239,7 @@ public class AuditReaderImpl implements AuditReaderImplementor {
         List<Class> clazz = findEntityTypesChangedInRevision(revision);
         List result = new ArrayList(clazz.size());
         for (Class c : clazz) {
-            result.addAll(createQuery().forEntitiesAtRevision(c, revision, true).getResultList());
+            result.addAll(createQuery().forEntitiesAtCertainRevision(c, revision).getResultList());
         }
         return result;
     }
@@ -249,7 +249,7 @@ public class AuditReaderImpl implements AuditReaderImplementor {
         List<Class> clazz = findEntityTypesChangedInRevision(revision);
         List result = new ArrayList(clazz.size());
         for (Class c : clazz) {
-            result.addAll(createQuery().forEntitiesAtRevision(c, revision, true).add(new RevisionTypeAuditExpression(revisionType, "=")).getResultList());
+            result.addAll(createQuery().forEntitiesAtCertainRevision(c, revision).add(new RevisionTypeAuditExpression(revisionType, "=")).getResultList());
         }
         return result;
     }
@@ -261,7 +261,7 @@ public class AuditReaderImpl implements AuditReaderImplementor {
         for (RevisionType revisionType : RevisionType.values()) {
             result.put(revisionType, new ArrayList());
             for (Class c : clazz) {
-                List list = createQuery().forEntitiesAtRevision(c, revision, true).add(new RevisionTypeAuditExpression(revisionType, "=")).getResultList();
+                List list = createQuery().forEntitiesAtCertainRevision(c, revision).add(new RevisionTypeAuditExpression(revisionType, "=")).getResultList();
                 result.get(revisionType).addAll(list);
             }
         }

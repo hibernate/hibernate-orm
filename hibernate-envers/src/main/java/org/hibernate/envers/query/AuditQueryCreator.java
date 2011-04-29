@@ -25,8 +25,8 @@ package org.hibernate.envers.query;
 import static org.hibernate.envers.tools.ArgumentsTools.checkNotNull;
 import static org.hibernate.envers.tools.ArgumentsTools.checkPositive;
 
-import org.hibernate.Query;
 import org.hibernate.envers.configuration.AuditConfiguration;
+import org.hibernate.envers.query.impl.EntitiesModifiedAtRevisionQuery;
 import org.hibernate.envers.query.impl.EntitiesAtRevisionQuery;
 import org.hibernate.envers.query.impl.RevisionsOfEntityQuery;
 import org.hibernate.envers.reader.AuditReaderImplementor;
@@ -55,18 +55,9 @@ public class AuditQueryCreator {
      * projection is added.
      */
     public AuditQuery forEntitiesAtRevision(Class<?> c, Number revision) {
-        return forEntitiesAtRevision(c, revision, false);
-    }
-
-    /**
-     * Returns deleted entities as well. Removed entities data depends on the value of
-     * <code>org.hibernate.envers.store_data_at_delete</code> parameter.
-     * @see #forEntitiesAtRevision(Class, Number)
-     */
-    public AuditQuery forEntitiesAtRevision(Class<?> c, Number revision, boolean selectDeletedEntities) {
         checkNotNull(revision, "Entity revision");
         checkPositive(revision, "Entity revision");
-        return new EntitiesAtRevisionQuery(auditCfg, auditReaderImplementor, c, revision, selectDeletedEntities);
+        return new EntitiesAtRevisionQuery(auditCfg, auditReaderImplementor, c, revision);
     }
     
     /**
@@ -83,7 +74,22 @@ public class AuditQueryCreator {
         checkNotNull(revision, "Entity revision");
         checkPositive(revision, "Entity revision");
         return new EntitiesAtRevisionQuery(auditCfg, auditReaderImplementor, c, entityName, revision);
-    }    
+    }
+
+    /**
+     * In comparison to {@link #forEntitiesAtRevision(Class, String, Number)} this method will return an empty
+     * collection if an entity of a certain type has not been changed in a given revision.
+     * @param c Class of the entities for which to query.
+     * @param revision Revision number at which to execute the query.
+     * @return A query for entities changed at a given revision, to which conditions can be added and which
+     *         can then be executed.
+     * @see #forEntitiesAtRevision(Class, String, Number)
+     */
+    public AuditQuery forEntitiesAtCertainRevision(Class<?> c, Number revision) {
+        checkNotNull(revision, "Entity revision");
+        checkPositive(revision, "Entity revision");
+        return new EntitiesModifiedAtRevisionQuery(auditCfg, auditReaderImplementor, c, revision);
+    }
 
     /**
      * Creates a query, which selects the revisions, at which the given entity was modified.

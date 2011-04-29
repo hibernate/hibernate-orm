@@ -1284,10 +1284,7 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 			preparedProperties.setProperty(
 					Environment.TRANSACTION_STRATEGY, JoinableCMTTransactionFactory.class.getName()
 			);
-		}
-		else if ( ! hasTxStrategy && transactionType == PersistenceUnitTransactionType.RESOURCE_LOCAL ) {
-			preparedProperties.setProperty( Environment.TRANSACTION_STRATEGY, JDBCTransactionFactory.class.getName() );
-		}
+		} //else if RESOURCE_LOCAL, let the default being used.
 		if ( hasTxStrategy ) {
 			log.warn(
 					"Overriding {} is dangerous, this might break the EJB3 specification implementation",

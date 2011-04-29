@@ -56,6 +56,9 @@ public final class TransactionFactoryFactory {
 	public static TransactionFactory buildTransactionFactory(Properties transactionProps) throws HibernateException {
 		String strategyClassName = transactionProps.getProperty( Environment.TRANSACTION_STRATEGY );
 		if ( strategyClassName == null ) {
+			strategyClassName = transactionProps.getProperty( Environment.DEFAULT_TRANSACTION_STRATEGY );
+		}
+		if ( strategyClassName == null ) {
 			log.info( "Using default transaction strategy (direct JDBC transactions)" );
 			return new JDBCTransactionFactory();
 		}

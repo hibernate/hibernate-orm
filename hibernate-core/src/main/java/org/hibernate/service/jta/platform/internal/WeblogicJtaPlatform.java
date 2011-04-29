@@ -36,8 +36,6 @@ public class WeblogicJtaPlatform extends AbstractJtaPlatform {
 	public static final String TM_NAME = "javax.transaction.TransactionManager";
 	public static final String UT_NAME = "javax.transaction.UserTransaction";
 
-	private final JtaSynchronizationStrategy synchronizationStrategy = new TransactionManagerBasedSynchronizationStrategy( this );
-
 	@Override
 	protected TransactionManager locateTransactionManager() {
 		return (TransactionManager) jndiService().locate( TM_NAME );
@@ -46,10 +44,5 @@ public class WeblogicJtaPlatform extends AbstractJtaPlatform {
 	@Override
 	protected UserTransaction locateUserTransaction() {
 		return (UserTransaction) jndiService().locate( UT_NAME );
-	}
-
-	@Override
-	protected JtaSynchronizationStrategy getSynchronizationStrategy() {
-		return synchronizationStrategy;
 	}
 }

@@ -24,7 +24,6 @@
 package org.hibernate.service.jta.platform.internal;
 
 import javax.transaction.TransactionManager;
-import javax.transaction.TransactionSynchronizationRegistry;
 import javax.transaction.UserTransaction;
 
 /**
@@ -32,12 +31,10 @@ import javax.transaction.UserTransaction;
  *
  * @author Steve Ebersole
  */
-public class JBossAppServerPlatform extends AbstractJtaPlatform implements SynchronizationRegistryAccess {
+public class JBossAppServerJtaPlatform extends AbstractJtaPlatform {
 	public static final String TM_NAME = "java:/TransactionManager";
 	public static final String UT_NAME = "UserTransaction";
-	public static final String REG_NAME = "java:comp/TransactionSynchronizationRegistry";
 
-	private final JtaSynchronizationStrategy synchronizationStrategy = new SynchronizationRegistryBasedSynchronizationStrategy( this );
 	@Override
 	protected TransactionManager locateTransactionManager() {
 		return (TransactionManager) jndiService().locate( TM_NAME );
@@ -46,15 +43,5 @@ public class JBossAppServerPlatform extends AbstractJtaPlatform implements Synch
 	@Override
 	protected UserTransaction locateUserTransaction() {
 		return (UserTransaction) jndiService().locate( UT_NAME );
-	}
-
-	@Override
-	protected JtaSynchronizationStrategy getSynchronizationStrategy() {
-		return synchronizationStrategy;
-	}
-
-	@Override
-	public TransactionSynchronizationRegistry getSynchronizationRegistry() {
-		return (TransactionSynchronizationRegistry) jndiService().locate( REG_NAME );
 	}
 }

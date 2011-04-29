@@ -40,8 +40,6 @@ public class JBossStandAloneJtaPlatform extends AbstractJtaPlatform {
 	private static final String JBOSS_TM_CLASS_NAME = "com.arjuna.ats.jta.TransactionManager";
 	private static final String JBOSS_UT_CLASS_NAME = "com.arjuna.ats.jta.UserTransaction";
 
-	private final JtaSynchronizationStrategy synchronizationStrategy = new TransactionManagerBasedSynchronizationStrategy( this );
-
 	@Override
 	protected TransactionManager locateTransactionManager() {
 		try {
@@ -66,10 +64,5 @@ public class JBossStandAloneJtaPlatform extends AbstractJtaPlatform {
 		catch ( Exception e ) {
 			throw new JtaPlatformException( "Could not obtain JBoss Transactions user transaction instance", e );
 		}
-	}
-
-	@Override
-	protected JtaSynchronizationStrategy getSynchronizationStrategy() {
-		return synchronizationStrategy;
 	}
 }

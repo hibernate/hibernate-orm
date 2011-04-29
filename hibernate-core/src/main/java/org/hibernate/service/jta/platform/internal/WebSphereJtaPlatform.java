@@ -38,13 +38,10 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class WebSphereJtaPlatform extends AbstractJtaPlatform {
-
     private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, WebSphereJtaPlatform.class.getName());
 
 	public static final String VERSION_5_UT_NAME = "java:comp/UserTransaction";
 	public static final String VERSION_4_UT_NAME = "jta/usertransaction";
-
-	private final JtaSynchronizationStrategy synchronizationStrategy = new TransactionManagerBasedSynchronizationStrategy( this );
 
 	private final Class transactionManagerAccessClass;
 	private final int webSphereVersion;
@@ -95,10 +92,5 @@ public class WebSphereJtaPlatform extends AbstractJtaPlatform {
 	protected UserTransaction locateUserTransaction() {
 		final String utName = webSphereVersion == 5 ? VERSION_5_UT_NAME : VERSION_4_UT_NAME;
 		return (UserTransaction) jndiService().locate( utName );
-	}
-
-	@Override
-	protected JtaSynchronizationStrategy getSynchronizationStrategy() {
-		return synchronizationStrategy;
 	}
 }

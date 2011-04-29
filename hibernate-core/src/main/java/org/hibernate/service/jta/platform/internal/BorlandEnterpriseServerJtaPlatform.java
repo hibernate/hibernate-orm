@@ -33,8 +33,6 @@ public class BorlandEnterpriseServerJtaPlatform extends AbstractJtaPlatform {
 	protected static final String TM_NAME = "java:pm/TransactionManager";
 	protected static final String UT_NAME = "java:comp/UserTransaction";
 
-	private final JtaSynchronizationStrategy synchronizationStrategy = new TransactionManagerBasedSynchronizationStrategy( this );
-
 	@Override
 	protected TransactionManager locateTransactionManager() {
 		return (TransactionManager) jndiService().locate( TM_NAME );
@@ -43,10 +41,5 @@ public class BorlandEnterpriseServerJtaPlatform extends AbstractJtaPlatform {
 	@Override
 	protected UserTransaction locateUserTransaction() {
 		return (UserTransaction) jndiService().locate( UT_NAME );
-	}
-
-	@Override
-	protected JtaSynchronizationStrategy getSynchronizationStrategy() {
-		return synchronizationStrategy;
 	}
 }

@@ -48,6 +48,8 @@ public abstract class AbstractJtaPlatform
 	private boolean cacheUserTransaction;
 	private ServiceRegistryImplementor serviceRegistry;
 
+	private final JtaSynchronizationStrategy tmSynchronizationStrategy = new TransactionManagerBasedSynchronizationStrategy( this );
+
 	@Override
 	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
 		this.serviceRegistry = serviceRegistry;
@@ -116,7 +118,9 @@ public abstract class AbstractJtaPlatform
 		return transaction;
 	}
 
-	protected abstract JtaSynchronizationStrategy getSynchronizationStrategy();
+	protected JtaSynchronizationStrategy getSynchronizationStrategy() {
+		return tmSynchronizationStrategy;
+	}
 
 	@Override
 	public void registerSynchronization(Synchronization synchronization) {

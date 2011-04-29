@@ -122,7 +122,7 @@ public class JtaPlatformInitiator implements BasicServiceInitiator<JtaPlatform> 
 		}
 
 		if ( "org.hibernate.transaction.JBossTransactionManagerLookup".equals( tmlImplName ) ) {
-			return new JBossAppServerPlatform();
+			return new JBossAppServerJtaPlatform();
 		}
 
 		if ( "org.hibernate.transaction.JBossTSStandaloneTransactionManagerLookup".equals( tmlImplName ) ) {

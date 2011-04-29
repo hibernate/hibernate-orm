@@ -35,13 +35,6 @@ import org.hibernate.service.jta.platform.spi.JtaPlatformException;
 public class BitronixJtaPlatform extends AbstractJtaPlatform {
 	private static final String TM_CLASS_NAME = "bitronix.tm.TransactionManagerServices";
 
-	private final JtaSynchronizationStrategy synchronizationStrategy = new TransactionManagerBasedSynchronizationStrategy( this );
-
-	@Override
-	protected JtaSynchronizationStrategy getSynchronizationStrategy() {
-		return synchronizationStrategy;
-	}
-
 	@Override
 	protected TransactionManager locateTransactionManager() {
 		try {

@@ -38,8 +38,6 @@ public class TransactionManagerLookupBridge extends AbstractJtaPlatform {
 	private final TransactionManagerLookup lookup;
 	private final Properties jndiProperties;
 
-	private final JtaSynchronizationStrategy synchronizationStrategy = new TransactionManagerBasedSynchronizationStrategy( this );
-
 	public TransactionManagerLookupBridge(TransactionManagerLookup lookup, Properties jndiProperties) {
 		this.lookup = lookup;
 		this.jndiProperties = jndiProperties;
@@ -53,11 +51,6 @@ public class TransactionManagerLookupBridge extends AbstractJtaPlatform {
 	@Override
 	protected UserTransaction locateUserTransaction() {
 		return (UserTransaction) serviceRegistry().getService( JndiService.class ).locate( lookup.getUserTransactionName() );
-	}
-
-	@Override
-	protected JtaSynchronizationStrategy getSynchronizationStrategy() {
-		return synchronizationStrategy;
 	}
 
 	@Override

@@ -77,6 +77,9 @@ public final class TransactionManagerLookupFactory {
 	public static TransactionManagerLookup getTransactionManagerLookup(Properties props) throws HibernateException {
 		String tmLookupClass = props.getProperty( Environment.TRANSACTION_MANAGER_STRATEGY );
 		if ( tmLookupClass == null ) {
+			tmLookupClass = props.getProperty( Environment.DEFAULT_TRANSACTION_MANAGER_STRATEGY );
+		}
+		if ( tmLookupClass == null ) {
 			log.info( "No TransactionManagerLookup configured (in JTA environment, use of read-write or transactional second-level cache is not recommended)" );
 			return null;
 		}

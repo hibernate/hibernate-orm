@@ -389,6 +389,11 @@ public final class Environment {
 	 */
 	public static final String TRANSACTION_MANAGER_STRATEGY = "hibernate.transaction.manager_lookup_class";
 	/**
+	 * If none is explicitly set, default <tt>TransactionManagerLookup</tt> implementor
+	 * to use for obtaining the <tt>TransactionManager</tt>
+	 */
+	public static final String DEFAULT_TRANSACTION_MANAGER_STRATEGY = "hibernate.transaction.default_manager_lookup_class";
+	/**
 	 * JNDI name of JTA <tt>UserTransaction</tt> object
 	 */
 	public static final String USER_TRANSACTION = "jta.UserTransaction";

@@ -10,6 +10,7 @@ import org.junit.Test;
 
 import javax.persistence.EntityManager;
 import java.util.Arrays;
+import java.util.Properties;
 
 /**
  * Tests simple auditing process (read and write operations) when <i>REVINFO</i> and audit tables
@@ -21,10 +22,16 @@ public class DifferentDBSchemaTest extends AbstractEntityTest {
     private Integer steId = null;
 
     @Override
-    public void configure(Ejb3Configuration cfg) {
+    public void addConfigurationProperties(Properties configuration) {
+        super.addConfigurationProperties(configuration);
+
         // Creates new schema after establishing connection
-        cfg.setProperty(Environment.URL, cfg.getProperties().getProperty(Environment.URL) + ";INIT=CREATE SCHEMA IF NOT EXISTS " + SCHEMA_NAME);
-        cfg.setProperty("org.hibernate.envers.default_schema", SCHEMA_NAME);
+        configuration.setProperty(Environment.URL, configuration.getProperty(Environment.URL) + ";INIT=CREATE SCHEMA IF NOT EXISTS " + SCHEMA_NAME);
+        configuration.setProperty("org.hibernate.envers.default_schema", SCHEMA_NAME);
+    }
+
+    @Override
+    public void configure(Ejb3Configuration cfg) {
         cfg.addAnnotatedClass(StrTestEntity.class);
     }
 

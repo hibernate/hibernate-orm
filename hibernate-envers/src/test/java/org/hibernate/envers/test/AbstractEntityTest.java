@@ -28,6 +28,7 @@ import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.event.EnversIntegrator;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.service.internal.BasicServiceRegistryImpl;
 import org.hibernate.testing.AfterClassOnce;
@@ -51,6 +52,8 @@ public abstract class AbstractEntityTest extends AbstractEnversTest {
     private boolean audited;
 
     public abstract void configure(Ejb3Configuration cfg);
+
+    public void addConfigurationProperties(Properties configuration) { }
 
     private void closeEntityManager() {
         if (entityManager != null) {
@@ -78,31 +81,41 @@ public abstract class AbstractEntityTest extends AbstractEnversTest {
     protected void init(boolean audited, String auditStrategy) throws IOException {
         this.audited = audited;
 
-        cfg = new Ejb3Configuration();
-        Properties configValues = cfg.getProperties();
+        Properties configurationProperties = new Properties();
         if (!audited) {
-			configValues.setProperty(EnversIntegrator.AUTO_REGISTER, "false");
+			configurationProperties.setProperty(EnversIntegrator.AUTO_REGISTER, "false");
         }
 
-        configValues.setProperty(Environment.HBM2DDL_AUTO, "create-drop");
-        configValues.setProperty(Environment.DIALECT, "org.hibernate.dialect.H2Dialect");
-        configValues.setProperty(Environment.DRIVER, "org.h2.Driver");
-        configValues.setProperty(Environment.USER, "sa");
+        configurationProperties.setProperty(Environment.HBM2DDL_AUTO, "create-drop");
+        configurationProperties.setProperty(Environment.DIALECT, "org.hibernate.dialect.H2Dialect");
+        configurationProperties.setProperty(Environment.DRIVER, "org.h2.Driver");
+        configurationProperties.setProperty(Environment.USER, "sa");
 
         // Separate database for each test class
-        configValues.setProperty(Environment.URL, "jdbc:h2:mem:" + this.getClass().getName() + ";DB_CLOSE_DELAY=-1");
+        configurationProperties.setProperty(Environment.URL, "jdbc:h2:mem:" + this.getClass().getName() + ";DB_CLOSE_DELAY=-1");
 
         if (auditStrategy != null && !"".equals(auditStrategy)) {
-            cfg.setProperty("org.hibernate.envers.audit_strategy", auditStrategy);
+            configurationProperties.setProperty("org.hibernate.envers.audit_strategy", auditStrategy);
         }
 
-        configure( cfg );
+        addConfigurationProperties(configurationProperties);
 
-		serviceRegistry = (BasicServiceRegistryImpl) new ServiceRegistryBuilder( configValues ).buildServiceRegistry();
+        cfg = new Ejb3Configuration();
+        configure(cfg);
+        cfg.configure(configurationProperties);
+
+        serviceRegistry = createServiceRegistry(cfg);
 
         emf = cfg.buildEntityManagerFactory( serviceRegistry );
 
         newEntityManager();
+    }
+
+    private BasicServiceRegistryImpl createServiceRegistry(Ejb3Configuration configuration) {
+        Properties properties = new Properties();
+		properties.putAll(configuration.getHibernateConfiguration().getProperties());
+		ConfigurationHelper.resolvePlaceHolders(properties);
+		return (BasicServiceRegistryImpl) new ServiceRegistryBuilder(properties).buildServiceRegistry();
     }
 
     @AfterClassOnce

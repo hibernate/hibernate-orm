@@ -10,6 +10,7 @@ import org.junit.Test;
 import javax.persistence.EntityManager;
 import javax.transaction.TransactionManager;
 import java.util.Arrays;
+import java.util.Properties;
 
 import static org.hibernate.envers.test.EnversTestingJtaBootstrap.*;
 
@@ -23,7 +24,12 @@ public class JtaTransaction extends AbstractEntityTest {
 
     public void configure(Ejb3Configuration cfg) {
         cfg.addAnnotatedClass(IntTestEntity.class);
-        tm = EnversTestingJtaBootstrap.updateConfigAndCreateTM(cfg.getProperties());
+    }
+
+    @Override
+    public void addConfigurationProperties(Properties configuration) {
+        super.addConfigurationProperties(configuration);
+        tm = EnversTestingJtaBootstrap.updateConfigAndCreateTM(configuration);
     }
 
     @Test

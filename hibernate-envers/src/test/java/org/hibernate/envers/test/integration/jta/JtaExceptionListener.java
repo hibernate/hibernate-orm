@@ -25,6 +25,7 @@ package org.hibernate.envers.test.integration.jta;
 
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.EnversTestingJtaBootstrap;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.envers.test.integration.reventity.ExceptionListenerRevEntity;
@@ -33,6 +34,7 @@ import org.junit.Test;
 import javax.persistence.EntityManager;
 import javax.transaction.RollbackException;
 import javax.transaction.TransactionManager;
+import java.util.Properties;
 
 import static org.hibernate.envers.test.EnversTestingJtaBootstrap.*;
 
@@ -44,10 +46,14 @@ public class JtaExceptionListener extends AbstractEntityTest {
     private TransactionManager tm;
 
     public void configure(Ejb3Configuration cfg) {
-        tm = updateConfigAndCreateTM(cfg.getProperties());
-
         cfg.addAnnotatedClass(StrTestEntity.class);
         cfg.addAnnotatedClass(ExceptionListenerRevEntity.class);
+    }
+
+     @Override
+    public void addConfigurationProperties(Properties configuration) {
+        super.addConfigurationProperties(configuration);
+        tm = EnversTestingJtaBootstrap.updateConfigAndCreateTM(configuration);
     }
 
     @Test(expected = RollbackException.class)

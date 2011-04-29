@@ -113,19 +113,21 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 				Connection connection = jdbcConnectionAccess.obtainConnection();
 				try {
 					DatabaseMetaData meta = connection.getMetaData();
-                    LOG.debugf( "Database ->\n" + "       name : %s\n" + "    version : %s\n" + "      major : %s\n" + "      minor : %s",
-								meta.getDatabaseProductName(),
-								meta.getDatabaseProductVersion(),
-								meta.getDatabaseMajorVersion(),
-								meta.getDatabaseMinorVersion()
-					);
-                    LOG.debugf( "Driver ->\n" + "       name : %s\n" + "    version : %s\n" + "      major : %s\n" + "      minor : %s",
-								meta.getDriverName(),
-								meta.getDriverVersion(),
-								meta.getDriverMajorVersion(),
-								meta.getDriverMinorVersion()
-					);
-                    LOG.debugf( "JDBC version : %s.%s", meta.getJDBCMajorVersion(), meta.getJDBCMinorVersion() );
+					if(LOG.isDebugEnabled()) {
+						LOG.debugf( "Database ->\n" + "       name : %s\n" + "    version : %s\n" + "      major : %s\n" + "      minor : %s",
+									meta.getDatabaseProductName(),
+									meta.getDatabaseProductVersion(),
+									meta.getDatabaseMajorVersion(),
+									meta.getDatabaseMinorVersion()
+						);
+						LOG.debugf( "Driver ->\n" + "       name : %s\n" + "    version : %s\n" + "      major : %s\n" + "      minor : %s",
+									meta.getDriverName(),
+									meta.getDriverVersion(),
+									meta.getDriverMajorVersion(),
+									meta.getDriverMinorVersion()
+						);
+						LOG.debugf( "JDBC version : %s.%s", meta.getJDBCMajorVersion(), meta.getJDBCMinorVersion() );
+					}
 
 					metaSupportsScrollable = meta.supportsResultSetType( ResultSet.TYPE_SCROLL_INSENSITIVE );
 					metaSupportsBatchUpdates = meta.supportsBatchUpdates();

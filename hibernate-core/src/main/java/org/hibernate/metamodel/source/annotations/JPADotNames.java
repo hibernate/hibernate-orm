@@ -24,6 +24,7 @@
 package org.hibernate.metamodel.source.annotations;
 
 import javax.persistence.Access;
+import javax.persistence.Embeddable;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -42,6 +43,8 @@ import org.jboss.jandex.DotName;
 public interface JPADotNames {
 	public static final DotName ENTITY = DotName.createSimple( Entity.class.getName() );
 	public static final DotName MAPPED_SUPER_CLASS = DotName.createSimple( MappedSuperclass.class.getName() );
+	public static final DotName EMBEDDABLE = DotName.createSimple( Embeddable.class.getName() );
+
 	public static final DotName INHERITANCE = DotName.createSimple( Inheritance.class.getName() );
 
 	public static final DotName ID = DotName.createSimple( Id.class.getName() );

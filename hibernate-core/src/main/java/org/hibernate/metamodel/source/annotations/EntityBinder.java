@@ -70,6 +70,17 @@ public class EntityBinder {
 	}
 
 	private void bindTable(EntityBinding entityBinding) {
+
+//		this.schemaName = new Schema.Name(
+//				( entityClazz.getSchema() == null ?
+//						hibernateMappingBinder.getDefaultSchemaName() :
+//						entityClazz.getSchema() ),
+//				( entityClazz.getCatalog() == null ?
+//						hibernateMappingBinder.getDefaultCatalogName() :
+//						entityClazz.getCatalog() )
+//		);
+
+
 		final Schema schema = meta.getDatabase().getSchema( null );
 	}
 

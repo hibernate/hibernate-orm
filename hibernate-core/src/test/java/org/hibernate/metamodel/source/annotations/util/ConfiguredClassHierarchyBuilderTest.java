@@ -26,6 +26,7 @@ package org.hibernate.metamodel.source.annotations.util;
 import java.util.Iterator;
 import java.util.Set;
 import javax.persistence.AccessType;
+import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -154,6 +155,17 @@ public class ConfiguredClassHierarchyBuilderTest extends BaseUnitTestCase {
 		}
 
 		Index index = JandexHelper.indexForClass( service, EntityAndMappedSuperClass.class );
+		ConfiguredClassHierarchyBuilder.createEntityHierarchies( index, serviceRegistry );
+	}
+
+	@Test(expected = AnnotationException.class)
+	public void testEntityAndEmbeddableAnnotations() {
+		@Entity
+		@Embeddable
+		class EntityAndEmbeddable {
+		}
+
+		Index index = JandexHelper.indexForClass( service, EntityAndEmbeddable.class );
 		ConfiguredClassHierarchyBuilder.createEntityHierarchies( index, serviceRegistry );
 	}
 

@@ -35,6 +35,7 @@ import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.Index;
 
+import org.hibernate.AnnotationException;
 import org.hibernate.metamodel.source.annotations.ConfiguredClassHierarchy;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.service.ServiceRegistry;
@@ -54,19 +55,14 @@ public class ConfiguredClassHierarchyBuilder {
 	 * @param index The annotation index
 	 * @param serviceRegistry The service registry
 	 *
-	 * @return a set of {@code ConfiguredClassHierarchy}s. One for each configured "leaf" entity.
+	 * @return a set of {@code ConfiguredClassHierarchy}s. One for each "leaf" entity.
 	 */
 	public static Set<ConfiguredClassHierarchy> createEntityHierarchies(Index index, ServiceRegistry serviceRegistry) {
 		ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
 		Map<ClassInfo, List<ClassInfo>> processedClassInfos = new HashMap<ClassInfo, List<ClassInfo>>();
 
 		for ( ClassInfo info : index.getKnownClasses() ) {
-			AnnotationInstance jpaEntityAnnotation = JandexHelper.getSingleAnnotation( info, JPADotNames.ENTITY );
-			AnnotationInstance mappedSuperClassAnnotation = JandexHelper.getSingleAnnotation(
-					info, JPADotNames.MAPPED_SUPER_CLASS
-			);
-			// we are only interested in building the class hierarchies for @Entity or @MappedSuperclass w
-			if ( jpaEntityAnnotation == null && mappedSuperClassAnnotation == null ) {
+			if ( !isConfiguredClass( info ) ) {
 				continue;
 			}
 
@@ -110,6 +106,29 @@ public class ConfiguredClassHierarchyBuilder {
 		return hierarchies;
 	}
 
+	private static boolean isConfiguredClass(ClassInfo info) {
+		boolean isConfiguredClass = true;
+		AnnotationInstance jpaEntityAnnotation = JandexHelper.getSingleAnnotation( info, JPADotNames.ENTITY );
+		AnnotationInstance mappedSuperClassAnnotation = JandexHelper.getSingleAnnotation(
+				info, JPADotNames.MAPPED_SUPER_CLASS
+		);
+		AnnotationInstance embeddableAnnotation = JandexHelper.getSingleAnnotation(
+				info, JPADotNames.EMBEDDABLE
+		);
+
+		// we are only interested in building the class hierarchies for @Entity or @MappedSuperclass w
+		if ( jpaEntityAnnotation == null && mappedSuperClassAnnotation == null && embeddableAnnotation == null ) {
+			return false;
+		}
+
+		// some sanity checks
+		String className = info.toString();
+		assertNotEntityAndMappedSuperClass( jpaEntityAnnotation, mappedSuperClassAnnotation, className );
+		assertNotEntityAndEmbeddable( jpaEntityAnnotation, embeddableAnnotation, className );
+
+		return isConfiguredClass;
+	}
+
 	private static boolean existsHierarchyWithClassInfoAsLeaf(Map<ClassInfo, List<ClassInfo>> processedClassInfos, ClassInfo tmpClassInfo) {
 		if ( !processedClassInfos.containsKey( tmpClassInfo ) ) {
 			return false;
@@ -117,6 +136,22 @@ public class ConfiguredClassHierarchyBuilder {
 
 		List<ClassInfo> classInfoList = processedClassInfos.get( tmpClassInfo );
 		return classInfoList.get( classInfoList.size() - 1 ).equals( tmpClassInfo );
+	}
+
+	private static void assertNotEntityAndMappedSuperClass(AnnotationInstance jpaEntityAnnotation, AnnotationInstance mappedSuperClassAnnotation, String className) {
+		if ( jpaEntityAnnotation != null && mappedSuperClassAnnotation != null ) {
+			throw new AnnotationException(
+					"An entity cannot be annotated with both @Entity and @MappedSuperclass. " + className + " has both annotations."
+			);
+		}
+	}
+
+	private static void assertNotEntityAndEmbeddable(AnnotationInstance jpaEntityAnnotation, AnnotationInstance embeddableAnnotation, String className) {
+		if ( jpaEntityAnnotation != null && embeddableAnnotation != null ) {
+			throw new AnnotationException(
+					"An entity cannot be annotated with both @Entity and @Embeddable. " + className + " has both annotations."
+			);
+		}
 	}
 }
 

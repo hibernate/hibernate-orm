@@ -23,27 +23,6 @@
  */
 package org.hibernate.metamodel.source.annotations;
 
-import org.jboss.jandex.DotName;
-
-import org.hibernate.annotations.Check;
-import org.hibernate.annotations.Entity;
-import org.hibernate.annotations.FetchProfile;
-import org.hibernate.annotations.FetchProfiles;
-import org.hibernate.annotations.Table;
-
 /**
- * Defines the dot names for the Hibernate specific annotations.
- *
- * @author Hardy Ferentschik
+ * This package contains the core binding code for binding annotation based configuration to the Hibernate metadata model.
  */
-public interface HibernateDotNames {
-	public static final DotName ENTITY = DotName.createSimple( Entity.class.getName() );
-	public static final DotName TABLE = DotName.createSimple( Table.class.getName() );
-
-	public static final DotName FETCH_PROFILES = DotName.createSimple( FetchProfiles.class.getName() );
-	public static final DotName FETCH_PROFILE = DotName.createSimple( FetchProfile.class.getName() );
-
-	public static final DotName CHECK = DotName.createSimple( Check.class.getName() );
-}
-
-

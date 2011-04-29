@@ -35,17 +35,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.persistence.AccessType;
+import javax.persistence.InheritanceType;
 
 import com.fasterxml.classmate.ResolvedTypeWithMembers;
 import com.fasterxml.classmate.members.HierarchicType;
 import com.fasterxml.classmate.members.ResolvedMember;
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;
+import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.FieldInfo;
 import org.jboss.jandex.MethodInfo;
 
-import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.metamodel.source.annotations.util.JandexHelper;
@@ -59,26 +60,60 @@ import org.hibernate.service.classloading.spi.ClassLoaderService;
  * @author Hardy Ferentschik
  */
 public class ConfiguredClass {
+	/**
+	 * The parent of this configured class or {@code null} in case this configured class is the root of a hierarchy.
+	 */
 	private final ConfiguredClass parent;
 	private final ClassInfo classInfo;
 	private final Class<?> clazz;
+
 	private final boolean isRoot;
 	private final AccessType classAccessType;
 	private final AccessType hierarchyAccessType;
+
+	private final InheritanceType inheritanceType;
+	private final boolean hasOwnTable;
+	private final String primaryTableName;
+	private final AnnotationInstance tableAnnotation;
+
 	private final boolean isMappedSuperClass;
+	private final boolean isEmbeddable;
+
 	private final Map<String, MappedProperty> mappedProperties;
 
-	public ConfiguredClass(ClassInfo info, ConfiguredClass parent, AccessType hierarchyAccessType, ServiceRegistry serviceRegistry, ResolvedTypeWithMembers resolvedType) {
+	public ConfiguredClass(ClassInfo info,
+						   ConfiguredClass parent,
+						   AccessType hierarchyAccessType,
+						   InheritanceType inheritanceType,
+						   ServiceRegistry serviceRegistry,
+						   ResolvedTypeWithMembers resolvedType) {
 		this.classInfo = info;
 		this.parent = parent;
 		this.isRoot = parent == null;
 		this.hierarchyAccessType = hierarchyAccessType;
-
-		AnnotationInstance mappedSuperClassAnnotation = assertNotEntityAndMappedSuperClass();
-
+		this.inheritanceType = inheritanceType;
 		this.clazz = serviceRegistry.getService( ClassLoaderService.class ).classForName( info.toString() );
+
+		AnnotationInstance mappedSuperClassAnnotation = JandexHelper.getSingleAnnotation(
+				classInfo, JPADotNames.MAPPED_SUPER_CLASS
+		);
 		isMappedSuperClass = mappedSuperClassAnnotation != null;
+
+		AnnotationInstance embeddableAnnotation = JandexHelper.getSingleAnnotation(
+				classInfo, JPADotNames.MAPPED_SUPER_CLASS
+		);
+		isEmbeddable = embeddableAnnotation != null;
+
+		tableAnnotation = JandexHelper.getSingleAnnotation(
+				classInfo, JPADotNames.TABLE
+		);
+
+		// todo think about how exactly to handle embeddables regarding access type etc
+
 		classAccessType = determineClassAccessType();
+
+		hasOwnTable = definesItsOwnTable();
+		primaryTableName = determinePrimaryTableName();
 
 		List<MappedProperty> properties = collectMappedProperties( resolvedType );
 		// make sure the properties are ordered by property name
@@ -110,6 +145,22 @@ public class ConfiguredClass {
 		return isMappedSuperClass;
 	}
 
+	public boolean isEmbeddable() {
+		return isEmbeddable;
+	}
+
+	public InheritanceType getInheritanceType() {
+		return inheritanceType;
+	}
+
+	public boolean hasOwnTable() {
+		return hasOwnTable;
+	}
+
+	public String getPrimaryTableName() {
+		return primaryTableName;
+	}
+
 	public Iterable<MappedProperty> getMappedProperties() {
 		return mappedProperties.values();
 	}
@@ -126,6 +177,7 @@ public class ConfiguredClass {
 		sb.append( ", mappedProperties=" ).append( mappedProperties );
 		sb.append( ", classAccessType=" ).append( classAccessType );
 		sb.append( ", isRoot=" ).append( isRoot );
+		sb.append( ", inheritanceType=" ).append( inheritanceType );
 		sb.append( '}' );
 		return sb.toString();
 	}
@@ -344,20 +396,39 @@ public class ConfiguredClass {
 		}
 	}
 
-	private AnnotationInstance assertNotEntityAndMappedSuperClass() {
-		//@Entity and @MappedSuperclass on the same class leads to a NPE down the road
-		AnnotationInstance jpaEntityAnnotation = JandexHelper.getSingleAnnotation( classInfo, JPADotNames.ENTITY );
-		AnnotationInstance mappedSuperClassAnnotation = JandexHelper.getSingleAnnotation(
-				classInfo, JPADotNames.MAPPED_SUPER_CLASS
-		);
-
-		if ( jpaEntityAnnotation != null && mappedSuperClassAnnotation != null ) {
-			throw new AnnotationException(
-					"An entity cannot be annotated with both @Entity and @MappedSuperclass: "
-							+ classInfo.name().toString()
-			);
+	private boolean definesItsOwnTable() {
+		// mapped super classes and embeddables don't have their own tables
+		if ( isMappedSuperClass() || isEmbeddable() ) {
+			return false;
 		}
-		return mappedSuperClassAnnotation;
+
+		if ( InheritanceType.SINGLE_TABLE.equals( inheritanceType ) ) {
+			if ( isRoot() ) {
+				return true;
+			}
+			else {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private String determinePrimaryTableName() {
+		String tableName = null;
+		if ( hasOwnTable() ) {
+			tableName = clazz.getSimpleName();
+			if ( tableAnnotation != null ) {
+				AnnotationValue value = tableAnnotation.value( "name" );
+				String tmp = value == null ? null : value.asString();
+				if ( tmp != null && !tmp.isEmpty() ) {
+					tableName = tmp;
+				}
+			}
+		}
+		else if ( parent != null && !parent.isMappedSuperClass && !parent.isEmbeddable ) {
+			tableName = parent.getPrimaryTableName();
+		}
+		return tableName;
 	}
 }
 

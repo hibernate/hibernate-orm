@@ -24,6 +24,7 @@
 package org.hibernate.metamodel.binding;
 
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.metamodel.domain.Attribute;
 import org.hibernate.metamodel.domain.MetaAttribute;
@@ -104,6 +105,7 @@ public interface AttributeBinding {
 	public boolean isLazy();
 
 	public void addEntityReferencingAttributeBinding(EntityReferencingAttributeBinding attributeBinding);
+	public Set<EntityReferencingAttributeBinding> getEntityReferencingAttributeBindings();
 
 	public void validate();
 }

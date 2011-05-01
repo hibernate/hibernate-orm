@@ -26,10 +26,10 @@ package org.hibernate.metamodel.binding;
 import java.util.Iterator;
 
 import org.hibernate.MappingException;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.metamodel.relational.ForeignKey;
 import org.hibernate.metamodel.relational.SimpleValue;
 import org.hibernate.metamodel.relational.Column;
-import org.hibernate.metamodel.source.Metadata;
 
 /**
  * TODO : javadoc
@@ -52,7 +52,7 @@ public class ManyToOneAttributeBinding extends SingularAttributeBinding implemen
 		boolean ignoreNotFound();
 	}
 
-	public static interface RelationalState extends SingleValueRelationalState {
+	public static interface ManyToOneRelationalState extends RelationalState {
 		boolean isLogicalOneToOne();
 		String getForeignKeyName();
 	}
@@ -66,12 +66,23 @@ public class ManyToOneAttributeBinding extends SingularAttributeBinding implemen
 		isPropertyReference = state.getReferencedAttributeName() != null;
 		referencedAttributeName = state.getReferencedAttributeName();
 		referencedEntityName = state.getReferencedEntityName();
+		if ( referencedEntityName == null ) {
+				referencedEntityName =
+						ReflectHelper.reflectedPropertyClass(
+								getEntityBinding().getEntity().getName(),
+								state.getAttribute().getName()
+						).getName();
+		}
 	}
 
-	public final void initialize(RelationalState state) {
-		super.initializeSingleValue( state );
+	public final void initialize(ManyToOneRelationalState state) {
+		super.initialize( state );
 		isLogicalOneToOne = state.isLogicalOneToOne();
 		foreignKeyName = state.getForeignKeyName();
+	}
+
+	public final boolean isPropertyReference() {
+		return isPropertyReference;
 	}
 
 	public final String getReferencedEntityName() {

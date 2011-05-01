@@ -59,9 +59,9 @@ class EntityReferenceResolver {
 					"] refers to unknown entity: [" + attributeBinding.getReferencedEntityName() + "]" );
 		}
 		AttributeBinding referencedAttributeBinding =
-				attributeBinding.getReferencedAttributeName() == null ?
-						entityBinding.getEntityIdentifier().getValueBinding() :
-						entityBinding.getAttributeBinding( attributeBinding.getReferencedAttributeName() );
+				attributeBinding.isPropertyReference() ?
+						entityBinding.getAttributeBinding( attributeBinding.getReferencedAttributeName() ) :
+						entityBinding.getEntityIdentifier().getValueBinding();
 		if ( referencedAttributeBinding == null ) {
 			// TODO: does attribute name include path w/ entity name?
 			throw new MappingException(

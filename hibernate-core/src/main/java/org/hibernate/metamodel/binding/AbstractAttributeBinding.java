@@ -109,12 +109,20 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 		this.attribute = attribute;
 	}
 
-	protected void initializeColumnValue(ColumnRelationalState state, boolean forceNonNullable, boolean forceUnique) {
-		Column columnValue = createColumn( state, forceNonNullable, forceUnique );
+	protected boolean forceNonNullable() {
+		return false;
+	}
+
+	protected boolean forceUnique() {
+		return false;
+	}
+
+	protected void initializeColumnValue(ColumnRelationalState state) {
+		Column columnValue = createColumn( state );
 		setValue( columnValue );
 	}
 
-	private Column createColumn(ColumnRelationalState state, boolean forceNonNullable, boolean forceUnique) {
+	private Column createColumn(ColumnRelationalState state) {
 		final String explicitName = state.getExplicitColumnName();
 		final String logicalColumnName = state.getNamingStrategy().logicalColumnName( explicitName, getAttribute().getName() );
 		final TableSpecification table = getEntityBinding().getBaseTable();
@@ -126,8 +134,8 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 //			mappings.addColumnBinding( logicalColumnName, column, table );
 		Column columnValue = table.createColumn( columnName );
 		columnValue.getSize().initialize( state.getSize() );
-		columnValue.setNullable( ! forceNonNullable &&  state.isNullable() );
-		columnValue.setUnique( ! forceUnique && state.isUnique()  );
+		columnValue.setNullable( ! forceNonNullable() &&  state.isNullable() );
+		columnValue.setUnique( ! forceUnique() && state.isUnique()  );
 		columnValue.setCheckCondition( state.getCheckCondition() );
 		columnValue.setDefaultValue( state.getDefault() );
 		columnValue.setSqlType( state.getSqlType() );
@@ -143,6 +151,16 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 		return columnValue;
 	}
 
+	public final void initialize(RelationalState state) {
+		if ( SingleValueRelationalState.class.isInstance( state ) ) {
+			initializeSingleValue( SingleValueRelationalState.class.cast( state )  );
+		}
+		else if ( SimpleTupleRelationalState.class.isInstance( state ) ) {
+			initializeTupleValue( SimpleTupleRelationalState.class.cast( state ).getRelationalStates() );
+		}
+	}
+
+
 	public final <T extends DerivedRelationalState> void initializeDerivedValue(T state) {
 		value = createDerivedValue( state );
 	}
@@ -151,13 +169,13 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 		return getEntityBinding().getBaseTable().createDerivedValue( state.getFormula() );
 	}
 
-	public final void initializeSingleValue(SingleValueRelationalState state, boolean forceNonNullable, boolean forceUnique) {
-		value = createSingleValue( state,  forceNonNullable, forceUnique );
+	public final void initializeSingleValue(SingleValueRelationalState state) {
+		value = createSingleValue( state );
 	}
 
-	protected SimpleValue createSingleValue(SingleValueRelationalState state, boolean forceNonNullable, boolean forceUnique) {
+	protected SimpleValue createSingleValue(SingleValueRelationalState state) {
 		if ( state instanceof ColumnRelationalState ) {
-			return createColumn( ColumnRelationalState.class.cast( state ), forceNonNullable, forceUnique );
+			return createColumn( ColumnRelationalState.class.cast( state ) );
 		}
 		else if ( state instanceof DerivedRelationalState ) {
 			return createDerivedValue( DerivedRelationalState.class.cast( state ) );
@@ -167,12 +185,20 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 		}
 	}
 
-	protected final void initializeTupleValue(Set<SingleValueRelationalState> singleValueStates, boolean forceNonNullable, boolean forceUnique) {
-		Tuple tuple = getEntityBinding().getBaseTable().createTuple(  "[" + getAttribute().getName() + "]" );
-		for ( SingleValueRelationalState singleValueState : singleValueStates ) {
-			tuple.addValue( createSingleValue( singleValueState, forceNonNullable, forceUnique ) );
+	protected final void initializeTupleValue(Set<SingleValueRelationalState> singleValueStates) {
+		if ( singleValueStates.size() == 0 ) {
+			throw new MappingException( "Tuple state does not contain any values." );
 		}
-		value = tuple;
+		if ( singleValueStates.size() == 1 ) {
+			initializeSingleValue( singleValueStates.iterator().next() );
+		}
+		else {
+			Tuple tuple = getEntityBinding().getBaseTable().createTuple(  "[" + getAttribute().getName() + "]" );
+			for ( SingleValueRelationalState singleValueState : singleValueStates ) {
+				tuple.addValue( createSingleValue( singleValueState ) );
+			}
+			value = tuple;
+		}
 	}
 
 	@Override
@@ -290,6 +316,10 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 		entityReferencingAttributeBindings.add( referencingAttributeBinding );
 	}
 
+	public Set<EntityReferencingAttributeBinding> getEntityReferencingAttributeBindings() {
+		return Collections.unmodifiableSet( entityReferencingAttributeBindings );
+	}
+
 	public void validate() {
 		if ( ! entityReferencingAttributeBindings.isEmpty() ) {
 			// TODO; validate that this AttributeBinding can be a target of an entity reference
@@ -298,9 +328,11 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 		}
 	}
 
-	public static interface SingleValueRelationalState {}
+	public static interface RelationalState {}
 
-	public static interface ColumnRelationalState extends SimpleAttributeBinding.SingleValueRelationalState {
+	public static interface SingleValueRelationalState extends RelationalState {}
+
+	public static interface ColumnRelationalState extends SingleValueRelationalState {
 		NamingStrategy getNamingStrategy();
 		String getExplicitColumnName();
 		boolean isUnique();
@@ -320,4 +352,10 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 		String getFormula();
 	}
 
+	public static interface SimpleTupleRelationalState extends TupleRelationalState<SingleValueRelationalState> {
+	}
+
+	public static interface TupleRelationalState<T extends RelationalState> extends RelationalState{
+		Set<T> getRelationalStates();
+	}
 }

@@ -25,28 +25,14 @@ package org.hibernate.metamodel.source.hbm.state.domain;
 
 import java.util.Map;
 
-import org.dom4j.Attribute;
-import org.dom4j.Element;
-
 import org.hibernate.FetchMode;
-import org.hibernate.MappingException;
-import org.hibernate.cfg.HbmBinder;
-import org.hibernate.cfg.Mappings;
-import org.hibernate.mapping.Fetchable;
-import org.hibernate.mapping.OneToOne;
-import org.hibernate.mapping.PropertyGeneration;
-import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.HibernateTypeDescriptor;
 import org.hibernate.metamodel.binding.ManyToOneAttributeBinding;
 import org.hibernate.metamodel.binding.MappingDefaults;
-import org.hibernate.metamodel.binding.SimpleAttributeBinding;
 import org.hibernate.metamodel.domain.MetaAttribute;
-import org.hibernate.metamodel.source.Metadata;
 import org.hibernate.metamodel.source.hbm.HbmHelper;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLManyToOneElement;
-import org.hibernate.metamodel.source.util.DomHelper;
 import org.hibernate.metamodel.source.util.MappingHelper;
-import org.hibernate.tuple.component.Dom4jComponentTuplizer;
 
 /**
  * @author Gail Badner
@@ -56,8 +42,16 @@ public class HbmManyToOneAttributeDomainState
 		implements ManyToOneAttributeBinding.DomainState {
 
 	private final HibernateTypeDescriptor hibernateTypeDescriptor = new HibernateTypeDescriptor();
-	private final XMLManyToOneElement manyToOne;
+	private final FetchMode fetchMode;
+	private final boolean isUnwrapProxy;
+	private final boolean isLazy;
 	private final String cascade;
+	private final boolean isEmbedded;
+	private final String referencedPropertyName;
+	private final String referencedEntityName;
+	private final boolean ignoreNotFound;
+	private final boolean isInsertable;
+	private final boolean isUpdateable;
 
 	public HbmManyToOneAttributeDomainState(MappingDefaults defaults,
 										   org.hibernate.metamodel.domain.Attribute attribute,
@@ -71,15 +65,29 @@ public class HbmManyToOneAttributeDomainState
 				HbmHelper.getPropertyAccessorName( manyToOne.getAccess(), manyToOne.isEmbedXml(), defaults.getDefaultAccess() ),
 				manyToOne.isOptimisticLock()
 		);
-
-		this.hibernateTypeDescriptor.setTypeName( getReferencedEntityName() );
-		this.manyToOne = manyToOne;
-		this.cascade = MappingHelper.getStringValue( manyToOne.getCascade(), defaults.getDefaultCascade() );
+		fetchMode = getFetchMode( manyToOne );
+		isUnwrapProxy = manyToOne.getLazy() != null && "no-proxy".equals( manyToOne.getLazy().value() );
+		//TODO: better to degrade to lazy="false" if uninstrumented
+		isLazy =  manyToOne.getLazy() == null ||
+				isUnwrapProxy ||
+				"proxy".equals( manyToOne.getLazy().value() );
+		cascade = MappingHelper.getStringValue( manyToOne.getCascade(), defaults.getDefaultCascade() );
+		isEmbedded = manyToOne.isEmbedXml();
+		hibernateTypeDescriptor.setTypeName( getReferencedEntityName() );
+		referencedPropertyName = manyToOne.getPropertyRef();
+		referencedEntityName = (
+				manyToOne.getEntityName() == null ?
+				HbmHelper.getClassName( manyToOne.getClazz(), getDefaults().getPackageName() ) :
+				manyToOne.getEntityName().intern()
+		);
+		ignoreNotFound = "ignore".equals( manyToOne.getNotFound().value() );
+		isInsertable = manyToOne.isInsert();
+		isUpdateable = manyToOne.isUpdate();
 	}
 
 	// TODO: is this needed???
 	protected boolean isEmbedded() {
-		return MappingHelper.getBooleanValue( manyToOne.isEmbedXml(), true );
+		return isEmbedded;
 	}
 
 	public HibernateTypeDescriptor getHibernateTypeDescriptor() {
@@ -87,13 +95,13 @@ public class HbmManyToOneAttributeDomainState
 	}
 
 	// same as for plural attributes...
-	public FetchMode getFetchMode() {
+	private static FetchMode getFetchMode(XMLManyToOneElement manyToOne) {
 		FetchMode fetchMode;
 		if ( manyToOne.getFetch() != null ) {
-			fetchMode = "join".equals( manyToOne.getFetch() ) ? FetchMode.JOIN : FetchMode.SELECT;
+			fetchMode = "join".equals( manyToOne.getFetch().value() ) ? FetchMode.JOIN : FetchMode.SELECT;
 		}
 		else {
-			String jfNodeValue = ( manyToOne.getOuterJoin().value() == null ? "auto" : manyToOne.getOuterJoin().value() );
+			String jfNodeValue = ( manyToOne.getOuterJoin() == null ? "auto" : manyToOne.getOuterJoin().value() );
 			if ( "auto".equals( jfNodeValue ) ) {
 				fetchMode = FetchMode.DEFAULT;
 			}
@@ -107,54 +115,40 @@ public class HbmManyToOneAttributeDomainState
 		return fetchMode;
 	}
 
+	public FetchMode getFetchMode() {
+		return fetchMode;
+	}
+
 	public boolean isLazy() {
-		return manyToOne.getLazy() == null ||
-				isUnwrapProxy() ||
-				manyToOne.getLazy().equals( "proxy" );
-		//TODO: better to degrade to lazy="false" if uninstrumented
+		return isLazy;
 	}
 
 	public boolean isUnwrapProxy() {
-		return "no-proxy".equals( manyToOne.getLazy() );
+		return isUnwrapProxy;
 	}
 
 	public String getReferencedAttributeName() {
-		return manyToOne.getPropertyRef();
+		return referencedPropertyName;
 	}
 
 	public String getReferencedEntityName() {
-		String entityName = manyToOne.getEntityName();
-		return entityName == null ?
-				HbmHelper.getClassName( manyToOne.getClazz(), getDefaults().getPackageName() ) :
-				entityName.intern();
+		return referencedEntityName;
 	}
 
 	public String getCascade() {
-		return MappingHelper.getStringValue( manyToOne.getCascade(), getDefaults().getDefaultCascade() );
+		return cascade;
 	}
 
 	public boolean ignoreNotFound() {
-		return "ignore".equals( manyToOne.getNotFound() );
+		return ignoreNotFound;
 	}
-
-	/*
-	void junk() {
-		if( getReferencedPropertyName() != null && ! ignoreNotFound() ) {
-				mappings.addSecondPass( new ManyToOneSecondPass(manyToOne) );
-		}
-	}
-	*/
 
 	public boolean isInsertable() {
-		return MappingHelper.getBooleanValue( manyToOne.isInsert(), true );
+		return isInsertable;
 	}
 
 	public boolean isUpdateable() {
-		return MappingHelper.getBooleanValue( manyToOne.isUnique(), true );
-	}
-
-	public String getForeignkeyName() {
-		return manyToOne.getForeignKey();
+		return isUpdateable;
 	}
 
 	public boolean isKeyCasadeDeleteEnabled() {

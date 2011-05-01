@@ -23,7 +23,12 @@
  */
 package org.hibernate.metamodel.binding;
 
+import java.util.Iterator;
+
 import org.hibernate.metamodel.relational.Column;
+import org.hibernate.metamodel.source.Metadata;
+import org.hibernate.metamodel.source.internal.MetadataImpl;
+import org.hibernate.metamodel.source.spi.MetadataImplementor;
 import org.hibernate.service.BasicServiceRegistry;
 import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.service.internal.BasicServiceRegistryImpl;
@@ -34,6 +39,7 @@ import org.junit.Test;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
+import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertNull;
 import static org.junit.Assert.assertSame;
@@ -64,7 +70,10 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 
 	@Test
 	public void testSimpleEntityMapping() {
-		EntityBinding entityBinding = buildSimpleEntityBinding();
+		checkSimpleEntityMaping( buildSimpleEntityBinding() );
+	}
+
+	protected void checkSimpleEntityMaping(EntityBinding entityBinding) {
 		assertNotNull( entityBinding );
 		assertNotNull( entityBinding.getEntityIdentifier() );
 		assertNotNull( entityBinding.getEntityIdentifier().getValueBinding() );
@@ -105,6 +114,21 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 		assertNotNull( nameBinding.getValue() );
 	}
 
+	@Test
+	public void testEntityWithManyToOneMapping() {
+		MetadataImplementor metadata = buildMetadataWithManyToOne();
+		EntityBinding entityWithManyToOneBinding = metadata.getEntityBinding( EntityWithManyToOne.class.getName() );
+		EntityBinding simpleEntityBinding = metadata.getEntityBinding( SimpleEntity.class.getName() );
+		checkSimpleEntityMaping( simpleEntityBinding );
+
+		assertTrue(
+				1 == simpleEntityBinding.getAttributeBinding( "id" ).getEntityReferencingAttributeBindings().size()
+		);
+		Iterator<EntityReferencingAttributeBinding> it = entityWithManyToOneBinding.getEntityReferencingAttributeBindings().iterator();
+		assertTrue( it.hasNext() );
+		assertSame( entityWithManyToOneBinding.getAttributeBinding( "simpleEntity" ), it.next() );
+		assertFalse( it.hasNext() );
+	}
 	/*
 	@Test
 	public void testEntityWithElementCollection() {
@@ -132,6 +156,8 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 	public abstract EntityBinding buildSimpleVersionedEntityBinding();
 
 	public abstract EntityBinding buildSimpleEntityBinding();
+
+	public abstract MetadataImplementor buildMetadataWithManyToOne();
 
 	//public abstract EntityBinding buildEntityWithElementCollectionBinding();
 }

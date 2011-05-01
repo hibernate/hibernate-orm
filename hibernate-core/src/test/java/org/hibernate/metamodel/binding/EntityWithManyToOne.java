@@ -23,18 +23,53 @@
  */
 package org.hibernate.metamodel.binding;
 
-import org.hibernate.metamodel.relational.Value;
+import java.util.HashSet;
+import java.util.Set;
+
+import javax.persistence.Id;
+import javax.persistence.ManyToOne;
+
+import org.hibernate.annotations.Entity;
 
 /**
- * TODO : javadoc
- *
  * @author Gail Badner
  */
-public interface EntityReferencingAttributeBinding extends AttributeBinding {
-	boolean isReferenceResolved();
-	boolean isPropertyReference();
-	String getReferencedEntityName();
-	String getReferencedAttributeName();
-	EntityBinding getReferencedEntityBinding();
-	void resolveReference(AttributeBinding attributeBinding);
+@Entity
+public class EntityWithManyToOne {
+	@Id
+	private Long id;
+	private String theName;
+	SimpleEntity simpleEntity;
+
+	public EntityWithManyToOne() {
+	}
+
+	public EntityWithManyToOne(String name) {
+		this.theName = theName;
+	}
+
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	public String getName() {
+		return theName;
+	}
+
+	public void setName(String name) {
+		this.theName = theName;
+	}
+
+	@ManyToOne
+	public SimpleEntity getSimpleEntity() {
+		return simpleEntity;
+	}
+
+	public void setSimpleEntity(SimpleEntity simpleEntity) {
+		this.simpleEntity = simpleEntity;
+	}
 }

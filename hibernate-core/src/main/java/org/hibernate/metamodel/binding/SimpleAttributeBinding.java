@@ -23,15 +23,8 @@
  */
 package org.hibernate.metamodel.binding;
 
-import java.util.Set;
-
 import org.hibernate.MappingException;
 import org.hibernate.mapping.PropertyGeneration;
-import org.hibernate.metamodel.relational.Column;
-import org.hibernate.metamodel.relational.DerivedValue;
-import org.hibernate.metamodel.relational.SimpleValue;
-import org.hibernate.metamodel.relational.TableSpecification;
-import org.hibernate.metamodel.relational.Tuple;
 
 /**
  * TODO : javadoc
@@ -54,15 +47,15 @@ public class SimpleAttributeBinding extends SingularAttributeBinding {
 		generation = state.getPropertyGeneration();
 	}
 
-	public final void initializeTupleValue(TupleRelationalState state) {
-		if ( state.getSingleValueRelationalStates().size() == 0 ) {
+	public final void initializeTupleValue(SimpleTupleRelationalState state) {
+		if ( state.getRelationalStates().size() == 0 ) {
 			throw new MappingException( "Tuple state does not contain any values." );
 		}
-		if ( state.getSingleValueRelationalStates().size() == 1 ) {
-			initializeSingleValue( state.getSingleValueRelationalStates().iterator().next() );
+		if ( state.getRelationalStates().size() == 1 ) {
+			initializeSingleValue( state.getRelationalStates().iterator().next() );
 		}
 		else {
-			initializeTupleValue( state.getSingleValueRelationalStates() );
+			initializeTupleValue( state.getRelationalStates() );
 		}
 	}
 
@@ -83,7 +76,4 @@ public class SimpleAttributeBinding extends SingularAttributeBinding {
 		return generation;
 	}
 
-	public static interface TupleRelationalState {
-		Set<SingleValueRelationalState> getSingleValueRelationalStates();
-	}
 }

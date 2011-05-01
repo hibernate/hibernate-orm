@@ -23,15 +23,11 @@
  */
 package org.hibernate.metamodel.binding;
 
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-
 import org.jboss.logging.Logger;
 
 import org.hibernate.metamodel.source.MetadataSources;
-import org.hibernate.metamodel.source.internal.JaxbRoot;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
+import org.hibernate.metamodel.source.spi.MetadataImplementor;
 
 import org.junit.Test;
 
@@ -57,6 +53,14 @@ public class BasicHbmBindingTests extends AbstractBasicBindingTests {
 				"org/hibernate/metamodel/binding/SimpleVersionedEntity.hbm.xml",
 				SimpleVersionedEntity.class.getName()
 		);
+	}
+
+	public MetadataImplementor buildMetadataWithManyToOne() {
+		MetadataSources metadataSources = new MetadataSources(  basicServiceRegistry() );
+		metadataSources.addResource( "org/hibernate/metamodel/binding/EntityWithManyToOne.hbm.xml" );
+		metadataSources.addResource( "org/hibernate/metamodel/binding/SimpleEntity.hbm.xml" );
+		assertEquals( 2, metadataSources.getJaxbRootList().size() );
+		return ( MetadataImplementor ) metadataSources.buildMetadata();
 	}
 
 	private EntityBinding getEntityBinding(String resourceName, String entityName ) {

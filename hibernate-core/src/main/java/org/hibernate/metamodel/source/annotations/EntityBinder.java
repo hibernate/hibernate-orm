@@ -315,11 +315,11 @@ public class EntityBinder {
 	}
 
 	public static class AnnotationSimpleAttributeRelationalState
-			implements SimpleAttributeBinding.TupleRelationalState {
+			implements SimpleAttributeBinding.SimpleTupleRelationalState {
 		LinkedHashSet<SimpleAttributeBinding.SingleValueRelationalState> valueStates = new LinkedHashSet<SimpleAttributeBinding.SingleValueRelationalState>();
 
 		@Override
-		public LinkedHashSet<SimpleAttributeBinding.SingleValueRelationalState> getSingleValueRelationalStates() {
+		public LinkedHashSet<SimpleAttributeBinding.SingleValueRelationalState> getRelationalStates() {
 			return valueStates;
 		}
 	}

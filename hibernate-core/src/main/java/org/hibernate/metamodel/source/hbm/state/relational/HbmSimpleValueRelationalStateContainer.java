@@ -30,10 +30,10 @@ import java.util.Set;
 
 import org.hibernate.MappingException;
 import org.hibernate.cfg.NamingStrategy;
+import org.hibernate.metamodel.binding.AbstractAttributeBinding;
 import org.hibernate.metamodel.binding.HibernateTypeDescriptor;
 import org.hibernate.metamodel.binding.MappingDefaults;
 import org.hibernate.metamodel.binding.SimpleAttributeBinding;
-import org.hibernate.metamodel.relational.Size;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLColumnElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLDiscriminator;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLId;
@@ -45,7 +45,7 @@ import org.hibernate.metamodel.source.hbm.xml.mapping.XMLPropertyElement;
 /**
  * @author Gail Badner
  */
-public class HbmSimpleValueRelationalStateContainer implements SimpleAttributeBinding.TupleRelationalState {
+public class HbmSimpleValueRelationalStateContainer implements AbstractAttributeBinding.SimpleTupleRelationalState {
 	private final MappingDefaults defaults;
 	private final Set<String> propertyUniqueKeys;
 	private final Set<String> propertyIndexes;
@@ -196,7 +196,7 @@ public class HbmSimpleValueRelationalStateContainer implements SimpleAttributeBi
 		throw new MappingException( "unknown type of column or formula: " + columnOrFormula.getClass().getName() );
 	}
 
-	public Set<SimpleAttributeBinding.SingleValueRelationalState> getSingleValueRelationalStates() {
+	public Set<SimpleAttributeBinding.SingleValueRelationalState> getRelationalStates() {
 		return singleValueStates;
 	}
 

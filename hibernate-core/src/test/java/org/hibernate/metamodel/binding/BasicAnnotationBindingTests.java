@@ -25,8 +25,10 @@ package org.hibernate.metamodel.binding;
 
 import org.junit.Test;
 
+import org.hibernate.metamodel.source.Metadata;
 import org.hibernate.metamodel.source.MetadataSources;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
+import org.hibernate.metamodel.source.spi.MetadataImplementor;
 import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.testing.FailureExpected;
 
@@ -49,6 +51,12 @@ public class BasicAnnotationBindingTests extends AbstractBasicBindingTests {
 		super.testSimpleVersionedEntityMapping();
 	}
 
+	@FailureExpected(jiraKey = "HHH-6172", message = "Work in progress")
+	@Test
+	public void testEntityWithManyToOneMapping() {
+		super.testEntityWithManyToOneMapping();
+	}
+
 	public EntityBinding buildSimpleEntityBinding() {
 		MetadataSources sources = new MetadataSources( new ServiceRegistryBuilder().buildServiceRegistry() );
 		sources.addAnnotatedClass( SimpleEntity.class );
@@ -63,5 +71,12 @@ public class BasicAnnotationBindingTests extends AbstractBasicBindingTests {
 		MetadataImpl metadata = (MetadataImpl) sources.buildMetadata();
 
 		return metadata.getEntityBinding( SimpleVersionedEntity.class.getSimpleName() );
+	}
+
+	public MetadataImplementor buildMetadataWithManyToOne() {
+		MetadataSources sources = new MetadataSources( new ServiceRegistryBuilder().buildServiceRegistry() );
+		sources.addAnnotatedClass( EntityWithManyToOne.class );
+		sources.addAnnotatedClass( SimpleVersionedEntity.class );
+		return ( MetadataImplementor ) sources.buildMetadata();
 	}
 }

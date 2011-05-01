@@ -23,13 +23,6 @@
  */
 package org.hibernate.metamodel.binding;
 
-import java.util.Set;
-
-import org.hibernate.MappingException;
-import org.hibernate.metamodel.relational.DerivedValue;
-import org.hibernate.metamodel.relational.SimpleValue;
-import org.hibernate.metamodel.relational.Tuple;
-
 /**
  * TODO : javadoc
  *
@@ -62,18 +55,6 @@ public abstract class SingularAttributeBinding extends AbstractAttributeBinding 
 		updateable = state.isUpdateable();
 		keyCasadeDeleteEnabled = state.isKeyCasadeDeleteEnabled();
 		unsavedValue = state.getUnsavedValue();
-	}
-
-	public final void initializeColumnValue(ColumnRelationalState state) {
-		initializeColumnValue( state, forceNonNullable, forceUnique );
-	}
-
-	public final void initializeSingleValue(SingleValueRelationalState state) {
-		initializeSingleValue( state, forceNonNullable, forceUnique );
-	}
-
-	protected void initializeTupleValue(Set<SingleValueRelationalState> singleValueStates) {
-		initializeTupleValue( singleValueStates, forceNonNullable, forceUnique );
 	}
 
 	public boolean isInsertable() {

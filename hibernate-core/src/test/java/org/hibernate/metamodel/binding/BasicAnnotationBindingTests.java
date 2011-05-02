@@ -25,8 +25,7 @@ package org.hibernate.metamodel.binding;
 
 import org.junit.Test;
 
-import org.hibernate.metamodel.source.Metadata;
-import org.hibernate.metamodel.source.MetadataSources;
+import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
 import org.hibernate.metamodel.source.spi.MetadataImplementor;
 import org.hibernate.service.ServiceRegistryBuilder;

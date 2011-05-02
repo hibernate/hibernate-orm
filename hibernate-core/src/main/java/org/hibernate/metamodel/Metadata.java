@@ -22,15 +22,11 @@
  * Boston, MA  02110-1301  USA
  */
 
-package org.hibernate.metamodel.source;
+package org.hibernate.metamodel;
 
 /**
  * @author Steve Ebersole
  */
 public interface Metadata {
-	public static enum ProcessingOrder {
-		ANNOTATIONS_FIRST,
-		HBM_FIRST
-	}
 
 }

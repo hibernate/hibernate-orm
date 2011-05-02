@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source;
+package org.hibernate.metamodel;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -43,9 +43,13 @@ import org.xml.sax.EntityResolver;
 import org.hibernate.cfg.EJB3DTDEntityResolver;
 import org.hibernate.cfg.EJB3NamingStrategy;
 import org.hibernate.cfg.NamingStrategy;
+import org.hibernate.metamodel.source.MappingException;
+import org.hibernate.metamodel.source.MappingNotFoundException;
+import org.hibernate.metamodel.source.Origin;
+import org.hibernate.metamodel.source.SourceType;
 import org.hibernate.metamodel.source.internal.JaxbHelper;
 import org.hibernate.metamodel.source.internal.JaxbRoot;
-import org.hibernate.metamodel.source.internal.MetadataImpl;
+import org.hibernate.metamodel.source.internal.MetadataBuilderImpl;
 import org.hibernate.service.BasicServiceRegistry;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 
@@ -97,12 +101,12 @@ public class MetadataSources {
 		return namingStrategy;
 	}
 
-	public Metadata buildMetadata() {
-		return buildMetadata( Metadata.ProcessingOrder.ANNOTATIONS_FIRST );
+	public MetadataBuilder getMetadataBuilder() {
+		return new MetadataBuilderImpl( this );
 	}
 
-	public Metadata buildMetadata(Metadata.ProcessingOrder preferredProcessingOrder) {
-		return new MetadataImpl( this, preferredProcessingOrder );
+	public Metadata buildMetadata() {
+		return getMetadataBuilder().buildMetadata();
 	}
 
 	/**

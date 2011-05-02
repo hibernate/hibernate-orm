@@ -23,13 +23,9 @@
  */
 package org.hibernate.metamodel.binding;
 
-import org.jboss.logging.Logger;
-
-import org.hibernate.metamodel.source.MetadataSources;
+import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
 import org.hibernate.metamodel.source.spi.MetadataImplementor;
-
-import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
@@ -39,8 +35,6 @@ import static org.junit.Assert.assertEquals;
  * @author Steve Ebersole
  */
 public class BasicHbmBindingTests extends AbstractBasicBindingTests {
-	private static final Logger log = Logger.getLogger( BasicHbmBindingTests.class.getName() );
-
 	public EntityBinding buildSimpleEntityBinding() {
 		return getEntityBinding(
 				"org/hibernate/metamodel/binding/SimpleEntity.hbm.xml",

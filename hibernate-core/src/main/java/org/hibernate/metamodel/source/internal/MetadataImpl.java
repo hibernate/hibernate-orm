@@ -40,13 +40,13 @@ import org.hibernate.HibernateException;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.MetadataSource;
+import org.hibernate.metamodel.SourceProcessingOrder;
 import org.hibernate.metamodel.binding.EntityBinding;
-import org.hibernate.metamodel.binding.EntityReferencingAttributeBinding;
 import org.hibernate.metamodel.binding.FetchProfile;
 import org.hibernate.metamodel.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.relational.Database;
-import org.hibernate.metamodel.source.Metadata;
-import org.hibernate.metamodel.source.MetadataSources;
+import org.hibernate.metamodel.Metadata;
+import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.source.annotation.xml.XMLEntityMappings;
 import org.hibernate.metamodel.source.annotations.AnnotationBinder;
 import org.hibernate.metamodel.source.annotations.xml.OrmXmlParser;
@@ -76,12 +76,14 @@ public class MetadataImpl implements Metadata, MetadataImplementor, Serializable
 	private Map<String, FetchProfile> fetchProfiles = new HashMap<String, FetchProfile>();
 	private Map<String, String> imports;
 
-	public MetadataImpl(MetadataSources metadataSources, ProcessingOrder preferredProcessingOrder) {
+	public MetadataImpl(MetadataBuilderImpl builder) {
+		final MetadataSources metadataSources = builder.getSources();
+
 		this.serviceRegistry = metadataSources.getServiceRegistry();
-		this.namingStrategy = metadataSources.getNamingStrategy();
+		this.namingStrategy = builder.getNamingStrategy();
 
 		final ArrayList<String> processedEntityNames = new ArrayList<String>();
-		if ( preferredProcessingOrder == ProcessingOrder.HBM_FIRST ) {
+		if ( builder.getSourceProcessingOrder() == SourceProcessingOrder.HBM_FIRST ) {
 			applyHibernateMappings( metadataSources, processedEntityNames );
 			applyAnnotationMappings( metadataSources, processedEntityNames );
 		}

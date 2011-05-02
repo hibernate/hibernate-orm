@@ -50,8 +50,8 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 
+import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.source.MappingException;
-import org.hibernate.metamodel.source.MetadataSources;
 import org.hibernate.metamodel.source.Origin;
 import org.hibernate.metamodel.source.XsdException;
 import org.hibernate.metamodel.source.annotation.xml.XMLEntityMappings;

@@ -23,7 +23,7 @@
  */
 package org.hibernate.metamodel.source.annotations;
 
-import java.util.LinkedHashSet;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -35,6 +35,8 @@ import org.hibernate.MappingException;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.PropertyGeneration;
+import org.hibernate.metamodel.binding.AbstractAttributeBinding;
+import org.hibernate.metamodel.binding.AttributeBinding;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.HibernateTypeDescriptor;
 import org.hibernate.metamodel.binding.SimpleAttributeBinding;
@@ -144,7 +146,7 @@ public class EntityBinder {
 
 		AnnotationSimpleAttributeRelationalState relationalState = new AnnotationSimpleAttributeRelationalState();
 		relationalState.valueStates.add( columnRelationsState );
-		idBinding.initializeTupleValue( relationalState );
+		idBinding.initializeSimpleTupleValue( relationalState );
 	}
 
 	private void bindHibernateEntityAnnotation(EntityBinding entityBinding) {
@@ -316,10 +318,10 @@ public class EntityBinder {
 
 	public static class AnnotationSimpleAttributeRelationalState
 			implements SimpleAttributeBinding.SimpleTupleRelationalState {
-		LinkedHashSet<SimpleAttributeBinding.SingleValueRelationalState> valueStates = new LinkedHashSet<SimpleAttributeBinding.SingleValueRelationalState>();
+		List<AttributeBinding.SingleValueRelationalState> valueStates = new ArrayList<AttributeBinding.SingleValueRelationalState>();
 
 		@Override
-		public LinkedHashSet<SimpleAttributeBinding.SingleValueRelationalState> getRelationalStates() {
+		public List<AttributeBinding.SingleValueRelationalState> getRelationalStates() {
 			return valueStates;
 		}
 	}

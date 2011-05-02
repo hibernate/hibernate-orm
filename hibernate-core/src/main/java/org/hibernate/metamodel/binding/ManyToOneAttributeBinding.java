@@ -52,7 +52,7 @@ public class ManyToOneAttributeBinding extends SingularAttributeBinding implemen
 		boolean ignoreNotFound();
 	}
 
-	public static interface ManyToOneRelationalState extends RelationalState {
+	public static interface RelationalState extends AttributeBinding.RelationalState {
 		boolean isLogicalOneToOne();
 		String getForeignKeyName();
 	}
@@ -75,7 +75,7 @@ public class ManyToOneAttributeBinding extends SingularAttributeBinding implemen
 		}
 	}
 
-	public final void initialize(ManyToOneRelationalState state) {
+	public final void initialize(RelationalState state) {
 		super.initialize( state );
 		isLogicalOneToOne = state.isLogicalOneToOne();
 		foreignKeyName = state.getForeignKeyName();

@@ -68,6 +68,6 @@ public class SimpleValueBindingTests extends BaseUnitTestCase {
 		idColumn.setSize( Size.precision( 18, 0 ) );
 		table.getPrimaryKey().addColumn( idColumn );
 		table.getPrimaryKey().setName( "my_table_pk" );
-		attributeBinding.setValue( idColumn );
+		//attributeBinding.setValue( idColumn );
 	}
 }

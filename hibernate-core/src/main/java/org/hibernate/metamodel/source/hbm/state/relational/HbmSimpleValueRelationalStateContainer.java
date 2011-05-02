@@ -23,6 +23,7 @@
  */
 package org.hibernate.metamodel.source.hbm.state.relational;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -31,6 +32,7 @@ import java.util.Set;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.metamodel.binding.AbstractAttributeBinding;
+import org.hibernate.metamodel.binding.AttributeBinding;
 import org.hibernate.metamodel.binding.HibernateTypeDescriptor;
 import org.hibernate.metamodel.binding.MappingDefaults;
 import org.hibernate.metamodel.binding.SimpleAttributeBinding;
@@ -49,7 +51,7 @@ public class HbmSimpleValueRelationalStateContainer implements AbstractAttribute
 	private final MappingDefaults defaults;
 	private final Set<String> propertyUniqueKeys;
 	private final Set<String> propertyIndexes;
-	private final Set<SimpleAttributeBinding.SingleValueRelationalState> singleValueStates;
+	private final List<AttributeBinding.SingleValueRelationalState> singleValueStates;
 	private final HibernateTypeDescriptor hibernateTypeDescriptor = new HibernateTypeDescriptor();
 
 	public NamingStrategy getNamingStrategy() {
@@ -169,7 +171,7 @@ public class HbmSimpleValueRelationalStateContainer implements AbstractAttribute
 		this.defaults = defaults;
 		this.propertyUniqueKeys = Collections.emptySet();
 		this.propertyIndexes = Collections.emptySet();
-		singleValueStates = new LinkedHashSet<SimpleAttributeBinding.SingleValueRelationalState>(
+		singleValueStates = new ArrayList<AttributeBinding.SingleValueRelationalState>(
 							mappedColumnsOrFormulas == null || mappedColumnsOrFormulas.isEmpty() ?
 									1 :
 									mappedColumnsOrFormulas.size()
@@ -181,7 +183,7 @@ public class HbmSimpleValueRelationalStateContainer implements AbstractAttribute
 		}
 	}
 
-	private static SimpleAttributeBinding.SingleValueRelationalState createColumnOrFormulaRelationalState(
+	private static AttributeBinding.SingleValueRelationalState createColumnOrFormulaRelationalState(
 			HbmSimpleValueRelationalStateContainer container,
 			Object columnOrFormula) {
 		if ( XMLColumnElement.class.isInstance( columnOrFormula ) ) {
@@ -196,7 +198,7 @@ public class HbmSimpleValueRelationalStateContainer implements AbstractAttribute
 		throw new MappingException( "unknown type of column or formula: " + columnOrFormula.getClass().getName() );
 	}
 
-	public Set<SimpleAttributeBinding.SingleValueRelationalState> getRelationalStates() {
+	public List<AttributeBinding.SingleValueRelationalState> getRelationalStates() {
 		return singleValueStates;
 	}
 

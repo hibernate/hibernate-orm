@@ -23,12 +23,15 @@
  */
 package org.hibernate.metamodel.binding;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.metamodel.domain.Attribute;
 import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.metamodel.relational.SimpleValue;
+import org.hibernate.metamodel.relational.Size;
 import org.hibernate.metamodel.relational.TableSpecification;
 import org.hibernate.metamodel.relational.Value;
 
@@ -108,4 +111,37 @@ public interface AttributeBinding {
 	public Set<EntityReferencingAttributeBinding> getEntityReferencingAttributeBindings();
 
 	public void validate();
+
+	// TODO: where should this RelationalState stuff go???
+
+	interface RelationalState {}
+
+	interface SingleValueRelationalState extends RelationalState {}
+
+	interface ColumnRelationalState extends SingleValueRelationalState {
+		NamingStrategy getNamingStrategy();
+		String getExplicitColumnName();
+		boolean isUnique();
+		Size getSize();
+		boolean isNullable();
+		String getCheckCondition();
+		String getDefault();
+		String getSqlType();
+		String getCustomWriteFragment();
+		String getCustomReadFragment();
+		String getComment();
+		Set<String> getUniqueKeys();
+		Set<String> getIndexes();
+	}
+
+	interface DerivedRelationalState extends SingleValueRelationalState {
+		String getFormula();
+	}
+
+	interface SimpleTupleRelationalState extends AbstractAttributeBinding.TupleRelationalState<SingleValueRelationalState> {
+	}
+
+	interface TupleRelationalState<T extends RelationalState> extends RelationalState{
+		List<T> getRelationalStates();
+	}
 }

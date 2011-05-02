@@ -23,7 +23,6 @@
  */
 package org.hibernate.metamodel.binding;
 
-import org.hibernate.MappingException;
 import org.hibernate.mapping.PropertyGeneration;
 
 /**
@@ -47,16 +46,16 @@ public class SimpleAttributeBinding extends SingularAttributeBinding {
 		generation = state.getPropertyGeneration();
 	}
 
-	public final void initializeTupleValue(SimpleTupleRelationalState state) {
-		if ( state.getRelationalStates().size() == 0 ) {
-			throw new MappingException( "Tuple state does not contain any values." );
-		}
-		if ( state.getRelationalStates().size() == 1 ) {
-			initializeSingleValue( state.getRelationalStates().iterator().next() );
-		}
-		else {
-			initializeTupleValue( state.getRelationalStates() );
-		}
+	public void initializeColumnValue(ColumnRelationalState state) {
+		super.initializeColumnValue( state );
+	}
+
+	public void initializeDerivedValue(DerivedRelationalState state) {
+		super.initializeDerivedValue( state );
+	}
+
+	public void initializeSimpleTupleValue(SimpleTupleRelationalState state) {
+		super.initializeSimpleTupleValue( state );
 	}
 
 	private boolean isUnique(ColumnRelationalState state) {

@@ -159,7 +159,10 @@ import org.hibernate.usertype.UserType;
  *
  * @author Gavin King
  * @see org.hibernate.SessionFactory
+ *
+ * @deprecated use {@link ServiceRegistryBuilder} and {@link org.hibernate.metamodel.MetadataSources} instead.
  */
+@Deprecated
 public class Configuration implements Serializable {
 
     private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, Configuration.class.getName());

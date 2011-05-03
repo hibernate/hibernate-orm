@@ -121,7 +121,11 @@ import org.hibernate.service.jdbc.connections.internal.DatasourceConnectionProvi
  * serialization
  *
  * @author Emmanuel Bernard
+ *
+ * @deprecated See <a href="http://opensource.atlassian.com/projects/hibernate/browse/HHH-6181">HHH-6181</a> and
+ * <a href="http://opensource.atlassian.com/projects/hibernate/browse/HHH-6159">HHH-6159</a> for details
  */
+@Deprecated
 public class Ejb3Configuration implements Serializable, Referenceable {
 
     private static final EntityManagerMessageLogger LOG = Logger.getMessageLogger(

@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.annotations;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -31,9 +32,11 @@ import java.lang.annotation.RetentionPolicy;
  *
  * @author Shawn Clowater
  */
-@java.lang.annotation.Target({ElementType.TYPE, ElementType.METHOD, ElementType.FIELD})
-@Retention( RetentionPolicy.RUNTIME )
+@java.lang.annotation.Target( { ElementType.TYPE, ElementType.METHOD, ElementType.FIELD })
+@Retention(RetentionPolicy.RUNTIME)
 public @interface Persister {
-	/** Custom persister */
-	Class impl();
+	/**
+	 * @return The custom persister class
+	 */
+	Class<?> impl();
 }

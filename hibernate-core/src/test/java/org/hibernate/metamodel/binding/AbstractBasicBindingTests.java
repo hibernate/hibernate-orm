@@ -25,18 +25,15 @@ package org.hibernate.metamodel.binding;
 
 import java.util.Iterator;
 
-import org.hibernate.metamodel.relational.Column;
-import org.hibernate.metamodel.source.Metadata;
-import org.hibernate.metamodel.source.internal.MetadataImpl;
-import org.hibernate.metamodel.source.spi.MetadataImplementor;
-import org.hibernate.service.BasicServiceRegistry;
-import org.hibernate.service.ServiceRegistryBuilder;
-import org.hibernate.service.internal.BasicServiceRegistryImpl;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.hibernate.metamodel.relational.Column;
+import org.hibernate.metamodel.source.spi.MetadataImplementor;
+import org.hibernate.service.BasicServiceRegistry;
+import org.hibernate.service.ServiceRegistryBuilder;
+import org.hibernate.service.internal.BasicServiceRegistryImpl;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static junit.framework.Assert.assertFalse;
@@ -124,7 +121,8 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 		assertTrue(
 				1 == simpleEntityBinding.getAttributeBinding( "id" ).getEntityReferencingAttributeBindings().size()
 		);
-		Iterator<EntityReferencingAttributeBinding> it = entityWithManyToOneBinding.getEntityReferencingAttributeBindings().iterator();
+		Iterator<EntityReferencingAttributeBinding> it = entityWithManyToOneBinding.getEntityReferencingAttributeBindings()
+				.iterator();
 		assertTrue( it.hasNext() );
 		assertSame( entityWithManyToOneBinding.getAttributeBinding( "simpleEntity" ), it.next() );
 		assertFalse( it.hasNext() );

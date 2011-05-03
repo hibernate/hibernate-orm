@@ -121,12 +121,6 @@ public class SynchronizationCallbackCoordinatorImpl implements SynchronizationCa
 	public void afterCompletion(int status) {
         LOG.trace("Transaction after completion callback [status=" + status + "]");
 
-		if ( transactionContext().isClosed() ) {
-			// usually this happens during failed tests
-			LOG.debug( "Transaction context was closed prior to synchronization callback" );
-			return;
-		}
-
 		try {
 			afterCompletionAction.doAction( transactionCoordinator, status );
 			transactionCoordinator.afterTransaction( null, status );

@@ -160,7 +160,9 @@ import org.hibernate.usertype.UserType;
  * @author Gavin King
  * @see org.hibernate.SessionFactory
  *
- * @deprecated use {@link ServiceRegistryBuilder} and {@link org.hibernate.metamodel.MetadataSources} instead.
+ * @deprecated use {@link ServiceRegistryBuilder} and {@link org.hibernate.metamodel.MetadataSources} instead.  See
+ * <a href="http://opensource.atlassian.com/projects/hibernate/browse/HHH-6183">HHH-6183</a> and
+ * <a href="http://opensource.atlassian.com/projects/hibernate/browse/HHH-2578">HHH-2578</a> for details
  */
 @Deprecated
 public class Configuration implements Serializable {

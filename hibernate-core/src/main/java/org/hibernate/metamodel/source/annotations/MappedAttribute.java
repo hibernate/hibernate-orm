@@ -42,18 +42,22 @@ public class MappedAttribute implements Comparable<MappedAttribute> {
 	private final Class<?> type;
 	private final Map<DotName, List<AnnotationInstance>> annotations;
 	private final ColumnValues columnValues;
+	private final boolean isId;
 
 	MappedAttribute(String name, Class<?> type, Map<DotName, List<AnnotationInstance>> annotations) {
 		this.name = name;
 		this.type = type;
 		this.annotations = annotations;
 
+		List<AnnotationInstance> idAnnotations = annotations.get( JPADotNames.ID );
+		isId = idAnnotations != null && !idAnnotations.isEmpty();
+
 		List<AnnotationInstance> columnAnnotations = annotations.get( JPADotNames.COLUMN );
 		if ( columnAnnotations != null && columnAnnotations.size() > 1 ) {
 			throw new AssertionFailure( "There can only be one @Column annotation per mapped attribute" );
 		}
 		AnnotationInstance columnAnnotation = columnAnnotations == null ? null : columnAnnotations.get( 0 );
-		columnValues = new ColumnValues( columnAnnotation );
+		columnValues = new ColumnValues( columnAnnotation, isId );
 	}
 
 	public final String getName() {
@@ -66,6 +70,10 @@ public class MappedAttribute implements Comparable<MappedAttribute> {
 
 	public final ColumnValues getColumnValues() {
 		return columnValues;
+	}
+
+	public boolean isId() {
+		return isId;
 	}
 
 	public final List<AnnotationInstance> annotations(DotName annotationDotName) {

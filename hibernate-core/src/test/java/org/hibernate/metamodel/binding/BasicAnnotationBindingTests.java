@@ -38,7 +38,7 @@ import org.hibernate.testing.FailureExpected;
  */
 public class BasicAnnotationBindingTests extends AbstractBasicBindingTests {
 
-	@FailureExpected(jiraKey = "HHH-5672", message = "Work in progress")
+	//@FailureExpected(jiraKey = "HHH-5672", message = "Work in progress")
 	@Test
 	public void testSimpleEntityMapping() {
 		super.testSimpleEntityMapping();

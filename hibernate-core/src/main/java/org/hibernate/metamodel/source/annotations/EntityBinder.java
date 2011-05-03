@@ -68,6 +68,8 @@ public class EntityBinder {
 		if ( configuredClass.isRoot() ) {
 			bindId( entityBinding );
 		}
+		bindAttributes( entityBinding );
+
 		meta.addEntity( entityBinding );
 	}
 
@@ -164,13 +166,38 @@ public class EntityBinder {
 		typeDescriptor.setTypeName( idAttribute.getType().getName() );
 		domainState.typeDescriptor = typeDescriptor;
 		domainState.attribute = entityBinding.getEntity().getOrCreateSingularAttribute( idAttribute.getName() );
-
 		idBinding.initialize( domainState );
 
 		AttributeColumnRelationalState columnRelationsState = new AttributeColumnRelationalState( idAttribute, meta );
 		AnnotationSimpleAttributeRelationalState relationalState = new AnnotationSimpleAttributeRelationalState();
 		relationalState.valueStates.add( columnRelationsState );
 		idBinding.initializeSimpleTupleValue( relationalState );
+	}
+
+	private void bindAttributes(EntityBinding entityBinding) {
+		for ( MappedAttribute mappedAttribute : configuredClass.getMappedAttributes() ) {
+			if ( mappedAttribute.isId() ) {
+				continue;
+			}
+
+			String attributeName = mappedAttribute.getName();
+			entityBinding.getEntity().getOrCreateSingularAttribute( attributeName );
+			SimpleAttributeBinding simpleBinding = entityBinding.makeSimpleAttributeBinding( attributeName );
+
+			AnnotationSimpleAttributeDomainState domainState = new AnnotationSimpleAttributeDomainState();
+			HibernateTypeDescriptor typeDescriptor = new HibernateTypeDescriptor();
+			typeDescriptor.setTypeName( mappedAttribute.getType().getName() );
+			domainState.typeDescriptor = typeDescriptor;
+			domainState.attribute = entityBinding.getEntity().getOrCreateSingularAttribute( attributeName );
+			simpleBinding.initialize( domainState );
+
+			AttributeColumnRelationalState columnRelationsState = new AttributeColumnRelationalState(
+					mappedAttribute, meta
+			);
+			AnnotationSimpleAttributeRelationalState relationalState = new AnnotationSimpleAttributeRelationalState();
+			relationalState.valueStates.add( columnRelationsState );
+			simpleBinding.initializeSimpleTupleValue( relationalState );
+		}
 	}
 
 	private void bindHibernateEntityAnnotation(EntityBinding entityBinding) {

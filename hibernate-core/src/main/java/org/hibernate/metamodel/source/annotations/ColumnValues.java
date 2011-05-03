@@ -45,14 +45,14 @@ public final class ColumnValues {
 	private int precision = 0;
 	private int scale = 0;
 
-	public ColumnValues(AnnotationInstance columnAnnotation) {
+	public ColumnValues(AnnotationInstance columnAnnotation, boolean isId) {
 		if ( columnAnnotation != null && !JPADotNames.COLUMN.equals( columnAnnotation.name() ) ) {
 			throw new AssertionFailure( "A @Column annotation needs to be passed to the constructor" );
 		}
-		applyColumnValues( columnAnnotation );
+		applyColumnValues( columnAnnotation, isId );
 	}
 
-	private void applyColumnValues(AnnotationInstance columnAnnotation) {
+	private void applyColumnValues(AnnotationInstance columnAnnotation, boolean isId) {
 		if ( columnAnnotation == null ) {
 			return;
 		}
@@ -62,14 +62,26 @@ public final class ColumnValues {
 			this.name = nameValue.asString();
 		}
 
-		AnnotationValue uniqueValue = columnAnnotation.value( "unique" );
-		if ( uniqueValue != null ) {
-			this.unique = nameValue.asBoolean();
+		// id attribute must be unique
+		if ( isId ) {
+			this.unique = true;
+		}
+		else {
+			AnnotationValue uniqueValue = columnAnnotation.value( "unique" );
+			if ( uniqueValue != null ) {
+				this.unique = nameValue.asBoolean();
+			}
 		}
 
-		AnnotationValue nullableValue = columnAnnotation.value( "nullable" );
-		if ( nullableValue != null ) {
-			this.nullable = nullableValue.asBoolean();
+		// id attribute cannot be nullable
+		if ( isId ) {
+			this.nullable = false;
+		}
+		else {
+			AnnotationValue nullableValue = columnAnnotation.value( "nullable" );
+			if ( nullableValue != null ) {
+				this.nullable = nullableValue.asBoolean();
+			}
 		}
 
 		AnnotationValue insertableValue = columnAnnotation.value( "insertable" );

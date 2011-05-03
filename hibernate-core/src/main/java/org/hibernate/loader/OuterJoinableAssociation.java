@@ -53,6 +53,7 @@ public final class OuterJoinableAssociation {
 	private final int joinType;
 	private final String on;
 	private final Map enabledFilters;
+	private final boolean hasRestriction;
 
 	public static OuterJoinableAssociation createRoot(
 			AssociationType joinableType,
@@ -66,6 +67,7 @@ public final class OuterJoinableAssociation {
 				alias,
 				JoinFragment.LEFT_OUTER_JOIN,
 				null,
+				false,
 				factory,
 				CollectionHelper.EMPTY_MAP
 		);
@@ -79,6 +81,7 @@ public final class OuterJoinableAssociation {
 			String rhsAlias,
 			int joinType,
 			String withClause,
+			boolean hasRestriction,
 			SessionFactoryImplementor factory,
 			Map enabledFilters) throws MappingException {
 		this.propertyPath = propertyPath;
@@ -91,6 +94,7 @@ public final class OuterJoinableAssociation {
 		this.rhsColumns = JoinHelper.getRHSColumnNames(joinableType, factory);
 		this.on = joinableType.getOnCondition(rhsAlias, factory, enabledFilters)
 			+ ( withClause == null || withClause.trim().length() == 0 ? "" : " and ( " + withClause + " )" );
+		this.hasRestriction = hasRestriction;
 		this.enabledFilters = enabledFilters; // needed later for many-to-many/filter application
 	}
 
@@ -138,6 +142,10 @@ public final class OuterJoinableAssociation {
 
 	public Joinable getJoinable() {
 		return joinable;
+	}
+
+	public boolean hasRestriction() {
+		return hasRestriction;
 	}
 
 	public int getOwner(final List associations) {

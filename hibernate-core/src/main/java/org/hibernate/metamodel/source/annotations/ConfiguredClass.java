@@ -96,12 +96,12 @@ public class ConfiguredClass {
 		this.clazz = serviceRegistry.getService( ClassLoaderService.class ).classForName( info.toString() );
 
 		AnnotationInstance mappedSuperClassAnnotation = JandexHelper.getSingleAnnotation(
-				classInfo, JPADotNames.MAPPED_SUPER_CLASS
+				classInfo, JPADotNames.MAPPED_SUPERCLASS
 		);
 		isMappedSuperClass = mappedSuperClassAnnotation != null;
 
 		AnnotationInstance embeddableAnnotation = JandexHelper.getSingleAnnotation(
-				classInfo, JPADotNames.MAPPED_SUPER_CLASS
+				classInfo, JPADotNames.MAPPED_SUPERCLASS
 		);
 		isEmbeddable = embeddableAnnotation != null;
 

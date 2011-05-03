@@ -26,17 +26,14 @@ package org.hibernate.metamodel.source.annotations;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
-import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.PropertyGeneration;
-import org.hibernate.metamodel.binding.AbstractAttributeBinding;
 import org.hibernate.metamodel.binding.AttributeBinding;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.HibernateTypeDescriptor;
@@ -46,7 +43,6 @@ import org.hibernate.metamodel.domain.Entity;
 import org.hibernate.metamodel.domain.Hierarchical;
 import org.hibernate.metamodel.relational.Identifier;
 import org.hibernate.metamodel.relational.Schema;
-import org.hibernate.metamodel.relational.Size;
 import org.hibernate.metamodel.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
 
@@ -76,8 +72,8 @@ public class EntityBinder {
 	}
 
 	private Schema.Name createSchemaName() {
-		String schema = "";
-		String catalog = "";
+		String schema = null;
+		String catalog = null;
 
 		AnnotationInstance tableAnnotation = JandexHelper.getSingleAnnotation(
 				configuredClass.getClassInfo(), JPADotNames.TABLE
@@ -86,8 +82,8 @@ public class EntityBinder {
 			AnnotationValue schemaValue = tableAnnotation.value( "schema" );
 			AnnotationValue catalogValue = tableAnnotation.value( "catalog" );
 
-			schema = schemaValue != null ? schemaValue.asString() : "";
-			catalog = catalogValue != null ? catalogValue.asString() : "";
+			schema = schemaValue != null ? schemaValue.asString() : null;
+			catalog = catalogValue != null ? catalogValue.asString() : null;
 		}
 
 		return new Schema.Name( schema, catalog );
@@ -171,12 +167,7 @@ public class EntityBinder {
 
 		idBinding.initialize( domainState );
 
-		AnnotationColumnRelationalState columnRelationsState = new AnnotationColumnRelationalState();
-		columnRelationsState.namingStrategy = meta.getNamingStrategy();
-		columnRelationsState.columnName = idAttribute.getColumnName();
-		columnRelationsState.unique = true;
-		columnRelationsState.nullable = false;
-
+		AttributeColumnRelationalState columnRelationsState = new AttributeColumnRelationalState( idAttribute, meta );
 		AnnotationSimpleAttributeRelationalState relationalState = new AnnotationSimpleAttributeRelationalState();
 		relationalState.valueStates.add( columnRelationsState );
 		idBinding.initializeSimpleTupleValue( relationalState );
@@ -356,80 +347,6 @@ public class EntityBinder {
 		@Override
 		public List<AttributeBinding.SingleValueRelationalState> getRelationalStates() {
 			return valueStates;
-		}
-	}
-
-	public static class AnnotationColumnRelationalState
-			implements SimpleAttributeBinding.ColumnRelationalState {
-
-		NamingStrategy namingStrategy;
-		String columnName;
-		boolean unique;
-		boolean nullable;
-
-		@Override
-		public NamingStrategy getNamingStrategy() {
-			return namingStrategy;
-		}
-
-		@Override
-		public String getExplicitColumnName() {
-			return columnName;
-		}
-
-		@Override
-		public boolean isUnique() {
-			return unique;
-		}
-
-		@Override
-		public Size getSize() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
-		}
-
-		@Override
-		public boolean isNullable() {
-			return nullable;
-		}
-
-		@Override
-		public String getCheckCondition() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
-		}
-
-		@Override
-		public String getDefault() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
-		}
-
-		@Override
-		public String getSqlType() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
-		}
-
-		@Override
-		public String getCustomWriteFragment() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
-		}
-
-		@Override
-		public String getCustomReadFragment() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
-		}
-
-		@Override
-		public String getComment() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
-		}
-
-		@Override
-		public Set<String> getUniqueKeys() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
-		}
-
-		@Override
-		public Set<String> getIndexes() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 	}
 }

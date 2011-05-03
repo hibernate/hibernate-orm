@@ -110,7 +110,7 @@ public class ConfiguredClassHierarchyBuilder {
 		boolean isConfiguredClass = true;
 		AnnotationInstance jpaEntityAnnotation = JandexHelper.getSingleAnnotation( info, JPADotNames.ENTITY );
 		AnnotationInstance mappedSuperClassAnnotation = JandexHelper.getSingleAnnotation(
-				info, JPADotNames.MAPPED_SUPER_CLASS
+				info, JPADotNames.MAPPED_SUPERCLASS
 		);
 		AnnotationInstance embeddableAnnotation = JandexHelper.getSingleAnnotation(
 				info, JPADotNames.EMBEDDABLE

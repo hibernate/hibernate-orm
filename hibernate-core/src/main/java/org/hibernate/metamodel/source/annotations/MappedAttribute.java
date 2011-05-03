@@ -30,6 +30,8 @@ import java.util.Map;
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.DotName;
 
+import org.hibernate.AssertionFailure;
+
 /**
  * Represent a mapped attribute (explicitly or implicitly mapped).
  *
@@ -39,23 +41,31 @@ public class MappedAttribute implements Comparable<MappedAttribute> {
 	private final String name;
 	private final Class<?> type;
 	private final Map<DotName, List<AnnotationInstance>> annotations;
+	private final ColumnValues columnValues;
 
 	MappedAttribute(String name, Class<?> type, Map<DotName, List<AnnotationInstance>> annotations) {
 		this.name = name;
 		this.type = type;
 		this.annotations = annotations;
+
+		List<AnnotationInstance> columnAnnotations = annotations.get( JPADotNames.COLUMN );
+		if ( columnAnnotations != null && columnAnnotations.size() > 1 ) {
+			throw new AssertionFailure( "There can only be one @Column annotation per mapped attribute" );
+		}
+		AnnotationInstance columnAnnotation = columnAnnotations == null ? null : columnAnnotations.get( 0 );
+		columnValues = new ColumnValues( columnAnnotation );
 	}
 
-	final public String getName() {
+	public final String getName() {
 		return name;
 	}
 
-	final public String getColumnName() {
-		return name;
-	}
-
-	final public Class<?> getType() {
+	public final Class<?> getType() {
 		return type;
+	}
+
+	public final ColumnValues getColumnValues() {
+		return columnValues;
 	}
 
 	public final List<AnnotationInstance> annotations(DotName annotationDotName) {

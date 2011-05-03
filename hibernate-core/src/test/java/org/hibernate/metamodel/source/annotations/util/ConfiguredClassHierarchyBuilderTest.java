@@ -59,12 +59,12 @@ import static org.junit.Assert.assertFalse;
 public class ConfiguredClassHierarchyBuilderTest extends BaseUnitTestCase {
 
 	private BasicServiceRegistryImpl serviceRegistry;
-	private ClassLoaderService service;
+	private ClassLoaderService classLoaderService;
 
 	@Before
 	public void setUp() {
 		serviceRegistry = (BasicServiceRegistryImpl) new ServiceRegistryBuilder().buildServiceRegistry();
-		service = serviceRegistry.getService( ClassLoaderService.class );
+		classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
 	}
 
 	@After
@@ -74,7 +74,7 @@ public class ConfiguredClassHierarchyBuilderTest extends BaseUnitTestCase {
 
 	@Test
 	public void testSingleEntity() {
-		Index index = JandexHelper.indexForClass( service, Foo.class );
+		Index index = JandexHelper.indexForClass( classLoaderService, Foo.class );
 		Set<ConfiguredClassHierarchy> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
 				index, serviceRegistry
 		);
@@ -88,7 +88,7 @@ public class ConfiguredClassHierarchyBuilderTest extends BaseUnitTestCase {
 
 	@Test
 	public void testSimpleInheritance() {
-		Index index = JandexHelper.indexForClass( service, B.class, A.class );
+		Index index = JandexHelper.indexForClass( classLoaderService, B.class, A.class );
 		Set<ConfiguredClassHierarchy> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
 				index, serviceRegistry
 		);
@@ -104,7 +104,7 @@ public class ConfiguredClassHierarchyBuilderTest extends BaseUnitTestCase {
 
 	@Test
 	public void testMultipleHierarchies() {
-		Index index = JandexHelper.indexForClass( service, B.class, A.class, Foo.class );
+		Index index = JandexHelper.indexForClass( classLoaderService, B.class, A.class, Foo.class );
 		Set<ConfiguredClassHierarchy> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
 				index, serviceRegistry
 		);
@@ -130,7 +130,7 @@ public class ConfiguredClassHierarchyBuilderTest extends BaseUnitTestCase {
 		}
 
 		Index index = JandexHelper.indexForClass(
-				service, MappedSubClass.class, MappedSuperClass.class, UnmappedSubClass.class
+				classLoaderService, MappedSubClass.class, MappedSuperClass.class, UnmappedSubClass.class
 		);
 		Set<ConfiguredClassHierarchy> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
 				index, serviceRegistry
@@ -154,7 +154,7 @@ public class ConfiguredClassHierarchyBuilderTest extends BaseUnitTestCase {
 		class EntityAndMappedSuperClass {
 		}
 
-		Index index = JandexHelper.indexForClass( service, EntityAndMappedSuperClass.class );
+		Index index = JandexHelper.indexForClass( classLoaderService, EntityAndMappedSuperClass.class );
 		ConfiguredClassHierarchyBuilder.createEntityHierarchies( index, serviceRegistry );
 	}
 
@@ -165,7 +165,7 @@ public class ConfiguredClassHierarchyBuilderTest extends BaseUnitTestCase {
 		class EntityAndEmbeddable {
 		}
 
-		Index index = JandexHelper.indexForClass( service, EntityAndEmbeddable.class );
+		Index index = JandexHelper.indexForClass( classLoaderService, EntityAndEmbeddable.class );
 		ConfiguredClassHierarchyBuilder.createEntityHierarchies( index, serviceRegistry );
 	}
 
@@ -181,7 +181,7 @@ public class ConfiguredClassHierarchyBuilderTest extends BaseUnitTestCase {
 		class B extends A {
 		}
 
-		Index index = JandexHelper.indexForClass( service, B.class, A.class );
+		Index index = JandexHelper.indexForClass( classLoaderService, B.class, A.class );
 		ConfiguredClassHierarchyBuilder.createEntityHierarchies( index, serviceRegistry );
 	}
 
@@ -197,7 +197,7 @@ public class ConfiguredClassHierarchyBuilderTest extends BaseUnitTestCase {
 		class B extends A {
 		}
 
-		Index index = JandexHelper.indexForClass( service, B.class, A.class );
+		Index index = JandexHelper.indexForClass( classLoaderService, B.class, A.class );
 		Set<ConfiguredClassHierarchy> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
 				index, serviceRegistry
 		);
@@ -226,7 +226,7 @@ public class ConfiguredClassHierarchyBuilderTest extends BaseUnitTestCase {
 		class B extends A {
 		}
 
-		Index index = JandexHelper.indexForClass( service, B.class, A.class );
+		Index index = JandexHelper.indexForClass( classLoaderService, B.class, A.class );
 		Set<ConfiguredClassHierarchy> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
 				index, serviceRegistry
 		);
@@ -247,7 +247,7 @@ public class ConfiguredClassHierarchyBuilderTest extends BaseUnitTestCase {
 		class B extends A {
 		}
 
-		Index index = JandexHelper.indexForClass( service, B.class, A.class );
+		Index index = JandexHelper.indexForClass( classLoaderService, B.class, A.class );
 		Set<ConfiguredClassHierarchy> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
 				index, serviceRegistry
 		);
@@ -275,7 +275,7 @@ public class ConfiguredClassHierarchyBuilderTest extends BaseUnitTestCase {
 		class B extends A {
 		}
 
-		Index index = JandexHelper.indexForClass( service, B.class, MappedSuperClass.class, A.class );
+		Index index = JandexHelper.indexForClass( classLoaderService, B.class, MappedSuperClass.class, A.class );
 		Set<ConfiguredClassHierarchy> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
 				index, serviceRegistry
 		);
@@ -298,7 +298,7 @@ public class ConfiguredClassHierarchyBuilderTest extends BaseUnitTestCase {
 		class B extends A {
 		}
 
-		Index index = JandexHelper.indexForClass( service, B.class, A.class );
+		Index index = JandexHelper.indexForClass( classLoaderService, B.class, A.class );
 		ConfiguredClassHierarchyBuilder.createEntityHierarchies( index, serviceRegistry );
 	}
 

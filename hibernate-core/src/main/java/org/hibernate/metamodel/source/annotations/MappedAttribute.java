@@ -23,34 +23,52 @@
  */
 package org.hibernate.metamodel.source.annotations;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.DotName;
+
 /**
- * Represent a mapped property (explicitly or implicitly mapped).
+ * Represent a mapped attribute (explicitly or implicitly mapped).
  *
  * @author Hardy Ferentschik
  */
-public class MappedProperty implements Comparable<MappedProperty> {
+public class MappedAttribute implements Comparable<MappedAttribute> {
 	private final String name;
 	private final Class<?> type;
+	private final Map<DotName, List<AnnotationInstance>> annotations;
 
-	MappedProperty(String name, Class<?> type) {
+	MappedAttribute(String name, Class<?> type, Map<DotName, List<AnnotationInstance>> annotations) {
 		this.name = name;
 		this.type = type;
+		this.annotations = annotations;
 	}
 
-	public String getName() {
+	final public String getName() {
 		return name;
 	}
 
-	public String getColumnName() {
+	final public String getColumnName() {
 		return name;
 	}
 
-	public Class<?> getType() {
+	final public Class<?> getType() {
 		return type;
 	}
 
+	public final List<AnnotationInstance> annotations(DotName annotationDotName) {
+		if ( annotations.containsKey( annotationDotName ) ) {
+			return annotations.get( annotationDotName );
+		}
+		else {
+			return Collections.emptyList();
+		}
+	}
+
 	@Override
-	public int compareTo(MappedProperty mappedProperty) {
+	public int compareTo(MappedAttribute mappedProperty) {
 		return name.compareTo( mappedProperty.getName() );
 	}
 

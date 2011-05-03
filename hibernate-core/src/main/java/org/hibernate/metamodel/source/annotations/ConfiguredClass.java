@@ -44,6 +44,7 @@ import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;
 import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.DotName;
 import org.jboss.jandex.FieldInfo;
 import org.jboss.jandex.MethodInfo;
 
@@ -74,12 +75,12 @@ public class ConfiguredClass {
 	private final InheritanceType inheritanceType;
 	private final boolean hasOwnTable;
 	private final String primaryTableName;
-	private final AnnotationInstance tableAnnotation;
+	//private final AnnotationInstance tableAnnotation;
 
 	private final boolean isMappedSuperClass;
 	private final boolean isEmbeddable;
 
-	private final Map<String, MappedProperty> mappedProperties;
+	private final Map<String, MappedAttribute> mappedAttributes;
 
 	public ConfiguredClass(ClassInfo info,
 						   ConfiguredClass parent,
@@ -104,10 +105,6 @@ public class ConfiguredClass {
 		);
 		isEmbeddable = embeddableAnnotation != null;
 
-		tableAnnotation = JandexHelper.getSingleAnnotation(
-				classInfo, JPADotNames.TABLE
-		);
-
 		// todo think about how exactly to handle embeddables regarding access type etc
 
 		classAccessType = determineClassAccessType();
@@ -115,14 +112,14 @@ public class ConfiguredClass {
 		hasOwnTable = definesItsOwnTable();
 		primaryTableName = determinePrimaryTableName();
 
-		List<MappedProperty> properties = collectMappedProperties( resolvedType );
+		List<MappedAttribute> properties = collectMappedProperties( resolvedType );
 		// make sure the properties are ordered by property name
 		Collections.sort( properties );
-		Map<String, MappedProperty> tmpMap = new LinkedHashMap<String, MappedProperty>();
-		for ( MappedProperty property : properties ) {
+		Map<String, MappedAttribute> tmpMap = new LinkedHashMap<String, MappedAttribute>();
+		for ( MappedAttribute property : properties ) {
 			tmpMap.put( property.getName(), property );
 		}
-		mappedProperties = Collections.unmodifiableMap( tmpMap );
+		mappedAttributes = Collections.unmodifiableMap( tmpMap );
 	}
 
 	public String getName() {
@@ -161,12 +158,12 @@ public class ConfiguredClass {
 		return primaryTableName;
 	}
 
-	public Iterable<MappedProperty> getMappedProperties() {
-		return mappedProperties.values();
+	public Iterable<MappedAttribute> getMappedAttributes() {
+		return mappedAttributes.values();
 	}
 
-	public MappedProperty getMappedProperty(String propertyName) {
-		return mappedProperties.get( propertyName );
+	public MappedAttribute getMappedProperty(String propertyName) {
+		return mappedAttributes.get( propertyName );
 	}
 
 	@Override
@@ -174,7 +171,7 @@ public class ConfiguredClass {
 		final StringBuilder sb = new StringBuilder();
 		sb.append( "ConfiguredClass" );
 		sb.append( "{clazz=" ).append( clazz );
-		sb.append( ", mappedProperties=" ).append( mappedProperties );
+		sb.append( ", mappedAttributes=" ).append( mappedAttributes );
 		sb.append( ", classAccessType=" ).append( classAccessType );
 		sb.append( ", isRoot=" ).append( isRoot );
 		sb.append( ", inheritanceType=" ).append( inheritanceType );
@@ -197,7 +194,7 @@ public class ConfiguredClass {
 	/**
 	 * @return A list of the persistent properties of this configured class
 	 */
-	private List<MappedProperty> collectMappedProperties(ResolvedTypeWithMembers resolvedTypes) {
+	private List<MappedAttribute> collectMappedProperties(ResolvedTypeWithMembers resolvedTypes) {
 		// create sets of transient field and method names
 		Set<String> transientFieldNames = new HashSet<String>();
 		Set<String> transientMethodNames = new HashSet<String>();
@@ -216,7 +213,7 @@ public class ConfiguredClass {
 			throw new AssertionFailure( "Unable to resolve types for " + clazz.getName() );
 		}
 
-		List<MappedProperty> properties = new ArrayList<MappedProperty>();
+		List<MappedAttribute> properties = new ArrayList<MappedAttribute>();
 		Set<String> explicitlyConfiguredMemberNames = createExplicitlyConfiguredAccessProperties(
 				properties, resolvedType
 		);
@@ -265,7 +262,7 @@ public class ConfiguredClass {
 	 *
 	 * @return the property names of the explicitly configured class names in a set
 	 */
-	private Set<String> createExplicitlyConfiguredAccessProperties(List<MappedProperty> mappedProperties, ResolvedTypeWithMembers resolvedMembers) {
+	private Set<String> createExplicitlyConfiguredAccessProperties(List<MappedAttribute> mappedProperties, ResolvedTypeWithMembers resolvedMembers) {
 		Set<String> explicitAccessMembers = new HashSet<String>();
 
 		List<AnnotationInstance> accessAnnotations = classInfo.annotations().get( JPADotNames.ACCESS );
@@ -350,8 +347,8 @@ public class ConfiguredClass {
 		return explicitAccessMembers;
 	}
 
-	private MappedProperty createMappedProperty(Member member, ResolvedTypeWithMembers resolvedType) {
-		String name = ReflectionHelper.getPropertyName( member );
+	private MappedAttribute createMappedProperty(Member member, ResolvedTypeWithMembers resolvedType) {
+		final String name = ReflectionHelper.getPropertyName( member );
 		ResolvedMember[] resolvedMembers;
 		if ( member instanceof Field ) {
 			resolvedMembers = resolvedType.getMemberFields();
@@ -359,8 +356,11 @@ public class ConfiguredClass {
 		else {
 			resolvedMembers = resolvedType.getMemberMethods();
 		}
-		Type type = findResolvedType( member.getName(), resolvedMembers );
-		return new MappedProperty( name, (Class) type );
+		final Type type = findResolvedType( member.getName(), resolvedMembers );
+		final Map<DotName, List<AnnotationInstance>> annotations = JandexHelper.getMemberAnnotations(
+				classInfo, member.getName()
+		);
+		return new MappedAttribute( name, (Class) type, annotations );
 	}
 
 	private Type findResolvedType(String name, ResolvedMember[] resolvedMembers) {
@@ -417,6 +417,9 @@ public class ConfiguredClass {
 		String tableName = null;
 		if ( hasOwnTable() ) {
 			tableName = clazz.getSimpleName();
+			AnnotationInstance tableAnnotation = JandexHelper.getSingleAnnotation(
+					classInfo, JPADotNames.TABLE
+			);
 			if ( tableAnnotation != null ) {
 				AnnotationValue value = tableAnnotation.value( "name" );
 				String tmp = value == null ? null : value.asString();

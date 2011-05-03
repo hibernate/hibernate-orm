@@ -60,7 +60,7 @@ public class HbmColumnRelationalState implements AbstractAttributeBinding.Column
 
 	/* package-protected */
 	HbmColumnRelationalState(XMLColumnElement columnElement,
-							HbmSimpleValueRelationalStateContainer container) {
+							 HbmSimpleValueRelationalStateContainer container) {
 		this.container = container;
 		this.explicitColumnName = columnElement.getName();
 		this.size = createSize( columnElement.getLength(), columnElement.getScale(), columnElement.getPrecision() );
@@ -70,8 +70,8 @@ public class HbmColumnRelationalState implements AbstractAttributeBinding.Column
 		this.defaultColumnValue = columnElement.getDefault();
 		this.sqlType = columnElement.getSqlType();
 		this.customWrite = columnElement.getWrite();
-		if ( customWrite != null && ! customWrite.matches("[^?]*\\?[^?]*") ) {
-			throw new MappingException("write expression must contain exactly one value placeholder ('?') character");
+		if ( customWrite != null && !customWrite.matches( "[^?]*\\?[^?]*" ) ) {
+			throw new MappingException( "write expression must contain exactly one value placeholder ('?') character" );
 		}
 		this.customRead = columnElement.getRead();
 		this.comment = columnElement.getComment() == null ? null : columnElement.getComment().trim();
@@ -82,7 +82,7 @@ public class HbmColumnRelationalState implements AbstractAttributeBinding.Column
 	}
 
 	HbmColumnRelationalState(XMLPropertyElement property,
-							HbmSimpleValueRelationalStateContainer container) {
+							 HbmSimpleValueRelationalStateContainer container) {
 		this.container = container;
 		this.explicitColumnName = property.getName();
 		this.size = createSize( property.getLength(), property.getScale(), property.getPrecision() );
@@ -101,11 +101,11 @@ public class HbmColumnRelationalState implements AbstractAttributeBinding.Column
 	}
 
 	HbmColumnRelationalState(XMLManyToOneElement manyToOne,
-							HbmSimpleValueRelationalStateContainer container) {
+							 HbmSimpleValueRelationalStateContainer container) {
 		this.container = container;
 		this.explicitColumnName = manyToOne.getName();
 		this.size = new Size();
-		this.isNullable =!  MappingHelper.getBooleanValue( manyToOne.isNotNull(), false );
+		this.isNullable = !MappingHelper.getBooleanValue( manyToOne.isNotNull(), false );
 		this.isUnique = manyToOne.isUnique();
 		this.checkCondition = null;
 		this.defaultColumnValue = null;
@@ -120,8 +120,8 @@ public class HbmColumnRelationalState implements AbstractAttributeBinding.Column
 	}
 
 	HbmColumnRelationalState(XMLId id,
-							HbmSimpleValueRelationalStateContainer container) {
-		if ( id.getColumn() != null && ! id.getColumn().isEmpty() ) {
+							 HbmSimpleValueRelationalStateContainer container) {
+		if ( id.getColumn() != null && !id.getColumn().isEmpty() ) {
 			throw new IllegalArgumentException( "This method should not be called with non-empty id.getColumnElement()" );
 		}
 		this.container = container;
@@ -140,9 +140,11 @@ public class HbmColumnRelationalState implements AbstractAttributeBinding.Column
 	}
 
 	HbmColumnRelationalState(XMLDiscriminator discriminator,
-							HbmSimpleValueRelationalStateContainer container) {
-		if ( discriminator.getColumn() != null  ) {
-			throw new IllegalArgumentException( "This method should not be called with null discriminator.getColumnElement()" );
+							 HbmSimpleValueRelationalStateContainer container) {
+		if ( discriminator.getColumn() != null ) {
+			throw new IllegalArgumentException(
+					"This method should not be called with null discriminator.getColumnElement()"
+			);
 		}
 		this.container = container;
 		this.explicitColumnName = null;
@@ -160,11 +162,13 @@ public class HbmColumnRelationalState implements AbstractAttributeBinding.Column
 	}
 
 	HbmColumnRelationalState(XMLVersion version,
-							HbmSimpleValueRelationalStateContainer container) {
+							 HbmSimpleValueRelationalStateContainer container) {
 		this.container = container;
 		this.explicitColumnName = version.getColumnAttribute();
-		if ( version.getColumn() != null && ! version.getColumn().isEmpty() ) {
-			throw new IllegalArgumentException( "This method should not be called with non-empty version.getColumnElement()" );
+		if ( version.getColumn() != null && !version.getColumn().isEmpty() ) {
+			throw new IllegalArgumentException(
+					"This method should not be called with non-empty version.getColumnElement()"
+			);
 		}
 		// TODO: should set default
 		this.size = new Size();
@@ -181,7 +185,7 @@ public class HbmColumnRelationalState implements AbstractAttributeBinding.Column
 	}
 
 	HbmColumnRelationalState(XMLTimestamp timestamp,
-							HbmSimpleValueRelationalStateContainer container) {
+							 HbmSimpleValueRelationalStateContainer container) {
 		this.container = container;
 		this.explicitColumnName = timestamp.getColumn();
 		// TODO: should set default
@@ -201,12 +205,15 @@ public class HbmColumnRelationalState implements AbstractAttributeBinding.Column
 	public NamingStrategy getNamingStrategy() {
 		return container.getNamingStrategy();
 	}
+
 	public String getExplicitColumnName() {
 		return explicitColumnName;
 	}
+
 	public Size getSize() {
 		return size;
 	}
+
 	protected static Size createSize(String length, String scale, String precision) {
 		// TODO: should this set defaults if length, scale, precision is not specified?
 		Size size = new Size();
@@ -222,6 +229,7 @@ public class HbmColumnRelationalState implements AbstractAttributeBinding.Column
 		// TODO: is there an attribute for lobMultiplier?
 		return size;
 	}
+
 	public boolean isNullable() {
 		return isNullable;
 	}
@@ -233,24 +241,31 @@ public class HbmColumnRelationalState implements AbstractAttributeBinding.Column
 	public String getCheckCondition() {
 		return checkCondition;
 	}
+
 	public String getDefault() {
 		return defaultColumnValue;
 	}
+
 	public String getSqlType() {
 		return sqlType;
 	}
+
 	public String getCustomWriteFragment() {
 		return customWrite;
 	}
+
 	public String getCustomReadFragment() {
 		return customRead;
 	}
+
 	public String getComment() {
 		return comment;
 	}
+
 	public Set<String> getUniqueKeys() {
 		return uniqueKeys;
 	}
+
 	public Set<String> getIndexes() {
 		return indexes;
 	}

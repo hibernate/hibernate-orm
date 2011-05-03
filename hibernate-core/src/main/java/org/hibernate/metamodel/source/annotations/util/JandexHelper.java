@@ -26,7 +26,10 @@ package org.hibernate.metamodel.source.annotations.util;
 import java.beans.Introspector;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;
@@ -36,7 +39,6 @@ import org.jboss.jandex.FieldInfo;
 import org.jboss.jandex.Index;
 import org.jboss.jandex.Indexer;
 import org.jboss.jandex.MethodInfo;
-
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
@@ -144,6 +146,46 @@ public class JandexHelper {
 			}
 		}
 		return indexer.complete();
+	}
+
+	public static Map<DotName, List<AnnotationInstance>> getMemberAnnotations(ClassInfo classInfo, String name) {
+		if ( classInfo == null ) {
+			throw new IllegalArgumentException( "classInfo cannot be null" );
+		}
+
+		if ( name == null ) {
+			throw new IllegalArgumentException( "name cannot be null" );
+		}
+
+		Map<DotName, List<AnnotationInstance>> annotations = new HashMap<DotName, List<AnnotationInstance>>();
+		for ( List<AnnotationInstance> annotationList : classInfo.annotations().values() ) {
+			for ( AnnotationInstance instance : annotationList ) {
+				String targetName = null;
+				if ( instance.target() instanceof FieldInfo ) {
+					targetName = ( (FieldInfo) instance.target() ).name();
+				}
+				else if ( instance.target() instanceof MethodInfo ) {
+					targetName = ( (MethodInfo) instance.target() ).name();
+				}
+				if ( targetName != null && name.equals( targetName ) ) {
+					addAnnotationToMap( instance, annotations );
+				}
+			}
+		}
+		return annotations;
+	}
+
+	private static void addAnnotationToMap(AnnotationInstance instance, Map<DotName, List<AnnotationInstance>> annotations) {
+		DotName dotName = instance.name();
+		List<AnnotationInstance> list;
+		if ( annotations.containsKey( dotName ) ) {
+			list = annotations.get( dotName );
+		}
+		else {
+			list = new ArrayList<AnnotationInstance>();
+			annotations.put( dotName, list );
+		}
+		list.add( instance );
 	}
 }
 

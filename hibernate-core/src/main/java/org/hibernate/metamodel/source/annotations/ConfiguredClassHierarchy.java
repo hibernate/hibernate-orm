@@ -190,7 +190,7 @@ public class ConfiguredClassHierarchy implements Iterable<ConfiguredClass> {
 
 	private AccessType throwIdNotFoundAnnotationException(List<ClassInfo> classes) {
 		StringBuilder builder = new StringBuilder();
-		builder.append( "Unable to find Id property for class hierarchy " );
+		builder.append( "Unable to determine identifier attribute for class hierarchy " );
 		builder.append( hierarchyListString( classes ) );
 		throw new AnnotationException( builder.toString() );
 	}

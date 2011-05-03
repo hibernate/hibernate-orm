@@ -40,7 +40,7 @@ import org.junit.Test;
 
 import org.hibernate.metamodel.source.annotations.ConfiguredClass;
 import org.hibernate.metamodel.source.annotations.ConfiguredClassHierarchy;
-import org.hibernate.metamodel.source.annotations.MappedProperty;
+import org.hibernate.metamodel.source.annotations.MappedAttribute;
 import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.internal.BasicServiceRegistryImpl;
@@ -80,7 +80,7 @@ public class GenericTypeDiscoveryTest extends BaseUnitTestCase {
 		ConfiguredClass configuredClass = iter.next();
 		ClassInfo info = configuredClass.getClassInfo();
 		assertEquals( "wrong class", DotName.createSimple( Stuff.class.getName() ), info.name() );
-		MappedProperty property = configuredClass.getMappedProperty( "value" );
+		MappedAttribute property = configuredClass.getMappedProperty( "value" );
 		assertEquals( Price.class, property.getType() );
 
 		assertTrue( iter.hasNext() );
@@ -88,7 +88,7 @@ public class GenericTypeDiscoveryTest extends BaseUnitTestCase {
 		info = configuredClass.getClassInfo();
 		assertEquals( "wrong class", DotName.createSimple( PricedStuff.class.getName() ), info.name() );
 		assertFalse(
-				"PricedStuff should not mapped properties", configuredClass.getMappedProperties().iterator().hasNext()
+				"PricedStuff should not mapped properties", configuredClass.getMappedAttributes().iterator().hasNext()
 		);
 
 		assertTrue( iter.hasNext() );
@@ -105,7 +105,7 @@ public class GenericTypeDiscoveryTest extends BaseUnitTestCase {
 		configuredClass = iter.next();
 		info = configuredClass.getClassInfo();
 		assertEquals( "wrong class", DotName.createSimple( Paper.class.getName() ), info.name() );
-		assertFalse( "Paper should not mapped properties", configuredClass.getMappedProperties().iterator().hasNext() );
+		assertFalse( "Paper should not mapped properties", configuredClass.getMappedAttributes().iterator().hasNext() );
 
 		assertFalse( iter.hasNext() );
 	}

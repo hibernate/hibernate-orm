@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.AnnotationValue;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
@@ -43,6 +44,7 @@ import org.hibernate.metamodel.binding.SimpleAttributeBinding;
 import org.hibernate.metamodel.domain.Attribute;
 import org.hibernate.metamodel.domain.Entity;
 import org.hibernate.metamodel.domain.Hierarchical;
+import org.hibernate.metamodel.relational.Identifier;
 import org.hibernate.metamodel.relational.Schema;
 import org.hibernate.metamodel.relational.Size;
 import org.hibernate.metamodel.source.annotations.util.JandexHelper;
@@ -54,15 +56,17 @@ import org.hibernate.metamodel.source.internal.MetadataImpl;
  * @author Hardy Ferentschik
  */
 public class EntityBinder {
-	private final ConfiguredClass entity;
+	private final ConfiguredClass configuredClass;
 	private final MetadataImpl meta;
+	private final Schema.Name schemaName;
 
 	public EntityBinder(MetadataImpl metadata, ConfiguredClass configuredClass) {
-		this.entity = configuredClass;
+		this.configuredClass = configuredClass;
 		this.meta = metadata;
 		EntityBinding entityBinding = new EntityBinding();
 		bindJpaEntityAnnotation( entityBinding );
 		bindHibernateEntityAnnotation( entityBinding ); // optional hibernate specific @org.hibernate.annotations.Entity
+		schemaName = createSchemaName();
 		bindTable( entityBinding );
 
 		if ( configuredClass.isRoot() ) {
@@ -71,19 +75,48 @@ public class EntityBinder {
 		meta.addEntity( entityBinding );
 	}
 
+	private Schema.Name createSchemaName() {
+		String schema = "";
+		String catalog = "";
+
+		AnnotationInstance tableAnnotation = JandexHelper.getSingleAnnotation(
+				configuredClass.getClassInfo(), JPADotNames.TABLE
+		);
+		if ( tableAnnotation != null ) {
+			AnnotationValue schemaValue = tableAnnotation.value( "schema" );
+			AnnotationValue catalogValue = tableAnnotation.value( "catalog" );
+
+			schema = schemaValue != null ? schemaValue.asString() : "";
+			catalog = catalogValue != null ? catalogValue.asString() : "";
+		}
+
+		return new Schema.Name( schema, catalog );
+	}
+
 	private void bindTable(EntityBinding entityBinding) {
+		final Schema schema = meta.getDatabase().getSchema( schemaName );
+		final Identifier tableName = Identifier.toIdentifier( configuredClass.getPrimaryTableName() );
+		org.hibernate.metamodel.relational.Table table = schema.getTable( tableName );
+		if ( table == null ) {
+			table = schema.createTable( tableName );
+		}
+		entityBinding.setBaseTable( table );
 
-//		this.schemaName = new Schema.Name(
-//				( entityClazz.getSchema() == null ?
-//						hibernateMappingBinder.getDefaultSchemaName() :
-//						entityClazz.getSchema() ),
-//				( entityClazz.getCatalog() == null ?
-//						hibernateMappingBinder.getDefaultCatalogName() :
-//						entityClazz.getCatalog() )
-//		);
+		AnnotationInstance hibernateTableAnnotation = JandexHelper.getSingleAnnotation(
+				configuredClass.getClassInfo(), HibernateDotNames.TABLE
+		);
 
+		if ( hibernateTableAnnotation != null && hibernateTableAnnotation.value( "comment" ) != null ) {
+			table.addComment( hibernateTableAnnotation.value( "comment" ).asString().trim() );
+		}
+		// todo map rest of Hibernate @Table attributes
 
-		final Schema schema = meta.getDatabase().getSchema( null );
+		AnnotationInstance checkAnnotation = JandexHelper.getSingleAnnotation(
+				configuredClass.getClassInfo(), HibernateDotNames.CHECK
+		);
+		if ( checkAnnotation != null ) {
+			table.addCheckConstraint( checkAnnotation.value( "constraints" ).asString() );
+		}
 	}
 
 	private void bindId(EntityBinding entityBinding) {
@@ -107,11 +140,11 @@ public class EntityBinder {
 
 	private void bindJpaEntityAnnotation(EntityBinding entityBinding) {
 		AnnotationInstance jpaEntityAnnotation = JandexHelper.getSingleAnnotation(
-				entity.getClassInfo(), JPADotNames.ENTITY
+				configuredClass.getClassInfo(), JPADotNames.ENTITY
 		);
 		String name;
 		if ( jpaEntityAnnotation.value( "name" ) == null ) {
-			name = StringHelper.unqualify( entity.getName() );
+			name = StringHelper.unqualify( configuredClass.getName() );
 		}
 		else {
 			name = jpaEntityAnnotation.value( "name" ).asString();
@@ -121,26 +154,26 @@ public class EntityBinder {
 
 	private void bindSingleIdAnnotation(EntityBinding entityBinding) {
 		AnnotationInstance idAnnotation = JandexHelper.getSingleAnnotation(
-				entity.getClassInfo(), JPADotNames.ID
+				configuredClass.getClassInfo(), JPADotNames.ID
 		);
 
 		String idName = JandexHelper.getPropertyName( idAnnotation.target() );
 		entityBinding.getEntity().getOrCreateSingularAttribute( idName );
 		SimpleAttributeBinding idBinding = entityBinding.makeSimplePrimaryKeyAttributeBinding( idName );
 
-		MappedProperty idProperty = entity.getMappedProperty( idName );
+		MappedAttribute idAttribute = configuredClass.getMappedProperty( idName );
 
 		AnnotationSimpleAttributeDomainState domainState = new AnnotationSimpleAttributeDomainState();
 		HibernateTypeDescriptor typeDescriptor = new HibernateTypeDescriptor();
-		typeDescriptor.setTypeName( idProperty.getType().getName() );
+		typeDescriptor.setTypeName( idAttribute.getType().getName() );
 		domainState.typeDescriptor = typeDescriptor;
-		domainState.attribute = entityBinding.getEntity().getOrCreateSingularAttribute( idProperty.getName() );
+		domainState.attribute = entityBinding.getEntity().getOrCreateSingularAttribute( idAttribute.getName() );
 
 		idBinding.initialize( domainState );
 
 		AnnotationColumnRelationalState columnRelationsState = new AnnotationColumnRelationalState();
 		columnRelationsState.namingStrategy = meta.getNamingStrategy();
-		columnRelationsState.columnName = idProperty.getColumnName();
+		columnRelationsState.columnName = idAttribute.getColumnName();
 		columnRelationsState.unique = true;
 		columnRelationsState.nullable = false;
 
@@ -151,7 +184,7 @@ public class EntityBinder {
 
 	private void bindHibernateEntityAnnotation(EntityBinding entityBinding) {
 		AnnotationInstance hibernateEntityAnnotation = JandexHelper.getSingleAnnotation(
-				entity.getClassInfo(), HibernateDotNames.ENTITY
+				configuredClass.getClassInfo(), HibernateDotNames.ENTITY
 		);
 //		if ( hibAnn != null ) {
 //			dynamicInsert = hibAnn.dynamicInsert();
@@ -173,7 +206,7 @@ public class EntityBinder {
 	}
 
 	private Hierarchical getSuperType() {
-		ConfiguredClass parent = entity.getParent();
+		ConfiguredClass parent = configuredClass.getParent();
 		if ( parent == null ) {
 			return null;
 		}
@@ -181,7 +214,7 @@ public class EntityBinder {
 		EntityBinding parentBinding = meta.getEntityBinding( parent.getName() );
 		if ( parentBinding == null ) {
 			throw new AssertionFailure(
-					"Parent entity " + parent.getName() + " of entity " + entity.getName() + "not yet created!"
+					"Parent entity " + parent.getName() + " of entity " + configuredClass.getName() + "not yet created!"
 			);
 		}
 
@@ -189,14 +222,14 @@ public class EntityBinder {
 	}
 
 	private IdType determineIdType() {
-		List<AnnotationInstance> idAnnotations = entity.getClassInfo().annotations().get( JPADotNames.ENTITY );
-		List<AnnotationInstance> embeddedIdAnnotations = entity.getClassInfo()
+		List<AnnotationInstance> idAnnotations = configuredClass.getClassInfo().annotations().get( JPADotNames.ENTITY );
+		List<AnnotationInstance> embeddedIdAnnotations = configuredClass.getClassInfo()
 				.annotations()
 				.get( JPADotNames.EMBEDDED_ID );
 
 		if ( idAnnotations != null && embeddedIdAnnotations != null ) {
 			throw new MappingException(
-					"@EmbeddedId and @Id cannot be used together. Check the configuration for " + entity.getName() + "."
+					"@EmbeddedId and @Id cannot be used together. Check the configuration for " + configuredClass.getName() + "."
 			);
 		}
 

@@ -25,11 +25,14 @@ package org.hibernate.metamodel.binding;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.Table;
+
 
 /**
  * @author Steve Ebersole
  */
 @Entity
+@Table(schema = "foo")
 public class SimpleEntity {
 	@Id
 	private Long id;

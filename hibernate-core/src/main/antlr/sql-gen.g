@@ -1,8 +1,6 @@
 header
 {
-//   $Id: sql-gen.g 10001 2006-06-08 21:08:04Z steve.ebersole@jboss.com $
-package org.hibernate.hql.antlr;
-
+package org.hibernate.hql.internal.antlr;
 }
 /**
  * SQL Generator Tree Parser, providing SQL rendering of SQL ASTs produced by the previous phase, HqlSqlWalker.  All

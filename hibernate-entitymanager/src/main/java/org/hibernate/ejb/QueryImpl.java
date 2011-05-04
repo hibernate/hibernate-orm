@@ -53,7 +53,7 @@ import org.hibernate.ejb.util.LockModeTypeHelper;
 import org.hibernate.engine.query.spi.NamedParameterDescriptor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.query.spi.OrdinalParameterDescriptor;
-import org.hibernate.hql.QueryExecutionRequestException;
+import org.hibernate.hql.internal.QueryExecutionRequestException;
 import org.hibernate.internal.AbstractQueryImpl;
 import org.jboss.logging.Logger;
 

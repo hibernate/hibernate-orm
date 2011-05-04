@@ -29,7 +29,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.hql.HolderInstantiator;
+import org.hibernate.hql.internal.HolderInstantiator;
 import org.hibernate.loader.Loader;
 import org.hibernate.type.Type;
 

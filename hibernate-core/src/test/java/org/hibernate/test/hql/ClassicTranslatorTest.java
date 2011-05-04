@@ -26,7 +26,7 @@ package org.hibernate.test.hql;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.hql.classic.ClassicQueryTranslatorFactory;
+import org.hibernate.hql.internal.classic.ClassicQueryTranslatorFactory;
 
 import org.junit.Test;
 

@@ -32,10 +32,8 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.hql.ast.ASTQueryTranslatorFactory;
+import org.hibernate.hql.internal.ast.ASTQueryTranslatorFactory;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
 import org.hibernate.testing.FailureExpected;

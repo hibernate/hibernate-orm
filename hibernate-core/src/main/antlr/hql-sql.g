@@ -1,6 +1,6 @@
 header
 {
-package org.hibernate.hql.antlr;
+package org.hibernate.hql.internal.antlr;
 
 import org.hibernate.internal.CoreMessageLogger;
 import org.jboss.logging.Logger;

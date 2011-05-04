@@ -34,12 +34,12 @@ import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.engine.query.spi.HQLQueryPlan;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.hql.QueryTranslator;
-import org.hibernate.hql.QueryTranslatorFactory;
-import org.hibernate.hql.ast.ASTQueryTranslatorFactory;
-import org.hibernate.hql.ast.QueryTranslatorImpl;
-import org.hibernate.hql.ast.util.ASTPrinter;
-import org.hibernate.hql.classic.ClassicQueryTranslatorFactory;
+import org.hibernate.hql.spi.QueryTranslator;
+import org.hibernate.hql.spi.QueryTranslatorFactory;
+import org.hibernate.hql.internal.ast.ASTQueryTranslatorFactory;
+import org.hibernate.hql.internal.ast.QueryTranslatorImpl;
+import org.hibernate.hql.internal.ast.util.ASTPrinter;
+import org.hibernate.hql.internal.classic.ClassicQueryTranslatorFactory;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.type.Type;
 

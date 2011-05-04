@@ -24,7 +24,7 @@
  */
 package org.hibernate.engine.query.spi;
 import org.hibernate.QueryException;
-import org.hibernate.hql.classic.ParserHelper;
+import org.hibernate.hql.internal.classic.ParserHelper;
 import org.hibernate.internal.util.StringHelper;
 
 /**

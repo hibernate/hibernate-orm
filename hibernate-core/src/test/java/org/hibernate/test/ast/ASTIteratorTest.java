@@ -28,12 +28,12 @@ import java.io.PrintWriter;
 import antlr.ASTFactory;
 import antlr.collections.AST;
 
-import org.hibernate.hql.antlr.HqlTokenTypes;
-import org.hibernate.hql.ast.HqlParser;
-import org.hibernate.hql.ast.util.ASTIterator;
-import org.hibernate.hql.ast.util.ASTParentsFirstIterator;
-import org.hibernate.hql.ast.util.ASTPrinter;
-import org.hibernate.hql.ast.util.ASTUtil;
+import org.hibernate.hql.internal.antlr.HqlTokenTypes;
+import org.hibernate.hql.internal.ast.HqlParser;
+import org.hibernate.hql.internal.ast.util.ASTIterator;
+import org.hibernate.hql.internal.ast.util.ASTParentsFirstIterator;
+import org.hibernate.hql.internal.ast.util.ASTPrinter;
+import org.hibernate.hql.internal.ast.util.ASTUtil;
 
 import org.junit.Test;
 

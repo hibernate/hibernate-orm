@@ -31,13 +31,13 @@ import antlr.RecognitionException;
 import antlr.TokenStreamException;
 import antlr.collections.AST;
 
-import org.hibernate.hql.QueryTranslator;
-import org.hibernate.hql.QueryTranslatorFactory;
-import org.hibernate.hql.antlr.HqlSqlTokenTypes;
-import org.hibernate.hql.ast.ASTQueryTranslatorFactory;
-import org.hibernate.hql.ast.HqlParser;
-import org.hibernate.hql.ast.QueryTranslatorImpl;
-import org.hibernate.hql.ast.util.ASTUtil;
+import org.hibernate.hql.spi.QueryTranslator;
+import org.hibernate.hql.spi.QueryTranslatorFactory;
+import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
+import org.hibernate.hql.internal.ast.ASTQueryTranslatorFactory;
+import org.hibernate.hql.internal.ast.HqlParser;
+import org.hibernate.hql.internal.ast.QueryTranslatorImpl;
+import org.hibernate.hql.internal.ast.util.ASTUtil;
 
 import org.junit.Test;
 

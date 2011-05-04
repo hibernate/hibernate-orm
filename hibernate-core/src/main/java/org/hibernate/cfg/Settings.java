@@ -29,7 +29,7 @@ import org.hibernate.EntityMode;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.cache.spi.QueryCacheFactory;
 import org.hibernate.cache.spi.RegionFactory;
-import org.hibernate.hql.QueryTranslatorFactory;
+import org.hibernate.hql.spi.QueryTranslatorFactory;
 import org.hibernate.service.jta.platform.spi.JtaPlatform;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
 

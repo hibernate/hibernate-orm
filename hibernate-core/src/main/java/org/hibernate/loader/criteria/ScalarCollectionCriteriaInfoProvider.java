@@ -26,10 +26,9 @@ package org.hibernate.loader.criteria;
 
 import java.io.Serializable;
 
-import org.hibernate.hql.ast.util.SessionFactoryHelper;
+import org.hibernate.hql.internal.ast.util.SessionFactoryHelper;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.PropertyMapping;
-import org.hibernate.type.ComponentType;
 import org.hibernate.type.Type;
 
 /**

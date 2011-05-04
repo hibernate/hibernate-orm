@@ -50,7 +50,7 @@ import org.hibernate.ejb.internal.EntityManagerMessageLogger;
 import org.hibernate.ejb.util.CacheModeHelper;
 import org.hibernate.ejb.util.ConfigurationHelper;
 import org.hibernate.ejb.util.LockModeTypeHelper;
-import org.hibernate.hql.QueryExecutionRequestException;
+import org.hibernate.hql.internal.QueryExecutionRequestException;
 import org.jboss.logging.Logger;
 
 /**

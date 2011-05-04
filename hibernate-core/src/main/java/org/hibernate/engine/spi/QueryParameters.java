@@ -38,7 +38,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollMode;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.hql.classic.ParserHelper;
+import org.hibernate.hql.internal.classic.ParserHelper;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.FilterImpl;
 import org.hibernate.internal.util.collections.ArrayHelper;

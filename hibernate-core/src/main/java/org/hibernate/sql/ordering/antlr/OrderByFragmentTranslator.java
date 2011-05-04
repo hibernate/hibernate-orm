@@ -26,7 +26,7 @@ package org.hibernate.sql.ordering.antlr;
 import java.io.StringReader;
 import org.hibernate.HibernateException;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.hql.ast.util.ASTPrinter;
+import org.hibernate.hql.internal.ast.util.ASTPrinter;
 
 import org.jboss.logging.Logger;
 

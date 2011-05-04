@@ -156,7 +156,7 @@ import org.hibernate.type.TypeResolver;
  *
  * @see org.hibernate.service.jdbc.connections.spi.ConnectionProvider
  * @see org.hibernate.Session
- * @see org.hibernate.hql.QueryTranslator
+ * @see org.hibernate.hql.spi.QueryTranslator
  * @see org.hibernate.persister.entity.EntityPersister
  * @see org.hibernate.persister.collection.CollectionPersister
  * @author Gavin King

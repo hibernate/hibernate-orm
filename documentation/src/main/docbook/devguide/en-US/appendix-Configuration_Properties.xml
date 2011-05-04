@@ -287,8 +287,8 @@
           </row>
           <row>
             <entry>factory_class</entry>
-            <entry><para><literal>org.hibernate.hql.ast.ASTQueryTranslatorFactory</literal> or
-            <literal>org.hibernate.hql.classic.ClassicQueryTranslatorFactory</literal></para></entry>
+            <entry><para><literal>org.hibernate.hql.internal.ast.ASTQueryTranslatorFactory</literal> or
+            <literal>org.hibernate.hql.internal.classic.ClassicQueryTranslatorFactory</literal></para></entry>
             <entry>Chooses the HQL parser implementation.</entry>
           </row>
           <row>

@@ -869,9 +869,9 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect</programlisting>
 
             <entry>Chooses the HQL parser implementation. <para> <emphasis
             role="strong">e.g.</emphasis>
-            <literal>org.hibernate.hql.ast.ASTQueryTranslatorFactory</literal>
+            <literal>org.hibernate.hql.internal.ast.ASTQueryTranslatorFactory</literal>
             or
-            <literal>org.hibernate.hql.classic.ClassicQueryTranslatorFactory</literal>
+            <literal>org.hibernate.hql.internal.classic.ClassicQueryTranslatorFactory</literal>
             </para></entry>
           </row>
 
@@ -1291,7 +1291,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect</programlisting>
           </row>
 
           <row>
-            <entry><literal>org.hibernate.hql.ast.AST</literal></entry>
+            <entry><literal>org.hibernate.hql.internal.ast.AST</literal></entry>
 
             <entry>Log HQL and SQL ASTs during query parsing</entry>
           </row>

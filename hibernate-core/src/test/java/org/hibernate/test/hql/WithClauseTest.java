@@ -28,7 +28,7 @@ import java.util.List;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.hql.ast.InvalidWithClauseException;
+import org.hibernate.hql.internal.ast.InvalidWithClauseException;
 
 import org.junit.Test;
 

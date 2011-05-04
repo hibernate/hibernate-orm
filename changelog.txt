@@ -12,7 +12,6 @@ http://opensource.atlassian.com/projects/hibernate/browse/HHH/fixforversion/1121
 ** Bug
     * [HHH-4999] - createSQLQuery(query).list() result screw up when when columns in different tables have same name
     * [HHH-5803] - Better handling of implicit literal numeric expression typing
-    * [HHH-5915] - Bug with MSSQL Paging released in 3.6.1
     * [HHH-5940] - @MapKeyJoinColumns always throws an exception
     * [HHH-5974] - unnecessary import which crashes the system in OSGi environement
     * [HHH-5978] - TS: Postgresql 8.x - CustomSQLTest fails because UPPER()'s result is not converted to number.

@@ -30,7 +30,7 @@ import org.hibernate.StaleObjectStateException;
 import org.hibernate.action.internal.EntityIncrementVersionProcess;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.event.EventSource;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.persister.entity.Lockable;
 
 /**

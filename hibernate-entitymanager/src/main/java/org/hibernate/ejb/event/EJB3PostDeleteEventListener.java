@@ -23,8 +23,8 @@
  */
 package org.hibernate.ejb.event;
 
-import org.hibernate.event.PostDeleteEvent;
-import org.hibernate.event.PostDeleteEventListener;
+import org.hibernate.event.spi.PostDeleteEvent;
+import org.hibernate.event.spi.PostDeleteEventListener;
 
 /**
  * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>

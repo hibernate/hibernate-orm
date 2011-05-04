@@ -26,7 +26,7 @@ package org.hibernate.test.flush;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.event.EventType;
+import org.hibernate.event.spi.EventType;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.integrator.spi.IntegratorService;
 import org.hibernate.service.internal.BasicServiceRegistryImpl;

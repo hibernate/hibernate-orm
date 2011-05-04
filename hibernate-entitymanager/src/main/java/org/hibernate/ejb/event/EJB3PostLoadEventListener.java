@@ -23,8 +23,8 @@
  */
 package org.hibernate.ejb.event;
 
-import org.hibernate.event.PostLoadEvent;
-import org.hibernate.event.PostLoadEventListener;
+import org.hibernate.event.spi.PostLoadEvent;
+import org.hibernate.event.spi.PostLoadEventListener;
 
 /**
  * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>

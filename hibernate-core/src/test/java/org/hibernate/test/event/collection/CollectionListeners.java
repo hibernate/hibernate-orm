@@ -29,22 +29,22 @@ import java.util.List;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.event.AbstractCollectionEvent;
-import org.hibernate.event.EventType;
-import org.hibernate.event.InitializeCollectionEvent;
-import org.hibernate.event.PostCollectionRecreateEvent;
-import org.hibernate.event.PostCollectionRecreateEventListener;
-import org.hibernate.event.PostCollectionRemoveEvent;
-import org.hibernate.event.PostCollectionRemoveEventListener;
-import org.hibernate.event.PostCollectionUpdateEvent;
-import org.hibernate.event.PostCollectionUpdateEventListener;
-import org.hibernate.event.PreCollectionRecreateEvent;
-import org.hibernate.event.PreCollectionRecreateEventListener;
-import org.hibernate.event.PreCollectionRemoveEvent;
-import org.hibernate.event.PreCollectionRemoveEventListener;
-import org.hibernate.event.PreCollectionUpdateEvent;
-import org.hibernate.event.PreCollectionUpdateEventListener;
-import org.hibernate.event.def.DefaultInitializeCollectionEventListener;
+import org.hibernate.event.spi.AbstractCollectionEvent;
+import org.hibernate.event.spi.EventType;
+import org.hibernate.event.spi.InitializeCollectionEvent;
+import org.hibernate.event.spi.PostCollectionRecreateEvent;
+import org.hibernate.event.spi.PostCollectionRecreateEventListener;
+import org.hibernate.event.spi.PostCollectionRemoveEvent;
+import org.hibernate.event.spi.PostCollectionRemoveEventListener;
+import org.hibernate.event.spi.PostCollectionUpdateEvent;
+import org.hibernate.event.spi.PostCollectionUpdateEventListener;
+import org.hibernate.event.spi.PreCollectionRecreateEvent;
+import org.hibernate.event.spi.PreCollectionRecreateEventListener;
+import org.hibernate.event.spi.PreCollectionRemoveEvent;
+import org.hibernate.event.spi.PreCollectionRemoveEventListener;
+import org.hibernate.event.spi.PreCollectionUpdateEvent;
+import org.hibernate.event.spi.PreCollectionUpdateEventListener;
+import org.hibernate.event.internal.DefaultInitializeCollectionEventListener;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 
 /**

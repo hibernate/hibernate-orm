@@ -25,8 +25,8 @@ package org.hibernate.ejb.event;
 
 import java.io.Serializable;
 
-import org.hibernate.event.EventSource;
-import org.hibernate.event.def.DefaultSaveOrUpdateEventListener;
+import org.hibernate.event.spi.EventSource;
+import org.hibernate.event.internal.DefaultSaveOrUpdateEventListener;
 
 /**
  * Overrides the LifeCycle OnSave call to call the PrePersist operation

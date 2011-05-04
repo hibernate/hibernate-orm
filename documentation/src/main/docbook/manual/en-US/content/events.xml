@@ -268,10 +268,10 @@ cfg.EventListeners().setLoadEventListeners(stack);]]></programlisting>
             authorization.
         </para>
         
-        <programlisting role="XML"><![CDATA[<listener type="pre-delete" class="org.hibernate.secure.JACCPreDeleteEventListener"/>
-<listener type="pre-update" class="org.hibernate.secure.JACCPreUpdateEventListener"/>
-<listener type="pre-insert" class="org.hibernate.secure.JACCPreInsertEventListener"/>
-<listener type="pre-load" class="org.hibernate.secure.JACCPreLoadEventListener"/>]]></programlisting>
+        <programlisting role="XML"><![CDATA[<listener type="pre-delete" class="org.hibernate.secure.internal.JACCPreDeleteEventListener"/>
+<listener type="pre-update" class="org.hibernate.secure.internal.JACCPreUpdateEventListener"/>
+<listener type="pre-insert" class="org.hibernate.secure.internal.JACCPreInsertEventListener"/>
+<listener type="pre-load" class="org.hibernate.secure.internal.JACCPreLoadEventListener"/>]]></programlisting>
 
         <para>
             Note that <literal>&lt;listener type="..." class="..."/&gt;</literal> is shorthand

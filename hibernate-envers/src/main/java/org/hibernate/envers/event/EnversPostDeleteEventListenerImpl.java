@@ -27,8 +27,8 @@ import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.synchronization.AuditProcess;
 import org.hibernate.envers.synchronization.work.AuditWorkUnit;
 import org.hibernate.envers.synchronization.work.DelWorkUnit;
-import org.hibernate.event.PostDeleteEvent;
-import org.hibernate.event.PostDeleteEventListener;
+import org.hibernate.event.spi.PostDeleteEvent;
+import org.hibernate.event.spi.PostDeleteEventListener;
 
 /**
  * @author Adam Warski (adam at warski dot org)

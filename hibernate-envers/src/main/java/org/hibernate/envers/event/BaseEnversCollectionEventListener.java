@@ -39,7 +39,7 @@ import org.hibernate.envers.synchronization.work.AuditWorkUnit;
 import org.hibernate.envers.synchronization.work.CollectionChangeWorkUnit;
 import org.hibernate.envers.synchronization.work.FakeBidirectionalRelationWorkUnit;
 import org.hibernate.envers.synchronization.work.PersistentCollectionChangeWorkUnit;
-import org.hibernate.event.AbstractCollectionEvent;
+import org.hibernate.event.spi.AbstractCollectionEvent;
 import org.hibernate.persister.collection.AbstractCollectionPersister;
 
 /**

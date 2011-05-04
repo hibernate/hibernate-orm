@@ -25,8 +25,8 @@ package org.hibernate.test.flush;
 
 import java.util.Collection;
 
-import org.hibernate.event.PreUpdateEvent;
-import org.hibernate.event.PreUpdateEventListener;
+import org.hibernate.event.spi.PreUpdateEvent;
+import org.hibernate.event.spi.PreUpdateEventListener;
 
 /**
  * @author Steve Ebersole

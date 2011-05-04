@@ -41,7 +41,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.event.EventSource;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.hql.HolderInstantiator;
 import org.hibernate.hql.ast.QueryTranslatorImpl;
 import org.hibernate.hql.ast.tree.AggregatedSelectExpression;

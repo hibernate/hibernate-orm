@@ -47,9 +47,10 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.MappingException;
-import org.hibernate.event.EventType;
+import org.hibernate.event.spi.EventType;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
@@ -80,7 +81,8 @@ class TypeSafeActivator {
 	}
 
 	@SuppressWarnings( {"UnusedDeclaration"})
-	public static void activateBeanValidation(EventListenerRegistry listenerRegistry, Properties properties) {
+	public static void activateBeanValidation(EventListenerRegistry listenerRegistry, Configuration configuration) {
+		final Properties properties = configuration.getProperties();
 		ValidatorFactory factory = getValidatorFactory( properties );
 		BeanValidationEventListener listener = new BeanValidationEventListener(
 				factory, properties
@@ -91,6 +93,8 @@ class TypeSafeActivator {
 		listenerRegistry.appendListeners( EventType.PRE_INSERT, listener );
 		listenerRegistry.appendListeners( EventType.PRE_UPDATE, listener );
 		listenerRegistry.appendListeners( EventType.PRE_DELETE, listener );
+
+		listener.initialize( configuration );
 	}
 
 	@SuppressWarnings( {"UnusedDeclaration"})

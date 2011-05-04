@@ -42,7 +42,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollableResults;
-import org.hibernate.event.EventSource;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.hql.FilterTranslator;
 import org.hibernate.hql.ParameterTranslations;
 import org.hibernate.hql.QuerySplitter;

@@ -25,8 +25,8 @@ package org.hibernate.envers.event;
 
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.envers.configuration.AuditConfiguration;
-import org.hibernate.event.PreCollectionUpdateEvent;
-import org.hibernate.event.PreCollectionUpdateEventListener;
+import org.hibernate.event.spi.PreCollectionUpdateEvent;
+import org.hibernate.event.spi.PreCollectionUpdateEventListener;
 
 /**
  * @author Adam Warski (adam at warski dot org)

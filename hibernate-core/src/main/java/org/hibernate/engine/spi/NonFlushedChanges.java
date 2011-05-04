@@ -25,7 +25,7 @@ package org.hibernate.engine.spi;
 
 import java.io.Serializable;
 
-import org.hibernate.event.EventSource;
+import org.hibernate.event.spi.EventSource;
 
 public interface NonFlushedChanges extends Serializable {
 	/**

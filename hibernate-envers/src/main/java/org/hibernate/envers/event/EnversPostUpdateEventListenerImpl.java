@@ -27,8 +27,8 @@ import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.synchronization.AuditProcess;
 import org.hibernate.envers.synchronization.work.AuditWorkUnit;
 import org.hibernate.envers.synchronization.work.ModWorkUnit;
-import org.hibernate.event.PostUpdateEvent;
-import org.hibernate.event.PostUpdateEventListener;
+import org.hibernate.event.spi.PostUpdateEvent;
+import org.hibernate.event.spi.PostUpdateEventListener;
 
 /**
  * @author Adam Warski (adam at warski dot org)

@@ -222,12 +222,12 @@ public class BeanValidationIntegrator implements Integrator {
 		}
 
 		try {
-			Method activateMethod = typeSafeActivatorClass.getMethod( ACTIVATE_METHOD, EventListenerRegistry.class, Properties.class );
+			Method activateMethod = typeSafeActivatorClass.getMethod( ACTIVATE_METHOD, EventListenerRegistry.class, Configuration.class );
 			try {
 				activateMethod.invoke(
 						null,
 						serviceRegistry.getService( EventListenerRegistry.class ),
-						configuration.getProperties()
+						configuration
 				);
 			}
 			catch (HibernateException e) {

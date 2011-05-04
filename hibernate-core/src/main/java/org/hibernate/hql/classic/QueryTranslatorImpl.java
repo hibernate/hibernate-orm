@@ -50,7 +50,7 @@ import org.hibernate.QueryException;
 import org.hibernate.ScrollableResults;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.event.EventSource;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.hql.FilterTranslator;
 import org.hibernate.hql.HolderInstantiator;
 import org.hibernate.hql.NameGenerator;

@@ -24,8 +24,8 @@
 package org.hibernate.ejb.event;
 
 import org.hibernate.engine.spi.CascadingAction;
-import org.hibernate.event.AutoFlushEventListener;
-import org.hibernate.event.def.DefaultAutoFlushEventListener;
+import org.hibernate.event.spi.AutoFlushEventListener;
+import org.hibernate.event.internal.DefaultAutoFlushEventListener;
 import org.hibernate.internal.util.collections.IdentityMap;
 
 /**

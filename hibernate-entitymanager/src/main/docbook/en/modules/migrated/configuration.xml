@@ -901,25 +901,25 @@ EntityManagerFactory emf =
           <row>
             <entry>pre-insert</entry>
 
-            <entry>org.hibernate.secure.JACCPreInsertEventListener</entry>
+            <entry>org.hibernate.secure.internal.JACCPreInsertEventListener</entry>
           </row>
 
           <row>
             <entry>pre-insert</entry>
 
-            <entry>org.hibernate.secure.JACCPreUpdateEventListener</entry>
+            <entry>org.hibernate.secure.internal.JACCPreUpdateEventListener</entry>
           </row>
 
           <row>
             <entry>pre-delete</entry>
 
-            <entry>org.hibernate.secure.JACCPreDeleteEventListener</entry>
+            <entry>org.hibernate.secure.internal.JACCPreDeleteEventListener</entry>
           </row>
 
           <row>
             <entry>pre-load</entry>
 
-            <entry>org.hibernate.secure.JACCPreLoadEventListener</entry>
+            <entry>org.hibernate.secure.internal.JACCPreLoadEventListener</entry>
           </row>
 
           <row>

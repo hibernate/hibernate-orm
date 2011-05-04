@@ -30,11 +30,11 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.event.EventType;
-import org.hibernate.event.PostInsertEvent;
-import org.hibernate.event.PostInsertEventListener;
-import org.hibernate.event.PreInsertEvent;
-import org.hibernate.event.PreInsertEventListener;
+import org.hibernate.event.spi.EventType;
+import org.hibernate.event.spi.PostInsertEvent;
+import org.hibernate.event.spi.PostInsertEventListener;
+import org.hibernate.event.spi.PreInsertEvent;
+import org.hibernate.event.spi.PreInsertEventListener;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.event.service.spi.EventListenerGroup;
 

@@ -28,7 +28,7 @@ import org.hibernate.Transaction;
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.revisioninfo.RevisionInfoGenerator;
-import org.hibernate.event.EventSource;
+import org.hibernate.event.spi.EventSource;
 
 /**
  * @author Adam Warski (adam at warski dot org)

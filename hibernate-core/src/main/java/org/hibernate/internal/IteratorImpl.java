@@ -30,7 +30,7 @@ import java.util.NoSuchElementException;
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 import org.hibernate.engine.HibernateIterator;
-import org.hibernate.event.EventSource;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.hql.HolderInstantiator;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;

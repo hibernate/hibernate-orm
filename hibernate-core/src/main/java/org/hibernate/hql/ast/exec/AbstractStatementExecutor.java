@@ -36,7 +36,7 @@ import org.hibernate.action.internal.BulkOperationCleanupAction;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
-import org.hibernate.event.EventSource;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.hql.ast.HqlSqlWalker;
 import org.hibernate.hql.ast.SqlGenerator;
 import org.hibernate.internal.util.StringHelper;

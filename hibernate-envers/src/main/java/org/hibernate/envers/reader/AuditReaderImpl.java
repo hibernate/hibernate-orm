@@ -43,7 +43,7 @@ import org.hibernate.envers.exception.RevisionDoesNotExistException;
 import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.query.AuditQueryCreator;
 import org.hibernate.envers.synchronization.AuditProcess;
-import org.hibernate.event.EventSource;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.proxy.HibernateProxy;
 
 /**

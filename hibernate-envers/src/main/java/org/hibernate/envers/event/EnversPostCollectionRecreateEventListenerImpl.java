@@ -25,8 +25,8 @@ package org.hibernate.envers.event;
 
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.envers.configuration.AuditConfiguration;
-import org.hibernate.event.PostCollectionRecreateEvent;
-import org.hibernate.event.PostCollectionRecreateEventListener;
+import org.hibernate.event.spi.PostCollectionRecreateEvent;
+import org.hibernate.event.spi.PostCollectionRecreateEventListener;
 
 /**
  * @author Adam Warski (adam at warski dot org)

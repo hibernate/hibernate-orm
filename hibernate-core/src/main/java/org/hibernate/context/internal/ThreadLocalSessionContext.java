@@ -47,7 +47,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.transaction.spi.TransactionContext;
-import org.hibernate.event.EventSource;
+import org.hibernate.event.spi.EventSource;
 
 /**
  * A {@link CurrentSessionContext} impl which scopes the notion of current

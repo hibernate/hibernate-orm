@@ -29,11 +29,11 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.event.EventType;
-import org.hibernate.event.PostCollectionRemoveEvent;
-import org.hibernate.event.PostCollectionRemoveEventListener;
-import org.hibernate.event.PreCollectionRemoveEvent;
-import org.hibernate.event.PreCollectionRemoveEventListener;
+import org.hibernate.event.spi.EventType;
+import org.hibernate.event.spi.PostCollectionRemoveEvent;
+import org.hibernate.event.spi.PostCollectionRemoveEventListener;
+import org.hibernate.event.spi.PreCollectionRemoveEvent;
+import org.hibernate.event.spi.PreCollectionRemoveEventListener;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.event.service.spi.EventListenerGroup;
 

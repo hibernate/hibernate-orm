@@ -25,7 +25,7 @@ package org.hibernate.event.service.spi;
 
 import java.io.Serializable;
 
-import org.hibernate.event.EventType;
+import org.hibernate.event.spi.EventType;
 
 /**
  * Contract for a groups of events listeners for a particular event type.

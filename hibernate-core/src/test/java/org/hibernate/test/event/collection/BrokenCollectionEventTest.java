@@ -30,7 +30,7 @@ import java.util.List;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.event.AbstractCollectionEvent;
+import org.hibernate.event.spi.AbstractCollectionEvent;
 
 import org.junit.Test;
 
@@ -324,7 +324,7 @@ public class BrokenCollectionEventTest extends BaseCoreFunctionalTestCase {
 		);
 		assertEquals(
 				ownerExpected.getClass().getName(),
-				( ( AbstractCollectionEvent ) listeners.getEvents().get( index ) ).getAffectedOwnerEntityName()
+				( (AbstractCollectionEvent) listeners.getEvents().get( index ) ).getAffectedOwnerEntityName()
 		);
 		assertSame(
 				collExpected, ( ( AbstractCollectionEvent ) listeners.getEvents().get( index ) ).getCollection()

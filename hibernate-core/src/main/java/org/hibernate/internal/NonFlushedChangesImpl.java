@@ -33,7 +33,7 @@ import org.hibernate.EntityMode;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.spi.ActionQueue;
 import org.hibernate.engine.spi.NonFlushedChanges;
-import org.hibernate.event.EventSource;
+import org.hibernate.event.spi.EventSource;
 
 import org.jboss.logging.Logger;
 

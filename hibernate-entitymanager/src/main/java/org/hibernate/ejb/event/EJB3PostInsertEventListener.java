@@ -23,8 +23,8 @@
  */
 package org.hibernate.ejb.event;
 
-import org.hibernate.event.PostInsertEvent;
-import org.hibernate.event.PostInsertEventListener;
+import org.hibernate.event.spi.PostInsertEvent;
+import org.hibernate.event.spi.PostInsertEventListener;
 
 /**
  * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>

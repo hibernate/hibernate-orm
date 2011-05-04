@@ -24,7 +24,7 @@ import java.util.Iterator;
 import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.ejb.internal.EntityManagerMessageLogger;
-import org.hibernate.event.EventSource;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.type.CollectionType;
 import org.jboss.logging.Logger;
 

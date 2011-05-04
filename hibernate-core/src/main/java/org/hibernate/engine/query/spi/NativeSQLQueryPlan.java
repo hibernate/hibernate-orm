@@ -39,7 +39,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.QueryException;
 import org.hibernate.action.internal.BulkOperationCleanupAction;
 import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
-import org.hibernate.event.EventSource;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.custom.sql.SQLCustomQuery;
 import org.hibernate.type.Type;

@@ -30,16 +30,18 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.Environment;
 import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.event.EventType;
+import org.hibernate.event.spi.EventType;
+import org.hibernate.event.spi.PreDeleteEventListener;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.secure.JACCPreDeleteEventListener;
-import org.hibernate.secure.JACCPreInsertEventListener;
-import org.hibernate.secure.JACCPreLoadEventListener;
-import org.hibernate.secure.JACCPreUpdateEventListener;
-import org.hibernate.secure.JACCSecurityListener;
+import org.hibernate.secure.internal.JACCPreDeleteEventListener;
+import org.hibernate.secure.internal.JACCPreInsertEventListener;
+import org.hibernate.secure.internal.JACCPreLoadEventListener;
+import org.hibernate.secure.internal.JACCPreUpdateEventListener;
+import org.hibernate.secure.internal.JACCSecurityListener;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.event.service.spi.DuplicationStrategy;
 import org.hibernate.event.service.spi.EventListenerGroup;
@@ -105,10 +107,11 @@ public class JpaIntegrator implements Integrator {
 
 		// pre op listeners
 		if ( isSecurityEnabled ) {
-			eventListenerRegistry.prependListeners( EventType.PRE_DELETE, new JACCPreDeleteEventListener() );
-			eventListenerRegistry.prependListeners( EventType.PRE_INSERT, new JACCPreInsertEventListener() );
-			eventListenerRegistry.prependListeners( EventType.PRE_UPDATE, new JACCPreUpdateEventListener() );
-			eventListenerRegistry.prependListeners( EventType.PRE_LOAD, new JACCPreLoadEventListener() );
+			final String jaccContextId = configuration.getProperty( Environment.JACC_CONTEXTID );
+			eventListenerRegistry.prependListeners( EventType.PRE_DELETE, new JACCPreDeleteEventListener(jaccContextId) );
+			eventListenerRegistry.prependListeners( EventType.PRE_INSERT, new JACCPreInsertEventListener(jaccContextId) );
+			eventListenerRegistry.prependListeners( EventType.PRE_UPDATE, new JACCPreUpdateEventListener(jaccContextId) );
+			eventListenerRegistry.prependListeners( EventType.PRE_LOAD, new JACCPreLoadEventListener(jaccContextId) );
 		}
 
 		// post op listeners

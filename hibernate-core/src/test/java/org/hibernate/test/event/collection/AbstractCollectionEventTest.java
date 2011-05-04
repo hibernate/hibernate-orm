@@ -31,7 +31,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.collection.internal.PersistentSet;
-import org.hibernate.event.AbstractCollectionEvent;
+import org.hibernate.event.spi.AbstractCollectionEvent;
 
 import org.junit.Test;
 
@@ -795,7 +795,7 @@ public abstract class AbstractCollectionEventTest extends BaseCoreFunctionalTest
 				( ( AbstractCollectionEvent ) listeners.getEvents().get( index ) ).getAffectedOwnerEntityName()
 		);
 		assertSame(
-				collExpected, ( ( AbstractCollectionEvent ) listeners.getEvents().get( index ) ).getCollection()
+				collExpected, ( (AbstractCollectionEvent) listeners.getEvents().get( index ) ).getCollection()
 		);
 	}
 

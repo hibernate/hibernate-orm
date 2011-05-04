@@ -30,20 +30,17 @@ import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.event.DeleteEvent;
-import org.hibernate.event.DeleteEventListener;
-import org.hibernate.event.Destructible;
-import org.hibernate.event.EventType;
-import org.hibernate.event.Initializable;
 import org.hibernate.event.service.spi.EventListenerRegistry;
+import org.hibernate.event.spi.DeleteEvent;
+import org.hibernate.event.spi.DeleteEventListener;
+import org.hibernate.event.spi.EventType;
+import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
 import org.hibernate.service.internal.BasicServiceRegistryImpl;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
-import org.hibernate.integrator.spi.Integrator;
 
 import org.junit.Test;
 
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -79,18 +76,19 @@ public class CallbackTest extends BaseCoreFunctionalTestCase {
 						serviceRegistry.getService( EventListenerRegistry.class ).setListeners(
 								EventType.DELETE, listener
 						);
+						listener.initialize( configuration );
 					}
 
 					@Override
 					public void disintegrate(
 							SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry) {
+						listener.cleanup();
 					}
 				}
 		);
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-5913", message = "Need to figure out how to initialize/destroy event listeners now")
 	public void testCallbacks() {
 		assertEquals( "observer not notified of creation", 1, observer.creationCount );
 		assertEquals( "listener not notified of creation", 1, listener.initCount );
@@ -114,7 +112,7 @@ public class CallbackTest extends BaseCoreFunctionalTestCase {
 		}
 	}
 
-	private static class TestingListener implements DeleteEventListener, Initializable, Destructible {
+	private static class TestingListener implements DeleteEventListener {
 		private int initCount = 0;
 		private int destoryCount = 0;
 

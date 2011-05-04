@@ -32,8 +32,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollableResults;
-import org.hibernate.engine.QueryParameters;
-import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.spi.QueryParameters;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.EventSource;
 import org.hibernate.type.Type;
 

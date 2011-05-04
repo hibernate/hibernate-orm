@@ -28,8 +28,8 @@ import java.util.Map;
 import org.hibernate.EntityMode;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
-import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.property.Getter;
 import org.hibernate.tuple.Tuplizer;
 
@@ -233,7 +233,7 @@ public interface EntityTuplizer extends Tuplizer {
 	/**
 	 * Returns the java class to which generated proxies will be typed.
 	 * <p/>
-	 * todo : look at fully encapsulating {@link org.hibernate.engine.PersistenceContext#narrowProxy} here,
+	 * todo : look at fully encapsulating {@link org.hibernate.engine.spi.PersistenceContext#narrowProxy} here,
 	 * since that is the only external use of this method
 	 *
 	 * @return The java class to which generated proxies will be typed

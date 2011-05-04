@@ -29,7 +29,7 @@ import org.hibernate.Session;
 import org.hibernate.UnknownProfileException;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 
 import org.junit.Test;
 

@@ -25,7 +25,7 @@
 package org.hibernate.criterion;
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
-import org.hibernate.engine.TypedValue;
+import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.internal.util.StringHelper;
 
 /**

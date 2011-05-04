@@ -28,6 +28,12 @@ import java.util.Map;
 
 import org.jboss.logging.Logger;
 
+import org.hibernate.engine.internal.Cascade;
+import org.hibernate.engine.internal.ForeignKeys;
+import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.Status;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.LockMode;
 import org.hibernate.NonUniqueObjectException;
@@ -36,15 +42,9 @@ import org.hibernate.action.internal.EntityInsertAction;
 import org.hibernate.bytecode.instrumentation.internal.FieldInterceptionHelper;
 import org.hibernate.bytecode.instrumentation.spi.FieldInterceptor;
 import org.hibernate.classic.Lifecycle;
-import org.hibernate.engine.Cascade;
-import org.hibernate.engine.CascadingAction;
-import org.hibernate.engine.EntityEntry;
-import org.hibernate.engine.EntityKey;
-import org.hibernate.engine.ForeignKeys;
-import org.hibernate.engine.Nullability;
-import org.hibernate.engine.SessionImplementor;
-import org.hibernate.engine.Status;
-import org.hibernate.engine.Versioning;
+import org.hibernate.engine.spi.CascadingAction;
+import org.hibernate.engine.internal.Nullability;
+import org.hibernate.engine.internal.Versioning;
 import org.hibernate.event.EventSource;
 import org.hibernate.id.IdentifierGenerationException;
 import org.hibernate.id.IdentifierGeneratorHelper;
@@ -499,7 +499,7 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 		// the entity is not associated with the session, so
         // try interceptor and unsaved-value
 
-		if (ForeignKeys.isTransient(entityName, entity, getAssumedUnsaved(), source)) {
+		if ( ForeignKeys.isTransient( entityName, entity, getAssumedUnsaved(), source )) {
             if (LOG.isTraceEnabled()) LOG.trace("Transient instance of: " + getLoggableName(entityName, entity));
             return TRANSIENT;
 		}

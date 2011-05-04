@@ -28,7 +28,7 @@ import java.util.Iterator;
 import java.util.List;
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
-import org.hibernate.engine.TypedValue;
+import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.internal.util.StringHelper;
 
 /**

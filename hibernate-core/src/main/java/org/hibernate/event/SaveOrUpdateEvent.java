@@ -24,7 +24,7 @@
  */
 package org.hibernate.event;
 import java.io.Serializable;
-import org.hibernate.engine.EntityEntry;
+import org.hibernate.engine.spi.EntityEntry;
 
 /** 
  * An event class for saveOrUpdate()

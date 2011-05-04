@@ -26,7 +26,7 @@ package org.hibernate.cache.spi;
 import java.io.Serializable;
 
 import org.hibernate.EntityMode;
-import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.type.Type;
 

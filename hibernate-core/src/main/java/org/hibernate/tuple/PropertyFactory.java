@@ -25,9 +25,9 @@
 package org.hibernate.tuple;
 import java.lang.reflect.Constructor;
 import org.hibernate.EntityMode;
-import org.hibernate.engine.IdentifierValue;
-import org.hibernate.engine.UnsavedValueFactory;
-import org.hibernate.engine.VersionValue;
+import org.hibernate.engine.spi.IdentifierValue;
+import org.hibernate.engine.internal.UnsavedValueFactory;
+import org.hibernate.engine.spi.VersionValue;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;

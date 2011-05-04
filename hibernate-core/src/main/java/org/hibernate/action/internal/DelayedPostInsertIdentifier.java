@@ -31,7 +31,7 @@ import java.io.Serializable;
  * be delayed because we were outside a transaction when the persist
  * occurred (save currently still performs the insert).
  * <p/>
- * The stand-in is only used within the {@link org.hibernate.engine.PersistenceContext}
+ * The stand-in is only used within the {@link org.hibernate.engine.spi.PersistenceContext}
  * in order to distinguish one instance from another; it is never injected into
  * the entity instance or returned to the client...
  *

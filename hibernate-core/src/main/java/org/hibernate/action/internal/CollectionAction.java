@@ -32,7 +32,7 @@ import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.CacheKey;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.EventSource;
 import org.hibernate.event.EventType;
 import org.hibernate.internal.util.StringHelper;

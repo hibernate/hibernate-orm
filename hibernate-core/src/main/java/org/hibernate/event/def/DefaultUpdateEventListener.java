@@ -26,9 +26,9 @@ package org.hibernate.event.def;
 import java.io.Serializable;
 import org.hibernate.HibernateException;
 import org.hibernate.ObjectDeletedException;
-import org.hibernate.engine.EntityEntry;
-import org.hibernate.engine.SessionImplementor;
-import org.hibernate.engine.Status;
+import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.Status;
 import org.hibernate.event.SaveOrUpdateEvent;
 import org.hibernate.persister.entity.EntityPersister;
 
@@ -43,7 +43,7 @@ public class DefaultUpdateEventListener extends DefaultSaveOrUpdateEventListener
 		// mappings, for the purpose of backward-compatibility
 		EntityEntry entry = event.getSession().getPersistenceContext().getEntry( event.getEntity() );
 		if ( entry!=null ) {
-			if ( entry.getStatus()==Status.DELETED ) {
+			if ( entry.getStatus()== Status.DELETED ) {
 				throw new ObjectDeletedException( "deleted instance passed to update()", null, event.getEntityName() );
 			}
 			else {

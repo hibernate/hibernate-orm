@@ -27,7 +27,7 @@ import java.io.Serializable;
 import java.sql.Types;
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
-import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.Type;
 
 /**

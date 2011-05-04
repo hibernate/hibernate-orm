@@ -27,7 +27,7 @@ import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.engine.TypedValue;
+import org.hibernate.engine.spi.TypedValue;
 
 /**
  * A case-insensitive "like"

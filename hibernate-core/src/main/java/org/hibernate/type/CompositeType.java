@@ -26,8 +26,8 @@ import java.lang.reflect.Method;
 import org.hibernate.EntityMode;
 import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
-import org.hibernate.engine.CascadeStyle;
-import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.engine.spi.SessionImplementor;
 
 /**
  * Contract for value types to hold collections and have cascades, etc.  The notion is that of composition.  JPA terms

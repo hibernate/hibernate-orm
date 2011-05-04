@@ -24,7 +24,7 @@
  */
 package org.hibernate.id;
 import java.io.Serializable;
-import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 
 /**
  * Basic implementation of the {@link PostInsertIdentifierGenerator}

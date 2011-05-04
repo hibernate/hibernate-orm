@@ -28,9 +28,9 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.hibernate.engine.internal.JoinSequence;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.QueryException;
-import org.hibernate.engine.JoinSequence;
 import org.hibernate.hql.CollectionProperties;
 import org.hibernate.hql.QueryTranslator;
 import org.hibernate.hql.antlr.HqlSqlTokenTypes;

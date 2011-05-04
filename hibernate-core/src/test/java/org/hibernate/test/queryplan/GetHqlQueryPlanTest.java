@@ -25,9 +25,9 @@ package org.hibernate.test.queryplan;
 import java.util.Map;
 
 import org.hibernate.Session;
-import org.hibernate.engine.SessionImplementor;
-import org.hibernate.engine.query.HQLQueryPlan;
-import org.hibernate.engine.query.QueryPlanCache;
+import org.hibernate.engine.query.spi.HQLQueryPlan;
+import org.hibernate.engine.query.spi.QueryPlanCache;
+import org.hibernate.engine.spi.SessionImplementor;
 
 import org.junit.Test;
 
@@ -84,7 +84,7 @@ public class GetHqlQueryPlanTest extends BaseCoreFunctionalTestCase {
 	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testHqlQueryPlanWithEnabledFilter() {
 		Session s = openSession();
-		QueryPlanCache cache = ( ( SessionImplementor ) s ).getFactory().getQueryPlanCache();
+		QueryPlanCache cache = ( (SessionImplementor) s ).getFactory().getQueryPlanCache();
 
 		HQLQueryPlan plan1A = cache.getHQLQueryPlan( "from Person", true, getEnabledFilters( s ) );
 		HQLQueryPlan plan1B = cache.getHQLQueryPlan( "from Person", false, getEnabledFilters( s ) );

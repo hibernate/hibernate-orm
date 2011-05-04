@@ -29,7 +29,7 @@ import java.util.List;
 import org.dom4j.Element;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.IntegerType;
 import org.hibernate.type.Type;

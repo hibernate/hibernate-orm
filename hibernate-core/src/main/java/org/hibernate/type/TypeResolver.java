@@ -28,7 +28,7 @@ import java.util.Properties;
 
 import org.hibernate.MappingException;
 import org.hibernate.classic.Lifecycle;
-import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;

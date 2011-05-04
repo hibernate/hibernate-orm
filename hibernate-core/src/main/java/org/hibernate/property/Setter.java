@@ -25,7 +25,7 @@ package org.hibernate.property;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import org.hibernate.HibernateException;
-import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 /**
  * Sets values to a particular property.

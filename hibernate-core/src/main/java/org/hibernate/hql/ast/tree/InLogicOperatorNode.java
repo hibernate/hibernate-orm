@@ -25,7 +25,7 @@
 package org.hibernate.hql.ast.tree;
 import java.util.ArrayList;
 import java.util.List;
-import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.hql.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.antlr.HqlTokenTypes;
 import org.hibernate.param.ParameterSpecification;

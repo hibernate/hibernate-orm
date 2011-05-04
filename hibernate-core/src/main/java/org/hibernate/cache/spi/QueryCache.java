@@ -28,7 +28,7 @@ import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.cache.CacheException;
-import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.type.Type;
 
 /**

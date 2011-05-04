@@ -30,19 +30,19 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.CacheMode;
 import org.hibernate.HibernateException;
+import org.hibernate.engine.internal.ForeignKeys;
+import org.hibernate.engine.internal.Nullability;
+import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.LockMode;
 import org.hibernate.TransientObjectException;
 import org.hibernate.action.internal.EntityDeleteAction;
 import org.hibernate.classic.Lifecycle;
-import org.hibernate.engine.Cascade;
-import org.hibernate.engine.CascadingAction;
-import org.hibernate.engine.EntityEntry;
-import org.hibernate.engine.EntityKey;
-import org.hibernate.engine.ForeignKeys;
-import org.hibernate.engine.Nullability;
-import org.hibernate.engine.PersistenceContext;
-import org.hibernate.engine.Status;
+import org.hibernate.engine.internal.Cascade;
+import org.hibernate.engine.spi.CascadingAction;
+import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.engine.spi.Status;
 import org.hibernate.event.DeleteEvent;
 import org.hibernate.event.DeleteEventListener;
 import org.hibernate.event.EventSource;
@@ -212,7 +212,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 	/**
 	 * Perform the entity deletion.  Well, as with most operations, does not
 	 * really perform it; just schedules an action/execution with the
-	 * {@link org.hibernate.engine.ActionQueue} for execution during flush.
+	 * {@link org.hibernate.engine.spi.ActionQueue} for execution during flush.
 	 *
 	 * @param session The originating session
 	 * @param entity The entity to delete

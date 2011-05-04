@@ -31,8 +31,8 @@ import org.dom4j.Node;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.PropertyNotFoundException;
-import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.Type;
 
@@ -109,7 +109,7 @@ public class Dom4jAccessor implements PropertyAccessor {
 			this.factory = factory;
 		}
 		
-		public Object getForInsert(Object owner, Map mergeMap, SessionImplementor session) 
+		public Object getForInsert(Object owner, Map mergeMap, SessionImplementor session)
 		throws HibernateException {
 			return get( owner );
 		}

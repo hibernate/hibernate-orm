@@ -33,7 +33,7 @@ import java.util.Set;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.proxy.HibernateProxy;
 
 import org.junit.Test;
@@ -1376,7 +1376,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 	private void checkObject(Object entityOrProxy, Set expectedInitializedObjects, Set expectedReadOnlyObjects, Session s) {
 		boolean isExpectedToBeInitialized = expectedInitializedObjects.contains( entityOrProxy );
 		boolean isExpectedToBeReadOnly = expectedReadOnlyObjects.contains( entityOrProxy );
-		SessionImplementor si = ( SessionImplementor ) s;
+		SessionImplementor si = (SessionImplementor) s;
 		assertEquals( isExpectedToBeInitialized, Hibernate.isInitialized( entityOrProxy ) );
 		assertEquals( isExpectedToBeReadOnly, s.isReadOnly( entityOrProxy ) );
 		if ( Hibernate.isInitialized( entityOrProxy ) ) {

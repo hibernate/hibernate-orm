@@ -26,8 +26,8 @@ package org.hibernate.proxy.pojo;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 
-import org.hibernate.engine.EntityKey;
-import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.proxy.AbstractLazyInitializer;

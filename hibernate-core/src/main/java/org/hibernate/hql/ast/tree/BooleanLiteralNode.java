@@ -24,7 +24,7 @@
 package org.hibernate.hql.ast.tree;
 
 import org.hibernate.QueryException;
-import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.LiteralType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;

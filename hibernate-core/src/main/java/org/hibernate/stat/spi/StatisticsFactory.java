@@ -23,8 +23,7 @@
  */
 package org.hibernate.stat.spi;
 
-import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.stat.Statistics;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 /**
  * @author Steve Ebersole

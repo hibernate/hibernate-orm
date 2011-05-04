@@ -24,7 +24,7 @@
  */
 package org.hibernate;
 import java.util.Collection;
-import org.hibernate.engine.FilterDefinition;
+import org.hibernate.engine.spi.FilterDefinition;
 
 /**
  * Type definition of Filter.  Filter defines the user's view into enabled dynamic filters,

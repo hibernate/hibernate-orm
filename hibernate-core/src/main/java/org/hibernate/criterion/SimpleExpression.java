@@ -26,8 +26,8 @@ package org.hibernate.criterion;
 import java.sql.Types;
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
-import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.engine.TypedValue;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.type.Type;
 
 /**

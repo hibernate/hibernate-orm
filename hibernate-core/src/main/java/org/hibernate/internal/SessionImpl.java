@@ -77,23 +77,23 @@ import org.hibernate.TypeHelper;
 import org.hibernate.UnknownProfileException;
 import org.hibernate.UnresolvableObjectException;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.ActionQueue;
-import org.hibernate.engine.CollectionEntry;
-import org.hibernate.engine.EntityEntry;
-import org.hibernate.engine.EntityKey;
-import org.hibernate.engine.LoadQueryInfluencers;
-import org.hibernate.engine.NonFlushedChanges;
-import org.hibernate.engine.PersistenceContext;
-import org.hibernate.engine.QueryParameters;
-import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.engine.StatefulPersistenceContext;
-import org.hibernate.engine.Status;
+import org.hibernate.engine.internal.StatefulPersistenceContext;
+import org.hibernate.engine.query.spi.FilterQueryPlan;
+import org.hibernate.engine.spi.ActionQueue;
+import org.hibernate.engine.spi.CollectionEntry;
+import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
+import org.hibernate.engine.spi.NonFlushedChanges;
+import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.engine.spi.QueryParameters;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.Status;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.LobCreator;
-import org.hibernate.engine.query.FilterQueryPlan;
-import org.hibernate.engine.query.HQLQueryPlan;
-import org.hibernate.engine.query.NativeSQLQueryPlan;
-import org.hibernate.engine.query.sql.NativeSQLQuerySpecification;
+import org.hibernate.engine.query.spi.HQLQueryPlan;
+import org.hibernate.engine.query.spi.NativeSQLQueryPlan;
+import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
 import org.hibernate.engine.transaction.internal.TransactionCoordinatorImpl;
 import org.hibernate.engine.transaction.spi.TransactionContext;
 import org.hibernate.engine.transaction.spi.TransactionCoordinator;
@@ -153,7 +153,7 @@ import org.hibernate.type.Type;
  *
  * Exposes two interfaces:<ul>
  *     <li>{@link Session} to the application</li>
- *     <li>{@link org.hibernate.engine.SessionImplementor} to other Hibernate components (SPI)</li>
+ *     <li>{@link org.hibernate.engine.spi.SessionImplementor} to other Hibernate components (SPI)</li>
  * </ul>
  *
  * This class is not thread-safe.
@@ -1989,7 +1989,7 @@ public final class SessionImpl
 		persistenceContext = StatefulPersistenceContext.deserialize( ois, this );
 		actionQueue = ActionQueue.deserialize( ois, this );
 
-		loadQueryInfluencers = ( LoadQueryInfluencers ) ois.readObject();
+		loadQueryInfluencers = (LoadQueryInfluencers) ois.readObject();
 
 		childSessionsByEntityMode = ( Map ) ois.readObject();
 

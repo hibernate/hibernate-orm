@@ -27,7 +27,7 @@ import java.util.LinkedList;
 import java.util.Map;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
-import org.hibernate.engine.JoinSequence;
+import org.hibernate.engine.internal.JoinSequence;
 import org.hibernate.hql.CollectionSubqueryFactory;
 import org.hibernate.persister.collection.CollectionPropertyMapping;
 import org.hibernate.persister.collection.QueryableCollection;

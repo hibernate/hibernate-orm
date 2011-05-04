@@ -24,7 +24,7 @@
  */
 package org.hibernate.id.enhanced;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 
 /**
  * Encapsulates definition of the underlying data structure backing a

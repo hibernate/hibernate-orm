@@ -25,7 +25,7 @@ package org.hibernate.engine.profile;
 import java.util.HashMap;
 import java.util.Map;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.BagType;
 import org.hibernate.type.Type;
 import org.jboss.logging.Logger;

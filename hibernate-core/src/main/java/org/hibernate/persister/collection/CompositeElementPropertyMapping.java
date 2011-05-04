@@ -23,7 +23,7 @@
  */
 package org.hibernate.persister.collection;
 import org.hibernate.MappingException;
-import org.hibernate.engine.Mapping;
+import org.hibernate.engine.spi.Mapping;
 import org.hibernate.persister.entity.AbstractPropertyMapping;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;

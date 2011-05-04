@@ -30,7 +30,7 @@ import org.hibernate.EntityMode;
 import org.hibernate.collection.internal.PersistentListElementHolder;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.collection.internal.PersistentList;
-import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 
 public class ListType extends CollectionType {

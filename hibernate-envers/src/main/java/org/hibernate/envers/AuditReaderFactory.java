@@ -26,7 +26,7 @@ package org.hibernate.envers;
 import javax.persistence.EntityManager;
 
 import org.hibernate.Session;
-import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.event.EnversListener;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.reader.AuditReaderImpl;

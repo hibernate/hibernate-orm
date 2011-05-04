@@ -35,12 +35,12 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.LazyInitializationException;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.CollectionEntry;
-import org.hibernate.engine.EntityEntry;
-import org.hibernate.engine.ForeignKeys;
-import org.hibernate.engine.SessionImplementor;
-import org.hibernate.engine.Status;
-import org.hibernate.engine.TypedValue;
+import org.hibernate.engine.internal.ForeignKeys;
+import org.hibernate.engine.spi.CollectionEntry;
+import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.Status;
+import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.collections.EmptyIterator;
@@ -927,7 +927,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		for ( Iterator it=oldElements.iterator(); it.hasNext(); ) {
 			Object old = it.next();
 			if ( ! currentSaving.contains( old ) ) {
-				Serializable oldId = ForeignKeys.getEntityIdentifierIfNotUnsaved(entityName, old, session);
+				Serializable oldId = ForeignKeys.getEntityIdentifierIfNotUnsaved( entityName, old, session );
 				if ( !currentIds.contains( new TypedValue( idType, oldId, session.getEntityMode() ) ) ) {
 					res.add(old);
 				}

@@ -31,13 +31,13 @@ import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.MappingException;
-import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.engine.query.sql.NativeSQLQueryCollectionReturn;
-import org.hibernate.engine.query.sql.NativeSQLQueryJoinReturn;
-import org.hibernate.engine.query.sql.NativeSQLQueryNonScalarReturn;
-import org.hibernate.engine.query.sql.NativeSQLQueryReturn;
-import org.hibernate.engine.query.sql.NativeSQLQueryRootReturn;
-import org.hibernate.engine.query.sql.NativeSQLQueryScalarReturn;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.query.spi.sql.NativeSQLQueryCollectionReturn;
+import org.hibernate.engine.query.spi.sql.NativeSQLQueryJoinReturn;
+import org.hibernate.engine.query.spi.sql.NativeSQLQueryNonScalarReturn;
+import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
+import org.hibernate.engine.query.spi.sql.NativeSQLQueryRootReturn;
+import org.hibernate.engine.query.spi.sql.NativeSQLQueryScalarReturn;
 import org.hibernate.loader.BasicLoader;
 import org.hibernate.loader.CollectionAliases;
 import org.hibernate.loader.ColumnEntityAliases;
@@ -61,8 +61,8 @@ import org.hibernate.type.Type;
 import org.jboss.logging.Logger;
 
 /**
- * Responsible for processing the series of {@link org.hibernate.engine.query.sql.NativeSQLQueryReturn returns}
- * defined by a {@link org.hibernate.engine.query.sql.NativeSQLQuerySpecification} and
+ * Responsible for processing the series of {@link org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn returns}
+ * defined by a {@link org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification} and
  * breaking them down into a series of {@link Return returns} for use within the
  * {@link org.hibernate.loader.custom.CustomLoader}.
  *

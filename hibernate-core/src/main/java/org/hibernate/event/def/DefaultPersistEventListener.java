@@ -25,12 +25,12 @@ package org.hibernate.event.def;
 
 import java.util.Map;
 import org.hibernate.HibernateException;
+import org.hibernate.engine.spi.CascadingAction;
+import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.ObjectDeletedException;
 import org.hibernate.PersistentObjectException;
-import org.hibernate.engine.CascadingAction;
-import org.hibernate.engine.EntityEntry;
-import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.EventSource;
 import org.hibernate.event.PersistEvent;
 import org.hibernate.event.PersistEventListener;

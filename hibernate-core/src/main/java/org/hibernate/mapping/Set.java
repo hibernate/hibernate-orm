@@ -25,7 +25,7 @@ package org.hibernate.mapping;
 import java.util.Iterator;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.Mappings;
-import org.hibernate.engine.Mapping;
+import org.hibernate.engine.spi.Mapping;
 import org.hibernate.type.CollectionType;
 
 /**

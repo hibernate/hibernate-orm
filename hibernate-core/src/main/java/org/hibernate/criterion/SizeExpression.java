@@ -26,7 +26,7 @@ package org.hibernate.criterion;
 import org.hibernate.Criteria;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
-import org.hibernate.engine.TypedValue;
+import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.sql.ConditionFragment;
@@ -76,7 +76,7 @@ public class SizeExpression implements Criterion {
 
 	public TypedValue[] getTypedValues(Criteria criteria, CriteriaQuery criteriaQuery) 
 	throws HibernateException {
-		return new TypedValue[] { 
+		return new TypedValue[] {
 			new TypedValue( StandardBasicTypes.INTEGER, size, EntityMode.POJO )
 		};
 	}

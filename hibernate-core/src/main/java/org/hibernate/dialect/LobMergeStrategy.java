@@ -27,7 +27,7 @@ import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.NClob;
 
-import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 
 /**
  * Strategy for how dialects need {@code LOB} values to be merged.

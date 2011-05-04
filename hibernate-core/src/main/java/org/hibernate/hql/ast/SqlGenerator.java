@@ -29,10 +29,10 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.QueryException;
 import org.hibernate.dialect.function.SQLFunction;
-import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.hql.antlr.SqlGeneratorBase;
 import org.hibernate.hql.antlr.SqlTokenTypes;
 import org.hibernate.hql.ast.tree.FromElement;

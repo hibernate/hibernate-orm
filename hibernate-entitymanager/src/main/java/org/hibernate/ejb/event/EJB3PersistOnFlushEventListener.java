@@ -23,7 +23,7 @@
  */
 package org.hibernate.ejb.event;
 
-import org.hibernate.engine.CascadingAction;
+import org.hibernate.engine.spi.CascadingAction;
 
 /**
  * @author Emmanuel Bernard

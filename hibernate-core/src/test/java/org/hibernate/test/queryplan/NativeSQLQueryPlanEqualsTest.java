@@ -23,11 +23,11 @@
  */
 package org.hibernate.test.queryplan;
 
-import org.hibernate.engine.query.NativeSQLQueryPlan;
-import org.hibernate.engine.query.QueryPlanCache;
-import org.hibernate.engine.query.sql.NativeSQLQueryReturn;
-import org.hibernate.engine.query.sql.NativeSQLQueryScalarReturn;
-import org.hibernate.engine.query.sql.NativeSQLQuerySpecification;
+import org.hibernate.engine.query.spi.NativeSQLQueryPlan;
+import org.hibernate.engine.query.spi.QueryPlanCache;
+import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
+import org.hibernate.engine.query.spi.sql.NativeSQLQueryScalarReturn;
+import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
 
 import org.junit.Test;
 

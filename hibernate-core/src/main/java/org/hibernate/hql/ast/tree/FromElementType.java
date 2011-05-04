@@ -27,10 +27,10 @@ package org.hibernate.hql.ast.tree;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.engine.internal.JoinSequence;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
-import org.hibernate.engine.JoinSequence;
 import org.hibernate.hql.CollectionProperties;
 import org.hibernate.hql.CollectionSubqueryFactory;
 import org.hibernate.hql.NameGenerator;

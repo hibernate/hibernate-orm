@@ -25,9 +25,9 @@
 package org.hibernate.param;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import org.hibernate.engine.QueryParameters;
-import org.hibernate.engine.SessionImplementor;
-import org.hibernate.engine.TypedValue;
+import org.hibernate.engine.spi.QueryParameters;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.TypedValue;
 
 /**
  * Parameter bind specification for an explicit named parameter.

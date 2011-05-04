@@ -30,7 +30,7 @@ import org.hibernate.param.ParameterSpecification;
  * contain "hidden" JDBC parameters from applying filters.
  * <p/>
  * Would love for this to go away, but that would require that Hibernate's
- * internal {@link org.hibernate.engine.JoinSequence join handling} be able to either:<ul>
+ * internal {@link org.hibernate.engine.internal.JoinSequence join handling} be able to either:<ul>
  * <li>render the same AST structures</li>
  * <li>render structures capable of being converted to these AST structures</li>
  * </ul>

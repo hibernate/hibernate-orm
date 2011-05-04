@@ -23,7 +23,7 @@
  */
 package org.hibernate.ejb.event;
 
-import org.hibernate.engine.CascadingAction;
+import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.event.FlushEventListener;
 import org.hibernate.event.def.DefaultFlushEventListener;
 import org.hibernate.internal.util.collections.IdentityMap;

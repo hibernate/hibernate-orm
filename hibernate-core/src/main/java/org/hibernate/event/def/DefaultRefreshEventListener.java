@@ -29,15 +29,15 @@ import java.util.Map;
 import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
+import org.hibernate.engine.internal.Cascade;
+import org.hibernate.engine.spi.CascadingAction;
+import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.PersistentObjectException;
 import org.hibernate.UnresolvableObjectException;
 import org.hibernate.cache.spi.CacheKey;
-import org.hibernate.engine.Cascade;
-import org.hibernate.engine.CascadingAction;
-import org.hibernate.engine.EntityEntry;
-import org.hibernate.engine.EntityKey;
-import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.event.EventSource;
 import org.hibernate.event.RefreshEvent;
 import org.hibernate.event.RefreshEventListener;
@@ -117,7 +117,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 
 		// cascade the refresh prior to refreshing this entity
 		refreshedAlready.put(object, object);
-		new Cascade(CascadingAction.REFRESH, Cascade.BEFORE_REFRESH, source)
+		new Cascade( CascadingAction.REFRESH, Cascade.BEFORE_REFRESH, source)
 				.cascade( persister, object, refreshedAlready );
 
 		if ( e != null ) {

@@ -24,12 +24,12 @@
 package org.hibernate.type;
 import java.util.Map;
 import org.hibernate.MappingException;
-import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.Joinable;
 
 /**
  * A type that represents some kind of association between entities.
- * @see org.hibernate.engine.Cascade
+ * @see org.hibernate.engine.internal.Cascade
  * @author Gavin King
  */
 public interface AssociationType extends Type {

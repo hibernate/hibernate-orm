@@ -29,8 +29,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.LazyInitializationException;
 import org.hibernate.SessionException;
 import org.hibernate.TransientObjectException;
-import org.hibernate.engine.EntityKey;
-import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**

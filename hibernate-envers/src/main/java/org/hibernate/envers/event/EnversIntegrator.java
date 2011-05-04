@@ -25,9 +25,9 @@ package org.hibernate.envers.event;
 
 import org.jboss.logging.Logger;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.event.EventType;
 import org.hibernate.integrator.spi.Integrator;

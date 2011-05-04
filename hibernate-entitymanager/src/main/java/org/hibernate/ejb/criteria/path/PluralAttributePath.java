@@ -28,7 +28,7 @@ import javax.persistence.metamodel.Bindable;
 import javax.persistence.metamodel.PluralAttribute;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.criteria.PathSource;
-import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 
 /**

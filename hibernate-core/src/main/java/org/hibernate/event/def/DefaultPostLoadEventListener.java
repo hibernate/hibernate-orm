@@ -27,7 +27,7 @@ import org.hibernate.LockMode;
 import org.hibernate.action.internal.EntityIncrementVersionProcess;
 import org.hibernate.action.internal.EntityVerifyVersionProcess;
 import org.hibernate.classic.Lifecycle;
-import org.hibernate.engine.EntityEntry;
+import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.event.PostLoadEvent;
 import org.hibernate.event.PostLoadEventListener;
 import org.hibernate.persister.entity.EntityPersister;

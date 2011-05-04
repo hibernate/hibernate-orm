@@ -24,8 +24,8 @@
  */
 package org.hibernate.hql.ast.exec;
 import org.hibernate.HibernateException;
-import org.hibernate.engine.QueryParameters;
-import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.spi.QueryParameters;
+import org.hibernate.engine.spi.SessionImplementor;
 
 /**
  * Encapsulates the strategy required to execute various types of update, delete,

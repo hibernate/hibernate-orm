@@ -24,7 +24,7 @@
 package org.hibernate.mapping;
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.Mapping;
+import org.hibernate.engine.spi.Mapping;
 
 /**
  * A relational object which may be created using DDL

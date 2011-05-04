@@ -23,7 +23,7 @@
  */
 package org.hibernate.engine.transaction.spi;
 
-import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.service.jta.platform.spi.JtaPlatform;
 import org.hibernate.stat.spi.StatisticsImplementor;

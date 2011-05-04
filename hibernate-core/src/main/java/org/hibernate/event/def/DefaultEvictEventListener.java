@@ -25,12 +25,12 @@
 package org.hibernate.event.def;
 import java.io.Serializable;
 import org.hibernate.HibernateException;
+import org.hibernate.engine.internal.Cascade;
+import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.engine.Cascade;
-import org.hibernate.engine.CascadingAction;
-import org.hibernate.engine.EntityEntry;
-import org.hibernate.engine.EntityKey;
-import org.hibernate.engine.PersistenceContext;
+import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.event.EventSource;
 import org.hibernate.event.EvictEvent;
 import org.hibernate.event.EvictEventListener;

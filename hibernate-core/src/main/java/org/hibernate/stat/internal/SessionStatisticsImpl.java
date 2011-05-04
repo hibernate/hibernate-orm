@@ -26,7 +26,7 @@ package org.hibernate.stat.internal;
 import java.util.Collections;
 import java.util.Set;
 
-import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.stat.SessionStatistics;
 
 /**

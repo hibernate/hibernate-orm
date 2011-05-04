@@ -37,7 +37,7 @@ import javax.persistence.metamodel.Type;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.criteria.MapJoinImplementor;
 import org.hibernate.ejb.criteria.PathImplementor;
-import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 
 /**

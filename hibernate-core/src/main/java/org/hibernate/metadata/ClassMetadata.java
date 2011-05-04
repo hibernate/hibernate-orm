@@ -27,7 +27,7 @@ import java.io.Serializable;
 import java.util.Map;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
-import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.type.Type;
 
 /**
@@ -151,7 +151,7 @@ public interface ClassMetadata {
 	/**
 	 * Create a class instance initialized with the given identifier
 	 *
-	 * @deprecated Use {@link #instantiate(Serializable, SessionImplementor)} instead
+	 * @deprecated Use {@link #instantiate(Serializable, org.hibernate.engine.spi.SessionImplementor)} instead
 	 * @noinspection JavaDoc
 	 */
 	public Object instantiate(Serializable id, EntityMode entityMode) throws HibernateException;

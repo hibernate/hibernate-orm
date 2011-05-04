@@ -28,8 +28,8 @@ import java.util.List;
 import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.ScrollableResults;
-import org.hibernate.engine.SessionImplementor;
-import org.hibernate.engine.query.ParameterMetadata;
+import org.hibernate.engine.query.spi.ParameterMetadata;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.type.Type;
 
 /**

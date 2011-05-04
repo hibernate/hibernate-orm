@@ -28,7 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.SessionFactory;
-import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.AbstractCollectionEvent;
 import org.hibernate.event.EventType;
 import org.hibernate.event.InitializeCollectionEvent;

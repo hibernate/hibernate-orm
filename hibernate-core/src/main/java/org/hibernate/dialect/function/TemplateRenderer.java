@@ -25,8 +25,8 @@ package org.hibernate.dialect.function;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.engine.SessionFactoryImplementor;
 
 import org.jboss.logging.Logger;
 

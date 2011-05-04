@@ -23,7 +23,7 @@
  */
 package org.hibernate.action.spi;
 
-import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 
 /**
  * Contract representing some process that needs to occur during before transaction completion.

@@ -23,7 +23,7 @@
  *
  */
 package org.hibernate.event.def;
-import org.hibernate.engine.CascadingAction;
+import org.hibernate.engine.spi.CascadingAction;
 
 /**
  * When persist is used as the cascade action, persistOnFlush should be used

@@ -23,7 +23,7 @@
  */
 package org.hibernate.envers.entities.mapper;
 import java.util.Map;
-import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 
 /**
  * @author Adam Warski (adam at warski dot org)

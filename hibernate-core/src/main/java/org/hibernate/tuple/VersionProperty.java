@@ -23,8 +23,8 @@
  *
  */
 package org.hibernate.tuple;
-import org.hibernate.engine.CascadeStyle;
-import org.hibernate.engine.VersionValue;
+import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.engine.spi.VersionValue;
 import org.hibernate.type.Type;
 
 /**

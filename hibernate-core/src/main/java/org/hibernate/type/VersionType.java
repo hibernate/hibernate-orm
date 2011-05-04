@@ -23,7 +23,7 @@
  */
 package org.hibernate.type;
 import java.util.Comparator;
-import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 
 /**
  * Additional contract for types which may be used to version (and optimistic lock) data.

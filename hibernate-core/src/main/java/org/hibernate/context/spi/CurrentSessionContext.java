@@ -35,7 +35,7 @@ import org.hibernate.Session;
  * Implementations should adhere to the following:
  * <ul>
  * <li>contain a constructor accepting a single argument of type
- * {@link org.hibernate.engine.SessionFactoryImplementor}
+ * {@link org.hibernate.engine.spi.SessionFactoryImplementor}
  * <li>should be thread safe
  * <li>should be fully serializable
  * </ul>

@@ -29,7 +29,7 @@ import java.sql.Connection;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.engine.FilterDefinition;
+import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.stat.Statistics;

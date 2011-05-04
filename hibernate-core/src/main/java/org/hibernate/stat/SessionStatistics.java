@@ -42,12 +42,12 @@ public interface SessionStatistics {
 
 	/**
 	 * Get the set of all <tt>EntityKey</tt>s
-	 * @see org.hibernate.engine.EntityKey
+	 * @see org.hibernate.engine.spi.EntityKey
 	 */
 	public Set getEntityKeys();
 	/**
 	 * Get the set of all <tt>CollectionKey</tt>s
-	 * @see org.hibernate.engine.CollectionKey
+	 * @see org.hibernate.engine.spi.CollectionKey
 	 */
 	public Set getCollectionKeys();
 	

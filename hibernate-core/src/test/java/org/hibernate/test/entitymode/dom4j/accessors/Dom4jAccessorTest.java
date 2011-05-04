@@ -9,7 +9,7 @@ import org.dom4j.util.NodeComparator;
 import org.hibernate.EntityMode;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Mappings;
-import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.property.Getter;

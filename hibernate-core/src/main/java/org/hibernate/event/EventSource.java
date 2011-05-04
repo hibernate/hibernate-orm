@@ -28,9 +28,9 @@ import java.util.Map;
 import java.util.Set;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
-import org.hibernate.engine.ActionQueue;
-import org.hibernate.engine.EntityEntry;
-import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.spi.ActionQueue;
+import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**

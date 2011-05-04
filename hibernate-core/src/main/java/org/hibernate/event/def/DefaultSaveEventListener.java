@@ -26,9 +26,9 @@ package org.hibernate.event.def;
 import java.io.Serializable;
 import org.hibernate.Hibernate;
 import org.hibernate.PersistentObjectException;
-import org.hibernate.engine.EntityEntry;
-import org.hibernate.engine.SessionImplementor;
-import org.hibernate.engine.Status;
+import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.Status;
 import org.hibernate.event.SaveOrUpdateEvent;
 
 /**

@@ -23,7 +23,7 @@
  */
 package org.hibernate.envers.event;
 
-import org.hibernate.engine.CollectionEntry;
+import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.event.PostCollectionRecreateEvent;
 import org.hibernate.event.PostCollectionRecreateEventListener;

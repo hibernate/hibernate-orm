@@ -29,7 +29,7 @@ import org.hibernate.bytecode.instrumentation.internal.FieldInterceptionHelper;
 import org.hibernate.bytecode.instrumentation.spi.FieldInterceptor;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.HibernateIterator;
-import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.proxy.HibernateProxy;
@@ -117,7 +117,7 @@ public final class Hibernate {
 	}
 
 	public static LobCreator getLobCreator(Session session) {
-		return getLobCreator( ( SessionImplementor ) session );
+		return getLobCreator( (SessionImplementor) session );
 	}
 
 	public static LobCreator getLobCreator(SessionImplementor session) {

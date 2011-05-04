@@ -27,11 +27,12 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.List;
+
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.QueryException;
-import org.hibernate.engine.JoinSequence;
-import org.hibernate.engine.QueryParameters;
-import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.internal.JoinSequence;
+import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.hql.ast.SqlGenerator;
 import org.hibernate.hql.ast.util.SessionFactoryHelper;
 import org.hibernate.param.ParameterSpecification;

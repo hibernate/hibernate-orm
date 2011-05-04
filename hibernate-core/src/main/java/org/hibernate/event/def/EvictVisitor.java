@@ -25,9 +25,9 @@
 package org.hibernate.event.def;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.engine.CollectionEntry;
-import org.hibernate.engine.CollectionKey;
+import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.event.EventSource;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.CollectionType;

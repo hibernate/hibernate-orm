@@ -24,9 +24,9 @@
 package org.hibernate.engine.transaction.internal;
 
 import org.hibernate.ConnectionReleaseMode;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.ResourceClosedException;
-import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.jdbc.internal.JdbcCoordinatorImpl;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;

@@ -23,8 +23,8 @@
  */
 package org.hibernate.ejb.event;
 
-import org.hibernate.engine.EntityEntry;
-import org.hibernate.engine.Status;
+import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.Status;
 import org.hibernate.event.EventSource;
 import org.hibernate.event.PostCollectionRecreateEvent;
 import org.hibernate.event.PostCollectionRecreateEventListener;
@@ -71,7 +71,7 @@ public class EJB3PostUpdateEventListener
 		EntityEntry entry = (EntityEntry) source.getPersistenceContext()
 				.getEntityEntries().get(entity);
 		// mimic the preUpdate filter
-		if (Status.DELETED != entry.getStatus()) {
+		if ( Status.DELETED != entry.getStatus()) {
 			callbackHandler.postUpdate(entity);
 		}
 	}

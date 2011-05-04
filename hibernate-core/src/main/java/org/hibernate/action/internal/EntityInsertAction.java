@@ -29,10 +29,10 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.cache.spi.CacheKey;
 import org.hibernate.cache.spi.entry.CacheEntry;
-import org.hibernate.engine.EntityEntry;
-import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.engine.SessionImplementor;
-import org.hibernate.engine.Versioning;
+import org.hibernate.engine.internal.Versioning;
+import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.EventType;
 import org.hibernate.event.PostInsertEvent;
 import org.hibernate.event.PostInsertEventListener;
@@ -89,7 +89,7 @@ public final class EntityInsertAction extends EntityAction {
 			if ( persister.hasInsertGeneratedProperties() ) {
 				persister.processInsertGeneratedProperties( id, instance, state, session );
 				if ( persister.isVersionPropertyGenerated() ) {
-					version = Versioning.getVersion(state, persister);
+					version = Versioning.getVersion( state, persister );
 				}
 				entry.postUpdate(instance, state, version);
 			}

@@ -24,7 +24,7 @@
 package org.hibernate.mapping;
 import java.util.Iterator;
 import org.hibernate.MappingException;
-import org.hibernate.engine.Mapping;
+import org.hibernate.engine.spi.Mapping;
 
 /**
  * A subclass in a table-per-subclass mapping

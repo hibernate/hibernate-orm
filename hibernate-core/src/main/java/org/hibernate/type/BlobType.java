@@ -24,7 +24,7 @@
 package org.hibernate.type;
 import java.sql.Blob;
 
-import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.type.descriptor.java.BlobTypeDescriptor;
 
 /**

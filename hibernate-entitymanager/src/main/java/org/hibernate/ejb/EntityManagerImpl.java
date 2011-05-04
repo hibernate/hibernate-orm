@@ -38,7 +38,7 @@ import org.hibernate.SessionBuilder;
 import org.hibernate.annotations.common.util.ReflectHelper;
 import org.hibernate.cfg.Environment;
 import org.hibernate.ejb.internal.EntityManagerMessageLogger;
-import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 
 /**
  * Hibernate implementation of {@link javax.persistence.EntityManager}.

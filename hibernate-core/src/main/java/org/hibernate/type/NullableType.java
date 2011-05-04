@@ -32,11 +32,11 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
+import org.hibernate.engine.spi.Mapping;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.MappingException;
-import org.hibernate.engine.Mapping;
-import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.engine.SessionImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.metamodel.relational.Size;
@@ -55,7 +55,7 @@ public abstract class NullableType extends AbstractType implements StringReprese
 	private final Size dictatedSize = new Size();
 
 	/**
-	 * A convenience form of {@link #sqlTypes(org.hibernate.engine.Mapping)}, returning
+	 * A convenience form of {@link #sqlTypes(org.hibernate.engine.spi.Mapping)}, returning
 	 * just a single type value since these are explicitly dealing with single column
 	 * mappings.
 	 *

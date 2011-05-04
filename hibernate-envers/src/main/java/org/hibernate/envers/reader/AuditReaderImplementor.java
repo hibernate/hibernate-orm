@@ -23,7 +23,7 @@
  */
 package org.hibernate.envers.reader;
 import org.hibernate.Session;
-import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.AuditReader;
 
 /**

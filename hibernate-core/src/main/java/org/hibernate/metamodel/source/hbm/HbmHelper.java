@@ -31,7 +31,7 @@ import org.dom4j.Attribute;
 import org.dom4j.Element;
 
 import org.hibernate.MappingException;
-import org.hibernate.engine.ExecuteUpdateResultCheckStyle;
+import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.metamodel.binding.CustomSQL;
 import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass;
@@ -66,7 +66,7 @@ public class HbmHelper {
 			// NONE might be a better option moving forward in the case of callable
 			return ExecuteUpdateResultCheckStyle.COUNT;
 		}
-		return ExecuteUpdateResultCheckStyle.parse( check );
+		return ExecuteUpdateResultCheckStyle.fromExternalName( check );
 	}
 
 	public static final Map<String, MetaAttribute> extractMetas(List<XMLMetaElement> meta, Map<String, MetaAttribute> baseline) {

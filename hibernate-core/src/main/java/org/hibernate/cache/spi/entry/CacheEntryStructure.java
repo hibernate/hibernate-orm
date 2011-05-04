@@ -23,7 +23,7 @@
  */
 package org.hibernate.cache.spi.entry;
 
-import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 /**
  * @author Gavin King

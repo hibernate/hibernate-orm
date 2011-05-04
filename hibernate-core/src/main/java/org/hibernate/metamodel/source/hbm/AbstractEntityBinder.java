@@ -28,7 +28,7 @@ import org.dom4j.Attribute;
 import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.NamingStrategy;
-import org.hibernate.engine.Versioning;
+import org.hibernate.engine.internal.Versioning;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.binding.AttributeBinding;
 import org.hibernate.metamodel.binding.BagBinding;

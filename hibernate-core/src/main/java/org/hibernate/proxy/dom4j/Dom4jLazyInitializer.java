@@ -25,7 +25,7 @@
 package org.hibernate.proxy.dom4j;
 import java.io.Serializable;
 import org.dom4j.Element;
-import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.proxy.AbstractLazyInitializer;
 
 /**

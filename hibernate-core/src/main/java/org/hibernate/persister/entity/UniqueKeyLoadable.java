@@ -24,7 +24,7 @@
  */
 package org.hibernate.persister.entity;
 import org.hibernate.HibernateException;
-import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 
 /**
  * @author Gavin King

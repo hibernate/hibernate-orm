@@ -24,7 +24,7 @@
  */
 package org.hibernate.id.insert;
 import java.io.Serializable;
-import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 
 /**
  * Responsible for handling delegation relating to variants in how

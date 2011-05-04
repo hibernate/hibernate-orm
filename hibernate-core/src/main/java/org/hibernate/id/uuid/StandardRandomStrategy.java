@@ -23,7 +23,7 @@
  */
 package org.hibernate.id.uuid;
 import java.util.UUID;
-import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.id.UUIDGenerationStrategy;
 
 /**

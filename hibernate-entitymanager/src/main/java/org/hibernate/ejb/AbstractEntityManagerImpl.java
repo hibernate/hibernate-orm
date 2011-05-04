@@ -88,13 +88,13 @@ import org.hibernate.ejb.internal.EntityManagerMessageLogger;
 import org.hibernate.ejb.util.CacheModeHelper;
 import org.hibernate.ejb.util.ConfigurationHelper;
 import org.hibernate.ejb.util.LockModeTypeHelper;
-import org.hibernate.engine.NamedSQLQueryDefinition;
+import org.hibernate.engine.query.spi.HQLQueryPlan;
+import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.engine.ResultSetMappingDefinition;
-import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.engine.SessionImplementor;
-import org.hibernate.engine.query.HQLQueryPlan;
-import org.hibernate.engine.query.sql.NativeSQLQueryReturn;
-import org.hibernate.engine.query.sql.NativeSQLQueryRootReturn;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
+import org.hibernate.engine.query.spi.sql.NativeSQLQueryRootReturn;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.spi.JoinStatus;
 import org.hibernate.engine.transaction.spi.TransactionCoordinator;
@@ -1116,7 +1116,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	}
 
 	private SessionFactoryImplementor sfi() {
-		return ( SessionFactoryImplementor ) getRawSession().getSessionFactory();
+		return (SessionFactoryImplementor) getRawSession().getSessionFactory();
 	}
 
 	protected void markAsRollback() {

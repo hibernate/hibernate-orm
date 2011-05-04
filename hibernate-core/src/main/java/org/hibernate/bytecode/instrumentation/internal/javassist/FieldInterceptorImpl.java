@@ -28,7 +28,7 @@ import java.util.Set;
 
 import org.hibernate.bytecode.instrumentation.spi.AbstractFieldInterceptor;
 import org.hibernate.bytecode.internal.javassist.FieldHandler;
-import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 

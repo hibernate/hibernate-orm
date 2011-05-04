@@ -27,12 +27,12 @@ import java.io.Serializable;
 
 import org.jboss.logging.Logger;
 
+import org.hibernate.engine.internal.Versioning;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.LockMode;
-import org.hibernate.engine.EntityEntry;
-import org.hibernate.engine.EntityKey;
-import org.hibernate.engine.Status;
-import org.hibernate.engine.Versioning;
+import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.Status;
 import org.hibernate.event.AbstractEvent;
 import org.hibernate.event.EventSource;
 import org.hibernate.persister.entity.EntityPersister;

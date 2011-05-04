@@ -29,8 +29,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.SessionImplementor;
-import org.hibernate.metamodel.relational.Size;
+import org.hibernate.engine.spi.SessionImplementor;
 
 /**
  * This interface should be implemented by user-defined "types".

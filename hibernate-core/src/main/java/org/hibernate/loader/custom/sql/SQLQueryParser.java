@@ -28,8 +28,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.hibernate.QueryException;
-import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.engine.query.ParameterParser;
+import org.hibernate.engine.query.spi.ParameterParser;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.collection.SQLLoadableCollection;
 import org.hibernate.persister.entity.SQLLoadable;
 

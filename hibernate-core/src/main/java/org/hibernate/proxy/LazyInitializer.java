@@ -25,7 +25,7 @@
 package org.hibernate.proxy;
 import java.io.Serializable;
 import org.hibernate.HibernateException;
-import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 
 /**
  * Handles fetching of the underlying entity for a proxy

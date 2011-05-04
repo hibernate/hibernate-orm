@@ -24,7 +24,7 @@
 package org.hibernate.id;
 import java.io.Serializable;
 import java.util.UUID;
-import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 
 /**
  * A strategy for generating a variant 2 {@link UUID} value.

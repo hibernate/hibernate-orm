@@ -25,7 +25,7 @@ package org.hibernate.bytecode.instrumentation.spi;
 
 import java.io.Serializable;
 
-import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 
 /**
  * Contract for controlling how lazy properties get initialized.

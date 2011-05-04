@@ -26,7 +26,7 @@ package org.hibernate.hql.ast.tree;
 
 import org.hibernate.QueryException;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.hql.QueryTranslator;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;

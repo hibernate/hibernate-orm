@@ -23,7 +23,7 @@
  *
  */
 package org.hibernate.event;
-import org.hibernate.engine.EntityEntry;
+import org.hibernate.engine.spi.EntityEntry;
 
 /**
  * @author Gavin King

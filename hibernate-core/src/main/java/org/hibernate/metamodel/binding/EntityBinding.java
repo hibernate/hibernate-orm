@@ -26,13 +26,12 @@ package org.hibernate.metamodel.binding;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.MappingException;
-import org.hibernate.engine.Versioning;
+import org.hibernate.engine.internal.Versioning;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.metamodel.domain.Entity;
 import org.hibernate.metamodel.domain.MetaAttribute;
@@ -44,7 +43,6 @@ import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlDeleteElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlInsertElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlUpdateElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSynchronizeElement;
-import org.hibernate.metamodel.source.spi.MetadataImplementor;
 import org.hibernate.metamodel.source.util.MappingHelper;
 
 /**

@@ -23,8 +23,8 @@
  */
 package org.hibernate.type;
 import org.hibernate.HibernateException;
-import org.hibernate.engine.Mapping;
-import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.spi.Mapping;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 /**
  * Additional, optional contract for types whose values can be represented as XML text (either as attribute or

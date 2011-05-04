@@ -26,7 +26,7 @@ import java.util.ArrayList;
 import org.hibernate.Criteria;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
-import org.hibernate.engine.TypedValue;
+import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
@@ -73,7 +73,7 @@ public class InExpression implements Criterion {
         }
     }
 
-	public TypedValue[] getTypedValues(Criteria criteria, CriteriaQuery criteriaQuery) 
+	public TypedValue[] getTypedValues(Criteria criteria, CriteriaQuery criteriaQuery)
 	throws HibernateException {
 		ArrayList list = new ArrayList();
 		Type type = criteriaQuery.getTypeUsingProjection(criteria, propertyName);

@@ -31,7 +31,7 @@ import java.util.List;
 
 import org.hibernate.EntityMode;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.property.BasicPropertyAccessor;
 import org.hibernate.property.DirectPropertyAccessor;
 import org.hibernate.tuple.entity.EntityMetamodel;

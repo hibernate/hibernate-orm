@@ -31,7 +31,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.EntityMode;
-import org.hibernate.engine.TypedValue;
+import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.internal.FilterImpl;
 import org.hibernate.type.Type;
 

@@ -31,7 +31,7 @@ import org.hibernate.SessionException;
 import org.hibernate.Transaction;
 import org.hibernate.TransientObjectException;
 import org.hibernate.UnresolvableObjectException;
-import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 
@@ -1612,7 +1612,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		s.close();
 
 		assertNull( ( ( HibernateProxy ) dp ).getHibernateLazyInitializer().getSession() );
-		assertTrue( ( ( SessionImplementor ) s ).isClosed() );
+		assertTrue( ( (SessionImplementor) s ).isClosed() );
 		try {
 			( ( HibernateProxy ) dp ).getHibernateLazyInitializer().setSession( ( SessionImplementor ) s );			
 			fail( "should have failed because session was closed" );

@@ -25,8 +25,8 @@ package org.hibernate.type;
 import java.util.Map;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
-import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 
 /**
  * Superclass for mutable nullable types
@@ -42,7 +42,7 @@ public abstract class MutableType extends NullableType {
 
 	protected abstract Object deepCopyNotNull(Object value) throws HibernateException;
 
-	public final Object deepCopy(Object value, EntityMode entityMode, SessionFactoryImplementor factory) 
+	public final Object deepCopy(Object value, EntityMode entityMode, SessionFactoryImplementor factory)
 	throws HibernateException {
 		return (value==null) ? null : deepCopyNotNull(value);
 	}

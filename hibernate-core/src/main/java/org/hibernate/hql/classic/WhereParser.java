@@ -32,7 +32,7 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
-import org.hibernate.engine.JoinSequence;
+import org.hibernate.engine.internal.JoinSequence;
 import org.hibernate.hql.QueryTranslator;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;

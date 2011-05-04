@@ -28,7 +28,7 @@ import java.util.Set;
 
 import org.hibernate.bytecode.instrumentation.internal.javassist.JavassistHelper;
 import org.hibernate.bytecode.instrumentation.spi.FieldInterceptor;
-import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 
 /**
  * Helper class for dealing with enhanced entity classes.

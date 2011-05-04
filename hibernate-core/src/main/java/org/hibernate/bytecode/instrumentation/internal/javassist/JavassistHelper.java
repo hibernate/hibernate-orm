@@ -27,7 +27,7 @@ import java.util.Set;
 
 import org.hibernate.bytecode.instrumentation.spi.FieldInterceptor;
 import org.hibernate.bytecode.internal.javassist.FieldHandled;
-import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 
 /**
  * @author Steve Ebersole

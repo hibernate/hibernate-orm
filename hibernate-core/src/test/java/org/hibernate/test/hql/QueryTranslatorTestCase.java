@@ -32,8 +32,8 @@ import java.util.TreeMap;
 
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
-import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.engine.query.HQLQueryPlan;
+import org.hibernate.engine.query.spi.HQLQueryPlan;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.hql.QueryTranslator;
 import org.hibernate.hql.QueryTranslatorFactory;
 import org.hibernate.hql.ast.ASTQueryTranslatorFactory;

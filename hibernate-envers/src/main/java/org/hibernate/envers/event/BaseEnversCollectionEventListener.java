@@ -27,7 +27,7 @@ import java.io.Serializable;
 import java.util.List;
 
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.CollectionEntry;
+import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.entities.EntityConfiguration;

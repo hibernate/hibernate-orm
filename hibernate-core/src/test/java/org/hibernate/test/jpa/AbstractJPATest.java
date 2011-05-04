@@ -28,8 +28,8 @@ import java.io.Serializable;
 
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.engine.CascadingAction;
-import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.spi.CascadingAction;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.AutoFlushEventListener;
 import org.hibernate.event.EventType;
 import org.hibernate.event.FlushEntityEventListener;

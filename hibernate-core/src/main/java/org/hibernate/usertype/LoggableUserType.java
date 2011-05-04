@@ -23,7 +23,7 @@
  *
  */
 package org.hibernate.usertype;
-import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 /**
  * Marker interface for user types which want to perform custom

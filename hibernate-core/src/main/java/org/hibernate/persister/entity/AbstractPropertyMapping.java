@@ -27,10 +27,10 @@ package org.hibernate.persister.entity;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
-import org.hibernate.engine.Mapping;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.sql.Template;

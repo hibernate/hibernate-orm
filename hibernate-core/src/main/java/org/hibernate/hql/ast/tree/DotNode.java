@@ -24,9 +24,9 @@
  */
 package org.hibernate.hql.ast.tree;
 
+import org.hibernate.engine.internal.JoinSequence;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.QueryException;
-import org.hibernate.engine.JoinSequence;
 import org.hibernate.hql.CollectionProperties;
 import org.hibernate.hql.antlr.SqlTokenTypes;
 import org.hibernate.hql.ast.util.ASTUtil;

@@ -31,7 +31,7 @@ import java.util.Iterator;
 import java.util.Map;
 import org.hibernate.Filter;
 import org.hibernate.HibernateException;
-import org.hibernate.engine.FilterDefinition;
+import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.type.Type;
 
 /**

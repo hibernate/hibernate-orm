@@ -30,10 +30,10 @@ import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.engine.EntityKey;
-import org.hibernate.engine.NonFlushedChanges;
-import org.hibernate.engine.SessionImplementor;
-import org.hibernate.engine.StatefulPersistenceContext;
+import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.NonFlushedChanges;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
 import org.hibernate.internal.util.SerializationHelper;
 

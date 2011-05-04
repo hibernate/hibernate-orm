@@ -26,7 +26,7 @@ package org.hibernate.property;
 import java.util.Map;
 import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
-import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Property;

@@ -23,7 +23,7 @@
  */
 package org.hibernate.bytecode.instrumentation.spi;
 
-import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 
 /**
  * Contract for field interception handlers.

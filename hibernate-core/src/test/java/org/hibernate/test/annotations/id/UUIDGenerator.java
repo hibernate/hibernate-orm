@@ -3,7 +3,7 @@ import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.UUID;
 import org.hibernate.HibernateException;
-import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.id.IdentifierGenerator;
 
 /**

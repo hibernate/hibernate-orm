@@ -25,8 +25,8 @@
 package org.hibernate.criterion;
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
-import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.engine.TypedValue;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.type.Type;
 
 /**
@@ -84,7 +84,7 @@ public interface CriteriaQuery {
 	/**
 	 * Get the a typed value for the given property value.
 	 */
-	public TypedValue getTypedValue(Criteria criteria, String propertyPath, Object value) 
+	public TypedValue getTypedValue(Criteria criteria, String propertyPath, Object value)
 	throws HibernateException;
 	
 	/**

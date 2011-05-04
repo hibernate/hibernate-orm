@@ -23,7 +23,7 @@
  */
 package org.hibernate.type;
 import java.io.Serializable;
-import org.hibernate.engine.Cascade;
+import org.hibernate.engine.internal.Cascade;
 
 /**
  * Represents directionality of the foreign key constraint
@@ -33,7 +33,7 @@ public abstract class ForeignKeyDirection implements Serializable {
 	protected ForeignKeyDirection() {}
 	/**
 	 * Should we cascade at this cascade point?
-	 * @see org.hibernate.engine.Cascade
+	 * @see org.hibernate.engine.internal.Cascade
 	 */
 	public abstract boolean cascadeNow(int cascadePoint);
 
@@ -58,7 +58,7 @@ public abstract class ForeignKeyDirection implements Serializable {
 	 */
 	public static final ForeignKeyDirection FOREIGN_KEY_FROM_PARENT = new ForeignKeyDirection() {
 		public boolean cascadeNow(int cascadePoint) {
-			return cascadePoint!=Cascade.AFTER_INSERT_BEFORE_DELETE;
+			return cascadePoint!= Cascade.AFTER_INSERT_BEFORE_DELETE;
 		}
 
 		public String toString() {

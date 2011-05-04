@@ -25,7 +25,7 @@ package org.hibernate.dialect.lock;
 import java.io.Serializable;
 import org.hibernate.JDBCException;
 import org.hibernate.StaleObjectStateException;
-import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 
 /**
  * A strategy abstraction for how locks are obtained in the underlying database.

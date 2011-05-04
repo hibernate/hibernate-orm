@@ -48,7 +48,9 @@ import org.hibernate.stat.internal.ConcurrentStatisticsImpl;
  * loaded.
  *
  * @author Emmanuel Bernard
+ * @deprecated See <a href="http://opensource.atlassian.com/projects/hibernate/browse/HHH-6190">HHH-6190</a> for details
  */
+@Deprecated
 public class StatisticsService implements StatisticsServiceMBean {
 
     private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, StatisticsService.class.getName());

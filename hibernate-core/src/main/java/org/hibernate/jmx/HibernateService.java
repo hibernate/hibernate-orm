@@ -26,7 +26,9 @@ import org.hibernate.tool.hbm2ddl.SchemaExport;
  * @see HibernateServiceMBean
  * @see org.hibernate.SessionFactory
  * @author John Urberg, Gavin King
+ * @deprecated See <a href="http://opensource.atlassian.com/projects/hibernate/browse/HHH-6190">HHH-6190</a> for details
  */
+@Deprecated
 public class HibernateService extends ExternalSessionFactoryConfig implements HibernateServiceMBean {
 
     private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, HibernateService.class.getName());

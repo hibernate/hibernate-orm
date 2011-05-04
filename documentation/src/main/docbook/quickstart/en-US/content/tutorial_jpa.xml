@@ -124,8 +124,17 @@ entityManager.close();]]></programlisting>
         </para>
     </section>
 
-        <section id="hibernate-gsg-tutorial-annotations-further">
+    <section id="hibernate-gsg-tutorial-annotations-further">
         <title>Take it further!</title>
         <itemizedlist>
-          <title>Practice Exercises</title> <listitem> <para> </para> </listitem> <listitem> <para> </para> </listitem>
-          </itemizedlist> </section> </chapter>
+            <title>Practice Exercises</title>
+            <listitem>
+                <para>
+                    Develop an EJB Session bean to investigate implications of using a container-managed
+                    persistence context (<interfacename>javax.persistence.EntityManager</interfacename>).  Try both
+                    stateless and stateful use-cases.
+                </para>
+            </listitem>
+        </itemizedlist>
+    </section>
+</chapter>

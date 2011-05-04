@@ -67,10 +67,10 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 
 	@Test
 	public void testSimpleEntityMapping() {
-		checkSimpleEntityMaping( buildSimpleEntityBinding() );
+		checkSimpleEntityMapping( buildSimpleEntityBinding() );
 	}
 
-	protected void checkSimpleEntityMaping(EntityBinding entityBinding) {
+	protected void checkSimpleEntityMapping(EntityBinding entityBinding) {
 		assertNotNull( entityBinding );
 		assertNotNull( entityBinding.getEntityIdentifier() );
 		assertNotNull( entityBinding.getEntityIdentifier().getValueBinding() );
@@ -116,7 +116,7 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 		MetadataImplementor metadata = buildMetadataWithManyToOne();
 		EntityBinding entityWithManyToOneBinding = metadata.getEntityBinding( EntityWithManyToOne.class.getName() );
 		EntityBinding simpleEntityBinding = metadata.getEntityBinding( SimpleEntity.class.getName() );
-		checkSimpleEntityMaping( simpleEntityBinding );
+		checkSimpleEntityMapping( simpleEntityBinding );
 
 		assertTrue(
 				1 == simpleEntityBinding.getAttributeBinding( "id" ).getEntityReferencingAttributeBindings().size()

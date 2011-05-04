@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,40 +21,28 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.binding;
+package org.hibernate.metamodel.source.annotations.state.relational;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.hibernate.metamodel.binding.AttributeBinding;
+import org.hibernate.metamodel.binding.SimpleAttributeBinding;
 
 /**
- * @author Steve Ebersole
+ * @author Hardy Ferentschik
  */
-@Entity
-public class SimpleEntity {
-	@Id
-	private Long id;
-	private String name;
+public class AttributeTupleRelationalState implements SimpleAttributeBinding.SimpleTupleRelationalState {
+	List<AttributeBinding.SingleValueRelationalState> valueStates = new ArrayList<AttributeBinding.SingleValueRelationalState>();
 
-	public SimpleEntity() {
+	public void addValueState(AttributeBinding.SingleValueRelationalState state) {
+		valueStates.add( state );
 	}
 
-	public SimpleEntity(String name) {
-		this.name = name;
-	}
-
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
+	@Override
+	public List<AttributeBinding.SingleValueRelationalState> getRelationalStates() {
+		return valueStates;
 	}
 }
+
+

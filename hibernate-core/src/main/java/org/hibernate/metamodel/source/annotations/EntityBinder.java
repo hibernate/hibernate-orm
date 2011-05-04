@@ -23,9 +23,7 @@
  */
 package org.hibernate.metamodel.source.annotations;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
@@ -33,16 +31,15 @@ import org.jboss.jandex.AnnotationValue;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.mapping.PropertyGeneration;
-import org.hibernate.metamodel.binding.AttributeBinding;
 import org.hibernate.metamodel.binding.EntityBinding;
-import org.hibernate.metamodel.binding.HibernateTypeDescriptor;
 import org.hibernate.metamodel.binding.SimpleAttributeBinding;
-import org.hibernate.metamodel.domain.Attribute;
 import org.hibernate.metamodel.domain.Entity;
 import org.hibernate.metamodel.domain.Hierarchical;
 import org.hibernate.metamodel.relational.Identifier;
 import org.hibernate.metamodel.relational.Schema;
+import org.hibernate.metamodel.source.annotations.state.domain.AttributeDomainState;
+import org.hibernate.metamodel.source.annotations.state.relational.AttributeColumnRelationalState;
+import org.hibernate.metamodel.source.annotations.state.relational.AttributeTupleRelationalState;
 import org.hibernate.metamodel.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
 
@@ -161,16 +158,12 @@ public class EntityBinder {
 
 		MappedAttribute idAttribute = configuredClass.getMappedProperty( idName );
 
-		AnnotationSimpleAttributeDomainState domainState = new AnnotationSimpleAttributeDomainState();
-		HibernateTypeDescriptor typeDescriptor = new HibernateTypeDescriptor();
-		typeDescriptor.setTypeName( idAttribute.getType().getName() );
-		domainState.typeDescriptor = typeDescriptor;
-		domainState.attribute = entityBinding.getEntity().getOrCreateSingularAttribute( idAttribute.getName() );
+		AttributeDomainState domainState = new AttributeDomainState( entityBinding, idAttribute );
 		idBinding.initialize( domainState );
 
 		AttributeColumnRelationalState columnRelationsState = new AttributeColumnRelationalState( idAttribute, meta );
-		AnnotationSimpleAttributeRelationalState relationalState = new AnnotationSimpleAttributeRelationalState();
-		relationalState.valueStates.add( columnRelationsState );
+		AttributeTupleRelationalState relationalState = new AttributeTupleRelationalState();
+		relationalState.addValueState( columnRelationsState );
 		idBinding.initializeSimpleTupleValue( relationalState );
 	}
 
@@ -182,21 +175,24 @@ public class EntityBinder {
 
 			String attributeName = mappedAttribute.getName();
 			entityBinding.getEntity().getOrCreateSingularAttribute( attributeName );
-			SimpleAttributeBinding simpleBinding = entityBinding.makeSimpleAttributeBinding( attributeName );
+			SimpleAttributeBinding attributeBinding;
 
-			AnnotationSimpleAttributeDomainState domainState = new AnnotationSimpleAttributeDomainState();
-			HibernateTypeDescriptor typeDescriptor = new HibernateTypeDescriptor();
-			typeDescriptor.setTypeName( mappedAttribute.getType().getName() );
-			domainState.typeDescriptor = typeDescriptor;
-			domainState.attribute = entityBinding.getEntity().getOrCreateSingularAttribute( attributeName );
-			simpleBinding.initialize( domainState );
+			if ( mappedAttribute.isVersioned() ) {
+				attributeBinding = entityBinding.makeVersionBinding( attributeName );
+			}
+			else {
+				attributeBinding = entityBinding.makeSimpleAttributeBinding( attributeName );
+			}
+
+			AttributeDomainState domainState = new AttributeDomainState( entityBinding, mappedAttribute );
+			attributeBinding.initialize( domainState );
 
 			AttributeColumnRelationalState columnRelationsState = new AttributeColumnRelationalState(
 					mappedAttribute, meta
 			);
-			AnnotationSimpleAttributeRelationalState relationalState = new AnnotationSimpleAttributeRelationalState();
-			relationalState.valueStates.add( columnRelationsState );
-			simpleBinding.initializeSimpleTupleValue( relationalState );
+			AttributeTupleRelationalState relationalState = new AttributeTupleRelationalState();
+			relationalState.addValueState( columnRelationsState );
+			attributeBinding.initializeSimpleTupleValue( relationalState );
 		}
 	}
 
@@ -281,100 +277,6 @@ public class EntityBinder {
 		EMBEDDED,
 		// does not contain any identifier mappings
 		NONE
-	}
-
-	public static class AnnotationSimpleAttributeDomainState implements SimpleAttributeBinding.DomainState {
-		PropertyGeneration propertyGeneration;
-		HibernateTypeDescriptor typeDescriptor;
-		Attribute attribute;
-
-		@Override
-		public PropertyGeneration getPropertyGeneration() {
-
-//		GeneratedValue generatedValue = property.getAnnotation( GeneratedValue.class );
-//		String generatorType = generatedValue != null ?
-//				generatorType( generatedValue.strategy(), mappings ) :
-//				"assigned";
-//		String generatorName = generatedValue != null ?
-//				generatedValue.generator() :
-//				BinderHelper.ANNOTATION_STRING_DEFAULT;
-			return propertyGeneration;
-		}
-
-		@Override
-		public boolean isInsertable() {
-			return false;  //To change body of implemented methods use File | Settings | File Templates.
-		}
-
-		@Override
-		public boolean isUpdateable() {
-			return false;  //To change body of implemented methods use File | Settings | File Templates.
-		}
-
-		@Override
-		public boolean isKeyCasadeDeleteEnabled() {
-			return false;  //To change body of implemented methods use File | Settings | File Templates.
-		}
-
-		@Override
-		public String getUnsavedValue() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
-		}
-
-		@Override
-		public HibernateTypeDescriptor getHibernateTypeDescriptor() {
-			return typeDescriptor;
-		}
-
-		@Override
-		public Attribute getAttribute() {
-			return attribute;
-		}
-
-		@Override
-		public boolean isLazy() {
-			return false;  //To change body of implemented methods use File | Settings | File Templates.
-		}
-
-		@Override
-		public String getPropertyAccessorName() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
-		}
-
-		@Override
-		public boolean isAlternateUniqueKey() {
-			return false;  //To change body of implemented methods use File | Settings | File Templates.
-		}
-
-		@Override
-		public String getCascade() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
-		}
-
-		@Override
-		public boolean isOptimisticLockable() {
-			return false;  //To change body of implemented methods use File | Settings | File Templates.
-		}
-
-		@Override
-		public String getNodeName() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
-		}
-
-		@Override
-		public Map<String, org.hibernate.metamodel.domain.MetaAttribute> getMetaAttributes(EntityBinding entityBinding) {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
-		}
-	}
-
-	public static class AnnotationSimpleAttributeRelationalState
-			implements SimpleAttributeBinding.SimpleTupleRelationalState {
-		List<AttributeBinding.SingleValueRelationalState> valueStates = new ArrayList<AttributeBinding.SingleValueRelationalState>();
-
-		@Override
-		public List<AttributeBinding.SingleValueRelationalState> getRelationalStates() {
-			return valueStates;
-		}
 	}
 }
 

@@ -37,13 +37,12 @@ import org.hibernate.metamodel.source.hbm.xml.mapping.XMLCacheElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLCompositeId;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLId;
-import org.hibernate.metamodel.source.util.MappingHelper;
 
 /**
-* TODO : javadoc
-*
-* @author Steve Ebersole
-*/
+ * TODO : javadoc
+ *
+ * @author Steve Ebersole
+ */
 class RootEntityBinder extends AbstractEntityBinder {
 
 	RootEntityBinder(HibernateMappingBinder hibernateMappingBinder, XMLClass xmlClazz) {
@@ -67,7 +66,7 @@ class RootEntityBinder extends AbstractEntityBinder {
 		}
 
 		if ( xmlClazz.getPolymorphism() != null ) {
-			entityBinding.setExplicitPolymorphism( "explicit".equals(  xmlClazz.getPolymorphism() ) );
+			entityBinding.setExplicitPolymorphism( "explicit".equals( xmlClazz.getPolymorphism() ) );
 		}
 
 		if ( xmlClazz.getRowid() != null ) {
@@ -141,7 +140,7 @@ class RootEntityBinder extends AbstractEntityBinder {
 		SimpleAttributeBinding idBinding = entityBinding.makeSimplePrimaryKeyAttributeBinding( attributeName );
 		bindSimpleAttribute( id, idBinding, entityBinding, attributeName );
 
-		if ( ! Column.class.isInstance( idBinding.getValue() ) ) {
+		if ( !Column.class.isInstance( idBinding.getValue() ) ) {
 			// this should never ever happen..
 			throw new MappingException( "Unanticipated situation" );
 		}
@@ -237,9 +236,14 @@ class RootEntityBinder extends AbstractEntityBinder {
 		SimpleAttributeBinding discriminatorBinding = entityBinding.makeEntityDiscriminatorBinding( RootClass.DEFAULT_DISCRIMINATOR_COLUMN_NAME );
 
 		// Handle the relational portion of the binding...
-		bindSimpleAttribute( xmlEntityClazz.getDiscriminator(), discriminatorBinding, entityBinding, RootClass.DEFAULT_DISCRIMINATOR_COLUMN_NAME );
+		bindSimpleAttribute(
+				xmlEntityClazz.getDiscriminator(),
+				discriminatorBinding,
+				entityBinding,
+				RootClass.DEFAULT_DISCRIMINATOR_COLUMN_NAME
+		);
 
-		entityBinding.getEntityDiscriminator().setForced(xmlEntityClazz.getDiscriminator().isForce());
+		entityBinding.getEntityDiscriminator().setForced( xmlEntityClazz.getDiscriminator().isForce() );
 	}
 
 	private void bindVersion(XMLClass xmlEntityClazz,
@@ -249,9 +253,12 @@ class RootEntityBinder extends AbstractEntityBinder {
 		}
 
 		boolean isVersion = xmlEntityClazz.getVersion() != null;
-		String explicitName = isVersion ? xmlEntityClazz.getVersion().getName() : xmlEntityClazz.getTimestamp().getName();
+		String explicitName = isVersion ? xmlEntityClazz.getVersion().getName() : xmlEntityClazz.getTimestamp()
+				.getName();
 		if ( explicitName == null ) {
-			throw new MappingException( "Mising property name for version/timestamp mapping [" + entityBinding.getEntity().getName() + "]" );
+			throw new MappingException(
+					"Missing property name for version/timestamp mapping [" + entityBinding.getEntity().getName() + "]"
+			);
 		}
 		SimpleAttributeBinding versionBinding = entityBinding.makeVersionBinding( explicitName );
 		if ( isVersion ) {

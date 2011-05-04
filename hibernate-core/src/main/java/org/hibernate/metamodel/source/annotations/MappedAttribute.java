@@ -43,6 +43,7 @@ public class MappedAttribute implements Comparable<MappedAttribute> {
 	private final Map<DotName, List<AnnotationInstance>> annotations;
 	private final ColumnValues columnValues;
 	private final boolean isId;
+	private final boolean isVersioned;
 
 	MappedAttribute(String name, Class<?> type, Map<DotName, List<AnnotationInstance>> annotations) {
 		this.name = name;
@@ -51,6 +52,9 @@ public class MappedAttribute implements Comparable<MappedAttribute> {
 
 		List<AnnotationInstance> idAnnotations = annotations.get( JPADotNames.ID );
 		isId = idAnnotations != null && !idAnnotations.isEmpty();
+
+		List<AnnotationInstance> versionAnnotations = annotations.get( JPADotNames.VERSION );
+		isVersioned = versionAnnotations != null && !versionAnnotations.isEmpty();
 
 		List<AnnotationInstance> columnAnnotations = annotations.get( JPADotNames.COLUMN );
 		if ( columnAnnotations != null && columnAnnotations.size() > 1 ) {
@@ -74,6 +78,10 @@ public class MappedAttribute implements Comparable<MappedAttribute> {
 
 	public boolean isId() {
 		return isId;
+	}
+
+	public boolean isVersioned() {
+		return isVersioned;
 	}
 
 	public final List<AnnotationInstance> annotations(DotName annotationDotName) {

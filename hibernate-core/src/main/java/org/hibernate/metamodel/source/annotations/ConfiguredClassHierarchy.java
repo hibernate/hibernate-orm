@@ -202,7 +202,7 @@ public class ConfiguredClassHierarchy implements Iterable<ConfiguredClass> {
 		int count = 0;
 		for ( ClassInfo info : classes ) {
 			builder.append( info.name().toString() );
-			if ( count < classes.size() ) {
+			if ( count < classes.size() - 1 ) {
 				builder.append( ", " );
 			}
 			count++;

@@ -59,6 +59,7 @@ public class EntityBinder {
 		EntityBinding entityBinding = new EntityBinding();
 		bindJpaEntityAnnotation( entityBinding );
 		bindHibernateEntityAnnotation( entityBinding ); // optional hibernate specific @org.hibernate.annotations.Entity
+		bindWhereFilter( entityBinding );
 		schemaName = createSchemaName();
 		bindTable( entityBinding );
 
@@ -68,6 +69,17 @@ public class EntityBinder {
 		bindAttributes( entityBinding );
 
 		meta.addEntity( entityBinding );
+	}
+
+	private void bindWhereFilter(EntityBinding entityBinding) {
+		AnnotationInstance whereAnnotation = JandexHelper.getSingleAnnotation(
+				configuredClass.getClassInfo(), HibernateDotNames.WHERE
+		);
+		if ( whereAnnotation != null ) {
+			// no null check needed, it is a required attribute
+			String clause = whereAnnotation.value( "clause" ).asString();
+			entityBinding.setWhereFilter( clause );
+		}
 	}
 
 	private Schema.Name createSchemaName() {

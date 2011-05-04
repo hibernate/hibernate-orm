@@ -26,9 +26,9 @@ import java.io.Serializable;
 import java.util.HashSet;
 import org.dom4j.Element;
 import org.hibernate.EntityMode;
-import org.hibernate.collection.PersistentCollection;
-import org.hibernate.collection.PersistentElementHolder;
-import org.hibernate.collection.PersistentSet;
+import org.hibernate.collection.internal.PersistentElementHolder;
+import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.collection.internal.PersistentSet;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 

@@ -13,7 +13,7 @@ import java.util.WeakHashMap;
 import javax.persistence.PersistenceException;
 import javax.persistence.spi.LoadState;
 import org.hibernate.AssertionFailure;
-import org.hibernate.collection.PersistentCollection;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.bytecode.instrumentation.internal.FieldInterceptionHelper;
 import org.hibernate.bytecode.instrumentation.spi.FieldInterceptor;
 import org.hibernate.proxy.HibernateProxy;
@@ -120,7 +120,7 @@ public class PersistenceUtilHelper {
 			return isInitialized ? LoadState.LOADED : LoadState.NOT_LOADED;
 		}
 		else if ( o instanceof PersistentCollection ) {
-			final boolean isInitialized = ( ( PersistentCollection ) o ).wasInitialized();
+			final boolean isInitialized = ( (PersistentCollection) o ).wasInitialized();
 			return isInitialized ? LoadState.LOADED : LoadState.NOT_LOADED;
 		}
 		else {

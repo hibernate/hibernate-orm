@@ -37,9 +37,9 @@ import org.hibernate.CacheMode;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.cache.spi.CacheKey;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.cache.spi.entry.CollectionCacheEntry;
-import org.hibernate.collection.PersistentCollection;
 import org.hibernate.engine.CollectionEntry;
 import org.hibernate.engine.CollectionKey;
 import org.hibernate.engine.SessionFactoryImplementor;
@@ -90,7 +90,7 @@ public class CollectionLoadContext {
 	 * result set.
 	 * <p/>
 	 * Basically, there are two valid return values from this method:<ul>
-	 * <li>an instance of {@link PersistentCollection} which indicates to
+	 * <li>an instance of {@link org.hibernate.collection.spi.PersistentCollection} which indicates to
 	 * continue loading the result set row data into that returned collection
 	 * instance; this may be either an instance already associated and in the
 	 * midst of being loaded, or a newly instantiated instance as a matching

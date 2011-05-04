@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,9 +20,9 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
-package org.hibernate.collection;
+package org.hibernate.collection.spi;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -30,6 +30,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.LazyInitializationException;
@@ -39,16 +40,16 @@ import org.hibernate.engine.ForeignKeys;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.Status;
 import org.hibernate.engine.TypedValue;
+import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.collections.EmptyIterator;
 import org.hibernate.internal.util.collections.IdentitySet;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.Type;
-import org.hibernate.internal.util.MarkerObject;
 
 /**
- * Base class implementing {@link PersistentCollection}
+ * Base class implementing {@link org.hibernate.collection.spi.PersistentCollection}
  *
  * @author Gavin King
  */
@@ -565,9 +566,10 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		return session;
 	}
 
-	final class IteratorProxy implements Iterator {
-		private final Iterator iter;
-		IteratorProxy(Iterator iter) {
+	protected final class IteratorProxy implements Iterator {
+		protected final Iterator iter;
+
+		public IteratorProxy(Iterator iter) {
 			this.iter=iter;
 		}
 		public boolean hasNext() {
@@ -585,9 +587,10 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 
 	}
 
-	final class ListIteratorProxy implements ListIterator {
-		private final ListIterator iter;
-		ListIteratorProxy(ListIterator iter) {
+	protected final class ListIteratorProxy implements ListIterator {
+		protected final ListIterator iter;
+
+		public ListIteratorProxy(ListIterator iter) {
 			this.iter = iter;
 		}
 		public void add(Object o) {
@@ -631,11 +634,10 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 
 	}
 
-	class SetProxy implements java.util.Set {
+	protected class SetProxy implements java.util.Set {
+		protected final Collection set;
 
-		final Collection set;
-
-		SetProxy(Collection set) {
+		public SetProxy(Collection set) {
 			this.set=set;
 		}
 		public boolean add(Object o) {
@@ -698,11 +700,10 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 
 	}
 
-	final class ListProxy implements java.util.List {
+	protected final class ListProxy implements java.util.List {
+		protected final java.util.List list;
 
-		private final java.util.List list;
-
-		ListProxy(java.util.List list) {
+		public ListProxy(java.util.List list) {
 			this.list = list;
 		}
 
@@ -935,12 +936,11 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 		return res;
 	}
 
-	static void identityRemove(
+	public static void identityRemove(
 			Collection list, 
 			Object object, 
 			String entityName, 
-			SessionImplementor session)
-	throws HibernateException {
+			SessionImplementor session) throws HibernateException {
 
 		if ( object!=null && ForeignKeys.isNotTransient(entityName, object, null, session) ) {
 			

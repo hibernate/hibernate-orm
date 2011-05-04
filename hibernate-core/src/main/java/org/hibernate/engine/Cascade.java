@@ -31,7 +31,7 @@ import java.util.Stack;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.collection.PersistentCollection;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.event.EventSource;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.persister.collection.CollectionPersister;

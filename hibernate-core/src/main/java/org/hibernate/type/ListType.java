@@ -27,9 +27,9 @@ import java.util.ArrayList;
 import java.util.List;
 import org.dom4j.Element;
 import org.hibernate.EntityMode;
-import org.hibernate.collection.PersistentCollection;
-import org.hibernate.collection.PersistentList;
-import org.hibernate.collection.PersistentListElementHolder;
+import org.hibernate.collection.internal.PersistentListElementHolder;
+import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.collection.internal.PersistentList;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 

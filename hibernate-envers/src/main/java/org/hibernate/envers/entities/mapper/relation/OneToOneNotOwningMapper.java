@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Map;
 import javax.persistence.NoResultException;
 import org.hibernate.NonUniqueResultException;
-import org.hibernate.collection.PersistentCollection;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.entities.EntityConfiguration;

@@ -25,7 +25,7 @@ package org.hibernate.envers.entities.mapper;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
-import org.hibernate.collection.PersistentCollection;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.entities.PropertyData;
@@ -65,7 +65,7 @@ public class SubclassPropertyMapper implements ExtendedPropertyMapper {
     }
 
     public List<PersistentCollectionChangeData> mapCollectionChanges(String referencingPropertyName,
-                                                                                    PersistentCollection newColl, 
+                                                                                    PersistentCollection newColl,
                                                                                     Serializable oldColl,
                                                                                     Serializable id) {
         List<PersistentCollectionChangeData> parentCollectionChanges = parentMapper.mapCollectionChanges(

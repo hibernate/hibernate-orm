@@ -25,7 +25,7 @@ package org.hibernate.test.collection.bag;
 import java.util.ArrayList;
 
 import org.hibernate.Session;
-import org.hibernate.collection.PersistentBag;
+import org.hibernate.collection.internal.PersistentBag;
 
 import org.junit.Test;
 

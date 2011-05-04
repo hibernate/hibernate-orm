@@ -23,7 +23,7 @@
  *
  */
 package org.hibernate.event;
-import org.hibernate.collection.PersistentCollection;
+import org.hibernate.collection.spi.PersistentCollection;
 
 /**
  * An event that occurs when a collection wants to be

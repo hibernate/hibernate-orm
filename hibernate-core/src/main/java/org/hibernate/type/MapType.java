@@ -29,9 +29,9 @@ import java.util.Map;
 import org.dom4j.Element;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
-import org.hibernate.collection.PersistentCollection;
-import org.hibernate.collection.PersistentMap;
-import org.hibernate.collection.PersistentMapElementHolder;
+import org.hibernate.collection.internal.PersistentMap;
+import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.collection.internal.PersistentMapElementHolder;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 

@@ -29,7 +29,7 @@ import org.hibernate.CacheMode;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.collection.PersistentSet;
+import org.hibernate.collection.internal.PersistentSet;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.stat.CollectionStatistics;
 
@@ -191,7 +191,7 @@ public class PersistentSetTest extends BaseCoreFunctionalTestCase {
 		session.save( container );
 		session.flush();
 		// at this point, the set on container has now been replaced with a PersistentSet...
-		PersistentSet children = ( PersistentSet ) container.getContents();
+		PersistentSet children = (PersistentSet) container.getContents();
 
 		assertFalse( children.add( c1 ) );
 		assertFalse( children.isDirty() );

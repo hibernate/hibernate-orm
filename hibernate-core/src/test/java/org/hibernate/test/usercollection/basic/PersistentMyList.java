@@ -1,5 +1,5 @@
 package org.hibernate.test.usercollection.basic;
-import org.hibernate.collection.PersistentList;
+import org.hibernate.collection.internal.PersistentList;
 import org.hibernate.engine.SessionImplementor;
 
 public class PersistentMyList extends PersistentList implements IMyList {

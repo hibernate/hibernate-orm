@@ -25,7 +25,7 @@ package org.hibernate.test.collection.list;
 import java.util.ArrayList;
 
 import org.hibernate.Session;
-import org.hibernate.collection.PersistentList;
+import org.hibernate.collection.internal.PersistentList;
 
 import org.junit.Test;
 
@@ -58,7 +58,7 @@ public class PersistentListTest extends BaseCoreFunctionalTestCase {
 		session.save( parent );
 		session.flush();
 		// at this point, the list on parent has now been replaced with a PersistentList...
-		PersistentList children = ( PersistentList ) parent.getChildren();
+		PersistentList children = (PersistentList) parent.getChildren();
 
 		assertFalse( children.remove( otherChild ) );
 		assertFalse( children.isDirty() );

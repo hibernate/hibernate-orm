@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import org.hibernate.EntityMode;
-import org.hibernate.collection.PersistentCollection;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.usertype.ParameterizedType;

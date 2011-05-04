@@ -29,8 +29,8 @@ import java.util.List;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.collection.PersistentCollection;
-import org.hibernate.collection.PersistentSet;
+import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.collection.internal.PersistentSet;
 import org.hibernate.event.AbstractCollectionEvent;
 
 import org.junit.Test;
@@ -338,7 +338,7 @@ public abstract class AbstractCollectionEventTest extends BaseCoreFunctionalTest
 		tx.commit();
 		s.close();
 		int index = 0;
-		if ( ( ( PersistentCollection ) oldCollection ).wasInitialized() ) {
+		if ( ( (PersistentCollection) oldCollection ).wasInitialized() ) {
 			checkResult( listeners, listeners.getInitializeCollectionListener(), parent, oldCollection, index++ );
 		}
 		if ( oldChild instanceof ChildWithBidirectionalManyToMany ) {

@@ -24,7 +24,7 @@
  */
 package org.hibernate.event;
 import java.io.Serializable;
-import org.hibernate.collection.PersistentCollection;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.CollectionEntry;
 import org.hibernate.engine.EntityEntry;
 import org.hibernate.persister.collection.CollectionPersister;

@@ -32,7 +32,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.hibernate.collection.PersistentCollection;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.configuration.AuditConfiguration;

@@ -27,9 +27,9 @@ import java.util.Comparator;
 import java.util.TreeSet;
 import org.dom4j.Element;
 import org.hibernate.EntityMode;
-import org.hibernate.collection.PersistentCollection;
-import org.hibernate.collection.PersistentElementHolder;
-import org.hibernate.collection.PersistentSortedSet;
+import org.hibernate.collection.internal.PersistentElementHolder;
+import org.hibernate.collection.internal.PersistentSortedSet;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 

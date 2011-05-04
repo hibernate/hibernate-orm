@@ -37,7 +37,7 @@ import org.hibernate.EntityMode;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.collection.PersistentCollection;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.CollectionKey;
 import org.hibernate.engine.EntityEntry;
 import org.hibernate.engine.Mapping;

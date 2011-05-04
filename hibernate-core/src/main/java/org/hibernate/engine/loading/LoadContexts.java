@@ -32,7 +32,7 @@ import java.util.Map;
 import java.util.Set;
 import org.hibernate.EntityMode;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.collection.PersistentCollection;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.CollectionKey;
 import org.hibernate.engine.PersistenceContext;
 import org.hibernate.engine.SessionImplementor;

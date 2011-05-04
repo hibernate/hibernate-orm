@@ -24,8 +24,8 @@
 package org.hibernate.event.def;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.collection.PersistentCollection;
 import org.hibernate.engine.PersistenceContext;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.event.EventSource;

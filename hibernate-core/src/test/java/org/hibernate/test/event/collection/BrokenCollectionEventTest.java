@@ -29,7 +29,7 @@ import java.util.List;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.collection.PersistentCollection;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.event.AbstractCollectionEvent;
 
 import org.junit.Test;
@@ -174,7 +174,7 @@ public class BrokenCollectionEventTest extends BaseCoreFunctionalTestCase {
 		tx.commit();
 		s.close();
 		int index = 0;
-		if ( ( ( PersistentCollection ) oldCollection ).wasInitialized() ) {
+		if ( ( (PersistentCollection) oldCollection ).wasInitialized() ) {
 			checkResult( listeners, listeners.getInitializeCollectionListener(), parent, oldCollection, index++ );
 		}
 		checkResult( listeners, listeners.getPreCollectionRemoveListener(), parent, oldCollection, index++ );

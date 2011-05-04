@@ -31,7 +31,7 @@ import java.util.Map;
 
 import org.hibernate.EntityMode;
 import org.hibernate.cache.spi.CacheKey;
-import org.hibernate.collection.PersistentCollection;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;

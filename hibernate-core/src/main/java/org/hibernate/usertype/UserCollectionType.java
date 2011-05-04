@@ -26,14 +26,14 @@ package org.hibernate.usertype;
 import java.util.Iterator;
 import java.util.Map;
 import org.hibernate.HibernateException;
-import org.hibernate.collection.PersistentCollection;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 
 /**
  * A custom type for mapping user-written classes that implement <tt>PersistentCollection</tt>
  * 
- * @see org.hibernate.collection.PersistentCollection
+ * @see org.hibernate.collection.spi.PersistentCollection
  * @author Gavin King
  */
 public interface UserCollectionType {

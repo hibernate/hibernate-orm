@@ -27,7 +27,7 @@ import java.util.Iterator;
 
 import org.hibernate.bytecode.instrumentation.internal.FieldInterceptionHelper;
 import org.hibernate.bytecode.instrumentation.spi.FieldInterceptor;
-import org.hibernate.collection.PersistentCollection;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.HibernateIterator;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.jdbc.LobCreationContext;
@@ -75,7 +75,7 @@ public final class Hibernate {
 			( ( HibernateProxy ) proxy ).getHibernateLazyInitializer().initialize();
 		}
 		else if ( proxy instanceof PersistentCollection ) {
-			( ( PersistentCollection ) proxy ).forceInitialization();
+			( (PersistentCollection) proxy ).forceInitialization();
 		}
 	}
 

@@ -32,11 +32,11 @@ import java.util.Map;
 import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.action.internal.CollectionRecreateAction;
 import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.action.internal.CollectionUpdateAction;
-import org.hibernate.collection.PersistentCollection;
 import org.hibernate.engine.ActionQueue;
 import org.hibernate.engine.Cascade;
 import org.hibernate.engine.CascadingAction;

@@ -25,7 +25,7 @@ package org.hibernate.cache.spi.entry;
 
 import java.io.Serializable;
 
-import org.hibernate.collection.PersistentCollection;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.persister.collection.CollectionPersister;
 

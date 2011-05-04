@@ -31,8 +31,8 @@ import java.util.List;
 import java.util.Map;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
-import org.hibernate.collection.PersistentArrayHolder;
-import org.hibernate.collection.PersistentCollection;
+import org.hibernate.collection.internal.PersistentArrayHolder;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -56,7 +56,7 @@ public class ArrayType extends CollectionType {
 		return arrayClass;
 	}
 
-	public PersistentCollection instantiate(SessionImplementor session, CollectionPersister persister, Serializable key) 
+	public PersistentCollection instantiate(SessionImplementor session, CollectionPersister persister, Serializable key)
 	throws HibernateException {
 		return new PersistentArrayHolder(session, persister);
 	}

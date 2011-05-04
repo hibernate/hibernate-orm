@@ -25,7 +25,7 @@
 package org.hibernate.engine.loading;
 import java.io.Serializable;
 import java.sql.ResultSet;
-import org.hibernate.collection.PersistentCollection;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.pretty.MessageHelper;
 

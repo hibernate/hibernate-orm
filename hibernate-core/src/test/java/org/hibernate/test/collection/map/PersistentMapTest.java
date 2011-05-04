@@ -25,7 +25,7 @@ package org.hibernate.test.collection.map;
 import java.util.HashMap;
 
 import org.hibernate.Session;
-import org.hibernate.collection.PersistentMap;
+import org.hibernate.collection.internal.PersistentMap;
 
 import org.junit.Test;
 

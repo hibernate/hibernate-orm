@@ -26,7 +26,7 @@ package org.hibernate.envers.event;
 import java.io.Serializable;
 import java.util.List;
 
-import org.hibernate.collection.PersistentCollection;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.CollectionEntry;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.configuration.AuditConfiguration;

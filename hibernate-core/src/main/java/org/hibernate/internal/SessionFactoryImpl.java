@@ -63,6 +63,7 @@ import org.hibernate.SessionBuilder;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.StatelessSession;
+import org.hibernate.StatelessSessionBuilder;
 import org.hibernate.TypeHelper;
 import org.hibernate.cache.CacheKey;
 import org.hibernate.cache.CollectionRegion;
@@ -524,12 +525,17 @@ public final class SessionFactoryImpl
 		return new SessionBuilderImpl( this );
 	}
 
+	@Override
+	public StatelessSessionBuilder withStatelessOptions() {
+		return new StatelessSessionBuilderImpl( this );
+	}
+
 	public StatelessSession openStatelessSession() {
-		return new StatelessSessionImpl( null, null, this );
+		return withStatelessOptions().openStatelessSession();
 	}
 
 	public StatelessSession openStatelessSession(Connection connection) {
-		return new StatelessSessionImpl( connection, null, this );
+		return withStatelessOptions().connection( connection ).openStatelessSession();
 	}
 
 	@Override
@@ -1383,6 +1389,33 @@ public final class SessionFactoryImpl
 
 		@Override
 		public SessionBuilder tenantIdentifier(String tenantIdentifier) {
+			this.tenantIdentifier = tenantIdentifier;
+			return this;
+		}
+	}
+
+	public static class StatelessSessionBuilderImpl implements StatelessSessionBuilder {
+		private final SessionFactoryImpl sessionFactory;
+		private Connection connection;
+		private String tenantIdentifier;
+
+		public StatelessSessionBuilderImpl(SessionFactoryImpl sessionFactory) {
+			this.sessionFactory = sessionFactory;
+		}
+
+		@Override
+		public StatelessSession openStatelessSession() {
+			return new StatelessSessionImpl( connection, tenantIdentifier, sessionFactory );
+		}
+
+		@Override
+		public StatelessSessionBuilder connection(Connection connection) {
+			this.connection = connection;
+			return this;
+		}
+
+		@Override
+		public StatelessSessionBuilder tenantIdentifier(String tenantIdentifier) {
 			this.tenantIdentifier = tenantIdentifier;
 			return this;
 		}

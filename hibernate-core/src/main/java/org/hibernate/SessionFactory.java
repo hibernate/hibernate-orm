@@ -87,6 +87,13 @@ public interface SessionFactory extends Referenceable, Serializable {
 	public Session getCurrentSession() throws HibernateException;
 
 	/**
+	 * Obtain a {@link StatelessSession} builder.
+	 *
+	 * @return The stateless session builder
+	 */
+	public StatelessSessionBuilder withStatelessOptions();
+
+	/**
 	 * Open a new stateless session.
 	 *
 	 * @return The created stateless session.

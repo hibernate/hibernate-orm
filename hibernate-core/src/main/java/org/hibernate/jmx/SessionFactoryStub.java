@@ -38,6 +38,7 @@ import org.jboss.logging.Logger;
 import org.hibernate.AssertionFailure;
 import org.hibernate.Cache;
 import org.hibernate.HibernateException;
+import org.hibernate.StatelessSessionBuilder;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.Session;
 import org.hibernate.SessionBuilder;
@@ -202,6 +203,11 @@ public class SessionFactoryStub implements SessionFactory {
 
 	public Statistics getStatistics() {
 		return getImpl().getStatistics();
+	}
+
+	@Override
+	public StatelessSessionBuilder withStatelessOptions() {
+		return getImpl().withStatelessOptions();
 	}
 
 	public StatelessSession openStatelessSession() {

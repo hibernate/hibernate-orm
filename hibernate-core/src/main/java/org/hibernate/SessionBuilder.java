@@ -118,6 +118,8 @@ public interface SessionBuilder {
 	 * Define the tenant identifier to be associated with the opened session.
 	 *
 	 * @param tenantIdentifier The tenant identifier.
+	 *
+	 * @return {@code this}, for method chaining
 	 */
 	public SessionBuilder tenantIdentifier(String tenantIdentifier);
 }

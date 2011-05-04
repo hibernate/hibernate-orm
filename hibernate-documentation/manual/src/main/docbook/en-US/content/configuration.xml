@@ -1,3 +1,4 @@
+
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   ~ Hibernate, Relational Persistence for Idiomatic Java
@@ -899,7 +900,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect</programlisting>
           </row>
 
           <row>
-            <entry><literal>hibernate.hbm2ddl.import_file</literal></entry>
+            <entry><literal>hibernate.hbm2ddl.import_files</literal></entry>
 
             <entry><para>Comma-separated names of the optional files
             containing SQL DML statements executed during the

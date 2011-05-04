@@ -5,6 +5,29 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 3.6.4 (2011.05.04)
+-------------------------------------------
+http://opensource.atlassian.com/projects/hibernate/browse/HHH/fixforversion/11220
+
+** Bug
+    * [HHH-2049] - LEFT OUTER JOIN subcriteria filters children
+    * [HHH-4073] - discriminator formula creates problem in hibernate envers
+    * [HHH-4787] - AuditProperty.isNull() doesn't generate "tab.col is null" SQL clause as expected
+    * [HHH-5276] - Table REVINFO created in the default schema even if the property is otherwise set
+    * [HHH-5887] - Document typo hibernate.hbm2ddl.import_files
+    * [HHH-6069] - Escape entity fields name when required
+    * [HHH-6095] - Improve the way AbstractEntityManagerImpl.flush checks for an active transaction, should apply to other AbstractEntityManagerImpl methods that also check for an active tx
+    * [HHH-6099] - Documentation poms have wrong parent declaration
+    * [HHH-6120] - Configuration addCacheableFile doesn't close input and output streams
+    * [HHH-6197] - Blank line at top of configuration.xml for en_US manual causes breaks documentation build
+
+** Improvement
+    * [HHH-6096] - H2Dialect should use CACHED option for temporary table creation
+
+** New Feature
+    * [HHH-6170] - Offer ability to customize the default TransactionFactory and TransactionManagerLookup implementation used if none is specifically specified
+
+
 Changes in version 3.6.3 (2011.04.06)
 -------------------------------------------
 http://opensource.atlassian.com/projects/hibernate/browse/HHH/fixforversion/11211

@@ -278,5 +278,8 @@ public class CriteriaJoinWalker extends AbstractEntityJoinWalker {
 	protected String getWithClause(PropertyPath path) {
 		return translator.getWithClause( path.getFullPath() );
 	}
-	
+
+	protected boolean hasRestriction(PropertyPath path)	{
+		return translator.hasRestriction( path.getFullPath() );
+	}
 }

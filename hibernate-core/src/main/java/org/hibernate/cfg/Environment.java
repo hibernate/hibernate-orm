@@ -76,7 +76,7 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
  * </tr>
  * <tr>
  *   <td><tt>hibernate.cache.provider_class</tt></td>
- *   <td>classname of <tt>org.hibernate.cache.CacheProvider</tt>
+ *   <td>classname of <tt>org.hibernate.cache.spi.CacheProvider</tt>
  *   subclass (if not specified EHCache is used)</td>
  * </tr>
  * <tr>

@@ -28,8 +28,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.hibernate.cache.CacheKey;
-import org.hibernate.cache.Region;
+import org.hibernate.cache.spi.CacheKey;
+import org.hibernate.cache.spi.Region;
 import org.hibernate.stat.SecondLevelCacheStatistics;
 
 /**

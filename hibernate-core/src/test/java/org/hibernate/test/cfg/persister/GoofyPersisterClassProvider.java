@@ -31,9 +31,9 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
-import org.hibernate.cache.access.CollectionRegionAccessStrategy;
-import org.hibernate.cache.access.EntityRegionAccessStrategy;
-import org.hibernate.cache.entry.CacheEntryStructure;
+import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
+import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
+import org.hibernate.cache.spi.entry.CacheEntryStructure;
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.engine.CascadeStyle;
 import org.hibernate.engine.SessionFactoryImplementor;
@@ -69,7 +69,7 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 	public static class NoopEntityPersister implements EntityPersister {
 
 		public NoopEntityPersister(org.hibernate.mapping.PersistentClass persistentClass,
-								   org.hibernate.cache.access.EntityRegionAccessStrategy strategy,
+								   org.hibernate.cache.spi.access.EntityRegionAccessStrategy strategy,
 								   org.hibernate.engine.SessionFactoryImplementor sf,
 								   org.hibernate.engine.Mapping mapping) {
 			throw new GoofyException(NoopEntityPersister.class);
@@ -471,7 +471,7 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 	public static class NoopCollectionPersister implements CollectionPersister {
 
 		public NoopCollectionPersister(org.hibernate.mapping.Collection collection,
-									   org.hibernate.cache.access.CollectionRegionAccessStrategy strategy,
+									   org.hibernate.cache.spi.access.CollectionRegionAccessStrategy strategy,
 									   org.hibernate.cfg.Configuration configuration,
 									   org.hibernate.engine.SessionFactoryImplementor sf) {
 			throw new GoofyException(NoopCollectionPersister.class);

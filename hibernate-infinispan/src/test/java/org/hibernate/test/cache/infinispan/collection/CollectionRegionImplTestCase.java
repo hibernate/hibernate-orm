@@ -23,13 +23,13 @@
  */
 package org.hibernate.test.cache.infinispan.collection;
 import java.util.Properties;
-import org.hibernate.cache.CacheDataDescription;
+import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.CollectionRegion;
-import org.hibernate.cache.Region;
-import org.hibernate.cache.RegionFactory;
-import org.hibernate.cache.access.AccessType;
-import org.hibernate.cache.access.CollectionRegionAccessStrategy;
+import org.hibernate.cache.spi.CollectionRegion;
+import org.hibernate.cache.spi.Region;
+import org.hibernate.cache.spi.RegionFactory;
+import org.hibernate.cache.spi.access.AccessType;
+import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.infinispan.util.CacheAdapter;
 import org.hibernate.cache.infinispan.util.CacheAdapterImpl;

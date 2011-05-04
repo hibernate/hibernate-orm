@@ -816,8 +816,8 @@ public class EntityBinder {
 	}
 
 	public static String getCacheConcurrencyStrategy(CacheConcurrencyStrategy strategy) {
-		org.hibernate.cache.access.AccessType accessType = strategy.toAccessType();
-		return accessType == null ? null : accessType.getName();
+		org.hibernate.cache.spi.access.AccessType accessType = strategy.toAccessType();
+		return accessType == null ? null : accessType.getExternalName();
 	}
 
 	public void addFilter(String name, String condition) {

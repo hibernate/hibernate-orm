@@ -27,8 +27,8 @@ import java.io.Serializable;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
-import org.hibernate.cache.CacheKey;
-import org.hibernate.cache.entry.CacheEntry;
+import org.hibernate.cache.spi.CacheKey;
+import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.engine.EntityEntry;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;

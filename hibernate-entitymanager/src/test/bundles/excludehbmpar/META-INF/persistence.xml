@@ -13,7 +13,7 @@
             <property name="hibernate.connection.password" value="@jdbc.pass@"/>
             <property name="hibernate.connection.url" value="@jdbc.url@"/>
             <property name="hibernate.hbm2ddl.auto" value="create-drop"/>
-            <property name="hibernate.cache.provider_class" value="org.hibernate.cache.HashtableCacheProvider"/>
+            <property name="hibernate.cache.provider_class" value="org.hibernate.cache.internal.HashtableCacheProvider"/>
             <property name="hibernate.archive.autodetection" value="class"/>
         </properties>
     </persistence-unit>

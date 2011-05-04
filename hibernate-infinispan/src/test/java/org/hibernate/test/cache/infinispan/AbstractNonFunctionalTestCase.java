@@ -28,7 +28,7 @@ import java.util.Set;
 import org.infinispan.Cache;
 import org.jboss.logging.Logger;
 
-import org.hibernate.cache.RegionFactory;
+import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.infinispan.util.CacheHelper;
 
 import org.junit.After;

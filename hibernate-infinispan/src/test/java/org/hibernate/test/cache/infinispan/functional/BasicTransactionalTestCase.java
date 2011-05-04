@@ -31,14 +31,12 @@ import org.infinispan.util.logging.LogFactory;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.cache.entry.CacheEntry;
+import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.stat.SecondLevelCacheStatistics;
 import org.hibernate.stat.Statistics;
 
 import org.junit.Test;
-
-import org.hibernate.testing.FailureExpected;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;

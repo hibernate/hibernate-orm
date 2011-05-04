@@ -1,12 +1,12 @@
 package org.hibernate.cache.infinispan.impl;
 import javax.transaction.TransactionManager;
-import org.hibernate.cache.CacheDataDescription;
-import org.hibernate.cache.RegionFactory;
-import org.hibernate.cache.TransactionalDataRegion;
+import org.hibernate.cache.spi.CacheDataDescription;
+import org.hibernate.cache.spi.RegionFactory;
+import org.hibernate.cache.spi.TransactionalDataRegion;
 import org.hibernate.cache.infinispan.util.CacheAdapter;
 
 /**
- * Support for Inifinispan {@link TransactionalDataRegion} implementors.
+ * Support for Inifinispan {@link org.hibernate.cache.spi.TransactionalDataRegion} implementors.
  * 
  * @author Chris Bredesen
  * @author Galder Zamarreño

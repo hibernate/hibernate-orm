@@ -42,7 +42,7 @@ import org.jnp.server.Main;
 import org.jnp.server.SingletonNamingServer;
 
 import org.hibernate.Session;
-import org.hibernate.cache.RegionFactory;
+import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.infinispan.JndiInfinispanRegionFactory;
 import org.hibernate.cfg.Configuration;

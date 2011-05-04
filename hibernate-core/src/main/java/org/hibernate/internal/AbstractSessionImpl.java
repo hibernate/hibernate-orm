@@ -36,7 +36,7 @@ import org.hibernate.SQLQuery;
 import org.hibernate.ScrollableResults;
 import org.hibernate.SessionException;
 import org.hibernate.SharedSessionContract;
-import org.hibernate.cache.CacheKey;
+import org.hibernate.cache.spi.CacheKey;
 import org.hibernate.engine.EntityKey;
 import org.hibernate.engine.NamedQueryDefinition;
 import org.hibernate.engine.NamedSQLQueryDefinition;

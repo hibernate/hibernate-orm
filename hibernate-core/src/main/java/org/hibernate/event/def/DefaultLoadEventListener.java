@@ -29,14 +29,14 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
+import org.hibernate.cache.spi.CacheKey;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.LockMode;
 import org.hibernate.NonUniqueObjectException;
 import org.hibernate.PersistentObjectException;
 import org.hibernate.TypeMismatchException;
-import org.hibernate.cache.CacheKey;
-import org.hibernate.cache.access.SoftLock;
-import org.hibernate.cache.entry.CacheEntry;
+import org.hibernate.cache.spi.access.SoftLock;
+import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.engine.EntityEntry;
 import org.hibernate.engine.EntityKey;
 import org.hibernate.engine.PersistenceContext;

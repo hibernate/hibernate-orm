@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2007, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2007-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
- * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -27,10 +27,9 @@ import java.net.URL;
 import java.util.Properties;
 import net.sf.ehcache.CacheManager;
 
-import org.hibernate.cache.Cache;
+import org.hibernate.cache.spi.Cache;
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.CacheProvider;
-import org.hibernate.cache.Timestamper;
+import org.hibernate.cache.spi.CacheProvider;
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.util.ConfigHelper;
 import org.hibernate.internal.util.StringHelper;
@@ -70,6 +69,7 @@ import org.jboss.logging.Logger;
  * @author Greg Luck
  * @author Emmanuel Bernard
  */
+@Deprecated
 public class EhCacheProvider implements CacheProvider {
 
     private static final EhCacheMessageLogger LOG = Logger.getMessageLogger(EhCacheMessageLogger.class, EhCacheProvider.class.getName());

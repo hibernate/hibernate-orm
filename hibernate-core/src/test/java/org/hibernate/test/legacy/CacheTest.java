@@ -23,12 +23,12 @@
  */
 package org.hibernate.test.legacy;
 
-import org.hibernate.cache.Cache;
-import org.hibernate.cache.CacheConcurrencyStrategy;
-import org.hibernate.cache.CacheProvider;
-import org.hibernate.cache.HashtableCacheProvider;
-import org.hibernate.cache.ReadWriteCache;
-import org.hibernate.cache.access.SoftLock;
+import org.hibernate.cache.spi.Cache;
+import org.hibernate.cache.spi.CacheConcurrencyStrategy;
+import org.hibernate.cache.spi.CacheProvider;
+import org.hibernate.cache.internal.HashtableCacheProvider;
+import org.hibernate.cache.spi.ReadWriteCache;
+import org.hibernate.cache.spi.access.SoftLock;
 
 import org.junit.Test;
 

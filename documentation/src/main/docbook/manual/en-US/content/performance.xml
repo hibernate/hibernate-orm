@@ -712,7 +712,7 @@ Customer customer = (Customer) session.get( Customer.class, customerId );
 
     <para revision="1">You have the option to tell Hibernate which caching
     implementation to use by specifying the name of a class that implements
-    <literal>org.hibernate.cache.CacheProvider</literal> using the property
+    <literal>org.hibernate.cache.spi.CacheProvider</literal> using the property
     <literal>hibernate.cache.provider_class</literal>. Hibernate is bundled
     with a number of built-in integrations with the open-source cache
     providers that are listed in <xref linkend="cacheproviders" />. You can
@@ -752,7 +752,7 @@ Customer customer = (Customer) session.get( Customer.class, customerId );
           <row>
             <entry>Hashtable (not intended for production use)</entry>
 
-            <entry><literal>org.hibernate.cache.HashtableCacheProvider</literal></entry>
+            <entry><literal>org.hibernate.cache.internal.HashtableCacheProvider</literal></entry>
 
             <entry>memory</entry>
 
@@ -1316,12 +1316,12 @@ hibernate.cache.use_structured_entries true</programlisting>
 
       <para>This setting creates two new cache regions: <itemizedlist>
           <listitem>
-            <para><classname>org.hibernate.cache.StandardQueryCache</classname>,
+            <para><classname>org.hibernate.cache.internal.StandardQueryCache</classname>,
             holding the cached query results</para>
           </listitem>
 
           <listitem>
-            <para><classname>org.hibernate.cache.UpdateTimestampsCache</classname>,
+            <para><classname>org.hibernate.cache.spi.UpdateTimestampsCache</classname>,
             holding timestamps of the most recent updates to queryable tables.
             These are used to validate the results as they are served from the
             query cache.</para>

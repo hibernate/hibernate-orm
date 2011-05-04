@@ -29,7 +29,7 @@ import java.util.concurrent.TimeUnit;
 import org.infinispan.transaction.tm.BatchModeTransactionManager;
 import org.jboss.logging.Logger;
 
-import org.hibernate.cache.access.AccessType;
+import org.hibernate.cache.spi.access.AccessType;
 
 import junit.framework.AssertionFailedError;
 

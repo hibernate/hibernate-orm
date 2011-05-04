@@ -32,8 +32,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
-import org.hibernate.cache.access.EntityRegionAccessStrategy;
-import org.hibernate.cache.entry.CacheEntryStructure;
+import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
+import org.hibernate.cache.spi.entry.CacheEntryStructure;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.engine.CascadeStyle;
 import org.hibernate.engine.SessionFactoryImplementor;
@@ -86,7 +86,7 @@ public class PersisterClassProviderTest extends junit.framework.TestCase {
 	public static class GoofyProvider implements EntityPersister {
 
 		public GoofyProvider(org.hibernate.mapping.PersistentClass persistentClass,
-								   org.hibernate.cache.access.EntityRegionAccessStrategy strategy,
+								   org.hibernate.cache.spi.access.EntityRegionAccessStrategy strategy,
 								   org.hibernate.engine.SessionFactoryImplementor sf,
 								   org.hibernate.engine.Mapping mapping) {
 			throw new GoofyException();

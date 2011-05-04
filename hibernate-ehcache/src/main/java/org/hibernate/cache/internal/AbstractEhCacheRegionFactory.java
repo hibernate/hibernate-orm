@@ -20,23 +20,23 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.cache.internal;
+
 import java.util.Properties;
 
-import org.hibernate.cache.CacheDataDescription;
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.CollectionRegion;
-import org.hibernate.cache.EntityRegion;
-import org.hibernate.cache.QueryResultsRegion;
-import org.hibernate.cache.RegionFactory;
-import org.hibernate.cache.TimestampsRegion;
-import org.hibernate.cache.access.AccessType;
+import org.hibernate.cache.spi.CacheDataDescription;
+import org.hibernate.cache.spi.CollectionRegion;
+import org.hibernate.cache.spi.EntityRegion;
+import org.hibernate.cache.spi.QueryResultsRegion;
+import org.hibernate.cache.spi.RegionFactory;
+import org.hibernate.cache.spi.TimestampsRegion;
+import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.Settings;
 
 /**
- * Abstract class that will delegate all calls to org.hibernate.cache.RegionFactory to the instance it wraps.
+ * Abstract class that will delegate all calls to org.hibernate.cache.spi.RegionFactory to the instance it wraps.
  * This abstracts the Singleton CacheManager construct of Ehcache
  *
  * @author Alex Snaps

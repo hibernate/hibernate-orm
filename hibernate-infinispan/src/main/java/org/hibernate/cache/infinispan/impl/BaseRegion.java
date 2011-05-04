@@ -10,13 +10,14 @@ import javax.transaction.SystemException;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.Region;
-import org.hibernate.cache.RegionFactory;
+import org.hibernate.cache.spi.Region;
+import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.infinispan.util.AddressAdapter;
 import org.hibernate.cache.infinispan.util.AddressAdapterImpl;
 import org.hibernate.cache.infinispan.util.CacheAdapter;
 import org.hibernate.cache.infinispan.util.CacheHelper;
 import org.hibernate.cache.infinispan.util.FlagAdapter;
+
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryInvalidated;
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryModified;
 import org.infinispan.notifications.cachelistener.event.CacheEntryInvalidatedEvent;

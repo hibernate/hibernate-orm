@@ -30,7 +30,7 @@ import java.util.Set;
 import org.infinispan.Cache;
 import org.jboss.logging.Logger;
 
-import org.hibernate.cache.RegionFactory;
+import org.hibernate.cache.spi.RegionFactory;
 
 /**
  * Support class for tracking and cleaning up objects used in tests.

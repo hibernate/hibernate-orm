@@ -29,9 +29,8 @@ import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
 import org.jboss.logging.Logger;
 
-import org.hibernate.cache.Cache;
+import org.hibernate.cache.spi.Cache;
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.Timestamper;
 
 /**
  * EHCache plugin for Hibernate
@@ -45,6 +44,7 @@ import org.hibernate.cache.Timestamper;
  * @author Greg Luck
  * @author Emmanuel Bernard
  */
+@Deprecated
 public class EhCache implements Cache {
 
     private static final EhCacheMessageLogger LOG = Logger.getMessageLogger(EhCacheMessageLogger.class, EhCache.class.getName());

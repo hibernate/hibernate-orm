@@ -8,7 +8,7 @@
 		<properties>
             <property name="hibernate.dialect" value="@db.dialect@"/>
             <property name="hibernate.hbm2ddl.auto" value="create-drop"/>
-            <property name="hibernate.cache.provider_class" value="org.hibernate.cache.HashtableCacheProvider"/>
+            <property name="hibernate.cache.provider_class" value="org.hibernate.cache.internal.HashtableCacheProvider"/>
         </properties>
     </persistence-unit>
 </persistence>

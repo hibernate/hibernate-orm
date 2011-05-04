@@ -283,7 +283,7 @@ http://opensource.atlassian.com/projects/hibernate/browse/HHH/fixforversion/1114
     * [HHH-5512] - JndiInfinispanRegionFactory shouldn't try to stop CacheManager
     * [HHH-5517] - Switch uuid generation in SessionFactory to org.hibernate.id.UUIDGenerator instead
     * [HHH-5519] - VersionedItem should not extend Item, otherwise query cache results are confusing
-    * [HHH-5520] - Per org.hibernate.cache.RegionFactory javadocs, implementors should be allowed to use no-arg constructor
+    * [HHH-5520] - Per org.hibernate.cache.spi.RegionFactory javadocs, implementors should be allowed to use no-arg constructor
 
 ** Deprecation
     * [HHH-5489] - Deprecate jbosscache as a second level cache provider, in favor of infinispan

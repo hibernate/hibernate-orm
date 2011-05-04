@@ -3,12 +3,13 @@ import java.util.Properties;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.QueryResultsRegion;
-import org.hibernate.cache.RegionFactory;
+import org.hibernate.cache.spi.QueryResultsRegion;
+import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.infinispan.impl.BaseTransactionalDataRegion;
 import org.hibernate.cache.infinispan.util.CacheAdapter;
 import org.hibernate.cache.infinispan.util.CacheHelper;
 import org.hibernate.cache.infinispan.util.FlagAdapter;
+
 import org.infinispan.notifications.Listener;
 
 /**

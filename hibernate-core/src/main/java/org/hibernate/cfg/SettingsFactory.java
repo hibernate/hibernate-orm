@@ -33,10 +33,10 @@ import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MultiTenancyStrategy;
-import org.hibernate.cache.QueryCacheFactory;
-import org.hibernate.cache.RegionFactory;
-import org.hibernate.cache.impl.NoCachingRegionFactory;
-import org.hibernate.cache.impl.bridge.RegionFactoryCacheProviderBridge;
+import org.hibernate.cache.internal.NoCachingRegionFactory;
+import org.hibernate.cache.spi.QueryCacheFactory;
+import org.hibernate.cache.spi.RegionFactory;
+import org.hibernate.cache.internal.bridge.RegionFactoryCacheProviderBridge;
 import org.hibernate.engine.jdbc.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.transaction.spi.TransactionFactory;
@@ -305,7 +305,7 @@ public class SettingsFactory implements Serializable {
 
 	protected QueryCacheFactory createQueryCacheFactory(Properties properties, ServiceRegistry serviceRegistry) {
 		String queryCacheFactoryClassName = ConfigurationHelper.getString(
-				Environment.QUERY_CACHE_FACTORY, properties, "org.hibernate.cache.StandardQueryCacheFactory"
+				Environment.QUERY_CACHE_FACTORY, properties, "org.hibernate.cache.internal.StandardQueryCacheFactory"
 		);
         LOG.debugf( "Query cache factory: %s", queryCacheFactoryClassName );
 		try {

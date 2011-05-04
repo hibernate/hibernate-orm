@@ -43,7 +43,7 @@ import org.infinispan.util.logging.LogFactory;
 
 import org.hibernate.FlushMode;
 import org.hibernate.Session;
-import org.hibernate.cache.RegionFactory;
+import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;

@@ -30,10 +30,9 @@ import net.sf.ehcache.util.ClassLoaderUtil;
 import org.jboss.logging.Logger;
 import org.jboss.logging.Logger.Level;
 
-import org.hibernate.cache.Cache;
+import org.hibernate.cache.spi.Cache;
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.CacheProvider;
-import org.hibernate.cache.Timestamper;
+import org.hibernate.cache.spi.CacheProvider;
 
 /**
  * Singleton cache Provider plugin for Hibernate 3.2 and ehcache-1.2. New in this provider is support for
@@ -56,6 +55,7 @@ import org.hibernate.cache.Timestamper;
  * @author Emmanuel Bernard
  * @version $Id: SingletonEhCacheProvider.java 744 2008-08-16 20:10:49Z gregluck $
  */
+@Deprecated
 public final class SingletonEhCacheProvider implements CacheProvider {
 
 	/**

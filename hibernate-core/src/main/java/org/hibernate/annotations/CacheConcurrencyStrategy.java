@@ -22,7 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.annotations;
-import org.hibernate.cache.access.AccessType;
+
+import org.hibernate.cache.spi.access.AccessType;
 
 /**
  * Cache concurrency strategy
@@ -43,35 +44,36 @@ public enum CacheConcurrencyStrategy {
 	}
 
 	public static CacheConcurrencyStrategy fromAccessType(AccessType accessType) {
-		final String name = accessType == null ? null : accessType.getName();
-		if ( AccessType.READ_ONLY.getName().equals( name ) ) {
-			return READ_ONLY;
-		}
-		else if ( AccessType.READ_WRITE.getName().equals( name ) ) {
-			return READ_WRITE;
-		}
-		else if ( AccessType.NONSTRICT_READ_WRITE.getName().equals( name ) ) {
-			return NONSTRICT_READ_WRITE;
-		}
-		else if ( AccessType.TRANSACTIONAL.getName().equals( name ) ) {
-			return TRANSACTIONAL;
-		}
-		else {
-			return NONE;
+		switch ( accessType ) {
+			case READ_ONLY: {
+				return READ_ONLY;
+			}
+			case READ_WRITE: {
+				return READ_WRITE;
+			}
+			case NONSTRICT_READ_WRITE: {
+				return NONSTRICT_READ_WRITE;
+			}
+			case TRANSACTIONAL: {
+				return TRANSACTIONAL;
+			}
+			default: {
+				return NONE;
+			}
 		}
 	}
 
 	public static CacheConcurrencyStrategy parse(String name) {
-		if ( READ_ONLY.accessType.getName().equalsIgnoreCase( name ) ) {
+		if ( READ_ONLY.accessType.getExternalName().equalsIgnoreCase( name ) ) {
 			return READ_ONLY;
 		}
-		else if ( READ_WRITE.accessType.getName().equalsIgnoreCase( name ) ) {
+		else if ( READ_WRITE.accessType.getExternalName().equalsIgnoreCase( name ) ) {
 			return READ_WRITE;
 		}
-		else if ( NONSTRICT_READ_WRITE.accessType.getName().equalsIgnoreCase( name ) ) {
+		else if ( NONSTRICT_READ_WRITE.accessType.getExternalName().equalsIgnoreCase( name ) ) {
 			return NONSTRICT_READ_WRITE;
 		}
-		else if ( TRANSACTIONAL.accessType.getName().equalsIgnoreCase( name ) ) {
+		else if ( TRANSACTIONAL.accessType.getExternalName().equalsIgnoreCase( name ) ) {
 			return TRANSACTIONAL;
 		}
 		else if ( "none".equalsIgnoreCase( name ) ) {

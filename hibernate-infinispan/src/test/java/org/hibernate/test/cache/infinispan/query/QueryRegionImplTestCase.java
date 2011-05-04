@@ -34,16 +34,15 @@ import org.infinispan.transaction.tm.BatchModeTransactionManager;
 import org.infinispan.util.concurrent.IsolationLevel;
 import org.jboss.logging.Logger;
 
-import org.hibernate.cache.CacheDataDescription;
-import org.hibernate.cache.QueryResultsRegion;
-import org.hibernate.cache.Region;
-import org.hibernate.cache.StandardQueryCache;
+import org.hibernate.cache.spi.CacheDataDescription;
+import org.hibernate.cache.spi.QueryResultsRegion;
+import org.hibernate.cache.spi.Region;
+import org.hibernate.cache.internal.StandardQueryCache;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.infinispan.util.CacheAdapter;
 import org.hibernate.cache.infinispan.util.CacheAdapterImpl;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.service.ServiceRegistryBuilder;
-import org.hibernate.service.internal.BasicServiceRegistryImpl;
 
 import junit.framework.AssertionFailedError;
 

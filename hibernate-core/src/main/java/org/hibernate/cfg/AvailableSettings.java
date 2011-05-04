@@ -296,7 +296,7 @@ public interface AvailableSettings {
 	public static final String CACHE_PROVIDER = "hibernate.cache.provider_class";
 
 	/**
-	 * The {@link org.hibernate.cache.RegionFactory} implementation class
+	 * The {@link org.hibernate.cache.spi.RegionFactory} implementation class
 	 */
 	public static final String CACHE_REGION_FACTORY = "hibernate.cache.region.factory_class";
 

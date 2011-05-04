@@ -29,12 +29,12 @@
         <itemizedlist>
           <listitem>
             <para>
-              <code>org.hibernate.cache.StandardQueryCache</code> holds the cached query results.
+              <code>org.hibernate.cache.internal.StandardQueryCache</code> holds the cached query results.
             </para>
           </listitem>
           <listitem>
             <para>
-              <code>org.hibernate.cache.UpdateTimestampsCache</code> holds timestamps of the most recent updates to
+              <code>org.hibernate.cache.spi.UpdateTimestampsCache</code> holds timestamps of the most recent updates to
               queryable tables. These timestamps validate results served from the query cache.
             </para>
           </listitem>

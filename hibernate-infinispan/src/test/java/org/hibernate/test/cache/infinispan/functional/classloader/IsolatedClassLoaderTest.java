@@ -31,7 +31,7 @@ import org.infinispan.manager.EmbeddedCacheManager;
 import org.jboss.logging.Logger;
 
 import org.hibernate.SessionFactory;
-import org.hibernate.cache.StandardQueryCache;
+import org.hibernate.cache.internal.StandardQueryCache;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cfg.Configuration;
 

@@ -22,7 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.cache.infinispan.collection;
-import org.hibernate.cache.access.AccessType;
+import org.hibernate.cache.spi.access.AccessType;
 
 /**
  * Base class for tests of TRANSACTIONAL access.

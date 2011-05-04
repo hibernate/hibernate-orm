@@ -34,10 +34,10 @@ import java.util.concurrent.TimeUnit;
 import org.infinispan.transaction.tm.BatchModeTransactionManager;
 import org.jboss.logging.Logger;
 
-import org.hibernate.cache.CacheDataDescription;
-import org.hibernate.cache.access.AccessType;
-import org.hibernate.cache.access.CollectionRegionAccessStrategy;
-import org.hibernate.cache.impl.CacheDataDescriptionImpl;
+import org.hibernate.cache.internal.CacheDataDescriptionImpl;
+import org.hibernate.cache.spi.CacheDataDescription;
+import org.hibernate.cache.spi.access.AccessType;
+import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.infinispan.access.PutFromLoadValidator;
 import org.hibernate.cache.infinispan.access.TransactionalAccessDelegate;

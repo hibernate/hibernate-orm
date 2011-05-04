@@ -26,7 +26,7 @@ package org.hibernate.test.cache.infinispan;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.hibernate.cache.CacheDataDescription;
+import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.infinispan.collection.CollectionRegionImpl;
 import org.hibernate.cache.infinispan.entity.EntityRegionImpl;

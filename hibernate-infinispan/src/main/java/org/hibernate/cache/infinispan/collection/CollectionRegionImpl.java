@@ -1,11 +1,11 @@
 package org.hibernate.cache.infinispan.collection;
 import javax.transaction.TransactionManager;
-import org.hibernate.cache.CacheDataDescription;
+import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.CollectionRegion;
-import org.hibernate.cache.RegionFactory;
-import org.hibernate.cache.access.AccessType;
-import org.hibernate.cache.access.CollectionRegionAccessStrategy;
+import org.hibernate.cache.spi.CollectionRegion;
+import org.hibernate.cache.spi.RegionFactory;
+import org.hibernate.cache.spi.access.AccessType;
+import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.infinispan.access.PutFromLoadValidator;
 import org.hibernate.cache.infinispan.impl.BaseTransactionalDataRegion;
 import org.hibernate.cache.infinispan.util.CacheAdapter;
@@ -30,7 +30,7 @@ public class CollectionRegionImpl extends BaseTransactionalDataRegion implements
       } else if (AccessType.TRANSACTIONAL.equals(accessType)) {
          return new TransactionalAccess(this);
       }
-      throw new CacheException("Unsupported access type [" + accessType.getName() + "]");
+      throw new CacheException("Unsupported access type [" + accessType.getExternalName() + "]");
    }
 
    public PutFromLoadValidator getPutFromLoadValidator() {

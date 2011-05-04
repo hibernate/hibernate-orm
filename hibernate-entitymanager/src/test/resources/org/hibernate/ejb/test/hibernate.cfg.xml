@@ -16,7 +16,7 @@
         <property name="hibernate.max_fetch_depth">3</property>
         <property name="hibernate.hbm2ddl.auto">create-drop</property>
         <property name="hibernate.generate_statistics">true</property>
-        <property name="hibernate.cache.provider_class">org.hibernate.cache.HashtableCacheProvider</property>
+        <property name="hibernate.cache.provider_class">org.hibernate.cache.internal.HashtableCacheProvider</property>
         <mapping class="org.hibernate.ejb.test.Item"/>
         <mapping class="org.hibernate.ejb.test.Cat"/>
 		<mapping class="org.hibernate.ejb.test.Kitten"/>

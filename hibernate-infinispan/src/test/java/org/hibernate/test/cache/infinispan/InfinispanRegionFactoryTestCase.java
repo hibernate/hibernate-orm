@@ -287,7 +287,7 @@ public class InfinispanRegionFactoryTestCase extends TestCase {
    }
 
    public void testBuildDefaultTimestampsRegion() {
-      final String timestamps = "org.hibernate.cache.UpdateTimestampsCache";
+      final String timestamps = "org.hibernate.cache.spi.UpdateTimestampsCache";
       Properties p = new Properties();
       InfinispanRegionFactory factory = new InfinispanRegionFactory();
       factory.start(null, p);
@@ -311,7 +311,7 @@ public class InfinispanRegionFactoryTestCase extends TestCase {
    }
    
    public void testBuildDiffCacheNameTimestampsRegion() {
-      final String timestamps = "org.hibernate.cache.UpdateTimestampsCache";
+      final String timestamps = "org.hibernate.cache.spi.UpdateTimestampsCache";
       Properties p = new Properties();
       p.setProperty("hibernate.cache.infinispan.timestamps.cfg", "unrecommended-timestamps");
       InfinispanRegionFactory factory = new InfinispanRegionFactory();
@@ -338,7 +338,7 @@ public class InfinispanRegionFactoryTestCase extends TestCase {
    }
 
    public void testBuildTimestamRegionWithCacheNameOverride() {
-      final String timestamps = "org.hibernate.cache.UpdateTimestampsCache";
+      final String timestamps = "org.hibernate.cache.spi.UpdateTimestampsCache";
       Properties p = new Properties();
       InfinispanRegionFactory factory = new InfinispanRegionFactory();
       p.setProperty("hibernate.cache.infinispan.timestamps.cfg", "mytimestamps-cache");
@@ -354,7 +354,7 @@ public class InfinispanRegionFactoryTestCase extends TestCase {
    }
    
    public void testBuildTimestamRegionWithFifoEvictionOverride() {
-      final String timestamps = "org.hibernate.cache.UpdateTimestampsCache";
+      final String timestamps = "org.hibernate.cache.spi.UpdateTimestampsCache";
       Properties p = new Properties();
       InfinispanRegionFactory factory = new InfinispanRegionFactory();
       p.setProperty("hibernate.cache.infinispan.timestamps.cfg", "mytimestamps-cache");
@@ -375,7 +375,7 @@ public class InfinispanRegionFactoryTestCase extends TestCase {
    }
 
    public void testBuildTimestamRegionWithNoneEvictionOverride() {
-      final String timestamps = "org.hibernate.cache.UpdateTimestampsCache";
+      final String timestamps = "org.hibernate.cache.spi.UpdateTimestampsCache";
       Properties p = new Properties();
       InfinispanRegionFactory factory = new InfinispanRegionFactory();
       p.setProperty("hibernate.cache.infinispan.timestamps.cfg", "timestamps-none-eviction");
@@ -394,7 +394,7 @@ public class InfinispanRegionFactoryTestCase extends TestCase {
    }
 
    public void testBuildQueryRegion() {
-      final String query = "org.hibernate.cache.StandardQueryCache";
+      final String query = "org.hibernate.cache.internal.StandardQueryCache";
       Properties p = new Properties();
       InfinispanRegionFactory factory = new InfinispanRegionFactory();
       factory.start(null, p);
@@ -462,13 +462,13 @@ public class InfinispanRegionFactoryTestCase extends TestCase {
          assertTrue(factory.getTypeOverrides().get("com.acme.Person").isExposeStatistics());
          assertTrue(cache.getConfiguration().isExposeJmxStatistics());
 
-         final String query = "org.hibernate.cache.StandardQueryCache";
+         final String query = "org.hibernate.cache.internal.StandardQueryCache";
          QueryResultsRegionImpl queryRegion = (QueryResultsRegionImpl) factory.buildQueryResultsRegion(query, p);
          cache = queryRegion.getCacheAdapter();
          assertTrue(factory.getTypeOverrides().get("query").isExposeStatistics());
          assertTrue(cache.getConfiguration().isExposeJmxStatistics());
 
-         final String timestamps = "org.hibernate.cache.UpdateTimestampsCache";
+         final String timestamps = "org.hibernate.cache.spi.UpdateTimestampsCache";
          Configuration config = new Configuration();
          config.setFetchInMemoryState(false);
          manager.defineConfiguration("timestamps", config);
@@ -510,13 +510,13 @@ public class InfinispanRegionFactoryTestCase extends TestCase {
          assertFalse(factory.getTypeOverrides().get("com.acme.Person").isExposeStatistics());
          assertFalse(cache.getConfiguration().isExposeJmxStatistics());
 
-         final String query = "org.hibernate.cache.StandardQueryCache";
+         final String query = "org.hibernate.cache.internal.StandardQueryCache";
          QueryResultsRegionImpl queryRegion = (QueryResultsRegionImpl) factory.buildQueryResultsRegion(query, p);
          cache = queryRegion.getCacheAdapter();
          assertFalse(factory.getTypeOverrides().get("query").isExposeStatistics());
          assertFalse(cache.getConfiguration().isExposeJmxStatistics());
 
-         final String timestamps = "org.hibernate.cache.UpdateTimestampsCache";
+         final String timestamps = "org.hibernate.cache.spi.UpdateTimestampsCache";
          Configuration config = new Configuration();
          config.setFetchInMemoryState(false);
          manager.defineConfiguration("timestamps", config);

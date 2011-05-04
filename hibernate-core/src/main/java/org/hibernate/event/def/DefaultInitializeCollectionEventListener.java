@@ -28,9 +28,9 @@ import java.io.Serializable;
 import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
+import org.hibernate.cache.spi.CacheKey;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.cache.CacheKey;
-import org.hibernate.cache.entry.CollectionCacheEntry;
+import org.hibernate.cache.spi.entry.CollectionCacheEntry;
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.engine.CollectionEntry;
 import org.hibernate.engine.PersistenceContext;

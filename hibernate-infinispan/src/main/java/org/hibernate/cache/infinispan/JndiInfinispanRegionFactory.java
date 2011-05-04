@@ -25,7 +25,6 @@ import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.RegionFactory;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.internal.util.jndi.JndiHelper;
 import org.infinispan.manager.EmbeddedCacheManager;
@@ -33,7 +32,7 @@ import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 
 /**
- * A {@link RegionFactory} for <a href="http://www.jboss.org/infinispan">Infinispan</a>-backed cache
+ * A {@link org.hibernate.cache.spi.RegionFactory} for <a href="http://www.jboss.org/infinispan">Infinispan</a>-backed cache
  * regions that finds its cache manager in JNDI rather than creating one itself.
  * 
  * @author Galder Zamarreño

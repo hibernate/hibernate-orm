@@ -26,8 +26,8 @@ package org.hibernate.ejb.test.cacheable.annotation;
 import javax.persistence.SharedCacheMode;
 import java.util.Properties;
 
-import org.hibernate.cache.access.AccessType;
-import org.hibernate.cache.impl.NoCachingRegionFactory;
+import org.hibernate.cache.internal.NoCachingRegionFactory;
+import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.Environment;
 import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.Ejb3Configuration;

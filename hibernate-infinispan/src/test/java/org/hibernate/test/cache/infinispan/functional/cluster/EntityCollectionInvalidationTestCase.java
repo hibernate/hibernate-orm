@@ -39,7 +39,7 @@ import org.jboss.util.collection.ConcurrentSet;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.cache.CacheKey;
+import org.hibernate.cache.spi.CacheKey;
 import org.hibernate.cache.infinispan.util.CacheHelper;
 
 import org.junit.Test;

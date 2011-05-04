@@ -8,14 +8,14 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import javax.transaction.TransactionManager;
-import org.hibernate.cache.CacheDataDescription;
+import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.CollectionRegion;
-import org.hibernate.cache.EntityRegion;
-import org.hibernate.cache.QueryResultsRegion;
-import org.hibernate.cache.RegionFactory;
-import org.hibernate.cache.TimestampsRegion;
-import org.hibernate.cache.access.AccessType;
+import org.hibernate.cache.spi.CollectionRegion;
+import org.hibernate.cache.spi.EntityRegion;
+import org.hibernate.cache.spi.QueryResultsRegion;
+import org.hibernate.cache.spi.RegionFactory;
+import org.hibernate.cache.spi.TimestampsRegion;
+import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.infinispan.collection.CollectionRegionImpl;
 import org.hibernate.cache.infinispan.entity.EntityRegionImpl;
 import org.hibernate.cache.infinispan.impl.ClassLoaderAwareCache;
@@ -184,7 +184,7 @@ public class InfinispanRegionFactory implements RegionFactory {
       if (log.isDebugEnabled()) log.debug("Building query results cache region [" + regionName + "]");
       String cacheName = typeOverrides.get(QUERY_KEY).getCacheName();
       // If region name is not default one, lookup a cache for that region name
-      if (!regionName.equals("org.hibernate.cache.StandardQueryCache"))
+      if (!regionName.equals("org.hibernate.cache.internal.StandardQueryCache"))
          cacheName = regionName;
 
       Cache cache = getCache(cacheName, QUERY_KEY, properties);

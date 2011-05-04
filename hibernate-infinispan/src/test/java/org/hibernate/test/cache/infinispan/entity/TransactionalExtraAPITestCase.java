@@ -21,9 +21,9 @@
  */
 package org.hibernate.test.cache.infinispan.entity;
 
-import org.hibernate.cache.access.AccessType;
-import org.hibernate.cache.access.EntityRegionAccessStrategy;
-import org.hibernate.cache.access.SoftLock;
+import org.hibernate.cache.spi.access.AccessType;
+import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
+import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cfg.Configuration;
 

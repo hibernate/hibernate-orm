@@ -59,8 +59,12 @@ import org.hibernate.stat.Statistics;
  * have classpath to the persistent classes, then a stub will be registered
  * with JNDI and the actual <tt>SessionFactoryImpl</tt> built upon first
  * access.
+ *
  * @author Gavin King
+ *
+ * @deprecated See <a href="http://opensource.atlassian.com/projects/hibernate/browse/HHH-6190">HHH-6190</a> for details
  */
+@Deprecated
 public class SessionFactoryStub implements SessionFactory {
 	private static final IdentifierGenerator UUID_GENERATOR = UUIDGenerator.buildSessionFactoryUniqueIdentifierGenerator();
 

@@ -73,11 +73,11 @@ public interface SessionFactory extends Referenceable, Serializable {
 
 	/**
 	 * Obtains the current session.  The definition of what exactly "current"
-	 * means controlled by the {@link org.hibernate.context.CurrentSessionContext} impl configured
+	 * means controlled by the {@link org.hibernate.context.spi.CurrentSessionContext} impl configured
 	 * for use.
 	 * <p/>
-	 * Note that for backwards compatibility, if a {@link org.hibernate.context.CurrentSessionContext}
-	 * is not configured but JTA is configured this will default to the {@link org.hibernate.context.JTASessionContext}
+	 * Note that for backwards compatibility, if a {@link org.hibernate.context.spi.CurrentSessionContext}
+	 * is not configured but JTA is configured this will default to the {@link org.hibernate.context.internal.JTASessionContext}
 	 * impl.
 	 *
 	 * @return The current session.

@@ -29,11 +29,11 @@
                         <entry>
                             <para>
                                 Indicates that a session was left associated with the
-                                <classname>org.hibernate.context.ThreadLocalSessionContext</classname> that is used
+                                <classname>org.hibernate.context.internal.ThreadLocalSessionContext</classname> that is used
                                 to implement thread-based current session management.  Internally that class uses a
                                 ThreadLocal, and in environments where Threads are pooled this could represent a
                                 potential "bleed through" situation.  Consider using a different
-                                <interfacename>org.hibernate.context.CurrentSessionContext</interfacename>
+                                <interfacename>org.hibernate.context.spi.CurrentSessionContext</interfacename>
                                 implementation.  Otherwise, make sure the sessions always get unbound properly.
                             </para>
                         </entry>

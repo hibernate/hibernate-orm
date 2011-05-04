@@ -35,7 +35,6 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
-import org.hibernate.collection.spi.AbstractPersistentCollection;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.loader.CollectionAliases;

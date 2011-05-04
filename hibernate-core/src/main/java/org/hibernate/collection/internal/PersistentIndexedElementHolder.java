@@ -37,7 +37,6 @@ import org.dom4j.Element;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
-import org.hibernate.collection.spi.AbstractPersistentCollection;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;

@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.collection.spi;
+package org.hibernate.collection.internal;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -34,6 +34,7 @@ import java.util.ListIterator;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.LazyInitializationException;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.CollectionEntry;
 import org.hibernate.engine.EntityEntry;
 import org.hibernate.engine.ForeignKeys;

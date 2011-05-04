@@ -235,12 +235,12 @@
         <para>
             However, as of version 3.1, the processing behind
             <literal>SessionFactory.getCurrentSession()</literal> is now pluggable.  To that
-            end, a new extension interface, <literal>org.hibernate.context.CurrentSessionContext</literal>,
+            end, a new extension interface, <literal>org.hibernate.context.spi.CurrentSessionContext</literal>,
             and a new configuration parameter, <literal>hibernate.current_session_context_class</literal>,
             have been added to allow pluggability of the scope and context of defining current sessions.
         </para>
         <para>
-            See the Javadocs for the <literal>org.hibernate.context.CurrentSessionContext</literal>
+            See the Javadocs for the <literal>org.hibernate.context.spi.CurrentSessionContext</literal>
             interface for a detailed discussion of its contract.  It defines a single method,
             <literal>currentSession()</literal>, by which the implementation is responsible for
             tracking the current contextual session.  Out-of-the-box, Hibernate comes with three
@@ -250,7 +250,7 @@
         <itemizedlist>
             <listitem>
                 <para>
-                    <literal>org.hibernate.context.JTASessionContext</literal>: current sessions
+                    <literal>org.hibernate.context.internal.JTASessionContext</literal>: current sessions
                     are tracked and scoped by a <literal>JTA</literal> transaction.  The processing
                     here is exactly the same as in the older JTA-only approach.  See the Javadocs
                     for details.
@@ -258,13 +258,13 @@
             </listitem>
             <listitem>
                 <para>
-                    <literal>org.hibernate.context.ThreadLocalSessionContext</literal>:current
+                    <literal>org.hibernate.context.internal.ThreadLocalSessionContext</literal>:current
                     sessions are tracked by thread of execution. See the Javadocs for details.
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    <literal>org.hibernate.context.ManagedSessionContext</literal>: current
+                    <literal>org.hibernate.context.internal.ManagedSessionContext</literal>: current
                     sessions are tracked by thread of execution. However, you are responsible to
                     bind and unbind a <literal>Session</literal> instance with static methods
                     on this class: it does not open, flush, or close a <literal>Session</literal>.
@@ -286,10 +286,10 @@
 
         <para>
             The <literal>hibernate.current_session_context_class</literal> configuration parameter
-            defines which <literal>org.hibernate.context.CurrentSessionContext</literal> implementation
+            defines which <literal>org.hibernate.context.spi.CurrentSessionContext</literal> implementation
             should be used.  For backwards compatibility, if this configuration parameter is not set
             but a <literal>org.hibernate.transaction.TransactionManagerLookup</literal> is configured,
-            Hibernate will use the <literal>org.hibernate.context.JTASessionContext</literal>.
+            Hibernate will use the <literal>org.hibernate.context.internal.JTASessionContext</literal>.
             Typically, the value of this parameter would just name the implementation class to
             use. For the three out-of-the-box implementations, however, there are three corresponding
             short names: "jta", "thread", and "managed".

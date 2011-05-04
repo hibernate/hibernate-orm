@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.context;
+package org.hibernate.context.internal;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -29,10 +29,11 @@ import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.context.spi.CurrentSessionContext;
 import org.hibernate.engine.SessionFactoryImplementor;
 
 /**
- * Represents a {@link CurrentSessionContext} the notion of a contextual session
+ * Represents a {@link org.hibernate.context.spi.CurrentSessionContext} the notion of a contextual session
  * is managed by some external entity (generally some form of interceptor, etc).
  * This external manager is responsible for scoping these contextual sessions
  * appropriately binding/unbinding them here for exposure to the application

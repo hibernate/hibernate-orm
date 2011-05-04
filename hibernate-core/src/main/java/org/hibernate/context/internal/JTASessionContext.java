@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.context;
+package org.hibernate.context.internal;
 
 import javax.transaction.Synchronization;
 import javax.transaction.Transaction;
@@ -33,6 +33,7 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.HibernateException;
+import org.hibernate.context.spi.CurrentSessionContext;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.Session;
 import org.hibernate.engine.SessionFactoryImplementor;

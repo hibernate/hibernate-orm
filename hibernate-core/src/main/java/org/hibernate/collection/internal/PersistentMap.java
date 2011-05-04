@@ -36,7 +36,6 @@ import java.util.Set;
 
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
-import org.hibernate.collection.spi.AbstractPersistentCollection;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.loader.CollectionAliases;
 import org.hibernate.persister.collection.CollectionPersister;

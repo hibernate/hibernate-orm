@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,12 +20,12 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
-package org.hibernate.exception;
+package org.hibernate.exception.spi;
 
 import java.io.Serializable;
 import java.sql.SQLException;
+
 import org.hibernate.JDBCException;
 
 /**
@@ -36,7 +36,7 @@ import org.hibernate.JDBCException;
  * Implementations <b>must</b> have a constructor which takes a
  * {@link ViolatedConstraintNameExtracter} parameter.
  * <p/>
- * Implementations may implement {@link Configurable} if they need to perform
+ * Implementations may implement {@link org.hibernate.exception.spi.Configurable} if they need to perform
  * configuration steps prior to first use.
  *
  * @author Steve Ebersole
@@ -49,7 +49,7 @@ public interface SQLExceptionConverter extends Serializable {
 	 * @param sqlException The SQLException to be converted.
 	 * @param message      An optional error message.
 	 * @return The resulting JDBCException.
-	 * @see ConstraintViolationException, JDBCConnectionException, SQLGrammarException, LockAcquisitionException
+	 * @see org.hibernate.exception.ConstraintViolationException , JDBCConnectionException, SQLGrammarException, LockAcquisitionException
 	 */
 	public JDBCException convert(SQLException sqlException, String message, String sql);
 }

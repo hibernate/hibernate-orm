@@ -37,7 +37,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
-import org.hibernate.exception.SQLExceptionConverter;
+import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Table;
 

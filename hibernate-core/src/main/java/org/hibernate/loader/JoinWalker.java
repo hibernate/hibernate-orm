@@ -205,6 +205,10 @@ public class JoinWalker {
 		}
 	}
 
+	protected boolean hasRestriction(PropertyPath path)	{
+		return false;
+	}
+
 	protected String getWithClause(PropertyPath path)	{
 		return "";
 	}
@@ -239,6 +243,7 @@ public class JoinWalker {
 				subalias, 
 				joinType, 
 				getWithClause(path),
+				hasRestriction( path ),
 				getFactory(),
 				loadQueryInfluencers.getEnabledFilters()
 		);
@@ -877,7 +882,9 @@ public class JoinWalker {
 		Iterator iter = associations.iterator();
 		while ( iter.hasNext() ) {
 			OuterJoinableAssociation oj = (OuterJoinableAssociation) iter.next();
-			if ( oj.getJoinType()==JoinFragment.LEFT_OUTER_JOIN && oj.getJoinable().isCollection() ) {
+			if ( oj.getJoinType()==JoinFragment.LEFT_OUTER_JOIN &&
+					oj.getJoinable().isCollection() &&
+					! oj.hasRestriction() ) {
 				result++;
 			}
 		}
@@ -1012,7 +1019,7 @@ public class JoinWalker {
 			else {
 				
 				QueryableCollection collPersister = (QueryableCollection) oj.getJoinable();
-				if ( oj.getJoinType()==JoinFragment.LEFT_OUTER_JOIN ) {
+				if ( oj.getJoinType()==JoinFragment.LEFT_OUTER_JOIN && ! oj.hasRestriction() ) {
 					//it must be a collection fetch
 					collectionPersisters[j] = collPersister;
 					collectionOwners[j] = oj.getOwner(associations);

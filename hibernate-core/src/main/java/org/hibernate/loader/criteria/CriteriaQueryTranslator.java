@@ -674,5 +674,12 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 		final Criterion crit = (Criterion)this.withClauseMap.get(path);
 		return crit == null ? null : crit.toSqlString(getCriteria(path), this);
 	}
-	
+
+	public boolean hasRestriction(String path)
+	{
+		final CriteriaImpl.Subcriteria crit = ( CriteriaImpl.Subcriteria ) getCriteria( path );
+		return crit == null ? false : crit.hasRestriction();
+	}
+
+
 }

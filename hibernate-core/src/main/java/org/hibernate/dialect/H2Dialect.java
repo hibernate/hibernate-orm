@@ -298,7 +298,7 @@ public class H2Dialect extends Dialect {
 
 	@Override
 	public String getCreateTemporaryTableString() {
-		return "create local temporary table if not exists";
+		return "create cached local temporary table if not exists";
 	}
 
 	@Override

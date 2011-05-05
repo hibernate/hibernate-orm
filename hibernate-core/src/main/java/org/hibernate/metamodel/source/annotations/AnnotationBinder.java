@@ -31,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.hibernate.metamodel.source.annotations.global.FetchProfileBinder;
+import org.hibernate.metamodel.source.annotations.global.TableBinder;
 import org.hibernate.metamodel.source.annotations.util.ConfiguredClassHierarchyBuilder;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
 
@@ -51,17 +52,22 @@ public class AnnotationBinder {
 		this.metadata = metadata;
 	}
 
+	public void bind(Index annotationIndex) {
+		preEntityBindings( annotationIndex );
+		bindMappedClasses( annotationIndex );
+		postEntityBindings( annotationIndex );
+	}
+
 	/**
-	 * Binds global configuration data. This includes mappings which live outside of the configuration for a single
-	 * entity or entity hierarchy, for example sequence generators, fetch profiles, etc
+	 * Binds global configuration data prior to entity binding. This includes generators and type definitions
 	 *
 	 * @param annotationIndex the annotation repository/index
 	 */
-	public void bindGlobalAnnotations(Index annotationIndex) {
-		FetchProfileBinder.bindFetchProfiles( metadata, annotationIndex );
+	private void preEntityBindings(Index annotationIndex) {
+		FetchProfileBinder.bind( metadata, annotationIndex );
 	}
 
-	public void bindMappedClasses(Index annotationIndex) {
+	private void bindMappedClasses(Index annotationIndex) {
 		// need to order our annotated entities into an order we can process
 		Set<ConfiguredClassHierarchy> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
 				annotationIndex, metadata.getServiceRegistry()
@@ -72,212 +78,21 @@ public class AnnotationBinder {
 			Iterator<ConfiguredClass> iter = hierarchy.iterator();
 			while ( iter.hasNext() ) {
 				ConfiguredClass entity = iter.next();
-				bindEntity( entity );
+				log.info( "Binding entity from annotated class: {}", entity.getName() );
+				EntityBinder entityBinder = new EntityBinder( metadata, entity );
+				entityBinder.bind();
 			}
 		}
 	}
 
-	public void bindEntity(ConfiguredClass entity) {
-		log.info( "Binding entity from annotated class: {}", entity.getName() );
-		EntityBinder entityBinder = new EntityBinder( metadata, entity );
-
-//
-//		PersistentClass superEntity = getSuperEntity(
-//				clazzToProcess, inheritanceStatePerClass, mappings, inheritanceState
-//		);
-//
-//		PersistentClass persistentClass = makePersistentClass( inheritanceState, superEntity );
-
-
-//		entityBinder.setInheritanceState( inheritanceState );
-//
-//		bindQueries( clazzToProcess, mappings );
-//		bindFilterDefs( clazzToProcess, mappings );
-//		bindTypeDefs( clazzToProcess, mappings );
-//		bindFetchProfiles( clazzToProcess, mappings );
-//		BinderHelper.bindAnyMetaDefs( clazzToProcess, mappings );
-//
-//		String schema = "";
-//		String table = ""; //might be no @Table annotation on the annotated class
-//		String catalog = "";
-//		List<UniqueConstraintHolder> uniqueConstraints = new ArrayList<UniqueConstraintHolder>();
-//		if ( clazzToProcess.isAnnotationPresent( javax.persistence.Table.class ) ) {
-//			javax.persistence.Table tabAnn = clazzToProcess.getAnnotation( javax.persistence.Table.class );
-//			table = tabAnn.name();
-//			schema = tabAnn.schema();
-//			catalog = tabAnn.catalog();
-//			uniqueConstraints = TableBinder.buildUniqueConstraintHolders( tabAnn.uniqueConstraints() );
-//		}
-//
-//		Ejb3JoinColumn[] inheritanceJoinedColumns = makeInheritanceJoinColumns(
-//				clazzToProcess, mappings, inheritanceState, superEntity
-//		);
-//		Ejb3DiscriminatorColumn discriminatorColumn = null;
-//		if ( InheritanceType.SINGLE_TABLE.equals( inheritanceState.getType() ) ) {
-//			discriminatorColumn = processDiscriminatorProperties(
-//					clazzToProcess, mappings, inheritanceState, entityBinder
-//			);
-//		}
-//
-//		entityBinder.setProxy( clazzToProcess.getAnnotation( Proxy.class ) );
-//		entityBinder.setBatchSize( clazzToProcess.getAnnotation( BatchSize.class ) );
-//		entityBinder.setWhere( clazzToProcess.getAnnotation( Where.class ) );
-//	    entityBinder.setCache( determineCacheSettings( clazzToProcess, mappings ) );
-//
-//		//Filters are not allowed on subclasses
-//		if ( !inheritanceState.hasParents() ) {
-//			bindFilters( clazzToProcess, entityBinder, mappings );
-//		}
-//
-//		entityBinder.bindEntity();
-//
-//		if ( inheritanceState.hasTable() ) {
-//			Check checkAnn = clazzToProcess.getAnnotation( Check.class );
-//			String constraints = checkAnn == null ?
-//					null :
-//					checkAnn.constraints();
-//			entityBinder.bindTable(
-//					schema, catalog, table, uniqueConstraints,
-//					constraints, inheritanceState.hasDenormalizedTable() ?
-//							superEntity.getTable() :
-//							null
-//			);
-//		}
-//		else {
-//			if ( clazzToProcess.isAnnotationPresent( Table.class ) ) {
-//				log.warn(
-//						"Illegal use of @Table in a subclass of a SINGLE_TABLE hierarchy: " + clazzToProcess
-//								.getName()
-//				);
-//			}
-//		}
-//
-//		PropertyHolder propertyHolder = PropertyHolderBuilder.buildPropertyHolder(
-//				clazzToProcess,
-//				persistentClass,
-//				entityBinder, mappings, inheritanceStatePerClass
-//		);
-//
-//		javax.persistence.SecondaryTable secTabAnn = clazzToProcess.getAnnotation(
-//				javax.persistence.SecondaryTable.class
-//		);
-//		javax.persistence.SecondaryTables secTabsAnn = clazzToProcess.getAnnotation(
-//				javax.persistence.SecondaryTables.class
-//		);
-//		entityBinder.firstLevelSecondaryTablesBinding( secTabAnn, secTabsAnn );
-//
-//		OnDelete onDeleteAnn = clazzToProcess.getAnnotation( OnDelete.class );
-//		boolean onDeleteAppropriate = false;
-//		if ( InheritanceType.JOINED.equals( inheritanceState.getType() ) && inheritanceState.hasParents() ) {
-//			onDeleteAppropriate = true;
-//			final JoinedSubclass jsc = ( JoinedSubclass ) persistentClass;
-//			if ( persistentClass.getEntityPersisterClass() == null ) {
-//				persistentClass.getRootClass().setEntityPersisterClass( JoinedSubclassEntityPersister.class );
-//			}
-//			SimpleValue key = new DependantValue( mappings, jsc.getTable(), jsc.getIdentifier() );
-//			jsc.setKey( key );
-//			ForeignKey fk = clazzToProcess.getAnnotation( ForeignKey.class );
-//			if ( fk != null && !BinderHelper.isEmptyAnnotationValue( fk.name() ) ) {
-//				key.setForeignKeyName( fk.name() );
-//			}
-//			if ( onDeleteAnn != null ) {
-//				key.setCascadeDeleteEnabled( OnDeleteAction.CASCADE.equals( onDeleteAnn.action() ) );
-//			}
-//			else {
-//				key.setCascadeDeleteEnabled( false );
-//			}
-//			//we are never in a second pass at that stage, so queue it
-//			SecondPass sp = new JoinedSubclassFkSecondPass( jsc, inheritanceJoinedColumns, key, mappings );
-//			mappings.addSecondPass( sp );
-//			mappings.addSecondPass( new CreateKeySecondPass( jsc ) );
-//
-//		}
-//		else if ( InheritanceType.SINGLE_TABLE.equals( inheritanceState.getType() ) ) {
-//			if ( inheritanceState.hasParents() ) {
-//				if ( persistentClass.getEntityPersisterClass() == null ) {
-//					persistentClass.getRootClass().setEntityPersisterClass( SingleTableEntityPersister.class );
-//				}
-//			}
-//			else {
-//				if ( inheritanceState.hasSiblings() || !discriminatorColumn.isImplicit() ) {
-//					//need a discriminator column
-//					bindDiscriminatorToPersistentClass(
-//							(RootClass) persistentClass,
-//							discriminatorColumn,
-//							entityBinder.getSecondaryTables(),
-//							propertyHolder,
-//							mappings
-//					);
-//					entityBinder.bindDiscriminatorValue();//bind it again since the type might have changed
-//				}
-//			}
-//		}
-//		else if ( InheritanceType.TABLE_PER_CLASS.equals( inheritanceState.getType() ) ) {
-//			if ( inheritanceState.hasParents() ) {
-//				if ( persistentClass.getEntityPersisterClass() == null ) {
-//					persistentClass.getRootClass().setEntityPersisterClass( UnionSubclassEntityPersister.class );
-//				}
-//			}
-//		}
-//		if ( onDeleteAnn != null && !onDeleteAppropriate ) {
-//			log.warn(
-//					"Inapropriate use of @OnDelete on entity, annotation ignored: {}", propertyHolder.getEntityName()
-//			);
-//		}
-//
-//		// try to find class level generators
-//		HashMap<String, IdGenerator> classGenerators = buildLocalGenerators( clazzToProcess, mappings );
-//
-//		// check properties
-//		final InheritanceState.ElementsToProcess elementsToProcess = inheritanceState.getElementsToProcess();
-//		inheritanceState.postProcess( persistentClass, entityBinder );
-//
-//		final boolean subclassAndSingleTableStrategy = inheritanceState.getType() == InheritanceType.SINGLE_TABLE
-//				&& inheritanceState.hasParents();
-//		Set<String> idPropertiesIfIdClass = new HashSet<String>();
-//		boolean isIdClass = mapAsIdClass(
-//				inheritanceStatePerClass,
-//				inheritanceState,
-//				persistentClass,
-//				entityBinder,
-//				propertyHolder,
-//				elementsToProcess,
-//				idPropertiesIfIdClass,
-//				mappings
-//		);
-//
-//		if ( !isIdClass ) {
-//			entityBinder.setWrapIdsInEmbeddedComponents( elementsToProcess.getIdPropertyCount() > 1 );
-//		}
-//
-//		processIdPropertiesIfNotAlready(
-//				inheritanceStatePerClass,
-//				mappings,
-//				persistentClass,
-//				entityBinder,
-//				propertyHolder,
-//				classGenerators,
-//				elementsToProcess,
-//				subclassAndSingleTableStrategy,
-//				idPropertiesIfIdClass
-//		);
-//
-//		if ( !inheritanceState.hasParents() ) {
-//			final RootClass rootClass = ( RootClass ) persistentClass;
-//			mappings.addSecondPass( new CreateKeySecondPass( rootClass ) );
-//		}
-//		else {
-//			superEntity.addSubclass( (Subclass) persistentClass );
-//		}
-//
-//		mappings.addClass( persistentClass );
-//
-//		//Process secondary tables and complementary definitions (ie o.h.a.Table)
-//		mappings.addSecondPass( new SecondaryTableSecondPass( entityBinder, propertyHolder, clazzToProcess ) );
-//
-//		//add process complementary Table definition (index & all)
-//		entityBinder.processComplementaryTableDefinitions( clazzToProcess.getAnnotation( org.hibernate.annotations.Table.class ) );
-//		entityBinder.processComplementaryTableDefinitions( clazzToProcess.getAnnotation( org.hibernate.annotations.Tables.class ) );
+	/**
+	 * Binds global configuration data post entity binding. This includes mappings which live outside of the configuration for a single
+	 * entity or entity hierarchy, for example sequence generators, fetch profiles, etc
+	 *
+	 * @param annotationIndex the annotation repository/index
+	 */
+	private void postEntityBindings(Index annotationIndex) {
+		TableBinder.bind( metadata, annotationIndex );
 	}
 }
 

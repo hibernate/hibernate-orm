@@ -130,8 +130,7 @@ public class MetadataImpl implements Metadata, MetadataImplementor, Serializable
 
 		// create the annotation binder and pass it the final annotation index
 		final AnnotationBinder annotationBinder = new AnnotationBinder( this );
-		annotationBinder.bindGlobalAnnotations( index );
-		annotationBinder.bindMappedClasses( index );
+		annotationBinder.bind( index );
 	}
 
 	/**

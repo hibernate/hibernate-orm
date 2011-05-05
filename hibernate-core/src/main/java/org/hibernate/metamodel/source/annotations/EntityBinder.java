@@ -51,11 +51,15 @@ import org.hibernate.metamodel.source.internal.MetadataImpl;
 public class EntityBinder {
 	private final ConfiguredClass configuredClass;
 	private final MetadataImpl meta;
-	private final Schema.Name schemaName;
+
+	private Schema.Name schemaName;
 
 	public EntityBinder(MetadataImpl metadata, ConfiguredClass configuredClass) {
 		this.configuredClass = configuredClass;
 		this.meta = metadata;
+	}
+
+	public void bind() {
 		EntityBinding entityBinding = new EntityBinding();
 		bindJpaEntityAnnotation( entityBinding );
 		bindHibernateEntityAnnotation( entityBinding ); // optional hibernate specific @org.hibernate.annotations.Entity
@@ -108,15 +112,6 @@ public class EntityBinder {
 			table = schema.createTable( tableName );
 		}
 		entityBinding.setBaseTable( table );
-
-		AnnotationInstance hibernateTableAnnotation = JandexHelper.getSingleAnnotation(
-				configuredClass.getClassInfo(), HibernateDotNames.TABLE
-		);
-
-		if ( hibernateTableAnnotation != null && hibernateTableAnnotation.value( "comment" ) != null ) {
-			table.addComment( hibernateTableAnnotation.value( "comment" ).asString().trim() );
-		}
-		// todo map rest of Hibernate @Table attributes
 
 		AnnotationInstance checkAnnotation = JandexHelper.getSingleAnnotation(
 				configuredClass.getClassInfo(), HibernateDotNames.CHECK

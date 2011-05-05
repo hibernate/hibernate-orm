@@ -46,7 +46,7 @@ public class FetchProfileBinder {
 	}
 
 	/**
-	 * Binds all {@link org.hibernate.annotations.FetchProfiles} and {@link org.hibernate.annotations.FetchProfile} \
+	 * Binds all {@link org.hibernate.annotations.FetchProfiles} and {@link org.hibernate.annotations.FetchProfile}
 	 * annotations to the specified meta data instance.
 	 *
 	 * @param meta the global metadata
@@ -54,7 +54,7 @@ public class FetchProfileBinder {
 	 */
 	// TODO how to handle fetch profiles defined in hbm and annotations. Which overrides which?
 	// TODO verify that association exists. See former VerifyFetchProfileReferenceSecondPass
-	public static void bindFetchProfiles(MetadataImpl meta, Index index) {
+	public static void bind(MetadataImpl meta, Index index) {
 		// check @FetchProfiles
 		List<AnnotationInstance> fetchProfilesAnnotations = index.getAnnotations( HibernateDotNames.FETCH_PROFILES );
 		for ( AnnotationInstance fetchProfilesAnnotation : fetchProfilesAnnotations ) {

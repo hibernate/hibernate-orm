@@ -78,7 +78,7 @@ public class FetchProfileBinderTest extends BaseUnitTestCase {
 		}
 		Index index = JandexHelper.indexForClass( service, Foo.class );
 
-		FetchProfileBinder.bindFetchProfiles( meta, index );
+		FetchProfileBinder.bind( meta, index );
 
 		Iterator<org.hibernate.metamodel.binding.FetchProfile> mappedFetchProfiles = meta.getFetchProfiles().iterator();
 		assertTrue( mappedFetchProfiles.hasNext() );
@@ -92,7 +92,7 @@ public class FetchProfileBinderTest extends BaseUnitTestCase {
 	@Test
 	public void testFetchProfiles() {
 		Index index = JandexHelper.indexForClass( service, FooBar.class );
-		FetchProfileBinder.bindFetchProfiles( meta, index );
+		FetchProfileBinder.bind( meta, index );
 
 		Iterator<org.hibernate.metamodel.binding.FetchProfile> mappedFetchProfiles = meta.getFetchProfiles().iterator();
 		assertTrue( mappedFetchProfiles.hasNext() );
@@ -129,7 +129,7 @@ public class FetchProfileBinderTest extends BaseUnitTestCase {
 		}
 		Index index = JandexHelper.indexForClass( service, Foo.class );
 
-		FetchProfileBinder.bindFetchProfiles( meta, index );
+		FetchProfileBinder.bind( meta, index );
 	}
 
 	@FetchProfiles( {

@@ -32,7 +32,6 @@ import java.util.Set;
 import org.jboss.jandex.AnnotationInstance;
 
 import org.hibernate.AnnotationException;
-import org.hibernate.AssertionFailure;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.metamodel.binding.SimpleAttributeBinding;
 import org.hibernate.metamodel.relational.Size;
@@ -53,13 +52,14 @@ public class AttributeColumnRelationalState implements SimpleAttributeBinding.Co
 	private final String checkCondition;
 	private final String customWriteFragment;
 	private final String customReadFragment;
+	private final Set<String> indexes;
 
 	// todo - what about these annotations !?
 	private String defaultString;
 	private String sqlType;
 	private String comment;
 	private Set<String> uniqueKeys = new HashSet<String>();
-	private Set<String> indexes = new HashSet<String>();
+
 
 	public AttributeColumnRelationalState(MappedAttribute attribute, MetadataImpl meta) {
 		ColumnValues columnValues = attribute.getColumnValues();
@@ -68,24 +68,14 @@ public class AttributeColumnRelationalState implements SimpleAttributeBinding.Co
 		unique = columnValues.isUnique();
 		nullable = columnValues.isNullable();
 		size = createSize( columnValues.getLength(), columnValues.getScale(), columnValues.getPrecision() );
-
-		List<AnnotationInstance> checkAnnotations = attribute.annotations( HibernateDotNames.CHECK );
-		if ( checkAnnotations.size() > 1 ) {
-			throw new AssertionFailure( "There cannot be more than one @Check annotation per mapped attribute" );
-		}
-		if ( checkAnnotations.size() == 1 ) {
-			checkCondition = checkAnnotations.get( 0 ).value( "constraints" ).toString();
-		}
-		else {
-			checkCondition = null;
-		}
+		checkCondition = parseCheckAnnotation( attribute );
+		indexes = parseIndexAnnotation( attribute );
 
 		String[] readWrite;
 		List<AnnotationInstance> columnTransformerAnnotations = getAllColumnTransformerAnnotations( attribute );
 		readWrite = createCustomReadWrite( columnTransformerAnnotations );
 		customReadFragment = readWrite[0];
 		customWriteFragment = readWrite[1];
-
 	}
 
 	@Override
@@ -161,34 +151,22 @@ public class AttributeColumnRelationalState implements SimpleAttributeBinding.Co
 		return size;
 	}
 
-
 	private List<AnnotationInstance> getAllColumnTransformerAnnotations(MappedAttribute attribute) {
 		List<AnnotationInstance> allColumnTransformerAnnotations = new ArrayList<AnnotationInstance>();
 
 		// not quite sure about the usefulness of @ColumnTransformers (HF)
-		List<AnnotationInstance> columnTransformersAnnotations = attribute.annotations( HibernateDotNames.COLUMN_TRANSFORMERS );
-		if ( columnTransformersAnnotations.size() > 1 ) {
-			throw new AssertionFailure(
-					"There cannot be more than one @ColumnTransformers annotation per mapped attribute"
-			);
-		}
-		if ( columnTransformersAnnotations.size() == 1 ) {
+		AnnotationInstance columnTransformersAnnotations = attribute.annotations( HibernateDotNames.COLUMN_TRANSFORMERS );
+		if ( columnTransformersAnnotations != null ) {
 			AnnotationInstance[] annotationInstances = allColumnTransformerAnnotations.get( 0 ).value().asNestedArray();
 			allColumnTransformerAnnotations.addAll( Arrays.asList( annotationInstances ) );
 		}
 
-		List<AnnotationInstance> columnTransformerAnnotations = attribute.annotations( HibernateDotNames.COLUMN_TRANSFORMER );
-		if ( columnTransformerAnnotations.size() > 1 ) {
-			throw new AssertionFailure(
-					"There cannot be more than one @ColumnTransformer annotation per mapped attribute"
-			);
-		}
-		if ( columnTransformerAnnotations.size() == 1 ) {
-			allColumnTransformerAnnotations.add( columnTransformerAnnotations.get( 0 ) );
+		AnnotationInstance columnTransformerAnnotation = attribute.annotations( HibernateDotNames.COLUMN_TRANSFORMER );
+		if ( columnTransformerAnnotation != null ) {
+			allColumnTransformerAnnotations.add( columnTransformerAnnotation );
 		}
 		return allColumnTransformerAnnotations;
 	}
-
 
 	private String[] createCustomReadWrite(List<AnnotationInstance> columnTransformerAnnotations) {
 		String[] readWrite = new String[2];
@@ -214,6 +192,25 @@ public class AttributeColumnRelationalState implements SimpleAttributeBinding.Co
 			alreadyProcessedForColumn = true;
 		}
 		return readWrite;
+	}
+
+	private String parseCheckAnnotation(MappedAttribute attribute) {
+		String checkCondition = null;
+		AnnotationInstance checkAnnotation = attribute.annotations( HibernateDotNames.CHECK );
+		if ( checkAnnotation != null ) {
+			checkCondition = checkAnnotation.value( "constraints" ).toString();
+		}
+		return checkCondition;
+	}
+
+	private Set<String> parseIndexAnnotation(MappedAttribute attribute) {
+		Set<String> indexNames = new HashSet<String>();
+		AnnotationInstance indexAnnotation = attribute.annotations( HibernateDotNames.INDEX );
+		if ( indexAnnotation != null ) {
+			String indexName = indexAnnotation.value( "name" ).toString();
+			indexNames.add( indexName );
+		}
+		return indexNames;
 	}
 }
 

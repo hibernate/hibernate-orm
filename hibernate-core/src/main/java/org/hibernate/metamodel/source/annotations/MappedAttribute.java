@@ -23,7 +23,6 @@
  */
 package org.hibernate.metamodel.source.annotations;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -84,12 +83,24 @@ public class MappedAttribute implements Comparable<MappedAttribute> {
 		return isVersioned;
 	}
 
-	public final List<AnnotationInstance> annotations(DotName annotationDotName) {
+	/**
+	 * Returns the annotation with the specified name or {@code null}
+	 *
+	 * @param annotationDotName The annotation to retrieve/check
+	 *
+	 * @return Returns the annotation with the specified name or {@code null}. Note, since these are the
+	 *         annotations defined on a single attribute there can never be more than one.
+	 */
+	public final AnnotationInstance annotations(DotName annotationDotName) {
 		if ( annotations.containsKey( annotationDotName ) ) {
-			return annotations.get( annotationDotName );
+			List<AnnotationInstance> instanceList = annotations.get( annotationDotName );
+			if ( instanceList.size() > 1 ) {
+				throw new AssertionFailure( "There cannot be more than one @" + annotationDotName.toString() + " annotation per mapped attribute" );
+			}
+			return instanceList.get( 0 );
 		}
 		else {
-			return Collections.emptyList();
+			return null;
 		}
 	}
 

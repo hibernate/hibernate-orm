@@ -39,6 +39,7 @@ public class Identifier {
 	 * Means to generate an {@link Identifier} instance from its simple name
 	 *
 	 * @param name The name
+	 *
 	 * @return
 	 */
 	public static Identifier toIdentifier(String name) {

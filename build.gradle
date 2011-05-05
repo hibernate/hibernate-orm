@@ -17,7 +17,7 @@ buildscript {
         mavenRepo name: "jboss-snapshots", urls: "http://snapshots.jboss.org/maven2/"
     }
     dependencies {
-        classpath 'org.hibernate.build.gradle:gradle-upload-auth-plugin:1.0.1'
+        classpath 'org.hibernate.build.gradle:gradle-upload-auth-plugin:1.0.2'
     }
 }
 
@@ -98,7 +98,7 @@ subprojects { subProject ->
     defaultTasks 'build'
 
     group = 'org.hibernate'
-    version = '4.0.0.Alpha3'
+    version = '4.0.0-SNAPSHOT'
 
     // minimize changes, at least for now (gradle uses 'build' by default)..
     buildDir = "target"

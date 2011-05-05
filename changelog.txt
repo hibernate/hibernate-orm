@@ -5,8 +5,91 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+
+Changes in version 4.0.0.Alpha3 (2011.05.04)
+------------------------------------------------------------------------------------------------------------------------
+http://opensource.atlassian.com/projects/hibernate/browse/HHH/fixforversion/11163
+
+** Sub-task
+    * [HHH-6114] - Preprocess annotation configuration
+    * [HHH-6148] - Resolve generic type parameters
+    * [HHH-6161] - Integrate annotation based configuration processing into MetadataSource
+
+** Bug
+    * [HHH-468] - MysqlDialect incorrectly maps java.lang.Boolean to SQL BIT
+    * [HHH-2049] - LEFT OUTER JOIN subcriteria filters children
+    * [HHH-4073] - discriminator formula creates problem in hibernate envers
+    * [HHH-4787] - AuditProperty.isNull() doesn't generate "tab.col is null" SQL clause as expected
+    * [HHH-5276] - Table REVINFO created in the default schema even if the property is otherwise set
+    * [HHH-5887] - Document typo hibernate.hbm2ddl.import_files
+    * [HHH-6069] - Escape entity fields name when required
+    * [HHH-6093] - Account for tenant identifier on QueryKey
+    * [HHH-6094] - Test failures in hibernate-infinispan dealing with query caching
+    * [HHH-6095] - Improve the way AbstractEntityManagerImpl.flush checks for an active transaction, should apply to other AbstractEntityManagerImpl methods that also check for an active tx
+    * [HHH-6163] - Need to fix location of envers integrator service file
+    * [HHH-6164] - Prefer regsitering JTA syncs via TransactionManager
+
+** Deprecation
+    * [HHH-6158] - Deprecate SessionFactoryStub
+    * [HHH-6181] - Deprecate EJB3Configuration
+    * [HHH-6183] - Deprecate Configuration
+
+** Improvement
+    * [HHH-2578] - redesign SessionFactory building
+    * [HHH-2579] - scope bytecode provider selection to session factory
+    * [HHH-5914] - Remove deprecated Hibernate type constants from org.hibernate.Hibernate and manuals
+    * [HHH-6064] - Skip regsitration of envers listeners if AuditConfiguration says no auditing annotations were found
+    * [HHH-6080] - Migrate from DTD to XSD for hbm.xml files
+    * [HHH-6096] - H2Dialect should use CACHED option for temporary table creation
+    * [HHH-6097] - Review log levels, especially related to i18n messages
+    * [HHH-6102] - ISE should be thrown when EM is colsed and joinTransaction is called, even with RESOURCE-LOCAL TX
+    * [HHH-6106] - Fix up IntelliJ project generation
+    * [HHH-6117] - Figure out best way to handle SessionFactoryObjectFactory dealing with JNDI
+    * [HHH-6118] - Make Metadata more user-friendly API
+    * [HHH-6128] - Create simplier LobCreator access from Session
+    * [HHH-6129] - org.hibernate.LobHelper#createNClob can now return NClob
+    * [HHH-6144] - Introduce ServiceRegistryBuilder
+    * [HHH-6154] - Add a README for describing build
+
+** New Feature
+    * [HHH-6140] - Allow disabling of JAXP validation
+
+** Patch
+    * [HHH-6169] - Prevent unnecessary calls to JDBC metadata methods.
+
+** Task
+    * [HHH-5652] - Create "Take It Further" tasks for the JPA chapter of the GSG
+    * [HHH-6014] - Migrate hibernate-envers tests to JUnit4
+    * [HHH-6023] - Create "Take It Further" tasks for the Envers chapter of the GSG
+    * [HHH-6092] - Create domain and relational state APIs for SimpleAttributeBinding and implement for XML mappings
+    * [HHH-6098] - Slight naming changes in regards to new logging classes
+    * [HHH-6101] - Clean up checks for java 1.3 versus 1.4
+    * [HHH-6107] - Metamodel dependence on ServiceRegistry
+    * [HHH-6111] - Switch to use JAX for xml parsing
+    * [HHH-6115] - jaxb generation should follow directory pattern
+    * [HHH-6131] - JAXB generated classes should have a prefix to distinguish then easier from model classes
+    * [HHH-6134] - Migrate processing hbm.xml files to use Jaxb-generated classes
+    * [HHH-6138] - Implement addition of annotated classes and packages in MetadataSources
+    * [HHH-6141] - Develop scheme for ordered processing of MetadataSources sources
+    * [HHH-6142] - Integrate JAXB-based binding code and MetadataSources
+    * [HHH-6146] - remove SF.setTenantIdentifier, add to withOptions selections
+    * [HHH-6147] - Add support for multi-tenancy to StatelessSession building
+    * [HHH-6155] - Migrate o.h.impl package to o.h.internal
+    * [HHH-6168] - Create an attribute binding for many-to-one and implement DomainState and RelationalState for HBM XML
+    * [HHH-6191] - repackage org.hibernate.cache per api/spi/internal split
+    * [HHH-6192] - Split org.hibernate.collection package up into api/sip/internal
+    * [HHH-6193] - Split org.hibernate.context package into api/spi/internal
+    * [HHH-6194] - Better jaxb task to leverage Gradle up-to-date checking
+    * [HHH-6196] - Split org.hibernate.engine package into api/spi/internal
+    * [HHH-6198] - Split org.hibernate.event package into api/spi/internal
+    * [HHH-6199] - Split org.hibernate.exception package into api/spi/internal
+    * [HHH-6200] - Split org.hibernate.hql package into api/spi/internal
+
+
+
 Changes in version 4.0.0.Alpha2 (2011.04.06)
 ------------------------------------------------------------------------------------------------------------------------
+http://opensource.atlassian.com/projects/hibernate/browse/HHH/fixforversion/11162
 
 ** Bug
     * [HHH-4999] - createSQLQuery(query).list() result screw up when when columns in different tables have same name

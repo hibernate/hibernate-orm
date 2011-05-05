@@ -23,22 +23,40 @@
  */
 package org.hibernate.metamodel.relational;
 
+import org.hibernate.HibernateException;
+
 /**
  * Models the qualified name of a database object.
  * <p/>
  * Some things to keep in mind wrt catalog/schema:
- * 	1) {@link java.sql.DatabaseMetaData#isCatalogAtStart}
- * 	2) {@link java.sql.DatabaseMetaData#getCatalogSeparator()}
+ * 1) {@link java.sql.DatabaseMetaData#isCatalogAtStart}
+ * 2) {@link java.sql.DatabaseMetaData#getCatalogSeparator()}
  *
  * @author Steve Ebersole
  */
 public class ObjectName {
+	// todo - should depend on DatabaseMetaData. For now hard coded (HF)
+	private static String SEPARATOR = ".";
+
 	private final Identifier schema;
 	private final Identifier catalog;
 	private final Identifier name;
 
 	private final String identifier;
 	private final int hashCode;
+
+	/**
+	 * Tries to create an {@code ObjectName} from a name.
+	 *
+	 * @param objectName simple or qualified name of the database object.
+	 */
+	public ObjectName(String objectName) {
+		this(
+				extractSchema( objectName ),
+				extractCatalog( objectName ),
+				extractName( objectName )
+		);
+	}
 
 	public ObjectName(Identifier name) {
 		this( null, null, name );
@@ -86,7 +104,7 @@ public class ObjectName {
 		this.identifier = buff.toString();
 
 		int tmpHashCode = schema != null ? schema.hashCode() : 0;
-		tmpHashCode = 31 * tmpHashCode + (catalog != null ? catalog.hashCode() : 0);
+		tmpHashCode = 31 * tmpHashCode + ( catalog != null ? catalog.hashCode() : 0 );
 		tmpHashCode = 31 * tmpHashCode + name.hashCode();
 		this.hashCode = tmpHashCode;
 	}
@@ -109,10 +127,10 @@ public class ObjectName {
 
 	@Override
 	public boolean equals(Object o) {
-		if (this == o) {
+		if ( this == o ) {
 			return true;
 		}
-		if (o == null || getClass() != o.getClass()) {
+		if ( o == null || getClass() != o.getClass() ) {
 			return false;
 		}
 
@@ -121,12 +139,6 @@ public class ObjectName {
 		return name.equals( that.name )
 				&& areEqual( catalog, that.catalog )
 				&& areEqual( schema, that.schema );
-	}
-
-	private boolean areEqual(Identifier one, Identifier other) {
-		return one == null
-				? other == null
-				: one.equals( other );
 	}
 
 	@Override
@@ -142,6 +154,65 @@ public class ObjectName {
 				", schema='" + schema + '\'' +
 				", catalog='" + catalog + '\'' +
 				'}';
+	}
+
+	private boolean areEqual(Identifier one, Identifier other) {
+		return one == null
+				? other == null
+				: one.equals( other );
+	}
+
+	private static String extractSchema(String qualifiedName) {
+		if ( qualifiedName == null ) {
+			return null;
+		}
+		String[] tokens = qualifiedName.split( SEPARATOR );
+		if ( tokens.length == 0 || tokens.length == 1 ) {
+			return null;
+		}
+		else if ( tokens.length == 2 ) {
+			// todo - this case needs to be refined w/ help of  DatabaseMetaData (HF)
+			return null;
+		}
+		else if ( tokens.length == 3 ) {
+			return tokens[0];
+		}
+		else {
+			throw new HibernateException( "Unable to parse object name: " + qualifiedName );
+		}
+	}
+
+	private static String extractCatalog(String qualifiedName) {
+		if ( qualifiedName == null ) {
+			return null;
+		}
+		String[] tokens = qualifiedName.split( SEPARATOR );
+		if ( tokens.length == 0 || tokens.length == 1 ) {
+			return null;
+		}
+		else if ( tokens.length == 2 ) {
+			// todo - this case needs to be refined w/ help of  DatabaseMetaData (HF)
+			return null;
+		}
+		else if ( tokens.length == 3 ) {
+			return tokens[1];
+		}
+		else {
+			throw new HibernateException( "Unable to parse object name: " + qualifiedName );
+		}
+	}
+
+	private static String extractName(String qualifiedName) {
+		if ( qualifiedName == null ) {
+			return null;
+		}
+		String[] tokens = qualifiedName.split( SEPARATOR );
+		if ( tokens.length == 0 ) {
+			return qualifiedName;
+		}
+		else {
+			return tokens[tokens.length - 1];
+		}
 	}
 }
 

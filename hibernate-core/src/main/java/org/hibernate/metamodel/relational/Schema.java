@@ -32,6 +32,74 @@ import java.util.Map;
  * @author Steve Ebersole
  */
 public class Schema {
+	private final Name name;
+	private Map<String, InLineView> inLineViews = new HashMap<String, InLineView>();
+	private Map<Identifier, Table> tables = new HashMap<Identifier, Table>();
+
+	public Schema(Name name) {
+		this.name = name;
+	}
+
+	public Schema(Identifier schema, Identifier catalog) {
+		this( new Name( schema, catalog ) );
+	}
+
+	public Name getName() {
+		return name;
+	}
+
+	public Table getTable(Identifier name) {
+		return tables.get( name );
+	}
+
+	public Table createTable(Identifier name) {
+		Table table = new Table( this, name );
+		tables.put( name, table );
+		return table;
+	}
+
+	public InLineView getInLineView(String logicalName) {
+		return inLineViews.get( logicalName );
+	}
+
+	public InLineView createInLineView(String logicalName, String subSelect) {
+		InLineView inLineView = new InLineView( this, logicalName, subSelect );
+		inLineViews.put( logicalName, inLineView );
+		return inLineView;
+	}
+
+	@Override
+	public String toString() {
+		final StringBuilder sb = new StringBuilder();
+		sb.append( "Schema" );
+		sb.append( "{name=" ).append( name );
+		sb.append( '}' );
+		return sb.toString();
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+
+		Schema schema = (Schema) o;
+
+		if ( name != null ? !name.equals( schema.name ) : schema.name != null ) {
+			return false;
+		}
+
+		return true;
+	}
+
+	@Override
+	public int hashCode() {
+		return name != null ? name.hashCode() : 0;
+	}
+
 	public static class Name {
 		private final Identifier schema;
 		private final Identifier catalog;
@@ -52,43 +120,43 @@ public class Schema {
 		public Identifier getCatalog() {
 			return catalog;
 		}
-	}
 
-	private final Name name;
+		@Override
+		public String toString() {
+			final StringBuilder sb = new StringBuilder();
+			sb.append( "Name" );
+			sb.append( "{schema=" ).append( schema );
+			sb.append( ", catalog=" ).append( catalog );
+			sb.append( '}' );
+			return sb.toString();
+		}
 
-	public Schema(Name name) {
-		this.name = name;
-	}
+		@Override
+		public boolean equals(Object o) {
+			if ( this == o ) {
+				return true;
+			}
+			if ( o == null || getClass() != o.getClass() ) {
+				return false;
+			}
 
-	public Schema(Identifier schema, Identifier catalog) {
-		this( new Name( schema, catalog ) );
-	}
+			Name name = (Name) o;
 
-	public Name getName() {
-		return name;
-	}
+			if ( catalog != null ? !catalog.equals( name.catalog ) : name.catalog != null ) {
+				return false;
+			}
+			if ( schema != null ? !schema.equals( name.schema ) : name.schema != null ) {
+				return false;
+			}
 
-	private Map<Identifier,Table> tables = new HashMap<Identifier, Table>();
+			return true;
+		}
 
-	public Table getTable(Identifier name) {
-		return tables.get( name );
-	}
-
-	public Table createTable(Identifier name) {
-		Table table = new Table( this, name );
-		tables.put( name, table );
-		return table;
-	}
-
-	private Map<String,InLineView> inLineViews = new HashMap<String, InLineView>();
-
-	public InLineView getInLineView(String logicalName) {
-		return inLineViews.get( logicalName );
-	}
-
-	public InLineView createInLineView(String logicalName, String subSelect) {
-		InLineView inLineView = new InLineView( this, logicalName, subSelect );
-		inLineViews.put( logicalName, inLineView );
-		return inLineView;
+		@Override
+		public int hashCode() {
+			int result = schema != null ? schema.hashCode() : 0;
+			result = 31 * result + ( catalog != null ? catalog.hashCode() : 0 );
+			return result;
+		}
 	}
 }

@@ -44,8 +44,9 @@ import static org.junit.Assert.fail;
 
 /**
  * @author Emmanuel Bernard
+ * @author Alex Snaps
  */
-public class EhCacheTest extends BaseCoreFunctionalTestCase {
+public abstract class EhCacheTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String getBaseForMappings() {
 		return "org/hibernate/test/cache/ehcache/";
@@ -68,10 +69,11 @@ public class EhCacheTest extends BaseCoreFunctionalTestCase {
 		cfg.setProperty( Environment.USE_SECOND_LEVEL_CACHE, "true" );
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
 		cfg.setProperty( Environment.USE_STRUCTURED_CACHE, "true" );
-		cfg.setProperty( Environment.CACHE_PROVIDER, EhCacheProvider.class.getName() );
-		cfg.setProperty( Environment.CACHE_PROVIDER_CONFIG, "ehcache.xml" );
+		configCache(cfg);
 		cfg.setProperty( Environment.TRANSACTION_STRATEGY, JdbcTransactionFactory.class.getName() );
 	}
+
+	protected abstract void configCache(final Configuration cfg);
 
 	@Test
 	public void testQueryCacheInvalidation() {
@@ -107,12 +109,7 @@ public class EhCacheTest extends BaseCoreFunctionalTestCase {
 
 		Object entry = slcs.getEntries().get( i.getId() );
 		Map map;
-		if ( entry instanceof ReadWriteCache.Item ) {
-			map = (Map) ( (ReadWriteCache.Item) entry ).getValue();
-		}
-		else {
-			map = (Map) entry;
-		}
+		map = getMapFromCacheEntry(entry);
 		assertTrue( map.get("description").equals("A bog standard item") );
 		assertTrue( map.get("name").equals("widget") );
 
@@ -123,6 +120,8 @@ public class EhCacheTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 		s.close();
 	}
+
+	protected abstract Map getMapFromCacheEntry(final Object entry);
 
 	@Test
 	public void testEmptySecondLevelCacheEntry() throws Exception {
@@ -188,9 +187,10 @@ public class EhCacheTest extends BaseCoreFunctionalTestCase {
 		if ( entry instanceof ReadWriteCache.Lock ) {
 			//FIXME don't know what to test here
 			cachedVersionValue = Long.valueOf( ((ReadWriteCache.Lock) entry).getUnlockTimestamp() );
-		}
-		else {
-			cachedVersionValue = ( Long ) ( (Map) entry ).get( "_version" );
+		} else if(entry.getClass().getName().equals("net.sf.ehcache.hibernate.strategy.AbstractReadWriteEhcacheAccessStrategy$Lock")) {
+			//FIXME don't know what to test here
+		} else {
+			cachedVersionValue = ( Long ) getMapFromCacheEntry(entry).get( "_version" );
 			assertEquals( initialVersion.longValue(), cachedVersionValue.longValue() );
 		}
 

@@ -23,10 +23,8 @@
  */
 package org.hibernate.envers.synchronization.work;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
 import org.hibernate.Session;
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.engine.CollectionEntry;
@@ -47,7 +45,7 @@ public class PersistentCollectionChangeWorkUnit extends AbstractAuditWorkUnit im
 											  AuditConfiguration auditCfg, PersistentCollection collection,
 											  CollectionEntry collectionEntry, Serializable snapshot, Serializable id,
                                               String referencingPropertyName) {
-        super(sessionImplementor, entityName, auditCfg, new PersistentCollectionChangeWorkUnitId(id, collectionEntry.getRole()));
+        super(sessionImplementor, entityName, auditCfg, new PersistentCollectionChangeWorkUnitId(id, collectionEntry.getRole()), null);
 
 		this.referencingPropertyName = referencingPropertyName;
 
@@ -59,7 +57,7 @@ public class PersistentCollectionChangeWorkUnit extends AbstractAuditWorkUnit im
                                               AuditConfiguration verCfg, Serializable id,
                                               List<PersistentCollectionChangeData> collectionChanges,
                                               String referencingPropertyName) {
-        super(sessionImplementor, entityName, verCfg, id);
+        super(sessionImplementor, entityName, verCfg, id, null);
 
         this.collectionChanges = collectionChanges;
         this.referencingPropertyName = referencingPropertyName;
@@ -81,7 +79,7 @@ public class PersistentCollectionChangeWorkUnit extends AbstractAuditWorkUnit im
             // Setting the revision number
             ((Map<String, Object>) persistentCollectionChangeData.getData().get(entitiesCfg.getOriginalIdPropName()))
                     .put(entitiesCfg.getRevisionFieldName(), revisionData);
-
+            
             auditStrategy.performCollectionChange(session, verCfg, persistentCollectionChangeData, revisionData);
         }
     }

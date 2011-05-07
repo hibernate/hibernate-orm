@@ -269,10 +269,14 @@ public class RevisionInfoConfiguration {
 
                 revisionInfoClass = pc.getMappedClass();
                 revisionInfoTimestampType = pc.getProperty(revisionInfoTimestampData.getName()).getType();
-                if (globalCfg.isTrackEntitiesChangedInRevisionEnabled() || DefaultTrackingModifiedTypesRevisionEntity.class.isAssignableFrom(revisionInfoClass) || modifiedEntityNamesFound.isSet()) {
-                    // If modified entities tracking parameter is enabled, custom revision info class is a subtype of DefaultTrackingModifiedTypesRevisionEntity, or @ModifiedEntityNames annotation is used.
-                    revisionInfoGenerator = new DefaultTrackingModifiedTypesRevisionInfoGenerator(revisionInfoEntityName, revisionInfoClass,
-                            revisionEntity.value(), revisionInfoTimestampData, isTimestampAsDate(), modifiedEntityNamesData);
+                if (globalCfg.isTrackEntitiesChangedInRevisionEnabled() ||
+                        DefaultTrackingModifiedTypesRevisionEntity.class.isAssignableFrom(revisionInfoClass) ||
+                        modifiedEntityNamesFound.isSet()) {
+                    // If tracking modified entities parameter is enabled, custom revision info entity is a subtype
+                    // of DefaultTrackingModifiedTypesRevisionEntity class, or @ModifiedEntityNames annotation is used.
+                    revisionInfoGenerator = new DefaultTrackingModifiedTypesRevisionInfoGenerator(revisionInfoEntityName,
+                            revisionInfoClass, revisionEntity.value(), revisionInfoTimestampData, isTimestampAsDate(),
+                            modifiedEntityNamesData);
                     globalCfg.setTrackEntitiesChangedInRevisionEnabled(true);
                 } else {
                     revisionInfoGenerator = new DefaultRevisionInfoGenerator(revisionInfoEntityName, revisionInfoClass,

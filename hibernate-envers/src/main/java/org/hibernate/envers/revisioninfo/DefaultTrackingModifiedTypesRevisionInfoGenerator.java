@@ -1,16 +1,18 @@
 package org.hibernate.envers.revisioninfo;
 
 import org.hibernate.envers.RevisionListener;
+import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.entities.PropertyData;
 import org.hibernate.envers.tools.reflection.ReflectionTools;
 import org.hibernate.property.Getter;
 import org.hibernate.property.Setter;
 
+import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Automatically adds and removes entity names changed during current revision.
+ * Automatically adds entity names changed during current revision.
  * @see org.hibernate.envers.ModifiedEntityNames
  * @see org.hibernate.envers.DefaultTrackingModifiedTypesRevisionEntity
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
@@ -31,25 +33,14 @@ public class DefaultTrackingModifiedTypesRevisionInfoGenerator extends DefaultRe
 
     @Override
     @SuppressWarnings({"unchecked"})
-    public void addEntityToRevision(String entityName, Object revisionInfo) {
-        super.addEntityToRevision(entityName, revisionInfo);
-        Set<String> modifiedEntityNames = (Set<String>) modifiedEntityNamesGetter.get(revisionInfo);
+    public void entityChanged(Class entityClass, String entityName, Serializable entityId, RevisionType revisionType,
+                              Object revisionEntity) {
+        super.entityChanged(entityClass, entityName, entityId, revisionType, revisionEntity);
+        Set<String> modifiedEntityNames = (Set<String>) modifiedEntityNamesGetter.get(revisionEntity);
         if (modifiedEntityNames == null) {
             modifiedEntityNames = new HashSet<String>();
+            modifiedEntityNamesSetter.set(revisionEntity, modifiedEntityNames, null);
         }
-        modifiedEntityNames.add(entityName);
-        modifiedEntityNamesSetter.set(revisionInfo, modifiedEntityNames, null);
-    }
-
-    @Override
-    @SuppressWarnings({"unchecked"})
-    public void removeEntityFromRevision(String entityName, Object revisionInfo) {
-        super.removeEntityFromRevision(entityName, revisionInfo);
-        Set<String> modifiedEntityNames = (Set<String>) modifiedEntityNamesGetter.get(revisionInfo);
-        if (modifiedEntityNames == null) {
-            return;
-        }
-        modifiedEntityNames.remove(entityName);
-        modifiedEntityNamesSetter.set(revisionInfo, modifiedEntityNames, null);
+        modifiedEntityNames.add(entityClass.getName());
     }
 }

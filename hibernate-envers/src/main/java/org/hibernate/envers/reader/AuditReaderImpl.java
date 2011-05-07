@@ -235,33 +235,38 @@ public class AuditReaderImpl implements AuditReaderImplementor {
     }
 
     @SuppressWarnings({"unchecked"})
-    public List findEntitiesChangedInRevision(Number revision) throws IllegalStateException, IllegalArgumentException, AuditException {
+    public List<Object> findEntitiesChangedInRevision(Number revision) throws IllegalStateException,
+                                                                              IllegalArgumentException, AuditException {
         List<Class> clazz = findEntityTypesChangedInRevision(revision);
-        List result = new ArrayList(clazz.size());
+        List<Object> result = new ArrayList<Object>();
         for (Class c : clazz) {
-            result.addAll(createQuery().forEntitiesAtCertainRevision(c, revision).getResultList());
+            result.addAll(createQuery().forEntitiesModifiedAtRevision(c, revision).getResultList());
         }
         return result;
     }
 
     @SuppressWarnings({"unchecked"})
-    public List findEntitiesChangedInRevision(Number revision, RevisionType revisionType) throws IllegalStateException, IllegalArgumentException, AuditException {
+    public List<Object> findEntitiesChangedInRevision(Number revision, RevisionType revisionType)
+            throws IllegalStateException, IllegalArgumentException, AuditException {
         List<Class> clazz = findEntityTypesChangedInRevision(revision);
-        List result = new ArrayList(clazz.size());
+        List<Object> result = new ArrayList<Object>();
         for (Class c : clazz) {
-            result.addAll(createQuery().forEntitiesAtCertainRevision(c, revision).add(new RevisionTypeAuditExpression(revisionType, "=")).getResultList());
+            result.addAll(createQuery().forEntitiesModifiedAtRevision(c, revision)
+                                       .add(new RevisionTypeAuditExpression(revisionType, "=")).getResultList());
         }
         return result;
     }
 
     @SuppressWarnings({"unchecked"})
-    public Map<RevisionType, List> findEntitiesChangedInRevisionGroupByRevisionType(Number revision) throws IllegalStateException, IllegalArgumentException, AuditException {
+    public Map<RevisionType, List<Object>> findEntitiesChangedInRevisionGroupByRevisionType(Number revision)
+            throws IllegalStateException, IllegalArgumentException, AuditException {
         List<Class> clazz = findEntityTypesChangedInRevision(revision);
-        Map<RevisionType, List> result = new HashMap<RevisionType, List>();
+        Map<RevisionType, List<Object>> result = new HashMap<RevisionType, List<Object>>();
         for (RevisionType revisionType : RevisionType.values()) {
             result.put(revisionType, new ArrayList());
             for (Class c : clazz) {
-                List list = createQuery().forEntitiesAtCertainRevision(c, revision).add(new RevisionTypeAuditExpression(revisionType, "=")).getResultList();
+                List<Object> list = createQuery().forEntitiesModifiedAtRevision(c, revision)
+                                                 .add(new RevisionTypeAuditExpression(revisionType, "=")).getResultList();
                 result.get(revisionType).addAll(list);
             }
         }
@@ -269,7 +274,8 @@ public class AuditReaderImpl implements AuditReaderImplementor {
     }
 
     @SuppressWarnings({"unchecked"})
-    public List<Class> findEntityTypesChangedInRevision(Number revision) throws IllegalStateException, IllegalArgumentException, AuditException {
+    public List<Class> findEntityTypesChangedInRevision(Number revision) throws IllegalStateException,
+                                                                                IllegalArgumentException, AuditException {
         checkNotNull(revision, "Entity revision");
         checkPositive(revision, "Entity revision");
         checkSession();

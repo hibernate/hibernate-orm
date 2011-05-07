@@ -22,7 +22,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.revisioninfo;
+
 import org.hibernate.Session;
+import org.hibernate.envers.EntityTrackingRevisionListener;
+import org.hibernate.envers.RevisionType;
+
+import java.io.Serializable;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -32,12 +37,8 @@ public interface RevisionInfoGenerator {
     Object generate();
 
     /**
-     * @see org.hibernate.envers.EntityTrackingRevisionListener#addEntityToRevision(String, Object)
+     * @see EntityTrackingRevisionListener#entityChanged(Class, String, Serializable, RevisionType, Object)
      */
-    void addEntityToRevision(String entityName, Object revisionInfo);
-
-    /**
-     * @see org.hibernate.envers.EntityTrackingRevisionListener#removeEntityFromRevision(String, Object)
-     */
-    void removeEntityFromRevision(String entityName, Object revisionInfo);
+    void entityChanged(Class entityClass, String entityName, Serializable entityId, RevisionType revisionType,
+                       Object revisionEntity);
 }

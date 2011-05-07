@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * In comparison to {@link EntitiesAtRevisionQuery} this query will return an empty collection if an entity
+ * In comparison to {@link EntitiesAtRevisionQuery} this query returns an empty collection if an entity
  * of a certain type has not been changed in a given revision.
  * @see EntitiesAtRevisionQuery
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
@@ -18,8 +18,8 @@ import java.util.List;
 public class EntitiesModifiedAtRevisionQuery extends AbstractAuditQuery {
     private final Number revision;
 
-	public EntitiesModifiedAtRevisionQuery(AuditConfiguration verCfg, AuditReaderImplementor versionsReader, Class<?> cls,
-                                        Number revision) {
+    public EntitiesModifiedAtRevisionQuery(AuditConfiguration verCfg, AuditReaderImplementor versionsReader,
+                                           Class<?> cls, Number revision) {
 		super(verCfg, versionsReader, cls);
         this.revision = revision;
 	}

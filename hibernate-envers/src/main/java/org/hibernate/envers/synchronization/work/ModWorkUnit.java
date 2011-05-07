@@ -23,6 +23,8 @@
  */
 package org.hibernate.envers.synchronization.work;
 import java.io.Serializable;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import org.hibernate.engine.SessionImplementor;
@@ -39,7 +41,7 @@ public class ModWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
 
     public ModWorkUnit(SessionImplementor sessionImplementor, String entityName, AuditConfiguration verCfg, 
 					   Serializable id, EntityPersister entityPersister, Object[] newState, Object[] oldState) {
-        super(sessionImplementor, entityName, verCfg, id);
+        super(sessionImplementor, entityName, verCfg, id, RevisionType.MOD);
 
         data = new HashMap<String, Object>();
         changes = verCfg.getEntCfg().get(getEntityName()).getPropertyMapper().map(sessionImplementor, data,
@@ -51,7 +53,7 @@ public class ModWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
     }
 
     public Map<String, Object> generateData(Object revisionData) {
-        fillDataWithId(data, revisionData, RevisionType.MOD);
+        fillDataWithId(data, revisionData);
 
         return data;
     }

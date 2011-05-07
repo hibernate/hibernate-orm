@@ -77,7 +77,7 @@ public class AuditQueryCreator {
     }
 
     /**
-     * In comparison to {@link #forEntitiesAtRevision(Class, String, Number)} this method will return an empty
+     * In comparison to {@link #forEntitiesAtRevision(Class, String, Number)} this query will return an empty
      * collection if an entity of a certain type has not been changed in a given revision.
      * @param c Class of the entities for which to query.
      * @param revision Revision number at which to execute the query.
@@ -85,7 +85,7 @@ public class AuditQueryCreator {
      *         can then be executed.
      * @see #forEntitiesAtRevision(Class, String, Number)
      */
-    public AuditQuery forEntitiesAtCertainRevision(Class<?> c, Number revision) {
+    public AuditQuery forEntitiesModifiedAtRevision(Class<?> c, Number revision) {
         checkNotNull(revision, "Entity revision");
         checkPositive(revision, "Entity revision");
         return new EntitiesModifiedAtRevisionQuery(auditCfg, auditReaderImplementor, c, revision);

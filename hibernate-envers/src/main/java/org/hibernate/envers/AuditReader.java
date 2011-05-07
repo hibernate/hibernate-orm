@@ -210,22 +210,28 @@ public interface AuditReader {
 			throws HibernateException;
 
     /**
-     * Find all entities changed (added, updated and removed) in a given revision.
+     * Find all entities changed (added, updated and removed) in a given revision. Executes <i>n+1</i> queries,
+     * where <i>n</i> is a number of entity classes modified within specified revision.
      * @param revision Revision number.
      * @return Snapshots of all audited entities changed in a given revision.
      * @throws IllegalStateException If the associated entity manager is closed.
      * @throws IllegalArgumentException If a revision number is <code>null</code>, less or equal to 0.
      * @throws AuditException If none of the following conditions is satisfied:
      *                        <ul>
-     *                        <li><code>org.hibernate.envers.track_entities_changed_in_revision</code> parameter is set to <code>true</code>.</li>
-     *                        <li>Custom revision entity (annotated with {@link RevisionEntity}) extends {@link DefaultTrackingModifiedTypesRevisionEntity} base class.</li>
-     *                        <li>Custom revision entity (annotated with {@link RevisionEntity}) encapsulates a field marked with {@link ModifiedEntityNames} interface.</li>
+     *                        <li><code>org.hibernate.envers.track_entities_changed_in_revision</code>
+     *                            parameter is set to <code>true</code>.</li>
+     *                        <li>Custom revision entity (annotated with {@link RevisionEntity})
+     *                            extends {@link DefaultTrackingModifiedTypesRevisionEntity} base class.</li>
+     *                        <li>Custom revision entity (annotated with {@link RevisionEntity}) encapsulates a field
+     *                            marked with {@link ModifiedEntityNames} interface.</li>
      *                        </ul>
      */
-    List findEntitiesChangedInRevision(Number revision) throws IllegalStateException, IllegalArgumentException, AuditException;
+    List<Object> findEntitiesChangedInRevision(Number revision)
+            throws IllegalStateException, IllegalArgumentException, AuditException;
 
     /**
-     * Find all entities changed (added, updated or removed) in a given revision.
+     * Find all entities changed (added, updated or removed) in a given revision. Executes <i>n+1</i> queries,
+     * where <i>n</i> is a number of entity classes modified within specified revision.
      * @param revision Revision number.
      * @param revisionType Type of modification.
      * @return Snapshots of all audited entities changed in a given revision filtered by modification type.
@@ -233,27 +239,40 @@ public interface AuditReader {
      * @throws IllegalArgumentException If a revision number is <code>null</code>, less or equal to 0.
      * @throws AuditException If none of the following conditions is satisfied:
      *                        <ul>
-     *                        <li><code>org.hibernate.envers.track_entities_changed_in_revision</code> parameter is set to <code>true</code>.</li>
-     *                        <li>Custom revision entity (annotated with {@link RevisionEntity}) extends {@link DefaultTrackingModifiedTypesRevisionEntity} base class.</li>
-     *                        <li>Custom revision entity (annotated with {@link RevisionEntity}) encapsulates a field marked with {@link ModifiedEntityNames} interface.</li>
+     *                        <li><code>org.hibernate.envers.track_entities_changed_in_revision</code>
+     *                            parameter is set to <code>true</code>.</li>
+     *                        <li>Custom revision entity (annotated with {@link RevisionEntity})
+     *                            extends {@link DefaultTrackingModifiedTypesRevisionEntity} base class.</li>
+     *                        <li>Custom revision entity (annotated with {@link RevisionEntity}) encapsulates a field
+     *                            marked with {@link ModifiedEntityNames} interface.</li>
      *                        </ul>
      */
-    List findEntitiesChangedInRevision(Number revision, RevisionType revisionType) throws IllegalStateException, IllegalArgumentException, AuditException;
+    List<Object> findEntitiesChangedInRevision(Number revision, RevisionType revisionType)
+            throws IllegalStateException, IllegalArgumentException, AuditException;
 
     /**
      * Find all entities changed (added, updated and removed) in a given revision grouped by modification type.
+     * Executes <i>mn+1</i> queries, where:
+     * <ul>
+     * <li><i>n</i> - number of entity classes modified within specified revision.
+     * <li><i>m</i> - number of different revision types. See {@link RevisionType} enum.
+     * </ul>
      * @param revision Revision number.
      * @return Map containing lists of entity snapshots grouped by modification operation (e.g. addition, update, removal).
      * @throws IllegalStateException If the associated entity manager is closed.
      * @throws IllegalArgumentException If a revision number is <code>null</code>, less or equal to 0.
      * @throws AuditException If none of the following conditions is satisfied:
      *                        <ul>
-     *                        <li><code>org.hibernate.envers.track_entities_changed_in_revision</code> parameter is set to <code>true</code>.</li>
-     *                        <li>Custom revision entity (annotated with {@link RevisionEntity}) extends {@link DefaultTrackingModifiedTypesRevisionEntity} base class.</li>
-     *                        <li>Custom revision entity (annotated with {@link RevisionEntity}) encapsulates a field marked with {@link ModifiedEntityNames} interface.</li>
+     *                        <li><code>org.hibernate.envers.track_entities_changed_in_revision</code>
+     *                            parameter is set to <code>true</code>.</li>
+     *                        <li>Custom revision entity (annotated with {@link RevisionEntity})
+     *                            extends {@link DefaultTrackingModifiedTypesRevisionEntity} base class.</li>
+     *                        <li>Custom revision entity (annotated with {@link RevisionEntity}) encapsulates a field
+     *                            marked with {@link ModifiedEntityNames} interface.</li>
      *                        </ul>
      */
-    Map<RevisionType, List> findEntitiesChangedInRevisionGroupByRevisionType(Number revision) throws IllegalStateException, IllegalArgumentException, AuditException;
+    Map<RevisionType, List<Object>> findEntitiesChangedInRevisionGroupByRevisionType(Number revision)
+            throws IllegalStateException, IllegalArgumentException, AuditException;
 
     /**
      * Returns list of entity classes modified in a given revision.
@@ -263,10 +282,14 @@ public interface AuditReader {
      * @throws IllegalArgumentException If a revision number is <code>null</code>, less or equal to 0.
      * @throws AuditException If none of the following conditions is satisfied:
      *                        <ul>
-     *                        <li><code>org.hibernate.envers.track_entities_changed_in_revision</code> parameter is set to <code>true</code>.</li>
-     *                        <li>Custom revision entity (annotated with {@link RevisionEntity}) extends {@link DefaultTrackingModifiedTypesRevisionEntity} base class.</li>
-     *                        <li>Custom revision entity (annotated with {@link RevisionEntity}) encapsulates a field marked with {@link ModifiedEntityNames} interface.</li>
+     *                        <li><code>org.hibernate.envers.track_entities_changed_in_revision</code>
+     *                            parameter is set to <code>true</code>.</li>
+     *                        <li>Custom revision entity (annotated with {@link RevisionEntity})
+     *                            extends {@link DefaultTrackingModifiedTypesRevisionEntity} base class.</li>
+     *                        <li>Custom revision entity (annotated with {@link RevisionEntity}) encapsulates a field
+     *                            marked with {@link ModifiedEntityNames} interface.</li>
      *                        </ul>
      */
-    List<Class> findEntityTypesChangedInRevision(Number revision) throws IllegalStateException, IllegalArgumentException, AuditException;
+    List<Class> findEntityTypesChangedInRevision(Number revision)
+            throws IllegalStateException, IllegalArgumentException, AuditException;
 }

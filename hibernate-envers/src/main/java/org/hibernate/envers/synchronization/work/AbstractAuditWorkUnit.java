@@ -22,9 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.synchronization.work;
-import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
+
 import org.hibernate.Session;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.envers.RevisionType;
@@ -32,9 +30,14 @@ import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.configuration.AuditEntitiesConfiguration;
 import org.hibernate.envers.strategy.AuditStrategy;
 
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * @author Adam Warski (adam at warski dot org)
  * @author Stephanie Pau at Markit Group Plc
+ * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public abstract class AbstractAuditWorkUnit implements AuditWorkUnit {
 	protected final SessionImplementor sessionImplementor;
@@ -42,19 +45,21 @@ public abstract class AbstractAuditWorkUnit implements AuditWorkUnit {
     protected final Serializable id;
     protected final String entityName;
     protected final AuditStrategy auditStrategy;
+    protected final RevisionType revisionType;
 
     private Object performedData;
 
     protected AbstractAuditWorkUnit(SessionImplementor sessionImplementor, String entityName, AuditConfiguration verCfg,
-									Serializable id) {
+									Serializable id, RevisionType revisionType) {
 		this.sessionImplementor = sessionImplementor;
         this.verCfg = verCfg;
         this.id = id;
         this.entityName = entityName;
+        this.revisionType = revisionType;
         this.auditStrategy = verCfg.getAuditStrategy();
     }
 
-    protected void fillDataWithId(Map<String, Object> data, Object revision, RevisionType revisionType) {
+    protected void fillDataWithId(Map<String, Object> data, Object revision) {
         AuditEntitiesConfiguration entitiesCfg = verCfg.getAuditEntCfg();
 
         Map<String, Object> originalId = new HashMap<String, Object>();
@@ -73,7 +78,7 @@ public abstract class AbstractAuditWorkUnit implements AuditWorkUnit {
         setPerformed(data);
     }
 
-    public Object getEntityId() {
+    public Serializable getEntityId() {
         return id;
     }
 
@@ -94,5 +99,9 @@ public abstract class AbstractAuditWorkUnit implements AuditWorkUnit {
             session.delete(verCfg.getAuditEntCfg().getAuditEntityName(getEntityName()), performedData);
             session.flush();
         }
+    }
+
+    public RevisionType getRevisionType() {
+        return revisionType;
     }
 }

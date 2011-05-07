@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
+ * Revision entity which {@code modifiedEntityNames} field is manually populated by {@link CustomEntityTrackingRevisionListener}.
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @Entity

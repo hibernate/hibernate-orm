@@ -17,6 +17,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * Tests proper behavior of tracking modified entity types when {@code org.hibernate.envers.track_entities_changed_in_revision}
+ * parameter is set to {@code true}.
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @SuppressWarnings({"unchecked"})
@@ -109,7 +111,7 @@ public class DefaultTrackingEntitiesTest extends AbstractEntityTest {
         StrTestEntity ste = new StrTestEntity("x", steId);
         StrIntTestEntity site = new StrIntTestEntity("y", 1, siteId);
 
-        Map<RevisionType, List> result = getAuditReader().findEntitiesChangedInRevisionGroupByRevisionType(1);
+        Map<RevisionType, List<Object>> result = getAuditReader().findEntitiesChangedInRevisionGroupByRevisionType(1);
         assert Arrays.asList(ste, site).equals(result.get(RevisionType.ADD));
         assert Arrays.asList().equals(result.get(RevisionType.MOD));
         assert Arrays.asList().equals(result.get(RevisionType.DEL));
@@ -119,7 +121,7 @@ public class DefaultTrackingEntitiesTest extends AbstractEntityTest {
     public void testTrackModifiedEntitiesGroupByRevisionType() {
         StrIntTestEntity site = new StrIntTestEntity("y", 2, siteId);
 
-        Map<RevisionType, List> result = getAuditReader().findEntitiesChangedInRevisionGroupByRevisionType(2);
+        Map<RevisionType, List<Object>> result = getAuditReader().findEntitiesChangedInRevisionGroupByRevisionType(2);
         assert Arrays.asList().equals(result.get(RevisionType.ADD));
         assert Arrays.asList(site).equals(result.get(RevisionType.MOD));
         assert Arrays.asList().equals(result.get(RevisionType.DEL));
@@ -130,7 +132,7 @@ public class DefaultTrackingEntitiesTest extends AbstractEntityTest {
         StrTestEntity ste = new StrTestEntity(null, steId);
         StrIntTestEntity site = new StrIntTestEntity(null, null, siteId);
 
-        Map<RevisionType, List> result = getAuditReader().findEntitiesChangedInRevisionGroupByRevisionType(3);
+        Map<RevisionType, List<Object>> result = getAuditReader().findEntitiesChangedInRevisionGroupByRevisionType(3);
         assert Arrays.asList().equals(result.get(RevisionType.ADD));
         assert Arrays.asList().equals(result.get(RevisionType.MOD));
         assert Arrays.asList(ste, site).equals(result.get(RevisionType.DEL));

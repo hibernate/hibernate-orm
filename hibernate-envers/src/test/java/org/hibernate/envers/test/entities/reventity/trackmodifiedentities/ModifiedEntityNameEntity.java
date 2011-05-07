@@ -6,6 +6,7 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 
 /**
+ * Custom detail of revision entity.
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @Entity

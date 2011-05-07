@@ -39,7 +39,7 @@ public class DelWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
 
     public DelWorkUnit(SessionImplementor sessionImplementor, String entityName, AuditConfiguration verCfg,
 					   Serializable id, EntityPersister entityPersister, Object[] state) {
-        super(sessionImplementor, entityName, verCfg, id);
+        super(sessionImplementor, entityName, verCfg, id, RevisionType.DEL);
 
         this.state = state;
         this.propertyNames = entityPersister.getPropertyNames();
@@ -51,7 +51,7 @@ public class DelWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
 
     public Map<String, Object> generateData(Object revisionData) {
         Map<String, Object> data = new HashMap<String, Object>();
-        fillDataWithId(data, revisionData, RevisionType.DEL);
+        fillDataWithId(data, revisionData);
 
 		if (verCfg.getGlobalCfg().isStoreDataAtDelete()) {
 			verCfg.getEntCfg().get(getEntityName()).getPropertyMapper().map(sessionImplementor, data,

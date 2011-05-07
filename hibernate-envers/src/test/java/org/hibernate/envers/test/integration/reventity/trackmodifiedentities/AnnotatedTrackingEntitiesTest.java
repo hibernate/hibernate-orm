@@ -1,16 +1,11 @@
 package org.hibernate.envers.test.integration.reventity.trackmodifiedentities;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
-import org.hibernate.envers.test.Priority;
-import org.hibernate.envers.test.entities.StrIntTestEntity;
-import org.hibernate.envers.test.entities.StrTestEntity;
+import org.hibernate.envers.ModifiedEntityNames;
 import org.hibernate.envers.test.entities.reventity.trackmodifiedentities.AnnotatedTrackingRevisionEntity;
-import org.junit.Test;
-
-import javax.persistence.EntityManager;
 
 /**
+ * Tests proper behavior of revision entity that utilizes {@link ModifiedEntityNames} annotation.
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public class AnnotatedTrackingEntitiesTest extends DefaultTrackingEntitiesTest {

@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
+ * Sample revision entity that uses {@link ModifiedEntityNames} annotation.
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @Entity
@@ -27,7 +28,7 @@ public class AnnotatedTrackingRevisionEntity {
     @JoinTable(name = "REVENTITY", joinColumns = @JoinColumn(name = "REV"))
     @Column(name = "ENTITYNAME")
     @ModifiedEntityNames
-    private Set<String> modifiedEntityNames;
+    private Set<String> entityNames;
 
     public int getCustomId() {
         return customId;
@@ -45,12 +46,12 @@ public class AnnotatedTrackingRevisionEntity {
         this.customTimestamp = customTimestamp;
     }
 
-    public Set<String> getModifiedEntityNames() {
-        return modifiedEntityNames;
+    public Set<String> getEntityNames() {
+        return entityNames;
     }
 
-    public void setModifiedEntityNames(Set<String> modifiedEntityNames) {
-        this.modifiedEntityNames = modifiedEntityNames;
+    public void setEntityNames(Set<String> entityNames) {
+        this.entityNames = entityNames;
     }
 
     public boolean equals(Object o) {

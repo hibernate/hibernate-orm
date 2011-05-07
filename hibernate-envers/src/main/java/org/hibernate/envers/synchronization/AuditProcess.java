@@ -22,17 +22,21 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.synchronization;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.Queue;
+
 import org.hibernate.FlushMode;
 import org.hibernate.Session;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.envers.revisioninfo.RevisionInfoGenerator;
 import org.hibernate.envers.synchronization.work.AuditWorkUnit;
+import org.hibernate.envers.synchronization.work.PersistentCollectionChangeWorkUnit;
 import org.hibernate.envers.tools.Pair;
+import org.hibernate.persister.entity.EntityPersister;
+
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.Queue;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -105,13 +109,23 @@ public class AuditProcess implements BeforeTransactionCompletionProcess {
         // First undoing any performed work units
         while ((vwu = undoQueue.poll()) != null) {
             vwu.undo(session);
-            revisionInfoGenerator.removeEntityFromRevision(vwu.getEntityName(), currentRevisionData);
         }
 
         while ((vwu = workUnits.poll()) != null) {
             vwu.perform(session, revisionData);
-            revisionInfoGenerator.addEntityToRevision(vwu.getEntityName(), currentRevisionData);
+            if (!(vwu instanceof PersistentCollectionChangeWorkUnit)) {
+                Class entityClass = getEntityClass(this.session, session, vwu.getEntityName());
+                revisionInfoGenerator.entityChanged(entityClass, vwu.getEntityName(), vwu.getEntityId(), vwu.getRevisionType(), currentRevisionData);
+            }
         }
+    }
+
+    /**
+     * @return Java class mapped to specified entity name.
+     */
+    private Class getEntityClass(SessionImplementor sessionImplementor, Session session, String entityName) {
+        EntityPersister entityPersister = sessionImplementor.getFactory().getEntityPersister(entityName);
+        return entityPersister.getClassMetadata().getMappedClass(session.getEntityMode());
     }
 
 	public Object getCurrentRevisionData(Session session, boolean persist) {

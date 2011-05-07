@@ -7,7 +7,7 @@ import java.lang.annotation.Target;
 
 /**
  * Marks a property which will hold the collection of entity names modified during each revision.
- * This annotation expects field of Set&lt;String&gt; type.
+ * This annotation expects field of <code>{@literal Set<String>}</code> type.
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @Retention(RetentionPolicy.RUNTIME)

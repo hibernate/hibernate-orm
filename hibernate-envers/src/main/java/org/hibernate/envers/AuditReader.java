@@ -210,8 +210,8 @@ public interface AuditReader {
 			throws HibernateException;
 
     /**
-     * Find all entities changed (added, updated and removed) in a given revision. Executes <i>n+1</i> queries,
-     * where <i>n</i> is a number of entity classes modified within specified revision.
+     * Find all entities changed (added, updated and removed) in a given revision. Executes <i>n+1</i> SQL queries,
+     * where <i>n</i> is a number of different entity classes modified within specified revision.
      * @param revision Revision number.
      * @return Snapshots of all audited entities changed in a given revision.
      * @throws IllegalStateException If the associated entity manager is closed.
@@ -230,8 +230,8 @@ public interface AuditReader {
             throws IllegalStateException, IllegalArgumentException, AuditException;
 
     /**
-     * Find all entities changed (added, updated or removed) in a given revision. Executes <i>n+1</i> queries,
-     * where <i>n</i> is a number of entity classes modified within specified revision.
+     * Find all entities changed (added, updated or removed) in a given revision. Executes <i>n+1</i> SQL queries,
+     * where <i>n</i> is a number of different entity classes modified within specified revision.
      * @param revision Revision number.
      * @param revisionType Type of modification.
      * @return Snapshots of all audited entities changed in a given revision filtered by modification type.
@@ -252,9 +252,9 @@ public interface AuditReader {
 
     /**
      * Find all entities changed (added, updated and removed) in a given revision grouped by modification type.
-     * Executes <i>mn+1</i> queries, where:
+     * Executes <i>mn+1</i> SQL queries, where:
      * <ul>
-     * <li><i>n</i> - number of entity classes modified within specified revision.
+     * <li><i>n</i> - number of different entity classes modified within specified revision.
      * <li><i>m</i> - number of different revision types. See {@link RevisionType} enum.
      * </ul>
      * @param revision Revision number.

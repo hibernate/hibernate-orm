@@ -23,8 +23,6 @@
  */
 package org.hibernate.metamodel.binding;
 
-import org.hibernate.metamodel.relational.Value;
-
 /**
  * TODO : javadoc
  *
@@ -32,9 +30,14 @@ import org.hibernate.metamodel.relational.Value;
  */
 public interface EntityReferencingAttributeBinding extends AttributeBinding {
 	boolean isReferenceResolved();
+
 	boolean isPropertyReference();
+
 	String getReferencedEntityName();
+
 	String getReferencedAttributeName();
+
 	EntityBinding getReferencedEntityBinding();
+
 	void resolveReference(AttributeBinding attributeBinding);
 }

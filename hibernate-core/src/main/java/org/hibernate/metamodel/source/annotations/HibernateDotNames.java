@@ -188,8 +188,6 @@ public interface HibernateDotNames {
 	public static final DotName TYPE_DEFS = DotName.createSimple( TypeDefs.class.getName() );
 	public static final DotName WHERE = DotName.createSimple( Where.class.getName() );
 	public static final DotName WHERE_JOIN_TABLE = DotName.createSimple( WhereJoinTable.class.getName() );
-
-
 }
 
 

@@ -75,10 +75,8 @@ public class ConfiguredClass {
 	private final InheritanceType inheritanceType;
 	private final boolean hasOwnTable;
 	private final String primaryTableName;
-	//private final AnnotationInstance tableAnnotation;
 
-	private final boolean isMappedSuperClass;
-	private final boolean isEmbeddable;
+	private final ConfiguredClassType type;
 
 	private final Map<String, MappedAttribute> mappedAttributes;
 
@@ -95,22 +93,11 @@ public class ConfiguredClass {
 		this.inheritanceType = inheritanceType;
 		this.clazz = serviceRegistry.getService( ClassLoaderService.class ).classForName( info.toString() );
 
-		AnnotationInstance mappedSuperClassAnnotation = JandexHelper.getSingleAnnotation(
-				classInfo, JPADotNames.MAPPED_SUPERCLASS
-		);
-		isMappedSuperClass = mappedSuperClassAnnotation != null;
+		this.type = determineType();
+		this.classAccessType = determineClassAccessType();
 
-		AnnotationInstance embeddableAnnotation = JandexHelper.getSingleAnnotation(
-				classInfo, JPADotNames.MAPPED_SUPERCLASS
-		);
-		isEmbeddable = embeddableAnnotation != null;
-
-		// todo think about how exactly to handle embeddables regarding access type etc
-
-		classAccessType = determineClassAccessType();
-
-		hasOwnTable = definesItsOwnTable();
-		primaryTableName = determinePrimaryTableName();
+		this.hasOwnTable = definesItsOwnTable();
+		this.primaryTableName = determinePrimaryTableName();
 
 		List<MappedAttribute> properties = collectMappedProperties( resolvedType );
 		// make sure the properties are ordered by property name
@@ -119,7 +106,7 @@ public class ConfiguredClass {
 		for ( MappedAttribute property : properties ) {
 			tmpMap.put( property.getName(), property );
 		}
-		mappedAttributes = Collections.unmodifiableMap( tmpMap );
+		this.mappedAttributes = Collections.unmodifiableMap( tmpMap );
 	}
 
 	public String getName() {
@@ -138,12 +125,8 @@ public class ConfiguredClass {
 		return isRoot;
 	}
 
-	public boolean isMappedSuperClass() {
-		return isMappedSuperClass;
-	}
-
-	public boolean isEmbeddable() {
-		return isEmbeddable;
+	public ConfiguredClassType getType() {
+		return type;
 	}
 
 	public InheritanceType getInheritanceType() {
@@ -170,13 +153,37 @@ public class ConfiguredClass {
 	public String toString() {
 		final StringBuilder sb = new StringBuilder();
 		sb.append( "ConfiguredClass" );
-		sb.append( "{clazz=" ).append( clazz );
-		sb.append( ", mappedAttributes=" ).append( mappedAttributes );
+		sb.append( "{clazz=" ).append( clazz.getSimpleName() );
+		sb.append( ", type=" ).append( type );
 		sb.append( ", classAccessType=" ).append( classAccessType );
 		sb.append( ", isRoot=" ).append( isRoot );
 		sb.append( ", inheritanceType=" ).append( inheritanceType );
 		sb.append( '}' );
 		return sb.toString();
+	}
+
+	private ConfiguredClassType determineType() {
+		AnnotationInstance entityAnnotation = JandexHelper.getSingleAnnotation(
+				classInfo, JPADotNames.ENTITY
+		);
+		if ( entityAnnotation != null ) {
+			return ConfiguredClassType.ENTITY;
+		}
+
+		AnnotationInstance mappedSuperClassAnnotation = JandexHelper.getSingleAnnotation(
+				classInfo, JPADotNames.MAPPED_SUPERCLASS
+		);
+		if ( mappedSuperClassAnnotation != null ) {
+			return ConfiguredClassType.MAPPED_SUPERCLASS;
+		}
+
+		AnnotationInstance embeddableAnnotation = JandexHelper.getSingleAnnotation(
+				classInfo, JPADotNames.EMBEDDABLE
+		);
+		if ( embeddableAnnotation != null ) {
+			return ConfiguredClassType.EMBEDDABLE;
+		}
+		return ConfiguredClassType.NON_ENTITY;
 	}
 
 	private AccessType determineClassAccessType() {
@@ -398,7 +405,8 @@ public class ConfiguredClass {
 
 	private boolean definesItsOwnTable() {
 		// mapped super classes and embeddables don't have their own tables
-		if ( isMappedSuperClass() || isEmbeddable() ) {
+		if ( ConfiguredClassType.MAPPED_SUPERCLASS.equals( getType() ) || ConfiguredClassType.EMBEDDABLE
+				.equals( getType() ) ) {
 			return false;
 		}
 
@@ -428,7 +436,9 @@ public class ConfiguredClass {
 				}
 			}
 		}
-		else if ( parent != null && !parent.isMappedSuperClass && !parent.isEmbeddable ) {
+		else if ( parent != null
+				&& !parent.getType().equals( ConfiguredClassType.MAPPED_SUPERCLASS )
+				&& !parent.getType().equals( ConfiguredClassType.EMBEDDABLE ) ) {
 			tableName = parent.getPrimaryTableName();
 		}
 		return tableName;

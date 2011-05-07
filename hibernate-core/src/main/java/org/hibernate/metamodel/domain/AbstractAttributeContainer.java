@@ -111,7 +111,7 @@ public abstract class AbstractAttributeContainer implements AttributeContainer, 
 	protected void addAttribute(Attribute attribute) {
 		// todo : how to best "secure" this?
 		if ( attributeMap.put( attribute.getName(), attribute ) != null ) {
-			throw new IllegalArgumentException( "Attrtibute with name [" + attribute.getName() + "] already registered" );
+			throw new IllegalArgumentException( "Attribute with name [" + attribute.getName() + "] already registered" );
 		}
 		attributeSet.add( attribute );
 	}

@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,31 +21,14 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.domain;
+package org.hibernate.metamodel.source.annotations;
 
 /**
- * Describes the type of a type :/
- *
- * @author Steve Ebersole
+ * @author Hardy Ferentschik
  */
-public enum TypeNature {
-	BASIC( "basic" ),
-	COMPONENT( "component" ),
-	ENTITY( "entity" ),
-	SUPERCLASS( "superclass" ),
-	NON_ENTITY( "non-entity" );
-
-	private final String name;
-
-	private TypeNature(String name) {
-		this.name = name;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public String toString() {
-		return super.toString() + "[" + getName() + "]";
-	}
+public enum ConfiguredClassType {
+	ENTITY,
+	MAPPED_SUPERCLASS,
+	EMBEDDABLE,
+	NON_ENTITY
 }

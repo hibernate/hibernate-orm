@@ -24,28 +24,19 @@
 package org.hibernate.metamodel.domain;
 
 /**
- * Describes the type of a type :/
+ * Models the concept class in the hierarchy with no persistent attributes.
  *
- * @author Steve Ebersole
+ * @author Hardy Ferentschik
  */
-public enum TypeNature {
-	BASIC( "basic" ),
-	COMPONENT( "component" ),
-	ENTITY( "entity" ),
-	SUPERCLASS( "superclass" ),
-	NON_ENTITY( "non-entity" );
-
-	private final String name;
-
-	private TypeNature(String name) {
-		this.name = name;
+public class NonEntity extends AbstractAttributeContainer implements Hierarchical {
+	public NonEntity(String name, Hierarchical superType) {
+		super( name, superType );
 	}
 
-	public String getName() {
-		return name;
-	}
-
-	public String toString() {
-		return super.toString() + "[" + getName() + "]";
+	/**
+	 * {@inheritDoc}
+	 */
+	public TypeNature getNature() {
+		return TypeNature.NON_ENTITY;
 	}
 }

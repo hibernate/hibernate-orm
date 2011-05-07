@@ -75,11 +75,9 @@ public class AnnotationBinder {
 
 		// now we process each hierarchy one at the time
 		for ( ConfiguredClassHierarchy hierarchy : hierarchies ) {
-			Iterator<ConfiguredClass> iter = hierarchy.iterator();
-			while ( iter.hasNext() ) {
-				ConfiguredClass entity = iter.next();
-				log.info( "Binding entity from annotated class: {}", entity.getName() );
-				EntityBinder entityBinder = new EntityBinder( metadata, entity );
+			for ( ConfiguredClass configuredClass : hierarchy ) {
+				log.info( "Binding entity from annotated class: {}", configuredClass.getName() );
+				EntityBinder entityBinder = new EntityBinder( metadata, configuredClass );
 				entityBinder.bind();
 			}
 		}

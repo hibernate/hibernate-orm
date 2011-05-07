@@ -45,7 +45,7 @@ public class PersistentCollectionChangeWorkUnit extends AbstractAuditWorkUnit im
 											  AuditConfiguration auditCfg, PersistentCollection collection,
 											  CollectionEntry collectionEntry, Serializable snapshot, Serializable id,
                                               String referencingPropertyName) {
-        super(sessionImplementor, entityName, auditCfg, new PersistentCollectionChangeWorkUnitId(id, collectionEntry.getRole()), null);
+        super(sessionImplementor, entityName, auditCfg, new PersistentCollectionChangeWorkUnitId(id, collectionEntry.getRole()), RevisionType.MOD);
 
 		this.referencingPropertyName = referencingPropertyName;
 
@@ -57,7 +57,7 @@ public class PersistentCollectionChangeWorkUnit extends AbstractAuditWorkUnit im
                                               AuditConfiguration verCfg, Serializable id,
                                               List<PersistentCollectionChangeData> collectionChanges,
                                               String referencingPropertyName) {
-        super(sessionImplementor, entityName, verCfg, id, null);
+        super(sessionImplementor, entityName, verCfg, id, RevisionType.MOD);
 
         this.collectionChanges = collectionChanges;
         this.referencingPropertyName = referencingPropertyName;
@@ -169,7 +169,7 @@ public class PersistentCollectionChangeWorkUnit extends AbstractAuditWorkUnit im
      * the entity plus the name of the field (the role). This is needed because such collections aren't entities
      * in the "normal" mapping, but they are entities for Envers.
      */
-    private static class PersistentCollectionChangeWorkUnitId implements Serializable {
+    public static class PersistentCollectionChangeWorkUnitId implements Serializable {
         private static final long serialVersionUID = -8007831518629167537L;
         
         private final Serializable ownerId;
@@ -199,6 +199,10 @@ public class PersistentCollectionChangeWorkUnit extends AbstractAuditWorkUnit im
             int result = ownerId != null ? ownerId.hashCode() : 0;
             result = 31 * result + (role != null ? role.hashCode() : 0);
             return result;
+        }
+
+        public Serializable getOwnerId() {
+            return ownerId;
         }
     }
 }

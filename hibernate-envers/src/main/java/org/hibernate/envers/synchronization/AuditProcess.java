@@ -33,6 +33,7 @@ import org.hibernate.envers.synchronization.work.PersistentCollectionChangeWorkU
 import org.hibernate.envers.tools.Pair;
 import org.hibernate.persister.entity.EntityPersister;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -113,10 +114,12 @@ public class AuditProcess implements BeforeTransactionCompletionProcess {
 
         while ((vwu = workUnits.poll()) != null) {
             vwu.perform(session, revisionData);
-            if (!(vwu instanceof PersistentCollectionChangeWorkUnit)) {
-                Class entityClass = getEntityClass(this.session, session, vwu.getEntityName());
-                revisionInfoGenerator.entityChanged(entityClass, vwu.getEntityName(), vwu.getEntityId(), vwu.getRevisionType(), currentRevisionData);
+            Serializable entityId = vwu.getEntityId();
+            if (entityId instanceof PersistentCollectionChangeWorkUnit.PersistentCollectionChangeWorkUnitId) {
+                entityId = ((PersistentCollectionChangeWorkUnit.PersistentCollectionChangeWorkUnitId) entityId).getOwnerId();
             }
+            Class entityClass = getEntityClass(this.session, session, vwu.getEntityName());
+            revisionInfoGenerator.entityChanged(entityClass, vwu.getEntityName(), entityId, vwu.getRevisionType(), currentRevisionData);
         }
     }
 

@@ -46,7 +46,7 @@ import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSynchronizeElement;
 import org.hibernate.metamodel.source.util.MappingHelper;
 
 /**
- * TODO : javadoc
+ * Provides the link between the domain and the relational model for an entity.
  *
  * @author Steve Ebersole
  */
@@ -58,9 +58,8 @@ public class EntityBinding {
 	private Entity entity;
 	private TableSpecification baseTable;
 
-	private Map<String,AttributeBinding> attributeBindingMap = new HashMap<String, AttributeBinding>();
-	private Set<EntityReferencingAttributeBinding> entityReferencingAttributeBindings =
-			new HashSet<EntityReferencingAttributeBinding>();
+	private Map<String, AttributeBinding> attributeBindingMap = new HashMap<String, AttributeBinding>();
+	private Set<EntityReferencingAttributeBinding> entityReferencingAttributeBindings = new HashSet<EntityReferencingAttributeBinding>();
 
 	private Caching caching;
 
@@ -126,9 +125,11 @@ public class EntityBinding {
 			try {
 				entityPersisterClass = ReflectHelper.classForName( entityClazz.getPersister() );
 			}
-			catch (ClassNotFoundException cnfe) {
-				throw new MappingException( "Could not find persister class: "
-					+ entityClazz.getPersister() );
+			catch ( ClassNotFoundException cnfe ) {
+				throw new MappingException(
+						"Could not find persister class: "
+								+ entityClazz.getPersister()
+				);
 			}
 		}
 
@@ -190,7 +191,7 @@ public class EntityBinding {
 	}
 
 	public void bindEntityIdentifier(SimpleAttributeBinding attributeBinding) {
-		if ( ! Column.class.isInstance( attributeBinding.getValue() ) ) {
+		if ( !Column.class.isInstance( attributeBinding.getValue() ) ) {
 			throw new MappingException(
 					"Identifier value must be a Column; instead it is: " + attributeBinding.getValue().getClass()
 			);
@@ -204,7 +205,7 @@ public class EntityBinding {
 	}
 
 	public void bindEntityDiscriminator(SimpleAttributeBinding attributeBinding) {
-		if ( ! Column.class.isInstance( attributeBinding.getValue() ) ) {
+		if ( !Column.class.isInstance( attributeBinding.getValue() ) ) {
 			throw new MappingException(
 					"Identifier value must be a Column; instead it is: " + attributeBinding.getValue().getClass()
 			);
@@ -231,7 +232,7 @@ public class EntityBinding {
 	}
 
 	public SimpleAttributeBinding makeSimplePrimaryKeyAttributeBinding(String name) {
-		final SimpleAttributeBinding binding = makeSimpleAttributeBinding( name, true, true  );
+		final SimpleAttributeBinding binding = makeSimpleAttributeBinding( name, true, true );
 		getEntityIdentifier().setValueBinding( binding );
 		return binding;
 	}
@@ -241,15 +242,14 @@ public class EntityBinding {
 			// TODO: LOG this!!!
 		}
 		entityDiscriminator = new EntityDiscriminator( this );
-		entityDiscriminator.setValueBinding( makeSimpleAttributeBinding( name, true, false  ) );
+		entityDiscriminator.setValueBinding( makeSimpleAttributeBinding( name, true, false ) );
 		return entityDiscriminator.getValueBinding();
 	}
 
 	public SimpleAttributeBinding makeVersionBinding(String name) {
-		versionBinding = makeSimpleAttributeBinding( name, true, false  );
+		versionBinding = makeSimpleAttributeBinding( name, true, false );
 		return versionBinding;
 	}
-
 
 
 	public SimpleAttributeBinding makeSimpleAttributeBinding(String name) {
@@ -257,7 +257,7 @@ public class EntityBinding {
 	}
 
 	private SimpleAttributeBinding makeSimpleAttributeBinding(String name, boolean forceNonNullable, boolean forceUnique) {
-		final SimpleAttributeBinding binding = new SimpleAttributeBinding( this, forceNonNullable, forceUnique  );
+		final SimpleAttributeBinding binding = new SimpleAttributeBinding( this, forceNonNullable, forceUnique );
 		registerAttributeBinding( name, binding );
 		binding.setAttribute( entity.getAttribute( name ) );
 		return binding;

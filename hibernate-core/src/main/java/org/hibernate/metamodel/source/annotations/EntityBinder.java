@@ -30,6 +30,8 @@ import org.jboss.jandex.AnnotationValue;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
+import org.hibernate.annotations.OptimisticLockType;
+import org.hibernate.annotations.PolymorphismType;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.SimpleAttributeBinding;
@@ -42,6 +44,7 @@ import org.hibernate.metamodel.source.annotations.state.relational.AttributeColu
 import org.hibernate.metamodel.source.annotations.state.relational.AttributeTupleRelationalState;
 import org.hibernate.metamodel.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
+import org.hibernate.service.classloading.spi.ClassLoaderService;
 
 /**
  * Creates the domain and relational metamodel for a configured class and binds them together.
@@ -204,26 +207,68 @@ public class EntityBinder {
 	}
 
 	private void bindHibernateEntityAnnotation(EntityBinding entityBinding) {
+		// initialize w/ the defaults
+		boolean mutable = true;
+		boolean dynamicInsert = false;
+		boolean dynamicUpdate = false;
+		boolean selectBeforeUpdate = false;
+		PolymorphismType polymorphism = PolymorphismType.IMPLICIT;
+		OptimisticLockType optimisticLock = OptimisticLockType.VERSION;
+
 		AnnotationInstance hibernateEntityAnnotation = JandexHelper.getSingleAnnotation(
 				configuredClass.getClassInfo(), HibernateDotNames.ENTITY
 		);
-//		if ( hibAnn != null ) {
-//			dynamicInsert = hibAnn.dynamicInsert();
-//			dynamicUpdate = hibAnn.dynamicUpdate();
-//			optimisticLockType = hibAnn.optimisticLock();
-//			selectBeforeUpdate = hibAnn.selectBeforeUpdate();
-//			polymorphismType = hibAnn.polymorphism();
-//			explicitHibernateEntityAnnotation = true;
-//			//persister handled in bind
-//		}
-//		else {
-//			//default values when the annotation is not there
-//			dynamicInsert = false;
-//			dynamicUpdate = false;
-//			optimisticLockType = OptimisticLockType.VERSION;
-//			polymorphismType = PolymorphismType.IMPLICIT;
-//			selectBeforeUpdate = false;
-//		}
+
+		if ( hibernateEntityAnnotation != null ) {
+			if ( hibernateEntityAnnotation.value( "mutable" ) != null ) {
+				mutable = hibernateEntityAnnotation.value( "mutable" ).asBoolean();
+			}
+
+			if ( hibernateEntityAnnotation.value( "dynamicInsert" ) != null ) {
+				dynamicInsert = hibernateEntityAnnotation.value( "dynamicInsert" ).asBoolean();
+			}
+
+			if ( hibernateEntityAnnotation.value( "dynamicUpdate" ) != null ) {
+				dynamicUpdate = hibernateEntityAnnotation.value( "dynamicUpdate" ).asBoolean();
+			}
+
+			if ( hibernateEntityAnnotation.value( "selectBeforeUpdate" ) != null ) {
+				selectBeforeUpdate = hibernateEntityAnnotation.value( "selectBeforeUpdate" ).asBoolean();
+			}
+
+			if ( hibernateEntityAnnotation.value( "polymorphism" ) != null ) {
+				polymorphism = PolymorphismType.valueOf( hibernateEntityAnnotation.value( "polymorphism" ).asEnum() );
+			}
+
+			if ( hibernateEntityAnnotation.value( "optimisticLock" ) != null ) {
+				optimisticLock = OptimisticLockType.valueOf(
+						hibernateEntityAnnotation.value( "optimisticLock" ).asEnum()
+				);
+			}
+
+			if ( hibernateEntityAnnotation.value( "persister" ) != null ) {
+				String persister = ( hibernateEntityAnnotation.value( "persister" ).toString() );
+				ClassLoaderService classLoaderService = meta.getServiceRegistry()
+						.getService( ClassLoaderService.class );
+				Class<?> persisterClass = classLoaderService.classForName( persister );
+				entityBinding.setEntityPersisterClass( persisterClass );
+			}
+		}
+
+		// also check for the immutable annotation
+		AnnotationInstance immutableAnnotation = JandexHelper.getSingleAnnotation(
+				configuredClass.getClassInfo(), HibernateDotNames.IMMUTABLE
+		);
+		if ( immutableAnnotation != null ) {
+			mutable = false;
+		}
+
+		entityBinding.setMutable( mutable );
+		entityBinding.setDynamicInsert( dynamicInsert );
+		entityBinding.setDynamicUpdate( dynamicUpdate );
+		entityBinding.setSelectBeforeUpdate( selectBeforeUpdate );
+		entityBinding.setExplicitPolymorphism( PolymorphismType.EXPLICIT.equals( polymorphism ) );
+		entityBinding.setOptimisticLockMode( optimisticLock.ordinal() );
 	}
 
 	private Hierarchical getSuperType() {
@@ -271,7 +316,6 @@ public class EntityBinder {
 				return IdType.COMPOSED;
 			}
 		}
-
 		return IdType.NONE;
 	}
 

@@ -24,7 +24,7 @@
 package org.hibernate.metamodel.binding;
 
 /**
- * TODO : javadoc
+ * Defines the caching settings for an entity.
  *
  * @author Steve Ebersole
  */

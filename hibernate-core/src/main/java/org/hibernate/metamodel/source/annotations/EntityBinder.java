@@ -28,11 +28,14 @@ import java.util.List;
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
 
+import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.annotations.PolymorphismType;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.binding.Caching;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.SimpleAttributeBinding;
 import org.hibernate.metamodel.domain.Entity;
@@ -67,6 +70,7 @@ public class EntityBinder {
 		bindJpaEntityAnnotation( entityBinding );
 		bindHibernateEntityAnnotation( entityBinding ); // optional hibernate specific @org.hibernate.annotations.Entity
 		bindWhereFilter( entityBinding );
+		bindCaching( entityBinding );
 		schemaName = createSchemaName();
 		bindTable( entityBinding );
 
@@ -86,6 +90,41 @@ public class EntityBinder {
 			// no null check needed, it is a required attribute
 			String clause = whereAnnotation.value( "clause" ).asString();
 			entityBinding.setWhereFilter( clause );
+		}
+	}
+
+	private void bindCaching(EntityBinding entityBinding) {
+		AnnotationInstance cacheAnnotation = JandexHelper.getSingleAnnotation(
+				configuredClass.getClassInfo(), HibernateDotNames.CACHE
+		);
+		if ( cacheAnnotation != null ) {
+			String region;
+			if ( cacheAnnotation.value( "region" ) != null ) {
+				region = cacheAnnotation.value( "region" ).asString();
+			}
+			else {
+				region = entityBinding.getEntity().getName();
+			}
+
+			boolean cacheLazyProperties = true;
+			if ( cacheAnnotation.value( "include" ) != null ) {
+				String tmp = cacheAnnotation.value( "include" ).asString();
+				if ( "all".equalsIgnoreCase( tmp ) ) {
+					cacheLazyProperties = true;
+				}
+				else if ( "non-lazy".equalsIgnoreCase( tmp ) ) {
+					cacheLazyProperties = false;
+				}
+				else {
+					throw new AnnotationException( "Unknown lazy property annotations: " + tmp );
+				}
+			}
+
+			CacheConcurrencyStrategy strategy = CacheConcurrencyStrategy.valueOf(
+					cacheAnnotation.value( "usage" ).asEnum()
+			);
+			Caching caching = new Caching( region, strategy.toAccessType().getExternalName(), cacheLazyProperties );
+			entityBinding.setCaching( caching );
 		}
 	}
 

@@ -1,6 +1,14 @@
+How to build
+============
+
 *Starting with development of version 4.0, Hibernate uses Gradle (http://gradle.org) as its build tool.*
+
 This README describes some of the basics developers and contributors new to Gradle need to know to get productive quickly.
-Here is a list of resources to obtain more detailed information about Gradle:
+
+Resources
+---------
+
+To start with - here is a list of resources to obtain more information about Gradle:
 
 * The Gradle User Guide : http://gradle.org/latest/docs/userguide/userguide_single.html
 * Gradle DSL Guide : http://gradle.org/latest/docs/dsl/index.html
@@ -12,14 +20,12 @@ Executing Tasks Across All Modules
 To execute a task across all modules, simply perform that task from the root directory.  Gradle will visit each
 subproject and execute that task if the subproject defines it.
 
-
 Executing Tasks In Specific Module
 ----------------------------------
 
 To execute a task in a specific module you can either:
 1. `cd` into that module directory and execute the task
 2. name the "task path".  For example, in order to run the tests for the _hibernate-core_ module from the root directory you could say `gradle hibernate-core:test`
-
 
 Common Java-module tasks
 ------------------------

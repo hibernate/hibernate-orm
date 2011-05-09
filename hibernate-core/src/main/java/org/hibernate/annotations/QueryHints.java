@@ -21,48 +21,24 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.binding;
-
-import java.io.Serializable;
-import java.util.Collections;
-import java.util.Map;
+package org.hibernate.annotations;
 
 /**
- * Identifier generator container, Useful to keep named generator in annotations
  *
- * @author Emmanuel Bernard
  */
-public class IdGenerator implements Serializable {
-    private final String name;
-    private final String strategy;
-    private final Map<String, String> parameters;
+public class QueryHints {
 
-    public IdGenerator( String name,
-                        String strategy,
-                        Map<String, String> parameters ) {
-        this.name = name;
-        this.strategy = strategy;
-        this.parameters = parameters;
-    }
+    public static final String CACHE_MODE = "org.hibernate.cacheMode";
+    public static final String CACHE_REGION = "org.hibernate.cacheRegion";
+    public static final String CACHEABLE = "org.hibernate.cacheable";
+    public static final String CALLABLE = "org.hibernate.callable";
+    public static final String COMMENT = "org.hibernate.comment";
+    public static final String FETCH_SIZE = "org.hibernate.fetchSize";
+    public static final String FLUSH_MODE = "org.hibernate.flushMode";
+    public static final String READ_ONLY = "org.hibernate.readOnly";
+    public static final String TIMEOUT_HIBERNATE = "org.hibernate.timeout";
+    public static final String TIMEOUT_JPA = "javax.persistence.query.timeout";
 
-    /**
-     * @return identifier generator strategy
-     */
-    public String getStrategy() {
-        return strategy;
-    }
-
-    /**
-     * @return generator name
-     */
-    public String getName() {
-        return name;
-    }
-
-    /**
-     * @return generator configuration parameters
-     */
-    public Map<String, String> getParameters() {
-        return Collections.unmodifiableMap(parameters);
+    private QueryHints() {
     }
 }

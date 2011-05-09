@@ -23,17 +23,17 @@
  */
 package org.hibernate.metamodel.source.annotations.global;
 
-import java.util.Arrays;
-import java.util.List;
-
+import java.util.HashSet;
+import java.util.Set;
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.Index;
-
 import org.hibernate.MappingException;
 import org.hibernate.annotations.FetchMode;
-import org.hibernate.mapping.MetadataSource;
+import org.hibernate.annotations.FetchProfiles;
 import org.hibernate.metamodel.binding.FetchProfile;
+import org.hibernate.metamodel.binding.FetchProfile.Fetch;
 import org.hibernate.metamodel.source.annotations.HibernateDotNames;
+import org.hibernate.metamodel.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
 
 /**
@@ -42,51 +42,42 @@ import org.hibernate.metamodel.source.internal.MetadataImpl;
  * @author Hardy Ferentschik
  */
 public class FetchProfileBinder {
-	private FetchProfileBinder() {
-	}
 
-	/**
-	 * Binds all {@link org.hibernate.annotations.FetchProfiles} and {@link org.hibernate.annotations.FetchProfile}
-	 * annotations to the specified meta data instance.
-	 *
-	 * @param meta the global metadata
-	 * @param index the annotation index repository
-	 */
-	// TODO how to handle fetch profiles defined in hbm and annotations. Which overrides which?
-	// TODO verify that association exists. See former VerifyFetchProfileReferenceSecondPass
-	public static void bind(MetadataImpl meta, Index index) {
-		// check @FetchProfiles
-		List<AnnotationInstance> fetchProfilesAnnotations = index.getAnnotations( HibernateDotNames.FETCH_PROFILES );
-		for ( AnnotationInstance fetchProfilesAnnotation : fetchProfilesAnnotations ) {
-			AnnotationInstance fetchProfiles[] = fetchProfilesAnnotation.value().asNestedArray();
-			bindFetchProfileAnnotations( meta, Arrays.asList( fetchProfiles ) );
-		}
+    /**
+     * Binds all {@link FetchProfiles} and {@link org.hibernate.annotations.FetchProfile} annotations to the supplied metadata.
+     *
+     * @param metadata the global metadata
+     * @param jandex the jandex index
+     */
+    // TODO verify that association exists. See former VerifyFetchProfileReferenceSecondPass
+    public static void bind( MetadataImpl metadata,
+                             Index jandex ) {
+        for (AnnotationInstance fetchProfile : jandex.getAnnotations(HibernateDotNames.FETCH_PROFILE)) {
+            bind(metadata, jandex, fetchProfile);
+        }
+        for (AnnotationInstance fetchProfiles : jandex.getAnnotations(HibernateDotNames.FETCH_PROFILES)) {
+            for (AnnotationInstance fetchProfile : JandexHelper.getValueAsArray(fetchProfiles, "value")) {
+                bind(metadata, jandex, fetchProfile);
+            }
+        }
+    }
 
-		// check @FetchProfile
-		List<AnnotationInstance> fetchProfileAnnotations = index.getAnnotations( HibernateDotNames.FETCH_PROFILE );
-		bindFetchProfileAnnotations( meta, fetchProfileAnnotations );
-	}
+    private static void bind( MetadataImpl metadata,
+                              Index jandex,
+                              AnnotationInstance fetchProfile ) {
+        String name = JandexHelper.getValueAsString(jandex, fetchProfile, "name");
+        Set<Fetch> fetches = new HashSet<Fetch>();
+        for (AnnotationInstance override : JandexHelper.getValueAsArray(fetchProfile, "fetchOverrides")) {
+            FetchMode fetchMode = JandexHelper.getValueAsEnum(jandex, override, "mode", FetchMode.class);
+            if (!fetchMode.equals(org.hibernate.annotations.FetchMode.JOIN)) throw new MappingException(
+                                                                                                        "Only FetchMode.JOIN is currently supported");
+            fetches.add(new Fetch(JandexHelper.getValueAsString(jandex, override, "entity"),
+                                  JandexHelper.getValueAsString(jandex, override, "association"),
+                                  fetchMode.toString().toLowerCase()));
+        }
+        metadata.addFetchProfile(new FetchProfile(name, fetches));
+    }
 
-	private static void bindFetchProfileAnnotations(MetadataImpl meta, List<AnnotationInstance> fetchProfileAnnotations) {
-		for ( AnnotationInstance fetchProfileAnnotation : fetchProfileAnnotations ) {
-			String name = fetchProfileAnnotation.value( "name" ).asString();
-			FetchProfile profile = meta.findOrCreateFetchProfile( name, MetadataSource.ANNOTATIONS );
-
-			AnnotationInstance overrides[] = fetchProfileAnnotation.value( "fetchOverrides" ).asNestedArray();
-			for ( AnnotationInstance overrideAnnotation : overrides ) {
-				FetchMode fetchMode = Enum.valueOf( FetchMode.class, overrideAnnotation.value( "mode" ).asEnum() );
-				if ( !fetchMode.equals( org.hibernate.annotations.FetchMode.JOIN ) ) {
-					throw new MappingException( "Only FetchMode.JOIN is currently supported" );
-				}
-
-				String entityClassName = overrideAnnotation.value( "entity" ).asClass().name().toString();
-				String associationName = overrideAnnotation.value( "association" ).asString();
-				profile.addFetch(
-						entityClassName, associationName, fetchMode.toString().toLowerCase()
-				);
-			}
-		}
-	}
+    private FetchProfileBinder() {
+    }
 }
-
-

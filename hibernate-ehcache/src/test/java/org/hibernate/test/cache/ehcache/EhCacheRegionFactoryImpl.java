@@ -1,6 +1,6 @@
 package org.hibernate.test.cache.ehcache;
 
-import org.hibernate.cache.EhCacheRegionFactory;
+import org.hibernate.cache.internal.EhCacheRegionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 

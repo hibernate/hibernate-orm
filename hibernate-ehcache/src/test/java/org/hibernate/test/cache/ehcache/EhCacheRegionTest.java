@@ -1,7 +1,7 @@
 package org.hibernate.test.cache.ehcache;
 
-import org.hibernate.cache.EhCacheProvider;
-import org.hibernate.cache.ReadWriteCache;
+import org.hibernate.cache.spi.ReadWriteCache.Item;
+import org.hibernate.cache.internal.EhCacheProvider;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 
@@ -20,8 +20,8 @@ public class EhCacheRegionTest extends EhCacheTest {
 	@Override
 	protected Map getMapFromCacheEntry(final Object entry) {
 		final Map map;
-		if ( entry instanceof ReadWriteCache.Item ) {
-			map = (Map) ( (ReadWriteCache.Item) entry ).getValue();
+		if ( entry instanceof Item ) {
+			map = (Map) ( (Item) entry ).getValue();
 		}
 		else {
 			map = (Map) entry;

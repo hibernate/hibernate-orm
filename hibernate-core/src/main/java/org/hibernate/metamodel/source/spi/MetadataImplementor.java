@@ -23,7 +23,6 @@
  */
 package org.hibernate.metamodel.source.spi;
 
-import org.hibernate.mapping.MetadataSource;
 import org.hibernate.metamodel.Metadata;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.FetchProfile;
@@ -47,5 +46,5 @@ public interface MetadataImplementor extends Metadata {
 
 	public void addCollection(PluralAttributeBinding collectionBinding);
 
-	public FetchProfile findOrCreateFetchProfile(String profileName, MetadataSource hbm);
+    public void addFetchProfile( FetchProfile profile );
 }

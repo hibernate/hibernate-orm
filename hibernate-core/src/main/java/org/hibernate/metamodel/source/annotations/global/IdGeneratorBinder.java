@@ -23,18 +23,21 @@
  */
 package org.hibernate.metamodel.source.annotations.global;
 
-import java.util.Properties;
+import java.util.HashMap;
+import java.util.Map;
 import javax.persistence.SequenceGenerator;
-import javax.persistence.TableGenerator;
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Parameter;
+import org.hibernate.annotations.GenericGenerators;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.id.MultipleHiLoPerTableGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.SequenceHiLoGenerator;
 import org.hibernate.id.TableHiLoGenerator;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
+import org.hibernate.id.enhanced.TableGenerator;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.binding.IdGenerator;
 import org.hibernate.metamodel.source.annotations.HibernateDotNames;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.util.JandexHelper;
@@ -50,123 +53,107 @@ public class IdGeneratorBinder {
 
     private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, IdGeneratorBinder.class.getName());
 
-    private static final boolean USE_NEW_GENERATOR_MAPPINGS = true;
+    private static void addStringParameter( Index index,
+                                            AnnotationInstance annotation,
+                                            String element,
+                                            Map<String, String> parameters,
+                                            String parameter ) {
+        String string = JandexHelper.getValueAsString(index, annotation, element);
+        if (StringHelper.isNotEmpty(string)) parameters.put(parameter, string);
+    }
 
     /**
-     * @param metadata
-     * @param index
+     * Binds all {@link SequenceGenerator}, {@link javax.persistence.TableGenerator}, {@link GenericGenerator}, and {
+     * {@link GenericGenerators} annotations to the supplied metadata.
+     *
+     * @param metadata the global metadata
+     * @param jandex the jandex index
      */
     public static void bind( MetadataImpl metadata,
-                             Index index ) {
-        for (AnnotationInstance generator : index.getAnnotations(JPADotNames.SEQUENCE_GENERATOR)) {
-            String name = JandexHelper.asString(generator, SequenceGenerator.class, "name");
-            String strategy;
-            Properties prms = new Properties();
-            JandexHelper.addString(generator, prms, SequenceGenerator.class, "sequenceName", SequenceStyleGenerator.SEQUENCE_PARAM);
-            if (USE_NEW_GENERATOR_MAPPINGS) {
-                strategy = SequenceStyleGenerator.class.getName();
-                JandexHelper.addString(generator, prms, SequenceGenerator.class, "catalog", PersistentIdentifierGenerator.CATALOG);
-                JandexHelper.addString(generator, prms, SequenceGenerator.class, "schema", PersistentIdentifierGenerator.SCHEMA);
-                JandexHelper.addInteger(generator,
-                                        prms,
-                                        SequenceGenerator.class,
-                                        "allocationSize",
-                                        SequenceStyleGenerator.INCREMENT_PARAM);
-                JandexHelper.addInteger(generator,
-                                        prms,
-                                        SequenceGenerator.class,
-                                        "initialValue",
-                                        SequenceStyleGenerator.INITIAL_PARAM);
-            } else {
-                strategy = "seqhilo";
-                if (JandexHelper.asInteger(generator, SequenceGenerator.class, "initialValue") != 1) LOG.unsupportedInitialValue(AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS);
-                Integer size = JandexHelper.asInteger(generator, SequenceGenerator.class, "allocationSize");
-                if (size != null) prms.put(SequenceHiLoGenerator.MAX_LO, String.valueOf(size - 1));
-            }
-            metadata.addIdGenerator(name, strategy, prms);
-            LOG.tracef("Add sequence generator with name: %s", name);
+                             Index jandex ) {
+        for (AnnotationInstance generator : jandex.getAnnotations(JPADotNames.SEQUENCE_GENERATOR)) {
+            bindSequenceGenerator(metadata, jandex, generator);
         }
-        for (AnnotationInstance generator : index.getAnnotations(JPADotNames.TABLE_GENERATOR)) {
-            String name = JandexHelper.asString(generator, TableGenerator.class, "name");
-            String strategy;
-            Properties prms = new Properties();
-            JandexHelper.addString(generator, prms, TableGenerator.class, "catalog", PersistentIdentifierGenerator.CATALOG);
-            JandexHelper.addString(generator, prms, TableGenerator.class, "schema", PersistentIdentifierGenerator.SCHEMA);
-            if (USE_NEW_GENERATOR_MAPPINGS) {
-                strategy = org.hibernate.id.enhanced.TableGenerator.class.getName();
-                prms.put(org.hibernate.id.enhanced.TableGenerator.CONFIG_PREFER_SEGMENT_PER_ENTITY, "true");
-                JandexHelper.addString(generator,
-                                       prms,
-                                       TableGenerator.class,
-                                       "table",
-                                       org.hibernate.id.enhanced.TableGenerator.TABLE_PARAM);
-                JandexHelper.addString(generator,
-                                       prms,
-                                       TableGenerator.class,
-                                       "pkColumnName",
-                                       org.hibernate.id.enhanced.TableGenerator.SEGMENT_COLUMN_PARAM);
-                JandexHelper.addString(generator,
-                                       prms,
-                                       TableGenerator.class,
-                                       "pkColumnValue",
-                                       org.hibernate.id.enhanced.TableGenerator.SEGMENT_VALUE_PARAM);
-                JandexHelper.addString(generator,
-                                       prms,
-                                       TableGenerator.class,
-                                       "valueColumnName",
-                                       org.hibernate.id.enhanced.TableGenerator.VALUE_COLUMN_PARAM);
-                JandexHelper.addInteger(generator,
-                                        prms,
-                                        TableGenerator.class,
-                                        "allocationSize",
-                                        org.hibernate.id.enhanced.TableGenerator.INCREMENT_PARAM);
-                Integer val = JandexHelper.asInteger(generator, TableGenerator.class, "initialValue");
-                if (val != null) prms.put(org.hibernate.id.enhanced.TableGenerator.INITIAL_PARAM, String.valueOf(val + 1));
-            } else {
-                strategy = MultipleHiLoPerTableGenerator.class.getName();
-                JandexHelper.addString(generator, prms, TableGenerator.class, "table", MultipleHiLoPerTableGenerator.ID_TABLE);
-                JandexHelper.addString(generator,
-                                       prms,
-                                       TableGenerator.class,
-                                       "pkColumnName",
-                                       MultipleHiLoPerTableGenerator.PK_COLUMN_NAME);
-                JandexHelper.addString(generator,
-                                       prms,
-                                       TableGenerator.class,
-                                       "pkColumnValue",
-                                       MultipleHiLoPerTableGenerator.PK_VALUE_NAME);
-                JandexHelper.addString(generator,
-                                       prms,
-                                       TableGenerator.class,
-                                       "valueColumnName",
-                                       MultipleHiLoPerTableGenerator.VALUE_COLUMN_NAME);
-                Integer val = JandexHelper.asInteger(generator, TableGenerator.class, "allocationSize");
-                if (val != null) prms.put(TableHiLoGenerator.MAX_LO, String.valueOf(val - 1));
-            }
-            if (JandexHelper.asArray(generator, "uniqueConstraints").length > 0) LOG.ignoringTableGeneratorConstraints(name);
-            metadata.addIdGenerator(name, strategy, prms);
-            LOG.tracef("Add table generator with name: %s", name);
+        for (AnnotationInstance generator : jandex.getAnnotations(JPADotNames.TABLE_GENERATOR)) {
+            bindTableGenerator(metadata, jandex, generator);
         }
-        for (AnnotationInstance generator : index.getAnnotations(HibernateDotNames.GENERIC_GENERATOR)) {
-            bindGenericGenerator(metadata, generator);
+        for (AnnotationInstance generator : jandex.getAnnotations(HibernateDotNames.GENERIC_GENERATOR)) {
+            bindGenericGenerator(metadata, jandex, generator);
         }
-        for (AnnotationInstance generators : index.getAnnotations(HibernateDotNames.GENERIC_GENERATORS)) {
-            for (AnnotationInstance generator : JandexHelper.asArray(generators, "value")) {
-                bindGenericGenerator(metadata, generator);
+        for (AnnotationInstance generators : jandex.getAnnotations(HibernateDotNames.GENERIC_GENERATORS)) {
+            for (AnnotationInstance generator : JandexHelper.getValueAsArray(generators, "value")) {
+                bindGenericGenerator(metadata, jandex, generator);
             }
         }
     }
 
     private static void bindGenericGenerator( MetadataImpl metadata,
+                                              Index jandex,
                                               AnnotationInstance generator ) {
-        String name = JandexHelper.asString(generator, GenericGenerator.class, "name");
-        Properties prms = new Properties();
-        for (AnnotationInstance prmAnnotation : JandexHelper.asArray(generator, "parameters")) {
-            prms.put(JandexHelper.asString(prmAnnotation, Parameter.class, "name"),
-                     JandexHelper.asString(prmAnnotation, Parameter.class, "value"));
+        String name = JandexHelper.getValueAsString(jandex, generator, "name");
+        Map<String, String> prms = new HashMap<String, String>();
+        for (AnnotationInstance prm : JandexHelper.getValueAsArray(generator, "parameters")) {
+            prms.put(JandexHelper.getValueAsString(jandex, prm, "name"), JandexHelper.getValueAsString(jandex, prm, "value"));
         }
-        metadata.addIdGenerator(name, JandexHelper.asString(generator, GenericGenerator.class, "strategy"), prms);
+        metadata.addIdGenerator(new IdGenerator(name, JandexHelper.getValueAsString(jandex, generator, "strategy"), prms));
         LOG.tracef("Add generic generator with name: %s", name);
+    }
+
+    private static void bindSequenceGenerator( MetadataImpl metadata,
+                                               Index jandex,
+                                               AnnotationInstance generator ) {
+        String name = JandexHelper.getValueAsString(jandex, generator, "name");
+        String strategy;
+        Map<String, String> prms = new HashMap<String, String>();
+        addStringParameter(jandex, generator, "sequenceName", prms, SequenceStyleGenerator.SEQUENCE_PARAM);
+        if (metadata.getOptions().useNewIdentifierGenerators()) {
+            strategy = SequenceStyleGenerator.class.getName();
+            addStringParameter(jandex, generator, "catalog", prms, PersistentIdentifierGenerator.CATALOG);
+            addStringParameter(jandex, generator, "schema", prms, PersistentIdentifierGenerator.SCHEMA);
+            prms.put(SequenceStyleGenerator.INCREMENT_PARAM,
+                     String.valueOf(JandexHelper.getValueAsInt(jandex, generator, "allocationSize")));
+            prms.put(SequenceStyleGenerator.INITIAL_PARAM,
+                     String.valueOf(JandexHelper.getValueAsInt(jandex, generator, "initialValue")));
+        } else {
+            strategy = "seqhilo";
+            if (JandexHelper.getValueAsInt(jandex, generator, "initialValue") != 1) LOG.unsupportedInitialValue(AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS);
+            prms.put(SequenceHiLoGenerator.MAX_LO,
+                     String.valueOf(JandexHelper.getValueAsInt(jandex, generator, "allocationSize") - 1));
+        }
+        metadata.addIdGenerator(new IdGenerator(name, strategy, prms));
+        LOG.tracef("Add sequence generator with name: %s", name);
+    }
+
+    private static void bindTableGenerator( MetadataImpl metadata,
+                                            Index jandex,
+                                            AnnotationInstance generator ) {
+        String name = JandexHelper.getValueAsString(jandex, generator, "name");
+        String strategy;
+        Map<String, String> prms = new HashMap<String, String>();
+        addStringParameter(jandex, generator, "catalog", prms, PersistentIdentifierGenerator.CATALOG);
+        addStringParameter(jandex, generator, "schema", prms, PersistentIdentifierGenerator.SCHEMA);
+        if (metadata.getOptions().useNewIdentifierGenerators()) {
+            strategy = TableGenerator.class.getName();
+            prms.put(TableGenerator.CONFIG_PREFER_SEGMENT_PER_ENTITY, "true");
+            addStringParameter(jandex, generator, "table", prms, TableGenerator.TABLE_PARAM);
+            addStringParameter(jandex, generator, "pkColumnName", prms, TableGenerator.SEGMENT_COLUMN_PARAM);
+            addStringParameter(jandex, generator, "pkColumnValue", prms, TableGenerator.SEGMENT_VALUE_PARAM);
+            addStringParameter(jandex, generator, "valueColumnName", prms, TableGenerator.VALUE_COLUMN_PARAM);
+            prms.put(TableGenerator.INCREMENT_PARAM,
+                     String.valueOf(JandexHelper.getValueAsInt(jandex, generator, "allocationSize")));
+            prms.put(TableGenerator.INITIAL_PARAM,
+                     String.valueOf(JandexHelper.getValueAsInt(jandex, generator, "initialValue") + 1));
+        } else {
+            strategy = MultipleHiLoPerTableGenerator.class.getName();
+            addStringParameter(jandex, generator, "table", prms, MultipleHiLoPerTableGenerator.ID_TABLE);
+            addStringParameter(jandex, generator, "pkColumnName", prms, MultipleHiLoPerTableGenerator.PK_COLUMN_NAME);
+            addStringParameter(jandex, generator, "pkColumnValue", prms, MultipleHiLoPerTableGenerator.PK_VALUE_NAME);
+            addStringParameter(jandex, generator, "valueColumnName", prms, MultipleHiLoPerTableGenerator.VALUE_COLUMN_NAME);
+            prms.put(TableHiLoGenerator.MAX_LO, String.valueOf(JandexHelper.getValueAsInt(jandex, generator, "allocationSize") - 1));
+        }
+        if (JandexHelper.getValueAsArray(generator, "uniqueConstraints").length > 0) LOG.ignoringTableGeneratorConstraints(name);
+        metadata.addIdGenerator(new IdGenerator(name, strategy, prms));
+        LOG.tracef("Add table generator with name: %s", name);
     }
 
     private IdGeneratorBinder() {

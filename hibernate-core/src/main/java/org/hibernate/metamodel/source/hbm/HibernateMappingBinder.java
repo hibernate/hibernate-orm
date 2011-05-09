@@ -23,18 +23,19 @@
  */
 package org.hibernate.metamodel.source.hbm;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-
+import java.util.Set;
 import org.dom4j.Attribute;
-
 import org.hibernate.MappingException;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.mapping.MetadataSource;
+import org.hibernate.metamodel.binding.FetchProfile;
+import org.hibernate.metamodel.binding.FetchProfile.Fetch;
 import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.metamodel.source.Origin;
-import org.hibernate.metamodel.source.internal.JaxbRoot;
+import org.hibernate.metamodel.source.hbm.util.MappingHelper;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLFetchProfileElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLFetchProfileElement.XMLFetch;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping;
@@ -45,7 +46,7 @@ import org.hibernate.metamodel.source.hbm.xml.mapping.XMLQueryElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlQueryElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSubclassElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLUnionSubclassElement;
-import org.hibernate.metamodel.source.hbm.util.MappingHelper;
+import org.hibernate.metamodel.source.internal.JaxbRoot;
 import org.hibernate.service.ServiceRegistry;
 
 /**
@@ -225,14 +226,15 @@ public class HibernateMappingBinder implements MappingDefaults {
 	protected void parseFetchProfiles(List<XMLFetchProfileElement> fetchProfiles, String containingEntityName) {
 		for ( XMLFetchProfileElement fetchProfile : fetchProfiles ) {
 			String profileName = fetchProfile.getName();
-			org.hibernate.metamodel.binding.FetchProfile profile = hibernateXmlBinder.getMetadata().findOrCreateFetchProfile( profileName, MetadataSource.HBM );
+	        Set<Fetch> fetches = new HashSet<Fetch>();
 			for (  XMLFetch fetch : fetchProfile.getFetch() ) {
 				String entityName = fetch.getEntity() == null ? containingEntityName : fetch.getEntity();
 				if ( entityName == null ) {
 					throw new MappingException( "could not determine entity for fetch-profile fetch [" + profileName + "]:[" + fetch.getAssociation() + "]" );
 				}
-				profile.addFetch( entityName, fetch.getAssociation(), fetch.getStyle() );
+				fetches.add(new Fetch(entityName, fetch.getAssociation(), fetch.getStyle()));
 			}
+            hibernateXmlBinder.getMetadata().addFetchProfile( new FetchProfile(profileName, fetches));
 		}
 	}
 

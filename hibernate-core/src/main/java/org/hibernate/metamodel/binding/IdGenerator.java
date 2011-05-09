@@ -22,46 +22,47 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.metamodel.binding;
+
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.Map;
-import java.util.Properties;
 
 /**
- * Identifier generator container,
- * Useful to keep named generator in annotations
+ * Identifier generator container, Useful to keep named generator in annotations
  *
  * @author Emmanuel Bernard
  */
 public class IdGenerator implements Serializable {
-	private final String name;
-	private final String strategy;
-	private final Properties parameters;
+    private final String name;
+    private final String strategy;
+    private final Map<String, String> parameters;
 
-    public IdGenerator(String name, String strategy, Properties parameters) {
+    public IdGenerator( String name,
+                        String strategy,
+                        Map<String, String> parameters ) {
         this.name = name;
         this.strategy = strategy;
         this.parameters = parameters;
     }
 
-	/**
-	 * @return identifier generator strategy
-	 */
-	public String getIdentifierGeneratorStrategy() {
-		return strategy;
-	}
+    /**
+     * @return identifier generator strategy
+     */
+    public String getStrategy() {
+        return strategy;
+    }
 
-	/**
-	 * @return generator name
-	 */
-	public String getName() {
-		return name;
-	}
+    /**
+     * @return generator name
+     */
+    public String getName() {
+        return name;
+    }
 
-	/**
-	 * @return generator configuration parameters
-	 */
-	public Map<Object, Object> getParams() {
-		return Collections.unmodifiableMap(parameters);
-	}
+    /**
+     * @return generator configuration parameters
+     */
+    public Map<String, String> getParameters() {
+        return Collections.unmodifiableMap(parameters);
+    }
 }

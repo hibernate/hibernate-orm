@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import org.hibernate.metamodel.source.annotations.entity.ConfiguredClass;
 import org.hibernate.metamodel.source.annotations.entity.ConfiguredClassHierarchy;
 import org.hibernate.metamodel.source.annotations.entity.EntityBinder;
+import org.hibernate.metamodel.source.annotations.global.FilterDefBinder;
 import org.hibernate.metamodel.source.annotations.global.IdGeneratorBinder;
 import org.hibernate.metamodel.source.annotations.global.QueryBinder;
 import org.hibernate.metamodel.source.annotations.global.TypeDefBinder;
@@ -100,6 +101,7 @@ public class AnnotationBinder {
 		TableBinder.bind( metadata, index );
         FetchProfileBinder.bind( metadata, index );
         QueryBinder.bind(metadata, index);
+        FilterDefBinder.bind(metadata, index);
 	}
 }
 

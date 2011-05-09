@@ -26,7 +26,6 @@ package org.hibernate.metamodel.binding;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.Map;
-import java.util.Properties;
 
 /**
  * Placeholder for typedef information
@@ -34,15 +33,15 @@ import java.util.Properties;
 public class TypeDef implements Serializable {
 
     private final String typeClass;
-    private final Properties parameters;
+    private final Map<String, String> parameters;
 
     public TypeDef( String typeClass,
-                    Properties parameters ) {
+                    Map<String, String> parameters ) {
         this.typeClass = typeClass;
         this.parameters = parameters;
     }
 
-    public Map<Object, Object> getParameters() {
+    public Map<String, String> getParameters() {
         return Collections.unmodifiableMap(parameters);
     }
 

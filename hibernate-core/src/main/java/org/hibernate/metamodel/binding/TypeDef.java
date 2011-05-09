@@ -22,27 +22,30 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.metamodel.binding;
+
 import java.io.Serializable;
-import java.util.Properties;
+import java.util.Collections;
+import java.util.Map;
 
 /**
  * Placeholder for typedef information
  */
 public class TypeDef implements Serializable {
 
-	private String typeClass;
-	private Properties parameters;
+    private final String typeClass;
+    private final Map<String, String> parameters;
 
-	public TypeDef(String typeClass, Properties parameters) {
-		this.typeClass = typeClass;
-		this.parameters = parameters;
-	}
+    public TypeDef( String typeClass,
+                    Map<String, String> parameters ) {
+        this.typeClass = typeClass;
+        this.parameters = parameters;
+    }
 
-	public Properties getParameters() {
-		return parameters;
-	}
-	public String getTypeClass() {
-		return typeClass;
-	}
+    public Map<String, String> getParameters() {
+        return Collections.unmodifiableMap(parameters);
+    }
 
+    public String getTypeClass() {
+        return typeClass;
+    }
 }

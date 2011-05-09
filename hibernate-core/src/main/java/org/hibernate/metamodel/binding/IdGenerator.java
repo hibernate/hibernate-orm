@@ -23,6 +23,8 @@
  */
 package org.hibernate.metamodel.binding;
 import java.io.Serializable;
+import java.util.Collections;
+import java.util.Map;
 import java.util.Properties;
 
 /**
@@ -32,16 +34,21 @@ import java.util.Properties;
  * @author Emmanuel Bernard
  */
 public class IdGenerator implements Serializable {
-	private String name;
-	private String identifierGeneratorStrategy;
-	private Properties params = new Properties();
+	private final String name;
+	private final String strategy;
+	private final Properties parameters;
 
+    public IdGenerator(String name, String strategy, Properties parameters) {
+        this.name = name;
+        this.strategy = strategy;
+        this.parameters = parameters;
+    }
 
 	/**
 	 * @return identifier generator strategy
 	 */
 	public String getIdentifierGeneratorStrategy() {
-		return identifierGeneratorStrategy;
+		return strategy;
 	}
 
 	/**
@@ -54,20 +61,7 @@ public class IdGenerator implements Serializable {
 	/**
 	 * @return generator configuration parameters
 	 */
-	public Properties getParams() {
-		return params;
+	public Map<Object, Object> getParams() {
+		return Collections.unmodifiableMap(parameters);
 	}
-
-	public void setIdentifierGeneratorStrategy(String string) {
-		identifierGeneratorStrategy = string;
-	}
-
-	public void setName(String string) {
-		name = string;
-	}
-
-	public void addParam(String key, String value) {
-		params.setProperty( key, value );
-	}
-
 }

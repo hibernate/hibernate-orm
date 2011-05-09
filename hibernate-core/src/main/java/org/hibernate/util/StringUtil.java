@@ -21,32 +21,17 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.binding;
-
-import java.io.Serializable;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Properties;
+package org.hibernate.util;
 
 /**
- * Placeholder for typedef information
+ *
  */
-public class TypeDef implements Serializable {
+public class StringUtil {
 
-    private final String typeClass;
-    private final Properties parameters;
-
-    public TypeDef( String typeClass,
-                    Properties parameters ) {
-        this.typeClass = typeClass;
-        this.parameters = parameters;
+    public static boolean isEmpty(String string) {
+        return string == null || string.trim().isEmpty();
     }
 
-    public Map<Object, Object> getParameters() {
-        return Collections.unmodifiableMap(parameters);
-    }
-
-    public String getTypeClass() {
-        return typeClass;
+    private StringUtil() {
     }
 }

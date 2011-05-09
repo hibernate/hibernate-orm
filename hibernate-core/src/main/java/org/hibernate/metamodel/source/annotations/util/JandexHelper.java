@@ -30,19 +30,21 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
+import java.util.Properties;
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;
+import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.FieldInfo;
 import org.jboss.jandex.Index;
 import org.jboss.jandex.Indexer;
 import org.jboss.jandex.MethodInfo;
-
+import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
+import org.hibernate.util.StringUtil;
 
 /**
  * Utility methods for working with the jandex annotation index.
@@ -50,172 +52,243 @@ import org.hibernate.service.classloading.spi.ClassLoaderService;
  * @author Hardy Ferentschik
  */
 public class JandexHelper {
-	private JandexHelper() {
-	}
 
-	/**
-	 * Expects a method or field annotation target and returns the property name for this target
-	 *
-	 * @param target the annotation target
-	 *
-	 * @return the property name of the target. For a field it is the field name and for a method name it is
-	 *         the method name stripped of 'is', 'has' or 'get'
-	 */
-	public static String getPropertyName(AnnotationTarget target) {
-		if ( !( target instanceof MethodInfo || target instanceof FieldInfo ) ) {
-			throw new AssertionFailure( "Unexpected annotation target " + target.toString() );
-		}
+    private static final AnnotationInstance[] EMPTY_ANNOTATIONS_ARRAY = new AnnotationInstance[0];
 
-		if ( target instanceof FieldInfo ) {
-			return ( (FieldInfo) target ).name();
-		}
-		else {
-			String methodName = ( (MethodInfo) target ).name();
-			if ( methodName.startsWith( "is" ) ) {
-				methodName = Introspector.decapitalize( methodName.substring( 2 ) );
-			}
-			else if ( methodName.startsWith( "has" ) ) {
-				methodName = Introspector.decapitalize( methodName.substring( 3 ) );
-			}
-			else if ( methodName.startsWith( "get" ) ) {
-				methodName = Introspector.decapitalize( methodName.substring( 3 ) );
-			}
-			else {
-				throw new AssertionFailure( "Expected a method following the Java Bean notation" );
-			}
-			return methodName;
-		}
-	}
+    /**
+     * Adds the {@link #asString(AnnotationInstance, Class, String) value} for the supplied annotation key from the supplied Jandex
+     * annotation as a <code>String</code> to the supplied parameters using the supplied parameter key if the value is not
+     * <code>null</code> or empty.
+     *
+     * @param annotation a Jandex annotation
+     * @param parameters
+     * @param annotationClass
+     * @param annotationKey
+     * @param parameterKey
+     */
+    public static void addString( AnnotationInstance annotation,
+                                  Properties parameters,
+                                  Class<?> annotationClass,
+                                  String annotationKey,
+                                  String parameterKey ) {
+        String string = asString(annotation, annotationClass, annotationKey);
+        if (!StringUtil.isEmpty(string)) parameters.put(parameterKey, string);
+    }
 
-	/**
-	 * @param classInfo the class info from which to retrieve the annotation instance
-	 * @param annotationName the annotation to retrieve from the class info
-	 *
-	 * @return the single annotation defined on the class or {@code null} in case the annotation is not specified at all
-	 *
-	 * @throws org.hibernate.AssertionFailure in case there is there is more than one annotation of this type.
-	 */
-	public static AnnotationInstance getSingleAnnotation(ClassInfo classInfo, DotName annotationName)
-			throws AssertionFailure {
-		return getSingleAnnotation( classInfo.annotations(), annotationName );
-	}
+    /**
+     * Adds the {@link #asInteger(AnnotationInstance, Class, String) value} for the supplied annotation key from the supplied Jandex
+     * annotation as an <code>int</code> to the supplied parameters using the supplied parameter key if the value is not
+     * <code>null</code>.
+     *
+     * @param annotation a Jandex annotation
+     * @param parameters
+     * @param annotationClass
+     * @param annotationKey
+     * @param parameterKey
+     */
+    public static void addInteger( AnnotationInstance annotation,
+                                   Properties parameters,
+                                   Class<?> annotationClass,
+                                   String annotationKey,
+                                   String parameterKey ) {
+        Integer val = asInteger(annotation, annotationClass, annotationKey);
+        if (val != null) parameters.put(parameterKey, val.toString());
+    }
 
-	/**
-	 * @param annotations List of annotation instances keyed against their dot name.
-	 * @param annotationName the annotation to retrieve from map
-	 *
-	 * @return the single annotation of the specified dot name or {@code null} in case the annotation is not specified at all
-	 *
-	 * @throws org.hibernate.AssertionFailure in case there is there is more than one annotation of this type.
-	 */
-	public static AnnotationInstance getSingleAnnotation(Map<DotName, List<AnnotationInstance>> annotations, DotName annotationName)
-			throws AssertionFailure {
-		List<AnnotationInstance> annotationList = annotations.get( annotationName );
-		if ( annotationList == null ) {
-			return null;
-		}
-		else if ( annotationList.size() == 1 ) {
-			return annotationList.get( 0 );
-		}
-		else {
-			throw new AssertionFailure(
-					"Found more than one instance of the annotation "
-							+ annotationList.get( 0 ).name().toString()
-							+ ". Expected was one."
-			);
-		}
-	}
+    /**
+     * @param annotation a Jandex annotation
+     * @param key
+     * @return the value for the supplied annotation key from the supplied Jandex annotation as an array of annotations; never
+     *         <code>null</code>.
+     */
+    public static AnnotationInstance[] asArray( AnnotationInstance annotation,
+                                                String key ) {
+        AnnotationValue val = annotation.value(key);
+        return val == null ? EMPTY_ANNOTATIONS_ARRAY : val.asNestedArray();
+    }
 
-	/**
-	 * Creates a jandex index for the specified classes
-	 *
-	 * @param classLoaderService class loader service
-	 * @param classes the classes to index
-	 *
-	 * @return an annotation repository w/ all the annotation discovered in the specified classes
-	 */
-	public static Index indexForClass(ClassLoaderService classLoaderService, Class<?>... classes) {
-		Indexer indexer = new Indexer();
-		for ( Class<?> clazz : classes ) {
-			InputStream stream = classLoaderService.locateResourceStream(
-					clazz.getName().replace( '.', '/' ) + ".class"
-			);
-			try {
-				indexer.index( stream );
-			}
-			catch ( IOException e ) {
-				StringBuilder builder = new StringBuilder();
-				builder.append( "[" );
-				int count = 0;
-				for ( Class<?> c : classes ) {
-					builder.append( c.getName() );
-					if ( count < classes.length - 1 ) {
-						builder.append( "," );
-					}
-					count++;
-				}
-				builder.append( "]" );
-				throw new HibernateException( "Unable to create annotation index for " + builder.toString() );
-			}
-		}
-		return indexer.complete();
-	}
+    /**
+     * @param annotation a Jandex annotation
+     * @param annotationClass
+     * @param key
+     * @return the value for the supplied annotation key from the supplied Jandex annotation as an Integer if not <code>null</code>,
+     *         else the default value specified in the supplied Java annotation class if that default value is not
+     *         <code>null</code>, else <code>null</code>.
+     */
+    public static Integer asInteger( AnnotationInstance annotation,
+                                     Class<?> annotationClass,
+                                     String key ) {
+        AnnotationValue val = annotation.value(key);
+        if (val == null) return defaultValue(annotationClass, key);
+        else return val.asInt();
+    }
 
-	public static Map<DotName, List<AnnotationInstance>> getMemberAnnotations(ClassInfo classInfo, String name) {
-		if ( classInfo == null ) {
-			throw new IllegalArgumentException( "classInfo cannot be null" );
-		}
+    /**
+     * @param annotation a Jandex annotation
+     * @param annotationClass
+     * @param key
+     * @return the value for the supplied annotation key from the supplied Jandex annotation as a String if not <code>null</code>,
+     *         else the default value specified in the supplied Java annotation class if that default value is not
+     *         <code>null</code>, else <code>null</code>.
+     */
+    public static String asString( AnnotationInstance annotation,
+                                   Class<?> annotationClass,
+                                   String key ) {
+        AnnotationValue val = annotation.value(key);
+        if (val == null) return defaultValue(annotationClass, key);
+        return val.asString();
+    }
 
-		if ( name == null ) {
-			throw new IllegalArgumentException( "name cannot be null" );
-		}
+    private static <T> T defaultValue( Class<?> annotationClass,
+                                       String key ) {
+        try {
+            T defaultVal = (T)annotationClass.getMethod(key).getDefaultValue();
+            return defaultVal == null ? null : defaultVal;
+        } catch (NoSuchMethodException error) {
+            throw new AnnotationException(error);
+        }
+    }
 
-		Map<DotName, List<AnnotationInstance>> annotations = new HashMap<DotName, List<AnnotationInstance>>();
-		for ( List<AnnotationInstance> annotationList : classInfo.annotations().values() ) {
-			for ( AnnotationInstance instance : annotationList ) {
-				String targetName = null;
-				if ( instance.target() instanceof FieldInfo ) {
-					targetName = ( (FieldInfo) instance.target() ).name();
-				}
-				else if ( instance.target() instanceof MethodInfo ) {
-					targetName = ( (MethodInfo) instance.target() ).name();
-				}
-				if ( targetName != null && name.equals( targetName ) ) {
-					addAnnotationToMap( instance, annotations );
-				}
-			}
-		}
-		return annotations;
-	}
+    /**
+     * Expects a method or field annotation target and returns the property name for this target
+     *
+     * @param target the annotation target
+     * @return the property name of the target. For a field it is the field name and for a method name it is the method name stripped
+     *         of 'is', 'has' or 'get'
+     */
+    public static String getPropertyName( AnnotationTarget target ) {
+        if (!(target instanceof MethodInfo || target instanceof FieldInfo)) {
+            throw new AssertionFailure("Unexpected annotation target " + target.toString());
+        }
 
-	public static Map<DotName, List<AnnotationInstance>> getTypeAnnotations(ClassInfo classInfo) {
-		if ( classInfo == null ) {
-			throw new IllegalArgumentException( "classInfo cannot be null" );
-		}
+        if (target instanceof FieldInfo) {
+            return ((FieldInfo)target).name();
+        } else {
+            String methodName = ((MethodInfo)target).name();
+            if (methodName.startsWith("is")) {
+                methodName = Introspector.decapitalize(methodName.substring(2));
+            } else if (methodName.startsWith("has")) {
+                methodName = Introspector.decapitalize(methodName.substring(3));
+            } else if (methodName.startsWith("get")) {
+                methodName = Introspector.decapitalize(methodName.substring(3));
+            } else {
+                throw new AssertionFailure("Expected a method following the Java Bean notation");
+            }
+            return methodName;
+        }
+    }
 
-		Map<DotName, List<AnnotationInstance>> annotations = new HashMap<DotName, List<AnnotationInstance>>();
-		for ( List<AnnotationInstance> annotationList : classInfo.annotations().values() ) {
-			for ( AnnotationInstance instance : annotationList ) {
-				if ( instance.target() instanceof ClassInfo ) {
-					addAnnotationToMap( instance, annotations );
-				}
-			}
-		}
-		return annotations;
-	}
+    /**
+     * @param classInfo the class info from which to retrieve the annotation instance
+     * @param annotationName the annotation to retrieve from the class info
+     *
+     * @return the single annotation defined on the class or {@code null} in case the annotation is not specified at all
+     *
+     * @throws org.hibernate.AssertionFailure in case there is there is more than one annotation of this type.
+     */
+    public static AnnotationInstance getSingleAnnotation(ClassInfo classInfo, DotName annotationName)
+            throws AssertionFailure {
+        return getSingleAnnotation( classInfo.annotations(), annotationName );
+    }
 
-	private static void addAnnotationToMap(AnnotationInstance instance, Map<DotName, List<AnnotationInstance>> annotations) {
-		DotName dotName = instance.name();
-		List<AnnotationInstance> list;
-		if ( annotations.containsKey( dotName ) ) {
-			list = annotations.get( dotName );
-		}
-		else {
-			list = new ArrayList<AnnotationInstance>();
-			annotations.put( dotName, list );
-		}
-		list.add( instance );
-	}
+    /**
+     * @param annotations List of annotation instances keyed against their dot name.
+     * @param annotationName the annotation to retrieve from map
+     *
+     * @return the single annotation of the specified dot name or {@code null} in case the annotation is not specified at all
+     *
+     * @throws org.hibernate.AssertionFailure in case there is there is more than one annotation of this type.
+     */
+    public static AnnotationInstance getSingleAnnotation(Map<DotName, List<AnnotationInstance>> annotations, DotName annotationName)
+            throws AssertionFailure {
+        List<AnnotationInstance> annotationList = annotations.get( annotationName );
+        if ( annotationList == null ) {
+            return null;
+        }
+        else if ( annotationList.size() == 1 ) {
+            return annotationList.get( 0 );
+        }
+        else {
+            throw new AssertionFailure(
+                    "Found more than one instance of the annotation "
+                            + annotationList.get( 0 ).name().toString()
+                            + ". Expected was one."
+            );
+        }
+    }
+
+    /**
+     * Creates a jandex index for the specified classes
+     *
+     * @param classLoaderService class loader service
+     * @param classes the classes to index
+     * @return an annotation repository w/ all the annotation discovered in the specified classes
+     */
+    public static Index indexForClass( ClassLoaderService classLoaderService,
+                                       Class<?>... classes ) {
+        Indexer indexer = new Indexer();
+        for (Class<?> clazz : classes) {
+            InputStream stream = classLoaderService.locateResourceStream(clazz.getName().replace('.', '/') + ".class");
+            try {
+                indexer.index(stream);
+            } catch (IOException e) {
+                StringBuilder builder = new StringBuilder();
+                builder.append("[");
+                int count = 0;
+                for (Class<?> c : classes) {
+                    builder.append(c.getName());
+                    if (count < classes.length - 1) {
+                        builder.append(",");
+                    }
+                    count++;
+                }
+                builder.append("]");
+                throw new HibernateException("Unable to create annotation index for " + builder.toString());
+            }
+        }
+        return indexer.complete();
+    }
+
+    public static Map<DotName, List<AnnotationInstance>> getMemberAnnotations( ClassInfo classInfo,
+                                                                               String name ) {
+        if (classInfo == null) {
+            throw new IllegalArgumentException("classInfo cannot be null");
+        }
+
+        if (name == null) {
+            throw new IllegalArgumentException("name cannot be null");
+        }
+
+        Map<DotName, List<AnnotationInstance>> annotations = new HashMap<DotName, List<AnnotationInstance>>();
+        for (List<AnnotationInstance> annotationList : classInfo.annotations().values()) {
+            for (AnnotationInstance instance : annotationList) {
+                String targetName = null;
+                if (instance.target() instanceof FieldInfo) {
+                    targetName = ((FieldInfo)instance.target()).name();
+                } else if (instance.target() instanceof MethodInfo) {
+                    targetName = ((MethodInfo)instance.target()).name();
+                }
+                if (targetName != null && name.equals(targetName)) {
+                    addAnnotationToMap(instance, annotations);
+                }
+            }
+        }
+        return annotations;
+    }
+
+    private static void addAnnotationToMap( AnnotationInstance instance,
+                                            Map<DotName, List<AnnotationInstance>> annotations ) {
+        DotName dotName = instance.name();
+        List<AnnotationInstance> list;
+        if (annotations.containsKey(dotName)) {
+            list = annotations.get(dotName);
+        } else {
+            list = new ArrayList<AnnotationInstance>();
+            annotations.put(dotName, list);
+        }
+        list.add(instance);
+    }
+
+    private JandexHelper() {
+    }
 }
-
-

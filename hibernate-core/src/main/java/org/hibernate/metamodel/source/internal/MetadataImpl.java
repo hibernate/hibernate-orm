@@ -30,14 +30,17 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
+import java.util.Properties;
 import org.jboss.jandex.Index;
 import org.jboss.jandex.Indexer;
 import org.jboss.logging.Logger;
-
+import org.hibernate.CacheMode;
 import org.hibernate.DuplicateMappingException;
+import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.SessionFactory;
+import org.hibernate.engine.spi.NamedQueryDefinition;
+import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.MetadataSource;
 import org.hibernate.metamodel.Metadata;
@@ -45,6 +48,7 @@ import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.SourceProcessingOrder;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.FetchProfile;
+import org.hibernate.metamodel.binding.IdGenerator;
 import org.hibernate.metamodel.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.binding.TypeDef;
 import org.hibernate.metamodel.relational.Database;
@@ -64,9 +68,8 @@ import org.hibernate.service.classloading.spi.ClassLoaderService;
  * @author Hardy Ferentschik
  */
 public class MetadataImpl implements Metadata, MetadataImplementor, Serializable {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class, MetadataImpl.class.getName()
-	);
+
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, MetadataImpl.class.getName());
 
 	private final BasicServiceRegistry serviceRegistry;
 	private final Options options;
@@ -79,8 +82,11 @@ public class MetadataImpl implements Metadata, MetadataImplementor, Serializable
 	private Map<String, EntityBinding> entityBindingMap = new HashMap<String, EntityBinding>();
 	private Map<String, PluralAttributeBinding> collectionBindingMap = new HashMap<String, PluralAttributeBinding>();
 	private Map<String, FetchProfile> fetchProfiles = new HashMap<String, FetchProfile>();
-	private Map<String, TypeDef> typeDefs = new HashMap<String, TypeDef>();
 	private Map<String, String> imports;
+    private Map<String, TypeDef> typeDefs = new HashMap<String, TypeDef>();
+    private Map<String, IdGenerator> idGenerators = new HashMap<String, IdGenerator>();
+    private Map<String, NamedQueryDefinition> namedQueries = new HashMap<String, NamedQueryDefinition>();
+    private Map<String, NamedSQLQueryDefinition> namedNativeQueries = new HashMap<String, NamedSQLQueryDefinition>();
 
 	public MetadataImpl(MetadataSources metadataSources, Options options) {
 		this.serviceRegistry = metadataSources.getServiceRegistry();
@@ -98,6 +104,37 @@ public class MetadataImpl implements Metadata, MetadataImplementor, Serializable
 
 		new EntityReferenceResolver( this ).resolve();
 	}
+
+    public void addIdGenerator( String name,
+                                String strategy,
+                                Properties properties ) {
+        idGenerators.put(name, new IdGenerator(name, strategy, properties));
+    }
+
+    public void addNamedNativeQuery( String name,
+                                     NamedSQLQueryDefinition query ) {
+        namedNativeQueries.put(name, query);
+    }
+
+    public void addNamedQuery( String name,
+                               String query,
+                               boolean cacheable,
+                               String cacheRegion,
+                               Integer timeout,
+                               Integer fetchSize,
+                               FlushMode flushMode,
+                               CacheMode cacheMode,
+                               boolean readOnly,
+                               String comment ) {
+        namedQueries.put(name, new NamedQueryDefinition(query, cacheable, cacheRegion, timeout, fetchSize, flushMode, cacheMode,
+                                                        readOnly, comment, null));
+    }
+
+    public void addTypeDef( String name,
+                            String typeClass,
+                            Properties parameters ) {
+        typeDefs.put(name, new TypeDef(typeClass, parameters));
+    }
 
 	private void applyHibernateMappings(MetadataSources metadataSources, List<String> processedEntityNames) {
 		final HibernateXmlBinder hibernateXmlBinder = new HibernateXmlBinder( this );

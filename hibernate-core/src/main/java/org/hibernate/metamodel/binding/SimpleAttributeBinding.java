@@ -24,6 +24,10 @@
 package org.hibernate.metamodel.binding;
 
 import org.hibernate.mapping.PropertyGeneration;
+import org.hibernate.metamodel.state.domain.SimpleAttributeDomainState;
+import org.hibernate.metamodel.state.relational.ColumnRelationalState;
+import org.hibernate.metamodel.state.relational.DerivedValueRelationalState;
+import org.hibernate.metamodel.state.relational.TupleRelationalState;
 
 /**
  * TODO : javadoc
@@ -31,31 +35,27 @@ import org.hibernate.mapping.PropertyGeneration;
  * @author Steve Ebersole
  */
 public class SimpleAttributeBinding extends SingularAttributeBinding {
-	public static interface DomainState extends SingularAttributeBinding.DomainState {
-		public PropertyGeneration getPropertyGeneration();
-	}
-
 	private PropertyGeneration generation;
 
 	SimpleAttributeBinding(EntityBinding entityBinding, boolean forceNonNullable, boolean forceUnique) {
 		super( entityBinding, forceNonNullable, forceUnique );
 	}
 
-	public final void initialize(DomainState state) {
+	public final void initialize(SimpleAttributeDomainState state) {
 		super.initialize( state );
 		generation = state.getPropertyGeneration();
 	}
 
 	public void initializeColumnValue(ColumnRelationalState state) {
-		super.initializeColumnValue( state );
+		super.initializeValue( state );
 	}
 
-	public void initializeDerivedValue(DerivedRelationalState state) {
-		super.initializeDerivedValue( state );
+	public void initializeDerivedValue(DerivedValueRelationalState state) {
+		super.initializeValue( state );
 	}
 
-	public void initializeSimpleTupleValue(SimpleTupleRelationalState state) {
-		super.initializeSimpleTupleValue( state );
+	public void initializeTupleValue(TupleRelationalState state) {
+		super.initializeValue( state );
 	}
 
 	private boolean isUnique(ColumnRelationalState state) {

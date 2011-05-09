@@ -30,7 +30,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.MappingException;
 import org.hibernate.metamodel.domain.Attribute;
 import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.metamodel.relational.Column;
@@ -39,6 +38,10 @@ import org.hibernate.metamodel.relational.SimpleValue;
 import org.hibernate.metamodel.relational.TableSpecification;
 import org.hibernate.metamodel.relational.Tuple;
 import org.hibernate.metamodel.relational.Value;
+import org.hibernate.metamodel.relational.ValueFactory;
+import org.hibernate.metamodel.state.domain.AttributeDomainState;
+import org.hibernate.metamodel.state.relational.ValueRelationalState;
+import org.hibernate.metamodel.state.relational.TupleRelationalState;
 
 /**
  * TODO : javadoc
@@ -46,17 +49,6 @@ import org.hibernate.metamodel.relational.Value;
  * @author Steve Ebersole
  */
 public abstract class AbstractAttributeBinding implements AttributeBinding {
-	public static interface DomainState {
-		HibernateTypeDescriptor getHibernateTypeDescriptor();
-		Attribute getAttribute();
-		boolean isLazy();
-		String getPropertyAccessorName();
-		boolean isAlternateUniqueKey();
-		String getCascade();
-		boolean isOptimisticLockable();
-		String getNodeName();
-		Map<String, MetaAttribute> getMetaAttributes(EntityBinding entityBinding);
-	}
 
 	private final HibernateTypeDescriptor hibernateTypeDescriptor = new HibernateTypeDescriptor();
 	private final EntityBinding entityBinding;
@@ -81,7 +73,7 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 		this.entityBinding = entityBinding;
 	}
 
-	protected void initialize(DomainState state) {
+	protected void initialize(AttributeDomainState state) {
 		hibernateTypeDescriptor.initialize( state.getHibernateTypeDescriptor() );
 		attribute = state.getAttribute();
 		isLazy = state.isLazy();
@@ -90,7 +82,7 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 		cascade = state.getCascade();
 		optimisticLockable = state.isOptimisticLockable();
 		nodeName = state.getNodeName();
-		metaAttributes = state.getMetaAttributes( entityBinding );
+		metaAttributes = state.getMetaAttributes();
 	}
 
 	@Override
@@ -115,94 +107,24 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 		return false;
 	}
 
-	protected void initializeColumnValue(ColumnRelationalState state) {
-		value = createColumn( state );
+	protected void initializeValue(ValueRelationalState state) {
+		value = ValueFactory.createValue( getEntityBinding().getBaseTable(),
+				getAttribute().getName(),
+				convertToSimpleRelationalStateIfPossible( state ),
+				forceNonNullable(),
+				forceUnique()
+		);
 	}
 
-	private Column createColumn(ColumnRelationalState state) {
-		final String explicitName = state.getExplicitColumnName();
-		final String logicalColumnName = state.getNamingStrategy().logicalColumnName( explicitName, getAttribute().getName() );
-		final TableSpecification table = getEntityBinding().getBaseTable();
-		final String columnName =
-				explicitName == null ?
-						state.getNamingStrategy().propertyToColumnName( getAttribute().getName() ) :
-						state.getNamingStrategy().columnName( explicitName );
-// todo : find out the purpose of these logical bindings
-//			mappings.addColumnBinding( logicalColumnName, column, table );
-		Column columnValue = table.createColumn( columnName );
-		columnValue.getSize().initialize( state.getSize() );
-		columnValue.setNullable( ! forceNonNullable() &&  state.isNullable() );
-		columnValue.setUnique( ! forceUnique() && state.isUnique()  );
-		columnValue.setCheckCondition( state.getCheckCondition() );
-		columnValue.setDefaultValue( state.getDefault() );
-		columnValue.setSqlType( state.getSqlType() );
-		columnValue.setWriteFragment( state.getCustomWriteFragment() );
-		columnValue.setReadFragment( state.getCustomReadFragment() );
-		columnValue.setComment( state.getComment() );
-		for ( String uniqueKey : state.getUniqueKeys() ) {
-			table.getOrCreateUniqueKey( uniqueKey ).addColumn( columnValue );
+	// TODO: should a single-valued tuple always be converted???
+	protected ValueRelationalState convertToSimpleRelationalStateIfPossible(ValueRelationalState state) {
+		if ( !TupleRelationalState.class.isInstance( state ) ) {
+			return state;
 		}
-		for ( String index : state.getIndexes() ) {
-			table.getOrCreateIndex( index ).addColumn( columnValue );
-		}
-		return columnValue;
-	}
-
-	// TODO: move this logic out...
-	protected void initialize(RelationalState state) {
-		if ( SingleValueRelationalState.class.isInstance( state ) ) {
-			initializeSingleValue( SingleValueRelationalState.class.cast( state )  );
-		}
-		else if ( SimpleTupleRelationalState.class.isInstance( state ) ) {
-			initializeSimpleTupleValue( SimpleTupleRelationalState.class.cast( state ) );
-		}
-		else {
-			throw new MappingException( "Unexpected type of RelationalState" + state.getClass().getName() );
-		}
-	}
-
-	protected <T extends DerivedRelationalState> void initializeDerivedValue(T state) {
-		value = createDerivedValue( state );
-	}
-
-	private DerivedValue createDerivedValue(DerivedRelationalState state) {
-		return getEntityBinding().getBaseTable().createDerivedValue( state.getFormula() );
-	}
-
-	private void initializeSingleValue(SingleValueRelationalState state) {
-		value = createSingleValue( state );
-	}
-
-	private SimpleValue createSingleValue(SingleValueRelationalState state) {
-		if ( state instanceof ColumnRelationalState ) {
-			return createColumn( ColumnRelationalState.class.cast( state ) );
-		}
-		else if ( state instanceof DerivedRelationalState ) {
-			return createDerivedValue( DerivedRelationalState.class.cast( state ) );
-		}
-		else {
-			throw new MappingException( "unknown relational state:" + state.getClass().getName() );
-		}
-	}
-
-	protected void initializeSimpleTupleValue(SimpleTupleRelationalState state) {
-		if ( state.getRelationalStates().size() == 0 ) {
-			throw new MappingException( "Tuple state does not contain any values." );
-		}
-		if ( state.getRelationalStates().size() == 1 ) {
-			initializeSingleValue( state.getRelationalStates().iterator().next() );
-		}
-		else {
-			value = createSimpleTupleValue( state );
-		}
-	}
-
-	private Tuple createSimpleTupleValue(SimpleTupleRelationalState state) {
-		Tuple tuple = getEntityBinding().getBaseTable().createTuple(  "[" + getAttribute().getName() + "]" );
-		for ( SingleValueRelationalState singleValueState : state.getRelationalStates() ) {
-			tuple.addValue( createSingleValue( singleValueState ) );
-		}
-		return tuple;
+		TupleRelationalState tupleRelationalState = TupleRelationalState.class.cast( state );
+		return tupleRelationalState.getRelationalStates().size() == 1 ?
+				tupleRelationalState.getRelationalStates().get( 0 ) :
+				state;
 	}
 
 	@Override

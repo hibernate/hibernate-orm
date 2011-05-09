@@ -26,11 +26,12 @@ package org.hibernate.metamodel.source.hbm.state.domain;
 import org.hibernate.metamodel.binding.CollectionElement;
 import org.hibernate.metamodel.binding.HibernateTypeDescriptor;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLElementElement;
+import org.hibernate.metamodel.state.domain.CollectionElementDomainState;
 
 /**
  * @author Gail Badner
  */
-public class HbmCollectionElementDomainState implements CollectionElement.DomainState {
+public class HbmCollectionElementDomainState implements CollectionElementDomainState {
 	private final XMLElementElement element;
 
 	HbmCollectionElementDomainState(XMLElementElement element) {

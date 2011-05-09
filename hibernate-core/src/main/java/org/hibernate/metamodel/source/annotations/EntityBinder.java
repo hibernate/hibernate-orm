@@ -213,7 +213,7 @@ public class EntityBinder {
 		AttributeColumnRelationalState columnRelationsState = new AttributeColumnRelationalState( idAttribute, meta );
 		AttributeTupleRelationalState relationalState = new AttributeTupleRelationalState();
 		relationalState.addValueState( columnRelationsState );
-		idBinding.initializeSimpleTupleValue( relationalState );
+		idBinding.initializeTupleValue( relationalState );
 	}
 
 	private void bindAttributes(EntityBinding entityBinding) {
@@ -241,7 +241,7 @@ public class EntityBinder {
 			);
 			AttributeTupleRelationalState relationalState = new AttributeTupleRelationalState();
 			relationalState.addValueState( columnRelationsState );
-			attributeBinding.initializeSimpleTupleValue( relationalState );
+			attributeBinding.initializeTupleValue( relationalState );
 		}
 	}
 

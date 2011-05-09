@@ -26,7 +26,7 @@ package org.hibernate.metamodel.relational;
 import java.util.Set;
 
 import org.hibernate.cfg.NamingStrategy;
-import org.hibernate.metamodel.binding.SimpleAttributeBinding;
+import org.hibernate.metamodel.state.relational.ColumnRelationalState;
 
 /**
  * Models a physical column
@@ -53,6 +53,26 @@ public class Column extends AbstractSimpleValue implements SimpleValue {
 	protected Column(TableSpecification table, int position, String name) {
 		super( table, position );
 		this.name = name;
+	}
+
+	public void initialize(ColumnRelationalState state, boolean forceNonNullable, boolean forceUnique) {
+		size.initialize( state.getSize() );
+		nullable = ! forceNonNullable &&  state.isNullable();
+		unique = ! forceUnique && state.isUnique();
+		checkCondition = state.getCheckCondition();
+		defaultValue = state.getDefault();
+		sqlType = state.getSqlType();
+
+		// TODO: this should go into binding instead (I think???)
+		writeFragment = state.getCustomWriteFragment();
+		readFragment = state.getCustomReadFragment();
+		comment = state.getComment();
+		for ( String uniqueKey : state.getUniqueKeys() ) {
+			getTable().getOrCreateUniqueKey( uniqueKey ).addColumn( this );
+		}
+		for ( String index : state.getIndexes() ) {
+			getTable().getOrCreateIndex( index ).addColumn( this );
+		}
 	}
 
 	public String getName() {
@@ -135,5 +155,4 @@ public class Column extends AbstractSimpleValue implements SimpleValue {
 	public String toLoggableString() {
 		return getTable().getLoggableValueQualifier() + '.' + getName();
 	}
-
 }

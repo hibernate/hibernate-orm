@@ -23,19 +23,14 @@
  */
 package org.hibernate.metamodel.binding;
 
+import org.hibernate.metamodel.state.domain.SingularAttributeDomainState;
+
 /**
  * TODO : javadoc
  *
  * @author Gail Badner
  */
 public abstract class SingularAttributeBinding extends AbstractAttributeBinding implements KeyValueBinding {
-	public static interface DomainState extends AbstractAttributeBinding.DomainState {
-		boolean isInsertable();
-		boolean isUpdateable();
-		boolean isKeyCasadeDeleteEnabled();
-		String getUnsavedValue();
-	}
-
 	private final boolean forceNonNullable;
 	private final boolean forceUnique;
 	private boolean insertable;
@@ -49,7 +44,7 @@ public abstract class SingularAttributeBinding extends AbstractAttributeBinding 
 		this.forceUnique = forceUnique;
 	}
 
-	public final void initialize(DomainState state) {
+	public final void initialize(SingularAttributeDomainState state) {
 		super.initialize( state );
 		insertable = state.isInsertable();
 		updateable = state.isUpdateable();

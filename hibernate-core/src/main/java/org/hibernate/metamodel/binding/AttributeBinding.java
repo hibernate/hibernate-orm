@@ -111,37 +111,4 @@ public interface AttributeBinding {
 	public Set<EntityReferencingAttributeBinding> getEntityReferencingAttributeBindings();
 
 	public void validate();
-
-	// TODO: where should this RelationalState stuff go???
-
-	interface RelationalState {}
-
-	interface SingleValueRelationalState extends RelationalState {}
-
-	interface ColumnRelationalState extends SingleValueRelationalState {
-		NamingStrategy getNamingStrategy();
-		String getExplicitColumnName();
-		boolean isUnique();
-		Size getSize();
-		boolean isNullable();
-		String getCheckCondition();
-		String getDefault();
-		String getSqlType();
-		String getCustomWriteFragment();
-		String getCustomReadFragment();
-		String getComment();
-		Set<String> getUniqueKeys();
-		Set<String> getIndexes();
-	}
-
-	interface DerivedRelationalState extends SingleValueRelationalState {
-		String getFormula();
-	}
-
-	interface SimpleTupleRelationalState extends AbstractAttributeBinding.TupleRelationalState<SingleValueRelationalState> {
-	}
-
-	interface TupleRelationalState<T extends RelationalState> extends RelationalState{
-		List<T> getRelationalStates();
-	}
 }

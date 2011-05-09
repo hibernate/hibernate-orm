@@ -26,21 +26,21 @@ package org.hibernate.metamodel.source.annotations.state.relational;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.metamodel.binding.AttributeBinding;
-import org.hibernate.metamodel.binding.SimpleAttributeBinding;
+import org.hibernate.metamodel.state.relational.SimpleValueRelationalState;
+import org.hibernate.metamodel.state.relational.TupleRelationalState;
 
 /**
  * @author Hardy Ferentschik
  */
-public class AttributeTupleRelationalState implements SimpleAttributeBinding.SimpleTupleRelationalState {
-	List<AttributeBinding.SingleValueRelationalState> valueStates = new ArrayList<AttributeBinding.SingleValueRelationalState>();
+public class AttributeTupleRelationalState implements TupleRelationalState {
+	List<SimpleValueRelationalState> valueStates = new ArrayList<SimpleValueRelationalState>();
 
-	public void addValueState(AttributeBinding.SingleValueRelationalState state) {
+	public void addValueState(SimpleValueRelationalState state) {
 		valueStates.add( state );
 	}
 
 	@Override
-	public List<AttributeBinding.SingleValueRelationalState> getRelationalStates() {
+	public List<SimpleValueRelationalState> getRelationalStates() {
 		return valueStates;
 	}
 }

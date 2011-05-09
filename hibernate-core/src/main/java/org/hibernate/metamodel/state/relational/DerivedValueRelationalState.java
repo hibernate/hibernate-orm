@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,31 +21,17 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.binding;
+package org.hibernate.metamodel.state.relational;
 
-import org.hibernate.metamodel.relational.Value;
-import org.hibernate.metamodel.state.domain.CollectionElementDomainState;
+import org.hibernate.metamodel.relational.SimpleValue;
 
 /**
- * TODO : javadoc
- *
- * @author Steve Ebersole
+ * Created by IntelliJ IDEA.
+ * User: gbadner
+ * Date: 5/9/11
+ * Time: 2:15 PM
+ * To change this template use File | Settings | File Templates.
  */
-public class CollectionElement {
-
-	private final HibernateTypeDescriptor hibernateTypeDescriptor = new HibernateTypeDescriptor();
-	private final PluralAttributeBinding collectionBinding;
-
-	private String nodeName;
-
-	private Value elementValue;
-
-	CollectionElement(PluralAttributeBinding collectionBinding) {
-		this.collectionBinding = collectionBinding;
-	}
-
-	public void initialize(CollectionElementDomainState state) {
-		hibernateTypeDescriptor.initialize( state.getHibernateTypeDescriptor() );
-		nodeName = state.getNodeName();
-	}
+public interface DerivedValueRelationalState extends SimpleValueRelationalState {
+	String getFormula();
 }

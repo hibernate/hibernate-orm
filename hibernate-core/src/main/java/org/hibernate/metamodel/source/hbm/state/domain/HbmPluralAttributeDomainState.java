@@ -30,12 +30,10 @@ import java.util.Map;
 
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
-import org.hibernate.metamodel.binding.CollectionElement;
 import org.hibernate.metamodel.binding.CustomSQL;
 import org.hibernate.metamodel.binding.ElementCollectionElement;
 import org.hibernate.metamodel.binding.HibernateTypeDescriptor;
 import org.hibernate.metamodel.binding.MappingDefaults;
-import org.hibernate.metamodel.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.domain.Attribute;
 import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.metamodel.source.hbm.HbmHelper;
@@ -47,12 +45,14 @@ import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlUpdateElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSynchronizeElement;
 
 import org.hibernate.metamodel.source.util.MappingHelper;
+import org.hibernate.metamodel.state.domain.CollectionElementDomainState;
+import org.hibernate.metamodel.state.domain.PluralAttributeDomainState;
 
 
 /**
  * @author Gail Badner
  */
-public class HbmPluralAttributeDomainState extends AbstractHbmAttributeDomainState implements PluralAttributeBinding.DomainState {
+public class HbmPluralAttributeDomainState extends AbstractHbmAttributeDomainState implements PluralAttributeDomainState {
 	private final XMLBagElement collection;
 	private final HibernateTypeDescriptor hibernateTypeDescriptor = new HibernateTypeDescriptor();
 	private final String cascade;
@@ -121,10 +121,8 @@ public class HbmPluralAttributeDomainState extends AbstractHbmAttributeDomainSta
 		return  ( "extra".equals( collection.getLazy() ) );
 	}
 
-	public CollectionElement getCollectionElement(PluralAttributeBinding binding) {
-		ElementCollectionElement collectionElement = new ElementCollectionElement( binding );
-		collectionElement.initialize( new HbmCollectionElementDomainState( collection.getElement() ) );
-		return collectionElement;
+	public CollectionElementDomainState getCollectionElementDomainState() {
+		return new HbmCollectionElementDomainState( collection.getElement() );
 	}
 
 	public boolean isInverse() {

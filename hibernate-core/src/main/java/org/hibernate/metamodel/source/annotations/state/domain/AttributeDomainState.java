@@ -5,16 +5,16 @@ import java.util.Map;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.HibernateTypeDescriptor;
-import org.hibernate.metamodel.binding.SimpleAttributeBinding;
 import org.hibernate.metamodel.domain.Attribute;
 import org.hibernate.metamodel.domain.Entity;
 import org.hibernate.metamodel.domain.MetaAttribute;
+import org.hibernate.metamodel.state.domain.SimpleAttributeDomainState;
 import org.hibernate.metamodel.source.annotations.MappedAttribute;
 
 /**
  * @author Hardy Ferentschik
  */
-public class AttributeDomainState implements SimpleAttributeBinding.DomainState {
+public class AttributeDomainState implements SimpleAttributeDomainState {
 	private final PropertyGeneration propertyGeneration = null;
 	private final HibernateTypeDescriptor typeDescriptor;
 	private final Attribute attribute;
@@ -101,7 +101,7 @@ public class AttributeDomainState implements SimpleAttributeBinding.DomainState 
 	}
 
 	@Override
-	public Map<String, MetaAttribute> getMetaAttributes(EntityBinding entityBinding) {
+	public Map<String, MetaAttribute> getMetaAttributes() {
 		return null;  //To change body of implemented methods use File | Settings | File Templates.
 	}
 }

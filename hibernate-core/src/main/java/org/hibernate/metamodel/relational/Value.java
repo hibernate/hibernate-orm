@@ -75,4 +75,5 @@ public interface Value {
 	 * @throws org.hibernate.metamodel.ValidationException if validaton fails.
 	 */
 	public void validateJdbcTypes(JdbcCodes typeCodes);
+
 }

@@ -30,6 +30,8 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.metamodel.relational.ForeignKey;
 import org.hibernate.metamodel.relational.SimpleValue;
 import org.hibernate.metamodel.relational.Column;
+import org.hibernate.metamodel.state.domain.ManyToOneAttributeDomainState;
+import org.hibernate.metamodel.state.relational.ManyToOneRelationalState;
 
 /**
  * TODO : javadoc
@@ -45,23 +47,11 @@ public class ManyToOneAttributeBinding extends SingularAttributeBinding implemen
 	private AttributeBinding referencedAttributeBinding;
 	private boolean ignoreNotFound;
 
-	public static interface DomainState extends SingularAttributeBinding.DomainState {
-		boolean isUnwrapProxy();
-		String getReferencedAttributeName();
-		String getReferencedEntityName();
-		boolean ignoreNotFound();
-	}
-
-	public static interface RelationalState extends AttributeBinding.RelationalState {
-		boolean isLogicalOneToOne();
-		String getForeignKeyName();
-	}
-
 	ManyToOneAttributeBinding(EntityBinding entityBinding) {
 		super( entityBinding, false, false );
 	}
 
-	public final void initialize(DomainState state) {
+	public final void initialize(ManyToOneAttributeDomainState state) {
 		super.initialize( state );
 		isPropertyReference = state.getReferencedAttributeName() != null;
 		referencedAttributeName = state.getReferencedAttributeName();
@@ -75,8 +65,8 @@ public class ManyToOneAttributeBinding extends SingularAttributeBinding implemen
 		}
 	}
 
-	public final void initialize(RelationalState state) {
-		super.initialize( state );
+	public final void initialize(ManyToOneRelationalState state) {
+		super.initializeValue( state );
 		isLogicalOneToOne = state.isLogicalOneToOne();
 		foreignKeyName = state.getForeignKeyName();
 	}

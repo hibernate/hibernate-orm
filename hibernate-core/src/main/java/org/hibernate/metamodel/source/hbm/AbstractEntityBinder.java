@@ -435,7 +435,7 @@ PrimitiveArray
 		if ( attributeBinding.getValue() == null ) {
 			// relational model has not been bound yet
 			// boolean (true here) indicates that by default column names should be guessed
-			attributeBinding.initializeSimpleTupleValue(
+			attributeBinding.initializeTupleValue(
 					new HbmSimpleValueRelationalStateContainer(
 							getHibernateMappingBinder(),
 							true,
@@ -463,7 +463,7 @@ PrimitiveArray
 		if ( attributeBinding.getValue() == null ) {
 			// relational model has not been bound yet
 			// boolean (true here) indicates that by default column names should be guessed
-			attributeBinding.initializeSimpleTupleValue(
+			attributeBinding.initializeTupleValue(
 					new HbmSimpleValueRelationalStateContainer(
 							getHibernateMappingBinder(),
 							true,
@@ -491,7 +491,7 @@ PrimitiveArray
 		if ( attributeBinding.getValue() == null ) {
 			// relational model has not been bound yet
 			// boolean (true here) indicates that by default column names should be guessed
-			attributeBinding.initializeSimpleTupleValue(
+			attributeBinding.initializeTupleValue(
 					new HbmSimpleValueRelationalStateContainer(
 							getHibernateMappingBinder(),
 							true,
@@ -519,7 +519,7 @@ PrimitiveArray
 		if ( attributeBinding.getValue() == null ) {
 			// relational model has not been bound yet
 			// boolean (true here) indicates that by default column names should be guessed
-			attributeBinding.initializeSimpleTupleValue(
+			attributeBinding.initializeTupleValue(
 					new HbmSimpleValueRelationalStateContainer(
 							getHibernateMappingBinder(),
 							true,
@@ -546,7 +546,7 @@ PrimitiveArray
 		if ( attributeBinding.getValue() == null ) {
 			// relational model has not been bound yet
 			// boolean (true here) indicates that by default column names should be guessed
-			attributeBinding.initializeSimpleTupleValue(
+			attributeBinding.initializeTupleValue(
 					new HbmSimpleValueRelationalStateContainer(
 							getHibernateMappingBinder(),
 							true,

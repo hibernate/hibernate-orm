@@ -25,17 +25,16 @@ package org.hibernate.metamodel.source.hbm.state.domain;
 
 import java.util.Map;
 
-import org.hibernate.metamodel.binding.AbstractAttributeBinding;
-import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.MappingDefaults;
 import org.hibernate.metamodel.domain.Attribute;
 import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.metamodel.source.util.MappingHelper;
+import org.hibernate.metamodel.state.domain.AttributeDomainState;
 
 /**
  * @author Gail Badner
  */
-public abstract class AbstractHbmAttributeDomainState implements AbstractAttributeBinding.DomainState {
+public abstract class AbstractHbmAttributeDomainState implements AttributeDomainState {
 	private final MappingDefaults defaults;
 	private final Attribute attribute;
 	private final String nodeName;
@@ -78,7 +77,7 @@ public abstract class AbstractHbmAttributeDomainState implements AbstractAttribu
 		return nodeName;
 	}
 
-	public final Map<String, MetaAttribute> getMetaAttributes(EntityBinding entityBinding) {
+	public final Map<String, MetaAttribute> getMetaAttributes() {
 		return metaAttributes;
 	}
 }

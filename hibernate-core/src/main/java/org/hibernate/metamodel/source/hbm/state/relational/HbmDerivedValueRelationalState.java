@@ -23,12 +23,12 @@
  */
 package org.hibernate.metamodel.source.hbm.state.relational;
 
-import org.hibernate.metamodel.binding.SimpleAttributeBinding;
+import org.hibernate.metamodel.state.relational.DerivedValueRelationalState;
 
 /**
  * @author Gail Badner
  */
-public class HbmDerivedValueRelationalState implements SimpleAttributeBinding.DerivedRelationalState {
+public class HbmDerivedValueRelationalState implements DerivedValueRelationalState {
 	private final String formula;
 
 	public HbmDerivedValueRelationalState(String formula) {

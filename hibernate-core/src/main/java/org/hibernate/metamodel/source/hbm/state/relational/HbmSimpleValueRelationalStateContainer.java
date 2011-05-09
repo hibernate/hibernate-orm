@@ -25,17 +25,13 @@ package org.hibernate.metamodel.source.hbm.state.relational;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
 import org.hibernate.MappingException;
 import org.hibernate.cfg.NamingStrategy;
-import org.hibernate.metamodel.binding.AbstractAttributeBinding;
-import org.hibernate.metamodel.binding.AttributeBinding;
 import org.hibernate.metamodel.binding.HibernateTypeDescriptor;
 import org.hibernate.metamodel.binding.MappingDefaults;
-import org.hibernate.metamodel.binding.SimpleAttributeBinding;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLColumnElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLDiscriminator;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLId;
@@ -43,15 +39,17 @@ import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLCla
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLVersion;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLManyToOneElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLPropertyElement;
+import org.hibernate.metamodel.state.relational.SimpleValueRelationalState;
+import org.hibernate.metamodel.state.relational.TupleRelationalState;
 
 /**
  * @author Gail Badner
  */
-public class HbmSimpleValueRelationalStateContainer implements AbstractAttributeBinding.SimpleTupleRelationalState {
+public class HbmSimpleValueRelationalStateContainer implements TupleRelationalState {
 	private final MappingDefaults defaults;
 	private final Set<String> propertyUniqueKeys;
 	private final Set<String> propertyIndexes;
-	private final List<AttributeBinding.SingleValueRelationalState> singleValueStates;
+	private final List<SimpleValueRelationalState> simpleValueStates;
 	private final HibernateTypeDescriptor hibernateTypeDescriptor = new HibernateTypeDescriptor();
 
 	public NamingStrategy getNamingStrategy() {
@@ -64,11 +62,11 @@ public class HbmSimpleValueRelationalStateContainer implements AbstractAttribute
 												  boolean autoColumnCreation,
 												  XMLId id) {
 		this( defaults, id.getColumn() );
-		if ( singleValueStates.isEmpty() ) {
+		if ( simpleValueStates.isEmpty() ) {
 			if ( id.getColumn() == null && ! autoColumnCreation ) {
 				throw new MappingException( "No columns to map and auto column creation is disabled." );
 			}
-			singleValueStates.add( new HbmColumnRelationalState( id, this ) );
+			simpleValueStates.add( new HbmColumnRelationalState( id, this ) );
 		}
 		else if ( id.getColumn() != null ) {
 			throw new MappingException( "column attribute may not be used together with <column> subelement" );
@@ -80,11 +78,11 @@ public class HbmSimpleValueRelationalStateContainer implements AbstractAttribute
 												  boolean autoColumnCreation,
 												  XMLDiscriminator discriminator) {
 		this( defaults, discriminator.getFormula(), discriminator.getColumn() );
-		if ( singleValueStates.isEmpty() ) {
+		if ( simpleValueStates.isEmpty() ) {
 			if ( discriminator.getColumn() == null && discriminator.getFormula() == null &&  ! autoColumnCreation ) {
 				throw new MappingException( "No column or formula to map and auto column creation is disabled." );
 			}
-			singleValueStates.add( new HbmColumnRelationalState( discriminator, this ) );
+			simpleValueStates.add( new HbmColumnRelationalState( discriminator, this ) );
 		}
 		else if ( discriminator.getColumn() != null || discriminator.getFormula() != null) {
 			throw new MappingException( "column/formula attribute may not be used together with <column>/<formula> subelement" );
@@ -96,11 +94,11 @@ public class HbmSimpleValueRelationalStateContainer implements AbstractAttribute
 												  boolean autoColumnCreation,
 												  XMLVersion version) {
 		this( defaults, version.getColumn() );
-		if ( singleValueStates.isEmpty() ) {
+		if ( simpleValueStates.isEmpty() ) {
 			if ( version.getColumn() == null && ! autoColumnCreation ) {
 				throw new MappingException( "No column or formula to map and auto column creation is disabled." );
 			}
-			singleValueStates.add( new HbmColumnRelationalState( version, this ) );
+			simpleValueStates.add( new HbmColumnRelationalState( version, this ) );
 		}
 		else if ( version.getColumn() != null ) {
 			throw new MappingException( "column attribute may not be used together with <column> subelement" );
@@ -112,11 +110,11 @@ public class HbmSimpleValueRelationalStateContainer implements AbstractAttribute
 												  boolean autoColumnCreation,
 												  XMLTimestamp timestamp) {
 		this( defaults, null );
-		if ( singleValueStates.isEmpty() ) {
+		if ( simpleValueStates.isEmpty() ) {
 			if ( timestamp.getColumn() == null && ! autoColumnCreation ) {
 				throw new MappingException( "No columns to map and auto column creation is disabled." );
 			}
-			singleValueStates.add( new HbmColumnRelationalState( timestamp, this ) );
+			simpleValueStates.add( new HbmColumnRelationalState( timestamp, this ) );
 		}
 		else if ( timestamp.getColumn() != null ) {
 			throw new MappingException( "column attribute may not be used together with <column> subelement" );
@@ -128,11 +126,11 @@ public class HbmSimpleValueRelationalStateContainer implements AbstractAttribute
 												  boolean autoColumnCreation,
 												  XMLPropertyElement property) {
 		this( defaults, property.getColumnOrFormula() );
-		if ( singleValueStates.isEmpty() ) {
+		if ( simpleValueStates.isEmpty() ) {
 			if ( property.getColumn() == null && property.getFormula() == null &&  ! autoColumnCreation ) {
 				throw new MappingException( "No column or formula to map and auto column creation is disabled." );
 			}
-			singleValueStates.add( new HbmColumnRelationalState( property, this ) );
+			simpleValueStates.add( new HbmColumnRelationalState( property, this ) );
 		}
 		else if ( property.getColumn() != null || property.getFormula() != null) {
 			throw new MappingException( "column/formula attribute may not be used together with <column>/<formula> subelement" );
@@ -144,11 +142,11 @@ public class HbmSimpleValueRelationalStateContainer implements AbstractAttribute
 												  boolean autoColumnCreation,
 												  XMLManyToOneElement manyToOne) {
 		this( defaults, manyToOne.getColumnOrFormula() );
-		if ( singleValueStates.isEmpty() ) {
+		if ( simpleValueStates.isEmpty() ) {
 			if ( manyToOne.getColumn() == null && manyToOne.getFormula() == null &&  ! autoColumnCreation ) {
 				throw new MappingException( "No column or formula to map and auto column creation is disabled." );
 			}
-			singleValueStates.add( new HbmColumnRelationalState( manyToOne, this ) );
+			simpleValueStates.add( new HbmColumnRelationalState( manyToOne, this ) );
 		}
 		else if ( manyToOne.getColumn() != null || manyToOne.getFormula() != null) {
 			throw new MappingException( "column/formula attribute may not be used together with <column>/<formula> subelement" );
@@ -171,19 +169,19 @@ public class HbmSimpleValueRelationalStateContainer implements AbstractAttribute
 		this.defaults = defaults;
 		this.propertyUniqueKeys = Collections.emptySet();
 		this.propertyIndexes = Collections.emptySet();
-		singleValueStates = new ArrayList<AttributeBinding.SingleValueRelationalState>(
+		simpleValueStates = new ArrayList<SimpleValueRelationalState>(
 							mappedColumnsOrFormulas == null || mappedColumnsOrFormulas.isEmpty() ?
 									1 :
 									mappedColumnsOrFormulas.size()
 		);
 		if ( mappedColumnsOrFormulas != null && ! mappedColumnsOrFormulas.isEmpty() ) {
 			for ( Object mappedColumnOrFormula : mappedColumnsOrFormulas ) {
-				singleValueStates.add( createColumnOrFormulaRelationalState( this, mappedColumnOrFormula ) );
+				simpleValueStates.add( createColumnOrFormulaRelationalState( this, mappedColumnOrFormula ) );
 			}
 		}
 	}
 
-	private static AttributeBinding.SingleValueRelationalState createColumnOrFormulaRelationalState(
+	private static SimpleValueRelationalState createColumnOrFormulaRelationalState(
 			HbmSimpleValueRelationalStateContainer container,
 			Object columnOrFormula) {
 		if ( XMLColumnElement.class.isInstance( columnOrFormula ) ) {
@@ -198,8 +196,8 @@ public class HbmSimpleValueRelationalStateContainer implements AbstractAttribute
 		throw new MappingException( "unknown type of column or formula: " + columnOrFormula.getClass().getName() );
 	}
 
-	public List<AttributeBinding.SingleValueRelationalState> getRelationalStates() {
-		return singleValueStates;
+	public List<SimpleValueRelationalState> getRelationalStates() {
+		return simpleValueStates;
 	}
 
 	Set<String> getPropertyUniqueKeys() {

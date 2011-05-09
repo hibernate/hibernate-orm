@@ -33,13 +33,14 @@ import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.metamodel.source.hbm.HbmHelper;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLManyToOneElement;
 import org.hibernate.metamodel.source.util.MappingHelper;
+import org.hibernate.metamodel.state.domain.ManyToOneAttributeDomainState;
 
 /**
  * @author Gail Badner
  */
 public class HbmManyToOneAttributeDomainState
 		extends AbstractHbmAttributeDomainState
-		implements ManyToOneAttributeBinding.DomainState {
+		implements ManyToOneAttributeDomainState {
 
 	private final HibernateTypeDescriptor hibernateTypeDescriptor = new HibernateTypeDescriptor();
 	private final FetchMode fetchMode;

@@ -29,7 +29,6 @@ import org.hibernate.MappingException;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.binding.HibernateTypeDescriptor;
 import org.hibernate.metamodel.binding.MappingDefaults;
-import org.hibernate.metamodel.binding.SimpleAttributeBinding;
 import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.metamodel.source.hbm.HbmHelper;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLDiscriminator;
@@ -38,11 +37,12 @@ import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLCla
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLVersion;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLPropertyElement;
 import org.hibernate.metamodel.source.util.MappingHelper;
+import org.hibernate.metamodel.state.domain.SimpleAttributeDomainState;
 
 /**
  * @author Gail Badner
  */
-public class HbmSimpleAttributeDomainState extends AbstractHbmAttributeDomainState implements SimpleAttributeBinding.DomainState {
+public class HbmSimpleAttributeDomainState extends AbstractHbmAttributeDomainState implements SimpleAttributeDomainState {
 	private final HibernateTypeDescriptor hibernateTypeDescriptor = new HibernateTypeDescriptor();
 	private final boolean isLazy;
 	private final PropertyGeneration propertyGeneration;

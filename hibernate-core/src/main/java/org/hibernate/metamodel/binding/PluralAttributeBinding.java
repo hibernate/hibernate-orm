@@ -26,19 +26,13 @@ package org.hibernate.metamodel.binding;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
 
-import org.dom4j.Attribute;
-import org.dom4j.Element;
 import org.jboss.logging.Logger;
 
 import org.hibernate.FetchMode;
-import org.hibernate.MappingException;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.relational.Table;
-import org.hibernate.metamodel.source.hbm.HbmHelper;
-import org.hibernate.metamodel.source.util.DomHelper;
+import org.hibernate.metamodel.state.domain.PluralAttributeDomainState;
 
 /**
  * TODO : javadoc
@@ -46,35 +40,6 @@ import org.hibernate.metamodel.source.util.DomHelper;
  * @author Steve Ebersole
  */
 public abstract class PluralAttributeBinding extends AbstractAttributeBinding {
-
-	public static interface DomainState extends AbstractAttributeBinding.DomainState {
-		FetchMode getFetchMode();
-		boolean isExtraLazy();
-		CollectionElement getCollectionElement(PluralAttributeBinding binding);
-		boolean isInverse();
-		boolean isMutable();
-		boolean isSubselectLoadable();
-		String getCacheConcurrencyStrategy();
-		String getCacheRegionName();
-		String getOrderBy();
-		String getWhere();
-		String getReferencedPropertyName();
-		boolean isSorted();
-		Comparator getComparator();
-		String getComparatorClassName();
-		boolean isOrphanDelete();
-		int getBatchSize();
-		boolean isEmbedded();
-		boolean isOptimisticLocked();
-		Class getCollectionPersisterClass();
-		java.util.Map getFilters();
-		java.util.Set getSynchronizedTables();
-		CustomSQL getCustomSQLInsert();
-		CustomSQL getCustomSQLUpdate();
-		CustomSQL getCustomSQLDelete();
-		CustomSQL getCustomSQLDeleteAll();
-		String getLoaderName();
-	}
 
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
 			CoreMessageLogger.class, PluralAttributeBinding.class.getName()
@@ -119,11 +84,12 @@ public abstract class PluralAttributeBinding extends AbstractAttributeBinding {
 		collectionElement = new CollectionElement( this );
 	}
 
-	public void initialize(DomainState state) {
+	public void initialize(PluralAttributeDomainState state) {
 		super.initialize( state );
 		fetchMode = state.getFetchMode();
 		extraLazy = state.isExtraLazy();
-		collectionElement = state.getCollectionElement( this );
+		collectionElement = new ElementCollectionElement( this );
+		collectionElement.initialize( state.getCollectionElementDomainState() );
 		inverse = state.isInverse();
 		mutable = state.isMutable();
 		subselectLoadable = state.isSubselectLoadable();
@@ -151,8 +117,6 @@ public abstract class PluralAttributeBinding extends AbstractAttributeBinding {
 		customSQLDeleteAll = state.getCustomSQLDeleteAll();
 		loaderName = state.getLoaderName();
 	}
-
-
 
 	protected boolean isLazyDefault(MappingDefaults defaults) {
 		return defaults.isDefaultLazy();

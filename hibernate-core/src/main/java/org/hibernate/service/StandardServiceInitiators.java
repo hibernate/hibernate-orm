@@ -23,13 +23,17 @@
  */
 package org.hibernate.service;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.hibernate.cache.internal.RegionFactoryInitiator;
 import org.hibernate.engine.jdbc.batch.internal.BatchBuilderInitiator;
 import org.hibernate.engine.jdbc.internal.JdbcServicesInitiator;
 import org.hibernate.engine.transaction.internal.TransactionFactoryInitiator;
+import org.hibernate.integrator.internal.IntegratorServiceInitiator;
 import org.hibernate.persister.internal.PersisterClassResolverInitiator;
 import org.hibernate.persister.internal.PersisterFactoryInitiator;
 import org.hibernate.service.classloading.internal.ClassLoaderServiceInitiator;
-import org.hibernate.integrator.internal.IntegratorServiceInitiator;
 import org.hibernate.service.internal.SessionFactoryServiceRegistryFactoryInitiator;
 import org.hibernate.service.jdbc.connections.internal.ConnectionProviderInitiator;
 import org.hibernate.service.jdbc.connections.internal.MultiTenantConnectionProviderInitiator;
@@ -39,9 +43,6 @@ import org.hibernate.service.jmx.internal.JmxServiceInitiator;
 import org.hibernate.service.jndi.internal.JndiServiceInitiator;
 import org.hibernate.service.jta.platform.internal.JtaPlatformInitiator;
 import org.hibernate.service.spi.BasicServiceInitiator;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author Steve Ebersole
@@ -72,7 +73,8 @@ public class StandardServiceInitiators {
 		serviceInitiators.add( SessionFactoryServiceRegistryFactoryInitiator.INSTANCE );
 		serviceInitiators.add( IntegratorServiceInitiator.INSTANCE );
 
+		serviceInitiators.add( RegionFactoryInitiator.INSTANCE );
+
 		return serviceInitiators;
 	}
-
 }

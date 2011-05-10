@@ -42,9 +42,7 @@ import org.hibernate.cfg.Settings;
  * @author Steve Ebersole
  */
 public class NoCachingRegionFactory implements RegionFactory {
-
-
-	public NoCachingRegionFactory(Properties properties) {
+	public NoCachingRegionFactory() {
 	}
 
 	public void start(Settings settings, Properties properties) throws CacheException {

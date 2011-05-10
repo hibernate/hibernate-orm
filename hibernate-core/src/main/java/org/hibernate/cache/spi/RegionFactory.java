@@ -28,6 +28,7 @@ import java.util.Properties;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.Settings;
+import org.hibernate.service.Service;
 
 /**
  * Contract for building second level cache regions.
@@ -37,16 +38,16 @@ import org.hibernate.cfg.Settings;
  * <li>MyRegionFactoryImpl()</li>
  * </ul>
  * Use the first when we need to read config properties prior to
- * {@link #start} being called.  For an example, have a look at
+ * {@link #start(Settings, Properties)} being called.  For an example, have a look at
  * {@link org.hibernate.cache.internal.bridge.RegionFactoryCacheProviderBridge}
- * where we need the properties in order to determine which legacy 
+ * where we need the properties in order to determine which legacy
  * {@link CacheProvider} to use so that we can answer the
  * {@link #isMinimalPutsEnabledByDefault()} question for the
  * {@link org.hibernate.cfg.SettingsFactory}.
  *
  * @author Steve Ebersole
  */
-public interface RegionFactory {
+public interface RegionFactory extends Service {
 
 	/**
 	 * Lifecycle callback to perform any necessary initialization of the
@@ -55,6 +56,7 @@ public interface RegionFactory {
 	 *
 	 * @param settings The settings in effect.
 	 * @param properties The defined cfg properties
+	 *
 	 * @throws org.hibernate.cache.CacheException Indicates problems starting the L2 cache impl;
 	 * considered as a sign to stop {@link org.hibernate.SessionFactory}
 	 * building.
@@ -73,7 +75,7 @@ public interface RegionFactory {
 	 * level cache implementation?
 	 *
 	 * @return True if "minimal puts" should be performed by default; false
-	 * otherwise.
+	 *         otherwise.
 	 */
 	public boolean isMinimalPutsEnabledByDefault();
 
@@ -101,10 +103,13 @@ public interface RegionFactory {
 	 * @param regionName The name of the region.
 	 * @param properties Configuration properties.
 	 * @param metadata Information regarding the type of data to be cached
+	 *
 	 * @return The built region
+	 *
 	 * @throws CacheException Indicates problems building the region.
 	 */
-	public EntityRegion buildEntityRegion(String regionName, Properties properties, CacheDataDescription metadata) throws CacheException;
+	public EntityRegion buildEntityRegion(String regionName, Properties properties, CacheDataDescription metadata)
+			throws CacheException;
 
 	/**
 	 * Build a cache region specialized for storing collection data.
@@ -112,17 +117,22 @@ public interface RegionFactory {
 	 * @param regionName The name of the region.
 	 * @param properties Configuration properties.
 	 * @param metadata Information regarding the type of data to be cached
+	 *
 	 * @return The built region
+	 *
 	 * @throws CacheException Indicates problems building the region.
 	 */
-	public CollectionRegion buildCollectionRegion(String regionName, Properties properties, CacheDataDescription metadata) throws CacheException;
+	public CollectionRegion buildCollectionRegion(String regionName, Properties properties, CacheDataDescription metadata)
+			throws CacheException;
 
 	/**
 	 * Build a cache region specialized for storing query results
 	 *
 	 * @param regionName The name of the region.
 	 * @param properties Configuration properties.
+	 *
 	 * @return The built region
+	 *
 	 * @throws CacheException Indicates problems building the region.
 	 */
 	public QueryResultsRegion buildQueryResultsRegion(String regionName, Properties properties) throws CacheException;
@@ -132,7 +142,9 @@ public interface RegionFactory {
 	 *
 	 * @param regionName The name of the region.
 	 * @param properties Configuration properties.
+	 *
 	 * @return The built region
+	 *
 	 * @throws CacheException Indicates problems building the region.
 	 */
 	public TimestampsRegion buildTimestampsRegion(String regionName, Properties properties) throws CacheException;

@@ -42,7 +42,7 @@ import org.hibernate.service.Service;
  */
 public interface PersisterFactory extends Service {
 
-	// TODO: is it really neceassry to provide Configuration to CollectionPersisters ?
+	// TODO: is it really necessary to provide Configuration to CollectionPersisters ?
 	// Should it not be enough with associated class ? or why does EntityPersister's not get access to configuration ?
 	//
 	// The only reason I could see that Configuration gets passed to collection persisters

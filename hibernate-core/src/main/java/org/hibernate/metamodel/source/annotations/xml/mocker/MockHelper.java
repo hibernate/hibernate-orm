@@ -369,7 +369,7 @@ public class MockHelper {
 				method = getterMethod( clazz, name );
 				if ( method == null ) {
 					throw new HibernateException(
-							"Unable to load method "
+							"Unable to load property "
 									+ name
 									+ " of class " + clazz.getName()
 					);

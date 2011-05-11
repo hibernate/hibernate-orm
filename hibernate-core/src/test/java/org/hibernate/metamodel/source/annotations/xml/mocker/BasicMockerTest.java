@@ -29,7 +29,6 @@ public class BasicMockerTest extends AbstractMockerTest {
 		assertEquals( 1, index.getKnownClasses().size() );
 		DotName itemName = DotName.createSimple( Item.class.getName() );
 		assertHasAnnotation( index, itemName, JPADotNames.ENTITY );
-		assertHasAnnotation( index, itemName, JPADotNames.TABLE );
 		assertHasAnnotation( index, itemName, JPADotNames.ID, 2 );
 		assertHasAnnotation( index, itemName, JPADotNames.GENERATED_VALUE, 2 );
 	}

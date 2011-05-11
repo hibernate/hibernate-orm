@@ -32,6 +32,7 @@ import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 
+import org.hibernate.HibernateException;
 import org.hibernate.metamodel.source.annotation.xml.XMLAccessType;
 import org.hibernate.metamodel.source.annotation.xml.XMLEnumType;
 import org.hibernate.metamodel.source.annotation.xml.XMLMapKey;
@@ -77,20 +78,28 @@ abstract class PropertyMocker extends AnnotationMocker {
 
 	@Override
 	final void process() {
-		setTarget(
-				MockHelper.getTarget(
-						indexBuilder.getServiceRegistry(), classInfo, getFieldName(), MockHelper.TargetType.FIELD
-				)
-		);
-		parserAccessType( getAccessType(), getTarget() );
-		processExtra();
-		setTarget(
-				MockHelper.getTarget(
-						indexBuilder.getServiceRegistry(), classInfo, getFieldName(), MockHelper.TargetType.PROPERTY
-				)
-		);
-		processExtra();
-		parserAccessType( getAccessType(), getTarget() );
+		processByTarget( MockHelper.TargetType.FIELD );
+		processByTarget( MockHelper.TargetType.PROPERTY );
+	}
+
+	private void processByTarget(MockHelper.TargetType type) {
+		boolean isTargetAvailable = false;
+		try {
+			setTarget(
+					MockHelper.getTarget(
+							indexBuilder.getServiceRegistry(), classInfo, getFieldName(), type
+					)
+			);
+			isTargetAvailable = true;
+		}
+		catch ( HibernateException e ) {
+			//ignore
+			e.printStackTrace();
+		}
+		if ( isTargetAvailable ) {
+			parserAccessType( getAccessType(), getTarget() );
+			processExtra();
+		}
 	}
 
 	protected AnnotationInstance parserMapKeyColumn(XMLMapKeyColumn mapKeyColumn, AnnotationTarget target) {
@@ -158,7 +167,9 @@ abstract class PropertyMocker extends AnnotationMocker {
 						"", annotationInstance
 				);
 			}
-			MockHelper.addToCollectionIfNotNull( annotationValueList, AnnotationValue.createArrayValue( name, values ) );
+			MockHelper.addToCollectionIfNotNull(
+					annotationValueList, AnnotationValue.createArrayValue( name, values )
+			);
 			return values;
 		}
 		return MockHelper.EMPTY_ANNOTATION_VALUE_ARRAY;

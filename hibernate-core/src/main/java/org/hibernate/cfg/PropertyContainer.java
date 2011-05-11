@@ -190,7 +190,7 @@ class PropertyContainer {
 	 */
 	private TreeMap<String, XProperty> initProperties(AccessType access) {
 		if ( !( AccessType.PROPERTY.equals( access ) || AccessType.FIELD.equals( access ) ) ) {
-			throw new IllegalArgumentException( "Acces type has to be AccessType.FIELD or AccessType.Property" );
+			throw new IllegalArgumentException( "Access type has to be AccessType.FIELD or AccessType.Property" );
 		}
 
 		//order so that property are used in the same order when binding native query

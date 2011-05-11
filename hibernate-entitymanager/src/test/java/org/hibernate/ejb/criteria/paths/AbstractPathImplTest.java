@@ -28,8 +28,6 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 
-import org.junit.Test;
-
 import org.hibernate.ejb.metamodel.AbstractMetamodelSpecificTest;
 import org.hibernate.ejb.metamodel.Order;
 
@@ -37,7 +35,6 @@ import org.hibernate.ejb.metamodel.Order;
  * @author Michael Rudolf
  */
 public class AbstractPathImplTest extends AbstractMetamodelSpecificTest {
-	@Test(expected = IllegalArgumentException.class)
 	public void testGetNonExistingAttributeViaName() {
 		EntityManager em = getOrCreateEntityManager();
 		try {
@@ -45,6 +42,10 @@ public class AbstractPathImplTest extends AbstractMetamodelSpecificTest {
 			CriteriaQuery<Order> criteria = criteriaBuilder.createQuery( Order.class );
 			Root<Order> orderRoot = criteria.from( Order.class );
 			orderRoot.get( "nonExistingAttribute" );
+			fail();
+		}
+		catch ( IllegalArgumentException e ) {
+			// success
 		}
 		finally {
 			em.close();

@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.persistence.SharedCacheMode;
 
 import org.jboss.jandex.Index;
 import org.jboss.jandex.Indexer;
@@ -40,13 +41,13 @@ import org.hibernate.HibernateException;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.MetadataSource;
+import org.hibernate.metamodel.Metadata;
+import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.SourceProcessingOrder;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.FetchProfile;
 import org.hibernate.metamodel.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.relational.Database;
-import org.hibernate.metamodel.Metadata;
-import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.source.annotation.xml.XMLEntityMappings;
 import org.hibernate.metamodel.source.annotations.AnnotationBinder;
 import org.hibernate.metamodel.source.annotations.xml.OrmXmlParser;
@@ -69,6 +70,7 @@ public class MetadataImpl implements Metadata, MetadataImplementor, Serializable
 
 	private final BasicServiceRegistry serviceRegistry;
 	private final NamingStrategy namingStrategy;
+	private final SharedCacheMode sharedCacheMode;
 	private final Database database = new Database();
 
 	private Map<String, EntityBinding> entityBindingMap = new HashMap<String, EntityBinding>();
@@ -81,6 +83,7 @@ public class MetadataImpl implements Metadata, MetadataImplementor, Serializable
 
 		this.serviceRegistry = metadataSources.getServiceRegistry();
 		this.namingStrategy = builder.getNamingStrategy();
+		this.sharedCacheMode = builder.getSharedCacheMode();
 
 		final ArrayList<String> processedEntityNames = new ArrayList<String>();
 		if ( builder.getSourceProcessingOrder() == SourceProcessingOrder.HBM_FIRST ) {
@@ -160,6 +163,10 @@ public class MetadataImpl implements Metadata, MetadataImplementor, Serializable
 
 	public NamingStrategy getNamingStrategy() {
 		return namingStrategy;
+	}
+
+	public SharedCacheMode getSharedCacheMode() {
+		return sharedCacheMode;
 	}
 
 	public EntityBinding getEntityBinding(String entityName) {

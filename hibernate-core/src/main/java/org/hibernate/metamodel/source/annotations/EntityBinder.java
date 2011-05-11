@@ -34,6 +34,8 @@ import org.hibernate.MappingException;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.annotations.PolymorphismType;
+import org.hibernate.cache.spi.RegionFactory;
+import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.binding.Caching;
 import org.hibernate.metamodel.binding.EntityBinding;
@@ -70,7 +72,8 @@ public class EntityBinder {
 		bindJpaEntityAnnotation( entityBinding );
 		bindHibernateEntityAnnotation( entityBinding ); // optional hibernate specific @org.hibernate.annotations.Entity
 		bindWhereFilter( entityBinding );
-		bindCaching( entityBinding );
+		bindJpaCaching( entityBinding );
+		bindHibernateCaching( entityBinding );
 		schemaName = createSchemaName();
 		bindTable( entityBinding );
 
@@ -93,39 +96,88 @@ public class EntityBinder {
 		}
 	}
 
-	private void bindCaching(EntityBinding entityBinding) {
+	private void bindHibernateCaching(EntityBinding entityBinding) {
 		AnnotationInstance cacheAnnotation = JandexHelper.getSingleAnnotation(
 				configuredClass.getClassInfo(), HibernateDotNames.CACHE
 		);
-		if ( cacheAnnotation != null ) {
-			String region;
-			if ( cacheAnnotation.value( "region" ) != null ) {
-				region = cacheAnnotation.value( "region" ).asString();
+		if ( cacheAnnotation == null ) {
+			return;
+		}
+
+		String region;
+		if ( cacheAnnotation.value( "region" ) != null ) {
+			region = cacheAnnotation.value( "region" ).asString();
+		}
+		else {
+			region = entityBinding.getEntity().getName();
+		}
+
+		boolean cacheLazyProperties = true;
+		if ( cacheAnnotation.value( "include" ) != null ) {
+			String tmp = cacheAnnotation.value( "include" ).asString();
+			if ( "all".equalsIgnoreCase( tmp ) ) {
+				cacheLazyProperties = true;
+			}
+			else if ( "non-lazy".equalsIgnoreCase( tmp ) ) {
+				cacheLazyProperties = false;
 			}
 			else {
-				region = entityBinding.getEntity().getName();
+				throw new AnnotationException( "Unknown lazy property annotations: " + tmp );
 			}
+		}
 
-			boolean cacheLazyProperties = true;
-			if ( cacheAnnotation.value( "include" ) != null ) {
-				String tmp = cacheAnnotation.value( "include" ).asString();
-				if ( "all".equalsIgnoreCase( tmp ) ) {
-					cacheLazyProperties = true;
-				}
-				else if ( "non-lazy".equalsIgnoreCase( tmp ) ) {
-					cacheLazyProperties = false;
-				}
-				else {
-					throw new AnnotationException( "Unknown lazy property annotations: " + tmp );
-				}
+		CacheConcurrencyStrategy strategy = CacheConcurrencyStrategy.valueOf(
+				cacheAnnotation.value( "usage" ).asEnum()
+		);
+		Caching caching = new Caching( region, strategy.toAccessType(), cacheLazyProperties );
+		entityBinding.setCaching( caching );
+	}
+
+	// This does not take care of any inheritance of @Cacheable within a class hierarchy as specified in JPA2.
+	// This is currently not supported (HF)
+	private void bindJpaCaching(EntityBinding entityBinding) {
+		AnnotationInstance cacheAnnotation = JandexHelper.getSingleAnnotation(
+				configuredClass.getClassInfo(), JPADotNames.CACHEABLE
+		);
+
+		boolean cacheable = true; // true is the default
+		if ( cacheAnnotation != null && cacheAnnotation.value() != null ) {
+			cacheable = cacheAnnotation.value().asBoolean();
+		}
+
+		Caching caching = null;
+		switch ( meta.getSharedCacheMode() ) {
+			case ALL: {
+				caching = createCachingForCacheableAnnotation( entityBinding );
+				break;
 			}
-
-			CacheConcurrencyStrategy strategy = CacheConcurrencyStrategy.valueOf(
-					cacheAnnotation.value( "usage" ).asEnum()
-			);
-			Caching caching = new Caching( region, strategy.toAccessType().getExternalName(), cacheLazyProperties );
+			case ENABLE_SELECTIVE: {
+				if ( cacheable ) {
+					caching = createCachingForCacheableAnnotation( entityBinding );
+				}
+				break;
+			}
+			case DISABLE_SELECTIVE: {
+				if ( cacheAnnotation == null || cacheable ) {
+					caching = createCachingForCacheableAnnotation( entityBinding );
+				}
+				break;
+			}
+			default: {
+				// treat both NONE and UNSPECIFIED the same
+				break;
+			}
+		}
+		if ( caching != null ) {
 			entityBinding.setCaching( caching );
 		}
+	}
+
+	private Caching createCachingForCacheableAnnotation(EntityBinding entityBinding) {
+		String region = entityBinding.getEntity().getName();
+		RegionFactory regionFactory = meta.getServiceRegistry().getService( RegionFactory.class );
+		AccessType defaultAccessType = regionFactory.getDefaultAccessType();
+		return new Caching( region, defaultAccessType, true );
 	}
 
 	private Schema.Name createSchemaName() {

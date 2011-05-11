@@ -69,6 +69,8 @@ public class MetadataSources {
 	private final EntityResolver entityResolver;
 	private final NamingStrategy namingStrategy;
 
+	private final MetadataBuilderImpl metadataBuilder;
+
 	public MetadataSources(BasicServiceRegistry serviceRegistry) {
 		this( serviceRegistry, EJB3DTDEntityResolver.INSTANCE, EJB3NamingStrategy.INSTANCE );
 	}
@@ -79,6 +81,7 @@ public class MetadataSources {
 		this.namingStrategy = namingStrategy;
 
 		this.jaxbHelper = new JaxbHelper( this );
+		this.metadataBuilder = new MetadataBuilderImpl( this );
 	}
 
 	public List<JaxbRoot> getJaxbRootList() {
@@ -102,7 +105,7 @@ public class MetadataSources {
 	}
 
 	public MetadataBuilder getMetadataBuilder() {
-		return new MetadataBuilderImpl( this );
+		return metadataBuilder;
 	}
 
 	public Metadata buildMetadata() {

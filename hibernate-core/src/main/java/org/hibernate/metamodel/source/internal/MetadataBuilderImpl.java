@@ -23,6 +23,8 @@
  */
 package org.hibernate.metamodel.source.internal;
 
+import javax.persistence.SharedCacheMode;
+
 import org.hibernate.cfg.EJB3NamingStrategy;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.metamodel.Metadata;
@@ -38,6 +40,7 @@ public class MetadataBuilderImpl implements MetadataBuilder {
 
 	private NamingStrategy namingStrategy = EJB3NamingStrategy.INSTANCE;
 	private SourceProcessingOrder sourceProcessingOrder = SourceProcessingOrder.HBM_FIRST;
+	private SharedCacheMode sharedCacheMode = SharedCacheMode.ENABLE_SELECTIVE;
 
 	public MetadataBuilderImpl(MetadataSources sources) {
 		this.sources = sources;
@@ -49,6 +52,10 @@ public class MetadataBuilderImpl implements MetadataBuilder {
 
 	public NamingStrategy getNamingStrategy() {
 		return namingStrategy;
+	}
+
+	public SharedCacheMode getSharedCacheMode() {
+		return sharedCacheMode;
 	}
 
 	public SourceProcessingOrder getSourceProcessingOrder() {
@@ -64,6 +71,12 @@ public class MetadataBuilderImpl implements MetadataBuilder {
 	@Override
 	public MetadataBuilder with(SourceProcessingOrder sourceProcessingOrder) {
 		this.sourceProcessingOrder = sourceProcessingOrder;
+		return this;
+	}
+
+	@Override
+	public MetadataBuilder with(SharedCacheMode sharedCacheMode) {
+		this.sharedCacheMode = sharedCacheMode;
 		return this;
 	}
 

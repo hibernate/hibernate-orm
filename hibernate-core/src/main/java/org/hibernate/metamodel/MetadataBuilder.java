@@ -23,13 +23,20 @@
  */
 package org.hibernate.metamodel;
 
+import javax.persistence.SharedCacheMode;
+
 import org.hibernate.cfg.NamingStrategy;
 
 /**
  * @author Steve Ebersole
+ * @author Hardy Ferentschik
  */
 public interface MetadataBuilder {
 	public MetadataBuilder with(NamingStrategy namingStrategy);
+
 	public MetadataBuilder with(SourceProcessingOrder sourceProcessingOrder);
+
+	public MetadataBuilder with(SharedCacheMode cacheMode);
+
 	public Metadata buildMetadata();
 }

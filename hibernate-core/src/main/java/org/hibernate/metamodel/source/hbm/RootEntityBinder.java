@@ -25,6 +25,7 @@ package org.hibernate.metamodel.source.hbm;
 
 import org.hibernate.InvalidMappingException;
 import org.hibernate.MappingException;
+import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.binding.Caching;
 import org.hibernate.metamodel.binding.EntityBinding;
@@ -286,9 +287,8 @@ class RootEntityBinder extends AbstractEntityBinder {
 			return;
 		}
 		final String region = cache.getRegion() != null ? cache.getRegion() : entityBinding.getEntity().getName();
-		final String strategy = cache.getUsage();
+		final AccessType accessType = Enum.valueOf( AccessType.class, cache.getUsage() );
 		final boolean cacheLazyProps = !"non-lazy".equals( cache.getInclude() );
-		entityBinding.setCaching( new Caching( region, strategy, cacheLazyProps ) );
+		entityBinding.setCaching( new Caching( region, accessType, cacheLazyProps ) );
 	}
-
 }

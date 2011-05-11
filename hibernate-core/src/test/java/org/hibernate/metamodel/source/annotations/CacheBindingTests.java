@@ -26,17 +26,18 @@ package org.hibernate.metamodel.source.annotations;
 import javax.persistence.Cacheable;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.SharedCacheMode;
 
 import org.junit.Test;
 
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.binding.Caching;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
 import org.hibernate.service.ServiceRegistryBuilder;
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static junit.framework.Assert.assertEquals;
@@ -51,30 +52,33 @@ import static junit.framework.Assert.assertNull;
 public class CacheBindingTests extends BaseUnitTestCase {
 	@Test
 	public void testHibernateCaching() {
-		EntityBinding binding = getEntityBinding( HibernateCacheEntity.class );
+		EntityBinding binding = getEntityBinding( HibernateCacheEntity.class, SharedCacheMode.ALL );
 		assertNotNull( "There should be a cache binding", binding.getCaching() );
 		Caching caching = binding.getCaching();
 		assertEquals( "Wrong region", "foo", caching.getRegion() );
-		assertEquals( "Wrong strategy", "read-write", caching.getStrategy() );
+		assertEquals( "Wrong strategy", AccessType.READ_WRITE, caching.getAccessType() );
 		assertEquals( "Wrong lazy properties configuration", false, caching.isCacheLazyProperties() );
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-6207", message = "under construction")
 	public void testJpaCaching() {
-		EntityBinding binding = getEntityBinding( JpaCacheEntity.class );
+		EntityBinding binding = getEntityBinding( JpaCacheEntity.class, SharedCacheMode.ALL );
 		assertNotNull( "There should be a cache binding", binding.getCaching() );
+		Caching caching = binding.getCaching();
+		assertEquals( "Wrong region", "CacheBindingTests$JpaCacheEntity", caching.getRegion() );
+		assertEquals( "Wrong lazy properties configuration", true, caching.isCacheLazyProperties() );
 	}
 
 	@Test
 	public void testNoCaching() {
-		EntityBinding binding = getEntityBinding( NoCacheEntity.class );
+		EntityBinding binding = getEntityBinding( NoCacheEntity.class, SharedCacheMode.NONE );
 		assertNull( "There should be no cache binding", binding.getCaching() );
 	}
 
-	private EntityBinding getEntityBinding(Class<?> clazz) {
+	private EntityBinding getEntityBinding(Class<?> clazz, SharedCacheMode cacheMode) {
 		MetadataSources sources = new MetadataSources( new ServiceRegistryBuilder().buildServiceRegistry() );
 		sources.addAnnotatedClass( clazz );
+		sources.getMetadataBuilder().with( cacheMode );
 		MetadataImpl metadata = (MetadataImpl) sources.buildMetadata();
 
 		return metadata.getEntityBinding( this.getClass().getSimpleName() + "$" + clazz.getSimpleName() );

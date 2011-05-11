@@ -40,6 +40,7 @@ public class OrmXmlParserTests extends BaseUnitTestCase {
 		MetadataSources sources = new MetadataSources( new ServiceRegistryBuilder().buildServiceRegistry() );
 		sources.addResource( "org/hibernate/metamodel/source/annotations/xml/orm.xml" );
 		MetadataImpl metadata = (MetadataImpl) sources.buildMetadata();
+
 		// Todo assertions
 	}
 

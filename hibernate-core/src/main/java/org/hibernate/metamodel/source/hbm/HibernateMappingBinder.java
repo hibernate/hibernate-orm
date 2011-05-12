@@ -51,7 +51,7 @@ import org.hibernate.metamodel.source.util.MappingHelper;
 /**
  * Responsible for performing binding of the {@code <hibernate-mapping/>} DOM element
  */
-class HibernateMappingBinder implements MappingDefaults {
+public class HibernateMappingBinder implements MappingDefaults {
 	private final HibernateXmlBinder hibernateXmlBinder;
 	private final JaxbRoot<XMLHibernateMapping> jaxbRoot;
 	private final XMLHibernateMapping hibernateMapping;

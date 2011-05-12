@@ -36,7 +36,6 @@ import org.hibernate.metamodel.binding.CustomSQL;
 import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLMetaElement;
-import org.hibernate.metamodel.source.util.DomHelper;
 import org.hibernate.metamodel.source.util.MappingHelper;
 
 /**
@@ -76,7 +75,7 @@ public class HbmHelper {
 	public static final Map<String, MetaAttribute> extractMetas(List<XMLMetaElement> metaList, boolean onlyInheritable, Map<String, MetaAttribute> baseline) {
 		Map<String, MetaAttribute> extractedMetas = new HashMap<String, MetaAttribute>();
 		extractedMetas.putAll( baseline );
-		for ( XMLMetaElement meta : metaList) {
+		for ( XMLMetaElement meta : metaList ) {
 			boolean inheritable = meta.isInherit();
 			if ( onlyInheritable & !inheritable ) {
 				continue;
@@ -94,16 +93,18 @@ public class HbmHelper {
 		return extractedMetas;
 	}
 
-	public static String extractEntityName( XMLClass entityClazz, String unqualifiedPackageName) {
+	public static String extractEntityName(XMLClass entityClazz, String unqualifiedPackageName) {
 		return extractEntityName( entityClazz.getEntityName(), entityClazz.getName(), unqualifiedPackageName );
 	}
 
-	public static String extractEntityName( String entityName, String entityClassName, String unqualifiedPackageName) {
+	public static String extractEntityName(String entityName, String entityClassName, String unqualifiedPackageName) {
 		return entityName == null ? getClassName( entityClassName, unqualifiedPackageName ) : entityName;
 	}
 
 	public static String getClassName(Attribute att, String unqualifiedPackageName) {
-		if ( att == null ) return null;
+		if ( att == null ) {
+			return null;
+		}
 		return getClassName( att.getValue(), unqualifiedPackageName );
 	}
 
@@ -117,16 +118,8 @@ public class HbmHelper {
 		return unqualifiedName;
 	}
 
-	public static CustomSQL getCustomSql(String sql, boolean isCallable, String check )  {
+	public static CustomSQL getCustomSql(String sql, boolean isCallable, String check) {
 		return new CustomSQL( sql.trim(), isCallable, getResultCheckStyle( check, isCallable ) );
-	}
-
-	public static String getPropertyAccessorName(Element element, boolean isEmbedded, String defaultAccess) {
-		return DomHelper.extractAttributeValue(
-				element,
-				"access",
-				isEmbedded ? "embedded" : defaultAccess
-		);
 	}
 
 	public static String getPropertyAccessorName(String access, boolean isEmbedded, String defaultAccess) {

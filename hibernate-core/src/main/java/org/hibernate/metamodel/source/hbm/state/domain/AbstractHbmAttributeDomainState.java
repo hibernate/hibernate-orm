@@ -25,9 +25,11 @@ package org.hibernate.metamodel.source.hbm.state.domain;
 
 import java.util.Map;
 
+import org.hibernate.metamodel.Metadata;
 import org.hibernate.metamodel.binding.MappingDefaults;
 import org.hibernate.metamodel.domain.Attribute;
 import org.hibernate.metamodel.domain.MetaAttribute;
+import org.hibernate.metamodel.source.internal.MetadataImpl;
 import org.hibernate.metamodel.source.util.MappingHelper;
 import org.hibernate.metamodel.state.domain.AttributeDomainState;
 
@@ -35,6 +37,7 @@ import org.hibernate.metamodel.state.domain.AttributeDomainState;
  * @author Gail Badner
  */
 public abstract class AbstractHbmAttributeDomainState implements AttributeDomainState {
+	private final MetadataImpl metadata;
 	private final MappingDefaults defaults;
 	private final Attribute attribute;
 	private final String nodeName;
@@ -42,12 +45,15 @@ public abstract class AbstractHbmAttributeDomainState implements AttributeDomain
 	private final boolean isOptimisticLockable;
 	private final Map<String, MetaAttribute> metaAttributes;
 
-	public AbstractHbmAttributeDomainState(MappingDefaults defaults,
-										   Attribute attribute,
-										   String nodeName,
-										   Map<String, MetaAttribute> metaAttributes,
-										   String accessorName,
-										   boolean isOptimisticLockable) {
+	public AbstractHbmAttributeDomainState(
+			MetadataImpl metadata,
+			MappingDefaults defaults,
+			Attribute attribute,
+			String nodeName,
+			Map<String, MetaAttribute> metaAttributes,
+			String accessorName,
+			boolean isOptimisticLockable) {
+		this.metadata = metadata;
 		this.defaults = defaults;
 		this.attribute = attribute;
 		this.nodeName = MappingHelper.getStringValue( nodeName, attribute.getName() );
@@ -56,12 +62,18 @@ public abstract class AbstractHbmAttributeDomainState implements AttributeDomain
 		this.isOptimisticLockable = isOptimisticLockable;
 	}
 
+	public MetadataImpl getMetadata() {
+		return metadata;
+	}
+
 	protected final MappingDefaults getDefaults() {
 		return defaults;
 	}
+
 	public final Attribute getAttribute() {
 		return attribute;
 	}
+
 	public final String getPropertyAccessorName() {
 		return accessorName;
 	}
@@ -70,9 +82,11 @@ public abstract class AbstractHbmAttributeDomainState implements AttributeDomain
 		//TODO: implement
 		return false;
 	}
+
 	public final boolean isOptimisticLockable() {
 		return isOptimisticLockable;
 	}
+
 	public final String getNodeName() {
 		return nodeName;
 	}

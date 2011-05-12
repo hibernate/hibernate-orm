@@ -44,18 +44,39 @@ import org.hibernate.metamodel.relational.Table;
 import org.hibernate.metamodel.relational.TableSpecification;
 import org.hibernate.metamodel.relational.UniqueKey;
 import org.hibernate.metamodel.source.hbm.state.domain.HbmManyToOneAttributeDomainState;
-import org.hibernate.metamodel.source.hbm.state.relational.HbmManyToOneRelationalStateContainer;
-import org.hibernate.metamodel.source.hbm.xml.mapping.*;
-import org.hibernate.metamodel.source.internal.MetadataImpl;
 import org.hibernate.metamodel.source.hbm.state.domain.HbmPluralAttributeDomainState;
 import org.hibernate.metamodel.source.hbm.state.domain.HbmSimpleAttributeDomainState;
+import org.hibernate.metamodel.source.hbm.state.relational.HbmManyToOneRelationalStateContainer;
 import org.hibernate.metamodel.source.hbm.state.relational.HbmSimpleValueRelationalStateContainer;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLAnyElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLBagElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLComponentElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLDynamicComponentElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLFilterElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLIdbagElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLJoinElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLJoinedSubclassElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLListElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLManyToOneElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLMapElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLOneToOneElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLPropertiesElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLPropertyElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLQueryElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLResultsetElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSetElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlQueryElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSubclassElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLTuplizerElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLUnionSubclassElement;
+import org.hibernate.metamodel.source.internal.MetadataImpl;
 
 /**
-* TODO : javadoc
-*
-* @author Steve Ebersole
-*/
+ * TODO : javadoc
+ *
+ * @author Steve Ebersole
+ */
 abstract class AbstractEntityBinder {
 	private final HibernateMappingBinder hibernateMappingBinder;
 	private final Schema.Name schemaName;
@@ -88,6 +109,7 @@ abstract class AbstractEntityBinder {
 	protected Schema.Name getSchemaName() {
 		return schemaName;
 	}
+
 	protected NamingStrategy getNamingStrategy() {
 		return getMetadata().getNamingStrategy();
 	}
@@ -151,7 +173,7 @@ abstract class AbstractEntityBinder {
 		if ( nodeName == null ) {
 			nodeName = StringHelper.unqualify( entityBinding.getEntity().getName() );
 		}
-		entityBinding.getEntity().getDom4jEntitySpecifics().setNodeName(nodeName);
+		entityBinding.getEntity().getDom4jEntitySpecifics().setNodeName( nodeName );
 
 		XMLTuplizerElement tuplizer = locateTuplizerDefinition( entityClazz, EntityMode.DOM4J );
 		if ( tuplizer != null ) {
@@ -176,7 +198,7 @@ abstract class AbstractEntityBinder {
 	 * @return The tuplizer element, or null.
 	 */
 	private static XMLTuplizerElement locateTuplizerDefinition(XMLHibernateMapping.XMLClass container,
-													EntityMode entityMode) {
+															   EntityMode entityMode) {
 		for ( XMLTuplizerElement tuplizer : container.getTuplizer() ) {
 			if ( entityMode.toString().equals( tuplizer.getEntityMode() ) ) {
 				return tuplizer;
@@ -216,7 +238,9 @@ abstract class AbstractEntityBinder {
 		String physicalTableName;
 		if ( entityClazz.getTable() == null ) {
 			logicalTableName = StringHelper.unqualify( entityName );
-			physicalTableName = getHibernateXmlBinder().getMetadata().getNamingStrategy().classToTableName( entityName );
+			physicalTableName = getHibernateXmlBinder().getMetadata()
+					.getNamingStrategy()
+					.classToTableName( entityName );
 		}
 		else {
 			logicalTableName = entityClazz.getTable();
@@ -296,7 +320,7 @@ abstract class AbstractEntityBinder {
 				//hibernateMappingBinder.getHibernateXmlBinder().getMetadata().addCollection( attributeBinding );
 			}
 			else if ( XMLManyToOneElement.class.isInstance( attribute ) ) {
-				XMLManyToOneElement  manyToOne = XMLManyToOneElement.class.cast( attribute );
+				XMLManyToOneElement manyToOne = XMLManyToOneElement.class.cast( attribute );
 				ManyToOneAttributeBinding manyToOneBinding = entityBinding.makeManyToOneAttributeBinding( manyToOne.getName() );
 				bindManyToOne( manyToOne, manyToOneBinding, entityBinding );
 				attributeBinding = manyToOneBinding;
@@ -424,6 +448,7 @@ PrimitiveArray
 		if ( attributeBinding.getAttribute() == null ) {
 			attributeBinding.initialize(
 					new HbmSimpleAttributeDomainState(
+							hibernateMappingBinder.getHibernateXmlBinder().getMetadata(),
 							hibernateMappingBinder,
 							entityBinding.getEntity().getOrCreateSingularAttribute( attributeName ),
 							entityBinding.getMetaAttributes(),
@@ -452,6 +477,7 @@ PrimitiveArray
 		if ( attributeBinding.getAttribute() == null ) {
 			attributeBinding.initialize(
 					new HbmSimpleAttributeDomainState(
+							hibernateMappingBinder.getHibernateXmlBinder().getMetadata(),
 							hibernateMappingBinder,
 							entityBinding.getEntity().getOrCreateSingularAttribute( attributeName ),
 							entityBinding.getMetaAttributes(),
@@ -480,6 +506,7 @@ PrimitiveArray
 		if ( attributeBinding.getAttribute() == null ) {
 			attributeBinding.initialize(
 					new HbmSimpleAttributeDomainState(
+							hibernateMappingBinder.getHibernateXmlBinder().getMetadata(),
 							hibernateMappingBinder,
 							entityBinding.getEntity().getOrCreateSingularAttribute( attributeName ),
 							entityBinding.getMetaAttributes(),
@@ -508,6 +535,7 @@ PrimitiveArray
 		if ( attributeBinding.getAttribute() == null ) {
 			attributeBinding.initialize(
 					new HbmSimpleAttributeDomainState(
+							hibernateMappingBinder.getHibernateXmlBinder().getMetadata(),
 							hibernateMappingBinder,
 							entityBinding.getEntity().getOrCreateSingularAttribute( attributeName ),
 							entityBinding.getMetaAttributes(),
@@ -535,6 +563,7 @@ PrimitiveArray
 		if ( attributeBinding.getAttribute() == null ) {
 			attributeBinding.initialize(
 					new HbmSimpleAttributeDomainState(
+							hibernateMappingBinder.getHibernateXmlBinder().getMetadata(),
 							hibernateMappingBinder,
 							entityBinding.getEntity().getOrCreateSingularAttribute( property.getName() ),
 							entityBinding.getMetaAttributes(),
@@ -564,6 +593,7 @@ PrimitiveArray
 			// domain model has not been bound yet
 			collectionBinding.initialize(
 					new HbmPluralAttributeDomainState(
+							hibernateMappingBinder.getHibernateXmlBinder().getMetadata(),
 							hibernateMappingBinder,
 							collection,
 							entityBinding.getMetaAttributes(),
@@ -586,6 +616,7 @@ PrimitiveArray
 		if ( attributeBinding.getAttribute() == null ) {
 			attributeBinding.initialize(
 					new HbmManyToOneAttributeDomainState(
+							hibernateMappingBinder.getHibernateXmlBinder().getMetadata(),
 							hibernateMappingBinder,
 							entityBinding.getEntity().getOrCreateSingularAttribute( manyToOne.getName() ),
 							entityBinding.getMetaAttributes(),
@@ -648,8 +679,8 @@ PrimitiveArray
 
 
 //	protected HbmRelationalState processValues(Element identifierElement, TableSpecification baseTable, String propertyPath, boolean isSimplePrimaryKey) {
-		// first boolean (false here) indicates that by default columns are nullable
-		// second boolean (true here) indicates that by default column names should be guessed
+	// first boolean (false here) indicates that by default columns are nullable
+	// second boolean (true here) indicates that by default column names should be guessed
 // todo : logical 1-1 handling
 //			final Attribute uniqueAttribute = node.attribute( "unique" );
 //			if ( uniqueAttribute != null
@@ -657,8 +688,7 @@ PrimitiveArray
 //					&& ManyToOne.class.isInstance( simpleValue ) ) {
 //				( (ManyToOne) simpleValue ).markAsLogicalOneToOne();
 //			}
-		//return processValues( identifierElement, baseTable, false, true, propertyPath, isSimplePrimaryKey );
-
+	//return processValues( identifierElement, baseTable, false, true, propertyPath, isSimplePrimaryKey );
 
 
 }

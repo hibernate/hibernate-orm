@@ -28,12 +28,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.StringTokenizer;
 
-import org.dom4j.Element;
-
-import org.hibernate.internal.util.ReflectHelper;
-
 /**
- * Helper class for working with DOM documents.
+ * Helper class.
  *
  * @author Gail Badner
  */
@@ -41,39 +37,12 @@ public class MappingHelper {
 	private MappingHelper() {
 	}
 
-	public static String extractAttributeValue(Element element, String attributeName) {
-		return extractAttributeValue( element, attributeName, null );
-	}
-
-	public static String extractAttributeValue(Element element, String attributeName, String defaultValue) {
-		String attributeValue = ( element == null ? null : element.attributeValue( attributeName ) );
-		return attributeValue == null ? defaultValue : attributeValue;
-	}
-
 	public static String getStringValue(String value, String defaultValue) {
 		return value == null ? defaultValue : value;
 	}
 
-	public static int extractIntAttributeValue(Element element, String attributeName) {
-		return extractIntAttributeValue( element, attributeName, -1 );
-	}
-
-	public static int extractIntAttributeValue(Element element, String attributeName, int defaultValue) {
-		String attributeValue = ( element == null ? null : element.attributeValue( attributeName ) );
-		return attributeValue == null ? defaultValue : Integer.valueOf( attributeValue );
-	}
-
 	public static int getIntValue(String value, int defaultValue) {
 		return value == null ? defaultValue : Integer.parseInt( value );
-	}
-
-	public static boolean extractBooleanAttributeValue(Element element, String attributeName) {
-		return extractBooleanAttributeValue( element, attributeName, false );
-	}
-
-	public static boolean extractBooleanAttributeValue(Element element, String attributeName, boolean defaultValue) {
-		String attributeValue = ( element == null ? null : element.attributeValue( attributeName ) );
-		return attributeValue == null ? defaultValue : Boolean.valueOf( attributeValue );
 	}
 
 	public static boolean getBooleanValue(String value, boolean defaultValue) {
@@ -82,25 +51,6 @@ public class MappingHelper {
 
 	public static boolean getBooleanValue(Boolean value, boolean defaultValue) {
 		return value == null ? defaultValue : value;
-	}
-
-	public static Class extractClassAttributeValue(Element element, String attributeName)
-	throws ClassNotFoundException {
-		String attributeValue = ( element == null ? null : element.attributeValue( attributeName ) );
-		return (
-				attributeValue == null ?
-				null :
-				ReflectHelper.classForName( attributeValue )
-		);
-	}
-
-	public static Class getClassValue(String className)
-	throws ClassNotFoundException {
-		return (
-				className == null ?
-				null :
-				ReflectHelper.classForName( className )
-		);
 	}
 
 	public static Set<String> getStringValueTokens(String str, String delimiters) {

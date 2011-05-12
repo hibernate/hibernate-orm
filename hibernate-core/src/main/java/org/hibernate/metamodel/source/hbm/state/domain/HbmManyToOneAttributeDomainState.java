@@ -27,11 +27,11 @@ import java.util.Map;
 
 import org.hibernate.FetchMode;
 import org.hibernate.metamodel.binding.HibernateTypeDescriptor;
-import org.hibernate.metamodel.binding.ManyToOneAttributeBinding;
 import org.hibernate.metamodel.binding.MappingDefaults;
 import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.metamodel.source.hbm.HbmHelper;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLManyToOneElement;
+import org.hibernate.metamodel.source.internal.MetadataImpl;
 import org.hibernate.metamodel.source.util.MappingHelper;
 import org.hibernate.metamodel.state.domain.ManyToOneAttributeDomainState;
 
@@ -54,22 +54,27 @@ public class HbmManyToOneAttributeDomainState
 	private final boolean isInsertable;
 	private final boolean isUpdateable;
 
-	public HbmManyToOneAttributeDomainState(MappingDefaults defaults,
-										   org.hibernate.metamodel.domain.Attribute attribute,
-										   Map<String, MetaAttribute> entityMetaAttributes,
-										   XMLManyToOneElement manyToOne) {
+	public HbmManyToOneAttributeDomainState(
+			MetadataImpl metadata,
+			MappingDefaults defaults,
+			org.hibernate.metamodel.domain.Attribute attribute,
+			Map<String, MetaAttribute> entityMetaAttributes,
+			XMLManyToOneElement manyToOne) {
 		super(
+				metadata,
 				defaults,
 				attribute,
 				manyToOne.getNode(),
 				HbmHelper.extractMetas( manyToOne.getMeta(), entityMetaAttributes ),
-				HbmHelper.getPropertyAccessorName( manyToOne.getAccess(), manyToOne.isEmbedXml(), defaults.getDefaultAccess() ),
+				HbmHelper.getPropertyAccessorName(
+						manyToOne.getAccess(), manyToOne.isEmbedXml(), defaults.getDefaultAccess()
+				),
 				manyToOne.isOptimisticLock()
 		);
 		fetchMode = getFetchMode( manyToOne );
 		isUnwrapProxy = manyToOne.getLazy() != null && "no-proxy".equals( manyToOne.getLazy().value() );
 		//TODO: better to degrade to lazy="false" if uninstrumented
-		isLazy =  manyToOne.getLazy() == null ||
+		isLazy = manyToOne.getLazy() == null ||
 				isUnwrapProxy ||
 				"proxy".equals( manyToOne.getLazy().value() );
 		cascade = MappingHelper.getStringValue( manyToOne.getCascade(), defaults.getDefaultCascade() );
@@ -78,8 +83,8 @@ public class HbmManyToOneAttributeDomainState
 		referencedPropertyName = manyToOne.getPropertyRef();
 		referencedEntityName = (
 				manyToOne.getEntityName() == null ?
-				HbmHelper.getClassName( manyToOne.getClazz(), getDefaults().getPackageName() ) :
-				manyToOne.getEntityName().intern()
+						HbmHelper.getClassName( manyToOne.getClazz(), getDefaults().getPackageName() ) :
+						manyToOne.getEntityName().intern()
 		);
 		ignoreNotFound = "ignore".equals( manyToOne.getNotFound().value() );
 		isInsertable = manyToOne.isInsert();
@@ -156,6 +161,7 @@ public class HbmManyToOneAttributeDomainState
 		//TODO: implement
 		return false;
 	}
+
 	public String getUnsavedValue() {
 		//TODO: implement
 		return null;

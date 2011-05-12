@@ -36,29 +36,34 @@ import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLCla
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLTimestamp;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLVersion;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLPropertyElement;
+import org.hibernate.metamodel.source.internal.MetadataImpl;
 import org.hibernate.metamodel.source.util.MappingHelper;
 import org.hibernate.metamodel.state.domain.SimpleAttributeDomainState;
 
 /**
  * @author Gail Badner
  */
-public class HbmSimpleAttributeDomainState extends AbstractHbmAttributeDomainState implements SimpleAttributeDomainState {
+public class HbmSimpleAttributeDomainState extends AbstractHbmAttributeDomainState
+		implements SimpleAttributeDomainState {
 	private final HibernateTypeDescriptor hibernateTypeDescriptor = new HibernateTypeDescriptor();
 	private final boolean isLazy;
 	private final PropertyGeneration propertyGeneration;
 	private final boolean isInsertable;
 	private final boolean isUpdateable;
 
-	public HbmSimpleAttributeDomainState(MappingDefaults defaults,
-										 org.hibernate.metamodel.domain.Attribute attribute,
-										 Map<String, MetaAttribute> entityMetaAttributes,
-										 XMLId id) {
+	public HbmSimpleAttributeDomainState(
+			MetadataImpl metadata,
+			MappingDefaults defaults,
+			org.hibernate.metamodel.domain.Attribute attribute,
+			Map<String, MetaAttribute> entityMetaAttributes,
+			XMLId id) {
 		super(
+				metadata,
 				defaults,
 				attribute,
 				id.getNode(),
 				HbmHelper.extractMetas( id.getMeta(), entityMetaAttributes ),
-				HbmHelper.getPropertyAccessorName( id.getAccess(), false, defaults.getDefaultAccess() ) ,
+				HbmHelper.getPropertyAccessorName( id.getAccess(), false, defaults.getDefaultAccess() ),
 				true
 		);
 
@@ -74,14 +79,17 @@ public class HbmSimpleAttributeDomainState extends AbstractHbmAttributeDomainSta
 		this.isUpdateable = false;
 	}
 
-	public HbmSimpleAttributeDomainState(MappingDefaults defaults,
-										 org.hibernate.metamodel.domain.Attribute attribute,
-										 Map<String, MetaAttribute> entityMetaAttributes,
-										 XMLDiscriminator discriminator) {
+	public HbmSimpleAttributeDomainState(
+			MetadataImpl metadata,
+			MappingDefaults defaults,
+			org.hibernate.metamodel.domain.Attribute attribute,
+			Map<String, MetaAttribute> entityMetaAttributes,
+			XMLDiscriminator discriminator) {
 		super(
-				defaults, attribute, null, null, null, true
+				metadata, defaults, attribute, null, null, null, true
 		);
-		this.hibernateTypeDescriptor.setTypeName( discriminator.getType() == null ? "string" : discriminator.getType() );
+		this.hibernateTypeDescriptor
+				.setTypeName( discriminator.getType() == null ? "string" : discriminator.getType() );
 		this.isLazy = false;
 
 		this.propertyGeneration = PropertyGeneration.NEVER;
@@ -89,17 +97,20 @@ public class HbmSimpleAttributeDomainState extends AbstractHbmAttributeDomainSta
 		this.isUpdateable = false;
 	}
 
-	public HbmSimpleAttributeDomainState(MappingDefaults defaults,
-										 org.hibernate.metamodel.domain.Attribute attribute,
-										 Map<String, MetaAttribute> entityMetaAttributes,
-										 XMLVersion version) {
+	public HbmSimpleAttributeDomainState(
+			MetadataImpl metadata,
+			MappingDefaults defaults,
+			org.hibernate.metamodel.domain.Attribute attribute,
+			Map<String, MetaAttribute> entityMetaAttributes,
+			XMLVersion version) {
 
 		super(
+				metadata,
 				defaults,
 				attribute,
 				version.getNode(),
 				HbmHelper.extractMetas( version.getMeta(), entityMetaAttributes ),
-				HbmHelper.getPropertyAccessorName( version.getAccess(), false, defaults.getDefaultAccess() ) ,
+				HbmHelper.getPropertyAccessorName( version.getAccess(), false, defaults.getDefaultAccess() ),
 				true
 		);
 		this.hibernateTypeDescriptor.setTypeName( version.getType() == null ? "integer" : version.getType() );
@@ -108,7 +119,7 @@ public class HbmSimpleAttributeDomainState extends AbstractHbmAttributeDomainSta
 		// for version properties marked as being generated, make sure they are "always"
 		// generated; aka, "insert" is invalid; this is dis-allowed by the DTD,
 		// but just to make sure.
-		this.propertyGeneration = PropertyGeneration.parse(  version.getGenerated().value()  );
+		this.propertyGeneration = PropertyGeneration.parse( version.getGenerated().value() );
 		if ( propertyGeneration == PropertyGeneration.INSERT ) {
 			throw new MappingException( "'generated' attribute cannot be 'insert' for versioning property" );
 		}
@@ -116,12 +127,15 @@ public class HbmSimpleAttributeDomainState extends AbstractHbmAttributeDomainSta
 		this.isUpdateable = true;
 	}
 
-	public HbmSimpleAttributeDomainState(MappingDefaults defaults,
-										 org.hibernate.metamodel.domain.Attribute attribute,
-										 Map<String, MetaAttribute> entityMetaAttributes,
-										 XMLTimestamp timestamp) {
+	public HbmSimpleAttributeDomainState(
+			MetadataImpl metadata,
+			MappingDefaults defaults,
+			org.hibernate.metamodel.domain.Attribute attribute,
+			Map<String, MetaAttribute> entityMetaAttributes,
+			XMLTimestamp timestamp) {
 
 		super(
+				metadata,
 				defaults,
 				attribute,
 				timestamp.getNode(),
@@ -136,7 +150,7 @@ public class HbmSimpleAttributeDomainState extends AbstractHbmAttributeDomainSta
 		// for version properties marked as being generated, make sure they are "always"
 		// generated; aka, "insert" is invalid; this is dis-allowed by the DTD,
 		// but just to make sure.
-		this.propertyGeneration = PropertyGeneration.parse(  timestamp.getGenerated().value()  );
+		this.propertyGeneration = PropertyGeneration.parse( timestamp.getGenerated().value() );
 		if ( propertyGeneration == PropertyGeneration.INSERT ) {
 			throw new MappingException( "'generated' attribute cannot be 'insert' for versioning property" );
 		}
@@ -144,11 +158,14 @@ public class HbmSimpleAttributeDomainState extends AbstractHbmAttributeDomainSta
 		this.isUpdateable = true;
 	}
 
-	public HbmSimpleAttributeDomainState(MappingDefaults defaults,
-										 org.hibernate.metamodel.domain.Attribute attribute,
-										 Map<String, MetaAttribute> entityMetaAttributes,
-										 XMLPropertyElement property) {
+	public HbmSimpleAttributeDomainState(
+			MetadataImpl metadata,
+			MappingDefaults defaults,
+			org.hibernate.metamodel.domain.Attribute attribute,
+			Map<String, MetaAttribute> entityMetaAttributes,
+			XMLPropertyElement property) {
 		super(
+				metadata,
 				defaults,
 				attribute,
 				property.getNode(),
@@ -161,12 +178,12 @@ public class HbmSimpleAttributeDomainState extends AbstractHbmAttributeDomainSta
 
 		if ( propertyGeneration == PropertyGeneration.ALWAYS || propertyGeneration == PropertyGeneration.INSERT ) {
 			// generated properties can *never* be insertable.
-			if (property.isInsert() != null && property.isInsert()) {
+			if ( property.isInsert() != null && property.isInsert() ) {
 				// the user specifically supplied insert="true", which constitutes an illegal combo
 				throw new MappingException(
 						"cannot specify both insert=\"true\" and generated=\"" + propertyGeneration.getName() +
-						"\" for property: " +
-						getAttribute().getName()
+								"\" for property: " +
+								getAttribute().getName()
 				);
 			}
 			isInsertable = false;
@@ -175,13 +192,13 @@ public class HbmSimpleAttributeDomainState extends AbstractHbmAttributeDomainSta
 			isInsertable = MappingHelper.getBooleanValue( property.isInsert(), true );
 		}
 		if ( propertyGeneration == PropertyGeneration.ALWAYS ) {
-			if (property.isUpdate() != null && property.isUpdate()) {
+			if ( property.isUpdate() != null && property.isUpdate() ) {
 				// the user specifically supplied update="true",
 				// which constitutes an illegal combo
 				throw new MappingException(
 						"cannot specify both update=\"true\" and generated=\"" + propertyGeneration.getName() +
-						"\" for property: " +
-						getAttribute().getName()
+								"\" for property: " +
+								getAttribute().getName()
 				);
 			}
 			isUpdateable = false;
@@ -206,9 +223,11 @@ public class HbmSimpleAttributeDomainState extends AbstractHbmAttributeDomainSta
 	public PropertyGeneration getPropertyGeneration() {
 		return propertyGeneration;
 	}
+
 	public boolean isInsertable() {
 		return isInsertable;
 	}
+
 	public boolean isUpdateable() {
 		return isUpdateable;
 	}
@@ -221,6 +240,7 @@ public class HbmSimpleAttributeDomainState extends AbstractHbmAttributeDomainSta
 		//TODO: implement
 		return false;
 	}
+
 	public String getUnsavedValue() {
 		//TODO: implement
 		return null;

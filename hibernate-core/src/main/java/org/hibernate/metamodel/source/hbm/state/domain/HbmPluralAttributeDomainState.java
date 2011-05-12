@@ -24,14 +24,13 @@
 package org.hibernate.metamodel.source.hbm.state.domain;
 
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.metamodel.binding.CustomSQL;
-import org.hibernate.metamodel.binding.ElementCollectionElement;
 import org.hibernate.metamodel.binding.HibernateTypeDescriptor;
 import org.hibernate.metamodel.binding.MappingDefaults;
 import org.hibernate.metamodel.domain.Attribute;
@@ -43,50 +42,58 @@ import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlDeleteElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlInsertElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlUpdateElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSynchronizeElement;
-
+import org.hibernate.metamodel.source.internal.MetadataImpl;
 import org.hibernate.metamodel.source.util.MappingHelper;
 import org.hibernate.metamodel.state.domain.CollectionElementDomainState;
 import org.hibernate.metamodel.state.domain.PluralAttributeDomainState;
+import org.hibernate.service.classloading.spi.ClassLoaderService;
+import org.hibernate.service.classloading.spi.ClassLoadingException;
 
 
 /**
  * @author Gail Badner
  */
-public class HbmPluralAttributeDomainState extends AbstractHbmAttributeDomainState implements PluralAttributeDomainState {
+public class HbmPluralAttributeDomainState extends AbstractHbmAttributeDomainState
+		implements PluralAttributeDomainState {
 	private final XMLBagElement collection;
 	private final HibernateTypeDescriptor hibernateTypeDescriptor = new HibernateTypeDescriptor();
 	private final String cascade;
 
-	public HbmPluralAttributeDomainState(MappingDefaults defaults,
-										 XMLBagElement collection,
-										 Map<String, MetaAttribute> entityMetaAttributes,
-										 Attribute attribute) {
+	public HbmPluralAttributeDomainState(
+			MetadataImpl metadata,
+			MappingDefaults mappingDefaults,
+			XMLBagElement collection,
+			Map<String, MetaAttribute> entityMetaAttributes,
+			Attribute attribute) {
 		super(
-				defaults,
+				metadata,
+				mappingDefaults,
 				attribute,
 				collection.getNode(),
 				HbmHelper.extractMetas( collection.getMeta(), entityMetaAttributes ),
-				HbmHelper.getPropertyAccessorName( collection.getAccess(), collection.isEmbedXml(), defaults.getDefaultAccess() ),
+				HbmHelper.getPropertyAccessorName(
+						collection.getAccess(), collection.isEmbedXml(), mappingDefaults.getDefaultAccess()
+				),
 				collection.isOptimisticLock()
 		);
 		this.collection = collection;
 		// TODO: is collection.getCollectionType() correct here?
 		this.hibernateTypeDescriptor.setTypeName( collection.getCollectionType() );
-		this.cascade = MappingHelper.getStringValue( collection.getCascade(), defaults.getDefaultCascade() );
+		this.cascade = MappingHelper.getStringValue( collection.getCascade(), mappingDefaults.getDefaultCascade() );
 		//Attribute typeNode = collectionElement.attribute( "collection-type" );
 		//if ( typeNode != null ) {
-			// TODO: implement when typedef binding is implemented
-			/*
-			String typeName = typeNode.getValue();
-			TypeDef typeDef = mappings.getTypeDef( typeName );
-			if ( typeDef != null ) {
-				collectionBinding.setTypeName( typeDef.getTypeClass() );
-				collectionBinding.setTypeParameters( typeDef.getParameters() );
-			}
-			else {
-				collectionBinding.setTypeName( typeName );
-			}
-			*/
+		// TODO: implement when typedef binding is implemented
+		/*
+		   String typeName = typeNode.getValue();
+		   TypeDef typeDef = mappings.getTypeDef( typeName );
+		   if ( typeDef != null ) {
+			   collectionBinding.setTypeName( typeDef.getTypeClass() );
+			   collectionBinding.setTypeParameters( typeDef.getParameters() );
+		   }
+		   else {
+			   collectionBinding.setTypeName( typeName );
+		   }
+		   */
 		//}
 		//TODO: fix this!!!
 		this.hibernateTypeDescriptor.setTypeName( collection.getCollectionType() );
@@ -98,7 +105,8 @@ public class HbmPluralAttributeDomainState extends AbstractHbmAttributeDomainSta
 			fetchMode = "join".equals( collection.getFetch() ) ? FetchMode.JOIN : FetchMode.SELECT;
 		}
 		else {
-			String jfNodeValue = ( collection.getOuterJoin().value() == null ? "auto" : collection.getOuterJoin().value() );
+			String jfNodeValue = ( collection.getOuterJoin().value() == null ? "auto" : collection.getOuterJoin()
+					.value() );
 			if ( "auto".equals( jfNodeValue ) ) {
 				fetchMode = FetchMode.DEFAULT;
 			}
@@ -114,11 +122,11 @@ public class HbmPluralAttributeDomainState extends AbstractHbmAttributeDomainSta
 
 	public boolean isLazy() {
 		return isExtraLazy() ||
-				MappingHelper.getBooleanValue( collection.getLazy().value(), getDefaults().isDefaultLazy());
+				MappingHelper.getBooleanValue( collection.getLazy().value(), getDefaults().isDefaultLazy() );
 	}
 
 	public boolean isExtraLazy() {
-		return  ( "extra".equals( collection.getLazy() ) );
+		return ( "extra".equals( collection.getLazy() ) );
 	}
 
 	public CollectionElementDomainState getCollectionElementDomainState() {
@@ -136,30 +144,37 @@ public class HbmPluralAttributeDomainState extends AbstractHbmAttributeDomainSta
 	public boolean isSubselectLoadable() {
 		return "subselect".equals( collection.getFetch() );
 	}
+
 	public String getCacheConcurrencyStrategy() {
 		return collection.getCache() == null ?
 				null :
 				collection.getCache().getUsage();
 	}
+
 	public String getCacheRegionName() {
 		return collection.getCache() == null ?
 				null :
 				collection.getCache().getRegion();
 	}
+
 	public String getOrderBy() {
 		return collection.getOrderBy();
 	}
+
 	public String getWhere() {
 		return collection.getWhere();
 	}
+
 	public String getReferencedPropertyName() {
 		return collection.getKey().getPropertyRef();
 	}
+
 	public boolean isSorted() {
 		// SORT
 		// unsorted, natural, comparator.class.name
-		return ( ! "unsorted".equals( getSortString() ) );
+		return ( !"unsorted".equals( getSortString() ) );
 	}
+
 	public Comparator getComparator() {
 		return null;
 	}
@@ -167,7 +182,7 @@ public class HbmPluralAttributeDomainState extends AbstractHbmAttributeDomainSta
 	public String getComparatorClassName() {
 		String sortString = getSortString();
 		return (
-				isSorted() && ! "natural".equals( sortString ) ?
+				isSorted() && !"natural".equals( sortString ) ?
 						sortString :
 						null
 		);
@@ -178,28 +193,37 @@ public class HbmPluralAttributeDomainState extends AbstractHbmAttributeDomainSta
 		// collection.getSort() == null ? "unsorted" : collection.getSort();
 		return "unsorted";
 	}
+
 	public boolean isOrphanDelete() {
 		// ORPHAN DELETE (used for programmer error detection)
 		return ( getCascade().indexOf( "delete-orphan" ) >= 0 );
 	}
+
 	public int getBatchSize() {
 		return MappingHelper.getIntValue( collection.getBatchSize(), 0 );
 	}
+
 	@Override
 	public boolean isEmbedded() {
 		return collection.isEmbedXml();
 	}
+
 	public boolean isOptimisticLocked() {
 		return collection.isOptimisticLock();
 	}
 
 	public Class getCollectionPersisterClass() {
+		String className = collection.getPersister();
+		ClassLoaderService classLoaderService = getMetadata().getServiceRegistry()
+				.getService( ClassLoaderService.class );
 		try {
-			return MappingHelper.getClassValue( collection.getPersister() );
+			return classLoaderService.classForName( className );
 		}
-		catch (ClassNotFoundException cnfe) {
-			throw new MappingException( "Could not find collection persister class: "
-				+ collection.getPersister() );
+		catch ( ClassLoadingException e ) {
+			throw new MappingException(
+					"Could not find collection persister class: "
+							+ collection.getPersister()
+			);
 		}
 	}
 
@@ -216,6 +240,7 @@ public class HbmPluralAttributeDomainState extends AbstractHbmAttributeDomainSta
 		//}
 		return new HashMap();
 	}
+
 	public java.util.Set getSynchronizedTables() {
 		java.util.Set<String> synchronizedTables = new HashSet<String>();
 		for ( XMLSynchronizeElement sync : collection.getSynchronize() ) {
@@ -234,6 +259,7 @@ public class HbmPluralAttributeDomainState extends AbstractHbmAttributeDomainSta
 						collection.getSqlInsert().getCheck().value()
 				);
 	}
+
 	public CustomSQL getCustomSQLUpdate() {
 		XMLSqlUpdateElement sqlUpdate = collection.getSqlUpdate();
 		return sqlUpdate == null ?
@@ -244,6 +270,7 @@ public class HbmPluralAttributeDomainState extends AbstractHbmAttributeDomainSta
 						collection.getSqlUpdate().getCheck().value()
 				);
 	}
+
 	public CustomSQL getCustomSQLDelete() {
 		XMLSqlDeleteElement sqlDelete = collection.getSqlDelete();
 		return sqlDelete == null ?
@@ -254,6 +281,7 @@ public class HbmPluralAttributeDomainState extends AbstractHbmAttributeDomainSta
 						collection.getSqlDelete().getCheck().value()
 				);
 	}
+
 	public CustomSQL getCustomSQLDeleteAll() {
 		XMLSqlDeleteAllElement sqlDeleteAll = collection.getSqlDeleteAll();
 		return sqlDeleteAll == null ?
@@ -264,6 +292,7 @@ public class HbmPluralAttributeDomainState extends AbstractHbmAttributeDomainSta
 						collection.getSqlDeleteAll().getCheck().value()
 				);
 	}
+
 	public String getLoaderName() {
 		return collection.getLoader() == null ?
 				null :
@@ -278,6 +307,7 @@ public class HbmPluralAttributeDomainState extends AbstractHbmAttributeDomainSta
 		//TODO: implement
 		return false;
 	}
+
 	public String getUnsavedValue() {
 		//TODO: implement
 		return null;

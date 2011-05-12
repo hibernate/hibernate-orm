@@ -83,7 +83,7 @@ abstract class AbstractEntityObjectMocker extends AnnotationMocker {
 		}
 		parserIdClass( getIdClass() );
 
-		if ( getAttributes() != null ) {
+		if ( hasAttributes() ) {
 			getAttributesBuilder().parser();
 
 		}
@@ -138,6 +138,9 @@ abstract class AbstractEntityObjectMocker extends AnnotationMocker {
 	abstract protected XMLPostLoad getPostLoad();
 
 	abstract protected XMLAttributes getAttributes();
+	protected boolean hasAttributes(){
+		return getAttributes()!=null;
+	}
 
 	protected ListenerMocker getListenerParser() {
 		if ( listenerParser == null ) {

@@ -147,6 +147,7 @@ class EntityMocker extends AbstractEntityObjectMocker {
 		if ( entity.isMetadataComplete() == null ) {
 			entity.setMetadataComplete( getDefaults().getMetadataComplete() );
 		}
+
 		LOG.debugf( "Adding XML overriding information for %s", className );
 
 	}

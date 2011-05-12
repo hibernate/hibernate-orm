@@ -24,7 +24,9 @@
 package org.hibernate.metamodel.source.annotations.xml.mocker;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;
@@ -66,7 +68,7 @@ abstract class PropertyMocker extends AnnotationMocker {
 		return classInfo.name();
 	}
 
-	protected void resolveTarget() {
+	protected void determinAccessType() {
 		XMLAccessType accessType = getAccessType();
 		if ( accessType == null ) {
 			accessType = AccessHelper.getAccessFromAttributeAnnotation( getTargetName(), getFieldName(), indexBuilder );
@@ -82,7 +84,6 @@ abstract class PropertyMocker extends AnnotationMocker {
 			}
 			setAccessType( accessType );
 		}
-
 	}
 
 	@Override
@@ -120,8 +121,49 @@ abstract class PropertyMocker extends AnnotationMocker {
 
 	@Override
 	final void process() {
-		resolveTarget();
+		overrideIndexedAccessType();
+		determinAccessType();
+		parserAccessType( getAccessType(), getTarget() );
 		processExtra();
+	}
+
+	private void overrideIndexedAccessType() {
+		if ( getAccessType() == null ) {
+			return;
+		}
+		/**
+		 * 如果这个xml定义了access，那么：
+		 * 如果这个access是field，那么察看对应的property上是否有access，有的话删除
+		 * 如果这个access是property，那么察看对应的field上是否有access，有的话删除
+		 */
+		if ( getAccessType() == XMLAccessType.FIELD ) {
+			removeAccessAnnotationFromAnotherSide( XMLAccessType.PROPERTY );
+		}else{
+			removeAccessAnnotationFromAnotherSide( XMLAccessType.FIELD );
+		}
+	}
+
+	private void removeAccessAnnotationFromAnotherSide(XMLAccessType accessType) {
+		try {
+			AnnotationTarget reverseTarget = getTargetFromAttributeAccessType( accessType );
+			Map<DotName, List<AnnotationInstance>> indexedAnnotationsMap = indexBuilder.getIndexedAnnotations(
+					getTargetName()
+			);
+			if ( indexedAnnotationsMap.isEmpty() || !indexedAnnotationsMap.containsKey( ACCESS ) ) {
+				return;
+			}
+			List<AnnotationInstance> indexedAccessList = indexedAnnotationsMap.get( ACCESS );
+			for ( Iterator<AnnotationInstance> iterator = indexedAccessList.iterator(); iterator.hasNext(); ) {
+				AnnotationInstance accessAnnotationInstance = iterator.next();
+				if(MockHelper.targetEquals( reverseTarget,accessAnnotationInstance.target() )){
+					iterator.remove();
+				}
+			}
+
+		}
+		catch ( Throwable e ) {
+			//ignore
+		}
 	}
 
 	protected AnnotationInstance parserMapKeyColumn(XMLMapKeyColumn mapKeyColumn, AnnotationTarget target) {

@@ -155,4 +155,9 @@ class EmbeddableMocker extends AbstractEntityObjectMocker {
 	protected XMLAttributes getAttributes() {
 		return null;
 	}
+
+	@Override
+	protected boolean hasAttributes() {
+		return embeddable.getAttributes()!=null;
+	}
 }

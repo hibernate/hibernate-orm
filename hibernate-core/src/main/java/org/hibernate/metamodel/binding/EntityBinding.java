@@ -52,6 +52,7 @@ import org.hibernate.metamodel.source.util.MappingHelper;
  */
 public class EntityBinding {
 	private final EntityIdentifier entityIdentifier = new EntityIdentifier( this );
+	private InheritanceType entityInheritanceType;
 	private EntityDiscriminator entityDiscriminator;
 	private SimpleAttributeBinding versionBinding;
 
@@ -214,6 +215,13 @@ public class EntityBinding {
 		baseTable.getPrimaryKey().addColumn( Column.class.cast( attributeBinding.getValue() ) );
 	}
 
+	public void setInheritanceType(InheritanceType entityInheritanceType) {
+		this.entityInheritanceType = entityInheritanceType;
+	}
+
+	public InheritanceType getInheritanceType() {
+		return entityInheritanceType;
+	}
 
 	public SimpleAttributeBinding getVersioningValueBinding() {
 		return versionBinding;

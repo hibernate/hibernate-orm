@@ -39,6 +39,7 @@ import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.binding.Caching;
 import org.hibernate.metamodel.binding.EntityBinding;
+import org.hibernate.metamodel.binding.InheritanceType;
 import org.hibernate.metamodel.binding.SimpleAttributeBinding;
 import org.hibernate.metamodel.domain.Entity;
 import org.hibernate.metamodel.domain.Hierarchical;
@@ -69,11 +70,16 @@ public class EntityBinder {
 
 	public void bind() {
 		EntityBinding entityBinding = new EntityBinding();
+		entityBinding.setInheritanceType( InheritanceType.get( configuredClass.getInheritanceType() ) );
+
 		bindJpaEntityAnnotation( entityBinding );
 		bindHibernateEntityAnnotation( entityBinding ); // optional hibernate specific @org.hibernate.annotations.Entity
+
 		bindWhereFilter( entityBinding );
+
 		bindJpaCaching( entityBinding );
 		bindHibernateCaching( entityBinding );
+
 		schemaName = createSchemaName();
 		bindTable( entityBinding );
 

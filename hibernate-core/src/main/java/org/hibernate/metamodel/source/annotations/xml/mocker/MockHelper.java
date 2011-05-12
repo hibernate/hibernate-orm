@@ -311,7 +311,14 @@ public class MockHelper {
 		if ( values == null || values.length == 0 ) {
 			values = EMPTY_ANNOTATION_VALUE_ARRAY;
 		}
-		return AnnotationInstance.create( name, target, values );
+		return AnnotationInstance.create( name, target, addMockMark( values ) );
+	}
+
+	private static AnnotationValue[] addMockMark(AnnotationValue[] values) {
+		AnnotationValue[] newValues = new AnnotationValue[values.length + 1];
+		System.arraycopy( values, 0, newValues, 0, values.length );
+		newValues[values.length] = booleanValue( "isMocked", true );
+		return newValues;
 	}
 
 

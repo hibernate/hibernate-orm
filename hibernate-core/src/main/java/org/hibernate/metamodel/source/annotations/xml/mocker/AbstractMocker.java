@@ -54,7 +54,7 @@ import org.hibernate.metamodel.source.annotations.JPADotNames;
  * @author Strong Liu
  */
 abstract class AbstractMocker implements JPADotNames {
-	protected IndexBuilder indexBuilder;
+	final protected IndexBuilder indexBuilder;
 
 	AbstractMocker(IndexBuilder indexBuilder) {
 		this.indexBuilder = indexBuilder;
@@ -241,7 +241,7 @@ abstract class AbstractMocker implements JPADotNames {
 		if ( MockHelper.isNotEmpty( annotationInstanceList ) ) {
 			for ( AnnotationInstance annotationInstance : annotationInstanceList ) {
 				AnnotationTarget annotationTarget = annotationInstance.target();
-				if ( MockHelper.targetEquals( target, annotationTarget, false ) ) {
+				if ( MockHelper.targetEquals( target, annotationTarget ) ) {
 					if ( operation.process( annotationInstance ) ) {
 						return;
 					}

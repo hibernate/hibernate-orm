@@ -28,6 +28,7 @@ import org.jboss.jandex.AnnotationTarget;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.metamodel.source.annotation.xml.XMLAccessType;
 import org.hibernate.metamodel.source.annotation.xml.XMLAttributes;
 import org.hibernate.metamodel.source.annotation.xml.XMLEntityListeners;
@@ -51,12 +52,28 @@ abstract class AbstractEntityObjectMocker extends AnnotationMocker {
 	AbstractEntityObjectMocker(IndexBuilder indexBuilder, EntityMappingsMocker.Default defaults) {
 		super( indexBuilder, defaults );
 	}
+	private boolean isPreProcessCalled=false;
 
-	final void process() {
+	final void preProcess() {
 		applyDefaults();
 		classInfo = indexBuilder.createClassInfo( getClassName() );
 		DotName classDotName = classInfo.name();
 		indexBuilder.metadataComplete( classDotName, isMetadataComplete() );
+		parserAccessType( getAccessType(), getTarget() );
+		isPreProcessCalled = true;
+	}
+
+	final void process() {
+		if(!isPreProcessCalled){
+			throw new AssertionFailure( "preProcess should be called before process" );
+		}
+		if ( getAccessType() == null ) {
+			XMLAccessType accessType = AccessHelper.getEntityAccess( getTargetName(), indexBuilder );
+			if ( accessType == null ) {
+				accessType = getDefaults().getAccess();
+			}
+			parserAccessType( accessType, getTarget() );
+		}
 		processExtra();
 		if ( isExcludeDefaultListeners() ) {
 			create( EXCLUDE_DEFAULT_LISTENERS );
@@ -65,7 +82,7 @@ abstract class AbstractEntityObjectMocker extends AnnotationMocker {
 			create( EXCLUDE_SUPERCLASS_LISTENERS );
 		}
 		parserIdClass( getIdClass() );
-		parserAccessType( getAccessType(), getTarget() );
+
 		if ( getAttributes() != null ) {
 			getAttributesBuilder().parser();
 

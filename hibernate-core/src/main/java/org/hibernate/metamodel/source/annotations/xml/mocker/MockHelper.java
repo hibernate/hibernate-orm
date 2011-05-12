@@ -43,7 +43,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.source.annotation.xml.XMLCascadeType;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
-import org.hibernate.metamodel.source.annotations.util.JandexHelper;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 
@@ -267,33 +266,24 @@ public class MockHelper {
 	/**
 	 * @param t1 can't be null
 	 * @param t2 can't be null
-	 * @param ignoreAccess true t1 and t2 can't be ClassInfo
 	 */
-	public static boolean targetEquals(AnnotationTarget t1, AnnotationTarget t2, boolean ignoreAccess) {
+	public static boolean targetEquals(AnnotationTarget t1, AnnotationTarget t2) {
 		if ( t1 == t2 ) {
 			return true;
 		}
-		if ( t1.getClass() == t2.getClass() ) {
-			if ( t1.getClass() == ClassInfo.class ) {
-				return ( (ClassInfo) t1 ).name().equals( ( (ClassInfo) t2 ).name() );
-			}
-			else if ( t1.getClass() == MethodInfo.class ) {
-				return ( (MethodInfo) t1 ).name().equals( ( (MethodInfo) t2 ).name() );
-			}
-			else {
-				return ( (FieldInfo) t1 ).name().equals( ( (FieldInfo) t2 ).name() );
-			}
-		}
-		if ( ignoreAccess && t1.getClass() != ClassInfo.class && t2.getClass() != ClassInfo.class ) {
-			if ( t1.getClass() == FieldInfo.class ) {
-				String fieldName = JandexHelper.getPropertyName( t2 );
-				return ( (FieldInfo) t1 ).name().equals( fieldName );
-			}
-			else {
-				String fieldName = JandexHelper.getPropertyName( t1 );
-				return ( (FieldInfo) t2 ).name().equals( fieldName );
-			}
+		if ( t1 != null && t2 != null ) {
 
+			if ( t1.getClass() == t2.getClass() ) {
+				if ( t1.getClass() == ClassInfo.class ) {
+					return ( (ClassInfo) t1 ).name().equals( ( (ClassInfo) t2 ).name() );
+				}
+				else if ( t1.getClass() == MethodInfo.class ) {
+					return ( (MethodInfo) t1 ).name().equals( ( (MethodInfo) t2 ).name() );
+				}
+				else {
+					return ( (FieldInfo) t1 ).name().equals( ( (FieldInfo) t2 ).name() );
+				}
+			}
 		}
 		return false;
 	}

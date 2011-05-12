@@ -55,6 +55,10 @@ class VersionMocker extends PropertyMocker {
 	protected XMLAccessType getAccessType() {
 		return version.getAccess();
 	}
+		@Override
+	protected void setAccessType(XMLAccessType accessType) {
+		version.setAccess( accessType );
+	}
 
 
 }

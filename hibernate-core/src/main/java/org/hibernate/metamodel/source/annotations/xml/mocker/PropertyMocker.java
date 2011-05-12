@@ -46,12 +46,6 @@ import org.hibernate.metamodel.source.annotation.xml.XMLTemporalType;
  */
 abstract class PropertyMocker extends AnnotationMocker {
 	protected ClassInfo classInfo;
-	protected XMLAccessType accessType;
-
-	private void setTarget(AnnotationTarget target) {
-		this.target = target;
-	}
-
 	private AnnotationTarget target;
 
 	PropertyMocker(IndexBuilder indexBuilder, ClassInfo classInfo, EntityMappingsMocker.Default defaults) {
@@ -61,45 +55,73 @@ abstract class PropertyMocker extends AnnotationMocker {
 
 	protected abstract void processExtra();
 
-	@Override
-	protected AnnotationTarget getTarget() {
-		return target;
-	}
-
 	protected abstract String getFieldName();
 
 	protected abstract XMLAccessType getAccessType();
+
+	protected abstract void setAccessType(XMLAccessType accessType);
 
 	@Override
 	protected DotName getTargetName() {
 		return classInfo.name();
 	}
 
+	protected void resolveTarget() {
+		XMLAccessType accessType = getAccessType();
+		if ( accessType == null ) {
+			accessType = AccessHelper.getAccessFromAttributeAnnotation( getTargetName(), getFieldName(), indexBuilder );
+			if ( accessType == null ) {
+				accessType = AccessHelper.getEntityAccess( getTargetName(), indexBuilder );
+			}
+			if ( accessType == null ) {
+				accessType = AccessHelper.getAccessFromIdPosition( getTargetName(), indexBuilder );
+			}
+			if ( accessType == null ) {
+				accessType = XMLAccessType.PROPERTY;
+
+			}
+			setAccessType( accessType );
+		}
+
+	}
+
+	@Override
+	protected AnnotationTarget getTarget() {
+		if ( target == null ) {
+			target = getTargetFromAttributeAccessType( getAccessType() );
+		}
+		return target;
+	}
+
+	protected AnnotationTarget getTargetFromAttributeAccessType(XMLAccessType accessType) {
+		if ( accessType == null ) {
+			throw new IllegalArgumentException( "access type can't be null." );
+		}
+		switch ( accessType ) {
+			case FIELD:
+				return MockHelper.getTarget(
+						indexBuilder.getServiceRegistry(),
+						classInfo,
+						getFieldName(),
+						MockHelper.TargetType.FIELD
+				);
+			case PROPERTY:
+				return MockHelper.getTarget(
+						indexBuilder.getServiceRegistry(),
+						classInfo,
+						getFieldName(),
+						MockHelper.TargetType.PROPERTY
+				);
+			default:
+				throw new HibernateException( "can't determin access type [" + accessType + "]" );
+		}
+	}
+
 
 	@Override
 	final void process() {
-		processByTarget( MockHelper.TargetType.FIELD );
-		processByTarget( MockHelper.TargetType.PROPERTY );
-	}
-
-	private void processByTarget(MockHelper.TargetType type) {
-		boolean isTargetAvailable = false;
-		try {
-			setTarget(
-					MockHelper.getTarget(
-							indexBuilder.getServiceRegistry(), classInfo, getFieldName(), type
-					)
-			);
-			isTargetAvailable = true;
-		}
-		catch ( HibernateException e ) {
-			//ignore
-			e.printStackTrace();
-		}
-		if ( isTargetAvailable ) {
-			parserAccessType( getAccessType(), getTarget() );
-			processExtra();
-		}
+		resolveTarget();
+		processExtra();
 	}
 
 	protected AnnotationInstance parserMapKeyColumn(XMLMapKeyColumn mapKeyColumn, AnnotationTarget target) {

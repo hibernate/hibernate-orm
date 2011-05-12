@@ -40,6 +40,7 @@ public class OverrideTest extends AbstractMockerTest {
 		EntityMappingsMocker.Default defaults = new EntityMappingsMocker.Default();
 		defaults.setMetadataComplete( true );
 		EntityMocker entityMocker = new EntityMocker( indexBuilder, author, defaults );
+		entityMocker.preProcess();
 		entityMocker.process();
 		Index index = indexBuilder.build( new EntityMappingsMocker.Default() );
 		DotName className = DotName.createSimple( Author.class.getName() );
@@ -80,6 +81,7 @@ public class OverrideTest extends AbstractMockerTest {
 		EntityMappingsMocker.Default defaults = new EntityMappingsMocker.Default();
 		defaults.setCascadePersist( true );
 		EntityMocker entityMocker = new EntityMocker( indexBuilder, author, defaults );
+		entityMocker.preProcess();
 		entityMocker.process();
 		Index index = indexBuilder.build( new EntityMappingsMocker.Default() );
 		DotName className = DotName.createSimple( Author.class.getName() );
@@ -97,7 +99,6 @@ public class OverrideTest extends AbstractMockerTest {
 				index,
 				className,
 				JPADotNames.ONE_TO_MANY,
-				2,
 				new CascadeAnnotationValueChecker( new String[] { "PERSIST", "ALL" } )
 		);
 	}
@@ -139,7 +140,7 @@ public class OverrideTest extends AbstractMockerTest {
 		assertAnnotationValue(
 				index,
 				className,
-				JPADotNames.ATTRIBUTE_OVERRIDES, 2, new AnnotationValueChecker() {
+				JPADotNames.ATTRIBUTE_OVERRIDES,  new AnnotationValueChecker() {
 					@Override
 					public void check(AnnotationInstance annotationInstance) {
 						AnnotationValue value = annotationInstance.value();
@@ -167,6 +168,7 @@ public class OverrideTest extends AbstractMockerTest {
 	@Test
 	public void testSchemaInPersistenceMetadata() {
 		Index index =getMockedIndex( "default-schema.xml" );
+		index.printAnnotations();
 		//Global Configuration should be accessed like this, not from ClassInfo
 		List<AnnotationInstance> annotationInstanceList = index.getAnnotations( JPADotNames.TABLE_GENERATOR );
 		assertNotNull( annotationInstanceList );
@@ -200,6 +202,7 @@ public class OverrideTest extends AbstractMockerTest {
 	@Test
 	public void testSchemaInEntityMapping() {
 		Index index =getMockedIndex( "default-schema2.xml" );
+		index.printAnnotations();
 		//Global Configuration should be accessed like this, not from ClassInfo
 		List<AnnotationInstance> annotationInstanceList = index.getAnnotations( JPADotNames.TABLE_GENERATOR );
 		assertNotNull( annotationInstanceList );

@@ -72,5 +72,9 @@ class ManyToOneMocker extends PropertyMocker {
 	protected XMLAccessType getAccessType() {
 		return manyToOne.getAccess();
 	}
+		@Override
+	protected void setAccessType(XMLAccessType accessType) {
+		manyToOne.setAccess( accessType );
+	}
 
 }

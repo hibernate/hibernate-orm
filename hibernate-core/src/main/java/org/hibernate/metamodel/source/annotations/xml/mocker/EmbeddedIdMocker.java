@@ -53,4 +53,8 @@ class EmbeddedIdMocker extends PropertyMocker {
 	protected XMLAccessType getAccessType() {
 		return embeddedId.getAccess();
 	}
+		@Override
+	protected void setAccessType(XMLAccessType accessType) {
+		embeddedId.setAccess( accessType );
+	}
 }

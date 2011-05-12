@@ -25,12 +25,17 @@ package org.hibernate.metamodel.source.annotations.xml.mocker;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;
 import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.DotName;
+import org.jboss.jandex.MethodInfo;
 
+import org.hibernate.AnnotationException;
+import org.hibernate.HibernateException;
 import org.hibernate.metamodel.source.annotation.xml.XMLAccessType;
 import org.hibernate.metamodel.source.annotation.xml.XMLGeneratedValue;
 import org.hibernate.metamodel.source.annotation.xml.XMLId;
@@ -72,10 +77,15 @@ class IdMocker extends PropertyMocker {
 		return id.getName();
 	}
 
-
 	@Override
 	protected XMLAccessType getAccessType() {
 		return id.getAccess();
 	}
+
+	@Override
+	protected void setAccessType(XMLAccessType accessType) {
+		id.setAccess( accessType );
+	}
+
 
 }

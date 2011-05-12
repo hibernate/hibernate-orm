@@ -1,12 +1,16 @@
 package org.hibernate.metamodel.source.annotations.xml;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.jboss.jandex.Index;
 
 import org.hibernate.metamodel.source.annotation.xml.XMLEntityMappings;
+import org.hibernate.metamodel.source.annotations.xml.mocker.EntityMappingsMocker;
 import org.hibernate.metamodel.source.internal.JaxbRoot;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
+
+//import org.hibernate.metamodel.source.util.xml.XmlHelper;
 
 /**
  * @author Hardy Ferentschik
@@ -28,11 +32,17 @@ public class OrmXmlParser {
 	 * @return a new updated annotation index, enhancing and modifying the existing ones according to the jpa xml rules
 	 */
 	public Index parseAndUpdateIndex(List<JaxbRoot<XMLEntityMappings>> mappings, Index annotationIndex) {
-		for ( JaxbRoot<XMLEntityMappings> root : mappings ) {
-			root.getRoot().toString();
+		List<XMLEntityMappings> list = new ArrayList<XMLEntityMappings>( mappings.size() );
+		for ( JaxbRoot<XMLEntityMappings> jaxbRoot : mappings ) {
+			list.add( jaxbRoot.getRoot() );
 		}
-		return annotationIndex;
+		return new EntityMappingsMocker(
+				list, annotationIndex, meta.getServiceRegistry()
+		).mockNewIndex();
 	}
+
+
+
 }
 
 

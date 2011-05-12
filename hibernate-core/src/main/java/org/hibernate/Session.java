@@ -120,7 +120,7 @@ public interface Session extends SharedSessionContract {
 	/**
 	 * Force this session to flush. Must be called at the end of a
 	 * unit of work, before committing the transaction and closing the
-	 * session (depending on {@link #setFlushMode flush-mode},
+	 * session (depending on {@link #setFlushMode(FlushMode)},
 	 * {@link Transaction#commit()} calls this method).
 	 * <p/>
 	 * <i>Flushing</i> is the process of synchronizing the underlying persistent

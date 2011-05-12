@@ -157,7 +157,8 @@ public class IndexBuilder {
 	public ClassInfo getClassInfo(DotName name) {
 		return classes.get( name );
 	}
-	public ClassInfo getIndexedClassInfo(DotName name){
+
+	public ClassInfo getIndexedClassInfo(DotName name) {
 		return index.getClassByName( name );
 	}
 
@@ -303,6 +304,4 @@ public class IndexBuilder {
 			}
 		}
 	}
-
-
 }

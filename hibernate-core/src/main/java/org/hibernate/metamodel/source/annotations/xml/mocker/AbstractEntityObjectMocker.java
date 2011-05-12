@@ -52,7 +52,8 @@ abstract class AbstractEntityObjectMocker extends AnnotationMocker {
 	AbstractEntityObjectMocker(IndexBuilder indexBuilder, EntityMappingsMocker.Default defaults) {
 		super( indexBuilder, defaults );
 	}
-	private boolean isPreProcessCalled=false;
+
+	private boolean isPreProcessCalled = false;
 
 	final void preProcess() {
 		applyDefaults();
@@ -64,7 +65,7 @@ abstract class AbstractEntityObjectMocker extends AnnotationMocker {
 	}
 
 	final void process() {
-		if(!isPreProcessCalled){
+		if ( !isPreProcessCalled ) {
 			throw new AssertionFailure( "preProcess should be called before process" );
 		}
 		if ( getAccessType() == null ) {
@@ -177,6 +178,4 @@ abstract class AbstractEntityObjectMocker extends AnnotationMocker {
 	protected AnnotationTarget getTarget() {
 		return classInfo;
 	}
-
-
 }

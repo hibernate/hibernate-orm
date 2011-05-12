@@ -23,6 +23,7 @@
  */
 package org.hibernate.metamodel.source.annotations.xml.filter;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -40,13 +41,10 @@ abstract class AbstractAnnotationFilter implements IndexedAnnotationFilter {
 	protected static final DotName[] EMPTY_DOTNAME_ARRAY = new DotName[0];
 	private Set<DotName> candidates;
 
-
 	private boolean match(DotName annName) {
 		if ( candidates == null ) {
 			candidates = new HashSet<DotName>();
-			for ( DotName name : targetAnnotation() ) {
-				candidates.add( name );
-			}
+			candidates.addAll( Arrays.asList( targetAnnotation() ) );
 		}
 		return candidates.contains( annName );
 	}

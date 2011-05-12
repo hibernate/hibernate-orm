@@ -106,6 +106,4 @@ class AttributesBuilder extends AbstractAttributesBuilder {
 	XMLEmbeddedId getEmbeddedId() {
 		return attributes.getEmbeddedId();
 	}
-
-
 }

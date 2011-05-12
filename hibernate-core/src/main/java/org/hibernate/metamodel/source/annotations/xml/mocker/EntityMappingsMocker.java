@@ -251,9 +251,5 @@ public class EntityMappingsMocker {
 				}
 			}
 		}
-
-
 	}
-
-
 }

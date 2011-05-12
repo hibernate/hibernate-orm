@@ -89,9 +89,6 @@ class NameTargetAnnotationFilter extends AbstractAnnotationFilter {
 				MAP_KEY_CLASS,
 				MAP_KEY_COLUMN,
 				MAP_KEY_ENUMERATED
-
 		};
 	}
-
-
 }

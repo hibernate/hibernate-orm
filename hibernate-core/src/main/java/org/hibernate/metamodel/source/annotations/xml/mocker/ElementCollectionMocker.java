@@ -71,8 +71,6 @@ class ElementCollectionMocker extends PropertyMocker {
 		parserMapKeyClass( elementCollection.getMapKeyClass(), getTarget() );
 		parserMapKeyEnumerated( elementCollection.getMapKeyEnumerated(), getTarget() );
 		parserMapKeyTemporal( elementCollection.getMapKeyTemporal(), getTarget() );
-
-
 	}
 
 	@Override
@@ -84,7 +82,8 @@ class ElementCollectionMocker extends PropertyMocker {
 	protected XMLAccessType getAccessType() {
 		return elementCollection.getAccess();
 	}
-		@Override
+
+	@Override
 	protected void setAccessType(XMLAccessType accessType) {
 		elementCollection.setAccess( accessType );
 	}

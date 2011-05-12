@@ -63,8 +63,8 @@ class ManyToManyMocker extends PropertyMocker {
 		parserMapKeyTemporal( manyToMany.getMapKeyTemporal(), getTarget() );
 		parserMapKeyEnumerated( manyToMany.getMapKeyEnumerated(), getTarget() );
 		parserMapKey( manyToMany.getMapKey(), getTarget() );
-		parserAttributeOverrides( manyToMany.getMapKeyAttributeOverride(),getTarget() );
-		parserMapKeyJoinColumnList( manyToMany.getMapKeyJoinColumn(),getTarget() );
+		parserAttributeOverrides( manyToMany.getMapKeyAttributeOverride(), getTarget() );
+		parserMapKeyJoinColumnList( manyToMany.getMapKeyJoinColumn(), getTarget() );
 		parserOrderColumn( manyToMany.getOrderColumn(), getTarget() );
 		parserJoinTable( manyToMany.getJoinTable(), getTarget() );
 		if ( manyToMany.getOrderBy() != null ) {
@@ -76,7 +76,8 @@ class ManyToManyMocker extends PropertyMocker {
 	protected XMLAccessType getAccessType() {
 		return manyToMany.getAccess();
 	}
-		@Override
+
+	@Override
 	protected void setAccessType(XMLAccessType accessType) {
 		manyToMany.setAccess( accessType );
 	}

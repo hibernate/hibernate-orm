@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
- * indicated by the @author tags or express copyright attribution
- * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Inc..
+ * Copyright (c) 2011 by Red Hat Inc and/or its affiliates or by
+ * third-party contributors as indicated by either @author tags or express
+ * copyright attribution statements applied by the authors.  All
+ * third-party contributions are distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -24,24 +24,5 @@
 package org.hibernate.metamodel.source.annotations.xml.mocker;
 
 /**
- * @author Strong Liu
+ * Mocker classes to create mock JPA annotations from orm.xml
  */
-abstract class AnnotationMocker extends AbstractMocker {
-	private EntityMappingsMocker.Default defaults;
-
-	AnnotationMocker(IndexBuilder indexBuilder, EntityMappingsMocker.Default defaults) {
-		super( indexBuilder );
-		this.defaults = defaults;
-	}
-
-	abstract void process();
-
-	@Override
-	protected EntityMappingsMocker.Default getDefaults() {
-		return defaults;
-	}
-
-	protected boolean isDefaultCascadePersist() {
-		return defaults.getCascadePersist() != null && defaults.getCascadePersist();
-	}
-}

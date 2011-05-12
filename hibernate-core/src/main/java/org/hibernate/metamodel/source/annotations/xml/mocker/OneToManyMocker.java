@@ -60,7 +60,7 @@ class OneToManyMocker extends PropertyMocker {
 		MockHelper.cascadeValue( "cascade", oneToMany.getCascade(), isDefaultCascadePersist(), annotationValueList );
 		create( ONE_TO_MANY, getTarget(), annotationValueList );
 		parserAttributeOverrides( oneToMany.getMapKeyAttributeOverride(), getTarget() );
-		parserMapKeyJoinColumnList( oneToMany.getMapKeyJoinColumn(),getTarget() );
+		parserMapKeyJoinColumnList( oneToMany.getMapKeyJoinColumn(), getTarget() );
 		parserMapKey( oneToMany.getMapKey(), getTarget() );
 		parserMapKeyColumn( oneToMany.getMapKeyColumn(), getTarget() );
 		parserMapKeyClass( oneToMany.getMapKeyClass(), getTarget() );
@@ -78,7 +78,8 @@ class OneToManyMocker extends PropertyMocker {
 	protected XMLAccessType getAccessType() {
 		return oneToMany.getAccess();
 	}
-		@Override
+
+	@Override
 	protected void setAccessType(XMLAccessType accessType) {
 		oneToMany.setAccess( accessType );
 	}

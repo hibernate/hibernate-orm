@@ -66,7 +66,7 @@ class ListenerMocker extends AbstractMocker {
 			parser( listener );
 
 		}
-		MockHelper.classArrayValue( "value", clazzNameList, annotationValueList,indexBuilder.getServiceRegistry() );
+		MockHelper.classArrayValue( "value", clazzNameList, annotationValueList, indexBuilder.getServiceRegistry() );
 		return create( ENTITY_LISTENERS, annotationValueList );
 	}
 
@@ -81,7 +81,7 @@ class ListenerMocker extends AbstractMocker {
 		builder.parser( listener.getPrePersist() );
 		builder.parser( listener.getPreRemove() );
 		builder.parser( listener.getPreUpdate() );
-		indexBuilder.finishEntityObject( tempClassInfo.name(),null );
+		indexBuilder.finishEntityObject( tempClassInfo.name(), null );
 	}
 
 	//@PrePersist

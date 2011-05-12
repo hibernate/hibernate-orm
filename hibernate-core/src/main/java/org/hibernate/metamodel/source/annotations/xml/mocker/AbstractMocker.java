@@ -51,6 +51,8 @@ import org.hibernate.metamodel.source.annotation.xml.XMLUniqueConstraint;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 
 /**
+ * Base class for the mock jandex annotations created from orm.xml.
+ *
  * @author Strong Liu
  */
 abstract class AbstractMocker implements JPADotNames {
@@ -59,7 +61,6 @@ abstract class AbstractMocker implements JPADotNames {
 	AbstractMocker(IndexBuilder indexBuilder) {
 		this.indexBuilder = indexBuilder;
 	}
-
 
 	abstract protected EntityMappingsMocker.Default getDefaults();
 
@@ -119,9 +120,8 @@ abstract class AbstractMocker implements JPADotNames {
 
 	}
 
-
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-//@Column
+	//@Column
 	protected AnnotationInstance parserColumn(XMLColumn column, AnnotationTarget target) {
 		if ( column == null ) {
 			return null;
@@ -557,7 +557,6 @@ abstract class AbstractMocker implements JPADotNames {
 		MockHelper.booleanValue( "updatable", column.isUpdatable(), annotationValueList );
 		return create( JOIN_COLUMN, target, annotationValueList );
 	}
-
 
 	protected AnnotationInstance parserLob(XMLLob lob, AnnotationTarget target) {
 		if ( lob == null ) {

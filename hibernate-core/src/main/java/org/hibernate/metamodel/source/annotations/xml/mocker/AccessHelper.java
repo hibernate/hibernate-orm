@@ -40,8 +40,8 @@ import org.hibernate.metamodel.source.annotations.util.JandexHelper;
 /**
  * @author Strong Liu
  */
- class AccessHelper implements JPADotNames {
-	 static XMLAccessType getAccessFromIdPosition(DotName className, IndexBuilder indexBuilder) {
+class AccessHelper implements JPADotNames {
+	static XMLAccessType getAccessFromIdPosition(DotName className, IndexBuilder indexBuilder) {
 		Map<DotName, List<AnnotationInstance>> indexedAnnotations = indexBuilder.getIndexedAnnotations( className );
 		Map<DotName, List<AnnotationInstance>> ormAnnotations = indexBuilder.getClassInfoAnnotationsMap( className );
 		XMLAccessType accessType = getAccessFromIdPosition( ormAnnotations );
@@ -93,11 +93,11 @@ import org.hibernate.metamodel.source.annotations.util.JandexHelper;
 		return accessType;
 	}
 
-	 static XMLAccessType annotationTargetToAccessType(AnnotationTarget target) {
+	static XMLAccessType annotationTargetToAccessType(AnnotationTarget target) {
 		return ( target instanceof MethodInfo ) ? XMLAccessType.PROPERTY : XMLAccessType.FIELD;
 	}
 
-	 static XMLAccessType getEntityAccess(DotName className, IndexBuilder indexBuilder) {
+	static XMLAccessType getEntityAccess(DotName className, IndexBuilder indexBuilder) {
 		Map<DotName, List<AnnotationInstance>> indexedAnnotations = indexBuilder.getIndexedAnnotations( className );
 		Map<DotName, List<AnnotationInstance>> ormAnnotations = indexBuilder.getClassInfoAnnotationsMap( className );
 		XMLAccessType accessType = getAccess( ormAnnotations );
@@ -138,7 +138,7 @@ import org.hibernate.metamodel.source.annotations.util.JandexHelper;
 				.containsKey( EMBEDDABLE );
 	}
 
-	 static XMLAccessType getAccessFromAttributeAnnotation(DotName className, String attributeName, IndexBuilder indexBuilder) {
+	static XMLAccessType getAccessFromAttributeAnnotation(DotName className, String attributeName, IndexBuilder indexBuilder) {
 		Map<DotName, List<AnnotationInstance>> indexedAnnotations = indexBuilder.getIndexedAnnotations( className );
 		if ( indexedAnnotations != null && indexedAnnotations.containsKey( ACCESS ) ) {
 			List<AnnotationInstance> annotationInstances = indexedAnnotations.get( ACCESS );

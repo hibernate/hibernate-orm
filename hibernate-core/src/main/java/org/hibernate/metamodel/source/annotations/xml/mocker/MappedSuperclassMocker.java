@@ -41,6 +41,7 @@ import org.hibernate.metamodel.source.annotation.xml.XMLPreUpdate;
 
 /**
  * Mock <mapped-superclass> to {@link javax.persistence.MappedSuperclass @MappedSuperClass}
+ *
  * @author Strong Liu
  */
 class MappedSuperclassMocker extends AbstractEntityObjectMocker {
@@ -54,6 +55,7 @@ class MappedSuperclassMocker extends AbstractEntityObjectMocker {
 		super( indexBuilder, defaults );
 		this.mappedSuperclass = mappedSuperclass;
 	}
+
 	@Override
 	protected void applyDefaults() {
 		String className = MockHelper.buildSafeClassName( mappedSuperclass.getClazz(), getDefaults().getPackageName() );
@@ -142,6 +144,4 @@ class MappedSuperclassMocker extends AbstractEntityObjectMocker {
 	protected XMLPostLoad getPostLoad() {
 		return mappedSuperclass.getPostLoad();
 	}
-
-
 }

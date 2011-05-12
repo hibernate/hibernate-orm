@@ -50,5 +50,4 @@ class XMLAssociationOverrideProxy extends XMLAssociationOverride {
 	void setJoinTableAnnotationValue(AnnotationValue joinTableAnnotationValue) {
 		this.joinTableAnnotationValue = joinTableAnnotationValue;
 	}
-
 }

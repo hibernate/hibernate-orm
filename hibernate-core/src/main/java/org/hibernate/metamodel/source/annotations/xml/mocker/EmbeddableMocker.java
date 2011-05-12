@@ -41,6 +41,7 @@ import org.hibernate.metamodel.source.annotation.xml.XMLPreUpdate;
 
 /**
  * Mock <embeddable> to {@link javax.persistence.Embeddable @Embeddable}
+ *
  * @author Strong Liu
  */
 class EmbeddableMocker extends AbstractEntityObjectMocker {
@@ -78,7 +79,6 @@ class EmbeddableMocker extends AbstractEntityObjectMocker {
 			embeddable.setMetadataComplete( getDefaults().getMetadataComplete() );
 		}
 		LOG.debugf( "Adding XML overriding information for %s", className );
-
 	}
 
 	@Override

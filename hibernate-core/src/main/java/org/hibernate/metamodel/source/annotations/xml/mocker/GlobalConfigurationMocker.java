@@ -46,6 +46,7 @@ import org.hibernate.metamodel.source.annotation.xml.XMLTableGenerator;
 /**
  * note: Global Configurations {@link org.hibernate.metamodel.source.annotations.xml.filter.IndexedAnnotationFilter.GLOBAL_ANNOTATIONS}
  * in the new build Index has no target
+ *
  * @author Strong Liu
  */
 class GlobalConfigurationMocker extends AbstractMocker {
@@ -165,7 +166,9 @@ class GlobalConfigurationMocker extends AbstractMocker {
 						"", annotationInstance
 				);
 			}
-			MockHelper.addToCollectionIfNotNull( annotationValueList, AnnotationValue.createArrayValue( name, values ) );
+			MockHelper.addToCollectionIfNotNull(
+					annotationValueList, AnnotationValue.createArrayValue( name, values )
+			);
 		}
 	}
 
@@ -183,7 +186,9 @@ class GlobalConfigurationMocker extends AbstractMocker {
 						"", annotationInstance
 				);
 			}
-			MockHelper.addToCollectionIfNotNull( annotationValueList, AnnotationValue.createArrayValue( name, values ) );
+			MockHelper.addToCollectionIfNotNull(
+					annotationValueList, AnnotationValue.createArrayValue( name, values )
+			);
 		}
 	}
 
@@ -205,7 +210,9 @@ class GlobalConfigurationMocker extends AbstractMocker {
 						"", annotationInstance
 				);
 			}
-			MockHelper.addToCollectionIfNotNull( annotationValueList, AnnotationValue.createArrayValue( name, values ) );
+			MockHelper.addToCollectionIfNotNull(
+					annotationValueList, AnnotationValue.createArrayValue( name, values )
+			);
 		}
 	}
 
@@ -290,7 +297,9 @@ class GlobalConfigurationMocker extends AbstractMocker {
 						"", annotationInstance
 				);
 			}
-			MockHelper.addToCollectionIfNotNull( annotationValueList, AnnotationValue.createArrayValue( name, values ) );
+			MockHelper.addToCollectionIfNotNull(
+					annotationValueList, AnnotationValue.createArrayValue( name, values )
+			);
 		}
 	}
 

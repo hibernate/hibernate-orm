@@ -53,7 +53,8 @@ class TransientMocker extends PropertyMocker {
 	protected XMLAccessType getAccessType() {
 		return XMLAccessType.FIELD;
 	}
-		@Override
+
+	@Override
 	protected void setAccessType(XMLAccessType accessType) {
 		//ignore
 	}

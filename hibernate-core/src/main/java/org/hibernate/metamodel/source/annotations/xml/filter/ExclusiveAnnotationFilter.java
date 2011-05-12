@@ -64,26 +64,31 @@ class ExclusiveAnnotationFilter extends AbstractAnnotationFilter {
 			group.add( EMBEDDABLE );
 			group.scope = Scope.TYPE;
 			exclusiveGroupList.add( group );
+
 			group = new ExclusiveGroup();
 			group.add( SECONDARY_TABLES );
 			group.add( SECONDARY_TABLE );
 			group.scope = Scope.TYPE;
 			exclusiveGroupList.add( group );
+
 			group = new ExclusiveGroup();
 			group.add( PRIMARY_KEY_JOIN_COLUMNS );
 			group.add( PRIMARY_KEY_JOIN_COLUMN );
 			group.scope = Scope.ATTRIBUTE;
 			exclusiveGroupList.add( group );
+
 			group = new ExclusiveGroup();
 			group.add( SQL_RESULT_SET_MAPPING );
 			group.add( SQL_RESULT_SET_MAPPINGS );
 			group.scope = Scope.TYPE;
 			exclusiveGroupList.add( group );
+
 			group = new ExclusiveGroup();
 			group.add( NAMED_NATIVE_QUERY );
 			group.add( NAMED_NATIVE_QUERIES );
 			group.scope = Scope.TYPE;
 			exclusiveGroupList.add( group );
+
 			group = new ExclusiveGroup();
 			group.add( NAMED_QUERY );
 			group.add( NAMED_QUERIES );
@@ -132,7 +137,7 @@ class ExclusiveAnnotationFilter extends AbstractAnnotationFilter {
 					Iterator<AnnotationInstance> iter = indexedAnnotationInstanceList.iterator();
 					while ( iter.hasNext() ) {
 						AnnotationInstance ann = iter.next();
-						if ( MockHelper.targetEquals( target, ann.target(), true ) ) {
+						if ( MockHelper.targetEquals( target, ann.target() ) ) {
 							iter.remove();
 						}
 					}

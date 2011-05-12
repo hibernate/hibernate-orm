@@ -23,14 +23,15 @@ public class BasicMockerTest extends AbstractMockerTest {
 		XMLEntity entity = createEntity();
 		IndexBuilder indexBuilder = getIndexBuilder();
 		EntityMocker entityMocker = new EntityMocker( indexBuilder, entity, new EntityMappingsMocker.Default() );
+		entityMocker.preProcess();
 		entityMocker.process();
 
 		Index index = indexBuilder.build( new EntityMappingsMocker.Default() );
 		assertEquals( 1, index.getKnownClasses().size() );
 		DotName itemName = DotName.createSimple( Item.class.getName() );
 		assertHasAnnotation( index, itemName, JPADotNames.ENTITY );
-		assertHasAnnotation( index, itemName, JPADotNames.ID, 2 );
-		assertHasAnnotation( index, itemName, JPADotNames.GENERATED_VALUE, 2 );
+		assertHasAnnotation( index, itemName, JPADotNames.ID );
+		assertHasAnnotation( index, itemName, JPADotNames.GENERATED_VALUE );
 	}
 
 	@Test
@@ -44,6 +45,7 @@ public class BasicMockerTest extends AbstractMockerTest {
 		defaults.setSchema( "HIBERNATE_SCHEMA" );
 		defaults.setCatalog( "HIBERNATE_CATALOG" );
 		EntityMocker entityMocker = new EntityMocker( indexBuilder, entity, defaults );
+		entityMocker.preProcess();
 		entityMocker.process();
 
 		Index index = indexBuilder.build( new EntityMappingsMocker.Default() );

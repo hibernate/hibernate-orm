@@ -6,6 +6,8 @@ import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.DotName;
 
 /**
+ * if class from index has matched annotations, then remove.
+ *
  * @author Strong Liu
  */
 class NameAnnotationFilter extends AbstractAnnotationFilter {

@@ -84,4 +84,8 @@ class ElementCollectionMocker extends PropertyMocker {
 	protected XMLAccessType getAccessType() {
 		return elementCollection.getAccess();
 	}
+		@Override
+	protected void setAccessType(XMLAccessType accessType) {
+		elementCollection.setAccess( accessType );
+	}
 }

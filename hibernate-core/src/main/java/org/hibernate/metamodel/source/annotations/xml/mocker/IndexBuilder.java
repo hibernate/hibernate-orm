@@ -150,6 +150,17 @@ public class IndexBuilder {
 		return map;
 	}
 
+	public Map<DotName, List<AnnotationInstance>> getClassInfoAnnotationsMap(DotName name) {
+		return classInfoAnnotationsMap.get( name );
+	}
+
+	public ClassInfo getClassInfo(DotName name) {
+		return classes.get( name );
+	}
+	public ClassInfo getIndexedClassInfo(DotName name){
+		return index.getClassByName( name );
+	}
+
 	void collectGlobalConfigurationFromIndex(GlobalAnnotations globalAnnotations) {
 		for ( DotName annName : IndexedAnnotationFilter.GLOBAL_ANNOTATIONS ) {
 			List<AnnotationInstance> annotationInstanceList = index.getAnnotations( annName );
@@ -239,8 +250,7 @@ public class IndexBuilder {
 					interfaces[i] = DotName.createSimple( classInterfaces[i].getName() );
 				}
 			}
-			//todo how to get access_flag from a Class?
-			access_flag = 0x0001;
+			access_flag = (short) ( clazz.getModifiers() | 0x20 );//(modifiers | ACC_SUPER)
 		}
 		Map<DotName, List<AnnotationInstance>> map = new HashMap<DotName, List<AnnotationInstance>>();
 		classInfoAnnotationsMap.put( classDotName, map );

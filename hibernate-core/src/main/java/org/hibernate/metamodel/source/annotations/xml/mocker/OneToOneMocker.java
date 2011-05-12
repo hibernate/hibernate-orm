@@ -76,4 +76,8 @@ class OneToOneMocker extends PropertyMocker {
 	protected XMLAccessType getAccessType() {
 		return oneToOne.getAccess();
 	}
+		@Override
+	protected void setAccessType(XMLAccessType accessType) {
+		oneToOne.setAccess( accessType );
+	}
 }

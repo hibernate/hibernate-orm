@@ -77,9 +77,6 @@ class EmbeddableMocker extends AbstractEntityObjectMocker {
 		if ( embeddable.isMetadataComplete() == null ) {
 			embeddable.setMetadataComplete( getDefaults().getMetadataComplete() );
 		}
-		if ( embeddable.getAccess() == null ) {
-			embeddable.setAccess( getDefaults().getAccess() );
-		}
 		LOG.debugf( "Adding XML overriding information for %s", className );
 
 	}

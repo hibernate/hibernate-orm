@@ -24,6 +24,7 @@
 package org.hibernate.metamodel.source.annotations.xml.mocker;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.jboss.jandex.Index;
@@ -109,19 +110,32 @@ public class EntityMappingsMocker {
 
 
 	private void processEntityMappings(List<XMLEntityMappings> entityMappingsList) {
+		List<AbstractEntityObjectMocker> mockerList = new ArrayList<AbstractEntityObjectMocker>();
 		for ( XMLEntityMappings entityMappings : entityMappingsList ) {
 			final Default defaults = getEntityMappingsDefaults( entityMappings );
 			globalAnnotations.collectGlobalMappings( entityMappings, defaults );
 			for ( XMLMappedSuperclass mappedSuperclass : entityMappings.getMappedSuperclass() ) {
-				new MappedSuperclassMocker( indexBuilder, mappedSuperclass, defaults ).process();
+				AbstractEntityObjectMocker mocker =
+						new MappedSuperclassMocker( indexBuilder, mappedSuperclass, defaults );
+				mockerList.add( mocker );
+				mocker.preProcess();
 			}
 			for ( XMLEmbeddable embeddable : entityMappings.getEmbeddable() ) {
-				new EmbeddableMocker( indexBuilder, embeddable, defaults ).process();
+				AbstractEntityObjectMocker mocker =
+						new EmbeddableMocker( indexBuilder, embeddable, defaults );
+				mockerList.add( mocker );
+				mocker.preProcess();
 			}
 			for ( XMLEntity entity : entityMappings.getEntity() ) {
 				globalAnnotations.collectGlobalMappings( entity, defaults );
-				new EntityMocker( indexBuilder, entity, defaults ).process();
+				AbstractEntityObjectMocker mocker =
+						new EntityMocker( indexBuilder, entity, defaults );
+				mockerList.add( mocker );
+				mocker.preProcess();
 			}
+		}
+		for ( AbstractEntityObjectMocker mocker : mockerList ) {
+			mocker.process();
 		}
 	}
 

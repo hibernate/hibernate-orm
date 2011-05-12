@@ -2,10 +2,14 @@ package org.hibernate.metamodel.source.annotations.xml.mocker;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import javax.persistence.AccessType;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;
 import org.jboss.jandex.AnnotationValue;
+import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.DotName;
 import org.jboss.logging.Logger;
 
 import org.hibernate.internal.CoreMessageLogger;
@@ -26,6 +30,7 @@ import org.hibernate.metamodel.source.annotation.xml.XMLPreRemove;
 import org.hibernate.metamodel.source.annotation.xml.XMLPreUpdate;
 import org.hibernate.metamodel.source.annotation.xml.XMLSecondaryTable;
 import org.hibernate.metamodel.source.annotation.xml.XMLTable;
+import org.hibernate.metamodel.source.annotations.util.JandexHelper;
 
 
 /**
@@ -97,6 +102,33 @@ class EntityMocker extends AbstractEntityObjectMocker {
 		return create( TABLE, annotationValueList );
 	}
 
+	protected AccessType getDefaultAccess() {
+		if ( entity.getAccess() != null ) {
+			return AccessType.valueOf( entity.getAccess().value() );
+		}
+
+		return null;
+	}
+
+	protected AccessType getAccessFromIndex(DotName className) {
+		//todo 这里实际上不应该从getIndexedAnnotations获取，而是应该先处理完所有的entity，mapped-superclass，先不处理attributes呢
+		//然后获取这个
+		Map<DotName, List<AnnotationInstance>> indexedAnnotations = indexBuilder.getIndexedAnnotations( className );
+		List<AnnotationInstance> accessAnnotationInstances = indexedAnnotations.get( ACCESS );
+		if ( MockHelper.isNotEmpty( accessAnnotationInstances ) ) {
+			for ( AnnotationInstance annotationInstance : accessAnnotationInstances ) {
+				if ( annotationInstance.target() != null && annotationInstance.target() instanceof ClassInfo ) {
+					ClassInfo ci = (ClassInfo) ( annotationInstance.target() );
+					if ( className.equals( ci.name() ) ) {
+						//todo does ci need to have @Entity or @MappedSuperClass ??
+						return AccessType.valueOf( annotationInstance.value().asEnum() );
+					}
+				}
+			}
+		}
+		return null;
+	}
+
 	@Override
 	protected void applyDefaults() {
 		if ( getDefaults() == null ) {
@@ -114,9 +146,6 @@ class EntityMocker extends AbstractEntityObjectMocker {
 		entity.setClazz( className );
 		if ( entity.isMetadataComplete() == null ) {
 			entity.setMetadataComplete( getDefaults().getMetadataComplete() );
-		}
-		if ( entity.getAccess() != null ) {
-			entity.setAccess( getDefaults().getAccess() );
 		}
 		LOG.debugf( "Adding XML overriding information for %s", className );
 

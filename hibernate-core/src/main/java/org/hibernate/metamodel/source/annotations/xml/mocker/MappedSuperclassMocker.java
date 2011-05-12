@@ -61,9 +61,6 @@ class MappedSuperclassMocker extends AbstractEntityObjectMocker {
 		if ( mappedSuperclass.isMetadataComplete() == null ) {
 			mappedSuperclass.setMetadataComplete( getDefaults().getMetadataComplete() );
 		}
-		if ( mappedSuperclass.getAccess() == null ) {
-			mappedSuperclass.setAccess( getDefaults().getAccess() );
-		}
 		LOG.debugf( "Adding XML overriding information for %s", className );
 	}
 

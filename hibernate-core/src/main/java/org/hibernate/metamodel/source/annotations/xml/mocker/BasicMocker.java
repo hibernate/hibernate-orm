@@ -66,5 +66,9 @@ class BasicMocker extends PropertyMocker {
 	protected XMLAccessType getAccessType() {
 		return basic.getAccess();
 	}
+		@Override
+	protected void setAccessType(XMLAccessType accessType) {
+		basic.setAccess( accessType );
+	}
 
 }

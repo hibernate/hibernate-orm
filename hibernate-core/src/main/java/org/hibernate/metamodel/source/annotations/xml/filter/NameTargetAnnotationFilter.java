@@ -42,7 +42,7 @@ class NameTargetAnnotationFilter extends AbstractAnnotationFilter {
 
 		for ( Iterator<AnnotationInstance> iter = indexedAnnotationInstanceList.iterator(); iter.hasNext(); ) {
 			AnnotationInstance ann = iter.next();
-			if ( MockHelper.targetEquals( target, ann.target(), false ) ) {
+			if ( MockHelper.targetEquals( target, ann.target() ) ) {
 				iter.remove();
 			}
 		}

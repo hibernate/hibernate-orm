@@ -67,6 +67,7 @@ class GlobalAnnotations implements JPADotNames {
 		List<AnnotationInstance> list = annotationInstanceMap.get( name );
 		if ( list == null ) {
 			list = new ArrayList<AnnotationInstance>();
+			annotationInstanceMap.put( name,list );
 		}
 		list.add( annotationInstance );
 		return annotationInstance;

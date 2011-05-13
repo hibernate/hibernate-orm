@@ -48,8 +48,10 @@ import org.jboss.jandex.DotName;
 import org.jboss.jandex.FieldInfo;
 import org.jboss.jandex.MethodInfo;
 
+import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
+import org.hibernate.MappingException;
 import org.hibernate.metamodel.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.source.annotations.util.ReflectionHelper;
 import org.hibernate.service.ServiceRegistry;
@@ -76,7 +78,8 @@ public class ConfiguredClass {
 	private final boolean hasOwnTable;
 	private final String primaryTableName;
 
-	private final ConfiguredClassType type;
+	private final ConfiguredClassType configuredClassType;
+	private final IdType idType;
 
 	private final Map<String, MappedAttribute> mappedAttributes;
 
@@ -93,8 +96,9 @@ public class ConfiguredClass {
 		this.inheritanceType = inheritanceType;
 		this.clazz = serviceRegistry.getService( ClassLoaderService.class ).classForName( info.toString() );
 
-		this.type = determineType();
+		this.configuredClassType = determineType();
 		this.classAccessType = determineClassAccessType();
+		this.idType = determineIdType();
 
 		this.hasOwnTable = definesItsOwnTable();
 		this.primaryTableName = determinePrimaryTableName();
@@ -125,12 +129,16 @@ public class ConfiguredClass {
 		return isRoot;
 	}
 
-	public ConfiguredClassType getType() {
-		return type;
+	public ConfiguredClassType getConfiguredClassType() {
+		return configuredClassType;
 	}
 
 	public InheritanceType getInheritanceType() {
 		return inheritanceType;
+	}
+
+	public IdType getIdType() {
+		return idType;
 	}
 
 	public boolean hasOwnTable() {
@@ -154,7 +162,7 @@ public class ConfiguredClass {
 		final StringBuilder sb = new StringBuilder();
 		sb.append( "ConfiguredClass" );
 		sb.append( "{clazz=" ).append( clazz.getSimpleName() );
-		sb.append( ", type=" ).append( type );
+		sb.append( ", type=" ).append( configuredClassType );
 		sb.append( ", classAccessType=" ).append( classAccessType );
 		sb.append( ", isRoot=" ).append( isRoot );
 		sb.append( ", inheritanceType=" ).append( inheritanceType );
@@ -405,8 +413,8 @@ public class ConfiguredClass {
 
 	private boolean definesItsOwnTable() {
 		// mapped super classes and embeddables don't have their own tables
-		if ( ConfiguredClassType.MAPPED_SUPERCLASS.equals( getType() ) || ConfiguredClassType.EMBEDDABLE
-				.equals( getType() ) ) {
+		if ( ConfiguredClassType.MAPPED_SUPERCLASS.equals( getConfiguredClassType() ) || ConfiguredClassType.EMBEDDABLE
+				.equals( getConfiguredClassType() ) ) {
 			return false;
 		}
 
@@ -437,11 +445,43 @@ public class ConfiguredClass {
 			}
 		}
 		else if ( parent != null
-				&& !parent.getType().equals( ConfiguredClassType.MAPPED_SUPERCLASS )
-				&& !parent.getType().equals( ConfiguredClassType.EMBEDDABLE ) ) {
+				&& !parent.getConfiguredClassType().equals( ConfiguredClassType.MAPPED_SUPERCLASS )
+				&& !parent.getConfiguredClassType().equals( ConfiguredClassType.EMBEDDABLE ) ) {
 			tableName = parent.getPrimaryTableName();
 		}
 		return tableName;
+	}
+
+	private IdType determineIdType() {
+		List<AnnotationInstance> idAnnotations = getClassInfo().annotations().get( JPADotNames.ENTITY );
+		List<AnnotationInstance> embeddedIdAnnotations = getClassInfo()
+				.annotations()
+				.get( JPADotNames.EMBEDDED_ID );
+
+		if ( idAnnotations != null && embeddedIdAnnotations != null ) {
+			throw new MappingException(
+					"@EmbeddedId and @Id cannot be used together. Check the configuration for " + getName() + "."
+			);
+		}
+
+		if ( embeddedIdAnnotations != null ) {
+			if ( embeddedIdAnnotations.size() == 1 ) {
+				return IdType.EMBEDDED;
+			}
+			else {
+				throw new AnnotationException( "Multiple @EmbeddedId annotations are not allowed" );
+			}
+		}
+
+		if ( idAnnotations != null ) {
+			if ( idAnnotations.size() == 1 ) {
+				return IdType.SIMPLE;
+			}
+			else {
+				return IdType.COMPOSED;
+			}
+		}
+		return IdType.NONE;
 	}
 }
 

@@ -60,7 +60,12 @@ public class MappedAttribute implements Comparable<MappedAttribute> {
 			throw new AssertionFailure( "There can only be one @Column annotation per mapped attribute" );
 		}
 		AnnotationInstance columnAnnotation = columnAnnotations == null ? null : columnAnnotations.get( 0 );
-		columnValues = new ColumnValues( columnAnnotation, isId );
+		columnValues = new ColumnValues( columnAnnotation );
+		if ( isId ) {
+			// an id must be unique and cannot be nullable
+			columnValues.setUnique( true );
+			columnValues.setNullable( false );
+		}
 	}
 
 	public final String getName() {

@@ -33,7 +33,7 @@ import org.hibernate.AssertionFailure;
  *
  * @author Hardy Ferentschik
  */
-public final class ColumnValues {
+public class ColumnValues {
 	private String name = "";
 	private boolean unique = false;
 	private boolean nullable = true;
@@ -45,14 +45,18 @@ public final class ColumnValues {
 	private int precision = 0;
 	private int scale = 0;
 
-	public ColumnValues(AnnotationInstance columnAnnotation, boolean isId) {
+	public ColumnValues() {
+		this( null );
+	}
+
+	public ColumnValues(AnnotationInstance columnAnnotation) {
 		if ( columnAnnotation != null && !JPADotNames.COLUMN.equals( columnAnnotation.name() ) ) {
 			throw new AssertionFailure( "A @Column annotation needs to be passed to the constructor" );
 		}
-		applyColumnValues( columnAnnotation, isId );
+		applyColumnValues( columnAnnotation );
 	}
 
-	private void applyColumnValues(AnnotationInstance columnAnnotation, boolean isId) {
+	private void applyColumnValues(AnnotationInstance columnAnnotation) {
 		if ( columnAnnotation == null ) {
 			return;
 		}
@@ -62,26 +66,14 @@ public final class ColumnValues {
 			this.name = nameValue.asString();
 		}
 
-		// id attribute must be unique
-		if ( isId ) {
-			this.unique = true;
-		}
-		else {
-			AnnotationValue uniqueValue = columnAnnotation.value( "unique" );
-			if ( uniqueValue != null ) {
-				this.unique = nameValue.asBoolean();
-			}
+		AnnotationValue uniqueValue = columnAnnotation.value( "unique" );
+		if ( uniqueValue != null ) {
+			this.unique = nameValue.asBoolean();
 		}
 
-		// id attribute cannot be nullable
-		if ( isId ) {
-			this.nullable = false;
-		}
-		else {
-			AnnotationValue nullableValue = columnAnnotation.value( "nullable" );
-			if ( nullableValue != null ) {
-				this.nullable = nullableValue.asBoolean();
-			}
+		AnnotationValue nullableValue = columnAnnotation.value( "nullable" );
+		if ( nullableValue != null ) {
+			this.nullable = nullableValue.asBoolean();
 		}
 
 		AnnotationValue insertableValue = columnAnnotation.value( "insertable" );
@@ -158,6 +150,46 @@ public final class ColumnValues {
 
 	public final int getScale() {
 		return scale;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public void setUnique(boolean unique) {
+		this.unique = unique;
+	}
+
+	public void setNullable(boolean nullable) {
+		this.nullable = nullable;
+	}
+
+	public void setInsertable(boolean insertable) {
+		this.insertable = insertable;
+	}
+
+	public void setUpdatable(boolean updatable) {
+		this.updatable = updatable;
+	}
+
+	public void setColumnDefinition(String columnDefinition) {
+		this.columnDefinition = columnDefinition;
+	}
+
+	public void setTable(String table) {
+		this.table = table;
+	}
+
+	public void setLength(int length) {
+		this.length = length;
+	}
+
+	public void setPrecision(int precision) {
+		this.precision = precision;
+	}
+
+	public void setScale(int scale) {
+		this.scale = scale;
 	}
 
 	@Override

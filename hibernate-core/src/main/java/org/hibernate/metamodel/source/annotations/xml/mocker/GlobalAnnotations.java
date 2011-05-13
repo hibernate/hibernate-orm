@@ -25,14 +25,19 @@ package org.hibernate.metamodel.source.annotations.xml.mocker;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.DotName;
+import org.jboss.logging.Logger;
 
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.source.MappingException;
 import org.hibernate.metamodel.source.annotation.xml.XMLAttributes;
 import org.hibernate.metamodel.source.annotation.xml.XMLEntity;
 import org.hibernate.metamodel.source.annotation.xml.XMLEntityMappings;
@@ -48,6 +53,10 @@ import org.hibernate.metamodel.source.annotations.JPADotNames;
  * @author Strong Liu
  */
 class GlobalAnnotations implements JPADotNames {
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			GlobalAnnotations.class.getName()
+	);
 	private Map<String, XMLSequenceGenerator> sequenceGeneratorMap = new HashMap<String, XMLSequenceGenerator>();
 	private Map<String, XMLTableGenerator> tableGeneratorMap = new HashMap<String, XMLTableGenerator>();
 	private Map<String, XMLNamedQuery> namedQueryMap = new HashMap<String, XMLNamedQuery>();
@@ -55,6 +64,11 @@ class GlobalAnnotations implements JPADotNames {
 	private Map<String, XMLSqlResultSetMapping> sqlResultSetMappingMap = new HashMap<String, XMLSqlResultSetMapping>();
 	private Map<DotName, List<AnnotationInstance>> annotationInstanceMap = new HashMap<DotName, List<AnnotationInstance>>();
 	private List<AnnotationInstance> indexedAnnotationInstanceList = new ArrayList<AnnotationInstance>();
+	//---------------------------
+	private Set<String> defaultNamedNativeQueryNames = new HashSet<String>();
+	private Set<String> defaultNamedQueryNames = new HashSet<String>();
+	private Set<String> defaultNamedGenerators = new HashSet<String>();
+	private Set<String> defaultSqlResultSetMappingNames = new HashSet<String>();
 
 	Map<DotName, List<AnnotationInstance>> getAnnotationInstanceMap() {
 		return annotationInstanceMap;
@@ -67,7 +81,7 @@ class GlobalAnnotations implements JPADotNames {
 		List<AnnotationInstance> list = annotationInstanceMap.get( name );
 		if ( list == null ) {
 			list = new ArrayList<AnnotationInstance>();
-			annotationInstanceMap.put( name,list );
+			annotationInstanceMap.put( name, list );
 		}
 		list.add( annotationInstance );
 		return annotationInstance;
@@ -108,35 +122,6 @@ class GlobalAnnotations implements JPADotNames {
 		return tableGeneratorMap;
 	}
 
-	void put(String name, XMLNamedNativeQuery value) {
-		if ( value != null ) {
-			namedNativeQueryMap.put( name, value );
-		}
-	}
-
-	void put(String name, XMLNamedQuery value) {
-		if ( value != null ) {
-			namedQueryMap.put( name, value );
-		}
-	}
-
-	void put(String name, XMLSequenceGenerator value) {
-		if ( value != null ) {
-			sequenceGeneratorMap.put( name, value );
-		}
-	}
-
-	void put(String name, XMLTableGenerator value) {
-		if ( value != null ) {
-			tableGeneratorMap.put( name, value );
-		}
-	}
-
-	void put(String name, XMLSqlResultSetMapping value) {
-		if ( value != null ) {
-			sqlResultSetMappingMap.put( name, value );
-		}
-	}
 
 	public void filterIndexedAnnotations() {
 		for ( AnnotationInstance annotationInstance : indexedAnnotationInstanceList ) {
@@ -169,54 +154,71 @@ class GlobalAnnotations implements JPADotNames {
 
 	void collectGlobalMappings(XMLEntityMappings entityMappings, EntityMappingsMocker.Default defaults) {
 		for ( XMLSequenceGenerator generator : entityMappings.getSequenceGenerator() ) {
-			put( generator.getName(), overrideGenerator( generator, defaults ) );
+			put( generator, defaults );
+			defaultNamedGenerators.add( generator.getName() );
 		}
 		for ( XMLTableGenerator generator : entityMappings.getTableGenerator() ) {
-			put( generator.getName(), overrideGenerator( generator, defaults ) );
+			put( generator, defaults );
+			defaultNamedGenerators.add( generator.getName() );
 		}
 		for ( XMLNamedQuery namedQuery : entityMappings.getNamedQuery() ) {
-			put( namedQuery.getName(), namedQuery );
+			put( namedQuery );
+			defaultNamedQueryNames.add( namedQuery.getName() );
 		}
 		for ( XMLNamedNativeQuery namedNativeQuery : entityMappings.getNamedNativeQuery() ) {
-			put( namedNativeQuery.getName(), namedNativeQuery );
+			put( namedNativeQuery );
+			defaultNamedNativeQueryNames.add( namedNativeQuery.getName() );
 		}
 		for ( XMLSqlResultSetMapping sqlResultSetMapping : entityMappings.getSqlResultSetMapping() ) {
-			put( sqlResultSetMapping.getName(), sqlResultSetMapping );
+			put( sqlResultSetMapping );
+			defaultSqlResultSetMappingNames.add( sqlResultSetMapping.getName() );
 		}
 	}
 
 	void collectGlobalMappings(XMLEntity entity, EntityMappingsMocker.Default defaults) {
 		for ( XMLNamedQuery namedQuery : entity.getNamedQuery() ) {
-			put( namedQuery.getName(), namedQuery );
+			if ( !defaultNamedQueryNames.contains( namedQuery.getName() ) ) {
+				put( namedQuery );
+			}
+			else {
+				LOG.warn( "Named Query [" + namedQuery.getName() + "] duplicated." );
+			}
 		}
 		for ( XMLNamedNativeQuery namedNativeQuery : entity.getNamedNativeQuery() ) {
-			put( namedNativeQuery.getName(), namedNativeQuery );
+			if ( !defaultNamedNativeQueryNames.contains( namedNativeQuery.getName() ) ) {
+				put( namedNativeQuery );
+			}
+			else {
+				LOG.warn( "Named native Query [" + namedNativeQuery.getName() + "] duplicated." );
+			}
 		}
 		for ( XMLSqlResultSetMapping sqlResultSetMapping : entity.getSqlResultSetMapping() ) {
-			put( sqlResultSetMapping.getName(), sqlResultSetMapping );
+			if ( !defaultSqlResultSetMappingNames.contains( sqlResultSetMapping.getName() ) ) {
+				put( sqlResultSetMapping );
+			}
 		}
 		XMLSequenceGenerator sequenceGenerator = entity.getSequenceGenerator();
 		if ( sequenceGenerator != null ) {
-			put( sequenceGenerator.getName(), overrideGenerator( sequenceGenerator, defaults ) );
+			if ( !defaultNamedGenerators.contains( sequenceGenerator.getName() ) ) {
+				put( sequenceGenerator, defaults );
+			}
 		}
 		XMLTableGenerator tableGenerator = entity.getTableGenerator();
 		if ( tableGenerator != null ) {
-			put( tableGenerator.getName(), overrideGenerator( tableGenerator, defaults ) );
+			if ( !defaultNamedGenerators.contains( tableGenerator.getName() ) ) {
+				put( tableGenerator, defaults );
+			}
 		}
 		XMLAttributes attributes = entity.getAttributes();
 		if ( attributes != null ) {
 			for ( XMLId id : attributes.getId() ) {
 				sequenceGenerator = id.getSequenceGenerator();
 				if ( sequenceGenerator != null ) {
-					put(
-							sequenceGenerator.getName(), overrideGenerator(
-							sequenceGenerator, defaults
-					)
-					);
+					put( sequenceGenerator, defaults );
 				}
 				tableGenerator = id.getTableGenerator();
 				if ( tableGenerator != null ) {
-					put( tableGenerator.getName(), overrideGenerator( tableGenerator, defaults ) );
+					put( tableGenerator, defaults );
 				}
 			}
 		}
@@ -226,10 +228,10 @@ class GlobalAnnotations implements JPADotNames {
 	 * Override SequenceGenerator using info definded in EntityMappings/Persistence-Metadata-Unit
 	 */
 	private static XMLSequenceGenerator overrideGenerator(XMLSequenceGenerator generator, EntityMappingsMocker.Default defaults) {
-		if ( StringHelper.isEmpty( generator.getSchema() ) ) {
+		if ( StringHelper.isEmpty( generator.getSchema() ) && defaults != null ) {
 			generator.setSchema( defaults.getSchema() );
 		}
-		if ( StringHelper.isEmpty( generator.getCatalog() ) ) {
+		if ( StringHelper.isEmpty( generator.getCatalog() ) && defaults != null ) {
 			generator.setCatalog( defaults.getCatalog() );
 		}
 		return generator;
@@ -239,12 +241,59 @@ class GlobalAnnotations implements JPADotNames {
 	 * Override TableGenerator using info definded in EntityMappings/Persistence-Metadata-Unit
 	 */
 	private static XMLTableGenerator overrideGenerator(XMLTableGenerator generator, EntityMappingsMocker.Default defaults) {
-		if ( StringHelper.isEmpty( generator.getSchema() ) ) {
+		if ( StringHelper.isEmpty( generator.getSchema() ) && defaults != null ) {
 			generator.setSchema( defaults.getSchema() );
 		}
-		if ( StringHelper.isEmpty( generator.getCatalog() ) ) {
+		if ( StringHelper.isEmpty( generator.getCatalog() ) && defaults != null ) {
 			generator.setCatalog( defaults.getCatalog() );
 		}
 		return generator;
+	}
+
+	private void put(XMLNamedNativeQuery query) {
+		if ( query != null ) {
+			checkQueryName( query.getName() );
+			namedNativeQueryMap.put( query.getName(), query );
+		}
+	}
+
+	private void checkQueryName(String name) {
+		if ( namedQueryMap.containsKey( name ) || namedNativeQueryMap.containsKey( name ) ) {
+			throw new MappingException( "Duplicated query mapping " + name, null );
+		}
+	}
+
+	private void put(XMLNamedQuery query) {
+		if ( query != null ) {
+			checkQueryName( query.getName() );
+			namedQueryMap.put( query.getName(), query );
+		}
+	}
+
+	private void put(XMLSequenceGenerator generator, EntityMappingsMocker.Default defaults) {
+		if ( generator != null ) {
+			Object old = sequenceGeneratorMap.put( generator.getName(), overrideGenerator( generator, defaults ) );
+			if ( old != null ) {
+				LOG.duplicateGeneratorName( generator.getName() );
+			}
+		}
+	}
+
+	private void put(XMLTableGenerator generator, EntityMappingsMocker.Default defaults) {
+		if ( generator != null ) {
+			Object old = tableGeneratorMap.put( generator.getName(), overrideGenerator( generator, defaults ) );
+			if ( old != null ) {
+				LOG.duplicateGeneratorName( generator.getName() );
+			}
+		}
+	}
+
+	private void put(XMLSqlResultSetMapping mapping) {
+		if ( mapping != null ) {
+			Object old = sqlResultSetMappingMap.put( mapping.getName(), mapping );
+			if ( old != null ) {
+				throw new MappingException( "Duplicated SQL result set mapping " +  mapping.getName(), null );
+			}
+		}
 	}
 }

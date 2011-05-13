@@ -55,7 +55,8 @@ public class EntityMappingsMocker {
 	//todo delimited-identifier
 	private Default globalDefaults;
 	final private IndexBuilder indexBuilder;
-	//todo
+	//todo default entity listeners
+	//todo default access type
 	private XMLEntityListeners defaultEntityListeners;
 	final private GlobalAnnotations globalAnnotations;
 
@@ -73,7 +74,7 @@ public class EntityMappingsMocker {
 	public Index mockNewIndex() {
 		processPersistenceUnitMetadata( entityMappingsList );
 		processEntityMappings( entityMappingsList );
-		processGlobalConfiguration();
+		processGlobalAnnotations();
 		return indexBuilder.build( globalDefaults );
 	}
 
@@ -101,6 +102,7 @@ public class EntityMappingsMocker {
 				globalDefaults.setCascadePersist( pud.getCascadePersist() != null );
 				globalDefaults.setDelimitedIdentifiers( pud.getDelimitedIdentifiers() != null );
 				defaultEntityListeners = pud.getEntityListeners();
+				new PersistenceMetadataMocker( indexBuilder, pud ).process();
 			}
 			else {
 				LOG.duplicateMetadata();
@@ -139,12 +141,12 @@ public class EntityMappingsMocker {
 		}
 	}
 
-	private void processGlobalConfiguration() {
+	private void processGlobalAnnotations() {
 		if ( globalAnnotations.hasGlobalConfiguration() ) {
 			indexBuilder.collectGlobalConfigurationFromIndex( globalAnnotations );
-			new GlobalConfigurationMocker(
+			new GlobalAnnotationMocker(
 					indexBuilder, globalAnnotations
-			).parser();
+			).process();
 		}
 	}
 

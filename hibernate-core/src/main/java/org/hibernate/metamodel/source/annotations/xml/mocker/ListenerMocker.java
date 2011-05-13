@@ -30,7 +30,6 @@ import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;
 import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
-import org.jboss.jandex.DotName;
 
 import org.hibernate.metamodel.source.annotation.xml.XMLEntityListener;
 import org.hibernate.metamodel.source.annotation.xml.XMLEntityListeners;
@@ -67,13 +66,13 @@ class ListenerMocker extends AbstractMocker {
 
 		}
 		MockHelper.classArrayValue( "value", clazzNameList, annotationValueList, indexBuilder.getServiceRegistry() );
-		return create( ENTITY_LISTENERS, annotationValueList );
+		return create( ENTITY_LISTENERS, classInfo, annotationValueList );
 	}
 
 	private void parser(XMLEntityListener listener) {
 		String clazz = listener.getClazz();
 		ClassInfo tempClassInfo = indexBuilder.createClassInfo( clazz );
-		ListenerMocker builder = new ListenerMocker( indexBuilder, tempClassInfo );
+		ListenerMocker builder = createListenerMocker( indexBuilder, tempClassInfo );
 		builder.parser( listener.getPostLoad() );
 		builder.parser( listener.getPostPersist() );
 		builder.parser( listener.getPostRemove() );
@@ -82,6 +81,9 @@ class ListenerMocker extends AbstractMocker {
 		builder.parser( listener.getPreRemove() );
 		builder.parser( listener.getPreUpdate() );
 		indexBuilder.finishEntityObject( tempClassInfo.name(), null );
+	}
+	protected ListenerMocker createListenerMocker(IndexBuilder indexBuilder, ClassInfo classInfo){
+		return new ListenerMocker( indexBuilder, classInfo );
 	}
 
 	//@PrePersist
@@ -147,17 +149,10 @@ class ListenerMocker extends AbstractMocker {
 	}
 
 	@Override
-	protected EntityMappingsMocker.Default getDefaults() {
-		return null;
-	}
-
-	@Override
-	protected DotName getTargetName() {
-		return classInfo.name();
-	}
-
-	@Override
-	protected AnnotationTarget getTarget() {
-		return classInfo;
+	protected AnnotationInstance push(AnnotationInstance annotationInstance) {
+		if ( annotationInstance != null && annotationInstance.target() != null ) {
+			indexBuilder.addAnnotationInstance( classInfo.name(), annotationInstance );
+		}
+		return annotationInstance;
 	}
 }

@@ -307,9 +307,7 @@ public class RevisionInfoConfiguration {
         return new RevisionInfoConfigurationResult(
                 revisionInfoGenerator, revisionInfoXmlMapping,
                 new RevisionInfoQueryCreator(revisionInfoEntityName, revisionInfoIdData.getName(),
-                        revisionInfoTimestampData.getName(), isTimestampAsDate(),
-                        globalCfg.isTrackEntitiesChangedInRevisionEnabled() ? modifiedEntityNamesData.getName()
-                                                                            : null),
+                        revisionInfoTimestampData.getName(), isTimestampAsDate()),
                 generateRevisionInfoRelationMapping(),
                 new RevisionInfoNumberReader(revisionInfoClass, revisionInfoIdData), revisionInfoEntityName,
                 revisionInfoClass, revisionInfoTimestampData);

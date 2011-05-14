@@ -23,8 +23,10 @@
  */
 package org.hibernate.envers.revisioninfo;
 
-import org.hibernate.Query;
+import org.hibernate.Criteria;
 import org.hibernate.Session;
+import org.hibernate.criterion.Projections;
+import org.hibernate.criterion.Restrictions;
 
 import java.util.Date;
 import java.util.Set;
@@ -34,56 +36,30 @@ import java.util.Set;
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public class RevisionInfoQueryCreator {
-    private final String revisionDateQuery;
-    private final String revisionNumberForDateQuery;
-    private final String revisionsQuery;
+    private final String revisionInfoEntityName;
+    private final String revisionInfoIdName;
+    private final String revisionInfoTimestampName;
     private final boolean timestampAsDate;
 
     public RevisionInfoQueryCreator(String revisionInfoEntityName, String revisionInfoIdName,
-                                    String revisionInfoTimestampName, boolean timestampAsDate,
-                                    String modifiedEntityNamesName) {
+                                    String revisionInfoTimestampName, boolean timestampAsDate) {
+        this.revisionInfoEntityName = revisionInfoEntityName;
+        this.revisionInfoIdName = revisionInfoIdName;
+        this.revisionInfoTimestampName = revisionInfoTimestampName;
         this.timestampAsDate = timestampAsDate;
-        
-        revisionDateQuery = new StringBuilder()
-                .append("select rev.").append(revisionInfoTimestampName)
-                .append(" from ").append(revisionInfoEntityName)
-                .append(" rev where ").append(revisionInfoIdName).append(" = :_revision_number")
-                .toString();
-
-        revisionNumberForDateQuery = new StringBuilder()
-                .append("select max(rev.").append(revisionInfoIdName)
-                .append(") from ").append(revisionInfoEntityName)
-                .append(" rev where ").append(revisionInfoTimestampName).append(" <= :_revision_date")
-                .toString();
-
-        if (modifiedEntityNamesName == null) {
-            // Tracking modified entity classes is not enabled.
-            revisionsQuery = new StringBuilder()
-                    .append("select rev from ").append(revisionInfoEntityName)
-                    .append(" rev where ").append(revisionInfoIdName)
-                    .append(" in (:_revision_numbers)")
-                    .toString();
-        } else {
-            // Modified entity names enabled. Eagerly loading entity names collection.
-            // HQL queries do not respect any fetch="join" defined in the mapping document.
-            revisionsQuery = new StringBuilder()
-                    .append("select rev from ").append(revisionInfoEntityName)
-                    .append(" rev join fetch rev.").append(modifiedEntityNamesName)
-                    .append(" ent where rev.").append(revisionInfoIdName)
-                    .append(" in (:_revision_numbers)")
-                    .toString();
-        }
     }
 
-    public Query getRevisionDateQuery(Session session, Number revision) {
-        return session.createQuery(revisionDateQuery).setParameter("_revision_number", revision);
+    public Criteria getRevisionDateQuery(Session session, Number revision) {
+        return session.createCriteria(revisionInfoEntityName).setProjection(Projections.property(revisionInfoTimestampName))
+                                                             .add(Restrictions.eq(revisionInfoIdName, revision));
     }
 
-    public Query getRevisionNumberForDateQuery(Session session, Date date) {
-        return session.createQuery(revisionNumberForDateQuery).setParameter("_revision_date", timestampAsDate ? date : date.getTime());
+    public Criteria getRevisionNumberForDateQuery(Session session, Date date) {
+        return session.createCriteria(revisionInfoEntityName).setProjection(Projections.max(revisionInfoIdName))
+                                                             .add(Restrictions.le(revisionInfoTimestampName, timestampAsDate ? date : date.getTime()));
     }
 
-    public Query getRevisionsQuery(Session session, Set<Number> revisions) {
-        return session.createQuery(revisionsQuery).setParameterList("_revision_numbers", revisions);
+    public Criteria getRevisionsQuery(Session session, Set<Number> revisions) {
+        return session.createCriteria(revisionInfoEntityName).add(Restrictions.in(revisionInfoIdName, revisions));
     }
 }

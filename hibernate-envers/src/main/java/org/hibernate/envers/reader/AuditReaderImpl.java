@@ -27,9 +27,9 @@ import static org.hibernate.envers.tools.ArgumentsTools.checkPositive;
 
 import java.util.*;
 import javax.persistence.NoResultException;
+import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.NonUniqueResultException;
-import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.envers.ModifiedEntityNames;
@@ -153,7 +153,7 @@ public class AuditReaderImpl implements AuditReaderImplementor {
         checkPositive(revision, "Entity revision");
         checkSession();
 
-        Query query = verCfg.getRevisionInfoQueryCreator().getRevisionDateQuery(session, revision);
+        Criteria query = verCfg.getRevisionInfoQueryCreator().getRevisionDateQuery(session, revision);
 
         try {
             Object timestampObject = query.uniqueResult();
@@ -172,7 +172,7 @@ public class AuditReaderImpl implements AuditReaderImplementor {
         checkNotNull(date, "Date of revision");
         checkSession();
 
-        Query query = verCfg.getRevisionInfoQueryCreator().getRevisionNumberForDateQuery(session, date);
+        Criteria query = verCfg.getRevisionInfoQueryCreator().getRevisionNumberForDateQuery(session, date);
 
         try {
             Number res = (Number) query.uniqueResult();
@@ -195,7 +195,7 @@ public class AuditReaderImpl implements AuditReaderImplementor {
 
         Set<Number> revisions = new HashSet<Number>(1);
         revisions.add(revision);
-        Query query = verCfg.getRevisionInfoQueryCreator().getRevisionsQuery(session, revisions);
+        Criteria query = verCfg.getRevisionInfoQueryCreator().getRevisionsQuery(session, revisions);
 
         try {
             T revisionData = (T) query.uniqueResult();
@@ -221,7 +221,7 @@ public class AuditReaderImpl implements AuditReaderImplementor {
 		}
         checkSession();
 
-        Query query = verCfg.getRevisionInfoQueryCreator().getRevisionsQuery(session, revisions);
+        Criteria query = verCfg.getRevisionInfoQueryCreator().getRevisionsQuery(session, revisions);
 
         try {
             List<T> revisionList = query.list();
@@ -288,7 +288,7 @@ public class AuditReaderImpl implements AuditReaderImplementor {
         }
         Set<Number> revisions = new HashSet<Number>(1);
         revisions.add(revision);
-        Query query = verCfg.getRevisionInfoQueryCreator().getRevisionsQuery(session, revisions);
+        Criteria query = verCfg.getRevisionInfoQueryCreator().getRevisionsQuery(session, revisions);
         Object revisionInfo = query.uniqueResult();
         if (revisionInfo != null) {
             // If revision exists

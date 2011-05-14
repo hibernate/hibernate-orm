@@ -29,11 +29,8 @@ import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.envers.revisioninfo.RevisionInfoGenerator;
 import org.hibernate.envers.synchronization.work.AuditWorkUnit;
-import org.hibernate.envers.synchronization.work.PersistentCollectionChangeWorkUnit;
 import org.hibernate.envers.tools.Pair;
-import org.hibernate.persister.entity.EntityPersister;
 
-import java.io.Serializable;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -49,6 +46,7 @@ public class AuditProcess implements BeforeTransactionCompletionProcess {
     private final LinkedList<AuditWorkUnit> workUnits;
     private final Queue<AuditWorkUnit> undoQueue;
     private final Map<Pair<String, Object>, AuditWorkUnit> usedIds;
+    private final EntityChangeNotifier entityChangeNotifier;
 
     private Object revisionData;
 
@@ -59,6 +57,7 @@ public class AuditProcess implements BeforeTransactionCompletionProcess {
         workUnits = new LinkedList<AuditWorkUnit>();
         undoQueue = new LinkedList<AuditWorkUnit>();
         usedIds = new HashMap<Pair<String, Object>, AuditWorkUnit>();
+        entityChangeNotifier = new EntityChangeNotifier(revisionInfoGenerator, session);
     }
 
     private void removeWorkUnit(AuditWorkUnit vwu) {
@@ -114,21 +113,8 @@ public class AuditProcess implements BeforeTransactionCompletionProcess {
 
         while ((vwu = workUnits.poll()) != null) {
             vwu.perform(session, revisionData);
-            Serializable entityId = vwu.getEntityId();
-            if (entityId instanceof PersistentCollectionChangeWorkUnit.PersistentCollectionChangeWorkUnitId) {
-                entityId = ((PersistentCollectionChangeWorkUnit.PersistentCollectionChangeWorkUnitId) entityId).getOwnerId();
-            }
-            Class entityClass = getEntityClass(this.session, session, vwu.getEntityName());
-            revisionInfoGenerator.entityChanged(entityClass, vwu.getEntityName(), entityId, vwu.getRevisionType(), currentRevisionData);
+            entityChangeNotifier.entityChanged(session, currentRevisionData, vwu);
         }
-    }
-
-    /**
-     * @return Java class mapped to specified entity name.
-     */
-    private Class getEntityClass(SessionImplementor sessionImplementor, Session session, String entityName) {
-        EntityPersister entityPersister = sessionImplementor.getFactory().getEntityPersister(entityName);
-        return entityPersister.getClassMetadata().getMappedClass(session.getEntityMode());
     }
 
 	public Object getCurrentRevisionData(Session session, boolean persist) {

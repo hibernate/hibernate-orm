@@ -22,8 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.tools.reflection;
-import static org.hibernate.envers.tools.Pair.make;
-import java.util.Map;
+
 import org.hibernate.envers.entities.PropertyData;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.tools.ConcurrentReferenceHashMap;
@@ -33,8 +32,20 @@ import org.hibernate.property.PropertyAccessor;
 import org.hibernate.property.PropertyAccessorFactory;
 import org.hibernate.property.Setter;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
+import java.lang.reflect.Member;
+import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+import static org.hibernate.envers.tools.Pair.make;
+
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public class ReflectionTools {
     private static final Map<Pair<Class, String>, Getter> getterCache =
@@ -88,5 +99,73 @@ public class ReflectionTools {
         }
 
         return value;
+    }
+
+    /** 
+     * @param object Not {@code null} instance.
+     * @param annotation Searched annotation.
+     * @return Map with the following structure:
+     *         <ul>
+     *         <li>key - members ({@link Field} and/or {@link Method}) that have been marked with a given annotation.</li>
+     *         <li>value - object returned by the method invocation or field's value.</li>
+     *         </ul>
+     */
+    public static Map<Member, Object> getAnnotatedMembersValues(Object object, Class<? extends Annotation> annotation) {
+        try {
+            Set<Field> annotatedFields = new HashSet<Field>();
+            Set<Method> annotatedMethods = new HashSet<Method>();
+            doGetAnnotatedFields(object.getClass(), annotation, annotatedFields);
+            doGetAnnotatedMethods(object.getClass(), annotation, annotatedMethods);
+            Map<Member, Object> result = new HashMap<Member, Object>(annotatedFields.size() + annotatedMethods.size());
+            for (Field field : annotatedFields) {
+                field.setAccessible(true);
+                result.put(field, field.get(object));
+            }
+            for (Method method : annotatedMethods) {
+                method.setAccessible(true);
+                result.put(method, method.invoke(object));
+            }
+            return result;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Populates {@code fields} set with all properties marked with a given annotation.
+     * @param clazz Object's class type.
+     * @param annotation Annotation.
+     * @param fields Set of annotated fields. Shall be initialized externally.
+     */
+    private static void doGetAnnotatedFields(Class clazz, Class<? extends Annotation> annotation, Set<Field> fields) {
+        for (Field field : clazz.getDeclaredFields()) {
+            field.setAccessible(true);
+            if (field.isAnnotationPresent(annotation)) {
+                fields.add(field);
+            }
+        }
+        Class superClass = clazz.getSuperclass();
+        if (!Object.class.equals(superClass)) {
+            doGetAnnotatedFields(superClass, annotation, fields);
+        }
+    }
+
+    /**
+     * Populates {@code methods} set with all functions marked with a given annotation.
+     * @param clazz Object's class type.
+     * @param annotation Annotation.
+     * @param methods Set of annotated methods. Shall be initialized externally.
+     */
+    private static void doGetAnnotatedMethods(Class clazz, Class<? extends Annotation> annotation, Set<Method> methods) {
+        for (Method method : clazz.getDeclaredMethods()) {
+            method.setAccessible(true);
+            if (method.isAnnotationPresent(annotation)) {
+                methods.add(method);
+            }
+        }
+        Class superClass = clazz.getSuperclass();
+        if (!Object.class.equals(superClass)) {
+            doGetAnnotatedMethods(superClass, annotation, methods);
+        }
     }
 }

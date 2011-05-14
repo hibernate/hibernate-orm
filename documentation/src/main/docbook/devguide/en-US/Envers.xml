@@ -16,7 +16,8 @@
             which can be used to identify groups of changes (much like a change set in source control).  As the revisions
             are global, having a revision number, you can query for various entities at that revision, retrieving a
             (partial) view of the database at that revision. You can find a revision number having a date, and the other
-            way round, you can get the date at which a revision was committed.
+            way round, you can get the date at which a revision was committed. Since version 4, Envers enables user
+            to retrieve all changes performed in a certain revision.
         </para>
     </preface>
 
@@ -792,7 +793,7 @@ query.add(AuditEntity.relatedId("address").eq(relatedEntityId));]]></programlist
             <para>
                 The basic query allows retrieving entity classes modified in a specified revision:
             </para>
-            <programlisting><![CDATA[List<Class> modifiedEntities = getAuditReader()
+            <programlisting><![CDATA[Set<Class> modifiedEntities = getAuditReader()
     .findEntityTypesChangedInRevision(revisionNumber);]]></programlisting>
             <para>
                 Other queries (accessible from <interfacename>org.hibernate.envers.AuditReader</interfacename>):

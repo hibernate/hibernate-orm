@@ -1,5 +1,8 @@
 package org.hibernate.envers;
 
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
+
 import javax.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
@@ -16,9 +19,10 @@ import java.util.Set;
  */
 @MappedSuperclass
 public class DefaultTrackingModifiedTypesRevisionEntity extends DefaultRevisionEntity {
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @JoinTable(name = "REVENTITY", joinColumns = @JoinColumn(name = "REV"))
     @Column(name = "ENTITYNAME")
+    @Fetch(FetchMode.JOIN)
     @ModifiedEntityNames
     private Set<String> modifiedEntityNames = new HashSet<String>();
 

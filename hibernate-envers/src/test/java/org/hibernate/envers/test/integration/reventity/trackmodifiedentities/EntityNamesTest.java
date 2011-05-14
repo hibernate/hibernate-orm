@@ -5,6 +5,7 @@ import org.hibernate.envers.test.AbstractSessionTest;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.integration.entityNames.manyToManyAudited.Car;
 import org.hibernate.envers.test.integration.entityNames.manyToManyAudited.Person;
+import org.hibernate.envers.test.tools.TestTools;
 import org.junit.Test;
 
 import java.io.File;
@@ -61,7 +62,7 @@ public class EntityNamesTest extends AbstractSessionTest {
     @Test
     @SuppressWarnings("unchecked")
     public void testModifiedEntityTypes() {
-        assert Arrays.asList(Car.class, Person.class).equals(getAuditReader().findEntityTypesChangedInRevision(1));
-        assert Arrays.asList(Car.class, Person.class).equals(getAuditReader().findEntityTypesChangedInRevision(2));
+        assert TestTools.makeSet(Car.class, Person.class).equals(getAuditReader().findEntityTypesChangedInRevision(1));
+        assert TestTools.makeSet(Car.class, Person.class).equals(getAuditReader().findEntityTypesChangedInRevision(2));
     }
 }

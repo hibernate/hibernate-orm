@@ -22,11 +22,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.revisioninfo;
-import java.util.Date;
-import java.util.Set;
+
 import org.hibernate.Query;
 import org.hibernate.Session;
-import org.hibernate.transform.Transformers;
+
+import java.util.Date;
+import java.util.Set;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -36,7 +37,6 @@ public class RevisionInfoQueryCreator {
     private final String revisionDateQuery;
     private final String revisionNumberForDateQuery;
     private final String revisionsQuery;
-    private final String entitiesChangedInRevisionQuery;
     private final boolean timestampAsDate;
 
     public RevisionInfoQueryCreator(String revisionInfoEntityName, String revisionInfoIdName,
@@ -56,17 +56,23 @@ public class RevisionInfoQueryCreator {
                 .append(" rev where ").append(revisionInfoTimestampName).append(" <= :_revision_date")
                 .toString();
 
-        revisionsQuery = new StringBuilder()
-                .append("select rev from ").append(revisionInfoEntityName)
-                .append(" rev where ").append(revisionInfoIdName)
-                .append(" in (:_revision_numbers)")
-                .toString();
-
-        entitiesChangedInRevisionQuery = new StringBuilder()
-                .append("select elements(rev.").append(modifiedEntityNamesName)
-                .append(") from ").append(revisionInfoEntityName)
-                .append(" rev where rev.").append(revisionInfoIdName).append(" = :_revision_number")
-                .toString();
+        if (modifiedEntityNamesName == null) {
+            // Tracking modified entity classes is not enabled.
+            revisionsQuery = new StringBuilder()
+                    .append("select rev from ").append(revisionInfoEntityName)
+                    .append(" rev where ").append(revisionInfoIdName)
+                    .append(" in (:_revision_numbers)")
+                    .toString();
+        } else {
+            // Modified entity names enabled. Eagerly loading entity names collection.
+            // HQL queries do not respect any fetch="join" defined in the mapping document.
+            revisionsQuery = new StringBuilder()
+                    .append("select rev from ").append(revisionInfoEntityName)
+                    .append(" rev join fetch rev.").append(modifiedEntityNamesName)
+                    .append(" ent where rev.").append(revisionInfoIdName)
+                    .append(" in (:_revision_numbers)")
+                    .toString();
+        }
     }
 
     public Query getRevisionDateQuery(Session session, Number revision) {
@@ -79,9 +85,5 @@ public class RevisionInfoQueryCreator {
 
     public Query getRevisionsQuery(Session session, Set<Number> revisions) {
         return session.createQuery(revisionsQuery).setParameterList("_revision_numbers", revisions);
-    }
-
-    public Query getEntitiesChangedInRevisionQuery(Session session, Number revision) {
-        return session.createQuery(entitiesChangedInRevisionQuery).setParameter("_revision_number", revision);
     }
 }

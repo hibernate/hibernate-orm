@@ -275,9 +275,9 @@ public interface AuditReader {
             throws IllegalStateException, IllegalArgumentException, AuditException;
 
     /**
-     * Returns list of entity classes modified in a given revision.
+     * Returns set of entity classes modified in a given revision.
      * @param revision Revision number.
-     * @return List of classes modified in a given revision.
+     * @return Set of classes modified in a given revision.
      * @throws IllegalStateException If the associated entity manager is closed.
      * @throws IllegalArgumentException If a revision number is <code>null</code>, less or equal to 0.
      * @throws AuditException If none of the following conditions is satisfied:
@@ -290,6 +290,6 @@ public interface AuditReader {
      *                            marked with {@link ModifiedEntityNames} interface.</li>
      *                        </ul>
      */
-    List<Class> findEntityTypesChangedInRevision(Number revision)
+    Set<Class> findEntityTypesChangedInRevision(Number revision)
             throws IllegalStateException, IllegalArgumentException, AuditException;
 }

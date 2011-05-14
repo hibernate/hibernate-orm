@@ -96,7 +96,7 @@ public class RevisionInfoConfiguration {
     /**
      * Generates mapping that represents a set of strings.<br />
      * <code>
-     * &lt;set name="propertyName" table="joinTableName" cascade="persist, delete"&gt;<br />
+     * &lt;set name="propertyName" table="joinTableName" cascade="persist, delete" lazy="false" fetch="join"&gt;<br />
      * &nbsp;&nbsp;&nbsp;&lt;key column="joinTablePrimaryKeyColumnName" /&gt;<br />
      * &nbsp;&nbsp;&nbsp;&lt;element type="joinTableValueColumnType"&gt;<br />
      * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;column name="joinTableValueColumnName" /&gt;<br />
@@ -111,6 +111,8 @@ public class RevisionInfoConfiguration {
         set.addAttribute("name", propertyName);
         set.addAttribute("table", joinTableName);
         set.addAttribute("cascade", "persist, delete");
+        set.addAttribute("fetch", "join");
+        set.addAttribute("lazy", "false");
         Element key = set.addElement("key");
         key.addAttribute("column", joinTablePrimaryKeyColumnName);
         Element element = set.addElement("element");
@@ -305,7 +307,9 @@ public class RevisionInfoConfiguration {
         return new RevisionInfoConfigurationResult(
                 revisionInfoGenerator, revisionInfoXmlMapping,
                 new RevisionInfoQueryCreator(revisionInfoEntityName, revisionInfoIdData.getName(),
-                        revisionInfoTimestampData.getName(), isTimestampAsDate(), modifiedEntityNamesData.getName()),
+                        revisionInfoTimestampData.getName(), isTimestampAsDate(),
+                        globalCfg.isTrackEntitiesChangedInRevisionEnabled() ? modifiedEntityNamesData.getName()
+                                                                            : null),
                 generateRevisionInfoRelationMapping(),
                 new RevisionInfoNumberReader(revisionInfoClass, revisionInfoIdData), revisionInfoEntityName,
                 revisionInfoClass, revisionInfoTimestampData);

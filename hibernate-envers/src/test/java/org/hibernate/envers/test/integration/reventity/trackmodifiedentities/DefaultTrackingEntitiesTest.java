@@ -6,12 +6,12 @@ import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrIntTestEntity;
 import org.hibernate.envers.test.entities.StrTestEntity;
+import org.hibernate.envers.test.tools.TestTools;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
 import org.junit.Test;
 
 import javax.persistence.EntityManager;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -83,14 +83,14 @@ public class DefaultTrackingEntitiesTest extends AbstractEntityTest {
         StrTestEntity ste = new StrTestEntity("x", steId);
         StrIntTestEntity site = new StrIntTestEntity("y", 1, siteId);
 
-        assert Arrays.asList(ste, site).equals(getAuditReader().findEntitiesChangedInRevision(1));
+        assert TestTools.checkList(getAuditReader().findEntitiesChangedInRevision(1), ste, site);
     }
 
     @Test
     public void testTrackModifiedEntities() {
         StrIntTestEntity site = new StrIntTestEntity("y", 2, siteId);
 
-        assert Arrays.asList(site).equals(getAuditReader().findEntitiesChangedInRevision(2));
+        assert TestTools.checkList(getAuditReader().findEntitiesChangedInRevision(2), site);
     }
 
     @Test
@@ -98,7 +98,7 @@ public class DefaultTrackingEntitiesTest extends AbstractEntityTest {
         StrTestEntity ste = new StrTestEntity(null, steId);
         StrIntTestEntity site = new StrIntTestEntity(null, null, siteId);
 
-        assert Arrays.asList(ste, site).equals(getAuditReader().findEntitiesChangedInRevision(3));
+        assert TestTools.checkList(getAuditReader().findEntitiesChangedInRevision(3), site, ste);
     }
 
     @Test
@@ -112,9 +112,9 @@ public class DefaultTrackingEntitiesTest extends AbstractEntityTest {
         StrIntTestEntity site = new StrIntTestEntity("y", 1, siteId);
 
         Map<RevisionType, List<Object>> result = getAuditReader().findEntitiesChangedInRevisionGroupByRevisionType(1);
-        assert Arrays.asList(ste, site).equals(result.get(RevisionType.ADD));
-        assert Arrays.asList().equals(result.get(RevisionType.MOD));
-        assert Arrays.asList().equals(result.get(RevisionType.DEL));
+        assert TestTools.checkList(result.get(RevisionType.ADD), site, ste);
+        assert TestTools.checkList(result.get(RevisionType.MOD));
+        assert TestTools.checkList(result.get(RevisionType.DEL));
     }
 
     @Test
@@ -122,9 +122,9 @@ public class DefaultTrackingEntitiesTest extends AbstractEntityTest {
         StrIntTestEntity site = new StrIntTestEntity("y", 2, siteId);
 
         Map<RevisionType, List<Object>> result = getAuditReader().findEntitiesChangedInRevisionGroupByRevisionType(2);
-        assert Arrays.asList().equals(result.get(RevisionType.ADD));
-        assert Arrays.asList(site).equals(result.get(RevisionType.MOD));
-        assert Arrays.asList().equals(result.get(RevisionType.DEL));
+        assert TestTools.checkList(result.get(RevisionType.ADD));
+        assert TestTools.checkList(result.get(RevisionType.MOD), site);
+        assert TestTools.checkList(result.get(RevisionType.DEL));
     }
 
     @Test
@@ -133,9 +133,9 @@ public class DefaultTrackingEntitiesTest extends AbstractEntityTest {
         StrIntTestEntity site = new StrIntTestEntity(null, null, siteId);
 
         Map<RevisionType, List<Object>> result = getAuditReader().findEntitiesChangedInRevisionGroupByRevisionType(3);
-        assert Arrays.asList().equals(result.get(RevisionType.ADD));
-        assert Arrays.asList().equals(result.get(RevisionType.MOD));
-        assert Arrays.asList(ste, site).equals(result.get(RevisionType.DEL));
+        assert TestTools.checkList(result.get(RevisionType.ADD));
+        assert TestTools.checkList(result.get(RevisionType.MOD));
+        assert TestTools.checkList(result.get(RevisionType.DEL), site, ste);
     }
 
     @Test
@@ -143,14 +143,14 @@ public class DefaultTrackingEntitiesTest extends AbstractEntityTest {
         StrTestEntity ste = new StrTestEntity("x", steId);
         StrIntTestEntity site = new StrIntTestEntity("y", 1, siteId);
 
-        assert Arrays.asList(ste, site).equals(getAuditReader().findEntitiesChangedInRevision(1, RevisionType.ADD));
+        assert TestTools.checkList(getAuditReader().findEntitiesChangedInRevision(1, RevisionType.ADD), ste, site);
     }
 
     @Test
     public void testFindChangedEntitiesByRevisionTypeMOD() {
         StrIntTestEntity site = new StrIntTestEntity("y", 2, siteId);
 
-        assert Arrays.asList(site).equals(getAuditReader().findEntitiesChangedInRevision(2, RevisionType.MOD));
+        assert TestTools.checkList(getAuditReader().findEntitiesChangedInRevision(2, RevisionType.MOD), site);
     }
 
     @Test
@@ -158,13 +158,13 @@ public class DefaultTrackingEntitiesTest extends AbstractEntityTest {
         StrTestEntity ste = new StrTestEntity(null, steId);
         StrIntTestEntity site = new StrIntTestEntity(null, null, siteId);
 
-        assert Arrays.asList(ste, site).equals(getAuditReader().findEntitiesChangedInRevision(3, RevisionType.DEL));
+        assert TestTools.checkList(getAuditReader().findEntitiesChangedInRevision(3, RevisionType.DEL), ste, site);
     }
 
     @Test
     public void testFindEntityTypesChangedInRevision() {
-        assert Arrays.asList(StrTestEntity.class, StrIntTestEntity.class).equals(getAuditReader().findEntityTypesChangedInRevision(1));
-        assert Arrays.asList(StrIntTestEntity.class).equals(getAuditReader().findEntityTypesChangedInRevision(2));
-        assert Arrays.asList(StrTestEntity.class, StrIntTestEntity.class).equals(getAuditReader().findEntityTypesChangedInRevision(3));
+        assert TestTools.makeSet(StrTestEntity.class, StrIntTestEntity.class).equals(getAuditReader().findEntityTypesChangedInRevision(1));
+        assert TestTools.makeSet(StrIntTestEntity.class).equals(getAuditReader().findEntityTypesChangedInRevision(2));
+        assert TestTools.makeSet(StrTestEntity.class, StrIntTestEntity.class).equals(getAuditReader().findEntityTypesChangedInRevision(3));
     }
 }

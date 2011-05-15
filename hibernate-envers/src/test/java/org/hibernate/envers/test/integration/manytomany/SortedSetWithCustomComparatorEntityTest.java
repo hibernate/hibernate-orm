@@ -146,7 +146,7 @@ public class SortedSetWithCustomComparatorEntityTest extends AbstractEntityTest 
     }
 
     @Test
-    @FailureExpected(message = "Envers doesn't support custom comparators yet", jiraKey = "UPDATE_THAT")
+    @FailureExpected(message = "Envers doesn't support custom comparators yet", jiraKey = "HHH-6176")
     public void testHistoryOfEntity1() throws Exception {
         SortedSetEntity entity1 = getAuditReader().find(SortedSetEntity.class, 1, 1);
 

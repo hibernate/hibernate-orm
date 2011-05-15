@@ -107,7 +107,8 @@ public abstract class AbstractMockerTest {
 		return index;
 
 	}
-	protected Index getMockedIndex(String ormFileName){
+
+	protected Index getMockedIndex(String ormFileName) {
 		EntityMappingsMocker mocker = getEntityMappingsMocker( ormFileName );
 		return mocker.mockNewIndex();
 	}
@@ -138,36 +139,23 @@ public abstract class AbstractMockerTest {
 		return serviceRegistry;
 	}
 
-	protected void assertHasAnnotation(Index index, DotName className, DotName annName) {
-		assertHasAnnotation( index, className, annName, 1 );
-	}
-
 	protected void assertHasNoAnnotation(Index index, DotName className, DotName annName) {
-		ClassInfo classInfo = index.getClassByName( className );
-		if ( classInfo == null ) {
-			fail( "Can't find " + className + " from Index" );
-		}
-		if ( classInfo.annotations() != null ) {
-			List<AnnotationInstance> annotationInstanceList = classInfo.annotations().get( annName );
-			if ( annotationInstanceList != null ) {
-				if(!annotationInstanceList.isEmpty()){
-					fail( className+" has Annotation "+annName );
-				}
+		List<AnnotationInstance> annotationInstanceList = getAnnotationInstances( index, className, annName );
+		if ( annotationInstanceList != null ) {
+			if ( !annotationInstanceList.isEmpty() ) {
+				fail( className + " has Annotation " + annName );
 			}
 		}
 	}
 
+	protected void assertHasAnnotation(Index index, DotName className, DotName annName) {
+		assertHasAnnotation( index, className, annName, 1 );
+	}
+
 	protected void assertHasAnnotation(Index index, DotName className, DotName annName, int size) {
-		ClassInfo classInfo = index.getClassByName( className );
-		if ( classInfo == null ) {
-			fail( "Can't find " + className + " from Index" );
-		}
-		if ( classInfo.annotations() == null ) {
-			fail( classInfo + " doesn't have any annotations defined" );
-		}
-		List<AnnotationInstance> annotationInstanceList = classInfo.annotations().get( annName );
+		List<AnnotationInstance> annotationInstanceList = getAnnotationInstances( index, className, annName );
 		if ( annotationInstanceList == null || annotationInstanceList.isEmpty() ) {
-			fail( classInfo + " doesn't have annotation " + annName );
+			fail( "Expected annotation " + annName + " size is " + size + ", but no one can be found in Index" );
 		}
 		assertEquals(
 				"Expected annotation " + annName + " size is " + size + ", but it actually is " + annotationInstanceList
@@ -188,10 +176,25 @@ public abstract class AbstractMockerTest {
 
 	protected void assertAnnotationValue(Index index, DotName className, DotName annName, int size, AnnotationValueChecker checker) {
 		assertHasAnnotation( index, className, annName, size );
-		ClassInfo classInfo = index.getClassByName( className );
-		List<AnnotationInstance> annotationInstanceList = classInfo.annotations().get( annName );
+		List<AnnotationInstance> annotationInstanceList = getAnnotationInstances( index,className,annName );
 		for ( AnnotationInstance annotationInstance : annotationInstanceList ) {
 			checker.check( annotationInstance );
+		}
+	}
+
+	private List<AnnotationInstance> getAnnotationInstances(Index index, DotName className, DotName annName) {
+		if ( className != null ) {
+			ClassInfo classInfo = index.getClassByName( className );
+			if ( classInfo == null ) {
+				fail( "Can't find " + className + " from Index" );
+			}
+			if ( classInfo.annotations() == null ) {
+				fail( classInfo + " doesn't have any annotations defined" );
+			}
+			return classInfo.annotations().get( annName );
+		}
+		else {
+			return index.getAnnotations( annName );
 		}
 	}
 

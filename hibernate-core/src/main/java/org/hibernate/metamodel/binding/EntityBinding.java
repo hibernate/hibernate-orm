@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.internal.util.ReflectHelper;
@@ -49,6 +50,7 @@ import org.hibernate.metamodel.source.util.MappingHelper;
  * Provides the link between the domain and the relational model for an entity.
  *
  * @author Steve Ebersole
+ * @author Hardy Ferentschik
  */
 public class EntityBinding {
 	private final EntityIdentifier entityIdentifier = new EntityIdentifier( this );
@@ -247,9 +249,9 @@ public class EntityBinding {
 
 	public SimpleAttributeBinding makeEntityDiscriminatorBinding(String name) {
 		if ( entityDiscriminator != null ) {
-			// TODO: LOG this!!!
+			throw new AssertionFailure( "Creation of entity discriminator was called more than once" );
 		}
-		entityDiscriminator = new EntityDiscriminator( this );
+		entityDiscriminator = new EntityDiscriminator();
 		entityDiscriminator.setValueBinding( makeSimpleAttributeBinding( name, true, false ) );
 		return entityDiscriminator.getValueBinding();
 	}

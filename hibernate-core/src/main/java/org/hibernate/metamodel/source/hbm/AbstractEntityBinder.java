@@ -480,7 +480,6 @@ PrimitiveArray
 							hibernateMappingBinder.getHibernateXmlBinder().getMetadata(),
 							hibernateMappingBinder,
 							entityBinding.getEntity().getOrCreateSingularAttribute( attributeName ),
-							entityBinding.getMetaAttributes(),
 							discriminator
 					)
 			);

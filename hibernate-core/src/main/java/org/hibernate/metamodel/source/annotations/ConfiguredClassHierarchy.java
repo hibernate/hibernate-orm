@@ -27,7 +27,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import javax.persistence.AccessType;
-import javax.persistence.InheritanceType;
 
 import com.fasterxml.classmate.ResolvedTypeWithMembers;
 import org.jboss.jandex.AnnotationInstance;
@@ -36,6 +35,7 @@ import org.jboss.jandex.FieldInfo;
 import org.jboss.jandex.MethodInfo;
 
 import org.hibernate.AnnotationException;
+import org.hibernate.metamodel.binding.InheritanceType;
 import org.hibernate.metamodel.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.source.annotations.util.ReflectionHelper;
 import org.hibernate.service.ServiceRegistry;
@@ -150,6 +150,10 @@ public class ConfiguredClassHierarchy implements Iterable<ConfiguredClass> {
 	}
 
 	private InheritanceType determineInheritanceType(List<ClassInfo> classes) {
+		if ( classes.size() == 1 ) {
+			return InheritanceType.NO_INHERITANCE;
+		}
+
 		InheritanceType inheritanceType = null;
 		for ( ClassInfo info : classes ) {
 			AnnotationInstance inheritanceAnnotation = JandexHelper.getSingleAnnotation(
@@ -159,9 +163,10 @@ public class ConfiguredClassHierarchy implements Iterable<ConfiguredClass> {
 				continue;
 			}
 
-			InheritanceType tmpInheritanceType = Enum.valueOf(
-					InheritanceType.class, inheritanceAnnotation.value( "strategy" ).asEnum()
+			javax.persistence.InheritanceType jpaInheritanceType = Enum.valueOf(
+					javax.persistence.InheritanceType.class, inheritanceAnnotation.value( "strategy" ).asEnum()
 			);
+			InheritanceType tmpInheritanceType = InheritanceType.get( jpaInheritanceType );
 			if ( tmpInheritanceType == null ) {
 				// default inheritance type is single table
 				inheritanceType = InheritanceType.SINGLE_TABLE;

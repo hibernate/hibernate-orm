@@ -23,14 +23,11 @@
  */
 package org.hibernate.metamodel.source.annotations;
 
-import java.util.List;
-
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
-import org.hibernate.MappingException;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.annotations.PolymorphismType;
@@ -69,13 +66,20 @@ public class EntityBinder {
 
 	public void bind() {
 		EntityBinding entityBinding = new EntityBinding();
+
 		bindJpaEntityAnnotation( entityBinding );
 		bindHibernateEntityAnnotation( entityBinding ); // optional hibernate specific @org.hibernate.annotations.Entity
-		bindWhereFilter( entityBinding );
-		bindJpaCaching( entityBinding );
-		bindHibernateCaching( entityBinding );
+
 		schemaName = createSchemaName();
 		bindTable( entityBinding );
+
+		entityBinding.setInheritanceType( configuredClass.getInheritanceType() );
+		bindInheritance( entityBinding );
+
+		bindWhereFilter( entityBinding );
+
+		bindJpaCaching( entityBinding );
+		bindHibernateCaching( entityBinding );
 
 		if ( configuredClass.isRoot() ) {
 			bindId( entityBinding );
@@ -83,6 +87,42 @@ public class EntityBinder {
 		bindAttributes( entityBinding );
 
 		meta.addEntity( entityBinding );
+	}
+
+	private void bindInheritance(EntityBinding entityBinding) {
+		switch ( configuredClass.getInheritanceType() ) {
+			case SINGLE_TABLE: {
+				bindDiscriminatorColumn( entityBinding );
+				break;
+			}
+			case JOINED: {
+				// todo
+				break;
+			}
+			case TABLE_PER_CLASS: {
+				// todo
+				break;
+			}
+			default: {
+				// do nothing
+			}
+		}
+	}
+
+	private void bindDiscriminatorColumn(EntityBinding entityBinding) {
+		MappedAttribute discriminatorAttribute = MappedAttribute.createDiscriminatorAttribute(
+				configuredClass.getClassInfo().annotations()
+		);
+
+		bindSingleMappedAttribute( entityBinding, discriminatorAttribute );
+
+		if ( !( discriminatorAttribute.getColumnValues() instanceof DiscriminatorColumnValues ) ) {
+			throw new AssertionFailure( "Expected discriminator column values" );
+		}
+		DiscriminatorColumnValues discriminatorColumnvalues = (DiscriminatorColumnValues) discriminatorAttribute.getColumnValues();
+		entityBinding.getEntityDiscriminator().setForced( discriminatorColumnvalues.isForced() );
+		entityBinding.getEntityDiscriminator().setInserted( discriminatorColumnvalues.isIncludedInSql() );
+		entityBinding.setDiscriminatorValue( discriminatorColumnvalues.getDiscriminatorValue() );
 	}
 
 	private void bindWhereFilter(EntityBinding entityBinding) {
@@ -216,7 +256,7 @@ public class EntityBinder {
 	}
 
 	private void bindId(EntityBinding entityBinding) {
-		switch ( determineIdType() ) {
+		switch ( configuredClass.getIdType() ) {
 			case SIMPLE: {
 				bindSingleIdAnnotation( entityBinding );
 				break;
@@ -270,24 +310,33 @@ public class EntityBinder {
 
 	private void bindAttributes(EntityBinding entityBinding) {
 		for ( MappedAttribute mappedAttribute : configuredClass.getMappedAttributes() ) {
-			if ( mappedAttribute.isId() ) {
-				continue;
-			}
+			bindSingleMappedAttribute( entityBinding, mappedAttribute );
+		}
+	}
 
-			String attributeName = mappedAttribute.getName();
-			entityBinding.getEntity().getOrCreateSingularAttribute( attributeName );
-			SimpleAttributeBinding attributeBinding;
+	private void bindSingleMappedAttribute(EntityBinding entityBinding, MappedAttribute mappedAttribute) {
+		if ( mappedAttribute.isId() ) {
+			return;
+		}
 
-			if ( mappedAttribute.isVersioned() ) {
-				attributeBinding = entityBinding.makeVersionBinding( attributeName );
-			}
-			else {
-				attributeBinding = entityBinding.makeSimpleAttributeBinding( attributeName );
-			}
+		String attributeName = mappedAttribute.getName();
+		entityBinding.getEntity().getOrCreateSingularAttribute( attributeName );
+		SimpleAttributeBinding attributeBinding;
 
-			AttributeDomainState domainState = new AttributeDomainState( entityBinding, mappedAttribute );
-			attributeBinding.initialize( domainState );
+		if ( mappedAttribute.isVersioned() ) {
+			attributeBinding = entityBinding.makeVersionBinding( attributeName );
+		}
+		else if ( mappedAttribute.isDiscriminator() ) {
+			attributeBinding = entityBinding.makeEntityDiscriminatorBinding( attributeName );
+		}
+		else {
+			attributeBinding = entityBinding.makeSimpleAttributeBinding( attributeName );
+		}
 
+		AttributeDomainState domainState = new AttributeDomainState( entityBinding, mappedAttribute );
+		attributeBinding.initialize( domainState );
+
+		if ( configuredClass.hasOwnTable() ) {
 			AttributeColumnRelationalState columnRelationsState = new AttributeColumnRelationalState(
 					mappedAttribute, meta
 			);
@@ -368,59 +417,14 @@ public class EntityBinder {
 			return null;
 		}
 
-		EntityBinding parentBinding = meta.getEntityBinding( parent.getName() );
+		EntityBinding parentBinding = meta.getEntityBinding( parent.getSimpleName() );
 		if ( parentBinding == null ) {
 			throw new AssertionFailure(
-					"Parent entity " + parent.getName() + " of entity " + configuredClass.getName() + "not yet created!"
+					"Parent entity " + parent.getName() + " of entity " + configuredClass.getName() + " not yet created!"
 			);
 		}
 
 		return parentBinding.getEntity();
 	}
-
-	private IdType determineIdType() {
-		List<AnnotationInstance> idAnnotations = configuredClass.getClassInfo().annotations().get( JPADotNames.ENTITY );
-		List<AnnotationInstance> embeddedIdAnnotations = configuredClass.getClassInfo()
-				.annotations()
-				.get( JPADotNames.EMBEDDED_ID );
-
-		if ( idAnnotations != null && embeddedIdAnnotations != null ) {
-			throw new MappingException(
-					"@EmbeddedId and @Id cannot be used together. Check the configuration for " + configuredClass.getName() + "."
-			);
-		}
-
-		if ( embeddedIdAnnotations != null ) {
-			if ( embeddedIdAnnotations.size() == 1 ) {
-				return IdType.EMBEDDED;
-			}
-			else {
-				throw new MappingException( "Multiple @EmbeddedId annotations are not allowed" );
-			}
-		}
-
-		if ( idAnnotations != null ) {
-			if ( idAnnotations.size() == 1 ) {
-				return IdType.SIMPLE;
-			}
-			else {
-				return IdType.COMPOSED;
-			}
-		}
-		return IdType.NONE;
-	}
-
-	enum IdType {
-		// single @Id annotation
-		SIMPLE,
-		// multiple @Id annotations
-		COMPOSED,
-		// @EmbeddedId annotation
-		EMBEDDED,
-		// does not contain any identifier mappings
-		NONE
-	}
 }
-
-
 

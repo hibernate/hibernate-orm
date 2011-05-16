@@ -24,18 +24,16 @@
 package org.hibernate.metamodel.binding;
 
 /**
- * TODO : javadoc
+ * Binding of the discriminator in a entity hierarchy
  *
  * @author Steve Ebersole
  */
 public class EntityDiscriminator {
-	private final EntityBinding entityBinding;
 	private SimpleAttributeBinding valueBinding;
 	private boolean forced;
 	private boolean inserted = true;
 
-	public EntityDiscriminator(EntityBinding entityBinding) {
-		this.entityBinding = entityBinding;
+	public EntityDiscriminator() {
 	}
 
 	public SimpleAttributeBinding getValueBinding() {
@@ -60,5 +58,16 @@ public class EntityDiscriminator {
 
 	public void setInserted(boolean inserted) {
 		this.inserted = inserted;
+	}
+
+	@Override
+	public String toString() {
+		final StringBuilder sb = new StringBuilder();
+		sb.append( "EntityDiscriminator" );
+		sb.append( "{valueBinding=" ).append( valueBinding );
+		sb.append( ", forced=" ).append( forced );
+		sb.append( ", inserted=" ).append( inserted );
+		sb.append( '}' );
+		return sb.toString();
 	}
 }

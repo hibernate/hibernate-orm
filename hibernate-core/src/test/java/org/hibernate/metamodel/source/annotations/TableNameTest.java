@@ -29,7 +29,6 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Inheritance;
-import javax.persistence.InheritanceType;
 import javax.persistence.Table;
 
 import org.jboss.jandex.ClassInfo;
@@ -40,6 +39,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.hibernate.metamodel.binding.InheritanceType;
 import org.hibernate.metamodel.source.annotations.util.ConfiguredClassHierarchyBuilder;
 import org.hibernate.metamodel.source.annotations.util.JandexHelper;
 import org.hibernate.service.ServiceRegistryBuilder;
@@ -119,7 +119,7 @@ public class TableNameTest extends BaseUnitTestCase {
 	@Test
 	public void testTablePerClassDefaultTableName() {
 		@Entity
-		@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
+		@Inheritance(strategy = javax.persistence.InheritanceType.TABLE_PER_CLASS)
 		class A {
 			@Id
 			@GeneratedValue
@@ -166,7 +166,7 @@ public class TableNameTest extends BaseUnitTestCase {
 	@Test
 	public void testJoinedSubclassDefaultTableName() {
 		@Entity
-		@Inheritance(strategy = InheritanceType.JOINED)
+		@Inheritance(strategy = javax.persistence.InheritanceType.JOINED)
 		@Table(name = "FOO")
 		class A {
 			@Id

@@ -23,15 +23,12 @@
  */
 package org.hibernate.metamodel.binding;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.metamodel.domain.Attribute;
 import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.metamodel.relational.SimpleValue;
-import org.hibernate.metamodel.relational.Size;
 import org.hibernate.metamodel.relational.TableSpecification;
 import org.hibernate.metamodel.relational.Value;
 
@@ -86,8 +83,9 @@ public interface AttributeBinding {
 	public Iterable<SimpleValue> getValues();
 
 	/**
-	 * @deprecated Use {@link #getValue()}.{@link Value#getTable() getTable()} instead; to be removed on completion of new metamodel code
 	 * @return
+	 *
+	 * @deprecated Use {@link #getValue()}.{@link Value#getTable() getTable()} instead; to be removed on completion of new metamodel code
 	 */
 	@Deprecated
 	public TableSpecification getTable();
@@ -95,19 +93,24 @@ public interface AttributeBinding {
 	public String getPropertyAccessorName();
 
 	/**
-	 *
 	 * @return
 	 */
 	public boolean hasFormula();
 
 	public boolean isAlternateUniqueKey();
+
 	public boolean isNullable();
+
 	public boolean[] getColumnUpdateability();
+
 	public boolean[] getColumnInsertability();
+
 	public boolean isSimpleValue();
+
 	public boolean isLazy();
 
 	public void addEntityReferencingAttributeBinding(EntityReferencingAttributeBinding attributeBinding);
+
 	public Set<EntityReferencingAttributeBinding> getEntityReferencingAttributeBindings();
 
 	public void validate();

@@ -31,7 +31,6 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Inheritance;
-import javax.persistence.InheritanceType;
 import javax.persistence.MappedSuperclass;
 
 import org.jboss.jandex.ClassInfo;
@@ -42,6 +41,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import org.hibernate.AnnotationException;
+import org.hibernate.metamodel.binding.InheritanceType;
 import org.hibernate.metamodel.source.annotations.ConfiguredClass;
 import org.hibernate.metamodel.source.annotations.ConfiguredClassHierarchy;
 import org.hibernate.service.ServiceRegistryBuilder;
@@ -265,7 +265,7 @@ public class ConfiguredClassHierarchyBuilderTest extends BaseUnitTestCase {
 		}
 
 		@Entity
-		@Inheritance(strategy = InheritanceType.JOINED)
+		@Inheritance(strategy = javax.persistence.InheritanceType.JOINED)
 		class A extends MappedSuperClass {
 			@Id
 			String id;
@@ -281,20 +281,22 @@ public class ConfiguredClassHierarchyBuilderTest extends BaseUnitTestCase {
 		);
 		assertTrue( hierarchies.size() == 1 );
 		ConfiguredClassHierarchy hierarchy = hierarchies.iterator().next();
-		assertEquals( "Wrong inheritance type", InheritanceType.JOINED, hierarchy.getInheritanceType() );
+		assertEquals(
+				"Wrong inheritance type", InheritanceType.JOINED, hierarchy.getInheritanceType()
+		);
 	}
 
 	@Test(expected = AnnotationException.class)
 	public void testMultipleConflictingInheritanceDefinitions() {
 
 		@Entity
-		@Inheritance(strategy = InheritanceType.JOINED)
+		@Inheritance(strategy = javax.persistence.InheritanceType.JOINED)
 		class A {
 			String id;
 		}
 
 		@Entity
-		@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
+		@Inheritance(strategy = javax.persistence.InheritanceType.TABLE_PER_CLASS)
 		class B extends A {
 		}
 

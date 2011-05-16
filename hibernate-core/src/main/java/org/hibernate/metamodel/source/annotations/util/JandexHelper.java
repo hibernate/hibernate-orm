@@ -93,11 +93,24 @@ public class JandexHelper {
 	 *
 	 * @return the single annotation defined on the class or {@code null} in case the annotation is not specified at all
 	 *
-	 * @throws org.hibernate.AssertionFailure in case there is
+	 * @throws org.hibernate.AssertionFailure in case there is there is more than one annotation of this type.
 	 */
 	public static AnnotationInstance getSingleAnnotation(ClassInfo classInfo, DotName annotationName)
 			throws AssertionFailure {
-		List<AnnotationInstance> annotationList = classInfo.annotations().get( annotationName );
+		return getSingleAnnotation( classInfo.annotations(), annotationName );
+	}
+
+	/**
+	 * @param annotations List of annotation instances keyed against their dot name.
+	 * @param annotationName the annotation to retrieve from map
+	 *
+	 * @return the single annotation of the specified dot name or {@code null} in case the annotation is not specified at all
+	 *
+	 * @throws org.hibernate.AssertionFailure in case there is there is more than one annotation of this type.
+	 */
+	public static AnnotationInstance getSingleAnnotation(Map<DotName, List<AnnotationInstance>> annotations, DotName annotationName)
+			throws AssertionFailure {
+		List<AnnotationInstance> annotationList = annotations.get( annotationName );
 		if ( annotationList == null ) {
 			return null;
 		}
@@ -111,6 +124,20 @@ public class JandexHelper {
 							+ ". Expected was one."
 			);
 		}
+	}
+
+	/**
+	 * @param annotations List of annotation instances keyed against their dot name.
+	 * @param annotationNames the annotation names to filter
+	 *
+	 * @return a new map of annotation instances only containing annotations of the specified dot names.
+	 */
+	public static Map<DotName, List<AnnotationInstance>> filterAnnotations(Map<DotName, List<AnnotationInstance>> annotations, DotName... annotationNames) {
+		Map<DotName, List<AnnotationInstance>> filteredAnnotations = new HashMap<DotName, List<AnnotationInstance>>();
+		for ( DotName name : annotationNames ) {
+			filteredAnnotations.put( name, annotations.get( name ) );
+		}
+		return filteredAnnotations;
 	}
 
 	/**

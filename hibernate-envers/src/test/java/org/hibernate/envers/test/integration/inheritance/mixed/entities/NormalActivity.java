@@ -2,7 +2,12 @@ package org.hibernate.envers.test.integration.inheritance.mixed.entities;
 
 import org.hibernate.envers.Audited;
 
+import javax.persistence.DiscriminatorValue;
+import javax.persistence.Entity;
+
 @Audited
+@Entity
+@DiscriminatorValue(value = "NORMAL")
 public class NormalActivity extends AbstractActivity {
 
     @Override

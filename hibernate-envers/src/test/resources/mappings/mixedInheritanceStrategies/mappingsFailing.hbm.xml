@@ -16,7 +16,8 @@
         <property name="sequenceNumber" type="int" not-null="true"/>
 
         <subclass abstract="true"
-                  name="org.hibernate.envers.test.integration.inheritance.mixed.entities.AbstractCheckActivity">
+                  name="org.hibernate.envers.test.integration.inheritance.mixed.entities.AbstractCheckActivity"
+                  discriminator-value="CHECK">
             <join table="ACTIVITY_CHECK">
                 <key foreign-key="FK_CHKACT_ACT" not-null="true" column="ACTIVITY_ID"/>
                 <property name="durationInMinutes" type="int" not-null="true" column="DURATION_IN_MINUTES"/>

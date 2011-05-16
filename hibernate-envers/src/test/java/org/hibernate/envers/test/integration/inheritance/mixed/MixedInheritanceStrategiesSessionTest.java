@@ -11,7 +11,7 @@ import java.net.URL;
 /**
  * @author Michal Skowronek (mskowr at o2 pl)
  */
-public class FailingMixedInheritanceStrategiesSessionTest extends AbstractInheritanceStrategiesSessionTest {
+public class MixedInheritanceStrategiesSessionTest extends AbstractInheritanceStrategiesSessionTest {
 
     protected void initMappings() throws MappingException, URISyntaxException {
         URL url = Thread.currentThread().getContextClassLoader().getResource(

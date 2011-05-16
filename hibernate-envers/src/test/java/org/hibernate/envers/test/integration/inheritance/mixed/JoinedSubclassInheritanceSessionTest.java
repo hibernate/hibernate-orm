@@ -10,7 +10,7 @@ import java.net.URL;
 /**
  * @author Michal Skowronek (mskowr at o2 pl)
  */
-public class PassingJoinedSubclassInheritanceSessionTest extends AbstractInheritanceStrategiesSessionTest {
+public class JoinedSubclassInheritanceSessionTest extends AbstractInheritanceStrategiesSessionTest {
 
     protected void initMappings() throws MappingException, URISyntaxException {
         URL url = Thread.currentThread().getContextClassLoader().getResource(

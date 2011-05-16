@@ -158,6 +158,9 @@ public class QueryAndSQLTest extends TestCase {
 	}
 	
 	public void testSQLQueryWithManyToOne() {
+		Statistics stats = getSessions().getStatistics();
+		stats.clear();
+		stats.setStatisticsEnabled( true );
 		Night n = new Night();
 		Calendar c = new GregorianCalendar();
 		c.set( 2000, 2, 2 );
@@ -179,10 +182,8 @@ public class QueryAndSQLTest extends TestCase {
 		s.close();
 		s = openSession();
 		tx = s.beginTransaction();
-		Statistics stats = getSessions().getStatistics();
-		stats.setStatisticsEnabled( true );
 		Query q = s.getNamedQuery( "night&areaCached" );
-		List result = q.list();
+		List result = q.setCacheable( true ).list();
 		assertEquals( 1, result.size() );
 		assertEquals( 1, stats.getQueryCachePutCount() );
 		q.list();

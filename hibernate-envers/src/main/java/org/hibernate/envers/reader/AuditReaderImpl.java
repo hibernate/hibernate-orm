@@ -25,6 +25,7 @@ package org.hibernate.envers.reader;
 import static org.hibernate.envers.tools.ArgumentsTools.checkNotNull;
 import static org.hibernate.envers.tools.ArgumentsTools.checkPositive;
 
+import java.lang.reflect.Member;
 import java.util.*;
 import javax.persistence.NoResultException;
 import org.hibernate.Criteria;
@@ -56,6 +57,7 @@ public class AuditReaderImpl implements AuditReaderImplementor {
     private final SessionImplementor sessionImplementor;
     private final Session session;
     private final FirstLevelCache firstLevelCache;
+    private Member modifiedEntityTypesProperty = null;
 
     public AuditReaderImpl(AuditConfiguration verCfg, Session session,
                               SessionImplementor sessionImplementor) {
@@ -292,8 +294,12 @@ public class AuditReaderImpl implements AuditReaderImplementor {
         Object revisionInfo = query.uniqueResult();
         if (revisionInfo != null) {
             // If revision exists
-            // Only one field can be marked with @ModifiedEntityTypes annotation
-            Set<String> modifiedEntityTypes = (Set<String>) ReflectionTools.getAnnotatedMembersValues(revisionInfo, ModifiedEntityTypes.class).values().toArray()[0];
+            if (modifiedEntityTypesProperty == null) {
+                // Only one field or method (getter) can be marked with @ModifiedEntityTypes annotation
+                modifiedEntityTypesProperty = (Member) ReflectionTools.getAnnotatedMembers(revisionInfo.getClass(),
+                                                                                           ModifiedEntityTypes.class).toArray()[0];
+            }
+            Set<String> modifiedEntityTypes = (Set<String>) ReflectionTools.getPropertyValue(modifiedEntityTypesProperty, revisionInfo);
             Set<Class> result = new HashSet<Class>(modifiedEntityTypes.size());
             for (String entityClassName : modifiedEntityTypes) {
                 try {

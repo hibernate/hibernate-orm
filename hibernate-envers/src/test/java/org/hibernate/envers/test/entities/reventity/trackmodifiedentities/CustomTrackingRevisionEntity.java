@@ -9,7 +9,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Revision entity which {@code modifiedEntityNames} field is manually populated by {@link CustomEntityTrackingRevisionListener}.
+ * Revision entity which {@code modifiedEntityTypes} field is manually populated by {@link CustomEntityTrackingRevisionListener}.
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @Entity
@@ -24,7 +24,7 @@ public class CustomTrackingRevisionEntity {
     private long customTimestamp;
 
     @OneToMany(mappedBy="revision", cascade={CascadeType.PERSIST, CascadeType.REMOVE})
-    private Set<ModifiedEntityNameEntity> modifiedEntityNames = new HashSet<ModifiedEntityNameEntity>();
+    private Set<ModifiedEntityTypeEntity> modifiedEntityTypes = new HashSet<ModifiedEntityTypeEntity>();
 
     public int getCustomId() {
         return customId;
@@ -42,20 +42,16 @@ public class CustomTrackingRevisionEntity {
         this.customTimestamp = customTimestamp;
     }
 
-    public Set<ModifiedEntityNameEntity> getModifiedEntityNames() {
-        return modifiedEntityNames;
+    public Set<ModifiedEntityTypeEntity> getModifiedEntityTypes() {
+        return modifiedEntityTypes;
     }
 
-    public void setModifiedEntityNames(Set<ModifiedEntityNameEntity> modifiedEntityNames) {
-        this.modifiedEntityNames = modifiedEntityNames;
+    public void setModifiedEntityTypes(Set<ModifiedEntityTypeEntity> modifiedEntityTypes) {
+        this.modifiedEntityTypes = modifiedEntityTypes;
     }
 
-    public void addModifiedEntityName(String entityName) {
-        modifiedEntityNames.add(new ModifiedEntityNameEntity(this, entityName));
-    }
-
-    public void removeModifiedEntityName(String entityName) {
-        modifiedEntityNames.remove(new ModifiedEntityNameEntity(this, entityName));
+    public void addModifiedEntityType(String entityClassName) {
+        modifiedEntityTypes.add(new ModifiedEntityTypeEntity(this, entityClassName));
     }
 
     public boolean equals(Object o) {

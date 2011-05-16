@@ -223,7 +223,7 @@ public interface AuditReader {
      *                        <li>Custom revision entity (annotated with {@link RevisionEntity})
      *                            extends {@link DefaultTrackingModifiedTypesRevisionEntity} base class.</li>
      *                        <li>Custom revision entity (annotated with {@link RevisionEntity}) encapsulates a field
-     *                            marked with {@link ModifiedEntityNames} interface.</li>
+     *                            marked with {@link ModifiedEntityTypes} interface.</li>
      *                        </ul>
      */
     List<Object> findEntitiesChangedInRevision(Number revision)
@@ -244,7 +244,7 @@ public interface AuditReader {
      *                        <li>Custom revision entity (annotated with {@link RevisionEntity})
      *                            extends {@link DefaultTrackingModifiedTypesRevisionEntity} base class.</li>
      *                        <li>Custom revision entity (annotated with {@link RevisionEntity}) encapsulates a field
-     *                            marked with {@link ModifiedEntityNames} interface.</li>
+     *                            marked with {@link ModifiedEntityTypes} interface.</li>
      *                        </ul>
      */
     List<Object> findEntitiesChangedInRevision(Number revision, RevisionType revisionType)
@@ -268,7 +268,7 @@ public interface AuditReader {
      *                        <li>Custom revision entity (annotated with {@link RevisionEntity})
      *                            extends {@link DefaultTrackingModifiedTypesRevisionEntity} base class.</li>
      *                        <li>Custom revision entity (annotated with {@link RevisionEntity}) encapsulates a field
-     *                            marked with {@link ModifiedEntityNames} interface.</li>
+     *                            marked with {@link ModifiedEntityTypes} interface.</li>
      *                        </ul>
      */
     Map<RevisionType, List<Object>> findEntitiesChangedInRevisionGroupByRevisionType(Number revision)
@@ -287,7 +287,7 @@ public interface AuditReader {
      *                        <li>Custom revision entity (annotated with {@link RevisionEntity})
      *                            extends {@link DefaultTrackingModifiedTypesRevisionEntity} base class.</li>
      *                        <li>Custom revision entity (annotated with {@link RevisionEntity}) encapsulates a field
-     *                            marked with {@link ModifiedEntityNames} interface.</li>
+     *                            marked with {@link ModifiedEntityTypes} interface.</li>
      *                        </ul>
      */
     Set<Class> findEntityTypesChangedInRevision(Number revision)

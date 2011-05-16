@@ -71,7 +71,7 @@ public class DefaultTrackingEntitiesTest extends AbstractEntityTest {
             if ("REVENTITY".equals(table.getName())) {
                 assert table.getColumnSpan() == 2;
                 assert table.getColumn(new Column("REV")) != null;
-                assert table.getColumn(new Column("ENTITYNAME")) != null;
+                assert table.getColumn(new Column("ENTITYTYPE")) != null;
                 return;
             }
         }

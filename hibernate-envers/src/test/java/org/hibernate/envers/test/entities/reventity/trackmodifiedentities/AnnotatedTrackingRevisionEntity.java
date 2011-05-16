@@ -1,16 +1,15 @@
 package org.hibernate.envers.test.entities.reventity.trackmodifiedentities;
 
-import org.hibernate.envers.ModifiedEntityNames;
+import org.hibernate.envers.ModifiedEntityTypes;
 import org.hibernate.envers.RevisionEntity;
 import org.hibernate.envers.RevisionNumber;
 import org.hibernate.envers.RevisionTimestamp;
 
 import javax.persistence.*;
-import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Sample revision entity that uses {@link ModifiedEntityNames} annotation.
+ * Sample revision entity that uses {@link ModifiedEntityTypes} annotation.
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @Entity
@@ -26,9 +25,9 @@ public class AnnotatedTrackingRevisionEntity {
 
     @ElementCollection
     @JoinTable(name = "REVENTITY", joinColumns = @JoinColumn(name = "REV"))
-    @Column(name = "ENTITYNAME")
-    @ModifiedEntityNames
-    private Set<String> entityNames;
+    @Column(name = "ENTITYTYPE")
+    @ModifiedEntityTypes
+    private Set<String> entityTypes;
 
     public int getCustomId() {
         return customId;
@@ -46,12 +45,12 @@ public class AnnotatedTrackingRevisionEntity {
         this.customTimestamp = customTimestamp;
     }
 
-    public Set<String> getEntityNames() {
-        return entityNames;
+    public Set<String> getEntityTypes() {
+        return entityTypes;
     }
 
-    public void setEntityNames(Set<String> entityNames) {
-        this.entityNames = entityNames;
+    public void setEntityTypes(Set<String> entityTypes) {
+        this.entityTypes = entityTypes;
     }
 
     public boolean equals(Object o) {
@@ -62,6 +61,7 @@ public class AnnotatedTrackingRevisionEntity {
 
         if (customId != that.customId) return false;
         if (customTimestamp != that.customTimestamp) return false;
+        if (entityTypes != null ? !entityTypes.equals(that.entityTypes) : that.entityTypes != null) return false;
 
         return true;
     }
@@ -69,11 +69,12 @@ public class AnnotatedTrackingRevisionEntity {
     public int hashCode() {
         int result = customId;
         result = 31 * result + (int) (customTimestamp ^ (customTimestamp >>> 32));
+        result = 31 * result + (entityTypes != null ? entityTypes.hashCode() : 0);
         return result;
     }
 
     @Override
     public String toString() {
-        return "AnnotatedTrackingRevisionEntity(customId = " + customId + ", customTimestamp = " + customTimestamp + ")";
+        return "AnnotatedTrackingRevisionEntity(customId = " + customId + ", customTimestamp = " + customTimestamp + ", entityTypes=" + entityTypes + ")";
     }
 }

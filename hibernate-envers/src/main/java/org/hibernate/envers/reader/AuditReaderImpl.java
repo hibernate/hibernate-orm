@@ -32,7 +32,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.Session;
 import org.hibernate.engine.SessionImplementor;
-import org.hibernate.envers.ModifiedEntityNames;
+import org.hibernate.envers.ModifiedEntityTypes;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.exception.AuditException;
@@ -283,7 +283,7 @@ public class AuditReaderImpl implements AuditReaderImplementor {
         checkSession();
         if (!verCfg.getGlobalCfg().isTrackEntitiesChangedInRevisionEnabled()) {
             throw new AuditException("This query is designed for Envers default mechanism of tracking entities modified in a given revision."
-                                     + " Extend DefaultTrackingModifiedTypesRevisionEntity, utilize @ModifiedEntityNames annotation or set "
+                                     + " Extend DefaultTrackingModifiedTypesRevisionEntity, utilize @ModifiedEntityTypes annotation or set "
                                      + "'org.hibernate.envers.track_entities_changed_in_revision' parameter to true.");
         }
         Set<Number> revisions = new HashSet<Number>(1);
@@ -292,12 +292,12 @@ public class AuditReaderImpl implements AuditReaderImplementor {
         Object revisionInfo = query.uniqueResult();
         if (revisionInfo != null) {
             // If revision exists
-            // Only one field can be marked with @ModifiedEntityNames annotation
-            Set<String> modifiedEntityNames = (Set<String>) ReflectionTools.getAnnotatedMembersValues(revisionInfo, ModifiedEntityNames.class).values().toArray()[0];
-            Set<Class> result = new HashSet<Class>(modifiedEntityNames.size());
-            for (String entityName : modifiedEntityNames) {
+            // Only one field can be marked with @ModifiedEntityTypes annotation
+            Set<String> modifiedEntityTypes = (Set<String>) ReflectionTools.getAnnotatedMembersValues(revisionInfo, ModifiedEntityTypes.class).values().toArray()[0];
+            Set<Class> result = new HashSet<Class>(modifiedEntityTypes.size());
+            for (String entityClassName : modifiedEntityTypes) {
                 try {
-                    result.add(Class.forName(entityName));
+                    result.add(Class.forName(entityClassName));
                 } catch (ClassNotFoundException e) {
                     // This shall never happen
                     throw new RuntimeException(e);

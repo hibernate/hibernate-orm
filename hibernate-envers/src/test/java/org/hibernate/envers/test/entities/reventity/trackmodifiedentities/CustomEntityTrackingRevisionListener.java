@@ -12,7 +12,7 @@ public class CustomEntityTrackingRevisionListener implements EntityTrackingRevis
     @Override
     public void entityChanged(Class entityClass, String entityName, Serializable entityId, RevisionType revisionType,
                               Object revisionEntity) {
-        ((CustomTrackingRevisionEntity)revisionEntity).addModifiedEntityName(entityClass.getName());
+        ((CustomTrackingRevisionEntity)revisionEntity).addModifiedEntityType(entityClass.getName());
     }
 
     @Override

@@ -499,7 +499,7 @@ public class ExtendedRevisionEntity extends DefaultTrackingModifiedTypesRevision
                 </listitem>
                 <listitem>
                     Mark an appropriate field of a custom revision entity with
-                    <interfacename>@org.hibernate.envers.ModifiedEntityNames</interfacename> annotation. The property is
+                    <interfacename>@org.hibernate.envers.ModifiedEntityTypes</interfacename> annotation. The property is
                     required to be of <literal><![CDATA[Set<String>]]></literal> type.
                     <programlisting>
 <![CDATA[@Entity
@@ -509,9 +509,9 @@ public class AnnotatedTrackingRevisionEntity {
 
     @ElementCollection
     @JoinTable(name = "REVENTITY", joinColumns = @JoinColumn(name = "REV"))
-    @Column(name = "ENTITYNAME")
-    @ModifiedEntityNames
-    private Set<String> modifiedEntityNames;
+    @Column(name = "ENTITYTYPE")
+    @ModifiedEntityTypes
+    private Set<String> modifiedEntityTypes;
     
     ...
 }]]></programlisting>
@@ -539,7 +539,7 @@ public class CustomEntityTrackingRevisionListener implements EntityTrackingRevis
     @Override
     public void entityChanged(Class entityClass, String entityName, Serializable entityId, RevisionType revisionType,
                               Object revisionEntity) {
-        ((CustomTrackingRevisionEntity)revisionEntity).addModifiedEntityName(entityClass.getName());
+        ((CustomTrackingRevisionEntity)revisionEntity).addModifiedEntityType(entityClass.getName());
     }
 
     @Override
@@ -561,24 +561,20 @@ public class CustomTrackingRevisionEntity {
     private long customTimestamp;
 
     @OneToMany(mappedBy="revision", cascade={CascadeType.PERSIST, CascadeType.REMOVE})
-    private Set<ModifiedEntityNameEntity> modifiedEntityNames = new HashSet<ModifiedEntityNameEntity>();
+    private Set<ModifiedEntityTypeEntity> modifiedEntityTypes = new HashSet<ModifiedEntityTypeEntity>();
     
-    public void addModifiedEntityName(String entityName) {
-        modifiedEntityNames.add(new ModifiedEntityNameEntity(this, entityName));
-    }
-
-    public void removeModifiedEntityName(String entityName) {
-        modifiedEntityNames.remove(new ModifiedEntityNameEntity(this, entityName));
+    public void addModifiedEntityType(String entityClassName) {
+        modifiedEntityTypes.add(new ModifiedEntityTypeEntity(this, entityClassName));
     }
     
     ...
 }
 ]]></programlisting>
                 <programlisting>
-                    <filename>ModifiedEntityNameEntity.java</filename>
+                    <filename>ModifiedEntityTypeEntity.java</filename>
 <![CDATA[
 @Entity
-public class ModifiedEntityNameEntity {
+public class ModifiedEntityTypeEntity {
     @Id
     @GeneratedValue
     private Integer id;
@@ -586,14 +582,14 @@ public class ModifiedEntityNameEntity {
     @ManyToOne
     private CustomTrackingRevisionEntity revision;
     
-    private String entityName;
+    private String entityClassName;
     
     ...
 }
 ]]></programlisting>
                 <programlisting><![CDATA[CustomTrackingRevisionEntity revEntity =
     getAuditReader().findRevision(CustomTrackingRevisionEntity.class, revisionNumber);
-List<String> modifiedEntityNames = revEntity.getModifiedEntityNames()]]></programlisting>
+Set<ModifiedEntityTypeEntity> modifiedEntityTypes = revEntity.getModifiedEntityTypes()]]></programlisting>
             </example>
         </section>
 
@@ -812,7 +808,7 @@ query.add(AuditEntity.relatedId("address").eq(relatedEntityId));]]></programlist
                     is a number of different entity classes modified within specified revision.
                 </listitem>
                 <listitem>
-                    <firstterm><methodname><![CDATA[Map<RevisionType, List>]]> findEntitiesChangedInRevisionGroupByRevisionType(Number)</methodname></firstterm>
+                    <firstterm><methodname><![CDATA[Map<RevisionType, List<Object>>]]> findEntitiesChangedInRevisionGroupByRevisionType(Number)</methodname></firstterm>
                     - Returns a map containing lists of entity snapshots grouped by modification operation (e.g.
                     addition, update and removal). Executes <literal>3n+1</literal> SQL queries, where <literal>n</literal>
                     is a number of different entity classes modified within specified revision.

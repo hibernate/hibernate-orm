@@ -10,7 +10,7 @@ import org.hibernate.envers.test.entities.StrIntTestEntity;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.envers.test.entities.reventity.trackmodifiedentities.CustomEntityTrackingRevisionListener;
 import org.hibernate.envers.test.entities.reventity.trackmodifiedentities.CustomTrackingRevisionEntity;
-import org.hibernate.envers.test.entities.reventity.trackmodifiedentities.ModifiedEntityNameEntity;
+import org.hibernate.envers.test.entities.reventity.trackmodifiedentities.ModifiedEntityTypeEntity;
 import org.hibernate.envers.test.tools.TestTools;
 import org.junit.Test;
 
@@ -28,7 +28,7 @@ public class CustomTrackingEntitiesTest extends AbstractEntityTest {
     
     @Override
     public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(ModifiedEntityNameEntity.class);
+        cfg.addAnnotatedClass(ModifiedEntityTypeEntity.class);
         cfg.addAnnotatedClass(CustomTrackingRevisionEntity.class);
         cfg.addAnnotatedClass(StrTestEntity.class);
         cfg.addAnnotatedClass(StrIntTestEntity.class);
@@ -66,40 +66,40 @@ public class CustomTrackingEntitiesTest extends AbstractEntityTest {
 
     @Test
     public void testTrackAddedEntities() {
-        ModifiedEntityNameEntity steDescriptor = new ModifiedEntityNameEntity(StrTestEntity.class.getName());
-        ModifiedEntityNameEntity siteDescriptor = new ModifiedEntityNameEntity(StrIntTestEntity.class.getName());
+        ModifiedEntityTypeEntity steDescriptor = new ModifiedEntityTypeEntity(StrTestEntity.class.getName());
+        ModifiedEntityTypeEntity siteDescriptor = new ModifiedEntityTypeEntity(StrIntTestEntity.class.getName());
 
         AuditReader vr = getAuditReader();
         CustomTrackingRevisionEntity ctre = vr.findRevision(CustomTrackingRevisionEntity.class, 1);
 
-        assert ctre.getModifiedEntityNames() != null;
-        assert ctre.getModifiedEntityNames().size() == 2;
-        assert TestTools.makeSet(steDescriptor, siteDescriptor).equals(ctre.getModifiedEntityNames());
+        assert ctre.getModifiedEntityTypes() != null;
+        assert ctre.getModifiedEntityTypes().size() == 2;
+        assert TestTools.makeSet(steDescriptor, siteDescriptor).equals(ctre.getModifiedEntityTypes());
     }
 
     @Test
     public void testTrackModifiedEntities() {
-        ModifiedEntityNameEntity siteDescriptor = new ModifiedEntityNameEntity(StrIntTestEntity.class.getName());
+        ModifiedEntityTypeEntity siteDescriptor = new ModifiedEntityTypeEntity(StrIntTestEntity.class.getName());
 
         AuditReader vr = getAuditReader();
         CustomTrackingRevisionEntity ctre = vr.findRevision(CustomTrackingRevisionEntity.class, 2);
 
-        assert ctre.getModifiedEntityNames() != null;
-        assert ctre.getModifiedEntityNames().size() == 1;
-        assert TestTools.makeSet(siteDescriptor).equals(ctre.getModifiedEntityNames());
+        assert ctre.getModifiedEntityTypes() != null;
+        assert ctre.getModifiedEntityTypes().size() == 1;
+        assert TestTools.makeSet(siteDescriptor).equals(ctre.getModifiedEntityTypes());
     }
 
     @Test
     public void testTrackDeletedEntities() {
-        ModifiedEntityNameEntity steDescriptor = new ModifiedEntityNameEntity(StrTestEntity.class.getName());
-        ModifiedEntityNameEntity siteDescriptor = new ModifiedEntityNameEntity(StrIntTestEntity.class.getName());
+        ModifiedEntityTypeEntity steDescriptor = new ModifiedEntityTypeEntity(StrTestEntity.class.getName());
+        ModifiedEntityTypeEntity siteDescriptor = new ModifiedEntityTypeEntity(StrIntTestEntity.class.getName());
 
         AuditReader vr = getAuditReader();
         CustomTrackingRevisionEntity ctre = vr.findRevision(CustomTrackingRevisionEntity.class, 3);
 
-        assert ctre.getModifiedEntityNames() != null;
-        assert ctre.getModifiedEntityNames().size() == 2;
-        assert TestTools.makeSet(steDescriptor, siteDescriptor).equals(ctre.getModifiedEntityNames());
+        assert ctre.getModifiedEntityTypes() != null;
+        assert ctre.getModifiedEntityTypes().size() == 2;
+        assert TestTools.makeSet(steDescriptor, siteDescriptor).equals(ctre.getModifiedEntityTypes());
     }
 
     @Test(expected = AuditException.class)

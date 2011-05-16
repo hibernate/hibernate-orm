@@ -13,7 +13,7 @@ import java.util.Set;
  * <ul>
  * <li><code>org.hibernate.envers.track_entities_changed_in_revision</code> parameter is set to <code>true</code>.</li>
  * <li>Custom revision entity (annotated with {@link RevisionEntity}) extends {@link DefaultTrackingModifiedTypesRevisionEntity}.</li>
- * <li>Custom revision entity (annotated with {@link RevisionEntity}) encapsulates a field marked with {@link ModifiedEntityNames}.</li>
+ * <li>Custom revision entity (annotated with {@link RevisionEntity}) encapsulates a field marked with {@link ModifiedEntityTypes}.</li>
  * </ul>
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
@@ -21,17 +21,17 @@ import java.util.Set;
 public class DefaultTrackingModifiedTypesRevisionEntity extends DefaultRevisionEntity {
     @ElementCollection(fetch = FetchType.EAGER)
     @JoinTable(name = "REVENTITY", joinColumns = @JoinColumn(name = "REV"))
-    @Column(name = "ENTITYNAME")
+    @Column(name = "ENTITYTYPE")
     @Fetch(FetchMode.JOIN)
-    @ModifiedEntityNames
-    private Set<String> modifiedEntityNames = new HashSet<String>();
+    @ModifiedEntityTypes
+    private Set<String> modifiedEntityTypes = new HashSet<String>();
 
-    public Set<String> getModifiedEntityNames() {
-        return modifiedEntityNames;
+    public Set<String> getModifiedEntityTypes() {
+        return modifiedEntityTypes;
     }
 
-    public void setModifiedEntityNames(Set<String> modifiedEntityNames) {
-        this.modifiedEntityNames = modifiedEntityNames;
+    public void setModifiedEntityTypes(Set<String> modifiedEntityTypes) {
+        this.modifiedEntityTypes = modifiedEntityTypes;
     }
 
     public boolean equals(Object o) {
@@ -41,19 +41,19 @@ public class DefaultTrackingModifiedTypesRevisionEntity extends DefaultRevisionE
 
         DefaultTrackingModifiedTypesRevisionEntity that = (DefaultTrackingModifiedTypesRevisionEntity) o;
 
-        if (modifiedEntityNames != null ? !modifiedEntityNames.equals(that.modifiedEntityNames)
-                                        : that.modifiedEntityNames != null) return false;
+        if (modifiedEntityTypes != null ? !modifiedEntityTypes.equals(that.modifiedEntityTypes)
+                                        : that.modifiedEntityTypes != null) return false;
 
         return true;
     }
 
     public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + (modifiedEntityNames != null ? modifiedEntityNames.hashCode() : 0);
+        result = 31 * result + (modifiedEntityTypes != null ? modifiedEntityTypes.hashCode() : 0);
         return result;
     }
 
     public String toString() {
-        return "DefaultTrackingModifiedTypesRevisionEntity(" + super.toString() + ", modifiedEntityNames = " + modifiedEntityNames.toString() + ")";
+        return "DefaultTrackingModifiedTypesRevisionEntity(" + super.toString() + ", modifiedEntityTypes = " + modifiedEntityTypes.toString() + ")";
     }
 }

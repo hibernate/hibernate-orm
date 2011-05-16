@@ -13,22 +13,22 @@ import java.util.Set;
 
 /**
  * Automatically adds entity names changed during current revision.
- * @see org.hibernate.envers.ModifiedEntityNames
+ * @see org.hibernate.envers.ModifiedEntityTypes
  * @see org.hibernate.envers.DefaultTrackingModifiedTypesRevisionEntity
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public class DefaultTrackingModifiedTypesRevisionInfoGenerator extends DefaultRevisionInfoGenerator {
-    private final Setter modifiedEntityNamesSetter;
-    private final Getter modifiedEntityNamesGetter;
+    private final Setter modifiedEntityTypesSetter;
+    private final Getter modifiedEntityTypesGetter;
 
     public DefaultTrackingModifiedTypesRevisionInfoGenerator(String revisionInfoEntityName,
                                                              Class<?> revisionInfoClass,
                                                              Class<? extends RevisionListener> listenerClass,
                                                              PropertyData revisionInfoTimestampData, boolean timestampAsDate,
-                                                             PropertyData modifiedEntityNamesData) {
+                                                             PropertyData modifiedEntityTypesData) {
         super(revisionInfoEntityName, revisionInfoClass, listenerClass, revisionInfoTimestampData, timestampAsDate);
-        modifiedEntityNamesSetter = ReflectionTools.getSetter(revisionInfoClass, modifiedEntityNamesData);
-        modifiedEntityNamesGetter = ReflectionTools.getGetter(revisionInfoClass, modifiedEntityNamesData);
+        modifiedEntityTypesSetter = ReflectionTools.getSetter(revisionInfoClass, modifiedEntityTypesData);
+        modifiedEntityTypesGetter = ReflectionTools.getGetter(revisionInfoClass, modifiedEntityTypesData);
     }
 
     @Override
@@ -36,11 +36,11 @@ public class DefaultTrackingModifiedTypesRevisionInfoGenerator extends DefaultRe
     public void entityChanged(Class entityClass, String entityName, Serializable entityId, RevisionType revisionType,
                               Object revisionEntity) {
         super.entityChanged(entityClass, entityName, entityId, revisionType, revisionEntity);
-        Set<String> modifiedEntityNames = (Set<String>) modifiedEntityNamesGetter.get(revisionEntity);
-        if (modifiedEntityNames == null) {
-            modifiedEntityNames = new HashSet<String>();
-            modifiedEntityNamesSetter.set(revisionEntity, modifiedEntityNames, null);
+        Set<String> modifiedEntityTypes = (Set<String>) modifiedEntityTypesGetter.get(revisionEntity);
+        if (modifiedEntityTypes == null) {
+            modifiedEntityTypes = new HashSet<String>();
+            modifiedEntityTypesSetter.set(revisionEntity, modifiedEntityTypes, null);
         }
-        modifiedEntityNames.add(entityClass.getName());
+        modifiedEntityTypes.add(entityClass.getName());
     }
 }

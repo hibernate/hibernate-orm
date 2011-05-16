@@ -35,7 +35,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.persistence.AccessType;
-import javax.persistence.InheritanceType;
 
 import com.fasterxml.classmate.ResolvedTypeWithMembers;
 import com.fasterxml.classmate.members.HierarchicType;
@@ -52,6 +51,7 @@ import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.metamodel.binding.InheritanceType;
 import org.hibernate.metamodel.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.source.annotations.util.ReflectionHelper;
 import org.hibernate.service.ServiceRegistry;
@@ -115,6 +115,10 @@ public class ConfiguredClass {
 
 	public String getName() {
 		return clazz.getName();
+	}
+
+	public String getSimpleName() {
+		return clazz.getSimpleName();
 	}
 
 	public ClassInfo getClassInfo() {
@@ -375,7 +379,7 @@ public class ConfiguredClass {
 		final Map<DotName, List<AnnotationInstance>> annotations = JandexHelper.getMemberAnnotations(
 				classInfo, member.getName()
 		);
-		return new MappedAttribute( name, (Class) type, annotations );
+		return MappedAttribute.createMappedAttribute( name, (Class) type, annotations );
 	}
 
 	private Type findResolvedType(String name, ResolvedMember[] resolvedMembers) {

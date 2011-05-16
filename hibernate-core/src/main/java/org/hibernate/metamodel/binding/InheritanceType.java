@@ -35,7 +35,8 @@ import org.hibernate.MappingException;
 public enum InheritanceType {
 	JOINED,
 	SINGLE_TABLE,
-	TABLE_PER_CLASS;
+	TABLE_PER_CLASS,
+	NO_INHERITANCE;
 
 	/**
 	 * @param jpaType The JPA inheritance type

@@ -23,25 +23,90 @@
  */
 package org.hibernate.metamodel.source.annotations;
 
+import java.util.List;
+import java.util.Map;
+
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.DotName;
+
+import org.hibernate.metamodel.source.annotations.util.JandexHelper;
+
 /**
  * Container for the properties of a discriminator column.
  *
  * @author Hardy Ferentschik
  */
 public class DiscriminatorColumnValues extends ColumnValues {
-	private static final String DEFAULT_DISCRIMINATOR_COLUMN_NAME = "DTYPE";
-	private static final String DEFAULT_DISCRIMINATOR_TYPE = "string";
+	public static final String DEFAULT_DISCRIMINATOR_COLUMN_NAME = "DTYPE";
 	private static final int DEFAULT_DISCRIMINATOR_LENGTH = 31;
 
-	public DiscriminatorColumnValues() {
+	private boolean isForced = true;
+	private boolean isIncludedInSql = true;
+	private String discriminatorValue = null;
+
+	public DiscriminatorColumnValues(Map<DotName, List<AnnotationInstance>> annotations) {
 		super();
-		setName( DEFAULT_DISCRIMINATOR_COLUMN_NAME );
-		setLength( DEFAULT_DISCRIMINATOR_LENGTH );
+
+		AnnotationInstance discriminatorOptionsAnnotation = JandexHelper.getSingleAnnotation(
+				annotations, JPADotNames.DISCRIMINATOR_COLUMN
+		);
+
+		if ( discriminatorOptionsAnnotation != null ) {
+			setName( discriminatorOptionsAnnotation.value( "name" ).asString() );
+			setLength( discriminatorOptionsAnnotation.value( "length" ).asInt() );
+			if ( discriminatorOptionsAnnotation.value( "columnDefinition" ) != null ) {
+				setColumnDefinition( discriminatorOptionsAnnotation.value( "columnDefinition" ).asString() );
+			}
+		}
+		else {
+			setName( DEFAULT_DISCRIMINATOR_COLUMN_NAME );
+			setLength( DEFAULT_DISCRIMINATOR_LENGTH );
+		}
+
 		setNullable( false );
-//		if ( columnAnnotation != null && !JPADotNames.COLUMN.equals( columnAnnotation.name() ) ) {
-//			throw new AssertionFailure( "A @Column annotation needs to be passed to the constructor" );
-//		}
-//		applyColumnValues( columnAnnotation, isId );
+		setDiscriminatorValue( annotations );
+		setDiscriminatorOptions( annotations );
+		setDiscriminatorFormula( annotations );
+	}
+
+	private void setDiscriminatorValue(Map<DotName, List<AnnotationInstance>> annotations) {
+		AnnotationInstance discriminatorValueAnnotation = JandexHelper.getSingleAnnotation(
+				annotations, JPADotNames.DISCRIMINATOR_VALUE
+		);
+		if ( discriminatorValueAnnotation != null ) {
+			discriminatorValue = discriminatorValueAnnotation.value().asString();
+		}
+	}
+
+	private void setDiscriminatorFormula(Map<DotName, List<AnnotationInstance>> annotations) {
+		AnnotationInstance discriminatorFormulaAnnotation = JandexHelper.getSingleAnnotation(
+				annotations, HibernateDotNames.DISCRIMINATOR_FORMULA
+		);
+		if ( discriminatorFormulaAnnotation != null ) {
+			// todo
+		}
+	}
+
+	public boolean isForced() {
+		return isForced;
+	}
+
+	public boolean isIncludedInSql() {
+		return isIncludedInSql;
+	}
+
+	public String getDiscriminatorValue() {
+		return discriminatorValue;
+	}
+
+	private void setDiscriminatorOptions(Map<DotName, List<AnnotationInstance>> annotations) {
+		AnnotationInstance discriminatorOptionsAnnotation = JandexHelper.getSingleAnnotation(
+				annotations, HibernateDotNames.DISCRIMINATOR_OPTIONS
+		);
+		if ( discriminatorOptionsAnnotation != null ) {
+			isForced = discriminatorOptionsAnnotation.value( "force" ).asBoolean();
+			isIncludedInSql = discriminatorOptionsAnnotation.value( "insert" ).asBoolean();
+		}
 	}
 }
 

@@ -25,14 +25,19 @@ package org.hibernate.metamodel.source.annotations;
 
 import java.util.List;
 import java.util.Map;
+import javax.persistence.DiscriminatorType;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.DotName;
 
+import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
+import org.hibernate.metamodel.source.annotations.util.JandexHelper;
+
 
 /**
- * Represent a mapped attribute (explicitly or implicitly mapped).
+ * Represent a mapped attribute (explicitly or implicitly mapped). Also used for synthetic attributes likes a
+ * discriminator column.
  *
  * @author Hardy Ferentschik
  */
@@ -43,24 +48,73 @@ public class MappedAttribute implements Comparable<MappedAttribute> {
 	private final ColumnValues columnValues;
 	private final boolean isId;
 	private final boolean isVersioned;
+	private final boolean isDiscriminator;
 
-	MappedAttribute(String name, Class<?> type, Map<DotName, List<AnnotationInstance>> annotations) {
+	static MappedAttribute createMappedAttribute(String name, Class<?> type, Map<DotName, List<AnnotationInstance>> annotations) {
+		return new MappedAttribute( name, type, annotations, false );
+	}
+
+	static MappedAttribute createDiscriminatorAttribute(Map<DotName, List<AnnotationInstance>> annotations) {
+		Map<DotName, List<AnnotationInstance>> discriminatorAnnotations = JandexHelper.filterAnnotations(
+				annotations,
+				JPADotNames.DISCRIMINATOR_COLUMN,
+				JPADotNames.DISCRIMINATOR_VALUE,
+				HibernateDotNames.DISCRIMINATOR_FORMULA,
+				HibernateDotNames.DISCRIMINATOR_OPTIONS
+		);
+
+		AnnotationInstance discriminatorOptionsAnnotation = JandexHelper.getSingleAnnotation(
+				annotations, JPADotNames.DISCRIMINATOR_COLUMN
+		);
+		String name = DiscriminatorColumnValues.DEFAULT_DISCRIMINATOR_COLUMN_NAME;
+		Class<?> type = String.class; // string is the discriminator default
+		if ( discriminatorOptionsAnnotation != null ) {
+			name = discriminatorOptionsAnnotation.value( "name" ).asString();
+
+			DiscriminatorType discriminatorType = Enum.valueOf(
+					DiscriminatorType.class, discriminatorOptionsAnnotation.value( "discriminatorType" ).asEnum()
+			);
+			switch ( discriminatorType ) {
+				case STRING: {
+					type = String.class;
+					break;
+				}
+				case CHAR: {
+					type = Character.class;
+					break;
+				}
+				case INTEGER: {
+					type = Integer.class;
+					break;
+				}
+				default: {
+					throw new AnnotationException( "Unsupported discriminator type: " + discriminatorType );
+				}
+			}
+		}
+		return new MappedAttribute( name, type, discriminatorAnnotations, true );
+	}
+
+	private MappedAttribute(String name, Class<?> type, Map<DotName, List<AnnotationInstance>> annotations, boolean isDiscriminator) {
 		this.name = name;
 		this.type = type;
 		this.annotations = annotations;
+		this.isDiscriminator = isDiscriminator;
 
-		List<AnnotationInstance> idAnnotations = annotations.get( JPADotNames.ID );
-		isId = idAnnotations != null && !idAnnotations.isEmpty();
+		AnnotationInstance idAnnotation = JandexHelper.getSingleAnnotation( annotations, JPADotNames.ID );
+		isId = idAnnotation != null;
 
-		List<AnnotationInstance> versionAnnotations = annotations.get( JPADotNames.VERSION );
-		isVersioned = versionAnnotations != null && !versionAnnotations.isEmpty();
+		AnnotationInstance versionAnnotation = JandexHelper.getSingleAnnotation( annotations, JPADotNames.VERSION );
+		isVersioned = versionAnnotation != null;
 
-		List<AnnotationInstance> columnAnnotations = annotations.get( JPADotNames.COLUMN );
-		if ( columnAnnotations != null && columnAnnotations.size() > 1 ) {
-			throw new AssertionFailure( "There can only be one @Column annotation per mapped attribute" );
+		if ( isDiscriminator ) {
+			columnValues = new DiscriminatorColumnValues( annotations );
 		}
-		AnnotationInstance columnAnnotation = columnAnnotations == null ? null : columnAnnotations.get( 0 );
-		columnValues = new ColumnValues( columnAnnotation );
+		else {
+			AnnotationInstance columnAnnotation = JandexHelper.getSingleAnnotation( annotations, JPADotNames.COLUMN );
+			columnValues = new ColumnValues( columnAnnotation );
+		}
+
 		if ( isId ) {
 			// an id must be unique and cannot be nullable
 			columnValues.setUnique( true );
@@ -86,6 +140,10 @@ public class MappedAttribute implements Comparable<MappedAttribute> {
 
 	public boolean isVersioned() {
 		return isVersioned;
+	}
+
+	public boolean isDiscriminator() {
+		return isDiscriminator;
 	}
 
 	/**

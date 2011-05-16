@@ -83,7 +83,6 @@ public class HbmSimpleAttributeDomainState extends AbstractHbmAttributeDomainSta
 			MetadataImpl metadata,
 			MappingDefaults defaults,
 			org.hibernate.metamodel.domain.Attribute attribute,
-			Map<String, MetaAttribute> entityMetaAttributes,
 			XMLDiscriminator discriminator) {
 		super(
 				metadata, defaults, attribute, null, null, null, true

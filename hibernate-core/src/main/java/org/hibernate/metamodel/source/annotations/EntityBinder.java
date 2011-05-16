@@ -36,7 +36,6 @@ import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.binding.Caching;
 import org.hibernate.metamodel.binding.EntityBinding;
-import org.hibernate.metamodel.binding.InheritanceType;
 import org.hibernate.metamodel.binding.SimpleAttributeBinding;
 import org.hibernate.metamodel.domain.Entity;
 import org.hibernate.metamodel.domain.Hierarchical;
@@ -67,19 +66,20 @@ public class EntityBinder {
 
 	public void bind() {
 		EntityBinding entityBinding = new EntityBinding();
-		entityBinding.setInheritanceType( InheritanceType.get( configuredClass.getInheritanceType() ) );
-		bindInheritance( entityBinding );
 
 		bindJpaEntityAnnotation( entityBinding );
 		bindHibernateEntityAnnotation( entityBinding ); // optional hibernate specific @org.hibernate.annotations.Entity
+
+		schemaName = createSchemaName();
+		bindTable( entityBinding );
+
+		entityBinding.setInheritanceType( configuredClass.getInheritanceType() );
+		bindInheritance( entityBinding );
 
 		bindWhereFilter( entityBinding );
 
 		bindJpaCaching( entityBinding );
 		bindHibernateCaching( entityBinding );
-
-		schemaName = createSchemaName();
-		bindTable( entityBinding );
 
 		if ( configuredClass.isRoot() ) {
 			bindId( entityBinding );
@@ -93,21 +93,36 @@ public class EntityBinder {
 		switch ( configuredClass.getInheritanceType() ) {
 			case SINGLE_TABLE: {
 				bindDiscriminatorColumn( entityBinding );
+				break;
 			}
 			case JOINED: {
 				// todo
+				break;
 			}
 			case TABLE_PER_CLASS: {
 				// todo
+				break;
 			}
 			default: {
-				throw new AnnotationException( "Invalid inheritance type " + configuredClass.getInheritanceType() );
+				// do nothing
 			}
 		}
 	}
 
 	private void bindDiscriminatorColumn(EntityBinding entityBinding) {
+		MappedAttribute discriminatorAttribute = MappedAttribute.createDiscriminatorAttribute(
+				configuredClass.getClassInfo().annotations()
+		);
 
+		bindSingleMappedAttribute( entityBinding, discriminatorAttribute );
+
+		if ( !( discriminatorAttribute.getColumnValues() instanceof DiscriminatorColumnValues ) ) {
+			throw new AssertionFailure( "Expected discriminator column values" );
+		}
+		DiscriminatorColumnValues discriminatorColumnvalues = (DiscriminatorColumnValues) discriminatorAttribute.getColumnValues();
+		entityBinding.getEntityDiscriminator().setForced( discriminatorColumnvalues.isForced() );
+		entityBinding.getEntityDiscriminator().setInserted( discriminatorColumnvalues.isIncludedInSql() );
+		entityBinding.setDiscriminatorValue( discriminatorColumnvalues.getDiscriminatorValue() );
 	}
 
 	private void bindWhereFilter(EntityBinding entityBinding) {
@@ -295,24 +310,33 @@ public class EntityBinder {
 
 	private void bindAttributes(EntityBinding entityBinding) {
 		for ( MappedAttribute mappedAttribute : configuredClass.getMappedAttributes() ) {
-			if ( mappedAttribute.isId() ) {
-				continue;
-			}
+			bindSingleMappedAttribute( entityBinding, mappedAttribute );
+		}
+	}
 
-			String attributeName = mappedAttribute.getName();
-			entityBinding.getEntity().getOrCreateSingularAttribute( attributeName );
-			SimpleAttributeBinding attributeBinding;
+	private void bindSingleMappedAttribute(EntityBinding entityBinding, MappedAttribute mappedAttribute) {
+		if ( mappedAttribute.isId() ) {
+			return;
+		}
 
-			if ( mappedAttribute.isVersioned() ) {
-				attributeBinding = entityBinding.makeVersionBinding( attributeName );
-			}
-			else {
-				attributeBinding = entityBinding.makeSimpleAttributeBinding( attributeName );
-			}
+		String attributeName = mappedAttribute.getName();
+		entityBinding.getEntity().getOrCreateSingularAttribute( attributeName );
+		SimpleAttributeBinding attributeBinding;
 
-			AttributeDomainState domainState = new AttributeDomainState( entityBinding, mappedAttribute );
-			attributeBinding.initialize( domainState );
+		if ( mappedAttribute.isVersioned() ) {
+			attributeBinding = entityBinding.makeVersionBinding( attributeName );
+		}
+		else if ( mappedAttribute.isDiscriminator() ) {
+			attributeBinding = entityBinding.makeEntityDiscriminatorBinding( attributeName );
+		}
+		else {
+			attributeBinding = entityBinding.makeSimpleAttributeBinding( attributeName );
+		}
 
+		AttributeDomainState domainState = new AttributeDomainState( entityBinding, mappedAttribute );
+		attributeBinding.initialize( domainState );
+
+		if ( configuredClass.hasOwnTable() ) {
 			AttributeColumnRelationalState columnRelationsState = new AttributeColumnRelationalState(
 					mappedAttribute, meta
 			);
@@ -393,16 +417,14 @@ public class EntityBinder {
 			return null;
 		}
 
-		EntityBinding parentBinding = meta.getEntityBinding( parent.getName() );
+		EntityBinding parentBinding = meta.getEntityBinding( parent.getSimpleName() );
 		if ( parentBinding == null ) {
 			throw new AssertionFailure(
-					"Parent entity " + parent.getName() + " of entity " + configuredClass.getName() + "not yet created!"
+					"Parent entity " + parent.getName() + " of entity " + configuredClass.getName() + " not yet created!"
 			);
 		}
 
 		return parentBinding.getEntity();
 	}
 }
-
-
 

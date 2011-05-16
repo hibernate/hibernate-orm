@@ -8,7 +8,7 @@ import java.io.Serializable;
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-public class CustomEntityTrackingRevisionListener implements EntityTrackingRevisionListener {
+public class CustomTrackingRevisionListener implements EntityTrackingRevisionListener {
     @Override
     public void entityChanged(Class entityClass, String entityName, Serializable entityId, RevisionType revisionType,
                               Object revisionEntity) {

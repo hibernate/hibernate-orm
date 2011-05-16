@@ -9,11 +9,11 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Revision entity which {@code modifiedEntityTypes} field is manually populated by {@link CustomEntityTrackingRevisionListener}.
+ * Revision entity which {@code modifiedEntityTypes} field is manually populated by {@link CustomTrackingRevisionListener}.
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @Entity
-@RevisionEntity(CustomEntityTrackingRevisionListener.class)
+@RevisionEntity(CustomTrackingRevisionListener.class)
 public class CustomTrackingRevisionEntity {
     @Id
     @GeneratedValue

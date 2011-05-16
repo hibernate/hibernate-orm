@@ -8,8 +8,8 @@ import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrIntTestEntity;
 import org.hibernate.envers.test.entities.StrTestEntity;
-import org.hibernate.envers.test.entities.reventity.trackmodifiedentities.CustomEntityTrackingRevisionListener;
 import org.hibernate.envers.test.entities.reventity.trackmodifiedentities.CustomTrackingRevisionEntity;
+import org.hibernate.envers.test.entities.reventity.trackmodifiedentities.CustomTrackingRevisionListener;
 import org.hibernate.envers.test.entities.reventity.trackmodifiedentities.ModifiedEntityTypeEntity;
 import org.hibernate.envers.test.tools.TestTools;
 import org.junit.Test;
@@ -18,7 +18,7 @@ import javax.persistence.EntityManager;
 
 /**
  * Tests proper behavior of entity listener that implements {@link EntityTrackingRevisionListener}
- * interface. {@link CustomEntityTrackingRevisionListener} shall be notified whenever an entity instance has been
+ * interface. {@link CustomTrackingRevisionListener} shall be notified whenever an entity instance has been
  * added, modified or removed, so that changed entity type can be persisted.
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */

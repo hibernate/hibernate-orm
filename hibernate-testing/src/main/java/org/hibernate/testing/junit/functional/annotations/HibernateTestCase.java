@@ -145,6 +145,7 @@ public abstract class HibernateTestCase extends TestCase {
 	protected void tearDown() throws Exception {
 		runSchemaDrop();
 		handleUnclosedResources();
+		closeResources();
 	}
 
 	protected static class Skip {

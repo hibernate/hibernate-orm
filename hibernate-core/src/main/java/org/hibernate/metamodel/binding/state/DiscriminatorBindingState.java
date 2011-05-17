@@ -26,6 +26,8 @@ package org.hibernate.metamodel.binding.state;
 /**
  * @author Gail Badner
  */
-public interface DiscriminatorBindingState extends SimpleAttributeBindingState {
+public interface DiscriminatorBindingState extends AttributeBindingState {
+	String getDiscriminatorValue();
 	boolean isForced();
+	boolean isInserted();
 }

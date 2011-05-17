@@ -33,14 +33,21 @@ import org.hibernate.metamodel.source.annotations.entity.MappedAttribute;
  */
 public class DiscriminatorBindingStateImpl
 		extends AttributeBindingStateImpl implements org.hibernate.metamodel.binding.state.DiscriminatorBindingState {
+	private final String discriminatorValue;
 	private final boolean isForced;
 	private final boolean isInserted;
 
 	public DiscriminatorBindingStateImpl(MappedAttribute mappedAttribute) {
 		super( mappedAttribute );
 		DiscriminatorColumnValues columnValues = DiscriminatorColumnValues.class.cast( mappedAttribute.getColumnValues() );
+		discriminatorValue = columnValues.getDiscriminatorValue();
 		isForced = columnValues.isForced();
 		isInserted = columnValues.isIncludedInSql();
+	}
+
+	@Override
+	public String getDiscriminatorValue() {
+		return discriminatorValue;
 	}
 
 	@Override
@@ -49,7 +56,7 @@ public class DiscriminatorBindingStateImpl
 	}
 
 	@Override
-	public boolean isInsertable() {
+	public boolean isInserted() {
 		return isInserted;
 	}
 }

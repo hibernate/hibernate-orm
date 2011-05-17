@@ -24,53 +24,67 @@
 package org.hibernate.metamodel.source.hbm.state.binding;
 
 import org.hibernate.metamodel.binding.MappingDefaults;
+import org.hibernate.metamodel.binding.state.AttributeBindingState;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLDiscriminator;
 import org.hibernate.metamodel.binding.state.DiscriminatorBindingState;
+import org.hibernate.metamodel.source.util.MappingHelper;
 
 /**
  * @author Gail Badner
  */
-public class HbmDiscriminatorBindingState extends AbstractHbmAttributeBindingState
-		implements DiscriminatorBindingState {
+public class HbmDiscriminatorBindingState extends AbstractHbmAttributeBindingState implements DiscriminatorBindingState {
 	private final XMLDiscriminator discriminator;
+	private final String discriminatorValue;
+	private final boolean isForced;
+	private final boolean isInserted;
+	private final String typeName;
 
 	public HbmDiscriminatorBindingState(
+			String entityName,
 			String ownerClassName,
 			MappingDefaults defaults,
-			XMLDiscriminator discriminator) {
+			XMLHibernateMapping.XMLClass xmlEntityClazz) {
 		// Discriminator.getName() is not defined, so the attribute will always be
 		// defaults.getDefaultDescriminatorColumnName()
 		super(
 				ownerClassName, defaults.getDefaultDescriminatorColumnName(), defaults, null, null, null, true
 		);
-		this.discriminator = discriminator;
-	}
-
-	public String getCascade() {
-		return null;
-	}
-
-	protected boolean isEmbedded() {
-		return false;
+		this.discriminatorValue =  MappingHelper.getStringValue(
+					xmlEntityClazz.getDiscriminatorValue(), entityName
+		);
+		this.discriminator = xmlEntityClazz.getDiscriminator();
+		this.isForced = xmlEntityClazz.getDiscriminator().isForce();
+		this.isInserted = discriminator.isInsert();
+		this.typeName =  discriminator.getType() == null ? "string" : discriminator.getType();
 	}
 
 	public String getTypeName() {
-		return discriminator.getType() == null ? "string" : discriminator.getType();
+		return typeName;
 	}
 
+	@Override
 	public boolean isLazy() {
 		return false;
 	}
 
-	public boolean isInsertable() {
-		return discriminator.isInsert();
+	@Override
+	public String getCascade() {
+		return null;
 	}
 
-	public boolean isUpdateable() {
-		return false;
+	@Override
+	public boolean isInserted() {
+		return isInserted;
 	}
 
+	@Override
+	public String getDiscriminatorValue() {
+		return discriminatorValue;
+	}
+
+	@Override
 	public boolean isForced() {
-		return discriminator.isForce();
+		return isForced;
 	}
 }

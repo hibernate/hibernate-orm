@@ -39,6 +39,7 @@ import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.metamodel.binding.Caching;
 import org.hibernate.metamodel.binding.EntityBinding;
+import org.hibernate.metamodel.binding.EntityDiscriminator;
 import org.hibernate.metamodel.binding.ManyToOneAttributeBinding;
 import org.hibernate.metamodel.binding.SimpleAttributeBinding;
 import org.hibernate.metamodel.binding.state.ManyToOneAttributeBindingState;
@@ -135,10 +136,6 @@ public class EntityBinder {
 		if ( !( discriminatorAttribute.getColumnValues() instanceof DiscriminatorColumnValues ) ) {
 			throw new AssertionFailure( "Expected discriminator column values" );
 		}
-
-		// TODO: move this into DiscriminatorBindingState
-		DiscriminatorColumnValues discriminatorColumnvalues = (DiscriminatorColumnValues) discriminatorAttribute.getColumnValues();
-		entityBinding.setDiscriminatorValue( discriminatorColumnvalues.getDiscriminatorValue() );
 	}
 
 	private void bindWhereFilter(EntityBinding entityBinding) {
@@ -391,21 +388,20 @@ public class EntityBinder {
 		String attributeName = simpleAttribute.getName();
 		entityBinding.getEntity().getOrCreateSingularAttribute( attributeName );
 		SimpleAttributeBinding attributeBinding;
-		SimpleAttributeBindingState bindingState;
 
 		if ( simpleAttribute.isDiscriminator() ) {
-			attributeBinding = entityBinding.makeEntityDiscriminator( attributeName ).getValueBinding();
-			bindingState = new DiscriminatorBindingStateImpl( simpleAttribute );
+			EntityDiscriminator entityDiscriminator = entityBinding.makeEntityDiscriminator( attributeName );
+			entityDiscriminator.initialize( new DiscriminatorBindingStateImpl( simpleAttribute ) );
+			attributeBinding = entityDiscriminator.getValueBinding();
 		}
 		else if ( simpleAttribute.isVersioned() ) {
 			attributeBinding = entityBinding.makeVersionBinding( attributeName );
-			bindingState = new AttributeBindingStateImpl( simpleAttribute );
+			attributeBinding.initialize(  new AttributeBindingStateImpl( simpleAttribute ) );
 		}
 		else {
 			attributeBinding = entityBinding.makeSimpleAttributeBinding( attributeName );
-			bindingState = new AttributeBindingStateImpl( simpleAttribute );
+			attributeBinding.initialize(  new AttributeBindingStateImpl( simpleAttribute ) );
 		}
-		attributeBinding.initialize( bindingState );
 
 		if ( configuredClass.hasOwnTable() ) {
 			ColumnRelationalStateImpl columnRelationsState = new ColumnRelationalStateImpl(

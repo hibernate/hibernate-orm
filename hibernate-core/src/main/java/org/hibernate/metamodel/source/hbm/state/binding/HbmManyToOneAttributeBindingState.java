@@ -164,7 +164,7 @@ public class HbmManyToOneAttributeBindingState
 		return isUpdateable;
 	}
 
-	public boolean isKeyCasadeDeleteEnabled() {
+	public boolean isKeyCascadeDeleteEnabled() {
 		//TODO: implement
 		return false;
 	}

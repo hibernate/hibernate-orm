@@ -28,5 +28,6 @@ package org.hibernate.metamodel.state.relational;
  */
 public interface ManyToOneRelationalState extends ValueRelationalState {
 	boolean isLogicalOneToOne();
+
 	String getForeignKeyName();
 }

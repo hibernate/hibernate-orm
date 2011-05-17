@@ -29,38 +29,60 @@ import org.hibernate.FetchMode;
 import org.hibernate.metamodel.binding.CustomSQL;
 
 /**
- * Created by IntelliJ IDEA.
- * User: gbadner
- * Date: 5/9/11
- * Time: 4:49 PM
- * To change this template use File | Settings | File Templates.
+ * @author gbadner
  */
 public interface PluralAttributeBindingState extends AttributeBindingState {
 	FetchMode getFetchMode();
+
 	boolean isExtraLazy();
+
 	String getElementTypeName();
+
 	String getElementNodeName();
+
 	boolean isInverse();
+
 	boolean isMutable();
+
 	boolean isSubselectLoadable();
+
 	String getCacheConcurrencyStrategy();
+
 	String getCacheRegionName();
+
 	String getOrderBy();
+
 	String getWhere();
+
 	String getReferencedPropertyName();
+
 	boolean isSorted();
+
 	Comparator getComparator();
+
 	String getComparatorClassName();
+
 	boolean isOrphanDelete();
+
 	int getBatchSize();
+
 	boolean isEmbedded();
+
 	boolean isOptimisticLocked();
+
 	Class getCollectionPersisterClass();
+
 	java.util.Map getFilters();
+
 	java.util.Set getSynchronizedTables();
+
 	CustomSQL getCustomSQLInsert();
+
 	CustomSQL getCustomSQLUpdate();
+
 	CustomSQL getCustomSQLDelete();
+
 	CustomSQL getCustomSQLDeleteAll();
+
 	String getLoaderName();
 }

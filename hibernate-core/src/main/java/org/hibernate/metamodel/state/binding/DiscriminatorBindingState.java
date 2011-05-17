@@ -23,8 +23,6 @@
  */
 package org.hibernate.metamodel.state.binding;
 
-import org.hibernate.metamodel.binding.AttributeBinding;
-
 /**
  * @author Gail Badner
  */

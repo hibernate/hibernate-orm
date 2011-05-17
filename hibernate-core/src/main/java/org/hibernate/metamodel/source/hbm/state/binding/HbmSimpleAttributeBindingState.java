@@ -265,7 +265,7 @@ public class HbmSimpleAttributeBindingState extends AbstractHbmAttributeBindingS
 		return null;
 	}
 
-	public boolean isKeyCasadeDeleteEnabled() {
+	public boolean isKeyCascadeDeleteEnabled() {
 		//TODO: implement
 		return false;
 	}

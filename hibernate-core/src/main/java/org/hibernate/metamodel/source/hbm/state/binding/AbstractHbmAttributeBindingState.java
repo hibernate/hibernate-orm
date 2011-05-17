@@ -112,7 +112,7 @@ public abstract class AbstractHbmAttributeBindingState implements AttributeBindi
 		return PropertyGeneration.NEVER;
 	}
 
-	public boolean isKeyCasadeDeleteEnabled() {
+	public boolean isKeyCascadeDeleteEnabled() {
 		return false;
 	}
 

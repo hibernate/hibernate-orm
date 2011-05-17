@@ -33,16 +33,28 @@ import org.hibernate.metamodel.relational.Size;
  */
 public interface ColumnRelationalState extends SimpleValueRelationalState {
 	NamingStrategy getNamingStrategy();
+
 	String getExplicitColumnName();
+
 	boolean isUnique();
+
 	Size getSize();
+
 	boolean isNullable();
+
 	String getCheckCondition();
+
 	String getDefault();
+
 	String getSqlType();
+
 	String getCustomWriteFragment();
+
 	String getCustomReadFragment();
+
 	String getComment();
+
 	Set<String> getUniqueKeys();
+
 	Set<String> getIndexes();
 }

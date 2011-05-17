@@ -26,8 +26,6 @@ package org.hibernate.metamodel.state.binding;
 import java.util.Map;
 import java.util.Properties;
 
-import org.hibernate.metamodel.binding.HibernateTypeDescriptor;
-import org.hibernate.metamodel.domain.Attribute;
 import org.hibernate.metamodel.domain.MetaAttribute;
 
 /**
@@ -35,13 +33,22 @@ import org.hibernate.metamodel.domain.MetaAttribute;
  */
 public interface AttributeBindingState {
 	String getAttributeName();
+
 	String getTypeName();
+
 	Properties getTypeParameters();
+
 	boolean isLazy();
+
 	String getPropertyAccessorName();
+
 	boolean isAlternateUniqueKey();
+
 	String getCascade();
+
 	boolean isOptimisticLockable();
+
 	String getNodeName();
+
 	Map<String, MetaAttribute> getMetaAttributes();
 }

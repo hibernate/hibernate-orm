@@ -30,11 +30,6 @@ import org.hibernate.metamodel.relational.SimpleValue;
 import org.hibernate.metamodel.relational.TableSpecification;
 import org.hibernate.metamodel.relational.Tuple;
 import org.hibernate.metamodel.relational.Value;
-import org.hibernate.metamodel.state.relational.ColumnRelationalState;
-import org.hibernate.metamodel.state.relational.DerivedValueRelationalState;
-import org.hibernate.metamodel.state.relational.ValueRelationalState;
-import org.hibernate.metamodel.state.relational.SimpleValueRelationalState;
-import org.hibernate.metamodel.state.relational.TupleRelationalState;
 
 /**
  * @author Gail Badner
@@ -64,7 +59,7 @@ public class ValueCreator {
 		return value;
 	}
 
- 	public static DerivedValue createDerivedValue(TableSpecification table,
+	public static DerivedValue createDerivedValue(TableSpecification table,
 												  DerivedValueRelationalState state) {
 		return table.createDerivedValue( state.getFormula() );
 	}
@@ -74,7 +69,7 @@ public class ValueCreator {
 												SimpleValueRelationalState state,
 												boolean forceNonNullable,
 												boolean forceUnique
-												) {
+	) {
 		if ( state instanceof ColumnRelationalState ) {
 			ColumnRelationalState columnRelationalState = ColumnRelationalState.class.cast( state );
 			return createColumn( table, attributeName, columnRelationalState, forceNonNullable, forceUnique );
@@ -93,7 +88,7 @@ public class ValueCreator {
 									boolean forceNonNullable,
 									boolean forceUnique
 	) {
-		Tuple tuple = table.createTuple(  "[" + attributeName + "]" );
+		Tuple tuple = table.createTuple( "[" + attributeName + "]" );
 		for ( SimpleValueRelationalState valueState : state.getRelationalStates() ) {
 			tuple.addValue( createSimpleValue( table, attributeName, valueState, forceNonNullable, forceUnique ) );
 		}
@@ -107,7 +102,7 @@ public class ValueCreator {
 									boolean forceUnique) {
 		Value value = null;
 		if ( SimpleValueRelationalState.class.isInstance( state ) ) {
-			value =  createSimpleValue(
+			value = createSimpleValue(
 					table,
 					attributeName,
 					SimpleValueRelationalState.class.cast( state ),

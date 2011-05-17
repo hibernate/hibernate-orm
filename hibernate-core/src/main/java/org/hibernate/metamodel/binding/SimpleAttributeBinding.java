@@ -52,7 +52,7 @@ public class SimpleAttributeBinding extends AbstractAttributeBinding implements 
 		super.initialize( state );
 		insertable = state.isInsertable();
 		updateable = state.isUpdateable();
-		keyCasadeDeleteEnabled = state.isKeyCasadeDeleteEnabled();
+		keyCasadeDeleteEnabled = state.isKeyCascadeDeleteEnabled();
 		unsavedValue = state.getUnsavedValue();
 		generation = state.getPropertyGeneration() == null ? PropertyGeneration.NEVER : state.getPropertyGeneration();
 		return this;

@@ -23,14 +23,8 @@
  */
 package org.hibernate.metamodel.state.relational;
 
-import org.hibernate.metamodel.relational.SimpleValue;
-
 /**
- * Created by IntelliJ IDEA.
- * User: gbadner
- * Date: 5/9/11
- * Time: 2:15 PM
- * To change this template use File | Settings | File Templates.
+ * @author Gail Badner
  */
 public interface DerivedValueRelationalState extends SimpleValueRelationalState {
 	String getFormula();

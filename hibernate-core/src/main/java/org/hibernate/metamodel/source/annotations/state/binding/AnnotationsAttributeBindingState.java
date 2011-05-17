@@ -76,7 +76,7 @@ public class AnnotationsAttributeBindingState implements SimpleAttributeBindingS
 	}
 
 	@Override
-	public boolean isKeyCasadeDeleteEnabled() {
+	public boolean isKeyCascadeDeleteEnabled() {
 		return false;  //To change body of implemented methods use File | Settings | File Templates.
 	}
 

@@ -286,7 +286,7 @@ public class HbmPluralAttributeBindingState extends AbstractHbmAttributeBindingS
 		return cascade;
 	}
 
-	public boolean isKeyCasadeDeleteEnabled() {
+	public boolean isKeyCascadeDeleteEnabled() {
 		//TODO: implement
 		return false;
 	}

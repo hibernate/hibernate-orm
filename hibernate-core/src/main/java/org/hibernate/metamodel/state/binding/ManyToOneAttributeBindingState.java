@@ -28,7 +28,10 @@ package org.hibernate.metamodel.state.binding;
  */
 public interface ManyToOneAttributeBindingState extends SimpleAttributeBindingState {
 	boolean isUnwrapProxy();
+
 	String getReferencedAttributeName();
+
 	String getReferencedEntityName();
+
 	boolean ignoreNotFound();
 }

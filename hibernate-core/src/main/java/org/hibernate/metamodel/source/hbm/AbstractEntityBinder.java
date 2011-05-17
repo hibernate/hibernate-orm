@@ -34,18 +34,16 @@ import org.hibernate.metamodel.binding.AttributeBinding;
 import org.hibernate.metamodel.binding.BagBinding;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.ManyToOneAttributeBinding;
-import org.hibernate.metamodel.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.binding.SimpleAttributeBinding;
 import org.hibernate.metamodel.domain.Entity;
 import org.hibernate.metamodel.domain.Hierarchical;
-import org.hibernate.metamodel.domain.PluralAttributeNature;
 import org.hibernate.metamodel.relational.Schema;
 import org.hibernate.metamodel.relational.Table;
 import org.hibernate.metamodel.relational.TableSpecification;
 import org.hibernate.metamodel.relational.UniqueKey;
-import org.hibernate.metamodel.source.hbm.state.domain.HbmManyToOneAttributeDomainState;
-import org.hibernate.metamodel.source.hbm.state.domain.HbmPluralAttributeDomainState;
-import org.hibernate.metamodel.source.hbm.state.domain.HbmSimpleAttributeDomainState;
+import org.hibernate.metamodel.source.hbm.state.binding.HbmManyToOneAttributeBindingState;
+import org.hibernate.metamodel.source.hbm.state.binding.HbmPluralAttributeBindingState;
+import org.hibernate.metamodel.source.hbm.state.binding.HbmSimpleAttributeBindingState;
 import org.hibernate.metamodel.source.hbm.state.relational.HbmManyToOneRelationalStateContainer;
 import org.hibernate.metamodel.source.hbm.state.relational.HbmSimpleValueRelationalStateContainer;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLAnyElement;
@@ -71,6 +69,12 @@ import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSubclassElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLTuplizerElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLUnionSubclassElement;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
+import org.hibernate.metamodel.state.binding.ManyToOneAttributeBindingState;
+import org.hibernate.metamodel.state.binding.PluralAttributeBindingState;
+import org.hibernate.metamodel.state.binding.SimpleAttributeBindingState;
+import org.hibernate.metamodel.state.relational.ManyToOneRelationalState;
+import org.hibernate.metamodel.state.relational.TupleRelationalState;
+import org.hibernate.metamodel.state.relational.ValueRelationalState;
 
 /**
  * TODO : javadoc
@@ -284,8 +288,7 @@ abstract class AbstractEntityBinder {
 		for ( Object attribute : entityClazz.getPropertyOrManyToOneOrOneToOne() ) {
 			if ( XMLBagElement.class.isInstance( attribute ) ) {
 				XMLBagElement collection = XMLBagElement.class.cast( attribute );
-				BagBinding collectionBinding = entityBinding.makeBagAttributeBinding( collection.getName() );
-				bindBag( collection, collectionBinding, entityBinding );
+				BagBinding collectionBinding = makeBagAttributeBinding( collection, entityBinding );
 				hibernateMappingBinder.getHibernateXmlBinder().getMetadata().addCollection( collectionBinding );
 				attributeBinding = collectionBinding;
 			}
@@ -321,12 +324,7 @@ abstract class AbstractEntityBinder {
 			}
 			else if ( XMLManyToOneElement.class.isInstance( attribute ) ) {
 				XMLManyToOneElement manyToOne = XMLManyToOneElement.class.cast( attribute );
-				ManyToOneAttributeBinding manyToOneBinding = entityBinding.makeManyToOneAttributeBinding( manyToOne.getName() );
-				bindManyToOne( manyToOne, manyToOneBinding, entityBinding );
-				attributeBinding = manyToOneBinding;
-// todo : implement
-//				value = new ManyToOne( mappings, table );
-//				bindManyToOne( subElement, (ManyToOne) value, propertyName, nullable, mappings );
+				attributeBinding =  makeManyToOneAttributeBinding( manyToOne, entityBinding );
 			}
 			else if ( XMLAnyElement.class.isInstance( attribute ) ) {
 // todo : implement
@@ -340,9 +338,7 @@ abstract class AbstractEntityBinder {
 			}
 			else if ( XMLPropertyElement.class.isInstance( attribute ) ) {
 				XMLPropertyElement property = XMLPropertyElement.class.cast( attribute );
-				SimpleAttributeBinding binding = entityBinding.makeSimpleAttributeBinding( property.getName() );
-				bindSimpleAttribute( property, binding, entityBinding );
-				attributeBinding = binding;
+				attributeBinding = bindProperty( property, entityBinding );
 			}
 			else if ( XMLComponentElement.class.isInstance( attribute )
 					|| XMLDynamicComponentElement.class.isInstance( attribute )
@@ -441,200 +437,86 @@ PrimitiveArray
 
 	}
 
-	protected void bindSimpleAttribute(XMLHibernateMapping.XMLClass.XMLId id,
-									   SimpleAttributeBinding attributeBinding,
-									   EntityBinding entityBinding,
-									   String attributeName) {
-		if ( attributeBinding.getAttribute() == null ) {
-			attributeBinding.initialize(
-					new HbmSimpleAttributeDomainState(
-							hibernateMappingBinder.getHibernateXmlBinder().getMetadata(),
-							hibernateMappingBinder,
-							entityBinding.getEntity().getOrCreateSingularAttribute( attributeName ),
-							entityBinding.getMetaAttributes(),
-							id
-					)
-			);
-		}
+	protected SimpleAttributeBinding bindProperty(XMLPropertyElement property,
+									EntityBinding entityBinding) {
+		SimpleAttributeBindingState bindingState = new HbmSimpleAttributeBindingState(
+				entityBinding.getEntity().getPojoEntitySpecifics().getClassName(),
+				getHibernateMappingBinder(),
+				entityBinding.getMetaAttributes(),
+				property
+		);
 
-		if ( attributeBinding.getValue() == null ) {
-			// relational model has not been bound yet
-			// boolean (true here) indicates that by default column names should be guessed
-			attributeBinding.initializeTupleValue(
-					new HbmSimpleValueRelationalStateContainer(
-							getHibernateMappingBinder(),
-							true,
-							id
-					)
-			);
-		}
+		// boolean (true here) indicates that by default column names should be guessed
+		ValueRelationalState relationalState =
+				convertToSimpleValueRelationalStateIfPossible(
+						new HbmSimpleValueRelationalStateContainer(
+								getHibernateMappingBinder(),
+								true,
+								property
+						)
+				);
+
+		entityBinding.getEntity().getOrCreateSingularAttribute( bindingState.getAttributeName() );
+		return entityBinding.makeSimpleAttributeBinding( bindingState.getAttributeName() )
+				.initialize( bindingState )
+				.initialize( relationalState );
 	}
 
-	protected void bindSimpleAttribute(XMLHibernateMapping.XMLClass.XMLDiscriminator discriminator,
-									   SimpleAttributeBinding attributeBinding,
-									   EntityBinding entityBinding,
-									   String attributeName) {
-		if ( attributeBinding.getAttribute() == null ) {
-			attributeBinding.initialize(
-					new HbmSimpleAttributeDomainState(
-							hibernateMappingBinder.getHibernateXmlBinder().getMetadata(),
-							hibernateMappingBinder,
-							entityBinding.getEntity().getOrCreateSingularAttribute( attributeName ),
-							discriminator
-					)
-			);
+	protected static ValueRelationalState convertToSimpleValueRelationalStateIfPossible(ValueRelationalState state) {
+	// TODO: should a single-valued tuple always be converted???
+		if ( !TupleRelationalState.class.isInstance( state ) ) {
+			return state;
 		}
-
-		if ( attributeBinding.getValue() == null ) {
-			// relational model has not been bound yet
-			// boolean (true here) indicates that by default column names should be guessed
-			attributeBinding.initializeTupleValue(
-					new HbmSimpleValueRelationalStateContainer(
-							getHibernateMappingBinder(),
-							true,
-							discriminator
-					)
-			);
-		}
+		TupleRelationalState tupleRelationalState = TupleRelationalState.class.cast( state );
+		return tupleRelationalState.getRelationalStates().size() == 1 ?
+				tupleRelationalState.getRelationalStates().get( 0 ) :
+				state;
 	}
 
-	protected void bindSimpleAttribute(XMLHibernateMapping.XMLClass.XMLVersion version,
-									   SimpleAttributeBinding attributeBinding,
-									   EntityBinding entityBinding,
-									   String attributeName) {
-		if ( attributeBinding.getAttribute() == null ) {
-			attributeBinding.initialize(
-					new HbmSimpleAttributeDomainState(
-							hibernateMappingBinder.getHibernateXmlBinder().getMetadata(),
-							hibernateMappingBinder,
-							entityBinding.getEntity().getOrCreateSingularAttribute( attributeName ),
-							entityBinding.getMetaAttributes(),
-							version
-					)
-			);
-		}
-
-		if ( attributeBinding.getValue() == null ) {
-			// relational model has not been bound yet
-			// boolean (true here) indicates that by default column names should be guessed
-			attributeBinding.initializeTupleValue(
-					new HbmSimpleValueRelationalStateContainer(
-							getHibernateMappingBinder(),
-							true,
-							version
-					)
-			);
-		}
-	}
-
-	protected void bindSimpleAttribute(XMLHibernateMapping.XMLClass.XMLTimestamp timestamp,
-									   SimpleAttributeBinding attributeBinding,
-									   EntityBinding entityBinding,
-									   String attributeName) {
-		if ( attributeBinding.getAttribute() == null ) {
-			attributeBinding.initialize(
-					new HbmSimpleAttributeDomainState(
-							hibernateMappingBinder.getHibernateXmlBinder().getMetadata(),
-							hibernateMappingBinder,
-							entityBinding.getEntity().getOrCreateSingularAttribute( attributeName ),
-							entityBinding.getMetaAttributes(),
-							timestamp
-					)
-			);
-		}
-
-		if ( attributeBinding.getValue() == null ) {
-			// relational model has not been bound yet
-			// boolean (true here) indicates that by default column names should be guessed
-			attributeBinding.initializeTupleValue(
-					new HbmSimpleValueRelationalStateContainer(
-							getHibernateMappingBinder(),
-							true,
-							timestamp
-					)
-			);
-		}
-	}
-
-	protected void bindSimpleAttribute(XMLPropertyElement property,
-									   SimpleAttributeBinding attributeBinding,
-									   EntityBinding entityBinding) {
-		if ( attributeBinding.getAttribute() == null ) {
-			attributeBinding.initialize(
-					new HbmSimpleAttributeDomainState(
-							hibernateMappingBinder.getHibernateXmlBinder().getMetadata(),
-							hibernateMappingBinder,
-							entityBinding.getEntity().getOrCreateSingularAttribute( property.getName() ),
-							entityBinding.getMetaAttributes(),
-							property
-					)
-			);
-		}
-
-		if ( attributeBinding.getValue() == null ) {
-			// relational model has not been bound yet
-			// boolean (true here) indicates that by default column names should be guessed
-			attributeBinding.initializeTupleValue(
-					new HbmSimpleValueRelationalStateContainer(
-							getHibernateMappingBinder(),
-							true,
-							property
-					)
-			);
-		}
-	}
-
-	protected void bindBag(
+	protected BagBinding makeBagAttributeBinding(
 			XMLBagElement collection,
-			PluralAttributeBinding collectionBinding,
 			EntityBinding entityBinding) {
-		if ( collectionBinding.getAttribute() == null ) {
-			// domain model has not been bound yet
-			collectionBinding.initialize(
-					new HbmPluralAttributeDomainState(
-							hibernateMappingBinder.getHibernateXmlBinder().getMetadata(),
-							hibernateMappingBinder,
-							collection,
-							entityBinding.getMetaAttributes(),
-							entityBinding.getEntity().getOrCreatePluralAttribute(
-									collection.getName(),
-									PluralAttributeNature.BAG
-							)
-					)
-			);
-		}
 
-		if ( collectionBinding.getValue() == null ) {
+		PluralAttributeBindingState bindingState =
+				new HbmPluralAttributeBindingState(
+						entityBinding.getEntity().getPojoEntitySpecifics().getClassName(),
+						hibernateMappingBinder,
+						collection,
+						entityBinding.getMetaAttributes()
+				);
+
+		BagBinding collectionBinding = entityBinding.makeBagAttributeBinding( bindingState.getAttributeName() )
+				.initialize( bindingState );
+
 			// todo : relational model binding
-		}
+		return collectionBinding;
 	}
 
-	private void bindManyToOne(XMLManyToOneElement manyToOne,
-							   ManyToOneAttributeBinding attributeBinding,
+	private ManyToOneAttributeBinding makeManyToOneAttributeBinding(XMLManyToOneElement manyToOne,
 							   EntityBinding entityBinding) {
-		if ( attributeBinding.getAttribute() == null ) {
-			attributeBinding.initialize(
-					new HbmManyToOneAttributeDomainState(
-							hibernateMappingBinder.getHibernateXmlBinder().getMetadata(),
-							hibernateMappingBinder,
-							entityBinding.getEntity().getOrCreateSingularAttribute( manyToOne.getName() ),
-							entityBinding.getMetaAttributes(),
-							manyToOne
-					)
-			);
-		}
+		ManyToOneAttributeBindingState bindingState =
+				new HbmManyToOneAttributeBindingState(
+						entityBinding.getEntity().getPojoEntitySpecifics().getClassName(),
+						hibernateMappingBinder,
+						entityBinding.getMetaAttributes(),
+						manyToOne
+				);
 
-		if ( attributeBinding.getValue() == null ) {
-			// relational model has not been bound yet
-			// boolean (true here) indicates that by default column names should be guessed
-			attributeBinding.initialize(
-					new HbmManyToOneRelationalStateContainer(
-							getHibernateMappingBinder(),
-							true,
-							manyToOne
-					)
-			);
-		}
+		// boolean (true here) indicates that by default column names should be guessed
+		ManyToOneRelationalState relationalState =
+						new HbmManyToOneRelationalStateContainer(
+								getHibernateMappingBinder(),
+								true,
+								manyToOne
+						);
+
+	    entityBinding.getEntity().getOrCreateSingularAttribute( bindingState.getAttributeName() );
+		ManyToOneAttributeBinding manyToOneAttributeBinding =
+				entityBinding.makeManyToOneAttributeBinding( bindingState.getAttributeName() )
+						.initialize( bindingState )
+						.initialize( relationalState );
+
+		return manyToOneAttributeBinding;
 	}
 
 //	private static Property createProperty(

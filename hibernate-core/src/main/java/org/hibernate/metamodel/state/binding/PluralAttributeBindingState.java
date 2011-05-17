@@ -21,15 +21,12 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.state.domain;
+package org.hibernate.metamodel.state.binding;
 
 import java.util.Comparator;
 
 import org.hibernate.FetchMode;
-import org.hibernate.metamodel.binding.AbstractAttributeBinding;
-import org.hibernate.metamodel.binding.CollectionElement;
 import org.hibernate.metamodel.binding.CustomSQL;
-import org.hibernate.metamodel.binding.PluralAttributeBinding;
 
 /**
  * Created by IntelliJ IDEA.
@@ -38,10 +35,11 @@ import org.hibernate.metamodel.binding.PluralAttributeBinding;
  * Time: 4:49 PM
  * To change this template use File | Settings | File Templates.
  */
-public interface PluralAttributeDomainState extends AttributeDomainState {
+public interface PluralAttributeBindingState extends AttributeBindingState {
 	FetchMode getFetchMode();
 	boolean isExtraLazy();
-	CollectionElementDomainState getCollectionElementDomainState();
+	String getElementTypeName();
+	String getElementNodeName();
 	boolean isInverse();
 	boolean isMutable();
 	boolean isSubselectLoadable();

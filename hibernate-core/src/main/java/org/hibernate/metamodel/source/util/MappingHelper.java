@@ -28,6 +28,12 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.StringTokenizer;
 
+import org.hibernate.MappingException;
+import org.hibernate.metamodel.source.spi.MetadataImplementor;
+import org.hibernate.service.ServiceRegistry;
+import org.hibernate.service.classloading.spi.ClassLoaderService;
+import org.hibernate.service.classloading.spi.ClassLoadingException;
+
 /**
  * Helper class.
  *
@@ -64,6 +70,19 @@ public class MappingHelper {
 				tokens.add( tokenizer.nextToken() );
 			}
 			return tokens;
+		}
+	}
+
+	public static Class classForName(String className, ServiceRegistry serviceRegistry) {
+		ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+		try {
+			return classLoaderService.classForName( className );
+		}
+		catch ( ClassLoadingException e ) {
+			throw new MappingException(
+					"Could not find class: "
+							+ className
+			);
 		}
 	}
 }

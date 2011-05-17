@@ -21,57 +21,70 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.hbm.state.domain;
+package org.hibernate.metamodel.source.hbm.state.binding;
 
 import java.util.Map;
+import java.util.Properties;
 
-import org.hibernate.metamodel.Metadata;
+import org.hibernate.MappingException;
+import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.binding.MappingDefaults;
-import org.hibernate.metamodel.domain.Attribute;
 import org.hibernate.metamodel.domain.MetaAttribute;
-import org.hibernate.metamodel.source.internal.MetadataImpl;
 import org.hibernate.metamodel.source.util.MappingHelper;
-import org.hibernate.metamodel.state.domain.AttributeDomainState;
+import org.hibernate.metamodel.state.binding.AttributeBindingState;
 
 /**
  * @author Gail Badner
  */
-public abstract class AbstractHbmAttributeDomainState implements AttributeDomainState {
-	private final MetadataImpl metadata;
+public abstract class AbstractHbmAttributeBindingState implements AttributeBindingState {
+	private final String ownerClassName;
+	private final String attributeName;
 	private final MappingDefaults defaults;
-	private final Attribute attribute;
 	private final String nodeName;
 	private final String accessorName;
 	private final boolean isOptimisticLockable;
 	private final Map<String, MetaAttribute> metaAttributes;
 
-	public AbstractHbmAttributeDomainState(
-			MetadataImpl metadata,
+	public AbstractHbmAttributeBindingState(
+			String ownerClassName,
+			String attributeName,
 			MappingDefaults defaults,
-			Attribute attribute,
 			String nodeName,
 			Map<String, MetaAttribute> metaAttributes,
 			String accessorName,
 			boolean isOptimisticLockable) {
-		this.metadata = metadata;
+		if ( attributeName == null ) {
+			throw new MappingException(
+					"Attribute name cannot be null."
+			);
+		}
+
+		this.ownerClassName = ownerClassName;
+		this.attributeName = attributeName;
 		this.defaults = defaults;
-		this.attribute = attribute;
-		this.nodeName = MappingHelper.getStringValue( nodeName, attribute.getName() );
+		this.nodeName =  nodeName;
 		this.metaAttributes = metaAttributes;
 		this.accessorName = accessorName;
 		this.isOptimisticLockable = isOptimisticLockable;
 	}
 
-	public MetadataImpl getMetadata() {
-		return metadata;
+	// TODO: really don't like this here...
+	protected String getOwnerClassName() {
+		return ownerClassName;
+	}
+
+	protected final String getTypeNameByReflection() {
+		Class ownerClass = MappingHelper.classForName( ownerClassName, defaults.getServiceRegistry() );
+		return ReflectHelper.reflectedPropertyClass( ownerClass, attributeName ).getName();
+	}
+
+	public String getAttributeName() {
+		return attributeName;
 	}
 
 	protected final MappingDefaults getDefaults() {
 		return defaults;
-	}
-
-	public final Attribute getAttribute() {
-		return attribute;
 	}
 
 	public final String getPropertyAccessorName() {
@@ -88,10 +101,27 @@ public abstract class AbstractHbmAttributeDomainState implements AttributeDomain
 	}
 
 	public final String getNodeName() {
-		return nodeName;
+		return nodeName == null ? getAttributeName() : nodeName;
 	}
 
 	public final Map<String, MetaAttribute> getMetaAttributes() {
 		return metaAttributes;
+	}
+
+	public PropertyGeneration getPropertyGeneration() {
+		return PropertyGeneration.NEVER;
+	}
+
+	public boolean isKeyCasadeDeleteEnabled() {
+		return false;
+	}
+
+	public String getUnsavedValue() {
+		//TODO: implement
+		return null;
+	}
+
+	public Properties getTypeParameters() {
+		return null;
 	}
 }

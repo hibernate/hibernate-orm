@@ -23,6 +23,9 @@
  */
 package org.hibernate.metamodel.binding;
 
+import org.hibernate.metamodel.state.binding.DiscriminatorBindingState;
+import org.hibernate.metamodel.state.relational.ValueRelationalState;
+
 /**
  * Binding of the discriminator in a entity hierarchy
  *
@@ -40,8 +43,24 @@ public class EntityDiscriminator {
 		return valueBinding;
 	}
 
-	public void setValueBinding(SimpleAttributeBinding valueBinding) {
+	/* package-protected */
+	void setValueBinding(SimpleAttributeBinding valueBinding) {
 		this.valueBinding = valueBinding;
+	}
+
+	public EntityDiscriminator initialize(DiscriminatorBindingState state) {
+		if ( valueBinding == null ) {
+			throw new IllegalStateException( "Cannot bind state because the value binding has not been initialized." );
+		}
+		this.valueBinding.initialize( state );
+		this.forced = state.isForced();
+		this.inserted = state.isInsertable();
+		return this;
+	}
+
+	public EntityDiscriminator initialize(ValueRelationalState state) {
+		valueBinding.initialize( state );
+		return this;
 	}
 
 	public boolean isForced() {

@@ -232,6 +232,18 @@ public final class ReflectHelper {
 		}
 	}
 
+	/**
+	 * Attempt to resolve the specified property type through reflection.
+	 *
+	 * @param clazz The class owning the property.
+	 * @param name The name of the property.
+	 * @return The type of the property.
+	 * @throws MappingException Indicates we were unable to locate the property.
+	 */
+	public static Class reflectedPropertyClass(Class clazz, String name) throws MappingException {
+		return getter( clazz, name ).getReturnType();
+	}
+
 	private static Getter getter(Class clazz, String name) throws MappingException {
 		try {
 			return BASIC_PROPERTY_ACCESSOR.getGetter( clazz, name );

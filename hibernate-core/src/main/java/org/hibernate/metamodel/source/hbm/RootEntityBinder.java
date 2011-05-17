@@ -26,18 +26,22 @@ package org.hibernate.metamodel.source.hbm;
 import org.hibernate.InvalidMappingException;
 import org.hibernate.MappingException;
 import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.binding.Caching;
 import org.hibernate.metamodel.binding.EntityBinding;
-import org.hibernate.metamodel.binding.SimpleAttributeBinding;
-import org.hibernate.metamodel.relational.Column;
 import org.hibernate.metamodel.relational.Identifier;
 import org.hibernate.metamodel.relational.InLineView;
 import org.hibernate.metamodel.relational.Schema;
+import org.hibernate.metamodel.source.hbm.state.binding.HbmDiscriminatorBindingState;
+import org.hibernate.metamodel.source.hbm.state.binding.HbmSimpleAttributeBindingState;
+import org.hibernate.metamodel.source.hbm.state.relational.HbmSimpleValueRelationalStateContainer;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLCacheElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLCompositeId;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLId;
+import org.hibernate.metamodel.state.binding.DiscriminatorBindingState;
+import org.hibernate.metamodel.state.binding.SimpleAttributeBindingState;
+import org.hibernate.metamodel.state.relational.ValueRelationalState;
 
 /**
  * TODO : javadoc
@@ -76,7 +80,7 @@ class RootEntityBinder extends AbstractEntityBinder {
 
 		bindIdentifier( xmlClazz, entityBinding );
 		bindDiscriminator( xmlClazz, entityBinding );
-		bindVersion( xmlClazz, entityBinding );
+		bindVersionOrTimestamp( xmlClazz, entityBinding );
 		bindCaching( xmlClazz, entityBinding );
 
 		// called createClassProperties in HBMBinder...
@@ -135,18 +139,25 @@ class RootEntityBinder extends AbstractEntityBinder {
 	}
 
 	private void bindSimpleId(XMLId id, EntityBinding entityBinding) {
-		// Handle the domain portion of the binding...
-		final String explicitName = id.getName();
-		final String attributeName = explicitName == null ? RootClass.DEFAULT_IDENTIFIER_COLUMN_NAME : explicitName;
-		SimpleAttributeBinding idBinding = entityBinding.makeSimplePrimaryKeyAttributeBinding( attributeName );
-		bindSimpleAttribute( id, idBinding, entityBinding, attributeName );
-
-		if ( !Column.class.isInstance( idBinding.getValue() ) ) {
-			// this should never ever happen..
-			throw new MappingException( "Unanticipated situation" );
+		SimpleAttributeBindingState bindingState = new HbmSimpleAttributeBindingState(
+				entityBinding.getEntity().getPojoEntitySpecifics().getClassName(),
+				getHibernateMappingBinder(),
+				entityBinding.getMetaAttributes(),
+				id
+		);
+		// boolean (true here) indicates that by default column names should be guessed
+		HbmSimpleValueRelationalStateContainer relationalStateContainer = new HbmSimpleValueRelationalStateContainer(
+				getHibernateMappingBinder(), true, id
+		);
+		if ( relationalStateContainer.getRelationalStates().size() > 1 ) {
+			throw new MappingException( "ID is expected to be a single column, but has more than 1 value" );
 		}
 
-		entityBinding.getBaseTable().getPrimaryKey().addColumn( Column.class.cast( idBinding.getValue() ) );
+		entityBinding.getEntity().getOrCreateSingularAttribute( bindingState.getAttributeName() );
+		entityBinding.makeSimpleIdAttributeBinding( bindingState.getAttributeName() )
+				.initialize( bindingState )
+				.initialize( relationalStateContainer.getRelationalStates().get( 0 ) );
+
 		// if ( propertyName == null || entity.getPojoRepresentation() == null ) {
 		// bindSimpleValue( idNode, id, false, RootClass.DEFAULT_IDENTIFIER_COLUMN_NAME, mappings );
 		// if ( !id.isTypeSpecified() ) {
@@ -233,51 +244,95 @@ class RootEntityBinder extends AbstractEntityBinder {
 			return;
 		}
 
-		// Discriminator.getName() is not defined, so the attribute will always be RootClass.DEFAULT_DISCRIMINATOR_COLUMN_NAME
-		SimpleAttributeBinding discriminatorBinding = entityBinding.makeEntityDiscriminatorBinding( RootClass.DEFAULT_DISCRIMINATOR_COLUMN_NAME );
-
-		// Handle the relational portion of the binding...
-		bindSimpleAttribute(
-				xmlEntityClazz.getDiscriminator(),
-				discriminatorBinding,
-				entityBinding,
-				RootClass.DEFAULT_DISCRIMINATOR_COLUMN_NAME
+		DiscriminatorBindingState bindingState = new HbmDiscriminatorBindingState(
+						entityBinding.getEntity().getPojoEntitySpecifics().getClassName(),
+						getHibernateMappingBinder(),
+						xmlEntityClazz.getDiscriminator()
 		);
 
-		entityBinding.getEntityDiscriminator().setForced( xmlEntityClazz.getDiscriminator().isForce() );
+		// boolean (true here) indicates that by default column names should be guessed
+		ValueRelationalState relationalState = convertToSimpleValueRelationalStateIfPossible(
+				new HbmSimpleValueRelationalStateContainer(
+						getHibernateMappingBinder(),
+						true,
+						xmlEntityClazz.getDiscriminator()
+				)
+		);
+
+
+		entityBinding.getEntity().getOrCreateSingularAttribute( bindingState.getAttributeName() );
+		entityBinding.makeEntityDiscriminator( bindingState.getAttributeName() )
+				.initialize( bindingState )
+				.initialize( relationalState );
 	}
 
-	private void bindVersion(XMLClass xmlEntityClazz,
-							 EntityBinding entityBinding) {
-		if ( xmlEntityClazz.getVersion() == null && xmlEntityClazz.getTimestamp() == null ) {
-			return;
-		}
-
-		boolean isVersion = xmlEntityClazz.getVersion() != null;
-		String explicitName = isVersion ? xmlEntityClazz.getVersion().getName() : xmlEntityClazz.getTimestamp()
-				.getName();
-		if ( explicitName == null ) {
-			throw new MappingException(
-					"Missing property name for version/timestamp mapping [" + entityBinding.getEntity().getName() + "]"
-			);
-		}
-		SimpleAttributeBinding versionBinding = entityBinding.makeVersionBinding( explicitName );
-		if ( isVersion ) {
-			bindSimpleAttribute(
+	private void bindVersionOrTimestamp(XMLClass xmlEntityClazz,
+										EntityBinding entityBinding) {
+		if ( xmlEntityClazz.getVersion() != null ) {
+			bindVersion(
 					xmlEntityClazz.getVersion(),
-					versionBinding,
-					entityBinding,
-					explicitName
+					entityBinding
 			);
 		}
-		else {
-			bindSimpleAttribute(
+		else if ( xmlEntityClazz.getTimestamp() != null ) {
+			bindTimestamp(
 					xmlEntityClazz.getTimestamp(),
-					versionBinding,
-					entityBinding,
-					explicitName
+					entityBinding
 			);
 		}
+	}
+
+	protected void bindVersion(XMLHibernateMapping.XMLClass.XMLVersion version,
+									   EntityBinding entityBinding) {
+		SimpleAttributeBindingState bindingState =
+				new HbmSimpleAttributeBindingState(
+							entityBinding.getEntity().getPojoEntitySpecifics().getClassName(),
+							getHibernateMappingBinder(),
+							entityBinding.getMetaAttributes(),
+							version
+				);
+
+		// boolean (true here) indicates that by default column names should be guessed
+		ValueRelationalState relationalState =
+				convertToSimpleValueRelationalStateIfPossible(
+						new HbmSimpleValueRelationalStateContainer(
+								getHibernateMappingBinder(),
+								true,
+								version
+						)
+				);
+
+		entityBinding.getEntity().getOrCreateSingularAttribute( bindingState.getAttributeName() );
+		entityBinding.makeVersionBinding( bindingState.getAttributeName() )
+				.initialize( bindingState )
+				.initialize( relationalState );
+	}
+
+	protected void bindTimestamp(XMLHibernateMapping.XMLClass.XMLTimestamp timestamp,
+								 EntityBinding entityBinding) {
+
+		SimpleAttributeBindingState bindingState =
+				new HbmSimpleAttributeBindingState(
+					entityBinding.getEntity().getPojoEntitySpecifics().getClassName(),
+					getHibernateMappingBinder(),
+					entityBinding.getMetaAttributes(),
+					timestamp
+				);
+
+		// relational model has not been bound yet
+		// boolean (true here) indicates that by default column names should be guessed
+		ValueRelationalState relationalState =
+				convertToSimpleValueRelationalStateIfPossible(
+						new HbmSimpleValueRelationalStateContainer(
+								getHibernateMappingBinder(),
+								true,
+								timestamp
+						)
+				);
+
+		entityBinding.makeVersionBinding( bindingState.getAttributeName() )
+				.initialize( bindingState )
+		 		.initialize( relationalState );
 	}
 
 	private void bindCaching(XMLClass xmlClazz,

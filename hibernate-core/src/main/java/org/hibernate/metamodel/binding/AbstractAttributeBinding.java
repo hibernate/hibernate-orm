@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.MappingException;
 import org.hibernate.metamodel.domain.Attribute;
 import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.metamodel.relational.Column;
@@ -38,8 +39,9 @@ import org.hibernate.metamodel.relational.SimpleValue;
 import org.hibernate.metamodel.relational.TableSpecification;
 import org.hibernate.metamodel.relational.Tuple;
 import org.hibernate.metamodel.relational.Value;
-import org.hibernate.metamodel.relational.ValueFactory;
-import org.hibernate.metamodel.state.domain.AttributeDomainState;
+import org.hibernate.metamodel.state.binding.AttributeBindingState;
+import org.hibernate.metamodel.state.relational.ValueCreator;
+import org.hibernate.metamodel.state.relational.SimpleValueRelationalState;
 import org.hibernate.metamodel.state.relational.ValueRelationalState;
 import org.hibernate.metamodel.state.relational.TupleRelationalState;
 
@@ -73,15 +75,15 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 		this.entityBinding = entityBinding;
 	}
 
-	protected void initialize(AttributeDomainState state) {
-		hibernateTypeDescriptor.initialize( state.getHibernateTypeDescriptor() );
-		attribute = state.getAttribute();
+	protected void initialize(AttributeBindingState state) {
+		hibernateTypeDescriptor.setTypeName( state.getTypeName() );
+		hibernateTypeDescriptor.setTypeParameters( state.getTypeParameters() );
 		isLazy = state.isLazy();
 		propertyAccessorName = state.getPropertyAccessorName();
 		isAlternateUniqueKey = state.isAlternateUniqueKey();
 		cascade = state.getCascade();
 		optimisticLockable = state.isOptimisticLockable();
-		nodeName = state.getNodeName();
+		nodeName = state.getNodeName() ;
 		metaAttributes = state.getMetaAttributes();
 	}
 
@@ -107,24 +109,36 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 		return false;
 	}
 
-	protected void initializeValue(ValueRelationalState state) {
-		value = ValueFactory.createValue( getEntityBinding().getBaseTable(),
+	protected final boolean isPrimaryKey() {
+		return this == getEntityBinding().getEntityIdentifier().getValueBinding();
+	}
+
+	protected void initializeValueRelationalState(ValueRelationalState state) {
+		// TODO: change to have ValueRelationalState generate the value
+		value = ValueCreator.createValue(
+				getEntityBinding().getBaseTable(),
 				getAttribute().getName(),
-				convertToSimpleRelationalStateIfPossible( state ),
+				state,
 				forceNonNullable(),
 				forceUnique()
 		);
-	}
-
-	// TODO: should a single-valued tuple always be converted???
-	protected ValueRelationalState convertToSimpleRelationalStateIfPossible(ValueRelationalState state) {
-		if ( !TupleRelationalState.class.isInstance( state ) ) {
-			return state;
+		// TODO: not sure I like this here...
+		if ( isPrimaryKey() ) {
+			if ( SimpleValue.class.isInstance( value ) ) {
+				if ( ! Column.class.isInstance( value ) ) {
+						// this should never ever happen..
+					throw new MappingException( "Simple ID is not a column." );
+				}
+				entityBinding.getBaseTable().getPrimaryKey().addColumn( Column.class.cast( value ) );
+			}
+			else {
+				for ( SimpleValueRelationalState val : TupleRelationalState.class.cast( state ).getRelationalStates() ) {
+					if ( Column.class.isInstance( val ) ) {
+						entityBinding.getBaseTable().getPrimaryKey().addColumn( Column.class.cast( val ) );
+					}
+				}
+			}
 		}
-		TupleRelationalState tupleRelationalState = TupleRelationalState.class.cast( state );
-		return tupleRelationalState.getRelationalStates().size() == 1 ?
-				tupleRelationalState.getRelationalStates().get( 0 ) :
-				state;
 	}
 
 	@Override
@@ -143,10 +157,6 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 
 	public boolean isOptimisticLockable() {
 		return optimisticLockable;
-	}
-
-	public String getNodeName() {
-		return nodeName;
 	}
 
 	@Override

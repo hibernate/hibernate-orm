@@ -36,16 +36,19 @@ import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.binding.Caching;
 import org.hibernate.metamodel.binding.EntityBinding;
+import org.hibernate.metamodel.binding.EntityDiscriminator;
 import org.hibernate.metamodel.binding.SimpleAttributeBinding;
 import org.hibernate.metamodel.domain.Entity;
 import org.hibernate.metamodel.domain.Hierarchical;
 import org.hibernate.metamodel.relational.Identifier;
 import org.hibernate.metamodel.relational.Schema;
-import org.hibernate.metamodel.source.annotations.state.domain.AttributeDomainState;
+import org.hibernate.metamodel.source.annotations.state.binding.AnnotationsAttributeBindingState;
+import org.hibernate.metamodel.source.annotations.state.binding.AnnotationsDiscriminatorBindingState;
 import org.hibernate.metamodel.source.annotations.state.relational.AttributeColumnRelationalState;
 import org.hibernate.metamodel.source.annotations.state.relational.AttributeTupleRelationalState;
 import org.hibernate.metamodel.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
+import org.hibernate.metamodel.state.binding.DiscriminatorBindingState;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 
 /**
@@ -119,9 +122,9 @@ public class EntityBinder {
 		if ( !( discriminatorAttribute.getColumnValues() instanceof DiscriminatorColumnValues ) ) {
 			throw new AssertionFailure( "Expected discriminator column values" );
 		}
+
+		// TODO: move this into DiscriminatorBindingState
 		DiscriminatorColumnValues discriminatorColumnvalues = (DiscriminatorColumnValues) discriminatorAttribute.getColumnValues();
-		entityBinding.getEntityDiscriminator().setForced( discriminatorColumnvalues.isForced() );
-		entityBinding.getEntityDiscriminator().setInserted( discriminatorColumnvalues.isIncludedInSql() );
 		entityBinding.setDiscriminatorValue( discriminatorColumnvalues.getDiscriminatorValue() );
 	}
 
@@ -294,18 +297,12 @@ public class EntityBinder {
 		);
 
 		String idName = JandexHelper.getPropertyName( idAnnotation.target() );
-		entityBinding.getEntity().getOrCreateSingularAttribute( idName );
-		SimpleAttributeBinding idBinding = entityBinding.makeSimplePrimaryKeyAttributeBinding( idName );
-
 		MappedAttribute idAttribute = configuredClass.getMappedProperty( idName );
 
-		AttributeDomainState domainState = new AttributeDomainState( entityBinding, idAttribute );
-		idBinding.initialize( domainState );
-
-		AttributeColumnRelationalState columnRelationsState = new AttributeColumnRelationalState( idAttribute, meta );
-		AttributeTupleRelationalState relationalState = new AttributeTupleRelationalState();
-		relationalState.addValueState( columnRelationsState );
-		idBinding.initializeTupleValue( relationalState );
+		entityBinding.getEntity().getOrCreateSingularAttribute( idName );
+		entityBinding.makeSimpleIdAttributeBinding( idName )
+				.initialize( new AnnotationsAttributeBindingState( idAttribute ) )
+				.initialize( new AttributeColumnRelationalState( idAttribute, meta ) );
 	}
 
 	private void bindAttributes(EntityBinding entityBinding) {
@@ -323,18 +320,17 @@ public class EntityBinder {
 		entityBinding.getEntity().getOrCreateSingularAttribute( attributeName );
 		SimpleAttributeBinding attributeBinding;
 
-		if ( mappedAttribute.isVersioned() ) {
-			attributeBinding = entityBinding.makeVersionBinding( attributeName );
-		}
-		else if ( mappedAttribute.isDiscriminator() ) {
-			attributeBinding = entityBinding.makeEntityDiscriminatorBinding( attributeName );
+		if ( mappedAttribute.isDiscriminator() ) {
+			attributeBinding = entityBinding.makeEntityDiscriminator( attributeName )
+					.initialize( new AnnotationsDiscriminatorBindingState( mappedAttribute ) )
+					.getValueBinding();
 		}
 		else {
-			attributeBinding = entityBinding.makeSimpleAttributeBinding( attributeName );
+			attributeBinding = mappedAttribute.isVersioned() ?
+					entityBinding.makeVersionBinding( attributeName ) :
+					entityBinding.makeSimpleAttributeBinding( attributeName );
+			attributeBinding.initialize(  new AnnotationsAttributeBindingState( mappedAttribute ) );
 		}
-
-		AttributeDomainState domainState = new AttributeDomainState( entityBinding, mappedAttribute );
-		attributeBinding.initialize( domainState );
 
 		if ( configuredClass.hasOwnTable() ) {
 			AttributeColumnRelationalState columnRelationsState = new AttributeColumnRelationalState(
@@ -342,7 +338,9 @@ public class EntityBinder {
 			);
 			AttributeTupleRelationalState relationalState = new AttributeTupleRelationalState();
 			relationalState.addValueState( columnRelationsState );
-			attributeBinding.initializeTupleValue( relationalState );
+			// TODO: if this really just binds a column, then it can be changed to
+			// attributeBinding.initialize( columnRelationsState );
+			attributeBinding.initialize( relationalState );
 		}
 	}
 

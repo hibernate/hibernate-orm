@@ -69,10 +69,14 @@ public class CacheHelper {
       return key instanceof EvictAll && value == Internal.EVICT;
    }
 
-   private static class EvictAll implements Externalizable {
+   public static class EvictAll implements Externalizable {
       AddressAdapter member;
 
-      EvictAll(AddressAdapter member) {
+      // Required by Java Externalizable
+      public EvictAll() {
+      }
+
+      public EvictAll(AddressAdapter member) {
          this.member = member;
       }
 

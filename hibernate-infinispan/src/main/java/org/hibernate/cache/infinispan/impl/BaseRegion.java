@@ -268,7 +268,7 @@ public abstract class BaseRegion implements Region {
 
    protected boolean handleEvictAllModification(CacheEntryModifiedEvent event) {
       if (!event.isPre() && (replication || event.isOriginLocal()) && CacheHelper.isEvictAllNotification(event.getKey(), event.getValue())) {
-         if (log.isTraceEnabled()) log.trace("Set invalid state because marker cache entry was put: {0}", event);
+         if (log.isTraceEnabled()) log.tracef("Set invalid state because marker cache entry was put: {0}", event);
          invalidateState.set(InvalidateState.INVALID);
          return true;
       }
@@ -277,13 +277,13 @@ public abstract class BaseRegion implements Region {
 
    @CacheEntryInvalidated
    public void entryInvalidated(CacheEntryInvalidatedEvent event) {
-      if (log.isTraceEnabled()) log.trace("Cache entry invalidated: {0}", event);
+      if (log.isTraceEnabled()) log.tracef("Cache entry invalidated: {0}", event);
       handleEvictAllInvalidation(event);
    }
 
    protected boolean handleEvictAllInvalidation(CacheEntryInvalidatedEvent event) {
       if (!event.isPre() && CacheHelper.isEvictAllNotification(event.getKey())) {
-         if (log.isTraceEnabled()) log.trace("Set invalid state because marker cache entry was invalidated: {0}", event);
+         if (log.isTraceEnabled()) log.tracef("Set invalid state because marker cache entry was invalidated: {0}", event);
          invalidateState.set(InvalidateState.INVALID);
          return true;
       }

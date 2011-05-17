@@ -89,7 +89,7 @@ public class HbmManyToOneAttributeBindingState
 	}
 
 	private static String getReferencedEntityName(String ownerClassName, XMLManyToOneElement manyToOne, MappingDefaults defaults) {
-		String referencedEntityName = null;
+		String referencedEntityName;
 		if ( manyToOne.getEntityName() != null ) {
 			referencedEntityName = manyToOne.getEntityName();
 		}
@@ -98,7 +98,7 @@ public class HbmManyToOneAttributeBindingState
 		}
 		else {
 			Class ownerClazz = MappingHelper.classForName( ownerClassName, defaults.getServiceRegistry() );
-			referencedEntityName = ReflectHelper.reflectedPropertyClass( ownerClazz, manyToOne.getName()  ).getName();
+			referencedEntityName = ReflectHelper.reflectedPropertyClass( ownerClazz, manyToOne.getName() ).getName();
 		}
 		return referencedEntityName;
 	}

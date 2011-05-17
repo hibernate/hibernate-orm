@@ -23,18 +23,17 @@
  */
 package org.hibernate.metamodel.source.hbm.state.binding;
 
-import java.util.Map;
-
 import org.hibernate.metamodel.binding.MappingDefaults;
-import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLDiscriminator;
 import org.hibernate.metamodel.state.binding.DiscriminatorBindingState;
 
 /**
  * @author Gail Badner
  */
-public class HbmDiscriminatorBindingState extends AbstractHbmAttributeBindingState implements DiscriminatorBindingState {
+public class HbmDiscriminatorBindingState extends AbstractHbmAttributeBindingState
+		implements DiscriminatorBindingState {
 	private final XMLDiscriminator discriminator;
+
 	public HbmDiscriminatorBindingState(
 			String ownerClassName,
 			MappingDefaults defaults,

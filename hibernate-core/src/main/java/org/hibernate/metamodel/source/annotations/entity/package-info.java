@@ -21,14 +21,10 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.annotations;
+package org.hibernate.metamodel.source.annotations.entity;
 
 /**
- * @author Hardy Ferentschik
+ * This package contains binding code for entities. In particular it contains classes like {@code ConfiguredClass} and
+ * {@code MappedAttribute} which are populated from annotations to make it easier to bind to the Hibernate metamodel.
+ * The configured classes (entities) are also ordered in a ways that they can be bound in the right order.
  */
-public enum ConfiguredClassType {
-	ENTITY,
-	MAPPED_SUPERCLASS,
-	EMBEDDABLE,
-	NON_ENTITY
-}

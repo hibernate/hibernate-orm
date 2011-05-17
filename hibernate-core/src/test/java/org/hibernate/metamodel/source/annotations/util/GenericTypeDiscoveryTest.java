@@ -38,9 +38,11 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.hibernate.metamodel.source.annotations.ConfiguredClass;
-import org.hibernate.metamodel.source.annotations.ConfiguredClassHierarchy;
-import org.hibernate.metamodel.source.annotations.MappedAttribute;
+import org.hibernate.metamodel.source.annotations.entity.ConfiguredClass;
+import org.hibernate.metamodel.source.annotations.entity.ConfiguredClassHierarchy;
+import org.hibernate.metamodel.source.annotations.entity.MappedAttribute;
+import org.hibernate.metamodel.source.annotations.entity.ConfiguredClass;
+import org.hibernate.metamodel.source.annotations.entity.ConfiguredClassHierarchy;
 import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.internal.BasicServiceRegistryImpl;

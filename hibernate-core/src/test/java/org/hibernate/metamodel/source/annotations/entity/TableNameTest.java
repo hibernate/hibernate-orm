@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.annotations;
+package org.hibernate.metamodel.source.annotations.entity;
 
 import java.util.Iterator;
 import java.util.Set;
@@ -40,6 +40,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import org.hibernate.metamodel.binding.InheritanceType;
+import org.hibernate.metamodel.source.annotations.entity.ConfiguredClass;
+import org.hibernate.metamodel.source.annotations.entity.ConfiguredClassHierarchy;
 import org.hibernate.metamodel.source.annotations.util.ConfiguredClassHierarchyBuilder;
 import org.hibernate.metamodel.source.annotations.util.JandexHelper;
 import org.hibernate.service.ServiceRegistryBuilder;

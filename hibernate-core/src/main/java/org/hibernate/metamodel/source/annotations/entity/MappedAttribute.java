@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.annotations;
+package org.hibernate.metamodel.source.annotations.entity;
 
 import java.util.List;
 import java.util.Map;
@@ -32,8 +32,9 @@ import org.jboss.jandex.DotName;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
+import org.hibernate.metamodel.source.annotations.HibernateDotNames;
+import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.util.JandexHelper;
-
 
 /**
  * Represent a mapped attribute (explicitly or implicitly mapped). Also used for synthetic attributes likes a

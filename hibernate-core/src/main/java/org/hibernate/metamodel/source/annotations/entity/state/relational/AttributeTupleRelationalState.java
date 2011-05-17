@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.annotations.state.relational;
+package org.hibernate.metamodel.source.annotations.entity.state.relational;
 
 import java.util.ArrayList;
 import java.util.List;

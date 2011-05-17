@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.annotations.state.relational;
+package org.hibernate.metamodel.source.annotations.entity.state.relational;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,9 +35,9 @@ import org.hibernate.AnnotationException;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.metamodel.relational.Size;
 import org.hibernate.metamodel.relational.state.ColumnRelationalState;
-import org.hibernate.metamodel.source.annotations.ColumnValues;
 import org.hibernate.metamodel.source.annotations.HibernateDotNames;
-import org.hibernate.metamodel.source.annotations.MappedAttribute;
+import org.hibernate.metamodel.source.annotations.entity.ColumnValues;
+import org.hibernate.metamodel.source.annotations.entity.MappedAttribute;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
 
 /**

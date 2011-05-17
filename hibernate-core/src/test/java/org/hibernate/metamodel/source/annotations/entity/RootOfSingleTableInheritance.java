@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,20 +21,21 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.annotations;
+package org.hibernate.metamodel.source.annotations.entity;
+
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 
 /**
- * An emum for the type of id configuration for an entity.
- *
  * @author Hardy Ferentschik
  */
-public enum IdType {
-	// single @Id annotation
-	SIMPLE,
-	// multiple @Id annotations
-	COMPOSED,
-	// @EmbeddedId annotation
-	EMBEDDED,
-	// does not contain any identifier mappings
-	NONE
+@Entity
+class RootOfSingleTableInheritance {
+	@Id
+	@GeneratedValue
+	private int id;
 }
+
+
+

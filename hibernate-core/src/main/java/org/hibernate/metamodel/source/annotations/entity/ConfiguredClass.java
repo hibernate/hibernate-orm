@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.annotations;
+package org.hibernate.metamodel.source.annotations.entity;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
@@ -52,6 +52,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.metamodel.binding.InheritanceType;
+import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.source.annotations.util.ReflectionHelper;
 import org.hibernate.service.ServiceRegistry;

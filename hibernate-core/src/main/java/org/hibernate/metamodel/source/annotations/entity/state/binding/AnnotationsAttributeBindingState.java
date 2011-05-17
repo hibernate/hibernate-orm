@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.annotations.state.binding;
+package org.hibernate.metamodel.source.annotations.entity.state.binding;
 
 import java.util.Map;
 import java.util.Properties;
@@ -29,7 +29,7 @@ import java.util.Properties;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.binding.state.SimpleAttributeBindingState;
 import org.hibernate.metamodel.domain.MetaAttribute;
-import org.hibernate.metamodel.source.annotations.MappedAttribute;
+import org.hibernate.metamodel.source.annotations.entity.MappedAttribute;
 
 /**
  * @author Hardy Ferentschik

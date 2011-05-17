@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,21 +21,14 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.annotations;
-
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+package org.hibernate.metamodel.source.annotations.entity;
 
 /**
  * @author Hardy Ferentschik
  */
-@Entity
-class RootOfSingleTableInheritance {
-	@Id
-	@GeneratedValue
-	private int id;
+public enum ConfiguredClassType {
+	ENTITY,
+	MAPPED_SUPERCLASS,
+	EMBEDDABLE,
+	NON_ENTITY
 }
-
-
-

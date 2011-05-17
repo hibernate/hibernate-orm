@@ -21,12 +21,13 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.annotations;
+package org.hibernate.metamodel.source.annotations.entity;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.metamodel.source.annotations.JPADotNames;
 
 /**
  * Container for the properties defined by {@code @Column}.

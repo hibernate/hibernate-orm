@@ -29,9 +29,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.AnnotationTarget;
 import org.jboss.jandex.AnnotationValue;
-import org.jboss.jandex.DotName;
 
 import org.hibernate.metamodel.source.annotation.xml.XMLColumnResult;
 import org.hibernate.metamodel.source.annotation.xml.XMLEntityResult;
@@ -44,35 +42,18 @@ import org.hibernate.metamodel.source.annotation.xml.XMLSqlResultSetMapping;
 import org.hibernate.metamodel.source.annotation.xml.XMLTableGenerator;
 
 /**
- * note: Global Configurations {@link org.hibernate.metamodel.source.annotations.xml.filter.IndexedAnnotationFilter.GLOBAL_ANNOTATIONS}
- * in the new build Index has no target
- *
  * @author Strong Liu
  */
-class GlobalConfigurationMocker extends AbstractMocker {
+class GlobalAnnotationMocker extends AbstractMocker {
 	private GlobalAnnotations globalAnnotations;
 
-	GlobalConfigurationMocker(IndexBuilder indexBuilder, GlobalAnnotations globalAnnotations) {
+	GlobalAnnotationMocker(IndexBuilder indexBuilder, GlobalAnnotations globalAnnotations) {
 		super( indexBuilder );
 		this.globalAnnotations = globalAnnotations;
 	}
 
-	@Override
-	protected EntityMappingsMocker.Default getDefaults() {
-		return null;
-	}
 
-	@Override
-	protected DotName getTargetName() {
-		return null;
-	}
-
-	@Override
-	protected AnnotationTarget getTarget() {
-		return null;
-	}
-
-	void parser() {
+	void process() {
 		if ( !globalAnnotations.getTableGeneratorMap().isEmpty() ) {
 			for ( XMLTableGenerator generator : globalAnnotations.getTableGeneratorMap().values() ) {
 				parserTableGenerator( generator );
@@ -117,7 +98,7 @@ class GlobalConfigurationMocker extends AbstractMocker {
 			);
 		}
 		return create(
-				SQL_RESULT_SET_MAPPINGS,
+				SQL_RESULT_SET_MAPPINGS, null,
 				new AnnotationValue[] { AnnotationValue.createArrayValue( "values", values ) }
 
 		);
@@ -133,7 +114,7 @@ class GlobalConfigurationMocker extends AbstractMocker {
 		nestedColumnResultList( "columns", mapping.getColumnResult(), annotationValueList );
 		return
 				create(
-						SQL_RESULT_SET_MAPPING, annotationValueList
+						SQL_RESULT_SET_MAPPING, null, annotationValueList
 
 				);
 	}
@@ -226,7 +207,7 @@ class GlobalConfigurationMocker extends AbstractMocker {
 			);
 		}
 		return create(
-				NAMED_NATIVE_QUERIES,
+				NAMED_NATIVE_QUERIES, null,
 				new AnnotationValue[] { AnnotationValue.createArrayValue( "values", values ) }
 
 		);
@@ -246,7 +227,7 @@ class GlobalConfigurationMocker extends AbstractMocker {
 		nestedQueryHintList( "hints", namedNativeQuery.getHint(), annotationValueList );
 		return
 				create(
-						NAMED_NATIVE_QUERY, annotationValueList
+						NAMED_NATIVE_QUERY, null, annotationValueList
 
 				);
 	}
@@ -262,7 +243,7 @@ class GlobalConfigurationMocker extends AbstractMocker {
 			);
 		}
 		return create(
-				NAMED_QUERIES,
+				NAMED_QUERIES, null,
 				new AnnotationValue[] { AnnotationValue.createArrayValue( "values", values ) }
 
 		);
@@ -276,7 +257,7 @@ class GlobalConfigurationMocker extends AbstractMocker {
 		MockHelper.stringValue( "query", namedQuery.getQuery(), annotationValueList );
 		MockHelper.enumValue( "lockMode", LOCK_MODE_TYPE, namedQuery.getLockMode(), annotationValueList );
 		nestedQueryHintList( "hints", namedQuery.getHint(), annotationValueList );
-		return create( NAMED_QUERY, annotationValueList );
+		return create( NAMED_QUERY, null, annotationValueList );
 	}
 
 	//@QueryHint
@@ -315,7 +296,7 @@ class GlobalConfigurationMocker extends AbstractMocker {
 		MockHelper.integerValue( "allocationSize", generator.getAllocationSize(), annotationValueList );
 		return
 				create(
-						SEQUENCE_GENERATOR, annotationValueList
+						SEQUENCE_GENERATOR, null, annotationValueList
 
 				);
 	}
@@ -335,19 +316,16 @@ class GlobalConfigurationMocker extends AbstractMocker {
 		nestedUniqueConstraintList( "uniqueConstraints", generator.getUniqueConstraint(), annotationValueList );
 		return
 				create(
-						TABLE_GENERATOR, annotationValueList
+						TABLE_GENERATOR, null, annotationValueList
 
 				);
 	}
 
 	@Override
 	protected AnnotationInstance push(AnnotationInstance annotationInstance) {
-		return globalAnnotations.push( annotationInstance.name(), annotationInstance );
-	}
-
-	@Override
-	protected AnnotationInstance create(DotName name, AnnotationTarget target, AnnotationValue[] annotationValues) {
-		AnnotationInstance annotationInstance = MockHelper.create( name, target, annotationValues );
-		return push( annotationInstance );
+		if ( annotationInstance != null ) {
+			return globalAnnotations.push( annotationInstance.name(), annotationInstance );
+		}
+		return null;
 	}
 }

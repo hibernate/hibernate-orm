@@ -309,8 +309,10 @@ public class RevisionInfoConfiguration {
                 new RevisionInfoQueryCreator(revisionInfoEntityName, revisionInfoIdData.getName(),
                         revisionInfoTimestampData.getName(), isTimestampAsDate()),
                 generateRevisionInfoRelationMapping(),
-                new RevisionInfoNumberReader(revisionInfoClass, revisionInfoIdData), revisionInfoEntityName,
-                revisionInfoClass, revisionInfoTimestampData);
+                new RevisionInfoNumberReader(revisionInfoClass, revisionInfoIdData),
+                globalCfg.isTrackEntitiesChangedInRevisionEnabled() ? new ModifiedEntityTypesReader(revisionInfoClass, modifiedEntityTypesData)
+                                                                    : null,
+                revisionInfoEntityName, revisionInfoClass, revisionInfoTimestampData);
     }
 
     private boolean isTimestampAsDate() {
@@ -325,20 +327,22 @@ class RevisionInfoConfigurationResult {
     private final RevisionInfoQueryCreator revisionInfoQueryCreator;
     private final Element revisionInfoRelationMapping;
     private final RevisionInfoNumberReader revisionInfoNumberReader;
+    private final ModifiedEntityTypesReader modifiedEntityTypesReader;
     private final String revisionInfoEntityName;
     private final Class<?> revisionInfoClass;
     private final PropertyData revisionInfoTimestampData;
 
     RevisionInfoConfigurationResult(RevisionInfoGenerator revisionInfoGenerator,
                                     Document revisionInfoXmlMapping, RevisionInfoQueryCreator revisionInfoQueryCreator,
-                                    Element revisionInfoRelationMapping,
-                                    RevisionInfoNumberReader revisionInfoNumberReader, String revisionInfoEntityName,  Class<?> revisionInfoClass,
-                                    PropertyData revisionInfoTimestampData) {
+                                    Element revisionInfoRelationMapping, RevisionInfoNumberReader revisionInfoNumberReader,
+                                    ModifiedEntityTypesReader modifiedEntityTypesReader, String revisionInfoEntityName,
+                                    Class<?> revisionInfoClass, PropertyData revisionInfoTimestampData) {
         this.revisionInfoGenerator = revisionInfoGenerator;
         this.revisionInfoXmlMapping = revisionInfoXmlMapping;
         this.revisionInfoQueryCreator = revisionInfoQueryCreator;
         this.revisionInfoRelationMapping = revisionInfoRelationMapping;
         this.revisionInfoNumberReader = revisionInfoNumberReader;
+        this.modifiedEntityTypesReader = modifiedEntityTypesReader;
         this.revisionInfoEntityName = revisionInfoEntityName;
         this.revisionInfoClass = revisionInfoClass;
         this.revisionInfoTimestampData = revisionInfoTimestampData;
@@ -375,4 +379,8 @@ class RevisionInfoConfigurationResult {
 	public PropertyData getRevisionInfoTimestampData() {
 		return revisionInfoTimestampData;
 	}
+
+    public ModifiedEntityTypesReader getModifiedEntityTypesReader() {
+        return modifiedEntityTypesReader;
+    }
 }

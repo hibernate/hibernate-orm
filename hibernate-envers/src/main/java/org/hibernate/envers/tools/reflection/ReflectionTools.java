@@ -45,7 +45,6 @@ import static org.hibernate.envers.tools.Pair.make;
 
 /**
  * @author Adam Warski (adam at warski dot org)
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public class ReflectionTools {
     private static final Map<Pair<Class, String>, Getter> getterCache =
@@ -99,92 +98,5 @@ public class ReflectionTools {
         }
 
         return value;
-    }
-
-    /**
-     * Returns property value by invoking getter method or directly retrieving field's reference.
-     * @param member Field or getter method representation.
-     * @param object Object instance.
-     * @return Property value.
-     */
-    public static Object getPropertyValue(Member member, Object object) {
-        try {
-            if (member instanceof Field) {
-                Field field = (Field) member;
-                field.setAccessible(true);
-                return field.get(object);
-            } else if (member instanceof Method) {
-                Method method = (Method) member;
-                method.setAccessible(true);
-                return method.invoke(object);
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-        throw new IllegalArgumentException("Unsupported member type: " + member + ".");
-    }
-
-    /** 
-     * @param clazz Class type.
-     * @param annotation Searched annotation.
-     * @return Set of annotated members ({@link Field} and/or {@link Method}).
-     */
-    public static Set<Member> getAnnotatedMembers(Class clazz, Class<? extends Annotation> annotation) {
-        try {
-            Set<Field> annotatedFields = new HashSet<Field>();
-            Set<Method> annotatedMethods = new HashSet<Method>();
-            doGetAnnotatedFields(clazz, annotation, annotatedFields);
-            doGetAnnotatedMethods(clazz, annotation, annotatedMethods);
-            Set<Member> result = new HashSet<Member>(annotatedFields.size() + annotatedMethods.size());
-            for (Field field : annotatedFields) {
-                field.setAccessible(true);
-                result.add(field);
-            }
-            for (Method method : annotatedMethods) {
-                method.setAccessible(true);
-                result.add(method);
-            }
-            return result;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    /**
-     * Populates {@code fields} set with all properties marked with a given annotation.
-     * @param clazz Class type.
-     * @param annotation Annotation.
-     * @param fields Set of annotated fields. Shall be initialized externally.
-     */
-    private static void doGetAnnotatedFields(Class clazz, Class<? extends Annotation> annotation, Set<Field> fields) {
-        for (Field field : clazz.getDeclaredFields()) {
-            field.setAccessible(true);
-            if (field.isAnnotationPresent(annotation)) {
-                fields.add(field);
-            }
-        }
-        Class superClass = clazz.getSuperclass();
-        if (!Object.class.equals(superClass)) {
-            doGetAnnotatedFields(superClass, annotation, fields);
-        }
-    }
-
-    /**
-     * Populates {@code methods} set with all functions marked with a given annotation.
-     * @param clazz Class type.
-     * @param annotation Annotation.
-     * @param methods Set of annotated methods. Shall be initialized externally.
-     */
-    private static void doGetAnnotatedMethods(Class clazz, Class<? extends Annotation> annotation, Set<Method> methods) {
-        for (Method method : clazz.getDeclaredMethods()) {
-            method.setAccessible(true);
-            if (method.isAnnotationPresent(annotation)) {
-                methods.add(method);
-            }
-        }
-        Class superClass = clazz.getSuperclass();
-        if (!Object.class.equals(superClass)) {
-            doGetAnnotatedMethods(superClass, annotation, methods);
-        }
     }
 }

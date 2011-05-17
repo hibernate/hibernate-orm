@@ -33,7 +33,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.Session;
 import org.hibernate.engine.SessionImplementor;
-import org.hibernate.envers.ModifiedEntityTypes;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.exception.AuditException;
@@ -43,7 +42,6 @@ import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.query.AuditQueryCreator;
 import org.hibernate.envers.query.criteria.RevisionTypeAuditExpression;
 import org.hibernate.envers.synchronization.AuditProcess;
-import org.hibernate.envers.tools.reflection.ReflectionTools;
 import org.hibernate.event.EventSource;
 import org.hibernate.proxy.HibernateProxy;
 
@@ -294,22 +292,7 @@ public class AuditReaderImpl implements AuditReaderImplementor {
         Object revisionInfo = query.uniqueResult();
         if (revisionInfo != null) {
             // If revision exists
-            if (modifiedEntityTypesProperty == null) {
-                // Only one field or method (getter) can be marked with @ModifiedEntityTypes annotation
-                modifiedEntityTypesProperty = (Member) ReflectionTools.getAnnotatedMembers(revisionInfo.getClass(),
-                                                                                           ModifiedEntityTypes.class).toArray()[0];
-            }
-            Set<String> modifiedEntityTypes = (Set<String>) ReflectionTools.getPropertyValue(modifiedEntityTypesProperty, revisionInfo);
-            Set<Class> result = new HashSet<Class>(modifiedEntityTypes.size());
-            for (String entityClassName : modifiedEntityTypes) {
-                try {
-                    result.add(Class.forName(entityClassName));
-                } catch (ClassNotFoundException e) {
-                    // This shall never happen
-                    throw new RuntimeException(e);
-                }
-            }
-            return result;
+            return verCfg.getModifiedEntityTypesReader().getModifiedEntityTypes(revisionInfo);
         }
         return Collections.EMPTY_SET;
     }

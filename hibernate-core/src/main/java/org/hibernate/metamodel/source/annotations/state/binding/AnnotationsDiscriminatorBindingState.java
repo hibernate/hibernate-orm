@@ -21,14 +21,36 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.state.domain;
+package org.hibernate.metamodel.source.annotations.state.binding;
+
+import org.hibernate.metamodel.source.annotations.ColumnValues;
+import org.hibernate.metamodel.source.annotations.DiscriminatorColumnValues;
+import org.hibernate.metamodel.source.annotations.MappedAttribute;
+import org.hibernate.metamodel.state.binding.DiscriminatorBindingState;
 
 /**
  * @author Gail Badner
+ *
+ * TODO: extract a superclass that sets defaults for other stuff
  */
-public interface ManyToOneAttributeDomainState extends SingularAttributeDomainState {
-	boolean isUnwrapProxy();
-	String getReferencedAttributeName();
-	String getReferencedEntityName();
-	boolean ignoreNotFound();
+public class AnnotationsDiscriminatorBindingState
+		extends AnnotationsAttributeBindingState implements DiscriminatorBindingState {
+	private final boolean isForced;
+	private final boolean isInserted;
+	public AnnotationsDiscriminatorBindingState(MappedAttribute mappedAttribute) {
+		super( mappedAttribute );
+		DiscriminatorColumnValues columnValues = DiscriminatorColumnValues.class.cast( mappedAttribute.getColumnValues() );
+		isForced = columnValues.isForced();
+		isInserted = columnValues.isIncludedInSql();
+	}
+
+	@Override
+	public boolean isForced() {
+		return isForced;
+	}
+
+	@Override
+	public boolean isInsertable() {
+		return isInserted;
+	}
 }

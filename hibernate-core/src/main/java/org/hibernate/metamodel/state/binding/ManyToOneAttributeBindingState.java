@@ -21,30 +21,14 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.hbm.state.domain;
-
-import org.hibernate.metamodel.binding.CollectionElement;
-import org.hibernate.metamodel.binding.HibernateTypeDescriptor;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLElementElement;
-import org.hibernate.metamodel.state.domain.CollectionElementDomainState;
+package org.hibernate.metamodel.state.binding;
 
 /**
  * @author Gail Badner
  */
-public class HbmCollectionElementDomainState implements CollectionElementDomainState {
-	private final XMLElementElement element;
-
-	HbmCollectionElementDomainState(XMLElementElement element) {
-		this.element = element;
-	}
-
-	public final HibernateTypeDescriptor getHibernateTypeDescriptor() {
-		HibernateTypeDescriptor hibernateTypeDescriptor = new HibernateTypeDescriptor();
-		hibernateTypeDescriptor.setTypeName( element.getTypeAttribute() );
-		return hibernateTypeDescriptor;
-	}
-
-	public final String getNodeName() {
-		return element.getNode();
-	}
+public interface ManyToOneAttributeBindingState extends SimpleAttributeBindingState {
+	boolean isUnwrapProxy();
+	String getReferencedAttributeName();
+	String getReferencedEntityName();
+	boolean ignoreNotFound();
 }

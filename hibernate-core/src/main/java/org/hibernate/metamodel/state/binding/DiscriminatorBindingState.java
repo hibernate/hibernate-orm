@@ -21,14 +21,13 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.state.domain;
+package org.hibernate.metamodel.state.binding;
 
-import org.hibernate.mapping.PropertyGeneration;
-import org.hibernate.metamodel.binding.SingularAttributeBinding;
+import org.hibernate.metamodel.binding.AttributeBinding;
 
 /**
  * @author Gail Badner
  */
-public interface SimpleAttributeDomainState extends SingularAttributeDomainState {
-	public PropertyGeneration getPropertyGeneration();
+public interface DiscriminatorBindingState extends SimpleAttributeBindingState {
+	boolean isForced();
 }

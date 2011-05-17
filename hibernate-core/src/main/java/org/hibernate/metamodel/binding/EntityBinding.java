@@ -36,6 +36,7 @@ import org.hibernate.engine.internal.Versioning;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.metamodel.domain.Entity;
 import org.hibernate.metamodel.domain.MetaAttribute;
+import org.hibernate.metamodel.domain.PluralAttributeNature;
 import org.hibernate.metamodel.relational.Column;
 import org.hibernate.metamodel.relational.TableSpecification;
 import org.hibernate.metamodel.source.hbm.HbmHelper;
@@ -45,6 +46,11 @@ import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlInsertElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlUpdateElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSynchronizeElement;
 import org.hibernate.metamodel.source.util.MappingHelper;
+import org.hibernate.metamodel.state.binding.DiscriminatorBindingState;
+import org.hibernate.metamodel.state.binding.ManyToOneAttributeBindingState;
+import org.hibernate.metamodel.state.binding.PluralAttributeBindingState;
+import org.hibernate.metamodel.state.binding.SimpleAttributeBindingState;
+import org.hibernate.metamodel.state.relational.ColumnRelationalState;
 
 /**
  * Provides the link between the domain and the relational model for an entity.
@@ -207,16 +213,6 @@ public class EntityBinding {
 		return entityDiscriminator;
 	}
 
-	public void bindEntityDiscriminator(SimpleAttributeBinding attributeBinding) {
-		if ( !Column.class.isInstance( attributeBinding.getValue() ) ) {
-			throw new MappingException(
-					"Identifier value must be a Column; instead it is: " + attributeBinding.getValue().getClass()
-			);
-		}
-		entityDiscriminator.setValueBinding( attributeBinding );
-		baseTable.getPrimaryKey().addColumn( Column.class.cast( attributeBinding.getValue() ) );
-	}
-
 	public void setInheritanceType(InheritanceType entityInheritanceType) {
 		this.entityInheritanceType = entityInheritanceType;
 	}
@@ -241,26 +237,25 @@ public class EntityBinding {
 		return entityReferencingAttributeBindings;
 	}
 
-	public SimpleAttributeBinding makeSimplePrimaryKeyAttributeBinding(String name) {
+	public SimpleAttributeBinding makeSimpleIdAttributeBinding(String name) {
 		final SimpleAttributeBinding binding = makeSimpleAttributeBinding( name, true, true );
 		getEntityIdentifier().setValueBinding( binding );
 		return binding;
 	}
 
-	public SimpleAttributeBinding makeEntityDiscriminatorBinding(String name) {
+	public EntityDiscriminator makeEntityDiscriminator(String attributeName) {
 		if ( entityDiscriminator != null ) {
 			throw new AssertionFailure( "Creation of entity discriminator was called more than once" );
 		}
 		entityDiscriminator = new EntityDiscriminator();
-		entityDiscriminator.setValueBinding( makeSimpleAttributeBinding( name, true, false ) );
-		return entityDiscriminator.getValueBinding();
+		entityDiscriminator.setValueBinding( makeSimpleAttributeBinding( attributeName, true, false ) );
+		return entityDiscriminator;
 	}
 
-	public SimpleAttributeBinding makeVersionBinding(String name) {
-		versionBinding = makeSimpleAttributeBinding( name, true, false );
+	public SimpleAttributeBinding makeVersionBinding(String attributeName) {
+		versionBinding = makeSimpleAttributeBinding( attributeName, true, false );
 		return versionBinding;
 	}
-
 
 	public SimpleAttributeBinding makeSimpleAttributeBinding(String name) {
 		return makeSimpleAttributeBinding( name, false, false );
@@ -273,17 +268,17 @@ public class EntityBinding {
 		return binding;
 	}
 
-	public ManyToOneAttributeBinding makeManyToOneAttributeBinding(String name) {
+	public ManyToOneAttributeBinding makeManyToOneAttributeBinding(String attributeName) {
 		final ManyToOneAttributeBinding binding = new ManyToOneAttributeBinding( this );
-		registerAttributeBinding( name, binding );
-		binding.setAttribute( entity.getAttribute( name ) );
+		registerAttributeBinding( attributeName, binding );
+		binding.setAttribute( entity.getAttribute( attributeName ) );
 		return binding;
 	}
 
-	public BagBinding makeBagAttributeBinding(String name) {
+	public BagBinding makeBagAttributeBinding(String attributeName) {
 		final BagBinding binding = new BagBinding( this );
-		registerAttributeBinding( name, binding );
-		binding.setAttribute( entity.getAttribute( name ) );
+		registerAttributeBinding( attributeName, binding );
+		binding.setAttribute( entity.getAttribute( attributeName ) );
 		return binding;
 	}
 

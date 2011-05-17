@@ -24,7 +24,6 @@
 package org.hibernate.metamodel.binding;
 
 import org.hibernate.metamodel.relational.Value;
-import org.hibernate.metamodel.state.domain.CollectionElementDomainState;
 
 /**
  * TODO : javadoc
@@ -44,8 +43,13 @@ public class CollectionElement {
 		this.collectionBinding = collectionBinding;
 	}
 
-	public void initialize(CollectionElementDomainState state) {
-		hibernateTypeDescriptor.initialize( state.getHibernateTypeDescriptor() );
-		nodeName = state.getNodeName();
+	/* package-protected */
+	void setTypeName(String typeName) {
+		hibernateTypeDescriptor.setTypeName( typeName );
+	}
+
+	/* package-protected */
+	void setNodeName(String nodeName) {
+		this.nodeName = nodeName;
 	}
 }

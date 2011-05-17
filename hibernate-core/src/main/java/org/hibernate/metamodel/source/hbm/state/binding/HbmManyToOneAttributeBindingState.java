@@ -21,28 +21,26 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.hbm.state.domain;
+package org.hibernate.metamodel.source.hbm.state.binding;
 
 import java.util.Map;
 
 import org.hibernate.FetchMode;
-import org.hibernate.metamodel.binding.HibernateTypeDescriptor;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.metamodel.binding.MappingDefaults;
 import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.metamodel.source.hbm.HbmHelper;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLManyToOneElement;
-import org.hibernate.metamodel.source.internal.MetadataImpl;
 import org.hibernate.metamodel.source.util.MappingHelper;
-import org.hibernate.metamodel.state.domain.ManyToOneAttributeDomainState;
+import org.hibernate.metamodel.state.binding.ManyToOneAttributeBindingState;
 
 /**
  * @author Gail Badner
  */
-public class HbmManyToOneAttributeDomainState
-		extends AbstractHbmAttributeDomainState
-		implements ManyToOneAttributeDomainState {
+public class HbmManyToOneAttributeBindingState
+		extends AbstractHbmAttributeBindingState
+		implements ManyToOneAttributeBindingState {
 
-	private final HibernateTypeDescriptor hibernateTypeDescriptor = new HibernateTypeDescriptor();
 	private final FetchMode fetchMode;
 	private final boolean isUnwrapProxy;
 	private final boolean isLazy;
@@ -54,16 +52,15 @@ public class HbmManyToOneAttributeDomainState
 	private final boolean isInsertable;
 	private final boolean isUpdateable;
 
-	public HbmManyToOneAttributeDomainState(
-			MetadataImpl metadata,
+	public HbmManyToOneAttributeBindingState(
+			String ownerClassName,
 			MappingDefaults defaults,
-			org.hibernate.metamodel.domain.Attribute attribute,
 			Map<String, MetaAttribute> entityMetaAttributes,
 			XMLManyToOneElement manyToOne) {
 		super(
-				metadata,
+				ownerClassName,
+				manyToOne.getName(),
 				defaults,
-				attribute,
 				manyToOne.getNode(),
 				HbmHelper.extractMetas( manyToOne.getMeta(), entityMetaAttributes ),
 				HbmHelper.getPropertyAccessorName(
@@ -79,13 +76,8 @@ public class HbmManyToOneAttributeDomainState
 				"proxy".equals( manyToOne.getLazy().value() );
 		cascade = MappingHelper.getStringValue( manyToOne.getCascade(), defaults.getDefaultCascade() );
 		isEmbedded = manyToOne.isEmbedXml();
-		hibernateTypeDescriptor.setTypeName( getReferencedEntityName() );
+		referencedEntityName = getReferencedEntityName( ownerClassName, manyToOne, defaults );
 		referencedPropertyName = manyToOne.getPropertyRef();
-		referencedEntityName = (
-				manyToOne.getEntityName() == null ?
-						HbmHelper.getClassName( manyToOne.getClazz(), getDefaults().getPackageName() ) :
-						manyToOne.getEntityName().intern()
-		);
 		ignoreNotFound = "ignore".equals( manyToOne.getNotFound().value() );
 		isInsertable = manyToOne.isInsert();
 		isUpdateable = manyToOne.isUpdate();
@@ -96,8 +88,19 @@ public class HbmManyToOneAttributeDomainState
 		return isEmbedded;
 	}
 
-	public HibernateTypeDescriptor getHibernateTypeDescriptor() {
-		return hibernateTypeDescriptor;
+	private static String getReferencedEntityName(String ownerClassName, XMLManyToOneElement manyToOne, MappingDefaults defaults) {
+		String referencedEntityName = null;
+		if ( manyToOne.getEntityName() != null ) {
+			referencedEntityName = manyToOne.getEntityName();
+		}
+		else if ( manyToOne.getClazz() != null ) {
+			referencedEntityName = HbmHelper.getClassName( manyToOne.getClazz(), defaults.getPackageName() );
+		}
+		else {
+			Class ownerClazz = MappingHelper.classForName( ownerClassName, defaults.getServiceRegistry() );
+			referencedEntityName = ReflectHelper.reflectedPropertyClass( ownerClazz, manyToOne.getName()  ).getName();
+		}
+		return referencedEntityName;
 	}
 
 	// same as for plural attributes...
@@ -119,6 +122,10 @@ public class HbmManyToOneAttributeDomainState
 			}
 		}
 		return fetchMode;
+	}
+
+	public String getTypeName() {
+		return referencedEntityName;
 	}
 
 	public FetchMode getFetchMode() {

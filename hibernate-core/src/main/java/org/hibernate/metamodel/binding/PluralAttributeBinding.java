@@ -32,7 +32,7 @@ import org.jboss.logging.Logger;
 import org.hibernate.FetchMode;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.relational.Table;
-import org.hibernate.metamodel.state.domain.PluralAttributeDomainState;
+import org.hibernate.metamodel.state.binding.PluralAttributeBindingState;
 
 /**
  * TODO : javadoc
@@ -84,12 +84,13 @@ public abstract class PluralAttributeBinding extends AbstractAttributeBinding {
 		collectionElement = new CollectionElement( this );
 	}
 
-	public void initialize(PluralAttributeDomainState state) {
+	protected void initializeBinding(PluralAttributeBindingState state) {
 		super.initialize( state );
 		fetchMode = state.getFetchMode();
 		extraLazy = state.isExtraLazy();
 		collectionElement = new ElementCollectionElement( this );
-		collectionElement.initialize( state.getCollectionElementDomainState() );
+		collectionElement.setNodeName( state.getElementNodeName() );
+		collectionElement.setTypeName( state.getElementTypeName() );
 		inverse = state.isInverse();
 		mutable = state.isMutable();
 		subselectLoadable = state.isSubselectLoadable();

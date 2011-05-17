@@ -30,7 +30,7 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.metamodel.relational.ForeignKey;
 import org.hibernate.metamodel.relational.SimpleValue;
 import org.hibernate.metamodel.relational.Column;
-import org.hibernate.metamodel.state.domain.ManyToOneAttributeDomainState;
+import org.hibernate.metamodel.state.binding.ManyToOneAttributeBindingState;
 import org.hibernate.metamodel.state.relational.ManyToOneRelationalState;
 
 /**
@@ -38,7 +38,7 @@ import org.hibernate.metamodel.state.relational.ManyToOneRelationalState;
  *
  * @author Gail Badner
  */
-public class ManyToOneAttributeBinding extends SingularAttributeBinding implements EntityReferencingAttributeBinding {
+public class ManyToOneAttributeBinding extends SimpleAttributeBinding implements EntityReferencingAttributeBinding {
 	private boolean isLogicalOneToOne;
 	private boolean isPropertyReference;
 	private String foreignKeyName;
@@ -51,7 +51,7 @@ public class ManyToOneAttributeBinding extends SingularAttributeBinding implemen
 		super( entityBinding, false, false );
 	}
 
-	public final void initialize(ManyToOneAttributeDomainState state) {
+	public final ManyToOneAttributeBinding initialize(ManyToOneAttributeBindingState state) {
 		super.initialize( state );
 		isPropertyReference = state.getReferencedAttributeName() != null;
 		referencedAttributeName = state.getReferencedAttributeName();
@@ -60,15 +60,17 @@ public class ManyToOneAttributeBinding extends SingularAttributeBinding implemen
 				referencedEntityName =
 						ReflectHelper.reflectedPropertyClass(
 								getEntityBinding().getEntity().getName(),
-								state.getAttribute().getName()
+								state.getAttributeName()
 						).getName();
 		}
+		return this;
 	}
 
-	public final void initialize(ManyToOneRelationalState state) {
-		super.initializeValue( state );
+	public final ManyToOneAttributeBinding initialize(ManyToOneRelationalState state) {
+		super.initializeValueRelationalState( state );
 		isLogicalOneToOne = state.isLogicalOneToOne();
 		foreignKeyName = state.getForeignKeyName();
+		return this;
 	}
 
 	public final boolean isPropertyReference() {

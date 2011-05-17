@@ -21,46 +21,46 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.hbm.state.domain;
+package org.hibernate.metamodel.source.hbm.state.binding;
 
 import java.util.Map;
+import java.util.Properties;
 
 import org.hibernate.MappingException;
 import org.hibernate.mapping.PropertyGeneration;
-import org.hibernate.metamodel.binding.HibernateTypeDescriptor;
 import org.hibernate.metamodel.binding.MappingDefaults;
 import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.metamodel.source.hbm.HbmHelper;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLDiscriminator;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLId;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLTimestamp;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLVersion;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLParamElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLPropertyElement;
-import org.hibernate.metamodel.source.internal.MetadataImpl;
 import org.hibernate.metamodel.source.util.MappingHelper;
-import org.hibernate.metamodel.state.domain.SimpleAttributeDomainState;
+import org.hibernate.metamodel.state.binding.SimpleAttributeBindingState;
 
 /**
  * @author Gail Badner
  */
-public class HbmSimpleAttributeDomainState extends AbstractHbmAttributeDomainState
-		implements SimpleAttributeDomainState {
-	private final HibernateTypeDescriptor hibernateTypeDescriptor = new HibernateTypeDescriptor();
+public class HbmSimpleAttributeBindingState extends AbstractHbmAttributeBindingState
+		implements SimpleAttributeBindingState {
+	private final String typeName;
+	private final Properties typeParameters = new Properties();
+
 	private final boolean isLazy;
 	private final PropertyGeneration propertyGeneration;
 	private final boolean isInsertable;
 	private final boolean isUpdateable;
 
-	public HbmSimpleAttributeDomainState(
-			MetadataImpl metadata,
+	public HbmSimpleAttributeBindingState(
+			String ownerClassName,
 			MappingDefaults defaults,
-			org.hibernate.metamodel.domain.Attribute attribute,
 			Map<String, MetaAttribute> entityMetaAttributes,
 			XMLId id) {
 		super(
-				metadata,
+				ownerClassName,
+				id.getName() != null ? id.getName() : defaults.getDefaultIdColumnName(),
 				defaults,
-				attribute,
 				id.getNode(),
 				HbmHelper.extractMetas( id.getMeta(), entityMetaAttributes ),
 				HbmHelper.getPropertyAccessorName( id.getAccess(), false, defaults.getDefaultAccess() ),
@@ -68,8 +68,14 @@ public class HbmSimpleAttributeDomainState extends AbstractHbmAttributeDomainSta
 		);
 
 		this.isLazy = false;
-		if ( id.getType() != null ) {
-			this.hibernateTypeDescriptor.setTypeName( id.getType().getName() );
+		if ( id.getTypeAttribute() != null ) {
+		 	typeName = maybeConvertToTypeDefName( id.getTypeAttribute(), defaults );
+		}
+		else if ( id.getType() != null ) {
+			typeName = maybeConvertToTypeDefName( id.getType().getName(), defaults );
+		}
+		else {
+			typeName = getTypeNameByReflection();
 		}
 
 		// TODO: how should these be set???
@@ -79,40 +85,32 @@ public class HbmSimpleAttributeDomainState extends AbstractHbmAttributeDomainSta
 		this.isUpdateable = false;
 	}
 
-	public HbmSimpleAttributeDomainState(
-			MetadataImpl metadata,
-			MappingDefaults defaults,
-			org.hibernate.metamodel.domain.Attribute attribute,
-			XMLDiscriminator discriminator) {
-		super(
-				metadata, defaults, attribute, null, null, null, true
-		);
-		this.hibernateTypeDescriptor
-				.setTypeName( discriminator.getType() == null ? "string" : discriminator.getType() );
-		this.isLazy = false;
-
-		this.propertyGeneration = PropertyGeneration.NEVER;
-		this.isInsertable = discriminator.isInsert();
-		this.isUpdateable = false;
+	private static String maybeConvertToTypeDefName(String typeName, MappingDefaults defaults) {
+		String actualTypeName = typeName;
+		if ( typeName != null ) {
+			// TODO: tweak for typedef...
+		}
+		else {
+		}
+		return actualTypeName;
 	}
 
-	public HbmSimpleAttributeDomainState(
-			MetadataImpl metadata,
+	public HbmSimpleAttributeBindingState(
+			String ownerClassName,
 			MappingDefaults defaults,
-			org.hibernate.metamodel.domain.Attribute attribute,
 			Map<String, MetaAttribute> entityMetaAttributes,
 			XMLVersion version) {
-
 		super(
-				metadata,
+				ownerClassName,
+				version.getName(),
 				defaults,
-				attribute,
 				version.getNode(),
 				HbmHelper.extractMetas( version.getMeta(), entityMetaAttributes ),
 				HbmHelper.getPropertyAccessorName( version.getAccess(), false, defaults.getDefaultAccess() ),
 				true
 		);
-		this.hibernateTypeDescriptor.setTypeName( version.getType() == null ? "integer" : version.getType() );
+		this.typeName = version.getType() == null ? "integer" : version.getType();
+
 		this.isLazy = false;
 
 		// for version properties marked as being generated, make sure they are "always"
@@ -126,24 +124,24 @@ public class HbmSimpleAttributeDomainState extends AbstractHbmAttributeDomainSta
 		this.isUpdateable = true;
 	}
 
-	public HbmSimpleAttributeDomainState(
-			MetadataImpl metadata,
+	public HbmSimpleAttributeBindingState(
+			String ownerClassName,
 			MappingDefaults defaults,
-			org.hibernate.metamodel.domain.Attribute attribute,
 			Map<String, MetaAttribute> entityMetaAttributes,
 			XMLTimestamp timestamp) {
 
 		super(
-				metadata,
+				ownerClassName,
+				timestamp.getName(),
 				defaults,
-				attribute,
 				timestamp.getNode(),
 				HbmHelper.extractMetas( timestamp.getMeta(), entityMetaAttributes ),
 				HbmHelper.getPropertyAccessorName( timestamp.getAccess(), false, defaults.getDefaultAccess() ),
 				true
 		);
+
 		// Timestamp.getType() is not defined
-		this.hibernateTypeDescriptor.setTypeName( "db".equals( timestamp.getSource() ) ? "dbtimestamp" : "timestamp" );
+		this.typeName = "db".equals( timestamp.getSource() ) ? "dbtimestamp" : "timestamp";
 		this.isLazy = false;
 
 		// for version properties marked as being generated, make sure they are "always"
@@ -157,16 +155,15 @@ public class HbmSimpleAttributeDomainState extends AbstractHbmAttributeDomainSta
 		this.isUpdateable = true;
 	}
 
-	public HbmSimpleAttributeDomainState(
-			MetadataImpl metadata,
+	public HbmSimpleAttributeBindingState(
+			String ownerClassName,
 			MappingDefaults defaults,
-			org.hibernate.metamodel.domain.Attribute attribute,
 			Map<String, MetaAttribute> entityMetaAttributes,
 			XMLPropertyElement property) {
 		super(
-				metadata,
+				ownerClassName,
+				property.getName(),
 				defaults,
-				attribute,
 				property.getNode(),
 				HbmHelper.extractMetas( property.getMeta(), entityMetaAttributes ),
 				HbmHelper.getPropertyAccessorName( property.getAccess(), false, defaults.getDefaultAccess() ),
@@ -182,7 +179,7 @@ public class HbmSimpleAttributeDomainState extends AbstractHbmAttributeDomainSta
 				throw new MappingException(
 						"cannot specify both insert=\"true\" and generated=\"" + propertyGeneration.getName() +
 								"\" for property: " +
-								getAttribute().getName()
+								property.getName()
 				);
 			}
 			isInsertable = false;
@@ -197,7 +194,7 @@ public class HbmSimpleAttributeDomainState extends AbstractHbmAttributeDomainSta
 				throw new MappingException(
 						"cannot specify both update=\"true\" and generated=\"" + propertyGeneration.getName() +
 								"\" for property: " +
-								getAttribute().getName()
+								property.getName()
 				);
 			}
 			isUpdateable = false;
@@ -205,14 +202,47 @@ public class HbmSimpleAttributeDomainState extends AbstractHbmAttributeDomainSta
 		else {
 			isUpdateable = MappingHelper.getBooleanValue( property.isUpdate(), true );
 		}
+
+		if ( property.getTypeAttribute() != null ) {
+			typeName = maybeConvertToTypeDefName( property.getTypeAttribute(), defaults );
+		}
+		else if ( property.getType() != null ) {
+			typeName = maybeConvertToTypeDefName( property.getType().getName(), defaults );
+			for ( XMLParamElement typeParameter : property.getType().getParam() ) {
+				//TODO: add parameters from typedef
+				typeParameters.put( typeParameter.getName(), typeParameter.getValue().trim() );
+			}
+		}
+		else {
+			typeName = getTypeNameByReflection();
+		}
+
+
+		// TODO: check for typedef first
+		/*
+		TypeDef typeDef = mappings.getTypeDef( typeName );
+		if ( typeDef != null ) {
+			typeName = typeDef.getTypeClass();
+			// parameters on the property mapping should
+			// override parameters in the typedef
+			Properties allParameters = new Properties();
+			allParameters.putAll( typeDef.getParameters() );
+			allParameters.putAll( parameters );
+			parameters = allParameters;
+		}
+        */
 	}
 
 	protected boolean isEmbedded() {
 		return false;
 	}
 
-	public HibernateTypeDescriptor getHibernateTypeDescriptor() {
-		return hibernateTypeDescriptor;
+	public String getTypeName() {
+		return typeName;
+	}
+
+	public Properties getTypeParameters() {
+		return typeParameters;
 	}
 
 	public boolean isLazy() {

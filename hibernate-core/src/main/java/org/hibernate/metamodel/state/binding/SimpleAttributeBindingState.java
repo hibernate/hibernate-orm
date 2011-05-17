@@ -21,25 +21,17 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.state.domain;
+package org.hibernate.metamodel.state.binding;
 
-import java.util.Map;
-
-import org.hibernate.metamodel.binding.HibernateTypeDescriptor;
-import org.hibernate.metamodel.domain.Attribute;
-import org.hibernate.metamodel.domain.MetaAttribute;
+import org.hibernate.mapping.PropertyGeneration;
 
 /**
  * @author Gail Badner
  */
-public interface AttributeDomainState {
-	HibernateTypeDescriptor getHibernateTypeDescriptor();
-	Attribute getAttribute();
-	boolean isLazy();
-	String getPropertyAccessorName();
-	boolean isAlternateUniqueKey();
-	String getCascade();
-	boolean isOptimisticLockable();
-	String getNodeName();
-	Map<String, MetaAttribute> getMetaAttributes();
+public interface SimpleAttributeBindingState extends AttributeBindingState {
+	boolean isInsertable();
+	boolean isUpdateable();
+	boolean isKeyCasadeDeleteEnabled();
+	String getUnsavedValue();
+	public PropertyGeneration getPropertyGeneration();
 }

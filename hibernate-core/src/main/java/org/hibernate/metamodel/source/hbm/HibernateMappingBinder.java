@@ -47,11 +47,15 @@ import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlQueryElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSubclassElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLUnionSubclassElement;
 import org.hibernate.metamodel.source.util.MappingHelper;
+import org.hibernate.service.ServiceRegistry;
 
 /**
  * Responsible for performing binding of the {@code <hibernate-mapping/>} DOM element
  */
 public class HibernateMappingBinder implements MappingDefaults {
+	private static final String DEFAULT_IDENTIFIER_COLUMN_NAME = "id";
+	private static final String DEFAULT_DISCRIMINATOR_COLUMN_NAME = "class";
+
 	private final HibernateXmlBinder hibernateXmlBinder;
 	private final JaxbRoot<XMLHibernateMapping> jaxbRoot;
 	private final XMLHibernateMapping hibernateMapping;
@@ -103,6 +107,15 @@ public class HibernateMappingBinder implements MappingDefaults {
 		return defaultCatalogName;
 	}
 
+	public String getDefaultIdColumnName() {
+		return DEFAULT_IDENTIFIER_COLUMN_NAME;
+
+
+	}
+	public String getDefaultDescriminatorColumnName() {
+		return DEFAULT_DISCRIMINATOR_COLUMN_NAME;
+	}
+
 	public String getDefaultCascade() {
 		return defaultCascade;
 	}
@@ -113,6 +126,11 @@ public class HibernateMappingBinder implements MappingDefaults {
 
 	public boolean isDefaultLazy() {
 		return defaultLazy;
+	}
+
+	@Override
+	public ServiceRegistry getServiceRegistry() {
+		return hibernateXmlBinder.getMetadata().getServiceRegistry();
 	}
 
 	public NamingStrategy getNamingStrategy() {

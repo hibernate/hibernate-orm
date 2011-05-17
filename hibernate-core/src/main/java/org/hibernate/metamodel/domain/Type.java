@@ -42,5 +42,4 @@ public interface Type {
 	 * @return persistence type
 	 */
 	public TypeNature getNature();
-
 }

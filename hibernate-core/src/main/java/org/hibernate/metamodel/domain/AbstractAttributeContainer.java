@@ -121,15 +121,27 @@ public abstract class AbstractAttributeContainer implements AttributeContainer, 
 	public static class SingularAttributeImpl implements SingularAttribute {
 		private final AttributeContainer attributeContainer;
 		private final String name;
+		private Type type;
 
 		public SingularAttributeImpl(String name, AttributeContainer attributeContainer) {
 			this.name = name;
 			this.attributeContainer = attributeContainer;
 		}
 
+		boolean isTypeResolved() {
+			return type != null;
+		}
+
+		void resolveType(Type type) {
+			if ( type == null ) {
+				throw new IllegalArgumentException( "Attempt to resolve with null type" );
+			}
+			this.type = type;
+		}
+
 		@Override
 		public Type getSingularAttributeType() {
-			return null;
+			return type;
 		}
 
 		@Override
@@ -152,6 +164,7 @@ public abstract class AbstractAttributeContainer implements AttributeContainer, 
 		private final AttributeContainer attributeContainer;
 		private final PluralAttributeNature nature;
 		private final String name;
+		private String nodeName;
 
 		private Type elementType;
 

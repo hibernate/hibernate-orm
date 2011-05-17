@@ -1,30 +1,55 @@
-package org.hibernate.metamodel.source.annotations.state.domain;
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
+package org.hibernate.metamodel.source.annotations.state.binding;
 
 import java.util.Map;
+import java.util.Properties;
 
 import org.hibernate.mapping.PropertyGeneration;
-import org.hibernate.metamodel.binding.EntityBinding;
-import org.hibernate.metamodel.binding.HibernateTypeDescriptor;
-import org.hibernate.metamodel.domain.Attribute;
-import org.hibernate.metamodel.domain.Entity;
 import org.hibernate.metamodel.domain.MetaAttribute;
-import org.hibernate.metamodel.state.domain.SimpleAttributeDomainState;
+import org.hibernate.metamodel.state.binding.SimpleAttributeBindingState;
 import org.hibernate.metamodel.source.annotations.MappedAttribute;
 
 /**
  * @author Hardy Ferentschik
  */
-public class AttributeDomainState implements SimpleAttributeDomainState {
+public class AnnotationsAttributeBindingState implements SimpleAttributeBindingState {
+	private final MappedAttribute mappedAttribute;
 	private final PropertyGeneration propertyGeneration = null;
-	private final HibernateTypeDescriptor typeDescriptor;
-	private final Attribute attribute;
+	private final String typeName;
+	private final Properties typeParameters;
 
-	public AttributeDomainState(EntityBinding entityBinding, MappedAttribute mappedAttribute) {
-		typeDescriptor = new HibernateTypeDescriptor();
-		typeDescriptor.setTypeName( mappedAttribute.getType().getName() );
+	public AnnotationsAttributeBindingState(MappedAttribute mappedAttribute) {
+		this.mappedAttribute = mappedAttribute;
+		typeName = mappedAttribute.getType().getName();
+		// TODO: implement....
+		typeParameters = null;
+	}
 
-		Entity entity = entityBinding.getEntity();
-		attribute = entity.getOrCreateSingularAttribute( mappedAttribute.getName() );
+	@Override
+	public String getAttributeName() {
+		return mappedAttribute.getName();
 	}
 
 	@Override
@@ -61,13 +86,13 @@ public class AttributeDomainState implements SimpleAttributeDomainState {
 	}
 
 	@Override
-	public HibernateTypeDescriptor getHibernateTypeDescriptor() {
-		return typeDescriptor;
+	public String getTypeName() {
+		return typeName;
 	}
 
 	@Override
-	public Attribute getAttribute() {
-		return attribute;
+	public Properties getTypeParameters() {
+		return typeParameters;
 	}
 
 	@Override

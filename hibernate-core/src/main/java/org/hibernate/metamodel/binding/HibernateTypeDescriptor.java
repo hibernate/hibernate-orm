@@ -41,6 +41,7 @@ public class HibernateTypeDescriptor {
 		return typeName;
 	}
 
+	/* package-protected */
 	public void setTypeName(String typeName) {
 		this.typeName = typeName;
 	}
@@ -49,13 +50,17 @@ public class HibernateTypeDescriptor {
 		return explicitType;
 	}
 
+	/* package-protected */
 	public void setExplicitType(Type explicitType) {
 		this.explicitType = explicitType;
 	}
 
-	public void initialize(HibernateTypeDescriptor hibernateTypeDescriptor) {
-		typeName = hibernateTypeDescriptor.typeName;
-		explicitType = hibernateTypeDescriptor.explicitType;
-		typeParameters = hibernateTypeDescriptor.typeParameters;
+	public Properties getTypeParameters() {
+		return typeParameters;
+	}
+
+	/* package-protected */
+	void setTypeParameters(Properties typeParameters) {
+		this.typeParameters = typeParameters;
 	}
 }

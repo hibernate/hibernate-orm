@@ -27,6 +27,7 @@ import java.util.Map;
 
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.metamodel.domain.MetaAttribute;
+import org.hibernate.service.ServiceRegistry;
 
 /**
  * @author Gail Badner
@@ -36,8 +37,11 @@ public interface MappingDefaults {
 	String getPackageName();
 	String getDefaultSchemaName();
 	String getDefaultCatalogName();
+	String getDefaultIdColumnName();
+	String getDefaultDescriminatorColumnName();
 	String getDefaultCascade();
 	String getDefaultAccess();
 	boolean isDefaultLazy();
+	ServiceRegistry getServiceRegistry();
 	NamingStrategy getNamingStrategy();
 }

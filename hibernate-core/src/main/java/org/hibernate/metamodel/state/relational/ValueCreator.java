@@ -21,9 +21,15 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.relational;
+package org.hibernate.metamodel.state.relational;
 
 import org.hibernate.MappingException;
+import org.hibernate.metamodel.relational.Column;
+import org.hibernate.metamodel.relational.DerivedValue;
+import org.hibernate.metamodel.relational.SimpleValue;
+import org.hibernate.metamodel.relational.TableSpecification;
+import org.hibernate.metamodel.relational.Tuple;
+import org.hibernate.metamodel.relational.Value;
 import org.hibernate.metamodel.state.relational.ColumnRelationalState;
 import org.hibernate.metamodel.state.relational.DerivedValueRelationalState;
 import org.hibernate.metamodel.state.relational.ValueRelationalState;
@@ -33,7 +39,7 @@ import org.hibernate.metamodel.state.relational.TupleRelationalState;
 /**
  * @author Gail Badner
  */
-public class ValueFactory {
+public class ValueCreator {
 
 	public static Column createColumn(TableSpecification table,
 									  String attributeName,

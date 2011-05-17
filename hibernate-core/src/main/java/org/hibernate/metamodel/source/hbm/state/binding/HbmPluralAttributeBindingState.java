@@ -69,7 +69,9 @@ public class HbmPluralAttributeBindingState extends AbstractHbmAttributeBindingS
 				collection.isOptimisticLock()
 		);
 		this.collection = collection;
-		this.collectionPersisterClass = MappingHelper.classForName( collection.getPersister(), getDefaults().getServiceRegistry() );
+		this.collectionPersisterClass = MappingHelper.classForName(
+				collection.getPersister(), getDefaults().getServiceRegistry()
+		);
 		this.cascade = MappingHelper.getStringValue( collection.getCascade(), mappingDefaults.getDefaultCascade() );
 
 		//Attribute typeNode = collectionElement.attribute( "collection-type" );
@@ -93,7 +95,7 @@ public class HbmPluralAttributeBindingState extends AbstractHbmAttributeBindingS
 	public FetchMode getFetchMode() {
 		FetchMode fetchMode;
 		if ( collection.getFetch() != null ) {
-			fetchMode = "join".equals( collection.getFetch() ) ? FetchMode.JOIN : FetchMode.SELECT;
+			fetchMode = "join".equals( collection.getFetch().value() ) ? FetchMode.JOIN : FetchMode.SELECT;
 		}
 		else {
 			String jfNodeValue = ( collection.getOuterJoin().value() == null ? "auto" : collection.getOuterJoin()
@@ -117,7 +119,7 @@ public class HbmPluralAttributeBindingState extends AbstractHbmAttributeBindingS
 	}
 
 	public boolean isExtraLazy() {
-		return ( "extra".equals( collection.getLazy() ) );
+		return ( "extra".equals( collection.getLazy().value() ) );
 	}
 
 	public String getElementTypeName() {
@@ -128,6 +130,7 @@ public class HbmPluralAttributeBindingState extends AbstractHbmAttributeBindingS
 	public String getElementNodeName() {
 		return collection.getElement().getNode();
 	}
+
 	public boolean isInverse() {
 		return collection.isInverse();
 	}
@@ -137,7 +140,7 @@ public class HbmPluralAttributeBindingState extends AbstractHbmAttributeBindingS
 	}
 
 	public boolean isSubselectLoadable() {
-		return "subselect".equals( collection.getFetch() );
+		return "subselect".equals( collection.getFetch().value() );
 	}
 
 	public String getCacheConcurrencyStrategy() {

@@ -246,8 +246,9 @@ class RootEntityBinder extends AbstractEntityBinder {
 
 		DiscriminatorBindingState bindingState = new HbmDiscriminatorBindingState(
 						entityBinding.getEntity().getPojoEntitySpecifics().getClassName(),
+						entityBinding.getEntity().getName(),
 						getHibernateMappingBinder(),
-						xmlEntityClazz.getDiscriminator()
+						xmlEntityClazz
 		);
 
 		// boolean (true here) indicates that by default column names should be guessed

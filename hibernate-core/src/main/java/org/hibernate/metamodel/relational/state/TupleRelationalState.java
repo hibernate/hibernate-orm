@@ -21,40 +21,13 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.state.relational;
+package org.hibernate.metamodel.relational.state;
 
-import java.util.Set;
-
-import org.hibernate.cfg.NamingStrategy;
-import org.hibernate.metamodel.relational.Size;
+import java.util.List;
 
 /**
  * @author Gail Badner
  */
-public interface ColumnRelationalState extends SimpleValueRelationalState {
-	NamingStrategy getNamingStrategy();
-
-	String getExplicitColumnName();
-
-	boolean isUnique();
-
-	Size getSize();
-
-	boolean isNullable();
-
-	String getCheckCondition();
-
-	String getDefault();
-
-	String getSqlType();
-
-	String getCustomWriteFragment();
-
-	String getCustomReadFragment();
-
-	String getComment();
-
-	Set<String> getUniqueKeys();
-
-	Set<String> getIndexes();
+public interface TupleRelationalState extends ValueRelationalState {
+	List<SimpleValueRelationalState> getRelationalStates();
 }

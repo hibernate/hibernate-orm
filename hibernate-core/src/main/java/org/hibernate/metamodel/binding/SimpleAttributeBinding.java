@@ -24,9 +24,9 @@
 package org.hibernate.metamodel.binding;
 
 import org.hibernate.mapping.PropertyGeneration;
-import org.hibernate.metamodel.state.binding.SimpleAttributeBindingState;
-import org.hibernate.metamodel.state.relational.ColumnRelationalState;
-import org.hibernate.metamodel.state.relational.ValueRelationalState;
+import org.hibernate.metamodel.binding.state.SimpleAttributeBindingState;
+import org.hibernate.metamodel.relational.state.ValueRelationalState;
+import org.hibernate.metamodel.relational.state.ColumnRelationalState;
 
 /**
  * TODO : javadoc

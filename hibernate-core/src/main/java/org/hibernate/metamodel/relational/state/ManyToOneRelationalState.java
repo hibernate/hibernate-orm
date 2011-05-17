@@ -21,13 +21,15 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.state.relational;
+package org.hibernate.metamodel.relational.state;
 
-import java.util.List;
+import org.hibernate.metamodel.relational.state.ValueRelationalState;
 
 /**
  * @author Gail Badner
  */
-public interface TupleRelationalState extends ValueRelationalState {
-	List<SimpleValueRelationalState> getRelationalStates();
+public interface ManyToOneRelationalState extends ValueRelationalState {
+	boolean isLogicalOneToOne();
+
+	String getForeignKeyName();
 }

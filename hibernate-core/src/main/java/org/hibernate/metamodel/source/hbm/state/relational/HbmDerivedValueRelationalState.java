@@ -23,7 +23,7 @@
  */
 package org.hibernate.metamodel.source.hbm.state.relational;
 
-import org.hibernate.metamodel.state.relational.DerivedValueRelationalState;
+import org.hibernate.metamodel.relational.state.DerivedValueRelationalState;
 
 /**
  * @author Gail Badner

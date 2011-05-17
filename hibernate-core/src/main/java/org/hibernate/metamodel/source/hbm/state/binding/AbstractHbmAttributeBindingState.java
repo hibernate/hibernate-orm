@@ -32,7 +32,7 @@ import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.binding.MappingDefaults;
 import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.metamodel.source.util.MappingHelper;
-import org.hibernate.metamodel.state.binding.AttributeBindingState;
+import org.hibernate.metamodel.binding.state.AttributeBindingState;
 
 /**
  * @author Gail Badner

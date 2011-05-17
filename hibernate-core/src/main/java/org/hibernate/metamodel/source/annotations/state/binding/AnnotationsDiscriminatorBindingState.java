@@ -23,10 +23,9 @@
  */
 package org.hibernate.metamodel.source.annotations.state.binding;
 
-import org.hibernate.metamodel.source.annotations.ColumnValues;
 import org.hibernate.metamodel.source.annotations.DiscriminatorColumnValues;
 import org.hibernate.metamodel.source.annotations.MappedAttribute;
-import org.hibernate.metamodel.state.binding.DiscriminatorBindingState;
+import org.hibernate.metamodel.binding.state.DiscriminatorBindingState;
 
 /**
  * @author Gail Badner

@@ -21,17 +21,11 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.state.binding;
+package org.hibernate.metamodel.relational.state;
 
 /**
  * @author Gail Badner
  */
-public interface ManyToOneAttributeBindingState extends SimpleAttributeBindingState {
-	boolean isUnwrapProxy();
-
-	String getReferencedAttributeName();
-
-	String getReferencedEntityName();
-
-	boolean ignoreNotFound();
+public interface DerivedValueRelationalState extends SimpleValueRelationalState {
+	String getFormula();
 }

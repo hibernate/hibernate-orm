@@ -23,7 +23,7 @@
  */
 package org.hibernate.metamodel.binding;
 
-import org.hibernate.metamodel.state.binding.PluralAttributeBindingState;
+import org.hibernate.metamodel.binding.state.PluralAttributeBindingState;
 
 /**
  * TODO : javadoc

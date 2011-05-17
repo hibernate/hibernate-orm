@@ -26,8 +26,8 @@ package org.hibernate.metamodel.source.annotations.state.relational;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.metamodel.state.relational.SimpleValueRelationalState;
-import org.hibernate.metamodel.state.relational.TupleRelationalState;
+import org.hibernate.metamodel.relational.state.SimpleValueRelationalState;
+import org.hibernate.metamodel.relational.state.TupleRelationalState;
 
 /**
  * @author Hardy Ferentschik

@@ -32,6 +32,8 @@ import org.hibernate.MappingException;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.metamodel.binding.HibernateTypeDescriptor;
 import org.hibernate.metamodel.binding.MappingDefaults;
+import org.hibernate.metamodel.relational.state.SimpleValueRelationalState;
+import org.hibernate.metamodel.relational.state.TupleRelationalState;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLColumnElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLDiscriminator;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLId;
@@ -39,8 +41,6 @@ import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLCla
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLVersion;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLManyToOneElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLPropertyElement;
-import org.hibernate.metamodel.state.relational.SimpleValueRelationalState;
-import org.hibernate.metamodel.state.relational.TupleRelationalState;
 
 /**
  * @author Gail Badner

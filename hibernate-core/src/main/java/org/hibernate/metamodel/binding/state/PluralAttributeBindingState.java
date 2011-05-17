@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.state.binding;
+package org.hibernate.metamodel.binding.state;
 
 import java.util.Comparator;
 

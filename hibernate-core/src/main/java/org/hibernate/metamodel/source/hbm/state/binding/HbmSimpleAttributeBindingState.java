@@ -37,7 +37,7 @@ import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLCla
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLParamElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLPropertyElement;
 import org.hibernate.metamodel.source.util.MappingHelper;
-import org.hibernate.metamodel.state.binding.SimpleAttributeBindingState;
+import org.hibernate.metamodel.binding.state.SimpleAttributeBindingState;
 
 /**
  * @author Gail Badner

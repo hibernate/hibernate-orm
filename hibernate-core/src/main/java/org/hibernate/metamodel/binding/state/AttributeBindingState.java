@@ -21,11 +21,34 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.state.binding;
+package org.hibernate.metamodel.binding.state;
+
+import java.util.Map;
+import java.util.Properties;
+
+import org.hibernate.metamodel.domain.MetaAttribute;
 
 /**
  * @author Gail Badner
  */
-public interface DiscriminatorBindingState extends SimpleAttributeBindingState {
-	boolean isForced();
+public interface AttributeBindingState {
+	String getAttributeName();
+
+	String getTypeName();
+
+	Properties getTypeParameters();
+
+	boolean isLazy();
+
+	String getPropertyAccessorName();
+
+	boolean isAlternateUniqueKey();
+
+	String getCascade();
+
+	boolean isOptimisticLockable();
+
+	String getNodeName();
+
+	Map<String, MetaAttribute> getMetaAttributes();
 }

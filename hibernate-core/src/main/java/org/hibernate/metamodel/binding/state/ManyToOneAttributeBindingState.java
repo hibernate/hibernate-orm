@@ -21,21 +21,17 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.state.binding;
-
-import org.hibernate.mapping.PropertyGeneration;
+package org.hibernate.metamodel.binding.state;
 
 /**
  * @author Gail Badner
  */
-public interface SimpleAttributeBindingState extends AttributeBindingState {
-	boolean isInsertable();
+public interface ManyToOneAttributeBindingState extends SimpleAttributeBindingState {
+	boolean isUnwrapProxy();
 
-	boolean isUpdateable();
+	String getReferencedAttributeName();
 
-	boolean isKeyCascadeDeleteEnabled();
+	String getReferencedEntityName();
 
-	String getUnsavedValue();
-
-	public PropertyGeneration getPropertyGeneration();
+	boolean ignoreNotFound();
 }

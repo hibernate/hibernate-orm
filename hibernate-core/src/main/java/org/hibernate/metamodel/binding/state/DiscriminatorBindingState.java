@@ -21,11 +21,11 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.state.relational;
+package org.hibernate.metamodel.binding.state;
 
 /**
  * @author Gail Badner
  */
-public interface DerivedValueRelationalState extends SimpleValueRelationalState {
-	String getFormula();
+public interface DiscriminatorBindingState extends SimpleAttributeBindingState {
+	boolean isForced();
 }

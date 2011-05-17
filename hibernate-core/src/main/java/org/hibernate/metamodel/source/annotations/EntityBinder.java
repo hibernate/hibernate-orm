@@ -36,7 +36,6 @@ import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.binding.Caching;
 import org.hibernate.metamodel.binding.EntityBinding;
-import org.hibernate.metamodel.binding.EntityDiscriminator;
 import org.hibernate.metamodel.binding.SimpleAttributeBinding;
 import org.hibernate.metamodel.domain.Entity;
 import org.hibernate.metamodel.domain.Hierarchical;
@@ -48,7 +47,6 @@ import org.hibernate.metamodel.source.annotations.state.relational.AttributeColu
 import org.hibernate.metamodel.source.annotations.state.relational.AttributeTupleRelationalState;
 import org.hibernate.metamodel.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
-import org.hibernate.metamodel.state.binding.DiscriminatorBindingState;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 
 /**

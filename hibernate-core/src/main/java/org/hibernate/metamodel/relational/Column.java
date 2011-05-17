@@ -23,10 +23,7 @@
  */
 package org.hibernate.metamodel.relational;
 
-import java.util.Set;
-
-import org.hibernate.cfg.NamingStrategy;
-import org.hibernate.metamodel.state.relational.ColumnRelationalState;
+import org.hibernate.metamodel.relational.state.ColumnRelationalState;
 
 /**
  * Models a physical column

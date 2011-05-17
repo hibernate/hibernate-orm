@@ -39,11 +39,11 @@ import org.hibernate.metamodel.relational.SimpleValue;
 import org.hibernate.metamodel.relational.TableSpecification;
 import org.hibernate.metamodel.relational.Tuple;
 import org.hibernate.metamodel.relational.Value;
-import org.hibernate.metamodel.state.binding.AttributeBindingState;
-import org.hibernate.metamodel.state.relational.ValueCreator;
-import org.hibernate.metamodel.state.relational.SimpleValueRelationalState;
-import org.hibernate.metamodel.state.relational.ValueRelationalState;
-import org.hibernate.metamodel.state.relational.TupleRelationalState;
+import org.hibernate.metamodel.binding.state.AttributeBindingState;
+import org.hibernate.metamodel.relational.state.ValueCreator;
+import org.hibernate.metamodel.relational.state.SimpleValueRelationalState;
+import org.hibernate.metamodel.relational.state.ValueRelationalState;
+import org.hibernate.metamodel.relational.state.TupleRelationalState;
 
 /**
  * TODO : javadoc

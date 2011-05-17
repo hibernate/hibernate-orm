@@ -23,8 +23,8 @@
  */
 package org.hibernate.metamodel.binding;
 
-import org.hibernate.metamodel.state.binding.DiscriminatorBindingState;
-import org.hibernate.metamodel.state.relational.ValueRelationalState;
+import org.hibernate.metamodel.binding.state.DiscriminatorBindingState;
+import org.hibernate.metamodel.relational.state.ValueRelationalState;
 
 /**
  * Binding of the discriminator in a entity hierarchy

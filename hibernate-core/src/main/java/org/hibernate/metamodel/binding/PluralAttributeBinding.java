@@ -31,8 +31,8 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.FetchMode;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.metamodel.binding.state.PluralAttributeBindingState;
 import org.hibernate.metamodel.relational.Table;
-import org.hibernate.metamodel.state.binding.PluralAttributeBindingState;
 
 /**
  * TODO : javadoc

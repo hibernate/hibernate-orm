@@ -30,8 +30,8 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.metamodel.relational.ForeignKey;
 import org.hibernate.metamodel.relational.SimpleValue;
 import org.hibernate.metamodel.relational.Column;
-import org.hibernate.metamodel.state.binding.ManyToOneAttributeBindingState;
-import org.hibernate.metamodel.state.relational.ManyToOneRelationalState;
+import org.hibernate.metamodel.binding.state.ManyToOneAttributeBindingState;
+import org.hibernate.metamodel.relational.state.ManyToOneRelationalState;
 
 /**
  * TODO : javadoc

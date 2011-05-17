@@ -25,7 +25,7 @@ package org.hibernate.metamodel.source.hbm.state.binding;
 
 import org.hibernate.metamodel.binding.MappingDefaults;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLDiscriminator;
-import org.hibernate.metamodel.state.binding.DiscriminatorBindingState;
+import org.hibernate.metamodel.binding.state.DiscriminatorBindingState;
 
 /**
  * @author Gail Badner

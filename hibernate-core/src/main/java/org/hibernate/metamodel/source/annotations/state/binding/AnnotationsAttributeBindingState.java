@@ -27,8 +27,8 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.hibernate.mapping.PropertyGeneration;
+import org.hibernate.metamodel.binding.state.SimpleAttributeBindingState;
 import org.hibernate.metamodel.domain.MetaAttribute;
-import org.hibernate.metamodel.state.binding.SimpleAttributeBindingState;
 import org.hibernate.metamodel.source.annotations.MappedAttribute;
 
 /**

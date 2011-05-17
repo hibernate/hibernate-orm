@@ -33,13 +33,12 @@ import org.jboss.jandex.AnnotationInstance;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.cfg.NamingStrategy;
-import org.hibernate.metamodel.relational.Column;
 import org.hibernate.metamodel.relational.Size;
+import org.hibernate.metamodel.relational.state.ColumnRelationalState;
 import org.hibernate.metamodel.source.annotations.ColumnValues;
 import org.hibernate.metamodel.source.annotations.HibernateDotNames;
 import org.hibernate.metamodel.source.annotations.MappedAttribute;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
-import org.hibernate.metamodel.state.relational.ColumnRelationalState;
 
 /**
  * @author Hardy Ferentschik

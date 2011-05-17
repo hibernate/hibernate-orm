@@ -28,11 +28,11 @@ import java.util.Map;
 import org.hibernate.FetchMode;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.metamodel.binding.MappingDefaults;
+import org.hibernate.metamodel.binding.state.ManyToOneAttributeBindingState;
 import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.metamodel.source.hbm.HbmHelper;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLManyToOneElement;
 import org.hibernate.metamodel.source.util.MappingHelper;
-import org.hibernate.metamodel.state.binding.ManyToOneAttributeBindingState;
 
 /**
  * @author Gail Badner

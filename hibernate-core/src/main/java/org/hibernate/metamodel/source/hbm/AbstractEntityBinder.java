@@ -35,12 +35,14 @@ import org.hibernate.metamodel.binding.BagBinding;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.ManyToOneAttributeBinding;
 import org.hibernate.metamodel.binding.SimpleAttributeBinding;
+import org.hibernate.metamodel.binding.state.ManyToOneAttributeBindingState;
 import org.hibernate.metamodel.domain.Entity;
 import org.hibernate.metamodel.domain.Hierarchical;
 import org.hibernate.metamodel.relational.Schema;
 import org.hibernate.metamodel.relational.Table;
 import org.hibernate.metamodel.relational.TableSpecification;
 import org.hibernate.metamodel.relational.UniqueKey;
+import org.hibernate.metamodel.relational.state.ManyToOneRelationalState;
 import org.hibernate.metamodel.source.hbm.state.binding.HbmManyToOneAttributeBindingState;
 import org.hibernate.metamodel.source.hbm.state.binding.HbmPluralAttributeBindingState;
 import org.hibernate.metamodel.source.hbm.state.binding.HbmSimpleAttributeBindingState;
@@ -69,12 +71,10 @@ import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSubclassElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLTuplizerElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLUnionSubclassElement;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
-import org.hibernate.metamodel.state.binding.ManyToOneAttributeBindingState;
-import org.hibernate.metamodel.state.binding.PluralAttributeBindingState;
-import org.hibernate.metamodel.state.binding.SimpleAttributeBindingState;
-import org.hibernate.metamodel.state.relational.ManyToOneRelationalState;
-import org.hibernate.metamodel.state.relational.TupleRelationalState;
-import org.hibernate.metamodel.state.relational.ValueRelationalState;
+import org.hibernate.metamodel.binding.state.PluralAttributeBindingState;
+import org.hibernate.metamodel.binding.state.SimpleAttributeBindingState;
+import org.hibernate.metamodel.relational.state.TupleRelationalState;
+import org.hibernate.metamodel.relational.state.ValueRelationalState;
 
 /**
  * TODO : javadoc

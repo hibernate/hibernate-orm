@@ -30,7 +30,7 @@ import org.jboss.jandex.Index;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
-import org.hibernate.metamodel.source.annotations.xml.MockedNames;
+import org.hibernate.metamodel.source.annotations.xml.PseudoJpaDotNames;
 
 /**
  * @author Strong Liu
@@ -39,8 +39,8 @@ public class PersistenceMetadataMockerTest extends AbstractMockerTest {
 	@Test
 	public void testPersistenceMetadata() {
 		Index index = getMockedIndex( "persistence-metadata.xml" );
-		assertHasAnnotation( index, null, MockedNames.DEFAULT_ACCESS, 1 );
-		assertAnnotationValue(index,null,MockedNames.DEFAULT_ACCESS,new AnnotationValueChecker(){
+		assertHasAnnotation( index, null, PseudoJpaDotNames.DEFAULT_ACCESS, 1 );
+		assertAnnotationValue(index,null, PseudoJpaDotNames.DEFAULT_ACCESS,new AnnotationValueChecker(){
 			@Override
 			public void check(AnnotationInstance annotationInstance) {
 			assertEquals( AccessType.FIELD.toString(), annotationInstance.value().asEnum());

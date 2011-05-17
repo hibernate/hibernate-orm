@@ -44,8 +44,8 @@ import org.hibernate.metamodel.relational.Identifier;
 import org.hibernate.metamodel.relational.Schema;
 import org.hibernate.metamodel.source.annotations.HibernateDotNames;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
-import org.hibernate.metamodel.source.annotations.entity.state.binding.AnnotationsAttributeBindingState;
-import org.hibernate.metamodel.source.annotations.entity.state.binding.AnnotationsDiscriminatorBindingState;
+import org.hibernate.metamodel.source.annotations.entity.state.binding.AttributeBindingStateImpl;
+import org.hibernate.metamodel.source.annotations.entity.state.binding.DiscriminatorBindingStateImpl;
 import org.hibernate.metamodel.source.annotations.entity.state.relational.AttributeColumnRelationalState;
 import org.hibernate.metamodel.source.annotations.entity.state.relational.AttributeTupleRelationalState;
 import org.hibernate.metamodel.source.annotations.util.JandexHelper;
@@ -303,7 +303,7 @@ public class EntityBinder {
 		entityBinding.getEntity().getOrCreateSingularAttribute( idName );
 
 		SimpleAttributeBinding attributeBinding = entityBinding.makeSimpleIdAttributeBinding( idName );
-		attributeBinding.initialize( new AnnotationsAttributeBindingState( idAttribute ) );
+		attributeBinding.initialize( new AttributeBindingStateImpl( idAttribute ) );
 		attributeBinding.initialize( new AttributeColumnRelationalState( idAttribute, meta ) );
 	}
 
@@ -325,15 +325,15 @@ public class EntityBinder {
 
 		if ( mappedAttribute.isDiscriminator() ) {
 			attributeBinding = entityBinding.makeEntityDiscriminator( attributeName ).getValueBinding();
-			bindingState = new AnnotationsDiscriminatorBindingState( mappedAttribute );
+			bindingState = new DiscriminatorBindingStateImpl( mappedAttribute );
 		}
 		else if ( mappedAttribute.isVersioned() ) {
 			attributeBinding = entityBinding.makeVersionBinding( attributeName );
-			bindingState = new AnnotationsAttributeBindingState( mappedAttribute );
+			bindingState = new AttributeBindingStateImpl( mappedAttribute );
 		}
 		else {
 			attributeBinding = entityBinding.makeSimpleAttributeBinding( attributeName );
-			bindingState = new AnnotationsAttributeBindingState( mappedAttribute );
+			bindingState = new AttributeBindingStateImpl( mappedAttribute );
 		}
 		attributeBinding.initialize( bindingState );
 

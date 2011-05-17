@@ -23,7 +23,6 @@
  */
 package org.hibernate.metamodel.source.annotations.entity.state.binding;
 
-import org.hibernate.metamodel.binding.state.DiscriminatorBindingState;
 import org.hibernate.metamodel.source.annotations.entity.DiscriminatorColumnValues;
 import org.hibernate.metamodel.source.annotations.entity.MappedAttribute;
 
@@ -32,12 +31,12 @@ import org.hibernate.metamodel.source.annotations.entity.MappedAttribute;
  *
  *         TODO: extract a superclass that sets defaults for other stuff
  */
-public class AnnotationsDiscriminatorBindingState
-		extends AnnotationsAttributeBindingState implements DiscriminatorBindingState {
+public class DiscriminatorBindingStateImpl
+		extends AttributeBindingStateImpl implements org.hibernate.metamodel.binding.state.DiscriminatorBindingState {
 	private final boolean isForced;
 	private final boolean isInserted;
 
-	public AnnotationsDiscriminatorBindingState(MappedAttribute mappedAttribute) {
+	public DiscriminatorBindingStateImpl(MappedAttribute mappedAttribute) {
 		super( mappedAttribute );
 		DiscriminatorColumnValues columnValues = DiscriminatorColumnValues.class.cast( mappedAttribute.getColumnValues() );
 		isForced = columnValues.isForced();

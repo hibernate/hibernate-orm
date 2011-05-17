@@ -47,6 +47,7 @@ import org.hibernate.metamodel.SourceProcessingOrder;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.FetchProfile;
 import org.hibernate.metamodel.binding.PluralAttributeBinding;
+import org.hibernate.metamodel.binding.TypeDef;
 import org.hibernate.metamodel.relational.Database;
 import org.hibernate.metamodel.source.annotation.xml.XMLEntityMappings;
 import org.hibernate.metamodel.source.annotations.AnnotationBinder;
@@ -58,7 +59,7 @@ import org.hibernate.service.BasicServiceRegistry;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 
 /**
- * Container for configuration data while building and binding the metamodel
+ * Container for configuration data collected during binding the metamodel.
  *
  * @author Steve Ebersole
  * @author Hardy Ferentschik
@@ -76,6 +77,7 @@ public class MetadataImpl implements Metadata, MetadataImplementor, Serializable
 	private Map<String, EntityBinding> entityBindingMap = new HashMap<String, EntityBinding>();
 	private Map<String, PluralAttributeBinding> collectionBindingMap = new HashMap<String, PluralAttributeBinding>();
 	private Map<String, FetchProfile> fetchProfiles = new HashMap<String, FetchProfile>();
+	private Map<String, TypeDef> typeDefs = new HashMap<String, TypeDef>();
 	private Map<String, String> imports;
 
 	public MetadataImpl(MetadataBuilderImpl builder) {
@@ -216,6 +218,15 @@ public class MetadataImpl implements Metadata, MetadataImplementor, Serializable
 
 	public Iterable<FetchProfile> getFetchProfiles() {
 		return fetchProfiles.values();
+	}
+
+	public void addTypeDef(String name, TypeDef typeDef) {
+		// TODO - should we check whether the typedef already exists? Log it? Exception? (HF)
+		typeDefs.put( name, typeDef );
+	}
+
+	public TypeDef getTypeDef(String name) {
+		return typeDefs.get( name );
 	}
 
 	public FetchProfile findOrCreateFetchProfile(String profileName, MetadataSource source) {

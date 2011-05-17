@@ -32,15 +32,17 @@ import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.metamodel.source.annotations.entity.MappedAttribute;
 
 /**
+ * Implementation of the attribute binding state via annotation configuration.
+ *
  * @author Hardy Ferentschik
  */
-public class AnnotationsAttributeBindingState implements SimpleAttributeBindingState {
+public class AttributeBindingStateImpl implements SimpleAttributeBindingState {
 	private final MappedAttribute mappedAttribute;
 	private final PropertyGeneration propertyGeneration = null;
 	private final String typeName;
 	private final Properties typeParameters;
 
-	public AnnotationsAttributeBindingState(MappedAttribute mappedAttribute) {
+	public AttributeBindingStateImpl(MappedAttribute mappedAttribute) {
 		this.mappedAttribute = mappedAttribute;
 		typeName = mappedAttribute.getType().getName();
 		// TODO: implement....

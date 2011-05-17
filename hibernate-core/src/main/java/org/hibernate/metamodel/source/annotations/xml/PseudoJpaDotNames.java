@@ -28,7 +28,7 @@ import org.jboss.jandex.DotName;
 /**
  * @author Strong Liu
  */
-public interface MockedNames {
+public interface PseudoJpaDotNames {
 	public static final DotName DEFAULT_ACCESS = DotName.createSimple( "default.access" );
 	public static final DotName DEFAULT_DELIMITED_IDENTIFIERS = DotName.createSimple( "default.delimited.identifiers" );
 	public static final DotName DEFAULT_ENTITY_LISTENERS = DotName.createSimple( "default.entity.listeners" );

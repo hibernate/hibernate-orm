@@ -10,7 +10,7 @@ import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 
 import org.hibernate.metamodel.source.annotation.xml.XMLPersistenceUnitDefaults;
-import org.hibernate.metamodel.source.annotations.xml.MockedNames;
+import org.hibernate.metamodel.source.annotations.xml.PseudoJpaDotNames;
 
 /**
  * @author Strong Liu
@@ -21,16 +21,16 @@ class PersistenceMetadataMocker extends AbstractMocker {
 	private static Map<DotName, DotName> nameDotNameMap = new HashMap<DotName, DotName>();
 
 	static {
-		nameDotNameMap.put( ACCESS, MockedNames.DEFAULT_ACCESS );
-		nameDotNameMap.put( ENTITY_LISTENERS, MockedNames.DEFAULT_ENTITY_LISTENERS );
-		nameDotNameMap.put( POST_LOAD, MockedNames.DEFAULT_POST_LOAD );
-		nameDotNameMap.put( POST_REMOVE, MockedNames.DEFAULT_POST_REMOVE );
-		nameDotNameMap.put( POST_UPDATE, MockedNames.DEFAULT_POST_UPDATE );
-		nameDotNameMap.put( POST_PERSIST, MockedNames.DEFAULT_POST_PERSIST );
-		nameDotNameMap.put( PRE_REMOVE, MockedNames.DEFAULT_PRE_REMOVE );
-		nameDotNameMap.put( PRE_UPDATE, MockedNames.DEFAULT_PRE_UPDATE );
-		nameDotNameMap.put( PRE_PERSIST, MockedNames.DEFAULT_PRE_PERSIST );
-		nameDotNameMap.put( MockedNames.DEFAULT_DELIMITED_IDENTIFIERS, MockedNames.DEFAULT_DELIMITED_IDENTIFIERS );
+		nameDotNameMap.put( ACCESS, PseudoJpaDotNames.DEFAULT_ACCESS );
+		nameDotNameMap.put( ENTITY_LISTENERS, PseudoJpaDotNames.DEFAULT_ENTITY_LISTENERS );
+		nameDotNameMap.put( POST_LOAD, PseudoJpaDotNames.DEFAULT_POST_LOAD );
+		nameDotNameMap.put( POST_REMOVE, PseudoJpaDotNames.DEFAULT_POST_REMOVE );
+		nameDotNameMap.put( POST_UPDATE, PseudoJpaDotNames.DEFAULT_POST_UPDATE );
+		nameDotNameMap.put( POST_PERSIST, PseudoJpaDotNames.DEFAULT_POST_PERSIST );
+		nameDotNameMap.put( PRE_REMOVE, PseudoJpaDotNames.DEFAULT_PRE_REMOVE );
+		nameDotNameMap.put( PRE_UPDATE, PseudoJpaDotNames.DEFAULT_PRE_UPDATE );
+		nameDotNameMap.put( PRE_PERSIST, PseudoJpaDotNames.DEFAULT_PRE_PERSIST );
+		nameDotNameMap.put( PseudoJpaDotNames.DEFAULT_DELIMITED_IDENTIFIERS, PseudoJpaDotNames.DEFAULT_DELIMITED_IDENTIFIERS );
 	}
 
 	PersistenceMetadataMocker(IndexBuilder indexBuilder, XMLPersistenceUnitDefaults persistenceUnitDefaults) {
@@ -51,7 +51,7 @@ class PersistenceMetadataMocker extends AbstractMocker {
 	final void process() {
 		parserAccessType( persistenceUnitDefaults.getAccess(), null );
 		if ( persistenceUnitDefaults.getDelimitedIdentifiers() != null ) {
-			create( MockedNames.DEFAULT_DELIMITED_IDENTIFIERS, null );
+			create( PseudoJpaDotNames.DEFAULT_DELIMITED_IDENTIFIERS, null );
 		}
 		if ( persistenceUnitDefaults.getEntityListeners() != null ) {
 			new DefaultListenerMocker( indexBuilder, null ).parser( persistenceUnitDefaults.getEntityListeners() );

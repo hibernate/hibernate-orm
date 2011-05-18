@@ -37,7 +37,6 @@ import org.hibernate.metamodel.source.annotations.entity.MappedAttribute;
  */
 public class AttributeBindingStateImpl implements SimpleAttributeBindingState {
 	private final MappedAttribute mappedAttribute;
-	private final PropertyGeneration propertyGeneration = null;
 	private final String typeName;
 	private final Map<String, String> typeParameters;
 
@@ -54,35 +53,17 @@ public class AttributeBindingStateImpl implements SimpleAttributeBindingState {
 
 	@Override
 	public PropertyGeneration getPropertyGeneration() {
-
-//		GeneratedValue generatedValue = property.getAnnotation( GeneratedValue.class );
-//		String generatorType = generatedValue != null ?
-//				generatorType( generatedValue.strategy(), mappings ) :
-//				"assigned";
-//		String generatorName = generatedValue != null ?
-//				generatedValue.generator() :
-//				BinderHelper.ANNOTATION_STRING_DEFAULT;
-		return propertyGeneration;
+		return mappedAttribute.getPropertyGeneration();
 	}
 
 	@Override
 	public boolean isInsertable() {
-		return false;  //To change body of implemented methods use File | Settings | File Templates.
+		return mappedAttribute.isInsertable();
 	}
 
 	@Override
 	public boolean isUpdatable() {
-		return false;  //To change body of implemented methods use File | Settings | File Templates.
-	}
-
-	@Override
-	public boolean isKeyCascadeDeleteEnabled() {
-		return false;  //To change body of implemented methods use File | Settings | File Templates.
-	}
-
-	@Override
-	public String getUnsavedValue() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		return mappedAttribute.isUpdatable();
 	}
 
 	@Override
@@ -97,7 +78,17 @@ public class AttributeBindingStateImpl implements SimpleAttributeBindingState {
 
 	@Override
 	public boolean isLazy() {
+		return mappedAttribute.isLazy();
+	}
+
+	@Override
+	public boolean isKeyCascadeDeleteEnabled() {
 		return false;  //To change body of implemented methods use File | Settings | File Templates.
+	}
+
+	@Override
+	public String getUnsavedValue() {
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
 	}
 
 	@Override

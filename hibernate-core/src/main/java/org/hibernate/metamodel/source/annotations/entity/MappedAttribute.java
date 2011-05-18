@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.persistence.DiscriminatorType;
+import javax.persistence.FetchType;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
@@ -34,12 +35,14 @@ import org.jboss.jandex.DotName;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
+import org.hibernate.annotations.GenerationTime;
+import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.source.annotations.HibernateDotNames;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.util.JandexHelper;
 
 /**
- * Represent a mapped attribute (explicitly or implicitly mapped). Also used for synthetic attributes likes a
+ * Represent a mapped attribute (explicitly or implicitly mapped). Also used for synthetic attributes like a
  * discriminator column.
  *
  * @author Hardy Ferentschik
@@ -52,25 +55,24 @@ public class MappedAttribute implements Comparable<MappedAttribute> {
 	private final String type;
 	private final Map<String, String> typeParameters;
 
-	private final ColumnValues columnValues;
-
 	private final boolean isId;
 	private final boolean isVersioned;
 	private final boolean isDiscriminator;
+
+	private boolean isLazy = false;
+	private boolean isOptional = true;
+
+	private PropertyGeneration propertyGeneration;
+	private boolean isInsertable = true;
+	private boolean isUpdatable = true;
+
+	private final ColumnValues columnValues;
 
 	static MappedAttribute createMappedAttribute(String name, String type, Map<DotName, List<AnnotationInstance>> annotations) {
 		return new MappedAttribute( name, type, annotations, false );
 	}
 
 	static MappedAttribute createDiscriminatorAttribute(Map<DotName, List<AnnotationInstance>> annotations) {
-		Map<DotName, List<AnnotationInstance>> discriminatorAnnotations = JandexHelper.filterAnnotations(
-				annotations,
-				JPADotNames.DISCRIMINATOR_COLUMN,
-				JPADotNames.DISCRIMINATOR_VALUE,
-				HibernateDotNames.DISCRIMINATOR_FORMULA,
-				HibernateDotNames.DISCRIMINATOR_OPTIONS
-		);
-
 		AnnotationInstance discriminatorOptionsAnnotation = JandexHelper.getSingleAnnotation(
 				annotations, JPADotNames.DISCRIMINATOR_COLUMN
 		);
@@ -100,7 +102,7 @@ public class MappedAttribute implements Comparable<MappedAttribute> {
 				}
 			}
 		}
-		return new MappedAttribute( name, type, discriminatorAnnotations, true );
+		return new MappedAttribute( name, type, annotations, true );
 	}
 
 	private MappedAttribute(String name, String type, Map<DotName, List<AnnotationInstance>> annotations, boolean isDiscriminator) {
@@ -130,6 +132,9 @@ public class MappedAttribute implements Comparable<MappedAttribute> {
 			columnValues.setUnique( true );
 			columnValues.setNullable( false );
 		}
+
+		checkBasicAnnotation();
+		checkGeneratedAnnotation();
 	}
 
 	public final String getName() {
@@ -158,6 +163,26 @@ public class MappedAttribute implements Comparable<MappedAttribute> {
 
 	public boolean isDiscriminator() {
 		return isDiscriminator;
+	}
+
+	public boolean isLazy() {
+		return isLazy;
+	}
+
+	public boolean isOptional() {
+		return isOptional;
+	}
+
+	public boolean isInsertable() {
+		return isInsertable;
+	}
+
+	public boolean isUpdatable() {
+		return isUpdatable;
+	}
+
+	public PropertyGeneration getPropertyGeneration() {
+		return propertyGeneration;
 	}
 
 	/**
@@ -226,6 +251,40 @@ public class MappedAttribute implements Comparable<MappedAttribute> {
 		}
 
 		return typeAnnotation.value( "type" ).asString();
+	}
+
+	private void checkBasicAnnotation() {
+		AnnotationInstance basicAnnotation = getIfExists( JPADotNames.BASIC );
+		if ( basicAnnotation != null ) {
+			FetchType fetchType = FetchType.LAZY;
+			AnnotationValue fetchValue = basicAnnotation.value( "fetch" );
+			if ( fetchValue != null ) {
+				fetchType = Enum.valueOf( FetchType.class, fetchValue.asEnum() );
+			}
+			this.isLazy = fetchType == FetchType.LAZY;
+
+			AnnotationValue optionalValue = basicAnnotation.value( "optional" );
+			if ( optionalValue != null ) {
+				this.isOptional = optionalValue.asBoolean();
+			}
+		}
+	}
+
+	// TODO - there is more todo for updatable and insertable. Checking the @Generated annotation is only one part (HF)
+	private void checkGeneratedAnnotation() {
+		AnnotationInstance generatedAnnotation = getIfExists( HibernateDotNames.GENERATED );
+		if ( generatedAnnotation != null ) {
+			this.isInsertable = false;
+
+			AnnotationValue generationTimeValue = generatedAnnotation.value();
+			if ( generationTimeValue != null ) {
+				GenerationTime genTime = Enum.valueOf( GenerationTime.class, generationTimeValue.asEnum() );
+				if ( GenerationTime.ALWAYS.equals( genTime ) ) {
+					this.isUpdatable = false;
+					this.propertyGeneration = PropertyGeneration.parse( genTime.toString().toLowerCase() );
+				}
+			}
+		}
 	}
 }
 

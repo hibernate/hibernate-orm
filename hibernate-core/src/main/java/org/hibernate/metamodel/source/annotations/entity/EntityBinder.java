@@ -23,8 +23,12 @@
  */
 package org.hibernate.metamodel.source.annotations.entity;
 
+import java.util.List;
+import java.util.Map;
+
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
+import org.jboss.jandex.DotName;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
@@ -116,9 +120,10 @@ public class EntityBinder {
 	}
 
 	private void bindDiscriminatorColumn(EntityBinding entityBinding) {
-		MappedAttribute discriminatorAttribute = MappedAttribute.createDiscriminatorAttribute(
-				configuredClass.getClassInfo().annotations()
+		final Map<DotName, List<AnnotationInstance>> typeAnnotations = JandexHelper.getTypeAnnotations(
+				configuredClass.getClassInfo()
 		);
+		MappedAttribute discriminatorAttribute = MappedAttribute.createDiscriminatorAttribute( typeAnnotations );
 
 		bindSingleMappedAttribute( entityBinding, discriminatorAttribute );
 

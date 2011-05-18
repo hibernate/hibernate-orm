@@ -23,7 +23,7 @@
  */
 package org.hibernate.metamodel.binding;
 
-import java.util.Properties;
+import java.util.Map;
 
 import org.hibernate.type.Type;
 
@@ -35,7 +35,7 @@ import org.hibernate.type.Type;
 public class HibernateTypeDescriptor {
 	private String typeName;
 	private Type explicitType;
-	private Properties typeParameters;
+	private Map<String, String> typeParameters;
 
 	public String getTypeName() {
 		return typeName;
@@ -55,12 +55,12 @@ public class HibernateTypeDescriptor {
 		this.explicitType = explicitType;
 	}
 
-	public Properties getTypeParameters() {
+	public Map<String, String> getTypeParameters() {
 		return typeParameters;
 	}
 
 	/* package-protected */
-	void setTypeParameters(Properties typeParameters) {
+	void setTypeParameters(Map<String, String> typeParameters) {
 		this.typeParameters = typeParameters;
 	}
 }

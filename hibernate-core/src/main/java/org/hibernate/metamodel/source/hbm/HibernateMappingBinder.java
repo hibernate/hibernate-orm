@@ -112,7 +112,7 @@ public class HibernateMappingBinder implements MappingDefaults {
 
 
 	}
-	public String getDefaultDescriminatorColumnName() {
+	public String getDefaultDiscriminatorColumnName() {
 		return DEFAULT_DISCRIMINATOR_COLUMN_NAME;
 	}
 

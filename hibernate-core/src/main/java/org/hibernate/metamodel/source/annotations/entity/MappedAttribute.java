@@ -23,6 +23,7 @@
  */
 package org.hibernate.metamodel.source.annotations.entity;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.persistence.DiscriminatorType;
@@ -43,15 +44,20 @@ import org.hibernate.metamodel.source.annotations.util.JandexHelper;
  * @author Hardy Ferentschik
  */
 public class MappedAttribute implements Comparable<MappedAttribute> {
-	private final String name;
-	private final Class<?> type;
 	private final Map<DotName, List<AnnotationInstance>> annotations;
+
+	private final String name;
+
+	private final String type;
+	private final Map<String, String> typeParameters;
+
 	private final ColumnValues columnValues;
+
 	private final boolean isId;
 	private final boolean isVersioned;
 	private final boolean isDiscriminator;
 
-	static MappedAttribute createMappedAttribute(String name, Class<?> type, Map<DotName, List<AnnotationInstance>> annotations) {
+	static MappedAttribute createMappedAttribute(String name, String type, Map<DotName, List<AnnotationInstance>> annotations) {
 		return new MappedAttribute( name, type, annotations, false );
 	}
 
@@ -68,7 +74,7 @@ public class MappedAttribute implements Comparable<MappedAttribute> {
 				annotations, JPADotNames.DISCRIMINATOR_COLUMN
 		);
 		String name = DiscriminatorColumnValues.DEFAULT_DISCRIMINATOR_COLUMN_NAME;
-		Class<?> type = String.class; // string is the discriminator default
+		String type = String.class.toString(); // string is the discriminator default
 		if ( discriminatorOptionsAnnotation != null ) {
 			name = discriminatorOptionsAnnotation.value( "name" ).asString();
 
@@ -77,15 +83,15 @@ public class MappedAttribute implements Comparable<MappedAttribute> {
 			);
 			switch ( discriminatorType ) {
 				case STRING: {
-					type = String.class;
+					type = String.class.toString();
 					break;
 				}
 				case CHAR: {
-					type = Character.class;
+					type = Character.class.toString();
 					break;
 				}
 				case INTEGER: {
-					type = Integer.class;
+					type = Integer.class.toString();
 					break;
 				}
 				default: {
@@ -96,11 +102,13 @@ public class MappedAttribute implements Comparable<MappedAttribute> {
 		return new MappedAttribute( name, type, discriminatorAnnotations, true );
 	}
 
-	private MappedAttribute(String name, Class<?> type, Map<DotName, List<AnnotationInstance>> annotations, boolean isDiscriminator) {
+	private MappedAttribute(String name, String type, Map<DotName, List<AnnotationInstance>> annotations, boolean isDiscriminator) {
 		this.name = name;
-		this.type = type;
 		this.annotations = annotations;
 		this.isDiscriminator = isDiscriminator;
+
+		this.typeParameters = new HashMap<String, String>();
+		this.type = determineType( type, typeParameters );
 
 		AnnotationInstance idAnnotation = JandexHelper.getSingleAnnotation( annotations, JPADotNames.ID );
 		isId = idAnnotation != null;
@@ -127,12 +135,16 @@ public class MappedAttribute implements Comparable<MappedAttribute> {
 		return name;
 	}
 
-	public final Class<?> getType() {
+	public final String getType() {
 		return type;
 	}
 
 	public final ColumnValues getColumnValues() {
 		return columnValues;
+	}
+
+	public Map<String, String> getTypeParameters() {
+		return typeParameters;
 	}
 
 	public boolean isId() {
@@ -155,7 +167,7 @@ public class MappedAttribute implements Comparable<MappedAttribute> {
 	 * @return Returns the annotation with the specified name or {@code null}. Note, since these are the
 	 *         annotations defined on a single attribute there can never be more than one.
 	 */
-	public final AnnotationInstance annotations(DotName annotationDotName) {
+	public final AnnotationInstance getIfExists(DotName annotationDotName) {
 		if ( annotations.containsKey( annotationDotName ) ) {
 			List<AnnotationInstance> instanceList = annotations.get( annotationDotName );
 			if ( instanceList.size() > 1 ) {
@@ -176,11 +188,26 @@ public class MappedAttribute implements Comparable<MappedAttribute> {
 	@Override
 	public String toString() {
 		final StringBuilder sb = new StringBuilder();
-		sb.append( "MappedProperty" );
+		sb.append( "MappedAttribute" );
 		sb.append( "{name='" ).append( name ).append( '\'' );
-		sb.append( ", type=" ).append( type );
+		sb.append( ", type='" ).append( type ).append( '\'' );
+		sb.append( ", isId=" ).append( isId );
+		sb.append( ", isVersioned=" ).append( isVersioned );
+		sb.append( ", isDiscriminator=" ).append( isDiscriminator );
 		sb.append( '}' );
 		return sb.toString();
+	}
+
+	/**
+	 * We need to check whether the is an explicit type specified via {@link org.hibernate.annotations.Type}.
+	 *
+	 * @param type the type specified via the constructor
+	 * @param typeParameters map for type parameters in case there are any
+	 *
+	 * @return the final type for this mapped attribute
+	 */
+	private String determineType(String type, Map<String, String> typeParameters) {
+		return type;
 	}
 }
 

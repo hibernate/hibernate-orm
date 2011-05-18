@@ -160,7 +160,7 @@ public class HbmManyToOneAttributeBindingState
 		return isInsertable;
 	}
 
-	public boolean isUpdateable() {
+	public boolean isUpdatable() {
 		return isUpdateable;
 	}
 

@@ -24,8 +24,8 @@
 package org.hibernate.metamodel.source.hbm.state.binding;
 
 import org.hibernate.metamodel.binding.MappingDefaults;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLDiscriminator;
 import org.hibernate.metamodel.binding.state.DiscriminatorBindingState;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLDiscriminator;
 
 /**
  * @author Gail Badner
@@ -41,7 +41,7 @@ public class HbmDiscriminatorBindingState extends AbstractHbmAttributeBindingSta
 		// Discriminator.getName() is not defined, so the attribute will always be
 		// defaults.getDefaultDescriminatorColumnName()
 		super(
-				ownerClassName, defaults.getDefaultDescriminatorColumnName(), defaults, null, null, null, true
+				ownerClassName, defaults.getDefaultDiscriminatorColumnName(), defaults, null, null, null, true
 		);
 		this.discriminator = discriminator;
 	}
@@ -66,7 +66,7 @@ public class HbmDiscriminatorBindingState extends AbstractHbmAttributeBindingSta
 		return discriminator.isInsert();
 	}
 
-	public boolean isUpdateable() {
+	public boolean isUpdatable() {
 		return false;
 	}
 

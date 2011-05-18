@@ -155,13 +155,13 @@ public class AttributeColumnRelationalState implements ColumnRelationalState {
 		List<AnnotationInstance> allColumnTransformerAnnotations = new ArrayList<AnnotationInstance>();
 
 		// not quite sure about the usefulness of @ColumnTransformers (HF)
-		AnnotationInstance columnTransformersAnnotations = attribute.annotations( HibernateDotNames.COLUMN_TRANSFORMERS );
+		AnnotationInstance columnTransformersAnnotations = attribute.getIfExists( HibernateDotNames.COLUMN_TRANSFORMERS );
 		if ( columnTransformersAnnotations != null ) {
 			AnnotationInstance[] annotationInstances = allColumnTransformerAnnotations.get( 0 ).value().asNestedArray();
 			allColumnTransformerAnnotations.addAll( Arrays.asList( annotationInstances ) );
 		}
 
-		AnnotationInstance columnTransformerAnnotation = attribute.annotations( HibernateDotNames.COLUMN_TRANSFORMER );
+		AnnotationInstance columnTransformerAnnotation = attribute.getIfExists( HibernateDotNames.COLUMN_TRANSFORMER );
 		if ( columnTransformerAnnotation != null ) {
 			allColumnTransformerAnnotations.add( columnTransformerAnnotation );
 		}
@@ -196,7 +196,7 @@ public class AttributeColumnRelationalState implements ColumnRelationalState {
 
 	private String parseCheckAnnotation(MappedAttribute attribute) {
 		String checkCondition = null;
-		AnnotationInstance checkAnnotation = attribute.annotations( HibernateDotNames.CHECK );
+		AnnotationInstance checkAnnotation = attribute.getIfExists( HibernateDotNames.CHECK );
 		if ( checkAnnotation != null ) {
 			checkCondition = checkAnnotation.value( "constraints" ).toString();
 		}
@@ -205,7 +205,7 @@ public class AttributeColumnRelationalState implements ColumnRelationalState {
 
 	private Set<String> parseIndexAnnotation(MappedAttribute attribute) {
 		Set<String> indexNames = new HashSet<String>();
-		AnnotationInstance indexAnnotation = attribute.annotations( HibernateDotNames.INDEX );
+		AnnotationInstance indexAnnotation = attribute.getIfExists( HibernateDotNames.INDEX );
 		if ( indexAnnotation != null ) {
 			String indexName = indexAnnotation.value( "name" ).toString();
 			indexNames.add( indexName );

@@ -23,7 +23,6 @@
  */
 package org.hibernate.metamodel.source.annotations;
 
-import java.util.Iterator;
 import java.util.Set;
 
 import org.jboss.jandex.Index;
@@ -44,36 +43,37 @@ import org.hibernate.metamodel.source.internal.MetadataImpl;
  * are added to the annotation index.
  *
  * @author Hardy Ferentschik
- * @todo On top of the index we probably needs to pass some sort of XMLContext for global configuration data
- * @todo The annotation index should really be passed at construction time
  */
 public class AnnotationBinder {
 	private static final Logger log = LoggerFactory.getLogger( AnnotationBinder.class );
 	private final MetadataImpl metadata;
+	private final Index index;
 
-	public AnnotationBinder(MetadataImpl metadata) {
+	public AnnotationBinder(MetadataImpl metadata, Index index) {
 		this.metadata = metadata;
+		this.index = index;
 	}
 
-	public void bind(Index annotationIndex) {
-		preEntityBindings( annotationIndex );
-		bindMappedClasses( annotationIndex );
-		postEntityBindings( annotationIndex );
+	public void bind() {
+		preEntityBindings();
+		bindMappedClasses();
+		postEntityBindings();
 	}
 
 	/**
-	 * Binds global configuration data prior to entity binding. This includes generators and type definitions
-	 *
-	 * @param annotationIndex the annotation repository/index
+	 * Binds global configuration data prior to entity binding. This includes generators and type definitions.
 	 */
-	private void preEntityBindings(Index annotationIndex) {
-		FetchProfileBinder.bind( metadata, annotationIndex );
+	private void preEntityBindings() {
+		FetchProfileBinder.bind( metadata, index );
 	}
 
-	private void bindMappedClasses(Index annotationIndex) {
+	/**
+	 * Does the actual entity binding (see {@link org.hibernate.metamodel.binding.EntityBinding}.
+	 */
+	private void bindMappedClasses() {
 		// need to order our annotated entities into an order we can process
 		Set<ConfiguredClassHierarchy> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
-				annotationIndex, metadata.getServiceRegistry()
+				index, metadata.getServiceRegistry()
 		);
 
 		// now we process each hierarchy one at the time
@@ -89,11 +89,9 @@ public class AnnotationBinder {
 	/**
 	 * Binds global configuration data post entity binding. This includes mappings which live outside of the configuration for a single
 	 * entity or entity hierarchy, for example sequence generators, fetch profiles, etc
-	 *
-	 * @param annotationIndex the annotation repository/index
 	 */
-	private void postEntityBindings(Index annotationIndex) {
-		TableBinder.bind( metadata, annotationIndex );
+	private void postEntityBindings() {
+		TableBinder.bind( metadata, index );
 	}
 }
 

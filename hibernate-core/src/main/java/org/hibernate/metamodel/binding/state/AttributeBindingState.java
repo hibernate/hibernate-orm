@@ -24,7 +24,6 @@
 package org.hibernate.metamodel.binding.state;
 
 import java.util.Map;
-import java.util.Properties;
 
 import org.hibernate.metamodel.domain.MetaAttribute;
 
@@ -36,7 +35,7 @@ public interface AttributeBindingState {
 
 	String getTypeName();
 
-	Properties getTypeParameters();
+	Map<String, String> getTypeParameters();
 
 	boolean isLazy();
 

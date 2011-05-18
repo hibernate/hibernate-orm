@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.MappingException;
+import org.hibernate.metamodel.binding.state.AttributeBindingState;
 import org.hibernate.metamodel.domain.Attribute;
 import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.metamodel.relational.Column;
@@ -39,11 +40,10 @@ import org.hibernate.metamodel.relational.SimpleValue;
 import org.hibernate.metamodel.relational.TableSpecification;
 import org.hibernate.metamodel.relational.Tuple;
 import org.hibernate.metamodel.relational.Value;
-import org.hibernate.metamodel.binding.state.AttributeBindingState;
-import org.hibernate.metamodel.relational.state.ValueCreator;
 import org.hibernate.metamodel.relational.state.SimpleValueRelationalState;
-import org.hibernate.metamodel.relational.state.ValueRelationalState;
 import org.hibernate.metamodel.relational.state.TupleRelationalState;
+import org.hibernate.metamodel.relational.state.ValueCreator;
+import org.hibernate.metamodel.relational.state.ValueRelationalState;
 
 /**
  * TODO : javadoc
@@ -51,11 +51,9 @@ import org.hibernate.metamodel.relational.state.TupleRelationalState;
  * @author Steve Ebersole
  */
 public abstract class AbstractAttributeBinding implements AttributeBinding {
-
 	private final HibernateTypeDescriptor hibernateTypeDescriptor = new HibernateTypeDescriptor();
 	private final EntityBinding entityBinding;
-	private final Set<EntityReferencingAttributeBinding> entityReferencingAttributeBindings =
-			new HashSet<EntityReferencingAttributeBinding>();
+	private final Set<EntityReferencingAttributeBinding> entityReferencingAttributeBindings = new HashSet<EntityReferencingAttributeBinding>();
 
 	private Attribute attribute;
 	private Value value;
@@ -83,7 +81,7 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 		isAlternateUniqueKey = state.isAlternateUniqueKey();
 		cascade = state.getCascade();
 		optimisticLockable = state.isOptimisticLockable();
-		nodeName = state.getNodeName() ;
+		nodeName = state.getNodeName();
 		metaAttributes = state.getMetaAttributes();
 	}
 
@@ -125,14 +123,15 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 		// TODO: not sure I like this here...
 		if ( isPrimaryKey() ) {
 			if ( SimpleValue.class.isInstance( value ) ) {
-				if ( ! Column.class.isInstance( value ) ) {
-						// this should never ever happen..
+				if ( !Column.class.isInstance( value ) ) {
+					// this should never ever happen..
 					throw new MappingException( "Simple ID is not a column." );
 				}
 				entityBinding.getBaseTable().getPrimaryKey().addColumn( Column.class.cast( value ) );
 			}
 			else {
-				for ( SimpleValueRelationalState val : TupleRelationalState.class.cast( state ).getRelationalStates() ) {
+				for ( SimpleValueRelationalState val : TupleRelationalState.class.cast( state )
+						.getRelationalStates() ) {
 					if ( Column.class.isInstance( val ) ) {
 						entityBinding.getBaseTable().getPrimaryKey().addColumn( Column.class.cast( val ) );
 					}
@@ -169,8 +168,8 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 		return value == null
 				? Collections.<SimpleValue>emptyList()
 				: value instanceof Tuple
-						? ( (Tuple) value ).values()
-						: Collections.singletonList( (SimpleValue) value );
+				? ( (Tuple) value ).values()
+				: Collections.singletonList( (SimpleValue) value );
 	}
 
 	@Override
@@ -220,9 +219,9 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 	public boolean[] getColumnInsertability() {
 		List<Boolean> tmp = new ArrayList<Boolean>();
 		for ( SimpleValue simpleValue : getValues() ) {
-			tmp.add( ! ( simpleValue instanceof DerivedValue ) );
+			tmp.add( !( simpleValue instanceof DerivedValue ) );
 		}
-		boolean[] rtn = new boolean[ tmp.size() ];
+		boolean[] rtn = new boolean[tmp.size()];
 		int i = 0;
 		for ( Boolean insertable : tmp ) {
 			rtn[i++] = insertable.booleanValue();
@@ -253,11 +252,10 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 	}
 
 	public void validate() {
-		if ( ! entityReferencingAttributeBindings.isEmpty() ) {
+		if ( !entityReferencingAttributeBindings.isEmpty() ) {
 			// TODO; validate that this AttributeBinding can be a target of an entity reference
 			// (e.g., this attribute is the primary key or there is a unique-key)
 			// can a unique attribute be used as a target? if so, does it need to be non-null?
 		}
 	}
-
 }

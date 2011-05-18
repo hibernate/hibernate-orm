@@ -380,7 +380,7 @@ public class ConfiguredClass {
 		final Map<DotName, List<AnnotationInstance>> annotations = JandexHelper.getMemberAnnotations(
 				classInfo, member.getName()
 		);
-		return MappedAttribute.createMappedAttribute( name, (Class) type, annotations );
+		return MappedAttribute.createMappedAttribute( name, ( (Class) type ).getName(), annotations );
 	}
 
 	private Type findResolvedType(String name, ResolvedMember[] resolvedMembers) {

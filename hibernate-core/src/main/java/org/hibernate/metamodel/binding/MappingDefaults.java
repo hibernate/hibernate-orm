@@ -34,14 +34,24 @@ import org.hibernate.service.ServiceRegistry;
  */
 public interface MappingDefaults {
 	Map<String, MetaAttribute> getMappingMetas();
+
 	String getPackageName();
+
 	String getDefaultSchemaName();
+
 	String getDefaultCatalogName();
+
 	String getDefaultIdColumnName();
-	String getDefaultDescriminatorColumnName();
+
+	String getDefaultDiscriminatorColumnName();
+
 	String getDefaultCascade();
+
 	String getDefaultAccess();
+
 	boolean isDefaultLazy();
+
 	ServiceRegistry getServiceRegistry();
+
 	NamingStrategy getNamingStrategy();
 }

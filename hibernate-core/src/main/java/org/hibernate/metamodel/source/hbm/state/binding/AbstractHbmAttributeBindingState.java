@@ -24,15 +24,14 @@
 package org.hibernate.metamodel.source.hbm.state.binding;
 
 import java.util.Map;
-import java.util.Properties;
 
 import org.hibernate.MappingException;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.binding.MappingDefaults;
+import org.hibernate.metamodel.binding.state.AttributeBindingState;
 import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.metamodel.source.util.MappingHelper;
-import org.hibernate.metamodel.binding.state.AttributeBindingState;
 
 /**
  * @author Gail Badner
@@ -63,7 +62,7 @@ public abstract class AbstractHbmAttributeBindingState implements AttributeBindi
 		this.ownerClassName = ownerClassName;
 		this.attributeName = attributeName;
 		this.defaults = defaults;
-		this.nodeName =  nodeName;
+		this.nodeName = nodeName;
 		this.metaAttributes = metaAttributes;
 		this.accessorName = accessorName;
 		this.isOptimisticLockable = isOptimisticLockable;
@@ -121,7 +120,7 @@ public abstract class AbstractHbmAttributeBindingState implements AttributeBindi
 		return null;
 	}
 
-	public Properties getTypeParameters() {
+	public Map<String, String> getTypeParameters() {
 		return null;
 	}
 }

@@ -31,7 +31,7 @@ import org.hibernate.mapping.PropertyGeneration;
 public interface SimpleAttributeBindingState extends AttributeBindingState {
 	boolean isInsertable();
 
-	boolean isUpdateable();
+	boolean isUpdatable();
 
 	boolean isKeyCascadeDeleteEnabled();
 

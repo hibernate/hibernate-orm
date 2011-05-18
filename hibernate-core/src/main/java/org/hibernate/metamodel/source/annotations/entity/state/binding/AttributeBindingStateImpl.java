@@ -24,7 +24,6 @@
 package org.hibernate.metamodel.source.annotations.entity.state.binding;
 
 import java.util.Map;
-import java.util.Properties;
 
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.binding.state.SimpleAttributeBindingState;
@@ -40,13 +39,12 @@ public class AttributeBindingStateImpl implements SimpleAttributeBindingState {
 	private final MappedAttribute mappedAttribute;
 	private final PropertyGeneration propertyGeneration = null;
 	private final String typeName;
-	private final Properties typeParameters;
+	private final Map<String, String> typeParameters;
 
 	public AttributeBindingStateImpl(MappedAttribute mappedAttribute) {
 		this.mappedAttribute = mappedAttribute;
-		typeName = mappedAttribute.getType().getName();
-		// TODO: implement....
-		typeParameters = null;
+		typeName = mappedAttribute.getType();
+		typeParameters = mappedAttribute.getTypeParameters();
 	}
 
 	@Override
@@ -73,7 +71,7 @@ public class AttributeBindingStateImpl implements SimpleAttributeBindingState {
 	}
 
 	@Override
-	public boolean isUpdateable() {
+	public boolean isUpdatable() {
 		return false;  //To change body of implemented methods use File | Settings | File Templates.
 	}
 
@@ -93,7 +91,7 @@ public class AttributeBindingStateImpl implements SimpleAttributeBindingState {
 	}
 
 	@Override
-	public Properties getTypeParameters() {
+	public Map<String, String> getTypeParameters() {
 		return typeParameters;
 	}
 

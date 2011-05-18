@@ -23,12 +23,13 @@
  */
 package org.hibernate.metamodel.source.hbm.state.binding;
 
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 
 import org.hibernate.MappingException;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.binding.MappingDefaults;
+import org.hibernate.metamodel.binding.state.SimpleAttributeBindingState;
 import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.metamodel.source.hbm.HbmHelper;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLId;
@@ -37,7 +38,6 @@ import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLCla
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLParamElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLPropertyElement;
 import org.hibernate.metamodel.source.util.MappingHelper;
-import org.hibernate.metamodel.binding.state.SimpleAttributeBindingState;
 
 /**
  * @author Gail Badner
@@ -45,12 +45,12 @@ import org.hibernate.metamodel.binding.state.SimpleAttributeBindingState;
 public class HbmSimpleAttributeBindingState extends AbstractHbmAttributeBindingState
 		implements SimpleAttributeBindingState {
 	private final String typeName;
-	private final Properties typeParameters = new Properties();
+	private final Map<String, String> typeParameters = new HashMap<String, String>();
 
 	private final boolean isLazy;
 	private final PropertyGeneration propertyGeneration;
 	private final boolean isInsertable;
-	private final boolean isUpdateable;
+	private final boolean isUpdatable;
 
 	public HbmSimpleAttributeBindingState(
 			String ownerClassName,
@@ -69,7 +69,7 @@ public class HbmSimpleAttributeBindingState extends AbstractHbmAttributeBindingS
 
 		this.isLazy = false;
 		if ( id.getTypeAttribute() != null ) {
-		 	typeName = maybeConvertToTypeDefName( id.getTypeAttribute(), defaults );
+			typeName = maybeConvertToTypeDefName( id.getTypeAttribute(), defaults );
 		}
 		else if ( id.getType() != null ) {
 			typeName = maybeConvertToTypeDefName( id.getType().getName(), defaults );
@@ -82,7 +82,7 @@ public class HbmSimpleAttributeBindingState extends AbstractHbmAttributeBindingS
 		this.propertyGeneration = PropertyGeneration.parse( null );
 		this.isInsertable = true;
 
-		this.isUpdateable = false;
+		this.isUpdatable = false;
 	}
 
 	private static String maybeConvertToTypeDefName(String typeName, MappingDefaults defaults) {
@@ -121,7 +121,7 @@ public class HbmSimpleAttributeBindingState extends AbstractHbmAttributeBindingS
 			throw new MappingException( "'generated' attribute cannot be 'insert' for versioning property" );
 		}
 		this.isInsertable = MappingHelper.getBooleanValue( version.isInsert(), true );
-		this.isUpdateable = true;
+		this.isUpdatable = true;
 	}
 
 	public HbmSimpleAttributeBindingState(
@@ -152,7 +152,7 @@ public class HbmSimpleAttributeBindingState extends AbstractHbmAttributeBindingS
 			throw new MappingException( "'generated' attribute cannot be 'insert' for versioning property" );
 		}
 		this.isInsertable = true; //TODO: is this right????
-		this.isUpdateable = true;
+		this.isUpdatable = true;
 	}
 
 	public HbmSimpleAttributeBindingState(
@@ -197,10 +197,10 @@ public class HbmSimpleAttributeBindingState extends AbstractHbmAttributeBindingS
 								property.getName()
 				);
 			}
-			isUpdateable = false;
+			isUpdatable = false;
 		}
 		else {
-			isUpdateable = MappingHelper.getBooleanValue( property.isUpdate(), true );
+			isUpdatable = MappingHelper.getBooleanValue( property.isUpdate(), true );
 		}
 
 		if ( property.getTypeAttribute() != null ) {
@@ -241,7 +241,7 @@ public class HbmSimpleAttributeBindingState extends AbstractHbmAttributeBindingS
 		return typeName;
 	}
 
-	public Properties getTypeParameters() {
+	public Map<String, String> getTypeParameters() {
 		return typeParameters;
 	}
 
@@ -257,8 +257,8 @@ public class HbmSimpleAttributeBindingState extends AbstractHbmAttributeBindingS
 		return isInsertable;
 	}
 
-	public boolean isUpdateable() {
-		return isUpdateable;
+	public boolean isUpdatable() {
+		return isUpdatable;
 	}
 
 	public String getCascade() {

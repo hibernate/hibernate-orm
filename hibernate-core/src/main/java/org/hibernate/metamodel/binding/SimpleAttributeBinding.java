@@ -25,8 +25,8 @@ package org.hibernate.metamodel.binding;
 
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.binding.state.SimpleAttributeBindingState;
-import org.hibernate.metamodel.relational.state.ValueRelationalState;
 import org.hibernate.metamodel.relational.state.ColumnRelationalState;
+import org.hibernate.metamodel.relational.state.ValueRelationalState;
 
 /**
  * TODO : javadoc
@@ -37,8 +37,8 @@ public class SimpleAttributeBinding extends AbstractAttributeBinding implements 
 	private final boolean forceNonNullable;
 	private final boolean forceUnique;
 	private boolean insertable;
-	private boolean updateable;
-	private boolean keyCasadeDeleteEnabled;
+	private boolean updatable;
+	private boolean keyCascadeDeleteEnabled;
 	private String unsavedValue;
 	private PropertyGeneration generation;
 
@@ -51,8 +51,8 @@ public class SimpleAttributeBinding extends AbstractAttributeBinding implements 
 	public final SimpleAttributeBinding initialize(SimpleAttributeBindingState state) {
 		super.initialize( state );
 		insertable = state.isInsertable();
-		updateable = state.isUpdateable();
-		keyCasadeDeleteEnabled = state.isKeyCascadeDeleteEnabled();
+		updatable = state.isUpdatable();
+		keyCascadeDeleteEnabled = state.isKeyCascadeDeleteEnabled();
 		unsavedValue = state.getUnsavedValue();
 		generation = state.getPropertyGeneration() == null ? PropertyGeneration.NEVER : state.getPropertyGeneration();
 		return this;
@@ -80,21 +80,21 @@ public class SimpleAttributeBinding extends AbstractAttributeBinding implements 
 		this.insertable = insertable;
 	}
 
-	public boolean isUpdateable() {
-		return updateable;
+	public boolean isUpdatable() {
+		return updatable;
 	}
 
-	protected void setUpdateable(boolean updateable) {
-		this.updateable = updateable;
+	protected void setUpdatable(boolean updatable) {
+		this.updatable = updatable;
 	}
 
 	@Override
-	public boolean isKeyCasadeDeleteEnabled() {
-		return keyCasadeDeleteEnabled;
+	public boolean isKeyCascadeDeleteEnabled() {
+		return keyCascadeDeleteEnabled;
 	}
 
-	public void setKeyCasadeDeleteEnabled(boolean keyCasadeDeleteEnabled) {
-		this.keyCasadeDeleteEnabled = keyCasadeDeleteEnabled;
+	public void setKeyCascadeDeleteEnabled(boolean keyCascadeDeleteEnabled) {
+		this.keyCascadeDeleteEnabled = keyCascadeDeleteEnabled;
 	}
 
 	@Override
@@ -117,5 +117,4 @@ public class SimpleAttributeBinding extends AbstractAttributeBinding implements 
 	public PropertyGeneration getGeneration() {
 		return generation;
 	}
-
 }

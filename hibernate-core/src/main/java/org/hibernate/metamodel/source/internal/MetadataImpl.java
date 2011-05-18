@@ -134,8 +134,8 @@ public class MetadataImpl implements Metadata, MetadataImplementor, Serializable
 		index = ormParser.parseAndUpdateIndex( mappings, index );
 
 		// create the annotation binder and pass it the final annotation index
-		final AnnotationBinder annotationBinder = new AnnotationBinder( this );
-		annotationBinder.bind( index );
+		final AnnotationBinder annotationBinder = new AnnotationBinder( this, index );
+		annotationBinder.bind();
 	}
 
 	/**

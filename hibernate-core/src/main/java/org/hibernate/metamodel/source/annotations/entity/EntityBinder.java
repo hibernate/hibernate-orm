@@ -85,11 +85,13 @@ public class EntityBinder {
 		bindJpaCaching( entityBinding );
 		bindHibernateCaching( entityBinding );
 
+		// take care of the id, attributes and relations
 		if ( configuredClass.isRoot() ) {
 			bindId( entityBinding );
 		}
 		bindAttributes( entityBinding );
 
+		// last, but not least we register the new EntityBinding with the metadata
 		meta.addEntity( entityBinding );
 	}
 

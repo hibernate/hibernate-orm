@@ -29,6 +29,7 @@ import java.util.Map;
 import javax.persistence.DiscriminatorType;
 
 import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.DotName;
 
 import org.hibernate.AnnotationException;
@@ -207,7 +208,24 @@ public class MappedAttribute implements Comparable<MappedAttribute> {
 	 * @return the final type for this mapped attribute
 	 */
 	private String determineType(String type, Map<String, String> typeParameters) {
-		return type;
+		AnnotationInstance typeAnnotation = getIfExists( HibernateDotNames.TYPE );
+		if ( typeAnnotation == null ) {
+			// return discovered type
+			return type;
+		}
+
+		AnnotationValue parameterAnnotationValue = typeAnnotation.value( "parameters" );
+		if ( parameterAnnotationValue != null ) {
+			AnnotationInstance[] parameterAnnotations = parameterAnnotationValue.asNestedArray();
+			for ( AnnotationInstance parameterAnnotationInstance : parameterAnnotations ) {
+				typeParameters.put(
+						parameterAnnotationInstance.value( "name" ).asString(),
+						parameterAnnotationInstance.value( "value" ).asString()
+				);
+			}
+		}
+
+		return typeAnnotation.value( "type" ).asString();
 	}
 }
 

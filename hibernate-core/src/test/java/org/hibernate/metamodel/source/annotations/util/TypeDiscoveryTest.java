@@ -24,16 +24,17 @@
 package org.hibernate.metamodel.source.annotations.util;
 
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 import javax.persistence.Id;
 
-import org.jboss.jandex.ClassInfo;
-import org.jboss.jandex.DotName;
 import org.jboss.jandex.Index;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.hibernate.annotations.Parameter;
+import org.hibernate.annotations.Type;
 import org.hibernate.metamodel.source.annotations.entity.ConfiguredClass;
 import org.hibernate.metamodel.source.annotations.entity.ConfiguredClassHierarchy;
 import org.hibernate.metamodel.source.annotations.entity.MappedAttribute;
@@ -72,8 +73,6 @@ public class TypeDiscoveryTest extends BaseUnitTestCase {
 
 		Iterator<ConfiguredClass> iter = hierarchies.iterator().next().iterator();
 		ConfiguredClass configuredClass = iter.next();
-		ClassInfo info = configuredClass.getClassInfo();
-		assertEquals( "wrong class", DotName.createSimple( Entity.class.getName() ), info.name() );
 
 		MappedAttribute property = configuredClass.getMappedProperty( "id" );
 		assertEquals( "Unexpected property type", "int", property.getType() );
@@ -82,8 +81,10 @@ public class TypeDiscoveryTest extends BaseUnitTestCase {
 		assertEquals( "Unexpected property type", String.class.getName(), property.getType() );
 
 		property = configuredClass.getMappedProperty( "customString" );
-		assertEquals( "Unexpected property type", String.class.getName(), property.getType() );
+		assertEquals( "Unexpected property type", "my.custom.Type", property.getType() );
 
+		Map<String, String> typeParameters = property.getTypeParameters();
+		assertEquals( "There should be a type parameter", "bar", typeParameters.get( "foo" ) );
 	}
 
 	@javax.persistence.Entity
@@ -91,6 +92,7 @@ public class TypeDiscoveryTest extends BaseUnitTestCase {
 		@Id
 		private int id;
 		private String string;
+		@Type(type = "my.custom.Type", parameters = { @Parameter(name = "foo", value = "bar") })
 		private String customString;
 	}
 }

@@ -25,7 +25,7 @@ public class MiscAnnotationBindingTest extends BaseUnitTestCase {
 		sources.addAnnotatedClass( Foo.class );
 		MetadataImpl metadata = (MetadataImpl) sources.buildMetadata();
 
-		EntityBinding binding = metadata.getEntityBinding( MiscAnnotationBindingTest.class.getSimpleName() + "$" + Foo.class.getSimpleName() );
+		EntityBinding binding = metadata.getEntityBinding( MiscAnnotationBindingTest.class.getName() + "$" + Foo.class.getSimpleName() );
 		assertEquals( "Wrong where filter", "1=1", binding.getWhereFilter() );
 	}
 

@@ -52,7 +52,7 @@ public class InheritanceTypeTest extends BaseUnitTestCase {
 	@Test
 	public void testDiscriminatorValue() {
 		MetadataImpl meta = buildMetadata( RootOfSingleTableInheritance.class, SubclassOfSingleTableInheritance.class );
-		EntityBinding entityBinding = meta.getEntityBinding( SubclassOfSingleTableInheritance.class.getSimpleName() );
+		EntityBinding entityBinding = meta.getEntityBinding( SubclassOfSingleTableInheritance.class.getName() );
 		assertEquals( "Wrong discriminator value", "foo", entityBinding.getDiscriminatorValue() );
 	}
 
@@ -65,7 +65,7 @@ public class InheritanceTypeTest extends BaseUnitTestCase {
 	}
 
 	private EntityBinding getEntityBindingForInnerClass(MetadataImpl meta, Class<?> clazz) {
-		return meta.getEntityBinding( this.getClass().getSimpleName() + "$" + clazz.getSimpleName() );
+		return meta.getEntityBinding( this.getClass().getName() + "$" + clazz.getSimpleName() );
 	}
 
 	@Entity

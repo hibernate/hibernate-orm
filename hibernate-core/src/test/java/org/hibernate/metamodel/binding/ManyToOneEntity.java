@@ -23,9 +23,6 @@
  */
 package org.hibernate.metamodel.binding;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 
@@ -35,17 +32,18 @@ import org.hibernate.annotations.Entity;
  * @author Gail Badner
  */
 @Entity
-public class EntityWithManyToOne {
+public class ManyToOneEntity {
 	@Id
 	private Long id;
 	private String theName;
+	@ManyToOne
 	SimpleEntity simpleEntity;
 
-	public EntityWithManyToOne() {
+	public ManyToOneEntity() {
 	}
 
-	public EntityWithManyToOne(String name) {
-		this.theName = theName;
+	public ManyToOneEntity(String name) {
+		this.theName = name;
 	}
 
 	public Long getId() {
@@ -61,15 +59,25 @@ public class EntityWithManyToOne {
 	}
 
 	public void setName(String name) {
-		this.theName = theName;
+		this.theName = name;
 	}
 
-	@ManyToOne
 	public SimpleEntity getSimpleEntity() {
 		return simpleEntity;
 	}
 
 	public void setSimpleEntity(SimpleEntity simpleEntity) {
 		this.simpleEntity = simpleEntity;
+	}
+
+	@Override
+	public String toString() {
+		final StringBuilder sb = new StringBuilder();
+		sb.append( "EntityWithManyToOne" );
+		sb.append( "{id=" ).append( id );
+		sb.append( ", theName='" ).append( theName ).append( '\'' );
+		sb.append( ", simpleEntity=" ).append( simpleEntity );
+		sb.append( '}' );
+		return sb.toString();
 	}
 }

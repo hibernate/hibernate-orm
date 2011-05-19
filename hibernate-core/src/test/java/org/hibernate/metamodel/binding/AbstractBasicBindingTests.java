@@ -29,8 +29,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.relational.Column;
-import org.hibernate.metamodel.source.spi.MetadataImplementor;
+import org.hibernate.metamodel.source.internal.MetadataImpl;
 import org.hibernate.service.BasicServiceRegistry;
 import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.service.internal.BasicServiceRegistryImpl;
@@ -50,10 +51,12 @@ import static org.junit.Assert.assertTrue;
 public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 
 	private BasicServiceRegistryImpl serviceRegistry;
+	private MetadataSources sources;
 
 	@Before
 	public void setUp() {
 		serviceRegistry = (BasicServiceRegistryImpl) new ServiceRegistryBuilder().buildServiceRegistry();
+		sources = new MetadataSources( new ServiceRegistryBuilder().buildServiceRegistry() );
 	}
 
 	@After
@@ -67,56 +70,31 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 
 	@Test
 	public void testSimpleEntityMapping() {
-		checkSimpleEntityMapping( buildSimpleEntityBinding() );
-	}
+		MetadataImpl metadata = addSourcesForSimpleEntityBinding( sources );
+		EntityBinding entityBinding = metadata.getEntityBinding( SimpleEntity.class.getName() );
+		assertIdAndSimpleProperty( entityBinding );
 
-	protected void checkSimpleEntityMapping(EntityBinding entityBinding) {
-		assertNotNull( entityBinding );
-		assertNotNull( entityBinding.getEntityIdentifier() );
-		assertNotNull( entityBinding.getEntityIdentifier().getValueBinding() );
 		assertNull( entityBinding.getVersioningValueBinding() );
-
-		AttributeBinding idAttributeBinding = entityBinding.getAttributeBinding( "id" );
-		assertNotNull( idAttributeBinding );
-		assertSame( idAttributeBinding, entityBinding.getEntityIdentifier().getValueBinding() );
-		assertNotNull( idAttributeBinding.getAttribute() );
-		assertNotNull( idAttributeBinding.getValue() );
-		assertTrue( idAttributeBinding.getValue() instanceof Column );
-
-		AttributeBinding nameBinding = entityBinding.getAttributeBinding( "name" );
-		assertNotNull( nameBinding );
-		assertNotNull( nameBinding.getAttribute() );
-		assertNotNull( nameBinding.getValue() );
 	}
 
 	@Test
 	public void testSimpleVersionedEntityMapping() {
-		EntityBinding entityBinding = buildSimpleVersionedEntityBinding();
-		assertNotNull( entityBinding );
-		assertNotNull( entityBinding.getEntityIdentifier() );
-		assertNotNull( entityBinding.getEntityIdentifier().getValueBinding() );
+		MetadataImpl metadata = addSourcesForSimpleVersionedEntityBinding( sources );
+		EntityBinding entityBinding = metadata.getEntityBinding( SimpleVersionedEntity.class.getName() );
+		assertIdAndSimpleProperty( entityBinding );
+
 		assertNotNull( entityBinding.getVersioningValueBinding() );
 		assertNotNull( entityBinding.getVersioningValueBinding().getAttribute() );
-
-		AttributeBinding idAttributeBinding = entityBinding.getAttributeBinding( "id" );
-		assertNotNull( idAttributeBinding );
-		assertSame( idAttributeBinding, entityBinding.getEntityIdentifier().getValueBinding() );
-		assertNotNull( idAttributeBinding.getAttribute() );
-		assertNotNull( idAttributeBinding.getValue() );
-		assertTrue( idAttributeBinding.getValue() instanceof Column );
-
-		AttributeBinding nameBinding = entityBinding.getAttributeBinding( "name" );
-		assertNotNull( nameBinding );
-		assertNotNull( nameBinding.getAttribute() );
-		assertNotNull( nameBinding.getValue() );
 	}
 
 	@Test
 	public void testEntityWithManyToOneMapping() {
-		MetadataImplementor metadata = buildMetadataWithManyToOne();
-		EntityBinding entityWithManyToOneBinding = metadata.getEntityBinding( EntityWithManyToOne.class.getName() );
+		MetadataImpl metadata = addSourcesForManyToOne( sources );
+
 		EntityBinding simpleEntityBinding = metadata.getEntityBinding( SimpleEntity.class.getName() );
-		checkSimpleEntityMapping( simpleEntityBinding );
+		assertIdAndSimpleProperty( simpleEntityBinding );
+
+		EntityBinding entityWithManyToOneBinding = metadata.getEntityBinding( ManyToOneEntity.class.getName() );
 
 		assertTrue(
 				1 == simpleEntityBinding.getAttributeBinding( "id" ).getEntityReferencingAttributeBindings().size()
@@ -127,15 +105,17 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 		assertSame( entityWithManyToOneBinding.getAttributeBinding( "simpleEntity" ), it.next() );
 		assertFalse( it.hasNext() );
 	}
-	/*
-	@Test
-	public void testEntityWithElementCollection() {
-		EntityBinding entityBinding = buildEntityWithElementCollectionBinding();
 
+	public abstract MetadataImpl addSourcesForSimpleVersionedEntityBinding(MetadataSources sources);
+
+	public abstract MetadataImpl addSourcesForSimpleEntityBinding(MetadataSources sources);
+
+	public abstract MetadataImpl addSourcesForManyToOne(MetadataSources sources);
+
+	protected void assertIdAndSimpleProperty(EntityBinding entityBinding) {
 		assertNotNull( entityBinding );
 		assertNotNull( entityBinding.getEntityIdentifier() );
 		assertNotNull( entityBinding.getEntityIdentifier().getValueBinding() );
-		assertNull( entityBinding.getVersioningValueBinding() );
 
 		AttributeBinding idAttributeBinding = entityBinding.getAttributeBinding( "id" );
 		assertNotNull( idAttributeBinding );
@@ -149,13 +129,4 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 		assertNotNull( nameBinding.getAttribute() );
 		assertNotNull( nameBinding.getValue() );
 	}
-	*/
-
-	public abstract EntityBinding buildSimpleVersionedEntityBinding();
-
-	public abstract EntityBinding buildSimpleEntityBinding();
-
-	public abstract MetadataImplementor buildMetadataWithManyToOne();
-
-	//public abstract EntityBinding buildEntityWithElementCollectionBinding();
 }

@@ -74,6 +74,9 @@ public class MetadataImpl implements Metadata, MetadataImplementor, Serializable
 	private final SharedCacheMode sharedCacheMode;
 	private final Database database = new Database();
 
+	/**
+	 * Maps the fully qualified class name of an entity to its entity binding
+	 */
 	private Map<String, EntityBinding> entityBindingMap = new HashMap<String, EntityBinding>();
 	private Map<String, PluralAttributeBinding> collectionBindingMap = new HashMap<String, PluralAttributeBinding>();
 	private Map<String, FetchProfile> fetchProfiles = new HashMap<String, FetchProfile>();

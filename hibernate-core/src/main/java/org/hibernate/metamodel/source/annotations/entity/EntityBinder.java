@@ -37,7 +37,6 @@ import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.annotations.PolymorphismType;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.binding.Caching;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.SimpleAttributeBinding;
@@ -291,7 +290,7 @@ public class EntityBinder {
 		);
 		String name;
 		if ( jpaEntityAnnotation.value( "name" ) == null ) {
-			name = StringHelper.unqualify( configuredClass.getName() );
+			name = configuredClass.getName();
 		}
 		else {
 			name = jpaEntityAnnotation.value( "name" ).asString();
@@ -428,7 +427,7 @@ public class EntityBinder {
 			return null;
 		}
 
-		EntityBinding parentBinding = meta.getEntityBinding( parent.getSimpleName() );
+		EntityBinding parentBinding = meta.getEntityBinding( parent.getName() );
 		if ( parentBinding == null ) {
 			throw new AssertionFailure(
 					"Parent entity " + parent.getName() + " of entity " + configuredClass.getName() + " not yet created!"

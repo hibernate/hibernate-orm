@@ -65,7 +65,11 @@ public class CacheBindingTests extends BaseUnitTestCase {
 		EntityBinding binding = getEntityBinding( JpaCacheEntity.class, SharedCacheMode.ALL );
 		assertNotNull( "There should be a cache binding", binding.getCaching() );
 		Caching caching = binding.getCaching();
-		assertEquals( "Wrong region", "CacheBindingTests$JpaCacheEntity", caching.getRegion() );
+		assertEquals(
+				"Wrong region",
+				this.getClass().getName() + "$" + JpaCacheEntity.class.getSimpleName(),
+				caching.getRegion()
+		);
 		assertEquals( "Wrong lazy properties configuration", true, caching.isCacheLazyProperties() );
 	}
 
@@ -81,7 +85,7 @@ public class CacheBindingTests extends BaseUnitTestCase {
 		sources.getMetadataBuilder().with( cacheMode );
 		MetadataImpl metadata = (MetadataImpl) sources.buildMetadata();
 
-		return metadata.getEntityBinding( this.getClass().getSimpleName() + "$" + clazz.getSimpleName() );
+		return metadata.getEntityBinding( this.getClass().getName() + "$" + clazz.getSimpleName() );
 	}
 
 	@Entity

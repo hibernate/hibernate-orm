@@ -173,11 +173,6 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 	}
 
 	@Override
-	public TableSpecification getTable() {
-		return getValue().getTable();
-	}
-
-	@Override
 	public String getPropertyAccessorName() {
 		return propertyAccessorName;
 	}

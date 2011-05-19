@@ -31,31 +31,28 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.jboss.logging.Logger;
 
-import org.hibernate.HibernateException;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.service.Service;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.service.internal.proxy.javassist.ServiceProxyFactoryFactoryImpl;
+import org.hibernate.service.UnknownServiceException;
 import org.hibernate.service.jmx.spi.JmxService;
 import org.hibernate.service.spi.InjectService;
 import org.hibernate.service.spi.Manageable;
+import org.hibernate.service.spi.ServiceBinding;
+import org.hibernate.service.spi.ServiceException;
+import org.hibernate.service.spi.ServiceInitiator;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Startable;
 import org.hibernate.service.spi.Stoppable;
-import org.hibernate.service.UnknownServiceException;
-import org.hibernate.service.spi.proxy.ServiceProxyFactory;
 
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractServiceRegistryImpl implements ServiceRegistryImplementor {
+public abstract class AbstractServiceRegistryImpl implements ServiceRegistryImplementor, ServiceBinding.OwningRegistry {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, AbstractServiceRegistryImpl.class.getName() );
 
 	private final ServiceRegistryImplementor parent;
-
-	// for now just hard-code the javassist factory
-	private ServiceProxyFactory serviceProxyFactory = new ServiceProxyFactoryFactoryImpl().makeServiceProxyFactory( this );
 
 	private ConcurrentHashMap<Class,ServiceBinding> serviceBindingMap;
 	// IMPL NOTE : the list used for ordered destruction.  Cannot used map above because we need to
@@ -71,6 +68,20 @@ public abstract class AbstractServiceRegistryImpl implements ServiceRegistryImpl
 		// assume 20 services for initial sizing
 		this.serviceBindingMap = CollectionHelper.concurrentMap( 20 );
 		this.serviceList = CollectionHelper.arrayList( 20 );
+	}
+
+	@SuppressWarnings({ "unchecked" })
+	protected <R extends Service> void createServiceBinding(ServiceInitiator<R> initiator) {
+		serviceBindingMap.put( initiator.getServiceInitiated(), new ServiceBinding( this, initiator ) );
+	}
+
+	protected <R extends Service> void createServiceBinding(ProvidedService<R> providedService) {
+		ServiceBinding<R> binding = locateServiceBinding( providedService.getServiceRole(), false );
+		if ( binding == null ) {
+			binding = new ServiceBinding<R>( this, providedService.getServiceRole(), providedService.getService() );
+			serviceBindingMap.put( providedService.getServiceRole(), binding );
+		}
+		registerService( binding, providedService.getService() );
 	}
 
 	@Override
@@ -97,40 +108,33 @@ public abstract class AbstractServiceRegistryImpl implements ServiceRegistryImpl
 
 	@Override
 	public <R extends Service> R getService(Class<R> serviceRole) {
-		return locateOrCreateServiceBinding( serviceRole, true ).getProxy();
-	}
-
-	@SuppressWarnings({ "unchecked" })
-	protected <R extends Service> ServiceBinding<R> locateOrCreateServiceBinding(Class<R> serviceRole, boolean checkParent) {
-		ServiceBinding<R> serviceBinding = locateServiceBinding( serviceRole, checkParent );
+		final ServiceBinding<R> serviceBinding = locateServiceBinding( serviceRole );
 		if ( serviceBinding == null ) {
-			createServiceBinding( serviceRole );
+			throw new UnknownServiceException( serviceRole );
 		}
-		return serviceBinding;
+
+		R service = serviceBinding.getService();
+		if ( service == null ) {
+			service = initializeService( serviceBinding );
+		}
+
+		return service;
 	}
 
-	protected <R extends Service> ServiceBinding<R> createServiceBinding(Class<R> serviceRole) {
-		R proxy = serviceProxyFactory.makeProxy( serviceRole );
-		ServiceBinding<R> serviceBinding = new ServiceBinding<R>( proxy );
-		serviceBindingMap.put( serviceRole, serviceBinding );
-		return serviceBinding;
-	}
-
-	protected <R extends Service> void registerService(Class<R> serviceRole, R service) {
-		ServiceBinding<R> serviceBinding = locateOrCreateServiceBinding( serviceRole, false );
-		R priorServiceInstance = serviceBinding.getTarget();
-		serviceBinding.setTarget( service );
+	protected <R extends Service> void registerService(ServiceBinding<R> serviceBinding, R service) {
+		R priorServiceInstance = serviceBinding.getService();
+		serviceBinding.setService( service );
 		if ( priorServiceInstance != null ) {
 			serviceList.remove( priorServiceInstance );
 		}
 		serviceList.add( service );
 	}
 
-	private <R extends Service> R initializeService(Class<R> serviceRole) {
-        LOG.trace("Initializing service [role=" + serviceRole.getName() + "]");
+	private <R extends Service> R initializeService(ServiceBinding<R> serviceBinding) {
+        LOG.trace( "Initializing service [role=" + serviceBinding.getServiceRole().getName() + "]" );
 
 		// PHASE 1 : create service
-		R service = createService( serviceRole );
+		R service = createService( serviceBinding );
 		if ( service == null ) {
 			return null;
 		}
@@ -139,12 +143,34 @@ public abstract class AbstractServiceRegistryImpl implements ServiceRegistryImpl
 		configureService( service );
 
 		// PHASE 3 : Start service
-		startService( service, serviceRole );
+		startService( serviceBinding );
 
 		return service;
 	}
 
-	protected abstract <T extends Service> T createService(Class<T> serviceRole);
+	@SuppressWarnings( {"unchecked"})
+	protected <R extends Service> R createService(ServiceBinding<R> serviceBinding) {
+		final ServiceInitiator<R> serviceInitiator = serviceBinding.getServiceInitiator();
+		if ( serviceInitiator == null ) {
+			// this condition should never ever occur
+			throw new UnknownServiceException( serviceBinding.getServiceRole() );
+		}
+
+		try {
+			R service = serviceBinding.getServiceRegistry().initiateService( serviceInitiator );
+			// IMPL NOTE : the register call here is important to avoid potential stack overflow issues
+			//		from recursive calls through #configureService
+			registerService( serviceBinding, service );
+			return service;
+		}
+		catch ( ServiceException e ) {
+			throw e;
+		}
+		catch ( Exception e ) {
+			throw new ServiceException( "Unable to create requested service [" + serviceBinding.getServiceRole().getName() + "]", e );
+		}
+	}
+
 	protected abstract <T extends Service> void configureService(T service);
 
 	protected <T extends Service> void applyInjections(T service) {
@@ -197,34 +223,17 @@ public abstract class AbstractServiceRegistryImpl implements ServiceRegistryImpl
 	}
 
 	@SuppressWarnings({ "unchecked" })
-	protected <T extends Service> void startService(T service, Class serviceRole) {
-		if ( Startable.class.isInstance( service ) ) {
-			( (Startable) service ).start();
+	protected <R extends Service> void startService(ServiceBinding<R> serviceBinding) {
+		if ( Startable.class.isInstance( serviceBinding.getService() ) ) {
+			( (Startable) serviceBinding.getService() ).start();
 		}
 
-		if ( Manageable.class.isInstance( service ) ) {
-			getService( JmxService.class ).registerService( (Manageable) service, serviceRole );
+		if ( Manageable.class.isInstance( serviceBinding.getService() ) ) {
+			getService( JmxService.class ).registerService(
+					(Manageable) serviceBinding.getService(),
+					serviceBinding.getServiceRole()
+			);
 		}
-	}
-
-	@Override
-	@SuppressWarnings( {"unchecked"})
-	public <R extends Service> R getServiceInternal(Class<R> serviceRole) {
-		// this call comes from the binding proxy, we most definitely do not want to look up into the parent
-		// in this case!
-		ServiceBinding<R> serviceBinding = locateServiceBinding( serviceRole, false );
-		if ( serviceBinding == null ) {
-			throw new HibernateException( "Only proxies should invoke #getServiceInternal" );
-		}
-		R service = serviceBinding.getTarget();
-		if ( service == null ) {
-			service = initializeService( serviceRole );
-			serviceBinding.setTarget( service );
-		}
-		if ( service == null ) {
-			throw new UnknownServiceException( serviceRole );
-		}
-		return service;
 	}
 
 	public void destroy() {

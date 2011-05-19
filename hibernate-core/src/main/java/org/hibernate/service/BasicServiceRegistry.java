@@ -23,11 +23,8 @@
  */
 package org.hibernate.service;
 
-import org.hibernate.service.spi.BasicServiceInitiator;
-
 /**
  * @author Steve Ebersole
  */
 public interface BasicServiceRegistry extends ServiceRegistry {
-	public void registerServiceInitiator(BasicServiceInitiator initiator);
 }

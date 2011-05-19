@@ -28,20 +28,20 @@ package org.hibernate.service.internal;
  *
  * @author Steve Ebersole
  */
-public class ProvidedService<T> {
-	private final Class<T> serviceRole;
-	private final T service;
+public class ProvidedService<R> {
+	private final Class<R> serviceRole;
+	private final R service;
 
-	public ProvidedService(Class<T> serviceRole, T service) {
+	public ProvidedService(Class<R> serviceRole, R service) {
 		this.serviceRole = serviceRole;
 		this.service = service;
 	}
 
-	public Class<T> getServiceRole() {
+	public Class<R> getServiceRole() {
 		return serviceRole;
 	}
 
-	public T getService() {
+	public R getService() {
 		return service;
 	}
 }

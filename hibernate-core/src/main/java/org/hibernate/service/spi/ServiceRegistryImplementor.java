@@ -25,34 +25,11 @@ package org.hibernate.service.spi;
 
 import org.hibernate.service.Service;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.service.spi.proxy.ServiceProxyTargetSource;
 
 /**
  * @author Steve Ebersole
  */
-public interface ServiceRegistryImplementor extends ServiceRegistry, ServiceProxyTargetSource {
+public interface ServiceRegistryImplementor extends ServiceRegistry {
 	public <R extends Service> ServiceBinding<R> locateServiceBinding(Class<R> serviceRole);
-
 	public void destroy();
-
-	public final class ServiceBinding<R> {
-		private final R proxy;
-		private R target;
-
-		public ServiceBinding(R proxy) {
-			this.proxy = proxy;
-		}
-
-		public R getProxy() {
-			return proxy;
-		}
-
-		public R getTarget() {
-			return target;
-		}
-
-		public void setTarget(R target) {
-			this.target = target;
-		}
-	}
 }

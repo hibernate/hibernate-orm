@@ -21,26 +21,18 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.service.spi.proxy;
+package org.hibernate.service.spi;
 
 import org.hibernate.service.Service;
-import org.hibernate.service.ServiceRegistry;
 
 /**
- * Additional contract for service proxies.  This allows the proxies access to their actual service instances.
- *
  * @author Steve Ebersole
  */
-public interface ServiceProxyTargetSource extends ServiceRegistry {
+public interface ServiceInitiator<R extends Service> {
 	/**
-	 * Retrieve a service by role.  Unlike {@link ServiceRegistry#getService}, this version will never return a proxy.
+	 * Obtains the service role initiated by this initiator.  Should be unique within a registry
 	 *
-	 * @param serviceRole The service role
-	 * @param <R> The service role type
-	 *
-	 * @return The requested service.
-	 *
-	 * @throws org.hibernate.service.UnknownServiceException Indicates the service was not known.
+	 * @return The service role.
 	 */
-	public <R extends Service> R getServiceInternal(Class<R> serviceRole);
+	public Class<R> getServiceInitiated();
 }

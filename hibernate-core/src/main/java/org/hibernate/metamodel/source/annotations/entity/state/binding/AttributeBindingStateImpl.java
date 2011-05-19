@@ -34,16 +34,13 @@ import org.hibernate.metamodel.source.annotations.entity.MappedAttribute;
  * Implementation of the attribute binding state via annotation configuration.
  *
  * @author Hardy Ferentschik
+ * @todo in the end we can maybe just let MappedAttribute implement SimpleAttributeBindingState. (HF)
  */
 public class AttributeBindingStateImpl implements SimpleAttributeBindingState {
 	private final MappedAttribute mappedAttribute;
-	private final String typeName;
-	private final Map<String, String> typeParameters;
 
 	public AttributeBindingStateImpl(MappedAttribute mappedAttribute) {
 		this.mappedAttribute = mappedAttribute;
-		typeName = mappedAttribute.getType();
-		typeParameters = mappedAttribute.getTypeParameters();
 	}
 
 	@Override
@@ -68,17 +65,22 @@ public class AttributeBindingStateImpl implements SimpleAttributeBindingState {
 
 	@Override
 	public String getTypeName() {
-		return typeName;
+		return mappedAttribute.getType();
 	}
 
 	@Override
 	public Map<String, String> getTypeParameters() {
-		return typeParameters;
+		return mappedAttribute.getTypeParameters();
 	}
 
 	@Override
 	public boolean isLazy() {
 		return mappedAttribute.isLazy();
+	}
+
+	@Override
+	public boolean isOptimisticLockable() {
+		return mappedAttribute.isOptimisticLockable();
 	}
 
 	@Override
@@ -104,11 +106,6 @@ public class AttributeBindingStateImpl implements SimpleAttributeBindingState {
 	@Override
 	public String getCascade() {
 		return null;  //To change body of implemented methods use File | Settings | File Templates.
-	}
-
-	@Override
-	public boolean isOptimisticLockable() {
-		return false;  //To change body of implemented methods use File | Settings | File Templates.
 	}
 
 	@Override

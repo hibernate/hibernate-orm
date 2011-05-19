@@ -48,24 +48,64 @@ import org.hibernate.metamodel.source.annotations.util.JandexHelper;
  * @author Hardy Ferentschik
  */
 public class MappedAttribute implements Comparable<MappedAttribute> {
+	/**
+	 * Annotations defined on the attribute, keyed against the annotation dot name.
+	 */
 	private final Map<DotName, List<AnnotationInstance>> annotations;
 
+	/**
+	 * The property name.
+	 */
 	private final String name;
 
+	/**
+	 * The property type as string.
+	 */
 	private final String type;
+
+	/**
+	 * Optional type parameters for custom types.
+	 */
 	private final Map<String, String> typeParameters;
 
+	/**
+	 * Is this property an id property (or part thereof).
+	 */
 	private final boolean isId;
+
+	/**
+	 * Is this a versioned property (annotated w/ {@code @Version}.
+	 */
 	private final boolean isVersioned;
+
+	/**
+	 * Is this property a discriminator property.
+	 */
 	private final boolean isDiscriminator;
 
+	/**
+	 * Whether a change of the property's value triggers a version increment of the entity (in case of optimistic
+	 * locking).
+	 */
+	private final boolean isOptimisticLockable;
+
+	/**
+	 * Is this property lazy loaded (see {@link javax.persistence.Basic}).
+	 */
 	private boolean isLazy = false;
+
+	/**
+	 * Is this property optional  (see {@link javax.persistence.Basic}).
+	 */
 	private boolean isOptional = true;
 
 	private PropertyGeneration propertyGeneration;
 	private boolean isInsertable = true;
 	private boolean isUpdatable = true;
 
+	/**
+	 * Defines the column values (relational values) for this property.
+	 */
 	private final ColumnValues columnValues;
 
 	static MappedAttribute createMappedAttribute(String name, String type, Map<DotName, List<AnnotationInstance>> annotations) {
@@ -133,6 +173,8 @@ public class MappedAttribute implements Comparable<MappedAttribute> {
 			columnValues.setNullable( false );
 		}
 
+		this.isOptimisticLockable = checkOptimisticLockAnnotation();
+
 		checkBasicAnnotation();
 		checkGeneratedAnnotation();
 	}
@@ -183,6 +225,10 @@ public class MappedAttribute implements Comparable<MappedAttribute> {
 
 	public PropertyGeneration getPropertyGeneration() {
 		return propertyGeneration;
+	}
+
+	public boolean isOptimisticLockable() {
+		return isOptimisticLockable;
 	}
 
 	/**
@@ -251,6 +297,16 @@ public class MappedAttribute implements Comparable<MappedAttribute> {
 		}
 
 		return typeAnnotation.value( "type" ).asString();
+	}
+
+	private boolean checkOptimisticLockAnnotation() {
+		boolean triggersVersionIncrement = true;
+		AnnotationInstance optimisticLockAnnotation = getIfExists( HibernateDotNames.OPTIMISTIC_LOCK );
+		if ( optimisticLockAnnotation != null ) {
+			boolean exclude = optimisticLockAnnotation.value( "excluded" ).asBoolean();
+			triggersVersionIncrement = !exclude;
+		}
+		return triggersVersionIncrement;
 	}
 
 	private void checkBasicAnnotation() {

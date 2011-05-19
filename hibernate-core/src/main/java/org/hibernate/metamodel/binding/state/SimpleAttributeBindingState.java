@@ -27,6 +27,8 @@ import org.hibernate.mapping.PropertyGeneration;
 
 /**
  * @author Gail Badner
+ * @todo - We need to get a better split into the states. For example this SimpleAttributeBindingState contains
+ * state which is only relevant for primary/foreign keys. This should be in a different interface. (HF)
  */
 public interface SimpleAttributeBindingState extends AttributeBindingState {
 	boolean isInsertable();

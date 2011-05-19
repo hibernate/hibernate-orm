@@ -31,6 +31,7 @@ import org.hibernate.envers.tools.Tools;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public abstract class AbstractCompositeIdMapper extends AbstractIdMapper implements SimpleIdMapperBuilder {
     protected Map<PropertyData, SingleIdMapper> ids;
@@ -47,6 +48,10 @@ public abstract class AbstractCompositeIdMapper extends AbstractIdMapper impleme
     }
 
     public Object mapToIdFromMap(Map data) {
+        if (data == null) {
+            return null;
+        }
+
         Object ret;
         try {
             ret = Thread.currentThread().getContextClassLoader().loadClass(compositeIdClass).newInstance();

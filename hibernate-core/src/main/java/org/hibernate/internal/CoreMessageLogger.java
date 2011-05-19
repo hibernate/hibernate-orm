@@ -59,6 +59,7 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.SerializationException;
 import org.hibernate.type.Type;
 
+import static org.jboss.logging.Logger.Level.DEBUG;
 import static org.jboss.logging.Logger.Level.ERROR;
 import static org.jboss.logging.Logger.Level.INFO;
 import static org.jboss.logging.Logger.Level.WARN;
@@ -115,7 +116,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Cleaning up connection pool [%s]", id = 30)
 	void cleaningUpConnectionPool(String url);
 
-	@LogMessage(level = INFO)
+	@LogMessage(level = DEBUG)
 	@Message(value = "Closing", id = 31)
 	void closing();
 
@@ -539,11 +540,11 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Logging statistics....", id = 161)
 	void loggingStatistics();
 
-	@LogMessage(level = INFO)
+	@LogMessage(level = DEBUG)
 	@Message(value = "*** Logical connection closed ***", id = 162)
 	void logicalConnectionClosed();
 
-	@LogMessage(level = INFO)
+	@LogMessage(level = DEBUG)
 	@Message(value = "Logical connection releasing its physical connection", id = 163)
 	void logicalConnectionReleasingPhysicalConnection();
 

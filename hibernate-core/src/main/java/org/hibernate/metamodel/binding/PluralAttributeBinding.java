@@ -119,10 +119,6 @@ public abstract class PluralAttributeBinding extends AbstractAttributeBinding {
 		loaderName = state.getLoaderName();
 	}
 
-	protected boolean isLazyDefault(MappingDefaults defaults) {
-		return defaults.isDefaultLazy();
-	}
-
 	@Override
 	public boolean isSimpleValue() {
 		return false;

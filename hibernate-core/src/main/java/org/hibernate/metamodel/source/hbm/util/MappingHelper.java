@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.util;
+package org.hibernate.metamodel.source.hbm.util;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -29,7 +29,6 @@ import java.util.Set;
 import java.util.StringTokenizer;
 
 import org.hibernate.MappingException;
-import org.hibernate.metamodel.source.spi.MetadataImplementor;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.classloading.spi.ClassLoadingException;

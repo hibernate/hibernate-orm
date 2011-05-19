@@ -28,7 +28,7 @@ import java.util.Map;
 
 import org.hibernate.MappingException;
 import org.hibernate.mapping.PropertyGeneration;
-import org.hibernate.metamodel.binding.MappingDefaults;
+import org.hibernate.metamodel.source.hbm.MappingDefaults;
 import org.hibernate.metamodel.binding.state.SimpleAttributeBindingState;
 import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.metamodel.source.hbm.HbmHelper;
@@ -37,7 +37,7 @@ import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLCla
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLVersion;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLParamElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLPropertyElement;
-import org.hibernate.metamodel.source.util.MappingHelper;
+import org.hibernate.metamodel.source.hbm.util.MappingHelper;
 
 /**
  * @author Gail Badner

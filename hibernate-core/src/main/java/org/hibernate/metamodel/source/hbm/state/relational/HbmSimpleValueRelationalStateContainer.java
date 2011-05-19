@@ -31,7 +31,7 @@ import java.util.Set;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.metamodel.binding.HibernateTypeDescriptor;
-import org.hibernate.metamodel.binding.MappingDefaults;
+import org.hibernate.metamodel.source.hbm.MappingDefaults;
 import org.hibernate.metamodel.relational.state.SimpleValueRelationalState;
 import org.hibernate.metamodel.relational.state.TupleRelationalState;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLColumnElement;

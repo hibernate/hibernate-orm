@@ -30,7 +30,7 @@ import java.util.Map;
 
 import org.hibernate.FetchMode;
 import org.hibernate.metamodel.binding.CustomSQL;
-import org.hibernate.metamodel.binding.MappingDefaults;
+import org.hibernate.metamodel.source.hbm.MappingDefaults;
 import org.hibernate.metamodel.binding.state.PluralAttributeBindingState;
 import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.metamodel.source.hbm.HbmHelper;
@@ -40,7 +40,7 @@ import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlDeleteElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlInsertElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlUpdateElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSynchronizeElement;
-import org.hibernate.metamodel.source.util.MappingHelper;
+import org.hibernate.metamodel.source.hbm.util.MappingHelper;
 
 /**
  * @author Gail Badner

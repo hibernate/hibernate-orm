@@ -49,8 +49,8 @@ import org.hibernate.metamodel.source.annotations.HibernateDotNames;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.entity.state.binding.AttributeBindingStateImpl;
 import org.hibernate.metamodel.source.annotations.entity.state.binding.DiscriminatorBindingStateImpl;
-import org.hibernate.metamodel.source.annotations.entity.state.relational.AttributeColumnRelationalState;
-import org.hibernate.metamodel.source.annotations.entity.state.relational.AttributeTupleRelationalState;
+import org.hibernate.metamodel.source.annotations.entity.state.relational.ColumnRelationalStateImpl;
+import org.hibernate.metamodel.source.annotations.entity.state.relational.TupleRelationalStateImpl;
 import org.hibernate.metamodel.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
@@ -310,7 +310,7 @@ public class EntityBinder {
 
 		SimpleAttributeBinding attributeBinding = entityBinding.makeSimpleIdAttributeBinding( idName );
 		attributeBinding.initialize( new AttributeBindingStateImpl( idAttribute ) );
-		attributeBinding.initialize( new AttributeColumnRelationalState( idAttribute, meta ) );
+		attributeBinding.initialize( new ColumnRelationalStateImpl( idAttribute, meta ) );
 	}
 
 	private void bindAttributes(EntityBinding entityBinding) {
@@ -344,10 +344,10 @@ public class EntityBinder {
 		attributeBinding.initialize( bindingState );
 
 		if ( configuredClass.hasOwnTable() ) {
-			AttributeColumnRelationalState columnRelationsState = new AttributeColumnRelationalState(
+			ColumnRelationalStateImpl columnRelationsState = new ColumnRelationalStateImpl(
 					mappedAttribute, meta
 			);
-			AttributeTupleRelationalState relationalState = new AttributeTupleRelationalState();
+			TupleRelationalStateImpl relationalState = new TupleRelationalStateImpl();
 			relationalState.addValueState( columnRelationsState );
 
 			// TODO: if this really just binds a column, then it can be changed to

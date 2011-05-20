@@ -32,7 +32,7 @@ import org.hibernate.metamodel.relational.state.TupleRelationalState;
 /**
  * @author Hardy Ferentschik
  */
-public class AttributeTupleRelationalState implements TupleRelationalState {
+public class TupleRelationalStateImpl implements TupleRelationalState {
 	List<SimpleValueRelationalState> valueStates = new ArrayList<SimpleValueRelationalState>();
 
 	public void addValueState(SimpleValueRelationalState state) {

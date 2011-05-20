@@ -24,6 +24,7 @@
 package org.hibernate.metamodel.binding;
 
 import java.util.Iterator;
+import java.util.Set;
 
 import org.junit.After;
 import org.junit.Before;
@@ -37,6 +38,7 @@ import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.service.internal.BasicServiceRegistryImpl;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
+import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertNull;
@@ -94,11 +96,16 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 		EntityBinding simpleEntityBinding = metadata.getEntityBinding( SimpleEntity.class.getName() );
 		assertIdAndSimpleProperty( simpleEntityBinding );
 
-		EntityBinding entityWithManyToOneBinding = metadata.getEntityBinding( ManyToOneEntity.class.getName() );
+		Set<EntityReferencingAttributeBinding> referenceBindings = simpleEntityBinding.getAttributeBinding( "id" )
+				.getEntityReferencingAttributeBindings();
+		assertEquals( "There should be only one reference binding", 1, referenceBindings.size() );
 
-		assertTrue(
-				1 == simpleEntityBinding.getAttributeBinding( "id" ).getEntityReferencingAttributeBindings().size()
-		);
+		EntityReferencingAttributeBinding referenceBinding = referenceBindings.iterator().next();
+		EntityBinding referencedEntityBinding = referenceBinding.getReferencedEntityBinding();
+		// TODO - Is this assertion correct (HF)?
+		assertEquals( "Should be the same entity binding", referencedEntityBinding, simpleEntityBinding );
+
+		EntityBinding entityWithManyToOneBinding = metadata.getEntityBinding( ManyToOneEntity.class.getName() );
 		Iterator<EntityReferencingAttributeBinding> it = entityWithManyToOneBinding.getEntityReferencingAttributeBindings()
 				.iterator();
 		assertTrue( it.hasNext() );

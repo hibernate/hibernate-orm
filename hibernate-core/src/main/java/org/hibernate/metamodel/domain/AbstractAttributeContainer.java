@@ -35,11 +35,11 @@ import java.util.Set;
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractAttributeContainer implements AttributeContainer, Hierarchical  {
+public abstract class AbstractAttributeContainer implements AttributeContainer, Hierarchical {
 	private final String name;
 	private final Hierarchical superType;
 	private LinkedHashSet<Attribute> attributeSet = new LinkedHashSet<Attribute>();
-	private HashMap<String,Attribute> attributeMap = new HashMap<String,Attribute>();
+	private HashMap<String, Attribute> attributeMap = new HashMap<String, Attribute>();
 
 	public AbstractAttributeContainer(String name, Hierarchical superType) {
 		this.name = name;
@@ -108,6 +108,16 @@ public abstract class AbstractAttributeContainer implements AttributeContainer, 
 		return attribute;
 	}
 
+	@Override
+	public String toString() {
+		final StringBuilder sb = new StringBuilder();
+		sb.append( "AbstractAttributeContainer" );
+		sb.append( "{name='" ).append( name ).append( '\'' );
+		sb.append( ", superType=" ).append( superType );
+		sb.append( '}' );
+		return sb.toString();
+	}
+
 	protected void addAttribute(Attribute attribute) {
 		// todo : how to best "secure" this?
 		if ( attributeMap.put( attribute.getName(), attribute ) != null ) {
@@ -168,7 +178,7 @@ public abstract class AbstractAttributeContainer implements AttributeContainer, 
 
 		private Type elementType;
 
-		public PluralAttributeImpl(String name,  PluralAttributeNature nature, AttributeContainer attributeContainer) {
+		public PluralAttributeImpl(String name, PluralAttributeNature nature, AttributeContainer attributeContainer) {
 			this.name = name;
 			this.nature = nature;
 			this.attributeContainer = attributeContainer;

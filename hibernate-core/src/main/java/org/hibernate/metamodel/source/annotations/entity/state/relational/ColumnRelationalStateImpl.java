@@ -43,7 +43,7 @@ import org.hibernate.metamodel.source.internal.MetadataImpl;
 /**
  * @author Hardy Ferentschik
  */
-public class AttributeColumnRelationalState implements ColumnRelationalState {
+public class ColumnRelationalStateImpl implements ColumnRelationalState {
 	private final NamingStrategy namingStrategy;
 	private final String columnName;
 	private final boolean unique;
@@ -61,7 +61,7 @@ public class AttributeColumnRelationalState implements ColumnRelationalState {
 	private Set<String> uniqueKeys = new HashSet<String>();
 
 
-	public AttributeColumnRelationalState(MappedAttribute attribute, MetadataImpl meta) {
+	public ColumnRelationalStateImpl(MappedAttribute attribute, MetadataImpl meta) {
 		ColumnValues columnValues = attribute.getColumnValues();
 		namingStrategy = meta.getNamingStrategy();
 		columnName = columnValues.getName().isEmpty() ? attribute.getName() : columnValues.getName();

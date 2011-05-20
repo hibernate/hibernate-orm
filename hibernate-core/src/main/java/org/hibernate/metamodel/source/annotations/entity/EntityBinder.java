@@ -52,7 +52,7 @@ import org.hibernate.metamodel.source.annotations.entity.state.binding.Discrimin
 import org.hibernate.metamodel.source.annotations.entity.state.relational.ColumnRelationalStateImpl;
 import org.hibernate.metamodel.source.annotations.entity.state.relational.TupleRelationalStateImpl;
 import org.hibernate.metamodel.source.annotations.util.JandexHelper;
-import org.hibernate.metamodel.source.internal.MetadataImpl;
+import org.hibernate.metamodel.source.spi.MetadataImplementor;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 
 /**
@@ -62,11 +62,11 @@ import org.hibernate.service.classloading.spi.ClassLoaderService;
  */
 public class EntityBinder {
 	private final ConfiguredClass configuredClass;
-	private final MetadataImpl meta;
+	private final MetadataImplementor meta;
 
 	private Schema.Name schemaName;
 
-	public EntityBinder(MetadataImpl metadata, ConfiguredClass configuredClass) {
+	public EntityBinder(MetadataImplementor metadata, ConfiguredClass configuredClass) {
 		this.configuredClass = configuredClass;
 		this.meta = metadata;
 	}
@@ -196,7 +196,7 @@ public class EntityBinder {
 		}
 
 		Caching caching = null;
-		switch ( meta.getSharedCacheMode() ) {
+		switch ( meta.getOptions().getSharedCacheMode() ) {
 			case ALL: {
 				caching = createCachingForCacheableAnnotation( entityBinding );
 				break;

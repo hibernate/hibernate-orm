@@ -38,7 +38,7 @@ import org.hibernate.metamodel.relational.state.ColumnRelationalState;
 import org.hibernate.metamodel.source.annotations.HibernateDotNames;
 import org.hibernate.metamodel.source.annotations.entity.ColumnValues;
 import org.hibernate.metamodel.source.annotations.entity.MappedAttribute;
-import org.hibernate.metamodel.source.internal.MetadataImpl;
+import org.hibernate.metamodel.source.spi.MetadataImplementor;
 
 /**
  * @author Hardy Ferentschik
@@ -61,9 +61,9 @@ public class ColumnRelationalStateImpl implements ColumnRelationalState {
 	private Set<String> uniqueKeys = new HashSet<String>();
 
 
-	public ColumnRelationalStateImpl(MappedAttribute attribute, MetadataImpl meta) {
+	public ColumnRelationalStateImpl(MappedAttribute attribute, MetadataImplementor meta) {
 		ColumnValues columnValues = attribute.getColumnValues();
-		namingStrategy = meta.getNamingStrategy();
+		namingStrategy = meta.getOptions().getNamingStrategy();
 		columnName = columnValues.getName().isEmpty() ? attribute.getName() : columnValues.getName();
 		unique = columnValues.isUnique();
 		nullable = columnValues.isNullable();

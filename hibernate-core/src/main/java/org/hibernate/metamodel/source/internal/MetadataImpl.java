@@ -30,7 +30,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.persistence.SharedCacheMode;
 
 import org.jboss.jandex.Index;
 import org.jboss.jandex.Indexer;
@@ -38,7 +37,7 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.DuplicateMappingException;
 import org.hibernate.HibernateException;
-import org.hibernate.cfg.NamingStrategy;
+import org.hibernate.SessionFactory;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.MetadataSource;
 import org.hibernate.metamodel.Metadata;
@@ -70,8 +69,8 @@ public class MetadataImpl implements Metadata, MetadataImplementor, Serializable
 	);
 
 	private final BasicServiceRegistry serviceRegistry;
-	private final NamingStrategy namingStrategy;
-	private final SharedCacheMode sharedCacheMode;
+	private final Options options;
+
 	private final Database database = new Database();
 
 	/**
@@ -83,15 +82,12 @@ public class MetadataImpl implements Metadata, MetadataImplementor, Serializable
 	private Map<String, TypeDef> typeDefs = new HashMap<String, TypeDef>();
 	private Map<String, String> imports;
 
-	public MetadataImpl(MetadataBuilderImpl builder) {
-		final MetadataSources metadataSources = builder.getSources();
-
+	public MetadataImpl(MetadataSources metadataSources, Options options) {
 		this.serviceRegistry = metadataSources.getServiceRegistry();
-		this.namingStrategy = builder.getNamingStrategy();
-		this.sharedCacheMode = builder.getSharedCacheMode();
+		this.options = options;
 
 		final ArrayList<String> processedEntityNames = new ArrayList<String>();
-		if ( builder.getSourceProcessingOrder() == SourceProcessingOrder.HBM_FIRST ) {
+		if ( options.getSourceProcessingOrder() == SourceProcessingOrder.HBM_FIRST ) {
 			applyHibernateMappings( metadataSources, processedEntityNames );
 			applyAnnotationMappings( metadataSources, processedEntityNames );
 		}
@@ -158,20 +154,25 @@ public class MetadataImpl implements Metadata, MetadataImplementor, Serializable
 		}
 	}
 
+	@Override
+	public Options getOptions() {
+		return options;
+	}
+
+	@Override
+	public SessionFactory buildSessionFactory() {
+		// todo : implement!!!!
+		return null;
+	}
+
+	@Override
 	public BasicServiceRegistry getServiceRegistry() {
 		return serviceRegistry;
 	}
 
+	@Override
 	public Database getDatabase() {
 		return database;
-	}
-
-	public NamingStrategy getNamingStrategy() {
-		return namingStrategy;
-	}
-
-	public SharedCacheMode getSharedCacheMode() {
-		return sharedCacheMode;
 	}
 
 	public EntityBinding getEntityBinding(String entityName) {

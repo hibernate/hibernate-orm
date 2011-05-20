@@ -40,8 +40,8 @@ import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.internal.util.xml.XmlDocument;
 import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.metamodel.source.internal.JaxbRoot;
-import org.hibernate.metamodel.source.internal.MetadataImpl;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping;
+import org.hibernate.metamodel.source.spi.MetadataImplementor;
 
 /**
  * Binder for {@code hbm.xml} files
@@ -51,14 +51,14 @@ import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping;
 public class HibernateXmlBinder {
 	private static final Logger log = LoggerFactory.getLogger( HibernateXmlBinder.class );
 
-	private final MetadataImpl metadata;
+	private final MetadataImplementor metadata;
 	private final Map<String, MetaAttribute> globalMetas;
 
-	public HibernateXmlBinder(MetadataImpl metadata) {
+	public HibernateXmlBinder(MetadataImplementor metadata) {
 		this( metadata, Collections.<String, MetaAttribute>emptyMap() );
 	}
 
-	public HibernateXmlBinder(MetadataImpl metadata, Map<String, MetaAttribute> globalMetas) {
+	public HibernateXmlBinder(MetadataImplementor metadata, Map<String, MetaAttribute> globalMetas) {
 		this.metadata = metadata;
 		this.globalMetas = globalMetas;
 	}
@@ -85,7 +85,7 @@ public class HibernateXmlBinder {
 		mappingBinder.processHibernateMapping();
 	}
 
-	MetadataImpl getMetadata() {
+	MetadataImplementor getMetadata() {
 		return metadata;
 	}
 

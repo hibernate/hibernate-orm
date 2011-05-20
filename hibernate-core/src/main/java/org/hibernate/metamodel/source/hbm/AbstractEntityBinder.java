@@ -70,11 +70,11 @@ import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlQueryElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSubclassElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLTuplizerElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLUnionSubclassElement;
-import org.hibernate.metamodel.source.internal.MetadataImpl;
 import org.hibernate.metamodel.binding.state.PluralAttributeBindingState;
 import org.hibernate.metamodel.binding.state.SimpleAttributeBindingState;
 import org.hibernate.metamodel.relational.state.TupleRelationalState;
 import org.hibernate.metamodel.relational.state.ValueRelationalState;
+import org.hibernate.metamodel.source.spi.MetadataImplementor;
 
 /**
  * TODO : javadoc
@@ -106,7 +106,7 @@ abstract class AbstractEntityBinder {
 		return hibernateMappingBinder.getHibernateXmlBinder();
 	}
 
-	protected MetadataImpl getMetadata() {
+	protected MetadataImplementor getMetadata() {
 		return hibernateMappingBinder.getHibernateXmlBinder().getMetadata();
 	}
 
@@ -115,7 +115,7 @@ abstract class AbstractEntityBinder {
 	}
 
 	protected NamingStrategy getNamingStrategy() {
-		return getMetadata().getNamingStrategy();
+		return getMetadata().getOptions().getNamingStrategy();
 	}
 
 	protected void basicEntityBinding(XMLHibernateMapping.XMLClass entityClazz,
@@ -243,12 +243,16 @@ abstract class AbstractEntityBinder {
 		if ( entityClazz.getTable() == null ) {
 			logicalTableName = StringHelper.unqualify( entityName );
 			physicalTableName = getHibernateXmlBinder().getMetadata()
+					.getOptions()
 					.getNamingStrategy()
 					.classToTableName( entityName );
 		}
 		else {
 			logicalTableName = entityClazz.getTable();
-			physicalTableName = getHibernateXmlBinder().getMetadata().getNamingStrategy().tableName( logicalTableName );
+			physicalTableName = getHibernateXmlBinder().getMetadata()
+					.getOptions()
+					.getNamingStrategy()
+					.tableName( logicalTableName );
 		}
 // todo : find out the purpose of these logical bindings
 //			mappings.addTableBinding( schema, catalog, logicalTableName, physicalTableName, denormalizedSuperTable );

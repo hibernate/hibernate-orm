@@ -43,4 +43,19 @@ public class ConfigurationServiceImpl implements ConfigurationService {
 	public Map getSettings() {
 		return settings;
 	}
+
+	@Override
+	public <T> T getSetting(String name, Converter<T> converter) {
+		return getSetting( name, converter, null );
+	}
+
+	@Override
+	public <T> T getSetting(String name, Converter<T> converter, T defaultValue) {
+		final Object value = settings.get( name );
+		if ( value == null ) {
+			return defaultValue;
+		}
+
+		return converter.convert( value );
+	}
 }

@@ -25,63 +25,121 @@ package org.hibernate.metamodel.source.internal;
 
 import javax.persistence.SharedCacheMode;
 
+import org.hibernate.cache.spi.access.AccessType;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.EJB3NamingStrategy;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.metamodel.Metadata;
 import org.hibernate.metamodel.MetadataBuilder;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.SourceProcessingOrder;
+import org.hibernate.service.BasicServiceRegistry;
+import org.hibernate.service.config.spi.ConfigurationService;
 
 /**
  * @author Steve Ebersole
  */
 public class MetadataBuilderImpl implements MetadataBuilder {
 	private final MetadataSources sources;
-
-	private NamingStrategy namingStrategy = EJB3NamingStrategy.INSTANCE;
-	private SourceProcessingOrder sourceProcessingOrder = SourceProcessingOrder.HBM_FIRST;
-	private SharedCacheMode sharedCacheMode = SharedCacheMode.ENABLE_SELECTIVE;
+	private final OptionsImpl options;
 
 	public MetadataBuilderImpl(MetadataSources sources) {
 		this.sources = sources;
-	}
-
-	public MetadataSources getSources() {
-		return sources;
-	}
-
-	public NamingStrategy getNamingStrategy() {
-		return namingStrategy;
-	}
-
-	public SharedCacheMode getSharedCacheMode() {
-		return sharedCacheMode;
-	}
-
-	public SourceProcessingOrder getSourceProcessingOrder() {
-		return sourceProcessingOrder;
+		this.options = new OptionsImpl( sources.getServiceRegistry() );
 	}
 
 	@Override
 	public MetadataBuilder with(NamingStrategy namingStrategy) {
-		this.namingStrategy = namingStrategy;
+		this.options.namingStrategy = namingStrategy;
 		return this;
 	}
 
 	@Override
 	public MetadataBuilder with(SourceProcessingOrder sourceProcessingOrder) {
-		this.sourceProcessingOrder = sourceProcessingOrder;
+		this.options.sourceProcessingOrder = sourceProcessingOrder;
 		return this;
 	}
 
 	@Override
 	public MetadataBuilder with(SharedCacheMode sharedCacheMode) {
-		this.sharedCacheMode = sharedCacheMode;
+		this.options.sharedCacheMode = sharedCacheMode;
+		return this;
+	}
+
+	@Override
+	public MetadataBuilder with(AccessType accessType) {
+		this.options.defaultCacheAccessType = accessType;
+		return this;
+	}
+
+	@Override
+	public MetadataBuilder withNewIdentifierGeneratorsEnabled(boolean enabled) {
+		this.options.useNewIdentifierGenerators = enabled;
 		return this;
 	}
 
 	@Override
 	public Metadata buildMetadata() {
-		return new MetadataImpl( this );
+		return new MetadataImpl( sources, options );
 	}
+
+	private static class OptionsImpl implements Metadata.Options {
+		private SourceProcessingOrder sourceProcessingOrder = SourceProcessingOrder.HBM_FIRST;
+		private NamingStrategy namingStrategy = EJB3NamingStrategy.INSTANCE;
+		private SharedCacheMode sharedCacheMode = SharedCacheMode.ENABLE_SELECTIVE;
+		private AccessType defaultCacheAccessType;
+        private boolean useNewIdentifierGenerators;
+
+		public OptionsImpl(BasicServiceRegistry serviceRegistry) {
+			ConfigurationService configService = serviceRegistry.getService( ConfigurationService.class );
+
+			// cache access type
+			defaultCacheAccessType = configService.getSetting(
+					AvailableSettings.DEFAULT_CACHE_CONCURRENCY_STRATEGY,
+					new ConfigurationService.Converter<AccessType>() {
+						@Override
+						public AccessType convert(Object value) {
+							return AccessType.fromExternalName( value.toString() );
+						}
+					}
+			);
+
+			useNewIdentifierGenerators = configService.getSetting(
+					AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS,
+					new ConfigurationService.Converter<Boolean>() {
+						@Override
+						public Boolean convert(Object value) {
+							return Boolean.parseBoolean( value.toString() );
+						}
+					},
+					false
+			);
+		}
+
+
+		@Override
+		public SourceProcessingOrder getSourceProcessingOrder() {
+			return sourceProcessingOrder;
+		}
+
+		@Override
+		public NamingStrategy getNamingStrategy() {
+			return namingStrategy;
+		}
+
+		@Override
+		public AccessType getDefaultAccessType() {
+			return defaultCacheAccessType;
+		}
+
+		@Override
+		public SharedCacheMode getSharedCacheMode() {
+			return sharedCacheMode;
+		}
+
+		@Override
+        public boolean useNewIdentifierGenerators() {
+            return useNewIdentifierGenerators;
+        }
+    }
 }

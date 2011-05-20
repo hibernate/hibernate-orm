@@ -133,7 +133,7 @@ public class HibernateMappingBinder implements MappingDefaults {
 	}
 
 	public NamingStrategy getNamingStrategy() {
-		return hibernateXmlBinder.getMetadata().getNamingStrategy();
+		return hibernateXmlBinder.getMetadata().getOptions().getNamingStrategy();
 	}
 
 	public String getPackageName() {

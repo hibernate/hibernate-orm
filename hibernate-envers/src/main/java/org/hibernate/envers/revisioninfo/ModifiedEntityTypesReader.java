@@ -21,7 +21,7 @@ public class ModifiedEntityTypesReader {
 
     @SuppressWarnings({"unchecked"})
     public Set<Class> getModifiedEntityTypes(Object revisionEntity) {
-        // The default mechanism of tracking entity types that have been changed during each revision, stores
+        // The default mechanism of tracking entity types that have been changed during each revision stores
         // fully qualified Java class names.
         Set<String> modifiedEntityClassNames = (Set<String>) modifiedEntityTypesGetter.get(revisionEntity);
         if (modifiedEntityClassNames != null) {

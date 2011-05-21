@@ -48,8 +48,7 @@ public class EntitiesAtRevisionQuery extends AbstractAuditQuery {
     }
     
 	public EntitiesAtRevisionQuery(AuditConfiguration verCfg,
-                                   AuditReaderImplementor versionsReader, Class<?> cls, String entityName,
-                                   Number revision) {
+			AuditReaderImplementor versionsReader, Class<?> cls, String entityName, Number revision) {
 		super(verCfg, versionsReader, cls, entityName);
 		this.revision = revision;
 	}    
@@ -85,9 +84,9 @@ public class EntitiesAtRevisionQuery extends AbstractAuditQuery {
         verCfg.getAuditStrategy().addEntityAtRevisionRestriction(verCfg.getGlobalCfg(), qb, revisionPropertyPath, 
         		verEntCfg.getRevisionEndFieldName(), true, referencedIdData, 
 				revisionPropertyPath, originalIdPropertyName, "e", "e2");
-
-        // e.revision_type != DEL
-        qb.getRootParameters().addWhereWithParam(verEntCfg.getRevisionTypePropName(), "<>", RevisionType.DEL);
+        
+         // e.revision_type != DEL
+         qb.getRootParameters().addWhereWithParam(verEntCfg.getRevisionTypePropName(), "<>", RevisionType.DEL);
 
         // all specified conditions
         for (AuditCriterion criterion : criterions) {

@@ -24,9 +24,14 @@
 package org.hibernate.envers.reader;
 import static org.hibernate.envers.tools.ArgumentsTools.checkNotNull;
 import static org.hibernate.envers.tools.ArgumentsTools.checkPositive;
-
-import java.lang.reflect.Member;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import javax.persistence.NoResultException;
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
@@ -55,7 +60,6 @@ public class AuditReaderImpl implements AuditReaderImplementor {
     private final SessionImplementor sessionImplementor;
     private final Session session;
     private final FirstLevelCache firstLevelCache;
-    private Member modifiedEntityTypesProperty = null;
 
     public AuditReaderImpl(AuditConfiguration verCfg, Session session,
                               SessionImplementor sessionImplementor) {
@@ -297,7 +301,7 @@ public class AuditReaderImpl implements AuditReaderImplementor {
         return Collections.EMPTY_SET;
     }
 
-    @SuppressWarnings({"unchecked"})
+	@SuppressWarnings({"unchecked"})
 	public <T> T getCurrentRevision(Class<T> revisionEntityClass, boolean persist) {
 		if (!(session instanceof EventSource)) {
 			throw new IllegalArgumentException("The provided session is not an EventSource!");

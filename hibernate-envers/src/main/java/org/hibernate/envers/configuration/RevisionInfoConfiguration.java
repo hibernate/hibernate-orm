@@ -34,7 +34,14 @@ import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.envers.*;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.DefaultRevisionEntity;
+import org.hibernate.envers.DefaultTrackingModifiedTypesRevisionEntity;
+import org.hibernate.envers.ModifiedEntityTypes;
+import org.hibernate.envers.RevisionEntity;
+import org.hibernate.envers.RevisionListener;
+import org.hibernate.envers.RevisionNumber;
+import org.hibernate.envers.RevisionTimestamp;
 import org.hibernate.envers.configuration.metadata.AuditTableData;
 import org.hibernate.envers.configuration.metadata.MetadataTools;
 import org.hibernate.envers.entities.PropertyData;
@@ -87,7 +94,7 @@ public class RevisionInfoConfiguration {
         MetadataTools.addColumn(timestampProperty, "REVTSTMP", null, 0, 0, null, null, null, false);
 
         if (globalCfg.isTrackEntitiesChangedInRevisionEnabled()) {
-            generateEntityNamesTrackingTableMapping(class_mapping, "modifiedEntityTypes", "REVENTITY", "REV", "ENTITYTYPE", "string");
+            generateEntityTypesTrackingTableMapping(class_mapping, "modifiedEntityTypes", "REVENTITY", "REV", "ENTITYTYPE", "string");
         }
 
         return document;
@@ -104,7 +111,7 @@ public class RevisionInfoConfiguration {
      * &lt;/set&gt;
      * </code>
      */
-    private void generateEntityNamesTrackingTableMapping(Element class_mapping, String propertyName,
+    private void generateEntityTypesTrackingTableMapping(Element class_mapping, String propertyName,
                                                          String joinTableName, String joinTablePrimaryKeyColumnName,
                                                          String joinTableValueColumnName, String joinTableValueColumnType) {
         Element set = class_mapping.addElement("set");

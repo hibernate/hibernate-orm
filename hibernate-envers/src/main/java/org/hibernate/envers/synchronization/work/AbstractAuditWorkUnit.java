@@ -23,16 +23,15 @@
  */
 package org.hibernate.envers.synchronization.work;
 
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 import org.hibernate.Session;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.configuration.AuditEntitiesConfiguration;
 import org.hibernate.envers.strategy.AuditStrategy;
-
-import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * @author Adam Warski (adam at warski dot org)

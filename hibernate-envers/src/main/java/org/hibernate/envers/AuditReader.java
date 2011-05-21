@@ -191,7 +191,7 @@ public interface AuditReader {
 	/**
 	 * Checks if the entityName was configured to be audited.
 	 * 
-	 * @param entityName
+	 * @param entityClass
 	 *            EntityName of the entity asking for audit support.
 	 * @return true if the entityName is audited.
 	 */
@@ -234,7 +234,7 @@ public interface AuditReader {
      * where <i>n</i> is a number of different entity classes modified within specified revision.
      * @param revision Revision number.
      * @param revisionType Type of modification.
-     * @return Snapshots of all audited entities changed in a given revision filtered by modification type.
+     * @return Snapshots of all audited entities changed in a given revision and filtered by modification type.
      * @throws IllegalStateException If the associated entity manager is closed.
      * @throws IllegalArgumentException If a revision number is <code>null</code>, less or equal to 0.
      * @throws AuditException If none of the following conditions is satisfied:

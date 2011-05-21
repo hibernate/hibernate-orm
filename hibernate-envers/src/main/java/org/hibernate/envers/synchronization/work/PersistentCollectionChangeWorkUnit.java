@@ -23,8 +23,10 @@
  */
 package org.hibernate.envers.synchronization.work;
 import java.io.Serializable;
-import java.util.*;
-
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.hibernate.Session;
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.engine.CollectionEntry;
@@ -79,7 +81,7 @@ public class PersistentCollectionChangeWorkUnit extends AbstractAuditWorkUnit im
             // Setting the revision number
             ((Map<String, Object>) persistentCollectionChangeData.getData().get(entitiesCfg.getOriginalIdPropName()))
                     .put(entitiesCfg.getRevisionFieldName(), revisionData);
-            
+
             auditStrategy.performCollectionChange(session, verCfg, persistentCollectionChangeData, revisionData);
         }
     }

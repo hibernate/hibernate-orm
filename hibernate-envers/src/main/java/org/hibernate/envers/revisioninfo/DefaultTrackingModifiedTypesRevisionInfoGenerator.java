@@ -1,5 +1,7 @@
 package org.hibernate.envers.revisioninfo;
 
+import org.hibernate.envers.DefaultTrackingModifiedTypesRevisionEntity;
+import org.hibernate.envers.ModifiedEntityTypes;
 import org.hibernate.envers.RevisionListener;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.entities.PropertyData;
@@ -12,17 +14,16 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Automatically adds entity names changed during current revision.
- * @see org.hibernate.envers.ModifiedEntityTypes
- * @see org.hibernate.envers.DefaultTrackingModifiedTypesRevisionEntity
+ * Automatically adds entity class names that have been changed during current revision to revision entity.
+ * @see ModifiedEntityTypes
+ * @see DefaultTrackingModifiedTypesRevisionEntity
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public class DefaultTrackingModifiedTypesRevisionInfoGenerator extends DefaultRevisionInfoGenerator {
     private final Setter modifiedEntityTypesSetter;
     private final Getter modifiedEntityTypesGetter;
 
-    public DefaultTrackingModifiedTypesRevisionInfoGenerator(String revisionInfoEntityName,
-                                                             Class<?> revisionInfoClass,
+    public DefaultTrackingModifiedTypesRevisionInfoGenerator(String revisionInfoEntityName, Class<?> revisionInfoClass,
                                                              Class<? extends RevisionListener> listenerClass,
                                                              PropertyData revisionInfoTimestampData, boolean timestampAsDate,
                                                              PropertyData modifiedEntityTypesData) {

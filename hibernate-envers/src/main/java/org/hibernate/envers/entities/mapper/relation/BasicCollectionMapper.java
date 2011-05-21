@@ -38,8 +38,8 @@ import org.hibernate.collection.PersistentCollection;
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public final class BasicCollectionMapper<T extends Collection> extends AbstractCollectionMapper<T> implements PropertyMapper {
-    private final MiddleComponentData elementComponentData;
+public class BasicCollectionMapper<T extends Collection> extends AbstractCollectionMapper<T> implements PropertyMapper {
+    protected final MiddleComponentData elementComponentData;
 
     public BasicCollectionMapper(CommonCollectionMapperData commonCollectionMapperData,
                                  Class<? extends T> collectionClass, Class<? extends T> proxyClass,

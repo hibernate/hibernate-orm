@@ -51,6 +51,8 @@ import org.hibernate.envers.entities.mapper.relation.BasicCollectionMapper;
 import org.hibernate.envers.entities.mapper.relation.CommonCollectionMapperData;
 import org.hibernate.envers.entities.mapper.relation.ListCollectionMapper;
 import org.hibernate.envers.entities.mapper.relation.MapCollectionMapper;
+import org.hibernate.envers.entities.mapper.relation.SortedMapCollectionMapper;
+import org.hibernate.envers.entities.mapper.relation.SortedSetCollectionMapper;
 import org.hibernate.envers.entities.mapper.relation.MiddleComponentData;
 import org.hibernate.envers.entities.mapper.relation.MiddleIdData;
 import org.hibernate.envers.entities.mapper.relation.ToOneIdMapper;
@@ -478,18 +480,18 @@ public final class CollectionMetadataGenerator {
                            MiddleComponentData indexComponentData) {
         Type type = propertyValue.getType();
         if (type instanceof SortedSetType) {
-            currentMapper.addComposite(propertyAuditingData.getPropertyData(),
-                    new BasicCollectionMapper<Set>(commonCollectionMapperData,
-                    TreeSet.class, SortedSetProxy.class, elementComponentData));
-        } else if (type instanceof SetType) {
-            currentMapper.addComposite(propertyAuditingData.getPropertyData(),
+			currentMapper.addComposite(propertyAuditingData.getPropertyData(),
+					new SortedSetCollectionMapper(commonCollectionMapperData,
+							TreeSet.class, SortedSetProxy.class, elementComponentData, propertyValue.getComparator()));
+		} else if (type instanceof SetType) {
+			currentMapper.addComposite(propertyAuditingData.getPropertyData(),
                     new BasicCollectionMapper<Set>(commonCollectionMapperData,
                     HashSet.class, SetProxy.class, elementComponentData));
         } else if (type instanceof SortedMapType) {
             // Indexed collection, so <code>indexComponentData</code> is not null.
-            currentMapper.addComposite(propertyAuditingData.getPropertyData(),
-                    new MapCollectionMapper<Map>(commonCollectionMapperData,
-                    TreeMap.class, SortedMapProxy.class, elementComponentData, indexComponentData));
+			currentMapper.addComposite(propertyAuditingData.getPropertyData(),
+					new SortedMapCollectionMapper(commonCollectionMapperData,
+							TreeMap.class, SortedMapProxy.class, elementComponentData, indexComponentData, propertyValue.getComparator()));
         } else if (type instanceof MapType) {
             // Indexed collection, so <code>indexComponentData</code> is not null.
             currentMapper.addComposite(propertyAuditingData.getPropertyData(),

@@ -29,14 +29,14 @@ import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.envers.test.entities.StrTestEntityComparator;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.ManyToMany;
+import javax.persistence.*;
+import java.util.SortedMap;
 import java.util.SortedSet;
+import java.util.TreeMap;
 import java.util.TreeSet;
 
 /**
- * Entity with custom-ordered SortedSet
+ * Entity with custom-ordered SortedSet and SortedMap
  *
  * @author Michal Skowronek (mskowr at o2 pl)
  */
@@ -52,6 +52,11 @@ public class SortedSetEntity {
     @ManyToMany
     @Sort(type = SortType.COMPARATOR, comparator = StrTestEntityComparator.class)
     private SortedSet<StrTestEntity> sortedSet = new TreeSet<StrTestEntity>(StrTestEntityComparator.INSTANCE);
+    @Audited
+	@ElementCollection
+	@MapKeyJoinColumn
+    @Sort(type = SortType.COMPARATOR, comparator = StrTestEntityComparator.class)
+    private SortedMap<StrTestEntity, String> sortedMap = new TreeMap<StrTestEntity, String>(StrTestEntityComparator.INSTANCE);
 
     public SortedSetEntity() {
     }
@@ -89,17 +94,22 @@ public class SortedSetEntity {
         this.sortedSet = sortedSet;
     }
 
-    public boolean equals(Object o) {
+	public SortedMap<StrTestEntity, String> getSortedMap() {
+		return sortedMap;
+	}
+
+	public void setSortedMap(SortedMap<StrTestEntity, String> sortedMap) {
+		this.sortedMap = sortedMap;
+	}
+
+	public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof SortedSetEntity)) return false;
 
         SortedSetEntity that = (SortedSetEntity) o;
 
-        if (data != null ? !data.equals(that.data) : that.data != null) return false;
-        if (id != null ? !id.equals(that.id) : that.id != null) return false;
-
-        return true;
-    }
+		return !(data != null ? !data.equals(that.data) : that.data != null) && !(id != null ? !id.equals(that.id) : that.id != null);
+	}
 
     public int hashCode() {
         int result;

@@ -38,7 +38,7 @@ import org.hibernate.envers.reader.AuditReaderImplementor;
  * @author Adam Warski (adam at warski dot org)
  */
 public class BasicCollectionInitializor<T extends Collection> extends AbstractCollectionInitializor<T> {
-    private final Class<? extends T> collectionClass;
+    protected final Class<? extends T> collectionClass;
     private final MiddleComponentData elementComponentData;
 
     public BasicCollectionInitializor(AuditConfiguration verCfg,

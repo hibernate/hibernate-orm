@@ -9,12 +9,8 @@ import java.util.Set;
 
 /**
  * Extension of {@link DefaultRevisionEntity} that allows tracking entity types changed in each revision. This revision
- * entity is implicitly used when one of the following conditions is satisfied:
- * <ul>
- * <li><code>org.hibernate.envers.track_entities_changed_in_revision</code> parameter is set to <code>true</code>.</li>
- * <li>Custom revision entity (annotated with {@link RevisionEntity}) extends {@link DefaultTrackingModifiedTypesRevisionEntity}.</li>
- * <li>Custom revision entity (annotated with {@link RevisionEntity}) encapsulates a field marked with {@link ModifiedEntityTypes}.</li>
- * </ul>
+ * entity is implicitly used when  <code>org.hibernate.envers.track_entities_changed_in_revision</code> parameter
+ * is set to <code>true</code>.
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @MappedSuperclass
@@ -54,6 +50,6 @@ public class DefaultTrackingModifiedTypesRevisionEntity extends DefaultRevisionE
     }
 
     public String toString() {
-        return "DefaultTrackingModifiedTypesRevisionEntity(" + super.toString() + ", modifiedEntityTypes = " + modifiedEntityTypes.toString() + ")";
+        return "DefaultTrackingModifiedTypesRevisionEntity(" + super.toString() + ", modifiedEntityTypes = " + modifiedEntityTypes + ")";
     }
 }

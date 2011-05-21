@@ -45,7 +45,12 @@ import org.hibernate.envers.RevisionTimestamp;
 import org.hibernate.envers.configuration.metadata.AuditTableData;
 import org.hibernate.envers.configuration.metadata.MetadataTools;
 import org.hibernate.envers.entities.PropertyData;
-import org.hibernate.envers.revisioninfo.*;
+import org.hibernate.envers.revisioninfo.DefaultRevisionInfoGenerator;
+import org.hibernate.envers.revisioninfo.DefaultTrackingModifiedTypesRevisionInfoGenerator;
+import org.hibernate.envers.revisioninfo.ModifiedEntityTypesReader;
+import org.hibernate.envers.revisioninfo.RevisionInfoGenerator;
+import org.hibernate.envers.revisioninfo.RevisionInfoNumberReader;
+import org.hibernate.envers.revisioninfo.RevisionInfoQueryCreator;
 import org.hibernate.envers.tools.MutableBoolean;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.type.LongType;
@@ -101,7 +106,7 @@ public class RevisionInfoConfiguration {
     }
 
     /**
-     * Generates mapping that represents a set of strings.<br />
+     * Generates mapping that represents a set of primitive types.<br />
      * <code>
      * &lt;set name="propertyName" table="joinTableName" cascade="persist, delete" lazy="false" fetch="join"&gt;<br />
      * &nbsp;&nbsp;&nbsp;&lt;key column="joinTablePrimaryKeyColumnName" /&gt;<br />
@@ -209,7 +214,7 @@ public class RevisionInfoConfiguration {
                     modifiedEntityTypesData = new PropertyData(property.getName(), property.getName(), accessType, null);
                     modifiedEntityTypesFound.set();
                 } else {
-                    throw new MappingException("The field annotated with @ModifiedEntityTypes must be of type Set<String>.");
+                    throw new MappingException("The field annotated with @ModifiedEntityTypes must be of Set<String> type.");
                 }
             }
         }

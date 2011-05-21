@@ -24,7 +24,6 @@
 package org.hibernate.envers.query;
 import static org.hibernate.envers.tools.ArgumentsTools.checkNotNull;
 import static org.hibernate.envers.tools.ArgumentsTools.checkPositive;
-
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.query.impl.EntitiesModifiedAtRevisionQuery;
 import org.hibernate.envers.query.impl.EntitiesAtRevisionQuery;

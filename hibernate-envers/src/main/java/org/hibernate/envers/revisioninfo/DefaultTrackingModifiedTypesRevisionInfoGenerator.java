@@ -14,7 +14,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Automatically adds entity class names that have been changed during current revision to revision entity.
+ * Automatically adds entity class names, that have been changed during current revision, to revision entity.
  * @see ModifiedEntityTypes
  * @see DefaultTrackingModifiedTypesRevisionEntity
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)

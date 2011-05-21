@@ -22,21 +22,23 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.entities.mapper.relation.lazy.initializor;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.entities.mapper.relation.MiddleComponentData;
 import org.hibernate.envers.entities.mapper.relation.query.RelationQueryGenerator;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.reader.AuditReaderImplementor;
 
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+
 /**
  * Initializes a non-indexed java collection (set or list, eventually sorted).
  * @author Adam Warski (adam at warski dot org)
  */
 public class BasicCollectionInitializor<T extends Collection> extends AbstractCollectionInitializor<T> {
-    private final Class<? extends T> collectionClass;
+    protected final Class<? extends T> collectionClass;
     private final MiddleComponentData elementComponentData;
 
     public BasicCollectionInitializor(AuditConfiguration verCfg,

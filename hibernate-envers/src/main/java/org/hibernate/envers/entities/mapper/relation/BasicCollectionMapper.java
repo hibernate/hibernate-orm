@@ -22,9 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.entities.mapper.relation;
-import java.io.Serializable;
-import java.util.Collection;
-import java.util.Map;
+
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.entities.mapper.PropertyMapper;
@@ -32,11 +30,15 @@ import org.hibernate.envers.entities.mapper.relation.lazy.initializor.BasicColle
 import org.hibernate.envers.entities.mapper.relation.lazy.initializor.Initializor;
 import org.hibernate.envers.reader.AuditReaderImplementor;
 
+import java.io.Serializable;
+import java.util.Collection;
+import java.util.Map;
+
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public final class BasicCollectionMapper<T extends Collection> extends AbstractCollectionMapper<T> implements PropertyMapper {
-    private final MiddleComponentData elementComponentData;
+public class BasicCollectionMapper<T extends Collection> extends AbstractCollectionMapper<T> implements PropertyMapper {
+    protected final MiddleComponentData elementComponentData;
 
     public BasicCollectionMapper(CommonCollectionMapperData commonCollectionMapperData,
                                  Class<? extends T> collectionClass, Class<? extends T> proxyClass,

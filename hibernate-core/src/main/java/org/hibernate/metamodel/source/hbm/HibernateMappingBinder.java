@@ -32,7 +32,6 @@ import org.hibernate.MappingException;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.MetadataSource;
-import org.hibernate.metamodel.binding.MappingDefaults;
 import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.metamodel.source.Origin;
 import org.hibernate.metamodel.source.internal.JaxbRoot;
@@ -46,12 +45,16 @@ import org.hibernate.metamodel.source.hbm.xml.mapping.XMLQueryElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlQueryElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSubclassElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLUnionSubclassElement;
-import org.hibernate.metamodel.source.util.MappingHelper;
+import org.hibernate.metamodel.source.hbm.util.MappingHelper;
+import org.hibernate.service.ServiceRegistry;
 
 /**
  * Responsible for performing binding of the {@code <hibernate-mapping/>} DOM element
  */
 public class HibernateMappingBinder implements MappingDefaults {
+	private static final String DEFAULT_IDENTIFIER_COLUMN_NAME = "id";
+	private static final String DEFAULT_DISCRIMINATOR_COLUMN_NAME = "class";
+
 	private final HibernateXmlBinder hibernateXmlBinder;
 	private final JaxbRoot<XMLHibernateMapping> jaxbRoot;
 	private final XMLHibernateMapping hibernateMapping;
@@ -103,6 +106,15 @@ public class HibernateMappingBinder implements MappingDefaults {
 		return defaultCatalogName;
 	}
 
+	public String getDefaultIdColumnName() {
+		return DEFAULT_IDENTIFIER_COLUMN_NAME;
+
+
+	}
+	public String getDefaultDiscriminatorColumnName() {
+		return DEFAULT_DISCRIMINATOR_COLUMN_NAME;
+	}
+
 	public String getDefaultCascade() {
 		return defaultCascade;
 	}
@@ -115,8 +127,13 @@ public class HibernateMappingBinder implements MappingDefaults {
 		return defaultLazy;
 	}
 
+	@Override
+	public ServiceRegistry getServiceRegistry() {
+		return hibernateXmlBinder.getMetadata().getServiceRegistry();
+	}
+
 	public NamingStrategy getNamingStrategy() {
-		return hibernateXmlBinder.getMetadata().getNamingStrategy();
+		return hibernateXmlBinder.getMetadata().getOptions().getNamingStrategy();
 	}
 
 	public String getPackageName() {

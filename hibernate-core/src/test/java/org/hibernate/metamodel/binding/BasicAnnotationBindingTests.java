@@ -27,8 +27,6 @@ import org.junit.Test;
 
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
-import org.hibernate.metamodel.source.spi.MetadataImplementor;
-import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.testing.FailureExpected;
 
 /**
@@ -43,26 +41,20 @@ public class BasicAnnotationBindingTests extends AbstractBasicBindingTests {
 		super.testEntityWithManyToOneMapping();
 	}
 
-	public EntityBinding buildSimpleEntityBinding() {
-		MetadataSources sources = new MetadataSources( new ServiceRegistryBuilder().buildServiceRegistry() );
+	public MetadataImpl addSourcesForSimpleEntityBinding(MetadataSources sources) {
 		sources.addAnnotatedClass( SimpleEntity.class );
-		MetadataImpl metadata = (MetadataImpl) sources.buildMetadata();
+		return (MetadataImpl) sources.buildMetadata();
 
-		return metadata.getEntityBinding( SimpleEntity.class.getSimpleName() );
 	}
 
-	public EntityBinding buildSimpleVersionedEntityBinding() {
-		MetadataSources sources = new MetadataSources( new ServiceRegistryBuilder().buildServiceRegistry() );
+	public MetadataImpl addSourcesForSimpleVersionedEntityBinding(MetadataSources sources) {
 		sources.addAnnotatedClass( SimpleVersionedEntity.class );
-		MetadataImpl metadata = (MetadataImpl) sources.buildMetadata();
-
-		return metadata.getEntityBinding( SimpleVersionedEntity.class.getSimpleName() );
+		return (MetadataImpl) sources.buildMetadata();
 	}
 
-	public MetadataImplementor buildMetadataWithManyToOne() {
-		MetadataSources sources = new MetadataSources( new ServiceRegistryBuilder().buildServiceRegistry() );
-		sources.addAnnotatedClass( EntityWithManyToOne.class );
-		sources.addAnnotatedClass( SimpleVersionedEntity.class );
-		return (MetadataImplementor) sources.buildMetadata();
+	public MetadataImpl addSourcesForManyToOne(MetadataSources sources) {
+		sources.addAnnotatedClass( ManyToOneEntity.class );
+		sources.addAnnotatedClass( SimpleEntity.class );
+		return (MetadataImpl) sources.buildMetadata();
 	}
 }

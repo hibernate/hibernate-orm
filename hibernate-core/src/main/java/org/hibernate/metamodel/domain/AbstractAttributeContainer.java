@@ -35,11 +35,11 @@ import java.util.Set;
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractAttributeContainer implements AttributeContainer, Hierarchical  {
+public abstract class AbstractAttributeContainer implements AttributeContainer, Hierarchical {
 	private final String name;
 	private final Hierarchical superType;
 	private LinkedHashSet<Attribute> attributeSet = new LinkedHashSet<Attribute>();
-	private HashMap<String,Attribute> attributeMap = new HashMap<String,Attribute>();
+	private HashMap<String, Attribute> attributeMap = new HashMap<String, Attribute>();
 
 	public AbstractAttributeContainer(String name, Hierarchical superType) {
 		this.name = name;
@@ -108,6 +108,16 @@ public abstract class AbstractAttributeContainer implements AttributeContainer, 
 		return attribute;
 	}
 
+	@Override
+	public String toString() {
+		final StringBuilder sb = new StringBuilder();
+		sb.append( "AbstractAttributeContainer" );
+		sb.append( "{name='" ).append( name ).append( '\'' );
+		sb.append( ", superType=" ).append( superType );
+		sb.append( '}' );
+		return sb.toString();
+	}
+
 	protected void addAttribute(Attribute attribute) {
 		// todo : how to best "secure" this?
 		if ( attributeMap.put( attribute.getName(), attribute ) != null ) {
@@ -121,15 +131,27 @@ public abstract class AbstractAttributeContainer implements AttributeContainer, 
 	public static class SingularAttributeImpl implements SingularAttribute {
 		private final AttributeContainer attributeContainer;
 		private final String name;
+		private Type type;
 
 		public SingularAttributeImpl(String name, AttributeContainer attributeContainer) {
 			this.name = name;
 			this.attributeContainer = attributeContainer;
 		}
 
+		boolean isTypeResolved() {
+			return type != null;
+		}
+
+		void resolveType(Type type) {
+			if ( type == null ) {
+				throw new IllegalArgumentException( "Attempt to resolve with null type" );
+			}
+			this.type = type;
+		}
+
 		@Override
 		public Type getSingularAttributeType() {
-			return null;
+			return type;
 		}
 
 		@Override
@@ -152,10 +174,11 @@ public abstract class AbstractAttributeContainer implements AttributeContainer, 
 		private final AttributeContainer attributeContainer;
 		private final PluralAttributeNature nature;
 		private final String name;
+		private String nodeName;
 
 		private Type elementType;
 
-		public PluralAttributeImpl(String name,  PluralAttributeNature nature, AttributeContainer attributeContainer) {
+		public PluralAttributeImpl(String name, PluralAttributeNature nature, AttributeContainer attributeContainer) {
 			this.name = name;
 			this.nature = nature;
 			this.attributeContainer = attributeContainer;

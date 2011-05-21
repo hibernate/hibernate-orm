@@ -30,5 +30,4 @@ package org.hibernate.service.spi;
  * @author Steve Ebersole
  */
 public interface SessionFactoryServiceRegistry extends ServiceRegistryImplementor {
-	public void registerServiceInitiator(SessionFactoryServiceInitiator initiator);
 }

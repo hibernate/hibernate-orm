@@ -24,9 +24,28 @@
 
 package org.hibernate.metamodel;
 
+import javax.persistence.SharedCacheMode;
+
+import org.hibernate.SessionFactory;
+import org.hibernate.cache.spi.access.AccessType;
+import org.hibernate.cfg.NamingStrategy;
+
 /**
  * @author Steve Ebersole
  */
 public interface Metadata {
+	/**
+	 * Exposes the options used to produce a {@link Metadata} instance.
+	 */
+	public static interface Options {
+		public SourceProcessingOrder getSourceProcessingOrder();
+		public NamingStrategy getNamingStrategy();
+		public SharedCacheMode getSharedCacheMode();
+		public AccessType getDefaultAccessType();
+		public boolean useNewIdentifierGenerators();
+	}
 
+	public Options getOptions();
+
+	public SessionFactory buildSessionFactory();
 }

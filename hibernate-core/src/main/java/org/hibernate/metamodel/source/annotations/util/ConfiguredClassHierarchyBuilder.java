@@ -36,8 +36,9 @@ import org.jboss.jandex.DotName;
 import org.jboss.jandex.Index;
 
 import org.hibernate.AnnotationException;
-import org.hibernate.metamodel.source.annotations.ConfiguredClassHierarchy;
+import org.hibernate.metamodel.source.annotations.entity.ConfiguredClassHierarchy;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
+import org.hibernate.metamodel.source.annotations.entity.ConfiguredClassHierarchy;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 

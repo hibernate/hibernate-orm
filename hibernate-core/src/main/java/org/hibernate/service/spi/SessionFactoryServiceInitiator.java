@@ -30,14 +30,7 @@ import org.hibernate.service.Service;
 /**
  * @author Steve Ebersole
  */
-public interface SessionFactoryServiceInitiator<R extends Service> {
-	/**
-	 * Obtains the service role initiated by this initiator.  Should be unique within a registry
-	 *
-	 * @return The service role.
-	 */
-	public Class<R> getServiceInitiated();
-
+public interface SessionFactoryServiceInitiator<R extends Service> extends ServiceInitiator<R>{
 	/**
 	 * Initiates the managed service.
 	 * <p/>

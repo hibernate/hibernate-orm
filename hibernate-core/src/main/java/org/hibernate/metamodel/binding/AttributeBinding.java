@@ -74,27 +74,14 @@ public interface AttributeBinding {
 	public Map<String, MetaAttribute> getMetaAttributes();
 
 	/**
-	 * In the case that {@link #getValue()} represents a {@link org.hibernate.metamodel.relational.Tuple} this method
+	 * @return In the case that {@link #getValue()} represents a {@link org.hibernate.metamodel.relational.Tuple} this method
 	 * gives access to its compound values.  In the case of {@link org.hibernate.metamodel.relational.SimpleValue},
 	 * we return an Iterable over that single simple value.
-	 *
-	 * @return
 	 */
 	public Iterable<SimpleValue> getValues();
 
-	/**
-	 * @return
-	 *
-	 * @deprecated Use {@link #getValue()}.{@link Value#getTable() getTable()} instead; to be removed on completion of new metamodel code
-	 */
-	@Deprecated
-	public TableSpecification getTable();
-
 	public String getPropertyAccessorName();
 
-	/**
-	 * @return
-	 */
 	public boolean hasFormula();
 
 	public boolean isAlternateUniqueKey();

@@ -163,6 +163,7 @@ subprojects { subProject ->
                     compilerArgs: [
                             "-nowarn",
                             "-proc:only",
+							"-encoding", "UTF-8",
                             "-processor", "org.jboss.logging.LoggingToolsProcessor",
                             "-s", "$sourceSets.main.generatedLoggingSrcDir.absolutePath"
                     ]
@@ -177,7 +178,7 @@ subprojects { subProject ->
         generateMainLoggingClasses.logging.captureStandardError(LogLevel.INFO)
 
 		compileJava.dependsOn generateMainLoggingClasses
-        compileJava.options.define(compilerArgs: ["-proc:none"])
+        compileJava.options.define(compilerArgs: ["-proc:none", "-encoding", "UTF-8"])
 
         manifest.mainAttributes(
                 provider: 'gradle',

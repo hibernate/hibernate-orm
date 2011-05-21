@@ -38,9 +38,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.hibernate.metamodel.source.annotations.ConfiguredClass;
-import org.hibernate.metamodel.source.annotations.ConfiguredClassHierarchy;
-import org.hibernate.metamodel.source.annotations.MappedAttribute;
+import org.hibernate.metamodel.source.annotations.entity.ConfiguredClass;
+import org.hibernate.metamodel.source.annotations.entity.ConfiguredClassHierarchy;
+import org.hibernate.metamodel.source.annotations.entity.MappedAttribute;
 import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.internal.BasicServiceRegistryImpl;
@@ -81,7 +81,7 @@ public class GenericTypeDiscoveryTest extends BaseUnitTestCase {
 		ClassInfo info = configuredClass.getClassInfo();
 		assertEquals( "wrong class", DotName.createSimple( Stuff.class.getName() ), info.name() );
 		MappedAttribute property = configuredClass.getMappedProperty( "value" );
-		assertEquals( Price.class, property.getType() );
+		assertEquals( Price.class.getName(), property.getType() );
 
 		assertTrue( iter.hasNext() );
 		configuredClass = iter.next();
@@ -97,9 +97,9 @@ public class GenericTypeDiscoveryTest extends BaseUnitTestCase {
 		assertEquals( "wrong class", DotName.createSimple( Item.class.getName() ), info.name() );
 		// properties are alphabetically ordered!
 		property = configuredClass.getMappedProperty( "owner" );
-		assertEquals( SomeGuy.class, property.getType() );
+		assertEquals( SomeGuy.class.getName(), property.getType() );
 		property = configuredClass.getMappedProperty( "type" );
-		assertEquals( PaperType.class, property.getType() );
+		assertEquals( PaperType.class.getName(), property.getType() );
 
 		assertTrue( iter.hasNext() );
 		configuredClass = iter.next();

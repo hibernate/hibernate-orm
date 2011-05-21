@@ -10,8 +10,6 @@ import org.hibernate.metamodel.source.annotations.xml.mocker.EntityMappingsMocke
 import org.hibernate.metamodel.source.internal.JaxbRoot;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
 
-//import org.hibernate.metamodel.source.util.xml.XmlHelper;
-
 /**
  * @author Hardy Ferentschik
  * @todo Need some create some XMLContext as well which can be populated w/ information which can not be expressed via annotations
@@ -40,9 +38,6 @@ public class OrmXmlParser {
 				list, annotationIndex, meta.getServiceRegistry()
 		).mockNewIndex();
 	}
-
-
-
 }
 
 

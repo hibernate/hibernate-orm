@@ -263,7 +263,7 @@ public class DualNodeJtaTransactionImpl implements Transaction {
          if (prepareResult != XAResource.XA_RDONLY)
             xaResource.commit(xid, b);
          else
-            log.trace("Not committing {0} due to readonly.", xid);
+            log.tracef("Not committing {0} due to readonly.", xid);
       }
 
       @Override

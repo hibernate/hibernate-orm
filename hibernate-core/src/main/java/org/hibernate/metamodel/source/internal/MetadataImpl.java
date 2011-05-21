@@ -30,7 +30,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.persistence.SharedCacheMode;
 
 import org.jboss.jandex.Index;
 import org.jboss.jandex.Indexer;
@@ -38,7 +37,7 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.DuplicateMappingException;
 import org.hibernate.HibernateException;
-import org.hibernate.cfg.NamingStrategy;
+import org.hibernate.SessionFactory;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.MetadataSource;
 import org.hibernate.metamodel.Metadata;
@@ -47,6 +46,7 @@ import org.hibernate.metamodel.SourceProcessingOrder;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.FetchProfile;
 import org.hibernate.metamodel.binding.PluralAttributeBinding;
+import org.hibernate.metamodel.binding.TypeDef;
 import org.hibernate.metamodel.relational.Database;
 import org.hibernate.metamodel.source.annotation.xml.XMLEntityMappings;
 import org.hibernate.metamodel.source.annotations.AnnotationBinder;
@@ -58,7 +58,7 @@ import org.hibernate.service.BasicServiceRegistry;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 
 /**
- * Container for configuration data while building and binding the metamodel
+ * Container for configuration data collected during binding the metamodel.
  *
  * @author Steve Ebersole
  * @author Hardy Ferentschik
@@ -69,24 +69,25 @@ public class MetadataImpl implements Metadata, MetadataImplementor, Serializable
 	);
 
 	private final BasicServiceRegistry serviceRegistry;
-	private final NamingStrategy namingStrategy;
-	private final SharedCacheMode sharedCacheMode;
+	private final Options options;
+
 	private final Database database = new Database();
 
+	/**
+	 * Maps the fully qualified class name of an entity to its entity binding
+	 */
 	private Map<String, EntityBinding> entityBindingMap = new HashMap<String, EntityBinding>();
 	private Map<String, PluralAttributeBinding> collectionBindingMap = new HashMap<String, PluralAttributeBinding>();
 	private Map<String, FetchProfile> fetchProfiles = new HashMap<String, FetchProfile>();
+	private Map<String, TypeDef> typeDefs = new HashMap<String, TypeDef>();
 	private Map<String, String> imports;
 
-	public MetadataImpl(MetadataBuilderImpl builder) {
-		final MetadataSources metadataSources = builder.getSources();
-
+	public MetadataImpl(MetadataSources metadataSources, Options options) {
 		this.serviceRegistry = metadataSources.getServiceRegistry();
-		this.namingStrategy = builder.getNamingStrategy();
-		this.sharedCacheMode = builder.getSharedCacheMode();
+		this.options = options;
 
 		final ArrayList<String> processedEntityNames = new ArrayList<String>();
-		if ( builder.getSourceProcessingOrder() == SourceProcessingOrder.HBM_FIRST ) {
+		if ( options.getSourceProcessingOrder() == SourceProcessingOrder.HBM_FIRST ) {
 			applyHibernateMappings( metadataSources, processedEntityNames );
 			applyAnnotationMappings( metadataSources, processedEntityNames );
 		}
@@ -132,8 +133,8 @@ public class MetadataImpl implements Metadata, MetadataImplementor, Serializable
 		index = ormParser.parseAndUpdateIndex( mappings, index );
 
 		// create the annotation binder and pass it the final annotation index
-		final AnnotationBinder annotationBinder = new AnnotationBinder( this );
-		annotationBinder.bind( index );
+		final AnnotationBinder annotationBinder = new AnnotationBinder( this, index );
+		annotationBinder.bind();
 	}
 
 	/**
@@ -153,20 +154,25 @@ public class MetadataImpl implements Metadata, MetadataImplementor, Serializable
 		}
 	}
 
+	@Override
+	public Options getOptions() {
+		return options;
+	}
+
+	@Override
+	public SessionFactory buildSessionFactory() {
+		// todo : implement!!!!
+		return null;
+	}
+
+	@Override
 	public BasicServiceRegistry getServiceRegistry() {
 		return serviceRegistry;
 	}
 
+	@Override
 	public Database getDatabase() {
 		return database;
-	}
-
-	public NamingStrategy getNamingStrategy() {
-		return namingStrategy;
-	}
-
-	public SharedCacheMode getSharedCacheMode() {
-		return sharedCacheMode;
 	}
 
 	public EntityBinding getEntityBinding(String entityName) {
@@ -216,6 +222,15 @@ public class MetadataImpl implements Metadata, MetadataImplementor, Serializable
 
 	public Iterable<FetchProfile> getFetchProfiles() {
 		return fetchProfiles.values();
+	}
+
+	public void addTypeDef(String name, TypeDef typeDef) {
+		// TODO - should we check whether the typedef already exists? Log it? Exception? (HF)
+		typeDefs.put( name, typeDef );
+	}
+
+	public TypeDef getTypeDef(String name) {
+		return typeDefs.get( name );
 	}
 
 	public FetchProfile findOrCreateFetchProfile(String profileName, MetadataSource source) {

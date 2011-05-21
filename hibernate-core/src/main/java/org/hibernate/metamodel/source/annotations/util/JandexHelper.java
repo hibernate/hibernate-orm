@@ -127,20 +127,6 @@ public class JandexHelper {
 	}
 
 	/**
-	 * @param annotations List of annotation instances keyed against their dot name.
-	 * @param annotationNames the annotation names to filter
-	 *
-	 * @return a new map of annotation instances only containing annotations of the specified dot names.
-	 */
-	public static Map<DotName, List<AnnotationInstance>> filterAnnotations(Map<DotName, List<AnnotationInstance>> annotations, DotName... annotationNames) {
-		Map<DotName, List<AnnotationInstance>> filteredAnnotations = new HashMap<DotName, List<AnnotationInstance>>();
-		for ( DotName name : annotationNames ) {
-			filteredAnnotations.put( name, annotations.get( name ) );
-		}
-		return filteredAnnotations;
-	}
-
-	/**
 	 * Creates a jandex index for the specified classes
 	 *
 	 * @param classLoaderService class loader service
@@ -195,6 +181,22 @@ public class JandexHelper {
 					targetName = ( (MethodInfo) instance.target() ).name();
 				}
 				if ( targetName != null && name.equals( targetName ) ) {
+					addAnnotationToMap( instance, annotations );
+				}
+			}
+		}
+		return annotations;
+	}
+
+	public static Map<DotName, List<AnnotationInstance>> getTypeAnnotations(ClassInfo classInfo) {
+		if ( classInfo == null ) {
+			throw new IllegalArgumentException( "classInfo cannot be null" );
+		}
+
+		Map<DotName, List<AnnotationInstance>> annotations = new HashMap<DotName, List<AnnotationInstance>>();
+		for ( List<AnnotationInstance> annotationList : classInfo.annotations().values() ) {
+			for ( AnnotationInstance instance : annotationList ) {
+				if ( instance.target() instanceof ClassInfo ) {
 					addAnnotationToMap( instance, annotations );
 				}
 			}

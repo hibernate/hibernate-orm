@@ -29,9 +29,9 @@ package org.hibernate.metamodel.binding;
  * @author Steve Ebersole
  */
 public interface KeyValueBinding extends AttributeBinding {
-	public boolean isKeyCasadeDeleteEnabled();
+	public boolean isKeyCascadeDeleteEnabled();
 
 	public String getUnsavedValue();
 
-	public boolean isUpdateable();
+	public boolean isUpdatable();
 }

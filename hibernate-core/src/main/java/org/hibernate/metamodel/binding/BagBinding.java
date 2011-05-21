@@ -23,6 +23,8 @@
  */
 package org.hibernate.metamodel.binding;
 
+import org.hibernate.metamodel.binding.state.PluralAttributeBindingState;
+
 /**
  * TODO : javadoc
  *
@@ -31,5 +33,10 @@ package org.hibernate.metamodel.binding;
 public class BagBinding extends PluralAttributeBinding {
 	protected BagBinding(EntityBinding entityBinding) {
 		super( entityBinding );
+	}
+
+	public BagBinding initialize(PluralAttributeBindingState bindingState) {
+		super.initialize( bindingState );
+		return this;
 	}
 }

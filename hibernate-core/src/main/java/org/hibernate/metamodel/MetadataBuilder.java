@@ -25,6 +25,7 @@ package org.hibernate.metamodel;
 
 import javax.persistence.SharedCacheMode;
 
+import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.NamingStrategy;
 
 /**
@@ -37,6 +38,10 @@ public interface MetadataBuilder {
 	public MetadataBuilder with(SourceProcessingOrder sourceProcessingOrder);
 
 	public MetadataBuilder with(SharedCacheMode cacheMode);
+
+	public MetadataBuilder with(AccessType accessType);
+
+	public MetadataBuilder withNewIdentifierGeneratorsEnabled(boolean enabled);
 
 	public Metadata buildMetadata();
 }

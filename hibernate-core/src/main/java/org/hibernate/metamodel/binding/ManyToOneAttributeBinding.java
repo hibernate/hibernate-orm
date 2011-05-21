@@ -26,19 +26,18 @@ package org.hibernate.metamodel.binding;
 import java.util.Iterator;
 
 import org.hibernate.MappingException;
-import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.metamodel.binding.state.ManyToOneAttributeBindingState;
+import org.hibernate.metamodel.relational.Column;
 import org.hibernate.metamodel.relational.ForeignKey;
 import org.hibernate.metamodel.relational.SimpleValue;
-import org.hibernate.metamodel.relational.Column;
-import org.hibernate.metamodel.state.domain.ManyToOneAttributeDomainState;
-import org.hibernate.metamodel.state.relational.ManyToOneRelationalState;
+import org.hibernate.metamodel.relational.state.ManyToOneRelationalState;
 
 /**
  * TODO : javadoc
  *
  * @author Gail Badner
  */
-public class ManyToOneAttributeBinding extends SingularAttributeBinding implements EntityReferencingAttributeBinding {
+public class ManyToOneAttributeBinding extends SimpleAttributeBinding implements EntityReferencingAttributeBinding {
 	private boolean isLogicalOneToOne;
 	private boolean isPropertyReference;
 	private String foreignKeyName;
@@ -51,24 +50,19 @@ public class ManyToOneAttributeBinding extends SingularAttributeBinding implemen
 		super( entityBinding, false, false );
 	}
 
-	public final void initialize(ManyToOneAttributeDomainState state) {
+	public final ManyToOneAttributeBinding initialize(ManyToOneAttributeBindingState state) {
 		super.initialize( state );
 		isPropertyReference = state.getReferencedAttributeName() != null;
 		referencedAttributeName = state.getReferencedAttributeName();
 		referencedEntityName = state.getReferencedEntityName();
-		if ( referencedEntityName == null ) {
-				referencedEntityName =
-						ReflectHelper.reflectedPropertyClass(
-								getEntityBinding().getEntity().getName(),
-								state.getAttribute().getName()
-						).getName();
-		}
+		return this;
 	}
 
-	public final void initialize(ManyToOneRelationalState state) {
-		super.initializeValue( state );
+	public final ManyToOneAttributeBinding initialize(ManyToOneRelationalState state) {
+		super.initializeValueRelationalState( state );
 		isLogicalOneToOne = state.isLogicalOneToOne();
 		foreignKeyName = state.getForeignKeyName();
+		return this;
 	}
 
 	public final boolean isPropertyReference() {
@@ -82,7 +76,7 @@ public class ManyToOneAttributeBinding extends SingularAttributeBinding implemen
 	public final String getReferencedAttributeName() {
 		if ( referencedAttributeName == null ) {
 			throw new IllegalStateException(
-				"Referenced attribute name is not available."
+					"Referenced attribute name is not available."
 			);
 		}
 		return referencedAttributeName;
@@ -93,7 +87,7 @@ public class ManyToOneAttributeBinding extends SingularAttributeBinding implemen
 	}
 
 	public final EntityBinding getReferencedEntityBinding() {
-		if ( ! isReferenceResolved() ) {
+		if ( !isReferenceResolved() ) {
 			throw new IllegalStateException( "EntityBinding reference has not be referenced." );
 		}
 		// TODO: throw exception if referencedEntityBinding is null?
@@ -101,7 +95,7 @@ public class ManyToOneAttributeBinding extends SingularAttributeBinding implemen
 	}
 
 	public final void resolveReference(AttributeBinding referencedAttributeBinding) {
-		if ( ! referencedEntityName.equals( referencedAttributeBinding.getEntityBinding().getEntity().getName() ) ) {
+		if ( !referencedEntityName.equals( referencedAttributeBinding.getEntityBinding().getEntity().getName() ) ) {
 			throw new IllegalStateException(
 					"attempt to set EntityBinding with name: [" +
 							referencedAttributeBinding.getEntityBinding().getEntity().getName() +
@@ -111,10 +105,10 @@ public class ManyToOneAttributeBinding extends SingularAttributeBinding implemen
 		if ( referencedAttributeName == null ) {
 			referencedAttributeName = referencedAttributeBinding.getAttribute().getName();
 		}
-		else if ( ! referencedAttributeName.equals( referencedAttributeBinding.getAttribute().getName() ) ) {
+		else if ( !referencedAttributeName.equals( referencedAttributeBinding.getAttribute().getName() ) ) {
 			throw new IllegalStateException(
 					"Inconsistent attribute name; expected: " + referencedAttributeName +
-					"actual: " + referencedAttributeBinding.getAttribute().getName()
+							"actual: " + referencedAttributeBinding.getAttribute().getName()
 			);
 		}
 		this.referencedAttributeBinding = referencedAttributeBinding;
@@ -123,18 +117,21 @@ public class ManyToOneAttributeBinding extends SingularAttributeBinding implemen
 
 	private void buildForeignKey() {
 		// TODO: move this stuff to relational model
-		ForeignKey foreignKey = getTable().createForeignKey(  referencedAttributeBinding.getTable(), foreignKeyName );
+		ForeignKey foreignKey = getValue().getTable()
+				.createForeignKey( referencedAttributeBinding.getValue().getTable(), foreignKeyName );
 		Iterator<SimpleValue> referencingValueIterator = getValues().iterator();
-		Iterator<SimpleValue> targetValueIterator =  referencedAttributeBinding.getValues().iterator();
+		Iterator<SimpleValue> targetValueIterator = referencedAttributeBinding.getValues().iterator();
 		while ( referencingValueIterator.hasNext() ) {
-			if ( ! targetValueIterator.hasNext() ) {
+			if ( !targetValueIterator.hasNext() ) {
 				// TODO: improve this message
-				throw new MappingException( "number of values in many-to-one reference is greater than number of values in target" );
+				throw new MappingException(
+						"number of values in many-to-one reference is greater than number of values in target"
+				);
 			}
 			SimpleValue referencingValue = referencingValueIterator.next();
 			SimpleValue targetValue = targetValueIterator.next();
 			if ( Column.class.isInstance( referencingValue ) ) {
-				if ( ! Column.class.isInstance( targetValue ) ) {
+				if ( !Column.class.isInstance( targetValue ) ) {
 					// TODO improve this message
 					throw new MappingException( "referencing value is a column, but target is not a column" );
 				}
@@ -157,7 +154,7 @@ public class ManyToOneAttributeBinding extends SingularAttributeBinding implemen
 	public void validate() {
 		// can't check this until both the domain and relational states are initialized...
 		if ( getCascade() != null && getCascade().indexOf( "delete-orphan" ) >= 0 ) {
-			if ( ! isLogicalOneToOne ) {
+			if ( !isLogicalOneToOne ) {
 				throw new MappingException(
 						"many-to-one attribute [" + getAttribute().getName() + "] does not support orphan delete as it is not unique"
 				);

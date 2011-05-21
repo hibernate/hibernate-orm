@@ -26,9 +26,9 @@ package org.hibernate.stat.internal;
 import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceInitiator;
@@ -90,7 +90,6 @@ public class StatisticsInitiator implements SessionFactoryServiceInitiator<Stati
 		statistics.setStatisticsEnabled( enabled );
 		LOG.debugf( "Statistics initialized [enabled=%s]", enabled );
 		return statistics;
-
 	}
 
 	private static StatisticsFactory DEFAULT_STATS_BUILDER = new StatisticsFactory() {

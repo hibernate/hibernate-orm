@@ -36,7 +36,7 @@ import org.hibernate.metamodel.binding.CustomSQL;
 import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLMetaElement;
-import org.hibernate.metamodel.source.util.MappingHelper;
+import org.hibernate.metamodel.source.hbm.util.MappingHelper;
 
 /**
  * TODO : javadoc

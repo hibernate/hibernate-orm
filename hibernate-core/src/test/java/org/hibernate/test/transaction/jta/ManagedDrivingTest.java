@@ -112,7 +112,7 @@ public class ManagedDrivingTest extends BaseUnitTestCase {
 			fail( "incorrect exception type : SQLException" );
 		}
 
-		JtaPlatform instance = ( (ServiceProxy) serviceRegistry.getService( JtaPlatform.class ) ).getTargetInstance();
+		JtaPlatform instance = serviceRegistry.getService( JtaPlatform.class );
 		TransactionManager transactionManager = instance.retrieveTransactionManager();
 
 		// start the cmt

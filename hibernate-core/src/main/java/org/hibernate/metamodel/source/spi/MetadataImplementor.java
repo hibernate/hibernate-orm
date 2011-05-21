@@ -23,17 +23,29 @@
  */
 package org.hibernate.metamodel.source.spi;
 
+import org.hibernate.mapping.MetadataSource;
+import org.hibernate.metamodel.Metadata;
 import org.hibernate.metamodel.binding.EntityBinding;
+import org.hibernate.metamodel.binding.FetchProfile;
+import org.hibernate.metamodel.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.relational.Database;
 import org.hibernate.service.BasicServiceRegistry;
 
 /**
  * @author Steve Ebersole
  */
-public interface MetadataImplementor {
+public interface MetadataImplementor extends Metadata {
 	public BasicServiceRegistry getServiceRegistry();
 	public Database getDatabase();
 
 	public Iterable<EntityBinding> getEntityBindings();
 	public EntityBinding getEntityBinding(String entityName);
+
+	public void addImport(String entityName, String entityName1);
+
+	public void addEntity(EntityBinding entityBinding);
+
+	public void addCollection(PluralAttributeBinding collectionBinding);
+
+	public FetchProfile findOrCreateFetchProfile(String profileName, MetadataSource hbm);
 }

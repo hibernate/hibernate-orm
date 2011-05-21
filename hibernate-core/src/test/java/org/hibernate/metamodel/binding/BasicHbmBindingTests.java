@@ -25,9 +25,6 @@ package org.hibernate.metamodel.binding;
 
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
-import org.hibernate.metamodel.source.spi.MetadataImplementor;
-
-import static org.junit.Assert.assertEquals;
 
 /**
  * Basic tests of {@code hbm.xml} binding code
@@ -35,33 +32,19 @@ import static org.junit.Assert.assertEquals;
  * @author Steve Ebersole
  */
 public class BasicHbmBindingTests extends AbstractBasicBindingTests {
-	public EntityBinding buildSimpleEntityBinding() {
-		return getEntityBinding(
-				"org/hibernate/metamodel/binding/SimpleEntity.hbm.xml",
-				SimpleEntity.class.getName()
-		);
+	public MetadataImpl addSourcesForSimpleEntityBinding(MetadataSources sources) {
+		sources.addResource( "org/hibernate/metamodel/binding/SimpleEntity.hbm.xml" );
+		return (MetadataImpl) sources.buildMetadata();
 	}
 
-	public EntityBinding buildSimpleVersionedEntityBinding() {
-		return getEntityBinding(
-				"org/hibernate/metamodel/binding/SimpleVersionedEntity.hbm.xml",
-				SimpleVersionedEntity.class.getName()
-		);
+	public MetadataImpl addSourcesForSimpleVersionedEntityBinding(MetadataSources sources) {
+		sources.addResource( "org/hibernate/metamodel/binding/SimpleVersionedEntity.hbm.xml" );
+		return (MetadataImpl) sources.buildMetadata();
 	}
 
-	public MetadataImplementor buildMetadataWithManyToOne() {
-		MetadataSources metadataSources = new MetadataSources(  basicServiceRegistry() );
-		metadataSources.addResource( "org/hibernate/metamodel/binding/EntityWithManyToOne.hbm.xml" );
-		metadataSources.addResource( "org/hibernate/metamodel/binding/SimpleEntity.hbm.xml" );
-		assertEquals( 2, metadataSources.getJaxbRootList().size() );
-		return ( MetadataImplementor ) metadataSources.buildMetadata();
-	}
-
-	private EntityBinding getEntityBinding(String resourceName, String entityName ) {
-		MetadataSources metadataSources = new MetadataSources(  basicServiceRegistry() );
-		metadataSources.addResource( resourceName );
-		assertEquals( 1, metadataSources.getJaxbRootList().size() );
-		MetadataImpl metadata = ( MetadataImpl ) metadataSources.buildMetadata();
-		return metadata.getEntityBinding( entityName );
+	public MetadataImpl addSourcesForManyToOne(MetadataSources sources) {
+		sources.addResource( "org/hibernate/metamodel/binding/ManyToOneEntity.hbm.xml" );
+		sources.addResource( "org/hibernate/metamodel/binding/SimpleEntity.hbm.xml" );
+		return (MetadataImpl) sources.buildMetadata();
 	}
 }

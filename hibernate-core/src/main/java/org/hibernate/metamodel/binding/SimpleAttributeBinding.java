@@ -24,38 +24,43 @@
 package org.hibernate.metamodel.binding;
 
 import org.hibernate.mapping.PropertyGeneration;
-import org.hibernate.metamodel.state.domain.SimpleAttributeDomainState;
-import org.hibernate.metamodel.state.relational.ColumnRelationalState;
-import org.hibernate.metamodel.state.relational.DerivedValueRelationalState;
-import org.hibernate.metamodel.state.relational.TupleRelationalState;
+import org.hibernate.metamodel.binding.state.SimpleAttributeBindingState;
+import org.hibernate.metamodel.relational.state.ColumnRelationalState;
+import org.hibernate.metamodel.relational.state.ValueRelationalState;
 
 /**
  * TODO : javadoc
  *
  * @author Steve Ebersole
  */
-public class SimpleAttributeBinding extends SingularAttributeBinding {
+public class SimpleAttributeBinding extends AbstractAttributeBinding implements KeyValueBinding {
+	private final boolean forceNonNullable;
+	private final boolean forceUnique;
+	private boolean insertable;
+	private boolean updatable;
+	private boolean keyCascadeDeleteEnabled;
+	private String unsavedValue;
 	private PropertyGeneration generation;
 
 	SimpleAttributeBinding(EntityBinding entityBinding, boolean forceNonNullable, boolean forceUnique) {
-		super( entityBinding, forceNonNullable, forceUnique );
+		super( entityBinding );
+		this.forceNonNullable = forceNonNullable;
+		this.forceUnique = forceUnique;
 	}
 
-	public final void initialize(SimpleAttributeDomainState state) {
+	public final SimpleAttributeBinding initialize(SimpleAttributeBindingState state) {
 		super.initialize( state );
-		generation = state.getPropertyGeneration();
+		insertable = state.isInsertable();
+		updatable = state.isUpdatable();
+		keyCascadeDeleteEnabled = state.isKeyCascadeDeleteEnabled();
+		unsavedValue = state.getUnsavedValue();
+		generation = state.getPropertyGeneration() == null ? PropertyGeneration.NEVER : state.getPropertyGeneration();
+		return this;
 	}
 
-	public void initializeColumnValue(ColumnRelationalState state) {
-		super.initializeValue( state );
-	}
-
-	public void initializeDerivedValue(DerivedValueRelationalState state) {
-		super.initializeValue( state );
-	}
-
-	public void initializeTupleValue(TupleRelationalState state) {
-		super.initializeValue( state );
+	public SimpleAttributeBinding initialize(ValueRelationalState state) {
+		super.initializeValueRelationalState( state );
+		return this;
 	}
 
 	private boolean isUnique(ColumnRelationalState state) {
@@ -67,12 +72,49 @@ public class SimpleAttributeBinding extends SingularAttributeBinding {
 		return true;
 	}
 
-	private boolean isPrimaryKey() {
-		return this == getEntityBinding().getEntityIdentifier().getValueBinding();
+	public boolean isInsertable() {
+		return insertable;
+	}
+
+	protected void setInsertable(boolean insertable) {
+		this.insertable = insertable;
+	}
+
+	public boolean isUpdatable() {
+		return updatable;
+	}
+
+	protected void setUpdatable(boolean updatable) {
+		this.updatable = updatable;
+	}
+
+	@Override
+	public boolean isKeyCascadeDeleteEnabled() {
+		return keyCascadeDeleteEnabled;
+	}
+
+	public void setKeyCascadeDeleteEnabled(boolean keyCascadeDeleteEnabled) {
+		this.keyCascadeDeleteEnabled = keyCascadeDeleteEnabled;
+	}
+
+	@Override
+	public String getUnsavedValue() {
+		return unsavedValue;
+	}
+
+	public void setUnsavedValue(String unsaveValue) {
+		this.unsavedValue = unsaveValue;
+	}
+
+	public boolean forceNonNullable() {
+		return forceNonNullable;
+	}
+
+	public boolean forceUnique() {
+		return forceUnique;
 	}
 
 	public PropertyGeneration getGeneration() {
 		return generation;
 	}
-
 }

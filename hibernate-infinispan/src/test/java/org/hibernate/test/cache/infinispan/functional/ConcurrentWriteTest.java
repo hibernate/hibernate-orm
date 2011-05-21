@@ -175,7 +175,7 @@ public class ConcurrentWriteTest extends SingleNodeTestCase {
 		assertEquals( customerSlcs.getElementCountInMemory(), 1 );
 		assertEquals( customerSlcs.getEntries().size(), 1 );
 
-		log.info( "Add contact to customer {0}", customerId );
+		log.infof( "Add contact to customer {0}", customerId );
 		SecondLevelCacheStatistics contactsCollectionSlcs = sessionFactory()
 				.getStatistics()
 				.getSecondLevelCacheStatistics( Customer.class.getName() + ".contacts" );
@@ -478,7 +478,7 @@ public class ConcurrentWriteTest extends SingleNodeTestCase {
 					thinkRandomTime();
 					++completedIterations;
 					if ( log.isTraceEnabled() ) {
-						log.trace( "Iteration completed {0}", completedIterations );
+						log.tracef( "Iteration completed {0}", completedIterations );
 					}
 				}
 			}

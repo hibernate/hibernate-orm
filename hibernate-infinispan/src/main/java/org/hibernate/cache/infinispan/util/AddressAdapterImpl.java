@@ -39,7 +39,11 @@ public class AddressAdapterImpl implements AddressAdapter, Externalizable {
 
    private Address address;
 
-   private AddressAdapterImpl(Address address) {
+   // Required by Java Externalizable
+   public AddressAdapterImpl() {
+   }
+
+   public AddressAdapterImpl(Address address) {
       this.address = address;
    }
 

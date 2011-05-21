@@ -29,20 +29,17 @@ import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.envers.test.entities.StrTestEntityComparator;
 import org.hibernate.envers.test.entities.manytomany.SortedSetEntity;
-import org.hibernate.testing.FailureExpected;
 import org.junit.Test;
 
 import javax.persistence.EntityManager;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.SortedSet;
+import java.util.*;
 
 import static org.junit.Assert.assertEquals;
 
 /**
  * @author Michal Skowronek (mskowr at o2 pl)
  */
-public class SortedSetWithCustomComparatorEntityTest extends AbstractEntityTest {
+public class CustomComparatorEntityTest extends AbstractEntityTest {
 
     private Integer id1;
     private Integer id2;
@@ -59,7 +56,7 @@ public class SortedSetWithCustomComparatorEntityTest extends AbstractEntityTest 
     public void initData() {
         EntityManager em = getEntityManager();
 
-        SortedSetEntity entity1 = new SortedSetEntity(1, "sortedSet1");
+        SortedSetEntity entity1 = new SortedSetEntity(1, "sortedEntity1");
 
         // Revision 1
         em.getTransaction().begin();
@@ -77,6 +74,7 @@ public class SortedSetWithCustomComparatorEntityTest extends AbstractEntityTest 
         em.persist(strTestEntity1);
         id1 = strTestEntity1.getId();
         entity1.getSortedSet().add(strTestEntity1);
+		entity1.getSortedMap().put(strTestEntity1, "abc");
 
         em.getTransaction().commit();
 
@@ -88,6 +86,7 @@ public class SortedSetWithCustomComparatorEntityTest extends AbstractEntityTest 
         em.persist(strTestEntity2);
         id2 = strTestEntity2.getId();
         entity1.getSortedSet().add(strTestEntity2);
+		entity1.getSortedMap().put(strTestEntity2, "aaa");
 
         em.getTransaction().commit();
 
@@ -99,6 +98,7 @@ public class SortedSetWithCustomComparatorEntityTest extends AbstractEntityTest 
         em.persist(strTestEntity3);
         id3 = strTestEntity3.getId();
         entity1.getSortedSet().add(strTestEntity3);
+		entity1.getSortedMap().put(strTestEntity3, "aba");
 
         em.getTransaction().commit();
 
@@ -110,6 +110,7 @@ public class SortedSetWithCustomComparatorEntityTest extends AbstractEntityTest 
         em.persist(strTestEntity4);
         id4 = strTestEntity4.getId();
         entity1.getSortedSet().add(strTestEntity4);
+		entity1.getSortedMap().put(strTestEntity4, "aac");
 
         em.getTransaction().commit();
     }
@@ -127,7 +128,7 @@ public class SortedSetWithCustomComparatorEntityTest extends AbstractEntityTest 
     public void testCurrentStateOfEntity1() {
         final SortedSetEntity entity1 = getEntityManager().find(SortedSetEntity.class, 1);
 
-        assertEquals("sortedSet1", entity1.getData());
+        assertEquals("sortedEntity1", entity1.getData());
         assertEquals(Integer.valueOf(1), entity1.getId());
 
         final SortedSet<StrTestEntity> sortedSet = entity1.getSortedSet();
@@ -138,6 +139,21 @@ public class SortedSetWithCustomComparatorEntityTest extends AbstractEntityTest 
         checkStrTestEntity(iterator.next(), id4, "aac");
         checkStrTestEntity(iterator.next(), id3, "aba");
         checkStrTestEntity(iterator.next(), id1, "abc");
+
+		final SortedMap<StrTestEntity, String> sortedMap = entity1.getSortedMap();
+        assertEquals(StrTestEntityComparator.class, sortedMap.comparator().getClass());
+        assertEquals(4, sortedMap.size());
+		Iterator<Map.Entry<StrTestEntity, String>> mapIterator = sortedMap.entrySet().iterator();
+        checkStrTestEntity(mapIterator.next().getKey(), id2, "aaa");
+        checkStrTestEntity(mapIterator.next().getKey(), id4, "aac");
+        checkStrTestEntity(mapIterator.next().getKey(), id3, "aba");
+        checkStrTestEntity(mapIterator.next().getKey(), id1, "abc");
+
+	    mapIterator = sortedMap.entrySet().iterator();
+        assertEquals(mapIterator.next().getValue(), "aaa");
+        assertEquals(mapIterator.next().getValue(), "aac");
+        assertEquals(mapIterator.next().getValue(), "aba");
+        assertEquals(mapIterator.next().getValue(), "abc");
     }
 
     private void checkStrTestEntity(StrTestEntity entity, Integer id, String sortKey) {
@@ -146,20 +162,23 @@ public class SortedSetWithCustomComparatorEntityTest extends AbstractEntityTest 
     }
 
     @Test
-    @FailureExpected(message = "Envers doesn't support custom comparators yet", jiraKey = "HHH-6176")
     public void testHistoryOfEntity1() throws Exception {
         SortedSetEntity entity1 = getAuditReader().find(SortedSetEntity.class, 1, 1);
 
-        assertEquals("sortedSet1", entity1.getData());
+        assertEquals("sortedEntity1", entity1.getData());
         assertEquals(Integer.valueOf(1), entity1.getId());
 
         SortedSet<StrTestEntity> sortedSet = entity1.getSortedSet();
         assertEquals(StrTestEntityComparator.class, sortedSet.comparator().getClass());
         assertEquals(0, sortedSet.size());
 
+		SortedMap<StrTestEntity, String> sortedMap = entity1.getSortedMap();
+        assertEquals(StrTestEntityComparator.class, sortedMap.comparator().getClass());
+        assertEquals(0, sortedMap.size());
+
         entity1 = getAuditReader().find(SortedSetEntity.class, 1, 2);
 
-        assertEquals("sortedSet1", entity1.getData());
+        assertEquals("sortedEntity1", entity1.getData());
         assertEquals(Integer.valueOf(1), entity1.getId());
 
         sortedSet = entity1.getSortedSet();
@@ -168,9 +187,18 @@ public class SortedSetWithCustomComparatorEntityTest extends AbstractEntityTest 
         Iterator<StrTestEntity> iterator = sortedSet.iterator();
         checkStrTestEntity(iterator.next(), id1, "abc");
 
+		sortedMap = entity1.getSortedMap();
+        assertEquals(StrTestEntityComparator.class, sortedMap.comparator().getClass());
+        assertEquals(1, sortedMap.size());
+		Iterator<Map.Entry<StrTestEntity, String>> mapIterator = sortedMap.entrySet().iterator();
+        checkStrTestEntity(mapIterator.next().getKey(), id1, "abc");
+
+	    mapIterator = sortedMap.entrySet().iterator();
+        assertEquals(mapIterator.next().getValue(), "abc");
+
         entity1 = getAuditReader().find(SortedSetEntity.class, 1, 3);
 
-        assertEquals("sortedSet1", entity1.getData());
+        assertEquals("sortedEntity1", entity1.getData());
         assertEquals(Integer.valueOf(1), entity1.getId());
 
         sortedSet = entity1.getSortedSet();
@@ -180,9 +208,20 @@ public class SortedSetWithCustomComparatorEntityTest extends AbstractEntityTest 
         checkStrTestEntity(iterator.next(), id2, "aaa");
         checkStrTestEntity(iterator.next(), id1, "abc");
 
+		sortedMap = entity1.getSortedMap();
+        assertEquals(StrTestEntityComparator.class, sortedMap.comparator().getClass());
+        assertEquals(2, sortedMap.size());
+		mapIterator = sortedMap.entrySet().iterator();
+        checkStrTestEntity(mapIterator.next().getKey(), id2, "aaa");
+        checkStrTestEntity(mapIterator.next().getKey(), id1, "abc");
+
+	    mapIterator = sortedMap.entrySet().iterator();
+        assertEquals(mapIterator.next().getValue(), "aaa");
+        assertEquals(mapIterator.next().getValue(), "abc");
+
         entity1 = getAuditReader().find(SortedSetEntity.class, 1, 4);
 
-        assertEquals("sortedSet1", entity1.getData());
+        assertEquals("sortedEntity1", entity1.getData());
         assertEquals(Integer.valueOf(1), entity1.getId());
 
         sortedSet = entity1.getSortedSet();
@@ -193,9 +232,22 @@ public class SortedSetWithCustomComparatorEntityTest extends AbstractEntityTest 
         checkStrTestEntity(iterator.next(), id3, "aba");
         checkStrTestEntity(iterator.next(), id1, "abc");
 
+		sortedMap = entity1.getSortedMap();
+        assertEquals(StrTestEntityComparator.class, sortedMap.comparator().getClass());
+        assertEquals(3, sortedMap.size());
+		mapIterator = sortedMap.entrySet().iterator();
+        checkStrTestEntity(mapIterator.next().getKey(), id2, "aaa");
+        checkStrTestEntity(mapIterator.next().getKey(), id3, "aba");
+        checkStrTestEntity(mapIterator.next().getKey(), id1, "abc");
+
+	    mapIterator = sortedMap.entrySet().iterator();
+        assertEquals(mapIterator.next().getValue(), "aaa");
+        assertEquals(mapIterator.next().getValue(), "aba");
+        assertEquals(mapIterator.next().getValue(), "abc");
+
         entity1 = getAuditReader().find(SortedSetEntity.class, 1, 5);
 
-        assertEquals("sortedSet1", entity1.getData());
+        assertEquals("sortedEntity1", entity1.getData());
         assertEquals(Integer.valueOf(1), entity1.getId());
 
         sortedSet = entity1.getSortedSet();
@@ -206,6 +258,21 @@ public class SortedSetWithCustomComparatorEntityTest extends AbstractEntityTest 
         checkStrTestEntity(iterator.next(), id4, "aac");
         checkStrTestEntity(iterator.next(), id3, "aba");
         checkStrTestEntity(iterator.next(), id1, "abc");
+
+		sortedMap = entity1.getSortedMap();
+        assertEquals(StrTestEntityComparator.class, sortedMap.comparator().getClass());
+        assertEquals(4, sortedMap.size());
+		mapIterator = sortedMap.entrySet().iterator();
+        checkStrTestEntity(mapIterator.next().getKey(), id2, "aaa");
+        checkStrTestEntity(mapIterator.next().getKey(), id4, "aac");
+        checkStrTestEntity(mapIterator.next().getKey(), id3, "aba");
+        checkStrTestEntity(mapIterator.next().getKey(), id1, "abc");
+
+	    mapIterator = sortedMap.entrySet().iterator();
+        assertEquals(mapIterator.next().getValue(), "aaa");
+        assertEquals(mapIterator.next().getValue(), "aac");
+        assertEquals(mapIterator.next().getValue(), "aba");
+        assertEquals(mapIterator.next().getValue(), "abc");
     }
 
 }

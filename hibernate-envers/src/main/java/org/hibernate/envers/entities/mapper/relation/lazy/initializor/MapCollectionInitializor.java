@@ -37,7 +37,7 @@ import org.hibernate.envers.reader.AuditReaderImplementor;
  * @author Adam Warski (adam at warski dot org)
  */
 public class MapCollectionInitializor<T extends Map> extends AbstractCollectionInitializor<T> {
-    private final Class<? extends T> collectionClass;
+    protected final Class<? extends T> collectionClass;
     private final MiddleComponentData elementComponentData;
     private final MiddleComponentData indexComponentData;
 

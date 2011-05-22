@@ -122,15 +122,18 @@ public class MetadataImpl implements Metadata, MetadataImplementor, Serializable
 		}
 		Index index = indexer.complete();
 
-		// process the xml configuration
-		final OrmXmlParser ormParser = new OrmXmlParser( this );
+
 		List<JaxbRoot<XMLEntityMappings>> mappings = new ArrayList<JaxbRoot<XMLEntityMappings>>();
 		for ( JaxbRoot<?> root : metadataSources.getJaxbRootList() ) {
 			if ( root.getRoot() instanceof XMLEntityMappings ) {
 				mappings.add( (JaxbRoot<XMLEntityMappings>) root );
 			}
 		}
-		index = ormParser.parseAndUpdateIndex( mappings, index );
+		if ( !mappings.isEmpty() ) {
+			// process the xml configuration
+			final OrmXmlParser ormParser = new OrmXmlParser( this );
+			index = ormParser.parseAndUpdateIndex( mappings, index );
+		}
 
 		// create the annotation binder and pass it the final annotation index
 		final AnnotationBinder annotationBinder = new AnnotationBinder( this, index );

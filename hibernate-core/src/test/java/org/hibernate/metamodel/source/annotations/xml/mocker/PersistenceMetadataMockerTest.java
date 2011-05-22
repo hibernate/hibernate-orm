@@ -23,31 +23,28 @@
  */
 package org.hibernate.metamodel.source.annotations.xml.mocker;
 
+import javax.persistence.AccessType;
 
-import org.jboss.jandex.AnnotationValue;
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.Index;
+import org.junit.Test;
+import static org.junit.Assert.*;
 
-import org.hibernate.metamodel.source.annotation.xml.XMLAssociationOverride;
+import org.hibernate.metamodel.source.annotations.xml.PseudoJpaDotNames;
 
 /**
  * @author Strong Liu
  */
-class XMLAssociationOverrideProxy extends XMLAssociationOverride {
-	private AnnotationValue joinTableAnnotationValue;
-	private AnnotationValue joinColumnsAnnotationValue;
-
-	AnnotationValue getJoinColumnsAnnotationValue() {
-		return joinColumnsAnnotationValue;
-	}
-
-	void setJoinColumnsAnnotationValue(AnnotationValue joinColumnsAnnotationValue) {
-		this.joinColumnsAnnotationValue = joinColumnsAnnotationValue;
-	}
-
-	AnnotationValue getJoinTableAnnotationValue() {
-		return joinTableAnnotationValue;
-	}
-
-	void setJoinTableAnnotationValue(AnnotationValue joinTableAnnotationValue) {
-		this.joinTableAnnotationValue = joinTableAnnotationValue;
+public class PersistenceMetadataMockerTest extends AbstractMockerTest {
+	@Test
+	public void testPersistenceMetadata() {
+		Index index = getMockedIndex( "persistence-metadata.xml" );
+		assertHasAnnotation( index, null, PseudoJpaDotNames.DEFAULT_ACCESS, 1 );
+		assertAnnotationValue(index,null, PseudoJpaDotNames.DEFAULT_ACCESS,new AnnotationValueChecker(){
+			@Override
+			public void check(AnnotationInstance annotationInstance) {
+			assertEquals( AccessType.FIELD.toString(), annotationInstance.value().asEnum());
+			}
+		});
 	}
 }

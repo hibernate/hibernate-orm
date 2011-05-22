@@ -33,24 +33,7 @@ import org.hibernate.metamodel.source.annotations.xml.mocker.IndexBuilder;
  * @author Strong Liu
  */
 public interface IndexedAnnotationFilter extends JPADotNames {
-	DotName[] GLOBAL_ANNOTATIONS = new DotName[] {
-			SEQUENCE_GENERATOR,
-			TABLE_GENERATOR,
-			NAMED_QUERIES,
-			NAMED_QUERY,
-			NAMED_NATIVE_QUERIES,
-			NAMED_NATIVE_QUERY,
-			SQL_RESULT_SET_MAPPING,
-			SQL_RESULT_SET_MAPPINGS
-	};
-	DotName[] SCHEMAAWARE_ANNOTATIONS = new DotName[] {
-			TABLE, JOIN_TABLE, COLLECTION_TABLE, SECONDARY_TABLE, SECONDARY_TABLES
-			, TABLE_GENERATOR, SEQUENCE_GENERATOR
-	};
-	DotName[] ASSOCIATION_ANNOTATIONS = new DotName[] {
-			ONE_TO_MANY, ONE_TO_ONE, MANY_TO_ONE, MANY_TO_MANY
-	};
-	IndexedAnnotationFilter[] filters = new IndexedAnnotationFilter[] {
+	final IndexedAnnotationFilter[] ALL_FILTERS = new IndexedAnnotationFilter[] {
 			ExclusiveAnnotationFilter.INSTANCE,
 			NameAnnotationFilter.INSTANCE, NameTargetAnnotationFilter.INSTANCE
 	};

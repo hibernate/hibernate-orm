@@ -73,12 +73,7 @@ class EmbeddableMocker extends AbstractEntityObjectMocker {
 
 	@Override
 	protected void applyDefaults() {
-		String className = MockHelper.buildSafeClassName( embeddable.getClazz(), getDefaults().getPackageName() );
-		embeddable.setClazz( className );
-		if ( embeddable.isMetadataComplete() == null ) {
-			embeddable.setMetadataComplete( getDefaults().getMetadataComplete() );
-		}
-		LOG.debugf( "Adding XML overriding information for %s", className );
+		DefaultConfigurationHelper.INSTANCE.applyDefaults( embeddable, getDefaults() );
 	}
 
 	@Override

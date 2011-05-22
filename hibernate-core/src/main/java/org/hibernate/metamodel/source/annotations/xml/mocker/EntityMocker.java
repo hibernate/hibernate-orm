@@ -114,7 +114,10 @@ class EntityMocker extends AbstractEntityObjectMocker {
 		if ( table == null ) {
 			return null;
 		}
-		MockHelper.updateSchema( new SchemaAware.TableSchemaAware( table ), getDefaults() );
+		DefaultConfigurationHelper.INSTANCE.applyDefaults(
+				new SchemaAware.TableSchemaAware( table ),
+				getDefaults()
+		);
 		List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
 		MockHelper.stringValue( "name", table.getName(), annotationValueList );
 		MockHelper.stringValue( "catalog", table.getCatalog(), annotationValueList );
@@ -152,24 +155,7 @@ class EntityMocker extends AbstractEntityObjectMocker {
 
 	@Override
 	protected void applyDefaults() {
-		if ( getDefaults() == null ) {
-			return;
-		}
-		if ( MockHelper.hasSchemaOrCatalogDefined( getDefaults() ) ) {
-			XMLTable table = entity.getTable();
-			if ( table == null ) {
-				table = new XMLTable();
-				entity.setTable( table );
-			}
-			MockHelper.updateSchema( new SchemaAware.TableSchemaAware( table ), getDefaults() );
-		}
-		String className = MockHelper.buildSafeClassName( entity.getClazz(), getDefaults().getPackageName() );
-		entity.setClazz( className );
-		if ( entity.isMetadataComplete() == null ) {
-			entity.setMetadataComplete( getDefaults().getMetadataComplete() );
-		}
-		LOG.debugf( "Adding XML overriding information for %s", className );
-
+		DefaultConfigurationHelper.INSTANCE.applyDefaults( entity, getDefaults() );
 	}
 
 	@Override
@@ -282,7 +268,10 @@ class EntityMocker extends AbstractEntityObjectMocker {
 		if ( secondaryTable == null ) {
 			return null;
 		}
-		MockHelper.updateSchema( new SchemaAware.SecondaryTableSchemaAware( secondaryTable ), getDefaults() );
+		DefaultConfigurationHelper.INSTANCE.applyDefaults(
+				new SchemaAware.SecondaryTableSchemaAware( secondaryTable ),
+				getDefaults()
+		);
 		List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
 		MockHelper.stringValue( "name", secondaryTable.getName(), annotationValueList );
 		MockHelper.stringValue( "catalog", secondaryTable.getCatalog(), annotationValueList );

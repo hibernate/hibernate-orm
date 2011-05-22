@@ -34,7 +34,6 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.source.annotation.xml.XMLAccessType;
 import org.hibernate.metamodel.source.annotation.xml.XMLEmbeddable;
 import org.hibernate.metamodel.source.annotation.xml.XMLEntity;
-import org.hibernate.metamodel.source.annotation.xml.XMLEntityListeners;
 import org.hibernate.metamodel.source.annotation.xml.XMLEntityMappings;
 import org.hibernate.metamodel.source.annotation.xml.XMLMappedSuperclass;
 import org.hibernate.metamodel.source.annotation.xml.XMLPersistenceUnitDefaults;
@@ -51,13 +50,13 @@ public class EntityMappingsMocker {
 			CoreMessageLogger.class,
 			EntityMappingsMocker.class.getName()
 	);
-	private List<XMLEntityMappings> entityMappingsList;
-	//todo delimited-identifier
+	private final List<XMLEntityMappings> entityMappingsList;
+	/**
+	 * Default configuration defined in Persistence Metadata Unit, one or zero per Persistence Unit.
+	 */
 	private Default globalDefaults;
-	final private IndexBuilder indexBuilder;
-	//todo
-	private XMLEntityListeners defaultEntityListeners;
-	final private GlobalAnnotations globalAnnotations;
+	private final IndexBuilder indexBuilder;
+	private final GlobalAnnotations globalAnnotations;
 
 	public EntityMappingsMocker(List<XMLEntityMappings> entityMappingsList, Index index, ServiceRegistry serviceRegistry) {
 		this.entityMappingsList = entityMappingsList;
@@ -73,7 +72,7 @@ public class EntityMappingsMocker {
 	public Index mockNewIndex() {
 		processPersistenceUnitMetadata( entityMappingsList );
 		processEntityMappings( entityMappingsList );
-		processGlobalConfiguration();
+		processGlobalAnnotations();
 		return indexBuilder.build( globalDefaults );
 	}
 
@@ -84,27 +83,27 @@ public class EntityMappingsMocker {
 		for ( XMLEntityMappings entityMappings : entityMappingsList ) {
 			//we have to iterate entityMappingsList first to find persistence-unit-metadata
 			XMLPersistenceUnitMetadata pum = entityMappings.getPersistenceUnitMetadata();
+			if ( globalDefaults != null ) {
+				LOG.duplicateMetadata();
+				return;
+			}
 			if ( pum == null ) {
 				continue;
 			}
-			if ( globalDefaults == null ) {
-				globalDefaults = new Default();
-				globalDefaults.setMetadataComplete( pum.getXmlMappingMetadataComplete() != null );
-				indexBuilder.mappingMetadataComplete( globalDefaults );
-				XMLPersistenceUnitDefaults pud = pum.getPersistenceUnitDefaults();
-				if ( pud == null ) {
-					return;
-				}
-				globalDefaults.setSchema( pud.getSchema() );
-				globalDefaults.setCatalog( pud.getCatalog() );
-				globalDefaults.setAccess( pud.getAccess() );
-				globalDefaults.setCascadePersist( pud.getCascadePersist() != null );
-				globalDefaults.setDelimitedIdentifiers( pud.getDelimitedIdentifiers() != null );
-				defaultEntityListeners = pud.getEntityListeners();
+			globalDefaults = new Default();
+			if ( pum.getXmlMappingMetadataComplete() != null ) {
+				globalDefaults.setMetadataComplete( true );
+				indexBuilder.mappingMetadataComplete();
 			}
-			else {
-				LOG.duplicateMetadata();
+			XMLPersistenceUnitDefaults pud = pum.getPersistenceUnitDefaults();
+			if ( pud == null ) {
+				return;
 			}
+			globalDefaults.setSchema( pud.getSchema() );
+			globalDefaults.setCatalog( pud.getCatalog() );
+			globalDefaults.setAccess( pud.getAccess() );
+			globalDefaults.setCascadePersist( pud.getCascadePersist() != null );
+			new PersistenceMetadataMocker( indexBuilder, pud ).process();
 		}
 	}
 
@@ -139,12 +138,12 @@ public class EntityMappingsMocker {
 		}
 	}
 
-	private void processGlobalConfiguration() {
+	private void processGlobalAnnotations() {
 		if ( globalAnnotations.hasGlobalConfiguration() ) {
 			indexBuilder.collectGlobalConfigurationFromIndex( globalAnnotations );
-			new GlobalConfigurationMocker(
+			new GlobalAnnotationMocker(
 					indexBuilder, globalAnnotations
-			).parser();
+			).process();
 		}
 	}
 
@@ -168,7 +167,6 @@ public class EntityMappingsMocker {
 		private String catalog;
 		private Boolean metadataComplete;
 		private Boolean cascadePersist;
-		private Boolean delimitedIdentifier;
 
 		public XMLAccessType getAccess() {
 			return access;
@@ -202,7 +200,7 @@ public class EntityMappingsMocker {
 			this.schema = schema;
 		}
 
-		public Boolean getMetadataComplete() {
+		public Boolean isMetadataComplete() {
 			return metadataComplete;
 		}
 
@@ -210,20 +208,12 @@ public class EntityMappingsMocker {
 			this.metadataComplete = metadataComplete;
 		}
 
-		public Boolean getCascadePersist() {
+		public Boolean isCascadePersist() {
 			return cascadePersist;
 		}
 
 		void setCascadePersist(Boolean cascadePersist) {
 			this.cascadePersist = cascadePersist;
-		}
-
-		void setDelimitedIdentifiers(Boolean delimitedIdentifier) {
-			this.delimitedIdentifier = delimitedIdentifier;
-		}
-
-		public Boolean getDelimitedIdentifier() {
-			return delimitedIdentifier;
 		}
 
 		void override(Default globalDefault) {
@@ -240,15 +230,13 @@ public class EntityMappingsMocker {
 				if ( globalDefault.getCatalog() != null ) {
 					catalog = globalDefault.getCatalog();
 				}
-				if ( globalDefault.getDelimitedIdentifier() != null ) {
-					delimitedIdentifier = globalDefault.getDelimitedIdentifier();
+				if ( globalDefault.isCascadePersist() != null ) {
+					cascadePersist = globalDefault.isCascadePersist();
 				}
-				if ( globalDefault.getMetadataComplete() != null ) {
-					metadataComplete = globalDefault.getMetadataComplete();
+				if ( globalDefault.isMetadataComplete() != null ) {
+					metadataComplete = globalDefault.isMetadataComplete();
 				}
-				if ( globalDefault.getCascadePersist() != null ) {
-					cascadePersist = globalDefault.getCascadePersist();
-				}
+
 			}
 		}
 	}

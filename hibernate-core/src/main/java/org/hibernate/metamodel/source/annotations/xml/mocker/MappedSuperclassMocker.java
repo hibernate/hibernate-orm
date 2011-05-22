@@ -58,12 +58,7 @@ class MappedSuperclassMocker extends AbstractEntityObjectMocker {
 
 	@Override
 	protected void applyDefaults() {
-		String className = MockHelper.buildSafeClassName( mappedSuperclass.getClazz(), getDefaults().getPackageName() );
-		mappedSuperclass.setClazz( className );
-		if ( mappedSuperclass.isMetadataComplete() == null ) {
-			mappedSuperclass.setMetadataComplete( getDefaults().getMetadataComplete() );
-		}
-		LOG.debugf( "Adding XML overriding information for %s", className );
+		DefaultConfigurationHelper.INSTANCE.applyDefaults( mappedSuperclass, getDefaults() );
 	}
 
 	@Override

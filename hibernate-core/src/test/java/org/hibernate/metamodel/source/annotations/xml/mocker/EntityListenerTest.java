@@ -29,6 +29,7 @@ import org.jboss.jandex.Index;
 import org.junit.Test;
 
 import org.hibernate.metamodel.source.annotations.JPADotNames;
+import org.hibernate.metamodel.source.annotations.xml.PseudoJpaDotNames;
 
 import static org.junit.Assert.assertEquals;
 
@@ -41,9 +42,23 @@ public class EntityListenerTest extends AbstractMockerTest {
 		Index index = getMockedIndex( "listener.xml" );
 		index.printAnnotations();
 		DotName itemName = DotName.createSimple( Item.class.getName() );
+		DotName itemListenerName = DotName.createSimple( ItemListener.class.getName() );
 		ClassInfo itemClassInfo = index.getClassByName( itemName );
-		assertEquals( 2, itemClassInfo.annotations().size() );
-		assertHasAnnotation( index,itemName, JPADotNames.ENTITY );
-		assertHasAnnotation( index,itemName,JPADotNames.ENTITY_LISTENERS );
+		assertEquals( 3, itemClassInfo.annotations().size() );
+		//entity
+		assertHasAnnotation( index, itemName, JPADotNames.ENTITY );
+		assertHasAnnotation( index, itemName, JPADotNames.ENTITY_LISTENERS );
+		assertHasAnnotation( index, itemName, JPADotNames.ACCESS );
+		//listener
+		assertHasAnnotation( index, itemListenerName, JPADotNames.PRE_PERSIST );
+		assertHasAnnotation( index, itemListenerName, JPADotNames.POST_PERSIST );
+		//assert global configurations
+		assertHasAnnotation( index, PseudoJpaDotNames.DEFAULT_DELIMITED_IDENTIFIERS );
+		assertHasAnnotation( index, PseudoJpaDotNames.DEFAULT_ACCESS );
+		assertHasAnnotation( index, PseudoJpaDotNames.DEFAULT_ENTITY_LISTENERS );
+		assertHasAnnotation( index, PseudoJpaDotNames.DEFAULT_PRE_PERSIST );
+		assertHasAnnotation( index, PseudoJpaDotNames.DEFAULT_POST_PERSIST );
+
+
 	}
 }

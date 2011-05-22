@@ -165,8 +165,8 @@ public class EntityMappingsMocker {
 		private String packageName;
 		private String schema;
 		private String catalog;
-		private boolean metadataComplete;
-		private boolean cascadePersist;
+		private Boolean metadataComplete;
+		private Boolean cascadePersist;
 
 		public XMLAccessType getAccess() {
 			return access;
@@ -200,19 +200,19 @@ public class EntityMappingsMocker {
 			this.schema = schema;
 		}
 
-		public boolean isMetadataComplete() {
+		public Boolean isMetadataComplete() {
 			return metadataComplete;
 		}
 
-		void setMetadataComplete(boolean metadataComplete) {
+		void setMetadataComplete(Boolean metadataComplete) {
 			this.metadataComplete = metadataComplete;
 		}
 
-		public boolean isCascadePersist() {
+		public Boolean isCascadePersist() {
 			return cascadePersist;
 		}
 
-		void setCascadePersist(boolean cascadePersist) {
+		void setCascadePersist(Boolean cascadePersist) {
 			this.cascadePersist = cascadePersist;
 		}
 
@@ -230,8 +230,13 @@ public class EntityMappingsMocker {
 				if ( globalDefault.getCatalog() != null ) {
 					catalog = globalDefault.getCatalog();
 				}
-				metadataComplete = globalDefault.isMetadataComplete();
-				cascadePersist = globalDefault.isCascadePersist();
+				if ( globalDefault.isCascadePersist() != null ) {
+					cascadePersist = globalDefault.isCascadePersist();
+				}
+				if ( globalDefault.isMetadataComplete() != null ) {
+					metadataComplete = globalDefault.isMetadataComplete();
+				}
+
 			}
 		}
 	}

@@ -95,7 +95,7 @@ class DefaultConfigurationHelper {
 		if ( hasSchemaOrCatalogDefined( defaults ) ) {
 			applyDefaultSchemaAndCatalog( annotationsMap, defaults );
 		}
-		if ( defaults.isCascadePersist() ) {
+		if ( defaults.isCascadePersist()!=null && defaults.isCascadePersist() ) {
 			applyDefaultCascadePersist( annotationsMap );
 		}
 	}

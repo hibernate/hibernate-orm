@@ -65,7 +65,7 @@ abstract class AnnotationMocker extends AbstractMocker {
 	}
 
 	protected boolean isDefaultCascadePersist() {
-		return defaults.isCascadePersist();
+		return defaults.isCascadePersist()!=null && defaults.isCascadePersist();
 	}
 
 	//@JoinTable

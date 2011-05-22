@@ -184,10 +184,10 @@ public class IndexBuilder {
 		// annotations classes overrided by xml
 		if ( indexedClassInfoAnnotationsMap.containsKey( name ) ) {
 			Map<DotName, List<AnnotationInstance>> tmp = getIndexedAnnotations( name );
-			DefaultConfigurationHelper.INSTANCE.applyDefaults( tmp, defaults );
 			mergeAnnotationMap( tmp, map );
 		}
-
+		DefaultConfigurationHelper.INSTANCE.applyDefaults( map, defaults );
+		
 		mergeAnnotationMap( map, annotations );
 	}
 

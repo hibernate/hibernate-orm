@@ -16,38 +16,38 @@ import org.hibernate.metamodel.source.annotations.xml.PseudoJpaDotNames;
  * @author Strong Liu
  */
 class PersistenceMetadataMocker extends AbstractMocker {
-	private XMLPersistenceUnitDefaults persistenceUnitDefaults;
-	private GlobalAnnotations globalAnnotations = new GlobalAnnotations();
-	private static Map<DotName, DotName> nameDotNameMap = new HashMap<DotName, DotName>();
+	private final XMLPersistenceUnitDefaults persistenceUnitDefaults;
+	private final GlobalAnnotations globalAnnotations = new GlobalAnnotations();
+	/**
+	 * Map JPA Annotations name to Pseudo JPA Annotations name.
+	 */
+	private final static Map<DotName, DotName> nameMapper = new HashMap<DotName, DotName>();
 
 	static {
-		nameDotNameMap.put( ACCESS, PseudoJpaDotNames.DEFAULT_ACCESS );
-		nameDotNameMap.put( ENTITY_LISTENERS, PseudoJpaDotNames.DEFAULT_ENTITY_LISTENERS );
-		nameDotNameMap.put( POST_LOAD, PseudoJpaDotNames.DEFAULT_POST_LOAD );
-		nameDotNameMap.put( POST_REMOVE, PseudoJpaDotNames.DEFAULT_POST_REMOVE );
-		nameDotNameMap.put( POST_UPDATE, PseudoJpaDotNames.DEFAULT_POST_UPDATE );
-		nameDotNameMap.put( POST_PERSIST, PseudoJpaDotNames.DEFAULT_POST_PERSIST );
-		nameDotNameMap.put( PRE_REMOVE, PseudoJpaDotNames.DEFAULT_PRE_REMOVE );
-		nameDotNameMap.put( PRE_UPDATE, PseudoJpaDotNames.DEFAULT_PRE_UPDATE );
-		nameDotNameMap.put( PRE_PERSIST, PseudoJpaDotNames.DEFAULT_PRE_PERSIST );
-		nameDotNameMap.put( PseudoJpaDotNames.DEFAULT_DELIMITED_IDENTIFIERS, PseudoJpaDotNames.DEFAULT_DELIMITED_IDENTIFIERS );
+		nameMapper.put( ACCESS, PseudoJpaDotNames.DEFAULT_ACCESS );
+		nameMapper.put( ENTITY_LISTENERS, PseudoJpaDotNames.DEFAULT_ENTITY_LISTENERS );
+		nameMapper.put( POST_LOAD, PseudoJpaDotNames.DEFAULT_POST_LOAD );
+		nameMapper.put( POST_REMOVE, PseudoJpaDotNames.DEFAULT_POST_REMOVE );
+		nameMapper.put( POST_UPDATE, PseudoJpaDotNames.DEFAULT_POST_UPDATE );
+		nameMapper.put( POST_PERSIST, PseudoJpaDotNames.DEFAULT_POST_PERSIST );
+		nameMapper.put( PRE_REMOVE, PseudoJpaDotNames.DEFAULT_PRE_REMOVE );
+		nameMapper.put( PRE_UPDATE, PseudoJpaDotNames.DEFAULT_PRE_UPDATE );
+		nameMapper.put( PRE_PERSIST, PseudoJpaDotNames.DEFAULT_PRE_PERSIST );
+		nameMapper.put(
+				PseudoJpaDotNames.DEFAULT_DELIMITED_IDENTIFIERS,
+				PseudoJpaDotNames.DEFAULT_DELIMITED_IDENTIFIERS
+		);
 	}
 
 	PersistenceMetadataMocker(IndexBuilder indexBuilder, XMLPersistenceUnitDefaults persistenceUnitDefaults) {
 		super( indexBuilder );
 		this.persistenceUnitDefaults = persistenceUnitDefaults;
-
-
 	}
 
-	@Override
-	protected AnnotationInstance push(AnnotationInstance annotationInstance) {
-		if ( annotationInstance != null ) {
-			return globalAnnotations.push( annotationInstance.name(), annotationInstance );
-		}
-		return null;
-	}
-
+	/**
+	 * Mock global configurations defined in <persistence-unit-metadata> with pseudo JPA annotation name.
+	 * NOTE: These mocked annotations do not have {@link AnnotationTarget target}.
+	 */
 	final void process() {
 		parserAccessType( persistenceUnitDefaults.getAccess(), null );
 		if ( persistenceUnitDefaults.getDelimitedIdentifiers() != null ) {
@@ -60,8 +60,16 @@ class PersistenceMetadataMocker extends AbstractMocker {
 	}
 
 	@Override
+	protected AnnotationInstance push(AnnotationInstance annotationInstance) {
+		if ( annotationInstance != null ) {
+			return globalAnnotations.push( annotationInstance.name(), annotationInstance );
+		}
+		return null;
+	}
+
+	@Override
 	protected AnnotationInstance create(DotName name, AnnotationTarget target, AnnotationValue[] annotationValues) {
-		DotName defaultName = nameDotNameMap.get( name );
+		DotName defaultName = nameMapper.get( name );
 		if ( defaultName == null ) {
 			return null;
 		}
@@ -69,7 +77,7 @@ class PersistenceMetadataMocker extends AbstractMocker {
 
 	}
 
-	class DefaultListenerMocker extends ListenerMocker {
+	private class DefaultListenerMocker extends ListenerMocker {
 		DefaultListenerMocker(IndexBuilder indexBuilder, ClassInfo classInfo) {
 			super( indexBuilder, classInfo );
 		}
@@ -81,7 +89,7 @@ class PersistenceMetadataMocker extends AbstractMocker {
 
 		@Override
 		protected AnnotationInstance create(DotName name, AnnotationTarget target, AnnotationValue[] annotationValues) {
-		   return PersistenceMetadataMocker.this.create( name,target,annotationValues );
+			return PersistenceMetadataMocker.this.create( name, target, annotationValues );
 		}
 
 		@Override
@@ -89,6 +97,4 @@ class PersistenceMetadataMocker extends AbstractMocker {
 			return new DefaultListenerMocker( indexBuilder, classInfo );
 		}
 	}
-
-
 }

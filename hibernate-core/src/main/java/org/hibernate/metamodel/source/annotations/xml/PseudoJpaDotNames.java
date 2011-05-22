@@ -26,6 +26,8 @@ package org.hibernate.metamodel.source.annotations.xml;
 import org.jboss.jandex.DotName;
 
 /**
+ * Pseudo JPA Annotation name to distinguish Annotations defined in <persistence-unit-metadata>
+ *
  * @author Strong Liu
  */
 public interface PseudoJpaDotNames {

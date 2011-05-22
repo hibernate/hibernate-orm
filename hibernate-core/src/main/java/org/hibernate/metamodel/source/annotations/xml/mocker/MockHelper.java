@@ -244,24 +244,6 @@ public class MockHelper {
 		}
 	}
 
-	public static boolean hasSchemaOrCatalogDefined(EntityMappingsMocker.Default defaults) {
-		if ( defaults == null ) {
-			return false;
-		}
-		return StringHelper.isNotEmpty( defaults.getSchema() ) || StringHelper.isNotEmpty( defaults.getCatalog() );
-	}
-
-	public static void updateSchema(SchemaAware schemaAware, EntityMappingsMocker.Default defaults) {
-		if ( hasSchemaOrCatalogDefined( defaults ) ) {
-			if ( StringHelper.isEmpty( schemaAware.getSchema() ) ) {
-				schemaAware.setSchema( defaults.getSchema() );
-			}
-			if ( StringHelper.isEmpty( schemaAware.getCatalog() ) ) {
-				schemaAware.setCatalog( defaults.getCatalog() );
-			}
-		}
-	}
-
 
 	/**
 	 * @param t1 can't be null

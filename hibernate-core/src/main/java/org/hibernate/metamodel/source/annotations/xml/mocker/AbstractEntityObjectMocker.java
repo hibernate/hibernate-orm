@@ -55,11 +55,16 @@ abstract class AbstractEntityObjectMocker extends AnnotationMocker {
 
 	private boolean isPreProcessCalled = false;
 
+	/**
+	 * Pre-process Entity Objects to find the default {@link javax.persistence.Access} for later attributes processing.
+	 */
 	final void preProcess() {
 		applyDefaults();
 		classInfo = indexBuilder.createClassInfo( getClassName() );
 		DotName classDotName = classInfo.name();
-		indexBuilder.metadataComplete( classDotName, isMetadataComplete() );
+		if ( isMetadataComplete() ) {
+			indexBuilder.metadataComplete( classDotName );
+		}
 		parserAccessType( getAccessType(), getTarget() );
 		isPreProcessCalled = true;
 	}

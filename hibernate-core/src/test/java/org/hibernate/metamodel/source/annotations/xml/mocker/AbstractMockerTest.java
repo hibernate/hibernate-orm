@@ -147,7 +147,9 @@ public abstract class AbstractMockerTest {
 			}
 		}
 	}
-
+	protected void assertHasAnnotation(Index index,  DotName annName) {
+		assertHasAnnotation( index, null, annName, 1 );
+	}
 	protected void assertHasAnnotation(Index index, DotName className, DotName annName) {
 		assertHasAnnotation( index, className, annName, 1 );
 	}

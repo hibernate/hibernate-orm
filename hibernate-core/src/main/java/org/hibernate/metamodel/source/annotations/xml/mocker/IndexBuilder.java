@@ -70,63 +70,63 @@ public class IndexBuilder {
 		this.indexedClassInfoAnnotationsMap = new HashMap<DotName, Map<DotName, List<AnnotationInstance>>>();
 	}
 
+	/**
+	 * Build new {@link Index} with mocked annotations from orm.xml.
+	 * This method should be only called once per {@org.hibernate.metamodel.source.annotations.xml.mocker.IndexBuilder IndexBuilder} instance.
+	 *
+	 * @param globalDefaults Global defaults from <persistence-unit-metadata>, or null.
+	 *
+	 * @return Index.
+	 */
 	Index build(EntityMappingsMocker.Default globalDefaults) {
-		if ( !classInfoAnnotationsMap.isEmpty() ) {
-			throw new AssertionFailure( "IndexBuilder.finishEntityObject must be called after processing each entity." );
-		}
 		//merge annotations that not overrided by xml into the new Index
 		for ( ClassInfo ci : index.getKnownClasses() ) {
 			DotName name = ci.name();
-			// annotations classes NOT overrided by xml
-			if ( !indexedClassInfoAnnotationsMap.containsKey( name ) ) {
-				if ( ci.annotations() != null && !ci.annotations().isEmpty() ) {
-					Map<DotName, List<AnnotationInstance>> tmp = new HashMap<DotName, List<AnnotationInstance>>( ci.annotations() );
-					DefaultConfigurationHelper.INSTANCE.apply( tmp, globalDefaults );
-					mergeAnnotationMap( tmp, annotations );
-					tmp.clear();
-					classes.put( name, ci );
-					if ( ci.superName() != null ) {
-						addSubClasses( ci.superName(), ci );
-					}
-					if ( ci.interfaces() != null && ci.interfaces().length > 0 ) {
-						addImplementors( ci.interfaces(), ci );
-					}
+			if ( indexedClassInfoAnnotationsMap.containsKey( name ) ) {
+				//this class has been overrided by orm.xml
+				continue;
+			}
+			if ( ci.annotations() != null && !ci.annotations().isEmpty() ) {
+				Map<DotName, List<AnnotationInstance>> tmp = new HashMap<DotName, List<AnnotationInstance>>( ci.annotations() );
+				DefaultConfigurationHelper.INSTANCE.applyDefaults( tmp, globalDefaults );
+				mergeAnnotationMap( tmp, annotations );
+				classes.put( name, ci );
+				if ( ci.superName() != null ) {
+					addSubClasses( ci.superName(), ci );
+				}
+				if ( ci.interfaces() != null && ci.interfaces().length > 0 ) {
+					addImplementors( ci.interfaces(), ci );
 				}
 			}
 		}
-		Index newIndex = Index.create(
+		return Index.create(
 				annotations, subclasses, implementors, classes
 		);
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace( "Annotations from new build Index:" );
-			newIndex.printAnnotations();
-		}
-		return newIndex;
 	}
 
-	void mappingMetadataComplete(EntityMappingsMocker.Default globalDefaults) {
-		if ( globalDefaults != null && globalDefaults.getMetadataComplete() != null && globalDefaults.getMetadataComplete() ) {
-			LOG.debug(
-					"xml-mapping-metadata-complete is specified in persistence-unit-metadata, ignore JPA annotations."
-			);
-			index = Index.create(
-					new HashMap<DotName, List<AnnotationInstance>>(),
-					new HashMap<DotName, List<ClassInfo>>(),
-					new HashMap<DotName, List<ClassInfo>>(),
-					new HashMap<DotName, ClassInfo>()
-			);
-		}
-
+	/**
+	 * If {@code xml-mapping-metadata-complete} is defined in PersistenceUnitMetadata, we create a new empty {@link Index} here.
+	 */
+	void mappingMetadataComplete() {
+		LOG.debug(
+				"xml-mapping-metadata-complete is specified in persistence-unit-metadata, ignore JPA annotations."
+		);
+		index = Index.create(
+				new HashMap<DotName, List<AnnotationInstance>>(),
+				new HashMap<DotName, List<ClassInfo>>(),
+				new HashMap<DotName, List<ClassInfo>>(),
+				new HashMap<DotName, ClassInfo>()
+		);
 	}
 
 	/**
 	 * @param name Entity Object dot name which is being process.
-	 * @param metadataComplete True Entity Object defined in orm.xml is supposed to override annotations.
 	 */
-	void metadataComplete(DotName name, boolean metadataComplete) {
-		if ( metadataComplete ) {
-			getIndexedAnnotations( name ).clear();
-		}
+	void metadataComplete(DotName name) {
+		LOG.debug(
+				"metadata-complete is specified in " + name + ", ignore JPA annotations."
+		);
+		getIndexedAnnotations( name ).clear();
 	}
 
 	public Map<DotName, List<AnnotationInstance>> getIndexedAnnotations(DotName name) {
@@ -139,7 +139,7 @@ public class IndexBuilder {
 			else {
 				map = new HashMap<DotName, List<AnnotationInstance>>( ci.annotations() );
 				//here we ignore global annotations
-				for ( DotName globalAnnotationName : IndexedAnnotationFilter.GLOBAL_ANNOTATIONS ) {
+				for ( DotName globalAnnotationName : DefaultConfigurationHelper.GLOBAL_ANNOTATIONS ) {
 					if ( map.containsKey( globalAnnotationName ) ) {
 						map.put( globalAnnotationName, Collections.<AnnotationInstance>emptyList() );
 					}
@@ -163,7 +163,7 @@ public class IndexBuilder {
 	}
 
 	void collectGlobalConfigurationFromIndex(GlobalAnnotations globalAnnotations) {
-		for ( DotName annName : IndexedAnnotationFilter.GLOBAL_ANNOTATIONS ) {
+		for ( DotName annName : DefaultConfigurationHelper.GLOBAL_ANNOTATIONS ) {
 			List<AnnotationInstance> annotationInstanceList = index.getAnnotations( annName );
 			if ( MockHelper.isNotEmpty( annotationInstanceList ) ) {
 				globalAnnotations.addIndexedAnnotationInstance( annotationInstanceList );
@@ -174,20 +174,18 @@ public class IndexBuilder {
 
 	void finishGlobalConfigurationMocking(GlobalAnnotations globalAnnotations) {
 		annotations.putAll( globalAnnotations.getAnnotationInstanceMap() );
-
 	}
 
 	void finishEntityObject(final DotName name, final EntityMappingsMocker.Default defaults) {
+		Map<DotName, List<AnnotationInstance>> map = classInfoAnnotationsMap.get( name );
+		if ( map == null ) {
+			throw new AssertionFailure( "Calling finish entity object " + name + " before create it." );
+		}
 		// annotations classes overrided by xml
 		if ( indexedClassInfoAnnotationsMap.containsKey( name ) ) {
 			Map<DotName, List<AnnotationInstance>> tmp = getIndexedAnnotations( name );
-			DefaultConfigurationHelper.INSTANCE.apply( tmp, defaults );
-			mergeAnnotationMap( tmp, classInfoAnnotationsMap.get( name ) );
-			tmp.clear();
-		}
-		Map<DotName, List<AnnotationInstance>> map = classInfoAnnotationsMap.remove( name );
-		if ( map == null ) {
-			throw new AssertionFailure( "Calling finish entity object " + name.toString() + " before create it." );
+			DefaultConfigurationHelper.INSTANCE.applyDefaults( tmp, defaults );
+			mergeAnnotationMap( tmp, map );
 		}
 
 		mergeAnnotationMap( map, annotations );
@@ -198,7 +196,7 @@ public class IndexBuilder {
 		if ( annotationInstance == null ) {
 			return;
 		}
-		for ( IndexedAnnotationFilter indexedAnnotationFilter : IndexedAnnotationFilter.filters ) {
+		for ( IndexedAnnotationFilter indexedAnnotationFilter : IndexedAnnotationFilter.ALL_FILTERS ) {
 			indexedAnnotationFilter.beforePush( this, targetClassName, annotationInstance );
 		}
 		Map<DotName, List<AnnotationInstance>> map = classInfoAnnotationsMap.get( targetClassName );
@@ -224,9 +222,7 @@ public class IndexBuilder {
 		}
 		DotName classDotName = DotName.createSimple( className );
 		if ( classes.containsKey( classDotName ) ) {
-			LOG.warnf(
-					"Class %s has already been processed by IndexBuilder, ignoring this call and return previous created ClassInfo object"
-			);
+			//classInfoAnnotationsMap.put( classDotName, new HashMap<DotName, List<AnnotationInstance>>(classes.get( classDotName ).annotations()) );
 			return classes.get( classDotName );
 		}
 		Class clazz = serviceRegistry.getService( ClassLoaderService.class ).classForName( className );

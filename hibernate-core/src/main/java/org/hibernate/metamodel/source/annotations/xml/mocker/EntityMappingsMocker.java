@@ -34,7 +34,6 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.source.annotation.xml.XMLAccessType;
 import org.hibernate.metamodel.source.annotation.xml.XMLEmbeddable;
 import org.hibernate.metamodel.source.annotation.xml.XMLEntity;
-import org.hibernate.metamodel.source.annotation.xml.XMLEntityListeners;
 import org.hibernate.metamodel.source.annotation.xml.XMLEntityMappings;
 import org.hibernate.metamodel.source.annotation.xml.XMLMappedSuperclass;
 import org.hibernate.metamodel.source.annotation.xml.XMLPersistenceUnitDefaults;
@@ -51,14 +50,13 @@ public class EntityMappingsMocker {
 			CoreMessageLogger.class,
 			EntityMappingsMocker.class.getName()
 	);
-	private List<XMLEntityMappings> entityMappingsList;
-	//todo delimited-identifier
+	private final List<XMLEntityMappings> entityMappingsList;
+	/**
+	 * Default configuration defined in Persistence Metadata Unit, one or zero per Persistence Unit.
+	 */
 	private Default globalDefaults;
-	final private IndexBuilder indexBuilder;
-	//todo default entity listeners
-	//todo default access type
-	private XMLEntityListeners defaultEntityListeners;
-	final private GlobalAnnotations globalAnnotations;
+	private final IndexBuilder indexBuilder;
+	private final GlobalAnnotations globalAnnotations;
 
 	public EntityMappingsMocker(List<XMLEntityMappings> entityMappingsList, Index index, ServiceRegistry serviceRegistry) {
 		this.entityMappingsList = entityMappingsList;
@@ -85,28 +83,27 @@ public class EntityMappingsMocker {
 		for ( XMLEntityMappings entityMappings : entityMappingsList ) {
 			//we have to iterate entityMappingsList first to find persistence-unit-metadata
 			XMLPersistenceUnitMetadata pum = entityMappings.getPersistenceUnitMetadata();
+			if ( globalDefaults != null ) {
+				LOG.duplicateMetadata();
+				return;
+			}
 			if ( pum == null ) {
 				continue;
 			}
-			if ( globalDefaults == null ) {
-				globalDefaults = new Default();
-				globalDefaults.setMetadataComplete( pum.getXmlMappingMetadataComplete() != null );
-				indexBuilder.mappingMetadataComplete( globalDefaults );
-				XMLPersistenceUnitDefaults pud = pum.getPersistenceUnitDefaults();
-				if ( pud == null ) {
-					return;
-				}
-				globalDefaults.setSchema( pud.getSchema() );
-				globalDefaults.setCatalog( pud.getCatalog() );
-				globalDefaults.setAccess( pud.getAccess() );
-				globalDefaults.setCascadePersist( pud.getCascadePersist() != null );
-				globalDefaults.setDelimitedIdentifiers( pud.getDelimitedIdentifiers() != null );
-				defaultEntityListeners = pud.getEntityListeners();
-				new PersistenceMetadataMocker( indexBuilder, pud ).process();
+			globalDefaults = new Default();
+			if ( pum.getXmlMappingMetadataComplete() != null ) {
+				globalDefaults.setMetadataComplete( true );
+				indexBuilder.mappingMetadataComplete();
 			}
-			else {
-				LOG.duplicateMetadata();
+			XMLPersistenceUnitDefaults pud = pum.getPersistenceUnitDefaults();
+			if ( pud == null ) {
+				return;
 			}
+			globalDefaults.setSchema( pud.getSchema() );
+			globalDefaults.setCatalog( pud.getCatalog() );
+			globalDefaults.setAccess( pud.getAccess() );
+			globalDefaults.setCascadePersist( pud.getCascadePersist() != null );
+			new PersistenceMetadataMocker( indexBuilder, pud ).process();
 		}
 	}
 
@@ -168,9 +165,8 @@ public class EntityMappingsMocker {
 		private String packageName;
 		private String schema;
 		private String catalog;
-		private Boolean metadataComplete;
-		private Boolean cascadePersist;
-		private Boolean delimitedIdentifier;
+		private boolean metadataComplete;
+		private boolean cascadePersist;
 
 		public XMLAccessType getAccess() {
 			return access;
@@ -204,28 +200,20 @@ public class EntityMappingsMocker {
 			this.schema = schema;
 		}
 
-		public Boolean getMetadataComplete() {
+		public boolean isMetadataComplete() {
 			return metadataComplete;
 		}
 
-		void setMetadataComplete(Boolean metadataComplete) {
+		void setMetadataComplete(boolean metadataComplete) {
 			this.metadataComplete = metadataComplete;
 		}
 
-		public Boolean getCascadePersist() {
+		public boolean isCascadePersist() {
 			return cascadePersist;
 		}
 
-		void setCascadePersist(Boolean cascadePersist) {
+		void setCascadePersist(boolean cascadePersist) {
 			this.cascadePersist = cascadePersist;
-		}
-
-		void setDelimitedIdentifiers(Boolean delimitedIdentifier) {
-			this.delimitedIdentifier = delimitedIdentifier;
-		}
-
-		public Boolean getDelimitedIdentifier() {
-			return delimitedIdentifier;
 		}
 
 		void override(Default globalDefault) {
@@ -242,15 +230,8 @@ public class EntityMappingsMocker {
 				if ( globalDefault.getCatalog() != null ) {
 					catalog = globalDefault.getCatalog();
 				}
-				if ( globalDefault.getDelimitedIdentifier() != null ) {
-					delimitedIdentifier = globalDefault.getDelimitedIdentifier();
-				}
-				if ( globalDefault.getMetadataComplete() != null ) {
-					metadataComplete = globalDefault.getMetadataComplete();
-				}
-				if ( globalDefault.getCascadePersist() != null ) {
-					cascadePersist = globalDefault.getCascadePersist();
-				}
+				metadataComplete = globalDefault.isMetadataComplete();
+				cascadePersist = globalDefault.isCascadePersist();
 			}
 		}
 	}

@@ -31,6 +31,7 @@ import org.jboss.jandex.AnnotationTarget;
 import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
 
+import org.hibernate.MappingException;
 import org.hibernate.metamodel.source.annotation.xml.XMLEntityListener;
 import org.hibernate.metamodel.source.annotation.xml.XMLEntityListeners;
 import org.hibernate.metamodel.source.annotation.xml.XMLPostLoad;
@@ -42,47 +43,47 @@ import org.hibernate.metamodel.source.annotation.xml.XMLPreRemove;
 import org.hibernate.metamodel.source.annotation.xml.XMLPreUpdate;
 
 /**
+ * {@link javax.persistence.EntityListeners @EntityListeners} mocker
+ *
  * @author Strong Liu
  */
 class ListenerMocker extends AbstractMocker {
-	private ClassInfo classInfo;
+	private final ClassInfo classInfo;
 
 	ListenerMocker(IndexBuilder indexBuilder, ClassInfo classInfo) {
 		super( indexBuilder );
 		this.classInfo = classInfo;
 	}
 
-	//@EntityListeners
 	AnnotationInstance parser(XMLEntityListeners entityListeners) {
-		if ( entityListeners == null ) {
-			return null;
+		if ( entityListeners.getEntityListener().isEmpty() ) {
+			throw new MappingException( "No child element of <entity-listener> found under <entity-listeners>." );
 		}
-		//class array value
-		List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
-		List<String> clazzNameList = new ArrayList<String>();
+		List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>( 1 );
+		List<String> clazzNameList = new ArrayList<String>( entityListeners.getEntityListener().size() );
 		for ( XMLEntityListener listener : entityListeners.getEntityListener() ) {
 			MockHelper.addToCollectionIfNotNull( clazzNameList, listener.getClazz() );
-			parser( listener );
-
+			parserEntityListener( listener );
 		}
 		MockHelper.classArrayValue( "value", clazzNameList, annotationValueList, indexBuilder.getServiceRegistry() );
 		return create( ENTITY_LISTENERS, classInfo, annotationValueList );
 	}
 
-	private void parser(XMLEntityListener listener) {
+	private void parserEntityListener(XMLEntityListener listener) {
 		String clazz = listener.getClazz();
 		ClassInfo tempClassInfo = indexBuilder.createClassInfo( clazz );
-		ListenerMocker builder = createListenerMocker( indexBuilder, tempClassInfo );
-		builder.parser( listener.getPostLoad() );
-		builder.parser( listener.getPostPersist() );
-		builder.parser( listener.getPostRemove() );
-		builder.parser( listener.getPostUpdate() );
-		builder.parser( listener.getPrePersist() );
-		builder.parser( listener.getPreRemove() );
-		builder.parser( listener.getPreUpdate() );
+		ListenerMocker mocker = createListenerMocker( indexBuilder, tempClassInfo );
+		mocker.parser( listener.getPostLoad() );
+		mocker.parser( listener.getPostPersist() );
+		mocker.parser( listener.getPostRemove() );
+		mocker.parser( listener.getPostUpdate() );
+		mocker.parser( listener.getPrePersist() );
+		mocker.parser( listener.getPreRemove() );
+		mocker.parser( listener.getPreUpdate() );
 		indexBuilder.finishEntityObject( tempClassInfo.name(), null );
 	}
-	protected ListenerMocker createListenerMocker(IndexBuilder indexBuilder, ClassInfo classInfo){
+
+	protected ListenerMocker createListenerMocker(IndexBuilder indexBuilder, ClassInfo classInfo) {
 		return new ListenerMocker( indexBuilder, classInfo );
 	}
 
@@ -91,7 +92,7 @@ class ListenerMocker extends AbstractMocker {
 		if ( callback == null ) {
 			return null;
 		}
-		return create( PRE_PERSIST, getTarget( callback.getMethodName() ) );
+		return create( PRE_PERSIST, getListenerTarget( callback.getMethodName() ) );
 	}
 
 	//@PreRemove
@@ -99,7 +100,7 @@ class ListenerMocker extends AbstractMocker {
 		if ( callback == null ) {
 			return null;
 		}
-		return create( PRE_REMOVE, getTarget( callback.getMethodName() ) );
+		return create( PRE_REMOVE, getListenerTarget( callback.getMethodName() ) );
 	}
 
 	//@PreUpdate
@@ -107,7 +108,7 @@ class ListenerMocker extends AbstractMocker {
 		if ( callback == null ) {
 			return null;
 		}
-		return create( PRE_UPDATE, getTarget( callback.getMethodName() ) );
+		return create( PRE_UPDATE, getListenerTarget( callback.getMethodName() ) );
 	}
 
 	//@PostPersist
@@ -115,7 +116,7 @@ class ListenerMocker extends AbstractMocker {
 		if ( callback == null ) {
 			return null;
 		}
-		return create( POST_PERSIST, getTarget( callback.getMethodName() ) );
+		return create( POST_PERSIST, getListenerTarget( callback.getMethodName() ) );
 	}
 
 	//@PostUpdate
@@ -123,7 +124,7 @@ class ListenerMocker extends AbstractMocker {
 		if ( callback == null ) {
 			return null;
 		}
-		return create( POST_UPDATE, getTarget( callback.getMethodName() ) );
+		return create( POST_UPDATE, getListenerTarget( callback.getMethodName() ) );
 	}
 
 	//@PostRemove
@@ -131,7 +132,7 @@ class ListenerMocker extends AbstractMocker {
 		if ( callback == null ) {
 			return null;
 		}
-		return create( POST_REMOVE, getTarget( callback.getMethodName() ) );
+		return create( POST_REMOVE, getListenerTarget( callback.getMethodName() ) );
 	}
 
 	//@PostLoad
@@ -139,10 +140,10 @@ class ListenerMocker extends AbstractMocker {
 		if ( callback == null ) {
 			return null;
 		}
-		return create( POST_LOAD, getTarget( callback.getMethodName() ) );
+		return create( POST_LOAD, getListenerTarget( callback.getMethodName() ) );
 	}
 
-	private AnnotationTarget getTarget(String methodName) {
+	private AnnotationTarget getListenerTarget(String methodName) {
 		return MockHelper.getTarget(
 				indexBuilder.getServiceRegistry(), classInfo, methodName, MockHelper.TargetType.METHOD
 		);

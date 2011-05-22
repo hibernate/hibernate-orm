@@ -65,7 +65,7 @@ abstract class AnnotationMocker extends AbstractMocker {
 	}
 
 	protected boolean isDefaultCascadePersist() {
-		return defaults.getCascadePersist() != null && defaults.getCascadePersist();
+		return defaults.isCascadePersist();
 	}
 
 	//@JoinTable
@@ -73,7 +73,10 @@ abstract class AnnotationMocker extends AbstractMocker {
 		if ( joinTable == null ) {
 			return null;
 		}
-		MockHelper.updateSchema( new SchemaAware.JoinTableSchemaAware( joinTable ), getDefaults() );
+		DefaultConfigurationHelper.INSTANCE.applyDefaults(
+				new SchemaAware.JoinTableSchemaAware( joinTable ),
+				getDefaults()
+		);
 		List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
 		MockHelper.stringValue( "name", joinTable.getName(), annotationValueList );
 		MockHelper.stringValue( "catalog", joinTable.getCatalog(), annotationValueList );
@@ -380,7 +383,10 @@ abstract class AnnotationMocker extends AbstractMocker {
 		if ( collectionTable == null ) {
 			return null;
 		}
-		MockHelper.updateSchema( new SchemaAware.CollectionTableSchemaAware( collectionTable ), getDefaults() );
+		DefaultConfigurationHelper.INSTANCE.applyDefaults(
+				new SchemaAware.CollectionTableSchemaAware( collectionTable ),
+				getDefaults()
+		);
 		List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
 		MockHelper.stringValue( "name", collectionTable.getName(), annotationValueList );
 		MockHelper.stringValue( "catalog", collectionTable.getCatalog(), annotationValueList );
@@ -476,6 +482,39 @@ abstract class AnnotationMocker extends AbstractMocker {
 			return false;
 		}
 
+	}
+
+	class XMLAssociationOverrideProxy extends XMLAssociationOverride {
+		private AnnotationValue joinTableAnnotationValue;
+		private AnnotationValue joinColumnsAnnotationValue;
+
+		AnnotationValue getJoinColumnsAnnotationValue() {
+			return joinColumnsAnnotationValue;
+		}
+
+		void setJoinColumnsAnnotationValue(AnnotationValue joinColumnsAnnotationValue) {
+			this.joinColumnsAnnotationValue = joinColumnsAnnotationValue;
+		}
+
+		AnnotationValue getJoinTableAnnotationValue() {
+			return joinTableAnnotationValue;
+		}
+
+		void setJoinTableAnnotationValue(AnnotationValue joinTableAnnotationValue) {
+			this.joinTableAnnotationValue = joinTableAnnotationValue;
+		}
+	}
+
+	class XMLAttributeOverrideProxy extends XMLAttributeOverride {
+		private AnnotationValue columnAnnotationValue;
+
+		AnnotationValue getColumnAnnotationValue() {
+			return columnAnnotationValue;
+		}
+
+		void setColumnAnnotationValue(AnnotationValue columnAnnotationValue) {
+			this.columnAnnotationValue = columnAnnotationValue;
+		}
 	}
 
 	/**

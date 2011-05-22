@@ -30,49 +30,144 @@ import java.util.Map;
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.DotName;
+import org.jboss.logging.Logger;
 
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.source.annotation.xml.XMLEmbeddable;
+import org.hibernate.metamodel.source.annotation.xml.XMLEntity;
+import org.hibernate.metamodel.source.annotation.xml.XMLMappedSuperclass;
+import org.hibernate.metamodel.source.annotation.xml.XMLTable;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
+import org.hibernate.metamodel.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.source.annotations.xml.filter.IndexedAnnotationFilter;
 
 /**
  * @author Strong Liu
  */
 class DefaultConfigurationHelper {
-	static DefaultConfigurationHelper INSTANCE = new DefaultConfigurationHelper();
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			DefaultConfigurationHelper.class.getName()
+	);
+	static final DefaultConfigurationHelper INSTANCE = new DefaultConfigurationHelper();
+	static final DotName[] GLOBAL_ANNOTATIONS = new DotName[] {
+			JPADotNames.SEQUENCE_GENERATOR,
+			JPADotNames.TABLE_GENERATOR,
+			JPADotNames.NAMED_QUERIES,
+			JPADotNames.NAMED_QUERY,
+			JPADotNames.NAMED_NATIVE_QUERIES,
+			JPADotNames.NAMED_NATIVE_QUERY,
+			JPADotNames.SQL_RESULT_SET_MAPPING,
+			JPADotNames.SQL_RESULT_SET_MAPPINGS
+	};
+	static final DotName[] SCHEMA_AWARE_ANNOTATIONS = new DotName[] {
+			JPADotNames.TABLE,
+			JPADotNames.JOIN_TABLE,
+			JPADotNames.COLLECTION_TABLE,
+			JPADotNames.SECONDARY_TABLE,
+			JPADotNames.SECONDARY_TABLES,
+			JPADotNames.TABLE_GENERATOR,
+			JPADotNames.SEQUENCE_GENERATOR
+	};
+	static final DotName[] ASSOCIATION_ANNOTATIONS = new DotName[] {
+			JPADotNames.ONE_TO_MANY, JPADotNames.ONE_TO_ONE, JPADotNames.MANY_TO_ONE, JPADotNames.MANY_TO_MANY
+	};
 
 	private DefaultConfigurationHelper() {
 	}
 
-	void apply(Map<DotName, List<AnnotationInstance>> annotationsMap, EntityMappingsMocker.Default defaults) {
-		if ( annotationsMap == null || annotationsMap.isEmpty() || defaults == null ) {
-			return;
-		}
-		if ( MockHelper.hasSchemaOrCatalogDefined( defaults ) ) {
-
-			for ( DotName annName : IndexedAnnotationFilter.SCHEMAAWARE_ANNOTATIONS ) {
-				if ( annName.equals( JPADotNames.TABLE ) && !annotationsMap.containsKey( JPADotNames.TABLE ) && annotationsMap
-						.containsKey( JPADotNames.ENTITY ) ) {
-					//if an entity doesn't have a @Table, we create one here
-					AnnotationInstance entity = annotationsMap.get( JPADotNames.ENTITY ).get( 0 );
-					AnnotationInstance table = AnnotationInstance.create(
-							JPADotNames.TABLE, entity.target(), MockHelper.EMPTY_ANNOTATION_VALUE_ARRAY
-					);
-					List<AnnotationInstance> tableList = new ArrayList<AnnotationInstance>( 1 );
-					tableList.add( table );
-
-					annotationsMap.put( JPADotNames.TABLE, tableList );
-				}
-				if ( annotationsMap.containsKey( annName ) ) {
-					overrideScheamCatalogByDefault( annName, annotationsMap, defaults );
-				}
+	void applyDefaults(SchemaAware schemaAware, EntityMappingsMocker.Default defaults) {
+		if ( hasSchemaOrCatalogDefined( defaults ) ) {
+			if ( StringHelper.isEmpty( schemaAware.getSchema() ) ) {
+				schemaAware.setSchema( defaults.getSchema() );
+			}
+			if ( StringHelper.isEmpty( schemaAware.getCatalog() ) ) {
+				schemaAware.setCatalog( defaults.getCatalog() );
 			}
 		}
-		if ( defaults.getCascadePersist() != null && defaults.getCascadePersist() ) {
-			for ( DotName annName : IndexedAnnotationFilter.ASSOCIATION_ANNOTATIONS ) {
-				if ( annotationsMap.containsKey( annName ) ) {
-					addCascadePersistIfNotExist( annName, annotationsMap );
-				}
+	}
+
+	void applyDefaults(Map<DotName, List<AnnotationInstance>> annotationsMap, EntityMappingsMocker.Default defaults) {
+		if ( annotationsMap.isEmpty() || defaults == null ) {
+			return;
+		}
+		if ( hasSchemaOrCatalogDefined( defaults ) ) {
+			applyDefaultSchemaAndCatalog( annotationsMap, defaults );
+		}
+		if ( defaults.isCascadePersist() ) {
+			applyDefaultCascadePersist( annotationsMap );
+		}
+	}
+
+	void applyDefaults(XMLMappedSuperclass mappedSuperclass, EntityMappingsMocker.Default defaults) {
+		applyDefaultsToEntityObject( new MappedSuperClassEntityObject( mappedSuperclass ), defaults );
+	}
+
+	void applyDefaults(XMLEmbeddable embeddable, EntityMappingsMocker.Default defaults) {
+		applyDefaultsToEntityObject( new EmbeddableEntityObject( embeddable ), defaults );
+	}
+
+	void applyDefaults(XMLEntity entity, EntityMappingsMocker.Default defaults) {
+		mockTableIfNonExist( entity, defaults );
+		applyDefaultsToEntityObject( new EntityEntityObject( entity ), defaults );
+	}
+
+	private void applyDefaultsToEntityObject(EntityObject entityObject, EntityMappingsMocker.Default defaults) {
+		if ( defaults == null ) {
+			return;
+		}
+		String className = MockHelper.buildSafeClassName( entityObject.getClazz(), defaults.getPackageName() );
+		entityObject.setClazz( className );
+		if ( entityObject.isMetadataComplete() == null ) {
+			entityObject.setMetadataComplete( defaults.isMetadataComplete() );
+		}
+		LOG.debugf( "Adding XML overriding information for %s", className );
+	}
+
+	private boolean hasSchemaOrCatalogDefined(EntityMappingsMocker.Default defaults) {
+		return ( defaults != null ) && ( StringHelper.isNotEmpty( defaults.getSchema() ) || StringHelper.isNotEmpty(
+				defaults.getCatalog()
+		) );
+	}
+
+	private void applyDefaultCascadePersist(Map<DotName, List<AnnotationInstance>> annotationsMap) {
+		for ( DotName annName : ASSOCIATION_ANNOTATIONS ) {
+			if ( annotationsMap.containsKey( annName ) ) {
+				addCascadePersistIfNotExist( annName, annotationsMap );
+			}
+		}
+	}
+
+	private void applyDefaultSchemaAndCatalog(Map<DotName, List<AnnotationInstance>> annotationsMap, EntityMappingsMocker.Default defaults) {
+		for ( DotName annName : SCHEMA_AWARE_ANNOTATIONS ) {
+			mockTableIfNonExist( annotationsMap, annName );
+			if ( annotationsMap.containsKey( annName ) ) {
+				overrideSchemaCatalogByDefault( annName, annotationsMap, defaults );
+			}
+		}
+	}
+
+	private void mockTableIfNonExist(Map<DotName, List<AnnotationInstance>> annotationsMap, DotName annName) {
+		if ( annName == JPADotNames.TABLE && !annotationsMap.containsKey( JPADotNames.TABLE ) && annotationsMap
+				.containsKey( JPADotNames.ENTITY ) ) {
+			//if an entity doesn't have a @Table, we create one here
+			AnnotationInstance entity = JandexHelper.getSingleAnnotation( annotationsMap, JPADotNames.ENTITY );
+			AnnotationInstance table = MockHelper.create(
+					JPADotNames.TABLE, entity.target(), MockHelper.EMPTY_ANNOTATION_VALUE_ARRAY
+			);
+			List<AnnotationInstance> annotationInstanceList = new ArrayList<AnnotationInstance>( 1 );
+			annotationInstanceList.add( table );
+			annotationsMap.put( JPADotNames.TABLE, annotationInstanceList );
+		}
+	}
+
+	private void mockTableIfNonExist(XMLEntity entity, EntityMappingsMocker.Default defaults) {
+		if ( hasSchemaOrCatalogDefined( defaults ) ) {
+			XMLTable table = entity.getTable();
+			if ( table == null ) {
+				table = new XMLTable();
+				entity.setTable( table );
 			}
 		}
 	}
@@ -98,11 +193,12 @@ class DefaultConfigurationHelper {
 				for ( String type : cascadeTypes ) {
 					if ( "PERSIST".equals( type ) ) {
 						hasPersistDefined = true;
-						break;
+						continue;
 					}
 				}
 				if ( hasPersistDefined ) {
-					break;
+					newAnnotationInstanceList.add( annotationInstance );
+					continue;
 				}
 				String[] newCascadeTypes = new String[cascadeTypes.length + 1];
 				newCascadeTypes[0] = "PERSIST";
@@ -116,7 +212,7 @@ class DefaultConfigurationHelper {
 			}
 			newAnnotationValueList.add( cascadeValue );
 
-			AnnotationInstance newAnnotationInstance = AnnotationInstance.create(
+			AnnotationInstance newAnnotationInstance = MockHelper.create(
 					annotationInstance.name(),
 					annotationInstance.target(),
 					MockHelper.toArray( newAnnotationValueList )
@@ -127,7 +223,7 @@ class DefaultConfigurationHelper {
 	}
 
 	//@Table, @CollectionTable, @JoinTable, @SecondaryTable
-	private void overrideScheamCatalogByDefault(DotName annName, Map<DotName, List<AnnotationInstance>> indexedAnnotationMap, EntityMappingsMocker.Default defaults) {
+	private void overrideSchemaCatalogByDefault(DotName annName, Map<DotName, List<AnnotationInstance>> indexedAnnotationMap, EntityMappingsMocker.Default defaults) {
 		List<AnnotationInstance> annotationInstanceList = indexedAnnotationMap.get( annName );
 		if ( annotationInstanceList == null || annotationInstanceList.isEmpty() ) {
 			return;
@@ -138,14 +234,14 @@ class DefaultConfigurationHelper {
 				AnnotationInstance[] secondaryTableAnnotationInstanceArray = annotationInstance.value().asNestedArray();
 				AnnotationValue[] newAnnotationValueArray = new AnnotationValue[secondaryTableAnnotationInstanceArray.length];
 				for ( int i = 0; i < secondaryTableAnnotationInstanceArray.length; i++ ) {
-					newAnnotationValueArray[i] = AnnotationValue.createNestedAnnotationValue(
-							"", overrideScheamCatalogByDefault(
+					newAnnotationValueArray[i] = MockHelper.nestedAnnotationValue(
+							"", overrideSchemaCatalogByDefault(
 							secondaryTableAnnotationInstanceArray[i],
 							defaults
 					)
 					);
 				}
-				AnnotationInstance secondaryTablesAnnotationInstance = AnnotationInstance.create(
+				AnnotationInstance secondaryTablesAnnotationInstance = MockHelper.create(
 						annName,
 						annotationInstance.target(),
 						new AnnotationValue[] {
@@ -155,13 +251,13 @@ class DefaultConfigurationHelper {
 				newAnnotationInstanceList.add( secondaryTablesAnnotationInstance );
 			}
 			else {
-				newAnnotationInstanceList.add( overrideScheamCatalogByDefault( annotationInstance, defaults ) );
+				newAnnotationInstanceList.add( overrideSchemaCatalogByDefault( annotationInstance, defaults ) );
 			}
 		}
 		indexedAnnotationMap.put( annName, newAnnotationInstanceList );
 	}
 
-	private AnnotationInstance overrideScheamCatalogByDefault(AnnotationInstance annotationInstance, EntityMappingsMocker.Default defaults) {
+	private AnnotationInstance overrideSchemaCatalogByDefault(AnnotationInstance annotationInstance, EntityMappingsMocker.Default defaults) {
 		List<AnnotationValue> newAnnotationValueList = new ArrayList<AnnotationValue>();
 		newAnnotationValueList.addAll( annotationInstance.values() );
 		boolean schemaDefined = false;
@@ -189,11 +285,105 @@ class DefaultConfigurationHelper {
 					)
 			);
 		}
-		return AnnotationInstance.create(
+		return MockHelper.create(
 				annotationInstance.name(),
 				annotationInstance.target(),
 				MockHelper.toArray( newAnnotationValueList )
 		);
-
 	}
+
+	private static interface EntityObject {
+		String getClazz();
+
+		void setClazz(String className);
+
+		Boolean isMetadataComplete();
+
+		void setMetadataComplete(Boolean isMetadataComplete);
+	}
+
+	private static class EntityEntityObject implements EntityObject {
+		private XMLEntity entity;
+
+		private EntityEntityObject(XMLEntity entity) {
+			this.entity = entity;
+		}
+
+		@Override
+		public String getClazz() {
+			return entity.getClazz();
+		}
+
+		@Override
+		public void setClazz(String className) {
+			entity.setClazz( className );
+		}
+
+		@Override
+		public Boolean isMetadataComplete() {
+			return entity.isMetadataComplete();
+		}
+
+		@Override
+		public void setMetadataComplete(Boolean isMetadataComplete) {
+			entity.setMetadataComplete( isMetadataComplete );
+		}
+	}
+
+	private static class EmbeddableEntityObject implements EntityObject {
+		private XMLEmbeddable entity;
+
+		private EmbeddableEntityObject(XMLEmbeddable entity) {
+			this.entity = entity;
+		}
+
+		@Override
+		public String getClazz() {
+			return entity.getClazz();
+		}
+
+		@Override
+		public void setClazz(String className) {
+			entity.setClazz( className );
+		}
+
+		@Override
+		public Boolean isMetadataComplete() {
+			return entity.isMetadataComplete();
+		}
+
+		@Override
+		public void setMetadataComplete(Boolean isMetadataComplete) {
+			entity.setMetadataComplete( isMetadataComplete );
+		}
+	}
+
+	private static class MappedSuperClassEntityObject implements EntityObject {
+		private XMLMappedSuperclass entity;
+
+		private MappedSuperClassEntityObject(XMLMappedSuperclass entity) {
+			this.entity = entity;
+		}
+
+		@Override
+		public String getClazz() {
+			return entity.getClazz();
+		}
+
+		@Override
+		public void setClazz(String className) {
+			entity.setClazz( className );
+		}
+
+		@Override
+		public Boolean isMetadataComplete() {
+			return entity.isMetadataComplete();
+		}
+
+		@Override
+		public void setMetadataComplete(Boolean isMetadataComplete) {
+			entity.setMetadataComplete( isMetadataComplete );
+		}
+	}
+
 }

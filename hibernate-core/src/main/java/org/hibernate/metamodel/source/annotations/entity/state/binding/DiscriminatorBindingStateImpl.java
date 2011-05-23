@@ -24,7 +24,7 @@
 package org.hibernate.metamodel.source.annotations.entity.state.binding;
 
 import org.hibernate.metamodel.source.annotations.entity.DiscriminatorColumnValues;
-import org.hibernate.metamodel.source.annotations.entity.MappedAttribute;
+import org.hibernate.metamodel.source.annotations.entity.SimpleAttribute;
 
 /**
  * @author Gail Badner
@@ -36,7 +36,7 @@ public class DiscriminatorBindingStateImpl
 	private final boolean isForced;
 	private final boolean isInserted;
 
-	public DiscriminatorBindingStateImpl(MappedAttribute mappedAttribute) {
+	public DiscriminatorBindingStateImpl(SimpleAttribute mappedAttribute) {
 		super( mappedAttribute );
 		DiscriminatorColumnValues columnValues = DiscriminatorColumnValues.class.cast( mappedAttribute.getColumnValues() );
 		isForced = columnValues.isForced();

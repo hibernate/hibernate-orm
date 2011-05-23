@@ -104,11 +104,11 @@ public class ConfiguredClass {
 		this.hasOwnTable = definesItsOwnTable();
 		this.primaryTableName = determinePrimaryTableName();
 
-		List<MappedAttribute> properties = collectMappedProperties( resolvedType );
+		List<MappedAttribute> simpleProps = collectAttributes( resolvedType );
 		// make sure the properties are ordered by property name
-		Collections.sort( properties );
+		Collections.sort( simpleProps );
 		Map<String, MappedAttribute> tmpMap = new LinkedHashMap<String, MappedAttribute>();
-		for ( MappedAttribute property : properties ) {
+		for ( MappedAttribute property : simpleProps ) {
 			tmpMap.put( property.getName(), property );
 		}
 		this.mappedAttributes = Collections.unmodifiableMap( tmpMap );
@@ -116,10 +116,6 @@ public class ConfiguredClass {
 
 	public String getName() {
 		return clazz.getName();
-	}
-
-	public String getSimpleName() {
-		return clazz.getSimpleName();
 	}
 
 	public ClassInfo getClassInfo() {
@@ -212,9 +208,11 @@ public class ConfiguredClass {
 	}
 
 	/**
+	 * @param resolvedTypes the resolved types for the field/properties of this class
+	 *
 	 * @return A list of the persistent properties of this configured class
 	 */
-	private List<MappedAttribute> collectMappedProperties(ResolvedTypeWithMembers resolvedTypes) {
+	private List<MappedAttribute> collectAttributes(ResolvedTypeWithMembers resolvedTypes) {
 		// create sets of transient field and method names
 		Set<String> transientFieldNames = new HashSet<String>();
 		Set<String> transientMethodNames = new HashSet<String>();
@@ -279,6 +277,7 @@ public class ConfiguredClass {
 	 * Creates {@code MappedProperty} instances for the explicitly configured persistent properties
 	 *
 	 * @param mappedProperties list to which to add the explicitly configured mapped properties
+	 * @param resolvedMembers the resolved type parameters for this class
 	 *
 	 * @return the property names of the explicitly configured class names in a set
 	 */
@@ -380,7 +379,48 @@ public class ConfiguredClass {
 		final Map<DotName, List<AnnotationInstance>> annotations = JandexHelper.getMemberAnnotations(
 				classInfo, member.getName()
 		);
-		return MappedAttribute.createMappedAttribute( name, ( (Class) type ).getName(), annotations );
+
+		MappedAttribute attribute;
+		AssociationType associationType = determineAssociationType( annotations );
+		switch ( associationType ) {
+			case NO_ASSOCIATION: {
+				attribute = SimpleAttribute.createSimpleAttribute( name, ( (Class) type ).getName(), annotations );
+				break;
+			}
+			default: {
+				attribute = AssociationAttribute.createAssociationAttribute(
+						name, ( (Class) type ).getName(), associationType, annotations
+				);
+			}
+		}
+
+		return attribute;
+	}
+
+	private AssociationType determineAssociationType(Map<DotName, List<AnnotationInstance>> annotations) {
+		AnnotationInstance oneToOne = JandexHelper.getSingleAnnotation( annotations, JPADotNames.ONE_TO_ONE );
+		AnnotationInstance oneToMany = JandexHelper.getSingleAnnotation( annotations, JPADotNames.ONE_TO_MANY );
+		AnnotationInstance manyToOne = JandexHelper.getSingleAnnotation( annotations, JPADotNames.MANY_TO_ONE );
+		AnnotationInstance manyToMany = JandexHelper.getSingleAnnotation( annotations, JPADotNames.MANY_TO_MANY );
+
+		if ( oneToOne == null && oneToMany == null && manyToOne == null && manyToMany == null ) {
+			return AssociationType.NO_ASSOCIATION;
+		}
+		else if ( oneToOne != null && oneToMany == null && manyToOne == null && manyToMany == null ) {
+			return AssociationType.ONE_TO_ONE;
+		}
+		else if ( oneToOne == null && oneToMany != null && manyToOne == null && manyToMany == null ) {
+			return AssociationType.ONE_TO_MANY;
+		}
+		else if ( oneToOne == null && oneToMany == null && manyToOne != null && manyToMany == null ) {
+			return AssociationType.MANY_TO_ONE;
+		}
+		else if ( oneToOne == null && oneToMany == null && manyToOne == null && manyToMany != null ) {
+			return AssociationType.MANY_TO_MANY;
+		}
+		else {
+			throw new AnnotationException( "More than one association type configured for property  " + getName() + " of class " + getName() );
+		}
 	}
 
 	private Type findResolvedType(String name, ResolvedMember[] resolvedMembers) {

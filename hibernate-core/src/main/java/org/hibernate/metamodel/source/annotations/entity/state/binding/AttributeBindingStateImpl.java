@@ -28,7 +28,7 @@ import java.util.Map;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.binding.state.SimpleAttributeBindingState;
 import org.hibernate.metamodel.domain.MetaAttribute;
-import org.hibernate.metamodel.source.annotations.entity.MappedAttribute;
+import org.hibernate.metamodel.source.annotations.entity.SimpleAttribute;
 
 /**
  * Implementation of the attribute binding state via annotation configuration.
@@ -37,9 +37,9 @@ import org.hibernate.metamodel.source.annotations.entity.MappedAttribute;
  * @todo in the end we can maybe just let MappedAttribute implement SimpleAttributeBindingState. (HF)
  */
 public class AttributeBindingStateImpl implements SimpleAttributeBindingState {
-	private final MappedAttribute mappedAttribute;
+	private final SimpleAttribute mappedAttribute;
 
-	public AttributeBindingStateImpl(MappedAttribute mappedAttribute) {
+	public AttributeBindingStateImpl(SimpleAttribute mappedAttribute) {
 		this.mappedAttribute = mappedAttribute;
 	}
 

@@ -23,18 +23,29 @@
  */
 package org.hibernate.metamodel.source.annotations.entity;
 
+import java.util.List;
+import java.util.Map;
+
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.DotName;
+
 /**
  * @author Hardy Ferentschik
  */
-public class AssociationAttribute {
-	private final MappedAttribute mappedAttribute;
+public class AssociationAttribute extends SimpleAttribute {
+	private final AssociationType associationType;
 
-	public AssociationAttribute(MappedAttribute mappedAttribute) {
-		this.mappedAttribute = mappedAttribute;
+	public static AssociationAttribute createAssociationAttribute(String name, String type, AssociationType associationType, Map<DotName, List<AnnotationInstance>> annotations) {
+		return new AssociationAttribute( name, type, associationType, annotations );
 	}
 
-	public MappedAttribute getMappedAttribute() {
-		return mappedAttribute;
+	private AssociationAttribute(String name, String type, AssociationType associationType, Map<DotName, List<AnnotationInstance>> annotations) {
+		super( name, type, annotations, false );
+		this.associationType = associationType;
+	}
+
+	public AssociationType getAssociationType() {
+		return associationType;
 	}
 }
 

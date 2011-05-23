@@ -122,7 +122,7 @@ public class EntityBinder {
 		final Map<DotName, List<AnnotationInstance>> typeAnnotations = JandexHelper.getTypeAnnotations(
 				configuredClass.getClassInfo()
 		);
-		MappedAttribute discriminatorAttribute = MappedAttribute.createDiscriminatorAttribute( typeAnnotations );
+		SimpleAttribute discriminatorAttribute = SimpleAttribute.createDiscriminatorAttribute( typeAnnotations );
 
 		bindSingleMappedAttribute( entityBinding, discriminatorAttribute );
 
@@ -305,21 +305,29 @@ public class EntityBinder {
 
 		String idName = JandexHelper.getPropertyName( idAnnotation.target() );
 		MappedAttribute idAttribute = configuredClass.getMappedProperty( idName );
+		if ( !( idAttribute instanceof SimpleAttribute ) ) {
+			throw new AssertionFailure( "Unexpected attribute type for id attribute" );
+		}
 
 		entityBinding.getEntity().getOrCreateSingularAttribute( idName );
 
 		SimpleAttributeBinding attributeBinding = entityBinding.makeSimpleIdAttributeBinding( idName );
-		attributeBinding.initialize( new AttributeBindingStateImpl( idAttribute ) );
-		attributeBinding.initialize( new ColumnRelationalStateImpl( idAttribute, meta ) );
+		attributeBinding.initialize( new AttributeBindingStateImpl( (SimpleAttribute) idAttribute ) );
+		attributeBinding.initialize( new ColumnRelationalStateImpl( (SimpleAttribute) idAttribute, meta ) );
 	}
 
 	private void bindAttributes(EntityBinding entityBinding) {
 		for ( MappedAttribute mappedAttribute : configuredClass.getMappedAttributes() ) {
-			bindSingleMappedAttribute( entityBinding, mappedAttribute );
+			if ( mappedAttribute instanceof AssociationAttribute ) {
+				// todo
+			}
+			else {
+				bindSingleMappedAttribute( entityBinding, (SimpleAttribute) mappedAttribute );
+			}
 		}
 	}
 
-	private void bindSingleMappedAttribute(EntityBinding entityBinding, MappedAttribute mappedAttribute) {
+	private void bindSingleMappedAttribute(EntityBinding entityBinding, SimpleAttribute mappedAttribute) {
 		if ( mappedAttribute.isId() ) {
 			return;
 		}

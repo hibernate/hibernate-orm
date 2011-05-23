@@ -37,7 +37,7 @@ import org.hibernate.metamodel.relational.Size;
 import org.hibernate.metamodel.relational.state.ColumnRelationalState;
 import org.hibernate.metamodel.source.annotations.HibernateDotNames;
 import org.hibernate.metamodel.source.annotations.entity.ColumnValues;
-import org.hibernate.metamodel.source.annotations.entity.MappedAttribute;
+import org.hibernate.metamodel.source.annotations.entity.SimpleAttribute;
 import org.hibernate.metamodel.source.spi.MetadataImplementor;
 
 /**
@@ -61,7 +61,7 @@ public class ColumnRelationalStateImpl implements ColumnRelationalState {
 	private Set<String> uniqueKeys = new HashSet<String>();
 
 
-	public ColumnRelationalStateImpl(MappedAttribute attribute, MetadataImplementor meta) {
+	public ColumnRelationalStateImpl(SimpleAttribute attribute, MetadataImplementor meta) {
 		ColumnValues columnValues = attribute.getColumnValues();
 		namingStrategy = meta.getOptions().getNamingStrategy();
 		columnName = columnValues.getName().isEmpty() ? attribute.getName() : columnValues.getName();
@@ -151,7 +151,7 @@ public class ColumnRelationalStateImpl implements ColumnRelationalState {
 		return size;
 	}
 
-	private List<AnnotationInstance> getAllColumnTransformerAnnotations(MappedAttribute attribute) {
+	private List<AnnotationInstance> getAllColumnTransformerAnnotations(SimpleAttribute attribute) {
 		List<AnnotationInstance> allColumnTransformerAnnotations = new ArrayList<AnnotationInstance>();
 
 		// not quite sure about the usefulness of @ColumnTransformers (HF)
@@ -194,7 +194,7 @@ public class ColumnRelationalStateImpl implements ColumnRelationalState {
 		return readWrite;
 	}
 
-	private String parseCheckAnnotation(MappedAttribute attribute) {
+	private String parseCheckAnnotation(SimpleAttribute attribute) {
 		String checkCondition = null;
 		AnnotationInstance checkAnnotation = attribute.getIfExists( HibernateDotNames.CHECK );
 		if ( checkAnnotation != null ) {
@@ -203,7 +203,7 @@ public class ColumnRelationalStateImpl implements ColumnRelationalState {
 		return checkCondition;
 	}
 
-	private Set<String> parseIndexAnnotation(MappedAttribute attribute) {
+	private Set<String> parseIndexAnnotation(SimpleAttribute attribute) {
 		Set<String> indexNames = new HashSet<String>();
 		AnnotationInstance indexAnnotation = attribute.getIfExists( HibernateDotNames.INDEX );
 		if ( indexAnnotation != null ) {

@@ -23,10 +23,9 @@
  */
 package org.hibernate.metamodel.binding;
 
+import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
-
-import org.hibernate.annotations.Entity;
 
 /**
  * @author Gail Badner

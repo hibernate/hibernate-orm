@@ -21,38 +21,15 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.annotations.entity.state.binding;
-
-import org.hibernate.metamodel.binding.state.ManyToOneAttributeBindingState;
-import org.hibernate.metamodel.source.annotations.entity.AssociationAttribute;
+package org.hibernate.metamodel.source.annotations.entity;
 
 /**
  * @author Hardy Ferentschik
  */
-public class ManyToOneBindingStateImpl extends AttributeBindingStateImpl implements ManyToOneAttributeBindingState {
-	public ManyToOneBindingStateImpl(AssociationAttribute associationAttribute) {
-		super( associationAttribute );
-	}
-
-	@Override
-	public boolean isUnwrapProxy() {
-		return false;  //To change body of implemented methods use File | Settings | File Templates.
-	}
-
-	@Override
-	public String getReferencedAttributeName() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
-	}
-
-	@Override
-	public String getReferencedEntityName() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
-	}
-
-	@Override
-	public boolean ignoreNotFound() {
-		return false;  //To change body of implemented methods use File | Settings | File Templates.
-	}
+public enum AssociationType {
+	NO_ASSOCIATION,
+	ONE_TO_ONE,
+	ONE_TO_MANY,
+	MANY_TO_ONE,
+	MANY_TO_MANY
 }
-
-

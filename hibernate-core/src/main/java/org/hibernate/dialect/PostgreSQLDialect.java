@@ -67,6 +67,7 @@ public class PostgreSQLDialect extends Dialect {
 		registerColumnType( Types.DATE, "date" );
 		registerColumnType( Types.TIME, "time" );
 		registerColumnType( Types.TIMESTAMP, "timestamp" );
+		registerColumnType( Types.BINARY, "bytea" );
 		registerColumnType( Types.VARBINARY, "bytea" );
 		registerColumnType( Types.LONGVARCHAR, "text" );
 		registerColumnType( Types.LONGVARBINARY, "bytea" );

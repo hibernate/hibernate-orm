@@ -88,13 +88,13 @@ import org.hibernate.ejb.internal.EntityManagerMessageLogger;
 import org.hibernate.ejb.util.CacheModeHelper;
 import org.hibernate.ejb.util.ConfigurationHelper;
 import org.hibernate.ejb.util.LockModeTypeHelper;
-import org.hibernate.engine.query.spi.HQLQueryPlan;
-import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.engine.ResultSetMappingDefinition;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.query.spi.HQLQueryPlan;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryRootReturn;
+import org.hibernate.engine.spi.NamedSQLQueryDefinition;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.spi.JoinStatus;
 import org.hibernate.engine.transaction.spi.TransactionCoordinator;
@@ -1163,9 +1163,9 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		throw new PersistenceException( "Hibernate cannot unwrap " + clazz );
 	}
 
-	private void joinTransaction(boolean ignoreNotJoining) {
+	private void joinTransaction(boolean explicitRequest) {
 		if ( transactionType != PersistenceUnitTransactionType.JTA ) {
-			if ( !ignoreNotJoining ) {
+			if ( explicitRequest ) {
 			    LOG.callingJoinTransactionOnNonJtaEntityManager();
 			}
 			return;
@@ -1180,11 +1180,14 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 
 		LOG.debug( "Looking for a JTA transaction to join" );
 		if ( ! transactionCoordinator.isTransactionJoinable() ) {
-            LOG.unableToJoinTransaction(Environment.TRANSACTION_STRATEGY);
+			if ( explicitRequest ) {
+				// if this is an explicit join request, log a warning so user can track underlying cause
+				// of subsequent exceptions/messages
+				LOG.unableToJoinTransaction(Environment.TRANSACTION_STRATEGY);
+			}
 		}
 
 		try {
-
 			if ( transaction.getJoinStatus() == JoinStatus.JOINED ) {
 				LOG.debug( "Transaction already joined" );
 				return; // noop
@@ -1193,12 +1196,12 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			// join the transaction and then recheck the status
 			transaction.join();
 			if ( transaction.getJoinStatus() == JoinStatus.NOT_JOINED ) {
-				if ( ignoreNotJoining ) {
-					LOG.debug( "No JTA transaction found" );
-					return;
+				if ( explicitRequest ) {
+					throw new TransactionRequiredException( "No active JTA transaction on joinTransaction call" );
 				}
 				else {
-					throw new TransactionRequiredException( "No active JTA transaction on joinTransaction call" );
+					LOG.debug( "Unable to join JTA transaction" );
+					return;
 				}
 			}
 			else if ( transaction.getJoinStatus() == JoinStatus.MARKED_FOR_JOINED ) {

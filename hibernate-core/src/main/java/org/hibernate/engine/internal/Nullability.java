@@ -200,14 +200,14 @@ public final class Nullability {
 
 	/**
 	 * Return a well formed property path.
-	 * Basicaly, it will return parent.child
+	 * Basically, it will return parent.child
 	 *
 	 * @param parent parent in path
 	 * @param child child in path
 	 * @return parent-child path
 	 */
 	private static String buildPropertyPath(String parent, String child) {
-		return new StringBuffer( parent.length() + child.length() + 1 )
+		return new StringBuilder( parent.length() + child.length() + 1 )
 			.append(parent).append('.').append(child).toString();
 	}
 

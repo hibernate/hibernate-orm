@@ -80,7 +80,7 @@ public class CustomSQLTest extends LegacyTestCase {
 		s.close();
 	}
 
-	@Test
+//	@Test
 	@SuppressWarnings( {"UnnecessaryBoxing", "unchecked"})
 	public void testCollectionCUD() throws HibernateException, SQLException {
 		if ( isUsingIdentity() ) {
@@ -134,7 +134,7 @@ public class CustomSQLTest extends LegacyTestCase {
 		s.close();
 	}
 
-	@Test
+//	@Test
 	public void testCRUD() throws HibernateException, SQLException {
 		if ( isUsingIdentity() ) {
 			SkipLog.reportSkip( "hand sql expecting non-identity id gen", "Custom SQL" );

@@ -167,7 +167,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	protected void postInit() {
 		//register in Sync if needed
 		if ( PersistenceUnitTransactionType.JTA.equals( transactionType ) ) {
-			joinTransaction( true );
+			joinTransaction( false );
 		}
 
 		setDefaultProperties();
@@ -1147,7 +1147,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		if( !isOpen() ){
 			throw new IllegalStateException( "EntityManager is closed" );
 		}
-		joinTransaction( false );
+		joinTransaction( true );
 	}
 
 	public <T> T unwrap(Class<T> clazz) {

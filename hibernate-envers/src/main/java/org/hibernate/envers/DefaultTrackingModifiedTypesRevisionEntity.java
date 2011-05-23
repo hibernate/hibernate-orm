@@ -9,7 +9,7 @@ import java.util.Set;
 
 /**
  * Extension of {@link DefaultRevisionEntity} that allows tracking entity types changed in each revision. This revision
- * entity is implicitly used when  <code>org.hibernate.envers.track_entities_changed_in_revision</code> parameter
+ * entity is implicitly used when <code>org.hibernate.envers.track_entities_changed_in_revision</code> parameter
  * is set to <code>true</code>.
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */

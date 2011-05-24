@@ -2,10 +2,11 @@ package org.hibernate.envers.test.integration.onetoone.unidirectional;
 
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
-import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.ids.EmbId;
 import org.hibernate.envers.test.entities.ids.EmbIdTestEntity;
-import org.junit.Test;
+
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
 
 import javax.persistence.EntityManager;
 
@@ -20,8 +21,7 @@ public class UnidirectionalMulIdWithNulls extends AbstractEntityTest {
         cfg.addAnnotatedClass(UniRefIngMulIdEntity.class);
     }
 
-    @Test
-    @Priority(10)
+    @BeforeClass(dependsOnMethods = "init")
     public void initData() {
         ei = new EmbId(1, 2);
 

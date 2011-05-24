@@ -440,7 +440,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Indexes: %s", id = 126)
 	void indexes(Set keySet);
 
-	@LogMessage(level = WARN)
+	@LogMessage(level = DEBUG)
 	@Message(value = "Could not bind JNDI listener", id = 127)
 	void couldNotBindJndiListener();
 

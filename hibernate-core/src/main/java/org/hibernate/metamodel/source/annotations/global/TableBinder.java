@@ -57,40 +57,37 @@ public class TableBinder {
     public static void bind( MetadataImpl metadata,
                              Index jandex ) {
         for (AnnotationInstance tableAnnotation : jandex.getAnnotations(HibernateDotNames.TABLE)) {
-            bind(metadata, jandex, tableAnnotation);
+            bind(metadata, tableAnnotation);
         }
         for (AnnotationInstance tables : jandex.getAnnotations(HibernateDotNames.TABLES)) {
             for (AnnotationInstance table : JandexHelper.getValueAsArray(tables, "value")) {
-                bind(metadata, jandex, table);
+                bind(metadata, table);
             }
         }
     }
 
     private static void bind( MetadataImpl metadata,
-                              Index jandex,
                               AnnotationInstance tableAnnotation ) {
-        String tableName = JandexHelper.getValueAsString(jandex, tableAnnotation, "appliesTo");
+        String tableName = JandexHelper.getValueAsString(tableAnnotation, "appliesTo");
         ObjectName objectName = new ObjectName(tableName);
         Schema schema = metadata.getDatabase().getSchema(objectName.getSchema(), objectName.getCatalog());
         Table table = schema.getTable(objectName.getName());
-        if (table != null) bindHibernateTableAnnotation(jandex, table, tableAnnotation);
+        if (table != null) bindHibernateTableAnnotation(table, tableAnnotation);
     }
 
-    private static void bindHibernateTableAnnotation( Index jandex,
-                                                      Table table,
+    private static void bindHibernateTableAnnotation( Table table,
                                                       AnnotationInstance tableAnnotation ) {
         for (AnnotationInstance indexAnnotation : JandexHelper.getValueAsArray(tableAnnotation, "indexes")) {
-            bindIndexAnnotation(jandex, table, indexAnnotation);
+            bindIndexAnnotation(table, indexAnnotation);
         }
-        String comment = JandexHelper.getValueAsString(jandex, tableAnnotation, "comment");
+        String comment = JandexHelper.getValueAsString(tableAnnotation, "comment");
         if (StringHelper.isNotEmpty(comment)) table.addComment(comment.trim());
     }
 
-    private static void bindIndexAnnotation( Index jandex,
-                                             Table table,
+    private static void bindIndexAnnotation( Table table,
                                              AnnotationInstance indexAnnotation ) {
-        String indexName = JandexHelper.getValueAsString(jandex, indexAnnotation, "appliesTo");
-        String[] columnNames = (String[])JandexHelper.getValue(jandex, indexAnnotation, "columnNames");
+        String indexName = JandexHelper.getValueAsString(indexAnnotation, "appliesTo");
+        String[] columnNames = (String[])JandexHelper.getValue(indexAnnotation, "columnNames");
         if (columnNames == null) {
             LOG.noColumnsSpecifiedForIndex(indexName, table.toLoggableString());
             return;

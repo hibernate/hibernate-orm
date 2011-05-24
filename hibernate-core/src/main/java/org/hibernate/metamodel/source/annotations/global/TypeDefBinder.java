@@ -53,13 +53,30 @@ public class TypeDefBinder {
     public static void bind( MetadataImpl metadata,
                              Index jandex ) {
         for (AnnotationInstance typeDef : jandex.getAnnotations(HibernateDotNames.TYPE_DEF)) {
-            bind(metadata, jandex, typeDef);
+            bind(metadata, typeDef);
         }
         for (AnnotationInstance typeDefs : jandex.getAnnotations(HibernateDotNames.TYPE_DEFS)) {
             for (AnnotationInstance typeDef : JandexHelper.getValueAsArray(typeDefs, "value")) {
-                bind(metadata, jandex, typeDef);
+                bind(metadata, typeDef);
             }
         }
+    }
+
+    private static void bind( MetadataImpl metadata,
+                              AnnotationInstance typeDef ) {
+        String name = JandexHelper.getValueAsString(typeDef, "name");
+        String defaultForType = JandexHelper.getValueAsString(typeDef, "defaultForType");
+        String typeClass = JandexHelper.getValueAsString(typeDef, "typeClass");
+        boolean noName = StringHelper.isEmpty(name);
+        boolean noDefaultForType = defaultForType == null || defaultForType.equals(void.class.getName());
+        if (noName && noDefaultForType) throw new AnnotationException("Either name or defaultForType (or both) attribute should be set in TypeDef having typeClass "
+                                                                      + typeClass);
+        Map<String, String> prms = new HashMap<String, String>();
+        for (AnnotationInstance prm : JandexHelper.getValueAsArray(typeDef, "parameters")) {
+            prms.put(JandexHelper.getValueAsString(prm, "name"), JandexHelper.getValueAsString(prm, "value"));
+        }
+        if (!noName) bind(name, typeClass, prms, metadata);
+        if (!noDefaultForType) bind(defaultForType, typeClass, prms, metadata);
     }
 
     private static void bind( String name,
@@ -68,25 +85,6 @@ public class TypeDefBinder {
                               MetadataImpl metadata ) {
         LOG.debugf("Binding type definition: %s", name);
         metadata.addTypeDef(name, new TypeDef(typeClass, prms));
-    }
-
-    private static void bind( MetadataImpl metadata,
-                              Index jandex,
-                              AnnotationInstance typeDef ) {
-        String name = JandexHelper.getValueAsString(jandex, typeDef, "name");
-        String defaultForType = JandexHelper.getValueAsString(jandex, typeDef, "defaultForType");
-        String typeClass = JandexHelper.getValueAsString(jandex, typeDef, "typeClass");
-        boolean noName = StringHelper.isEmpty(name);
-        boolean noDefaultForType = defaultForType == null || defaultForType.equals(void.class.getName());
-        if (noName && noDefaultForType) throw new AnnotationException(
-                                                                      "Either name or defaultForType (or both) attribute should be set in TypeDef having typeClass "
-                                                                      + typeClass);
-        Map<String, String> prms = new HashMap<String, String>();
-        for (AnnotationInstance prm : JandexHelper.getValueAsArray(typeDef, "parameters")) {
-            prms.put(JandexHelper.getValueAsString(jandex, prm, "name"), JandexHelper.getValueAsString(jandex, prm, "value"));
-        }
-        if (!noName) bind(name, typeClass, prms, metadata);
-        if (!noDefaultForType) bind(defaultForType, typeClass, prms, metadata);
     }
 
     private TypeDefBinder() {

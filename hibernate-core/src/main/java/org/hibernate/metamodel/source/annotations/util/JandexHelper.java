@@ -57,8 +57,7 @@ public class JandexHelper {
 
     private static final Map<String, Object> DEFAULT_VALUES_BY_ELEMENT = new HashMap<String, Object>();
 
-    private static Object getDefaultValue( Index index,
-                                           AnnotationInstance annotation,
+    private static Object getDefaultValue( AnnotationInstance annotation,
                                            String element ) {
         String name = annotation.name().toString();
         String fqElement = name + '.' + element;
@@ -154,22 +153,20 @@ public class JandexHelper {
      * called to retrieve an enumerated value, and {@link #getValueAsArray(AnnotationInstance, String)} must be called to retrieve
      * an object array (other than a String array).
      *
-     * @param index the jandex index containing the supplied annotation
      * @param annotation the annotation containing the element with the supplied name
      * @param element the name of the element value to be retrieve
      * @return the value if not <code>null</code>, else the default value if not
      *         <code>null</code>, else <code>null</code>.
      */
-    public static Object getValue( Index index,
-                                   AnnotationInstance annotation,
+    public static Object getValue( AnnotationInstance annotation,
                                    String element ) {
         AnnotationValue val = annotation.value(element);
-        if (val == null) return getDefaultValue(index, annotation, element);
+        if (val == null) return getDefaultValue(annotation, element);
         return val.asNested();
     }
 
     /**
-     * Retrieves a jandex annotation element array.  Note, {@link #getValue(Index, AnnotationInstance, String)} may be
+     * Retrieves a jandex annotation element array.  Note, {@link #getValue(AnnotationInstance, String)} may be
      * called to retrieve a String array (or a non-array value).
      *
      * @param annotation the jandex annotation containing the element with the supplied name
@@ -187,20 +184,18 @@ public class JandexHelper {
      * <code>null</code>, the default value specified in the annotation class is retrieved instead.
      *
      * @param <T> an enumerated type
-     * @param index the jandex index containing the supplied annotation
      * @param annotation the annotation containing the enumerated element with the supplied name
      * @param element the name of the enumerated element value to be retrieve
      * @param type the type to which to convert the value before being returned
      * @return the value converted to the supplied enumerated type if the value is not <code>null</code>, else the default value if
      *         not <code>null</code>, else <code>null</code>.
-     * @see #getValue(Index, AnnotationInstance, String)
+     * @see #getValue(AnnotationInstance, String)
      */
-    public static <T extends Enum<T>> T getValueAsEnum( Index index,
-                                                        AnnotationInstance annotation,
+    public static <T extends Enum<T>> T getValueAsEnum( AnnotationInstance annotation,
                                                         String element,
                                                         Class<T> type ) {
         AnnotationValue val = annotation.value(element);
-        if (val == null) return (T)getDefaultValue(index, annotation, element);
+        if (val == null) return (T)getDefaultValue(annotation, element);
         return Enum.valueOf(type, val.asEnum());
     }
 
@@ -208,17 +203,15 @@ public class JandexHelper {
      * Retrieves a jandex annotation element value as an Integer.  If the value is <code>null</code>, the default value specified in
      * the annotation class is retrieved instead.
      *
-     * @param index the jandex index containing the supplied annotation
      * @param annotation the annotation containing the element with the supplied name
      * @param element the name of the element value to be retrieve
      * @return the value converted to an int if the value is not <code>null</code>, else the default value if not
      *         <code>null</code>, else <code>0</code>.
      */
-    public static int getValueAsInt( Index index,
-                                     AnnotationInstance annotation,
+    public static int getValueAsInt( AnnotationInstance annotation,
                                      String element ) {
         AnnotationValue val = annotation.value(element);
-        if (val == null) return (Integer)getDefaultValue(index, annotation, element);
+        if (val == null) return (Integer)getDefaultValue(annotation, element);
         return val.asInt();
     }
 
@@ -226,17 +219,15 @@ public class JandexHelper {
      * Retrieves a jandex annotation element value as a String.  If the value is <code>null</code>, the default value specified in
      * the annotation class is retrieved instead.
      *
-     * @param index the jandex index containing the supplied annotation
      * @param annotation the annotation containing the element with the supplied name
      * @param element the name of the element value to be retrieve
      * @return the value converted to a String if the value is not <code>null</code>, else the default value if not
      *         <code>null</code>, else <code>null</code>.
      */
-    public static String getValueAsString( Index index,
-                                           AnnotationInstance annotation,
+    public static String getValueAsString( AnnotationInstance annotation,
                                            String element ) {
         AnnotationValue val = annotation.value(element);
-        if (val == null) return (String)getDefaultValue(index, annotation, element);
+        if (val == null) return (String)getDefaultValue(annotation, element);
         return val.asString();
     }
 

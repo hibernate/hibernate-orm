@@ -53,26 +53,24 @@ public class FetchProfileBinder {
     public static void bind( MetadataImpl metadata,
                              Index jandex ) {
         for (AnnotationInstance fetchProfile : jandex.getAnnotations(HibernateDotNames.FETCH_PROFILE)) {
-            bind(metadata, jandex, fetchProfile);
+            bind(metadata, fetchProfile);
         }
         for (AnnotationInstance fetchProfiles : jandex.getAnnotations(HibernateDotNames.FETCH_PROFILES)) {
             for (AnnotationInstance fetchProfile : JandexHelper.getValueAsArray(fetchProfiles, "value")) {
-                bind(metadata, jandex, fetchProfile);
+                bind(metadata, fetchProfile);
             }
         }
     }
 
     private static void bind( MetadataImpl metadata,
-                              Index jandex,
                               AnnotationInstance fetchProfile ) {
-        String name = JandexHelper.getValueAsString(jandex, fetchProfile, "name");
+        String name = JandexHelper.getValueAsString(fetchProfile, "name");
         Set<Fetch> fetches = new HashSet<Fetch>();
         for (AnnotationInstance override : JandexHelper.getValueAsArray(fetchProfile, "fetchOverrides")) {
-            FetchMode fetchMode = JandexHelper.getValueAsEnum(jandex, override, "mode", FetchMode.class);
-            if (!fetchMode.equals(org.hibernate.annotations.FetchMode.JOIN)) throw new MappingException(
-                                                                                                        "Only FetchMode.JOIN is currently supported");
-            fetches.add(new Fetch(JandexHelper.getValueAsString(jandex, override, "entity"),
-                                  JandexHelper.getValueAsString(jandex, override, "association"),
+            FetchMode fetchMode = JandexHelper.getValueAsEnum(override, "mode", FetchMode.class);
+            if (!fetchMode.equals(org.hibernate.annotations.FetchMode.JOIN)) throw new MappingException("Only FetchMode.JOIN is currently supported");
+            fetches.add(new Fetch(JandexHelper.getValueAsString(override, "entity"), JandexHelper.getValueAsString(override,
+                                                                                                                   "association"),
                                   fetchMode.toString().toLowerCase()));
         }
         metadata.addFetchProfile(new FetchProfile(name, fetches));

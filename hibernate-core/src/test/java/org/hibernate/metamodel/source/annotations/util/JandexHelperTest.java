@@ -107,10 +107,10 @@ public class JandexHelperTest extends BaseUnitTestCase {
 
 		Index index = JandexHelper.indexForClass(classLoaderService, Foo.class);
         for (AnnotationInstance query : index.getAnnotations( JPADotNames.NAMED_QUERY)) {
-    		assertThat(JandexHelper.getValueAsEnum(index, query, "lockMode", LockModeType.class), is(LockModeType.NONE));
+    		assertThat(JandexHelper.getValueAsEnum(query, "lockMode", LockModeType.class), is(LockModeType.NONE));
         }
         for (AnnotationInstance generator : index.getAnnotations( JPADotNames.SEQUENCE_GENERATOR)) {
-            assertThat(JandexHelper.getValueAsInt(index, generator, "allocationSize"), is(50));
+            assertThat(JandexHelper.getValueAsInt(generator, "allocationSize"), is(50));
         }
 	}
 
@@ -123,7 +123,7 @@ public class JandexHelperTest extends BaseUnitTestCase {
 
         Index index = JandexHelper.indexForClass(classLoaderService, Foo.class);
         for (AnnotationInstance query : index.getAnnotations( JPADotNames.NAMED_QUERY)) {
-            assertThat(JandexHelper.getValueAsString(index, query, "name"), is("foo"));
+            assertThat(JandexHelper.getValueAsString(query, "name"), is("foo"));
         }
     }
 
@@ -136,7 +136,7 @@ public class JandexHelperTest extends BaseUnitTestCase {
 
         Index index = JandexHelper.indexForClass(classLoaderService, Foo.class);
         for (AnnotationInstance query : index.getAnnotations( JPADotNames.NAMED_QUERY)) {
-            assertThat(JandexHelper.getValueAsEnum(index, query, "lockMode", LockModeType.class), is(LockModeType.OPTIMISTIC));
+            assertThat(JandexHelper.getValueAsEnum(query, "lockMode", LockModeType.class), is(LockModeType.OPTIMISTIC));
         }
     }
 }

@@ -45,6 +45,8 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
+import org.hibernate.metamodel.binding.EntityBinding;
+import org.hibernate.metamodel.binding.PluralAttributeBinding;
 import org.hibernate.persister.spi.PersisterClassResolver;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -63,7 +65,17 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 	}
 
 	@Override
+	public Class<? extends EntityPersister> getEntityPersisterClass(EntityBinding metadata) {
+		return NoopEntityPersister.class;
+	}
+
+	@Override
 	public Class<? extends CollectionPersister> getCollectionPersisterClass(Collection metadata) {
+		return NoopCollectionPersister.class;
+	}
+
+	@Override
+	public Class<? extends CollectionPersister> getCollectionPersisterClass(PluralAttributeBinding metadata) {
 		return NoopCollectionPersister.class;
 	}
 

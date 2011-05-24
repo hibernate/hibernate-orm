@@ -44,6 +44,8 @@ import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.metamodel.binding.EntityBinding;
+import org.hibernate.metamodel.binding.PluralAttributeBinding;
 import org.hibernate.persister.internal.PersisterClassResolverInitiator;
 import org.hibernate.persister.spi.PersisterClassResolver;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -79,7 +81,17 @@ public class PersisterClassProviderTest extends junit.framework.TestCase {
 		}
 
 		@Override
+		public Class<? extends EntityPersister> getEntityPersisterClass(EntityBinding metadata) {
+			return GoofyProvider.class;
+		}
+
+		@Override
 		public Class<? extends CollectionPersister> getCollectionPersisterClass(Collection metadata) {
+			return null;
+		}
+
+		@Override
+		public Class<? extends CollectionPersister> getCollectionPersisterClass(PluralAttributeBinding metadata) {
 			return null;
 		}
 	}

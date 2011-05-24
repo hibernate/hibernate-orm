@@ -25,9 +25,8 @@ package org.hibernate.metamodel.source.annotations;
 
 import java.util.Set;
 
+import org.hibernate.internal.CoreMessageLogger;
 import org.jboss.jandex.Index;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import org.hibernate.metamodel.source.annotations.entity.ConfiguredClass;
 import org.hibernate.metamodel.source.annotations.entity.ConfiguredClassHierarchy;
@@ -40,6 +39,7 @@ import org.hibernate.metamodel.source.annotations.global.FetchProfileBinder;
 import org.hibernate.metamodel.source.annotations.global.TableBinder;
 import org.hibernate.metamodel.source.annotations.util.ConfiguredClassHierarchyBuilder;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
+import org.jboss.logging.Logger;
 
 /**
  * Main class responsible to creating and binding the Hibernate meta-model from annotations.
@@ -50,8 +50,7 @@ import org.hibernate.metamodel.source.internal.MetadataImpl;
  */
 public class AnnotationBinder {
 
-	private static final Logger LOG = LoggerFactory.getLogger( AnnotationBinder.class );
-
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, AnnotationBinder.class.getName() );
 	private final MetadataImpl metadata;
 	private final Index index;
 
@@ -86,7 +85,7 @@ public class AnnotationBinder {
 		// now we process each hierarchy one at the time
 		for ( ConfiguredClassHierarchy hierarchy : hierarchies ) {
 			for ( ConfiguredClass configuredClass : hierarchy ) {
-				LOG.info( "Binding entity from annotated class: {}", configuredClass.getName() );
+				LOG.bindingEntityFromAnnotatedClass( configuredClass.getName() );
 				EntityBinder entityBinder = new EntityBinder( metadata, configuredClass );
 				entityBinder.bind();
 			}

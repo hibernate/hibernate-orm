@@ -23,11 +23,8 @@
  */
 package org.hibernate.metamodel.binding;
 
-import org.junit.Test;
-
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
-import org.hibernate.testing.FailureExpected;
 
 /**
  * Basic tests of annotation based binding code
@@ -35,16 +32,9 @@ import org.hibernate.testing.FailureExpected;
  * @author Hardy Ferentschik
  */
 public class BasicAnnotationBindingTests extends AbstractBasicBindingTests {
-	@FailureExpected(jiraKey = "HHH-6172", message = "Work in progress")
-	@Test
-	public void testEntityWithManyToOneMapping() {
-		super.testEntityWithManyToOneMapping();
-	}
-
 	public MetadataImpl addSourcesForSimpleEntityBinding(MetadataSources sources) {
 		sources.addAnnotatedClass( SimpleEntity.class );
 		return (MetadataImpl) sources.buildMetadata();
-
 	}
 
 	public MetadataImpl addSourcesForSimpleVersionedEntityBinding(MetadataSources sources) {

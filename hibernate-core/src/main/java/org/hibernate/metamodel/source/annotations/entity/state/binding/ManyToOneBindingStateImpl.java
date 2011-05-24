@@ -30,28 +30,41 @@ import org.hibernate.metamodel.source.annotations.entity.AssociationAttribute;
  * @author Hardy Ferentschik
  */
 public class ManyToOneBindingStateImpl extends AttributeBindingStateImpl implements ManyToOneAttributeBindingState {
+	private final AssociationAttribute associationAttribute;
+
 	public ManyToOneBindingStateImpl(AssociationAttribute associationAttribute) {
 		super( associationAttribute );
+		this.associationAttribute = associationAttribute;
 	}
 
 	@Override
-	public boolean isUnwrapProxy() {
-		return false;  //To change body of implemented methods use File | Settings | File Templates.
+	public boolean isLazy() {
+		return associationAttribute.isLazy();
 	}
 
 	@Override
-	public String getReferencedAttributeName() {
+	public String getCascade() {
 		return null;  //To change body of implemented methods use File | Settings | File Templates.
 	}
 
 	@Override
 	public String getReferencedEntityName() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		return associationAttribute.getReferencedEntityType();
 	}
 
 	@Override
 	public boolean ignoreNotFound() {
-		return false;  //To change body of implemented methods use File | Settings | File Templates.
+		return associationAttribute.isIgnoreNotFound();
+	}
+
+	@Override
+	public boolean isUnwrapProxy() {
+		return false;
+	}
+
+	@Override
+	public String getReferencedAttributeName() {
+		return null;
 	}
 }
 

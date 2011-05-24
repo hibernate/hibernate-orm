@@ -23,13 +23,27 @@
  */
 package org.hibernate.metamodel.source.annotations.entity;
 
+import org.jboss.jandex.DotName;
+
+import org.hibernate.metamodel.source.annotations.JPADotNames;
+
 /**
  * @author Hardy Ferentschik
  */
 public enum AssociationType {
-	NO_ASSOCIATION,
-	ONE_TO_ONE,
-	ONE_TO_MANY,
-	MANY_TO_ONE,
-	MANY_TO_MANY
+	NO_ASSOCIATION( null ),
+	ONE_TO_ONE( JPADotNames.ONE_TO_ONE ),
+	ONE_TO_MANY( JPADotNames.ONE_TO_MANY ),
+	MANY_TO_ONE( JPADotNames.MANY_TO_ONE ),
+	MANY_TO_MANY( JPADotNames.MANY_TO_MANY );
+
+	private final DotName annotationDotName;
+
+	AssociationType(DotName annotationDotName) {
+		this.annotationDotName = annotationDotName;
+	}
+
+	public DotName getAnnotationDotName() {
+		return annotationDotName;
+	}
 }

@@ -46,9 +46,9 @@ public class MappedAttribute implements Comparable<MappedAttribute> {
 	private final Map<DotName, List<AnnotationInstance>> annotations;
 
 	/**
-	 * The property type as string.
+	 * The property name.
 	 */
-	private final String type;
+	private final String name;
 
 	/**
 	 * Optional type parameters for custom types.
@@ -56,9 +56,9 @@ public class MappedAttribute implements Comparable<MappedAttribute> {
 	private final Map<String, String> typeParameters;
 
 	/**
-	 * The property name.
+	 * The property type as string.
 	 */
-	private final String name;
+	private final String type;
 
 	MappedAttribute(String name, String type, Map<DotName, List<AnnotationInstance>> annotations) {
 		this.annotations = annotations;
@@ -101,6 +101,22 @@ public class MappedAttribute implements Comparable<MappedAttribute> {
 		}
 	}
 
+	@Override
+	public int compareTo(MappedAttribute mappedProperty) {
+		return name.compareTo( mappedProperty.getName() );
+	}
+
+	@Override
+	public String toString() {
+		final StringBuilder sb = new StringBuilder();
+		sb.append( "MappedAttribute" );
+		sb.append( "{type='" ).append( type ).append( '\'' );
+		sb.append( ", typeParameters=" ).append( typeParameters );
+		sb.append( ", name='" ).append( name ).append( '\'' );
+		sb.append( '}' );
+		return sb.toString();
+	}
+
 	/**
 	 * We need to check whether the is an explicit type specified via {@link org.hibernate.annotations.Type}.
 	 *
@@ -128,22 +144,6 @@ public class MappedAttribute implements Comparable<MappedAttribute> {
 		}
 
 		return typeAnnotation.value( "type" ).asString();
-	}
-
-	@Override
-	public int compareTo(MappedAttribute mappedProperty) {
-		return name.compareTo( mappedProperty.getName() );
-	}
-
-	@Override
-	public String toString() {
-		final StringBuilder sb = new StringBuilder();
-		sb.append( "MappedAttribute" );
-		sb.append( "{type='" ).append( type ).append( '\'' );
-		sb.append( ", typeParameters=" ).append( typeParameters );
-		sb.append( ", name='" ).append( name ).append( '\'' );
-		sb.append( '}' );
-		return sb.toString();
 	}
 }
 

@@ -39,7 +39,9 @@ import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.metamodel.binding.Caching;
 import org.hibernate.metamodel.binding.EntityBinding;
+import org.hibernate.metamodel.binding.ManyToOneAttributeBinding;
 import org.hibernate.metamodel.binding.SimpleAttributeBinding;
+import org.hibernate.metamodel.binding.state.ManyToOneAttributeBindingState;
 import org.hibernate.metamodel.binding.state.SimpleAttributeBindingState;
 import org.hibernate.metamodel.domain.Entity;
 import org.hibernate.metamodel.domain.Hierarchical;
@@ -49,7 +51,9 @@ import org.hibernate.metamodel.source.annotations.HibernateDotNames;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.entity.state.binding.AttributeBindingStateImpl;
 import org.hibernate.metamodel.source.annotations.entity.state.binding.DiscriminatorBindingStateImpl;
+import org.hibernate.metamodel.source.annotations.entity.state.binding.ManyToOneBindingStateImpl;
 import org.hibernate.metamodel.source.annotations.entity.state.relational.ColumnRelationalStateImpl;
+import org.hibernate.metamodel.source.annotations.entity.state.relational.ManyToOneRelationalStateImpl;
 import org.hibernate.metamodel.source.annotations.entity.state.relational.TupleRelationalStateImpl;
 import org.hibernate.metamodel.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.source.spi.MetadataImplementor;
@@ -319,7 +323,7 @@ public class EntityBinder {
 	private void bindAttributes(EntityBinding entityBinding) {
 		for ( MappedAttribute mappedAttribute : configuredClass.getMappedAttributes() ) {
 			if ( mappedAttribute instanceof AssociationAttribute ) {
-				// todo
+				bindAssociationAttribute( entityBinding, (AssociationAttribute) mappedAttribute );
 			}
 			else {
 				bindSingleMappedAttribute( entityBinding, (SimpleAttribute) mappedAttribute );
@@ -327,39 +331,64 @@ public class EntityBinder {
 		}
 	}
 
-	private void bindSingleMappedAttribute(EntityBinding entityBinding, SimpleAttribute mappedAttribute) {
-		if ( mappedAttribute.isId() ) {
+	private void bindAssociationAttribute(EntityBinding entityBinding, AssociationAttribute associationAttribute) {
+		switch ( associationAttribute.getAssociationType() ) {
+			case MANY_TO_ONE: {
+				entityBinding.getEntity().getOrCreateSingularAttribute( associationAttribute.getName() );
+				ManyToOneAttributeBinding manyToOneAttributeBinding = entityBinding.makeManyToOneAttributeBinding(
+						associationAttribute.getName()
+				);
+
+				ManyToOneAttributeBindingState bindingState = new ManyToOneBindingStateImpl( associationAttribute );
+				manyToOneAttributeBinding.initialize( bindingState );
+
+				ManyToOneRelationalStateImpl relationalState = new ManyToOneRelationalStateImpl();
+				if ( configuredClass.hasOwnTable() ) {
+					ColumnRelationalStateImpl columnRelationsState = new ColumnRelationalStateImpl(
+							associationAttribute, meta
+					);
+					relationalState.addValueState( columnRelationsState );
+				}
+				manyToOneAttributeBinding.initialize( relationalState );
+				break;
+			}
+			default: {
+				// todo
+			}
+		}
+	}
+
+	private void bindSingleMappedAttribute(EntityBinding entityBinding, SimpleAttribute simpleAttribute) {
+		if ( simpleAttribute.isId() ) {
 			return;
 		}
 
-		String attributeName = mappedAttribute.getName();
+		String attributeName = simpleAttribute.getName();
 		entityBinding.getEntity().getOrCreateSingularAttribute( attributeName );
 		SimpleAttributeBinding attributeBinding;
 		SimpleAttributeBindingState bindingState;
 
-		if ( mappedAttribute.isDiscriminator() ) {
+		if ( simpleAttribute.isDiscriminator() ) {
 			attributeBinding = entityBinding.makeEntityDiscriminator( attributeName ).getValueBinding();
-			bindingState = new DiscriminatorBindingStateImpl( mappedAttribute );
+			bindingState = new DiscriminatorBindingStateImpl( simpleAttribute );
 		}
-		else if ( mappedAttribute.isVersioned() ) {
+		else if ( simpleAttribute.isVersioned() ) {
 			attributeBinding = entityBinding.makeVersionBinding( attributeName );
-			bindingState = new AttributeBindingStateImpl( mappedAttribute );
+			bindingState = new AttributeBindingStateImpl( simpleAttribute );
 		}
 		else {
 			attributeBinding = entityBinding.makeSimpleAttributeBinding( attributeName );
-			bindingState = new AttributeBindingStateImpl( mappedAttribute );
+			bindingState = new AttributeBindingStateImpl( simpleAttribute );
 		}
 		attributeBinding.initialize( bindingState );
 
 		if ( configuredClass.hasOwnTable() ) {
 			ColumnRelationalStateImpl columnRelationsState = new ColumnRelationalStateImpl(
-					mappedAttribute, meta
+					simpleAttribute, meta
 			);
 			TupleRelationalStateImpl relationalState = new TupleRelationalStateImpl();
 			relationalState.addValueState( columnRelationsState );
 
-			// TODO: if this really just binds a column, then it can be changed to
-			// attributeBinding.initialize( columnRelationsState );
 			attributeBinding.initialize( relationalState );
 		}
 	}

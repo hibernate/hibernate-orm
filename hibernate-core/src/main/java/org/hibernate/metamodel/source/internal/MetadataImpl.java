@@ -112,6 +112,11 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
         filterDefs.put(def.getFilterName(), def);
     }
 
+	public Map<String, FilterDefinition> getFilterDefinitions() {
+		return filterDefs;
+
+	}
+
     public void addIdGenerator( IdGenerator generator ) {
         idGenerators.put(generator.getName(), generator);
     }
@@ -263,7 +268,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
         return fetchProfiles.values();
     }
 
-    public TypeResolver typeResolver() {
+    public TypeResolver getTypeResolver() {
         return typeResolver;
     }
 }

@@ -112,6 +112,8 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
+import org.hibernate.metamodel.binding.EntityBinding;
+import org.hibernate.metamodel.source.spi.MetadataImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Loadable;
@@ -500,6 +502,47 @@ public final class SessionFactoryImpl
 
 		this.transactionEnvironment = new TransactionEnvironmentImpl( this );
 		this.observer.sessionFactoryCreated( this );
+	}
+
+	public SessionFactoryImpl(
+			MetadataImplementor metadata,
+	        Mapping mapping,
+			ServiceRegistry serviceRegistry,
+			SessionFactoryObserver observer) throws HibernateException {
+        LOG.debug( "Building session factory" );
+
+		// TODO: remove initialization of final variables; just setting to null to make compiler happy
+		this.name = null;
+		this.uuid = null;
+		this.entityPersisters = null;
+		this.classMetadata = null;
+		this.collectionPersisters = null;
+		this.collectionMetadata = null;
+		this.collectionRolesByEntityParticipant = null;
+		this.identifierGenerators = null;
+		this.namedQueries = null;
+		this.namedSqlQueries = null;
+		this.sqlResultSetMappings = null;
+		this.filters = null;
+		this.fetchProfiles = null;
+		this.imports = null;
+		this.interceptor = null;
+		this.serviceRegistry = null;
+		this.settings = null;
+		this.properties = null;
+		this.queryCache = null;
+		this.updateTimestampsCache = null;
+		this.queryCaches = null;
+		this.currentSessionContext = null;
+		this.entityNotFoundDelegate = null;
+		this.sqlFunctionRegistry = null;
+		this.queryPlanCache = null;
+		this.typeResolver = null;
+		this.typeHelper = null;
+		this.transactionEnvironment = null;
+
+		// TODO: implement
+
 	}
 
 	public Session openSession() throws HibernateException {

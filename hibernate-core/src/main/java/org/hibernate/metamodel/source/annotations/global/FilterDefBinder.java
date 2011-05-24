@@ -71,7 +71,7 @@ public class FilterDefBinder {
 		for ( AnnotationInstance prm : JandexHelper.getValueAsArray( filterDef, "parameters" ) ) {
 			prms.put(
 					JandexHelper.getValueAsString( prm, "name" ),
-					metadata.typeResolver().heuristicType( JandexHelper.getValueAsString( prm, "type" ) )
+					metadata.getTypeResolver().heuristicType( JandexHelper.getValueAsString( prm, "type" ) )
 			);
 		}
 		metadata.addFilterDef(

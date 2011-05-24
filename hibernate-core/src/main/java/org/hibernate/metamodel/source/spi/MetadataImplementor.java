@@ -23,12 +23,16 @@
  */
 package org.hibernate.metamodel.source.spi;
 
+import java.util.Map;
+
+import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.metamodel.Metadata;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.FetchProfile;
 import org.hibernate.metamodel.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.relational.Database;
 import org.hibernate.service.BasicServiceRegistry;
+import org.hibernate.type.TypeResolver;
 
 /**
  * @author Steve Ebersole
@@ -39,6 +43,10 @@ public interface MetadataImplementor extends Metadata {
 
 	public Iterable<EntityBinding> getEntityBindings();
 	public EntityBinding getEntityBinding(String entityName);
+
+	public TypeResolver getTypeResolver();
+
+	public Map<String, FilterDefinition> getFilterDefinitions();
 
 	public void addImport(String entityName, String entityName1);
 

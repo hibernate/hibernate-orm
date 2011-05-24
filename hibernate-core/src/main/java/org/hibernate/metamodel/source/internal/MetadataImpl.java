@@ -30,21 +30,21 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import org.jboss.jandex.Index;
 import org.jboss.jandex.Indexer;
 import org.jboss.logging.Logger;
-
 import org.hibernate.DuplicateMappingException;
 import org.hibernate.HibernateException;
 import org.hibernate.SessionFactory;
+import org.hibernate.engine.spi.FilterDefinition;
+import org.hibernate.engine.spi.NamedQueryDefinition;
+import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.mapping.MetadataSource;
-import org.hibernate.metamodel.Metadata;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.SourceProcessingOrder;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.FetchProfile;
+import org.hibernate.metamodel.binding.IdGenerator;
 import org.hibernate.metamodel.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.binding.TypeDef;
 import org.hibernate.metamodel.relational.Database;
@@ -56,6 +56,7 @@ import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping;
 import org.hibernate.metamodel.source.spi.MetadataImplementor;
 import org.hibernate.service.BasicServiceRegistry;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
+import org.hibernate.type.TypeResolver;
 
 /**
  * Container for configuration data collected during binding the metamodel.
@@ -63,15 +64,15 @@ import org.hibernate.service.classloading.spi.ClassLoaderService;
  * @author Steve Ebersole
  * @author Hardy Ferentschik
  */
-public class MetadataImpl implements Metadata, MetadataImplementor, Serializable {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class, MetadataImpl.class.getName()
-	);
+public class MetadataImpl implements MetadataImplementor, Serializable {
+
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, MetadataImpl.class.getName());
 
 	private final BasicServiceRegistry serviceRegistry;
 	private final Options options;
 
 	private final Database database = new Database();
+    private TypeResolver typeResolver = new TypeResolver();
 
 	/**
 	 * Maps the fully qualified class name of an entity to its entity binding
@@ -79,8 +80,12 @@ public class MetadataImpl implements Metadata, MetadataImplementor, Serializable
 	private Map<String, EntityBinding> entityBindingMap = new HashMap<String, EntityBinding>();
 	private Map<String, PluralAttributeBinding> collectionBindingMap = new HashMap<String, PluralAttributeBinding>();
 	private Map<String, FetchProfile> fetchProfiles = new HashMap<String, FetchProfile>();
-	private Map<String, TypeDef> typeDefs = new HashMap<String, TypeDef>();
 	private Map<String, String> imports;
+    private Map<String, TypeDef> typeDefs = new HashMap<String, TypeDef>();
+    private Map<String, IdGenerator> idGenerators = new HashMap<String, IdGenerator>();
+    private Map<String, NamedQueryDefinition> namedQueryDefs = new HashMap<String, NamedQueryDefinition>();
+    private Map<String, NamedSQLQueryDefinition> namedNativeQueryDefs = new HashMap<String, NamedSQLQueryDefinition>();
+    private Map<String, FilterDefinition> filterDefs = new HashMap<String, FilterDefinition>();
 
 	public MetadataImpl(MetadataSources metadataSources, Options options) {
 		this.serviceRegistry = metadataSources.getServiceRegistry();
@@ -98,6 +103,33 @@ public class MetadataImpl implements Metadata, MetadataImplementor, Serializable
 
 		new EntityReferenceResolver( this ).resolve();
 	}
+
+    public void addFetchProfile( FetchProfile profile ) {
+        fetchProfiles.put(profile.getName(), profile);
+    }
+
+    public void addFilterDef( FilterDefinition def ) {
+        filterDefs.put(def.getFilterName(), def);
+    }
+
+    public void addIdGenerator( IdGenerator generator ) {
+        idGenerators.put(generator.getName(), generator);
+    }
+
+    public void addNamedNativeQuery( String name,
+                                     NamedSQLQueryDefinition def ) {
+        namedNativeQueryDefs.put(name, def);
+    }
+
+    public void addNamedQuery( String name,
+                               NamedQueryDefinition def ) {
+        namedQueryDefs.put(name, def);
+    }
+
+    public void addTypeDef(String name, TypeDef typeDef) {
+        // TODO - should we check whether the typedef already exists? Log it? Exception? (HF)
+        typeDefs.put( name, typeDef );
+    }
 
 	private void applyHibernateMappings(MetadataSources metadataSources, List<String> processedEntityNames) {
 		final HibernateXmlBinder hibernateXmlBinder = new HibernateXmlBinder( this );
@@ -223,25 +255,15 @@ public class MetadataImpl implements Metadata, MetadataImplementor, Serializable
 		}
 	}
 
-	public Iterable<FetchProfile> getFetchProfiles() {
-		return fetchProfiles.values();
-	}
-
-	public void addTypeDef(String name, TypeDef typeDef) {
-		// TODO - should we check whether the typedef already exists? Log it? Exception? (HF)
-		typeDefs.put( name, typeDef );
-	}
-
 	public TypeDef getTypeDef(String name) {
 		return typeDefs.get( name );
 	}
 
-	public FetchProfile findOrCreateFetchProfile(String profileName, MetadataSource source) {
-		FetchProfile profile = fetchProfiles.get( profileName );
-		if ( profile == null ) {
-			profile = new FetchProfile( profileName, source );
-			fetchProfiles.put( profileName, profile );
-		}
-		return profile;
-	}
+    public Iterable<FetchProfile> getFetchProfiles() {
+        return fetchProfiles.values();
+    }
+
+    public TypeResolver typeResolver() {
+        return typeResolver;
+    }
 }

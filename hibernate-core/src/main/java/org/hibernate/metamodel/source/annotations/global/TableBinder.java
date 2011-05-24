@@ -23,21 +23,19 @@
  */
 package org.hibernate.metamodel.source.annotations.global;
 
-import java.util.Arrays;
-import java.util.List;
-
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.Index;
 import org.jboss.logging.Logger;
-
 import org.hibernate.AnnotationException;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.relational.Column;
 import org.hibernate.metamodel.relational.ObjectName;
 import org.hibernate.metamodel.relational.Schema;
 import org.hibernate.metamodel.relational.SimpleValue;
 import org.hibernate.metamodel.relational.Table;
 import org.hibernate.metamodel.source.annotations.HibernateDotNames;
+import org.hibernate.metamodel.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
 
 /**
@@ -46,93 +44,77 @@ import org.hibernate.metamodel.source.internal.MetadataImpl;
  * @author Hardy Ferentschik
  */
 public class TableBinder {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class, TableBinder.class.getName()
-	);
 
-	private TableBinder() {
-	}
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, TableBinder.class.getName());
 
-	/**
-	 * Binds {@link org.hibernate.annotations.Tables} and {@link org.hibernate.annotations.Table}
-	 * annotations to the specified meta data instance.
-	 *
-	 * @param meta the global metadata
-	 * @param index the annotation index repository
-	 */
-	public static void bind(MetadataImpl meta, Index index) {
-		// check @o.h.a.Tables
-		List<AnnotationInstance> tablesAnnotations = index.getAnnotations( HibernateDotNames.TABLES );
-		for ( AnnotationInstance tableAnnotation : tablesAnnotations ) {
-			AnnotationInstance tables[] = tableAnnotation.value().asNestedArray();
-			bindTablesAnnotation( meta, Arrays.asList( tables ) );
-		}
+    /**
+     * Binds {@link org.hibernate.annotations.Tables} and {@link org.hibernate.annotations.Table} annotations to the supplied
+     * metadata.
+     *
+     * @param metadata the global metadata
+     * @param jandex the annotation index repository
+     */
+    public static void bind( MetadataImpl metadata,
+                             Index jandex ) {
+        for (AnnotationInstance tableAnnotation : jandex.getAnnotations(HibernateDotNames.TABLE)) {
+            bind(metadata, jandex, tableAnnotation);
+        }
+        for (AnnotationInstance tables : jandex.getAnnotations(HibernateDotNames.TABLES)) {
+            for (AnnotationInstance table : JandexHelper.getValueAsArray(tables, "value")) {
+                bind(metadata, jandex, table);
+            }
+        }
+    }
 
-		// check @o.h.a.Table
-		List<AnnotationInstance> tableAnnotations = index.getAnnotations( HibernateDotNames.TABLE );
-		bindTablesAnnotation( meta, tableAnnotations );
-	}
+    private static void bind( MetadataImpl metadata,
+                              Index jandex,
+                              AnnotationInstance tableAnnotation ) {
+        String tableName = JandexHelper.getValueAsString(jandex, tableAnnotation, "appliesTo");
+        ObjectName objectName = new ObjectName(tableName);
+        Schema schema = metadata.getDatabase().getSchema(objectName.getSchema(), objectName.getCatalog());
+        Table table = schema.getTable(objectName.getName());
+        if (table != null) bindHibernateTableAnnotation(jandex, table, tableAnnotation);
+    }
 
-	private static void bindTablesAnnotation(MetadataImpl meta, List<AnnotationInstance> tableAnnotations) {
-		for ( AnnotationInstance tableAnnotation : tableAnnotations ) {
-			String tableName = tableAnnotation.value( "appliesTo" ).asString();
-			ObjectName objectName = new ObjectName( tableName );
-			Schema schema = meta.getDatabase().getSchema( objectName.getSchema(), objectName.getCatalog() );
-			Table table = schema.getTable( objectName.getName() );
-			if ( table == null ) {
-				continue;
-			}
-			bindHibernateTableAnnotation( table, tableAnnotation );
-		}
-	}
+    private static void bindHibernateTableAnnotation( Index jandex,
+                                                      Table table,
+                                                      AnnotationInstance tableAnnotation ) {
+        for (AnnotationInstance indexAnnotation : JandexHelper.getValueAsArray(tableAnnotation, "indexes")) {
+            bindIndexAnnotation(jandex, table, indexAnnotation);
+        }
+        String comment = JandexHelper.getValueAsString(jandex, tableAnnotation, "comment");
+        if (StringHelper.isNotEmpty(comment)) table.addComment(comment.trim());
+    }
 
-	private static void bindHibernateTableAnnotation(Table table, AnnotationInstance tableAnnotation) {
-		if ( tableAnnotation.value( "indexes" ) != null ) {
-			AnnotationInstance[] indexAnnotations = tableAnnotation.value( "indexes" ).asNestedArray();
-			for ( AnnotationInstance indexAnnotation : indexAnnotations ) {
-				bindIndexAnnotation( table, indexAnnotation );
-			}
-		}
+    private static void bindIndexAnnotation( Index jandex,
+                                             Table table,
+                                             AnnotationInstance indexAnnotation ) {
+        String indexName = JandexHelper.getValueAsString(jandex, indexAnnotation, "appliesTo");
+        String[] columnNames = (String[])JandexHelper.getValue(jandex, indexAnnotation, "columnNames");
+        if (columnNames == null) {
+            LOG.noColumnsSpecifiedForIndex(indexName, table.toLoggableString());
+            return;
+        }
+        org.hibernate.metamodel.relational.Index index = table.getOrCreateIndex(indexName);
+        for (String columnName : columnNames) {
+            Column column = findColumn(table, columnName);
+            if (column == null) throw new AnnotationException("@Index references a unknown column: " + columnName);
+            index.addColumn(column);
+        }
+    }
 
-		if ( tableAnnotation.value( "comment" ) != null ) {
-			table.addComment( tableAnnotation.value( "comment" ).asString().trim() );
-		}
+    private static Column findColumn( Table table,
+                                      String columnName ) {
+        Column column = null;
+        for (SimpleValue value : table.values()) {
+            if (value instanceof Column && ((Column)value).getName().equals(columnName)) {
+                column = (Column)value;
+                break;
+            }
+        }
+        return column;
+    }
 
-
-
-	}
-
-	private static void bindIndexAnnotation(Table table, AnnotationInstance indexAnnotation) {
-		String indexName = indexAnnotation.value( "name" ).asString();
-		if ( indexAnnotation.value( "columnNames" ) == null ) {
-			LOG.noColumnsSpecifiedForIndex( indexName, table.toLoggableString() );
-			return;
-		}
-
-		org.hibernate.metamodel.relational.Index index = table.getOrCreateIndex( indexName );
-
-		String[] columnNames = indexAnnotation.value( "columnNames" ).asStringArray();
-		for ( String columnName : columnNames ) {
-			Column column = findColumn( table, columnName );
-			if ( column == null ) {
-				throw new AnnotationException(
-						"@Index references a unknown column: " + columnName
-				);
-			}
-			index.addColumn( column );
-		}
-	}
-
-	private static Column findColumn(Table table, String columnName) {
-		Column column = null;
-		for ( SimpleValue value : table.values() ) {
-			if ( value instanceof Column && ( (Column) value ).getName().equals( columnName ) ) {
-				column = (Column) value;
-				break;
-			}
-		}
-		return column;
-	}
+    private TableBinder() {
+    }
 }
-
-

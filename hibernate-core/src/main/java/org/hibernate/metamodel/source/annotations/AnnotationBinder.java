@@ -32,6 +32,10 @@ import org.slf4j.LoggerFactory;
 import org.hibernate.metamodel.source.annotations.entity.ConfiguredClass;
 import org.hibernate.metamodel.source.annotations.entity.ConfiguredClassHierarchy;
 import org.hibernate.metamodel.source.annotations.entity.EntityBinder;
+import org.hibernate.metamodel.source.annotations.global.FilterDefBinder;
+import org.hibernate.metamodel.source.annotations.global.IdGeneratorBinder;
+import org.hibernate.metamodel.source.annotations.global.QueryBinder;
+import org.hibernate.metamodel.source.annotations.global.TypeDefBinder;
 import org.hibernate.metamodel.source.annotations.global.FetchProfileBinder;
 import org.hibernate.metamodel.source.annotations.global.TableBinder;
 import org.hibernate.metamodel.source.annotations.util.ConfiguredClassHierarchyBuilder;
@@ -45,7 +49,9 @@ import org.hibernate.metamodel.source.internal.MetadataImpl;
  * @author Hardy Ferentschik
  */
 public class AnnotationBinder {
-	private static final Logger log = LoggerFactory.getLogger( AnnotationBinder.class );
+
+	private static final Logger LOG = LoggerFactory.getLogger( AnnotationBinder.class );
+
 	private final MetadataImpl metadata;
 	private final Index index;
 
@@ -64,7 +70,8 @@ public class AnnotationBinder {
 	 * Binds global configuration data prior to entity binding. This includes generators and type definitions.
 	 */
 	private void preEntityBindings() {
-		FetchProfileBinder.bind( metadata, index );
+        TypeDefBinder.bind(metadata, index);
+        IdGeneratorBinder.bind(metadata, index);
 	}
 
 	/**
@@ -79,7 +86,7 @@ public class AnnotationBinder {
 		// now we process each hierarchy one at the time
 		for ( ConfiguredClassHierarchy hierarchy : hierarchies ) {
 			for ( ConfiguredClass configuredClass : hierarchy ) {
-				log.info( "Binding entity from annotated class: {}", configuredClass.getName() );
+				LOG.info( "Binding entity from annotated class: {}", configuredClass.getName() );
 				EntityBinder entityBinder = new EntityBinder( metadata, configuredClass );
 				entityBinder.bind();
 			}
@@ -92,6 +99,9 @@ public class AnnotationBinder {
 	 */
 	private void postEntityBindings() {
 		TableBinder.bind( metadata, index );
+        FetchProfileBinder.bind( metadata, index );
+        QueryBinder.bind(metadata, index);
+        FilterDefBinder.bind(metadata, index);
 	}
 }
 

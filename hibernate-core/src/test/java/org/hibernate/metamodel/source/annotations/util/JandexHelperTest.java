@@ -23,10 +23,17 @@
  */
 package org.hibernate.metamodel.source.annotations.util;
 
+import static org.hamcrest.core.Is.is;
+
+import static org.junit.Assert.assertThat;
+
 import java.util.List;
 import java.util.Map;
 import javax.persistence.Basic;
 import javax.persistence.Column;
+import javax.persistence.LockModeType;
+import javax.persistence.NamedQuery;
+import javax.persistence.SequenceGenerator;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.ClassInfo;
@@ -36,6 +43,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.internal.BasicServiceRegistryImpl;
@@ -88,6 +96,49 @@ public class JandexHelperTest extends BaseUnitTestCase {
 		memberAnnotations = JandexHelper.getMemberAnnotations( classInfo, "fubar" );
 		assertTrue( "there should be no annotations in fubar", memberAnnotations.isEmpty() );
 	}
+
+	@Test
+	public void shouldRetrieveDefaultOfUnspecifiedAnnotationElement() {
+
+		@NamedQuery(name="foo", query="bar")
+		@SequenceGenerator(name="fu")
+		class Foo {
+		}
+
+		Index index = JandexHelper.indexForClass(classLoaderService, Foo.class);
+        for (AnnotationInstance query : index.getAnnotations( JPADotNames.NAMED_QUERY)) {
+    		assertThat(JandexHelper.getValueAsEnum(index, query, "lockMode", LockModeType.class), is(LockModeType.NONE));
+        }
+        for (AnnotationInstance generator : index.getAnnotations( JPADotNames.SEQUENCE_GENERATOR)) {
+            assertThat(JandexHelper.getValueAsInt(index, generator, "allocationSize"), is(50));
+        }
+	}
+
+    @Test
+    public void shouldRetrieveValueOfAnnotationElement() {
+
+        @NamedQuery(name="foo", query="bar")
+        class Foo {
+        }
+
+        Index index = JandexHelper.indexForClass(classLoaderService, Foo.class);
+        for (AnnotationInstance query : index.getAnnotations( JPADotNames.NAMED_QUERY)) {
+            assertThat(JandexHelper.getValueAsString(index, query, "name"), is("foo"));
+        }
+    }
+
+    @Test
+    public void shouldRetrieveValueOfEnumeratedAnnotationElement() {
+
+        @NamedQuery(name="foo", query="bar", lockMode=LockModeType.OPTIMISTIC)
+        class Foo {
+        }
+
+        Index index = JandexHelper.indexForClass(classLoaderService, Foo.class);
+        for (AnnotationInstance query : index.getAnnotations( JPADotNames.NAMED_QUERY)) {
+            assertThat(JandexHelper.getValueAsEnum(index, query, "lockMode", LockModeType.class), is(LockModeType.OPTIMISTIC));
+        }
+    }
 }
 
 

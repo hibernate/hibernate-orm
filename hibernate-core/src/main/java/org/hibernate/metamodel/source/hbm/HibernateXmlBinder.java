@@ -32,9 +32,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.dom4j.Element;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.internal.util.xml.XmlDocument;
@@ -42,6 +41,7 @@ import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.metamodel.source.internal.JaxbRoot;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping;
 import org.hibernate.metamodel.source.spi.MetadataImplementor;
+import org.jboss.logging.Logger;
 
 /**
  * Binder for {@code hbm.xml} files
@@ -49,7 +49,7 @@ import org.hibernate.metamodel.source.spi.MetadataImplementor;
  * @author Steve Ebersole
  */
 public class HibernateXmlBinder {
-	private static final Logger log = LoggerFactory.getLogger( HibernateXmlBinder.class );
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, HibernateXmlBinder.class.getName() );
 
 	private final MetadataImplementor metadata;
 	private final Map<String, MetaAttribute> globalMetas;
@@ -64,7 +64,7 @@ public class HibernateXmlBinder {
 	}
 
 	public void bindRoot(JaxbRoot<XMLHibernateMapping> jaxbRoot) {
-		log.debug( jaxbRoot.toString() );
+		if (LOG.isDebugEnabled()) LOG.debugf( jaxbRoot.toString() );
 		bindRoot( jaxbRoot, Collections.<String>emptySet() );
 	}
 

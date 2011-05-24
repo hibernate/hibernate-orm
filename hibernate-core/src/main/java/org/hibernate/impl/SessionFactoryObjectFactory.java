@@ -121,7 +121,7 @@ public class SessionFactoryObjectFactory implements ObjectFactory {
 				log.warn("Could not bind factory to JNDI", ne);
 			}
 			catch(ClassCastException cce) {
-				log.warn("InitialContext did not implement EventContext");
+				log.debug("InitialContext did not implement EventContext");
 			}
 
 		}

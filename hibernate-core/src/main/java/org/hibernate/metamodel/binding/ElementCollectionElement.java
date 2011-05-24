@@ -30,6 +30,6 @@ import org.dom4j.Element;
  */
 public class ElementCollectionElement extends CollectionElement {
 	public ElementCollectionElement(PluralAttributeBinding binding) {
-		super( binding );
+		super( binding, CollectionElementType.ELEMENT );
 	}
 }

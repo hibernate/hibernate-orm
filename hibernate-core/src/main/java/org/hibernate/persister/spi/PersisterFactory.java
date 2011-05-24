@@ -31,6 +31,8 @@ import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.metamodel.binding.EntityBinding;
+import org.hibernate.metamodel.binding.PluralAttributeBinding;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.Service;
@@ -70,6 +72,24 @@ public interface PersisterFactory extends Service {
 			Mapping cfg) throws HibernateException;
 
 	/**
+	 * Create an entity persister instance.
+	 *
+	 * @param model The O/R mapping metamodel definition for the entity
+	 * @param cacheAccessStrategy The caching strategy for this entity
+	 * @param factory The session factory
+	 * @param cfg The overall mapping
+	 *
+	 * @return An appropriate entity persister instance.
+	 *
+	 * @throws HibernateException Indicates a problem building the persister.
+	 */
+	public EntityPersister createEntityPersister(
+			EntityBinding model,
+			EntityRegionAccessStrategy cacheAccessStrategy,
+			SessionFactoryImplementor factory,
+			Mapping cfg) throws HibernateException;
+
+	/**
 	 * Create a collection persister instance.
 	 *
 	 * @param cfg The configuration
@@ -86,4 +106,23 @@ public interface PersisterFactory extends Service {
 			Collection model,
 			CollectionRegionAccessStrategy cacheAccessStrategy,
 			SessionFactoryImplementor factory) throws HibernateException;
+
+	/**
+	 * Create a collection persister instance.
+	 *
+	 * @param cfg The configuration
+	 * @param model The O/R mapping metamodel definition for the collection
+	 * @param cacheAccessStrategy The caching strategy for this collection
+	 * @param factory The session factory
+	 *
+	 * @return An appropriate collection persister instance.
+	 *
+	 * @throws HibernateException Indicates a problem building the persister.
+	 */
+	public CollectionPersister createCollectionPersister(
+			Configuration cfg,
+			PluralAttributeBinding model,
+			CollectionRegionAccessStrategy cacheAccessStrategy,
+			SessionFactoryImplementor factory) throws HibernateException;
+
 }

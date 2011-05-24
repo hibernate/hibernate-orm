@@ -28,6 +28,8 @@ import org.hibernate.mapping.JoinedSubclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.UnionSubclass;
+import org.hibernate.metamodel.binding.EntityBinding;
+import org.hibernate.metamodel.binding.PluralAttributeBinding;
 import org.hibernate.persister.collection.BasicCollectionPersister;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.OneToManyPersister;
@@ -42,6 +44,28 @@ import org.hibernate.persister.spi.UnknownPersisterException;
  * @author Steve Ebersole
  */
 public class StandardPersisterClassResolver implements PersisterClassResolver {
+
+	public Class<? extends EntityPersister> getEntityPersisterClass(EntityBinding metadata) {
+		// todo : make sure this is based on an attribute kept on the metamodel in the new code, not the concrete PersistentClass impl found!
+		switch ( metadata.getInheritanceType() ) {
+			case JOINED: {
+				joinedSubclassEntityPersister();
+			}
+			case SINGLE_TABLE: {
+				return singleTableEntityPersister();
+			}
+			case TABLE_PER_CLASS: {
+				return unionSubclassEntityPersister();
+			}
+			default: {
+				throw new UnknownPersisterException(
+						"Could not determine persister implementation for entity [" + metadata.getEntity().getName() + "]"
+				);
+			}
+
+		}
+	}
+
 	@Override
 	public Class<? extends EntityPersister> getEntityPersisterClass(PersistentClass metadata) {
 		// todo : make sure this is based on an attribute kept on the metamodel in the new code, not the concrete PersistentClass impl found!
@@ -76,6 +100,11 @@ public class StandardPersisterClassResolver implements PersisterClassResolver {
 	@Override
 	public Class<? extends CollectionPersister> getCollectionPersisterClass(Collection metadata) {
 		return metadata.isOneToMany() ? oneToManyPersister() : basicCollectionPersister();
+	}
+
+	@Override
+	public Class<? extends CollectionPersister> getCollectionPersisterClass(PluralAttributeBinding metadata) {
+		return metadata.getCollectionElement().isOneToMany() ? oneToManyPersister() : basicCollectionPersister();
 	}
 
 	private Class<OneToManyPersister> oneToManyPersister() {

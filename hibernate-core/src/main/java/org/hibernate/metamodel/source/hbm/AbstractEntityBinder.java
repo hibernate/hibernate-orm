@@ -25,6 +25,7 @@ package org.hibernate.metamodel.source.hbm;
 
 import org.dom4j.Attribute;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.NamingStrategy;
@@ -32,6 +33,7 @@ import org.hibernate.engine.internal.Versioning;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.binding.AttributeBinding;
 import org.hibernate.metamodel.binding.BagBinding;
+import org.hibernate.metamodel.binding.CollectionElementType;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.ManyToOneAttributeBinding;
 import org.hibernate.metamodel.binding.SimpleAttributeBinding;
@@ -489,11 +491,34 @@ PrimitiveArray
 						entityBinding.getMetaAttributes()
 				);
 
-		BagBinding collectionBinding = entityBinding.makeBagAttributeBinding( bindingState.getAttributeName() )
+		BagBinding collectionBinding = entityBinding.makeBagAttributeBinding(
+				bindingState.getAttributeName(),
+				getCollectionElementType( collection ) )
 				.initialize( bindingState );
 
 			// todo : relational model binding
 		return collectionBinding;
+	}
+
+	private CollectionElementType getCollectionElementType(XMLBagElement collection) {
+		if ( collection.getElement() != null ) {
+			return CollectionElementType.ELEMENT;
+		}
+		else if ( collection.getCompositeElement() != null ) {
+			return CollectionElementType.COMPOSITE_ELEMENT;
+		}
+		else if ( collection.getManyToMany() != null ) {
+			return CollectionElementType.MANY_TO_MANY;
+		}
+		else if ( collection.getOneToMany() != null ) {
+			return CollectionElementType.ONE_TO_MANY;
+		}
+		else if ( collection.getManyToAny() != null ) {
+			return CollectionElementType.MANY_TO_ANY;
+		}
+		else {
+			throw new AssertionFailure( "Unknown collection element type: " + collection );
+		}
 	}
 
 	private ManyToOneAttributeBinding makeManyToOneAttributeBinding(XMLManyToOneElement manyToOne,

@@ -32,6 +32,8 @@ import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.metamodel.binding.EntityBinding;
+import org.hibernate.metamodel.binding.PluralAttributeBinding;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.spi.PersisterClassResolver;
@@ -63,6 +65,21 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 	};
 
 	/**
+	 * The constructor signature for {@link EntityPersister} implementations using
+	 * an {@link EntityBinding}.
+	 *
+	 * @todo make EntityPersister *not* depend on {@link SessionFactoryImplementor} if possible.
+	 * @todo change ENTITY_PERSISTER_CONSTRUCTOR_ARGS_NEW to ENTITY_PERSISTER_CONSTRUCTOR_ARGS
+	 * when new metamodel is integrated
+	 */
+	public static final Class[] ENTITY_PERSISTER_CONSTRUCTOR_ARGS_NEW = new Class[] {
+			EntityBinding.class,
+			EntityRegionAccessStrategy.class,
+			SessionFactoryImplementor.class,
+			Mapping.class
+	};
+
+	/**
 	 * The constructor signature for {@link CollectionPersister} implementations
 	 *
 	 * @todo still need to make collection persisters EntityMode-aware
@@ -70,6 +87,22 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 	 */
 	private static final Class[] COLLECTION_PERSISTER_CONSTRUCTOR_ARGS = new Class[] {
 			Collection.class,
+			CollectionRegionAccessStrategy.class,
+			Configuration.class,
+			SessionFactoryImplementor.class
+	};
+
+	/**
+	 * The constructor signature for {@link CollectionPersister} implementations using
+	 * a {@link PluralAttributeBinding}
+	 *
+	 * @todo still need to make collection persisters EntityMode-aware
+	 * @todo make EntityPersister *not* depend on {@link SessionFactoryImplementor} if possible.
+	 * @todo change COLLECTION_PERSISTER_CONSTRUCTOR_ARGS_NEW to COLLECTION_PERSISTER_CONSTRUCTOR_ARGS
+	 * when new metamodel is integrated
+	 */
+	private static final Class[] COLLECTION_PERSISTER_CONSTRUCTOR_ARGS_NE = new Class[] {
+			PluralAttributeBinding.class,
 			CollectionRegionAccessStrategy.class,
 			Configuration.class,
 			SessionFactoryImplementor.class
@@ -93,17 +126,30 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 		if ( persisterClass == null ) {
 			persisterClass = serviceRegistry.getService( PersisterClassResolver.class ).getEntityPersisterClass( metadata );
 		}
-		return create( persisterClass, metadata, cacheAccessStrategy, factory, cfg );
+		return create( persisterClass, ENTITY_PERSISTER_CONSTRUCTOR_ARGS, metadata, cacheAccessStrategy, factory, cfg );
+	}
+
+	@Override
+	public EntityPersister createEntityPersister(EntityBinding metadata,
+												 EntityRegionAccessStrategy cacheAccessStrategy,
+												 SessionFactoryImplementor factory,
+												 Mapping cfg) throws HibernateException {
+		Class<? extends EntityPersister> persisterClass = metadata.getEntityPersisterClass();
+		if ( persisterClass == null ) {
+			persisterClass = serviceRegistry.getService( PersisterClassResolver.class ).getEntityPersisterClass( metadata );
+		}
+		return create( persisterClass, ENTITY_PERSISTER_CONSTRUCTOR_ARGS_NEW, metadata, cacheAccessStrategy, factory, cfg );
 	}
 
 	private static EntityPersister create(
 			Class<? extends EntityPersister> persisterClass,
-			PersistentClass metadata,
+			Class[] persisterConstructorArgs,
+			Object metadata,
 			EntityRegionAccessStrategy cacheAccessStrategy,
 			SessionFactoryImplementor factory,
 			Mapping cfg) throws HibernateException {
 		try {
-			Constructor<? extends EntityPersister> constructor = persisterClass.getConstructor( ENTITY_PERSISTER_CONSTRUCTOR_ARGS );
+			Constructor<? extends EntityPersister> constructor = persisterClass.getConstructor( persisterConstructorArgs );
 			try {
 				return constructor.newInstance( metadata, cacheAccessStrategy, factory, cfg );
 			}
@@ -144,6 +190,12 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 		}
 
 		return create( persisterClass, cfg, metadata, cacheAccessStrategy, factory );
+	}
+
+	@Override
+	public CollectionPersister createCollectionPersister(Configuration cfg, PluralAttributeBinding model, CollectionRegionAccessStrategy cacheAccessStrategy, SessionFactoryImplementor factory)
+			throws HibernateException {
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
 	}
 
 	private static CollectionPersister create(

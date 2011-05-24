@@ -79,9 +79,9 @@ public abstract class PluralAttributeBinding extends AbstractAttributeBinding {
 
 	private String loaderName;
 
-	protected PluralAttributeBinding(EntityBinding entityBinding) {
+	protected PluralAttributeBinding(EntityBinding entityBinding, CollectionElementType collectionElementType) {
 		super( entityBinding );
-		collectionElement = new CollectionElement( this );
+		collectionElement = collectionElementType.createCollectionElement( this );
 	}
 
 	protected void initializeBinding(PluralAttributeBindingState state) {

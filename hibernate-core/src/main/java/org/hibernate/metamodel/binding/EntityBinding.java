@@ -270,8 +270,8 @@ public class EntityBinding {
 		return binding;
 	}
 
-	public BagBinding makeBagAttributeBinding(String attributeName) {
-		final BagBinding binding = new BagBinding( this );
+	public BagBinding makeBagAttributeBinding(String attributeName, CollectionElementType collectionElementType) {
+		final BagBinding binding = new BagBinding( this, collectionElementType );
 		registerAttributeBinding( attributeName, binding );
 		binding.setAttribute( entity.getAttribute( attributeName ) );
 		return binding;

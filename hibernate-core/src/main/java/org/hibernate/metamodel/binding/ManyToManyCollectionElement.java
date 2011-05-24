@@ -36,8 +36,8 @@ public class ManyToManyCollectionElement extends CollectionElement {
 	private String manyToManyOrderBy;
 
 
-	ManyToManyCollectionElement(Element collectionNode, PluralAttributeBinding binding) {
-		super( binding );
+	ManyToManyCollectionElement(PluralAttributeBinding binding) {
+		super( binding, CollectionElementType.MANY_TO_MANY );
 	}
 
 	public void fromHbmXml(Element node){

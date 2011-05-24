@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -23,20 +23,12 @@
  */
 package org.hibernate.metamodel.binding;
 
-import org.hibernate.metamodel.binding.state.PluralAttributeBindingState;
-
 /**
- * TODO : javadoc
- *
- * @author Steve Ebersole
+ * @author Gail Badner
  */
-public class BagBinding extends PluralAttributeBinding {
-	protected BagBinding(EntityBinding entityBinding, CollectionElementType collectionElementType) {
-		super( entityBinding, collectionElementType );
-	}
+public class OneToManyCollectionElement extends CollectionElement {
 
-	public BagBinding initialize(PluralAttributeBindingState bindingState) {
-		super.initialize( bindingState );
-		return this;
+	OneToManyCollectionElement(PluralAttributeBinding binding) {
+		super( binding, CollectionElementType.ONE_TO_MANY );
 	}
 }

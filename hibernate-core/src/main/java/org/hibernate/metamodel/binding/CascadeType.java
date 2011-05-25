@@ -29,6 +29,7 @@ import java.util.Map;
 
 /**
  * @author Hardy Ferentschik
+ * @todo integrate this w/ org.hibernate.engine.spi.CascadeStyle
  */
 public enum CascadeType {
 	/**
@@ -91,22 +92,32 @@ public enum CascadeType {
 	 */
 	NONE;
 
-	private static final Map<String, CascadeType> hbmOptionToEnum = new HashMap<String, CascadeType>();
+	private static final Map<String, CascadeType> hbmOptionToCascadeType = new HashMap<String, CascadeType>();
 
 	static {
-		hbmOptionToEnum.put( "all", ALL );
-		hbmOptionToEnum.put( "all-delete-orphan", ALL_DELETE_ORPHAN );
-		hbmOptionToEnum.put( "save-update", UPDATE );
-		hbmOptionToEnum.put( "persist", PERSIST );
-		hbmOptionToEnum.put( "merge", MERGE );
-		hbmOptionToEnum.put( "lock", LOCK );
-		hbmOptionToEnum.put( "refresh", REFRESH );
-		hbmOptionToEnum.put( "replicate", REPLICATE );
-		hbmOptionToEnum.put( "evict", EVICT );
-		hbmOptionToEnum.put( "delete", DELETE );
-		hbmOptionToEnum.put( "remove", DELETE ); // adds remove as a sort-of alias for delete...
-		hbmOptionToEnum.put( "delete-orphan", DELETE_ORPHAN );
-		hbmOptionToEnum.put( "none", NONE );
+		hbmOptionToCascadeType.put( "all", ALL );
+		hbmOptionToCascadeType.put( "all-delete-orphan", ALL_DELETE_ORPHAN );
+		hbmOptionToCascadeType.put( "save-update", UPDATE );
+		hbmOptionToCascadeType.put( "persist", PERSIST );
+		hbmOptionToCascadeType.put( "merge", MERGE );
+		hbmOptionToCascadeType.put( "lock", LOCK );
+		hbmOptionToCascadeType.put( "refresh", REFRESH );
+		hbmOptionToCascadeType.put( "replicate", REPLICATE );
+		hbmOptionToCascadeType.put( "evict", EVICT );
+		hbmOptionToCascadeType.put( "delete", DELETE );
+		hbmOptionToCascadeType.put( "remove", DELETE ); // adds remove as a sort-of alias for delete...
+		hbmOptionToCascadeType.put( "delete-orphan", DELETE_ORPHAN );
+		hbmOptionToCascadeType.put( "none", NONE );
+	}
+
+	private static final Map<javax.persistence.CascadeType, CascadeType> jpaCascadeTypeToHibernateCascadeType = new HashMap<javax.persistence.CascadeType, CascadeType>();
+
+	static {
+		jpaCascadeTypeToHibernateCascadeType.put( javax.persistence.CascadeType.ALL, ALL );
+		jpaCascadeTypeToHibernateCascadeType.put( javax.persistence.CascadeType.PERSIST, PERSIST );
+		jpaCascadeTypeToHibernateCascadeType.put( javax.persistence.CascadeType.MERGE, MERGE );
+		jpaCascadeTypeToHibernateCascadeType.put( javax.persistence.CascadeType.REFRESH, REFRESH );
+		jpaCascadeTypeToHibernateCascadeType.put( javax.persistence.CascadeType.DETACH, EVICT );
 	}
 
 	/**
@@ -115,6 +126,15 @@ public enum CascadeType {
 	 * @return Returns the {@code CascadeType} for a given hbm cascading option
 	 */
 	public static CascadeType getCascadeType(String hbmOptionName) {
-		return hbmOptionToEnum.get( hbmOptionName );
+		return hbmOptionToCascadeType.get( hbmOptionName );
+	}
+
+	/**
+	 * @param jpaCascade the jpa cascade type
+	 *
+	 * @return Returns the Hibernate {@code CascadeType} for a given jpa cascade type
+	 */
+	public static CascadeType getCascadeType(javax.persistence.CascadeType jpaCascade) {
+		return jpaCascadeTypeToHibernateCascadeType.get( jpaCascade );
 	}
 }

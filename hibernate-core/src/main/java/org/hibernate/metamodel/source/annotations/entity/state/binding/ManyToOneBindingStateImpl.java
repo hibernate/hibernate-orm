@@ -23,6 +23,7 @@
  */
 package org.hibernate.metamodel.source.annotations.entity.state.binding;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import org.hibernate.metamodel.binding.CascadeType;
@@ -47,7 +48,11 @@ public class ManyToOneBindingStateImpl extends AttributeBindingStateImpl impleme
 
 	@Override
 	public Set<CascadeType> getCascadeTypes() {
-		return null;
+		Set<CascadeType> hibernateCascadeTypes = new HashSet<CascadeType>();
+		for ( javax.persistence.CascadeType jpaCascadeType : associationAttribute.getCascadeTypes() ) {
+			hibernateCascadeTypes.add( CascadeType.getCascadeType( jpaCascadeType ) );
+		}
+		return hibernateCascadeTypes;
 	}
 
 	@Override

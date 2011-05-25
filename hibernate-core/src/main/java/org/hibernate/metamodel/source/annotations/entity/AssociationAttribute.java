@@ -23,8 +23,11 @@
  */
 package org.hibernate.metamodel.source.annotations.entity;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import javax.persistence.CascadeType;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
@@ -41,6 +44,7 @@ public class AssociationAttribute extends SimpleAttribute {
 	private final AssociationType associationType;
 	private final boolean ignoreNotFound;
 	private final String referencedEntityType;
+	private final Set<CascadeType> cascadeTypes;
 
 	public static AssociationAttribute createAssociationAttribute(String name, String type, AssociationType associationType, Map<DotName, List<AnnotationInstance>> annotations) {
 		return new AssociationAttribute( name, type, associationType, annotations );
@@ -57,6 +61,7 @@ public class AssociationAttribute extends SimpleAttribute {
 		);
 
 		referencedEntityType = determineReferencedEntityType( associationAnnotation );
+		cascadeTypes = determineCascadeTypes( associationAnnotation );
 	}
 
 	public boolean isIgnoreNotFound() {
@@ -69,6 +74,10 @@ public class AssociationAttribute extends SimpleAttribute {
 
 	public AssociationType getAssociationType() {
 		return associationType;
+	}
+
+	public Set<CascadeType> getCascadeTypes() {
+		return cascadeTypes;
 	}
 
 	private boolean ignoreNotFound() {
@@ -98,6 +107,18 @@ public class AssociationAttribute extends SimpleAttribute {
 		}
 
 		return targetTypeName;
+	}
+
+	private Set<CascadeType> determineCascadeTypes(AnnotationInstance associationAnnotation) {
+		Set<CascadeType> cascadeTypes = new HashSet<CascadeType>();
+		AnnotationValue cascadeValue = associationAnnotation.value( "cascade" );
+		if ( cascadeValue != null ) {
+			String[] cascades = cascadeValue.asEnumArray();
+			for ( String s : cascades ) {
+				cascadeTypes.add( Enum.valueOf( CascadeType.class, s ) );
+			}
+		}
+		return cascadeTypes;
 	}
 }
 

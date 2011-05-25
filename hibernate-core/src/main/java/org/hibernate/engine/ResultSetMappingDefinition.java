@@ -38,7 +38,7 @@ import org.hibernate.engine.query.sql.NativeSQLQueryReturn;
 public class ResultSetMappingDefinition implements Serializable {
 
 	private final String name;
-	private final List /*NativeSQLQueryReturn*/ queryReturns = new ArrayList();
+	private final List<NativeSQLQueryReturn> queryReturns = new ArrayList<NativeSQLQueryReturn>();
 
 	public ResultSetMappingDefinition(String name) {
 		this.name = name;
@@ -63,7 +63,7 @@ public class ResultSetMappingDefinition implements Serializable {
 //	}
 
 	public NativeSQLQueryReturn[] getQueryReturns() {
-		return ( NativeSQLQueryReturn[] ) queryReturns.toArray( new NativeSQLQueryReturn[0] );
+		return queryReturns.toArray( new NativeSQLQueryReturn[queryReturns.size()] );
 	}
 
 }

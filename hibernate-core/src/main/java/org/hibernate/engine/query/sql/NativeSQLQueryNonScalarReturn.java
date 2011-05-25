@@ -41,7 +41,7 @@ import org.hibernate.LockMode;
 public abstract class NativeSQLQueryNonScalarReturn implements NativeSQLQueryReturn, Serializable {
 	private final String alias;
 	private final LockMode lockMode;
-	private final Map propertyResults = new HashMap();
+	private final Map<String,String[]> propertyResults = new HashMap<String,String[]>();
 	private final int hashCode;
 
 	/**
@@ -51,7 +51,7 @@ public abstract class NativeSQLQueryNonScalarReturn implements NativeSQLQueryRet
 	 * @param propertyResults Any user-supplied column->property mappings
 	 * @param lockMode The lock mode to apply to the return.
 	 */
-	protected NativeSQLQueryNonScalarReturn(String alias, Map propertyResults, LockMode lockMode) {
+	protected NativeSQLQueryNonScalarReturn(String alias, Map<String,String[]> propertyResults, LockMode lockMode) {
 		this.alias = alias;
 		if ( alias == null ) {
 			throw new HibernateException("alias must be specified");
@@ -86,7 +86,7 @@ public abstract class NativeSQLQueryNonScalarReturn implements NativeSQLQueryRet
 	 *
 	 * @return The property mappings.
 	 */
-	public Map getPropertyResultsMap() {
+	public Map<String,String[]> getPropertyResultsMap() {
 		return Collections.unmodifiableMap( propertyResults );
 	}
 

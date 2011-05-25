@@ -22,19 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.configuration.metadata;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
-import javax.persistence.JoinColumn;
+
 import org.dom4j.Element;
 import org.hibernate.MappingException;
-import org.hibernate.envers.internal.EnversMessageLogger;
 import org.hibernate.envers.ModificationStore;
 import org.hibernate.envers.RelationTargetAuditMode;
 import org.hibernate.envers.configuration.metadata.reader.PropertyAuditingData;
@@ -45,45 +35,25 @@ import org.hibernate.envers.entities.mapper.CompositeMapperBuilder;
 import org.hibernate.envers.entities.mapper.PropertyMapper;
 import org.hibernate.envers.entities.mapper.SinglePropertyMapper;
 import org.hibernate.envers.entities.mapper.id.IdMapper;
-import org.hibernate.envers.entities.mapper.relation.BasicCollectionMapper;
-import org.hibernate.envers.entities.mapper.relation.CommonCollectionMapperData;
-import org.hibernate.envers.entities.mapper.relation.ListCollectionMapper;
-import org.hibernate.envers.entities.mapper.relation.MapCollectionMapper;
-import org.hibernate.envers.entities.mapper.relation.MiddleComponentData;
-import org.hibernate.envers.entities.mapper.relation.MiddleIdData;
-import org.hibernate.envers.entities.mapper.relation.ToOneIdMapper;
-import org.hibernate.envers.entities.mapper.relation.component.MiddleDummyComponentMapper;
-import org.hibernate.envers.entities.mapper.relation.component.MiddleMapKeyIdComponentMapper;
-import org.hibernate.envers.entities.mapper.relation.component.MiddleMapKeyPropertyComponentMapper;
-import org.hibernate.envers.entities.mapper.relation.component.MiddleRelatedComponentMapper;
-import org.hibernate.envers.entities.mapper.relation.component.MiddleSimpleComponentMapper;
-import org.hibernate.envers.entities.mapper.relation.component.MiddleStraightComponentMapper;
-import org.hibernate.envers.entities.mapper.relation.lazy.proxy.ListProxy;
-import org.hibernate.envers.entities.mapper.relation.lazy.proxy.MapProxy;
-import org.hibernate.envers.entities.mapper.relation.lazy.proxy.SetProxy;
-import org.hibernate.envers.entities.mapper.relation.lazy.proxy.SortedMapProxy;
-import org.hibernate.envers.entities.mapper.relation.lazy.proxy.SortedSetProxy;
+import org.hibernate.envers.entities.mapper.relation.*;
+import org.hibernate.envers.entities.mapper.relation.component.*;
+import org.hibernate.envers.entities.mapper.relation.lazy.proxy.*;
 import org.hibernate.envers.entities.mapper.relation.query.OneAuditEntityQueryGenerator;
 import org.hibernate.envers.entities.mapper.relation.query.RelationQueryGenerator;
+import org.hibernate.envers.internal.EnversMessageLogger;
 import org.hibernate.envers.tools.MappingTools;
 import org.hibernate.envers.tools.StringTools;
 import org.hibernate.envers.tools.Tools;
 import org.hibernate.mapping.Collection;
-import org.hibernate.mapping.IndexedCollection;
-import org.hibernate.mapping.OneToMany;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Property;
-import org.hibernate.mapping.Table;
-import org.hibernate.mapping.Value;
-import org.hibernate.type.BagType;
-import org.hibernate.type.ListType;
-import org.hibernate.type.ManyToOneType;
-import org.hibernate.type.MapType;
-import org.hibernate.type.SetType;
-import org.hibernate.type.SortedMapType;
-import org.hibernate.type.SortedSetType;
-import org.hibernate.type.Type;
+import org.hibernate.mapping.*;
+import org.hibernate.type.*;
 import org.jboss.logging.Logger;
+
+import javax.persistence.JoinColumn;
+import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Generates metadata for a collection-valued property.
@@ -476,18 +446,18 @@ public final class CollectionMetadataGenerator {
                            MiddleComponentData indexComponentData) {
         Type type = propertyValue.getType();
         if (type instanceof SortedSetType) {
-            currentMapper.addComposite(propertyAuditingData.getPropertyData(),
-                    new BasicCollectionMapper<Set>(commonCollectionMapperData,
-                    TreeSet.class, SortedSetProxy.class, elementComponentData));
-        } else if (type instanceof SetType) {
-            currentMapper.addComposite(propertyAuditingData.getPropertyData(),
+			currentMapper.addComposite(propertyAuditingData.getPropertyData(),
+					new SortedSetCollectionMapper(commonCollectionMapperData,
+							TreeSet.class, SortedSetProxy.class, elementComponentData, propertyValue.getComparator()));
+		} else if (type instanceof SetType) {
+			currentMapper.addComposite(propertyAuditingData.getPropertyData(),
                     new BasicCollectionMapper<Set>(commonCollectionMapperData,
                     HashSet.class, SetProxy.class, elementComponentData));
         } else if (type instanceof SortedMapType) {
             // Indexed collection, so <code>indexComponentData</code> is not null.
-            currentMapper.addComposite(propertyAuditingData.getPropertyData(),
-                    new MapCollectionMapper<Map>(commonCollectionMapperData,
-                    TreeMap.class, SortedMapProxy.class, elementComponentData, indexComponentData));
+			currentMapper.addComposite(propertyAuditingData.getPropertyData(),
+					new SortedMapCollectionMapper(commonCollectionMapperData,
+							TreeMap.class, SortedMapProxy.class, elementComponentData, indexComponentData, propertyValue.getComparator()));
         } else if (type instanceof MapType) {
             // Indexed collection, so <code>indexComponentData</code> is not null.
             currentMapper.addComposite(propertyAuditingData.getPropertyData(),

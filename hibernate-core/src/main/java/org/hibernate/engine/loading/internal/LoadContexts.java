@@ -183,7 +183,9 @@ public class LoadContexts {
         if (collectionLoadContexts == null) collectionLoadContexts = IdentityMap.instantiate(8);
         else context = (CollectionLoadContext)collectionLoadContexts.get(resultSet);
 		if ( context == null ) {
-            LOG.trace("Constructing collection load context for result set [" + resultSet + "]");
+                   if (LOG.isTraceEnabled()) {
+                      LOG.trace("Constructing collection load context for result set [" + resultSet + "]");
+                   }
 			context = new CollectionLoadContext( this, resultSet );
 			collectionLoadContexts.put( resultSet, context );
 		}

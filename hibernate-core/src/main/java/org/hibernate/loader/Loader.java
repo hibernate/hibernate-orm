@@ -854,12 +854,16 @@ public abstract class Loader {
 
 			EntityKey[] keys = new EntityKey[entitySpan]; //we can reuse it for each row
 
-            LOG.trace("Processing result set");
+                        if (LOG.isTraceEnabled()) {
+                           LOG.trace("Processing result set");
+                        }
 
 			int count;
 			for ( count = 0; count < maxRows && rs.next(); count++ ) {
 
-                LOG.debugf("Result set row: %s", count);
+                                if (LOG.isDebugEnabled()) {
+                                   LOG.debugf("Result set row: %s", count);
+                                }
 
 				Object result = getRowFromResultSet(
 						rs,
@@ -881,7 +885,9 @@ public abstract class Loader {
 
 			}
 
-            LOG.trace("Done processing result set (" + count + " rows)");
+                        if (LOG.isTraceEnabled()) {
+                           LOG.trace("Done processing result set (" + count + " rows)");
+                        }
 
 		}
 		finally {

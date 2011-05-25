@@ -242,7 +242,9 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 	 */
 	private void flushCollections(EventSource session) throws HibernateException {
 
-        LOG.trace("Processing unreferenced collections");
+                if (LOG.isTraceEnabled()) {
+                   LOG.trace("Processing unreferenced collections");
+                }
 
 		List list = IdentityMap.entries( session.getPersistenceContext().getCollectionEntries() );
 		int size = list.size();
@@ -256,7 +258,9 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 
 		// Schedule updates to collections:
 
-        LOG.trace("Scheduling collection removes/(re)creates/updates");
+                if (LOG.isTraceEnabled()) {
+                   LOG.trace("Scheduling collection removes/(re)creates/updates");
+                }
 
 		list = IdentityMap.entries( session.getPersistenceContext().getCollectionEntries() );
 		size = list.size();

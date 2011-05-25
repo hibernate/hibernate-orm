@@ -4,14 +4,10 @@ import java.util.HashSet;
 
 import javax.persistence.EntityManager;
 
-import org.hibernate.Session;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.entities.manytomany.SetOwnedEntity;
 import org.hibernate.envers.test.entities.manytomany.SetOwningEntity;
-import org.hibernate.envers.test.entities.manytomany.sametable.Child1Entity;
-import org.hibernate.envers.test.entities.manytomany.sametable.Child2Entity;
-import org.hibernate.envers.test.entities.manytomany.sametable.ParentEntity;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 

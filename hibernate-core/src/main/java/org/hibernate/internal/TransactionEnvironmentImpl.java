@@ -37,8 +37,20 @@ import org.hibernate.stat.spi.StatisticsImplementor;
 public class TransactionEnvironmentImpl implements TransactionEnvironment {
 	private final SessionFactoryImpl sessionFactory;
 
+        private final transient StatisticsImplementor statisticsImplementor;
+        private final transient ServiceRegistry serviceRegistry;
+        private final transient JdbcServices jdbcServices;
+        private final transient JtaPlatform jtaPlatform;
+        private final transient TransactionFactory transactionFactory;
+
 	public TransactionEnvironmentImpl(SessionFactoryImpl sessionFactory) {
 		this.sessionFactory = sessionFactory;
+                this.statisticsImplementor = sessionFactory.getStatisticsImplementor();
+                this.serviceRegistry = sessionFactory.getServiceRegistry();
+                this.jdbcServices = serviceRegistry.getService( JdbcServices.class );
+                this.jtaPlatform = serviceRegistry.getService( JtaPlatform.class );
+                this.transactionFactory = serviceRegistry.getService( TransactionFactory.class );
+
 	}
 
 	@Override
@@ -47,26 +59,26 @@ public class TransactionEnvironmentImpl implements TransactionEnvironment {
 	}
 
 	protected ServiceRegistry serviceRegistry() {
-		return sessionFactory.getServiceRegistry();
+                return serviceRegistry;
 	}
 
 	@Override
 	public JdbcServices getJdbcServices() {
-		return serviceRegistry().getService( JdbcServices.class );
+                return jdbcServices;
 	}
 
 	@Override
 	public JtaPlatform getJtaPlatform() {
-		return serviceRegistry().getService( JtaPlatform.class );
+                return jtaPlatform;
 	}
 
 	@Override
 	public TransactionFactory getTransactionFactory() {
-		return serviceRegistry().getService( TransactionFactory.class );
+                return transactionFactory;
 	}
 
 	@Override
 	public StatisticsImplementor getStatisticsImplementor() {
-		return sessionFactory.getStatisticsImplementor();
+                return statisticsImplementor;
 	}
 }

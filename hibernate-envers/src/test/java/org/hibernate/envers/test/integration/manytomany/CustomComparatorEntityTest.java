@@ -25,16 +25,16 @@ package org.hibernate.envers.test.integration.manytomany;
 
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
-import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.envers.test.entities.StrTestEntityComparator;
 import org.hibernate.envers.test.entities.manytomany.SortedSetEntity;
-import org.junit.Test;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
 
 import javax.persistence.EntityManager;
 import java.util.*;
 
-import static org.junit.Assert.assertEquals;
+import static org.testng.Assert.*;
 
 /**
  * @author Michal Skowronek (mskowr at o2 pl)
@@ -51,8 +51,7 @@ public class CustomComparatorEntityTest extends AbstractEntityTest {
         cfg.addAnnotatedClass(SortedSetEntity.class);
     }
 
-    @Test
-    @Priority(10)
+    @BeforeClass(dependsOnMethods = "init")
     public void initData() {
         EntityManager em = getEntityManager();
 

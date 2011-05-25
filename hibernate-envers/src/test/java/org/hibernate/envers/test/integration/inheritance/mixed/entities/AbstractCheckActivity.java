@@ -7,12 +7,15 @@ import javax.persistence.*;
 @Audited
 @Entity
 @DiscriminatorValue(value = "CHECK")
-@SecondaryTable(name = "ACTIVITY_CHECK", pkJoinColumns = @PrimaryKeyJoinColumn(name = "ACTIVITY_ID"))
+@SecondaryTable(name = "ACTIVITY_CHECK",
+		pkJoinColumns = {@PrimaryKeyJoinColumn(name = "ACTIVITY_ID"),
+						@PrimaryKeyJoinColumn(name = "ACTIVITY_ID2")})
 public abstract class AbstractCheckActivity extends AbstractActivity {
     @Column(table = "ACTIVITY_CHECK")
     private Integer durationInMinutes;
     @ManyToOne(targetEntity = AbstractActivity.class, cascade = CascadeType.MERGE, fetch = FetchType.LAZY)
-    @JoinColumn(table = "ACTIVITY_CHECK")
+	@JoinColumns({@JoinColumn(table = "ACTIVITY_CHECK", referencedColumnName = "id"),
+			@JoinColumn(table = "ACTIVITY_CHECK", referencedColumnName = "id2")})
     private Activity relatedActivity;
 
     public Integer getDurationInMinutes() {

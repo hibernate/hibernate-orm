@@ -14,7 +14,7 @@ public class JoinedSubclassInheritanceSessionTest extends AbstractInheritanceStr
 
     protected void initMappings() throws MappingException, URISyntaxException {
         URL url = Thread.currentThread().getContextClassLoader().getResource(
-                "mappings/mixedInheritanceStrategies/mappingsPassing.hbm.xml");
+				"mappings/mixedInheritanceStrategies/mappingsJoinedSubclass.hbm.xml");
         config.addFile(new File(url.toURI()));
     }
 

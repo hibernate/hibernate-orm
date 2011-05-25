@@ -52,7 +52,7 @@ public class RelatedAuditExpression implements AuditCriterion {
             throw new AuditException("This criterion can only be used on a property that is " +
                     "a relation to another property.");
         } else {
-            relatedEntity.getIdMapper().addIdEqualsToQuery(parameters, id, propertyName, equals);
+            relatedEntity.getIdMapper().addIdEqualsToQuery(parameters, id, null, equals);
         }
     }
 }

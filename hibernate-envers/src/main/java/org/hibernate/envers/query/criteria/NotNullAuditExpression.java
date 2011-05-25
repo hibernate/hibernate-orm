@@ -45,7 +45,7 @@ public class NotNullAuditExpression implements AuditCriterion {
         if (relatedEntity == null) {
             parameters.addNotNullRestriction(propertyName, true);
         } else {
-            relatedEntity.getIdMapper().addIdEqualsToQuery(parameters, null, propertyName, false);
+            relatedEntity.getIdMapper().addIdEqualsToQuery(parameters, null, null, false);
         }
     }
 }

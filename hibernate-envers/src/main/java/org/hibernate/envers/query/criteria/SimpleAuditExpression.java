@@ -58,7 +58,7 @@ public class SimpleAuditExpression implements AuditCriterion {
 
             Object id = relatedEntity.getIdMapper().mapToIdFromEntity(value);
 
-            relatedEntity.getIdMapper().addIdEqualsToQuery(parameters, id, propertyName, "=".equals(op));
+            relatedEntity.getIdMapper().addIdEqualsToQuery(parameters, id, null, "=".equals(op));
         }
     }
 }

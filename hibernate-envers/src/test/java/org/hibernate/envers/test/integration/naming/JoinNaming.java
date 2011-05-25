@@ -33,6 +33,8 @@ import javax.persistence.EntityManager;
 import java.util.Arrays;
 import java.util.Iterator;
 
+import static junit.framework.Assert.*;
+
 /**
  * @author Adam Warski (adam at warski dot org)
  */
@@ -122,16 +124,11 @@ public class JoinNaming extends AbstractEntityTest {
     @SuppressWarnings({"unchecked"})
     @Test
     public void testJoinColumnName() {
-        Iterator<Column> columns =
-                getCfg().getClassMapping("org.hibernate.envers.test.integration.naming.JoinNamingRefIngEntity_AUD")
-                .getProperty("reference").getColumnIterator();
-
-        while (columns.hasNext()) {
-            if ("jnree_column_reference".equals(columns.next().getName())) {
-                return;
-            }
-        }
-
-        assert false;
-    }
+		Iterator<Column> columns =
+				getCfg().getClassMapping("org.hibernate.envers.test.integration.naming.JoinNamingRefIngEntity_AUD")
+						.getProperty("reference_id").getColumnIterator();
+		assertTrue(columns.hasNext());
+		assertEquals("jnree_column_reference", columns.next().getName());
+		assertFalse(columns.hasNext());
+	}
 }

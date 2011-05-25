@@ -23,13 +23,11 @@
  */
 package org.hibernate.metamodel.binding;
 
-import org.dom4j.Element;
-
 /**
  * @author Gail Badner
  */
-public class ElementCollectionElement extends CollectionElement {
-	public ElementCollectionElement(PluralAttributeBinding binding) {
-		super( binding, CollectionElementType.ELEMENT );
+public class BasicCollectionElement extends CollectionElement {
+	public BasicCollectionElement(PluralAttributeBinding binding) {
+		super( binding, CollectionElementType.BASIC );
 	}
 }

@@ -48,7 +48,7 @@ public abstract class PluralAttributeBinding extends AbstractAttributeBinding {
 	private Table collectionTable;
 
 	private CollectionKey collectionKey;
-	private CollectionElement collectionElement;
+	private final CollectionElement collectionElement;
 
 //	private String role;
 	private FetchMode fetchMode;
@@ -88,7 +88,6 @@ public abstract class PluralAttributeBinding extends AbstractAttributeBinding {
 		super.initialize( state );
 		fetchMode = state.getFetchMode();
 		extraLazy = state.isExtraLazy();
-		collectionElement = new ElementCollectionElement( this );
 		collectionElement.setNodeName( state.getElementNodeName() );
 		collectionElement.setTypeName( state.getElementTypeName() );
 		inverse = state.isInverse();
@@ -144,9 +143,6 @@ public abstract class PluralAttributeBinding extends AbstractAttributeBinding {
 		return collectionElement;
 	}
 
-	public void setCollectionElement(CollectionElement collectionElement) {
-		this.collectionElement = collectionElement;
-	}
 	public boolean isExtraLazy() {
 		return extraLazy;
 	}

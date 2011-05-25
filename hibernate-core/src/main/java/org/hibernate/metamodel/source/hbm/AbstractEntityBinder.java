@@ -502,10 +502,10 @@ PrimitiveArray
 
 	private CollectionElementType getCollectionElementType(XMLBagElement collection) {
 		if ( collection.getElement() != null ) {
-			return CollectionElementType.ELEMENT;
+			return CollectionElementType.BASIC;
 		}
 		else if ( collection.getCompositeElement() != null ) {
-			return CollectionElementType.COMPOSITE_ELEMENT;
+			return CollectionElementType.COMPOSITE;
 		}
 		else if ( collection.getManyToMany() != null ) {
 			return CollectionElementType.MANY_TO_MANY;

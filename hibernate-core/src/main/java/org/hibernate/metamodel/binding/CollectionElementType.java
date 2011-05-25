@@ -27,14 +27,14 @@ package org.hibernate.metamodel.binding;
  * @author Gail Badner
  */
 public enum CollectionElementType {
-	ELEMENT( "element" ) {
+	BASIC( "basic" ) {
 		public CollectionElement createCollectionElementInternal(PluralAttributeBinding attributeBinding) {
-			return new ElementCollectionElement( attributeBinding  );
+			return new BasicCollectionElement( attributeBinding  );
 		}
 	},
-	COMPOSITE_ELEMENT( "composite-element" ) {
+	COMPOSITE( "composite" ) {
 		public CollectionElement createCollectionElementInternal(PluralAttributeBinding attributeBinding) {
-			return new ElementCollectionElement( attributeBinding  );
+			return new CompositeCollectionElement( attributeBinding  );
 		}
 	},
 	ONE_TO_MANY( "one-to-many" ) {

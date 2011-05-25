@@ -25,6 +25,11 @@ package org.hibernate.metamodel.source.annotations.global;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.Index;
+import org.jboss.logging.Logger;
+
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.FilterDefs;
 import org.hibernate.engine.spi.FilterDefinition;
@@ -33,47 +38,52 @@ import org.hibernate.metamodel.source.annotations.HibernateDotNames;
 import org.hibernate.metamodel.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
 import org.hibernate.type.Type;
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.Index;
-import org.jboss.logging.Logger;
 
-/**
- *
- */
 public class FilterDefBinder {
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, FilterDefBinder.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			FilterDefBinder.class.getName()
+	);
 
-    /**
-     * Binds all {@link FilterDefs} and {@link FilterDef} annotations to the supplied metadata.
-     *
-     * @param metadata the global metadata
-     * @param jandex the jandex index
-     */
-    public static void bind( MetadataImpl metadata,
-                             Index jandex ) {
-        for (AnnotationInstance filterDef : jandex.getAnnotations(HibernateDotNames.FILTER_DEF)) {
-            bind(metadata, filterDef);
-        }
-        for (AnnotationInstance filterDefs : jandex.getAnnotations(HibernateDotNames.FILTER_DEFS)) {
-            for (AnnotationInstance filterDef : JandexHelper.getValueAsArray(filterDefs, "value")) {
-                bind(metadata, filterDef);
-            }
-        }
-    }
+	/**
+	 * Binds all {@link FilterDefs} and {@link FilterDef} annotations to the supplied metadata.
+	 *
+	 * @param metadata the global metadata
+	 * @param jandex the jandex index
+	 */
+	public static void bind(MetadataImpl metadata,
+							Index jandex) {
+		for ( AnnotationInstance filterDef : jandex.getAnnotations( HibernateDotNames.FILTER_DEF ) ) {
+			bind( metadata, filterDef );
+		}
+		for ( AnnotationInstance filterDefs : jandex.getAnnotations( HibernateDotNames.FILTER_DEFS ) ) {
+			for ( AnnotationInstance filterDef : JandexHelper.getValueAsArray( filterDefs, "value" ) ) {
+				bind( metadata, filterDef );
+			}
+		}
+	}
 
-    private static void bind( MetadataImpl metadata,
-                              AnnotationInstance filterDef ) {
-        String name = JandexHelper.getValueAsString(filterDef, "name");
-        Map<String, Type> prms = new HashMap<String, Type>();
-        for (AnnotationInstance prm : JandexHelper.getValueAsArray(filterDef, "parameters")) {
-            prms.put(JandexHelper.getValueAsString(prm, "name"),
-                     metadata.typeResolver().heuristicType(JandexHelper.getValueAsString(prm, "type")));
-        }
-        metadata.addFilterDef(new FilterDefinition(name, JandexHelper.getValueAsString(filterDef, "defaultCondition"), prms));
-        LOG.debugf("Binding filter definition: %s", name);
-    }
+	private static void bind(MetadataImpl metadata,
+							 AnnotationInstance filterDef) {
+		String name = JandexHelper.getValueAsString( filterDef, "name" );
+		Map<String, Type> prms = new HashMap<String, Type>();
+		for ( AnnotationInstance prm : JandexHelper.getValueAsArray( filterDef, "parameters" ) ) {
+			prms.put(
+					JandexHelper.getValueAsString( prm, "name" ),
+					metadata.typeResolver().heuristicType( JandexHelper.getValueAsString( prm, "type" ) )
+			);
+		}
+		metadata.addFilterDef(
+				new FilterDefinition(
+						name,
+						JandexHelper.getValueAsString( filterDef, "defaultCondition" ),
+						prms
+				)
+		);
+		LOG.debugf( "Binding filter definition: %s", name );
+	}
 
-    private FilterDefBinder() {
-    }
+	private FilterDefBinder() {
+	}
 }

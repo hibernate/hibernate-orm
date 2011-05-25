@@ -26,6 +26,7 @@ package org.hibernate.metamodel.source.annotations.global;
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.Index;
 import org.jboss.logging.Logger;
+
 import org.hibernate.AnnotationException;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
@@ -45,73 +46,82 @@ import org.hibernate.metamodel.source.internal.MetadataImpl;
  */
 public class TableBinder {
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, TableBinder.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			TableBinder.class.getName()
+	);
 
-    /**
-     * Binds {@link org.hibernate.annotations.Tables} and {@link org.hibernate.annotations.Table} annotations to the supplied
-     * metadata.
-     *
-     * @param metadata the global metadata
-     * @param jandex the annotation index repository
-     */
-    public static void bind( MetadataImpl metadata,
-                             Index jandex ) {
-        for (AnnotationInstance tableAnnotation : jandex.getAnnotations(HibernateDotNames.TABLE)) {
-            bind(metadata, tableAnnotation);
-        }
-        for (AnnotationInstance tables : jandex.getAnnotations(HibernateDotNames.TABLES)) {
-            for (AnnotationInstance table : JandexHelper.getValueAsArray(tables, "value")) {
-                bind(metadata, table);
-            }
-        }
-    }
+	/**
+	 * Binds {@link org.hibernate.annotations.Tables} and {@link org.hibernate.annotations.Table} annotations to the supplied
+	 * metadata.
+	 *
+	 * @param metadata the global metadata
+	 * @param jandex the annotation index repository
+	 */
+	public static void bind(MetadataImpl metadata,
+							Index jandex) {
+		for ( AnnotationInstance tableAnnotation : jandex.getAnnotations( HibernateDotNames.TABLE ) ) {
+			bind( metadata, tableAnnotation );
+		}
+		for ( AnnotationInstance tables : jandex.getAnnotations( HibernateDotNames.TABLES ) ) {
+			for ( AnnotationInstance table : JandexHelper.getValueAsArray( tables, "value" ) ) {
+				bind( metadata, table );
+			}
+		}
+	}
 
-    private static void bind( MetadataImpl metadata,
-                              AnnotationInstance tableAnnotation ) {
-        String tableName = JandexHelper.getValueAsString(tableAnnotation, "appliesTo");
-        ObjectName objectName = new ObjectName(tableName);
-        Schema schema = metadata.getDatabase().getSchema(objectName.getSchema(), objectName.getCatalog());
-        Table table = schema.getTable(objectName.getName());
-        if (table != null) bindHibernateTableAnnotation(table, tableAnnotation);
-    }
+	private static void bind(MetadataImpl metadata,
+							 AnnotationInstance tableAnnotation) {
+		String tableName = JandexHelper.getValueAsString( tableAnnotation, "appliesTo" );
+		ObjectName objectName = new ObjectName( tableName );
+		Schema schema = metadata.getDatabase().getSchema( objectName.getSchema(), objectName.getCatalog() );
+		Table table = schema.getTable( objectName.getName() );
+		if ( table != null ) {
+			bindHibernateTableAnnotation( table, tableAnnotation );
+		}
+	}
 
-    private static void bindHibernateTableAnnotation( Table table,
-                                                      AnnotationInstance tableAnnotation ) {
-        for (AnnotationInstance indexAnnotation : JandexHelper.getValueAsArray(tableAnnotation, "indexes")) {
-            bindIndexAnnotation(table, indexAnnotation);
-        }
-        String comment = JandexHelper.getValueAsString(tableAnnotation, "comment");
-        if (StringHelper.isNotEmpty(comment)) table.addComment(comment.trim());
-    }
+	private static void bindHibernateTableAnnotation(Table table,
+													 AnnotationInstance tableAnnotation) {
+		for ( AnnotationInstance indexAnnotation : JandexHelper.getValueAsArray( tableAnnotation, "indexes" ) ) {
+			bindIndexAnnotation( table, indexAnnotation );
+		}
+		String comment = JandexHelper.getValueAsString( tableAnnotation, "comment" );
+		if ( StringHelper.isNotEmpty( comment ) ) {
+			table.addComment( comment.trim() );
+		}
+	}
 
-    private static void bindIndexAnnotation( Table table,
-                                             AnnotationInstance indexAnnotation ) {
-        String indexName = JandexHelper.getValueAsString(indexAnnotation, "appliesTo");
-        String[] columnNames = (String[])JandexHelper.getValue(indexAnnotation, "columnNames");
-        if (columnNames == null) {
-            LOG.noColumnsSpecifiedForIndex(indexName, table.toLoggableString());
-            return;
-        }
-        org.hibernate.metamodel.relational.Index index = table.getOrCreateIndex(indexName);
-        for (String columnName : columnNames) {
-            Column column = findColumn(table, columnName);
-            if (column == null) throw new AnnotationException("@Index references a unknown column: " + columnName);
-            index.addColumn(column);
-        }
-    }
+	private static void bindIndexAnnotation(Table table,
+											AnnotationInstance indexAnnotation) {
+		String indexName = JandexHelper.getValueAsString( indexAnnotation, "appliesTo" );
+		String[] columnNames = (String[]) JandexHelper.getValue( indexAnnotation, "columnNames" );
+		if ( columnNames == null ) {
+			LOG.noColumnsSpecifiedForIndex( indexName, table.toLoggableString() );
+			return;
+		}
+		org.hibernate.metamodel.relational.Index index = table.getOrCreateIndex( indexName );
+		for ( String columnName : columnNames ) {
+			Column column = findColumn( table, columnName );
+			if ( column == null ) {
+				throw new AnnotationException( "@Index references a unknown column: " + columnName );
+			}
+			index.addColumn( column );
+		}
+	}
 
-    private static Column findColumn( Table table,
-                                      String columnName ) {
-        Column column = null;
-        for (SimpleValue value : table.values()) {
-            if (value instanceof Column && ((Column)value).getName().equals(columnName)) {
-                column = (Column)value;
-                break;
-            }
-        }
-        return column;
-    }
+	private static Column findColumn(Table table,
+									 String columnName) {
+		Column column = null;
+		for ( SimpleValue value : table.values() ) {
+			if ( value instanceof Column && ( (Column) value ).getName().equals( columnName ) ) {
+				column = (Column) value;
+				break;
+			}
+		}
+		return column;
+	}
 
-    private TableBinder() {
-    }
+	private TableBinder() {
+	}
 }

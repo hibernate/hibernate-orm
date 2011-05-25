@@ -25,8 +25,10 @@ package org.hibernate.metamodel.source.annotations.global;
 
 import java.util.HashSet;
 import java.util.Set;
+
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.Index;
+
 import org.hibernate.MappingException;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.FetchProfiles;
@@ -43,39 +45,47 @@ import org.hibernate.metamodel.source.internal.MetadataImpl;
  */
 public class FetchProfileBinder {
 
-    /**
-     * Binds all {@link FetchProfiles} and {@link org.hibernate.annotations.FetchProfile} annotations to the supplied metadata.
-     *
-     * @param metadata the global metadata
-     * @param jandex the jandex index
-     */
-    // TODO verify that association exists. See former VerifyFetchProfileReferenceSecondPass
-    public static void bind( MetadataImpl metadata,
-                             Index jandex ) {
-        for (AnnotationInstance fetchProfile : jandex.getAnnotations(HibernateDotNames.FETCH_PROFILE)) {
-            bind(metadata, fetchProfile);
-        }
-        for (AnnotationInstance fetchProfiles : jandex.getAnnotations(HibernateDotNames.FETCH_PROFILES)) {
-            for (AnnotationInstance fetchProfile : JandexHelper.getValueAsArray(fetchProfiles, "value")) {
-                bind(metadata, fetchProfile);
-            }
-        }
-    }
+	/**
+	 * Binds all {@link FetchProfiles} and {@link org.hibernate.annotations.FetchProfile} annotations to the supplied metadata.
+	 *
+	 * @param metadata the global metadata
+	 * @param jandex the jandex index
+	 */
+	// TODO verify that association exists. See former VerifyFetchProfileReferenceSecondPass
+	public static void bind(MetadataImpl metadata,
+							Index jandex) {
+		for ( AnnotationInstance fetchProfile : jandex.getAnnotations( HibernateDotNames.FETCH_PROFILE ) ) {
+			bind( metadata, fetchProfile );
+		}
+		for ( AnnotationInstance fetchProfiles : jandex.getAnnotations( HibernateDotNames.FETCH_PROFILES ) ) {
+			for ( AnnotationInstance fetchProfile : JandexHelper.getValueAsArray( fetchProfiles, "value" ) ) {
+				bind( metadata, fetchProfile );
+			}
+		}
+	}
 
-    private static void bind( MetadataImpl metadata,
-                              AnnotationInstance fetchProfile ) {
-        String name = JandexHelper.getValueAsString(fetchProfile, "name");
-        Set<Fetch> fetches = new HashSet<Fetch>();
-        for (AnnotationInstance override : JandexHelper.getValueAsArray(fetchProfile, "fetchOverrides")) {
-            FetchMode fetchMode = JandexHelper.getValueAsEnum(override, "mode", FetchMode.class);
-            if (!fetchMode.equals(org.hibernate.annotations.FetchMode.JOIN)) throw new MappingException("Only FetchMode.JOIN is currently supported");
-            fetches.add(new Fetch(JandexHelper.getValueAsString(override, "entity"), JandexHelper.getValueAsString(override,
-                                                                                                                   "association"),
-                                  fetchMode.toString().toLowerCase()));
-        }
-        metadata.addFetchProfile(new FetchProfile(name, fetches));
-    }
+	private static void bind(MetadataImpl metadata,
+							 AnnotationInstance fetchProfile) {
+		String name = JandexHelper.getValueAsString( fetchProfile, "name" );
+		Set<Fetch> fetches = new HashSet<Fetch>();
+		for ( AnnotationInstance override : JandexHelper.getValueAsArray( fetchProfile, "fetchOverrides" ) ) {
+			FetchMode fetchMode = JandexHelper.getValueAsEnum( override, "mode", FetchMode.class );
+			if ( !fetchMode.equals( org.hibernate.annotations.FetchMode.JOIN ) ) {
+				throw new MappingException( "Only FetchMode.JOIN is currently supported" );
+			}
+			fetches.add(
+					new Fetch(
+							JandexHelper.getValueAsString( override, "entity" ), JandexHelper.getValueAsString(
+							override,
+							"association"
+					),
+							fetchMode.toString().toLowerCase()
+					)
+			);
+		}
+		metadata.addFetchProfile( new FetchProfile( name, fetches ) );
+	}
 
-    private FetchProfileBinder() {
-    }
+	private FetchProfileBinder() {
+	}
 }

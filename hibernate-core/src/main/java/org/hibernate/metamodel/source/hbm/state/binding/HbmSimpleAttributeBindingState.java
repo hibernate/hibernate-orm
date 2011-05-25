@@ -25,19 +25,21 @@ package org.hibernate.metamodel.source.hbm.state.binding;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.MappingException;
 import org.hibernate.mapping.PropertyGeneration;
-import org.hibernate.metamodel.source.hbm.MappingDefaults;
+import org.hibernate.metamodel.binding.CascadeType;
 import org.hibernate.metamodel.binding.state.SimpleAttributeBindingState;
 import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.metamodel.source.hbm.HbmHelper;
+import org.hibernate.metamodel.source.hbm.MappingDefaults;
+import org.hibernate.metamodel.source.hbm.util.MappingHelper;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLId;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLTimestamp;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLVersion;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLParamElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLPropertyElement;
-import org.hibernate.metamodel.source.hbm.util.MappingHelper;
 
 /**
  * @author Gail Badner
@@ -261,7 +263,7 @@ public class HbmSimpleAttributeBindingState extends AbstractHbmAttributeBindingS
 		return isUpdatable;
 	}
 
-	public String getCascade() {
+	public Set<CascadeType> getCascadeTypes() {
 		return null;
 	}
 

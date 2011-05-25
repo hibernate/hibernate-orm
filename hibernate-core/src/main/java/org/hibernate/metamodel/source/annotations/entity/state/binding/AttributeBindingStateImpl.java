@@ -24,8 +24,10 @@
 package org.hibernate.metamodel.source.annotations.entity.state.binding;
 
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.mapping.PropertyGeneration;
+import org.hibernate.metamodel.binding.CascadeType;
 import org.hibernate.metamodel.binding.state.SimpleAttributeBindingState;
 import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.metamodel.source.annotations.entity.SimpleAttribute;
@@ -104,7 +106,7 @@ public class AttributeBindingStateImpl implements SimpleAttributeBindingState {
 	}
 
 	@Override
-	public String getCascade() {
+	public Set<CascadeType> getCascadeTypes() {
 		return null;  //To change body of implemented methods use File | Settings | File Templates.
 	}
 

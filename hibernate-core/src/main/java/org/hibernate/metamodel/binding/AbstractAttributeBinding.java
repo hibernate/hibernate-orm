@@ -37,7 +37,6 @@ import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.metamodel.relational.Column;
 import org.hibernate.metamodel.relational.DerivedValue;
 import org.hibernate.metamodel.relational.SimpleValue;
-import org.hibernate.metamodel.relational.TableSpecification;
 import org.hibernate.metamodel.relational.Tuple;
 import org.hibernate.metamodel.relational.Value;
 import org.hibernate.metamodel.relational.state.SimpleValueRelationalState;
@@ -61,7 +60,7 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 	private boolean isLazy;
 	private String propertyAccessorName;
 	private boolean isAlternateUniqueKey;
-	private String cascade;
+	private Set<CascadeType> cascadeTypes;
 	private boolean optimisticLockable;
 
 	// DOM4J specific...
@@ -79,7 +78,7 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 		isLazy = state.isLazy();
 		propertyAccessorName = state.getPropertyAccessorName();
 		isAlternateUniqueKey = state.isAlternateUniqueKey();
-		cascade = state.getCascade();
+		cascadeTypes = state.getCascadeTypes();
 		optimisticLockable = state.isOptimisticLockable();
 		nodeName = state.getNodeName();
 		metaAttributes = state.getMetaAttributes();
@@ -150,8 +149,8 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 		return hibernateTypeDescriptor;
 	}
 
-	public String getCascade() {
-		return cascade;
+	public Set<CascadeType> getCascadeTypes() {
+		return cascadeTypes;
 	}
 
 	public boolean isOptimisticLockable() {

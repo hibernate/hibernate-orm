@@ -27,20 +27,22 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.FetchMode;
+import org.hibernate.metamodel.binding.CascadeType;
 import org.hibernate.metamodel.binding.CustomSQL;
-import org.hibernate.metamodel.source.hbm.MappingDefaults;
 import org.hibernate.metamodel.binding.state.PluralAttributeBindingState;
 import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.metamodel.source.hbm.HbmHelper;
+import org.hibernate.metamodel.source.hbm.MappingDefaults;
+import org.hibernate.metamodel.source.hbm.util.MappingHelper;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLBagElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlDeleteAllElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlDeleteElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlInsertElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlUpdateElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSynchronizeElement;
-import org.hibernate.metamodel.source.hbm.util.MappingHelper;
 
 /**
  * @author Gail Badner
@@ -50,7 +52,7 @@ public class HbmPluralAttributeBindingState extends AbstractHbmAttributeBindingS
 	private final XMLBagElement collection;
 	private final Class collectionPersisterClass;
 	private final String typeName;
-	private final String cascade;
+	private final Set<CascadeType> cascadeTypes;
 
 	public HbmPluralAttributeBindingState(
 			String ownerClassName,
@@ -72,7 +74,7 @@ public class HbmPluralAttributeBindingState extends AbstractHbmAttributeBindingS
 		this.collectionPersisterClass = MappingHelper.classForName(
 				collection.getPersister(), getDefaults().getServiceRegistry()
 		);
-		this.cascade = MappingHelper.getStringValue( collection.getCascade(), mappingDefaults.getDefaultCascade() );
+		this.cascadeTypes = determineCascadeTypes( collection.getCascade() );
 
 		//Attribute typeNode = collectionElement.attribute( "collection-type" );
 		//if ( typeNode != null ) {
@@ -194,7 +196,8 @@ public class HbmPluralAttributeBindingState extends AbstractHbmAttributeBindingS
 
 	public boolean isOrphanDelete() {
 		// ORPHAN DELETE (used for programmer error detection)
-		return ( getCascade().indexOf( "delete-orphan" ) >= 0 );
+		return true;
+		//return ( getCascade().indexOf( "delete-orphan" ) >= 0 );
 	}
 
 	public int getBatchSize() {
@@ -282,8 +285,8 @@ public class HbmPluralAttributeBindingState extends AbstractHbmAttributeBindingS
 				collection.getLoader().getQueryRef();
 	}
 
-	public String getCascade() {
-		return cascade;
+	public Set<CascadeType> getCascadeTypes() {
+		return cascadeTypes;
 	}
 
 	public boolean isKeyCascadeDeleteEnabled() {

@@ -29,7 +29,6 @@ import java.util.Set;
 import org.hibernate.metamodel.domain.Attribute;
 import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.metamodel.relational.SimpleValue;
-import org.hibernate.metamodel.relational.TableSpecification;
 import org.hibernate.metamodel.relational.Value;
 
 /**
@@ -75,8 +74,8 @@ public interface AttributeBinding {
 
 	/**
 	 * @return In the case that {@link #getValue()} represents a {@link org.hibernate.metamodel.relational.Tuple} this method
-	 * gives access to its compound values.  In the case of {@link org.hibernate.metamodel.relational.SimpleValue},
-	 * we return an Iterable over that single simple value.
+	 *         gives access to its compound values.  In the case of {@link org.hibernate.metamodel.relational.SimpleValue},
+	 *         we return an Iterable over that single simple value.
 	 */
 	public Iterable<SimpleValue> getValues();
 

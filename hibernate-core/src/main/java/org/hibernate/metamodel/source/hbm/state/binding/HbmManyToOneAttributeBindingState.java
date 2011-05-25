@@ -23,16 +23,20 @@
  */
 package org.hibernate.metamodel.source.hbm.state.binding;
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.FetchMode;
+import org.hibernate.MappingException;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.metamodel.source.hbm.MappingDefaults;
+import org.hibernate.metamodel.binding.CascadeType;
 import org.hibernate.metamodel.binding.state.ManyToOneAttributeBindingState;
 import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.metamodel.source.hbm.HbmHelper;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLManyToOneElement;
+import org.hibernate.metamodel.source.hbm.MappingDefaults;
 import org.hibernate.metamodel.source.hbm.util.MappingHelper;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLManyToOneElement;
 
 /**
  * @author Gail Badner
@@ -44,7 +48,7 @@ public class HbmManyToOneAttributeBindingState
 	private final FetchMode fetchMode;
 	private final boolean isUnwrapProxy;
 	private final boolean isLazy;
-	private final String cascade;
+	private final Set<CascadeType> cascadeTypes;
 	private final boolean isEmbedded;
 	private final String referencedPropertyName;
 	private final String referencedEntityName;
@@ -74,7 +78,7 @@ public class HbmManyToOneAttributeBindingState
 		isLazy = manyToOne.getLazy() == null ||
 				isUnwrapProxy ||
 				"proxy".equals( manyToOne.getLazy().value() );
-		cascade = MappingHelper.getStringValue( manyToOne.getCascade(), defaults.getDefaultCascade() );
+		cascadeTypes = determineCascadeTypes( manyToOne.getCascade() );
 		isEmbedded = manyToOne.isEmbedXml();
 		referencedEntityName = getReferencedEntityName( ownerClassName, manyToOne, defaults );
 		referencedPropertyName = manyToOne.getPropertyRef();
@@ -148,8 +152,8 @@ public class HbmManyToOneAttributeBindingState
 		return referencedEntityName;
 	}
 
-	public String getCascade() {
-		return cascade;
+	public Set<CascadeType> getCascadeTypes() {
+		return cascadeTypes;
 	}
 
 	public boolean ignoreNotFound() {

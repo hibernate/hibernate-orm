@@ -24,7 +24,9 @@
 package org.hibernate.metamodel.binding.state;
 
 import java.util.Map;
+import java.util.Set;
 
+import org.hibernate.metamodel.binding.CascadeType;
 import org.hibernate.metamodel.domain.MetaAttribute;
 
 /**
@@ -43,7 +45,7 @@ public interface AttributeBindingState {
 
 	boolean isAlternateUniqueKey();
 
-	String getCascade();
+	Set<CascadeType> getCascadeTypes();
 
 	boolean isOptimisticLockable();
 

@@ -44,7 +44,6 @@ public class ManyToOneAttributeBinding extends SimpleAttributeBinding implements
 	private String referencedAttributeName;
 	private String referencedEntityName;
 	private AttributeBinding referencedAttributeBinding;
-	private boolean ignoreNotFound;
 
 	ManyToOneAttributeBinding(EntityBinding entityBinding) {
 		super( entityBinding, false, false );
@@ -153,7 +152,7 @@ public class ManyToOneAttributeBinding extends SimpleAttributeBinding implements
 
 	public void validate() {
 		// can't check this until both the domain and relational states are initialized...
-		if ( getCascade() != null && getCascade().indexOf( "delete-orphan" ) >= 0 ) {
+		if ( getCascadeTypes().contains( CascadeType.DELETE_ORPHAN ) ) {
 			if ( !isLogicalOneToOne ) {
 				throw new MappingException(
 						"many-to-one attribute [" + getAttribute().getName() + "] does not support orphan delete as it is not unique"

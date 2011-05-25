@@ -23,14 +23,17 @@
  */
 package org.hibernate.metamodel.source.hbm.state.binding;
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.MappingException;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.PropertyGeneration;
-import org.hibernate.metamodel.source.hbm.MappingDefaults;
+import org.hibernate.metamodel.binding.CascadeType;
 import org.hibernate.metamodel.binding.state.AttributeBindingState;
 import org.hibernate.metamodel.domain.MetaAttribute;
+import org.hibernate.metamodel.source.hbm.MappingDefaults;
 import org.hibernate.metamodel.source.hbm.util.MappingHelper;
 
 /**
@@ -71,6 +74,20 @@ public abstract class AbstractHbmAttributeBindingState implements AttributeBindi
 	// TODO: really don't like this here...
 	protected String getOwnerClassName() {
 		return ownerClassName;
+	}
+
+	protected Set<CascadeType> determineCascadeTypes(String cascade) {
+		String commaSeparatedCascades = MappingHelper.getStringValue( cascade, getDefaults().getDefaultCascade() );
+		Set<String> cascades = MappingHelper.getStringValueTokens( commaSeparatedCascades, "," );
+		Set<CascadeType> cascadeTypes = new HashSet<CascadeType>( cascades.size() );
+		for ( String s : cascades ) {
+			CascadeType cascadeType = CascadeType.getCascadeType( s );
+			if ( cascadeType == null ) {
+				throw new MappingException( "Invalid cascading option " + s );
+			}
+			cascadeTypes.add( cascadeType );
+		}
+		return cascadeTypes;
 	}
 
 	protected final String getTypeNameByReflection() {

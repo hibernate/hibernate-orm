@@ -23,6 +23,9 @@
  */
 package org.hibernate.metamodel.source.annotations.entity.state.binding;
 
+import java.util.Set;
+
+import org.hibernate.metamodel.binding.CascadeType;
 import org.hibernate.metamodel.binding.state.ManyToOneAttributeBindingState;
 import org.hibernate.metamodel.source.annotations.entity.AssociationAttribute;
 
@@ -43,8 +46,8 @@ public class ManyToOneBindingStateImpl extends AttributeBindingStateImpl impleme
 	}
 
 	@Override
-	public String getCascade() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+	public Set<CascadeType> getCascadeTypes() {
+		return null;
 	}
 
 	@Override

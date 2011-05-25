@@ -65,6 +65,8 @@ public class TransactionCoordinatorImpl implements TransactionCoordinator {
 
 	private final transient TransactionContext transactionContext;
 	private final transient JdbcCoordinatorImpl jdbcCoordinator;
+        private final transient TransactionFactory transactionFactory;
+        private final transient TransactionEnvironment transactionEnvironment;
 
 	private final transient List<TransactionObserver> observers;
 	private final transient SynchronizationRegistryImpl synchronizationRegistry;
@@ -82,6 +84,8 @@ public class TransactionCoordinatorImpl implements TransactionCoordinator {
 			TransactionContext transactionContext) {
 		this.transactionContext = transactionContext;
 		this.jdbcCoordinator = new JdbcCoordinatorImpl( userSuppliedConnection, this );
+                this.transactionEnvironment = transactionContext.getTransactionEnvironment();
+                this.transactionFactory = this.transactionEnvironment.getTransactionFactory();
 		this.observers = new ArrayList<TransactionObserver>();
 		this.synchronizationRegistry = new SynchronizationRegistryImpl();
 		reset();
@@ -100,6 +104,8 @@ public class TransactionCoordinatorImpl implements TransactionCoordinator {
 			List<TransactionObserver> observers) {
 		this.transactionContext = transactionContext;
 		this.jdbcCoordinator = jdbcCoordinator;
+                this.transactionEnvironment = transactionContext.getTransactionEnvironment();
+                this.transactionFactory = this.transactionEnvironment.getTransactionFactory();
 		this.observers = observers;
 		this.synchronizationRegistry = new SynchronizationRegistryImpl();
 		reset();
@@ -130,7 +136,7 @@ public class TransactionCoordinatorImpl implements TransactionCoordinator {
 
 		final boolean success = JtaStatusHelper.isCommitted( status );
 
-		transactionContext.getTransactionEnvironment().getStatisticsImplementor().endTransaction( success );
+                transactionEnvironment.getStatisticsImplementor().endTransaction( success );
 
 		getJdbcCoordinator().afterTransaction();
 
@@ -140,7 +146,7 @@ public class TransactionCoordinatorImpl implements TransactionCoordinator {
 	}
 
 	private SessionFactoryImplementor sessionFactory() {
-		return transactionContext.getTransactionEnvironment().getSessionFactory();
+		return transactionEnvironment.getSessionFactory();
 	}
 
 	public boolean isSynchronizationRegistered() {
@@ -164,11 +170,11 @@ public class TransactionCoordinatorImpl implements TransactionCoordinator {
 	}
 
 	private TransactionFactory transactionFactory() {
-		return getTransactionEnvironment().getTransactionFactory();
+                return transactionFactory;
 	}
 
 	private TransactionEnvironment getTransactionEnvironment() {
-		return getTransactionContext().getTransactionEnvironment();
+                return transactionEnvironment;
 	}
 
 	@Override

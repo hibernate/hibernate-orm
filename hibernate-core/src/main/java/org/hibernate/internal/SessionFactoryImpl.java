@@ -188,6 +188,8 @@ public final class SessionFactoryImpl
 	private final transient Map imports;
 	private final transient Interceptor interceptor;
 	private final transient SessionFactoryServiceRegistry serviceRegistry;
+        private final transient JdbcServices jdbcServices;
+        private final transient Dialect dialect;
 	private final transient Settings settings;
 	private final transient Properties properties;
 	private transient SchemaExport schemaExport;
@@ -226,6 +228,8 @@ public final class SessionFactoryImpl
 				this,
 				cfg
 		);
+                this.jdbcServices = this.serviceRegistry.getService( JdbcServices );
+                this.dialect = this.jdbcServices.getDialect();
 		this.sqlFunctionRegistry = new SQLFunctionRegistry( getDialect(), cfg.getSqlFunctions() );
 		if ( observer != null ) {
 			this.observer.addObserver( observer );
@@ -762,14 +766,15 @@ public final class SessionFactoryImpl
 	}
 
 	public JdbcServices getJdbcServices() {
-		return serviceRegistry.getService( JdbcServices.class );
+                return jdbcServices;
 	}
 
 	public Dialect getDialect() {
 		if ( serviceRegistry == null ) {
 			throw new IllegalStateException( "Cannot determine dialect because serviceRegistry is null." );
 		}
-		return getJdbcServices().getDialect();
+                return dialect;
+		//return getJdbcServices().getDialect();
 	}
 
 	public Interceptor getInterceptor()
@@ -956,7 +961,7 @@ public final class SessionFactoryImpl
 	}
 
 	public ConnectionProvider getConnectionProvider() {
-		return serviceRegistry.getService( JdbcServices.class ).getConnectionProvider();
+		return jdbcServices.getConnectionProvider();
 	}
 
 	/**

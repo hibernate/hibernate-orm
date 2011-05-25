@@ -407,7 +407,7 @@ public class SQLQueryImpl extends AbstractQueryImpl implements SQLQuery {
 		private final String alias;
 		private final String entityName;
 		private LockMode lockMode = LockMode.READ;
-		private Map<String,List<String>> propertyMappings;
+		private Map<String,String[]> propertyMappings;
 
 		private RootReturnBuilder(String alias, String entityName) {
 			this.alias = alias;
@@ -431,15 +431,21 @@ public class SQLQueryImpl extends AbstractQueryImpl implements SQLQuery {
 
 		public ReturnProperty addProperty(final String propertyName) {
 			if ( propertyMappings == null ) {
-				propertyMappings = new HashMap<String,List<String>>();
+				propertyMappings = new HashMap<String,String[]>();
 			}
 			return new ReturnProperty() {
 				public ReturnProperty addColumnAlias(String columnAlias) {
-					List<String> columnAliases = propertyMappings.get( propertyName );
+					String[] columnAliases = propertyMappings.get( propertyName );
 					if ( columnAliases == null ) {
-						columnAliases = new ArrayList<String>();
+						columnAliases = new String[] { columnAlias };
 					}
-					columnAliases.add( columnAlias );
+					else {
+						String[] newColumnAliases = new String[columnAliases.length + 1];
+						System.arraycopy( columnAliases, 0, newColumnAliases, 0, columnAliases.length );
+						newColumnAliases[columnAliases.length] = columnAlias;
+						columnAliases = newColumnAliases;
+					}
+					propertyMappings.put( propertyName, columnAliases );
 					return this;
 				}
 			};
@@ -454,7 +460,7 @@ public class SQLQueryImpl extends AbstractQueryImpl implements SQLQuery {
 		private String ownerTableAlias;
 		private final String joinedPropertyName;
 		private LockMode lockMode = LockMode.READ;
-		private Map<String,List<String>> propertyMappings;
+		private Map<String,String[]> propertyMappings;
 
 		private FetchReturnBuilder(String alias, String ownerTableAlias, String joinedPropertyName) {
 			this.alias = alias;
@@ -474,15 +480,21 @@ public class SQLQueryImpl extends AbstractQueryImpl implements SQLQuery {
 
 		public ReturnProperty addProperty(final String propertyName) {
 			if ( propertyMappings == null ) {
-				propertyMappings = new HashMap<String,List<String>>();
+				propertyMappings = new HashMap<String,String[]>();
 			}
 			return new ReturnProperty() {
 				public ReturnProperty addColumnAlias(String columnAlias) {
-					List<String> columnAliases = propertyMappings.get( propertyName );
+					String[] columnAliases = propertyMappings.get( propertyName );
 					if ( columnAliases == null ) {
-						columnAliases = new ArrayList<String>();
+						columnAliases = new String[] { columnAlias };
 					}
-					columnAliases.add( columnAlias );
+					else {
+						String[] newColumnAliases = new String[columnAliases.length + 1];
+						System.arraycopy( columnAliases, 0, newColumnAliases, 0, columnAliases.length );
+						newColumnAliases[columnAliases.length] = columnAlias;
+						columnAliases = newColumnAliases;
+					}
+					propertyMappings.put( propertyName, columnAliases );
 					return this;
 				}
 			};

@@ -12,11 +12,13 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 /**
- * Tests whether the mapping of many-to-many Sets is
+ * Tests the ValidityAuditStrategy on many-to-many Sets.
+ * It was first introduced because of a bug when adding and removing the same element
+ * from the set multiple times between database persists.
  * Created on: 24.05.11
  *
  * @author Oliver Lorenz
- * @since 0.0
+ * @since 3.6.5
  */
 public class ValidityAuditStrategyManyToManyTest extends AbstractEntityTest {
 
@@ -29,33 +31,33 @@ public class ValidityAuditStrategyManyToManyTest extends AbstractEntityTest {
         cfg.addAnnotatedClass(SetOwningEntity.class);
         cfg.addAnnotatedClass(SetOwnedEntity.class);
 
-		cfg.setProperty("org.hibernate.envers.audit_strategy",
+        cfg.setProperty("org.hibernate.envers.audit_strategy",
                 "org.hibernate.envers.strategy.ValidityAuditStrategy");
     }
 
-	@BeforeClass(enabled = true, dependsOnMethods = "init")
-	public void initData() {
-		final EntityManager em = getEntityManager();
+    @BeforeClass(enabled = true, dependsOnMethods = "init")
+    public void initData() {
+        final EntityManager em = getEntityManager();
 
-		final SetOwningEntity setOwningEntity = new SetOwningEntity(1, "parent");
-		final SetOwnedEntity setOwnedEntity = new SetOwnedEntity(2, "child");
+        final SetOwningEntity setOwningEntity = new SetOwningEntity(1, "parent");
+        final SetOwnedEntity setOwnedEntity = new SetOwnedEntity(2, "child");
 
-		// Initial persist
-		em.getTransaction().begin();
+        // Initial persist
+        em.getTransaction().begin();
 
-		em.persist(setOwningEntity);
+        em.persist(setOwningEntity);
         em.persist(setOwnedEntity);
 
-		em.getTransaction().commit();
-		em.clear();
+        em.getTransaction().commit();
+        em.clear();
 
         ing_id = setOwningEntity.getId();
         ed_id = setOwnedEntity.getId();
     }
 
-	@Test(enabled = true)
-	public void testMultipleAddAndRemove() {
-		final EntityManager em = getEntityManager();
+    @Test(enabled = true)
+    public void testMultipleAddAndRemove() {
+        final EntityManager em = getEntityManager();
 
         // add child for first time
         em.getTransaction().begin();
@@ -66,8 +68,8 @@ public class ValidityAuditStrategyManyToManyTest extends AbstractEntityTest {
         owningEntity.setReferences(new HashSet<SetOwnedEntity>());
         owningEntity.getReferences().add(ownedEntity);
 
-		em.getTransaction().commit();
-		em.clear();
+        em.getTransaction().commit();
+        em.clear();
 
         // remove child
         em.getTransaction().begin();
@@ -77,8 +79,8 @@ public class ValidityAuditStrategyManyToManyTest extends AbstractEntityTest {
 
         owningEntity.getReferences().remove(ownedEntity);
 
-		em.getTransaction().commit();
-		em.clear();
+        em.getTransaction().commit();
+        em.clear();
 
         // add child again
         em.getTransaction().begin();
@@ -88,8 +90,8 @@ public class ValidityAuditStrategyManyToManyTest extends AbstractEntityTest {
 
         owningEntity.getReferences().add(ownedEntity);
 
-		em.getTransaction().commit();
-		em.clear();
+        em.getTransaction().commit();
+        em.clear();
 
         // remove child again
         em.getTransaction().begin();
@@ -99,8 +101,8 @@ public class ValidityAuditStrategyManyToManyTest extends AbstractEntityTest {
 
         owningEntity.getReferences().remove(ownedEntity);
 
-		em.getTransaction().commit();
-		em.clear();
+        em.getTransaction().commit();
+        em.clear();
 
         // now the set owning entity list should be empty again
         owningEntity = getEntityManager().find(SetOwningEntity.class, ing_id);

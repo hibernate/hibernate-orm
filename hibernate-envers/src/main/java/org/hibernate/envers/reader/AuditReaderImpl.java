@@ -280,11 +280,11 @@ public class AuditReaderImpl implements AuditReaderImplementor {
 			entity = ((HibernateProxy)entity).getHibernateLazyInitializer().getImplementation();
 		}
 		if(firstLevelCache.containsEntityName(primaryKey, revision, entity)) {
-			// it´s on envers FLC! 
+			// it's on envers FLC!
 			return firstLevelCache.getFromEntityNameCache(primaryKey, revision, entity);
 		} else {
 			throw new HibernateException(
-						"Envers can´t resolve entityName for historic entity. The id, revision and entity is not on envers first level cache.");
+						"Envers can't resolve entityName for historic entity. The id, revision and entity is not on envers first level cache.");
     }	
 }
 }

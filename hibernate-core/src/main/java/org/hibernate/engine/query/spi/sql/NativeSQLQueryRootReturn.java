@@ -56,7 +56,7 @@ public class NativeSQLQueryRootReturn extends NativeSQLQueryNonScalarReturn {
 	 * @param propertyResults Any user-supplied column->property mappings
 	 * @param lockMode The lock mode to apply
 	 */
-	public NativeSQLQueryRootReturn(String alias, String entityName, Map propertyResults, LockMode lockMode) {
+	public NativeSQLQueryRootReturn(String alias, String entityName, Map<String,String[]> propertyResults, LockMode lockMode) {
 		super( alias, propertyResults, lockMode );
 		this.returnEntityName = entityName;
 		this.hashCode = determineHashCode();

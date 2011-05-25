@@ -31,6 +31,7 @@ import java.util.List;
 
 import org.hibernate.MappingException;
 import org.hibernate.Query;
+import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
@@ -39,6 +40,7 @@ import org.hibernate.stat.Statistics;
 
 import org.junit.Test;
 
+import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.test.annotations.A320;
@@ -57,6 +59,30 @@ import static org.junit.Assert.fail;
  * @author Emmanuel Bernard
  */
 public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
+	@Test
+	public void testNativeQueryWithFormulaAttribute() {
+		String sql = "select t.table_name as {t.tableName}, sysdate() as {t.daysOld} from all_tables t  where t.table_name = 'AUDIT_ACTIONS' ";
+		String sql2 = "select table_name as t_name, sysdate() as t_time from all_tables   where table_name = 'AUDIT_ACTIONS' ";
+		Session s = openSession();
+		s.beginTransaction();
+		s.createSQLQuery( sql ).addEntity( "t", AllTables.class ).list();
+		s.createSQLQuery( sql2 ).setResultSetMapping( "all" ).list();
+		SQLQuery q = s.createSQLQuery( sql2 );
+		q.addRoot( "t", AllTables.class ).addProperty( "tableName", "t_name" ).addProperty( "daysOld", "t_time" );
+		q.list();
+		s.getTransaction().commit();
+		s.close();
+	}
+	@Test
+	@FailureExpected( jiraKey = "HHH-2225")
+	public void testNativeQueryWithFormulaAttributeWithoutAlias() {
+		String sql = "select table_name , sysdate() from all_tables  where table_name = 'AUDIT_ACTIONS' ";
+		Session s = openSession();
+		s.beginTransaction();
+		s.createSQLQuery( sql ).addEntity( "t", AllTables.class ).list();
+		s.getTransaction().commit();
+		s.close();
+	}
 	@Test
 	public void testPackageQueries() throws Exception {
 		Session s = openSession();
@@ -415,7 +441,8 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 				SynonymousDictionary.class,
 				Captain.class,
 				Chaos.class,
-				CasimirParticle.class
+				CasimirParticle.class,
+				AllTables.class
 		};
 	}
 

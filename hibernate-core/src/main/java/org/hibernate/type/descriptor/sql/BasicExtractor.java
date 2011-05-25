@@ -62,11 +62,15 @@ public abstract class BasicExtractor<J> implements ValueExtractor<J> {
 	public J extract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
 		final J value = doExtract( rs, name, options );
 		if ( value == null || rs.wasNull() ) {
-            LOG.trace("Found [null] as column [" + name + "]");
+                        if (LOG.isTraceEnabled()) {
+                           LOG.trace("Found [null] as column [" + name + "]");
+                        }
 			return null;
 		}
 		else {
-            LOG.trace("Found [" + getJavaDescriptor().extractLoggableRepresentation(value) + "] as column [" + name + "]");
+                        if (LOG.isTraceEnabled()) {
+                           LOG.trace("Found [" + getJavaDescriptor().extractLoggableRepresentation(value) + "] as column [" + name + "]");
+                        }
 			return value;
 		}
 	}

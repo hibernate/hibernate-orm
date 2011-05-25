@@ -69,7 +69,9 @@ public abstract class AbstractResultSetProxyHandler extends AbstractProxyHandler
 	@Override
     protected Object continueInvocation(Object proxy, Method method, Object[] args) throws Throwable {
 		String methodName = method.getName();
-        LOG.trace("Handling invocation of ResultSet method [" + methodName + "]");
+        if (LOG.isTraceEnabled()) {
+           LOG.trace("Handling invocation of ResultSet method [" + methodName + "]");
+        }
 
 		// other methods allowed while invalid ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		if ( "close".equals( methodName ) ) {

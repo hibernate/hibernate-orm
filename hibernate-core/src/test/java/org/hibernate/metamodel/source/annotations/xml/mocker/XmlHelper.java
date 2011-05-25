@@ -33,8 +33,8 @@ import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.hibernate.internal.CoreMessageLogger;
+import org.jboss.logging.Logger;
 import org.xml.sax.SAXException;
 
 import org.hibernate.metamodel.source.Origin;
@@ -45,7 +45,7 @@ import org.hibernate.service.classloading.spi.ClassLoaderService;
  * @author Hardy Ferentschik
  */
 public class XmlHelper {
-    private static final Logger log = LoggerFactory.getLogger( XmlHelper.class );
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, XmlHelper.class.getName() );
 
     private XmlHelper() {
     }
@@ -71,7 +71,7 @@ public class XmlHelper {
             schema = sf.newSchema( schemaUrl );
         }
         catch ( SAXException e ) {
-            log.debug( "Unable to create schema for {}: {}", schemaVersion, e.getMessage() );
+            LOG.debugf( "Unable to create schema for %s: %s", schemaVersion, e.getMessage() );
         }
         return schema;
     }

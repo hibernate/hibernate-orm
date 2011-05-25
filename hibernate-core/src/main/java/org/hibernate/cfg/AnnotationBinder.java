@@ -182,7 +182,7 @@ import org.jboss.logging.Logger;
 @SuppressWarnings("unchecked")
 public final class AnnotationBinder {
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, AnnotationBinder.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, AnnotationBinder.class.getName() );
 
     /*
      * Some design description

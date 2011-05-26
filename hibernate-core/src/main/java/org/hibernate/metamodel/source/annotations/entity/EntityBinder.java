@@ -60,7 +60,7 @@ import org.hibernate.metamodel.source.spi.MetadataImplementor;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 
 /**
- * Creates the domain and relational metamodel for a configured class and binds them together.
+ * Creates the domain and relational metamodel for a configured class and <i>binds</i> them together.
  *
  * @author Hardy Ferentschik
  */
@@ -84,11 +84,9 @@ public class EntityBinder {
 		schemaName = createSchemaName();
 		bindTable( entityBinding );
 
-		entityBinding.setInheritanceType( configuredClass.getInheritanceType() );
 		bindInheritance( entityBinding );
 
 		bindWhereFilter( entityBinding );
-
 		bindJpaCaching( entityBinding );
 		bindHibernateCaching( entityBinding );
 
@@ -96,6 +94,8 @@ public class EntityBinder {
 		if ( configuredClass.isRoot() ) {
 			bindId( entityBinding );
 		}
+
+		// bind all attributes - simple as well as associations
 		bindAttributes( entityBinding );
 
 		// last, but not least we register the new EntityBinding with the metadata
@@ -103,6 +103,7 @@ public class EntityBinder {
 	}
 
 	private void bindInheritance(EntityBinding entityBinding) {
+		entityBinding.setInheritanceType( configuredClass.getInheritanceType() );
 		switch ( configuredClass.getInheritanceType() ) {
 			case SINGLE_TABLE: {
 				bindDiscriminatorColumn( entityBinding );

@@ -28,6 +28,7 @@ import org.hibernate.MappingException;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.metamodel.binding.Caching;
 import org.hibernate.metamodel.binding.EntityBinding;
+import org.hibernate.metamodel.binding.state.DiscriminatorBindingState;
 import org.hibernate.metamodel.binding.state.SimpleAttributeBindingState;
 import org.hibernate.metamodel.relational.Identifier;
 import org.hibernate.metamodel.relational.InLineView;
@@ -41,7 +42,6 @@ import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLCompositeId;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLId;
-import org.hibernate.metamodel.binding.state.DiscriminatorBindingState;
 
 /**
  * TODO : javadoc
@@ -50,7 +50,7 @@ import org.hibernate.metamodel.binding.state.DiscriminatorBindingState;
  */
 class RootEntityBinder extends AbstractEntityBinder {
 
-	RootEntityBinder(HibernateMappingBinder hibernateMappingBinder, XMLClass xmlClazz) {
+	RootEntityBinder(HbmBinder hibernateMappingBinder, XMLClass xmlClazz) {
 		super( hibernateMappingBinder, xmlClazz );
 	}
 
@@ -86,12 +86,12 @@ class RootEntityBinder extends AbstractEntityBinder {
 		// called createClassProperties in HBMBinder...
 		buildAttributeBindings( xmlClazz, entityBinding );
 
-		getHibernateXmlBinder().getMetadata().addEntity( entityBinding );
+		getMetadata().addEntity( entityBinding );
 	}
 
 	private void basicTableBinding(XMLClass xmlClazz,
 								   EntityBinding entityBinding) {
-		final Schema schema = getHibernateXmlBinder().getMetadata().getDatabase().getSchema( getSchemaName() );
+		final Schema schema = getMetadata().getDatabase().getSchema( getSchemaName() );
 
 		final String subSelect =
 				xmlClazz.getSubselectAttribute() == null ? xmlClazz.getSubselect() : xmlClazz.getSubselectAttribute();
@@ -245,9 +245,9 @@ class RootEntityBinder extends AbstractEntityBinder {
 		}
 
 		DiscriminatorBindingState bindingState = new HbmDiscriminatorBindingState(
-						entityBinding.getEntity().getPojoEntitySpecifics().getClassName(),
-						getHibernateMappingBinder(),
-						xmlEntityClazz.getDiscriminator()
+				entityBinding.getEntity().getPojoEntitySpecifics().getClassName(),
+				getHibernateMappingBinder(),
+				xmlEntityClazz.getDiscriminator()
 		);
 
 		// boolean (true here) indicates that by default column names should be guessed
@@ -283,13 +283,13 @@ class RootEntityBinder extends AbstractEntityBinder {
 	}
 
 	protected void bindVersion(XMLHibernateMapping.XMLClass.XMLVersion version,
-									   EntityBinding entityBinding) {
+							   EntityBinding entityBinding) {
 		SimpleAttributeBindingState bindingState =
 				new HbmSimpleAttributeBindingState(
-							entityBinding.getEntity().getPojoEntitySpecifics().getClassName(),
-							getHibernateMappingBinder(),
-							entityBinding.getMetaAttributes(),
-							version
+						entityBinding.getEntity().getPojoEntitySpecifics().getClassName(),
+						getHibernateMappingBinder(),
+						entityBinding.getMetaAttributes(),
+						version
 				);
 
 		// boolean (true here) indicates that by default column names should be guessed
@@ -313,10 +313,10 @@ class RootEntityBinder extends AbstractEntityBinder {
 
 		SimpleAttributeBindingState bindingState =
 				new HbmSimpleAttributeBindingState(
-					entityBinding.getEntity().getPojoEntitySpecifics().getClassName(),
-					getHibernateMappingBinder(),
-					entityBinding.getMetaAttributes(),
-					timestamp
+						entityBinding.getEntity().getPojoEntitySpecifics().getClassName(),
+						getHibernateMappingBinder(),
+						entityBinding.getMetaAttributes(),
+						timestamp
 				);
 
 		// relational model has not been bound yet
@@ -332,7 +332,7 @@ class RootEntityBinder extends AbstractEntityBinder {
 
 		entityBinding.makeVersionBinding( bindingState.getAttributeName() )
 				.initialize( bindingState )
-		 		.initialize( relationalState );
+				.initialize( relationalState );
 	}
 
 	private void bindCaching(XMLClass xmlClazz,

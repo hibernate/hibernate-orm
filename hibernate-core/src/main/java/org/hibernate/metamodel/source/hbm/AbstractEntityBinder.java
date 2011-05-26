@@ -84,10 +84,10 @@ import org.hibernate.metamodel.source.spi.MetadataImplementor;
  * @author Steve Ebersole
  */
 abstract class AbstractEntityBinder {
-	private final HibernateMappingBinder hibernateMappingBinder;
+	private final HbmBinder hibernateMappingBinder;
 	private final Schema.Name schemaName;
 
-	AbstractEntityBinder(HibernateMappingBinder hibernateMappingBinder,
+	AbstractEntityBinder(HbmBinder hibernateMappingBinder,
 						 XMLHibernateMapping.XMLClass entityClazz) {
 		this.hibernateMappingBinder = hibernateMappingBinder;
 		this.schemaName = new Schema.Name(
@@ -100,16 +100,12 @@ abstract class AbstractEntityBinder {
 		);
 	}
 
-	protected HibernateMappingBinder getHibernateMappingBinder() {
+	public HbmBinder getHibernateMappingBinder() {
 		return hibernateMappingBinder;
 	}
 
-	protected HibernateXmlBinder getHibernateXmlBinder() {
-		return hibernateMappingBinder.getHibernateXmlBinder();
-	}
-
 	protected MetadataImplementor getMetadata() {
-		return hibernateMappingBinder.getHibernateXmlBinder().getMetadata();
+		return hibernateMappingBinder.getMetadata();
 	}
 
 	protected Schema.Name getSchemaName() {
@@ -244,14 +240,14 @@ abstract class AbstractEntityBinder {
 		String physicalTableName;
 		if ( entityClazz.getTable() == null ) {
 			logicalTableName = StringHelper.unqualify( entityName );
-			physicalTableName = getHibernateXmlBinder().getMetadata()
+			physicalTableName = getMetadata()
 					.getOptions()
 					.getNamingStrategy()
 					.classToTableName( entityName );
 		}
 		else {
 			logicalTableName = entityClazz.getTable();
-			physicalTableName = getHibernateXmlBinder().getMetadata()
+			physicalTableName = getMetadata()
 					.getOptions()
 					.getNamingStrategy()
 					.tableName( logicalTableName );
@@ -295,7 +291,7 @@ abstract class AbstractEntityBinder {
 			if ( XMLBagElement.class.isInstance( attribute ) ) {
 				XMLBagElement collection = XMLBagElement.class.cast( attribute );
 				BagBinding collectionBinding = makeBagAttributeBinding( collection, entityBinding );
-				hibernateMappingBinder.getHibernateXmlBinder().getMetadata().addCollection( collectionBinding );
+				hibernateMappingBinder.getMetadata().addCollection( collectionBinding );
 				attributeBinding = collectionBinding;
 			}
 			else if ( XMLIdbagElement.class.isInstance( attribute ) ) {
@@ -447,7 +443,7 @@ PrimitiveArray
 									EntityBinding entityBinding) {
 		SimpleAttributeBindingState bindingState = new HbmSimpleAttributeBindingState(
 				entityBinding.getEntity().getPojoEntitySpecifics().getClassName(),
-				getHibernateMappingBinder(),
+				hibernateMappingBinder,
 				entityBinding.getMetaAttributes(),
 				property
 		);
@@ -456,7 +452,7 @@ PrimitiveArray
 		ValueRelationalState relationalState =
 				convertToSimpleValueRelationalStateIfPossible(
 						new HbmSimpleValueRelationalStateContainer(
-								getHibernateMappingBinder(),
+								hibernateMappingBinder,
 								true,
 								property
 						)
@@ -534,7 +530,7 @@ PrimitiveArray
 		// boolean (true here) indicates that by default column names should be guessed
 		ManyToOneRelationalState relationalState =
 						new HbmManyToOneRelationalStateContainer(
-								getHibernateMappingBinder(),
+								hibernateMappingBinder,
 								true,
 								manyToOne
 						);

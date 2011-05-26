@@ -69,6 +69,7 @@ public class EntityBinding {
 
 	private Map<String, MetaAttribute> metaAttributes;
 
+	private String proxyInterfaceName;
 	private boolean lazy;
 	private boolean mutable;
 	private boolean explicitPolymorphism;

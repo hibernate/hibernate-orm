@@ -27,7 +27,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import org.dom4j.Attribute;
+
 import org.hibernate.MappingException;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.internal.util.StringHelper;
@@ -47,16 +49,16 @@ import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlQueryElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSubclassElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLUnionSubclassElement;
 import org.hibernate.metamodel.source.internal.JaxbRoot;
+import org.hibernate.metamodel.source.spi.MetadataImplementor;
 import org.hibernate.service.ServiceRegistry;
 
 /**
- * Responsible for performing binding of the {@code <hibernate-mapping/>} DOM element
+ * Responsible for performing binding of hbm xml.
  */
-public class HibernateMappingBinder implements MappingDefaults {
+public class HbmBinder implements MappingDefaults {
 	private static final String DEFAULT_IDENTIFIER_COLUMN_NAME = "id";
 	private static final String DEFAULT_DISCRIMINATOR_COLUMN_NAME = "class";
 
-	private final HibernateXmlBinder hibernateXmlBinder;
 	private final JaxbRoot<XMLHibernateMapping> jaxbRoot;
 	private final XMLHibernateMapping hibernateMapping;
 
@@ -68,13 +70,17 @@ public class HibernateMappingBinder implements MappingDefaults {
 	private final String packageName;
 	private final boolean autoImport;
 
+	private final MetadataImplementor metadata;
+	private final Map<String, MetaAttribute> globalMetas;
+
 	private Map<String, MetaAttribute> mappingMetas;
 
-
-	HibernateMappingBinder(HibernateXmlBinder hibernateXmlBinder, JaxbRoot<XMLHibernateMapping> jaxbRoot) {
-		this.hibernateXmlBinder = hibernateXmlBinder;
+	public HbmBinder(MetadataImplementor metadata, Map<String, MetaAttribute> globalMetas, JaxbRoot<XMLHibernateMapping> jaxbRoot) {
 		this.jaxbRoot = jaxbRoot;
 		this.hibernateMapping = jaxbRoot.getRoot();
+
+		this.metadata = metadata;
+		this.globalMetas = globalMetas;
 
 		defaultSchemaName = hibernateMapping.getSchema();
 		defaultCatalogName = hibernateMapping.getCatalog();
@@ -84,16 +90,17 @@ public class HibernateMappingBinder implements MappingDefaults {
 		packageName = hibernateMapping.getPackage();
 		autoImport = hibernateMapping.isAutoImport();
 
-		mappingMetas = HbmHelper.extractMetas( hibernateMapping.getMeta(), true, hibernateXmlBinder.getGlobalMetas() );
+		mappingMetas = HbmHelper.extractMetas( hibernateMapping.getMeta(), true, globalMetas );
 	}
 
-	HibernateXmlBinder getHibernateXmlBinder() {
-		return hibernateXmlBinder;
+	public MetadataImplementor getMetadata() {
+		return metadata;
 	}
 
 	XMLHibernateMapping getHibernateMapping() {
 		return hibernateMapping;
 	}
+
 
 	Origin getOrigin() {
 		return jaxbRoot.getOrigin();
@@ -109,9 +116,8 @@ public class HibernateMappingBinder implements MappingDefaults {
 
 	public String getDefaultIdColumnName() {
 		return DEFAULT_IDENTIFIER_COLUMN_NAME;
-
-
 	}
+
 	public String getDefaultDiscriminatorColumnName() {
 		return DEFAULT_DISCRIMINATOR_COLUMN_NAME;
 	}
@@ -130,11 +136,11 @@ public class HibernateMappingBinder implements MappingDefaults {
 
 	@Override
 	public ServiceRegistry getServiceRegistry() {
-		return hibernateXmlBinder.getMetadata().getServiceRegistry();
+		return metadata.getServiceRegistry();
 	}
 
 	public NamingStrategy getNamingStrategy() {
-		return hibernateXmlBinder.getMetadata().getOptions().getNamingStrategy();
+		return metadata.getOptions().getNamingStrategy();
 	}
 
 	public String getPackageName() {
@@ -149,14 +155,14 @@ public class HibernateMappingBinder implements MappingDefaults {
 		return mappingMetas;
 	}
 
-	void processHibernateMapping() {
+	public void processHibernateMapping() {
 		if ( hibernateMapping.getFilterDef() != null ) {
 //			parseFilterDefs(  hibernateMapping.getFilterDef() );
 		}
 		if ( hibernateMapping.getFetchProfile() != null ) {
 			parseFetchProfiles( hibernateMapping.getFetchProfile(), null );
 		}
-		if ( hibernateMapping.getIdentifierGenerator() != null )  {
+		if ( hibernateMapping.getIdentifierGenerator() != null ) {
 //			parseIdentifierGeneratorRegistrations( hibernateMapping.getIdentifierGenerator() );
 		}
 		if ( hibernateMapping.getTypedef() != null ) {
@@ -182,8 +188,9 @@ public class HibernateMappingBinder implements MappingDefaults {
 //					handleUnionSubclass( superModel, mappings, element, inheritedMetas );
 				}
 				else {
-					throw new org.hibernate.metamodel.source.MappingException( "unknown type of class or subclass: " +
-							clazzOrSubclass.getClass().getName(), jaxbRoot.getOrigin()
+					throw new org.hibernate.metamodel.source.MappingException(
+							"unknown type of class or subclass: " +
+									clazzOrSubclass.getClass().getName(), jaxbRoot.getOrigin()
 					);
 				}
 			}
@@ -197,8 +204,9 @@ public class HibernateMappingBinder implements MappingDefaults {
 //				bindNamedSQLQuery( element, null, mappings );
 				}
 				else {
-					throw new org.hibernate.metamodel.source.MappingException( "unknown type of query: " +
-							queryOrSqlQuery.getClass().getName(), jaxbRoot.getOrigin()
+					throw new org.hibernate.metamodel.source.MappingException(
+							"unknown type of query: " +
+									queryOrSqlQuery.getClass().getName(), jaxbRoot.getOrigin()
 					);
 				}
 			}
@@ -219,26 +227,28 @@ public class HibernateMappingBinder implements MappingDefaults {
 			String className = getClassName( importValue.getClazz() );
 			String rename = importValue.getRename();
 			rename = ( rename == null ) ? StringHelper.unqualify( className ) : rename;
-			hibernateXmlBinder.getMetadata().addImport( className, rename );
+			metadata.addImport( className, rename );
 		}
 	}
 
 	protected void parseFetchProfiles(List<XMLFetchProfileElement> fetchProfiles, String containingEntityName) {
 		for ( XMLFetchProfileElement fetchProfile : fetchProfiles ) {
 			String profileName = fetchProfile.getName();
-	        Set<Fetch> fetches = new HashSet<Fetch>();
-			for (  XMLFetch fetch : fetchProfile.getFetch() ) {
+			Set<Fetch> fetches = new HashSet<Fetch>();
+			for ( XMLFetch fetch : fetchProfile.getFetch() ) {
 				String entityName = fetch.getEntity() == null ? containingEntityName : fetch.getEntity();
 				if ( entityName == null ) {
-					throw new MappingException( "could not determine entity for fetch-profile fetch [" + profileName + "]:[" + fetch.getAssociation() + "]" );
+					throw new MappingException(
+							"could not determine entity for fetch-profile fetch [" + profileName + "]:[" + fetch.getAssociation() + "]"
+					);
 				}
-				fetches.add(new Fetch(entityName, fetch.getAssociation(), fetch.getStyle()));
+				fetches.add( new Fetch( entityName, fetch.getAssociation(), fetch.getStyle() ) );
 			}
-            hibernateXmlBinder.getMetadata().addFetchProfile( new FetchProfile(profileName, fetches));
+			metadata.addFetchProfile( new FetchProfile( profileName, fetches ) );
 		}
 	}
 
-	String extractEntityName( XMLClass entityClazz) {
+	String extractEntityName(XMLClass entityClazz) {
 		return HbmHelper.extractEntityName( entityClazz, packageName );
 	}
 

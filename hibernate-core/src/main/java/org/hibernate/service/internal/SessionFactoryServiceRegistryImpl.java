@@ -40,8 +40,8 @@ import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 public class SessionFactoryServiceRegistryImpl extends AbstractServiceRegistryImpl implements SessionFactoryServiceRegistry  {
 
 	// for now we need to hold on to the Configuration... :(
-	private Configuration configuration;
-	private MetadataImplementor metadata;
+	private final Configuration configuration;
+	private final MetadataImplementor metadata;
 	private final SessionFactoryImplementor sessionFactory;
 
 	@SuppressWarnings( {"unchecked"})

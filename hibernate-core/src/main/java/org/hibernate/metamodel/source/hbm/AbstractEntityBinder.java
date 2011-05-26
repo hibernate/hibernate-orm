@@ -151,7 +151,7 @@ abstract class AbstractEntityBinder {
 	private void bindPojoRepresentation(XMLHibernateMapping.XMLClass entityClazz,
 										EntityBinding entityBinding) {
 		String className = hibernateMappingBinder.getClassName( entityClazz.getName() );
-		String proxyName = hibernateMappingBinder.getClassName( entityClazz.getProxy() );
+		String proxyName = entityBinding.getProxyInterfaceName();
 
 		entityBinding.getEntity().getPojoEntitySpecifics().setClassName( className );
 

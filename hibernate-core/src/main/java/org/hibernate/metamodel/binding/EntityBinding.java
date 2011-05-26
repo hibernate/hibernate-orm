@@ -101,6 +101,7 @@ public class EntityBinding {
 
 		// go ahead and set the lazy here, since pojo.proxy can override it.
 		lazy = MappingHelper.getBooleanValue( entityClazz.isLazy(), defaults.isDefaultLazy() );
+		proxyInterfaceName = entityClazz.getProxy();
 		discriminatorValue = MappingHelper.getStringValue( entityClazz.getDiscriminatorValue(), entity.getName() );
 		dynamicUpdate = entityClazz.isDynamicUpdate();
 		dynamicInsert = entityClazz.isDynamicInsert();
@@ -317,6 +318,14 @@ public class EntityBinding {
 
 	public void setLazy(boolean lazy) {
 		this.lazy = lazy;
+	}
+
+	public void setProxyInterfaceName(String proxyInterfaceName) {
+		this.proxyInterfaceName = proxyInterfaceName;
+	}
+
+	public String getProxyInterfaceName() {
+		return proxyInterfaceName;
 	}
 
 	public String getWhereFilter() {

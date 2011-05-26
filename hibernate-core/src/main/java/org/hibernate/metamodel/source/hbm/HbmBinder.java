@@ -28,8 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.dom4j.Attribute;
-
 import org.hibernate.MappingException;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.internal.util.StringHelper;
@@ -96,11 +94,6 @@ public class HbmBinder implements MappingDefaults {
 	public MetadataImplementor getMetadata() {
 		return metadata;
 	}
-
-	XMLHibernateMapping getHibernateMapping() {
-		return hibernateMapping;
-	}
-
 
 	Origin getOrigin() {
 		return jaxbRoot.getOrigin();
@@ -252,12 +245,7 @@ public class HbmBinder implements MappingDefaults {
 		return HbmHelper.extractEntityName( entityClazz, packageName );
 	}
 
-	String getClassName(Attribute attribute) {
-		return HbmHelper.getClassName( attribute, packageName );
-	}
-
 	String getClassName(String unqualifiedName) {
 		return HbmHelper.getClassName( unqualifiedName, packageName );
 	}
-
 }

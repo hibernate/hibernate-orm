@@ -89,6 +89,7 @@ public class EntityBinder {
 		bindWhereFilter( entityBinding );
 		bindJpaCaching( entityBinding );
 		bindHibernateCaching( entityBinding );
+		bindProxy( entityBinding );
 
 		// take care of the id, attributes and relations
 		if ( configuredClass.isRoot() ) {
@@ -226,6 +227,29 @@ public class EntityBinder {
 		if ( caching != null ) {
 			entityBinding.setCaching( caching );
 		}
+	}
+
+	private void bindProxy(EntityBinding entityBinding) {
+		AnnotationInstance proxyAnnotation = JandexHelper.getSingleAnnotation(
+				configuredClass.getClassInfo(), HibernateDotNames.PROXY
+		);
+		boolean lazy = true;
+		String proxyInterfaceClass = null;
+
+		if ( proxyAnnotation != null ) {
+			AnnotationValue lazyValue = proxyAnnotation.value( "lazy" );
+			if ( lazyValue != null ) {
+				lazy = lazyValue.asBoolean();
+			}
+
+			AnnotationValue proxyClassValue = proxyAnnotation.value( "proxyClass" );
+			if ( proxyClassValue != null ) {
+				proxyInterfaceClass = proxyClassValue.asString();
+			}
+		}
+
+		entityBinding.setLazy( lazy );
+		entityBinding.setProxyInterfaceName( proxyInterfaceClass );
 	}
 
 	private Caching createCachingForCacheableAnnotation(EntityBinding entityBinding) {

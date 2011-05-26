@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -23,42 +23,39 @@
  */
 package org.hibernate.metamodel.source.annotations.entity;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import org.junit.After;
 
-import org.junit.Test;
-
+import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.binding.EntityBinding;
-
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertNull;
+import org.hibernate.metamodel.source.internal.MetadataImpl;
+import org.hibernate.service.ServiceRegistryBuilder;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 /**
  * @author Hardy Ferentschik
  */
-public class InheritanceTypeTest extends BaseAnnotationBindingTestCase {
-	@Test
-	public void testNoInheritance() {
-		buildMetadataSources( SingleEntity.class );
-		EntityBinding entityBinding = getEntityBinding( SingleEntity.class );
-		assertNull( entityBinding.getEntityDiscriminator() );
+public abstract class BaseAnnotationBindingTestCase extends BaseUnitTestCase {
+	protected MetadataSources sources;
+	protected MetadataImpl meta;
+
+	@After
+	public void tearDown() {
+		sources = null;
+		meta = null;
 	}
 
-	@Test
-	public void testDiscriminatorValue() {
-		buildMetadataSources(
-				RootOfSingleTableInheritance.class, SubclassOfSingleTableInheritance.class
-		);
-		EntityBinding entityBinding = getEntityBinding( SubclassOfSingleTableInheritance.class );
-		assertEquals( "Wrong discriminator value", "foo", entityBinding.getDiscriminatorValue() );
+	public void buildMetadataSources(Class<?>... classes) {
+		sources = new MetadataSources( new ServiceRegistryBuilder().buildServiceRegistry() );
+		for ( Class clazz : classes ) {
+			sources.addAnnotatedClass( clazz );
+		}
 	}
 
-	@Entity
-	class SingleEntity {
-		@Id
-		@GeneratedValue
-		private int id;
+	public EntityBinding getEntityBinding(Class<?> clazz) {
+		if ( meta == null ) {
+			meta = (MetadataImpl) sources.buildMetadata();
+		}
+		return meta.getEntityBinding( clazz.getName() );
 	}
 }
 

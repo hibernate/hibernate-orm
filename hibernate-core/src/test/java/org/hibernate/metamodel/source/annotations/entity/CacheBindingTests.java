@@ -33,12 +33,8 @@ import org.junit.Test;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.binding.Caching;
 import org.hibernate.metamodel.binding.EntityBinding;
-import org.hibernate.metamodel.source.internal.MetadataImpl;
-import org.hibernate.service.ServiceRegistryBuilder;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
@@ -49,10 +45,12 @@ import static junit.framework.Assert.assertNull;
  *
  * @author Hardy Ferentschik
  */
-public class CacheBindingTests extends BaseUnitTestCase {
+public class CacheBindingTests extends BaseAnnotationBindingTestCase {
 	@Test
 	public void testHibernateCaching() {
-		EntityBinding binding = getEntityBinding( HibernateCacheEntity.class, SharedCacheMode.ALL );
+		buildMetadataSources( HibernateCacheEntity.class );
+		sources.getMetadataBuilder().with( SharedCacheMode.ALL );
+		EntityBinding binding = getEntityBinding( HibernateCacheEntity.class );
 		assertNotNull( "There should be a cache binding", binding.getCaching() );
 		Caching caching = binding.getCaching();
 		assertEquals( "Wrong region", "foo", caching.getRegion() );
@@ -62,7 +60,9 @@ public class CacheBindingTests extends BaseUnitTestCase {
 
 	@Test
 	public void testJpaCaching() {
-		EntityBinding binding = getEntityBinding( JpaCacheEntity.class, SharedCacheMode.ALL );
+		buildMetadataSources( JpaCacheEntity.class );
+		sources.getMetadataBuilder().with( SharedCacheMode.ALL );
+		EntityBinding binding = getEntityBinding( JpaCacheEntity.class );
 		assertNotNull( "There should be a cache binding", binding.getCaching() );
 		Caching caching = binding.getCaching();
 		assertEquals(
@@ -75,17 +75,10 @@ public class CacheBindingTests extends BaseUnitTestCase {
 
 	@Test
 	public void testNoCaching() {
-		EntityBinding binding = getEntityBinding( NoCacheEntity.class, SharedCacheMode.NONE );
+		buildMetadataSources( NoCacheEntity.class );
+		sources.getMetadataBuilder().with( SharedCacheMode.NONE );
+		EntityBinding binding = getEntityBinding( NoCacheEntity.class );
 		assertNull( "There should be no cache binding", binding.getCaching() );
-	}
-
-	private EntityBinding getEntityBinding(Class<?> clazz, SharedCacheMode cacheMode) {
-		MetadataSources sources = new MetadataSources( new ServiceRegistryBuilder().buildServiceRegistry() );
-		sources.addAnnotatedClass( clazz );
-		sources.getMetadataBuilder().with( cacheMode );
-		MetadataImpl metadata = (MetadataImpl) sources.buildMetadata();
-
-		return metadata.getEntityBinding( this.getClass().getName() + "$" + clazz.getSimpleName() );
 	}
 
 	@Entity

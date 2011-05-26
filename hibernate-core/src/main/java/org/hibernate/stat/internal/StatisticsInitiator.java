@@ -29,7 +29,9 @@ import org.hibernate.HibernateException;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.metamodel.source.spi.MetadataImplementor;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
+import org.hibernate.service.config.spi.ConfigurationService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceInitiator;
 import org.hibernate.stat.spi.StatisticsFactory;
@@ -60,6 +62,23 @@ public class StatisticsInitiator implements SessionFactoryServiceInitiator<Stati
 			Configuration configuration,
 			ServiceRegistryImplementor registry) {
 		final Object configValue = configuration.getProperties().get( STATS_BUILDER );
+		return initiateServiceInternal( sessionFactory, configValue, registry );
+	}
+
+	@Override
+	public StatisticsImplementor initiateService(
+			SessionFactoryImplementor sessionFactory,
+			MetadataImplementor metadata,
+			ServiceRegistryImplementor registry) {
+		ConfigurationService configurationService =  registry.getService( ConfigurationService.class );
+		final Object configValue = configurationService.getSetting( STATS_BUILDER, null );
+		return initiateServiceInternal( sessionFactory, configValue, registry );
+	}
+
+	private StatisticsImplementor initiateServiceInternal(
+			SessionFactoryImplementor sessionFactory,
+			Object configValue,
+			ServiceRegistryImplementor registry) {
 
 		StatisticsFactory statisticsFactory;
 		if ( configValue == null ) {

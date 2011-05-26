@@ -94,7 +94,7 @@ public class TypeDefBinder {
 							 Map<String, String> prms,
 							 MetadataImpl metadata) {
 		LOG.debugf( "Binding type definition: %s", name );
-		metadata.addTypeDef( name, new TypeDef( typeClass, prms ) );
+		metadata.addTypeDef( new TypeDef( name, typeClass, prms ) );
 	}
 
 	private TypeDefBinder() {

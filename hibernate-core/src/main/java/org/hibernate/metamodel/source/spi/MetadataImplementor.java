@@ -30,6 +30,7 @@ import org.hibernate.metamodel.Metadata;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.FetchProfile;
 import org.hibernate.metamodel.binding.PluralAttributeBinding;
+import org.hibernate.metamodel.binding.TypeDef;
 import org.hibernate.metamodel.relational.Database;
 import org.hibernate.service.BasicServiceRegistry;
 import org.hibernate.type.TypeResolver;
@@ -55,4 +56,8 @@ public interface MetadataImplementor extends Metadata {
 	public void addCollection(PluralAttributeBinding collectionBinding);
 
     public void addFetchProfile( FetchProfile profile );
+
+	public void addTypeDef(TypeDef typeDef);
+
+	public Iterable<TypeDef> getTypeDefs();
 }

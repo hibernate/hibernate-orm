@@ -133,7 +133,7 @@ abstract class AbstractEntityBinder {
 		final String entityName = entityBinding.getEntity().getName();
 
 		if ( entityClazz.getFetchProfile() != null ) {
-			hibernateMappingBinder.parseFetchProfiles( entityClazz.getFetchProfile(), entityName );
+			hibernateMappingBinder.bindFetchProfiles( entityClazz.getFetchProfile(), entityName );
 		}
 
 		getMetadata().addImport( entityName, entityName );

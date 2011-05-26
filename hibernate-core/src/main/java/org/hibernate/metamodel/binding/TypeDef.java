@@ -28,24 +28,30 @@ import java.util.Collections;
 import java.util.Map;
 
 /**
- * Placeholder for typedef information
+ * Represents the metamodel view of a typedef (type definition).
+ *
+ * @author John Verhaeg
  */
 public class TypeDef implements Serializable {
-
+	private final String name;
     private final String typeClass;
     private final Map<String, String> parameters;
 
-    public TypeDef( String typeClass,
-                    Map<String, String> parameters ) {
-        this.typeClass = typeClass;
-        this.parameters = parameters;
+	public TypeDef(String name, String typeClass, Map<String, String> parameters) {
+		this.name = name;
+		this.typeClass = typeClass;
+		this.parameters = parameters;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public String getTypeClass() {
+        return typeClass;
     }
 
     public Map<String, String> getParameters() {
         return Collections.unmodifiableMap(parameters);
-    }
-
-    public String getTypeClass() {
-        return typeClass;
     }
 }

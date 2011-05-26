@@ -156,9 +156,17 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		return namedQueryDefs.get( name );
 	}
 
-	public void addTypeDef(String name, TypeDef typeDef) {
-		// TODO - should we check whether the typedef already exists? Log it? Exception? (HF)
-		typeDefs.put( name, typeDef );
+	@Override
+	public void addTypeDef(TypeDef typeDef) {
+		final TypeDef previous = typeDefs.put( typeDef.getName(), typeDef );
+		if ( previous != null ) {
+			LOG.debugf( "Duplicate typedef name [%s] now -> %s", typeDef.getName(), typeDef.getTypeClass() );
+		}
+	}
+
+	@Override
+	public Iterable<TypeDef> getTypeDefs() {
+		return typeDefs.values();
 	}
 
 	public TypeDef getTypeDef(String name) {

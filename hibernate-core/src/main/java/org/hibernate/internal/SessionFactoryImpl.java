@@ -75,6 +75,7 @@ import org.hibernate.cache.spi.UpdateTimestampsCache;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Settings;
@@ -123,6 +124,7 @@ import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.integrator.spi.IntegratorService;
+import org.hibernate.service.config.spi.ConfigurationService;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.jndi.spi.JndiService;
 import org.hibernate.service.jta.platform.spi.JtaPlatform;
@@ -523,13 +525,9 @@ public final class SessionFactoryImpl
 		this.namedQueries = null;
 		this.namedSqlQueries = null;
 		this.sqlResultSetMappings = null;
-		this.filters = null;
 		this.fetchProfiles = null;
 		this.imports = null;
 		this.interceptor = null;
-		this.serviceRegistry = null;
-		this.settings = null;
-		this.properties = null;
 		this.queryCache = null;
 		this.updateTimestampsCache = null;
 		this.queryCaches = null;
@@ -537,9 +535,37 @@ public final class SessionFactoryImpl
 		this.entityNotFoundDelegate = null;
 		this.sqlFunctionRegistry = null;
 		this.queryPlanCache = null;
-		this.typeResolver = null;
-		this.typeHelper = null;
 		this.transactionEnvironment = null;
+
+		ConfigurationService configurationService = serviceRegistry.getService( ConfigurationService.class );
+		this.settings = null;
+
+		this.serviceRegistry = serviceRegistry.getService( SessionFactoryServiceRegistryFactory.class ).buildServiceRegistry(
+				this,
+				metadata
+		);
+
+		// TODO: get Interceptor from ConfurationService
+		//this.interceptor = cfg.getInterceptor();
+
+		// TODO: find references to properties and make sure everything needed is available to services via
+		//       ConfigurationService
+		this.properties = null;
+
+		// TODO: should this be build along w/ metadata? seems like it should so app has more control over it...
+		//this.sqlFunctionRegistry = new SQLFunctionRegistry( getDialect(), metadata.getSqlFunctions() );
+		if ( observer != null ) {
+			this.observer.addObserver( observer );
+		}
+
+		this.typeResolver = metadata.getTypeResolver().scope( this );
+		this.typeHelper = new TypeLocatorImpl( typeResolver );
+
+		this.filters = new HashMap();
+		this.filters.putAll( metadata.getFilterDefinitions() );
+
+        LOG.debugf("Session factory constructed with filter configurations : %s", filters);
+        LOG.debugf("Instantiating session factory with properties: %s", configurationService.getSettings() );
 
 		// TODO: implement
 

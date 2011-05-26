@@ -542,6 +542,8 @@ public final class SessionFactoryImpl
 		this.currentSessionContext = null;
 		this.sqlFunctionRegistry = null;
 		this.transactionEnvironment = null;
+                this.jdbcServices = null;
+                this.dialect = null;
 
 		this.sessionFactoryOptions = sessionFactoryOptions;
 

@@ -183,7 +183,7 @@ public final class SessionFactoryImpl
 	private final transient Map namedQueries;
 	private final transient Map namedSqlQueries;
 	private final transient Map sqlResultSetMappings;
-	private final transient Map filters;
+	private final transient Map<String, FilterDefinition> filters;
 	private final transient Map fetchProfiles;
 	private final transient Map imports;
 	private final transient Interceptor interceptor;
@@ -207,6 +207,7 @@ public final class SessionFactoryImpl
 	private final transient TypeHelper typeHelper;
 	private final transient TransactionEnvironment transactionEnvironment;
 
+	@SuppressWarnings( {"unchecked"} )
 	public SessionFactoryImpl(
 			Configuration cfg,
 	        Mapping mapping,
@@ -233,7 +234,7 @@ public final class SessionFactoryImpl
 		this.typeResolver = cfg.getTypeResolver().scope( this );
 		this.typeHelper = new TypeLocatorImpl( typeResolver );
 
-		this.filters = new HashMap();
+		this.filters = new HashMap<String, FilterDefinition>();
 		this.filters.putAll( cfg.getFilterDefinitions() );
 
         LOG.debugf("Session factory constructed with filter configurations : %s", filters);
@@ -561,7 +562,10 @@ public final class SessionFactoryImpl
 		this.typeResolver = metadata.getTypeResolver().scope( this );
 		this.typeHelper = new TypeLocatorImpl( typeResolver );
 
-		this.filters = new HashMap<String, FilterDefinition>( metadata.getFilterDefinitions() );
+		this.filters = new HashMap<String, FilterDefinition>();
+		for ( FilterDefinition filterDefinition : metadata.getFilterDefinitions() ) {
+			filters.put( filterDefinition.getFilterName(), filterDefinition );
+		}
 
         LOG.debugf("Session factory constructed with filter configurations : %s", filters);
         LOG.debugf("Instantiating session factory with properties: %s", configurationService.getSettings() );

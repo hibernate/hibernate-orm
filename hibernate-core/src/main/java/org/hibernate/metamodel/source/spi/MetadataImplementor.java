@@ -47,8 +47,6 @@ public interface MetadataImplementor extends Metadata {
 
 	public TypeResolver getTypeResolver();
 
-	public Map<String, FilterDefinition> getFilterDefinitions();
-
 	public void addImport(String entityName, String entityName1);
 
 	public void addEntity(EntityBinding entityBinding);
@@ -60,4 +58,8 @@ public interface MetadataImplementor extends Metadata {
 	public void addTypeDef(TypeDef typeDef);
 
 	public Iterable<TypeDef> getTypeDefs();
+
+	public void addFilterDefinition(FilterDefinition filterDefinition);
+
+	public Iterable<FilterDefinition> getFilterDefinitions();
 }

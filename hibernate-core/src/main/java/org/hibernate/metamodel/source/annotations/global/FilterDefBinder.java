@@ -74,7 +74,7 @@ public class FilterDefBinder {
 					metadata.getTypeResolver().heuristicType( JandexHelper.getValueAsString( prm, "type" ) )
 			);
 		}
-		metadata.addFilterDef(
+		metadata.addFilterDefinition(
 				new FilterDefinition(
 						name,
 						JandexHelper.getValueAsString( filterDef, "defaultCondition" ),

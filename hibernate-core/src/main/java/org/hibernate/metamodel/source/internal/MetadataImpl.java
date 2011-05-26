@@ -111,16 +111,18 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		new EntityReferenceResolver( this ).resolve();
 	}
 
+	@Override
 	public void addFetchProfile(FetchProfile profile) {
 		fetchProfiles.put( profile.getName(), profile );
 	}
 
-	public void addFilterDef(FilterDefinition def) {
+	@Override
+	public void addFilterDefinition(FilterDefinition def) {
 		filterDefs.put( def.getFilterName(), def );
 	}
 
-	public Map<String, FilterDefinition> getFilterDefinitions() {
-		return filterDefs;
+	public Iterable<FilterDefinition> getFilterDefinitions() {
+		return filterDefs.values();
 	}
 
 	public void addIdGenerator(IdGenerator generator) {

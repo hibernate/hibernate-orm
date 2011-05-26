@@ -29,13 +29,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.MappingException;
 import org.hibernate.cfg.NamingStrategy;
+import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.binding.FetchProfile;
 import org.hibernate.metamodel.binding.FetchProfile.Fetch;
 import org.hibernate.metamodel.binding.TypeDef;
 import org.hibernate.metamodel.domain.MetaAttribute;
+import org.hibernate.metamodel.source.MappingException;
 import org.hibernate.metamodel.source.Origin;
 import org.hibernate.metamodel.source.hbm.util.MappingHelper;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLFetchProfileElement;
@@ -52,6 +53,7 @@ import org.hibernate.metamodel.source.hbm.xml.mapping.XMLUnionSubclassElement;
 import org.hibernate.metamodel.source.internal.JaxbRoot;
 import org.hibernate.metamodel.source.spi.MetadataImplementor;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.type.Type;
 
 /**
  * Responsible for performing binding of hbm xml.
@@ -156,10 +158,10 @@ public class HbmBinder implements MappingDefaults {
 			bindImports( hibernateMapping.getImport() );
 		}
 		if ( hibernateMapping.getTypedef() != null ) {
-			bindTypeDef( hibernateMapping.getTypedef() );
+			bindTypeDefinitions( hibernateMapping.getTypedef() );
 		}
 		if ( hibernateMapping.getFilterDef() != null ) {
-//			parseFilterDefs(  hibernateMapping.getFilterDef() );
+			bindFilterDefinitions( hibernateMapping.getFilterDef() );
 		}
 		if ( hibernateMapping.getFetchProfile() != null ) {
 			bindFetchProfiles( hibernateMapping.getFetchProfile(), null );
@@ -203,7 +205,7 @@ public class HbmBinder implements MappingDefaults {
 //				bindNamedSQLQuery( element, null, mappings );
 				}
 				else {
-					throw new org.hibernate.metamodel.source.MappingException(
+					throw new MappingException(
 							"unknown type of query: " +
 									queryOrSqlQuery.getClass().getName(), jaxbRoot.getOrigin()
 					);
@@ -227,7 +229,7 @@ public class HbmBinder implements MappingDefaults {
 		}
 	}
 
-	private void bindTypeDef(List<XMLHibernateMapping.XMLTypedef> typedefs) {
+	private void bindTypeDefinitions(List<XMLHibernateMapping.XMLTypedef> typedefs) {
 		for ( XMLHibernateMapping.XMLTypedef typedef : typedefs ) {
 			final Map<String, String> parameters = new HashMap<String, String>();
 			for ( XMLParamElement paramElement : typedef.getParam() ) {
@@ -245,12 +247,46 @@ public class HbmBinder implements MappingDefaults {
 				String entityName = fetch.getEntity() == null ? containingEntityName : fetch.getEntity();
 				if ( entityName == null ) {
 					throw new MappingException(
-							"could not determine entity for fetch-profile fetch [" + profileName + "]:[" + fetch.getAssociation() + "]"
+							"could not determine entity for fetch-profile fetch [" + profileName + "]:[" +
+									fetch.getAssociation() + "]",
+							jaxbRoot.getOrigin()
 					);
 				}
 				fetches.add( new Fetch( entityName, fetch.getAssociation(), fetch.getStyle() ) );
 			}
 			metadata.addFetchProfile( new FetchProfile( profileName, fetches ) );
+		}
+	}
+
+	private void bindFilterDefinitions(List<XMLHibernateMapping.XMLFilterDef> filterDefinitions) {
+		for ( XMLHibernateMapping.XMLFilterDef filterDefinition : filterDefinitions ) {
+			final String name = filterDefinition.getName();
+			final Map<String,Type> parameters = new HashMap<String, Type>();
+			String condition = null;
+			for ( Object o : filterDefinition.getContent() ) {
+				if ( o instanceof String ) {
+					// represents the condition
+					if ( condition != null ) {
+						// log?
+					}
+					condition = (String) o;
+				}
+				else if ( o instanceof XMLHibernateMapping.XMLFilterDef.XMLFilterParam ) {
+					final XMLHibernateMapping.XMLFilterDef.XMLFilterParam paramElement = (XMLHibernateMapping.XMLFilterDef.XMLFilterParam) o;
+					// todo : should really delay this resolution until later to allow typedef names
+					parameters.put(
+							paramElement.getName(),
+							metadata.getTypeResolver().heuristicType( paramElement.getType() )
+					);
+				}
+				else {
+					throw new MappingException( "Unrecognized nested filter content", jaxbRoot.getOrigin() );
+				}
+			}
+			if ( condition == null ) {
+				condition = filterDefinition.getCondition();
+			}
+			metadata.addFilterDefinition( new FilterDefinition( name, condition, parameters ) );
 		}
 	}
 

@@ -541,6 +541,8 @@ public final class SessionFactoryImpl
 		this.sqlFunctionRegistry = null;
 		this.queryPlanCache = null;
 		this.transactionEnvironment = null;
+                this.jdbcServices = null;
+                this.dialect = null;
 
 		ConfigurationService configurationService = serviceRegistry.getService( ConfigurationService.class );
 		this.settings = null;

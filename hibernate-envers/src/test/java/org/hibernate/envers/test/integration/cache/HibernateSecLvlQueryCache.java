@@ -42,14 +42,15 @@ public class HibernateSecLvlQueryCache extends AbstractSessionTest {
 
     @Test
     public void testSecLvlCacheWithRevisionTypeDiskPersistent() {
-        /* Invoking the same query twice for caching purpose. */
-        invokeSampleCacheableQuery();
-        invokeSampleCacheableQuery();
+        // Invoking the same query twice for caching purpose.
+        invokeSampleCachingRevTypeQuery();
+        invokeSampleCachingRevTypeQuery();
         
         assert getQueryCacheStatistics() > 0;
     }
 
-    private void invokeSampleCacheableQuery() {
+    private void invokeSampleCachingRevTypeQuery() {
+        // Cached query that requires serializing RevisionType variable when persisting to disk.
         getAuditReader().createQuery().forEntitiesAtRevision(StrTestEntity.class, 1)
                                       .add(new RevisionTypeAuditExpression(RevisionType.ADD, "="))
                                       .setCacheable(true).getResultList();

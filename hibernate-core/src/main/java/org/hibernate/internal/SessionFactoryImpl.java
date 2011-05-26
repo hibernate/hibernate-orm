@@ -228,7 +228,7 @@ public final class SessionFactoryImpl
 				this,
 				cfg
 		);
-                this.jdbcServices = this.serviceRegistry.getService( JdbcServices );
+                this.jdbcServices = this.serviceRegistry.getService( JdbcServices.class );
                 this.dialect = this.jdbcServices.getDialect();
 		this.sqlFunctionRegistry = new SQLFunctionRegistry( getDialect(), cfg.getSqlFunctions() );
 		if ( observer != null ) {

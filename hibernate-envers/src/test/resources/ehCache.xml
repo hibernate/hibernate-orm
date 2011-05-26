@@ -1,0 +1,7 @@
+<ehcache>
+    <diskStore path="java.io.tmpdir" />
+    <!-- Mandatory persist cached objects to disk (checks whether they are serializable). -->
+    <defaultCache eternal="false" diskPersistent="true"
+                  maxElementsInMemory="1" maxElementsOnDisk="10000" overflowToDisk="true"
+                  timeToIdleSeconds="3600" timeToLiveSeconds="3600" />
+</ehcache>

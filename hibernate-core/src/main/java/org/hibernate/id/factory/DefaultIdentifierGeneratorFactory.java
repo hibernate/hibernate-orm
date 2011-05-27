@@ -86,7 +86,7 @@ public class DefaultIdentifierGeneratorFactory implements IdentifierGeneratorFac
 	}
 
 	public void register(String strategy, Class generatorClass) {
-		LOG.debugf( "Registering IdentifierGenerator strategy [%s] -> [%s]" + strategy + "] -> [" + generatorClass.getName() + "]" );
+		LOG.debugf( "Registering IdentifierGenerator strategy [%s] -> [%s]", strategy, generatorClass.getName() );
 		final Class previous = generatorStrategyToClassNameMap.put( strategy, generatorClass );
 		if ( previous != null ) {
 			LOG.debugf( "    - overriding [%s]", previous.getName() );

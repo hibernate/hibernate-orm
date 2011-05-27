@@ -37,7 +37,6 @@ import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLCla
  */
 public class HbmDiscriminatorBindingState extends AbstractHbmAttributeBindingState
 		implements DiscriminatorBindingState {
-	private final XMLDiscriminator discriminator;
 	private final String discriminatorValue;
 	private final boolean isForced;
 	private final boolean isInserted;
@@ -53,10 +52,10 @@ public class HbmDiscriminatorBindingState extends AbstractHbmAttributeBindingSta
 		super(
 				ownerClassName, defaults.getDefaultDiscriminatorColumnName(), defaults, null, null, null, true
 		);
+		XMLDiscriminator discriminator = xmlEntityClazz.getDiscriminator();
 		this.discriminatorValue =  MappingHelper.getStringValue(
 					xmlEntityClazz.getDiscriminatorValue(), entityName
 		);
-		this.discriminator = xmlEntityClazz.getDiscriminator();
 		this.isForced = xmlEntityClazz.getDiscriminator().isForce();
 		this.isInserted = discriminator.isInsert();
 		this.typeName =  discriminator.getType() == null ? "string" : discriminator.getType();
@@ -77,10 +76,6 @@ public class HbmDiscriminatorBindingState extends AbstractHbmAttributeBindingSta
 	@Override
 	public boolean isLazy() {
 		return false;
-	}
-
-	public boolean isInsertable() {
-		return discriminator.isInsert();
 	}
 
 	@Override

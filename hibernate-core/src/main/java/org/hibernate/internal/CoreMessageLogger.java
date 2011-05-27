@@ -1480,7 +1480,7 @@ public interface CoreMessageLogger extends BasicLogger {
 													  String name2,
 													  String valueOf2);
 
-	@LogMessage(level = WARN)
+	@LogMessage(level = DEBUG)
 	@Message(value = "Closing un-released batch", id = 420)
 	void closingUnreleasedBatch();
 

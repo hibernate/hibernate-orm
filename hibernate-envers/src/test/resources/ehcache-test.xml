@@ -1,0 +1,14 @@
+<ehcache>
+    <diskStore path="java.io.tmpdir" />
+
+    <!-- Fail safe. -->
+    <defaultCache maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="120" timeToLiveSeconds="120"
+                  overflowToDisk="true" maxElementsOnDisk="10000000" diskPersistent="false"
+                  diskExpiryThreadIntervalSeconds="120" memoryStoreEvictionPolicy="LRU" />
+
+    <!-- Mandatory persist cached objects to disk (checks whether they are serializable).
+    This cache region is used by HibernateSecLvlQueryCache test case. -->
+    <cache name="queryCacheRegion" eternal="false" diskPersistent="true"
+           maxElementsInMemory="1" maxElementsOnDisk="10000" overflowToDisk="true"
+           timeToIdleSeconds="3600" timeToLiveSeconds="3600" />
+</ehcache>

@@ -16,7 +16,7 @@ import java.util.Set;
 @MappedSuperclass
 public class DefaultTrackingModifiedTypesRevisionEntity extends DefaultRevisionEntity {
     @ElementCollection(fetch = FetchType.EAGER)
-    @JoinTable(name = "REVENTITY", joinColumns = @JoinColumn(name = "REV"))
+    @JoinTable(name = "REVCHANGES", joinColumns = @JoinColumn(name = "REV"))
     @Column(name = "ENTITYTYPE")
     @Fetch(FetchMode.JOIN)
     @ModifiedEntityTypes

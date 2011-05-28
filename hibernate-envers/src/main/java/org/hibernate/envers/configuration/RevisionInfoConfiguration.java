@@ -99,7 +99,7 @@ public class RevisionInfoConfiguration {
         MetadataTools.addColumn(timestampProperty, "REVTSTMP", null, 0, 0, null, null, null, false);
 
         if (globalCfg.isTrackEntitiesChangedInRevisionEnabled()) {
-            generateEntityTypesTrackingTableMapping(class_mapping, "modifiedEntityTypes", "REVENTITY", "REV", "ENTITYTYPE", "string");
+            generateEntityTypesTrackingTableMapping(class_mapping, "modifiedEntityTypes", "REVCHANGES", "REV", "ENTITYTYPE", "string");
         }
 
         return document;

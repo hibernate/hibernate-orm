@@ -253,8 +253,8 @@
                         </entry>
                         <entry>
                             Should entity types, that have been modified during each revision, be tracked. The default
-                            implementation creates <literal>REVENTITY</literal> table that stores fully qualified names
-                            of Java classes changed in a specified revision. Single record encapsulates the revision
+                            implementation creates <literal>REVCHANGES</literal> table that stores fully qualified names
+                            of Java classes modified in a specified revision. Single record encapsulates the revision
                             identifier (foreign key to <literal>REVINFO</literal> table) and a string value. This
                             feature shall be used when entity name can be clearly identified by Java class type. Otherwise
                             extend <interfacename>org.hibernate.envers.EntityTrackingRevisionListener</interfacename>
@@ -470,8 +470,8 @@ public class ExampleListener implements RevisionListener {
             <para>
                 By default entity types that have been changed in each revision are not being tracked. This implies the
                 necessity to query all tables storing audited data in order to retrieve changes made during
-                specified revision. Envers provides a simple mechanism that creates <literal>REVENTITY</literal>
-                table which stores fully qualified names of Java classes changed in each revision.
+                specified revision. Envers provides a simple mechanism that creates <literal>REVCHANGES</literal>
+                table which stores fully qualified names of Java classes modified in each revision.
                 Single record encapsulates the revision identifier (foreign key to <literal>REVINFO</literal> table)
                 and a string value. Note that this mechanism shall be used when entity name can be clearly identified
                 by Java class type. Otherwise extend <interfacename>org.hibernate.envers.EntityTrackingRevisionListener</interfacename>
@@ -508,7 +508,7 @@ public class AnnotatedTrackingRevisionEntity {
     ...
 
     @ElementCollection
-    @JoinTable(name = "REVENTITY", joinColumns = @JoinColumn(name = "REV"))
+    @JoinTable(name = "REVCHANGES", joinColumns = @JoinColumn(name = "REV"))
     @Column(name = "ENTITYTYPE")
     @ModifiedEntityTypes
     private Set<String> modifiedEntityTypes;

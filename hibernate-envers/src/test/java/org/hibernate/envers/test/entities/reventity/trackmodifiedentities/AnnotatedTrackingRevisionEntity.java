@@ -24,7 +24,7 @@ public class AnnotatedTrackingRevisionEntity {
     private long customTimestamp;
 
     @ElementCollection
-    @JoinTable(name = "REVENTITY", joinColumns = @JoinColumn(name = "REV"))
+    @JoinTable(name = "REVCHANGES", joinColumns = @JoinColumn(name = "REV"))
     @Column(name = "ENTITYTYPE")
     @ModifiedEntityTypes
     private Set<String> entityTypes;

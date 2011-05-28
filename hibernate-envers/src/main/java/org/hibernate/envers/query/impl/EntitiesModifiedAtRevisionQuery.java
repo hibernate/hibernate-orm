@@ -20,9 +20,15 @@ public class EntitiesModifiedAtRevisionQuery extends AbstractAuditQuery {
 
     public EntitiesModifiedAtRevisionQuery(AuditConfiguration verCfg, AuditReaderImplementor versionsReader,
                                            Class<?> cls, Number revision) {
-		super(verCfg, versionsReader, cls);
+        super(verCfg, versionsReader, cls);
         this.revision = revision;
-	}
+    }
+
+    public EntitiesModifiedAtRevisionQuery(AuditConfiguration verCfg, AuditReaderImplementor versionsReader,
+                                           Class<?> cls, String entityName, Number revision) {
+        super(verCfg, versionsReader, cls, entityName);
+        this.revision = revision;
+    }
 
     @SuppressWarnings({"unchecked"})
     public List list() {

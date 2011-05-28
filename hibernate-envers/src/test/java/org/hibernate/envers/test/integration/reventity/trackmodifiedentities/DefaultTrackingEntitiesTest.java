@@ -68,7 +68,7 @@ public class DefaultTrackingEntitiesTest extends AbstractEntityTest {
         Iterator<Table> tableIterator = getCfg().getTableMappings();
         while (tableIterator.hasNext()) {
             Table table = tableIterator.next();
-            if ("REVENTITY".equals(table.getName())) {
+            if ("REVCHANGES".equals(table.getName())) {
                 assert table.getColumnSpan() == 2;
                 assert table.getColumn(new Column("REV")) != null;
                 assert table.getColumn(new Column("ENTITYTYPE")) != null;

@@ -3,31 +3,31 @@ package org.hibernate.envers.test.integration.cache;
 import org.hibernate.MappingException;
 import org.hibernate.cache.internal.EhCacheProvider;
 import org.hibernate.cfg.Environment;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.query.criteria.RevisionTypeAuditExpression;
 import org.hibernate.envers.test.AbstractSessionTest;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
-import org.hibernate.stat.Statistics;
+import org.hibernate.testing.TestForIssue;
+import org.junit.Assert;
 import org.junit.Test;
 
-import java.io.File;
 import java.net.URISyntaxException;
-import java.net.URL;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public class HibernateSecLvlQueryCache extends AbstractSessionTest {
+    private static final String QUERY_CACHE_REGION = "queryCacheRegion";
+
     @Override
     protected void initMappings() throws MappingException, URISyntaxException {
         config.addAnnotatedClass(StrTestEntity.class);
         config.setProperty(Environment.USE_SECOND_LEVEL_CACHE, "true");
         config.setProperty(Environment.USE_QUERY_CACHE, "true");
         config.setProperty(Environment.CACHE_PROVIDER, EhCacheProvider.class.getName());
-        URL cacheURL = Thread.currentThread().getContextClassLoader().getResource("ehCache.xml");
-		config.setProperty(Environment.CACHE_PROVIDER_CONFIG, new File(cacheURL.toURI()).getAbsolutePath());
-        config.setProperty(Environment.GENERATE_STATISTICS, "true");
+        config.setProperty(Environment.CACHE_PROVIDER_CONFIG, "ehcache-test.xml");
     }
 
     @Test
@@ -38,31 +38,29 @@ public class HibernateSecLvlQueryCache extends AbstractSessionTest {
         StrTestEntity ste = new StrTestEntity("data");
         getSession().persist(ste);
         getSession().getTransaction().commit();
+
+        // Evicting old query cache.
+        getSession().getSessionFactory().getCache().evictQueryRegion(QUERY_CACHE_REGION);
     }
 
     @Test
-    public void testSecLvlCacheWithRevisionTypeDiskPersistent() {
-        // Invoking the same query twice for caching purpose.
-        invokeSampleCachingRevTypeQuery();
-        invokeSampleCachingRevTypeQuery();
-        
-        assert getQueryCacheStatistics() > 0;
-    }
-
-    private void invokeSampleCachingRevTypeQuery() {
+    @TestForIssue(jiraKey="HHH-5025")
+    public void testSecLvlCacheWithRevisionTypeDiskPersistent() throws InterruptedException {
         // Cached query that requires serializing RevisionType variable when persisting to disk.
         getAuditReader().createQuery().forEntitiesAtRevision(StrTestEntity.class, 1)
                                       .add(new RevisionTypeAuditExpression(RevisionType.ADD, "="))
-                                      .setCacheable(true).getResultList();
+                                      .setCacheable(true).setCacheRegion(QUERY_CACHE_REGION).getResultList();
+
+        // Waiting for cached data to persist to disk.
+        Thread.sleep(1000);
+        
+        Assert.assertTrue(getQueryCacheSize() > 0);
     }
 
-    private double getQueryCacheStatistics() {
-        Statistics stats = getSession().getSessionFactory().getStatistics();
-
-        double queryCacheHitCount  = stats.getQueryCacheHitCount();
-        double queryCacheMissCount = stats.getQueryCacheMissCount();
-        double queryCacheHitRatio = queryCacheHitCount / (queryCacheHitCount + queryCacheMissCount);
-
-        return queryCacheHitRatio;
+    private int getQueryCacheSize() {
+        // Statistics are not notified about persisting cached data failure. However, cache entry gets evicted.
+        // See DiskWriteTask.call() method (net.sf.ehcache.store.compound.factories.DiskStorageFactory).
+        SessionFactoryImplementor sessionFactoryImplementor = (SessionFactoryImplementor) getSession().getSessionFactory();
+        return sessionFactoryImplementor.getQueryCache(QUERY_CACHE_REGION).getRegion().toMap().size();
     }
 }

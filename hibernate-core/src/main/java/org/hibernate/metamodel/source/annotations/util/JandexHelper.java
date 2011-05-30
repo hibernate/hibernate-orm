@@ -95,20 +95,21 @@ public class JandexHelper {
 			return ( (FieldInfo) target ).name();
 		}
 		else {
-			String methodName = ( (MethodInfo) target ).name();
+			final String methodName = ( (MethodInfo) target ).name();
+			String propertyName;
 			if ( methodName.startsWith( "is" ) ) {
-				methodName = Introspector.decapitalize( methodName.substring( 2 ) );
+				propertyName = Introspector.decapitalize( methodName.substring( 2 ) );
 			}
 			else if ( methodName.startsWith( "has" ) ) {
-				methodName = Introspector.decapitalize( methodName.substring( 3 ) );
+				propertyName = Introspector.decapitalize( methodName.substring( 3 ) );
 			}
 			else if ( methodName.startsWith( "get" ) ) {
-				methodName = Introspector.decapitalize( methodName.substring( 3 ) );
+				propertyName = Introspector.decapitalize( methodName.substring( 3 ) );
 			}
 			else {
 				throw new AssertionFailure( "Expected a method following the Java Bean notation" );
 			}
-			return methodName;
+			return propertyName;
 		}
 	}
 

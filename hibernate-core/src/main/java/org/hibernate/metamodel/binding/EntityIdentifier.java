@@ -23,6 +23,12 @@
  */
 package org.hibernate.metamodel.binding;
 
+import java.util.Properties;
+
+import javax.persistence.GenerationType;
+
+import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.CoreMessageLogger;
 
 import org.jboss.logging.Logger;
@@ -38,6 +44,9 @@ public class EntityIdentifier {
 
 	private final EntityBinding entityBinding;
 	private AttributeBinding attributeBinding;
+	private IdentifierGenerator identifierGenerator;
+	private IdGenerator idGenerator;
+	private GenerationType  generationType;
 	// todo : generator, mappers, etc
 
 	/**
@@ -60,5 +69,24 @@ public class EntityIdentifier {
 			LOG.entityIdentifierValueBindingExists( entityBinding.getEntity().getName() );
 		}
 		this.attributeBinding = attributeBinding;
+	}
+
+	public void setIdGenerator(IdGenerator idGenerator) {
+		this.idGenerator = idGenerator;
+	}
+
+	public void setGenerationType(GenerationType generationType) {
+		this.generationType = generationType;
+	}
+
+	public IdentifierGenerator createIdentifierGenerator(IdentifierGeneratorFactory factory) {
+		Properties props = new Properties();
+		props.putAll( idGenerator.getParameters() );
+		identifierGenerator = factory.createIdentifierGenerator( idGenerator.getStrategy(), null, props );
+		return identifierGenerator;
+	}
+
+	public IdentifierGenerator getIdentifierGenerator() {
+		return identifierGenerator;
 	}
 }

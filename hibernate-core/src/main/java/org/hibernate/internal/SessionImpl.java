@@ -1053,7 +1053,12 @@ public final class SessionImpl
 	// refresh() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	public void refresh(Object object) throws HibernateException {
-		fireRefresh( new RefreshEvent(object, this) );
+		refresh( null, object );
+	}
+
+	@Override
+	public void refresh(String entityName, Object object) throws HibernateException {
+		fireRefresh( new RefreshEvent( entityName,object,this ) );
 	}
 
 	public void refresh(Object object, LockMode lockMode) throws HibernateException {
@@ -1061,7 +1066,11 @@ public final class SessionImpl
 	}
 
 	public void refresh(Object object, LockOptions lockOptions) throws HibernateException {
-		fireRefresh( new RefreshEvent(object, lockOptions, this) );
+		refresh( null, object, lockOptions );
+	}
+	@Override
+	public void refresh(String entityName, Object object, LockOptions lockOptions) throws HibernateException {
+		fireRefresh( new RefreshEvent(entityName, object, lockOptions, this) );
 	}
 
 	public void refresh(Object object, Map refreshedAlready) throws HibernateException {

@@ -361,7 +361,7 @@ public interface SessionImplementor extends Serializable, LobCreationContext {
 	 * Set the current <i>internal</i> fetch profile for this session.
 	 *
 	 * @param name The internal fetch profile name to use
-	 * @deprecated use #getLoadQueryInfluencers instead
+	 * @deprecated use {@link #getLoadQueryInfluencers} instead
 	 */
 	@Deprecated
     public void setFetchProfile(String name);

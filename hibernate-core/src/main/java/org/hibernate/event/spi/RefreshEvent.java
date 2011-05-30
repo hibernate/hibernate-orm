@@ -34,6 +34,8 @@ import org.hibernate.LockOptions;
 public class RefreshEvent extends AbstractEvent {
 
 	private Object object;
+	private String entityName;
+
 	private LockOptions lockOptions = new LockOptions().setLockMode(LockMode.READ);
 
 	public RefreshEvent(Object object, EventSource source) {
@@ -42,6 +44,11 @@ public class RefreshEvent extends AbstractEvent {
 			throw new IllegalArgumentException("Attempt to generate refresh event with null object");
 		}
 		this.object = object;
+	}
+
+	public RefreshEvent(String entityName, Object object, EventSource source){
+		this(object, source);
+		this.entityName = entityName;
 	}
 
 	public RefreshEvent(Object object, LockMode lockMode, EventSource source) {
@@ -59,6 +66,10 @@ public class RefreshEvent extends AbstractEvent {
 		}
 		this.lockOptions = lockOptions;
 	}
+	public RefreshEvent(String entityName, Object object, LockOptions lockOptions, EventSource source){
+		this(object,lockOptions,source);
+		this.entityName = entityName;
+	}
 
 	public Object getObject() {
 		return object;
@@ -70,6 +81,14 @@ public class RefreshEvent extends AbstractEvent {
 
 	public LockMode getLockMode() {
 		return lockOptions.getLockMode();
+	}
+
+	public String getEntityName() {
+		return entityName;
+	}
+
+	public void setEntityName(String entityName) {
+		this.entityName = entityName;
 	}
 
 	public int getLockTimeout() {

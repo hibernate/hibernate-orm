@@ -137,8 +137,8 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 
 		evictCachedCollections( persister, id, source.getFactory() );
 
-		String previousFetchProfile = source.getFetchProfile();
-		source.setFetchProfile("refresh");
+		String previousFetchProfile = source.getLoadQueryInfluencers().getInternalFetchProfile();
+		source.getLoadQueryInfluencers().setInternalFetchProfile( "refresh" );
 		Object result = persister.load( id, object, event.getLockOptions(), source );
 		// Keep the same read-only/modifiable setting for the entity that it had before refreshing;
 		// If it was transient, then set it to the default for the source.
@@ -151,7 +151,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 				source.setReadOnly( result, ( e == null ? source.isDefaultReadOnly() : e.isReadOnly() ) );
 			}
 		}
-		source.setFetchProfile(previousFetchProfile);
+		source.getLoadQueryInfluencers().setInternalFetchProfile(previousFetchProfile);
 
 		UnresolvableObjectException.throwIfNull( result, id, persister.getEntityName() );
 
@@ -165,7 +165,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 	throws HibernateException {
 		for ( int i = 0; i < types.length; i++ ) {
 			if ( types[i].isCollectionType() ) {
-				factory.evictCollection( ( (CollectionType) types[i] ).getRole(), id );
+				factory.getCache().evictCollection( ( (CollectionType) types[i] ).getRole(), id );
 			}
 			else if ( types[i].isComponentType() ) {
 				CompositeType actype = (CompositeType) types[i];

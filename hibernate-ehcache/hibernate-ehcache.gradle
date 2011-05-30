@@ -2,8 +2,6 @@ apply plugin: 'java'
 
 dependencies {
     compile( project( ':hibernate-core' ) )
-    compile( [group: 'net.sf.ehcache', name: 'ehcache-core', version: '2.4.1'] ){
-        trasitive = false
-    }
+    compile( [group: 'net.sf.ehcache', name: 'ehcache-core', version: '2.4.1', ext: 'jar'] )
     testCompile( project(':hibernate-testing') )
 }

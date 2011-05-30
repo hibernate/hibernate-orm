@@ -33,6 +33,7 @@ import org.hibernate.metamodel.relational.state.ValueRelationalState;
  */
 public class EntityDiscriminator {
 	private SimpleAttributeBinding valueBinding;
+	private String discriminatorValue;
 	private boolean forced;
 	private boolean inserted = true;
 
@@ -53,14 +54,19 @@ public class EntityDiscriminator {
 			throw new IllegalStateException( "Cannot bind state because the value binding has not been initialized." );
 		}
 		this.valueBinding.initialize( state );
+		this.discriminatorValue = state.getDiscriminatorValue();
 		this.forced = state.isForced();
-		this.inserted = state.isInsertable();
+		this.inserted = state.isInserted();
 		return this;
 	}
 
 	public EntityDiscriminator initialize(ValueRelationalState state) {
 		valueBinding.initialize( state );
 		return this;
+	}
+
+	public String getDiscriminatorValue() {
+		return discriminatorValue;
 	}
 
 	public boolean isForced() {

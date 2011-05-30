@@ -52,6 +52,7 @@ import org.hibernate.metamodel.source.hbm.util.MappingHelper;
  *
  * @author Steve Ebersole
  * @author Hardy Ferentschik
+ * @author Gail Badner
  */
 public class EntityBinding {
 	private final EntityIdentifier entityIdentifier = new EntityIdentifier( this );
@@ -76,7 +77,6 @@ public class EntityBinding {
 	private String whereFilter;
 	private String rowId;
 
-	private String discriminatorValue;
 	private boolean dynamicUpdate;
 	private boolean dynamicInsert;
 
@@ -102,7 +102,6 @@ public class EntityBinding {
 		// go ahead and set the lazy here, since pojo.proxy can override it.
 		lazy = MappingHelper.getBooleanValue( entityClazz.isLazy(), defaults.isDefaultLazy() );
 		proxyInterfaceName = entityClazz.getProxy();
-		discriminatorValue = MappingHelper.getStringValue( entityClazz.getDiscriminatorValue(), entity.getName() );
 		dynamicUpdate = entityClazz.isDynamicUpdate();
 		dynamicInsert = entityClazz.isDynamicInsert();
 		batchSize = MappingHelper.getIntValue( entityClazz.getBatchSize(), 0 );
@@ -353,11 +352,7 @@ public class EntityBinding {
 	}
 
 	public String getDiscriminatorValue() {
-		return discriminatorValue;
-	}
-
-	public void setDiscriminatorValue(String discriminatorValue) {
-		this.discriminatorValue = discriminatorValue;
+		return entityDiscriminator == null ? null : entityDiscriminator.getDiscriminatorValue();
 	}
 
 	public boolean isDynamicUpdate() {

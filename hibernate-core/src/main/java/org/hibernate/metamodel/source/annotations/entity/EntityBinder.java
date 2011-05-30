@@ -42,6 +42,7 @@ import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.EntityDiscriminator;
 import org.hibernate.metamodel.binding.ManyToOneAttributeBinding;
 import org.hibernate.metamodel.binding.SimpleAttributeBinding;
+import org.hibernate.metamodel.binding.state.DiscriminatorBindingState;
 import org.hibernate.metamodel.binding.state.ManyToOneAttributeBindingState;
 import org.hibernate.metamodel.binding.state.SimpleAttributeBindingState;
 import org.hibernate.metamodel.domain.Entity;
@@ -391,16 +392,19 @@ public class EntityBinder {
 
 		if ( simpleAttribute.isDiscriminator() ) {
 			EntityDiscriminator entityDiscriminator = entityBinding.makeEntityDiscriminator( attributeName );
-			entityDiscriminator.initialize( new DiscriminatorBindingStateImpl( simpleAttribute ) );
+			DiscriminatorBindingState bindingState = new DiscriminatorBindingStateImpl( simpleAttribute );
+			entityDiscriminator.initialize( bindingState );
 			attributeBinding = entityDiscriminator.getValueBinding();
 		}
 		else if ( simpleAttribute.isVersioned() ) {
 			attributeBinding = entityBinding.makeVersionBinding( attributeName );
-			attributeBinding.initialize(  new AttributeBindingStateImpl( simpleAttribute ) );
+			SimpleAttributeBindingState bindingState = new AttributeBindingStateImpl( simpleAttribute );
+			attributeBinding.initialize( bindingState );
 		}
 		else {
 			attributeBinding = entityBinding.makeSimpleAttributeBinding( attributeName );
-			attributeBinding.initialize(  new AttributeBindingStateImpl( simpleAttribute ) );
+			SimpleAttributeBindingState bindingState = new AttributeBindingStateImpl( simpleAttribute );
+			attributeBinding.initialize( bindingState );
 		}
 
 		if ( configuredClass.hasOwnTable() ) {

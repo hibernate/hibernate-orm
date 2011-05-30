@@ -23,16 +23,15 @@
  */
 package org.hibernate.metamodel.source.annotations.entity.state.binding;
 
+import org.hibernate.metamodel.binding.state.DiscriminatorBindingState;
 import org.hibernate.metamodel.source.annotations.entity.DiscriminatorColumnValues;
 import org.hibernate.metamodel.source.annotations.entity.SimpleAttribute;
 
 /**
  * @author Gail Badner
- *
- *         TODO: extract a superclass that sets defaults for other stuff
  */
 public class DiscriminatorBindingStateImpl
-		extends AttributeBindingStateImpl implements org.hibernate.metamodel.binding.state.DiscriminatorBindingState {
+		extends AttributeBindingStateImpl implements DiscriminatorBindingState {
 	private final String discriminatorValue;
 	private final boolean isForced;
 	private final boolean isInserted;

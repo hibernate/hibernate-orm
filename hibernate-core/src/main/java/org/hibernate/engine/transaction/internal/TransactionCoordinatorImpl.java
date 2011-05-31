@@ -65,6 +65,8 @@ public class TransactionCoordinatorImpl implements TransactionCoordinator {
 
 	private final transient TransactionContext transactionContext;
 	private final transient JdbcCoordinatorImpl jdbcCoordinator;
+        private final transient TransactionFactory transactionFactory;
+        private final transient TransactionEnvironment transactionEnvironment;
 
 	private final transient List<TransactionObserver> observers;
 	private final transient SynchronizationRegistryImpl synchronizationRegistry;
@@ -82,6 +84,8 @@ public class TransactionCoordinatorImpl implements TransactionCoordinator {
 			TransactionContext transactionContext) {
 		this.transactionContext = transactionContext;
 		this.jdbcCoordinator = new JdbcCoordinatorImpl( userSuppliedConnection, this );
+                this.transactionEnvironment = transactionContext.getTransactionEnvironment();
+                this.transactionFactory = this.transactionEnvironment.getTransactionFactory();
 		this.observers = new ArrayList<TransactionObserver>();
 		this.synchronizationRegistry = new SynchronizationRegistryImpl();
 		reset();
@@ -100,6 +104,8 @@ public class TransactionCoordinatorImpl implements TransactionCoordinator {
 			List<TransactionObserver> observers) {
 		this.transactionContext = transactionContext;
 		this.jdbcCoordinator = jdbcCoordinator;
+                this.transactionEnvironment = transactionContext.getTransactionEnvironment();
+                this.transactionFactory = this.transactionEnvironment.getTransactionFactory();
 		this.observers = observers;
 		this.synchronizationRegistry = new SynchronizationRegistryImpl();
 		reset();
@@ -126,11 +132,13 @@ public class TransactionCoordinatorImpl implements TransactionCoordinator {
 	}
 
 	public void afterTransaction(TransactionImplementor hibernateTransaction, int status) {
-		LOG.trace( "after transaction completion" );
+                if (LOG.isTraceEnabled()) {
+		   LOG.trace( "after transaction completion" );
+                }
 
 		final boolean success = JtaStatusHelper.isCommitted( status );
 
-		transactionContext.getTransactionEnvironment().getStatisticsImplementor().endTransaction( success );
+                transactionEnvironment.getStatisticsImplementor().endTransaction( success );
 
 		getJdbcCoordinator().afterTransaction();
 
@@ -140,7 +148,7 @@ public class TransactionCoordinatorImpl implements TransactionCoordinator {
 	}
 
 	private SessionFactoryImplementor sessionFactory() {
-		return transactionContext.getTransactionEnvironment().getSessionFactory();
+		return transactionEnvironment.getSessionFactory();
 	}
 
 	public boolean isSynchronizationRegistered() {
@@ -164,11 +172,11 @@ public class TransactionCoordinatorImpl implements TransactionCoordinator {
 	}
 
 	private TransactionFactory transactionFactory() {
-		return getTransactionEnvironment().getTransactionFactory();
+                return transactionFactory;
 	}
 
 	private TransactionEnvironment getTransactionEnvironment() {
-		return getTransactionContext().getTransactionEnvironment();
+                return transactionEnvironment;
 	}
 
 	@Override
@@ -211,7 +219,9 @@ public class TransactionCoordinatorImpl implements TransactionCoordinator {
 
 		if ( ! transactionContext.shouldAutoJoinTransaction() ) {
 			if ( currentHibernateTransaction.getJoinStatus() != JoinStatus.MARKED_FOR_JOINED ) {
-				LOG.debug( "Skipping JTA sync registration due to auto join checking" );
+                                if (LOG.isDebugEnabled()) {
+				   LOG.debug( "Skipping JTA sync registration due to auto join checking" );
+                                }
 				return;
 			}
 		}
@@ -229,19 +239,25 @@ public class TransactionCoordinatorImpl implements TransactionCoordinator {
 
 		// Can we resister a synchronization
 		if ( ! jtaPlatform.canRegisterSynchronization() ) {
-			LOG.trace(  "registered JTA platform says we cannot currently resister synchronization; skipping" );
+                        if (LOG.isTraceEnabled()) {
+			   LOG.trace(  "registered JTA platform says we cannot currently resister synchronization; skipping" );
+                        }
 			return;
 		}
 
 		// Should we resister a synchronization
 		if ( ! transactionFactory().isJoinableJtaTransaction( this, currentHibernateTransaction ) ) {
-			LOG.trace( "TransactionFactory reported no JTA transaction to join; skipping Synchronization registration" );
+                        if (LOG.isTraceEnabled()) {
+			   LOG.trace( "TransactionFactory reported no JTA transaction to join; skipping Synchronization registration" );
+                        }
 			return;
 		}
 
 		jtaPlatform.registerSynchronization( new RegisteredSynchronization( getSynchronizationCallbackCoordinator() ) );
 		synchronizationRegistered = true;
-		LOG.debug( "successfully registered Synchronization" );
+                if (LOG.isDebugEnabled()) {
+		   LOG.debug( "successfully registered Synchronization" );
+                }
 	}
 
 	@Override
@@ -253,7 +269,9 @@ public class TransactionCoordinatorImpl implements TransactionCoordinator {
 	}
 
 	public void pulse() {
-		LOG.trace( "Starting transaction coordinator pulse" );
+                if (LOG.isTraceEnabled()) {
+		   LOG.trace( "Starting transaction coordinator pulse" );
+                }
 		if ( transactionFactory().compatibleWithJtaSynchronization() ) {
 			// the configured transaction strategy says it supports callbacks via JTA synchronization, so attempt to
 			// register JTA synchronization if possible

@@ -27,8 +27,11 @@ import java.io.Serializable;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.persistence.GenerationType;
+
 import org.jboss.logging.Logger;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.id.Assigned;
@@ -38,6 +41,7 @@ import org.hibernate.id.GUIDGenerator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.IdentityGenerator;
 import org.hibernate.id.IncrementGenerator;
+import org.hibernate.id.MultipleHiLoPerTableGenerator;
 import org.hibernate.id.SelectGenerator;
 import org.hibernate.id.SequenceGenerator;
 import org.hibernate.id.SequenceHiLoGenerator;
@@ -92,6 +96,27 @@ public class DefaultIdentifierGeneratorFactory implements IdentifierGeneratorFac
 			LOG.debugf( "    - overriding [%s]", previous.getName() );
 		}
 	}
+
+	public static String generatorType(GenerationType generatorEnum, boolean useNewGeneratorMappings) {
+		switch ( generatorEnum ) {
+			case IDENTITY:
+				return "identity";
+			case AUTO:
+				return useNewGeneratorMappings
+						? "enhanced-sequence"
+						: "native";
+			case TABLE:
+				return useNewGeneratorMappings
+						? "enhanced-table"
+						: MultipleHiLoPerTableGenerator.class.getName();
+			case SEQUENCE:
+				return useNewGeneratorMappings
+						? "enhanced-sequence"
+						: "seqhilo";
+		}
+		throw new AssertionFailure( "Unknown GeneratorType: " + generatorEnum );
+	}
+
 
 	@Override
 	public void setDialect(Dialect dialect) {

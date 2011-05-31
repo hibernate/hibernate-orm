@@ -23,6 +23,7 @@
  */
 package org.hibernate.metamodel.source.annotations.entity;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -40,6 +41,7 @@ import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.annotations.PolymorphismType;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.access.AccessType;
+import org.hibernate.id.factory.DefaultIdentifierGeneratorFactory;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.binding.Caching;
 import org.hibernate.metamodel.binding.EntityBinding;
@@ -348,7 +350,7 @@ public class EntityBinder {
 		SimpleAttributeBinding attributeBinding = entityBinding.makeSimpleIdAttributeBinding( idName );
 		attributeBinding.initialize( new AttributeBindingStateImpl( (SimpleAttribute) idAttribute ) );
 		attributeBinding.initialize( new ColumnRelationalStateImpl( (SimpleAttribute) idAttribute, meta ) );
-
+		bindSingleIdGeneratedValue( entityBinding, idName );
 
 	}
 
@@ -372,8 +374,9 @@ public class EntityBinder {
 			);
 		}
 		String generator = JandexHelper.getValueAsString( generatedValueAnn, "generator" );
+		IdGenerator idGenerator = null;
 		if ( StringHelper.isNotEmpty( generator ) ) {
-			IdGenerator idGenerator = ( (MetadataImpl) meta ).getIdGenerator( generator );
+			idGenerator = ( (MetadataImpl) meta ).getIdGenerator( generator );
 			if ( idGenerator == null ) {
 				throw new MappingException(
 						String.format(
@@ -386,9 +389,23 @@ public class EntityBinder {
 			}
 			entityBinding.getEntityIdentifier().setIdGenerator( idGenerator );
 		}
-		GenerationType strategy = JandexHelper.getValueAsEnum( generatedValueAnn, "strategy", GenerationType.class );
-		entityBinding.getEntityIdentifier().setGenerationType( strategy );
+		GenerationType generationType = JandexHelper.getValueAsEnum( generatedValueAnn, "strategy", GenerationType.class );
+		String strategy = DefaultIdentifierGeneratorFactory.generatorType( generationType, meta.getOptions().useNewIdentifierGenerators() );
+		if ( idGenerator != null && !strategy.equals( idGenerator.getStrategy() ) ) {
+			//todo how to ?
+			throw new MappingException(
+					String.format(
+							"Inconsistent Id Generation strategy of @GeneratedValue on %s.%s",
+							configuredClass.getName(),
+							idName
+					)
+			);
+		} else{
+			idGenerator = new IdGenerator( "NAME", strategy, new HashMap<String, String>(  ) );
+			entityBinding.getEntityIdentifier().setIdGenerator( idGenerator );
+		}
 	}
+
 
 	private void bindAttributes(EntityBinding entityBinding) {
 		for ( MappedAttribute mappedAttribute : configuredClass.getMappedAttributes() ) {

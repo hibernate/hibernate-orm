@@ -25,6 +25,7 @@ package org.hibernate.metamodel.source.annotations.global;
 
 import java.util.HashMap;
 import java.util.Map;
+import javax.persistence.GenerationType;
 import javax.persistence.SequenceGenerator;
 
 import org.jboss.jandex.AnnotationInstance;
@@ -40,6 +41,7 @@ import org.hibernate.id.SequenceHiLoGenerator;
 import org.hibernate.id.TableHiLoGenerator;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.enhanced.TableGenerator;
+import org.hibernate.id.factory.DefaultIdentifierGeneratorFactory;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.binding.IdGenerator;
@@ -113,8 +115,9 @@ public class IdGeneratorBinder {
 		String strategy;
 		Map<String, String> prms = new HashMap<String, String>();
 		addStringParameter( generator, "sequenceName", prms, SequenceStyleGenerator.SEQUENCE_PARAM );
-		if ( metadata.getOptions().useNewIdentifierGenerators() ) {
-			strategy = SequenceStyleGenerator.class.getName();
+		boolean useNewIdentifierGenerators = metadata.getOptions().useNewIdentifierGenerators();
+		strategy = DefaultIdentifierGeneratorFactory.generatorType( GenerationType.SEQUENCE, useNewIdentifierGenerators);
+		if ( useNewIdentifierGenerators ) {
 			addStringParameter( generator, "catalog", prms, PersistentIdentifierGenerator.CATALOG );
 			addStringParameter( generator, "schema", prms, PersistentIdentifierGenerator.SCHEMA );
 			prms.put(
@@ -127,7 +130,6 @@ public class IdGeneratorBinder {
 			);
 		}
 		else {
-			strategy = "seqhilo";
 			if ( JandexHelper.getValueAsInt( generator, "initialValue" ) != 1 ) {
 				LOG.unsupportedInitialValue( AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS );
 			}
@@ -147,8 +149,9 @@ public class IdGeneratorBinder {
 		Map<String, String> prms = new HashMap<String, String>();
 		addStringParameter( generator, "catalog", prms, PersistentIdentifierGenerator.CATALOG );
 		addStringParameter( generator, "schema", prms, PersistentIdentifierGenerator.SCHEMA );
-		if ( metadata.getOptions().useNewIdentifierGenerators() ) {
-			strategy = TableGenerator.class.getName();
+		boolean useNewIdentifierGenerators = metadata.getOptions().useNewIdentifierGenerators();
+		strategy = DefaultIdentifierGeneratorFactory.generatorType( GenerationType.TABLE, useNewIdentifierGenerators);
+		if ( useNewIdentifierGenerators ) {
 			prms.put( TableGenerator.CONFIG_PREFER_SEGMENT_PER_ENTITY, "true" );
 			addStringParameter( generator, "table", prms, TableGenerator.TABLE_PARAM );
 			addStringParameter( generator, "pkColumnName", prms, TableGenerator.SEGMENT_COLUMN_PARAM );
@@ -164,7 +167,6 @@ public class IdGeneratorBinder {
 			);
 		}
 		else {
-			strategy = MultipleHiLoPerTableGenerator.class.getName();
 			addStringParameter( generator, "table", prms, MultipleHiLoPerTableGenerator.ID_TABLE );
 			addStringParameter( generator, "pkColumnName", prms, MultipleHiLoPerTableGenerator.PK_COLUMN_NAME );
 			addStringParameter( generator, "pkColumnValue", prms, MultipleHiLoPerTableGenerator.PK_VALUE_NAME );

@@ -40,7 +40,6 @@ import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.annotations.PolymorphismType;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.id.factory.DefaultIdentifierGeneratorFactory;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.binding.Caching;
 import org.hibernate.metamodel.binding.EntityBinding;
@@ -63,6 +62,7 @@ import org.hibernate.metamodel.source.annotations.entity.state.binding.ManyToOne
 import org.hibernate.metamodel.source.annotations.entity.state.relational.ColumnRelationalStateImpl;
 import org.hibernate.metamodel.source.annotations.entity.state.relational.ManyToOneRelationalStateImpl;
 import org.hibernate.metamodel.source.annotations.entity.state.relational.TupleRelationalStateImpl;
+import org.hibernate.metamodel.source.annotations.global.IdGeneratorBinder;
 import org.hibernate.metamodel.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
 import org.hibernate.metamodel.source.spi.MetadataImplementor;
@@ -374,7 +374,7 @@ public class EntityBinder {
 		String generator = JandexHelper.getValueAsString( generatedValueAnn, "generator" );
 		IdGenerator idGenerator = null;
 		if ( StringHelper.isNotEmpty( generator ) ) {
-			idGenerator = ( (MetadataImpl) meta ).getIdGenerator( generator );
+			idGenerator = meta.getIdGenerator( generator );
 			if ( idGenerator == null ) {
 				throw new MappingException(
 						String.format(
@@ -392,7 +392,7 @@ public class EntityBinder {
 				"strategy",
 				GenerationType.class
 		);
-		String strategy = DefaultIdentifierGeneratorFactory.generatorType(
+		String strategy = IdGeneratorBinder.generatorType(
 				generationType,
 				meta.getOptions().useNewIdentifierGenerators()
 		);

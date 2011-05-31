@@ -128,7 +128,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	public void addIdGenerator(IdGenerator generator) {
 		idGenerators.put( generator.getName(), generator );
 	}
-
+	@Override
 	public IdGenerator getIdGenerator(String name) {
 		if ( name == null ) {
 			throw new IllegalArgumentException( "null is not a valid generator name" );

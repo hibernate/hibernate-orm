@@ -97,26 +97,6 @@ public class DefaultIdentifierGeneratorFactory implements IdentifierGeneratorFac
 		}
 	}
 
-	public static String generatorType(GenerationType generatorEnum, boolean useNewGeneratorMappings) {
-		switch ( generatorEnum ) {
-			case IDENTITY:
-				return "identity";
-			case AUTO:
-				return useNewGeneratorMappings
-						? "enhanced-sequence"
-						: "native";
-			case TABLE:
-				return useNewGeneratorMappings
-						? "enhanced-table"
-						: MultipleHiLoPerTableGenerator.class.getName();
-			case SEQUENCE:
-				return useNewGeneratorMappings
-						? "enhanced-sequence"
-						: "seqhilo";
-		}
-		throw new AssertionFailure( "Unknown GeneratorType: " + generatorEnum );
-	}
-
 
 	@Override
 	public void setDialect(Dialect dialect) {

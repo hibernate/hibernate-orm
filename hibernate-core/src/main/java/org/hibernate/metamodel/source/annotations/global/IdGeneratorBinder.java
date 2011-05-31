@@ -32,6 +32,7 @@ import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.Index;
 import org.jboss.logging.Logger;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.GenericGenerators;
 import org.hibernate.cfg.AvailableSettings;
@@ -41,7 +42,6 @@ import org.hibernate.id.SequenceHiLoGenerator;
 import org.hibernate.id.TableHiLoGenerator;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.enhanced.TableGenerator;
-import org.hibernate.id.factory.DefaultIdentifierGeneratorFactory;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.binding.IdGenerator;
@@ -116,7 +116,7 @@ public class IdGeneratorBinder {
 		Map<String, String> prms = new HashMap<String, String>();
 		addStringParameter( generator, "sequenceName", prms, SequenceStyleGenerator.SEQUENCE_PARAM );
 		boolean useNewIdentifierGenerators = metadata.getOptions().useNewIdentifierGenerators();
-		strategy = DefaultIdentifierGeneratorFactory.generatorType( GenerationType.SEQUENCE, useNewIdentifierGenerators);
+		strategy = generatorType( GenerationType.SEQUENCE, useNewIdentifierGenerators );
 		if ( useNewIdentifierGenerators ) {
 			addStringParameter( generator, "catalog", prms, PersistentIdentifierGenerator.CATALOG );
 			addStringParameter( generator, "schema", prms, PersistentIdentifierGenerator.SCHEMA );
@@ -150,7 +150,7 @@ public class IdGeneratorBinder {
 		addStringParameter( generator, "catalog", prms, PersistentIdentifierGenerator.CATALOG );
 		addStringParameter( generator, "schema", prms, PersistentIdentifierGenerator.SCHEMA );
 		boolean useNewIdentifierGenerators = metadata.getOptions().useNewIdentifierGenerators();
-		strategy = DefaultIdentifierGeneratorFactory.generatorType( GenerationType.TABLE, useNewIdentifierGenerators);
+		strategy = generatorType( GenerationType.TABLE, useNewIdentifierGenerators );
 		if ( useNewIdentifierGenerators ) {
 			prms.put( TableGenerator.CONFIG_PREFER_SEGMENT_PER_ENTITY, "true" );
 			addStringParameter( generator, "table", prms, TableGenerator.TABLE_PARAM );
@@ -184,5 +184,25 @@ public class IdGeneratorBinder {
 	}
 
 	private IdGeneratorBinder() {
+	}
+
+	public static String generatorType(GenerationType generatorEnum, boolean useNewGeneratorMappings) {
+		switch ( generatorEnum ) {
+			case IDENTITY:
+				return "identity";
+			case AUTO:
+				return useNewGeneratorMappings
+						? "enhanced-sequence"
+						: "native";
+			case TABLE:
+				return useNewGeneratorMappings
+						? "enhanced-table"
+						: MultipleHiLoPerTableGenerator.class.getName();
+			case SEQUENCE:
+				return useNewGeneratorMappings
+						? "enhanced-sequence"
+						: "seqhilo";
+		}
+		throw new AssertionFailure( "Unknown GeneratorType: " + generatorEnum );
 	}
 }

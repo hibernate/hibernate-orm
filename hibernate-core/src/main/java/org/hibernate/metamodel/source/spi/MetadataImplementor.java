@@ -27,6 +27,7 @@ import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.metamodel.Metadata;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.FetchProfile;
+import org.hibernate.metamodel.binding.IdGenerator;
 import org.hibernate.metamodel.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.binding.TypeDef;
 import org.hibernate.metamodel.relational.Database;
@@ -62,4 +63,5 @@ public interface MetadataImplementor extends Metadata {
 	public void addFilterDefinition(FilterDefinition filterDefinition);
 
 	public Iterable<FilterDefinition> getFilterDefinitions();
+	public IdGenerator getIdGenerator(String name);
 }

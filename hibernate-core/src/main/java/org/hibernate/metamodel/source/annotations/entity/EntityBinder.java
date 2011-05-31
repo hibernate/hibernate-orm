@@ -26,7 +26,6 @@ package org.hibernate.metamodel.source.annotations.entity;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.persistence.GenerationType;
 
 import org.jboss.jandex.AnnotationInstance;
@@ -45,8 +44,8 @@ import org.hibernate.id.factory.DefaultIdentifierGeneratorFactory;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.binding.Caching;
 import org.hibernate.metamodel.binding.EntityBinding;
-import org.hibernate.metamodel.binding.IdGenerator;
 import org.hibernate.metamodel.binding.EntityDiscriminator;
+import org.hibernate.metamodel.binding.IdGenerator;
 import org.hibernate.metamodel.binding.ManyToOneAttributeBinding;
 import org.hibernate.metamodel.binding.SimpleAttributeBinding;
 import org.hibernate.metamodel.binding.state.DiscriminatorBindingState;
@@ -354,8 +353,7 @@ public class EntityBinder {
 
 	}
 
-
-	private void bindSingleIdGeneratedValue(EntityBinding entityBinding,String idPropertyName){
+	private void bindSingleIdGeneratedValue(EntityBinding entityBinding, String idPropertyName) {
 		AnnotationInstance generatedValueAnn = JandexHelper.getSingleAnnotation(
 				configuredClass.getClassInfo(), JPADotNames.GENERATED_VALUE
 		);
@@ -389,8 +387,15 @@ public class EntityBinder {
 			}
 			entityBinding.getEntityIdentifier().setIdGenerator( idGenerator );
 		}
-		GenerationType generationType = JandexHelper.getValueAsEnum( generatedValueAnn, "strategy", GenerationType.class );
-		String strategy = DefaultIdentifierGeneratorFactory.generatorType( generationType, meta.getOptions().useNewIdentifierGenerators() );
+		GenerationType generationType = JandexHelper.getValueAsEnum(
+				generatedValueAnn,
+				"strategy",
+				GenerationType.class
+		);
+		String strategy = DefaultIdentifierGeneratorFactory.generatorType(
+				generationType,
+				meta.getOptions().useNewIdentifierGenerators()
+		);
 		if ( idGenerator != null && !strategy.equals( idGenerator.getStrategy() ) ) {
 			//todo how to ?
 			throw new MappingException(
@@ -400,8 +405,9 @@ public class EntityBinder {
 							idName
 					)
 			);
-		} else{
-			idGenerator = new IdGenerator( "NAME", strategy, new HashMap<String, String>(  ) );
+		}
+		else {
+			idGenerator = new IdGenerator( "NAME", strategy, new HashMap<String, String>() );
 			entityBinding.getEntityIdentifier().setIdGenerator( idGenerator );
 		}
 	}

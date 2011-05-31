@@ -115,7 +115,7 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 
 	public String[] sqlCreateStrings(Dialect dialect) throws HibernateException {
 		return new String[] {
-			new StringBuffer( dialect.getCreateTableString() )
+			new StringBuilder( dialect.getCreateTableString() )
 					.append( ' ' )
 					.append( tableName )
 					.append( " ( " )

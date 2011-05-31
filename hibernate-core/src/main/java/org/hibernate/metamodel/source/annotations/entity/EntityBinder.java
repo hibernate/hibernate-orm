@@ -23,8 +23,11 @@
  */
 package org.hibernate.metamodel.source.annotations.entity;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.persistence.GenerationType;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
@@ -32,13 +35,17 @@ import org.jboss.jandex.DotName;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
+import org.hibernate.MappingException;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.annotations.PolymorphismType;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.access.AccessType;
+import org.hibernate.id.factory.DefaultIdentifierGeneratorFactory;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.binding.Caching;
 import org.hibernate.metamodel.binding.EntityBinding;
+import org.hibernate.metamodel.binding.IdGenerator;
 import org.hibernate.metamodel.binding.EntityDiscriminator;
 import org.hibernate.metamodel.binding.ManyToOneAttributeBinding;
 import org.hibernate.metamodel.binding.SimpleAttributeBinding;
@@ -58,6 +65,7 @@ import org.hibernate.metamodel.source.annotations.entity.state.relational.Column
 import org.hibernate.metamodel.source.annotations.entity.state.relational.ManyToOneRelationalStateImpl;
 import org.hibernate.metamodel.source.annotations.entity.state.relational.TupleRelationalStateImpl;
 import org.hibernate.metamodel.source.annotations.util.JandexHelper;
+import org.hibernate.metamodel.source.internal.MetadataImpl;
 import org.hibernate.metamodel.source.spi.MetadataImplementor;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 
@@ -311,6 +319,7 @@ public class EntityBinder {
 		}
 	}
 
+
 	private void bindJpaEntityAnnotation(EntityBinding entityBinding) {
 		AnnotationInstance jpaEntityAnnotation = JandexHelper.getSingleAnnotation(
 				configuredClass.getClassInfo(), JPADotNames.ENTITY
@@ -341,7 +350,62 @@ public class EntityBinder {
 		SimpleAttributeBinding attributeBinding = entityBinding.makeSimpleIdAttributeBinding( idName );
 		attributeBinding.initialize( new AttributeBindingStateImpl( (SimpleAttribute) idAttribute ) );
 		attributeBinding.initialize( new ColumnRelationalStateImpl( (SimpleAttribute) idAttribute, meta ) );
+		bindSingleIdGeneratedValue( entityBinding, idName );
+
 	}
+
+
+	private void bindSingleIdGeneratedValue(EntityBinding entityBinding,String idPropertyName){
+		AnnotationInstance generatedValueAnn = JandexHelper.getSingleAnnotation(
+				configuredClass.getClassInfo(), JPADotNames.GENERATED_VALUE
+		);
+		if ( generatedValueAnn == null ) {
+			return;
+		}
+
+		String idName = JandexHelper.getPropertyName( generatedValueAnn.target() );
+		if ( !idPropertyName.equals( idName ) ) {
+			throw new AssertionFailure(
+					String.format(
+							"Attribute[%s.%s] with @GeneratedValue doesn't have a @Id.",
+							configuredClass.getName(),
+							idPropertyName
+					)
+			);
+		}
+		String generator = JandexHelper.getValueAsString( generatedValueAnn, "generator" );
+		IdGenerator idGenerator = null;
+		if ( StringHelper.isNotEmpty( generator ) ) {
+			idGenerator = ( (MetadataImpl) meta ).getIdGenerator( generator );
+			if ( idGenerator == null ) {
+				throw new MappingException(
+						String.format(
+								"@GeneratedValue on %s.%s refering an undefined generator [%s]",
+								configuredClass.getName(),
+								idName,
+								generator
+						)
+				);
+			}
+			entityBinding.getEntityIdentifier().setIdGenerator( idGenerator );
+		}
+		GenerationType generationType = JandexHelper.getValueAsEnum( generatedValueAnn, "strategy", GenerationType.class );
+		String strategy = DefaultIdentifierGeneratorFactory.generatorType( generationType, meta.getOptions().useNewIdentifierGenerators() );
+		if ( idGenerator != null && !strategy.equals( idGenerator.getStrategy() ) ) {
+			//todo how to ?
+			throw new MappingException(
+					String.format(
+							"Inconsistent Id Generation strategy of @GeneratedValue on %s.%s",
+							configuredClass.getName(),
+							idName
+					)
+			);
+		} else{
+			idGenerator = new IdGenerator( "NAME", strategy, new HashMap<String, String>(  ) );
+			entityBinding.getEntityIdentifier().setIdGenerator( idGenerator );
+		}
+	}
+
 
 	private void bindAttributes(EntityBinding entityBinding) {
 		for ( MappedAttribute mappedAttribute : configuredClass.getMappedAttributes() ) {

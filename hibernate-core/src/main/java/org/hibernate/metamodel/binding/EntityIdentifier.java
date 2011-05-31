@@ -23,9 +23,14 @@
  */
 package org.hibernate.metamodel.binding;
 
-import org.hibernate.internal.CoreMessageLogger;
+import java.util.Properties;
+import javax.persistence.GenerationType;
 
 import org.jboss.logging.Logger;
+
+import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.id.factory.IdentifierGeneratorFactory;
+import org.hibernate.internal.CoreMessageLogger;
 
 /**
  * Binds the entity identifier.
@@ -34,11 +39,16 @@ import org.jboss.logging.Logger;
  */
 public class EntityIdentifier {
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, EntityIdentifier.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			EntityIdentifier.class.getName()
+	);
 
 	private final EntityBinding entityBinding;
 	private AttributeBinding attributeBinding;
-	// todo : generator, mappers, etc
+	private IdentifierGenerator identifierGenerator;
+	private IdGenerator idGenerator;
+	// todo : mappers, etc
 
 	/**
 	 * Create an identifier
@@ -60,5 +70,28 @@ public class EntityIdentifier {
 			LOG.entityIdentifierValueBindingExists( entityBinding.getEntity().getName() );
 		}
 		this.attributeBinding = attributeBinding;
+	}
+
+	public void setIdGenerator(IdGenerator idGenerator) {
+		this.idGenerator = idGenerator;
+	}
+
+	public IdentifierGenerator createIdentifierGenerator(IdentifierGeneratorFactory factory) {
+		if ( identifierGenerator == null ) {
+			Properties props = new Properties();
+			if ( idGenerator != null ) {
+				props.putAll( idGenerator.getParameters() );
+			}
+			identifierGenerator = factory.createIdentifierGenerator(
+					idGenerator.getStrategy(),
+					getValueBinding().getHibernateTypeDescriptor().getExplicitType(),
+					props
+			);
+		}
+		return identifierGenerator;
+	}
+
+	public IdentifierGenerator getIdentifierGenerator() {
+		return identifierGenerator;
 	}
 }

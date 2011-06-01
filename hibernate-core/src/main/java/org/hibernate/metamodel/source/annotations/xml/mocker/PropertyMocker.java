@@ -67,14 +67,20 @@ abstract class PropertyMocker extends AnnotationMocker {
 	}
 
 	protected void resolveTarget() {
+		//attribute in orm.xml has access sub-element
 		XMLAccessType accessType = getAccessType();
 		if ( accessType == null ) {
+			//attribute in the entity class has @Access
 			accessType = AccessHelper.getAccessFromAttributeAnnotation( getTargetName(), getFieldName(), indexBuilder );
 			if ( accessType == null ) {
 				accessType = AccessHelper.getEntityAccess( getTargetName(), indexBuilder );
 			}
 			if ( accessType == null ) {
 				accessType = AccessHelper.getAccessFromIdPosition( getTargetName(), indexBuilder );
+			}
+			if (accessType == null ) {
+				//this should only for determin @Id position
+				accessType = AccessHelper.getAccessFromDefault( indexBuilder );
 			}
 			if ( accessType == null ) {
 				accessType = XMLAccessType.PROPERTY;

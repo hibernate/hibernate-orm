@@ -101,7 +101,7 @@ public class EntityMappingsMocker {
 			}
 			globalDefaults.setSchema( pud.getSchema() );
 			globalDefaults.setCatalog( pud.getCatalog() );
-			globalDefaults.setAccess( pud.getAccess() );
+			//globalDefaults.setAccess( pud.getAccess() );
 			globalDefaults.setCascadePersist( pud.getCascadePersist() != null );
 			new PersistenceMetadataMocker( indexBuilder, pud ).process();
 		}

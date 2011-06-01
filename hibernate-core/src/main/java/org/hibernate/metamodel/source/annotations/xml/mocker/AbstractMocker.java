@@ -100,11 +100,8 @@ abstract class AbstractMocker implements JPADotNames {
 		MockHelper.stringValue( "name", uniqueConstraint.getName(), annotationValueList );
 		MockHelper.stringArrayValue( "columnNames", uniqueConstraint.getColumnName(), annotationValueList );
 		return
-				create(
-						UNIQUE_CONSTRAINT, target,
-						annotationValueList
-
-				);
+				create( UNIQUE_CONSTRAINT, target,
+						annotationValueList );
 	}
 
 }

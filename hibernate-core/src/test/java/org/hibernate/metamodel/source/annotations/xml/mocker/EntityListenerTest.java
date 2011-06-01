@@ -40,15 +40,13 @@ public class EntityListenerTest extends AbstractMockerTest {
 	@Test
 	public void basicEntityListenerMockTest() {
 		Index index = getMockedIndex( "listener.xml" );
-		index.printAnnotations();
 		DotName itemName = DotName.createSimple( Item.class.getName() );
 		DotName itemListenerName = DotName.createSimple( ItemListener.class.getName() );
 		ClassInfo itemClassInfo = index.getClassByName( itemName );
-		assertEquals( 3, itemClassInfo.annotations().size() );
+		assertEquals( 2, itemClassInfo.annotations().size() );
 		//entity
 		assertHasAnnotation( index, itemName, JPADotNames.ENTITY );
 		assertHasAnnotation( index, itemName, JPADotNames.ENTITY_LISTENERS );
-		assertHasAnnotation( index, itemName, JPADotNames.ACCESS );
 		//listener
 		assertHasAnnotation( index, itemListenerName, JPADotNames.PRE_PERSIST );
 		assertHasAnnotation( index, itemListenerName, JPADotNames.POST_PERSIST );

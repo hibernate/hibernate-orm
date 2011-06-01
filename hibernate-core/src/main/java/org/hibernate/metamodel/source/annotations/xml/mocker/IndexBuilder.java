@@ -103,7 +103,9 @@ public class IndexBuilder {
 				annotations, subclasses, implementors, classes
 		);
 	}
-
+	Map<DotName, List<AnnotationInstance>> getAnnotations(){
+		return Collections.unmodifiableMap( annotations );
+	}
 	/**
 	 * If {@code xml-mapping-metadata-complete} is defined in PersistenceUnitMetadata, we create a new empty {@link Index} here.
 	 */

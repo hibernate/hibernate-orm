@@ -202,7 +202,7 @@ public class ConfiguredClass {
 
 		AnnotationInstance accessAnnotation = JandexHelper.getSingleAnnotation( classInfo, JPADotNames.ACCESS );
 		if ( accessAnnotation != null ) {
-			accessType = Enum.valueOf( AccessType.class, accessAnnotation.value( "value" ).asEnum() );
+			accessType = JandexHelper.getValueAsEnum( accessAnnotation, "value", AccessType.class );
 		}
 
 		return accessType;
@@ -299,7 +299,7 @@ public class ConfiguredClass {
 				continue;
 			}
 
-			AccessType accessType = Enum.valueOf( AccessType.class, accessAnnotation.value().asEnum() );
+			AccessType accessType = JandexHelper.getValueAsEnum( accessAnnotation, "value", AccessType.class );
 
 			// when class access type is field
 			// overriding access annotations must be placed on properties and have the access type PROPERTY
@@ -465,12 +465,7 @@ public class ConfiguredClass {
 		}
 
 		if ( InheritanceType.SINGLE_TABLE.equals( inheritanceType ) ) {
-			if ( isRoot() ) {
-				return true;
-			}
-			else {
-				return false;
-			}
+			return isRoot();
 		}
 		return true;
 	}

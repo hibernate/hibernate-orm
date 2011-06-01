@@ -31,16 +31,39 @@ import org.jboss.jandex.AnnotationTarget;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.MethodInfo;
+import org.jboss.logging.Logger;
 
-import org.hibernate.AnnotationException;
+import org.hibernate.AssertionFailure;
+import org.hibernate.MappingException;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.source.annotation.xml.XMLAccessType;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.util.JandexHelper;
+import org.hibernate.metamodel.source.annotations.xml.PseudoJpaDotNames;
 
 /**
  * @author Strong Liu
  */
 class AccessHelper implements JPADotNames {
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			AccessHelper.class.getName()
+	);
+
+	static XMLAccessType getAccessFromDefault(IndexBuilder indexBuilder) {
+		AnnotationInstance annotationInstance = JandexHelper.getSingleAnnotation(
+				indexBuilder.getAnnotations(),
+				PseudoJpaDotNames.DEFAULT_ACCESS
+		);
+		if ( annotationInstance == null ) {
+			return null;
+		}
+		else {
+			return JandexHelper.getValueAsEnum( annotationInstance, "value", XMLAccessType.class );
+		}
+
+	}
+
 	static XMLAccessType getAccessFromIdPosition(DotName className, IndexBuilder indexBuilder) {
 		Map<DotName, List<AnnotationInstance>> indexedAnnotations = indexBuilder.getIndexedAnnotations( className );
 		Map<DotName, List<AnnotationInstance>> ormAnnotations = indexBuilder.getClassInfoAnnotationsMap( className );
@@ -79,14 +102,14 @@ class AccessHelper implements JPADotNames {
 		for ( AnnotationInstance annotation : idAnnotations ) {
 			AnnotationTarget tmpTarget = annotation.target();
 			if ( tmpTarget == null ) {
-				continue;
+				throw new AssertionFailure( "@Id has no AnnotationTarget, this is mostly a internal error." );
 			}
 			if ( accessType == null ) {
 				accessType = annotationTargetToAccessType( tmpTarget );
 			}
 			else {
 				if ( !accessType.equals( annotationTargetToAccessType( tmpTarget ) ) ) {
-					throw new AnnotationException( "Inconsistent placement of @Id annotation within hierarchy " );
+					throw new MappingException( "Inconsistent placement of @Id annotation within hierarchy " );
 				}
 			}
 		}
@@ -126,7 +149,11 @@ class AccessHelper implements JPADotNames {
 		if ( MockHelper.isNotEmpty( accessAnnotationInstances ) ) {
 			for ( AnnotationInstance annotationInstance : accessAnnotationInstances ) {
 				if ( annotationInstance.target() != null && annotationInstance.target() instanceof ClassInfo ) {
-					return XMLAccessType.valueOf( annotationInstance.value().asEnum() );
+					return JandexHelper.getValueAsEnum(
+							annotationInstance,
+							"value",
+							XMLAccessType.class
+					);
 				}
 			}
 		}
@@ -138,6 +165,9 @@ class AccessHelper implements JPADotNames {
 				.containsKey( EMBEDDABLE );
 	}
 
+	/**
+	 * Get {@link javax.persistence.AccessType } from {@link javax.persistence.Access @Access} on the attribute of the given class
+	 */
 	static XMLAccessType getAccessFromAttributeAnnotation(DotName className, String attributeName, IndexBuilder indexBuilder) {
 		Map<DotName, List<AnnotationInstance>> indexedAnnotations = indexBuilder.getIndexedAnnotations( className );
 		if ( indexedAnnotations != null && indexedAnnotations.containsKey( ACCESS ) ) {
@@ -149,10 +179,28 @@ class AccessHelper implements JPADotNames {
 						continue;
 					}
 					if ( JandexHelper.getPropertyName( indexedPropertyTarget ).equals( attributeName ) ) {
-						XMLAccessType accessType = XMLAccessType.valueOf( annotationInstance.value().asEnum() );
-						XMLAccessType targetAccessType = ( indexedPropertyTarget instanceof MethodInfo ) ? XMLAccessType.PROPERTY : XMLAccessType.FIELD;
-						if ( accessType == targetAccessType ) {
+						XMLAccessType accessType = JandexHelper.getValueAsEnum(
+								annotationInstance,
+								"value",
+								XMLAccessType.class
+						);
+						/**
+						 * here we ignore @Access(FIELD) on property (getter) and @Access(PROPERTY) on field
+						 */
+						XMLAccessType targetAccessType = annotationTargetToAccessType( indexedPropertyTarget );
+						if ( accessType.equals( targetAccessType ) ) {
 							return targetAccessType;
+						}
+						else {
+							LOG.warn(
+									String.format(
+											"%s.%s has @Access on %s, but it tries to assign the access type to %s, this is not allowed by JPA spec, and will be ignored.",
+											className,
+											attributeName,
+											targetAccessType,
+											accessType
+									)
+							);
 						}
 					}
 				}

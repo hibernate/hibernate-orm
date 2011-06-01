@@ -328,7 +328,7 @@ public class JandexHelper {
 		return annotations;
 	}
 
-	private static void addAnnotationToMap(AnnotationInstance instance, Map<DotName, List<AnnotationInstance>> annotations) {
+	public static void addAnnotationToMap(AnnotationInstance instance, Map<DotName, List<AnnotationInstance>> annotations) {
 		DotName dotName = instance.name();
 		List<AnnotationInstance> list;
 		if ( annotations.containsKey( dotName ) ) {

@@ -87,7 +87,7 @@ public class AttributeBindingStateImpl implements SimpleAttributeBindingState {
 
 	@Override
 	public boolean isKeyCascadeDeleteEnabled() {
-		return false;  //To change body of implemented methods use File | Settings | File Templates.
+		return false;
 	}
 
 	@Override

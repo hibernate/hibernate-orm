@@ -26,30 +26,36 @@ package org.hibernate.metamodel.source.annotations.xml;
 import org.junit.Test;
 
 import org.hibernate.metamodel.MetadataSources;
+import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.source.MappingException;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
 import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+
+import static junit.framework.Assert.assertNotNull;
 
 /**
  * @author Hardy Ferentschik
  */
 public class OrmXmlParserTests extends BaseUnitTestCase {
 	@Test
-	public void testSingleOrmXml() {
+	public void testSimpleOrmVersion2() {
 		MetadataSources sources = new MetadataSources( new ServiceRegistryBuilder().buildServiceRegistry() );
-		sources.addResource( "org/hibernate/metamodel/source/annotations/xml/orm.xml" );
+		sources.addResource( "org/hibernate/metamodel/source/annotations/xml/orm-father.xml" );
 		MetadataImpl metadata = (MetadataImpl) sources.buildMetadata();
 
-		// Todo assertions
+		EntityBinding binding = metadata.getEntityBinding( Father.class.getName() );
+		assertNotNull( binding );
 	}
 
 	@Test
-	public void testOrmXmlWithOldSchema() {
+	public void testSimpleOrmVersion1() {
 		MetadataSources sources = new MetadataSources( new ServiceRegistryBuilder().buildServiceRegistry() );
 		sources.addResource( "org/hibernate/metamodel/source/annotations/xml/orm-star.xml" );
 		MetadataImpl metadata = (MetadataImpl) sources.buildMetadata();
-		// Todo assertions
+
+		EntityBinding binding = metadata.getEntityBinding( Star.class.getName() );
+		assertNotNull( binding );
 	}
 
 	@Test(expected = MappingException.class)

@@ -90,34 +90,35 @@ public class AttributeBindingStateImpl implements SimpleAttributeBindingState {
 		return false;
 	}
 
+	// TODO find out more about these methods. How are they relevant for a simple attribute
 	@Override
 	public String getUnsavedValue() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		return null;
 	}
 
 	@Override
 	public String getPropertyAccessorName() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		return null;
 	}
 
 	@Override
 	public boolean isAlternateUniqueKey() {
-		return false;  //To change body of implemented methods use File | Settings | File Templates.
+		return false;
 	}
 
 	@Override
 	public Set<CascadeType> getCascadeTypes() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		return null;
 	}
 
 	@Override
 	public String getNodeName() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		return null;
 	}
 
 	@Override
 	public Map<String, MetaAttribute> getMetaAttributes() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		return null;
 	}
 }
 

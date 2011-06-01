@@ -23,24 +23,38 @@
  */
 package org.hibernate.metamodel.relational;
 
-import java.io.Serializable;
+import java.util.Set;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.mapping.RelationalModel;
+import org.hibernate.engine.spi.Mapping;
 
 /**
- * Auxiliary database objects (i.e., triggers, stored procedures, etc) defined
- * in the mappings.  Allows Hibernate to manage their lifecycle as part of
- * creating/dropping the schema.
- *
  * @author Steve Ebersole
  */
-public interface AuxiliaryDatabaseObject extends RelationalModel, Serializable {
-	/**
-	 * Does this database object apply to the given dialect?
-	 *
-	 * @param dialect The dialect to check against.
-	 * @return True if this database object does apply to the given dialect.
-	 */
-	boolean appliesToDialect(Dialect dialect);
+public class BasicAuxiliaryDatabaseObjectImpl implements AuxiliaryDatabaseObject {
+	private final String createString;
+	private final String dropString;
+	private final Set<String> dialectScopes;
+
+	public BasicAuxiliaryDatabaseObjectImpl(String createString, String dropString, Set<String> dialectScopes) {
+		this.createString = createString;
+		this.dropString = dropString;
+		this.dialectScopes = dialectScopes;
+	}
+
+	@Override
+	public boolean appliesToDialect(Dialect dialect) {
+		// empty means no scoping
+		return dialectScopes.isEmpty() || dialectScopes.contains( dialect.getClass().getName() );
+	}
+
+	@Override
+	public String sqlCreateString(Dialect dialect, Mapping p, String defaultCatalog, String defaultSchema) {
+		return createString;
+	}
+
+	@Override
+	public String sqlDropString(Dialect dialect, String defaultCatalog, String defaultSchema) {
+		return dropString;
+	}
 }

@@ -30,6 +30,7 @@ import org.hibernate.metamodel.binding.FetchProfile;
 import org.hibernate.metamodel.binding.IdGenerator;
 import org.hibernate.metamodel.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.binding.TypeDef;
+import org.hibernate.metamodel.relational.AuxiliaryDatabaseObject;
 import org.hibernate.metamodel.relational.Database;
 import org.hibernate.service.BasicServiceRegistry;
 import org.hibernate.type.TypeResolver;
@@ -56,9 +57,9 @@ public interface MetadataImplementor extends Metadata {
 
 	public void addFetchProfile(FetchProfile profile);
 
-	public void addTypeDef(TypeDef typeDef);
+	public void addTypeDefinition(TypeDef typeDef);
 
-	public Iterable<TypeDef> getTypeDefs();
+	public Iterable<TypeDef> getTypeDefinitions();
 
 	public void addFilterDefinition(FilterDefinition filterDefinition);
 
@@ -67,4 +68,6 @@ public interface MetadataImplementor extends Metadata {
 	public void registerIdentifierGenerator(String name, String clazz);
 
 	public IdGenerator getIdGenerator(String name);
+
+	public void addAuxiliaryDatabaseObject(AuxiliaryDatabaseObject auxiliaryDatabaseObject);
 }

@@ -32,10 +32,12 @@ import java.util.Set;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.relational.AuxiliaryDatabaseObject;
 import org.hibernate.metamodel.binding.FetchProfile;
 import org.hibernate.metamodel.binding.FetchProfile.Fetch;
 import org.hibernate.metamodel.binding.TypeDef;
 import org.hibernate.metamodel.domain.MetaAttribute;
+import org.hibernate.metamodel.relational.BasicAuxiliaryDatabaseObjectImpl;
 import org.hibernate.metamodel.source.MappingException;
 import org.hibernate.metamodel.source.Origin;
 import org.hibernate.metamodel.source.hbm.util.MappingHelper;
@@ -53,6 +55,8 @@ import org.hibernate.metamodel.source.hbm.xml.mapping.XMLUnionSubclassElement;
 import org.hibernate.metamodel.source.internal.JaxbRoot;
 import org.hibernate.metamodel.source.spi.MetadataImplementor;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.service.classloading.spi.ClassLoaderService;
+import org.hibernate.service.classloading.spi.ClassLoadingException;
 import org.hibernate.type.Type;
 
 /**
@@ -154,10 +158,13 @@ public class HbmBinder implements MappingDefaults {
 	}
 
 	public void processHibernateMapping() {
-		bindTypeDefinitions(  );
-		bindFilterDefinitions(  );
-		bindFetchProfiles(  );
+		// perform bindings with no pre-requisites
+		bindDatabaseObjectDefinitions();
+		bindTypeDefinitions();
+
+		bindFilterDefinitions();
 		bindIdentifierGenerators();
+
 		if ( hibernateMapping.getClazzOrSubclassOrJoinedSubclass() != null ) {
 			for ( Object clazzOrSubclass : hibernateMapping.getClazzOrSubclassOrJoinedSubclass() ) {
 				if ( XMLClass.class.isInstance( clazzOrSubclass ) ) {
@@ -185,6 +192,10 @@ public class HbmBinder implements MappingDefaults {
 				}
 			}
 		}
+
+		bindFetchProfiles();
+		bindImports();
+
 		if ( hibernateMapping.getQueryOrSqlQuery() != null ) {
 			for ( Object queryOrSqlQuery : hibernateMapping.getQueryOrSqlQuery() ) {
 				if ( XMLQueryElement.class.isInstance( queryOrSqlQuery ) ) {
@@ -204,10 +215,57 @@ public class HbmBinder implements MappingDefaults {
 		if ( hibernateMapping.getResultset() != null ) {
 //			bindResultSetMappingDefinitions( element, null, mappings );
 		}
-		if ( hibernateMapping.getDatabaseObject() != null ) {
-//			bindAuxiliaryDatabaseObjects( element, mappings );
+	}
+
+	private void bindDatabaseObjectDefinitions() {
+		if ( hibernateMapping.getDatabaseObject() == null ) {
+			return;
 		}
-		bindImports(  );
+		for ( XMLHibernateMapping.XMLDatabaseObject databaseObjectElement : hibernateMapping.getDatabaseObject() ) {
+			final AuxiliaryDatabaseObject auxiliaryDatabaseObject;
+			if ( databaseObjectElement.getDefinition() != null ) {
+				final String className = databaseObjectElement.getDefinition().getClazz();
+				try {
+					auxiliaryDatabaseObject = (AuxiliaryDatabaseObject) classLoaderService().classForName( className ).newInstance();
+				}
+				catch (ClassLoadingException e) {
+					throw e;
+				}
+				catch (Exception e) {
+					throw new MappingException(
+							"could not instantiate custom database object class [" + className + "]",
+							jaxbRoot.getOrigin()
+					);
+				}
+			}
+			else {
+				Set<String> dialectScopes = new HashSet<String>();
+				if ( databaseObjectElement.getDialectScope() != null ) {
+					for ( XMLHibernateMapping.XMLDatabaseObject.XMLDialectScope dialectScope : databaseObjectElement.getDialectScope() ) {
+						dialectScopes.add( dialectScope.getName() );
+					}
+				}
+				auxiliaryDatabaseObject = new BasicAuxiliaryDatabaseObjectImpl(
+						databaseObjectElement.getCreate(),
+						databaseObjectElement.getDrop(),
+						dialectScopes
+				);
+			}
+			metadata.addAuxiliaryDatabaseObject( auxiliaryDatabaseObject );
+		}
+	}
+
+	private void bindTypeDefinitions() {
+		if ( hibernateMapping.getTypedef() == null ) {
+			return;
+		}
+		for ( XMLHibernateMapping.XMLTypedef typedef : hibernateMapping.getTypedef() ) {
+			final Map<String, String> parameters = new HashMap<String, String>();
+			for ( XMLParamElement paramElement : typedef.getParam() ) {
+				parameters.put( paramElement.getName(), paramElement.getValue() );
+			}
+			metadata.addTypeDefinition( new TypeDef( typedef.getName(), typedef.getClazz(), parameters ) );
+		}
 	}
 
 	private void bindIdentifierGenerators() {
@@ -234,18 +292,6 @@ public class HbmBinder implements MappingDefaults {
 		}
 	}
 
-	private void bindTypeDefinitions() {
-		if ( hibernateMapping.getTypedef() == null ) {
-			return;
-		}
-		for ( XMLHibernateMapping.XMLTypedef typedef : hibernateMapping.getTypedef() ) {
-			final Map<String, String> parameters = new HashMap<String, String>();
-			for ( XMLParamElement paramElement : typedef.getParam() ) {
-				parameters.put( paramElement.getName(), paramElement.getValue() );
-			}
-			metadata.addTypeDef( new TypeDef( typedef.getName(), typedef.getClazz(), parameters ) );
-		}
-	}
 	private void bindFetchProfiles(){
 		if(hibernateMapping.getFetchProfile() == null){
 			return;
@@ -305,6 +351,15 @@ public class HbmBinder implements MappingDefaults {
 			}
 			metadata.addFilterDefinition( new FilterDefinition( name, condition, parameters ) );
 		}
+	}
+
+	private ClassLoaderService classLoaderService;
+
+	private ClassLoaderService classLoaderService() {
+		if ( classLoaderService == null ) {
+			classLoaderService = metadata.getServiceRegistry().getService( ClassLoaderService.class );
+		}
+		return classLoaderService;
 	}
 
 	String extractEntityName(XMLClass entityClazz) {

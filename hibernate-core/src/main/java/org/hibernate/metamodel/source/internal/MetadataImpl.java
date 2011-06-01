@@ -52,6 +52,7 @@ import org.hibernate.metamodel.binding.IdGenerator;
 import org.hibernate.metamodel.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.binding.TypeDef;
 import org.hibernate.metamodel.domain.MetaAttribute;
+import org.hibernate.metamodel.relational.AuxiliaryDatabaseObject;
 import org.hibernate.metamodel.relational.Database;
 import org.hibernate.metamodel.source.annotation.xml.XMLEntityMappings;
 import org.hibernate.metamodel.source.annotations.AnnotationBinder;
@@ -79,9 +80,12 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	private final BasicServiceRegistry serviceRegistry;
 	private final Options options;
 	private ClassLoaderService classLoaderService;
-	private final Database database = new Database();
+
 	private TypeResolver typeResolver = new TypeResolver();
 	private DefaultIdentifierGeneratorFactory identifierGeneratorFactory = new DefaultIdentifierGeneratorFactory();
+
+	private final Database database = new Database();
+
 	/**
 	 * Maps the fully qualified class name of an entity to its entity binding
 	 */
@@ -94,6 +98,9 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	private Map<String, NamedQueryDefinition> namedQueryDefs = new HashMap<String, NamedQueryDefinition>();
 	private Map<String, NamedSQLQueryDefinition> namedNativeQueryDefs = new HashMap<String, NamedSQLQueryDefinition>();
 	private Map<String, FilterDefinition> filterDefs = new HashMap<String, FilterDefinition>();
+
+	// todo : keep as part of Database?
+	private List<AuxiliaryDatabaseObject> auxiliaryDatabaseObjects = new ArrayList<AuxiliaryDatabaseObject>();
 
 	public MetadataImpl(MetadataSources metadataSources, Options options) {
 		this.serviceRegistry = metadataSources.getServiceRegistry();
@@ -141,6 +148,11 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		 identifierGeneratorFactory.register( name, classLoaderService().classForName( generatorClassName ) );
 	}
 
+	@Override
+	public void addAuxiliaryDatabaseObject(AuxiliaryDatabaseObject auxiliaryDatabaseObject) {
+		auxiliaryDatabaseObjects.add( auxiliaryDatabaseObject );
+	}
+
 	public void addNamedNativeQuery(String name, NamedSQLQueryDefinition def) {
 		namedNativeQueryDefs.put( name, def );
 	}
@@ -164,7 +176,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	@Override
-	public void addTypeDef(TypeDef typeDef) {
+	public void addTypeDefinition(TypeDef typeDef) {
 		final TypeDef previous = typeDefs.put( typeDef.getName(), typeDef );
 		if ( previous != null ) {
 			LOG.debugf( "Duplicate typedef name [%s] now -> %s", typeDef.getName(), typeDef.getTypeClass() );
@@ -172,7 +184,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	@Override
-	public Iterable<TypeDef> getTypeDefs() {
+	public Iterable<TypeDef> getTypeDefinitions() {
 		return typeDefs.values();
 	}
 

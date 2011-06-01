@@ -63,5 +63,8 @@ public interface MetadataImplementor extends Metadata {
 	public void addFilterDefinition(FilterDefinition filterDefinition);
 
 	public Iterable<FilterDefinition> getFilterDefinitions();
+
+	public void registerIdentifierGenerator(String name, String clazz);
+
 	public IdGenerator getIdGenerator(String name);
 }

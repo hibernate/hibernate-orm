@@ -42,6 +42,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
+import org.hibernate.id.factory.DefaultIdentifierGeneratorFactory;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.SourceProcessingOrder;
@@ -77,10 +78,10 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	private final BasicServiceRegistry serviceRegistry;
 	private final Options options;
-
+	private ClassLoaderService classLoaderService;
 	private final Database database = new Database();
 	private TypeResolver typeResolver = new TypeResolver();
-
+	private DefaultIdentifierGeneratorFactory identifierGeneratorFactory = new DefaultIdentifierGeneratorFactory();
 	/**
 	 * Maps the fully qualified class name of an entity to its entity binding
 	 */
@@ -134,6 +135,10 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 			throw new IllegalArgumentException( "null is not a valid generator name" );
 		}
 		return idGenerators.get( name );
+	}
+	@Override
+	public void registerIdentifierGenerator(String name, String generatorClassName) {
+		 identifierGeneratorFactory.register( name, classLoaderService().classForName( generatorClassName ) );
 	}
 
 	public void addNamedNativeQuery(String name, NamedSQLQueryDefinition def) {
@@ -225,14 +230,20 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	 * @param className the fully qualified name of the class
 	 */
 	private void indexClass(Indexer indexer, String className) {
-		ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
-		InputStream stream = classLoaderService.locateResourceStream( className );
+		InputStream stream = classLoaderService().locateResourceStream( className );
 		try {
 			indexer.index( stream );
 		}
 		catch ( IOException e ) {
 			throw new HibernateException( "Unable to open input stream for class " + className, e );
 		}
+	}
+
+	private ClassLoaderService classLoaderService(){
+		if(classLoaderService==null){
+			classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+		}
+		return classLoaderService;
 	}
 
 	@Override

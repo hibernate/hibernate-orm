@@ -154,21 +154,10 @@ public class HbmBinder implements MappingDefaults {
 	}
 
 	public void processHibernateMapping() {
-		if ( hibernateMapping.getImport() != null ) {
-			bindImports( hibernateMapping.getImport() );
-		}
-		if ( hibernateMapping.getTypedef() != null ) {
-			bindTypeDefinitions( hibernateMapping.getTypedef() );
-		}
-		if ( hibernateMapping.getFilterDef() != null ) {
-			bindFilterDefinitions( hibernateMapping.getFilterDef() );
-		}
-		if ( hibernateMapping.getFetchProfile() != null ) {
-			bindFetchProfiles( hibernateMapping.getFetchProfile(), null );
-		}
-		if ( hibernateMapping.getIdentifierGenerator() != null ) {
-//			parseIdentifierGeneratorRegistrations( hibernateMapping.getIdentifierGenerator() );
-		}
+		bindTypeDefinitions(  );
+		bindFilterDefinitions(  );
+		bindFetchProfiles(  );
+		bindIdentifierGenerators();
 		if ( hibernateMapping.getClazzOrSubclassOrJoinedSubclass() != null ) {
 			for ( Object clazzOrSubclass : hibernateMapping.getClazzOrSubclassOrJoinedSubclass() ) {
 				if ( XMLClass.class.isInstance( clazzOrSubclass ) ) {
@@ -218,10 +207,26 @@ public class HbmBinder implements MappingDefaults {
 		if ( hibernateMapping.getDatabaseObject() != null ) {
 //			bindAuxiliaryDatabaseObjects( element, mappings );
 		}
+		bindImports(  );
 	}
 
-	private void bindImports(List<XMLImport> imports) {
-		for ( XMLImport importValue : imports ) {
+	private void bindIdentifierGenerators() {
+		if ( hibernateMapping.getIdentifierGenerator() == null ) {
+			return;
+		}
+		for ( XMLHibernateMapping.XMLIdentifierGenerator identifierGeneratorElement : hibernateMapping.getIdentifierGenerator() ) {
+			metadata.registerIdentifierGenerator(
+					identifierGeneratorElement.getName(),
+					identifierGeneratorElement.getClazz()
+			);
+		}
+	}
+
+	private void bindImports() {
+		if ( hibernateMapping.getImport() == null ) {
+			return;
+		}
+		for ( XMLImport importValue : hibernateMapping.getImport() ) {
 			String className = getClassName( importValue.getClazz() );
 			String rename = importValue.getRename();
 			rename = ( rename == null ) ? StringHelper.unqualify( className ) : rename;
@@ -229,14 +234,23 @@ public class HbmBinder implements MappingDefaults {
 		}
 	}
 
-	private void bindTypeDefinitions(List<XMLHibernateMapping.XMLTypedef> typedefs) {
-		for ( XMLHibernateMapping.XMLTypedef typedef : typedefs ) {
+	private void bindTypeDefinitions() {
+		if ( hibernateMapping.getTypedef() == null ) {
+			return;
+		}
+		for ( XMLHibernateMapping.XMLTypedef typedef : hibernateMapping.getTypedef() ) {
 			final Map<String, String> parameters = new HashMap<String, String>();
 			for ( XMLParamElement paramElement : typedef.getParam() ) {
 				parameters.put( paramElement.getName(), paramElement.getValue() );
 			}
 			metadata.addTypeDef( new TypeDef( typedef.getName(), typedef.getClazz(), parameters ) );
 		}
+	}
+	private void bindFetchProfiles(){
+		if(hibernateMapping.getFetchProfile() == null){
+			return;
+		}
+		bindFetchProfiles( hibernateMapping.getFetchProfile(),null );
 	}
 
 	protected void bindFetchProfiles(List<XMLFetchProfileElement> fetchProfiles, String containingEntityName) {
@@ -258,8 +272,11 @@ public class HbmBinder implements MappingDefaults {
 		}
 	}
 
-	private void bindFilterDefinitions(List<XMLHibernateMapping.XMLFilterDef> filterDefinitions) {
-		for ( XMLHibernateMapping.XMLFilterDef filterDefinition : filterDefinitions ) {
+	private void bindFilterDefinitions() {
+		if(hibernateMapping.getFilterDef() == null){
+			return;
+		}
+		for ( XMLHibernateMapping.XMLFilterDef filterDefinition : hibernateMapping.getFilterDef() ) {
 			final String name = filterDefinition.getName();
 			final Map<String,Type> parameters = new HashMap<String, Type>();
 			String condition = null;

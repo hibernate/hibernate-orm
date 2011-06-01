@@ -24,6 +24,7 @@
 package org.hibernate.metamodel.source.spi;
 
 import org.hibernate.engine.spi.FilterDefinition;
+import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.metamodel.Metadata;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.FetchProfile;
@@ -63,6 +64,8 @@ public interface MetadataImplementor extends Metadata {
 	public void addFilterDefinition(FilterDefinition filterDefinition);
 
 	public Iterable<FilterDefinition> getFilterDefinitions();
+
+	public IdentifierGeneratorFactory getIdentifierGeneratorFactory();
 
 	public void registerIdentifierGenerator(String name, String clazz);
 

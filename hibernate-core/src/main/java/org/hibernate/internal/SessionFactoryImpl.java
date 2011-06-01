@@ -509,7 +509,6 @@ public final class SessionFactoryImpl
 
 	public SessionFactoryImpl(
 			MetadataImplementor metadata,
-	        Mapping mapping,
 			ServiceRegistry serviceRegistry,
 			SessionFactoryObserver observer) throws HibernateException {
         LOG.debug( "Building session factory" );
@@ -522,7 +521,6 @@ public final class SessionFactoryImpl
 		this.collectionPersisters = null;
 		this.collectionMetadata = null;
 		this.collectionRolesByEntityParticipant = null;
-		this.identifierGenerators = null;
 		this.namedQueries = null;
 		this.namedSqlQueries = null;
 		this.sqlResultSetMappings = null;
@@ -569,6 +567,24 @@ public final class SessionFactoryImpl
 
         LOG.debugf("Session factory constructed with filter configurations : %s", filters);
         LOG.debugf("Instantiating session factory with properties: %s", configurationService.getSettings() );
+
+		// TODO: Caches
+		// TODO: Integrators
+
+		//Generators:
+
+		identifierGenerators = new HashMap();
+		for ( EntityBinding entityBinding : metadata.getEntityBindings() ) {
+			// TODO: how to tell if EntityBinding is a "root" binding? for now, check for a value binding
+			if ( entityBinding.getEntityIdentifier().getValueBinding() != null ) {
+				// TODO: should the IdentifierGenerator have already been created? creating now, in case it wasn't
+				IdentifierGenerator identifierGenerator =
+						entityBinding.getEntityIdentifier().createIdentifierGenerator(
+								metadata.getIdentifierGeneratorFactory()
+						);
+				identifierGenerators.put( entityBinding.getEntity().getName(),identifierGenerator );
+			}
+		}
 
 		// TODO: implement
 

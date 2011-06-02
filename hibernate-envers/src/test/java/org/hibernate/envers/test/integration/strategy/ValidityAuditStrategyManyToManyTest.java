@@ -1,24 +1,17 @@
 package org.hibernate.envers.test.integration.strategy;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-
-import javax.persistence.EntityManager;
-
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.manytomany.SetOwnedEntity;
 import org.hibernate.envers.test.entities.manytomany.SetOwningEntity;
-import org.hibernate.envers.test.entities.manytomany.sametable.Child1Entity;
-import org.hibernate.envers.test.entities.manytomany.sametable.Child2Entity;
-import org.hibernate.envers.test.entities.manytomany.sametable.ParentEntity;
-import org.testng.Assert;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
+import org.junit.Test;
 
-import static org.testng.Assert.assertEquals;
+import javax.persistence.EntityManager;
+import java.util.Arrays;
+import java.util.HashSet;
+
+import static org.junit.Assert.*;
 
 /**
  * Tests the ValidityAuditStrategy on many-to-many Sets.
@@ -44,7 +37,8 @@ public class ValidityAuditStrategyManyToManyTest extends AbstractEntityTest {
                 "org.hibernate.envers.strategy.ValidityAuditStrategy");
     }
 
-    @BeforeClass(enabled = true, dependsOnMethods = "init")
+    @Test
+    @Priority(10)
     public void initData() {
         final EntityManager em = getEntityManager();
 
@@ -64,7 +58,8 @@ public class ValidityAuditStrategyManyToManyTest extends AbstractEntityTest {
         ed_id = setOwnedEntity.getId();
     }
 
-    @Test(enabled = true)
+    @Test
+    @Priority(5)
     public void testMultipleAddAndRemove() {
         final EntityManager em = getEntityManager();
 
@@ -118,13 +113,13 @@ public class ValidityAuditStrategyManyToManyTest extends AbstractEntityTest {
         assertEquals(owningEntity.getReferences().size(), 0);
     }
 
-    @Test(enabled = true, dependsOnMethods = "testMultipleAddAndRemove")
+    @Test
 	public void testRevisionsCounts() {
 		assertEquals(getAuditReader().getRevisions(SetOwningEntity.class, ing_id), Arrays.asList(1, 2, 3, 4, 5));
 		assertEquals(getAuditReader().getRevisions(SetOwnedEntity.class, ed_id), Arrays.asList(1, 2, 3, 4, 5));
 	}
 
-	@Test(enabled = true, dependsOnMethods = "testMultipleAddAndRemove")
+	@Test
 	public void testHistoryOfIng1() {
 		SetOwningEntity ver_empty = createOwningEntity();
 		SetOwningEntity ver_child = createOwningEntity(new SetOwnedEntity(ed_id, "child"));
@@ -136,7 +131,7 @@ public class ValidityAuditStrategyManyToManyTest extends AbstractEntityTest {
         assertEquals(getAuditReader().find(SetOwningEntity.class, ing_id, 5), ver_empty);
 	}
 
-    @Test(enabled = true, dependsOnMethods = "testMultipleAddAndRemove")
+    @Test
 	public void testHistoryOfEd1() {
 		SetOwnedEntity ver_empty = createOwnedEntity();
 		SetOwnedEntity ver_child = createOwnedEntity(new SetOwningEntity(ing_id, "parent"));

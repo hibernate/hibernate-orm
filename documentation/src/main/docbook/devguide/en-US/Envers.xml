@@ -16,8 +16,7 @@
             which can be used to identify groups of changes (much like a change set in source control).  As the revisions
             are global, having a revision number, you can query for various entities at that revision, retrieving a
             (partial) view of the database at that revision. You can find a revision number having a date, and the other
-            way round, you can get the date at which a revision was committed. Since version 4.0, Envers enables you
-            to retrieve all changes performed in a certain revision.
+            way round, you can get the date at which a revision was committed.
         </para>
     </preface>
 
@@ -258,13 +257,24 @@
                             identifier (foreign key to <literal>REVINFO</literal> table) and a string value. This
                             feature shall be used when entity name can be clearly identified by Java class type. Otherwise
                             extend <interfacename>org.hibernate.envers.EntityTrackingRevisionListener</interfacename>
-                            interface. For more information refer to <xref linkend="envers-tracking-modified-entities-reventity"/>
+                            interface. For more information refer to <xref linkend="envers-tracking-modified-entities-revchanges"/>
                             and <xref linkend="envers-tracking-modified-entities-queries"/>.
                         </entry>
                     </row>
                 </tbody>
             </tgroup>
         </table>
+
+        <important>
+            <para>
+                The following configuration options have been added recently and should be regarded as experimental:
+                <orderedlist>
+                    <listitem>
+                        org.hibernate.envers.track_entities_changed_in_revision
+                    </listitem>
+                </orderedlist>
+            </para>
+        </important>
     </section>
 
     <section>
@@ -465,7 +475,7 @@ public class ExampleListener implements RevisionListener {
 
         </example>
 
-        <section id="envers-tracking-modified-entities-reventity">
+        <section id="envers-tracking-modified-entities-revchanges">
             <title>Tracking entity classes modified in revision</title>
             <para>
                 By default entity types that have been changed in each revision are not being tracked. This implies the
@@ -816,7 +826,7 @@ query.add(AuditEntity.relatedId("address").eq(relatedEntityId));]]></programlist
             </orderedlist>
             <para>
                 Note that methods described above can be legally used only when default mechanism of
-                tracking changed entity types is enabled (see <xref linkend="envers-tracking-modified-entities-reventity"/>).
+                tracking changed entity types is enabled (see <xref linkend="envers-tracking-modified-entities-revchanges"/>).
             </para>
         </section>
 

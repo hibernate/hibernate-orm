@@ -22,15 +22,17 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+
 import org.hibernate.HibernateException;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.exception.NotAuditedException;
 import org.hibernate.envers.exception.RevisionDoesNotExistException;
 import org.hibernate.envers.query.AuditQueryCreator;
+
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -191,8 +193,7 @@ public interface AuditReader {
 	/**
 	 * Checks if the entityName was configured to be audited.
 	 * 
-	 * @param entityClass
-	 *            EntityName of the entity asking for audit support.
+	 * @param entityName EntityName of the entity asking for audit support.
 	 * @return true if the entityName is audited.
 	 */
 	boolean isEntityNameAudited(String entityName);	

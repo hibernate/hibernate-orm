@@ -14,6 +14,9 @@ dependencies {
     testCompile( libraries.junit )
     testCompile( project(':hibernate-testing') )
     testCompile( libraries.jpa )
+    testCompile( project(':hibernate-ehcache') ) {
+        exclude group: 'org.slf4j'
+    }
     testRuntime( libraries.h2 )
     testRuntime( libraries.javassist )
 }

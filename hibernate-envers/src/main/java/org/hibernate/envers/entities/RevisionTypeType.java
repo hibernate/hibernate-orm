@@ -38,7 +38,9 @@ import org.hibernate.usertype.UserType;
  * A hibernate type for the {@link RevisionType} enum.
  * @author Adam Warski (adam at warski dot org)
  */
-public class RevisionTypeType implements UserType {
+public class RevisionTypeType implements UserType, Serializable {
+    private static final long serialVersionUID = -1053201518229282688L;
+    
     private static final int[] SQL_TYPES = { Types.TINYINT };
 
     public int[] sqlTypes() {

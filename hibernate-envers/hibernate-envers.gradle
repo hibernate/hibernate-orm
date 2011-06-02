@@ -29,8 +29,3 @@ sourceSets {
         }
     }
 }
-
-// temporary
-test {
-  ignoreFailures = true
-}

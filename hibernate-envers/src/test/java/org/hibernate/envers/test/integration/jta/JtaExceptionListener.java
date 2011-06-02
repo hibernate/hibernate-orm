@@ -29,6 +29,7 @@ import org.hibernate.envers.test.EnversTestingJtaBootstrap;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.envers.test.integration.reventity.ExceptionListenerRevEntity;
+import org.hibernate.testing.FailureExpected;
 import org.junit.Test;
 
 import javax.persistence.EntityManager;
@@ -50,7 +51,7 @@ public class JtaExceptionListener extends AbstractEntityTest {
         cfg.addAnnotatedClass(ExceptionListenerRevEntity.class);
     }
 
-     @Override
+    @Override
     public void addConfigurationProperties(Properties configuration) {
         super.addConfigurationProperties(configuration);
         tm = EnversTestingJtaBootstrap.updateConfigAndCreateTM(configuration);
@@ -74,6 +75,7 @@ public class JtaExceptionListener extends AbstractEntityTest {
     }
 
     @Test
+    @FailureExpected(jiraKey = "HHH-6020")
     public void testDataNotPersisted() throws Exception {
         tm.begin();
 

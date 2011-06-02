@@ -1,17 +1,16 @@
 package org.hibernate.envers.test.integration.cache;
 
 import org.hibernate.MappingException;
-import org.hibernate.cache.internal.EhCacheProvider;
 import org.hibernate.cfg.Environment;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.query.criteria.RevisionTypeAuditExpression;
 import org.hibernate.envers.test.AbstractSessionTest;
-import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
-import org.hibernate.testing.TestForIssue;
-import org.junit.Assert;
-import org.junit.Test;
+import org.testng.Assert;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
+import org.hibernate.cache.EhCacheProvider;
 
 import java.net.URISyntaxException;
 
@@ -30,10 +29,10 @@ public class HibernateSecLvlQueryCache extends AbstractSessionTest {
         config.setProperty(Environment.CACHE_PROVIDER_CONFIG, "ehcache-test.xml");
     }
 
-    @Test
-    @Priority(10)
+    @BeforeClass(dependsOnMethods = "init")
     public void initData() {
         // Revision 1
+        newSessionFactory();
         getSession().getTransaction().begin();
         StrTestEntity ste = new StrTestEntity("data");
         getSession().persist(ste);
@@ -44,7 +43,6 @@ public class HibernateSecLvlQueryCache extends AbstractSessionTest {
     }
 
     @Test
-    @TestForIssue(jiraKey="HHH-5025")
     public void testSecLvlCacheWithRevisionTypeDiskPersistent() throws InterruptedException {
         // Cached query that requires serializing RevisionType variable when persisting to disk.
         getAuditReader().createQuery().forEntitiesAtRevision(StrTestEntity.class, 1)

@@ -143,7 +143,7 @@ public class SettingsFactory implements Serializable {
 			releaseMode = serviceRegistry.getService( TransactionFactory.class ).getDefaultReleaseMode();
 		}
 		else {
-			releaseMode = ConnectionReleaseMode.parse( releaseModeName );
+			releaseMode = ConnectionReleaseMode.valueOf( releaseModeName );
 			if ( releaseMode == ConnectionReleaseMode.AFTER_STATEMENT &&
 					! jdbcServices.getConnectionProvider().supportsAggressiveRelease() ) {
                 LOG.unsupportedAfterStatement();

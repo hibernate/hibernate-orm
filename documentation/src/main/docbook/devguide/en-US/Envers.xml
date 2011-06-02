@@ -833,6 +833,44 @@ query.add(AuditEntity.relatedId("address").eq(relatedEntityId));]]></programlist
     </section>
 
     <section>
+        <title>Conditional auditing</title>
+        <para>
+            Envers persists audit data in reaction to various Hibernate events (e.g. post update, post insert, and
+            so on), using a series of even listeners from the <literal>org.hibernate.envers.event</literal>
+            package. By default, if the Envers jar is in the classpath, the event listeners are auto-registered with
+            Hibernate.
+        </para>
+        <para>
+            Conditional auditing can be implemented by overriding some of the Envers event listeners.
+            To use customized Envers event listeners, the following steps are needed:
+            <orderedlist>
+            <listitem>
+                Turn off automatic Envers event listeners registration by setting the
+                <literal>hibernate.listeners.envers.autoRegister</literal>
+                Hibernate property to <literal>false</literal>.
+            </listitem>
+            <listitem>
+                Create subclasses for appropriate event listeners. For example, if you want to conditionally audit
+                entity insertions, extend the
+                <literal>org.hibernate.envers.eventEnversPostInsertEventListenerImpl</literal>
+                class. Place the conditional-auditing logic in the subclasses, call the super method if auditing
+                should be performed.
+            </listitem>
+            <listitem>
+                Create your own implementation of <literal>org.hibernate.integrator.spi.Integrator</literal>,
+                similar to <literal>org.hibernate.envers.event.EnversIntegrator</literal>. Use your event listener
+                classes instead of the default ones.
+            </listitem>
+            <listitem>
+                For the integrator to be automatically used when Hibernate starts up, you will need to add a
+                <literal>META-INF/services/org.hibernate.integrator.spi.Integrator</literal> file to your jar.
+                The file should contain the fully qualified name of the class implementing the interface.
+            </listitem>
+            </orderedlist>
+        </para>
+    </section>
+
+    <section>
         <title>Understanding the Envers Schema</title>
 
         <para>

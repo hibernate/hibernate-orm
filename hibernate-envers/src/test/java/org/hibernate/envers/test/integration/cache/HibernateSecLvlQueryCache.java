@@ -51,9 +51,15 @@ public class HibernateSecLvlQueryCache extends AbstractSessionTest {
                                       .add(new RevisionTypeAuditExpression(RevisionType.ADD, "="))
                                       .setCacheable(true).setCacheRegion(QUERY_CACHE_REGION).getResultList();
 
-        // Waiting for cached data to persist to disk.
-        Thread.sleep(1000);
-        
+        // Waiting max 3 seconds for cached data to persist to disk.
+        for (int i=0; i<30; i++) {
+            if (getQueryCacheSize() > 0) {
+                break;
+            }
+
+            Thread.sleep(100);
+        }
+
         Assert.assertTrue(getQueryCacheSize() > 0);
     }
 

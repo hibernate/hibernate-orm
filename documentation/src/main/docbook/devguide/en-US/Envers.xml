@@ -16,7 +16,8 @@
             which can be used to identify groups of changes (much like a change set in source control).  As the revisions
             are global, having a revision number, you can query for various entities at that revision, retrieving a
             (partial) view of the database at that revision. You can find a revision number having a date, and the other
-            way round, you can get the date at which a revision was committed.
+            way round, you can get the date at which a revision was committed. Since version 4.0, Envers enables you
+            to retrieve all changes performed in a certain revision.
         </para>
     </preface>
 
@@ -243,6 +244,24 @@
                             evaluates to true
                         </entry>
                     </row>
+                    <row>
+                        <entry>
+                            <property>org.hibernate.envers.track_entities_changed_in_revision</property>
+                        </entry>
+                        <entry>
+                            false
+                        </entry>
+                        <entry>
+                            Should entity types, that have been modified during each revision, be tracked. The default
+                            implementation creates <literal>REVCHANGES</literal> table that stores fully qualified names
+                            of Java classes modified in a specified revision. Single record encapsulates the revision
+                            identifier (foreign key to <literal>REVINFO</literal> table) and a string value. This
+                            feature shall be used when entity name can be clearly identified by Java class type. Otherwise
+                            extend <interfacename>org.hibernate.envers.EntityTrackingRevisionListener</interfacename>
+                            interface. For more information refer to <xref linkend="envers-tracking-modified-entities-reventity"/>
+                            and <xref linkend="envers-tracking-modified-entities-queries"/>.
+                        </entry>
+                    </row>
                 </tbody>
             </tgroup>
         </table>
@@ -446,6 +465,134 @@ public class ExampleListener implements RevisionListener {
 
         </example>
 
+        <section id="envers-tracking-modified-entities-reventity">
+            <title>Tracking entity classes modified in revision</title>
+            <para>
+                By default entity types that have been changed in each revision are not being tracked. This implies the
+                necessity to query all tables storing audited data in order to retrieve changes made during
+                specified revision. Envers provides a simple mechanism that creates <literal>REVCHANGES</literal>
+                table which stores fully qualified names of Java classes modified in each revision.
+                Single record encapsulates the revision identifier (foreign key to <literal>REVINFO</literal> table)
+                and a string value. Note that this mechanism shall be used when entity name can be clearly identified
+                by Java class type. Otherwise extend <interfacename>org.hibernate.envers.EntityTrackingRevisionListener</interfacename>
+                interface (described further).
+            </para>
+            <para>
+                Tracking of modified entity types can be enabled in three different ways:
+            </para>
+            <orderedlist>
+                <listitem>
+                    Set <property>org.hibernate.envers.track_entities_changed_in_revision</property> parameter to
+                    <literal>true</literal>. In this case
+                    <classname>org.hibernate.envers.DefaultTrackingModifiedTypesRevisionEntity</classname> will
+                    be implicitly used as the revision log entity.
+                </listitem>
+                <listitem>
+                    Create a custom revision entity that extends
+                    <classname>org.hibernate.envers.DefaultTrackingModifiedTypesRevisionEntity</classname> class.
+                    <programlisting>
+<![CDATA[@Entity
+@RevisionEntity
+public class ExtendedRevisionEntity extends DefaultTrackingModifiedTypesRevisionEntity {
+    ...
+}]]></programlisting>
+                </listitem>
+                <listitem>
+                    Mark an appropriate field of a custom revision entity with
+                    <interfacename>@org.hibernate.envers.ModifiedEntityTypes</interfacename> annotation. The property is
+                    required to be of <literal><![CDATA[Set<String>]]></literal> type.
+                    <programlisting>
+<![CDATA[@Entity
+@RevisionEntity
+public class AnnotatedTrackingRevisionEntity {
+    ...
+
+    @ElementCollection
+    @JoinTable(name = "REVCHANGES", joinColumns = @JoinColumn(name = "REV"))
+    @Column(name = "ENTITYTYPE")
+    @ModifiedEntityTypes
+    private Set<String> modifiedEntityTypes;
+    
+    ...
+}]]></programlisting>
+                </listitem>
+            </orderedlist>
+            <para>
+                Users, that have chosen one of the approaches listed above, can retrieve all entities modified in
+                specified revision by utilizing API described in <xref linkend="envers-tracking-modified-entities-queries"/>.
+            </para>
+            <para>
+                Users are also allowed to implement custom mechanism of tracking modified entity types. In this case, they
+                shall pass their own implementation of
+                <interfacename>org.hibernate.envers.EntityTrackingRevisionListener</interfacename> interface as the value
+                of <interfacename>@org.hibernate.envers.RevisionEntity</interfacename> annotation.
+                <interfacename>EntityTrackingRevisionListener</interfacename> interface exposes one method that notifies
+                whenever audited entity instance has been added, modified or removed within current revision boundaries.
+            </para>
+            
+            <example>
+                <title>Custom implementation of tracking entity classes modified during revisions</title>
+                <programlisting>
+                    <filename>CustomEntityTrackingRevisionListener.java</filename>
+<![CDATA[
+public class CustomEntityTrackingRevisionListener implements EntityTrackingRevisionListener {
+    @Override
+    public void entityChanged(Class entityClass, String entityName, Serializable entityId, RevisionType revisionType,
+                              Object revisionEntity) {
+        ((CustomTrackingRevisionEntity)revisionEntity).addModifiedEntityType(entityClass.getName());
+    }
+
+    @Override
+    public void newRevision(Object revisionEntity) {
+    }
+}]]></programlisting>
+                <programlisting>
+                    <filename>CustomTrackingRevisionEntity.java</filename>
+<![CDATA[
+@Entity
+@RevisionEntity(CustomEntityTrackingRevisionListener.class)
+public class CustomTrackingRevisionEntity {
+    @Id
+    @GeneratedValue
+    @RevisionNumber
+    private int customId;
+
+    @RevisionTimestamp
+    private long customTimestamp;
+
+    @OneToMany(mappedBy="revision", cascade={CascadeType.PERSIST, CascadeType.REMOVE})
+    private Set<ModifiedEntityTypeEntity> modifiedEntityTypes = new HashSet<ModifiedEntityTypeEntity>();
+    
+    public void addModifiedEntityType(String entityClassName) {
+        modifiedEntityTypes.add(new ModifiedEntityTypeEntity(this, entityClassName));
+    }
+    
+    ...
+}
+]]></programlisting>
+                <programlisting>
+                    <filename>ModifiedEntityTypeEntity.java</filename>
+<![CDATA[
+@Entity
+public class ModifiedEntityTypeEntity {
+    @Id
+    @GeneratedValue
+    private Integer id;
+
+    @ManyToOne
+    private CustomTrackingRevisionEntity revision;
+    
+    private String entityClassName;
+    
+    ...
+}
+]]></programlisting>
+                <programlisting><![CDATA[CustomTrackingRevisionEntity revEntity =
+    getAuditReader().findRevision(CustomTrackingRevisionEntity.class, revisionNumber);
+Set<ModifiedEntityTypeEntity> modifiedEntityTypes = revEntity.getModifiedEntityTypes()]]></programlisting>
+            </example>
+        </section>
+
     </section>
 
     <section id="envers-queries">
@@ -635,6 +782,42 @@ query.add(AuditEntity.relatedId("address").eq(relatedEntityId));]]></programlist
                 <literal>null</literal>.
             </para>
 
+        </section>
+
+        <section id="envers-tracking-modified-entities-queries">
+            <title>Querying for entities modified in a given revision</title>
+            <para>
+                The basic query allows retrieving entity types changed in a specified revision:
+            </para>
+            <programlisting><![CDATA[Set<Class> modifiedEntityTypes = getAuditReader()
+    .findEntityTypesChangedInRevision(revisionNumber);]]></programlisting>
+            <para>
+                Other queries (accessible from <interfacename>org.hibernate.envers.AuditReader</interfacename>):
+            </para>
+            <orderedlist>
+                <listitem>
+                    <firstterm><methodname>List<![CDATA[<Object>]]> findEntitiesChangedInRevision(Number)</methodname></firstterm>
+                    - Returns snapshots of all audited entities changed (added, updated and removed) in a given revision.
+                    Executes <literal>n+1</literal> SQL queries, where <literal>n</literal> is a number of different entity
+                    classes modified within specified revision.
+                </listitem>
+                <listitem>
+                    <firstterm><methodname>List<![CDATA[<Object>]]> findEntitiesChangedInRevision(Number, RevisionType)</methodname></firstterm>
+                    - Returns snapshots of all audited entities changed (added, updated or removed) in a given revision
+                    filtered by modification type. Executes <literal>n+1</literal> SQL queries, where <literal>n</literal>
+                    is a number of different entity classes modified within specified revision.
+                </listitem>
+                <listitem>
+                    <firstterm><methodname><![CDATA[Map<RevisionType, List<Object>>]]> findEntitiesChangedInRevisionGroupByRevisionType(Number)</methodname></firstterm>
+                    - Returns a map containing lists of entity snapshots grouped by modification operation (e.g.
+                    addition, update and removal). Executes <literal>3n+1</literal> SQL queries, where <literal>n</literal>
+                    is a number of different entity classes modified within specified revision.
+                </listitem>
+            </orderedlist>
+            <para>
+                Note that methods described above can be legally used only when default mechanism of
+                tracking changed entity types is enabled (see <xref linkend="envers-tracking-modified-entities-reventity"/>).
+            </para>
         </section>
 
     </section>

@@ -38,7 +38,7 @@ public class AddWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
 
     public AddWorkUnit(SessionImplementor sessionImplementor, String entityName, AuditConfiguration verCfg,
 					   Serializable id, EntityPersister entityPersister, Object[] state) {
-        super(sessionImplementor, entityName, verCfg, id);
+        super(sessionImplementor, entityName, verCfg, id, RevisionType.ADD);
 
         data = new HashMap<String, Object>();
         verCfg.getEntCfg().get(getEntityName()).getPropertyMapper().map(sessionImplementor, data,
@@ -47,7 +47,7 @@ public class AddWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
 
     public AddWorkUnit(SessionImplementor sessionImplementor, String entityName, AuditConfiguration verCfg,
                        Serializable id, Map<String, Object> data) {
-        super(sessionImplementor, entityName, verCfg, id);
+        super(sessionImplementor, entityName, verCfg, id, RevisionType.ADD);
 
         this.data = data;
     }
@@ -57,7 +57,7 @@ public class AddWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
     }
 
     public Map<String, Object> generateData(Object revisionData) {
-        fillDataWithId(data, revisionData, RevisionType.ADD);
+        fillDataWithId(data, revisionData);
         return data;
     }
 

@@ -31,6 +31,7 @@ import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrIntTestEntity;
 import org.hibernate.envers.test.tools.TestTools;
+import org.junit.Assert;
 import org.junit.Test;
 
 import javax.persistence.EntityManager;
@@ -40,6 +41,7 @@ import java.util.List;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @SuppressWarnings({"unchecked"})
 public class SimpleQuery extends AbstractEntityTest {
@@ -266,5 +268,60 @@ public class SimpleQuery extends AbstractEntityTest {
                 .getResultList();
 
         assert result.size() == 0;
+    }
+
+    @Test
+    public void testEntitiesAddedAtRevision() {
+        StrIntTestEntity site1 = new StrIntTestEntity("a", 10, id1);
+        StrIntTestEntity site2 = new StrIntTestEntity("a", 10, id2);
+        StrIntTestEntity site3 = new StrIntTestEntity("b", 5, id3);
+
+        List result = getAuditReader().createQuery().forEntitiesModifiedAtRevision(StrIntTestEntity.class, StrIntTestEntity.class.getName(), 1).getResultList();
+        RevisionType revisionType = (RevisionType) getAuditReader().createQuery().forEntitiesModifiedAtRevision(StrIntTestEntity.class, 1)
+                                                                   .addProjection(AuditEntity.revisionType()).add(AuditEntity.id().eq(id1))
+                                                                   .getSingleResult();
+
+        Assert.assertTrue(TestTools.checkList(result, site1, site2, site3));
+        Assert.assertEquals(revisionType, RevisionType.ADD);
+    }
+
+    @Test
+    public void testEntitiesChangedAtRevision() {
+        StrIntTestEntity site1 = new StrIntTestEntity("c", 10, id1);
+        StrIntTestEntity site2 = new StrIntTestEntity("a", 20, id2);
+
+        List result = getAuditReader().createQuery().forEntitiesModifiedAtRevision(StrIntTestEntity.class, 2).getResultList();
+        RevisionType revisionType = (RevisionType) getAuditReader().createQuery().forEntitiesModifiedAtRevision(StrIntTestEntity.class, 2)
+                                                                   .addProjection(AuditEntity.revisionType()).add(AuditEntity.id().eq(id1))
+                                                                   .getSingleResult();
+
+        Assert.assertTrue(TestTools.checkList(result, site1, site2));
+        Assert.assertEquals(revisionType, RevisionType.MOD);
+    }
+
+    @Test
+    public void testEntitiesRemovedAtRevision() {
+        StrIntTestEntity site1 = new StrIntTestEntity(null, null, id1);
+
+        List result = getAuditReader().createQuery().forEntitiesModifiedAtRevision(StrIntTestEntity.class, 4).getResultList();
+        RevisionType revisionType = (RevisionType) getAuditReader().createQuery().forEntitiesModifiedAtRevision(StrIntTestEntity.class, 4)
+                                                                   .addProjection(AuditEntity.revisionType()).add(AuditEntity.id().eq(id1))
+                                                                   .getSingleResult();
+        
+        Assert.assertTrue(TestTools.checkList(result, site1));
+        Assert.assertEquals(revisionType, RevisionType.DEL);
+    }
+
+    @Test
+    public void testEntityNotModifiedAtRevision() {
+        List result = getAuditReader().createQuery().forEntitiesModifiedAtRevision(StrIntTestEntity.class, 3)
+                                                    .add(AuditEntity.id().eq(id1)).getResultList();
+        Assert.assertTrue(result.isEmpty());
+    }
+
+    @Test
+    public void testNoEntitiesModifiedAtRevision() {
+        List result = getAuditReader().createQuery().forEntitiesModifiedAtRevision(StrIntTestEntity.class, 5).getResultList();
+        Assert.assertTrue(result.isEmpty());
     }
 }

@@ -24,6 +24,8 @@
 package org.hibernate.envers.reader;
 import static org.hibernate.envers.tools.ArgumentsTools.checkNotNull;
 import static org.hibernate.envers.tools.ArgumentsTools.checkPositive;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -31,17 +33,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.persistence.NoResultException;
+import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.NonUniqueResultException;
-import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.exception.NotAuditedException;
 import org.hibernate.envers.exception.RevisionDoesNotExistException;
 import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.query.AuditQueryCreator;
+import org.hibernate.envers.query.criteria.RevisionTypeAuditExpression;
 import org.hibernate.envers.synchronization.AuditProcess;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.proxy.HibernateProxy;
@@ -49,6 +53,7 @@ import org.hibernate.proxy.HibernateProxy;
 /**
  * @author Adam Warski (adam at warski dot org)
  * @author Hern&aacute;n Chanfreau
+ * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public class AuditReaderImpl implements AuditReaderImplementor {
     private final AuditConfiguration verCfg;
@@ -152,7 +157,7 @@ public class AuditReaderImpl implements AuditReaderImplementor {
         checkPositive(revision, "Entity revision");
         checkSession();
 
-        Query query = verCfg.getRevisionInfoQueryCreator().getRevisionDateQuery(session, revision);
+        Criteria query = verCfg.getRevisionInfoQueryCreator().getRevisionDateQuery(session, revision);
 
         try {
             Object timestampObject = query.uniqueResult();
@@ -171,7 +176,7 @@ public class AuditReaderImpl implements AuditReaderImplementor {
         checkNotNull(date, "Date of revision");
         checkSession();
 
-        Query query = verCfg.getRevisionInfoQueryCreator().getRevisionNumberForDateQuery(session, date);
+        Criteria query = verCfg.getRevisionInfoQueryCreator().getRevisionNumberForDateQuery(session, date);
 
         try {
             Number res = (Number) query.uniqueResult();
@@ -194,7 +199,7 @@ public class AuditReaderImpl implements AuditReaderImplementor {
 
         Set<Number> revisions = new HashSet<Number>(1);
         revisions.add(revision);
-        Query query = verCfg.getRevisionInfoQueryCreator().getRevisionsQuery(session, revisions);
+        Criteria query = verCfg.getRevisionInfoQueryCreator().getRevisionsQuery(session, revisions);
 
         try {
             T revisionData = (T) query.uniqueResult();
@@ -220,7 +225,7 @@ public class AuditReaderImpl implements AuditReaderImplementor {
 		}
         checkSession();
 
-        Query query = verCfg.getRevisionInfoQueryCreator().getRevisionsQuery(session, revisions);
+        Criteria query = verCfg.getRevisionInfoQueryCreator().getRevisionsQuery(session, revisions);
 
         try {
             List<T> revisionList = query.list();
@@ -233,6 +238,67 @@ public class AuditReaderImpl implements AuditReaderImplementor {
         } catch (HibernateException e) {
             throw new AuditException(e);
         }
+    }
+
+    @SuppressWarnings({"unchecked"})
+    public List<Object> findEntitiesChangedInRevision(Number revision) throws IllegalStateException,
+                                                                              IllegalArgumentException, AuditException {
+        Set<Class> clazz = findEntityTypesChangedInRevision(revision);
+        List<Object> result = new ArrayList<Object>();
+        for (Class c : clazz) {
+            result.addAll(createQuery().forEntitiesModifiedAtRevision(c, revision).getResultList());
+        }
+        return result;
+    }
+
+    @SuppressWarnings({"unchecked"})
+    public List<Object> findEntitiesChangedInRevision(Number revision, RevisionType revisionType)
+            throws IllegalStateException, IllegalArgumentException, AuditException {
+        Set<Class> clazz = findEntityTypesChangedInRevision(revision);
+        List<Object> result = new ArrayList<Object>();
+        for (Class c : clazz) {
+            result.addAll(createQuery().forEntitiesModifiedAtRevision(c, revision)
+                                       .add(new RevisionTypeAuditExpression(revisionType, "=")).getResultList());
+        }
+        return result;
+    }
+
+    @SuppressWarnings({"unchecked"})
+    public Map<RevisionType, List<Object>> findEntitiesChangedInRevisionGroupByRevisionType(Number revision)
+            throws IllegalStateException, IllegalArgumentException, AuditException {
+        Set<Class> clazz = findEntityTypesChangedInRevision(revision);
+        Map<RevisionType, List<Object>> result = new HashMap<RevisionType, List<Object>>();
+        for (RevisionType revisionType : RevisionType.values()) {
+            result.put(revisionType, new ArrayList());
+            for (Class c : clazz) {
+                List<Object> list = createQuery().forEntitiesModifiedAtRevision(c, revision)
+                                                 .add(new RevisionTypeAuditExpression(revisionType, "=")).getResultList();
+                result.get(revisionType).addAll(list);
+            }
+        }
+        return result;
+    }
+
+    @SuppressWarnings({"unchecked"})
+    public Set<Class> findEntityTypesChangedInRevision(Number revision) throws IllegalStateException,
+                                                                               IllegalArgumentException, AuditException {
+        checkNotNull(revision, "Entity revision");
+        checkPositive(revision, "Entity revision");
+        checkSession();
+        if (!verCfg.getGlobalCfg().isTrackEntitiesChangedInRevisionEnabled()) {
+            throw new AuditException("This query is designed for Envers default mechanism of tracking entities modified in a given revision."
+                                     + " Extend DefaultTrackingModifiedTypesRevisionEntity, utilize @ModifiedEntityTypes annotation or set "
+                                     + "'org.hibernate.envers.track_entities_changed_in_revision' parameter to true.");
+        }
+        Set<Number> revisions = new HashSet<Number>(1);
+        revisions.add(revision);
+        Criteria query = verCfg.getRevisionInfoQueryCreator().getRevisionsQuery(session, revisions);
+        Object revisionInfo = query.uniqueResult();
+        if (revisionInfo != null) {
+            // If revision exists
+            return verCfg.getModifiedEntityTypesReader().getModifiedEntityTypes(revisionInfo);
+        }
+        return Collections.EMPTY_SET;
     }
 
 	@SuppressWarnings({"unchecked"})

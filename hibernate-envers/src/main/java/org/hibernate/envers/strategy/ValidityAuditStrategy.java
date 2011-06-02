@@ -61,8 +61,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
             IdMapper idMapper = auditCfg.getEntCfg().get(entityName).getIdMapper();
             idMapper.addIdEqualsToQuery(qb.getRootParameters(), id, auditCfg.getAuditEntCfg().getOriginalIdPropName(), true);
 
-            // e.end_rev is null
-            qb.getRootParameters().addWhere(auditCfg.getAuditEntCfg().getRevisionEndFieldName(), true, "is", "null", false);
+            addEndRevisionNulLRestriction(auditCfg, qb);
 
             @SuppressWarnings({"unchecked"})
             List<Object> l = qb.toQuery(session).list();
@@ -91,12 +90,13 @@ public class ValidityAuditStrategy implements AuditStrategy {
             }
         }
 
-        // e.end_rev is null
-        qb.getRootParameters().addWhere(auditCfg.getAuditEntCfg().getRevisionEndFieldName(), true, "is", "null", false);
+        addEndRevisionNulLRestriction(auditCfg, qb);
 
         final List<Object> l = qb.toQuery(session).list();
 
-        // Update the last revision if there exists such a last revision
+        // Update the last revision if one exists.
+        // HHH-5967: with collections, the same element can be added and removed multiple times. So even if it's an
+        // ADD, we may need to update the last revision.
         if (l.size() > 0) {
             updateLastRevision(session, auditCfg, l, originalId, persistentCollectionChangeData.getEntityName(), revision);
         }
@@ -105,7 +105,12 @@ public class ValidityAuditStrategy implements AuditStrategy {
         session.save(persistentCollectionChangeData.getEntityName(), persistentCollectionChangeData.getData());
     }
 
-	public void addEntityAtRevisionRestriction(GlobalConfiguration globalCfg, QueryBuilder rootQueryBuilder,
+    private void addEndRevisionNulLRestriction(AuditConfiguration auditCfg, QueryBuilder qb) {
+        // e.end_rev is null
+        qb.getRootParameters().addWhere(auditCfg.getAuditEntCfg().getRevisionEndFieldName(), true, "is", "null", false);
+    }
+
+    public void addEntityAtRevisionRestriction(GlobalConfiguration globalCfg, QueryBuilder rootQueryBuilder,
 			String revisionProperty,String revisionEndProperty, boolean addAlias,
             MiddleIdData idData, String revisionPropertyPath, String originalIdPropertyName,
             String alias1, String alias2) {

@@ -52,7 +52,7 @@ public class SimpleValueBindingTests extends BaseUnitTestCase {
 	public void testBasicMiddleOutBuilding() {
 		Table table = new Table( new Schema( null, null ), "the_table" );
 		Entity entity = new Entity( "TheEntity", null );
-		EntityBinding entityBinding = new EntityBinding();
+		EntityBinding entityBinding = new EntityBinding( true );
 		entityBinding.setEntity( entity );
 		entityBinding.setBaseTable( table );
 

@@ -26,16 +26,13 @@ package org.hibernate.metamodel.source.hbm.state.binding;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.FetchMode;
 import org.hibernate.metamodel.binding.CascadeType;
 import org.hibernate.metamodel.binding.CustomSQL;
 import org.hibernate.metamodel.binding.state.PluralAttributeBindingState;
-import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.metamodel.source.hbm.HbmHelper;
-import org.hibernate.metamodel.source.hbm.MappingDefaults;
 import org.hibernate.metamodel.source.hbm.util.MappingHelper;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLBagElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlDeleteAllElement;
@@ -43,6 +40,8 @@ import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlDeleteElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlInsertElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlUpdateElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSynchronizeElement;
+import org.hibernate.metamodel.source.spi.BindingContext;
+import org.hibernate.metamodel.source.spi.MetaAttributeContext;
 
 /**
  * @author Gail Badner
@@ -56,23 +55,23 @@ public class HbmPluralAttributeBindingState extends AbstractHbmAttributeBindingS
 
 	public HbmPluralAttributeBindingState(
 			String ownerClassName,
-			MappingDefaults mappingDefaults,
-			XMLBagElement collection,
-			Map<String, MetaAttribute> entityMetaAttributes) {
+			BindingContext bindingContext,
+			MetaAttributeContext parentMetaAttributeContext,
+			XMLBagElement collection) {
 		super(
 				ownerClassName,
 				collection.getName(),
-				mappingDefaults,
+				bindingContext,
 				collection.getNode(),
-				HbmHelper.extractMetas( collection.getMeta(), entityMetaAttributes ),
+				HbmHelper.extractMetaAttributeContext( collection.getMeta(), parentMetaAttributeContext ),
 				HbmHelper.getPropertyAccessorName(
-						collection.getAccess(), collection.isEmbedXml(), mappingDefaults.getDefaultAccess()
+						collection.getAccess(), collection.isEmbedXml(), bindingContext.getMappingDefaults().getDefaultAccess()
 				),
 				collection.isOptimisticLock()
 		);
 		this.collection = collection;
 		this.collectionPersisterClass = MappingHelper.classForName(
-				collection.getPersister(), getDefaults().getServiceRegistry()
+				collection.getPersister(), getBindingContext().getServiceRegistry()
 		);
 		this.cascadeTypes = determineCascadeTypes( collection.getCascade() );
 
@@ -117,7 +116,9 @@ public class HbmPluralAttributeBindingState extends AbstractHbmAttributeBindingS
 
 	public boolean isLazy() {
 		return isExtraLazy() ||
-				MappingHelper.getBooleanValue( collection.getLazy().value(), getDefaults().isDefaultLazy() );
+				MappingHelper.getBooleanValue(
+						collection.getLazy().value(), getBindingContext().getMappingDefaults().isDefaultLazy()
+				);
 	}
 
 	public boolean isExtraLazy() {

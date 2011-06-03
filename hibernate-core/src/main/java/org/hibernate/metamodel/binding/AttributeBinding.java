@@ -23,13 +23,12 @@
  */
 package org.hibernate.metamodel.binding;
 
-import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.metamodel.domain.Attribute;
-import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.metamodel.relational.SimpleValue;
 import org.hibernate.metamodel.relational.Value;
+import org.hibernate.metamodel.source.spi.MetaAttributeContext;
 
 /**
  * The basic contract for binding between an {@link #getAttribute() attribute} and a {@link #getValue() value}
@@ -66,11 +65,11 @@ public interface AttributeBinding {
 	public HibernateTypeDescriptor getHibernateTypeDescriptor();
 
 	/**
-	 * Obtain the map of meta attributes associated with this binding
+	 * Obtain the meta attributes associated with this binding
 	 *
 	 * @return The meta attributes
 	 */
-	public Map<String, MetaAttribute> getMetaAttributes();
+	public MetaAttributeContext getMetaAttributeContext();
 
 	/**
 	 * @return In the case that {@link #getValue()} represents a {@link org.hibernate.metamodel.relational.Tuple} this method

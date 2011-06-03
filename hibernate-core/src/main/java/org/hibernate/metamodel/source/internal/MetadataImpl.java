@@ -39,6 +39,7 @@ import org.jboss.logging.Logger;
 import org.hibernate.DuplicateMappingException;
 import org.hibernate.HibernateException;
 import org.hibernate.SessionFactory;
+import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
@@ -59,8 +60,12 @@ import org.hibernate.metamodel.source.annotations.AnnotationBinder;
 import org.hibernate.metamodel.source.annotations.xml.OrmXmlParser;
 import org.hibernate.metamodel.source.hbm.HbmBinder;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping;
+import org.hibernate.metamodel.source.spi.BindingContext;
+import org.hibernate.metamodel.source.spi.MappingDefaults;
+import org.hibernate.metamodel.source.spi.MetaAttributeContext;
 import org.hibernate.metamodel.source.spi.MetadataImplementor;
 import org.hibernate.service.BasicServiceRegistry;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.type.TypeResolver;
 
@@ -86,6 +91,8 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	private final Database database = new Database();
 
+	private final MappingDefaults mappingDefaults;
+
 	/**
 	 * Maps the fully qualified class name of an entity to its entity binding
 	 */
@@ -106,6 +113,9 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		this.serviceRegistry = metadataSources.getServiceRegistry();
 		this.options = options;
 
+		this.mappingDefaults = new MappingDefaultsImpl();
+
+		applyIndependentMetadata();
 		final ArrayList<String> processedEntityNames = new ArrayList<String>();
 		if ( options.getSourceProcessingOrder() == SourceProcessingOrder.HBM_FIRST ) {
 			applyHibernateMappings( metadataSources, processedEntityNames );
@@ -117,6 +127,10 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		}
 
 		new EntityReferenceResolver( this ).resolve();
+	}
+
+	private void applyIndependentMetadata() {
+		// todo : implement method body
 	}
 
 	@Override
@@ -193,12 +207,11 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	private void applyHibernateMappings(MetadataSources metadataSources, List<String> processedEntityNames) {
+
 		for ( JaxbRoot jaxbRoot : metadataSources.getJaxbRootList() ) {
 			// filter to just hbm-based roots
 			if ( jaxbRoot.getRoot() instanceof XMLHibernateMapping ) {
-				final HbmBinder mappingBinder = new HbmBinder(
-						this, Collections.<String, MetaAttribute>emptyMap(), jaxbRoot
-				);
+				final HbmBinder mappingBinder = new HbmBinder( this, jaxbRoot );
 				mappingBinder.processHibernateMapping();
 			}
 		}
@@ -330,5 +343,80 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	public TypeResolver getTypeResolver() {
 		return typeResolver;
+	}
+
+	@Override
+	public NamingStrategy getNamingStrategy() {
+		return options.getNamingStrategy();
+	}
+
+	@Override
+	public MappingDefaults getMappingDefaults() {
+		return mappingDefaults;
+	}
+
+	private final MetaAttributeContext globalMetaAttributeContext = new MetaAttributeContext();
+
+	@Override
+	public MetaAttributeContext getMetaAttributeContext() {
+		return globalMetaAttributeContext;
+	}
+
+	@Override
+	public MetadataImplementor getMetadataImplementor() {
+		return this;
+	}
+
+	private static final String DEFAULT_IDENTIFIER_COLUMN_NAME = "id";
+	private static final String DEFAULT_DISCRIMINATOR_COLUMN_NAME = "class";
+	private static final String DEFAULT_CASCADE = "none";
+	private static final String DEFAULT_PROPERTY_ACCESS = "property";
+
+	private class MappingDefaultsImpl implements MappingDefaults {
+
+		@Override
+		public String getPackageName() {
+			return null;
+		}
+
+		@Override
+		public String getDefaultSchemaName() {
+			return options.getDefaultSchemaName();
+		}
+
+		@Override
+		public String getDefaultCatalogName() {
+			return options.getDefaultCatalogName();
+		}
+
+		@Override
+		public String getDefaultIdColumnName() {
+			return DEFAULT_IDENTIFIER_COLUMN_NAME;
+		}
+
+		@Override
+		public String getDefaultDiscriminatorColumnName() {
+			return DEFAULT_DISCRIMINATOR_COLUMN_NAME;
+		}
+
+		@Override
+		public String getDefaultCascade() {
+			return DEFAULT_CASCADE;
+		}
+
+		@Override
+		public String getDefaultAccess() {
+			return DEFAULT_PROPERTY_ACCESS;
+		}
+
+		@Override
+		public boolean isDefaultLazy() {
+			return true;
+		}
+
+		@Override
+		public Map<String, MetaAttribute> getMappingMetas() {
+			return Collections.emptyMap();
+		}
 	}
 }

@@ -23,20 +23,17 @@
  */
 package org.hibernate.metamodel.source.hbm.state.binding;
 
-import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.FetchMode;
-import org.hibernate.MappingException;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.metamodel.binding.CascadeType;
 import org.hibernate.metamodel.binding.state.ManyToOneAttributeBindingState;
-import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.metamodel.source.hbm.HbmHelper;
-import org.hibernate.metamodel.source.hbm.MappingDefaults;
 import org.hibernate.metamodel.source.hbm.util.MappingHelper;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLManyToOneElement;
+import org.hibernate.metamodel.source.spi.BindingContext;
+import org.hibernate.metamodel.source.spi.MetaAttributeContext;
 
 /**
  * @author Gail Badner
@@ -58,17 +55,19 @@ public class HbmManyToOneAttributeBindingState
 
 	public HbmManyToOneAttributeBindingState(
 			String ownerClassName,
-			MappingDefaults defaults,
-			Map<String, MetaAttribute> entityMetaAttributes,
+			BindingContext bindingContext,
+			MetaAttributeContext parentMetaAttributeContext,
 			XMLManyToOneElement manyToOne) {
 		super(
 				ownerClassName,
 				manyToOne.getName(),
-				defaults,
+				bindingContext,
 				manyToOne.getNode(),
-				HbmHelper.extractMetas( manyToOne.getMeta(), entityMetaAttributes ),
+				HbmHelper.extractMetaAttributeContext( manyToOne.getMeta(), parentMetaAttributeContext ),
 				HbmHelper.getPropertyAccessorName(
-						manyToOne.getAccess(), manyToOne.isEmbedXml(), defaults.getDefaultAccess()
+						manyToOne.getAccess(),
+						manyToOne.isEmbedXml(),
+						bindingContext.getMappingDefaults().getDefaultAccess()
 				),
 				manyToOne.isOptimisticLock()
 		);
@@ -80,7 +79,7 @@ public class HbmManyToOneAttributeBindingState
 				"proxy".equals( manyToOne.getLazy().value() );
 		cascadeTypes = determineCascadeTypes( manyToOne.getCascade() );
 		isEmbedded = manyToOne.isEmbedXml();
-		referencedEntityName = getReferencedEntityName( ownerClassName, manyToOne, defaults );
+		referencedEntityName = getReferencedEntityName( ownerClassName, manyToOne, bindingContext );
 		referencedPropertyName = manyToOne.getPropertyRef();
 		ignoreNotFound = "ignore".equals( manyToOne.getNotFound().value() );
 		isInsertable = manyToOne.isInsert();
@@ -92,16 +91,21 @@ public class HbmManyToOneAttributeBindingState
 		return isEmbedded;
 	}
 
-	private static String getReferencedEntityName(String ownerClassName, XMLManyToOneElement manyToOne, MappingDefaults defaults) {
+	private static String getReferencedEntityName(
+			String ownerClassName,
+			XMLManyToOneElement manyToOne,
+			BindingContext bindingContext) {
 		String referencedEntityName;
 		if ( manyToOne.getEntityName() != null ) {
 			referencedEntityName = manyToOne.getEntityName();
 		}
 		else if ( manyToOne.getClazz() != null ) {
-			referencedEntityName = HbmHelper.getClassName( manyToOne.getClazz(), defaults.getPackageName() );
+			referencedEntityName = HbmHelper.getClassName(
+					manyToOne.getClazz(), bindingContext.getMappingDefaults().getPackageName()
+			);
 		}
 		else {
-			Class ownerClazz = MappingHelper.classForName( ownerClassName, defaults.getServiceRegistry() );
+			Class ownerClazz = MappingHelper.classForName( ownerClassName, bindingContext.getServiceRegistry() );
 			referencedEntityName = ReflectHelper.reflectedPropertyClass( ownerClazz, manyToOne.getName() ).getName();
 		}
 		return referencedEntityName;

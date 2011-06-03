@@ -31,15 +31,16 @@ import org.hibernate.MappingException;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.binding.CascadeType;
 import org.hibernate.metamodel.binding.state.SimpleAttributeBindingState;
-import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.metamodel.source.hbm.HbmHelper;
-import org.hibernate.metamodel.source.hbm.MappingDefaults;
 import org.hibernate.metamodel.source.hbm.util.MappingHelper;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLId;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLTimestamp;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLVersion;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLParamElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLPropertyElement;
+import org.hibernate.metamodel.source.spi.BindingContext;
+import org.hibernate.metamodel.source.spi.MappingDefaults;
+import org.hibernate.metamodel.source.spi.MetaAttributeContext;
 
 /**
  * @author Gail Badner
@@ -56,25 +57,25 @@ public class HbmSimpleAttributeBindingState extends AbstractHbmAttributeBindingS
 
 	public HbmSimpleAttributeBindingState(
 			String ownerClassName,
-			MappingDefaults defaults,
-			Map<String, MetaAttribute> entityMetaAttributes,
+			BindingContext bindingContext,
+			MetaAttributeContext parentMetaAttributeContext,
 			XMLId id) {
 		super(
 				ownerClassName,
-				id.getName() != null ? id.getName() : defaults.getDefaultIdColumnName(),
-				defaults,
+				id.getName() != null ? id.getName() : bindingContext.getMappingDefaults().getDefaultIdColumnName(),
+				bindingContext,
 				id.getNode(),
-				HbmHelper.extractMetas( id.getMeta(), entityMetaAttributes ),
-				HbmHelper.getPropertyAccessorName( id.getAccess(), false, defaults.getDefaultAccess() ),
+				HbmHelper.extractMetaAttributeContext( id.getMeta(), parentMetaAttributeContext ),
+				HbmHelper.getPropertyAccessorName( id.getAccess(), false, bindingContext.getMappingDefaults().getDefaultAccess() ),
 				true
 		);
 
 		this.isLazy = false;
 		if ( id.getTypeAttribute() != null ) {
-			typeName = maybeConvertToTypeDefName( id.getTypeAttribute(), defaults );
+			typeName = maybeConvertToTypeDefName( id.getTypeAttribute(), bindingContext.getMappingDefaults() );
 		}
 		else if ( id.getType() != null ) {
-			typeName = maybeConvertToTypeDefName( id.getType().getName(), defaults );
+			typeName = maybeConvertToTypeDefName( id.getType().getName(), bindingContext.getMappingDefaults() );
 		}
 		else {
 			typeName = getTypeNameByReflection();
@@ -99,16 +100,16 @@ public class HbmSimpleAttributeBindingState extends AbstractHbmAttributeBindingS
 
 	public HbmSimpleAttributeBindingState(
 			String ownerClassName,
-			MappingDefaults defaults,
-			Map<String, MetaAttribute> entityMetaAttributes,
+			BindingContext bindingContext,
+			MetaAttributeContext parentMetaAttributeContext,
 			XMLVersion version) {
 		super(
 				ownerClassName,
 				version.getName(),
-				defaults,
+				bindingContext,
 				version.getNode(),
-				HbmHelper.extractMetas( version.getMeta(), entityMetaAttributes ),
-				HbmHelper.getPropertyAccessorName( version.getAccess(), false, defaults.getDefaultAccess() ),
+				HbmHelper.extractMetaAttributeContext( version.getMeta(), parentMetaAttributeContext ),
+				HbmHelper.getPropertyAccessorName( version.getAccess(), false, bindingContext.getMappingDefaults().getDefaultAccess() ),
 				true
 		);
 		this.typeName = version.getType() == null ? "integer" : version.getType();
@@ -128,17 +129,17 @@ public class HbmSimpleAttributeBindingState extends AbstractHbmAttributeBindingS
 
 	public HbmSimpleAttributeBindingState(
 			String ownerClassName,
-			MappingDefaults defaults,
-			Map<String, MetaAttribute> entityMetaAttributes,
+			BindingContext bindingContext,
+			MetaAttributeContext parentMetaAttributeContext,
 			XMLTimestamp timestamp) {
 
 		super(
 				ownerClassName,
 				timestamp.getName(),
-				defaults,
+				bindingContext,
 				timestamp.getNode(),
-				HbmHelper.extractMetas( timestamp.getMeta(), entityMetaAttributes ),
-				HbmHelper.getPropertyAccessorName( timestamp.getAccess(), false, defaults.getDefaultAccess() ),
+				HbmHelper.extractMetaAttributeContext( timestamp.getMeta(), parentMetaAttributeContext ),
+				HbmHelper.getPropertyAccessorName( timestamp.getAccess(), false, bindingContext.getMappingDefaults().getDefaultAccess() ),
 				true
 		);
 
@@ -159,16 +160,16 @@ public class HbmSimpleAttributeBindingState extends AbstractHbmAttributeBindingS
 
 	public HbmSimpleAttributeBindingState(
 			String ownerClassName,
-			MappingDefaults defaults,
-			Map<String, MetaAttribute> entityMetaAttributes,
+			BindingContext bindingContext,
+			MetaAttributeContext parentMetaAttributeContext,
 			XMLPropertyElement property) {
 		super(
 				ownerClassName,
 				property.getName(),
-				defaults,
+				bindingContext,
 				property.getNode(),
-				HbmHelper.extractMetas( property.getMeta(), entityMetaAttributes ),
-				HbmHelper.getPropertyAccessorName( property.getAccess(), false, defaults.getDefaultAccess() ),
+				HbmHelper.extractMetaAttributeContext( property.getMeta(), parentMetaAttributeContext ),
+				HbmHelper.getPropertyAccessorName( property.getAccess(), false, bindingContext.getMappingDefaults().getDefaultAccess() ),
 				property.isOptimisticLock()
 		);
 		this.isLazy = property.isLazy();
@@ -206,10 +207,10 @@ public class HbmSimpleAttributeBindingState extends AbstractHbmAttributeBindingS
 		}
 
 		if ( property.getTypeAttribute() != null ) {
-			typeName = maybeConvertToTypeDefName( property.getTypeAttribute(), defaults );
+			typeName = maybeConvertToTypeDefName( property.getTypeAttribute(), bindingContext.getMappingDefaults() );
 		}
 		else if ( property.getType() != null ) {
-			typeName = maybeConvertToTypeDefName( property.getType().getName(), defaults );
+			typeName = maybeConvertToTypeDefName( property.getType().getName(), bindingContext.getMappingDefaults() );
 			for ( XMLParamElement typeParameter : property.getType().getParam() ) {
 				//TODO: add parameters from typedef
 				typeParameters.put( typeParameter.getName(), typeParameter.getValue().trim() );

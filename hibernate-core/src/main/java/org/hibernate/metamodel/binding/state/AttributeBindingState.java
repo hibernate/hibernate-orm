@@ -28,6 +28,7 @@ import java.util.Set;
 
 import org.hibernate.metamodel.binding.CascadeType;
 import org.hibernate.metamodel.domain.MetaAttribute;
+import org.hibernate.metamodel.source.spi.MetaAttributeContext;
 
 /**
  * @author Gail Badner
@@ -51,5 +52,5 @@ public interface AttributeBindingState {
 
 	String getNodeName();
 
-	Map<String, MetaAttribute> getMetaAttributes();
+	public MetaAttributeContext getMetaAttributeContext();
 }

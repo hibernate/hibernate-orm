@@ -32,9 +32,10 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.binding.CascadeType;
 import org.hibernate.metamodel.binding.state.AttributeBindingState;
-import org.hibernate.metamodel.domain.MetaAttribute;
-import org.hibernate.metamodel.source.hbm.MappingDefaults;
 import org.hibernate.metamodel.source.hbm.util.MappingHelper;
+import org.hibernate.metamodel.source.spi.BindingContext;
+import org.hibernate.metamodel.source.spi.MappingDefaults;
+import org.hibernate.metamodel.source.spi.MetaAttributeContext;
 
 /**
  * @author Gail Badner
@@ -42,18 +43,18 @@ import org.hibernate.metamodel.source.hbm.util.MappingHelper;
 public abstract class AbstractHbmAttributeBindingState implements AttributeBindingState {
 	private final String ownerClassName;
 	private final String attributeName;
-	private final MappingDefaults defaults;
+	private final BindingContext bindingContext;
 	private final String nodeName;
 	private final String accessorName;
 	private final boolean isOptimisticLockable;
-	private final Map<String, MetaAttribute> metaAttributes;
+	private final MetaAttributeContext metaAttributeContext;
 
 	public AbstractHbmAttributeBindingState(
 			String ownerClassName,
 			String attributeName,
-			MappingDefaults defaults,
+			BindingContext bindingContext,
 			String nodeName,
-			Map<String, MetaAttribute> metaAttributes,
+			MetaAttributeContext metaAttributeContext,
 			String accessorName,
 			boolean isOptimisticLockable) {
 		if ( attributeName == null ) {
@@ -64,9 +65,9 @@ public abstract class AbstractHbmAttributeBindingState implements AttributeBindi
 
 		this.ownerClassName = ownerClassName;
 		this.attributeName = attributeName;
-		this.defaults = defaults;
+		this.bindingContext = bindingContext;
 		this.nodeName = nodeName;
-		this.metaAttributes = metaAttributes;
+		this.metaAttributeContext = metaAttributeContext;
 		this.accessorName = accessorName;
 		this.isOptimisticLockable = isOptimisticLockable;
 	}
@@ -77,7 +78,7 @@ public abstract class AbstractHbmAttributeBindingState implements AttributeBindi
 	}
 
 	protected Set<CascadeType> determineCascadeTypes(String cascade) {
-		String commaSeparatedCascades = MappingHelper.getStringValue( cascade, getDefaults().getDefaultCascade() );
+		String commaSeparatedCascades = MappingHelper.getStringValue( cascade, getBindingContext().getMappingDefaults().getDefaultCascade() );
 		Set<String> cascades = MappingHelper.getStringValueTokens( commaSeparatedCascades, "," );
 		Set<CascadeType> cascadeTypes = new HashSet<CascadeType>( cascades.size() );
 		for ( String s : cascades ) {
@@ -91,7 +92,7 @@ public abstract class AbstractHbmAttributeBindingState implements AttributeBindi
 	}
 
 	protected final String getTypeNameByReflection() {
-		Class ownerClass = MappingHelper.classForName( ownerClassName, defaults.getServiceRegistry() );
+		Class ownerClass = MappingHelper.classForName( ownerClassName, bindingContext.getServiceRegistry() );
 		return ReflectHelper.reflectedPropertyClass( ownerClass, attributeName ).getName();
 	}
 
@@ -99,29 +100,39 @@ public abstract class AbstractHbmAttributeBindingState implements AttributeBindi
 		return attributeName;
 	}
 
-	protected final MappingDefaults getDefaults() {
-		return defaults;
+	public BindingContext getBindingContext() {
+		return bindingContext;
 	}
 
+	@Deprecated
+	protected final MappingDefaults getDefaults() {
+		return getBindingContext().getMappingDefaults();
+	}
+
+	@Override
 	public final String getPropertyAccessorName() {
 		return accessorName;
 	}
 
+	@Override
 	public final boolean isAlternateUniqueKey() {
 		//TODO: implement
 		return false;
 	}
 
+	@Override
 	public final boolean isOptimisticLockable() {
 		return isOptimisticLockable;
 	}
 
+	@Override
 	public final String getNodeName() {
 		return nodeName == null ? getAttributeName() : nodeName;
 	}
 
-	public final Map<String, MetaAttribute> getMetaAttributes() {
-		return metaAttributes;
+	@Override
+	public MetaAttributeContext getMetaAttributeContext() {
+		return metaAttributeContext;
 	}
 
 	public PropertyGeneration getPropertyGeneration() {

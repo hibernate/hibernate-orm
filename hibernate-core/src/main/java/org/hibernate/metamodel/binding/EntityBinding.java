@@ -35,17 +35,17 @@ import org.hibernate.MappingException;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.metamodel.domain.Entity;
-import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.metamodel.relational.Column;
 import org.hibernate.metamodel.relational.TableSpecification;
 import org.hibernate.metamodel.source.hbm.HbmHelper;
-import org.hibernate.metamodel.source.hbm.MappingDefaults;
+import org.hibernate.metamodel.source.hbm.util.MappingHelper;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlDeleteElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlInsertElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlUpdateElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSynchronizeElement;
-import org.hibernate.metamodel.source.hbm.util.MappingHelper;
+import org.hibernate.metamodel.source.spi.BindingContext;
+import org.hibernate.metamodel.source.spi.MetaAttributeContext;
 
 /**
  * Provides the link between the domain and the relational model for an entity.
@@ -68,7 +68,7 @@ public class EntityBinding {
 
 	private Caching caching;
 
-	private Map<String, MetaAttribute> metaAttributes;
+	private MetaAttributeContext metaAttributeContext;
 
 	private String proxyInterfaceName;
 	private boolean lazy;
@@ -95,12 +95,14 @@ public class EntityBinding {
 	private List<String> synchronizedTableNames;
 
 	// TODO: change to intialize from Doimain
-	public void fromHbmXml(MappingDefaults defaults, XMLClass entityClazz, Entity entity) {
+	public void fromHbmXml(BindingContext bindingContext, XMLClass entityClazz, Entity entity) {
 		this.entity = entity;
-		metaAttributes = HbmHelper.extractMetas( entityClazz.getMeta(), true, defaults.getMappingMetas() );
+		metaAttributeContext = HbmHelper.extractMetaAttributeContext( entityClazz.getMeta(), true, bindingContext.getMetaAttributeContext() );
 
 		// go ahead and set the lazy here, since pojo.proxy can override it.
-		lazy = MappingHelper.getBooleanValue( entityClazz.isLazy(), defaults.isDefaultLazy() );
+		lazy = MappingHelper.getBooleanValue(
+				entityClazz.isLazy(), bindingContext.getMappingDefaults().isDefaultLazy()
+		);
 		proxyInterfaceName = entityClazz.getProxy();
 		dynamicUpdate = entityClazz.isDynamicUpdate();
 		dynamicInsert = entityClazz.isDynamicInsert();
@@ -295,12 +297,8 @@ public class EntityBinding {
 		this.caching = caching;
 	}
 
-	public Map<String, MetaAttribute> getMetaAttributes() {
-		return metaAttributes;
-	}
-
-	public void setMetaAttributes(Map<String, MetaAttribute> metaAttributes) {
-		this.metaAttributes = metaAttributes;
+	public MetaAttributeContext getMetaAttributeContext() {
+		return metaAttributeContext;
 	}
 
 	public boolean isMutable() {

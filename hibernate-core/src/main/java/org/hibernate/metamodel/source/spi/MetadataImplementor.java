@@ -27,7 +27,6 @@ import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.metamodel.Metadata;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.FetchProfile;
-import org.hibernate.metamodel.binding.IdGenerator;
 import org.hibernate.metamodel.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.binding.TypeDef;
 import org.hibernate.metamodel.relational.AuxiliaryDatabaseObject;
@@ -38,14 +37,10 @@ import org.hibernate.type.TypeResolver;
 /**
  * @author Steve Ebersole
  */
-public interface MetadataImplementor extends Metadata {
+public interface MetadataImplementor extends Metadata, BindingContext {
 	public BasicServiceRegistry getServiceRegistry();
 
 	public Database getDatabase();
-
-	public Iterable<EntityBinding> getEntityBindings();
-
-	public EntityBinding getEntityBinding(String entityName);
 
 	public TypeResolver getTypeResolver();
 
@@ -59,15 +54,9 @@ public interface MetadataImplementor extends Metadata {
 
 	public void addTypeDefinition(TypeDef typeDef);
 
-	public Iterable<TypeDef> getTypeDefinitions();
-
 	public void addFilterDefinition(FilterDefinition filterDefinition);
 
-	public Iterable<FilterDefinition> getFilterDefinitions();
-
 	public void registerIdentifierGenerator(String name, String clazz);
-
-	public IdGenerator getIdGenerator(String name);
 
 	public void addAuxiliaryDatabaseObject(AuxiliaryDatabaseObject auxiliaryDatabaseObject);
 }

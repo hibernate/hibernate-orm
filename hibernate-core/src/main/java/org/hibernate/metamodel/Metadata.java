@@ -29,6 +29,10 @@ import javax.persistence.SharedCacheMode;
 import org.hibernate.SessionFactory;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.NamingStrategy;
+import org.hibernate.engine.spi.FilterDefinition;
+import org.hibernate.metamodel.binding.EntityBinding;
+import org.hibernate.metamodel.binding.IdGenerator;
+import org.hibernate.metamodel.binding.TypeDef;
 
 /**
  * @author Steve Ebersole
@@ -43,9 +47,21 @@ public interface Metadata {
 		public SharedCacheMode getSharedCacheMode();
 		public AccessType getDefaultAccessType();
 		public boolean useNewIdentifierGenerators();
+		public String getDefaultSchemaName();
+		public String getDefaultCatalogName();
 	}
 
 	public Options getOptions();
 
 	public SessionFactory buildSessionFactory();
+
+	public Iterable<EntityBinding> getEntityBindings();
+
+	public EntityBinding getEntityBinding(String entityName);
+
+	public Iterable<TypeDef> getTypeDefinitions();
+
+	public Iterable<FilterDefinition> getFilterDefinitions();
+
+	public IdGenerator getIdGenerator(String name);
 }

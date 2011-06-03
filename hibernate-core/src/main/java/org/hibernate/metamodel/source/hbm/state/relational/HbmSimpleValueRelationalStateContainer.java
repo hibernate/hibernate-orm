@@ -31,7 +31,6 @@ import java.util.Set;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.metamodel.binding.HibernateTypeDescriptor;
-import org.hibernate.metamodel.source.hbm.MappingDefaults;
 import org.hibernate.metamodel.relational.state.SimpleValueRelationalState;
 import org.hibernate.metamodel.relational.state.TupleRelationalState;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLColumnElement;
@@ -41,27 +40,33 @@ import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLCla
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLVersion;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLManyToOneElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLPropertyElement;
+import org.hibernate.metamodel.source.spi.BindingContext;
 
 /**
  * @author Gail Badner
  */
 public class HbmSimpleValueRelationalStateContainer implements TupleRelationalState {
-	private final MappingDefaults defaults;
+	private final BindingContext bindingContext;
 	private final Set<String> propertyUniqueKeys;
 	private final Set<String> propertyIndexes;
 	private final List<SimpleValueRelationalState> simpleValueStates;
 	private final HibernateTypeDescriptor hibernateTypeDescriptor = new HibernateTypeDescriptor();
 
+	public BindingContext getBindingContext() {
+		return bindingContext;
+	}
+
 	public NamingStrategy getNamingStrategy() {
-		return defaults.getNamingStrategy();
+		return getBindingContext().getNamingStrategy();
 	}
 
 	// TODO: remove duplication after Id, Discriminator, Version, Timestamp, and Property extend a common interface.
 
-	public HbmSimpleValueRelationalStateContainer(MappingDefaults defaults,
-												  boolean autoColumnCreation,
-												  XMLId id) {
-		this( defaults, id.getColumn() );
+	public HbmSimpleValueRelationalStateContainer(
+			BindingContext bindingContext,
+			boolean autoColumnCreation,
+			XMLId id) {
+		this( bindingContext, id.getColumn() );
 		if ( simpleValueStates.isEmpty() ) {
 			if ( id.getColumn() == null && ! autoColumnCreation ) {
 				throw new MappingException( "No columns to map and auto column creation is disabled." );
@@ -74,10 +79,11 @@ public class HbmSimpleValueRelationalStateContainer implements TupleRelationalSt
 		this.hibernateTypeDescriptor.setTypeName( id.getTypeAttribute() );
 	}
 
-	public HbmSimpleValueRelationalStateContainer(MappingDefaults defaults,
-												  boolean autoColumnCreation,
-												  XMLDiscriminator discriminator) {
-		this( defaults, discriminator.getFormula(), discriminator.getColumn() );
+	public HbmSimpleValueRelationalStateContainer(
+			BindingContext bindingContext,
+			boolean autoColumnCreation,
+			XMLDiscriminator discriminator) {
+		this( bindingContext, discriminator.getFormula(), discriminator.getColumn() );
 		if ( simpleValueStates.isEmpty() ) {
 			if ( discriminator.getColumn() == null && discriminator.getFormula() == null &&  ! autoColumnCreation ) {
 				throw new MappingException( "No column or formula to map and auto column creation is disabled." );
@@ -90,10 +96,11 @@ public class HbmSimpleValueRelationalStateContainer implements TupleRelationalSt
 		this.hibernateTypeDescriptor.setTypeName( discriminator.getType() == null ? "string" : discriminator.getType() );
 	}
 
-	public HbmSimpleValueRelationalStateContainer(MappingDefaults defaults,
-												  boolean autoColumnCreation,
-												  XMLVersion version) {
-		this( defaults, version.getColumn() );
+	public HbmSimpleValueRelationalStateContainer(
+			BindingContext bindingContext,
+			boolean autoColumnCreation,
+			XMLVersion version) {
+		this( bindingContext, version.getColumn() );
 		if ( simpleValueStates.isEmpty() ) {
 			if ( version.getColumn() == null && ! autoColumnCreation ) {
 				throw new MappingException( "No column or formula to map and auto column creation is disabled." );
@@ -106,10 +113,11 @@ public class HbmSimpleValueRelationalStateContainer implements TupleRelationalSt
 		this.hibernateTypeDescriptor.setTypeName( version.getType() == null ? "integer" : version.getType() );
 	}
 
-	public HbmSimpleValueRelationalStateContainer(MappingDefaults defaults,
-												  boolean autoColumnCreation,
-												  XMLTimestamp timestamp) {
-		this( defaults, null );
+	public HbmSimpleValueRelationalStateContainer(
+			BindingContext bindingContext,
+			boolean autoColumnCreation,
+			XMLTimestamp timestamp) {
+		this( bindingContext, null );
 		if ( simpleValueStates.isEmpty() ) {
 			if ( timestamp.getColumn() == null && ! autoColumnCreation ) {
 				throw new MappingException( "No columns to map and auto column creation is disabled." );
@@ -122,10 +130,11 @@ public class HbmSimpleValueRelationalStateContainer implements TupleRelationalSt
 		this.hibernateTypeDescriptor.setTypeName( "db".equals( timestamp.getSource() ) ? "dbtimestamp" : "timestamp" );
 	}
 
-	public HbmSimpleValueRelationalStateContainer(MappingDefaults defaults,
-												  boolean autoColumnCreation,
-												  XMLPropertyElement property) {
-		this( defaults, property.getColumnOrFormula() );
+	public HbmSimpleValueRelationalStateContainer(
+			BindingContext bindingContext,
+			boolean autoColumnCreation,
+			XMLPropertyElement property) {
+		this( bindingContext, property.getColumnOrFormula() );
 		if ( simpleValueStates.isEmpty() ) {
 			if ( property.getColumn() == null && property.getFormula() == null &&  ! autoColumnCreation ) {
 				throw new MappingException( "No column or formula to map and auto column creation is disabled." );
@@ -138,10 +147,11 @@ public class HbmSimpleValueRelationalStateContainer implements TupleRelationalSt
 		this.hibernateTypeDescriptor.setTypeName( property.getTypeAttribute() );
 	}
 
-	public HbmSimpleValueRelationalStateContainer(MappingDefaults defaults,
-												  boolean autoColumnCreation,
-												  XMLManyToOneElement manyToOne) {
-		this( defaults, manyToOne.getColumnOrFormula() );
+	public HbmSimpleValueRelationalStateContainer(
+			BindingContext bindingContext,
+			boolean autoColumnCreation,
+			XMLManyToOneElement manyToOne) {
+		this( bindingContext, manyToOne.getColumnOrFormula() );
 		if ( simpleValueStates.isEmpty() ) {
 			if ( manyToOne.getColumn() == null && manyToOne.getFormula() == null &&  ! autoColumnCreation ) {
 				throw new MappingException( "No column or formula to map and auto column creation is disabled." );
@@ -153,26 +163,29 @@ public class HbmSimpleValueRelationalStateContainer implements TupleRelationalSt
 		}
 	}
 
-	private HbmSimpleValueRelationalStateContainer(MappingDefaults defaults,
-												   String formulaElement,
-												   XMLColumnElement columnElement
-	) {
-		this( defaults,
-				formulaElement != null ?
-						Collections.singletonList( formulaElement ) :
-						columnElement != null ? Collections.singletonList( columnElement ) : Collections.<Object>emptyList()
+	private HbmSimpleValueRelationalStateContainer(
+			BindingContext bindingContext,
+			String formulaElement,
+			XMLColumnElement columnElement) {
+		this( bindingContext,
+				formulaElement != null
+						? Collections.singletonList( formulaElement )
+						: columnElement != null
+								? Collections.singletonList( columnElement )
+								: Collections.<Object>emptyList()
 		);
 	}
 
-	private HbmSimpleValueRelationalStateContainer(MappingDefaults defaults,
-												  List mappedColumnsOrFormulas) {
-		this.defaults = defaults;
+	private HbmSimpleValueRelationalStateContainer(
+			BindingContext bindingContext,
+			List mappedColumnsOrFormulas) {
+		this.bindingContext = bindingContext;
 		this.propertyUniqueKeys = Collections.emptySet();
 		this.propertyIndexes = Collections.emptySet();
 		simpleValueStates = new ArrayList<SimpleValueRelationalState>(
-							mappedColumnsOrFormulas == null || mappedColumnsOrFormulas.isEmpty() ?
-									1 :
-									mappedColumnsOrFormulas.size()
+							mappedColumnsOrFormulas == null || mappedColumnsOrFormulas.isEmpty()
+									? 1
+									: mappedColumnsOrFormulas.size()
 		);
 		if ( mappedColumnsOrFormulas != null && ! mappedColumnsOrFormulas.isEmpty() ) {
 			for ( Object mappedColumnOrFormula : mappedColumnsOrFormulas ) {

@@ -89,6 +89,8 @@ public class MetadataBuilderImpl implements MetadataBuilder {
 		private SharedCacheMode sharedCacheMode = SharedCacheMode.ENABLE_SELECTIVE;
 		private AccessType defaultCacheAccessType;
         private boolean useNewIdentifierGenerators;
+		private String defaultSchemaName;
+		private String defaultCatalogName;
 
 		public OptionsImpl(BasicServiceRegistry serviceRegistry) {
 			ConfigurationService configService = serviceRegistry.getService( ConfigurationService.class );
@@ -113,6 +115,28 @@ public class MetadataBuilderImpl implements MetadataBuilder {
 						}
 					},
 					false
+			);
+
+			defaultSchemaName = configService.getSetting(
+					AvailableSettings.DEFAULT_SCHEMA,
+					new ConfigurationService.Converter<String>() {
+						@Override
+						public String convert(Object value) {
+							return value.toString();
+						}
+					},
+					null
+			);
+
+			defaultCatalogName = configService.getSetting(
+					AvailableSettings.DEFAULT_CATALOG,
+					new ConfigurationService.Converter<String>() {
+						@Override
+						public String convert(Object value) {
+							return value.toString();
+						}
+					},
+					null
 			);
 		}
 
@@ -141,5 +165,15 @@ public class MetadataBuilderImpl implements MetadataBuilder {
         public boolean useNewIdentifierGenerators() {
             return useNewIdentifierGenerators;
         }
-    }
+
+		@Override
+		public String getDefaultSchemaName() {
+			return defaultSchemaName;
+		}
+
+		@Override
+		public String getDefaultCatalogName() {
+			return defaultCatalogName;
+		}
+	}
 }

@@ -37,6 +37,7 @@ import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLMetaElement;
 import org.hibernate.metamodel.source.hbm.util.MappingHelper;
+import org.hibernate.metamodel.source.spi.MetaAttributeContext;
 
 /**
  * TODO : javadoc
@@ -127,5 +128,35 @@ public class HbmHelper {
 				access,
 				isEmbedded ? "embedded" : defaultAccess
 		);
+	}
+
+	public static MetaAttributeContext extractMetaAttributeContext(
+			List<XMLMetaElement> metaElementList,
+			MetaAttributeContext parentContext) {
+		return extractMetaAttributeContext( metaElementList, false, parentContext );
+	}
+
+	public static MetaAttributeContext extractMetaAttributeContext(
+			List<XMLMetaElement> metaElementList,
+			boolean onlyInheritable,
+			MetaAttributeContext parentContext) {
+		final MetaAttributeContext subContext = new MetaAttributeContext( parentContext );
+
+		for ( XMLMetaElement metaElement : metaElementList ) {
+			if ( onlyInheritable & !metaElement.isInherit() ) {
+				continue;
+			}
+
+			final String name = metaElement.getAttribute();
+			final MetaAttribute inheritedMetaAttribute = parentContext.getMetaAttribute( name );
+			MetaAttribute metaAttribute = subContext.getLocalMetaAttribute( name );
+			if ( metaAttribute == null || metaAttribute == inheritedMetaAttribute ) {
+				metaAttribute = new MetaAttribute( name );
+				subContext.add( metaAttribute );
+			}
+			metaAttribute.addValue( metaElement.getValue() );
+		}
+
+		return subContext;
 	}
 }

@@ -27,13 +27,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.MappingException;
 import org.hibernate.metamodel.binding.state.AttributeBindingState;
 import org.hibernate.metamodel.domain.Attribute;
-import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.metamodel.relational.Column;
 import org.hibernate.metamodel.relational.DerivedValue;
 import org.hibernate.metamodel.relational.SimpleValue;
@@ -43,6 +41,7 @@ import org.hibernate.metamodel.relational.state.SimpleValueRelationalState;
 import org.hibernate.metamodel.relational.state.TupleRelationalState;
 import org.hibernate.metamodel.relational.state.ValueCreator;
 import org.hibernate.metamodel.relational.state.ValueRelationalState;
+import org.hibernate.metamodel.source.spi.MetaAttributeContext;
 
 /**
  * TODO : javadoc
@@ -66,7 +65,7 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 	// DOM4J specific...
 	private String nodeName;
 
-	private Map<String, MetaAttribute> metaAttributes;
+	private MetaAttributeContext metaAttributeContext;
 
 	protected AbstractAttributeBinding(EntityBinding entityBinding) {
 		this.entityBinding = entityBinding;
@@ -81,7 +80,7 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 		cascadeTypes = state.getCascadeTypes();
 		optimisticLockable = state.isOptimisticLockable();
 		nodeName = state.getNodeName();
-		metaAttributes = state.getMetaAttributes();
+		metaAttributeContext = state.getMetaAttributeContext();
 	}
 
 	@Override
@@ -158,8 +157,8 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 	}
 
 	@Override
-	public Map<String, MetaAttribute> getMetaAttributes() {
-		return metaAttributes;
+	public MetaAttributeContext getMetaAttributeContext() {
+		return metaAttributeContext;
 	}
 
 	@Override

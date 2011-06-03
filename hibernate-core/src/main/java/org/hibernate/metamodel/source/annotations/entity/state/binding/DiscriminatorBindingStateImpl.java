@@ -31,7 +31,8 @@ import org.hibernate.metamodel.source.annotations.entity.SimpleAttribute;
  * @author Gail Badner
  */
 public class DiscriminatorBindingStateImpl
-		extends AttributeBindingStateImpl implements DiscriminatorBindingState {
+		extends AttributeBindingStateImpl
+		implements DiscriminatorBindingState {
 	private final String discriminatorValue;
 	private final boolean isForced;
 	private final boolean isInserted;

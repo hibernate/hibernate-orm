@@ -142,7 +142,7 @@ class RootEntityBinder extends AbstractEntityBinder {
 		SimpleAttributeBindingState bindingState = new HbmSimpleAttributeBindingState(
 				entityBinding.getEntity().getPojoEntitySpecifics().getClassName(),
 				getHibernateMappingBinder(),
-				entityBinding.getMetaAttributes(),
+				entityBinding.getMetaAttributeContext(),
 				id
 		);
 		// boolean (true here) indicates that by default column names should be guessed
@@ -289,7 +289,7 @@ class RootEntityBinder extends AbstractEntityBinder {
 				new HbmSimpleAttributeBindingState(
 						entityBinding.getEntity().getPojoEntitySpecifics().getClassName(),
 						getHibernateMappingBinder(),
-						entityBinding.getMetaAttributes(),
+						entityBinding.getMetaAttributeContext(),
 						version
 				);
 
@@ -316,7 +316,7 @@ class RootEntityBinder extends AbstractEntityBinder {
 				new HbmSimpleAttributeBindingState(
 						entityBinding.getEntity().getPojoEntitySpecifics().getClassName(),
 						getHibernateMappingBinder(),
-						entityBinding.getMetaAttributes(),
+						entityBinding.getMetaAttributeContext(),
 						timestamp
 				);
 

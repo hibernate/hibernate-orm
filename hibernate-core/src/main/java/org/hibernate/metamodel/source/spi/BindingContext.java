@@ -21,37 +21,22 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.hbm;
-
-import java.util.Map;
+package org.hibernate.metamodel.source.spi;
 
 import org.hibernate.cfg.NamingStrategy;
-import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.service.ServiceRegistry;
 
 /**
- * @author Gail Badner
+ * @author Steve Ebersole
  */
-public interface MappingDefaults {
-	Map<String, MetaAttribute> getMappingMetas();
+public interface BindingContext {
+	public ServiceRegistry getServiceRegistry();
 
-	String getPackageName();
+	public NamingStrategy getNamingStrategy();
 
-	String getDefaultSchemaName();
+	public MappingDefaults getMappingDefaults();
 
-	String getDefaultCatalogName();
+	public MetaAttributeContext getMetaAttributeContext();
 
-	String getDefaultIdColumnName();
-
-	String getDefaultDiscriminatorColumnName();
-
-	String getDefaultCascade();
-
-	String getDefaultAccess();
-
-	boolean isDefaultLazy();
-
-	ServiceRegistry getServiceRegistry();
-
-	NamingStrategy getNamingStrategy();
+	public MetadataImplementor getMetadataImplementor();
 }

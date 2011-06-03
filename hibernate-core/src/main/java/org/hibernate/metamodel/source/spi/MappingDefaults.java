@@ -21,35 +21,38 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.hbm.state.relational;
+package org.hibernate.metamodel.source.spi;
 
-import org.hibernate.metamodel.relational.state.ManyToOneRelationalState;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLManyToOneElement;
-import org.hibernate.metamodel.source.spi.BindingContext;
+import java.util.Map;
+
+import org.hibernate.cfg.NamingStrategy;
+import org.hibernate.metamodel.domain.MetaAttribute;
+import org.hibernate.service.ServiceRegistry;
 
 /**
  * @author Gail Badner
+ * @author Steve Ebersole
  */
-public class HbmManyToOneRelationalStateContainer extends HbmSimpleValueRelationalStateContainer
-implements ManyToOneRelationalState {
+public interface MappingDefaults {
 
-	private final boolean isLogicalOneToOne;
-	private final String foreignKeyName;
+	String getPackageName();
 
-	public HbmManyToOneRelationalStateContainer(
-			BindingContext bindingContext,
-			boolean autoColumnCreation,
-			XMLManyToOneElement manyToOne ) {
-		super( bindingContext, autoColumnCreation, manyToOne );
-		this.isLogicalOneToOne = manyToOne.isUnique();
-		this.foreignKeyName = manyToOne.getForeignKey();
-	}
+	String getDefaultSchemaName();
 
-	public boolean isLogicalOneToOne() {
-		return isLogicalOneToOne;
-	}
+	String getDefaultCatalogName();
 
-	public String getForeignKeyName() {
-		return foreignKeyName;
-	}
+	String getDefaultIdColumnName();
+
+	String getDefaultDiscriminatorColumnName();
+
+	String getDefaultCascade();
+
+	String getDefaultAccess();
+
+	boolean isDefaultLazy();
+
+
+	// Not happy about these here ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	Map<String, MetaAttribute> getMappingMetas();
 }

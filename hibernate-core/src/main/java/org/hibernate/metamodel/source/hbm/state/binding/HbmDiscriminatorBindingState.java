@@ -26,16 +26,17 @@ package org.hibernate.metamodel.source.hbm.state.binding;
 import java.util.Set;
 
 import org.hibernate.metamodel.binding.CascadeType;
-import org.hibernate.metamodel.source.hbm.MappingDefaults;
 import org.hibernate.metamodel.binding.state.DiscriminatorBindingState;
 import org.hibernate.metamodel.source.hbm.util.MappingHelper;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLDiscriminator;
+import org.hibernate.metamodel.source.spi.BindingContext;
 
 /**
  * @author Gail Badner
  */
-public class HbmDiscriminatorBindingState extends AbstractHbmAttributeBindingState
+public class HbmDiscriminatorBindingState
+		extends AbstractHbmAttributeBindingState
 		implements DiscriminatorBindingState {
 	private final String discriminatorValue;
 	private final boolean isForced;
@@ -45,12 +46,16 @@ public class HbmDiscriminatorBindingState extends AbstractHbmAttributeBindingSta
 	public HbmDiscriminatorBindingState(
 			String entityName,
 			String ownerClassName,
-			MappingDefaults defaults,
+			BindingContext bindingContext,
 			XMLHibernateMapping.XMLClass xmlEntityClazz) {
-		// Discriminator.getName() is not defined, so the attribute will always be
-		// defaults.getDefaultDescriminatorColumnName()
 		super(
-				ownerClassName, defaults.getDefaultDiscriminatorColumnName(), defaults, null, null, null, true
+				ownerClassName,
+				bindingContext.getMappingDefaults().getDefaultDiscriminatorColumnName(),
+				bindingContext,
+				null,
+				null,
+				null,
+				true
 		);
 		XMLDiscriminator discriminator = xmlEntityClazz.getDiscriminator();
 		this.discriminatorValue =  MappingHelper.getStringValue(

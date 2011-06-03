@@ -92,10 +92,10 @@ abstract class AbstractEntityBinder {
 		this.hibernateMappingBinder = hibernateMappingBinder;
 		this.schemaName = new Schema.Name(
 				( entityClazz.getSchema() == null ?
-						hibernateMappingBinder.getDefaultSchemaName() :
+						hibernateMappingBinder.getMappingDefaults().getDefaultSchemaName() :
 						entityClazz.getSchema() ),
 				( entityClazz.getCatalog() == null ?
-						hibernateMappingBinder.getDefaultCatalogName() :
+						hibernateMappingBinder.getMappingDefaults().getDefaultCatalogName() :
 						entityClazz.getCatalog() )
 		);
 	}
@@ -145,7 +145,7 @@ abstract class AbstractEntityBinder {
 	}
 
 	protected String getDefaultAccess() {
-		return hibernateMappingBinder.getDefaultAccess();
+		return hibernateMappingBinder.getMappingDefaults().getDefaultAccess();
 	}
 
 	private void bindPojoRepresentation(XMLHibernateMapping.XMLClass entityClazz,
@@ -439,12 +439,13 @@ PrimitiveArray
 
 	}
 
-	protected SimpleAttributeBinding bindProperty(XMLPropertyElement property,
-									EntityBinding entityBinding) {
+	protected SimpleAttributeBinding bindProperty(
+			XMLPropertyElement property,
+			EntityBinding entityBinding) {
 		SimpleAttributeBindingState bindingState = new HbmSimpleAttributeBindingState(
 				entityBinding.getEntity().getPojoEntitySpecifics().getClassName(),
 				hibernateMappingBinder,
-				entityBinding.getMetaAttributes(),
+				entityBinding.getMetaAttributeContext(),
 				property
 		);
 
@@ -483,8 +484,8 @@ PrimitiveArray
 				new HbmPluralAttributeBindingState(
 						entityBinding.getEntity().getPojoEntitySpecifics().getClassName(),
 						hibernateMappingBinder,
-						collection,
-						entityBinding.getMetaAttributes()
+						entityBinding.getMetaAttributeContext(),
+						collection
 				);
 
 		BagBinding collectionBinding = entityBinding.makeBagAttributeBinding(
@@ -523,7 +524,7 @@ PrimitiveArray
 				new HbmManyToOneAttributeBindingState(
 						entityBinding.getEntity().getPojoEntitySpecifics().getClassName(),
 						hibernateMappingBinder,
-						entityBinding.getMetaAttributes(),
+						entityBinding.getMetaAttributeContext(),
 						manyToOne
 				);
 

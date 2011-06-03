@@ -29,8 +29,8 @@ import java.util.Set;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.binding.CascadeType;
 import org.hibernate.metamodel.binding.state.SimpleAttributeBindingState;
-import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.metamodel.source.annotations.entity.SimpleAttribute;
+import org.hibernate.metamodel.source.spi.MetaAttributeContext;
 
 /**
  * Implementation of the attribute binding state via annotation configuration.
@@ -117,7 +117,7 @@ public class AttributeBindingStateImpl implements SimpleAttributeBindingState {
 	}
 
 	@Override
-	public Map<String, MetaAttribute> getMetaAttributes() {
+	public MetaAttributeContext getMetaAttributeContext() {
 		return null;
 	}
 }

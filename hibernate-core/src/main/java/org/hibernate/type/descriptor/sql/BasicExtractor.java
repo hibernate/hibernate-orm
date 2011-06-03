@@ -67,7 +67,9 @@ public abstract class BasicExtractor<J> implements ValueExtractor<J> {
 			return null;
 		}
 		else {
-			log.trace( "found [{}] as column [{}]", getJavaDescriptor().extractLoggableRepresentation( value ), name );
+			if ( log.isTraceEnabled() ) {
+				log.trace( "found [{}] as column [{}]", getJavaDescriptor().extractLoggableRepresentation( value ), name );
+			}
 			return value;
 		}
 	}

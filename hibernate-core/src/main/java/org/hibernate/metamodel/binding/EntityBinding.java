@@ -56,6 +56,8 @@ import org.hibernate.metamodel.source.spi.MetaAttributeContext;
  */
 public class EntityBinding {
 	private final EntityIdentifier entityIdentifier = new EntityIdentifier( this );
+	private final boolean isRoot;
+
 	private InheritanceType entityInheritanceType;
 	private EntityDiscriminator entityDiscriminator;
 	private SimpleAttributeBinding versionBinding;
@@ -93,6 +95,10 @@ public class EntityBinding {
 	private CustomSQL customDelete;
 
 	private List<String> synchronizedTableNames;
+
+	public EntityBinding(boolean isRoot) {
+		this.isRoot = isRoot;
+	}
 
 	// TODO: change to intialize from Doimain
 	public void fromHbmXml(BindingContext bindingContext, XMLClass entityClazz, Entity entity) {
@@ -175,6 +181,10 @@ public class EntityBinding {
 		}
 
 		isAbstract = entityClazz.isAbstract();
+	}
+
+	public boolean isRoot() {
+		return isRoot;
 	}
 
 	public Entity getEntity() {

@@ -123,6 +123,7 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 		assertNotNull( entityBinding );
 		assertNotNull( entityBinding.getEntityIdentifier() );
 		assertNotNull( entityBinding.getEntityIdentifier().getValueBinding() );
+		assertTrue( entityBinding.isRoot() );
 
 		AttributeBinding idAttributeBinding = entityBinding.getAttributeBinding( "id" );
 		assertNotNull( idAttributeBinding );

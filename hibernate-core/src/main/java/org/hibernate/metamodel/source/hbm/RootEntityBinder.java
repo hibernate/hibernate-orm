@@ -60,7 +60,7 @@ class RootEntityBinder extends AbstractEntityBinder {
 			throw new MappingException( "Unable to determine entity name" );
 		}
 
-		EntityBinding entityBinding = new EntityBinding();
+		EntityBinding entityBinding = new EntityBinding( true );
 		basicEntityBinding( xmlClazz, entityBinding, null );
 		basicTableBinding( xmlClazz, entityBinding );
 

@@ -32,7 +32,9 @@ import org.junit.Test;
 import org.hibernate.metamodel.binding.EntityBinding;
 
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNull;
+import static junit.framework.Assert.assertTrue;
 
 /**
  * @author Hardy Ferentschik
@@ -42,6 +44,7 @@ public class InheritanceTypeTest extends BaseAnnotationBindingTestCase {
 	public void testNoInheritance() {
 		buildMetadataSources( SingleEntity.class );
 		EntityBinding entityBinding = getEntityBinding( SingleEntity.class );
+		assertTrue( entityBinding.isRoot() );
 		assertNull( entityBinding.getEntityDiscriminator() );
 	}
 
@@ -51,6 +54,7 @@ public class InheritanceTypeTest extends BaseAnnotationBindingTestCase {
 				RootOfSingleTableInheritance.class, SubclassOfSingleTableInheritance.class
 		);
 		EntityBinding entityBinding = getEntityBinding( SubclassOfSingleTableInheritance.class );
+		assertFalse( entityBinding.isRoot() );
 		assertEquals( "Wrong discriminator value", "foo", entityBinding.getDiscriminatorValue() );
 	}
 

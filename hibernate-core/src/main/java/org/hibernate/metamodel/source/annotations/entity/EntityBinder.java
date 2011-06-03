@@ -85,7 +85,7 @@ public class EntityBinder {
 	}
 
 	public void bind() {
-		EntityBinding entityBinding = new EntityBinding();
+		EntityBinding entityBinding = new EntityBinding( configuredClass.isRoot() );
 
 		bindJpaEntityAnnotation( entityBinding );
 		bindHibernateEntityAnnotation( entityBinding ); // optional hibernate specific @org.hibernate.annotations.Entity

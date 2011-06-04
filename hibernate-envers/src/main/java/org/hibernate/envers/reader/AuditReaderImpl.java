@@ -25,6 +25,7 @@ package org.hibernate.envers.reader;
 
 import static org.hibernate.envers.tools.ArgumentsTools.checkNotNull;
 import static org.hibernate.envers.tools.ArgumentsTools.checkPositive;
+import static org.hibernate.envers.tools.Tools.getTargetClassIfProxied;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -89,13 +90,14 @@ public class AuditReaderImpl implements AuditReaderImplementor {
 
     public <T> T find(Class<T> cls, Object primaryKey, Number revision) throws
             IllegalArgumentException, NotAuditedException, IllegalStateException {
-    	
+    	cls = getTargetClassIfProxied(cls);
     	return this.find(cls, cls.getName(), primaryKey, revision);
     }
     
     @SuppressWarnings({"unchecked"})
     public <T> T find(Class<T> cls, String entityName, Object primaryKey, Number revision) throws
             IllegalArgumentException, NotAuditedException, IllegalStateException {
+        cls = getTargetClassIfProxied(cls);
         checkNotNull(cls, "Entity class");
         checkNotNull(entityName, "Entity name");
         checkNotNull(primaryKey, "Primary key");
@@ -127,7 +129,7 @@ public class AuditReaderImpl implements AuditReaderImplementor {
 
     public List<Number> getRevisions(Class<?> cls, Object primaryKey)
             throws IllegalArgumentException, NotAuditedException, IllegalStateException {
-    	
+    	cls = getTargetClassIfProxied(cls);
     	return this.getRevisions(cls, cls.getName(), primaryKey);
     }
 
@@ -135,6 +137,7 @@ public class AuditReaderImpl implements AuditReaderImplementor {
     public List<Number> getRevisions(Class<?> cls, String entityName, Object primaryKey)
             throws IllegalArgumentException, NotAuditedException, IllegalStateException {
         // todo: if a class is not versioned from the beginning, there's a missing ADD rev - what then?
+        cls = getTargetClassIfProxied(cls);
         checkNotNull(cls, "Entity class");
         checkNotNull(entityName, "Entity name");
         checkNotNull(primaryKey, "Primary key");
@@ -257,6 +260,7 @@ public class AuditReaderImpl implements AuditReaderImplementor {
     }
 	
     public boolean isEntityClassAudited(Class<?> entityClass) {
+        entityClass = getTargetClassIfProxied(entityClass);
     	return this.isEntityNameAudited(entityClass.getName());
     }
 

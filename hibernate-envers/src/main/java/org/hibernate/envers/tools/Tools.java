@@ -27,12 +27,14 @@ import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.Session;
+import org.hibernate.proxy.ProxyFactory;
 
 import java.util.*;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  * @author Hern�n Chanfreau
+ * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public class Tools {
     public static <K,V> Map<K,V> newHashMap() {
@@ -87,6 +89,23 @@ public class Tools {
 		finally {
             tempSession.close();
         }
+    }
+
+    /**
+     * @param clazz Class wrapped with a proxy or not.
+     * @param <T> Class type.
+     * @return Returns target class in case it has been wrapped with a proxy. If {@code null} reference is passed,
+     *         method returns {@code null}. 
+     */
+    @SuppressWarnings({"unchecked"})
+    public static <T> Class<T> getTargetClassIfProxied(Class<T> clazz) {
+        if (clazz == null) {
+            return null;
+        } else if (HibernateProxy.class.isAssignableFrom(clazz)) {
+            // Get the source class of Javassist proxy instance.
+            return (Class<T>) clazz.getSuperclass();
+        }
+        return clazz;
     }
 
     public static boolean objectsEqual(Object obj1, Object obj2) {

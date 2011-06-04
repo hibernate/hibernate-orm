@@ -29,6 +29,7 @@ import org.hibernate.envers.query.impl.RevisionsOfEntityQuery;
 import org.hibernate.envers.reader.AuditReaderImplementor;
 import static org.hibernate.envers.tools.ArgumentsTools.checkNotNull;
 import static org.hibernate.envers.tools.ArgumentsTools.checkPositive;
+import static org.hibernate.envers.tools.Tools.getTargetClassIfProxied;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -55,6 +56,7 @@ public class AuditQueryCreator {
     public AuditQuery forEntitiesAtRevision(Class<?> c, Number revision) {
         checkNotNull(revision, "Entity revision");
         checkPositive(revision, "Entity revision");
+        c = getTargetClassIfProxied(c);
         return new EntitiesAtRevisionQuery(auditCfg, auditReaderImplementor, c, revision);
     }
     
@@ -71,8 +73,9 @@ public class AuditQueryCreator {
     public AuditQuery forEntitiesAtRevision(Class<?> c, String entityName, Number revision) {
         checkNotNull(revision, "Entity revision");
         checkPositive(revision, "Entity revision");
+        c = getTargetClassIfProxied(c);
         return new EntitiesAtRevisionQuery(auditCfg, auditReaderImplementor, c, entityName, revision);
-    }    
+    }
 
     /**
      * Creates a query, which selects the revisions, at which the given entity was modified.
@@ -95,6 +98,7 @@ public class AuditQueryCreator {
      * unless an order or projection is added.
      */
     public AuditQuery forRevisionsOfEntity(Class<?> c, boolean selectEntitiesOnly, boolean selectDeletedEntities) {
+        c = getTargetClassIfProxied(c);
         return new RevisionsOfEntityQuery(auditCfg, auditReaderImplementor, c, selectEntitiesOnly,selectDeletedEntities);
     }
     
@@ -120,6 +124,7 @@ public class AuditQueryCreator {
      * unless an order or projection is added.
      */
     public AuditQuery forRevisionsOfEntity(Class<?> c, String entityName, boolean selectEntitiesOnly, boolean selectDeletedEntities) {
+        c = getTargetClassIfProxied(c);
         return new RevisionsOfEntityQuery(auditCfg, auditReaderImplementor, c, entityName, selectEntitiesOnly,selectDeletedEntities);
     }
     

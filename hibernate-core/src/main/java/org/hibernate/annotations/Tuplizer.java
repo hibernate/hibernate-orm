@@ -28,6 +28,8 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.Retention;
 
+import org.hibernate.EntityMode;
+
 /**
  * Define a tuplizer for an entity or a component
  * @author Emmanuel Bernard
@@ -37,6 +39,11 @@ import java.lang.annotation.Retention;
 public @interface Tuplizer {
 	/** tuplizer implementation */
 	Class impl();
-	/** either pojo, dynamic-map or dom4j� */
+	/**
+	 * either pojo, dynamic-map or dom4j
+	 * @deprecated should use #entityModeType instead
+	 */
+	@Deprecated
 	String entityMode() default "pojo";
+	EntityMode entityModeType() default EntityMode.POJO;
 }

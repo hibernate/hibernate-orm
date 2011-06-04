@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc..
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -23,78 +23,58 @@
  *
  */
 package org.hibernate;
-import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Controls how the session interacts with the second-level
  * cache and query cache.
  *
- * @see Session#setCacheMode(CacheMode)
  * @author Gavin King
+ * @author Strong Liu
+ * @see Session#setCacheMode(CacheMode)
  */
-public final class CacheMode implements Serializable {
-	private final String name;
-	private final boolean isPutEnabled;
-	private final boolean isGetEnabled;
-	private static final Map INSTANCES = new HashMap();
+public enum CacheMode {
 
-	private CacheMode(String name, boolean isPutEnabled, boolean isGetEnabled) {
-		this.name=name;
-		this.isPutEnabled = isPutEnabled;
-		this.isGetEnabled = isGetEnabled;
-	}
-	public String toString() {
-		return name;
-	}
-	public boolean isPutEnabled() {
-		return isPutEnabled;
-	}
-	public boolean isGetEnabled() {
-		return isGetEnabled;
-	}
 	/**
 	 * The session may read items from the cache, and add items to the cache
 	 */
-	public static final CacheMode NORMAL = new CacheMode("NORMAL", true, true);
+	NORMAL( true, true),
 	/**
 	 * The session will never interact with the cache, except to invalidate
 	 * cache items when updates occur
 	 */
-	public static final CacheMode IGNORE = new CacheMode("IGNORE", false, false);
+	IGNORE( false, false),
 	/**
-	 * The session may read items from the cache, but will not add items, 
+	 * The session may read items from the cache, but will not add items,
 	 * except to invalidate items when updates occur
 	 */
-	public static final CacheMode GET = new CacheMode("GET", false, true);
+	GET( false, true),
 	/**
 	 * The session will never read items from the cache, but will add items
 	 * to the cache as it reads them from the database.
 	 */
-	public static final CacheMode PUT = new CacheMode("PUT", true, false);
-	
+	PUT( true, false),
 	/**
 	 * The session will never read items from the cache, but will add items
 	 * to the cache as it reads them from the database. In this mode, the
 	 * effect of <tt>hibernate.cache.use_minimal_puts</tt> is bypassed, in
 	 * order to <em>force</em> a cache refresh
 	 */
-	public static final CacheMode REFRESH = new CacheMode("REFRESH", true, false);
-	
-	static {
-		INSTANCES.put( NORMAL.name, NORMAL );
-		INSTANCES.put( IGNORE.name, IGNORE );
-		INSTANCES.put( GET.name, GET );
-		INSTANCES.put( PUT.name, PUT );
-		INSTANCES.put( REFRESH.name, REFRESH );
+	REFRESH( true, false);
+
+
+	private final boolean isPutEnabled;
+	private final boolean isGetEnabled;
+
+	CacheMode( boolean isPutEnabled, boolean isGetEnabled) {
+		this.isPutEnabled = isPutEnabled;
+		this.isGetEnabled = isGetEnabled;
 	}
 
-	private Object readResolve() {
-		return INSTANCES.get( name );
+	public boolean isGetEnabled() {
+		return isGetEnabled;
 	}
 
-	public static CacheMode parse(String name) {
-		return ( CacheMode ) INSTANCES.get( name );
+	public boolean isPutEnabled() {
+		return isPutEnabled;
 	}
 }

@@ -111,7 +111,7 @@ public class CustomPersister implements EntityPersister {
 	}
 
 	public Boolean isTransient(Object object, SessionImplementor session) {
-		return new Boolean( ( (Custom) object ).id==null );
+		return ( (Custom) object ).id==null;
 	}
 
 	public Object[] getPropertyValuesToInsert(Object object, Map mergeMap, SessionImplementor session)

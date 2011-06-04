@@ -144,7 +144,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 				if ( hasQueuedOperations() ) {
 					session.flush();
 				}
-				return new Boolean( persister.indexExists( entry.getLoadedKey(), index, session ) );
+				return persister.indexExists( entry.getLoadedKey(), index, session );
 			}
 		}
 		read();
@@ -161,7 +161,7 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 				if ( hasQueuedOperations() ) {
 					session.flush();
 				}
-				return new Boolean( persister.elementExists( entry.getLoadedKey(), element, session ) );
+				return persister.elementExists( entry.getLoadedKey(), element, session );
 			}
 		}
 		read();

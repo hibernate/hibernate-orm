@@ -185,9 +185,9 @@ public class WhereParser implements Parser {
 	// The following variables are stacks that keep information about each subexpression
 	// in the list of nested subexpressions we are currently processing.
 
-	private LinkedList nots = new LinkedList();           //were an odd or even number of NOTs encountered
+	private LinkedList<Boolean> nots = new LinkedList<Boolean>();           //were an odd or even number of NOTs encountered
 	private LinkedList joins = new LinkedList();          //the join string built up by compound paths inside this expression
-	private LinkedList booleanTests = new LinkedList();   //a flag indicating if the subexpression is known to be boolean
+	private LinkedList<Boolean> booleanTests = new LinkedList<Boolean>();   //a flag indicating if the subexpression is known to be boolean
 
 	private String getElementName(PathExpressionParser.CollectionElement element, QueryTranslatorImpl q) throws QueryException {
 		String name;
@@ -275,7 +275,7 @@ public class WhereParser implements Parser {
 		}
 
 		if ( lcToken.equals( "not" ) ) {
-			nots.addLast( new Boolean( !( ( Boolean ) nots.removeLast() ).booleanValue() ) );
+			nots.addLast(  !(  nots.removeLast() ) );
 			negated = !negated;
 			return; //NOTE: early return
 		}
@@ -309,7 +309,7 @@ public class WhereParser implements Parser {
 	}
 
 	private void closeExpression(QueryTranslatorImpl q, String lcToken) {
-		if ( ( ( Boolean ) booleanTests.removeLast() ).booleanValue() ) { //it was a boolean expression
+		if ( booleanTests.removeLast() ) { //it was a boolean expression
 
 			if ( booleanTests.size() > 0 ) {
 				// the next one up must also be
@@ -326,7 +326,7 @@ public class WhereParser implements Parser {
 			( ( StringBuffer ) joins.getLast() ).append( join.toString() );
 		}
 
-		if ( ( ( Boolean ) nots.removeLast() ).booleanValue() ) negated = !negated;
+		if ( nots.removeLast() ) negated = !negated;
 
 		if ( !")".equals( lcToken ) ) appendToken( q, ")" );
 	}

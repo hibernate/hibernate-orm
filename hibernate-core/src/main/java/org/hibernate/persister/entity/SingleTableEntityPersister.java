@@ -235,11 +235,11 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		boolean hasDeferred = false;
 		ArrayList subclassTables = new ArrayList();
 		ArrayList joinKeyColumns = new ArrayList();
-		ArrayList isConcretes = new ArrayList();
-		ArrayList isDeferreds = new ArrayList();
-		ArrayList isInverses = new ArrayList();
-		ArrayList isNullables = new ArrayList();
-		ArrayList isLazies = new ArrayList();
+		ArrayList<Boolean> isConcretes = new ArrayList<Boolean>();
+		ArrayList<Boolean> isDeferreds = new ArrayList<Boolean>();
+		ArrayList<Boolean> isInverses = new ArrayList<Boolean>();
+		ArrayList<Boolean> isNullables = new ArrayList<Boolean>();
+		ArrayList<Boolean> isLazies = new ArrayList<Boolean>();
 		subclassTables.add( qualifiedTableNames[0] );
 		joinKeyColumns.add( getIdentifierColumnNames() );
 		isConcretes.add(Boolean.TRUE);
@@ -250,11 +250,11 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		joinIter = persistentClass.getSubclassJoinClosureIterator();
 		while ( joinIter.hasNext() ) {
 			Join join = (Join) joinIter.next();
-			isConcretes.add( new Boolean( persistentClass.isClassOrSuperclassJoin(join) ) );
-			isDeferreds.add( new Boolean( join.isSequentialSelect() ) );
-			isInverses.add( new Boolean( join.isInverse() ) );
-			isNullables.add( new Boolean( join.isOptional() ) );
-			isLazies.add( new Boolean( lazyAvailable && join.isLazy() ) );
+			isConcretes.add( persistentClass.isClassOrSuperclassJoin(join) );
+			isDeferreds.add( join.isSequentialSelect() );
+			isInverses.add( join.isInverse() );
+			isNullables.add( join.isOptional() );
+			isLazies.add( lazyAvailable && join.isLazy() );
 			if ( join.isSequentialSelect() && !persistentClass.isClassOrSuperclassJoin(join) ) hasDeferred = true;
 			subclassTables.add( join.getTable().getQualifiedName( 
 					factory.getDialect(), 
@@ -368,7 +368,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		iter = persistentClass.getSubclassPropertyClosureIterator();
 		while ( iter.hasNext() ) {
 			Property prop = (Property) iter.next();
-			Integer join = new Integer( persistentClass.getJoinNumber(prop) );
+			Integer join = persistentClass.getJoinNumber(prop);
 			propertyJoinNumbers.add(join);
 
 			//propertyTableNumbersByName.put( prop.getName(), join );

@@ -173,7 +173,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			keyColumns.add(keyCols);
 			keyColumnReaders.add(keyColReaders);
 			keyColumnReaderTemplates.add(keyColReaderTemplates);
-			cascadeDeletes.add( new Boolean( key.isCascadeDeleteEnabled() && factory.getDialect().supportsCascadeDelete() ) );
+			cascadeDeletes.add( key.isCascadeDeleteEnabled() && factory.getDialect().supportsCascadeDelete() );
 		}
 		
 		//Span of the tables directly mapped by this entity and super-classes, if any
@@ -210,7 +210,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			keyColumns.add(keyCols);
 			keyColumnReaders.add(keyColReaders);
 			keyColumnReaderTemplates.add(keyColReaderTemplates);
-			cascadeDeletes.add( new Boolean( key.isCascadeDeleteEnabled() && factory.getDialect().supportsCascadeDelete() ) );
+			cascadeDeletes.add( key.isCascadeDeleteEnabled() && factory.getDialect().supportsCascadeDelete() );
 		}
 		
 		naturalOrderTableNames = ArrayHelper.toStringArray( tables );
@@ -228,7 +228,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		titer = persistentClass.getSubclassTableClosureIterator();
 		while ( titer.hasNext() ) {
 			Table tab = (Table) titer.next();
-			isConcretes.add( new Boolean( persistentClass.isClassOrSuperclassTable(tab) ) );
+			isConcretes.add( persistentClass.isClassOrSuperclassTable(tab) );
 			isDeferreds.add(Boolean.FALSE);
 			isLazies.add(Boolean.FALSE);
 			String tabname = tab.getQualifiedName(
@@ -252,9 +252,9 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			
 			Table tab = join.getTable();
 			 
-			isConcretes.add( new Boolean( persistentClass.isClassOrSuperclassTable(tab) ) );
-			isDeferreds.add( new Boolean( join.isSequentialSelect() ) );
-			isLazies.add(new Boolean(join.isLazy()));
+			isConcretes.add( persistentClass.isClassOrSuperclassTable(tab) );
+			isDeferreds.add( join.isSequentialSelect() );
+			isLazies.add(join.isLazy());
 			
 			String tabname = tab.getQualifiedName(
 					factory.getDialect(),

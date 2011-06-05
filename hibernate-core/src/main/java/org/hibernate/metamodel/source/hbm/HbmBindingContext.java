@@ -25,42 +25,23 @@ package org.hibernate.metamodel.source.hbm;
 
 import java.util.List;
 
-import org.hibernate.metamodel.MetadataSources;
-import org.hibernate.metamodel.source.spi.Binder;
-import org.hibernate.metamodel.source.spi.MetadataImplementor;
+import org.hibernate.internal.util.xml.XmlDocument;
+import org.hibernate.metamodel.source.Origin;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLFetchProfileElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping;
+import org.hibernate.metamodel.source.spi.BindingContext;
 
 /**
  * @author Steve Ebersole
  */
-public class HibernateMappingBinder implements Binder {
-	private final MetadataImplementor metadata;
+public interface HbmBindingContext extends BindingContext {
+	public boolean isAutoImport();
 
-	public HibernateMappingBinder(MetadataImplementor metadata) {
-		this.metadata = metadata;
-	}
+	public String extractEntityName(XMLHibernateMapping.XMLClass entityClazz);
 
-	@Override
-	public void prepare(MetadataSources sources) {
-		// nothing to do here.
-	}
+	public String getClassName(String unqualifiedName);
 
-	@Override
-	public void bindIndependentMetadata(MetadataSources sources) {
-		// todo : implement method body
-	}
+	public void bindFetchProfiles(List<XMLFetchProfileElement> fetchProfiles, String containingEntityName);
 
-	@Override
-	public void bindTypeDependentMetadata(MetadataSources sources) {
-		// todo : implement method body
-	}
-
-	@Override
-	public void bindMappingMetadata(MetadataSources sources, List<String> processedEntityNames) {
-		// todo : implement method body
-	}
-
-	@Override
-	public void bindMappingDependentMetadata(MetadataSources sources) {
-		// todo : implement method body
-	}
+	public Origin getOrigin();
 }

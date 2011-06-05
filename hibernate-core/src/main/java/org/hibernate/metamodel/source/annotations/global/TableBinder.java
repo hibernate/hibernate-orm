@@ -37,7 +37,7 @@ import org.hibernate.metamodel.relational.SimpleValue;
 import org.hibernate.metamodel.relational.Table;
 import org.hibernate.metamodel.source.annotations.HibernateDotNames;
 import org.hibernate.metamodel.source.annotations.util.JandexHelper;
-import org.hibernate.metamodel.source.internal.MetadataImpl;
+import org.hibernate.metamodel.source.spi.MetadataImplementor;
 
 /**
  * Binds table related information. This binder is called after the entities are bound.
@@ -58,8 +58,7 @@ public class TableBinder {
 	 * @param metadata the global metadata
 	 * @param jandex the annotation index repository
 	 */
-	public static void bind(MetadataImpl metadata,
-							Index jandex) {
+	public static void bind(MetadataImplementor metadata, Index jandex) {
 		for ( AnnotationInstance tableAnnotation : jandex.getAnnotations( HibernateDotNames.TABLE ) ) {
 			bind( metadata, tableAnnotation );
 		}
@@ -70,8 +69,7 @@ public class TableBinder {
 		}
 	}
 
-	private static void bind(MetadataImpl metadata,
-							 AnnotationInstance tableAnnotation) {
+	private static void bind(MetadataImplementor metadata, AnnotationInstance tableAnnotation) {
 		String tableName = JandexHelper.getValueAsString( tableAnnotation, "appliesTo" );
 		ObjectName objectName = new ObjectName( tableName );
 		Schema schema = metadata.getDatabase().getSchema( objectName.getSchema(), objectName.getCatalog() );
@@ -81,8 +79,7 @@ public class TableBinder {
 		}
 	}
 
-	private static void bindHibernateTableAnnotation(Table table,
-													 AnnotationInstance tableAnnotation) {
+	private static void bindHibernateTableAnnotation(Table table, AnnotationInstance tableAnnotation) {
 		for ( AnnotationInstance indexAnnotation : JandexHelper.getValueAsArray( tableAnnotation, "indexes" ) ) {
 			bindIndexAnnotation( table, indexAnnotation );
 		}
@@ -92,8 +89,7 @@ public class TableBinder {
 		}
 	}
 
-	private static void bindIndexAnnotation(Table table,
-											AnnotationInstance indexAnnotation) {
+	private static void bindIndexAnnotation(Table table, AnnotationInstance indexAnnotation) {
 		String indexName = JandexHelper.getValueAsString( indexAnnotation, "appliesTo" );
 		String[] columnNames = (String[]) JandexHelper.getValue( indexAnnotation, "columnNames" );
 		if ( columnNames == null ) {
@@ -110,8 +106,7 @@ public class TableBinder {
 		}
 	}
 
-	private static Column findColumn(Table table,
-									 String columnName) {
+	private static Column findColumn(Table table, String columnName) {
 		Column column = null;
 		for ( SimpleValue value : table.values() ) {
 			if ( value instanceof Column && ( (Column) value ).getName().equals( columnName ) ) {

@@ -76,6 +76,7 @@ import org.hibernate.metamodel.binding.state.PluralAttributeBindingState;
 import org.hibernate.metamodel.binding.state.SimpleAttributeBindingState;
 import org.hibernate.metamodel.relational.state.TupleRelationalState;
 import org.hibernate.metamodel.relational.state.ValueRelationalState;
+import org.hibernate.metamodel.source.spi.BindingContext;
 import org.hibernate.metamodel.source.spi.MetadataImplementor;
 
 /**
@@ -84,28 +85,27 @@ import org.hibernate.metamodel.source.spi.MetadataImplementor;
  * @author Steve Ebersole
  */
 abstract class AbstractEntityBinder {
-	private final HbmBinder hibernateMappingBinder;
+	private final HbmBindingContext bindingContext;
 	private final Schema.Name schemaName;
 
-	AbstractEntityBinder(HbmBinder hibernateMappingBinder,
-						 XMLHibernateMapping.XMLClass entityClazz) {
-		this.hibernateMappingBinder = hibernateMappingBinder;
+	AbstractEntityBinder(HbmBindingContext bindingContext, XMLHibernateMapping.XMLClass entityClazz) {
+		this.bindingContext = bindingContext;
 		this.schemaName = new Schema.Name(
-				( entityClazz.getSchema() == null ?
-						hibernateMappingBinder.getMappingDefaults().getDefaultSchemaName() :
-						entityClazz.getSchema() ),
-				( entityClazz.getCatalog() == null ?
-						hibernateMappingBinder.getMappingDefaults().getDefaultCatalogName() :
-						entityClazz.getCatalog() )
+				entityClazz.getSchema() == null
+						? bindingContext.getMappingDefaults().getDefaultSchemaName()
+						: entityClazz.getSchema(),
+				entityClazz.getCatalog() == null
+						? bindingContext.getMappingDefaults().getDefaultCatalogName() :
+						entityClazz.getCatalog()
 		);
 	}
 
-	public HbmBinder getHibernateMappingBinder() {
-		return hibernateMappingBinder;
+	public HbmBindingContext getBindingContext() {
+		return bindingContext;
 	}
 
 	protected MetadataImplementor getMetadata() {
-		return hibernateMappingBinder.getMetadata();
+		return bindingContext.getMetadataImplementor();
 	}
 
 	protected Schema.Name getSchemaName() {
@@ -116,13 +116,14 @@ abstract class AbstractEntityBinder {
 		return getMetadata().getOptions().getNamingStrategy();
 	}
 
-	protected void basicEntityBinding(XMLHibernateMapping.XMLClass entityClazz,
-									  EntityBinding entityBinding,
-									  Hierarchical superType) {
+	protected void basicEntityBinding(
+			XMLHibernateMapping.XMLClass entityClazz,
+			EntityBinding entityBinding,
+			Hierarchical superType) {
 		entityBinding.fromHbmXml(
-				hibernateMappingBinder,
+				bindingContext,
 				entityClazz,
-				new Entity( hibernateMappingBinder.extractEntityName( entityClazz ), superType )
+				new Entity( bindingContext.extractEntityName( entityClazz ), superType )
 		);
 		// TODO: move this stuff out
 		// transfer an explicitly defined lazy attribute
@@ -133,11 +134,11 @@ abstract class AbstractEntityBinder {
 		final String entityName = entityBinding.getEntity().getName();
 
 		if ( entityClazz.getFetchProfile() != null ) {
-			hibernateMappingBinder.bindFetchProfiles( entityClazz.getFetchProfile(), entityName );
+			bindingContext.bindFetchProfiles( entityClazz.getFetchProfile(), entityName );
 		}
 
 		getMetadata().addImport( entityName, entityName );
-		if ( hibernateMappingBinder.isAutoImport() ) {
+		if ( bindingContext.isAutoImport() ) {
 			if ( entityName.indexOf( '.' ) > 0 ) {
 				getMetadata().addImport( StringHelper.unqualify( entityName ), entityName );
 			}
@@ -145,12 +146,12 @@ abstract class AbstractEntityBinder {
 	}
 
 	protected String getDefaultAccess() {
-		return hibernateMappingBinder.getMappingDefaults().getDefaultAccess();
+		return bindingContext.getMappingDefaults().getDefaultAccess();
 	}
 
 	private void bindPojoRepresentation(XMLHibernateMapping.XMLClass entityClazz,
 										EntityBinding entityBinding) {
-		String className = hibernateMappingBinder.getClassName( entityClazz.getName() );
+		String className = bindingContext.getClassName( entityClazz.getName() );
 		String proxyName = entityBinding.getProxyInterfaceName();
 
 		entityBinding.getEntity().getPojoEntitySpecifics().setClassName( className );
@@ -291,7 +292,7 @@ abstract class AbstractEntityBinder {
 			if ( XMLBagElement.class.isInstance( attribute ) ) {
 				XMLBagElement collection = XMLBagElement.class.cast( attribute );
 				BagBinding collectionBinding = makeBagAttributeBinding( collection, entityBinding );
-				hibernateMappingBinder.getMetadata().addCollection( collectionBinding );
+				bindingContext.getMetadataImplementor().addCollection( collectionBinding );
 				attributeBinding = collectionBinding;
 			}
 			else if ( XMLIdbagElement.class.isInstance( attribute ) ) {
@@ -444,7 +445,7 @@ PrimitiveArray
 			EntityBinding entityBinding) {
 		SimpleAttributeBindingState bindingState = new HbmSimpleAttributeBindingState(
 				entityBinding.getEntity().getPojoEntitySpecifics().getClassName(),
-				hibernateMappingBinder,
+				bindingContext,
 				entityBinding.getMetaAttributeContext(),
 				property
 		);
@@ -453,7 +454,7 @@ PrimitiveArray
 		ValueRelationalState relationalState =
 				convertToSimpleValueRelationalStateIfPossible(
 						new HbmSimpleValueRelationalStateContainer(
-								hibernateMappingBinder,
+								bindingContext,
 								true,
 								property
 						)
@@ -483,7 +484,7 @@ PrimitiveArray
 		PluralAttributeBindingState bindingState =
 				new HbmPluralAttributeBindingState(
 						entityBinding.getEntity().getPojoEntitySpecifics().getClassName(),
-						hibernateMappingBinder,
+						bindingContext,
 						entityBinding.getMetaAttributeContext(),
 						collection
 				);
@@ -523,7 +524,7 @@ PrimitiveArray
 		ManyToOneAttributeBindingState bindingState =
 				new HbmManyToOneAttributeBindingState(
 						entityBinding.getEntity().getPojoEntitySpecifics().getClassName(),
-						hibernateMappingBinder,
+						bindingContext,
 						entityBinding.getMetaAttributeContext(),
 						manyToOne
 				);
@@ -531,7 +532,7 @@ PrimitiveArray
 		// boolean (true here) indicates that by default column names should be guessed
 		ManyToOneRelationalState relationalState =
 						new HbmManyToOneRelationalStateContainer(
-								hibernateMappingBinder,
+								bindingContext,
 								true,
 								manyToOne
 						);

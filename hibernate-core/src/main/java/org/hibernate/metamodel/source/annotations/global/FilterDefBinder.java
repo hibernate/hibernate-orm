@@ -36,7 +36,7 @@ import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.source.annotations.HibernateDotNames;
 import org.hibernate.metamodel.source.annotations.util.JandexHelper;
-import org.hibernate.metamodel.source.internal.MetadataImpl;
+import org.hibernate.metamodel.source.spi.MetadataImplementor;
 import org.hibernate.type.Type;
 
 public class FilterDefBinder {
@@ -52,8 +52,7 @@ public class FilterDefBinder {
 	 * @param metadata the global metadata
 	 * @param jandex the jandex index
 	 */
-	public static void bind(MetadataImpl metadata,
-							Index jandex) {
+	public static void bind(MetadataImplementor metadata, Index jandex) {
 		for ( AnnotationInstance filterDef : jandex.getAnnotations( HibernateDotNames.FILTER_DEF ) ) {
 			bind( metadata, filterDef );
 		}
@@ -64,8 +63,7 @@ public class FilterDefBinder {
 		}
 	}
 
-	private static void bind(MetadataImpl metadata,
-							 AnnotationInstance filterDef) {
+	private static void bind(MetadataImplementor metadata, AnnotationInstance filterDef) {
 		String name = JandexHelper.getValueAsString( filterDef, "name" );
 		Map<String, Type> prms = new HashMap<String, Type>();
 		for ( AnnotationInstance prm : JandexHelper.getValueAsArray( filterDef, "parameters" ) ) {

@@ -23,11 +23,18 @@
  */
 package org.hibernate.metamodel.source.annotations;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
+import org.hibernate.HibernateException;
 import org.hibernate.internal.CoreMessageLogger;
 import org.jboss.jandex.Index;
 
+import org.hibernate.metamodel.MetadataSources;
+import org.hibernate.metamodel.source.annotation.xml.XMLEntityMappings;
 import org.hibernate.metamodel.source.annotations.entity.ConfiguredClass;
 import org.hibernate.metamodel.source.annotations.entity.ConfiguredClassHierarchy;
 import org.hibernate.metamodel.source.annotations.entity.EntityBinder;
@@ -38,7 +45,14 @@ import org.hibernate.metamodel.source.annotations.global.TypeDefBinder;
 import org.hibernate.metamodel.source.annotations.global.FetchProfileBinder;
 import org.hibernate.metamodel.source.annotations.global.TableBinder;
 import org.hibernate.metamodel.source.annotations.util.ConfiguredClassHierarchyBuilder;
+import org.hibernate.metamodel.source.annotations.xml.OrmXmlParser;
+import org.hibernate.metamodel.source.internal.JaxbRoot;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
+import org.hibernate.metamodel.source.spi.Binder;
+import org.hibernate.metamodel.source.spi.MetadataImplementor;
+import org.hibernate.service.classloading.spi.ClassLoaderService;
+
+import org.jboss.jandex.Indexer;
 import org.jboss.logging.Logger;
 
 /**
@@ -48,35 +62,77 @@ import org.jboss.logging.Logger;
  *
  * @author Hardy Ferentschik
  */
-public class AnnotationBinder {
-
+public class AnnotationBinder implements Binder {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, AnnotationBinder.class.getName() );
-	private final MetadataImpl metadata;
-	private final Index index;
 
-	public AnnotationBinder(MetadataImpl metadata, Index index) {
+	private final MetadataImplementor metadata;
+
+	private Index index;
+	private ClassLoaderService classLoaderService;
+
+	public AnnotationBinder(MetadataImpl metadata) {
 		this.metadata = metadata;
-		this.index = index;
 	}
 
-	public void bind() {
-		preEntityBindings();
-		bindMappedClasses();
-		postEntityBindings();
+	@Override
+	@SuppressWarnings( {"unchecked"})
+	public void prepare(MetadataSources sources) {
+		// create a jandex index from the annotated classes
+		Indexer indexer = new Indexer();
+		for ( Class<?> clazz : sources.getAnnotatedClasses() ) {
+			indexClass( indexer, clazz.getName().replace( '.', '/' ) + ".class" );
+		}
+
+		// add package-info from the configured packages
+		for ( String packageName : sources.getAnnotatedPackages() ) {
+			indexClass( indexer, packageName.replace( '.', '/' ) + "/package-info.class" );
+		}
+
+		index = indexer.complete();
+
+		List<JaxbRoot<XMLEntityMappings>> mappings = new ArrayList<JaxbRoot<XMLEntityMappings>>();
+		for ( JaxbRoot<?> root : sources.getJaxbRootList() ) {
+			if ( root.getRoot() instanceof XMLEntityMappings ) {
+				mappings.add( (JaxbRoot<XMLEntityMappings>) root );
+			}
+		}
+		if ( !mappings.isEmpty() ) {
+			// process the xml configuration
+			final OrmXmlParser ormParser = new OrmXmlParser( metadata );
+			index = ormParser.parseAndUpdateIndex( mappings, index );
+		}
 	}
 
-	/**
-	 * Binds global configuration data prior to entity binding. This includes generators and type definitions.
-	 */
-	private void preEntityBindings() {
-        TypeDefBinder.bind(metadata, index);
-        IdGeneratorBinder.bind(metadata, index);
+	private void indexClass(Indexer indexer, String className) {
+		InputStream stream = classLoaderService().locateResourceStream( className );
+		try {
+			indexer.index( stream );
+		}
+		catch ( IOException e ) {
+			throw new HibernateException( "Unable to open input stream for class " + className, e );
+		}
 	}
 
-	/**
-	 * Does the actual entity binding (see {@link org.hibernate.metamodel.binding.EntityBinding}.
-	 */
-	private void bindMappedClasses() {
+	private ClassLoaderService classLoaderService(){
+		if ( classLoaderService == null ) {
+			classLoaderService = metadata.getServiceRegistry().getService( ClassLoaderService.class );
+		}
+		return classLoaderService;
+	}
+
+
+	@Override
+	public void bindIndependentMetadata(MetadataSources sources) {
+        TypeDefBinder.bind( metadata, index );
+	}
+
+	@Override
+	public void bindTypeDependentMetadata(MetadataSources sources) {
+        IdGeneratorBinder.bind( metadata, index );
+	}
+
+	@Override
+	public void bindMappingMetadata(MetadataSources sources, List<String> processedEntityNames) {
 		// need to order our annotated entities into an order we can process
 		Set<ConfiguredClassHierarchy> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
 				index, metadata.getServiceRegistry()
@@ -92,15 +148,12 @@ public class AnnotationBinder {
 		}
 	}
 
-	/**
-	 * Binds global configuration data post entity binding. This includes mappings which live outside of the configuration for a single
-	 * entity or entity hierarchy, for example sequence generators, fetch profiles, etc
-	 */
-	private void postEntityBindings() {
+	@Override
+	public void bindMappingDependentMetadata(MetadataSources sources) {
 		TableBinder.bind( metadata, index );
         FetchProfileBinder.bind( metadata, index );
-        QueryBinder.bind(metadata, index);
-        FilterDefBinder.bind(metadata, index);
+        QueryBinder.bind( metadata, index );
+        FilterDefBinder.bind( metadata, index );
 	}
 }
 

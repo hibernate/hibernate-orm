@@ -23,10 +23,10 @@
  */
 package org.hibernate.metamodel.source.annotations.global;
 
-import java.util.HashMap;
-import java.util.Map;
 import javax.persistence.GenerationType;
 import javax.persistence.SequenceGenerator;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.Index;
@@ -48,7 +48,7 @@ import org.hibernate.metamodel.binding.IdGenerator;
 import org.hibernate.metamodel.source.annotations.HibernateDotNames;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.util.JandexHelper;
-import org.hibernate.metamodel.source.internal.MetadataImpl;
+import org.hibernate.metamodel.source.spi.MetadataImplementor;
 
 public class IdGeneratorBinder {
 
@@ -56,6 +56,9 @@ public class IdGeneratorBinder {
 			CoreMessageLogger.class,
 			IdGeneratorBinder.class.getName()
 	);
+
+	private IdGeneratorBinder() {
+	}
 
 	private static void addStringParameter(AnnotationInstance annotation,
 										   String element,
@@ -74,8 +77,7 @@ public class IdGeneratorBinder {
 	 * @param metadata the global metadata
 	 * @param jandex the jandex index
 	 */
-	public static void bind(MetadataImpl metadata,
-							Index jandex) {
+	public static void bind(MetadataImplementor metadata, Index jandex) {
 		for ( AnnotationInstance generator : jandex.getAnnotations( JPADotNames.SEQUENCE_GENERATOR ) ) {
 			bindSequenceGenerator( metadata, generator );
 		}
@@ -92,8 +94,7 @@ public class IdGeneratorBinder {
 		}
 	}
 
-	private static void bindGenericGenerator(MetadataImpl metadata,
-											 AnnotationInstance generator) {
+	private static void bindGenericGenerator(MetadataImplementor metadata, AnnotationInstance generator) {
 		String name = JandexHelper.getValueAsString( generator, "name" );
 		Map<String, String> prms = new HashMap<String, String>();
 		for ( AnnotationInstance prm : JandexHelper.getValueAsArray( generator, "parameters" ) ) {
@@ -109,8 +110,7 @@ public class IdGeneratorBinder {
 		LOG.tracef( "Add generic generator with name: %s", name );
 	}
 
-	private static void bindSequenceGenerator(MetadataImpl metadata,
-											  AnnotationInstance generator) {
+	private static void bindSequenceGenerator(MetadataImplementor metadata, AnnotationInstance generator) {
 		String name = JandexHelper.getValueAsString( generator, "name" );
 		String strategy;
 		Map<String, String> prms = new HashMap<String, String>();
@@ -142,8 +142,7 @@ public class IdGeneratorBinder {
 		LOG.tracef( "Add sequence generator with name: %s", name );
 	}
 
-	private static void bindTableGenerator(MetadataImpl metadata,
-										   AnnotationInstance generator) {
+	private static void bindTableGenerator(MetadataImplementor metadata, AnnotationInstance generator) {
 		String name = JandexHelper.getValueAsString( generator, "name" );
 		String strategy;
 		Map<String, String> prms = new HashMap<String, String>();
@@ -181,9 +180,6 @@ public class IdGeneratorBinder {
 		}
 		metadata.addIdGenerator( new IdGenerator( name, strategy, prms ) );
 		LOG.tracef( "Add table generator with name: %s", name );
-	}
-
-	private IdGeneratorBinder() {
 	}
 
 	public static String generatorType(GenerationType generatorEnum, boolean useNewGeneratorMappings) {

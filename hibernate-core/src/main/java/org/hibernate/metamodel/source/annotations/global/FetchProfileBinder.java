@@ -36,7 +36,7 @@ import org.hibernate.metamodel.binding.FetchProfile;
 import org.hibernate.metamodel.binding.FetchProfile.Fetch;
 import org.hibernate.metamodel.source.annotations.HibernateDotNames;
 import org.hibernate.metamodel.source.annotations.util.JandexHelper;
-import org.hibernate.metamodel.source.internal.MetadataImpl;
+import org.hibernate.metamodel.source.spi.MetadataImplementor;
 
 /**
  * Binds fetch profiles found in annotations.
@@ -52,8 +52,7 @@ public class FetchProfileBinder {
 	 * @param jandex the jandex index
 	 */
 	// TODO verify that association exists. See former VerifyFetchProfileReferenceSecondPass
-	public static void bind(MetadataImpl metadata,
-							Index jandex) {
+	public static void bind(MetadataImplementor metadata, Index jandex) {
 		for ( AnnotationInstance fetchProfile : jandex.getAnnotations( HibernateDotNames.FETCH_PROFILE ) ) {
 			bind( metadata, fetchProfile );
 		}
@@ -64,8 +63,7 @@ public class FetchProfileBinder {
 		}
 	}
 
-	private static void bind(MetadataImpl metadata,
-							 AnnotationInstance fetchProfile) {
+	private static void bind(MetadataImplementor metadata, AnnotationInstance fetchProfile) {
 		String name = JandexHelper.getValueAsString( fetchProfile, "name" );
 		Set<Fetch> fetches = new HashSet<Fetch>();
 		for ( AnnotationInstance override : JandexHelper.getValueAsArray( fetchProfile, "fetchOverrides" ) ) {
@@ -76,9 +74,9 @@ public class FetchProfileBinder {
 			fetches.add(
 					new Fetch(
 							JandexHelper.getValueAsString( override, "entity" ), JandexHelper.getValueAsString(
-							override,
-							"association"
-					),
+									override,
+									"association"
+							),
 							fetchMode.toString().toLowerCase()
 					)
 			);

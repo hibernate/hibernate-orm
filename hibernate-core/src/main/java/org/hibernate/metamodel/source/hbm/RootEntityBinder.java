@@ -50,12 +50,12 @@ import org.hibernate.metamodel.binding.state.DiscriminatorBindingState;
  */
 class RootEntityBinder extends AbstractEntityBinder {
 
-	RootEntityBinder(HbmBinder hibernateMappingBinder, XMLClass xmlClazz) {
-		super( hibernateMappingBinder, xmlClazz );
+	RootEntityBinder(HbmBindingContext bindingContext, XMLClass xmlClazz) {
+		super( bindingContext, xmlClazz );
 	}
 
 	public void process(XMLClass xmlClazz) {
-		String entityName = getHibernateMappingBinder().extractEntityName( xmlClazz );
+		String entityName = getBindingContext().extractEntityName( xmlClazz );
 		if ( entityName == null ) {
 			throw new MappingException( "Unable to determine entity name" );
 		}
@@ -134,20 +134,20 @@ class RootEntityBinder extends AbstractEntityBinder {
 
 		throw new InvalidMappingException(
 				"Entity [" + entityBinding.getEntity().getName() + "] did not contain identifier mapping",
-				getHibernateMappingBinder().getOrigin()
+				getBindingContext().getOrigin()
 		);
 	}
 
 	private void bindSimpleId(XMLId id, EntityBinding entityBinding) {
 		SimpleAttributeBindingState bindingState = new HbmSimpleAttributeBindingState(
 				entityBinding.getEntity().getPojoEntitySpecifics().getClassName(),
-				getHibernateMappingBinder(),
+				getBindingContext(),
 				entityBinding.getMetaAttributeContext(),
 				id
 		);
 		// boolean (true here) indicates that by default column names should be guessed
 		HbmSimpleValueRelationalStateContainer relationalStateContainer = new HbmSimpleValueRelationalStateContainer(
-				getHibernateMappingBinder(), true, id
+				getBindingContext(), true, id
 		);
 		if ( relationalStateContainer.getRelationalStates().size() > 1 ) {
 			throw new MappingException( "ID is expected to be a single column, but has more than 1 value" );
@@ -247,14 +247,14 @@ class RootEntityBinder extends AbstractEntityBinder {
 		DiscriminatorBindingState bindingState = new HbmDiscriminatorBindingState(
 						entityBinding.getEntity().getPojoEntitySpecifics().getClassName(),
 						entityBinding.getEntity().getName(),
-						getHibernateMappingBinder(),
+						getBindingContext(),
 						xmlEntityClazz
 		);
 
 		// boolean (true here) indicates that by default column names should be guessed
 		ValueRelationalState relationalState = convertToSimpleValueRelationalStateIfPossible(
 				new HbmSimpleValueRelationalStateContainer(
-						getHibernateMappingBinder(),
+						getBindingContext(),
 						true,
 						xmlEntityClazz.getDiscriminator()
 				)
@@ -288,7 +288,7 @@ class RootEntityBinder extends AbstractEntityBinder {
 		SimpleAttributeBindingState bindingState =
 				new HbmSimpleAttributeBindingState(
 						entityBinding.getEntity().getPojoEntitySpecifics().getClassName(),
-						getHibernateMappingBinder(),
+						getBindingContext(),
 						entityBinding.getMetaAttributeContext(),
 						version
 				);
@@ -297,7 +297,7 @@ class RootEntityBinder extends AbstractEntityBinder {
 		ValueRelationalState relationalState =
 				convertToSimpleValueRelationalStateIfPossible(
 						new HbmSimpleValueRelationalStateContainer(
-								getHibernateMappingBinder(),
+								getBindingContext(),
 								true,
 								version
 						)
@@ -315,7 +315,7 @@ class RootEntityBinder extends AbstractEntityBinder {
 		SimpleAttributeBindingState bindingState =
 				new HbmSimpleAttributeBindingState(
 						entityBinding.getEntity().getPojoEntitySpecifics().getClassName(),
-						getHibernateMappingBinder(),
+						getBindingContext(),
 						entityBinding.getMetaAttributeContext(),
 						timestamp
 				);
@@ -325,7 +325,7 @@ class RootEntityBinder extends AbstractEntityBinder {
 		ValueRelationalState relationalState =
 				convertToSimpleValueRelationalStateIfPossible(
 						new HbmSimpleValueRelationalStateContainer(
-								getHibernateMappingBinder(),
+								getBindingContext(),
 								true,
 								timestamp
 						)

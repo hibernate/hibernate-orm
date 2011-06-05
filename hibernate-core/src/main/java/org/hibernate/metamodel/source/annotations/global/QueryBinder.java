@@ -23,11 +23,11 @@
  */
 package org.hibernate.metamodel.source.annotations.global;
 
-import java.util.HashMap;
 import javax.persistence.NamedNativeQueries;
 import javax.persistence.NamedNativeQuery;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import java.util.HashMap;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.Index;
@@ -47,7 +47,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.source.annotations.HibernateDotNames;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.util.JandexHelper;
-import org.hibernate.metamodel.source.internal.MetadataImpl;
+import org.hibernate.metamodel.source.spi.MetadataImplementor;
 
 public class QueryBinder {
 
@@ -65,8 +65,7 @@ public class QueryBinder {
 	 * @param metadata the global metadata
 	 * @param jandex the jandex index
 	 */
-	public static void bind(MetadataImpl metadata,
-							Index jandex) {
+	public static void bind(MetadataImplementor metadata, Index jandex) {
 		for ( AnnotationInstance query : jandex.getAnnotations( JPADotNames.NAMED_QUERY ) ) {
 			bindNamedQuery( metadata, query );
 		}
@@ -101,8 +100,7 @@ public class QueryBinder {
 		}
 	}
 
-	private static void bindNamedQuery(MetadataImpl metadata,
-									   AnnotationInstance annotation) {
+	private static void bindNamedQuery(MetadataImplementor metadata, AnnotationInstance annotation) {
 		String name = JandexHelper.getValueAsString( annotation, "name" );
 		if ( StringHelper.isEmpty( name ) ) {
 			throw new AnnotationException( "A named query must have a name when used in class or package level" );
@@ -137,8 +135,7 @@ public class QueryBinder {
 		LOG.debugf( "Binding named query: %s => %s", name, query );
 	}
 
-	private static void bindNamedNativeQuery(MetadataImpl metadata,
-											 AnnotationInstance annotation) {
+	private static void bindNamedNativeQuery(MetadataImplementor metadata, AnnotationInstance annotation) {
 		String name = JandexHelper.getValueAsString( annotation, "name" );
 		if ( StringHelper.isEmpty( name ) ) {
 			throw new AnnotationException( "A named native query must have a name when used in class or package level" );

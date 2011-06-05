@@ -23,8 +23,6 @@
  */
 package org.hibernate.metamodel.source.internal;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -32,12 +30,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.jboss.jandex.Index;
-import org.jboss.jandex.Indexer;
 import org.jboss.logging.Logger;
 
 import org.hibernate.DuplicateMappingException;
-import org.hibernate.HibernateException;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.engine.spi.FilterDefinition;
@@ -55,13 +50,8 @@ import org.hibernate.metamodel.binding.TypeDef;
 import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.metamodel.relational.AuxiliaryDatabaseObject;
 import org.hibernate.metamodel.relational.Database;
-import org.hibernate.metamodel.source.annotation.xml.XMLEntityMappings;
 import org.hibernate.metamodel.source.annotations.AnnotationBinder;
-import org.hibernate.metamodel.source.annotations.JpaBinder;
-import org.hibernate.metamodel.source.annotations.xml.OrmXmlParser;
 import org.hibernate.metamodel.source.hbm.HbmBinder;
-import org.hibernate.metamodel.source.hbm.HibernateMappingBinder;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping;
 import org.hibernate.metamodel.source.spi.Binder;
 import org.hibernate.metamodel.source.spi.MappingDefaults;
 import org.hibernate.metamodel.source.spi.MetaAttributeContext;
@@ -119,33 +109,26 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		final Binder[] binders;
 		if ( options.getSourceProcessingOrder() == SourceProcessingOrder.HBM_FIRST ) {
 			binders = new Binder[] {
-					new HibernateMappingBinder( this ),
-					new JpaBinder( this )
+					new HbmBinder( this ),
+					new AnnotationBinder( this )
 			};
 		}
 		else {
 			binders = new Binder[] {
-					new JpaBinder( this ),
-					new HibernateMappingBinder( this )
+					new AnnotationBinder( this ),
+					new HbmBinder( this )
 			};
 		}
+
+		final ArrayList<String> processedEntityNames = new ArrayList<String>();
 
 		prepare( binders, metadataSources );
 		bindIndependentMetadata( binders, metadataSources );
 		bindTypeDependentMetadata( binders, metadataSources );
-		bindMappingMetadata( binders, metadataSources );
+		bindMappingMetadata( binders, metadataSources, processedEntityNames );
 		bindMappingDependentMetadata( binders, metadataSources );
 
-		final ArrayList<String> processedEntityNames = new ArrayList<String>();
-		if ( options.getSourceProcessingOrder() == SourceProcessingOrder.HBM_FIRST ) {
-			applyHibernateMappings( metadataSources, processedEntityNames );
-			applyAnnotationMappings( metadataSources, processedEntityNames );
-		}
-		else {
-			applyAnnotationMappings( metadataSources, processedEntityNames );
-			applyHibernateMappings( metadataSources, processedEntityNames );
-		}
-
+		// todo : remove this by coordinated ordering of entity processing
 		new EntityReferenceResolver( this ).resolve();
 	}
 
@@ -153,21 +136,6 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		for ( Binder binder : binders ) {
 			binder.prepare( metadataSources );
 		}
-	}
-
-	private Index prepareIndex(MetadataSources metadataSources) {
-		// create a jandex index from the annotated classes
-		Indexer indexer = new Indexer();
-		for ( Class<?> clazz : metadataSources.getAnnotatedClasses() ) {
-			indexClass( indexer, clazz.getName().replace( '.', '/' ) + ".class" );
-		}
-
-		// add package-info from the configured packages
-		for ( String packageName : metadataSources.getAnnotatedPackages() ) {
-			indexClass( indexer, packageName.replace( '.', '/' ) + "/package-info.class" );
-		}
-
-		return indexer.complete();
 	}
 
 	private void bindIndependentMetadata(Binder[] binders, MetadataSources metadataSources) {
@@ -182,8 +150,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		}
 	}
 
-	private void bindMappingMetadata(Binder[] binders, MetadataSources metadataSources) {
-		final ArrayList<String> processedEntityNames = new ArrayList<String>();
+	private void bindMappingMetadata(Binder[] binders, MetadataSources metadataSources, List<String> processedEntityNames) {
 		for ( Binder binder : binders ) {
 			binder.bindMappingMetadata( metadataSources, processedEntityNames );
 		}
@@ -209,9 +176,11 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		return filterDefs.values();
 	}
 
+	@Override
 	public void addIdGenerator(IdGenerator generator) {
 		idGenerators.put( generator.getName(), generator );
 	}
+
 	@Override
 	public IdGenerator getIdGenerator(String name) {
 		if ( name == null ) {
@@ -229,6 +198,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		auxiliaryDatabaseObjects.add( auxiliaryDatabaseObject );
 	}
 
+	@Override
 	public void addNamedNativeQuery(String name, NamedSQLQueryDefinition def) {
 		namedNativeQueryDefs.put( name, def );
 	}
@@ -240,6 +210,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		return namedNativeQueryDefs.get( name );
 	}
 
+	@Override
 	public void addNamedQuery(String name, NamedQueryDefinition def) {
 		namedQueryDefs.put( name, def );
 	}
@@ -266,64 +237,6 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	public TypeDef getTypeDef(String name) {
 		return typeDefs.get( name );
-	}
-
-	private void applyHibernateMappings(MetadataSources metadataSources, List<String> processedEntityNames) {
-
-		for ( JaxbRoot jaxbRoot : metadataSources.getJaxbRootList() ) {
-			// filter to just hbm-based roots
-			if ( jaxbRoot.getRoot() instanceof XMLHibernateMapping ) {
-				final HbmBinder mappingBinder = new HbmBinder( this, jaxbRoot );
-				mappingBinder.processHibernateMapping();
-			}
-		}
-	}
-
-	private void applyAnnotationMappings(MetadataSources metadataSources, List<String> processedEntityNames) {
-		// create a jandex index from the annotated classes
-		Indexer indexer = new Indexer();
-		for ( Class<?> clazz : metadataSources.getAnnotatedClasses() ) {
-			indexClass( indexer, clazz.getName().replace( '.', '/' ) + ".class" );
-		}
-
-		// add package-info from the configured packages
-		for ( String packageName : metadataSources.getAnnotatedPackages() ) {
-			indexClass( indexer, packageName.replace( '.', '/' ) + "/package-info.class" );
-		}
-		Index index = indexer.complete();
-
-
-		List<JaxbRoot<XMLEntityMappings>> mappings = new ArrayList<JaxbRoot<XMLEntityMappings>>();
-		for ( JaxbRoot<?> root : metadataSources.getJaxbRootList() ) {
-			if ( root.getRoot() instanceof XMLEntityMappings ) {
-				mappings.add( (JaxbRoot<XMLEntityMappings>) root );
-			}
-		}
-		if ( !mappings.isEmpty() ) {
-			// process the xml configuration
-			final OrmXmlParser ormParser = new OrmXmlParser( this );
-			index = ormParser.parseAndUpdateIndex( mappings, index );
-		}
-
-		// create the annotation binder and pass it the final annotation index
-		final AnnotationBinder annotationBinder = new AnnotationBinder( this, index );
-		annotationBinder.bind();
-	}
-
-	/**
-	 * Adds a single class to the jandex index
-	 *
-	 * @param indexer the jandex indexer
-	 * @param className the fully qualified name of the class
-	 */
-	private void indexClass(Indexer indexer, String className) {
-		InputStream stream = classLoaderService().locateResourceStream( className );
-		try {
-			indexer.index( stream );
-		}
-		catch ( IOException e ) {
-			throw new HibernateException( "Unable to open input stream for class " + className, e );
-		}
 	}
 
 	private ClassLoaderService classLoaderService(){

@@ -37,7 +37,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.binding.TypeDef;
 import org.hibernate.metamodel.source.annotations.HibernateDotNames;
 import org.hibernate.metamodel.source.annotations.util.JandexHelper;
-import org.hibernate.metamodel.source.internal.MetadataImpl;
+import org.hibernate.metamodel.source.spi.MetadataImplementor;
 
 public class TypeDefBinder {
 
@@ -52,8 +52,7 @@ public class TypeDefBinder {
 	 * @param metadata the global metadata
 	 * @param jandex the jandex jandex
 	 */
-	public static void bind(MetadataImpl metadata,
-							Index jandex) {
+	public static void bind(MetadataImplementor metadata, Index jandex) {
 		for ( AnnotationInstance typeDef : jandex.getAnnotations( HibernateDotNames.TYPE_DEF ) ) {
 			bind( metadata, typeDef );
 		}
@@ -64,8 +63,7 @@ public class TypeDefBinder {
 		}
 	}
 
-	private static void bind(MetadataImpl metadata,
-							 AnnotationInstance typeDef) {
+	private static void bind(MetadataImplementor metadata, AnnotationInstance typeDef) {
 		String name = JandexHelper.getValueAsString( typeDef, "name" );
 		String defaultForType = JandexHelper.getValueAsString( typeDef, "defaultForType" );
 		String typeClass = JandexHelper.getValueAsString( typeDef, "typeClass" );
@@ -89,10 +87,11 @@ public class TypeDefBinder {
 		}
 	}
 
-	private static void bind(String name,
-							 String typeClass,
-							 Map<String, String> prms,
-							 MetadataImpl metadata) {
+	private static void bind(
+			String name,
+			String typeClass,
+			Map<String, String> prms,
+			MetadataImplementor metadata) {
 		LOG.debugf( "Binding type definition: %s", name );
 		metadata.addTypeDefinition( new TypeDef( name, typeClass, prms ) );
 	}

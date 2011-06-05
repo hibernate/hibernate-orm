@@ -37,6 +37,7 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.metamodel.domain.Entity;
 import org.hibernate.metamodel.relational.Column;
 import org.hibernate.metamodel.relational.TableSpecification;
+import org.hibernate.metamodel.source.hbm.HbmBindingContext;
 import org.hibernate.metamodel.source.hbm.HbmHelper;
 import org.hibernate.metamodel.source.hbm.util.MappingHelper;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass;
@@ -44,7 +45,6 @@ import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlDeleteElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlInsertElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlUpdateElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSynchronizeElement;
-import org.hibernate.metamodel.source.spi.BindingContext;
 import org.hibernate.metamodel.source.spi.MetaAttributeContext;
 
 /**
@@ -101,7 +101,7 @@ public class EntityBinding {
 	}
 
 	// TODO: change to intialize from Doimain
-	public void fromHbmXml(BindingContext bindingContext, XMLClass entityClazz, Entity entity) {
+	public void fromHbmXml(HbmBindingContext bindingContext, XMLClass entityClazz, Entity entity) {
 		this.entity = entity;
 		metaAttributeContext = HbmHelper.extractMetaAttributeContext( entityClazz.getMeta(), true, bindingContext.getMetaAttributeContext() );
 

@@ -31,15 +31,16 @@ import org.jboss.jandex.Index;
 import org.hibernate.metamodel.source.annotation.xml.XMLEntityMappings;
 import org.hibernate.metamodel.source.annotations.xml.mocker.EntityMappingsMocker;
 import org.hibernate.metamodel.source.internal.JaxbRoot;
-import org.hibernate.metamodel.source.internal.MetadataImpl;
+import org.hibernate.metamodel.source.spi.MetadataImplementor;
+
 /**
  * @author Hardy Ferentschik
  */
 public class OrmXmlParser {
-	private final MetadataImpl meta;
+	private final MetadataImplementor metadata;
 
-	public OrmXmlParser(MetadataImpl meta) {
-		this.meta = meta;
+	public OrmXmlParser(MetadataImplementor metadata) {
+		this.metadata = metadata;
 	}
 
 	/**
@@ -55,9 +56,7 @@ public class OrmXmlParser {
 		for ( JaxbRoot<XMLEntityMappings> jaxbRoot : mappings ) {
 			list.add( jaxbRoot.getRoot() );
 		}
-		return new EntityMappingsMocker(
-				list, annotationIndex, meta.getServiceRegistry()
-		).mockNewIndex();
+		return new EntityMappingsMocker( list, annotationIndex, metadata.getServiceRegistry() ).mockNewIndex();
 	}
 }
 

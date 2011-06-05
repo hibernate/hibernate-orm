@@ -21,52 +21,19 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.domain;
+package org.hibernate.metamodel.source.spi;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.List;
+
+import org.hibernate.metamodel.MetadataSources;
 
 /**
- * A meta attribute is a named value or values.
- * 
- * @author Gavin King
+ * @author Steve Ebersole
  */
-public class MetaAttribute implements Serializable {
-
-	// todo : this really belongs in the binding package
-
-	private String name;
-	private java.util.List values = new ArrayList();
-
-	public MetaAttribute(String name) {
-		this.name = name;
-	}
-	
-	public String getName() {
-		return name;
-	}	
-
-	public java.util.List getValues() {
-		return Collections.unmodifiableList(values);
-	}
-
-	public void addValue(String value) {
-		values.add(value);
-	}
-
-	public String getValue() {
-		if ( values.size()!=1 ) {
-			throw new IllegalStateException("no unique value");
-		}
-		return (String) values.get(0);
-	}
-
-	public boolean isMultiValued() {
-		return values.size()>1;
-	}
-
-	public String toString() {
-		return "[" + name + "=" + values + "]";
-	}
+public interface Binder {
+	public void prepare(MetadataSources sources);
+	public void bindIndependentMetadata(MetadataSources sources);
+	public void bindTypeDependentMetadata(MetadataSources sources);
+	public void bindMappingMetadata(MetadataSources sources, List<String> processedEntityNames);
+	public void bindMappingDependentMetadata(MetadataSources sources);
 }

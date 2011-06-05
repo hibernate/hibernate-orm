@@ -57,15 +57,16 @@ import org.hibernate.metamodel.relational.AuxiliaryDatabaseObject;
 import org.hibernate.metamodel.relational.Database;
 import org.hibernate.metamodel.source.annotation.xml.XMLEntityMappings;
 import org.hibernate.metamodel.source.annotations.AnnotationBinder;
+import org.hibernate.metamodel.source.annotations.JpaBinder;
 import org.hibernate.metamodel.source.annotations.xml.OrmXmlParser;
 import org.hibernate.metamodel.source.hbm.HbmBinder;
+import org.hibernate.metamodel.source.hbm.HibernateMappingBinder;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping;
-import org.hibernate.metamodel.source.spi.BindingContext;
+import org.hibernate.metamodel.source.spi.Binder;
 import org.hibernate.metamodel.source.spi.MappingDefaults;
 import org.hibernate.metamodel.source.spi.MetaAttributeContext;
 import org.hibernate.metamodel.source.spi.MetadataImplementor;
 import org.hibernate.service.BasicServiceRegistry;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.type.TypeResolver;
 
@@ -115,7 +116,26 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 		this.mappingDefaults = new MappingDefaultsImpl();
 
-		applyIndependentMetadata();
+		final Binder[] binders;
+		if ( options.getSourceProcessingOrder() == SourceProcessingOrder.HBM_FIRST ) {
+			binders = new Binder[] {
+					new HibernateMappingBinder( this ),
+					new JpaBinder( this )
+			};
+		}
+		else {
+			binders = new Binder[] {
+					new JpaBinder( this ),
+					new HibernateMappingBinder( this )
+			};
+		}
+
+		prepare( binders, metadataSources );
+		bindIndependentMetadata( binders, metadataSources );
+		bindTypeDependentMetadata( binders, metadataSources );
+		bindMappingMetadata( binders, metadataSources );
+		bindMappingDependentMetadata( binders, metadataSources );
+
 		final ArrayList<String> processedEntityNames = new ArrayList<String>();
 		if ( options.getSourceProcessingOrder() == SourceProcessingOrder.HBM_FIRST ) {
 			applyHibernateMappings( metadataSources, processedEntityNames );
@@ -129,8 +149,50 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		new EntityReferenceResolver( this ).resolve();
 	}
 
-	private void applyIndependentMetadata() {
-		// todo : implement method body
+	private void prepare(Binder[] binders, MetadataSources metadataSources) {
+		for ( Binder binder : binders ) {
+			binder.prepare( metadataSources );
+		}
+	}
+
+	private Index prepareIndex(MetadataSources metadataSources) {
+		// create a jandex index from the annotated classes
+		Indexer indexer = new Indexer();
+		for ( Class<?> clazz : metadataSources.getAnnotatedClasses() ) {
+			indexClass( indexer, clazz.getName().replace( '.', '/' ) + ".class" );
+		}
+
+		// add package-info from the configured packages
+		for ( String packageName : metadataSources.getAnnotatedPackages() ) {
+			indexClass( indexer, packageName.replace( '.', '/' ) + "/package-info.class" );
+		}
+
+		return indexer.complete();
+	}
+
+	private void bindIndependentMetadata(Binder[] binders, MetadataSources metadataSources) {
+		for ( Binder binder : binders ) {
+			binder.bindIndependentMetadata( metadataSources );
+		}
+	}
+
+	private void bindTypeDependentMetadata(Binder[] binders, MetadataSources metadataSources) {
+		for ( Binder binder : binders ) {
+			binder.bindTypeDependentMetadata( metadataSources );
+		}
+	}
+
+	private void bindMappingMetadata(Binder[] binders, MetadataSources metadataSources) {
+		final ArrayList<String> processedEntityNames = new ArrayList<String>();
+		for ( Binder binder : binders ) {
+			binder.bindMappingMetadata( metadataSources, processedEntityNames );
+		}
+	}
+
+	private void bindMappingDependentMetadata(Binder[] binders, MetadataSources metadataSources) {
+		for ( Binder binder : binders ) {
+			binder.bindMappingDependentMetadata( metadataSources );
+		}
 	}
 
 	@Override

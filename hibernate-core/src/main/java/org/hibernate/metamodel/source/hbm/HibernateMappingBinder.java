@@ -21,52 +21,46 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.domain;
+package org.hibernate.metamodel.source.hbm;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.List;
+
+import org.hibernate.metamodel.MetadataSources;
+import org.hibernate.metamodel.source.spi.Binder;
+import org.hibernate.metamodel.source.spi.MetadataImplementor;
 
 /**
- * A meta attribute is a named value or values.
- * 
- * @author Gavin King
+ * @author Steve Ebersole
  */
-public class MetaAttribute implements Serializable {
+public class HibernateMappingBinder implements Binder {
+	private final MetadataImplementor metadata;
 
-	// todo : this really belongs in the binding package
-
-	private String name;
-	private java.util.List values = new ArrayList();
-
-	public MetaAttribute(String name) {
-		this.name = name;
-	}
-	
-	public String getName() {
-		return name;
-	}	
-
-	public java.util.List getValues() {
-		return Collections.unmodifiableList(values);
+	public HibernateMappingBinder(MetadataImplementor metadata) {
+		this.metadata = metadata;
 	}
 
-	public void addValue(String value) {
-		values.add(value);
+	@Override
+	public void prepare(MetadataSources sources) {
+		// nothing to do here.
 	}
 
-	public String getValue() {
-		if ( values.size()!=1 ) {
-			throw new IllegalStateException("no unique value");
-		}
-		return (String) values.get(0);
+	@Override
+	public void bindIndependentMetadata(MetadataSources sources) {
+		// todo : implement method body
 	}
 
-	public boolean isMultiValued() {
-		return values.size()>1;
+	@Override
+	public void bindTypeDependentMetadata(MetadataSources sources) {
+		// todo : implement method body
 	}
 
-	public String toString() {
-		return "[" + name + "=" + values + "]";
+	@Override
+	public void bindMappingMetadata(MetadataSources sources, List<String> processedEntityNames) {
+		// todo : implement method body
+	}
+
+	@Override
+	public void bindMappingDependentMetadata(MetadataSources sources) {
+		// todo : implement method body
 	}
 }

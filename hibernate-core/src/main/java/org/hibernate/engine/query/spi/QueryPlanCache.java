@@ -57,7 +57,20 @@ import org.jboss.logging.Logger;
 public class QueryPlanCache implements Serializable {
 
     private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, QueryPlanCache.class.getName());
+	/**
+	 * simple cache of param metadata based on query string.  Ideally, the original "user-supplied query"
+	 * string should be used to obtain this metadata (i.e., not the para-list-expanded query string) to avoid
+	 * unnecessary cache entries.
+	 * <p>
+	 * Used solely for caching param metadata for native-sql queries, see {@link #getSQLParameterMetadata} for a
+	 * discussion as to why...
+	 */
+	private final SimpleMRUCache sqlParamMetadataCache;
 
+	/**
+	 * the cache of the actual plans...
+	 */
+	private final SoftLimitMRUCache planCache;
 	private SessionFactoryImplementor factory;
 
 	public QueryPlanCache(SessionFactoryImplementor factory) {
@@ -76,22 +89,6 @@ public class QueryPlanCache implements Serializable {
 		this.sqlParamMetadataCache = new SimpleMRUCache( maxStrongReferenceCount );
 		this.planCache = new SoftLimitMRUCache( maxStrongReferenceCount, maxSoftReferenceCount );
 	}
-
-	/**
-	 * simple cache of param metadata based on query string.  Ideally, the original "user-supplied query"
-	 * string should be used to obtain this metadata (i.e., not the para-list-expanded query string) to avoid
-	 * unnecessary cache entries.
-	 * <p>
-	 * Used solely for caching param metadata for native-sql queries, see {@link #getSQLParameterMetadata} for a
-	 * discussion as to why...
-	 */
-	private final SimpleMRUCache sqlParamMetadataCache;
-
-	/**
-	 * the cache of the actual plans...
-	 */
-	private final SoftLimitMRUCache planCache;
-
 
 	/**
 	 * Obtain the parameter metadata for given native-sql query.
@@ -118,10 +115,13 @@ public class QueryPlanCache implements Serializable {
 		HQLQueryPlan plan = ( HQLQueryPlan ) planCache.get ( key );
 
 		if ( plan == null ) {
+			if(LOG.isTraceEnabled())
             LOG.trace("Unable to locate HQL query plan in cache; generating (" + queryString + ")");
 			plan = new HQLQueryPlan(queryString, shallow, enabledFilters, factory );
-        } else LOG.trace("Located HQL query plan in cache (" + queryString + ")");
-
+        } else {
+			if(LOG.isTraceEnabled())
+			LOG.trace("Located HQL query plan in cache (" + queryString + ")");
+		}
 		planCache.put( key, plan );
 
 		return plan;
@@ -133,10 +133,14 @@ public class QueryPlanCache implements Serializable {
 		FilterQueryPlan plan = ( FilterQueryPlan ) planCache.get ( key );
 
 		if ( plan == null ) {
+			if(LOG.isTraceEnabled())
             LOG.trace("Unable to locate collection-filter query plan in cache; generating (" + collectionRole + " : "
                       + filterString + ")");
 			plan = new FilterQueryPlan( filterString, collectionRole, shallow, enabledFilters, factory );
-        } else LOG.trace("Located collection-filter query plan in cache (" + collectionRole + " : " + filterString + ")");
+        } else {
+			if(LOG.isTraceEnabled())
+			LOG.trace("Located collection-filter query plan in cache (" + collectionRole + " : " + filterString + ")");
+		}
 
 		planCache.put( key, plan );
 
@@ -147,9 +151,13 @@ public class QueryPlanCache implements Serializable {
 		NativeSQLQueryPlan plan = ( NativeSQLQueryPlan ) planCache.get( spec );
 
 		if ( plan == null ) {
+			if(LOG.isTraceEnabled())
             LOG.trace("Unable to locate native-sql query plan in cache; generating (" + spec.getQueryString() + ")");
 			plan = new NativeSQLQueryPlan( spec, factory );
-        } else LOG.trace("Located native-sql query plan in cache (" + spec.getQueryString() + ")");
+        } else {
+			if(LOG.isTraceEnabled())
+			LOG.trace("Located native-sql query plan in cache (" + spec.getQueryString() + ")");
+		}
 
 		planCache.put( spec, plan );
 		return plan;
@@ -259,7 +267,7 @@ public class QueryPlanCache implements Serializable {
 						valueCount = new Integer( ( (Collection) entry.getValue() ).size() );
 					}
 					else {
-						valueCount = new Integer( 1 );
+						valueCount = 1;
 					}
 					parameterMetadata.put( key, valueCount );
 				}

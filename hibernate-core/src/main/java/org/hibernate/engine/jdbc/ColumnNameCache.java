@@ -49,7 +49,7 @@ public class ColumnNameCache {
 		}
 		else {
 			int index = rs.findColumn( columnName );
-			columnNameToIndexCache.put( columnName, new Integer(index) );
+			columnNameToIndexCache.put( columnName, index);
 			return index;
 		}
 	}

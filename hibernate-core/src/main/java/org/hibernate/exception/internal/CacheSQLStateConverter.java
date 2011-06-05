@@ -47,10 +47,10 @@ public class CacheSQLStateConverter implements SQLExceptionConverter {
 
 	private ViolatedConstraintNameExtracter extracter;
 
-	private static final Set SQL_GRAMMAR_CATEGORIES = new HashSet();
-	private static final Set DATA_CATEGORIES = new HashSet();
-	private static final Set INTEGRITY_VIOLATION_CATEGORIES = new HashSet();
-	private static final Set CONNECTION_CATEGORIES = new HashSet();
+	private static final Set<String> SQL_GRAMMAR_CATEGORIES = new HashSet<String>();
+	private static final Set<String> DATA_CATEGORIES = new HashSet<String>();
+	private static final Set<Integer> INTEGRITY_VIOLATION_CATEGORIES = new HashSet<Integer>();
+	private static final Set<String> CONNECTION_CATEGORIES = new HashSet<String>();
 
 	static {
 		SQL_GRAMMAR_CATEGORIES.add( "07" );
@@ -64,14 +64,14 @@ public class CacheSQLStateConverter implements SQLExceptionConverter {
 		DATA_CATEGORIES.add( "21" );
 		DATA_CATEGORIES.add( "02" );
 
-		INTEGRITY_VIOLATION_CATEGORIES.add( new Integer( 119 ) );
-		INTEGRITY_VIOLATION_CATEGORIES.add( new Integer( 120 ) );
-		INTEGRITY_VIOLATION_CATEGORIES.add( new Integer( 121 ) );
-		INTEGRITY_VIOLATION_CATEGORIES.add( new Integer( 122 ) );
-		INTEGRITY_VIOLATION_CATEGORIES.add( new Integer( 123 ) );
-		INTEGRITY_VIOLATION_CATEGORIES.add( new Integer( 124 ) );
-		INTEGRITY_VIOLATION_CATEGORIES.add( new Integer( 125 ) );
-		INTEGRITY_VIOLATION_CATEGORIES.add( new Integer( 127 ) );
+		INTEGRITY_VIOLATION_CATEGORIES.add( 119 );
+		INTEGRITY_VIOLATION_CATEGORIES.add( 120 );
+		INTEGRITY_VIOLATION_CATEGORIES.add( 121 );
+		INTEGRITY_VIOLATION_CATEGORIES.add( 122 );
+		INTEGRITY_VIOLATION_CATEGORIES.add( 123 );
+		INTEGRITY_VIOLATION_CATEGORIES.add( 124 );
+		INTEGRITY_VIOLATION_CATEGORIES.add( 125 );
+		INTEGRITY_VIOLATION_CATEGORIES.add( 127 );
 
 		CONNECTION_CATEGORIES.add( "08" );
 	}
@@ -90,7 +90,7 @@ public class CacheSQLStateConverter implements SQLExceptionConverter {
 	 */
 	public JDBCException convert(SQLException sqlException, String message, String sql) {
 		String sqlStateClassCode = JdbcExceptionHelper.extractSqlStateClassCode( sqlException );
-		Integer errorCode = new Integer( JdbcExceptionHelper.extractErrorCode( sqlException ) );
+		Integer errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
 		if ( sqlStateClassCode != null ) {
 			if ( SQL_GRAMMAR_CATEGORIES.contains( sqlStateClassCode ) ) {
 				return new SQLGrammarException( message, sqlException, sql );

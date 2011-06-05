@@ -121,7 +121,7 @@ public class ParameterTranslationsImpl implements ParameterTranslations {
 					paramHolder.type = namedSpec.getExpectedType();
 					namedParameterMap.put( namedSpec.getName(), paramHolder );
 				}
-				paramHolder.positions.add( new Integer( i ) );
+				paramHolder.positions.add( i );
 			}
 			else {
 				// don't care about other param types here, just those explicitly user-defined...

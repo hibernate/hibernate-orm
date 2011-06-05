@@ -142,7 +142,7 @@ public class CustomLoader extends Loader {
 				lockModes.add( (rootRtn.getLockMode()) );
 				resultColumnProcessors.add( new NonScalarResultColumnProcessor( returnableCounter++ ) );
 				nonScalarReturnList.add( rtn );
-				entityOwners.add( new Integer( -1 ) );
+				entityOwners.add( -1 );
 				resultTypes.add( persister.getType() );
 				specifiedAliases.add( rootRtn.getAlias() );
 				entityAliases.add( rootRtn.getEntityAliases() );
@@ -157,7 +157,7 @@ public class CustomLoader extends Loader {
 				lockModes.add( collRtn.getLockMode() );
 				resultColumnProcessors.add( new NonScalarResultColumnProcessor( returnableCounter++ ) );
 				nonScalarReturnList.add( rtn );
-				collectionOwners.add( new Integer( -1 ) );
+				collectionOwners.add( -1 );
 				resultTypes.add( persister.getType() );
 				specifiedAliases.add( collRtn.getAlias() );
 				collectionAliases.add( collRtn.getCollectionAliases() );
@@ -166,7 +166,7 @@ public class CustomLoader extends Loader {
 				if ( elementType.isEntityType() ) {
 					Queryable elementPersister = ( Queryable ) ( ( EntityType ) elementType ).getAssociatedJoinable( factory );
 					entityPersisters.add( elementPersister );
-					entityOwners.add( new Integer( -1 ) );
+					entityOwners.add( -1 );
 					entityAliases.add( collRtn.getElementEntityAliases() );
 					ArrayHelper.addAll( querySpaces, elementPersister.getQuerySpaces() );
 				}
@@ -176,7 +176,7 @@ public class CustomLoader extends Loader {
 				EntityFetchReturn fetchRtn = ( EntityFetchReturn ) rtn;
 				NonScalarReturn ownerDescriptor = fetchRtn.getOwner();
 				int ownerIndex = nonScalarReturnList.indexOf( ownerDescriptor );
-				entityOwners.add( new Integer( ownerIndex ) );
+				entityOwners.add( ownerIndex );
 				lockModes.add( fetchRtn.getLockMode() );
 				Queryable ownerPersister = determineAppropriateOwnerPersister( ownerDescriptor );
 				EntityType fetchedType = ( EntityType ) ownerPersister.getPropertyType( fetchRtn.getOwnerProperty() );
@@ -193,7 +193,7 @@ public class CustomLoader extends Loader {
 				CollectionFetchReturn fetchRtn = ( CollectionFetchReturn ) rtn;
 				NonScalarReturn ownerDescriptor = fetchRtn.getOwner();
 				int ownerIndex = nonScalarReturnList.indexOf( ownerDescriptor );
-				collectionOwners.add( new Integer( ownerIndex ) );
+				collectionOwners.add( ownerIndex );
 				lockModes.add( fetchRtn.getLockMode() );
 				Queryable ownerPersister = determineAppropriateOwnerPersister( ownerDescriptor );
 				String role = ownerPersister.getEntityName() + '.' + fetchRtn.getOwnerProperty();
@@ -207,7 +207,7 @@ public class CustomLoader extends Loader {
 				if ( elementType.isEntityType() ) {
 					Queryable elementPersister = ( Queryable ) ( ( EntityType ) elementType ).getAssociatedJoinable( factory );
 					entityPersisters.add( elementPersister );
-					entityOwners.add( new Integer( ownerIndex ) );
+					entityOwners.add( ownerIndex );
 					entityAliases.add( fetchRtn.getElementEntityAliases() );
 					ArrayHelper.addAll( querySpaces, elementPersister.getQuerySpaces() );
 				}

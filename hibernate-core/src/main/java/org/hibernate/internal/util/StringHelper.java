@@ -57,7 +57,7 @@ public final class StringHelper {
 	public static String join(String seperator, String[] strings) {
 		int length = strings.length;
 		if ( length == 0 ) return "";
-		StringBuffer buf = new StringBuffer( length * strings[0].length() )
+		StringBuilder buf = new StringBuilder( length * strings[0].length() )
 				.append( strings[0] );
 		for ( int i = 1; i < length; i++ ) {
 			buf.append( seperator ).append( strings[i] );
@@ -66,7 +66,7 @@ public final class StringHelper {
 	}
 
 	public static String join(String seperator, Iterator objects) {
-		StringBuffer buf = new StringBuffer();
+		StringBuilder buf = new StringBuilder();
 		if ( objects.hasNext() ) buf.append( objects.next() );
 		while ( objects.hasNext() ) {
 			buf.append( seperator ).append( objects.next() );
@@ -83,7 +83,7 @@ public final class StringHelper {
 	}
 
 	public static String repeat(String string, int times) {
-		StringBuffer buf = new StringBuffer( string.length() * times );
+		StringBuilder buf = new StringBuilder( string.length() * times );
 		for ( int i = 0; i < times; i++ ) buf.append( string );
 		return buf.toString();
 	}
@@ -199,7 +199,7 @@ public final class StringHelper {
 			return template;
 		}
 		else {
-			return new StringBuffer( template.substring( 0, loc ) )
+			return new StringBuilder( template.substring( 0, loc ) )
 					.append( replacement )
 					.append( template.substring( loc + placeholder.length() ) )
 					.toString();
@@ -334,7 +334,7 @@ public final class StringHelper {
 	public static String toString(Object[] array) {
 		int len = array.length;
 		if ( len == 0 ) return "";
-		StringBuffer buf = new StringBuffer( len * 12 );
+		StringBuilder buf = new StringBuilder( len * 12 );
 		for ( int i = 0; i < len - 1; i++ ) {
 			buf.append( array[i] ).append(", ");
 		}
@@ -415,7 +415,7 @@ public final class StringHelper {
 				inQuote = true;
 			}
 			else if ( c == character ) {
-				locations.add( new Integer( indx ) );
+				locations.add( indx );
 			}
 		}
 		return ArrayHelper.toIntArray( locations );
@@ -433,7 +433,7 @@ public final class StringHelper {
 		if ( name == null || prefix == null ) {
 			throw new NullPointerException();
 		}
-		return new StringBuffer( prefix.length() + name.length() + 1 )
+		return new StringBuilder( prefix.length() + name.length() + 1 )
 				.append(prefix)
 				.append('.')
 				.append(name)
@@ -585,7 +585,7 @@ public final class StringHelper {
 			return name;
 		}
 		else {
-			return new StringBuffer( name.length() + 2 ).append('`').append( name ).append( '`' ).toString();
+			return new StringBuilder( name.length() + 2 ).append('`').append( name ).append( '`' ).toString();
 		}
 	}
 

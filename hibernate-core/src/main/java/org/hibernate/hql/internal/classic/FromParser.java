@@ -62,10 +62,10 @@ public class FromParser implements Parser {
 	private static final Map JOIN_TYPES = new HashMap();
 
 	static {
-		JOIN_TYPES.put( "left", new Integer( JoinFragment.LEFT_OUTER_JOIN ) );
-		JOIN_TYPES.put( "right", new Integer( JoinFragment.RIGHT_OUTER_JOIN ) );
-		JOIN_TYPES.put( "full", new Integer( JoinFragment.FULL_JOIN ) );
-		JOIN_TYPES.put( "inner", new Integer( JoinFragment.INNER_JOIN ) );
+		JOIN_TYPES.put( "left", JoinFragment.LEFT_OUTER_JOIN );
+		JOIN_TYPES.put( "right", JoinFragment.RIGHT_OUTER_JOIN );
+		JOIN_TYPES.put( "full", JoinFragment.FULL_JOIN );
+		JOIN_TYPES.put( "inner", JoinFragment.INNER_JOIN );
 	}
 
 	public void token(String token, QueryTranslatorImpl q) throws QueryException {

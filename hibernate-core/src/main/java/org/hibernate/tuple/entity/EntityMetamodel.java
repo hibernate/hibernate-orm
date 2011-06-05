@@ -183,7 +183,7 @@ public class EntityMetamodel implements Serializable {
 			}
 
 			if ( prop.isNaturalIdentifier() ) {
-				naturalIdNumbers.add( new Integer(i) );
+				naturalIdNumbers.add( i );
 				if ( prop.isUpdateable() ) {
 					foundUpdateableNaturalIdProperty = true;
 				}
@@ -375,14 +375,14 @@ public class EntityMetamodel implements Serializable {
 	}
 
 	private void mapPropertyToIndex(Property prop, int i) {
-		propertyIndexes.put( prop.getName(), new Integer(i) );
+		propertyIndexes.put( prop.getName(), i );
 		if ( prop.getValue() instanceof Component ) {
 			Iterator iter = ( (Component) prop.getValue() ).getPropertyIterator();
 			while ( iter.hasNext() ) {
 				Property subprop = (Property) iter.next();
 				propertyIndexes.put(
 						prop.getName() + '.' + subprop.getName(),
-						new Integer(i)
+						i
 					);
 			}
 		}

@@ -170,7 +170,7 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 				throw new QueryException( "duplicate association path: " + wholeAssociationPath );
 			}
 			int joinType = crit.getJoinType();
-			old = associationPathJoinTypesMap.put( wholeAssociationPath, new Integer( joinType ) );
+			old = associationPathJoinTypesMap.put( wholeAssociationPath, joinType );
 			if ( old != null ) {
 				// TODO : not so sure this is needed...
 				throw new QueryException( "duplicate association path: " + wholeAssociationPath );

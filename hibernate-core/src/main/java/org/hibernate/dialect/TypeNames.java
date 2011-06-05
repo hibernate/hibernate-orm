@@ -114,7 +114,7 @@ public class TypeNames {
 			map = new TreeMap<Integer, String>();
 			weighted.put( typecode, map );
 		}
-		map.put(new Integer(capacity), value);
+		map.put(capacity, value);
 	}
 
 	/**

@@ -320,7 +320,7 @@ public class SQLQueryParser {
 		}
 
 		private void addNamedParameter(String name) {
-			Integer loc = new Integer( parameterCount++ );
+			Integer loc = parameterCount++;
 			Object o = namedParameterBindPoints.get( name );
 			if ( o == null ) {
 				namedParameterBindPoints.put( name, loc );

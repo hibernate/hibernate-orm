@@ -212,11 +212,11 @@ public final class Environment implements AvailableSettings {
 
         LOG.version(Version.getVersionString());
 
-		ISOLATION_LEVELS.put( new Integer(Connection.TRANSACTION_NONE), "NONE" );
-		ISOLATION_LEVELS.put( new Integer(Connection.TRANSACTION_READ_UNCOMMITTED), "READ_UNCOMMITTED" );
-		ISOLATION_LEVELS.put( new Integer(Connection.TRANSACTION_READ_COMMITTED), "READ_COMMITTED" );
-		ISOLATION_LEVELS.put( new Integer(Connection.TRANSACTION_REPEATABLE_READ), "REPEATABLE_READ" );
-		ISOLATION_LEVELS.put( new Integer(Connection.TRANSACTION_SERIALIZABLE), "SERIALIZABLE" );
+		ISOLATION_LEVELS.put( (Connection.TRANSACTION_NONE), "NONE" );
+		ISOLATION_LEVELS.put( (Connection.TRANSACTION_READ_UNCOMMITTED), "READ_UNCOMMITTED" );
+		ISOLATION_LEVELS.put( (Connection.TRANSACTION_READ_COMMITTED), "READ_COMMITTED" );
+		ISOLATION_LEVELS.put( (Connection.TRANSACTION_REPEATABLE_READ), "REPEATABLE_READ" );
+		ISOLATION_LEVELS.put( (Connection.TRANSACTION_SERIALIZABLE), "SERIALIZABLE" );
 
 		GLOBAL_PROPERTIES = new Properties();
 		//Set USE_REFLECTION_OPTIMIZER to false to fix HHH-227
@@ -339,7 +339,7 @@ public final class Environment implements AvailableSettings {
 	 * @return a human-readable name
 	 */
 	public static String isolationLevelToString(int isolation) {
-		return (String) ISOLATION_LEVELS.get( new Integer(isolation) );
+		return (String) ISOLATION_LEVELS.get( isolation );
 	}
 
 	public static BytecodeProvider buildBytecodeProvider(Properties properties) {

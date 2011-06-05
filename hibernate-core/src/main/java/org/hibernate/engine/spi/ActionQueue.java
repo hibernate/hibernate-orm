@@ -677,7 +677,7 @@ public class ActionQueue {
 
 			// now rebuild the insertions list. There is a batch for each entry in the name list.
 			for ( int i = 0; i < actionBatches.size(); i++ ) {
-				List batch = ( List ) actionBatches.get( new Integer( i ) );
+				List batch = ( List ) actionBatches.get( i );
 				for ( Object aBatch : batch ) {
 					EntityInsertAction action = (EntityInsertAction) aBatch;
 					insertions.add( action );

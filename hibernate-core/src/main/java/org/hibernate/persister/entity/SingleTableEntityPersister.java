@@ -656,7 +656,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		for ( int i=0; i<props.length; i++ ) {
 			int propTableNumber = getSubclassPropertyTableNumber( props[i], classes[i] );
 			if ( isSubclassTableSequentialSelect(propTableNumber) && !isSubclassTableLazy(propTableNumber) ) {
-				tableNumbers.add( new Integer(propTableNumber) );
+				tableNumbers.add( propTableNumber);
 			}
 		}
 		if ( tableNumbers.isEmpty() ) return null;
@@ -665,8 +665,8 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		ArrayList columnNumbers = new ArrayList();
 		final int[] columnTableNumbers = getSubclassColumnTableNumberClosure();
 		for ( int i=0; i<getSubclassColumnClosure().length; i++ ) {
-			if ( tableNumbers.contains( new Integer( columnTableNumbers[i] ) ) ) {
-				columnNumbers.add( new Integer(i) );
+			if ( tableNumbers.contains( columnTableNumbers[i] ) ) {
+				columnNumbers.add( i );
 			}
 		}
 		
@@ -674,8 +674,8 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		ArrayList formulaNumbers = new ArrayList();
 		final int[] formulaTableNumbers = getSubclassColumnTableNumberClosure();
 		for ( int i=0; i<getSubclassFormulaTemplateClosure().length; i++ ) {
-			if ( tableNumbers.contains( new Integer( formulaTableNumbers[i] ) ) ) {
-				formulaNumbers.add( new Integer(i) );
+			if ( tableNumbers.contains( formulaTableNumbers[i] ) ) {
+				formulaNumbers.add( i );
 			}
 		}
 		

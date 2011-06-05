@@ -241,7 +241,7 @@ public class CriteriaImpl implements Criteria, Serializable {
 	}
 
 	public Criteria setMaxResults(int maxResults) {
-		this.maxResults = new Integer(maxResults);
+		this.maxResults = maxResults;
 		return this;
 	}
 
@@ -250,7 +250,7 @@ public class CriteriaImpl implements Criteria, Serializable {
 	}
 
 	public Criteria setFirstResult(int firstResult) {
-		this.firstResult = new Integer(firstResult);
+		this.firstResult = firstResult;
 		return this;
 	}
 
@@ -259,7 +259,7 @@ public class CriteriaImpl implements Criteria, Serializable {
 	}
 
 	public Criteria setFetchSize(int fetchSize) {
-		this.fetchSize = new Integer(fetchSize);
+		this.fetchSize = fetchSize;
 		return this;
 	}
 
@@ -268,7 +268,7 @@ public class CriteriaImpl implements Criteria, Serializable {
 	}
 
 	public Criteria setTimeout(int timeout) {
-		this.timeout = new Integer(timeout);
+		this.timeout = timeout;
 		return this;
 	}
 

@@ -164,7 +164,7 @@ public abstract class AbstractQueryImpl implements Query {
 	}
 
 	public Query setFirstResult(int firstResult) {
-		selection.setFirstRow( new Integer(firstResult) );
+		selection.setFirstRow( firstResult);
 		return this;
 	}
 
@@ -174,17 +174,17 @@ public abstract class AbstractQueryImpl implements Query {
 			selection.setMaxRows( null );
 		}
 		else {
-			selection.setMaxRows( new Integer(maxResults) );
+			selection.setMaxRows( maxResults);
 		}
 		return this;
 	}
 
 	public Query setTimeout(int timeout) {
-		selection.setTimeout( new Integer(timeout) );
+		selection.setTimeout( timeout);
 		return this;
 	}
 	public Query setFetchSize(int fetchSize) {
-		selection.setFetchSize( new Integer(fetchSize) );
+		selection.setFetchSize( fetchSize);
 		return this;
 	}
 

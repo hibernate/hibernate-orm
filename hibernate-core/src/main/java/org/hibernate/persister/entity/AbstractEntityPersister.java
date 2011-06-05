@@ -599,7 +599,7 @@ public abstract class AbstractEntityPersister
 			if ( lazyAvailable && prop.isLazy() ) {
 				lazyProperties.add( prop.getName() );
 				lazyNames.add( prop.getName() );
-				lazyNumbers.add( new Integer( i ) );
+				lazyNumbers.add( i );
 				lazyTypes.add( prop.getValue().getType() );
 				lazyColAliases.add( colAliases );
 			}
@@ -770,18 +770,18 @@ public abstract class AbstractEntityPersister
 			int propertyNumber = getSubclassPropertyIndex( lazyPropertyNames[i] );
 
 			int tableNumber = getSubclassPropertyTableNumber( propertyNumber );
-			tableNumbers.add( new Integer( tableNumber ) );
+			tableNumbers.add(  tableNumber );
 
 			int[] colNumbers = subclassPropertyColumnNumberClosure[propertyNumber];
 			for ( int j = 0; j < colNumbers.length; j++ ) {
 				if ( colNumbers[j]!=-1 ) {
-					columnNumbers.add( new Integer( colNumbers[j] ) );
+					columnNumbers.add( colNumbers[j] );
 				}
 			}
 			int[] formNumbers = subclassPropertyFormulaNumberClosure[propertyNumber];
 			for ( int j = 0; j < formNumbers.length; j++ ) {
 				if ( formNumbers[j]!=-1 ) {
-					formulaNumbers.add( new Integer( formNumbers[j] ) );
+					formulaNumbers.add( formNumbers[j] );
 				}
 			}
 		}

@@ -961,7 +961,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 	}
 
 	private void trackNamedParameterPositions(String name) {
-		Integer loc = new Integer( parameterCount++ );
+		Integer loc = parameterCount++;
 		Object o = namedParameters.get( name );
 		if ( o == null ) {
 			namedParameters.put( name, loc );

@@ -51,7 +51,7 @@ public class ParamLocationRecognizer implements ParameterParser.Recognizer {
 		}
 
 		private void add(int position) {
-			positions.add( new Integer( position ) );
+			positions.add( position );
 		}
 
 		public int[] buildPositionsArray() {
@@ -101,7 +101,7 @@ public class ParamLocationRecognizer implements ParameterParser.Recognizer {
 	// Recognition code ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	public void ordinalParameter(int position) {
-		ordinalParameterLocationList.add( new Integer( position ) );
+		ordinalParameterLocationList.add( position );
 	}
 
 	public void namedParameter(String name, int position) {

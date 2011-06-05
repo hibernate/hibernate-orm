@@ -524,7 +524,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 
 	void addNamedParameter(String name) {
 		if ( superQuery != null ) superQuery.addNamedParameter( name );
-		Integer loc = new Integer( parameterCount++ );
+		Integer loc = parameterCount++;
 		Object o = namedParameters.get( name );
 		if ( o == null ) {
 			namedParameters.put( name, loc );

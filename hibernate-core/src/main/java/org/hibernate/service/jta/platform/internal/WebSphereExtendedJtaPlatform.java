@@ -235,7 +235,7 @@ public class WebSphereExtendedJtaPlatform extends AbstractJtaPlatform {
 
 			@Override
 			public int getStatus() {
-				return new Integer(0).equals( getLocalId() ) ?
+				return Integer.valueOf( 0 ).equals( getLocalId() ) ?
 						Status.STATUS_NO_TRANSACTION : Status.STATUS_ACTIVE;
 			}
 

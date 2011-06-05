@@ -64,7 +64,7 @@ public class ComponentMetamodel implements Serializable {
 		while ( itr.hasNext() ) {
 			Property property = ( Property ) itr.next();
 			properties[i] = PropertyFactory.buildStandardProperty( property, false );
-			propertyIndexes.put( property.getName(), new Integer( i ) );
+			propertyIndexes.put( property.getName(), i );
 			i++;
 		}
 

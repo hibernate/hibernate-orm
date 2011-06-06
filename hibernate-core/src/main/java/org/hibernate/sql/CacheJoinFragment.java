@@ -34,8 +34,8 @@ import org.hibernate.AssertionFailure;
  */
 public class CacheJoinFragment extends ANSIJoinFragment {
 
-	public void addJoin(String tableName, String alias, String[] fkColumns, String[] pkColumns, int joinType, String on) {
-		if ( joinType == FULL_JOIN ) {
+	public void addJoin(String tableName, String alias, String[] fkColumns, String[] pkColumns, JoinType joinType, String on) {
+		if ( joinType == JoinType.FULL_JOIN ) {
 			throw new AssertionFailure( "Cache does not support full outer joins" );
 		}
 		super.addJoin( tableName, alias, fkColumns, pkColumns, joinType, on );

@@ -24,6 +24,8 @@
  */
 package org.hibernate.criterion;
 import java.io.Serializable;
+import javax.persistence.criteria.Join;
+
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
@@ -31,6 +33,7 @@ import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.CriteriaImpl;
+import org.hibernate.sql.JoinType;
 import org.hibernate.transform.ResultTransformer;
 
 /**
@@ -144,26 +147,62 @@ public class DetachedCriteria implements CriteriaSpecification, Serializable {
 		return impl;
 	}
 
-    public DetachedCriteria createAlias(String associationPath, String alias, int joinType) throws HibernateException {
+    public DetachedCriteria createAlias(String associationPath, String alias, JoinType joinType) throws HibernateException {
         criteria.createAlias(associationPath, alias, joinType);
         return this;
     }
 	
-	public DetachedCriteria createAlias(String associationPath, String alias, int joinType, Criterion withClause) throws HibernateException {
+	public DetachedCriteria createAlias(String associationPath, String alias, JoinType joinType, Criterion withClause) throws HibernateException {
 		criteria.createAlias(associationPath, alias, joinType, withClause);
 		return this;
 	}
 	
-	public DetachedCriteria createCriteria(String associationPath, int joinType) throws HibernateException {
+	public DetachedCriteria createCriteria(String associationPath, JoinType joinType) throws HibernateException {
         return new DetachedCriteria(impl, criteria.createCriteria(associationPath, joinType));
     }
 
-    public DetachedCriteria createCriteria(String associationPath, String alias, int joinType) throws HibernateException {
+    public DetachedCriteria createCriteria(String associationPath, String alias, JoinType joinType) throws HibernateException {
         return new DetachedCriteria(impl, criteria.createCriteria(associationPath, alias, joinType));
     }
 	
-	public DetachedCriteria createCriteria(String associationPath, String alias, int joinType, Criterion withClause) throws HibernateException {
+	public DetachedCriteria createCriteria(String associationPath, String alias, JoinType joinType, Criterion withClause) throws HibernateException {
 		return new DetachedCriteria(impl, criteria.createCriteria(associationPath, alias, joinType, withClause));
+	}
+
+	/**
+	 * @deprecated use {@link #createAlias(String, String, JoinType)}
+	 */
+	@Deprecated
+	public DetachedCriteria createAlias(String associationPath, String alias, int joinType) throws HibernateException {
+       return createAlias( associationPath, alias, JoinType.parse( joinType ) );
+    }
+	/**
+	 * @deprecated use {@link #createAlias(String, String, JoinType, Criterion)}
+	 */
+	@Deprecated
+	public DetachedCriteria createAlias(String associationPath, String alias, int joinType, Criterion withClause) throws HibernateException {
+		return createAlias( associationPath, alias, JoinType.parse( joinType ), withClause );
+	}
+	/**
+	 * @deprecated use {@link #createCriteria(String, JoinType)}
+	 */
+	@Deprecated
+	public DetachedCriteria createCriteria(String associationPath, int joinType) throws HibernateException {
+        return createCriteria( associationPath, JoinType.parse( joinType ) );
+    }
+	/**
+	 * @deprecated use {@link #createCriteria(String, String, JoinType)}
+	 */
+	@Deprecated
+    public DetachedCriteria createCriteria(String associationPath, String alias, int joinType) throws HibernateException {
+        return createCriteria( associationPath, alias, JoinType.parse( joinType ) );
+    }
+	/**
+	 * @deprecated use {@link #createCriteria(String, String, JoinType, Criterion)}
+	 */
+	@Deprecated
+	public DetachedCriteria createCriteria(String associationPath, String alias, int joinType, Criterion withClause) throws HibernateException {
+		return createCriteria( associationPath, alias, JoinType.parse( joinType ), withClause );
 	}
 	
 	public DetachedCriteria setComment(String comment) {

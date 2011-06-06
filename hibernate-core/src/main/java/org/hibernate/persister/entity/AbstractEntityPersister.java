@@ -98,6 +98,7 @@ import org.hibernate.sql.Alias;
 import org.hibernate.sql.Delete;
 import org.hibernate.sql.Insert;
 import org.hibernate.sql.JoinFragment;
+import org.hibernate.sql.JoinType;
 import org.hibernate.sql.Select;
 import org.hibernate.sql.SelectFragment;
 import org.hibernate.sql.SimpleSelect;
@@ -2999,8 +3000,8 @@ public abstract class AbstractEntityPersister
 						idCols,
 						getSubclassTableKeyColumns( j ),
 						innerJoin && isClassOrSuperclassTable( j ) && !isInverseTable( j ) && !isNullableTable( j ) ?
-						JoinFragment.INNER_JOIN : //we can inner join to superclass tables (the row MUST be there)
-						JoinFragment.LEFT_OUTER_JOIN //we can never inner join to subclass tables
+						JoinType.INNER_JOIN : //we can inner join to superclass tables (the row MUST be there)
+						JoinType.LEFT_OUTER_JOIN //we can never inner join to subclass tables
 					);
 			}
 		}
@@ -3017,8 +3018,8 @@ public abstract class AbstractEntityPersister
 					keyCols,
 					getSubclassTableKeyColumns( j ),
 					isInverseSubclassTable( j ) || isNullableSubclassTable( j ) ?
-					JoinFragment.LEFT_OUTER_JOIN :
-					JoinFragment.INNER_JOIN );
+					JoinType.LEFT_OUTER_JOIN :
+					JoinType.INNER_JOIN );
 		}
 		return jf;
 	}

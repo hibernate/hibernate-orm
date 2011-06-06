@@ -42,16 +42,16 @@ public class QueryJoinFragment extends JoinFragment {
 		this.useThetaStyleInnerJoins = useThetaStyleInnerJoins;
 	}
 
-	public void addJoin(String tableName, String alias, String[] fkColumns, String[] pkColumns, int joinType) {
+	public void addJoin(String tableName, String alias, String[] fkColumns, String[] pkColumns, JoinType joinType) {
 		addJoin( tableName, alias, alias, fkColumns, pkColumns, joinType, null );
 	}
 
-	public void addJoin(String tableName, String alias, String[] fkColumns, String[] pkColumns, int joinType, String on) {
+	public void addJoin(String tableName, String alias, String[] fkColumns, String[] pkColumns, JoinType joinType, String on) {
 		addJoin( tableName, alias, alias, fkColumns, pkColumns, joinType, on );
 	}
 
-	private void addJoin(String tableName, String alias, String concreteAlias, String[] fkColumns, String[] pkColumns, int joinType, String on) {
-		if ( !useThetaStyleInnerJoins || joinType != INNER_JOIN ) {
+	private void addJoin(String tableName, String alias, String concreteAlias, String[] fkColumns, String[] pkColumns, JoinType joinType, String on) {
+		if ( !useThetaStyleInnerJoins || joinType != JoinType.INNER_JOIN ) {
 			JoinFragment jf = dialect.createOuterJoinFragment();
 			jf.addJoin( tableName, alias, fkColumns, pkColumns, joinType, on );
 			addFragment( jf );

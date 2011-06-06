@@ -37,21 +37,21 @@ public class Sybase11JoinFragment extends JoinFragment {
 	private StringBuffer afterFrom = new StringBuffer();
 	private StringBuffer afterWhere = new StringBuffer();
 
-	public void addJoin(String tableName, String alias, String[] fkColumns, String[] pkColumns, int joinType) {
+	public void addJoin(String tableName, String alias, String[] fkColumns, String[] pkColumns, JoinType joinType) {
 
 		addCrossJoin(tableName, alias);
 
 		for ( int j=0; j<fkColumns.length; j++) {
 			//full joins are not supported.. yet!
-			if (joinType==JoinFragment.FULL_JOIN ) throw new UnsupportedOperationException();
+			if (joinType==JoinType.FULL_JOIN ) throw new UnsupportedOperationException();
 
 			afterWhere.append(" and ")
 				.append( fkColumns[j] )
 				.append( " " );
 
-			if (joinType==LEFT_OUTER_JOIN ) afterWhere.append("*");
+			if (joinType==JoinType.LEFT_OUTER_JOIN ) afterWhere.append("*");
 			afterWhere.append('=');
-			if (joinType==RIGHT_OUTER_JOIN ) afterWhere.append("*");
+			if (joinType==JoinType.RIGHT_OUTER_JOIN ) afterWhere.append("*");
 
 			afterWhere.append (" ")
 				.append(alias)
@@ -113,7 +113,7 @@ public class Sybase11JoinFragment extends JoinFragment {
 	}
 
 
-	public void addJoin(String tableName, String alias, String[] fkColumns, String[] pkColumns, int joinType, String on) {
+	public void addJoin(String tableName, String alias, String[] fkColumns, String[] pkColumns, JoinType joinType, String on) {
 		addJoin(tableName, alias, fkColumns, pkColumns, joinType);
 		addCondition(on);
 	}

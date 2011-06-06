@@ -41,6 +41,7 @@ import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.sql.JoinType;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.Type;
 import org.hibernate.internal.util.collections.ArrayHelper;
@@ -129,7 +130,7 @@ public class CriteriaJoinWalker extends AbstractEntityJoinWalker {
 		}
 	}
 
-	protected int getJoinType(
+	protected JoinType getJoinType(
 			OuterJoinLoadable persister,
 			final PropertyPath path,
 			int propertyNumber,
@@ -145,7 +146,7 @@ public class CriteriaJoinWalker extends AbstractEntityJoinWalker {
 		}
 		else {
 			if ( translator.hasProjection() ) {
-				return -1;
+				return JoinType.NONE;
 			}
 			else {
 				FetchMode fetchMode = translator.getRootCriteria().getFetchMode( path.getFullPath() );
@@ -174,14 +175,14 @@ public class CriteriaJoinWalker extends AbstractEntityJoinWalker {
 						return getJoinType( nullable, currentDepth );
 					}
 					else {
-						return -1;
+						return JoinType.NONE;
 					}
 				}
 			}
 		}
 	}
 
-	protected int getJoinType(
+	protected JoinType getJoinType(
 			AssociationType associationType,
 			FetchMode config,
 			PropertyPath path,

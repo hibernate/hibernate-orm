@@ -42,6 +42,7 @@ import org.hibernate.criterion.NaturalIdentifier;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projection;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.sql.JoinType;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.internal.util.StringHelper;
 
@@ -194,37 +195,64 @@ public class CriteriaImpl implements Criteria, Serializable {
 	}
 
 	public Criteria createAlias(String associationPath, String alias) {
-		return createAlias( associationPath, alias, INNER_JOIN );
+		return createAlias( associationPath, alias, JoinType.INNER_JOIN );
 	}
 
-	public Criteria createAlias(String associationPath, String alias, int joinType) {
+	public Criteria createAlias(String associationPath, String alias, JoinType joinType) {
 		new Subcriteria( this, associationPath, alias, joinType );
 		return this;
 	}
 
-	public Criteria createAlias(String associationPath, String alias, int joinType, Criterion withClause) {
+	@Override
+	public Criteria createAlias(String associationPath, String alias, int joinType) throws HibernateException {
+		return createAlias( associationPath, alias, JoinType.parse( joinType ) );
+	}
+
+	public Criteria createAlias(String associationPath, String alias, JoinType joinType, Criterion withClause) {
 		new Subcriteria( this, associationPath, alias, joinType, withClause );
 		return this;
 	}
 
-	public Criteria createCriteria(String associationPath) {
-		return createCriteria( associationPath, INNER_JOIN );
+	@Override
+	public Criteria createAlias(String associationPath, String alias, int joinType, Criterion withClause)
+			throws HibernateException {
+		return createAlias( associationPath, alias, JoinType.parse( joinType ), withClause );
 	}
 
-	public Criteria createCriteria(String associationPath, int joinType) {
+	public Criteria createCriteria(String associationPath) {
+		return createCriteria( associationPath, JoinType.INNER_JOIN );
+	}
+
+	public Criteria createCriteria(String associationPath, JoinType joinType) {
 		return new Subcriteria( this, associationPath, joinType );
 	}
 
-	public Criteria createCriteria(String associationPath, String alias) {
-		return createCriteria( associationPath, alias, INNER_JOIN );
+	@Override
+	public Criteria createCriteria(String associationPath, int joinType) throws HibernateException {
+		return createCriteria(associationPath, JoinType.parse( joinType ));
 	}
 
-	public Criteria createCriteria(String associationPath, String alias, int joinType) {
+	public Criteria createCriteria(String associationPath, String alias) {
+		return createCriteria( associationPath, alias, JoinType.INNER_JOIN );
+	}
+
+	public Criteria createCriteria(String associationPath, String alias, JoinType joinType) {
 		return new Subcriteria( this, associationPath, alias, joinType );
 	}
 
-	public Criteria createCriteria(String associationPath, String alias, int joinType, Criterion withClause) {
+	@Override
+	public Criteria createCriteria(String associationPath, String alias, int joinType) throws HibernateException {
+		return createCriteria( associationPath, alias, JoinType.parse( joinType ) );
+	}
+
+	public Criteria createCriteria(String associationPath, String alias, JoinType joinType, Criterion withClause) {
 		return new Subcriteria( this, associationPath, alias, joinType, withClause );
+	}
+
+	@Override
+	public Criteria createCriteria(String associationPath, String alias, int joinType, Criterion withClause)
+			throws HibernateException {
+		return createCriteria( associationPath, alias, JoinType.parse( joinType ), withClause );
 	}
 
 	public ResultTransformer getResultTransformer() {
@@ -412,13 +440,13 @@ public class CriteriaImpl implements Criteria, Serializable {
 		private String path;
 		private Criteria parent;
 		private LockMode lockMode;
-		private int joinType;
+		private JoinType joinType = JoinType.INNER_JOIN;
 		private Criterion withClause;
 		private boolean hasRestriction;
 
 		// Constructors ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-		private Subcriteria(Criteria parent, String path, String alias, int joinType, Criterion withClause) {
+		private Subcriteria(Criteria parent, String path, String alias, JoinType joinType, Criterion withClause) {
 			this.alias = alias;
 			this.path = path;
 			this.parent = parent;
@@ -428,11 +456,11 @@ public class CriteriaImpl implements Criteria, Serializable {
 			CriteriaImpl.this.subcriteriaList.add( this );
 		}
 
-		private Subcriteria(Criteria parent, String path, String alias, int joinType) {
+		private Subcriteria(Criteria parent, String path, String alias, JoinType joinType) {
 			this( parent, path, alias, joinType, null );
 		}
 
-		private Subcriteria(Criteria parent, String path, int joinType) {
+		private Subcriteria(Criteria parent, String path, JoinType joinType) {
 			this( parent, path, null, joinType );
 		}
 
@@ -471,7 +499,7 @@ public class CriteriaImpl implements Criteria, Serializable {
 			return this;
 		}
 
-		public int getJoinType() {
+		public JoinType getJoinType() {
 			return joinType;
 		}
 
@@ -497,37 +525,64 @@ public class CriteriaImpl implements Criteria, Serializable {
 		}
 
 		public Criteria createAlias(String associationPath, String alias) {
-			return createAlias( associationPath, alias, INNER_JOIN );
+			return createAlias( associationPath, alias, JoinType.INNER_JOIN );
 		}
 
-		public Criteria createAlias(String associationPath, String alias, int joinType) throws HibernateException {
+		public Criteria createAlias(String associationPath, String alias, JoinType joinType) throws HibernateException {
 			new Subcriteria( this, associationPath, alias, joinType );
 			return this;
 		}
 
-		public Criteria createAlias(String associationPath, String alias, int joinType, Criterion withClause) throws HibernateException {
+		@Override
+		public Criteria createAlias(String associationPath, String alias, int joinType) throws HibernateException {
+			return createAlias( associationPath, alias, JoinType.parse( joinType ) );
+		}
+
+		public Criteria createAlias(String associationPath, String alias, JoinType joinType, Criterion withClause) throws HibernateException {
 			new Subcriteria( this, associationPath, alias, joinType, withClause );
 			return this;
 		}
 
-		public Criteria createCriteria(String associationPath) {
-			return createCriteria( associationPath, INNER_JOIN );
+		@Override
+		public Criteria createAlias(String associationPath, String alias, int joinType, Criterion withClause)
+				throws HibernateException {
+			return createAlias( associationPath, alias, JoinType.parse( joinType ), withClause );
 		}
 
-		public Criteria createCriteria(String associationPath, int joinType) throws HibernateException {
+		public Criteria createCriteria(String associationPath) {
+			return createCriteria( associationPath, JoinType.INNER_JOIN );
+		}
+
+		public Criteria createCriteria(String associationPath, JoinType joinType) throws HibernateException {
 			return new Subcriteria( Subcriteria.this, associationPath, joinType );
 		}
 
-		public Criteria createCriteria(String associationPath, String alias) {
-			return createCriteria( associationPath, alias, INNER_JOIN );
+		@Override
+		public Criteria createCriteria(String associationPath, int joinType) throws HibernateException {
+			return createCriteria( associationPath, JoinType.parse( joinType ) );
 		}
 
-		public Criteria createCriteria(String associationPath, String alias, int joinType) throws HibernateException {
+		public Criteria createCriteria(String associationPath, String alias) {
+			return createCriteria( associationPath, alias, JoinType.INNER_JOIN );
+		}
+
+		public Criteria createCriteria(String associationPath, String alias, JoinType joinType) throws HibernateException {
 			return new Subcriteria( Subcriteria.this, associationPath, alias, joinType );
 		}
 
-		public Criteria createCriteria(String associationPath, String alias, int joinType, Criterion withClause) throws HibernateException {
+		@Override
+		public Criteria createCriteria(String associationPath, String alias, int joinType) throws HibernateException {
+			return createCriteria( associationPath, alias, JoinType.parse( joinType ) );
+		}
+
+		public Criteria createCriteria(String associationPath, String alias, JoinType joinType, Criterion withClause) throws HibernateException {
 			return new Subcriteria( this, associationPath, alias, joinType, withClause );
+		}
+
+		@Override
+		public Criteria createCriteria(String associationPath, String alias, int joinType, Criterion withClause)
+				throws HibernateException {
+			return createCriteria( associationPath, alias, JoinType.parse( joinType ), withClause );
 		}
 
 		public boolean isReadOnly() {

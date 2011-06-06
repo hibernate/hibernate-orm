@@ -33,6 +33,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.JoinFragment;
+import org.hibernate.sql.JoinType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.Type;
 import antlr.SemanticException;
@@ -77,7 +78,7 @@ public class IdentNode extends FromReferenceNode implements SelectExpression {
 
 		String alias = null;  // DotNode uses null here...
 		String columnTableAlias = getFromElement().getTableAlias();
-		int joinType = JoinFragment.INNER_JOIN;
+		JoinType joinType = JoinType.INNER_JOIN;
 		boolean fetch = false;
 
 		FromElementFactory factory = new FromElementFactory(

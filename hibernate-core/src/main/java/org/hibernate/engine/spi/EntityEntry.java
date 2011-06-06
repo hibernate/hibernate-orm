@@ -387,7 +387,7 @@ public final class EntityEntry implements Serializable {
 	            ( Object[] ) ois.readObject(),
 	            ( Object[] ) ois.readObject(),
 	            ois.readObject(),
-	            LockMode.parse( (String) ois.readObject() ),
+	            LockMode.valueOf( (String) ois.readObject() ),
 	            ois.readBoolean(),
 	            ois.readBoolean(),
 	            ois.readBoolean()

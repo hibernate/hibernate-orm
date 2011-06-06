@@ -53,9 +53,9 @@ public class Fetch {
 	 * require major changes to the subselect loading code (which is
 	 * needed for other things as well anyway).
 	 */
-	public static class Style {
-		public static final Style JOIN = new Style( "join" );
-		public static final Style SELECT = new Style( "select" );
+	public enum Style {
+		JOIN( "join" ),
+		SELECT( "select" );
 
 		private final String name;
 

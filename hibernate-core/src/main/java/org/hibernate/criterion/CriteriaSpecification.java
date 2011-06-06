@@ -23,6 +23,7 @@
  *
  */
 package org.hibernate.criterion;
+import org.hibernate.sql.JoinType;
 import org.hibernate.transform.AliasToEntityMapResultTransformer;
 import org.hibernate.transform.DistinctRootEntityResultTransformer;
 import org.hibernate.transform.PassThroughResultTransformer;
@@ -61,17 +62,24 @@ public interface CriteriaSpecification {
 
 	/**
 	 * Specifies joining to an entity based on an inner join.
+	 * @deprecated use {@link JoinType#INNER_JOIN}
 	 */
+	@Deprecated
 	public static final int INNER_JOIN = org.hibernate.sql.JoinFragment.INNER_JOIN;
 
 	/**
 	 * Specifies joining to an entity based on a full join.
+	 * @deprecated use {@link JoinType#FULL_JOIN}
 	 */
+	@Deprecated
 	public static final int FULL_JOIN = org.hibernate.sql.JoinFragment.FULL_JOIN;
 
 	/**
 	 * Specifies joining to an entity based on a left outer join.
+	 * @deprecated use {@link JoinType#LEFT_OUTER_JOIN}
 	 */
+	@Deprecated
 	public static final int LEFT_JOIN = org.hibernate.sql.JoinFragment.LEFT_OUTER_JOIN;
-	
+
+
 }

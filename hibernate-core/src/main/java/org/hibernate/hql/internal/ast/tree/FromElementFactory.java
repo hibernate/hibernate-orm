@@ -37,6 +37,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.JoinFragment;
+import org.hibernate.sql.JoinType;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
@@ -182,7 +183,7 @@ public class FromElementFactory implements SqlTokenTypes {
 	FromElement createCollection(
 	        QueryableCollection queryableCollection,
 	        String role,
-	        int joinType,
+	        JoinType joinType,
 	        boolean fetchFlag,
 	        boolean indexed)
 			throws SemanticException {
@@ -330,7 +331,7 @@ public class FromElementFactory implements SqlTokenTypes {
 		AssociationType elementAssociationType = sfh.getElementAssociationType( type );
 
 		// Create the join element under the from element.
-		int joinType = JoinFragment.INNER_JOIN;
+		JoinType joinType = JoinType.INNER_JOIN;
 		JoinSequence joinSequence = sfh.createJoinSequence( implied, elementAssociationType, tableAlias, joinType, targetColumns );
 		elem = initializeJoin( path, destination, joinSequence, targetColumns, origin, false );
 		elem.setUseFromFragment( true );	// The associated entity is implied, but it must be included in the FROM.
@@ -366,7 +367,7 @@ public class FromElementFactory implements SqlTokenTypes {
 	private FromElement createEntityAssociation(
 	        String role,
 	        String roleAlias,
-	        int joinType) throws SemanticException {
+	        JoinType joinType) throws SemanticException {
 		FromElement elem;
 		Queryable entityPersister = ( Queryable ) queryableCollection.getElementPersister();
 		String associatedEntityName = entityPersister.getEntityName();
@@ -412,7 +413,7 @@ public class FromElementFactory implements SqlTokenTypes {
 	        String roleAlias,
 	        Queryable entityPersister,
 	        EntityType type,
-	        int joinType) throws SemanticException {
+	        JoinType joinType) throws SemanticException {
 		FromElement elem;
 		SessionFactoryHelper sfh = fromClause.getSessionFactoryHelper();
 		if ( inElementsFunction /*implied*/ ) {
@@ -435,7 +436,7 @@ public class FromElementFactory implements SqlTokenTypes {
 		return elem;
 	}
 
-	private JoinSequence createJoinSequence(String roleAlias, int joinType) {
+	private JoinSequence createJoinSequence(String roleAlias, JoinType joinType) {
 		SessionFactoryHelper sessionFactoryHelper = fromClause.getSessionFactoryHelper();
 		String[] joinColumns = getColumns();
 		if ( collectionType == null ) {

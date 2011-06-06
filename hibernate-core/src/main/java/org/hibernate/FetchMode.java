@@ -23,9 +23,6 @@
  *
  */
 package org.hibernate;
-import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Represents an association fetching strategy. This is used
@@ -37,30 +34,21 @@ import java.util.Map;
  * @see Criteria#setFetchMode(java.lang.String, FetchMode)
  * @author Gavin King
  */
-public final class FetchMode implements Serializable {
-	private final String name;
-	private static final Map INSTANCES = new HashMap();
-
-	private FetchMode(String name) {
-		this.name=name;
-	}
-	public String toString() {
-		return name;
-	}
+public enum FetchMode  {
 	/**
 	 * Default to the setting configured in the mapping file.
 	 */
-	public static final FetchMode DEFAULT = new FetchMode("DEFAULT");
+	DEFAULT,
 
 	/**
 	 * Fetch using an outer join. Equivalent to <tt>fetch="join"</tt>.
 	 */
-	public static final FetchMode JOIN = new FetchMode("JOIN");
+	JOIN,
 	/**
 	 * Fetch eagerly, using a separate select. Equivalent to
 	 * <tt>fetch="select"</tt>.
 	 */
-	public static final FetchMode SELECT = new FetchMode("SELECT");
+	SELECT;
 
 	/**
 	 * Fetch lazily. Equivalent to <tt>outer-join="false"</tt>.
@@ -73,17 +61,6 @@ public final class FetchMode implements Serializable {
 	 * @deprecated use <tt>FetchMode.JOIN</tt>
 	 */
 	public static final FetchMode EAGER = JOIN;
-	
-	static {
-		INSTANCES.put( JOIN.name, JOIN );
-		INSTANCES.put( SELECT.name, SELECT );
-		INSTANCES.put( DEFAULT.name, DEFAULT );
-	}
-
-	private Object readResolve() {
-		return INSTANCES.get(name);
-	}
-
 }
 
 

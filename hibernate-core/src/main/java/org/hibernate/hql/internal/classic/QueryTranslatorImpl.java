@@ -66,6 +66,7 @@ import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.JoinFragment;
+import org.hibernate.sql.JoinType;
 import org.hibernate.sql.QuerySelect;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.AssociationType;
@@ -908,7 +909,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 			try {
 				join.addJoin( ( AssociationType ) persister.getElementType(),
 						elementName,
-						JoinFragment.INNER_JOIN,
+						JoinType.INNER_JOIN,
 						persister.getElementColumnNames(collectionName) );
 			}
 			catch ( MappingException me ) {

@@ -48,6 +48,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.param.DynamicFilterParameterSpecification;
 import org.hibernate.sql.JoinFragment;
+import org.hibernate.sql.JoinType;
 import org.hibernate.type.Type;
 import org.jboss.logging.Logger;
 
@@ -83,14 +84,14 @@ public class JoinProcessor implements SqlTokenTypes {
 	 * @see JoinFragment
 	 * @see SqlTokenTypes
 	 */
-	public static int toHibernateJoinType(int astJoinType) {
+	public static JoinType toHibernateJoinType(int astJoinType) {
 		switch ( astJoinType ) {
 			case LEFT_OUTER:
-				return JoinFragment.LEFT_OUTER_JOIN;
+				return JoinType.LEFT_OUTER_JOIN;
 			case INNER:
-				return JoinFragment.INNER_JOIN;
+				return JoinType.INNER_JOIN;
 			case RIGHT_OUTER:
-				return JoinFragment.RIGHT_OUTER_JOIN;
+				return JoinType.RIGHT_OUTER_JOIN;
 			default:
 				throw new AssertionFailure( "undefined join type " + astJoinType );
 		}

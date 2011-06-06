@@ -34,6 +34,7 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.sql.JoinFragment;
+import org.hibernate.sql.JoinType;
 import org.hibernate.sql.QueryJoinFragment;
 import org.hibernate.type.AssociationType;
 
@@ -43,7 +44,7 @@ import org.hibernate.type.AssociationType;
 public class JoinSequence {
 
 	private final SessionFactoryImplementor factory;
-	private final List joins = new ArrayList();
+	private final List<Join> joins = new ArrayList<Join>();
 	private boolean useThetaStyle = false;
 	private final StringBuffer conditions = new StringBuffer();
 	private String rootAlias;
@@ -54,7 +55,7 @@ public class JoinSequence {
 
 	@Override
     public String toString() {
-		StringBuffer buf = new StringBuffer();
+		StringBuilder buf = new StringBuilder();
 		buf.append( "JoinSequence{" );
 		if ( rootJoinable != null ) {
 			buf.append( rootJoinable )
@@ -72,11 +73,11 @@ public class JoinSequence {
 
 		private final AssociationType associationType;
 		private final Joinable joinable;
-		private final int joinType;
+		private final JoinType joinType;
 		private final String alias;
 		private final String[] lhsColumns;
 
-		Join(AssociationType associationType, String alias, int joinType, String[] lhsColumns)
+		Join(AssociationType associationType, String alias, JoinType joinType, String[] lhsColumns)
 				throws MappingException {
 			this.associationType = associationType;
 			this.joinable = associationType.getAssociatedJoinable( factory );
@@ -97,7 +98,7 @@ public class JoinSequence {
 			return joinable;
 		}
 
-		public int getJoinType() {
+		public JoinType getJoinType() {
 			return joinType;
 		}
 
@@ -140,7 +141,7 @@ public class JoinSequence {
 		return copy;
 	}
 
-	public JoinSequence addJoin(AssociationType associationType, String alias, int joinType, String[] referencingKey)
+	public JoinSequence addJoin(AssociationType associationType, String alias, JoinType joinType, String[] referencingKey)
 			throws MappingException {
 		joins.add( new Join( associationType, alias, joinType, referencingKey ) );
 		return this;
@@ -174,8 +175,7 @@ public class JoinSequence {
 
 		Joinable last = rootJoinable;
 
-		for ( int i = 0; i < joins.size(); i++ ) {
-			Join join = ( Join ) joins.get( i );
+		for ( Join join: joins ) {
 			String on = join.getAssociationType().getOnCondition( join.getAlias(), factory, enabledFilters );
 			String condition = null;
 			if ( last != null &&
@@ -209,7 +209,7 @@ public class JoinSequence {
 					condition
 			);
 			if (includeExtraJoins) { //TODO: not quite sure about the full implications of this!
-				addExtraJoins( joinFragment, join.getAlias(), join.getJoinable(), join.joinType == JoinFragment.INNER_JOIN );
+				addExtraJoins( joinFragment, join.getAlias(), join.getJoinable(), join.joinType == JoinType.INNER_JOIN );
 			}
 			last = join.getJoinable();
 		}

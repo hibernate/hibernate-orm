@@ -36,7 +36,7 @@ public class OracleJoinFragment extends JoinFragment {
 	private StringBuffer afterFrom = new StringBuffer();
 	private StringBuffer afterWhere = new StringBuffer();
 
-	public void addJoin(String tableName, String alias, String[] fkColumns, String[] pkColumns, int joinType) {
+	public void addJoin(String tableName, String alias, String[] fkColumns, String[] pkColumns, JoinType joinType) {
 
 		addCrossJoin( tableName, alias );
 
@@ -44,12 +44,12 @@ public class OracleJoinFragment extends JoinFragment {
 			setHasThetaJoins( true );
 			afterWhere.append( " and " )
 					.append( fkColumns[j] );
-			if ( joinType == RIGHT_OUTER_JOIN || joinType == FULL_JOIN ) afterWhere.append( "(+)" );
+			if ( joinType == JoinType.RIGHT_OUTER_JOIN || joinType == JoinType.FULL_JOIN ) afterWhere.append( "(+)" );
 			afterWhere.append( '=' )
 					.append( alias )
 					.append( '.' )
 					.append( pkColumns[j] );
-			if ( joinType == LEFT_OUTER_JOIN || joinType == FULL_JOIN ) afterWhere.append( "(+)" );
+			if ( joinType == JoinType.LEFT_OUTER_JOIN || joinType == JoinType.FULL_JOIN ) afterWhere.append( "(+)" );
 		}
 
 	}
@@ -103,13 +103,13 @@ public class OracleJoinFragment extends JoinFragment {
 		afterFrom.append( fromFragmentString );
 	}
 
-	public void addJoin(String tableName, String alias, String[] fkColumns, String[] pkColumns, int joinType, String on) {
+	public void addJoin(String tableName, String alias, String[] fkColumns, String[] pkColumns, JoinType joinType, String on) {
 		//arbitrary on clause ignored!!
 		addJoin( tableName, alias, fkColumns, pkColumns, joinType );
-		if ( joinType == JoinFragment.INNER_JOIN ) {
+		if ( joinType == JoinType.INNER_JOIN ) {
 			addCondition( on );
 		}
-		else if ( joinType == JoinFragment.LEFT_OUTER_JOIN ) {
+		else if ( joinType == JoinType.LEFT_OUTER_JOIN ) {
 			addLeftOuterJoinCondition( on );
 		}
 		else {

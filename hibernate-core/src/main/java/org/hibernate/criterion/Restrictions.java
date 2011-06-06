@@ -47,7 +47,6 @@ public class Restrictions {
 
 	/**
 	 * Apply an "equal" constraint to the identifier property
-	 * @param propertyName
 	 * @param value
 	 * @return Criterion
 	 */
@@ -99,7 +98,7 @@ public class Restrictions {
 	 * @return Criterion
 	 */
 	public static Criterion ilike(String propertyName, String value, MatchMode matchMode) {
-		return new IlikeExpression(propertyName, value, matchMode);
+		return new LikeExpression(propertyName, value, matchMode, null, true);
 	}
 	/**
 	 * A case-insensitive "like", similar to Postgres <tt>ilike</tt>
@@ -110,7 +109,7 @@ public class Restrictions {
 	 * @return Criterion
 	 */
 	public static Criterion ilike(String propertyName, Object value) {
-		return new IlikeExpression(propertyName, value);
+		return new LikeExpression(propertyName, value.toString());
 	}
 	/**
 	 * Apply a "greater than" constraint to the named property

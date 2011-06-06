@@ -1607,6 +1607,21 @@ public abstract class Dialect {
 	}
 
 	/**
+	 * The name of the SQL function that can do case insensitive <b>like</b> comparison.
+	 * @return  The dialect-specific "case insensitive" like function.
+	 */
+	public String getCaseInsensitiveLike(){
+		return "like";
+	}
+
+	/**
+	 * Does the underlying Database supports case insensitive like comparison.
+	 */
+	public boolean supportsCaseInsensitiveLike(){
+		return false;
+	}
+
+	/**
 	 * Meant as a means for end users to affect the select strings being sent
 	 * to the database and perhaps manipulate them in some fashion.
 	 * <p/>

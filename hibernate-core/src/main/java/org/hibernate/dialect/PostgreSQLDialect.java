@@ -214,7 +214,7 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	public String getLimitString(String sql, boolean hasOffset) {
-		return new StringBuffer( sql.length()+20 )
+		return new StringBuilder( sql.length()+20 )
 				.append( sql )
 				.append( hasOffset ? " limit ? offset ?" : " limit ?" )
 				.toString();
@@ -233,7 +233,7 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	public String getIdentitySelectString(String table, String column, int type) {
-		return new StringBuffer().append("select currval('")
+		return new StringBuilder().append("select currval('")
 			.append(table)
 			.append('_')
 			.append(column)
@@ -253,6 +253,15 @@ public class PostgreSQLDialect extends Dialect {
 
 	public String getNoColumnsInsertString() {
 		return "default values";
+	}
+
+	public String getCaseInsensitiveLike(){
+		return "ilike";
+	}
+
+	@Override
+	public boolean supportsCaseInsensitiveLike() {
+		return true;
 	}
 
 	public Class getNativeIdentifierGeneratorClass() {
@@ -360,15 +369,13 @@ public class PostgreSQLDialect extends Dialect {
 	
 	public int registerResultSetOutParameter(CallableStatement statement, int col) throws SQLException {
 		// Register the type of the out param - PostgreSQL uses Types.OTHER
-		statement.registerOutParameter(col, Types.OTHER);
-		col++;
+		statement.registerOutParameter(col++, Types.OTHER);
 		return col;
 	}
 
 	public ResultSet getResultSet(CallableStatement ps) throws SQLException {
 		ps.execute();
-		ResultSet rs = (ResultSet) ps.getObject(1);
-		return rs;
+		return (ResultSet) ps.getObject(1);
 	}
 
 	public boolean supportsPooledSequences() {

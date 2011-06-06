@@ -108,7 +108,7 @@ public class StandardSQLFunction implements SQLFunction {
 	 * {@inheritDoc}
 	 */
 	public String render(Type firstArgumentType, List arguments, SessionFactoryImplementor sessionFactory) {
-		StringBuffer buf = new StringBuffer();
+		StringBuilder buf = new StringBuilder();
 		buf.append( name ).append( '(' );
 		for ( int i = 0; i < arguments.size(); i++ ) {
 			buf.append( arguments.get( i ) );

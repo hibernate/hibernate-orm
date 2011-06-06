@@ -81,11 +81,19 @@ public class LikeExpression implements Criterion {
 		if ( columns.length != 1 ) {
 			throw new HibernateException( "Like may only be used with single-column properties" );
 		}
-		String lhs = ignoreCase
-				? dialect.getLowercaseFunction() + '(' + columns[0] + ')'
-	            : columns[0];
-		return lhs + " like ?" + ( escapeChar == null ? "" : " escape \'" + escapeChar + "\'" );
-
+		String escape = escapeChar == null ? "" : " escape \'" + escapeChar + "\'";
+		String column = columns[0];
+		if ( ignoreCase ) {
+			if ( dialect.supportsCaseInsensitiveLike() ) {
+				return column +" " + dialect.getCaseInsensitiveLike() + " ?" + escape;
+			}
+			else {
+				return dialect.getLowercaseFunction() + '(' + column + ')' + " like ?" + escape;
+			}
+		}
+		else {
+			return column + " like ?" + escape;
+		}
 	}
 
 	public TypedValue[] getTypedValues(

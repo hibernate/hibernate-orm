@@ -28,6 +28,7 @@ import org.hibernate.criterion.CriteriaSpecification;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projection;
+import org.hibernate.sql.JoinType;
 import org.hibernate.transform.ResultTransformer;
 
 /**
@@ -163,8 +164,8 @@ public interface Criteria extends CriteriaSpecification {
 	/**
 	 * Join an association, assigning an alias to the joined association.
 	 * <p/>
-	 * Functionally equivalent to {@link #createAlias(String, String, int)} using
-	 * {@link #INNER_JOIN} for the joinType.
+	 * Functionally equivalent to {@link #createAlias(String, String, JoinType )} using
+	 * {@link JoinType#INNER_JOIN} for the joinType.
 	 *
 	 * @param associationPath A dot-seperated property path
 	 * @param alias The alias to assign to the joined association (for later reference).
@@ -174,6 +175,23 @@ public interface Criteria extends CriteriaSpecification {
 	 * @throws HibernateException Indicates a problem creating the sub criteria
 	 */
 	public Criteria createAlias(String associationPath, String alias) throws HibernateException;
+
+	/**
+	 * Join an association using the specified join-type, assigning an alias
+	 * to the joined association.
+	 * <p/>
+	 * The joinType is expected to be one of {@link JoinType#INNER_JOIN} (the default),
+	 * {@link JoinType#FULL_JOIN}, or {@link JoinType#LEFT_OUTER_JOIN}.
+	 *
+	 * @param associationPath A dot-seperated property path
+	 * @param alias The alias to assign to the joined association (for later reference).
+	 * @param joinType The type of join to use.
+	 *
+	 * @return this (for method chaining)
+	 *
+	 * @throws HibernateException Indicates a problem creating the sub criteria
+	 */
+	public Criteria createAlias(String associationPath, String alias, JoinType joinType) throws HibernateException;
 
 	/**
 	 * Join an association using the specified join-type, assigning an alias
@@ -189,8 +207,28 @@ public interface Criteria extends CriteriaSpecification {
 	 * @return this (for method chaining)
 	 *
 	 * @throws HibernateException Indicates a problem creating the sub criteria
+	 * @deprecated use {@link #createAlias(String, String, org.hibernate.sql.JoinType)}
 	 */
+	@Deprecated
 	public Criteria createAlias(String associationPath, String alias, int joinType) throws HibernateException;
+
+	/**
+	 * Join an association using the specified join-type, assigning an alias
+	 * to the joined association.
+	 * <p/>
+	 * The joinType is expected to be one of {@link JoinType#INNER_JOIN} (the default),
+	 * {@link JoinType#FULL_JOIN}, or {@link JoinType#LEFT_OUTER_JOIN}.
+	 *
+	 * @param associationPath A dot-seperated property path
+	 * @param alias The alias to assign to the joined association (for later reference).
+	 * @param joinType The type of join to use.
+	 * @param withClause The criteria to be added to the join condition (<tt>ON</tt> clause)
+	 *
+	 * @return this (for method chaining)
+	 *
+	 * @throws HibernateException Indicates a problem creating the sub criteria
+	 */
+	public Criteria createAlias(String associationPath, String alias, JoinType joinType, Criterion withClause) throws HibernateException;
 
 	/**
 	 * Join an association using the specified join-type, assigning an alias
@@ -207,14 +245,16 @@ public interface Criteria extends CriteriaSpecification {
 	 * @return this (for method chaining)
 	 *
 	 * @throws HibernateException Indicates a problem creating the sub criteria
+	 * @deprecated use {@link #createAlias(String, String, JoinType, Criterion}
 	 */
+	@Deprecated
 	public Criteria createAlias(String associationPath, String alias, int joinType, Criterion withClause) throws HibernateException;
-	
+
 	/**
 	 * Create a new <tt>Criteria</tt>, "rooted" at the associated entity.
 	 * <p/>
-	 * Functionally equivalent to {@link #createCriteria(String, int)} using
-	 * {@link #INNER_JOIN} for the joinType.
+	 * Functionally equivalent to {@link #createCriteria(String, org.hibernate.sql.JoinType)} using
+	 * {@link JoinType#INNER_JOIN} for the joinType.
 	 *
 	 * @param associationPath A dot-seperated property path
 	 *
@@ -235,14 +275,29 @@ public interface Criteria extends CriteriaSpecification {
 	 *
 	 * @throws HibernateException Indicates a problem creating the sub criteria
 	 */
+	public Criteria createCriteria(String associationPath, JoinType joinType) throws HibernateException;
+
+	/**
+	 * Create a new <tt>Criteria</tt>, "rooted" at the associated entity, using the
+	 * specified join type.
+	 *
+	 * @param associationPath A dot-seperated property path
+	 * @param joinType The type of join to use.
+	 *
+	 * @return the created "sub criteria"
+	 *
+	 * @throws HibernateException Indicates a problem creating the sub criteria
+	 * @deprecated use {@link #createAlias(String, String, org.hibernate.sql.JoinType)}
+	 */
+	@Deprecated
 	public Criteria createCriteria(String associationPath, int joinType) throws HibernateException;
 
 	/**
 	 * Create a new <tt>Criteria</tt>, "rooted" at the associated entity,
 	 * assigning the given alias.
 	 * <p/>
-	 * Functionally equivalent to {@link #createCriteria(String, String, int)} using
-	 * {@link #INNER_JOIN} for the joinType.
+	 * Functionally equivalent to {@link #createCriteria(String, String, org.hibernate.sql.JoinType)} using
+	 * {@link JoinType#INNER_JOIN} for the joinType.
 	 *
 	 * @param associationPath A dot-seperated property path
 	 * @param alias The alias to assign to the joined association (for later reference).
@@ -265,7 +320,24 @@ public interface Criteria extends CriteriaSpecification {
 	 *
 	 * @throws HibernateException Indicates a problem creating the sub criteria
 	 */
+	public Criteria createCriteria(String associationPath, String alias, JoinType joinType) throws HibernateException;
+
+	/**
+	 * Create a new <tt>Criteria</tt>, "rooted" at the associated entity,
+	 * assigning the given alias and using the specified join type.
+	 *
+	 * @param associationPath A dot-seperated property path
+	 * @param alias The alias to assign to the joined association (for later reference).
+	 * @param joinType The type of join to use.
+	 *
+	 * @return the created "sub criteria"
+	 *
+	 * @throws HibernateException Indicates a problem creating the sub criteria
+	 * @deprecated use {@link #createCriteria(String, org.hibernate.sql.JoinType)}
+	 */
+	@Deprecated
 	public Criteria createCriteria(String associationPath, String alias, int joinType) throws HibernateException;
+
 
 	/**
 	 * Create a new <tt>Criteria</tt>, "rooted" at the associated entity,
@@ -280,6 +352,23 @@ public interface Criteria extends CriteriaSpecification {
 	 * 
 	 * @throws HibernateException Indicates a problem creating the sub criteria
 	 */
+	public Criteria createCriteria(String associationPath, String alias, JoinType joinType, Criterion withClause) throws HibernateException;
+
+	/**
+	 * Create a new <tt>Criteria</tt>, "rooted" at the associated entity,
+	 * assigning the given alias and using the specified join type.
+	 *
+	 * @param associationPath A dot-seperated property path
+	 * @param alias The alias to assign to the joined association (for later reference).
+	 * @param joinType The type of join to use.
+	 * @param withClause The criteria to be added to the join condition (<tt>ON</tt> clause)
+	 *
+	 * @return the created "sub criteria"
+	 *
+	 * @throws HibernateException Indicates a problem creating the sub criteria
+	 * @deprecated use {@link #createCriteria(String, String, org.hibernate.sql.JoinType, org.hibernate.criterion.Criterion)}
+	 */
+	@Deprecated
 	public Criteria createCriteria(String associationPath, String alias, int joinType, Criterion withClause) throws HibernateException;
 
 	/**

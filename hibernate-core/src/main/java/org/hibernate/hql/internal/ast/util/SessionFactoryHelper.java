@@ -40,6 +40,7 @@ import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.persister.entity.Queryable;
+import org.hibernate.sql.JoinType;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.EntityType;
@@ -266,7 +267,7 @@ public class SessionFactoryHelper {
 	 * @param columns The columns making up the condition of the join.
 	 * @return The generated join sequence.
 	 */
-	public JoinSequence createJoinSequence(boolean implicit, AssociationType associationType, String tableAlias, int joinType, String[] columns) {
+	public JoinSequence createJoinSequence(boolean implicit, AssociationType associationType, String tableAlias, JoinType joinType, String[] columns) {
 		JoinSequence joinSequence = createJoinSequence();
 		joinSequence.setUseThetaStyle( implicit );	// Implicit joins use theta style (WHERE pk = fk), explicit joins use JOIN (after from)
 		joinSequence.addJoin( associationType, tableAlias, joinType, columns );

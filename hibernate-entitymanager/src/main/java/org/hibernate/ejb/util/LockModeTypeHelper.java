@@ -98,7 +98,7 @@ public class LockModeTypeHelper {
 		}
 		else if ( String.class.isInstance( value ) ) {
 			// first try LockMode name
-			LockMode lockMode = LockMode.parse( (String) value );
+			LockMode lockMode = LockMode.valueOf( (String) value );
 			if ( lockMode == null ) {
 				try {
 					lockMode = getLockMode( LockModeType.valueOf( (String) value ) );

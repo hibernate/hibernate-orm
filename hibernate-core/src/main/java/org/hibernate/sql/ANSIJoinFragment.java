@@ -35,11 +35,11 @@ public class ANSIJoinFragment extends JoinFragment {
 	private StringBuffer buffer = new StringBuffer();
 	private StringBuffer conditions = new StringBuffer();
 
-	public void addJoin(String tableName, String alias, String[] fkColumns, String[] pkColumns, int joinType) {
+	public void addJoin(String tableName, String alias, String[] fkColumns, String[] pkColumns, JoinType joinType) {
 		addJoin(tableName, alias, fkColumns, pkColumns, joinType, null);
 	}
 
-	public void addJoin(String tableName, String alias, String[] fkColumns, String[] pkColumns, int joinType, String on) {
+	public void addJoin(String tableName, String alias, String[] fkColumns, String[] pkColumns, JoinType joinType, String on) {
 		String joinString;
 		switch (joinType) {
 			case INNER_JOIN:

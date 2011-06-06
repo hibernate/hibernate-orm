@@ -34,7 +34,7 @@ import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.persister.entity.Queryable;
-import org.hibernate.sql.JoinFragment;
+import org.hibernate.sql.JoinType;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.EntityType;
@@ -69,7 +69,7 @@ public class PathExpressionParser implements Parser {
 	private final StringBuffer path = new StringBuffer();
 	private boolean ignoreInitialJoin;
 	private boolean continuation;
-	private int joinType = JoinFragment.INNER_JOIN; //default mode
+	private JoinType joinType = JoinType.INNER_JOIN; //default mode
 	private boolean useThetaStyleJoin = true;
 	private PropertyMapping currentPropertyMapping;
 	private JoinSequence joinSequence;
@@ -77,7 +77,7 @@ public class PathExpressionParser implements Parser {
 	private boolean expectingCollectionIndex;
 	private LinkedList collectionElements = new LinkedList();
 
-	void setJoinType(int joinType) {
+	void setJoinType(JoinType joinType) {
 		this.joinType = joinType;
 	}
 

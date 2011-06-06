@@ -35,6 +35,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.JoinFragment;
+import org.hibernate.sql.JoinType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
@@ -100,7 +101,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 	/**
 	 * The type of join to create.   Default is an inner join.
 	 */
-	private int joinType = JoinFragment.INNER_JOIN;
+	private JoinType joinType = JoinType.INNER_JOIN;
 
 	/**
 	 * Fetch join or not.
@@ -120,7 +121,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 	 * @param joinType The type of join to use.
 	 * @see JoinFragment
 	 */
-	public void setJoinType(int joinType) {
+	public void setJoinType(JoinType joinType) {
 		this.joinType = joinType;
 	}
 
@@ -135,7 +136,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 
 	@Override
     public String getDisplayText() {
-		StringBuffer buf = new StringBuffer();
+		StringBuilder buf = new StringBuilder();
 		FromElement fromElement = getFromElement();
 		buf.append( "{propertyName=" ).append( propertyName );
 		buf.append( ",dereferenceType=" ).append( getWalker().getASTPrinter().getTokenTypeName( dereferenceType ) );

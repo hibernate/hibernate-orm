@@ -33,9 +33,9 @@ import org.hibernate.internal.util.StringHelper;
  */
 public abstract class JoinFragment {
 
-	public abstract void addJoin(String tableName, String alias, String[] fkColumns, String[] pkColumns, int joinType);
+	public abstract void addJoin(String tableName, String alias, String[] fkColumns, String[] pkColumns, JoinType joinType);
 
-	public abstract void addJoin(String tableName, String alias, String[] fkColumns, String[] pkColumns, int joinType, String on);
+	public abstract void addJoin(String tableName, String alias, String[] fkColumns, String[] pkColumns, JoinType joinType, String on);
 
 	public abstract void addCrossJoin(String tableName, String alias);
 
@@ -53,11 +53,26 @@ public abstract class JoinFragment {
 
 	public abstract JoinFragment copy();
 
+	/**
+	 * @deprecated use {@link JoinType#INNER_JOIN} instead.
+	 */
+	@Deprecated
 	public static final int INNER_JOIN = 0;
+	/**
+	 * @deprecated use {@link JoinType#FULL_JOIN} instead.
+	 */
+	@Deprecated
 	public static final int FULL_JOIN = 4;
+	/**
+	 * @deprecated use {@link JoinType#LEFT_OUTER_JOIN} instead.
+	 */
+	@Deprecated
 	public static final int LEFT_OUTER_JOIN = 1;
+	/**
+	 * @deprecated use {@link JoinType#RIGHT_OUTER_JOIN} instead.
+	 */
+	@Deprecated
 	public static final int RIGHT_OUTER_JOIN = 2;
-
 	private boolean hasFilterCondition = false;
 	private boolean hasThetaJoins = false;
 

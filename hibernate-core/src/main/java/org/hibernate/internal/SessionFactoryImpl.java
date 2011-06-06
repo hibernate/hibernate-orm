@@ -678,6 +678,7 @@ public final class SessionFactoryImpl
 		Map errors = new HashMap();
 
 		// Check named HQL queries
+		if(LOG.isDebugEnabled())
         LOG.debugf("Checking %s named HQL queries", namedQueries.size());
 		Iterator itr = namedQueries.entrySet().iterator();
 		while ( itr.hasNext() ) {
@@ -697,7 +698,7 @@ public final class SessionFactoryImpl
 				errors.put( queryName, e );
 			}
 		}
-
+		if(LOG.isDebugEnabled())
         LOG.debugf("Checking %s named SQL queries", namedSqlQueries.size());
 		itr = namedSqlQueries.entrySet().iterator();
 		while ( itr.hasNext() ) {

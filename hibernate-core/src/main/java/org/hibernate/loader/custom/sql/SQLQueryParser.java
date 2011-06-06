@@ -86,7 +86,7 @@ public class SQLQueryParser {
 	//       don't get'em'all we throw an exception! Way better than trial and error ;)
 	private String substituteBrackets(String sqlQuery) throws QueryException {
 
-		StringBuffer result = new StringBuffer( sqlQuery.length() + 20 );
+		StringBuilder result = new StringBuilder( sqlQuery.length() + 20 );
 		int left, right;
 
 		// replace {....} with corresponding column aliases
@@ -294,7 +294,7 @@ public class SQLQueryParser {
 	}
 
 	public static class ParameterSubstitutionRecognizer implements ParameterParser.Recognizer {
-		StringBuffer result = new StringBuffer();
+		StringBuilder result = new StringBuilder();
 		Map namedParameterBindPoints = new HashMap();
 		int parameterCount = 0;
 

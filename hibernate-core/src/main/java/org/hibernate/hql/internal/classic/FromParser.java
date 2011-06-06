@@ -28,7 +28,7 @@ import java.util.Map;
 import org.hibernate.QueryException;
 import org.hibernate.hql.spi.QueryTranslator;
 import org.hibernate.persister.entity.Queryable;
-import org.hibernate.sql.JoinFragment;
+import org.hibernate.sql.JoinType;
 
 /**
  * Parses the from clause of a hibernate query, looking for tables and
@@ -47,7 +47,7 @@ public class FromParser implements Parser {
 	private boolean expectingIn;
 	private boolean expectingAs;
 	private boolean afterJoinType;
-	private int joinType;
+	private JoinType joinType = JoinType.INNER_JOIN;
 	private boolean afterFetch;
 	
 	//support collection member declarations
@@ -57,15 +57,13 @@ public class FromParser implements Parser {
 	private boolean afterMemberDeclarations;
 	private String collectionName;
 
-	private static final int NONE = -666;
-
-	private static final Map JOIN_TYPES = new HashMap();
+	private static final Map<String,JoinType> JOIN_TYPES = new HashMap<String,JoinType>();
 
 	static {
-		JOIN_TYPES.put( "left", JoinFragment.LEFT_OUTER_JOIN );
-		JOIN_TYPES.put( "right", JoinFragment.RIGHT_OUTER_JOIN );
-		JOIN_TYPES.put( "full", JoinFragment.FULL_JOIN );
-		JOIN_TYPES.put( "inner", JoinFragment.INNER_JOIN );
+		JOIN_TYPES.put( "left", JoinType.LEFT_OUTER_JOIN );
+		JOIN_TYPES.put( "right", JoinType.RIGHT_OUTER_JOIN );
+		JOIN_TYPES.put( "full", JoinType.FULL_JOIN );
+		JOIN_TYPES.put( "inner", JoinType.INNER_JOIN );
 	}
 
 	public void token(String token, QueryTranslatorImpl q) throws QueryException {
@@ -81,7 +79,7 @@ public class FromParser implements Parser {
 			if ( !afterJoinType ) {
 				if ( !( expectingJoin | expectingAs ) ) throw new QueryException( "unexpected token: join" );
 				// inner joins can be abbreviated to 'join'
-				joinType = JoinFragment.INNER_JOIN;
+				joinType = JoinType.INNER_JOIN;
 				expectingJoin = false;
 				expectingAs = false;
 			}
@@ -91,8 +89,8 @@ public class FromParser implements Parser {
 		}
 		else if ( lcToken.equals( "fetch" ) ) {
 			if ( q.isShallowQuery() ) throw new QueryException( QueryTranslator.ERROR_CANNOT_FETCH_WITH_ITERATE );
-			if ( joinType == NONE ) throw new QueryException( "unexpected token: fetch" );
-			if ( joinType == JoinFragment.FULL_JOIN || joinType == JoinFragment.RIGHT_OUTER_JOIN ) {
+			if ( joinType == JoinType.NONE ) throw new QueryException( "unexpected token: fetch" );
+			if ( joinType == JoinType.FULL_JOIN || joinType == JoinType.RIGHT_OUTER_JOIN ) {
 				throw new QueryException( "fetch may only be used with inner join or left outer join" );
 			}
 			afterFetch = true;
@@ -100,21 +98,21 @@ public class FromParser implements Parser {
 		else if ( lcToken.equals( "outer" ) ) {
 			// 'outer' is optional and is ignored
 			if ( !afterJoinType ||
-					( joinType != JoinFragment.LEFT_OUTER_JOIN && joinType != JoinFragment.RIGHT_OUTER_JOIN )
+					( joinType != JoinType.LEFT_OUTER_JOIN && joinType != JoinType.RIGHT_OUTER_JOIN )
 			) {
 				throw new QueryException( "unexpected token: outer" );
 			}
 		}
 		else if ( JOIN_TYPES.containsKey( lcToken ) ) {
 			if ( !( expectingJoin | expectingAs ) ) throw new QueryException( "unexpected token: " + token );
-			joinType = ( ( Integer ) JOIN_TYPES.get( lcToken ) ).intValue();
+			joinType = JOIN_TYPES.get( lcToken );
 			afterJoinType = true;
 			expectingJoin = false;
 			expectingAs = false;
 		}
 		else if ( lcToken.equals( "class" ) ) {
 			if ( !afterIn ) throw new QueryException( "unexpected token: class" );
-			if ( joinType != NONE ) throw new QueryException( "outer or full join must be followed by path expression" );
+			if ( joinType != JoinType.NONE ) throw new QueryException( "outer or full join must be followed by path expression" );
 			afterClass = true;
 		}
 		else if ( lcToken.equals( "in" ) ) {
@@ -187,7 +185,7 @@ public class FromParser implements Parser {
 
 				if ( alias == null ) throw new QueryException( "alias not specified for: " + token );
 
-				if ( joinType != NONE ) throw new QueryException( "outer or full join must be followed by path expression" );
+				if ( joinType != JoinType.NONE ) throw new QueryException( "outer or full join must be followed by path expression" );
 
 				if ( afterClass ) {
 					// treat it as a classname
@@ -197,7 +195,7 @@ public class FromParser implements Parser {
 				}
 				else {
 					// treat it as a path expression
-					peParser.setJoinType( JoinFragment.INNER_JOIN );
+					peParser.setJoinType( JoinType.INNER_JOIN );
 					peParser.setUseThetaStyleJoin( true );
 					ParserHelper.parse( peParser, q.unalias( token ), ParserHelper.PATH_SEPARATORS, q );
 					if ( !peParser.isCollectionValued() ) throw new QueryException( "path expression did not resolve to collection: " + token );
@@ -212,7 +210,7 @@ public class FromParser implements Parser {
 			}
 			else if( memberDeclarations && expectingPathExpression ){
 				expectingAs = true;
-				peParser.setJoinType( JoinFragment.INNER_JOIN );
+				peParser.setJoinType( JoinType.INNER_JOIN );
 				peParser.setUseThetaStyleJoin( false );
 				ParserHelper.parse( peParser, q.unalias( token ), ParserHelper.PATH_SEPARATORS, q );
 				if ( !peParser.isCollectionValued() ) throw new QueryException( "path expression did not resolve to collection: " + token );
@@ -230,7 +228,7 @@ public class FromParser implements Parser {
 				Queryable p = q.getEntityPersisterUsingImports( token );
 				if ( p != null ) {
 					// starts with the name of a mapped class (new style)
-					if ( joinType != NONE ) throw new QueryException( "outer or full join must be followed by path expression" );
+					if ( joinType != JoinType.NONE ) throw new QueryException( "outer or full join must be followed by path expression" );
 					entityName = q.createNameFor( p.getEntityName() );
 					q.addFromClass( entityName, p );
 					expectingAs = true;
@@ -249,19 +247,19 @@ public class FromParser implements Parser {
 					//if (joinType==NONE) throw new QueryException("path expression must be preceded by full, left, right or inner join");
 
 					//allow ODMG OQL style: from Person p, p.cars c
-					if ( joinType != NONE ) {
+					if ( joinType != JoinType.NONE ) {
 						peParser.setJoinType( joinType );
 					}
 					else {
-						peParser.setJoinType( JoinFragment.INNER_JOIN );
+						peParser.setJoinType( JoinType.INNER_JOIN );
 					}
 					peParser.setUseThetaStyleJoin( q.isSubquery() );
 
 					ParserHelper.parse( peParser, q.unalias( token ), ParserHelper.PATH_SEPARATORS, q );
 					entityName = peParser.addFromAssociation( q );
 
-					joinType = NONE;
-					peParser.setJoinType( JoinFragment.INNER_JOIN );
+					joinType = JoinType.NONE;
+					peParser.setJoinType( JoinType.INNER_JOIN );
 
 					if ( afterFetch ) {
 						peParser.fetch( q, entityName );
@@ -289,7 +287,7 @@ public class FromParser implements Parser {
 		memberDeclarations = false;
 		expectingPathExpression = false;
 		afterMemberDeclarations = false;
-		joinType = NONE;
+		joinType = JoinType.NONE;
 	}
 
 	public void end(QueryTranslatorImpl q) {

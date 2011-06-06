@@ -1983,8 +1983,8 @@ public final class SessionImpl
 		entityMode = EntityMode.parse( ( String ) ois.readObject() );
 		autoClear = ois.readBoolean();
 		autoJoinTransactions = ois.readBoolean();
-		flushMode = FlushMode.parse( ( String ) ois.readObject() );
-		cacheMode = CacheMode.parse( ( String ) ois.readObject() );
+		flushMode = FlushMode.valueOf( ( String ) ois.readObject() );
+		cacheMode = CacheMode.valueOf( ( String ) ois.readObject() );
 		flushBeforeCompletionEnabled = ois.readBoolean();
 		autoCloseSessionEnabled = ois.readBoolean();
 		interceptor = ( Interceptor ) ois.readObject();
@@ -2043,7 +2043,7 @@ public final class SessionImpl
 		oos.writeBoolean( autoClear );
 		oos.writeBoolean( autoJoinTransactions );
 		oos.writeObject( flushMode.toString() );
-		oos.writeObject( cacheMode.toString() );
+		oos.writeObject( cacheMode.name() );
 		oos.writeBoolean( flushBeforeCompletionEnabled );
 		oos.writeBoolean( autoCloseSessionEnabled );
 		// we need to writeObject() on this since interceptor is user defined

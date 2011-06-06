@@ -91,7 +91,7 @@ import org.hibernate.param.PositionalParameterSpecification;
 import org.hibernate.param.VersionTypeSeedParameterSpecification;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.Queryable;
-import org.hibernate.sql.JoinFragment;
+import org.hibernate.sql.JoinType;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.DbTimestampType;
@@ -148,7 +148,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 
 	private ArrayList assignmentSpecifications = new ArrayList();
 
-	private int impliedJoinType;
+	private JoinType impliedJoinType = JoinType.INNER_JOIN;
 
 	/**
 	 * Create a new tree transformer.
@@ -342,7 +342,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		if ( !persister.isOneToMany() ) {
 			join.addJoin( ( AssociationType ) persister.getElementType(),
 					fromElement.getTableAlias(),
-					JoinFragment.INNER_JOIN,
+					JoinType.INNER_JOIN,
 					persister.getElementColumnNames( fkTableAlias ) );
 		}
 		join.addCondition( fkTableAlias, keyColumnNames, " = ?" );
@@ -369,7 +369,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 			throw new SemanticException( "Path expected for join!" );
 		}
 		DotNode dot = ( DotNode ) path;
-		int hibernateJoinType = JoinProcessor.toHibernateJoinType( joinType );
+		JoinType hibernateJoinType = JoinProcessor.toHibernateJoinType( joinType );
 		dot.setJoinType( hibernateJoinType );	// Tell the dot node about the join type.
 		dot.setFetch( fetch );
 		// Generate an explicit join for the root dot node.   The implied joins will be collected and passed up
@@ -548,7 +548,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		impliedJoinType = JoinProcessor.toHibernateJoinType( joinType );
 	}
 
-	public int getImpliedJoinType() {
+	public JoinType getImpliedJoinType() {
 		return impliedJoinType;
 	}
 

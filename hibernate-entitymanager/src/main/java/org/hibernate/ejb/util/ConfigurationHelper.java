@@ -66,7 +66,7 @@ public abstract class ConfigurationHelper {
 			return null;
 		}
 		flushMode = flushMode.toUpperCase();
-		return FlushMode.parse( flushMode );
+		return FlushMode.valueOf( flushMode );
 	}
 
 	private static FlushMode getFlushMode(FlushModeType flushMode)  {
@@ -103,7 +103,7 @@ public abstract class ConfigurationHelper {
 			return (CacheMode) value;
 		}
 		else {
-			return CacheMode.parse( (String) value );
+			return CacheMode.valueOf( (String) value );
 		}
 	}
 }

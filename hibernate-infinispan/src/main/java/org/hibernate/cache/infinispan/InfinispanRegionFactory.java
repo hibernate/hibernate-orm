@@ -72,6 +72,16 @@ public class InfinispanRegionFactory implements RegionFactory {
 
    public static final String INFINISPAN_GLOBAL_STATISTICS_PROP = "hibernate.cache.infinispan.statistics";
 
+   /**
+    * Property that controls whether Infinispan should interact with the
+    * transaction manager as a {@link javax.transaction.Synchronization} or as
+    * an XA resource. If the property is set to true, it will be a
+    * synchronization, otherwise an XA resource.
+    *
+    * @see #DEF_USE_SYNCHRONIZATION
+    */
+   public static final String INFINISPAN_USE_SYNCHRONIZATION_PROP = "hibernate.cache.infinispan.use_synchronization";
+
    private static final String ENTITY_KEY = "entity";
    
    /**
@@ -130,6 +140,11 @@ public class InfinispanRegionFactory implements RegionFactory {
     * Default value for {@link #QUERY_CACHE_RESOURCE_PROP}.
     */
    public static final String DEF_QUERY_RESOURCE = "local-query";
+
+   /**
+    * Default value for {@link #INFINISPAN_USE_SYNCHRONIZATION_PROP}.
+    */
+   public static final boolean DEF_USE_SYNCHRONIZATION = true;
 
    private EmbeddedCacheManager manager;
 
@@ -422,6 +437,11 @@ public class InfinispanRegionFactory implements RegionFactory {
       } else {
          regionOverrides.setTransactionManagerLookup(transactionManagerlookup);
       }
+
+      String useSyncProp = ConfigurationHelper.extractPropertyValue(INFINISPAN_USE_SYNCHRONIZATION_PROP, properties);
+      boolean useSync = useSyncProp == null ? DEF_USE_SYNCHRONIZATION : Boolean.parseBoolean(useSyncProp);
+      regionOverrides.fluent().transaction().useSynchronization(useSync);
+
       return regionOverrides;
    }
 

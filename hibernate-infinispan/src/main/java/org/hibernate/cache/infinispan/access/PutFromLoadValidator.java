@@ -662,10 +662,14 @@ public class PutFromLoadValidator {
       public void invalidate() {
          if (singlePendingPut != null) {
             singlePendingPut.completed = true;
+            // Nullify to avoid leaking completed pending puts
+            singlePendingPut = null;
          } else if (fullMap != null) {
             for (PendingPut pp : fullMap.values()) {
                pp.completed = true;
             }
+            // Nullify to avoid leaking completed pending puts
+            fullMap = null;
          }
       }
    }

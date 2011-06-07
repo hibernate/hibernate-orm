@@ -53,11 +53,20 @@ public interface Metadata {
 
 	public Options getOptions();
 
+	public SessionFactoryBuilder getSessionFactoryBuilder();
+
 	public SessionFactory buildSessionFactory();
 
 	public Iterable<EntityBinding> getEntityBindings();
 
 	public EntityBinding getEntityBinding(String entityName);
+
+	/**
+	 * Get the "root" entity binding
+	 * @param entityName
+	 * @return the "root entity binding; simply returns entityBinding if it is the root entity binding
+	 */
+	public EntityBinding getRootEntityBinding(String entityName);
 
 	public Iterable<TypeDef> getTypeDefinitions();
 

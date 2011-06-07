@@ -33,15 +33,19 @@ import java.util.Map;
 import org.jboss.logging.Logger;
 
 import org.hibernate.DuplicateMappingException;
+import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.id.factory.DefaultIdentifierGeneratorFactory;
+import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.MetadataSources;
+import org.hibernate.metamodel.SessionFactoryBuilder;
 import org.hibernate.metamodel.SourceProcessingOrder;
+import org.hibernate.metamodel.binding.AttributeBinding;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.FetchProfile;
 import org.hibernate.metamodel.binding.IdGenerator;
@@ -58,6 +62,7 @@ import org.hibernate.metamodel.source.spi.MetaAttributeContext;
 import org.hibernate.metamodel.source.spi.MetadataImplementor;
 import org.hibernate.service.BasicServiceRegistry;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
+import org.hibernate.type.Type;
 import org.hibernate.type.TypeResolver;
 
 /**
@@ -65,6 +70,7 @@ import org.hibernate.type.TypeResolver;
  *
  * @author Steve Ebersole
  * @author Hardy Ferentschik
+ * @author Gail Badner
  */
 public class MetadataImpl implements MetadataImplementor, Serializable {
 
@@ -78,6 +84,9 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	private ClassLoaderService classLoaderService;
 
 	private TypeResolver typeResolver = new TypeResolver();
+
+	private SessionFactoryBuilder sessionFactoryBuilder = new SessionFactoryBuilderImpl( this );
+
 	private DefaultIdentifierGeneratorFactory identifierGeneratorFactory = new DefaultIdentifierGeneratorFactory();
 
 	private final Database database = new Database();
@@ -88,6 +97,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	 * Maps the fully qualified class name of an entity to its entity binding
 	 */
 	private Map<String, EntityBinding> entityBindingMap = new HashMap<String, EntityBinding>();
+	private Map<String, EntityBinding> rootEntityBindingMap = new HashMap<String, EntityBinding>();
 	private Map<String, PluralAttributeBinding> collectionBindingMap = new HashMap<String, PluralAttributeBinding>();
 	private Map<String, FetchProfile> fetchProfiles = new HashMap<String, FetchProfile>();
 	private Map<String, String> imports;
@@ -253,8 +263,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	@Override
 	public SessionFactory buildSessionFactory() {
-		// todo : implement!!!!
-		return null;
+		return sessionFactoryBuilder.buildSessionFactory();
 	}
 
 	@Override
@@ -269,6 +278,28 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	public EntityBinding getEntityBinding(String entityName) {
 		return entityBindingMap.get( entityName );
+	}
+
+	@Override
+	public EntityBinding getRootEntityBinding(String entityName) {
+		EntityBinding rootEntityBinding = rootEntityBindingMap.get( entityName );
+		if ( rootEntityBinding == null ) {
+			EntityBinding entityBinding = entityBindingMap.get( entityName );
+			if ( entityBinding == null ) {
+				throw new IllegalStateException( "Unknown entity binding: " + entityName );
+			}
+			if ( entityBinding.isRoot() ) {
+				rootEntityBinding = entityBinding;
+			}
+			else {
+				if ( entityBinding.getEntity().getSuperType() == null ) {
+					throw new IllegalStateException( "Entity binding has no root: " + entityName );
+				}
+				rootEntityBinding = getRootEntityBinding( entityBinding.getEntity().getSuperType().getName() );
+			}
+			rootEntityBindingMap.put( entityName, rootEntityBinding );
+		}
+		return rootEntityBinding;
 	}
 
 	public Iterable<EntityBinding> getEntityBindings() {
@@ -321,6 +352,11 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	@Override
+	public SessionFactoryBuilder getSessionFactoryBuilder() {
+		return sessionFactoryBuilder;
+	}
+
+	@Override
 	public NamingStrategy getNamingStrategy() {
 		return options.getNamingStrategy();
 	}
@@ -346,6 +382,48 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	private static final String DEFAULT_DISCRIMINATOR_COLUMN_NAME = "class";
 	private static final String DEFAULT_CASCADE = "none";
 	private static final String DEFAULT_PROPERTY_ACCESS = "property";
+
+	@Override
+	public IdentifierGeneratorFactory getIdentifierGeneratorFactory() {
+		return identifierGeneratorFactory;
+	}
+
+	@Override
+	public Type getIdentifierType(String entityName) throws MappingException {
+		EntityBinding entityBinding = getEntityBinding( entityName );
+		if ( entityBinding == null ) {
+			throw new MappingException( "Entity binding not known: " + entityName );
+		}
+		return entityBinding
+				.getEntityIdentifier()
+				.getValueBinding()
+				.getHibernateTypeDescriptor()
+				.getExplicitType();
+	}
+
+	@Override
+	public String getIdentifierPropertyName(String entityName) throws MappingException {
+		EntityBinding entityBinding = getEntityBinding( entityName );
+		if ( entityBinding == null ) {
+			throw new MappingException( "Entity binding not known: " + entityName );
+		}
+		AttributeBinding idBinding = entityBinding.getEntityIdentifier().getValueBinding();
+		return idBinding == null ? null : idBinding.getAttribute().getName();
+	}
+
+	@Override
+	public Type getReferencedPropertyType(String entityName, String propertyName) throws MappingException {
+		EntityBinding entityBinding = getEntityBinding( entityName );
+		if ( entityBinding == null ) {
+			throw new MappingException( "Entity binding not known: " + entityName );
+		}
+		// TODO: should this call EntityBinding.getReferencedAttributeBindingString), which does not exist yet?
+		AttributeBinding attributeBinding = entityBinding.getAttributeBinding( propertyName );
+		if ( attributeBinding == null ) {
+			throw new MappingException( "unknown property: " + entityName + '.' + propertyName );
+		}
+		return attributeBinding.getHibernateTypeDescriptor().getExplicitType();
+	}
 
 	private class MappingDefaultsImpl implements MappingDefaults {
 

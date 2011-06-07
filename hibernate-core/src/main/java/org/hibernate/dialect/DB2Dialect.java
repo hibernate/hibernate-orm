@@ -207,75 +207,74 @@ public class DB2Dialect extends Dialect {
 	public boolean supportsLimit() {
 		return true;
 	}
-
-	/*public String getLimitString(String sql, boolean hasOffset) {
-		StringBuffer rownumber = new StringBuffer(50)
-			.append(" rownumber() over(");
-		int orderByIndex = sql.toLowerCase().indexOf("order by");
-		if (orderByIndex>0) rownumber.append( sql.substring(orderByIndex) );
-		rownumber.append(") as row_,");
-		StringBuffer pagingSelect = new StringBuffer( sql.length()+100 )
-			.append("select * from ( ")
-			.append(sql)
-			.insert( getAfterSelectInsertPoint(sql)+16, rownumber.toString() )
-			.append(" ) as temp_ where row_ ");
-		if (hasOffset) {
-			pagingSelect.append("between ?+1 and ?");
-		}
-		else {
-			pagingSelect.append("<= ?");
-		}
-		return pagingSelect.toString();
-	}*/
-
-	/**
-	 * Render the <tt>rownumber() over ( .... ) as rownumber_,</tt> 
-	 * bit, that goes in the select list
-	 */
-	private String getRowNumber(String sql) {
-		StringBuffer rownumber = new StringBuffer(50)
-			.append("rownumber() over(");
-
-		int orderByIndex = sql.toLowerCase().indexOf("order by");
-
-		if ( orderByIndex>0 && !hasDistinct(sql) ) {
-			rownumber.append( sql.substring(orderByIndex) );
-		}
-
-		rownumber.append(") as rownumber_,");
-
-		return rownumber.toString();
+	public boolean supportsVariableLimit() {
+		return false;
 	}
 
-	public String getLimitString(String sql, boolean hasOffset) {
-		int startOfSelect = sql.toLowerCase().indexOf("select");
-
-		StringBuffer pagingSelect = new StringBuffer( sql.length()+100 )
-				.append( sql.substring(0, startOfSelect) )	// add the comment
-				.append("select * from ( select ") 			// nest the main query in an outer select
-				.append( getRowNumber(sql) ); 				// add the rownnumber bit into the outer query select list
-
-		if ( hasDistinct(sql) ) {
-			pagingSelect.append(" row_.* from ( ")			// add another (inner) nested select
-					.append( sql.substring(startOfSelect) ) // add the main query
-					.append(" ) as row_"); 					// close off the inner nested select
-		}
-		else {
-			pagingSelect.append( sql.substring( startOfSelect + 6 ) ); // add the main query
-		}
-
-		pagingSelect.append(" ) as temp_ where rownumber_ ");
-
-		//add the restriction to the outer select
-		if (hasOffset) {
-			pagingSelect.append("between ?+1 and ?");
-		}
-		else {
-			pagingSelect.append("<= ?");
-		}
-
-		return pagingSelect.toString();
+//	/**
+//	 * Render the <tt>rownumber() over ( .... ) as rownumber_,</tt>
+//	 * bit, that goes in the select list
+//	 */
+//	private String getRowNumber(String sql) {
+//		StringBuffer rownumber = new StringBuffer(50)
+//			.append("rownumber() over(");
+//
+//		int orderByIndex = sql.toLowerCase().indexOf("order by");
+//
+//		if ( orderByIndex>0 && !hasDistinct(sql) ) {
+//			rownumber.append( sql.substring(orderByIndex) );
+//		}
+//
+//		rownumber.append(") as rownumber_,");
+//
+//		return rownumber.toString();
+//	}
+//
+//	public String getLimitString(String sql, boolean hasOffset) {
+//		int startOfSelect = sql.toLowerCase().indexOf("select");
+//
+//		StringBuffer pagingSelect = new StringBuffer( sql.length()+100 )
+//				.append( sql.substring(0, startOfSelect) )	// add the comment
+//				.append("select * from ( select ") 			// nest the main query in an outer select
+//				.append( getRowNumber(sql) ); 				// add the rownnumber bit into the outer query select list
+//
+//		if ( hasDistinct(sql) ) {
+//			pagingSelect.append(" row_.* from ( ")			// add another (inner) nested select
+//					.append( sql.substring(startOfSelect) ) // add the main query
+//					.append(" ) as row_"); 					// close off the inner nested select
+//		}
+//		else {
+//			pagingSelect.append( sql.substring( startOfSelect + 6 ) ); // add the main query
+//		}
+//
+//		pagingSelect.append(" ) as temp_ where rownumber_ ");
+//
+//		//add the restriction to the outer select
+//		if (hasOffset) {
+//			pagingSelect.append("between ?+1 and ?");
+//		}
+//		else {
+//			pagingSelect.append("<= ?");
+//		}
+//
+//		return pagingSelect.toString();
+//	}
+public String getLimitString(String sql, int offset, int limit) {
+	if ( offset == 0 ) {
+		return sql + " fetch first " + limit + " rows only";
 	}
+	StringBuilder pagingSelect = new StringBuilder( sql.length() + 200 )
+			.append(
+					"select * from ( select inner2_.*, rownumber() over(order by order of inner2_) as rownumber_ from ( "
+			)
+			.append( sql )  //nest the main query in an outer select
+			.append( " fetch first " )
+			.append( limit )
+			.append( " rows only ) as inner2_ ) as inner1_ where rownumber_ > " )
+			.append( offset )
+			.append( " order by rownumber_" );
+	return pagingSelect.toString();
+}
 
 	/**
 	 * DB2 does have a one-based offset, however this was actually already handled in the limit string building
@@ -288,10 +287,10 @@ public class DB2Dialect extends Dialect {
 	public int convertToFirstRowValue(int zeroBasedFirstResult) {
 		return zeroBasedFirstResult;
 	}
-
-	private static boolean hasDistinct(String sql) {
-		return sql.toLowerCase().indexOf("select distinct")>=0;
-	}
+//
+//	private static boolean hasDistinct(String sql) {
+//		return sql.toLowerCase().indexOf("select distinct")>=0;
+//	}
 
 	public String getForUpdateString() {
 		return " for read only with rs";

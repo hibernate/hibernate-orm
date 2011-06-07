@@ -38,6 +38,7 @@ import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Gavin King
@@ -145,6 +146,30 @@ public class PaginationTest extends BaseCoreFunctionalTestCase {
 		assertEquals( 1, result.size() );
 		assertEquals( 99, ( ( DataPoint ) result.get( 0 ) ).getSequence() );
 
+		result = session.createQuery("select distinct description from DataPoint order by description")
+				.setFirstResult( 2 )
+				.setMaxResults( 3 )
+				.list();
+		assertEquals( 3, result.size() );
+		assertEquals( "Description: 2", result.get(0));
+		assertEquals( "Description: 3", result.get(1));
+		assertEquals( "Description: 4", result.get(2));
+
+		result = session.createSQLQuery( "select description, xval, yval from DataPoint order by xval, yval" )
+				.setFirstResult( 2 )
+				.setMaxResults( 5 )
+				.list();
+		assertEquals( 5, result.size() );
+		Object[] row = (Object[]) result.get(0);
+		assertTrue( row[0] instanceof String);
+
+		result = session.createSQLQuery( "select * from DataPoint order by xval, yval" )
+				.setFirstResult( 2 )
+				.setMaxResults( 5 )
+				.list();
+		assertEquals( 5, result.size() );
+
+
 		session.getTransaction().commit();
 		session.close();
 
@@ -175,6 +200,7 @@ public class PaginationTest extends BaseCoreFunctionalTestCase {
 			BigDecimal x = new BigDecimal( i * 0.1d ).setScale( 19, BigDecimal.ROUND_DOWN );
 			dataPoint.setX( x );
 			dataPoint.setY( new BigDecimal( Math.cos( x.doubleValue() ) ).setScale( 19, BigDecimal.ROUND_DOWN ) );
+			dataPoint.setDescription("Description: " + i%5);
 			session.save( dataPoint );
 		}
 		session.getTransaction().commit();

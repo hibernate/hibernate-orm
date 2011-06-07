@@ -24,14 +24,19 @@
 
 package org.hibernate.metamodel;
 
+import java.util.Map;
 import javax.persistence.SharedCacheMode;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.NamingStrategy;
+import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.spi.FilterDefinition;
+import org.hibernate.engine.spi.NamedQueryDefinition;
+import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.IdGenerator;
+import org.hibernate.metamodel.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.binding.TypeDef;
 
 /**
@@ -68,9 +73,19 @@ public interface Metadata {
 	 */
 	public EntityBinding getRootEntityBinding(String entityName);
 
+	public Iterable<PluralAttributeBinding> getCollectionBindings();
+
 	public Iterable<TypeDef> getTypeDefinitions();
 
 	public Iterable<FilterDefinition> getFilterDefinitions();
+
+	public Iterable<NamedQueryDefinition> getNamedQueryDefinitions();
+
+	public Iterable<NamedSQLQueryDefinition> getNamedNativeQueryDefinitions();
+
+	public Iterable<ResultSetMappingDefinition> getResultSetMappingDefinitions();
+
+	public Iterable<Map.Entry<String, String>> getImports();
 
 	public IdGenerator getIdGenerator(String name);
 }

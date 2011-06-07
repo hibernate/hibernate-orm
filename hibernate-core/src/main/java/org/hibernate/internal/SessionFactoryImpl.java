@@ -75,6 +75,7 @@ import org.hibernate.cache.spi.UpdateTimestampsCache;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
+import org.hibernate.cache.spi.access.RegionAccessStrategy;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Settings;
@@ -114,6 +115,7 @@ import org.hibernate.mapping.RootClass;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.metamodel.binding.EntityBinding;
+import org.hibernate.metamodel.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.source.spi.MetadataImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -180,12 +182,12 @@ public final class SessionFactoryImpl
 	private final transient Map collectionMetadata;
 	private final transient Map<String,Set<String>> collectionRolesByEntityParticipant;
 	private final transient Map identifierGenerators;
-	private final transient Map namedQueries;
-	private final transient Map namedSqlQueries;
-	private final transient Map sqlResultSetMappings;
+	private final transient Map<String, NamedQueryDefinition> namedQueries;
+	private final transient Map<String, NamedSQLQueryDefinition> namedSqlQueries;
+	private final transient Map<String, ResultSetMappingDefinition> sqlResultSetMappings;
 	private final transient Map<String, FilterDefinition> filters;
 	private final transient Map fetchProfiles;
-	private final transient Map imports;
+	private final transient Map<String,String> imports;
 	private final transient SessionFactoryServiceRegistry serviceRegistry;
 	private final transient Settings settings;
 	private final transient Properties properties;
@@ -401,10 +403,10 @@ public final class SessionFactoryImpl
 		collectionRolesByEntityParticipant = Collections.unmodifiableMap( tmpEntityToCollectionRoleMap );
 
 		//Named Queries:
-		namedQueries = new HashMap( cfg.getNamedQueries() );
-		namedSqlQueries = new HashMap( cfg.getNamedSQLQueries() );
-		sqlResultSetMappings = new HashMap( cfg.getSqlResultSetMappings() );
-		imports = new HashMap( cfg.getImports() );
+		namedQueries = new HashMap<String, NamedQueryDefinition>( cfg.getNamedQueries() );
+		namedSqlQueries = new HashMap<String, NamedSQLQueryDefinition>( cfg.getNamedSQLQueries() );
+		sqlResultSetMappings = new HashMap<String, ResultSetMappingDefinition>( cfg.getSqlResultSetMappings() );
+		imports = new HashMap<String,String>( cfg.getImports() );
 
 		// after *all* persisters and named queries are registered
 		Iterator iter = entityPersisters.values().iterator();
@@ -529,14 +531,7 @@ public final class SessionFactoryImpl
 		// TODO: remove initialization of final variables; just setting to null to make compiler happy
 		this.name = null;
 		this.uuid = null;
-		this.collectionPersisters = null;
-		this.collectionMetadata = null;
-		this.collectionRolesByEntityParticipant = null;
-		this.namedQueries = null;
-		this.namedSqlQueries = null;
-		this.sqlResultSetMappings = null;
 		this.fetchProfiles = null;
-		this.imports = null;
 		this.queryCache = null;
 		this.updateTimestampsCache = null;
 		this.queryCaches = null;
@@ -614,10 +609,11 @@ public final class SessionFactoryImpl
 			if ( entityBinding.isRoot() ) {
 				// TODO: create the IdentifierGenerator while the metadata is being build, then simply
 				// use EntityBinding.getIdentifierGenerator() (also remove getIdentifierGeneratorFactory from Mappings)
-				IdentifierGenerator generator = entityBinding.getEntityIdentifier().createIdentifierGenerator(
-						metadata.getIdentifierGeneratorFactory()
-				);
-				identifierGenerators.put( entityBinding.getEntity().getName(), generator );
+				// TODO: this is broken; throws NullPointerException
+				//IdentifierGenerator generator = entityBinding.getEntityIdentifier().createIdentifierGenerator(
+				//		metadata.getIdentifierGeneratorFactory()
+				//);
+				//identifierGenerators.put( entityBinding.getEntity().getName(), generator );
 			}
 		}
 
@@ -634,7 +630,7 @@ public final class SessionFactoryImpl
 		final String cacheRegionPrefix = stringBuilder.toString();
 
 		entityPersisters = new HashMap();
-		Map<String, EntityRegionAccessStrategy> entityAccessStrategies = new HashMap<String, EntityRegionAccessStrategy>();
+		Map<String, RegionAccessStrategy> entityAccessStrategies = new HashMap<String, RegionAccessStrategy>();
 		Map<String,ClassMetadata> classMeta = new HashMap<String,ClassMetadata>();
 		for ( EntityBinding model : metadata.getEntityBindings() ) {
 			// TODO: should temp table prep happen when metadata is being built?
@@ -647,7 +643,7 @@ public final class SessionFactoryImpl
 					model.getCaching() != null &&
 					model.getCaching().getAccessType() != null ) {
 				final String cacheRegionName = cacheRegionPrefix + rootEntityBinding.getCaching().getRegion();
-				accessStrategy = entityAccessStrategies.get( cacheRegionName );
+				accessStrategy = EntityRegionAccessStrategy.class.cast( entityAccessStrategies.get( cacheRegionName ) );
 				if ( accessStrategy == null ) {
 					final AccessType accessType = model.getCaching().getAccessType();
 					LOG.trace("Building cache for entity data [" + model.getEntity().getName() + "]");
@@ -669,6 +665,101 @@ public final class SessionFactoryImpl
 			classMeta.put( model.getEntity().getName(), cp.getClassMetadata() );
 		}
 		this.classMetadata = Collections.unmodifiableMap(classMeta);
+
+		Map<String,Set<String>> tmpEntityToCollectionRoleMap = new HashMap<String,Set<String>>();
+		collectionPersisters = new HashMap();
+		for ( PluralAttributeBinding model : metadata.getCollectionBindings() ) {
+			if ( model.getAttribute() == null ) {
+				throw new IllegalStateException( "No attribute defined for a PluralAttributeBinding: " +  model );
+			}
+			if ( model.getAttribute().isSingular() ) {
+				throw new IllegalStateException(
+						"PluralAttributeBinding has a Singular attribute defined: " + model.getAttribute().getName()
+				);
+			}
+			// TODO: Add PluralAttributeBinding.getCaching()
+			final String cacheRegionName = cacheRegionPrefix + model.getCacheRegionName();
+			final AccessType accessType = AccessType.fromExternalName( model.getCacheConcurrencyStrategy() );
+			CollectionRegionAccessStrategy accessStrategy = null;
+			if ( accessType != null && settings.isSecondLevelCacheEnabled() ) {
+				// TODO: is model.getAttribute().getName() the collection's role??? For now, assuming it is
+                LOG.trace("Building cache for collection data [" + model.getAttribute().getName() + "]");
+				CollectionRegion collectionRegion =
+						settings.getRegionFactory()
+								.buildCollectionRegion(
+										cacheRegionName, properties, CacheDataDescriptionImpl.decode( model )
+								);
+				accessStrategy = collectionRegion.buildAccessStrategy( accessType );
+				entityAccessStrategies.put( cacheRegionName, accessStrategy );
+				allCacheRegions.put( cacheRegionName, collectionRegion );
+			}
+			CollectionPersister persister =
+					serviceRegistry
+							.getService( PersisterFactory.class )
+							.createCollectionPersister( metadata, model, accessStrategy, this );
+			// TODO: is model.getAttribute().getName() the collection's role??? For now, assuming it is
+			collectionPersisters.put( model.getAttribute().getName(), persister.getCollectionMetadata() );
+			Type indexType = persister.getIndexType();
+			if ( indexType != null && indexType.isAssociationType() && !indexType.isAnyType() ) {
+				String entityName = ( ( AssociationType ) indexType ).getAssociatedEntityName( this );
+				Set roles = tmpEntityToCollectionRoleMap.get( entityName );
+				if ( roles == null ) {
+					roles = new HashSet();
+					tmpEntityToCollectionRoleMap.put( entityName, roles );
+				}
+				roles.add( persister.getRole() );
+			}
+			Type elementType = persister.getElementType();
+			if ( elementType.isAssociationType() && !elementType.isAnyType() ) {
+				String entityName = ( ( AssociationType ) elementType ).getAssociatedEntityName( this );
+				Set roles = tmpEntityToCollectionRoleMap.get( entityName );
+				if ( roles == null ) {
+					roles = new HashSet();
+					tmpEntityToCollectionRoleMap.put( entityName, roles );
+				}
+				roles.add( persister.getRole() );
+			}
+		}
+		collectionMetadata = Collections.unmodifiableMap(collectionPersisters);
+		Iterator itr = tmpEntityToCollectionRoleMap.entrySet().iterator();
+		while ( itr.hasNext() ) {
+			final Map.Entry entry = ( Map.Entry ) itr.next();
+			entry.setValue( Collections.unmodifiableSet( ( Set ) entry.getValue() ) );
+		}
+		collectionRolesByEntityParticipant = Collections.unmodifiableMap( tmpEntityToCollectionRoleMap );
+
+		//Named Queries:
+		namedQueries = new HashMap<String,NamedQueryDefinition>();
+		for ( NamedQueryDefinition namedQueryDefinition :  metadata.getNamedQueryDefinitions() ) {
+			namedQueries.put( namedQueryDefinition.getName(), namedQueryDefinition );
+		}
+		namedSqlQueries = new HashMap<String, NamedSQLQueryDefinition>();
+		for ( NamedSQLQueryDefinition namedNativeQueryDefinition: metadata.getNamedNativeQueryDefinitions() ) {
+			namedSqlQueries.put( namedNativeQueryDefinition.getName(), namedNativeQueryDefinition );
+		}
+		sqlResultSetMappings = new HashMap<String, ResultSetMappingDefinition>();
+		for( ResultSetMappingDefinition resultSetMappingDefinition : metadata.getResultSetMappingDefinitions() ) {
+			sqlResultSetMappings.put( resultSetMappingDefinition.getName(), resultSetMappingDefinition );
+		}
+		imports = new HashMap<String,String>();
+		for ( Map.Entry<String,String> importEntry : metadata.getImports() ) {
+			imports.put( importEntry.getKey(), importEntry.getValue() );
+		}
+
+		// after *all* persisters and named queries are registered
+		Iterator iter = entityPersisters.values().iterator();
+		while ( iter.hasNext() ) {
+			final EntityPersister persister = ( ( EntityPersister ) iter.next() );
+			// TODO: broken
+			//persister.postInstantiate();
+			registerEntityNameResolvers( persister );
+
+		}
+		iter = collectionPersisters.values().iterator();
+		while ( iter.hasNext() ) {
+			final CollectionPersister persister = ( ( CollectionPersister ) iter.next() );
+			persister.postInstantiate();
+		}
 
 		// TODO: implement
 	}

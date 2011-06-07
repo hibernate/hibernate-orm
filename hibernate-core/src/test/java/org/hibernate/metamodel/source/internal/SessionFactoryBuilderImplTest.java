@@ -87,6 +87,7 @@ public class SessionFactoryBuilderImplTest extends BaseUnitTestCase {
 
 	private SessionFactoryBuilder getSessionFactoryBuilder() {
 		MetadataSources sources = new MetadataSources( new ServiceRegistryBuilder().buildServiceRegistry() );
+		sources.addAnnotatedClass( SimpleEntity.class );
 		MetadataImpl metadata = (MetadataImpl) sources.buildMetadata();
 		return  metadata.getSessionFactoryBuilder();
 	}

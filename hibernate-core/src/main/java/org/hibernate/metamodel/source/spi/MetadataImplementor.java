@@ -23,6 +23,7 @@
  */
 package org.hibernate.metamodel.source.spi;
 
+import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.NamedQueryDefinition;
@@ -65,9 +66,11 @@ public interface MetadataImplementor extends Metadata, BindingContext, Mapping {
 
 	public void registerIdentifierGenerator(String name, String clazz);
 
-	public void addNamedNativeQuery(String name, NamedSQLQueryDefinition def);
+	public void addNamedNativeQuery(NamedSQLQueryDefinition def);
 
-	public void addNamedQuery(String name, NamedQueryDefinition def);
+	public void addNamedQuery(NamedQueryDefinition def);
+
+	public void addResultSetMapping(ResultSetMappingDefinition resultSetMappingDefinition);
 
 	public void addAuxiliaryDatabaseObject(AuxiliaryDatabaseObject auxiliaryDatabaseObject);
 }

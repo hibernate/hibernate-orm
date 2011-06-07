@@ -34,6 +34,7 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.PluralAttributeBinding;
+import org.hibernate.metamodel.source.spi.MetadataImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.spi.PersisterClassResolver;
@@ -104,7 +105,7 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 	private static final Class[] COLLECTION_PERSISTER_CONSTRUCTOR_ARGS_NEW = new Class[] {
 			PluralAttributeBinding.class,
 			CollectionRegionAccessStrategy.class,
-			Configuration.class,
+			MetadataImplementor.class,
 			SessionFactoryImplementor.class
 	};
 
@@ -183,44 +184,44 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 	@SuppressWarnings( {"unchecked"})
 	public CollectionPersister createCollectionPersister(
 			Configuration cfg,
-			Collection metadata,
+			Collection collectionMetadata,
 			CollectionRegionAccessStrategy cacheAccessStrategy,
 			SessionFactoryImplementor factory) throws HibernateException {
-		Class<? extends CollectionPersister> persisterClass = metadata.getCollectionPersisterClass();
+		Class<? extends CollectionPersister> persisterClass = collectionMetadata.getCollectionPersisterClass();
 		if ( persisterClass == null ) {
-			persisterClass = serviceRegistry.getService( PersisterClassResolver.class ).getCollectionPersisterClass( metadata );
+			persisterClass = serviceRegistry.getService( PersisterClassResolver.class ).getCollectionPersisterClass( collectionMetadata );
 		}
 
-		return create( persisterClass, COLLECTION_PERSISTER_CONSTRUCTOR_ARGS, cfg, metadata, cacheAccessStrategy, factory );
+		return create( persisterClass, COLLECTION_PERSISTER_CONSTRUCTOR_ARGS, cfg, collectionMetadata, cacheAccessStrategy, factory );
 	}
 
 	@Override
 	@SuppressWarnings( {"unchecked"})
-
-	public CollectionPersister createCollectionPersister(Configuration cfg,
-														 PluralAttributeBinding metadata,
+	public CollectionPersister createCollectionPersister(MetadataImplementor metadata,
+														 PluralAttributeBinding collectionMetadata,
 														 CollectionRegionAccessStrategy cacheAccessStrategy,
 														 SessionFactoryImplementor factory) throws HibernateException {
-		Class<? extends CollectionPersister> persisterClass = metadata.getCollectionPersisterClass();
+		Class<? extends CollectionPersister> persisterClass = collectionMetadata.getCollectionPersisterClass();
 		if ( persisterClass == null ) {
-			persisterClass = serviceRegistry.getService( PersisterClassResolver.class ).getCollectionPersisterClass( metadata );
+			persisterClass = serviceRegistry.getService( PersisterClassResolver.class ).getCollectionPersisterClass( collectionMetadata );
 		}
 
-		return create( persisterClass, COLLECTION_PERSISTER_CONSTRUCTOR_ARGS_NEW, cfg, metadata, cacheAccessStrategy, factory );
+		return create( persisterClass, COLLECTION_PERSISTER_CONSTRUCTOR_ARGS_NEW, metadata, collectionMetadata, cacheAccessStrategy, factory );
 	}
 
-	// TODO: change metadata arg type to PluralAttributeBinding when new metadata is integrated
+	// TODO: change collectionMetadata arg type to PluralAttributeBinding when new metadata is integrated
+	// TODO: change metadata arg type to MetadataImplementor when new metadata is integrated
 	private static CollectionPersister create(
 			Class<? extends CollectionPersister> persisterClass,
 			Class[] persisterConstructorArgs,
-			Configuration cfg,
-			Object metadata,
+			Object cfg,
+			Object collectionMetadata,
 			CollectionRegionAccessStrategy cacheAccessStrategy,
 			SessionFactoryImplementor factory) throws HibernateException {
 		try {
 			Constructor<? extends CollectionPersister> constructor = persisterClass.getConstructor( persisterConstructorArgs );
 			try {
-				return constructor.newInstance( metadata, cacheAccessStrategy, cfg, factory );
+				return constructor.newInstance( collectionMetadata, cacheAccessStrategy, cfg, factory );
 			}
 			catch (MappingException e) {
 				throw e;

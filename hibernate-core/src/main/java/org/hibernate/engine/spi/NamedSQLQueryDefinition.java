@@ -62,6 +62,7 @@ public class NamedSQLQueryDefinition extends NamedQueryDefinition {
 	 * @param callable Does the query string represent a callable object (i.e., proc)
 	 */
 	public NamedSQLQueryDefinition(
+			String name,
 			String query,
 			NativeSQLQueryReturn[] queryReturns,
 			List<String> querySpaces,
@@ -76,6 +77,7 @@ public class NamedSQLQueryDefinition extends NamedQueryDefinition {
 			Map parameterTypes,
 			boolean callable) {
 		super(
+				name,
 				query.trim(), /* trim done to workaround stupid oracle bug that cant handle whitespaces before a { in a sp */
 				cacheable,
 				cacheRegion,
@@ -111,6 +113,7 @@ public class NamedSQLQueryDefinition extends NamedQueryDefinition {
 	 * @param callable Does the query string represent a callable object (i.e., proc)
 	 */
 	public NamedSQLQueryDefinition(
+			String name,
 			String query,
 			String resultSetRef,
 			List<String> querySpaces,
@@ -125,6 +128,7 @@ public class NamedSQLQueryDefinition extends NamedQueryDefinition {
 			Map parameterTypes,
 			boolean callable) {
 		super(
+				name,
 				query.trim(), /* trim done to workaround stupid oracle bug that cant handle whitespaces before a { in a sp */
 				cacheable,
 				cacheRegion,
@@ -172,6 +176,7 @@ public class NamedSQLQueryDefinition extends NamedQueryDefinition {
 			Map parameterTypes,
 			boolean callable) {
 		this(
+				null,
 				query,
 				resultSetRef,
 				querySpaces,

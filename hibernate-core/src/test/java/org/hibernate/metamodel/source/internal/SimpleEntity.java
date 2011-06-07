@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,30 +21,40 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.cache.spi.access;
+package org.hibernate.metamodel.source.internal;
 
-import org.hibernate.cache.spi.CollectionRegion;
+import javax.persistence.Entity;
+import javax.persistence.Id;
 
 /**
- * Contract for managing transactional and concurrent access to cached collection
- * data.  For cached collection data, all modification actions actually just
- * invalidate the entry(s).  The call sequence here is:
- * {@link #lockItem} -> {@link #remove} -> {@link #unlockItem}
- * <p/>
- * There is another usage pattern that is used to invalidate entries
- * after performing "bulk" HQL/SQL operations:
- * {@link #lockRegion} -> {@link #removeAll} -> {@link #unlockRegion}
- *
- * @author Gavin King
  * @author Steve Ebersole
  */
-public interface CollectionRegionAccessStrategy extends RegionAccessStrategy {
+@Entity
+public class SimpleEntity {
+	@Id
+	private Long id;
+	private String name;
 
-	/**
-	 * Get the wrapped collection cache region
-	 *
-	 * @return The underlying region
-	 */
-	public CollectionRegion getRegion();
+	public SimpleEntity() {
+	}
 
+	public SimpleEntity(String name) {
+		this.name = name;
+	}
+
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
 }

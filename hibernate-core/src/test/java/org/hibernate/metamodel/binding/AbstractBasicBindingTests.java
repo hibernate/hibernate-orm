@@ -33,6 +33,7 @@ import org.junit.Test;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.relational.Column;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
+import org.hibernate.metamodel.source.spi.MetadataImplementor;
 import org.hibernate.service.BasicServiceRegistry;
 import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.service.internal.BasicServiceRegistryImpl;
@@ -74,6 +75,7 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 	public void testSimpleEntityMapping() {
 		MetadataImpl metadata = addSourcesForSimpleEntityBinding( sources );
 		EntityBinding entityBinding = metadata.getEntityBinding( SimpleEntity.class.getName() );
+		assertRoot( metadata, entityBinding );
 		assertIdAndSimpleProperty( entityBinding );
 
 		assertNull( entityBinding.getVersioningValueBinding() );
@@ -123,7 +125,6 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 		assertNotNull( entityBinding );
 		assertNotNull( entityBinding.getEntityIdentifier() );
 		assertNotNull( entityBinding.getEntityIdentifier().getValueBinding() );
-		assertTrue( entityBinding.isRoot() );
 
 		AttributeBinding idAttributeBinding = entityBinding.getAttributeBinding( "id" );
 		assertNotNull( idAttributeBinding );
@@ -136,5 +137,10 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 		assertNotNull( nameBinding );
 		assertNotNull( nameBinding.getAttribute() );
 		assertNotNull( nameBinding.getValue() );
+	}
+
+	protected void assertRoot(MetadataImplementor metadata, EntityBinding entityBinding) {
+		assertTrue( entityBinding.isRoot() );
+		assertSame( entityBinding, metadata.getRootEntityBinding( entityBinding.getEntity().getName() ) );
 	}
 }

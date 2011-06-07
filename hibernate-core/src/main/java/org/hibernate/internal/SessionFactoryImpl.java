@@ -75,10 +75,11 @@ import org.hibernate.cache.spi.UpdateTimestampsCache;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
-import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cache.spi.access.RegionAccessStrategy;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Settings;
+import org.hibernate.cfg.SettingsFactory;
 import org.hibernate.context.internal.ThreadLocalSessionContext;
 import org.hibernate.context.spi.CurrentSessionContext;
 import org.hibernate.context.internal.JTASessionContext;
@@ -114,6 +115,7 @@ import org.hibernate.mapping.RootClass;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.metamodel.binding.EntityBinding;
+import org.hibernate.metamodel.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.source.spi.MetadataImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -180,13 +182,12 @@ public final class SessionFactoryImpl
 	private final transient Map collectionMetadata;
 	private final transient Map<String,Set<String>> collectionRolesByEntityParticipant;
 	private final transient Map identifierGenerators;
-	private final transient Map namedQueries;
-	private final transient Map namedSqlQueries;
-	private final transient Map sqlResultSetMappings;
+	private final transient Map<String, NamedQueryDefinition> namedQueries;
+	private final transient Map<String, NamedSQLQueryDefinition> namedSqlQueries;
+	private final transient Map<String, ResultSetMappingDefinition> sqlResultSetMappings;
 	private final transient Map<String, FilterDefinition> filters;
 	private final transient Map fetchProfiles;
-	private final transient Map imports;
-	private final transient Interceptor interceptor;
+	private final transient Map<String,String> imports;
 	private final transient SessionFactoryServiceRegistry serviceRegistry;
 	private final transient Settings settings;
 	private final transient Properties properties;
@@ -196,7 +197,6 @@ public final class SessionFactoryImpl
 	private final transient Map<String,QueryCache> queryCaches;
 	private final transient ConcurrentMap<String,Region> allCacheRegions = new ConcurrentHashMap<String, Region>();
 	private final transient CurrentSessionContext currentSessionContext;
-	private final transient EntityNotFoundDelegate entityNotFoundDelegate;
 	private final transient SQLFunctionRegistry sqlFunctionRegistry;
 	private final transient SessionFactoryObserverChain observer = new SessionFactoryObserverChain();
 	private final transient HashMap entityNameResolvers = new HashMap();
@@ -206,18 +206,44 @@ public final class SessionFactoryImpl
 	private final transient TypeResolver typeResolver;
 	private final transient TypeHelper typeHelper;
 	private final transient TransactionEnvironment transactionEnvironment;
+	private final transient SessionFactoryOptions sessionFactoryOptions;
 
 	@SuppressWarnings( {"unchecked"} )
 	public SessionFactoryImpl(
-			Configuration cfg,
+			final Configuration cfg,
 	        Mapping mapping,
 			ServiceRegistry serviceRegistry,
 	        Settings settings,
 			SessionFactoryObserver observer) throws HibernateException {
         LOG.debug( "Building session factory" );
 
+		sessionFactoryOptions = new SessionFactoryOptions() {
+			private EntityNotFoundDelegate entityNotFoundDelegate;
+
+			@Override
+			public Interceptor getInterceptor() {
+				return cfg.getInterceptor();
+			}
+
+			@Override
+			public EntityNotFoundDelegate getEntityNotFoundDelegate() {
+				if ( entityNotFoundDelegate == null ) {
+					if ( cfg.getEntityNotFoundDelegate() != null ) {
+						entityNotFoundDelegate = cfg.getEntityNotFoundDelegate();
+					}
+					else {
+						entityNotFoundDelegate = new EntityNotFoundDelegate() {
+							public void handleEntityNotFound(String entityName, Serializable id) {
+								throw new ObjectNotFoundException( id, entityName );
+							}
+						};
+					}
+				}
+				return entityNotFoundDelegate;
+			}
+		};
+
 		this.settings = settings;
-		this.interceptor = cfg.getInterceptor();
 
 		this.properties = new Properties();
 		this.properties.putAll( cfg.getProperties() );
@@ -377,10 +403,10 @@ public final class SessionFactoryImpl
 		collectionRolesByEntityParticipant = Collections.unmodifiableMap( tmpEntityToCollectionRoleMap );
 
 		//Named Queries:
-		namedQueries = new HashMap( cfg.getNamedQueries() );
-		namedSqlQueries = new HashMap( cfg.getNamedSQLQueries() );
-		sqlResultSetMappings = new HashMap( cfg.getSqlResultSetMappings() );
-		imports = new HashMap( cfg.getImports() );
+		namedQueries = new HashMap<String, NamedQueryDefinition>( cfg.getNamedQueries() );
+		namedSqlQueries = new HashMap<String, NamedSQLQueryDefinition>( cfg.getNamedSQLQueries() );
+		sqlResultSetMappings = new HashMap<String, ResultSetMappingDefinition>( cfg.getSqlResultSetMappings() );
+		imports = new HashMap<String,String>( cfg.getImports() );
 
 		// after *all* persisters and named queries are registered
 		Iterator iter = entityPersisters.values().iterator();
@@ -455,17 +481,6 @@ public final class SessionFactoryImpl
 			}
 		}
 
-		// EntityNotFoundDelegate
-		EntityNotFoundDelegate entityNotFoundDelegate = cfg.getEntityNotFoundDelegate();
-		if ( entityNotFoundDelegate == null ) {
-			entityNotFoundDelegate = new EntityNotFoundDelegate() {
-				public void handleEntityNotFound(String entityName, Serializable id) {
-					throw new ObjectNotFoundException( id, entityName );
-				}
-			};
-		}
-		this.entityNotFoundDelegate = entityNotFoundDelegate;
-
 		// this needs to happen after persisters are all ready to go...
 		this.fetchProfiles = new HashMap();
 		itr = cfg.iterateFetchProfiles();
@@ -509,52 +524,41 @@ public final class SessionFactoryImpl
 
 	public SessionFactoryImpl(
 			MetadataImplementor metadata,
-	        Mapping mapping,
-			ServiceRegistry serviceRegistry,
+			SessionFactoryOptions sessionFactoryOptions,
 			SessionFactoryObserver observer) throws HibernateException {
         LOG.debug( "Building session factory" );
 
 		// TODO: remove initialization of final variables; just setting to null to make compiler happy
 		this.name = null;
 		this.uuid = null;
-		this.entityPersisters = null;
-		this.classMetadata = null;
-		this.collectionPersisters = null;
-		this.collectionMetadata = null;
-		this.collectionRolesByEntityParticipant = null;
-		this.identifierGenerators = null;
-		this.namedQueries = null;
-		this.namedSqlQueries = null;
-		this.sqlResultSetMappings = null;
 		this.fetchProfiles = null;
-		this.imports = null;
-		this.interceptor = null;
 		this.queryCache = null;
 		this.updateTimestampsCache = null;
 		this.queryCaches = null;
 		this.currentSessionContext = null;
-		this.entityNotFoundDelegate = null;
 		this.sqlFunctionRegistry = null;
-		this.queryPlanCache = null;
 		this.transactionEnvironment = null;
 
-		ConfigurationService configurationService = serviceRegistry.getService( ConfigurationService.class );
-		this.settings = null;
+		this.sessionFactoryOptions = sessionFactoryOptions;
 
-		this.serviceRegistry = serviceRegistry.getService( SessionFactoryServiceRegistryFactory.class ).buildServiceRegistry(
-				this,
-				metadata
+		this.properties = createPropertiesFromMap(
+				metadata.getServiceRegistry().getService( ConfigurationService.class ).getSettings()
 		);
 
-		// TODO: get Interceptor from ConfurationService
-		//this.interceptor = cfg.getInterceptor();
+		// TODO: these should be moved into SessionFactoryOptions
+		this.settings = new SettingsFactory().buildSettings(
+				properties,
+				metadata.getServiceRegistry()
+		);
 
-		// TODO: find references to properties and make sure everything needed is available to services via
-		//       ConfigurationService
-		this.properties = null;
+		this.serviceRegistry =
+				metadata.getServiceRegistry()
+						.getService( SessionFactoryServiceRegistryFactory.class )
+						.buildServiceRegistry( this, metadata );
 
-		// TODO: should this be build along w/ metadata? seems like it should so app has more control over it...
-		//this.sqlFunctionRegistry = new SQLFunctionRegistry( getDialect(), metadata.getSqlFunctions() );
+		// TODO: get SQL functions from a new service
+		// this.sqlFunctionRegistry = new SQLFunctionRegistry( getDialect(), cfg.getSqlFunctions() );
+
 		if ( observer != null ) {
 			this.observer.addObserver( observer );
 		}
@@ -568,10 +572,203 @@ public final class SessionFactoryImpl
 		}
 
         LOG.debugf("Session factory constructed with filter configurations : %s", filters);
-        LOG.debugf("Instantiating session factory with properties: %s", configurationService.getSettings() );
+        LOG.debugf("Instantiating session factory with properties: %s", properties );
+
+		// TODO: get RegionFactory from service registry
+		settings.getRegionFactory().start( settings, properties );
+		this.queryPlanCache = new QueryPlanCache( this );
+
+		class IntegratorObserver implements SessionFactoryObserver {
+			private ArrayList<Integrator> integrators = new ArrayList<Integrator>();
+
+			@Override
+			public void sessionFactoryCreated(SessionFactory factory) {
+			}
+
+			@Override
+			public void sessionFactoryClosed(SessionFactory factory) {
+				for ( Integrator integrator : integrators ) {
+					integrator.disintegrate( SessionFactoryImpl.this, SessionFactoryImpl.this.serviceRegistry );
+				}
+			}
+		}
+
+		final IntegratorObserver integratorObserver = new IntegratorObserver();
+		this.observer.addObserver( integratorObserver );
+		for ( Integrator integrator : serviceRegistry.getService( IntegratorService.class ).getIntegrators() ) {
+			// TODO: add Integrator.integrate(MetadataImplementor, ...)
+			// integrator.integrate( cfg, this, this.serviceRegistry );
+			integratorObserver.integrators.add( integrator );
+		}
+
+
+		//Generators:
+
+		identifierGenerators = new HashMap();
+		for ( EntityBinding entityBinding : metadata.getEntityBindings() ) {
+			if ( entityBinding.isRoot() ) {
+				// TODO: create the IdentifierGenerator while the metadata is being build, then simply
+				// use EntityBinding.getIdentifierGenerator() (also remove getIdentifierGeneratorFactory from Mappings)
+				// TODO: this is broken; throws NullPointerException
+				//IdentifierGenerator generator = entityBinding.getEntityIdentifier().createIdentifierGenerator(
+				//		metadata.getIdentifierGeneratorFactory()
+				//);
+				//identifierGenerators.put( entityBinding.getEntity().getName(), generator );
+			}
+		}
+
+		///////////////////////////////////////////////////////////////////////
+		// Prepare persisters and link them up with their cache
+		// region/access-strategy
+
+		StringBuilder stringBuilder = new StringBuilder();
+		if ( settings.getCacheRegionPrefix() != null) {
+			stringBuilder
+					.append( settings.getCacheRegionPrefix() )
+					.append( '.' );
+		}
+		final String cacheRegionPrefix = stringBuilder.toString();
+
+		entityPersisters = new HashMap();
+		Map<String, RegionAccessStrategy> entityAccessStrategies = new HashMap<String, RegionAccessStrategy>();
+		Map<String,ClassMetadata> classMeta = new HashMap<String,ClassMetadata>();
+		for ( EntityBinding model : metadata.getEntityBindings() ) {
+			// TODO: should temp table prep happen when metadata is being built?
+			//model.prepareTemporaryTables( metadata, getDialect() );
+			// cache region is defined by the root-class in the hierarchy...
+			EntityBinding rootEntityBinding = metadata.getRootEntityBinding( model.getEntity().getName() );
+			EntityRegionAccessStrategy accessStrategy = null;
+			if ( settings.isSecondLevelCacheEnabled() &&
+					rootEntityBinding.getCaching() != null &&
+					model.getCaching() != null &&
+					model.getCaching().getAccessType() != null ) {
+				final String cacheRegionName = cacheRegionPrefix + rootEntityBinding.getCaching().getRegion();
+				accessStrategy = EntityRegionAccessStrategy.class.cast( entityAccessStrategies.get( cacheRegionName ) );
+				if ( accessStrategy == null ) {
+					final AccessType accessType = model.getCaching().getAccessType();
+					LOG.trace("Building cache for entity data [" + model.getEntity().getName() + "]");
+					EntityRegion entityRegion =
+							settings.getRegionFactory().buildEntityRegion(
+									cacheRegionName,
+									properties,
+									CacheDataDescriptionImpl.decode( model )
+							);
+					accessStrategy = entityRegion.buildAccessStrategy( accessType );
+					entityAccessStrategies.put( cacheRegionName, accessStrategy );
+					allCacheRegions.put( cacheRegionName, entityRegion );
+				}
+			}
+			EntityPersister cp = serviceRegistry.getService( PersisterFactory.class ).createEntityPersister(
+					model, accessStrategy, this, metadata
+			);
+			entityPersisters.put( model.getEntity().getName(), cp );
+			classMeta.put( model.getEntity().getName(), cp.getClassMetadata() );
+		}
+		this.classMetadata = Collections.unmodifiableMap(classMeta);
+
+		Map<String,Set<String>> tmpEntityToCollectionRoleMap = new HashMap<String,Set<String>>();
+		collectionPersisters = new HashMap();
+		for ( PluralAttributeBinding model : metadata.getCollectionBindings() ) {
+			if ( model.getAttribute() == null ) {
+				throw new IllegalStateException( "No attribute defined for a PluralAttributeBinding: " +  model );
+			}
+			if ( model.getAttribute().isSingular() ) {
+				throw new IllegalStateException(
+						"PluralAttributeBinding has a Singular attribute defined: " + model.getAttribute().getName()
+				);
+			}
+			// TODO: Add PluralAttributeBinding.getCaching()
+			final String cacheRegionName = cacheRegionPrefix + model.getCacheRegionName();
+			final AccessType accessType = AccessType.fromExternalName( model.getCacheConcurrencyStrategy() );
+			CollectionRegionAccessStrategy accessStrategy = null;
+			if ( accessType != null && settings.isSecondLevelCacheEnabled() ) {
+				// TODO: is model.getAttribute().getName() the collection's role??? For now, assuming it is
+                LOG.trace("Building cache for collection data [" + model.getAttribute().getName() + "]");
+				CollectionRegion collectionRegion =
+						settings.getRegionFactory()
+								.buildCollectionRegion(
+										cacheRegionName, properties, CacheDataDescriptionImpl.decode( model )
+								);
+				accessStrategy = collectionRegion.buildAccessStrategy( accessType );
+				entityAccessStrategies.put( cacheRegionName, accessStrategy );
+				allCacheRegions.put( cacheRegionName, collectionRegion );
+			}
+			CollectionPersister persister =
+					serviceRegistry
+							.getService( PersisterFactory.class )
+							.createCollectionPersister( metadata, model, accessStrategy, this );
+			// TODO: is model.getAttribute().getName() the collection's role??? For now, assuming it is
+			collectionPersisters.put( model.getAttribute().getName(), persister.getCollectionMetadata() );
+			Type indexType = persister.getIndexType();
+			if ( indexType != null && indexType.isAssociationType() && !indexType.isAnyType() ) {
+				String entityName = ( ( AssociationType ) indexType ).getAssociatedEntityName( this );
+				Set roles = tmpEntityToCollectionRoleMap.get( entityName );
+				if ( roles == null ) {
+					roles = new HashSet();
+					tmpEntityToCollectionRoleMap.put( entityName, roles );
+				}
+				roles.add( persister.getRole() );
+			}
+			Type elementType = persister.getElementType();
+			if ( elementType.isAssociationType() && !elementType.isAnyType() ) {
+				String entityName = ( ( AssociationType ) elementType ).getAssociatedEntityName( this );
+				Set roles = tmpEntityToCollectionRoleMap.get( entityName );
+				if ( roles == null ) {
+					roles = new HashSet();
+					tmpEntityToCollectionRoleMap.put( entityName, roles );
+				}
+				roles.add( persister.getRole() );
+			}
+		}
+		collectionMetadata = Collections.unmodifiableMap(collectionPersisters);
+		Iterator itr = tmpEntityToCollectionRoleMap.entrySet().iterator();
+		while ( itr.hasNext() ) {
+			final Map.Entry entry = ( Map.Entry ) itr.next();
+			entry.setValue( Collections.unmodifiableSet( ( Set ) entry.getValue() ) );
+		}
+		collectionRolesByEntityParticipant = Collections.unmodifiableMap( tmpEntityToCollectionRoleMap );
+
+		//Named Queries:
+		namedQueries = new HashMap<String,NamedQueryDefinition>();
+		for ( NamedQueryDefinition namedQueryDefinition :  metadata.getNamedQueryDefinitions() ) {
+			namedQueries.put( namedQueryDefinition.getName(), namedQueryDefinition );
+		}
+		namedSqlQueries = new HashMap<String, NamedSQLQueryDefinition>();
+		for ( NamedSQLQueryDefinition namedNativeQueryDefinition: metadata.getNamedNativeQueryDefinitions() ) {
+			namedSqlQueries.put( namedNativeQueryDefinition.getName(), namedNativeQueryDefinition );
+		}
+		sqlResultSetMappings = new HashMap<String, ResultSetMappingDefinition>();
+		for( ResultSetMappingDefinition resultSetMappingDefinition : metadata.getResultSetMappingDefinitions() ) {
+			sqlResultSetMappings.put( resultSetMappingDefinition.getName(), resultSetMappingDefinition );
+		}
+		imports = new HashMap<String,String>();
+		for ( Map.Entry<String,String> importEntry : metadata.getImports() ) {
+			imports.put( importEntry.getKey(), importEntry.getValue() );
+		}
+
+		// after *all* persisters and named queries are registered
+		Iterator iter = entityPersisters.values().iterator();
+		while ( iter.hasNext() ) {
+			final EntityPersister persister = ( ( EntityPersister ) iter.next() );
+			// TODO: broken
+			//persister.postInstantiate();
+			registerEntityNameResolvers( persister );
+
+		}
+		iter = collectionPersisters.values().iterator();
+		while ( iter.hasNext() ) {
+			final CollectionPersister persister = ( ( CollectionPersister ) iter.next() );
+			persister.postInstantiate();
+		}
 
 		// TODO: implement
+	}
 
+	@SuppressWarnings( {"unchecked"} )
+	private static Properties createPropertiesFromMap(Map map) {
+		Properties properties = new Properties();
+		properties.putAll( map );
+		return properties;
 	}
 
 	public Session openSession() throws HibernateException {
@@ -762,6 +959,11 @@ public final class SessionFactoryImpl
 		return settings;
 	}
 
+	@Override
+	public SessionFactoryOptions getSessionFactoryOptions() {
+		return sessionFactoryOptions;
+	}
+
 	public JdbcServices getJdbcServices() {
 		return serviceRegistry.getService( JdbcServices.class );
 	}
@@ -775,7 +977,7 @@ public final class SessionFactoryImpl
 
 	public Interceptor getInterceptor()
 	{
-		return interceptor;
+		return sessionFactoryOptions.getInterceptor();
 	}
 
 	public SQLExceptionConverter getSQLExceptionConverter() {
@@ -1315,7 +1517,7 @@ public final class SessionFactoryImpl
 
 	@Override
 	public EntityNotFoundDelegate getEntityNotFoundDelegate() {
-		return entityNotFoundDelegate;
+		return sessionFactoryOptions.getEntityNotFoundDelegate();
 	}
 
 	public SQLFunctionRegistry getSqlFunctionRegistry() {

@@ -27,14 +27,21 @@ import java.util.Iterator;
 
 import org.junit.Test;
 
+import org.hibernate.EmptyInterceptor;
 import org.hibernate.HibernateException;
+import org.hibernate.SessionFactory;
+import org.hibernate.metamodel.Metadata;
 import org.hibernate.metamodel.MetadataSources;
+import org.hibernate.metamodel.SessionFactoryBuilder;
 import org.hibernate.metamodel.binding.FetchProfile;
+import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
+import static junit.framework.Assert.assertNotNull;
+import static junit.framework.Assert.assertSame;
 import static junit.framework.Assert.assertTrue;
 
 /**
@@ -79,6 +86,19 @@ public class MetadataImplTest extends BaseUnitTestCase {
 		MetadataImpl metadata = (MetadataImpl) sources.buildMetadata();
 
 		assertFetchProfile( metadata );
+	}
+
+	@Test
+	public void testGettingSessionFactoryBuilder() {
+		MetadataSources sources = new MetadataSources( new ServiceRegistryBuilder().buildServiceRegistry() );
+		Metadata metadata = sources.buildMetadata();
+
+		SessionFactoryBuilder sessionFactoryBuilder = metadata.getSessionFactoryBuilder();
+		assertNotNull( sessionFactoryBuilder );
+		assertTrue( SessionFactoryBuilderImpl.class.isInstance( sessionFactoryBuilder ) );
+
+		SessionFactory sessionFactory = metadata.buildSessionFactory();
+		assertNotNull( sessionFactory );
 	}
 
 	private void assertFetchProfile(MetadataImpl metadata) {

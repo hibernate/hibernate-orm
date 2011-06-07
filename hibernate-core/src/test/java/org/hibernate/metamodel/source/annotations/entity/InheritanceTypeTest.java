@@ -34,6 +34,7 @@ import org.hibernate.metamodel.binding.EntityBinding;
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNull;
+import static junit.framework.Assert.assertSame;
 import static junit.framework.Assert.assertTrue;
 
 /**
@@ -44,7 +45,6 @@ public class InheritanceTypeTest extends BaseAnnotationBindingTestCase {
 	public void testNoInheritance() {
 		buildMetadataSources( SingleEntity.class );
 		EntityBinding entityBinding = getEntityBinding( SingleEntity.class );
-		assertTrue( entityBinding.isRoot() );
 		assertNull( entityBinding.getEntityDiscriminator() );
 	}
 
@@ -54,8 +54,27 @@ public class InheritanceTypeTest extends BaseAnnotationBindingTestCase {
 				RootOfSingleTableInheritance.class, SubclassOfSingleTableInheritance.class
 		);
 		EntityBinding entityBinding = getEntityBinding( SubclassOfSingleTableInheritance.class );
-		assertFalse( entityBinding.isRoot() );
 		assertEquals( "Wrong discriminator value", "foo", entityBinding.getDiscriminatorValue() );
+	}
+
+	@Test
+	public void testRootEntityBinding() {
+		buildMetadataSources(
+				SubclassOfSingleTableInheritance.class, SingleEntity.class, RootOfSingleTableInheritance.class
+		);
+
+		EntityBinding noInheritanceEntityBinding = getEntityBinding( SingleEntity.class );
+		EntityBinding subclassEntityBinding = getEntityBinding( SubclassOfSingleTableInheritance.class );
+		EntityBinding rootEntityBinding = getEntityBinding( RootOfSingleTableInheritance.class );
+
+		assertTrue( noInheritanceEntityBinding.isRoot() );
+		assertSame( noInheritanceEntityBinding, getRootEntityBinding( SingleEntity.class ) );
+
+		assertFalse( subclassEntityBinding.isRoot() );
+		assertSame( rootEntityBinding, getRootEntityBinding( SubclassOfSingleTableInheritance.class ) );
+
+		assertTrue( rootEntityBinding.isRoot() );
+		assertSame( rootEntityBinding, getRootEntityBinding( RootOfSingleTableInheritance.class ));
 	}
 
 	@Entity

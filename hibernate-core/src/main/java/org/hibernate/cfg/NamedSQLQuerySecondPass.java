@@ -84,6 +84,7 @@ public class NamedSQLQuerySecondPass extends ResultSetMappingBinder implements Q
 		String resultSetRef = ref == null ? null : ref.getValue();
 		if ( StringHelper.isNotEmpty( resultSetRef ) ) {
 			namedQuery = new NamedSQLQueryDefinition(
+					queryName,
 					queryElem.getText(),
 					resultSetRef,
 					synchronizedTables,
@@ -103,6 +104,7 @@ public class NamedSQLQuerySecondPass extends ResultSetMappingBinder implements Q
 		else {
 			ResultSetMappingDefinition definition = buildResultSetMappingDefinition( queryElem, path, mappings );
 			namedQuery = new NamedSQLQueryDefinition(
+					queryName,
 					queryElem.getText(),
 					definition.getQueryReturns(),
 					synchronizedTables,
@@ -119,7 +121,7 @@ public class NamedSQLQuerySecondPass extends ResultSetMappingBinder implements Q
 			);
 		}
 
-        LOG.debugf("Named SQL query: %s -> %s", queryName, namedQuery.getQueryString());
+        LOG.debugf("Named SQL query: %s -> %s", namedQuery.getName(), namedQuery.getQueryString());
 		mappings.addSQLQuery( queryName, namedQuery );
 	}
 }

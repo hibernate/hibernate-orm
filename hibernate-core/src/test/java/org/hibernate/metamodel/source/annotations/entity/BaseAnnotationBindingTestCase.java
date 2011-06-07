@@ -57,6 +57,14 @@ public abstract class BaseAnnotationBindingTestCase extends BaseUnitTestCase {
 		}
 		return meta.getEntityBinding( clazz.getName() );
 	}
+
+	public EntityBinding getRootEntityBinding(Class<?> clazz) {
+		if ( meta == null ) {
+			meta = (MetadataImpl) sources.buildMetadata();
+		}
+		return meta.getRootEntityBinding( clazz.getName() );
+	}
+
 }
 
 

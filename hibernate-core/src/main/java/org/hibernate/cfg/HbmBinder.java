@@ -2661,6 +2661,7 @@ public final class HbmBinder {
 		String comment = cmAtt == null ? null : cmAtt.getValue();
 
 		NamedQueryDefinition namedQuery = new NamedQueryDefinition(
+				queryName,
 				query,
 				cacheable,
 				region,
@@ -2673,7 +2674,7 @@ public final class HbmBinder {
 				getParameterTypes(queryElem)
 			);
 
-		mappings.addQuery( queryName, namedQuery );
+		mappings.addQuery( namedQuery.getName(), namedQuery );
 	}
 
 	public static CacheMode getCacheMode(String cacheMode) {

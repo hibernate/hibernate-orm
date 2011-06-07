@@ -23,10 +23,13 @@
  */
 package org.hibernate.metamodel.source.spi;
 
+import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.spi.FilterDefinition;
+import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.metamodel.Metadata;
+import org.hibernate.metamodel.SessionFactoryBuilder;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.FetchProfile;
 import org.hibernate.metamodel.binding.IdGenerator;
@@ -40,7 +43,7 @@ import org.hibernate.type.TypeResolver;
 /**
  * @author Steve Ebersole
  */
-public interface MetadataImplementor extends Metadata, BindingContext {
+public interface MetadataImplementor extends Metadata, BindingContext, Mapping {
 	public BasicServiceRegistry getServiceRegistry();
 
 	public Database getDatabase();
@@ -63,9 +66,11 @@ public interface MetadataImplementor extends Metadata, BindingContext {
 
 	public void registerIdentifierGenerator(String name, String clazz);
 
-	public void addNamedNativeQuery(String name, NamedSQLQueryDefinition def);
+	public void addNamedNativeQuery(NamedSQLQueryDefinition def);
 
-	public void addNamedQuery(String name, NamedQueryDefinition def);
+	public void addNamedQuery(NamedQueryDefinition def);
+
+	public void addResultSetMapping(ResultSetMappingDefinition resultSetMappingDefinition);
 
 	public void addAuxiliaryDatabaseObject(AuxiliaryDatabaseObject auxiliaryDatabaseObject);
 }

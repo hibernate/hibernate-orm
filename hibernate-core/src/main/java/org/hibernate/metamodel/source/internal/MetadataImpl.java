@@ -33,15 +33,20 @@ import java.util.Map;
 import org.jboss.logging.Logger;
 
 import org.hibernate.DuplicateMappingException;
+import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.NamingStrategy;
+import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.id.factory.DefaultIdentifierGeneratorFactory;
+import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.MetadataSources;
+import org.hibernate.metamodel.SessionFactoryBuilder;
 import org.hibernate.metamodel.SourceProcessingOrder;
+import org.hibernate.metamodel.binding.AttributeBinding;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.FetchProfile;
 import org.hibernate.metamodel.binding.IdGenerator;
@@ -58,6 +63,7 @@ import org.hibernate.metamodel.source.spi.MetaAttributeContext;
 import org.hibernate.metamodel.source.spi.MetadataImplementor;
 import org.hibernate.service.BasicServiceRegistry;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
+import org.hibernate.type.Type;
 import org.hibernate.type.TypeResolver;
 
 /**
@@ -65,6 +71,7 @@ import org.hibernate.type.TypeResolver;
  *
  * @author Steve Ebersole
  * @author Hardy Ferentschik
+ * @author Gail Badner
  */
 public class MetadataImpl implements MetadataImplementor, Serializable {
 
@@ -78,6 +85,9 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	private ClassLoaderService classLoaderService;
 
 	private TypeResolver typeResolver = new TypeResolver();
+
+	private SessionFactoryBuilder sessionFactoryBuilder = new SessionFactoryBuilderImpl( this );
+
 	private DefaultIdentifierGeneratorFactory identifierGeneratorFactory = new DefaultIdentifierGeneratorFactory();
 
 	private final Database database = new Database();
@@ -88,13 +98,15 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	 * Maps the fully qualified class name of an entity to its entity binding
 	 */
 	private Map<String, EntityBinding> entityBindingMap = new HashMap<String, EntityBinding>();
+	private Map<String, EntityBinding> rootEntityBindingMap = new HashMap<String, EntityBinding>();
 	private Map<String, PluralAttributeBinding> collectionBindingMap = new HashMap<String, PluralAttributeBinding>();
 	private Map<String, FetchProfile> fetchProfiles = new HashMap<String, FetchProfile>();
-	private Map<String, String> imports;
+	private Map<String, String> imports = new HashMap<String, String>();
 	private Map<String, TypeDef> typeDefs = new HashMap<String, TypeDef>();
 	private Map<String, IdGenerator> idGenerators = new HashMap<String, IdGenerator>();
 	private Map<String, NamedQueryDefinition> namedQueryDefs = new HashMap<String, NamedQueryDefinition>();
 	private Map<String, NamedSQLQueryDefinition> namedNativeQueryDefs = new HashMap<String, NamedSQLQueryDefinition>();
+	private Map<String, ResultSetMappingDefinition> resultSetMappings = new HashMap<String, ResultSetMappingDefinition>();
 	private Map<String, FilterDefinition> filterDefs = new HashMap<String, FilterDefinition>();
 
 	// todo : keep as part of Database?
@@ -164,11 +176,17 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	@Override
 	public void addFetchProfile(FetchProfile profile) {
+		if ( profile == null || profile.getName() == null ) {
+			throw new IllegalArgumentException( "Fetch profile object or name is null: " + profile );
+		}
 		fetchProfiles.put( profile.getName(), profile );
 	}
 
 	@Override
 	public void addFilterDefinition(FilterDefinition def) {
+		if ( def == null || def.getFilterName() == null ) {
+			throw new IllegalArgumentException( "Filter definition object or name is null: "  + def );
+		}
 		filterDefs.put( def.getFilterName(), def );
 	}
 
@@ -178,6 +196,9 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	@Override
 	public void addIdGenerator(IdGenerator generator) {
+		if ( generator == null || generator.getName() == null ) {
+			throw new IllegalArgumentException( "ID generator object or name is null." );
+		}
 		idGenerators.put( generator.getName(), generator );
 	}
 
@@ -195,12 +216,18 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	@Override
 	public void addAuxiliaryDatabaseObject(AuxiliaryDatabaseObject auxiliaryDatabaseObject) {
+		if ( auxiliaryDatabaseObject == null ) {
+			throw new IllegalArgumentException( "Auxiliary database object is null." );
+		}
 		auxiliaryDatabaseObjects.add( auxiliaryDatabaseObject );
 	}
 
 	@Override
-	public void addNamedNativeQuery(String name, NamedSQLQueryDefinition def) {
-		namedNativeQueryDefs.put( name, def );
+	public void addNamedNativeQuery(NamedSQLQueryDefinition def) {
+		if ( def == null || def.getName() == null ) {
+			throw new IllegalArgumentException( "Named native query definition object or name is null: " + def.getQueryString() );
+		}
+		namedNativeQueryDefs.put( def.getName(), def );
 	}
 
 	public NamedSQLQueryDefinition getNamedNativeQuery(String name) {
@@ -211,8 +238,16 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	@Override
-	public void addNamedQuery(String name, NamedQueryDefinition def) {
-		namedQueryDefs.put( name, def );
+	public Iterable<NamedSQLQueryDefinition> getNamedNativeQueryDefinitions() {
+		return namedNativeQueryDefs.values();
+	}
+
+	@Override
+	public void addNamedQuery(NamedQueryDefinition def) {
+		if ( def == null || def.getName() == null ) {
+			throw new IllegalArgumentException( "Named query definition object or name is null: " + def.getQueryString() );
+		}
+		namedQueryDefs.put( def.getName(), def );
 	}
 
 	public NamedQueryDefinition getNamedQuery(String name) {
@@ -223,7 +258,28 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	@Override
+	public Iterable<NamedQueryDefinition> getNamedQueryDefinitions() {
+		return namedQueryDefs.values();
+	}
+
+	@Override
+	public void addResultSetMapping(ResultSetMappingDefinition resultSetMappingDefinition) {
+		if ( resultSetMappingDefinition == null || resultSetMappingDefinition.getName() == null ) {
+			throw new IllegalArgumentException( "Resultset mappping object or name is null: " + resultSetMappingDefinition );
+		}
+		resultSetMappings.put( resultSetMappingDefinition.getName(), resultSetMappingDefinition );
+	}
+
+	@Override
+	public Iterable<ResultSetMappingDefinition> getResultSetMappingDefinitions() {
+		return resultSetMappings.values();
+	}
+
+	@Override
 	public void addTypeDefinition(TypeDef typeDef) {
+		if ( typeDef == null || typeDef.getName() == null ) {
+			throw new IllegalArgumentException( "Type definition object or name is null: " + typeDef.getTypeClass() );
+		}
 		final TypeDef previous = typeDefs.put( typeDef.getName(), typeDef );
 		if ( previous != null ) {
 			LOG.debugf( "Duplicate typedef name [%s] now -> %s", typeDef.getName(), typeDef.getTypeClass() );
@@ -253,8 +309,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	@Override
 	public SessionFactory buildSessionFactory() {
-		// todo : implement!!!!
-		return null;
+		return sessionFactoryBuilder.buildSessionFactory();
 	}
 
 	@Override
@@ -269,6 +324,28 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	public EntityBinding getEntityBinding(String entityName) {
 		return entityBindingMap.get( entityName );
+	}
+
+	@Override
+	public EntityBinding getRootEntityBinding(String entityName) {
+		EntityBinding rootEntityBinding = rootEntityBindingMap.get( entityName );
+		if ( rootEntityBinding == null ) {
+			EntityBinding entityBinding = entityBindingMap.get( entityName );
+			if ( entityBinding == null ) {
+				throw new IllegalStateException( "Unknown entity binding: " + entityName );
+			}
+			if ( entityBinding.isRoot() ) {
+				rootEntityBinding = entityBinding;
+			}
+			else {
+				if ( entityBinding.getEntity().getSuperType() == null ) {
+					throw new IllegalStateException( "Entity binding has no root: " + entityName );
+				}
+				rootEntityBinding = getRootEntityBinding( entityBinding.getEntity().getSuperType().getName() );
+			}
+			rootEntityBindingMap.put( entityName, rootEntityBinding );
+		}
+		return rootEntityBinding;
 	}
 
 	public Iterable<EntityBinding> getEntityBindings() {
@@ -287,7 +364,8 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		return collectionBindingMap.get( collectionRole );
 	}
 
-	public Iterable<PluralAttributeBinding> getCollections() {
+	@Override
+	public Iterable<PluralAttributeBinding> getCollectionBindings() {
 		return collectionBindingMap.values();
 	}
 
@@ -302,8 +380,8 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	public void addImport(String importName, String entityName) {
-		if ( imports == null ) {
-			imports = new HashMap<String, String>();
+		if ( importName == null || entityName == null ) {
+			throw new IllegalArgumentException( "Import name or entity name is null" );
 		}
 		LOG.trace( "Import: " + importName + " -> " + entityName );
 		String old = imports.put( importName, entityName );
@@ -312,12 +390,21 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		}
 	}
 
+	public Iterable<Map.Entry<String, String>> getImports() {
+		return imports.entrySet();
+	}
+
 	public Iterable<FetchProfile> getFetchProfiles() {
 		return fetchProfiles.values();
 	}
 
 	public TypeResolver getTypeResolver() {
 		return typeResolver;
+	}
+
+	@Override
+	public SessionFactoryBuilder getSessionFactoryBuilder() {
+		return sessionFactoryBuilder;
 	}
 
 	@Override
@@ -346,6 +433,48 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	private static final String DEFAULT_DISCRIMINATOR_COLUMN_NAME = "class";
 	private static final String DEFAULT_CASCADE = "none";
 	private static final String DEFAULT_PROPERTY_ACCESS = "property";
+
+	@Override
+	public IdentifierGeneratorFactory getIdentifierGeneratorFactory() {
+		return identifierGeneratorFactory;
+	}
+
+	@Override
+	public Type getIdentifierType(String entityName) throws MappingException {
+		EntityBinding entityBinding = getEntityBinding( entityName );
+		if ( entityBinding == null ) {
+			throw new MappingException( "Entity binding not known: " + entityName );
+		}
+		return entityBinding
+				.getEntityIdentifier()
+				.getValueBinding()
+				.getHibernateTypeDescriptor()
+				.getExplicitType();
+	}
+
+	@Override
+	public String getIdentifierPropertyName(String entityName) throws MappingException {
+		EntityBinding entityBinding = getEntityBinding( entityName );
+		if ( entityBinding == null ) {
+			throw new MappingException( "Entity binding not known: " + entityName );
+		}
+		AttributeBinding idBinding = entityBinding.getEntityIdentifier().getValueBinding();
+		return idBinding == null ? null : idBinding.getAttribute().getName();
+	}
+
+	@Override
+	public Type getReferencedPropertyType(String entityName, String propertyName) throws MappingException {
+		EntityBinding entityBinding = getEntityBinding( entityName );
+		if ( entityBinding == null ) {
+			throw new MappingException( "Entity binding not known: " + entityName );
+		}
+		// TODO: should this call EntityBinding.getReferencedAttributeBindingString), which does not exist yet?
+		AttributeBinding attributeBinding = entityBinding.getAttributeBinding( propertyName );
+		if ( attributeBinding == null ) {
+			throw new MappingException( "unknown property: " + entityName + '.' + propertyName );
+		}
+		return attributeBinding.getHibernateTypeDescriptor().getExplicitType();
+	}
 
 	private class MappingDefaultsImpl implements MappingDefaults {
 

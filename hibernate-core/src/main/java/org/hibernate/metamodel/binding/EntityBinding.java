@@ -229,6 +229,10 @@ public class EntityBinding {
 		return entityInheritanceType;
 	}
 
+	public boolean isVersioned() {
+		return versionBinding != null;
+	}
+
 	public SimpleAttributeBinding getVersioningValueBinding() {
 		return versionBinding;
 	}

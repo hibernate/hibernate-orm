@@ -47,6 +47,7 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
+import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.SelectFragment;
 import org.hibernate.type.StandardBasicTypes;
@@ -490,6 +491,43 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 		postConstruct(mapping);
 
+	}
+
+	public JoinedSubclassEntityPersister(
+			final EntityBinding entityBinding,
+			final EntityRegionAccessStrategy cacheAccessStrategy,
+			final SessionFactoryImplementor factory,
+			final Mapping mapping) throws HibernateException {
+		super( entityBinding, cacheAccessStrategy, factory );
+		// TODO: implement!!! initializing final fields to null to make compiler happy
+		tableSpan = -1;
+		tableNames = null;
+		naturalOrderTableNames = null;
+		tableKeyColumns = null;
+		tableKeyColumnReaders = null;
+		tableKeyColumnReaderTemplates = null;
+		naturalOrderTableKeyColumns = null;
+		naturalOrderTableKeyColumnReaders = null;
+		naturalOrderTableKeyColumnReaderTemplates = null;
+		naturalOrderCascadeDeleteEnabled = null;
+		spaces = null;
+		subclassClosure = null;
+		subclassTableNameClosure = null;
+		subclassTableKeyColumnClosure= null;
+		isClassOrSuperclassTable = null;
+		naturalOrderPropertyTableNumbers = null;
+		propertyTableNumbers = null;
+		subclassPropertyTableNumberClosure = null;
+		subclassColumnTableNumberClosure = null;
+		subclassFormulaTableNumberClosure = null;
+		subclassTableSequentialSelect = null;
+		subclassTableIsLazyClosure = null;
+		discriminatorValues = null;
+		notNullColumnNames = null;
+		notNullColumnTableNumbers = null;
+		constraintOrderedTableNames = null;
+		constraintOrderedKeyColumnNames = null;
+		discriminatorSQLString = null;
 	}
 
 	protected boolean isSubclassTableSequentialSelect(int j) {

@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,30 +21,19 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.cache.spi.access;
+package org.hibernate.metamodel;
 
-import org.hibernate.cache.spi.CollectionRegion;
+import org.hibernate.Interceptor;
+import org.hibernate.SessionFactory;
+import org.hibernate.proxy.EntityNotFoundDelegate;
 
 /**
- * Contract for managing transactional and concurrent access to cached collection
- * data.  For cached collection data, all modification actions actually just
- * invalidate the entry(s).  The call sequence here is:
- * {@link #lockItem} -> {@link #remove} -> {@link #unlockItem}
- * <p/>
- * There is another usage pattern that is used to invalidate entries
- * after performing "bulk" HQL/SQL operations:
- * {@link #lockRegion} -> {@link #removeAll} -> {@link #unlockRegion}
- *
- * @author Gavin King
- * @author Steve Ebersole
+ * @author Gail Badner
  */
-public interface CollectionRegionAccessStrategy extends RegionAccessStrategy {
+public interface SessionFactoryBuilder {
+	public SessionFactoryBuilder with(Interceptor interceptor);
 
-	/**
-	 * Get the wrapped collection cache region
-	 *
-	 * @return The underlying region
-	 */
-	public CollectionRegion getRegion();
+	public SessionFactoryBuilder with(EntityNotFoundDelegate entityNotFoundDelegate);
 
+	public SessionFactory buildSessionFactory();
 }

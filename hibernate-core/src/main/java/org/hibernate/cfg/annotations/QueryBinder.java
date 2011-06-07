@@ -64,6 +64,7 @@ public abstract class QueryBinder {
 		QueryHint[] hints = queryAnn.hints();
 		String queryName = queryAnn.query();
 		NamedQueryDefinition query = new NamedQueryDefinition(
+				queryAnn.name(),
 				queryName,
 				getBoolean( queryName, "org.hibernate.cacheable", hints ),
 				getString( queryName, "org.hibernate.cacheRegion", hints ),
@@ -76,12 +77,12 @@ public abstract class QueryBinder {
 				null
 		);
 		if ( isDefault ) {
-			mappings.addDefaultQuery( queryAnn.name(), query );
+			mappings.addDefaultQuery( query.getName(), query );
 		}
 		else {
-			mappings.addQuery( queryAnn.name(), query );
+			mappings.addQuery( query.getName(), query );
 		}
-        LOG.debugf( "Binding named query: %s => %s", queryAnn.name(), queryAnn.query() );
+        LOG.debugf( "Binding named query: %s => %s", query.getName(), query.getQueryString() );
 	}
 
 
@@ -97,6 +98,7 @@ public abstract class QueryBinder {
 		if ( !BinderHelper.isEmptyAnnotationValue( resultSetMapping ) ) {
 			//sql result set usage
 			query = new NamedSQLQueryDefinition(
+					queryAnn.name(),
 					queryName,
 					resultSetMapping,
 					null,
@@ -118,6 +120,7 @@ public abstract class QueryBinder {
 			final NativeSQLQueryRootReturn entityQueryReturn =
 					new NativeSQLQueryRootReturn( "alias1", queryAnn.resultClass().getName(), new HashMap(), LockMode.READ );
 			query = new NamedSQLQueryDefinition(
+					queryAnn.name(),
 					queryName,
 					new NativeSQLQueryReturn[] { entityQueryReturn },
 					null,
@@ -137,10 +140,10 @@ public abstract class QueryBinder {
 			throw new NotYetImplementedException( "Pure native scalar queries are not yet supported" );
 		}
 		if ( isDefault ) {
-			mappings.addDefaultSQLQuery( queryAnn.name(), query );
+			mappings.addDefaultSQLQuery( query.getName(), query );
 		}
 		else {
-			mappings.addSQLQuery( queryAnn.name(), query );
+			mappings.addSQLQuery( query.getName(), query );
 		}
         LOG.debugf( "Binding named native query: %s => %s", queryAnn.name(), queryAnn.query() );
 	}
@@ -155,6 +158,7 @@ public abstract class QueryBinder {
 		if ( !BinderHelper.isEmptyAnnotationValue( resultSetMapping ) ) {
 			//sql result set usage
 			query = new NamedSQLQueryDefinition(
+					queryAnn.name(),
 					queryAnn.query(),
 					resultSetMapping,
 					null,
@@ -176,6 +180,7 @@ public abstract class QueryBinder {
 			final NativeSQLQueryRootReturn entityQueryReturn =
 					new NativeSQLQueryRootReturn( "alias1", queryAnn.resultClass().getName(), new HashMap(), LockMode.READ );
 			query = new NamedSQLQueryDefinition(
+					queryAnn.name(),
 					queryAnn.query(),
 					new NativeSQLQueryReturn[] { entityQueryReturn },
 					null,
@@ -194,8 +199,8 @@ public abstract class QueryBinder {
 		else {
 			throw new NotYetImplementedException( "Pure native scalar queries are not yet supported" );
 		}
-		mappings.addSQLQuery( queryAnn.name(), query );
-        LOG.debugf( "Binding named native query: %s => %s", queryAnn.name(), queryAnn.query() );
+		mappings.addSQLQuery( query.getName(), query );
+        LOG.debugf( "Binding named native query: %s => %s", query.getName(), queryAnn.query() );
 	}
 
 	public static void bindQueries(NamedQueries queriesAnn, Mappings mappings, boolean isDefault) {
@@ -229,6 +234,7 @@ public abstract class QueryBinder {
 		flushMode = getFlushMode( queryAnn.flushMode() );
 
 		NamedQueryDefinition query = new NamedQueryDefinition(
+				queryAnn.name(),
 				queryAnn.query(),
 				queryAnn.cacheable(),
 				BinderHelper.isEmptyAnnotationValue( queryAnn.cacheRegion() ) ? null : queryAnn.cacheRegion(),
@@ -241,8 +247,8 @@ public abstract class QueryBinder {
 				null
 		);
 
-		mappings.addQuery( queryAnn.name(), query );
-        LOG.debugf( "Binding named query: %s => %s", queryAnn.name(), queryAnn.query() );
+		mappings.addQuery( query.getName(), query );
+        LOG.debugf( "Binding named query: %s => %s", query.getName(), query.getQueryString() );
 	}
 
 	private static FlushMode getFlushMode(FlushModeType flushModeType) {

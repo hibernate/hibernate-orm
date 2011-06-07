@@ -35,6 +35,7 @@ import org.hibernate.FlushMode;
  * @author Gavin King
  */
 public class NamedQueryDefinition implements Serializable {
+	private final String name;
 	private final String query;
 	private final boolean cacheable;
 	private final String cacheRegion;
@@ -47,6 +48,7 @@ public class NamedQueryDefinition implements Serializable {
 	private String comment;
 
 	// kept for backward compatibility until after the 3.1beta5 release of HA
+	// TODO: is this still needed?
 	public NamedQueryDefinition(
 			String query,
 			boolean cacheable,
@@ -56,6 +58,7 @@ public class NamedQueryDefinition implements Serializable {
 			FlushMode flushMode,
 			Map parameterTypes) {
 		this(
+				null,
 				query,
 				cacheable,
 				cacheRegion,
@@ -70,6 +73,7 @@ public class NamedQueryDefinition implements Serializable {
 	}
 
 	public NamedQueryDefinition(
+			String name,
 			String query,
 			boolean cacheable,
 			String cacheRegion,
@@ -80,6 +84,7 @@ public class NamedQueryDefinition implements Serializable {
 			boolean readOnly,
 			String comment,
 			Map parameterTypes) {
+		this.name = name;
 		this.query = query;
 		this.cacheable = cacheable;
 		this.cacheRegion = cacheRegion;
@@ -90,6 +95,10 @@ public class NamedQueryDefinition implements Serializable {
 		this.cacheMode = cacheMode;
 		this.readOnly = readOnly;
 		this.comment = comment;
+	}
+
+	public String getName() {
+		return name;
 	}
 
 	public String getQueryString() {

@@ -33,6 +33,7 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.PluralAttributeBinding;
+import org.hibernate.metamodel.source.spi.MetadataImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.Service;
@@ -110,7 +111,7 @@ public interface PersisterFactory extends Service {
 	/**
 	 * Create a collection persister instance.
 	 *
-	 * @param cfg The configuration
+	 * @param metadata The metadata
 	 * @param model The O/R mapping metamodel definition for the collection
 	 * @param cacheAccessStrategy The caching strategy for this collection
 	 * @param factory The session factory
@@ -120,7 +121,7 @@ public interface PersisterFactory extends Service {
 	 * @throws HibernateException Indicates a problem building the persister.
 	 */
 	public CollectionPersister createCollectionPersister(
-			Configuration cfg,
+			MetadataImplementor metadata,
 			PluralAttributeBinding model,
 			CollectionRegionAccessStrategy cacheAccessStrategy,
 			SessionFactoryImplementor factory) throws HibernateException;

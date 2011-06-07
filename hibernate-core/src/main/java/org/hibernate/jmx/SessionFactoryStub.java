@@ -38,6 +38,8 @@ import org.jboss.logging.Logger;
 import org.hibernate.AssertionFailure;
 import org.hibernate.Cache;
 import org.hibernate.HibernateException;
+import org.hibernate.Interceptor;
+import org.hibernate.ObjectNotFoundException;
 import org.hibernate.StatelessSessionBuilder;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.Session;
@@ -51,6 +53,7 @@ import org.hibernate.id.UUIDGenerator;
 import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
+import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.service.jndi.internal.JndiServiceImpl;
 import org.hibernate.stat.Statistics;
 
@@ -86,6 +89,11 @@ public class SessionFactoryStub implements SessionFactory {
 		}
 
 		SessionFactoryRegistry.INSTANCE.addSessionFactory( uuid, name, this, new JndiServiceImpl( service.getProperties() )  );
+	}
+
+	@Override
+	public SessionFactoryOptions getSessionFactoryOptions() {
+		return impl.getSessionFactoryOptions();
 	}
 
 	@Override

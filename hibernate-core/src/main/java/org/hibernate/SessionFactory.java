@@ -32,6 +32,7 @@ import java.util.Set;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
+import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.stat.Statistics;
 
 /**
@@ -51,6 +52,14 @@ import org.hibernate.stat.Statistics;
  * @author Steve Ebersole
  */
 public interface SessionFactory extends Referenceable, Serializable {
+
+	public interface SessionFactoryOptions {
+		Interceptor getInterceptor();
+		EntityNotFoundDelegate getEntityNotFoundDelegate();
+	}
+
+	public SessionFactoryOptions getSessionFactoryOptions();
+
 	/**
 	 * Obtain a {@link Session} builder.
 	 *

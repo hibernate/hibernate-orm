@@ -47,6 +47,7 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
+import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.sql.InFragment;
 import org.hibernate.sql.Insert;
 import org.hibernate.sql.SelectFragment;
@@ -436,6 +437,49 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		
 		postConstruct(mapping);
 
+	}
+
+	public SingleTableEntityPersister(
+			final EntityBinding entityBinding,
+			final EntityRegionAccessStrategy cacheAccessStrategy,
+			final SessionFactoryImplementor factory,
+			final Mapping mapping) throws HibernateException {
+
+		super( entityBinding, cacheAccessStrategy, factory );
+
+		//TODO: implement!!!! initializing final fields to make compiler happy...
+		joinSpan = -1;
+		qualifiedTableNames = null;
+		isInverseTable = null;
+		isNullableTable = null;
+		keyColumnNames = null;
+		cascadeDeleteEnabled = null;
+		hasSequentialSelects = false;
+		spaces = null;
+		subclassClosure = null;
+		subclassTableNameClosure = null;
+		subclassTableIsLazyClosure = null;
+		isInverseSubclassTable = null;
+		isNullableSubclassTable = null;
+		subclassTableSequentialSelect = null;
+		subclassTableKeyColumnClosure = null;
+		isClassOrSuperclassTable = null;
+		propertyTableNumbers = null;
+		subclassPropertyTableNumberClosure = null;
+		subclassColumnTableNumberClosure = null;
+		subclassFormulaTableNumberClosure = null;
+		forceDiscriminator = false;
+		discriminatorColumnName = null;
+		discriminatorColumnReaders = null;
+		discriminatorColumnReaderTemplate = null;
+		discriminatorFormula = null;
+		discriminatorFormulaTemplate = null;
+		discriminatorAlias = null;
+		discriminatorType = null;
+		discriminatorSQLValue = null;
+		discriminatorInsertable = false;
+		constraintOrderedTableNames = null;
+		constraintOrderedKeyColumnNames = null;
 	}
 
 	protected boolean isInverseTable(int j) {

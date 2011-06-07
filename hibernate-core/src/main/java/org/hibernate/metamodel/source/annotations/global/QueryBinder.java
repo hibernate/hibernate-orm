@@ -124,8 +124,8 @@ public class QueryBinder {
 			comment = null;
 		}
 		metadata.addNamedQuery(
-				name,
 				new NamedQueryDefinition(
+						name,
 						query, getBoolean( hints, QueryHints.CACHEABLE, name ), cacheRegion,
 						timeout, fetchSize, getFlushMode( hints, QueryHints.FLUSH_MODE, name ),
 						getCacheMode( hints, QueryHints.CACHE_MODE, name ),
@@ -167,6 +167,7 @@ public class QueryBinder {
 		NamedSQLQueryDefinition def;
 		if ( StringHelper.isNotEmpty( resultSetMapping ) ) {
 			def = new NamedSQLQueryDefinition(
+					name,
 					query, resultSetMapping, null, cacheable,
 					cacheRegion, timeout, fetchSize,
 					flushMode, cacheMode, readOnly, comment,
@@ -179,6 +180,7 @@ public class QueryBinder {
 				throw new NotYetImplementedException( "Pure native scalar queries are not yet supported" );
 			}
 			def = new NamedSQLQueryDefinition(
+					name,
 					query, new NativeSQLQueryRootReturn[] {
 					new NativeSQLQueryRootReturn(
 							"alias1",
@@ -192,7 +194,7 @@ public class QueryBinder {
 			);
 
 		}
-		metadata.addNamedNativeQuery( name, def );
+		metadata.addNamedNativeQuery( def );
 		LOG.debugf( "Binding named native query: %s => %s", name, query );
 	}
 

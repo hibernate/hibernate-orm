@@ -92,6 +92,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.property.BackrefPropertyAccessor;
 import org.hibernate.sql.Alias;
@@ -752,6 +753,75 @@ public abstract class AbstractEntityPersister
 
 		temporaryIdTableName = persistentClass.getTemporaryIdTableName();
 		temporaryIdTableDDL = persistentClass.getTemporaryIdTableDDL();
+	}
+
+
+	public AbstractEntityPersister(
+			final EntityBinding entityBinding,
+			final EntityRegionAccessStrategy cacheAccessStrategy,
+			final SessionFactoryImplementor factory) throws HibernateException {
+		// TODO: Implement! Initializing final fields to make compiler happy
+		this.factory = factory;
+		this.cacheAccessStrategy = cacheAccessStrategy;
+		isLazyPropertiesCacheable = false;
+		cacheEntryStructure = null;
+		entityMetamodel = null;
+		rootTableKeyColumnNames = null;
+		rootTableKeyColumnReaders = null;
+		rootTableKeyColumnReaderTemplates = null;
+		identifierAliases = null;
+		identifierColumnSpan = -1;
+		versionColumnName = null;
+		hasFormulaProperties = false;
+		batchSize = -1;
+		hasSubselectLoadableCollections = false;
+		rowIdName = null;
+		lazyProperties = null;
+		sqlWhereString = null;
+		sqlWhereStringTemplate = null;
+		propertyColumnSpans = null;
+		propertySubclassNames = null;
+		propertyColumnAliases = null;
+		propertyColumnNames = null;
+		propertyColumnFormulaTemplates = null;
+		propertyColumnReaderTemplates = null;
+		propertyColumnWriters = null;
+		propertyColumnUpdateable = null;
+		propertyColumnInsertable = null;
+		propertyUniqueness = null;
+		propertySelectable = null;
+		lazyPropertyNames = null;
+		lazyPropertyNumbers = null;
+		lazyPropertyTypes = null;
+		lazyPropertyColumnAliases = null;
+		subclassPropertyNameClosure = null;
+		subclassPropertySubclassNameClosure = null;
+		subclassPropertyTypeClosure = null;
+		subclassPropertyFormulaTemplateClosure = null;
+		subclassPropertyColumnNameClosure = null;
+		subclassPropertyColumnReaderClosure = null;
+		subclassPropertyColumnReaderTemplateClosure = null;
+		subclassPropertyFetchModeClosure = null;
+		subclassPropertyNullabilityClosure = null;
+		propertyDefinedOnSubclass = null;
+		subclassPropertyColumnNumberClosure = null;
+		subclassPropertyFormulaNumberClosure = null;
+		subclassPropertyCascadeStyleClosure = null;
+		subclassColumnClosure = null;
+		subclassColumnLazyClosure = null;
+		subclassColumnAliasClosure = null;
+		subclassColumnSelectableClosure = null;
+		subclassColumnReaderTemplateClosure = null;
+		subclassFormulaClosure = null;
+		subclassFormulaTemplateClosure = null;
+		subclassFormulaAliasClosure = null;
+		subclassFormulaLazyClosure = null;
+		filterHelper = null;
+		loaderName = null;
+		queryLoader = null;
+		temporaryIdTableName = null;
+		temporaryIdTableDDL = null;
+		propertyMapping = null;
 	}
 
 	protected String generateLazySelectString() {

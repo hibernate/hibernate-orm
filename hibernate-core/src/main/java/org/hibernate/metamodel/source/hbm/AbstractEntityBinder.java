@@ -35,6 +35,7 @@ import org.hibernate.metamodel.binding.AttributeBinding;
 import org.hibernate.metamodel.binding.BagBinding;
 import org.hibernate.metamodel.binding.CollectionElementType;
 import org.hibernate.metamodel.binding.EntityBinding;
+import org.hibernate.metamodel.binding.InheritanceType;
 import org.hibernate.metamodel.binding.ManyToOneAttributeBinding;
 import org.hibernate.metamodel.binding.SimpleAttributeBinding;
 import org.hibernate.metamodel.binding.state.ManyToOneAttributeBindingState;
@@ -45,6 +46,7 @@ import org.hibernate.metamodel.relational.Table;
 import org.hibernate.metamodel.relational.TableSpecification;
 import org.hibernate.metamodel.relational.UniqueKey;
 import org.hibernate.metamodel.relational.state.ManyToOneRelationalState;
+import org.hibernate.metamodel.source.hbm.state.binding.HbmEntityBindingState;
 import org.hibernate.metamodel.source.hbm.state.binding.HbmManyToOneAttributeBindingState;
 import org.hibernate.metamodel.source.hbm.state.binding.HbmPluralAttributeBindingState;
 import org.hibernate.metamodel.source.hbm.state.binding.HbmSimpleAttributeBindingState;
@@ -100,6 +102,12 @@ abstract class AbstractEntityBinder {
 		);
 	}
 
+	public boolean isRoot() {
+		return false;
+	}
+
+	public abstract InheritanceType getInheritanceType();
+
 	public HbmBindingContext getBindingContext() {
 		return bindingContext;
 	}
@@ -120,11 +128,9 @@ abstract class AbstractEntityBinder {
 			XMLHibernateMapping.XMLClass entityClazz,
 			EntityBinding entityBinding,
 			Hierarchical superType) {
-		entityBinding.fromHbmXml(
-				bindingContext,
-				entityClazz,
-				new Entity( bindingContext.extractEntityName( entityClazz ), superType )
-		);
+		entityBinding.setEntity( new Entity( bindingContext.extractEntityName( entityClazz ), superType ) );
+		entityBinding.initialize( new HbmEntityBindingState( isRoot(), getInheritanceType(), bindingContext, entityClazz ) );
+
 		// TODO: move this stuff out
 		// transfer an explicitly defined lazy attribute
 		bindPojoRepresentation( entityClazz, entityBinding );
@@ -208,28 +214,6 @@ abstract class AbstractEntityBinder {
 			}
 		}
 		return null;
-	}
-
-	int getOptimisticLockMode(Attribute olAtt) throws MappingException {
-		if ( olAtt == null ) {
-			return Versioning.OPTIMISTIC_LOCK_VERSION;
-		}
-		String olMode = olAtt.getValue();
-		if ( olMode == null || "version".equals( olMode ) ) {
-			return Versioning.OPTIMISTIC_LOCK_VERSION;
-		}
-		else if ( "dirty".equals( olMode ) ) {
-			return Versioning.OPTIMISTIC_LOCK_DIRTY;
-		}
-		else if ( "all".equals( olMode ) ) {
-			return Versioning.OPTIMISTIC_LOCK_ALL;
-		}
-		else if ( "none".equals( olMode ) ) {
-			return Versioning.OPTIMISTIC_LOCK_NONE;
-		}
-		else {
-			throw new MappingException( "Unsupported optimistic-lock style: " + olMode );
-		}
 	}
 
 	protected String getClassTableName(

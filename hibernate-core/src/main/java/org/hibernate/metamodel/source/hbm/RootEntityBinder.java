@@ -25,9 +25,8 @@ package org.hibernate.metamodel.source.hbm;
 
 import org.hibernate.InvalidMappingException;
 import org.hibernate.MappingException;
-import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.metamodel.binding.Caching;
 import org.hibernate.metamodel.binding.EntityBinding;
+import org.hibernate.metamodel.binding.InheritanceType;
 import org.hibernate.metamodel.binding.state.SimpleAttributeBindingState;
 import org.hibernate.metamodel.relational.Identifier;
 import org.hibernate.metamodel.relational.InLineView;
@@ -36,7 +35,6 @@ import org.hibernate.metamodel.relational.state.ValueRelationalState;
 import org.hibernate.metamodel.source.hbm.state.binding.HbmDiscriminatorBindingState;
 import org.hibernate.metamodel.source.hbm.state.binding.HbmSimpleAttributeBindingState;
 import org.hibernate.metamodel.source.hbm.state.relational.HbmSimpleValueRelationalStateContainer;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLCacheElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLCompositeId;
@@ -54,34 +52,27 @@ class RootEntityBinder extends AbstractEntityBinder {
 		super( bindingContext, xmlClazz );
 	}
 
+	public boolean isRoot() {
+		return true;
+	}
+
+	public InheritanceType getInheritanceType() {
+		return InheritanceType.SINGLE_TABLE;
+	}
+
 	public void process(XMLClass xmlClazz) {
 		String entityName = getBindingContext().extractEntityName( xmlClazz );
 		if ( entityName == null ) {
 			throw new MappingException( "Unable to determine entity name" );
 		}
 
-		EntityBinding entityBinding = new EntityBinding( true );
+		EntityBinding entityBinding = new EntityBinding();
 		basicEntityBinding( xmlClazz, entityBinding, null );
 		basicTableBinding( xmlClazz, entityBinding );
-
-		entityBinding.setMutable( xmlClazz.isMutable() );
-
-		if ( xmlClazz.getWhere() != null ) {
-			entityBinding.setWhereFilter( xmlClazz.getWhere() );
-		}
-
-		if ( xmlClazz.getPolymorphism() != null ) {
-			entityBinding.setExplicitPolymorphism( "explicit".equals( xmlClazz.getPolymorphism() ) );
-		}
-
-		if ( xmlClazz.getRowid() != null ) {
-			entityBinding.setRowId( xmlClazz.getRowid() );
-		}
 
 		bindIdentifier( xmlClazz, entityBinding );
 		bindDiscriminator( xmlClazz, entityBinding );
 		bindVersionOrTimestamp( xmlClazz, entityBinding );
-		bindCaching( xmlClazz, entityBinding );
 
 		// called createClassProperties in HBMBinder...
 		buildAttributeBindings( xmlClazz, entityBinding );
@@ -334,17 +325,5 @@ class RootEntityBinder extends AbstractEntityBinder {
 		entityBinding.makeVersionBinding( bindingState.getAttributeName() )
 				.initialize( bindingState )
 				.initialize( relationalState );
-	}
-
-	private void bindCaching(XMLClass xmlClazz,
-							 EntityBinding entityBinding) {
-		XMLCacheElement cache = xmlClazz.getCache();
-		if ( cache == null ) {
-			return;
-		}
-		final String region = cache.getRegion() != null ? cache.getRegion() : entityBinding.getEntity().getName();
-		final AccessType accessType = Enum.valueOf( AccessType.class, cache.getUsage() );
-		final boolean cacheLazyProps = !"non-lazy".equals( cache.getInclude() );
-		entityBinding.setCaching( new Caching( region, accessType, cacheLazyProps ) );
 	}
 }

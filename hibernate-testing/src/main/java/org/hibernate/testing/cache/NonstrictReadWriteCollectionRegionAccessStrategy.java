@@ -21,59 +21,28 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate;
-
-import java.util.Map;
+package org.hibernate.testing.cache;
 
 import org.jboss.logging.Logger;
 
-import org.hibernate.cfg.Environment;
+import org.hibernate.cache.CacheException;
+import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.internal.CoreMessageLogger;
 
 /**
- * Describes the methods for multi-tenancy understood by Hibernate.
- *
- * @author Steve Ebersole
+ * @author Strong Liu
  */
-public enum MultiTenancyStrategy {
-
-	/**
-	 * Multi-tenancy implemented by use of discriminator columns.
-	 */
-	DISCRIMINATOR,
-	/**
-	 * Multi-tenancy implemented as separate schemas.
-	 */
-	SCHEMA,
-	/**
-	 * Multi-tenancy implemented as separate databases.
-	 */
-	DATABASE,
-	/**
-	 * No multi-tenancy
-	 */
-	NONE;
+class NonstrictReadWriteCollectionRegionAccessStrategy extends BaseCollectionRegionAccessStrategy {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class,
-			MultiTenancyStrategy.class.getName()
+			CoreMessageLogger.class, NonstrictReadWriteCollectionRegionAccessStrategy.class.getName()
 	);
-	public static MultiTenancyStrategy determineMultiTenancyStrategy(Map properties) {
-		final Object strategy = properties.get( Environment.MULTI_TENANT );
-		if ( strategy == null ) {
-			return MultiTenancyStrategy.NONE;
-		}
 
-		if ( MultiTenancyStrategy.class.isInstance( strategy ) ) {
-			return (MultiTenancyStrategy) strategy;
-		}
-
-		final String strategyName = strategy.toString();
-		try {
-			return MultiTenancyStrategy.valueOf( strategyName.toUpperCase() );
-		}
-		catch ( RuntimeException e ) {
-			LOG.warn( "Unknown multi tenancy strategy [ " +strategyName +" ], using MultiTenancyStrategy.NONE." );
-			return MultiTenancyStrategy.NONE;
-		}
+	NonstrictReadWriteCollectionRegionAccessStrategy(CollectionRegionImpl region) {
+		super( region );
 	}
+	@Override
+	public void unlockItem(Object key, SoftLock lock) throws CacheException {
+		evict( key );
+	}
+
 }

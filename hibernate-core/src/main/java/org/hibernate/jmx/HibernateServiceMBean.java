@@ -222,11 +222,11 @@ public interface HibernateServiceMBean {
 	/**
 	 * Get the second-level cache provider class name
 	 */
-	public String getCacheProviderClass();
+	public String getCacheRegionFactory();
 	/**
 	 * Set the second-level cache provider class name
 	 */
-	public void setCacheProviderClass(String providerClassName);
+	public void setCacheRegionFactory(String cacheRegionFactory);
 	/**
 	 * For cache providers which support this setting, get the
 	 * provider's specific configuration resource.

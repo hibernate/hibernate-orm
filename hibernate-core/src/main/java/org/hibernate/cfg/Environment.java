@@ -75,11 +75,6 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
  *   <td>classname of <tt>org.hibernate.dialect.Dialect</tt> subclass</td>
  * </tr>
  * <tr>
- *   <td><tt>hibernate.cache.provider_class</tt></td>
- *   <td>classname of <tt>org.hibernate.cache.spi.CacheProvider</tt>
- *   subclass (if not specified EHCache is used)</td>
- * </tr>
- * <tr>
  *   <td><tt>hibernate.connection.provider_class</tt></td>
  *   <td>classname of <tt>org.hibernate.service.jdbc.connections.spi.ConnectionProvider</tt>
  *   subclass (if not specified hueristics are used)</td>

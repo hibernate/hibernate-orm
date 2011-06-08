@@ -55,7 +55,7 @@ public abstract class ExternalSessionFactoryConfig {
 	private String querySubstitutions;
 	private String showSqlEnabled;
 	private String commentsEnabled;
-	private String cacheProviderClass;
+	private String cacheRegionFactory;
 	private String cacheProviderConfig;
 	private String cacheRegionPrefix;
 	private String secondLevelCacheEnabled;
@@ -209,12 +209,12 @@ public abstract class ExternalSessionFactoryConfig {
 		this.secondLevelCacheEnabled = secondLevelCacheEnabled;
 	}
 
-	public final String getCacheProviderClass() {
-		return cacheProviderClass;
+	public final String getCacheRegionFactory() {
+		return cacheRegionFactory;
 	}
 
-	public final void setCacheProviderClass(String cacheProviderClass) {
-		this.cacheProviderClass = cacheProviderClass;
+	public final void setCacheRegionFactory(String cacheRegionFactory) {
+		this.cacheRegionFactory = cacheRegionFactory;
 	}
 
 	public String getCacheProviderConfig() {
@@ -287,7 +287,7 @@ public abstract class ExternalSessionFactoryConfig {
 		setUnlessNull( props, Environment.QUERY_SUBSTITUTIONS, querySubstitutions );
 		setUnlessNull( props, Environment.SHOW_SQL, showSqlEnabled );
 		setUnlessNull( props, Environment.USE_SQL_COMMENTS, commentsEnabled );
-		setUnlessNull( props, Environment.CACHE_PROVIDER, cacheProviderClass );
+		setUnlessNull( props, Environment.CACHE_REGION_FACTORY, cacheRegionFactory );
 		setUnlessNull( props, Environment.CACHE_PROVIDER_CONFIG, cacheProviderConfig );
 		setUnlessNull( props, Environment.CACHE_REGION_PREFIX, cacheRegionPrefix );
 		setUnlessNull( props, Environment.USE_MINIMAL_PUTS, minimalPutsEnabled );

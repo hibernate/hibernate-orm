@@ -37,7 +37,6 @@ import java.util.Properties;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
-import org.hibernate.cache.internal.HashtableCacheProvider;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
@@ -62,6 +61,7 @@ import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.OnExpectedFailure;
 import org.hibernate.testing.OnFailure;
 import org.hibernate.testing.SkipLog;
+import org.hibernate.testing.cache.CachingRegionFactory;
 
 import static org.junit.Assert.fail;
 
@@ -130,7 +130,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 
 	protected Configuration constructConfiguration() {
 		Configuration configuration = new Configuration()
-				.setProperty( Environment.CACHE_PROVIDER, HashtableCacheProvider.class.getName() );
+				.setProperty(Environment.CACHE_REGION_FACTORY, CachingRegionFactory.class.getName()  );
 		configuration.setProperty( AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
 		if ( createSchema() ) {
 			configuration.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );

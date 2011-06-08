@@ -32,19 +32,10 @@ import java.util.Set;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
-import org.hibernate.engine.internal.Versioning;
-import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.metamodel.binding.state.EntityBindingState;
 import org.hibernate.metamodel.domain.Entity;
 import org.hibernate.metamodel.relational.Column;
 import org.hibernate.metamodel.relational.TableSpecification;
-import org.hibernate.metamodel.source.hbm.HbmBindingContext;
-import org.hibernate.metamodel.source.hbm.HbmHelper;
-import org.hibernate.metamodel.source.hbm.util.MappingHelper;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlDeleteElement;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlInsertElement;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlUpdateElement;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSynchronizeElement;
 import org.hibernate.metamodel.source.spi.MetaAttributeContext;
 
 /**
@@ -56,7 +47,8 @@ import org.hibernate.metamodel.source.spi.MetaAttributeContext;
  */
 public class EntityBinding {
 	private final EntityIdentifier entityIdentifier = new EntityIdentifier( this );
-	private final boolean isRoot;
+
+	private boolean isRoot;
 
 	private InheritanceType entityInheritanceType;
 	private EntityDiscriminator entityDiscriminator;
@@ -96,95 +88,41 @@ public class EntityBinding {
 
 	private List<String> synchronizedTableNames;
 
-	public EntityBinding(boolean isRoot) {
-		this.isRoot = isRoot;
-	}
-
-	// TODO: change to intialize from Doimain
-	public void fromHbmXml(HbmBindingContext bindingContext, XMLClass entityClazz, Entity entity) {
-		this.entity = entity;
-		metaAttributeContext = HbmHelper.extractMetaAttributeContext( entityClazz.getMeta(), true, bindingContext.getMetaAttributeContext() );
-
-		// go ahead and set the lazy here, since pojo.proxy can override it.
-		lazy = MappingHelper.getBooleanValue(
-				entityClazz.isLazy(), bindingContext.getMappingDefaults().isDefaultLazy()
-		);
-		proxyInterfaceName = entityClazz.getProxy();
-		dynamicUpdate = entityClazz.isDynamicUpdate();
-		dynamicInsert = entityClazz.isDynamicInsert();
-		batchSize = MappingHelper.getIntValue( entityClazz.getBatchSize(), 0 );
-		selectBeforeUpdate = entityClazz.isSelectBeforeUpdate();
-
-		// OPTIMISTIC LOCK MODE
-		String optimisticLockModeString = MappingHelper.getStringValue( entityClazz.getOptimisticLock(), "version" );
-		if ( "version".equals( optimisticLockModeString ) ) {
-			optimisticLockMode = Versioning.OPTIMISTIC_LOCK_VERSION;
-		}
-		else if ( "dirty".equals( optimisticLockModeString ) ) {
-			optimisticLockMode = Versioning.OPTIMISTIC_LOCK_DIRTY;
-		}
-		else if ( "all".equals( optimisticLockModeString ) ) {
-			optimisticLockMode = Versioning.OPTIMISTIC_LOCK_ALL;
-		}
-		else if ( "none".equals( optimisticLockModeString ) ) {
-			optimisticLockMode = Versioning.OPTIMISTIC_LOCK_NONE;
-		}
-		else {
-			throw new MappingException( "Unsupported optimistic-lock style: " + optimisticLockModeString );
-		}
-
-		// PERSISTER
-		if ( entityClazz.getPersister() != null ) {
-			try {
-				entityPersisterClass = ReflectHelper.classForName( entityClazz.getPersister() );
-			}
-			catch ( ClassNotFoundException cnfe ) {
-				throw new MappingException(
-						"Could not find persister class: "
-								+ entityClazz.getPersister()
-				);
+	public EntityBinding initialize(EntityBindingState state) {
+		this.isRoot = state.isRoot();
+		this.entityInheritanceType = state.getEntityInheritanceType();
+		this.caching = state.getCaching();
+		this.metaAttributeContext = state.getMetaAttributeContext();
+		this.proxyInterfaceName = state.getProxyInterfaceName();
+		this.lazy = state.isLazy();
+		this.mutable = state.isMutable();
+		this.explicitPolymorphism = state.isExplicitPolymorphism();
+		this.whereFilter = state.getWhereFilter();
+		this.rowId = state.getRowId();
+		this.dynamicInsert = state.isDynamicUpdate();
+		this.dynamicInsert = state.isDynamicInsert();
+		this.batchSize = state.getBatchSize();
+		this.selectBeforeUpdate = state.isSelectBeforeUpdate();
+		this.optimisticLockMode = state.getOptimisticLockMode();
+		this.entityPersisterClass = state.getEntityPersisterClass();
+		this.isAbstract = state.isAbstract();
+		this.customInsert = state.getCustomInsert();
+		this.customUpdate = state.getCustomUpdate();
+		this.customDelete = state.getCustomDelete();
+		if ( state.getSynchronizedTableNames() != null ) {
+			for ( String synchronizedTableName : state.getSynchronizedTableNames() ) {
+				addSynchronizedTable( synchronizedTableName );
 			}
 		}
-
-		// CUSTOM SQL
-		XMLSqlInsertElement sqlInsert = entityClazz.getSqlInsert();
-		if ( sqlInsert != null ) {
-			customInsert = HbmHelper.getCustomSql(
-					sqlInsert.getValue(),
-					sqlInsert.isCallable(),
-					sqlInsert.getCheck().value()
-			);
-		}
-
-		XMLSqlDeleteElement sqlDelete = entityClazz.getSqlDelete();
-		if ( sqlDelete != null ) {
-			customDelete = HbmHelper.getCustomSql(
-					sqlDelete.getValue(),
-					sqlDelete.isCallable(),
-					sqlDelete.getCheck().value()
-			);
-		}
-
-		XMLSqlUpdateElement sqlUpdate = entityClazz.getSqlUpdate();
-		if ( sqlUpdate != null ) {
-			customUpdate = HbmHelper.getCustomSql(
-					sqlUpdate.getValue(),
-					sqlUpdate.isCallable(),
-					sqlUpdate.getCheck().value()
-			);
-		}
-
-		if ( entityClazz.getSynchronize() != null ) {
-			for ( XMLSynchronizeElement synchronize : entityClazz.getSynchronize() ) {
-				addSynchronizedTable( synchronize.getTable() );
-			}
-		}
-
-		isAbstract = entityClazz.isAbstract();
+		return this;
 	}
 
 	public boolean isRoot() {
 		return isRoot;
+	}
+
+	public void setRoot(boolean isRoot) {
+		this.isRoot = isRoot;
 	}
 
 	public Entity getEntity() {

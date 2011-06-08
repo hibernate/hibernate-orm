@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2010-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,37 +21,39 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.cache.internal.bridge;
+package org.hibernate.testing.cache;
+
+import org.jboss.logging.Logger;
 
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.spi.Cache;
-import org.hibernate.cache.spi.GeneralDataRegion;
-import org.hibernate.cfg.Settings;
+import org.hibernate.cache.spi.access.SoftLock;
+import org.hibernate.internal.CoreMessageLogger;
 
 /**
- * {@inheritDoc}
- *
- * @author Steve Ebersole
+ * @author Strong Liu
  */
-public abstract class BaseGeneralDataRegionAdapter extends BaseRegionAdapter implements GeneralDataRegion {
+class ReadOnlyCollectionRegionAccessStrategy extends BaseCollectionRegionAccessStrategy {
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class, ReadOnlyCollectionRegionAccessStrategy.class.getName()
+	);
 
-	protected BaseGeneralDataRegionAdapter(Cache underlyingCache, Settings settings) {
-		super( underlyingCache, settings );
+	ReadOnlyCollectionRegionAccessStrategy(CollectionRegionImpl region) {
+		super( region );
 	}
 
-	public Object get(Object key) throws CacheException {
-		return underlyingCache.get( key );
+	@Override
+	public void unlockItem(Object key, SoftLock lock) throws CacheException {
+		LOG.invalidEditOfReadOnlyItem( key );
 	}
 
-	public void put(Object key, Object value) throws CacheException {
-		underlyingCache.put( key, value );
+	@Override
+	public SoftLock lockItem(Object key, Object version) throws CacheException {
+		LOG.invalidEditOfReadOnlyItem( key );
+		throw new UnsupportedOperationException( "Can't write to a readonly object" );
 	}
 
-	public void evict(Object key) throws CacheException {
-		underlyingCache.remove( key );
+	@Override
+	public void remove(Object key) throws CacheException {
 	}
 
-	public void evictAll() throws CacheException {
-		underlyingCache.clear();
-	}
 }

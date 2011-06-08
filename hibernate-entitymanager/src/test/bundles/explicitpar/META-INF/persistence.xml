@@ -26,7 +26,7 @@
             <property name="hibernate.max_fetch_depth" value="3"/>
             <property name="hibernate.hbm2ddl.auto" value="create-drop"/>
             <property name="hibernate.generate_statistics" value="true"/>
-            <property name="hibernate.cache.provider_class" value="org.hibernate.cache.internal.HashtableCacheProvider"/>
+			<property name="hibernate.cache.region.factory_class" value="org.hibernate.testing.cache.CachingRegionFactory" />
             <property name="hibernate.ejb.naming_strategy" value="org.hibernate.ejb.test.MyNamingStrategy"/>
             <!-- test naming strategy and fall back to element content -->
             <!-- property name="hibernate.ejb.naming_strategy">org.hibernate.ejb.test.MyNamingStrategy</property -->

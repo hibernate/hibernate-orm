@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2010-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,19 +21,34 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.cache.internal.bridge;
+package org.hibernate.testing.cache;
 
-import org.hibernate.cache.spi.Cache;
-import org.hibernate.cache.spi.TimestampsRegion;
-import org.hibernate.cfg.Settings;
+import org.hibernate.cache.spi.CollectionRegion;
+import org.hibernate.cache.spi.GeneralDataRegion;
+import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 
 /**
- * Adapter specifically bridging {@link TimestampsRegion} to {@link org.hibernate.cache.spi.Cache}.
-*
-* @author Steve Ebersole
+ * @author Strong Liu
  */
-public class TimestampsRegionAdapter extends BaseGeneralDataRegionAdapter implements TimestampsRegion {
-	protected TimestampsRegionAdapter(Cache underlyingCache, Settings settings) {
-		super( underlyingCache, settings );
+class BaseCollectionRegionAccessStrategy extends BaseRegionAccessStrategy implements CollectionRegionAccessStrategy {
+	private final CollectionRegionImpl region;
+
+	@Override
+	protected BaseGeneralDataRegion getInternalRegion() {
+		return region;
+	}
+
+	@Override
+	protected boolean isDefaultMinimalPutOverride() {
+		return region.getSettings().isMinimalPutsEnabled();
+	}
+
+	@Override
+	public CollectionRegion getRegion() {
+		return region;
+	}
+
+	BaseCollectionRegionAccessStrategy(CollectionRegionImpl region) {
+		this.region = region;
 	}
 }

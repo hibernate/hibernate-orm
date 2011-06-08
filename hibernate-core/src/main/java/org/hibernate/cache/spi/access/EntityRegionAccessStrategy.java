@@ -104,37 +104,4 @@ public interface EntityRegionAccessStrategy extends RegionAccessStrategy{
 	 * @throws CacheException Propogated from underlying {@link org.hibernate.cache.spi.Region}
 	 */
 	public boolean afterUpdate(Object key, Object value, Object currentVersion, Object previousVersion, SoftLock lock) throws CacheException;
-
-	/**
-	 * Called after an item has become stale (before the transaction completes).
-	 * This method is used by "synchronous" concurrency strategies.
-	 *
-	 * @param key The key of the item to remove
-	 * @throws CacheException Propogated from underlying {@link org.hibernate.cache.spi.Region}
-	 */
-	public void remove(Object key) throws CacheException;
-
-	/**
-	 * Called to evict data from the entire region
-	 *
-	 * @throws CacheException Propogated from underlying {@link org.hibernate.cache.spi.Region}
-	 */
-	public void removeAll() throws CacheException;
-
-	/**
-	 * Forcibly evict an item from the cache immediately without regard for transaction
-	 * isolation.
-	 *
-	 * @param key The key of the item to remove
-	 * @throws CacheException Propogated from underlying {@link org.hibernate.cache.spi.Region}
-	 */
-	public void evict(Object key) throws CacheException;
-
-	/**
-	 * Forcibly evict all items from the cache immediately without regard for transaction
-	 * isolation.
-	 *
-	 * @throws CacheException Propogated from underlying {@link org.hibernate.cache.spi.Region}
-	 */
-	public void evictAll() throws CacheException;
 }

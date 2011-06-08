@@ -1,7 +1,7 @@
 package org.hibernate.envers.test.integration.cache;
 
 import org.hibernate.MappingException;
-import org.hibernate.cache.internal.EhCacheProvider;
+import org.hibernate.cache.internal.EhCacheRegionFactory;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.envers.RevisionType;
@@ -26,7 +26,7 @@ public class HibernateSecLvlQueryCache extends AbstractSessionTest {
         config.addAnnotatedClass(StrTestEntity.class);
         config.setProperty(Environment.USE_SECOND_LEVEL_CACHE, "true");
         config.setProperty(Environment.USE_QUERY_CACHE, "true");
-        config.setProperty(Environment.CACHE_PROVIDER, EhCacheProvider.class.getName());
+        config.setProperty(Environment.CACHE_REGION_FACTORY, EhCacheRegionFactory.class.getName());
         config.setProperty(Environment.CACHE_PROVIDER_CONFIG, "ehcache-test.xml");
     }
 

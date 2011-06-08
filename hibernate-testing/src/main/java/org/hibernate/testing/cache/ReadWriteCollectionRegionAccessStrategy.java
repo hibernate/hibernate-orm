@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2010-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,19 +21,44 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.cache.internal.bridge;
+package org.hibernate.testing.cache;
 
-import org.hibernate.cache.spi.Cache;
-import org.hibernate.cache.spi.QueryResultsRegion;
-import org.hibernate.cfg.Settings;
+import java.util.Comparator;
+
+import org.hibernate.cache.spi.CollectionRegion;
+import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 
 /**
- * Adapter specifically briding {@link org.hibernate.cache.spi.QueryResultsRegion} to {@link Cache}.
-*
-* @author Steve Ebersole
+ * @author Strong Liu
  */
-public class QueryResultsRegionAdapter extends BaseGeneralDataRegionAdapter implements QueryResultsRegion {
-	protected QueryResultsRegionAdapter(Cache underlyingCache, Settings settings) {
-		super( underlyingCache, settings );
+class ReadWriteCollectionRegionAccessStrategy extends AbstractReadWriteAccessStrategy
+		implements CollectionRegionAccessStrategy {
+
+	private final CollectionRegionImpl region;
+
+	ReadWriteCollectionRegionAccessStrategy(CollectionRegionImpl region) {
+		this.region = region;
 	}
+
+	@Override
+	Comparator getVersionComparator() {
+		return region.getCacheDataDescription().getVersionComparator();
+	}
+
+	@Override
+	protected BaseGeneralDataRegion getInternalRegion() {
+		return region;
+	}
+
+	@Override
+	protected boolean isDefaultMinimalPutOverride() {
+		return region.getSettings().isMinimalPutsEnabled();
+	}
+
+	@Override
+	public CollectionRegion getRegion() {
+		return region;
+	}
+
+
 }

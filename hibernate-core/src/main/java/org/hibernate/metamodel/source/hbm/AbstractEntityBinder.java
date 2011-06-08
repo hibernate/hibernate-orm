@@ -23,13 +23,9 @@
  */
 package org.hibernate.metamodel.source.hbm;
 
-import org.dom4j.Attribute;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
-import org.hibernate.MappingException;
 import org.hibernate.cfg.NamingStrategy;
-import org.hibernate.engine.internal.Versioning;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.binding.AttributeBinding;
 import org.hibernate.metamodel.binding.BagBinding;
@@ -78,7 +74,6 @@ import org.hibernate.metamodel.binding.state.PluralAttributeBindingState;
 import org.hibernate.metamodel.binding.state.SimpleAttributeBindingState;
 import org.hibernate.metamodel.relational.state.TupleRelationalState;
 import org.hibernate.metamodel.relational.state.ValueRelationalState;
-import org.hibernate.metamodel.source.spi.BindingContext;
 import org.hibernate.metamodel.source.spi.MetadataImplementor;
 
 /**
@@ -94,10 +89,10 @@ abstract class AbstractEntityBinder {
 		this.bindingContext = bindingContext;
 		this.schemaName = new Schema.Name(
 				entityClazz.getSchema() == null
-						? bindingContext.getMappingDefaults().getDefaultSchemaName()
+						? bindingContext.getMappingDefaults().getSchemaName()
 						: entityClazz.getSchema(),
 				entityClazz.getCatalog() == null
-						? bindingContext.getMappingDefaults().getDefaultCatalogName() :
+						? bindingContext.getMappingDefaults().getCatalogName() :
 						entityClazz.getCatalog()
 		);
 	}
@@ -152,7 +147,7 @@ abstract class AbstractEntityBinder {
 	}
 
 	protected String getDefaultAccess() {
-		return bindingContext.getMappingDefaults().getDefaultAccess();
+		return bindingContext.getMappingDefaults().getPropertyAccessorName();
 	}
 
 	private void bindPojoRepresentation(XMLHibernateMapping.XMLClass entityClazz,

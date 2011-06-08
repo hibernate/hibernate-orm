@@ -23,14 +23,11 @@
  */
 package org.hibernate.metamodel.source.internal;
 
-import java.util.Map;
-
-import org.hibernate.cfg.NamingStrategy;
-import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.metamodel.source.spi.MappingDefaults;
-import org.hibernate.service.ServiceRegistry;
 
 /**
+ * Represents a "nested level" in the mapping defaults stack.
+ *
  * @author Steve Ebersole
  */
 public class OverriddenMappingDefaults implements MappingDefaults {
@@ -75,42 +72,37 @@ public class OverriddenMappingDefaults implements MappingDefaults {
 	}
 
 	@Override
-	public String getDefaultSchemaName() {
-		return schemaName == null ? overriddenValues.getDefaultSchemaName() : schemaName;
+	public String getSchemaName() {
+		return schemaName == null ? overriddenValues.getSchemaName() : schemaName;
 	}
 
 	@Override
-	public String getDefaultCatalogName() {
-		return catalogName == null ? overriddenValues.getDefaultCatalogName() : catalogName;
+	public String getCatalogName() {
+		return catalogName == null ? overriddenValues.getCatalogName() : catalogName;
 	}
 
 	@Override
-	public String getDefaultIdColumnName() {
-		return idColumnName == null ? overriddenValues.getDefaultIdColumnName() : idColumnName;
+	public String getIdColumnName() {
+		return idColumnName == null ? overriddenValues.getIdColumnName() : idColumnName;
 	}
 
 	@Override
-	public String getDefaultDiscriminatorColumnName() {
-		return discriminatorColumnName == null ? overriddenValues.getDefaultDiscriminatorColumnName() : discriminatorColumnName;
+	public String getDiscriminatorColumnName() {
+		return discriminatorColumnName == null ? overriddenValues.getDiscriminatorColumnName() : discriminatorColumnName;
 	}
 
 	@Override
-	public String getDefaultCascade() {
-		return cascade == null ? overriddenValues.getDefaultCascade() : cascade;
+	public String getCascadeStyle() {
+		return cascade == null ? overriddenValues.getCascadeStyle() : cascade;
 	}
 
 	@Override
-	public String getDefaultAccess() {
-		return propertyAccess == null ? overriddenValues.getDefaultAccess() : propertyAccess;
+	public String getPropertyAccessorName() {
+		return propertyAccess == null ? overriddenValues.getPropertyAccessorName() : propertyAccess;
 	}
 
 	@Override
-	public boolean isDefaultLazy() {
-		return associationLaziness == null ? overriddenValues.isDefaultLazy() : associationLaziness;
-	}
-
-	@Override
-	public Map<String, MetaAttribute> getMappingMetas() {
-		return null; // todo : implement method body
+	public boolean areAssociationsLazy() {
+		return associationLaziness == null ? overriddenValues.areAssociationsLazy() : associationLaziness;
 	}
 }

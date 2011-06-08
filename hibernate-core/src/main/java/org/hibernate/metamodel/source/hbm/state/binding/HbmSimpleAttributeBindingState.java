@@ -62,11 +62,11 @@ public class HbmSimpleAttributeBindingState extends AbstractHbmAttributeBindingS
 			XMLId id) {
 		super(
 				ownerClassName,
-				id.getName() != null ? id.getName() : bindingContext.getMappingDefaults().getDefaultIdColumnName(),
+				id.getName() != null ? id.getName() : bindingContext.getMappingDefaults().getIdColumnName(),
 				bindingContext,
 				id.getNode(),
 				HbmHelper.extractMetaAttributeContext( id.getMeta(), parentMetaAttributeContext ),
-				HbmHelper.getPropertyAccessorName( id.getAccess(), false, bindingContext.getMappingDefaults().getDefaultAccess() ),
+				HbmHelper.getPropertyAccessorName( id.getAccess(), false, bindingContext.getMappingDefaults().getPropertyAccessorName() ),
 				true
 		);
 
@@ -109,7 +109,7 @@ public class HbmSimpleAttributeBindingState extends AbstractHbmAttributeBindingS
 				bindingContext,
 				version.getNode(),
 				HbmHelper.extractMetaAttributeContext( version.getMeta(), parentMetaAttributeContext ),
-				HbmHelper.getPropertyAccessorName( version.getAccess(), false, bindingContext.getMappingDefaults().getDefaultAccess() ),
+				HbmHelper.getPropertyAccessorName( version.getAccess(), false, bindingContext.getMappingDefaults().getPropertyAccessorName() ),
 				true
 		);
 		this.typeName = version.getType() == null ? "integer" : version.getType();
@@ -139,7 +139,7 @@ public class HbmSimpleAttributeBindingState extends AbstractHbmAttributeBindingS
 				bindingContext,
 				timestamp.getNode(),
 				HbmHelper.extractMetaAttributeContext( timestamp.getMeta(), parentMetaAttributeContext ),
-				HbmHelper.getPropertyAccessorName( timestamp.getAccess(), false, bindingContext.getMappingDefaults().getDefaultAccess() ),
+				HbmHelper.getPropertyAccessorName( timestamp.getAccess(), false, bindingContext.getMappingDefaults().getPropertyAccessorName() ),
 				true
 		);
 
@@ -169,7 +169,7 @@ public class HbmSimpleAttributeBindingState extends AbstractHbmAttributeBindingS
 				bindingContext,
 				property.getNode(),
 				HbmHelper.extractMetaAttributeContext( property.getMeta(), parentMetaAttributeContext ),
-				HbmHelper.getPropertyAccessorName( property.getAccess(), false, bindingContext.getMappingDefaults().getDefaultAccess() ),
+				HbmHelper.getPropertyAccessorName( property.getAccess(), false, bindingContext.getMappingDefaults().getPropertyAccessorName() ),
 				property.isOptimisticLock()
 		);
 		this.isLazy = property.isLazy();

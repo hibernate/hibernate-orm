@@ -50,7 +50,7 @@ public class HbmDiscriminatorBindingState
 			XMLHibernateMapping.XMLClass xmlEntityClazz) {
 		super(
 				ownerClassName,
-				bindingContext.getMappingDefaults().getDefaultDiscriminatorColumnName(),
+				bindingContext.getMappingDefaults().getDiscriminatorColumnName(),
 				bindingContext,
 				null,
 				null,

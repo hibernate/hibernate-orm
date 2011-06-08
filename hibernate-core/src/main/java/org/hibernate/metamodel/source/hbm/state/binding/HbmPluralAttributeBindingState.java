@@ -65,7 +65,7 @@ public class HbmPluralAttributeBindingState extends AbstractHbmAttributeBindingS
 				collection.getNode(),
 				HbmHelper.extractMetaAttributeContext( collection.getMeta(), parentMetaAttributeContext ),
 				HbmHelper.getPropertyAccessorName(
-						collection.getAccess(), collection.isEmbedXml(), bindingContext.getMappingDefaults().getDefaultAccess()
+						collection.getAccess(), collection.isEmbedXml(), bindingContext.getMappingDefaults().getPropertyAccessorName()
 				),
 				collection.isOptimisticLock()
 		);
@@ -117,7 +117,7 @@ public class HbmPluralAttributeBindingState extends AbstractHbmAttributeBindingS
 	public boolean isLazy() {
 		return isExtraLazy() ||
 				MappingHelper.getBooleanValue(
-						collection.getLazy().value(), getBindingContext().getMappingDefaults().isDefaultLazy()
+						collection.getLazy().value(), getBindingContext().getMappingDefaults().areAssociationsLazy()
 				);
 	}
 

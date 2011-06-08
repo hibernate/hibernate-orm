@@ -78,7 +78,7 @@ public abstract class AbstractHbmAttributeBindingState implements AttributeBindi
 	}
 
 	protected Set<CascadeType> determineCascadeTypes(String cascade) {
-		String commaSeparatedCascades = MappingHelper.getStringValue( cascade, getBindingContext().getMappingDefaults().getDefaultCascade() );
+		String commaSeparatedCascades = MappingHelper.getStringValue( cascade, getBindingContext().getMappingDefaults().getCascadeStyle() );
 		Set<String> cascades = MappingHelper.getStringValueTokens( commaSeparatedCascades, "," );
 		Set<CascadeType> cascadeTypes = new HashSet<CascadeType>( cascades.size() );
 		for ( String s : cascades ) {

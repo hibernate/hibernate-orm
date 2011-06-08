@@ -25,7 +25,6 @@ package org.hibernate.metamodel.source.internal;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,7 +51,6 @@ import org.hibernate.metamodel.binding.FetchProfile;
 import org.hibernate.metamodel.binding.IdGenerator;
 import org.hibernate.metamodel.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.binding.TypeDef;
-import org.hibernate.metamodel.domain.MetaAttribute;
 import org.hibernate.metamodel.relational.AuxiliaryDatabaseObject;
 import org.hibernate.metamodel.relational.Database;
 import org.hibernate.metamodel.source.annotations.AnnotationBinder;
@@ -484,43 +482,38 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		}
 
 		@Override
-		public String getDefaultSchemaName() {
+		public String getSchemaName() {
 			return options.getDefaultSchemaName();
 		}
 
 		@Override
-		public String getDefaultCatalogName() {
+		public String getCatalogName() {
 			return options.getDefaultCatalogName();
 		}
 
 		@Override
-		public String getDefaultIdColumnName() {
+		public String getIdColumnName() {
 			return DEFAULT_IDENTIFIER_COLUMN_NAME;
 		}
 
 		@Override
-		public String getDefaultDiscriminatorColumnName() {
+		public String getDiscriminatorColumnName() {
 			return DEFAULT_DISCRIMINATOR_COLUMN_NAME;
 		}
 
 		@Override
-		public String getDefaultCascade() {
+		public String getCascadeStyle() {
 			return DEFAULT_CASCADE;
 		}
 
 		@Override
-		public String getDefaultAccess() {
+		public String getPropertyAccessorName() {
 			return DEFAULT_PROPERTY_ACCESS;
 		}
 
 		@Override
-		public boolean isDefaultLazy() {
+		public boolean areAssociationsLazy() {
 			return true;
-		}
-
-		@Override
-		public Map<String, MetaAttribute> getMappingMetas() {
-			return Collections.emptyMap();
 		}
 	}
 }

@@ -67,7 +67,7 @@ public class HbmManyToOneAttributeBindingState
 				HbmHelper.getPropertyAccessorName(
 						manyToOne.getAccess(),
 						manyToOne.isEmbedXml(),
-						bindingContext.getMappingDefaults().getDefaultAccess()
+						bindingContext.getMappingDefaults().getPropertyAccessorName()
 				),
 				manyToOne.isOptimisticLock()
 		);

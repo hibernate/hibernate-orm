@@ -21,11 +21,12 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.domain;
+package org.hibernate.metamodel.binding;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 /**
  * A meta attribute is a named value or values.
@@ -33,11 +34,8 @@ import java.util.Collections;
  * @author Gavin King
  */
 public class MetaAttribute implements Serializable {
-
-	// todo : this really belongs in the binding package
-
-	private String name;
-	private java.util.List values = new ArrayList();
+	private final String name;
+	private List<String> values = new ArrayList<String>();
 
 	public MetaAttribute(String name) {
 		this.name = name;
@@ -47,19 +45,19 @@ public class MetaAttribute implements Serializable {
 		return name;
 	}	
 
-	public java.util.List getValues() {
+	public List<String> getValues() {
 		return Collections.unmodifiableList(values);
 	}
 
 	public void addValue(String value) {
-		values.add(value);
+		values.add( value );
 	}
 
 	public String getValue() {
-		if ( values.size()!=1 ) {
-			throw new IllegalStateException("no unique value");
+		if ( values.size() != 1 ) {
+			throw new IllegalStateException( "no unique value" );
 		}
-		return (String) values.get(0);
+		return values.get( 0 );
 	}
 
 	public boolean isMultiValued() {

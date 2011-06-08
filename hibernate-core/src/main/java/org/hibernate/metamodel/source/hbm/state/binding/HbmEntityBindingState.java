@@ -92,7 +92,7 @@ public class HbmEntityBindingState implements EntityBindingState {
 
 		// go ahead and set the lazy here, since pojo.proxy can override it.
 		lazy = MappingHelper.getBooleanValue(
-				entityClazz.isLazy(), bindingContext.getMappingDefaults().isDefaultLazy()
+				entityClazz.isLazy(), bindingContext.getMappingDefaults().areAssociationsLazy()
 		);
 		mutable = entityClazz.isMutable();
 

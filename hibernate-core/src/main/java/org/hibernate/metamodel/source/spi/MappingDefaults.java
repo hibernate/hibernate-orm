@@ -23,36 +23,70 @@
  */
 package org.hibernate.metamodel.source.spi;
 
-import java.util.Map;
-
-import org.hibernate.cfg.NamingStrategy;
-import org.hibernate.metamodel.domain.MetaAttribute;
-import org.hibernate.service.ServiceRegistry;
-
 /**
+ * Defines a (contextual) set of values to use as defaults in the absence of related mapping information.  The
+ * context here is conceptually a stack.  The "global" level is configuration settings.
+ *
  * @author Gail Badner
  * @author Steve Ebersole
  */
 public interface MappingDefaults {
+	/**
+	 * Identifies the default package name to use if none specified in the mapping.  Really only pertinent for
+	 * {@code hbm.xml} mappings.
+	 *
+	 * @return The default package name.
+	 */
+	public String getPackageName();
 
-	String getPackageName();
+	/**
+	 * Identifies the default database schema name to use if none specified in the mapping.
+	 *
+	 * @return The default schema name
+	 */
+	public String getSchemaName();
 
-	String getDefaultSchemaName();
+	/**
+	 * Identifies the default database catalog name to use if none specified in the mapping.
+	 *
+	 * @return The default catalog name
+	 */
+	public String getCatalogName();
 
-	String getDefaultCatalogName();
+	/**
+	 * Identifies the default column name to use for the identifier column if none specified in the mapping.
+	 *
+	 * @return The default identifier column name
+	 */
+	public String getIdColumnName();
 
-	String getDefaultIdColumnName();
+	/**
+	 * Identifies the default column name to use for the discriminator column if none specified in the mapping.
+	 *
+	 * @return The default discriminator column name
+	 */
+	public String getDiscriminatorColumnName();
 
-	String getDefaultDiscriminatorColumnName();
+	/**
+	 * Identifies the default cascade style to apply to associations if none specified in the mapping.
+	 *
+	 * @return The default cascade style
+	 */
+	public String getCascadeStyle();
 
-	String getDefaultCascade();
+	/**
+	 * Identifies the default {@link org.hibernate.property.PropertyAccessor} name to use if none specified in the
+	 * mapping.
+	 *
+	 * @return The default property accessor name
+	 * @see org.hibernate.property.PropertyAccessorFactory
+	 */
+	public String getPropertyAccessorName();
 
-	String getDefaultAccess();
-
-	boolean isDefaultLazy();
-
-
-	// Not happy about these here ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	Map<String, MetaAttribute> getMappingMetas();
+	/**
+	 * Identifies whether associations are lazy by default if not specified in the mapping.
+	 *
+	 * @return The default association laziness
+	 */
+	public boolean areAssociationsLazy();
 }

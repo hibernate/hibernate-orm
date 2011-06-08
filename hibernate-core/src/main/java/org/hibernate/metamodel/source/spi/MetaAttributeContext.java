@@ -27,7 +27,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.hibernate.metamodel.domain.MetaAttribute;
+import org.hibernate.metamodel.binding.MetaAttribute;
 
 /**
  * @author Steve Ebersole

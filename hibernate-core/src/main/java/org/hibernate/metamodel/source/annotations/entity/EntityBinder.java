@@ -85,7 +85,7 @@ public class EntityBinder {
 	}
 
 	public void bind() {
-		EntityBinding entityBinding = new EntityBinding( configuredClass.isRoot() );
+		EntityBinding entityBinding = new EntityBinding();
 
 		bindJpaEntityAnnotation( entityBinding );
 		bindHibernateEntityAnnotation( entityBinding ); // optional hibernate specific @org.hibernate.annotations.Entity
@@ -300,6 +300,7 @@ public class EntityBinder {
 	}
 
 	private void bindId(EntityBinding entityBinding) {
+		entityBinding.setRoot( true );
 		switch ( configuredClass.getIdType() ) {
 			case SIMPLE: {
 				bindSingleIdAnnotation( entityBinding );

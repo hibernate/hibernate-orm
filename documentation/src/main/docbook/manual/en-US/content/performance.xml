@@ -750,9 +750,9 @@ Customer customer = (Customer) session.get( Customer.class, customerId );
 
         <tbody>
           <row>
-            <entry>Hashtable (not intended for production use)</entry>
+            <entry>ConcurrentHashMap (only for testing purpose, in hibernate-testing module)</entry>
 
-            <entry><literal>org.hibernate.cache.internal.HashtableCacheProvider</literal></entry>
+            <entry><literal>org.hibernate.testing.cache.CachingRegionFactory</literal></entry>
 
             <entry>memory</entry>
 
@@ -764,7 +764,7 @@ Customer customer = (Customer) session.get( Customer.class, customerId );
           <row>
             <entry>EHCache</entry>
 
-            <entry><literal>org.hibernate.cache.internal.EhCacheProvider</literal></entry>
+            <entry><literal>org.hibernate.cache.internal.EhCacheRegionFactory</literal></entry>
 
             <entry>memory, disk</entry>
 
@@ -773,7 +773,7 @@ Customer customer = (Customer) session.get( Customer.class, customerId );
             <entry>yes</entry>
           </row>
 
-          <row>
+<!--          <row>
             <entry>OSCache</entry>
 
             <entry><literal>org.hibernate.cache.OSCacheProvider</literal></entry>
@@ -813,6 +813,17 @@ Customer customer = (Customer) session.get( Customer.class, customerId );
             <entry>JBoss Cache 2</entry>
 
             <entry><literal>org.hibernate.cache.jbc.JBossCacheRegionFactory</literal></entry>
+
+            <entry>clustered (ip multicast), transactional</entry>
+
+            <entry>yes (replication or invalidation)</entry>
+
+            <entry>yes (clock sync req.)</entry>
+          </row> -->
+          <row>
+            <entry>Infinispan</entry>
+
+            <entry><literal>org.hibernate.cache.infinispan.InfinispanRegionFactory</literal></entry>
 
             <entry>clustered (ip multicast), transactional</entry>
 
@@ -1114,7 +1125,7 @@ public SortedSet&lt;Ticket&gt; getTickets() {
 
           <tbody>
             <row>
-              <entry>Hashtable (not intended for production use)</entry>
+              <entry>ConcurrentHashMap (not intended for production use)</entry>
 
               <entry>yes</entry>
 
@@ -1134,10 +1145,10 @@ public SortedSet&lt;Ticket&gt; getTickets() {
 
               <entry>yes</entry>
 
-              <entry></entry>
+              <entry>yes</entry>
             </row>
 
-            <row>
+ <!--           <row>
               <entry>OSCache</entry>
 
               <entry>yes</entry>
@@ -1175,6 +1186,17 @@ public SortedSet&lt;Ticket&gt; getTickets() {
 
             <row>
               <entry>JBoss Cache 2</entry>
+
+              <entry>yes</entry>
+
+              <entry></entry>
+
+              <entry></entry>
+
+              <entry>yes</entry>
+            </row> -->
+            <row>
+              <entry>Infinispan</entry>
 
               <entry>yes</entry>
 

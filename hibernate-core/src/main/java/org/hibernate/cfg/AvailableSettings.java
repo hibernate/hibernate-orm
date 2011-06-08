@@ -289,13 +289,6 @@ public interface AvailableSettings {
 	public static final String USER_TRANSACTION = "jta.UserTransaction";
 
 	/**
-	 * The <tt>CacheProvider</tt> implementation class
-	 *
-	 * @deprecated See {@link #CACHE_REGION_FACTORY}
-	 */
-	public static final String CACHE_PROVIDER = "hibernate.cache.provider_class";
-
-	/**
 	 * The {@link org.hibernate.cache.spi.RegionFactory} implementation class
 	 */
 	public static final String CACHE_REGION_FACTORY = "hibernate.cache.region.factory_class";

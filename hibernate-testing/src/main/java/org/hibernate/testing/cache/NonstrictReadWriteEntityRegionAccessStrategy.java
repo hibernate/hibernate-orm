@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,35 +21,41 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.cache.internal.bridge;
+package org.hibernate.testing.cache;
 
-import org.hibernate.cache.spi.Cache;
-import org.hibernate.cache.spi.CacheDataDescription;
-import org.hibernate.cache.spi.TransactionAwareCache;
-import org.hibernate.cache.spi.TransactionalDataRegion;
-import org.hibernate.cfg.Settings;
+import org.jboss.logging.Logger;
+
+import org.hibernate.cache.CacheException;
+import org.hibernate.cache.spi.access.SoftLock;
+import org.hibernate.internal.CoreMessageLogger;
 
 /**
- * {@inheritDoc}
- *
- * @author Steve Ebersole
+ * @author Strong Liu
  */
-public abstract class BaseTransactionalDataRegionAdapter
-		extends BaseRegionAdapter
-		implements TransactionalDataRegion {
-
-	protected final CacheDataDescription metadata;
-
-	protected BaseTransactionalDataRegionAdapter(Cache underlyingCache, Settings settings, CacheDataDescription metadata) {
-		super( underlyingCache, settings );
-		this.metadata = metadata;
+class NonstrictReadWriteEntityRegionAccessStrategy extends BaseEntityRegionAccessStrategy {
+	NonstrictReadWriteEntityRegionAccessStrategy(EntityRegionImpl region) {
+		super( region );
 	}
 
-	public boolean isTransactionAware() {
-		return underlyingCache instanceof TransactionAwareCache;
+	@Override
+	public void unlockItem(Object key, SoftLock lock) throws CacheException {
+		evict( key );
 	}
 
-	public CacheDataDescription getCacheDataDescription() {
-		return metadata;
+	@Override
+	public boolean insert(Object key, Object value, Object version) throws CacheException {
+		return false;
+	}
+
+	@Override
+	public boolean afterInsert(Object key, Object value, Object version) throws CacheException {
+		return false;
+	}
+
+	@Override
+	public boolean update(Object key, Object value, Object currentVersion, Object previousVersion)
+			throws CacheException {
+		evict( key );
+		return false;
 	}
 }

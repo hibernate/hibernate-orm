@@ -34,9 +34,9 @@ import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.cache.internal.NoCachingRegionFactory;
+import org.hibernate.cache.internal.StandardQueryCacheFactory;
 import org.hibernate.cache.spi.QueryCacheFactory;
 import org.hibernate.cache.spi.RegionFactory;
-import org.hibernate.cache.internal.bridge.RegionFactoryCacheProviderBridge;
 import org.hibernate.engine.jdbc.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.transaction.spi.TransactionFactory;
@@ -305,7 +305,7 @@ public class SettingsFactory implements Serializable {
 
 	protected QueryCacheFactory createQueryCacheFactory(Properties properties, ServiceRegistry serviceRegistry) {
 		String queryCacheFactoryClassName = ConfigurationHelper.getString(
-				Environment.QUERY_CACHE_FACTORY, properties, "org.hibernate.cache.internal.StandardQueryCacheFactory"
+				Environment.QUERY_CACHE_FACTORY, properties, StandardQueryCacheFactory.class.getName()
 		);
         LOG.debugf( "Query cache factory: %s", queryCacheFactoryClassName );
 		try {
@@ -318,18 +318,11 @@ public class SettingsFactory implements Serializable {
 		}
 	}
 
-	public static RegionFactory createRegionFactory(Properties properties, boolean cachingEnabled, ServiceRegistry serviceRegistry) {
+	private static RegionFactory createRegionFactory(Properties properties, boolean cachingEnabled, ServiceRegistry serviceRegistry) {
 		String regionFactoryClassName = ConfigurationHelper.getString(
 				Environment.CACHE_REGION_FACTORY, properties, null
 		);
-		if ( regionFactoryClassName == null && cachingEnabled ) {
-			String providerClassName = ConfigurationHelper.getString( Environment.CACHE_PROVIDER, properties, null );
-			if ( providerClassName != null ) {
-				// legacy behavior, apply the bridge...
-				regionFactoryClassName = RegionFactoryCacheProviderBridge.class.getName();
-			}
-		}
-		if ( regionFactoryClassName == null ) {
+		if ( regionFactoryClassName == null || !cachingEnabled) {
 			regionFactoryClassName = DEF_CACHE_REG_FACTORY;
 		}
         LOG.debugf( "Cache region factory : %s", regionFactoryClassName );
@@ -348,6 +341,36 @@ public class SettingsFactory implements Serializable {
 				);
 				return (RegionFactory) serviceRegistry.getService( ClassLoaderService.class )
 						.classForName( regionFactoryClassName )
+						.newInstance();
+			}
+		}
+		catch ( Exception e ) {
+			throw new HibernateException( "could not instantiate RegionFactory [" + regionFactoryClassName + "]", e );
+		}
+	}
+	//todo remove this once we move to new metamodel
+	public static RegionFactory createRegionFactory(Properties properties, boolean cachingEnabled) {
+		// todo : REMOVE!  THIS IS TOTALLY A TEMPORARY HACK FOR org.hibernate.cfg.AnnotationBinder which will be going away
+		String regionFactoryClassName = ConfigurationHelper.getString(
+				Environment.CACHE_REGION_FACTORY, properties, null
+		);
+		if ( regionFactoryClassName == null ) {
+			regionFactoryClassName = DEF_CACHE_REG_FACTORY;
+		}
+        LOG.debugf( "Cache region factory : %s", regionFactoryClassName );
+		try {
+			try {
+				return (RegionFactory) org.hibernate.internal.util.ReflectHelper.classForName( regionFactoryClassName )
+						.getConstructor( Properties.class )
+						.newInstance( properties );
+			}
+			catch ( NoSuchMethodException e ) {
+				// no constructor accepting Properties found, try no arg constructor
+                LOG.debugf(
+						"%s did not provide constructor accepting java.util.Properties; attempting no-arg constructor.",
+						regionFactoryClassName
+				);
+				return (RegionFactory) org.hibernate.internal.util.ReflectHelper.classForName( regionFactoryClassName )
 						.newInstance();
 			}
 		}
@@ -360,51 +383,14 @@ public class SettingsFactory implements Serializable {
 		String className = ConfigurationHelper.getString(
 				Environment.QUERY_TRANSLATOR, properties, "org.hibernate.hql.internal.ast.ASTQueryTranslatorFactory"
 		);
-        LOG.debugf( "Query translator: %s", className );
+		LOG.debugf( "Query translator: %s", className );
 		try {
 			return (QueryTranslatorFactory) serviceRegistry.getService( ClassLoaderService.class )
 					.classForName( className )
 					.newInstance();
 		}
-		catch (Exception e) {
-			throw new HibernateException( "could not instantiate QueryTranslatorFactory: " + className, e );
-		}
-	}
-
-	public static RegionFactory createRegionFactory(Properties properties, boolean cachingEnabled) {
-		// todo : REMOVE!  THIS IS TOTALLY A TEMPORARY HACK FOR org.hibernate.cfg.AnnotationBinder which will be going away
-		String regionFactoryClassName = ConfigurationHelper.getString(
-				Environment.CACHE_REGION_FACTORY, properties, null
-		);
-		if ( regionFactoryClassName == null && cachingEnabled ) {
-			String providerClassName = ConfigurationHelper.getString( Environment.CACHE_PROVIDER, properties, null );
-			if ( providerClassName != null ) {
-				// legacy behavior, apply the bridge...
-				regionFactoryClassName = RegionFactoryCacheProviderBridge.class.getName();
-			}
-		}
-		if ( regionFactoryClassName == null ) {
-			regionFactoryClassName = DEF_CACHE_REG_FACTORY;
-		}
-        LOG.debugf( "Cache region factory : %s", regionFactoryClassName );
-		try {
-			try {
-				return (RegionFactory) org.hibernate.internal.util.ReflectHelper.classForName( regionFactoryClassName )
-						.getConstructor( Properties.class )
-						.newInstance( properties );
-			}
-			catch ( NoSuchMethodException e ) {
-				// no constructor accepting Properties found, try no arg constructor
-                LOG.debugf(
-						"%s did not provide constructor accepting java.util.Properties; attempting no-arg constructor.",
-						regionFactoryClassName
-				);
-				return (RegionFactory) org.hibernate.internal.util.ReflectHelper.classForName( regionFactoryClassName )
-						.newInstance();
-			}
-		}
 		catch ( Exception e ) {
-			throw new HibernateException( "could not instantiate RegionFactory [" + regionFactoryClassName + "]", e );
+			throw new HibernateException( "could not instantiate QueryTranslatorFactory: " + className, e );
 		}
 	}
 }

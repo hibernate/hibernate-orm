@@ -451,12 +451,11 @@ hibernate.cache.region_prefix hibernate.test
 
 ## choose a cache implementation
 
-#hibernate.cache.provider_class org.hibernate.cache.EhCacheProvider
-#hibernate.cache.provider_class org.hibernate.cache.EmptyCacheProvider
-hibernate.cache.provider_class org.hibernate.cache.HashtableCacheProvider
-#hibernate.cache.provider_class org.hibernate.cache.TreeCacheProvider
-#hibernate.cache.provider_class org.hibernate.cache.OSCacheProvider
-#hibernate.cache.provider_class org.hibernate.cache.SwarmCacheProvider
+#hibernate.cache.region.factory_class org.hibernate.cache.infinispan.InfinispanRegionFactory
+#hibernate.cache.region.factory_class org.hibernate.cache.infinispan.JndiInfinispanRegionFactory
+#hibernate.cache.region.factory_class org.hibernate.cache.internal.EhCacheRegionFactory
+#hibernate.cache.region.factory_class org.hibernate.cache.internal.SingletonEhCacheRegionFactory
+#hibernate.cache.region.factory_class org.hibernate.cache.internal.NoCachingRegionFactory
 
 
 ## choose a custom query cache implementation

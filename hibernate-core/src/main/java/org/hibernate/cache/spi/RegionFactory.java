@@ -38,12 +38,7 @@ import org.hibernate.service.Service;
  * <li>MyRegionFactoryImpl()</li>
  * </ul>
  * Use the first when we need to read config properties prior to
- * {@link #start(Settings, Properties)} being called.  For an example, have a look at
- * {@link org.hibernate.cache.internal.bridge.RegionFactoryCacheProviderBridge}
- * where we need the properties in order to determine which legacy
- * {@link CacheProvider} to use so that we can answer the
- * {@link #isMinimalPutsEnabledByDefault()} question for the
- * {@link org.hibernate.cfg.SettingsFactory}.
+ * {@link #start(Settings, Properties)} being called.
  *
  * @author Steve Ebersole
  */

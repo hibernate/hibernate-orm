@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2010-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,30 +21,30 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.cache.internal.bridge;
-
-import java.util.Comparator;
+package org.hibernate.testing.cache;
 
 import org.hibernate.cache.spi.CacheDataDescription;
-import org.hibernate.cache.spi.OptimisticCacheSource;
+import org.hibernate.cache.spi.TransactionalDataRegion;
 
 /**
- * {@inheritDoc}
-*
-* @author Steve Ebersole
-*/
-public class OptimisticCacheSourceAdapter implements OptimisticCacheSource {
-	private final CacheDataDescription dataDescription;
+ * @author Strong Liu
+ */
+class BaseTransactionalDataRegion extends BaseGeneralDataRegion implements TransactionalDataRegion {
+	private final CacheDataDescription metadata;
 
-	public OptimisticCacheSourceAdapter(CacheDataDescription dataDescription) {
-		this.dataDescription = dataDescription;
+	BaseTransactionalDataRegion(String name, CacheDataDescription metadata) {
+		super( name );
+		this.metadata = metadata;
 	}
 
-	public boolean isVersioned() {
-		return dataDescription.isVersioned();
+	@Override
+	public CacheDataDescription getCacheDataDescription() {
+		return metadata;
 	}
 
-	public Comparator getVersionComparator() {
-		return dataDescription.getVersionComparator();
+	@Override
+	public boolean isTransactionAware() {
+		return false;
 	}
+
 }

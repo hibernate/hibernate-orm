@@ -26,8 +26,6 @@ package org.hibernate.test.cache.ehcache;
 import java.util.Map;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.cache.internal.EhCacheProvider;
-import org.hibernate.cache.spi.ReadWriteCache;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.transaction.internal.jdbc.JdbcTransactionFactory;
@@ -184,10 +182,11 @@ public abstract class EhCacheTest extends BaseCoreFunctionalTestCase {
 
 		Object entry = slcs.getEntries().get( item.getId() );
 		Long cachedVersionValue;
-		if ( entry instanceof ReadWriteCache.Lock ) {
-			//FIXME don't know what to test here
-			cachedVersionValue = Long.valueOf( ((ReadWriteCache.Lock) entry).getUnlockTimestamp() );
-		} else if(entry.getClass().getName().equals("net.sf.ehcache.hibernate.strategy.AbstractReadWriteEhcacheAccessStrategy$Lock")) {
+//		if ( entry instanceof ReadWriteCache.Lock ) {
+//			//FIXME don't know what to test here
+//			cachedVersionValue = Long.valueOf( ((ReadWriteCache.Lock) entry).getUnlockTimestamp() );
+//		} else
+		if(entry.getClass().getName().equals("net.sf.ehcache.hibernate.strategy.AbstractReadWriteEhcacheAccessStrategy$Lock")) {
 			//FIXME don't know what to test here
 		} else {
 			cachedVersionValue = ( Long ) getMapFromCacheEntry(entry).get( "_version" );

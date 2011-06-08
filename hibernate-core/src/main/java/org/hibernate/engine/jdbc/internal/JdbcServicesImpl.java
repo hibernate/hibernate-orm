@@ -169,6 +169,11 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 				// user supplied JDBC connections
 				dialect = dialectFactory.buildDialect( configValues, null );
 			}
+			catch ( RuntimeException re ) {
+				LOG.unableToObtainConnectionToQueryMetadata(re.getMessage());
+				// user supplied JDBC connections
+				dialect = dialectFactory.buildDialect( configValues, null );
+			}
 		}
 		else {
 			dialect = dialectFactory.buildDialect( configValues, null );

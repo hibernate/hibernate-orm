@@ -57,7 +57,6 @@ import org.hibernate.metamodel.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.source.annotations.util.ReflectionHelper;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
-import org.hibernate.metamodel.source.annotations.entity.AssociationType;
 
 /**
  * Represents an entity, mapped superclass or component configured via annotations/xml.

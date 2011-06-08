@@ -13,6 +13,7 @@ dependencies {
     compile( libraries.classmate )
     compile( libraries.jpa )
     compile( libraries.javassist )
+    compile( libraries.antlr )
     antlr( libraries.antlr )
     provided( libraries.ant )
     provided( libraries.jacc )

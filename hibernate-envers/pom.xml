@@ -147,13 +147,6 @@
             <artifactId>hibernate-testing</artifactId>
             <scope>test</scope>
         </dependency>
-        <!-- For HibernateSecLvlQueryCache test -->
-        <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-ehcache</artifactId>
-            <version>${project.version}</version>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
 
     <dependencyManagement>

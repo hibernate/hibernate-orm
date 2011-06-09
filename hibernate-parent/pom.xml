@@ -42,6 +42,12 @@
     </organization>
 
     <developers>
+        <developer>
+            <id>hibernate.org</id>
+            <name>Hibernate.org Developers</name>
+            <organization>Hibernate.org</organization>
+            <organizationUrl>http://www.hibernate.org</organizationUrl>
+        </developer>
     </developers>
 
     <licenses>

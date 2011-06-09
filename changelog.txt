@@ -6,6 +6,88 @@ refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
 
+Changes in version 4.0.0.Beta1 (2011.06.08)
+------------------------------------------------------------------------------------------------------------------------
+http://opensource.atlassian.com/projects/hibernate/browse/HHH/fixforversion/11222
+
+** Sub-task
+    * [HHH-6113] - Write orm.xml parser
+    * [HHH-6132] - Process and bind global configuration annotations
+    * [HHH-6133] - Enhance annotation based Jandex index with configuration extracted from orm.xml
+    * [HHH-6171] - Implement SimpleAttributeBinding relational and domain state using annotations
+    * [HHH-6174] - Create table binding
+    * [HHH-6207] - Bind o.h.a.Cache and j.p.Cachable
+    * [HHH-6246] - ConfiguredClass should honor default access from persistence-metadata-unit
+    * [HHH-6261] - Bind @GeneratedValue
+    * [HHH-6263] - Bind o.h.a.Proxy
+    * [HHH-6264] - Bind typedef information
+    * [HHH-6265] - Bind fetch profiles
+    * [HHH-6266] - Bind filter definitions
+    * [HHH-6273] - Bind identifier-generator definitions
+    * [HHH-6279] - Bind database object definitions
+    * [HHH-6281] - Basic HbmBinder cleanup
+
+** Bug
+    * [HHH-2176] - DB2 setMaxResults problem in Hibernate 3.1.3
+    * [HHH-2225] - NPE when eager fetching joined component with native SQL query
+    * [HHH-4760] - NotAuditedException occurs when auditReader.getRevisions() is called for javassist proxies
+    * [HHH-4943] - ilike support is incomplete
+    * [HHH-5572] - clean up Sybase job failures
+    * [HHH-5808] - ObjectNotFoundException for an audited optional association. Envers is creating a proxy even when the association is null.
+    * [HHH-5967] - Envers Fetching Indexed Collection - Duplicate Row Exception
+    * [HHH-6119] - NullPointerException in AbstractPathImpl without source path
+    * [HHH-6176] - Envers ignores custom comparators for SortedSets
+    * [HHH-6206] - Explicitly add antlr jar to transitive dependencies
+    * [HHH-6211] - Fix bad pull request merge
+    * [HHH-6217] - Create EntityBindingState for initializing entity-specific binding data
+    * [HHH-6219] - Memory leak with Infinispan cache
+    * [HHH-6242] - no Types.BINARY type mapping in PostgresqlDialect
+    * [HHH-6243] - JBPAPP-3312 org.hibernate.test.legacy.CustomSQLTest fails
+    * [HHH-6250] - Some classes still using SLF4J
+    * [HHH-6272] - More logging fix ups
+    * [HHH-6274] - Logging format error causes many test failures
+    * [HHH-6276] - org.hibernate.test.cache.ehcache.EhCacheRegionFactoryImpl fails due to no slf4j in test configuration
+
+** Improvement
+    * [HHH-4489] - need method "refresh(String entityName, Object obj)"
+    * [HHH-5025] - Support caching audit queries using ehcache's DiskStore.
+    * [HHH-5598] - sybase integration improvement
+    * [HHH-5649] - improve eclipse support with migration to gradle
+    * [HHH-6062] - Infinispan as JTA synchronization participant
+    * [HHH-6237] - Remove Service proxy code
+    * [HHH-6247] - Log (warn) inability for EM to join transaction only when user explicitly asked for join
+    * [HHH-6248] - Ominous-sounding WARN message from SessionFactoryObjectFactory
+    * [HHH-6258] - Performance improvement work
+    * [HHH-6291] - Basic MetadataImpl redesign
+    * [HHH-6292] - avoid Boolean instance creation
+    * [HHH-6294] - use enum instead of constant
+
+** New Feature
+    * [HHH-5580] - tracking entity names in a revision
+    * [HHH-6078] - Conditional auditing support
+    * [HHH-6293] - avoid create unnesserary Integer object
+
+** Patch
+    * [HHH-5434] - org.hibernate.test.filter.DynamicFilterTest testSqlSyntaxOfFiltersWithUnions fails with Ingres dialect
+    * [HHH-6228] - Build is platform dependent
+
+** Task
+    * [HHH-6110] - Initial work to integrate new metamodel into persisters
+    * [HHH-6156] - Deprecate Configuration
+    * [HHH-6186] - Upgrade Hibernate 4 to Infinispan 5.0.0.CRx
+    * [HHH-6213] - Move domain and relational state interfaces into org.hibernate.metamodel.state
+    * [HHH-6214] - Make RegionFactory a service
+    * [HHH-6229] - Clean up MappingDefaults
+    * [HHH-6230] - Rework attribute binding using state objects
+    * [HHH-6232] - Add discriminator value to DiscriminatorBindingState
+    * [HHH-6239] - Add service for access to configuration options/settings map
+    * [HHH-6240] - Add access to configuration options targetting metamodel building
+    * [HHH-6251] - Create CollectionElement subclasses for element, composite-element, one-to-many, many-to-many, many-to-any
+    * [HHH-6267] - Plumb MetadataImplementor into service initiators registered in SessionFactoryServiceRegistry
+    * [HHH-6282] - clean out-of-date config files in etc dir
+    * [HHH-6290] - Add EntityBinder.isRoot() to indicate if the EntityBinding is for a "root" entity
+
+
 Changes in version 4.0.0.Alpha3 (2011.05.04)
 ------------------------------------------------------------------------------------------------------------------------
 http://opensource.atlassian.com/projects/hibernate/browse/HHH/fixforversion/11163

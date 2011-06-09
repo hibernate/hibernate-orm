@@ -5,6 +5,35 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 3.6.5 (2011.06.08)
+-------------------------------------------
+http://opensource.atlassian.com/projects/hibernate/browse/HHH/fixforversion/11226
+
+** Bug
+    * [HHH-2225] - NPE when eager fetching joined component with native SQL query
+    * [HHH-4760] - NotAuditedException occurs when auditReader.getRevisions() is called for javassist proxies
+    * [HHH-5572] - clean up Sybase job failures
+    * [HHH-5808] - ObjectNotFoundException for an audited optional association. Envers is creating a proxy even when the association is null.
+    * [HHH-5967] - Envers Fetching Indexed Collection - Duplicate Row Exception
+    * [HHH-6119] - NullPointerException in AbstractPathImpl without source path
+    * [HHH-6176] - Envers ignores custom comparators for SortedSets
+    * [HHH-6219] - Memory leak with Infinispan cache
+    * [HHH-6223] - connection leak in entitymanager and annotation's testsuite
+    * [HHH-6231] - Upgrade ehcache version
+    * [HHH-6242] - no Types.BINARY type mapping in PostgresqlDialect
+    * [HHH-6243] - JBPAPP-3312 org.hibernate.test.legacy.CustomSQLTest fails
+
+** Improvement
+    * [HHH-5025] - Support caching audit queries using ehcache's DiskStore.
+    * [HHH-5598] - sybase integration improvement
+    * [HHH-5790] - method BasicBinder#bind() and BasicExtractor#extract missing guards for trace logging
+    * [HHH-6248] - Ominous-sounding WARN message from SessionFactoryObjectFactory
+
+** Task
+    * [HHH-6203] - Make necessary updates to pass nexus artifact validation
+    * [HHH-6224] - update mysql jdbc driver version for testing
+
+
 Changes in version 3.6.4 (2011.05.04)
 -------------------------------------------
 http://opensource.atlassian.com/projects/hibernate/browse/HHH/fixforversion/11220

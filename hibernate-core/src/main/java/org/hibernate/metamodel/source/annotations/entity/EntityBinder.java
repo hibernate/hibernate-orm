@@ -32,22 +32,16 @@ import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.DotName;
 
-import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.annotations.OptimisticLockType;
-import org.hibernate.annotations.PolymorphismType;
-import org.hibernate.cache.spi.RegionFactory;
-import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.metamodel.binding.Caching;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.EntityDiscriminator;
 import org.hibernate.metamodel.binding.IdGenerator;
 import org.hibernate.metamodel.binding.ManyToOneAttributeBinding;
 import org.hibernate.metamodel.binding.SimpleAttributeBinding;
 import org.hibernate.metamodel.binding.state.DiscriminatorBindingState;
+import org.hibernate.metamodel.binding.state.EntityBindingState;
 import org.hibernate.metamodel.binding.state.ManyToOneAttributeBindingState;
 import org.hibernate.metamodel.binding.state.SimpleAttributeBindingState;
 import org.hibernate.metamodel.domain.Entity;
@@ -58,15 +52,14 @@ import org.hibernate.metamodel.source.annotations.HibernateDotNames;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.entity.state.binding.AttributeBindingStateImpl;
 import org.hibernate.metamodel.source.annotations.entity.state.binding.DiscriminatorBindingStateImpl;
+import org.hibernate.metamodel.source.annotations.entity.state.binding.EntityBindingStateImpl;
 import org.hibernate.metamodel.source.annotations.entity.state.binding.ManyToOneBindingStateImpl;
 import org.hibernate.metamodel.source.annotations.entity.state.relational.ColumnRelationalStateImpl;
 import org.hibernate.metamodel.source.annotations.entity.state.relational.ManyToOneRelationalStateImpl;
 import org.hibernate.metamodel.source.annotations.entity.state.relational.TupleRelationalStateImpl;
 import org.hibernate.metamodel.source.annotations.global.IdGeneratorBinder;
 import org.hibernate.metamodel.source.annotations.util.JandexHelper;
-import org.hibernate.metamodel.source.internal.MetadataImpl;
 import org.hibernate.metamodel.source.spi.MetadataImplementor;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
 
 /**
  * Creates the domain and relational metamodel for a configured class and <i>binds</i> them together.
@@ -86,19 +79,12 @@ public class EntityBinder {
 
 	public void bind() {
 		EntityBinding entityBinding = new EntityBinding();
-
-		bindJpaEntityAnnotation( entityBinding );
-		bindHibernateEntityAnnotation( entityBinding ); // optional hibernate specific @org.hibernate.annotations.Entity
+		initializeEntityBinding( entityBinding );
 
 		schemaName = createSchemaName();
 		bindTable( entityBinding );
 
-		bindInheritance( entityBinding );
-
-		bindWhereFilter( entityBinding );
-		bindJpaCaching( entityBinding );
-		bindHibernateCaching( entityBinding );
-		bindProxy( entityBinding );
+		bindDiscriminator( entityBinding );
 
 		// take care of the id, attributes and relations
 		if ( configuredClass.isRoot() ) {
@@ -112,8 +98,7 @@ public class EntityBinder {
 		meta.addEntity( entityBinding );
 	}
 
-	private void bindInheritance(EntityBinding entityBinding) {
-		entityBinding.setInheritanceType( configuredClass.getInheritanceType() );
+	private void bindDiscriminator(EntityBinding entityBinding) {
 		switch ( configuredClass.getInheritanceType() ) {
 			case SINGLE_TABLE: {
 				bindDiscriminatorColumn( entityBinding );
@@ -144,124 +129,6 @@ public class EntityBinder {
 		if ( !( discriminatorAttribute.getColumnValues() instanceof DiscriminatorColumnValues ) ) {
 			throw new AssertionFailure( "Expected discriminator column values" );
 		}
-	}
-
-	private void bindWhereFilter(EntityBinding entityBinding) {
-		AnnotationInstance whereAnnotation = JandexHelper.getSingleAnnotation(
-				configuredClass.getClassInfo(), HibernateDotNames.WHERE
-		);
-		if ( whereAnnotation != null ) {
-			// no null check needed, it is a required attribute
-			String clause = whereAnnotation.value( "clause" ).asString();
-			entityBinding.setWhereFilter( clause );
-		}
-	}
-
-	private void bindHibernateCaching(EntityBinding entityBinding) {
-		AnnotationInstance cacheAnnotation = JandexHelper.getSingleAnnotation(
-				configuredClass.getClassInfo(), HibernateDotNames.CACHE
-		);
-		if ( cacheAnnotation == null ) {
-			return;
-		}
-
-		String region;
-		if ( cacheAnnotation.value( "region" ) != null ) {
-			region = cacheAnnotation.value( "region" ).asString();
-		}
-		else {
-			region = entityBinding.getEntity().getName();
-		}
-
-		boolean cacheLazyProperties = true;
-		if ( cacheAnnotation.value( "include" ) != null ) {
-			String tmp = cacheAnnotation.value( "include" ).asString();
-			if ( "all".equalsIgnoreCase( tmp ) ) {
-				cacheLazyProperties = true;
-			}
-			else if ( "non-lazy".equalsIgnoreCase( tmp ) ) {
-				cacheLazyProperties = false;
-			}
-			else {
-				throw new AnnotationException( "Unknown lazy property annotations: " + tmp );
-			}
-		}
-
-		CacheConcurrencyStrategy strategy = CacheConcurrencyStrategy.valueOf(
-				cacheAnnotation.value( "usage" ).asEnum()
-		);
-		Caching caching = new Caching( region, strategy.toAccessType(), cacheLazyProperties );
-		entityBinding.setCaching( caching );
-	}
-
-	// This does not take care of any inheritance of @Cacheable within a class hierarchy as specified in JPA2.
-	// This is currently not supported (HF)
-	private void bindJpaCaching(EntityBinding entityBinding) {
-		AnnotationInstance cacheAnnotation = JandexHelper.getSingleAnnotation(
-				configuredClass.getClassInfo(), JPADotNames.CACHEABLE
-		);
-
-		boolean cacheable = true; // true is the default
-		if ( cacheAnnotation != null && cacheAnnotation.value() != null ) {
-			cacheable = cacheAnnotation.value().asBoolean();
-		}
-
-		Caching caching = null;
-		switch ( meta.getOptions().getSharedCacheMode() ) {
-			case ALL: {
-				caching = createCachingForCacheableAnnotation( entityBinding );
-				break;
-			}
-			case ENABLE_SELECTIVE: {
-				if ( cacheable ) {
-					caching = createCachingForCacheableAnnotation( entityBinding );
-				}
-				break;
-			}
-			case DISABLE_SELECTIVE: {
-				if ( cacheAnnotation == null || cacheable ) {
-					caching = createCachingForCacheableAnnotation( entityBinding );
-				}
-				break;
-			}
-			default: {
-				// treat both NONE and UNSPECIFIED the same
-				break;
-			}
-		}
-		if ( caching != null ) {
-			entityBinding.setCaching( caching );
-		}
-	}
-
-	private void bindProxy(EntityBinding entityBinding) {
-		AnnotationInstance proxyAnnotation = JandexHelper.getSingleAnnotation(
-				configuredClass.getClassInfo(), HibernateDotNames.PROXY
-		);
-		boolean lazy = true;
-		String proxyInterfaceClass = null;
-
-		if ( proxyAnnotation != null ) {
-			AnnotationValue lazyValue = proxyAnnotation.value( "lazy" );
-			if ( lazyValue != null ) {
-				lazy = lazyValue.asBoolean();
-			}
-
-			AnnotationValue proxyClassValue = proxyAnnotation.value( "proxyClass" );
-			if ( proxyClassValue != null ) {
-				proxyInterfaceClass = proxyClassValue.asString();
-			}
-		}
-
-		entityBinding.setLazy( lazy );
-		entityBinding.setProxyInterfaceName( proxyInterfaceClass );
-	}
-
-	private Caching createCachingForCacheableAnnotation(EntityBinding entityBinding) {
-		String region = entityBinding.getEntity().getName();
-		RegionFactory regionFactory = meta.getServiceRegistry().getService( RegionFactory.class );
-		AccessType defaultAccessType = regionFactory.getDefaultAccessType();
-		return new Caching( region, defaultAccessType, true );
 	}
 
 	private Schema.Name createSchemaName() {
@@ -300,7 +167,6 @@ public class EntityBinder {
 	}
 
 	private void bindId(EntityBinding entityBinding) {
-		entityBinding.setRoot( true );
 		switch ( configuredClass.getIdType() ) {
 			case SIMPLE: {
 				bindSingleIdAnnotation( entityBinding );
@@ -319,8 +185,15 @@ public class EntityBinder {
 		}
 	}
 
+	private void initializeEntityBinding(EntityBinding entityBinding) {
+		entityBinding.setEntity( new Entity( getEntityName( configuredClass ), getSuperType() ) );
+		EntityBindingState entityBindingState = new EntityBindingStateImpl(
+				meta, configuredClass, entityBinding.getEntity().getName()
+		);
+		entityBinding.initialize( entityBindingState );
+	}
 
-	private void bindJpaEntityAnnotation(EntityBinding entityBinding) {
+	private static String getEntityName(ConfiguredClass configuredClass) {
 		AnnotationInstance jpaEntityAnnotation = JandexHelper.getSingleAnnotation(
 				configuredClass.getClassInfo(), JPADotNames.ENTITY
 		);
@@ -331,7 +204,7 @@ public class EntityBinder {
 		else {
 			name = jpaEntityAnnotation.value( "name" ).asString();
 		}
-		entityBinding.setEntity( new Entity( name, getSuperType() ) );
+		return name;
 	}
 
 	private void bindSingleIdAnnotation(EntityBinding entityBinding) {
@@ -487,71 +360,6 @@ public class EntityBinder {
 
 			attributeBinding.initialize( relationalState );
 		}
-	}
-
-	private void bindHibernateEntityAnnotation(EntityBinding entityBinding) {
-		// initialize w/ the defaults
-		boolean mutable = true;
-		boolean dynamicInsert = false;
-		boolean dynamicUpdate = false;
-		boolean selectBeforeUpdate = false;
-		PolymorphismType polymorphism = PolymorphismType.IMPLICIT;
-		OptimisticLockType optimisticLock = OptimisticLockType.VERSION;
-
-		AnnotationInstance hibernateEntityAnnotation = JandexHelper.getSingleAnnotation(
-				configuredClass.getClassInfo(), HibernateDotNames.ENTITY
-		);
-
-		if ( hibernateEntityAnnotation != null ) {
-			if ( hibernateEntityAnnotation.value( "mutable" ) != null ) {
-				mutable = hibernateEntityAnnotation.value( "mutable" ).asBoolean();
-			}
-
-			if ( hibernateEntityAnnotation.value( "dynamicInsert" ) != null ) {
-				dynamicInsert = hibernateEntityAnnotation.value( "dynamicInsert" ).asBoolean();
-			}
-
-			if ( hibernateEntityAnnotation.value( "dynamicUpdate" ) != null ) {
-				dynamicUpdate = hibernateEntityAnnotation.value( "dynamicUpdate" ).asBoolean();
-			}
-
-			if ( hibernateEntityAnnotation.value( "selectBeforeUpdate" ) != null ) {
-				selectBeforeUpdate = hibernateEntityAnnotation.value( "selectBeforeUpdate" ).asBoolean();
-			}
-
-			if ( hibernateEntityAnnotation.value( "polymorphism" ) != null ) {
-				polymorphism = PolymorphismType.valueOf( hibernateEntityAnnotation.value( "polymorphism" ).asEnum() );
-			}
-
-			if ( hibernateEntityAnnotation.value( "optimisticLock" ) != null ) {
-				optimisticLock = OptimisticLockType.valueOf(
-						hibernateEntityAnnotation.value( "optimisticLock" ).asEnum()
-				);
-			}
-
-			if ( hibernateEntityAnnotation.value( "persister" ) != null ) {
-				String persister = ( hibernateEntityAnnotation.value( "persister" ).toString() );
-				ClassLoaderService classLoaderService = meta.getServiceRegistry()
-						.getService( ClassLoaderService.class );
-				Class<?> persisterClass = classLoaderService.classForName( persister );
-				entityBinding.setEntityPersisterClass( persisterClass );
-			}
-		}
-
-		// also check for the immutable annotation
-		AnnotationInstance immutableAnnotation = JandexHelper.getSingleAnnotation(
-				configuredClass.getClassInfo(), HibernateDotNames.IMMUTABLE
-		);
-		if ( immutableAnnotation != null ) {
-			mutable = false;
-		}
-
-		entityBinding.setMutable( mutable );
-		entityBinding.setDynamicInsert( dynamicInsert );
-		entityBinding.setDynamicUpdate( dynamicUpdate );
-		entityBinding.setSelectBeforeUpdate( selectBeforeUpdate );
-		entityBinding.setExplicitPolymorphism( PolymorphismType.EXPLICIT.equals( polymorphism ) );
-		entityBinding.setOptimisticLockMode( optimisticLock.ordinal() );
 	}
 
 	private Hierarchical getSuperType() {

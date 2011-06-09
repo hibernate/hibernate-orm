@@ -235,6 +235,7 @@ subprojects { subProject ->
         // elements used to customize the generated POM used during upload
         def pomConfig = {
             name 'A Hibernate Core Module'
+            description 'A module of the Hibernate Core project'
             url 'http://hibernate.org'
             organization {
                 name 'Hibernate.org'

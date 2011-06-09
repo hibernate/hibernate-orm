@@ -1,7 +1,6 @@
 package org.hibernate.envers.test.integration.cache;
 
 import org.hibernate.MappingException;
-import org.hibernate.cache.internal.EhCacheRegionFactory;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.envers.RevisionType;
@@ -10,6 +9,8 @@ import org.hibernate.envers.test.AbstractSessionTest;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.cache.CachingRegionFactory;
+
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -26,8 +27,9 @@ public class HibernateSecLvlQueryCache extends AbstractSessionTest {
         config.addAnnotatedClass(StrTestEntity.class);
         config.setProperty(Environment.USE_SECOND_LEVEL_CACHE, "true");
         config.setProperty(Environment.USE_QUERY_CACHE, "true");
-        config.setProperty(Environment.CACHE_REGION_FACTORY, EhCacheRegionFactory.class.getName());
-        config.setProperty(Environment.CACHE_PROVIDER_CONFIG, "ehcache-test.xml");
+		//i don't see there is any specific reason that we need ehcache, so change it to the testing cache
+        config.setProperty(Environment.CACHE_REGION_FACTORY, CachingRegionFactory.class.getName());
+//        config.setProperty(Environment.CACHE_PROVIDER_CONFIG, "ehcache-test.xml");
     }
 
     @Test

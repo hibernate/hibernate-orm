@@ -84,7 +84,7 @@ class BaseRegion implements Region {
 
 	@Override
 	public int getTimeout() {
-		return Timestamper.ONE_MS * 60000;
+		return Timestamper.ONE_MS * 600000;
 	}
 
 }

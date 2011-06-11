@@ -25,12 +25,16 @@ public class SQLServer2005DialectTestCase extends TestCase {
 	
 	
 	public void testReplaceDistinctWithGroupBy() {
-		StringBuilder input = new StringBuilder( "select distinct f1, f2 as ff, f3 from table where f1 = 5" );
-		SQLServer2005Dialect.replaceDistinctWithGroupBy( input );
-		
-		assertEquals( "select f1, f2 as ff, f3 from table where f1 = 5 group by f1, f2, f3 ", input.toString() );
+		assertReplaceDistinctWithGroupBy( "select distinct f1, f2 as ff, f3 from table where f1 = 5", "select f1, f2 as ff, f3 from table where f1 = 5 group by f1, f2, f3 " );
+		//assertReplaceDistinctWithGroupBy( "select distinct sumefunc(f1) as sf1, f2 as ff from table where sf1 = 5", "select sumefunc(f1) as sf1, f2 as ff from table where sf1 = 5 group by f2" );
 	}
 	
+	private static final void assertReplaceDistinctWithGroupBy(String input, String expectedOutput) {
+		StringBuilder partialQuery = new StringBuilder( input );
+		SQLServer2005Dialect.replaceDistinctWithGroupBy( partialQuery );
+		
+		assertEquals( "select f1, f2 as ff, f3 from table where f1 = 5 group by f1, f2, f3 ", partialQuery.toString() );
+	}
 	
 	public void testGetLimitString() {
 		String input = "select distinct f1 as f53245 from table849752 order by f234, f67 desc"; 

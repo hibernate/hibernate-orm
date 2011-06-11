@@ -36,10 +36,16 @@ public class SQLServer2005DialectTestCase extends TestCase {
 		assertEquals( "select f1, f2 as ff, f3 from table where f1 = 5 group by f1, f2, f3 ", partialQuery.toString() );
 	}
 	
-	public void testGetLimitString() {
-		String input = "select distinct f1 as f53245 from table849752 order by f234, f67 desc"; 
-		
+	public void testGetLimitString() { 
 		Dialect sqlDialect = new SQLServer2005Dialect();
-		assertEquals( "with query as (select row_number() over (order by f234, f67 desc) as __hibernate_row_nr__, f1 as f53245 from table849752  group by f1) select * from query where __hibernate_row_nr__ between ? and ?", sqlDialect.getLimitString(input, 10, 15).toLowerCase() );
+
+		assertGetLimitString( sqlDialect, 
+				"select distinct f1 as f53245 from table849752 order by f234, f67 desc",
+				"with query as (select row_number() over (order by f234, f67 desc) as __hibernate_row_nr__, f1 as f53245 from table849752  group by f1) select * from query where __hibernate_row_nr__ between ? and ?" );
+	}
+	
+	private static final void assertGetLimitString(Dialect dialect, String input, String expected) {
+		String limitString = dialect.getLimitString( input, 10, 15 );
+		assertEquals( expected, limitString );
 	}
 }

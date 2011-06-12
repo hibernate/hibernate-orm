@@ -48,6 +48,8 @@ import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.query.AuditQueryCreator;
 import org.hibernate.envers.query.criteria.RevisionTypeAuditExpression;
 import org.hibernate.envers.synchronization.AuditProcess;
+import org.hibernate.envers.tools.Pair;
+import org.hibernate.envers.tools.Tools;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.proxy.HibernateProxy;
 
@@ -248,10 +250,10 @@ public class AuditReaderImpl implements AuditReaderImplementor {
     @SuppressWarnings({"unchecked"})
     public List<Object> findEntitiesChangedInRevision(Number revision) throws IllegalStateException,
                                                                               IllegalArgumentException, AuditException {
-        Set<Class> clazz = findEntityTypesChangedInRevision(revision);
+        Set<Pair<String, Class>> entityTypes = findEntityTypesChangedInRevision(revision);
         List<Object> result = new ArrayList<Object>();
-        for (Class c : clazz) {
-            result.addAll(createQuery().forEntitiesModifiedAtRevision(c, revision).getResultList());
+        for (Pair<String, Class> type : entityTypes) {
+            result.addAll(createQuery().forEntitiesModifiedAtRevision(type.getSecond(), type.getFirst(), revision).getResultList());
         }
         return result;
     }
@@ -259,10 +261,10 @@ public class AuditReaderImpl implements AuditReaderImplementor {
     @SuppressWarnings({"unchecked"})
     public List<Object> findEntitiesChangedInRevision(Number revision, RevisionType revisionType)
             throws IllegalStateException, IllegalArgumentException, AuditException {
-        Set<Class> clazz = findEntityTypesChangedInRevision(revision);
+        Set<Pair<String, Class>> entityTypes = findEntityTypesChangedInRevision(revision);
         List<Object> result = new ArrayList<Object>();
-        for (Class c : clazz) {
-            result.addAll(createQuery().forEntitiesModifiedAtRevision(c, revision)
+        for (Pair<String, Class> type : entityTypes) {
+            result.addAll(createQuery().forEntitiesModifiedAtRevision(type.getSecond(), type.getFirst(), revision)
                                        .add(new RevisionTypeAuditExpression(revisionType, "=")).getResultList());
         }
         return result;
@@ -271,12 +273,12 @@ public class AuditReaderImpl implements AuditReaderImplementor {
     @SuppressWarnings({"unchecked"})
     public Map<RevisionType, List<Object>> findEntitiesChangedInRevisionGroupByRevisionType(Number revision)
             throws IllegalStateException, IllegalArgumentException, AuditException {
-        Set<Class> clazz = findEntityTypesChangedInRevision(revision);
+        Set<Pair<String, Class>> entityTypes = findEntityTypesChangedInRevision(revision);
         Map<RevisionType, List<Object>> result = new HashMap<RevisionType, List<Object>>();
         for (RevisionType revisionType : RevisionType.values()) {
-            result.put(revisionType, new ArrayList());
-            for (Class c : clazz) {
-                List<Object> list = createQuery().forEntitiesModifiedAtRevision(c, revision)
+            result.put(revisionType, new ArrayList<Object>());
+            for (Pair<String, Class> type : entityTypes) {
+                List<Object> list = createQuery().forEntitiesModifiedAtRevision(type.getSecond(), type.getFirst(), revision)
                                                  .add(new RevisionTypeAuditExpression(revisionType, "=")).getResultList();
                 result.get(revisionType).addAll(list);
             }
@@ -285,14 +287,14 @@ public class AuditReaderImpl implements AuditReaderImplementor {
     }
 
     @SuppressWarnings({"unchecked"})
-    public Set<Class> findEntityTypesChangedInRevision(Number revision) throws IllegalStateException,
-                                                                               IllegalArgumentException, AuditException {
+    public Set<Pair<String, Class>> findEntityTypesChangedInRevision(Number revision) throws IllegalStateException,
+                                                                                             IllegalArgumentException, AuditException {
         checkNotNull(revision, "Entity revision");
         checkPositive(revision, "Entity revision");
         checkSession();
         if (!verCfg.getGlobalCfg().isTrackEntitiesChangedInRevisionEnabled()) {
             throw new AuditException("This query is designed for Envers default mechanism of tracking entities modified in a given revision."
-                                     + " Extend DefaultTrackingModifiedTypesRevisionEntity, utilize @ModifiedEntityTypes annotation or set "
+                                     + " Extend DefaultTrackingModifiedEntitiesRevisionEntity, utilize @ModifiedEntityNames annotation or set "
                                      + "'org.hibernate.envers.track_entities_changed_in_revision' parameter to true.");
         }
         Set<Number> revisions = new HashSet<Number>(1);
@@ -300,8 +302,14 @@ public class AuditReaderImpl implements AuditReaderImplementor {
         Criteria query = verCfg.getRevisionInfoQueryCreator().getRevisionsQuery(session, revisions);
         Object revisionInfo = query.uniqueResult();
         if (revisionInfo != null) {
-            // If revision exists
-            return verCfg.getModifiedEntityTypesReader().getModifiedEntityTypes(revisionInfo);
+            // If revision exists.
+            Set<String> entityNames = verCfg.getModifiedEntityNamesReader().getModifiedEntityNames(revisionInfo);
+            // Generate result that contains entity names and corresponding Java classes.
+            Set<Pair<String, Class>> result = new HashSet<Pair<String, Class>>();
+            for (String entityName : entityNames) {
+                result.add(Pair.make(entityName, Tools.getEntityClass(sessionImplementor, session, entityName)));
+            }
+            return result;
         }
         return Collections.EMPTY_SET;
     }

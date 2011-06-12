@@ -28,6 +28,7 @@ import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.exception.NotAuditedException;
 import org.hibernate.envers.exception.RevisionDoesNotExistException;
 import org.hibernate.envers.query.AuditQueryCreator;
+import org.hibernate.envers.tools.Pair;
 
 import java.util.Date;
 import java.util.List;
@@ -222,9 +223,9 @@ public interface AuditReader {
      *                        <li><code>org.hibernate.envers.track_entities_changed_in_revision</code>
      *                            parameter is set to <code>true</code>.</li>
      *                        <li>Custom revision entity (annotated with {@link RevisionEntity})
-     *                            extends {@link DefaultTrackingModifiedTypesRevisionEntity} base class.</li>
+     *                            extends {@link DefaultTrackingModifiedEntitiesRevisionEntity} base class.</li>
      *                        <li>Custom revision entity (annotated with {@link RevisionEntity}) encapsulates a field
-     *                            marked with {@link ModifiedEntityTypes} interface.</li>
+     *                            marked with {@link ModifiedEntityNames} interface.</li>
      *                        </ul>
      */
     List<Object> findEntitiesChangedInRevision(Number revision)
@@ -237,15 +238,15 @@ public interface AuditReader {
      * @param revisionType Type of modification.
      * @return Snapshots of all audited entities changed in a given revision and filtered by modification type.
      * @throws IllegalStateException If the associated entity manager is closed.
-     * @throws IllegalArgumentException If a revision number is <code>null</code>, less or equal to 0.
+     * @throws IllegalArgumentException If a revision number is {@code null}, less or equal to 0.
      * @throws AuditException If none of the following conditions is satisfied:
      *                        <ul>
-     *                        <li><code>org.hibernate.envers.track_entities_changed_in_revision</code>
-     *                            parameter is set to <code>true</code>.</li>
+     *                        <li>{@code org.hibernate.envers.track_entities_changed_in_revision}
+     *                            parameter is set to {@code true}.</li>
      *                        <li>Custom revision entity (annotated with {@link RevisionEntity})
-     *                            extends {@link DefaultTrackingModifiedTypesRevisionEntity} base class.</li>
+     *                            extends {@link DefaultTrackingModifiedEntitiesRevisionEntity} base class.</li>
      *                        <li>Custom revision entity (annotated with {@link RevisionEntity}) encapsulates a field
-     *                            marked with {@link ModifiedEntityTypes} interface.</li>
+     *                            marked with {@link ModifiedEntityNames} interface.</li>
      *                        </ul>
      */
     List<Object> findEntitiesChangedInRevision(Number revision, RevisionType revisionType)
@@ -261,36 +262,36 @@ public interface AuditReader {
      * @param revision Revision number.
      * @return Map containing lists of entity snapshots grouped by modification operation (e.g. addition, update, removal).
      * @throws IllegalStateException If the associated entity manager is closed.
-     * @throws IllegalArgumentException If a revision number is <code>null</code>, less or equal to 0.
+     * @throws IllegalArgumentException If a revision number is {@code null}, less or equal to 0.
      * @throws AuditException If none of the following conditions is satisfied:
      *                        <ul>
-     *                        <li><code>org.hibernate.envers.track_entities_changed_in_revision</code>
-     *                            parameter is set to <code>true</code>.</li>
+     *                        <li>{@code org.hibernate.envers.track_entities_changed_in_revision}
+     *                            parameter is set to {@code true}.</li>
      *                        <li>Custom revision entity (annotated with {@link RevisionEntity})
-     *                            extends {@link DefaultTrackingModifiedTypesRevisionEntity} base class.</li>
+     *                            extends {@link DefaultTrackingModifiedEntitiesRevisionEntity} base class.</li>
      *                        <li>Custom revision entity (annotated with {@link RevisionEntity}) encapsulates a field
-     *                            marked with {@link ModifiedEntityTypes} interface.</li>
+     *                            marked with {@link ModifiedEntityNames} interface.</li>
      *                        </ul>
      */
     Map<RevisionType, List<Object>> findEntitiesChangedInRevisionGroupByRevisionType(Number revision)
             throws IllegalStateException, IllegalArgumentException, AuditException;
 
     /**
-     * Returns set of entity classes modified in a given revision.
+     * Returns set of entity names and corresponding Java classes modified in a given revision.
      * @param revision Revision number.
-     * @return Set of classes modified in a given revision.
+     * @return Set of entity names and corresponding Java classes modified in a given revision.
      * @throws IllegalStateException If the associated entity manager is closed.
-     * @throws IllegalArgumentException If a revision number is <code>null</code>, less or equal to 0.
+     * @throws IllegalArgumentException If a revision number is {@code null}, less or equal to 0.
      * @throws AuditException If none of the following conditions is satisfied:
      *                        <ul>
-     *                        <li><code>org.hibernate.envers.track_entities_changed_in_revision</code>
-     *                            parameter is set to <code>true</code>.</li>
+     *                        <li>{@code org.hibernate.envers.track_entities_changed_in_revision}
+     *                            parameter is set to {@code true}.</li>
      *                        <li>Custom revision entity (annotated with {@link RevisionEntity})
-     *                            extends {@link DefaultTrackingModifiedTypesRevisionEntity} base class.</li>
+     *                            extends {@link DefaultTrackingModifiedEntitiesRevisionEntity} base class.</li>
      *                        <li>Custom revision entity (annotated with {@link RevisionEntity}) encapsulates a field
-     *                            marked with {@link ModifiedEntityTypes} interface.</li>
+     *                            marked with {@link ModifiedEntityNames} interface.</li>
      *                        </ul>
      */
-    Set<Class> findEntityTypesChangedInRevision(Number revision)
+    Set<Pair<String, Class>> findEntityTypesChangedInRevision(Number revision)
             throws IllegalStateException, IllegalArgumentException, AuditException;
 }

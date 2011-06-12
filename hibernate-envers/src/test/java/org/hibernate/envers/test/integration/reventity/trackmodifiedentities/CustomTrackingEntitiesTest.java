@@ -1,7 +1,6 @@
 package org.hibernate.envers.test.integration.reventity.trackmodifiedentities;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.EntityTrackingRevisionListener;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.test.AbstractEntityTest;
@@ -19,7 +18,7 @@ import javax.persistence.EntityManager;
 /**
  * Tests proper behavior of entity listener that implements {@link EntityTrackingRevisionListener}
  * interface. {@link CustomTrackingRevisionListener} shall be notified whenever an entity instance has been
- * added, modified or removed, so that changed entity type can be persisted.
+ * added, modified or removed, so that changed entity name can be persisted.
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public class CustomTrackingEntitiesTest extends AbstractEntityTest {
@@ -69,8 +68,7 @@ public class CustomTrackingEntitiesTest extends AbstractEntityTest {
         ModifiedEntityTypeEntity steDescriptor = new ModifiedEntityTypeEntity(StrTestEntity.class.getName());
         ModifiedEntityTypeEntity siteDescriptor = new ModifiedEntityTypeEntity(StrIntTestEntity.class.getName());
 
-        AuditReader vr = getAuditReader();
-        CustomTrackingRevisionEntity ctre = vr.findRevision(CustomTrackingRevisionEntity.class, 1);
+        CustomTrackingRevisionEntity ctre = getAuditReader().findRevision(CustomTrackingRevisionEntity.class, 1);
 
         assert ctre.getModifiedEntityTypes() != null;
         assert ctre.getModifiedEntityTypes().size() == 2;
@@ -81,8 +79,7 @@ public class CustomTrackingEntitiesTest extends AbstractEntityTest {
     public void testTrackModifiedEntities() {
         ModifiedEntityTypeEntity siteDescriptor = new ModifiedEntityTypeEntity(StrIntTestEntity.class.getName());
 
-        AuditReader vr = getAuditReader();
-        CustomTrackingRevisionEntity ctre = vr.findRevision(CustomTrackingRevisionEntity.class, 2);
+        CustomTrackingRevisionEntity ctre = getAuditReader().findRevision(CustomTrackingRevisionEntity.class, 2);
 
         assert ctre.getModifiedEntityTypes() != null;
         assert ctre.getModifiedEntityTypes().size() == 1;
@@ -94,8 +91,7 @@ public class CustomTrackingEntitiesTest extends AbstractEntityTest {
         ModifiedEntityTypeEntity steDescriptor = new ModifiedEntityTypeEntity(StrTestEntity.class.getName());
         ModifiedEntityTypeEntity siteDescriptor = new ModifiedEntityTypeEntity(StrIntTestEntity.class.getName());
 
-        AuditReader vr = getAuditReader();
-        CustomTrackingRevisionEntity ctre = vr.findRevision(CustomTrackingRevisionEntity.class, 3);
+        CustomTrackingRevisionEntity ctre = getAuditReader().findRevision(CustomTrackingRevisionEntity.class, 3);
 
         assert ctre.getModifiedEntityTypes() != null;
         assert ctre.getModifiedEntityTypes().size() == 2;

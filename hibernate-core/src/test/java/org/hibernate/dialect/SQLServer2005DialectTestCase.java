@@ -26,7 +26,9 @@ public class SQLServer2005DialectTestCase extends TestCase {
 	
 	public void testReplaceDistinctWithGroupBy() {
 		assertReplaceDistinctWithGroupBy( "select distinct f1, f2 as ff, f3 from table where f1 = 5", "select f1, f2 as ff, f3 from table where f1 = 5 group by f1, f2, f3 " );
-		//assertReplaceDistinctWithGroupBy( "select distinct sumefunc(f1) as sf1, f2 as ff from table where sf1 = 5", "select sumefunc(f1) as sf1, f2 as ff from table where sf1 = 5 group by f2" );
+		
+		//http://opensource.atlassian.com/projects/hibernate/browse/HHH-5715 distinct in an aggragate function
+		assertReplaceDistinctWithGroupBy( "select count(distinct f1) from table", "select count(distinct f1) from table" );
 	}
 	
 	private static final void assertReplaceDistinctWithGroupBy(String input, String expectedOutput) {
@@ -46,6 +48,12 @@ public class SQLServer2005DialectTestCase extends TestCase {
 		assertGetLimitString( sqlDialect, 
 				"select distinct f1 as f53245 from table849752 order by f234, f67 desc",
 				"with query as (select row_number() over (order by f234, f67 desc) as __hibernate_row_nr__, f1 as f53245 from table849752  group by f1) select * from query where __hibernate_row_nr__ between ? and ?" );
+		
+		//http://opensource.atlassian.com/projects/hibernate/browse/HHH-5715 distinct in an aggragate function
+		assertGetLimitString( sqlDialect, 
+				"select count(distinct p.n) from table849752 p order by f234, f67 desc",
+				"with query as (select row_number() over (order by f234, f67 desc) as __hibernate_row_nr__, f1 as f53245 from table849752  group by f1) select * from query where __hibernate_row_nr__ between ? and ?" );
+		
 	}
 	
 	private static final void assertGetLimitString(Dialect dialect, String input, String expected) {

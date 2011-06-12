@@ -304,12 +304,14 @@ public class AuditReaderImpl implements AuditReaderImplementor {
         if (revisionInfo != null) {
             // If revision exists.
             Set<String> entityNames = verCfg.getModifiedEntityNamesReader().getModifiedEntityNames(revisionInfo);
-            // Generate result that contains entity names and corresponding Java classes.
-            Set<Pair<String, Class>> result = new HashSet<Pair<String, Class>>();
-            for (String entityName : entityNames) {
-                result.add(Pair.make(entityName, Tools.getEntityClass(sessionImplementor, session, entityName)));
+            if (entityNames != null) {
+                // Generate result that contains entity names and corresponding Java classes.
+                Set<Pair<String, Class>> result = new HashSet<Pair<String, Class>>();
+                for (String entityName : entityNames) {
+                    result.add(Pair.make(entityName, Tools.getEntityClass(sessionImplementor, session, entityName)));
+                }
+                return result;
             }
-            return result;
         }
         return Collections.EMPTY_SET;
     }

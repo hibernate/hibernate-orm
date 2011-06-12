@@ -21,7 +21,6 @@ public class ModifiedEntityNamesReader {
 
     @SuppressWarnings({"unchecked"})
     public Set<String> getModifiedEntityNames(Object revisionEntity) {
-        Set<String> modifiedEntityNames = (Set<String>) modifiedEntityNamesGetter.get(revisionEntity);
-        return modifiedEntityNames != null ? modifiedEntityNames : Collections.EMPTY_SET;
+        return (Set<String>) modifiedEntityNamesGetter.get(revisionEntity);
     }
 }

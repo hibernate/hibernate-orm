@@ -35,7 +35,7 @@ public class SQLServer2005DialectTestCase extends TestCase {
 		StringBuilder partialQuery = new StringBuilder( input );
 		SQLServer2005Dialect.replaceDistinctWithGroupBy( partialQuery );
 		
-		assertEquals( "select f1, f2 as ff, f3 from table where f1 = 5 group by f1, f2, f3 ", partialQuery.toString() );
+		assertEquals( expectedOutput, partialQuery.toString() );
 	}
 	
 	public void testGetLimitString() { 

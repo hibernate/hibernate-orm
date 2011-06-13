@@ -47,6 +47,7 @@ public class DistinctSelectTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	//TODO: Add a test case with a select query that has the distinct keyword within a aggregate function
 	public void testDistinctSelectWithJoin() {
 		feedDatabase();
 		

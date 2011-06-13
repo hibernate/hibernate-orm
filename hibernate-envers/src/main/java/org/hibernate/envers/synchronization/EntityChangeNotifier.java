@@ -6,7 +6,7 @@ import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.revisioninfo.RevisionInfoGenerator;
 import org.hibernate.envers.synchronization.work.AuditWorkUnit;
 import org.hibernate.envers.synchronization.work.PersistentCollectionChangeWorkUnit;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.envers.tools.Tools;
 
 import java.io.Serializable;
 
@@ -36,16 +36,8 @@ public class EntityChangeNotifier {
             // Notify about a change in collection owner entity.
             entityId = ((PersistentCollectionChangeWorkUnit.PersistentCollectionChangeWorkUnitId) entityId).getOwnerId();
         }
-        Class entityClass = getEntityClass(session, vwu.getEntityName());
+        Class entityClass = Tools.getEntityClass(sessionImplementor, session, vwu.getEntityName());
         revisionInfoGenerator.entityChanged(entityClass, vwu.getEntityName(), entityId, vwu.getRevisionType(),
                                             currentRevisionData);
-    }
-
-    /**
-     * @return Java class mapped to specified entity name.
-     */
-    private Class getEntityClass(Session session, String entityName) {
-        EntityPersister entityPersister = sessionImplementor.getFactory().getEntityPersister(entityName);
-        return entityPersister.getClassMetadata().getMappedClass(session.getEntityMode());
     }
 }

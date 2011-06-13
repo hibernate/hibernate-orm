@@ -1,6 +1,6 @@
 package org.hibernate.envers.test.entities.reventity.trackmodifiedentities;
 
-import org.hibernate.envers.ModifiedEntityTypes;
+import org.hibernate.envers.ModifiedEntityNames;
 import org.hibernate.envers.RevisionEntity;
 import org.hibernate.envers.RevisionNumber;
 import org.hibernate.envers.RevisionTimestamp;
@@ -9,7 +9,7 @@ import javax.persistence.*;
 import java.util.Set;
 
 /**
- * Sample revision entity that uses {@link ModifiedEntityTypes} annotation.
+ * Sample revision entity that uses {@link ModifiedEntityNames} annotation.
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @Entity
@@ -25,9 +25,9 @@ public class AnnotatedTrackingRevisionEntity {
 
     @ElementCollection
     @JoinTable(name = "REVCHANGES", joinColumns = @JoinColumn(name = "REV"))
-    @Column(name = "ENTITYTYPE")
-    @ModifiedEntityTypes
-    private Set<String> entityTypes;
+    @Column(name = "ENTITYNAME")
+    @ModifiedEntityNames
+    private Set<String> entityNames;
 
     public int getCustomId() {
         return customId;
@@ -45,12 +45,12 @@ public class AnnotatedTrackingRevisionEntity {
         this.customTimestamp = customTimestamp;
     }
 
-    public Set<String> getEntityTypes() {
-        return entityTypes;
+    public Set<String> getEntityNames() {
+        return entityNames;
     }
 
-    public void setEntityTypes(Set<String> entityTypes) {
-        this.entityTypes = entityTypes;
+    public void setEntityNames(Set<String> entityNames) {
+        this.entityNames = entityNames;
     }
 
     public boolean equals(Object o) {
@@ -61,7 +61,7 @@ public class AnnotatedTrackingRevisionEntity {
 
         if (customId != that.customId) return false;
         if (customTimestamp != that.customTimestamp) return false;
-        if (entityTypes != null ? !entityTypes.equals(that.entityTypes) : that.entityTypes != null) return false;
+        if (entityNames != null ? !entityNames.equals(that.entityNames) : that.entityNames != null) return false;
 
         return true;
     }
@@ -69,12 +69,12 @@ public class AnnotatedTrackingRevisionEntity {
     public int hashCode() {
         int result = customId;
         result = 31 * result + (int) (customTimestamp ^ (customTimestamp >>> 32));
-        result = 31 * result + (entityTypes != null ? entityTypes.hashCode() : 0);
+        result = 31 * result + (entityNames != null ? entityNames.hashCode() : 0);
         return result;
     }
 
     @Override
     public String toString() {
-        return "AnnotatedTrackingRevisionEntity(customId = " + customId + ", customTimestamp = " + customTimestamp + ", entityTypes=" + entityTypes + ")";
+        return "AnnotatedTrackingRevisionEntity(customId = " + customId + ", customTimestamp = " + customTimestamp + ", entityNames=" + entityNames + ")";
     }
 }

@@ -30,7 +30,7 @@ import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.envers.entities.EntitiesConfigurations;
 import org.hibernate.envers.entities.PropertyData;
-import org.hibernate.envers.revisioninfo.ModifiedEntityTypesReader;
+import org.hibernate.envers.revisioninfo.ModifiedEntityNamesReader;
 import org.hibernate.envers.revisioninfo.RevisionInfoNumberReader;
 import org.hibernate.envers.revisioninfo.RevisionInfoQueryCreator;
 import org.hibernate.envers.strategy.AuditStrategy;
@@ -51,7 +51,7 @@ public class AuditConfiguration {
     private final EntitiesConfigurations entCfg;
     private final RevisionInfoQueryCreator revisionInfoQueryCreator;
     private final RevisionInfoNumberReader revisionInfoNumberReader;
-    private final ModifiedEntityTypesReader modifiedEntityTypesReader;
+    private final ModifiedEntityNamesReader modifiedEntityNamesReader;
 
     public AuditEntitiesConfiguration getAuditEntCfg() {
         return auditEntCfg;
@@ -77,8 +77,8 @@ public class AuditConfiguration {
         return revisionInfoNumberReader;
     }
 
-    public ModifiedEntityTypesReader getModifiedEntityTypesReader() {
-        return modifiedEntityTypesReader;
+    public ModifiedEntityNamesReader getModifiedEntityNamesReader() {
+        return modifiedEntityNamesReader;
     }
 
     public AuditStrategy getAuditStrategy() {
@@ -96,7 +96,7 @@ public class AuditConfiguration {
         auditProcessManager = new AuditProcessManager(revInfoCfgResult.getRevisionInfoGenerator());
         revisionInfoQueryCreator = revInfoCfgResult.getRevisionInfoQueryCreator();
         revisionInfoNumberReader = revInfoCfgResult.getRevisionInfoNumberReader();
-        modifiedEntityTypesReader = revInfoCfgResult.getModifiedEntityTypesReader();
+        modifiedEntityNamesReader = revInfoCfgResult.getModifiedEntityNamesReader();
         auditStrategy = initializeAuditStrategy(revInfoCfgResult.getRevisionInfoClass(), 
         		revInfoCfgResult.getRevisionInfoTimestampData());
         entCfg = new EntitiesConfigurator().configure(cfg, reflectionManager, globalCfg, auditEntCfg, auditStrategy,

@@ -123,8 +123,13 @@ abstract class AbstractEntityBinder {
 			XMLHibernateMapping.XMLClass entityClazz,
 			EntityBinding entityBinding,
 			Hierarchical superType) {
-		entityBinding.setEntity( new Entity( bindingContext.extractEntityName( entityClazz ), superType ) );
-		entityBinding.initialize( new HbmEntityBindingState( isRoot(), getInheritanceType(), bindingContext, entityClazz ) );
+		Entity entity = new Entity( bindingContext.extractEntityName( entityClazz ), superType );
+		entityBinding.setEntity( entity );
+		HbmEntityBindingState bindingState =
+				new HbmEntityBindingState(
+						isRoot(), getInheritanceType(), bindingContext, entityClazz, entity.getName()
+				);
+		entityBinding.initialize( bindingState );
 
 		// TODO: move this stuff out
 		// transfer an explicitly defined lazy attribute

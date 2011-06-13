@@ -48,6 +48,7 @@ import org.hibernate.metamodel.source.spi.MetaAttributeContext;
  * @author Gail Badner
  */
 public class HbmEntityBindingState implements EntityBindingState {
+	private final String entityName;
 	private final boolean isRoot;
 	private final InheritanceType entityInheritanceType;
 	private final Caching caching;
@@ -80,11 +81,13 @@ public class HbmEntityBindingState implements EntityBindingState {
 			boolean isRoot,
 			InheritanceType inheritanceType,
 			HbmBindingContext bindingContext,
-			XMLHibernateMapping.XMLClass entityClazz) {
+			XMLHibernateMapping.XMLClass entityClazz,
+			String entityName) {
+		this.entityName = entityName;
 		this.isRoot = isRoot;
 		this.entityInheritanceType = inheritanceType;
 
-		this.caching = createCaching( entityClazz,  bindingContext.extractEntityName( entityClazz ) );
+		this.caching = createCaching( entityClazz, entityName );
 
 		metaAttributeContext = HbmHelper.extractMetaAttributeContext(
 				entityClazz.getMeta(), true, bindingContext.getMetaAttributeContext()
@@ -104,7 +107,7 @@ public class HbmEntityBindingState implements EntityBindingState {
 		dynamicInsert = entityClazz.isDynamicInsert();
 		batchSize = MappingHelper.getIntValue( entityClazz.getBatchSize(), 0 );
 		selectBeforeUpdate = entityClazz.isSelectBeforeUpdate();
-		optimisticLockMode = getOptimisticLockMode();
+		optimisticLockMode = createOptimisticLockMode( entityClazz );
 
 		// PERSISTER
 		entityPersisterClass =

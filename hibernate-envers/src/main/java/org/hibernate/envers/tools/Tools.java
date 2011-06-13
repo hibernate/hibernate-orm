@@ -35,6 +35,7 @@ import javassist.util.proxy.ProxyFactory;
 import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 
 /**
@@ -177,5 +178,13 @@ public class Tools {
         } else {
             return value;
         }
+    }
+
+    /**
+     * @return Java class mapped to specified entity name.
+     */
+    public static Class getEntityClass(SessionImplementor sessionImplementor, Session session, String entityName) {
+        EntityPersister entityPersister = sessionImplementor.getFactory().getEntityPersister(entityName);
+        return entityPersister.getClassMetadata().getMappedClass(session.getEntityMode());
     }
 }

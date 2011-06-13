@@ -46,7 +46,7 @@ public class GlobalConfiguration {
     // The default name of the catalog of the audit tables.
     private final String defaultCatalogName;
 
-    // Should Envers track (persist) entity types that have been changed during each revision.
+    // Should Envers track (persist) entity names that have been changed during each revision.
     private boolean trackEntitiesChangedInRevisionEnabled;
 
     /*

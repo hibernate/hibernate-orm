@@ -6,13 +6,13 @@ import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.integration.entityNames.manyToManyAudited.Car;
 import org.hibernate.envers.test.integration.entityNames.manyToManyAudited.Person;
 import org.hibernate.envers.test.tools.TestTools;
+import org.hibernate.envers.tools.Pair;
 import org.junit.Test;
 
 import java.io.File;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -62,7 +62,11 @@ public class EntityNamesTest extends AbstractSessionTest {
     @Test
     @SuppressWarnings("unchecked")
     public void testModifiedEntityTypes() {
-        assert TestTools.makeSet(Car.class, Person.class).equals(getAuditReader().findEntityTypesChangedInRevision(1));
-        assert TestTools.makeSet(Car.class, Person.class).equals(getAuditReader().findEntityTypesChangedInRevision(2));
+        assert TestTools.makeSet(Pair.make(Car.class.getName(), Car.class),
+                                 Pair.make("Personaje", Person.class))
+                        .equals(getAuditReader().findEntityTypesChangedInRevision(1));
+        assert TestTools.makeSet(Pair.make(Car.class.getName(), Car.class),
+                                 Pair.make("Personaje", Person.class))
+                        .equals(getAuditReader().findEntityTypesChangedInRevision(2));
     }
 }

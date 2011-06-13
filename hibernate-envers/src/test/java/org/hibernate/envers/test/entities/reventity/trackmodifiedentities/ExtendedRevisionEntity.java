@@ -1,7 +1,6 @@
 package org.hibernate.envers.test.entities.reventity.trackmodifiedentities;
 
-import org.hibernate.envers.DefaultRevisionEntity;
-import org.hibernate.envers.DefaultTrackingModifiedTypesRevisionEntity;
+import org.hibernate.envers.DefaultTrackingModifiedEntitiesRevisionEntity;
 import org.hibernate.envers.RevisionEntity;
 
 import javax.persistence.Entity;
@@ -11,14 +10,14 @@ import javax.persistence.Entity;
  */
 @Entity
 @RevisionEntity(ExtendedRevisionListener.class)
-public class ExtendedRevisionEntity extends DefaultTrackingModifiedTypesRevisionEntity {
-    private String commnent;
+public class ExtendedRevisionEntity extends DefaultTrackingModifiedEntitiesRevisionEntity {
+    private String comment;
 
-    public String getCommnent() {
-        return commnent;
+    public String getComment() {
+        return comment;
     }
 
-    public void setCommnent(String commnent) {
-        this.commnent = commnent;
+    public void setComment(String comment) {
+        this.comment = comment;
     }
 }

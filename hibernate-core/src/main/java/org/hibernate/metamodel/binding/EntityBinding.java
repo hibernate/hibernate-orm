@@ -245,20 +245,12 @@ public class EntityBinding {
 		return caching;
 	}
 
-	public void setCaching(Caching caching) {
-		this.caching = caching;
-	}
-
 	public MetaAttributeContext getMetaAttributeContext() {
 		return metaAttributeContext;
 	}
 
 	public boolean isMutable() {
 		return mutable;
-	}
-
-	public void setMutable(boolean mutable) {
-		this.mutable = mutable;
 	}
 
 	public boolean isLazy() {
@@ -269,10 +261,6 @@ public class EntityBinding {
 		this.lazy = lazy;
 	}
 
-	public void setProxyInterfaceName(String proxyInterfaceName) {
-		this.proxyInterfaceName = proxyInterfaceName;
-	}
-
 	public String getProxyInterfaceName() {
 		return proxyInterfaceName;
 	}
@@ -281,24 +269,12 @@ public class EntityBinding {
 		return whereFilter;
 	}
 
-	public void setWhereFilter(String whereFilter) {
-		this.whereFilter = whereFilter;
-	}
-
 	public boolean isExplicitPolymorphism() {
 		return explicitPolymorphism;
 	}
 
-	public void setExplicitPolymorphism(boolean explicitPolymorphism) {
-		this.explicitPolymorphism = explicitPolymorphism;
-	}
-
 	public String getRowId() {
 		return rowId;
-	}
-
-	public void setRowId(String rowId) {
-		this.rowId = rowId;
 	}
 
 	public String getDiscriminatorValue() {
@@ -309,32 +285,16 @@ public class EntityBinding {
 		return dynamicUpdate;
 	}
 
-	public void setDynamicUpdate(boolean dynamicUpdate) {
-		this.dynamicUpdate = dynamicUpdate;
-	}
-
 	public boolean isDynamicInsert() {
 		return dynamicInsert;
-	}
-
-	public void setDynamicInsert(boolean dynamicInsert) {
-		this.dynamicInsert = dynamicInsert;
 	}
 
 	public int getBatchSize() {
 		return batchSize;
 	}
 
-	public void setBatchSize(int batchSize) {
-		this.batchSize = batchSize;
-	}
-
 	public boolean isSelectBeforeUpdate() {
 		return selectBeforeUpdate;
-	}
-
-	public void setSelectBeforeUpdate(Boolean selectBeforeUpdate) {
-		this.selectBeforeUpdate = selectBeforeUpdate;
 	}
 
 	public boolean hasSubselectLoadableCollections() {
@@ -350,16 +310,8 @@ public class EntityBinding {
 		return optimisticLockMode;
 	}
 
-	public void setOptimisticLockMode(int optimisticLockMode) {
-		this.optimisticLockMode = optimisticLockMode;
-	}
-
 	public Class getEntityPersisterClass() {
 		return entityPersisterClass;
-	}
-
-	public void setEntityPersisterClass(Class entityPersisterClass) {
-		this.entityPersisterClass = entityPersisterClass;
 	}
 
 	public Boolean isAbstract() {

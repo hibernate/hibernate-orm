@@ -36,7 +36,8 @@ import org.hibernate.type.StandardBasicTypes;
 public class SQLServer2005Dialect extends SQLServerDialect {
 	private static final String SELECT = "select";
 	private static final String FROM = "from";
-	private static final String DISTINCT = "distinct";
+	//private static final String DISTINCT = "distinct";
+	private static final String SELECT_DISTINCT = "select distinct";
 	private static final int MAX_LENGTH = 8000;
 
 	public SQLServer2005Dialect() {
@@ -141,9 +142,9 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 	 * @param sql an sql query
 	 */
 	protected static void replaceDistinctWithGroupBy(StringBuilder sql) {
-		int distinctIndex = sql.indexOf(DISTINCT);
-		if (distinctIndex > 0) {
-			sql.delete(distinctIndex, distinctIndex + DISTINCT.length() + 1);
+		int selectDistinctIndex = sql.indexOf(SELECT_DISTINCT);
+		if (selectDistinctIndex == 0) {
+			sql.delete(SELECT.length() + 1, SELECT_DISTINCT.length() + 1);
 			sql.append(" group by").append(getSelectFieldsWithoutAliases(sql));
 		}
 	}

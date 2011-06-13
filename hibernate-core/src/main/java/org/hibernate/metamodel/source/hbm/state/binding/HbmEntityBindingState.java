@@ -23,8 +23,8 @@
  */
 package org.hibernate.metamodel.source.hbm.state.binding;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.hibernate.MappingException;
 import org.hibernate.cache.spi.access.AccessType;
@@ -74,7 +74,7 @@ public class HbmEntityBindingState implements EntityBindingState {
 	private final CustomSQL customUpdate;
 	private final CustomSQL customDelete;
 
-	private final List<String> synchronizedTableNames;
+	private final Set<String> synchronizedTableNames;
 
 	public HbmEntityBindingState(
 			boolean isRoot,
@@ -84,7 +84,7 @@ public class HbmEntityBindingState implements EntityBindingState {
 		this.isRoot = isRoot;
 		this.entityInheritanceType = inheritanceType;
 
-		this.caching = createCaching( entityClazz,  bindingContext.extractEntityName( entityClazz ) );
+		this.caching = createCaching( entityClazz, bindingContext.extractEntityName( entityClazz ) );
 
 		metaAttributeContext = HbmHelper.extractMetaAttributeContext(
 				entityClazz.getMeta(), true, bindingContext.getMetaAttributeContext()
@@ -150,7 +150,7 @@ public class HbmEntityBindingState implements EntityBindingState {
 		}
 
 		if ( entityClazz.getSynchronize() != null ) {
-			synchronizedTableNames = new ArrayList<String>( entityClazz.getSynchronize().size() );
+			synchronizedTableNames = new HashSet<String>( entityClazz.getSynchronize().size() );
 			for ( XMLSynchronizeElement synchronize : entityClazz.getSynchronize() ) {
 				synchronizedTableNames.add( synchronize.getTable() );
 			}
@@ -295,7 +295,7 @@ public class HbmEntityBindingState implements EntityBindingState {
 	}
 
 	@Override
-	public List<String> getSynchronizedTableNames() {
+	public Set<String> getSynchronizedTableNames() {
 		return synchronizedTableNames;
 	}
 }

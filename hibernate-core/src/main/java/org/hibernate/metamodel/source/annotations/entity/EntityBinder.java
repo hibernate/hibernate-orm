@@ -100,6 +100,7 @@ public class EntityBinder {
 		bindJpaCaching( entityBindingState );
 		bindHibernateCaching( entityBindingState );
 		bindProxy( entityBindingState );
+		bindSynchronize( entityBindingState );
 
 		// take care of the id, attributes and relations
 		if ( configuredClass.isRoot() ) {
@@ -257,6 +258,19 @@ public class EntityBinder {
 
 		entityBindingState.setLazy( lazy );
 		entityBindingState.setProxyInterfaceName( proxyInterfaceClass );
+	}
+
+	private void bindSynchronize(EntityBindingStateImpl entityBindingState) {
+		AnnotationInstance synchronizeAnnotation = JandexHelper.getSingleAnnotation(
+				configuredClass.getClassInfo(), HibernateDotNames.SYNCHRONIZE
+		);
+
+		if ( synchronizeAnnotation != null ) {
+			String[] tableNames = synchronizeAnnotation.value().asStringArray();
+			for ( String tableName : tableNames ) {
+				entityBindingState.addSynchronizedTableName( tableName );
+			}
+		}
 	}
 
 	private Caching createCachingForCacheableAnnotation(EntityBindingStateImpl entityBindingState) {

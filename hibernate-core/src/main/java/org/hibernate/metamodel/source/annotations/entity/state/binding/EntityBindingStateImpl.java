@@ -23,7 +23,8 @@
  */
 package org.hibernate.metamodel.source.annotations.entity.state.binding;
 
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.metamodel.binding.Caching;
@@ -67,11 +68,12 @@ public class EntityBindingStateImpl implements EntityBindingState {
 	private CustomSQL customUpdate;
 	private CustomSQL customDelete;
 
-	private List<String> synchronizedTableNames;
+	private Set<String> synchronizedTableNames;
 
 	public EntityBindingStateImpl(ConfiguredClass configuredClass) {
 		this.isRoot = configuredClass.isRoot();
 		this.inheritanceType = configuredClass.getInheritanceType();
+		this.synchronizedTableNames = new HashSet<String>();
 
 		// TODO: where do these values come from?
 		this.metaAttributeContext = null;
@@ -81,7 +83,6 @@ public class EntityBindingStateImpl implements EntityBindingState {
 		this.customInsert = null;
 		this.customUpdate = null;
 		this.customDelete = null;
-		this.synchronizedTableNames = null;
 	}
 
 	public void setEntityName(String entityName) {
@@ -134,6 +135,10 @@ public class EntityBindingStateImpl implements EntityBindingState {
 
 	public void setProxyInterfaceName(String proxyInterfaceName) {
 		this.proxyInterfaceName = proxyInterfaceName;
+	}
+
+	public void addSynchronizedTableName(String tableName) {
+		synchronizedTableNames.add( tableName );
 	}
 
 	@Override
@@ -238,7 +243,7 @@ public class EntityBindingStateImpl implements EntityBindingState {
 	}
 
 	@Override
-	public List<String> getSynchronizedTableNames() {
+	public Set<String> getSynchronizedTableNames() {
 		return synchronizedTableNames;
 	}
 }

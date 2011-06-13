@@ -23,10 +23,8 @@
  */
 package org.hibernate.metamodel.binding;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -86,7 +84,7 @@ public class EntityBinding {
 	private CustomSQL customUpdate;
 	private CustomSQL customDelete;
 
-	private List<String> synchronizedTableNames;
+	private Set<String> synchronizedTableNames = new HashSet<String>();
 
 	public EntityBinding initialize(EntityBindingState state) {
 		this.isRoot = state.isRoot();
@@ -318,13 +316,13 @@ public class EntityBinding {
 		return isAbstract;
 	}
 
-	protected void addSynchronizedTable(String tablename) {
-		if ( synchronizedTableNames == null ) {
-			synchronizedTableNames = new ArrayList<String>();
-		}
-		synchronizedTableNames.add( tablename );
+	protected void addSynchronizedTable(String tableName) {
+		synchronizedTableNames.add( tableName );
 	}
 
+	public Set<String> getSynchronizedTableNames() {
+		return synchronizedTableNames;
+	}
 
 	// Custom SQL ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

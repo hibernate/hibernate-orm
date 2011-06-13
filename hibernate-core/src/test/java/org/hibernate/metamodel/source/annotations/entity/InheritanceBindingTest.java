@@ -40,7 +40,7 @@ import static junit.framework.Assert.assertTrue;
 /**
  * @author Hardy Ferentschik
  */
-public class InheritanceTypeTest extends BaseAnnotationBindingTestCase {
+public class InheritanceBindingTest extends BaseAnnotationBindingTestCase {
 	@Test
 	public void testNoInheritance() {
 		buildMetadataSources( SingleEntity.class );

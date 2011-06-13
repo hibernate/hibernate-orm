@@ -23,7 +23,7 @@
  */
 package org.hibernate.metamodel.binding.state;
 
-import java.util.List;
+import java.util.Set;
 
 import org.hibernate.metamodel.binding.Caching;
 import org.hibernate.metamodel.binding.CustomSQL;
@@ -74,5 +74,5 @@ public interface EntityBindingState {
 
 	CustomSQL getCustomDelete();
 
-	List<String> getSynchronizedTableNames();
+	Set<String> getSynchronizedTableNames();
 }

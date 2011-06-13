@@ -10,8 +10,7 @@ import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 
 /**
- * HHH-5715 bug test case: Dublicated entries when using select distinct with join and pagination. The bug has to do
- * with new {@link SQLServerDialect} that uses row_number function for pagination
+ * HHH-5715 bug test case: Dublicated entries when using select distinct with join and pagination. 
  * 
  * @author Valotasios Yoryos
  * 

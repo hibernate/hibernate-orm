@@ -82,7 +82,12 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 
 	@Override
 	public void configure(Map configValues) {
-		final JdbcConnectionAccess jdbcConnectionAccess = buildJdbcConnectionAccess( configValues );
+		JdbcConnectionAccess jdbcConnectionAccess = null;
+		try {
+			jdbcConnectionAccess = buildJdbcConnectionAccess( configValues );
+		} catch (RuntimeException re){
+			LOG.unableToObtainConnectionMetadata(re.getMessage());
+		}
 		final DialectFactory dialectFactory = serviceRegistry.getService( DialectFactory.class );
 
 		Dialect dialect = null;
@@ -108,7 +113,7 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 		// certain Settings default values; it is useful to *not* do this when the database
 		// may not be available (mainly in tools usage).
 		boolean useJdbcMetadata = ConfigurationHelper.getBoolean( "hibernate.temp.use_jdbc_metadata_defaults", configValues, true );
-		if ( useJdbcMetadata ) {
+		if ( useJdbcMetadata && jdbcConnectionAccess != null) {
 			try {
 				Connection connection = jdbcConnectionAccess.obtainConnection();
 				try {

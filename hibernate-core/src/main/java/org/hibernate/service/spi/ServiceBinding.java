@@ -74,9 +74,9 @@ public final class ServiceBinding<R extends Service> {
 
 	public void setService(R service) {
 		if ( this.service != null ) {
-                        if (log.isDebugEnabled()) {
-			   log.debug( "Overriding existing service binding [" + serviceRole.getName() + "]" );
-                        }
+			if ( log.isDebugEnabled() ) {
+				log.debug( "Overriding existing service binding [" + serviceRole.getName() + "]" );
+			}
 		}
 		this.service = service;
 	}

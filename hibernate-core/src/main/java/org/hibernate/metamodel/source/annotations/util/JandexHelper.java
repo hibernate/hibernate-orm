@@ -52,13 +52,10 @@ import org.hibernate.service.classloading.spi.ClassLoaderService;
  * @author Hardy Ferentschik
  */
 public class JandexHelper {
-
 	private static final AnnotationInstance[] EMPTY_ANNOTATIONS_ARRAY = new AnnotationInstance[0];
-
 	private static final Map<String, Object> DEFAULT_VALUES_BY_ELEMENT = new HashMap<String, Object>();
 
-	private static Object getDefaultValue(AnnotationInstance annotation,
-										  String element) {
+	private static Object getDefaultValue(AnnotationInstance annotation, String element) {
 		String name = annotation.name().toString();
 		String fqElement = name + '.' + element;
 		Object val = DEFAULT_VALUES_BY_ELEMENT.get( fqElement );
@@ -164,8 +161,7 @@ public class JandexHelper {
 	 * @return the value if not <code>null</code>, else the default value if not
 	 *         <code>null</code>, else <code>null</code>.
 	 */
-	public static Object getValue(AnnotationInstance annotation,
-								  String element) {
+	public static Object getValue(AnnotationInstance annotation, String element) {
 		AnnotationValue val = annotation.value( element );
 		if ( val == null ) {
 			return getDefaultValue( annotation, element );
@@ -182,8 +178,7 @@ public class JandexHelper {
 	 *
 	 * @return the element array if not <code>null</code>, else an empty array
 	 */
-	public static AnnotationInstance[] getValueAsArray(AnnotationInstance annotation,
-													   String element) {
+	public static AnnotationInstance[] getValueAsArray(AnnotationInstance annotation, String element) {
 		AnnotationValue val = annotation.value( element );
 		return val == null ? EMPTY_ANNOTATIONS_ARRAY : val.asNestedArray();
 	}
@@ -202,9 +197,7 @@ public class JandexHelper {
 	 *
 	 * @see #getValue(AnnotationInstance, String)
 	 */
-	public static <T extends Enum<T>> T getValueAsEnum(AnnotationInstance annotation,
-													   String element,
-													   Class<T> type) {
+	public static <T extends Enum<T>> T getValueAsEnum(AnnotationInstance annotation, String element, Class<T> type) {
 		AnnotationValue val = annotation.value( element );
 		if ( val == null ) {
 			return (T) getDefaultValue( annotation, element );
@@ -222,8 +215,7 @@ public class JandexHelper {
 	 * @return the value converted to an int if the value is not <code>null</code>, else the default value if not
 	 *         <code>null</code>, else <code>0</code>.
 	 */
-	public static int getValueAsInt(AnnotationInstance annotation,
-									String element) {
+	public static int getValueAsInt(AnnotationInstance annotation, String element) {
 		AnnotationValue val = annotation.value( element );
 		if ( val == null ) {
 			return (Integer) getDefaultValue( annotation, element );
@@ -241,8 +233,7 @@ public class JandexHelper {
 	 * @return the value converted to a String if the value is not <code>null</code>, else the default value if not
 	 *         <code>null</code>, else <code>null</code>.
 	 */
-	public static String getValueAsString(AnnotationInstance annotation,
-										  String element) {
+	public static String getValueAsString(AnnotationInstance annotation, String element) {
 		AnnotationValue val = annotation.value( element );
 		if ( val == null ) {
 			return (String) getDefaultValue( annotation, element );

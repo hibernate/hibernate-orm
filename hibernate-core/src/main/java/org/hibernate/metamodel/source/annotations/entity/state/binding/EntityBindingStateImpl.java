@@ -80,9 +80,6 @@ public class EntityBindingStateImpl implements EntityBindingState {
 		this.rowId = null;
 		this.batchSize = -1;
 		this.isAbstract = false;
-		this.customInsert = null;
-		this.customUpdate = null;
-		this.customDelete = null;
 	}
 
 	public void setEntityName(String entityName) {
@@ -139,6 +136,18 @@ public class EntityBindingStateImpl implements EntityBindingState {
 
 	public void addSynchronizedTableName(String tableName) {
 		synchronizedTableNames.add( tableName );
+	}
+
+	public void setCustomInsert(CustomSQL customInsert) {
+		this.customInsert = customInsert;
+	}
+
+	public void setCustomUpdate(CustomSQL customUpdate) {
+		this.customUpdate = customUpdate;
+	}
+
+	public void setCustomDelete(CustomSQL customDelete) {
+		this.customDelete = customDelete;
 	}
 
 	@Override

@@ -38,10 +38,13 @@ import org.hibernate.MappingException;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.annotations.PolymorphismType;
+import org.hibernate.annotations.ResultCheckStyle;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.access.AccessType;
+import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.binding.Caching;
+import org.hibernate.metamodel.binding.CustomSQL;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.EntityDiscriminator;
 import org.hibernate.metamodel.binding.IdGenerator;
@@ -101,6 +104,7 @@ public class EntityBinder {
 		bindHibernateCaching( entityBindingState );
 		bindProxy( entityBindingState );
 		bindSynchronize( entityBindingState );
+		bindCustomSQL( entityBindingState );
 
 		// take care of the id, attributes and relations
 		if ( configuredClass.isRoot() ) {
@@ -271,6 +275,55 @@ public class EntityBinder {
 				entityBindingState.addSynchronizedTableName( tableName );
 			}
 		}
+	}
+
+	private void bindCustomSQL(EntityBindingStateImpl entityBindingState) {
+		AnnotationInstance sqlInsertAnnotation = JandexHelper.getSingleAnnotation(
+				configuredClass.getClassInfo(), HibernateDotNames.SQL_INSERT
+		);
+		entityBindingState.setCustomInsert( createCustomSQL( sqlInsertAnnotation ) );
+
+		AnnotationInstance sqlUpdateAnnotation = JandexHelper.getSingleAnnotation(
+				configuredClass.getClassInfo(), HibernateDotNames.SQL_UPDATE
+		);
+		entityBindingState.setCustomUpdate( createCustomSQL( sqlUpdateAnnotation ) );
+
+		AnnotationInstance sqlDeleteAnnotation = JandexHelper.getSingleAnnotation(
+				configuredClass.getClassInfo(), HibernateDotNames.SQL_DELETE
+		);
+		entityBindingState.setCustomDelete( createCustomSQL( sqlDeleteAnnotation ) );
+
+		AnnotationInstance sqlDeleteAllAnnotation = JandexHelper.getSingleAnnotation(
+				configuredClass.getClassInfo(), HibernateDotNames.SQL_DELETE_ALL
+		);
+		if ( sqlDeleteAllAnnotation != null ) {
+			entityBindingState.setCustomDelete( createCustomSQL( sqlDeleteAllAnnotation ) );
+		}
+	}
+
+	private CustomSQL createCustomSQL(AnnotationInstance customSQLAnnotation) {
+		if ( customSQLAnnotation == null ) {
+			return null;
+		}
+
+		String sql = customSQLAnnotation.value( "sql" ).asString();
+		boolean isCallable = false;
+		AnnotationValue callableValue = customSQLAnnotation.value( "callable" );
+		if ( callableValue != null ) {
+			isCallable = callableValue.asBoolean();
+		}
+
+		ResultCheckStyle checkStyle = ResultCheckStyle.NONE;
+		AnnotationValue checkStyleValue = customSQLAnnotation.value( "check" );
+		if ( checkStyleValue != null ) {
+			checkStyle = Enum.valueOf( ResultCheckStyle.class, checkStyleValue.asEnum() );
+		}
+
+		return new CustomSQL(
+				sql,
+				isCallable,
+				Enum.valueOf( ExecuteUpdateResultCheckStyle.class, checkStyle.toString() )
+		);
 	}
 
 	private Caching createCachingForCacheableAnnotation(EntityBindingStateImpl entityBindingState) {

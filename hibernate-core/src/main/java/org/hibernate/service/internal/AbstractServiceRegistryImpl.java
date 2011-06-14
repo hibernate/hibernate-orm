@@ -131,7 +131,9 @@ public abstract class AbstractServiceRegistryImpl implements ServiceRegistryImpl
 	}
 
 	private <R extends Service> R initializeService(ServiceBinding<R> serviceBinding) {
-        LOG.trace( "Initializing service [role=" + serviceBinding.getServiceRole().getName() + "]" );
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace( "Initializing service [role=" + serviceBinding.getServiceRole().getName() + "]" );
+		}
 
 		// PHASE 1 : create service
 		R service = createService( serviceBinding );

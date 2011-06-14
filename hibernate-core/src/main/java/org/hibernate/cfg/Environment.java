@@ -27,8 +27,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.Timestamp;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 
@@ -177,7 +177,7 @@ public final class Environment implements AvailableSettings {
 	private static final boolean JVM_HAS_TIMESTAMP_BUG;
 
 	private static final Properties GLOBAL_PROPERTIES;
-	private static final HashMap ISOLATION_LEVELS = new HashMap();
+	private static final Map<Integer,String> ISOLATION_LEVELS;
 
 	private static final Map OBSOLETE_PROPERTIES = new HashMap();
 	private static final Map RENAMED_PROPERTIES = new HashMap();
@@ -206,13 +206,13 @@ public final class Environment implements AvailableSettings {
 	static {
 
         LOG.version(Version.getVersionString());
-
-		ISOLATION_LEVELS.put( (Connection.TRANSACTION_NONE), "NONE" );
-		ISOLATION_LEVELS.put( (Connection.TRANSACTION_READ_UNCOMMITTED), "READ_UNCOMMITTED" );
-		ISOLATION_LEVELS.put( (Connection.TRANSACTION_READ_COMMITTED), "READ_COMMITTED" );
-		ISOLATION_LEVELS.put( (Connection.TRANSACTION_REPEATABLE_READ), "REPEATABLE_READ" );
-		ISOLATION_LEVELS.put( (Connection.TRANSACTION_SERIALIZABLE), "SERIALIZABLE" );
-
+		Map<Integer,String> temp = new HashMap<Integer,String>();
+		temp.put( Connection.TRANSACTION_NONE, "NONE" );
+		temp.put( Connection.TRANSACTION_READ_UNCOMMITTED, "READ_UNCOMMITTED" );
+		temp.put( Connection.TRANSACTION_READ_COMMITTED, "READ_COMMITTED" );
+		temp.put( Connection.TRANSACTION_REPEATABLE_READ, "REPEATABLE_READ" );
+		temp.put( Connection.TRANSACTION_SERIALIZABLE, "SERIALIZABLE" );
+		ISOLATION_LEVELS = Collections.unmodifiableMap( temp );
 		GLOBAL_PROPERTIES = new Properties();
 		//Set USE_REFLECTION_OPTIMIZER to false to fix HHH-227
 		GLOBAL_PROPERTIES.setProperty( USE_REFLECTION_OPTIMIZER, Boolean.FALSE.toString() );
@@ -334,7 +334,7 @@ public final class Environment implements AvailableSettings {
 	 * @return a human-readable name
 	 */
 	public static String isolationLevelToString(int isolation) {
-		return (String) ISOLATION_LEVELS.get( isolation );
+		return ISOLATION_LEVELS.get( isolation );
 	}
 
 	public static BytecodeProvider buildBytecodeProvider(Properties properties) {

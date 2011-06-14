@@ -48,6 +48,8 @@ public class EntityIdentifier {
 	private SimpleAttributeBinding attributeBinding;
 	private IdentifierGenerator identifierGenerator;
 	private IdGenerator idGenerator;
+	private boolean isEmbedded;
+	private boolean isIdentifierMapper;
 	// todo : mappers, etc
 
 	/**
@@ -74,6 +76,14 @@ public class EntityIdentifier {
 
 	public void setIdGenerator(IdGenerator idGenerator) {
 		this.idGenerator = idGenerator;
+	}
+
+	public boolean isEmbedded() {
+		return isEmbedded;
+	}
+
+	public boolean isIdentifierMapper() {
+		return isIdentifierMapper;
 	}
 
 	public IdentifierGenerator createIdentifierGenerator(IdentifierGeneratorFactory factory) {

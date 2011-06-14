@@ -156,6 +156,10 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 		return optimisticLockable;
 	}
 
+	public String getNodeName() {
+		return nodeName;
+	}
+
 	@Override
 	public MetaAttributeContext getMetaAttributeContext() {
 		return metaAttributeContext;

@@ -99,12 +99,15 @@ public class EntityBinder {
 
 		bindInheritance( entityBinding );
 
+		// bind entity level annotations
 		bindWhereFilter( entityBindingState );
 		bindJpaCaching( entityBindingState );
 		bindHibernateCaching( entityBindingState );
 		bindProxy( entityBindingState );
 		bindSynchronize( entityBindingState );
 		bindCustomSQL( entityBindingState );
+		bindRowId( entityBindingState );
+		bindBatchSize( entityBindingState );
 
 		// take care of the id, attributes and relations
 		if ( configuredClass.isRoot() ) {
@@ -324,6 +327,26 @@ public class EntityBinder {
 				isCallable,
 				Enum.valueOf( ExecuteUpdateResultCheckStyle.class, checkStyle.toString() )
 		);
+	}
+
+	private void bindRowId(EntityBindingStateImpl entityBindingState) {
+		AnnotationInstance rowIdAnnotation = JandexHelper.getSingleAnnotation(
+				configuredClass.getClassInfo(), HibernateDotNames.ROW_ID
+		);
+
+		if ( rowIdAnnotation != null ) {
+			entityBindingState.setRowId( rowIdAnnotation.value().asString() );
+		}
+	}
+
+	private void bindBatchSize(EntityBindingStateImpl entityBindingState) {
+		AnnotationInstance batchSizeAnnotation = JandexHelper.getSingleAnnotation(
+				configuredClass.getClassInfo(), HibernateDotNames.BATCH_SIZE
+		);
+
+		if ( batchSizeAnnotation != null ) {
+			entityBindingState.setBatchSize( batchSizeAnnotation.value( "size" ).asInt() );
+		}
 	}
 
 	private Caching createCachingForCacheableAnnotation(EntityBindingStateImpl entityBindingState) {

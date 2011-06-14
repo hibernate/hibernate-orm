@@ -33,7 +33,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @author Steve Ebersole
  */
-@java.lang.annotation.Target({TYPE})
+@java.lang.annotation.Target( { TYPE })
 @Retention(RUNTIME)
 public @interface RowId {
 	/**

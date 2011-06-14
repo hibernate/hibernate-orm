@@ -44,7 +44,6 @@ public class EntityBindingStateImpl implements EntityBindingState {
 	private String entityName;
 
 	private Caching caching;
-	private MetaAttributeContext metaAttributeContext;
 
 	private boolean mutable;
 	private boolean explicitPolymorphism;
@@ -59,7 +58,6 @@ public class EntityBindingStateImpl implements EntityBindingState {
 	private OptimisticLockType optimisticLock;
 
 	private Class<?> persisterClass;
-	private boolean isAbstract;
 
 	private boolean lazy;
 	private String proxyInterfaceName;
@@ -74,12 +72,7 @@ public class EntityBindingStateImpl implements EntityBindingState {
 		this.isRoot = configuredClass.isRoot();
 		this.inheritanceType = configuredClass.getInheritanceType();
 		this.synchronizedTableNames = new HashSet<String>();
-
-		// TODO: where do these values come from?
-		this.metaAttributeContext = null;
-		this.rowId = null;
 		this.batchSize = -1;
-		this.isAbstract = false;
 	}
 
 	public void setEntityName(String entityName) {
@@ -134,6 +127,14 @@ public class EntityBindingStateImpl implements EntityBindingState {
 		this.proxyInterfaceName = proxyInterfaceName;
 	}
 
+	public void setRowId(String rowId) {
+		this.rowId = rowId;
+	}
+
+	public void setBatchSize(int batchSize) {
+		this.batchSize = batchSize;
+	}
+
 	public void addSynchronizedTableName(String tableName) {
 		synchronizedTableNames.add( tableName );
 	}
@@ -168,7 +169,8 @@ public class EntityBindingStateImpl implements EntityBindingState {
 
 	@Override
 	public MetaAttributeContext getMetaAttributeContext() {
-		return metaAttributeContext;
+		// not needed for annotations!? (HF)
+		return null;
 	}
 
 	@Override
@@ -233,7 +235,8 @@ public class EntityBindingStateImpl implements EntityBindingState {
 
 	@Override
 	public Boolean isAbstract() {
-		return isAbstract;
+		// no annotations equivalent
+		return false;
 	}
 
 	@Override

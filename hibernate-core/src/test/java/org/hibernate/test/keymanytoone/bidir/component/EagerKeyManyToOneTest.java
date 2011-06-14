@@ -37,7 +37,7 @@ import org.hibernate.integrator.spi.IntegratorService;
 import org.hibernate.service.internal.BasicServiceRegistryImpl;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 import org.hibernate.integrator.spi.Integrator;
-
+import org.hibernate.metamodel.source.MetadataImplementor;
 import org.junit.Test;
 
 import org.hibernate.testing.TestForIssue;
@@ -51,11 +51,13 @@ import static org.junit.Assert.fail;
  */
 @SuppressWarnings( {"unchecked"})
 public class EagerKeyManyToOneTest extends BaseCoreFunctionalTestCase {
-	public String[] getMappings() {
+	@Override
+    public String[] getMappings() {
 		return new String[] { "keymanytoone/bidir/component/EagerMapping.hbm.xml" };
 	}
 
-	public void configure(Configuration cfg) {
+	@Override
+    public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
 	}
@@ -66,15 +68,26 @@ public class EagerKeyManyToOneTest extends BaseCoreFunctionalTestCase {
 
 		serviceRegistry.getService( IntegratorService.class ).addIntegrator(
 				new Integrator() {
-					@Override
+
+				    @Override
 					public void integrate(
 							Configuration configuration,
 							SessionFactoryImplementor sessionFactory,
 							SessionFactoryServiceRegistry serviceRegistry) {
-						serviceRegistry.getService( EventListenerRegistry.class ).prependListeners(
-								EventType.LOAD, new CustomLoadListener()
-						);
+                        integrate(serviceRegistry);
 					}
+
+                    @Override
+				    public void integrate( MetadataImplementor metadata,
+				                           SessionFactoryImplementor sessionFactory,
+				                           SessionFactoryServiceRegistry serviceRegistry ) {
+                        integrate(serviceRegistry);
+				    }
+
+                    private void integrate( SessionFactoryServiceRegistry serviceRegistry ) {
+                        serviceRegistry.getService( EventListenerRegistry.class ).prependListeners(EventType.LOAD,
+                                                                                                   new CustomLoadListener());
+                    }
 
 					@Override
 					public void disintegrate(
@@ -184,7 +197,8 @@ public class EagerKeyManyToOneTest extends BaseCoreFunctionalTestCase {
 
 	private static class CustomLoadListener extends DefaultLoadEventListener {
 		private int internalLoadCount = 0;
-		public void onLoad(LoadEvent event, LoadType loadType) throws HibernateException {
+		@Override
+        public void onLoad(LoadEvent event, LoadType loadType) throws HibernateException {
 			if ( LoadEventListener.INTERNAL_LOAD_EAGER.getName().equals( loadType.getName() ) ) {
 				internalLoadCount++;
 				if ( internalLoadCount > 10 ) {

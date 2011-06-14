@@ -39,6 +39,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.metamodel.source.MetadataImplementor;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
@@ -137,6 +138,33 @@ public class BeanValidationIntegrator implements Integrator {
 		);
 	}
 
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.hibernate.integrator.spi.Integrator#integrate(org.hibernate.metamodel.source.MetadataImplementor, org.hibernate.engine.spi.SessionFactoryImplementor, org.hibernate.service.spi.SessionFactoryServiceRegistry)
+	 */
+	@Override
+	public void integrate( MetadataImplementor metadata,
+	                       SessionFactoryImplementor sessionFactory,
+	                       SessionFactoryServiceRegistry serviceRegistry ) {
+//	    Properties props = sessionFactory.getProperties();
+//        final Set<ValidationMode> modes = ValidationMode.getModes(props.get(MODE_PROPERTY));
+//        final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+//        // try to locate a BV class to see if it is available on the classpath
+//        boolean isBeanValidationAvailable;
+//        try {
+//            classLoaderService.classForName( BV_CHECK_CLASS );
+//            isBeanValidationAvailable = true;
+//        } catch (Exception error) {
+//            isBeanValidationAvailable = false;
+//        }
+//        // locate the type safe activator class
+//        final Class typeSafeActivatorClass = loadTypeSafeActivatorClass(serviceRegistry);
+//        // todo : if this works out, probably better to simply alter TypeSafeActivator into a single method...
+//        applyRelationalConstraints(modes, isBeanValidationAvailable, typeSafeActivatorClass, props, metadata);
+//        applyHibernateListeners(modes, isBeanValidationAvailable, typeSafeActivatorClass, sessionFactory, serviceRegistry);
+	}
+
 	private Class loadTypeSafeActivatorClass(SessionFactoryServiceRegistry serviceRegistry) {
 		try {
 			return serviceRegistry.getService( ClassLoaderService.class ).classForName( ACTIVATOR_CLASS );
@@ -194,6 +222,38 @@ public class BeanValidationIntegrator implements Integrator {
 		}
 	}
 
+//    private void applyRelationalConstraints( Set<ValidationMode> modes,
+//                                             boolean beanValidationAvailable,
+//                                             Class typeSafeActivatorClass,
+//                                             Properties properties,
+//                                             MetadataImplementor metadata ) {
+//        if (!ConfigurationHelper.getBoolean(APPLY_CONSTRAINTS, properties, true)){
+//            LOG.debug("Skipping application of relational constraints from legacy Hibernate Validator");
+//            return;
+//        }
+//        if (!(modes.contains(ValidationMode.DDL) || modes.contains(ValidationMode.AUTO))) return;
+//        if (!beanValidationAvailable) {
+//            if (modes.contains(ValidationMode.DDL))
+//                throw new HibernateException("Bean Validation not available in the class path but required in " + MODE_PROPERTY);
+//            if(modes.contains(ValidationMode.AUTO)) return; //nothing to activate
+//        }
+//        try {
+//            Method applyDDLMethod = typeSafeActivatorClass.getMethod(DDL_METHOD, Iterable.class, Properties.class, ClassLoaderService.class);
+//            try {
+//                applyDDLMethod.invoke(null, metadata.getEntityBindings(), properties,
+//                                      metadata.getServiceRegistry().getService(ClassLoaderService.class));
+//            } catch (HibernateException error) {
+//                throw error;
+//            } catch (Exception error) {
+//                throw new HibernateException("Error applying BeanValidation relational constraints", error);
+//            }
+//        } catch (HibernateException error) {
+//            throw error;
+//        } catch (Exception error) {
+//            throw new HibernateException("Unable to locate TypeSafeActivator#applyDDL method", error);
+//        }
+//    }
+
 	private void applyHibernateListeners(
 			Set<ValidationMode> modes,
 			boolean beanValidationAvailable,
@@ -245,6 +305,40 @@ public class BeanValidationIntegrator implements Integrator {
 		}
 	}
 
+//    private void applyHibernateListeners( Set<ValidationMode> modes,
+//                                          boolean beanValidationAvailable,
+//                                          Class typeSafeActivatorClass,
+//                                          SessionFactoryImplementor sessionFactory,
+//                                          SessionFactoryServiceRegistry serviceRegistry ) {
+//        // de-activate not-null tracking at the core level when Bean Validation is present unless the user explicitly
+//        // asks for it
+//        if (sessionFactory.getProperties().getProperty(Environment.CHECK_NULLABILITY) == null)
+//            sessionFactory.getSettings().setCheckNullability( false );
+//        if (!(modes.contains( ValidationMode.CALLBACK) || modes.contains(ValidationMode.AUTO))) return;
+//        if (!beanValidationAvailable) {
+//            if (modes.contains(ValidationMode.CALLBACK))
+//                throw new HibernateException("Bean Validation not available in the class path but required in " + MODE_PROPERTY);
+//            if (modes.contains(ValidationMode.AUTO)) return; //nothing to activate
+//        }
+//        try {
+//            Method activateMethod = typeSafeActivatorClass.getMethod(ACTIVATE_METHOD, EventListenerRegistry.class);
+//            try {
+//                activateMethod.invoke(null, serviceRegistry.getService(EventListenerRegistry.class));
+//            }
+//            catch (HibernateException e) {
+//                throw e;
+//            }
+//            catch (Exception e) {
+//                throw new HibernateException( "Error applying BeanValidation relational constraints", e );
+//            }
+//        }
+//        catch (HibernateException e) {
+//            throw e;
+//        }
+//        catch (Exception e) {
+//            throw new HibernateException( "Unable to locate TypeSafeActivator#applyDDL method", e );
+//        }
+//    }
 
 	// Because the javax validation classes might not be on the runtime classpath
 	private static enum ValidationMode {

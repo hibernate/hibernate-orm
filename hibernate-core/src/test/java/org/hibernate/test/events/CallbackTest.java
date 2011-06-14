@@ -36,6 +36,7 @@ import org.hibernate.event.spi.DeleteEventListener;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
+import org.hibernate.metamodel.source.MetadataImplementor;
 import org.hibernate.service.internal.BasicServiceRegistryImpl;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
@@ -55,11 +56,13 @@ public class CallbackTest extends BaseCoreFunctionalTestCase {
 	private TestingObserver observer = new TestingObserver();
 	private TestingListener listener = new TestingListener();
 
-	public String[] getMappings() {
+	@Override
+    public String[] getMappings() {
 		return NO_MAPPINGS;
 	}
 
-	public void configure(Configuration cfg) {
+	@Override
+    public void configure(Configuration cfg) {
 		cfg.setSessionFactoryObserver( observer );
 	}
 
@@ -68,16 +71,26 @@ public class CallbackTest extends BaseCoreFunctionalTestCase {
 		super.applyServices( serviceRegistry );
 		serviceRegistry.getService( IntegratorService.class ).addIntegrator(
 				new Integrator() {
-					@Override
+
+				    @Override
 					public void integrate(
 							Configuration configuration,
 							SessionFactoryImplementor sessionFactory,
 							SessionFactoryServiceRegistry serviceRegistry) {
-						serviceRegistry.getService( EventListenerRegistry.class ).setListeners(
-								EventType.DELETE, listener
-						);
-						listener.initialize( configuration );
+                        integrate(serviceRegistry);
 					}
+
+                    @Override
+				    public void integrate( MetadataImplementor metadata,
+				                           SessionFactoryImplementor sessionFactory,
+				                           SessionFactoryServiceRegistry serviceRegistry ) {
+                        integrate(serviceRegistry);
+				    }
+
+                    private void integrate( SessionFactoryServiceRegistry serviceRegistry ) {
+                        serviceRegistry.getService( EventListenerRegistry.class ).setListeners(EventType.DELETE, listener);
+                        listener.initialize();
+                    }
 
 					@Override
 					public void disintegrate(
@@ -116,7 +129,7 @@ public class CallbackTest extends BaseCoreFunctionalTestCase {
 		private int initCount = 0;
 		private int destoryCount = 0;
 
-		public void initialize(Configuration cfg) {
+		public void initialize() {
 			initCount++;
 		}
 

@@ -97,7 +97,7 @@ public class AuditConfiguration {
         revisionInfoQueryCreator = revInfoCfgResult.getRevisionInfoQueryCreator();
         revisionInfoNumberReader = revInfoCfgResult.getRevisionInfoNumberReader();
         modifiedEntityNamesReader = revInfoCfgResult.getModifiedEntityNamesReader();
-        auditStrategy = initializeAuditStrategy(revInfoCfgResult.getRevisionInfoClass(), 
+        auditStrategy = initializeAuditStrategy(revInfoCfgResult.getRevisionInfoClass(),
         		revInfoCfgResult.getRevisionInfoTimestampData());
         entCfg = new EntitiesConfigurator().configure(cfg, reflectionManager, globalCfg, auditEntCfg, auditStrategy,
                 revInfoCfgResult.getRevisionInfoXmlMapping(), revInfoCfgResult.getRevisionInfoRelationMapping());
@@ -105,14 +105,14 @@ public class AuditConfiguration {
 
 	private AuditStrategy initializeAuditStrategy(Class<?> revisionInfoClass, PropertyData revisionInfoTimestampData) {
 		AuditStrategy strategy;
-		
+
 		try {
             Class<?> auditStrategyClass = Thread.currentThread().getContextClassLoader().loadClass(auditEntCfg.getAuditStrategyName());
             strategy = (AuditStrategy) auditStrategyClass.newInstance();
         } catch (Exception e) {
            throw new MappingException(String.format("Unable to create AuditStrategy[%s] instance." , auditEntCfg.getAuditStrategyName()));
         }
-        
+
         if (strategy instanceof ValidityAuditStrategy) {
         	// further initialization required
         	Getter revisionTimestampGetter = ReflectionTools.getGetter(revisionInfoClass, revisionInfoTimestampData);
@@ -133,7 +133,7 @@ public class AuditConfiguration {
         if (verCfg == null) {
             verCfg = new AuditConfiguration(cfg);
             cfgs.put(cfg, verCfg);
-            
+
             cfg.buildMappings();
         }
 

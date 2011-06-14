@@ -25,7 +25,6 @@ package org.hibernate.metamodel.source.hbm;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.AssertionFailure;
@@ -37,6 +36,7 @@ import org.hibernate.metamodel.source.Origin;
 import org.hibernate.metamodel.source.binder.AttributeSource;
 import org.hibernate.metamodel.source.binder.ConstraintSource;
 import org.hibernate.metamodel.source.binder.EntitySource;
+import org.hibernate.metamodel.source.binder.JpaCallbackClass;
 import org.hibernate.metamodel.source.binder.MetaAttributeSource;
 import org.hibernate.metamodel.source.binder.SubclassEntitySource;
 import org.hibernate.metamodel.source.binder.TableSource;
@@ -304,5 +304,15 @@ public abstract class AbstractEntitySourceImpl implements EntitySource {
 	@Override
 	public Iterable<TableSource> getSecondaryTables() {
 		return Collections.emptySet();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.hibernate.metamodel.source.binder.EntitySource#getJpaCallbackClasses()
+	 */
+	@Override
+	public List<JpaCallbackClass> getJpaCallbackClasses() {
+	    return Collections.EMPTY_LIST;
 	}
 }

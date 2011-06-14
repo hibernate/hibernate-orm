@@ -35,6 +35,8 @@ import java.util.HashMap;
 
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
+import org.hibernate.metamodel.binding.EntityBinding;
+import org.hibernate.service.classloading.spi.ClassLoaderService;
 
 /**
  * Keep track of all lifecycle callbacks and listeners for a given persistence unit
@@ -59,6 +61,18 @@ public class EntityCallbackHandler implements Serializable {
 		addCallback( entity, preUpdates, PreUpdate.class, reflectionManager );
 		addCallback( entity, postUpdates, PostUpdate.class, reflectionManager );
 		addCallback( entity, postLoads, PostLoad.class, reflectionManager );
+	}
+
+	public void add( Class entity,
+	                 ClassLoaderService classLoaderService,
+	                 EntityBinding binding ) {
+        addCallback( entity, preCreates, PrePersist.class, classLoaderService, binding );
+        addCallback( entity, postCreates, PostPersist.class, classLoaderService, binding );
+        addCallback( entity, preRemoves, PreRemove.class, classLoaderService, binding );
+        addCallback( entity, postRemoves, PostRemove.class, classLoaderService, binding );
+        addCallback( entity, preUpdates, PreUpdate.class, classLoaderService, binding );
+        addCallback( entity, postUpdates, PostUpdate.class, classLoaderService, binding );
+        addCallback( entity, postLoads, PostLoad.class, classLoaderService, binding );
 	}
 
 	public boolean preCreate(Object bean) {
@@ -102,7 +116,6 @@ public class EntityCallbackHandler implements Serializable {
 		}
 	}
 
-
 	private void addCallback(
 			XClass entity, HashMap<Class, Callback[]> map, Class annotation, ReflectionManager reflectionManager
 	) {
@@ -110,4 +123,12 @@ public class EntityCallbackHandler implements Serializable {
 		callbacks = CallbackResolver.resolveCallback( entity, annotation, reflectionManager );
 		map.put( reflectionManager.toClass( entity ), callbacks );
 	}
+
+    private void addCallback( Class<?> entity,
+                              HashMap<Class, Callback[]> map,
+                              Class annotation,
+                              ClassLoaderService classLoaderService,
+                              EntityBinding binding ) {
+        map.put(entity, CallbackResolver.resolveCallbacks(entity, annotation, classLoaderService, binding));
+    }
 }

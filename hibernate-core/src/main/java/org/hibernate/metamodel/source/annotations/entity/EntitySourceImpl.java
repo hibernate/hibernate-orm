@@ -39,6 +39,7 @@ import org.hibernate.metamodel.source.annotations.attribute.ToOneAttributeSource
 import org.hibernate.metamodel.source.binder.AttributeSource;
 import org.hibernate.metamodel.source.binder.ConstraintSource;
 import org.hibernate.metamodel.source.binder.EntitySource;
+import org.hibernate.metamodel.source.binder.JpaCallbackClass;
 import org.hibernate.metamodel.source.binder.MetaAttributeSource;
 import org.hibernate.metamodel.source.binder.SubclassEntitySource;
 import org.hibernate.metamodel.source.binder.TableSource;
@@ -202,6 +203,16 @@ public class EntitySourceImpl implements EntitySource {
 	@Override
 	public Iterable<ConstraintSource> getConstraints() {
 		return entityClass.getConstraintSources();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.hibernate.metamodel.source.binder.EntitySource#getJpaCallbackClasses()
+	 */
+	@Override
+	public List<JpaCallbackClass> getJpaCallbackClasses() {
+	    return entityClass.getJpaCallbackClasses();
 	}
 
 	@Override

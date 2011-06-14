@@ -24,7 +24,9 @@
 package org.hibernate.metamodel.source.binder;
 
 import java.util.List;
-
+import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
+import javax.persistence.MappedSuperclass;
 import org.hibernate.metamodel.binding.CustomSQL;
 import org.hibernate.metamodel.source.LocalBindingContext;
 import org.hibernate.metamodel.source.Origin;
@@ -35,6 +37,7 @@ import org.hibernate.metamodel.source.Origin;
  * @author Steve Ebersole
  */
 public interface EntitySource extends SubclassEntityContainer, AttributeSourceContainer {
+
 	/**
 	 * Obtain the origin of this source.
 	 *
@@ -203,4 +206,10 @@ public interface EntitySource extends SubclassEntityContainer, AttributeSourceCo
 	 * @return returns the source information for constraints defined on the table
 	 */
 	public Iterable<ConstraintSource> getConstraints();
+
+    /**
+     * @return the list of classes (this {@link Entity entity}/{@link MappedSuperclass mapped superclass}, or
+     *         {@link EntityListeners entity listeners}) that define JPA callbacks for this entity/mapped superclass.
+     */
+    List<JpaCallbackClass> getJpaCallbackClasses();
 }

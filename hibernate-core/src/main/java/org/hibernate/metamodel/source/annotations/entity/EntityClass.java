@@ -23,19 +23,33 @@
  */
 package org.hibernate.metamodel.source.annotations.entity;
 
-import javax.persistence.AccessType;
-import javax.persistence.DiscriminatorType;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import javax.persistence.AccessType;
+import javax.persistence.DiscriminatorType;
+import javax.persistence.PersistenceException;
+import javax.persistence.PostLoad;
+import javax.persistence.PostPersist;
+import javax.persistence.PostRemove;
+import javax.persistence.PostUpdate;
+import javax.persistence.PrePersist;
+import javax.persistence.PreRemove;
+import javax.persistence.PreUpdate;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
+import org.jboss.jandex.MethodInfo;
+import org.jboss.jandex.Type;
+import org.jboss.jandex.Type.Kind;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
@@ -54,7 +68,9 @@ import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.JandexHelper;
 import org.hibernate.metamodel.source.annotations.attribute.ColumnValues;
 import org.hibernate.metamodel.source.annotations.attribute.FormulaValue;
+import org.hibernate.metamodel.source.annotations.xml.PseudoJpaDotNames;
 import org.hibernate.metamodel.source.binder.ConstraintSource;
+import org.hibernate.metamodel.source.binder.JpaCallbackClass;
 import org.hibernate.metamodel.source.binder.TableSource;
 
 /**
@@ -101,6 +117,8 @@ public class EntityClass extends ConfiguredClass {
 	private boolean isDiscriminatorIncludedInSql = true;
 
 
+	List<JpaCallbackClass> jpaCallbackClasses = new ArrayList<JpaCallbackClass>();
+
 	public EntityClass(
 			ClassInfo classInfo,
 			EntityClass parent,
@@ -136,7 +154,151 @@ public class EntityClass extends ConfiguredClass {
 		processProxyGeneration();
 
 		processDiscriminator();
+
+		// Bind default JPA entity listener callbacks (unless excluded), using superclasses first (unless excluded)
+        if (JandexHelper.getSingleAnnotation(classInfo, JPADotNames.EXCLUDE_DEFAULT_LISTENERS) == null) {
+            for (AnnotationInstance callbackClasses : context.getIndex().getAnnotations(PseudoJpaDotNames.DEFAULT_ENTITY_LISTENERS)) {
+                for (Type callbackClass : callbackClasses.value().asClassArray()) {
+                    String callbackClassName = callbackClass.name().toString();
+                    try {
+                        processDefaultJpaCallbacks(callbackClassName, context.getClassInfo(callbackClassName), context);
+                    } catch (PersistenceException error) {
+                        throw new PersistenceException(error.getMessage() + "default entity listener " + callbackClassName);
+                    }
+                }
+            }
+        }
+        // Bind JPA entity listener callbacks, using superclasses first (unless excluded)
+        for (AnnotationInstance callbackClasses : classInfo.annotations().get(JPADotNames.ENTITY_LISTENERS)) {
+            for (Type callbackClass : callbackClasses.value().asClassArray()) {
+                String callbackClassName = callbackClass.name().toString();
+                try {
+                    processJpaCallbacks(callbackClassName, context.getClassInfo(callbackClassName), true, context);
+                } catch (PersistenceException error) {
+                    throw new PersistenceException(error.getMessage() + "entity listener " + callbackClassName);
+                }
+            }
+        }
+        // Bind JPA entity.mapped superclass callbacks, using superclasses first (unless excluded)
+        try {
+            processJpaCallbacks(getName(), classInfo, false, context);
+        } catch (PersistenceException error) {
+            throw new PersistenceException(error.getMessage() + "entity/mapped superclass " + classInfo.name().toString());
+        }
 	}
+
+	private void processDefaultJpaCallbacks( String instanceCallbackClassName,
+	                                         ClassInfo callbackClassInfo,
+	                                         AnnotationBindingContext context ) {
+	    // Process superclass first if available and not excluded
+        if (JandexHelper.getSingleAnnotation(callbackClassInfo, JPADotNames.EXCLUDE_SUPERCLASS_LISTENERS) != null) {
+            DotName superName = callbackClassInfo.superName();
+            if (superName != null)
+                processDefaultJpaCallbacks(instanceCallbackClassName, context.getClassInfo(superName.toString()), context);
+        }
+
+        String callbackClassName = callbackClassInfo.name().toString();
+        Map<Class<?>, String> callbacksByType = new HashMap<Class<?>, String>();
+        createDefaultCallback(PrePersist.class, PseudoJpaDotNames.DEFAULT_PRE_PERSIST, callbackClassName, callbacksByType,
+                              context);
+        createDefaultCallback(PreRemove.class, PseudoJpaDotNames.DEFAULT_PRE_REMOVE, callbackClassName, callbacksByType,
+                              context);
+        createDefaultCallback(PreUpdate.class, PseudoJpaDotNames.DEFAULT_PRE_UPDATE, callbackClassName, callbacksByType,
+                              context);
+        createDefaultCallback(PostLoad.class, PseudoJpaDotNames.DEFAULT_POST_LOAD, callbackClassName, callbacksByType,
+                              context);
+        createDefaultCallback(PostPersist.class, PseudoJpaDotNames.DEFAULT_POST_PERSIST, callbackClassName, callbacksByType,
+                              context);
+        createDefaultCallback(PostRemove.class, PseudoJpaDotNames.DEFAULT_POST_REMOVE, callbackClassName, callbacksByType,
+                              context);
+        createDefaultCallback(PostUpdate.class, PseudoJpaDotNames.DEFAULT_POST_UPDATE, callbackClassName, callbacksByType,
+                              context);
+        if (!callbacksByType.isEmpty())
+            jpaCallbackClasses.add(new JpaCallbackClassImpl(instanceCallbackClassName, callbacksByType, true));
+	}
+
+    private void processJpaCallbacks( String instanceCallbackClassName,
+                                      ClassInfo callbackClassInfo,
+                                      boolean isListener,
+                                      AnnotationBindingContext context ) {
+        // Process superclass first if available and not excluded
+        if (JandexHelper.getSingleAnnotation(callbackClassInfo, JPADotNames.EXCLUDE_SUPERCLASS_LISTENERS) != null) {
+            DotName superName = callbackClassInfo.superName();
+            if (superName != null)
+                processJpaCallbacks(instanceCallbackClassName, context.getClassInfo(superName.toString()), isListener, context);
+        }
+
+        Map<Class<?>, String> callbacksByType = new HashMap<Class<?>, String>();
+        createCallback(PrePersist.class, JPADotNames.PRE_PERSIST, callbacksByType, callbackClassInfo, isListener);
+        createCallback(PreRemove.class, JPADotNames.PRE_REMOVE, callbacksByType, callbackClassInfo, isListener);
+        createCallback(PreUpdate.class, JPADotNames.PRE_UPDATE, callbacksByType, callbackClassInfo, isListener);
+        createCallback(PostLoad.class, JPADotNames.POST_LOAD, callbacksByType, callbackClassInfo, isListener);
+        createCallback(PostPersist.class, JPADotNames.POST_PERSIST, callbacksByType, callbackClassInfo, isListener);
+        createCallback(PostRemove.class, JPADotNames.POST_REMOVE, callbacksByType, callbackClassInfo, isListener);
+        createCallback(PostUpdate.class, JPADotNames.POST_UPDATE, callbacksByType, callbackClassInfo, isListener);
+        if (!callbacksByType.isEmpty())
+            jpaCallbackClasses.add(new JpaCallbackClassImpl(instanceCallbackClassName, callbacksByType, isListener));
+    }
+
+    private void createDefaultCallback( Class callbackTypeClass,
+                                        DotName callbackTypeName,
+                                        String callbackClassName,
+                                        Map<Class<?>, String> callbacksByClass,
+                                        AnnotationBindingContext context ) {
+        for (AnnotationInstance callback : context.getIndex().getAnnotations(callbackTypeName)) {
+            MethodInfo methodInfo = (MethodInfo)callback.target();
+            validateMethod(methodInfo, callbackTypeClass, callbacksByClass, true);
+            if (methodInfo.declaringClass().name().equals(callbackClassName)) {
+                if (methodInfo.args().length != 1)
+                    throw new PersistenceException("Callback method " + methodInfo.name() +
+                                                   " must have exactly one argument defined as either Object or " +
+                                                   getEntityName() + " in ");
+                createCallback(callbackTypeClass, callbacksByClass, methodInfo);
+            }
+        }
+    }
+
+    private void createCallback( Class callbackTypeClass,
+                                 DotName callbackTypeName,
+                                 Map<Class<?>, String> callbacksByClass,
+                                 ClassInfo callbackClassInfo,
+                                 boolean isListener ) {
+        Map<DotName, List<AnnotationInstance>> annotations = callbackClassInfo.annotations();
+        for (AnnotationInstance callback : annotations.get(callbackTypeName)) {
+            MethodInfo methodInfo = (MethodInfo)callback.target();
+            validateMethod(methodInfo, callbackTypeClass, callbacksByClass, isListener);
+            createCallback(callbackTypeClass, callbacksByClass, methodInfo);
+        }
+    }
+
+    private void createCallback( Class callbackTypeClass,
+                                 Map<Class<?>, String> callbacksByClass,
+                                 MethodInfo methodInfo ) {
+        callbacksByClass.put(callbackTypeClass, methodInfo.name());
+    }
+
+    private void validateMethod( MethodInfo methodInfo,
+                                 Class callbackTypeClass,
+                                 Map<Class<?>, String> callbacksByClass,
+                                 boolean isListener) {
+        if (methodInfo.returnType().kind() != Kind.VOID)
+            throw new PersistenceException("Callback method " + methodInfo.name() + " must have a void return type in ");
+        if (Modifier.isStatic(methodInfo.flags()) || Modifier.isFinal(methodInfo.flags()))
+            throw new PersistenceException("Callback method " + methodInfo.name() + " must not be static or final in ");
+        Type[] argTypes = methodInfo.args();
+        if (isListener) {
+            if (argTypes.length != 1)
+                throw new PersistenceException("Callback method " + methodInfo.name() + " must have exactly one argument in ");
+            String argTypeName = argTypes[0].name().toString();
+            if (!argTypeName.equals(Object.class.getName()) && !argTypeName.equals(getName()))
+                throw new PersistenceException("The argument for callback method " + methodInfo.name() +
+                                               " must be defined as either Object or " + getEntityName() + " in ");
+        } else if (argTypes.length != 0)
+            throw new PersistenceException("Callback method " + methodInfo.name() + " must have no arguments in ");
+        if (callbacksByClass.containsKey(callbackTypeClass))
+            throw new PersistenceException("Only one method may be annotated as a " + callbackTypeClass.getSimpleName() +
+                                           " callback method in ");
+    }
 
 	public ColumnValues getDiscriminatorColumnValues() {
 		return discriminatorColumnValues;
@@ -740,4 +902,55 @@ public class EntityClass extends ConfiguredClass {
 	public String getDiscriminatorMatchValue() {
 		return discriminatorMatchValue;
 	}
+
+    public List<JpaCallbackClass> getJpaCallbackClasses() {
+        return jpaCallbackClasses;
+    }
+
+    // Process JPA callbacks, in superclass-first order (unless superclasses are excluded), using default listeners first
+    // (unless default listeners are excluded), then entity listeners, and finally the entity/mapped superclass itself
+    private class JpaCallbackClassImpl implements JpaCallbackClass {
+
+        private final Map<Class<?>, String> callbacksByType;
+        private final String name;
+        private final boolean isListener;
+
+        private JpaCallbackClassImpl( String name,
+                                      Map<Class<?>, String> callbacksByType,
+                                      boolean isListener ) {
+            this.name = name;
+            this.callbacksByType = callbacksByType;
+            this.isListener = isListener;
+        }
+
+        /**
+         * {@inheritDoc}
+         *
+         * @see org.hibernate.metamodel.source.binder.JpaCallbackClass#getCallback(java.lang.Class)
+         */
+        @Override
+        public String getCallback( Class<?> callbackAnnotationClass ) {
+            return callbacksByType.get(callbackAnnotationClass);
+        }
+
+        /**
+         * {@inheritDoc}
+         *
+         * @see org.hibernate.metamodel.source.binder.JpaCallbackClass#getName()
+         */
+        @Override
+        public String getName() {
+            return name;
+        }
+
+        /**
+         * {@inheritDoc}
+         *
+         * @see org.hibernate.metamodel.source.binder.JpaCallbackClass#isListener()
+         */
+        @Override
+        public boolean isListener() {
+            return isListener;
+        }
+    }
 }

@@ -35,13 +35,15 @@ import java.lang.annotation.Target;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
-
 import org.jboss.logging.Logger;
 
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XMethod;
 import org.hibernate.ejb.internal.EntityManagerMessageLogger;
+import org.hibernate.metamodel.binding.EntityBinding;
+import org.hibernate.metamodel.source.binder.JpaCallbackClass;
+import org.hibernate.service.classloading.spi.ClassLoaderService;
 
 /**
  * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>
@@ -69,7 +71,7 @@ public final class CallbackResolver {
 
 	public static Callback[] resolveCallback(XClass beanClass, Class annotation, ReflectionManager reflectionManager) {
 		List<Callback> callbacks = new ArrayList<Callback>();
-		List<String> callbacksMethodNames = new ArrayList<String>(); //used to track overriden methods
+		List<String> callbacksMethodNames = new ArrayList<String>(); //used to track overridden methods
 		List<Class> orderedListeners = new ArrayList<Class>();
 		XClass currentClazz = beanClass;
 		boolean stopListeners = false;
@@ -84,7 +86,7 @@ public final class CallbackResolver {
 					Method method = reflectionManager.toMethod( xMethod );
 					final String methodName = method.getName();
 					if ( ! callbacksMethodNames.contains( methodName ) ) {
-						//overriden method, remove the superclass overriden method
+						//overridden method, remove the superclass overridden method
 						if ( callback == null ) {
 							callback = new BeanCallback( method );
 							Class returnType = method.getReturnType();
@@ -145,64 +147,116 @@ public final class CallbackResolver {
 			if ( listener != null ) {
 				XClass xListener = reflectionManager.toXClass( listener );
 				callbacksMethodNames = new ArrayList<String>();
-				do {
-					List<XMethod> methods = xListener.getDeclaredMethods();
-					final int size = methods.size();
-					for ( int i = 0; i < size ; i++ ) {
-						final XMethod xMethod = methods.get( i );
-						if ( xMethod.isAnnotationPresent( annotation ) ) {
-							final Method method = reflectionManager.toMethod( xMethod );
-							final String methodName = method.getName();
-							if ( ! callbacksMethodNames.contains( methodName ) ) {
-								//overriden method, remove the superclass overriden method
-								if ( callback == null ) {
-									try {
-										callback = new ListenerCallback( method, listener.newInstance() );
-									}
-									catch (IllegalAccessException e) {
-										throw new PersistenceException(
-												"Unable to create instance of " + listener.getName()
-														+ " as a listener of beanClass", e
-										);
-									}
-									catch (InstantiationException e) {
-										throw new PersistenceException(
-												"Unable to create instance of " + listener.getName()
-														+ " as a listener of beanClass", e
-										);
-									}
-									Class returnType = method.getReturnType();
-									Class[] args = method.getParameterTypes();
-									if ( returnType != Void.TYPE || args.length != 1 ) {
-										throw new PersistenceException(
-												"Callback methods annotated in a listener bean class must return void and take one argument: " + annotation
-														.getName() + " - " + method
-										);
-									}
-                                    if (!method.isAccessible()) method.setAccessible(true);
-                                    LOG.debugf("Adding %s as %s callback for entity %s",
-                                               methodName,
-                                               annotation.getSimpleName(),
-                                               beanClass.getName());
-									callbacks.add( 0, callback ); // listeners first
+				List<XMethod> methods = xListener.getDeclaredMethods();
+				final int size = methods.size();
+				for ( int i = 0; i < size ; i++ ) {
+					final XMethod xMethod = methods.get( i );
+					if ( xMethod.isAnnotationPresent( annotation ) ) {
+						final Method method = reflectionManager.toMethod( xMethod );
+						final String methodName = method.getName();
+						if ( ! callbacksMethodNames.contains( methodName ) ) {
+							//overridden method, remove the superclass overridden method
+							if ( callback == null ) {
+								try {
+									callback = new ListenerCallback( method, listener.newInstance() );
 								}
-								else {
+								catch (IllegalAccessException e) {
 									throw new PersistenceException(
-											"You can only annotate one callback method with "
-													+ annotation.getName() + " in bean class: " + beanClass.getName() + " and callback listener: "
-													+ listener.getName()
+											"Unable to create instance of " + listener.getName()
+													+ " as a listener of beanClass", e
 									);
 								}
+								catch (InstantiationException e) {
+									throw new PersistenceException(
+											"Unable to create instance of " + listener.getName()
+													+ " as a listener of beanClass", e
+									);
+								}
+								Class returnType = method.getReturnType();
+								Class[] args = method.getParameterTypes();
+								if ( returnType != Void.TYPE || args.length != 1 ) {
+									throw new PersistenceException(
+											"Callback methods annotated in a listener bean class must return void and take one argument: " + annotation
+													.getName() + " - " + method
+									);
+								}
+                                if (!method.isAccessible()) method.setAccessible(true);
+                                LOG.debugf("Adding %s as %s callback for entity %s",
+                                           methodName,
+                                           annotation.getSimpleName(),
+                                           beanClass.getName());
+								callbacks.add( 0, callback ); // listeners first
+							}
+							else {
+								throw new PersistenceException(
+										"You can only annotate one callback method with "
+												+ annotation.getName() + " in bean class: " + beanClass.getName() + " and callback listener: "
+												+ listener.getName()
+								);
 							}
 						}
 					}
-					xListener = null;  //xListener.getSuperclass();
 				}
-				while ( xListener != null );
 			}
 		}
 		return callbacks.toArray( new Callback[ callbacks.size() ] );
 	}
+
+    public static Callback[] resolveCallbacks( Class entityClass,
+                                               Class callbackAnnotationClass,
+                                               ClassLoaderService classLoaderService,
+                                               EntityBinding binding ) {
+        List<Callback> callbacks = new ArrayList<Callback>();
+        for (JpaCallbackClass jpaCallbackClass : binding.getJpaCallbackClasses()) {
+            Object listener = classLoaderService.classForName(jpaCallbackClass.getName());
+            String methodName = jpaCallbackClass.getCallback(callbackAnnotationClass);
+            Callback callback = jpaCallbackClass.isListener() ?
+                                createListenerCallback(entityClass, callbackAnnotationClass, listener, methodName) :
+                                createBeanCallback(callbackAnnotationClass, methodName);
+            LOG.debugf("Adding %s as %s callback for entity %s", methodName, callbackAnnotationClass.getName(),
+                       entityClass.getName());
+            assert callback != null;
+            callbacks.add(callback);
+        }
+        return callbacks.toArray(new Callback[callbacks.size()]);
+    }
+
+    private static Callback createListenerCallback( Class<?> entityClass,
+                                                    Class<?> callbackClass,
+                                                    Object listener,
+                                                    String methodName ) {
+        Class<?> callbackSuperclass = callbackClass.getSuperclass();
+        if (callbackSuperclass != null) {
+            Callback callback = createListenerCallback(entityClass, callbackSuperclass, listener, methodName);
+            if (callback != null) return callback;
+        }
+        for (Method method : callbackClass.getDeclaredMethods()) {
+            if (!method.getName().equals(methodName)) continue;
+            Class<?>[] argTypes = method.getParameterTypes();
+            if (argTypes.length != 1) continue;
+            Class<?> argType = argTypes[0];
+            if (argType != Object.class && argType != entityClass) continue;
+            if (!method.isAccessible()) method.setAccessible(true);
+            return new ListenerCallback(method, listener);
+        }
+        return null;
+    }
+
+    private static Callback createBeanCallback( Class<?> callbackClass,
+                                                String methodName ) {
+        Class<?> callbackSuperclass = callbackClass.getSuperclass();
+        if (callbackSuperclass != null) {
+            Callback callback = createBeanCallback(callbackSuperclass, methodName);
+            if (callback != null) return callback;
+        }
+        for (Method method : callbackClass.getDeclaredMethods()) {
+            if (!method.getName().equals(methodName)) continue;
+            if (method.getParameterTypes().length != 0) continue;
+            if (!method.isAccessible()) method.setAccessible(true);
+            return new BeanCallback(method);
+        }
+        return null;
+    }
 
 	private static void getListeners(XClass currentClazz, List<Class> orderedListeners) {
 		EntityListeners entityListeners = currentClazz.getAnnotation( EntityListeners.class );

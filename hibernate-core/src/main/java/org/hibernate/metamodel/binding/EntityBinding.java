@@ -42,6 +42,7 @@ import org.hibernate.metamodel.domain.PluralAttributeNature;
 import org.hibernate.metamodel.domain.SingularAttribute;
 import org.hibernate.metamodel.relational.TableSpecification;
 import org.hibernate.metamodel.source.MetaAttributeContext;
+import org.hibernate.metamodel.source.binder.JpaCallbackClass;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.tuple.entity.EntityTuplizer;
 
@@ -100,6 +101,8 @@ public class EntityBinding implements AttributeBindingContainer {
 
 	private Set<String> synchronizedTableNames = new HashSet<String>();
 	private Map<String, AttributeBinding> attributeBindingMap = new HashMap<String, AttributeBinding>();
+
+    private List<JpaCallbackClass> jpaCallbackClasses = new ArrayList<JpaCallbackClass>();
 
 	/**
 	 * Used to instantiate the EntityBinding for an entity that is the root of an inheritance hierarchy
@@ -591,4 +594,12 @@ public class EntityBinding implements AttributeBindingContainer {
 		}
 		return new JoinedIterable<AttributeBinding>( iterables );
 	}
+
+	public void setJpaCallbackClasses( List<JpaCallbackClass> jpaCallbackClasses ) {
+	    this.jpaCallbackClasses = jpaCallbackClasses;
+	}
+
+    public Iterable<JpaCallbackClass> getJpaCallbackClasses() {
+        return jpaCallbackClasses;
+    }
 }

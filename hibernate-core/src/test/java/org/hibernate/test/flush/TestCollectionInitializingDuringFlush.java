@@ -32,7 +32,7 @@ import org.hibernate.integrator.spi.IntegratorService;
 import org.hibernate.service.internal.BasicServiceRegistryImpl;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 import org.hibernate.integrator.spi.Integrator;
-
+import org.hibernate.metamodel.source.MetadataImplementor;
 import org.junit.Test;
 
 import org.hibernate.testing.FailureExpected;
@@ -54,14 +54,25 @@ public class TestCollectionInitializingDuringFlush extends BaseCoreFunctionalTes
 		super.applyServices( serviceRegistry );
 		serviceRegistry.getService( IntegratorService.class ).addIntegrator(
 				new Integrator() {
+
 					@Override
 					public void integrate(
 							Configuration configuration,
 							SessionFactoryImplementor sessionFactory,
 							SessionFactoryServiceRegistry serviceRegistry) {
-						serviceRegistry.getService( EventListenerRegistry.class )
-								.getEventListenerGroup( EventType.PRE_UPDATE )
-								.appendListener( new InitializingPreUpdateEventListener() );
+                        integrate(serviceRegistry);
+					}
+
+					@Override
+					public void integrate( MetadataImplementor metadata,
+					                       SessionFactoryImplementor sessionFactory,
+					                       SessionFactoryServiceRegistry serviceRegistry ) {
+					    integrate(serviceRegistry);
+					}
+
+					private void integrate( SessionFactoryServiceRegistry serviceRegistry ) {
+                        serviceRegistry.getService(EventListenerRegistry.class).getEventListenerGroup(EventType.PRE_UPDATE)
+                                       .appendListener(new InitializingPreUpdateEventListener());
 					}
 
 					@Override

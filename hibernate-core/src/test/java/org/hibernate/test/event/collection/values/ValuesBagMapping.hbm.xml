@@ -1,13 +1,17 @@
 <?xml version="1.0"?>
+
+<!--
 <!DOCTYPE hibernate-mapping PUBLIC
         "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
         "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
-
-<!--
-
 -->
 
-<hibernate-mapping package="org.hibernate.test.event.collection.values">
+<hibernate-mapping 
+    xmlns="http://www.hibernate.org/xsd/hibernate-mapping"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.hibernate.org/xsd/hibernate-mapping
+    /Users/jpav/hibernate/hibernate-core/hibernate-core/src/main/resources/org/hibernate/hibernate-mapping-4.0.xsd" 
+    package="org.hibernate.test.event.collection.values">
 
     <class name="ParentWithCollectionOfValues" table="PARENT">
         <id name="id" column="ID" type="long">

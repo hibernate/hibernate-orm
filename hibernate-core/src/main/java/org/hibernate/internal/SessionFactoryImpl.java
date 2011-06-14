@@ -23,7 +23,6 @@
  */
 package org.hibernate.internal;
 
-import javax.naming.NamingException;
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
 import java.io.IOException;
@@ -116,7 +115,6 @@ import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.metamodel.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.source.MetadataImplementor;
 import org.hibernate.metamodel.binding.EntityBinding;
-import org.hibernate.metamodel.binding.AbstractPluralAttributeBinding;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Loadable;
@@ -167,7 +165,7 @@ import org.hibernate.type.TypeResolver;
  * @author Gavin King
  */
 public final class SessionFactoryImpl
-		implements SessionFactory, SessionFactoryImplementor {
+		implements SessionFactoryImplementor {
 
     private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, SessionFactoryImpl.class.getName());
 	private static final IdentifierGenerator UUID_GENERATOR = UUIDGenerator.buildSessionFactoryUniqueIdentifierGenerator();
@@ -218,7 +216,7 @@ public final class SessionFactoryImpl
 			SessionFactoryObserver observer) throws HibernateException {
         LOG.debug( "Building session factory" );
 
-		sessionFactoryOptions = new SessionFactoryOptions() {
+        sessionFactoryOptions = new SessionFactoryOptions() {
 			private EntityNotFoundDelegate entityNotFoundDelegate;
 
 			@Override
@@ -253,8 +251,8 @@ public final class SessionFactoryImpl
 				this,
 				cfg
 		);
-                this.jdbcServices = this.serviceRegistry.getService( JdbcServices.class );
-                this.dialect = this.jdbcServices.getDialect();
+        this.jdbcServices = this.serviceRegistry.getService( JdbcServices.class );
+        this.dialect = this.jdbcServices.getDialect();
 		this.sqlFunctionRegistry = new SQLFunctionRegistry( getDialect(), cfg.getSqlFunctions() );
 		if ( observer != null ) {
 			this.observer.addObserver( observer );
@@ -592,13 +590,12 @@ public final class SessionFactoryImpl
 			}
 		}
 
-		final IntegratorObserver integratorObserver = new IntegratorObserver();
-		this.observer.addObserver( integratorObserver );
-		for ( Integrator integrator : serviceRegistry.getService( IntegratorService.class ).getIntegrators() ) {
-			// TODO: add Integrator.integrate(MetadataImplementor, ...)
-			// integrator.integrate( cfg, this, this.serviceRegistry );
-			integratorObserver.integrators.add( integrator );
-		}
+        final IntegratorObserver integratorObserver = new IntegratorObserver();
+        this.observer.addObserver(integratorObserver);
+        for (Integrator integrator : serviceRegistry.getService(IntegratorService.class).getIntegrators()) {
+            integrator.integrate(metadata, this, this.serviceRegistry);
+            integratorObserver.integrators.add(integrator);
+        }
 
 
 		//Generators:
@@ -987,7 +984,7 @@ public final class SessionFactoryImpl
 				// currently not doable though because of the resultset-ref stuff...
 				NativeSQLQuerySpecification spec;
 				if ( qd.getResultSetRef() != null ) {
-					ResultSetMappingDefinition definition = ( ResultSetMappingDefinition ) sqlResultSetMappings.get( qd.getResultSetRef() );
+					ResultSetMappingDefinition definition = sqlResultSetMappings.get( qd.getResultSetRef() );
 					if ( definition == null ) {
 						throw new MappingException( "Unable to find resultset-ref definition: " + qd.getResultSetRef() );
 					}
@@ -1070,7 +1067,7 @@ public final class SessionFactoryImpl
 	}
 
 	@Override
-	public Reference getReference() throws NamingException {
+	public Reference getReference() {
 		// from javax.naming.Referenceable
         LOG.debug( "Returning a Reference to the SessionFactory" );
 		return new Reference(
@@ -1101,15 +1098,15 @@ public final class SessionFactoryImpl
 	}
 
 	public NamedQueryDefinition getNamedQuery(String queryName) {
-		return (NamedQueryDefinition) namedQueries.get(queryName);
+		return namedQueries.get(queryName);
 	}
 
 	public NamedSQLQueryDefinition getNamedSQLQuery(String queryName) {
-		return (NamedSQLQueryDefinition) namedSqlQueries.get(queryName);
+		return namedSqlQueries.get(queryName);
 	}
 
 	public ResultSetMappingDefinition getResultSetMapping(String resultSetName) {
-		return (ResultSetMappingDefinition) sqlResultSetMappings.get(resultSetName);
+		return sqlResultSetMappings.get(resultSetName);
 	}
 
 	public Type getIdentifierType(String className) throws MappingException {
@@ -1152,9 +1149,11 @@ public final class SessionFactoryImpl
 	}
 
 	/**
-	 * Return the names of all persistent (mapped) classes that extend or implement the
-	 * given class or interface, accounting for implicit/explicit polymorphism settings
-	 * and excluding mapped subclasses/joined-subclasses of other classes in the result.
+     * @param className
+	 * @return the names of all persistent (mapped) classes that extend or implement the
+	 *     given class or interface, accounting for implicit/explicit polymorphism settings
+	 *     and excluding mapped subclasses/joined-subclasses of other classes in the result.
+	 * @throws MappingException
 	 */
 	public String[] getImplementors(String className) throws MappingException {
 
@@ -1207,7 +1206,7 @@ public final class SessionFactoryImpl
 	}
 
 	public String getImportedClassName(String className) {
-		String result = (String) imports.get(className);
+		String result = imports.get(className);
 		if (result==null) {
 			try {
 				ReflectHelper.classForName( className );
@@ -1252,6 +1251,7 @@ public final class SessionFactoryImpl
 	 * be a "heavy" object memory wise after close() has been called.  Thus
 	 * it is important to not keep referencing the instance to let the garbage
 	 * collector release the memory.
+	 * @throws HibernateException
 	 */
 	public void close() throws HibernateException {
 
@@ -1515,7 +1515,7 @@ public final class SessionFactoryImpl
 	}
 
 	public FilterDefinition getFilterDefinition(String filterName) throws HibernateException {
-		FilterDefinition def = ( FilterDefinition ) filters.get( filterName );
+		FilterDefinition def = filters.get( filterName );
 		if ( def == null ) {
 			throw new HibernateException( "No such filter configured [" + filterName + "]" );
 		}

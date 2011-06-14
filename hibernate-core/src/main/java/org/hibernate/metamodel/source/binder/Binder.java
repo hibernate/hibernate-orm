@@ -30,7 +30,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.cfg.NotYetImplementedException;
@@ -77,7 +76,7 @@ import org.hibernate.tuple.entity.EntityTuplizer;
 /**
  * The common binder shared between annotations and {@code hbm.xml} processing.
  * <p/>
- * The API consists of {@link #Binder} and {@link #processEntityHierarchy}
+ * The API consists of {@link #Binder(MetadataImplementor, List)} and {@link #processEntityHierarchy(EntityHierarchy)}
  *
  * @author Steve Ebersole
  * @author Hardy Ferentschik
@@ -265,6 +264,8 @@ public class Binder {
 			entityBinding.addSynchronizedTableNames( entitySource.getSynchronizedTableNames() );
 		}
 
+		entityBinding.setJpaCallbackClasses(entitySource.getJpaCallbackClasses());
+
 		return entityBinding;
 	}
 
@@ -307,14 +308,17 @@ public class Binder {
 		switch ( entitySource.getIdentifierSource().getNature() ) {
 			case SIMPLE: {
 				bindSimpleIdentifier( (SimpleIdentifierSource) entitySource.getIdentifierSource(), entityBinding );
+				break;
 			}
 			case AGGREGATED_COMPOSITE: {
 				// composite id with an actual component class
+			    break;
 			}
 			case COMPOSITE: {
 				// what we used to term an "embedded composite identifier", which is not tobe confused with the JPA
 				// term embedded. Specifically a composite id where there is no component class, though there may
 				// be a @IdClass :/
+			    break;
 			}
 		}
 	}

@@ -26,6 +26,9 @@ package org.hibernate.metamodel.binding;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.hibernate.MappingException;
+import org.hibernate.engine.spi.CascadeStyle;
+
 
 /**
  * @author Hardy Ferentschik
@@ -120,6 +123,22 @@ public enum CascadeType {
 		jpaCascadeTypeToHibernateCascadeType.put( javax.persistence.CascadeType.DETACH, EVICT );
 	}
 
+	private static final Map<CascadeType, CascadeStyle> cascadeTypeToCascadeStyle = new HashMap<CascadeType, CascadeStyle>();
+	static {
+		cascadeTypeToCascadeStyle.put( ALL, CascadeStyle.ALL );
+		cascadeTypeToCascadeStyle.put( ALL_DELETE_ORPHAN, CascadeStyle.ALL_DELETE_ORPHAN );
+		cascadeTypeToCascadeStyle.put( UPDATE, CascadeStyle.UPDATE );
+		cascadeTypeToCascadeStyle.put( PERSIST, CascadeStyle.PERSIST );
+		cascadeTypeToCascadeStyle.put( MERGE, CascadeStyle.MERGE );
+		cascadeTypeToCascadeStyle.put( LOCK, CascadeStyle.LOCK );
+		cascadeTypeToCascadeStyle.put( REFRESH, CascadeStyle.REFRESH );
+		cascadeTypeToCascadeStyle.put( REPLICATE, CascadeStyle.REPLICATE );
+		cascadeTypeToCascadeStyle.put( EVICT, CascadeStyle.EVICT );
+		cascadeTypeToCascadeStyle.put( DELETE, CascadeStyle.DELETE );
+		cascadeTypeToCascadeStyle.put( DELETE_ORPHAN, CascadeStyle.DELETE_ORPHAN );
+		cascadeTypeToCascadeStyle.put( NONE, CascadeStyle.NONE );
+	}
+
 	/**
 	 * @param hbmOptionName the cascading option as specified in the hbm mapping file
 	 *
@@ -136,5 +155,18 @@ public enum CascadeType {
 	 */
 	public static CascadeType getCascadeType(javax.persistence.CascadeType jpaCascade) {
 		return jpaCascadeTypeToHibernateCascadeType.get( jpaCascade );
+	}
+
+	/**
+	 * @return Returns the {@code CascadeStyle} that corresponds to this {@code CascadeType}
+	 *
+	 * @throws MappingException if there is not corresponding {@code CascadeStyle}
+	 */
+	public CascadeStyle toCascadeStyle() {
+		CascadeStyle cascadeStyle = cascadeTypeToCascadeStyle.get( this );
+		if ( cascadeStyle == null ) {
+			throw new MappingException( "No CascadeStyle that corresponds with CascadeType=" + this.name() );
+		}
+		return cascadeStyle;
 	}
 }

@@ -64,7 +64,7 @@ public class SimpleValueBindingTests extends BaseUnitTestCase {
 
 		entityBinding.getEntityIdentifier().setValueBinding( attributeBinding );
 
-		Column idColumn = table.createColumn( "id" );
+		Column idColumn = table.getOrCreateColumn( "id" );
 		idColumn.setDatatype( BIGINT );
 		idColumn.setSize( Size.precision( 18, 0 ) );
 		table.getPrimaryKey().addColumn( idColumn );

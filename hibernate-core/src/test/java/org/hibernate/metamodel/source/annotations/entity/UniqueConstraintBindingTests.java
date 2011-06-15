@@ -21,50 +21,61 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
+
 package org.hibernate.metamodel.source.annotations.entity;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 
 import org.junit.Test;
 
-import org.hibernate.annotations.BatchSize;
 import org.hibernate.metamodel.binding.EntityBinding;
+import org.hibernate.metamodel.relational.Column;
+import org.hibernate.metamodel.relational.TableSpecification;
+import org.hibernate.metamodel.relational.UniqueKey;
 
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertNotNull;
+import static junit.framework.Assert.assertTrue;
 
 /**
- * Tests for {@code o.h.a.BatchSize}.
+ * test for {@link javax.persistence.UniqueConstraint}
  *
- * @author Hardy Ferentschik
+ * @author Strong Liu
  */
-public class BatchSizeBindingTests extends BaseAnnotationBindingTestCase {
+public class UniqueConstraintBindingTests extends BaseAnnotationBindingTestCase {
 	@Test
-	public void testNoBatchSize() {
-		buildMetadataSources( NoBatchSizeEntity.class );
-		EntityBinding binding = getEntityBinding( NoBatchSizeEntity.class );
-		assertEquals( "Wrong batch size", -1, binding.getBatchSize() );
+	public void testTableUniqueconstraints() {
+		buildMetadataSources( TableWithUniqueConstraint.class );
+		EntityBinding binding = getEntityBinding( TableWithUniqueConstraint.class );
+		TableSpecification table = binding.getBaseTable();
+		Iterable<UniqueKey> uniqueKeyIterable = table.getUniqueKeys();
+		assertNotNull( uniqueKeyIterable );
+		int i = 0;
+		for ( UniqueKey key : uniqueKeyIterable ) {
+			i++;
+			assertEquals( "u1", key.getName() );
+			assertTrue( table == key.getTable() );
+			assertNotNull( key.getColumns() );
+			int j = 0;
+			for ( Column column : key.getColumns() ) {
+				j++;
+
+			}
+			assertEquals( 2, j );
+		}
+		assertEquals( 1, i );
 	}
 
-	@Test
-	public void testBatchSize() {
-		buildMetadataSources( BatchSizeEntity.class );
-		EntityBinding binding = getEntityBinding( BatchSizeEntity.class );
-		assertEquals( "Wrong batch size", 100, binding.getBatchSize() );
-	}
 
 	@Entity
-	class NoBatchSizeEntity {
+	@Table(uniqueConstraints = { @UniqueConstraint(name = "u1", columnNames = { "name", "age" }) })
+	class TableWithUniqueConstraint {
 		@Id
-		private int id;
-	}
-
-	@Entity
-	@BatchSize(size = 100)
-	class BatchSizeEntity {
-		@Id
-		private int id;
+		int id;
+		String name;
+		int age;
 	}
 }
-
-

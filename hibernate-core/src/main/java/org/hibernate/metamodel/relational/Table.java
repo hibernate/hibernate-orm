@@ -25,6 +25,7 @@ package org.hibernate.metamodel.relational;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -39,8 +40,8 @@ public class Table extends AbstractTableSpecification implements ValueContainer,
 	private final Identifier tableName;
 	private final String qualifiedName;
 
-	private List<Index> indexes;
-	private List<UniqueKey> uniqueKeys;
+	private LinkedHashMap<String,Index> indexes;
+	private LinkedHashMap<String,UniqueKey> uniqueKeys;
 	private List<String> checkConstraints;
 	private Set<String> comments;
 
@@ -81,29 +82,35 @@ public class Table extends AbstractTableSpecification implements ValueContainer,
 
 	@Override
 	public Iterable<Index> getIndexes() {
-		return indexes;
+		return indexes.values();
 	}
 
 	public Index getOrCreateIndex(String name) {
+		if(indexes!=null && indexes.containsKey( name )){
+			return indexes.get( name );
+		}
 		Index index = new Index( this, name );
 		if ( indexes == null ) {
-			indexes = new ArrayList<Index>();
+			indexes = new LinkedHashMap<String,Index>();
 		}
-		indexes.add( index );
+		indexes.put(name, index );
 		return index;
 	}
 
 	@Override
 	public Iterable<UniqueKey> getUniqueKeys() {
-		return uniqueKeys;
+		return uniqueKeys.values();
 	}
 
 	public UniqueKey getOrCreateUniqueKey(String name) {
+		if(uniqueKeys!=null && uniqueKeys.containsKey( name )){
+			return uniqueKeys.get( name );
+		}
 		UniqueKey uniqueKey = new UniqueKey( this, name );
 		if ( uniqueKeys == null ) {
-			uniqueKeys = new ArrayList<UniqueKey>();
+			uniqueKeys = new LinkedHashMap<String,UniqueKey>();
 		}
-		uniqueKeys.add( uniqueKey );
+		uniqueKeys.put(name, uniqueKey );
 		return uniqueKey;
 	}
 

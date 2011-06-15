@@ -52,7 +52,7 @@ public class TableManipulationTests extends BaseUnitTestCase {
 		assertNull( table.getPrimaryKey().getName() );
 		assertFalse( table.values().iterator().hasNext() );
 
-		Column idColumn = table.createColumn( "id" );
+		Column idColumn = table.getOrCreateColumn( "id" );
 		idColumn.setDatatype( INTEGER );
 		idColumn.setSize( Size.precision( 18, 0 ) );
 		table.getPrimaryKey().addColumn( idColumn );
@@ -60,7 +60,7 @@ public class TableManipulationTests extends BaseUnitTestCase {
 		assertEquals( "my_table_pk", table.getPrimaryKey().getName() );
 		assertEquals( "my_table.PK", table.getPrimaryKey().getExportIdentifier() );
 
-		Column col_1 = table.createColumn( "col_1" );
+		Column col_1 = table.getOrCreateColumn( "col_1" );
 		col_1.setDatatype( VARCHAR );
 		col_1.setSize( Size.length( 512 ) );
 
@@ -90,7 +90,7 @@ public class TableManipulationTests extends BaseUnitTestCase {
 		Schema schema = new Schema( null, null );
 		Table book = schema.createTable( Identifier.toIdentifier( "BOOK" ) );
 
-		Column bookId = book.createColumn( "id" );
+		Column bookId = book.getOrCreateColumn( "id" );
 		bookId.setDatatype( INTEGER );
 		bookId.setSize( Size.precision( 18, 0 ) );
 		book.getPrimaryKey().addColumn( bookId );
@@ -98,13 +98,13 @@ public class TableManipulationTests extends BaseUnitTestCase {
 
 		Table page = schema.createTable( Identifier.toIdentifier( "PAGE" ) );
 
-		Column pageId = page.createColumn( "id" );
+		Column pageId = page.getOrCreateColumn( "id" );
 		pageId.setDatatype( INTEGER );
 		pageId.setSize( Size.precision( 18, 0 ) );
 		page.getPrimaryKey().addColumn( pageId );
 		page.getPrimaryKey().setName( "PAGE_PK" );
 
-		Column pageBookId = page.createColumn( "BOOK_ID" );
+		Column pageBookId = page.getOrCreateColumn( "BOOK_ID" );
 		pageId.setDatatype( INTEGER );
 		pageId.setSize( Size.precision( 18, 0 ) );
 		ForeignKey pageBookFk = page.createForeignKey( book, "PAGE_BOOK_FK" );

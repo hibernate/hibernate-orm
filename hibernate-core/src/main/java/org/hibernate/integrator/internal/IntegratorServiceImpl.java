@@ -26,16 +26,21 @@ package org.hibernate.integrator.internal;
 import java.util.LinkedHashSet;
 import java.util.ServiceLoader;
 
+import org.jboss.logging.Logger;
+
 import org.hibernate.cfg.beanvalidation.BeanValidationIntegrator;
 import org.hibernate.cfg.search.HibernateSearchIntegrator;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
  * @author Steve Ebersole
  */
 public class IntegratorServiceImpl implements IntegratorService {
+	 private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			 CoreMessageLogger.class, IntegratorServiceImpl.class.getName());
 	private final ServiceRegistryImplementor serviceRegistry;
 	private LinkedHashSet<Integrator> integrators = new LinkedHashSet<Integrator>();
 
@@ -43,12 +48,13 @@ public class IntegratorServiceImpl implements IntegratorService {
 		this.serviceRegistry = serviceRegistry;
 		// Standard integrators nameable from here.  Envers and JPA, for example, need to be handled by discovery
 		// because in separate project/jars
-		integrators.add( new BeanValidationIntegrator() );
-		integrators.add( new HibernateSearchIntegrator() );
+		addIntegrator( new BeanValidationIntegrator() );
+		addIntegrator( new HibernateSearchIntegrator() );
 	}
 
 	@Override
 	public void addIntegrator(Integrator integrator) {
+		LOG.debugf( "Adding Integrator [%s].", integrator.getClass().getName() );
 		integrators.add( integrator );
 	}
 
@@ -58,6 +64,7 @@ public class IntegratorServiceImpl implements IntegratorService {
 		integrators.addAll( this.integrators );
 
 		for ( Integrator integrator : ServiceLoader.load( Integrator.class ) ) {
+			LOG.debugf( "Adding Integrator [%s].", integrator.getClass().getName() );
 			integrators.add( integrator );
 		}
 

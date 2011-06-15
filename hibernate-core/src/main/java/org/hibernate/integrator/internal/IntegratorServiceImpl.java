@@ -39,7 +39,7 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
  * @author Steve Ebersole
  */
 public class IntegratorServiceImpl implements IntegratorService {
-	 private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
 			 CoreMessageLogger.class, IntegratorServiceImpl.class.getName());
 	private final ServiceRegistryImplementor serviceRegistry;
 	private LinkedHashSet<Integrator> integrators = new LinkedHashSet<Integrator>();

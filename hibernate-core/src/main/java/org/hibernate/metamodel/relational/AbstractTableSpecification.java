@@ -24,6 +24,8 @@
 package org.hibernate.metamodel.relational;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 
@@ -34,26 +36,32 @@ import java.util.List;
  * @author Steve Ebersole
  */
 public abstract class AbstractTableSpecification implements TableSpecification, ValueContainer {
-	private final LinkedHashSet<SimpleValue> values = new LinkedHashSet<SimpleValue>();
+	private final LinkedHashMap<String,SimpleValue> values = new LinkedHashMap<String,SimpleValue>();
 	private PrimaryKey primaryKey = new PrimaryKey( this );
 	private List<ForeignKey> foreignKeys = new ArrayList<ForeignKey>();
 
 	@Override
 	public Iterable<SimpleValue> values() {
-		return values;
+		return values.values();
 	}
 
 	@Override
-	public Column createColumn(String name) {
+	public Column getOrCreateColumn(String name) {
+		if(values.containsKey( name )){
+			return (Column) values.get( name );
+		}
 		final Column column = new Column( this, values.size(), name );
-		values.add( column );
+		values.put(name, column );
 		return column;
 	}
 
 	@Override
-	public DerivedValue createDerivedValue(String fragment) {
+	public DerivedValue getOrCreateDerivedValue(String fragment) {
+		if(values.containsKey( fragment )){
+			return (DerivedValue) values.get( fragment );
+		}
 		final DerivedValue value = new DerivedValue( this, values.size(), fragment );
-		values.add( value );
+		values.put(fragment, value );
 		return value;
 	}
 

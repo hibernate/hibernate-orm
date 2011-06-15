@@ -57,6 +57,8 @@ import org.hibernate.metamodel.domain.Entity;
 import org.hibernate.metamodel.domain.Hierarchical;
 import org.hibernate.metamodel.relational.Identifier;
 import org.hibernate.metamodel.relational.Schema;
+import org.hibernate.metamodel.relational.TableSpecification;
+import org.hibernate.metamodel.relational.UniqueKey;
 import org.hibernate.metamodel.source.annotations.HibernateDotNames;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.entity.state.binding.AttributeBindingStateImpl;
@@ -116,10 +118,47 @@ public class EntityBinder {
 
 		// bind all attributes - simple as well as associations
 		bindAttributes( entityBinding );
-
+		bindTableUniqueConstraints( entityBinding );
 		// last, but not least we initialize and register the new EntityBinding
 		entityBinding.initialize( entityBindingState );
 		meta.addEntity( entityBinding );
+	}
+
+	private void bindTableUniqueConstraints(EntityBinding entityBinding) {
+		AnnotationInstance tableAnnotation = JandexHelper.getSingleAnnotation(
+				configuredClass.getClassInfo(),
+				JPADotNames.TABLE
+		);
+		if ( tableAnnotation == null ) {
+			return;
+		}
+		TableSpecification table = entityBinding.getBaseTable();
+		bindUniqueConstraints( tableAnnotation, table );
+	}
+
+	/**
+	 * Bind {@link javax.persistence.UniqueConstraint} to table as a {@link UniqueKey}
+	 *
+	 * @param tableAnnotation JPA annotations which has a {@code uniqueConstraints} attribute.
+	 * @param table Table which the UniqueKey bind to.
+	 */
+	private void bindUniqueConstraints(AnnotationInstance tableAnnotation,TableSpecification table) {
+		AnnotationValue value = tableAnnotation.value( "uniqueConstraints" );
+		if ( value == null ) {
+			return;
+		}
+		AnnotationInstance[] uniqueConstraints = value.asNestedArray();
+		for ( AnnotationInstance unique : uniqueConstraints ) {
+			String name = unique.value( "name" ).asString();
+			UniqueKey uniqueKey = table.getOrCreateUniqueKey( name );
+			String[] columnNames = unique.value( "columnNames" ).asStringArray();
+			if ( columnNames.length == 0 ) {
+				//todo throw exception?
+			}
+			for ( String columnName : columnNames ) {
+				uniqueKey.addColumn( table.getOrCreateColumn( columnName ) );
+			}
+		}
 	}
 
 	private void bindInheritance(EntityBinding entityBinding) {

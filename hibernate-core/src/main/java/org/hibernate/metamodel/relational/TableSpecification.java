@@ -50,7 +50,7 @@ public interface TableSpecification extends ValueContainer, Loggable {
 	 *
 	 * @return The generated column
 	 */
-	public Column createColumn(String name);
+	public Column getOrCreateColumn(String name);
 
 	/**
 	 * Factory method for creating a {@link Column} associated with this container.
@@ -68,7 +68,7 @@ public interface TableSpecification extends ValueContainer, Loggable {
 	 *
 	 * @return The generated value.
 	 */
-	public DerivedValue createDerivedValue(String fragment);
+	public DerivedValue getOrCreateDerivedValue(String fragment);
 
 	public Iterable<ForeignKey> getForeignKeys();
 

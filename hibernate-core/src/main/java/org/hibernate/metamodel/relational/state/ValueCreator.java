@@ -54,14 +54,14 @@ public class ValueCreator {
 		if ( columnName == null ) {
 			throw new IllegalArgumentException( "columnName must be non-null." );
 		}
-		Column value = table.createColumn( columnName );
+		Column value = table.getOrCreateColumn( columnName );
 		value.initialize( state, forceNonNullable, forceUnique );
 		return value;
 	}
 
 	public static DerivedValue createDerivedValue(TableSpecification table,
 												  DerivedValueRelationalState state) {
-		return table.createDerivedValue( state.getFormula() );
+		return table.getOrCreateDerivedValue( state.getFormula() );
 	}
 
 	public static SimpleValue createSimpleValue(TableSpecification table,

@@ -47,7 +47,7 @@ import static junit.framework.Assert.assertTrue;
  */
 public class UniqueConstraintBindingTests extends BaseAnnotationBindingTestCase {
 	@Test
-	public void testTableUniqueconstraints() {
+	public void testTableUniqueConstraints() {
 		buildMetadataSources( TableWithUniqueConstraint.class );
 		EntityBinding binding = getEntityBinding( TableWithUniqueConstraint.class );
 		TableSpecification table = binding.getBaseTable();
@@ -62,11 +62,10 @@ public class UniqueConstraintBindingTests extends BaseAnnotationBindingTestCase 
 			int j = 0;
 			for ( Column column : key.getColumns() ) {
 				j++;
-
 			}
-			assertEquals( 2, j );
+			assertEquals( "There should be two columns in the unique constraint", 2, j );
 		}
-		assertEquals( 1, i );
+		assertEquals( "There should only be one unique constraint", 1, i );
 	}
 
 

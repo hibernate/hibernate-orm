@@ -119,6 +119,7 @@ public class EntityBinder {
 		// bind all attributes - simple as well as associations
 		bindAttributes( entityBinding );
 		bindTableUniqueConstraints( entityBinding );
+
 		// last, but not least we initialize and register the new EntityBinding
 		entityBinding.initialize( entityBindingState );
 		meta.addEntity( entityBinding );
@@ -142,7 +143,7 @@ public class EntityBinder {
 	 * @param tableAnnotation JPA annotations which has a {@code uniqueConstraints} attribute.
 	 * @param table Table which the UniqueKey bind to.
 	 */
-	private void bindUniqueConstraints(AnnotationInstance tableAnnotation,TableSpecification table) {
+	private void bindUniqueConstraints(AnnotationInstance tableAnnotation, TableSpecification table) {
 		AnnotationValue value = tableAnnotation.value( "uniqueConstraints" );
 		if ( value == null ) {
 			return;

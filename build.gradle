@@ -68,7 +68,7 @@ libraries = [
         javassist:      'javassist:javassist:3.12.0.GA',
 
         // javax
-        jpa:            'org.hibernate.javax.persistence:hibernate-jpa-2.0-api:1.0.0.Final',
+        jpa:            'org.hibernate.javax.persistence:hibernate-jpa-2.0-api:1.0.1.Final',
         jta:            'javax.transaction:jta:1.1',
         validation:     'javax.validation:validation-api:1.0.0.GA',
         validator:      'org.hibernate:hibernate-validator:4.0.2.GA',

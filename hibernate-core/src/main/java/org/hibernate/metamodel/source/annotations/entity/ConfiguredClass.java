@@ -29,6 +29,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -55,8 +56,6 @@ import org.hibernate.metamodel.binding.InheritanceType;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.source.annotations.util.ReflectionHelper;
-import org.hibernate.service.ServiceRegistry;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
 
 /**
  * Represents an entity, mapped superclass or component configured via annotations/xml.
@@ -68,7 +67,15 @@ public class ConfiguredClass {
 	 * The parent of this configured class or {@code null} in case this configured class is the root of a hierarchy.
 	 */
 	private final ConfiguredClass parent;
+
+	/**
+	 * The Jandex class info for this configured class. Provides access to the annotation defined on this configured class.
+	 */
 	private final ClassInfo classInfo;
+
+	/**
+	 * The actual java type.
+	 */
 	private final Class<?> clazz;
 
 	private final boolean isRoot;
@@ -83,19 +90,24 @@ public class ConfiguredClass {
 	private final IdType idType;
 
 	private final Map<String, MappedAttribute> mappedAttributes;
+	private final Set<String> transientFieldNames = new HashSet<String>();
+	private final Set<String> transientMethodNames = new HashSet<String>();
+
+	private final AnnotationBindingContext context;
 
 	public ConfiguredClass(ClassInfo info,
 						   ConfiguredClass parent,
 						   AccessType hierarchyAccessType,
 						   InheritanceType inheritanceType,
-						   ServiceRegistry serviceRegistry,
-						   ResolvedTypeWithMembers resolvedType) {
+						   ResolvedTypeWithMembers resolvedType,
+						   AnnotationBindingContext context) {
+		this.context = context;
 		this.classInfo = info;
 		this.parent = parent;
 		this.isRoot = parent == null;
 		this.hierarchyAccessType = hierarchyAccessType;
 		this.inheritanceType = inheritanceType;
-		this.clazz = serviceRegistry.getService( ClassLoaderService.class ).classForName( info.toString() );
+		this.clazz = context.classLoaderService().classForName( info.toString() );
 
 		this.configuredClassType = determineType();
 		this.classAccessType = determineClassAccessType();
@@ -103,6 +115,9 @@ public class ConfiguredClass {
 
 		this.hasOwnTable = definesItsOwnTable();
 		this.primaryTableName = determinePrimaryTableName();
+
+		// find transient field and method names
+		findTransientFieldAndMethodNames();
 
 		List<MappedAttribute> simpleProps = collectAttributes( resolvedType );
 		// make sure the properties are ordered by property name
@@ -213,11 +228,6 @@ public class ConfiguredClass {
 	 * @return A list of the persistent properties of this configured class
 	 */
 	private List<MappedAttribute> collectAttributes(ResolvedTypeWithMembers resolvedTypes) {
-		// create sets of transient field and method names
-		Set<String> transientFieldNames = new HashSet<String>();
-		Set<String> transientMethodNames = new HashSet<String>();
-		populateTransientFieldAndMethodLists( transientFieldNames, transientMethodNames );
-
 		// use the class mate library to generic types
 		ResolvedTypeWithMembers resolvedType = null;
 		for ( HierarchicType hierarchicType : resolvedTypes.allTypesAndOverrides() ) {
@@ -381,15 +391,19 @@ public class ConfiguredClass {
 		);
 
 		MappedAttribute attribute;
-		AssociationType associationType = determineAssociationType( annotations );
-		switch ( associationType ) {
-			case NO_ASSOCIATION: {
+		AttributeType attributeType = determineAttributeType( annotations );
+		switch ( attributeType ) {
+			case BASIC: {
 				attribute = SimpleAttribute.createSimpleAttribute( name, ( (Class) type ).getName(), annotations );
 				break;
 			}
+			case EMBEDDED: {
+				throw new HibernateException( "foo" );
+			}
+			// TODO handle the different association types
 			default: {
 				attribute = AssociationAttribute.createAssociationAttribute(
-						name, ( (Class) type ).getName(), associationType, annotations
+						name, ( (Class) type ).getName(), attributeType, annotations
 				);
 			}
 		}
@@ -397,26 +411,47 @@ public class ConfiguredClass {
 		return attribute;
 	}
 
-	private AssociationType determineAssociationType(Map<DotName, List<AnnotationInstance>> annotations) {
-		AnnotationInstance oneToOne = JandexHelper.getSingleAnnotation( annotations, JPADotNames.ONE_TO_ONE );
-		AnnotationInstance oneToMany = JandexHelper.getSingleAnnotation( annotations, JPADotNames.ONE_TO_MANY );
-		AnnotationInstance manyToOne = JandexHelper.getSingleAnnotation( annotations, JPADotNames.MANY_TO_ONE );
-		AnnotationInstance manyToMany = JandexHelper.getSingleAnnotation( annotations, JPADotNames.MANY_TO_MANY );
+	/**
+	 * Given the annotations defined on a persistent attribute this methods determines the attribute type.
+	 *
+	 * @param annotations the annotations defined on the persistent attribute
+	 *
+	 * @return an instance of the {@code AttributeType} enum
+	 */
+	private AttributeType determineAttributeType(Map<DotName, List<AnnotationInstance>> annotations) {
+		EnumMap<AttributeType, AnnotationInstance> discoveredAttributeTypes =
+				new EnumMap<AttributeType, AnnotationInstance>( AttributeType.class );
 
-		if ( oneToOne == null && oneToMany == null && manyToOne == null && manyToMany == null ) {
-			return AssociationType.NO_ASSOCIATION;
+		AnnotationInstance oneToOne = JandexHelper.getSingleAnnotation( annotations, JPADotNames.ONE_TO_ONE );
+		if ( oneToOne != null ) {
+			discoveredAttributeTypes.put( AttributeType.ONE_TO_ONE, oneToOne );
 		}
-		else if ( oneToOne != null && oneToMany == null && manyToOne == null && manyToMany == null ) {
-			return AssociationType.ONE_TO_ONE;
+
+		AnnotationInstance oneToMany = JandexHelper.getSingleAnnotation( annotations, JPADotNames.ONE_TO_MANY );
+		if ( oneToMany != null ) {
+			discoveredAttributeTypes.put( AttributeType.ONE_TO_MANY, oneToMany );
 		}
-		else if ( oneToOne == null && oneToMany != null && manyToOne == null && manyToMany == null ) {
-			return AssociationType.ONE_TO_MANY;
+
+		AnnotationInstance manyToOne = JandexHelper.getSingleAnnotation( annotations, JPADotNames.MANY_TO_ONE );
+		if ( manyToOne != null ) {
+			discoveredAttributeTypes.put( AttributeType.MANY_TO_ONE, manyToOne );
 		}
-		else if ( oneToOne == null && oneToMany == null && manyToOne != null && manyToMany == null ) {
-			return AssociationType.MANY_TO_ONE;
+
+		AnnotationInstance manyToMany = JandexHelper.getSingleAnnotation( annotations, JPADotNames.MANY_TO_MANY );
+		if ( manyToMany != null ) {
+			discoveredAttributeTypes.put( AttributeType.MANY_TO_MANY, manyToMany );
 		}
-		else if ( oneToOne == null && oneToMany == null && manyToOne == null && manyToMany != null ) {
-			return AssociationType.MANY_TO_MANY;
+
+		AnnotationInstance embedded = JandexHelper.getSingleAnnotation( annotations, JPADotNames.EMBEDDED );
+		if ( embedded != null ) {
+			discoveredAttributeTypes.put( AttributeType.EMBEDDED, embedded );
+		}
+
+		if ( discoveredAttributeTypes.size() == 0 ) {
+			return AttributeType.BASIC;
+		}
+		else if ( discoveredAttributeTypes.size() == 1 ) {
+			return discoveredAttributeTypes.keySet().iterator().next();
 		}
 		else {
 			throw new AnnotationException( "More than one association type configured for property  " + getName() + " of class " + getName() );
@@ -435,11 +470,8 @@ public class ConfiguredClass {
 
 	/**
 	 * Populates the sets of transient field and method names.
-	 *
-	 * @param transientFieldNames Set to populate with the field names explicitly marked as @Transient
-	 * @param transientMethodNames set to populate with the method names explicitly marked as @Transient
 	 */
-	private void populateTransientFieldAndMethodLists(Set<String> transientFieldNames, Set<String> transientMethodNames) {
+	private void findTransientFieldAndMethodNames() {
 		List<AnnotationInstance> transientMembers = classInfo.annotations().get( JPADotNames.TRANSIENT );
 		if ( transientMembers == null ) {
 			return;
@@ -524,5 +556,3 @@ public class ConfiguredClass {
 		return IdType.NONE;
 	}
 }
-
-

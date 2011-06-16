@@ -39,7 +39,7 @@ import org.hibernate.metamodel.source.annotations.HibernateDotNames;
  *
  * @author Hardy Ferentschik
  */
-public class MappedAttribute implements Comparable<MappedAttribute> {
+public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 	/**
 	 * Annotations defined on the attribute, keyed against the annotation dot name.
 	 */

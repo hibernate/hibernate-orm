@@ -41,16 +41,16 @@ import org.hibernate.metamodel.source.annotations.util.JandexHelper;
  * @author Hardy Ferentschik
  */
 public class AssociationAttribute extends SimpleAttribute {
-	private final AssociationType associationType;
+	private final AttributeType associationType;
 	private final boolean ignoreNotFound;
 	private final String referencedEntityType;
 	private final Set<CascadeType> cascadeTypes;
 
-	public static AssociationAttribute createAssociationAttribute(String name, String type, AssociationType associationType, Map<DotName, List<AnnotationInstance>> annotations) {
+	public static AssociationAttribute createAssociationAttribute(String name, String type, AttributeType associationType, Map<DotName, List<AnnotationInstance>> annotations) {
 		return new AssociationAttribute( name, type, associationType, annotations );
 	}
 
-	private AssociationAttribute(String name, String type, AssociationType associationType, Map<DotName, List<AnnotationInstance>> annotations) {
+	private AssociationAttribute(String name, String type, AttributeType associationType, Map<DotName, List<AnnotationInstance>> annotations) {
 		super( name, type, annotations, false );
 		this.associationType = associationType;
 		this.ignoreNotFound = ignoreNotFound();
@@ -72,7 +72,7 @@ public class AssociationAttribute extends SimpleAttribute {
 		return referencedEntityType;
 	}
 
-	public AssociationType getAssociationType() {
+	public AttributeType getAssociationType() {
 		return associationType;
 	}
 

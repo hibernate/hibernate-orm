@@ -120,7 +120,6 @@ public class AnnotationBinder implements Binder {
 		return classLoaderService;
 	}
 
-
 	@Override
 	public void bindIndependentMetadata(MetadataSources sources) {
         TypeDefBinder.bind( metadata, index );

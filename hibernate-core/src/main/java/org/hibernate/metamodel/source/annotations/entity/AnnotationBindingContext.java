@@ -23,27 +23,34 @@
  */
 package org.hibernate.metamodel.source.annotations.entity;
 
-import org.jboss.jandex.DotName;
 
-import org.hibernate.metamodel.source.annotations.JPADotNames;
+import org.jboss.jandex.Index;
+
+import org.hibernate.service.ServiceRegistry;
+import org.hibernate.service.classloading.spi.ClassLoaderService;
 
 /**
+ * Helper class for keeping some context information needed during the processing of mapped classes.
+ *
  * @author Hardy Ferentschik
  */
-public enum AssociationType {
-	NO_ASSOCIATION( null ),
-	ONE_TO_ONE( JPADotNames.ONE_TO_ONE ),
-	ONE_TO_MANY( JPADotNames.ONE_TO_MANY ),
-	MANY_TO_ONE( JPADotNames.MANY_TO_ONE ),
-	MANY_TO_MANY( JPADotNames.MANY_TO_MANY );
+public class AnnotationBindingContext {
+	private final ServiceRegistry serviceRegistry;
+	private final Index index;
 
-	private final DotName annotationDotName;
+	private ClassLoaderService classLoaderService;
 
-	AssociationType(DotName annotationDotName) {
-		this.annotationDotName = annotationDotName;
+	public AnnotationBindingContext(Index index, ServiceRegistry serviceRegistry) {
+		this.index = index;
+		this.serviceRegistry = serviceRegistry;
 	}
 
-	public DotName getAnnotationDotName() {
-		return annotationDotName;
+	public ClassLoaderService classLoaderService() {
+		if ( classLoaderService == null ) {
+			classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+		}
+		return classLoaderService;
 	}
 }
+
+

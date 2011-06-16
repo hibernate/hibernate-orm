@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,35 +21,32 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.domain;
+package org.hibernate.metamodel.source.annotations.entity;
+
+import org.jboss.jandex.DotName;
+
+import org.hibernate.metamodel.source.annotations.JPADotNames;
 
 /**
- * Describes an attribute.
+ * An enum defining the type of mapped attribute.
  *
- * @author Steve Ebersole
+ * @author Hardy Ferentschik
  */
-public interface Attribute {
-	/**
-	 * Retrieve the attribute name.
-	 *
-	 * @return The attribute name.
-	 */
-	public String getName();
+public enum AttributeType {
+	BASIC( null ),
+	ONE_TO_ONE( JPADotNames.ONE_TO_ONE ),
+	ONE_TO_MANY( JPADotNames.ONE_TO_MANY ),
+	MANY_TO_ONE( JPADotNames.MANY_TO_ONE ),
+	MANY_TO_MANY( JPADotNames.MANY_TO_MANY ),
+	EMBEDDED( JPADotNames.EMBEDDED );
 
-	/**
-	 * Retrieve the declaring container for this attribute (entity/component).
-	 *
-	 * @return The attribute container.
-	 */
-	public AttributeContainer getAttributeContainer();
+	private final DotName annotationDotName;
 
-	/**
-	 * An attribute can be either:<ul>
-	 * <li>singular - castable to {@link SingularAttribute}</li>
-	 * <li>plural - castable to {@link PluralAttribute}
-	 * </ul>
-	 *
-	 * @return True if attribute is singular; false if plural.
-	 */
-	public boolean isSingular();
+	AttributeType(DotName annotationDotName) {
+		this.annotationDotName = annotationDotName;
+	}
+
+	public DotName getAnnotationDotName() {
+		return annotationDotName;
+	}
 }

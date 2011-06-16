@@ -39,11 +39,10 @@ import org.hibernate.metamodel.binding.InheritanceType;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.source.annotations.util.ReflectionHelper;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 
 /**
- * Represents the inheritance structure of the configured classes within a class hierarchy.
+ * Contains information about the access and inheritance type for all classes within a class hierarchy.
  *
  * @author Hardy Ferentschik
  */
@@ -52,23 +51,23 @@ public class ConfiguredClassHierarchy implements Iterable<ConfiguredClass> {
 	private final InheritanceType inheritanceType;
 	private final List<ConfiguredClass> configuredClasses;
 
-	public static ConfiguredClassHierarchy create(List<ClassInfo> classes, ServiceRegistry serviceRegistry) {
-		return new ConfiguredClassHierarchy( classes, serviceRegistry );
+	public static ConfiguredClassHierarchy create(List<ClassInfo> classes, AnnotationBindingContext context) {
+		return new ConfiguredClassHierarchy( classes, context );
 	}
 
-	private ConfiguredClassHierarchy(List<ClassInfo> classes, ServiceRegistry serviceRegistry) {
+	private ConfiguredClassHierarchy(List<ClassInfo> classes, AnnotationBindingContext context) {
 		defaultAccessType = determineDefaultAccessType( classes );
 		inheritanceType = determineInheritanceType( classes );
 
-		ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
-		Class<?> clazz = classLoaderService.classForName( classes.get( classes.size() - 1 ).name().toString() );
-		ResolvedTypeWithMembers resolvedMembers = ReflectionHelper.resolveMemberTypes( clazz );
+		// the resolved type for the top level class in the hierarchy
+		Class<?> clazz = context.classLoaderService().classForName( classes.get( classes.size() - 1 ).name().toString() );
+		ResolvedTypeWithMembers resolvedType = ReflectionHelper.resolveMemberTypes( clazz );
 
 		configuredClasses = new ArrayList<ConfiguredClass>();
 		ConfiguredClass parent = null;
 		for ( ClassInfo info : classes ) {
 			ConfiguredClass configuredClass = new ConfiguredClass(
-					info, parent, defaultAccessType, inheritanceType, serviceRegistry, resolvedMembers
+					info, parent, defaultAccessType, inheritanceType, resolvedType, context
 			);
 			configuredClasses.add( configuredClass );
 			parent = configuredClass;
@@ -114,7 +113,7 @@ public class ConfiguredClassHierarchy implements Iterable<ConfiguredClass> {
 			if ( idAnnotations == null || idAnnotations.size() == 0 ) {
 				continue;
 			}
-			accessType = processIdAnnotations( idAnnotations );
+			accessType = determineAccessTypeByIdPlacement( idAnnotations );
 		}
 
 		if ( accessType == null ) {
@@ -124,7 +123,7 @@ public class ConfiguredClassHierarchy implements Iterable<ConfiguredClass> {
 		return accessType;
 	}
 
-	private AccessType processIdAnnotations(List<AnnotationInstance> idAnnotations) {
+	private AccessType determineAccessTypeByIdPlacement(List<AnnotationInstance> idAnnotations) {
 		AccessType accessType = null;
 		for ( AnnotationInstance annotation : idAnnotations ) {
 			AccessType tmpAccessType;
@@ -217,5 +216,3 @@ public class ConfiguredClassHierarchy implements Iterable<ConfiguredClass> {
 		return builder.toString();
 	}
 }
-
-

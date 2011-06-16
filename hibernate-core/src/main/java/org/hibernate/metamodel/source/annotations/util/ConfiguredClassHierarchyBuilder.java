@@ -36,9 +36,9 @@ import org.jboss.jandex.DotName;
 import org.jboss.jandex.Index;
 
 import org.hibernate.AnnotationException;
-import org.hibernate.metamodel.source.annotations.entity.ConfiguredClassHierarchy;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.entity.ConfiguredClassHierarchy;
+import org.hibernate.metamodel.source.annotations.entity.AnnotationBindingContext;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 
@@ -95,11 +95,12 @@ public class ConfiguredClassHierarchyBuilder {
 			}
 		}
 
+		AnnotationBindingContext context = new AnnotationBindingContext(index, serviceRegistry);
 		Set<ConfiguredClassHierarchy> hierarchies = new HashSet<ConfiguredClassHierarchy>();
 		List<List<ClassInfo>> processedList = new ArrayList<List<ClassInfo>>();
 		for ( List<ClassInfo> classInfoList : processedClassInfos.values() ) {
 			if ( !processedList.contains( classInfoList ) ) {
-				hierarchies.add( ConfiguredClassHierarchy.create( classInfoList, serviceRegistry ) );
+				hierarchies.add( ConfiguredClassHierarchy.create( classInfoList, context ) );
 				processedList.add( classInfoList );
 			}
 		}
@@ -107,6 +108,13 @@ public class ConfiguredClassHierarchyBuilder {
 		return hierarchies;
 	}
 
+	/**
+	 * Checks whether the passed jandex class info needs to be processed.
+	 *
+	 * @param info the jandex class info
+	 *
+	 * @return {@code true} if the class represented by {@code info} is relevant for the JPA mappings, {@code false} otherwise.
+	 */
 	private static boolean isConfiguredClass(ClassInfo info) {
 		boolean isConfiguredClass = true;
 		AnnotationInstance jpaEntityAnnotation = JandexHelper.getSingleAnnotation( info, JPADotNames.ENTITY );

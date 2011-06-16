@@ -405,8 +405,28 @@ public interface Query {
 	public Query setBigDecimal(String name, BigDecimal number);
 	public Query setBigInteger(String name, BigInteger number);
 
+        /**
+         * Bind the date (time is truncated) of a given Date object to a named query parameter.
+         * 
+	 * @param name The name of the parameter
+	 * @param date The date object
+         */
 	public Query setDate(String name, Date date);
+
+        /**
+         * Bind the time (date is truncated) of a given Date object to a named query parameter.
+         * 
+	 * @param name The name of the parameter
+	 * @param date The date object
+         */
 	public Query setTime(String name, Date date);
+
+        /**
+         * Bind the date and the time of a given Date object to a named query parameter.
+         *
+	 * @param name The name of the parameter
+	 * @param date The date object
+         */
 	public Query setTimestamp(String name, Date date);
 
 	public Query setCalendar(String name, Calendar calendar);

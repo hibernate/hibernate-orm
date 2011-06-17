@@ -25,7 +25,9 @@ package org.hibernate.service.jdbc.connections.internal;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Properties;
 import javax.sql.DataSource;
 import org.hibernate.HibernateException;
@@ -34,6 +36,9 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.UnknownUnwrapTypeException;
+import org.hibernate.service.spi.Configurable;
+import org.hibernate.service.spi.Stoppable;
+
 import org.jboss.logging.Logger;
 import com.mchange.v2.c3p0.DataSources;
 
@@ -44,7 +49,7 @@ import com.mchange.v2.c3p0.DataSources;
  * @author various people
  * @see ConnectionProvider
  */
-public class C3P0ConnectionProvider implements ConnectionProvider {
+public class C3P0ConnectionProvider implements ConnectionProvider, Configurable, Stoppable {
 
     private static final C3P0MessageLogger LOG = Logger.getMessageLogger(C3P0MessageLogger.class, C3P0ConnectionProvider.class.getName());
 
@@ -57,7 +62,6 @@ public class C3P0ConnectionProvider implements ConnectionProvider {
 	private final static String C3P0_STYLE_MAX_STATEMENTS = "c3p0.maxStatements";
 	private final static String C3P0_STYLE_ACQUIRE_INCREMENT = "c3p0.acquireIncrement";
 	private final static String C3P0_STYLE_IDLE_CONNECTION_TEST_PERIOD = "c3p0.idleConnectionTestPeriod";
-    // private final static String C3P0_STYLE_TEST_CONNECTION_ON_CHECKOUT = "c3p0.testConnectionOnCheckout";
 
 	//swaldman 2006-08-28: define c3p0-style configuration parameters for initialPoolSize, which
 	//                     hibernate sensibly lets default to minPoolSize, but we'll let users
@@ -114,9 +118,10 @@ public class C3P0ConnectionProvider implements ConnectionProvider {
 	/**
 	 * {@inheritDoc}
 	 */
-	public void configure(Properties props) throws HibernateException {
-		String jdbcDriverClass = props.getProperty( Environment.DRIVER );
-		String jdbcUrl = props.getProperty( Environment.URL );
+	@Override
+	public void configure(Map props) {
+		String jdbcDriverClass = (String) props.get( Environment.DRIVER );
+		String jdbcUrl = (String) props.get( Environment.URL );
 		Properties connectionProps = ConnectionProviderInitiator.getConnectionProperties( props );
 
         LOG.c3p0UsingDriver(jdbcDriverClass, jdbcUrl);
@@ -192,7 +197,8 @@ public class C3P0ConnectionProvider implements ConnectionProvider {
 			);*/
 			DataSource unpooled = DataSources.unpooledDataSource( jdbcUrl, connectionProps );
 
-			Properties allProps = ( Properties ) props.clone();
+			Map allProps = new HashMap();
+			allProps.putAll( props );
 			allProps.putAll( c3props );
 
 			ds = DataSources.pooledDataSource( unpooled, allProps );
@@ -202,7 +208,7 @@ public class C3P0ConnectionProvider implements ConnectionProvider {
             throw new HibernateException(LOG.unableToInstantiateC3p0ConnectionPool(), e);
 		}
 
-		String i = props.getProperty( Environment.ISOLATION );
+		String i = (String) props.get( Environment.ISOLATION );
         if (i == null) isolation = null;
 		else {
 			isolation = new Integer( i );
@@ -230,14 +236,14 @@ public class C3P0ConnectionProvider implements ConnectionProvider {
 		return false;
 	}
 
-	private void setOverwriteProperty(String hibernateStyleKey, String c3p0StyleKey, Properties hibp, Properties c3p, Integer value) {
+	private void setOverwriteProperty(String hibernateStyleKey, String c3p0StyleKey, Map hibp, Properties c3p, Integer value) {
 		if ( value != null ) {
 			c3p.put( c3p0StyleKey, String.valueOf( value ).trim() );
-			if ( hibp.getProperty( c3p0StyleKey ) != null ) {
+			if ( hibp.containsKey( c3p0StyleKey )  ) {
 				warnPropertyConflict( hibernateStyleKey, c3p0StyleKey );
 			}
 			String longC3p0StyleKey = "hibernate." + c3p0StyleKey;
-			if ( hibp.getProperty( longC3p0StyleKey ) != null ) {
+			if ( hibp.containsKey( longC3p0StyleKey ) ) {
 				warnPropertyConflict( hibernateStyleKey, longC3p0StyleKey );
 			}
 		}
@@ -245,5 +251,10 @@ public class C3P0ConnectionProvider implements ConnectionProvider {
 
 	private void warnPropertyConflict(String hibernateStyle, String c3p0Style) {
         LOG.bothHibernateAndC3p0StylesSet(hibernateStyle, c3p0Style, hibernateStyle, c3p0Style);
+	}
+
+	@Override
+	public void stop() {
+		close();
 	}
 }

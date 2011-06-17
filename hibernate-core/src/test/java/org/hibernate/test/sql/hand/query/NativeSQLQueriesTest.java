@@ -11,6 +11,7 @@ import java.util.Map;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Query;
+import org.hibernate.QueryException;
 import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -832,6 +833,17 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 				.uniqueResult();
 		assertTrue( ArrayHelper.isEquals( photo, photoRead ) );
 		s.delete( holder );
+		t.commit();
+		s.close();
+	}
+	@Test
+	public void testEscapeColonInSQL() throws QueryException {
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+		SQLQuery query = s.createSQLQuery( "SELECT @row \\:= 1" );
+		List list = query.list();
+		assertTrue( list.get( 0 ).toString().equals( "1" ) );
+		
 		t.commit();
 		s.close();
 	}

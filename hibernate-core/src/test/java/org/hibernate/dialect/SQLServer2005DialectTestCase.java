@@ -51,14 +51,14 @@ public class SQLServer2005DialectTestCase extends TestCase {
 		
 		// http://opensource.atlassian.com/projects/hibernate/browse/HHH-5715 distinct in an aggragate function
 		// this case should not happen! Is there a way to get paginated data with an aggregate function?
-		assertGetLimitString( sqlDialect, 
-				"select count(distinct p.n) from table849752 p order by f234, f67 desc",
-				"the actual sql that should be used" );
+		// assertGetLimitString( sqlDialect,
+		// "select count(distinct p.n) from table849752 p order by f234, f67 desc",
+		// "the actual sql that should be used" );
 		
 	}
 	
 	private static final void assertGetLimitString(Dialect dialect, String input, String expected) {
-		String limitString = dialect.getLimitString( input, 10, 15 );
+		String limitString = dialect.getLimitString( input, 10, 15 ).toLowerCase();
 		assertEquals( expected, limitString );
 	}
 }

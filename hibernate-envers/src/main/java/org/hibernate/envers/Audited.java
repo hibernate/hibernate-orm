@@ -32,6 +32,7 @@ import java.lang.annotation.Target;
  * When applied to a field, indicates that this field should be audited.
  * @author Adam Warski (adam at warski dot org)
  * @author Tomasz Bech
+ * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE, ElementType.METHOD, ElementType.FIELD})
@@ -44,4 +45,12 @@ public @interface Audited {
 	 * This is useful for dictionary-like entities, which don't change and don't need to be audited.
 	 */
     RelationTargetAuditMode targetAuditMode() default RelationTargetAuditMode.AUDITED;
+
+    /**
+     * @return Set of superclasses which properties shall be audited. The behavior of listed classes
+     * is the same as if they had {@link Audited} annotation applied on a type level. The scope of this functionality
+     * is limited to the context of actually mapped entity and its class hierarchy. If a parent type lists any of
+     * its parent types using this attribute, all fields encapsulated by marked classes are implicitly audited.
+     */
+    Class[] auditParents() default {};
 }

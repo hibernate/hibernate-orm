@@ -46,7 +46,6 @@ public class DistinctSelectTest extends FunctionalTestCase {
 		s.close();
 	}
 
-	//TODO: Add a test case with a select query that has the distinct keyword within a aggregate function
 	public void testDistinctSelectWithJoin() {
 		feedDatabase();
 		
@@ -55,6 +54,21 @@ public class DistinctSelectTest extends FunctionalTestCase {
 		List<Entry> entries = s.createQuery("select distinct e from Entry e join e.tags t where t.surrogate != null order by e.name").setFirstResult(10).setMaxResults(5).list();
 		Entry firstEntry = entries.remove(0);
 		assertFalse("The list of entries should not contain dublicated Entry objects as we've done a distinct select", entries.contains(firstEntry));
+		s.getTransaction().commit();
+		s.close();
+	}
+	
+	public void testDistinctSelectWithinAggragateFunction() {
+		feedDatabase();
+		
+		Session s = openSession();
+		s.beginTransaction();
+		Integer size = (Integer) s.createQuery("select count(distinct e.id) from Entry e")
+			.setFirstResult(10)
+			.setMaxResults(5)
+			.uniqueResult();
+
+		assertEquals(new Integer(NUM_OF_USERS), size);
 		s.getTransaction().commit();
 		s.close();
 	}

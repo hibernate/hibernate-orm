@@ -1008,7 +1008,7 @@
                 <jdbc.isolation/>
             </properties>
         </profile>
-        <!-- The SQLServer2005 (MS JDBC) test envionment -->
+        <!-- The SQLServer2005 (MS JDBC) test environment -->
         <profile>
             <id>mssql2005</id>
             <dependencies>
@@ -1029,7 +1029,7 @@
             </properties>
         </profile>
 
-        <!-- The SQLServer2005 (MS JDBC) test envionment -->
+        <!-- The SQLServer2008 (MS JDBC) test environment -->
         <profile>
             <id>mssql2008</id>
             <dependencies>

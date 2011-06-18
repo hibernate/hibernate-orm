@@ -6,7 +6,6 @@ import java.util.UUID;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 
 /**

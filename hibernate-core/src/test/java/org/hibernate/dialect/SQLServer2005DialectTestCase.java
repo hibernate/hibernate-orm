@@ -51,9 +51,9 @@ public class SQLServer2005DialectTestCase extends TestCase {
 		
 		// http://opensource.atlassian.com/projects/hibernate/browse/HHH-5715 distinct in an aggragate function
 		// this case should not happen! Is there a way to get paginated data with an aggregate function?
-		// assertGetLimitString( sqlDialect,
-		// "select count(distinct p.n) from table849752 p order by f234, f67 desc",
-		// "the actual sql that should be used" );
+		 assertGetLimitString( sqlDialect,
+				"select aggregate_function(distinct p.n) as f1, f2 from table849752 p order by f2",
+				"with query as (select row_number() over (order by f2) as __hibernate_row_nr__, aggregate_function(distinct p.n) as f1, f2 from table849752 p ) select * from query where __hibernate_row_nr__ between ? and ?" );
 		
 	}
 	

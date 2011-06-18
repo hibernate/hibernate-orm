@@ -9,7 +9,7 @@ import org.hibernate.Transaction;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 
 /**
- * HHH-5715 bug test case: Dublicated entries when using select distinct with join and pagination. 
+ * HHH-5715 bug test case: Duplicated entries when using select distinct with join and pagination. 
  * 
  * @author Valotasios Yoryos
  * 

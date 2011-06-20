@@ -51,6 +51,7 @@ import org.hibernate.persister.spi.PersisterClassResolver;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.tuple.entity.EntityMetamodel;
+import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.Type;
 import org.hibernate.type.VersionType;
 
@@ -98,403 +99,460 @@ public class PersisterClassProviderTest extends junit.framework.TestCase {
 
 	public static class GoofyProvider implements EntityPersister {
 
-		public GoofyProvider(org.hibernate.mapping.PersistentClass persistentClass,
-								   org.hibernate.cache.spi.access.EntityRegionAccessStrategy strategy,
-								   SessionFactoryImplementor sf,
-								   Mapping mapping) {
+		@SuppressWarnings( {"UnusedParameters"})
+		public GoofyProvider(
+				org.hibernate.mapping.PersistentClass persistentClass,
+				org.hibernate.cache.spi.access.EntityRegionAccessStrategy strategy,
+				SessionFactoryImplementor sf,
+				Mapping mapping) {
 			throw new GoofyException();
 		}
 
+		@Override
+		public EntityMode getEntityMode() {
+			return null;
+		}
+
+		@Override
+		public EntityTuplizer getEntityTuplizer() {
+			return null;
+		}
+
+		@Override
 		public void postInstantiate() throws MappingException {
-			//To change body of implemented methods use File | Settings | File Templates.
+
 		}
 
+		@Override
 		public SessionFactoryImplementor getFactory() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+			return null;
 		}
 
+		@Override
 		public String getRootEntityName() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+			return null;
 		}
 
+		@Override
 		public String getEntityName() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+			return null;
 		}
 
+		@Override
 		public EntityMetamodel getEntityMetamodel() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+			return null;
 		}
 
+		@Override
 		public boolean isSubclassEntityName(String entityName) {
-			return false;  //To change body of implemented methods use File | Settings | File Templates.
+			return false;
 		}
 
+		@Override
 		public Serializable[] getPropertySpaces() {
-			return new Serializable[0];  //To change body of implemented methods use File | Settings | File Templates.
+			return new Serializable[0];
 		}
 
+		@Override
 		public Serializable[] getQuerySpaces() {
-			return new Serializable[0];  //To change body of implemented methods use File | Settings | File Templates.
+			return new Serializable[0];
 		}
 
+		@Override
 		public boolean hasProxy() {
-			return false;  //To change body of implemented methods use File | Settings | File Templates.
+			return false;
 		}
 
+		@Override
 		public boolean hasCollections() {
-			return false;  //To change body of implemented methods use File | Settings | File Templates.
+			return false;
 		}
 
+		@Override
 		public boolean hasMutableProperties() {
-			return false;  //To change body of implemented methods use File | Settings | File Templates.
+			return false;
 		}
 
+		@Override
 		public boolean hasSubselectLoadableCollections() {
-			return false;  //To change body of implemented methods use File | Settings | File Templates.
+			return false;
 		}
 
+		@Override
 		public boolean hasCascades() {
-			return false;  //To change body of implemented methods use File | Settings | File Templates.
+			return false;
 		}
 
+		@Override
 		public boolean isMutable() {
-			return false;  //To change body of implemented methods use File | Settings | File Templates.
+			return false;
 		}
 
+		@Override
 		public boolean isInherited() {
-			return false;  //To change body of implemented methods use File | Settings | File Templates.
+			return false;
 		}
 
+		@Override
 		public boolean isIdentifierAssignedByInsert() {
-			return false;  //To change body of implemented methods use File | Settings | File Templates.
+			return false;
 		}
 
+		@Override
 		public Type getPropertyType(String propertyName) throws MappingException {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+			return null;
 		}
 
+		@Override
 		public int[] findDirty(Object[] currentState, Object[] previousState, Object owner, SessionImplementor session) {
-			return new int[0];  //To change body of implemented methods use File | Settings | File Templates.
+			return new int[0];
 		}
 
+		@Override
 		public int[] findModified(Object[] old, Object[] current, Object object, SessionImplementor session) {
-			return new int[0];  //To change body of implemented methods use File | Settings | File Templates.
+			return new int[0];
 		}
 
+		@Override
 		public boolean hasIdentifierProperty() {
-			return false;  //To change body of implemented methods use File | Settings | File Templates.
+			return false;
 		}
 
+		@Override
 		public boolean canExtractIdOutOfEntity() {
-			return false;  //To change body of implemented methods use File | Settings | File Templates.
+			return false;
 		}
 
+		@Override
 		public boolean isVersioned() {
-			return false;  //To change body of implemented methods use File | Settings | File Templates.
+			return false;
 		}
 
+		@Override
 		public Comparator getVersionComparator() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+			return null;
 		}
 
+		@Override
 		public VersionType getVersionType() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+			return null;
 		}
 
+		@Override
 		public int getVersionProperty() {
-			return 0;  //To change body of implemented methods use File | Settings | File Templates.
+			return 0;
 		}
 
+		@Override
 		public boolean hasNaturalIdentifier() {
-			return false;  //To change body of implemented methods use File | Settings | File Templates.
+			return false;
 		}
 
+		@Override
 		public int[] getNaturalIdentifierProperties() {
-			return new int[0];  //To change body of implemented methods use File | Settings | File Templates.
+			return new int[0];
 		}
 
+		@Override
 		public Object[] getNaturalIdentifierSnapshot(Serializable id, SessionImplementor session) {
-			return new Object[0];  //To change body of implemented methods use File | Settings | File Templates.
+			return new Object[0];
 		}
 
+		@Override
 		public IdentifierGenerator getIdentifierGenerator() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+			return null;
 		}
 
+		@Override
 		public boolean hasLazyProperties() {
-			return false;  //To change body of implemented methods use File | Settings | File Templates.
+			return false;
 		}
 
-		public Object load(Serializable id, Object optionalObject, LockMode lockMode, SessionImplementor session)
-				throws HibernateException {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+		@Override
+		public Object load(Serializable id, Object optionalObject, LockMode lockMode, SessionImplementor session) {
+			return null;
 		}
 
-		public Object load(Serializable id, Object optionalObject, LockOptions lockOptions, SessionImplementor session)
-				throws HibernateException {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+		@Override
+		public Object load(Serializable id, Object optionalObject, LockOptions lockOptions, SessionImplementor session) {
+			return null;
 		}
 
-		public void lock(Serializable id, Object version, Object object, LockMode lockMode, SessionImplementor session)
-				throws HibernateException {
-			//To change body of implemented methods use File | Settings | File Templates.
+		@Override
+		public void lock(Serializable id, Object version, Object object, LockMode lockMode, SessionImplementor session) {
 		}
 
-		public void lock(Serializable id, Object version, Object object, LockOptions lockOptions, SessionImplementor session)
-				throws HibernateException {
-			//To change body of implemented methods use File | Settings | File Templates.
+		@Override
+		public void lock(Serializable id, Object version, Object object, LockOptions lockOptions, SessionImplementor session) {
 		}
 
-		public void insert(Serializable id, Object[] fields, Object object, SessionImplementor session)
-				throws HibernateException {
-			//To change body of implemented methods use File | Settings | File Templates.
+		@Override
+		public void insert(Serializable id, Object[] fields, Object object, SessionImplementor session) {
 		}
 
-		public Serializable insert(Object[] fields, Object object, SessionImplementor session)
-				throws HibernateException {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+		@Override
+		public Serializable insert(Object[] fields, Object object, SessionImplementor session) {
+			return null;
 		}
 
-		public void delete(Serializable id, Object version, Object object, SessionImplementor session)
-				throws HibernateException {
-			//To change body of implemented methods use File | Settings | File Templates.
+		@Override
+		public void delete(Serializable id, Object version, Object object, SessionImplementor session) {
 		}
 
-		public void update(Serializable id, Object[] fields, int[] dirtyFields, boolean hasDirtyCollection, Object[] oldFields, Object oldVersion, Object object, Object rowId, SessionImplementor session)
-				throws HibernateException {
-			//To change body of implemented methods use File | Settings | File Templates.
+		@Override
+		public void update(Serializable id, Object[] fields, int[] dirtyFields, boolean hasDirtyCollection, Object[] oldFields, Object oldVersion, Object object, Object rowId, SessionImplementor session) {
 		}
 
+		@Override
 		public Type[] getPropertyTypes() {
-			return new Type[0];  //To change body of implemented methods use File | Settings | File Templates.
+			return new Type[0];
 		}
 
+		@Override
 		public String[] getPropertyNames() {
-			return new String[0];  //To change body of implemented methods use File | Settings | File Templates.
+			return new String[0];
 		}
 
+		@Override
 		public boolean[] getPropertyInsertability() {
-			return new boolean[0];  //To change body of implemented methods use File | Settings | File Templates.
+			return new boolean[0];
 		}
 
+		@Override
 		public ValueInclusion[] getPropertyInsertGenerationInclusions() {
-			return new ValueInclusion[0];  //To change body of implemented methods use File | Settings | File Templates.
+			return new ValueInclusion[0];
 		}
 
+		@Override
 		public ValueInclusion[] getPropertyUpdateGenerationInclusions() {
-			return new ValueInclusion[0];  //To change body of implemented methods use File | Settings | File Templates.
+			return new ValueInclusion[0];
 		}
 
+		@Override
 		public boolean[] getPropertyUpdateability() {
-			return new boolean[0];  //To change body of implemented methods use File | Settings | File Templates.
+			return new boolean[0];
 		}
 
+		@Override
 		public boolean[] getPropertyCheckability() {
-			return new boolean[0];  //To change body of implemented methods use File | Settings | File Templates.
+			return new boolean[0];
 		}
 
+		@Override
 		public boolean[] getPropertyNullability() {
-			return new boolean[0];  //To change body of implemented methods use File | Settings | File Templates.
+			return new boolean[0];
 		}
 
+		@Override
 		public boolean[] getPropertyVersionability() {
-			return new boolean[0];  //To change body of implemented methods use File | Settings | File Templates.
+			return new boolean[0];
 		}
 
+		@Override
 		public boolean[] getPropertyLaziness() {
-			return new boolean[0];  //To change body of implemented methods use File | Settings | File Templates.
+			return new boolean[0];
 		}
 
+		@Override
 		public CascadeStyle[] getPropertyCascadeStyles() {
-			return new CascadeStyle[0];  //To change body of implemented methods use File | Settings | File Templates.
+			return new CascadeStyle[0];
 		}
 
+		@Override
 		public Type getIdentifierType() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+			return null;
 		}
 
+		@Override
 		public String getIdentifierPropertyName() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+			return null;
 		}
 
+		@Override
 		public boolean isCacheInvalidationRequired() {
-			return false;  //To change body of implemented methods use File | Settings | File Templates.
+			return false;
 		}
 
+		@Override
 		public boolean isLazyPropertiesCacheable() {
-			return false;  //To change body of implemented methods use File | Settings | File Templates.
+			return false;
 		}
 
+		@Override
 		public boolean hasCache() {
-			return false;  //To change body of implemented methods use File | Settings | File Templates.
+			return false;
 		}
 
+		@Override
 		public EntityRegionAccessStrategy getCacheAccessStrategy() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+			return null;
 		}
 
+		@Override
 		public CacheEntryStructure getCacheEntryStructure() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+			return null;
 		}
 
+		@Override
 		public ClassMetadata getClassMetadata() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+			return null;
 		}
 
+		@Override
 		public boolean isBatchLoadable() {
-			return false;  //To change body of implemented methods use File | Settings | File Templates.
+			return false;
 		}
 
+		@Override
 		public boolean isSelectBeforeUpdateRequired() {
-			return false;  //To change body of implemented methods use File | Settings | File Templates.
+			return false;
 		}
 
+		@Override
 		public Object[] getDatabaseSnapshot(Serializable id, SessionImplementor session) throws HibernateException {
-			return new Object[0];  //To change body of implemented methods use File | Settings | File Templates.
+			return new Object[0];
 		}
 
+		@Override
 		public Object getCurrentVersion(Serializable id, SessionImplementor session) throws HibernateException {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+			return null;
 		}
 
-		public Object forceVersionIncrement(Serializable id, Object currentVersion, SessionImplementor session)
-				throws HibernateException {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+		@Override
+		public Object forceVersionIncrement(Serializable id, Object currentVersion, SessionImplementor session) {
+			return null;
 		}
 
-		public EntityMode guessEntityMode(Object object) {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+		@Override
+		public boolean isInstrumented() {
+			return false;
 		}
 
-		public boolean isInstrumented(EntityMode entityMode) {
-			return false;  //To change body of implemented methods use File | Settings | File Templates.
-		}
-
+		@Override
 		public boolean hasInsertGeneratedProperties() {
-			return false;  //To change body of implemented methods use File | Settings | File Templates.
+			return false;
 		}
 
+		@Override
 		public boolean hasUpdateGeneratedProperties() {
-			return false;  //To change body of implemented methods use File | Settings | File Templates.
+			return false;
 		}
 
+		@Override
 		public boolean isVersionPropertyGenerated() {
-			return false;  //To change body of implemented methods use File | Settings | File Templates.
+			return false;
 		}
 
+		@Override
 		public void afterInitialize(Object entity, boolean lazyPropertiesAreUnfetched, SessionImplementor session) {
-			//To change body of implemented methods use File | Settings | File Templates.
 		}
 
+		@Override
 		public void afterReassociate(Object entity, SessionImplementor session) {
-			//To change body of implemented methods use File | Settings | File Templates.
 		}
 
+		@Override
 		public Object createProxy(Serializable id, SessionImplementor session) throws HibernateException {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+			return null;
 		}
 
+		@Override
 		public Boolean isTransient(Object object, SessionImplementor session) throws HibernateException {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+			return null;
 		}
 
-		public Object[] getPropertyValuesToInsert(Object object, Map mergeMap, SessionImplementor session)
-				throws HibernateException {
-			return new Object[0];  //To change body of implemented methods use File | Settings | File Templates.
+		@Override
+		public Object[] getPropertyValuesToInsert(Object object, Map mergeMap, SessionImplementor session) {
+			return new Object[0];
 		}
 
+		@Override
 		public void processInsertGeneratedProperties(Serializable id, Object entity, Object[] state, SessionImplementor session) {
-			//To change body of implemented methods use File | Settings | File Templates.
 		}
 
+		@Override
 		public void processUpdateGeneratedProperties(Serializable id, Object entity, Object[] state, SessionImplementor session) {
-			//To change body of implemented methods use File | Settings | File Templates.
 		}
 
-		public Class getMappedClass(EntityMode entityMode) {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+		@Override
+		public Class getMappedClass() {
+			return null;
 		}
 
-		public boolean implementsLifecycle(EntityMode entityMode) {
-			return false;  //To change body of implemented methods use File | Settings | File Templates.
+		@Override
+		public boolean implementsLifecycle() {
+			return false;
 		}
 
-		public boolean implementsValidatable(EntityMode entityMode) {
-			return false;  //To change body of implemented methods use File | Settings | File Templates.
+		@Override
+		public Class getConcreteProxyClass() {
+			return null;
 		}
 
-		public Class getConcreteProxyClass(EntityMode entityMode) {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+		@Override
+		public void setPropertyValues(Object object, Object[] values) {
 		}
 
-		public void setPropertyValues(Object object, Object[] values, EntityMode entityMode) throws HibernateException {
-			//To change body of implemented methods use File | Settings | File Templates.
+		@Override
+		public void setPropertyValue(Object object, int i, Object value) {
 		}
 
-		public void setPropertyValue(Object object, int i, Object value, EntityMode entityMode)
-				throws HibernateException {
-			//To change body of implemented methods use File | Settings | File Templates.
+		@Override
+		public Object[] getPropertyValues(Object object) {
+			return new Object[0];
 		}
 
-		public Object[] getPropertyValues(Object object, EntityMode entityMode) throws HibernateException {
-			return new Object[0];  //To change body of implemented methods use File | Settings | File Templates.
+		@Override
+		public Object getPropertyValue(Object object, int i) {
+			return null;
 		}
 
-		public Object getPropertyValue(Object object, int i, EntityMode entityMode) throws HibernateException {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+		@Override
+		public Object getPropertyValue(Object object, String propertyName) {
+			return null;
 		}
 
-		public Object getPropertyValue(Object object, String propertyName, EntityMode entityMode)
-				throws HibernateException {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+		@Override
+		public Serializable getIdentifier(Object object) {
+			return null;
 		}
 
-		public Serializable getIdentifier(Object object, EntityMode entityMode) throws HibernateException {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
-		}
-
+		@Override
 		public Serializable getIdentifier(Object entity, SessionImplementor session) {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+			return null;
 		}
 
-		public void setIdentifier(Object entity, Serializable id, EntityMode entityMode) throws HibernateException {
-			//To change body of implemented methods use File | Settings | File Templates.
-		}
-
+		@Override
 		public void setIdentifier(Object entity, Serializable id, SessionImplementor session) {
-			//To change body of implemented methods use File | Settings | File Templates.
 		}
 
-		public Object getVersion(Object object, EntityMode entityMode) throws HibernateException {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+		@Override
+		public Object getVersion(Object object) {
+			return null;
 		}
 
-		public Object instantiate(Serializable id, EntityMode entityMode) throws HibernateException {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
-		}
-
+		@Override
 		public Object instantiate(Serializable id, SessionImplementor session) {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+			return null;
 		}
 
-		public boolean isInstance(Object object, EntityMode entityMode) {
-			return false;  //To change body of implemented methods use File | Settings | File Templates.
+		@Override
+		public boolean isInstance(Object object) {
+			return false;
 		}
 
-		public boolean hasUninitializedLazyProperties(Object object, EntityMode entityMode) {
-			return false;  //To change body of implemented methods use File | Settings | File Templates.
+		@Override
+		public boolean hasUninitializedLazyProperties(Object object) {
+			return false;
 		}
 
-		public void resetIdentifier(Object entity, Serializable currentId, Object currentVersion, EntityMode entityMode) {
-			//To change body of implemented methods use File | Settings | File Templates.
-		}
-
+		@Override
 		public void resetIdentifier(Object entity, Serializable currentId, Object currentVersion, SessionImplementor session) {
-			//To change body of implemented methods use File | Settings | File Templates.
 		}
 
-		public EntityPersister getSubclassEntityPersister(Object instance, SessionFactoryImplementor factory, EntityMode entityMode) {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+		@Override
+		public EntityPersister getSubclassEntityPersister(Object instance, SessionFactoryImplementor factory) {
+			return null;
 		}
 	}
 

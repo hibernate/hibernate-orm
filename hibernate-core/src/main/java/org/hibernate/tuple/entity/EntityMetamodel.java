@@ -31,15 +31,18 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.jboss.logging.Logger;
+
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
+import org.hibernate.MappingException;
+import org.hibernate.bytecode.instrumentation.internal.FieldInterceptionHelper;
+import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.MappingException;
 import org.hibernate.engine.spi.ValueInclusion;
-import org.hibernate.engine.internal.Versioning;
-import org.hibernate.bytecode.instrumentation.internal.FieldInterceptionHelper;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Component;
@@ -54,7 +57,6 @@ import org.hibernate.type.AssociationType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
-import org.jboss.logging.Logger;
 
 /**
  * Centralizes metamodel information about an entity.
@@ -121,7 +123,8 @@ public class EntityMetamodel implements Serializable {
 	private final Set subclassEntityNames = new HashSet();
 	private final Map entityNameByInheritenceClassMap = new HashMap();
 
-	private final EntityEntityModeToTuplizerMapping tuplizerMapping;
+	private final EntityMode entityMode;
+	private final EntityTuplizer entityTuplizer;
 
 	public EntityMetamodel(PersistentClass persistentClass, SessionFactoryImplementor sessionFactory) {
 		this.sessionFactory = sessionFactory;
@@ -315,7 +318,15 @@ public class EntityMetamodel implements Serializable {
 			}
 		}
 
-		tuplizerMapping = new EntityEntityModeToTuplizerMapping( persistentClass, this );
+		entityMode = persistentClass.hasPojoRepresentation() ? EntityMode.POJO : EntityMode.MAP;
+		final EntityTuplizerFactory entityTuplizerFactory = sessionFactory.getSettings().getEntityTuplizerFactory();
+		final String tuplizerClassName = persistentClass.getTuplizerImplClassName( entityMode );
+		if ( tuplizerClassName == null ) {
+			entityTuplizer = entityTuplizerFactory.constructDefaultTuplizer( entityMode, this, persistentClass );
+		}
+		else {
+			entityTuplizer = entityTuplizerFactory.constructTuplizer( tuplizerClassName, this, persistentClass );
+		}
 	}
 
 	private ValueInclusion determineInsertValueGenerationType(Property mappingProperty, StandardProperty runtimeProperty) {
@@ -388,20 +399,8 @@ public class EntityMetamodel implements Serializable {
 		}
 	}
 
-	public EntityEntityModeToTuplizerMapping getTuplizerMapping() {
-		return tuplizerMapping;
-	}
-
-	public EntityTuplizer getTuplizer(EntityMode entityMode) {
-		return (EntityTuplizer) tuplizerMapping.getTuplizer( entityMode );
-	}
-
-	public EntityTuplizer getTuplizerOrNull(EntityMode entityMode) {
-		return ( EntityTuplizer ) tuplizerMapping.getTuplizerOrNull( entityMode );
-	}
-
-	public EntityMode guessEntityMode(Object object) {
-		return tuplizerMapping.guessEntityMode( object );
+	public EntityTuplizer getTuplizer() {
+		return entityTuplizer;
 	}
 
 	public int[] getNaturalIdentifierProperties() {
@@ -634,5 +633,9 @@ public class EntityMetamodel implements Serializable {
 
 	public boolean hasUpdateGeneratedValues() {
 		return hasUpdateGeneratedValues;
+	}
+
+	public EntityMode getEntityMode() {
+		return entityMode;
 	}
 }

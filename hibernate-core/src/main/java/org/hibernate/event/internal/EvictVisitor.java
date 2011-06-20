@@ -60,7 +60,7 @@ public class EvictVisitor extends AbstractVisitor {
 	public void evictCollection(Object value, CollectionType type) {
 
 		final Object pc;
-		if ( type.hasHolder( getSession().getEntityMode() ) ) {
+		if ( type.hasHolder() ) {
 			pc = getSession().getPersistenceContext().removeCollectionHolder(value);
 		}
 		else if ( value instanceof PersistentCollection ) {
@@ -83,7 +83,7 @@ public class EvictVisitor extends AbstractVisitor {
 		if ( ce.getLoadedPersister() != null && ce.getLoadedKey() != null ) {
 			//TODO: is this 100% correct?
 			getSession().getPersistenceContext().getCollectionsByKey().remove(
-					new CollectionKey( ce.getLoadedPersister(), ce.getLoadedKey(), getSession().getEntityMode() )
+					new CollectionKey( ce.getLoadedPersister(), ce.getLoadedKey() )
 			);
 		}
 	}

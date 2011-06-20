@@ -30,13 +30,12 @@ import java.sql.SQLException;
 import org.dom4j.Node;
 import org.jboss.logging.Logger;
 
-import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
+import org.hibernate.MappingException;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.MappingException;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.metamodel.relational.Size;
@@ -205,7 +204,7 @@ public abstract class NullableType extends AbstractType implements StringReprese
 
 	public final Object nullSafeGet(ResultSet rs, String name, SessionImplementor session, Object owner)
 	throws HibernateException, SQLException {
-		return nullSafeGet(rs, name);
+		return nullSafeGet( rs, name );
 	}
 
 	public final String toXMLString(Object value, SessionFactoryImplementor pc)
@@ -236,10 +235,6 @@ public abstract class NullableType extends AbstractType implements StringReprese
 	}
 
 	@Override
-    public final boolean isEqual(Object x, Object y, EntityMode entityMode) {
-		return isEqual(x, y);
-	}
-
 	public boolean isEqual(Object x, Object y) {
 		return EqualsHelper.equals(x, y);
 	}

@@ -104,7 +104,7 @@ public final class EntityInsertAction extends EntityAction {
 			CacheEntry ce = new CacheEntry(
 					state,
 					persister, 
-					persister.hasUninitializedLazyProperties( instance, session.getEntityMode() ),
+					persister.hasUninitializedLazyProperties( instance ),
 					version,
 					session,
 					instance

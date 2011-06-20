@@ -60,17 +60,6 @@ public class DynamicClassTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testLazyDynamicClass() {
 		Session s = openSession();
-		assertTrue( "Incorrectly handled default_entity_mode", s.getEntityMode() == EntityMode.MAP );
-		Session other = s.getSession( EntityMode.MAP );
-		assertEquals( "openSession() using same entity-mode returned new session", s, other );
-
-		other = s.getSession( EntityMode.POJO );
-		other.close();
-		assertTrue( !other.isOpen() );
-
-		s.close();
-
-		s = openSession();
 		Transaction t = s.beginTransaction();
 
 		Map cars = new HashMap();

@@ -163,8 +163,7 @@ public class BatchFetchQueue {
 	public Serializable[] getCollectionBatch(
 			final CollectionPersister collectionPersister,
 			final Serializable id,
-			final int batchSize,
-			final EntityMode entityMode) {
+			final int batchSize) {
 		Serializable[] keys = new Serializable[batchSize];
 		keys[0] = id;
 		int i = 1;
@@ -191,7 +190,6 @@ public class BatchFetchQueue {
 				final boolean isEqual = collectionPersister.getKeyType().isEqual(
 						id,
 						ce.getLoadedKey(),
-						entityMode,
 						collectionPersister.getFactory()
 				);
 
@@ -245,7 +243,7 @@ public class BatchFetchQueue {
 					//the first id found after the given id
 					return ids;
 				}
-				if ( persister.getIdentifierType().isEqual( id, key.getIdentifier(), entityMode ) ) {
+				if ( persister.getIdentifierType().isEqual( id, key.getIdentifier() ) ) {
 					end = i;
 				}
 				else {

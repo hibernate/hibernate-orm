@@ -84,7 +84,7 @@ public abstract class AbstractQueryImpl implements Query {
 	// parameter bind values...
 	private List values = new ArrayList(4);
 	private List types = new ArrayList(4);
-	private Map namedParameters = new HashMap(4);
+	private Map<String,TypedValue> namedParameters = new HashMap<String, TypedValue>(4);
 	private Map namedParameterLists = new HashMap(4);
 
 	private Object optionalObject;
@@ -403,7 +403,7 @@ public abstract class AbstractQueryImpl implements Query {
 			throw new IllegalArgumentException("Parameter " + name + " does not exist as a named parameter in [" + getQueryString() + "]");
 		}
 		else {
-			 namedParameters.put( name, new TypedValue( type, val, session.getEntityMode() ) );
+			 namedParameters.put( name, new TypedValue( type, val  ) );
 			 return this;
 		}
 	}
@@ -725,7 +725,7 @@ public abstract class AbstractQueryImpl implements Query {
 		if ( !parameterMetadata.getNamedParameterNames().contains( name ) ) {
 			throw new IllegalArgumentException("Parameter " + name + " does not exist as a named parameter in [" + getQueryString() + "]");
 		}
-		namedParameterLists.put( name, new TypedValue( type, vals, session.getEntityMode() ) );
+		namedParameterLists.put( name, new TypedValue( type, vals ) );
 		return this;
 	}
 	
@@ -779,7 +779,7 @@ public abstract class AbstractQueryImpl implements Query {
 		if ( vals.size() == 1  && isEnclosedInParens ) {
 			// short-circuit for performance when only 1 value and the
 			// placeholder is already enclosed in parentheses...
-			namedParamsCopy.put( name, new TypedValue( type, vals.iterator().next(), session.getEntityMode() ) );
+			namedParamsCopy.put( name, new TypedValue( type, vals.iterator().next() ) );
 			return query;
 		}
 
@@ -788,7 +788,7 @@ public abstract class AbstractQueryImpl implements Query {
 		int i = 0;
 		while ( iter.hasNext() ) {
 			String alias = ( isJpaPositionalParam ? 'x' + name : name ) + i++ + '_';
-			namedParamsCopy.put( alias, new TypedValue( type, iter.next(), session.getEntityMode() ) );
+			namedParamsCopy.put( alias, new TypedValue( type, iter.next() ) );
 			list.append( ParserHelper.HQL_VARIABLE_PREFIX ).append( alias );
 			if ( iter.hasNext() ) {
 				list.append( ", " );

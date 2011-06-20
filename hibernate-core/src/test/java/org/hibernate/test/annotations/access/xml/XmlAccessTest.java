@@ -29,13 +29,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.EntityMode;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.property.BasicPropertyAccessor;
 import org.hibernate.property.DirectPropertyAccessor;
-import org.hibernate.tuple.entity.EntityMetamodel;
-import org.hibernate.tuple.entity.PojoEntityTuplizer;
+import org.hibernate.tuple.entity.EntityTuplizer;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -185,9 +183,9 @@ public class XmlAccessTest extends BaseUnitTestCase {
 	// uses the first getter of the tupelizer for the assertions
 
 	private void assertAccessType(SessionFactoryImplementor factory, Class<?> classUnderTest, AccessType accessType) {
-		EntityMetamodel metaModel = factory.getEntityPersister( classUnderTest.getName() )
-				.getEntityMetamodel();
-		PojoEntityTuplizer tuplizer = ( PojoEntityTuplizer ) metaModel.getTuplizer( EntityMode.POJO );
+		EntityTuplizer tuplizer = factory.getEntityPersister( classUnderTest.getName() )
+				.getEntityMetamodel()
+				.getTuplizer();
 		if ( AccessType.FIELD.equals( accessType ) ) {
 			Assert.assertTrue(
 					"Field access was expected.",

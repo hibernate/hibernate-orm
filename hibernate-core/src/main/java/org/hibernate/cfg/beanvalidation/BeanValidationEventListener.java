@@ -91,7 +91,7 @@ public class BeanValidationEventListener
 
 	public boolean onPreInsert(PreInsertEvent event) {
 		validate(
-				event.getEntity(), event.getSession().getEntityMode(), event.getPersister(),
+				event.getEntity(), event.getPersister().getEntityMode(), event.getPersister(),
 				event.getSession().getFactory(), GroupsPerOperation.Operation.INSERT
 		);
 		return false;
@@ -99,7 +99,7 @@ public class BeanValidationEventListener
 
 	public boolean onPreUpdate(PreUpdateEvent event) {
 		validate(
-				event.getEntity(), event.getSession().getEntityMode(), event.getPersister(),
+				event.getEntity(), event.getPersister().getEntityMode(), event.getPersister(),
 				event.getSession().getFactory(), GroupsPerOperation.Operation.UPDATE
 		);
 		return false;
@@ -107,7 +107,7 @@ public class BeanValidationEventListener
 
 	public boolean onPreDelete(PreDeleteEvent event) {
 		validate(
-				event.getEntity(), event.getSession().getEntityMode(), event.getPersister(),
+				event.getEntity(), event.getPersister().getEntityMode(), event.getPersister(),
 				event.getSession().getFactory(), GroupsPerOperation.Operation.DELETE
 		);
 		return false;

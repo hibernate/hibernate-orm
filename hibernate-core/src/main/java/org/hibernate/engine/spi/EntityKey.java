@@ -29,7 +29,6 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.EntityMode;
 import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
@@ -46,7 +45,6 @@ public final class EntityKey implements Serializable {
 	private final Serializable identifier;
 	private final String entityName;
 	private final String rootEntityName;
-	private final EntityMode entityMode;
 	private final String tenantId;
 
 	private final int hashCode;
@@ -64,17 +62,15 @@ public final class EntityKey implements Serializable {
 	 *
 	 * @param id The entity id
 	 * @param persister The entity persister
-	 * @param entityMode The entity mode of the session to which this key belongs
 	 * @param tenantId The tenant identifier of the session to which this key belongs
 	 */
-	public EntityKey(Serializable id, EntityPersister persister, EntityMode entityMode, String tenantId) {
+	public EntityKey(Serializable id, EntityPersister persister, String tenantId) {
 		if ( id == null ) {
 			throw new AssertionFailure( "null identifier" );
 		}
 		this.identifier = id; 
 		this.rootEntityName = persister.getRootEntityName();
 		this.entityName = persister.getEntityName();
-		this.entityMode = entityMode;
 		this.tenantId = tenantId;
 
 		this.identifierType = persister.getIdentifierType();
@@ -92,7 +88,6 @@ public final class EntityKey implements Serializable {
 	 * @param identifierType The type of the identifier value
 	 * @param batchLoadable Whether represented entity is eligible for batch loading
 	 * @param factory The session factory
-	 * @param entityMode The entity's entity mode
 	 * @param tenantId The entity's tenant id (from the session that loaded it).
 	 */
 	private EntityKey(
@@ -102,7 +97,6 @@ public final class EntityKey implements Serializable {
 	        Type identifierType,
 	        boolean batchLoadable,
 	        SessionFactoryImplementor factory,
-	        EntityMode entityMode,
 			String tenantId) {
 		this.identifier = identifier;
 		this.rootEntityName = rootEntityName;
@@ -110,7 +104,6 @@ public final class EntityKey implements Serializable {
 		this.identifierType = identifierType;
 		this.isBatchLoadable = batchLoadable;
 		this.factory = factory;
-		this.entityMode = entityMode;
 		this.tenantId = tenantId;
 		this.hashCode = generateHashCode();
 	}
@@ -118,7 +111,7 @@ public final class EntityKey implements Serializable {
 	private int generateHashCode() {
 		int result = 17;
 		result = 37 * result + rootEntityName.hashCode();
-		result = 37 * result + identifierType.getHashCode( identifier, entityMode, factory );
+		result = 37 * result + identifierType.getHashCode( identifier, factory );
 		return result;
 	}
 
@@ -138,7 +131,7 @@ public final class EntityKey implements Serializable {
 	public boolean equals(Object other) {
 		EntityKey otherKey = (EntityKey) other;
 		return otherKey.rootEntityName.equals(this.rootEntityName) &&
-				identifierType.isEqual(otherKey.identifier, this.identifier, entityMode, factory) &&
+				identifierType.isEqual(otherKey.identifier, this.identifier, factory) &&
 				EqualsHelper.equals( tenantId, otherKey.tenantId );
 	}
 
@@ -167,7 +160,6 @@ public final class EntityKey implements Serializable {
 		oos.writeObject( entityName );
 		oos.writeObject( identifierType );
 		oos.writeBoolean( isBatchLoadable );
-		oos.writeObject( entityMode.toString() );
 		oos.writeObject( tenantId );
 	}
 
@@ -193,7 +185,6 @@ public final class EntityKey implements Serializable {
 		        ( Type ) ois.readObject(),
 		        ois.readBoolean(),
 		        ( session == null ? null : session.getFactory() ),
-		        EntityMode.parse( (String) ois.readObject() ),
 				(String) ois.readObject()
 		);
 	}

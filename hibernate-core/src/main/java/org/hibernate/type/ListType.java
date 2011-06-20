@@ -22,14 +22,13 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.type;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import org.dom4j.Element;
-import org.hibernate.EntityMode;
-import org.hibernate.collection.internal.PersistentListElementHolder;
-import org.hibernate.collection.spi.PersistentCollection;
+
 import org.hibernate.collection.internal.PersistentList;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 
@@ -40,12 +39,7 @@ public class ListType extends CollectionType {
 	}
 
 	public PersistentCollection instantiate(SessionImplementor session, CollectionPersister persister, Serializable key) {
-		if ( session.getEntityMode()==EntityMode.DOM4J ) {
-			return new PersistentListElementHolder(session, persister, key);
-		}
-		else {
-			return new PersistentList(session);
-		}
+		return new PersistentList(session);
 	}
 
 	public Class getReturnedClass() {
@@ -53,12 +47,7 @@ public class ListType extends CollectionType {
 	}
 
 	public PersistentCollection wrap(SessionImplementor session, Object collection) {
-		if ( session.getEntityMode()==EntityMode.DOM4J ) {
-			return new PersistentListElementHolder( session, (Element) collection );
-		}
-		else {
-			return new PersistentList( session, (List) collection );
-		}
+		return new PersistentList( session, (List) collection );
 	}
 
 	public Object instantiate(int anticipatedSize) {

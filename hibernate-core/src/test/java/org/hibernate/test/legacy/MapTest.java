@@ -52,7 +52,7 @@ public class MapTest extends LegacyTestCase {
 
 	@Test
 	public void testMap() throws Exception {
-		Session s = openSession().getSession(EntityMode.MAP);
+		Session s = openSession();
 		s.beginTransaction();
 		Map map = new HashMap();
 		map.put("$type$", "TestMap");
@@ -66,7 +66,7 @@ public class MapTest extends LegacyTestCase {
 		s.getTransaction().commit();
 		s.close();
 
-		s = openSession().getSession(EntityMode.MAP);
+		s = openSession();
 		s.beginTransaction();
 		map = (Map) s.get( "TestMap", (Serializable) map.get("id") );
 		assertTrue( map!=null && "foo".equals( map.get("name") ) );
@@ -77,7 +77,7 @@ public class MapTest extends LegacyTestCase {
 		s.getTransaction().commit();
 		s.close();
 
-		s = openSession().getSession(EntityMode.MAP);
+		s = openSession();
 		s.beginTransaction();
 		List list = s.createQuery("from TestMap").list();
 		map = (Map) list.get(0);

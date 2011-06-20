@@ -28,7 +28,6 @@ import java.io.Serializable;
 import org.jboss.logging.Logger;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.action.internal.DelayedPostInsertIdentifier;
@@ -62,12 +61,8 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 	/**
 	 * make sure user didn't mangle the id
 	 */
-	public void checkId(
-			Object object,
-			EntityPersister persister,
-			Serializable id,
-			EntityMode entityMode,
-			SessionImplementor session) throws HibernateException {
+	public void checkId(Object object, EntityPersister persister, Serializable id, SessionImplementor session)
+			throws HibernateException {
 
 		if ( id != null && id instanceof DelayedPostInsertIdentifier ) {
 			// this is a situation where the entity id is assigned by a post-insert generator
@@ -81,7 +76,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 			if (id==null) {
 				throw new AssertionFailure("null id in " + persister.getEntityName() + " entry (don't flush the Session after an exception occurs)");
 			}
-			if ( !persister.getIdentifierType().isEqual( id, oid, entityMode, session.getFactory() ) ) {
+			if ( !persister.getIdentifierType().isEqual( id, oid, session.getFactory() ) ) {
 				throw new HibernateException(
 						"identifier of an instance of " +
 						persister.getEntityName() +
@@ -98,7 +93,6 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 	        EntityEntry entry,
 	        Object[] current,
 	        Object[] loaded,
-	        EntityMode entityMode,
 	        SessionImplementor session) {
 		if ( persister.hasNaturalIdentifier() && entry.getStatus() != Status.READ_ONLY ) {
  			Object[] snapshot = null;
@@ -117,7 +111,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
  					} else {
  						loadedVal = loaded[prop];
  					}
- 					if ( !types[prop].isEqual( current[prop], loadedVal, entityMode ) ) {
+ 					if ( !types[prop].isEqual( current[prop], loadedVal ) ) {
 						throw new HibernateException(
 								"immutable natural identifier of an instance of " +
 								persister.getEntityName() +
@@ -139,12 +133,11 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		final EventSource session = event.getSession();
 		final EntityPersister persister = entry.getPersister();
 		final Status status = entry.getStatus();
-		final EntityMode entityMode = session.getEntityMode();
 		final Type[] types = persister.getPropertyTypes();
 
 		final boolean mightBeDirty = entry.requiresDirtyCheck(entity);
 
-		final Object[] values = getValues( entity, entry, entityMode, mightBeDirty, session );
+		final Object[] values = getValues( entity, entry, mightBeDirty, session );
 
 		event.setPropertyValues(values);
 
@@ -157,7 +150,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 
 		if ( status != Status.DELETED ) {
 			// now update the object .. has to be outside the main if block above (because of collections)
-			if (substitute) persister.setPropertyValues( entity, values, entityMode );
+			if (substitute) persister.setPropertyValues( entity, values );
 
 			// Search for collections by reachability, updating their role.
 			// We don't want to touch collections reachable from a deleted object
@@ -168,12 +161,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 
 	}
 
-	private Object[] getValues(
-			Object entity,
-			EntityEntry entry,
-			EntityMode entityMode,
-			boolean mightBeDirty,
-	        SessionImplementor session) {
+	private Object[] getValues(Object entity, EntityEntry entry, boolean mightBeDirty, SessionImplementor session) {
 		final Object[] loadedState = entry.getLoadedState();
 		final Status status = entry.getStatus();
 		final EntityPersister persister = entry.getPersister();
@@ -187,12 +175,12 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 			values = loadedState;
 		}
 		else {
-			checkId( entity, persister, entry.getId(), entityMode, session );
+			checkId( entity, persister, entry.getId(), session );
 
 			// grab its current state
-			values = persister.getPropertyValues( entity, entityMode );
+			values = persister.getPropertyValues( entity );
 
-			checkNaturalId( persister, entry, values, loadedState, entityMode, session );
+			checkNaturalId( persister, entry, values, loadedState, session );
 		}
 		return values;
 	}
@@ -247,7 +235,6 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		final EventSource session = event.getSession();
 		final Object entity = event.getEntity();
 		final Status status = entry.getStatus();
-		final EntityMode entityMode = session.getEntityMode();
 		final EntityPersister persister = entry.getPersister();
 		final Object[] values = event.getPropertyValues();
 
@@ -291,7 +278,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 						dirtyProperties,
 						event.hasDirtyCollection(),
 						( status == Status.DELETED && ! entry.isModifiableEntity() ?
-								persister.getPropertyValues( entity, entityMode ) :
+								persister.getPropertyValues( entity ) :
 								entry.getLoadedState() ),
 						entry.getVersion(),
 						nextVersion,
@@ -502,8 +489,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 				// - entry.getDeletedState() contains the entity's current property values with
 				//   references to transient entities set to null.
 				// - dirtyProperties will only contain properties that refer to transient entities
-				final Object[] currentState =
-						persister.getPropertyValues( event.getEntity(), event.getSession().getEntityMode() );
+				final Object[] currentState = persister.getPropertyValues( event.getEntity() );
 				dirtyProperties = persister.findDirty( entry.getDeletedState(), currentState, entity, session );
 				cannotDirtyCheck = false;
 			}

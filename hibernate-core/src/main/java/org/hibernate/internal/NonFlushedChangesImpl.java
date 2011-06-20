@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2009, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2009-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -37,64 +37,42 @@ import org.hibernate.event.spi.EventSource;
 
 import org.jboss.logging.Logger;
 
-public final class NonFlushedChangesImpl implements NonFlushedChanges {
+public final class NonFlushedChangesImpl implements NonFlushedChanges, Serializable {
+    private static final Logger LOG = Logger.getLogger( NonFlushedChangesImpl.class.getName() );
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, NonFlushedChangesImpl.class.getName());
+	private transient ActionQueue actionQueue;
+	private transient StatefulPersistenceContext persistenceContext;
 
-	private static class SessionNonFlushedChanges implements Serializable {
-		private transient EntityMode entityMode;
-		private transient ActionQueue actionQueue;
-		private transient StatefulPersistenceContext persistenceContext;
-
-		public SessionNonFlushedChanges(EventSource session) {
-			this.entityMode = session.getEntityMode();
-			this.actionQueue = session.getActionQueue();
-			this.persistenceContext = ( StatefulPersistenceContext ) session.getPersistenceContext();
-		}
-
-		private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException {
-			ois.defaultReadObject();
-			entityMode = EntityMode.parse( ( String ) ois.readObject() );
-			persistenceContext = StatefulPersistenceContext.deserialize( ois, null );
-			actionQueue = ActionQueue.deserialize( ois, null );
-		}
-
-		private void writeObject(ObjectOutputStream oos) throws IOException {
-            LOG.trace("Serializing SessionNonFlushedChanges");
-			oos.defaultWriteObject();
-			oos.writeObject( entityMode.toString() );
-			persistenceContext.serialize( oos );
-			actionQueue.serialize( oos );
-		}
-	}
-	private Map nonFlushedChangesByEntityMode = new HashMap();
-
-	public NonFlushedChangesImpl( EventSource session ) {
-		extractFromSession( session );
-	}
-
-	public void extractFromSession(EventSource session) {
-		if ( nonFlushedChangesByEntityMode.containsKey( session.getEntityMode() ) ) {
-			throw new AssertionFailure( "Already has non-flushed changes for entity mode: " + session.getEntityMode() );
-		}
-		nonFlushedChangesByEntityMode.put( session.getEntityMode(), new SessionNonFlushedChanges( session ) );
-	}
-
-	private SessionNonFlushedChanges getSessionNonFlushedChanges(EntityMode entityMode) {
-		return ( SessionNonFlushedChanges ) nonFlushedChangesByEntityMode.get( entityMode );
+	public NonFlushedChangesImpl(EventSource session) {
+		this.actionQueue = session.getActionQueue();
+		this.persistenceContext = ( StatefulPersistenceContext ) session.getPersistenceContext();
 	}
 
 	/* package-protected */
-	ActionQueue getActionQueue(EntityMode entityMode) {
-		return getSessionNonFlushedChanges( entityMode ).actionQueue;
+	ActionQueue getActionQueue() {
+		return actionQueue;
 	}
 
 	/* package-protected */
-	StatefulPersistenceContext getPersistenceContext(EntityMode entityMode) {
-		return getSessionNonFlushedChanges( entityMode ).persistenceContext;
+	StatefulPersistenceContext getPersistenceContext() {
+		return persistenceContext;
 	}
 
 	public void clear() {
-		nonFlushedChangesByEntityMode.clear();
 	}
+
+	private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException {
+		LOG.trace( "Deserializing NonFlushedChangesImpl" );
+		ois.defaultReadObject();
+		persistenceContext = StatefulPersistenceContext.deserialize( ois, null );
+		actionQueue = ActionQueue.deserialize( ois, null );
+	}
+
+	private void writeObject(ObjectOutputStream oos) throws IOException {
+		LOG.trace( "Serializing NonFlushedChangesImpl" );
+		oos.defaultWriteObject();
+		persistenceContext.serialize( oos );
+		actionQueue.serialize( oos );
+	}
+
 }

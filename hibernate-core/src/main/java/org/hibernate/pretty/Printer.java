@@ -23,20 +23,20 @@
  *
  */
 package org.hibernate.pretty;
-import java.util.ArrayList;
+
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
-import org.hibernate.EntityMode;
+
+import org.jboss.logging.Logger;
+
 import org.hibernate.HibernateException;
+import org.hibernate.bytecode.instrumentation.spi.LazyPropertyInitializer;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.bytecode.instrumentation.spi.LazyPropertyInitializer;
-import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.Type;
-import org.jboss.logging.Logger;
 
 /**
  * Renders entities to a nicely readable string.
@@ -51,25 +51,27 @@ public final class Printer {
 	/**
 	 * @param entity an actual entity object, not a proxy!
 	 */
-	public String toString(Object entity, EntityMode entityMode) throws HibernateException {
-
+	public String toString(Object entity) throws HibernateException {
 		// todo : this call will not work for anything other than pojos!
-		ClassMetadata cm = factory.getClassMetadata( entity.getClass() );
+		// need a means to access the entity name resolver(s).  problem is accounting for session interceptor from here...
+		EntityPersister entityPersister = factory.getEntityPersister( entity.getClass().getName() );
 
-		if ( cm==null ) return entity.getClass().getName();
+		if ( entityPersister == null ) {
+			return entity.getClass().getName();
+		}
 
-		Map result = new HashMap();
+		Map<String,String> result = new HashMap<String,String>();
 
-		if ( cm.hasIdentifierProperty() ) {
+		if ( entityPersister.hasIdentifierProperty() ) {
 			result.put(
-				cm.getIdentifierPropertyName(),
-				cm.getIdentifierType().toLoggableString( cm.getIdentifier( entity, entityMode ), factory )
+				entityPersister.getIdentifierPropertyName(),
+				entityPersister.getIdentifierType().toLoggableString( entityPersister.getIdentifier( entity ), factory )
 			);
 		}
 
-		Type[] types = cm.getPropertyTypes();
-		String[] names = cm.getPropertyNames();
-		Object[] values = cm.getPropertyValues( entity, entityMode );
+		Type[] types = entityPersister.getPropertyTypes();
+		String[] names = entityPersister.getPropertyNames();
+		Object[] values = entityPersister.getPropertyValues( entity );
 		for ( int i=0; i<types.length; i++ ) {
 			if ( !names[i].startsWith("_") ) {
 				String strValue = values[i]==LazyPropertyInitializer.UNFETCHED_PROPERTY ?
@@ -78,38 +80,42 @@ public final class Printer {
 				result.put( names[i], strValue );
 			}
 		}
-		return cm.getEntityName() + result.toString();
+		return entityPersister.getEntityName() + result.toString();
 	}
 
 	public String toString(Type[] types, Object[] values) throws HibernateException {
-		List list = new ArrayList( types.length * 5 );
+		StringBuilder buffer = new StringBuilder();
 		for ( int i=0; i<types.length; i++ ) {
-			if ( types[i]!=null ) list.add( types[i].toLoggableString( values[i], factory ) );
+			if ( types[i]!=null ) {
+				buffer.append( types[i].toLoggableString( values[i], factory ) ).append( ", " );
+			}
 		}
-		return list.toString();
+		return buffer.toString();
 	}
 
-	public String toString(Map namedTypedValues) throws HibernateException {
-		Map result = new HashMap();
-		Iterator iter = namedTypedValues.entrySet().iterator();
-		while ( iter.hasNext() ) {
-			Map.Entry me = (Map.Entry) iter.next();
-			TypedValue tv = (TypedValue) me.getValue();
-			result.put( me.getKey(), tv.getType().toLoggableString( tv.getValue(), factory ) );
+	public String toString(Map<String,TypedValue> namedTypedValues) throws HibernateException {
+		Map<String,String> result = new HashMap<String,String>();
+		for ( Map.Entry<String, TypedValue> entry : namedTypedValues.entrySet() ) {
+			result.put(
+					entry.getKey(), entry.getValue().getType().toLoggableString(
+					entry.getValue().getValue(),
+					factory
+			)
+			);
 		}
 		return result.toString();
 	}
 
-	public void toString(Iterator iter, EntityMode entityMode) throws HibernateException {
-        if (!LOG.isDebugEnabled() || !iter.hasNext()) return;
-        LOG.debugf("Listing entities:");
+	public void toString(Iterator iterator) throws HibernateException {
+        if (!LOG.isDebugEnabled() || !iterator.hasNext()) return;
+        LOG.debugf( "Listing entities:" );
 		int i=0;
-		while ( iter.hasNext() ) {
+		while ( iterator.hasNext() ) {
 			if (i++>20) {
                 LOG.debugf("More......");
 				break;
 			}
-            LOG.debugf(toString(iter.next(), entityMode));
+            LOG.debugf( toString( iterator.next() ) );
 		}
 	}
 

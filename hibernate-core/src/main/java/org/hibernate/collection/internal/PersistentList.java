@@ -47,28 +47,28 @@ import org.hibernate.type.Type;
  * @author Gavin King
  */
 public class PersistentList extends AbstractPersistentCollection implements List {
-
 	protected List list;
 
+	@Override
+	@SuppressWarnings( {"unchecked"})
 	public Serializable getSnapshot(CollectionPersister persister) throws HibernateException {
-
-		EntityMode entityMode = getSession().getEntityMode();
+		final EntityMode entityMode = persister.getOwnerEntityPersister().getEntityMode();
 
 		ArrayList clonedList = new ArrayList( list.size() );
-		Iterator iter = list.iterator();
-		while ( iter.hasNext() ) {
-			Object deepCopy = persister.getElementType()
-					.deepCopy( iter.next(), entityMode, persister.getFactory() );
+		for ( Object element : list ) {
+			Object deepCopy = persister.getElementType().deepCopy( element, persister.getFactory() );
 			clonedList.add( deepCopy );
 		}
 		return clonedList;
 	}
 
+	@Override
 	public Collection getOrphans(Serializable snapshot, String entityName) throws HibernateException {
 		List sn = (List) snapshot;
 	    return getOrphans( sn, list, entityName, getSession() );
 	}
 
+	@Override
 	public boolean equalsSnapshot(CollectionPersister persister) throws HibernateException {
 		Type elementType = persister.getElementType();
 		List sn = (List) getSnapshot();
@@ -81,6 +81,7 @@ public class PersistentList extends AbstractPersistentCollection implements List
 		return true;
 	}
 
+	@Override
 	public boolean isSnapshotEmpty(Serializable snapshot) {
 		return ( (Collection) snapshot ).isEmpty();
 	}

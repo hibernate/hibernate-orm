@@ -36,7 +36,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 
-import org.hibernate.EntityMode;
 import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
@@ -214,7 +213,7 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 				throw new IllegalArgumentException( entityClass + " is not an entity" );
 			}
 			//TODO does that work for @IdClass?
-			return classMetadata.getIdentifier( entity, EntityMode.POJO );
+			return classMetadata.getIdentifier( entity );
 		}
 	}
 }

@@ -64,7 +64,7 @@ public class TypeHelper {
 					target[i] = values[i];
 				}
 				else {
-					target[i] = types[i].deepCopy( values[i], session.getEntityMode(), session
+					target[i] = types[i].deepCopy( values[i], session
 						.getFactory() );
 				}
 			}

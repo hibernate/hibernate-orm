@@ -22,12 +22,15 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.type;
+
 import java.io.Serializable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Map;
+
 import org.dom4j.Element;
 import org.dom4j.Node;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
@@ -43,7 +46,6 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.tuple.ElementWrapper;
 
 /**
@@ -235,26 +237,26 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	/**
 	 * Two entities are considered the same when their instances are the same.
 	 *
+	 *
 	 * @param x One entity instance
 	 * @param y Another entity instance
-	 * @param entityMode The entity mode.
 	 * @return True if x == y; false otherwise.
 	 */
-	public final boolean isSame(Object x, Object y, EntityMode entityMode) {
+	public final boolean isSame(Object x, Object y) {
 		return x == y;
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public int compare(Object x, Object y, EntityMode entityMode) {
+	public int compare(Object x, Object y) {
 		return 0; //TODO: entities CAN be compared, by PK, fix this! -> only if/when we can extract the id values....
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public Object deepCopy(Object value, EntityMode entityMode, SessionFactoryImplementor factory) {
+	public Object deepCopy(Object value, SessionFactoryImplementor factory) {
 		return value; //special case ... this is the leaf of the containment graph, even though not immutable
 	}
 
@@ -301,10 +303,10 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	/**
 	 * {@inheritDoc}
 	 */
-	public int getHashCode(Object x, EntityMode entityMode, SessionFactoryImplementor factory) {
+	public int getHashCode(Object x, SessionFactoryImplementor factory) {
 		EntityPersister persister = factory.getEntityPersister(associatedEntityName);
 		if ( !persister.canExtractIdOutOfEntity() ) {
-			return super.getHashCode(x, entityMode);
+			return super.getHashCode( x );
 		}
 
 		final Serializable id;
@@ -312,27 +314,27 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			id = ( (HibernateProxy) x ).getHibernateLazyInitializer().getIdentifier();
 		}
 		else {
-			final Class mappedClass = persister.getMappedClass( entityMode );
+			final Class mappedClass = persister.getMappedClass();
 			if ( mappedClass.isAssignableFrom( x.getClass() ) ) {
-				id = persister.getIdentifier(x, entityMode);
+				id = persister.getIdentifier( x );
 			}
 			else {
 				id = (Serializable) x;
 			}
 		}
-		return persister.getIdentifierType().getHashCode(id, entityMode, factory);
+		return persister.getIdentifierType().getHashCode( id, factory );
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public boolean isEqual(Object x, Object y, EntityMode entityMode, SessionFactoryImplementor factory) {
+	public boolean isEqual(Object x, Object y, SessionFactoryImplementor factory) {
 		EntityPersister persister = factory.getEntityPersister(associatedEntityName);
 		if ( !persister.canExtractIdOutOfEntity() ) {
-			return super.isEqual(x, y, entityMode);
+			return super.isEqual(x, y );
 		}
 
-		final Class mappedClass = persister.getMappedClass( entityMode );
+		final Class mappedClass = persister.getMappedClass();
 		Serializable xid;
 		if (x instanceof HibernateProxy) {
 			xid = ( (HibernateProxy) x ).getHibernateLazyInitializer()
@@ -340,7 +342,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		}
 		else {
 			if ( mappedClass.isAssignableFrom( x.getClass() ) ) {
-				xid = persister.getIdentifier(x, entityMode);
+				xid = persister.getIdentifier( x );
 			}
 			else {
 				//JPA 2 case where @IdClass contains the id and not the associated entity
@@ -355,7 +357,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		}
 		else {
 			if ( mappedClass.isAssignableFrom( y.getClass() ) ) {
-				yid = persister.getIdentifier(y, entityMode);
+				yid = persister.getIdentifier( y );
 			}
 			else {
 				//JPA 2 case where @IdClass contains the id and not the associated entity
@@ -364,7 +366,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		}
 
 		return persister.getIdentifierType()
-				.isEqual(xid, yid, entityMode, factory);
+				.isEqual(xid, yid, factory);
 	}
 
 	/**
@@ -458,7 +460,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		}
 		else {
 			EntityPersister entityPersister = session.getFactory().getEntityPersister( getAssociatedEntityName() );
-			Object propertyValue = entityPersister.getPropertyValue( value, uniqueKeyPropertyName, session.getEntityMode() );
+			Object propertyValue = entityPersister.getPropertyValue( value, uniqueKeyPropertyName );
 			// We now have the value of the property-ref we reference.  However,
 			// we need to dig a little deeper, as that property might also be
 			// an entity type, in which case we need to resolve its identitifier
@@ -472,28 +474,8 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	}
 
 	protected boolean isNotEmbedded(SessionImplementor session) {
-		return !isEmbeddedInXML && session.getEntityMode()==EntityMode.DOM4J;
-	}
-
-	/**
-	 * Get the identifier value of an instance or proxy.
-	 * <p/>
-	 * Intended only for loggin purposes!!!
-	 *
-	 * @param object The object from which to extract the identifier.
-	 * @param persister The entity persister
-	 * @param entityMode The entity mode
-	 * @return The extracted identifier.
-	 */
-	private static Serializable getIdentifier(Object object, EntityPersister persister, EntityMode entityMode) {
-		if (object instanceof HibernateProxy) {
-			HibernateProxy proxy = (HibernateProxy) object;
-			LazyInitializer li = proxy.getHibernateLazyInitializer();
-			return li.getIdentifier();
-		}
-		else {
-			return persister.getIdentifier( object, entityMode );
-		}
+//		return !isEmbeddedInXML;
+		return false;
 	}
 
 	/**
@@ -513,7 +495,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		StringBuffer result = new StringBuffer().append( associatedEntityName );
 
 		if ( persister.hasIdentifierProperty() ) {
-			final EntityMode entityMode = persister.guessEntityMode( value );
+			final EntityMode entityMode = persister.getEntityMode();
 			final Serializable id;
 			if ( entityMode == null ) {
 				if ( isEmbeddedInXML ) {
@@ -522,7 +504,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 				id = ( Serializable ) value;
 			}
 			else {
-				id = getIdentifier( value, persister, entityMode );
+				id = persister.getIdentifier( value );
 			}
 			
 			result.append( '#' )
@@ -623,7 +605,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		boolean isProxyUnwrapEnabled = unwrapProxy &&
 				session.getFactory()
 						.getEntityPersister( getAssociatedEntityName() )
-						.isInstrumented( session.getEntityMode() );
+						.isInstrumented();
 
 		Object proxyOrEntity = session.internalLoad(
 				getAssociatedEntityName(),
@@ -669,7 +651,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 				uniqueKeyPropertyName, 
 				key, 
 				getIdentifierOrUniqueKeyType( factory ),
-				session.getEntityMode(), 
+				persister.getEntityMode(),
 				session.getFactory()
 		);
 

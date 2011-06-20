@@ -170,7 +170,7 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 		else {
 			//then by fk
 			return persister.getKeyType()
-					.compare( key, action.key, session.getEntityMode() );
+					.compare( key, action.key );
 		}
 	}
 

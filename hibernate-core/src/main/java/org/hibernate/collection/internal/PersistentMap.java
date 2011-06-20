@@ -86,14 +86,12 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 		setDirectlyAccessible(true);
 	}
 
+	@SuppressWarnings( {"unchecked"})
 	public Serializable getSnapshot(CollectionPersister persister) throws HibernateException {
-		EntityMode entityMode = getSession().getEntityMode();
 		HashMap clonedMap = new HashMap( map.size() );
-		Iterator iter = map.entrySet().iterator();
-		while ( iter.hasNext() ) {
-			Map.Entry e = (Map.Entry) iter.next();
-			final Object copy = persister.getElementType()
-				.deepCopy( e.getValue(), entityMode, persister.getFactory() );
+		for ( Object o : map.entrySet() ) {
+			Entry e = (Entry) o;
+			final Object copy = persister.getElementType().deepCopy( e.getValue(), persister.getFactory() );
 			clonedMap.put( e.getKey(), copy );
 		}
 		return clonedMap;

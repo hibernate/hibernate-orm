@@ -92,17 +92,13 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 	}
 
 
-	public Serializable getSnapshot(CollectionPersister persister) 
-	throws HibernateException {
-		EntityMode entityMode = getSession().getEntityMode();
-		
-		//if (set==null) return new Set(session);
+	@SuppressWarnings( {"unchecked"})
+	public Serializable getSnapshot(CollectionPersister persister) throws HibernateException {
 		HashMap clonedSet = new HashMap( set.size() );
-		Iterator iter = set.iterator();
-		while ( iter.hasNext() ) {
+		for ( Object aSet : set ) {
 			Object copied = persister.getElementType()
-					.deepCopy( iter.next(), entityMode, persister.getFactory() );
-			clonedSet.put(copied, copied);
+					.deepCopy( aSet, persister.getFactory() );
+			clonedSet.put( copied, copied );
 		}
 		return clonedSet;
 	}

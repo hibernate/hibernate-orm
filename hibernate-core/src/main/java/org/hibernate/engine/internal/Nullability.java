@@ -25,6 +25,7 @@ package org.hibernate.engine.internal;
 
 import java.util.Iterator;
 
+import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.PropertyValueException;
 import org.hibernate.bytecode.instrumentation.spi.LazyPropertyInitializer;
@@ -54,7 +55,7 @@ public final class Nullability {
 	 *
 	 * @param values entity properties
 	 * @param persister class persister
-	 * @param isUpdate wether it is intended to be updated or saved
+	 * @param isUpdate whether it is intended to be updated or saved
 	 * @throws org.hibernate.PropertyValueException Break the nullability of one property
 	 * @throws HibernateException error while getting Component values
 	 */
@@ -180,7 +181,7 @@ public final class Nullability {
 		boolean[] nullability = compType.getPropertyNullability();
 		if ( nullability!=null ) {
 			//do the test
-			final Object[] values = compType.getPropertyValues( value, session.getEntityMode() );
+			final Object[] values = compType.getPropertyValues( value, EntityMode.POJO );
 			final Type[] propertyTypes = compType.getSubtypes();
 			for ( int i=0; i<values.length; i++ ) {
 				final Object subvalue = values[i];

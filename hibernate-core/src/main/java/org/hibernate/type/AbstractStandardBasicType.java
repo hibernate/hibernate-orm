@@ -22,27 +22,29 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.type;
+
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Map;
+
 import org.dom4j.Node;
-import org.hibernate.EntityMode;
+
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.Environment;
+import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.engine.jdbc.LobCreator;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.relational.Size;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-import org.hibernate.internal.util.collections.ArrayHelper;
 
 /**
  * TODO : javadoc
@@ -178,45 +180,32 @@ public abstract class AbstractStandardBasicType<T>
 		return false;
 	}
 
-	public final boolean isSame(Object x, Object y, EntityMode entityMode) {
-		return isSame( x, y );
+	@SuppressWarnings({ "unchecked" })
+	public final boolean isSame(Object x, Object y) {
+		return isEqual( x, y );
 	}
 
 	@SuppressWarnings({ "unchecked" })
-	protected final boolean isSame(Object x, Object y) {
-		return isEqual( (T) x, (T) y );
+	public final boolean isEqual(Object x, Object y, SessionFactoryImplementor factory) {
+		return isEqual( x, y );
 	}
 
 	@SuppressWarnings({ "unchecked" })
-	public final boolean isEqual(Object x, Object y, EntityMode entityMode) {
-		return isEqual( (T) x, (T) y );
+	public final boolean isEqual(Object one, Object another) {
+		return javaTypeDescriptor.areEqual( (T) one, (T) another );
 	}
 
 	@SuppressWarnings({ "unchecked" })
-	public final boolean isEqual(Object x, Object y, EntityMode entityMode, SessionFactoryImplementor factory) {
-		return isEqual( (T) x, (T) y );
-	}
-
-	@SuppressWarnings({ "unchecked" })
-	public final boolean isEqual(T one, T another) {
-		return javaTypeDescriptor.areEqual( one, another );
-	}
-
-	public final int getHashCode(Object x, EntityMode entityMode) {
-		return getHashCode( x );
-	}
-
-	public final int getHashCode(Object x, EntityMode entityMode, SessionFactoryImplementor factory) {
-		return getHashCode( x );
-	}
-
-	@SuppressWarnings({ "unchecked" })
-	protected final int getHashCode(Object x) {
+	public final int getHashCode(Object x) {
 		return javaTypeDescriptor.extractHashCode( (T) x );
 	}
 
+	public final int getHashCode(Object x, SessionFactoryImplementor factory) {
+		return getHashCode( x );
+	}
+
 	@SuppressWarnings({ "unchecked" })
-	public final int compare(Object x, Object y, EntityMode entityMode) {
+	public final int compare(Object x, Object y) {
 		return javaTypeDescriptor.getComparator().compare( (T) x, (T) y );
 	}
 
@@ -342,7 +331,7 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	@SuppressWarnings({ "unchecked" })
-	public final Object deepCopy(Object value, EntityMode entityMode, SessionFactoryImplementor factory) {
+	public final Object deepCopy(Object value, SessionFactoryImplementor factory) {
 		return deepCopy( (T) value );
 	}
 

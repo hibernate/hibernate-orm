@@ -33,12 +33,7 @@ public class DefaultableListType implements UserCollectionType, ParameterizedTyp
 	}
 
 	public PersistentCollection wrap(SessionImplementor session, Object collection) {
-		if ( session.getEntityMode() == EntityMode.DOM4J ) {
-			throw new IllegalStateException( "dom4j not supported" );
-		}
-		else {
-			return new PersistentDefaultableList( session, ( List ) collection );
-		}
+		return new PersistentDefaultableList( session, ( List ) collection );
 	}
 
 	public Iterator getElementsIterator(Object collection) {

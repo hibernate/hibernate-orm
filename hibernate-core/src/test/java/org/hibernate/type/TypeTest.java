@@ -349,15 +349,15 @@ public class TypeTest extends BaseUnitTestCase {
 
 		assertTrue( original == type.replace( original, copy, null, null, null ) );
 
-		assertTrue( type.isSame( original, copy, EntityMode.POJO ) );
+		assertTrue( type.isSame( original, copy ) );
 		assertTrue( type.isEqual( original, copy ) );
-		assertTrue( type.isEqual( original, copy, EntityMode.POJO ) );
-		assertTrue( type.isEqual( original, copy, EntityMode.POJO, null ) );
+		assertTrue( type.isEqual( original, copy ) );
+		assertTrue( type.isEqual( original, copy, null ) );
 
-		assertFalse( type.isSame( original, different, EntityMode.POJO ) );
+		assertFalse( type.isSame( original, different ) );
 		assertFalse( type.isEqual( original, different ) );
-		assertFalse( type.isEqual( original, different, EntityMode.POJO ) );
-		assertFalse( type.isEqual( original, different, EntityMode.POJO, null ) );
+		assertFalse( type.isEqual( original, different ) );
+		assertFalse( type.isEqual( original, different, null ) );
 
 		assertFalse( type.isDirty( original, copy , session ) );
 		assertFalse( type.isDirty( original, copy , ArrayHelper.FALSE, session ) );

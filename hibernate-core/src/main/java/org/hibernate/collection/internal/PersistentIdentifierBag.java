@@ -295,11 +295,7 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 		return element;
 	}
 
-	public Serializable getSnapshot(CollectionPersister persister)
-		throws HibernateException {
-
-		EntityMode entityMode = getSession().getEntityMode();
-
+	public Serializable getSnapshot(CollectionPersister persister) throws HibernateException {
 		HashMap map = new HashMap( values.size() );
 		Iterator iter = values.iterator();
 		int i=0;
@@ -307,7 +303,7 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 			Object value = iter.next();
 			map.put(
 				identifiers.get( new Integer(i++) ),
-				persister.getElementType().deepCopy(value, entityMode, persister.getFactory())
+				persister.getElementType().deepCopy(value, persister.getFactory())
 			);
 		}
 		return map;

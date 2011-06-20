@@ -33,7 +33,6 @@ import org.hibernate.EntityMode;
  */
 public class Entity extends AbstractAttributeContainer {
 	private final PojoEntitySpecifics pojoEntitySpecifics = new PojoEntitySpecifics();
-	private final Dom4jEntitySpecifics dom4jEntitySpecifics = new Dom4jEntitySpecifics();
 	private final MapEntitySpecifics mapEntitySpecifics = new MapEntitySpecifics();
 
 	/**
@@ -55,10 +54,6 @@ public class Entity extends AbstractAttributeContainer {
 
 	public PojoEntitySpecifics getPojoEntitySpecifics() {
 		return pojoEntitySpecifics;
-	}
-
-	public Dom4jEntitySpecifics getDom4jEntitySpecifics() {
-		return dom4jEntitySpecifics;
 	}
 
 	public MapEntitySpecifics getMapEntitySpecifics() {
@@ -106,31 +101,6 @@ public class Entity extends AbstractAttributeContainer {
 		}
 	}
 
-	public static class Dom4jEntitySpecifics implements EntityModeEntitySpecifics {
-		private String tuplizerClassName;
-		private String nodeName;
-
-		@Override
-		public EntityMode getEntityMode() {
-			return EntityMode.DOM4J;
-		}
-
-		public String getTuplizerClassName() {
-			return tuplizerClassName;
-		}
-
-		public void setTuplizerClassName(String tuplizerClassName) {
-			this.tuplizerClassName = tuplizerClassName;
-		}
-
-		public String getNodeName() {
-			return nodeName;
-		}
-
-		public void setNodeName(String nodeName) {
-			this.nodeName = nodeName;
-		}
-	}
 
 	public static class MapEntitySpecifics implements EntityModeEntitySpecifics {
 		private String tuplizerClassName;

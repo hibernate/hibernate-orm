@@ -46,7 +46,6 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.relational.Size;
-import org.hibernate.tuple.EntityModeToTuplizerMapping;
 import org.hibernate.tuple.StandardProperty;
 import org.hibernate.tuple.component.ComponentMetamodel;
 import org.hibernate.tuple.component.ComponentTuplizer;
@@ -67,7 +66,8 @@ public class ComponentType extends AbstractType implements CompositeType {
 	private final FetchMode[] joinedFetch;
 	private final boolean isKey;
 
-	protected final EntityModeToTuplizerMapping tuplizerMapping;
+	protected final EntityMode entityMode;
+	protected final ComponentTuplizer componentTuplizer;
 
 	public ComponentType(TypeFactory.TypeScope typeScope, ComponentMetamodel metamodel) {
 		this.typeScope = typeScope;
@@ -89,15 +89,20 @@ public class ComponentType extends AbstractType implements CompositeType {
 			this.joinedFetch[i] = prop.getFetchMode();
 		}
 
-		this.tuplizerMapping = metamodel.getTuplizerMapping();
+		this.entityMode = metamodel.getEntityMode();
+		this.componentTuplizer = metamodel.getComponentTuplizer();
 	}
 
 	public boolean isKey() {
 		return isKey;
 	}
 
-	public EntityModeToTuplizerMapping getTuplizerMapping() {
-		return tuplizerMapping;
+	public EntityMode getEntityMode() {
+		return entityMode;
+	}
+
+	public ComponentTuplizer getComponentTuplizer() {
+		return componentTuplizer;
 	}
 
 	public int getColumnSpan(Mapping mapping) throws MappingException {
@@ -154,11 +159,11 @@ public class ComponentType extends AbstractType implements CompositeType {
 	}
 
 	public Class getReturnedClass() {
-		return tuplizerMapping.getTuplizer( EntityMode.POJO ).getMappedClass(); //TODO
+		return componentTuplizer.getMappedClass();
 	}
 
 	@Override
-    public boolean isSame(Object x, Object y, EntityMode entityMode) throws HibernateException {
+    public boolean isSame(Object x, Object y) throws HibernateException {
 		if ( x == y ) {
 			return true;
 		}
@@ -168,7 +173,7 @@ public class ComponentType extends AbstractType implements CompositeType {
 		Object[] xvalues = getPropertyValues( x, entityMode );
 		Object[] yvalues = getPropertyValues( y, entityMode );
 		for ( int i = 0; i < propertySpan; i++ ) {
-			if ( !propertyTypes[i].isSame( xvalues[i], yvalues[i], entityMode ) ) {
+			if ( !propertyTypes[i].isSame( xvalues[i], yvalues[i] ) ) {
 				return false;
 			}
 		}
@@ -176,7 +181,7 @@ public class ComponentType extends AbstractType implements CompositeType {
 	}
 
 	@Override
-    public boolean isEqual(Object x, Object y, EntityMode entityMode)
+    public boolean isEqual(Object x, Object y)
 			throws HibernateException {
 		if ( x == y ) {
 			return true;
@@ -187,7 +192,7 @@ public class ComponentType extends AbstractType implements CompositeType {
 		Object[] xvalues = getPropertyValues( x, entityMode );
 		Object[] yvalues = getPropertyValues( y, entityMode );
 		for ( int i = 0; i < propertySpan; i++ ) {
-			if ( !propertyTypes[i].isEqual( xvalues[i], yvalues[i], entityMode ) ) {
+			if ( !propertyTypes[i].isEqual( xvalues[i], yvalues[i] ) ) {
 				return false;
 			}
 		}
@@ -195,7 +200,7 @@ public class ComponentType extends AbstractType implements CompositeType {
 	}
 
 	@Override
-    public boolean isEqual(Object x, Object y, EntityMode entityMode, SessionFactoryImplementor factory)
+    public boolean isEqual(Object x, Object y, SessionFactoryImplementor factory)
 			throws HibernateException {
 		if ( x == y ) {
 			return true;
@@ -206,7 +211,7 @@ public class ComponentType extends AbstractType implements CompositeType {
 		Object[] xvalues = getPropertyValues( x, entityMode );
 		Object[] yvalues = getPropertyValues( y, entityMode );
 		for ( int i = 0; i < propertySpan; i++ ) {
-			if ( !propertyTypes[i].isEqual( xvalues[i], yvalues[i], entityMode, factory ) ) {
+			if ( !propertyTypes[i].isEqual( xvalues[i], yvalues[i], factory ) ) {
 				return false;
 			}
 		}
@@ -214,14 +219,14 @@ public class ComponentType extends AbstractType implements CompositeType {
 	}
 
 	@Override
-    public int compare(Object x, Object y, EntityMode entityMode) {
+    public int compare(Object x, Object y) {
 		if ( x == y ) {
 			return 0;
 		}
 		Object[] xvalues = getPropertyValues( x, entityMode );
 		Object[] yvalues = getPropertyValues( y, entityMode );
 		for ( int i = 0; i < propertySpan; i++ ) {
-			int propertyCompare = propertyTypes[i].compare( xvalues[i], yvalues[i], entityMode );
+			int propertyCompare = propertyTypes[i].compare( xvalues[i], yvalues[i] );
 			if ( propertyCompare != 0 ) {
 				return propertyCompare;
 			}
@@ -234,28 +239,28 @@ public class ComponentType extends AbstractType implements CompositeType {
 	}
 
 	@Override
-    public int getHashCode(Object x, EntityMode entityMode) {
+    public int getHashCode(Object x) {
 		int result = 17;
 		Object[] values = getPropertyValues( x, entityMode );
 		for ( int i = 0; i < propertySpan; i++ ) {
 			Object y = values[i];
 			result *= 37;
 			if ( y != null ) {
-				result += propertyTypes[i].getHashCode( y, entityMode );
+				result += propertyTypes[i].getHashCode( y );
 			}
 		}
 		return result;
 	}
 
 	@Override
-    public int getHashCode(Object x, EntityMode entityMode, SessionFactoryImplementor factory) {
+    public int getHashCode(Object x, SessionFactoryImplementor factory) {
 		int result = 17;
 		Object[] values = getPropertyValues( x, entityMode );
 		for ( int i = 0; i < propertySpan; i++ ) {
 			Object y = values[i];
 			result *= 37;
 			if ( y != null ) {
-				result += propertyTypes[i].getHashCode( y, entityMode, factory );
+				result += propertyTypes[i].getHashCode( y, factory );
 			}
 		}
 		return result;
@@ -270,7 +275,6 @@ public class ComponentType extends AbstractType implements CompositeType {
 		if ( x == null || y == null ) {
 			return true;
 		}
-		EntityMode entityMode = session.getEntityMode();
 		Object[] xvalues = getPropertyValues( x, entityMode );
 		Object[] yvalues = getPropertyValues( y, entityMode );
 		for ( int i = 0; i < xvalues.length; i++ ) {
@@ -289,7 +293,6 @@ public class ComponentType extends AbstractType implements CompositeType {
 		if ( x == null || y == null ) {
 			return true;
 		}
-		EntityMode entityMode = session.getEntityMode();
 		Object[] xvalues = getPropertyValues( x, entityMode );
 		Object[] yvalues = getPropertyValues( y, entityMode );
 		int loc = 0;
@@ -349,7 +352,7 @@ public class ComponentType extends AbstractType implements CompositeType {
 	public void nullSafeSet(PreparedStatement st, Object value, int begin, SessionImplementor session)
 			throws HibernateException, SQLException {
 
-		Object[] subvalues = nullSafeGetValues( value, session.getEntityMode() );
+		Object[] subvalues = nullSafeGetValues( value, entityMode );
 
 		for ( int i = 0; i < propertySpan; i++ ) {
 			propertyTypes[i].nullSafeSet( st, subvalues[i], begin, session );
@@ -365,7 +368,7 @@ public class ComponentType extends AbstractType implements CompositeType {
 			SessionImplementor session)
 			throws HibernateException, SQLException {
 
-		Object[] subvalues = nullSafeGetValues( value, session.getEntityMode() );
+		Object[] subvalues = nullSafeGetValues( value, entityMode );
 
 		int loc = 0;
 		for ( int i = 0; i < propertySpan; i++ ) {
@@ -406,27 +409,27 @@ public class ComponentType extends AbstractType implements CompositeType {
 
 	public Object getPropertyValue(Object component, int i, SessionImplementor session)
 			throws HibernateException {
-		return getPropertyValue( component, i, session.getEntityMode() );
+		return getPropertyValue( component, i, entityMode );
 	}
 
 	public Object getPropertyValue(Object component, int i, EntityMode entityMode)
 			throws HibernateException {
-		return tuplizerMapping.getTuplizer( entityMode ).getPropertyValue( component, i );
+		return componentTuplizer.getPropertyValue( component, i );
 	}
 
 	public Object[] getPropertyValues(Object component, SessionImplementor session)
 			throws HibernateException {
-		return getPropertyValues( component, session.getEntityMode() );
+		return getPropertyValues( component, entityMode );
 	}
 
 	public Object[] getPropertyValues(Object component, EntityMode entityMode)
 			throws HibernateException {
-		return tuplizerMapping.getTuplizer( entityMode ).getPropertyValues( component );
+		return componentTuplizer.getPropertyValues( component );
 	}
 
 	public void setPropertyValues(Object component, Object[] values, EntityMode entityMode)
 			throws HibernateException {
-		tuplizerMapping.getTuplizer( entityMode ).setPropertyValues( component, values );
+		componentTuplizer.setPropertyValues( component, values );
 	}
 
 	public Type[] getSubtypes() {
@@ -443,7 +446,6 @@ public class ComponentType extends AbstractType implements CompositeType {
 			return "null";
 		}
 		Map result = new HashMap();
-		EntityMode entityMode = tuplizerMapping.guessEntityMode( value );
 		if ( entityMode == null ) {
 			throw new ClassCastException( value.getClass().getName() );
 		}
@@ -458,7 +460,7 @@ public class ComponentType extends AbstractType implements CompositeType {
 		return propertyNames;
 	}
 
-	public Object deepCopy(Object component, EntityMode entityMode, SessionFactoryImplementor factory)
+	public Object deepCopy(Object component, SessionFactoryImplementor factory)
 			throws HibernateException {
 		if ( component == null ) {
 			return null;
@@ -466,7 +468,7 @@ public class ComponentType extends AbstractType implements CompositeType {
 
 		Object[] values = getPropertyValues( component, entityMode );
 		for ( int i = 0; i < propertySpan; i++ ) {
-			values[i] = propertyTypes[i].deepCopy( values[i], entityMode, factory );
+			values[i] = propertyTypes[i].deepCopy( values[i], factory );
 		}
 
 		Object result = instantiate( entityMode );
@@ -474,9 +476,8 @@ public class ComponentType extends AbstractType implements CompositeType {
 
 		//not absolutely necessary, but helps for some
 		//equals()/hashCode() implementations
-		ComponentTuplizer ct = ( ComponentTuplizer ) tuplizerMapping.getTuplizer( entityMode );
-		if ( ct.hasParentProperty() ) {
-			ct.setParent( result, ct.getParent( component ), factory );
+		if ( componentTuplizer.hasParentProperty() ) {
+			componentTuplizer.setParent( result, componentTuplizer.getParent( component ), factory );
 		}
 
 		return result;
@@ -499,7 +500,6 @@ public class ComponentType extends AbstractType implements CompositeType {
 				? instantiate( owner, session )
 				: target;
 
-		final EntityMode entityMode = session.getEntityMode();
 		Object[] values = TypeHelper.replace(
 				getPropertyValues( original, entityMode ),
 				getPropertyValues( result, entityMode ),
@@ -532,7 +532,6 @@ public class ComponentType extends AbstractType implements CompositeType {
 				instantiate( owner, session ) :
 				target;
 
-		final EntityMode entityMode = session.getEntityMode();
 		Object[] values = TypeHelper.replace(
 				getPropertyValues( original, entityMode ),
 				getPropertyValues( result, entityMode ),
@@ -551,17 +550,16 @@ public class ComponentType extends AbstractType implements CompositeType {
 	 * This method does not populate the component parent
 	 */
 	public Object instantiate(EntityMode entityMode) throws HibernateException {
-		return tuplizerMapping.getTuplizer( entityMode ).instantiate();
+		return componentTuplizer.instantiate();
 	}
 
 	public Object instantiate(Object parent, SessionImplementor session)
 			throws HibernateException {
 
-		Object result = instantiate( session.getEntityMode() );
+		Object result = instantiate( entityMode );
 
-		ComponentTuplizer ct = ( ComponentTuplizer ) tuplizerMapping.getTuplizer( session.getEntityMode() );
-		if ( ct.hasParentProperty() && parent != null ) {
-			ct.setParent(
+		if ( componentTuplizer.hasParentProperty() && parent != null ) {
+			componentTuplizer.setParent(
 					result,
 					session.getPersistenceContext().proxyFor( parent ),
 					session.getFactory()
@@ -587,7 +585,7 @@ public class ComponentType extends AbstractType implements CompositeType {
 			return null;
 		}
 		else {
-			Object[] values = getPropertyValues( value, session.getEntityMode() );
+			Object[] values = getPropertyValues( value, entityMode );
 			for ( int i = 0; i < propertyTypes.length; i++ ) {
 				values[i] = propertyTypes[i].disassemble( values[i], session, owner );
 			}
@@ -609,7 +607,7 @@ public class ComponentType extends AbstractType implements CompositeType {
 				assembled[i] = propertyTypes[i].assemble( ( Serializable ) values[i], session, owner );
 			}
 			Object result = instantiate( owner, session );
-			setPropertyValues( result, assembled, session.getEntityMode() );
+			setPropertyValues( result, assembled, entityMode );
 			return result;
 		}
 	}
@@ -659,7 +657,7 @@ public class ComponentType extends AbstractType implements CompositeType {
 			for ( int i = 0; i < values.length; i++ ) {
 				resolvedValues[i] = propertyTypes[i].resolve( values[i], session, owner );
 			}
-			setPropertyValues( result, resolvedValues, session.getEntityMode() );
+			setPropertyValues( result, resolvedValues, entityMode );
 			return result;
 		}
 		else {

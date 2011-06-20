@@ -39,6 +39,10 @@ public final class TypedValue implements Serializable {
 	private final Object value;
 	private final EntityMode entityMode;
 
+	public TypedValue(Type type, Object value) {
+		this( type, value, EntityMode.POJO );
+	}
+
 	public TypedValue(Type type, Object value, EntityMode entityMode) {
 		this.type = type;
 		this.value=value;
@@ -62,7 +66,7 @@ public final class TypedValue implements Serializable {
 		//result = 37 * result + type.hashCode();
 		//result = 37 * result + ( value==null ? 0 : value.hashCode() );
 		//return result;
-		return value==null ? 0 : type.getHashCode(value, entityMode);
+		return value==null ? 0 : type.getHashCode(value );
 	}
 
 	public boolean equals(Object other) {
@@ -71,7 +75,7 @@ public final class TypedValue implements Serializable {
 		/*return that.type.equals(type) && 
 			EqualsHelper.equals(that.value, value);*/
 		return type.getReturnedClass() == that.type.getReturnedClass() &&
-			type.isEqual(that.value, value, entityMode);
+			type.isEqual(that.value, value );
 	}
 
 }

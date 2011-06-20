@@ -68,7 +68,6 @@ public class BatchingEntityLoader implements UniqueEntityLoader {
 			final boolean equal = idType.isEqual(
 					id,
 					session.getContextEntityIdentifier(obj),
-					session.getEntityMode(),
 					session.getFactory()
 			);
 			if ( equal ) return obj;
@@ -86,8 +85,8 @@ public class BatchingEntityLoader implements UniqueEntityLoader {
 
 	public Object load(Serializable id, Object optionalObject, SessionImplementor session, LockOptions lockOptions) {
 		Serializable[] batch = session.getPersistenceContext()
-			.getBatchFetchQueue()
-			.getEntityBatch( persister, id, batchSizes[0], session.getEntityMode() );
+				.getBatchFetchQueue()
+				.getEntityBatch( persister, id, batchSizes[0], persister.getEntityMode() );
 
 		for ( int i=0; i<batchSizes.length-1; i++) {
 			final int smallBatchSize = batchSizes[i];

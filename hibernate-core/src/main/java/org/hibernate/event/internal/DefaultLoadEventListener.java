@@ -27,35 +27,34 @@ import java.io.Serializable;
 
 import org.jboss.logging.Logger;
 
-import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
+import org.hibernate.LockMode;
+import org.hibernate.NonUniqueObjectException;
+import org.hibernate.PersistentObjectException;
+import org.hibernate.TypeMismatchException;
 import org.hibernate.cache.spi.CacheKey;
+import org.hibernate.cache.spi.access.SoftLock;
+import org.hibernate.cache.spi.entry.CacheEntry;
+import org.hibernate.engine.internal.TwoPhaseLoad;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
+import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.LoadEvent;
 import org.hibernate.event.spi.LoadEventListener;
 import org.hibernate.event.spi.PostLoadEvent;
 import org.hibernate.event.spi.PostLoadEventListener;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.LockMode;
-import org.hibernate.NonUniqueObjectException;
-import org.hibernate.PersistentObjectException;
-import org.hibernate.TypeMismatchException;
-import org.hibernate.cache.spi.access.SoftLock;
-import org.hibernate.cache.spi.entry.CacheEntry;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.internal.TwoPhaseLoad;
-import org.hibernate.event.spi.EventType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
-import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
@@ -104,42 +103,35 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 		}
 
 		final Class idClass = persister.getIdentifierType().getReturnedClass();
-		if ( persister.getIdentifierType().isComponentType() && EntityMode.DOM4J == event.getSession().getEntityMode() ) {
-			// skip this check for composite-ids relating to dom4j entity-mode;
-			// alternatively, we could add a check to make sure the incoming id value is
-			// an instance of Element...
-		}
-		else {
-			if ( idClass != null && ! idClass.isInstance( event.getEntityId() ) ) {
-				// we may have the kooky jpa requirement of allowing find-by-id where
-				// "id" is the "simple pk value" of a dependent objects parent.  This
-				// is part of its generally goofy "derived identity" "feature"
-				if ( persister.getEntityMetamodel().getIdentifierProperty().isEmbedded() ) {
-					final EmbeddedComponentType dependentIdType =
-							(EmbeddedComponentType) persister.getEntityMetamodel().getIdentifierProperty().getType();
-					if ( dependentIdType.getSubtypes().length == 1 ) {
-						final Type singleSubType = dependentIdType.getSubtypes()[0];
-						if ( singleSubType.isEntityType() ) {
-							final EntityType dependentParentType = (EntityType) singleSubType;
-							final Type dependentParentIdType = dependentParentType.getIdentifierOrUniqueKeyType( source.getFactory() );
-							if ( dependentParentIdType.getReturnedClass().isInstance( event.getEntityId() ) ) {
-								// yep that's what we have...
-								loadByDerivedIdentitySimplePkValue(
-										event,
-										loadType,
-										persister,
-										dependentIdType,
-										source.getFactory().getEntityPersister( dependentParentType.getAssociatedEntityName() )
-								);
-								return;
-							}
+		if ( idClass != null && ! idClass.isInstance( event.getEntityId() ) ) {
+			// we may have the kooky jpa requirement of allowing find-by-id where
+			// "id" is the "simple pk value" of a dependent objects parent.  This
+			// is part of its generally goofy "derived identity" "feature"
+			if ( persister.getEntityMetamodel().getIdentifierProperty().isEmbedded() ) {
+				final EmbeddedComponentType dependentIdType =
+						(EmbeddedComponentType) persister.getEntityMetamodel().getIdentifierProperty().getType();
+				if ( dependentIdType.getSubtypes().length == 1 ) {
+					final Type singleSubType = dependentIdType.getSubtypes()[0];
+					if ( singleSubType.isEntityType() ) {
+						final EntityType dependentParentType = (EntityType) singleSubType;
+						final Type dependentParentIdType = dependentParentType.getIdentifierOrUniqueKeyType( source.getFactory() );
+						if ( dependentParentIdType.getReturnedClass().isInstance( event.getEntityId() ) ) {
+							// yep that's what we have...
+							loadByDerivedIdentitySimplePkValue(
+									event,
+									loadType,
+									persister,
+									dependentIdType,
+									source.getFactory().getEntityPersister( dependentParentType.getAssociatedEntityName() )
+							);
+							return;
 						}
 					}
 				}
-				throw new TypeMismatchException(
-						"Provided id of the wrong type for class " + persister.getEntityName() + ". Expected: " + idClass + ", got " + event.getEntityId().getClass()
-				);
 			}
+			throw new TypeMismatchException(
+					"Provided id of the wrong type for class " + persister.getEntityName() + ". Expected: " + idClass + ", got " + event.getEntityId().getClass()
+			);
 		}
 
 		final  EntityKey keyToLoad = source.generateEntityKey( event.getEntityId(), persister );
@@ -176,7 +168,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 		final Object parent = doLoad( event, parentPersister, parentEntityKey, options );
 
 		final Serializable dependent = (Serializable) dependentIdType.instantiate( parent, event.getSession() );
-		dependentIdType.setPropertyValues( dependent, new Object[] {parent}, event.getSession().getEntityMode() );
+		dependentIdType.setPropertyValues( dependent, new Object[] {parent}, dependentPersister.getEntityMode() );
 		final EntityKey dependentEntityKey = event.getSession().generateEntityKey( dependent, dependentPersister );
 		event.setEntityId( dependent );
 
@@ -500,9 +492,8 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 				}
 			}
 			if ( options.isAllowNulls() ) {
-//				EntityPersister persister = event.getSession().getFactory().getEntityPersister( event.getEntityClassName() );
-				EntityPersister persister = event.getSession().getFactory().getEntityPersister( keyToLoad.getEntityName() );
-				if ( ! persister.isInstance( old, event.getSession().getEntityMode() ) ) {
+				final EntityPersister persister = event.getSession().getFactory().getEntityPersister( keyToLoad.getEntityName() );
+				if ( ! persister.isInstance( old ) ) {
 					return INCONSISTENT_RTN_CLASS_MARKER;
 				}
 			}

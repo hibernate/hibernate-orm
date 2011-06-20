@@ -55,7 +55,7 @@ public final class QueryParameters {
 
 	private Type[] positionalParameterTypes;
 	private Object[] positionalParameterValues;
-	private Map namedParameters;
+	private Map<String,TypedValue> namedParameters;
 	private LockOptions lockOptions;
 	private RowSelection rowSelection;
 	private boolean cacheable;
@@ -88,11 +88,11 @@ public final class QueryParameters {
 
 	public QueryParameters(
 			final Type[] positionalParameterTypes,
-			final Object[] postionalParameterValues,
+			final Object[] positionalParameterValues,
 			final Object optionalObject,
 			final String optionalEntityName,
 			final Serializable optionalObjectId) {
-		this( positionalParameterTypes, postionalParameterValues );
+		this( positionalParameterTypes, positionalParameterValues );
 		this.optionalObject = optionalObject;
 		this.optionalId = optionalObjectId;
 		this.optionalEntityName = optionalEntityName;
@@ -101,25 +101,25 @@ public final class QueryParameters {
 
 	public QueryParameters(
 			final Type[] positionalParameterTypes,
-			final Object[] postionalParameterValues) {
-		this( positionalParameterTypes, postionalParameterValues, null, null, false, false, false, null, null, false, null );
+			final Object[] positionalParameterValues) {
+		this( positionalParameterTypes, positionalParameterValues, null, null, false, false, false, null, null, false, null );
 	}
 
 	public QueryParameters(
 			final Type[] positionalParameterTypes,
-			final Object[] postionalParameterValues,
+			final Object[] positionalParameterValues,
 			final Serializable[] collectionKeys) {
-		this( positionalParameterTypes, postionalParameterValues, null, collectionKeys );
+		this( positionalParameterTypes, positionalParameterValues, null, collectionKeys );
 	}
 
 	public QueryParameters(
 			final Type[] positionalParameterTypes,
-			final Object[] postionalParameterValues,
-			final Map namedParameters,
+			final Object[] positionalParameterValues,
+			final Map<String,TypedValue> namedParameters,
 			final Serializable[] collectionKeys) {
 		this(
 				positionalParameterTypes,
-				postionalParameterValues,
+				positionalParameterValues,
 				namedParameters,
 				null,
 				null,
@@ -166,7 +166,7 @@ public final class QueryParameters {
 	public QueryParameters(
 			final Type[] positionalParameterTypes,
 			final Object[] positionalParameterValues,
-			final Map namedParameters,
+			final Map<String,TypedValue> namedParameters,
 			final LockOptions lockOptions,
 			final RowSelection rowSelection,
 			final boolean isReadOnlyInitialized,
@@ -195,7 +195,7 @@ public final class QueryParameters {
 	public QueryParameters(
 			final Type[] positionalParameterTypes,
 			final Object[] positionalParameterValues,
-			final Map namedParameters,
+			final Map<String,TypedValue> namedParameters,
 			final LockOptions lockOptions,
 			final RowSelection rowSelection,
 			final boolean isReadOnlyInitialized,
@@ -232,7 +232,7 @@ public final class QueryParameters {
 		return rowSelection != null;
 	}
 
-	public Map getNamedParameters() {
+	public Map<String,TypedValue> getNamedParameters() {
 		return namedParameters;
 	}
 
@@ -252,7 +252,7 @@ public final class QueryParameters {
 		return resultTransformer;
 	}
 
-	public void setNamedParameters(Map map) {
+	public void setNamedParameters(Map<String,TypedValue> map) {
 		namedParameters = map;
 	}
 

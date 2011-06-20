@@ -231,7 +231,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 				ArrayHelper.toStringArray( persistentClass.getSynchronizedTables() )
 		);
 		
-		final boolean lazyAvailable = isInstrumented(EntityMode.POJO);
+		final boolean lazyAvailable = isInstrumented();
 
 		boolean hasDeferred = false;
 		ArrayList subclassTables = new ArrayList();

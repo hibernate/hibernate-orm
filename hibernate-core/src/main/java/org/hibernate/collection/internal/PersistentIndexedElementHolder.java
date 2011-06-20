@@ -96,7 +96,7 @@ public abstract class PersistentIndexedElementHolder extends AbstractPersistentC
 		for ( int i=0; i<elements.size(); i++ ) {
 			Element elem = (Element) elements.get(i);
 			Object value = elementType.fromXMLNode( elem, persister.getFactory() );
-			Object copy = elementType.deepCopy( value, getSession().getEntityMode(), persister.getFactory() );
+			Object copy = elementType.deepCopy( value, persister.getFactory() );
 			snapshot.put( getIndex(elem, indexNode, i), copy );
 		}
 		return snapshot;

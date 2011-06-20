@@ -22,7 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.type;
+
 import java.io.Serializable;
+
 import org.hibernate.type.descriptor.java.SerializableTypeDescriptor;
 import org.hibernate.type.descriptor.sql.VarbinaryTypeDescriptor;
 

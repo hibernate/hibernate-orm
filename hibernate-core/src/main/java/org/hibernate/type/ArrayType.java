@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.type;
+
 import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -29,7 +30,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import org.hibernate.EntityMode;
+
 import org.hibernate.HibernateException;
 import org.hibernate.collection.internal.PersistentArrayHolder;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -129,13 +130,14 @@ public class ArrayType extends CollectionType {
 		return null;
 	}
 
-	protected boolean initializeImmediately(EntityMode entityMode) {
+	@Override
+	protected boolean initializeImmediately() {
 		return true;
 	}
 
-	public boolean hasHolder(EntityMode entityMode) {
+	@Override
+	public boolean hasHolder() {
 		return true;
 	}
-	
 
 }

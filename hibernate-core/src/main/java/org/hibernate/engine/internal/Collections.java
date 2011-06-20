@@ -28,7 +28,6 @@ import java.io.Serializable;
 import org.jboss.logging.Logger;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionEntry;
@@ -42,50 +41,52 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.CollectionType;
+import org.hibernate.type.Type;
 
 /**
  * Implements book-keeping for the collection persistence by reachability algorithm
+ *
  * @author Gavin King
  */
 public final class Collections {
-
     private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, Collections.class.getName());
 
-	private Collections() {}
+	private Collections() {
+	}
 
 	/**
 	 * record the fact that this collection was dereferenced
 	 *
-	 * @param coll The collection to be updated by unreachability.
-	 * @throws HibernateException
+	 * @param coll The collection to be updated by un-reachability.
 	 */
-	public static void processUnreachableCollection(PersistentCollection coll, SessionImplementor session)
-	throws HibernateException {
-
+	@SuppressWarnings( {"JavaDoc"})
+	public static void processUnreachableCollection(PersistentCollection coll, SessionImplementor session) {
 		if ( coll.getOwner()==null ) {
 			processNeverReferencedCollection(coll, session);
 		}
 		else {
 			processDereferencedCollection(coll, session);
 		}
-
 	}
 
-	private static void processDereferencedCollection(PersistentCollection coll, SessionImplementor session)
-	throws HibernateException {
-
+	private static void processDereferencedCollection(PersistentCollection coll, SessionImplementor session) {
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
 		CollectionEntry entry = persistenceContext.getCollectionEntry(coll);
 		final CollectionPersister loadedPersister = entry.getLoadedPersister();
 
-        if (LOG.isDebugEnabled() && loadedPersister != null) LOG.debugf("Collection dereferenced: %s",
-                                                                        MessageHelper.collectionInfoString(loadedPersister,
-                                                                                                           entry.getLoadedKey(),
-                                                                                                           session.getFactory()));
+        if (LOG.isDebugEnabled() && loadedPersister != null) {
+			LOG.debugf(
+					"Collection dereferenced: %s",
+					MessageHelper.collectionInfoString(
+							loadedPersister,
+							entry.getLoadedKey(),
+							session.getFactory()
+					)
+			);
+		}
 
 		// do a check
-		boolean hasOrphanDelete = loadedPersister != null &&
-		                          loadedPersister.hasOrphanDelete();
+		boolean hasOrphanDelete = loadedPersister != null && loadedPersister.hasOrphanDelete();
 		if (hasOrphanDelete) {
 			Serializable ownerId = loadedPersister.getOwnerEntityPersister().getIdentifier( coll.getOwner(), session );
 			if ( ownerId == null ) {
@@ -123,7 +124,7 @@ public final class Collections {
 		// do the work
 		entry.setCurrentPersister(null);
 		entry.setCurrentKey(null);
-		prepareCollectionForUpdate( coll, entry, session.getEntityMode(), session.getFactory() );
+		prepareCollectionForUpdate( coll, entry, session.getFactory() );
 
 	}
 
@@ -139,7 +140,7 @@ public final class Collections {
 		entry.setCurrentPersister( entry.getLoadedPersister() );
 		entry.setCurrentKey( entry.getLoadedKey() );
 
-		prepareCollectionForUpdate( coll, entry, session.getEntityMode(), session.getFactory() );
+		prepareCollectionForUpdate( coll, entry, session.getFactory() );
 
 	}
 
@@ -149,14 +150,13 @@ public final class Collections {
      * @param collection The collection to be updated by reachability.
      * @param type The type of the collection.
      * @param entity The owner of the collection.
-     * @throws HibernateException
+	 * @param session The session from which this request originates
      */
 	public static void processReachableCollection(
 			PersistentCollection collection,
 	        CollectionType type,
 	        Object entity,
-	        SessionImplementor session)
-	throws HibernateException {
+	        SessionImplementor session) {
 
 		collection.setOwner(entity);
 
@@ -197,7 +197,7 @@ public final class Collections {
                             MessageHelper.collectionInfoString(ce.getLoadedPersister(), ce.getLoadedKey(), factory));
         }
 
-		prepareCollectionForUpdate( collection, ce, session.getEntityMode(), factory );
+		prepareCollectionForUpdate( collection, ce, factory );
 
 	}
 
@@ -206,17 +206,16 @@ public final class Collections {
 	 * 2. decide if the collection needs deleting/creating/updating (but
 	 *	don't actually schedule the action yet)
 	 */
+	@SuppressWarnings( {"JavaDoc"})
 	private static void prepareCollectionForUpdate(
 			PersistentCollection collection,
 	        CollectionEntry entry,
-	        EntityMode entityMode,
-	        SessionFactoryImplementor factory)
-	throws HibernateException {
+	        SessionFactoryImplementor factory) {
 
 		if ( entry.isProcessed() ) {
 			throw new AssertionFailure( "collection was processed twice by flush()" );
 		}
-		entry.setProcessed(true);
+		entry.setProcessed( true );
 
 		final CollectionPersister loadedPersister = entry.getLoadedPersister();
 		final CollectionPersister currentPersister = entry.getCurrentPersister();
@@ -227,7 +226,7 @@ public final class Collections {
 					                       .getKeyType().isEqual(                       // or its key changed
 													entry.getLoadedKey(),
 			                                        entry.getCurrentKey(),
-			                                        entityMode, factory
+			                                        factory
 			                       );
 
 			if (ownerChanged) {
@@ -241,25 +240,25 @@ public final class Collections {
 					throw new HibernateException(
 							"Don't change the reference to a collection with cascade=\"all-delete-orphan\": " +
 							loadedPersister.getRole()
-						);
+					);
 				}
 
 				// do the work
 				if ( currentPersister != null ) {
-					entry.setDorecreate(true);											// we will need to create new entries
+					entry.setDorecreate( true );	// we will need to create new entries
 				}
 
 				if ( loadedPersister != null ) {
-					entry.setDoremove(true);											// we will need to remove ye olde entries
+					entry.setDoremove( true );		// we will need to remove ye olde entries
 					if ( entry.isDorecreate() ) {
-                        LOG.trace("Forcing collection initialization");
-						collection.forceInitialization();								// force initialize!
+                        LOG.trace( "Forcing collection initialization" );
+						collection.forceInitialization();
 					}
 				}
-
 			}
-			else if ( collection.isDirty() ) {											// else if it's elements changed
-				entry.setDoupdate(true);
+			else if ( collection.isDirty() ) {
+				// the collection's elements have changed
+				entry.setDoupdate( true );
 			}
 
 		}

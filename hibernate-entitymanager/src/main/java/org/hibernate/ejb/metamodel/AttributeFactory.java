@@ -860,8 +860,8 @@ public class AttributeFactory {
 		public Member resolveMember(AttributeContext attributeContext) {
 			final EmbeddableTypeImpl embeddableType = ( EmbeddableTypeImpl<?> ) attributeContext.getOwnerType();
 			final String attributeName = attributeContext.getPropertyMapping().getName();
-			return embeddableType.getHibernateType().getTuplizerMapping()
-					.getTuplizer( EntityMode.POJO )
+			return embeddableType.getHibernateType()
+					.getComponentTuplizer()
 					.getGetter( embeddableType.getHibernateType().getPropertyIndex( attributeName ) )
 					.getMember();
 		}
@@ -885,8 +885,7 @@ public class AttributeFactory {
 
 			final EmbeddedComponentType componentType = (EmbeddedComponentType) type;
 			final String attributeName = attributeContext.getPropertyMapping().getName();
-			return componentType.getTuplizerMapping()
-					.getTuplizer( EntityMode.POJO )
+			return componentType.getComponentTuplizer()
 					.getGetter( componentType.getPropertyIndex( attributeName ) )
 					.getMember();
 		}
@@ -917,7 +916,7 @@ public class AttributeFactory {
 					return VIRTUAL_IDENTIFIER_MEMBER_RESOLVER.resolveMember( attributeContext );
 				}
 				else {
-					return entityMetamodel.getTuplizer( EntityMode.POJO )
+					return entityMetamodel.getTuplizer()
 							.getGetter( index )
 							.getMember();
 				}
@@ -937,7 +936,7 @@ public class AttributeFactory {
 				// this *should* indicate processing part of an IdClass...
 				return VIRTUAL_IDENTIFIER_MEMBER_RESOLVER.resolveMember( attributeContext );
 			}
-			return entityMetamodel.getTuplizer( EntityMode.POJO ).getIdentifierGetter().getMember();
+			return entityMetamodel.getTuplizer().getIdentifierGetter().getMember();
 		}
 	};
 
@@ -950,7 +949,7 @@ public class AttributeFactory {
 				// this should never happen, but to be safe...
 				throw new IllegalArgumentException( "Given property did not match declared version property" );
 			}
-			return entityMetamodel.getTuplizer( EntityMode.POJO ).getVersionGetter().getMember();
+			return entityMetamodel.getTuplizer().getVersionGetter().getMember();
 		}
 	};
 }

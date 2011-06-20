@@ -63,8 +63,7 @@ import org.hibernate.type.TypeHelper;
  *
  * @author Gavin King
  */
-public class DefaultMergeEventListener extends AbstractSaveEventListener
-	implements MergeEventListener {
+public class DefaultMergeEventListener extends AbstractSaveEventListener implements MergeEventListener {
 
     private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
                                                                        DefaultMergeEventListener.class.getName());
@@ -339,8 +338,8 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 		}
 		catch (PropertyValueException ex) {
 			String propertyName = ex.getPropertyName();
-			Object propertyFromCopy = persister.getPropertyValue( copy, propertyName, source.getEntityMode() );
-			Object propertyFromEntity = persister.getPropertyValue( entity, propertyName, source.getEntityMode() );
+			Object propertyFromCopy = persister.getPropertyValue( copy, propertyName );
+			Object propertyFromEntity = persister.getPropertyValue( entity, propertyName );
 			Type propertyType = persister.getPropertyType( propertyName );
 			EntityEntry copyEntry = source.getPersistenceContext().getEntry( copy );
 			if ( propertyFromCopy == null ||
@@ -354,11 +353,13 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
                               + (propertyFromCopy == null ? "null" : propertyFromCopy));
                     LOG.trace("Property '" + copyEntry.getEntityName() + "." + propertyName + "' is"
                               + (propertyType.isEntityType() ? "" : " not") + " an entity type");
-                    if (propertyFromEntity != null && !copyCache.containsKey(propertyFromEntity)) LOG.trace("Property '"
-                                                                                                            + copyEntry.getEntityName()
-                                                                                                            + "."
-                                                                                                            + propertyName
-                                                                                                            + "' is not in copy cache");
+                    if (propertyFromEntity != null && !copyCache.containsKey(propertyFromEntity)) {
+						LOG.tracef(
+								"Property '%s.%s' is not in copy cache",
+								copyEntry.getEntityName(),
+								propertyName
+						);
+					}
 	            }
                 if ( isNullabilityCheckedGlobal( source ) ) {
                     throw ex;
@@ -440,7 +441,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 		else {
 			// check that entity id = requestedId
 			Serializable entityId = persister.getIdentifier( entity, source );
-			if ( !persister.getIdentifierType().isEqual( id, entityId, source.getEntityMode(), source.getFactory() ) ) {
+			if ( !persister.getIdentifierType().isEqual( id, entityId, source.getFactory() ) ) {
 				throw new HibernateException( "merge requested with id not matching id of passed entity" );
 			}
 		}
@@ -450,7 +451,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 		//we must clone embedded composite identifiers, or
 		//we will get back the same instance that we pass in
 		final Serializable clonedIdentifier = (Serializable) persister.getIdentifierType()
-				.deepCopy( id, source.getEntityMode(), source.getFactory() );
+				.deepCopy( id, source.getFactory() );
 		final Object result = source.get(entityName, clonedIdentifier);
 		source.setFetchProfile(previousFetchProfile);
 
@@ -523,9 +524,8 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 		// (though during a seperate operation) in which it was
 		// originally persisted/saved
 		boolean changed = ! persister.getVersionType().isSame(
-				persister.getVersion( target, source.getEntityMode() ),
-				persister.getVersion( entity, source.getEntityMode() ),
-				source.getEntityMode()
+				persister.getVersion( target ),
+				persister.getVersion( entity )
 		);
 
 		// TODO : perhaps we should additionally require that the incoming entity
@@ -554,15 +554,15 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 			final SessionImplementor source,
 			final Map copyCache) {
 		final Object[] copiedValues = TypeHelper.replace(
-				persister.getPropertyValues( entity, source.getEntityMode() ),
-				persister.getPropertyValues( target, source.getEntityMode() ),
+				persister.getPropertyValues( entity ),
+				persister.getPropertyValues( target ),
 				persister.getPropertyTypes(),
 				source,
 				target,
 				copyCache
 		);
 
-		persister.setPropertyValues( target, copiedValues, source.getEntityMode() );
+		persister.setPropertyValues( target, copiedValues );
 	}
 
 	protected void copyValues(
@@ -580,8 +580,8 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 			// replacement to associations types (value types were already replaced
 			// during the first pass)
 			copiedValues = TypeHelper.replaceAssociations(
-					persister.getPropertyValues( entity, source.getEntityMode() ),
-					persister.getPropertyValues( target, source.getEntityMode() ),
+					persister.getPropertyValues( entity ),
+					persister.getPropertyValues( target ),
 					persister.getPropertyTypes(),
 					source,
 					target,
@@ -591,8 +591,8 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 		}
 		else {
 			copiedValues = TypeHelper.replace(
-					persister.getPropertyValues( entity, source.getEntityMode() ),
-					persister.getPropertyValues( target, source.getEntityMode() ),
+					persister.getPropertyValues( entity ),
+					persister.getPropertyValues( target ),
 					persister.getPropertyTypes(),
 					source,
 					target,
@@ -601,7 +601,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 			);
 		}
 
-		persister.setPropertyValues( target, copiedValues, source.getEntityMode() );
+		persister.setPropertyValues( target, copiedValues );
 	}
 
 	/**

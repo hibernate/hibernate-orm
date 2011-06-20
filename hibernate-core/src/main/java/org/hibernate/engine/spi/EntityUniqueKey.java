@@ -82,7 +82,7 @@ public class EntityUniqueKey implements Serializable {
 		int result = 17;
 		result = 37 * result + entityName.hashCode();
 		result = 37 * result + uniqueKeyName.hashCode();
-		result = 37 * result + keyType.getHashCode(key, entityMode, factory);
+		result = 37 * result + keyType.getHashCode(key, factory);
 		return result;
 	}
 
@@ -94,7 +94,7 @@ public class EntityUniqueKey implements Serializable {
 		EntityUniqueKey that = (EntityUniqueKey) other;
 		return that.entityName.equals(entityName) &&
 		       that.uniqueKeyName.equals(uniqueKeyName) &&
-		       keyType.isEqual(that.key, key, entityMode);
+		       keyType.isEqual(that.key, key );
 	}
 
 	public String toString() {

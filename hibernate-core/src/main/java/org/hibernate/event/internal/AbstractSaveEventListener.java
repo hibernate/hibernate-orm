@@ -205,7 +205,7 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 	protected boolean invokeSaveLifecycle(Object entity, EntityPersister persister, EventSource source) {
 		// Sub-insertions should occur before containing insertion so
 		// Try to do the callback now
-		if ( persister.implementsLifecycle( source.getEntityMode() ) ) {
+		if ( persister.implementsLifecycle() ) {
             LOG.debugf("Calling onSave()");
 			if ( ( ( Lifecycle ) entity ).onSave( source ) ) {
                 LOG.debugf("Insertion vetoed by onSave()");
@@ -279,7 +279,7 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 		}
 
 		if ( substitute ) {
-			persister.setPropertyValues( entity, values, source.getEntityMode() );
+			persister.setPropertyValues( entity, values );
 		}
 
 		TypeHelper.deepCopy(

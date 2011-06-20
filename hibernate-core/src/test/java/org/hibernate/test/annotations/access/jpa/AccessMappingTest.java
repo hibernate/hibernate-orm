@@ -1,11 +1,10 @@
-//$Id$
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -23,8 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.annotations.access.jpa;
-import junit.framework.TestCase;
-import org.hibernate.EntityMode;
+
 import org.hibernate.MappingException;
 import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.cfg.Environment;
@@ -32,10 +30,12 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.property.BasicPropertyAccessor;
 import org.hibernate.property.DirectPropertyAccessor;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.tuple.entity.EntityTuplizer;
+
+import junit.framework.TestCase;
 
 import org.hibernate.testing.ServiceRegistryBuilder;
-import org.hibernate.tuple.entity.EntityMetamodel;
-import org.hibernate.tuple.entity.PojoEntityTuplizer;
+import org.hibernate.testing.TestForIssue;
 
 
 /**
@@ -43,8 +43,8 @@ import org.hibernate.tuple.entity.PojoEntityTuplizer;
  *
  * @author Hardy Ferentschik
  */
+@SuppressWarnings( {"deprecation"})
 public class AccessMappingTest extends TestCase {
-
 	private ServiceRegistry serviceRegistry;
 
 	protected void setUp() {
@@ -76,9 +76,9 @@ public class AccessMappingTest extends TestCase {
 		cfg.addAnnotatedClass( classUnderTest );
 		cfg.addAnnotatedClass( Student.class );
 		SessionFactoryImplementor factory = ( SessionFactoryImplementor ) cfg.buildSessionFactory( serviceRegistry );
-		EntityMetamodel metaModel = factory.getEntityPersister( classUnderTest.getName() )
-				.getEntityMetamodel();
-		PojoEntityTuplizer tuplizer = ( PojoEntityTuplizer ) metaModel.getTuplizer( EntityMode.POJO );
+		EntityTuplizer tuplizer = factory.getEntityPersister( classUnderTest.getName() )
+				.getEntityMetamodel()
+				.getTuplizer();
 		assertTrue(
 				"Field access should be used.",
 				tuplizer.getIdentifierGetter() instanceof DirectPropertyAccessor.DirectGetter
@@ -91,9 +91,9 @@ public class AccessMappingTest extends TestCase {
 		cfg.addAnnotatedClass( classUnderTest );
 		cfg.addAnnotatedClass( Student.class );
 		SessionFactoryImplementor factory = ( SessionFactoryImplementor ) cfg.buildSessionFactory( serviceRegistry );
-		EntityMetamodel metaModel = factory.getEntityPersister( classUnderTest.getName() )
-				.getEntityMetamodel();
-		PojoEntityTuplizer tuplizer = ( PojoEntityTuplizer ) metaModel.getTuplizer( EntityMode.POJO );
+		EntityTuplizer tuplizer = factory.getEntityPersister( classUnderTest.getName() )
+				.getEntityMetamodel()
+				.getTuplizer();
 		assertTrue(
 				"Property access should be used.",
 				tuplizer.getIdentifierGetter() instanceof BasicPropertyAccessor.BasicGetter
@@ -106,9 +106,9 @@ public class AccessMappingTest extends TestCase {
 		cfg.addAnnotatedClass( classUnderTest );
 		cfg.addAnnotatedClass( Student.class );
 		SessionFactoryImplementor factory = ( SessionFactoryImplementor ) cfg.buildSessionFactory( serviceRegistry );
-		EntityMetamodel metaModel = factory.getEntityPersister( classUnderTest.getName() )
-				.getEntityMetamodel();
-		PojoEntityTuplizer tuplizer = ( PojoEntityTuplizer ) metaModel.getTuplizer( EntityMode.POJO );
+		EntityTuplizer tuplizer = factory.getEntityPersister( classUnderTest.getName() )
+				.getEntityMetamodel()
+				.getTuplizer();
 		assertTrue(
 				"Property access should be used.",
 				tuplizer.getIdentifierGetter() instanceof BasicPropertyAccessor.BasicGetter
@@ -134,9 +134,9 @@ public class AccessMappingTest extends TestCase {
 		cfg.addAnnotatedClass( classUnderTest );
 		cfg.addAnnotatedClass( Student.class );
 		SessionFactoryImplementor factory = ( SessionFactoryImplementor ) cfg.buildSessionFactory( serviceRegistry );
-		EntityMetamodel metaModel = factory.getEntityPersister( classUnderTest.getName() )
-				.getEntityMetamodel();
-		PojoEntityTuplizer tuplizer = ( PojoEntityTuplizer ) metaModel.getTuplizer( EntityMode.POJO );
+		EntityTuplizer tuplizer = factory.getEntityPersister( classUnderTest.getName() )
+				.getEntityMetamodel()
+				.getTuplizer();
 		assertTrue(
 				"Field access should be used.",
 				tuplizer.getIdentifierGetter() instanceof DirectPropertyAccessor.DirectGetter
@@ -154,9 +154,9 @@ public class AccessMappingTest extends TestCase {
 		cfg.addAnnotatedClass( classUnderTest );
 		cfg.addAnnotatedClass( Student.class );
 		SessionFactoryImplementor factory = ( SessionFactoryImplementor ) cfg.buildSessionFactory( serviceRegistry );
-		EntityMetamodel metaModel = factory.getEntityPersister( classUnderTest.getName() )
-				.getEntityMetamodel();
-		PojoEntityTuplizer tuplizer = ( PojoEntityTuplizer ) metaModel.getTuplizer( EntityMode.POJO );
+		EntityTuplizer tuplizer = factory.getEntityPersister( classUnderTest.getName() )
+				.getEntityMetamodel()
+				.getTuplizer();
 		assertTrue(
 				"Field access should be used.",
 				tuplizer.getIdentifierGetter() instanceof DirectPropertyAccessor.DirectGetter
@@ -175,9 +175,9 @@ public class AccessMappingTest extends TestCase {
 		cfg.addAnnotatedClass( Person.class );
 		cfg.addAnnotatedClass( Being.class );
 		SessionFactoryImplementor factory = ( SessionFactoryImplementor ) cfg.buildSessionFactory( serviceRegistry );
-		EntityMetamodel metaModel = factory.getEntityPersister( classUnderTest.getName() )
-				.getEntityMetamodel();
-		PojoEntityTuplizer tuplizer = ( PojoEntityTuplizer ) metaModel.getTuplizer( EntityMode.POJO );
+		EntityTuplizer tuplizer = factory.getEntityPersister( classUnderTest.getName() )
+				.getEntityMetamodel()
+				.getTuplizer();
 		assertTrue(
 				"Field access should be used since the default access mode gets inherited",
 				tuplizer.getIdentifierGetter() instanceof DirectPropertyAccessor.DirectGetter
@@ -190,26 +190,24 @@ public class AccessMappingTest extends TestCase {
 		cfg.addAnnotatedClass( Animal.class );
 
 		SessionFactoryImplementor factory = ( SessionFactoryImplementor ) cfg.buildSessionFactory( serviceRegistry );
-		EntityMetamodel metaModel = factory.getEntityPersister( Animal.class.getName() )
-				.getEntityMetamodel();
-		PojoEntityTuplizer tuplizer = ( PojoEntityTuplizer ) metaModel.getTuplizer( EntityMode.POJO );
+		EntityTuplizer tuplizer = factory.getEntityPersister( Animal.class.getName() )
+				.getEntityMetamodel()
+				.getTuplizer();
 		assertTrue(
 				"Property access should be used since explicity configured via @Access",
 				tuplizer.getIdentifierGetter() instanceof BasicPropertyAccessor.BasicGetter
 		);
 
-		metaModel = factory.getEntityPersister( Horse.class.getName() )
-				.getEntityMetamodel();
-		tuplizer = ( PojoEntityTuplizer ) metaModel.getTuplizer( EntityMode.POJO );
+		tuplizer = factory.getEntityPersister( Horse.class.getName() )
+				.getEntityMetamodel()
+				.getTuplizer();
 		assertTrue(
 				"Property access should be used since the default access mode gets inherited",
 				tuplizer.getGetter( 0 ) instanceof BasicPropertyAccessor.BasicGetter
 		);
 	}
 
-	/**
-	 * HHH-5004
-	 */
+	@TestForIssue( jiraKey = "HHH-5004")
 	public void testAccessOnClassAndId() throws Exception {
 		AnnotationConfiguration cfg = new AnnotationConfiguration();
 		cfg.addAnnotatedClass( Course8.class );

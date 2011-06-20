@@ -38,7 +38,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -80,25 +79,25 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Settings;
 import org.hibernate.cfg.SettingsFactory;
-import org.hibernate.context.internal.ThreadLocalSessionContext;
-import org.hibernate.context.spi.CurrentSessionContext;
 import org.hibernate.context.internal.JTASessionContext;
 import org.hibernate.context.internal.ManagedSessionContext;
+import org.hibernate.context.internal.ThreadLocalSessionContext;
+import org.hibernate.context.spi.CurrentSessionContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.SQLFunctionRegistry;
-import org.hibernate.engine.query.spi.QueryPlanCache;
-import org.hibernate.engine.spi.FilterDefinition;
-import org.hibernate.engine.spi.Mapping;
-import org.hibernate.engine.spi.NamedQueryDefinition;
-import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.engine.ResultSetMappingDefinition;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.profile.Association;
 import org.hibernate.engine.profile.Fetch;
 import org.hibernate.engine.profile.FetchProfile;
+import org.hibernate.engine.query.spi.QueryPlanCache;
 import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
+import org.hibernate.engine.spi.FilterDefinition;
+import org.hibernate.engine.spi.Mapping;
+import org.hibernate.engine.spi.NamedQueryDefinition;
+import org.hibernate.engine.spi.NamedSQLQueryDefinition;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.transaction.internal.TransactionCoordinatorImpl;
 import org.hibernate.engine.transaction.spi.TransactionEnvironment;
 import org.hibernate.exception.spi.SQLExceptionConverter;
@@ -106,9 +105,9 @@ import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.UUIDGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.integrator.spi.Integrator;
+import org.hibernate.integrator.spi.IntegratorService;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.internal.util.collections.EmptyIterator;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
@@ -125,7 +124,6 @@ import org.hibernate.persister.spi.PersisterFactory;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.integrator.spi.IntegratorService;
 import org.hibernate.service.config.spi.ConfigurationService;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.jndi.spi.JndiService;
@@ -201,7 +199,7 @@ public final class SessionFactoryImpl
 	private final transient CurrentSessionContext currentSessionContext;
 	private final transient SQLFunctionRegistry sqlFunctionRegistry;
 	private final transient SessionFactoryObserverChain observer = new SessionFactoryObserverChain();
-	private final transient HashMap entityNameResolvers = new HashMap();
+	private final transient ConcurrentHashMap<EntityNameResolver,Object> entityNameResolvers = new ConcurrentHashMap<EntityNameResolver, Object>();
 	private final transient QueryPlanCache queryPlanCache;
 	private final transient Cache cacheAccess = new CacheImpl();
 	private transient boolean isClosed = false;
@@ -836,14 +834,10 @@ public final class SessionFactoryImpl
 	}
 
 	private void registerEntityNameResolvers(EntityPersister persister) {
-		if ( persister.getEntityMetamodel() == null || persister.getEntityMetamodel().getTuplizerMapping() == null ) {
+		if ( persister.getEntityMetamodel() == null || persister.getEntityMetamodel().getTuplizer() == null ) {
 			return;
 		}
-		Iterator itr = persister.getEntityMetamodel().getTuplizerMapping().iterateTuplizers();
-		while ( itr.hasNext() ) {
-			final EntityTuplizer tuplizer = ( EntityTuplizer ) itr.next();
-			registerEntityNameResolvers( tuplizer );
-		}
+		registerEntityNameResolvers( persister.getEntityMetamodel().getTuplizer() );
 	}
 
 	private void registerEntityNameResolvers(EntityTuplizer tuplizer) {
@@ -852,25 +846,19 @@ public final class SessionFactoryImpl
 			return;
 		}
 
-		for ( int i = 0; i < resolvers.length; i++ ) {
-			registerEntityNameResolver( resolvers[i], tuplizer.getEntityMode() );
+		for ( EntityNameResolver resolver : resolvers ) {
+			registerEntityNameResolver( resolver );
 		}
 	}
 
-	public void registerEntityNameResolver(EntityNameResolver resolver, EntityMode entityMode) {
-		LinkedHashSet resolversForMode = ( LinkedHashSet ) entityNameResolvers.get( entityMode );
-		if ( resolversForMode == null ) {
-			resolversForMode = new LinkedHashSet();
-			entityNameResolvers.put( entityMode, resolversForMode );
-		}
-		resolversForMode.add( resolver );
+	private static final Object ENTITY_NAME_RESOLVER_MAP_VALUE = new Object();
+
+	public void registerEntityNameResolver(EntityNameResolver resolver) {
+		entityNameResolvers.put( resolver, ENTITY_NAME_RESOLVER_MAP_VALUE );
 	}
 
-	public Iterator iterateEntityNameResolvers(EntityMode entityMode) {
-		Set actualEntityNameResolvers = ( Set ) entityNameResolvers.get( entityMode );
-		return actualEntityNameResolvers == null
-				? EmptyIterator.INSTANCE
-				: actualEntityNameResolvers.iterator();
+	public Iterable<EntityNameResolver> iterateEntityNameResolvers() {
+		return entityNameResolvers.keySet();
 	}
 
 	public QueryPlanCache getQueryPlanCache() {
@@ -1115,11 +1103,11 @@ public final class SessionFactoryImpl
 						results.add(testClassName);
 					}
 					else {
-						final Class mappedClass = testQueryable.getMappedClass( EntityMode.POJO );
+						final Class mappedClass = testQueryable.getMappedClass();
 						if ( mappedClass!=null && clazz.isAssignableFrom( mappedClass ) ) {
 							final boolean assignableSuperclass;
 							if ( testQueryable.isInherited() ) {
-								Class mappedSuperclass = getEntityPersister( testQueryable.getMappedSuperclass() ).getMappedClass( EntityMode.POJO);
+								Class mappedSuperclass = getEntityPersister( testQueryable.getMappedSuperclass() ).getMappedClass();
 								assignableSuperclass = clazz.isAssignableFrom(mappedSuperclass);
 							}
 							else {
@@ -1264,8 +1252,7 @@ public final class SessionFactoryImpl
 					identifier,
 					p.getIdentifierType(),
 					p.getRootEntityName(),
-					EntityMode.POJO,			// we have to assume POJO
-					null, 						// and also assume non tenancy
+					null, 						// have to assume non tenancy
 					SessionFactoryImpl.this
 			);
 		}
@@ -1310,8 +1297,7 @@ public final class SessionFactoryImpl
 					ownerIdentifier,
 					p.getKeyType(),
 					p.getRole(),
-					EntityMode.POJO,			// we have to assume POJO
-					null,						// and also assume non tenancy
+					null,						// have to assume non tenancy
 					SessionFactoryImpl.this
 			);
 		}
@@ -1583,7 +1569,6 @@ public final class SessionFactoryImpl
 		private Interceptor interceptor;
 		private Connection connection;
 		private ConnectionReleaseMode connectionReleaseMode;
-		private EntityMode entityMode;
 		private boolean autoClose;
 		private boolean autoJoinTransactions = true;
 		private boolean flushBeforeCompletion;
@@ -1596,7 +1581,6 @@ public final class SessionFactoryImpl
 			// set up default builder values...
 			this.interceptor = sessionFactory.getInterceptor();
 			this.connectionReleaseMode = settings.getConnectionReleaseMode();
-			this.entityMode = settings.getDefaultEntityMode();
 			this.autoClose = settings.isAutoCloseSessionEnabled();
 			this.flushBeforeCompletion = settings.isFlushBeforeCompletionEnabled();
 		}
@@ -1614,7 +1598,6 @@ public final class SessionFactoryImpl
 					autoJoinTransactions,
 					sessionFactory.settings.getRegionFactory().nextTimestamp(),
 					interceptor,
-					entityMode,
 					flushBeforeCompletion,
 					autoClose,
 					connectionReleaseMode,
@@ -1661,12 +1644,6 @@ public final class SessionFactoryImpl
 		@Override
 		public SessionBuilder flushBeforeCompletion(boolean flushBeforeCompletion) {
 			this.flushBeforeCompletion = flushBeforeCompletion;
-			return this;
-		}
-
-		@Override
-		public SessionBuilder entityMode(EntityMode entityMode) {
-			this.entityMode = entityMode;
 			return this;
 		}
 

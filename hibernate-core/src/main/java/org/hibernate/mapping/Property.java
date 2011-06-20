@@ -289,12 +289,7 @@ public class Property implements Serializable, MetaAttributable {
 	}
 
 	public String getAccessorPropertyName( EntityMode mode ) {
-		if ( mode == EntityMode.DOM4J ) {
-			return nodeName;
-		}
-		else {
-			return getName();
-		}
+		return getName();
 	}
 
 	// todo : remove

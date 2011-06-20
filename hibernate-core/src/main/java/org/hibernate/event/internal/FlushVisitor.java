@@ -49,7 +49,7 @@ public class FlushVisitor extends AbstractVisitor {
 
 		if (collection!=null) {
 			final PersistentCollection coll;
-			if ( type.hasHolder( getSession().getEntityMode() ) ) {
+			if ( type.hasHolder() ) {
 				coll = getSession().getPersistenceContext().getCollectionHolder(collection);
 			}
 			else {

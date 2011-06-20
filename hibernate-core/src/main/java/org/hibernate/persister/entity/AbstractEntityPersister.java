@@ -105,7 +105,6 @@ import org.hibernate.sql.SelectFragment;
 import org.hibernate.sql.SimpleSelect;
 import org.hibernate.sql.Template;
 import org.hibernate.sql.Update;
-import org.hibernate.tuple.Tuplizer;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.AssociationType;
@@ -538,7 +537,7 @@ public abstract class AbstractEntityPersister
 
 		// PROPERTIES
 
-		final boolean lazyAvailable = isInstrumented(EntityMode.POJO);
+		final boolean lazyAvailable = isInstrumented();
 
 		int hydrateSpan = entityMetamodel.getPropertySpan();
 		propertyColumnSpans = new int[hydrateSpan];
@@ -1004,10 +1003,10 @@ public abstract class AbstractEntityPersister
 			final Object[] snapshot,
 			final int j,
 			final Object propValue) {
-		setPropertyValue( entity, lazyPropertyNumbers[j], propValue, session.getEntityMode() );
-		if (snapshot != null) {
+		setPropertyValue( entity, lazyPropertyNumbers[j], propValue );
+		if ( snapshot != null ) {
 			// object have been loaded with setReadOnly(true); HHH-2236
-			snapshot[ lazyPropertyNumbers[j] ] = lazyPropertyTypes[j].deepCopy( propValue, session.getEntityMode(), factory );
+			snapshot[ lazyPropertyNumbers[j] ] = lazyPropertyTypes[j].deepCopy( propValue, factory );
 		}
 		return fieldName.equals( lazyPropertyNames[j] );
 	}
@@ -2867,9 +2866,9 @@ public abstract class AbstractEntityPersister
 			// For the case of dynamic-update="false", or no snapshot, we use the static SQL
 			updateStrings = getUpdateStrings(
 					rowId != null,
-					hasUninitializedLazyProperties( object, session.getEntityMode() )
-				);
-			propsToUpdate = getPropertyUpdateability( object, session.getEntityMode() );
+					hasUninitializedLazyProperties( object )
+			);
+			propsToUpdate = getPropertyUpdateability( object );
 		}
 
 		for ( int j = 0; j < span; j++ ) {
@@ -3443,7 +3442,7 @@ public abstract class AbstractEntityPersister
 				currentState,
 				previousState,
 				propertyColumnUpdateable,
-				hasUninitializedLazyProperties( entity, session.getEntityMode() ),
+				hasUninitializedLazyProperties( entity ),
 				session
 			);
 		if ( props == null ) {
@@ -3472,7 +3471,7 @@ public abstract class AbstractEntityPersister
 				current,
 				old,
 				propertyColumnUpdateable,
-				hasUninitializedLazyProperties( entity, session.getEntityMode() ),
+				hasUninitializedLazyProperties( entity ),
 				session
 			);
 		if ( props == null ) {
@@ -3488,10 +3487,10 @@ public abstract class AbstractEntityPersister
 	 * Which properties appear in the SQL update?
 	 * (Initialized, updateable ones!)
 	 */
-	protected boolean[] getPropertyUpdateability(Object entity, EntityMode entityMode) {
-		return hasUninitializedLazyProperties( entity, entityMode ) ?
-				getNonLazyPropertyUpdateability() :
-				getPropertyUpdateability();
+	protected boolean[] getPropertyUpdateability(Object entity) {
+		return hasUninitializedLazyProperties( entity )
+				? getNonLazyPropertyUpdateability()
+				: getPropertyUpdateability();
 	}
 
 	private void logDirtyProperties(int[] props) {
@@ -3501,14 +3500,6 @@ public abstract class AbstractEntityPersister
                 LOG.trace(StringHelper.qualify(getEntityName(), propertyName) + " is dirty");
 			}
 		}
-	}
-
-	protected EntityTuplizer getTuplizer(SessionImplementor session) {
-		return getTuplizer( session.getEntityMode() );
-	}
-
-	protected EntityTuplizer getTuplizer(EntityMode entityMode) {
-		return entityMetamodel.getTuplizer( entityMode );
 	}
 
 	public SessionFactoryImplementor getFactory() {
@@ -3630,7 +3621,7 @@ public abstract class AbstractEntityPersister
 		}
 
 		// check the version unsaved-value, if appropriate
-		final Object version = getVersion( entity, session.getEntityMode() );
+		final Object version = getVersion( entity );
 		if ( isVersioned() ) {
 			// let this take precedence if defined, since it works for
 			// assigned identifiers
@@ -3749,7 +3740,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	public Type getPropertyType(String propertyName) throws MappingException {
-		return propertyMapping.toType(propertyName);
+		return propertyMapping.toType( propertyName );
 	}
 
 	public Type getType() {
@@ -3765,8 +3756,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	public Object createProxy(Serializable id, SessionImplementor session) throws HibernateException {
-		return entityMetamodel.getTuplizer( session.getEntityMode() )
-				.createProxy( id, session );
+		return entityMetamodel.getTuplizer().createProxy( id, session );
 	}
 
 	public String toString() {
@@ -3784,9 +3774,8 @@ public abstract class AbstractEntityPersister
 		return selectFragment( lhsAlias, entitySuffix );
 	}
 
-	public boolean isInstrumented(EntityMode entityMode) {
-		EntityTuplizer tuplizer = entityMetamodel.getTuplizerOrNull(entityMode);
-		return tuplizer!=null && tuplizer.isInstrumented();
+	public boolean isInstrumented() {
+		return getEntityTuplizer().isInstrumented();
 	}
 
 	public boolean hasInsertGeneratedProperties() {
@@ -3806,7 +3795,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	public void afterInitialize(Object entity, boolean lazyPropertiesAreUnfetched, SessionImplementor session) {
-		getTuplizer( session ).afterInitialize( entity, lazyPropertiesAreUnfetched, session );
+		getEntityTuplizer().afterInitialize( entity, lazyPropertiesAreUnfetched, session );
 	}
 
 	public String[] getPropertyNames() {
@@ -3857,117 +3846,90 @@ public abstract class AbstractEntityPersister
 		return entityMetamodel.getCascadeStyles();
 	}
 
-	public final Class getMappedClass(EntityMode entityMode) {
-		Tuplizer tup = entityMetamodel.getTuplizerOrNull(entityMode);
-		return tup==null ? null : tup.getMappedClass();
+	public final Class getMappedClass() {
+		return getEntityTuplizer().getMappedClass();
 	}
 
-	public boolean implementsLifecycle(EntityMode entityMode) {
-		return getTuplizer( entityMode ).isLifecycleImplementor();
+	public boolean implementsLifecycle() {
+		return getEntityTuplizer().isLifecycleImplementor();
 	}
 
-	public Class getConcreteProxyClass(EntityMode entityMode) {
-		return getTuplizer( entityMode ).getConcreteProxyClass();
+	public Class getConcreteProxyClass() {
+		return getEntityTuplizer().getConcreteProxyClass();
 	}
 
-	public void setPropertyValues(Object object, Object[] values, EntityMode entityMode)
-			throws HibernateException {
-		getTuplizer( entityMode ).setPropertyValues( object, values );
+	public void setPropertyValues(Object object, Object[] values) {
+		getEntityTuplizer().setPropertyValues( object, values );
 	}
 
-	public void setPropertyValue(Object object, int i, Object value, EntityMode entityMode)
-			throws HibernateException {
-		getTuplizer( entityMode ).setPropertyValue( object, i, value );
+	public void setPropertyValue(Object object, int i, Object value) {
+		getEntityTuplizer().setPropertyValue( object, i, value );
 	}
 
-	public Object[] getPropertyValues(Object object, EntityMode entityMode)
-			throws HibernateException {
-		return getTuplizer( entityMode ).getPropertyValues( object );
+	public Object[] getPropertyValues(Object object) {
+		return getEntityTuplizer().getPropertyValues( object );
 	}
 
-	public Object getPropertyValue(Object object, int i, EntityMode entityMode)
-			throws HibernateException {
-		return getTuplizer( entityMode ).getPropertyValue( object , i );
+	@Override
+	public Object getPropertyValue(Object object, int i) {
+		return getEntityTuplizer().getPropertyValue( object, i );
 	}
 
-	public Object getPropertyValue(Object object, String propertyName, EntityMode entityMode)
-			throws HibernateException {
-		return getTuplizer( entityMode ).getPropertyValue( object, propertyName );
+	@Override
+	public Object getPropertyValue(Object object, String propertyName) {
+		return getEntityTuplizer().getPropertyValue( object, propertyName );
 	}
 
-	public Serializable getIdentifier(Object object, EntityMode entityMode) throws HibernateException {
-		return getTuplizer( entityMode ).getIdentifier( object, null );
+	@Override
+	public Serializable getIdentifier(Object object) {
+		return getEntityTuplizer().getIdentifier( object, null );
 	}
 
+	@Override
 	public Serializable getIdentifier(Object entity, SessionImplementor session) {
-		return getTuplizer( session.getEntityMode() ).getIdentifier( entity, session );
+		return getEntityTuplizer().getIdentifier( entity, session );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
-	public void setIdentifier(Object entity, Serializable id, EntityMode entityMode)
-			throws HibernateException {
-		getTuplizer( entityMode ).setIdentifier( entity, id, null );
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public void setIdentifier(Object entity, Serializable id, SessionImplementor session) {
-		getTuplizer( session ).setIdentifier( entity, id, session );
+		getEntityTuplizer().setIdentifier( entity, id, session );
 	}
 
-	public Object getVersion(Object object, EntityMode entityMode)
-			throws HibernateException {
-		return getTuplizer( entityMode ).getVersion( object );
+	@Override
+	public Object getVersion(Object object) {
+		return getEntityTuplizer().getVersion( object );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
-	public Object instantiate(Serializable id, EntityMode entityMode)
-			throws HibernateException {
-		return getTuplizer( entityMode ).instantiate( id, null );
+	@Override
+	public Object instantiate(Serializable id, SessionImplementor session) {
+		return getEntityTuplizer().instantiate( id, session );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
-	public Object instantiate(Serializable id, SessionImplementor session)
-			throws HibernateException {
-		return getTuplizer( session ).instantiate( id, session );
+	@Override
+	public boolean isInstance(Object object) {
+		return getEntityTuplizer().isInstance( object );
 	}
 
-	public boolean isInstance(Object object, EntityMode entityMode) {
-		return getTuplizer( entityMode ).isInstance( object );
+	@Override
+	public boolean hasUninitializedLazyProperties(Object object) {
+		return getEntityTuplizer().hasUninitializedLazyProperties( object );
 	}
 
-	public boolean hasUninitializedLazyProperties(Object object, EntityMode entityMode) {
-		return getTuplizer( entityMode ).hasUninitializedLazyProperties( object );
-	}
-
-	public void resetIdentifier(Object entity, Serializable currentId, Object currentVersion, EntityMode entityMode) {
-		getTuplizer( entityMode ).resetIdentifier( entity, currentId, currentVersion, null );
-	}
-
+	@Override
 	public void resetIdentifier(Object entity, Serializable currentId, Object currentVersion, SessionImplementor session) {
-		getTuplizer( session ).resetIdentifier( entity, currentId, currentVersion, session );
+		getEntityTuplizer().resetIdentifier( entity, currentId, currentVersion, session );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
-	public EntityPersister getSubclassEntityPersister(
-			Object instance,
-			SessionFactoryImplementor factory,
-			EntityMode entityMode) {
+	@Override
+	public EntityPersister getSubclassEntityPersister(Object instance, SessionFactoryImplementor factory) {
 		if ( !hasSubclasses() ) {
 			return this;
 		}
 		else {
-			final String concreteEntityName = getTuplizer( entityMode )
-					.determineConcreteSubclassEntityName( instance, factory );
+			final String concreteEntityName = getEntityTuplizer().determineConcreteSubclassEntityName(
+					instance,
+					factory
+			);
 			if ( concreteEntityName == null || getEntityName().equals( concreteEntityName ) ) {
 				// the contract of EntityTuplizer.determineConcreteSubclassEntityName says that returning null
 				// is an indication that the specified entity-name (this.getEntityName) should be used.
@@ -3977,10 +3939,6 @@ public abstract class AbstractEntityPersister
 				return factory.getEntityPersister( concreteEntityName );
 			}
 		}
-	}
-
-	public EntityMode guessEntityMode(Object object) {
-		return entityMetamodel.guessEntityMode(object);
 	}
 
 	public boolean isMultiTable() {
@@ -4000,7 +3958,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	public Object[] getPropertyValuesToInsert(Object object, Map mergeMap, SessionImplementor session) throws HibernateException {
-		return getTuplizer( session.getEntityMode() ).getPropertyValuesToInsert( object, mergeMap, session );
+		return getEntityTuplizer().getPropertyValuesToInsert( object, mergeMap, session );
 	}
 
 	public void processInsertGeneratedProperties(Serializable id, Object entity, Object[] state, SessionImplementor session) {
@@ -4046,7 +4004,7 @@ public abstract class AbstractEntityPersister
 						if ( includeds[i] != ValueInclusion.NONE ) {
 							Object hydratedState = getPropertyTypes()[i].hydrate( rs, getPropertyAliases( "", i ), session, entity );
 							state[i] = getPropertyTypes()[i].resolve( hydratedState, session, entity );
-							setPropertyValue( entity, i, state[i], session.getEntityMode() );
+							setPropertyValue( entity, i, state[i] );
 						}
 					}
 				}
@@ -4173,12 +4131,22 @@ public abstract class AbstractEntityPersister
 		}
 		return concretePropertySelectFragment;
 	}
+
 	public boolean hasNaturalIdentifier() {
 		return entityMetamodel.hasNaturalIdentifier();
 	}
 
-	public void setPropertyValue(Object object, String propertyName, Object value, EntityMode entityMode)
-			throws HibernateException {
-		getTuplizer( entityMode ).setPropertyValue( object, propertyName, value );
+	public void setPropertyValue(Object object, String propertyName, Object value) {
+		getEntityTuplizer().setPropertyValue( object, propertyName, value );
+	}
+
+	@Override
+	public EntityMode getEntityMode() {
+		return entityMetamodel.getEntityMode();
+	}
+
+	@Override
+	public EntityTuplizer getEntityTuplizer() {
+		return entityMetamodel.getTuplizer();
 	}
 }

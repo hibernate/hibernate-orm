@@ -22,9 +22,11 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.type.descriptor.java;
+
+import org.hibernate.type.descriptor.WrapperOptions;
+
 import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
-import org.hibernate.type.descriptor.WrapperOptions;
 
 /**
  * Descriptor for {@link Boolean} handling.

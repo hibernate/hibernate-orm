@@ -22,7 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.type;
+
 import java.util.Currency;
+
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.java.CurrencyTypeDescriptor;
 import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;

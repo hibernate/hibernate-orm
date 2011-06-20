@@ -129,7 +129,6 @@ abstract class AbstractEntityBinder {
 		// TODO: move this stuff out
 		// transfer an explicitly defined lazy attribute
 		bindPojoRepresentation( entityClazz, entityBinding );
-		bindDom4jRepresentation( entityClazz, entityBinding );
 		bindMapRepresentation( entityClazz, entityBinding );
 
 		final String entityName = entityBinding.getEntity().getName();
@@ -168,20 +167,6 @@ abstract class AbstractEntityBinder {
 		XMLTuplizerElement tuplizer = locateTuplizerDefinition( entityClazz, EntityMode.POJO );
 		if ( tuplizer != null ) {
 			entityBinding.getEntity().getPojoEntitySpecifics().setTuplizerClassName( tuplizer.getClazz() );
-		}
-	}
-
-	private void bindDom4jRepresentation(XMLHibernateMapping.XMLClass entityClazz,
-										 EntityBinding entityBinding) {
-		String nodeName = entityClazz.getNode();
-		if ( nodeName == null ) {
-			nodeName = StringHelper.unqualify( entityBinding.getEntity().getName() );
-		}
-		entityBinding.getEntity().getDom4jEntitySpecifics().setNodeName( nodeName );
-
-		XMLTuplizerElement tuplizer = locateTuplizerDefinition( entityClazz, EntityMode.DOM4J );
-		if ( tuplizer != null ) {
-			entityBinding.getEntity().getDom4jEntitySpecifics().setTuplizerClassName( tuplizer.getClazz() );
 		}
 	}
 

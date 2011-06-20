@@ -79,15 +79,6 @@ public interface SessionBuilder {
 	public SessionBuilder connectionReleaseMode(ConnectionReleaseMode connectionReleaseMode);
 
 	/**
-	 * Use a specific entity mode for these session options
-	 *
-	 * @param entityMode The entity mode to use.
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	public SessionBuilder entityMode(EntityMode entityMode);
-
-	/**
 	 * Should the session built automatically join in any ongoing JTA transactions
 	 *
 	 * @param autoJoinTransactions Should JTA transactions be automatically joined

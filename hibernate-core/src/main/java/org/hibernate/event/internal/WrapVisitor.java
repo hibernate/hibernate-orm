@@ -91,7 +91,7 @@ public class WrapVisitor extends ProxyVisitor {
 
 			final PersistenceContext persistenceContext = session.getPersistenceContext();
 			//TODO: move into collection type, so we can use polymorphism!
-			if ( collectionType.hasHolder( session.getEntityMode() ) ) {
+			if ( collectionType.hasHolder() ) {
 
 				if (collection==CollectionType.UNFETCHED_COLLECTION) return null;
 
@@ -143,7 +143,7 @@ public class WrapVisitor extends ProxyVisitor {
 				}
 			}
 			if (substituteComponent) {
-				componentType.setPropertyValues( component, values, getSession().getEntityMode() );
+				componentType.setPropertyValues( component, values, EntityMode.POJO );
 			}
 		}
 
@@ -152,12 +152,11 @@ public class WrapVisitor extends ProxyVisitor {
 
 	@Override
     void process(Object object, EntityPersister persister) throws HibernateException {
-		EntityMode entityMode = getSession().getEntityMode();
-		Object[] values = persister.getPropertyValues( object, entityMode );
-		Type[] types = persister.getPropertyTypes();
-		processEntityPropertyValues(values, types);
+		final Object[] values = persister.getPropertyValues( object );
+		final Type[] types = persister.getPropertyTypes();
+		processEntityPropertyValues( values, types );
 		if ( isSubstitutionRequired() ) {
-			persister.setPropertyValues( object, values, entityMode );
+			persister.setPropertyValues( object, values );
 		}
 	}
 }

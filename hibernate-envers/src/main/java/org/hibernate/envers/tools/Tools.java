@@ -185,6 +185,6 @@ public class Tools {
      */
     public static Class getEntityClass(SessionImplementor sessionImplementor, Session session, String entityName) {
         EntityPersister entityPersister = sessionImplementor.getFactory().getEntityPersister(entityName);
-        return entityPersister.getClassMetadata().getMappedClass(session.getEntityMode());
+        return entityPersister.getMappedClass();
     }
 }

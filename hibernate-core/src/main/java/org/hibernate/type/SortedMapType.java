@@ -22,15 +22,13 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.type;
+
 import java.io.Serializable;
 import java.util.Comparator;
 import java.util.TreeMap;
-import org.dom4j.Element;
-import org.hibernate.EntityMode;
-import org.hibernate.collection.internal.PersistentElementHolder;
+
 import org.hibernate.collection.internal.PersistentSortedMap;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.collection.internal.PersistentMapElementHolder;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 
@@ -45,31 +43,22 @@ public class SortedMapType extends MapType {
 	}
 
 	public PersistentCollection instantiate(SessionImplementor session, CollectionPersister persister, Serializable key) {
-		if ( session.getEntityMode()==EntityMode.DOM4J ) {
-			return new PersistentMapElementHolder(session, persister, key);
-		}
-		else {
-			PersistentSortedMap map = new PersistentSortedMap(session);
-			map.setComparator(comparator);
-			return map;
-		}
+		PersistentSortedMap map = new PersistentSortedMap(session);
+		map.setComparator(comparator);
+		return map;
 	}
 
 	public Class getReturnedClass() {
 		return java.util.SortedMap.class;
 	}
 
+	@SuppressWarnings( {"unchecked"})
 	public Object instantiate(int anticipatedSize) {
 		return new TreeMap(comparator);
 	}
 	
 	public PersistentCollection wrap(SessionImplementor session, Object collection) {
-		if ( session.getEntityMode()==EntityMode.DOM4J ) {
-			return new PersistentElementHolder( session, (Element) collection );
-		}
-		else {
-			return new PersistentSortedMap( session, (java.util.SortedMap) collection );
-		}
+		return new PersistentSortedMap( session, (java.util.SortedMap) collection );
 	}
 
 }

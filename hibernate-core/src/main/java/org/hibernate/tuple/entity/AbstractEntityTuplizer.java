@@ -425,7 +425,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 					injectionValues[i] = extractedValues[i];
 				}
 			}
-			virtualIdComponent.setPropertyValues( entity, injectionValues, session.getEntityMode() );
+			virtualIdComponent.setPropertyValues( entity, injectionValues, entityMode );
 		}
 	}
 

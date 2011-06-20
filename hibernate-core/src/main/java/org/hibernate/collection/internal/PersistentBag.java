@@ -99,15 +99,14 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 
 	public boolean equalsSnapshot(CollectionPersister persister) throws HibernateException {
 		Type elementType = persister.getElementType();
-		EntityMode entityMode = getSession().getEntityMode();
 		List sn = (List) getSnapshot();
 		if ( sn.size()!=bag.size() ) return false;
-		Iterator iter = bag.iterator();
-		while ( iter.hasNext() ) {
-			Object elt = iter.next();
-			final boolean unequal = countOccurrences(elt, bag, elementType, entityMode) !=
-				countOccurrences(elt, sn, elementType, entityMode);
-			if ( unequal ) return false;
+		for ( Object elt : bag ) {
+			final boolean unequal = countOccurrences( elt, bag, elementType )
+					!= countOccurrences( elt, sn, elementType );
+			if ( unequal ) {
+				return false;
+			}
 		}
 		return true;
 	}
@@ -116,23 +115,22 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 		return ( (Collection) snapshot ).isEmpty();
 	}
 
-	private int countOccurrences(Object element, List list, Type elementType, EntityMode entityMode)
+	private int countOccurrences(Object element, List list, Type elementType)
 	throws HibernateException {
 		Iterator iter = list.iterator();
 		int result=0;
 		while ( iter.hasNext() ) {
-			if ( elementType.isSame( element, iter.next(), entityMode ) ) result++;
+			if ( elementType.isSame( element, iter.next() ) ) result++;
 		}
 		return result;
 	}
 
 	public Serializable getSnapshot(CollectionPersister persister)
 	throws HibernateException {
-		EntityMode entityMode = getSession().getEntityMode();
 		ArrayList clonedList = new ArrayList( bag.size() );
 		Iterator iter = bag.iterator();
 		while ( iter.hasNext() ) {
-			clonedList.add( persister.getElementType().deepCopy( iter.next(), entityMode, persister.getFactory() ) );
+			clonedList.add( persister.getElementType().deepCopy( iter.next(), persister.getFactory() ) );
 		}
 		return clonedList;
 	}
@@ -183,7 +181,6 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 	public Iterator getDeletes(CollectionPersister persister, boolean indexIsFormula) throws HibernateException {
 		//if ( !persister.isOneToMany() ) throw new AssertionFailure("Not implemented for Bags");
 		Type elementType = persister.getElementType();
-		EntityMode entityMode = getSession().getEntityMode();
 		ArrayList deletes = new ArrayList();
 		List sn = (List) getSnapshot();
 		Iterator olditer = sn.iterator();
@@ -192,7 +189,7 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 			Object old = olditer.next();
 			Iterator newiter = bag.iterator();
 			boolean found = false;
-			if ( bag.size()>i && elementType.isSame( old, bag.get(i++), entityMode ) ) {
+			if ( bag.size()>i && elementType.isSame( old, bag.get(i++) ) ) {
 			//a shortcut if its location didn't change!
 				found = true;
 			}
@@ -200,7 +197,7 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 				//search for it
 				//note that this code is incorrect for other than one-to-many
 				while ( newiter.hasNext() ) {
-					if ( elementType.isSame( old, newiter.next(), entityMode ) ) {
+					if ( elementType.isSame( old, newiter.next() ) ) {
 						found = true;
 						break;
 					}
@@ -214,8 +211,7 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 	public boolean needsInserting(Object entry, int i, Type elemType) throws HibernateException {
 		//if ( !persister.isOneToMany() ) throw new AssertionFailure("Not implemented for Bags");
 		List sn = (List) getSnapshot();
-		final EntityMode entityMode = getSession().getEntityMode();
-		if ( sn.size()>i && elemType.isSame( sn.get(i), entry, entityMode ) ) {
+		if ( sn.size()>i && elemType.isSame( sn.get(i), entry ) ) {
 		//a shortcut if its location didn't change!
 			return false;
 		}
@@ -225,7 +221,7 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 			Iterator olditer = sn.iterator();
 			while ( olditer.hasNext() ) {
 				Object old = olditer.next();
-				if ( elemType.isSame( old, entry, entityMode ) ) return false;
+				if ( elemType.isSame( old, entry ) ) return false;
 			}
 			return true;
 		}

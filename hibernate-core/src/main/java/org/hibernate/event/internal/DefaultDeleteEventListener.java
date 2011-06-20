@@ -120,12 +120,12 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 
 			new OnUpdateVisitor( source, id, entity ).process( entity, persister );
 
-			version = persister.getVersion( entity, source.getEntityMode() );
+			version = persister.getVersion( entity );
 
 			entityEntry = persistenceContext.addEntity(
 					entity,
 					( persister.isMutable() ? Status.MANAGED : Status.READ_ONLY ),
-					persister.getPropertyValues( entity, source.getEntityMode() ),
+					persister.getPropertyValues( entity ),
 					key,
 					version,
 					LockMode.NONE,
@@ -238,7 +238,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 
 		final Object[] currentState;
 		if ( entityEntry.getLoadedState() == null ) { //ie. the entity came in from update()
-			currentState = persister.getPropertyValues( entity, session.getEntityMode() );
+			currentState = persister.getPropertyValues( entity );
 		}
 		else {
 			currentState = entityEntry.getLoadedState();
@@ -298,7 +298,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 	}
 
 	protected boolean invokeDeleteLifecycle(EventSource session, Object entity, EntityPersister persister) {
-		if ( persister.implementsLifecycle( session.getEntityMode() ) ) {
+		if ( persister.implementsLifecycle() ) {
             LOG.debugf("Calling onDelete()");
 			if ( ( ( Lifecycle ) entity ).onDelete( session ) ) {
                 LOG.debugf("Deletion vetoed by onDelete()");

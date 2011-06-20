@@ -31,7 +31,6 @@ import java.util.Stack;
 
 import org.jboss.logging.Logger;
 
-import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CascadeStyle;
@@ -151,8 +150,7 @@ public final class Cascade {
 
 			Type[] types = persister.getPropertyTypes();
 			CascadeStyle[] cascadeStyles = persister.getPropertyCascadeStyles();
-			EntityMode entityMode = eventSource.getEntityMode();
-			boolean hasUninitializedLazyProperties = persister.hasUninitializedLazyProperties( parent, entityMode );
+			boolean hasUninitializedLazyProperties = persister.hasUninitializedLazyProperties( parent );
 			for ( int i=0; i<types.length; i++) {
 				final CascadeStyle style = cascadeStyles[i];
 				final String propertyName = persister.getPropertyNames()[i];
@@ -164,7 +162,7 @@ public final class Cascade {
 				if ( style.doCascade( action ) ) {
 					cascadeProperty(
 						    parent,
-					        persister.getPropertyValue( parent, i, entityMode ),
+					        persister.getPropertyValue( parent, i ),
 					        types[i],
 					        style,
 							propertyName,
@@ -175,7 +173,7 @@ public final class Cascade {
 				else if ( action.requiresNoCascadeChecking() ) {
 					action.noCascade(
 							eventSource,
-							persister.getPropertyValue( parent, i, entityMode ),
+							persister.getPropertyValue( parent, i ),
 							parent,
 							persister,
 							i
@@ -277,26 +275,10 @@ public final class Cascade {
 		return type.isEntityType() && ( (EntityType) type ).isLogicalOneToOne();
 	}
 
-	private String composePropertyPath(String propertyName) {
-		if ( componentPathStack.isEmpty() ) {
-			return propertyName;
-		}
-		else {
-			StringBuffer buffer = new StringBuffer();
-			Iterator itr = componentPathStack.iterator();
-			while ( itr.hasNext() ) {
-				buffer.append( itr.next() ).append( '.' );
-			}
-			buffer.append( propertyName );
-			return buffer.toString();
-		}
-	}
-
 	private Stack componentPathStack = new Stack();
 
 	private boolean cascadeAssociationNow(AssociationType associationType) {
-		return associationType.getForeignKeyDirection().cascadeNow(cascadeTo) &&
-			( eventSource.getEntityMode()!=EntityMode.DOM4J || associationType.isEmbeddedInXML() );
+		return associationType.getForeignKeyDirection().cascadeNow(cascadeTo);
 	}
 
 	private void cascadeComponent(
@@ -410,12 +392,8 @@ public final class Cascade {
 			final Type elemType,
 			final Object anything,
 			final boolean isCascadeDeleteEnabled) throws HibernateException {
-		// we can't cascade to non-embedded elements
-		boolean embeddedElements = eventSource.getEntityMode()!=EntityMode.DOM4J ||
-				( (EntityType) collectionType.getElementType( eventSource.getFactory() ) ).isEmbeddedInXML();
 
-		boolean reallyDoCascade = style.reallyDoCascade(action) &&
-			embeddedElements && child!=CollectionType.UNFETCHED_COLLECTION;
+		boolean reallyDoCascade = style.reallyDoCascade(action) && child!=CollectionType.UNFETCHED_COLLECTION;
 
 		if ( reallyDoCascade ) {
             LOG.trace("Cascade " + action + " for collection: " + collectionType.getRole());

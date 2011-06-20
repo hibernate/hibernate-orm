@@ -69,7 +69,7 @@ public class BatchingCollectionInitializer implements CollectionInitializer {
 	throws HibernateException {
 		
 		Serializable[] batch = session.getPersistenceContext().getBatchFetchQueue()
-			.getCollectionBatch( collectionPersister, id, batchSizes[0], session.getEntityMode() );
+				.getCollectionBatch( collectionPersister, id, batchSizes[0] );
 		
 		for ( int i=0; i<batchSizes.length-1; i++) {
 			final int smallBatchSize = batchSizes[i];

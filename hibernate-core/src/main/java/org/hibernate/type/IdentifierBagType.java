@@ -22,8 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.type;
+
 import java.io.Serializable;
 import java.util.ArrayList;
+
 import org.hibernate.HibernateException;
 import org.hibernate.collection.internal.PersistentIdentifierBag;
 import org.hibernate.collection.spi.PersistentCollection;

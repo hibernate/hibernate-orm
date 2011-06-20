@@ -608,10 +608,10 @@ public final class HbmBinder {
 		if (nodeName==null) nodeName = StringHelper.unqualify( entity.getEntityName() );
 		entity.setNodeName(nodeName);
 
-		Element tuplizer = locateTuplizerDefinition( node, EntityMode.DOM4J );
-		if ( tuplizer != null ) {
-			entity.addTuplizer( EntityMode.DOM4J, tuplizer.attributeValue( "class" ) );
-		}
+//		Element tuplizer = locateTuplizerDefinition( node, EntityMode.DOM4J );
+//		if ( tuplizer != null ) {
+//			entity.addTuplizer( EntityMode.DOM4J, tuplizer.attributeValue( "class" ) );
+//		}
 	}
 
 	private static void bindMapRepresentation(Element node, PersistentClass entity,

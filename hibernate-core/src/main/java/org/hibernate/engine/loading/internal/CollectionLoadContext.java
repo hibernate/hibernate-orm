@@ -108,7 +108,7 @@ public class CollectionLoadContext {
 	 * @return The loading collection (see discussion above).
 	 */
 	public PersistentCollection getLoadingCollection(final CollectionPersister persister, final Serializable key) {
-		final EntityMode em = loadContexts.getPersistenceContext().getSession().getEntityMode();
+		final EntityMode em = persister.getOwnerEntityPersister().getEntityMetamodel().getEntityMode();
 		final CollectionKey collectionKey = new CollectionKey( persister, key, em );
         if (LOG.isTraceEnabled()) LOG.trace("Starting attempt to find loading collection ["
                                             + MessageHelper.collectionInfoString(persister.getRole(), key) + "]");
@@ -126,8 +126,7 @@ public class CollectionLoadContext {
 			else {
 				Object owner = loadContexts.getPersistenceContext().getCollectionOwner( key, persister );
 				final boolean newlySavedEntity = owner != null
-						&& loadContexts.getPersistenceContext().getEntry( owner ).getStatus() != Status.LOADING
-						&& em != EntityMode.DOM4J;
+						&& loadContexts.getPersistenceContext().getEntry( owner ).getStatus() != Status.LOADING;
 				if ( newlySavedEntity ) {
 					// important, to account for newly saved entities in query
 					// todo : some kind of check for new status...
@@ -189,7 +188,11 @@ public class CollectionLoadContext {
 				matches.add( lce );
 				if ( lce.getCollection().getOwner() == null ) {
 					session.getPersistenceContext().addUnownedCollection(
-							new CollectionKey( persister, lce.getKey(), session.getEntityMode() ),
+							new CollectionKey(
+									persister,
+									lce.getKey(),
+									persister.getOwnerEntityPersister().getEntityMetamodel().getEntityMode()
+							),
 							lce.getCollection()
 					);
 				}
@@ -233,11 +236,10 @@ public class CollectionLoadContext {
 	private void endLoadingCollection(LoadingCollectionEntry lce, CollectionPersister persister) {
         LOG.trace("Ending loading collection [" + lce + "]");
 		final SessionImplementor session = getLoadContext().getPersistenceContext().getSession();
-		final EntityMode em = session.getEntityMode();
 
 		boolean hasNoQueuedAdds = lce.getCollection().endRead(); // warning: can cause a recursive calls! (proxy initialization)
 
-		if ( persister.getCollectionType().hasHolder( em ) ) {
+		if ( persister.getCollectionType().hasHolder() ) {
 			getLoadContext().getPersistenceContext().addCollectionHolder( lce.getCollection() );
 		}
 
@@ -255,9 +257,15 @@ public class CollectionLoadContext {
 				!ce.isDoremove();                   // and this is not a forced initialization during flush
         if (addToCache) addCollectionToCache(lce, persister);
 
-        if (LOG.isDebugEnabled()) LOG.debugf("Collection fully initialized: %s",
-                                             MessageHelper.collectionInfoString(persister, lce.getKey(), session.getFactory()));
-        if (session.getFactory().getStatistics().isStatisticsEnabled()) session.getFactory().getStatisticsImplementor().loadCollection(persister.getRole());
+        if (LOG.isDebugEnabled()) {
+			LOG.debugf(
+					"Collection fully initialized: %s",
+					MessageHelper.collectionInfoString(persister, lce.getKey(), session.getFactory())
+			);
+		}
+        if (session.getFactory().getStatistics().isStatisticsEnabled()) {
+			session.getFactory().getStatisticsImplementor().loadCollection(persister.getRole());
+		}
 	}
 
 	/**

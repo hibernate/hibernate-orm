@@ -758,14 +758,6 @@ public abstract class Loader {
 		}
 	}
 
-	private Serializable determineResultId(SessionImplementor session, Serializable optionalId, Type idType, Serializable resolvedId) {
-		final boolean idIsResultId = optionalId != null
-				&& resolvedId != null
-				&& idType.isEqual( optionalId, resolvedId, session.getEntityMode(), factory );
-		final Serializable resultId = idIsResultId ? optionalId : resolvedId;
-		return resultId;
-	}
-
 	protected void applyPostLoadLocks(Object[] row, LockMode[] lockModesArray, SessionImplementor session) {
 	}
 
@@ -1298,7 +1290,7 @@ public abstract class Loader {
 
 			final boolean idIsResultId = id != null &&
 					resultId != null &&
-					idType.isEqual( id, resultId, session.getEntityMode(), factory );
+					idType.isEqual( id, resultId, factory );
 
 			if ( idIsResultId ) resultId = id; //use the id passed in
 		}
@@ -1418,15 +1410,15 @@ public abstract class Loader {
 	 * The entity instance is already in the session cache
 	 */
 	private void instanceAlreadyLoaded(
-	        final ResultSet rs,
+			final ResultSet rs,
 	        final int i,
 	        final Loadable persister,
 	        final EntityKey key,
 	        final Object object,
 	        final LockMode lockMode,
 	        final SessionImplementor session)
-	throws HibernateException, SQLException {
-		if ( !persister.isInstance( object, session.getEntityMode() ) ) {
+			throws HibernateException, SQLException {
+		if ( !persister.isInstance( object ) ) {
 			throw new WrongClassException(
 					"loaded object was of wrong class " + object.getClass(),
 					key.getIdentifier(),
@@ -1588,8 +1580,9 @@ public abstract class Loader {
 						ukName,
 						type.semiResolve( values[index], session, object ),
 						type,
-						session.getEntityMode(), session.getFactory()
-					);
+						persister.getEntityMode(),
+						session.getFactory()
+				);
 				session.getPersistenceContext().addEntity( euk, object );
 			}
 		}
@@ -2344,10 +2337,7 @@ public abstract class Loader {
 		return QueryKey.generateQueryKey(
 				getSQLString(),
 				queryParameters,
-				FilterKey.createFilterKeys(
-						session.getLoadQueryInfluencers().getEnabledFilters(),
-						session.getEntityMode()
-				),
+				FilterKey.createFilterKeys( session.getLoadQueryInfluencers().getEnabledFilters() ),
 				session,
 				createCacheableResultTransformer( queryParameters )
 		);

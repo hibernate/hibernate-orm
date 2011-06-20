@@ -25,16 +25,7 @@ package org.hibernate.engine.spi;
 
 import java.io.Serializable;
 
-import org.hibernate.event.spi.EventSource;
-
 public interface NonFlushedChanges extends Serializable {
-	/**
-	 * Extracts the non-flushed Changes from an EventSource into this NonFlushedChanges object.
-	 * <p>
-	 * @param source The session
-	 */
-	void extractFromSession(EventSource source);
-
 	/**
 	 * Remove the non-flushed changes from this NonFlushedChanges object.
 	 */

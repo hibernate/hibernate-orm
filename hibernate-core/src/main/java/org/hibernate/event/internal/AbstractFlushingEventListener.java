@@ -126,9 +126,8 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 					persistenceContext.getCollectionEntries().size()
 			);
 			new Printer( session.getFactory() ).toString(
-					persistenceContext.getEntitiesByKey().values().iterator(),
-					session.getEntityMode()
-				);
+					persistenceContext.getEntitiesByKey().values().iterator()
+			);
 		}
 	}
 
@@ -376,11 +375,9 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 				//otherwise recreate the mapping between the collection and its key
 				CollectionKey collectionKey = new CollectionKey(
 						collectionEntry.getLoadedPersister(),
-						collectionEntry.getLoadedKey(),
-						session.getEntityMode()
-					);
-				persistenceContext.getCollectionsByKey()
-						.put(collectionKey, persistentCollection);
+						collectionEntry.getLoadedKey()
+				);
+				persistenceContext.getCollectionsByKey().put(collectionKey, persistentCollection);
 			}
 		}
 

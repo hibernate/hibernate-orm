@@ -39,10 +39,11 @@ import java.util.Set;
  * A <tt>Map</tt> where keys are compared by object identity,
  * rather than <tt>equals()</tt>.
  */
-public final class IdentityMap implements Map {
+public final class IdentityMap<K,V> implements Map<K,V> {
 
-	private final Map map;
-	private transient Map.Entry[] entryArray = new Map.Entry[0];
+	private final Map<IdentityKey<K>,V> map;
+	@SuppressWarnings( {"unchecked"})
+	private transient Entry<IdentityKey<K>,V>[] entryArray = new Entry[0];
 	private transient boolean dirty = false;
 
 	/**
@@ -52,8 +53,8 @@ public final class IdentityMap implements Map {
 	 * @param size The size of the map
 	 * @return Map
 	 */
-	public static Map instantiate(int size) {
-		return new IdentityMap( new HashMap( size ) );
+	public static <K,V> IdentityMap<K,V> instantiate(int size) {
+		return new IdentityMap<K,V>( new HashMap<IdentityKey<K>,V>( size ) );
 	}
 
 	/**
@@ -61,10 +62,10 @@ public final class IdentityMap implements Map {
 	 * order defined as the order in which entries were added
 	 *
 	 * @param size The size of the map to create
-	 * @return
+	 * @return The map
 	 */
-	public static Map instantiateSequenced(int size) {
-		return new IdentityMap( new LinkedHashMap( size ) );
+	public static <K,V> IdentityMap<K,V> instantiateSequenced(int size) {
+		return new IdentityMap<K,V>( new LinkedHashMap<IdentityKey<K>,V>( size ) );
 	}
 
 	/**
@@ -72,7 +73,7 @@ public final class IdentityMap implements Map {
 	 *
 	 * @param underlyingMap The delegate map.
 	 */
-	private IdentityMap(Map underlyingMap) {
+	private IdentityMap(Map<IdentityKey<K>,V> underlyingMap) {
 		map = underlyingMap;
 		dirty = true;
 	}
@@ -82,7 +83,7 @@ public final class IdentityMap implements Map {
 	 * is safe from concurrent modification). ie. we may safely add new instances to
 	 * the underlying <tt>Map</tt> during iteration of the <tt>entries()</tt>.
 	 *
-	 * @param map
+	 * @param map The map of entries
 	 * @return Collection
 	 */
 	public static Map.Entry[] concurrentEntries(Map map) {
@@ -101,47 +102,54 @@ public final class IdentityMap implements Map {
 		return new KeyIterator( map.keySet().iterator() );
 	}
 
-	public static final class IdentityMapEntry implements java.util.Map.Entry {
-		IdentityMapEntry(Object key, Object value) {
+	public static final class IdentityMapEntry<K,V> implements java.util.Map.Entry<K,V> {
+		private K key;
+		private V value;
+
+		IdentityMapEntry(K key, V value) {
 			this.key=key;
 			this.value=value;
 		}
-		private Object key;
-		private Object value;
-		public Object getKey() {
+
+		public K getKey() {
 			return key;
 		}
 
-		public Object getValue() {
+		public V getValue() {
 			return value;
 		}
 
-		public Object setValue(Object value) {
-			Object result = this.value;
+		public V setValue(V value) {
+			V result = this.value;
 			this.value = value;
 			return result;
 		}
 	}
 
-	public static final class IdentityKey implements Serializable {
-		private Object key;
+	public static final class IdentityKey<K> implements Serializable {
+		private K key;
 
-		IdentityKey(Object key) {
+		IdentityKey(K key) {
 			this.key=key;
 		}
+
+		@SuppressWarnings( {"EqualsWhichDoesntCheckParameterClass"})
 		@Override
         public boolean equals(Object other) {
 			return key == ( (IdentityKey) other ).key;
 		}
+
 		@Override
         public int hashCode() {
 			return System.identityHashCode(key);
 		}
+
 		@Override
         public String toString() {
 			return key.toString();
 		}
-		public Object getRealKey() {
+
+		public K getRealKey() {
 			return key;
 		}
 	}
@@ -154,81 +162,87 @@ public final class IdentityMap implements Map {
 		return map.isEmpty();
 	}
 
+	@Override
+	@SuppressWarnings( {"unchecked"})
 	public boolean containsKey(Object key) {
 		IdentityKey k = new IdentityKey(key);
 		return map.containsKey(k);
 	}
 
+	@Override
 	public boolean containsValue(Object val) {
 		return map.containsValue(val);
 	}
 
-	public Object get(Object key) {
-		IdentityKey k = new IdentityKey(key);
-		return map.get(k);
+	@Override
+	@SuppressWarnings( {"unchecked"})
+	public V get(Object key) {
+		return map.get( new IdentityKey(key) );
 	}
 
-	public Object put(Object key, Object value) {
+	@Override
+	public V put(K key, V value) {
 		dirty = true;
-		return map.put( new IdentityKey(key), value );
+		return map.put( new IdentityKey<K>(key), value );
 	}
 
-	public Object remove(Object key) {
+	@Override
+	@SuppressWarnings( {"unchecked"})
+	public V remove(Object key) {
 		dirty = true;
-		IdentityKey k = new IdentityKey(key);
-		return map.remove(k);
+		return map.remove( new IdentityKey(key) );
 	}
 
-	public void putAll(Map otherMap) {
-		Iterator iter = otherMap.entrySet().iterator();
-		while ( iter.hasNext() ) {
-			Map.Entry me = (Map.Entry) iter.next();
-			put( me.getKey(), me.getValue() );
+	@Override
+	public void putAll(Map<? extends K, ? extends V> otherMap) {
+		for ( Entry<? extends K, ? extends V> entry : otherMap.entrySet() ) {
+			put( entry.getKey(), entry.getValue() );
 		}
 	}
 
+	@Override
 	public void clear() {
 		dirty = true;
 		entryArray = null;
 		map.clear();
 	}
 
-	public Set keySet() {
+	@Override
+	public Set<K> keySet() {
 		// would need an IdentitySet for this!
 		throw new UnsupportedOperationException();
 	}
 
-	public Collection values() {
+	@Override
+	public Collection<V> values() {
 		return map.values();
 	}
 
-	public Set entrySet() {
-		Set set = new HashSet( map.size() );
-		Iterator iter = map.entrySet().iterator();
-		while ( iter.hasNext() ) {
-			Map.Entry me = (Map.Entry) iter.next();
-			set.add( new IdentityMapEntry( ( (IdentityKey) me.getKey() ).key, me.getValue() ) );
+	@Override
+	public Set<Entry<K,V>> entrySet() {
+		Set<Entry<K,V>> set = new HashSet<Entry<K,V>>( map.size() );
+		for ( Entry<IdentityKey<K>, V> entry : map.entrySet() ) {
+			set.add( new IdentityMapEntry<K,V>( entry.getKey().getRealKey(), entry.getValue() ) );
 		}
 		return set;
 	}
 
-	public List entryList() {
-		ArrayList list = new ArrayList( map.size() );
-		Iterator iter = map.entrySet().iterator();
-		while ( iter.hasNext() ) {
-			Map.Entry me = (Map.Entry) iter.next();
-			list.add( new IdentityMapEntry( ( (IdentityKey) me.getKey() ).key, me.getValue() ) );
+	public List<Entry<K,V>> entryList() {
+		ArrayList<Entry<K,V>> list = new ArrayList<Entry<K,V>>( map.size() );
+		for ( Entry<IdentityKey<K>, V> entry : map.entrySet() ) {
+			list.add( new IdentityMapEntry<K,V>( entry.getKey().getRealKey(), entry.getValue() ) );
 		}
 		return list;
 	}
 
+	@SuppressWarnings( {"unchecked"})
 	public Map.Entry[] entryArray() {
 		if (dirty) {
 			entryArray = new Map.Entry[ map.size() ];
-			Iterator iter = map.entrySet().iterator();
+			Iterator itr = map.entrySet().iterator();
 			int i=0;
-			while ( iter.hasNext() ) {
-				Map.Entry me = (Map.Entry) iter.next();
+			while ( itr.hasNext() ) {
+				Map.Entry me = (Map.Entry) itr.next();
 				entryArray[i++] = new IdentityMapEntry( ( (IdentityKey) me.getKey() ).key, me.getValue() );
 			}
 			dirty = false;
@@ -240,7 +254,7 @@ public final class IdentityMap implements Map {
 	 * Workaround for a JDK 1.4.1 bug where <tt>IdentityHashMap</tt>s are not
 	 * correctly deserialized.
 	 *
-	 * @param map
+	 * @param map The map to serialize
 	 * @return Object
 	 */
 	public static Object serialize(Map map) {
@@ -251,11 +265,12 @@ public final class IdentityMap implements Map {
 	 * Workaround for a JDK 1.4.1 bug where <tt>IdentityHashMap</tt>s are not
 	 * correctly deserialized.
 	 *
-	 * @param o
-	 * @return Map
+	 * @param o the serialized map data
+	 * @return The deserialized map
 	 */
-	public static Map deserialize(Object o) {
-		return new IdentityMap( (Map) o );
+	@SuppressWarnings( {"unchecked"})
+	public static <K,V> Map<K,V> deserialize(Object o) {
+		return new IdentityMap<K,V>( (Map<IdentityKey<K>,V>) o );
 	}
 	
 	@Override
@@ -263,30 +278,27 @@ public final class IdentityMap implements Map {
 		return map.toString();
 	}
 
-	public static Map invert(Map map) {
-		Map result = instantiate( map.size() );
-		Iterator iter = map.entrySet().iterator();
-		while ( iter.hasNext() ) {
-			Map.Entry me = (Map.Entry) iter.next();
-			result.put( me.getValue(), me.getKey() );
+	public static <K,V> IdentityMap<V,K> invert(IdentityMap<K,V> map) {
+		IdentityMap<V,K> result = instantiate( map.size() );
+		for ( Entry<K, V> entry : map.entrySet() ) {
+			result.put( entry.getValue(), entry.getKey() );
 		}
 		return result;
 	}
 
-	static final class KeyIterator implements Iterator {
+	static final class KeyIterator<K> implements Iterator<K> {
+		private final Iterator<IdentityKey<K>> identityKeyIterator;
 
-		private KeyIterator(Iterator iter) {
-			identityKeyIterator = iter;
+		private KeyIterator(Iterator<IdentityKey<K>> iterator) {
+			identityKeyIterator = iterator;
 		}
-
-		private final Iterator identityKeyIterator;
 
 		public boolean hasNext() {
 			return identityKeyIterator.hasNext();
 		}
 
-		public Object next() {
-			return ( (IdentityKey) identityKeyIterator.next() ).key;
+		public K next() {
+			return identityKeyIterator.next().getRealKey();
 		}
 
 		public void remove() {

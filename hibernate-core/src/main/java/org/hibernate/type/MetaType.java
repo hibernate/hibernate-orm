@@ -22,14 +22,16 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.type;
+
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+
 import org.dom4j.Node;
-import org.hibernate.EntityMode;
+
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.Mapping;
@@ -137,7 +139,7 @@ public class MetaType extends AbstractType {
 		return baseType.getName(); //TODO!
 	}
 
-	public Object deepCopy(Object value, EntityMode entityMode, SessionFactoryImplementor factory) 
+	public Object deepCopy(Object value, SessionFactoryImplementor factory)
 	throws HibernateException {
 		return value;
 	}

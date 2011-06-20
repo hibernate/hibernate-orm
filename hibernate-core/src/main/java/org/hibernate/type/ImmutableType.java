@@ -23,7 +23,7 @@
  */
 package org.hibernate.type;
 import java.util.Map;
-import org.hibernate.EntityMode;
+
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -36,7 +36,7 @@ import org.hibernate.engine.spi.SessionImplementor;
  */
 public abstract class ImmutableType extends NullableType {
 
-	public final Object deepCopy(Object value, EntityMode entityMode, SessionFactoryImplementor factory) {
+	public final Object deepCopy(Object value, SessionFactoryImplementor factory) {
 		return value;
 	}
 

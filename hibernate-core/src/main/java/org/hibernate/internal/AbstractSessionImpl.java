@@ -237,12 +237,12 @@ public abstract class AbstractSessionImpl implements Serializable, SharedSession
 
 	@Override
 	public EntityKey generateEntityKey(Serializable id, EntityPersister persister) {
-		return new EntityKey( id, persister, getEntityMode(), getTenantIdentifier() );
+		return new EntityKey( id, persister, getTenantIdentifier() );
 	}
 
 	@Override
 	public CacheKey generateCacheKey(Serializable id, Type type, String entityOrRoleName) {
-		return new CacheKey( id, type, entityOrRoleName, getEntityMode(), getTenantIdentifier(), getFactory() );
+		return new CacheKey( id, type, entityOrRoleName, getTenantIdentifier(), getFactory() );
 	}
 
 	private transient JdbcConnectionAccess jdbcConnectionAccess;

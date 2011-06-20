@@ -182,7 +182,7 @@ public final class EntityEntry implements Serializable {
 			if ( getId() == null ) {
 				throw new IllegalStateException( "cannot generate an EntityKey when id is null.");
 			}
-			cachedEntityKey = new EntityKey( getId(), getPersister(), entityMode, tenantId );
+			cachedEntityKey = new EntityKey( getId(), getPersister(), tenantId );
 		}
 		return cachedEntityKey;
 	}
@@ -215,12 +215,7 @@ public final class EntityEntry implements Serializable {
 
 		if ( getPersister().isVersioned() ) {
 			this.version = nextVersion;
-			getPersister().setPropertyValue(
-					entity,
-					getPersister().getVersionProperty(), 
-					nextVersion, 
-					entityMode 
-			);
+			getPersister().setPropertyValue( entity, getPersister().getVersionProperty(), nextVersion );
 		}
 
 		FieldInterceptionHelper.clearDirty( entity );
@@ -288,12 +283,7 @@ public final class EntityEntry implements Serializable {
 		loadedState[ persister.getVersionProperty() ] = version;
 		//noinspection deprecation
 		setLockMode( LockMode.FORCE );  // TODO:  use LockMode.PESSIMISTIC_FORCE_INCREMENT
-		persister.setPropertyValue(
-				entity,
-		        getPersister().getVersionProperty(),
-		        nextVersion,
-		        entityMode
-		);
+		persister.setPropertyValue( entity, getPersister().getVersionProperty(), nextVersion );
 	}
 
 	public boolean isReadOnly() {
@@ -317,7 +307,7 @@ public final class EntityEntry implements Serializable {
 				throw new IllegalStateException( "Cannot make an immutable entity modifiable." );
 			}
 			setStatus( Status.MANAGED );
-			loadedState = getPersister().getPropertyValues( entity, entityMode );
+			loadedState = getPersister().getPropertyValues( entity );
 		}
 	}
 	

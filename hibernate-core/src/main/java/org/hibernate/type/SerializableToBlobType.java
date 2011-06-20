@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.type;
+
 import java.io.ByteArrayInputStream;
 import java.io.Serializable;
 import java.sql.Blob;
@@ -31,8 +32,9 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Map;
 import java.util.Properties;
+
 import org.dom4j.Node;
-import org.hibernate.EntityMode;
+
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -63,14 +65,14 @@ public class SerializableToBlobType extends AbstractLobType implements Parameter
 	}
 
 	@Override
-	public boolean isEqual(Object x, Object y, EntityMode entityMode, SessionFactoryImplementor factory) {
+	public boolean isEqual(Object x, Object y, SessionFactoryImplementor factory) {
 		return type.isEqual( x, y );
 	}
 
 
 	@Override
-	public int getHashCode(Object x, EntityMode entityMode, SessionFactoryImplementor session) {
-		return type.getHashCode( x, null );
+	public int getHashCode(Object x, SessionFactoryImplementor session) {
+		return type.getHashCode( x );
 	}
 
 	public Object get(ResultSet rs, String name) throws SQLException {
@@ -117,9 +119,9 @@ public class SerializableToBlobType extends AbstractLobType implements Parameter
 		return type.fromXMLNode( xml, factory );
 	}
 
-	public Object deepCopy(Object value, EntityMode entityMode, SessionFactoryImplementor factory)
+	public Object deepCopy(Object value, SessionFactoryImplementor factory)
 			throws HibernateException {
-		return type.deepCopy( value, null, null );
+		return type.deepCopy( value, null );
 	}
 
 	public boolean isMutable() {

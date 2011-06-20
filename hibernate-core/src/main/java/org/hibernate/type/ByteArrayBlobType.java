@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.type;
+
 import java.io.ByteArrayInputStream;
 import java.sql.Blob;
 import java.sql.PreparedStatement;
@@ -29,8 +30,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Map;
+
 import org.dom4j.Node;
-import org.hibernate.EntityMode;
+
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.Mapping;
@@ -54,7 +56,7 @@ public class ByteArrayBlobType extends AbstractLobType {
 	}
 
 	@Override
-	public boolean isEqual(Object x, Object y, EntityMode entityMode, SessionFactoryImplementor factory) {
+	public boolean isEqual(Object x, Object y, SessionFactoryImplementor factory) {
 		if ( x == y ) return true;
 		if ( x == null || y == null ) return false;
 		if ( x instanceof Byte[] ) {
@@ -69,7 +71,7 @@ public class ByteArrayBlobType extends AbstractLobType {
 		}
 	}
 
-	public int getHashCode(Object x, EntityMode entityMode, SessionFactoryImplementor factory) {
+	public int getHashCode(Object x, SessionFactoryImplementor factory) {
 		if ( x instanceof Character[] ) {
 			Object[] o = (Object[]) x;
 			return ArrayHelper.hash( o );
@@ -80,7 +82,7 @@ public class ByteArrayBlobType extends AbstractLobType {
 		}
 	}
 
-	public Object deepCopy(Object value, EntityMode entityMode, SessionFactoryImplementor factory)
+	public Object deepCopy(Object value, SessionFactoryImplementor factory)
 			throws HibernateException {
 		if ( value == null ) return null;
 		if ( value instanceof Byte[] ) {
@@ -207,8 +209,8 @@ public class ByteArrayBlobType extends AbstractLobType {
 			Map copyCache
 	)
 			throws HibernateException {
-		if ( isEqual( original, target, session.getEntityMode() ) ) return original;
-		return deepCopy( original, session.getEntityMode(), session.getFactory() );
+		if ( isEqual( original, target ) ) return original;
+		return deepCopy( original, session.getFactory() );
 	}
 
 	public boolean[] toColumnNullness(Object value, Mapping mapping) {

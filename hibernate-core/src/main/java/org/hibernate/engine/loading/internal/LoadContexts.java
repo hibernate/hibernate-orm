@@ -26,13 +26,11 @@ package org.hibernate.engine.loading.internal;
 import java.io.Serializable;
 import java.sql.ResultSet;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
 import org.jboss.logging.Logger;
 
-import org.hibernate.EntityMode;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -63,10 +61,10 @@ public class LoadContexts {
     private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, LoadContexts.class.getName());
 
 	private final PersistenceContext persistenceContext;
-	private Map collectionLoadContexts;
-	private Map entityLoadContexts;
+	private Map<ResultSet,CollectionLoadContext> collectionLoadContexts;
+	private Map<ResultSet,EntityLoadContext> entityLoadContexts;
 
-	private Map xrefLoadingCollectionEntries;
+	private Map<CollectionKey,LoadingCollectionEntry> xrefLoadingCollectionEntries;
 
 	/**
 	 * Creates and binds this to the given persistence context.
@@ -91,10 +89,6 @@ public class LoadContexts {
 		return getPersistenceContext().getSession();
 	}
 
-	private EntityMode getEntityMode() {
-		return getSession().getEntityMode();
-	}
-
 
 	// cleanup code ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -109,11 +103,11 @@ public class LoadContexts {
 	 */
 	public void cleanup(ResultSet resultSet) {
 		if ( collectionLoadContexts != null ) {
-			CollectionLoadContext collectionLoadContext = ( CollectionLoadContext ) collectionLoadContexts.remove( resultSet );
+			CollectionLoadContext collectionLoadContext = collectionLoadContexts.remove( resultSet );
 			collectionLoadContext.cleanup();
 		}
 		if ( entityLoadContexts != null ) {
-			EntityLoadContext entityLoadContext = ( EntityLoadContext ) entityLoadContexts.remove( resultSet );
+			EntityLoadContext entityLoadContext = entityLoadContexts.remove( resultSet );
 			entityLoadContext.cleanup();
 		}
 	}
@@ -126,19 +120,15 @@ public class LoadContexts {
 	 */
 	public void cleanup() {
 		if ( collectionLoadContexts != null ) {
-			Iterator itr = collectionLoadContexts.values().iterator();
-			while ( itr.hasNext() ) {
-				CollectionLoadContext collectionLoadContext = ( CollectionLoadContext ) itr.next();
-                LOG.failSafeCollectionsCleanup(collectionLoadContext);
+			for ( CollectionLoadContext collectionLoadContext : collectionLoadContexts.values() ) {
+				LOG.failSafeCollectionsCleanup( collectionLoadContext );
 				collectionLoadContext.cleanup();
 			}
 			collectionLoadContexts.clear();
 		}
 		if ( entityLoadContexts != null ) {
-			Iterator itr = entityLoadContexts.values().iterator();
-			while ( itr.hasNext() ) {
-				EntityLoadContext entityLoadContext = ( EntityLoadContext ) itr.next();
-                LOG.failSafeEntitiesCleanup(entityLoadContext);
+			for ( EntityLoadContext entityLoadContext : entityLoadContexts.values() ) {
+				LOG.failSafeEntitiesCleanup( entityLoadContext );
 				entityLoadContext.cleanup();
 			}
 			entityLoadContexts.clear();
@@ -180,12 +170,16 @@ public class LoadContexts {
 	 */
 	public CollectionLoadContext getCollectionLoadContext(ResultSet resultSet) {
 		CollectionLoadContext context = null;
-        if (collectionLoadContexts == null) collectionLoadContexts = IdentityMap.instantiate(8);
-        else context = (CollectionLoadContext)collectionLoadContexts.get(resultSet);
+        if ( collectionLoadContexts == null ) {
+			collectionLoadContexts = IdentityMap.instantiate( 8 );
+		}
+        else {
+			context = collectionLoadContexts.get(resultSet);
+		}
 		if ( context == null ) {
-                   if (LOG.isTraceEnabled()) {
-                      LOG.trace("Constructing collection load context for result set [" + resultSet + "]");
-                   }
+			if (LOG.isTraceEnabled()) {
+				LOG.trace("Constructing collection load context for result set [" + resultSet + "]");
+			}
 			context = new CollectionLoadContext( this, resultSet );
 			collectionLoadContexts.put( resultSet, context );
 		}
@@ -201,15 +195,23 @@ public class LoadContexts {
 	 * @return The loading collection, or null if not found.
 	 */
 	public PersistentCollection locateLoadingCollection(CollectionPersister persister, Serializable ownerKey) {
-		LoadingCollectionEntry lce = locateLoadingCollectionEntry( new CollectionKey( persister, ownerKey, getEntityMode() ) );
+		LoadingCollectionEntry lce = locateLoadingCollectionEntry( new CollectionKey( persister, ownerKey ) );
 		if ( lce != null ) {
-            if (LOG.isTraceEnabled()) LOG.trace("Returning loading collection: "
-                                                + MessageHelper.collectionInfoString(persister, ownerKey, getSession().getFactory()));
+            if ( LOG.isTraceEnabled() ) {
+				LOG.tracef(
+						"Returning loading collection: %s",
+						MessageHelper.collectionInfoString( persister, ownerKey, getSession().getFactory() )
+				);
+			}
 			return lce.getCollection();
 		}
         // TODO : should really move this log statement to CollectionType, where this is used from...
-        if (LOG.isTraceEnabled()) LOG.trace("Creating collection wrapper: "
-                                            + MessageHelper.collectionInfoString(persister, ownerKey, getSession().getFactory()));
+        if ( LOG.isTraceEnabled() ) {
+			LOG.tracef(
+					"Creating collection wrapper: %s",
+					MessageHelper.collectionInfoString( persister, ownerKey, getSession().getFactory() )
+			);
+		}
         return null;
 	}
 
@@ -231,7 +233,7 @@ public class LoadContexts {
 	 */
 	void registerLoadingCollectionXRef(CollectionKey entryKey, LoadingCollectionEntry entry) {
 		if ( xrefLoadingCollectionEntries == null ) {
-			xrefLoadingCollectionEntries = new HashMap();
+			xrefLoadingCollectionEntries = new HashMap<CollectionKey,LoadingCollectionEntry>();
 		}
 		xrefLoadingCollectionEntries.put( entryKey, entry );
 	}
@@ -277,16 +279,14 @@ public class LoadContexts {
 	LoadingCollectionEntry locateLoadingCollectionEntry(CollectionKey key) {
         if (xrefLoadingCollectionEntries == null) return null;
         LOG.trace("Attempting to locate loading collection entry [" + key + "] in any result-set context");
-		LoadingCollectionEntry rtn = ( LoadingCollectionEntry ) xrefLoadingCollectionEntries.get( key );
+		LoadingCollectionEntry rtn = xrefLoadingCollectionEntries.get( key );
         if (rtn == null) LOG.trace("Collection [" + key + "] not located in load context");
         else LOG.trace("Collection [" + key + "] located in load context");
 		return rtn;
 	}
 
-	/*package*/void cleanupCollectionXRefs(Set entryKeys) {
-		Iterator itr = entryKeys.iterator();
-		while ( itr.hasNext() ) {
-			final CollectionKey entryKey = (CollectionKey) itr.next();
+	/*package*/void cleanupCollectionXRefs(Set<CollectionKey> entryKeys) {
+		for ( CollectionKey entryKey : entryKeys ) {
 			xrefLoadingCollectionEntries.remove( entryKey );
 		}
 	}
@@ -301,7 +301,7 @@ public class LoadContexts {
 			entityLoadContexts = IdentityMap.instantiate( 8 );
 		}
 		else {
-			context = ( EntityLoadContext ) entityLoadContexts.get( resultSet );
+			context = entityLoadContexts.get( resultSet );
 		}
 		if ( context == null ) {
 			context = new EntityLoadContext( this, resultSet );

@@ -53,7 +53,7 @@ public class PersistentSortedMap extends PersistentMap implements SortedMap {
 		Iterator iter = map.entrySet().iterator();
 		while ( iter.hasNext() ) {
 			Map.Entry e = (Map.Entry) iter.next();
-			clonedMap.put( e.getKey(), persister.getElementType().deepCopy( e.getValue(), entityMode, persister.getFactory() ) );
+			clonedMap.put( e.getKey(), persister.getElementType().deepCopy( e.getValue(), persister.getFactory() ) );
 		}
 		return clonedMap;
 	}

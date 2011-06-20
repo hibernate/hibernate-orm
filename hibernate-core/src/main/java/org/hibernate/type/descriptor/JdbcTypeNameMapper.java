@@ -22,15 +22,17 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.type.descriptor;
+
 import java.lang.reflect.Field;
 import java.sql.Types;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import org.hibernate.HibernateException;
-import org.hibernate.internal.CoreMessageLogger;
 
 import org.jboss.logging.Logger;
+
+import org.hibernate.HibernateException;
+import org.hibernate.internal.CoreMessageLogger;
 
 /**
  * TODO : javadoc

@@ -13,11 +13,11 @@ import org.hibernate.MappingException;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
 import org.hibernate.cache.spi.entry.UnstructuredCacheEntry;
+import org.hibernate.engine.internal.TwoPhaseLoad;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.engine.internal.TwoPhaseLoad;
 import org.hibernate.engine.spi.ValueInclusion;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PostLoadEvent;
@@ -28,9 +28,8 @@ import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.sql.QuerySelect;
-import org.hibernate.sql.Select;
 import org.hibernate.tuple.entity.EntityMetamodel;
+import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 import org.hibernate.type.VersionType;
@@ -54,16 +53,6 @@ public class CustomPersister implements EntityPersister {
 		return false;
 	}
 
-	private void checkEntityMode(EntityMode entityMode) {
-		if ( EntityMode.POJO != entityMode ) {
-			throw new IllegalArgumentException( "Unhandled EntityMode : " + entityMode );
-		}
-	}
-
-	private void checkEntityMode(SessionImplementor session) {
-		checkEntityMode( session.getEntityMode() );
-	}
-
 	public boolean isInherited() {
 		return false;
 	}
@@ -72,6 +61,7 @@ public class CustomPersister implements EntityPersister {
 		return factory;
 	}
 
+	@Override
 	public Class getMappedClass() {
 		return Custom.class;
 	}
@@ -114,9 +104,9 @@ public class CustomPersister implements EntityPersister {
 		return ( (Custom) object ).id==null;
 	}
 
-	public Object[] getPropertyValuesToInsert(Object object, Map mergeMap, SessionImplementor session)
-	throws HibernateException {
-		return getPropertyValues( object, session.getEntityMode() );
+	@Override
+	public Object[] getPropertyValuesToInsert(Object object, Map mergeMap, SessionImplementor session) {
+		return getPropertyValues( object );
 	}
 
 	public void processInsertGeneratedProperties(Serializable id, Object entity, Object[] state, SessionImplementor session) {
@@ -129,115 +119,85 @@ public class CustomPersister implements EntityPersister {
 		throw new UnsupportedOperationException();
 	}
 
-	public Class getMappedClass(EntityMode entityMode) {
-		checkEntityMode( entityMode );
-		return Custom.class;
-	}
-
-	public boolean implementsLifecycle(EntityMode entityMode) {
-		checkEntityMode( entityMode );
+	@Override
+	public boolean implementsLifecycle() {
 		return false;
 	}
 
-	public boolean implementsValidatable(EntityMode entityMode) {
-		checkEntityMode( entityMode );
-		return false;
-	}
-
-	public Class getConcreteProxyClass(EntityMode entityMode) {
-		checkEntityMode( entityMode );
+	@Override
+	public Class getConcreteProxyClass() {
 		return Custom.class;
 	}
 
-	public void setPropertyValues(Object object, Object[] values, EntityMode entityMode) throws HibernateException {
-		checkEntityMode( entityMode );
-		setPropertyValue( object, 0, values[0], entityMode );
+	@Override
+	public void setPropertyValues(Object object, Object[] values) {
+		setPropertyValue( object, 0, values[0] );
 	}
 
-	public void setPropertyValue(Object object, int i, Object value, EntityMode entityMode) throws HibernateException {
-		checkEntityMode( entityMode );
+	@Override
+	public void setPropertyValue(Object object, int i, Object value) {
 		( (Custom) object ).setName( (String) value );
 	}
 
-	public Object[] getPropertyValues(Object object, EntityMode entityMode) throws HibernateException {
-		checkEntityMode( entityMode );
+	@Override
+	public Object[] getPropertyValues(Object object) throws HibernateException {
 		Custom c = (Custom) object;
 		return new Object[] { c.getName() };
 	}
 
-	public Object getPropertyValue(Object object, int i, EntityMode entityMode) throws HibernateException {
-		checkEntityMode( entityMode );
+	@Override
+	public Object getPropertyValue(Object object, int i) throws HibernateException {
 		return ( (Custom) object ).getName();
 	}
 
-	public Object getPropertyValue(Object object, String propertyName, EntityMode entityMode) throws HibernateException {
-		checkEntityMode( entityMode );
+	@Override
+	public Object getPropertyValue(Object object, String propertyName) throws HibernateException {
 		return ( (Custom) object ).getName();
 	}
 
-	public Serializable getIdentifier(Object object, EntityMode entityMode) throws HibernateException {
-		checkEntityMode( entityMode );
+	@Override
+	public Serializable getIdentifier(Object object) throws HibernateException {
 		return ( (Custom) object ).id;
 	}
 
+	@Override
 	public Serializable getIdentifier(Object entity, SessionImplementor session) {
-		checkEntityMode( session );
 		return ( (Custom) entity ).id;
 	}
 
-	public void setIdentifier(Object object, Serializable id, EntityMode entityMode) throws HibernateException {
-		checkEntityMode( entityMode );
-		( (Custom) object ).id = (String) id;
-	}
-
+	@Override
 	public void setIdentifier(Object entity, Serializable id, SessionImplementor session) {
-		checkEntityMode( session );
 		( (Custom) entity ).id = (String) id;
 	}
 
-	public Object getVersion(Object object, EntityMode entityMode) throws HibernateException {
-		checkEntityMode( entityMode );
+	@Override
+	public Object getVersion(Object object) throws HibernateException {
 		return null;
 	}
 
-	public Object instantiate(Serializable id, EntityMode entityMode) throws HibernateException {
-		checkEntityMode( entityMode );
-		return instantiate( id );
-	}
-
-	private Object instantiate(Serializable id) {
+	@Override
+	public Object instantiate(Serializable id, SessionImplementor session) {
 		Custom c = new Custom();
 		c.id = (String) id;
 		return c;
 	}
 
-	public Object instantiate(Serializable id, SessionImplementor session) {
-		checkEntityMode( session );
-		return instantiate( id );
-	}
-
-	public boolean isInstance(Object object, EntityMode entityMode) {
-		checkEntityMode( entityMode );
+	@Override
+	public boolean isInstance(Object object) {
 		return object instanceof Custom;
 	}
 
-	public boolean hasUninitializedLazyProperties(Object object, EntityMode entityMode) {
-		checkEntityMode( entityMode );
+	@Override
+	public boolean hasUninitializedLazyProperties(Object object) {
 		return false;
 	}
 
-	public void resetIdentifier(Object entity, Serializable currentId, Object currentVersion, EntityMode entityMode) {
-		checkEntityMode( entityMode );
-		( ( Custom ) entity ).id = ( String ) currentId;
-	}
-
+	@Override
 	public void resetIdentifier(Object entity, Serializable currentId, Object currentVersion, SessionImplementor session) {
-		checkEntityMode( session );
 		( ( Custom ) entity ).id = ( String ) currentId;
 	}
 
-	public EntityPersister getSubclassEntityPersister(Object instance, SessionFactoryImplementor factory, EntityMode entityMode) {
-		checkEntityMode( entityMode );
+	public EntityPersister getSubclassEntityPersister(Object instance, SessionFactoryImplementor factory) {
 		return this;
 	}
 
@@ -245,8 +205,7 @@ public class CustomPersister implements EntityPersister {
 		Object[] x,
 		Object[] y,
 		Object owner,
-		SessionImplementor session
-	) throws HibernateException {
+		SessionImplementor session) throws HibernateException {
 		if ( !EqualsHelper.equals( x[0], y[0] ) ) {
 			return new int[] { 0 };
 		}
@@ -259,8 +218,7 @@ public class CustomPersister implements EntityPersister {
 		Object[] x,
 		Object[] y,
 		Object owner,
-		SessionImplementor session
-	) throws HibernateException {
+		SessionImplementor session) throws HibernateException {
 		if ( !EqualsHelper.equals( x[0], y[0] ) ) {
 			return new int[] { 0 };
 		}
@@ -537,11 +495,6 @@ public class CustomPersister implements EntityPersister {
 		throw new UnsupportedOperationException();
 	}
 
-	public Object getPropertyValue(Object object, String propertyName)
-		throws HibernateException {
-		throw new UnsupportedOperationException();
-	}
-
 	public Object createProxy(Serializable id, SessionImplementor session)
 		throws HibernateException {
 		throw new UnsupportedOperationException("no proxy for this class");
@@ -555,120 +508,117 @@ public class CustomPersister implements EntityPersister {
 		return INSTANCES.get(id);
 	}
 
+	@Override
 	public Object forceVersionIncrement(Serializable id, Object currentVersion, SessionImplementor session)
 			throws HibernateException {
 		return null;
 	}
 
-	public EntityMode guessEntityMode(Object object) {
-		if ( !isInstance(object, EntityMode.POJO) ) {
-			return null;
-		}
-		else {
-			return EntityMode.POJO;
-		}
-	}
-
+	@Override
 	public boolean[] getPropertyNullability() {
 		return MUTABILITY;
 	}
 
-	public boolean isDynamic() {
-		return false;
-	}
-
+	@Override
 	public boolean isCacheInvalidationRequired() {
 		return false;
 	}
 
-	public void applyFilters(QuerySelect select, String alias, Map filters) {
-	}
-
-	public void applyFilters(Select select, String alias, Map filters) {
-	}
-
-
+	@Override
 	public void afterInitialize(Object entity, boolean fetched, SessionImplementor session) {
 	}
 
+	@Override
 	public void afterReassociate(Object entity, SessionImplementor session) {
 	}
 
-	public Object[] getDatabaseSnapshot(Serializable id, SessionImplementor session)
-	throws HibernateException {
+	@Override
+	public Object[] getDatabaseSnapshot(Serializable id, SessionImplementor session) throws HibernateException {
 		return null;
 	}
 
+	@Override
 	public boolean[] getPropertyVersionability() {
 		return MUTABILITY;
 	}
 
+	@Override
 	public CacheEntryStructure getCacheEntryStructure() {
 		return new UnstructuredCacheEntry();
 	}
 
+	@Override
 	public boolean hasSubselectLoadableCollections() {
 		return false;
 	}
 
+	@Override
 	public int[] getNaturalIdentifierProperties() {
 		return null;
 	}
 
-	public Type[] getNaturalIdentifierTypes() {
-		return null;
-	}
-
+	@Override
 	public boolean hasNaturalIdentifier() {
 		return false;
 	}
 
+	@Override
 	public boolean hasMutableProperties() {
 		return false;
 	}
 
-	public boolean isInstrumented(EntityMode entityMode) {
+	@Override
+	public boolean isInstrumented() {
 		return false;
 	}
 
+	@Override
 	public boolean hasInsertGeneratedProperties() {
 		return false;
 	}
 
+	@Override
 	public boolean hasUpdateGeneratedProperties() {
 		return false;
 	}
 
+	@Override
 	public boolean[] getPropertyLaziness() {
 		return null;
 	}
 
+	@Override
 	public boolean isLazyPropertiesCacheable() {
 		return true;
 	}
 
-	public boolean hasGeneratedProperties() {
-		return false;
-	}
-
+	@Override
 	public boolean isVersionPropertyGenerated() {
 		return false;
 	}
 
-	public String[] getOrphanRemovalOneToOnePaths() {
-		return null;
-	}
-
+	@Override
 	public Object[] getNaturalIdentifierSnapshot(Serializable id, SessionImplementor session) throws HibernateException {
 		return null;
 	}
 
+	@Override
 	public Comparator getVersionComparator() {
 		return null;
 	}
 
+	@Override
 	public EntityMetamodel getEntityMetamodel() {
 		return null;
 	}
 
+	@Override
+	public EntityMode getEntityMode() {
+		return EntityMode.POJO;
+	}
+
+	@Override
+	public EntityTuplizer getEntityTuplizer() {
+		return null;
+	}
 }

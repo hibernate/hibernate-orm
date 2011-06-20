@@ -17,12 +17,7 @@ public class MyListType implements UserCollectionType {
 	}
 
 	public PersistentCollection wrap(SessionImplementor session, Object collection) {
-		if ( session.getEntityMode()==EntityMode.DOM4J ) {
-			throw new IllegalStateException("dom4j not supported");
-		}
-		else {
-			return new PersistentMyList( session, (IMyList) collection );
-		}
+		return new PersistentMyList( session, (IMyList) collection );
 	}
 
 	public Iterator getElementsIterator(Object collection) {

@@ -31,7 +31,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Comparator;
-import org.hibernate.EntityMode;
+
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -122,16 +122,14 @@ public abstract class AbstractBynaryType extends MutableType implements VersionT
 		return this;
 	}
 
-	public int compare(Object o1, Object o2) {
-		return compare( o1, o2, null );
-	}
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	public boolean isEqual(Object x, Object y) {
 		return x==y || ( x!=null && y!=null && java.util.Arrays.equals( toInternalFormat(x), toInternalFormat(y) ) );
 	}
 
-	public int getHashCode(Object x, EntityMode entityMode) {
+	public int getHashCode(Object x) {
 		byte[] bytes = toInternalFormat(x);
 		int hashCode = 1;
 		for ( int j=0; j<bytes.length; j++ ) {
@@ -140,7 +138,7 @@ public abstract class AbstractBynaryType extends MutableType implements VersionT
 		return hashCode;
 	}
 
-	public int compare(Object x, Object y, EntityMode entityMode) {
+	public int compare(Object x, Object y) {
 		byte[] xbytes = toInternalFormat(x);
 		byte[] ybytes = toInternalFormat(y);
 		if ( xbytes.length < ybytes.length ) return -1;

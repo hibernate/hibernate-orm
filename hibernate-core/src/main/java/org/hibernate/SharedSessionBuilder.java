@@ -53,13 +53,6 @@ public interface SharedSessionBuilder extends SessionBuilder {
 	public SharedSessionBuilder connectionReleaseMode();
 
 	/**
-	 * Signifies that the entity mode from the original session should be used to create the new session
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	public SharedSessionBuilder entityMode();
-
-	/**
 	 * Signifies that the autoJoinTransaction flag from the original session should be used to create the new session
 	 *
 	 * @return {@code this}, for method chaining
@@ -98,9 +91,6 @@ public interface SharedSessionBuilder extends SessionBuilder {
 
 	@Override
 	SharedSessionBuilder connectionReleaseMode(ConnectionReleaseMode connectionReleaseMode);
-
-	@Override
-	SharedSessionBuilder entityMode(EntityMode entityMode);
 
 	@Override
 	SharedSessionBuilder autoJoinTransactions(boolean autoJoinTransactions);

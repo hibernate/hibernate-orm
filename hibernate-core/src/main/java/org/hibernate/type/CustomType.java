@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.type;
+
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -29,8 +30,9 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Map;
+
 import org.dom4j.Node;
-import org.hibernate.EntityMode;
+
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
@@ -110,14 +112,10 @@ public class CustomType extends AbstractType implements IdentifierType, Discrimi
 	}
 
 	public boolean isEqual(Object x, Object y) throws HibernateException {
-		return userType.equals(x, y);
+		return userType.equals( x, y );
 	}
 
-	public boolean isEqual(Object x, Object y, EntityMode entityMode) throws HibernateException {
-		return isEqual(x, y);
-	}
-
-	public int getHashCode(Object x, EntityMode entityMode) {
+	public int getHashCode(Object x) {
 		return userType.hashCode(x);
 	}
 
@@ -185,7 +183,7 @@ public class CustomType extends AbstractType implements IdentifierType, Discrimi
 		return name;
 	}
 
-	public Object deepCopy(Object value, EntityMode entityMode, SessionFactoryImplementor factory)
+	public Object deepCopy(Object value, SessionFactoryImplementor factory)
 			throws HibernateException {
 		return userType.deepCopy(value);
 	}

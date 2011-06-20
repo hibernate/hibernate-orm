@@ -62,7 +62,7 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 		this.metaType = metaType;
 	}
 
-	public Object deepCopy(Object value, EntityMode entityMode, SessionFactoryImplementor factory)
+	public Object deepCopy(Object value, SessionFactoryImplementor factory)
 	throws HibernateException {
 		return value;
 	}
@@ -71,11 +71,11 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 		return false;
 	}
 
-	public boolean isSame(Object x, Object y, EntityMode entityMode) throws HibernateException {
+	public boolean isSame(Object x, Object y) throws HibernateException {
 		return x==y;
 	}
 
-	public int compare(Object x, Object y, EntityMode entityMode) {
+	public int compare(Object x, Object y) {
 		return 0; //TODO: entities CAN be compared, by PK and entity name, fix this!
 	}
 

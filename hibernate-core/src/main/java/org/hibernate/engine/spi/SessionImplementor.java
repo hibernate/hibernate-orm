@@ -325,7 +325,6 @@ public interface SessionImplementor extends Serializable, LobCreationContext {
 
 	// copied from Session:
 
-	public EntityMode getEntityMode();
 	public CacheMode getCacheMode();
 	public void setCacheMode(CacheMode cm);
 	public boolean isOpen();

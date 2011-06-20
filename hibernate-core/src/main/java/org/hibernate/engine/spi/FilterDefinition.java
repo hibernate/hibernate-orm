@@ -39,14 +39,14 @@ import org.hibernate.type.Type;
 public class FilterDefinition implements Serializable {
 	private final String filterName;
 	private final String defaultFilterCondition;
-	private final Map parameterTypes = new HashMap();
+	private final Map<String,Type> parameterTypes = new HashMap<String,Type>();
 
 	/**
 	 * Construct a new FilterDefinition instance.
 	 *
 	 * @param name The name of the filter for which this configuration is in effect.
 	 */
-	public FilterDefinition(String name, String defaultCondition, Map parameterTypes) {
+	public FilterDefinition(String name, String defaultCondition, Map<String,Type> parameterTypes) {
 		this.filterName = name;
 		this.defaultFilterCondition = defaultCondition;
 		this.parameterTypes.putAll( parameterTypes );
@@ -77,14 +77,14 @@ public class FilterDefinition implements Serializable {
 	 * @return The type of the named parameter.
 	 */
     public Type getParameterType(String parameterName) {
-	    return (Type) parameterTypes.get(parameterName);
+	    return parameterTypes.get(parameterName);
     }
 
 	public String getDefaultFilterCondition() {
 		return defaultFilterCondition;
 	}
 
-	public Map getParameterTypes() {
+	public Map<String,Type> getParameterTypes() {
 		return parameterTypes;
 	}
 

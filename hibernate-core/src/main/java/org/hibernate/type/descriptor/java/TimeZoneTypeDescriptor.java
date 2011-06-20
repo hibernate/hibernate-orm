@@ -22,8 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.type.descriptor.java;
+
 import java.util.Comparator;
 import java.util.TimeZone;
+
 import org.hibernate.type.descriptor.WrapperOptions;
 
 /**

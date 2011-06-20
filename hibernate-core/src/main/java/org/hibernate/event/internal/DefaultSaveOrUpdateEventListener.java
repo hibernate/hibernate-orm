@@ -138,7 +138,7 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 			else {
 
 				final boolean isEqual = !entityEntry.getPersister().getIdentifierType()
-						.isEqual( requestedId, entityEntry.getId(), event.getSession().getEntityMode(), factory );
+						.isEqual( requestedId, entityEntry.getId(), factory );
 
 				if ( isEqual ) {
 					throw new PersistentObjectException(
@@ -309,14 +309,17 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
             		entry.getState(); //TODO: half-assemble this stuff
         }*/
 
-		source.getPersistenceContext().addEntity(entity, (persister.isMutable() ? Status.MANAGED : Status.READ_ONLY), null, // cachedState,
-                                                 key,
-                                                 persister.getVersion(entity, source.getEntityMode()),
-                                                 LockMode.NONE,
-                                                 true,
-                                                 persister,
-                                                 false,
-                                                 true // assume true, since we don't really know, and it doesn't matter
+		source.getPersistenceContext().addEntity(
+				entity,
+				(persister.isMutable() ? Status.MANAGED : Status.READ_ONLY),
+				null, // cachedState,
+				key,
+				persister.getVersion( entity ),
+				LockMode.NONE,
+				true,
+				persister,
+				false,
+				true // assume true, since we don't really know, and it doesn't matter
         );
 
 		persister.afterReassociate(entity, source);
@@ -328,7 +331,7 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 	}
 
 	protected boolean invokeUpdateLifecycle(Object entity, EntityPersister persister, EventSource source) {
-		if ( persister.implementsLifecycle( source.getEntityMode() ) ) {
+		if ( persister.implementsLifecycle() ) {
             LOG.debugf("Calling onUpdate()");
             if (((Lifecycle)entity).onUpdate(source)) {
                 LOG.debugf("Update vetoed by onUpdate()");

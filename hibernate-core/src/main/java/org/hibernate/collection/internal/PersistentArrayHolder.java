@@ -64,13 +64,12 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 	}
 
 	public Serializable getSnapshot(CollectionPersister persister) throws HibernateException {
-		EntityMode entityMode = getSession().getEntityMode();
 		int length = /*(array==null) ? tempList.size() :*/ Array.getLength(array);
 		Serializable result = (Serializable) Array.newInstance( persister.getElementClass(), length );
 		for ( int i=0; i<length; i++ ) {
 			Object elt = /*(array==null) ? tempList.get(i) :*/ Array.get(array, i);
 			try {
-				Array.set( result, i, persister.getElementType().deepCopy(elt, entityMode, persister.getFactory()) );
+				Array.set( result, i, persister.getElementType().deepCopy(elt, persister.getFactory()) );
 			}
 			catch (IllegalArgumentException iae) {
                 LOG.invalidArrayElementType(iae.getMessage());

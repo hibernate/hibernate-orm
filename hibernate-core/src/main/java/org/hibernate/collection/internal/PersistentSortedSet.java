@@ -51,7 +51,7 @@ public class PersistentSortedSet extends PersistentSet implements SortedSet {
 		TreeMap clonedSet = new TreeMap(comparator);
 		Iterator iter = set.iterator();
 		while ( iter.hasNext() ) {
-			Object copy = persister.getElementType().deepCopy( iter.next(), entityMode, persister.getFactory() );
+			Object copy = persister.getElementType().deepCopy( iter.next(), persister.getFactory() );
 			clonedSet.put(copy, copy);
 		}
 		return clonedSet;

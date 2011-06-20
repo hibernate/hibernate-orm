@@ -23,7 +23,6 @@
  */
 package org.hibernate.ejb.event;
 
-import org.hibernate.EntityMode;
 import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -73,11 +72,11 @@ public class EJB3FlushEntityEventListener extends DefaultFlushEntityEventListene
 	private boolean copyState(Object entity, Type[] types, Object[] state, SessionFactory sf) {
 		// copy the entity state into the state array and return true if the state has changed
 		ClassMetadata metadata = sf.getClassMetadata( entity.getClass() );
-		Object[] newState = metadata.getPropertyValues( entity, EntityMode.POJO );
+		Object[] newState = metadata.getPropertyValues( entity );
 		int size = newState.length;
 		boolean isDirty = false;
 		for ( int index = 0; index < size ; index++ ) {
-			if ( !types[index].isEqual( state[index], newState[index], EntityMode.POJO ) ) {
+			if ( !types[index].isEqual( state[index], newState[index] ) ) {
 				isDirty = true;
 				state[index] = newState[index];
 			}

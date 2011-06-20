@@ -45,7 +45,7 @@ public class FilterImpl implements Filter, Serializable {
 
 	private transient FilterDefinition definition;
 	private String filterName;
-	private Map parameters = new HashMap();
+	private Map<String,Object> parameters = new HashMap<String, Object>();
 	
 	void afterDeserialize(SessionFactoryImpl factory) {
 		definition = factory.getFilterDefinition(filterName);
@@ -75,7 +75,7 @@ public class FilterImpl implements Filter, Serializable {
 		return definition.getFilterName();
 	}
 	
-	public Map getParameters() {
+	public Map<String,?> getParameters() {
 		return parameters;
 	}
 

@@ -168,7 +168,7 @@ public abstract class EntityAction
 		}
 		else {
 			//then by id
-			return persister.getIdentifierType().compare( id, action.id, session.getEntityMode() );
+			return persister.getIdentifierType().compare( id, action.id );
 		}
 	}
 

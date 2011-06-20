@@ -86,8 +86,9 @@ public class DiscriminatorType extends AbstractType {
 		if ( entityName == null ) {
 			throw new HibernateException( "Unable to resolve discriminator value [" + discriminatorValue + "] to entity name" );
 		}
-		if ( EntityMode.POJO.equals( session.getEntityMode() ) ) {
-			return session.getEntityPersister( entityName, null ).getMappedClass( session.getEntityMode() );
+		final EntityPersister entityPersister = session.getEntityPersister( entityName, null );
+		if ( EntityMode.POJO == entityPersister.getEntityMode() ) {
+			return entityPersister.getMappedClass();
 		}
 		else {
 			return entityName;
@@ -117,7 +118,7 @@ public class DiscriminatorType extends AbstractType {
 		return value == null ? "[null]" : value.toString();
 	}
 
-	public Object deepCopy(Object value, EntityMode entityMode, SessionFactoryImplementor factory)
+	public Object deepCopy(Object value, SessionFactoryImplementor factory)
 			throws HibernateException {
 		return value;
 	}

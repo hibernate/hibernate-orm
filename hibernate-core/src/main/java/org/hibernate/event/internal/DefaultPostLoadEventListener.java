@@ -68,7 +68,7 @@ public class DefaultPostLoadEventListener implements PostLoadEventListener {
 			event.getSession().getActionQueue().registerProcess( verifyVersion );
 		}
 
-		if ( event.getPersister().implementsLifecycle( event.getSession().getEntityMode() ) ) {
+		if ( event.getPersister().implementsLifecycle() ) {
 			//log.debug( "calling onLoad()" );
 			( ( Lifecycle ) event.getEntity() ).onLoad( event.getSession(), event.getId() );
 		}

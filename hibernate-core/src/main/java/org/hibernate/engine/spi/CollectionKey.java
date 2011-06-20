@@ -46,6 +46,16 @@ public final class CollectionKey implements Serializable {
 	private final int hashCode;
 	private EntityMode entityMode;
 
+	public CollectionKey(CollectionPersister persister, Serializable key) {
+		this(
+				persister.getRole(),
+				key,
+				persister.getKeyType(),
+				persister.getOwnerEntityPersister().getEntityMetamodel().getEntityMode(),
+				persister.getFactory()
+		);
+	}
+
 	public CollectionKey(CollectionPersister persister, Serializable key, EntityMode em) {
 		this( persister.getRole(), key, persister.getKeyType(), em, persister.getFactory() );
 	}
@@ -67,13 +77,13 @@ public final class CollectionKey implements Serializable {
 	public boolean equals(Object other) {
 		CollectionKey that = (CollectionKey) other;
 		return that.role.equals(role) &&
-		       keyType.isEqual(that.key, key, entityMode, factory);
+		       keyType.isEqual(that.key, key, factory);
 	}
 
 	public int generateHashCode() {
 		int result = 17;
 		result = 37 * result + role.hashCode();
-		result = 37 * result + keyType.getHashCode(key, entityMode, factory);
+		result = 37 * result + keyType.getHashCode(key, factory);
 		return result;
 	}
 

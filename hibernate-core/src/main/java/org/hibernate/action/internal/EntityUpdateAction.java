@@ -93,7 +93,7 @@ public final class EntityUpdateAction extends EntityAction {
 			// we need to grab the version value from the entity, otherwise
 			// we have issues with generated-version entities that may have
 			// multiple actions queued during the same flush
-			previousVersion = persister.getVersion( instance, session.getEntityMode() );
+			previousVersion = persister.getVersion( instance );
 		}
 		
 		final CacheKey ck;
@@ -161,7 +161,7 @@ public final class EntityUpdateAction extends EntityAction {
 				CacheEntry ce = new CacheEntry(
 						state, 
 						persister, 
-						persister.hasUninitializedLazyProperties( instance, session.getEntityMode() ), 
+						persister.hasUninitializedLazyProperties( instance ),
 						nextVersion,
 						getSession(),
 						instance

@@ -95,7 +95,7 @@ public class ForeignGenerator implements IdentifierGenerator, Configurable {
 		Session session = ( Session ) sessionImplementor;
 
 		final EntityPersister persister = sessionImplementor.getFactory().getEntityPersister( entityName );
-		Object associatedObject = persister.getPropertyValue( object, propertyName, session.getEntityMode() );
+		Object associatedObject = persister.getPropertyValue( object, propertyName );
 		if ( associatedObject == null ) {
 			throw new IdentifierGenerationException(
 					"attempted to assign id from null one-to-one property [" + getRole() + "]"

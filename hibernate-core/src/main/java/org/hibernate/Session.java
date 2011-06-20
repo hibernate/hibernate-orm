@@ -98,26 +98,6 @@ public interface Session extends SharedSessionContract {
 	public SharedSessionBuilder sessionWithOptions();
 
 	/**
-	 * Retrieve the entity mode in effect for this session.
-	 *
-	 * @return The entity mode for this session.
-	 */
-	public EntityMode getEntityMode();
-
-	/**
-	 * Starts a new Session with the given entity mode in effect. This secondary
-	 * Session inherits the connection, transaction, and other context
-	 * information from the primary Session. It doesn't need to be flushed
-	 * or closed by the developer.
-	 * 
-	 * @param entityMode The entity mode to use for the new session.
-	 * @return The new session
-	 * @deprecated
-	 */
-	@Deprecated
-	public Session getSession(EntityMode entityMode);
-
-	/**
 	 * Force this session to flush. Must be called at the end of a
 	 * unit of work, before committing the transaction and closing the
 	 * session (depending on {@link #setFlushMode(FlushMode)},

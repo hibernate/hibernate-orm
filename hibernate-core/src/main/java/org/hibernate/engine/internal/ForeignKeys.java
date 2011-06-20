@@ -25,6 +25,7 @@ package org.hibernate.engine.internal;
 
 import java.io.Serializable;
 
+import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.TransientObjectException;
 import org.hibernate.bytecode.instrumentation.spi.LazyPropertyInitializer;
@@ -108,7 +109,10 @@ public final class ForeignKeys {
 						subvalues[i] = replacement;
 					}
 				}
-				if (substitute) actype.setPropertyValues( value, subvalues, session.getEntityMode() );
+				if ( substitute ) {
+					// todo : need to account for entity mode on the CompositeType interface :(
+					actype.setPropertyValues( value, subvalues, EntityMode.POJO );
+				}
 				return value;
 			}
 			else {

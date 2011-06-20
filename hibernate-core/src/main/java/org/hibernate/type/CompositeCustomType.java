@@ -22,14 +22,17 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.type;
+
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Map;
+
 import org.dom4j.Element;
 import org.dom4j.Node;
+
 import org.hibernate.EntityMode;
 import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
@@ -86,13 +89,11 @@ public class CompositeCustomType extends AbstractType implements CompositeType, 
 		return userType.getPropertyNames();
 	}
 
-	public Object[] getPropertyValues(Object component, SessionImplementor session)
-		throws HibernateException {
-		return getPropertyValues( component, session.getEntityMode() );
+	public Object[] getPropertyValues(Object component, SessionImplementor session) throws HibernateException {
+		return getPropertyValues( component, EntityMode.POJO );
 	}
 
-	public Object[] getPropertyValues(Object component, EntityMode entityMode)
-		throws HibernateException {
+	public Object[] getPropertyValues(Object component, EntityMode entityMode) throws HibernateException {
 
 		int len = getSubtypes().length;
 		Object[] result = new Object[len];
@@ -115,9 +116,8 @@ public class CompositeCustomType extends AbstractType implements CompositeType, 
 		return getPropertyValue(component, i);
 	}
 
-	public Object getPropertyValue(Object component, int i)
-		throws HibernateException {
-		return userType.getPropertyValue(component, i);
+	public Object getPropertyValue(Object component, int i) throws HibernateException {
+		return userType.getPropertyValue( component, i );
 	}
 
 	public CascadeStyle getCascadeStyle(int i) {
@@ -132,9 +132,9 @@ public class CompositeCustomType extends AbstractType implements CompositeType, 
 		return true;
 	}
 
-	public Object deepCopy(Object value, EntityMode entityMode, SessionFactoryImplementor factory) 
+	public Object deepCopy(Object value, SessionFactoryImplementor factory)
 	throws HibernateException {
-		return userType.deepCopy(value);
+		return userType.deepCopy( value );
 	}
 
 	public Object assemble(
@@ -143,14 +143,14 @@ public class CompositeCustomType extends AbstractType implements CompositeType, 
 		Object owner)
 		throws HibernateException {
 
-		return userType.assemble(cached, session, owner);
+		return userType.assemble( cached, session, owner );
 	}
 
 	public Serializable disassemble(Object value, SessionImplementor session, Object owner)
 	throws HibernateException {
 		return userType.disassemble(value, session);
 	}
-	
+
 	public Object replace(
 			Object original, 
 			Object target,
@@ -161,12 +161,12 @@ public class CompositeCustomType extends AbstractType implements CompositeType, 
 		return userType.replace(original, target, session, owner);
 	}
 	
-	public boolean isEqual(Object x, Object y, EntityMode entityMode) 
+	public boolean isEqual(Object x, Object y)
 	throws HibernateException {
 		return userType.equals(x, y);
 	}
 
-	public int getHashCode(Object x, EntityMode entityMode) {
+	public int getHashCode(Object x) {
 		return userType.hashCode(x);
 	}
 	

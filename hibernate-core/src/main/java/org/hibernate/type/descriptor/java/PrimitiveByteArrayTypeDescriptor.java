@@ -22,11 +22,13 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.type.descriptor.java;
+
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.sql.Blob;
 import java.sql.SQLException;
 import java.util.Arrays;
+
 import org.hibernate.HibernateException;
 import org.hibernate.type.descriptor.BinaryStream;
 import org.hibernate.type.descriptor.WrapperOptions;

@@ -26,11 +26,10 @@ package org.hibernate.cache.spi;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.EntityMode;
+import org.hibernate.Filter;
 import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.internal.FilterImpl;
 import org.hibernate.type.Type;
@@ -42,15 +41,13 @@ import org.hibernate.type.Type;
  */
 public final class FilterKey implements Serializable {
 	private String filterName;
-	private Map filterParameters = new HashMap();
+	private Map<String,TypedValue> filterParameters = new HashMap<String,TypedValue>();
 	
-	public FilterKey(String name, Map params, Map types, EntityMode entityMode) {
+	public FilterKey(String name, Map<String,?> params, Map<String,Type> types) {
 		filterName = name;
-		Iterator iter = params.entrySet().iterator();
-		while ( iter.hasNext() ) {
-			Map.Entry me = (Map.Entry) iter.next();
-			Type type = (Type) types.get( me.getKey() );
-			filterParameters.put( me.getKey(), new TypedValue( type, me.getValue(), entityMode ) );
+		for ( Map.Entry<String, ?> paramEntry : params.entrySet() ) {
+			Type type = types.get( paramEntry.getKey() );
+			filterParameters.put( paramEntry.getKey(), new TypedValue( type, paramEntry.getValue() ) );
 		}
 	}
 	
@@ -73,19 +70,18 @@ public final class FilterKey implements Serializable {
 		return "FilterKey[" + filterName + filterParameters + ']';
 	}
 	
-	public static Set createFilterKeys(Map enabledFilters, EntityMode entityMode) {
-		if ( enabledFilters.size()==0 ) return null;
-		Set result = new HashSet();
-		Iterator iter = enabledFilters.values().iterator();
-		while ( iter.hasNext() ) {
-			FilterImpl filter = (FilterImpl) iter.next();
+	public static Set<FilterKey> createFilterKeys(Map<String,Filter> enabledFilters) {
+		if ( enabledFilters.size()==0 ) {
+			return null;
+		}
+		Set<FilterKey> result = new HashSet<FilterKey>();
+		for ( Filter filter : enabledFilters.values() ) {
 			FilterKey key = new FilterKey(
-					filter.getName(), 
-					filter.getParameters(), 
-					filter.getFilterDefinition().getParameterTypes(), 
-					entityMode
-				);
-			result.add(key);
+					filter.getName(),
+					( (FilterImpl) filter ).getParameters(),
+					filter.getFilterDefinition().getParameterTypes()
+			);
+			result.add( key );
 		}
 		return result;
 	}

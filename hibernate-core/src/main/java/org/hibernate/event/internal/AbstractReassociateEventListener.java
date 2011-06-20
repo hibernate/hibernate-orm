@@ -72,7 +72,7 @@ public class AbstractReassociateEventListener implements Serializable {
 		source.getPersistenceContext().checkUniqueness( key, object );
 
 		//get a snapshot
-		Object[] values = persister.getPropertyValues( object, source.getEntityMode() );
+		Object[] values = persister.getPropertyValues( object );
 		TypeHelper.deepCopy(
 				values,
 				persister.getPropertyTypes(),

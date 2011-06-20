@@ -22,16 +22,15 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.type;
+
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import org.dom4j.Element;
-import org.hibernate.EntityMode;
+
 import org.hibernate.HibernateException;
 import org.hibernate.collection.internal.PersistentMap;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.collection.internal.PersistentMapElementHolder;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 
@@ -43,12 +42,7 @@ public class MapType extends CollectionType {
 	}
 
 	public PersistentCollection instantiate(SessionImplementor session, CollectionPersister persister, Serializable key) {
-		if ( session.getEntityMode()==EntityMode.DOM4J ) {
-			return new PersistentMapElementHolder(session, persister, key);
-		}
-		else {
-			return new PersistentMap(session);
-		}
+		return new PersistentMap(session);
 	}
 
 	public Class getReturnedClass() {
@@ -60,12 +54,7 @@ public class MapType extends CollectionType {
 	}
 
 	public PersistentCollection wrap(SessionImplementor session, Object collection) {
-		if ( session.getEntityMode()==EntityMode.DOM4J ) {
-			return new PersistentMapElementHolder( session, (Element) collection );
-		}
-		else {
-			return new PersistentMap( session, (java.util.Map) collection );
-		}
+		return new PersistentMap( session, (java.util.Map) collection );
 	}
 	
 	public Object instantiate(int anticipatedSize) {

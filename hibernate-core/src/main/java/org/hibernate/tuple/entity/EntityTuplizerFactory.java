@@ -22,14 +22,16 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.tuple.entity;
+
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
-import org.hibernate.mapping.PersistentClass;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.mapping.PersistentClass;
 
 /**
  * A registry allowing users to define the default {@link EntityTuplizer} class to use per {@link EntityMode}.
@@ -163,7 +165,6 @@ public class EntityTuplizerFactory implements Serializable {
 	private static Map<EntityMode,Class<? extends EntityTuplizer>> buildBaseMapping() {
 		Map<EntityMode,Class<? extends EntityTuplizer>> map = new ConcurrentHashMap<EntityMode,Class<? extends EntityTuplizer>>();
 		map.put( EntityMode.POJO, PojoEntityTuplizer.class );
-		map.put( EntityMode.DOM4J, Dom4jEntityTuplizer.class );
 		map.put( EntityMode.MAP, DynamicMapEntityTuplizer.class );
 		return map;
 	}

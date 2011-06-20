@@ -25,11 +25,9 @@ package org.hibernate.cache.spi;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.EntityMode;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -53,7 +51,6 @@ public class QueryKey implements Serializable {
 	private final Map namedParameters;
 	private final Integer firstRow;
 	private final Integer maxRows;
-	private final EntityMode entityMode;
 	private final String tenantIdentifier;
 	private final Set filterKeys;
 
@@ -95,22 +92,22 @@ public class QueryKey implements Serializable {
 		}
 
 		// disassemble named parameters
-		final Map namedParameters;
+		final Map<String,TypedValue> namedParameters;
 		if ( queryParameters.getNamedParameters() == null ) {
 			namedParameters = null;
 		}
 		else {
 			namedParameters = CollectionHelper.mapOfSize( queryParameters.getNamedParameters().size() );
-			Iterator itr = queryParameters.getNamedParameters().entrySet().iterator();
-			while ( itr.hasNext() ) {
-				final Map.Entry namedParameterEntry = ( Map.Entry ) itr.next();
-				final TypedValue original = ( TypedValue ) namedParameterEntry.getValue();
+			for ( Map.Entry<String,TypedValue> namedParameterEntry : queryParameters.getNamedParameters().entrySet() ) {
 				namedParameters.put(
 						namedParameterEntry.getKey(),
 						new TypedValue(
-								original.getType(),
-								original.getType().disassemble( original.getValue(), session, null ),
-								session.getEntityMode()
+								namedParameterEntry.getValue().getType(),
+								namedParameterEntry.getValue().getType().disassemble(
+										namedParameterEntry.getValue().getValue(),
+										session,
+										null
+								)
 						)
 				);
 			}
@@ -137,7 +134,6 @@ public class QueryKey implements Serializable {
 				firstRow,
 				maxRows,
 				filterKeys,
-				session.getEntityMode(),
 				session.getTenantIdentifier(),
 				customTransformer
 		);
@@ -153,8 +149,8 @@ public class QueryKey implements Serializable {
 	 * @param firstRow First row selection, if any.
 	 * @param maxRows Max-rows selection, if any.
 	 * @param filterKeys Enabled filter keys, if any.
-	 * @param entityMode The entity mode.
 	 * @param customTransformer Custom result transformer, if one.
+	 * @param tenantIdentifier The tenant identifier in effect for this query, or {@code null}
 	 */
 	QueryKey(
 			String sqlQueryString,
@@ -164,7 +160,6 @@ public class QueryKey implements Serializable {
 			Integer firstRow,
 			Integer maxRows,
 			Set filterKeys,
-			EntityMode entityMode,
 			String tenantIdentifier,
 			CacheableResultTransformer customTransformer) {
 		this.sqlQueryString = sqlQueryString;
@@ -173,7 +168,6 @@ public class QueryKey implements Serializable {
 		this.namedParameters = namedParameters;
 		this.firstRow = firstRow;
 		this.maxRows = maxRows;
-		this.entityMode = entityMode;
 		this.tenantIdentifier = tenantIdentifier;
 		this.filterKeys = filterKeys;
 		this.customTransformer = customTransformer;
@@ -202,7 +196,7 @@ public class QueryKey implements Serializable {
 		result = 37 * result + ( firstRow==null ? 0 : firstRow.hashCode() );
 		result = 37 * result + ( maxRows==null ? 0 : maxRows.hashCode() );
 		for ( int i=0; i< positionalParameterValues.length; i++ ) {
-			result = 37 * result + ( positionalParameterValues[i]==null ? 0 : positionalParameterTypes[i].getHashCode( positionalParameterValues[i], entityMode ) );
+			result = 37 * result + ( positionalParameterValues[i]==null ? 0 : positionalParameterTypes[i].getHashCode( positionalParameterValues[i] ) );
 		}
 		result = 37 * result + ( namedParameters==null ? 0 : namedParameters.hashCode() );
 		result = 37 * result + ( filterKeys ==null ? 0 : filterKeys.hashCode() );
@@ -246,7 +240,7 @@ public class QueryKey implements Serializable {
 				if ( positionalParameterTypes[i].getReturnedClass() != that.positionalParameterTypes[i].getReturnedClass() ) {
 					return false;
 				}
-				if ( !positionalParameterTypes[i].isEqual( positionalParameterValues[i], that.positionalParameterValues[i], entityMode ) ) {
+				if ( !positionalParameterTypes[i].isEqual( positionalParameterValues[i], that.positionalParameterValues[i] ) ) {
 					return false;
 				}
 			}
@@ -254,7 +248,6 @@ public class QueryKey implements Serializable {
 
 		return EqualsHelper.equals( filterKeys, that.filterKeys )
 				&& EqualsHelper.equals( namedParameters, that.namedParameters )
-				&& EqualsHelper.equals( entityMode, that.entityMode )
 				&& EqualsHelper.equals( tenantIdentifier, that.tenantIdentifier );
 	}
 
@@ -271,31 +264,29 @@ public class QueryKey implements Serializable {
 	 */
 	@Override
     public String toString() {
-		StringBuffer buf = new StringBuffer()
-				.append( "sql: " )
-				.append( sqlQueryString );
+		StringBuilder buffer = new StringBuilder( "sql: " ).append( sqlQueryString );
 		if ( positionalParameterValues != null ) {
-			buf.append( "; parameters: " );
-			for ( int i = 0; i < positionalParameterValues.length; i++ ) {
-				buf.append( positionalParameterValues[i] ).append( ", " );
+			buffer.append( "; parameters: " );
+			for ( Object positionalParameterValue : positionalParameterValues ) {
+				buffer.append( positionalParameterValue ).append( ", " );
 			}
 		}
 		if ( namedParameters != null ) {
-			buf.append( "; named parameters: " ).append( namedParameters );
+			buffer.append( "; named parameters: " ).append( namedParameters );
 		}
 		if ( filterKeys != null ) {
-			buf.append( "; filterKeys: " ).append( filterKeys );
+			buffer.append( "; filterKeys: " ).append( filterKeys );
 		}
 		if ( firstRow != null ) {
-			buf.append( "; first row: " ).append( firstRow );
+			buffer.append( "; first row: " ).append( firstRow );
 		}
 		if ( maxRows != null ) {
-			buf.append( "; max rows: " ).append( maxRows );
+			buffer.append( "; max rows: " ).append( maxRows );
 		}
 		if ( customTransformer != null ) {
-			buf.append( "; transformer: " ).append( customTransformer );
+			buffer.append( "; transformer: " ).append( customTransformer );
 		}
-		return buf.toString();
+		return buffer.toString();
 	}
 
 }

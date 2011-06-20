@@ -27,11 +27,14 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+
+import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
 import org.hibernate.tuple.PropertyFactory;
 import org.hibernate.tuple.StandardProperty;
+import org.hibernate.tuple.Tuplizer;
 
 /**
  * Centralizes metamodel information about a component.
@@ -46,7 +49,9 @@ public class ComponentMetamodel implements Serializable {
 	private final String role;
 	private final boolean isKey;
 	private final StandardProperty[] properties;
-	private final ComponentEntityModeToTuplizerMapping tuplizerMapping;
+
+	private final EntityMode entityMode;
+	private final ComponentTuplizer componentTuplizer;
 
 	// cached for efficiency...
 	private final int propertySpan;
@@ -68,7 +73,17 @@ public class ComponentMetamodel implements Serializable {
 			i++;
 		}
 
-		tuplizerMapping = new ComponentEntityModeToTuplizerMapping( component );
+		entityMode = component.hasPojoRepresentation() ? EntityMode.POJO : EntityMode.MAP;
+
+		// todo : move this to SF per HHH-3517; also see HHH-1907 and ComponentMetamodel
+		final ComponentTuplizerFactory componentTuplizerFactory = new ComponentTuplizerFactory();
+		final String tuplizerClassName = component.getTuplizerImplClassName( entityMode );
+		if ( tuplizerClassName == null ) {
+			componentTuplizer = componentTuplizerFactory.constructDefaultTuplizer( entityMode, component );
+		}
+		else {
+			componentTuplizer = componentTuplizerFactory.constructTuplizer( tuplizerClassName, component );
+		}
 	}
 
 	public boolean isKey() {
@@ -102,8 +117,12 @@ public class ComponentMetamodel implements Serializable {
 		return getProperty( getPropertyIndex( propertyName ) );
 	}
 
-	public ComponentEntityModeToTuplizerMapping getTuplizerMapping() {
-		return tuplizerMapping;
+	public EntityMode getEntityMode() {
+		return entityMode;
+	}
+
+	public ComponentTuplizer getComponentTuplizer() {
+		return componentTuplizer;
 	}
 
 }

@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.type;
+
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -31,8 +32,10 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
 import org.dom4j.Element;
 import org.dom4j.Node;
+
 import org.hibernate.EntityMode;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
@@ -108,17 +111,17 @@ public abstract class CollectionType extends AbstractType implements Association
 		return true;
 	}
 
-	public final boolean isEqual(Object x, Object y, EntityMode entityMode) {
+	public final boolean isEqual(Object x, Object y) {
 		return x == y
 			|| ( x instanceof PersistentCollection && ( (PersistentCollection) x ).isWrapper( y ) )
 			|| ( y instanceof PersistentCollection && ( (PersistentCollection) y ).isWrapper( x ) );
 	}
 
-	public int compare(Object x, Object y, EntityMode entityMode) {
+	public int compare(Object x, Object y) {
 		return 0; // collections cannot be compared
 	}
 
-	public int getHashCode(Object x, EntityMode entityMode) {
+	public int getHashCode(Object x) {
 		throw new UnsupportedOperationException( "cannot doAfterTransactionCompletion lookups on collections" );
 	}
 
@@ -182,25 +185,17 @@ public abstract class CollectionType extends AbstractType implements Association
 		}
 	}
 
-	protected String renderLoggableString(Object value, SessionFactoryImplementor factory)
-			throws HibernateException {
-		if ( Element.class.isInstance( value ) ) {
-			// for DOM4J "collections" only
-			// TODO: it would be better if this was done at the higher level by Printer
-			return ( ( Element ) value ).asXML();
+	protected String renderLoggableString(Object value, SessionFactoryImplementor factory) throws HibernateException {
+		final List<String> list = new ArrayList<String>();
+		Type elemType = getElementType( factory );
+		Iterator itr = getElementsIterator( value );
+		while ( itr.hasNext() ) {
+			list.add( elemType.toLoggableString( itr.next(), factory ) );
 		}
-		else {
-			List list = new ArrayList();
-			Type elemType = getElementType( factory );
-			Iterator iter = getElementsIterator( value );
-			while ( iter.hasNext() ) {
-				list.add( elemType.toLoggableString( iter.next(), factory ) );
-			}
-			return list.toString();
-		}
+		return list.toString();
 	}
 
-	public Object deepCopy(Object value, EntityMode entityMode, SessionFactoryImplementor factory)
+	public Object deepCopy(Object value, SessionFactoryImplementor factory)
 			throws HibernateException {
 		return value;
 	}
@@ -217,22 +212,7 @@ public abstract class CollectionType extends AbstractType implements Association
 	 * @return The iterator.
 	 */
 	public Iterator getElementsIterator(Object collection, SessionImplementor session) {
-		if ( session.getEntityMode()==EntityMode.DOM4J ) {
-			final SessionFactoryImplementor factory = session.getFactory();
-			final CollectionPersister persister = factory.getCollectionPersister( getRole() );
-			final Type elementType = persister.getElementType();
-			
-			List elements = ( (Element) collection ).elements( persister.getElementNodeName() );
-			ArrayList results = new ArrayList();
-			for ( int i=0; i<elements.size(); i++ ) {
-				Element value = (Element) elements.get(i);
-				results.add( elementType.fromXMLNode( value, factory ) );
-			}
-			return results.iterator();
-		}
-		else {
-			return getElementsIterator(collection);
-		}
+		return getElementsIterator(collection);
 	}
 
 	/**
@@ -372,7 +352,7 @@ public abstract class CollectionType extends AbstractType implements Association
 				id = entityEntry.getLoadedValue( foreignKeyPropertyName );
 			}
 			else {
-				id = entityEntry.getPersister().getPropertyValue( owner, foreignKeyPropertyName, session.getEntityMode() );
+				id = entityEntry.getPersister().getPropertyValue( owner, foreignKeyPropertyName );
 			}
 
 			// NOTE VERY HACKISH WORKAROUND!!
@@ -408,7 +388,7 @@ public abstract class CollectionType extends AbstractType implements Association
 			Type keyType = getPersister( session ).getKeyType();
 			EntityPersister ownerPersister = getPersister( session ).getOwnerEntityPersister();
 			// TODO: Fix this so it will work for non-POJO entity mode
-			Class ownerMappedClass = ownerPersister.getMappedClass( session.getEntityMode() );
+			Class ownerMappedClass = ownerPersister.getMappedClass();
 			if ( ownerMappedClass.isAssignableFrom( keyType.getReturnedClass() ) &&
 					keyType.getReturnedClass().isInstance( key ) ) {
 				// the key is the owning entity itself, so get the ID from the key
@@ -629,12 +609,8 @@ public abstract class CollectionType extends AbstractType implements Association
 
 		CollectionPersister persister = getPersister( session );
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
-		final EntityMode entityMode = session.getEntityMode();
+		final EntityMode entityMode = persister.getOwnerEntityPersister().getEntityMode();
 
-		if (entityMode==EntityMode.DOM4J && !isEmbeddedInXML) {
-			return UNFETCHED_COLLECTION;
-		}
-		
 		// check if collection is currently being loaded
 		PersistentCollection collection = persistenceContext.getLoadContexts().locateLoadingCollection( persister, key );
 		
@@ -651,14 +627,14 @@ public abstract class CollectionType extends AbstractType implements Association
 				persistenceContext.addUninitializedCollection( persister, collection, key );
 	
 				// some collections are not lazy:
-				if ( initializeImmediately( entityMode ) ) {
+				if ( initializeImmediately() ) {
 					session.initializeCollection( collection, false );
 				}
 				else if ( !persister.isLazy() ) {
 					persistenceContext.addNonLazyCollection( collection );
 				}
 	
-				if ( hasHolder( entityMode ) ) {
+				if ( hasHolder() ) {
 					session.getPersistenceContext().addCollectionHolder( collection );
 				}
 				
@@ -671,12 +647,12 @@ public abstract class CollectionType extends AbstractType implements Association
 		return collection.getValue();
 	}
 
-	public boolean hasHolder(EntityMode entityMode) {
-		return entityMode == EntityMode.DOM4J;
+	public boolean hasHolder() {
+		return false;
 	}
 
-	protected boolean initializeImmediately(EntityMode entityMode) {
-		return entityMode == EntityMode.DOM4J;
+	protected boolean initializeImmediately() {
+		return false;
 	}
 
 	public String getLHSPropertyName() {

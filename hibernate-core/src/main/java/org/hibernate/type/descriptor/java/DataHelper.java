@@ -28,11 +28,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.io.StringReader;
+
+import org.jboss.logging.Logger;
+
 import org.hibernate.HibernateException;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.type.descriptor.BinaryStream;
-import org.jboss.logging.Logger;
 
 /**
  * A help for dealing with BLOB and CLOB data

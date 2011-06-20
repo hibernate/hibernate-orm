@@ -25,6 +25,7 @@ package org.hibernate.type;
 
 import java.util.HashSet;
 import java.util.Set;
+
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**

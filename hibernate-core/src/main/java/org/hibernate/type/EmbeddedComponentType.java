@@ -22,32 +22,30 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.type;
+
 import java.lang.reflect.Method;
-import org.hibernate.EntityMode;
+
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.tuple.component.ComponentMetamodel;
-import org.hibernate.tuple.component.ComponentTuplizer;
 
 /**
  * @author Gavin King
  */
 public class EmbeddedComponentType extends ComponentType {
+	public EmbeddedComponentType(TypeFactory.TypeScope typeScope, ComponentMetamodel metamodel) {
+		super( typeScope, metamodel );
+	}
 
 	public boolean isEmbedded() {
 		return true;
 	}
 
-	public EmbeddedComponentType(TypeFactory.TypeScope typeScope, ComponentMetamodel metamodel) {
-		super( typeScope, metamodel );
-	}
-
 	public boolean isMethodOf(Method method) {
-		return ( ( ComponentTuplizer ) tuplizerMapping.getTuplizer(EntityMode.POJO) ).isMethodOf(method);
+		return componentTuplizer.isMethodOf( method );
 	}
 
-	public Object instantiate(Object parent, SessionImplementor session)
-	throws HibernateException {
+	public Object instantiate(Object parent, SessionImplementor session) throws HibernateException {
 		final boolean useParent = parent!=null &&
 		                          //TODO: Yuck! This is not quite good enough, it's a quick
 		                          //hack around the problem of having a to-one association

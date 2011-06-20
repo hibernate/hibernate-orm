@@ -112,15 +112,15 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 
 	public Serializable insert(String entityName, Object entity) {
 		errorIfClosed();
-		EntityPersister persister = getEntityPersister(entityName, entity);
-		Serializable id = persister.getIdentifierGenerator().generate(this, entity);
-		Object[] state = persister.getPropertyValues(entity, EntityMode.POJO);
+		EntityPersister persister = getEntityPersister( entityName, entity );
+		Serializable id = persister.getIdentifierGenerator().generate( this, entity );
+		Object[] state = persister.getPropertyValues( entity );
 		if ( persister.isVersioned() ) {
 			boolean substitute = Versioning.seedVersion(
 					state, persister.getVersionProperty(), persister.getVersionType(), this
 			);
 			if ( substitute ) {
-				persister.setPropertyValues( entity, state, EntityMode.POJO );
+				persister.setPropertyValues( entity, state );
 			}
 		}
 		if ( id == IdentifierGeneratorHelper.POST_INSERT_INDICATOR ) {
@@ -145,7 +145,7 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 		errorIfClosed();
 		EntityPersister persister = getEntityPersister(entityName, entity);
 		Serializable id = persister.getIdentifier( entity, this );
-		Object version = persister.getVersion(entity, EntityMode.POJO);
+		Object version = persister.getVersion( entity );
 		persister.delete(id, version, entity, this);
 	}
 
@@ -161,13 +161,13 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 		errorIfClosed();
 		EntityPersister persister = getEntityPersister(entityName, entity);
 		Serializable id = persister.getIdentifier( entity, this );
-		Object[] state = persister.getPropertyValues(entity, EntityMode.POJO);
+		Object[] state = persister.getPropertyValues( entity );
 		Object oldVersion;
 		if ( persister.isVersioned() ) {
-			oldVersion = persister.getVersion(entity, EntityMode.POJO);
+			oldVersion = persister.getVersion( entity );
 			Object newVersion = Versioning.increment( oldVersion, persister.getVersionType(), this );
 			Versioning.setVersion(state, newVersion, persister);
-			persister.setPropertyValues(entity, state, EntityMode.POJO);
+			persister.setPropertyValues( entity, state );
 		}
 		else {
 			oldVersion = null;
@@ -419,8 +419,7 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 			return factory.getEntityPersister( guessEntityName( object ) );
 		}
 		else {
-			return factory.getEntityPersister( entityName )
-					.getSubclassEntityPersister( object, getFactory(), EntityMode.POJO );
+			return factory.getEntityPersister( entityName ).getSubclassEntityPersister( object, getFactory() );
 		}
 	}
 

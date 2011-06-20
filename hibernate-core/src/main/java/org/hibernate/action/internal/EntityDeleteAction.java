@@ -75,7 +75,7 @@ public final class EntityDeleteAction extends EntityAction {
 			// we need to grab the version value from the entity, otherwise
 			// we have issues with generated-version entities that may have
 			// multiple actions queued during the same flush
-			version = persister.getVersion( instance, session.getEntityMode() );
+			version = persister.getVersion( instance );
 		}
 
 		final CacheKey ck;

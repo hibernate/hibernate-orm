@@ -134,7 +134,7 @@ public class SelectGenerator extends AbstractPostInsertGenerator implements Conf
 				SessionImplementor session,
 		        PreparedStatement ps,
 		        Object entity) throws SQLException {
-			Object uniqueKeyValue = persister.getPropertyValue( entity, uniqueKeyPropertyName, session.getEntityMode() );
+			Object uniqueKeyValue = persister.getPropertyValue( entity, uniqueKeyPropertyName );
 			uniqueKeyType.nullSafeSet( ps, uniqueKeyValue, 1, session );
 		}
 

@@ -112,9 +112,12 @@ public abstract class ReattachVisitor extends ProxyVisitor {
 	 * @return
 	 */
 	final Serializable extractCollectionKeyFromOwner(CollectionPersister role) {
-        if (role.getCollectionType().useLHSPrimaryKey()) return ownerIdentifier;
-        return (Serializable)role.getOwnerEntityPersister().getPropertyValue(owner,
-                                                                             role.getCollectionType().getLHSPropertyName(),
-                                                                             getSession().getEntityMode());
+        if ( role.getCollectionType().useLHSPrimaryKey() ) {
+			return ownerIdentifier;
+		}
+        return (Serializable)role.getOwnerEntityPersister().getPropertyValue(
+				owner,
+				role.getCollectionType().getLHSPropertyName()
+		);
 	}
 }

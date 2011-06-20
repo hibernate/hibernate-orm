@@ -141,11 +141,7 @@ public final class CacheEntry implements Serializable {
 			listener.onPreLoad( preLoadEvent );
 		}
 
-		persister.setPropertyValues( 
-				result, 
-				assembledProps, 
-				session.getEntityMode() 
-			);
+		persister.setPropertyValues( result, assembledProps );
 
 		return assembledProps;
 	}
@@ -158,8 +154,7 @@ public final class CacheEntry implements Serializable {
     }
 
 	public String toString() {
-		return "CacheEntry(" + subclass + ')' + 
-				ArrayHelper.toString(disassembledState);
+		return "CacheEntry(" + subclass + ')' + ArrayHelper.toString(disassembledState);
 	}
 
 }

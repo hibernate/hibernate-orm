@@ -110,7 +110,7 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
 			boolean canReplicate = replicationMode.shouldOverwriteCurrentVersion(
 					entity,
 					realOldVersion,
-					persister.getVersion( entity, source.getEntityMode() ),
+					persister.getVersion( entity ),
 					persister.getVersionType()
 			);
 

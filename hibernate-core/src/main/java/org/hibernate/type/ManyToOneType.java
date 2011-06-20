@@ -269,7 +269,7 @@ public class ManyToOneType extends EntityType {
 			Object old,
 			Object current,
 			SessionImplementor session) throws HibernateException {
-		if ( isSame( old, current, session.getEntityMode() ) ) {
+		if ( isSame( old, current ) ) {
 			return false;
 		}
 		Object oldid = getIdentifier( old, session );
@@ -286,7 +286,7 @@ public class ManyToOneType extends EntityType {
 			return isDirty( old, current, session );
 		}
 		else {
-			if ( isSame( old, current, session.getEntityMode() ) ) {
+			if ( isSame( old, current ) ) {
 				return false;
 			}
 			Object oldid = getIdentifier( old, session );

@@ -71,7 +71,7 @@ libraries = [
         jpa:            'org.hibernate.javax.persistence:hibernate-jpa-2.0-api:1.0.1.Final',
         jta:            'javax.transaction:jta:1.1',
         validation:     'javax.validation:validation-api:1.0.0.GA',
-        validator:      'org.hibernate:hibernate-validator:4.0.2.GA',
+        validator:      'org.hibernate:hibernate-validator:4.2.0.Final',
         jacc:           'org.jboss.javaee:jboss-jacc-api:1.1.0.GA',
 
         // logging

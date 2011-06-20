@@ -75,6 +75,7 @@ import org.hibernate.metamodel.binding.state.SimpleAttributeBindingState;
 import org.hibernate.metamodel.relational.state.TupleRelationalState;
 import org.hibernate.metamodel.relational.state.ValueRelationalState;
 import org.hibernate.metamodel.source.spi.MetadataImplementor;
+import org.hibernate.service.classloading.spi.ClassLoaderService;
 
 /**
  * TODO : javadoc
@@ -154,14 +155,17 @@ abstract class AbstractEntityBinder {
 		String className = bindingContext.getClassName( entityClazz.getName() );
 		String proxyName = entityBinding.getProxyInterfaceName();
 
-		entityBinding.getEntity().getPojoEntitySpecifics().setClassName( className );
+		final ClassLoaderService classLoaderService =
+				bindingContext.getServiceRegistry().getService( ClassLoaderService.class );
+
+		entityBinding.getEntity().getPojoEntitySpecifics().setClassName( className, classLoaderService );
 
 		if ( proxyName != null ) {
-			entityBinding.getEntity().getPojoEntitySpecifics().setProxyInterfaceName( proxyName );
+			entityBinding.getEntity().getPojoEntitySpecifics().setProxyInterfaceName( proxyName, classLoaderService );
 			entityBinding.setLazy( true );
 		}
 		else if ( entityBinding.isLazy() ) {
-			entityBinding.getEntity().getPojoEntitySpecifics().setProxyInterfaceName( className );
+			entityBinding.getEntity().getPojoEntitySpecifics().setProxyInterfaceName( className, classLoaderService );
 		}
 
 		XMLTuplizerElement tuplizer = locateTuplizerDefinition( entityClazz, EntityMode.POJO );

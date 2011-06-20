@@ -24,6 +24,7 @@
 package org.hibernate.metamodel.domain;
 
 import org.hibernate.EntityMode;
+import org.hibernate.service.classloading.spi.ClassLoaderService;
 
 /**
  * Models the notion of an entity
@@ -68,8 +69,8 @@ public class Entity extends AbstractAttributeContainer {
 
 	public static class PojoEntitySpecifics implements EntityModeEntitySpecifics {
 		private String tuplizerClassName;
-		private String className;
-		private String proxyInterfaceName;
+		private JavaType entityClass;
+		private JavaType proxyInterface;
 
 		@Override
 		public EntityMode getEntityMode() {
@@ -85,19 +86,27 @@ public class Entity extends AbstractAttributeContainer {
 		}
 
 		public String getClassName() {
-			return className;
+			return entityClass.getName();
 		}
 
-		public void setClassName(String className) {
-			this.className = className;
+		public void setClassName(String className, ClassLoaderService classLoaderService) {
+			this.entityClass = new JavaType( className, classLoaderService );
+		}
+
+		public Class<?> getEntityClass() {
+			return entityClass.getClassReference();
 		}
 
 		public String getProxyInterfaceName() {
-			return proxyInterfaceName;
+			return proxyInterface.getName();
 		}
 
-		public void setProxyInterfaceName(String proxyInterfaceName) {
-			this.proxyInterfaceName = proxyInterfaceName;
+		public void setProxyInterfaceName(String proxyInterfaceName, ClassLoaderService classLoaderService) {
+			this.proxyInterface = new JavaType( proxyInterfaceName, classLoaderService );
+		}
+
+		public Class<?> getProxyInterfaceClass() {
+			return proxyInterface.getClassReference();
 		}
 	}
 

@@ -80,6 +80,8 @@ public interface AttributeBinding {
 
 	public String getPropertyAccessorName();
 
+	public boolean isBasicPropertyAccessor();
+
 	public boolean hasFormula();
 
 	public boolean isAlternateUniqueKey();

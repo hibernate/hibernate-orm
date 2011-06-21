@@ -180,6 +180,12 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 	}
 
 	@Override
+	public boolean isBasicPropertyAccessor() {
+		return propertyAccessorName==null || "property".equals( propertyAccessorName );
+	}
+
+
+	@Override
 	public boolean hasFormula() {
 		for ( SimpleValue simpleValue : getValues() ) {
 			if ( simpleValue instanceof DerivedValue ) {

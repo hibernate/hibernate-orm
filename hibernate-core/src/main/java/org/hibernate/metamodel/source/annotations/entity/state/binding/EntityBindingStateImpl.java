@@ -35,7 +35,7 @@ import org.hibernate.metamodel.binding.CustomSQL;
 import org.hibernate.metamodel.binding.InheritanceType;
 import org.hibernate.metamodel.binding.state.EntityBindingState;
 import org.hibernate.metamodel.domain.Hierarchical;
-import org.hibernate.metamodel.source.annotations.entity.ConfiguredClass;
+import org.hibernate.metamodel.source.annotations.entity.EntityClass;
 import org.hibernate.metamodel.source.spi.MetaAttributeContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.tuple.entity.EntityTuplizer;
@@ -78,7 +78,7 @@ public class EntityBindingStateImpl implements EntityBindingState {
 
 	private Set<String> synchronizedTableNames;
 
-	public EntityBindingStateImpl(Hierarchical superType, ConfiguredClass configuredClass) {
+	public EntityBindingStateImpl(Hierarchical superType, EntityClass configuredClass) {
 		this.className = configuredClass.getName();
 		this.superType = superType;
 		this.isRoot = configuredClass.isRoot();

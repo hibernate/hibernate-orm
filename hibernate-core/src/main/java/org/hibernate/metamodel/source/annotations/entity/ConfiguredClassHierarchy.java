@@ -38,18 +38,16 @@ import org.hibernate.AnnotationException;
 import org.hibernate.metamodel.binding.InheritanceType;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.util.JandexHelper;
-import org.hibernate.metamodel.source.annotations.util.ReflectionHelper;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
 
 /**
  * Contains information about the access and inheritance type for all classes within a class hierarchy.
  *
  * @author Hardy Ferentschik
  */
-public class ConfiguredClassHierarchy implements Iterable<ConfiguredClass> {
+public class ConfiguredClassHierarchy implements Iterable<EntityClass> {
 	private final AccessType defaultAccessType;
 	private final InheritanceType inheritanceType;
-	private final List<ConfiguredClass> configuredClasses;
+	private final List<EntityClass> entityClasses;
 
 	public static ConfiguredClassHierarchy create(List<ClassInfo> classes, AnnotationBindingContext context) {
 		return new ConfiguredClassHierarchy( classes, context );
@@ -60,17 +58,18 @@ public class ConfiguredClassHierarchy implements Iterable<ConfiguredClass> {
 		inheritanceType = determineInheritanceType( classes );
 
 		// the resolved type for the top level class in the hierarchy
-		Class<?> clazz = context.classLoaderService().classForName( classes.get( classes.size() - 1 ).name().toString() );
-		ResolvedTypeWithMembers resolvedType = ReflectionHelper.resolveMemberTypes( clazz );
+		ResolvedTypeWithMembers resolvedType = context.resolveType(
+				classes.get( classes.size() - 1 ).name().toString()
+		);
 
-		configuredClasses = new ArrayList<ConfiguredClass>();
-		ConfiguredClass parent = null;
+		entityClasses = new ArrayList<EntityClass>();
+		EntityClass parent = null;
 		for ( ClassInfo info : classes ) {
-			ConfiguredClass configuredClass = new ConfiguredClass(
+			EntityClass entityClass = new EntityClass(
 					info, parent, defaultAccessType, inheritanceType, resolvedType, context
 			);
-			configuredClasses.add( configuredClass );
-			parent = configuredClass;
+			entityClasses.add( entityClass );
+			parent = entityClass;
 		}
 	}
 
@@ -85,8 +84,8 @@ public class ConfiguredClassHierarchy implements Iterable<ConfiguredClass> {
 	/**
 	 * @return An iterator iterating in top down manner over the configured classes in this hierarchy.
 	 */
-	public Iterator<ConfiguredClass> iterator() {
-		return configuredClasses.iterator();
+	public Iterator<EntityClass> iterator() {
+		return entityClasses.iterator();
 	}
 
 	@Override
@@ -94,7 +93,7 @@ public class ConfiguredClassHierarchy implements Iterable<ConfiguredClass> {
 		final StringBuilder sb = new StringBuilder();
 		sb.append( "ConfiguredClassHierarchy" );
 		sb.append( "{defaultAccessType=" ).append( defaultAccessType );
-		sb.append( ", configuredClasses=" ).append( configuredClasses );
+		sb.append( ", configuredClasses=" ).append( entityClasses );
 		sb.append( '}' );
 		return sb.toString();
 	}

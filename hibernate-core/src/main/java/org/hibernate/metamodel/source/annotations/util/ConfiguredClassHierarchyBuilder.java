@@ -37,8 +37,8 @@ import org.jboss.jandex.Index;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
-import org.hibernate.metamodel.source.annotations.entity.ConfiguredClassHierarchy;
 import org.hibernate.metamodel.source.annotations.entity.AnnotationBindingContext;
+import org.hibernate.metamodel.source.annotations.entity.ConfiguredClassHierarchy;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 
@@ -95,7 +95,7 @@ public class ConfiguredClassHierarchyBuilder {
 			}
 		}
 
-		AnnotationBindingContext context = new AnnotationBindingContext(index, serviceRegistry);
+		AnnotationBindingContext context = new AnnotationBindingContext( index, serviceRegistry );
 		Set<ConfiguredClassHierarchy> hierarchies = new HashSet<ConfiguredClassHierarchy>();
 		List<List<ClassInfo>> processedList = new ArrayList<List<ClassInfo>>();
 		for ( List<ClassInfo> classInfoList : processedClassInfos.values() ) {
@@ -121,18 +121,19 @@ public class ConfiguredClassHierarchyBuilder {
 		AnnotationInstance mappedSuperClassAnnotation = JandexHelper.getSingleAnnotation(
 				info, JPADotNames.MAPPED_SUPERCLASS
 		);
-		AnnotationInstance embeddableAnnotation = JandexHelper.getSingleAnnotation(
-				info, JPADotNames.EMBEDDABLE
-		);
 
-		// we are only interested in building the class hierarchies for @Entity or @MappedSuperclass w
-		if ( jpaEntityAnnotation == null && mappedSuperClassAnnotation == null && embeddableAnnotation == null ) {
+		// we are only interested in building the class hierarchies for @Entity or @MappedSuperclass
+		if ( jpaEntityAnnotation == null && mappedSuperClassAnnotation == null ) {
 			return false;
 		}
 
 		// some sanity checks
 		String className = info.toString();
 		assertNotEntityAndMappedSuperClass( jpaEntityAnnotation, mappedSuperClassAnnotation, className );
+
+		AnnotationInstance embeddableAnnotation = JandexHelper.getSingleAnnotation(
+				info, JPADotNames.EMBEDDABLE
+		);
 		assertNotEntityAndEmbeddable( jpaEntityAnnotation, embeddableAnnotation, className );
 
 		return isConfiguredClass;

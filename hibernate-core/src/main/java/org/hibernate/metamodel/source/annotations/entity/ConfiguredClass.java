@@ -30,6 +30,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -42,7 +43,6 @@ import com.fasterxml.classmate.members.HierarchicType;
 import com.fasterxml.classmate.members.ResolvedMember;
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;
-import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.FieldInfo;
@@ -51,23 +51,16 @@ import org.jboss.jandex.MethodInfo;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
-import org.hibernate.MappingException;
-import org.hibernate.metamodel.binding.InheritanceType;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.source.annotations.util.ReflectionHelper;
 
 /**
- * Represents an entity, mapped superclass or component configured via annotations/xml.
+ * Base class for a configured entity, mapped super class or embeddable
  *
  * @author Hardy Ferentschik
  */
 public class ConfiguredClass {
-	/**
-	 * The parent of this configured class or {@code null} in case this configured class is the root of a hierarchy.
-	 */
-	private final ConfiguredClass parent;
-
 	/**
 	 * The Jandex class info for this configured class. Provides access to the annotation defined on this configured class.
 	 */
@@ -78,43 +71,40 @@ public class ConfiguredClass {
 	 */
 	private final Class<?> clazz;
 
-	private final boolean isRoot;
+	/**
+	 * The default access type for this entity
+	 */
 	private final AccessType classAccessType;
-	private final AccessType hierarchyAccessType;
 
-	private final InheritanceType inheritanceType;
-	private final boolean hasOwnTable;
-	private final String primaryTableName;
-
+	/**
+	 * The type of configured class, entity, mapped super class, embeddable, ...
+	 */
 	private final ConfiguredClassType configuredClassType;
-	private final IdType idType;
 
+	/**
+	 * The mapped attributes for entity
+	 */
 	private final Map<String, MappedAttribute> mappedAttributes;
+
+	/**
+	 * The embedded classes for this entity
+	 */
+	private final Map<String, EmbeddedClass> embeddedClasses = new HashMap<String, EmbeddedClass>();
+
 	private final Set<String> transientFieldNames = new HashSet<String>();
 	private final Set<String> transientMethodNames = new HashSet<String>();
 
 	private final AnnotationBindingContext context;
 
-	public ConfiguredClass(ClassInfo info,
-						   ConfiguredClass parent,
-						   AccessType hierarchyAccessType,
-						   InheritanceType inheritanceType,
+	public ConfiguredClass(ClassInfo classInfo,
+						   AccessType defaultAccessType,
 						   ResolvedTypeWithMembers resolvedType,
 						   AnnotationBindingContext context) {
 		this.context = context;
-		this.classInfo = info;
-		this.parent = parent;
-		this.isRoot = parent == null;
-		this.hierarchyAccessType = hierarchyAccessType;
-		this.inheritanceType = inheritanceType;
-		this.clazz = context.classLoaderService().classForName( info.toString() );
-
+		this.classInfo = classInfo;
+		this.clazz = context.classLoaderService().classForName( classInfo.toString() );
 		this.configuredClassType = determineType();
-		this.classAccessType = determineClassAccessType();
-		this.idType = determineIdType();
-
-		this.hasOwnTable = definesItsOwnTable();
-		this.primaryTableName = determinePrimaryTableName();
+		this.classAccessType = determineClassAccessType( defaultAccessType );
 
 		// find transient field and method names
 		findTransientFieldAndMethodNames();
@@ -133,40 +123,24 @@ public class ConfiguredClass {
 		return clazz.getName();
 	}
 
+	public Class<?> getConfiguredClass() {
+		return clazz;
+	}
+
 	public ClassInfo getClassInfo() {
 		return classInfo;
-	}
-
-	public ConfiguredClass getParent() {
-		return parent;
-	}
-
-	public boolean isRoot() {
-		return isRoot;
 	}
 
 	public ConfiguredClassType getConfiguredClassType() {
 		return configuredClassType;
 	}
 
-	public InheritanceType getInheritanceType() {
-		return inheritanceType;
-	}
-
-	public IdType getIdType() {
-		return idType;
-	}
-
-	public boolean hasOwnTable() {
-		return hasOwnTable;
-	}
-
-	public String getPrimaryTableName() {
-		return primaryTableName;
-	}
-
 	public Iterable<MappedAttribute> getMappedAttributes() {
 		return mappedAttributes.values();
+	}
+
+	public Iterable<EmbeddedClass> getEmbeddedClasses() {
+		return embeddedClasses.values();
 	}
 
 	public MappedAttribute getMappedProperty(String propertyName) {
@@ -177,11 +151,12 @@ public class ConfiguredClass {
 	public String toString() {
 		final StringBuilder sb = new StringBuilder();
 		sb.append( "ConfiguredClass" );
-		sb.append( "{clazz=" ).append( clazz.getSimpleName() );
-		sb.append( ", type=" ).append( configuredClassType );
+		sb.append( "{clazz=" ).append( clazz );
 		sb.append( ", classAccessType=" ).append( classAccessType );
-		sb.append( ", isRoot=" ).append( isRoot );
-		sb.append( ", inheritanceType=" ).append( inheritanceType );
+		sb.append( ", configuredClassType=" ).append( configuredClassType );
+		sb.append( ", mappedAttributes=" ).append( mappedAttributes );
+		sb.append( ", transientFieldNames=" ).append( transientFieldNames );
+		sb.append( ", transientMethodNames=" ).append( transientMethodNames );
 		sb.append( '}' );
 		return sb.toString();
 	}
@@ -210,9 +185,9 @@ public class ConfiguredClass {
 		return ConfiguredClassType.NON_ENTITY;
 	}
 
-	private AccessType determineClassAccessType() {
+	private AccessType determineClassAccessType(AccessType defaultAccessType) {
 		// default to the hierarchy access type to start with
-		AccessType accessType = hierarchyAccessType;
+		AccessType accessType = defaultAccessType;
 
 		AnnotationInstance accessAnnotation = JandexHelper.getSingleAnnotation( classInfo, JPADotNames.ACCESS );
 		if ( accessAnnotation != null ) {
@@ -377,7 +352,7 @@ public class ConfiguredClass {
 	}
 
 	private MappedAttribute createMappedProperty(Member member, ResolvedTypeWithMembers resolvedType) {
-		final String name = ReflectionHelper.getPropertyName( member );
+		final String attributeName = ReflectionHelper.getPropertyName( member );
 		ResolvedMember[] resolvedMembers;
 		if ( member instanceof Field ) {
 			resolvedMembers = resolvedType.getMemberFields();
@@ -385,7 +360,7 @@ public class ConfiguredClass {
 		else {
 			resolvedMembers = resolvedType.getMemberMethods();
 		}
-		final Type type = findResolvedType( member.getName(), resolvedMembers );
+		final Class<?> type = (Class<?>) findResolvedType( member.getName(), resolvedMembers );
 		final Map<DotName, List<AnnotationInstance>> annotations = JandexHelper.getMemberAnnotations(
 				classInfo, member.getName()
 		);
@@ -394,16 +369,34 @@ public class ConfiguredClass {
 		AttributeType attributeType = determineAttributeType( annotations );
 		switch ( attributeType ) {
 			case BASIC: {
-				attribute = SimpleAttribute.createSimpleAttribute( name, ( (Class) type ).getName(), annotations );
+				attribute = SimpleAttribute.createSimpleAttribute( attributeName, type.getName(), annotations );
 				break;
 			}
 			case EMBEDDED: {
-				throw new HibernateException( "foo" );
+				ClassInfo embeddableClassInfo = context.getClassInfo( type.getName() );
+				if ( classInfo == null ) {
+					String msg = String.format(
+							"Attribute %s of entity %s is annotated with @Embedded, but no embeddable configuration for type %s can be found.",
+							attributeName,
+							getName(),
+							type.getName()
+					);
+					throw new AnnotationException( msg );
+				}
+
+				EmbeddedClass embeddedClass = new EmbeddedClass(
+						embeddableClassInfo,
+						classAccessType,
+						context.resolveType( type.getName() ),
+						context
+				);
+
+				embeddedClasses.put( attributeName, embeddedClass );
 			}
 			// TODO handle the different association types
 			default: {
 				attribute = AssociationAttribute.createAssociationAttribute(
-						name, ( (Class) type ).getName(), attributeType, annotations
+						attributeName, ( (Class) type ).getName(), attributeType, annotations
 				);
 			}
 		}
@@ -486,73 +479,5 @@ public class ConfiguredClass {
 				transientMethodNames.add( ( (MethodInfo) target ).name() );
 			}
 		}
-	}
-
-	private boolean definesItsOwnTable() {
-		// mapped super classes and embeddables don't have their own tables
-		if ( ConfiguredClassType.MAPPED_SUPERCLASS.equals( getConfiguredClassType() ) || ConfiguredClassType.EMBEDDABLE
-				.equals( getConfiguredClassType() ) ) {
-			return false;
-		}
-
-		if ( InheritanceType.SINGLE_TABLE.equals( inheritanceType ) ) {
-			return isRoot();
-		}
-		return true;
-	}
-
-	private String determinePrimaryTableName() {
-		String tableName = null;
-		if ( hasOwnTable() ) {
-			tableName = clazz.getSimpleName();
-			AnnotationInstance tableAnnotation = JandexHelper.getSingleAnnotation(
-					classInfo, JPADotNames.TABLE
-			);
-			if ( tableAnnotation != null ) {
-				AnnotationValue value = tableAnnotation.value( "name" );
-				String tmp = value == null ? null : value.asString();
-				if ( tmp != null && !tmp.isEmpty() ) {
-					tableName = tmp;
-				}
-			}
-		}
-		else if ( parent != null
-				&& !parent.getConfiguredClassType().equals( ConfiguredClassType.MAPPED_SUPERCLASS )
-				&& !parent.getConfiguredClassType().equals( ConfiguredClassType.EMBEDDABLE ) ) {
-			tableName = parent.getPrimaryTableName();
-		}
-		return tableName;
-	}
-
-	private IdType determineIdType() {
-		List<AnnotationInstance> idAnnotations = getClassInfo().annotations().get( JPADotNames.ENTITY );
-		List<AnnotationInstance> embeddedIdAnnotations = getClassInfo()
-				.annotations()
-				.get( JPADotNames.EMBEDDED_ID );
-
-		if ( idAnnotations != null && embeddedIdAnnotations != null ) {
-			throw new MappingException(
-					"@EmbeddedId and @Id cannot be used together. Check the configuration for " + getName() + "."
-			);
-		}
-
-		if ( embeddedIdAnnotations != null ) {
-			if ( embeddedIdAnnotations.size() == 1 ) {
-				return IdType.EMBEDDED;
-			}
-			else {
-				throw new AnnotationException( "Multiple @EmbeddedId annotations are not allowed" );
-			}
-		}
-
-		if ( idAnnotations != null ) {
-			if ( idAnnotations.size() == 1 ) {
-				return IdType.SIMPLE;
-			}
-			else {
-				return IdType.COMPOSED;
-			}
-		}
-		return IdType.NONE;
 	}
 }

@@ -23,44 +23,20 @@
  */
 package org.hibernate.metamodel.source.annotations.entity;
 
-import javax.persistence.Embeddable;
-import javax.persistence.Embedded;
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import javax.persistence.AccessType;
 
-import org.junit.Test;
-
-import org.hibernate.metamodel.binding.EntityBinding;
-
-import static junit.framework.Assert.assertNotNull;
+import com.fasterxml.classmate.ResolvedTypeWithMembers;
+import org.jboss.jandex.ClassInfo;
 
 /**
- * Tests for {@code j.p.Embeddable}.
- *
  * @author Hardy Ferentschik
  */
-public class EmbeddableBindingTests extends BaseAnnotationBindingTestCase {
-	@Test
-	public void testEmbeddable() {
-		buildMetadataSources( User.class, Address.class );
-		EntityBinding binding = getEntityBinding( User.class );
-		assertNotNull( binding.getAttributeBinding( "city" ) );
-	}
-
-	@Entity
-	class User {
-		@Id
-		private int id;
-
-		@Embedded
-		private Address address;
-	}
-
-	@Embeddable
-	class Address {
-		String street;
-		String city;
-		String postCode;
+public class EmbeddedClass extends ConfiguredClass {
+	public EmbeddedClass(ClassInfo classInfo,
+						 AccessType defaultAccessType,
+						 ResolvedTypeWithMembers resolvedType,
+						 AnnotationBindingContext context) {
+		super( classInfo, defaultAccessType, resolvedType, context );
 	}
 }
 

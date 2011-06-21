@@ -40,6 +40,7 @@ import org.junit.Test;
 
 import org.hibernate.metamodel.source.annotations.entity.ConfiguredClass;
 import org.hibernate.metamodel.source.annotations.entity.ConfiguredClassHierarchy;
+import org.hibernate.metamodel.source.annotations.entity.EntityClass;
 import org.hibernate.metamodel.source.annotations.entity.MappedAttribute;
 import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
@@ -76,7 +77,7 @@ public class GenericTypeDiscoveryTest extends BaseUnitTestCase {
 		);
 		assertEquals( "There should be only one hierarchy", 1, hierarchies.size() );
 
-		Iterator<ConfiguredClass> iter = hierarchies.iterator().next().iterator();
+		Iterator<EntityClass> iter = hierarchies.iterator().next().iterator();
 		ConfiguredClass configuredClass = iter.next();
 		ClassInfo info = configuredClass.getClassInfo();
 		assertEquals( "wrong class", DotName.createSimple( Stuff.class.getName() ), info.name() );

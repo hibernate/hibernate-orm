@@ -29,21 +29,23 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import org.jboss.jandex.Index;
+import org.jboss.jandex.Indexer;
+import org.jboss.logging.Logger;
+
 import org.hibernate.HibernateException;
 import org.hibernate.internal.CoreMessageLogger;
-import org.jboss.jandex.Index;
-
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.source.annotation.xml.XMLEntityMappings;
-import org.hibernate.metamodel.source.annotations.entity.ConfiguredClass;
 import org.hibernate.metamodel.source.annotations.entity.ConfiguredClassHierarchy;
 import org.hibernate.metamodel.source.annotations.entity.EntityBinder;
+import org.hibernate.metamodel.source.annotations.entity.EntityClass;
+import org.hibernate.metamodel.source.annotations.global.FetchProfileBinder;
 import org.hibernate.metamodel.source.annotations.global.FilterDefBinder;
 import org.hibernate.metamodel.source.annotations.global.IdGeneratorBinder;
 import org.hibernate.metamodel.source.annotations.global.QueryBinder;
-import org.hibernate.metamodel.source.annotations.global.TypeDefBinder;
-import org.hibernate.metamodel.source.annotations.global.FetchProfileBinder;
 import org.hibernate.metamodel.source.annotations.global.TableBinder;
+import org.hibernate.metamodel.source.annotations.global.TypeDefBinder;
 import org.hibernate.metamodel.source.annotations.util.ConfiguredClassHierarchyBuilder;
 import org.hibernate.metamodel.source.annotations.xml.OrmXmlParser;
 import org.hibernate.metamodel.source.internal.JaxbRoot;
@@ -51,9 +53,6 @@ import org.hibernate.metamodel.source.internal.MetadataImpl;
 import org.hibernate.metamodel.source.spi.Binder;
 import org.hibernate.metamodel.source.spi.MetadataImplementor;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
-
-import org.jboss.jandex.Indexer;
-import org.jboss.logging.Logger;
 
 /**
  * Main class responsible to creating and binding the Hibernate meta-model from annotations.
@@ -63,7 +62,10 @@ import org.jboss.logging.Logger;
  * @author Hardy Ferentschik
  */
 public class AnnotationBinder implements Binder {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, AnnotationBinder.class.getName() );
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			AnnotationBinder.class.getName()
+	);
 
 	private final MetadataImplementor metadata;
 
@@ -75,7 +77,7 @@ public class AnnotationBinder implements Binder {
 	}
 
 	@Override
-	@SuppressWarnings( {"unchecked"})
+	@SuppressWarnings( { "unchecked" })
 	public void prepare(MetadataSources sources) {
 		// create a jandex index from the annotated classes
 		Indexer indexer = new Indexer();
@@ -113,7 +115,7 @@ public class AnnotationBinder implements Binder {
 		}
 	}
 
-	private ClassLoaderService classLoaderService(){
+	private ClassLoaderService classLoaderService() {
 		if ( classLoaderService == null ) {
 			classLoaderService = metadata.getServiceRegistry().getService( ClassLoaderService.class );
 		}
@@ -122,12 +124,12 @@ public class AnnotationBinder implements Binder {
 
 	@Override
 	public void bindIndependentMetadata(MetadataSources sources) {
-        TypeDefBinder.bind( metadata, index );
+		TypeDefBinder.bind( metadata, index );
 	}
 
 	@Override
 	public void bindTypeDependentMetadata(MetadataSources sources) {
-        IdGeneratorBinder.bind( metadata, index );
+		IdGeneratorBinder.bind( metadata, index );
 	}
 
 	@Override
@@ -139,9 +141,9 @@ public class AnnotationBinder implements Binder {
 
 		// now we process each hierarchy one at the time
 		for ( ConfiguredClassHierarchy hierarchy : hierarchies ) {
-			for ( ConfiguredClass configuredClass : hierarchy ) {
-				LOG.bindingEntityFromAnnotatedClass( configuredClass.getName() );
-				EntityBinder entityBinder = new EntityBinder( metadata, configuredClass );
+			for ( EntityClass entityClass : hierarchy ) {
+				LOG.bindingEntityFromAnnotatedClass( entityClass.getName() );
+				EntityBinder entityBinder = new EntityBinder( metadata, entityClass );
 				entityBinder.bind();
 			}
 		}
@@ -150,9 +152,9 @@ public class AnnotationBinder implements Binder {
 	@Override
 	public void bindMappingDependentMetadata(MetadataSources sources) {
 		TableBinder.bind( metadata, index );
-        FetchProfileBinder.bind( metadata, index );
-        QueryBinder.bind( metadata, index );
-        FilterDefBinder.bind( metadata, index );
+		FetchProfileBinder.bind( metadata, index );
+		QueryBinder.bind( metadata, index );
+		FilterDefBinder.bind( metadata, index );
 	}
 }
 

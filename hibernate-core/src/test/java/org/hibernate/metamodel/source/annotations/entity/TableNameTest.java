@@ -40,8 +40,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import org.hibernate.metamodel.binding.InheritanceType;
-import org.hibernate.metamodel.source.annotations.entity.ConfiguredClass;
-import org.hibernate.metamodel.source.annotations.entity.ConfiguredClassHierarchy;
 import org.hibernate.metamodel.source.annotations.util.ConfiguredClassHierarchyBuilder;
 import org.hibernate.metamodel.source.annotations.util.JandexHelper;
 import org.hibernate.service.ServiceRegistryBuilder;
@@ -91,28 +89,28 @@ public class TableNameTest extends BaseUnitTestCase {
 		);
 		assertEquals( "There should be only one hierarchy", 1, hierarchies.size() );
 
-		Iterator<ConfiguredClass> iter = hierarchies.iterator().next().iterator();
-		ConfiguredClass configuredClass = iter.next();
-		ClassInfo info = configuredClass.getClassInfo();
+		Iterator<EntityClass> iter = hierarchies.iterator().next().iterator();
+		EntityClass entityClass = iter.next();
+		ClassInfo info = entityClass.getClassInfo();
 		assertEquals( "wrong class", DotName.createSimple( A.class.getName() ), info.name() );
-		assertTrue( configuredClass.hasOwnTable() );
+		assertTrue( entityClass.hasOwnTable() );
 		Assert.assertEquals(
-				"wrong inheritance type", InheritanceType.SINGLE_TABLE, configuredClass.getInheritanceType()
+				"wrong inheritance type", InheritanceType.SINGLE_TABLE, entityClass.getInheritanceType()
 		);
 		Assert.assertEquals(
-				"wrong table name", "A", configuredClass.getPrimaryTableName()
+				"wrong table name", "A", entityClass.getPrimaryTableName()
 		);
 
 		assertTrue( iter.hasNext() );
-		configuredClass = iter.next();
-		info = configuredClass.getClassInfo();
+		entityClass = iter.next();
+		info = entityClass.getClassInfo();
 		assertEquals( "wrong class", DotName.createSimple( B.class.getName() ), info.name() );
-		assertFalse( configuredClass.hasOwnTable() );
+		assertFalse( entityClass.hasOwnTable() );
 		Assert.assertEquals(
-				"wrong inheritance type", InheritanceType.SINGLE_TABLE, configuredClass.getInheritanceType()
+				"wrong inheritance type", InheritanceType.SINGLE_TABLE, entityClass.getInheritanceType()
 		);
 		Assert.assertEquals(
-				"wrong table name", "A", configuredClass.getPrimaryTableName()
+				"wrong table name", "A", entityClass.getPrimaryTableName()
 		);
 
 		assertFalse( iter.hasNext() );
@@ -138,28 +136,28 @@ public class TableNameTest extends BaseUnitTestCase {
 		);
 		assertEquals( "There should be only one hierarchy", 1, hierarchies.size() );
 
-		Iterator<ConfiguredClass> iter = hierarchies.iterator().next().iterator();
-		ConfiguredClass configuredClass = iter.next();
-		ClassInfo info = configuredClass.getClassInfo();
+		Iterator<EntityClass> iter = hierarchies.iterator().next().iterator();
+		EntityClass entityClass = iter.next();
+		ClassInfo info = entityClass.getClassInfo();
 		assertEquals( "wrong class", DotName.createSimple( A.class.getName() ), info.name() );
-		assertTrue( configuredClass.hasOwnTable() );
+		assertTrue( entityClass.hasOwnTable() );
 		Assert.assertEquals(
-				"wrong inheritance type", InheritanceType.TABLE_PER_CLASS, configuredClass.getInheritanceType()
+				"wrong inheritance type", InheritanceType.TABLE_PER_CLASS, entityClass.getInheritanceType()
 		);
 		Assert.assertEquals(
-				"wrong table name", "A", configuredClass.getPrimaryTableName()
+				"wrong table name", "A", entityClass.getPrimaryTableName()
 		);
 
 		assertTrue( iter.hasNext() );
-		configuredClass = iter.next();
-		info = configuredClass.getClassInfo();
+		entityClass = iter.next();
+		info = entityClass.getClassInfo();
 		assertEquals( "wrong class", DotName.createSimple( B.class.getName() ), info.name() );
-		assertTrue( configuredClass.hasOwnTable() );
+		assertTrue( entityClass.hasOwnTable() );
 		Assert.assertEquals(
-				"wrong inheritance type", InheritanceType.TABLE_PER_CLASS, configuredClass.getInheritanceType()
+				"wrong inheritance type", InheritanceType.TABLE_PER_CLASS, entityClass.getInheritanceType()
 		);
 		Assert.assertEquals(
-				"wrong table name", "B", configuredClass.getPrimaryTableName()
+				"wrong table name", "B", entityClass.getPrimaryTableName()
 		);
 
 		assertFalse( iter.hasNext() );
@@ -186,28 +184,28 @@ public class TableNameTest extends BaseUnitTestCase {
 		);
 		assertEquals( "There should be only one hierarchy", 1, hierarchies.size() );
 
-		Iterator<ConfiguredClass> iter = hierarchies.iterator().next().iterator();
-		ConfiguredClass configuredClass = iter.next();
-		ClassInfo info = configuredClass.getClassInfo();
+		Iterator<EntityClass> iter = hierarchies.iterator().next().iterator();
+		EntityClass entityClass = iter.next();
+		ClassInfo info = entityClass.getClassInfo();
 		assertEquals( "wrong class", DotName.createSimple( A.class.getName() ), info.name() );
-		assertTrue( configuredClass.hasOwnTable() );
+		assertTrue( entityClass.hasOwnTable() );
 		Assert.assertEquals(
-				"wrong inheritance type", InheritanceType.JOINED, configuredClass.getInheritanceType()
+				"wrong inheritance type", InheritanceType.JOINED, entityClass.getInheritanceType()
 		);
 		Assert.assertEquals(
-				"wrong table name", "FOO", configuredClass.getPrimaryTableName()
+				"wrong table name", "FOO", entityClass.getPrimaryTableName()
 		);
 
 		assertTrue( iter.hasNext() );
-		configuredClass = iter.next();
-		info = configuredClass.getClassInfo();
+		entityClass = iter.next();
+		info = entityClass.getClassInfo();
 		assertEquals( "wrong class", DotName.createSimple( B.class.getName() ), info.name() );
-		assertTrue( configuredClass.hasOwnTable() );
+		assertTrue( entityClass.hasOwnTable() );
 		Assert.assertEquals(
-				"wrong inheritance type", InheritanceType.JOINED, configuredClass.getInheritanceType()
+				"wrong inheritance type", InheritanceType.JOINED, entityClass.getInheritanceType()
 		);
 		Assert.assertEquals(
-				"wrong table name", "B", configuredClass.getPrimaryTableName()
+				"wrong table name", "B", entityClass.getPrimaryTableName()
 		);
 
 		assertFalse( iter.hasNext() );

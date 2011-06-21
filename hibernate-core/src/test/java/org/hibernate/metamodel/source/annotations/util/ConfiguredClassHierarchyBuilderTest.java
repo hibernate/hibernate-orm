@@ -42,10 +42,8 @@ import org.junit.Test;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.metamodel.binding.InheritanceType;
-import org.hibernate.metamodel.source.annotations.entity.ConfiguredClass;
 import org.hibernate.metamodel.source.annotations.entity.ConfiguredClassHierarchy;
-import org.hibernate.metamodel.source.annotations.entity.ConfiguredClass;
-import org.hibernate.metamodel.source.annotations.entity.ConfiguredClassHierarchy;
+import org.hibernate.metamodel.source.annotations.entity.EntityClass;
 import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.internal.BasicServiceRegistryImpl;
@@ -82,7 +80,7 @@ public class ConfiguredClassHierarchyBuilderTest extends BaseUnitTestCase {
 		);
 		assertEquals( "There should be only one hierarchy", 1, hierarchies.size() );
 
-		Iterator<ConfiguredClass> iter = hierarchies.iterator().next().iterator();
+		Iterator<EntityClass> iter = hierarchies.iterator().next().iterator();
 		ClassInfo info = iter.next().getClassInfo();
 		assertEquals( "wrong class", DotName.createSimple( Foo.class.getName() ), info.name() );
 		assertFalse( iter.hasNext() );
@@ -96,7 +94,7 @@ public class ConfiguredClassHierarchyBuilderTest extends BaseUnitTestCase {
 		);
 		assertEquals( "There should be only one hierarchy", 1, hierarchies.size() );
 
-		Iterator<ConfiguredClass> iter = hierarchies.iterator().next().iterator();
+		Iterator<EntityClass> iter = hierarchies.iterator().next().iterator();
 		ClassInfo info = iter.next().getClassInfo();
 		assertEquals( "wrong class", DotName.createSimple( A.class.getName() ), info.name() );
 		info = iter.next().getClassInfo();
@@ -139,7 +137,7 @@ public class ConfiguredClassHierarchyBuilderTest extends BaseUnitTestCase {
 		);
 		assertEquals( "There should be only one hierarchy", 1, hierarchies.size() );
 
-		Iterator<ConfiguredClass> iter = hierarchies.iterator().next().iterator();
+		Iterator<EntityClass> iter = hierarchies.iterator().next().iterator();
 		ClassInfo info = iter.next().getClassInfo();
 		assertEquals( "wrong class", DotName.createSimple( MappedSuperClass.class.getName() ), info.name() );
 		info = iter.next().getClassInfo();

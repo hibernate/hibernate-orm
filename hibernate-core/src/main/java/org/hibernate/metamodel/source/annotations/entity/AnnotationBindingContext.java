@@ -24,8 +24,12 @@
 package org.hibernate.metamodel.source.annotations.entity;
 
 
+import com.fasterxml.classmate.ResolvedTypeWithMembers;
+import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.DotName;
 import org.jboss.jandex.Index;
 
+import org.hibernate.metamodel.source.annotations.util.ReflectionHelper;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 
@@ -50,6 +54,17 @@ public class AnnotationBindingContext {
 			classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
 		}
 		return classLoaderService;
+	}
+
+	public ClassInfo getClassInfo(String className) {
+		DotName dotName = DotName.createSimple( className );
+		return index.getClassByName( dotName );
+	}
+
+	public ResolvedTypeWithMembers resolveType(String className) {
+		// the resolved type for the top level class in the hierarchy
+		Class<?> clazz = classLoaderService().classForName( className );
+		return ReflectionHelper.resolveMemberTypes( clazz );
 	}
 }
 

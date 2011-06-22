@@ -170,15 +170,17 @@ abstract class AbstractEntityBinder {
 
 		XMLTuplizerElement tuplizer = locateTuplizerDefinition( entityClazz, EntityMode.POJO );
 		if ( tuplizer != null ) {
-			entityBinding.getEntity().getPojoEntitySpecifics().setTuplizerClassName( tuplizer.getClazz() );
+			entityBinding.getEntity().getPojoEntitySpecifics().setTuplizerClassName( tuplizer.getClazz(), classLoaderService );
 		}
 	}
 
 	private void bindMapRepresentation(XMLHibernateMapping.XMLClass entityClazz,
 									   EntityBinding entityBinding) {
 		XMLTuplizerElement tuplizer = locateTuplizerDefinition( entityClazz, EntityMode.MAP );
+		final ClassLoaderService classLoaderService =
+				bindingContext.getServiceRegistry().getService( ClassLoaderService.class );
 		if ( tuplizer != null ) {
-			entityBinding.getEntity().getMapEntitySpecifics().setTuplizerClassName( tuplizer.getClazz() );
+			entityBinding.getEntity().getMapEntitySpecifics().setTuplizerClassName( tuplizer.getClazz(), classLoaderService );
 		}
 	}
 

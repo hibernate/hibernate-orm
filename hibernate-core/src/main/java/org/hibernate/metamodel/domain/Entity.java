@@ -24,7 +24,9 @@
 package org.hibernate.metamodel.domain;
 
 import org.hibernate.EntityMode;
+import org.hibernate.MappingException;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
+import org.hibernate.tuple.entity.EntityTuplizer;
 
 /**
  * Models the notion of an entity
@@ -65,10 +67,12 @@ public class Entity extends AbstractAttributeContainer {
 		public EntityMode getEntityMode();
 
 		public String getTuplizerClassName();
+
+		public Class<EntityTuplizer> getTuplizerClass();
 	}
 
 	public static class PojoEntitySpecifics implements EntityModeEntitySpecifics {
-		private String tuplizerClassName;
+		private JavaType tuplizerClass;
 		private JavaType entityClass;
 		private JavaType proxyInterface;
 
@@ -78,11 +82,20 @@ public class Entity extends AbstractAttributeContainer {
 		}
 
 		public String getTuplizerClassName() {
-			return tuplizerClassName;
+			return tuplizerClass.getName();
 		}
 
-		public void setTuplizerClassName(String tuplizerClassName) {
-			this.tuplizerClassName = tuplizerClassName;
+		public void setTuplizerClassName(String tuplizerClassName, ClassLoaderService classLoaderService) {
+			this.tuplizerClass = new JavaType( tuplizerClassName, classLoaderService);
+		}
+
+		@SuppressWarnings( {"unchecked"} )
+		public Class<EntityTuplizer> getTuplizerClass() {
+			Class clazz = tuplizerClass.getClassReference();
+			if ( ! EntityTuplizer.class.isAssignableFrom( clazz ) ) {
+				throw new MappingException( "Class does not implement EntityTuplizer" );
+			}
+			return ( Class<EntityTuplizer> ) clazz;
 		}
 
 		public String getClassName() {
@@ -112,7 +125,7 @@ public class Entity extends AbstractAttributeContainer {
 
 
 	public static class MapEntitySpecifics implements EntityModeEntitySpecifics {
-		private String tuplizerClassName;
+		private JavaType tuplizerClass;
 
 		@Override
 		public EntityMode getEntityMode() {
@@ -120,12 +133,22 @@ public class Entity extends AbstractAttributeContainer {
 		}
 
 		public String getTuplizerClassName() {
-			return tuplizerClassName;
+			return tuplizerClass.getName();
 		}
 
-		public void setTuplizerClassName(String tuplizerClassName) {
-			this.tuplizerClassName = tuplizerClassName;
+		public void setTuplizerClassName(String tuplizerClassName, ClassLoaderService classLoaderService) {
+			this.tuplizerClass = new JavaType( tuplizerClassName, classLoaderService );
 		}
+
+		@SuppressWarnings( {"unchecked"} )
+		public Class<EntityTuplizer> getTuplizerClass() {
+			Class clazz = tuplizerClass.getClassReference();
+			if ( ! EntityTuplizer.class.isAssignableFrom( clazz ) ) {
+				throw new MappingException( "Class does not implement EntityTuplizer" );
+			}
+			return ( Class<EntityTuplizer> ) clazz;
+		}
+
 	}
 
 }

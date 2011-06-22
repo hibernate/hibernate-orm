@@ -343,8 +343,12 @@ public class EntityBinding {
 		return optimisticLockMode;
 	}
 
-	public Class getEntityPersisterClass() {
+	public Class<EntityPersister> getEntityPersisterClass() {
 		return entityPersisterClass;
+	}
+
+	public Class<EntityTuplizer> getEntityTuplizerClass() {
+		return entityTuplizerClass;
 	}
 
 	public Boolean isAbstract() {

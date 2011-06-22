@@ -82,6 +82,16 @@ public class ConfiguredClass {
 	private final ConfiguredClassType configuredClassType;
 
 	/**
+	 * The attribute overrides defined on this entity
+	 */
+	private final List<AnnotationInstance> attributeOverrides;
+
+	/**
+	 * The association overrides defined on this entity;
+	 */
+	private final List<AnnotationInstance> associationOverrides;
+
+	/**
 	 * The mapped attributes for entity
 	 */
 	private final Map<String, MappedAttribute> mappedAttributes;
@@ -105,6 +115,9 @@ public class ConfiguredClass {
 		this.clazz = context.classLoaderService().classForName( classInfo.toString() );
 		this.configuredClassType = determineType();
 		this.classAccessType = determineClassAccessType( defaultAccessType );
+
+		this.attributeOverrides = findAttributeOverrides();
+		this.associationOverrides = findAssociationOverrides();
 
 		// find transient field and method names
 		findTransientFieldAndMethodNames();
@@ -388,6 +401,8 @@ public class ConfiguredClass {
 						embeddableClassInfo,
 						classAccessType,
 						context.resolveType( type.getName() ),
+						attributeOverrides,
+						associationOverrides,
 						context
 				);
 
@@ -479,5 +494,51 @@ public class ConfiguredClass {
 				transientMethodNames.add( ( (MethodInfo) target ).name() );
 			}
 		}
+	}
+
+	private List<AnnotationInstance> findAttributeOverrides() {
+		List<AnnotationInstance> attributeOverrideList = new ArrayList<AnnotationInstance>();
+
+		AnnotationInstance attributeOverrideAnnotation = JandexHelper.getSingleAnnotation(
+				classInfo,
+				JPADotNames.ATTRIBUTE_OVERRIDE
+		);
+		if ( attributeOverrideAnnotation != null ) {
+			attributeOverrideList.add( attributeOverrideAnnotation );
+		}
+
+		AnnotationInstance attributeOverridesAnnotation = JandexHelper.getSingleAnnotation(
+				classInfo,
+				JPADotNames.ATTRIBUTE_OVERRIDES
+		);
+		if ( attributeOverrideAnnotation != null ) {
+			AnnotationInstance[] attributeOverride = attributeOverridesAnnotation.value().asNestedArray();
+			Collections.addAll( attributeOverrideList, attributeOverride );
+		}
+
+		return attributeOverrideList;
+	}
+
+	private List<AnnotationInstance> findAssociationOverrides() {
+		List<AnnotationInstance> associationOverrideList = new ArrayList<AnnotationInstance>();
+
+		AnnotationInstance associationOverrideAnnotation = JandexHelper.getSingleAnnotation(
+				classInfo,
+				JPADotNames.ASSOCIATION_OVERRIDE
+		);
+		if ( associationOverrideAnnotation != null ) {
+			associationOverrideList.add( associationOverrideAnnotation );
+		}
+
+		AnnotationInstance associationOverridesAnnotation = JandexHelper.getSingleAnnotation(
+				classInfo,
+				JPADotNames.ASSOCIATION_OVERRIDES
+		);
+		if ( associationOverrideAnnotation != null ) {
+			AnnotationInstance[] attributeOverride = associationOverridesAnnotation.value().asNestedArray();
+			Collections.addAll( associationOverrideList, attributeOverride );
+		}
+
+		return associationOverrideList;
 	}
 }

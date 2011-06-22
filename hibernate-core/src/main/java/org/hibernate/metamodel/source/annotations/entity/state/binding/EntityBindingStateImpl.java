@@ -280,7 +280,7 @@ public class EntityBindingStateImpl implements EntityBindingState {
 	}
 
 	@Override
-	public Class getCustomEntityPersisterClass() {
+	public Class<EntityPersister> getCustomEntityPersisterClass() {
 		return persisterClass;
 	}
 

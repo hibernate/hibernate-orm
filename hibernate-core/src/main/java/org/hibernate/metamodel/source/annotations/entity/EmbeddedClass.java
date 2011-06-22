@@ -23,18 +23,23 @@
  */
 package org.hibernate.metamodel.source.annotations.entity;
 
+import java.util.List;
 import javax.persistence.AccessType;
 
 import com.fasterxml.classmate.ResolvedTypeWithMembers;
+import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.ClassInfo;
 
 /**
  * @author Hardy Ferentschik
  */
 public class EmbeddedClass extends ConfiguredClass {
+	// todo - need to take care of the attribute path (HF)
 	public EmbeddedClass(ClassInfo classInfo,
 						 AccessType defaultAccessType,
 						 ResolvedTypeWithMembers resolvedType,
+						 List<AnnotationInstance> attributeOverrides,
+						 List<AnnotationInstance> associationOverrides,
 						 AnnotationBindingContext context) {
 		super( classInfo, defaultAccessType, resolvedType, context );
 	}

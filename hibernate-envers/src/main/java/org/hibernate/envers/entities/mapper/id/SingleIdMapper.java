@@ -53,13 +53,20 @@ public class SingleIdMapper extends AbstractIdMapper implements SimpleIdMapperBu
         this.propertyData = propertyData;
     }
 
-    public void mapToEntityFromMap(Object obj, Map data) {
+    public boolean mapToEntityFromMap(Object obj, Map data) {
         if (data == null || obj == null) {
-            return;
+            return false;
+        }
+
+        Object value = data.get(propertyData.getName());
+        if (value == null) {
+            return false;
         }
 
         Setter setter = ReflectionTools.getSetter(obj.getClass(), propertyData);
-        setter.set(obj, data.get(propertyData.getName()), null);
+        setter.set(obj, value, null);
+
+        return true;
     }
 
     public Object mapToIdFromMap(Map data) {

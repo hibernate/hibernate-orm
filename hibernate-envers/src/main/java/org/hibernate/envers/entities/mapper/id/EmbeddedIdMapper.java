@@ -61,9 +61,9 @@ public class EmbeddedIdMapper extends AbstractCompositeIdMapper implements Simpl
         mapToMapFromId(data, getter.get(obj));
     }
 
-    public void mapToEntityFromMap(Object obj, Map data) {
+    public boolean mapToEntityFromMap(Object obj, Map data) {
         if (data == null || obj == null) {
-            return;
+            return false;
         }
 
         Getter getter = ReflectionTools.getGetter(obj.getClass(), idPropertyData);
@@ -71,11 +71,17 @@ public class EmbeddedIdMapper extends AbstractCompositeIdMapper implements Simpl
 
         try {
             Object subObj = ReflectHelper.getDefaultConstructor( getter.getReturnType() ).newInstance();
-            setter.set(obj, subObj, null);
 
+            boolean ret = true;
             for (IdMapper idMapper : ids.values()) {
-                idMapper.mapToEntityFromMap(subObj, data);
+                ret &= idMapper.mapToEntityFromMap(subObj, data);
             }
+
+            if (ret) {
+                setter.set(obj, subObj, null);
+            }
+
+            return ret;
         } catch (Exception e) {
             throw new AuditException(e);
         }

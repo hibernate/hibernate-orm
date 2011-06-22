@@ -9,6 +9,8 @@ import org.junit.Test;
 
 import javax.persistence.EntityManager;
 
+import static org.junit.Assert.*;
+
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
@@ -42,14 +44,14 @@ public class UnidirectionalMulIdWithNulls extends AbstractEntityTest {
     @Test
     public void testNullReference() {
         UniRefIngMulIdEntity nullRef = getAuditReader().find(UniRefIngMulIdEntity.class, 2, 1);
-        assert nullRef.getReference() == null;
+        assertNull(nullRef.getReference());
     }
 
     @Test
     public void testNotNullReference() {
         EmbIdTestEntity eite = getAuditReader().find(EmbIdTestEntity.class, ei, 1);
         UniRefIngMulIdEntity notNullRef = getAuditReader().find(UniRefIngMulIdEntity.class, 1, 1);
-        assert notNullRef.getReference() != null;
-        assert notNullRef.getReference().equals(eite);
+        assertNotNull(notNullRef.getReference());
+        assertEquals(notNullRef.getReference(), eite);
     }
 }

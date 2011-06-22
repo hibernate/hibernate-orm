@@ -47,10 +47,13 @@ public class MultipleIdMapper extends AbstractCompositeIdMapper implements Simpl
         mapToMapFromId(data, obj);
     }
 
-    public void mapToEntityFromMap(Object obj, Map data) {
+    public boolean mapToEntityFromMap(Object obj, Map data) {
+        boolean ret = true;
         for (IdMapper idMapper : ids.values()) {
-            idMapper.mapToEntityFromMap(obj, data);
+            ret &= idMapper.mapToEntityFromMap(obj, data);
         }
+
+        return ret;
     }
 
     public IdMapper prefixMappedProperties(String prefix) {

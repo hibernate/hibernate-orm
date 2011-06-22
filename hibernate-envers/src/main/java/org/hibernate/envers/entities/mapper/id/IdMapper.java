@@ -34,7 +34,12 @@ public interface IdMapper {
 
     void mapToMapFromEntity(Map<String, Object> data, Object obj);
 
-    void mapToEntityFromMap(Object obj, Map data);
+    /**
+     * @param obj Object to map to.
+     * @param data Data to map.
+     * @return True if data was mapped; false otherwise (when the id is {@code null}).
+     */
+    boolean mapToEntityFromMap(Object obj, Map data);
 
     Object mapToIdFromEntity(Object data);
 

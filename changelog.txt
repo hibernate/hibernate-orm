@@ -6,6 +6,42 @@ refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
 
+Changes in version 4.0.0.Beta2 (2011.06.22)
+------------------------------------------------------------------------------------------------------------------------
+http://opensource.atlassian.com/projects/hibernate/browse/HHH/fixforversion/11231
+
+** Sub-task
+    * [HHH-5671] - Apply entity-mode information to the logical model
+    * [HHH-6319] - Add getter for attribute node name
+    * [HHH-6320] - Add boolean values and getters to EntityIdentifier indicating if an ID is embedded or "identifier mapper"
+    * [HHH-6321] - Add org.hibernate.metamodel.binding.CascadeType.toCascadeStyle()
+    * [HHH-6341] - Add AttributeBinding.isBasicPropertyAccessor()
+    * [HHH-6342] - Add EntityModeEntitySpecifics.getTuplizerClass()
+    * [HHH-6346] - Add EntityBinding.entityTuplizerClass(); change getEntityPersisterClass() to return Class<EntityPersister>
+
+** Bug
+    * [HHH-6177] - Envers - problem with mapping relation when using mixed inheritance strategy
+    * [HHH-6327] - NPE when using JDBC connection pool C3pO
+    * [HHH-6348] - POST_COMMIT_DELETE listener does not get executed
+
+** Remove Feature
+    * [HHH-6330] - Remove entity mode switching capability
+
+** Task
+    * [HHH-6297] - remove legacy cache api
+    * [HHH-6300] - Create EntityBindingState implementation for annotations
+    * [HHH-6301] - Metamodel changes in preparation for integrating metamodel into persisters
+    * [HHH-6307] - Upgrade to slf4j 1.6.1
+    * [HHH-6308] - Upgrade to Hibernate Validator 4.2.0.Final
+    * [HHH-6318] - Change EntityIdentifier.attributeBinding to be type SimpleAttributeBinding
+    * [HHH-6322] - upgrade to hibernate-jpa-2.0-api-1.0.1.Final
+    * [HHH-6333] - Create DeferredInitializationValue
+    * [HHH-6334] - Create JavaType for the metamodel
+    * [HHH-6335] - Change PojoEntitySpecifics to use JavaType for entity and proxy classes
+    * [HHH-6340] - Revisit EntityBindingState
+    * [HHH-6343] - Remove JavaClassNameResolver because it is not used
+
+
 Changes in version 4.0.0.Beta1 (2011.06.08)
 ------------------------------------------------------------------------------------------------------------------------
 http://opensource.atlassian.com/projects/hibernate/browse/HHH/fixforversion/11222

@@ -33,6 +33,8 @@ import javax.persistence.EntityManager;
 import java.util.Arrays;
 import java.util.Iterator;
 
+import static junit.framework.Assert.*;
+
 /**
  * @author Adam Warski (adam at warski dot org)
  */
@@ -120,22 +122,17 @@ public class JoinMulIdNaming extends AbstractEntityTest {
     @SuppressWarnings({"unchecked"})
     @Test
     public void testJoinColumnNames() {
-        Iterator<Column> columns =
-                getCfg().getClassMapping("org.hibernate.envers.test.integration.naming.ids.JoinMulIdNamingRefIngEntity_AUD")
-                .getProperty("reference").getColumnIterator();
+		Iterator<Column> columns =
+				getCfg().getClassMapping("org.hibernate.envers.test.integration.naming.ids.JoinMulIdNamingRefIngEntity_AUD")
+						.getProperty("reference_id1").getColumnIterator();
+		assertTrue(columns.hasNext());
+		assertEquals("ID1_reference", columns.next().getName());
+		assertFalse(columns.hasNext());
 
-        boolean id1Found = false;
-        boolean id2Found = false;
-        while (columns.hasNext()) {
-            if ("ID1_reference".equals(columns.next().getName())) {
-                id1Found = true;
-            }
-
-            if ("ID2_reference".equals(columns.next().getName())) {
-                id2Found = true;
-            }
-        }
-
-        assert id1Found && id2Found;
-    }
+		columns = getCfg().getClassMapping("org.hibernate.envers.test.integration.naming.ids.JoinMulIdNamingRefIngEntity_AUD")
+				.getProperty("reference_id2").getColumnIterator();
+		assertTrue(columns.hasNext());
+		assertEquals("ID2_reference", columns.next().getName());
+		assertFalse(columns.hasNext());
+	}
 }

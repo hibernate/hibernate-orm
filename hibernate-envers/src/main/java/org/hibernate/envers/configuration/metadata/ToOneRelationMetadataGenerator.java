@@ -86,9 +86,15 @@ public final class ToOneRelationMetadataGenerator {
 
         MetadataTools.prefixNamesInPropertyElement(properties, lastPropertyPrefix,
                 MetadataTools.getColumnNameIterator(value.getColumnIterator()), false, insertable);
-        parent.add(properties);
 
-        // Adding mapper for the id
+		// Extracting related id properties from properties tag
+		for (Object o : properties.content()) {
+			Element element = (Element) o;
+			element.setParent(null);
+			parent.add(element);
+		}
+
+		// Adding mapper for the id
         PropertyData propertyData = propertyAuditingData.getPropertyData();
         mapper.addComposite(propertyData, new ToOneIdMapper(relMapper, propertyData, referencedEntityName, nonInsertableFake));
     }

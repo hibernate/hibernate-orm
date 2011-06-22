@@ -24,6 +24,7 @@
 package org.hibernate.metamodel.source.spi;
 
 import org.hibernate.cfg.NamingStrategy;
+import org.hibernate.metamodel.domain.JavaType;
 import org.hibernate.service.ServiceRegistry;
 
 /**
@@ -39,4 +40,8 @@ public interface BindingContext {
 	public MetaAttributeContext getMetaAttributeContext();
 
 	public MetadataImplementor getMetadataImplementor();
+
+	public <T> Class<T> locateClassByName(String name);
+
+	public JavaType makeJavaType(String className);
 }

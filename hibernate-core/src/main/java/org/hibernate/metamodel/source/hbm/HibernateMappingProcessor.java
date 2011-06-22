@@ -34,6 +34,7 @@ import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.binding.FetchProfile;
 import org.hibernate.metamodel.binding.TypeDef;
+import org.hibernate.metamodel.domain.JavaType;
 import org.hibernate.metamodel.relational.AuxiliaryDatabaseObject;
 import org.hibernate.metamodel.relational.BasicAuxiliaryDatabaseObjectImpl;
 import org.hibernate.metamodel.source.MappingException;
@@ -135,6 +136,16 @@ public class HibernateMappingProcessor implements HbmBindingContext {
 	@Override
 	public MetadataImplementor getMetadataImplementor() {
 		return metadata;
+	}
+
+	@Override
+	public <T> Class<T> locateClassByName(String name) {
+		return metadata.locateClassByName( name );
+	}
+
+	@Override
+	public JavaType makeJavaType(String className) {
+		return metadata.makeJavaType( className );
 	}
 
 	public void bindIndependentMetadata() {

@@ -23,11 +23,6 @@
  */
 package org.hibernate.metamodel.domain;
 
-import org.hibernate.EntityMode;
-import org.hibernate.MappingException;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
-import org.hibernate.tuple.entity.EntityTuplizer;
-
 /**
  * Models the notion of an entity
  *
@@ -35,120 +30,27 @@ import org.hibernate.tuple.entity.EntityTuplizer;
  * @author Hardy Ferentschik
  */
 public class Entity extends AbstractAttributeContainer {
-	private final PojoEntitySpecifics pojoEntitySpecifics = new PojoEntitySpecifics();
-	private final MapEntitySpecifics mapEntitySpecifics = new MapEntitySpecifics();
+	final JavaType javaType;
 
 	/**
 	 * Constructor for the entity
 	 *
 	 * @param name the name of the entity
 	 * @param superType the super type for this entity. If there is not super type {@code null} needs to be passed.
+	 * @param javaType the java type of the entity
 	 */
-	public Entity(String name, Hierarchical superType) {
+	public Entity(String name, Hierarchical superType, JavaType javaType) {
 		super( name, superType );
+		this.javaType = javaType;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public TypeNature getNature() {
 		return TypeNature.ENTITY;
 	}
 
-	public PojoEntitySpecifics getPojoEntitySpecifics() {
-		return pojoEntitySpecifics;
-	}
-
-	public MapEntitySpecifics getMapEntitySpecifics() {
-		return mapEntitySpecifics;
-	}
-
-	public static interface EntityModeEntitySpecifics {
-		public EntityMode getEntityMode();
-
-		public String getTuplizerClassName();
-
-		public Class<EntityTuplizer> getTuplizerClass();
-	}
-
-	public static class PojoEntitySpecifics implements EntityModeEntitySpecifics {
-		private JavaType tuplizerClass;
-		private JavaType entityClass;
-		private JavaType proxyInterface;
-
-		@Override
-		public EntityMode getEntityMode() {
-			return EntityMode.POJO;
-		}
-
-		public String getTuplizerClassName() {
-			return tuplizerClass.getName();
-		}
-
-		public void setTuplizerClassName(String tuplizerClassName, ClassLoaderService classLoaderService) {
-			this.tuplizerClass = new JavaType( tuplizerClassName, classLoaderService);
-		}
-
-		@SuppressWarnings( {"unchecked"} )
-		public Class<EntityTuplizer> getTuplizerClass() {
-			Class clazz = tuplizerClass.getClassReference();
-			if ( ! EntityTuplizer.class.isAssignableFrom( clazz ) ) {
-				throw new MappingException( "Class does not implement EntityTuplizer" );
-			}
-			return ( Class<EntityTuplizer> ) clazz;
-		}
-
-		public String getClassName() {
-			return entityClass.getName();
-		}
-
-		public void setClassName(String className, ClassLoaderService classLoaderService) {
-			this.entityClass = new JavaType( className, classLoaderService );
-		}
-
-		public Class<?> getEntityClass() {
-			return entityClass.getClassReference();
-		}
-
-		public String getProxyInterfaceName() {
-			return proxyInterface.getName();
-		}
-
-		public void setProxyInterfaceName(String proxyInterfaceName, ClassLoaderService classLoaderService) {
-			this.proxyInterface = new JavaType( proxyInterfaceName, classLoaderService );
-		}
-
-		public Class<?> getProxyInterfaceClass() {
-			return proxyInterface.getClassReference();
-		}
-	}
-
-
-	public static class MapEntitySpecifics implements EntityModeEntitySpecifics {
-		private JavaType tuplizerClass;
-
-		@Override
-		public EntityMode getEntityMode() {
-			return EntityMode.MAP;
-		}
-
-		public String getTuplizerClassName() {
-			return tuplizerClass.getName();
-		}
-
-		public void setTuplizerClassName(String tuplizerClassName, ClassLoaderService classLoaderService) {
-			this.tuplizerClass = new JavaType( tuplizerClassName, classLoaderService );
-		}
-
-		@SuppressWarnings( {"unchecked"} )
-		public Class<EntityTuplizer> getTuplizerClass() {
-			Class clazz = tuplizerClass.getClassReference();
-			if ( ! EntityTuplizer.class.isAssignableFrom( clazz ) ) {
-				throw new MappingException( "Class does not implement EntityTuplizer" );
-			}
-			return ( Class<EntityTuplizer> ) clazz;
-		}
-
+	public JavaType getJavaType() {
+		return javaType;
 	}
 
 }

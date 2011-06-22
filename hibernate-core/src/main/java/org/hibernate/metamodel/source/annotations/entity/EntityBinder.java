@@ -23,10 +23,10 @@
  */
 package org.hibernate.metamodel.source.annotations.entity;
 
+import javax.persistence.GenerationType;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.persistence.GenerationType;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
@@ -53,7 +53,6 @@ import org.hibernate.metamodel.binding.SimpleAttributeBinding;
 import org.hibernate.metamodel.binding.state.DiscriminatorBindingState;
 import org.hibernate.metamodel.binding.state.ManyToOneAttributeBindingState;
 import org.hibernate.metamodel.binding.state.SimpleAttributeBindingState;
-import org.hibernate.metamodel.domain.Entity;
 import org.hibernate.metamodel.domain.Hierarchical;
 import org.hibernate.metamodel.relational.Identifier;
 import org.hibernate.metamodel.relational.Schema;
@@ -71,7 +70,7 @@ import org.hibernate.metamodel.source.annotations.entity.state.relational.TupleR
 import org.hibernate.metamodel.source.annotations.global.IdGeneratorBinder;
 import org.hibernate.metamodel.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.source.spi.MetadataImplementor;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
+import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * Creates the domain and relational metamodel for a configured class and <i>binds</i> them together.
@@ -91,15 +90,13 @@ public class EntityBinder {
 
 	public void bind() {
 		EntityBinding entityBinding = new EntityBinding();
-		EntityBindingStateImpl entityBindingState = new EntityBindingStateImpl( configuredClass );
+		EntityBindingStateImpl entityBindingState = new EntityBindingStateImpl( getSuperType(), configuredClass );
 
-		bindJpaEntityAnnotation( entityBinding, entityBindingState );
+		bindJpaEntityAnnotation( entityBindingState );
 		bindHibernateEntityAnnotation( entityBindingState ); // optional hibernate specific @org.hibernate.annotations.Entity
 
 		schemaName = createSchemaName();
 		bindTable( entityBinding );
-
-		bindInheritance( entityBinding );
 
 		// bind entity level annotations
 		bindWhereFilter( entityBindingState );
@@ -111,6 +108,10 @@ public class EntityBinder {
 		bindRowId( entityBindingState );
 		bindBatchSize( entityBindingState );
 
+		entityBinding.initialize( meta, entityBindingState );
+
+		bindInheritance( entityBinding );
+
 		// take care of the id, attributes and relations
 		if ( configuredClass.isRoot() ) {
 			bindId( entityBinding );
@@ -121,7 +122,6 @@ public class EntityBinder {
 		bindTableUniqueConstraints( entityBinding );
 
 		// last, but not least we initialize and register the new EntityBinding
-		entityBinding.initialize( entityBindingState );
 		meta.addEntity( entityBinding );
 	}
 
@@ -451,7 +451,7 @@ public class EntityBinder {
 	}
 
 
-	private void bindJpaEntityAnnotation(EntityBinding entityBinding, EntityBindingStateImpl entityBindingState) {
+	private void bindJpaEntityAnnotation(EntityBindingStateImpl entityBindingState) {
 		AnnotationInstance jpaEntityAnnotation = JandexHelper.getSingleAnnotation(
 				configuredClass.getClassInfo(), JPADotNames.ENTITY
 		);
@@ -462,8 +462,7 @@ public class EntityBinder {
 		else {
 			name = jpaEntityAnnotation.value( "name" ).asString();
 		}
-		entityBindingState.setEntityName( name );
-		entityBinding.setEntity( new Entity( name, getSuperType() ) );
+		entityBindingState.setJpaEntityName( name );
 	}
 
 	private void bindSingleIdAnnotation(EntityBinding entityBinding) {
@@ -662,11 +661,8 @@ public class EntityBinder {
 			}
 
 			if ( hibernateEntityAnnotation.value( "persister" ) != null ) {
-				String persister = ( hibernateEntityAnnotation.value( "persister" ).toString() );
-				ClassLoaderService classLoaderService = meta.getServiceRegistry()
-						.getService( ClassLoaderService.class );
-				Class<?> persisterClass = classLoaderService.classForName( persister );
-				entityBindingState.setPersisterClass( persisterClass );
+				final String persisterClassName = ( hibernateEntityAnnotation.value( "persister" ).toString() );
+				entityBindingState.setPersisterClass( meta.<EntityPersister>locateClassByName( persisterClassName ) );
 			}
 		}
 

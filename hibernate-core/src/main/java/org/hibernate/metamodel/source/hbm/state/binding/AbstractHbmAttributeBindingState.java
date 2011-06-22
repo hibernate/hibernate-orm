@@ -92,7 +92,7 @@ public abstract class AbstractHbmAttributeBindingState implements AttributeBindi
 	}
 
 	protected final String getTypeNameByReflection() {
-		Class ownerClass = MappingHelper.classForName( ownerClassName, bindingContext.getServiceRegistry() );
+		Class ownerClass = bindingContext.locateClassByName( ownerClassName );
 		return ReflectHelper.reflectedPropertyClass( ownerClass, attributeName ).getName();
 	}
 

@@ -78,10 +78,7 @@ public class MappingHelper {
 			return classLoaderService.classForName( className );
 		}
 		catch ( ClassLoadingException e ) {
-			throw new MappingException(
-					"Could not find class: "
-							+ className
-			);
+			throw new MappingException( "Could not find class: " + className );
 		}
 	}
 }

@@ -24,20 +24,24 @@
 package org.hibernate.metamodel.domain;
 
 /**
- * Models a basic type, a simple value.
+ * Models a basic type.
  *
  * @author Steve Ebersole
  */
 public class BasicType implements Type {
-	private final String name;
+	private final JavaType javaType;
 
-	public BasicType(String name) {
-		this.name = name;
+	public BasicType(JavaType javaType) {
+		this.javaType = javaType;
 	}
 
 	@Override
 	public String getName() {
-		return name;
+		return javaType.getName();
+	}
+
+	public JavaType getJavaType() {
+		return javaType;
 	}
 
 	@Override

@@ -174,7 +174,6 @@ public abstract class AbstractAttributeContainer implements AttributeContainer, 
 		private final AttributeContainer attributeContainer;
 		private final PluralAttributeNature nature;
 		private final String name;
-		private String nodeName;
 
 		private Type elementType;
 

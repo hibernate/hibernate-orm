@@ -48,11 +48,23 @@ public class JavaType {
 		);
 	}
 
+	public JavaType(Class<?> theClass) {
+		this.name = theClass.getName();
+		this.classReference = new Value<Class<?>>( theClass );
+	}
+
 	public String getName() {
 		return name;
 	}
 
 	public Class<?> getClassReference() {
 		return classReference.getValue();
+	}
+
+	@Override
+	public String toString() {
+		return new StringBuilder( super.toString() )
+				.append( "[name=" ).append( name ).append( "]" )
+				.toString();
 	}
 }

@@ -26,11 +26,10 @@ package org.hibernate.metamodel.source.annotations.entity;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
-import org.junit.Test;
-
 import org.hibernate.annotations.Proxy;
 import org.hibernate.metamodel.binding.EntityBinding;
-import org.hibernate.metamodel.source.internal.MetadataImpl;
+
+import org.junit.Test;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
@@ -47,7 +46,7 @@ public class ProxyBindingTests extends BaseAnnotationBindingTestCase {
 		buildMetadataSources( ProxiedEntity.class );
 		EntityBinding binding = getEntityBinding( ProxiedEntity.class );
 		assertTrue( "Wrong laziness", binding.isLazy() );
-		assertEquals( "Wrong proxy interface", null, binding.getProxyInterfaceName() );
+		assertEquals( "Wrong proxy interface", ProxiedEntity.class, binding.getProxyInterfaceType().getClassReference() );
 	}
 
 	@Test
@@ -55,7 +54,7 @@ public class ProxyBindingTests extends BaseAnnotationBindingTestCase {
 		buildMetadataSources(NoProxyEntity.class);
 		EntityBinding binding = getEntityBinding( NoProxyEntity.class );
 		assertTrue( "Wrong laziness", binding.isLazy() );
-		assertEquals( "Wrong proxy interface", null, binding.getProxyInterfaceName() );
+		assertEquals( "Wrong proxy interface", NoProxyEntity.class, binding.getProxyInterfaceType().getClassReference() );
 	}
 
 	@Test
@@ -63,7 +62,7 @@ public class ProxyBindingTests extends BaseAnnotationBindingTestCase {
 		buildMetadataSources( ProxyDisabledEntity.class );
 		EntityBinding binding = getEntityBinding( ProxyDisabledEntity.class );
 		assertFalse( "Wrong laziness", binding.isLazy() );
-		assertEquals( "Wrong proxy interface", null, binding.getProxyInterfaceName() );
+		assertEquals( "Wrong proxy interface", null, binding.getProxyInterfaceType() );
 	}
 
 	@Test
@@ -74,7 +73,7 @@ public class ProxyBindingTests extends BaseAnnotationBindingTestCase {
 		assertEquals(
 				"Wrong proxy interface",
 				"org.hibernate.metamodel.source.annotations.entity.ProxyBindingTests$ProxyInterfaceEntity",
-				binding.getProxyInterfaceName()
+				binding.getProxyInterfaceType().getName()
 		);
 	}
 

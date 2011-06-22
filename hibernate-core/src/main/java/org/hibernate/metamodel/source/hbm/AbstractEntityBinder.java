@@ -35,13 +35,16 @@ import org.hibernate.metamodel.binding.InheritanceType;
 import org.hibernate.metamodel.binding.ManyToOneAttributeBinding;
 import org.hibernate.metamodel.binding.SimpleAttributeBinding;
 import org.hibernate.metamodel.binding.state.ManyToOneAttributeBindingState;
-import org.hibernate.metamodel.domain.Entity;
+import org.hibernate.metamodel.binding.state.PluralAttributeBindingState;
+import org.hibernate.metamodel.binding.state.SimpleAttributeBindingState;
 import org.hibernate.metamodel.domain.Hierarchical;
 import org.hibernate.metamodel.relational.Schema;
 import org.hibernate.metamodel.relational.Table;
 import org.hibernate.metamodel.relational.TableSpecification;
 import org.hibernate.metamodel.relational.UniqueKey;
 import org.hibernate.metamodel.relational.state.ManyToOneRelationalState;
+import org.hibernate.metamodel.relational.state.TupleRelationalState;
+import org.hibernate.metamodel.relational.state.ValueRelationalState;
 import org.hibernate.metamodel.source.hbm.state.binding.HbmEntityBindingState;
 import org.hibernate.metamodel.source.hbm.state.binding.HbmManyToOneAttributeBindingState;
 import org.hibernate.metamodel.source.hbm.state.binding.HbmPluralAttributeBindingState;
@@ -70,12 +73,7 @@ import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlQueryElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSubclassElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLTuplizerElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLUnionSubclassElement;
-import org.hibernate.metamodel.binding.state.PluralAttributeBindingState;
-import org.hibernate.metamodel.binding.state.SimpleAttributeBindingState;
-import org.hibernate.metamodel.relational.state.TupleRelationalState;
-import org.hibernate.metamodel.relational.state.ValueRelationalState;
 import org.hibernate.metamodel.source.spi.MetadataImplementor;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
 
 /**
  * TODO : javadoc
@@ -124,13 +122,16 @@ abstract class AbstractEntityBinder {
 			XMLHibernateMapping.XMLClass entityClazz,
 			EntityBinding entityBinding,
 			Hierarchical superType) {
-		entityBinding.setEntity( new Entity( bindingContext.extractEntityName( entityClazz ), superType ) );
-		entityBinding.initialize( new HbmEntityBindingState( isRoot(), getInheritanceType(), bindingContext, entityClazz ) );
-
-		// TODO: move this stuff out
-		// transfer an explicitly defined lazy attribute
-		bindPojoRepresentation( entityClazz, entityBinding );
-		bindMapRepresentation( entityClazz, entityBinding );
+		entityBinding.initialize(
+				bindingContext,
+				new HbmEntityBindingState(
+						superType,
+						entityClazz,
+						isRoot(),
+						getInheritanceType(),
+						bindingContext
+				)
+		);
 
 		final String entityName = entityBinding.getEntity().getName();
 
@@ -148,40 +149,6 @@ abstract class AbstractEntityBinder {
 
 	protected String getDefaultAccess() {
 		return bindingContext.getMappingDefaults().getPropertyAccessorName();
-	}
-
-	private void bindPojoRepresentation(XMLHibernateMapping.XMLClass entityClazz,
-										EntityBinding entityBinding) {
-		String className = bindingContext.getClassName( entityClazz.getName() );
-		String proxyName = entityBinding.getProxyInterfaceName();
-
-		final ClassLoaderService classLoaderService =
-				bindingContext.getServiceRegistry().getService( ClassLoaderService.class );
-
-		entityBinding.getEntity().getPojoEntitySpecifics().setClassName( className, classLoaderService );
-
-		if ( proxyName != null ) {
-			entityBinding.getEntity().getPojoEntitySpecifics().setProxyInterfaceName( proxyName, classLoaderService );
-			entityBinding.setLazy( true );
-		}
-		else if ( entityBinding.isLazy() ) {
-			entityBinding.getEntity().getPojoEntitySpecifics().setProxyInterfaceName( className, classLoaderService );
-		}
-
-		XMLTuplizerElement tuplizer = locateTuplizerDefinition( entityClazz, EntityMode.POJO );
-		if ( tuplizer != null ) {
-			entityBinding.getEntity().getPojoEntitySpecifics().setTuplizerClassName( tuplizer.getClazz(), classLoaderService );
-		}
-	}
-
-	private void bindMapRepresentation(XMLHibernateMapping.XMLClass entityClazz,
-									   EntityBinding entityBinding) {
-		XMLTuplizerElement tuplizer = locateTuplizerDefinition( entityClazz, EntityMode.MAP );
-		final ClassLoaderService classLoaderService =
-				bindingContext.getServiceRegistry().getService( ClassLoaderService.class );
-		if ( tuplizer != null ) {
-			entityBinding.getEntity().getMapEntitySpecifics().setTuplizerClassName( tuplizer.getClazz(), classLoaderService );
-		}
 	}
 
 	/**
@@ -414,7 +381,7 @@ PrimitiveArray
 			XMLPropertyElement property,
 			EntityBinding entityBinding) {
 		SimpleAttributeBindingState bindingState = new HbmSimpleAttributeBindingState(
-				entityBinding.getEntity().getPojoEntitySpecifics().getClassName(),
+				entityBinding.getEntity().getJavaType().getName(),
 				bindingContext,
 				entityBinding.getMetaAttributeContext(),
 				property
@@ -453,7 +420,7 @@ PrimitiveArray
 
 		PluralAttributeBindingState bindingState =
 				new HbmPluralAttributeBindingState(
-						entityBinding.getEntity().getPojoEntitySpecifics().getClassName(),
+						entityBinding.getEntity().getJavaType().getName(),
 						bindingContext,
 						entityBinding.getMetaAttributeContext(),
 						collection
@@ -493,7 +460,7 @@ PrimitiveArray
 							   EntityBinding entityBinding) {
 		ManyToOneAttributeBindingState bindingState =
 				new HbmManyToOneAttributeBindingState(
-						entityBinding.getEntity().getPojoEntitySpecifics().getClassName(),
+						entityBinding.getEntity().getJavaType().getName(),
 						bindingContext,
 						entityBinding.getMetaAttributeContext(),
 						manyToOne

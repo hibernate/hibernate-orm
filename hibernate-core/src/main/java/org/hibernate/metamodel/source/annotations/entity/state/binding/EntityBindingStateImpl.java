@@ -26,22 +26,31 @@ package org.hibernate.metamodel.source.annotations.entity.state.binding;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.hibernate.EntityMode;
 import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.metamodel.binding.Caching;
 import org.hibernate.metamodel.binding.CustomSQL;
 import org.hibernate.metamodel.binding.InheritanceType;
 import org.hibernate.metamodel.binding.state.EntityBindingState;
+import org.hibernate.metamodel.domain.Hierarchical;
 import org.hibernate.metamodel.source.annotations.entity.ConfiguredClass;
 import org.hibernate.metamodel.source.spi.MetaAttributeContext;
+import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.tuple.entity.EntityTuplizer;
 
 /**
  * @author Hardy Ferentschik
  */
 public class EntityBindingStateImpl implements EntityBindingState {
+	private String entityName;
+
+	private final String className;
+	private String proxyInterfaceName;
+
+	private final Hierarchical superType;
 	private final boolean isRoot;
 	private final InheritanceType inheritanceType;
 
-	private String entityName;
 
 	private Caching caching;
 
@@ -57,10 +66,9 @@ public class EntityBindingStateImpl implements EntityBindingState {
 	private boolean selectBeforeUpdate;
 	private OptimisticLockType optimisticLock;
 
-	private Class<?> persisterClass;
+	private Class<EntityPersister> persisterClass;
 
 	private boolean lazy;
-	private String proxyInterfaceName;
 
 	private CustomSQL customInsert;
 	private CustomSQL customUpdate;
@@ -68,19 +76,46 @@ public class EntityBindingStateImpl implements EntityBindingState {
 
 	private Set<String> synchronizedTableNames;
 
-	public EntityBindingStateImpl(ConfiguredClass configuredClass) {
+	public EntityBindingStateImpl(Hierarchical superType, ConfiguredClass configuredClass) {
+		this.className = configuredClass.getName();
+		this.superType = superType;
 		this.isRoot = configuredClass.isRoot();
 		this.inheritanceType = configuredClass.getInheritanceType();
 		this.synchronizedTableNames = new HashSet<String>();
 		this.batchSize = -1;
 	}
 
-	public void setEntityName(String entityName) {
+	@Override
+	public String getJpaEntityName() {
+		return entityName;
+	}
+
+	public void setJpaEntityName(String entityName) {
 		this.entityName = entityName;
 	}
 
+	@Override
+	public EntityMode getEntityMode() {
+		return EntityMode.POJO;
+	}
+
 	public String getEntityName() {
-		return entityName;
+		return className;
+	}
+
+	@Override
+	public String getClassName() {
+		return className;
+	}
+
+	@Override
+	public Class<EntityTuplizer> getCustomEntityTuplizerClass() {
+		return null; // todo : implement method body
+	}
+
+	@Override
+	public Hierarchical getSuperType() {
+		return superType;
 	}
 
 	public void setCaching(Caching caching) {
@@ -115,7 +150,7 @@ public class EntityBindingStateImpl implements EntityBindingState {
 		this.optimisticLock = optimisticLock;
 	}
 
-	public void setPersisterClass(Class<?> persisterClass) {
+	public void setPersisterClass(Class<EntityPersister> persisterClass) {
 		this.persisterClass = persisterClass;
 	}
 
@@ -229,7 +264,7 @@ public class EntityBindingStateImpl implements EntityBindingState {
 	}
 
 	@Override
-	public Class getEntityPersisterClass() {
+	public Class getCustomEntityPersisterClass() {
 		return persisterClass;
 	}
 

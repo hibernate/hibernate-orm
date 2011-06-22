@@ -131,7 +131,7 @@ class RootEntityBinder extends AbstractEntityBinder {
 
 	private void bindSimpleId(XMLId id, EntityBinding entityBinding) {
 		SimpleAttributeBindingState bindingState = new HbmSimpleAttributeBindingState(
-				entityBinding.getEntity().getPojoEntitySpecifics().getClassName(),
+				entityBinding.getEntity().getJavaType().getName(),
 				getBindingContext(),
 				entityBinding.getMetaAttributeContext(),
 				id
@@ -236,7 +236,7 @@ class RootEntityBinder extends AbstractEntityBinder {
 		}
 
 		DiscriminatorBindingState bindingState = new HbmDiscriminatorBindingState(
-						entityBinding.getEntity().getPojoEntitySpecifics().getClassName(),
+						entityBinding.getEntity().getJavaType().getName(),
 						entityBinding.getEntity().getName(),
 						getBindingContext(),
 						xmlEntityClazz
@@ -278,7 +278,7 @@ class RootEntityBinder extends AbstractEntityBinder {
 							   EntityBinding entityBinding) {
 		SimpleAttributeBindingState bindingState =
 				new HbmSimpleAttributeBindingState(
-						entityBinding.getEntity().getPojoEntitySpecifics().getClassName(),
+						entityBinding.getEntity().getJavaType().getName(),
 						getBindingContext(),
 						entityBinding.getMetaAttributeContext(),
 						version
@@ -305,7 +305,7 @@ class RootEntityBinder extends AbstractEntityBinder {
 
 		SimpleAttributeBindingState bindingState =
 				new HbmSimpleAttributeBindingState(
-						entityBinding.getEntity().getPojoEntitySpecifics().getClassName(),
+						entityBinding.getEntity().getJavaType().getName(),
 						getBindingContext(),
 						entityBinding.getMetaAttributeContext(),
 						timestamp

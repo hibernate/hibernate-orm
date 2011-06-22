@@ -29,12 +29,18 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
 import org.hibernate.metamodel.binding.state.EntityBindingState;
 import org.hibernate.metamodel.domain.Entity;
+import org.hibernate.metamodel.domain.JavaType;
 import org.hibernate.metamodel.relational.Column;
 import org.hibernate.metamodel.relational.TableSpecification;
+import org.hibernate.metamodel.source.spi.BindingContext;
 import org.hibernate.metamodel.source.spi.MetaAttributeContext;
+import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.service.classloading.spi.ClassLoaderService;
+import org.hibernate.tuple.entity.EntityTuplizer;
 
 /**
  * Provides the link between the domain and the relational model for an entity.
@@ -44,16 +50,23 @@ import org.hibernate.metamodel.source.spi.MetaAttributeContext;
  * @author Gail Badner
  */
 public class EntityBinding {
-	private final EntityIdentifier entityIdentifier = new EntityIdentifier( this );
-
-	private boolean isRoot;
-
-	private InheritanceType entityInheritanceType;
-	private EntityDiscriminator entityDiscriminator;
-	private SimpleAttributeBinding versionBinding;
-
 	private Entity entity;
 	private TableSpecification baseTable;
+
+	private EntityMode entityMode;
+	private JavaType proxyInterfaceType;
+
+	private String jpaEntityName;
+
+	private Class<EntityPersister> entityPersisterClass;
+	private Class<EntityTuplizer> entityTuplizerClass;
+
+	private boolean isRoot;
+	private InheritanceType entityInheritanceType;
+
+	private final EntityIdentifier entityIdentifier = new EntityIdentifier( this );
+	private EntityDiscriminator entityDiscriminator;
+	private SimpleAttributeBinding versionBinding;
 
 	private Map<String, AttributeBinding> attributeBindingMap = new HashMap<String, AttributeBinding>();
 	private Set<EntityReferencingAttributeBinding> entityReferencingAttributeBindings = new HashSet<EntityReferencingAttributeBinding>();
@@ -62,7 +75,6 @@ public class EntityBinding {
 
 	private MetaAttributeContext metaAttributeContext;
 
-	private String proxyInterfaceName;
 	private boolean lazy;
 	private boolean mutable;
 	private boolean explicitPolymorphism;
@@ -77,7 +89,6 @@ public class EntityBinding {
 	private boolean hasSubselectLoadableCollections;
 	private int optimisticLockMode;
 
-	private Class entityPersisterClass;
 	private Boolean isAbstract;
 
 	private CustomSQL customInsert;
@@ -86,23 +97,47 @@ public class EntityBinding {
 
 	private Set<String> synchronizedTableNames = new HashSet<String>();
 
-	public EntityBinding initialize(EntityBindingState state) {
+	public EntityBinding initialize(BindingContext bindingContext, EntityBindingState state) {
+		// todo : Entity will need both entityName and className to be effective
+		this.entity = new Entity( state.getEntityName(), state.getSuperType(), bindingContext.makeJavaType( state.getClassName() ) );
+
 		this.isRoot = state.isRoot();
 		this.entityInheritanceType = state.getEntityInheritanceType();
+
+		this.entityMode = state.getEntityMode();
+		this.jpaEntityName = state.getJpaEntityName();
+
+		// todo : handle the entity-persister-resolver stuff
+		this.entityPersisterClass = state.getCustomEntityPersisterClass();
+		this.entityTuplizerClass = state.getCustomEntityTuplizerClass();
+
 		this.caching = state.getCaching();
 		this.metaAttributeContext = state.getMetaAttributeContext();
-		this.proxyInterfaceName = state.getProxyInterfaceName();
-		this.lazy = state.isLazy();
+
+		if ( entityMode == EntityMode.POJO ) {
+			if ( state.getProxyInterfaceName() != null ) {
+				this.proxyInterfaceType = bindingContext.makeJavaType( state.getProxyInterfaceName() );
+				this.lazy = true;
+			}
+			else if ( state.isLazy() ) {
+				this.proxyInterfaceType = entity.getJavaType();
+				this.lazy = true;
+			}
+		}
+		else {
+			this.proxyInterfaceType = new JavaType( Map.class );
+			this.lazy = state.isLazy();
+		}
+
 		this.mutable = state.isMutable();
 		this.explicitPolymorphism = state.isExplicitPolymorphism();
 		this.whereFilter = state.getWhereFilter();
 		this.rowId = state.getRowId();
-		this.dynamicInsert = state.isDynamicUpdate();
+		this.dynamicUpdate = state.isDynamicUpdate();
 		this.dynamicInsert = state.isDynamicInsert();
 		this.batchSize = state.getBatchSize();
 		this.selectBeforeUpdate = state.isSelectBeforeUpdate();
 		this.optimisticLockMode = state.getOptimisticLockMode();
-		this.entityPersisterClass = state.getEntityPersisterClass();
 		this.isAbstract = state.isAbstract();
 		this.customInsert = state.getCustomInsert();
 		this.customUpdate = state.getCustomUpdate();
@@ -259,8 +294,8 @@ public class EntityBinding {
 		this.lazy = lazy;
 	}
 
-	public String getProxyInterfaceName() {
-		return proxyInterfaceName;
+	public JavaType getProxyInterfaceType() {
+		return proxyInterfaceType;
 	}
 
 	public String getWhereFilter() {

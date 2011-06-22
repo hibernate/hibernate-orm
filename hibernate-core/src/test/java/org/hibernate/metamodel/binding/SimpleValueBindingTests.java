@@ -28,6 +28,7 @@ import java.sql.Types;
 import org.junit.Test;
 
 import org.hibernate.metamodel.domain.Entity;
+import org.hibernate.metamodel.domain.JavaType;
 import org.hibernate.metamodel.domain.SingularAttribute;
 import org.hibernate.metamodel.relational.Column;
 import org.hibernate.metamodel.relational.Datatype;
@@ -51,7 +52,7 @@ public class SimpleValueBindingTests extends BaseUnitTestCase {
 	@Test
 	public void testBasicMiddleOutBuilding() {
 		Table table = new Table( new Schema( null, null ), "the_table" );
-		Entity entity = new Entity( "TheEntity", null );
+		Entity entity = new Entity( "TheEntity", null, new JavaType( "NoSuchClass", null ) );
 		EntityBinding entityBinding = new EntityBinding();
 		entityBinding.setRoot( true );
 		entityBinding.setEntity( entity );

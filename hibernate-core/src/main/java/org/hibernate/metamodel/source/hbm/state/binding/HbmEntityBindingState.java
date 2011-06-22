@@ -26,6 +26,7 @@ package org.hibernate.metamodel.source.hbm.state.binding;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.engine.internal.Versioning;
@@ -33,6 +34,7 @@ import org.hibernate.metamodel.binding.Caching;
 import org.hibernate.metamodel.binding.CustomSQL;
 import org.hibernate.metamodel.binding.InheritanceType;
 import org.hibernate.metamodel.binding.state.EntityBindingState;
+import org.hibernate.metamodel.domain.Hierarchical;
 import org.hibernate.metamodel.source.hbm.HbmBindingContext;
 import org.hibernate.metamodel.source.hbm.HbmHelper;
 import org.hibernate.metamodel.source.hbm.util.MappingHelper;
@@ -42,17 +44,31 @@ import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlDeleteElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlInsertElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlUpdateElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSynchronizeElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLTuplizerElement;
 import org.hibernate.metamodel.source.spi.MetaAttributeContext;
+import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.tuple.entity.EntityTuplizer;
 
 /**
  * @author Gail Badner
  */
 public class HbmEntityBindingState implements EntityBindingState {
+	private final String entityName;
+	private final EntityMode entityMode;
+
+	private final String className;
+	private final String proxyInterfaceName;
+
+	private final Class<EntityPersister> entityPersisterClass;
+	private final Class<EntityTuplizer> tuplizerClass;
+
+	private final MetaAttributeContext metaAttributeContext;
+
+	private final Hierarchical superType;
 	private final boolean isRoot;
 	private final InheritanceType entityInheritanceType;
+
 	private final Caching caching;
-	private final MetaAttributeContext metaAttributeContext;
-	private final String proxyInterfaceName;
 
 	private final boolean lazy;
 	private final boolean mutable;
@@ -67,7 +83,6 @@ public class HbmEntityBindingState implements EntityBindingState {
 	private final boolean selectBeforeUpdate;
 	private final int optimisticLockMode;
 
-	private final Class entityPersisterClass;
 	private final Boolean isAbstract;
 
 	private final CustomSQL customInsert;
@@ -77,10 +92,32 @@ public class HbmEntityBindingState implements EntityBindingState {
 	private final Set<String> synchronizedTableNames;
 
 	public HbmEntityBindingState(
+			Hierarchical superType,
+			XMLHibernateMapping.XMLClass entityClazz,
 			boolean isRoot,
 			InheritanceType inheritanceType,
-			HbmBindingContext bindingContext,
-			XMLHibernateMapping.XMLClass entityClazz) {
+			HbmBindingContext bindingContext) {
+
+		this.superType = superType;
+		this.entityName = bindingContext.extractEntityName( entityClazz );
+
+		final String verbatimClassName = entityClazz.getName();
+		this.entityMode = verbatimClassName == null ? EntityMode.MAP : EntityMode.POJO;
+
+		if ( this.entityMode == EntityMode.POJO ) {
+			this.className = bindingContext.getClassName( verbatimClassName );
+			this.proxyInterfaceName = entityClazz.getProxy();
+		}
+		else {
+			this.className = null;
+			this.proxyInterfaceName = null;
+		}
+
+		final String customTuplizerClassName = extractCustomTuplizerClassName( entityClazz, entityMode );
+		tuplizerClass = customTuplizerClassName != null
+				? bindingContext.<EntityTuplizer>locateClassByName( customTuplizerClassName )
+				: null;
+
 		this.isRoot = isRoot;
 		this.entityInheritanceType = inheritanceType;
 
@@ -99,7 +136,6 @@ public class HbmEntityBindingState implements EntityBindingState {
 		explicitPolymorphism = "explicit".equals( entityClazz.getPolymorphism() );
 		whereFilter = entityClazz.getWhere();
 		rowId = entityClazz.getRowid();
-		proxyInterfaceName = entityClazz.getProxy();
 		dynamicUpdate = entityClazz.isDynamicUpdate();
 		dynamicInsert = entityClazz.isDynamicInsert();
 		batchSize = MappingHelper.getIntValue( entityClazz.getBatchSize(), 0 );
@@ -107,10 +143,9 @@ public class HbmEntityBindingState implements EntityBindingState {
 		optimisticLockMode = getOptimisticLockMode();
 
 		// PERSISTER
-		entityPersisterClass =
-				entityClazz.getPersister() == null ?
-						null :
-						MappingHelper.classForName( entityClazz.getPersister(), bindingContext.getServiceRegistry() );
+		entityPersisterClass = entityClazz.getPersister() == null
+				? null
+				: bindingContext.<EntityPersister>locateClassByName( entityClazz.getPersister() );
 
 		// CUSTOM SQL
 		XMLSqlInsertElement sqlInsert = entityClazz.getSqlInsert();
@@ -161,6 +196,18 @@ public class HbmEntityBindingState implements EntityBindingState {
 		isAbstract = entityClazz.isAbstract();
 	}
 
+	private String extractCustomTuplizerClassName(XMLHibernateMapping.XMLClass entityClazz, EntityMode entityMode) {
+		if ( entityClazz.getTuplizer() == null ) {
+			return null;
+		}
+		for ( XMLTuplizerElement tuplizerElement : entityClazz.getTuplizer() ) {
+			if ( entityMode == EntityMode.parse( tuplizerElement.getEntityMode() ) ) {
+				return tuplizerElement.getClazz();
+			}
+		}
+		return null;
+	}
+
 	private static Caching createCaching(XMLHibernateMapping.XMLClass entityClazz, String entityName) {
 		XMLCacheElement cache = entityClazz.getCache();
 		if ( cache == null ) {
@@ -194,9 +241,48 @@ public class HbmEntityBindingState implements EntityBindingState {
 	}
 
 	@Override
+	public String getEntityName() {
+		return entityName;
+	}
+
+	@Override
+	public String getJpaEntityName() {
+		return null;  // no such notion in hbm.xml files
+	}
+
+	@Override
+	public EntityMode getEntityMode() {
+		return entityMode;
+	}
+
+	@Override
+	public String getClassName() {
+		return className;
+	}
+
+	@Override
+	public String getProxyInterfaceName() {
+		return proxyInterfaceName;
+	}
+
+	@Override
+	public Class<EntityPersister> getCustomEntityPersisterClass() {
+		return entityPersisterClass;
+	}
+
+	@Override
+	public Class<EntityTuplizer> getCustomEntityTuplizerClass() {
+		return tuplizerClass;
+	}
+
+	@Override
+	public Hierarchical getSuperType() {
+		return superType;
+	}
+
+	@Override
 	public boolean isRoot() {
 		return isRoot;
-
 	}
 
 	@Override
@@ -212,11 +298,6 @@ public class HbmEntityBindingState implements EntityBindingState {
 	@Override
 	public MetaAttributeContext getMetaAttributeContext() {
 		return metaAttributeContext;
-	}
-
-	@Override
-	public String getProxyInterfaceName() {
-		return proxyInterfaceName;
 	}
 
 	@Override
@@ -267,11 +348,6 @@ public class HbmEntityBindingState implements EntityBindingState {
 	@Override
 	public int getOptimisticLockMode() {
 		return optimisticLockMode;
-	}
-
-	@Override
-	public Class getEntityPersisterClass() {
-		return entityPersisterClass;
 	}
 
 	@Override

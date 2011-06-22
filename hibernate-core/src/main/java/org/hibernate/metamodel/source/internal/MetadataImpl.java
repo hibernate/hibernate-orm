@@ -51,6 +51,7 @@ import org.hibernate.metamodel.binding.FetchProfile;
 import org.hibernate.metamodel.binding.IdGenerator;
 import org.hibernate.metamodel.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.binding.TypeDef;
+import org.hibernate.metamodel.domain.JavaType;
 import org.hibernate.metamodel.relational.AuxiliaryDatabaseObject;
 import org.hibernate.metamodel.relational.Database;
 import org.hibernate.metamodel.source.annotations.AnnotationBinder;
@@ -313,6 +314,17 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	@Override
 	public BasicServiceRegistry getServiceRegistry() {
 		return serviceRegistry;
+	}
+
+	@Override
+	@SuppressWarnings( {"unchecked"})
+	public <T> Class<T> locateClassByName(String name) {
+		return classLoaderService().classForName( name );
+	}
+
+	@Override
+	public JavaType makeJavaType(String className) {
+		return new JavaType( className, classLoaderService() );
 	}
 
 	@Override

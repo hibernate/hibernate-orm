@@ -25,15 +25,63 @@ package org.hibernate.metamodel.binding.state;
 
 import java.util.Set;
 
+import org.hibernate.EntityMode;
 import org.hibernate.metamodel.binding.Caching;
 import org.hibernate.metamodel.binding.CustomSQL;
 import org.hibernate.metamodel.binding.InheritanceType;
+import org.hibernate.metamodel.domain.Hierarchical;
 import org.hibernate.metamodel.source.spi.MetaAttributeContext;
+import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.tuple.entity.EntityTuplizer;
 
 /**
+ * Represents unified set of information about metadata specific to binding an entity.
+ *
  * @author Gail Badner
+ * @author Steve Ebersole
  */
 public interface EntityBindingState {
+	/**
+	 * Obtain the Hibernate entity name.
+	 *
+	 * @return The entity name.
+	 */
+	public String getEntityName();
+
+	/**
+	 * Obtain the JPA entity name.
+	 *
+	 * @return  The JPA entity name
+	 */
+	public String getJpaEntityName();
+
+	/**
+	 * Obtain the entity mode represented by this state.
+	 *
+	 * @return The entity mode.
+	 */
+	public EntityMode getEntityMode();
+
+	/**
+	 * Obtain the name of the entity class.
+	 *
+	 * @return The entity class name.
+	 */
+	public String getClassName();
+
+	/**
+	 * The name of an interface to use for creating instance proxies for this entity.
+	 *
+	 * @return The name of the proxy interface.
+	 */
+	public String getProxyInterfaceName();
+
+	public Class<EntityPersister> getCustomEntityPersisterClass();
+
+	public Class<EntityTuplizer> getCustomEntityTuplizerClass();
+
+	public Hierarchical getSuperType();
+
 	boolean isRoot();
 
 	InheritanceType getEntityInheritanceType();
@@ -41,8 +89,6 @@ public interface EntityBindingState {
 	Caching getCaching();
 
 	MetaAttributeContext getMetaAttributeContext();
-
-	String getProxyInterfaceName();
 
 	boolean isLazy();
 
@@ -64,7 +110,6 @@ public interface EntityBindingState {
 
 	int getOptimisticLockMode();
 
-	Class getEntityPersisterClass();
 
 	Boolean isAbstract();
 

@@ -33,6 +33,8 @@ import javax.persistence.EntityManager;
 import java.util.Arrays;
 import java.util.Iterator;
 
+import static junit.framework.Assert.*;
+
 /**
  * @author Adam Warski (adam at warski dot org)
  */
@@ -120,22 +122,18 @@ public class JoinEmbIdNaming extends AbstractEntityTest {
     @SuppressWarnings({"unchecked"})
     @Test
     public void testJoinColumnNames() {
-        Iterator<Column> columns =
-                getCfg().getClassMapping("org.hibernate.envers.test.integration.naming.ids.JoinEmbIdNamingRefIngEntity_AUD")
-                .getProperty("reference").getColumnIterator();
+		Iterator<Column> columns =
+				getCfg().getClassMapping("org.hibernate.envers.test.integration.naming.ids.JoinEmbIdNamingRefIngEntity_AUD")
+						.getProperty("reference_x").getColumnIterator();
+		assertTrue(columns.hasNext());
+		assertEquals("XX_reference", columns.next().getName());
+		assertFalse(columns.hasNext());
 
-        boolean xxFound = false;
-        boolean yyFound = false;
-        while (columns.hasNext()) {
-            if ("XX_reference".equals(columns.next().getName())) {
-                xxFound = true;
-            }
+		columns = getCfg().getClassMapping("org.hibernate.envers.test.integration.naming.ids.JoinEmbIdNamingRefIngEntity_AUD")
+				.getProperty("reference_y").getColumnIterator();
 
-            if ("YY_reference".equals(columns.next().getName())) {
-                yyFound = true;
-            }
-        }
-
-        assert xxFound && yyFound;
-    }
+		assertTrue(columns.hasNext());
+		assertEquals("YY_reference", columns.next().getName());
+		assertFalse(columns.hasNext());
+	}
 }

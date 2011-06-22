@@ -22,10 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.entities.mapper.relation;
-import java.io.Serializable;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.configuration.AuditConfiguration;
@@ -39,6 +36,11 @@ import org.hibernate.envers.reader.AuditReaderImplementor;
 import org.hibernate.envers.tools.Tools;
 import org.hibernate.envers.tools.reflection.ReflectionTools;
 import org.hibernate.property.Setter;
+
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -59,12 +61,15 @@ public class ToOneIdMapper implements PropertyMapper {
 
     public boolean mapToMapFromEntity(SessionImplementor session, Map<String, Object> data, Object newObj, Object oldObj) {
         HashMap<String, Object> newData = new HashMap<String, Object>();
-        data.put(propertyData.getName(), newData);
 
         // If this property is originally non-insertable, but made insertable because it is in a many-to-one "fake"
         // bi-directional relation, we always store the "old", unchaged data, to prevent storing changes made
         // to this field. It is the responsibility of the collection to properly update it if it really changed.
         delegate.mapToMapFromEntity(newData, nonInsertableFake ? oldObj : newObj);
+
+		for (Map.Entry<String, Object> entry : newData.entrySet()) {
+			data.put(entry.getKey(), entry.getValue());
+		}
 
         //noinspection SimplifiableConditionalExpression
         return nonInsertableFake ? false : !Tools.entitiesEqual(session, referencedEntityName, newObj, oldObj);
@@ -76,7 +81,8 @@ public class ToOneIdMapper implements PropertyMapper {
             return;
         }
 
-        Object entityId = delegate.mapToIdFromMap((Map) data.get(propertyData.getName()));
+		Object entityId;
+		entityId = delegate.mapToIdFromMap(data);
         Object value;
         if (entityId == null) {
             value = null;
@@ -86,10 +92,10 @@ public class ToOneIdMapper implements PropertyMapper {
             } else {
             	EntityConfiguration entCfg = verCfg.getEntCfg().get(referencedEntityName);
             	if(entCfg == null) {
-            		// a relation marked as RelationTargetAuditMode.NOT_AUDITED 
+            		// a relation marked as RelationTargetAuditMode.NOT_AUDITED
             		entCfg = verCfg.getEntCfg().getNotVersionEntityConfiguration(referencedEntityName);
             	}
-            	
+
                 Class<?> entityClass = ReflectionTools.loadClass(entCfg.getEntityClassName());
 
                 value = versionsReader.getSessionImplementor().getFactory().getEntityPersister(referencedEntityName).

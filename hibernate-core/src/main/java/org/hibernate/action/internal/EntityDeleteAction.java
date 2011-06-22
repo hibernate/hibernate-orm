@@ -158,6 +158,9 @@ public final class EntityDeleteAction extends EntityAction {
 				getPersister(),
 				eventSource()
 		);
+		for( PostDeleteEventListener listener : listenerGroup.listeners() ){
+			listener.onPostDelete( event );
+		}
 	}
 
 	@Override

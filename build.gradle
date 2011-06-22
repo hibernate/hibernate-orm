@@ -288,17 +288,12 @@ subprojects { subProject ->
             from sourceSets.main.allSource
             classifier = 'sources'
         }
-		task javadocJar(type: Jar, dependsOn: javadoc) {
-            from javadoc.destinationDir
-            classifier = 'javadoc'
-        }
 
         artifacts {
             archives sourcesJar
-			archives javadocJar
         }
 
-        uploadArchives.dependsOn sourcesJar,javadocJar
+        uploadArchives.dependsOn sourcesJar
     }
 
 }

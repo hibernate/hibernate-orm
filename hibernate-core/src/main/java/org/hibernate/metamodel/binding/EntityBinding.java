@@ -216,6 +216,32 @@ public class EntityBinding {
 		return attributeBindingMap.get( name );
 	}
 
+	/**
+	 * Gets the number of attribute bindings defined on this class, including the
+	 * identifier attribute binding and attribute bindings defined
+	 * as part of a join.
+	 *
+	 * @return The number of attribute bindings
+	 */
+	public int getAttributeBindingClosureSpan() {
+		// TODO: fix this after HHH-6337 is fixed.
+		// if this is not a root, then need to include the superclass attribute bindings
+		return attributeBindingMap.size();
+	}
+
+	/**
+	 * Gets the attribute bindings defined on this class, including the
+	 * identifier attribute binding and attribute bindings defined
+	 * as part of a join.
+	 *
+	 * @return The attribute bindings.
+	 */
+	public Iterable<AttributeBinding> getAttributeBindingClosure() {
+		// TODO: fix this after HHH-6337 is fixed.
+		// if this is not a root, then need to include the superclass attribute bindings
+		return getAttributeBindings();
+	}
+
 	public Iterable<EntityReferencingAttributeBinding> getEntityReferencingAttributeBindings() {
 		return entityReferencingAttributeBindings;
 	}

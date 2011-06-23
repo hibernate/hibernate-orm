@@ -26,8 +26,10 @@ package org.hibernate.metamodel.source.annotations.entity.state.binding;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.annotations.OptimisticLockType;
+import org.hibernate.engine.internal.Versioning;
 import org.hibernate.metamodel.binding.Caching;
 import org.hibernate.metamodel.binding.CustomSQL;
 import org.hibernate.metamodel.binding.InheritanceType;
@@ -260,7 +262,21 @@ public class EntityBindingStateImpl implements EntityBindingState {
 
 	@Override
 	public int getOptimisticLockMode() {
-		return optimisticLock.ordinal();
+		if ( optimisticLock == OptimisticLockType.ALL ) {
+			return Versioning.OPTIMISTIC_LOCK_ALL;
+		}
+		else if ( optimisticLock == OptimisticLockType.NONE ) {
+			return Versioning.OPTIMISTIC_LOCK_NONE;
+		}
+		else if ( optimisticLock == OptimisticLockType.DIRTY ) {
+			return Versioning.OPTIMISTIC_LOCK_DIRTY;
+		}
+		else if ( optimisticLock == OptimisticLockType.VERSION ) {
+			return Versioning.OPTIMISTIC_LOCK_VERSION;
+		}
+		else {
+			throw new AssertionFailure( "Unexpected optimistic lock type: " + optimisticLock );
+		}
 	}
 
 	@Override

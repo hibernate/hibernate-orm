@@ -49,6 +49,12 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.PropertyGeneration;
+import org.hibernate.metamodel.binding.AttributeBinding;
+import org.hibernate.metamodel.binding.EntityBinding;
+import org.hibernate.metamodel.binding.SimpleAttributeBinding;
+import org.hibernate.metamodel.domain.Attribute;
+import org.hibernate.metamodel.domain.SingularAttribute;
+import org.hibernate.metamodel.domain.TypeNature;
 import org.hibernate.tuple.IdentifierProperty;
 import org.hibernate.tuple.PropertyFactory;
 import org.hibernate.tuple.StandardProperty;
@@ -97,7 +103,7 @@ public class EntityMetamodel implements Serializable {
 	private final boolean hasInsertGeneratedValues;
 	private final boolean hasUpdateGeneratedValues;
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	private final Map propertyIndexes = new HashMap();
+	private final Map<String, Integer> propertyIndexes = new HashMap<String, Integer>();
 	private final boolean hasCollections;
 	private final boolean hasMutableProperties;
 	private final boolean hasLazyProperties;
@@ -329,6 +335,251 @@ public class EntityMetamodel implements Serializable {
 		}
 	}
 
+	public EntityMetamodel(EntityBinding entityBinding, SessionFactoryImplementor sessionFactory) {
+		this.sessionFactory = sessionFactory;
+
+		name = entityBinding.getEntity().getName();
+
+		// TODO: Fix after HHH-6337 is fixed; for now assume entityBinding is the root binding
+		//rootName = entityBinding.getRootEntityBinding().getName();
+		rootName = name;
+		entityType = sessionFactory.getTypeResolver().getTypeFactory().manyToOne( name );
+
+		// TODO: fix this when Type is available (HHH-6360)
+		//identifierProperty = PropertyFactory.buildIdentifierProperty(
+		//        entityBinding,
+		//        sessionFactory.getIdentifierGenerator( rootName )
+		//);
+		identifierProperty = null;
+
+		versioned = entityBinding.isVersioned();
+
+		boolean hasPojoRepresentation = false;
+		Class<?> mappedClass = null;
+		Class<?> proxyInterfaceClass = null;
+		boolean lazyAvailable = false;
+		if (  entityBinding.getEntity().getJavaType() != null ) {
+			hasPojoRepresentation = true;
+			mappedClass = entityBinding.getEntity().getJavaType().getClassReference();
+			proxyInterfaceClass = entityBinding.getProxyInterfaceType().getClassReference();
+			lazyAvailable = FieldInterceptionHelper.isInstrumented( mappedClass );
+		}
+
+		boolean hasLazy = false;
+
+		// TODO: Fix after HHH-6337 is fixed; for now assume entityBinding is the root binding
+		//SimpleAttributeBinding rootEntityIdentifier = entityBinding.getRootEntityBinding().getEntityIdentifier().getValueBinding();
+		SimpleAttributeBinding rootEntityIdentifier = entityBinding.getEntityIdentifier().getValueBinding();
+		// entityBinding.getAttributeClosureSpan() includes the identifier binding;
+		// "properties" here excludes the ID, so subtract 1 if the identifier binding is non-null
+		propertySpan = rootEntityIdentifier == null ?
+				entityBinding.getAttributeBindingClosureSpan() :
+				entityBinding.getAttributeBindingClosureSpan() - 1;
+
+		properties = new StandardProperty[propertySpan];
+		List naturalIdNumbers = new ArrayList();
+		// temporary ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		propertyNames = new String[propertySpan];
+		propertyTypes = new Type[propertySpan];
+		propertyUpdateability = new boolean[propertySpan];
+		propertyInsertability = new boolean[propertySpan];
+		insertInclusions = new ValueInclusion[propertySpan];
+		updateInclusions = new ValueInclusion[propertySpan];
+		nonlazyPropertyUpdateability = new boolean[propertySpan];
+		propertyCheckability = new boolean[propertySpan];
+		propertyNullability = new boolean[propertySpan];
+		propertyVersionability = new boolean[propertySpan];
+		propertyLaziness = new boolean[propertySpan];
+		cascadeStyles = new CascadeStyle[propertySpan];
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+		int i = 0;
+		int tempVersionProperty = NO_VERSION_INDX;
+		boolean foundCascade = false;
+		boolean foundCollection = false;
+		boolean foundMutable = false;
+		boolean foundNonIdentifierPropertyNamedId = false;
+		boolean foundInsertGeneratedValue = false;
+		boolean foundUpdateGeneratedValue = false;
+		boolean foundUpdateableNaturalIdProperty = false;
+
+		for ( AttributeBinding attributeBinding : entityBinding.getAttributeBindingClosure() ) {
+			if ( attributeBinding == rootEntityIdentifier ) {
+				// skip the identifier attribute binding
+				continue;
+			}
+
+			// TODO: fix this when Type is available (HHH-6360)
+			//if ( attributeBinding == entityBinding.getVersioningValueBinding() ) {
+			//	tempVersionProperty = i;
+			//	properties[i] = PropertyFactory.buildVersionProperty( entityBinding.getVersioningValueBinding(), lazyAvailable );
+			//}
+			//else {
+			//	properties[i] = PropertyFactory.buildStandardProperty( attributeBinding, lazyAvailable );
+			//}
+
+			// TODO: fix when natural IDs are added (HHH-6354)
+			//if ( attributeBinding.isNaturalIdentifier() ) {
+			//	naturalIdNumbers.add( i );
+			//	if ( attributeBinding.isUpdateable() ) {
+			//		foundUpdateableNaturalIdProperty = true;
+			//	}
+			//}
+
+			if ( "id".equals( attributeBinding.getAttribute().getName() ) ) {
+				foundNonIdentifierPropertyNamedId = true;
+			}
+
+			// temporary ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+			boolean lazy = attributeBinding.isLazy() && lazyAvailable;
+			if ( lazy ) hasLazy = true;
+			propertyLaziness[i] = lazy;
+
+			propertyNames[i] = properties[i].getName();
+			propertyTypes[i] = properties[i].getType();
+			propertyNullability[i] = properties[i].isNullable();
+			propertyUpdateability[i] = properties[i].isUpdateable();
+			propertyInsertability[i] = properties[i].isInsertable();
+			insertInclusions[i] = determineInsertValueGenerationType( attributeBinding, properties[i] );
+			updateInclusions[i] = determineUpdateValueGenerationType( attributeBinding, properties[i] );
+			propertyVersionability[i] = properties[i].isVersionable();
+			nonlazyPropertyUpdateability[i] = properties[i].isUpdateable() && !lazy;
+			propertyCheckability[i] = propertyUpdateability[i] ||
+					( propertyTypes[i].isAssociationType() && ( (AssociationType) propertyTypes[i] ).isAlwaysDirtyChecked() );
+
+			cascadeStyles[i] = properties[i].getCascadeStyle();
+			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+			if ( properties[i].isLazy() ) {
+				hasLazy = true;
+			}
+
+			if ( properties[i].getCascadeStyle() != CascadeStyle.NONE ) {
+				foundCascade = true;
+			}
+
+			if ( indicatesCollection( properties[i].getType() ) ) {
+				foundCollection = true;
+			}
+
+			if ( propertyTypes[i].isMutable() && propertyCheckability[i] ) {
+				foundMutable = true;
+			}
+
+			if ( insertInclusions[i] != ValueInclusion.NONE ) {
+				foundInsertGeneratedValue = true;
+			}
+
+			if ( updateInclusions[i] != ValueInclusion.NONE ) {
+				foundUpdateGeneratedValue = true;
+			}
+
+			mapPropertyToIndex(attributeBinding.getAttribute(), i);
+			i++;
+		}
+
+		if (naturalIdNumbers.size()==0) {
+			naturalIdPropertyNumbers = null;
+			hasImmutableNaturalId = false;
+		}
+		else {
+			naturalIdPropertyNumbers = ArrayHelper.toIntArray(naturalIdNumbers);
+			hasImmutableNaturalId = !foundUpdateableNaturalIdProperty;
+		}
+
+		hasInsertGeneratedValues = foundInsertGeneratedValue;
+		hasUpdateGeneratedValues = foundUpdateGeneratedValue;
+
+		hasCascades = foundCascade;
+		hasNonIdentifierPropertyNamedId = foundNonIdentifierPropertyNamedId;
+		versionPropertyIndex = tempVersionProperty;
+		hasLazyProperties = hasLazy;
+		if (hasLazyProperties) {
+			LOG.lazyPropertyFetchingAvailable( name );
+		}
+
+		lazy = entityBinding.isLazy() && (
+				// TODO: this disables laziness even in non-pojo entity modes:
+				! hasPojoRepresentation ||
+				! ReflectHelper.isFinalClass( proxyInterfaceClass )
+		);
+		mutable = entityBinding.isMutable();
+		if ( entityBinding.isAbstract() == null ) {
+			// legacy behavior (with no abstract attribute specified)
+			isAbstract = hasPojoRepresentation &&
+			             ReflectHelper.isAbstractClass( mappedClass );
+		}
+		else {
+			isAbstract = entityBinding.isAbstract().booleanValue();
+			if ( !isAbstract && hasPojoRepresentation &&
+					ReflectHelper.isAbstractClass( mappedClass ) ) {
+				LOG.entityMappedAsNonAbstract(name);
+			}
+		}
+		selectBeforeUpdate = entityBinding.isSelectBeforeUpdate();
+		dynamicUpdate = entityBinding.isDynamicUpdate();
+		dynamicInsert = entityBinding.isDynamicInsert();
+
+		// TODO: fix this when can get subclass info from EntityBinding (HHH-6337)
+		//  for now set hasSubclasses to false
+		//hasSubclasses = entityBinding.hasSubclasses();
+		hasSubclasses = false;
+
+		//polymorphic = ! entityBinding.isRoot() || entityBinding.hasSubclasses();
+		polymorphic = ! entityBinding.isRoot() || hasSubclasses;
+
+		explicitPolymorphism = entityBinding.isExplicitPolymorphism();
+		inherited = ! entityBinding.isRoot();
+		superclass = inherited ?
+				entityBinding.getEntity().getSuperType().getName() :
+				null;
+
+		optimisticLockMode = entityBinding.getOptimisticLockMode();
+		if ( optimisticLockMode > Versioning.OPTIMISTIC_LOCK_VERSION && !dynamicUpdate ) {
+			throw new MappingException( "optimistic-lock=all|dirty requires dynamic-update=\"true\": " + name );
+		}
+		if ( versionPropertyIndex != NO_VERSION_INDX && optimisticLockMode > Versioning.OPTIMISTIC_LOCK_VERSION ) {
+			throw new MappingException( "version and optimistic-lock=all|dirty are not a valid combination : " + name );
+		}
+
+		hasCollections = foundCollection;
+		hasMutableProperties = foundMutable;
+
+		// TODO: fix this when can get subclass info from EntityBinding (HHH-6337)
+		// TODO: uncomment when it's possible to get subclasses from an EntityBinding
+		//iter = entityBinding.getSubclassIterator();
+		//while ( iter.hasNext() ) {
+		//	subclassEntityNames.add( ( (PersistentClass) iter.next() ).getEntityName() );
+		//}
+		subclassEntityNames.add( name );
+
+		if ( mappedClass != null ) {
+			entityNameByInheritenceClassMap.put( mappedClass, name );
+		// TODO: uncomment when it's possible to get subclasses from an EntityBinding
+		//	iter = entityBinding.getSubclassIterator();
+		//	while ( iter.hasNext() ) {
+		//		final EntityBinding subclassEntityBinding = ( EntityBinding ) iter.next();
+		//		entityNameByInheritenceClassMap.put(
+		//				subclassEntityBinding.getEntity().getPojoEntitySpecifics().getEntityClass(),
+		//				subclassEntityBinding.getEntity().getName() );
+		//	}
+		}
+
+		entityMode = hasPojoRepresentation ? EntityMode.POJO : EntityMode.MAP;
+		final EntityTuplizerFactory entityTuplizerFactory = sessionFactory.getSettings().getEntityTuplizerFactory();
+		Class<EntityTuplizer> tuplizerClass = entityBinding.getEntityTuplizerClass();
+
+		// TODO: fix this when integrated into tuplizers (HHH-6359)
+		//if ( tuplizerClass == null ) {
+		//	entityTuplizer = entityTuplizerFactory.constructDefaultTuplizer( entityMode, this, entityBinding );
+		//}
+		//else {
+		//	entityTuplizer = entityTuplizerFactory.constructTuplizer( tuplizerClass, this, entityBinding );
+		//}
+		entityTuplizer = null;
+	}
+
 	private ValueInclusion determineInsertValueGenerationType(Property mappingProperty, StandardProperty runtimeProperty) {
 		if ( runtimeProperty.isInsertGenerated() ) {
 			return ValueInclusion.FULL;
@@ -338,6 +589,19 @@ public class EntityMetamodel implements Serializable {
 				return ValueInclusion.PARTIAL;
 			}
 		}
+		return ValueInclusion.NONE;
+	}
+
+	private ValueInclusion determineInsertValueGenerationType(AttributeBinding mappingProperty, StandardProperty runtimeProperty) {
+		if ( runtimeProperty.isInsertGenerated() ) {
+			return ValueInclusion.FULL;
+		}
+		// TODO: fix the following when components are working (HHH-6173)
+		//else if ( mappingProperty.getValue() instanceof ComponentAttributeBinding ) {
+		//	if ( hasPartialInsertComponentGeneration( ( ComponentAttributeBinding ) mappingProperty.getValue() ) ) {
+		//		return ValueInclusion.PARTIAL;
+		//	}
+		//}
 		return ValueInclusion.NONE;
 	}
 
@@ -369,6 +633,19 @@ public class EntityMetamodel implements Serializable {
 		return ValueInclusion.NONE;
 	}
 
+	private ValueInclusion determineUpdateValueGenerationType(AttributeBinding mappingProperty, StandardProperty runtimeProperty) {
+		if ( runtimeProperty.isUpdateGenerated() ) {
+			return ValueInclusion.FULL;
+		}
+		// TODO: fix the following when components are working (HHH-6173)
+		//else if ( mappingProperty.getValue() instanceof ComponentAttributeBinding ) {
+		//	if ( hasPartialUpdateComponentGeneration( ( ComponentAttributeBinding ) mappingProperty.getValue() ) ) {
+		//		return ValueInclusion.PARTIAL;
+		//	}
+		//}
+		return ValueInclusion.NONE;
+	}
+
 	private boolean hasPartialUpdateComponentGeneration(Component component) {
 		Iterator subProperties = component.getPropertyIterator();
 		while ( subProperties.hasNext() ) {
@@ -393,6 +670,21 @@ public class EntityMetamodel implements Serializable {
 				Property subprop = (Property) iter.next();
 				propertyIndexes.put(
 						prop.getName() + '.' + subprop.getName(),
+						i
+					);
+			}
+		}
+	}
+
+	private void mapPropertyToIndex(Attribute attribute, int i) {
+		propertyIndexes.put( attribute.getName(), i );
+		if ( attribute.isSingular() &&
+				( ( SingularAttribute ) attribute ).getSingularAttributeType().getNature() == TypeNature.COMPONENT ) {
+			org.hibernate.metamodel.domain.Component component =
+					( org.hibernate.metamodel.domain.Component ) ( ( SingularAttribute ) attribute ).getSingularAttributeType();
+			for ( Attribute subAttribute : component.getAttributes() ) {
+				propertyIndexes.put(
+						attribute.getName() + '.' + subAttribute.getName(),
 						i
 					);
 			}

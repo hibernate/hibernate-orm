@@ -762,9 +762,15 @@ public abstract class AbstractEntityPersister
 		// TODO: Implement! Initializing final fields to make compiler happy
 		this.factory = factory;
 		this.cacheAccessStrategy = cacheAccessStrategy;
-		isLazyPropertiesCacheable = false;
-		cacheEntryStructure = null;
-		entityMetamodel = null;
+		this.isLazyPropertiesCacheable =
+				entityBinding.getCaching() == null ?
+						false :
+						entityBinding.getCaching().isCacheLazyProperties();
+		this.cacheEntryStructure =
+				factory.getSettings().isStructuredCacheEntriesEnabled() ?
+						new StructuredCacheEntry(this) :
+						new UnstructuredCacheEntry();
+		this.entityMetamodel = new EntityMetamodel( entityBinding, factory );
 		rootTableKeyColumnNames = null;
 		rootTableKeyColumnReaders = null;
 		rootTableKeyColumnReaderTemplates = null;

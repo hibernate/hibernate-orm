@@ -72,6 +72,17 @@ public interface AttributeBinding {
 	public MetaAttributeContext getMetaAttributeContext();
 
 	/**
+	 * Returns the number of {@link org.hibernate.metamodel.relational.SimpleValue}
+	 * objects that will be returned by {@link #getValues()}
+	 *
+	 * @return the number of objects that will be returned by {@link #getValues()}.
+	 *
+	 * @see {@link org.hibernate.metamodel.relational.SimpleValue}
+	 * @see {@link #getValues()}
+	 */
+	public int getValuesSpan();
+
+	/**
 	 * @return In the case that {@link #getValue()} represents a {@link org.hibernate.metamodel.relational.Tuple} this method
 	 *         gives access to its compound values.  In the case of {@link org.hibernate.metamodel.relational.SimpleValue},
 	 *         we return an Iterable over that single simple value.

@@ -56,6 +56,10 @@ public class Tuple implements Value, ValueContainer, Loggable {
 		return table;
 	}
 
+	public int valuesSpan() {
+		return values.size();
+	}
+
 	@Override
 	public Iterable<SimpleValue> values() {
 		return values;

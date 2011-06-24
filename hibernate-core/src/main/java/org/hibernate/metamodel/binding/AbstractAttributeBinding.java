@@ -166,6 +166,20 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 	}
 
 	@Override
+	public int getValuesSpan() {
+		if ( value == null ) {
+			return 0;
+		}
+		else if ( value instanceof Tuple ) {
+			return ( ( Tuple ) value ).valuesSpan();
+		}
+		else {
+			return 1;
+		}
+	}
+
+
+	@Override
 	public Iterable<SimpleValue> getValues() {
 		return value == null
 				? Collections.<SimpleValue>emptyList()

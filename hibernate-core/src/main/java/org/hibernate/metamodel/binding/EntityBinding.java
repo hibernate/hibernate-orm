@@ -23,6 +23,7 @@
  */
 package org.hibernate.metamodel.binding;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -224,9 +225,10 @@ public class EntityBinding {
 	 * @return The number of attribute bindings
 	 */
 	public int getAttributeBindingClosureSpan() {
-		// TODO: fix this after HHH-6337 is fixed.
+		// TODO: fix this after HHH-6337 and HHH-6360 are fixed.
 		// if this is not a root, then need to include the superclass attribute bindings
-		return attributeBindingMap.size();
+		//return attributeBindingMap.size();
+		return 1; // assume 1 for the ID attribute binding
 	}
 
 	/**
@@ -237,9 +239,11 @@ public class EntityBinding {
 	 * @return The attribute bindings.
 	 */
 	public Iterable<AttributeBinding> getAttributeBindingClosure() {
-		// TODO: fix this after HHH-6337 is fixed.
+		// TODO: fix this after HHH-6337 and HHH-6360 are fixed. for now, just return the identifier binding
 		// if this is not a root, then need to include the superclass attribute bindings
-		return getAttributeBindings();
+		//return getAttributeBindings();
+		Set<AttributeBinding> set = Collections.singleton( ( AttributeBinding ) entityIdentifier.getValueBinding() );
+		return set;
 	}
 
 	public Iterable<EntityReferencingAttributeBinding> getEntityReferencingAttributeBindings() {

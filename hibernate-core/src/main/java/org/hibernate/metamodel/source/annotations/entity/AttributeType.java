@@ -38,6 +38,7 @@ public enum AttributeType {
 	ONE_TO_MANY( JPADotNames.ONE_TO_MANY ),
 	MANY_TO_ONE( JPADotNames.MANY_TO_ONE ),
 	MANY_TO_MANY( JPADotNames.MANY_TO_MANY ),
+	ELEMENT_COLLECTION( JPADotNames.ELEMENT_COLLECTION ),
 	EMBEDDED( JPADotNames.EMBEDDED );
 
 	private final DotName annotationDotName;

@@ -175,27 +175,18 @@ public class ConfiguredClass {
 	}
 
 	private ConfiguredClassType determineType() {
-		AnnotationInstance entityAnnotation = JandexHelper.getSingleAnnotation(
-				classInfo, JPADotNames.ENTITY
-		);
-		if ( entityAnnotation != null ) {
+		if ( classInfo.annotations().containsKey( JPADotNames.ENTITY ) ) {
 			return ConfiguredClassType.ENTITY;
 		}
-
-		AnnotationInstance mappedSuperClassAnnotation = JandexHelper.getSingleAnnotation(
-				classInfo, JPADotNames.MAPPED_SUPERCLASS
-		);
-		if ( mappedSuperClassAnnotation != null ) {
+		else if ( classInfo.annotations().containsKey( JPADotNames.MAPPED_SUPERCLASS ) ) {
 			return ConfiguredClassType.MAPPED_SUPERCLASS;
 		}
-
-		AnnotationInstance embeddableAnnotation = JandexHelper.getSingleAnnotation(
-				classInfo, JPADotNames.EMBEDDABLE
-		);
-		if ( embeddableAnnotation != null ) {
+		else if ( classInfo.annotations().containsKey( JPADotNames.EMBEDDABLE ) ) {
 			return ConfiguredClassType.EMBEDDABLE;
 		}
-		return ConfiguredClassType.NON_ENTITY;
+		else {
+			return ConfiguredClassType.NON_ENTITY;
+		}
 	}
 
 	private AccessType determineClassAccessType(AccessType defaultAccessType) {

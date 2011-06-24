@@ -151,7 +151,7 @@ public class EntityClass extends ConfiguredClass {
 	}
 
 	private IdType determineIdType() {
-		List<AnnotationInstance> idAnnotations = getClassInfo().annotations().get( JPADotNames.ENTITY );
+		List<AnnotationInstance> idAnnotations = getClassInfo().annotations().get( JPADotNames.ID );
 		List<AnnotationInstance> embeddedIdAnnotations = getClassInfo()
 				.annotations()
 				.get( JPADotNames.EMBEDDED_ID );

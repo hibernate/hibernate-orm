@@ -33,9 +33,8 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 /**
  * A contract for defining the aspects of cascading various persistence actions.
  *
- * @see CascadingAction
- *
  * @author Gavin King
+ * @see CascadingAction
  */
 public abstract class CascadeStyle implements Serializable {
 
@@ -43,6 +42,7 @@ public abstract class CascadeStyle implements Serializable {
 	 * For this style, should the given action be cascaded?
 	 *
 	 * @param action The action to be checked for cascade-ability.
+	 *
 	 * @return True if the action should be cascaded under this style; false otherwise.
 	 */
 	public abstract boolean doCascade(CascadingAction action);
@@ -57,18 +57,19 @@ public abstract class CascadeStyle implements Serializable {
 	 * control this seperately.
 	 *
 	 * @param action The action to be checked for cascade-ability.
+	 *
 	 * @return True if the action should be really cascaded under this style;
-	 * false otherwise.
+	 *         false otherwise.
 	 */
 	public boolean reallyDoCascade(CascadingAction action) {
-		return doCascade(action);
+		return doCascade( action );
 	}
 
 	/**
 	 * Do we need to delete orphaned collection elements?
 	 *
 	 * @return True if this style need to account for orphan delete
-	 * operations; false othwerwise.
+	 *         operations; false othwerwise.
 	 */
 	public boolean hasOrphanDelete() {
 		return false;
@@ -76,27 +77,38 @@ public abstract class CascadeStyle implements Serializable {
 
 	public static final class MultipleCascadeStyle extends CascadeStyle {
 		private final CascadeStyle[] styles;
+
 		public MultipleCascadeStyle(CascadeStyle[] styles) {
 			this.styles = styles;
 		}
+
 		public boolean doCascade(CascadingAction action) {
-			for (int i=0; i<styles.length; i++) {
-				if ( styles[i].doCascade(action) ) return true;
+			for ( CascadeStyle style : styles ) {
+				if ( style.doCascade( action ) ) {
+					return true;
+				}
 			}
 			return false;
 		}
+
 		public boolean reallyDoCascade(CascadingAction action) {
-			for (int i=0; i<styles.length; i++) {
-				if ( styles[i].reallyDoCascade(action) ) return true;
+			for ( CascadeStyle style : styles ) {
+				if ( style.reallyDoCascade( action ) ) {
+					return true;
+				}
 			}
 			return false;
 		}
+
 		public boolean hasOrphanDelete() {
-			for (int i=0; i<styles.length; i++) {
-				if ( styles[i].hasOrphanDelete() ) return true;
+			for ( CascadeStyle style : styles ) {
+				if ( style.hasOrphanDelete() ) {
+					return true;
+				}
 			}
 			return false;
 		}
+
 		public String toString() {
 			return ArrayHelper.toString( styles );
 		}
@@ -109,9 +121,11 @@ public abstract class CascadeStyle implements Serializable {
 		public boolean doCascade(CascadingAction action) {
 			return true;
 		}
+
 		public boolean hasOrphanDelete() {
 			return true;
 		}
+
 		public String toString() {
 			return "STYLE_ALL_DELETE_ORPHAN";
 		}
@@ -124,6 +138,7 @@ public abstract class CascadeStyle implements Serializable {
 		public boolean doCascade(CascadingAction action) {
 			return true;
 		}
+
 		public String toString() {
 			return "STYLE_ALL";
 		}
@@ -134,8 +149,9 @@ public abstract class CascadeStyle implements Serializable {
 	 */
 	public static final CascadeStyle UPDATE = new CascadeStyle() {
 		public boolean doCascade(CascadingAction action) {
-			return action==CascadingAction.SAVE_UPDATE;
+			return action == CascadingAction.SAVE_UPDATE;
 		}
+
 		public String toString() {
 			return "STYLE_SAVE_UPDATE";
 		}
@@ -146,8 +162,9 @@ public abstract class CascadeStyle implements Serializable {
 	 */
 	public static final CascadeStyle LOCK = new CascadeStyle() {
 		public boolean doCascade(CascadingAction action) {
-			return action==CascadingAction.LOCK;
+			return action == CascadingAction.LOCK;
 		}
+
 		public String toString() {
 			return "STYLE_LOCK";
 		}
@@ -158,8 +175,9 @@ public abstract class CascadeStyle implements Serializable {
 	 */
 	public static final CascadeStyle REFRESH = new CascadeStyle() {
 		public boolean doCascade(CascadingAction action) {
-			return action==CascadingAction.REFRESH;
+			return action == CascadingAction.REFRESH;
 		}
+
 		public String toString() {
 			return "STYLE_REFRESH";
 		}
@@ -170,8 +188,9 @@ public abstract class CascadeStyle implements Serializable {
 	 */
 	public static final CascadeStyle EVICT = new CascadeStyle() {
 		public boolean doCascade(CascadingAction action) {
-			return action==CascadingAction.EVICT;
+			return action == CascadingAction.EVICT;
 		}
+
 		public String toString() {
 			return "STYLE_EVICT";
 		}
@@ -182,8 +201,9 @@ public abstract class CascadeStyle implements Serializable {
 	 */
 	public static final CascadeStyle REPLICATE = new CascadeStyle() {
 		public boolean doCascade(CascadingAction action) {
-			return action==CascadingAction.REPLICATE;
+			return action == CascadingAction.REPLICATE;
 		}
+
 		public String toString() {
 			return "STYLE_REPLICATE";
 		}
@@ -193,8 +213,9 @@ public abstract class CascadeStyle implements Serializable {
 	 */
 	public static final CascadeStyle MERGE = new CascadeStyle() {
 		public boolean doCascade(CascadingAction action) {
-			return action==CascadingAction.MERGE;
+			return action == CascadingAction.MERGE;
 		}
+
 		public String toString() {
 			return "STYLE_MERGE";
 		}
@@ -205,9 +226,10 @@ public abstract class CascadeStyle implements Serializable {
 	 */
 	public static final CascadeStyle PERSIST = new CascadeStyle() {
 		public boolean doCascade(CascadingAction action) {
-			return action==CascadingAction.PERSIST
-				|| action==CascadingAction.PERSIST_ON_FLUSH;
+			return action == CascadingAction.PERSIST
+					|| action == CascadingAction.PERSIST_ON_FLUSH;
 		}
+
 		public String toString() {
 			return "STYLE_PERSIST";
 		}
@@ -218,8 +240,9 @@ public abstract class CascadeStyle implements Serializable {
 	 */
 	public static final CascadeStyle DELETE = new CascadeStyle() {
 		public boolean doCascade(CascadingAction action) {
-			return action==CascadingAction.DELETE;
+			return action == CascadingAction.DELETE;
 		}
+
 		public String toString() {
 			return "STYLE_DELETE";
 		}
@@ -230,14 +253,17 @@ public abstract class CascadeStyle implements Serializable {
 	 */
 	public static final CascadeStyle DELETE_ORPHAN = new CascadeStyle() {
 		public boolean doCascade(CascadingAction action) {
-			return action==CascadingAction.DELETE || action==CascadingAction.SAVE_UPDATE;
+			return action == CascadingAction.DELETE || action == CascadingAction.SAVE_UPDATE;
 		}
+
 		public boolean reallyDoCascade(CascadingAction action) {
-			return action==CascadingAction.DELETE;
+			return action == CascadingAction.DELETE;
 		}
+
 		public boolean hasOrphanDelete() {
 			return true;
 		}
+
 		public String toString() {
 			return "STYLE_DELETE_ORPHAN";
 		}
@@ -250,6 +276,7 @@ public abstract class CascadeStyle implements Serializable {
 		public boolean doCascade(CascadingAction action) {
 			return false;
 		}
+
 		public String toString() {
 			return "STYLE_NONE";
 		}
@@ -258,7 +285,7 @@ public abstract class CascadeStyle implements Serializable {
 	public CascadeStyle() {
 	}
 
-	static final Map STYLES = new HashMap();
+	static final Map<String, CascadeStyle> STYLES = new HashMap<String, CascadeStyle>();
 
 	static {
 		STYLES.put( "all", ALL );
@@ -280,12 +307,13 @@ public abstract class CascadeStyle implements Serializable {
 	 * Factory method for obtaining named cascade styles
 	 *
 	 * @param cascade The named cascade style name.
+	 *
 	 * @return The appropriate CascadeStyle
 	 */
 	public static CascadeStyle getCascadeStyle(String cascade) {
-		CascadeStyle style = (CascadeStyle) STYLES.get(cascade);
-		if (style==null) {
-			throw new MappingException("Unsupported cascade style: " + cascade);
+		CascadeStyle style = STYLES.get( cascade );
+		if ( style == null ) {
+			throw new MappingException( "Unsupported cascade style: " + cascade );
 		}
 		else {
 			return style;

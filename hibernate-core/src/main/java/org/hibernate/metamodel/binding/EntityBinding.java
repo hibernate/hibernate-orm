@@ -40,7 +40,6 @@ import org.hibernate.metamodel.relational.TableSpecification;
 import org.hibernate.metamodel.source.spi.BindingContext;
 import org.hibernate.metamodel.source.spi.MetaAttributeContext;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.tuple.entity.EntityTuplizer;
 
 /**
@@ -100,7 +99,11 @@ public class EntityBinding {
 
 	public EntityBinding initialize(BindingContext bindingContext, EntityBindingState state) {
 		// todo : Entity will need both entityName and className to be effective
-		this.entity = new Entity( state.getEntityName(), state.getSuperType(), bindingContext.makeJavaType( state.getClassName() ) );
+		this.entity = new Entity(
+				state.getEntityName(),
+				state.getSuperType(),
+				bindingContext.makeJavaType( state.getClassName() )
+		);
 
 		this.isRoot = state.isRoot();
 		this.entityInheritanceType = state.getEntityInheritanceType();
@@ -242,7 +245,7 @@ public class EntityBinding {
 		// TODO: fix this after HHH-6337 and HHH-6360 are fixed. for now, just return the identifier binding
 		// if this is not a root, then need to include the superclass attribute bindings
 		//return getAttributeBindings();
-		Set<AttributeBinding> set = Collections.singleton( ( AttributeBinding ) entityIdentifier.getValueBinding() );
+		Set<AttributeBinding> set = Collections.singleton( (AttributeBinding) entityIdentifier.getValueBinding() );
 		return set;
 	}
 

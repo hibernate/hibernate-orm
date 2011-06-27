@@ -33,6 +33,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
 import org.hibernate.metamodel.binding.state.EntityBindingState;
+import org.hibernate.metamodel.domain.Attribute;
 import org.hibernate.metamodel.domain.Entity;
 import org.hibernate.metamodel.domain.JavaType;
 import org.hibernate.metamodel.relational.Column;
@@ -253,34 +254,34 @@ public class EntityBinding {
 		return entityReferencingAttributeBindings;
 	}
 
-	public SimpleAttributeBinding makeSimpleIdAttributeBinding(String name) {
-		final SimpleAttributeBinding binding = makeSimpleAttributeBinding( name, true, true );
+	public SimpleAttributeBinding makeSimpleIdAttributeBinding(Attribute attribute) {
+		final SimpleAttributeBinding binding = makeSimpleAttributeBinding( attribute, true, true );
 		getEntityIdentifier().setValueBinding( binding );
 		return binding;
 	}
 
-	public EntityDiscriminator makeEntityDiscriminator(String attributeName) {
+	public EntityDiscriminator makeEntityDiscriminator(Attribute attribute) {
 		if ( entityDiscriminator != null ) {
 			throw new AssertionFailure( "Creation of entity discriminator was called more than once" );
 		}
 		entityDiscriminator = new EntityDiscriminator();
-		entityDiscriminator.setValueBinding( makeSimpleAttributeBinding( attributeName, true, false ) );
+		entityDiscriminator.setValueBinding( makeSimpleAttributeBinding( attribute, true, false ) );
 		return entityDiscriminator;
 	}
 
-	public SimpleAttributeBinding makeVersionBinding(String attributeName) {
-		versionBinding = makeSimpleAttributeBinding( attributeName, true, false );
+	public SimpleAttributeBinding makeVersionBinding(Attribute attribute) {
+		versionBinding = makeSimpleAttributeBinding( attribute, true, false );
 		return versionBinding;
 	}
 
-	public SimpleAttributeBinding makeSimpleAttributeBinding(String name) {
-		return makeSimpleAttributeBinding( name, false, false );
+	public SimpleAttributeBinding makeSimpleAttributeBinding(Attribute attribute) {
+		return makeSimpleAttributeBinding( attribute, false, false );
 	}
 
-	private SimpleAttributeBinding makeSimpleAttributeBinding(String name, boolean forceNonNullable, boolean forceUnique) {
+	private SimpleAttributeBinding makeSimpleAttributeBinding(Attribute attribute, boolean forceNonNullable, boolean forceUnique) {
 		final SimpleAttributeBinding binding = new SimpleAttributeBinding( this, forceNonNullable, forceUnique );
-		registerAttributeBinding( name, binding );
-		binding.setAttribute( entity.getAttribute( name ) );
+		registerAttributeBinding( attribute.getName(), binding );
+		binding.setAttribute( attribute );
 		return binding;
 	}
 

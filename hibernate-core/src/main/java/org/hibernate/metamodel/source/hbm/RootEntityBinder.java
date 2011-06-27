@@ -27,7 +27,9 @@ import org.hibernate.InvalidMappingException;
 import org.hibernate.MappingException;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.InheritanceType;
+import org.hibernate.metamodel.binding.state.DiscriminatorBindingState;
 import org.hibernate.metamodel.binding.state.SimpleAttributeBindingState;
+import org.hibernate.metamodel.domain.Attribute;
 import org.hibernate.metamodel.relational.Identifier;
 import org.hibernate.metamodel.relational.InLineView;
 import org.hibernate.metamodel.relational.Schema;
@@ -39,7 +41,6 @@ import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLCompositeId;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLId;
-import org.hibernate.metamodel.binding.state.DiscriminatorBindingState;
 
 /**
  * TODO : javadoc
@@ -144,8 +145,8 @@ class RootEntityBinder extends AbstractEntityBinder {
 			throw new MappingException( "ID is expected to be a single column, but has more than 1 value" );
 		}
 
-		entityBinding.getEntity().getOrCreateSingularAttribute( bindingState.getAttributeName() );
-		entityBinding.makeSimpleIdAttributeBinding( bindingState.getAttributeName() )
+		Attribute attribute = entityBinding.getEntity().getOrCreateSingularAttribute( bindingState.getAttributeName() );
+		entityBinding.makeSimpleIdAttributeBinding( attribute )
 				.initialize( bindingState )
 				.initialize( relationalStateContainer.getRelationalStates().get( 0 ) );
 
@@ -236,10 +237,10 @@ class RootEntityBinder extends AbstractEntityBinder {
 		}
 
 		DiscriminatorBindingState bindingState = new HbmDiscriminatorBindingState(
-						entityBinding.getEntity().getJavaType().getName(),
-						entityBinding.getEntity().getName(),
-						getBindingContext(),
-						xmlEntityClazz
+				entityBinding.getEntity().getJavaType().getName(),
+				entityBinding.getEntity().getName(),
+				getBindingContext(),
+				xmlEntityClazz
 		);
 
 		// boolean (true here) indicates that by default column names should be guessed
@@ -252,8 +253,8 @@ class RootEntityBinder extends AbstractEntityBinder {
 		);
 
 
-		entityBinding.getEntity().getOrCreateSingularAttribute( bindingState.getAttributeName() );
-		entityBinding.makeEntityDiscriminator( bindingState.getAttributeName() )
+		Attribute attribute = entityBinding.getEntity().getOrCreateSingularAttribute( bindingState.getAttributeName() );
+		entityBinding.makeEntityDiscriminator( attribute )
 				.initialize( bindingState )
 				.initialize( relationalState );
 	}
@@ -294,8 +295,8 @@ class RootEntityBinder extends AbstractEntityBinder {
 						)
 				);
 
-		entityBinding.getEntity().getOrCreateSingularAttribute( bindingState.getAttributeName() );
-		entityBinding.makeVersionBinding( bindingState.getAttributeName() )
+		Attribute attribute = entityBinding.getEntity().getOrCreateSingularAttribute( bindingState.getAttributeName() );
+		entityBinding.makeVersionBinding( attribute )
 				.initialize( bindingState )
 				.initialize( relationalState );
 	}
@@ -322,7 +323,8 @@ class RootEntityBinder extends AbstractEntityBinder {
 						)
 				);
 
-		entityBinding.makeVersionBinding( bindingState.getAttributeName() )
+		Attribute attribute = entityBinding.getEntity().getOrCreateSingularAttribute( bindingState.getAttributeName() );
+		entityBinding.makeVersionBinding( attribute )
 				.initialize( bindingState )
 				.initialize( relationalState );
 	}

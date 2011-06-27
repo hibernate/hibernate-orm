@@ -53,6 +53,7 @@ import org.hibernate.metamodel.binding.SimpleAttributeBinding;
 import org.hibernate.metamodel.binding.state.DiscriminatorBindingState;
 import org.hibernate.metamodel.binding.state.ManyToOneAttributeBindingState;
 import org.hibernate.metamodel.binding.state.SimpleAttributeBindingState;
+import org.hibernate.metamodel.domain.Attribute;
 import org.hibernate.metamodel.domain.AttributeContainer;
 import org.hibernate.metamodel.domain.Hierarchical;
 import org.hibernate.metamodel.domain.SingularAttribute;
@@ -481,9 +482,9 @@ public class EntityBinder {
 			throw new AssertionFailure( "Unexpected attribute type for id attribute" );
 		}
 
-		entityBinding.getEntity().getOrCreateSingularAttribute( idName );
+		Attribute attribute = entityBinding.getEntity().getOrCreateSingularAttribute( idName );
 
-		SimpleAttributeBinding attributeBinding = entityBinding.makeSimpleIdAttributeBinding( idName );
+		SimpleAttributeBinding attributeBinding = entityBinding.makeSimpleIdAttributeBinding( attribute );
 		attributeBinding.initialize( new AttributeBindingStateImpl( (SimpleAttribute) idAttribute ) );
 		attributeBinding.initialize( new ColumnRelationalStateImpl( (SimpleAttribute) idAttribute, meta ) );
 		bindSingleIdGeneratedValue( entityBinding, idName );
@@ -624,23 +625,22 @@ public class EntityBinder {
 			return;
 		}
 
-		String attributeName = simpleAttribute.getName();
-		container.getOrCreateSingularAttribute( attributeName );
+		Attribute attribute = container.getOrCreateSingularAttribute( simpleAttribute.getName() );
 		SimpleAttributeBinding attributeBinding;
 
 		if ( simpleAttribute.isDiscriminator() ) {
-			EntityDiscriminator entityDiscriminator = entityBinding.makeEntityDiscriminator( attributeName );
+			EntityDiscriminator entityDiscriminator = entityBinding.makeEntityDiscriminator( attribute );
 			DiscriminatorBindingState bindingState = new DiscriminatorBindingStateImpl( simpleAttribute );
 			entityDiscriminator.initialize( bindingState );
 			attributeBinding = entityDiscriminator.getValueBinding();
 		}
 		else if ( simpleAttribute.isVersioned() ) {
-			attributeBinding = entityBinding.makeVersionBinding( attributeName );
+			attributeBinding = entityBinding.makeVersionBinding( attribute );
 			SimpleAttributeBindingState bindingState = new AttributeBindingStateImpl( simpleAttribute );
 			attributeBinding.initialize( bindingState );
 		}
 		else {
-			attributeBinding = entityBinding.makeSimpleAttributeBinding( attributeName );
+			attributeBinding = entityBinding.makeSimpleAttributeBinding( attribute );
 			SimpleAttributeBindingState bindingState = new AttributeBindingStateImpl( simpleAttribute );
 			attributeBinding.initialize( bindingState );
 		}

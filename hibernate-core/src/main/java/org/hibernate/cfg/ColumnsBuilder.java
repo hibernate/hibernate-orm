@@ -32,7 +32,6 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import org.hibernate.AnnotationException;
-import org.hibernate.annotations.CollectionOfElements;
 import org.hibernate.annotations.Columns;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.JoinColumnsOrFormulas;
@@ -112,7 +111,6 @@ class ColumnsBuilder {
 		}
 		else if ( joinColumns == null &&
 				( property.isAnnotationPresent( OneToMany.class )
-						|| property.isAnnotationPresent( CollectionOfElements.class ) //legacy Hibernate
 						|| property.isAnnotationPresent( ElementCollection.class )
 				) ) {
 			OneToMany oneToMany = property.getAnnotation( OneToMany.class );

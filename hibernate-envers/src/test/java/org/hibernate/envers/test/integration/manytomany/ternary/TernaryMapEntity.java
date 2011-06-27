@@ -28,7 +28,6 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
-import org.hibernate.annotations.MapKeyManyToMany;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.entities.IntTestEntity;
 import org.hibernate.envers.test.entities.StrTestEntity;
@@ -44,7 +43,7 @@ public class TernaryMapEntity {
 
     @Audited
     @ManyToMany
-    @MapKeyManyToMany
+    @javax.persistence.MapKeyJoinColumn
     private Map<IntTestEntity, StrTestEntity> map;
 
     public TernaryMapEntity() {

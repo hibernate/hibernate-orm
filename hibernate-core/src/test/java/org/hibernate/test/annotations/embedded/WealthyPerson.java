@@ -4,27 +4,17 @@ import java.util.Set;
 import javax.persistence.CollectionTable;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
-import org.hibernate.annotations.CollectionOfElements;
 
 @Entity
 public class WealthyPerson extends Person {
 
 	@ElementCollection
-//	@CollectionTable(name="XXXHOMES")
-//	@AttributeOverrides({
-//		@AttributeOverride(name="address1",
-//								 column=@Column(name="HOME_STREET")),
-//		@AttributeOverride(name="city",
-//								 column=@Column(name="HOME_CITY")),
-//		@AttributeOverride(name="country",
-//								 column=@Column(name="HOME_COUNTRY"))
-//	})
 	protected Set<Address> vacationHomes = new HashSet<Address>();
 
-	@CollectionOfElements
+	@ElementCollection
 	protected Set<Address> legacyVacationHomes = new HashSet<Address>();
 
-	@CollectionOfElements
+	@ElementCollection
 	@CollectionTable(name = "WelPers_VacHomes")
 	protected Set<Address> explicitVacationHomes = new HashSet<Address>();
 }

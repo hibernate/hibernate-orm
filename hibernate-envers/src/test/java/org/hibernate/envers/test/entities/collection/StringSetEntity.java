@@ -24,10 +24,10 @@
 package org.hibernate.envers.test.entities.collection;
 import java.util.HashSet;
 import java.util.Set;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import org.hibernate.annotations.CollectionOfElements;
 import org.hibernate.envers.Audited;
 
 /**
@@ -40,7 +40,7 @@ public class StringSetEntity {
     private Integer id;
 
     @Audited
-    @CollectionOfElements
+    @ElementCollection
     private Set<String> strings;
 
     public StringSetEntity() {

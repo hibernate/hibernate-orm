@@ -9,7 +9,6 @@ import javax.persistence.MappedSuperclass;
  * @author Erik-Berndt Scheper
  */
 @MappedSuperclass
-@org.hibernate.annotations.ForceDiscriminator
 @org.hibernate.envers.Audited
 public abstract class VersionsJoinTableRangeTestEntitySuperClass {
 

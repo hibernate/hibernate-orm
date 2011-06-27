@@ -152,11 +152,11 @@ public class ConfiguredClass {
 		return mappedAttributes.values();
 	}
 
-	public Iterable<EmbeddedClass> getEmbeddedClasses() {
-		return embeddedClasses.values();
+	public Map<String, EmbeddedClass> getEmbeddedClasses() {
+		return embeddedClasses;
 	}
 
-	public MappedAttribute getMappedProperty(String propertyName) {
+	public MappedAttribute getMappedAttribute(String propertyName) {
 		return mappedAttributes.get( propertyName );
 	}
 

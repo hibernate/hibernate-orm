@@ -81,7 +81,7 @@ public class GenericTypeDiscoveryTest extends BaseUnitTestCase {
 		ConfiguredClass configuredClass = iter.next();
 		ClassInfo info = configuredClass.getClassInfo();
 		assertEquals( "wrong class", DotName.createSimple( Stuff.class.getName() ), info.name() );
-		MappedAttribute property = configuredClass.getMappedProperty( "value" );
+		MappedAttribute property = configuredClass.getMappedAttribute( "value" );
 		assertEquals( Price.class.getName(), property.getType() );
 
 		assertTrue( iter.hasNext() );
@@ -97,9 +97,9 @@ public class GenericTypeDiscoveryTest extends BaseUnitTestCase {
 		info = configuredClass.getClassInfo();
 		assertEquals( "wrong class", DotName.createSimple( Item.class.getName() ), info.name() );
 		// properties are alphabetically ordered!
-		property = configuredClass.getMappedProperty( "owner" );
+		property = configuredClass.getMappedAttribute( "owner" );
 		assertEquals( SomeGuy.class.getName(), property.getType() );
-		property = configuredClass.getMappedProperty( "type" );
+		property = configuredClass.getMappedAttribute( "type" );
 		assertEquals( PaperType.class.getName(), property.getType() );
 
 		assertTrue( iter.hasNext() );

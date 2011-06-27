@@ -75,13 +75,13 @@ public class TypeDiscoveryTest extends BaseUnitTestCase {
 		Iterator<EntityClass> iter = hierarchies.iterator().next().iterator();
 		ConfiguredClass configuredClass = iter.next();
 
-		MappedAttribute property = configuredClass.getMappedProperty( "id" );
+		MappedAttribute property = configuredClass.getMappedAttribute( "id" );
 		assertEquals( "Unexpected property type", "int", property.getType() );
 
-		property = configuredClass.getMappedProperty( "string" );
+		property = configuredClass.getMappedAttribute( "string" );
 		assertEquals( "Unexpected property type", String.class.getName(), property.getType() );
 
-		property = configuredClass.getMappedProperty( "customString" );
+		property = configuredClass.getMappedAttribute( "customString" );
 		assertEquals( "Unexpected property type", "my.custom.Type", property.getType() );
 
 		Map<String, String> typeParameters = property.getTypeParameters();

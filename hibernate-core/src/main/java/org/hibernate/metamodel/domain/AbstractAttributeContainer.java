@@ -70,7 +70,19 @@ public abstract class AbstractAttributeContainer implements AttributeContainer, 
 	public SingularAttribute getOrCreateSingularAttribute(String name) {
 		SingularAttribute attribute = (SingularAttribute) getAttribute( name );
 		if ( attribute == null ) {
+
 			attribute = new SingularAttributeImpl( name, this );
+			addAttribute( attribute );
+		}
+		return attribute;
+	}
+
+	@Override
+	public SingularAttribute getOrCreateComponentAttribute(String name) {
+		SingularAttribute attribute = (SingularAttribute) getAttribute( name );
+		if ( attribute == null ) {
+			Component component = new Component( name, null );
+			attribute = new SingularAttributeImpl( name, component );
 			addAttribute( attribute );
 		}
 		return attribute;

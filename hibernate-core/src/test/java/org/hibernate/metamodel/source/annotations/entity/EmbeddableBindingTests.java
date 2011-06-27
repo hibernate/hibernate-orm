@@ -44,7 +44,7 @@ public class EmbeddableBindingTests extends BaseAnnotationBindingTestCase {
 	public void testEmbeddable() {
 		buildMetadataSources( User.class, Address.class );
 		EntityBinding binding = getEntityBinding( User.class );
-		assertNotNull( binding.getAttributeBinding( "city" ) );
+		assertNotNull( binding.getAttributeBinding( "address" ) );
 	}
 
 	@Entity

@@ -23,10 +23,10 @@
  */
 package org.hibernate.metamodel.source.annotations.entity;
 
-import javax.persistence.GenerationType;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.persistence.GenerationType;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
@@ -53,7 +53,9 @@ import org.hibernate.metamodel.binding.SimpleAttributeBinding;
 import org.hibernate.metamodel.binding.state.DiscriminatorBindingState;
 import org.hibernate.metamodel.binding.state.ManyToOneAttributeBindingState;
 import org.hibernate.metamodel.binding.state.SimpleAttributeBindingState;
+import org.hibernate.metamodel.domain.AttributeContainer;
 import org.hibernate.metamodel.domain.Hierarchical;
+import org.hibernate.metamodel.domain.SingularAttribute;
 import org.hibernate.metamodel.relational.Identifier;
 import org.hibernate.metamodel.relational.Schema;
 import org.hibernate.metamodel.relational.TableSpecification;
@@ -119,6 +121,9 @@ public class EntityBinder {
 
 		// bind all attributes - simple as well as associations
 		bindAttributes( entityBinding );
+		bindEmbeddedAttributes( entityBinding );
+
+
 		bindTableUniqueConstraints( entityBinding );
 
 		// last, but not least we initialize and register the new EntityBinding
@@ -189,7 +194,7 @@ public class EntityBinder {
 		);
 		SimpleAttribute discriminatorAttribute = SimpleAttribute.createDiscriminatorAttribute( typeAnnotations );
 
-		bindSingleMappedAttribute( entityBinding, discriminatorAttribute );
+		bindSingleMappedAttribute( entityBinding, entityBinding.getEntity(), discriminatorAttribute );
 
 		if ( !( discriminatorAttribute.getColumnValues() instanceof DiscriminatorColumnValues ) ) {
 			throw new AssertionFailure( "Expected discriminator column values" );
@@ -471,7 +476,7 @@ public class EntityBinder {
 		);
 
 		String idName = JandexHelper.getPropertyName( idAnnotation.target() );
-		MappedAttribute idAttribute = entityClass.getMappedProperty( idName );
+		MappedAttribute idAttribute = entityClass.getMappedAttribute( idName );
 		if ( !( idAttribute instanceof SimpleAttribute ) ) {
 			throw new AssertionFailure( "Unexpected attribute type for id attribute" );
 		}
@@ -547,29 +552,50 @@ public class EntityBinder {
 	private void bindAttributes(EntityBinding entityBinding) {
 		for ( MappedAttribute mappedAttribute : entityClass.getMappedAttributes() ) {
 			if ( mappedAttribute instanceof AssociationAttribute ) {
-				bindAssociationAttribute( entityBinding, (AssociationAttribute) mappedAttribute );
+				bindAssociationAttribute(
+						entityBinding,
+						entityBinding.getEntity(),
+						(AssociationAttribute) mappedAttribute
+				);
 			}
 			else {
-				bindSingleMappedAttribute( entityBinding, (SimpleAttribute) mappedAttribute );
+				bindSingleMappedAttribute(
+						entityBinding,
+						entityBinding.getEntity(),
+						(SimpleAttribute) mappedAttribute
+				);
 			}
 		}
+	}
 
-		for ( EmbeddedClass embeddedClass : entityClass.getEmbeddedClasses() ) {
+	private void bindEmbeddedAttributes(EntityBinding entityBinding) {
+		for ( Map.Entry<String, EmbeddedClass> entry : entityClass.getEmbeddedClasses().entrySet() ) {
+			String attributeName = entry.getKey();
+			EmbeddedClass embeddedClass = entry.getValue();
+			SingularAttribute component = entityBinding.getEntity().getOrCreateComponentAttribute( attributeName );
 			for ( MappedAttribute mappedAttribute : embeddedClass.getMappedAttributes() ) {
 				if ( mappedAttribute instanceof AssociationAttribute ) {
-					bindAssociationAttribute( entityBinding, (AssociationAttribute) mappedAttribute );
+					bindAssociationAttribute(
+							entityBinding,
+							component.getAttributeContainer(),
+							(AssociationAttribute) mappedAttribute
+					);
 				}
 				else {
-					bindSingleMappedAttribute( entityBinding, (SimpleAttribute) mappedAttribute );
+					bindSingleMappedAttribute(
+							entityBinding,
+							component.getAttributeContainer(),
+							(SimpleAttribute) mappedAttribute
+					);
 				}
 			}
 		}
 	}
 
-	private void bindAssociationAttribute(EntityBinding entityBinding, AssociationAttribute associationAttribute) {
+	private void bindAssociationAttribute(EntityBinding entityBinding, AttributeContainer container, AssociationAttribute associationAttribute) {
 		switch ( associationAttribute.getAssociationType() ) {
 			case MANY_TO_ONE: {
-				entityBinding.getEntity().getOrCreateSingularAttribute( associationAttribute.getName() );
+				container.getOrCreateSingularAttribute( associationAttribute.getName() );
 				ManyToOneAttributeBinding manyToOneAttributeBinding = entityBinding.makeManyToOneAttributeBinding(
 						associationAttribute.getName()
 				);
@@ -593,13 +619,13 @@ public class EntityBinder {
 		}
 	}
 
-	private void bindSingleMappedAttribute(EntityBinding entityBinding, SimpleAttribute simpleAttribute) {
+	private void bindSingleMappedAttribute(EntityBinding entityBinding, AttributeContainer container, SimpleAttribute simpleAttribute) {
 		if ( simpleAttribute.isId() ) {
 			return;
 		}
 
 		String attributeName = simpleAttribute.getName();
-		entityBinding.getEntity().getOrCreateSingularAttribute( attributeName );
+		container.getOrCreateSingularAttribute( attributeName );
 		SimpleAttributeBinding attributeBinding;
 
 		if ( simpleAttribute.isDiscriminator() ) {

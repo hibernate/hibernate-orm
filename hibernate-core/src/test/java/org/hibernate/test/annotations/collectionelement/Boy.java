@@ -19,7 +19,6 @@ import javax.persistence.JoinColumn;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OrderColumn;
 import javax.persistence.Table;
-import org.hibernate.annotations.CollectionOfElements;
 
 /**
  * @author Emmanuel Bernard
@@ -72,7 +71,7 @@ public class Boy {
 		this.lastName = lastName;
 	}
 
-	@CollectionOfElements //keep hibernate legacy for test purposes
+	@ElementCollection
 	public Set<String> getNickNames() {
 		return nickNames;
 	}
@@ -136,8 +135,7 @@ public class Boy {
 	public void setFavoriteNumbers(int[] favoriteNumbers) {
 		this.favoriteNumbers = favoriteNumbers;
 	}
-
-	@CollectionOfElements //TODO migration to ElementCollection "element.serial"??
+	@ElementCollection
 	@AttributeOverride(name = "element.serial", column = @Column(name = "serial_nbr"))
 	public Set<Toy> getFavoriteToys() {
 		return favoriteToys;

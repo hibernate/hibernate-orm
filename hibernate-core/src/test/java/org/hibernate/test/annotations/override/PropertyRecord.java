@@ -9,7 +9,6 @@ import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import org.hibernate.annotations.CollectionOfElements;
 
 /**
  * @author Emmanuel Bernard
@@ -29,12 +28,11 @@ public class PropertyRecord {
 	public Map<Address, PropertyInfo> parcels;
 
 	@AttributeOverrides({
-			@AttributeOverride(name = "index.street", column = @Column(name = "STREET_NAME")),
-			@AttributeOverride(name = "element.size", column = @Column(name = "SQUARE_FEET")),
-			@AttributeOverride(name = "element.tax", column = @Column(name = "ASSESSMENT"))
+			@AttributeOverride(name = "key.street", column = @Column(name = "STREET_NAME")),
+			@AttributeOverride(name = "value.size", column = @Column(name = "SQUARE_FEET")),
+			@AttributeOverride(name = "value.tax", column = @Column(name = "ASSESSMENT"))
 					})
-	@CollectionOfElements
-	//@MapKey
+	@ElementCollection
 	@CollectionTable(name="LegacyParcels")
 	public Map<Address, PropertyInfo> legacyParcels;
 
@@ -46,9 +44,9 @@ public class PropertyRecord {
 	public Set<PropertyInfo> unsortedParcels;
 
 	@AttributeOverrides({
-			@AttributeOverride(name = "element.size", column = @Column(name = "SQUARE_FEET")),
-			@AttributeOverride(name = "element.tax", column = @Column(name = "ASSESSMENT"))
+			@AttributeOverride(name = "size", column = @Column(name = "SQUARE_FEET")),
+			@AttributeOverride(name = "tax", column = @Column(name = "ASSESSMENT"))
 					})
-	@CollectionOfElements
+	@ElementCollection
 	public Set<PropertyInfo> legacyUnsortedParcels;
 }

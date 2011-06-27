@@ -33,8 +33,6 @@ import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
-import org.hibernate.annotations.MapKey;
-import org.hibernate.annotations.MapKeyManyToMany;
 import org.hibernate.annotations.MapKeyType;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
@@ -159,12 +157,6 @@ public class MapBinder extends CollectionBinder {
 			if ( property.isAnnotationPresent( MapKeyClass.class ) ) {
 				target = property.getAnnotation( MapKeyClass.class ).value();
 			}
-			else if ( property.isAnnotationPresent( org.hibernate.annotations.MapKey.class ) ) {
-				target = property.getAnnotation( org.hibernate.annotations.MapKey.class ).targetElement();
-			}
-			else if ( property.isAnnotationPresent( MapKeyManyToMany.class ) ) {
-				target = property.getAnnotation( MapKeyManyToMany.class ).targetEntity();
-			}
 			if ( !void.class.equals( target ) ) {
 				mapKeyType = target.getName();
 			}
@@ -281,19 +273,16 @@ public class MapBinder extends CollectionBinder {
 					elementBinder.setColumns( elementColumns );
 					//do not call setType as it extract the type from @Type
 					//the algorithm generally does not apply for map key anyway
-					MapKey mapKeyAnn = property.getAnnotation( org.hibernate.annotations.MapKey.class );
 					elementBinder.setKey(true);
-					if (mapKeyAnn != null && ! BinderHelper.isEmptyAnnotationValue( mapKeyAnn.type().type() ) ) {
-						elementBinder.setExplicitType( mapKeyAnn.type() );
+					MapKeyType mapKeyTypeAnnotation = property.getAnnotation( MapKeyType.class );
+					if ( mapKeyTypeAnnotation != null && !BinderHelper.isEmptyAnnotationValue(
+							mapKeyTypeAnnotation.value()
+									.type()
+					) ) {
+						elementBinder.setExplicitType( mapKeyTypeAnnotation.value() );
 					}
 					else {
-						MapKeyType mapKeyTypeAnnotation = property.getAnnotation( MapKeyType.class );
-						if ( mapKeyTypeAnnotation != null && ! BinderHelper.isEmptyAnnotationValue( mapKeyTypeAnnotation.value().type() ) ) {
-							elementBinder.setExplicitType( mapKeyTypeAnnotation.value() );
-						}
-						else {
-							elementBinder.setType( property, elementClass );
-						}
+						elementBinder.setType( property, elementClass );
 					}
 					mapValue.setIndex( elementBinder.make() );
 				}

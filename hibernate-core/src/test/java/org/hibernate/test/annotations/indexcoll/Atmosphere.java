@@ -19,8 +19,6 @@ import javax.persistence.MapKeyJoinColumn;
 import javax.persistence.MapKeyJoinColumns;
 import javax.persistence.MapKeyTemporal;
 import javax.persistence.TemporalType;
-import org.hibernate.annotations.CollectionOfElements;
-import org.hibernate.annotations.MapKey;
 
 /**
  * @author Emmanuel Bernard
@@ -56,7 +54,7 @@ public class Atmosphere {
 	@JoinTable(name = "Gas_per_key")
 	public Map<GasKey, Gas> gasesPerKey = new HashMap<GasKey, Gas>();
 
-	@CollectionOfElements //TODO migrate to @ElementCollection ;  @MapKeyManyToMany ??
+	@ElementCollection
 	@Column(name="composition_rate")
 	@MapKeyJoinColumns( { @MapKeyJoinColumn(name="gas_id" ) } ) //use @MapKeyJoinColumns explicitly for tests
 	@JoinTable(name = "Composition", joinColumns = @JoinColumn(name = "atmosphere_id"))
@@ -70,7 +68,7 @@ public class Atmosphere {
 
 	//use default HAN legacy column name for map key
 	@ManyToMany(cascade = CascadeType.ALL)
-	@MapKey
+	@MapKeyColumn
 	@JoinTable(name="Atm_Gas_DefLeg")
 	public Map<String, Gas> gasesDefLeg = new HashMap<String, Gas>();
 

@@ -30,7 +30,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.MapKeyClass;
-import org.hibernate.annotations.MapKeyManyToMany;
+import javax.persistence.MapKeyJoinColumn;
 
 /**
  * @author Emmanuel Bernard
@@ -47,7 +47,7 @@ public class Brand {
 
 	@ElementCollection(targetClass = SizeImpl.class)
 	@MapKeyClass(LuggageImpl.class)
-	@MapKeyManyToMany //legacy column name: was never officially supported BTW
+	@MapKeyJoinColumn
 	private Map<Luggage, Size> sizePerLuggage = new HashMap<Luggage, Size>();
 
 

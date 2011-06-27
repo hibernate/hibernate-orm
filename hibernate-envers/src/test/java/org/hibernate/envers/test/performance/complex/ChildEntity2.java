@@ -24,9 +24,9 @@
 
 package org.hibernate.envers.test.performance.complex;
 import java.util.Set;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import org.hibernate.annotations.CollectionOfElements;
 import org.hibernate.envers.Audited;
 
 /**
@@ -42,7 +42,7 @@ public class ChildEntity2 {
 
     private Integer number;
 
-    @CollectionOfElements
+    @ElementCollection
     private Set<String> strings;
 
     public Long getId() {

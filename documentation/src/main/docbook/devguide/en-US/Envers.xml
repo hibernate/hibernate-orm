@@ -310,6 +310,14 @@
             <literal>@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)</literal>. Then, when reading historic
             versions of your entity, the relation will always point to the "current" related entity.
         </para>
+
+        <para>
+            If you'd like to audit properties encapsulated by any subset of your entity's mapped superclasses (which are
+            not explicitly audited), list desired supertypes in <literal>auditParents</literal> attribute of
+            <interfacename>@Audited</interfacename> annotation. If any <interfacename>@MappedSuperclass</interfacename>
+            (or any of it's properties) is marked as <interfacename>@Audited</interfacename>, it's behavior is implicitly
+            inherited by all audited subclasses.
+        </para>
     </section>
 
     <section>

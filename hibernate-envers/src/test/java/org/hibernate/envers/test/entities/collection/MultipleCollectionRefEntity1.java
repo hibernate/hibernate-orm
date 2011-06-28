@@ -1,4 +1,4 @@
-package org.hibernate.envers.test.integration.collection;
+package org.hibernate.envers.test.entities.collection;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;

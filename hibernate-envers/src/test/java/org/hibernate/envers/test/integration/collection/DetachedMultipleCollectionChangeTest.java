@@ -20,6 +20,9 @@ import org.hibernate.envers.internal.EnversMessageLogger;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.EnversTestingJtaBootstrap;
 import org.hibernate.envers.test.Priority;
+import org.hibernate.envers.test.entities.collection.MultipleCollectionEntity;
+import org.hibernate.envers.test.entities.collection.MultipleCollectionRefEntity1;
+import org.hibernate.envers.test.entities.collection.MultipleCollectionRefEntity2;
 import org.jboss.logging.Logger;
 import org.junit.Test;
 

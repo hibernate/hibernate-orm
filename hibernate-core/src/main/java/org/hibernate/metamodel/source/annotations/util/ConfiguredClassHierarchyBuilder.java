@@ -36,14 +36,14 @@ import org.jboss.jandex.DotName;
 import org.jboss.jandex.Index;
 
 import org.hibernate.AnnotationException;
+import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
-import org.hibernate.metamodel.source.annotations.entity.AnnotationBindingContext;
 import org.hibernate.metamodel.source.annotations.entity.ConfiguredClassHierarchy;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 
 /**
- * Given a annotation index build a list of class hierarchies.
+ * Given a annotation index build a set of class hierarchies.
  *
  * @author Hardy Ferentschik
  */

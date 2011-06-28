@@ -21,28 +21,8 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.annotations.entity;
-
-import java.util.List;
-import javax.persistence.AccessType;
-
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.ClassInfo;
-
-import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
+package org.hibernate.metamodel.source.annotations.attribute;
 
 /**
- * @author Hardy Ferentschik
+ * This package contains binding code for attributes.
  */
-public class EmbeddedClass extends ConfiguredClass {
-	// todo - need to take care of the attribute path (HF)
-	public EmbeddedClass(ClassInfo classInfo,
-						 AccessType defaultAccessType,
-						 List<AnnotationInstance> attributeOverrides,
-						 List<AnnotationInstance> associationOverrides,
-						 AnnotationBindingContext context) {
-		super( classInfo, defaultAccessType, context );
-	}
-}
-
-

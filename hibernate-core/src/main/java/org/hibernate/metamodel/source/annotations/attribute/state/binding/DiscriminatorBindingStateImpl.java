@@ -21,11 +21,12 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.annotations.entity.state.binding;
+package org.hibernate.metamodel.source.annotations.attribute.state.binding;
 
 import org.hibernate.metamodel.binding.state.DiscriminatorBindingState;
-import org.hibernate.metamodel.source.annotations.entity.DiscriminatorColumnValues;
-import org.hibernate.metamodel.source.annotations.entity.SimpleAttribute;
+import org.hibernate.metamodel.source.annotations.attribute.DiscriminatorColumnValues;
+import org.hibernate.metamodel.source.annotations.attribute.SimpleAttribute;
+import org.hibernate.metamodel.source.annotations.attribute.state.binding.AttributeBindingStateImpl;
 
 /**
  * @author Gail Badner

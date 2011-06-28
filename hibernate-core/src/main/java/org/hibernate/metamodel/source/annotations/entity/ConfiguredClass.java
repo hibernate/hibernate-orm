@@ -51,7 +51,12 @@ import org.jboss.jandex.MethodInfo;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
+import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
+import org.hibernate.metamodel.source.annotations.attribute.AssociationAttribute;
+import org.hibernate.metamodel.source.annotations.attribute.AttributeType;
+import org.hibernate.metamodel.source.annotations.attribute.MappedAttribute;
+import org.hibernate.metamodel.source.annotations.attribute.SimpleAttribute;
 import org.hibernate.metamodel.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.source.annotations.util.ReflectionHelper;
 
@@ -108,7 +113,6 @@ public class ConfiguredClass {
 
 	public ConfiguredClass(ClassInfo classInfo,
 						   AccessType defaultAccessType,
-						   ResolvedTypeWithMembers resolvedType,
 						   AnnotationBindingContext context) {
 		this.context = context;
 		this.classInfo = classInfo;
@@ -122,11 +126,11 @@ public class ConfiguredClass {
 		// find transient field and method names
 		findTransientFieldAndMethodNames();
 
-		List<MappedAttribute> simpleProps = collectAttributes( resolvedType );
+		List<MappedAttribute> simpleAttributes = collectAttributes();
 		// make sure the properties are ordered by property name
-		Collections.sort( simpleProps );
+		Collections.sort( simpleAttributes );
 		Map<String, MappedAttribute> tmpMap = new LinkedHashMap<String, MappedAttribute>();
-		for ( MappedAttribute property : simpleProps ) {
+		for ( MappedAttribute property : simpleAttributes ) {
 			tmpMap.put( property.getName(), property );
 		}
 		this.mappedAttributes = Collections.unmodifiableMap( tmpMap );
@@ -202,16 +206,14 @@ public class ConfiguredClass {
 	}
 
 	/**
-	 * @param resolvedTypes the resolved types for the field/properties of this class
-	 *
 	 * @return A list of the persistent properties of this configured class
 	 */
-	private List<MappedAttribute> collectAttributes(ResolvedTypeWithMembers resolvedTypes) {
+	private List<MappedAttribute> collectAttributes() {
 		// use the class mate library to generic types
-		ResolvedTypeWithMembers resolvedType = null;
-		for ( HierarchicType hierarchicType : resolvedTypes.allTypesAndOverrides() ) {
+		ResolvedTypeWithMembers resolvedType = context.resolveMemberTypes( context.getResolvedType( clazz ) );
+		for ( HierarchicType hierarchicType : resolvedType.allTypesAndOverrides() ) {
 			if ( hierarchicType.getType().getErasedType().equals( clazz ) ) {
-				resolvedType = ReflectionHelper.resolveMemberTypes( hierarchicType.getType() );
+				resolvedType = context.resolveMemberTypes( hierarchicType.getType() );
 				break;
 			}
 		}
@@ -388,10 +390,10 @@ public class ConfiguredClass {
 					throw new AnnotationException( msg );
 				}
 
+				context.resolveAllTypes( type.getName() );
 				EmbeddedClass embeddedClass = new EmbeddedClass(
 						embeddableClassInfo,
 						classAccessType,
-						context.resolveType( type.getName() ),
 						attributeOverrides,
 						associationOverrides,
 						context

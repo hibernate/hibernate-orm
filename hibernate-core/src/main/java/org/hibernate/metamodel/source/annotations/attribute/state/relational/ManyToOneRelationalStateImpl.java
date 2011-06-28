@@ -1,4 +1,4 @@
-package org.hibernate.metamodel.source.annotations.entity.state.relational;
+package org.hibernate.metamodel.source.annotations.attribute.state.relational;
 
 import org.hibernate.metamodel.relational.state.ManyToOneRelationalState;
 

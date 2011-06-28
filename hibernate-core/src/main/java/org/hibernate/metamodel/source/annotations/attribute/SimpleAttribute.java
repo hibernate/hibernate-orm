@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.annotations.entity;
+package org.hibernate.metamodel.source.annotations.attribute;
 
 import java.util.List;
 import java.util.Map;
@@ -86,11 +86,11 @@ public class SimpleAttribute extends MappedAttribute {
 	 */
 	private final ColumnValues columnValues;
 
-	static SimpleAttribute createSimpleAttribute(String name, String type, Map<DotName, List<AnnotationInstance>> annotations) {
+	public static SimpleAttribute createSimpleAttribute(String name, String type, Map<DotName, List<AnnotationInstance>> annotations) {
 		return new SimpleAttribute( name, type, annotations, false );
 	}
 
-	static SimpleAttribute createDiscriminatorAttribute(Map<DotName, List<AnnotationInstance>> annotations) {
+	public static SimpleAttribute createDiscriminatorAttribute(Map<DotName, List<AnnotationInstance>> annotations) {
 		AnnotationInstance discriminatorOptionsAnnotation = JandexHelper.getSingleAnnotation(
 				annotations, JPADotNames.DISCRIMINATOR_COLUMN
 		);

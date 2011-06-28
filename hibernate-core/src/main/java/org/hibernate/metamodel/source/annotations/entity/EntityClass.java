@@ -34,6 +34,7 @@ import org.jboss.jandex.ClassInfo;
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
 import org.hibernate.metamodel.binding.InheritanceType;
+import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.util.JandexHelper;
 
@@ -61,10 +62,9 @@ public class EntityClass extends ConfiguredClass {
 					   EntityClass parent,
 					   AccessType hierarchyAccessType,
 					   InheritanceType inheritanceType,
-					   ResolvedTypeWithMembers resolvedType,
 					   AnnotationBindingContext context) {
 
-		super( classInfo, hierarchyAccessType, resolvedType, context );
+		super( classInfo, hierarchyAccessType, context );
 		this.parent = parent;
 		this.isRoot = parent == null;
 		this.hierarchyAccessType = hierarchyAccessType;

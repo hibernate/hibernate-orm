@@ -28,7 +28,6 @@ import java.util.Iterator;
 import java.util.List;
 import javax.persistence.AccessType;
 
-import com.fasterxml.classmate.ResolvedTypeWithMembers;
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.FieldInfo;
@@ -36,6 +35,7 @@ import org.jboss.jandex.MethodInfo;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.metamodel.binding.InheritanceType;
+import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.util.JandexHelper;
 
@@ -53,20 +53,18 @@ public class ConfiguredClassHierarchy implements Iterable<EntityClass> {
 		return new ConfiguredClassHierarchy( classes, context );
 	}
 
-	private ConfiguredClassHierarchy(List<ClassInfo> classes, AnnotationBindingContext context) {
-		defaultAccessType = determineDefaultAccessType( classes );
-		inheritanceType = determineInheritanceType( classes );
+	private ConfiguredClassHierarchy(List<ClassInfo> classInfoList, AnnotationBindingContext context) {
+		defaultAccessType = determineDefaultAccessType( classInfoList );
+		inheritanceType = determineInheritanceType( classInfoList );
 
 		// the resolved type for the top level class in the hierarchy
-		ResolvedTypeWithMembers resolvedType = context.resolveType(
-				classes.get( classes.size() - 1 ).name().toString()
-		);
+		context.resolveAllTypes( classInfoList.get( classInfoList.size() - 1 ).name().toString() );
 
 		entityClasses = new ArrayList<EntityClass>();
 		EntityClass parent = null;
-		for ( ClassInfo info : classes ) {
+		for ( ClassInfo info : classInfoList ) {
 			EntityClass entityClass = new EntityClass(
-					info, parent, defaultAccessType, inheritanceType, resolvedType, context
+					info, parent, defaultAccessType, inheritanceType, context
 			);
 			entityClasses.add( entityClass );
 			parent = entityClass;

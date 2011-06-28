@@ -38,10 +38,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.hibernate.metamodel.source.annotations.attribute.MappedAttribute;
 import org.hibernate.metamodel.source.annotations.entity.ConfiguredClass;
 import org.hibernate.metamodel.source.annotations.entity.ConfiguredClassHierarchy;
 import org.hibernate.metamodel.source.annotations.entity.EntityClass;
-import org.hibernate.metamodel.source.annotations.entity.MappedAttribute;
 import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.internal.BasicServiceRegistryImpl;
@@ -70,7 +70,7 @@ public class GenericTypeDiscoveryTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	public void testSingleEntity() {
+	public void testGenericClassHierarchy() {
 		Index index = JandexHelper.indexForClass( service, Paper.class, Stuff.class, Item.class, PricedStuff.class );
 		Set<ConfiguredClassHierarchy> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
 				index, serviceRegistry
@@ -109,6 +109,15 @@ public class GenericTypeDiscoveryTest extends BaseUnitTestCase {
 		assertFalse( "Paper should not mapped properties", configuredClass.getMappedAttributes().iterator().hasNext() );
 
 		assertFalse( iter.hasNext() );
+	}
+
+	@Test
+	public void testUnresolvedType() {
+		Index index = JandexHelper.indexForClass( service, UnresolvedType.class );
+		Set<ConfiguredClassHierarchy> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
+				index, serviceRegistry
+		);
+		assertEquals( "There should be only one hierarchy", 1, hierarchies.size() );
 	}
 
 	@MappedSuperclass
@@ -247,6 +256,32 @@ public class GenericTypeDiscoveryTest extends BaseUnitTestCase {
 
 		public void setId(Integer id) {
 			this.id = id;
+		}
+	}
+
+	@Entity
+	public class UnresolvedType<T> {
+
+		private Integer id;
+		private T state;
+
+		@Id
+		@GeneratedValue
+		public Integer getId() {
+			return id;
+		}
+
+		public void setId(Integer id) {
+			this.id = id;
+		}
+
+		//@Type(type = "org.hibernate.test.annotations.generics.StateType")
+		public T getState() {
+			return state;
+		}
+
+		public void setState(T state) {
+			this.state = state;
 		}
 	}
 }

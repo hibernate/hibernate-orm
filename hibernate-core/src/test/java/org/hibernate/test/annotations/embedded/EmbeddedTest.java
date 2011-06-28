@@ -409,7 +409,7 @@ public class EmbeddedTest extends BaseCoreFunctionalTestCase {
 	public void testDefaultCollectionTable() throws Exception {
 		//are the tables correct?
 		assertTrue( SchemaUtil.isTablePresent("WealthyPerson_vacationHomes", configuration() ) );
-		assertTrue( SchemaUtil.isTablePresent("PersonEmbed_legacyVacationHomes", configuration() ) );
+		assertTrue( SchemaUtil.isTablePresent("WealthyPerson_legacyVacationHomes", configuration() ) );
 		assertTrue( SchemaUtil.isTablePresent("WelPers_VacHomes", configuration() ) );
 
 		//just to make sure, use the mapping

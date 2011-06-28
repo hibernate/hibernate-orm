@@ -33,6 +33,7 @@ import java.util.Map;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
@@ -58,7 +59,7 @@ public class IndexedCollectionTest extends BaseCoreFunctionalTestCase {
 	public void testJPA2DefaultMapColumns() throws Exception {
 		isDefaultKeyColumnPresent( Atmosphere.class.getName(), "gasesDef", "_KEY" );
 		isDefaultKeyColumnPresent( Atmosphere.class.getName(), "gasesPerKeyDef", "_KEY" );
-		isNotDefaultKeyColumnPresent( Atmosphere.class.getName(), "gasesDefLeg", "_KEY" );
+		isDefaultKeyColumnPresent( Atmosphere.class.getName(), "gasesDefLeg", "_KEY" );
 	}
 
 	@Test
@@ -330,7 +331,7 @@ public class IndexedCollectionTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@RequiresDialect(HSQLDialect.class)
+	@RequiresDialect({HSQLDialect.class, H2Dialect.class})
 	public void testComponentSubPropertyMapKey() throws Exception {
 		Session s;
 		Transaction tx;

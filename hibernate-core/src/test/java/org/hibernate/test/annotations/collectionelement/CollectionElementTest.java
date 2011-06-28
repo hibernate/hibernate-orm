@@ -252,7 +252,7 @@ public class CollectionElementTest extends BaseCoreFunctionalTestCase {
 	public void testDefaultValueColumnForBasic() throws Exception {
 		isDefaultValueCollectionColumnPresent( Boy.class.getName(), "hatedNames" );
 		isDefaultValueCollectionColumnPresent( Boy.class.getName(), "preferredNames" );
-		isCollectionColumnPresent( Boy.class.getName(), "nickNames", "element" );
+		isCollectionColumnPresent( Boy.class.getName(), "nickNames", "nickNames" );
 		isDefaultValueCollectionColumnPresent( Boy.class.getName(), "scorePerPreferredName");
 	}
 

@@ -93,7 +93,6 @@ import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.Check;
 import org.hibernate.annotations.CollectionId;
-import org.hibernate.annotations.CollectionOfElements;
 import org.hibernate.annotations.Columns;
 import org.hibernate.annotations.DiscriminatorOptions;
 import org.hibernate.annotations.Fetch;
@@ -103,7 +102,6 @@ import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.FilterDefs;
 import org.hibernate.annotations.Filters;
-import org.hibernate.annotations.ForceDiscriminator;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.GenericGenerator;
@@ -736,11 +734,6 @@ public final class AnnotationBinder {
 				clazzToProcess.getAnnotation( DiscriminatorValue.class ).value() :
 				null;
 		entityBinder.setDiscriminatorValue( discrimValue );
-
-		if ( clazzToProcess.isAnnotationPresent( ForceDiscriminator.class ) ) {
-            LOG.deprecatedForceDescriminatorAnnotation();
-			entityBinder.setForceDiscriminator( true );
-		}
 
 		DiscriminatorOptions discriminatorOptions = clazzToProcess.getAnnotation( DiscriminatorOptions.class );
 		if ( discriminatorOptions != null) {
@@ -1651,13 +1644,11 @@ public final class AnnotationBinder {
 			}
 			else if ( property.isAnnotationPresent( OneToMany.class )
 					|| property.isAnnotationPresent( ManyToMany.class )
-					|| property.isAnnotationPresent( CollectionOfElements.class ) //legacy Hibernate
 					|| property.isAnnotationPresent( ElementCollection.class )
 					|| property.isAnnotationPresent( ManyToAny.class ) ) {
 				OneToMany oneToManyAnn = property.getAnnotation( OneToMany.class );
 				ManyToMany manyToManyAnn = property.getAnnotation( ManyToMany.class );
 				ElementCollection elementCollectionAnn = property.getAnnotation( ElementCollection.class );
-				CollectionOfElements collectionOfElementsAnn = property.getAnnotation( CollectionOfElements.class ); //legacy hibernate
 
 				final IndexColumn indexColumn;
 
@@ -1684,9 +1675,7 @@ public final class AnnotationBinder {
 						propertyHolder.getEntityName(),
 						property,
 						!indexColumn.isImplicit(),
-						property.isAnnotationPresent( CollectionOfElements.class )
-								|| property.isAnnotationPresent( org.hibernate.annotations.MapKey.class )
-								|| property.isAnnotationPresent( MapKeyType.class )
+						property.isAnnotationPresent( MapKeyType.class )
 
 						// || property.isAnnotationPresent( ManyToAny.class )
 				);
@@ -1759,12 +1748,6 @@ public final class AnnotationBinder {
 						isJPA2 = Boolean.TRUE;
 						keyColumns = new Column[] { new MapKeyColumnDelegator( property.getAnnotation( MapKeyColumn.class ) ) };
 					}
-					else if ( property.isAnnotationPresent( org.hibernate.annotations.MapKey.class ) ) {
-						if ( isJPA2 == null ) {
-							isJPA2 = Boolean.FALSE;
-						}
-						keyColumns = property.getAnnotation( org.hibernate.annotations.MapKey.class ).columns();
-					}
 
 					//not explicitly legacy
 					if ( isJPA2 == null ) {
@@ -1819,14 +1802,6 @@ public final class AnnotationBinder {
 								)
 						};
 					}
-					else if ( property.isAnnotationPresent( org.hibernate.annotations.MapKeyManyToMany.class ) ) {
-						if ( isJPA2 == null ) {
-							isJPA2 = Boolean.FALSE;
-						}
-						joinKeyColumns = property.getAnnotation( org.hibernate.annotations.MapKeyManyToMany.class )
-								.joinColumns();
-					}
-
 					//not explicitly legacy
 					if ( isJPA2 == null ) {
 						isJPA2 = Boolean.TRUE;
@@ -1876,9 +1851,7 @@ public final class AnnotationBinder {
 					);
 					collectionBinder.setOneToMany( true );
 				}
-				else if ( elementCollectionAnn != null
-						|| collectionOfElementsAnn != null //Hibernate legacy
-						) {
+				else if ( elementCollectionAnn != null ) {
 					for ( Ejb3JoinColumn column : joinColumns ) {
 						if ( column.isSecondary() ) {
 							throw new NotYetImplementedException( "Collections having FK in secondary table" );
@@ -1886,9 +1859,7 @@ public final class AnnotationBinder {
 					}
 					collectionBinder.setFkJoinColumns( joinColumns );
 					mappedBy = "";
-					final Class<?> targetElement = elementCollectionAnn != null ?
-							elementCollectionAnn.targetClass() :
-							collectionOfElementsAnn.targetElement();
+					final Class<?> targetElement = elementCollectionAnn.targetClass();
 					collectionBinder.setTargetEntity(
 							mappings.getReflectionManager().toXClass( targetElement )
 					);

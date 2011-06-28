@@ -7,11 +7,11 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
+import javax.persistence.MapKeyColumn;
 import javax.persistence.Table;
 import org.hibernate.annotations.AnyMetaDef;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.ManyToAny;
-import org.hibernate.annotations.MapKey;
 import org.hibernate.annotations.MetaValue;
 
 @Entity
@@ -59,7 +59,7 @@ public class PropertyMap {
 			name = "map_properties",
 			joinColumns = @JoinColumn( name = "map_id" ),
 			inverseJoinColumns = @JoinColumn( name = "property_id" ) )
-	@MapKey( columns = { @Column( name = "map_key", nullable = false ) } )   //keep for legacy test
+	@MapKeyColumn( name = "map_key", nullable = false )   //keep for legacy test
 	public Map<String, Property> getProperties() {
 		return properties;
 	}

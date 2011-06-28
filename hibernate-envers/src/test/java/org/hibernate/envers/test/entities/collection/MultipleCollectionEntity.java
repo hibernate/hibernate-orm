@@ -1,4 +1,4 @@
-package org.hibernate.envers.test.integration.collection;
+package org.hibernate.envers.test.entities.collection;
 
 import java.util.ArrayList;
 import java.util.Collections;

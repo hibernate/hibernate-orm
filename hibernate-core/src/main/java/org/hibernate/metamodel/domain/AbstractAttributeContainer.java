@@ -138,11 +138,11 @@ public abstract class AbstractAttributeContainer implements AttributeContainer, 
 			this.attributeContainer = attributeContainer;
 		}
 
-		boolean isTypeResolved() {
+		public boolean isTypeResolved() {
 			return type != null;
 		}
 
-		void resolveType(Type type) {
+		public void resolveType(Type type) {
 			if ( type == null ) {
 				throw new IllegalArgumentException( "Attempt to resolve with null type" );
 			}

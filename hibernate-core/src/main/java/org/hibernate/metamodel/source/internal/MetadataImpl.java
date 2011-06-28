@@ -141,6 +141,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 		// todo : remove this by coordinated ordering of entity processing
 		new EntityReferenceResolver( this ).resolve();
+		new AttributeTypeResolver( this ).resolve();
 	}
 
 	private void prepare(Binder[] binders, MetadataSources metadataSources) {

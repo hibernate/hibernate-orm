@@ -25,12 +25,20 @@ package org.hibernate.metamodel.source.internal;
 
 import java.util.Properties;
 
-
 import org.hibernate.MappingException;
 import org.hibernate.metamodel.binding.AttributeBinding;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.HibernateTypeDescriptor;
+import org.hibernate.metamodel.domain.AbstractAttributeContainer;
+import org.hibernate.metamodel.domain.Attribute;
+import org.hibernate.metamodel.domain.BasicType;
+import org.hibernate.metamodel.domain.JavaType;
+import org.hibernate.metamodel.relational.Datatype;
+import org.hibernate.metamodel.relational.SimpleValue;
+import org.hibernate.metamodel.relational.Value;
 import org.hibernate.metamodel.source.spi.MetadataImplementor;
+import org.hibernate.type.AbstractStandardBasicType;
+import org.hibernate.type.Type;
 
 /**
  * This is a TEMPORARY way to initialize HibernateTypeDescriptor.explicitType.
@@ -49,14 +57,17 @@ class AttributeTypeResolver {
 	void resolve() {
 		for ( EntityBinding entityBinding : metadata.getEntityBindings() ) {
 			for ( AttributeBinding attributeBinding : entityBinding.getAttributeBindings() ) {
-				resolve( attributeBinding );
+				Type type = resolveHibernateType( attributeBinding );
+				if ( type != null && ! type.isAssociationType() && ! type.isCollectionType() && ! type.isComponentType() ) {
+					resolveJavaType( attributeBinding.getAttribute(), type );
+				}
 			}
 		}
 	}
 
-	private void resolve(AttributeBinding attributeBinding) {
+	private Type resolveHibernateType(AttributeBinding attributeBinding) {
 		if ( attributeBinding.getHibernateTypeDescriptor().getExplicitType() != null ) {
-			return; // already resolved
+			return attributeBinding.getHibernateTypeDescriptor().getExplicitType(); // already resolved
 		}
 
 		// this only works for "basic" attribute types
@@ -66,19 +77,52 @@ class AttributeTypeResolver {
 					getQualifiedAttributeName( attributeBinding )
 			);
 		}
+		Type type = null;
 		if ( typeDescriptor.getTypeName() != null ) {
 			Properties typeParameters = null;
 			if ( typeDescriptor.getTypeParameters() != null ) {
 				typeParameters = new Properties();
 				typeParameters.putAll( typeDescriptor.getTypeParameters() );
 			}
-			typeDescriptor.setExplicitType(
-					metadata.getTypeResolver().heuristicType(
+			type = metadata.getTypeResolver().heuristicType(
 							typeDescriptor.getTypeName(),
 							typeParameters
+					);
+			typeDescriptor.setExplicitType( type );
+		}
+		return type;
+	}
+
+	// this only works for singular basic types
+	private void resolveJavaType(Attribute attribute, Type type) {
+		if ( ! ( type instanceof AbstractStandardBasicType ) || ! attribute.isSingular() ) {
+			return;
+		}
+		// Converting to SingularAttributeImpl is bad, but this resolver is TEMPORARY!
+		AbstractAttributeContainer.SingularAttributeImpl singularAttribute =
+				( AbstractAttributeContainer.SingularAttributeImpl ) attribute;
+		if ( ! singularAttribute.isTypeResolved() ) {
+			singularAttribute.resolveType(
+					new BasicType(
+							new JavaType( ( ( AbstractStandardBasicType) type ).getJavaTypeDescriptor().getJavaTypeClass() )
 					)
 			);
 		}
+	}
+
+	// this only works for singular basic types
+	private void resolveSqlType(Value value, Type type) {
+		if ( value == null || ! ( value instanceof SimpleValue ) || ! ( type instanceof AbstractStandardBasicType )  ) {
+			return;
+		}
+		// Converting to AbstractStandardBasicType is bad, but this resolver is TEMPORARY!
+		AbstractStandardBasicType basicType = ( AbstractStandardBasicType ) type;
+		Datatype dataType = new Datatype(
+								basicType.getSqlTypeDescriptor().getSqlType(),
+								basicType.getName(),
+								basicType.getReturnedClass()
+						);
+		( (SimpleValue) value ).setDatatype( dataType );
 	}
 
 	// TODO: this does not work for components

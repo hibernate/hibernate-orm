@@ -23,15 +23,22 @@
  */
 package org.hibernate.metamodel.binding;
 
+import java.sql.Types;
 import java.util.Iterator;
 import java.util.Set;
 
+import junit.framework.Assert;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import org.hibernate.metamodel.MetadataSources;
+import org.hibernate.metamodel.domain.BasicType;
+import org.hibernate.metamodel.domain.SingularAttribute;
+import org.hibernate.metamodel.domain.TypeNature;
 import org.hibernate.metamodel.relational.Column;
+import org.hibernate.metamodel.relational.Datatype;
+import org.hibernate.metamodel.relational.SimpleValue;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
 import org.hibernate.metamodel.source.spi.MetadataImplementor;
 import org.hibernate.service.BasicServiceRegistry;
@@ -132,15 +139,45 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 		assertNotNull( idAttributeBinding );
 		assertSame( idAttributeBinding, entityBinding.getEntityIdentifier().getValueBinding() );
 		assertSame( LongType.INSTANCE, idAttributeBinding.getHibernateTypeDescriptor().getExplicitType() );
+
+		assertTrue( idAttributeBinding.getAttribute().isSingular() );
 		assertNotNull( idAttributeBinding.getAttribute() );
+		SingularAttribute singularIdAttribute =  ( SingularAttribute ) idAttributeBinding.getAttribute();
+		assertSame( TypeNature.BASIC, singularIdAttribute.getSingularAttributeType().getNature() );
+		BasicType basicIdAttributeType = ( BasicType ) singularIdAttribute.getSingularAttributeType();
+		assertSame( Long.class, basicIdAttributeType.getJavaType().getClassReference() );
+
 		assertNotNull( idAttributeBinding.getValue() );
 		assertTrue( idAttributeBinding.getValue() instanceof Column );
+		Datatype idDataType = ( (Column) idAttributeBinding.getValue() ).getDatatype();
+		assertSame( Long.class, idDataType.getJavaType() );
+		assertSame( Types.BIGINT, idDataType.getTypeCode() );
+		assertSame( LongType.INSTANCE.getName(), idDataType.getTypeName() );
 
 		AttributeBinding nameBinding = entityBinding.getAttributeBinding( "name" );
 		assertNotNull( nameBinding );
 		assertSame( StringType.INSTANCE, nameBinding.getHibernateTypeDescriptor().getExplicitType() );
 		assertNotNull( nameBinding.getAttribute() );
 		assertNotNull( nameBinding.getValue() );
+
+		assertTrue( nameBinding.getAttribute().isSingular() );
+		assertNotNull( nameBinding.getAttribute() );
+		SingularAttribute singularNameAttribute =  ( SingularAttribute ) nameBinding.getAttribute();
+		assertSame( TypeNature.BASIC, singularNameAttribute.getSingularAttributeType().getNature() );
+		BasicType basicNameAttributeType = ( BasicType ) singularNameAttribute.getSingularAttributeType();
+		assertSame( String.class, basicNameAttributeType.getJavaType().getClassReference() );
+
+		assertNotNull( nameBinding.getValue() );
+		// until HHH-6380 is fixed, need to call getValues()
+		assertEquals( 1, nameBinding.getValuesSpan() );
+		Iterator<SimpleValue> it = nameBinding.getValues().iterator();
+		assertTrue( it.hasNext() );
+		SimpleValue nameValue = it.next();
+		assertTrue( nameValue instanceof Column );
+		Datatype nameDataType = nameValue.getDatatype();
+		assertSame( String.class, nameDataType.getJavaType() );
+		assertSame( Types.VARCHAR, nameDataType.getTypeCode() );
+		assertSame( StringType.INSTANCE.getName(), nameDataType.getTypeName() );
 	}
 
 	protected void assertRoot(MetadataImplementor metadata, EntityBinding entityBinding) {

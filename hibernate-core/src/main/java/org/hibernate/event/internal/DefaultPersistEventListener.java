@@ -102,8 +102,8 @@ public class DefaultPersistEventListener extends AbstractSaveEventListener imple
 		}
 
 		final EntityEntry entityEntry = source.getPersistenceContext().getEntry( entity );
-		int entityState = getEntityState( entity, entityName, entityEntry, source );
-		if ( entityState == DETACHED ) {
+		EntityState entityState = getEntityState( entity, entityName, entityEntry, source );
+		if ( entityState == EntityState.DETACHED ) {
 			// JPA 2, in its version of a "foreign generated", allows the id attribute value
 			// to be manually set by the user, even though this manual value is irrelevant.
 			// The issue is that this causes problems with the Hibernate unsaved-value strategy

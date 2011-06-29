@@ -96,7 +96,7 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 	}
 
 	protected Serializable performSaveOrUpdate(SaveOrUpdateEvent event) {
-		int entityState = getEntityState(
+		EntityState entityState = getEntityState(
 				event.getEntity(),
 				event.getEntityName(),
 				event.getEntry(),

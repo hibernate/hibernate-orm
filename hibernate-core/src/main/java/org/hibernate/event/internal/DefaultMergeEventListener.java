@@ -219,7 +219,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 					copyCache.setOperatedOn( entity, true );
 				}
 				event.setEntity( entity );
-				int entityState = -1;
+				EntityState entityState = null;
 
 				// Check the persistence context for an entry relating to this
 				// entity to be merged...
@@ -237,12 +237,12 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 							// have an incoming entity instance which has a corresponding
 							// entry in the current persistence context, but registered
 							// under a different entity instance
-							entityState = DETACHED;
+							entityState = EntityState.DETACHED;
 						}
 					}
 				}
 
-				if ( entityState == -1 ) {
+				if ( entityState == null ) {
 					entityState = getEntityState( entity, event.getEntityName(), entry, source );
 				}
 

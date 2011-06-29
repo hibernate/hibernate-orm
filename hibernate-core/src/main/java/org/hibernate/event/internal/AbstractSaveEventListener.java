@@ -59,11 +59,9 @@ import org.hibernate.type.TypeHelper;
  * @author Steve Ebersole.
  */
 public abstract class AbstractSaveEventListener extends AbstractReassociateEventListener {
-
-	protected static final int PERSISTENT = 0;
-	protected static final int TRANSIENT = 1;
-	protected static final int DETACHED = 2;
-	protected static final int DELETED = 3;
+    public enum EntityState{
+        PERSISTENT, TRANSIENT, DETACHED, DELETED;
+    }
 
     private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
                                                                        AbstractSaveEventListener.class.getName());
@@ -475,7 +473,7 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 	 *
 	 * @return The state.
 	 */
-	protected int getEntityState(
+	protected EntityState getEntityState(
 			Object entity,
 			String entityName,
 			EntityEntry entry, //pass this as an argument only to avoid double looking
@@ -487,11 +485,11 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 			if ( entry.getStatus() != Status.DELETED ) {
 				// do nothing for persistent instances
                 if (LOG.isTraceEnabled()) LOG.trace("Persistent instance of: " + getLoggableName(entityName, entity));
-				return PERSISTENT;
+				return EntityState.PERSISTENT;
 			}
             // ie. e.status==DELETED
             if (LOG.isTraceEnabled()) LOG.trace("Deleted instance of: " + getLoggableName(entityName, entity));
-            return DELETED;
+            return EntityState.DELETED;
 
 		}
         // the object is transient or detached
@@ -501,10 +499,10 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 
 		if ( ForeignKeys.isTransient( entityName, entity, getAssumedUnsaved(), source )) {
             if (LOG.isTraceEnabled()) LOG.trace("Transient instance of: " + getLoggableName(entityName, entity));
-            return TRANSIENT;
+            return EntityState.TRANSIENT;
 		}
         if (LOG.isTraceEnabled()) LOG.trace("Detached instance of: " + getLoggableName(entityName, entity));
-        return DETACHED;
+        return EntityState.DETACHED;
 	}
 
 	protected String getLoggableName(String entityName, Object entity) {

@@ -229,10 +229,9 @@ public class EntityBinding {
 	 * @return The number of attribute bindings
 	 */
 	public int getAttributeBindingClosureSpan() {
-		// TODO: fix this after HHH-6337 and HHH-6360 are fixed.
+		// TODO: fix this after HHH-6337 is fixed; for now just return size of attributeBindingMap
 		// if this is not a root, then need to include the superclass attribute bindings
-		//return attributeBindingMap.size();
-		return 1; // assume 1 for the ID attribute binding
+		return attributeBindingMap.size();
 	}
 
 	/**
@@ -243,11 +242,9 @@ public class EntityBinding {
 	 * @return The attribute bindings.
 	 */
 	public Iterable<AttributeBinding> getAttributeBindingClosure() {
-		// TODO: fix this after HHH-6337 and HHH-6360 are fixed. for now, just return the identifier binding
+		// TODO: fix this after HHH-6337 is fixed. for now, just return attributeBindings
 		// if this is not a root, then need to include the superclass attribute bindings
-		//return getAttributeBindings();
-		Set<AttributeBinding> set = Collections.singleton( (AttributeBinding) entityIdentifier.getValueBinding() );
-		return set;
+		return getAttributeBindings();
 	}
 
 	public Iterable<EntityReferencingAttributeBinding> getEntityReferencingAttributeBindings() {

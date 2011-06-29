@@ -34,6 +34,7 @@ import org.hibernate.metamodel.domain.Attribute;
 import org.hibernate.metamodel.relational.Identifier;
 import org.hibernate.metamodel.relational.InLineView;
 import org.hibernate.metamodel.relational.Schema;
+import org.hibernate.metamodel.relational.Table;
 import org.hibernate.metamodel.relational.state.ValueRelationalState;
 import org.hibernate.metamodel.source.hbm.state.binding.HbmDiscriminatorBindingState;
 import org.hibernate.metamodel.source.hbm.state.binding.HbmSimpleAttributeBindingState;
@@ -48,9 +49,9 @@ import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLCla
  *
  * @author Steve Ebersole
  */
-class RootEntityBinder extends AbstractEntityBinder {
+class RootEntityProcessor extends AbstractEntityBinder {
 
-	RootEntityBinder(HbmBindingContext bindingContext, XMLClass xmlClazz) {
+	RootEntityProcessor(HbmBindingContext bindingContext, XMLClass xmlClazz) {
 		super( bindingContext, xmlClazz );
 	}
 
@@ -98,14 +99,11 @@ class RootEntityBinder extends AbstractEntityBinder {
 		}
 		else {
             String classTableName = getClassTableName( xmlClazz, entityBinding, null );
-            if(getBindingContext().isGloballyQuotedIdentifiers()){
+            if ( getBindingContext().isGloballyQuotedIdentifiers() ) {
                 classTableName = StringHelper.quote( classTableName );
             }
 			final Identifier tableName = Identifier.toIdentifier( classTableName );
-			org.hibernate.metamodel.relational.Table table = schema.getTable( tableName );
-			if ( table == null ) {
-				table = schema.createTable( tableName );
-			}
+			final Table table = schema.locateOrCreateTable( tableName );
 			entityBinding.setBaseTable( table );
 			String comment = xmlClazz.getComment();
 			if ( comment != null ) {

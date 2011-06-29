@@ -23,11 +23,11 @@
  */
 package org.hibernate.metamodel.source.annotations.entity;
 
+import javax.persistence.GenerationType;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import javax.persistence.GenerationType;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
@@ -76,7 +76,7 @@ import org.hibernate.metamodel.source.annotations.attribute.state.binding.ManyTo
 import org.hibernate.metamodel.source.annotations.attribute.state.relational.ColumnRelationalStateImpl;
 import org.hibernate.metamodel.source.annotations.attribute.state.relational.ManyToOneRelationalStateImpl;
 import org.hibernate.metamodel.source.annotations.attribute.state.relational.TupleRelationalStateImpl;
-import org.hibernate.metamodel.source.annotations.entity.state.binding.EntityBindingStateImpl;
+import org.hibernate.metamodel.source.annotations.entity.state.binding.EntityViewImpl;
 import org.hibernate.metamodel.source.annotations.global.IdGeneratorBinder;
 import org.hibernate.metamodel.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.source.spi.MetadataImplementor;
@@ -100,7 +100,7 @@ public class EntityBinder {
 
 	public EntityBinding bind() {
 		EntityBinding entityBinding = new EntityBinding();
-		EntityBindingStateImpl entityBindingState = new EntityBindingStateImpl( superType, entityClass );
+		EntityViewImpl entityBindingState = new EntityViewImpl( superType, entityClass );
 
 		bindJpaEntityAnnotation( entityBindingState );
 		bindHibernateEntityAnnotation( entityBindingState ); // optional hibernate specific @org.hibernate.annotations.Entity
@@ -201,7 +201,7 @@ public class EntityBinder {
 		bindSingleMappedAttribute( entityBinding, entityBinding.getEntity(), discriminatorAttribute );
 	}
 
-	private void bindWhereFilter(EntityBindingStateImpl entityBindingState) {
+	private void bindWhereFilter(EntityViewImpl entityBindingState) {
 		AnnotationInstance whereAnnotation = JandexHelper.getSingleAnnotation(
 				entityClass.getClassInfo(), HibernateDotNames.WHERE
 		);
@@ -211,7 +211,7 @@ public class EntityBinder {
 		}
 	}
 
-	private void bindHibernateCaching(EntityBindingStateImpl entityBindingState) {
+	private void bindHibernateCaching(EntityViewImpl entityBindingState) {
 		AnnotationInstance cacheAnnotation = JandexHelper.getSingleAnnotation(
 				entityClass.getClassInfo(), HibernateDotNames.CACHE
 		);
@@ -250,7 +250,7 @@ public class EntityBinder {
 
 	// This does not take care of any inheritance of @Cacheable within a class hierarchy as specified in JPA2.
 	// This is currently not supported (HF)
-	private void bindJpaCaching(EntityBindingStateImpl entityBindingState) {
+	private void bindJpaCaching(EntityViewImpl entityBindingState) {
 		AnnotationInstance cacheAnnotation = JandexHelper.getSingleAnnotation(
 				entityClass.getClassInfo(), JPADotNames.CACHEABLE
 		);
@@ -288,7 +288,7 @@ public class EntityBinder {
 		}
 	}
 
-	private void bindProxy(EntityBindingStateImpl entityBindingState) {
+	private void bindProxy(EntityViewImpl entityBindingState) {
 		AnnotationInstance proxyAnnotation = JandexHelper.getSingleAnnotation(
 				entityClass.getClassInfo(), HibernateDotNames.PROXY
 		);
@@ -311,7 +311,7 @@ public class EntityBinder {
 		entityBindingState.setProxyInterfaceName( proxyInterfaceClass );
 	}
 
-	private void bindSynchronize(EntityBindingStateImpl entityBindingState) {
+	private void bindSynchronize(EntityViewImpl entityBindingState) {
 		AnnotationInstance synchronizeAnnotation = JandexHelper.getSingleAnnotation(
 				entityClass.getClassInfo(), HibernateDotNames.SYNCHRONIZE
 		);
@@ -324,7 +324,7 @@ public class EntityBinder {
 		}
 	}
 
-	private void bindCustomSQL(EntityBindingStateImpl entityBindingState) {
+	private void bindCustomSQL(EntityViewImpl entityBindingState) {
 		AnnotationInstance sqlInsertAnnotation = JandexHelper.getSingleAnnotation(
 				entityClass.getClassInfo(), HibernateDotNames.SQL_INSERT
 		);
@@ -373,7 +373,7 @@ public class EntityBinder {
 		);
 	}
 
-	private void bindRowId(EntityBindingStateImpl entityBindingState) {
+	private void bindRowId(EntityViewImpl entityBindingState) {
 		AnnotationInstance rowIdAnnotation = JandexHelper.getSingleAnnotation(
 				entityClass.getClassInfo(), HibernateDotNames.ROW_ID
 		);
@@ -383,7 +383,7 @@ public class EntityBinder {
 		}
 	}
 
-	private void bindBatchSize(EntityBindingStateImpl entityBindingState) {
+	private void bindBatchSize(EntityViewImpl entityBindingState) {
 		AnnotationInstance batchSizeAnnotation = JandexHelper.getSingleAnnotation(
 				entityClass.getClassInfo(), HibernateDotNames.BATCH_SIZE
 		);
@@ -393,7 +393,7 @@ public class EntityBinder {
 		}
 	}
 
-	private Caching createCachingForCacheableAnnotation(EntityBindingStateImpl entityBindingState) {
+	private Caching createCachingForCacheableAnnotation(EntityViewImpl entityBindingState) {
 		String region = entityBindingState.getEntityName();
 		RegionFactory regionFactory = meta.getServiceRegistry().getService( RegionFactory.class );
 		AccessType defaultAccessType = regionFactory.getDefaultAccessType();
@@ -433,11 +433,7 @@ public class EntityBinder {
 		// last, but not least create the metamodel relational objects
 		final Identifier tableNameIdentifier = Identifier.toIdentifier( tableName );
 		final Schema schema = meta.getDatabase().getSchema( new Schema.Name( schemaName, catalogName ) );
-		Table table = schema.getTable( tableNameIdentifier );
-		if ( table == null ) {
-			table = schema.createTable( tableNameIdentifier );
-		}
-		return table;
+		return schema.locateOrCreateTable( tableNameIdentifier );
 	}
 
 
@@ -472,7 +468,8 @@ public class EntityBinder {
 		}
 	}
 
-	private void bindJpaEntityAnnotation(EntityBindingStateImpl entityBindingState) {
+
+	private void bindJpaEntityAnnotation(EntityViewImpl entityBindingState) {
 		AnnotationInstance jpaEntityAnnotation = JandexHelper.getSingleAnnotation(
 				entityClass.getClassInfo(), JPADotNames.ENTITY
 		);
@@ -779,7 +776,7 @@ public class EntityBinder {
 		}
 	}
 
-	private void bindHibernateEntityAnnotation(EntityBindingStateImpl entityBindingState) {
+	private void bindHibernateEntityAnnotation(EntityViewImpl entityBindingState) {
 		// initialize w/ the defaults
 		boolean mutable = true;
 		boolean dynamicInsert = false;

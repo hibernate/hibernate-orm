@@ -21,21 +21,36 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
+package org.hibernate.metamodel.source.hbm;
 
-package org.hibernate.metamodel.source;
+import org.hibernate.metamodel.binder.EntityBinder;
+import org.hibernate.metamodel.binder.view.hbm.EntityViewImpl;
+import org.hibernate.metamodel.binding.EntityBinding;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping;
 
 /**
- * From where did the metadata come from?
- *
  * @author Steve Ebersole
  */
-public enum SourceType {
-	RESOURCE,
-	FILE,
-	INPUT_STREAM,
-	URL,
-	STRING,
-	DOM,
-	JAR,
-	OTHER
+public class EntityProcessor {
+	private final HbmBindingContext bindingContext;
+	private final EntityBinder entityBinder;
+
+	public EntityProcessor(HbmBindingContext bindingContext) {
+		this.bindingContext = bindingContext;
+		this.entityBinder = new EntityBinder( bindingContext.getMetadataImplementor() );
+	}
+
+	public void process(XMLHibernateMapping.XMLClass xmlClass) {
+		EntityBinding entityBinding = entityBinder.createEntityBinding(
+				new EntityViewImpl(
+						null,		// superType
+						xmlClass,
+						true,		// isRoot
+						null,		// inheritanceType
+						bindingContext
+				)
+		);
+
+		bindingContext.
+	}
 }

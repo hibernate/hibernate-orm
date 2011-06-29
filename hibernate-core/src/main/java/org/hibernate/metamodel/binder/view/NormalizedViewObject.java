@@ -21,19 +21,16 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.spi;
+package org.hibernate.metamodel.binder.view;
 
-import java.util.List;
-
-import org.hibernate.metamodel.MetadataSources;
+import org.hibernate.metamodel.source.Origin;
+import org.hibernate.metamodel.source.spi.MetaAttributeContext;
 
 /**
  * @author Steve Ebersole
  */
-public interface Binder {
-	public void prepare(MetadataSources sources);
-	public void bindIndependentMetadata(MetadataSources sources);
-	public void bindTypeDependentMetadata(MetadataSources sources);
-	public void bindMappingMetadata(MetadataSources sources, List<String> processedEntityNames);
-	public void bindMappingDependentMetadata(MetadataSources sources);
+public interface NormalizedViewObject {
+	public NormalizedViewObject getContainingViewObject();
+	public Origin getOrigin();
+	public MetaAttributeContext getMetaAttributeContext();
 }

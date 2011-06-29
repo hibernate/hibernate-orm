@@ -21,21 +21,42 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
+package org.hibernate.metamodel.binder.view.hbm;
 
-package org.hibernate.metamodel.source;
+import org.hibernate.metamodel.binder.view.TableView;
+import org.hibernate.metamodel.source.hbm.HbmBindingContext;
 
 /**
- * From where did the metadata come from?
- *
  * @author Steve Ebersole
  */
-public enum SourceType {
-	RESOURCE,
-	FILE,
-	INPUT_STREAM,
-	URL,
-	STRING,
-	DOM,
-	JAR,
-	OTHER
+public class TableViewImpl implements TableView {
+	private final String explicitSchemaName;
+	private final String explicitCatalogName;
+	private final String tableName;
+
+	public TableViewImpl(
+			String explicitSchemaName,
+			String explicitCatalogName,
+			String tableName,
+			EntityViewImpl entityView,
+			HbmBindingContext bindingContext) {
+		this.explicitSchemaName = explicitSchemaName;
+		this.explicitCatalogName = explicitCatalogName;
+		this.tableName = tableName;
+	}
+
+	@Override
+	public String getExplicitSchemaName() {
+		return explicitSchemaName;
+	}
+
+	@Override
+	public String getExplicitCatalogName() {
+		return explicitCatalogName;
+	}
+
+	@Override
+	public String getTableName() {
+		return tableName;
+	}
 }

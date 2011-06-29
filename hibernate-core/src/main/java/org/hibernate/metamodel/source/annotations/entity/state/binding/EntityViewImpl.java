@@ -33,7 +33,7 @@ import org.hibernate.engine.internal.Versioning;
 import org.hibernate.metamodel.binding.Caching;
 import org.hibernate.metamodel.binding.CustomSQL;
 import org.hibernate.metamodel.binding.InheritanceType;
-import org.hibernate.metamodel.binding.state.EntityBindingState;
+import org.hibernate.metamodel.binder.view.EntityView;
 import org.hibernate.metamodel.domain.Hierarchical;
 import org.hibernate.metamodel.source.annotations.entity.EntityClass;
 import org.hibernate.metamodel.source.spi.MetaAttributeContext;
@@ -43,7 +43,7 @@ import org.hibernate.tuple.entity.EntityTuplizer;
 /**
  * @author Hardy Ferentschik
  */
-public class EntityBindingStateImpl implements EntityBindingState {
+public class EntityViewImpl implements EntityView {
 	private String entityName;
 
 	private final String className;
@@ -78,7 +78,7 @@ public class EntityBindingStateImpl implements EntityBindingState {
 
 	private Set<String> synchronizedTableNames;
 
-	public EntityBindingStateImpl(Hierarchical superType, EntityClass entityClass) {
+	public EntityViewImpl(Hierarchical superType, EntityClass entityClass) {
 		this.className = entityClass.getName();
 		this.superType = superType;
 		this.isRoot = entityClass.isEntityRoot();

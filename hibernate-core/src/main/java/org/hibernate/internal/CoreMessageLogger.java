@@ -90,10 +90,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "On release of batch it still contained JDBC statements", id = 10)
 	void batchContainedStatementsOnRelease();
 
-	@LogMessage(level = DEBUG)
-	@Message(value = "Binding entity from annotated class: %s", id = 15)
-	void bindingEntityFromAnnotatedClass(String className);
-
 	@LogMessage(level = INFO)
 	@Message(value = "Bytecode provider name : %s", id = 21)
 	void bytecodeProvider(String provider);

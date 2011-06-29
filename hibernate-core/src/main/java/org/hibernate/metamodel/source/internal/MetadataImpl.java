@@ -53,12 +53,13 @@ import org.hibernate.metamodel.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.binding.TypeDef;
 import org.hibernate.metamodel.domain.JavaType;
 import org.hibernate.metamodel.relational.Database;
-import org.hibernate.metamodel.source.annotations.AnnotationBinder;
-import org.hibernate.metamodel.source.hbm.HbmBinder;
-import org.hibernate.metamodel.source.spi.Binder;
+import org.hibernate.metamodel.source.annotations.AnnotationSourceProcessor;
+import org.hibernate.metamodel.source.hbm.HbmSourceProcessor;
 import org.hibernate.metamodel.source.spi.MappingDefaults;
 import org.hibernate.metamodel.source.spi.MetaAttributeContext;
 import org.hibernate.metamodel.source.spi.MetadataImplementor;
+import org.hibernate.metamodel.source.spi.SourceProcessor;
+import org.hibernate.persister.spi.PersisterClassResolver;
 import org.hibernate.service.BasicServiceRegistry;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.type.Type;
@@ -80,7 +81,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	private final BasicServiceRegistry serviceRegistry;
 	private final Options options;
-	private ClassLoaderService classLoaderService;
+	private final org.hibernate.internal.util.Value<ClassLoaderService> classLoaderService;
 
 	private TypeResolver typeResolver = new TypeResolver();
 
@@ -115,60 +116,78 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 		this.mappingDefaults = new MappingDefaultsImpl();
 
-		final Binder[] binders;
+		final SourceProcessor[] sourceProcessors;
 		if ( options.getSourceProcessingOrder() == SourceProcessingOrder.HBM_FIRST ) {
-			binders = new Binder[] {
-					new HbmBinder( this ),
-					new AnnotationBinder( this )
+			sourceProcessors = new SourceProcessor[] {
+					new HbmSourceProcessor( this ),
+					new AnnotationSourceProcessor( this )
 			};
 		}
 		else {
-			binders = new Binder[] {
-					new AnnotationBinder( this ),
-					new HbmBinder( this )
+			sourceProcessors = new SourceProcessor[] {
+					new AnnotationSourceProcessor( this ),
+					new HbmSourceProcessor( this )
 			};
 		}
 
+		this.classLoaderService = new org.hibernate.internal.util.Value<ClassLoaderService>(
+				new org.hibernate.internal.util.Value.DeferredInitializer<ClassLoaderService>() {
+					@Override
+					public ClassLoaderService initialize() {
+						return serviceRegistry.getService( ClassLoaderService.class );
+					}
+				}
+		);
+		this.persisterClassResolverService = new org.hibernate.internal.util.Value<PersisterClassResolver>(
+				new org.hibernate.internal.util.Value.DeferredInitializer<PersisterClassResolver>() {
+					@Override
+					public PersisterClassResolver initialize() {
+						return serviceRegistry.getService( PersisterClassResolver.class );
+					}
+				}
+		);
+
+
 		final ArrayList<String> processedEntityNames = new ArrayList<String>();
 
-		prepare( binders, metadataSources );
-		bindIndependentMetadata( binders, metadataSources );
-		bindTypeDependentMetadata( binders, metadataSources );
-		bindMappingMetadata( binders, metadataSources, processedEntityNames );
-		bindMappingDependentMetadata( binders, metadataSources );
+		prepare( sourceProcessors, metadataSources );
+		bindIndependentMetadata( sourceProcessors, metadataSources );
+		bindTypeDependentMetadata( sourceProcessors, metadataSources );
+		bindMappingMetadata( sourceProcessors, metadataSources, processedEntityNames );
+		bindMappingDependentMetadata( sourceProcessors, metadataSources );
 
 		// todo : remove this by coordinated ordering of entity processing
 		new EntityReferenceResolver( this ).resolve();
 		new AttributeTypeResolver( this ).resolve();
 	}
 
-	private void prepare(Binder[] binders, MetadataSources metadataSources) {
-		for ( Binder binder : binders ) {
-			binder.prepare( metadataSources );
+	private void prepare(SourceProcessor[] sourceProcessors, MetadataSources metadataSources) {
+		for ( SourceProcessor sourceProcessor : sourceProcessors ) {
+			sourceProcessor.prepare( metadataSources );
 		}
 	}
 
-	private void bindIndependentMetadata(Binder[] binders, MetadataSources metadataSources) {
-		for ( Binder binder : binders ) {
-			binder.bindIndependentMetadata( metadataSources );
+	private void bindIndependentMetadata(SourceProcessor[] sourceProcessors, MetadataSources metadataSources) {
+		for ( SourceProcessor sourceProcessor : sourceProcessors ) {
+			sourceProcessor.processIndependentMetadata( metadataSources );
 		}
 	}
 
-	private void bindTypeDependentMetadata(Binder[] binders, MetadataSources metadataSources) {
-		for ( Binder binder : binders ) {
-			binder.bindTypeDependentMetadata( metadataSources );
+	private void bindTypeDependentMetadata(SourceProcessor[] sourceProcessors, MetadataSources metadataSources) {
+		for ( SourceProcessor sourceProcessor : sourceProcessors ) {
+			sourceProcessor.processTypeDependentMetadata( metadataSources );
 		}
 	}
 
-	private void bindMappingMetadata(Binder[] binders, MetadataSources metadataSources, List<String> processedEntityNames) {
-		for ( Binder binder : binders ) {
-			binder.bindMappingMetadata( metadataSources, processedEntityNames );
+	private void bindMappingMetadata(SourceProcessor[] sourceProcessors, MetadataSources metadataSources, List<String> processedEntityNames) {
+		for ( SourceProcessor sourceProcessor : sourceProcessors ) {
+			sourceProcessor.processMappingMetadata( metadataSources, processedEntityNames );
 		}
 	}
 
-	private void bindMappingDependentMetadata(Binder[] binders, MetadataSources metadataSources) {
-		for ( Binder binder : binders ) {
-			binder.bindMappingDependentMetadata( metadataSources );
+	private void bindMappingDependentMetadata(SourceProcessor[] sourceProcessors, MetadataSources metadataSources) {
+		for ( SourceProcessor sourceProcessor : sourceProcessors ) {
+			sourceProcessor.processMappingDependentMetadata( metadataSources );
 		}
 	}
 
@@ -285,11 +304,12 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		return typeDefs.get( name );
 	}
 
-	private ClassLoaderService classLoaderService(){
-		if(classLoaderService==null){
-			classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
-		}
-		return classLoaderService;
+	private ClassLoaderService classLoaderService() {
+		return classLoaderService.getValue();
+	}
+
+	private PersisterClassResolver persisterClassResolverService() {
+		return persisterClassResolverService.getValue();
 	}
 
 	@Override

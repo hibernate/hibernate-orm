@@ -48,7 +48,7 @@ public class Schema {
 		return name;
 	}
 
-	public Table getTable(Identifier name) {
+	public Table locateTable(Identifier name) {
 		return tables.get( name );
 	}
 
@@ -56,6 +56,14 @@ public class Schema {
 		Table table = new Table( this, name );
 		tables.put( name, table );
 		return table;
+	}
+
+	public Table locateOrCreateTable(Identifier name) {
+		final Table existing = locateTable( name );
+		if ( existing == null ) {
+			return createTable( name );
+		}
+		return existing;
 	}
 
 	public InLineView getInLineView(String logicalName) {

@@ -29,7 +29,6 @@ import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.metamodel.Metadata;
-import org.hibernate.metamodel.SessionFactoryBuilder;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.FetchProfile;
 import org.hibernate.metamodel.binding.IdGenerator;
@@ -71,4 +70,9 @@ public interface MetadataImplementor extends Metadata, BindingContext, Mapping {
 	public void addNamedQuery(NamedQueryDefinition def);
 
 	public void addResultSetMapping(ResultSetMappingDefinition resultSetMappingDefinition);
+
+	public void addAuxiliaryDatabaseObject(AuxiliaryDatabaseObject auxiliaryDatabaseObject);
+
+	// todo : this needs to move to AnnotationBindingContext
+	public void setGloballyQuotedIdentifiers(boolean b);
 }

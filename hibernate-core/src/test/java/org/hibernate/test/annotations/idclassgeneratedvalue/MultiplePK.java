@@ -34,7 +34,7 @@ public class MultiplePK implements Serializable
    private final Long id1;
    private final Long id2;
    private final Long id3;
-// AnnotationBinder (incorrectly) requires this to be transient; see HHH-4819 and HHH-4820
+// AnnotationSourceProcessor (incorrectly) requires this to be transient; see HHH-4819 and HHH-4820
    private final transient int cachedHashCode;
 
    private MultiplePK()

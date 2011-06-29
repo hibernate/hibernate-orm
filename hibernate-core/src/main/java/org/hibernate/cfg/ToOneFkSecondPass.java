@@ -83,7 +83,7 @@ public class ToOneFkSecondPass extends FkSecondPass {
 		}
 		else {
 			//try the embedded property
-			//embedded property starts their path with 'id.' See PropertyPreloadedData( ) use when idClass != null in AnnotationBinder
+			//embedded property starts their path with 'id.' See PropertyPreloadedData( ) use when idClass != null in AnnotationSourceProcessor
 			if ( path.startsWith( "id." ) ) {
 				KeyValue valueIdentifier = persistentClass.getIdentifier();
 				String localPath = path.substring( 3 );
@@ -115,7 +115,7 @@ public class ToOneFkSecondPass extends FkSecondPass {
 			BinderHelper.createSyntheticPropertyReference( columns, ref, null, manyToOne, false, mappings );
 			TableBinder.bindFk( ref, null, columns, manyToOne, unique, mappings );
 			/*
-			 * HbmBinder does this only when property-ref != null, but IMO, it makes sense event if it is null
+			 * HbmSourceProcessor does this only when property-ref != null, but IMO, it makes sense event if it is null
 			 */
 			if ( !manyToOne.isIgnoreNotFound() ) manyToOne.createPropertyRefConstraints( persistentClasses );
 		}

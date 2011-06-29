@@ -29,17 +29,17 @@ import java.util.List;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping;
 import org.hibernate.metamodel.source.internal.JaxbRoot;
-import org.hibernate.metamodel.source.spi.Binder;
+import org.hibernate.metamodel.source.spi.SourceProcessor;
 import org.hibernate.metamodel.source.spi.MetadataImplementor;
 
 /**
  * Responsible for performing binding of hbm xml.
  */
-public class HbmBinder implements Binder {
+public class HbmSourceProcessor implements SourceProcessor {
 	private final MetadataImplementor metadata;
 	private List<HibernateMappingProcessor> processors;
 
-	public HbmBinder(MetadataImplementor metadata) {
+	public HbmSourceProcessor(MetadataImplementor metadata) {
 		this.metadata = metadata;
 	}
 
@@ -55,28 +55,28 @@ public class HbmBinder implements Binder {
 	}
 
 	@Override
-	public void bindIndependentMetadata(MetadataSources sources) {
+	public void processIndependentMetadata(MetadataSources sources) {
 		for ( HibernateMappingProcessor processor : processors ) {
 			processor.bindIndependentMetadata();
 		}
 	}
 
 	@Override
-	public void bindTypeDependentMetadata(MetadataSources sources) {
+	public void processTypeDependentMetadata(MetadataSources sources) {
 		for ( HibernateMappingProcessor processor : processors ) {
 			processor.bindTypeDependentMetadata();
 		}
 	}
 
 	@Override
-	public void bindMappingMetadata(MetadataSources sources, List<String> processedEntityNames) {
+	public void processMappingMetadata(MetadataSources sources, List<String> processedEntityNames) {
 		for ( HibernateMappingProcessor processor : processors ) {
 			processor.bindMappingMetadata( processedEntityNames );
 		}
 	}
 
 	@Override
-	public void bindMappingDependentMetadata(MetadataSources sources) {
+	public void processMappingDependentMetadata(MetadataSources sources) {
 		for ( HibernateMappingProcessor processor : processors ) {
 			processor.bindMappingDependentMetadata();
 		}

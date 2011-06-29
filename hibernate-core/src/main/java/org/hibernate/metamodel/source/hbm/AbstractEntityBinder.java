@@ -27,6 +27,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.binder.view.hbm.EntityViewImpl;
 import org.hibernate.metamodel.binding.AttributeBinding;
 import org.hibernate.metamodel.binding.BagBinding;
 import org.hibernate.metamodel.binding.CollectionElementType;
@@ -46,7 +47,6 @@ import org.hibernate.metamodel.relational.UniqueKey;
 import org.hibernate.metamodel.relational.state.ManyToOneRelationalState;
 import org.hibernate.metamodel.relational.state.TupleRelationalState;
 import org.hibernate.metamodel.relational.state.ValueRelationalState;
-import org.hibernate.metamodel.source.hbm.state.binding.HbmEntityBindingState;
 import org.hibernate.metamodel.source.hbm.state.binding.HbmManyToOneAttributeBindingState;
 import org.hibernate.metamodel.source.hbm.state.binding.HbmPluralAttributeBindingState;
 import org.hibernate.metamodel.source.hbm.state.binding.HbmSimpleAttributeBindingState;
@@ -125,7 +125,7 @@ abstract class AbstractEntityBinder {
 			Hierarchical superType) {
 		entityBinding.initialize(
 				bindingContext,
-				new HbmEntityBindingState(
+				new EntityViewImpl(
 						superType,
 						entityClazz,
 						isRoot(),

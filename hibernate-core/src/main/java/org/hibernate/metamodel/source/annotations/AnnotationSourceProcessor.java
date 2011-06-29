@@ -34,7 +34,7 @@ import org.jboss.jandex.Indexer;
 import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
-import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.Value;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.domain.Hierarchical;
@@ -56,8 +56,8 @@ import org.hibernate.metamodel.source.annotations.xml.OrmXmlParser;
 import org.hibernate.metamodel.source.annotations.xml.PseudoJpaDotNames;
 import org.hibernate.metamodel.source.internal.JaxbRoot;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
-import org.hibernate.metamodel.source.spi.Binder;
 import org.hibernate.metamodel.source.spi.MetadataImplementor;
+import org.hibernate.metamodel.source.spi.SourceProcessor;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 
 /**
@@ -68,19 +68,24 @@ import org.hibernate.service.classloading.spi.ClassLoaderService;
  * @author Hardy Ferentschik
  * @see org.hibernate.metamodel.source.annotations.xml.OrmXmlParser
  */
-public class AnnotationBinder implements Binder {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class,
-			AnnotationBinder.class.getName()
-	);
+public class AnnotationSourceProcessor implements SourceProcessor {
+	private static final Logger LOG = Logger.getLogger( AnnotationSourceProcessor.class );
 
-	private final MetadataImpl metadata;
+	private final MetadataImplementor metadata;
+	private final Value<ClassLoaderService> classLoaderService;
 
 	private Index index;
-	private ClassLoaderService classLoaderService;
 
-	public AnnotationBinder(MetadataImpl metadata) {
+	public AnnotationSourceProcessor(MetadataImpl metadata) {
 		this.metadata = metadata;
+		this.classLoaderService = new Value<ClassLoaderService>(
+				new Value.DeferredInitializer<ClassLoaderService>() {
+					@Override
+					public ClassLoaderService initialize() {
+						return AnnotationSourceProcessor.this.metadata.getServiceRegistry().getService( ClassLoaderService.class );
+					}
+				}
+		);
 	}
 
 	@Override
@@ -112,6 +117,7 @@ public class AnnotationBinder implements Binder {
 		}
 
         if( index.getAnnotations( PseudoJpaDotNames.DEFAULT_DELIMITED_IDENTIFIERS ) != null ) {
+			// todo : this needs to move to AnnotationBindingContext
             metadata.setGloballyQuotedIdentifiers( true );
         }
 	}
@@ -123,7 +129,7 @@ public class AnnotationBinder implements Binder {
 	 * @param className the fully qualified class name to be indexed
 	 */
 	private void indexClass(Indexer indexer, String className) {
-		InputStream stream = classLoaderService().locateResourceStream( className );
+		InputStream stream = classLoaderService.getValue().locateResourceStream( className );
 		try {
 			indexer.index( stream );
 		}
@@ -132,26 +138,20 @@ public class AnnotationBinder implements Binder {
 		}
 	}
 
-	private ClassLoaderService classLoaderService() {
-		if ( classLoaderService == null ) {
-			classLoaderService = metadata.getServiceRegistry().getService( ClassLoaderService.class );
-		}
-		return classLoaderService;
+	@Override
+	public void processIndependentMetadata(MetadataSources sources) {
+        TypeDefBinder.bind( metadata, index );
 	}
 
 	@Override
-	public void bindIndependentMetadata(MetadataSources sources) {
-		TypeDefBinder.bind( metadata, index );
+	public void processTypeDependentMetadata(MetadataSources sources) {
+        IdGeneratorBinder.bind( metadata, index );
 	}
 
 	@Override
-	public void bindTypeDependentMetadata(MetadataSources sources) {
-		IdGeneratorBinder.bind( metadata, index );
-	}
-
-	@Override
-	public void bindMappingMetadata(MetadataSources sources, List<String> processedEntityNames) {
+	public void processMappingMetadata(MetadataSources sources, List<String> processedEntityNames) {
 		AnnotationBindingContext context = new AnnotationBindingContext( index, metadata.getServiceRegistry() );
+
 		// need to order our annotated entities into an order we can process
 		Set<ConfiguredClassHierarchy<EntityClass>> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
 				context
@@ -163,7 +163,7 @@ public class AnnotationBinder implements Binder {
 			for ( EntityClass entityClass : hierarchy ) {
 				// for classes annotated w/ @Entity we create a EntityBinding
 				if ( ConfiguredClassType.ENTITY.equals( entityClass.getConfiguredClassType() ) ) {
-					LOG.bindingEntityFromAnnotatedClass( entityClass.getName() );
+					LOG.debugf( "Binding entity from annotated class: %s", entityClass.getName() );
 					EntityBinder entityBinder = new EntityBinder( metadata, entityClass, parent );
 					EntityBinding binding = entityBinder.bind();
 					parent = binding.getEntity();
@@ -183,7 +183,7 @@ public class AnnotationBinder implements Binder {
 	}
 
 	@Override
-	public void bindMappingDependentMetadata(MetadataSources sources) {
+	public void processMappingDependentMetadata(MetadataSources sources) {
 		TableBinder.bind( metadata, index );
 		FetchProfileBinder.bind( metadata, index );
 		QueryBinder.bind( metadata, index );

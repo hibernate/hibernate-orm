@@ -21,21 +21,13 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-
-package org.hibernate.metamodel.source;
+package org.hibernate.metamodel.binder.view;
 
 /**
- * From where did the metadata come from?
- *
  * @author Steve Ebersole
  */
-public enum SourceType {
-	RESOURCE,
-	FILE,
-	INPUT_STREAM,
-	URL,
-	STRING,
-	DOM,
-	JAR,
-	OTHER
+public interface TableView extends NormalizedViewObject {
+	public String getExplicitSchemaName();
+	public String getExplicitCatalogName();
+	public String getTableName();
 }

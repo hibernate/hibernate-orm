@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.binding.state;
+package org.hibernate.metamodel.binder.view;
 
 import java.util.Set;
 
@@ -30,17 +30,16 @@ import org.hibernate.metamodel.binding.Caching;
 import org.hibernate.metamodel.binding.CustomSQL;
 import org.hibernate.metamodel.binding.InheritanceType;
 import org.hibernate.metamodel.domain.Hierarchical;
-import org.hibernate.metamodel.source.spi.MetaAttributeContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.tuple.entity.EntityTuplizer;
 
 /**
- * Represents unified set of information about metadata specific to binding an entity.
+ * Represents the normalized set of mapping information about a specific entity.
  *
  * @author Gail Badner
  * @author Steve Ebersole
  */
-public interface EntityBindingState {
+public interface EntityView extends NormalizedViewObject {
 	/**
 	 * Obtain the Hibernate entity name.
 	 *
@@ -76,19 +75,44 @@ public interface EntityBindingState {
 	 */
 	public String getProxyInterfaceName();
 
-	public Class<EntityPersister> getCustomEntityPersisterClass();
+	/**
+	 * Is this entity the root of a mapped inheritance hierarchy?
+	 *
+	 * @return {@code true} if this entity is an inheritance root; {@code false} otherwise.
+	 */
+	public boolean isRoot();
 
-	public Class<EntityTuplizer> getCustomEntityTuplizerClass();
+	/**
+	 * Obtains the type of inheritance defined for this entity hierarchy
+	 *
+	 * @return The inheritance strategy for this entity.
+	 */
+	public InheritanceType getEntityInheritanceType();
 
+	/**
+	 * Obtain the super type for this entity.
+	 *
+	 * @return This entity's super type.
+	 */
 	public Hierarchical getSuperType();
 
-	boolean isRoot();
+	/**
+	 * Obtain the custom {@link EntityPersister} class defined in this mapping.  {@code null} indicates the default
+	 * should be used.
+	 *
+	 * @return The custom {@link EntityPersister} class to use; or {@code null}
+	 */
+	public Class<? extends EntityPersister> getCustomEntityPersisterClass();
 
-	InheritanceType getEntityInheritanceType();
+	/**
+	 * Obtain the custom {@link EntityTuplizer} class defined in this mapping.  {@code null} indicates the default
+	 * should be used.
+	 *
+	 * @return The custom {@link EntityTuplizer} class to use; or {@code null}
+	 */
+	public Class<? extends EntityTuplizer> getCustomEntityTuplizerClass();
 
 	Caching getCaching();
-
-	MetaAttributeContext getMetaAttributeContext();
 
 	boolean isLazy();
 
@@ -110,8 +134,9 @@ public interface EntityBindingState {
 
 	int getOptimisticLockMode();
 
-
 	Boolean isAbstract();
+
+	String getCustomLoaderName();
 
 	CustomSQL getCustomInsert();
 
@@ -120,4 +145,7 @@ public interface EntityBindingState {
 	CustomSQL getCustomDelete();
 
 	Set<String> getSynchronizedTableNames();
+
+
+	public TableView getBaseTable();
 }

@@ -60,7 +60,7 @@ import org.hibernate.type.Type;
 /**
  * Responsible for processing a {@code <hibernate-mapping/>} element.  Allows processing to be coordinated across
  * all hbm files in an ordered fashion.  The order is essentially the same as defined in
- * {@link org.hibernate.metamodel.source.spi.Binder}
+ * {@link org.hibernate.metamodel.source.spi.SourceProcessor}
  *
  * @author Steve Ebersole
  */
@@ -261,6 +261,7 @@ public class HibernateMappingProcessor implements HbmBindingContext {
 		}
 	}
 
+
 	public void bindMappingMetadata(List<String> processedEntityNames) {
 		if ( hibernateMapping.getClazzOrSubclassOrJoinedSubclass() == null ) {
 			return;
@@ -269,7 +270,7 @@ public class HibernateMappingProcessor implements HbmBindingContext {
 			if ( XMLHibernateMapping.XMLClass.class.isInstance( clazzOrSubclass ) ) {
 				XMLHibernateMapping.XMLClass clazz =
 						XMLHibernateMapping.XMLClass.class.cast( clazzOrSubclass );
-				new RootEntityBinder( this, clazz ).process( clazz );
+				new RootEntityProcessor( this, clazz ).process( clazz );
 			}
 			else if ( XMLSubclassElement.class.isInstance( clazzOrSubclass ) ) {
 //					PersistentClass superModel = getSuperclass( mappings, element );

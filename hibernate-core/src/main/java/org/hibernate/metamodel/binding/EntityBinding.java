@@ -32,7 +32,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.FilterDefinition;
-import org.hibernate.metamodel.binding.state.EntityBindingState;
+import org.hibernate.metamodel.binder.view.EntityView;
 import org.hibernate.metamodel.domain.Attribute;
 import org.hibernate.metamodel.domain.Entity;
 import org.hibernate.metamodel.domain.JavaType;
@@ -59,8 +59,8 @@ public class EntityBinding {
 
 	private String jpaEntityName;
 
-	private Class<EntityPersister> entityPersisterClass;
-	private Class<EntityTuplizer> entityTuplizerClass;
+	private Class<? extends EntityPersister> customEntityPersisterClass;
+	private Class<? extends EntityTuplizer> customEntityTuplizerClass;
 
 	private boolean isRoot;
 	private InheritanceType entityInheritanceType;
@@ -93,13 +93,14 @@ public class EntityBinding {
 
 	private Boolean isAbstract;
 
+	private String customLoaderName;
 	private CustomSQL customInsert;
 	private CustomSQL customUpdate;
 	private CustomSQL customDelete;
 
 	private Set<String> synchronizedTableNames = new HashSet<String>();
 
-	public EntityBinding initialize(BindingContext bindingContext, EntityBindingState state) {
+	public EntityBinding initialize(BindingContext bindingContext, EntityView state) {
 		// todo : Entity will need both entityName and className to be effective
 		this.entity = new Entity(
 				state.getEntityName(),
@@ -114,8 +115,8 @@ public class EntityBinding {
 		this.jpaEntityName = state.getJpaEntityName();
 
 		// todo : handle the entity-persister-resolver stuff
-		this.entityPersisterClass = state.getCustomEntityPersisterClass();
-		this.entityTuplizerClass = state.getCustomEntityTuplizerClass();
+		this.customEntityPersisterClass = state.getCustomEntityPersisterClass();
+		this.customEntityTuplizerClass = state.getCustomEntityTuplizerClass();
 
 		this.caching = state.getCaching();
 		this.metaAttributeContext = state.getMetaAttributeContext();
@@ -156,14 +157,6 @@ public class EntityBinding {
 		return this;
 	}
 
-	public boolean isRoot() {
-		return isRoot;
-	}
-
-	public void setRoot(boolean isRoot) {
-		this.isRoot = isRoot;
-	}
-
 	public Entity getEntity() {
 		return entity;
 	}
@@ -178,6 +171,14 @@ public class EntityBinding {
 
 	public void setBaseTable(TableSpecification baseTable) {
 		this.baseTable = baseTable;
+	}
+
+	public boolean isRoot() {
+		return isRoot;
+	}
+
+	public void setRoot(boolean isRoot) {
+		this.isRoot = isRoot;
 	}
 
 	public EntityIdentifier getEntityIdentifier() {
@@ -318,12 +319,24 @@ public class EntityBinding {
 		return caching;
 	}
 
+	public void setCaching(Caching caching) {
+		this.caching = caching;
+	}
+
 	public MetaAttributeContext getMetaAttributeContext() {
 		return metaAttributeContext;
 	}
 
+	public void setMetaAttributeContext(MetaAttributeContext metaAttributeContext) {
+		this.metaAttributeContext = metaAttributeContext;
+	}
+
 	public boolean isMutable() {
 		return mutable;
+	}
+
+	public void setMutable(boolean mutable) {
+		this.mutable = mutable;
 	}
 
 	public boolean isLazy() {
@@ -338,16 +351,32 @@ public class EntityBinding {
 		return proxyInterfaceType;
 	}
 
+	public void setProxyInterfaceType(JavaType proxyInterfaceType) {
+		this.proxyInterfaceType = proxyInterfaceType;
+	}
+
 	public String getWhereFilter() {
 		return whereFilter;
+	}
+
+	public void setWhereFilter(String whereFilter) {
+		this.whereFilter = whereFilter;
 	}
 
 	public boolean isExplicitPolymorphism() {
 		return explicitPolymorphism;
 	}
 
+	public void setExplicitPolymorphism(boolean explicitPolymorphism) {
+		this.explicitPolymorphism = explicitPolymorphism;
+	}
+
 	public String getRowId() {
 		return rowId;
+	}
+
+	public void setRowId(String rowId) {
+		this.rowId = rowId;
 	}
 
 	public String getDiscriminatorValue() {
@@ -358,16 +387,32 @@ public class EntityBinding {
 		return dynamicUpdate;
 	}
 
+	public void setDynamicUpdate(boolean dynamicUpdate) {
+		this.dynamicUpdate = dynamicUpdate;
+	}
+
 	public boolean isDynamicInsert() {
 		return dynamicInsert;
+	}
+
+	public void setDynamicInsert(boolean dynamicInsert) {
+		this.dynamicInsert = dynamicInsert;
 	}
 
 	public int getBatchSize() {
 		return batchSize;
 	}
 
+	public void setBatchSize(int batchSize) {
+		this.batchSize = batchSize;
+	}
+
 	public boolean isSelectBeforeUpdate() {
 		return selectBeforeUpdate;
+	}
+
+	public void setSelectBeforeUpdate(boolean selectBeforeUpdate) {
+		this.selectBeforeUpdate = selectBeforeUpdate;
 	}
 
 	public boolean hasSubselectLoadableCollections() {
@@ -383,47 +428,91 @@ public class EntityBinding {
 		return optimisticLockMode;
 	}
 
-	public Class<EntityPersister> getEntityPersisterClass() {
-		return entityPersisterClass;
+	public void setOptimisticLockMode(int optimisticLockMode) {
+		this.optimisticLockMode = optimisticLockMode;
 	}
 
-	public Class<EntityTuplizer> getEntityTuplizerClass() {
-		return entityTuplizerClass;
+	public Class<? extends EntityPersister> getCustomEntityPersisterClass() {
+		return customEntityPersisterClass;
+	}
+
+	public void setCustomEntityPersisterClass(Class<? extends EntityPersister> customEntityPersisterClass) {
+		this.customEntityPersisterClass = customEntityPersisterClass;
+	}
+
+	public Class<? extends EntityTuplizer> getCustomEntityTuplizerClass() {
+		return customEntityTuplizerClass;
+	}
+
+	public void setCustomEntityTuplizerClass(Class<? extends EntityTuplizer> customEntityTuplizerClass) {
+		this.customEntityTuplizerClass = customEntityTuplizerClass;
 	}
 
 	public Boolean isAbstract() {
 		return isAbstract;
 	}
 
-	protected void addSynchronizedTable(String tableName) {
-		synchronizedTableNames.add( tableName );
+	public void setAbstract(Boolean isAbstract) {
+		this.isAbstract = isAbstract;
 	}
 
 	public Set<String> getSynchronizedTableNames() {
 		return synchronizedTableNames;
 	}
 
-	// Custom SQL ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	private String loaderName;
-
-	public String getLoaderName() {
-		return loaderName;
+	public void addSynchronizedTable(String tableName) {
+		synchronizedTableNames.add( tableName );
 	}
 
-	public void setLoaderName(String loaderName) {
-		this.loaderName = loaderName;
+	public void addSynchronizedTableNames(java.util.Collection<String> synchronizedTableNames) {
+		this.synchronizedTableNames.addAll( synchronizedTableNames );
+	}
+
+	public EntityMode getEntityMode() {
+		return entityMode;
+	}
+
+	public void setEntityMode(EntityMode entityMode) {
+		this.entityMode = entityMode;
+	}
+
+	public String getJpaEntityName() {
+		return jpaEntityName;
+	}
+
+	public void setJpaEntityName(String jpaEntityName) {
+		this.jpaEntityName = jpaEntityName;
+	}
+
+	public String getCustomLoaderName() {
+		return customLoaderName;
+	}
+
+	public void setCustomLoaderName(String customLoaderName) {
+		this.customLoaderName = customLoaderName;
 	}
 
 	public CustomSQL getCustomInsert() {
 		return customInsert;
 	}
 
+	public void setCustomInsert(CustomSQL customInsert) {
+		this.customInsert = customInsert;
+	}
+
 	public CustomSQL getCustomUpdate() {
 		return customUpdate;
 	}
 
+	public void setCustomUpdate(CustomSQL customUpdate) {
+		this.customUpdate = customUpdate;
+	}
+
 	public CustomSQL getCustomDelete() {
 		return customDelete;
+	}
+
+	public void setCustomDelete(CustomSQL customDelete) {
+		this.customDelete = customDelete;
 	}
 }

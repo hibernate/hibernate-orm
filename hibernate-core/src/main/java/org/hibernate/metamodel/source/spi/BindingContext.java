@@ -24,7 +24,9 @@
 package org.hibernate.metamodel.source.spi;
 
 import org.hibernate.cfg.NamingStrategy;
+import org.hibernate.metamodel.binder.view.EntityView;
 import org.hibernate.metamodel.domain.JavaType;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.ServiceRegistry;
 
 /**

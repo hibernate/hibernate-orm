@@ -136,7 +136,7 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 												 EntityRegionAccessStrategy cacheAccessStrategy,
 												 SessionFactoryImplementor factory,
 												 Mapping cfg) {
-		Class<? extends EntityPersister> persisterClass = metadata.getEntityPersisterClass();
+		Class<? extends EntityPersister> persisterClass = metadata.getCustomEntityPersisterClass();
 		if ( persisterClass == null ) {
 			persisterClass = serviceRegistry.getService( PersisterClassResolver.class ).getEntityPersisterClass( metadata );
 		}

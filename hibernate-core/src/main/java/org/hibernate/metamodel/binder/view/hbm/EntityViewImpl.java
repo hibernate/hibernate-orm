@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.hbm.state.binding;
+package org.hibernate.metamodel.binder.view.hbm;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -30,11 +30,14 @@ import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.engine.internal.Versioning;
+import org.hibernate.metamodel.binder.view.EntityView;
+import org.hibernate.metamodel.binder.view.NormalizedViewObject;
+import org.hibernate.metamodel.binder.view.TableView;
 import org.hibernate.metamodel.binding.Caching;
 import org.hibernate.metamodel.binding.CustomSQL;
 import org.hibernate.metamodel.binding.InheritanceType;
-import org.hibernate.metamodel.binding.state.EntityBindingState;
 import org.hibernate.metamodel.domain.Hierarchical;
+import org.hibernate.metamodel.source.Origin;
 import org.hibernate.metamodel.source.hbm.HbmBindingContext;
 import org.hibernate.metamodel.source.hbm.HbmHelper;
 import org.hibernate.metamodel.source.hbm.util.MappingHelper;
@@ -51,8 +54,11 @@ import org.hibernate.tuple.entity.EntityTuplizer;
 
 /**
  * @author Gail Badner
+ * @author Steve Ebersole
  */
-public class HbmEntityBindingState implements EntityBindingState {
+public class EntityViewImpl implements EntityView {
+	private final HbmBindingContext bindingContext;
+
 	private final String entityName;
 	private final EntityMode entityMode;
 
@@ -85,18 +91,23 @@ public class HbmEntityBindingState implements EntityBindingState {
 
 	private final Boolean isAbstract;
 
+	private final String customLoaderName;
 	private final CustomSQL customInsert;
 	private final CustomSQL customUpdate;
 	private final CustomSQL customDelete;
 
 	private final Set<String> synchronizedTableNames;
 
-	public HbmEntityBindingState(
+	private final TableView baseTableView;
+
+	public EntityViewImpl(
 			Hierarchical superType,
 			XMLHibernateMapping.XMLClass entityClazz,
 			boolean isRoot,
 			InheritanceType inheritanceType,
 			HbmBindingContext bindingContext) {
+
+		this.bindingContext = bindingContext;
 
 		this.superType = superType;
 		this.entityName = bindingContext.extractEntityName( entityClazz );
@@ -114,86 +125,94 @@ public class HbmEntityBindingState implements EntityBindingState {
 		}
 
 		final String customTuplizerClassName = extractCustomTuplizerClassName( entityClazz, entityMode );
-		tuplizerClass = customTuplizerClassName != null
+		this.tuplizerClass = customTuplizerClassName != null
 				? bindingContext.<EntityTuplizer>locateClassByName( customTuplizerClassName )
 				: null;
+		this.entityPersisterClass = entityClazz.getPersister() == null
+				? null
+				: bindingContext.<EntityPersister>locateClassByName( entityClazz.getPersister() );
 
 		this.isRoot = isRoot;
 		this.entityInheritanceType = inheritanceType;
 
 		this.caching = createCaching( entityClazz, bindingContext.extractEntityName( entityClazz ) );
 
-		metaAttributeContext = HbmHelper.extractMetaAttributeContext(
+		this.metaAttributeContext = HbmHelper.extractMetaAttributeContext(
 				entityClazz.getMeta(), true, bindingContext.getMetaAttributeContext()
 		);
 
 		// go ahead and set the lazy here, since pojo.proxy can override it.
-		lazy = MappingHelper.getBooleanValue(
+		this.lazy = MappingHelper.getBooleanValue(
 				entityClazz.isLazy(), bindingContext.getMappingDefaults().areAssociationsLazy()
 		);
-		mutable = entityClazz.isMutable();
+		this.mutable = entityClazz.isMutable();
 
-		explicitPolymorphism = "explicit".equals( entityClazz.getPolymorphism() );
-		whereFilter = entityClazz.getWhere();
-		rowId = entityClazz.getRowid();
-		dynamicUpdate = entityClazz.isDynamicUpdate();
-		dynamicInsert = entityClazz.isDynamicInsert();
-		batchSize = MappingHelper.getIntValue( entityClazz.getBatchSize(), 0 );
-		selectBeforeUpdate = entityClazz.isSelectBeforeUpdate();
-		optimisticLockMode = getOptimisticLockMode();
+		this.explicitPolymorphism = "explicit".equals( entityClazz.getPolymorphism() );
+		this.whereFilter = entityClazz.getWhere();
+		this.rowId = entityClazz.getRowid();
+		this.dynamicUpdate = entityClazz.isDynamicUpdate();
+		this.dynamicInsert = entityClazz.isDynamicInsert();
+		this.batchSize = MappingHelper.getIntValue( entityClazz.getBatchSize(), 0 );
+		this.selectBeforeUpdate = entityClazz.isSelectBeforeUpdate();
+		this.optimisticLockMode = getOptimisticLockMode();
 
-		// PERSISTER
-		entityPersisterClass = entityClazz.getPersister() == null
-				? null
-				: bindingContext.<EntityPersister>locateClassByName( entityClazz.getPersister() );
+		this.customLoaderName = entityClazz.getLoader().getQueryRef();
 
-		// CUSTOM SQL
 		XMLSqlInsertElement sqlInsert = entityClazz.getSqlInsert();
 		if ( sqlInsert != null ) {
-			customInsert = HbmHelper.getCustomSql(
+			this.customInsert = HbmHelper.getCustomSql(
 					sqlInsert.getValue(),
 					sqlInsert.isCallable(),
 					sqlInsert.getCheck().value()
 			);
 		}
 		else {
-			customInsert = null;
+			this.customInsert = null;
 		}
 
 		XMLSqlDeleteElement sqlDelete = entityClazz.getSqlDelete();
 		if ( sqlDelete != null ) {
-			customDelete = HbmHelper.getCustomSql(
+			this.customDelete = HbmHelper.getCustomSql(
 					sqlDelete.getValue(),
 					sqlDelete.isCallable(),
 					sqlDelete.getCheck().value()
 			);
 		}
 		else {
-			customDelete = null;
+			this.customDelete = null;
 		}
 
 		XMLSqlUpdateElement sqlUpdate = entityClazz.getSqlUpdate();
 		if ( sqlUpdate != null ) {
-			customUpdate = HbmHelper.getCustomSql(
+			this.customUpdate = HbmHelper.getCustomSql(
 					sqlUpdate.getValue(),
 					sqlUpdate.isCallable(),
 					sqlUpdate.getCheck().value()
 			);
 		}
 		else {
-			customUpdate = null;
+			this.customUpdate = null;
 		}
 
 		if ( entityClazz.getSynchronize() != null ) {
-			synchronizedTableNames = new HashSet<String>( entityClazz.getSynchronize().size() );
+			this.synchronizedTableNames = new HashSet<String>( entityClazz.getSynchronize().size() );
 			for ( XMLSynchronizeElement synchronize : entityClazz.getSynchronize() ) {
-				synchronizedTableNames.add( synchronize.getTable() );
+				this.synchronizedTableNames.add( synchronize.getTable() );
 			}
 		}
 		else {
-			synchronizedTableNames = null;
+			this.synchronizedTableNames = null;
 		}
-		isAbstract = entityClazz.isAbstract();
+
+		this.isAbstract = entityClazz.isAbstract();
+
+		this.baseTableView = new TableViewImpl(
+				entityClazz.getSchema(),
+				entityClazz.getCatalog(),
+				entityClazz.getTable(),
+				this,
+				bindingContext
+		);
 	}
 
 	private String extractCustomTuplizerClassName(XMLHibernateMapping.XMLClass entityClazz, EntityMode entityMode) {
@@ -373,5 +392,25 @@ public class HbmEntityBindingState implements EntityBindingState {
 	@Override
 	public Set<String> getSynchronizedTableNames() {
 		return synchronizedTableNames;
+	}
+
+	@Override
+	public String getCustomLoaderName() {
+		return customLoaderName;
+	}
+
+	@Override
+	public TableView getBaseTable() {
+		return baseTableView;
+	}
+
+	@Override
+	public NormalizedViewObject getContainingViewObject() {
+		return null;
+	}
+
+	@Override
+	public Origin getOrigin() {
+		return bindingContext.getOrigin();
 	}
 }

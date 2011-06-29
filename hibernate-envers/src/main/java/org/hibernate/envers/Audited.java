@@ -47,10 +47,14 @@ public @interface Audited {
     RelationTargetAuditMode targetAuditMode() default RelationTargetAuditMode.AUDITED;
 
     /**
-     * @return Set of superclasses which properties shall be audited. The behavior of listed classes
-     * is the same as if they had {@link Audited} annotation applied on a type level. The scope of this functionality
-     * is limited to the context of actually mapped entity and its class hierarchy. If a parent type lists any of
-     * its parent types using this attribute, all fields encapsulated by marked classes are implicitly audited.
+     * @return Specifies the superclasses for which properties should be audited, even if the superclasses are not
+     * annotated with {@link Audited}. Causes all properties of the listed classes to be audited, just as if the
+     * classes had {@link Audited} annotation applied on the class level.
+     *
+     * The scope of this functionality is limited to the class hierarchy of the annotated entity.
+     *
+     * If a parent type lists any of its parent types using this attribute, all properties in the specified classes
+     * will also be audited.
      */
     Class[] auditParents() default {};
 }

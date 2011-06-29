@@ -310,11 +310,10 @@
         </para>
 
         <para>
-            If you'd like to audit properties encapsulated by any subset of your entity's mapped superclasses (which are
-            not explicitly audited), list desired supertypes in <literal>auditParents</literal> attribute of
-            <interfacename>@Audited</interfacename> annotation. If any <interfacename>@MappedSuperclass</interfacename>
-            (or any of it's properties) is marked as <interfacename>@Audited</interfacename>, it's behavior is implicitly
-            inherited by all audited subclasses.
+            If you'd like to audit properties of a superclass of an entity, which are not explicitly audited (which
+            don't have the <literal>@Audited</literal> annotation on any properties or on the class),
+            you can list the superclasses in the <literal>auditParents</literal> attribute of the
+            <interfacename>@Audited</interfacename> annotation.
         </para>
     </section>
 

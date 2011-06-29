@@ -40,6 +40,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import org.hibernate.metamodel.binding.InheritanceType;
+import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.source.annotations.util.ConfiguredClassHierarchyBuilder;
 import org.hibernate.metamodel.source.annotations.util.JandexHelper;
 import org.hibernate.service.ServiceRegistryBuilder;
@@ -84,8 +85,9 @@ public class TableNameTest extends BaseUnitTestCase {
 		}
 
 		Index index = JandexHelper.indexForClass( service, A.class, B.class );
-		Set<ConfiguredClassHierarchy> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
-				index, serviceRegistry
+		AnnotationBindingContext context = new AnnotationBindingContext( index, serviceRegistry );
+		Set<ConfiguredClassHierarchy<EntityClass>> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
+				context
 		);
 		assertEquals( "There should be only one hierarchy", 1, hierarchies.size() );
 
@@ -131,8 +133,9 @@ public class TableNameTest extends BaseUnitTestCase {
 		}
 
 		Index index = JandexHelper.indexForClass( service, A.class, B.class );
-		Set<ConfiguredClassHierarchy> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
-				index, serviceRegistry
+		AnnotationBindingContext context = new AnnotationBindingContext( index, serviceRegistry );
+		Set<ConfiguredClassHierarchy<EntityClass>> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
+				context
 		);
 		assertEquals( "There should be only one hierarchy", 1, hierarchies.size() );
 
@@ -179,8 +182,9 @@ public class TableNameTest extends BaseUnitTestCase {
 		}
 
 		Index index = JandexHelper.indexForClass( service, B.class, A.class );
-		Set<ConfiguredClassHierarchy> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
-				index, serviceRegistry
+		AnnotationBindingContext context = new AnnotationBindingContext( index, serviceRegistry );
+		Set<ConfiguredClassHierarchy<EntityClass>> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
+				context
 		);
 		assertEquals( "There should be only one hierarchy", 1, hierarchies.size() );
 

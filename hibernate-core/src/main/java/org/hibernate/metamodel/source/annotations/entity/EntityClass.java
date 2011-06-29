@@ -26,7 +26,6 @@ package org.hibernate.metamodel.source.annotations.entity;
 import java.util.List;
 import javax.persistence.AccessType;
 
-import com.fasterxml.classmate.ResolvedTypeWithMembers;
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
@@ -44,12 +43,6 @@ import org.hibernate.metamodel.source.annotations.util.JandexHelper;
  * @author Hardy Ferentschik
  */
 public class EntityClass extends ConfiguredClass {
-	/**
-	 * The parent of this configured class or {@code null} in case this configured class is the root of a hierarchy.
-	 */
-	private final EntityClass parent;
-
-	private final boolean isRoot;
 	private final AccessType hierarchyAccessType;
 
 	private final InheritanceType inheritanceType;
@@ -64,23 +57,13 @@ public class EntityClass extends ConfiguredClass {
 					   InheritanceType inheritanceType,
 					   AnnotationBindingContext context) {
 
-		super( classInfo, hierarchyAccessType, context );
-		this.parent = parent;
-		this.isRoot = parent == null;
+		super( classInfo, hierarchyAccessType, parent, context );
 		this.hierarchyAccessType = hierarchyAccessType;
 		this.inheritanceType = inheritanceType;
 		this.idType = determineIdType();
 
 		this.hasOwnTable = definesItsOwnTable();
 		this.primaryTableName = determinePrimaryTableName();
-	}
-
-	public EntityClass getParent() {
-		return parent;
-	}
-
-	public boolean isRoot() {
-		return isRoot;
 	}
 
 	public InheritanceType getInheritanceType() {
@@ -104,7 +87,6 @@ public class EntityClass extends ConfiguredClass {
 		final StringBuilder sb = new StringBuilder();
 		sb.append( "EntityClass" );
 		sb.append( "{name=" ).append( getName() );
-		sb.append( ", isRoot=" ).append( isRoot );
 		sb.append( ", hierarchyAccessType=" ).append( hierarchyAccessType );
 		sb.append( ", inheritanceType=" ).append( inheritanceType );
 		sb.append( ", hasOwnTable=" ).append( hasOwnTable );
@@ -142,10 +124,10 @@ public class EntityClass extends ConfiguredClass {
 				}
 			}
 		}
-		else if ( parent != null
-				&& !parent.getConfiguredClassType().equals( ConfiguredClassType.MAPPED_SUPERCLASS )
-				&& !parent.getConfiguredClassType().equals( ConfiguredClassType.EMBEDDABLE ) ) {
-			tableName = parent.getPrimaryTableName();
+		else if ( getParent() != null
+				&& !getParent().getConfiguredClassType().equals( ConfiguredClassType.MAPPED_SUPERCLASS )
+				&& !getParent().getConfiguredClassType().equals( ConfiguredClassType.EMBEDDABLE ) ) {
+			tableName = ( (EntityClass) getParent() ).getPrimaryTableName();
 		}
 		return tableName;
 	}

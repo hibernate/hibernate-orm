@@ -35,49 +35,28 @@ import javax.persistence.MappedSuperclass;
 
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
-import org.jboss.jandex.Index;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
 import org.hibernate.AnnotationException;
+import org.hibernate.AssertionFailure;
 import org.hibernate.metamodel.binding.InheritanceType;
 import org.hibernate.metamodel.source.annotations.entity.ConfiguredClassHierarchy;
+import org.hibernate.metamodel.source.annotations.entity.EmbeddableClass;
 import org.hibernate.metamodel.source.annotations.entity.EntityClass;
-import org.hibernate.service.ServiceRegistryBuilder;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
-import org.hibernate.service.internal.BasicServiceRegistryImpl;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
 
 /**
  * @author Hardy Ferentschik
  */
-public class ConfiguredClassHierarchyBuilderTest extends BaseUnitTestCase {
-
-	private BasicServiceRegistryImpl serviceRegistry;
-	private ClassLoaderService classLoaderService;
-
-	@Before
-	public void setUp() {
-		serviceRegistry = (BasicServiceRegistryImpl) new ServiceRegistryBuilder().buildServiceRegistry();
-		classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
-	}
-
-	@After
-	public void tearDown() {
-		serviceRegistry.destroy();
-	}
+public class EntityHierarchyTest extends BaseAnnotationIndexTestCase {
 
 	@Test
 	public void testSingleEntity() {
-		Index index = JandexHelper.indexForClass( classLoaderService, Foo.class );
-		Set<ConfiguredClassHierarchy> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
-				index, serviceRegistry
-		);
+		Set<ConfiguredClassHierarchy<EntityClass>> hierarchies = createEntityHierarchies( Foo.class );
 		assertEquals( "There should be only one hierarchy", 1, hierarchies.size() );
 
 		Iterator<EntityClass> iter = hierarchies.iterator().next().iterator();
@@ -88,10 +67,7 @@ public class ConfiguredClassHierarchyBuilderTest extends BaseUnitTestCase {
 
 	@Test
 	public void testSimpleInheritance() {
-		Index index = JandexHelper.indexForClass( classLoaderService, B.class, A.class );
-		Set<ConfiguredClassHierarchy> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
-				index, serviceRegistry
-		);
+		Set<ConfiguredClassHierarchy<EntityClass>> hierarchies = createEntityHierarchies( B.class, A.class );
 		assertEquals( "There should be only one hierarchy", 1, hierarchies.size() );
 
 		Iterator<EntityClass> iter = hierarchies.iterator().next().iterator();
@@ -104,10 +80,7 @@ public class ConfiguredClassHierarchyBuilderTest extends BaseUnitTestCase {
 
 	@Test
 	public void testMultipleHierarchies() {
-		Index index = JandexHelper.indexForClass( classLoaderService, B.class, A.class, Foo.class );
-		Set<ConfiguredClassHierarchy> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
-				index, serviceRegistry
-		);
+		Set<ConfiguredClassHierarchy<EntityClass>> hierarchies = createEntityHierarchies( B.class, Foo.class, A.class );
 		assertEquals( "There should be only one hierarchy", 2, hierarchies.size() );
 	}
 
@@ -129,11 +102,10 @@ public class ConfiguredClassHierarchyBuilderTest extends BaseUnitTestCase {
 			private String mappedProperty;
 		}
 
-		Index index = JandexHelper.indexForClass(
-				classLoaderService, MappedSubClass.class, MappedSuperClass.class, UnmappedSubClass.class
-		);
-		Set<ConfiguredClassHierarchy> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
-				index, serviceRegistry
+		Set<ConfiguredClassHierarchy<EntityClass>> hierarchies = createEntityHierarchies(
+				MappedSubClass.class,
+				MappedSuperClass.class,
+				UnmappedSubClass.class
 		);
 		assertEquals( "There should be only one hierarchy", 1, hierarchies.size() );
 
@@ -154,8 +126,7 @@ public class ConfiguredClassHierarchyBuilderTest extends BaseUnitTestCase {
 		class EntityAndMappedSuperClass {
 		}
 
-		Index index = JandexHelper.indexForClass( classLoaderService, EntityAndMappedSuperClass.class );
-		ConfiguredClassHierarchyBuilder.createEntityHierarchies( index, serviceRegistry );
+		createEntityHierarchies( EntityAndMappedSuperClass.class );
 	}
 
 	@Test(expected = AnnotationException.class)
@@ -165,8 +136,7 @@ public class ConfiguredClassHierarchyBuilderTest extends BaseUnitTestCase {
 		class EntityAndEmbeddable {
 		}
 
-		Index index = JandexHelper.indexForClass( classLoaderService, EntityAndEmbeddable.class );
-		ConfiguredClassHierarchyBuilder.createEntityHierarchies( index, serviceRegistry );
+		createEntityHierarchies( EntityAndEmbeddable.class );
 	}
 
 	@Test(expected = AnnotationException.class)
@@ -181,8 +151,7 @@ public class ConfiguredClassHierarchyBuilderTest extends BaseUnitTestCase {
 		class B extends A {
 		}
 
-		Index index = JandexHelper.indexForClass( classLoaderService, B.class, A.class );
-		ConfiguredClassHierarchyBuilder.createEntityHierarchies( index, serviceRegistry );
+		createEntityHierarchies( B.class, A.class );
 	}
 
 	@Test
@@ -197,10 +166,7 @@ public class ConfiguredClassHierarchyBuilderTest extends BaseUnitTestCase {
 		class B extends A {
 		}
 
-		Index index = JandexHelper.indexForClass( classLoaderService, B.class, A.class );
-		Set<ConfiguredClassHierarchy> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
-				index, serviceRegistry
-		);
+		Set<ConfiguredClassHierarchy<EntityClass>> hierarchies = createEntityHierarchies( B.class, A.class );
 		assertTrue( hierarchies.size() == 1 );
 		ConfiguredClassHierarchy hierarchy = hierarchies.iterator().next();
 		assertEquals( "Wrong default access type", AccessType.FIELD, hierarchy.getDefaultAccessType() );
@@ -226,10 +192,7 @@ public class ConfiguredClassHierarchyBuilderTest extends BaseUnitTestCase {
 		class B extends A {
 		}
 
-		Index index = JandexHelper.indexForClass( classLoaderService, B.class, A.class );
-		Set<ConfiguredClassHierarchy> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
-				index, serviceRegistry
-		);
+		Set<ConfiguredClassHierarchy<EntityClass>> hierarchies = createEntityHierarchies( B.class, A.class );
 		assertTrue( hierarchies.size() == 1 );
 		ConfiguredClassHierarchy hierarchy = hierarchies.iterator().next();
 		assertEquals( "Wrong default access type", AccessType.PROPERTY, hierarchy.getDefaultAccessType() );
@@ -247,10 +210,7 @@ public class ConfiguredClassHierarchyBuilderTest extends BaseUnitTestCase {
 		class B extends A {
 		}
 
-		Index index = JandexHelper.indexForClass( classLoaderService, B.class, A.class );
-		Set<ConfiguredClassHierarchy> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
-				index, serviceRegistry
-		);
+		Set<ConfiguredClassHierarchy<EntityClass>> hierarchies = createEntityHierarchies( B.class, A.class );
 		assertTrue( hierarchies.size() == 1 );
 		ConfiguredClassHierarchy hierarchy = hierarchies.iterator().next();
 		assertEquals( "Wrong inheritance type", InheritanceType.SINGLE_TABLE, hierarchy.getInheritanceType() );
@@ -275,9 +235,10 @@ public class ConfiguredClassHierarchyBuilderTest extends BaseUnitTestCase {
 		class B extends A {
 		}
 
-		Index index = JandexHelper.indexForClass( classLoaderService, B.class, MappedSuperClass.class, A.class );
-		Set<ConfiguredClassHierarchy> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
-				index, serviceRegistry
+		Set<ConfiguredClassHierarchy<EntityClass>> hierarchies = createEntityHierarchies(
+				B.class,
+				MappedSuperClass.class,
+				A.class
 		);
 		assertTrue( hierarchies.size() == 1 );
 		ConfiguredClassHierarchy hierarchy = hierarchies.iterator().next();
@@ -300,8 +261,47 @@ public class ConfiguredClassHierarchyBuilderTest extends BaseUnitTestCase {
 		class B extends A {
 		}
 
-		Index index = JandexHelper.indexForClass( classLoaderService, B.class, A.class );
-		ConfiguredClassHierarchyBuilder.createEntityHierarchies( index, serviceRegistry );
+		createEntityHierarchies( B.class, A.class );
+	}
+
+	@Test
+	public void testEmbeddableHierarchy() {
+		@Embeddable
+		class A {
+			String foo;
+		}
+
+		class B extends A {
+		}
+
+		@Embeddable
+		class C extends B {
+			String bar;
+		}
+
+		ConfiguredClassHierarchy<EmbeddableClass> hierarchy = createEmbeddableHierarchy(
+				AccessType.FIELD,
+				C.class,
+				A.class,
+				B.class
+		);
+		Iterator<EmbeddableClass> iter = hierarchy.iterator();
+		ClassInfo info = iter.next().getClassInfo();
+		assertEquals( "wrong class", DotName.createSimple( A.class.getName() ), info.name() );
+		info = iter.next().getClassInfo();
+		assertEquals( "wrong class", DotName.createSimple( B.class.getName() ), info.name() );
+		info = iter.next().getClassInfo();
+		assertEquals( "wrong class", DotName.createSimple( C.class.getName() ), info.name() );
+		assertFalse( iter.hasNext() );
+		assertNotNull( hierarchy );
+	}
+
+	@Test(expected = AssertionFailure.class)
+	public void testEmbeddableHierarchyWithNotAnnotatedEntity() {
+		class NonAnnotatedEmbeddable {
+		}
+
+		createEmbeddableHierarchy( AccessType.FIELD, NonAnnotatedEmbeddable.class );
 	}
 
 	@Entity

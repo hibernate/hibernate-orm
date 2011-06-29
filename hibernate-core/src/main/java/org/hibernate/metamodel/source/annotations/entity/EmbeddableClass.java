@@ -23,10 +23,8 @@
  */
 package org.hibernate.metamodel.source.annotations.entity;
 
-import java.util.List;
 import javax.persistence.AccessType;
 
-import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.ClassInfo;
 
 import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
@@ -34,14 +32,13 @@ import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
 /**
  * @author Hardy Ferentschik
  */
-public class EmbeddedClass extends ConfiguredClass {
+public class EmbeddableClass extends ConfiguredClass {
 	// todo - need to take care of the attribute path (HF)
-	public EmbeddedClass(ClassInfo classInfo,
-						 AccessType defaultAccessType,
-						 List<AnnotationInstance> attributeOverrides,
-						 List<AnnotationInstance> associationOverrides,
-						 AnnotationBindingContext context) {
-		super( classInfo, defaultAccessType, context );
+	public EmbeddableClass(ClassInfo classInfo,
+						   EmbeddableClass parent,
+						   AccessType defaultAccessType,
+						   AnnotationBindingContext context) {
+		super( classInfo, defaultAccessType, parent, context );
 	}
 }
 

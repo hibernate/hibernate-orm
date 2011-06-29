@@ -44,30 +44,56 @@ import org.hibernate.metamodel.source.annotations.util.JandexHelper;
  *
  * @author Hardy Ferentschik
  */
-public class ConfiguredClassHierarchy implements Iterable<EntityClass> {
+public class ConfiguredClassHierarchy<T extends ConfiguredClass> implements Iterable<T> {
 	private final AccessType defaultAccessType;
 	private final InheritanceType inheritanceType;
-	private final List<EntityClass> entityClasses;
+	private final List<T> configuredClasses;
 
-	public static ConfiguredClassHierarchy create(List<ClassInfo> classes, AnnotationBindingContext context) {
-		return new ConfiguredClassHierarchy( classes, context );
+	public static ConfiguredClassHierarchy<EntityClass> createEntityClassHierarchy(List<ClassInfo> classInfoList, AnnotationBindingContext context) {
+		AccessType defaultAccessType = determineDefaultAccessType( classInfoList );
+		InheritanceType inheritanceType = determineInheritanceType( classInfoList );
+		return new ConfiguredClassHierarchy<EntityClass>(
+				classInfoList,
+				context,
+				defaultAccessType,
+				inheritanceType,
+				EntityClass.class
+		);
 	}
 
-	private ConfiguredClassHierarchy(List<ClassInfo> classInfoList, AnnotationBindingContext context) {
-		defaultAccessType = determineDefaultAccessType( classInfoList );
-		inheritanceType = determineInheritanceType( classInfoList );
+	public static ConfiguredClassHierarchy<EmbeddableClass> createEmbeddableClassHierarchy(List<ClassInfo> classes, AccessType accessType, AnnotationBindingContext context) {
+		return new ConfiguredClassHierarchy<EmbeddableClass>(
+				classes,
+				context,
+				accessType,
+				InheritanceType.NO_INHERITANCE,
+				EmbeddableClass.class
+		);
+	}
+
+	private ConfiguredClassHierarchy(List<ClassInfo> classInfoList, AnnotationBindingContext context, AccessType defaultAccessType, InheritanceType inheritanceType, Class<T> configuredClassType) {
+		this.defaultAccessType = defaultAccessType;
+		this.inheritanceType = inheritanceType;
 
 		// the resolved type for the top level class in the hierarchy
 		context.resolveAllTypes( classInfoList.get( classInfoList.size() - 1 ).name().toString() );
 
-		entityClasses = new ArrayList<EntityClass>();
-		EntityClass parent = null;
+		configuredClasses = new ArrayList<T>();
+		T parent = null;
 		for ( ClassInfo info : classInfoList ) {
-			EntityClass entityClass = new EntityClass(
-					info, parent, defaultAccessType, inheritanceType, context
-			);
-			entityClasses.add( entityClass );
-			parent = entityClass;
+			T configuredClass;
+			if ( EntityClass.class.equals( configuredClassType ) ) {
+				configuredClass = (T) new EntityClass(
+						info, (EntityClass) parent, defaultAccessType, inheritanceType, context
+				);
+			}
+			else {
+				configuredClass = (T) new EmbeddableClass(
+						info, (EmbeddableClass) parent, defaultAccessType, context
+				);
+			}
+			configuredClasses.add( configuredClass );
+			parent = configuredClass;
 		}
 	}
 
@@ -82,8 +108,22 @@ public class ConfiguredClassHierarchy implements Iterable<EntityClass> {
 	/**
 	 * @return An iterator iterating in top down manner over the configured classes in this hierarchy.
 	 */
-	public Iterator<EntityClass> iterator() {
-		return entityClasses.iterator();
+	public Iterator<T> iterator() {
+		return configuredClasses.iterator();
+	}
+
+	/**
+	 * @return Returns the top level configured class
+	 */
+	public T getRoot() {
+		return configuredClasses.get( 0 );
+	}
+
+	/**
+	 * @return Returns the leaf configured class
+	 */
+	public T getLeaf() {
+		return configuredClasses.get( configuredClasses.size() - 1 );
 	}
 
 	@Override
@@ -91,7 +131,7 @@ public class ConfiguredClassHierarchy implements Iterable<EntityClass> {
 		final StringBuilder sb = new StringBuilder();
 		sb.append( "ConfiguredClassHierarchy" );
 		sb.append( "{defaultAccessType=" ).append( defaultAccessType );
-		sb.append( ", configuredClasses=" ).append( entityClasses );
+		sb.append( ", configuredClasses=" ).append( configuredClasses );
 		sb.append( '}' );
 		return sb.toString();
 	}
@@ -103,7 +143,7 @@ public class ConfiguredClassHierarchy implements Iterable<EntityClass> {
 	 *         {@code AccessType} annotations. The default access type is determined by the placement of the
 	 *         annotations.
 	 */
-	private AccessType determineDefaultAccessType(List<ClassInfo> classes) {
+	private static AccessType determineDefaultAccessType(List<ClassInfo> classes) {
 		AccessType accessType = null;
 		for ( ClassInfo info : classes ) {
 			List<AnnotationInstance> idAnnotations = info.annotations().get( JPADotNames.ID );
@@ -120,7 +160,7 @@ public class ConfiguredClassHierarchy implements Iterable<EntityClass> {
 		return accessType;
 	}
 
-	private AccessType determineAccessTypeByIdPlacement(List<AnnotationInstance> idAnnotations) {
+	private static AccessType determineAccessTypeByIdPlacement(List<AnnotationInstance> idAnnotations) {
 		AccessType accessType = null;
 		for ( AnnotationInstance annotation : idAnnotations ) {
 			AccessType tmpAccessType;
@@ -146,7 +186,7 @@ public class ConfiguredClassHierarchy implements Iterable<EntityClass> {
 		return accessType;
 	}
 
-	private InheritanceType determineInheritanceType(List<ClassInfo> classes) {
+	private static InheritanceType determineInheritanceType(List<ClassInfo> classes) {
 		if ( classes.size() == 1 ) {
 			return InheritanceType.NO_INHERITANCE;
 		}
@@ -190,14 +230,14 @@ public class ConfiguredClassHierarchy implements Iterable<EntityClass> {
 		return inheritanceType;
 	}
 
-	private AccessType throwIdNotFoundAnnotationException(List<ClassInfo> classes) {
+	private static AccessType throwIdNotFoundAnnotationException(List<ClassInfo> classes) {
 		StringBuilder builder = new StringBuilder();
 		builder.append( "Unable to determine identifier attribute for class hierarchy consisting of the classe(s) " );
 		builder.append( hierarchyListString( classes ) );
 		throw new AnnotationException( builder.toString() );
 	}
 
-	private String hierarchyListString(List<ClassInfo> classes) {
+	private static String hierarchyListString(List<ClassInfo> classes) {
 		StringBuilder builder = new StringBuilder();
 		builder.append( "[" );
 

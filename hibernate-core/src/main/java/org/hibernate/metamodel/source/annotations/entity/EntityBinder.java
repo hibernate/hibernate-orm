@@ -574,9 +574,9 @@ public class EntityBinder {
 	}
 
 	private void bindEmbeddedAttributes(EntityBinding entityBinding) {
-		for ( Map.Entry<String, EmbeddedClass> entry : entityClass.getEmbeddedClasses().entrySet() ) {
+		for ( Map.Entry<String, EmbeddableClass> entry : entityClass.getEmbeddedClasses().entrySet() ) {
 			String attributeName = entry.getKey();
-			EmbeddedClass embeddedClass = entry.getValue();
+			EmbeddableClass embeddedClass = entry.getValue();
 			SingularAttribute component = entityBinding.getEntity().getOrCreateComponentAttribute( attributeName );
 			for ( MappedAttribute mappedAttribute : embeddedClass.getMappedAttributes() ) {
 				if ( mappedAttribute instanceof AssociationAttribute ) {

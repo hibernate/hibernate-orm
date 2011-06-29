@@ -33,19 +33,12 @@ import javax.persistence.MappedSuperclass;
 
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
-import org.jboss.jandex.Index;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
 import org.hibernate.metamodel.source.annotations.attribute.MappedAttribute;
 import org.hibernate.metamodel.source.annotations.entity.ConfiguredClass;
 import org.hibernate.metamodel.source.annotations.entity.ConfiguredClassHierarchy;
 import org.hibernate.metamodel.source.annotations.entity.EntityClass;
-import org.hibernate.service.ServiceRegistryBuilder;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
-import org.hibernate.service.internal.BasicServiceRegistryImpl;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
@@ -54,26 +47,15 @@ import static junit.framework.Assert.assertTrue;
 /**
  * @author Hardy Ferentschik
  */
-public class GenericTypeDiscoveryTest extends BaseUnitTestCase {
-	private BasicServiceRegistryImpl serviceRegistry;
-	private ClassLoaderService service;
-
-	@Before
-	public void setUp() {
-		serviceRegistry = (BasicServiceRegistryImpl) new ServiceRegistryBuilder().buildServiceRegistry();
-		service = serviceRegistry.getService( ClassLoaderService.class );
-	}
-
-	@After
-	public void tearDown() {
-		serviceRegistry.destroy();
-	}
+public class GenericTypeDiscoveryTest extends BaseAnnotationIndexTestCase {
 
 	@Test
 	public void testGenericClassHierarchy() {
-		Index index = JandexHelper.indexForClass( service, Paper.class, Stuff.class, Item.class, PricedStuff.class );
-		Set<ConfiguredClassHierarchy> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
-				index, serviceRegistry
+		Set<ConfiguredClassHierarchy<EntityClass>> hierarchies = createEntityHierarchies(
+				Paper.class,
+				Stuff.class,
+				Item.class,
+				PricedStuff.class
 		);
 		assertEquals( "There should be only one hierarchy", 1, hierarchies.size() );
 
@@ -113,10 +95,7 @@ public class GenericTypeDiscoveryTest extends BaseUnitTestCase {
 
 	@Test
 	public void testUnresolvedType() {
-		Index index = JandexHelper.indexForClass( service, UnresolvedType.class );
-		Set<ConfiguredClassHierarchy> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
-				index, serviceRegistry
-		);
+		Set<ConfiguredClassHierarchy<EntityClass>> hierarchies = createEntityHierarchies( UnresolvedType.class );
 		assertEquals( "There should be only one hierarchy", 1, hierarchies.size() );
 	}
 

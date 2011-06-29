@@ -135,12 +135,11 @@ public class AnnotationBinder implements Binder {
 	@Override
 	public void bindMappingMetadata(MetadataSources sources, List<String> processedEntityNames) {
 		// need to order our annotated entities into an order we can process
-		Set<ConfiguredClassHierarchy> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
-				index, metadata.getServiceRegistry()
-		);
+		AnnotationBindingContext context = new AnnotationBindingContext( index, metadata.getServiceRegistry() );
+		Set<ConfiguredClassHierarchy<EntityClass>> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies( context );
 
 		// now we process each hierarchy one at the time
-		for ( ConfiguredClassHierarchy hierarchy : hierarchies ) {
+		for ( ConfiguredClassHierarchy<EntityClass> hierarchy : hierarchies ) {
 			for ( EntityClass entityClass : hierarchy ) {
 				LOG.bindingEntityFromAnnotatedClass( entityClass.getName() );
 				EntityBinder entityBinder = new EntityBinder( metadata, entityClass );

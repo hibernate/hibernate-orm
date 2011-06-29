@@ -58,6 +58,10 @@ public class AnnotationBindingContext {
 		this.resolvedTypeCache = new HashMap<Class<?>, ResolvedType>();
 	}
 
+	public Index getIndex() {
+		return index;
+	}
+
 	public ClassLoaderService classLoaderService() {
 		if ( classLoaderService == null ) {
 			classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
@@ -68,6 +72,10 @@ public class AnnotationBindingContext {
 	public ClassInfo getClassInfo(String className) {
 		DotName dotName = DotName.createSimple( className );
 		return index.getClassByName( dotName );
+	}
+
+	public Class<?> loadClass(String className) {
+		return classLoaderService.classForName( className );
 	}
 
 	public void resolveAllTypes(String className) {

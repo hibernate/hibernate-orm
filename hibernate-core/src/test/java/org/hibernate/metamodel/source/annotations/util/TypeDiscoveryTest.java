@@ -28,9 +28,6 @@ import java.util.Map;
 import java.util.Set;
 import javax.persistence.Id;
 
-import org.jboss.jandex.Index;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
 import org.hibernate.annotations.Parameter;
@@ -39,37 +36,17 @@ import org.hibernate.metamodel.source.annotations.attribute.MappedAttribute;
 import org.hibernate.metamodel.source.annotations.entity.ConfiguredClass;
 import org.hibernate.metamodel.source.annotations.entity.ConfiguredClassHierarchy;
 import org.hibernate.metamodel.source.annotations.entity.EntityClass;
-import org.hibernate.service.ServiceRegistryBuilder;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
-import org.hibernate.service.internal.BasicServiceRegistryImpl;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static junit.framework.Assert.assertEquals;
 
 /**
  * @author Hardy Ferentschik
  */
-public class TypeDiscoveryTest extends BaseUnitTestCase {
-	private BasicServiceRegistryImpl serviceRegistry;
-	private ClassLoaderService service;
-
-	@Before
-	public void setUp() {
-		serviceRegistry = (BasicServiceRegistryImpl) new ServiceRegistryBuilder().buildServiceRegistry();
-		service = serviceRegistry.getService( ClassLoaderService.class );
-	}
-
-	@After
-	public void tearDown() {
-		serviceRegistry.destroy();
-	}
+public class TypeDiscoveryTest extends BaseAnnotationIndexTestCase {
 
 	@Test
 	public void testImplicitAndExplicitType() {
-		Index index = JandexHelper.indexForClass( service, Entity.class );
-		Set<ConfiguredClassHierarchy> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
-				index, serviceRegistry
-		);
+		Set<ConfiguredClassHierarchy<EntityClass>> hierarchies = createEntityHierarchies( Entity.class );
 		assertEquals( "There should be only one hierarchy", 1, hierarchies.size() );
 
 		Iterator<EntityClass> iter = hierarchies.iterator().next().iterator();

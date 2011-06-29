@@ -30,51 +30,55 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.persistence.AccessType;
+
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
-import org.jboss.jandex.Index;
 
 import org.hibernate.AnnotationException;
+import org.hibernate.AssertionFailure;
 import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.entity.ConfiguredClassHierarchy;
-import org.hibernate.service.ServiceRegistry;
+import org.hibernate.metamodel.source.annotations.entity.EmbeddableClass;
+import org.hibernate.metamodel.source.annotations.entity.EntityClass;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 
 /**
- * Given a annotation index build a set of class hierarchies.
+ * Given a (jandex) annotation index build processes all classes with JPA relevant annotations and pre-orders
+ * JPA entities respectively their inheritance hierarchy.
  *
  * @author Hardy Ferentschik
  */
 public class ConfiguredClassHierarchyBuilder {
 
 	/**
-	 * This methods pre-processes the annotated entities from the index and put them into a structure which can
+	 * Pre-processes the annotated entities from the index and put them into a structure which can
 	 * bound to the Hibernate metamodel.
 	 *
-	 * @param index The annotation index
-	 * @param serviceRegistry The service registry
+	 * @param context the annotation binding context with access to the service registry and the annotation index
 	 *
 	 * @return a set of {@code ConfiguredClassHierarchy}s. One for each "leaf" entity.
 	 */
-	public static Set<ConfiguredClassHierarchy> createEntityHierarchies(Index index, ServiceRegistry serviceRegistry) {
-		ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+	public static Set<ConfiguredClassHierarchy<EntityClass>> createEntityHierarchies(AnnotationBindingContext context) {
+		ClassLoaderService classLoaderService = context.classLoaderService();
 		Map<ClassInfo, List<ClassInfo>> processedClassInfos = new HashMap<ClassInfo, List<ClassInfo>>();
 
-		for ( ClassInfo info : index.getKnownClasses() ) {
-			if ( !isConfiguredClass( info ) ) {
+		for ( ClassInfo info : context.getIndex().getKnownClasses() ) {
+			if ( !isEntityClass( info ) ) {
 				continue;
 			}
 
 			if ( processedClassInfos.containsKey( info ) ) {
 				continue;
 			}
+
 			List<ClassInfo> configuredClassList = new ArrayList<ClassInfo>();
 			ClassInfo tmpClassInfo = info;
 			Class<?> clazz = classLoaderService.classForName( tmpClassInfo.toString() );
 			while ( clazz != null && !clazz.equals( Object.class ) ) {
-				tmpClassInfo = index.getClassByName( DotName.createSimple( clazz.getName() ) );
+				tmpClassInfo = context.getIndex().getClassByName( DotName.createSimple( clazz.getName() ) );
 				clazz = clazz.getSuperclass();
 				if ( tmpClassInfo == null ) {
 					continue;
@@ -95,17 +99,62 @@ public class ConfiguredClassHierarchyBuilder {
 			}
 		}
 
-		AnnotationBindingContext context = new AnnotationBindingContext( index, serviceRegistry );
-		Set<ConfiguredClassHierarchy> hierarchies = new HashSet<ConfiguredClassHierarchy>();
+		Set<ConfiguredClassHierarchy<EntityClass>> hierarchies = new HashSet<ConfiguredClassHierarchy<EntityClass>>();
 		List<List<ClassInfo>> processedList = new ArrayList<List<ClassInfo>>();
 		for ( List<ClassInfo> classInfoList : processedClassInfos.values() ) {
 			if ( !processedList.contains( classInfoList ) ) {
-				hierarchies.add( ConfiguredClassHierarchy.create( classInfoList, context ) );
+				hierarchies.add( ConfiguredClassHierarchy.createEntityClassHierarchy( classInfoList, context ) );
 				processedList.add( classInfoList );
 			}
 		}
 
 		return hierarchies;
+	}
+
+	/**
+	 * Builds the configured class hierarchy for a an embeddable class.
+	 *
+	 * @param embeddableClass the top level embedded class
+	 * @param accessType the access type inherited from the class in which the embeddable gets embedded
+	 * @param context the annotation binding context with access to the service registry and the annotation index
+	 *
+	 * @return a set of {@code ConfiguredClassHierarchy}s. One for each "leaf" entity.
+	 */
+	public static ConfiguredClassHierarchy<EmbeddableClass> createEmbeddableHierarchy(Class<?> embeddableClass, AccessType accessType, AnnotationBindingContext context) {
+
+		ClassInfo embeddableClassInfo = context.getClassInfo( embeddableClass.getName() );
+		if ( embeddableClassInfo == null ) {
+			throw new AssertionFailure(
+					String.format(
+							"The specified class %s cannot be found in the annotation index",
+							embeddableClass.getName()
+					)
+			);
+		}
+
+		if ( JandexHelper.getSingleAnnotation( embeddableClassInfo, JPADotNames.EMBEDDABLE ) == null ) {
+			throw new AssertionFailure(
+					String.format(
+							"The specified class %s is not annotated with @Embeddable",
+							embeddableClass.getName()
+					)
+			);
+		}
+
+		List<ClassInfo> classInfoList = new ArrayList<ClassInfo>();
+		ClassInfo tmpClassInfo;
+		Class<?> clazz = embeddableClass;
+		while ( clazz != null && !clazz.equals( Object.class ) ) {
+			tmpClassInfo = context.getIndex().getClassByName( DotName.createSimple( clazz.getName() ) );
+			clazz = clazz.getSuperclass();
+			if ( tmpClassInfo == null ) {
+				continue;
+			}
+
+			classInfoList.add( 0, tmpClassInfo );
+		}
+
+		return ConfiguredClassHierarchy.createEmbeddableClassHierarchy( classInfoList, accessType, context );
 	}
 
 	/**
@@ -115,7 +164,7 @@ public class ConfiguredClassHierarchyBuilder {
 	 *
 	 * @return {@code true} if the class represented by {@code info} is relevant for the JPA mappings, {@code false} otherwise.
 	 */
-	private static boolean isConfiguredClass(ClassInfo info) {
+	private static boolean isEntityClass(ClassInfo info) {
 		boolean isConfiguredClass = true;
 		AnnotationInstance jpaEntityAnnotation = JandexHelper.getSingleAnnotation( info, JPADotNames.ENTITY );
 		AnnotationInstance mappedSuperClassAnnotation = JandexHelper.getSingleAnnotation(

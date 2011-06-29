@@ -57,6 +57,7 @@ import org.hibernate.metamodel.source.annotations.attribute.AssociationAttribute
 import org.hibernate.metamodel.source.annotations.attribute.AttributeType;
 import org.hibernate.metamodel.source.annotations.attribute.MappedAttribute;
 import org.hibernate.metamodel.source.annotations.attribute.SimpleAttribute;
+import org.hibernate.metamodel.source.annotations.util.ConfiguredClassHierarchyBuilder;
 import org.hibernate.metamodel.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.source.annotations.util.ReflectionHelper;
 
@@ -66,6 +67,12 @@ import org.hibernate.metamodel.source.annotations.util.ReflectionHelper;
  * @author Hardy Ferentschik
  */
 public class ConfiguredClass {
+
+	/**
+	 * The parent of this configured class or {@code null} in case this configured class is the root of a hierarchy.
+	 */
+	private final ConfiguredClass parent;
+
 	/**
 	 * The Jandex class info for this configured class. Provides access to the annotation defined on this configured class.
 	 */
@@ -104,7 +111,7 @@ public class ConfiguredClass {
 	/**
 	 * The embedded classes for this entity
 	 */
-	private final Map<String, EmbeddedClass> embeddedClasses = new HashMap<String, EmbeddedClass>();
+	private final Map<String, EmbeddableClass> embeddedClasses = new HashMap<String, EmbeddableClass>();
 
 	private final Set<String> transientFieldNames = new HashSet<String>();
 	private final Set<String> transientMethodNames = new HashSet<String>();
@@ -113,7 +120,9 @@ public class ConfiguredClass {
 
 	public ConfiguredClass(ClassInfo classInfo,
 						   AccessType defaultAccessType,
+						   ConfiguredClass parent,
 						   AnnotationBindingContext context) {
+		this.parent = parent;
 		this.context = context;
 		this.classInfo = classInfo;
 		this.clazz = context.classLoaderService().classForName( classInfo.toString() );
@@ -148,6 +157,14 @@ public class ConfiguredClass {
 		return classInfo;
 	}
 
+	public ConfiguredClass getParent() {
+		return parent;
+	}
+
+	public boolean isRoot() {
+		return parent == null;
+	}
+
 	public ConfiguredClassType getConfiguredClassType() {
 		return configuredClassType;
 	}
@@ -156,7 +173,7 @@ public class ConfiguredClass {
 		return mappedAttributes.values();
 	}
 
-	public Map<String, EmbeddedClass> getEmbeddedClasses() {
+	public Map<String, EmbeddableClass> getEmbeddedClasses() {
 		return embeddedClasses;
 	}
 
@@ -172,8 +189,6 @@ public class ConfiguredClass {
 		sb.append( ", classAccessType=" ).append( classAccessType );
 		sb.append( ", configuredClassType=" ).append( configuredClassType );
 		sb.append( ", mappedAttributes=" ).append( mappedAttributes );
-		sb.append( ", transientFieldNames=" ).append( transientFieldNames );
-		sb.append( ", transientMethodNames=" ).append( transientMethodNames );
 		sb.append( '}' );
 		return sb.toString();
 	}
@@ -391,15 +406,12 @@ public class ConfiguredClass {
 				}
 
 				context.resolveAllTypes( type.getName() );
-				EmbeddedClass embeddedClass = new EmbeddedClass(
-						embeddableClassInfo,
+				ConfiguredClassHierarchy<EmbeddableClass> hierarchy = ConfiguredClassHierarchyBuilder.createEmbeddableHierarchy(
+						context.loadClass( embeddableClassInfo.toString() ),
 						classAccessType,
-						attributeOverrides,
-						associationOverrides,
 						context
 				);
-
-				embeddedClasses.put( attributeName, embeddedClass );
+				embeddedClasses.put( attributeName, hierarchy.getLeaf() );
 			}
 			// TODO handle the different association types
 			default: {

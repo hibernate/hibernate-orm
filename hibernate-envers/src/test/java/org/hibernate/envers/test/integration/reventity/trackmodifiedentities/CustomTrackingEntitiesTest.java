@@ -100,6 +100,6 @@ public class CustomTrackingEntitiesTest extends AbstractEntityTest {
 
     @Test(expected = AuditException.class)
     public void testFindEntitiesChangedInRevisionException() {
-        getAuditReader().getEntitiesChangedInRevisionManager();
+        getAuditReader().getCrossTypeRevisionChangesReader();
     }
 }

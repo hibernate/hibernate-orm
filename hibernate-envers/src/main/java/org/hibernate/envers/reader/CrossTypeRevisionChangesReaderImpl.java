@@ -3,7 +3,7 @@ package org.hibernate.envers.reader;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.envers.EntitiesChangedInRevisionManager;
+import org.hibernate.envers.CrossTypeRevisionChangesReader;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.query.criteria.RevisionTypeAuditExpression;
@@ -18,11 +18,11 @@ import static org.hibernate.envers.tools.ArgumentsTools.checkPositive;
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-public class EntitiesChangedInRevisionManagerImpl implements EntitiesChangedInRevisionManager {
+public class CrossTypeRevisionChangesReaderImpl implements CrossTypeRevisionChangesReader {
     private final AuditReaderImplementor auditReaderImplementor;
     private final AuditConfiguration verCfg;
 
-    public EntitiesChangedInRevisionManagerImpl(AuditReaderImplementor auditReaderImplementor, AuditConfiguration verCfg) {
+    public CrossTypeRevisionChangesReaderImpl(AuditReaderImplementor auditReaderImplementor, AuditConfiguration verCfg) {
         this.auditReaderImplementor = auditReaderImplementor;
         this.verCfg = verCfg;
     }

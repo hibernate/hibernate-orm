@@ -1,7 +1,7 @@
 package org.hibernate.envers.test.integration.reventity.trackmodifiedentities;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.EntitiesChangedInRevisionManager;
+import org.hibernate.envers.CrossTypeRevisionChangesReader;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.Priority;
@@ -85,14 +85,14 @@ public class DefaultTrackingEntitiesTest extends AbstractEntityTest {
         StrTestEntity ste = new StrTestEntity("x", steId);
         StrIntTestEntity site = new StrIntTestEntity("y", 1, siteId);
 
-        assert TestTools.checkList(getEntitiesChangedInRevisionManager().findEntities(1), ste, site);
+        assert TestTools.checkList(getCrossTypeRevisionChangesReader().findEntities(1), ste, site);
     }
 
     @Test
     public void testTrackModifiedEntities() {
         StrIntTestEntity site = new StrIntTestEntity("y", 2, siteId);
 
-        assert TestTools.checkList(getEntitiesChangedInRevisionManager().findEntities(2), site);
+        assert TestTools.checkList(getCrossTypeRevisionChangesReader().findEntities(2), site);
     }
 
     @Test
@@ -100,12 +100,12 @@ public class DefaultTrackingEntitiesTest extends AbstractEntityTest {
         StrTestEntity ste = new StrTestEntity(null, steId);
         StrIntTestEntity site = new StrIntTestEntity(null, null, siteId);
 
-        assert TestTools.checkList(getEntitiesChangedInRevisionManager().findEntities(3), site, ste);
+        assert TestTools.checkList(getCrossTypeRevisionChangesReader().findEntities(3), site, ste);
     }
 
     @Test
     public void testFindChangesInInvalidRevision() {
-        assert getEntitiesChangedInRevisionManager().findEntities(4).isEmpty();
+        assert getCrossTypeRevisionChangesReader().findEntities(4).isEmpty();
     }
 
     @Test
@@ -113,7 +113,7 @@ public class DefaultTrackingEntitiesTest extends AbstractEntityTest {
         StrTestEntity ste = new StrTestEntity("x", steId);
         StrIntTestEntity site = new StrIntTestEntity("y", 1, siteId);
 
-        Map<RevisionType, List<Object>> result = getEntitiesChangedInRevisionManager().findEntitiesGroupByRevisionType(1);
+        Map<RevisionType, List<Object>> result = getCrossTypeRevisionChangesReader().findEntitiesGroupByRevisionType(1);
         assert TestTools.checkList(result.get(RevisionType.ADD), site, ste);
         assert TestTools.checkList(result.get(RevisionType.MOD));
         assert TestTools.checkList(result.get(RevisionType.DEL));
@@ -123,7 +123,7 @@ public class DefaultTrackingEntitiesTest extends AbstractEntityTest {
     public void testTrackModifiedEntitiesGroupByRevisionType() {
         StrIntTestEntity site = new StrIntTestEntity("y", 2, siteId);
 
-        Map<RevisionType, List<Object>> result = getEntitiesChangedInRevisionManager().findEntitiesGroupByRevisionType(2);
+        Map<RevisionType, List<Object>> result = getCrossTypeRevisionChangesReader().findEntitiesGroupByRevisionType(2);
         assert TestTools.checkList(result.get(RevisionType.ADD));
         assert TestTools.checkList(result.get(RevisionType.MOD), site);
         assert TestTools.checkList(result.get(RevisionType.DEL));
@@ -134,7 +134,7 @@ public class DefaultTrackingEntitiesTest extends AbstractEntityTest {
         StrTestEntity ste = new StrTestEntity(null, steId);
         StrIntTestEntity site = new StrIntTestEntity(null, null, siteId);
 
-        Map<RevisionType, List<Object>> result = getEntitiesChangedInRevisionManager().findEntitiesGroupByRevisionType(3);
+        Map<RevisionType, List<Object>> result = getCrossTypeRevisionChangesReader().findEntitiesGroupByRevisionType(3);
         assert TestTools.checkList(result.get(RevisionType.ADD));
         assert TestTools.checkList(result.get(RevisionType.MOD));
         assert TestTools.checkList(result.get(RevisionType.DEL), site, ste);
@@ -145,14 +145,14 @@ public class DefaultTrackingEntitiesTest extends AbstractEntityTest {
         StrTestEntity ste = new StrTestEntity("x", steId);
         StrIntTestEntity site = new StrIntTestEntity("y", 1, siteId);
 
-        assert TestTools.checkList(getEntitiesChangedInRevisionManager().findEntities(1, RevisionType.ADD), ste, site);
+        assert TestTools.checkList(getCrossTypeRevisionChangesReader().findEntities(1, RevisionType.ADD), ste, site);
     }
 
     @Test
     public void testFindChangedEntitiesByRevisionTypeMOD() {
         StrIntTestEntity site = new StrIntTestEntity("y", 2, siteId);
 
-        assert TestTools.checkList(getEntitiesChangedInRevisionManager().findEntities(2, RevisionType.MOD), site);
+        assert TestTools.checkList(getCrossTypeRevisionChangesReader().findEntities(2, RevisionType.MOD), site);
     }
 
     @Test
@@ -160,24 +160,24 @@ public class DefaultTrackingEntitiesTest extends AbstractEntityTest {
         StrTestEntity ste = new StrTestEntity(null, steId);
         StrIntTestEntity site = new StrIntTestEntity(null, null, siteId);
 
-        assert TestTools.checkList(getEntitiesChangedInRevisionManager().findEntities(3, RevisionType.DEL), ste, site);
+        assert TestTools.checkList(getCrossTypeRevisionChangesReader().findEntities(3, RevisionType.DEL), ste, site);
     }
 
     @Test
     public void testFindEntityTypesChangedInRevision() {
         assert TestTools.makeSet(Pair.make(StrTestEntity.class.getName(), StrTestEntity.class),
                                  Pair.make(StrIntTestEntity.class.getName(), StrIntTestEntity.class))
-                        .equals(getEntitiesChangedInRevisionManager().findEntityTypes(1));
+                        .equals(getCrossTypeRevisionChangesReader().findEntityTypes(1));
 
         assert TestTools.makeSet(Pair.make(StrIntTestEntity.class.getName(), StrIntTestEntity.class))
-                        .equals(getEntitiesChangedInRevisionManager().findEntityTypes(2));
+                        .equals(getCrossTypeRevisionChangesReader().findEntityTypes(2));
         
         assert TestTools.makeSet(Pair.make(StrTestEntity.class.getName(), StrTestEntity.class),
                                  Pair.make(StrIntTestEntity.class.getName(), StrIntTestEntity.class))
-                        .equals(getEntitiesChangedInRevisionManager().findEntityTypes(3));
+                        .equals(getCrossTypeRevisionChangesReader().findEntityTypes(3));
     }
 
-    private EntitiesChangedInRevisionManager getEntitiesChangedInRevisionManager() {
-        return getAuditReader().getEntitiesChangedInRevisionManager();
+    private CrossTypeRevisionChangesReader getCrossTypeRevisionChangesReader() {
+        return getAuditReader().getCrossTypeRevisionChangesReader();
     }
 }

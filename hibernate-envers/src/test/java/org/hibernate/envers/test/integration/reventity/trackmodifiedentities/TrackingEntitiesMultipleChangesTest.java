@@ -1,7 +1,7 @@
 package org.hibernate.envers.test.integration.reventity.trackmodifiedentities;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.EntitiesChangedInRevisionManager;
+import org.hibernate.envers.CrossTypeRevisionChangesReader;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
@@ -60,7 +60,7 @@ public class TrackingEntitiesMultipleChangesTest extends AbstractEntityTest {
         StrTestEntity ste1 = new StrTestEntity("x", steId1);
         StrTestEntity ste2 = new StrTestEntity("y", steId2);
 
-        assert Arrays.asList(ste1, ste2).equals(getEntitiesChangedInRevisionManager().findEntities(1));
+        assert Arrays.asList(ste1, ste2).equals(getCrossTypeRevisionChangesReader().findEntities(1));
     }
 
     @Test
@@ -68,17 +68,17 @@ public class TrackingEntitiesMultipleChangesTest extends AbstractEntityTest {
         StrTestEntity ste1 = new StrTestEntity("z", steId1);
         StrTestEntity ste2 = new StrTestEntity(null, steId2);
 
-        assert Arrays.asList(ste1, ste2).equals(getEntitiesChangedInRevisionManager().findEntities(2));
+        assert Arrays.asList(ste1, ste2).equals(getCrossTypeRevisionChangesReader().findEntities(2));
     }
 
     @Test
     public void testTrackUpdateAndRemoveTheSameEntity() {
         StrTestEntity ste1 = new StrTestEntity(null, steId1);
 
-        assert Arrays.asList(ste1).equals(getEntitiesChangedInRevisionManager().findEntities(3));
+        assert Arrays.asList(ste1).equals(getCrossTypeRevisionChangesReader().findEntities(3));
     }
 
-    private EntitiesChangedInRevisionManager getEntitiesChangedInRevisionManager() {
-        return getAuditReader().getEntitiesChangedInRevisionManager();
+    private CrossTypeRevisionChangesReader getCrossTypeRevisionChangesReader() {
+        return getAuditReader().getCrossTypeRevisionChangesReader();
     }
 }

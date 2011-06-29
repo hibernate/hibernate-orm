@@ -800,9 +800,9 @@ query.add(AuditEntity.relatedId("address").eq(relatedEntityId));]]></programlist
                 The basic query allows retrieving entity names and corresponding Java classes changed in a specified revision:
             </para>
             <programlisting><![CDATA[Set<Pair<String, Class>> modifiedEntityTypes = getAuditReader()
-    .getEntitiesChangedInRevisionManager().findEntityTypes(revisionNumber);]]></programlisting>
+    .getCrossTypeRevisionChangesReader().findEntityTypes(revisionNumber);]]></programlisting>
             <para>
-                Other queries (also accessible from <interfacename>org.hibernate.envers.EntitiesChangedInRevisionManager</interfacename>):
+                Other queries (also accessible from <interfacename>org.hibernate.envers.CrossTypeRevisionChangesReader</interfacename>):
             </para>
             <orderedlist>
                 <listitem>

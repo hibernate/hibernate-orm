@@ -12,7 +12,7 @@ import java.util.Set;
  * is enabled.
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-public interface EntitiesChangedInRevisionManager {
+public interface CrossTypeRevisionChangesReader {
     /**
      * Find all entities changed (added, updated and removed) in a given revision. Executes <i>n+1</i> SQL queries,
      * where <i>n</i> is a number of different entity classes modified within specified revision.

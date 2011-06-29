@@ -37,7 +37,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.envers.EntitiesChangedInRevisionManager;
+import org.hibernate.envers.CrossTypeRevisionChangesReader;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.exception.NotAuditedException;
@@ -58,7 +58,7 @@ public class AuditReaderImpl implements AuditReaderImplementor {
     private final SessionImplementor sessionImplementor;
     private final Session session;
     private final FirstLevelCache firstLevelCache;
-    private final EntitiesChangedInRevisionManager entitiesChangedInRevisionManager;
+    private final CrossTypeRevisionChangesReader crossTypeRevisionChangesReader;
 
     public AuditReaderImpl(AuditConfiguration verCfg, Session session,
                               SessionImplementor sessionImplementor) {
@@ -67,7 +67,7 @@ public class AuditReaderImpl implements AuditReaderImplementor {
         this.session = session;
 
         firstLevelCache = new FirstLevelCache();
-        entitiesChangedInRevisionManager = new EntitiesChangedInRevisionManagerImpl(this, verCfg);
+        crossTypeRevisionChangesReader = new CrossTypeRevisionChangesReaderImpl(this, verCfg);
     }
 
     private void checkSession() {
@@ -244,13 +244,13 @@ public class AuditReaderImpl implements AuditReaderImplementor {
         }
     }
 
-    public EntitiesChangedInRevisionManager getEntitiesChangedInRevisionManager() throws AuditException {
+    public CrossTypeRevisionChangesReader getCrossTypeRevisionChangesReader() throws AuditException {
         if (!verCfg.getGlobalCfg().isTrackEntitiesChangedInRevisionEnabled()) {
             throw new AuditException("This API is designed for Envers default mechanism of tracking entities modified in a given revision."
                                      + " Extend DefaultTrackingModifiedEntitiesRevisionEntity, utilize @ModifiedEntityNames annotation or set "
                                      + "'org.hibernate.envers.track_entities_changed_in_revision' parameter to true.");
         }
-        return entitiesChangedInRevisionManager;
+        return crossTypeRevisionChangesReader;
     }
 
 	@SuppressWarnings({"unchecked"})

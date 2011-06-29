@@ -211,7 +211,7 @@ public interface AuditReader {
 			throws HibernateException;
 
     /**
-     * @return Basic implementation of {@link EntitiesChangedInRevisionManager} interface. Raises an exception if the default
+     * @return Basic implementation of {@link CrossTypeRevisionChangesReader} interface. Raises an exception if the default
      *         mechanism of tracking entity names modified during revisions has not been enabled. 
      * @throws AuditException If none of the following conditions is satisfied:
      *                        <ul>
@@ -223,5 +223,5 @@ public interface AuditReader {
      *                            marked with {@link ModifiedEntityNames} interface.</li>
      *                        </ul>
      */
-    public EntitiesChangedInRevisionManager getEntitiesChangedInRevisionManager() throws AuditException;
+    public CrossTypeRevisionChangesReader getCrossTypeRevisionChangesReader() throws AuditException;
 }

@@ -25,6 +25,8 @@
 package org.hibernate.tuple;
 import java.lang.reflect.Constructor;
 import org.hibernate.EntityMode;
+import org.hibernate.FetchMode;
+import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.engine.internal.UnsavedValueFactory;
 import org.hibernate.engine.spi.VersionValue;
@@ -33,6 +35,11 @@ import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.PropertyGeneration;
+import org.hibernate.metamodel.binding.AttributeBinding;
+import org.hibernate.metamodel.binding.EntityBinding;
+import org.hibernate.metamodel.binding.EntityIdentifier;
+import org.hibernate.metamodel.binding.PluralAttributeBinding;
+import org.hibernate.metamodel.binding.SimpleAttributeBinding;
 import org.hibernate.property.Getter;
 import org.hibernate.property.PropertyAccessor;
 import org.hibernate.property.PropertyAccessorFactory;
@@ -92,6 +99,50 @@ public class PropertyFactory {
 	}
 
 	/**
+	 * Generates an IdentifierProperty representation of the for a given entity mapping.
+	 *
+	 * @param mappedEntity The mapping definition of the entity.
+	 * @param generator The identifier value generator to use for this identifier.
+	 * @return The appropriate IdentifierProperty definition.
+	 */
+	public static IdentifierProperty buildIdentifierProperty(EntityBinding mappedEntity, IdentifierGenerator generator) {
+
+		final SimpleAttributeBinding property = mappedEntity.getEntityIdentifier().getValueBinding();
+
+		// TODO: the following will cause an NPE with "virtual" IDs; how should they be set?
+		final String mappedUnsavedValue = property.getUnsavedValue();
+		final Type type = property.getHibernateTypeDescriptor().getExplicitType();
+
+		IdentifierValue unsavedValue = UnsavedValueFactory.getUnsavedIdentifierValue(
+				mappedUnsavedValue,
+				getGetter( property ),
+				type,
+				getConstructor( mappedEntity )
+			);
+
+		if ( property == null ) {
+			// this is a virtual id property...
+			return new IdentifierProperty(
+			        type,
+					mappedEntity.getEntityIdentifier().isEmbedded(),
+					mappedEntity.getEntityIdentifier().isIdentifierMapper(),
+					unsavedValue,
+					generator
+				);
+		}
+		else {
+			return new IdentifierProperty(
+					property.getAttribute().getName(),
+					property.getNodeName(),
+					type,
+					mappedEntity.getEntityIdentifier().isEmbedded(),
+					unsavedValue,
+					generator
+				);
+		}
+	}
+
+	/**
 	 * Generates a VersionProperty representation for an entity mapping given its
 	 * version mapping Property.
 	 *
@@ -103,7 +154,7 @@ public class PropertyFactory {
 		String mappedUnsavedValue = ( (KeyValue) property.getValue() ).getNullValue();
 		
 		VersionValue unsavedValue = UnsavedValueFactory.getUnsavedVersionValue(
-				mappedUnsavedValue, 
+				mappedUnsavedValue,
 				getGetter( property ),
 				(VersionType) property.getType(),
 				getConstructor( property.getPersistentClass() )
@@ -124,6 +175,45 @@ public class PropertyFactory {
 				property.isUpdateable() && !lazy,
 				property.isOptimisticLocked(),
 		        property.getCascadeStyle(),
+		        unsavedValue
+			);
+	}
+
+	/**
+	 * Generates a VersionProperty representation for an entity mapping given its
+	 * version mapping Property.
+	 *
+	 * @param property The version mapping Property.
+	 * @param lazyAvailable Is property lazy loading currently available.
+	 * @return The appropriate VersionProperty definition.
+	 */
+	public static VersionProperty buildVersionProperty(SimpleAttributeBinding property, boolean lazyAvailable) {
+		String mappedUnsavedValue = ( (KeyValue) property.getValue() ).getNullValue();
+
+		VersionValue unsavedValue = UnsavedValueFactory.getUnsavedVersionValue(
+				mappedUnsavedValue,
+				getGetter( property ),
+				( VersionType ) property.getHibernateTypeDescriptor().getExplicitType(),
+				getConstructor( property.getEntityBinding() )
+		);
+
+		boolean lazy = lazyAvailable && property.isLazy();
+
+		return new VersionProperty(
+		        property.getAttribute().getName(),
+		        property.getNodeName(),
+		        property.getHibernateTypeDescriptor().getExplicitType(),
+		        lazy,
+				property.isInsertable(),
+				property.isUpdatable(),
+		        property.getGeneration() == PropertyGeneration.INSERT || property.getGeneration() == PropertyGeneration.ALWAYS,
+				property.getGeneration() == PropertyGeneration.ALWAYS,
+				property.isNullable(),
+				property.isUpdatable() && !lazy,
+				property.isOptimisticLockable(),
+				// TODO: get cascadeStyle from property when HHH-6355 is fixed; for now, assume NONE
+				//property.getCascadeStyle(),
+				CascadeStyle.NONE,
 		        unsavedValue
 			);
 	}
@@ -167,6 +257,80 @@ public class PropertyFactory {
 			);
 	}
 
+	/**
+	 * Generate a "standard" (i.e., non-identifier and non-version) based on the given
+	 * mapped property.
+	 *
+	 * @param property The mapped property.
+	 * @param lazyAvailable Is property lazy loading currently available.
+	 * @return The appropriate StandardProperty definition.
+	 */
+	public static StandardProperty buildStandardProperty(AttributeBinding property, boolean lazyAvailable) {
+
+		final Type type = property.getHibernateTypeDescriptor().getExplicitType();
+
+		// we need to dirty check collections, since they can cause an owner
+		// version number increment
+
+		// we need to dirty check many-to-ones with not-found="ignore" in order
+		// to update the cache (not the database), since in this case a null
+		// entity reference can lose information
+
+		boolean alwaysDirtyCheck = type.isAssociationType() &&
+				( (AssociationType) type ).isAlwaysDirtyChecked();
+
+		if ( property.isSimpleValue() ) {
+			SimpleAttributeBinding simpleProperty = ( SimpleAttributeBinding ) property;
+			return new StandardProperty(
+					simpleProperty.getAttribute().getName(),
+					simpleProperty.getNodeName(),
+					type,
+					lazyAvailable && simpleProperty.isLazy(),
+					simpleProperty.isInsertable(),
+					simpleProperty.isUpdatable(),
+					simpleProperty.getGeneration() == PropertyGeneration.INSERT || simpleProperty.getGeneration() == PropertyGeneration.ALWAYS,
+					simpleProperty.getGeneration() == PropertyGeneration.ALWAYS,
+					simpleProperty.isNullable(),
+					alwaysDirtyCheck || simpleProperty.isUpdatable(),
+					simpleProperty.isOptimisticLockable(),
+					// TODO: get cascadeStyle from simpleProperty when HHH-6355 is fixed; for now, assume NONE
+					//simpleProperty.getCascadeStyle(),
+					CascadeStyle.NONE,
+					// TODO: get fetchMode() from simpleProperty when HHH-6357 is fixed; for now, assume FetchMode.DEFAULT
+					//simpleProperty.getFetchMode()
+					FetchMode.DEFAULT
+				);
+		}
+		else {
+			PluralAttributeBinding pluralProperty = ( PluralAttributeBinding ) property;
+
+			return new StandardProperty(
+					pluralProperty.getAttribute().getName(),
+					pluralProperty.getNodeName(),
+					type,
+					lazyAvailable && pluralProperty.isLazy(),
+					// TODO: fix this when HHH-6356 is fixed; for now assume PluralAttributeBinding is updatable and insertable
+					// pluralProperty.isInsertable(),
+					//pluralProperty.isUpdatable(),
+					true,
+					true,
+					false,
+					false,
+					pluralProperty.isNullable(),
+					// TODO: fix this when HHH-6356 is fixed; for now assume PluralAttributeBinding is updatable and insertable
+					//alwaysDirtyCheck || pluralProperty.isUpdatable(),
+					true,
+					pluralProperty.isOptimisticLocked(),
+					// TODO: get cascadeStyle from property when HHH-6355 is fixed; for now, assume NONE
+					//pluralProperty.getCascadeStyle(),
+					CascadeStyle.NONE,
+					// TODO: get fetchMode() from simpleProperty when HHH-6357 is fixed; for now, assume FetchMode.DEFAULT
+					//pluralProperty.getFetchMode()
+					FetchMode.DEFAULT
+				);
+		}
+	}
+
 	private static Constructor getConstructor(PersistentClass persistentClass) {
 		if ( persistentClass == null || !persistentClass.hasPojoRepresentation() ) {
 			return null;
@@ -174,6 +338,19 @@ public class PropertyFactory {
 
 		try {
 			return ReflectHelper.getDefaultConstructor( persistentClass.getMappedClass() );
+		}
+		catch( Throwable t ) {
+			return null;
+		}
+	}
+
+	private static Constructor getConstructor(EntityBinding entityBinding) {
+		if ( entityBinding == null || entityBinding.getEntity().getJavaType() == null ) {
+			return null;
+		}
+
+		try {
+			return ReflectHelper.getDefaultConstructor( entityBinding.getEntity().getJavaType().getClassReference() );
 		}
 		catch( Throwable t ) {
 			return null;
@@ -188,5 +365,18 @@ public class PropertyFactory {
 		PropertyAccessor pa = PropertyAccessorFactory.getPropertyAccessor( mappingProperty, EntityMode.POJO );
 		return pa.getGetter( mappingProperty.getPersistentClass().getMappedClass(), mappingProperty.getName() );
 	}
+
+	private static Getter getGetter(AttributeBinding mappingProperty) {
+		if ( mappingProperty == null || mappingProperty.getEntityBinding().getEntity().getJavaType() == null ) {
+			return null;
+		}
+
+		PropertyAccessor pa = PropertyAccessorFactory.getPropertyAccessor( mappingProperty, EntityMode.POJO );
+		return pa.getGetter(
+				mappingProperty.getEntityBinding().getEntity().getJavaType().getClassReference(),
+				mappingProperty.getAttribute().getName()
+		);
+	}
+
 
 }

@@ -345,12 +345,10 @@ public class EntityMetamodel implements Serializable {
 		rootName = name;
 		entityType = sessionFactory.getTypeResolver().getTypeFactory().manyToOne( name );
 
-		// TODO: fix this when Type is available (HHH-6360)
-		//identifierProperty = PropertyFactory.buildIdentifierProperty(
-		//        entityBinding,
-		//        sessionFactory.getIdentifierGenerator( rootName )
-		//);
-		identifierProperty = null;
+		identifierProperty = PropertyFactory.buildIdentifierProperty(
+		        entityBinding,
+		        sessionFactory.getIdentifierGenerator( rootName )
+		);
 
 		versioned = entityBinding.isVersioned();
 
@@ -410,14 +408,13 @@ public class EntityMetamodel implements Serializable {
 				continue;
 			}
 
-			// TODO: fix this when Type is available (HHH-6360)
-			//if ( attributeBinding == entityBinding.getVersioningValueBinding() ) {
-			//	tempVersionProperty = i;
-			//	properties[i] = PropertyFactory.buildVersionProperty( entityBinding.getVersioningValueBinding(), lazyAvailable );
-			//}
-			//else {
-			//	properties[i] = PropertyFactory.buildStandardProperty( attributeBinding, lazyAvailable );
-			//}
+			if ( attributeBinding == entityBinding.getVersioningValueBinding() ) {
+				tempVersionProperty = i;
+				properties[i] = PropertyFactory.buildVersionProperty( entityBinding.getVersioningValueBinding(), lazyAvailable );
+			}
+			else {
+				properties[i] = PropertyFactory.buildStandardProperty( attributeBinding, lazyAvailable );
+			}
 
 			// TODO: fix when natural IDs are added (HHH-6354)
 			//if ( attributeBinding.isNaturalIdentifier() ) {

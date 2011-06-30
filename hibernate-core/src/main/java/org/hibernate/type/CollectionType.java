@@ -29,18 +29,27 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import org.dom4j.Element;
 import org.dom4j.Node;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.hibernate.EntityMode;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.collection.PersistentCollection;
+import org.hibernate.collection.PersistentIdentifierBag;
+import org.hibernate.collection.PersistentMap;
+import org.hibernate.engine.CollectionEntry;
 import org.hibernate.engine.CollectionKey;
 import org.hibernate.engine.EntityEntry;
 import org.hibernate.engine.Mapping;
@@ -62,6 +71,8 @@ import org.hibernate.util.MarkerObject;
  * @author Gavin King
  */
 public abstract class CollectionType extends AbstractType implements AssociationType {
+
+	private static final Logger log = LoggerFactory.getLogger(CollectionType.class);
 
 	private static final Object NOT_NULL_COLLECTION = new MarkerObject( "NOT NULL COLLECTION" );
 	public static final Object UNFETCHED_COLLECTION = new MarkerObject( "UNFETCHED COLLECTION" );
@@ -520,10 +531,89 @@ public abstract class CollectionType extends AbstractType implements Association
 				if ( ! ( ( PersistentCollection ) original ).isDirty() ) {
 					( ( PersistentCollection ) result ).clearDirty();
 				}
+
+				if (elemType instanceof AssociationType) {
+					preserveSnapshot(( PersistentCollection )original, ( PersistentCollection ) result, (AssociationType) elemType, owner, copyCache, session);
+				}
 			}
 		}
+		
 
 		return result;
+	}
+	
+	private void preserveSnapshot(PersistentCollection original ,PersistentCollection result, AssociationType elemType, Object owner,
+			Map copyCache, SessionImplementor session) {
+		Serializable originalSnapshot = original.getStoredSnapshot();
+		Serializable resultSnapshot = result.getStoredSnapshot();
+		Serializable targetSnapshot;
+		
+		
+		if ( log.isDebugEnabled() ) {
+			log.debug("preserveSnapshot: originalCollection class = " + original.getClass() + "; originalCollection = " + original);
+			log.debug("preserveSnapshot: resultCollection class = " + result.getClass() + "; resultCollection = " + result);
+			log.debug("preserveSnapshot: elemType class = " + elemType.getClass() + "; elemType = " + elemType);
+			log.debug("preserveSnapshot: owner class = " + owner.getClass() + "; owner = " + owner);
+			log.debug("preserveSnapshot: originalSnapshot class = " + originalSnapshot.getClass() + "; originalSnapshot = " + originalSnapshot);
+		}
+		
+		if (originalSnapshot instanceof List) {
+			targetSnapshot = new ArrayList(((List) originalSnapshot).size()); 
+			for (Object obj : (List) originalSnapshot) {
+				((List) targetSnapshot).add(elemType.replace(obj, null, session, owner, copyCache));
+			}
+		
+		} else if (originalSnapshot instanceof Map) {
+			if (originalSnapshot instanceof SortedMap) {
+				targetSnapshot = new TreeMap(((SortedMap) originalSnapshot).comparator());
+			} else {
+				targetSnapshot = new HashMap(((Map)originalSnapshot).size());
+			}
+			
+			for (Map.Entry<Object, Object> entry : ((Map<Object,Object>) originalSnapshot).entrySet()) {
+				Object key = entry.getKey();
+				Object value = entry.getValue();
+				Object resultSnapshotValue = (resultSnapshot == null) ? null : ((Map<Object,Object>) resultSnapshot).get(key);
+
+				if ( log.isDebugEnabled() ) {
+					log.debug("preserveSnapshot: key = " + key);
+					log.debug("preserveSnapshot: value = " + value);
+					log.debug("preserveSnapshot: resultSnapshotValue = " + resultSnapshotValue);
+				}
+				
+				if (key == value) { 
+					Object newValue = elemType.replace(value, resultSnapshotValue, session, owner, copyCache );
+					((Map) targetSnapshot).put(newValue, newValue);
+						
+				} else {
+					Object newValue = elemType.replace(value, resultSnapshotValue, session, owner, copyCache );
+					((Map) targetSnapshot).put(key, newValue);
+				}
+				
+			}
+
+		} else if (originalSnapshot instanceof Object []) {
+			Object [] arr = ( Object []) originalSnapshot;
+			for (int i=0; i< arr.length; i++) {
+				arr[i] = elemType.replace(arr[i], null, session, owner, copyCache );
+			}
+			targetSnapshot = originalSnapshot;
+		
+		} else {
+			// retain the same snapshot
+			targetSnapshot = resultSnapshot;
+			
+		}
+		
+		CollectionEntry ce = session.getPersistenceContext().getCollectionEntry(result);
+		if (ce != null) {
+			ce.resetStoredSnapshot(result, targetSnapshot);
+		}
+		
+		if ( log.isDebugEnabled() ) {
+			log.debug("preserveSnapshot: preserved targetSnapshot = " + targetSnapshot);
+		}
+		
 	}
 
 	/**

@@ -130,7 +130,8 @@ public class SimpleAttribute extends MappedAttribute {
 
 
 		AnnotationInstance idAnnotation = JandexHelper.getSingleAnnotation( annotations, JPADotNames.ID );
-		isId = idAnnotation != null;
+        AnnotationInstance embeddedIdAnnotation = JandexHelper.getSingleAnnotation( annotations, JPADotNames.EMBEDDED_ID );
+		isId = !(idAnnotation == null && embeddedIdAnnotation == null);
 
 		AnnotationInstance versionAnnotation = JandexHelper.getSingleAnnotation( annotations, JPADotNames.VERSION );
 		isVersioned = versionAnnotation != null;

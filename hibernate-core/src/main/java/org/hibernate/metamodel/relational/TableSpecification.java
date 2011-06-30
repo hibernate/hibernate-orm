@@ -89,7 +89,7 @@ public interface TableSpecification extends ValueContainer, Loggable {
 
 	public UniqueKey getOrCreateUniqueKey(String name);
 
-	public Iterable<String> getCheckConstraints();
+	public Iterable<CheckConstraint> getCheckConstraints();
 
 	public void addCheckConstraint(String checkCondition);
 

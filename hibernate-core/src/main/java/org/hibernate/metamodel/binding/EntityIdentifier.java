@@ -48,8 +48,7 @@ public class EntityIdentifier {
 	private SimpleAttributeBinding attributeBinding;
 	private IdentifierGenerator identifierGenerator;
 	private IdGenerator idGenerator;
-	private boolean isEmbedded;
-	private boolean isIdentifierMapper;
+	private boolean isIdentifierMapper = false;
 	// todo : mappers, etc
 
 	/**
@@ -79,7 +78,7 @@ public class EntityIdentifier {
 	}
 
 	public boolean isEmbedded() {
-		return isEmbedded;
+		return attributeBinding.getValuesSpan()>0;
 	}
 
 	public boolean isIdentifierMapper() {

@@ -36,7 +36,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractTableSpecification implements TableSpecification, ValueContainer {
+public abstract class AbstractTableSpecification implements TableSpecification {
 	private final static AtomicInteger tableCounter = new AtomicInteger( 0 );
 	private final int tableNumber;
 	private final LinkedHashMap<String,SimpleValue> values = new LinkedHashMap<String,SimpleValue>();

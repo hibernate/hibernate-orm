@@ -32,7 +32,7 @@ import java.util.Collections;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class InLineView extends AbstractTableSpecification implements ValueContainer {
+public class InLineView extends AbstractTableSpecification {
 	private final Schema schema;
 	private final String logicalName;
 	private final String select;
@@ -77,7 +77,7 @@ public class InLineView extends AbstractTableSpecification implements ValueConta
 	}
 
 	@Override
-	public Iterable<String> getCheckConstraints() {
+	public Iterable<CheckConstraint> getCheckConstraints() {
 		return Collections.emptyList();
 	}
 

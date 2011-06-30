@@ -29,20 +29,22 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 
+import org.hibernate.internal.util.StringHelper;
+
 /**
  * Models the concept of a relational <tt>TABLE</tt> (or <tt>VIEW</tt>).
  *
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class Table extends AbstractTableSpecification implements ValueContainer, Exportable {
+public class Table extends AbstractTableSpecification implements Exportable {
 	private final Schema database;
 	private final Identifier tableName;
 	private final String qualifiedName;
 
 	private LinkedHashMap<String,Index> indexes;
 	private LinkedHashMap<String,UniqueKey> uniqueKeys;
-	private List<String> checkConstraints;
+	private List<CheckConstraint> checkConstraints;
 	private Set<String> comments;
 
 	public Table(Schema database, String tableName) {
@@ -115,16 +117,18 @@ public class Table extends AbstractTableSpecification implements ValueContainer,
 	}
 
 	@Override
-	public Iterable<String> getCheckConstraints() {
+	public Iterable<CheckConstraint> getCheckConstraints() {
 		return checkConstraints;
 	}
 
 	@Override
 	public void addCheckConstraint(String checkCondition) {
 		if ( checkConstraints == null ) {
-			checkConstraints = new ArrayList<String>();
+			checkConstraints = new ArrayList<CheckConstraint>();
 		}
-		checkConstraints.add( checkCondition );
+        //todo ? StringHelper.isEmpty( checkCondition );
+        //todo default name?
+		checkConstraints.add( new CheckConstraint( this, "", checkCondition ) );
 	}
 
 	@Override

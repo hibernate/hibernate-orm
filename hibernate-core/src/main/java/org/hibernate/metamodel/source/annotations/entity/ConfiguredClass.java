@@ -393,30 +393,16 @@ public class ConfiguredClass {
 				attribute = SimpleAttribute.createSimpleAttribute( attributeName, type.getName(), annotations );
 				break;
 			}
-			case EMBEDDED: {
-				ClassInfo embeddableClassInfo = context.getClassInfo( type.getName() );
-				if ( classInfo == null ) {
-					String msg = String.format(
-							"Attribute %s of entity %s is annotated with @Embedded, but no embeddable configuration for type %s can be found.",
-							attributeName,
-							getName(),
-							type.getName()
-					);
-					throw new AnnotationException( msg );
-				}
+            case ELEMENT_COLLECTION:
+            case EMBEDDED_ID:
 
-				context.resolveAllTypes( type.getName() );
-				ConfiguredClassHierarchy<EmbeddableClass> hierarchy = ConfiguredClassHierarchyBuilder.createEmbeddableHierarchy(
-						context.loadClass( embeddableClassInfo.toString() ),
-						classAccessType,
-						context
-				);
-				embeddedClasses.put( attributeName, hierarchy.getLeaf() );
+			case EMBEDDED: {
+                resolveEmbeddable( attributeName, type );
 			}
 			// TODO handle the different association types
 			default: {
 				attribute = AssociationAttribute.createAssociationAttribute(
-						attributeName, ( (Class) type ).getName(), attributeType, annotations
+						attributeName,type.getName(), attributeType, annotations
 				);
 			}
 		}
@@ -424,7 +410,28 @@ public class ConfiguredClass {
 		return attribute;
 	}
 
-	/**
+    private void resolveEmbeddable(String attributeName, Class<?> type) {
+        ClassInfo embeddableClassInfo = context.getClassInfo( type.getName() );
+        if ( classInfo == null ) {
+            String msg = String.format(
+                    "Attribute %s of entity %s is annotated with @Embedded, but no embeddable configuration for type %s can be found.",
+                    attributeName,
+                    getName(),
+                    type.getName()
+            );
+            throw new AnnotationException( msg );
+        }
+
+        context.resolveAllTypes( type.getName() );
+        ConfiguredClassHierarchy<EmbeddableClass> hierarchy = ConfiguredClassHierarchyBuilder.createEmbeddableHierarchy(
+                context.loadClass( embeddableClassInfo.toString() ),
+                classAccessType,
+                context
+        );
+        embeddedClasses.put( attributeName, hierarchy.getLeaf() );
+    }
+
+    /**
 	 * Given the annotations defined on a persistent attribute this methods determines the attribute type.
 	 *
 	 * @param annotations the annotations defined on the persistent attribute
@@ -458,6 +465,16 @@ public class ConfiguredClass {
 		AnnotationInstance embedded = JandexHelper.getSingleAnnotation( annotations, JPADotNames.EMBEDDED );
 		if ( embedded != null ) {
 			discoveredAttributeTypes.put( AttributeType.EMBEDDED, embedded );
+		}
+
+        AnnotationInstance embeddIded = JandexHelper.getSingleAnnotation( annotations, JPADotNames.EMBEDDED_ID );
+		if ( embeddIded != null ) {
+			discoveredAttributeTypes.put( AttributeType.EMBEDDED_ID, embeddIded );
+		}
+
+        AnnotationInstance elementCollection = JandexHelper.getSingleAnnotation( annotations, JPADotNames.ELEMENT_COLLECTION );
+		if ( elementCollection != null ) {
+			discoveredAttributeTypes.put( AttributeType.ELEMENT_COLLECTION, elementCollection );
 		}
 
 		if ( discoveredAttributeTypes.size() == 0 ) {

@@ -42,6 +42,7 @@ import org.hibernate.annotations.ResultCheckStyle;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
+import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.binding.Caching;
 import org.hibernate.metamodel.binding.CustomSQL;
@@ -119,15 +120,15 @@ public class EntityBinder {
 
 		bindInheritance( entityBinding );
 
-		// take care of the id, attributes and relations
-		if ( entityClass.isRoot() ) {
-			bindId( entityBinding );
-		}
+
 
 		// bind all attributes - simple as well as associations
 		bindAttributes( entityBinding );
 		bindEmbeddedAttributes( entityBinding );
-
+        	// take care of the id, attributes and relations
+		if ( entityClass.isRoot() ) {
+			bindId( entityBinding );
+		}
 
 		bindTableUniqueConstraints( entityBinding );
 
@@ -452,7 +453,7 @@ public class EntityBinder {
 				break;
 			}
 			case EMBEDDED: {
-				// todo
+				bindEmbeddedIdAnnotation( entityBinding );
 				break;
 			}
 			default: {
@@ -474,6 +475,37 @@ public class EntityBinder {
 		}
 		entityBindingState.setJpaEntityName( name );
 	}
+
+    private void bindEmbeddedIdAnnotation(EntityBinding entityBinding) {
+        AnnotationInstance idAnnotation = JandexHelper.getSingleAnnotation(
+                entityClass.getClassInfo(), JPADotNames.EMBEDDED_ID
+        );
+
+        String idName = JandexHelper.getPropertyName( idAnnotation.target() );
+        MappedAttribute idAttribute = entityClass.getMappedAttribute( idName );
+        if ( !( idAttribute instanceof SimpleAttribute ) ) {
+            throw new AssertionFailure( "Unexpected attribute type for id attribute" );
+        }
+
+        SingularAttribute attribute = entityBinding.getEntity().getOrCreateComponentAttribute( idName );
+
+
+        SimpleAttributeBinding attributeBinding = entityBinding.makeSimpleIdAttributeBinding( attribute );
+
+        attributeBinding.initialize( new AttributeBindingStateImpl( (SimpleAttribute) idAttribute ) );
+
+        TupleRelationalStateImpl state = new TupleRelationalStateImpl();
+        EmbeddableClass embeddableClass = entityClass.getEmbeddedClasses().get( idName );
+        for ( MappedAttribute attr : embeddableClass.getMappedAttributes() ) {
+            state.addValueState( new ColumnRelationalStateImpl( (SimpleAttribute) attr, meta ) );
+        }
+        attributeBinding.initialize( state );
+        Map<String,String> parms = new HashMap<String, String>( 1 );
+        parms.put( IdentifierGenerator.ENTITY_NAME, entityBinding.getEntity().getName() );
+        IdGenerator generator = new IdGenerator( "NAME","assigned", parms);
+        entityBinding.getEntityIdentifier().setIdGenerator( generator );
+        entityBinding.getEntityIdentifier().createIdentifierGenerator( meta.getIdentifierGeneratorFactory() );
+    }
 
 	private void bindSingleIdAnnotation(EntityBinding entityBinding) {
 		AnnotationInstance idAnnotation = JandexHelper.getSingleAnnotation(
@@ -548,10 +580,11 @@ public class EntityBinder {
 					)
 			);
 		}
-		else {
+		if( idGenerator == null ) {
 			idGenerator = new IdGenerator( "NAME", strategy, new HashMap<String, String>() );
 			entityBinding.getEntityIdentifier().setIdGenerator( idGenerator );
 		}
+        entityBinding.getEntityIdentifier().createIdentifierGenerator( meta.getIdentifierGeneratorFactory() );
 	}
 
 	private void bindAttributes(EntityBinding entityBinding) {

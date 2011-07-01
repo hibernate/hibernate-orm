@@ -807,25 +807,25 @@ query.add(AuditEntity.relatedId("address").eq(relatedEntityId));]]></programlist
                 The basic query allows retrieving entity names and corresponding Java classes changed in a specified revision:
             </para>
             <programlisting><![CDATA[Set<Pair<String, Class>> modifiedEntityTypes = getAuditReader()
-    .findEntityTypesChangedInRevision(revisionNumber);]]></programlisting>
+    .getCrossTypeRevisionChangesReader().findEntityTypes(revisionNumber);]]></programlisting>
             <para>
-                Other queries (accessible from <interfacename>org.hibernate.envers.AuditReader</interfacename>):
+                Other queries (also accessible from <interfacename>org.hibernate.envers.CrossTypeRevisionChangesReader</interfacename>):
             </para>
             <orderedlist>
                 <listitem>
-                    <firstterm><methodname>List<![CDATA[<Object>]]> findEntitiesChangedInRevision(Number)</methodname></firstterm>
+                    <firstterm><methodname>List<![CDATA[<Object>]]> findEntities(Number)</methodname></firstterm>
                     - Returns snapshots of all audited entities changed (added, updated and removed) in a given revision.
                     Executes <literal>n+1</literal> SQL queries, where <literal>n</literal> is a number of different entity
                     classes modified within specified revision.
                 </listitem>
                 <listitem>
-                    <firstterm><methodname>List<![CDATA[<Object>]]> findEntitiesChangedInRevision(Number, RevisionType)</methodname></firstterm>
+                    <firstterm><methodname>List<![CDATA[<Object>]]> findEntities(Number, RevisionType)</methodname></firstterm>
                     - Returns snapshots of all audited entities changed (added, updated or removed) in a given revision
                     filtered by modification type. Executes <literal>n+1</literal> SQL queries, where <literal>n</literal>
                     is a number of different entity classes modified within specified revision.
                 </listitem>
                 <listitem>
-                    <firstterm><methodname><![CDATA[Map<RevisionType, List<Object>>]]> findEntitiesChangedInRevisionGroupByRevisionType(Number)</methodname></firstterm>
+                    <firstterm><methodname><![CDATA[Map<RevisionType, List<Object>>]]> findEntitiesGroupByRevisionType(Number)</methodname></firstterm>
                     - Returns a map containing lists of entity snapshots grouped by modification operation (e.g.
                     addition, update and removal). Executes <literal>3n+1</literal> SQL queries, where <literal>n</literal>
                     is a number of different entity classes modified within specified revision.

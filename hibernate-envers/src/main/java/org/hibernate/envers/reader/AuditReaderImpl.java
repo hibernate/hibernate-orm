@@ -25,8 +25,6 @@ package org.hibernate.envers.reader;
 import static org.hibernate.envers.tools.ArgumentsTools.checkNotNull;
 import static org.hibernate.envers.tools.ArgumentsTools.checkPositive;
 import static org.hibernate.envers.tools.Tools.getTargetClassIfProxied;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -39,17 +37,14 @@ import org.hibernate.HibernateException;
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.envers.RevisionType;
+import org.hibernate.envers.CrossTypeRevisionChangesReader;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.exception.NotAuditedException;
 import org.hibernate.envers.exception.RevisionDoesNotExistException;
 import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.query.AuditQueryCreator;
-import org.hibernate.envers.query.criteria.RevisionTypeAuditExpression;
 import org.hibernate.envers.synchronization.AuditProcess;
-import org.hibernate.envers.tools.Pair;
-import org.hibernate.envers.tools.Tools;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.proxy.HibernateProxy;
 
@@ -63,6 +58,7 @@ public class AuditReaderImpl implements AuditReaderImplementor {
     private final SessionImplementor sessionImplementor;
     private final Session session;
     private final FirstLevelCache firstLevelCache;
+    private final CrossTypeRevisionChangesReader crossTypeRevisionChangesReader;
 
     public AuditReaderImpl(AuditConfiguration verCfg, Session session,
                               SessionImplementor sessionImplementor) {
@@ -71,6 +67,7 @@ public class AuditReaderImpl implements AuditReaderImplementor {
         this.session = session;
 
         firstLevelCache = new FirstLevelCache();
+        crossTypeRevisionChangesReader = new CrossTypeRevisionChangesReaderImpl(this, verCfg);
     }
 
     private void checkSession() {
@@ -247,73 +244,13 @@ public class AuditReaderImpl implements AuditReaderImplementor {
         }
     }
 
-    @SuppressWarnings({"unchecked"})
-    public List<Object> findEntitiesChangedInRevision(Number revision) throws IllegalStateException,
-                                                                              IllegalArgumentException, AuditException {
-        Set<Pair<String, Class>> entityTypes = findEntityTypesChangedInRevision(revision);
-        List<Object> result = new ArrayList<Object>();
-        for (Pair<String, Class> type : entityTypes) {
-            result.addAll(createQuery().forEntitiesModifiedAtRevision(type.getSecond(), type.getFirst(), revision).getResultList());
-        }
-        return result;
-    }
-
-    @SuppressWarnings({"unchecked"})
-    public List<Object> findEntitiesChangedInRevision(Number revision, RevisionType revisionType)
-            throws IllegalStateException, IllegalArgumentException, AuditException {
-        Set<Pair<String, Class>> entityTypes = findEntityTypesChangedInRevision(revision);
-        List<Object> result = new ArrayList<Object>();
-        for (Pair<String, Class> type : entityTypes) {
-            result.addAll(createQuery().forEntitiesModifiedAtRevision(type.getSecond(), type.getFirst(), revision)
-                                       .add(new RevisionTypeAuditExpression(revisionType, "=")).getResultList());
-        }
-        return result;
-    }
-
-    @SuppressWarnings({"unchecked"})
-    public Map<RevisionType, List<Object>> findEntitiesChangedInRevisionGroupByRevisionType(Number revision)
-            throws IllegalStateException, IllegalArgumentException, AuditException {
-        Set<Pair<String, Class>> entityTypes = findEntityTypesChangedInRevision(revision);
-        Map<RevisionType, List<Object>> result = new HashMap<RevisionType, List<Object>>();
-        for (RevisionType revisionType : RevisionType.values()) {
-            result.put(revisionType, new ArrayList<Object>());
-            for (Pair<String, Class> type : entityTypes) {
-                List<Object> list = createQuery().forEntitiesModifiedAtRevision(type.getSecond(), type.getFirst(), revision)
-                                                 .add(new RevisionTypeAuditExpression(revisionType, "=")).getResultList();
-                result.get(revisionType).addAll(list);
-            }
-        }
-        return result;
-    }
-
-    @SuppressWarnings({"unchecked"})
-    public Set<Pair<String, Class>> findEntityTypesChangedInRevision(Number revision) throws IllegalStateException,
-                                                                                             IllegalArgumentException, AuditException {
-        checkNotNull(revision, "Entity revision");
-        checkPositive(revision, "Entity revision");
-        checkSession();
+    public CrossTypeRevisionChangesReader getCrossTypeRevisionChangesReader() throws AuditException {
         if (!verCfg.getGlobalCfg().isTrackEntitiesChangedInRevisionEnabled()) {
-            throw new AuditException("This query is designed for Envers default mechanism of tracking entities modified in a given revision."
+            throw new AuditException("This API is designed for Envers default mechanism of tracking entities modified in a given revision."
                                      + " Extend DefaultTrackingModifiedEntitiesRevisionEntity, utilize @ModifiedEntityNames annotation or set "
                                      + "'org.hibernate.envers.track_entities_changed_in_revision' parameter to true.");
         }
-        Set<Number> revisions = new HashSet<Number>(1);
-        revisions.add(revision);
-        Criteria query = verCfg.getRevisionInfoQueryCreator().getRevisionsQuery(session, revisions);
-        Object revisionInfo = query.uniqueResult();
-        if (revisionInfo != null) {
-            // If revision exists.
-            Set<String> entityNames = verCfg.getModifiedEntityNamesReader().getModifiedEntityNames(revisionInfo);
-            if (entityNames != null) {
-                // Generate result that contains entity names and corresponding Java classes.
-                Set<Pair<String, Class>> result = new HashSet<Pair<String, Class>>();
-                for (String entityName : entityNames) {
-                    result.add(Pair.make(entityName, Tools.getEntityClass(sessionImplementor, session, entityName)));
-                }
-                return result;
-            }
-        }
-        return Collections.EMPTY_SET;
+        return crossTypeRevisionChangesReader;
     }
 
 	@SuppressWarnings({"unchecked"})

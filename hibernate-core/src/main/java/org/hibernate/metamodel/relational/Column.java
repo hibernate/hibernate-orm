@@ -32,7 +32,7 @@ import org.hibernate.metamodel.relational.state.ColumnRelationalState;
  * @author Steve Ebersole
  */
 public class Column extends AbstractSimpleValue implements SimpleValue {
-	private final String name;
+	private final Identifier name;
 	private boolean nullable;
 	private boolean unique;
 
@@ -48,6 +48,10 @@ public class Column extends AbstractSimpleValue implements SimpleValue {
 	private Size size = new Size();
 
 	protected Column(TableSpecification table, int position, String name) {
+		this( table, position, Identifier.toIdentifier( name ) );
+	}
+
+	protected Column(TableSpecification table, int position, Identifier name) {
 		super( table, position );
 		this.name = name;
 	}
@@ -72,7 +76,7 @@ public class Column extends AbstractSimpleValue implements SimpleValue {
 		}
 	}
 
-	public String getName() {
+	public Identifier getName() {
 		return name;
 	}
 

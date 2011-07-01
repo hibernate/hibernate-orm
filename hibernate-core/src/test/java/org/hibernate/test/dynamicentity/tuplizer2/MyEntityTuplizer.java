@@ -26,6 +26,7 @@ package org.hibernate.test.dynamicentity.tuplizer2;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.property.Getter;
 import org.hibernate.property.Setter;
 import org.hibernate.proxy.ProxyFactory;
@@ -41,6 +42,10 @@ import org.hibernate.tuple.entity.PojoEntityTuplizer;
 public class MyEntityTuplizer extends PojoEntityTuplizer {
 
 	public MyEntityTuplizer(EntityMetamodel entityMetamodel, PersistentClass mappedEntity) {
+		super( entityMetamodel, mappedEntity );
+	}
+
+	public MyEntityTuplizer(EntityMetamodel entityMetamodel, EntityBinding mappedEntity) {
 		super( entityMetamodel, mappedEntity );
 	}
 

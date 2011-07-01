@@ -567,14 +567,12 @@ public class EntityMetamodel implements Serializable {
 		final EntityTuplizerFactory entityTuplizerFactory = sessionFactory.getSettings().getEntityTuplizerFactory();
 		Class<EntityTuplizer> tuplizerClass = entityBinding.getEntityTuplizerClass();
 
-		// TODO: fix this when integrated into tuplizers (HHH-6359)
-		//if ( tuplizerClass == null ) {
-		//	entityTuplizer = entityTuplizerFactory.constructDefaultTuplizer( entityMode, this, entityBinding );
-		//}
-		//else {
-		//	entityTuplizer = entityTuplizerFactory.constructTuplizer( tuplizerClass, this, entityBinding );
-		//}
-		entityTuplizer = null;
+		if ( tuplizerClass == null ) {
+			entityTuplizer = entityTuplizerFactory.constructDefaultTuplizer( entityMode, this, entityBinding );
+		}
+		else {
+			entityTuplizer = entityTuplizerFactory.constructTuplizer( tuplizerClass, this, entityBinding );
+		}
 	}
 
 	private ValueInclusion determineInsertValueGenerationType(Property mappingProperty, StandardProperty runtimeProperty) {

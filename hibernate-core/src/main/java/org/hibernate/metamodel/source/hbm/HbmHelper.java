@@ -34,6 +34,7 @@ import org.hibernate.MappingException;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.metamodel.binding.CustomSQL;
 import org.hibernate.metamodel.binding.MetaAttribute;
+import org.hibernate.metamodel.source.hbm.xml.mapping.EntityElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLMetaElement;
 import org.hibernate.metamodel.source.hbm.util.MappingHelper;
@@ -100,6 +101,14 @@ public class HbmHelper {
 
 	public static String extractEntityName(String entityName, String entityClassName, String unqualifiedPackageName) {
 		return entityName == null ? getClassName( entityClassName, unqualifiedPackageName ) : entityName;
+	}
+
+	public static String determineEntityName(EntityElement entityElement, String packageName) {
+		return extractEntityName( entityElement.getEntityName(), entityElement.getName(), packageName );
+	}
+
+	public static String determineClassName(EntityElement entityElement, String packageName) {
+		return getClassName( entityElement.getName(), packageName );
 	}
 
 	public static String getClassName(Attribute att, String unqualifiedPackageName) {

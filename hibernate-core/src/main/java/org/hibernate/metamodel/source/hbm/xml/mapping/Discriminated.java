@@ -21,37 +21,11 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.hbm;
-
-import org.hibernate.metamodel.binder.EntityBinder;
-import org.hibernate.metamodel.binder.view.hbm.EntityViewImpl;
-import org.hibernate.metamodel.binding.EntityBinding;
-import org.hibernate.metamodel.source.hbm.xml.mapping.EntityElement;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping;
+package org.hibernate.metamodel.source.hbm.xml.mapping;
 
 /**
  * @author Steve Ebersole
  */
-public abstract class EntityProcessor {
-	private final HbmBindingContext bindingContext;
-	private final EntityBinder entityBinder;
+public interface Discriminated {
 
-	public EntityProcessor(HbmBindingContext bindingContext) {
-		this.bindingContext = bindingContext;
-		this.entityBinder = new EntityBinder( bindingContext.getMetadataImplementor() );
-	}
-
-	public void process(EntityElement entityMapping) {
-		EntityBinding entityBinding = entityBinder.createEntityBinding(
-				new EntityViewImpl(
-						null,		// superType
-						entityMapping,
-						true,		// isRoot
-						null,		// inheritanceType
-						bindingContext
-				)
-		);
-
-		bindingContext.getMetadataImplementor().addEntity( entityBinding );
-	}
 }

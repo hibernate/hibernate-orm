@@ -25,8 +25,8 @@ package org.hibernate.metamodel.source.hbm;
 
 import java.util.List;
 
-import org.hibernate.internal.util.xml.XmlDocument;
 import org.hibernate.metamodel.source.Origin;
+import org.hibernate.metamodel.source.hbm.xml.mapping.EntityElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLFetchProfileElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping;
 import org.hibernate.metamodel.source.spi.BindingContext;
@@ -37,11 +37,12 @@ import org.hibernate.metamodel.source.spi.BindingContext;
 public interface HbmBindingContext extends BindingContext {
 	public boolean isAutoImport();
 
+	public Origin getOrigin();
+
 	public String extractEntityName(XMLHibernateMapping.XMLClass entityClazz);
+	public String determineEntityName(EntityElement entityElement);
 
 	public String getClassName(String unqualifiedName);
 
-	public void bindFetchProfiles(List<XMLFetchProfileElement> fetchProfiles, String containingEntityName);
-
-	public Origin getOrigin();
+	public void processFetchProfiles(List<XMLFetchProfileElement> fetchProfiles, String containingEntityName);
 }

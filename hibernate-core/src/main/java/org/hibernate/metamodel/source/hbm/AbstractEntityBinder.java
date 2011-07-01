@@ -137,7 +137,7 @@ abstract class AbstractEntityBinder {
 		final String entityName = entityBinding.getEntity().getName();
 
 		if ( entityClazz.getFetchProfile() != null ) {
-			bindingContext.bindFetchProfiles( entityClazz.getFetchProfile(), entityName );
+			bindingContext.processFetchProfiles( entityClazz.getFetchProfile(), entityName );
 		}
 
 		getMetadata().addImport( entityName, entityName );

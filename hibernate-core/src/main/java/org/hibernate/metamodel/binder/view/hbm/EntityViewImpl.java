@@ -41,6 +41,7 @@ import org.hibernate.metamodel.source.Origin;
 import org.hibernate.metamodel.source.hbm.HbmBindingContext;
 import org.hibernate.metamodel.source.hbm.HbmHelper;
 import org.hibernate.metamodel.source.hbm.util.MappingHelper;
+import org.hibernate.metamodel.source.hbm.xml.mapping.EntityElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLCacheElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlDeleteElement;
@@ -53,6 +54,8 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.tuple.entity.EntityTuplizer;
 
 /**
+ * TODO : thinking it might be better to have one of these for distinct mapping type (root, subclass, joined, etc)
+ *
  * @author Gail Badner
  * @author Steve Ebersole
  */
@@ -102,7 +105,7 @@ public class EntityViewImpl implements EntityView {
 
 	public EntityViewImpl(
 			Hierarchical superType,
-			XMLHibernateMapping.XMLClass entityClazz,
+			EntityElement entityClazz,
 			boolean isRoot,
 			InheritanceType inheritanceType,
 			HbmBindingContext bindingContext) {
@@ -110,7 +113,7 @@ public class EntityViewImpl implements EntityView {
 		this.bindingContext = bindingContext;
 
 		this.superType = superType;
-		this.entityName = bindingContext.extractEntityName( entityClazz );
+		this.entityName = bindingContext.determineEntityName( entityClazz );
 
 		final String verbatimClassName = entityClazz.getName();
 		this.entityMode = verbatimClassName == null ? EntityMode.MAP : EntityMode.POJO;
@@ -135,7 +138,7 @@ public class EntityViewImpl implements EntityView {
 		this.isRoot = isRoot;
 		this.entityInheritanceType = inheritanceType;
 
-		this.caching = createCaching( entityClazz, bindingContext.extractEntityName( entityClazz ) );
+		this.caching = isRoot ? createCaching( entityClazz, this.entityName ) : null;
 
 		this.metaAttributeContext = HbmHelper.extractMetaAttributeContext(
 				entityClazz.getMeta(), true, bindingContext.getMetaAttributeContext()
@@ -215,11 +218,11 @@ public class EntityViewImpl implements EntityView {
 		);
 	}
 
-	private String extractCustomTuplizerClassName(XMLHibernateMapping.XMLClass entityClazz, EntityMode entityMode) {
-		if ( entityClazz.getTuplizer() == null ) {
+	private String extractCustomTuplizerClassName(EntityElement entityMapping, EntityMode entityMode) {
+		if ( entityMapping.getTuplizer() == null ) {
 			return null;
 		}
-		for ( XMLTuplizerElement tuplizerElement : entityClazz.getTuplizer() ) {
+		for ( XMLTuplizerElement tuplizerElement : entityMapping.getTuplizer() ) {
 			if ( entityMode == EntityMode.parse( tuplizerElement.getEntityMode() ) ) {
 				return tuplizerElement.getClazz();
 			}
@@ -227,8 +230,13 @@ public class EntityViewImpl implements EntityView {
 		return null;
 	}
 
-	private static Caching createCaching(XMLHibernateMapping.XMLClass entityClazz, String entityName) {
-		XMLCacheElement cache = entityClazz.getCache();
+	private static Caching createCaching(EntityElement entityMapping, String entityName) {
+		if ( ! XMLHibernateMapping.XMLClass.class.isInstance( entityMapping ) ) {
+			// only the root entity can define caching
+			return null;
+		}
+		final XMLHibernateMapping.XMLClass rootEntityMapping = (XMLHibernateMapping.XMLClass) entityMapping;
+		XMLCacheElement cache = rootEntityMapping.getCache();
 		if ( cache == null ) {
 			return null;
 		}

@@ -32,6 +32,7 @@ import java.util.Set;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.Value;
 import org.hibernate.metamodel.binding.FetchProfile;
 import org.hibernate.metamodel.binding.TypeDef;
 import org.hibernate.metamodel.domain.JavaType;
@@ -39,6 +40,7 @@ import org.hibernate.metamodel.relational.AuxiliaryDatabaseObject;
 import org.hibernate.metamodel.relational.BasicAuxiliaryDatabaseObjectImpl;
 import org.hibernate.metamodel.source.MappingException;
 import org.hibernate.metamodel.source.Origin;
+import org.hibernate.metamodel.source.hbm.xml.mapping.EntityElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLFetchProfileElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLJoinedSubclassElement;
@@ -85,8 +87,8 @@ public class HibernateMappingProcessor implements HbmBindingContext {
 				hibernateMapping.getPackage(),
 				hibernateMapping.getSchema(),
 				hibernateMapping.getCatalog(),
-				null,
-				null,
+				null,	// idColumnName
+				null,	// discriminatorColumnName
 				hibernateMapping.getDefaultCascade(),
 				hibernateMapping.getDefaultAccess(),
 				hibernateMapping.isDefaultLazy()
@@ -101,6 +103,10 @@ public class HibernateMappingProcessor implements HbmBindingContext {
 		return hibernateMapping.getMeta() == null
 				? new MetaAttributeContext( metadata.getMetaAttributeContext() )
 				: HbmHelper.extractMetaAttributeContext( hibernateMapping.getMeta(), true, metadata.getMetaAttributeContext() );
+	}
+
+	XMLHibernateMapping getHibernateMapping() {
+		return hibernateMapping;
 	}
 
 	@Override
@@ -153,12 +159,12 @@ public class HibernateMappingProcessor implements HbmBindingContext {
 		return metadata.makeJavaType( className );
 	}
 
-	public void bindIndependentMetadata() {
-		bindDatabaseObjectDefinitions();
-		bindTypeDefinitions();
+	public void processIndependentMetadata() {
+		processDatabaseObjectDefinitions();
+		processTypeDefinitions();
 	}
 
-	private void bindDatabaseObjectDefinitions() {
+	private void processDatabaseObjectDefinitions() {
 		if ( hibernateMapping.getDatabaseObject() == null ) {
 			return;
 		}
@@ -167,7 +173,7 @@ public class HibernateMappingProcessor implements HbmBindingContext {
 			if ( databaseObjectElement.getDefinition() != null ) {
 				final String className = databaseObjectElement.getDefinition().getClazz();
 				try {
-					auxiliaryDatabaseObject = (AuxiliaryDatabaseObject) classLoaderService().classForName( className ).newInstance();
+					auxiliaryDatabaseObject = (AuxiliaryDatabaseObject) classLoaderService.getValue().classForName( className ).newInstance();
 				}
 				catch (ClassLoadingException e) {
 					throw e;
@@ -196,7 +202,7 @@ public class HibernateMappingProcessor implements HbmBindingContext {
 		}
 	}
 
-	private void bindTypeDefinitions() {
+	private void processTypeDefinitions() {
 		if ( hibernateMapping.getTypedef() == null ) {
 			return;
 		}
@@ -209,12 +215,12 @@ public class HibernateMappingProcessor implements HbmBindingContext {
 		}
 	}
 
-	public void bindTypeDependentMetadata() {
-		bindFilterDefinitions();
-		bindIdentifierGenerators();
+	public void processTypeDependentMetadata() {
+		processFilterDefinitions();
+		processIdentifierGenerators();
 	}
 
-	private void bindFilterDefinitions() {
+	private void processFilterDefinitions() {
 		if(hibernateMapping.getFilterDef() == null){
 			return;
 		}
@@ -249,7 +255,7 @@ public class HibernateMappingProcessor implements HbmBindingContext {
 		}
 	}
 
-	private void bindIdentifierGenerators() {
+	private void processIdentifierGenerators() {
 		if ( hibernateMapping.getIdentifierGenerator() == null ) {
 			return;
 		}
@@ -262,10 +268,17 @@ public class HibernateMappingProcessor implements HbmBindingContext {
 	}
 
 
-	public void bindMappingMetadata(List<String> processedEntityNames) {
+	public void processMappingMetadata(List<String> processedEntityNames) {
 		if ( hibernateMapping.getClazzOrSubclassOrJoinedSubclass() == null ) {
 			return;
 		}
+
+		for ( Object entityElementO : hibernateMapping.getClazzOrSubclassOrJoinedSubclass() ) {
+			final EntityElement entityElement = (EntityElement) entityElementO;
+
+
+		}
+
 		for ( Object clazzOrSubclass : hibernateMapping.getClazzOrSubclassOrJoinedSubclass() ) {
 			if ( XMLHibernateMapping.XMLClass.class.isInstance( clazzOrSubclass ) ) {
 				XMLHibernateMapping.XMLClass clazz =
@@ -293,21 +306,21 @@ public class HibernateMappingProcessor implements HbmBindingContext {
 		}
 	}
 
-	public void bindMappingDependentMetadata() {
-		bindFetchProfiles();
-		bindImports();
-		bindResultSetMappings();
-		bindNamedQueries();
+	public void processMappingDependentMetadata() {
+		processFetchProfiles();
+		processImports();
+		processResultSetMappings();
+		processNamedQueries();
 	}
 
-	private void bindFetchProfiles(){
-		if(hibernateMapping.getFetchProfile() == null){
+	private void processFetchProfiles(){
+		if ( hibernateMapping.getFetchProfile() == null ) {
 			return;
 		}
-		bindFetchProfiles( hibernateMapping.getFetchProfile(),null );
+		processFetchProfiles( hibernateMapping.getFetchProfile(), null );
 	}
 
-	public void bindFetchProfiles(List<XMLFetchProfileElement> fetchProfiles, String containingEntityName) {
+	public void processFetchProfiles(List<XMLFetchProfileElement> fetchProfiles, String containingEntityName) {
 		for ( XMLFetchProfileElement fetchProfile : fetchProfiles ) {
 			String profileName = fetchProfile.getName();
 			Set<FetchProfile.Fetch> fetches = new HashSet<FetchProfile.Fetch>();
@@ -326,7 +339,7 @@ public class HibernateMappingProcessor implements HbmBindingContext {
 		}
 	}
 
-	private void bindImports() {
+	private void processImports() {
 		if ( hibernateMapping.getImport() == null ) {
 			return;
 		}
@@ -338,14 +351,14 @@ public class HibernateMappingProcessor implements HbmBindingContext {
 		}
 	}
 
-	private void bindResultSetMappings() {
+	private void processResultSetMappings() {
 		if ( hibernateMapping.getResultset() == null ) {
 			return;
 		}
 //			bindResultSetMappingDefinitions( element, null, mappings );
 	}
 
-	private void bindNamedQueries() {
+	private void processNamedQueries() {
 		if ( hibernateMapping.getQueryOrSqlQuery() == null ) {
 			return;
 		}
@@ -365,14 +378,14 @@ public class HibernateMappingProcessor implements HbmBindingContext {
 		}
 	}
 
-	private ClassLoaderService classLoaderService;
-
-	private ClassLoaderService classLoaderService() {
-		if ( classLoaderService == null ) {
-			classLoaderService = metadata.getServiceRegistry().getService( ClassLoaderService.class );
-		}
-		return classLoaderService;
-	}
+	private Value<ClassLoaderService> classLoaderService = new Value<ClassLoaderService>(
+			new Value.DeferredInitializer<ClassLoaderService>() {
+				@Override
+				public ClassLoaderService initialize() {
+					return metadata.getServiceRegistry().getService( ClassLoaderService.class );
+				}
+			}
+	);
 
 	@Override
 	public String extractEntityName(XMLHibernateMapping.XMLClass entityClazz) {
@@ -382,5 +395,10 @@ public class HibernateMappingProcessor implements HbmBindingContext {
 	@Override
 	public String getClassName(String unqualifiedName) {
 		return HbmHelper.getClassName( unqualifiedName, mappingDefaults.getPackageName() );
+	}
+
+	@Override
+	public String determineEntityName(EntityElement entityElement) {
+		return HbmHelper.determineEntityName( entityElement, mappingDefaults.getPackageName() );
 	}
 }

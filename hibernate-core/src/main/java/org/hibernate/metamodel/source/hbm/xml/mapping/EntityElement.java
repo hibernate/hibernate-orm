@@ -21,37 +21,38 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.hbm;
+package org.hibernate.metamodel.source.hbm.xml.mapping;
 
-import org.hibernate.metamodel.binder.EntityBinder;
-import org.hibernate.metamodel.binder.view.hbm.EntityViewImpl;
-import org.hibernate.metamodel.binding.EntityBinding;
-import org.hibernate.metamodel.source.hbm.xml.mapping.EntityElement;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping;
+import java.util.List;
 
 /**
  * @author Steve Ebersole
  */
-public abstract class EntityProcessor {
-	private final HbmBindingContext bindingContext;
-	private final EntityBinder entityBinder;
+public interface EntityElement extends MetaAttributeContainer {
+	public String getName();
+	public String getEntityName();
 
-	public EntityProcessor(HbmBindingContext bindingContext) {
-		this.bindingContext = bindingContext;
-		this.entityBinder = new EntityBinder( bindingContext.getMetadataImplementor() );
-	}
+    public Boolean isAbstract();
+    public Boolean isLazy();
+    public String getProxy();
+    public String getBatchSize();
+    public boolean isDynamicInsert();
+    public boolean isDynamicUpdate();
+    public boolean isSelectBeforeUpdate();
 
-	public void process(EntityElement entityMapping) {
-		EntityBinding entityBinding = entityBinder.createEntityBinding(
-				new EntityViewImpl(
-						null,		// superType
-						entityMapping,
-						true,		// isRoot
-						null,		// inheritanceType
-						bindingContext
-				)
-		);
+	public List<XMLTuplizerElement> getTuplizer();
+    public String getPersister();
 
-		bindingContext.getMetadataImplementor().addEntity( entityBinding );
-	}
+	public XMLLoaderElement getLoader();
+	public XMLSqlInsertElement getSqlInsert();
+	public XMLSqlUpdateElement getSqlUpdate();
+	public XMLSqlDeleteElement getSqlDelete();
+
+	public List<XMLSynchronizeElement> getSynchronize();
+
+	public List<XMLFetchProfileElement> getFetchProfile();
+
+    public List<XMLResultsetElement> getResultset();
+
+    public List<Object> getQueryOrSqlQuery();
 }

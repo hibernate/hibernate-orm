@@ -12,6 +12,7 @@ allprojects {
 
 buildscript {
     repositories {
+        mavenCentral()
         mavenLocal()
         mavenRepo name: 'jboss-nexus', urls: "https://repository.jboss.org/nexus/content/groups/public/"
         mavenRepo name: "jboss-snapshots", urls: "http://snapshots.jboss.org/maven2/"

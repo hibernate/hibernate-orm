@@ -28,6 +28,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Convenience base class for implementing the {@link ValueContainer} contract centralizing commonality
@@ -36,9 +37,20 @@ import java.util.List;
  * @author Steve Ebersole
  */
 public abstract class AbstractTableSpecification implements TableSpecification, ValueContainer {
+	private final static AtomicInteger tableCounter = new AtomicInteger( 0 );
+	private final int tableNumber;
 	private final LinkedHashMap<String,SimpleValue> values = new LinkedHashMap<String,SimpleValue>();
 	private PrimaryKey primaryKey = new PrimaryKey( this );
 	private List<ForeignKey> foreignKeys = new ArrayList<ForeignKey>();
+
+	public AbstractTableSpecification() {
+		this.tableNumber = tableCounter.getAndIncrement();
+	}
+
+	@Override
+	public int getTableNumber() {
+		return tableNumber;
+	}
 
 	@Override
 	public Iterable<SimpleValue> values() {

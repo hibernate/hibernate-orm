@@ -86,6 +86,21 @@ public class TableManipulationTests extends BaseUnitTestCase {
 	}
 
 	@Test
+	public void testTableSpecificationCounter() {
+		Schema schema = new Schema( null, null );
+		Table table = schema.createTable( Identifier.toIdentifier( "my_table" ) );
+		InLineView inLineView = schema.createInLineView( "my_inlineview", "subselect" );
+		InLineView otherInLineView = schema.createInLineView( "my_other_inlineview", "other subselect" );
+		Table otherTable = schema.createTable( Identifier.toIdentifier( "my_other_table" ) );
+
+		int firstTableNumber = table.getTableNumber();
+		assertEquals( firstTableNumber, table.getTableNumber() );
+		assertEquals( firstTableNumber + 1, inLineView.getTableNumber() );
+		assertEquals( firstTableNumber + 2, otherInLineView.getTableNumber() );
+		assertEquals( firstTableNumber + 3, otherTable.getTableNumber() );
+	}
+
+	@Test
 	public void testBasicForeignKeyDefinition() {
 		Schema schema = new Schema( null, null );
 		Table book = schema.createTable( Identifier.toIdentifier( "BOOK" ) );

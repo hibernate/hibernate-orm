@@ -37,6 +37,13 @@ public interface TableSpecification extends ValueContainer, Loggable {
 	public Schema getSchema();
 
 	/**
+	 * Get the table number.
+	 *
+	 * @return the table number.
+	 */
+	public int getTableNumber();
+
+	/**
 	 * Get the primary key definition for this table spec.
 	 *
 	 * @return The PK definition.

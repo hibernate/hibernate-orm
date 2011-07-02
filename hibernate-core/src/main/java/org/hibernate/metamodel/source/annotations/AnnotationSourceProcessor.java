@@ -36,6 +36,9 @@ import org.jboss.logging.Logger;
 import org.hibernate.HibernateException;
 import org.hibernate.internal.util.Value;
 import org.hibernate.metamodel.MetadataSources;
+import org.hibernate.metamodel.binder.source.MetadataImplementor;
+import org.hibernate.metamodel.binder.source.SourceProcessor;
+import org.hibernate.metamodel.binder.source.internal.MetadataImpl;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.domain.Hierarchical;
 import org.hibernate.metamodel.domain.NonEntity;
@@ -53,11 +56,8 @@ import org.hibernate.metamodel.source.annotations.global.TableBinder;
 import org.hibernate.metamodel.source.annotations.global.TypeDefBinder;
 import org.hibernate.metamodel.source.annotations.util.ConfiguredClassHierarchyBuilder;
 import org.hibernate.metamodel.source.annotations.xml.OrmXmlParser;
+import org.hibernate.metamodel.binder.source.internal.JaxbRoot;
 import org.hibernate.metamodel.source.annotations.xml.PseudoJpaDotNames;
-import org.hibernate.metamodel.source.internal.JaxbRoot;
-import org.hibernate.metamodel.source.internal.MetadataImpl;
-import org.hibernate.metamodel.source.spi.MetadataImplementor;
-import org.hibernate.metamodel.source.spi.SourceProcessor;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 
 /**
@@ -180,6 +180,10 @@ public class AnnotationSourceProcessor implements SourceProcessor {
 				}
 			}
 		}
+	}
+
+	private Set<ConfiguredClassHierarchy> createEntityHierarchies() {
+		return ConfiguredClassHierarchyBuilder.createEntityHierarchies( index, metadata.getServiceRegistry() );
 	}
 
 	@Override

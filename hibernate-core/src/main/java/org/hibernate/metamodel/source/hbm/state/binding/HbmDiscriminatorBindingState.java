@@ -25,12 +25,12 @@ package org.hibernate.metamodel.source.hbm.state.binding;
 
 import java.util.Set;
 
+import org.hibernate.metamodel.binder.source.BindingContext;
+import org.hibernate.metamodel.binder.source.hbm.MappingHelper;
 import org.hibernate.metamodel.binding.CascadeType;
 import org.hibernate.metamodel.binding.state.DiscriminatorBindingState;
-import org.hibernate.metamodel.source.hbm.util.MappingHelper;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLDiscriminator;
-import org.hibernate.metamodel.source.spi.BindingContext;
 
 /**
  * @author Gail Badner
@@ -59,7 +59,7 @@ public class HbmDiscriminatorBindingState
 		);
 		XMLDiscriminator discriminator = xmlEntityClazz.getDiscriminator();
 		this.discriminatorValue =  MappingHelper.getStringValue(
-					xmlEntityClazz.getDiscriminatorValue(), entityName
+				xmlEntityClazz.getDiscriminatorValue(), entityName
 		);
 		this.isForced = xmlEntityClazz.getDiscriminator().isForce();
 		this.isInserted = discriminator.isInsert();

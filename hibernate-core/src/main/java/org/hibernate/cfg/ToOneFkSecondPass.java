@@ -115,7 +115,7 @@ public class ToOneFkSecondPass extends FkSecondPass {
 			BinderHelper.createSyntheticPropertyReference( columns, ref, null, manyToOne, false, mappings );
 			TableBinder.bindFk( ref, null, columns, manyToOne, unique, mappings );
 			/*
-			 * HbmSourceProcessor does this only when property-ref != null, but IMO, it makes sense event if it is null
+			 * HbmSourceProcessorImpl does this only when property-ref != null, but IMO, it makes sense event if it is null
 			 */
 			if ( !manyToOne.isIgnoreNotFound() ) manyToOne.createPropertyRefConstraints( persistentClasses );
 		}

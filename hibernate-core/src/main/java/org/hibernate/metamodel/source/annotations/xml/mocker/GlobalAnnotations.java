@@ -37,7 +37,7 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.metamodel.source.MappingException;
+import org.hibernate.metamodel.binder.MappingException;
 import org.hibernate.metamodel.source.annotation.xml.XMLAttributes;
 import org.hibernate.metamodel.source.annotation.xml.XMLEntity;
 import org.hibernate.metamodel.source.annotation.xml.XMLEntityMappings;

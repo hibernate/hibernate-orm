@@ -27,6 +27,7 @@ import java.util.Set;
 
 import org.hibernate.MappingException;
 import org.hibernate.cfg.NamingStrategy;
+import org.hibernate.metamodel.binder.source.hbm.MappingHelper;
 import org.hibernate.metamodel.relational.Size;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLColumnElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLDiscriminator;
@@ -35,7 +36,6 @@ import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLCla
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLVersion;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLManyToOneElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLPropertyElement;
-import org.hibernate.metamodel.source.hbm.util.MappingHelper;
 import org.hibernate.metamodel.relational.state.ColumnRelationalState;
 
 // TODO: remove duplication after Id, Discriminator, Version, Timestamp, and Property extend a common interface.

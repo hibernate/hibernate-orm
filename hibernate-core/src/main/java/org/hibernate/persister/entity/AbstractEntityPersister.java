@@ -42,8 +42,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.function.SQLFunctionRegistry;
+import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
@@ -797,7 +796,7 @@ public abstract class AbstractEntityPersister
 
 		rowIdName = entityBinding.getRowId();
 
-		loaderName = entityBinding.getLoaderName();
+		loaderName = entityBinding.getCustomLoaderName();
 
 		int i = 0;
 		for ( org.hibernate.metamodel.relational.Column col : entityBinding.getBaseTable().getPrimaryKey().getColumns() ) {
@@ -1196,9 +1195,9 @@ public abstract class AbstractEntityPersister
 	}
 
 	public boolean isBatchable() {
-		return optimisticLockMode()==Versioning.OPTIMISTIC_LOCK_NONE ||
-			( !isVersioned() && optimisticLockMode()==Versioning.OPTIMISTIC_LOCK_VERSION ) ||
-			getFactory().getSettings().isJdbcBatchVersionedData();
+		return optimisticLockStyle() == OptimisticLockStyle.NONE
+				|| ( !isVersioned() && optimisticLockStyle() == OptimisticLockStyle.VERSION )
+				|| getFactory().getSettings().isJdbcBatchVersionedData();
 	}
 
 	public Serializable[] getQuerySpaces() {
@@ -2306,7 +2305,7 @@ public abstract class AbstractEntityPersister
 			}
 		}
 
-		if ( j == 0 && isVersioned() && entityMetamodel.getOptimisticLockMode() == Versioning.OPTIMISTIC_LOCK_VERSION ) {
+		if ( j == 0 && isVersioned() && entityMetamodel.getOptimisticLockStyle() == OptimisticLockStyle.VERSION ) {
 			// this is the root (versioned) table, and we are using version-based
 			// optimistic locking;  if we are not updating the version, also don't
 			// check it (unless this is a "generated" version column)!
@@ -2315,12 +2314,12 @@ public abstract class AbstractEntityPersister
 				hasColumns = true;
 			}
 		}
-		else if ( entityMetamodel.getOptimisticLockMode() > Versioning.OPTIMISTIC_LOCK_VERSION && oldFields != null ) {
+		else if ( isAllOrDirtyOptLocking() && oldFields != null ) {
 			// we are using "all" or "dirty" property-based optimistic locking
 
-			boolean[] includeInWhere = entityMetamodel.getOptimisticLockMode() == Versioning.OPTIMISTIC_LOCK_ALL ?
-					getPropertyUpdateability() : //optimistic-lock="all", include all updatable properties
-					includeProperty; //optimistic-lock="dirty", include all properties we are updating this time
+			boolean[] includeInWhere = entityMetamodel.getOptimisticLockStyle() == OptimisticLockStyle.ALL
+					? getPropertyUpdateability() //optimistic-lock="all", include all updatable properties
+					: includeProperty; 			 //optimistic-lock="dirty", include all properties we are updating this time
 
 			boolean[] versionability = getPropertyVersionability();
 			Type[] types = getPropertyTypes();
@@ -2868,15 +2867,16 @@ public abstract class AbstractEntityPersister
 				index = dehydrate( id, fields, rowId, includeProperty, propertyColumnUpdateable, j, update, session, index );
 
 				// Write any appropriate versioning conditional parameters
-				if ( useVersion && Versioning.OPTIMISTIC_LOCK_VERSION == entityMetamodel.getOptimisticLockMode() ) {
+				if ( useVersion && entityMetamodel.getOptimisticLockStyle() == OptimisticLockStyle.VERSION ) {
 					if ( checkVersion( includeProperty ) ) {
 						getVersionType().nullSafeSet( update, oldVersion, index, session );
 					}
 				}
-				else if ( entityMetamodel.getOptimisticLockMode() > Versioning.OPTIMISTIC_LOCK_VERSION && oldFields != null ) {
+				else if ( isAllOrDirtyOptLocking() && oldFields != null ) {
 					boolean[] versionability = getPropertyVersionability(); //TODO: is this really necessary????
-					boolean[] includeOldField = entityMetamodel.getOptimisticLockMode() == Versioning.OPTIMISTIC_LOCK_ALL ?
-							getPropertyUpdateability() : includeProperty;
+					boolean[] includeOldField = entityMetamodel.getOptimisticLockStyle() == OptimisticLockStyle.ALL
+							? getPropertyUpdateability()
+							: includeProperty;
 					Type[] types = getPropertyTypes();
 					for ( int i = 0; i < entityMetamodel.getPropertySpan(); i++ ) {
 						boolean include = includeOldField[i] &&
@@ -2997,7 +2997,7 @@ public abstract class AbstractEntityPersister
 				if ( useVersion ) {
 					getVersionType().nullSafeSet( delete, version, index, session );
 				}
-				else if ( entityMetamodel.getOptimisticLockMode() > Versioning.OPTIMISTIC_LOCK_VERSION && loadedState != null ) {
+				else if ( isAllOrDirtyOptLocking() && loadedState != null ) {
 					boolean[] versionability = getPropertyVersionability();
 					Type[] types = getPropertyTypes();
 					for ( int i = 0; i < entityMetamodel.getPropertySpan(); i++ ) {
@@ -3189,7 +3189,7 @@ public abstract class AbstractEntityPersister
 	public void delete(Serializable id, Object version, Object object, SessionImplementor session)
 			throws HibernateException {
 		final int span = getTableSpan();
-		boolean isImpliedOptimisticLocking = !entityMetamodel.isVersioned() && entityMetamodel.getOptimisticLockMode() > Versioning.OPTIMISTIC_LOCK_VERSION;
+		boolean isImpliedOptimisticLocking = !entityMetamodel.isVersioned() && isAllOrDirtyOptLocking();
 		Object[] loadedState = null;
 		if ( isImpliedOptimisticLocking ) {
 			// need to treat this as if it where optimistic-lock="all" (dirty does *not* make sense);
@@ -3218,6 +3218,11 @@ public abstract class AbstractEntityPersister
 			delete( id, version, j, object, deleteStrings[j], session, loadedState );
 		}
 
+	}
+
+	private boolean isAllOrDirtyOptLocking() {
+		return entityMetamodel.getOptimisticLockStyle() == OptimisticLockStyle.DIRTY
+				|| entityMetamodel.getOptimisticLockStyle() == OptimisticLockStyle.ALL;
 	}
 
 	private String[] generateSQLDeletStrings(Object[] loadedState) {
@@ -4002,8 +4007,8 @@ public abstract class AbstractEntityPersister
 		return entityMetamodel.isSelectBeforeUpdate();
 	}
 
-	protected final int optimisticLockMode() {
-		return entityMetamodel.getOptimisticLockMode();
+	protected final OptimisticLockStyle optimisticLockStyle() {
+		return entityMetamodel.getOptimisticLockStyle();
 	}
 
 	public Object createProxy(Serializable id, SessionImplementor session) throws HibernateException {

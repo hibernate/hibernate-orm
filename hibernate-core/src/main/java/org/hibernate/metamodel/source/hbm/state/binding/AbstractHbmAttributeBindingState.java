@@ -30,12 +30,12 @@ import java.util.Set;
 import org.hibernate.MappingException;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.PropertyGeneration;
+import org.hibernate.metamodel.binder.source.BindingContext;
+import org.hibernate.metamodel.binder.source.MappingDefaults;
+import org.hibernate.metamodel.binder.source.MetaAttributeContext;
+import org.hibernate.metamodel.binder.source.hbm.MappingHelper;
 import org.hibernate.metamodel.binding.CascadeType;
 import org.hibernate.metamodel.binding.state.AttributeBindingState;
-import org.hibernate.metamodel.source.hbm.util.MappingHelper;
-import org.hibernate.metamodel.source.spi.BindingContext;
-import org.hibernate.metamodel.source.spi.MappingDefaults;
-import org.hibernate.metamodel.source.spi.MetaAttributeContext;
 
 /**
  * @author Gail Badner

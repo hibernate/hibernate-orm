@@ -36,6 +36,9 @@ import org.hibernate.type.VersionType;
  * @author Gavin King
  */
 public final class Versioning {
+
+	// todo : replace these constants with references to org.hibernate.annotations.OptimisticLockType enum
+
 	/**
 	 * Apply no optimistic locking
 	 */

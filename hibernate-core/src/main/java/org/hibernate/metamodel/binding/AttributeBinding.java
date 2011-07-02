@@ -25,10 +25,10 @@ package org.hibernate.metamodel.binding;
 
 import java.util.Set;
 
+import org.hibernate.metamodel.binder.source.MetaAttributeContext;
 import org.hibernate.metamodel.domain.Attribute;
 import org.hibernate.metamodel.relational.SimpleValue;
 import org.hibernate.metamodel.relational.Value;
-import org.hibernate.metamodel.source.spi.MetaAttributeContext;
 
 /**
  * The basic contract for binding between an {@link #getAttribute() attribute} and a {@link #getValue() value}

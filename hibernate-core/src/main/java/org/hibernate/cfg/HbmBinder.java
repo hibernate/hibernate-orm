@@ -1150,7 +1150,7 @@ public final class HbmBinder {
 			mappings.addColumnBinding( logicalName, column, table );
 			/* TODO: joinKeyColumnName & foreignKeyColumnName should be called either here or at a
 			 * slightly higer level in the stack (to get all the information we need)
-			 * Right now HbmSourceProcessor does not support the
+			 * Right now HbmSourceProcessorImpl does not support the
 			 */
 			simpleValue.getTable().addColumn( column );
 			simpleValue.addColumn( column );

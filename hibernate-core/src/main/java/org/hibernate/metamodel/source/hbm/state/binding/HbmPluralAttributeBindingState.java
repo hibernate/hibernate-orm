@@ -29,19 +29,19 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.hibernate.FetchMode;
+import org.hibernate.metamodel.binder.source.BindingContext;
+import org.hibernate.metamodel.binder.source.MetaAttributeContext;
+import org.hibernate.metamodel.binder.source.hbm.HbmHelper;
+import org.hibernate.metamodel.binder.source.hbm.MappingHelper;
 import org.hibernate.metamodel.binding.CascadeType;
 import org.hibernate.metamodel.binding.CustomSQL;
 import org.hibernate.metamodel.binding.state.PluralAttributeBindingState;
-import org.hibernate.metamodel.source.hbm.HbmHelper;
-import org.hibernate.metamodel.source.hbm.util.MappingHelper;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLBagElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlDeleteAllElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlDeleteElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlInsertElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlUpdateElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSynchronizeElement;
-import org.hibernate.metamodel.source.spi.BindingContext;
-import org.hibernate.metamodel.source.spi.MetaAttributeContext;
 
 /**
  * @author Gail Badner

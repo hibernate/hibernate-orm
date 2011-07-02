@@ -38,6 +38,7 @@ import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.bytecode.instrumentation.internal.FieldInterceptionHelper;
+import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -119,7 +120,7 @@ public class EntityMetamodel implements Serializable {
 	private final boolean selectBeforeUpdate;
 	private final boolean dynamicUpdate;
 	private final boolean dynamicInsert;
-	private final int optimisticLockMode;
+	private final OptimisticLockStyle optimisticLockStyle;
 
 	private final boolean polymorphic;
 	private final String superclass;  // superclass entity-name
@@ -298,11 +299,14 @@ public class EntityMetamodel implements Serializable {
 				null;
 		hasSubclasses = persistentClass.hasSubclasses();
 
-		optimisticLockMode = persistentClass.getOptimisticLockMode();
-		if ( optimisticLockMode > Versioning.OPTIMISTIC_LOCK_VERSION && !dynamicUpdate ) {
+		optimisticLockStyle = interpretOptLockMode( persistentClass.getOptimisticLockMode() );
+		final boolean isAllOrDirty =
+				optimisticLockStyle == OptimisticLockStyle.ALL
+						|| optimisticLockStyle == OptimisticLockStyle.DIRTY;
+		if ( isAllOrDirty && !dynamicUpdate ) {
 			throw new MappingException( "optimistic-lock=all|dirty requires dynamic-update=\"true\": " + name );
 		}
-		if ( versionPropertyIndex != NO_VERSION_INDX && optimisticLockMode > Versioning.OPTIMISTIC_LOCK_VERSION ) {
+		if ( versionPropertyIndex != NO_VERSION_INDX && isAllOrDirty ) {
 			throw new MappingException( "version and optimistic-lock=all|dirty are not a valid combination : " + name );
 		}
 
@@ -332,6 +336,23 @@ public class EntityMetamodel implements Serializable {
 		}
 		else {
 			entityTuplizer = entityTuplizerFactory.constructTuplizer( tuplizerClassName, this, persistentClass );
+		}
+	}
+
+	private OptimisticLockStyle interpretOptLockMode(int optimisticLockMode) {
+		switch ( optimisticLockMode ) {
+			case Versioning.OPTIMISTIC_LOCK_NONE: {
+				return OptimisticLockStyle.NONE;
+			}
+			case Versioning.OPTIMISTIC_LOCK_DIRTY: {
+				return OptimisticLockStyle.DIRTY;
+			}
+			case Versioning.OPTIMISTIC_LOCK_ALL: {
+				return OptimisticLockStyle.ALL;
+			}
+			default: {
+				return OptimisticLockStyle.VERSION;
+			}
 		}
 	}
 
@@ -532,11 +553,14 @@ public class EntityMetamodel implements Serializable {
 				entityBinding.getEntity().getSuperType().getName() :
 				null;
 
-		optimisticLockMode = entityBinding.getOptimisticLockMode();
-		if ( optimisticLockMode > Versioning.OPTIMISTIC_LOCK_VERSION && !dynamicUpdate ) {
+		optimisticLockStyle = entityBinding.getOptimisticLockStyle();
+		final boolean isAllOrDirty =
+				optimisticLockStyle == OptimisticLockStyle.ALL
+						|| optimisticLockStyle == OptimisticLockStyle.DIRTY;
+		if ( isAllOrDirty && !dynamicUpdate ) {
 			throw new MappingException( "optimistic-lock=all|dirty requires dynamic-update=\"true\": " + name );
 		}
-		if ( versionPropertyIndex != NO_VERSION_INDX && optimisticLockMode > Versioning.OPTIMISTIC_LOCK_VERSION ) {
+		if ( versionPropertyIndex != NO_VERSION_INDX && isAllOrDirty ) {
 			throw new MappingException( "version and optimistic-lock=all|dirty are not a valid combination : " + name );
 		}
 
@@ -810,8 +834,8 @@ public class EntityMetamodel implements Serializable {
 		return dynamicInsert;
 	}
 
-	public int getOptimisticLockMode() {
-		return optimisticLockMode;
+	public OptimisticLockStyle getOptimisticLockStyle() {
+		return optimisticLockStyle;
 	}
 
 	public boolean isPolymorphic() {

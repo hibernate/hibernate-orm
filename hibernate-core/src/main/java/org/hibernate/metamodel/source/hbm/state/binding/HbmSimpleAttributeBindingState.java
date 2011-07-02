@@ -29,18 +29,18 @@ import java.util.Set;
 
 import org.hibernate.MappingException;
 import org.hibernate.mapping.PropertyGeneration;
+import org.hibernate.metamodel.binder.source.BindingContext;
+import org.hibernate.metamodel.binder.source.MappingDefaults;
+import org.hibernate.metamodel.binder.source.MetaAttributeContext;
+import org.hibernate.metamodel.binder.source.hbm.HbmHelper;
+import org.hibernate.metamodel.binder.source.hbm.MappingHelper;
 import org.hibernate.metamodel.binding.CascadeType;
 import org.hibernate.metamodel.binding.state.SimpleAttributeBindingState;
-import org.hibernate.metamodel.source.hbm.HbmHelper;
-import org.hibernate.metamodel.source.hbm.util.MappingHelper;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLId;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLTimestamp;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass.XMLVersion;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLParamElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLPropertyElement;
-import org.hibernate.metamodel.source.spi.BindingContext;
-import org.hibernate.metamodel.source.spi.MappingDefaults;
-import org.hibernate.metamodel.source.spi.MetaAttributeContext;
 
 /**
  * @author Gail Badner
@@ -169,7 +169,11 @@ public class HbmSimpleAttributeBindingState extends AbstractHbmAttributeBindingS
 				bindingContext,
 				property.getNode(),
 				HbmHelper.extractMetaAttributeContext( property.getMeta(), parentMetaAttributeContext ),
-				HbmHelper.getPropertyAccessorName( property.getAccess(), false, bindingContext.getMappingDefaults().getPropertyAccessorName() ),
+				HbmHelper.getPropertyAccessorName(
+						property.getAccess(),
+						false,
+						bindingContext.getMappingDefaults().getPropertyAccessorName()
+				),
 				property.isOptimisticLock()
 		);
 		this.isLazy = property.isLazy();

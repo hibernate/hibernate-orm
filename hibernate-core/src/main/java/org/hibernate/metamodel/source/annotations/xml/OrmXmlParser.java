@@ -28,10 +28,10 @@ import java.util.List;
 
 import org.jboss.jandex.Index;
 
+import org.hibernate.metamodel.binder.source.MetadataImplementor;
+import org.hibernate.metamodel.binder.source.internal.JaxbRoot;
 import org.hibernate.metamodel.source.annotation.xml.XMLEntityMappings;
 import org.hibernate.metamodel.source.annotations.xml.mocker.EntityMappingsMocker;
-import org.hibernate.metamodel.source.internal.JaxbRoot;
-import org.hibernate.metamodel.source.spi.MetadataImplementor;
 
 /**
  * @author Hardy Ferentschik

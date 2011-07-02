@@ -23,9 +23,9 @@
  */
 package org.hibernate.metamodel.source.hbm.state.relational;
 
+import org.hibernate.metamodel.binder.source.BindingContext;
 import org.hibernate.metamodel.relational.state.ManyToOneRelationalState;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLManyToOneElement;
-import org.hibernate.metamodel.source.spi.BindingContext;
 
 /**
  * @author Gail Badner

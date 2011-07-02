@@ -31,15 +31,14 @@ import java.util.Set;
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
+import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.FilterDefinition;
-import org.hibernate.metamodel.binder.view.EntityView;
+import org.hibernate.metamodel.binder.source.MetaAttributeContext;
 import org.hibernate.metamodel.domain.Attribute;
 import org.hibernate.metamodel.domain.Entity;
 import org.hibernate.metamodel.domain.JavaType;
 import org.hibernate.metamodel.relational.Column;
 import org.hibernate.metamodel.relational.TableSpecification;
-import org.hibernate.metamodel.source.spi.BindingContext;
-import org.hibernate.metamodel.source.spi.MetaAttributeContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.tuple.entity.EntityTuplizer;
 
@@ -89,7 +88,7 @@ public class EntityBinding {
 	private int batchSize;
 	private boolean selectBeforeUpdate;
 	private boolean hasSubselectLoadableCollections;
-	private int optimisticLockMode;
+	private OptimisticLockStyle optimisticLockStyle;
 
 	private Boolean isAbstract;
 
@@ -100,62 +99,58 @@ public class EntityBinding {
 
 	private Set<String> synchronizedTableNames = new HashSet<String>();
 
-	public EntityBinding initialize(BindingContext bindingContext, EntityView state) {
-		// todo : Entity will need both entityName and className to be effective
-		this.entity = new Entity(
-				state.getEntityName(),
-				state.getSuperType(),
-				bindingContext.makeJavaType( state.getClassName() )
-		);
-
-		this.isRoot = state.isRoot();
-		this.entityInheritanceType = state.getEntityInheritanceType();
-
-		this.entityMode = state.getEntityMode();
-		this.jpaEntityName = state.getJpaEntityName();
-
-		// todo : handle the entity-persister-resolver stuff
-		this.customEntityPersisterClass = state.getCustomEntityPersisterClass();
-		this.customEntityTuplizerClass = state.getCustomEntityTuplizerClass();
-
-		this.caching = state.getCaching();
-		this.metaAttributeContext = state.getMetaAttributeContext();
-
-		if ( entityMode == EntityMode.POJO ) {
-			if ( state.getProxyInterfaceName() != null ) {
-				this.proxyInterfaceType = bindingContext.makeJavaType( state.getProxyInterfaceName() );
-				this.lazy = true;
-			}
-			else if ( state.isLazy() ) {
-				this.proxyInterfaceType = entity.getJavaType();
-				this.lazy = true;
-			}
-		}
-		else {
-			this.proxyInterfaceType = new JavaType( Map.class );
-			this.lazy = state.isLazy();
-		}
-
-		this.mutable = state.isMutable();
-		this.explicitPolymorphism = state.isExplicitPolymorphism();
-		this.whereFilter = state.getWhereFilter();
-		this.rowId = state.getRowId();
-		this.dynamicUpdate = state.isDynamicUpdate();
-		this.dynamicInsert = state.isDynamicInsert();
-		this.batchSize = state.getBatchSize();
-		this.selectBeforeUpdate = state.isSelectBeforeUpdate();
-		this.optimisticLockMode = state.getOptimisticLockMode();
-		this.isAbstract = state.isAbstract();
-		this.customInsert = state.getCustomInsert();
-		this.customUpdate = state.getCustomUpdate();
-		this.customDelete = state.getCustomDelete();
-		if ( state.getSynchronizedTableNames() != null ) {
-			for ( String synchronizedTableName : state.getSynchronizedTableNames() ) {
-				addSynchronizedTable( synchronizedTableName );
-			}
-		}
-		return this;
-	}
+//	public EntityBinding initialize(BindingContext bindingContext, EntityDescriptor state) {
+//		// todo : Entity will need both entityName and className to be effective
+//		this.entity = new Entity( state.getEntityName(), state.getSuperType(), bindingContext.makeJavaType( state.getClassName() ) );
+//
+//		this.isRoot = state.isRoot();
+//		this.entityInheritanceType = state.getEntityInheritanceType();
+//
+//		this.entityMode = state.getEntityMode();
+//		this.jpaEntityName = state.getJpaEntityName();
+//
+//		// todo : handle the entity-persister-resolver stuff
+//		this.customEntityPersisterClass = state.getCustomEntityPersisterClass();
+//		this.customEntityTuplizerClass = state.getCustomEntityTuplizerClass();
+//
+//		this.caching = state.getCaching();
+//		this.metaAttributeContext = state.getMetaAttributeContext();
+//
+//		if ( entityMode == EntityMode.POJO ) {
+//			if ( state.getProxyInterfaceName() != null ) {
+//				this.proxyInterfaceType = bindingContext.makeJavaType( state.getProxyInterfaceName() );
+//				this.lazy = true;
+//			}
+//			else if ( state.isLazy() ) {
+//				this.proxyInterfaceType = entity.getJavaType();
+//				this.lazy = true;
+//			}
+//		}
+//		else {
+//			this.proxyInterfaceType = new JavaType( Map.class );
+//			this.lazy = state.isLazy();
+//		}
+//
+//		this.mutable = state.isMutable();
+//		this.explicitPolymorphism = state.isExplicitPolymorphism();
+//		this.whereFilter = state.getWhereFilter();
+//		this.rowId = state.getRowId();
+//		this.dynamicUpdate = state.isDynamicUpdate();
+//		this.dynamicInsert = state.isDynamicInsert();
+//		this.batchSize = state.getBatchSize();
+//		this.selectBeforeUpdate = state.isSelectBeforeUpdate();
+//		this.optimisticLockMode = state.getOptimisticLockMode();
+//		this.isAbstract = state.isAbstract();
+//		this.customInsert = state.getCustomInsert();
+//		this.customUpdate = state.getCustomUpdate();
+//		this.customDelete = state.getCustomDelete();
+//		if ( state.getSynchronizedTableNames() != null ) {
+//			for ( String synchronizedTableName : state.getSynchronizedTableNames() ) {
+//				addSynchronizedTable( synchronizedTableName );
+//			}
+//		}
+//		return this;
+//	}
 
 	public Entity getEntity() {
 		return entity;
@@ -424,12 +419,12 @@ public class EntityBinding {
 		this.hasSubselectLoadableCollections = hasSubselectLoadableCollections;
 	}
 
-	public int getOptimisticLockMode() {
-		return optimisticLockMode;
+	public OptimisticLockStyle getOptimisticLockStyle() {
+		return optimisticLockStyle;
 	}
 
-	public void setOptimisticLockMode(int optimisticLockMode) {
-		this.optimisticLockMode = optimisticLockMode;
+	public void setOptimisticLockStyle(OptimisticLockStyle optimisticLockStyle) {
+		this.optimisticLockStyle = optimisticLockStyle;
 	}
 
 	public Class<? extends EntityPersister> getCustomEntityPersisterClass() {

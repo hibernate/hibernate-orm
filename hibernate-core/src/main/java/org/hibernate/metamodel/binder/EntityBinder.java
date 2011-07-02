@@ -26,17 +26,16 @@ package org.hibernate.metamodel.binder;
 import java.util.Map;
 
 import org.hibernate.EntityMode;
-import org.hibernate.metamodel.binder.view.EntityView;
-import org.hibernate.metamodel.binder.view.TableView;
+import org.hibernate.metamodel.binder.source.BindingContext;
+import org.hibernate.metamodel.binder.source.DiscriminatorSubClassEntityDescriptor;
+import org.hibernate.metamodel.binder.source.EntityDescriptor;
+import org.hibernate.metamodel.binder.source.JoinedSubClassEntityDescriptor;
+import org.hibernate.metamodel.binder.source.RootEntityDescriptor;
+import org.hibernate.metamodel.binder.source.UnionSubClassEntityDescriptor;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.InheritanceType;
 import org.hibernate.metamodel.domain.Entity;
 import org.hibernate.metamodel.domain.JavaType;
-import org.hibernate.metamodel.relational.Identifier;
-import org.hibernate.metamodel.relational.Schema;
-import org.hibernate.metamodel.relational.Table;
-import org.hibernate.metamodel.source.MappingException;
-import org.hibernate.metamodel.source.spi.BindingContext;
 
 /**
  * @author Steve Ebersole
@@ -48,81 +47,133 @@ public class EntityBinder {
 		this.bindingContext = bindingContext;
 	}
 
-	public EntityBinding createEntityBinding(EntityView entityView) {
-		final EntityBinding entityBinding = new EntityBinding();
+	public EntityBinding createEntityBinding(EntityDescriptor entityDescriptor) {
+		final InheritanceType inheritanceType = entityDescriptor.getEntityInheritanceType();
+		if ( inheritanceType == InheritanceType.NO_INHERITANCE ) {
+			// root, also doubles as a type check since the cast would fail
+			return makeEntityBinding( (RootEntityDescriptor) entityDescriptor );
+		}
+		else {
+			if ( entityDescriptor.getSuperEntityName() == null ) {
+				throw new MappingException(
+						"Encountered inheritance strategy, but no super type found",
+						entityDescriptor.getOrigin()
+				);
+			}
 
-		// todo : Entity will need both entityName and className to be effective
-		final Entity entity = new Entity( entityView.getEntityName(), entityView.getSuperType(), bindingContext.makeJavaType( entityView.getClassName() ) );
-		entityBinding.setEntity( entity );
-
-		final TableView baseTableView = entityView.getBaseTable();
-
-		final String schemaName = baseTableView.getExplicitSchemaName() == null
-				? bindingContext.getMappingDefaults().getSchemaName()
-				: baseTableView.getExplicitSchemaName();
-		final String catalogName = baseTableView.getExplicitCatalogName() == null
-				? bindingContext.getMappingDefaults().getCatalogName()
-				: baseTableView.getExplicitCatalogName();
-		final Schema.Name fullSchemaName = new Schema.Name( schemaName, catalogName );
-		final Schema schema = bindingContext.getMetadataImplementor().getDatabase().getSchema( fullSchemaName );
-		final Identifier tableName = Identifier.toIdentifier( baseTableView.getTableName() );
-		final Table baseTable = schema.locateOrCreateTable( tableName );
-		entityBinding.setBaseTable( baseTable );
-
-		// inheritance
-		if ( entityView.getEntityInheritanceType() != InheritanceType.NO_INHERITANCE ) {
-			// if there is any inheritance strategy, there has to be a super type.
-			if ( entityView.getSuperType() == null ) {
-				throw new MappingException( "Encountered inheritance strategy, but no super type", entityView.getOrigin() );
+			if ( inheritanceType == InheritanceType.SINGLE_TABLE ) {
+				// discriminator subclassing
+				return makeEntityBinding( (DiscriminatorSubClassEntityDescriptor) entityDescriptor );
+			}
+			else if ( inheritanceType == InheritanceType.JOINED ) {
+				// joined subclassing
+				return makeEntityBinding( (JoinedSubClassEntityDescriptor) entityDescriptor );
+			}
+			else if ( inheritanceType == InheritanceType.TABLE_PER_CLASS ) {
+				return makeEntityBinding( (UnionSubClassEntityDescriptor) entityDescriptor );
+			}
+			else {
+				throw new IllegalStateException( "Unexpected inheritance type [" + inheritanceType + "]" );
 			}
 		}
-		entityBinding.setRoot( entityView.isRoot() );
-		entityBinding.setInheritanceType( entityView.getEntityInheritanceType() );
+	}
 
-		entityBinding.setJpaEntityName( entityView.getJpaEntityName() );
-		entityBinding.setEntityMode( entityView.getEntityMode() );
+	protected EntityBinding makeEntityBinding(RootEntityDescriptor entityDescriptor) {
+		final EntityBinding entityBinding = new EntityBinding();
 
-		if ( entityView.getEntityMode() == EntityMode.POJO ) {
-			if ( entityView.getProxyInterfaceName() != null ) {
-				entityBinding.setProxyInterfaceType( bindingContext.makeJavaType( entityView.getProxyInterfaceName() ) );
+		final Entity entity = new Entity( entityDescriptor.getEntityName(), null, bindingContext.makeJavaType( entityDescriptor.getClassName() ) );
+		entityBinding.setEntity( entity );
+
+		performBasicEntityBind( entityBinding, entityDescriptor );
+
+		entityBinding.setMutable( entityDescriptor.isMutable() );
+		entityBinding.setExplicitPolymorphism( entityDescriptor.isExplicitPolymorphism() );
+		entityBinding.setWhereFilter( entityDescriptor.getWhereFilter() );
+		entityBinding.setRowId( entityDescriptor.getRowId() );
+		entityBinding.setOptimisticLockStyle( entityDescriptor.getOptimisticLockStyle() );
+		entityBinding.setCaching( entityDescriptor.getCaching() );
+
+		return entityBinding;
+	}
+
+	protected EntityBinding makeEntityBinding(DiscriminatorSubClassEntityDescriptor entityDescriptor) {
+		// temporary!!!
+
+		final EntityBinding entityBinding = new EntityBinding();
+
+		final Entity entity = new Entity( entityDescriptor.getEntityName(), null, bindingContext.makeJavaType( entityDescriptor.getClassName() ) );
+		entityBinding.setEntity( entity );
+
+		performBasicEntityBind( entityBinding, entityDescriptor );
+
+		return entityBinding;
+	}
+
+	protected EntityBinding makeEntityBinding(JoinedSubClassEntityDescriptor entityDescriptor) {
+		// temporary!!!
+
+		final EntityBinding entityBinding = new EntityBinding();
+
+		final Entity entity = new Entity( entityDescriptor.getEntityName(), null, bindingContext.makeJavaType( entityDescriptor.getClassName() ) );
+		entityBinding.setEntity( entity );
+
+		performBasicEntityBind( entityBinding, entityDescriptor );
+
+		return entityBinding;
+	}
+
+	protected EntityBinding makeEntityBinding(UnionSubClassEntityDescriptor entityDescriptor) {
+		// temporary!!!
+
+		final EntityBinding entityBinding = new EntityBinding();
+
+		final Entity entity = new Entity( entityDescriptor.getEntityName(), null, bindingContext.makeJavaType( entityDescriptor.getClassName() ) );
+		entityBinding.setEntity( entity );
+
+		performBasicEntityBind( entityBinding, entityDescriptor );
+
+		return entityBinding;
+	}
+
+	protected void performBasicEntityBind(EntityBinding entityBinding, EntityDescriptor entityDescriptor) {
+		entityBinding.setInheritanceType( entityDescriptor.getEntityInheritanceType() );
+
+		entityBinding.setJpaEntityName( entityDescriptor.getJpaEntityName() );
+		entityBinding.setEntityMode( entityDescriptor.getEntityMode() );
+
+		if ( entityDescriptor.getEntityMode() == EntityMode.POJO ) {
+			if ( entityDescriptor.getProxyInterfaceName() != null ) {
+				entityBinding.setProxyInterfaceType( bindingContext.makeJavaType( entityDescriptor.getProxyInterfaceName() ) );
 				entityBinding.setLazy( true );
 			}
-			else if ( entityView.isLazy() ) {
-				entityBinding.setProxyInterfaceType( entity.getJavaType() );
+			else if ( entityDescriptor.isLazy() ) {
+				entityBinding.setProxyInterfaceType( entityBinding.getEntity().getJavaType() );
 				entityBinding.setLazy( true );
 			}
 		}
 		else {
 			entityBinding.setProxyInterfaceType( new JavaType( Map.class ) );
-			entityBinding.setLazy( entityView.isLazy() );
+			entityBinding.setLazy( entityDescriptor.isLazy() );
 		}
 
-		entityBinding.setCustomEntityTuplizerClass( entityView.getCustomEntityTuplizerClass() );
-		entityBinding.setCustomEntityPersisterClass( entityView.getCustomEntityPersisterClass() );
+		entityBinding.setCustomEntityTuplizerClass( entityDescriptor.getCustomEntityTuplizerClass() );
+		entityBinding.setCustomEntityPersisterClass( entityDescriptor.getCustomEntityPersisterClass() );
 
-		entityBinding.setCaching( entityView.getCaching() );
-		entityBinding.setMetaAttributeContext( entityView.getMetaAttributeContext() );
+		entityBinding.setMetaAttributeContext( entityDescriptor.getMetaAttributeContext() );
 
-		entityBinding.setMutable( entityView.isMutable() );
-		entityBinding.setExplicitPolymorphism( entityView.isExplicitPolymorphism() );
-		entityBinding.setWhereFilter( entityView.getWhereFilter() );
-		entityBinding.setRowId( entityView.getRowId() );
-		entityBinding.setDynamicUpdate( entityView.isDynamicUpdate() );
-		entityBinding.setDynamicInsert( entityView.isDynamicInsert() );
-		entityBinding.setBatchSize( entityView.getBatchSize() );
-		entityBinding.setSelectBeforeUpdate( entityView.isSelectBeforeUpdate() );
-		entityBinding.setOptimisticLockMode( entityView.getOptimisticLockMode() );
-		entityBinding.setAbstract( entityView.isAbstract() );
+		entityBinding.setDynamicUpdate( entityDescriptor.isDynamicUpdate() );
+		entityBinding.setDynamicInsert( entityDescriptor.isDynamicInsert() );
+		entityBinding.setBatchSize( entityDescriptor.getBatchSize() );
+		entityBinding.setSelectBeforeUpdate( entityDescriptor.isSelectBeforeUpdate() );
+		entityBinding.setAbstract( entityDescriptor.isAbstract() );
 
-		entityBinding.setCustomLoaderName( entityView.getCustomLoaderName() );
-		entityBinding.setCustomInsert( entityView.getCustomInsert() );
-		entityBinding.setCustomUpdate( entityView.getCustomUpdate() );
-		entityBinding.setCustomDelete( entityView.getCustomDelete() );
+		entityBinding.setCustomLoaderName( entityDescriptor.getCustomLoaderName() );
+		entityBinding.setCustomInsert( entityDescriptor.getCustomInsert() );
+		entityBinding.setCustomUpdate( entityDescriptor.getCustomUpdate() );
+		entityBinding.setCustomDelete( entityDescriptor.getCustomDelete() );
 
-		if ( entityView.getSynchronizedTableNames() != null ) {
-			entityBinding.addSynchronizedTableNames( entityView.getSynchronizedTableNames() );
+		if ( entityDescriptor.getSynchronizedTableNames() != null ) {
+			entityBinding.addSynchronizedTableNames( entityDescriptor.getSynchronizedTableNames() );
 		}
-
-		return entityBinding;
 	}
 }

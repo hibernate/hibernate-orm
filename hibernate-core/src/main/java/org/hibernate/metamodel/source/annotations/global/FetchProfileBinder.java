@@ -32,11 +32,11 @@ import org.jboss.jandex.Index;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.FetchProfiles;
+import org.hibernate.metamodel.binder.source.MetadataImplementor;
 import org.hibernate.metamodel.binding.FetchProfile;
 import org.hibernate.metamodel.binding.FetchProfile.Fetch;
 import org.hibernate.metamodel.source.annotations.HibernateDotNames;
 import org.hibernate.metamodel.source.annotations.util.JandexHelper;
-import org.hibernate.metamodel.source.spi.MetadataImplementor;
 
 /**
  * Binds fetch profiles found in annotations.

@@ -32,7 +32,7 @@ import org.hibernate.metamodel.relational.state.ColumnRelationalState;
  * @author Steve Ebersole
  */
 public class Column extends AbstractSimpleValue implements SimpleValue {
-	private final Identifier name;
+	private final Identifier columnName;
 	private boolean nullable;
 	private boolean unique;
 
@@ -53,7 +53,7 @@ public class Column extends AbstractSimpleValue implements SimpleValue {
 
 	protected Column(TableSpecification table, int position, Identifier name) {
 		super( table, position );
-		this.name = name;
+		this.columnName = name;
 	}
 
 	public void initialize(ColumnRelationalState state, boolean forceNonNullable, boolean forceUnique) {
@@ -76,8 +76,8 @@ public class Column extends AbstractSimpleValue implements SimpleValue {
 		}
 	}
 
-	public Identifier getName() {
-		return name;
+	public Identifier getColumnName() {
+		return columnName;
 	}
 
 	public boolean isNullable() {
@@ -154,6 +154,6 @@ public class Column extends AbstractSimpleValue implements SimpleValue {
 
 	@Override
 	public String toLoggableString() {
-		return getTable().getLoggableValueQualifier() + '.' + getName();
+		return getTable().getLoggableValueQualifier() + '.' + getColumnName();
 	}
 }

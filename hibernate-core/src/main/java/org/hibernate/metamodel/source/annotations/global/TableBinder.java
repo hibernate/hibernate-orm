@@ -109,7 +109,7 @@ public class TableBinder {
 	private static Column findColumn(Table table, String columnName) {
 		Column column = null;
 		for ( SimpleValue value : table.values() ) {
-			if ( value instanceof Column && ( (Column) value ).getName().equals( columnName ) ) {
+			if ( value instanceof Column && ( (Column) value ).getColumnName().getName().equals( columnName ) ) {
 				column = (Column) value;
 				break;
 			}

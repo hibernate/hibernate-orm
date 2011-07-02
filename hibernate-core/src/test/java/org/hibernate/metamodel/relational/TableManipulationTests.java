@@ -67,7 +67,7 @@ public class TableManipulationTests extends BaseUnitTestCase {
 		for ( Value value : table.values() ) {
 			assertTrue( Column.class.isInstance( value ) );
 			Column column = ( Column ) value;
-			if ( column.getName().equals( Identifier.toIdentifier( "id" ) ) ) {
+			if ( column.getColumnName().getName().equals( "id" ) ) {
 				assertEquals( INTEGER, column.getDatatype() );
 				assertEquals( 18, column.getSize().getPrecision() );
 				assertEquals( 0, column.getSize().getScale() );
@@ -75,7 +75,7 @@ public class TableManipulationTests extends BaseUnitTestCase {
 				assertNull( column.getSize().getLobMultiplier() );
 			}
 			else {
-				assertEquals( Identifier.toIdentifier( "col_1" ), column.getName() );
+				assertEquals( "col_1", column.getColumnName().getName() );
 				assertEquals( VARCHAR, column.getDatatype() );
 				assertEquals( -1, column.getSize().getPrecision() );
 				assertEquals( -1, column.getSize().getScale() );

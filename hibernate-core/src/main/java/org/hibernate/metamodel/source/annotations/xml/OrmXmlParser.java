@@ -35,6 +35,7 @@ import org.hibernate.metamodel.source.spi.MetadataImplementor;
 
 /**
  * @author Hardy Ferentschik
+ * @todo Is this still class really still necessary? Maybe it should be removed (HF)
  */
 public class OrmXmlParser {
 	private final MetadataImplementor metadata;

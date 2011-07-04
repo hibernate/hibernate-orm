@@ -185,7 +185,7 @@ public class ConfiguredClass {
 	public String toString() {
 		final StringBuilder sb = new StringBuilder();
 		sb.append( "ConfiguredClass" );
-		sb.append( "{clazz=" ).append( clazz );
+		sb.append( "{clazz=" ).append( clazz.getSimpleName() );
 		sb.append( ", classAccessType=" ).append( classAccessType );
 		sb.append( ", configuredClassType=" ).append( configuredClassType );
 		sb.append( ", mappedAttributes=" ).append( mappedAttributes );

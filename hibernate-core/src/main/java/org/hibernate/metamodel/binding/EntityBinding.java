@@ -31,6 +31,7 @@ import java.util.Set;
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
+import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.metamodel.binding.state.EntityBindingState;
 import org.hibernate.metamodel.domain.Attribute;
 import org.hibernate.metamodel.domain.Entity;
@@ -69,6 +70,7 @@ public class EntityBinding {
 	private SimpleAttributeBinding versionBinding;
 
 	private Map<String, AttributeBinding> attributeBindingMap = new HashMap<String, AttributeBinding>();
+	private Set<FilterDefinition> filterDefinitions = new HashSet<FilterDefinition>( );
 	private Set<EntityReferencingAttributeBinding> entityReferencingAttributeBindings = new HashSet<EntityReferencingAttributeBinding>();
 
 	private Caching caching;
@@ -244,6 +246,14 @@ public class EntityBinding {
 		// TODO: fix this after HHH-6337 is fixed. for now, just return attributeBindings
 		// if this is not a root, then need to include the superclass attribute bindings
 		return getAttributeBindings();
+	}
+
+	public Iterable<FilterDefinition> getFilterDefinitions() {
+		return filterDefinitions;
+	}
+
+	public void addFilterDefinition(FilterDefinition filterDefinition) {
+		filterDefinitions.add( filterDefinition );
 	}
 
 	public Iterable<EntityReferencingAttributeBinding> getEntityReferencingAttributeBindings() {

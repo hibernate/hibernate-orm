@@ -214,7 +214,7 @@ sess.createSQLQuery("SELECT ID, NAME, BIRTHDATE FROM CATS").addEntity(Cat.class)
       <para>The following form is not vulnerable to column name
       duplication:</para>
 
-      <programlisting role="JAVA">sess.createSQLQuery("SELECT {cat.*}, {mother.*}  FROM CATS c, CATS m WHERE c.MOTHER_ID = c.ID")
+      <programlisting role="JAVA">sess.createSQLQuery("SELECT {cat.*}, {m.*}  FROM CATS c, CATS m WHERE c.MOTHER_ID = m.ID")
  .addEntity("cat", Cat.class)
  .addEntity("mother", Cat.class)
 </programlisting>

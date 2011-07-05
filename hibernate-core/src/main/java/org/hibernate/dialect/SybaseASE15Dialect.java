@@ -24,6 +24,7 @@
 package org.hibernate.dialect;
 import java.sql.Types;
 import org.hibernate.dialect.function.AnsiTrimEmulationFunction;
+import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.type.StandardBasicTypes;
 
@@ -40,14 +41,18 @@ public class SybaseASE15Dialect extends AbstractTransactSQLDialect {
 
 		registerColumnType( Types.LONGVARBINARY, "image" );
 		registerColumnType( Types.LONGVARCHAR, "text" );
-
+        registerColumnType(Types.BINARY, "binary($l)");
+        registerColumnType(Types.REAL, "real");
+        registerColumnType(Types.BOOLEAN, "bit");
 		registerFunction( "second", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "datepart(second, ?1)") );
 		registerFunction( "minute", new SQLFunctionTemplate(StandardBasicTypes.INTEGER, "datepart(minute, ?1)") );
 		registerFunction( "hour", new SQLFunctionTemplate(StandardBasicTypes.INTEGER, "datepart(hour, ?1)") );
 		registerFunction( "extract", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "datepart(?1, ?3)" ) );
 		registerFunction( "mod", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "?1 % ?2" ) );
 		registerFunction( "bit_length", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "datalength(?1) * 8" ) );
-		registerFunction( "trim", new AnsiTrimEmulationFunction( AnsiTrimEmulationFunction.LTRIM, AnsiTrimEmulationFunction.RTRIM, "str_replace" ) ); 
+		registerFunction( "trim", new AnsiTrimEmulationFunction( AnsiTrimEmulationFunction.LTRIM, AnsiTrimEmulationFunction.RTRIM, "str_replace" ) );
+        registerFunction( "sysdate", new NoArgSQLFunction("getdate", StandardBasicTypes.TIMESTAMP) );
+
 	}
 
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -78,7 +83,13 @@ public class SybaseASE15Dialect extends AbstractTransactSQLDialect {
 	public boolean supportsExpectedLobUsagePattern() {
 		return false;
 	}
-	public String getCrossJoinSeparator() {
+
+    @Override
+    public boolean supportsUniqueConstraintInCreateAlterTable() {
+        return false;
+    }
+
+    public String getCrossJoinSeparator() {
 		return ", ";
 	}
 }

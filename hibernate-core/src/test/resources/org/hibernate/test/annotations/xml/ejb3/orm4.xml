@@ -34,6 +34,7 @@
             <id name="id"/>
             <one-to-many name="organization" target-entity="VicePresident">
                 <map-key-class class="java.lang.String"/>
+                <map-key-column name="organization_Key" nullable="false" />
             </one-to-many>
             <element-collection name="conferenceRoomExtensions" target-class="java.lang.String">
                 <map-key-class class="java.lang.String"/>

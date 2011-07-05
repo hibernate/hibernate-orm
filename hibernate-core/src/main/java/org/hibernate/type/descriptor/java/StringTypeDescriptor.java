@@ -61,10 +61,10 @@ public class StringTypeDescriptor extends AbstractTypeDescriptor<String> {
 			return (X) value;
 		}
 		if ( Reader.class.isAssignableFrom( type ) ) {
-			return (X) new StringReader( (String) value );
+			return (X) new StringReader( value );
 		}
 		if ( CharacterStream.class.isAssignableFrom( type ) ) {
-			return (X) new CharacterStreamImpl( (String) value );
+			return (X) new CharacterStreamImpl( value );
 		}
 		if ( Clob.class.isAssignableFrom( type ) ) {
 			return (X) options.getLobCreator().createClob( value );

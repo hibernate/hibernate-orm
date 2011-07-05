@@ -87,7 +87,6 @@ public class ForeignKey extends Constraint {
 	 * Validates that columnspan of the foreignkey and the primarykey is the same.
 	 * 
 	 * Furthermore it aligns the length of the underlying tables columns.
-	 * @param referencedTable
 	 */
 	public void alignColumns() {
 		if ( isReferenceToPrimaryKey() ) alignColumns(referencedTable);

@@ -26,6 +26,7 @@ import org.hibernate.Session;
 
 import org.junit.Test;
 
+import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -91,8 +92,14 @@ public abstract class LongStringTest extends BaseCoreFunctionalTestCase {
 		s.beginTransaction();
 		entity = ( LongStringHolder ) s.get( LongStringHolder.class, entity.getId() );
 		if ( entity.getLongString() != null ) {
-			assertEquals( empty.length(), entity.getLongString().length() );
-			assertEquals( empty, entity.getLongString() );
+            if(getDialect() instanceof SybaseASE15Dialect){
+                //Sybase uses a single blank to denote an empty string (this is by design). So, when inserting an empty string '', it is interpreted as single blank ' '.
+                assertEquals( empty.length(), entity.getLongString().trim().length() );
+                assertEquals( empty, entity.getLongString().trim() );
+            }else{
+			    assertEquals( empty.length(), entity.getLongString().length() );
+                assertEquals( empty, entity.getLongString() );
+            }
 		}
 		s.delete( entity );
 		s.getTransaction().commit();

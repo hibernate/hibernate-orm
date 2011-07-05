@@ -78,7 +78,7 @@ public class EntityIdentifier {
 	}
 
 	public boolean isEmbedded() {
-		return attributeBinding.getValuesSpan()>0;
+		return attributeBinding.getValuesSpan()>1;
 	}
 
 	public boolean isIdentifierMapper() {

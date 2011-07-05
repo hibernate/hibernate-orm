@@ -504,7 +504,7 @@ public class EntityBinder {
         parms.put( IdentifierGenerator.ENTITY_NAME, entityBinding.getEntity().getName() );
         IdGenerator generator = new IdGenerator( "NAME","assigned", parms);
         entityBinding.getEntityIdentifier().setIdGenerator( generator );
-        entityBinding.getEntityIdentifier().createIdentifierGenerator( meta.getIdentifierGeneratorFactory() );
+       // entityBinding.getEntityIdentifier().createIdentifierGenerator( meta.getIdentifierGeneratorFactory() );
     }
 
 	private void bindSingleIdAnnotation(EntityBinding entityBinding) {
@@ -584,7 +584,7 @@ public class EntityBinder {
 			idGenerator = new IdGenerator( "NAME", strategy, new HashMap<String, String>() );
 			entityBinding.getEntityIdentifier().setIdGenerator( idGenerator );
 		}
-        entityBinding.getEntityIdentifier().createIdentifierGenerator( meta.getIdentifierGeneratorFactory() );
+//        entityBinding.getEntityIdentifier().createIdentifierGenerator( meta.getIdentifierGeneratorFactory() );
 	}
 
 	private void bindAttributes(EntityBinding entityBinding) {

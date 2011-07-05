@@ -144,30 +144,25 @@ public class ConfiguredClassHierarchy<T extends ConfiguredClass> implements Iter
 	 *         annotations.
 	 */
 	private static AccessType determineDefaultAccessType(List<ClassInfo> classes) {
-        AccessType defaultAccessType = null;
+        AccessType accessTypeByEmbeddedIdPlacement = null;
         AccessType accessTypeByIdPlacement = null;
 		for ( ClassInfo info : classes ) {
 			List<AnnotationInstance> idAnnotations = info.annotations().get( JPADotNames.ID );
-            List<AnnotationInstance> accessAnnotations = info.annotations().get( JPADotNames.ACCESS );
+            List<AnnotationInstance> embeddedIdAnnotations = info.annotations().get( JPADotNames.EMBEDDED_ID );
 
-            if ( accessAnnotations != null && !accessAnnotations.isEmpty() ) {
-                for ( AnnotationInstance annotation : accessAnnotations ) {
-                    if ( annotation.target() instanceof ClassInfo ) {
-                        defaultAccessType = JandexHelper.getValueAsEnum( annotation, "value", AccessType.class );
-                        break; //there can be only one @Access on class level.
-                    }
-                }
+            if ( embeddedIdAnnotations != null && !embeddedIdAnnotations.isEmpty() ) {
+                accessTypeByEmbeddedIdPlacement = determineAccessTypeByIdPlacement( embeddedIdAnnotations );
             }
 			if ( idAnnotations != null && !idAnnotations.isEmpty() ) {
 				accessTypeByIdPlacement = determineAccessTypeByIdPlacement( idAnnotations );
 			}
 		}
-        if ( defaultAccessType != null ) {
-            return defaultAccessType;
+        if ( accessTypeByEmbeddedIdPlacement != null ) {
+            return accessTypeByEmbeddedIdPlacement;
         } else if (accessTypeByIdPlacement != null ){
             return accessTypeByIdPlacement;
         } else {
-            return AccessType.PROPERTY;
+            return throwIdNotFoundAnnotationException( classes );
         }
 
 

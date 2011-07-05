@@ -24,6 +24,7 @@
 package org.hibernate.metamodel.source.annotations.entity;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import javax.persistence.GenerationType;
@@ -65,7 +66,6 @@ import org.hibernate.metamodel.relational.UniqueKey;
 import org.hibernate.metamodel.source.annotations.HibernateDotNames;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.attribute.AssociationAttribute;
-import org.hibernate.metamodel.source.annotations.attribute.DiscriminatorColumnValues;
 import org.hibernate.metamodel.source.annotations.attribute.MappedAttribute;
 import org.hibernate.metamodel.source.annotations.attribute.SimpleAttribute;
 import org.hibernate.metamodel.source.annotations.attribute.state.binding.AttributeBindingStateImpl;
@@ -88,22 +88,20 @@ import org.hibernate.persister.entity.EntityPersister;
 public class EntityBinder {
 	private final EntityClass entityClass;
 	private final MetadataImplementor meta;
+	private final Hierarchical superType;
 
-	private Schema.Name schemaName;
-
-	public EntityBinder(MetadataImplementor metadata, EntityClass entityClass) {
+	public EntityBinder(MetadataImplementor metadata, EntityClass entityClass, Hierarchical superType) {
 		this.entityClass = entityClass;
 		this.meta = metadata;
+		this.superType = superType;
 	}
 
-	public void bind() {
+	public EntityBinding bind() {
 		EntityBinding entityBinding = new EntityBinding();
-		EntityBindingStateImpl entityBindingState = new EntityBindingStateImpl( getSuperType(), entityClass );
+		EntityBindingStateImpl entityBindingState = new EntityBindingStateImpl( superType, entityClass );
 
 		bindJpaEntityAnnotation( entityBindingState );
 		bindHibernateEntityAnnotation( entityBindingState ); // optional hibernate specific @org.hibernate.annotations.Entity
-
-		schemaName = createSchemaName();
 		bindTable( entityBinding );
 
 		// bind entity level annotations
@@ -115,18 +113,16 @@ public class EntityBinder {
 		bindCustomSQL( entityBindingState );
 		bindRowId( entityBindingState );
 		bindBatchSize( entityBindingState );
-
 		entityBinding.initialize( meta, entityBindingState );
 
 		bindInheritance( entityBinding );
 
-
-
 		// bind all attributes - simple as well as associations
 		bindAttributes( entityBinding );
 		bindEmbeddedAttributes( entityBinding );
-        	// take care of the id, attributes and relations
-		if ( entityClass.isRoot() ) {
+
+		// take care of the id, attributes and relations
+		if ( entityClass.isEntityRoot() ) {
 			bindId( entityBinding );
 		}
 
@@ -134,6 +130,7 @@ public class EntityBinder {
 
 		// last, but not least we initialize and register the new EntityBinding
 		meta.addEntity( entityBinding );
+		return entityBinding;
 	}
 
 	private void bindTableUniqueConstraints(EntityBinding entityBinding) {
@@ -199,12 +196,7 @@ public class EntityBinder {
 				entityClass.getClassInfo()
 		);
 		SimpleAttribute discriminatorAttribute = SimpleAttribute.createDiscriminatorAttribute( typeAnnotations );
-
 		bindSingleMappedAttribute( entityBinding, entityBinding.getEntity(), discriminatorAttribute );
-
-		if ( !( discriminatorAttribute.getColumnValues() instanceof DiscriminatorColumnValues ) ) {
-			throw new AssertionFailure( "Expected discriminator column values" );
-		}
 	}
 
 	private void bindWhereFilter(EntityBindingStateImpl entityBindingState) {
@@ -426,7 +418,7 @@ public class EntityBinder {
 	}
 
 	private void bindTable(EntityBinding entityBinding) {
-		final Schema schema = meta.getDatabase().getSchema( schemaName );
+		final Schema schema = meta.getDatabase().getSchema( createSchemaName() );
 		final Identifier tableName = Identifier.toIdentifier( entityClass.getPrimaryTableName() );
 		org.hibernate.metamodel.relational.Table table = schema.getTable( tableName );
 		if ( table == null ) {
@@ -476,40 +468,9 @@ public class EntityBinder {
 		entityBindingState.setJpaEntityName( name );
 	}
 
-    private void bindEmbeddedIdAnnotation(EntityBinding entityBinding) {
-        AnnotationInstance idAnnotation = JandexHelper.getSingleAnnotation(
-                entityClass.getClassInfo(), JPADotNames.EMBEDDED_ID
-        );
-
-        String idName = JandexHelper.getPropertyName( idAnnotation.target() );
-        MappedAttribute idAttribute = entityClass.getMappedAttribute( idName );
-        if ( !( idAttribute instanceof SimpleAttribute ) ) {
-            throw new AssertionFailure( "Unexpected attribute type for id attribute" );
-        }
-
-        SingularAttribute attribute = entityBinding.getEntity().getOrCreateComponentAttribute( idName );
-
-
-        SimpleAttributeBinding attributeBinding = entityBinding.makeSimpleIdAttributeBinding( attribute );
-
-        attributeBinding.initialize( new AttributeBindingStateImpl( (SimpleAttribute) idAttribute ) );
-
-        TupleRelationalStateImpl state = new TupleRelationalStateImpl();
-        EmbeddableClass embeddableClass = entityClass.getEmbeddedClasses().get( idName );
-        for ( MappedAttribute attr : embeddableClass.getMappedAttributes() ) {
-            state.addValueState( new ColumnRelationalStateImpl( (SimpleAttribute) attr, meta ) );
-        }
-        attributeBinding.initialize( state );
-        Map<String,String> parms = new HashMap<String, String>( 1 );
-        parms.put( IdentifierGenerator.ENTITY_NAME, entityBinding.getEntity().getName() );
-        IdGenerator generator = new IdGenerator( "NAME","assigned", parms);
-        entityBinding.getEntityIdentifier().setIdGenerator( generator );
-       // entityBinding.getEntityIdentifier().createIdentifierGenerator( meta.getIdentifierGeneratorFactory() );
-    }
-
-	private void bindSingleIdAnnotation(EntityBinding entityBinding) {
+	private void bindEmbeddedIdAnnotation(EntityBinding entityBinding) {
 		AnnotationInstance idAnnotation = JandexHelper.getSingleAnnotation(
-				entityClass.getClassInfo(), JPADotNames.ID
+				entityClass.getClassInfo(), JPADotNames.EMBEDDED_ID
 		);
 
 		String idName = JandexHelper.getPropertyName( idAnnotation.target() );
@@ -518,13 +479,59 @@ public class EntityBinder {
 			throw new AssertionFailure( "Unexpected attribute type for id attribute" );
 		}
 
-		Attribute attribute = entityBinding.getEntity().getOrCreateSingularAttribute( idName );
+		SingularAttribute attribute = entityBinding.getEntity().getOrCreateComponentAttribute( idName );
+
+
+		SimpleAttributeBinding attributeBinding = entityBinding.makeSimpleIdAttributeBinding( attribute );
+
+		attributeBinding.initialize( new AttributeBindingStateImpl( (SimpleAttribute) idAttribute ) );
+
+		TupleRelationalStateImpl state = new TupleRelationalStateImpl();
+		EmbeddableClass embeddableClass = entityClass.getEmbeddedClasses().get( idName );
+		for ( SimpleAttribute attr : embeddableClass.getSimpleAttributes() ) {
+			state.addValueState( new ColumnRelationalStateImpl( attr, meta ) );
+		}
+		attributeBinding.initialize( state );
+		Map<String, String> parms = new HashMap<String, String>( 1 );
+		parms.put( IdentifierGenerator.ENTITY_NAME, entityBinding.getEntity().getName() );
+		IdGenerator generator = new IdGenerator( "NAME", "assigned", parms );
+		entityBinding.getEntityIdentifier().setIdGenerator( generator );
+		// entityBinding.getEntityIdentifier().createIdentifierGenerator( meta.getIdentifierGeneratorFactory() );
+	}
+
+	private void bindSingleIdAnnotation(EntityBinding entityBinding) {
+		// we know we are dealing w/ a single @Id, but potentially it is defined in a mapped super class
+		ConfiguredClass configuredClass = entityClass;
+		EntityClass superEntity = entityClass.getEntityParent();
+		Hierarchical container = entityBinding.getEntity();
+		Iterator<SimpleAttribute> iter = null;
+		while ( configuredClass != null && configuredClass != superEntity ) {
+			iter = configuredClass.getIdAttributes().iterator();
+			if ( iter.hasNext() ) {
+				break;
+			}
+			configuredClass = configuredClass.getParent();
+			container = container.getSuperType();
+		}
+
+		// if we could not find the attribute our assumptions were wrong
+		if ( iter == null || !iter.hasNext() ) {
+			throw new AnnotationException(
+					String.format(
+							"Unable to find id attribute for class %s",
+							entityClass.getName()
+					)
+			);
+		}
+
+		// now that we have the id attribute we can create the attribute and binding
+		MappedAttribute idAttribute = iter.next();
+		Attribute attribute = container.getOrCreateSingularAttribute( idAttribute.getName() );
 
 		SimpleAttributeBinding attributeBinding = entityBinding.makeSimpleIdAttributeBinding( attribute );
 		attributeBinding.initialize( new AttributeBindingStateImpl( (SimpleAttribute) idAttribute ) );
 		attributeBinding.initialize( new ColumnRelationalStateImpl( (SimpleAttribute) idAttribute, meta ) );
-		bindSingleIdGeneratedValue( entityBinding, idName );
-
+		bindSingleIdGeneratedValue( entityBinding, idAttribute.getName() );
 	}
 
 	private void bindSingleIdGeneratedValue(EntityBinding entityBinding, String idPropertyName) {
@@ -552,7 +559,7 @@ public class EntityBinder {
 			if ( idGenerator == null ) {
 				throw new MappingException(
 						String.format(
-								"@GeneratedValue on %s.%s refering an undefined generator [%s]",
+								"@GeneratedValue on %s.%s referring an undefined generator [%s]",
 								entityClass.getName(),
 								idName,
 								generator
@@ -580,7 +587,7 @@ public class EntityBinder {
 					)
 			);
 		}
-		if( idGenerator == null ) {
+		if ( idGenerator == null ) {
 			idGenerator = new IdGenerator( "NAME", strategy, new HashMap<String, String>() );
 			entityBinding.getEntityIdentifier().setIdGenerator( idGenerator );
 		}
@@ -588,44 +595,74 @@ public class EntityBinder {
 	}
 
 	private void bindAttributes(EntityBinding entityBinding) {
-		for ( MappedAttribute mappedAttribute : entityClass.getMappedAttributes() ) {
-			if ( mappedAttribute instanceof AssociationAttribute ) {
-				bindAssociationAttribute(
-						entityBinding,
-						entityBinding.getEntity(),
-						(AssociationAttribute) mappedAttribute
-				);
-			}
-			else {
-				bindSingleMappedAttribute(
-						entityBinding,
-						entityBinding.getEntity(),
-						(SimpleAttribute) mappedAttribute
-				);
-			}
+		// bind the attributes of this entity
+		AttributeContainer entity = entityBinding.getEntity();
+		bindAttributes( entityBinding, entity, entityClass );
+
+		// bind potential mapped super class attributes
+		ConfiguredClass parent = entityClass.getParent();
+		Hierarchical superTypeContainer = entityBinding.getEntity().getSuperType();
+		while ( containsPotentialMappedSuperclassAttributes( parent ) ) {
+			bindAttributes( entityBinding, superTypeContainer, parent );
+			parent = parent.getParent();
+			superTypeContainer = superTypeContainer.getSuperType();
+		}
+	}
+
+	private boolean containsPotentialMappedSuperclassAttributes(ConfiguredClass parent) {
+		return parent != null && ( ConfiguredClassType.MAPPED_SUPERCLASS.equals( parent.getConfiguredClassType() ) ||
+				ConfiguredClassType.NON_ENTITY.equals( parent.getConfiguredClassType() ) );
+	}
+
+	private void bindAttributes(EntityBinding entityBinding, AttributeContainer attributeContainer, ConfiguredClass configuredClass) {
+		for ( SimpleAttribute simpleAttribute : configuredClass.getSimpleAttributes() ) {
+			bindSingleMappedAttribute(
+					entityBinding,
+					attributeContainer,
+					simpleAttribute
+			);
+		}
+		for ( AssociationAttribute associationAttribute : configuredClass.getAssociationAttributes() ) {
+			bindAssociationAttribute(
+					entityBinding,
+					attributeContainer,
+					associationAttribute
+			);
 		}
 	}
 
 	private void bindEmbeddedAttributes(EntityBinding entityBinding) {
-		for ( Map.Entry<String, EmbeddableClass> entry : entityClass.getEmbeddedClasses().entrySet() ) {
+		AttributeContainer entity = entityBinding.getEntity();
+		bindEmbeddedAttributes( entityBinding, entity, entityClass );
+
+		// bind potential mapped super class embeddables
+		ConfiguredClass parent = entityClass.getParent();
+		Hierarchical superTypeContainer = entityBinding.getEntity().getSuperType();
+		while ( containsPotentialMappedSuperclassAttributes( parent ) ) {
+			bindEmbeddedAttributes( entityBinding, superTypeContainer, parent );
+			parent = parent.getParent();
+			superTypeContainer = superTypeContainer.getSuperType();
+		}
+	}
+
+	private void bindEmbeddedAttributes(EntityBinding entityBinding, AttributeContainer attributeContainer, ConfiguredClass configuredClass) {
+		for ( Map.Entry<String, EmbeddableClass> entry : configuredClass.getEmbeddedClasses().entrySet() ) {
 			String attributeName = entry.getKey();
 			EmbeddableClass embeddedClass = entry.getValue();
-			SingularAttribute component = entityBinding.getEntity().getOrCreateComponentAttribute( attributeName );
-			for ( MappedAttribute mappedAttribute : embeddedClass.getMappedAttributes() ) {
-				if ( mappedAttribute instanceof AssociationAttribute ) {
-					bindAssociationAttribute(
-							entityBinding,
-							component.getAttributeContainer(),
-							(AssociationAttribute) mappedAttribute
-					);
-				}
-				else {
-					bindSingleMappedAttribute(
-							entityBinding,
-							component.getAttributeContainer(),
-							(SimpleAttribute) mappedAttribute
-					);
-				}
+			SingularAttribute component = attributeContainer.getOrCreateComponentAttribute( attributeName );
+			for ( SimpleAttribute simpleAttribute : embeddedClass.getSimpleAttributes() ) {
+				bindSingleMappedAttribute(
+						entityBinding,
+						component.getAttributeContainer(),
+						simpleAttribute
+				);
+			}
+			for ( AssociationAttribute associationAttribute : embeddedClass.getAssociationAttributes() ) {
+				bindAssociationAttribute(
+						entityBinding,
+						component.getAttributeContainer(),
+						associationAttribute
+				);
 			}
 		}
 	}
@@ -753,22 +790,6 @@ public class EntityBinder {
 		entityBindingState.setSelectBeforeUpdate( selectBeforeUpdate );
 		entityBindingState.setExplicitPolymorphism( PolymorphismType.EXPLICIT.equals( polymorphism ) );
 		entityBindingState.setOptimisticLock( optimisticLock );
-	}
-
-	private Hierarchical getSuperType() {
-		ConfiguredClass parent = entityClass.getParent();
-		if ( parent == null ) {
-			return null;
-		}
-
-		EntityBinding parentBinding = meta.getEntityBinding( parent.getName() );
-		if ( parentBinding == null ) {
-			throw new AssertionFailure(
-					"Parent entity " + parent.getName() + " of entity " + entityClass.getName() + " not yet created!"
-			);
-		}
-
-		return parentBinding.getEntity();
 	}
 }
 

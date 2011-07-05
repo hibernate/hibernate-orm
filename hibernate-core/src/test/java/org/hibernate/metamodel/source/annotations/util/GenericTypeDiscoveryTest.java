@@ -71,7 +71,7 @@ public class GenericTypeDiscoveryTest extends BaseAnnotationIndexTestCase {
 		info = configuredClass.getClassInfo();
 		assertEquals( "wrong class", DotName.createSimple( PricedStuff.class.getName() ), info.name() );
 		assertFalse(
-				"PricedStuff should not mapped properties", configuredClass.getMappedAttributes().iterator().hasNext()
+				"PricedStuff should not mapped properties", configuredClass.getSimpleAttributes().iterator().hasNext()
 		);
 
 		assertTrue( iter.hasNext() );
@@ -88,7 +88,7 @@ public class GenericTypeDiscoveryTest extends BaseAnnotationIndexTestCase {
 		configuredClass = iter.next();
 		info = configuredClass.getClassInfo();
 		assertEquals( "wrong class", DotName.createSimple( Paper.class.getName() ), info.name() );
-		assertFalse( "Paper should not mapped properties", configuredClass.getMappedAttributes().iterator().hasNext() );
+		assertFalse( "Paper should not mapped properties", configuredClass.getSimpleAttributes().iterator().hasNext() );
 
 		assertFalse( iter.hasNext() );
 	}

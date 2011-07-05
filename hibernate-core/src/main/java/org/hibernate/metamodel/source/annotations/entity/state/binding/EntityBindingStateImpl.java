@@ -78,11 +78,11 @@ public class EntityBindingStateImpl implements EntityBindingState {
 
 	private Set<String> synchronizedTableNames;
 
-	public EntityBindingStateImpl(Hierarchical superType, EntityClass configuredClass) {
-		this.className = configuredClass.getName();
+	public EntityBindingStateImpl(Hierarchical superType, EntityClass entityClass) {
+		this.className = entityClass.getName();
 		this.superType = superType;
-		this.isRoot = configuredClass.isRoot();
-		this.inheritanceType = configuredClass.getInheritanceType();
+		this.isRoot = entityClass.isEntityRoot();
+		this.inheritanceType = entityClass.getInheritanceType();
 		this.synchronizedTableNames = new HashSet<String>();
 		this.batchSize = -1;
 	}

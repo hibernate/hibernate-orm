@@ -36,8 +36,13 @@ import org.jboss.logging.Logger;
 import org.hibernate.HibernateException;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.MetadataSources;
+import org.hibernate.metamodel.binding.EntityBinding;
+import org.hibernate.metamodel.domain.Hierarchical;
+import org.hibernate.metamodel.domain.NonEntity;
+import org.hibernate.metamodel.domain.Superclass;
 import org.hibernate.metamodel.source.annotation.xml.XMLEntityMappings;
 import org.hibernate.metamodel.source.annotations.entity.ConfiguredClassHierarchy;
+import org.hibernate.metamodel.source.annotations.entity.ConfiguredClassType;
 import org.hibernate.metamodel.source.annotations.entity.EntityBinder;
 import org.hibernate.metamodel.source.annotations.entity.EntityClass;
 import org.hibernate.metamodel.source.annotations.global.FetchProfileBinder;
@@ -56,10 +61,11 @@ import org.hibernate.service.classloading.spi.ClassLoaderService;
 
 /**
  * Main class responsible to creating and binding the Hibernate meta-model from annotations.
- * This binder only has to deal with annotation index. XML configuration is already processed and pseudo annotations
- * are added to the annotation index.
+ * This binder only has to deal with the (jandex) annotation index/repository. XML configuration is already processed
+ * and pseudo annotations are created.
  *
  * @author Hardy Ferentschik
+ * @see org.hibernate.metamodel.source.annotations.xml.OrmXmlParser
  */
 public class AnnotationBinder implements Binder {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
@@ -105,6 +111,12 @@ public class AnnotationBinder implements Binder {
 		}
 	}
 
+	/**
+	 * Adds the class w/ the specified name to the jandex index.
+	 *
+	 * @param indexer The jandex indexer
+	 * @param className the fully qualified class name to be indexed
+	 */
 	private void indexClass(Indexer indexer, String className) {
 		InputStream stream = classLoaderService().locateResourceStream( className );
 		try {
@@ -134,16 +146,33 @@ public class AnnotationBinder implements Binder {
 
 	@Override
 	public void bindMappingMetadata(MetadataSources sources, List<String> processedEntityNames) {
-		// need to order our annotated entities into an order we can process
 		AnnotationBindingContext context = new AnnotationBindingContext( index, metadata.getServiceRegistry() );
-		Set<ConfiguredClassHierarchy<EntityClass>> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies( context );
+		// need to order our annotated entities into an order we can process
+		Set<ConfiguredClassHierarchy<EntityClass>> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
+				context
+		);
 
 		// now we process each hierarchy one at the time
+		Hierarchical parent = null;
 		for ( ConfiguredClassHierarchy<EntityClass> hierarchy : hierarchies ) {
 			for ( EntityClass entityClass : hierarchy ) {
-				LOG.bindingEntityFromAnnotatedClass( entityClass.getName() );
-				EntityBinder entityBinder = new EntityBinder( metadata, entityClass );
-				entityBinder.bind();
+				// for classes annotated w/ @Entity we create a EntityBinding
+				if ( ConfiguredClassType.ENTITY.equals( entityClass.getConfiguredClassType() ) ) {
+					LOG.bindingEntityFromAnnotatedClass( entityClass.getName() );
+					EntityBinder entityBinder = new EntityBinder( metadata, entityClass, parent );
+					EntityBinding binding = entityBinder.bind();
+					parent = binding.getEntity();
+				}
+				// for classes annotated w/ @MappedSuperclass we just create the domain instance
+				// the attribute bindings will be part of the first entity subclass
+				else if ( ConfiguredClassType.MAPPED_SUPERCLASS.equals( entityClass.getConfiguredClassType() ) ) {
+					parent = new Superclass( entityClass.getName(), parent );
+				}
+				// for classes which are not annotated at all we create the NonEntity domain class
+				// todo - not sure whether this is needed. It might be that we don't need this information (HF)
+				else {
+					parent = new NonEntity( entityClass.getName(), parent );
+				}
 			}
 		}
 	}

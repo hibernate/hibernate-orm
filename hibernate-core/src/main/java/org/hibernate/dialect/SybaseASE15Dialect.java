@@ -48,6 +48,9 @@ public class SybaseASE15Dialect extends AbstractTransactSQLDialect {
 		registerColumnType( Types.DATE, "date" );
 		registerColumnType( Types.DECIMAL, "numeric($p,$s)" );
 		registerColumnType( Types.TIME, "time" );
+        registerColumnType( Types.BINARY, "binary($l)" );
+        registerColumnType( Types.REAL, "real" );
+        registerColumnType( Types.BOOLEAN, "bit" );
 
 		registerFunction( "second", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "datepart(second, ?1)" ) );
 		registerFunction( "minute", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "datepart(minute, ?1)" ) );
@@ -160,7 +163,7 @@ public class SybaseASE15Dialect extends AbstractTransactSQLDialect {
 		registerFunction( "variance", new SQLFunctionTemplate( StandardBasicTypes.DOUBLE, "variance" ) );
 		registerFunction( "var_pop", new SQLFunctionTemplate( StandardBasicTypes.DOUBLE, "var_pop" ) );
 		registerFunction( "var_samp", new SQLFunctionTemplate( StandardBasicTypes.DOUBLE, "var_samp" ) );
-
+        registerFunction( "sysdate", new NoArgSQLFunction("getdate", StandardBasicTypes.TIMESTAMP) );
 
 		registerSybaseKeywords();
 	}
@@ -417,6 +420,10 @@ public class SybaseASE15Dialect extends AbstractTransactSQLDialect {
 	public boolean supportsExpectedLobUsagePattern() {
 		return false;
 	}
+
+     public boolean supportsUniqueConstraintInCreateAlterTable() {
+         return false;
+     }
 
 	public String getCrossJoinSeparator() {
 		return ", ";

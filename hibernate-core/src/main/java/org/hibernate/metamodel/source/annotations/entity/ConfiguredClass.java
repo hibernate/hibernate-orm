@@ -32,10 +32,10 @@ import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import javax.persistence.AccessType;
 
 import com.fasterxml.classmate.ResolvedTypeWithMembers;
@@ -104,9 +104,19 @@ public class ConfiguredClass {
 	private final List<AnnotationInstance> associationOverrides;
 
 	/**
-	 * The mapped attributes for entity
+	 * The id attributes
 	 */
-	private final Map<String, MappedAttribute> mappedAttributes;
+	private final Map<String, SimpleAttribute> idAttributeMap;
+
+	/**
+	 * The mapped association attributes for this entity
+	 */
+	private final Map<String, AssociationAttribute> associationAttributeMap;
+
+	/**
+	 * The mapped simple attributes for this entity
+	 */
+	private final Map<String, SimpleAttribute> simpleAttributeMap;
 
 	/**
 	 * The embedded classes for this entity
@@ -132,17 +142,13 @@ public class ConfiguredClass {
 		this.attributeOverrides = findAttributeOverrides();
 		this.associationOverrides = findAssociationOverrides();
 
+		this.simpleAttributeMap = new TreeMap<String, SimpleAttribute>();
+		this.idAttributeMap = new TreeMap<String, SimpleAttribute>();
+		this.associationAttributeMap = new TreeMap<String, AssociationAttribute>();
+
 		// find transient field and method names
 		findTransientFieldAndMethodNames();
-
-		List<MappedAttribute> simpleAttributes = collectAttributes();
-		// make sure the properties are ordered by property name
-		Collections.sort( simpleAttributes );
-		Map<String, MappedAttribute> tmpMap = new LinkedHashMap<String, MappedAttribute>();
-		for ( MappedAttribute property : simpleAttributes ) {
-			tmpMap.put( property.getName(), property );
-		}
-		this.mappedAttributes = Collections.unmodifiableMap( tmpMap );
+		collectAttributes();
 	}
 
 	public String getName() {
@@ -161,16 +167,20 @@ public class ConfiguredClass {
 		return parent;
 	}
 
-	public boolean isRoot() {
-		return parent == null;
-	}
-
 	public ConfiguredClassType getConfiguredClassType() {
 		return configuredClassType;
 	}
 
-	public Iterable<MappedAttribute> getMappedAttributes() {
-		return mappedAttributes.values();
+	public Iterable<SimpleAttribute> getSimpleAttributes() {
+		return simpleAttributeMap.values();
+	}
+
+	public Iterable<SimpleAttribute> getIdAttributes() {
+		return idAttributeMap.values();
+	}
+
+	public Iterable<AssociationAttribute> getAssociationAttributes() {
+		return associationAttributeMap.values();
 	}
 
 	public Map<String, EmbeddableClass> getEmbeddedClasses() {
@@ -178,7 +188,15 @@ public class ConfiguredClass {
 	}
 
 	public MappedAttribute getMappedAttribute(String propertyName) {
-		return mappedAttributes.get( propertyName );
+		MappedAttribute attribute;
+		attribute = simpleAttributeMap.get( propertyName );
+		if ( attribute == null ) {
+			attribute = associationAttributeMap.get( propertyName );
+		}
+		if ( attribute == null ) {
+			attribute = idAttributeMap.get( propertyName );
+		}
+		return attribute;
 	}
 
 	@Override
@@ -188,7 +206,9 @@ public class ConfiguredClass {
 		sb.append( "{clazz=" ).append( clazz.getSimpleName() );
 		sb.append( ", classAccessType=" ).append( classAccessType );
 		sb.append( ", configuredClassType=" ).append( configuredClassType );
-		sb.append( ", mappedAttributes=" ).append( mappedAttributes );
+		sb.append( ", idAttributeMap=" ).append( idAttributeMap );
+		sb.append( ", simpleAttributeMap=" ).append( simpleAttributeMap );
+		sb.append( ", associationAttributeMap=" ).append( associationAttributeMap );
 		sb.append( '}' );
 		return sb.toString();
 	}
@@ -221,9 +241,9 @@ public class ConfiguredClass {
 	}
 
 	/**
-	 * @return A list of the persistent properties of this configured class
+	 * Find all attributes for this configured class and add them to the corresponding map
 	 */
-	private List<MappedAttribute> collectAttributes() {
+	private void collectAttributes() {
 		// use the class mate library to generic types
 		ResolvedTypeWithMembers resolvedType = context.resolveMemberTypes( context.getResolvedType( clazz ) );
 		for ( HierarchicType hierarchicType : resolvedType.allTypesAndOverrides() ) {
@@ -237,17 +257,14 @@ public class ConfiguredClass {
 			throw new AssertionFailure( "Unable to resolve types for " + clazz.getName() );
 		}
 
-		List<MappedAttribute> properties = new ArrayList<MappedAttribute>();
-		Set<String> explicitlyConfiguredMemberNames = createExplicitlyConfiguredAccessProperties(
-				properties, resolvedType
-		);
+		Set<String> explicitlyConfiguredMemberNames = createExplicitlyConfiguredAccessProperties( resolvedType );
 
 		if ( AccessType.FIELD.equals( classAccessType ) ) {
 			Field fields[] = clazz.getDeclaredFields();
 			Field.setAccessible( fields, true );
 			for ( Field field : fields ) {
 				if ( isPersistentMember( transientFieldNames, explicitlyConfiguredMemberNames, field ) ) {
-					properties.add( createMappedProperty( field, resolvedType ) );
+					createMappedProperty( field, resolvedType );
 				}
 			}
 		}
@@ -256,11 +273,10 @@ public class ConfiguredClass {
 			Method.setAccessible( methods, true );
 			for ( Method method : methods ) {
 				if ( isPersistentMember( transientMethodNames, explicitlyConfiguredMemberNames, method ) ) {
-					properties.add( createMappedProperty( method, resolvedType ) );
+					createMappedProperty( method, resolvedType );
 				}
 			}
 		}
-		return properties;
 	}
 
 	private boolean isPersistentMember(Set<String> transientNames, Set<String> explicitlyConfiguredMemberNames, Member member) {
@@ -282,12 +298,11 @@ public class ConfiguredClass {
 	/**
 	 * Creates {@code MappedProperty} instances for the explicitly configured persistent properties
 	 *
-	 * @param mappedProperties list to which to add the explicitly configured mapped properties
 	 * @param resolvedMembers the resolved type parameters for this class
 	 *
-	 * @return the property names of the explicitly configured class names in a set
+	 * @return the property names of the explicitly configured attribute names in a set
 	 */
-	private Set<String> createExplicitlyConfiguredAccessProperties(List<MappedAttribute> mappedProperties, ResolvedTypeWithMembers resolvedMembers) {
+	private Set<String> createExplicitlyConfiguredAccessProperties(ResolvedTypeWithMembers resolvedMembers) {
 		Set<String> explicitAccessMembers = new HashSet<String>();
 
 		List<AnnotationInstance> accessAnnotations = classInfo.annotations().get( JPADotNames.ACCESS );
@@ -365,14 +380,14 @@ public class ConfiguredClass {
 				member = f;
 			}
 			if ( ReflectionHelper.isProperty( member ) ) {
-				mappedProperties.add( createMappedProperty( member, resolvedMembers ) );
+				createMappedProperty( member, resolvedMembers );
 				explicitAccessMembers.add( member.getName() );
 			}
 		}
 		return explicitAccessMembers;
 	}
 
-	private MappedAttribute createMappedProperty(Member member, ResolvedTypeWithMembers resolvedType) {
+	private void createMappedProperty(Member member, ResolvedTypeWithMembers resolvedType) {
 		final String attributeName = ReflectionHelper.getPropertyName( member );
 		ResolvedMember[] resolvedMembers;
 		if ( member instanceof Field ) {
@@ -386,52 +401,60 @@ public class ConfiguredClass {
 				classInfo, member.getName()
 		);
 
-		MappedAttribute attribute;
 		AttributeType attributeType = determineAttributeType( annotations );
 		switch ( attributeType ) {
 			case BASIC: {
-				attribute = SimpleAttribute.createSimpleAttribute( attributeName, type.getName(), annotations );
+				SimpleAttribute attribute = SimpleAttribute.createSimpleAttribute(
+						attributeName,
+						type.getName(),
+						annotations
+				);
+				if ( attribute.isId() ) {
+					idAttributeMap.put( attributeName, attribute );
+				}
+				else {
+					simpleAttributeMap.put( attributeName, attribute );
+				}
 				break;
 			}
-            case ELEMENT_COLLECTION:
-            case EMBEDDED_ID:
+			case ELEMENT_COLLECTION:
+			case EMBEDDED_ID:
 
 			case EMBEDDED: {
-                resolveEmbeddable( attributeName, type );
+				resolveEmbeddable( attributeName, type );
 			}
 			// TODO handle the different association types
 			default: {
-				attribute = AssociationAttribute.createAssociationAttribute(
-						attributeName,type.getName(), attributeType, annotations
+				AssociationAttribute attribute = AssociationAttribute.createAssociationAttribute(
+						attributeName, type.getName(), attributeType, annotations
 				);
+				associationAttributeMap.put( attributeName, attribute );
 			}
 		}
-
-		return attribute;
 	}
 
-    private void resolveEmbeddable(String attributeName, Class<?> type) {
-        ClassInfo embeddableClassInfo = context.getClassInfo( type.getName() );
-        if ( classInfo == null ) {
-            String msg = String.format(
-                    "Attribute %s of entity %s is annotated with @Embedded, but no embeddable configuration for type %s can be found.",
-                    attributeName,
-                    getName(),
-                    type.getName()
-            );
-            throw new AnnotationException( msg );
-        }
+	private void resolveEmbeddable(String attributeName, Class<?> type) {
+		ClassInfo embeddableClassInfo = context.getClassInfo( type.getName() );
+		if ( classInfo == null ) {
+			String msg = String.format(
+					"Attribute %s of entity %s is annotated with @Embedded, but no embeddable configuration for type %s can be found.",
+					attributeName,
+					getName(),
+					type.getName()
+			);
+			throw new AnnotationException( msg );
+		}
 
-        context.resolveAllTypes( type.getName() );
-        ConfiguredClassHierarchy<EmbeddableClass> hierarchy = ConfiguredClassHierarchyBuilder.createEmbeddableHierarchy(
-                context.loadClass( embeddableClassInfo.toString() ),
-                classAccessType,
-                context
-        );
-        embeddedClasses.put( attributeName, hierarchy.getLeaf() );
-    }
+		context.resolveAllTypes( type.getName() );
+		ConfiguredClassHierarchy<EmbeddableClass> hierarchy = ConfiguredClassHierarchyBuilder.createEmbeddableHierarchy(
+				context.loadClass( embeddableClassInfo.toString() ),
+				classAccessType,
+				context
+		);
+		embeddedClasses.put( attributeName, hierarchy.getLeaf() );
+	}
 
-    /**
+	/**
 	 * Given the annotations defined on a persistent attribute this methods determines the attribute type.
 	 *
 	 * @param annotations the annotations defined on the persistent attribute
@@ -467,12 +490,15 @@ public class ConfiguredClass {
 			discoveredAttributeTypes.put( AttributeType.EMBEDDED, embedded );
 		}
 
-        AnnotationInstance embeddIded = JandexHelper.getSingleAnnotation( annotations, JPADotNames.EMBEDDED_ID );
+		AnnotationInstance embeddIded = JandexHelper.getSingleAnnotation( annotations, JPADotNames.EMBEDDED_ID );
 		if ( embeddIded != null ) {
 			discoveredAttributeTypes.put( AttributeType.EMBEDDED_ID, embeddIded );
 		}
 
-        AnnotationInstance elementCollection = JandexHelper.getSingleAnnotation( annotations, JPADotNames.ELEMENT_COLLECTION );
+		AnnotationInstance elementCollection = JandexHelper.getSingleAnnotation(
+				annotations,
+				JPADotNames.ELEMENT_COLLECTION
+		);
 		if ( elementCollection != null ) {
 			discoveredAttributeTypes.put( AttributeType.ELEMENT_COLLECTION, elementCollection );
 		}

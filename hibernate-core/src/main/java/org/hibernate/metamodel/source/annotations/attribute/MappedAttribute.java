@@ -110,9 +110,7 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 	public String toString() {
 		final StringBuilder sb = new StringBuilder();
 		sb.append( "MappedAttribute" );
-		sb.append( "{type='" ).append( type ).append( '\'' );
-		sb.append( ", typeParameters=" ).append( typeParameters );
-		sb.append( ", name='" ).append( name ).append( '\'' );
+		sb.append( "{name='" ).append( name ).append( '\'' );
 		sb.append( '}' );
 		return sb.toString();
 	}

@@ -23,12 +23,14 @@
  */
 package org.hibernate.metamodel.binder.source;
 
+import org.hibernate.cache.spi.access.AccessType;
+
 /**
  * Defines a (contextual) set of values to use as defaults in the absence of related mapping information.  The
  * context here is conceptually a stack.  The "global" level is configuration settings.
  *
- * @author Gail Badner
  * @author Steve Ebersole
+ * @author Gail Badner
  */
 public interface MappingDefaults {
 	/**
@@ -89,4 +91,11 @@ public interface MappingDefaults {
 	 * @return The default association laziness
 	 */
 	public boolean areAssociationsLazy();
+
+	/**
+	 * The default cache access type to use
+	 *
+	 * @return The default cache access type.
+	 */
+	public AccessType getCacheAccessType();
 }

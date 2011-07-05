@@ -27,17 +27,19 @@ import javax.persistence.AccessType;
 
 import org.jboss.jandex.ClassInfo;
 
-import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
+import org.hibernate.metamodel.binder.source.annotations.AnnotationsBindingContext;
+import org.hibernate.metamodel.binder.source.annotations.entity.ConfiguredClass;
 
 /**
  * @author Hardy Ferentschik
  */
 public class EmbeddableClass extends ConfiguredClass {
 	// todo - need to take care of the attribute path (HF)
-	public EmbeddableClass(ClassInfo classInfo,
-						   EmbeddableClass parent,
-						   AccessType defaultAccessType,
-						   AnnotationBindingContext context) {
+	public EmbeddableClass(
+			ClassInfo classInfo,
+			EmbeddableClass parent,
+			AccessType defaultAccessType,
+			AnnotationsBindingContext context) {
 		super( classInfo, defaultAccessType, parent, context );
 	}
 }

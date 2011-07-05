@@ -121,10 +121,11 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 	}
 
 	@Override
-	public Class classForName(String className) {
+	@SuppressWarnings( {"unchecked"})
+	public <T> Class<T> classForName(String className) {
 		for ( ClassLoader classLoader : classLoadingClassLoaders ) {
 			try {
-				return classLoader.loadClass( className );
+				return (Class<T>) classLoader.loadClass( className );
 			}
 			catch ( Exception ignore) {
 			}

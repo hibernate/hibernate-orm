@@ -58,12 +58,16 @@ public class PersisterFactoryInitiator implements BasicServiceInitiator<Persiste
 
 		final Class<? extends PersisterFactory> customImplClass = Class.class.isInstance( customImpl )
 				? ( Class<? extends PersisterFactory> ) customImpl
-				: registry.getService( ClassLoaderService.class ).classForName( customImpl.toString() );
+				: locate( registry, customImpl.toString() );
 		try {
 			return customImplClass.newInstance();
 		}
 		catch (Exception e) {
 			throw new ServiceException( "Could not initialize custom PersisterFactory impl [" + customImplClass.getName() + "]", e );
 		}
+	}
+
+	private Class<? extends PersisterFactory> locate(ServiceRegistryImplementor registry, String className) {
+		return registry.getService( ClassLoaderService.class ).classForName( className );
 	}
 }

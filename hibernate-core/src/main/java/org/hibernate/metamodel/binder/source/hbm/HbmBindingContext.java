@@ -27,6 +27,7 @@ import java.util.List;
 
 import org.hibernate.metamodel.binder.Origin;
 import org.hibernate.metamodel.binder.source.BindingContext;
+import org.hibernate.metamodel.binder.source.MetaAttributeContext;
 import org.hibernate.metamodel.binder.source.hbm.xml.mapping.EntityElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLFetchProfileElement;
 
@@ -37,6 +38,8 @@ import org.hibernate.metamodel.source.hbm.xml.mapping.XMLFetchProfileElement;
  */
 public interface HbmBindingContext extends BindingContext {
 	public boolean isAutoImport();
+
+	public MetaAttributeContext getMetaAttributeContext();
 
 	public Origin getOrigin();
 

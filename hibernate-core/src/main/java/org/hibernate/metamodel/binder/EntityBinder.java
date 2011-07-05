@@ -41,6 +41,11 @@ import org.hibernate.metamodel.domain.JavaType;
  * @author Steve Ebersole
  */
 public class EntityBinder {
+
+	// todo : re-purpose this as a general "metadata binder" with public apis to handle all the specific bindings?
+
+	// todo : make this globally available from MetadataImpl
+
 	private final BindingContext bindingContext;
 
 	public EntityBinder(BindingContext bindingContext) {

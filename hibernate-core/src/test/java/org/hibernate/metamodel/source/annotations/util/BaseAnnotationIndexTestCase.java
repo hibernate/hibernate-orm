@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -31,8 +31,10 @@ import org.jboss.jandex.Index;
 import org.junit.After;
 import org.junit.Before;
 
-import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
-import org.hibernate.metamodel.source.annotations.entity.ConfiguredClassHierarchy;
+import org.hibernate.metamodel.binder.source.annotations.ConfiguredClassHierarchyBuilder;
+import org.hibernate.metamodel.binder.source.annotations.JandexHelper;
+import org.hibernate.metamodel.binder.source.annotations.entity.ConfiguredClassHierarchy;
+import org.hibernate.metamodel.source.annotations.entity.AnnotationsBindingContextImpl;
 import org.hibernate.metamodel.source.annotations.entity.EmbeddableClass;
 import org.hibernate.metamodel.source.annotations.entity.EntityClass;
 import org.hibernate.service.ServiceRegistryBuilder;
@@ -58,7 +60,7 @@ public abstract class BaseAnnotationIndexTestCase extends BaseUnitTestCase {
 
 	public Set<ConfiguredClassHierarchy<EntityClass>> createEntityHierarchies(Class<?>... clazz) {
 		Index index = JandexHelper.indexForClass( serviceRegistry.getService( ClassLoaderService.class ), clazz );
-		AnnotationBindingContext context = new AnnotationBindingContext( index, serviceRegistry );
+		AnnotationsBindingContextImpl context = new AnnotationsBindingContextImpl( index, serviceRegistry );
 		return ConfiguredClassHierarchyBuilder.createEntityHierarchies( context );
 	}
 
@@ -67,7 +69,7 @@ public abstract class BaseAnnotationIndexTestCase extends BaseUnitTestCase {
 				serviceRegistry.getService( ClassLoaderService.class ),
 				configuredClasses
 		);
-		AnnotationBindingContext context = new AnnotationBindingContext( index, serviceRegistry );
+		AnnotationsBindingContextImpl context = new AnnotationsBindingContextImpl( index, serviceRegistry );
 		return ConfiguredClassHierarchyBuilder.createEmbeddableHierarchy( configuredClasses[0], accessType, context );
 	}
 }

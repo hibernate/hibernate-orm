@@ -42,11 +42,13 @@ import org.junit.Test;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.NamedNativeQuery;
-import org.hibernate.metamodel.source.annotations.HibernateDotNames;
-import org.hibernate.metamodel.source.annotations.JPADotNames;
+import org.hibernate.metamodel.binder.source.annotations.HibernateDotNames;
+import org.hibernate.metamodel.binder.source.annotations.JPADotNames;
+import org.hibernate.metamodel.binder.source.annotations.JandexHelper;
 import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.internal.BasicServiceRegistryImpl;
+
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static junit.framework.Assert.assertTrue;

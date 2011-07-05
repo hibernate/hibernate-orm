@@ -37,9 +37,7 @@ public interface BindingContext {
 
     public MappingDefaults getMappingDefaults();
 
-    public MetaAttributeContext getMetaAttributeContext();
-
-    public MetadataImplementor getMetadataImplementor();
+	public MetadataImplementor getMetadataImplementor();
 
     public <T> Class<T> locateClassByName(String name);
 

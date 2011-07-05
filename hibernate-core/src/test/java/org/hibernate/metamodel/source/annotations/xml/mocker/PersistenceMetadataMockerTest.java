@@ -30,7 +30,7 @@ import org.jboss.jandex.Index;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
-import org.hibernate.metamodel.source.annotations.xml.PseudoJpaDotNames;
+import org.hibernate.metamodel.binder.source.annotations.xml.PseudoJpaDotNames;
 
 /**
  * @author Strong Liu

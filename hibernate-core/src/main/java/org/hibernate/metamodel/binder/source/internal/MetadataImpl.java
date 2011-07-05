@@ -34,6 +34,8 @@ import org.jboss.logging.Logger;
 import org.hibernate.DuplicateMappingException;
 import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
+import org.hibernate.cache.spi.RegionFactory;
+import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.spi.FilterDefinition;
@@ -59,7 +61,7 @@ import org.hibernate.metamodel.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.binding.TypeDef;
 import org.hibernate.metamodel.domain.JavaType;
 import org.hibernate.metamodel.relational.Database;
-import org.hibernate.metamodel.source.annotations.AnnotationSourceProcessor;
+import org.hibernate.metamodel.binder.source.annotations.AnnotationsSourceProcessor;
 import org.hibernate.persister.spi.PersisterClassResolver;
 import org.hibernate.service.BasicServiceRegistry;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
@@ -123,12 +125,12 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		if ( options.getSourceProcessingOrder() == SourceProcessingOrder.HBM_FIRST ) {
 			sourceProcessors = new SourceProcessor[] {
 					new HbmSourceProcessorImpl( this ),
-					new AnnotationSourceProcessor( this )
+					new AnnotationsSourceProcessor( this )
 			};
 		}
 		else {
 			sourceProcessors = new SourceProcessor[] {
-					new AnnotationSourceProcessor( this ),
+					new AnnotationsSourceProcessor( this ),
 					new HbmSourceProcessorImpl( this )
 			};
 		}
@@ -459,7 +461,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	private final MetaAttributeContext globalMetaAttributeContext = new MetaAttributeContext();
 
 	@Override
-	public MetaAttributeContext getMetaAttributeContext() {
+	public MetaAttributeContext getGlobalMetaAttributeContext() {
 		return globalMetaAttributeContext;
 	}
 
@@ -555,6 +557,23 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		@Override
 		public boolean areAssociationsLazy() {
 			return true;
+		}
+
+		private final Value<AccessType> regionFactorySpecifiedDefaultAccessType = new Value<AccessType>(
+				new Value.DeferredInitializer<AccessType>() {
+					@Override
+					public AccessType initialize() {
+						final RegionFactory regionFactory = getServiceRegistry().getService( RegionFactory.class );
+						return regionFactory.getDefaultAccessType();
+					}
+				}
+		);
+
+		@Override
+		public AccessType getCacheAccessType() {
+			return options.getDefaultAccessType() != null
+					? options.getDefaultAccessType()
+					: regionFactorySpecifiedDefaultAccessType.getValue();
 		}
 	}
 }

@@ -38,6 +38,8 @@ import org.jboss.jandex.Indexer;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.HibernateException;
+import org.hibernate.metamodel.binder.source.annotations.xml.mocker.EntityMappingsMocker;
+import org.hibernate.metamodel.binder.source.annotations.xml.mocker.IndexBuilder;
 import org.hibernate.metamodel.source.annotation.xml.XMLEntityMappings;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.classloading.spi.ClassLoaderService;

@@ -31,20 +31,25 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.MappingException;
+import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.metamodel.MetadataSources;
+import org.hibernate.metamodel.binder.source.BindingContext;
+import org.hibernate.metamodel.binder.source.MappingDefaults;
 import org.hibernate.metamodel.binder.source.MetadataImplementor;
 import org.hibernate.metamodel.binder.source.SourceProcessor;
 import org.hibernate.metamodel.binder.source.hbm.xml.mapping.EntityElement;
 import org.hibernate.metamodel.binder.source.hbm.xml.mapping.SubclassEntityElement;
 import org.hibernate.metamodel.binder.source.internal.JaxbRoot;
+import org.hibernate.metamodel.domain.JavaType;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping;
+import org.hibernate.service.ServiceRegistry;
 
 /**
  * The {@link SourceProcessor} implementation responsible for processing {@code hbm.xml} sources.
  *
  * @author Steve Ebersole
  */
-public class HbmSourceProcessorImpl implements SourceProcessor {
+public class HbmSourceProcessorImpl implements SourceProcessor, BindingContext {
 	private final MetadataImplementor metadata;
 	private List<HibernateMappingProcessor> processors;
 
@@ -58,7 +63,7 @@ public class HbmSourceProcessorImpl implements SourceProcessor {
 		this.processors = new ArrayList<HibernateMappingProcessor>();
 		for ( JaxbRoot jaxbRoot : sources.getJaxbRootList() ) {
 			if ( jaxbRoot.getRoot() instanceof XMLHibernateMapping ) {
-				processors.add( new HibernateMappingProcessor( metadata, (JaxbRoot<XMLHibernateMapping>) jaxbRoot ) );
+				processors.add( new HibernateMappingProcessor( this, (JaxbRoot<XMLHibernateMapping>) jaxbRoot ) );
 			}
 		}
 	}
@@ -174,5 +179,35 @@ public class HbmSourceProcessorImpl implements SourceProcessor {
 		for ( HibernateMappingProcessor processor : processors ) {
 			processor.processMappingDependentMetadata();
 		}
+	}
+
+	@Override
+	public ServiceRegistry getServiceRegistry() {
+		return metadata.getServiceRegistry();
+	}
+
+	@Override
+	public NamingStrategy getNamingStrategy() {
+		return metadata.getNamingStrategy();
+	}
+
+	@Override
+	public MappingDefaults getMappingDefaults() {
+		return metadata.getMappingDefaults();
+	}
+
+	@Override
+	public MetadataImplementor getMetadataImplementor() {
+		return metadata;
+	}
+
+	@Override
+	public <T> Class<T> locateClassByName(String name) {
+		return metadata.locateClassByName( name );
+	}
+
+	@Override
+	public JavaType makeJavaType(String className) {
+		return metadata.makeJavaType( className );
 	}
 }

@@ -75,4 +75,6 @@ public interface MetadataImplementor extends Metadata, BindingContext, Mapping {
 
 	// todo : this needs to move to AnnotationBindingContext
 	public void setGloballyQuotedIdentifiers(boolean b);
+
+	public MetaAttributeContext getGlobalMetaAttributeContext();
 }

@@ -39,8 +39,8 @@ import org.junit.Test;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
+import org.hibernate.metamodel.binder.source.annotations.entity.ConfiguredClassHierarchy;
 import org.hibernate.metamodel.binding.InheritanceType;
-import org.hibernate.metamodel.source.annotations.entity.ConfiguredClassHierarchy;
 import org.hibernate.metamodel.source.annotations.entity.EmbeddableClass;
 import org.hibernate.metamodel.source.annotations.entity.EntityClass;
 

@@ -39,10 +39,11 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.hibernate.metamodel.binder.source.annotations.AnnotationsBindingContext;
+import org.hibernate.metamodel.binder.source.annotations.ConfiguredClassHierarchyBuilder;
+import org.hibernate.metamodel.binder.source.annotations.JandexHelper;
+import org.hibernate.metamodel.binder.source.annotations.entity.ConfiguredClassHierarchy;
 import org.hibernate.metamodel.binding.InheritanceType;
-import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
-import org.hibernate.metamodel.source.annotations.util.ConfiguredClassHierarchyBuilder;
-import org.hibernate.metamodel.source.annotations.util.JandexHelper;
 import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.internal.BasicServiceRegistryImpl;
@@ -85,7 +86,7 @@ public class TableNameTest extends BaseUnitTestCase {
 		}
 
 		Index index = JandexHelper.indexForClass( service, A.class, B.class );
-		AnnotationBindingContext context = new AnnotationBindingContext( index, serviceRegistry );
+		AnnotationsBindingContext context = new AnnotationsBindingContextImpl( index, serviceRegistry );
 		Set<ConfiguredClassHierarchy<EntityClass>> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
 				context
 		);
@@ -133,7 +134,7 @@ public class TableNameTest extends BaseUnitTestCase {
 		}
 
 		Index index = JandexHelper.indexForClass( service, A.class, B.class );
-		AnnotationBindingContext context = new AnnotationBindingContext( index, serviceRegistry );
+		AnnotationsBindingContext context = new AnnotationsBindingContextImpl( index, serviceRegistry );
 		Set<ConfiguredClassHierarchy<EntityClass>> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
 				context
 		);
@@ -182,7 +183,7 @@ public class TableNameTest extends BaseUnitTestCase {
 		}
 
 		Index index = JandexHelper.indexForClass( service, B.class, A.class );
-		AnnotationBindingContext context = new AnnotationBindingContext( index, serviceRegistry );
+		AnnotationsBindingContextImpl context = new AnnotationsBindingContextImpl( index, serviceRegistry );
 		Set<ConfiguredClassHierarchy<EntityClass>> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
 				context
 		);

@@ -23,6 +23,7 @@
  */
 package org.hibernate.metamodel.binder.source.internal;
 
+import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.metamodel.binder.source.MappingDefaults;
 
 /**
@@ -104,5 +105,10 @@ public class OverriddenMappingDefaults implements MappingDefaults {
 	@Override
 	public boolean areAssociationsLazy() {
 		return associationLaziness == null ? overriddenValues.areAssociationsLazy() : associationLaziness;
+	}
+
+	@Override
+	public AccessType getCacheAccessType() {
+		return overriddenValues.getCacheAccessType();
 	}
 }

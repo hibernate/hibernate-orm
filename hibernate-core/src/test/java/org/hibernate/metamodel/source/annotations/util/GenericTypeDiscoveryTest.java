@@ -35,9 +35,9 @@ import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 import org.junit.Test;
 
+import org.hibernate.metamodel.binder.source.annotations.entity.ConfiguredClass;
+import org.hibernate.metamodel.binder.source.annotations.entity.ConfiguredClassHierarchy;
 import org.hibernate.metamodel.source.annotations.attribute.MappedAttribute;
-import org.hibernate.metamodel.source.annotations.entity.ConfiguredClass;
-import org.hibernate.metamodel.source.annotations.entity.ConfiguredClassHierarchy;
 import org.hibernate.metamodel.source.annotations.entity.EntityClass;
 
 import static junit.framework.Assert.assertEquals;

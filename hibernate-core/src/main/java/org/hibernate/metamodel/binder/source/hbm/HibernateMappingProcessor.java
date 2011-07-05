@@ -49,14 +49,14 @@ import org.hibernate.metamodel.binding.TypeDef;
 import org.hibernate.metamodel.domain.JavaType;
 import org.hibernate.metamodel.relational.AuxiliaryDatabaseObject;
 import org.hibernate.metamodel.relational.BasicAuxiliaryDatabaseObjectImpl;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLFetchProfileElement;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLJoinedSubclassElement;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLParamElement;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLQueryElement;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlQueryElement;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSubclassElement;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLUnionSubclassElement;
+import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLFetchProfileElement;
+import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLHibernateMapping;
+import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLJoinedSubclassElement;
+import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLParamElement;
+import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLQueryElement;
+import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLSqlQueryElement;
+import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLSubclassElement;
+import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLUnionSubclassElement;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.classloading.spi.ClassLoadingException;
@@ -70,7 +70,7 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  */
 public class HibernateMappingProcessor implements HbmBindingContext {
-	private final MetadataImplementor metadata;
+	private final HbmSourceProcessorImpl hbmHandler;
 	private final JaxbRoot<XMLHibernateMapping> jaxbRoot;
 
 	private final XMLHibernateMapping hibernateMapping;
@@ -83,13 +83,13 @@ public class HibernateMappingProcessor implements HbmBindingContext {
 
 	private final boolean autoImport;
 
-	public HibernateMappingProcessor(MetadataImplementor metadata, JaxbRoot<XMLHibernateMapping> jaxbRoot) {
-		this.metadata = metadata;
+	public HibernateMappingProcessor(HbmSourceProcessorImpl hbmHandler, JaxbRoot<XMLHibernateMapping> jaxbRoot) {
+		this.hbmHandler = hbmHandler;
 		this.jaxbRoot = jaxbRoot;
 
 		this.hibernateMapping = jaxbRoot.getRoot();
 		this.mappingDefaults = new OverriddenMappingDefaults(
-				metadata.getMappingDefaults(),
+				hbmHandler.getMappingDefaults(),
 				hibernateMapping.getPackage(),
 				hibernateMapping.getSchema(),
 				hibernateMapping.getCatalog(),
@@ -102,15 +102,15 @@ public class HibernateMappingProcessor implements HbmBindingContext {
 
 		this.autoImport = hibernateMapping.isAutoImport();
 
-		this.entityBinder = new EntityBinder( metadata );
+		this.entityBinder = new EntityBinder( this );
 
 		this.metaAttributeContext = extractMetaAttributes();
 	}
 
 	private MetaAttributeContext extractMetaAttributes() {
 		return hibernateMapping.getMeta() == null
-				? new MetaAttributeContext( metadata.getMetaAttributeContext() )
-				: HbmHelper.extractMetaAttributeContext( hibernateMapping.getMeta(), true, metadata.getMetaAttributeContext() );
+				? new MetaAttributeContext( hbmHandler.getMetadataImplementor().getGlobalMetaAttributeContext() )
+				: HbmHelper.extractMetaAttributeContext( hibernateMapping.getMeta(), true, hbmHandler.getMetadataImplementor().getGlobalMetaAttributeContext() );
 	}
 
 	XMLHibernateMapping getHibernateMapping() {
@@ -129,17 +129,17 @@ public class HibernateMappingProcessor implements HbmBindingContext {
 
 	@Override
 	public ServiceRegistry getServiceRegistry() {
-		return metadata.getServiceRegistry();
+		return getMetadataImplementor().getServiceRegistry();
 	}
 
 	@Override
 	public NamingStrategy getNamingStrategy() {
-		return metadata.getOptions().getNamingStrategy();
+		return getMetadataImplementor().getOptions().getNamingStrategy();
 	}
 
     @Override
     public boolean isGloballyQuotedIdentifiers() {
-        return metadata.isGloballyQuotedIdentifiers();
+        return getMetadataImplementor().isGloballyQuotedIdentifiers();
     }
 
     @Override
@@ -154,17 +154,17 @@ public class HibernateMappingProcessor implements HbmBindingContext {
 
 	@Override
 	public MetadataImplementor getMetadataImplementor() {
-		return metadata;
+		return hbmHandler.getMetadataImplementor();
 	}
 
 	@Override
 	public <T> Class<T> locateClassByName(String name) {
-		return metadata.locateClassByName( name );
+		return getMetadataImplementor().locateClassByName( name );
 	}
 
 	@Override
 	public JavaType makeJavaType(String className) {
-		return metadata.makeJavaType( className );
+		return getMetadataImplementor().makeJavaType( className );
 	}
 
 	public void processIndependentMetadata() {
@@ -206,7 +206,7 @@ public class HibernateMappingProcessor implements HbmBindingContext {
 						dialectScopes
 				);
 			}
-			metadata.getDatabase().addAuxiliaryDatabaseObject( auxiliaryDatabaseObject );
+			getMetadataImplementor().addAuxiliaryDatabaseObject( auxiliaryDatabaseObject );
 		}
 	}
 
@@ -219,7 +219,13 @@ public class HibernateMappingProcessor implements HbmBindingContext {
 			for ( XMLParamElement paramElement : typedef.getParam() ) {
 				parameters.put( paramElement.getName(), paramElement.getValue() );
 			}
-			metadata.addTypeDefinition( new TypeDef( typedef.getName(), typedef.getClazz(), parameters ) );
+			getMetadataImplementor().addTypeDefinition(
+					new TypeDef(
+							typedef.getName(),
+							typedef.getClazz(),
+							parameters
+					)
+			);
 		}
 	}
 
@@ -249,7 +255,7 @@ public class HibernateMappingProcessor implements HbmBindingContext {
 					// todo : should really delay this resolution until later to allow typedef names
 					parameters.put(
 							paramElement.getName(),
-							metadata.getTypeResolver().heuristicType( paramElement.getType() )
+							getMetadataImplementor().getTypeResolver().heuristicType( paramElement.getType() )
 					);
 				}
 				else {
@@ -259,7 +265,7 @@ public class HibernateMappingProcessor implements HbmBindingContext {
 			if ( condition == null ) {
 				condition = filterDefinition.getCondition();
 			}
-			metadata.addFilterDefinition( new FilterDefinition( name, condition, parameters ) );
+			getMetadataImplementor().addFilterDefinition( new FilterDefinition( name, condition, parameters ) );
 		}
 	}
 
@@ -268,7 +274,7 @@ public class HibernateMappingProcessor implements HbmBindingContext {
 			return;
 		}
 		for ( XMLHibernateMapping.XMLIdentifierGenerator identifierGeneratorElement : hibernateMapping.getIdentifierGenerator() ) {
-			metadata.registerIdentifierGenerator(
+			getMetadataImplementor().registerIdentifierGenerator(
 					identifierGeneratorElement.getName(),
 					identifierGeneratorElement.getClazz()
 			);
@@ -314,7 +320,7 @@ public class HibernateMappingProcessor implements HbmBindingContext {
 			}
 
 			final EntityBinding entityBinding = entityBinder.createEntityBinding( entityDescriptor );
-			metadata.addEntity( entityBinding );
+			getMetadataImplementor().addEntity( entityBinding );
 			processedEntityNames.add( entityBinding.getEntity().getName() );
 		}
 	}
@@ -348,7 +354,7 @@ public class HibernateMappingProcessor implements HbmBindingContext {
 				}
 				fetches.add( new FetchProfile.Fetch( entityName, fetch.getAssociation(), fetch.getStyle() ) );
 			}
-			metadata.addFetchProfile( new FetchProfile( profileName, fetches ) );
+			getMetadataImplementor().addFetchProfile( new FetchProfile( profileName, fetches ) );
 		}
 	}
 
@@ -360,7 +366,7 @@ public class HibernateMappingProcessor implements HbmBindingContext {
 			String className = getClassName( importValue.getClazz() );
 			String rename = importValue.getRename();
 			rename = ( rename == null ) ? StringHelper.unqualify( className ) : rename;
-			metadata.addImport( className, rename );
+			getMetadataImplementor().addImport( className, rename );
 		}
 	}
 
@@ -395,7 +401,7 @@ public class HibernateMappingProcessor implements HbmBindingContext {
 			new Value.DeferredInitializer<ClassLoaderService>() {
 				@Override
 				public ClassLoaderService initialize() {
-					return metadata.getServiceRegistry().getService( ClassLoaderService.class );
+					return getMetadataImplementor().getServiceRegistry().getService( ClassLoaderService.class );
 				}
 			}
 	);

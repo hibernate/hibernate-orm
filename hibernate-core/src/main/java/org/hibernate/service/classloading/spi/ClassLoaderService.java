@@ -45,7 +45,7 @@ public interface ClassLoaderService extends Service {
 	 *
 	 * @throws ClassLoadingException Indicates the class could not be found
 	 */
-	public Class classForName(String className);
+	public <T> Class<T> classForName(String className);
 
 	/**
 	 * Locate a resource by name (classpath lookup)

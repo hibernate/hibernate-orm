@@ -36,8 +36,8 @@ import org.hibernate.metamodel.binder.source.MetaAttributeContext;
 import org.hibernate.metamodel.binder.source.hbm.xml.mapping.EntityElement;
 import org.hibernate.metamodel.binding.CustomSQL;
 import org.hibernate.metamodel.binding.MetaAttribute;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLHibernateMapping.XMLClass;
-import org.hibernate.metamodel.source.hbm.xml.mapping.XMLMetaElement;
+import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLHibernateMapping;
+import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLMetaElement;
 
 /**
  * @author Steve Ebersole
@@ -95,7 +95,7 @@ public class HbmHelper {
 		return extractedMetas;
 	}
 
-	public static String extractEntityName(XMLClass entityClazz, String unqualifiedPackageName) {
+	public static String extractEntityName(XMLHibernateMapping.XMLClass entityClazz, String unqualifiedPackageName) {
 		return extractEntityName( entityClazz.getEntityName(), entityClazz.getName(), unqualifiedPackageName );
 	}
 

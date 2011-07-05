@@ -32,8 +32,11 @@ import org.jboss.jandex.DotName;
 import org.jboss.jandex.Index;
 import org.junit.Test;
 
+import org.hibernate.metamodel.binder.source.annotations.xml.mocker.EntityMappingsMocker;
+import org.hibernate.metamodel.binder.source.annotations.xml.mocker.EntityMocker;
+import org.hibernate.metamodel.binder.source.annotations.xml.mocker.IndexBuilder;
 import org.hibernate.metamodel.source.annotation.xml.XMLEntity;
-import org.hibernate.metamodel.source.annotations.JPADotNames;
+import org.hibernate.metamodel.binder.source.annotations.JPADotNames;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;

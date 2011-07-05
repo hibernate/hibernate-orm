@@ -23,7 +23,6 @@
  */
 package org.hibernate.metamodel.binder.source;
 
-import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.metamodel.binding.Caching;
 

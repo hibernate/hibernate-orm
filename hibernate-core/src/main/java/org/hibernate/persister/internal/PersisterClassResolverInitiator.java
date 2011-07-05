@@ -57,7 +57,7 @@ public class PersisterClassResolverInitiator implements BasicServiceInitiator<Pe
 
 		final Class<? extends PersisterClassResolver> customImplClass = Class.class.isInstance( customImpl )
 				? (Class<? extends PersisterClassResolver>) customImpl
-				: registry.getService( ClassLoaderService.class ).classForName( customImpl.toString() );
+				: locate( registry, customImpl.toString() );
 
 		try {
 			return customImplClass.newInstance();
@@ -65,5 +65,9 @@ public class PersisterClassResolverInitiator implements BasicServiceInitiator<Pe
 		catch (Exception e) {
 			throw new ServiceException( "Could not initialize custom PersisterClassResolver impl [" + customImplClass.getName() + "]", e );
 		}
+	}
+
+	private Class<? extends PersisterClassResolver> locate(ServiceRegistryImplementor registry, String className) {
+		return registry.getService( ClassLoaderService.class ).classForName( className );
 	}
 }

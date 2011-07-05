@@ -33,9 +33,12 @@ import org.jboss.jandex.DotName;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
+import org.hibernate.metamodel.binder.source.annotations.AnnotationsBindingContext;
+import org.hibernate.metamodel.binder.source.annotations.JPADotNames;
+import org.hibernate.metamodel.binder.source.annotations.entity.ConfiguredClass;
+import org.hibernate.metamodel.binder.source.annotations.entity.ConfiguredClassType;
+import org.hibernate.metamodel.binder.source.annotations.entity.IdType;
 import org.hibernate.metamodel.binding.InheritanceType;
-import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
-import org.hibernate.metamodel.source.annotations.JPADotNames;
 
 /**
  * Represents an entity or mapped superclass configured via annotations/xml.
@@ -50,12 +53,12 @@ public class EntityClass extends ConfiguredClass {
 	private final IdType idType;
 	private final EntityClass jpaEntityParent;
 
-	public EntityClass(ClassInfo classInfo,
-					   EntityClass parent,
-					   AccessType hierarchyAccessType,
-					   InheritanceType inheritanceType,
-					   AnnotationBindingContext context) {
-
+	public EntityClass(
+			ClassInfo classInfo,
+			EntityClass parent,
+			AccessType hierarchyAccessType,
+			InheritanceType inheritanceType,
+			AnnotationsBindingContext context) {
 		super( classInfo, hierarchyAccessType, parent, context );
 		this.hierarchyAccessType = hierarchyAccessType;
 		this.inheritanceType = inheritanceType;

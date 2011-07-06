@@ -24,6 +24,7 @@
 package org.hibernate.metamodel.relational;
 
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.StringHelper;
 
 /**
@@ -93,6 +94,25 @@ public class Identifier {
 	 */
 	public boolean isQuoted() {
 		return isQuoted;
+	}
+
+	/**
+	 * If this is a quoted identifier, then return the identifier name
+	 * enclosed in dialect-specific open- and end-quotes; otherwise,
+	 * simply return the identifier name.
+	 *
+	 * @param dialect
+	 * @return if quoted, identifier name enclosed in dialect-specific
+	 *         open- and end-quotes; otherwise, the identifier name.
+	 */
+	public String encloseInQuotesIfQuoted(Dialect dialect) {
+		return isQuoted ?
+				new StringBuilder( name.length() + 2 )
+						.append( dialect.openQuote() )
+						.append( name )
+						.append( dialect.closeQuote() )
+						.toString() :
+				name;
 	}
 
 	@Override

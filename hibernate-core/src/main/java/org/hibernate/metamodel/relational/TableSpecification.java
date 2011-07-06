@@ -23,6 +23,8 @@
  */
 package org.hibernate.metamodel.relational;
 
+import org.hibernate.dialect.Dialect;
+
 /**
  * Models what ANSI SQL terms a table specification which is a table or a view or an inline view.
  *
@@ -96,4 +98,6 @@ public interface TableSpecification extends ValueContainer, Loggable {
 	public Iterable<String> getComments();
 
 	public void addComment(String comment);
+
+	public String getQualifiedName(Dialect dialect);
 }

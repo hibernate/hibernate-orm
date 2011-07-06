@@ -29,7 +29,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 
-import org.hibernate.internal.util.StringHelper;
+import org.hibernate.dialect.Dialect;
 
 /**
  * Models the concept of a relational <tt>TABLE</tt> (or <tt>VIEW</tt>).
@@ -40,6 +40,7 @@ import org.hibernate.internal.util.StringHelper;
 public class Table extends AbstractTableSpecification implements Exportable {
 	private final Schema database;
 	private final Identifier tableName;
+	private final ObjectName objectName;
 	private final String qualifiedName;
 
 	private LinkedHashMap<String,Index> indexes;
@@ -54,7 +55,7 @@ public class Table extends AbstractTableSpecification implements Exportable {
 	public Table(Schema database, Identifier tableName) {
 		this.database = database;
 		this.tableName = tableName;
-		ObjectName objectName = new ObjectName( database.getName().getSchema(), database.getName().getCatalog(), tableName );
+		objectName = new ObjectName( database.getName().getSchema(), database.getName().getCatalog(), tableName );
 		this.qualifiedName = objectName.toText();
 	}
 
@@ -142,6 +143,11 @@ public class Table extends AbstractTableSpecification implements Exportable {
 			comments = new HashSet<String>();
 		}
 		comments.add( comment );
+	}
+
+	@Override
+	public String getQualifiedName(Dialect dialect) {
+		return objectName.toText( dialect );
 	}
 
 	@Override

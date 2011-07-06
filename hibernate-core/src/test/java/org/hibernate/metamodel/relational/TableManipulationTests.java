@@ -27,6 +27,8 @@ import java.sql.Types;
 
 import org.junit.Test;
 
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -127,5 +129,23 @@ public class TableManipulationTests extends BaseUnitTestCase {
 
 		assertEquals( page, pageBookFk.getSourceTable() );
 		assertEquals( book, pageBookFk.getTargetTable() );
+	}
+
+	@Test
+	public void testQualifiedName() {
+		Dialect dialect = new H2Dialect();
+		Schema schema = new Schema( Identifier.toIdentifier( "schema" ), Identifier.toIdentifier( "`catalog`" ) );
+		Table table = schema.createTable( Identifier.toIdentifier( "my_table" ) );
+		assertEquals( "my_table", table.getTableName().getName() );
+		assertEquals( "my_table", table.getTableName().toString() );
+		assertEquals( "schema.\"catalog\".my_table", table.getQualifiedName( dialect ) );
+
+		table = schema.createTable( Identifier.toIdentifier( "`my_table`" ) );
+		assertEquals( "my_table", table.getTableName().getName() );
+		assertEquals( "`my_table`", table.getTableName().toString() );
+		assertEquals( "schema.\"catalog\".\"my_table\"", table.getQualifiedName( dialect ) );
+
+		InLineView inLineView = schema.createInLineView( "my_inlineview", "select ..." );
+		assertEquals( "( select ... )", inLineView.getQualifiedName( dialect ) );
 	}
 }

@@ -24,6 +24,7 @@
 package org.hibernate.metamodel.relational;
 
 import org.hibernate.HibernateException;
+import org.hibernate.dialect.Dialect;
 
 /**
  * Models the qualified name of a database object.
@@ -94,14 +95,11 @@ public class ObjectName {
 		this.schema = schema;
 		this.catalog = catalog;
 
-		StringBuilder buff = new StringBuilder( name.toString() );
-		if ( catalog != null ) {
-			buff.insert( 0, catalog.toString() + '.' );
-		}
-		if ( schema != null ) {
-			buff.insert( 0, schema.toString() + '.' );
-		}
-		this.identifier = buff.toString();
+		this.identifier = qualify(
+				schema == null ? null : schema.toString(),
+				catalog == null ? null : catalog.toString(),
+				name.toString()
+		);
 
 		int tmpHashCode = schema != null ? schema.hashCode() : 0;
 		tmpHashCode = 31 * tmpHashCode + ( catalog != null ? catalog.hashCode() : 0 );
@@ -123,6 +121,34 @@ public class ObjectName {
 
 	public String toText() {
 		return identifier;
+	}
+
+	public String toText(Dialect dialect) {
+		if ( dialect == null ) {
+			throw new IllegalArgumentException( "dialect must be non-null." );
+		}
+		return qualify(
+				encloseInQuotesIfQuoted( schema, dialect ),
+				encloseInQuotesIfQuoted( catalog, dialect ),
+				encloseInQuotesIfQuoted( name, dialect )
+		);
+	}
+
+	private static String encloseInQuotesIfQuoted(Identifier identifier, Dialect dialect) {
+		return identifier == null ?
+				null :
+				identifier.encloseInQuotesIfQuoted( dialect );
+	}
+
+	private static String qualify(String schema, String catalog, String name) {
+		StringBuilder buff = new StringBuilder( name );
+		if ( catalog != null ) {
+			buff.insert( 0, catalog + '.' );
+		}
+		if ( schema != null ) {
+			buff.insert( 0, schema + '.' );
+		}
+		return buff.toString();
 	}
 
 	@Override

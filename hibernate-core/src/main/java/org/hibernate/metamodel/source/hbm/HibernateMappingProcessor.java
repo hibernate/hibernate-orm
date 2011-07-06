@@ -123,7 +123,12 @@ public class HibernateMappingProcessor implements HbmBindingContext {
 		return metadata.getOptions().getNamingStrategy();
 	}
 
-	@Override
+    @Override
+    public boolean isGloballyQuotedIdentifiers() {
+        return metadata.isGloballyQuotedIdentifiers();
+    }
+
+    @Override
 	public MappingDefaults getMappingDefaults() {
 		return mappingDefaults;
 	}

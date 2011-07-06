@@ -25,6 +25,7 @@ package org.hibernate.metamodel.source.hbm;
 
 import org.hibernate.InvalidMappingException;
 import org.hibernate.MappingException;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.InheritanceType;
 import org.hibernate.metamodel.binding.state.DiscriminatorBindingState;
@@ -96,7 +97,11 @@ class RootEntityBinder extends AbstractEntityBinder {
 			entityBinding.setBaseTable( inLineView );
 		}
 		else {
-			final Identifier tableName = Identifier.toIdentifier( getClassTableName( xmlClazz, entityBinding, null ) );
+            String classTableName = getClassTableName( xmlClazz, entityBinding, null );
+            if(getBindingContext().isGloballyQuotedIdentifiers()){
+                classTableName = StringHelper.quote( classTableName );
+            }
+			final Identifier tableName = Identifier.toIdentifier( classTableName );
 			org.hibernate.metamodel.relational.Table table = schema.getTable( tableName );
 			if ( table == null ) {
 				table = schema.createTable( tableName );

@@ -53,6 +53,7 @@ import org.hibernate.metamodel.source.annotations.global.TableBinder;
 import org.hibernate.metamodel.source.annotations.global.TypeDefBinder;
 import org.hibernate.metamodel.source.annotations.util.ConfiguredClassHierarchyBuilder;
 import org.hibernate.metamodel.source.annotations.xml.OrmXmlParser;
+import org.hibernate.metamodel.source.annotations.xml.PseudoJpaDotNames;
 import org.hibernate.metamodel.source.internal.JaxbRoot;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
 import org.hibernate.metamodel.source.spi.Binder;
@@ -73,7 +74,7 @@ public class AnnotationBinder implements Binder {
 			AnnotationBinder.class.getName()
 	);
 
-	private final MetadataImplementor metadata;
+	private final MetadataImpl metadata;
 
 	private Index index;
 	private ClassLoaderService classLoaderService;
@@ -109,6 +110,10 @@ public class AnnotationBinder implements Binder {
 			final OrmXmlParser ormParser = new OrmXmlParser( metadata );
 			index = ormParser.parseAndUpdateIndex( mappings, index );
 		}
+
+        if( index.getAnnotations( PseudoJpaDotNames.DEFAULT_DELIMITED_IDENTIFIERS ) != null ) {
+            metadata.setGloballyQuotedIdentifiers( true );
+        }
 	}
 
 	/**

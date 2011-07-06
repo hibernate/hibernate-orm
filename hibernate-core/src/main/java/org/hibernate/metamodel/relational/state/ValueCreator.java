@@ -24,6 +24,7 @@
 package org.hibernate.metamodel.relational.state;
 
 import org.hibernate.MappingException;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.relational.Column;
 import org.hibernate.metamodel.relational.DerivedValue;
 import org.hibernate.metamodel.relational.SimpleValue;
@@ -44,7 +45,7 @@ public class ValueCreator {
 	) {
 		final String explicitName = state.getExplicitColumnName();
 		final String logicalColumnName = state.getNamingStrategy().logicalColumnName( explicitName, attributeName );
-		final String columnName =
+		String columnName =
 				explicitName == null ?
 						state.getNamingStrategy().propertyToColumnName( attributeName ) :
 						state.getNamingStrategy().columnName( explicitName );
@@ -54,6 +55,9 @@ public class ValueCreator {
 		if ( columnName == null ) {
 			throw new IllegalArgumentException( "columnName must be non-null." );
 		}
+        if( state.isGloballyQuotedIdentifiers()){
+            columnName = StringHelper.quote( columnName );
+        }
 		Column value = table.getOrCreateColumn( columnName );
 		value.initialize( state, forceNonNullable, forceUnique );
 		return value;

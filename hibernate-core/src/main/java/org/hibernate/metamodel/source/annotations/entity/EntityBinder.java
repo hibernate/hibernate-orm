@@ -61,6 +61,7 @@ import org.hibernate.metamodel.domain.Hierarchical;
 import org.hibernate.metamodel.domain.SingularAttribute;
 import org.hibernate.metamodel.relational.Identifier;
 import org.hibernate.metamodel.relational.Schema;
+import org.hibernate.metamodel.relational.Table;
 import org.hibernate.metamodel.relational.TableSpecification;
 import org.hibernate.metamodel.relational.UniqueKey;
 import org.hibernate.metamodel.source.annotations.HibernateDotNames;
@@ -205,8 +206,7 @@ public class EntityBinder {
 		);
 		if ( whereAnnotation != null ) {
 			// no null check needed, it is a required attribute
-			String clause = whereAnnotation.value( "clause" ).asString();
-			entityBindingState.setWhereFilter( clause );
+			entityBindingState.setWhereFilter( JandexHelper.getValueAsString( whereAnnotation, "clause" ) );
 		}
 	}
 
@@ -399,31 +399,44 @@ public class EntityBinder {
 		return new Caching( region, defaultAccessType, true );
 	}
 
-	private Schema.Name createSchemaName() {
-		String schema = null;
-		String catalog = null;
+    private Table createTable() {
+        String schmaName = null;
+        String catalogName = null;
+        String tableName = null;
+        AnnotationInstance tableAnnotation = JandexHelper.getSingleAnnotation(
+                entityClass.getClassInfo(), JPADotNames.TABLE
+        );
+        if ( tableAnnotation != null ) {
+            schmaName = JandexHelper.getValueAsString( tableAnnotation, "schema" );
+            catalogName = JandexHelper.getValueAsString( tableAnnotation, "catalog" );
+            tableName = JandexHelper.getValueAsString( tableAnnotation, "name" );
+        }
 
-		AnnotationInstance tableAnnotation = JandexHelper.getSingleAnnotation(
-				entityClass.getClassInfo(), JPADotNames.TABLE
-		);
-		if ( tableAnnotation != null ) {
-			AnnotationValue schemaValue = tableAnnotation.value( "schema" );
-			AnnotationValue catalogValue = tableAnnotation.value( "catalog" );
 
-			schema = schemaValue != null ? schemaValue.asString() : null;
-			catalog = catalogValue != null ? catalogValue.asString() : null;
-		}
+        if ( StringHelper.isEmpty( tableName ) ) {
+            tableName = meta.getNamingStrategy().classToTableName( entityClass.getPrimaryTableName() );
 
-		return new Schema.Name( schema, catalog );
-	}
+        }
+        else {
+            tableName = meta.getNamingStrategy().tableName( tableName );
+        }
+        if ( meta.isGloballyQuotedIdentifiers() ) {
+            schmaName = StringHelper.quote( schmaName );
+            catalogName = StringHelper.quote( catalogName );
+            tableName = StringHelper.quote( tableName );
+        }
+        final Identifier tableNameIdentifier = Identifier.toIdentifier( tableName );
+        final Schema schema = meta.getDatabase().getSchema( new Schema.Name( schmaName, catalogName ) );
+        Table table = schema.getTable( tableNameIdentifier );
+        if ( table == null ) {
+            table = schema.createTable( tableNameIdentifier );
+        }
+        return table;
+    }
+
 
 	private void bindTable(EntityBinding entityBinding) {
-		final Schema schema = meta.getDatabase().getSchema( createSchemaName() );
-		final Identifier tableName = Identifier.toIdentifier( entityClass.getPrimaryTableName() );
-		org.hibernate.metamodel.relational.Table table = schema.getTable( tableName );
-		if ( table == null ) {
-			table = schema.createTable( tableName );
-		}
+        Table table = createTable();
 		entityBinding.setBaseTable( table );
 
 		AnnotationInstance checkAnnotation = JandexHelper.getSingleAnnotation(
@@ -574,9 +587,9 @@ public class EntityBinder {
 				GenerationType.class
 		);
 		String strategy = IdGeneratorBinder.generatorType(
-				generationType,
-				meta.getOptions().useNewIdentifierGenerators()
-		);
+                generationType,
+                meta.getOptions().useNewIdentifierGenerators()
+        );
 		if ( idGenerator != null && !strategy.equals( idGenerator.getStrategy() ) ) {
 			//todo how to ?
 			throw new MappingException(

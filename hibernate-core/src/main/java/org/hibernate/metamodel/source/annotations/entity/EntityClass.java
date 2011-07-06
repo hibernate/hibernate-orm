@@ -94,7 +94,7 @@ public class EntityClass extends ConfiguredClass {
 	public boolean hasOwnTable() {
 		return hasOwnTable;
 	}
-
+    //todo change a better method name
 	public String getPrimaryTableName() {
 		return primaryTableName;
 	}
@@ -145,16 +145,6 @@ public class EntityClass extends ConfiguredClass {
 		String tableName = null;
 		if ( hasOwnTable() ) {
 			tableName = getConfiguredClass().getSimpleName();
-			AnnotationInstance tableAnnotation = JandexHelper.getSingleAnnotation(
-					getClassInfo(), JPADotNames.TABLE
-			);
-			if ( tableAnnotation != null ) {
-				AnnotationValue value = tableAnnotation.value( "name" );
-				String tmp = value == null ? null : value.asString();
-				if ( tmp != null && !tmp.isEmpty() ) {
-					tableName = tmp;
-				}
-			}
 		}
 		else if ( getParent() != null
 				&& !getParent().getConfiguredClassType().equals( ConfiguredClassType.MAPPED_SUPERCLASS ) ) {

@@ -34,6 +34,8 @@ import org.hibernate.metamodel.relational.Size;
 public interface ColumnRelationalState extends SimpleValueRelationalState {
 	NamingStrategy getNamingStrategy();
 
+    boolean isGloballyQuotedIdentifiers();
+
 	String getExplicitColumnName();
 
 	boolean isUnique();

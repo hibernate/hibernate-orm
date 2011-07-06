@@ -44,7 +44,7 @@ public class Identifier {
 	 * @return
 	 */
 	public static Identifier toIdentifier(String name) {
-		if ( name == null ) {
+		if ( StringHelper.isEmpty( name ) ) {
 			return null;
 		}
 		final String trimmedName = name.trim();

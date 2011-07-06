@@ -42,10 +42,13 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.function.SQLFunctionRegistry;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
+import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -92,7 +95,11 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.metamodel.binding.AttributeBinding;
 import org.hibernate.metamodel.binding.EntityBinding;
+import org.hibernate.metamodel.relational.DerivedValue;
+import org.hibernate.metamodel.relational.Identifier;
+import org.hibernate.metamodel.relational.SimpleValue;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.property.BackrefPropertyAccessor;
 import org.hibernate.sql.Alias;
@@ -771,62 +778,233 @@ public abstract class AbstractEntityPersister
 						new StructuredCacheEntry(this) :
 						new UnstructuredCacheEntry();
 		this.entityMetamodel = new EntityMetamodel( entityBinding, factory );
-		rootTableKeyColumnNames = null;
-		rootTableKeyColumnReaders = null;
-		rootTableKeyColumnReaderTemplates = null;
-		identifierAliases = null;
-		identifierColumnSpan = -1;
-		versionColumnName = null;
-		hasFormulaProperties = false;
-		batchSize = -1;
-		hasSubselectLoadableCollections = false;
-		rowIdName = null;
-		lazyProperties = null;
-		sqlWhereString = null;
-		sqlWhereStringTemplate = null;
-		propertyColumnSpans = null;
-		propertySubclassNames = null;
-		propertyColumnAliases = null;
-		propertyColumnNames = null;
-		propertyColumnFormulaTemplates = null;
-		propertyColumnReaderTemplates = null;
-		propertyColumnWriters = null;
-		propertyColumnUpdateable = null;
-		propertyColumnInsertable = null;
-		propertyUniqueness = null;
-		propertySelectable = null;
-		lazyPropertyNames = null;
-		lazyPropertyNumbers = null;
-		lazyPropertyTypes = null;
-		lazyPropertyColumnAliases = null;
-		subclassPropertyNameClosure = null;
-		subclassPropertySubclassNameClosure = null;
-		subclassPropertyTypeClosure = null;
-		subclassPropertyFormulaTemplateClosure = null;
-		subclassPropertyColumnNameClosure = null;
-		subclassPropertyColumnReaderClosure = null;
-		subclassPropertyColumnReaderTemplateClosure = null;
-		subclassPropertyFetchModeClosure = null;
-		subclassPropertyNullabilityClosure = null;
-		propertyDefinedOnSubclass = null;
-		subclassPropertyColumnNumberClosure = null;
-		subclassPropertyFormulaNumberClosure = null;
-		subclassPropertyCascadeStyleClosure = null;
-		subclassColumnClosure = null;
-		subclassColumnLazyClosure = null;
-		subclassColumnAliasClosure = null;
-		subclassColumnSelectableClosure = null;
-		subclassColumnReaderTemplateClosure = null;
-		subclassFormulaClosure = null;
-		subclassFormulaTemplateClosure = null;
-		subclassFormulaAliasClosure = null;
-		subclassFormulaLazyClosure = null;
-		filterHelper = null;
-		loaderName = null;
-		queryLoader = null;
+		int batch = entityBinding.getBatchSize();
+		if ( batch == -1 ) {
+			batch = factory.getSettings().getDefaultBatchFetchSize();
+		}
+		batchSize = batch;
+		hasSubselectLoadableCollections = entityBinding.hasSubselectLoadableCollections();
+
+		propertyMapping = new BasicEntityPropertyMapping( this );
+
+		// IDENTIFIER
+
+		identifierColumnSpan = entityBinding.getEntityIdentifier().getValueBinding().getValuesSpan();
+		rootTableKeyColumnNames = new String[identifierColumnSpan];
+		rootTableKeyColumnReaders = new String[identifierColumnSpan];
+		rootTableKeyColumnReaderTemplates = new String[identifierColumnSpan];
+		identifierAliases = new String[identifierColumnSpan];
+
+		rowIdName = entityBinding.getRowId();
+
+		loaderName = entityBinding.getLoaderName();
+
+		int i = 0;
+		for ( org.hibernate.metamodel.relational.Column col : entityBinding.getBaseTable().getPrimaryKey().getColumns() ) {
+			rootTableKeyColumnNames[i] = col.getColumnName().encloseInQuotesIfQuoted( factory.getDialect() );
+			if ( col.getReadFragment() == null ) {
+				rootTableKeyColumnReaders[i] = rootTableKeyColumnNames[i];
+				rootTableKeyColumnReaderTemplates[i] = getTemplateFromColumn( col, factory );
+			}
+			else {
+				rootTableKeyColumnReaders[i] = col.getReadFragment();
+				rootTableKeyColumnReaderTemplates[i] = getTemplateFromString( col.getReadFragment(), factory );
+			}
+			// TODO: Fix when HHH-6337 is fixed; for now assume entityBinding is the root
+			// identifierAliases[i] = col.getAlias( factory.getDialect(), entityBinding.getRootEntityBinding().getBaseTable() );
+			identifierAliases[i] = col.getAlias( factory.getDialect() );
+			i++;
+		}
+
+		// VERSION
+
+		if ( entityBinding.isVersioned() ) {
+			// Use AttributeBinding.getValues() due to HHH-6380
+			Iterator<SimpleValue> valueIterator = entityBinding.getVersioningValueBinding().getValues().iterator();
+			SimpleValue versionValue = valueIterator.next();
+			if ( ! ( versionValue instanceof org.hibernate.metamodel.relational.Column ) || valueIterator.hasNext() ) {
+				throw new MappingException( "Version must be a single column value." );
+			}
+			org.hibernate.metamodel.relational.Column versionColumn =
+					( org.hibernate.metamodel.relational.Column ) versionValue;
+			versionColumnName = versionColumn.getColumnName().encloseInQuotesIfQuoted( factory.getDialect() );
+		}
+		else {
+			versionColumnName = null;
+		}
+
+		//WHERE STRING
+
+		sqlWhereString = StringHelper.isNotEmpty( entityBinding.getWhereFilter() ) ? "( " + entityBinding.getWhereFilter() + ") " : null;
+		sqlWhereStringTemplate = getTemplateFromString( sqlWhereString, factory );
+
+		// PROPERTIES
+
+		final boolean lazyAvailable = isInstrumented();
+
+		int hydrateSpan = entityMetamodel.getPropertySpan();
+		propertyColumnSpans = new int[hydrateSpan];
+		propertySubclassNames = new String[hydrateSpan];
+		propertyColumnAliases = new String[hydrateSpan][];
+		propertyColumnNames = new String[hydrateSpan][];
+		propertyColumnFormulaTemplates = new String[hydrateSpan][];
+		propertyColumnReaderTemplates = new String[hydrateSpan][];
+		propertyColumnWriters = new String[hydrateSpan][];
+		propertyUniqueness = new boolean[hydrateSpan];
+		propertySelectable = new boolean[hydrateSpan];
+		propertyColumnUpdateable = new boolean[hydrateSpan][];
+		propertyColumnInsertable = new boolean[hydrateSpan][];
+		HashSet thisClassProperties = new HashSet();
+
+		lazyProperties = new HashSet();
+		ArrayList lazyNames = new ArrayList();
+		ArrayList lazyNumbers = new ArrayList();
+		ArrayList lazyTypes = new ArrayList();
+		ArrayList lazyColAliases = new ArrayList();
+
+		i = 0;
+		boolean foundFormula = false;
+		for ( AttributeBinding prop : entityBinding.getAttributeBindingClosure() ) {
+			if ( prop == entityBinding.getEntityIdentifier().getValueBinding() ) {
+				// entity identifier is not considered a "normal" property
+				continue;
+			}
+
+			thisClassProperties.add( prop );
+
+			int span = prop.getValuesSpan();
+			propertyColumnSpans[i] = span;
+			propertySubclassNames[i] = prop.getEntityBinding().getEntity().getName();
+			String[] colNames = new String[span];
+			String[] colAliases = new String[span];
+			String[] colReaderTemplates = new String[span];
+			String[] colWriters = new String[span];
+			String[] formulaTemplates = new String[span];
+			int k = 0;
+			for ( SimpleValue thing : prop.getValues() ) {
+				colAliases[k] = thing.getAlias( factory.getDialect() );
+				if ( thing instanceof DerivedValue ) {
+					foundFormula = true;
+					formulaTemplates[ k ] = getTemplateFromString( ( (DerivedValue) thing ).getExpression(), factory );
+				}
+				else {
+					org.hibernate.metamodel.relational.Column col = ( org.hibernate.metamodel.relational.Column ) thing;
+					colNames[k] = col.getColumnName().encloseInQuotesIfQuoted( factory.getDialect() );
+					colReaderTemplates[k] = getTemplateFromColumn( col, factory );
+					colWriters[k] = col.getWriteFragment();
+				}
+				k++;
+			}
+			propertyColumnNames[i] = colNames;
+			propertyColumnFormulaTemplates[i] = formulaTemplates;
+			propertyColumnReaderTemplates[i] = colReaderTemplates;
+			propertyColumnWriters[i] = colWriters;
+			propertyColumnAliases[i] = colAliases;
+
+			if ( lazyAvailable && prop.isLazy() ) {
+				lazyProperties.add( prop.getAttribute().getName() );
+				lazyNames.add( prop.getAttribute().getName() );
+				lazyNumbers.add( i );
+				lazyTypes.add( prop.getHibernateTypeDescriptor().getExplicitType());
+				lazyColAliases.add( colAliases );
+			}
+
+			propertyColumnUpdateable[i] = prop.getColumnUpdateability();
+			propertyColumnInsertable[i] = prop.getColumnInsertability();
+
+			// TODO: fix this when backrefs are working
+			//propertySelectable[i] = prop.isBackRef();
+			propertySelectable[i] = true;
+
+			propertyUniqueness[i] = prop.isAlternateUniqueKey();
+
+			i++;
+
+		}
+		hasFormulaProperties = foundFormula;
+		lazyPropertyColumnAliases = ArrayHelper.to2DStringArray( lazyColAliases );
+		lazyPropertyNames = ArrayHelper.toStringArray( lazyNames );
+		lazyPropertyNumbers = ArrayHelper.toIntArray( lazyNumbers );
+		lazyPropertyTypes = ArrayHelper.toTypeArray( lazyTypes );
+
+		// SUBCLASS PROPERTY CLOSURE
+
+		ArrayList columns = new ArrayList();
+		ArrayList columnsLazy = new ArrayList();
+		ArrayList columnReaderTemplates = new ArrayList();
+		ArrayList aliases = new ArrayList();
+		ArrayList formulas = new ArrayList();
+		ArrayList formulaAliases = new ArrayList();
+		ArrayList formulaTemplates = new ArrayList();
+		ArrayList formulasLazy = new ArrayList();
+		ArrayList types = new ArrayList();
+		ArrayList names = new ArrayList();
+		ArrayList classes = new ArrayList();
+		ArrayList templates = new ArrayList();
+		ArrayList propColumns = new ArrayList();
+		ArrayList propColumnReaders = new ArrayList();
+		ArrayList propColumnReaderTemplates = new ArrayList();
+		ArrayList<FetchMode> joinedFetchesList = new ArrayList<FetchMode>();
+		ArrayList<CascadeStyle> cascades = new ArrayList<CascadeStyle>();
+		ArrayList<Boolean> definedBySubclass = new ArrayList<Boolean>();
+		ArrayList propColumnNumbers = new ArrayList();
+		ArrayList propFormulaNumbers = new ArrayList();
+		ArrayList columnSelectables = new ArrayList();
+		ArrayList propNullables = new ArrayList();
+
+		subclassColumnClosure = ArrayHelper.toStringArray( columns );
+		subclassColumnAliasClosure = ArrayHelper.toStringArray( aliases );
+		subclassColumnLazyClosure = ArrayHelper.toBooleanArray( columnsLazy );
+		subclassColumnSelectableClosure = ArrayHelper.toBooleanArray( columnSelectables );
+		subclassColumnReaderTemplateClosure = ArrayHelper.toStringArray( columnReaderTemplates );
+
+		subclassFormulaClosure = ArrayHelper.toStringArray( formulas );
+		subclassFormulaTemplateClosure = ArrayHelper.toStringArray( formulaTemplates );
+		subclassFormulaAliasClosure = ArrayHelper.toStringArray( formulaAliases );
+		subclassFormulaLazyClosure = ArrayHelper.toBooleanArray( formulasLazy );
+
+		subclassPropertyNameClosure = ArrayHelper.toStringArray( names );
+		subclassPropertySubclassNameClosure = ArrayHelper.toStringArray( classes );
+		subclassPropertyTypeClosure = ArrayHelper.toTypeArray( types );
+		subclassPropertyNullabilityClosure = ArrayHelper.toBooleanArray( propNullables );
+		subclassPropertyFormulaTemplateClosure = ArrayHelper.to2DStringArray( templates );
+		subclassPropertyColumnNameClosure = ArrayHelper.to2DStringArray( propColumns );
+		subclassPropertyColumnReaderClosure = ArrayHelper.to2DStringArray( propColumnReaders );
+		subclassPropertyColumnReaderTemplateClosure = ArrayHelper.to2DStringArray( propColumnReaderTemplates );
+		subclassPropertyColumnNumberClosure = ArrayHelper.to2DIntArray( propColumnNumbers );
+		subclassPropertyFormulaNumberClosure = ArrayHelper.to2DIntArray( propFormulaNumbers );
+
+		subclassPropertyCascadeStyleClosure = cascades.toArray( new CascadeStyle[ cascades.size() ] );
+		subclassPropertyFetchModeClosure = joinedFetchesList.toArray( new FetchMode[ joinedFetchesList.size() ] );
+
+		propertyDefinedOnSubclass = ArrayHelper.toBooleanArray( definedBySubclass );
+
+		Map<String, String> filterDefaultConditionsByName = new HashMap<String, String>();
+		for ( FilterDefinition filterDefinition : entityBinding.getFilterDefinitions() ) {
+			filterDefaultConditionsByName.put( filterDefinition.getFilterName(), filterDefinition.getDefaultFilterCondition() );
+		}
+		filterHelper = new FilterHelper( filterDefaultConditionsByName, factory.getDialect(), factory.getSqlFunctionRegistry() );
+
 		temporaryIdTableName = null;
 		temporaryIdTableDDL = null;
-		propertyMapping = null;
+	}
+
+	protected static String getTemplateFromString(String string, SessionFactoryImplementor factory) {
+		return string == null ?
+				null :
+				Template.renderWhereStringTemplate( string, factory.getDialect(), factory.getSqlFunctionRegistry() );
+	}
+
+	public String getTemplateFromColumn(org.hibernate.metamodel.relational.Column column, SessionFactoryImplementor factory) {
+		String templateString;
+		if ( column.getReadFragment() != null ) {
+			templateString = getTemplateFromString( column.getReadFragment(), factory );
+		}
+		else {
+			String columnName = column.getColumnName().encloseInQuotesIfQuoted( factory.getDialect() );
+			templateString = Template.TEMPLATE + '.' + columnName;
+		}
+		return templateString;
 	}
 
 	protected String generateLazySelectString() {
@@ -1766,6 +1944,73 @@ public abstract class AbstractEntityPersister
 
 		// ALIASES
 		internalInitSubclassPropertyAliasesMap( null, model.getSubclassPropertyClosureIterator() );
+
+		// aliases for identifier ( alias.id ); skip if the entity defines a non-id property named 'id'
+		if ( ! entityMetamodel.hasNonIdentifierPropertyNamedId() ) {
+			subclassPropertyAliases.put( ENTITY_ID, getIdentifierAliases() );
+			subclassPropertyColumnNames.put( ENTITY_ID, getIdentifierColumnNames() );
+		}
+
+		// aliases named identifier ( alias.idname )
+		if ( hasIdentifierProperty() ) {
+			subclassPropertyAliases.put( getIdentifierPropertyName(), getIdentifierAliases() );
+			subclassPropertyColumnNames.put( getIdentifierPropertyName(), getIdentifierColumnNames() );
+		}
+
+		// aliases for composite-id's
+		if ( getIdentifierType().isComponentType() ) {
+			// Fetch embedded identifiers propertynames from the "virtual" identifier component
+			CompositeType componentId = ( CompositeType ) getIdentifierType();
+			String[] idPropertyNames = componentId.getPropertyNames();
+			String[] idAliases = getIdentifierAliases();
+			String[] idColumnNames = getIdentifierColumnNames();
+
+			for ( int i = 0; i < idPropertyNames.length; i++ ) {
+				if ( entityMetamodel.hasNonIdentifierPropertyNamedId() ) {
+					subclassPropertyAliases.put(
+							ENTITY_ID + "." + idPropertyNames[i],
+							new String[] { idAliases[i] }
+					);
+					subclassPropertyColumnNames.put(
+							ENTITY_ID + "." + getIdentifierPropertyName() + "." + idPropertyNames[i],
+							new String[] { idColumnNames[i] }
+					);
+				}
+//				if (hasIdentifierProperty() && !ENTITY_ID.equals( getIdentifierPropertyName() ) ) {
+				if ( hasIdentifierProperty() ) {
+					subclassPropertyAliases.put(
+							getIdentifierPropertyName() + "." + idPropertyNames[i],
+							new String[] { idAliases[i] }
+					);
+					subclassPropertyColumnNames.put(
+							getIdentifierPropertyName() + "." + idPropertyNames[i],
+							new String[] { idColumnNames[i] }
+					);
+				}
+				else {
+					// embedded composite ids ( alias.idname1, alias.idname2 )
+					subclassPropertyAliases.put( idPropertyNames[i], new String[] { idAliases[i] } );
+					subclassPropertyColumnNames.put( idPropertyNames[i],  new String[] { idColumnNames[i] } );
+				}
+			}
+		}
+
+		if ( entityMetamodel.isPolymorphic() ) {
+			subclassPropertyAliases.put( ENTITY_CLASS, new String[] { getDiscriminatorAlias() } );
+			subclassPropertyColumnNames.put( ENTITY_CLASS, new String[] { getDiscriminatorColumnName() } );
+		}
+
+	}
+
+	/**
+	 * Must be called by subclasses, at the end of their constructors
+	 */
+	protected void initSubclassPropertyAliasesMap(EntityBinding model) throws MappingException {
+
+		// ALIASES
+
+		// TODO: Fix when subclasses are working (HHH-6337)
+		//internalInitSubclassPropertyAliasesMap( null, model.getSubclassPropertyClosureIterator() );
 
 		// aliases for identifier ( alias.id ); skip if the entity defines a non-id property named 'id'
 		if ( ! entityMetamodel.hasNonIdentifierPropertyNamedId() ) {

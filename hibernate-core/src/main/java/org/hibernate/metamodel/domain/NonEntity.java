@@ -23,20 +23,33 @@
  */
 package org.hibernate.metamodel.domain;
 
+import org.hibernate.internal.util.Value;
+
 /**
  * Models the concept class in the hierarchy with no persistent attributes.
  *
  * @author Hardy Ferentschik
  */
 public class NonEntity extends AbstractAttributeContainer implements Hierarchical {
-	public NonEntity(String name, Hierarchical superType) {
-		super( name, superType );
+	/**
+	 * Constructor for the non-entity
+	 *
+	 * @param entityName The name of the non-entity
+	 * @param className The name of this non-entity's java class
+	 * @param classReference The reference to this non-entity's {@link Class}
+	 * @param superType The super type for this non-entity. If there is not super type {@code null} needs to be passed.
+	 */
+	public NonEntity(String entityName, String className, Value<Class<?>> classReference, Hierarchical superType) {
+		super( entityName, className, classReference, superType );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
-	public TypeNature getNature() {
-		return TypeNature.NON_ENTITY;
+	@Override
+	public boolean isAssociation() {
+		return true;
+	}
+
+	@Override
+	public boolean isComponent() {
+		return false;
 	}
 }

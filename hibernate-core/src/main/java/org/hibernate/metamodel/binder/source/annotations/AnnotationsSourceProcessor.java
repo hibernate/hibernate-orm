@@ -286,6 +286,11 @@ public class AnnotationsSourceProcessor implements SourceProcessor, AnnotationsB
 		}
 		return javaType;
 	}
+
+	@Override
+	public Value<Class<?>> makeClassReference(String className) {
+		return new Value<Class<?>>( locateClassByName( className ) );
+	}
 }
 
 

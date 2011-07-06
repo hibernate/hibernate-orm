@@ -45,7 +45,7 @@ public interface HbmBindingContext extends BindingContext {
 
 	public String determineEntityName(EntityElement entityElement);
 
-	public String getClassName(String unqualifiedName);
+	public String qualifyClassName(String unqualifiedName);
 
 	public void processFetchProfiles(List<XMLFetchProfileElement> fetchProfiles, String containingEntityName);
 }

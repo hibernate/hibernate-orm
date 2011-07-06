@@ -350,6 +350,18 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	@Override
+	public Value<Class<?>> makeClassReference(final String className) {
+		return new Value<Class<?>>(
+				new Value.DeferredInitializer<Class<?>>() {
+					@Override
+					public Class<?> initialize() {
+						return classLoaderService.getValue().classForName( className );
+					}
+				}
+		);
+	}
+
+	@Override
 	public Database getDatabase() {
 		return database;
 	}

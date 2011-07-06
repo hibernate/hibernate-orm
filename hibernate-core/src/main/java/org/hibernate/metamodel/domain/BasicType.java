@@ -23,29 +23,49 @@
  */
 package org.hibernate.metamodel.domain;
 
+import org.hibernate.internal.util.Value;
+
 /**
  * Models a basic type.
  *
  * @author Steve Ebersole
  */
 public class BasicType implements Type {
-	private final JavaType javaType;
+	private final String name;
+	private final Value<Class<?>> classReference;
 
-	public BasicType(JavaType javaType) {
-		this.javaType = javaType;
+	public BasicType(String name, Value<Class<?>> classReference) {
+		this.name = name;
+		this.classReference = classReference;
 	}
 
 	@Override
 	public String getName() {
-		return javaType.getName();
-	}
-
-	public JavaType getJavaType() {
-		return javaType;
+		return name;
 	}
 
 	@Override
-	public TypeNature getNature() {
-		return TypeNature.BASIC;
+	public String getClassName() {
+		return name;
+	}
+
+	@Override
+	public Class<?> getClassReference() {
+		return classReference.getValue();
+	}
+
+	@Override
+	public Value<Class<?>> getClassReferenceUnresolved() {
+		return classReference;
+	}
+
+	@Override
+	public boolean isAssociation() {
+		return false;
+	}
+
+	@Override
+	public boolean isComponent() {
+		return false;
 	}
 }

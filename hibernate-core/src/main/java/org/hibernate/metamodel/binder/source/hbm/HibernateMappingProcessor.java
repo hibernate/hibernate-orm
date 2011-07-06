@@ -33,10 +33,8 @@ import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.Value;
-import org.hibernate.metamodel.binder.EntityBinder;
 import org.hibernate.metamodel.binder.MappingException;
 import org.hibernate.metamodel.binder.Origin;
-import org.hibernate.metamodel.binder.source.EntityDescriptor;
 import org.hibernate.metamodel.binder.source.MappingDefaults;
 import org.hibernate.metamodel.binder.source.MetaAttributeContext;
 import org.hibernate.metamodel.binder.source.MetadataImplementor;
@@ -79,7 +77,7 @@ public class HibernateMappingProcessor implements HbmBindingContext {
 	private final MetaAttributeContext metaAttributeContext;
 
 
-	private final EntityBinder entityBinder;
+	private final BindingCreator bindingCreator;
 
 	private final boolean autoImport;
 
@@ -102,7 +100,7 @@ public class HibernateMappingProcessor implements HbmBindingContext {
 
 		this.autoImport = hibernateMapping.isAutoImport();
 
-		this.entityBinder = new EntityBinder( this );
+		this.bindingCreator = new BindingCreator( this );
 
 		this.metaAttributeContext = extractMetaAttributes();
 	}
@@ -165,6 +163,11 @@ public class HibernateMappingProcessor implements HbmBindingContext {
 	@Override
 	public JavaType makeJavaType(String className) {
 		return getMetadataImplementor().makeJavaType( className );
+	}
+
+	@Override
+	public Value<Class<?>> makeClassReference(String className) {
+		return getMetadataImplementor().makeClassReference( className );
 	}
 
 	public void processIndependentMetadata() {
@@ -289,37 +292,12 @@ public class HibernateMappingProcessor implements HbmBindingContext {
 		for ( Object entityElementO : hibernateMapping.getClazzOrSubclassOrJoinedSubclass() ) {
 			final EntityElement entityElement = (EntityElement) entityElementO;
 
-			// determine the type of root element we have and build appropriate entity descriptor.  Might be:
-			//		1) <class/>
-			//		2) <subclass/>
-			//		3) <joined-subclass/>
-			//		4) <union-subclass/>
-
-			final EntityDescriptor entityDescriptor;
-			if ( XMLHibernateMapping.XMLClass.class.isInstance( entityElement ) ) {
-				entityDescriptor = new RootEntityDescriptorImpl( entityElement, this );
-			}
-			else if ( XMLSubclassElement.class.isInstance( entityElement ) ) {
-				entityDescriptor = new DiscriminatedSubClassEntityDescriptorImpl( entityElement, this );
-			}
-			else if ( XMLJoinedSubclassElement.class.isInstance( entityElement ) ) {
-				entityDescriptor = new JoinedSubClassEntityDescriptorImpl( entityElement, this );
-			}
-			else if ( XMLUnionSubclassElement.class.isInstance( entityElement ) ) {
-				entityDescriptor = new UnionSubClassEntityDescriptorImpl( entityElement, this );
-			}
-			else {
-				throw new MappingException(
-						"unknown type of class or subclass: " + entityElement.getClass().getName(),
-						jaxbRoot.getOrigin()
-				);
-			}
-
-			if ( processedEntityNames.contains( entityDescriptor.getEntityName() ) ) {
+			final String entityName = this.determineEntityName( entityElement );
+			if ( processedEntityNames.contains( entityName ) ) {
 				continue;
 			}
 
-			final EntityBinding entityBinding = entityBinder.createEntityBinding( entityDescriptor );
+			final EntityBinding entityBinding = bindingCreator.createEntityBinding( entityElement, null );
 			getMetadataImplementor().addEntity( entityBinding );
 			processedEntityNames.add( entityBinding.getEntity().getName() );
 		}
@@ -363,7 +341,7 @@ public class HibernateMappingProcessor implements HbmBindingContext {
 			return;
 		}
 		for ( XMLHibernateMapping.XMLImport importValue : hibernateMapping.getImport() ) {
-			String className = getClassName( importValue.getClazz() );
+			String className = qualifyClassName( importValue.getClazz() );
 			String rename = importValue.getRename();
 			rename = ( rename == null ) ? StringHelper.unqualify( className ) : rename;
 			getMetadataImplementor().addImport( className, rename );
@@ -407,7 +385,7 @@ public class HibernateMappingProcessor implements HbmBindingContext {
 	);
 
 	@Override
-	public String getClassName(String unqualifiedName) {
+	public String qualifyClassName(String unqualifiedName) {
 		return HbmHelper.getClassName( unqualifiedName, mappingDefaults.getPackageName() );
 	}
 

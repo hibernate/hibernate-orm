@@ -23,6 +23,8 @@
  */
 package org.hibernate.metamodel.domain;
 
+import org.hibernate.internal.util.Value;
+
 /**
  * Models the notion of an entity
  *
@@ -30,27 +32,25 @@ package org.hibernate.metamodel.domain;
  * @author Hardy Ferentschik
  */
 public class Entity extends AbstractAttributeContainer {
-	final JavaType javaType;
-
 	/**
 	 * Constructor for the entity
 	 *
-	 * @param name the name of the entity
-	 * @param superType the super type for this entity. If there is not super type {@code null} needs to be passed.
-	 * @param javaType the java type of the entity
+	 * @param entityName The name of the entity
+	 * @param className The name of this entity's java class
+	 * @param classReference The reference to this entity's {@link Class}
+	 * @param superType The super type for this entity. If there is not super type {@code null} needs to be passed.
 	 */
-	public Entity(String name, Hierarchical superType, JavaType javaType) {
-		super( name, superType );
-		this.javaType = javaType;
+	public Entity(String entityName, String className, Value<Class<?>> classReference, Hierarchical superType) {
+		super( entityName, className, classReference, superType );
 	}
 
 	@Override
-	public TypeNature getNature() {
-		return TypeNature.ENTITY;
+	public boolean isAssociation() {
+		return true;
 	}
 
-	public JavaType getJavaType() {
-		return javaType;
+	@Override
+	public boolean isComponent() {
+		return false;
 	}
-
 }

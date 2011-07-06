@@ -1,19 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<jxb:bindings version="1.0"
-              xmlns:jxb="http://java.sun.com/xml/ns/jaxb"
-              xmlns:xs="http://www.w3.org/2001/XMLSchema"
-              xmlns:xjc="http://java.sun.com/xml/ns/jaxb/xjc"
-              jxb:extensionBindingPrefixes="xjc">
 
-    <jxb:bindings schemaLocation="../resources/org/hibernate/hibernate-configuration-4.0.xsd" node="/xs:schema">
-        <jxb:schemaBindings>
-            <jxb:nameXmlTransform>
-                <jxb:typeName prefix="XML"/>
-                <jxb:elementName prefix="XML"/>
-                <jxb:modelGroupName prefix="XML"/>
-                <jxb:anonymousTypeName prefix="XML"/>
-            </jxb:nameXmlTransform>
-        </jxb:schemaBindings>
-    </jxb:bindings>
+<jaxb:bindings xmlns:jaxb="http://java.sun.com/xml/ns/jaxb"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+        jaxb:version="2.1">
 
-</jxb:bindings>
+    <jaxb:bindings schemaLocation="../resources/org/hibernate/hibernate-configuration-4.0.xsd" node="/xsd:schema">
+        <jaxb:schemaBindings>
+            <jaxb:nameXmlTransform>
+                <jaxb:typeName prefix="XML"/>
+                <jaxb:elementName prefix="XML"/>
+                <jaxb:modelGroupName prefix="XML"/>
+                <jaxb:anonymousTypeName prefix="XML"/>
+            </jaxb:nameXmlTransform>
+        </jaxb:schemaBindings>
+    </jaxb:bindings>
+
+</jaxb:bindings>

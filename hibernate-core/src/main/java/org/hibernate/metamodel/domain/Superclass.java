@@ -23,20 +23,33 @@
  */
 package org.hibernate.metamodel.domain;
 
+import org.hibernate.internal.util.Value;
+
 /**
  * Models the concept of a (intermediate) superclass
  *
  * @author Steve Ebersole
  */
 public class Superclass extends AbstractAttributeContainer implements Hierarchical {
-	public Superclass(String name, Hierarchical superType) {
-		super( name, superType );
+	/**
+	 * Constructor for the entity
+	 *
+	 * @param entityName The name of the entity
+	 * @param className The name of this entity's java class
+	 * @param classReference The reference to this entity's {@link Class}
+	 * @param superType The super type for this entity. If there is not super type {@code null} needs to be passed.
+	 */
+	public Superclass(String entityName, String className, Value<Class<?>> classReference, Hierarchical superType) {
+		super( entityName, className, classReference, superType );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
-	public TypeNature getNature() {
-		return TypeNature.SUPERCLASS;
+	@Override
+	public boolean isAssociation() {
+		return true;
+	}
+
+	@Override
+	public boolean isComponent() {
+		return false;
 	}
 }

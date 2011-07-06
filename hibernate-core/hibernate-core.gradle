@@ -57,15 +57,20 @@ task jaxb {
     hbmXsd = file( 'src/main/resources/org/hibernate/hibernate-mapping-4.0.xsd' )
     ormXsd = file( 'src/main/resources/org/hibernate/ejb/orm_2_0.xsd' )
 
+    // input bindings
+    cfgXjb = file( 'src/main/xjb/hbm-configuration-bindings.xjb' )
+    hbmXjb = file( 'src/main/xjb/hbm-mapping-bindings.xjb' )
+    ormXjb = file( 'src/main/xjb/orm-bindings.xjb' )
+
     // configure Gradle up-to-date checking
-    inputs.files( [cfgXsd, hbmXsd, ormXsd] )
+    inputs.files( [cfgXsd, hbmXsd, ormXsd, cfgXjb, hbmXjb, ormXjb] )
     outputs.dir( jaxbTargetDir )
 
     // perform actions
     doLast {
         jaxbTargetDir.mkdirs()
 
-        ant.taskdef(name: 'xjc', classname: 'com.sun.tools.xjc.XJCTask', classpath: configurations.jaxb.asPath)
+        ant.taskdef(name: 'xjc', classname: 'org.jvnet.jaxb2_commons.xjc.XJC2Task', classpath: configurations.jaxb.asPath)
         ant.jaxbTargetDir = jaxbTargetDir
 
         // hibernate-configuration
@@ -80,9 +85,12 @@ task jaxb {
         ant.xjc(
                 destdir: '${jaxbTargetDir}',
                 package: 'org.hibernate.metamodel.source.hbm.xml.mapping',
-                binding: 'src/main/xjb/hbm-mapping-bindings.xjb',
-                schema: hbmXsd.path
-        )
+                binding: hbmXjb.path,
+                schema: hbmXsd.path,
+                extension: 'true'
+        ) {
+            arg line:     '-Xinheritance'
+        }
 
         // orm.xml (jpa)
         ant.xjc(

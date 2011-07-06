@@ -32,6 +32,7 @@ import java.util.Set;
 
 import org.hibernate.MappingException;
 import org.hibernate.cfg.NamingStrategy;
+import org.hibernate.internal.util.Value;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.binder.source.BindingContext;
 import org.hibernate.metamodel.binder.source.MappingDefaults;
@@ -209,5 +210,10 @@ public class HbmSourceProcessorImpl implements SourceProcessor, BindingContext {
 	@Override
 	public JavaType makeJavaType(String className) {
 		return metadata.makeJavaType( className );
+	}
+
+	@Override
+	public Value<Class<?>> makeClassReference(String className) {
+		return metadata.makeClassReference( className );
 	}
 }

@@ -23,6 +23,8 @@
  */
 package org.hibernate.metamodel.domain;
 
+import org.hibernate.internal.util.Value;
+
 /**
  * Models the notion of a component (what JPA calls an Embeddable).
  * <p/>
@@ -31,12 +33,17 @@ package org.hibernate.metamodel.domain;
  * @author Steve Ebersole
  */
 public class Component extends AbstractAttributeContainer implements Hierarchical {
-	public Component(String name, Hierarchical superType) {
-		super( name, superType );
+	public Component(String name, String className, Value<Class<?>> classReference, Hierarchical superType) {
+		super( name, className, classReference, superType );
 	}
 
 	@Override
-	public TypeNature getNature() {
-		return TypeNature.COMPONENT;
+	public boolean isAssociation() {
+		return false;
+	}
+
+	@Override
+	public boolean isComponent() {
+		return true;
 	}
 }

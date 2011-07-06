@@ -99,7 +99,7 @@ public abstract class AbstractEntityDescriptorImpl implements EntityDescriptor {
 		this.entityMode = verbatimClassName == null ? EntityMode.MAP : EntityMode.POJO;
 
 		if ( this.entityMode == EntityMode.POJO ) {
-			this.className = bindingContext.getClassName( verbatimClassName );
+			this.className = bindingContext.qualifyClassName( verbatimClassName );
 			this.proxyInterfaceName = entityClazz.getProxy();
 		}
 		else {

@@ -377,10 +377,10 @@ public class EntityMetamodel implements Serializable {
 		Class<?> mappedClass = null;
 		Class<?> proxyInterfaceClass = null;
 		boolean lazyAvailable = false;
-		if (  entityBinding.getEntity().getJavaType() != null ) {
+		if (  entityBinding.getEntity().getClassReferenceUnresolved() != null ) {
 			hasPojoRepresentation = true;
-			mappedClass = entityBinding.getEntity().getJavaType().getClassReference();
-			proxyInterfaceClass = entityBinding.getProxyInterfaceType().getClassReference();
+			mappedClass = entityBinding.getEntity().getClassReference();
+			proxyInterfaceClass = entityBinding.getProxyInterfaceType().getValue();
 			lazyAvailable = FieldInterceptionHelper.isInstrumented( mappedClass );
 		}
 
@@ -698,7 +698,7 @@ public class EntityMetamodel implements Serializable {
 	private void mapPropertyToIndex(Attribute attribute, int i) {
 		propertyIndexes.put( attribute.getName(), i );
 		if ( attribute.isSingular() &&
-				( ( SingularAttribute ) attribute ).getSingularAttributeType().getNature() == TypeNature.COMPONENT ) {
+				( ( SingularAttribute ) attribute ).getSingularAttributeType().isComponent() ) {
 			org.hibernate.metamodel.domain.Component component =
 					( org.hibernate.metamodel.domain.Component ) ( ( SingularAttribute ) attribute ).getSingularAttributeType();
 			for ( Attribute subAttribute : component.getAttributes() ) {

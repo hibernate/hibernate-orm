@@ -61,6 +61,8 @@ libraries = [
         // Dom4J
         dom4j:          'dom4j:dom4j:1.6.1@jar',
         jaxb:           'com.sun.xml.bind:jaxb-xjc:2.1.6',
+        jaxb2_basics:   'org.jvnet.jaxb2_commons:jaxb2-basics:0.6.0',
+        jaxb2_ant:      'org.jvnet.jaxb2_commons:jaxb2-basics-ant:0.6.0',
 
         // h2
         h2:             'com.h2database:h2:1.2.145',
@@ -141,6 +143,8 @@ subprojects { subProject ->
             jbossLoggingTool( libraries.logging_tools )
             hibernateJpaModelGenTool( libraries.jpa_modelgen )
             jaxb( libraries.jaxb )
+            jaxb( libraries.jaxb2_basics )
+            jaxb( libraries.jaxb2_ant )
             deployerJars "org.apache.maven.wagon:wagon-http:1.0-beta-6"
         }
 

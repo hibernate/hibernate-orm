@@ -33,10 +33,10 @@ import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.FilterDefinition;
+import org.hibernate.internal.util.Value;
 import org.hibernate.metamodel.binder.source.MetaAttributeContext;
 import org.hibernate.metamodel.domain.Attribute;
 import org.hibernate.metamodel.domain.Entity;
-import org.hibernate.metamodel.domain.JavaType;
 import org.hibernate.metamodel.relational.Column;
 import org.hibernate.metamodel.relational.TableSpecification;
 import org.hibernate.persister.entity.EntityPersister;
@@ -54,7 +54,7 @@ public class EntityBinding {
 	private TableSpecification baseTable;
 
 	private EntityMode entityMode;
-	private JavaType proxyInterfaceType;
+	private Value<Class<?>> proxyInterfaceType;
 
 	private String jpaEntityName;
 
@@ -342,11 +342,11 @@ public class EntityBinding {
 		this.lazy = lazy;
 	}
 
-	public JavaType getProxyInterfaceType() {
+	public Value<Class<?>> getProxyInterfaceType() {
 		return proxyInterfaceType;
 	}
 
-	public void setProxyInterfaceType(JavaType proxyInterfaceType) {
+	public void setProxyInterfaceType(Value<Class<?>> proxyInterfaceType) {
 		this.proxyInterfaceType = proxyInterfaceType;
 	}
 

@@ -28,6 +28,8 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import org.hibernate.internal.util.Value;
+
 /**
  * Convenient base class for {@link AttributeContainer}.  Because in our model all
  * {@link AttributeContainer AttributeContainers} are also {@link Hierarchical} we also implement that here
@@ -37,18 +39,37 @@ import java.util.Set;
  */
 public abstract class AbstractAttributeContainer implements AttributeContainer, Hierarchical {
 	private final String name;
+	private final String className;
+	private final Value<Class<?>> classReference;
 	private final Hierarchical superType;
 	private LinkedHashSet<Attribute> attributeSet = new LinkedHashSet<Attribute>();
 	private HashMap<String, Attribute> attributeMap = new HashMap<String, Attribute>();
 
-	public AbstractAttributeContainer(String name, Hierarchical superType) {
+	public AbstractAttributeContainer(String name, String className, Value<Class<?>> classReference, Hierarchical superType) {
 		this.name = name;
+		this.className = className;
+		this.classReference = classReference;
 		this.superType = superType;
 	}
 
 	@Override
 	public String getName() {
 		return name;
+	}
+
+	@Override
+	public String getClassName() {
+		return className;
+	}
+
+	@Override
+	public Class<?> getClassReference() {
+		return classReference.getValue();
+	}
+
+	@Override
+	public Value<Class<?>> getClassReferenceUnresolved() {
+		return classReference;
 	}
 
 	@Override

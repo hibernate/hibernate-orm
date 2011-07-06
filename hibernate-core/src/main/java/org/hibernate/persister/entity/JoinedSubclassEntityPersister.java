@@ -110,6 +110,11 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 	private final String discriminatorSQLString;
 
+	//Span of the tables directly mapped by this entity and super-classes, if any
+	private final int coreTableSpan;
+	// only contains values for SecondaryTables ie. not tables part of the "coreTableSpan"
+	private final boolean[] isNullableTable;
+
 	//INITIALIZATION:
 
 	public JoinedSubclassEntityPersister(
@@ -178,12 +183,17 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		}
 		
 		//Span of the tables directly mapped by this entity and super-classes, if any
-		int coreTableSpan = tables.size();
-		
+		coreTableSpan = tables.size();
+
+		isNullableTable = new boolean[persistentClass.getJoinClosureSpan()];
+
+		int tabIndex = 0;
 		Iterator joinIter = persistentClass.getJoinClosureIterator();
 		while ( joinIter.hasNext() ) {
 			Join join = (Join) joinIter.next();
 			
+			isNullableTable[tabIndex++] = join.isOptional();
+
 			Table tab = join.getTable();
 			 
 			String tabname = tab.getQualifiedName(
@@ -528,6 +538,14 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		constraintOrderedTableNames = null;
 		constraintOrderedKeyColumnNames = null;
 		discriminatorSQLString = null;
+		coreTableSpan = -1;
+		isNullableTable = null;
+	}
+
+	protected boolean isNullableTable(int j) {
+	    if (j < coreTableSpan)
+		return false;
+	    return isNullableTable[j-coreTableSpan];
 	}
 
 	protected boolean isSubclassTableSequentialSelect(int j) {

@@ -23,6 +23,8 @@
  */
 package org.hibernate.metamodel.relational;
 
+import org.hibernate.dialect.Dialect;
+
 /**
  * Models a simple, non-compound value.
  *
@@ -42,4 +44,15 @@ public interface SimpleValue extends Value {
 	 * @param datatype The value's datatype
 	 */
 	public void setDatatype(Datatype datatype);
+
+	/**
+	 * For any column name, generate an alias that is unique
+	 * to that column name, unique across tables, and within
+	 * alias size constraints determined by
+	 * {@link org.hibernate.dialect.Dialect#getMaxAliasLength()}.
+	 *
+	 * @param dialect the dialect.
+	 * @return the alias.
+	 */
+	public String getAlias(Dialect dialect);
 }

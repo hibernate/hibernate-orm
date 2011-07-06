@@ -23,6 +23,8 @@
  */
 package org.hibernate.metamodel.relational;
 
+import org.hibernate.dialect.Dialect;
+
 /**
  * Models a value expression.  It is the result of a <tt>formula</tt> mapping.
  *
@@ -41,5 +43,21 @@ public class DerivedValue extends AbstractSimpleValue implements SimpleValue {
 	 */
 	public String toLoggableString() {
 		return getTable().toLoggableString() + ".{derived-column}";
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public String getAlias(Dialect dialect) {
+		return "formula" + Integer.toString( getPosition() ) + '_';
+	}
+
+	/**
+	 * Get the value expression.
+	 * @return the value expression
+	 */
+	public String getExpression() {
+		return expression;
 	}
 }

@@ -23,6 +23,9 @@
  */
 package org.hibernate.metamodel.relational;
 
+import org.hibernate.MappingException;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.relational.state.ColumnRelationalState;
 
 /**
@@ -155,5 +158,38 @@ public class Column extends AbstractSimpleValue implements SimpleValue {
 	@Override
 	public String toLoggableString() {
 		return getTable().getLoggableValueQualifier() + '.' + getColumnName();
+	}
+
+	@Override
+	public String getAlias(Dialect dialect) {
+		String alias = columnName.getName();
+		int lastLetter = StringHelper.lastIndexOfLetter( columnName.getName() );
+		if ( lastLetter == -1 ) {
+			alias = "column";
+		}
+		boolean useRawName =
+				columnName.getName().equals( alias ) &&
+						alias.length() <= dialect.getMaxAliasLength() &&
+						! columnName.isQuoted() &&
+						! columnName.getName().toLowerCase().equals( "rowid" );
+		if ( ! useRawName ) {
+			String unique =
+					new StringBuilder()
+					.append( getPosition() )
+					.append( '_' )
+					.append( getTable().getTableNumber() )
+					.append( '_' )
+					.toString();
+			if ( unique.length() >= dialect.getMaxAliasLength() ) {
+				throw new MappingException(
+						"Unique suffix [" + unique + "] length must be less than maximum [" + dialect.getMaxAliasLength() + "]"
+				);
+			}
+			if ( alias.length() + unique.length() > dialect.getMaxAliasLength()) {
+				alias = alias.substring( 0, dialect.getMaxAliasLength() - unique.length() );
+			}
+			alias = alias + unique;
+		}
+		return alias;
 	}
 }

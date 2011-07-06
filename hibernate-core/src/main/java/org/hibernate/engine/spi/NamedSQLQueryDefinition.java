@@ -47,6 +47,7 @@ public class NamedSQLQueryDefinition extends NamedQueryDefinition {
 	 * code when a the result-set mapping information is explicitly
 	 * provided in the query definition (i.e., no resultset-mapping used)
 	 *
+	 * @param name The name of named query
 	 * @param query The sql query string
 	 * @param queryReturns The in-lined query return definitions
 	 * @param querySpaces Any specified query spaces (used for auto-flushing)
@@ -98,6 +99,7 @@ public class NamedSQLQueryDefinition extends NamedQueryDefinition {
 	 * This form used to construct a NamedSQLQueryDefinition from the binder
 	 * code when a resultset-mapping reference is used.
 	 *
+	 * @param name The name of named query
 	 * @param query The sql query string
 	 * @param resultSetRef The resultset-mapping name
 	 * @param querySpaces Any specified query spaces (used for auto-flushing)

@@ -29,7 +29,7 @@ package org.hibernate.annotations;
  * the Level 2 Cache.
  *
  * @author Emmanuel Bernard
- * @author Carlos Gonz�lez-Cadenas
+ * @author Carlos Gonzalez-Cadenas
  */
 
 public enum CacheModeType {

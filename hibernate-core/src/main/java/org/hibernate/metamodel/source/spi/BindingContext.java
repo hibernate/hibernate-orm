@@ -31,17 +31,19 @@ import org.hibernate.service.ServiceRegistry;
  * @author Steve Ebersole
  */
 public interface BindingContext {
-	public ServiceRegistry getServiceRegistry();
+    public ServiceRegistry getServiceRegistry();
 
-	public NamingStrategy getNamingStrategy();
+    public NamingStrategy getNamingStrategy();
 
-	public MappingDefaults getMappingDefaults();
+    public MappingDefaults getMappingDefaults();
 
-	public MetaAttributeContext getMetaAttributeContext();
+    public MetaAttributeContext getMetaAttributeContext();
 
-	public MetadataImplementor getMetadataImplementor();
+    public MetadataImplementor getMetadataImplementor();
 
-	public <T> Class<T> locateClassByName(String name);
+    public <T> Class<T> locateClassByName(String name);
 
-	public JavaType makeJavaType(String className);
+    public JavaType makeJavaType(String className);
+
+    public boolean isGloballyQuotedIdentifiers();
 }

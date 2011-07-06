@@ -581,12 +581,15 @@ public final class StringHelper {
 	 * @return The quoted version.
 	 */
 	public static String quote(String name) {
-		if ( name == null || name.length() == 0 || isQuoted( name ) ) {
+		if ( isEmpty( name ) || isQuoted( name ) ) {
 			return name;
 		}
-		else {
-			return new StringBuilder( name.length() + 2 ).append('`').append( name ).append( '`' ).toString();
-		}
+// Convert the JPA2 specific quoting character (double quote) to Hibernate's (back tick)
+        else if ( name.startsWith( "\"" ) && name.endsWith( "\"" ) ) {
+            name = name.substring( 1, name.length() - 1 );
+        }
+
+		return new StringBuilder( name.length() + 2 ).append('`').append( name ).append( '`' ).toString();
 	}
 
 	/**

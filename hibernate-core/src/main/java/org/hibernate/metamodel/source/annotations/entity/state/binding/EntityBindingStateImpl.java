@@ -262,21 +262,18 @@ public class EntityBindingStateImpl implements EntityBindingState {
 
 	@Override
 	public int getOptimisticLockMode() {
-		if ( optimisticLock == OptimisticLockType.ALL ) {
-			return Versioning.OPTIMISTIC_LOCK_ALL;
-		}
-		else if ( optimisticLock == OptimisticLockType.NONE ) {
-			return Versioning.OPTIMISTIC_LOCK_NONE;
-		}
-		else if ( optimisticLock == OptimisticLockType.DIRTY ) {
-			return Versioning.OPTIMISTIC_LOCK_DIRTY;
-		}
-		else if ( optimisticLock == OptimisticLockType.VERSION ) {
-			return Versioning.OPTIMISTIC_LOCK_VERSION;
-		}
-		else {
-			throw new AssertionFailure( "Unexpected optimistic lock type: " + optimisticLock );
-		}
+        switch ( optimisticLock ){
+            case ALL:
+                return Versioning.OPTIMISTIC_LOCK_ALL;
+            case NONE:
+                return Versioning.OPTIMISTIC_LOCK_NONE;
+            case DIRTY:
+                return Versioning.OPTIMISTIC_LOCK_DIRTY;
+            case VERSION:
+                return Versioning.OPTIMISTIC_LOCK_VERSION;
+            default:
+                throw new AssertionFailure( "Unexpected optimistic lock type: " + optimisticLock );
+        }
 	}
 
 	@Override

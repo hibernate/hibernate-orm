@@ -197,7 +197,7 @@ public class TableNameTest extends BaseUnitTestCase {
 				"wrong inheritance type", InheritanceType.JOINED, entityClass.getInheritanceType()
 		);
 		Assert.assertEquals(
-				"wrong table name", "FOO", entityClass.getPrimaryTableName()
+				"wrong table name", "A", entityClass.getPrimaryTableName()
 		);
 
 		assertTrue( iter.hasNext() );

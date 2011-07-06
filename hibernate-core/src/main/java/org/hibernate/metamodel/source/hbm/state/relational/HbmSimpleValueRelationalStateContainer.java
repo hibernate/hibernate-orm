@@ -55,7 +55,9 @@ public class HbmSimpleValueRelationalStateContainer implements TupleRelationalSt
 	public BindingContext getBindingContext() {
 		return bindingContext;
 	}
-
+    public boolean isGloballyQuotedIdentifiers(){
+        return getBindingContext().isGloballyQuotedIdentifiers();
+    }
 	public NamingStrategy getNamingStrategy() {
 		return getBindingContext().getNamingStrategy();
 	}

@@ -89,6 +89,7 @@ public class MetadataBuilderImpl implements MetadataBuilder {
 		private SharedCacheMode sharedCacheMode = SharedCacheMode.ENABLE_SELECTIVE;
 		private AccessType defaultCacheAccessType;
         private boolean useNewIdentifierGenerators;
+        private boolean globallyQuotedIdentifiers;
 		private String defaultSchemaName;
 		private String defaultCatalogName;
 
@@ -138,6 +139,17 @@ public class MetadataBuilderImpl implements MetadataBuilder {
 					},
 					null
 			);
+
+            globallyQuotedIdentifiers = configService.getSetting(
+                    AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS,
+                    new ConfigurationService.Converter<Boolean>() {
+                        @Override
+                        public Boolean convert(Object value) {
+                            return Boolean.parseBoolean( value.toString() );
+                        }
+                    },
+                    false
+            );
 		}
 
 
@@ -166,7 +178,12 @@ public class MetadataBuilderImpl implements MetadataBuilder {
             return useNewIdentifierGenerators;
         }
 
-		@Override
+        @Override
+        public boolean isGloballyQuotedIdentifiers() {
+            return globallyQuotedIdentifiers;
+        }
+
+        @Override
 		public String getDefaultSchemaName() {
 			return defaultSchemaName;
 		}

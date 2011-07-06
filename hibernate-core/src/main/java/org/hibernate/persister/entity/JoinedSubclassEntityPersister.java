@@ -96,7 +96,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 	private final boolean[] subclassTableSequentialSelect;
 	private final boolean[] subclassTableIsLazyClosure;
-	
+
 	// subclass discrimination works by assigning particular
 	// values to certain combinations of null primary key
 	// values in the outer join using an SQL CASE
@@ -110,9 +110,9 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 	private final String discriminatorSQLString;
 
-	//Span of the tables directly mapped by this entity and super-classes, if any
+	// Span of the tables directly mapped by this entity and super-classes, if any
 	private final int coreTableSpan;
-	// only contains values for SecondaryTables ie. not tables part of the "coreTableSpan"
+	// only contains values for SecondaryTables, ie. not tables part of the "coreTableSpan"
 	private final boolean[] isNullableTable;
 
 	//INITIALIZATION:
@@ -133,8 +133,8 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 				discriminatorValue = new Integer( persistentClass.getSubclassId() );
 				discriminatorSQLString = discriminatorValue.toString();
 			}
-			catch (Exception e) {
-				throw new MappingException("Could not format discriminator value to SQL string", e );
+			catch ( Exception e ) {
+				throw new MappingException( "Could not format discriminator value to SQL string", e );
 			}
 		}
 		else {
@@ -165,136 +165,135 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 					factory.getSettings().getDefaultCatalogName(),
 					factory.getSettings().getDefaultSchemaName()
 			);
-			tables.add(tabname);
+			tables.add( tabname );
 			String[] keyCols = new String[idColumnSpan];
 			String[] keyColReaders = new String[idColumnSpan];
 			String[] keyColReaderTemplates = new String[idColumnSpan];
 			Iterator citer = key.getColumnIterator();
-			for ( int k=0; k<idColumnSpan; k++ ) {
+			for ( int k = 0; k < idColumnSpan; k++ ) {
 				Column column = (Column) citer.next();
 				keyCols[k] = column.getQuotedName( factory.getDialect() );
 				keyColReaders[k] = column.getReadExpr( factory.getDialect() );
 				keyColReaderTemplates[k] = column.getTemplate( factory.getDialect(), factory.getSqlFunctionRegistry() );
 			}
-			keyColumns.add(keyCols);
-			keyColumnReaders.add(keyColReaders);
-			keyColumnReaderTemplates.add(keyColReaderTemplates);
+			keyColumns.add( keyCols );
+			keyColumnReaders.add( keyColReaders );
+			keyColumnReaderTemplates.add( keyColReaderTemplates );
 			cascadeDeletes.add( key.isCascadeDeleteEnabled() && factory.getDialect().supportsCascadeDelete() );
 		}
-		
+
 		//Span of the tables directly mapped by this entity and super-classes, if any
 		coreTableSpan = tables.size();
 
 		isNullableTable = new boolean[persistentClass.getJoinClosureSpan()];
 
-		int tabIndex = 0;
+		int tableIndex = 0;
 		Iterator joinIter = persistentClass.getJoinClosureIterator();
 		while ( joinIter.hasNext() ) {
 			Join join = (Join) joinIter.next();
-			
-			isNullableTable[tabIndex++] = join.isOptional();
 
-			Table tab = join.getTable();
-			 
-			String tabname = tab.getQualifiedName(
+			isNullableTable[tableIndex++] = join.isOptional();
+
+			Table table = join.getTable();
+
+			String tableName = table.getQualifiedName(
 					factory.getDialect(),
 					factory.getSettings().getDefaultCatalogName(),
 					factory.getSettings().getDefaultSchemaName()
 			);
-			tables.add(tabname);
-			
+			tables.add( tableName );
+
 			KeyValue key = join.getKey();
-			int joinIdColumnSpan = 	key.getColumnSpan();		
-			
+			int joinIdColumnSpan = key.getColumnSpan();
+
 			String[] keyCols = new String[joinIdColumnSpan];
 			String[] keyColReaders = new String[joinIdColumnSpan];
 			String[] keyColReaderTemplates = new String[joinIdColumnSpan];
-						
+
 			Iterator citer = key.getColumnIterator();
-			
-			for ( int k=0; k<joinIdColumnSpan; k++ ) {
+
+			for ( int k = 0; k < joinIdColumnSpan; k++ ) {
 				Column column = (Column) citer.next();
 				keyCols[k] = column.getQuotedName( factory.getDialect() );
 				keyColReaders[k] = column.getReadExpr( factory.getDialect() );
 				keyColReaderTemplates[k] = column.getTemplate( factory.getDialect(), factory.getSqlFunctionRegistry() );
 			}
-			keyColumns.add(keyCols);
-			keyColumnReaders.add(keyColReaders);
-			keyColumnReaderTemplates.add(keyColReaderTemplates);
+			keyColumns.add( keyCols );
+			keyColumnReaders.add( keyColReaders );
+			keyColumnReaderTemplates.add( keyColReaderTemplates );
 			cascadeDeletes.add( key.isCascadeDeleteEnabled() && factory.getDialect().supportsCascadeDelete() );
 		}
-		
+
 		naturalOrderTableNames = ArrayHelper.toStringArray( tables );
-		naturalOrderTableKeyColumns = ArrayHelper.to2DStringArray(keyColumns);
-		naturalOrderTableKeyColumnReaders = ArrayHelper.to2DStringArray(keyColumnReaders);
-		naturalOrderTableKeyColumnReaderTemplates = ArrayHelper.to2DStringArray(keyColumnReaderTemplates);
-		naturalOrderCascadeDeleteEnabled = ArrayHelper.toBooleanArray(cascadeDeletes);
+		naturalOrderTableKeyColumns = ArrayHelper.to2DStringArray( keyColumns );
+		naturalOrderTableKeyColumnReaders = ArrayHelper.to2DStringArray( keyColumnReaders );
+		naturalOrderTableKeyColumnReaderTemplates = ArrayHelper.to2DStringArray( keyColumnReaderTemplates );
+		naturalOrderCascadeDeleteEnabled = ArrayHelper.toBooleanArray( cascadeDeletes );
 
 		ArrayList subtables = new ArrayList();
 		ArrayList isConcretes = new ArrayList();
 		ArrayList isDeferreds = new ArrayList();
 		ArrayList isLazies = new ArrayList();
-		
+
 		keyColumns = new ArrayList();
 		titer = persistentClass.getSubclassTableClosureIterator();
 		while ( titer.hasNext() ) {
 			Table tab = (Table) titer.next();
-			isConcretes.add( persistentClass.isClassOrSuperclassTable(tab) );
-			isDeferreds.add(Boolean.FALSE);
-			isLazies.add(Boolean.FALSE);
+			isConcretes.add( persistentClass.isClassOrSuperclassTable( tab ) );
+			isDeferreds.add( Boolean.FALSE );
+			isLazies.add( Boolean.FALSE );
 			String tabname = tab.getQualifiedName(
 					factory.getDialect(),
 					factory.getSettings().getDefaultCatalogName(),
 					factory.getSettings().getDefaultSchemaName()
 			);
-			subtables.add(tabname);
+			subtables.add( tabname );
 			String[] key = new String[idColumnSpan];
 			Iterator citer = tab.getPrimaryKey().getColumnIterator();
-			for ( int k=0; k<idColumnSpan; k++ ) {
+			for ( int k = 0; k < idColumnSpan; k++ ) {
 				key[k] = ( (Column) citer.next() ).getQuotedName( factory.getDialect() );
 			}
-			keyColumns.add(key);
+			keyColumns.add( key );
 		}
-		
+
 		//Add joins
 		joinIter = persistentClass.getSubclassJoinClosureIterator();
 		while ( joinIter.hasNext() ) {
 			Join join = (Join) joinIter.next();
-			
+
 			Table tab = join.getTable();
-			 
-			isConcretes.add( persistentClass.isClassOrSuperclassTable(tab) );
+
+			isConcretes.add( persistentClass.isClassOrSuperclassTable( tab ) );
 			isDeferreds.add( join.isSequentialSelect() );
-			isLazies.add(join.isLazy());
-			
+			isLazies.add( join.isLazy() );
+
 			String tabname = tab.getQualifiedName(
 					factory.getDialect(),
 					factory.getSettings().getDefaultCatalogName(),
 					factory.getSettings().getDefaultSchemaName()
 			);
-			subtables.add(tabname);
+			subtables.add( tabname );
 			String[] key = new String[idColumnSpan];
 			Iterator citer = tab.getPrimaryKey().getColumnIterator();
-			for ( int k=0; k<idColumnSpan; k++ ) {
+			for ( int k = 0; k < idColumnSpan; k++ ) {
 				key[k] = ( (Column) citer.next() ).getQuotedName( factory.getDialect() );
 			}
-			keyColumns.add(key);
-						
+			keyColumns.add( key );
 		}
-				
-		String [] naturalOrderSubclassTableNameClosure = ArrayHelper.toStringArray(subtables);
-		String[][] naturalOrderSubclassTableKeyColumnClosure = ArrayHelper.to2DStringArray(keyColumns);
-		isClassOrSuperclassTable = ArrayHelper.toBooleanArray(isConcretes);
-		subclassTableSequentialSelect = ArrayHelper.toBooleanArray(isDeferreds);
-		subclassTableIsLazyClosure = ArrayHelper.toBooleanArray(isLazies);
-		
+
+		String[] naturalOrderSubclassTableNameClosure = ArrayHelper.toStringArray( subtables );
+		String[][] naturalOrderSubclassTableKeyColumnClosure = ArrayHelper.to2DStringArray( keyColumns );
+		isClassOrSuperclassTable = ArrayHelper.toBooleanArray( isConcretes );
+		subclassTableSequentialSelect = ArrayHelper.toBooleanArray( isDeferreds );
+		subclassTableIsLazyClosure = ArrayHelper.toBooleanArray( isLazies );
+
 		constraintOrderedTableNames = new String[naturalOrderSubclassTableNameClosure.length];
 		constraintOrderedKeyColumnNames = new String[naturalOrderSubclassTableNameClosure.length][];
 		int currentPosition = 0;
-		for ( int i = naturalOrderSubclassTableNameClosure.length - 1; i >= 0 ; i--, currentPosition++ ) {
+		for ( int i = naturalOrderSubclassTableNameClosure.length - 1; i >= 0; i--, currentPosition++ ) {
 			constraintOrderedTableNames[currentPosition] = naturalOrderSubclassTableNameClosure[i];
 			constraintOrderedKeyColumnNames[currentPosition] = naturalOrderSubclassTableKeyColumnClosure[i];
-		} 
+		}
 
 		/**
 		 * Suppose an entity Client extends Person, mapped to the tables CLIENT and PERSON respectively.
@@ -305,15 +304,15 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		 * the first table as it will the driving table.
 		 * tableNames -> CLIENT, PERSON
 		 */
-				
+
 		tableSpan = naturalOrderTableNames.length;
- 		tableNames = reverse(naturalOrderTableNames, coreTableSpan);
-		tableKeyColumns = reverse(naturalOrderTableKeyColumns, coreTableSpan);
-		tableKeyColumnReaders = reverse(naturalOrderTableKeyColumnReaders, coreTableSpan);
-		tableKeyColumnReaderTemplates = reverse(naturalOrderTableKeyColumnReaderTemplates, coreTableSpan);
-		subclassTableNameClosure = reverse(naturalOrderSubclassTableNameClosure, coreTableSpan);
-		subclassTableKeyColumnClosure = reverse(naturalOrderSubclassTableKeyColumnClosure, coreTableSpan);
- 
+		tableNames = reverse( naturalOrderTableNames, coreTableSpan );
+		tableKeyColumns = reverse( naturalOrderTableKeyColumns, coreTableSpan );
+		tableKeyColumnReaders = reverse( naturalOrderTableKeyColumnReaders, coreTableSpan );
+		tableKeyColumnReaderTemplates = reverse( naturalOrderTableKeyColumnReaderTemplates, coreTableSpan );
+		subclassTableNameClosure = reverse( naturalOrderSubclassTableNameClosure, coreTableSpan );
+		subclassTableKeyColumnClosure = reverse( naturalOrderSubclassTableKeyColumnClosure, coreTableSpan );
+
 		spaces = ArrayHelper.join(
 				tableNames,
 				ArrayHelper.toStringArray( persistentClass.getSynchronizedTables() )
@@ -331,71 +330,71 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		deleteResultCheckStyles = new ExecuteUpdateResultCheckStyle[tableSpan];
 
 		PersistentClass pc = persistentClass;
-		int jk = coreTableSpan-1;
-		while (pc!=null) {
+		int jk = coreTableSpan - 1;
+		while ( pc != null ) {
 			customSQLInsert[jk] = pc.getCustomSQLInsert();
 			insertCallable[jk] = customSQLInsert[jk] != null && pc.isCustomInsertCallable();
 			insertResultCheckStyles[jk] = pc.getCustomSQLInsertCheckStyle() == null
-			                              ? ExecuteUpdateResultCheckStyle.determineDefault(
+					? ExecuteUpdateResultCheckStyle.determineDefault(
 					customSQLInsert[jk], insertCallable[jk]
 			)
-		                                  : pc.getCustomSQLInsertCheckStyle();
+					: pc.getCustomSQLInsertCheckStyle();
 			customSQLUpdate[jk] = pc.getCustomSQLUpdate();
 			updateCallable[jk] = customSQLUpdate[jk] != null && pc.isCustomUpdateCallable();
 			updateResultCheckStyles[jk] = pc.getCustomSQLUpdateCheckStyle() == null
-			                              ? ExecuteUpdateResultCheckStyle.determineDefault( customSQLUpdate[jk], updateCallable[jk] )
-		                                  : pc.getCustomSQLUpdateCheckStyle();
+					? ExecuteUpdateResultCheckStyle.determineDefault( customSQLUpdate[jk], updateCallable[jk] )
+					: pc.getCustomSQLUpdateCheckStyle();
 			customSQLDelete[jk] = pc.getCustomSQLDelete();
 			deleteCallable[jk] = customSQLDelete[jk] != null && pc.isCustomDeleteCallable();
 			deleteResultCheckStyles[jk] = pc.getCustomSQLDeleteCheckStyle() == null
-			                              ? ExecuteUpdateResultCheckStyle.determineDefault( customSQLDelete[jk], deleteCallable[jk] )
-		                                  : pc.getCustomSQLDeleteCheckStyle();
+					? ExecuteUpdateResultCheckStyle.determineDefault( customSQLDelete[jk], deleteCallable[jk] )
+					: pc.getCustomSQLDeleteCheckStyle();
 			jk--;
 			pc = pc.getSuperclass();
 		}
-		
+
 		if ( jk != -1 ) {
 			throw new AssertionFailure( "Tablespan does not match height of joined-subclass hiearchy." );
 		}
- 
+
 		joinIter = persistentClass.getJoinClosureIterator();
 		int j = coreTableSpan;
 		while ( joinIter.hasNext() ) {
 			Join join = (Join) joinIter.next();
-			
+
 			customSQLInsert[j] = join.getCustomSQLInsert();
 			insertCallable[j] = customSQLInsert[j] != null && join.isCustomInsertCallable();
 			insertResultCheckStyles[j] = join.getCustomSQLInsertCheckStyle() == null
-			                              ? ExecuteUpdateResultCheckStyle.determineDefault( customSQLInsert[j], insertCallable[j] )
-		                                  : join.getCustomSQLInsertCheckStyle();
+					? ExecuteUpdateResultCheckStyle.determineDefault( customSQLInsert[j], insertCallable[j] )
+					: join.getCustomSQLInsertCheckStyle();
 			customSQLUpdate[j] = join.getCustomSQLUpdate();
 			updateCallable[j] = customSQLUpdate[j] != null && join.isCustomUpdateCallable();
 			updateResultCheckStyles[j] = join.getCustomSQLUpdateCheckStyle() == null
-			                              ? ExecuteUpdateResultCheckStyle.determineDefault( customSQLUpdate[j], updateCallable[j] )
-		                                  : join.getCustomSQLUpdateCheckStyle();
+					? ExecuteUpdateResultCheckStyle.determineDefault( customSQLUpdate[j], updateCallable[j] )
+					: join.getCustomSQLUpdateCheckStyle();
 			customSQLDelete[j] = join.getCustomSQLDelete();
 			deleteCallable[j] = customSQLDelete[j] != null && join.isCustomDeleteCallable();
 			deleteResultCheckStyles[j] = join.getCustomSQLDeleteCheckStyle() == null
-			                              ? ExecuteUpdateResultCheckStyle.determineDefault( customSQLDelete[j], deleteCallable[j] )
-		                                  : join.getCustomSQLDeleteCheckStyle();
+					? ExecuteUpdateResultCheckStyle.determineDefault( customSQLDelete[j], deleteCallable[j] )
+					: join.getCustomSQLDeleteCheckStyle();
 			j++;
 		}
-		
+
 		// PROPERTIES
 		int hydrateSpan = getPropertySpan();
 		naturalOrderPropertyTableNumbers = new int[hydrateSpan];
 		propertyTableNumbers = new int[hydrateSpan];
 		Iterator iter = persistentClass.getPropertyClosureIterator();
-		int i=0;
-		while( iter.hasNext() ) {
+		int i = 0;
+		while ( iter.hasNext() ) {
 			Property prop = (Property) iter.next();
 			String tabname = prop.getValue().getTable().getQualifiedName(
-				factory.getDialect(),
-				factory.getSettings().getDefaultCatalogName(),
-				factory.getSettings().getDefaultSchemaName()
+					factory.getDialect(),
+					factory.getSettings().getDefaultCatalogName(),
+					factory.getSettings().getDefaultSchemaName()
 			);
-			propertyTableNumbers[i] = getTableId(tabname, tableNames);
-			naturalOrderPropertyTableNumbers[i] = getTableId(tabname, naturalOrderTableNames);
+			propertyTableNumbers[i] = getTableId( tabname, tableNames );
+			naturalOrderPropertyTableNumbers[i] = getTableId( tabname, naturalOrderTableNames );
 			i++;
 		}
 
@@ -416,47 +415,47 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 					factory.getSettings().getDefaultCatalogName(),
 					factory.getSettings().getDefaultSchemaName()
 			);
-			Integer tabnum = new Integer( getTableId(tabname, subclassTableNameClosure) );
-  			propTableNumbers.add(tabnum);
+			Integer tabnum = new Integer( getTableId( tabname, subclassTableNameClosure ) );
+			propTableNumbers.add( tabnum );
 
 			Iterator citer = prop.getColumnIterator();
 			while ( citer.hasNext() ) {
 				Selectable thing = (Selectable) citer.next();
 				if ( thing.isFormula() ) {
-					formulaTableNumbers.add(tabnum);
+					formulaTableNumbers.add( tabnum );
 				}
 				else {
-					columnTableNumbers.add(tabnum);
+					columnTableNumbers.add( tabnum );
 				}
 			}
 
 		}
 
-		subclassColumnTableNumberClosure = ArrayHelper.toIntArray(columnTableNumbers);
-		subclassPropertyTableNumberClosure = ArrayHelper.toIntArray(propTableNumbers);
-		subclassFormulaTableNumberClosure = ArrayHelper.toIntArray(formulaTableNumbers);
+		subclassColumnTableNumberClosure = ArrayHelper.toIntArray( columnTableNumbers );
+		subclassPropertyTableNumberClosure = ArrayHelper.toIntArray( propTableNumbers );
+		subclassFormulaTableNumberClosure = ArrayHelper.toIntArray( formulaTableNumbers );
 
 		// SUBCLASSES
- 
+
 		int subclassSpan = persistentClass.getSubclassSpan() + 1;
 		subclassClosure = new String[subclassSpan];
-		subclassClosure[subclassSpan-1] = getEntityName();
+		subclassClosure[subclassSpan - 1] = getEntityName();
 		if ( persistentClass.isPolymorphic() ) {
 			subclassesByDiscriminatorValue.put( discriminatorValue, getEntityName() );
 			discriminatorValues = new String[subclassSpan];
-			discriminatorValues[subclassSpan-1] = discriminatorSQLString;
+			discriminatorValues[subclassSpan - 1] = discriminatorSQLString;
 			notNullColumnTableNumbers = new int[subclassSpan];
 			final int id = getTableId(
-				persistentClass.getTable().getQualifiedName(
-						factory.getDialect(),
-						factory.getSettings().getDefaultCatalogName(),
-						factory.getSettings().getDefaultSchemaName()
-				),
-				subclassTableNameClosure
+					persistentClass.getTable().getQualifiedName(
+							factory.getDialect(),
+							factory.getSettings().getDefaultCatalogName(),
+							factory.getSettings().getDefaultSchemaName()
+					),
+					subclassTableNameClosure
 			);
-			notNullColumnTableNumbers[subclassSpan-1] = id;
+			notNullColumnTableNumbers[subclassSpan - 1] = id;
 			notNullColumnNames = new String[subclassSpan];
-			notNullColumnNames[subclassSpan-1] =  subclassTableKeyColumnClosure[id][0]; //( (Column) model.getTable().getPrimaryKey().getColumnIterator().next() ).getName();
+			notNullColumnNames[subclassSpan - 1] = subclassTableKeyColumnClosure[id][0]; //( (Column) model.getTable().getPrimaryKey().getColumnIterator().next() ).getName();
 		}
 		else {
 			discriminatorValues = null;
@@ -465,7 +464,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		}
 
 		iter = persistentClass.getSubclassIterator();
-		int k=0;
+		int k = 0;
 		while ( iter.hasNext() ) {
 			Subclass sc = (Subclass) iter.next();
 			subclassClosure[k] = sc.getEntityName();
@@ -478,28 +477,28 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 					subclassesByDiscriminatorValue.put( subclassId, sc.getEntityName() );
 					discriminatorValues[k] = subclassId.toString();
 					int id = getTableId(
-						sc.getTable().getQualifiedName(
-								factory.getDialect(),
-								factory.getSettings().getDefaultCatalogName(),
-								factory.getSettings().getDefaultSchemaName()
-						),
-						subclassTableNameClosure
+							sc.getTable().getQualifiedName(
+									factory.getDialect(),
+									factory.getSettings().getDefaultCatalogName(),
+									factory.getSettings().getDefaultSchemaName()
+							),
+							subclassTableNameClosure
 					);
 					notNullColumnTableNumbers[k] = id;
 					notNullColumnNames[k] = subclassTableKeyColumnClosure[id][0]; //( (Column) sc.getTable().getPrimaryKey().getColumnIterator().next() ).getName();
 				}
 			}
-			catch (Exception e) {
-				throw new MappingException("Error parsing discriminator value", e );
+			catch ( Exception e ) {
+				throw new MappingException( "Error parsing discriminator value", e );
 			}
 			k++;
 		}
 
 		initLockers();
 
-		initSubclassPropertyAliasesMap(persistentClass);
+		initSubclassPropertyAliasesMap( persistentClass );
 
-		postConstruct(mapping);
+		postConstruct( mapping );
 
 	}
 
@@ -523,7 +522,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		spaces = null;
 		subclassClosure = null;
 		subclassTableNameClosure = null;
-		subclassTableKeyColumnClosure= null;
+		subclassTableKeyColumnClosure = null;
 		isClassOrSuperclassTable = null;
 		naturalOrderPropertyTableNumbers = null;
 		propertyTableNumbers = null;
@@ -543,16 +542,16 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	protected boolean isNullableTable(int j) {
-	    if (j < coreTableSpan)
-		return false;
-	    return isNullableTable[j-coreTableSpan];
+		if ( j < coreTableSpan ) {
+			return false;
+		}
+		return isNullableTable[j - coreTableSpan];
 	}
 
 	protected boolean isSubclassTableSequentialSelect(int j) {
 		return subclassTableSequentialSelect[j] && !isClassOrSuperclassTable[j];
 	}
-	
-	
+
 	/*public void postInstantiate() throws MappingException {
 		super.postInstantiate();
 		//TODO: other lock modes?
@@ -560,7 +559,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}*/
 
 	public String getSubclassPropertyTableName(int i) {
-		return subclassTableNameClosure[ subclassPropertyTableNumberClosure[i] ];
+		return subclassTableNameClosure[subclassPropertyTableNumberClosure[i]];
 	}
 
 	public Type getDiscriminatorType() {
@@ -573,7 +572,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 
 	public String getSubclassForDiscriminatorValue(Object value) {
-		return (String) subclassesByDiscriminatorValue.get(value);
+		return (String) subclassesByDiscriminatorValue.get( value );
 	}
 
 	public Serializable[] getPropertySpaces() {
@@ -594,7 +593,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	protected boolean isPropertyOfTable(int property, int j) {
-		return naturalOrderPropertyTableNumbers[property]==j;
+		return naturalOrderPropertyTableNumbers[property] == j;
 	}
 
 	/**
@@ -622,62 +621,64 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			throw new JDBCException( "could not load by id: " +  MessageHelper.infoString(this, id), sqle );
 		}
 	}*/
-
 	private static final void reverse(Object[] objects, int len) {
 		Object[] temp = new Object[len];
-		for (int i=0; i<len; i++) {
-			temp[i] = objects[len-i-1];
+		for ( int i = 0; i < len; i++ ) {
+			temp[i] = objects[len - i - 1];
 		}
-		for (int i=0; i<len; i++) {
+		for ( int i = 0; i < len; i++ ) {
 			objects[i] = temp[i];
 		}
 	}
 
-	
+
 	/**
 	 * Reverse the first n elements of the incoming array
+	 *
 	 * @param objects
 	 * @param n
-	 * @return New array with the first n elements in reversed order 
+	 *
+	 * @return New array with the first n elements in reversed order
 	 */
-	private static final String[] reverse(String [] objects, int n) {
-		
+	private static String[] reverse(String[] objects, int n) {
+
 		int size = objects.length;
 		String[] temp = new String[size];
-		
-		for (int i=0; i<n; i++) {
-			temp[i] = objects[n-i-1];
+
+		for ( int i = 0; i < n; i++ ) {
+			temp[i] = objects[n - i - 1];
 		}
-		
-		for (int i=n; i < size; i++) {
-			temp[i] =  objects[i];
-		}
-		
-		return temp;
-	}
-		
-	/**
-	 * Reverse the first n elements of the incoming array
-	 * @param objects
-	 * @param n
-	 * @return New array with the first n elements in reversed order 
-	 */
-	private static final String[][] reverse(String[][] objects, int n) {
-		int size = objects.length;
-		String[][] temp = new String[size][];
-		for (int i=0; i<n; i++) {
-			temp[i] = objects[n-i-1];
-		}
-		
-		for (int i=n; i<size; i++) {
+
+		for ( int i = n; i < size; i++ ) {
 			temp[i] = objects[i];
 		}
-		
+
 		return temp;
 	}
-	
-	
-	
+
+	/**
+	 * Reverse the first n elements of the incoming array
+	 *
+	 * @param objects
+	 * @param n
+	 *
+	 * @return New array with the first n elements in reversed order
+	 */
+	private static String[][] reverse(String[][] objects, int n) {
+		int size = objects.length;
+		String[][] temp = new String[size][];
+		for ( int i = 0; i < n; i++ ) {
+			temp[i] = objects[n - i - 1];
+		}
+
+		for ( int i = n; i < size; i++ ) {
+			temp[i] = objects[i];
+		}
+
+		return temp;
+	}
+
+
 	public String fromTableFragment(String alias) {
 		return getTableName() + ' ' + alias;
 	}
@@ -687,28 +688,28 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	private static int getTableId(String tableName, String[] tables) {
-		for ( int j=0; j<tables.length; j++ ) {
+		for ( int j = 0; j < tables.length; j++ ) {
 			if ( tableName.equals( tables[j] ) ) {
 				return j;
 			}
 		}
-		throw new AssertionFailure("Table " + tableName + " not found");
+		throw new AssertionFailure( "Table " + tableName + " not found" );
 	}
 
 	public void addDiscriminatorToSelect(SelectFragment select, String name, String suffix) {
 		if ( hasSubclasses() ) {
-			select.setExtraSelectList( discriminatorFragment(name), getDiscriminatorAlias() );
+			select.setExtraSelectList( discriminatorFragment( name ), getDiscriminatorAlias() );
 		}
 	}
 
 	private CaseFragment discriminatorFragment(String alias) {
 		CaseFragment cases = getFactory().getDialect().createCaseFragment();
 
-		for ( int i=0; i<discriminatorValues.length; i++ ) {
+		for ( int i = 0; i < discriminatorValues.length; i++ ) {
 			cases.addWhenColumnNotNull(
-				generateTableAlias( alias, notNullColumnTableNumbers[i] ),
-				notNullColumnNames[i],
-				discriminatorValues[i]
+					generateTableAlias( alias, notNullColumnTableNumbers[i] ),
+					notNullColumnNames[i],
+					discriminatorValues[i]
 			);
 		}
 
@@ -717,12 +718,12 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 	public String filterFragment(String alias) {
 		return hasWhere() ?
-			" and " + getSQLWhereString( generateFilterConditionAlias( alias ) ) :
-			"";
+				" and " + getSQLWhereString( generateFilterConditionAlias( alias ) ) :
+				"";
 	}
 
 	public String generateFilterConditionAlias(String rootAlias) {
-		return generateTableAlias( rootAlias, tableSpan-1 );
+		return generateTableAlias( rootAlias, tableSpan - 1 );
 	}
 
 	public String[] getIdentifierColumnNames() {
@@ -735,23 +736,21 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 	public String[] getIdentifierColumnReaders() {
 		return tableKeyColumnReaders[0];
-	}		
-	
-	public String[] toColumns(String alias, String propertyName) throws QueryException {
+	}
 
-		if ( ENTITY_CLASS.equals(propertyName) ) {
+	public String[] toColumns(String alias, String propertyName) throws QueryException {
+		if ( ENTITY_CLASS.equals( propertyName ) ) {
 			// This doesn't actually seem to work but it *might*
 			// work on some dbs. Also it doesn't work if there
 			// are multiple columns of results because it
 			// is not accounting for the suffix:
 			// return new String[] { getDiscriminatorColumnName() };
 
-			return new String[] { discriminatorFragment(alias).toFragmentString() };
+			return new String[] { discriminatorFragment( alias ).toFragmentString() };
 		}
 		else {
-			return super.toColumns(alias, propertyName);
+			return super.toColumns( alias, propertyName );
 		}
-
 	}
 
 	protected int[] getPropertyTableNumbersInSelect() {
@@ -797,18 +796,18 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	protected boolean isSubclassTableLazy(int j) {
 		return subclassTableIsLazyClosure[j];
 	}
-	
-	
+
+
 	protected boolean isClassOrSuperclassTable(int j) {
 		return isClassOrSuperclassTable[j];
 	}
 
 	public String getPropertyTableName(String propertyName) {
-		Integer index = getEntityMetamodel().getPropertyIndexOrNull(propertyName);
+		Integer index = getEntityMetamodel().getPropertyIndexOrNull( propertyName );
 		if ( index == null ) {
 			return null;
 		}
-		return tableNames[ propertyTableNumbers[ index.intValue() ] ];
+		return tableNames[propertyTableNumbers[index.intValue()]];
 	}
 
 	public String[] getConstraintOrderedTableNameClosure() {

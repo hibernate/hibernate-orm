@@ -23,11 +23,12 @@
  */
 package org.hibernate.test.annotations.inheritance.joined;
 
-import org.hibernate.Session;
-import org.hibernate.Transaction;
+import java.math.BigInteger;
 
 import org.junit.Test;
 
+import org.hibernate.Session;
+import org.hibernate.Transaction;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -42,32 +43,47 @@ public class JoinedSubclassAndSecondaryTable extends BaseCoreFunctionalTestCase 
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		SwimmingPool sp = new SwimmingPool();
-		//sp.setAddress( "Park Avenue" );
 		s.persist( sp );
 		s.flush();
 		s.clear();
-		
-		SwimmingPool sp2 = (SwimmingPool)s.get(SwimmingPool.class, sp.getId());
-		assertEquals( sp.getAddress(), null);
-		
-		PoolAddress addr = new PoolAddress();
-		addr.setAddress("Park Avenue");
-		sp2.setAddress(addr);
-		
+
+		BigInteger rowCount = getTableRowCount( s );
+		assertEquals(
+				"The address table is marked as optional. For null values no database row should be created",
+				BigInteger.valueOf( 0 ),
+				rowCount
+		);
+
+		SwimmingPool sp2 = (SwimmingPool) s.get( SwimmingPool.class, sp.getId() );
+		assertEquals( sp.getAddress(), null );
+
+		PoolAddress address = new PoolAddress();
+		address.setAddress( "Park Avenue" );
+		sp2.setAddress( address );
+
 		s.flush();
 		s.clear();
-		
-		sp2 = (SwimmingPool)s.get(SwimmingPool.class, sp.getId());
+
+		sp2 = (SwimmingPool) s.get( SwimmingPool.class, sp.getId() );
+		rowCount = getTableRowCount( s );
+		assertEquals(
+				"Now we should have a row in the pool address table ",
+				BigInteger.valueOf( 1 ),
+				rowCount
+		);
 		assertFalse( sp2.getAddress() == null );
-		assertEquals( sp2.getAddress().getAddress(), "Park Avenue");
-		
+		assertEquals( sp2.getAddress().getAddress(), "Park Avenue" );
+
 		tx.rollback();
 		s.close();
+	}
+
+	private BigInteger getTableRowCount(Session s) {
+		return (BigInteger) s.createSQLQuery( "select count(*) from POOL_ADDRESS" ).uniqueResult();
 	}
 
 	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] { Pool.class, SwimmingPool.class };
 	}
-
 }

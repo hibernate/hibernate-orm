@@ -42,17 +42,17 @@ public abstract class BaseAnnotationBindingTestCase extends BaseUnitTestCase {
 	public void tearDown() {
 		sources = null;
 		meta = null;
-    }
+	}
 
-    public void buildMetadataSources(String ormPath, Class<?>... classes) {
-        sources = new MetadataSources( new ServiceRegistryBuilder().buildServiceRegistry() );
-        if(ormPath!=null){
-            sources.addResource( ormPath );
-        }
-        for ( Class clazz : classes ) {
-            sources.addAnnotatedClass( clazz );
-        }
-    }
+	public void buildMetadataSources(String ormPath, Class<?>... classes) {
+		sources = new MetadataSources( new ServiceRegistryBuilder().buildServiceRegistry() );
+		if ( ormPath != null ) {
+			sources.addResource( ormPath );
+		}
+		for ( Class clazz : classes ) {
+			sources.addAnnotatedClass( clazz );
+		}
+	}
 
 	public void buildMetadataSources(Class<?>... classes) {
 		buildMetadataSources( null, classes );
@@ -71,7 +71,6 @@ public abstract class BaseAnnotationBindingTestCase extends BaseUnitTestCase {
 		}
 		return meta.getRootEntityBinding( clazz.getName() );
 	}
-
 }
 
 

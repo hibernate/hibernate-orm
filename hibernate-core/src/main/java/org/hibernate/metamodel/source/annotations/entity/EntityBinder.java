@@ -399,44 +399,49 @@ public class EntityBinder {
 		return new Caching( region, defaultAccessType, true );
 	}
 
-    private Table createTable() {
-        String schmaName = null;
-        String catalogName = null;
-        String tableName = null;
-        AnnotationInstance tableAnnotation = JandexHelper.getSingleAnnotation(
-                entityClass.getClassInfo(), JPADotNames.TABLE
-        );
-        if ( tableAnnotation != null ) {
-            schmaName = JandexHelper.getValueAsString( tableAnnotation, "schema" );
-            catalogName = JandexHelper.getValueAsString( tableAnnotation, "catalog" );
-            tableName = JandexHelper.getValueAsString( tableAnnotation, "name" );
-        }
+	private Table createTable() {
+		String schemaName = null;
+		String catalogName = null;
+		String tableName = null;
 
+		// is there an explicit @Table annotation?
+		AnnotationInstance tableAnnotation = JandexHelper.getSingleAnnotation(
+				entityClass.getClassInfo(), JPADotNames.TABLE
+		);
+		if ( tableAnnotation != null ) {
+			schemaName = JandexHelper.getValueAsString( tableAnnotation, "schema" );
+			catalogName = JandexHelper.getValueAsString( tableAnnotation, "catalog" );
+			String explicitTableName = JandexHelper.getValueAsString( tableAnnotation, "name" );
+			if ( StringHelper.isNotEmpty( explicitTableName ) ) {
+				tableName = meta.getNamingStrategy().tableName( explicitTableName );
+			}
+		}
 
-        if ( StringHelper.isEmpty( tableName ) ) {
-            tableName = meta.getNamingStrategy().classToTableName( entityClass.getPrimaryTableName() );
+		// no explicit table name given, let's use the entity name as table name (taking inheritance into consideration
+		if ( StringHelper.isEmpty( tableName ) ) {
+			tableName = meta.getNamingStrategy().classToTableName( entityClass.getClassNameForTable() );
+		}
 
-        }
-        else {
-            tableName = meta.getNamingStrategy().tableName( tableName );
-        }
-        if ( meta.isGloballyQuotedIdentifiers() ) {
-            schmaName = StringHelper.quote( schmaName );
-            catalogName = StringHelper.quote( catalogName );
-            tableName = StringHelper.quote( tableName );
-        }
-        final Identifier tableNameIdentifier = Identifier.toIdentifier( tableName );
-        final Schema schema = meta.getDatabase().getSchema( new Schema.Name( schmaName, catalogName ) );
-        Table table = schema.getTable( tableNameIdentifier );
-        if ( table == null ) {
-            table = schema.createTable( tableNameIdentifier );
-        }
-        return table;
-    }
+		// check whether the names should be globally quoted
+		if ( meta.isGloballyQuotedIdentifiers() ) {
+			schemaName = StringHelper.quote( schemaName );
+			catalogName = StringHelper.quote( catalogName );
+			tableName = StringHelper.quote( tableName );
+		}
+
+		// last, but not least create the metamodel relational objects
+		final Identifier tableNameIdentifier = Identifier.toIdentifier( tableName );
+		final Schema schema = meta.getDatabase().getSchema( new Schema.Name( schemaName, catalogName ) );
+		Table table = schema.getTable( tableNameIdentifier );
+		if ( table == null ) {
+			table = schema.createTable( tableNameIdentifier );
+		}
+		return table;
+	}
 
 
 	private void bindTable(EntityBinding entityBinding) {
-        Table table = createTable();
+		Table table = createTable();
 		entityBinding.setBaseTable( table );
 
 		AnnotationInstance checkAnnotation = JandexHelper.getSingleAnnotation(
@@ -465,7 +470,6 @@ public class EntityBinder {
 			}
 		}
 	}
-
 
 	private void bindJpaEntityAnnotation(EntityBindingStateImpl entityBindingState) {
 		AnnotationInstance jpaEntityAnnotation = JandexHelper.getSingleAnnotation(
@@ -587,9 +591,9 @@ public class EntityBinder {
 				GenerationType.class
 		);
 		String strategy = IdGeneratorBinder.generatorType(
-                generationType,
-                meta.getOptions().useNewIdentifierGenerators()
-        );
+				generationType,
+				meta.getOptions().useNewIdentifierGenerators()
+		);
 		if ( idGenerator != null && !strategy.equals( idGenerator.getStrategy() ) ) {
 			//todo how to ?
 			throw new MappingException(

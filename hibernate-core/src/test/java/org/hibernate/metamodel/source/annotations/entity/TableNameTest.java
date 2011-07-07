@@ -100,7 +100,7 @@ public class TableNameTest extends BaseUnitTestCase {
 				"wrong inheritance type", InheritanceType.SINGLE_TABLE, entityClass.getInheritanceType()
 		);
 		Assert.assertEquals(
-				"wrong table name", "A", entityClass.getPrimaryTableName()
+				"wrong table name", "A", entityClass.getClassNameForTable()
 		);
 
 		assertTrue( iter.hasNext() );
@@ -112,7 +112,7 @@ public class TableNameTest extends BaseUnitTestCase {
 				"wrong inheritance type", InheritanceType.SINGLE_TABLE, entityClass.getInheritanceType()
 		);
 		Assert.assertEquals(
-				"wrong table name", "A", entityClass.getPrimaryTableName()
+				"wrong table name", "A", entityClass.getClassNameForTable()
 		);
 
 		assertFalse( iter.hasNext() );
@@ -148,7 +148,7 @@ public class TableNameTest extends BaseUnitTestCase {
 				"wrong inheritance type", InheritanceType.TABLE_PER_CLASS, entityClass.getInheritanceType()
 		);
 		Assert.assertEquals(
-				"wrong table name", "A", entityClass.getPrimaryTableName()
+				"wrong table name", "A", entityClass.getClassNameForTable()
 		);
 
 		assertTrue( iter.hasNext() );
@@ -160,7 +160,7 @@ public class TableNameTest extends BaseUnitTestCase {
 				"wrong inheritance type", InheritanceType.TABLE_PER_CLASS, entityClass.getInheritanceType()
 		);
 		Assert.assertEquals(
-				"wrong table name", "B", entityClass.getPrimaryTableName()
+				"wrong table name", "B", entityClass.getClassNameForTable()
 		);
 
 		assertFalse( iter.hasNext() );
@@ -197,7 +197,7 @@ public class TableNameTest extends BaseUnitTestCase {
 				"wrong inheritance type", InheritanceType.JOINED, entityClass.getInheritanceType()
 		);
 		Assert.assertEquals(
-				"wrong table name", "A", entityClass.getPrimaryTableName()
+				"wrong table name", "A", entityClass.getClassNameForTable()
 		);
 
 		assertTrue( iter.hasNext() );
@@ -209,7 +209,7 @@ public class TableNameTest extends BaseUnitTestCase {
 				"wrong inheritance type", InheritanceType.JOINED, entityClass.getInheritanceType()
 		);
 		Assert.assertEquals(
-				"wrong table name", "B", entityClass.getPrimaryTableName()
+				"wrong table name", "B", entityClass.getClassNameForTable()
 		);
 
 		assertFalse( iter.hasNext() );

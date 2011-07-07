@@ -28,7 +28,6 @@ import java.util.List;
 import javax.persistence.AccessType;
 
 import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 
@@ -37,7 +36,6 @@ import org.hibernate.MappingException;
 import org.hibernate.metamodel.binding.InheritanceType;
 import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
-import org.hibernate.metamodel.source.annotations.util.JandexHelper;
 
 /**
  * Represents an entity or mapped superclass configured via annotations/xml.
@@ -48,7 +46,7 @@ public class EntityClass extends ConfiguredClass {
 	private final AccessType hierarchyAccessType;
 	private final InheritanceType inheritanceType;
 	private final boolean hasOwnTable;
-	private final String primaryTableName;
+	private final String entityBasedTableName;
 	private final IdType idType;
 	private final EntityClass jpaEntityParent;
 
@@ -64,7 +62,7 @@ public class EntityClass extends ConfiguredClass {
 		this.idType = determineIdType();
 		this.jpaEntityParent = findJpaEntitySuperClass();
 		this.hasOwnTable = definesItsOwnTable();
-		this.primaryTableName = determinePrimaryTableName();
+		this.entityBasedTableName = determineEntityBasedTableName();
 	}
 
 	/**
@@ -94,9 +92,9 @@ public class EntityClass extends ConfiguredClass {
 	public boolean hasOwnTable() {
 		return hasOwnTable;
 	}
-    //todo change a better method name
-	public String getPrimaryTableName() {
-		return primaryTableName;
+
+	public String getClassNameForTable() {
+		return entityBasedTableName;
 	}
 
 	@Override
@@ -107,7 +105,7 @@ public class EntityClass extends ConfiguredClass {
 		sb.append( ", hierarchyAccessType=" ).append( hierarchyAccessType );
 		sb.append( ", inheritanceType=" ).append( inheritanceType );
 		sb.append( ", hasOwnTable=" ).append( hasOwnTable );
-		sb.append( ", primaryTableName='" ).append( primaryTableName ).append( '\'' );
+		sb.append( ", primaryTableName='" ).append( entityBasedTableName ).append( '\'' );
 		sb.append( ", idType=" ).append( idType );
 		sb.append( '}' );
 		return sb.toString();
@@ -120,12 +118,7 @@ public class EntityClass extends ConfiguredClass {
 		}
 
 		if ( InheritanceType.SINGLE_TABLE.equals( inheritanceType ) ) {
-			if ( isEntityRoot() ) {
-				return true;
-			}
-			else {
-				return false;
-			}
+			return isEntityRoot();
 		}
 		return true;
 	}
@@ -141,14 +134,13 @@ public class EntityClass extends ConfiguredClass {
 		return null;
 	}
 
-	private String determinePrimaryTableName() {
+	private String determineEntityBasedTableName() {
 		String tableName = null;
 		if ( hasOwnTable() ) {
 			tableName = getConfiguredClass().getSimpleName();
 		}
-		else if ( getParent() != null
-				&& !getParent().getConfiguredClassType().equals( ConfiguredClassType.MAPPED_SUPERCLASS ) ) {
-			tableName = ( (EntityClass) getParent() ).getPrimaryTableName();
+		else if ( jpaEntityParent != null ) {
+			tableName = jpaEntityParent.getClassNameForTable();
 		}
 		return tableName;
 	}

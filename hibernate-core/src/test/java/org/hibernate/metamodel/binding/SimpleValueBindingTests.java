@@ -27,6 +27,7 @@ import java.sql.Types;
 
 import org.junit.Test;
 
+import org.hibernate.internal.util.Value;
 import org.hibernate.metamodel.domain.Entity;
 import org.hibernate.metamodel.domain.JavaType;
 import org.hibernate.metamodel.domain.SingularAttribute;
@@ -35,6 +36,8 @@ import org.hibernate.metamodel.relational.Datatype;
 import org.hibernate.metamodel.relational.Schema;
 import org.hibernate.metamodel.relational.Size;
 import org.hibernate.metamodel.relational.Table;
+import org.hibernate.service.classloading.spi.ClassLoadingException;
+
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.assertSame;
@@ -52,7 +55,7 @@ public class SimpleValueBindingTests extends BaseUnitTestCase {
 	@Test
 	public void testBasicMiddleOutBuilding() {
 		Table table = new Table( new Schema( null, null ), "the_table" );
-		Entity entity = new Entity( "TheEntity", null, new JavaType( "NoSuchClass", null ) );
+		Entity entity = new Entity( "TheEntity", "NoSuchClass", makeJavaType( "NoSuchClass" ), null );
 		EntityBinding entityBinding = new EntityBinding();
 		entityBinding.setRoot( true );
 		entityBinding.setEntity( entity );
@@ -71,5 +74,21 @@ public class SimpleValueBindingTests extends BaseUnitTestCase {
 		table.getPrimaryKey().addColumn( idColumn );
 		table.getPrimaryKey().setName( "my_table_pk" );
 		//attributeBinding.setValue( idColumn );
+	}
+
+	Value<Class<?>> makeJavaType(final String name) {
+		return new Value<Class<?>>(
+				new Value.DeferredInitializer<Class<?>>() {
+					@Override
+					public Class<?> initialize() {
+						try {
+							return Class.forName( name );
+						}
+						catch ( Exception e ) {
+							throw new ClassLoadingException( "Could not load class : " + name, e );
+						}
+					}
+				}
+		);
 	}
 }

@@ -23,14 +23,13 @@
  */
 package org.hibernate.metamodel.binder.source.annotations;
 
+import javax.persistence.AccessType;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import javax.persistence.AccessType;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.ClassInfo;
@@ -41,7 +40,6 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.metamodel.binder.source.annotations.entity.ConfiguredClassHierarchy;
 import org.hibernate.metamodel.source.annotations.entity.EmbeddableClass;
 import org.hibernate.metamodel.source.annotations.entity.EntityClass;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
 
 /**
  * Given a (jandex) annotation index build processes all classes with JPA relevant annotations and pre-orders
@@ -55,15 +53,14 @@ public class ConfiguredClassHierarchyBuilder {
 	 * Pre-processes the annotated entities from the index and put them into a structure which can
 	 * bound to the Hibernate metamodel.
 	 *
-	 * @param context the annotation binding context with access to the service registry and the annotation index
+	 * @param bindingContext The binding context, giving access to needed services and information
 	 *
 	 * @return a set of {@code ConfiguredClassHierarchy}s. One for each "leaf" entity.
 	 */
-	public static Set<ConfiguredClassHierarchy<EntityClass>> createEntityHierarchies(AnnotationsBindingContext context) {
-		ClassLoaderService classLoaderService = context.getServiceRegistry().getService( ClassLoaderService.class );
+	public static Set<ConfiguredClassHierarchy<EntityClass>> createEntityHierarchies(AnnotationsBindingContext bindingContext) {
 		Map<ClassInfo, List<ClassInfo>> processedClassInfos = new HashMap<ClassInfo, List<ClassInfo>>();
 
-		for ( ClassInfo info : context.getIndex().getKnownClasses() ) {
+		for ( ClassInfo info : bindingContext.getIndex().getKnownClasses() ) {
 			if ( !isEntityClass( info ) ) {
 				continue;
 			}
@@ -74,9 +71,9 @@ public class ConfiguredClassHierarchyBuilder {
 
 			List<ClassInfo> configuredClassList = new ArrayList<ClassInfo>();
 			ClassInfo tmpClassInfo = info;
-			Class<?> clazz = classLoaderService.classForName( tmpClassInfo.toString() );
+			Class<?> clazz = bindingContext.locateClassByName( tmpClassInfo.toString() );
 			while ( clazz != null && !clazz.equals( Object.class ) ) {
-				tmpClassInfo = context.getIndex().getClassByName( DotName.createSimple( clazz.getName() ) );
+				tmpClassInfo = bindingContext.getIndex().getClassByName( DotName.createSimple( clazz.getName() ) );
 				clazz = clazz.getSuperclass();
 				if ( tmpClassInfo == null ) {
 					continue;
@@ -101,7 +98,7 @@ public class ConfiguredClassHierarchyBuilder {
 		List<List<ClassInfo>> processedList = new ArrayList<List<ClassInfo>>();
 		for ( List<ClassInfo> classInfoList : processedClassInfos.values() ) {
 			if ( !processedList.contains( classInfoList ) ) {
-				hierarchies.add( ConfiguredClassHierarchy.createEntityClassHierarchy( classInfoList, context ) );
+				hierarchies.add( ConfiguredClassHierarchy.createEntityClassHierarchy( classInfoList, bindingContext ) );
 				processedList.add( classInfoList );
 			}
 		}

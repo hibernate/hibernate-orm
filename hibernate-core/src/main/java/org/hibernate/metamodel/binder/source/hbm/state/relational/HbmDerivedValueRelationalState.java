@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,29 +21,21 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.cfg;
-import org.hibernate.MappingException;
+package org.hibernate.metamodel.binder.source.hbm.state.relational;
+
+import org.hibernate.metamodel.relational.state.DerivedValueRelationalState;
 
 /**
- * Mapping not yet implemented
- *
- * @author Emmanuel Bernard
+ * @author Gail Badner
  */
-public class NotYetImplementedException extends MappingException {
-	public NotYetImplementedException() {
-		this( "Not yet implemented!" );
+public class HbmDerivedValueRelationalState implements DerivedValueRelationalState {
+	private final String formula;
+
+	public HbmDerivedValueRelationalState(String formula) {
+		this.formula = formula.trim();
 	}
 
-	public NotYetImplementedException(String msg, Throwable root) {
-		super( msg, root );
+	public String getFormula() {
+		return formula;
 	}
-
-	public NotYetImplementedException(Throwable root) {
-		super( root );
-	}
-
-	public NotYetImplementedException(String s) {
-		super( s );
-	}
-
 }

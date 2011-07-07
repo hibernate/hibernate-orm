@@ -76,9 +76,6 @@ public class HibernateMappingProcessor implements HbmBindingContext {
 	private final MappingDefaults mappingDefaults;
 	private final MetaAttributeContext metaAttributeContext;
 
-
-	private final BindingCreator bindingCreator;
-
 	private final boolean autoImport;
 
 	public HibernateMappingProcessor(HbmSourceProcessorImpl hbmHandler, JaxbRoot<XMLHibernateMapping> jaxbRoot) {
@@ -99,16 +96,18 @@ public class HibernateMappingProcessor implements HbmBindingContext {
 		);
 
 		this.autoImport = hibernateMapping.isAutoImport();
-
-		this.bindingCreator = new BindingCreator( this );
-
 		this.metaAttributeContext = extractMetaAttributes();
 	}
 
 	private MetaAttributeContext extractMetaAttributes() {
 		return hibernateMapping.getMeta() == null
 				? new MetaAttributeContext( hbmHandler.getMetadataImplementor().getGlobalMetaAttributeContext() )
-				: HbmHelper.extractMetaAttributeContext( hibernateMapping.getMeta(), true, hbmHandler.getMetadataImplementor().getGlobalMetaAttributeContext() );
+				: Helper.extractMetaAttributeContext(
+				hibernateMapping.getMeta(),
+				true,
+				hbmHandler.getMetadataImplementor()
+						.getGlobalMetaAttributeContext()
+		);
 	}
 
 	XMLHibernateMapping getHibernateMapping() {
@@ -289,17 +288,11 @@ public class HibernateMappingProcessor implements HbmBindingContext {
 			return;
 		}
 
+		final BindingCreator bindingCreator = new BindingCreator( this, processedEntityNames );
+
 		for ( Object entityElementO : hibernateMapping.getClazzOrSubclassOrJoinedSubclass() ) {
 			final EntityElement entityElement = (EntityElement) entityElementO;
-
-			final String entityName = this.determineEntityName( entityElement );
-			if ( processedEntityNames.contains( entityName ) ) {
-				continue;
-			}
-
-			final EntityBinding entityBinding = bindingCreator.createEntityBinding( entityElement, null );
-			getMetadataImplementor().addEntity( entityBinding );
-			processedEntityNames.add( entityBinding.getEntity().getName() );
+			bindingCreator.createEntityBinding( entityElement, null );
 		}
 	}
 
@@ -386,11 +379,11 @@ public class HibernateMappingProcessor implements HbmBindingContext {
 
 	@Override
 	public String qualifyClassName(String unqualifiedName) {
-		return HbmHelper.getClassName( unqualifiedName, mappingDefaults.getPackageName() );
+		return Helper.qualifyIfNeeded( unqualifiedName, mappingDefaults.getPackageName() );
 	}
 
 	@Override
 	public String determineEntityName(EntityElement entityElement) {
-		return HbmHelper.determineEntityName( entityElement, mappingDefaults.getPackageName() );
+		return Helper.determineEntityName( entityElement, mappingDefaults.getPackageName() );
 	}
 }

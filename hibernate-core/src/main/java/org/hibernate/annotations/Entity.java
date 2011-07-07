@@ -51,8 +51,11 @@ public @interface Entity {
 	boolean selectBeforeUpdate() default false;
 	/** polymorphism strategy for this entity */
 	PolymorphismType polymorphism() default PolymorphismType.IMPLICIT;
-	/** persister of this entity, default is hibernate internal one */
-	String persister() default "";
 	/** optimistic locking strategy */
 	OptimisticLockType optimisticLock() default OptimisticLockType.VERSION;
+	/**
+	 * persister of this entity, default is hibernate internal one
+	 * @deprecated  use {@link Persister} instead
+	 */
+	String persister() default "";
 }

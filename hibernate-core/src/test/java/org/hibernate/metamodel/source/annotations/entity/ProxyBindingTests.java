@@ -46,7 +46,7 @@ public class ProxyBindingTests extends BaseAnnotationBindingTestCase {
 		buildMetadataSources( ProxiedEntity.class );
 		EntityBinding binding = getEntityBinding( ProxiedEntity.class );
 		assertTrue( "Wrong laziness", binding.isLazy() );
-		assertEquals( "Wrong proxy interface", ProxiedEntity.class, binding.getProxyInterfaceType().getClassReference() );
+		assertEquals( "Wrong proxy interface", ProxiedEntity.class, binding.getProxyInterfaceType().getValue() );
 	}
 
 	@Test
@@ -54,7 +54,7 @@ public class ProxyBindingTests extends BaseAnnotationBindingTestCase {
 		buildMetadataSources(NoProxyEntity.class);
 		EntityBinding binding = getEntityBinding( NoProxyEntity.class );
 		assertTrue( "Wrong laziness", binding.isLazy() );
-		assertEquals( "Wrong proxy interface", NoProxyEntity.class, binding.getProxyInterfaceType().getClassReference() );
+		assertEquals( "Wrong proxy interface", NoProxyEntity.class, binding.getProxyInterfaceType().getValue() );
 	}
 
 	@Test
@@ -73,7 +73,7 @@ public class ProxyBindingTests extends BaseAnnotationBindingTestCase {
 		assertEquals(
 				"Wrong proxy interface",
 				"org.hibernate.metamodel.source.annotations.entity.ProxyBindingTests$ProxyInterfaceEntity",
-				binding.getProxyInterfaceType().getName()
+				binding.getProxyInterfaceType().getValue().getName()
 		);
 	}
 

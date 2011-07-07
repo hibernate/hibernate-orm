@@ -31,14 +31,11 @@ import org.jboss.jandex.Index;
 
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.internal.util.Value;
-import org.hibernate.metamodel.binder.MappingException;
-import org.hibernate.metamodel.binder.source.EntityDescriptor;
 import org.hibernate.metamodel.binder.source.MappingDefaults;
 import org.hibernate.metamodel.binder.source.MetadataImplementor;
 import org.hibernate.metamodel.binder.source.annotations.entity.ConfiguredClass;
 import org.hibernate.metamodel.binder.source.annotations.entity.EntityBinder;
 import org.hibernate.metamodel.binder.source.internal.OverriddenMappingDefaults;
-import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.domain.JavaType;
 import org.hibernate.service.ServiceRegistry;
 
@@ -52,7 +49,7 @@ public class AnnotationsMetadataProcessor implements AnnotationsBindingContext {
 
 	private final MappingDefaults mappingDefaults;
 
-	private final org.hibernate.metamodel.binder.EntityBinder entityBinder;
+	private final EntityBinder entityBinder;
 
 	public AnnotationsMetadataProcessor(
 			AnnotationsBindingContext parentBindingContext,
@@ -84,41 +81,12 @@ public class AnnotationsMetadataProcessor implements AnnotationsBindingContext {
 				null			// association laziness
 		);
 
-		this.entityBinder = new org.hibernate.metamodel.binder.EntityBinder( this );
+		this.entityBinder = new EntityBinder( configuredClass, this );
 	}
 
 
 	public void processMappingMetadata(List<String> processedEntityNames) {
-		final EntityDescriptor entityDescriptor;
-		switch ( configuredClass.getInheritanceType() ) {
-			case NO_INHERITANCE: {
-				entityDescriptor = new RootEntityDescriptorImpl( configuredClass, this );
-				break;
-			}
-//			else if ( XMLSubclassElement.class.isInstance( entityElement ) ) {
-//				entityDescriptor = new DiscriminatedSubClassEntityDescriptorImpl( entityElement, this );
-//			}
-//			else if ( XMLJoinedSubclassElement.class.isInstance( entityElement ) ) {
-//				entityDescriptor = new JoinedSubClassEntityDescriptorImpl( entityElement, this );
-//			}
-//			else if ( XMLUnionSubclassElement.class.isInstance( entityElement ) ) {
-//				entityDescriptor = new UnionSubClassEntityDescriptorImpl( entityElement, this );
-//			}
-			default: {
-				throw new MappingException(
-						"unknown type of class or subclass: " + configuredClass.getName(),
-						null
-				);
-			}
-		}
-
-		if ( processedEntityNames.contains( configuredClass.getName() ) ) {
-			return;
-		}
-
-		final EntityBinding entityBinding = entityBinder.createEntityBinding( entityDescriptor );
-		getMetadataImplementor().addEntity( entityBinding );
-		processedEntityNames.add( configuredClass.getName() );
+		entityBinder.bind( processedEntityNames );
 	}
 
 	@Override

@@ -34,7 +34,7 @@ import org.junit.Before;
 import org.hibernate.metamodel.binder.source.annotations.ConfiguredClassHierarchyBuilder;
 import org.hibernate.metamodel.binder.source.annotations.JandexHelper;
 import org.hibernate.metamodel.binder.source.annotations.entity.ConfiguredClassHierarchy;
-import org.hibernate.metamodel.source.annotations.entity.AnnotationsBindingContextImpl;
+import org.hibernate.metamodel.source.annotations.TestAnnotationsBindingContextImpl;
 import org.hibernate.metamodel.source.annotations.entity.EmbeddableClass;
 import org.hibernate.metamodel.source.annotations.entity.EntityClass;
 import org.hibernate.service.ServiceRegistryBuilder;
@@ -60,7 +60,7 @@ public abstract class BaseAnnotationIndexTestCase extends BaseUnitTestCase {
 
 	public Set<ConfiguredClassHierarchy<EntityClass>> createEntityHierarchies(Class<?>... clazz) {
 		Index index = JandexHelper.indexForClass( serviceRegistry.getService( ClassLoaderService.class ), clazz );
-		AnnotationsBindingContextImpl context = new AnnotationsBindingContextImpl( index, serviceRegistry );
+		TestAnnotationsBindingContextImpl context = new TestAnnotationsBindingContextImpl( index, serviceRegistry );
 		return ConfiguredClassHierarchyBuilder.createEntityHierarchies( context );
 	}
 
@@ -69,7 +69,7 @@ public abstract class BaseAnnotationIndexTestCase extends BaseUnitTestCase {
 				serviceRegistry.getService( ClassLoaderService.class ),
 				configuredClasses
 		);
-		AnnotationsBindingContextImpl context = new AnnotationsBindingContextImpl( index, serviceRegistry );
+		TestAnnotationsBindingContextImpl context = new TestAnnotationsBindingContextImpl( index, serviceRegistry );
 		return ConfiguredClassHierarchyBuilder.createEmbeddableHierarchy( configuredClasses[0], accessType, context );
 	}
 }

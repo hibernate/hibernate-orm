@@ -23,6 +23,7 @@
  */
 package org.hibernate.metamodel.binder.source.hbm;
 
+import java.util.List;
 import java.util.Map;
 
 import org.hibernate.EntityMode;
@@ -54,12 +55,27 @@ import org.hibernate.tuple.entity.EntityTuplizer;
  */
 public class BindingCreator {
 	private final HbmBindingContext bindingContext;
+	private final List<String> processedEntityNames;
 
-	public BindingCreator(HbmBindingContext bindingContext) {
+	public BindingCreator(HbmBindingContext bindingContext, List<String> processedEntityNames) {
 		this.bindingContext = bindingContext;
+		this.processedEntityNames = processedEntityNames;
 	}
 
 	public EntityBinding createEntityBinding(EntityElement entityElement, String containingSuperEntityName) {
+		final String entityName = bindingContext.determineEntityName( entityElement );
+		if ( processedEntityNames.contains( entityName ) ) {
+			return bindingContext.getMetadataImplementor().getEntityBinding( entityName );
+		}
+
+		final EntityBinding entityBinding = doEntityBindingCreation( entityElement, containingSuperEntityName );
+
+		bindingContext.getMetadataImplementor().addEntity( entityBinding );
+		processedEntityNames.add( entityBinding.getEntity().getName() );
+		return entityBinding;
+	}
+
+	private EntityBinding doEntityBindingCreation(EntityElement entityElement, String containingSuperEntityName) {
 		if ( XMLHibernateMapping.XMLClass.class.isInstance( entityElement ) ) {
 			return makeEntityBinding( (XMLHibernateMapping.XMLClass) entityElement );
 		}
@@ -97,7 +113,11 @@ public class BindingCreator {
 
 	protected EntityBinding makeEntityBinding(XMLHibernateMapping.XMLClass xmlClass) {
 		final EntityBinding entityBinding = new EntityBinding();
+		// todo : this is actually not correct
+		// 		the problem is that we need to know whether we have mapped subclasses which happens later
+		//		one option would be to simply reset the InheritanceType at that time.
 		entityBinding.setInheritanceType( InheritanceType.NO_INHERITANCE );
+		entityBinding.setRoot( true );
 
 		final String entityName = bindingContext.determineEntityName( xmlClass );
 		final String verbatimClassName = xmlClass.getName();
@@ -140,7 +160,7 @@ public class BindingCreator {
 	}
 
 	private OptimisticLockStyle interpretOptimisticLockStyle(XMLHibernateMapping.XMLClass entityClazz) {
-		final String optimisticLockModeString = MappingHelper.getStringValue(
+		final String optimisticLockModeString = Helper.getStringValue(
 				entityClazz.getOptimisticLock(),
 				"version"
 		);
@@ -245,14 +265,16 @@ public class BindingCreator {
 		entityBinding.setJpaEntityName( null );
 
 		final String proxy = entityElement.getProxy();
-		final Boolean isLazy = entityElement.isLazy();
+		final boolean isLazy = entityElement.isLazy() == null
+				? true
+				: entityElement.isLazy();
 		if ( entityBinding.getEntityMode() == EntityMode.POJO ) {
 			if ( proxy != null ) {
-				entityBinding.setProxyInterfaceType( bindingContext.makeClassReference(
-						bindingContext.qualifyClassName(
-								proxy
+				entityBinding.setProxyInterfaceType(
+						bindingContext.makeClassReference(
+								bindingContext.qualifyClassName( proxy )
 						)
-				) );
+				);
 				entityBinding.setLazy( true );
 			}
 			else if ( isLazy ) {
@@ -275,50 +297,34 @@ public class BindingCreator {
 		}
 
 		entityBinding.setMetaAttributeContext(
-				HbmHelper.extractMetaAttributeContext(
+				Helper.extractMetaAttributeContext(
 						entityElement.getMeta(), true, bindingContext.getMetaAttributeContext()
 				)
 		);
 
 		entityBinding.setDynamicUpdate( entityElement.isDynamicUpdate() );
 		entityBinding.setDynamicInsert( entityElement.isDynamicInsert() );
-		entityBinding.setBatchSize( MappingHelper.getIntValue( entityElement.getBatchSize(), 0 ) );
+		entityBinding.setBatchSize( Helper.getIntValue( entityElement.getBatchSize(), 0 ) );
 		entityBinding.setSelectBeforeUpdate( entityElement.isSelectBeforeUpdate() );
 		entityBinding.setAbstract( entityElement.isAbstract() );
 
-		entityBinding.setCustomLoaderName( entityElement.getLoader().getQueryRef() );
+		if ( entityElement.getLoader() != null ) {
+			entityBinding.setCustomLoaderName( entityElement.getLoader().getQueryRef() );
+		}
 
 		final XMLSqlInsertElement sqlInsert = entityElement.getSqlInsert();
 		if ( sqlInsert != null ) {
-			entityBinding.setCustomInsert(
-					HbmHelper.getCustomSql(
-							sqlInsert.getValue(),
-							sqlInsert.isCallable(),
-							sqlInsert.getCheck().value()
-					)
-			);
+			entityBinding.setCustomInsert( Helper.buildCustomSql( sqlInsert ) );
 		}
 
 		final XMLSqlDeleteElement sqlDelete = entityElement.getSqlDelete();
 		if ( sqlDelete != null ) {
-			entityBinding.setCustomDelete(
-					HbmHelper.getCustomSql(
-							sqlDelete.getValue(),
-							sqlDelete.isCallable(),
-							sqlDelete.getCheck().value()
-					)
-			);
+			entityBinding.setCustomDelete( Helper.buildCustomSql( sqlDelete ) );
 		}
 
 		final XMLSqlUpdateElement sqlUpdate = entityElement.getSqlUpdate();
 		if ( sqlUpdate != null ) {
-			entityBinding.setCustomUpdate(
-					HbmHelper.getCustomSql(
-							sqlUpdate.getValue(),
-							sqlUpdate.isCallable(),
-							sqlUpdate.getCheck().value()
-					)
-			);
+			entityBinding.setCustomUpdate( Helper.buildCustomSql( sqlUpdate ) );
 		}
 
 		if ( entityElement.getSynchronize() != null ) {

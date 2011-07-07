@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Inc.
+ * distributed under license by Red Hat Inc..
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -21,29 +21,40 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.cfg;
-import org.hibernate.MappingException;
+package org.hibernate.metamodel.binder.source.annotations.xml.mocker;
+
+import javax.persistence.Embeddable;
 
 /**
- * Mapping not yet implemented
- *
- * @author Emmanuel Bernard
+ * @author Strong Liu
  */
-public class NotYetImplementedException extends MappingException {
-	public NotYetImplementedException() {
-		this( "Not yet implemented!" );
+@Embeddable
+public class Topic {
+	private String title;
+	private String summary;
+	private int position;
+
+	public int getPosition() {
+		return position;
 	}
 
-	public NotYetImplementedException(String msg, Throwable root) {
-		super( msg, root );
+	public void setPosition(int position) {
+		this.position = position;
 	}
 
-	public NotYetImplementedException(Throwable root) {
-		super( root );
+	public String getSummary() {
+		return summary;
 	}
 
-	public NotYetImplementedException(String s) {
-		super( s );
+	public void setSummary(String summary) {
+		this.summary = summary;
 	}
 
+	public String getTitle() {
+		return title;
+	}
+
+	public void setTitle(String title) {
+		this.title = title;
+	}
 }

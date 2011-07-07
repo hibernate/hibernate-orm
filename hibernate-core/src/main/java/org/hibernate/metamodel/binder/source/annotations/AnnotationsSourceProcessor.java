@@ -176,8 +176,8 @@ public class AnnotationsSourceProcessor implements SourceProcessor, AnnotationsB
 				// for classes annotated w/ @Entity we create a EntityBinding
 				if ( ConfiguredClassType.ENTITY.equals( entityClass.getConfiguredClassType() ) ) {
 					LOG.debugf( "Binding entity from annotated class: %s", entityClass.getName() );
-					EntityBinder entityBinder = new EntityBinder( metadata, entityClass, parent );
-					EntityBinding binding = entityBinder.bind();
+					EntityBinder entityBinder = new EntityBinder( entityClass, parent, this );
+					EntityBinding binding = entityBinder.bind( processedEntityNames );
 					parent = binding.getEntity();
 				}
 				// for classes annotated w/ @MappedSuperclass we just create the domain instance

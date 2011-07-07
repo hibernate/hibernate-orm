@@ -30,6 +30,18 @@
         <jaxb:bindings node="//xsd:complexType[@name='union-subclass-element']">
             <inheritance:implements>org.hibernate.metamodel.binder.source.hbm.xml.mapping.SubclassEntityElement</inheritance:implements>
         </jaxb:bindings>
+        <jaxb:bindings node="//xsd:complexType[@name='sql-insert-element']">
+            <inheritance:implements>org.hibernate.metamodel.binder.source.hbm.xml.mapping.CustomSqlElement</inheritance:implements>
+        </jaxb:bindings>
+        <jaxb:bindings node="//xsd:complexType[@name='sql-update-element']">
+            <inheritance:implements>org.hibernate.metamodel.binder.source.hbm.xml.mapping.CustomSqlElement</inheritance:implements>
+        </jaxb:bindings>
+        <jaxb:bindings node="//xsd:complexType[@name='sql-delete-element']">
+            <inheritance:implements>org.hibernate.metamodel.binder.source.hbm.xml.mapping.CustomSqlElement</inheritance:implements>
+        </jaxb:bindings>
+        <jaxb:bindings node="//xsd:complexType[@name='sql-delete-all-element']">
+            <inheritance:implements>org.hibernate.metamodel.binder.source.hbm.xml.mapping.CustomSqlElement</inheritance:implements>
+        </jaxb:bindings>
 
         <jaxb:bindings node="//xsd:element[@name='class']//xsd:attribute[@name='subselect']">
             <jaxb:property name="subselectAttribute"/>

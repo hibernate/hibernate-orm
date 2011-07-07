@@ -44,6 +44,7 @@ import org.hibernate.metamodel.binder.source.annotations.ConfiguredClassHierarch
 import org.hibernate.metamodel.binder.source.annotations.JandexHelper;
 import org.hibernate.metamodel.binder.source.annotations.entity.ConfiguredClassHierarchy;
 import org.hibernate.metamodel.binding.InheritanceType;
+import org.hibernate.metamodel.source.annotations.TestAnnotationsBindingContextImpl;
 import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.internal.BasicServiceRegistryImpl;
@@ -86,9 +87,8 @@ public class TableNameTest extends BaseUnitTestCase {
 		}
 
 		Index index = JandexHelper.indexForClass( service, A.class, B.class );
-		AnnotationsBindingContext context = new AnnotationsBindingContextImpl( index, serviceRegistry );
 		Set<ConfiguredClassHierarchy<EntityClass>> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
-				context
+				new TestAnnotationsBindingContextImpl( index, serviceRegistry )
 		);
 		assertEquals( "There should be only one hierarchy", 1, hierarchies.size() );
 
@@ -134,9 +134,8 @@ public class TableNameTest extends BaseUnitTestCase {
 		}
 
 		Index index = JandexHelper.indexForClass( service, A.class, B.class );
-		AnnotationsBindingContext context = new AnnotationsBindingContextImpl( index, serviceRegistry );
 		Set<ConfiguredClassHierarchy<EntityClass>> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
-				context
+				new TestAnnotationsBindingContextImpl( index, serviceRegistry )
 		);
 		assertEquals( "There should be only one hierarchy", 1, hierarchies.size() );
 
@@ -183,9 +182,8 @@ public class TableNameTest extends BaseUnitTestCase {
 		}
 
 		Index index = JandexHelper.indexForClass( service, B.class, A.class );
-		AnnotationsBindingContextImpl context = new AnnotationsBindingContextImpl( index, serviceRegistry );
 		Set<ConfiguredClassHierarchy<EntityClass>> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
-				context
+				new TestAnnotationsBindingContextImpl( index, serviceRegistry )
 		);
 		assertEquals( "There should be only one hierarchy", 1, hierarchies.size() );
 

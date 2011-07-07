@@ -14,8 +14,25 @@ public class JoinedSubclassAndSecondaryTable extends TestCase {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		SwimmingPool sp = new SwimmingPool();
-		sp.setAddress( "Park Avenue" );
+		//sp.setAddress( "Park Avenue" );
 		s.persist( sp );
+		s.flush();
+		s.clear();
+		
+		SwimmingPool sp2 = (SwimmingPool)s.get(SwimmingPool.class, sp.getId());
+		assertEquals( sp.getAddress(), null);
+		
+		PoolAddress addr = new PoolAddress();
+		addr.setAddress("Park Avenue");
+		sp2.setAddress(addr);
+		
+		s.flush();
+		s.clear();
+		
+		sp2 = (SwimmingPool)s.get(SwimmingPool.class, sp.getId());
+		assertFalse( sp2.getAddress() == null );
+		assertEquals( sp2.getAddress().getAddress(), "Park Avenue");
+		
 		tx.rollback();
 		s.close();
 	}

@@ -14,36 +14,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.hibernate.jpamodelgen.test.elementcollection;
+package org.hibernate.jpamodelgen.test.onetomanysorted;
 
-import java.util.Map;
-import javax.persistence.ElementCollection;
-import javax.persistence.MapKeyClass;
-
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Lob;
 
 /**
  * @author Hardy Ferentschik
  */
-public class Hostel {
-	private Map roomsByName;
+@Entity
+public class PrintJob {
+	@Id
+	@GeneratedValue
+	private long id;
 
-	private Map cleaners;
-
-	@ElementCollection(targetClass = Room.class)
-	@MapKeyClass(String.class)
-	public Map getRoomsByName() {
-		return roomsByName;
-	}
-
-	public void setRoomsByName(Map roomsByName) {
-		this.roomsByName = roomsByName;
-	}
-
-	public Map getCleaners() {
-		return cleaners;
-	}
-
-	public void setCleaners(Map cleaners) {
-		this.cleaners = cleaners;
-	}
+	@Lob
+	private byte[] data;
 }
+
+

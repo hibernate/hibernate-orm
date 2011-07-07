@@ -192,4 +192,9 @@ public class EventType<T> {
 	public Class baseListenerInterface() {
 		return baseListenerInterface;
 	}
+
+	@Override
+	public String toString() {
+		return eventName();
+	}
 }

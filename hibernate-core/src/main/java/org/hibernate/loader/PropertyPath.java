@@ -39,20 +39,28 @@ public class PropertyPath {
 		this.parent = parent;
 		this.property = property;
 
-		final String prefix;
-		if ( parent != null ) {
-			final String resolvedParent = parent.getFullPath();
-			if ( StringHelper.isEmpty( resolvedParent ) ) {
+		// the _identifierMapper is a "hidden" property on entities with composite keys.
+		// concatenating it will prevent the path from correctly being used to look up
+		// various things such as criteria paths and fetch profile association paths
+		if ("_identifierMapper".equals(property)) {
+		    this.fullPath = parent != null ? parent.getFullPath() : "";
+		} else {
+			final String prefix;
+			if ( parent != null ) {
+			    final String resolvedParent = parent.getFullPath();
+			    if ( StringHelper.isEmpty( resolvedParent ) ) {
 				prefix = "";
+			    }
+			    else {
+				prefix = resolvedParent + '.';
+			    }
 			}
 			else {
-				prefix = resolvedParent + '.';
+			    prefix = "";
 			}
+
+			this.fullPath = prefix + property;
 		}
-		else {
-			prefix = "";
-		}
-		this.fullPath = prefix + property;
 	}
 
 	public PropertyPath(String property) {

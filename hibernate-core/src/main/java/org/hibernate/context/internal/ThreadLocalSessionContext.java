@@ -333,6 +333,7 @@ public class ThreadLocalSessionContext implements CurrentSessionContext {
 					     || "getTransaction".equals( method.getName() )
 					     || "isTransactionInProgress".equals( method.getName() )
 					     || "setFlushMode".equals( method.getName() )
+						 || "getFactory".equals( method.getName() ) //from SessionImplementor
 					     || "getSessionFactory".equals( method.getName() ) ) {
                         LOG.trace("Allowing method [" + method.getName() + "] in non-transacted context");
 					}

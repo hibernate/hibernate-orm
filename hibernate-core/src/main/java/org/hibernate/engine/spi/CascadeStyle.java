@@ -54,7 +54,7 @@ public abstract class CascadeStyle implements Serializable {
 	 * For this style, should the given action really be cascaded?  The default
 	 * implementation is simply to return {@link #doCascade}; for certain
 	 * styles (currently only delete-orphan), however, we need to be able to
-	 * control this seperately.
+	 * control this separately.
 	 *
 	 * @param action The action to be checked for cascade-ability.
 	 *
@@ -69,7 +69,7 @@ public abstract class CascadeStyle implements Serializable {
 	 * Do we need to delete orphaned collection elements?
 	 *
 	 * @return True if this style need to account for orphan delete
-	 *         operations; false othwerwise.
+	 *         operations; false otherwise.
 	 */
 	public boolean hasOrphanDelete() {
 		return false;

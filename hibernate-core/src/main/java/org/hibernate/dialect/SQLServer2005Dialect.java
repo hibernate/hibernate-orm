@@ -28,7 +28,7 @@ import org.hibernate.type.StandardBasicTypes;
 
 /**
  * A dialect for Microsoft SQL 2005. (HHH-3936 fix)
- * 
+ *
  * @author Yoryos Valotasios
  */
 public class SQLServer2005Dialect extends SQLServerDialect {
@@ -45,14 +45,18 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 		registerColumnType( Types.VARBINARY, "varbinary(MAX)" );
 		registerColumnType( Types.VARBINARY, MAX_LENGTH, "varbinary($l)" );
 		registerColumnType( Types.LONGVARBINARY, "varbinary(MAX)" );
-		
+
 		registerColumnType( Types.CLOB, "varchar(MAX)" );
 		registerColumnType( Types.LONGVARCHAR, "varchar(MAX)" );
 		registerColumnType( Types.VARCHAR, "varchar(MAX)" );
 		registerColumnType( Types.VARCHAR, MAX_LENGTH, "varchar($l)" );
-		
-		
-		registerFunction("row_number", new NoArgSQLFunction("row_number", StandardBasicTypes.INTEGER, true));
+
+		registerColumnType( Types.BIGINT, "bigint" );
+		registerColumnType( Types.BIT, "bit" );
+		registerColumnType( Types.BOOLEAN, "bit" );
+
+
+		registerFunction( "row_number", new NoArgSQLFunction( "row_number", StandardBasicTypes.INTEGER, true ) );
 	}
 
 	@Override
@@ -69,13 +73,13 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 	public boolean supportsVariableLimit() {
 		return true;
 	}
-	
+
 	@Override
 	public int convertToFirstRowValue(int zeroBasedFirstResult) {
 		// Our dialect paginated results aren't zero based. The first row should get the number 1 and so on
 		return zeroBasedFirstResult + 1;
 	}
-	
+
 	@Override
 	public String getLimitString(String query, int offset, int limit) {
 		// We transform the query to one with an offset and limit if we have an offset and limit to bind
@@ -85,25 +89,25 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 
 	/**
 	 * Add a LIMIT clause to the given SQL SELECT (HHH-2655: ROW_NUMBER for Paging)
-	 * 
+	 *
 	 * The LIMIT SQL will look like:
-	 * 
+	 *
 	 * <pre>
 	 * WITH query AS (
-	 *   SELECT ROW_NUMBER() OVER (ORDER BY orderby) as __hibernate_row_nr__, 
+	 *   SELECT ROW_NUMBER() OVER (ORDER BY orderby) as __hibernate_row_nr__,
 	 *   original_query_without_orderby
 	 * )
 	 * SELECT * FROM query WHERE __hibernate_row_nr__ BEETWIN offset AND offset + last
 	 * </pre>
-	 * 
-	 * 
+	 *
+	 *
 	 * @param querySqlString
 	 *            The SQL statement to base the limit query off of.
 	 * @param offset
 	 *            Offset of the first row to be returned by the query (zero-based)
 	 * @param limit
 	 *            Maximum number of rows to be returned by the query
-	 * 
+	 *
 	 * @return A new SQL statement with the LIMIT clause applied.
 	 */
 	@Override
@@ -135,7 +139,7 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 	 * Utility method that checks if the given sql query is a select distinct one and if so replaces the distinct select
 	 * with an equivalent simple select with a group by clause. See
 	 * {@link SQLServer2005DialectTestCase#testReplaceDistinctWithGroupBy()}
-	 * 
+	 *
 	 * @param sql an sql query
 	 */
 	protected static void replaceDistinctWithGroupBy(StringBuilder sql) {
@@ -149,7 +153,7 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 	/**
 	 * This utility method searches the given sql query for the fields of the select statement and returns them without
 	 * the aliases. See {@link SQLServer2005DialectTestCase#testGetSelectFieldsWithoutAliases()}
-	 * 
+	 *
 	 * @param an
 	 *            sql query
 	 * @return the fields of the select statement without their alias
@@ -163,7 +167,7 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 
 	/**
 	 * Utility method that strips the aliases. See {@link SQLServer2005DialectTestCase#testStripAliases()}
-	 * 
+	 *
 	 * @param a
 	 *            string to replace the as statements
 	 * @return a string without the as statements
@@ -174,7 +178,7 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 
 	/**
 	 * Right after the select statement of a given query we must place the row_number function
-	 * 
+	 *
 	 * @param sql
 	 *            the initial sql query without the order by clause
 	 * @param orderby

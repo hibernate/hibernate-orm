@@ -43,7 +43,7 @@ public class LazyInitializationException extends HibernateException {
 
 	public LazyInitializationException(String msg) {
 		super(msg);
-        LOG.error(msg, this);
+        LOG.trace(msg, this);
 	}
 
 }

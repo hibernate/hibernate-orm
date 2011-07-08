@@ -57,25 +57,30 @@ public class FilterDefBinder {
 			bind( metadata, filterDef );
 		}
 		for ( AnnotationInstance filterDefs : jandex.getAnnotations( HibernateDotNames.FILTER_DEFS ) ) {
-			for ( AnnotationInstance filterDef : JandexHelper.getValueAsArray( filterDefs, "value" ) ) {
+			AnnotationInstance[] filterDefAnnotations = JandexHelper.getValue(
+					filterDefs,
+					"value",
+					AnnotationInstance[].class
+			);
+			for ( AnnotationInstance filterDef : filterDefAnnotations ) {
 				bind( metadata, filterDef );
 			}
 		}
 	}
 
 	private static void bind(MetadataImplementor metadata, AnnotationInstance filterDef) {
-		String name = JandexHelper.getValueAsString( filterDef, "name" );
+		String name = JandexHelper.getValue( filterDef, "name", String.class );
 		Map<String, Type> prms = new HashMap<String, Type>();
-		for ( AnnotationInstance prm : JandexHelper.getValueAsArray( filterDef, "parameters" ) ) {
+		for ( AnnotationInstance prm : JandexHelper.getValue( filterDef, "parameters", AnnotationInstance[].class ) ) {
 			prms.put(
-					JandexHelper.getValueAsString( prm, "name" ),
-					metadata.getTypeResolver().heuristicType( JandexHelper.getValueAsString( prm, "type" ) )
+					JandexHelper.getValue( prm, "name", String.class ),
+					metadata.getTypeResolver().heuristicType( JandexHelper.getValue( prm, "type", String.class ) )
 			);
 		}
 		metadata.addFilterDefinition(
 				new FilterDefinition(
 						name,
-						JandexHelper.getValueAsString( filterDef, "defaultCondition" ),
+						JandexHelper.getValue( filterDef, "defaultCondition", String.class ),
 						prms
 				)
 		);

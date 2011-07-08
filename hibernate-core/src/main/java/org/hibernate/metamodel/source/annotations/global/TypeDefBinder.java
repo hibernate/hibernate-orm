@@ -57,33 +57,50 @@ public class TypeDefBinder {
 			bind( metadata, typeDef );
 		}
 		for ( AnnotationInstance typeDefs : jandex.getAnnotations( HibernateDotNames.TYPE_DEFS ) ) {
-			for ( AnnotationInstance typeDef : JandexHelper.getValueAsArray( typeDefs, "value" ) ) {
+			AnnotationInstance[] typeDefAnnotations = JandexHelper.getValue(
+					typeDefs,
+					"value",
+					AnnotationInstance[].class
+			);
+			for ( AnnotationInstance typeDef : typeDefAnnotations ) {
 				bind( metadata, typeDef );
 			}
 		}
 	}
 
-	private static void bind(MetadataImplementor metadata, AnnotationInstance typeDef) {
-		String name = JandexHelper.getValueAsString( typeDef, "name" );
-		String defaultForType = JandexHelper.getValueAsString( typeDef, "defaultForType" );
-		String typeClass = JandexHelper.getValueAsString( typeDef, "typeClass" );
+	private static void bind(MetadataImplementor metadata, AnnotationInstance typeDefAnnotation) {
+		String name = JandexHelper.getValue( typeDefAnnotation, "name", String.class );
+		String defaultForType = JandexHelper.getValue( typeDefAnnotation, "defaultForType", String.class );
+		String typeClass = JandexHelper.getValue( typeDefAnnotation, "typeClass", String.class );
+
 		boolean noName = StringHelper.isEmpty( name );
 		boolean noDefaultForType = defaultForType == null || defaultForType.equals( void.class.getName() );
+
 		if ( noName && noDefaultForType ) {
 			throw new AnnotationException(
 					"Either name or defaultForType (or both) attribute should be set in TypeDef having typeClass "
 							+ typeClass
 			);
 		}
-		Map<String, String> prms = new HashMap<String, String>();
-		for ( AnnotationInstance prm : JandexHelper.getValueAsArray( typeDef, "parameters" ) ) {
-			prms.put( JandexHelper.getValueAsString( prm, "name" ), JandexHelper.getValueAsString( prm, "value" ) );
+
+		Map<String, String> parameterMaps = new HashMap<String, String>();
+		AnnotationInstance[] parameterAnnotations = JandexHelper.getValue(
+				typeDefAnnotation,
+				"parameters",
+				AnnotationInstance[].class
+		);
+		for ( AnnotationInstance parameterAnnotation : parameterAnnotations ) {
+			parameterMaps.put(
+					JandexHelper.getValue( parameterAnnotation, "name", String.class ),
+					JandexHelper.getValue( parameterAnnotation, "value", String.class )
+			);
 		}
+
 		if ( !noName ) {
-			bind( name, typeClass, prms, metadata );
+			bind( name, typeClass, parameterMaps, metadata );
 		}
 		if ( !noDefaultForType ) {
-			bind( defaultForType, typeClass, prms, metadata );
+			bind( defaultForType, typeClass, parameterMaps, metadata );
 		}
 	}
 

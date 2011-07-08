@@ -63,14 +63,14 @@ public class TableBinder {
 			bind( metadata, tableAnnotation );
 		}
 		for ( AnnotationInstance tables : jandex.getAnnotations( HibernateDotNames.TABLES ) ) {
-			for ( AnnotationInstance table : JandexHelper.getValueAsArray( tables, "value" ) ) {
+			for ( AnnotationInstance table : JandexHelper.getValue( tables, "value", AnnotationInstance[].class ) ) {
 				bind( metadata, table );
 			}
 		}
 	}
 
 	private static void bind(MetadataImplementor metadata, AnnotationInstance tableAnnotation) {
-		String tableName = JandexHelper.getValueAsString( tableAnnotation, "appliesTo" );
+		String tableName = JandexHelper.getValue( tableAnnotation, "appliesTo", String.class );
 		ObjectName objectName = new ObjectName( tableName );
 		Schema schema = metadata.getDatabase().getSchema( objectName.getSchema(), objectName.getCatalog() );
 		Table table = schema.getTable( objectName.getName() );
@@ -80,18 +80,22 @@ public class TableBinder {
 	}
 
 	private static void bindHibernateTableAnnotation(Table table, AnnotationInstance tableAnnotation) {
-		for ( AnnotationInstance indexAnnotation : JandexHelper.getValueAsArray( tableAnnotation, "indexes" ) ) {
+		for ( AnnotationInstance indexAnnotation : JandexHelper.getValue(
+				tableAnnotation,
+				"indexes",
+				AnnotationInstance[].class
+		) ) {
 			bindIndexAnnotation( table, indexAnnotation );
 		}
-		String comment = JandexHelper.getValueAsString( tableAnnotation, "comment" );
+		String comment = JandexHelper.getValue( tableAnnotation, "comment", String.class );
 		if ( StringHelper.isNotEmpty( comment ) ) {
 			table.addComment( comment.trim() );
 		}
 	}
 
 	private static void bindIndexAnnotation(Table table, AnnotationInstance indexAnnotation) {
-		String indexName = JandexHelper.getValueAsString( indexAnnotation, "appliesTo" );
-		String[] columnNames = (String[]) JandexHelper.getValue( indexAnnotation, "columnNames" );
+		String indexName = JandexHelper.getValue( indexAnnotation, "appliesTo", String.class );
+		String[] columnNames = JandexHelper.getValue( indexAnnotation, "columnNames", String[].class );
 		if ( columnNames == null ) {
 			LOG.noColumnsSpecifiedForIndex( indexName, table.toLoggableString() );
 			return;

@@ -206,7 +206,7 @@ public class EntityBinder {
 		);
 		if ( whereAnnotation != null ) {
 			// no null check needed, it is a required attribute
-			entityBindingState.setWhereFilter( JandexHelper.getValueAsString( whereAnnotation, "clause" ) );
+			entityBindingState.setWhereFilter( JandexHelper.getValue( whereAnnotation, "clause", String.class ) );
 		}
 	}
 
@@ -409,9 +409,9 @@ public class EntityBinder {
 				entityClass.getClassInfo(), JPADotNames.TABLE
 		);
 		if ( tableAnnotation != null ) {
-			schemaName = JandexHelper.getValueAsString( tableAnnotation, "schema" );
-			catalogName = JandexHelper.getValueAsString( tableAnnotation, "catalog" );
-			String explicitTableName = JandexHelper.getValueAsString( tableAnnotation, "name" );
+			schemaName = JandexHelper.getValue( tableAnnotation, "schema", String.class);
+			catalogName = JandexHelper.getValue( tableAnnotation, "catalog", String.class );
+			String explicitTableName = JandexHelper.getValue( tableAnnotation, "name", String.class );
 			if ( StringHelper.isNotEmpty( explicitTableName ) ) {
 				tableName = meta.getNamingStrategy().tableName( explicitTableName );
 			}
@@ -569,7 +569,7 @@ public class EntityBinder {
 					)
 			);
 		}
-		String generator = JandexHelper.getValueAsString( generatedValueAnn, "generator" );
+		String generator = JandexHelper.getValue( generatedValueAnn, "generator", String.class );
 		IdGenerator idGenerator = null;
 		if ( StringHelper.isNotEmpty( generator ) ) {
 			idGenerator = meta.getIdGenerator( generator );

@@ -23,26 +23,26 @@
  */
 package org.hibernate.metamodel.source.annotations.util;
 
-import static org.hamcrest.core.Is.is;
-
-import static org.junit.Assert.assertThat;
-
 import java.util.List;
 import java.util.Map;
+import javax.persistence.AttributeOverride;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.LockModeType;
 import javax.persistence.NamedQuery;
-import javax.persistence.SequenceGenerator;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.Index;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.hibernate.AssertionFailure;
+import org.hibernate.annotations.NamedNativeQuery;
+import org.hibernate.metamodel.source.annotations.HibernateDotNames;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
@@ -50,8 +50,12 @@ import org.hibernate.service.internal.BasicServiceRegistryImpl;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static junit.framework.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
+ * Tests for the helper class {@link JandexHelper}.
+ *
  * @author Hardy Ferentschik
  */
 public class JandexHelperTest extends BaseUnitTestCase {
@@ -75,7 +79,6 @@ public class JandexHelperTest extends BaseUnitTestCase {
 			@Column
 			@Basic
 			private String bar;
-
 			private String fubar;
 		}
 		Index index = JandexHelper.indexForClass( classLoaderService, Foo.class );
@@ -98,47 +101,122 @@ public class JandexHelperTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	public void shouldRetrieveDefaultOfUnspecifiedAnnotationElement() {
-
-		@NamedQuery(name="foo", query="bar")
-		@SequenceGenerator(name="fu")
+	public void testGettingNestedAnnotation() {
+		@AttributeOverride(name = "foo", column = @Column(name = "FOO"))
 		class Foo {
 		}
 
-		Index index = JandexHelper.indexForClass(classLoaderService, Foo.class);
-        for (AnnotationInstance query : index.getAnnotations( JPADotNames.NAMED_QUERY)) {
-    		assertThat(JandexHelper.getValueAsEnum(query, "lockMode", LockModeType.class), is(LockModeType.NONE));
-        }
-        for (AnnotationInstance generator : index.getAnnotations( JPADotNames.SEQUENCE_GENERATOR)) {
-            assertThat(JandexHelper.getValueAsInt(generator, "allocationSize"), is(50));
-        }
+		Index index = JandexHelper.indexForClass( classLoaderService, Foo.class );
+		List<AnnotationInstance> annotationInstances = index.getAnnotations( JPADotNames.ATTRIBUTE_OVERRIDE );
+		assertTrue( annotationInstances.size() == 1 );
+		AnnotationInstance annotationInstance = annotationInstances.get( 0 );
+
+		// try to retrieve the name
+		String name = JandexHelper.getValue( annotationInstance, "name", String.class );
+		assertEquals( "Wrong nested annotation", "foo", name );
+
+		// try to retrieve the nested column annotation instance
+		AnnotationInstance columnAnnotationInstance = JandexHelper.getValue(
+				annotationInstance,
+				"column",
+				AnnotationInstance.class
+		);
+		assertNotNull( columnAnnotationInstance );
+		assertEquals(
+				"Wrong nested annotation",
+				"javax.persistence.Column",
+				columnAnnotationInstance.name().toString()
+		);
 	}
 
-    @Test
-    public void shouldRetrieveValueOfAnnotationElement() {
+	@Test(expected = AssertionFailure.class)
+	public void testTryingToRetrieveWrongType() {
+		@AttributeOverride(name = "foo", column = @Column(name = "FOO"))
+		class Foo {
+		}
 
-        @NamedQuery(name="foo", query="bar")
-        class Foo {
-        }
+		Index index = JandexHelper.indexForClass( classLoaderService, Foo.class );
+		List<AnnotationInstance> annotationInstances = index.getAnnotations( JPADotNames.ATTRIBUTE_OVERRIDE );
+		assertTrue( annotationInstances.size() == 1 );
+		AnnotationInstance annotationInstance = annotationInstances.get( 0 );
 
-        Index index = JandexHelper.indexForClass(classLoaderService, Foo.class);
-        for (AnnotationInstance query : index.getAnnotations( JPADotNames.NAMED_QUERY)) {
-            assertThat(JandexHelper.getValueAsString(query, "name"), is("foo"));
-        }
-    }
+		JandexHelper.getValue( annotationInstance, "name", Float.class );
+	}
 
-    @Test
-    public void shouldRetrieveValueOfEnumeratedAnnotationElement() {
+	@Test
+	public void testRetrieveDefaultEnumElement() {
+		@NamedQuery(name = "foo", query = "fubar")
+		class Foo {
+		}
 
-        @NamedQuery(name="foo", query="bar", lockMode=LockModeType.OPTIMISTIC)
-        class Foo {
-        }
+		Index index = JandexHelper.indexForClass( classLoaderService, Foo.class );
+		List<AnnotationInstance> annotationInstances = index.getAnnotations( JPADotNames.NAMED_QUERY );
+		assertTrue( annotationInstances.size() == 1 );
+		AnnotationInstance annotationInstance = annotationInstances.get( 0 );
 
-        Index index = JandexHelper.indexForClass(classLoaderService, Foo.class);
-        for (AnnotationInstance query : index.getAnnotations( JPADotNames.NAMED_QUERY)) {
-            assertThat(JandexHelper.getValueAsEnum(query, "lockMode", LockModeType.class), is(LockModeType.OPTIMISTIC));
-        }
-    }
+		LockModeType lockMode = JandexHelper.getValueAsEnum( annotationInstance, "lockMode", LockModeType.class );
+		assertEquals( "Wrong lock mode", LockModeType.NONE, lockMode );
+	}
+
+	@Test
+	public void testRetrieveExplicitEnumElement() {
+		@NamedQuery(name = "foo", query = "bar", lockMode = LockModeType.OPTIMISTIC)
+		class Foo {
+		}
+
+		Index index = JandexHelper.indexForClass( classLoaderService, Foo.class );
+		List<AnnotationInstance> annotationInstances = index.getAnnotations( JPADotNames.NAMED_QUERY );
+		assertTrue( annotationInstances.size() == 1 );
+		AnnotationInstance annotationInstance = annotationInstances.get( 0 );
+
+		LockModeType lockMode = JandexHelper.getValueAsEnum( annotationInstance, "lockMode", LockModeType.class );
+		assertEquals( "Wrong lock mode", LockModeType.OPTIMISTIC, lockMode );
+	}
+
+	@Test
+	public void testRetrieveStringArray() {
+		class Foo {
+			@org.hibernate.annotations.Index(name = "index", columnNames = { "a", "b", "c" })
+			private String foo;
+		}
+
+		Index index = JandexHelper.indexForClass( classLoaderService, Foo.class );
+		List<AnnotationInstance> annotationInstances = index.getAnnotations( HibernateDotNames.INDEX );
+		assertTrue( annotationInstances.size() == 1 );
+		AnnotationInstance annotationInstance = annotationInstances.get( 0 );
+
+		String[] columnNames = JandexHelper.getValue( annotationInstance, "columnNames", String[].class );
+		Assert.assertTrue( columnNames.length == 3 );
+	}
+
+	@Test(expected = AssertionFailure.class)
+	public void testRetrieveClassParameterAsClass() {
+		@NamedNativeQuery(name = "foo", query = "bar", resultClass = Foo.class)
+		class Foo {
+		}
+
+		Index index = JandexHelper.indexForClass( classLoaderService, Foo.class );
+		List<AnnotationInstance> annotationInstances = index.getAnnotations( HibernateDotNames.NAMED_NATIVE_QUERY );
+		assertTrue( annotationInstances.size() == 1 );
+		AnnotationInstance annotationInstance = annotationInstances.get( 0 );
+
+		JandexHelper.getValue( annotationInstance, "resultClass", Class.class );
+	}
+
+	@Test
+	public void testRetrieveClassParameterAsString() {
+		@NamedNativeQuery(name = "foo", query = "bar", resultClass = Foo.class)
+		class Foo {
+		}
+
+		Index index = JandexHelper.indexForClass( classLoaderService, Foo.class );
+		List<AnnotationInstance> annotationInstances = index.getAnnotations( HibernateDotNames.NAMED_NATIVE_QUERY );
+		assertTrue( annotationInstances.size() == 1 );
+		AnnotationInstance annotationInstance = annotationInstances.get( 0 );
+
+		String fqcn = JandexHelper.getValue( annotationInstance, "resultClass", String.class );
+		assertEquals( "Wrong class names", Foo.class.getName(), fqcn );
+	}
 }
 
 

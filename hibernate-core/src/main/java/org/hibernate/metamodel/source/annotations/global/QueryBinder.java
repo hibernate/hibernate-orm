@@ -74,7 +74,7 @@ public class QueryBinder {
 			bindNamedQuery( metadata, query );
 		}
 		for ( AnnotationInstance queries : jandex.getAnnotations( JPADotNames.NAMED_QUERIES ) ) {
-			for ( AnnotationInstance query : JandexHelper.getValueAsArray( queries, "value" ) ) {
+			for ( AnnotationInstance query : JandexHelper.getValue( queries, "value", AnnotationInstance[].class ) ) {
 				bindNamedQuery( metadata, query );
 			}
 		}
@@ -82,7 +82,7 @@ public class QueryBinder {
 			bindNamedNativeQuery( metadata, query );
 		}
 		for ( AnnotationInstance queries : jandex.getAnnotations( JPADotNames.NAMED_NATIVE_QUERIES ) ) {
-			for ( AnnotationInstance query : JandexHelper.getValueAsArray( queries, "value" ) ) {
+			for ( AnnotationInstance query : JandexHelper.getValue( queries, "value", AnnotationInstance[].class ) ) {
 				bindNamedNativeQuery( metadata, query );
 			}
 		}
@@ -90,7 +90,7 @@ public class QueryBinder {
 			bindNamedQuery( metadata, query );
 		}
 		for ( AnnotationInstance queries : jandex.getAnnotations( HibernateDotNames.NAMED_QUERIES ) ) {
-			for ( AnnotationInstance query : JandexHelper.getValueAsArray( queries, "value" ) ) {
+			for ( AnnotationInstance query : JandexHelper.getValue( queries, "value", AnnotationInstance[].class ) ) {
 				bindNamedQuery( metadata, query );
 			}
 		}
@@ -98,7 +98,7 @@ public class QueryBinder {
 			bindNamedNativeQuery( metadata, query );
 		}
 		for ( AnnotationInstance queries : jandex.getAnnotations( HibernateDotNames.NAMED_NATIVE_QUERIES ) ) {
-			for ( AnnotationInstance query : JandexHelper.getValueAsArray( queries, "value" ) ) {
+			for ( AnnotationInstance query : JandexHelper.getValue( queries, "value", AnnotationInstance[].class ) ) {
 				bindNamedNativeQuery( metadata, query );
 			}
 		}
@@ -111,14 +111,14 @@ public class QueryBinder {
 	 * @param annotation the named query annotation
 	 */
 	private static void bindNamedQuery(MetadataImplementor metadata, AnnotationInstance annotation) {
-		String name = JandexHelper.getValueAsString( annotation, "name" );
+		String name = JandexHelper.getValue( annotation, "name", String.class );
 		if ( StringHelper.isEmpty( name ) ) {
 			throw new AnnotationException( "A named query must have a name when used in class or package level" );
 		}
 
-		String query = JandexHelper.getValueAsString( annotation, "query" );
+		String query = JandexHelper.getValue( annotation, "query", String.class );
 
-		AnnotationInstance[] hints = JandexHelper.getValueAsArray( annotation, "hints" );
+		AnnotationInstance[] hints = JandexHelper.getValue( annotation, "hints", AnnotationInstance[].class );
 
 		String cacheRegion = getString( hints, QueryHints.CACHE_REGION );
 		if ( StringHelper.isEmpty( cacheRegion ) ) {
@@ -153,16 +153,16 @@ public class QueryBinder {
 	}
 
 	private static void bindNamedNativeQuery(MetadataImplementor metadata, AnnotationInstance annotation) {
-		String name = JandexHelper.getValueAsString( annotation, "name" );
+		String name = JandexHelper.getValue( annotation, "name", String.class );
 		if ( StringHelper.isEmpty( name ) ) {
 			throw new AnnotationException( "A named native query must have a name when used in class or package level" );
 		}
 
-		String query = JandexHelper.getValueAsString( annotation, "query" );
+		String query = JandexHelper.getValue( annotation, "query", String.class );
 
-		String resultSetMapping = JandexHelper.getValueAsString( annotation, "resultSetMapping" );
+		String resultSetMapping = JandexHelper.getValue( annotation, "resultSetMapping", String.class );
 
-		AnnotationInstance[] hints = JandexHelper.getValueAsArray( annotation, "hints" );
+		AnnotationInstance[] hints = JandexHelper.getValue( annotation, "hints", AnnotationInstance[].class );
 
 		boolean cacheable = getBoolean( hints, "org.hibernate.cacheable", name );
 		String cacheRegion = getString( hints, QueryHints.CACHE_REGION );
@@ -309,8 +309,8 @@ public class QueryBinder {
 
 	private static String getString(AnnotationInstance[] hints, String element) {
 		for ( AnnotationInstance hint : hints ) {
-			if ( element.equals( JandexHelper.getValue( hint, "name" ) ) ) {
-				return JandexHelper.getValueAsString( hint, "value" );
+			if ( element.equals( JandexHelper.getValue( hint, "name", String.class ) ) ) {
+				return JandexHelper.getValue( hint, "value", String.class );
 			}
 		}
 		return null;

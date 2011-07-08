@@ -146,8 +146,6 @@ public class ConfiguredClass {
 		this.idAttributeMap = new TreeMap<String, SimpleAttribute>();
 		this.associationAttributeMap = new TreeMap<String, AssociationAttribute>();
 
-		// find transient field and method names
-		findTransientFieldAndMethodNames();
 		collectAttributes();
 	}
 
@@ -244,6 +242,9 @@ public class ConfiguredClass {
 	 * Find all attributes for this configured class and add them to the corresponding map
 	 */
 	private void collectAttributes() {
+		// find transient field and method names
+		findTransientFieldAndMethodNames();
+
 		// use the class mate library to generic types
 		ResolvedTypeWithMembers resolvedType = context.resolveMemberTypes( context.getResolvedType( clazz ) );
 		for ( HierarchicType hierarchicType : resolvedType.allTypesAndOverrides() ) {

@@ -30,7 +30,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 
 /**
- * Container for the properties defined by {@code @Column}.
+ * Container for the properties defined by {@link javax.persistence.Column}.
  *
  * @author Hardy Ferentschik
  */
@@ -46,7 +46,7 @@ public class ColumnValues {
 	private int precision = 0;
 	private int scale = 0;
 
-	public ColumnValues() {
+	ColumnValues() {
 		this( null );
 	}
 
@@ -58,6 +58,7 @@ public class ColumnValues {
 	}
 
 	private void applyColumnValues(AnnotationInstance columnAnnotation) {
+		// if the column annotation is null we don't have to do anything. Everything is already defaulted.
 		if ( columnAnnotation == null ) {
 			return;
 		}
@@ -209,6 +210,66 @@ public class ColumnValues {
 		sb.append( ", scale=" ).append( scale );
 		sb.append( '}' );
 		return sb.toString();
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+
+		ColumnValues that = (ColumnValues) o;
+
+		if ( insertable != that.insertable ) {
+			return false;
+		}
+		if ( length != that.length ) {
+			return false;
+		}
+		if ( nullable != that.nullable ) {
+			return false;
+		}
+		if ( precision != that.precision ) {
+			return false;
+		}
+		if ( scale != that.scale ) {
+			return false;
+		}
+		if ( unique != that.unique ) {
+			return false;
+		}
+		if ( updatable != that.updatable ) {
+			return false;
+		}
+		if ( columnDefinition != null ? !columnDefinition.equals( that.columnDefinition ) : that.columnDefinition != null ) {
+			return false;
+		}
+		if ( name != null ? !name.equals( that.name ) : that.name != null ) {
+			return false;
+		}
+		if ( table != null ? !table.equals( that.table ) : that.table != null ) {
+			return false;
+		}
+
+		return true;
+	}
+
+	@Override
+	public int hashCode() {
+		int result = name != null ? name.hashCode() : 0;
+		result = 31 * result + ( unique ? 1 : 0 );
+		result = 31 * result + ( nullable ? 1 : 0 );
+		result = 31 * result + ( insertable ? 1 : 0 );
+		result = 31 * result + ( updatable ? 1 : 0 );
+		result = 31 * result + ( columnDefinition != null ? columnDefinition.hashCode() : 0 );
+		result = 31 * result + ( table != null ? table.hashCode() : 0 );
+		result = 31 * result + length;
+		result = 31 * result + precision;
+		result = 31 * result + scale;
+		return result;
 	}
 }
 

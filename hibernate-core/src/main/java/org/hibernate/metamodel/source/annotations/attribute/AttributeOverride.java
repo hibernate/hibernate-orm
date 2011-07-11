@@ -3,7 +3,9 @@ package org.hibernate.metamodel.source.annotations.attribute;
 import org.jboss.jandex.AnnotationInstance;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
+import org.hibernate.metamodel.source.annotations.util.JandexHelper;
 
 /**
  * Contains the information about a single {@link javax.persistence.AttributeOverride}. Instances of this class
@@ -12,23 +14,34 @@ import org.hibernate.metamodel.source.annotations.JPADotNames;
  * @author Hardy Ferentschik
  */
 public class AttributeOverride {
+	private static final String PROPERTY_PATH_SEPARATOR = ".";
 	private final ColumnValues columnValues;
 	private final String attributePath;
 
 	public AttributeOverride(AnnotationInstance attributeOverrideAnnotation) {
-		this(null, attributeOverrideAnnotation);
+		this( null, attributeOverrideAnnotation );
 	}
 
 	public AttributeOverride(String prefix, AnnotationInstance attributeOverrideAnnotation) {
-		if ( attributeOverrideAnnotation != null && !JPADotNames.ATTRIBUTE_OVERRIDE.equals( attributeOverrideAnnotation.name() ) ) {
-			throw new AssertionFailure( "A @Column annotation needs to be passed to the constructor" );
+		if ( attributeOverrideAnnotation == null ) {
+			throw new IllegalArgumentException( "An AnnotationInstance needs to be passed" );
 		}
 
+		if ( !JPADotNames.ATTRIBUTE_OVERRIDE.equals( attributeOverrideAnnotation.name() ) ) {
+			throw new AssertionFailure( "A @AttributeOverride annotation needs to be passed to the constructor" );
+		}
 
-
-
-		columnValues = null;
-		attributePath = "";
+		columnValues = new ColumnValues(
+				JandexHelper.getValue(
+						attributeOverrideAnnotation,
+						"column",
+						AnnotationInstance.class
+				)
+		);
+		attributePath = createAttributePath(
+				prefix,
+				JandexHelper.getValue( attributeOverrideAnnotation, "name", String.class )
+		);
 	}
 
 	@Override
@@ -67,6 +80,18 @@ public class AttributeOverride {
 		int result = columnValues != null ? columnValues.hashCode() : 0;
 		result = 31 * result + ( attributePath != null ? attributePath.hashCode() : 0 );
 		return result;
+	}
+
+	private String createAttributePath(String prefix, String name) {
+		String path = "";
+		if ( StringHelper.isNotEmpty( prefix ) ) {
+			path += prefix;
+		}
+		if ( StringHelper.isNotEmpty( path ) && !path.endsWith( PROPERTY_PATH_SEPARATOR ) ) {
+			path += PROPERTY_PATH_SEPARATOR;
+		}
+		path += name;
+		return path;
 	}
 }
 

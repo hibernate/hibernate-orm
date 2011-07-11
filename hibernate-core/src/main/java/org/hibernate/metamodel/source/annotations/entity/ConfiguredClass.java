@@ -54,6 +54,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.attribute.AssociationAttribute;
+import org.hibernate.metamodel.source.annotations.attribute.AttributeOverride;
 import org.hibernate.metamodel.source.annotations.attribute.AttributeType;
 import org.hibernate.metamodel.source.annotations.attribute.MappedAttribute;
 import org.hibernate.metamodel.source.annotations.attribute.SimpleAttribute;
@@ -94,16 +95,6 @@ public class ConfiguredClass {
 	private final ConfiguredClassType configuredClassType;
 
 	/**
-	 * The attribute overrides defined on this entity
-	 */
-	private final List<AnnotationInstance> attributeOverrides;
-
-	/**
-	 * The association overrides defined on this entity;
-	 */
-	private final List<AnnotationInstance> associationOverrides;
-
-	/**
 	 * The id attributes
 	 */
 	private final Map<String, SimpleAttribute> idAttributeMap;
@@ -138,15 +129,12 @@ public class ConfiguredClass {
 		this.clazz = context.classLoaderService().classForName( classInfo.toString() );
 		this.configuredClassType = determineType();
 		this.classAccessType = determineClassAccessType( defaultAccessType );
-
-		this.attributeOverrides = findAttributeOverrides();
-		this.associationOverrides = findAssociationOverrides();
-
 		this.simpleAttributeMap = new TreeMap<String, SimpleAttribute>();
 		this.idAttributeMap = new TreeMap<String, SimpleAttribute>();
 		this.associationAttributeMap = new TreeMap<String, AssociationAttribute>();
 
 		collectAttributes();
+		List<AttributeOverride> attributeOverrideList = findAttributeOverrides();
 	}
 
 	public String getName() {
@@ -545,27 +533,39 @@ public class ConfiguredClass {
 		}
 	}
 
-	private List<AnnotationInstance> findAttributeOverrides() {
-		List<AnnotationInstance> attributeOverrideList = new ArrayList<AnnotationInstance>();
+	private List<AttributeOverride> findAttributeOverrides() {
+		List<AttributeOverride> attributeOverrideList = new ArrayList<AttributeOverride>();
 
 		AnnotationInstance attributeOverrideAnnotation = JandexHelper.getSingleAnnotation(
 				classInfo,
 				JPADotNames.ATTRIBUTE_OVERRIDE
 		);
 		if ( attributeOverrideAnnotation != null ) {
-			attributeOverrideList.add( attributeOverrideAnnotation );
+			String prefix = createPathPrefix( attributeOverrideAnnotation );
+			attributeOverrideList.add( new AttributeOverride( prefix, attributeOverrideAnnotation ) );
 		}
 
 		AnnotationInstance attributeOverridesAnnotation = JandexHelper.getSingleAnnotation(
 				classInfo,
 				JPADotNames.ATTRIBUTE_OVERRIDES
 		);
-		if ( attributeOverrideAnnotation != null ) {
-			AnnotationInstance[] attributeOverride = attributeOverridesAnnotation.value().asNestedArray();
-			Collections.addAll( attributeOverrideList, attributeOverride );
+		if ( attributeOverridesAnnotation != null ) {
+			AnnotationInstance[] annotationInstances = attributeOverridesAnnotation.value().asNestedArray();
+			for ( AnnotationInstance annotationInstance : annotationInstances ) {
+				String prefix = createPathPrefix( annotationInstance );
+				attributeOverrideList.add( new AttributeOverride( prefix, annotationInstance ) );
+			}
 		}
-
 		return attributeOverrideList;
+	}
+
+	private String createPathPrefix(AnnotationInstance attributeOverrideAnnotation) {
+		String prefix = null;
+		AnnotationTarget target = attributeOverrideAnnotation.target();
+		if ( target instanceof FieldInfo || target instanceof MethodInfo ) {
+			prefix = JandexHelper.getPropertyName( target );
+		}
+		return prefix;
 	}
 
 	private List<AnnotationInstance> findAssociationOverrides() {

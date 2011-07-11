@@ -23,32 +23,41 @@
  */
 package org.hibernate.metamodel.source.annotations.entity;
 
+import javax.persistence.AttributeOverride;
+import javax.persistence.AttributeOverrides;
+import javax.persistence.Embeddable;
+import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
 
 import org.junit.Test;
 
-import org.hibernate.action.internal.EntityIdentityInsertAction;
 import org.hibernate.metamodel.binding.AttributeBinding;
 import org.hibernate.metamodel.binding.EntityBinding;
-import org.hibernate.metamodel.binding.EntityIdentifier;
 import org.hibernate.metamodel.domain.NonEntity;
 import org.hibernate.metamodel.domain.Superclass;
+import org.hibernate.metamodel.relational.Column;
+import org.hibernate.metamodel.relational.SimpleValue;
+import org.hibernate.metamodel.relational.Tuple;
+import org.hibernate.testing.FailureExpected;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertTrue;
 
 /**
- * Tests for {@code j.p.AttributeOverrides} and {@code j.p.AttributeOverride}.
+ * Tests for {@link javax.persistence.MappedSuperclass} {@link javax.persistence.AttributeOverrides}
+ * and {@code javax.persistence.AttributeOverride}.
  *
  * @author Hardy Ferentschik
  */
-public class MappedSuperclassWithAttributeOverrideTests extends BaseAnnotationBindingTestCase {
+public class MappedSuperclassTests extends BaseAnnotationBindingTestCase {
 	@Test
+	@FailureExpected(jiraKey = "HHH-6392", message = "work in progress")
 	public void testMappedSuperclass() {
-		buildMetadataSources( MyMappedSuperClass.class, MyEntity.class );
+		buildMetadataSources( MyMappedSuperClass.class, MyEntity.class, Address.class );
+
 		EntityBinding binding = getEntityBinding( MyEntity.class );
 		assertEquals( "Wrong entity name", MyEntity.class.getName(), binding.getEntity().getName() );
 		assertEquals(
@@ -56,9 +65,17 @@ public class MappedSuperclassWithAttributeOverrideTests extends BaseAnnotationBi
 				MyMappedSuperClass.class.getName(),
 				binding.getEntity().getSuperType().getName()
 		);
+
 		assertTrue( binding.getEntity().getSuperType() instanceof Superclass );
 		AttributeBinding nameBinding = binding.getAttributeBinding( "name" );
 		assertNotNull( "the name attribute should be bound to the subclass", nameBinding );
+
+		assertTrue( "The binding should be a simple column", nameBinding.getValue() instanceof Tuple );
+		Tuple tuple = (Tuple) nameBinding.getValue();
+		SimpleValue value = tuple.values().iterator().next();
+		assertTrue( value instanceof Column );
+		Column column = (Column) value;
+		assertEquals( "Wrong column name", "MY_NAME", column.getColumnName().toString() );
 
 		AttributeBinding idBinding = binding.getEntityIdentifier().getValueBinding();
 		assertNotNull( "the id attribute should be bound", idBinding );
@@ -78,12 +95,24 @@ public class MappedSuperclassWithAttributeOverrideTests extends BaseAnnotationBi
 		@Id
 		private int id;
 		String name;
-		int age;
 	}
 
 	@Entity
+	@AttributeOverrides( {
+			@AttributeOverride(name = "name", column = @javax.persistence.Column(name = "MY_NAME")),
+			@AttributeOverride(name = "address.street", column = @javax.persistence.Column(name = "MY_STREET"))
+	})
 	class MyEntity extends MyMappedSuperClass {
 		private Long count;
+		@AttributeOverride(name = "city", column = @javax.persistence.Column(name = "MY_CITY"))
+		@Embedded
+		Address address;
+	}
+
+	@Embeddable
+	class Address {
+		String street;
+		String city;
 	}
 
 	class NoEntity {

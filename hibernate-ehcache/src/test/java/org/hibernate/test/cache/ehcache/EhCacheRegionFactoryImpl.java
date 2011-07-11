@@ -15,13 +15,13 @@ public class EhCacheRegionFactoryImpl extends EhCacheTest {
 	@Override
 	protected void configCache(final Configuration cfg) {
 		cfg.setProperty(Environment.CACHE_REGION_FACTORY, EhCacheRegionFactory.class.getName());
-		cfg.setProperty( Environment.CACHE_PROVIDER_CONFIG, "ehcache.xml" );
+		cfg.setProperty(Environment.CACHE_PROVIDER_CONFIG, "ehcache.xml");
 	}
 
 	@Override
 	protected Map getMapFromCacheEntry(final Object entry) {
 		final Map map;
-		if ("net.sf.ehcache.hibernate.strategy.AbstractReadWriteEhcacheAccessStrategy$Item".equals(entry.getClass().getName())) {
+		if ("org.hibernate.cache.internal.strategy.AbstractReadWriteEhcacheAccessStrategy$Item".equals(entry.getClass().getName())) {
 			try {
 				Field field = entry.getClass().getDeclaredField("value");
 				field.setAccessible(true);

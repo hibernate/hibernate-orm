@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2007-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,38 +21,33 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.cache.ehcache;
+package org.hibernate.cache.internal.strategy;
 
+import org.hibernate.cache.internal.regions.EhcacheCollectionRegion;
+import org.hibernate.cache.spi.CollectionRegion;
+import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
+import org.hibernate.cfg.Settings;
 
 /**
- * @author Gavin King
+ * Ehcache specific read/write collection region access strategy
+ *
+ * @author Chris Dennis
+ * @author Alex Snaps
  */
-public class Item {
-	private Long id;
-	private String name;
-	private String description;
+public class ReadWriteEhcacheCollectionRegionAccessStrategy extends AbstractReadWriteEhcacheAccessStrategy<EhcacheCollectionRegion>
+	implements CollectionRegionAccessStrategy {
 
-	public String getDescription() {
-		return description;
+	/**
+	 * Create a read/write access strategy accessing the given collection region.
+	 */
+	public ReadWriteEhcacheCollectionRegionAccessStrategy(EhcacheCollectionRegion region, Settings settings) {
+		super(region, settings);
 	}
 
-	public void setDescription(String description) {
-		this.description = description;
-	}
-
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
+	/**
+	 * {@inheritDoc}
+	 */
+	public CollectionRegion getRegion() {
+		return region;
 	}
 }

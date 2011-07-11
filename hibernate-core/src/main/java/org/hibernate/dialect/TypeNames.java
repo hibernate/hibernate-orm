@@ -90,8 +90,8 @@ public class TypeNames {
 		if ( map!=null && map.size()>0 ) {
 			// iterate entries ordered by capacity to find first fit
 			for (Map.Entry<Integer, String> entry: map.entrySet()) {
-				if ( size <= ( (Integer) entry.getKey() ).intValue() ) {
-					return replace( (String) entry.getValue(), size, precision, scale );
+				if ( size <= entry.getKey() ) {
+					return replace( entry.getValue(), size, precision, scale );
 				}
 			}
 		}

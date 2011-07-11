@@ -383,7 +383,7 @@ public class Table implements RelationalModel, Serializable {
 	}
 
 	public String sqlCreateString(Dialect dialect, Mapping p, String defaultCatalog, String defaultSchema) {
-		StringBuffer buf = new StringBuffer( hasPrimaryKey() ? dialect.getCreateTableString() : dialect.getCreateMultisetTableString() )
+		StringBuilder buf = new StringBuilder( hasPrimaryKey() ? dialect.getCreateTableString() : dialect.getCreateMultisetTableString() )
 				.append( ' ' )
 				.append( getQualifiedName( dialect, defaultCatalog, defaultSchema ) )
 				.append( " (" );

@@ -418,7 +418,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			}
 		}
 
-		StringBuffer buf = new StringBuffer()
+		StringBuilder buf = new StringBuilder()
 			.append("( ");
 
 		Iterator siter = new JoinedIterator(

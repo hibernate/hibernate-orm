@@ -31,6 +31,7 @@ import org.jboss.logging.Logger;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.DerbyTenFiveDialect;
+import org.hibernate.dialect.DerbyTenSevenDialect;
 import org.hibernate.dialect.DerbyTenSixDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
@@ -84,7 +85,10 @@ public class StandardDialectResolver extends AbstractDialectResolver {
 
 		if ( "Apache Derby".equals( databaseName ) ) {
 			final int databaseMinorVersion = metaData.getDatabaseMinorVersion();
-			if ( databaseMajorVersion > 10 || ( databaseMajorVersion == 10 && databaseMinorVersion >= 6 ) ) {
+            if ( databaseMajorVersion > 10 || ( databaseMajorVersion == 10 && databaseMinorVersion >= 7 ) ) {
+				return new DerbyTenSevenDialect();
+			}
+			else if ( databaseMajorVersion > 10 || ( databaseMajorVersion == 10 && databaseMinorVersion >= 6 ) ) {
 				return new DerbyTenSixDialect();
 			}
 			else if ( databaseMajorVersion == 10 && databaseMinorVersion == 5 ) {

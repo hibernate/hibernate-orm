@@ -24,6 +24,7 @@
 package org.hibernate.dialect;
 
 import java.lang.reflect.Method;
+import java.sql.Types;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,7 +54,11 @@ public class DerbyDialect extends DB2Dialect {
 		super();
 		registerFunction( "concat", new DerbyConcatFunction() );
 		registerFunction( "trim", new AnsiTrimFunction() );
+        registerColumnType( Types.BLOB, "blob" );
 		determineDriverVersion();
+        if ( driverVersionMajor > 10 || ( driverVersionMajor == 10 && driverVersionMinor >= 7 ) ) {
+           registerColumnType( Types.BOOLEAN, "boolean" );
+        }
 	}
 
 	@SuppressWarnings({ "UnnecessaryUnboxing" })

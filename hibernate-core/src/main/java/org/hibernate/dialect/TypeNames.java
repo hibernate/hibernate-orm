@@ -87,18 +87,18 @@ public class TypeNames {
 	 * @return the associated name with smallest capacity >= size,
 	 * if available and the default type name otherwise
 	 */
-	public String get(int typecode, int size, int precision, int scale) throws MappingException {
-		Map<Integer, String> map = weighted.get( typecode );
-		if ( map!=null && map.size()>0 ) {
-			// iterate entries ordered by capacity to find first fit
-			for (Map.Entry<Integer, String> entry: map.entrySet()) {
-				if ( size <= ( entry.getKey() ).intValue() ) {
-					return replace( entry.getValue(), size, precision, scale );
-				}
-			}
-		}
-		return replace( get(typecode), size, precision, scale );
-	}
+    public String get(int typecode, int size, int precision, int scale) throws MappingException {
+        Map<Integer, String> map = weighted.get( typecode );
+        if ( map != null && map.size() > 0 ) {
+            // iterate entries ordered by capacity to find first fit
+            for ( Map.Entry<Integer, String> entry : map.entrySet() ) {
+                if ( size <= entry.getKey() ) {
+                    return replace( entry.getValue(), size, precision, scale );
+                }
+            }
+        }
+        return replace( get( typecode ), size, precision, scale );
+    }
 	
 	private static String replace(String type, int size, int precision, int scale) {
 		type = StringHelper.replaceOnce(type, "$s", Integer.toString(scale) );

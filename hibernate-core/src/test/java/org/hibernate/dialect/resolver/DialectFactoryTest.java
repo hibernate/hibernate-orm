@@ -23,17 +23,21 @@
  */
 package org.hibernate.dialect.resolver;
 
+import java.sql.Connection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+
 import org.junit.Before;
 import org.junit.Test;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
 
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.DerbyTenFiveDialect;
+import org.hibernate.dialect.DerbyTenSevenDialect;
 import org.hibernate.dialect.DerbyTenSixDialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
@@ -57,11 +61,9 @@ import org.hibernate.service.jdbc.dialect.internal.StandardDialectResolver;
 import org.hibernate.service.jdbc.dialect.spi.DialectResolver;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
-import java.sql.Connection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 /**
  * @author Steve Ebersole
@@ -78,7 +80,7 @@ public class DialectFactoryTest extends BaseUnitTestCase {
 
 	@Test
 	public void testExplicitlySuppliedDialectClassName() {
-		final Map<String,String> configValues = new HashMap<String,String>();
+		final Map<String, String> configValues = new HashMap<String, String>();
 
 		configValues.put( Environment.DIALECT, "org.hibernate.dialect.HSQLDialect" );
 		assertEquals( HSQLDialect.class, dialectFactory.buildDialect( configValues, null ).getClass() );
@@ -128,7 +130,7 @@ public class DialectFactoryTest extends BaseUnitTestCase {
 		testDetermination( "Apache Derby", 10, 4, DerbyDialect.class, resolver );
 		testDetermination( "Apache Derby", 10, 5, DerbyTenFiveDialect.class, resolver );
 		testDetermination( "Apache Derby", 10, 6, DerbyTenSixDialect.class, resolver );
-		testDetermination( "Apache Derby", 11, 5, DerbyTenSixDialect.class, resolver );
+		testDetermination( "Apache Derby", 11, 5, DerbyTenSevenDialect.class, resolver );
 		testDetermination( "Ingres", IngresDialect.class, resolver );
 		testDetermination( "ingres", IngresDialect.class, resolver );
 		testDetermination( "INGRES", IngresDialect.class, resolver );
@@ -211,5 +213,4 @@ public class DialectFactoryTest extends BaseUnitTestCase {
 		Connection conn = Mocks.createConnection( databaseName, majorVersion, minorVersion );
 		assertEquals( clazz, dialectFactory.buildDialect( properties, conn ).getClass() );
 	}
-
 }

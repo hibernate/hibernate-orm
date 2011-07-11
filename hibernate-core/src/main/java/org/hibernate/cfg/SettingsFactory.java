@@ -355,9 +355,9 @@ public class SettingsFactory implements Serializable {
 	//todo remove this once we move to new metamodel
 	public static RegionFactory createRegionFactory(Properties properties, boolean cachingEnabled) {
 		// todo : REMOVE!  THIS IS TOTALLY A TEMPORARY HACK FOR org.hibernate.cfg.AnnotationBinder which will be going away
-		String regionFactoryClassName = ConfigurationHelper.getString(
+		String regionFactoryClassName = mapLegacyNames( ConfigurationHelper.getString(
 				Environment.CACHE_REGION_FACTORY, properties, null
-		);
+		));
 		if ( regionFactoryClassName == null ) {
 			regionFactoryClassName = DEF_CACHE_REG_FACTORY;
 		}
@@ -381,6 +381,18 @@ public class SettingsFactory implements Serializable {
 		catch ( Exception e ) {
 			throw new HibernateException( "could not instantiate RegionFactory [" + regionFactoryClassName + "]", e );
 		}
+	}
+
+	private static String mapLegacyNames(final String name) {
+		if("org.hibernate.cache.EhCacheRegionFactory".equals(name)) {
+			return "org.hibernate.cache.ehcache.EhCacheRegionFactory";
+		}
+
+		if("org.hibernate.cache.SingletonEhCacheRegionFactory".equals(name)) {
+			return "org.hibernate.cache.ehcache.SingletonEhCacheRegionFactory";
+		}
+
+		return name;
 	}
 
 	protected QueryTranslatorFactory createQueryTranslatorFactory(Properties properties, ServiceRegistry serviceRegistry) {

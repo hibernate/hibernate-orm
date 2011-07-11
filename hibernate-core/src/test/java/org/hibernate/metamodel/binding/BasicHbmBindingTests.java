@@ -24,7 +24,7 @@
 package org.hibernate.metamodel.binding;
 
 import org.hibernate.metamodel.MetadataSources;
-import org.hibernate.metamodel.binder.source.internal.MetadataImpl;
+import org.hibernate.metamodel.source.internal.MetadataImpl;
 
 /**
  * Basic tests of {@code hbm.xml} binding code

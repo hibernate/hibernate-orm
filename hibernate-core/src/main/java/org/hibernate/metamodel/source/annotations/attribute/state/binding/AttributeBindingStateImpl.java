@@ -27,7 +27,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.mapping.PropertyGeneration;
-import org.hibernate.metamodel.binder.source.MetaAttributeContext;
+import org.hibernate.metamodel.source.MetaAttributeContext;
 import org.hibernate.metamodel.binding.CascadeType;
 import org.hibernate.metamodel.binding.state.SimpleAttributeBindingState;
 import org.hibernate.metamodel.source.annotations.attribute.SimpleAttribute;

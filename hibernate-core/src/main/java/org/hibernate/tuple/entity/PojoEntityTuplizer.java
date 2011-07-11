@@ -115,8 +115,8 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 
 	public PojoEntityTuplizer(EntityMetamodel entityMetamodel, EntityBinding mappedEntity) {
 		super( entityMetamodel, mappedEntity );
-		this.mappedClass = mappedEntity.getEntity().getJavaType().getClassReference();
-		this.proxyInterface = mappedEntity.getProxyInterfaceType().getClassReference();
+		this.mappedClass = mappedEntity.getEntity().getClassReference();
+		this.proxyInterface = mappedEntity.getProxyInterfaceType().getValue();
 		this.lifecycleImplementor = Lifecycle.class.isAssignableFrom( mappedClass );
 
 		for ( AttributeBinding property : mappedEntity.getAttributeBindingClosure() ) {
@@ -262,8 +262,8 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 		HashSet<Class> proxyInterfaces = new HashSet<Class>();
 		proxyInterfaces.add( HibernateProxy.class );
 
-		Class mappedClass = entityBinding.getEntity().getJavaType().getClassReference();
-		Class proxyInterface = entityBinding.getProxyInterfaceType().getClassReference();
+		Class mappedClass = entityBinding.getEntity().getClassReference();
+		Class proxyInterface = entityBinding.getProxyInterfaceType().getValue();
 
 		if ( proxyInterface!=null && !mappedClass.equals( proxyInterface ) ) {
 			if ( ! proxyInterface.isInterface() ) {
@@ -461,14 +461,14 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 
 	private Getter getGetter(AttributeBinding mappedProperty)  throws PropertyNotFoundException, MappingException {
 		return getPropertyAccessor( mappedProperty ).getGetter(
-				mappedProperty.getEntityBinding().getEntity().getJavaType().getClassReference(),
+				mappedProperty.getEntityBinding().getEntity().getClassReference(),
 				mappedProperty.getAttribute().getName()
 		);
 	}
 
 	private Setter getSetter(AttributeBinding mappedProperty) throws PropertyNotFoundException, MappingException {
 		return getPropertyAccessor( mappedProperty ).getSetter(
-				mappedProperty.getEntityBinding().getEntity().getJavaType().getClassReference(),
+				mappedProperty.getEntityBinding().getEntity().getClassReference(),
 				mappedProperty.getAttribute().getName()
 		);
 	}
@@ -476,7 +476,7 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 	private PropertyAccessor getPropertyAccessor(AttributeBinding mappedProperty) throws MappingException {
 		// TODO: Fix this then backrefs are working in new metamodel
 		return PropertyAccessorFactory.getPropertyAccessor(
-				mappedProperty.getEntityBinding().getEntity().getJavaType().getClassReference(),
+				mappedProperty.getEntityBinding().getEntity().getClassReference(),
 				mappedProperty.getPropertyAccessorName()
 		);
 	}

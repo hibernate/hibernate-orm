@@ -39,10 +39,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.hibernate.metamodel.binder.source.annotations.AnnotationsBindingContext;
-import org.hibernate.metamodel.binder.source.annotations.ConfiguredClassHierarchyBuilder;
-import org.hibernate.metamodel.binder.source.annotations.JandexHelper;
-import org.hibernate.metamodel.binder.source.annotations.entity.ConfiguredClassHierarchy;
+import org.hibernate.metamodel.source.annotations.ConfiguredClassHierarchyBuilder;
+import org.hibernate.metamodel.source.annotations.JandexHelper;
 import org.hibernate.metamodel.binding.InheritanceType;
 import org.hibernate.metamodel.source.annotations.TestAnnotationsBindingContextImpl;
 import org.hibernate.service.ServiceRegistryBuilder;

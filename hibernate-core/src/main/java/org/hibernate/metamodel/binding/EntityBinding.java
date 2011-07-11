@@ -34,7 +34,7 @@ import org.hibernate.MappingException;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.util.Value;
-import org.hibernate.metamodel.binder.source.MetaAttributeContext;
+import org.hibernate.metamodel.source.MetaAttributeContext;
 import org.hibernate.metamodel.domain.Attribute;
 import org.hibernate.metamodel.domain.Entity;
 import org.hibernate.metamodel.relational.Column;

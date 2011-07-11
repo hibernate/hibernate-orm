@@ -26,7 +26,7 @@ package org.hibernate.metamodel.binding.state;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.metamodel.binder.source.MetaAttributeContext;
+import org.hibernate.metamodel.source.MetaAttributeContext;
 import org.hibernate.metamodel.binding.CascadeType;
 
 /**

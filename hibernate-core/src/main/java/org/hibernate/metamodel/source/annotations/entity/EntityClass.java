@@ -33,11 +33,8 @@ import org.jboss.jandex.DotName;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
-import org.hibernate.metamodel.binder.source.annotations.AnnotationsBindingContext;
-import org.hibernate.metamodel.binder.source.annotations.JPADotNames;
-import org.hibernate.metamodel.binder.source.annotations.entity.ConfiguredClass;
-import org.hibernate.metamodel.binder.source.annotations.entity.ConfiguredClassType;
-import org.hibernate.metamodel.binder.source.annotations.entity.IdType;
+import org.hibernate.metamodel.source.annotations.AnnotationsBindingContext;
+import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.binding.InheritanceType;
 
 /**

@@ -84,8 +84,8 @@ public class PojoInstantiator implements Instantiator, Serializable {
 	}
 
 	public PojoInstantiator(EntityBinding entityBinding, ReflectionOptimizer.InstantiationOptimizer optimizer) {
-		this.mappedClass = entityBinding.getEntity().getJavaType().getClassReference();
-		this.proxyInterface = entityBinding.getProxyInterfaceType().getClassReference();
+		this.mappedClass = entityBinding.getEntity().getClassReference();
+		this.proxyInterface = entityBinding.getProxyInterfaceType().getValue();
 		this.embeddedIdentifier = entityBinding.getEntityIdentifier().isEmbedded();
 		this.optimizer = optimizer;
 

@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import org.hibernate.HibernateException;
 import org.hibernate.internal.util.Value;
 
 /**
@@ -100,13 +101,106 @@ public abstract class AbstractAttributeContainer implements AttributeContainer, 
 
 	@Override
 	public SingularAttribute locateOrCreateComponentAttribute(String name) {
-		SingularAttribute attribute = (SingularAttribute) getAttribute( name );
+		SingularAttributeImpl attribute = (SingularAttributeImpl) getAttribute( name );
 		if ( attribute == null ) {
-			Component component = new Component( name, null );
+			ComponentAttributeContainerDelegate component = new ComponentAttributeContainerDelegate();
 			attribute = new SingularAttributeImpl( name, component );
+			component.singularAttribute = attribute;
 			addAttribute( attribute );
 		}
 		return attribute;
+	}
+
+	private static class ComponentAttributeContainerDelegate implements AttributeContainer {
+		private SingularAttributeImpl singularAttribute;
+
+		private ComponentAttributeContainerDelegate() {
+		}
+
+		private Component realComponent() {
+			if ( singularAttribute.getSingularAttributeType() == null ) {
+				throw new HibernateException( "Component type was not yet bound" );
+			}
+			if ( ! Component.class.isInstance( singularAttribute.getSingularAttributeType() ) ) {
+				throw new HibernateException( "Unexpected bound type for component attribute" );
+			}
+			return (Component) singularAttribute.getSingularAttributeType();
+		}
+
+		@Override
+		public Attribute getAttribute(String name) {
+			return realComponent().getAttribute( name );
+		}
+
+		@Override
+		public Set<Attribute> getAttributes() {
+			return realComponent().getAttributes();
+		}
+
+		@Override
+		public SingularAttribute locateOrCreateSingularAttribute(String name) {
+			return realComponent().locateOrCreateSingularAttribute( name );
+		}
+
+		@Override
+		public PluralAttribute locateOrCreatePluralAttribute(String name, PluralAttributeNature nature) {
+			return realComponent().locateOrCreatePluralAttribute( name, nature );
+		}
+
+		@Override
+		public PluralAttribute locateOrCreateBag(String name) {
+			return realComponent().locateOrCreateBag( name );
+		}
+
+		@Override
+		public PluralAttribute locateOrCreateSet(String name) {
+			return realComponent().locateOrCreateBag( name );
+		}
+
+		@Override
+		public IndexedPluralAttribute locateOrCreateList(String name) {
+			return realComponent().locateOrCreateList( name );
+		}
+
+		@Override
+		public IndexedPluralAttribute locateOrCreateMap(String name) {
+			return realComponent().locateOrCreateMap( name );
+		}
+
+		@Override
+		public SingularAttribute locateOrCreateComponentAttribute(String name) {
+			return realComponent().locateOrCreateComponentAttribute( name );
+		}
+
+		@Override
+		public String getName() {
+			return realComponent().getName();
+		}
+
+		@Override
+		public String getClassName() {
+			return realComponent().getClassName();
+		}
+
+		@Override
+		public Class<?> getClassReference() {
+			return realComponent().getClassReference();
+		}
+
+		@Override
+		public Value<Class<?>> getClassReferenceUnresolved() {
+			return realComponent().getClassReferenceUnresolved();
+		}
+
+		@Override
+		public boolean isAssociation() {
+			return realComponent().isAssociation();
+		}
+
+		@Override
+		public boolean isComponent() {
+			return realComponent().isComponent();
+		}
 	}
 
 	@Override

@@ -49,10 +49,11 @@ public interface AttributeContainer extends Type {
 	public Set<Attribute> getAttributes();
 
 	public SingularAttribute locateOrCreateSingularAttribute(String name);
-	public SingularAttribute locateOrCreateComponentAttribute(String name);
 	public PluralAttribute locateOrCreatePluralAttribute(String name, PluralAttributeNature nature);
 	public PluralAttribute locateOrCreateBag(String name);
 	public PluralAttribute locateOrCreateSet(String name);
 	public IndexedPluralAttribute locateOrCreateList(String name);
 	public IndexedPluralAttribute locateOrCreateMap(String name);
+
+	public SingularAttribute locateOrCreateComponentAttribute(String name);
 }

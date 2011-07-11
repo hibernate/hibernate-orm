@@ -27,8 +27,7 @@ import javax.persistence.AccessType;
 
 import org.jboss.jandex.ClassInfo;
 
-import org.hibernate.metamodel.binder.source.annotations.AnnotationsBindingContext;
-import org.hibernate.metamodel.binder.source.annotations.entity.ConfiguredClass;
+import org.hibernate.metamodel.source.annotations.AnnotationsBindingContext;
 
 /**
  * @author Hardy Ferentschik

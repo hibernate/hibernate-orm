@@ -36,7 +36,7 @@ import org.hibernate.metamodel.domain.JavaType;
 import org.hibernate.metamodel.relational.Datatype;
 import org.hibernate.metamodel.relational.SimpleValue;
 import org.hibernate.metamodel.relational.Value;
-import org.hibernate.metamodel.source.spi.MetadataImplementor;
+import org.hibernate.metamodel.source.MetadataImplementor;
 import org.hibernate.type.AbstractStandardBasicType;
 import org.hibernate.type.Type;
 
@@ -98,19 +98,19 @@ class AttributeTypeResolver {
 
 	// this only works for singular basic types
 	private void resolveJavaType(Attribute attribute, Type type) {
-		if ( ! ( type instanceof AbstractStandardBasicType ) || ! attribute.isSingular() ) {
-			return;
-		}
-		// Converting to SingularAttributeImpl is bad, but this resolver is TEMPORARY!
-		AbstractAttributeContainer.SingularAttributeImpl singularAttribute =
-				( AbstractAttributeContainer.SingularAttributeImpl ) attribute;
-		if ( ! singularAttribute.isTypeResolved() ) {
-			singularAttribute.resolveType(
-					new BasicType(
-							new JavaType( ( ( AbstractStandardBasicType) type ).getJavaTypeDescriptor().getJavaTypeClass() )
-					)
-			);
-		}
+//		if ( ! ( type instanceof AbstractStandardBasicType ) || ! attribute.isSingular() ) {
+//			return;
+//		}
+//		// Converting to SingularAttributeImpl is bad, but this resolver is TEMPORARY!
+//		AbstractAttributeContainer.SingularAttributeImpl singularAttribute =
+//				( AbstractAttributeContainer.SingularAttributeImpl ) attribute;
+//		if ( ! singularAttribute.isTypeResolved() ) {
+//			singularAttribute.resolveType(
+//					new BasicType(
+//							new JavaType( ( ( AbstractStandardBasicType) type ).getJavaTypeDescriptor().getJavaTypeClass() )
+//					)
+//			);
+//		}
 	}
 
 	// this only works for singular basic types
@@ -131,7 +131,7 @@ class AttributeTypeResolver {
 	// TODO: this does not work for components
 	private static String getQualifiedAttributeName(AttributeBinding attributebinding) {
 		return new StringBuilder()
-				.append( attributebinding.getEntityBinding().getEntity().getJavaType().getName() )
+				.append( attributebinding.getEntityBinding().getEntity().getName() )
 				.append( "." )
 				.append( attributebinding.getAttribute().getName() )
 				.toString();

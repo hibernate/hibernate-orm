@@ -31,9 +31,9 @@ import org.jboss.jandex.Index;
 import org.junit.After;
 import org.junit.Before;
 
-import org.hibernate.metamodel.binder.source.annotations.ConfiguredClassHierarchyBuilder;
-import org.hibernate.metamodel.binder.source.annotations.JandexHelper;
-import org.hibernate.metamodel.binder.source.annotations.entity.ConfiguredClassHierarchy;
+import org.hibernate.metamodel.source.annotations.ConfiguredClassHierarchyBuilder;
+import org.hibernate.metamodel.source.annotations.JandexHelper;
+import org.hibernate.metamodel.source.annotations.entity.ConfiguredClassHierarchy;
 import org.hibernate.metamodel.source.annotations.TestAnnotationsBindingContextImpl;
 import org.hibernate.metamodel.source.annotations.entity.EmbeddableClass;
 import org.hibernate.metamodel.source.annotations.entity.EntityClass;

@@ -35,9 +35,9 @@ import org.jboss.jandex.DotName;
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.GenerationTime;
 import org.hibernate.mapping.PropertyGeneration;
-import org.hibernate.metamodel.binder.source.annotations.HibernateDotNames;
-import org.hibernate.metamodel.binder.source.annotations.JPADotNames;
-import org.hibernate.metamodel.binder.source.annotations.JandexHelper;
+import org.hibernate.metamodel.source.annotations.HibernateDotNames;
+import org.hibernate.metamodel.source.annotations.JPADotNames;
+import org.hibernate.metamodel.source.annotations.JandexHelper;
 
 /**
  * Represent a mapped attribute (explicitly or implicitly mapped). Also used for synthetic attributes like a

@@ -32,8 +32,6 @@ import org.hibernate.SessionFactory;
 import org.hibernate.metamodel.Metadata;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.SessionFactoryBuilder;
-import org.hibernate.metamodel.binder.source.internal.MetadataImpl;
-import org.hibernate.metamodel.binder.source.internal.SessionFactoryBuilderImpl;
 import org.hibernate.metamodel.binding.FetchProfile;
 import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.testing.junit4.BaseUnitTestCase;

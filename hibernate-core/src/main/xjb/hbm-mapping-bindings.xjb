@@ -19,30 +19,30 @@
 
         <!-- Inheritance -->
         <jaxb:bindings node="//xsd:element[@name='class']/xsd:complexType">
-            <inheritance:implements>org.hibernate.metamodel.binder.source.hbm.xml.mapping.EntityElement</inheritance:implements>
-            <inheritance:implements>org.hibernate.metamodel.binder.source.hbm.xml.mapping.JoinElementSource</inheritance:implements>
+            <inheritance:implements>org.hibernate.metamodel.source.hbm.jaxb.mapping.EntityElement</inheritance:implements>
+            <inheritance:implements>org.hibernate.metamodel.source.hbm.jaxb.mapping.JoinElementSource</inheritance:implements>
         </jaxb:bindings>
         <jaxb:bindings node="//xsd:complexType[@name='subclass-element']">
-            <inheritance:implements>org.hibernate.metamodel.binder.source.hbm.xml.mapping.SubEntityElement</inheritance:implements>
-            <inheritance:implements>org.hibernate.metamodel.binder.source.hbm.xml.mapping.JoinElementSource</inheritance:implements>
+            <inheritance:implements>org.hibernate.metamodel.source.hbm.jaxb.mapping.SubEntityElement</inheritance:implements>
+            <inheritance:implements>org.hibernate.metamodel.source.hbm.jaxb.mapping.JoinElementSource</inheritance:implements>
         </jaxb:bindings>
         <jaxb:bindings node="//xsd:complexType[@name='joined-subclass-element']">
-            <inheritance:implements>org.hibernate.metamodel.binder.source.hbm.xml.mapping.SubEntityElement</inheritance:implements>
+            <inheritance:implements>org.hibernate.metamodel.source.hbm.jaxb.mapping.SubEntityElement</inheritance:implements>
         </jaxb:bindings>
         <jaxb:bindings node="//xsd:complexType[@name='union-subclass-element']">
-            <inheritance:implements>org.hibernate.metamodel.binder.source.hbm.xml.mapping.SubEntityElement</inheritance:implements>
+            <inheritance:implements>org.hibernate.metamodel.source.hbm.jaxb.mapping.SubEntityElement</inheritance:implements>
         </jaxb:bindings>
         <jaxb:bindings node="//xsd:complexType[@name='sql-insert-element']">
-            <inheritance:implements>org.hibernate.metamodel.binder.source.hbm.xml.mapping.CustomSqlElement</inheritance:implements>
+            <inheritance:implements>org.hibernate.metamodel.source.hbm.jaxb.mapping.CustomSqlElement</inheritance:implements>
         </jaxb:bindings>
         <jaxb:bindings node="//xsd:complexType[@name='sql-update-element']">
-            <inheritance:implements>org.hibernate.metamodel.binder.source.hbm.xml.mapping.CustomSqlElement</inheritance:implements>
+            <inheritance:implements>org.hibernate.metamodel.source.hbm.jaxb.mapping.CustomSqlElement</inheritance:implements>
         </jaxb:bindings>
         <jaxb:bindings node="//xsd:complexType[@name='sql-delete-element']">
-            <inheritance:implements>org.hibernate.metamodel.binder.source.hbm.xml.mapping.CustomSqlElement</inheritance:implements>
+            <inheritance:implements>org.hibernate.metamodel.source.hbm.jaxb.mapping.CustomSqlElement</inheritance:implements>
         </jaxb:bindings>
         <jaxb:bindings node="//xsd:complexType[@name='sql-delete-all-element']">
-            <inheritance:implements>org.hibernate.metamodel.binder.source.hbm.xml.mapping.CustomSqlElement</inheritance:implements>
+            <inheritance:implements>org.hibernate.metamodel.source.hbm.jaxb.mapping.CustomSqlElement</inheritance:implements>
         </jaxb:bindings>
 
         <jaxb:bindings node="//xsd:element[@name='class']//xsd:attribute[@name='subselect']">

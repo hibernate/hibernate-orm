@@ -31,7 +31,7 @@ import org.jboss.jandex.DotName;
 
 import org.hibernate.metamodel.source.annotations.HibernateDotNames;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
-import org.hibernate.metamodel.source.annotations.util.JandexHelper;
+import org.hibernate.metamodel.source.annotations.JandexHelper;
 
 /**
  * Container for the properties of a discriminator column.

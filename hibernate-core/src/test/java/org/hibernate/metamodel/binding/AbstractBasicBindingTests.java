@@ -27,14 +27,13 @@ import java.sql.Types;
 import java.util.Iterator;
 import java.util.Set;
 
-import junit.framework.Assert;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import org.hibernate.metamodel.MetadataSources;
-import org.hibernate.metamodel.binder.source.MetadataImplementor;
-import org.hibernate.metamodel.binder.source.internal.MetadataImpl;
+import org.hibernate.metamodel.source.MetadataImplementor;
+import org.hibernate.metamodel.source.internal.MetadataImpl;
 import org.hibernate.metamodel.domain.BasicType;
 import org.hibernate.metamodel.domain.SingularAttribute;
 import org.hibernate.metamodel.domain.TypeNature;
@@ -143,9 +142,8 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 		assertTrue( idAttributeBinding.getAttribute().isSingular() );
 		assertNotNull( idAttributeBinding.getAttribute() );
 		SingularAttribute singularIdAttribute =  ( SingularAttribute ) idAttributeBinding.getAttribute();
-		assertSame( TypeNature.BASIC, singularIdAttribute.getSingularAttributeType().getNature() );
 		BasicType basicIdAttributeType = ( BasicType ) singularIdAttribute.getSingularAttributeType();
-		assertSame( Long.class, basicIdAttributeType.getJavaType().getClassReference() );
+		assertSame( Long.class, basicIdAttributeType.getClassReference() );
 
 		assertNotNull( idAttributeBinding.getValue() );
 		assertTrue( idAttributeBinding.getValue() instanceof Column );
@@ -163,9 +161,8 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 		assertTrue( nameBinding.getAttribute().isSingular() );
 		assertNotNull( nameBinding.getAttribute() );
 		SingularAttribute singularNameAttribute =  ( SingularAttribute ) nameBinding.getAttribute();
-		assertSame( TypeNature.BASIC, singularNameAttribute.getSingularAttributeType().getNature() );
 		BasicType basicNameAttributeType = ( BasicType ) singularNameAttribute.getSingularAttributeType();
-		assertSame( String.class, basicNameAttributeType.getJavaType().getClassReference() );
+		assertSame( String.class, basicNameAttributeType.getClassReference() );
 
 		assertNotNull( nameBinding.getValue() );
 		// until HHH-6380 is fixed, need to call getValues()

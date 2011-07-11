@@ -8,7 +8,7 @@
 			<delimited-identifiers/>
 			<access>FIELD</access>
 			<entity-listeners>
-				<entity-listener class="org.hibernate.metamodel.binder.source.annotations.xml.mocker.ItemListener">
+				<entity-listener class="org.hibernate.metamodel.source.annotations.xml.mocker.ItemListener">
 					<pre-persist method-name="prePersist"/>
 					<post-persist method-name="postPersist"/>
 				</entity-listener>
@@ -18,7 +18,7 @@
 	<package>org.hibernate.metamodel.binder.source.annotations.xml.mocker</package>
 	<entity class="Item">
 		<entity-listeners>
-			<entity-listener class="org.hibernate.metamodel.binder.source.annotations.xml.mocker.ItemListener">
+			<entity-listener class="org.hibernate.metamodel.source.annotations.xml.mocker.ItemListener">
 				<pre-persist method-name="prePersist"/>
 				<post-persist method-name="postPersist"/>
 			</entity-listener>

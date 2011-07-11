@@ -133,7 +133,7 @@ public class PropertyFactory {
 		else {
 			return new IdentifierProperty(
 					property.getAttribute().getName(),
-					property.getNodeName(),
+					null,
 					type,
 					mappedEntity.getEntityIdentifier().isEmbedded(),
 					unsavedValue,
@@ -201,7 +201,7 @@ public class PropertyFactory {
 
 		return new VersionProperty(
 		        property.getAttribute().getName(),
-		        property.getNodeName(),
+		        null,
 		        property.getHibernateTypeDescriptor().getExplicitType(),
 		        lazy,
 				property.isInsertable(),
@@ -283,7 +283,7 @@ public class PropertyFactory {
 			SimpleAttributeBinding simpleProperty = ( SimpleAttributeBinding ) property;
 			return new StandardProperty(
 					simpleProperty.getAttribute().getName(),
-					simpleProperty.getNodeName(),
+					null,
 					type,
 					lazyAvailable && simpleProperty.isLazy(),
 					simpleProperty.isInsertable(),
@@ -306,7 +306,7 @@ public class PropertyFactory {
 
 			return new StandardProperty(
 					pluralProperty.getAttribute().getName(),
-					pluralProperty.getNodeName(),
+					null,
 					type,
 					lazyAvailable && pluralProperty.isLazy(),
 					// TODO: fix this when HHH-6356 is fixed; for now assume PluralAttributeBinding is updatable and insertable
@@ -345,12 +345,12 @@ public class PropertyFactory {
 	}
 
 	private static Constructor getConstructor(EntityBinding entityBinding) {
-		if ( entityBinding == null || entityBinding.getEntity().getJavaType() == null ) {
+		if ( entityBinding == null || entityBinding.getEntity() == null ) {
 			return null;
 		}
 
 		try {
-			return ReflectHelper.getDefaultConstructor( entityBinding.getEntity().getJavaType().getClassReference() );
+			return ReflectHelper.getDefaultConstructor( entityBinding.getEntity().getClassReference() );
 		}
 		catch( Throwable t ) {
 			return null;
@@ -367,13 +367,13 @@ public class PropertyFactory {
 	}
 
 	private static Getter getGetter(AttributeBinding mappingProperty) {
-		if ( mappingProperty == null || mappingProperty.getEntityBinding().getEntity().getJavaType() == null ) {
+		if ( mappingProperty == null || mappingProperty.getEntityBinding().getEntity() == null ) {
 			return null;
 		}
 
 		PropertyAccessor pa = PropertyAccessorFactory.getPropertyAccessor( mappingProperty, EntityMode.POJO );
 		return pa.getGetter(
-				mappingProperty.getEntityBinding().getEntity().getJavaType().getClassReference(),
+				mappingProperty.getEntityBinding().getEntity().getClassReference(),
 				mappingProperty.getAttribute().getName()
 		);
 	}

@@ -34,8 +34,8 @@ import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.DotName;
 
 import org.hibernate.annotations.NotFoundAction;
-import org.hibernate.metamodel.binder.source.annotations.HibernateDotNames;
-import org.hibernate.metamodel.binder.source.annotations.JandexHelper;
+import org.hibernate.metamodel.source.annotations.HibernateDotNames;
+import org.hibernate.metamodel.source.annotations.JandexHelper;
 
 /**
  * @author Hardy Ferentschik

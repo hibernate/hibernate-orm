@@ -24,10 +24,9 @@
 package org.hibernate.metamodel.relational;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Convenience base class for implementing the {@link ValueContainer} contract centralizing commonality
@@ -35,10 +34,21 @@ import java.util.List;
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractTableSpecification implements TableSpecification, ValueContainer {
-	private final LinkedHashMap<String,SimpleValue> values = new LinkedHashMap<String,SimpleValue>();
+public abstract class AbstractTableSpecification implements TableSpecification {
+	private final static AtomicInteger tableCounter = new AtomicInteger( 0 );
+	private final int tableNumber;
+	private final LinkedHashMap<String, SimpleValue> values = new LinkedHashMap<String, SimpleValue>();
 	private PrimaryKey primaryKey = new PrimaryKey( this );
 	private List<ForeignKey> foreignKeys = new ArrayList<ForeignKey>();
+
+	public AbstractTableSpecification() {
+		this.tableNumber = tableCounter.getAndIncrement();
+	}
+
+	@Override
+	public int getTableNumber() {
+		return tableNumber;
+	}
 
 	@Override
 	public Iterable<SimpleValue> values() {
@@ -47,21 +57,21 @@ public abstract class AbstractTableSpecification implements TableSpecification, 
 
 	@Override
 	public Column getOrCreateColumn(String name) {
-		if(values.containsKey( name )){
+		if ( values.containsKey( name ) ) {
 			return (Column) values.get( name );
 		}
 		final Column column = new Column( this, values.size(), name );
-		values.put(name, column );
+		values.put( name, column );
 		return column;
 	}
 
 	@Override
 	public DerivedValue getOrCreateDerivedValue(String fragment) {
-		if(values.containsKey( fragment )){
+		if ( values.containsKey( fragment ) ) {
 			return (DerivedValue) values.get( fragment );
 		}
 		final DerivedValue value = new DerivedValue( this, values.size(), fragment );
-		values.put(fragment, value );
+		values.put( fragment, value );
 		return value;
 	}
 

@@ -24,5 +24,5 @@
 package org.hibernate.metamodel.source.annotations;
 
 /**
- * This package contains the binding code for binding annotation based configuration to the Hibernate metamodel.
+ * This package and its sub-packages contains the binding code for binding annotation based configuration to the Hibernate metamodel.
  */

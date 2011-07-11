@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.annotations.entity;
+package org.hibernate.metamodel.source.annotations.attribute;
 
 import java.util.HashMap;
 import java.util.List;
@@ -110,9 +110,7 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 	public String toString() {
 		final StringBuilder sb = new StringBuilder();
 		sb.append( "MappedAttribute" );
-		sb.append( "{type='" ).append( type ).append( '\'' );
-		sb.append( ", typeParameters=" ).append( typeParameters );
-		sb.append( ", name='" ).append( name ).append( '\'' );
+		sb.append( "{name='" ).append( name ).append( '\'' );
 		sb.append( '}' );
 		return sb.toString();
 	}

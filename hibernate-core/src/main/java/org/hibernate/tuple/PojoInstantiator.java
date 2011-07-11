@@ -34,6 +34,7 @@ import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.metamodel.binding.EntityBinding;
 
 import org.jboss.logging.Logger;
 
@@ -78,6 +79,21 @@ public class PojoInstantiator implements Instantiator, Serializable {
 		}
 		catch ( PropertyNotFoundException pnfe ) {
             LOG.noDefaultConstructor(mappedClass.getName());
+			constructor = null;
+		}
+	}
+
+	public PojoInstantiator(EntityBinding entityBinding, ReflectionOptimizer.InstantiationOptimizer optimizer) {
+		this.mappedClass = entityBinding.getEntity().getJavaType().getClassReference();
+		this.proxyInterface = entityBinding.getProxyInterfaceType().getClassReference();
+		this.embeddedIdentifier = entityBinding.getEntityIdentifier().isEmbedded();
+		this.optimizer = optimizer;
+
+		try {
+			constructor = ReflectHelper.getDefaultConstructor( mappedClass );
+		}
+		catch ( PropertyNotFoundException pnfe ) {
+			LOG.noDefaultConstructor(mappedClass.getName());
 			constructor = null;
 		}
 	}

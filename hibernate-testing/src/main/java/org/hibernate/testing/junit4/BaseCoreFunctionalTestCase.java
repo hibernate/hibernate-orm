@@ -409,5 +409,4 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 			return true;
 		}
 	}
-
 }

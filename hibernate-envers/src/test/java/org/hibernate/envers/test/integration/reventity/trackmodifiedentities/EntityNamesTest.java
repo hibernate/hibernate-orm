@@ -64,9 +64,9 @@ public class EntityNamesTest extends AbstractSessionTest {
     public void testModifiedEntityTypes() {
         assert TestTools.makeSet(Pair.make(Car.class.getName(), Car.class),
                                  Pair.make("Personaje", Person.class))
-                        .equals(getAuditReader().findEntityTypesChangedInRevision(1));
+                        .equals(getAuditReader().getCrossTypeRevisionChangesReader().findEntityTypes(1));
         assert TestTools.makeSet(Pair.make(Car.class.getName(), Car.class),
                                  Pair.make("Personaje", Person.class))
-                        .equals(getAuditReader().findEntityTypesChangedInRevision(2));
+                        .equals(getAuditReader().getCrossTypeRevisionChangesReader().findEntityTypes(2));
     }
 }

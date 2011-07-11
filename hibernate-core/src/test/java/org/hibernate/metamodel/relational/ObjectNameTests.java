@@ -25,6 +25,8 @@ package org.hibernate.metamodel.relational;
 
 import org.junit.Test;
 
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -53,10 +55,18 @@ public class ObjectNameTests extends BaseUnitTestCase {
 
 	@Test
 	public void testIdentifierBuilding() {
+		Dialect dialect = new H2Dialect();
 		ObjectName on = new ObjectName( "schema", "catalog", "name" );
 		assertEquals( "schema.catalog.name", on.toText() );
 		on = new ObjectName( "schema", null, "name" );
 		assertEquals( "schema.name", on.toText() );
+		assertEquals( "schema.name", on.toText( dialect ) );
+		on = new ObjectName( "`schema`", "`catalog`", "`name`" );
+		assertEquals( "`schema`.`catalog`.`name`", on.toText() );
+		assertEquals( "\"schema\".\"catalog\".\"name\"", on.toText( dialect ) );
+		on = new ObjectName( "`schema`", null, "`name`" );
+		assertEquals( "`schema`.`name`", on.toText() );
+		assertEquals( "\"schema\".\"name\"", on.toText( dialect ) );
 	}
 }
 

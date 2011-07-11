@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.annotations.entity.state.relational;
+package org.hibernate.metamodel.source.annotations.attribute.state.relational;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,8 +36,8 @@ import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.metamodel.relational.Size;
 import org.hibernate.metamodel.relational.state.ColumnRelationalState;
 import org.hibernate.metamodel.source.annotations.HibernateDotNames;
-import org.hibernate.metamodel.source.annotations.entity.ColumnValues;
-import org.hibernate.metamodel.source.annotations.entity.SimpleAttribute;
+import org.hibernate.metamodel.source.annotations.attribute.ColumnValues;
+import org.hibernate.metamodel.source.annotations.attribute.SimpleAttribute;
 import org.hibernate.metamodel.source.spi.MetadataImplementor;
 
 /**
@@ -48,6 +48,7 @@ public class ColumnRelationalStateImpl implements ColumnRelationalState {
 	private final String columnName;
 	private final boolean unique;
 	private final boolean nullable;
+    private final boolean globallyQuotedIdentifiers;
 	private final Size size;
 	private final String checkCondition;
 	private final String customWriteFragment;
@@ -64,6 +65,7 @@ public class ColumnRelationalStateImpl implements ColumnRelationalState {
 	public ColumnRelationalStateImpl(SimpleAttribute attribute, MetadataImplementor meta) {
 		ColumnValues columnValues = attribute.getColumnValues();
 		namingStrategy = meta.getOptions().getNamingStrategy();
+        globallyQuotedIdentifiers = meta.isGloballyQuotedIdentifiers();
 		columnName = columnValues.getName().isEmpty() ? attribute.getName() : columnValues.getName();
 		unique = columnValues.isUnique();
 		nullable = columnValues.isNullable();
@@ -83,7 +85,12 @@ public class ColumnRelationalStateImpl implements ColumnRelationalState {
 		return namingStrategy;
 	}
 
-	@Override
+    @Override
+    public boolean isGloballyQuotedIdentifiers() {
+        return globallyQuotedIdentifiers;
+    }
+
+    @Override
 	public String getExplicitColumnName() {
 		return columnName;
 	}

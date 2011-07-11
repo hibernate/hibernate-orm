@@ -60,6 +60,9 @@ class AttributeTypeResolver {
 				Type type = resolveHibernateType( attributeBinding );
 				if ( type != null && ! type.isAssociationType() && ! type.isCollectionType() && ! type.isComponentType() ) {
 					resolveJavaType( attributeBinding.getAttribute(), type );
+					for ( Value value : attributeBinding.getValues() ) {
+						resolveSqlType( value, type );
+					}
 				}
 			}
 		}

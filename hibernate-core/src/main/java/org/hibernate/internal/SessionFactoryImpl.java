@@ -540,8 +540,6 @@ public final class SessionFactoryImpl
 		this.currentSessionContext = null;
 		this.sqlFunctionRegistry = null;
 		this.transactionEnvironment = null;
-                this.jdbcServices = null;
-                this.dialect = null;
 
 		this.sessionFactoryOptions = sessionFactoryOptions;
 
@@ -559,6 +557,9 @@ public final class SessionFactoryImpl
 				metadata.getServiceRegistry()
 						.getService( SessionFactoryServiceRegistryFactory.class )
 						.buildServiceRegistry( this, metadata );
+
+		this.jdbcServices = this.serviceRegistry.getService( JdbcServices.class );
+		this.dialect = this.jdbcServices.getDialect();
 
 		// TODO: get SQL functions from a new service
 		// this.sqlFunctionRegistry = new SQLFunctionRegistry( getDialect(), cfg.getSqlFunctions() );
@@ -754,8 +755,7 @@ public final class SessionFactoryImpl
 		Iterator iter = entityPersisters.values().iterator();
 		while ( iter.hasNext() ) {
 			final EntityPersister persister = ( ( EntityPersister ) iter.next() );
-			// TODO: broken
-			//persister.postInstantiate();
+			persister.postInstantiate();
 			registerEntityNameResolvers( persister );
 
 		}
@@ -959,19 +959,17 @@ public final class SessionFactoryImpl
 	}
 
 	public JdbcServices getJdbcServices() {
-                return jdbcServices;
+		return jdbcServices;
 	}
 
 	public Dialect getDialect() {
 		if ( serviceRegistry == null ) {
 			throw new IllegalStateException( "Cannot determine dialect because serviceRegistry is null." );
 		}
-                return dialect;
-		//return getJdbcServices().getDialect();
+		return dialect;
 	}
 
-	public Interceptor getInterceptor()
-	{
+	public Interceptor getInterceptor() {
 		return sessionFactoryOptions.getInterceptor();
 	}
 

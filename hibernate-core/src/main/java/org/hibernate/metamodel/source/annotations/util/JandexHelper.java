@@ -26,6 +26,7 @@ package org.hibernate.metamodel.source.annotations.util;
 import java.beans.Introspector;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -40,6 +41,7 @@ import org.jboss.jandex.FieldInfo;
 import org.jboss.jandex.Index;
 import org.jboss.jandex.Indexer;
 import org.jboss.jandex.MethodInfo;
+import org.jboss.jandex.Type;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
@@ -52,27 +54,89 @@ import org.hibernate.service.classloading.spi.ClassLoaderService;
  * @author Hardy Ferentschik
  */
 public class JandexHelper {
-	private static final AnnotationInstance[] EMPTY_ANNOTATIONS_ARRAY = new AnnotationInstance[0];
 	private static final Map<String, Object> DEFAULT_VALUES_BY_ELEMENT = new HashMap<String, Object>();
 
-	private static Object getDefaultValue(AnnotationInstance annotation, String element) {
-		String name = annotation.name().toString();
-		String fqElement = name + '.' + element;
-		Object val = DEFAULT_VALUES_BY_ELEMENT.get( fqElement );
-		if ( val != null ) {
-			return val;
+	/**
+	 * Retrieves a jandex annotation element value. If the value is {@code null}, the default value specified in the
+	 * annotation class is retrieved instead.
+	 * <p>
+	 * There are two special cases. {@code Class} parameters should be retrieved as strings (and then can later be
+	 * loaded) and enumerated values should be retrieved via {@link #getValueAsEnum(AnnotationInstance, String, Class)}.
+	 * </p>
+	 *
+	 * @param annotation the annotation containing the element with the supplied name
+	 * @param element the name of the element value to be retrieve
+	 * @param type the type of element to retrieve. The following types are supported:
+	 * <ul>
+	 * <li>Byte</li>
+	 * <li>Short</li>
+	 * <li>Integer</li>
+	 * <li>Character</li>
+	 * <li>Float</li>
+	 * <li>Double</li>
+	 * <li>Long</li>
+	 * <li>Boolean</li>
+	 * <li>String</li>
+	 * <li>AnnotationInstance</li>
+	 *
+	 * @return the value if not {@code null}, else the default value if not
+	 *         {@code null}, else {@code null}.
+	 *
+	 * @throws AssertionFailure in case the specified {@code type} is a class instance or the specified type causes a {@code ClassCastException}
+	 * when retrieving the value.
+	 */
+	@SuppressWarnings("unchecked")
+	public static <T> T getValue(AnnotationInstance annotation, String element, Class<T> type) throws AssertionFailure {
+		if ( Class.class.equals( type ) ) {
+			throw new AssertionFailure(
+					"Annotation parameters of type Class should be retrieved as strings (fully qualified class names)"
+			);
 		}
+
+		// try getting the untyped value from Jandex
+		AnnotationValue annotationValue = annotation.value( element );
+
 		try {
-			val = Index.class.getClassLoader().loadClass( name ).getMethod( element ).getDefaultValue();
-			DEFAULT_VALUES_BY_ELEMENT.put( fqElement, val );
-			return val == null ? null : val;
+			if ( annotationValue != null ) {
+				return explicitAnnotationParameter( annotationValue, type );
+			}
+			else {
+				return defaultAnnotationParameter( getDefaultValue( annotation, element ), type );
+			}
 		}
-		catch ( RuntimeException error ) {
-			throw error;
+		catch ( ClassCastException e ) {
+			throw new AssertionFailure(
+					String.format(
+							"the annotation property %s of annotation %s is not of type %s",
+							element,
+							annotation.name(),
+							type.getName()
+					)
+			);
 		}
-		catch ( Exception error ) {
-			throw new AnnotationException( error );
+	}
+
+	/**
+	 * Retrieves a jandex annotation element value, converting it to the supplied enumerated type.  If the value is
+	 * <code>null</code>, the default value specified in the annotation class is retrieved instead.
+	 *
+	 * @param <T> an enumerated type
+	 * @param annotation the annotation containing the enumerated element with the supplied name
+	 * @param element the name of the enumerated element value to be retrieve
+	 * @param type the type to which to convert the value before being returned
+	 *
+	 * @return the value converted to the supplied enumerated type if the value is not <code>null</code>, else the default value if
+	 *         not <code>null</code>, else <code>null</code>.
+	 *
+	 * @see #getValue(AnnotationInstance, String, Class)
+	 */
+	@SuppressWarnings("unchecked")
+	public static <T extends Enum<T>> T getValueAsEnum(AnnotationInstance annotation, String element, Class<T> type) {
+		AnnotationValue val = annotation.value( element );
+		if ( val == null ) {
+			return (T) getDefaultValue( annotation, element );
 		}
+		return Enum.valueOf( type, val.asEnum() );
 	}
 
 	/**
@@ -147,98 +211,6 @@ public class JandexHelper {
 							+ ". Expected was one."
 			);
 		}
-	}
-
-	/**
-	 * Retrieves a jandex annotation element value.  If the value is <code>null</code>, the default value specified in the
-	 * annotation class is retrieved instead.  Note, {@link #getValueAsEnum(AnnotationInstance, String, Class)} must be
-	 * called to retrieve an enumerated value, and {@link #getValueAsArray(AnnotationInstance, String)} must be called to retrieve
-	 * an object array (other than a String array).
-	 *
-	 * @param annotation the annotation containing the element with the supplied name
-	 * @param element the name of the element value to be retrieve
-	 *
-	 * @return the value if not <code>null</code>, else the default value if not
-	 *         <code>null</code>, else <code>null</code>.
-	 */
-	public static Object getValue(AnnotationInstance annotation, String element) {
-		AnnotationValue val = annotation.value( element );
-		if ( val == null ) {
-			return getDefaultValue( annotation, element );
-		}
-		return val.asNested();
-	}
-
-	/**
-	 * Retrieves a jandex annotation element array.  Note, {@link #getValue(AnnotationInstance, String)} may be
-	 * called to retrieve a String array (or a non-array value).
-	 *
-	 * @param annotation the jandex annotation containing the element with the supplied name
-	 * @param element the name of the element array
-	 *
-	 * @return the element array if not <code>null</code>, else an empty array
-	 */
-	public static AnnotationInstance[] getValueAsArray(AnnotationInstance annotation, String element) {
-		AnnotationValue val = annotation.value( element );
-		return val == null ? EMPTY_ANNOTATIONS_ARRAY : val.asNestedArray();
-	}
-
-	/**
-	 * Retrieves a jandex annotation element value, converting it to the supplied enumerated type.  If the value is
-	 * <code>null</code>, the default value specified in the annotation class is retrieved instead.
-	 *
-	 * @param <T> an enumerated type
-	 * @param annotation the annotation containing the enumerated element with the supplied name
-	 * @param element the name of the enumerated element value to be retrieve
-	 * @param type the type to which to convert the value before being returned
-	 *
-	 * @return the value converted to the supplied enumerated type if the value is not <code>null</code>, else the default value if
-	 *         not <code>null</code>, else <code>null</code>.
-	 *
-	 * @see #getValue(AnnotationInstance, String)
-	 */
-	public static <T extends Enum<T>> T getValueAsEnum(AnnotationInstance annotation, String element, Class<T> type) {
-		AnnotationValue val = annotation.value( element );
-		if ( val == null ) {
-			return (T) getDefaultValue( annotation, element );
-		}
-		return Enum.valueOf( type, val.asEnum() );
-	}
-
-	/**
-	 * Retrieves a jandex annotation element value as an Integer.  If the value is <code>null</code>, the default value specified in
-	 * the annotation class is retrieved instead.
-	 *
-	 * @param annotation the annotation containing the element with the supplied name
-	 * @param element the name of the element value to be retrieve
-	 *
-	 * @return the value converted to an int if the value is not <code>null</code>, else the default value if not
-	 *         <code>null</code>, else <code>0</code>.
-	 */
-	public static int getValueAsInt(AnnotationInstance annotation, String element) {
-		AnnotationValue val = annotation.value( element );
-		if ( val == null ) {
-			return (Integer) getDefaultValue( annotation, element );
-		}
-		return val.asInt();
-	}
-
-	/**
-	 * Retrieves a jandex annotation element value as a String.  If the value is <code>null</code>, the default value specified in
-	 * the annotation class is retrieved instead.
-	 *
-	 * @param annotation the annotation containing the element with the supplied name
-	 * @param element the name of the element value to be retrieve
-	 *
-	 * @return the value converted to a String if the value is not <code>null</code>, else the default value if not
-	 *         <code>null</code>, else <code>null</code>.
-	 */
-	public static String getValueAsString(AnnotationInstance annotation, String element) {
-		AnnotationValue val = annotation.value( element );
-		if ( val == null ) {
-			return (String) getDefaultValue( annotation, element );
-		}
-		return val.asString();
 	}
 
 	/**
@@ -333,5 +305,60 @@ public class JandexHelper {
 	}
 
 	private JandexHelper() {
+	}
+
+	private static Object getDefaultValue(AnnotationInstance annotation, String element) {
+		String name = annotation.name().toString();
+		String fqElement = name + '.' + element;
+		Object val = DEFAULT_VALUES_BY_ELEMENT.get( fqElement );
+		if ( val != null ) {
+			return val;
+		}
+		try {
+			val = Index.class.getClassLoader().loadClass( name ).getMethod( element ).getDefaultValue();
+			DEFAULT_VALUES_BY_ELEMENT.put( fqElement, val );
+			return val == null ? null : val;
+		}
+		catch ( RuntimeException error ) {
+			throw error;
+		}
+		catch ( Exception error ) {
+			throw new AnnotationException( error );
+		}
+	}
+
+	private static <T> T defaultAnnotationParameter(Object defaultValue, Class<T> type) {
+		Object returnValue = defaultValue;
+
+		// resolve some mismatches between what's stored in jandex and what the defaults are for annotations
+		// in case of nested annotation arrays, jandex returns arrays of AnnotationInstances, hence we return
+		// an empty array of this type here
+		if ( defaultValue.getClass().isArray() && defaultValue.getClass().getComponentType().isAnnotation() ) {
+			returnValue = new AnnotationInstance[0];
+		}
+		return type.cast( returnValue );
+	}
+
+	private static <T> T explicitAnnotationParameter(AnnotationValue annotationValue, Class<T> type) {
+		Object returnValue = annotationValue.value();
+
+		// if the jandex return type is Type we actually try to retrieve a class parameter
+		// for our purposes we just return the fqcn of the class
+		if ( returnValue instanceof Type ) {
+			returnValue = ( (Type) returnValue ).name().toString();
+		}
+
+		// arrays we have to handle explicitly
+		if ( type.isArray() ) {
+			AnnotationValue[] values = (AnnotationValue[]) returnValue;
+			Class<?> componentType = type.getComponentType();
+			Object[] arr = (Object[]) Array.newInstance( componentType, values.length );
+			for ( int i = 0; i < values.length; i++ ) {
+				arr[i] = componentType.cast( values[i].value() );
+			}
+			returnValue = arr;
+		}
+
+		return type.cast( returnValue );
 	}
 }

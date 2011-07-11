@@ -33,18 +33,12 @@ import javax.persistence.MappedSuperclass;
 
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
-import org.jboss.jandex.Index;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
+import org.hibernate.metamodel.source.annotations.attribute.MappedAttribute;
 import org.hibernate.metamodel.source.annotations.entity.ConfiguredClass;
 import org.hibernate.metamodel.source.annotations.entity.ConfiguredClassHierarchy;
-import org.hibernate.metamodel.source.annotations.entity.MappedAttribute;
-import org.hibernate.service.ServiceRegistryBuilder;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
-import org.hibernate.service.internal.BasicServiceRegistryImpl;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.metamodel.source.annotations.entity.EntityClass;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
@@ -53,34 +47,23 @@ import static junit.framework.Assert.assertTrue;
 /**
  * @author Hardy Ferentschik
  */
-public class GenericTypeDiscoveryTest extends BaseUnitTestCase {
-	private BasicServiceRegistryImpl serviceRegistry;
-	private ClassLoaderService service;
-
-	@Before
-	public void setUp() {
-		serviceRegistry = (BasicServiceRegistryImpl) new ServiceRegistryBuilder().buildServiceRegistry();
-		service = serviceRegistry.getService( ClassLoaderService.class );
-	}
-
-	@After
-	public void tearDown() {
-		serviceRegistry.destroy();
-	}
+public class GenericTypeDiscoveryTest extends BaseAnnotationIndexTestCase {
 
 	@Test
-	public void testSingleEntity() {
-		Index index = JandexHelper.indexForClass( service, Paper.class, Stuff.class, Item.class, PricedStuff.class );
-		Set<ConfiguredClassHierarchy> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
-				index, serviceRegistry
+	public void testGenericClassHierarchy() {
+		Set<ConfiguredClassHierarchy<EntityClass>> hierarchies = createEntityHierarchies(
+				Paper.class,
+				Stuff.class,
+				Item.class,
+				PricedStuff.class
 		);
 		assertEquals( "There should be only one hierarchy", 1, hierarchies.size() );
 
-		Iterator<ConfiguredClass> iter = hierarchies.iterator().next().iterator();
+		Iterator<EntityClass> iter = hierarchies.iterator().next().iterator();
 		ConfiguredClass configuredClass = iter.next();
 		ClassInfo info = configuredClass.getClassInfo();
 		assertEquals( "wrong class", DotName.createSimple( Stuff.class.getName() ), info.name() );
-		MappedAttribute property = configuredClass.getMappedProperty( "value" );
+		MappedAttribute property = configuredClass.getMappedAttribute( "value" );
 		assertEquals( Price.class.getName(), property.getType() );
 
 		assertTrue( iter.hasNext() );
@@ -88,7 +71,7 @@ public class GenericTypeDiscoveryTest extends BaseUnitTestCase {
 		info = configuredClass.getClassInfo();
 		assertEquals( "wrong class", DotName.createSimple( PricedStuff.class.getName() ), info.name() );
 		assertFalse(
-				"PricedStuff should not mapped properties", configuredClass.getMappedAttributes().iterator().hasNext()
+				"PricedStuff should not mapped properties", configuredClass.getSimpleAttributes().iterator().hasNext()
 		);
 
 		assertTrue( iter.hasNext() );
@@ -96,18 +79,24 @@ public class GenericTypeDiscoveryTest extends BaseUnitTestCase {
 		info = configuredClass.getClassInfo();
 		assertEquals( "wrong class", DotName.createSimple( Item.class.getName() ), info.name() );
 		// properties are alphabetically ordered!
-		property = configuredClass.getMappedProperty( "owner" );
+		property = configuredClass.getMappedAttribute( "owner" );
 		assertEquals( SomeGuy.class.getName(), property.getType() );
-		property = configuredClass.getMappedProperty( "type" );
+		property = configuredClass.getMappedAttribute( "type" );
 		assertEquals( PaperType.class.getName(), property.getType() );
 
 		assertTrue( iter.hasNext() );
 		configuredClass = iter.next();
 		info = configuredClass.getClassInfo();
 		assertEquals( "wrong class", DotName.createSimple( Paper.class.getName() ), info.name() );
-		assertFalse( "Paper should not mapped properties", configuredClass.getMappedAttributes().iterator().hasNext() );
+		assertFalse( "Paper should not mapped properties", configuredClass.getSimpleAttributes().iterator().hasNext() );
 
 		assertFalse( iter.hasNext() );
+	}
+
+	@Test
+	public void testUnresolvedType() {
+		Set<ConfiguredClassHierarchy<EntityClass>> hierarchies = createEntityHierarchies( UnresolvedType.class );
+		assertEquals( "There should be only one hierarchy", 1, hierarchies.size() );
 	}
 
 	@MappedSuperclass
@@ -246,6 +235,32 @@ public class GenericTypeDiscoveryTest extends BaseUnitTestCase {
 
 		public void setId(Integer id) {
 			this.id = id;
+		}
+	}
+
+	@Entity
+	public class UnresolvedType<T> {
+
+		private Integer id;
+		private T state;
+
+		@Id
+		@GeneratedValue
+		public Integer getId() {
+			return id;
+		}
+
+		public void setId(Integer id) {
+			this.id = id;
+		}
+
+		//@Type(type = "org.hibernate.test.annotations.generics.StateType")
+		public T getState() {
+			return state;
+		}
+
+		public void setState(T state) {
+			this.state = state;
 		}
 	}
 }

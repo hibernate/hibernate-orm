@@ -37,8 +37,9 @@ import org.hibernate.tuple.Tuplizer;
  * Defines further responsibilities reagarding tuplization based on
  * a mapped entity.
  * <p/>
- * EntityTuplizer implementations should have the following constructor signature:
+ * EntityTuplizer implementations should have the following constructor signatures:
  *      (org.hibernate.tuple.entity.EntityMetamodel, org.hibernate.mapping.PersistentClass)
+ *      (org.hibernate.tuple.entity.EntityMetamodel, org.hibernate.metamodel.binding.EntityBinding)
  *
  * @author Gavin King
  * @author Steve Ebersole

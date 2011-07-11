@@ -6,18 +6,12 @@ import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
-import com.fasterxml.classmate.MemberResolver;
-import com.fasterxml.classmate.ResolvedType;
-import com.fasterxml.classmate.ResolvedTypeWithMembers;
-import com.fasterxml.classmate.TypeResolver;
-
 /**
  * Some helper methods for reflection tasks
  *
  * @author Hardy Ferentschik
  */
 public class ReflectionHelper {
-	private static final TypeResolver typeResolver = new TypeResolver();
 
 	private ReflectionHelper() {
 	}
@@ -50,17 +44,6 @@ public class ReflectionHelper {
 			}
 		}
 		return name;
-	}
-
-	public static ResolvedTypeWithMembers resolveMemberTypes(Class<?> clazz) {
-		ResolvedType resolvedType = typeResolver.resolve( clazz );
-		MemberResolver memberResolver = new MemberResolver( typeResolver );
-		return memberResolver.resolve( resolvedType, null, null );
-	}
-
-	public static ResolvedTypeWithMembers resolveMemberTypes(ResolvedType type) {
-		MemberResolver memberResolver = new MemberResolver( typeResolver );
-		return memberResolver.resolve( type, null, null );
 	}
 
 	public static boolean isProperty(Member m) {

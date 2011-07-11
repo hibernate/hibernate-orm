@@ -160,7 +160,12 @@ public final class ConfigurationHelper {
 			return (Integer) value;
 		}
 		if ( String.class.isInstance( value ) ) {
-			return Integer.valueOf( (String) value );
+			//empty values are ignored
+			final String trimmed = value.toString().trim();
+			if ( trimmed.isEmpty() ) {
+				return null;
+			}
+			return Integer.valueOf( trimmed );
 		}
 		throw new ConfigurationException(
 				"Could not determine how to handle configuration value [name=" + name +

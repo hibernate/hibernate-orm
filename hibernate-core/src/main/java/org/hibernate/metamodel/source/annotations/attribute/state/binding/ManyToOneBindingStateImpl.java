@@ -21,14 +21,15 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.annotations.entity.state.binding;
+package org.hibernate.metamodel.source.annotations.attribute.state.binding;
 
 import java.util.HashSet;
 import java.util.Set;
 
 import org.hibernate.metamodel.binding.CascadeType;
 import org.hibernate.metamodel.binding.state.ManyToOneAttributeBindingState;
-import org.hibernate.metamodel.source.annotations.entity.AssociationAttribute;
+import org.hibernate.metamodel.source.annotations.attribute.AssociationAttribute;
+import org.hibernate.metamodel.source.annotations.attribute.state.binding.AttributeBindingStateImpl;
 
 /**
  * @author Hardy Ferentschik

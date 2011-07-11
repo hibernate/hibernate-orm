@@ -31,9 +31,11 @@ import javax.persistence.Id;
 import org.junit.Test;
 
 import org.hibernate.metamodel.binding.EntityBinding;
-import org.hibernate.testing.FailureExpected;
+import org.hibernate.metamodel.domain.Attribute;
+import org.hibernate.metamodel.domain.Component;
 
 import static junit.framework.Assert.assertNotNull;
+import static junit.framework.Assert.assertTrue;
 
 /**
  * Tests for {@code j.p.Embeddable}.
@@ -42,11 +44,18 @@ import static junit.framework.Assert.assertNotNull;
  */
 public class EmbeddableBindingTests extends BaseAnnotationBindingTestCase {
 	@Test
-	@FailureExpected(jiraKey = "HHH6173", message = "Under construction")
 	public void testEmbeddable() {
-		buildMetadataSources( User.class );
+		buildMetadataSources( User.class, Address.class );
 		EntityBinding binding = getEntityBinding( User.class );
-		assertNotNull( binding.getAttributeBinding( "address" ) );
+		assertNotNull( binding.getAttributeBinding( "street" ) );
+		assertNotNull( binding.getAttributeBinding( "city" ) );
+		assertNotNull( binding.getAttributeBinding( "postCode" ) );
+
+		Attribute attribute = binding.getEntity().getAttribute( "address" );
+		assertTrue(
+				"Wrong container type. Should be a component",
+				attribute.getAttributeContainer() instanceof Component
+		);
 	}
 
 	@Entity

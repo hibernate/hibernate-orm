@@ -35,7 +35,7 @@ import org.hibernate.metamodel.binding.CustomSQL;
 import org.hibernate.metamodel.binding.InheritanceType;
 import org.hibernate.metamodel.binding.state.EntityBindingState;
 import org.hibernate.metamodel.domain.Hierarchical;
-import org.hibernate.metamodel.source.annotations.entity.ConfiguredClass;
+import org.hibernate.metamodel.source.annotations.entity.EntityClass;
 import org.hibernate.metamodel.source.spi.MetaAttributeContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.tuple.entity.EntityTuplizer;
@@ -78,11 +78,11 @@ public class EntityBindingStateImpl implements EntityBindingState {
 
 	private Set<String> synchronizedTableNames;
 
-	public EntityBindingStateImpl(Hierarchical superType, ConfiguredClass configuredClass) {
-		this.className = configuredClass.getName();
+	public EntityBindingStateImpl(Hierarchical superType, EntityClass entityClass) {
+		this.className = entityClass.getName();
 		this.superType = superType;
-		this.isRoot = configuredClass.isRoot();
-		this.inheritanceType = configuredClass.getInheritanceType();
+		this.isRoot = entityClass.isEntityRoot();
+		this.inheritanceType = entityClass.getInheritanceType();
 		this.synchronizedTableNames = new HashSet<String>();
 		this.batchSize = -1;
 	}
@@ -262,25 +262,22 @@ public class EntityBindingStateImpl implements EntityBindingState {
 
 	@Override
 	public int getOptimisticLockMode() {
-		if ( optimisticLock == OptimisticLockType.ALL ) {
-			return Versioning.OPTIMISTIC_LOCK_ALL;
-		}
-		else if ( optimisticLock == OptimisticLockType.NONE ) {
-			return Versioning.OPTIMISTIC_LOCK_NONE;
-		}
-		else if ( optimisticLock == OptimisticLockType.DIRTY ) {
-			return Versioning.OPTIMISTIC_LOCK_DIRTY;
-		}
-		else if ( optimisticLock == OptimisticLockType.VERSION ) {
-			return Versioning.OPTIMISTIC_LOCK_VERSION;
-		}
-		else {
-			throw new AssertionFailure( "Unexpected optimistic lock type: " + optimisticLock );
-		}
+        switch ( optimisticLock ){
+            case ALL:
+                return Versioning.OPTIMISTIC_LOCK_ALL;
+            case NONE:
+                return Versioning.OPTIMISTIC_LOCK_NONE;
+            case DIRTY:
+                return Versioning.OPTIMISTIC_LOCK_DIRTY;
+            case VERSION:
+                return Versioning.OPTIMISTIC_LOCK_VERSION;
+            default:
+                throw new AssertionFailure( "Unexpected optimistic lock type: " + optimisticLock );
+        }
 	}
 
 	@Override
-	public Class getCustomEntityPersisterClass() {
+	public Class<EntityPersister> getCustomEntityPersisterClass() {
 		return persisterClass;
 	}
 

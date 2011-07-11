@@ -28,59 +28,37 @@ import java.util.Map;
 import java.util.Set;
 import javax.persistence.Id;
 
-import org.jboss.jandex.Index;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
+import org.hibernate.metamodel.source.annotations.attribute.MappedAttribute;
 import org.hibernate.metamodel.source.annotations.entity.ConfiguredClass;
 import org.hibernate.metamodel.source.annotations.entity.ConfiguredClassHierarchy;
-import org.hibernate.metamodel.source.annotations.entity.MappedAttribute;
-import org.hibernate.service.ServiceRegistryBuilder;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
-import org.hibernate.service.internal.BasicServiceRegistryImpl;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.metamodel.source.annotations.entity.EntityClass;
 
 import static junit.framework.Assert.assertEquals;
 
 /**
  * @author Hardy Ferentschik
  */
-public class TypeDiscoveryTest extends BaseUnitTestCase {
-	private BasicServiceRegistryImpl serviceRegistry;
-	private ClassLoaderService service;
-
-	@Before
-	public void setUp() {
-		serviceRegistry = (BasicServiceRegistryImpl) new ServiceRegistryBuilder().buildServiceRegistry();
-		service = serviceRegistry.getService( ClassLoaderService.class );
-	}
-
-	@After
-	public void tearDown() {
-		serviceRegistry.destroy();
-	}
+public class TypeDiscoveryTest extends BaseAnnotationIndexTestCase {
 
 	@Test
 	public void testImplicitAndExplicitType() {
-		Index index = JandexHelper.indexForClass( service, Entity.class );
-		Set<ConfiguredClassHierarchy> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
-				index, serviceRegistry
-		);
+		Set<ConfiguredClassHierarchy<EntityClass>> hierarchies = createEntityHierarchies( Entity.class );
 		assertEquals( "There should be only one hierarchy", 1, hierarchies.size() );
 
-		Iterator<ConfiguredClass> iter = hierarchies.iterator().next().iterator();
+		Iterator<EntityClass> iter = hierarchies.iterator().next().iterator();
 		ConfiguredClass configuredClass = iter.next();
 
-		MappedAttribute property = configuredClass.getMappedProperty( "id" );
+		MappedAttribute property = configuredClass.getMappedAttribute( "id" );
 		assertEquals( "Unexpected property type", "int", property.getType() );
 
-		property = configuredClass.getMappedProperty( "string" );
+		property = configuredClass.getMappedAttribute( "string" );
 		assertEquals( "Unexpected property type", String.class.getName(), property.getType() );
 
-		property = configuredClass.getMappedProperty( "customString" );
+		property = configuredClass.getMappedAttribute( "customString" );
 		assertEquals( "Unexpected property type", "my.custom.Type", property.getType() );
 
 		Map<String, String> typeParameters = property.getTypeParameters();

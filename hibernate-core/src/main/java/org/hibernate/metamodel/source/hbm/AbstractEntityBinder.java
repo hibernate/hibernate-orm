@@ -37,6 +37,7 @@ import org.hibernate.metamodel.binding.SimpleAttributeBinding;
 import org.hibernate.metamodel.binding.state.ManyToOneAttributeBindingState;
 import org.hibernate.metamodel.binding.state.PluralAttributeBindingState;
 import org.hibernate.metamodel.binding.state.SimpleAttributeBindingState;
+import org.hibernate.metamodel.domain.Attribute;
 import org.hibernate.metamodel.domain.Hierarchical;
 import org.hibernate.metamodel.relational.Schema;
 import org.hibernate.metamodel.relational.Table;
@@ -264,7 +265,7 @@ abstract class AbstractEntityBinder {
 			}
 			else if ( XMLManyToOneElement.class.isInstance( attribute ) ) {
 				XMLManyToOneElement manyToOne = XMLManyToOneElement.class.cast( attribute );
-				attributeBinding =  makeManyToOneAttributeBinding( manyToOne, entityBinding );
+				attributeBinding = makeManyToOneAttributeBinding( manyToOne, entityBinding );
 			}
 			else if ( XMLAnyElement.class.isInstance( attribute ) ) {
 // todo : implement
@@ -397,14 +398,14 @@ PrimitiveArray
 						)
 				);
 
-		entityBinding.getEntity().getOrCreateSingularAttribute( bindingState.getAttributeName() );
-		return entityBinding.makeSimpleAttributeBinding( bindingState.getAttributeName() )
+		Attribute attribute = entityBinding.getEntity().getOrCreateSingularAttribute( bindingState.getAttributeName() );
+		return entityBinding.makeSimpleAttributeBinding( attribute )
 				.initialize( bindingState )
 				.initialize( relationalState );
 	}
 
 	protected static ValueRelationalState convertToSimpleValueRelationalStateIfPossible(ValueRelationalState state) {
-	// TODO: should a single-valued tuple always be converted???
+		// TODO: should a single-valued tuple always be converted???
 		if ( !TupleRelationalState.class.isInstance( state ) ) {
 			return state;
 		}
@@ -428,10 +429,11 @@ PrimitiveArray
 
 		BagBinding collectionBinding = entityBinding.makeBagAttributeBinding(
 				bindingState.getAttributeName(),
-				getCollectionElementType( collection ) )
+				getCollectionElementType( collection )
+		)
 				.initialize( bindingState );
 
-			// todo : relational model binding
+		// todo : relational model binding
 		return collectionBinding;
 	}
 
@@ -457,7 +459,7 @@ PrimitiveArray
 	}
 
 	private ManyToOneAttributeBinding makeManyToOneAttributeBinding(XMLManyToOneElement manyToOne,
-							   EntityBinding entityBinding) {
+																	EntityBinding entityBinding) {
 		ManyToOneAttributeBindingState bindingState =
 				new HbmManyToOneAttributeBindingState(
 						entityBinding.getEntity().getJavaType().getName(),
@@ -468,13 +470,13 @@ PrimitiveArray
 
 		// boolean (true here) indicates that by default column names should be guessed
 		ManyToOneRelationalState relationalState =
-						new HbmManyToOneRelationalStateContainer(
-								bindingContext,
-								true,
-								manyToOne
-						);
+				new HbmManyToOneRelationalStateContainer(
+						bindingContext,
+						true,
+						manyToOne
+				);
 
-	    entityBinding.getEntity().getOrCreateSingularAttribute( bindingState.getAttributeName() );
+		entityBinding.getEntity().getOrCreateSingularAttribute( bindingState.getAttributeName() );
 		ManyToOneAttributeBinding manyToOneAttributeBinding =
 				entityBinding.makeManyToOneAttributeBinding( bindingState.getAttributeName() )
 						.initialize( bindingState )

@@ -23,6 +23,9 @@
  */
 package org.hibernate.metamodel.relational;
 
+import org.hibernate.MappingException;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.relational.state.ColumnRelationalState;
 
 /**
@@ -32,7 +35,7 @@ import org.hibernate.metamodel.relational.state.ColumnRelationalState;
  * @author Steve Ebersole
  */
 public class Column extends AbstractSimpleValue implements SimpleValue {
-	private final String name;
+	private final Identifier columnName;
 	private boolean nullable;
 	private boolean unique;
 
@@ -48,8 +51,12 @@ public class Column extends AbstractSimpleValue implements SimpleValue {
 	private Size size = new Size();
 
 	protected Column(TableSpecification table, int position, String name) {
+		this( table, position, Identifier.toIdentifier( name ) );
+	}
+
+	protected Column(TableSpecification table, int position, Identifier name) {
 		super( table, position );
-		this.name = name;
+		this.columnName = name;
 	}
 
 	public void initialize(ColumnRelationalState state, boolean forceNonNullable, boolean forceUnique) {
@@ -72,8 +79,8 @@ public class Column extends AbstractSimpleValue implements SimpleValue {
 		}
 	}
 
-	public String getName() {
-		return name;
+	public Identifier getColumnName() {
+		return columnName;
 	}
 
 	public boolean isNullable() {
@@ -150,6 +157,39 @@ public class Column extends AbstractSimpleValue implements SimpleValue {
 
 	@Override
 	public String toLoggableString() {
-		return getTable().getLoggableValueQualifier() + '.' + getName();
+		return getTable().getLoggableValueQualifier() + '.' + getColumnName();
+	}
+
+	@Override
+	public String getAlias(Dialect dialect) {
+		String alias = columnName.getName();
+		int lastLetter = StringHelper.lastIndexOfLetter( columnName.getName() );
+		if ( lastLetter == -1 ) {
+			alias = "column";
+		}
+		boolean useRawName =
+				columnName.getName().equals( alias ) &&
+						alias.length() <= dialect.getMaxAliasLength() &&
+						! columnName.isQuoted() &&
+						! columnName.getName().toLowerCase().equals( "rowid" );
+		if ( ! useRawName ) {
+			String unique =
+					new StringBuilder()
+					.append( getPosition() )
+					.append( '_' )
+					.append( getTable().getTableNumber() )
+					.append( '_' )
+					.toString();
+			if ( unique.length() >= dialect.getMaxAliasLength() ) {
+				throw new MappingException(
+						"Unique suffix [" + unique + "] length must be less than maximum [" + dialect.getMaxAliasLength() + "]"
+				);
+			}
+			if ( alias.length() + unique.length() > dialect.getMaxAliasLength()) {
+				alias = alias.substring( 0, dialect.getMaxAliasLength() - unique.length() );
+			}
+			alias = alias + unique;
+		}
+		return alias;
 	}
 }

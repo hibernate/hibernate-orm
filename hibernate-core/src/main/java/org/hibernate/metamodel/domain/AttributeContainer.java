@@ -26,7 +26,7 @@ package org.hibernate.metamodel.domain;
 import java.util.Set;
 
 /**
- * Basic contract for any container holding attributes.  This allows polymorphic handling of both
+ * Basic contract for any container holding attributes. This allows polymorphic handling of both
  * components and entities in terms of the attributes they hold.
  *
  * @author Steve Ebersole
@@ -39,13 +39,6 @@ public interface AttributeContainer extends Type {
 	 */
 	public Set<Attribute> getAttributes();
 
-	public SingularAttribute getOrCreateSingularAttribute(String name);
-	public PluralAttribute getOrCreatePluralAttribute(String name, PluralAttributeNature nature);
-	public PluralAttribute getOrCreateBag(String name);
-	public PluralAttribute getOrCreateSet(String name);
-	public IndexedPluralAttribute getOrCreateList(String name);
-	public IndexedPluralAttribute getOrCreateMap(String name);
-
 	/**
 	 * Retrieve an attribute by name.
 	 *
@@ -54,4 +47,18 @@ public interface AttributeContainer extends Type {
 	 * @return The attribute matching the given name, or null.
 	 */
 	public Attribute getAttribute(String name);
+
+	public SingularAttribute getOrCreateSingularAttribute(String name);
+
+	public SingularAttribute getOrCreateComponentAttribute(String name);
+
+	public PluralAttribute getOrCreatePluralAttribute(String name, PluralAttributeNature nature);
+
+	public PluralAttribute getOrCreateBag(String name);
+
+	public PluralAttribute getOrCreateSet(String name);
+
+	public IndexedPluralAttribute getOrCreateList(String name);
+
+	public IndexedPluralAttribute getOrCreateMap(String name);
 }

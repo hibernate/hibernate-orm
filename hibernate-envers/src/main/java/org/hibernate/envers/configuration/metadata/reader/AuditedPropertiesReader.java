@@ -1,6 +1,7 @@
 package org.hibernate.envers.configuration.metadata.reader;
 import static org.hibernate.envers.tools.Tools.newHashSet;
 import java.lang.annotation.Annotation;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -33,6 +34,7 @@ import org.hibernate.mapping.Value;
  * @author Adam Warski (adam at warski dot org)
  * @author Erik-Berndt Scheper
  * @author Hern&aacut;n Chanfreau
+ * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public class AuditedPropertiesReader {
 	protected final ModificationStore defaultStore;
@@ -66,9 +68,49 @@ public class AuditedPropertiesReader {
 		// First reading the access types for the persistent properties.
 		readPersistentPropertiesAccess();
 
-		// Adding all properties from the given class.
-		addPropertiesFromClass(persistentPropertiesSource.getXClass());
+        // Retrieve classes that are explicitly marked for auditing process by any superclass of currently mapped
+        // entity or itself.
+        XClass clazz = persistentPropertiesSource.getXClass();
+        Set<XClass> declaredAuditedSuperclasses = new HashSet<XClass>();
+        doGetDeclaredAuditedSuperclasses(clazz, declaredAuditedSuperclasses);
+
+        // Adding all properties from the given class.
+        addPropertiesFromClass(clazz, declaredAuditedSuperclasses);
 	}
+
+    /**
+     * Recursively constructs a set of classes that have been declared for auditing process.
+     * @param clazz Class that is being processed. Currently mapped entity shall be passed during first invocation.
+     * @param declaredAuditedSuperclasses Total collection of classes listed in {@link Audited#auditParents()} property
+     *                                    by any superclass starting with class specified as the first argument.
+     */
+    @SuppressWarnings("unchecked")
+    private void doGetDeclaredAuditedSuperclasses(XClass clazz, Set<XClass> declaredAuditedSuperclasses) {
+        Audited allClassAudited = clazz.getAnnotation(Audited.class);
+        if (allClassAudited != null && allClassAudited.auditParents().length > 0) {
+            for (Class c : allClassAudited.auditParents()) {
+                XClass parentClass = reflectionManager.toXClass(c);
+                checkSuperclass(clazz, parentClass);
+                declaredAuditedSuperclasses.add(parentClass);
+            }
+        }
+        XClass superclass = clazz.getSuperclass();
+        if (!clazz.isInterface() && !Object.class.getName().equals(superclass.getName())) {
+            doGetDeclaredAuditedSuperclasses(superclass, declaredAuditedSuperclasses);
+        }
+    }
+
+    /**
+     * Checks whether one class is assignable from another. If not {@link MappingException} is thrown.
+     * @param child Subclass.
+     * @param parent Superclass.
+     */
+    private void checkSuperclass(XClass child, XClass parent) {
+        if (!parent.isAssignableFrom(child)) {
+            throw new MappingException("Class " + parent.getName() + " is not assignable from " + child.getName() + ". " +
+                                       "Please revise @Audited.auditParents value in " + child.getName() + " type.");
+        }
+    }
 
 	private void readPersistentPropertiesAccess() {
 		Iterator<Property> propertyIter = persistentPropertiesSource.getPropertyIterator();
@@ -82,8 +124,34 @@ public class AuditedPropertiesReader {
 		}
 	}
 
-	private void addPropertiesFromClass(XClass clazz)  {
-		Audited allClassAudited = clazz.getAnnotation(Audited.class);
+    /**
+     * @param clazz Class which properties are currently being added.
+     * @param declaredAuditedSuperclasses Collection of superclasses that have been explicitly declared to be audited.
+     * @return {@link Audited} annotation of specified class. If processed type hasn't been explicitly marked, method
+     *         checks whether given class exists in collection passed as the second argument. In case of success,
+     *         {@link Audited} configuration of currently mapped entity is returned, otherwise {@code null}.
+     */
+    private Audited computeAuditConfiguration(XClass clazz, Set<XClass> declaredAuditedSuperclasses) {
+        Audited allClassAudited = clazz.getAnnotation(Audited.class);
+        // If processed class is not explicitly marked with @Audited annotation, check whether auditing is
+        // forced by any of its child entities configuration (@Audited.auditParents).
+        if (allClassAudited == null && declaredAuditedSuperclasses.contains(clazz)) {
+            // Declared audited parent copies @Audited.modStore and @Audited.targetAuditMode configuration from
+            // currently mapped entity.
+            allClassAudited = persistentPropertiesSource.getXClass().getAnnotation(Audited.class);
+        }
+        return allClassAudited;
+    }
+
+    /**
+     * Recursively adds all audited properties of entity class and its superclasses.
+     * @param clazz Currently processed class.
+     * @param declaredAuditedSuperclasses Collection of classes that are declared to be audited
+     *                                    (see {@link Audited#auditParents()}).
+     */
+	private void addPropertiesFromClass(XClass clazz, Set<XClass> declaredAuditedSuperclasses)  {
+		Audited allClassAudited = computeAuditConfiguration(clazz, declaredAuditedSuperclasses);
+
 		//look in the class
 		addFromProperties(clazz.getDeclaredProperties("field"), "field", fieldAccessedPersistentProperties, allClassAudited);
 		addFromProperties(clazz.getDeclaredProperties("property"), "property", propertyAccessedPersistentProperties, allClassAudited);
@@ -91,7 +159,7 @@ public class AuditedPropertiesReader {
 		if(allClassAudited != null || !auditedPropertiesHolder.isEmpty()) {
 			XClass superclazz = clazz.getSuperclass();
 			if (!clazz.isInterface() && !"java.lang.Object".equals(superclazz.getName())) {
-				addPropertiesFromClass(superclazz);
+				addPropertiesFromClass(superclazz, declaredAuditedSuperclasses);
 			}
 		}
 	}

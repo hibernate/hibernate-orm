@@ -23,7 +23,6 @@
  */
 package org.hibernate.metamodel.binding;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -32,7 +31,9 @@ import java.util.Set;
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
+import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.metamodel.binding.state.EntityBindingState;
+import org.hibernate.metamodel.domain.Attribute;
 import org.hibernate.metamodel.domain.Entity;
 import org.hibernate.metamodel.domain.JavaType;
 import org.hibernate.metamodel.relational.Column;
@@ -40,7 +41,6 @@ import org.hibernate.metamodel.relational.TableSpecification;
 import org.hibernate.metamodel.source.spi.BindingContext;
 import org.hibernate.metamodel.source.spi.MetaAttributeContext;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.tuple.entity.EntityTuplizer;
 
 /**
@@ -70,6 +70,7 @@ public class EntityBinding {
 	private SimpleAttributeBinding versionBinding;
 
 	private Map<String, AttributeBinding> attributeBindingMap = new HashMap<String, AttributeBinding>();
+	private Set<FilterDefinition> filterDefinitions = new HashSet<FilterDefinition>( );
 	private Set<EntityReferencingAttributeBinding> entityReferencingAttributeBindings = new HashSet<EntityReferencingAttributeBinding>();
 
 	private Caching caching;
@@ -100,7 +101,11 @@ public class EntityBinding {
 
 	public EntityBinding initialize(BindingContext bindingContext, EntityBindingState state) {
 		// todo : Entity will need both entityName and className to be effective
-		this.entity = new Entity( state.getEntityName(), state.getSuperType(), bindingContext.makeJavaType( state.getClassName() ) );
+		this.entity = new Entity(
+				state.getEntityName(),
+				state.getSuperType(),
+				bindingContext.makeJavaType( state.getClassName() )
+		);
 
 		this.isRoot = state.isRoot();
 		this.entityInheritanceType = state.getEntityInheritanceType();
@@ -225,10 +230,9 @@ public class EntityBinding {
 	 * @return The number of attribute bindings
 	 */
 	public int getAttributeBindingClosureSpan() {
-		// TODO: fix this after HHH-6337 and HHH-6360 are fixed.
+		// TODO: fix this after HHH-6337 is fixed; for now just return size of attributeBindingMap
 		// if this is not a root, then need to include the superclass attribute bindings
-		//return attributeBindingMap.size();
-		return 1; // assume 1 for the ID attribute binding
+		return attributeBindingMap.size();
 	}
 
 	/**
@@ -239,45 +243,51 @@ public class EntityBinding {
 	 * @return The attribute bindings.
 	 */
 	public Iterable<AttributeBinding> getAttributeBindingClosure() {
-		// TODO: fix this after HHH-6337 and HHH-6360 are fixed. for now, just return the identifier binding
+		// TODO: fix this after HHH-6337 is fixed. for now, just return attributeBindings
 		// if this is not a root, then need to include the superclass attribute bindings
-		//return getAttributeBindings();
-		Set<AttributeBinding> set = Collections.singleton( ( AttributeBinding ) entityIdentifier.getValueBinding() );
-		return set;
+		return getAttributeBindings();
+	}
+
+	public Iterable<FilterDefinition> getFilterDefinitions() {
+		return filterDefinitions;
+	}
+
+	public void addFilterDefinition(FilterDefinition filterDefinition) {
+		filterDefinitions.add( filterDefinition );
 	}
 
 	public Iterable<EntityReferencingAttributeBinding> getEntityReferencingAttributeBindings() {
 		return entityReferencingAttributeBindings;
 	}
 
-	public SimpleAttributeBinding makeSimpleIdAttributeBinding(String name) {
-		final SimpleAttributeBinding binding = makeSimpleAttributeBinding( name, true, true );
+	public SimpleAttributeBinding makeSimpleIdAttributeBinding(Attribute attribute) {
+		final SimpleAttributeBinding binding = makeSimpleAttributeBinding( attribute, true, true );
 		getEntityIdentifier().setValueBinding( binding );
 		return binding;
 	}
 
-	public EntityDiscriminator makeEntityDiscriminator(String attributeName) {
+	public EntityDiscriminator makeEntityDiscriminator(Attribute attribute) {
 		if ( entityDiscriminator != null ) {
 			throw new AssertionFailure( "Creation of entity discriminator was called more than once" );
 		}
 		entityDiscriminator = new EntityDiscriminator();
-		entityDiscriminator.setValueBinding( makeSimpleAttributeBinding( attributeName, true, false ) );
+		entityDiscriminator.setValueBinding( makeSimpleAttributeBinding( attribute, true, false ) );
 		return entityDiscriminator;
 	}
 
-	public SimpleAttributeBinding makeVersionBinding(String attributeName) {
-		versionBinding = makeSimpleAttributeBinding( attributeName, true, false );
+	public SimpleAttributeBinding makeVersionBinding(Attribute attribute) {
+		versionBinding = makeSimpleAttributeBinding( attribute, true, false );
 		return versionBinding;
 	}
 
-	public SimpleAttributeBinding makeSimpleAttributeBinding(String name) {
-		return makeSimpleAttributeBinding( name, false, false );
+	public SimpleAttributeBinding makeSimpleAttributeBinding(Attribute attribute) {
+		return makeSimpleAttributeBinding( attribute, false, false );
 	}
 
-	private SimpleAttributeBinding makeSimpleAttributeBinding(String name, boolean forceNonNullable, boolean forceUnique) {
+	private SimpleAttributeBinding makeSimpleAttributeBinding(Attribute attribute, boolean forceNonNullable, boolean forceUnique) {
 		final SimpleAttributeBinding binding = new SimpleAttributeBinding( this, forceNonNullable, forceUnique );
-		registerAttributeBinding( name, binding );
-		binding.setAttribute( entity.getAttribute( name ) );
+		registerAttributeBinding( attribute.getName(), binding );
+		binding.setAttribute( attribute );
 		return binding;
 	}
 

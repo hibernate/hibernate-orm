@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.collections.functors.FalsePredicate;
 import org.jboss.logging.Logger;
 
 import org.hibernate.DuplicateMappingException;
@@ -110,6 +111,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	// todo : keep as part of Database?
 	private List<AuxiliaryDatabaseObject> auxiliaryDatabaseObjects = new ArrayList<AuxiliaryDatabaseObject>();
+    private boolean globallyQuotedIdentifiers = false;
 
 	public MetadataImpl(MetadataSources metadataSources, Options options) {
 		this.serviceRegistry = metadataSources.getServiceRegistry();
@@ -423,7 +425,16 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		return options.getNamingStrategy();
 	}
 
-	@Override
+    @Override
+    public boolean isGloballyQuotedIdentifiers() {
+        return globallyQuotedIdentifiers || getOptions().isGloballyQuotedIdentifiers();
+    }
+
+    public void setGloballyQuotedIdentifiers(boolean globallyQuotedIdentifiers){
+       this.globallyQuotedIdentifiers = globallyQuotedIdentifiers;
+    }
+
+    @Override
 	public MappingDefaults getMappingDefaults() {
 		return mappingDefaults;
 	}

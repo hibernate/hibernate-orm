@@ -61,8 +61,8 @@ import static org.junit.Assert.fail;
 public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testNativeQueryWithFormulaAttribute() {
-		String sql = "select t.table_name as {t.tableName}, sysdate() as {t.daysOld} from all_tables t  where t.table_name = 'AUDIT_ACTIONS' ";
-		String sql2 = "select table_name as t_name, sysdate() as t_time from all_tables   where table_name = 'AUDIT_ACTIONS' ";
+		String sql = "select t.table_name as {t.tableName}, sysdate() as {t.daysOld} from ALL_TABLES t  where t.table_name = 'AUDIT_ACTIONS' ";
+		String sql2 = "select table_name as t_name, sysdate() as t_time from ALL_TABLES   where table_name = 'AUDIT_ACTIONS' ";
 		Session s = openSession();
 		s.beginTransaction();
 		s.createSQLQuery( sql ).addEntity( "t", AllTables.class ).list();

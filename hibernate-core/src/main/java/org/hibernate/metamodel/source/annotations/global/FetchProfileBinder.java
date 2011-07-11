@@ -57,29 +57,33 @@ public class FetchProfileBinder {
 			bind( metadata, fetchProfile );
 		}
 		for ( AnnotationInstance fetchProfiles : jandex.getAnnotations( HibernateDotNames.FETCH_PROFILES ) ) {
-			for ( AnnotationInstance fetchProfile : JandexHelper.getValueAsArray( fetchProfiles, "value" ) ) {
+			AnnotationInstance[] fetchProfileAnnotations = JandexHelper.getValue(
+					fetchProfiles,
+					"value",
+					AnnotationInstance[].class
+			);
+			for ( AnnotationInstance fetchProfile : fetchProfileAnnotations ) {
 				bind( metadata, fetchProfile );
 			}
 		}
 	}
 
 	private static void bind(MetadataImplementor metadata, AnnotationInstance fetchProfile) {
-		String name = JandexHelper.getValueAsString( fetchProfile, "name" );
+		String name = JandexHelper.getValue( fetchProfile, "name", String.class );
 		Set<Fetch> fetches = new HashSet<Fetch>();
-		for ( AnnotationInstance override : JandexHelper.getValueAsArray( fetchProfile, "fetchOverrides" ) ) {
+		AnnotationInstance[] overrideAnnotations = JandexHelper.getValue(
+				fetchProfile,
+				"fetchOverrides",
+				AnnotationInstance[].class
+		);
+		for ( AnnotationInstance override : overrideAnnotations ) {
 			FetchMode fetchMode = JandexHelper.getValueAsEnum( override, "mode", FetchMode.class );
 			if ( !fetchMode.equals( org.hibernate.annotations.FetchMode.JOIN ) ) {
 				throw new MappingException( "Only FetchMode.JOIN is currently supported" );
 			}
-			fetches.add(
-					new Fetch(
-							JandexHelper.getValueAsString( override, "entity" ), JandexHelper.getValueAsString(
-									override,
-									"association"
-							),
-							fetchMode.toString().toLowerCase()
-					)
-			);
+			String entityName = JandexHelper.getValue( override, "entity", String.class );
+			String associationName = JandexHelper.getValue( override, "association", String.class );
+			fetches.add( new Fetch( entityName, associationName, fetchMode.toString().toLowerCase() ) );
 		}
 		metadata.addFetchProfile( new FetchProfile( name, fetches ) );
 	}

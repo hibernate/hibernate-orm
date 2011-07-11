@@ -27,7 +27,7 @@ dependencies {
     compile( project( ':hibernate-core' ) )
     compile( [group: 'junit', name: 'junit', version: '4.8.2'] )
     compile([group: 'com.experlog', name: 'xapool', version: '1.5.0'])
-    compile([group: 'org.jboss.jbossts', name: 'jbossjta', version: '4.14.0.Final']) {
+    compile([group: 'org.jboss.jbossts', name: 'jbossjta', version: '4.15.1.Final']) {
         transitive=false;
     }
 }

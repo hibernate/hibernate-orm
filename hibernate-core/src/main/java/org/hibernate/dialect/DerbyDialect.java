@@ -24,6 +24,7 @@
 package org.hibernate.dialect;
 
 import java.lang.reflect.Method;
+import java.sql.Types;
 
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.MappingException;
@@ -57,7 +58,12 @@ public class DerbyDialect extends DB2Dialect {
 		LOG.deprecatedDerbyDialect();
 		registerFunction( "concat", new DerbyConcatFunction() );
 		registerFunction( "trim", new AnsiTrimFunction() );
-		determineDriverVersion();
+        registerColumnType( Types.BLOB, "blob" );
+        determineDriverVersion();
+
+        if ( driverVersionMajor > 10 || ( driverVersionMajor == 10 && driverVersionMinor >= 7 ) ) {
+            registerColumnType( Types.BOOLEAN, "boolean" );
+        }
 	}
 
 	@SuppressWarnings({ "UnnecessaryUnboxing" })

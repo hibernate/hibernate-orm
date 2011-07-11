@@ -47,6 +47,8 @@ import org.hibernate.id.Assigned;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.metamodel.binding.AttributeBinding;
+import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.property.Getter;
 import org.hibernate.property.Setter;
 import org.hibernate.proxy.HibernateProxy;
@@ -130,6 +132,42 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 	protected abstract ProxyFactory buildProxyFactory(PersistentClass mappingInfo, Getter idGetter, Setter idSetter);
 
 	/**
+	 * Build an appropriate Getter for the given property.
+	 *
+	 *
+	 * @param mappedProperty The property to be accessed via the built Getter.
+	 * @return An appropriate Getter instance.
+	 */
+	protected abstract Getter buildPropertyGetter(AttributeBinding mappedProperty);
+
+	/**
+	 * Build an appropriate Setter for the given property.
+	 *
+	 *
+	 * @param mappedProperty The property to be accessed via the built Setter.
+	 * @return An appropriate Setter instance.
+	 */
+	protected abstract Setter buildPropertySetter(AttributeBinding mappedProperty);
+
+	/**
+	 * Build an appropriate Instantiator for the given mapped entity.
+	 *
+	 * @param mappingInfo The mapping information regarding the mapped entity.
+	 * @return An appropriate Instantiator instance.
+	 */
+	protected abstract Instantiator buildInstantiator(EntityBinding mappingInfo);
+
+	/**
+	 * Build an appropriate ProxyFactory for the given mapped entity.
+	 *
+	 * @param mappingInfo The mapping information regarding the mapped entity.
+	 * @param idGetter The constructed Getter relating to the entity's id property.
+	 * @param idSetter The constructed Setter relating to the entity's id property.
+	 * @return An appropriate ProxyFactory instance.
+	 */
+	protected abstract ProxyFactory buildProxyFactory(EntityBinding mappingInfo, Getter idGetter, Setter idSetter);
+
+	/**
 	 * Constructs a new AbstractEntityTuplizer instance.
 	 *
 	 * @param entityMetamodel The "interpreted" information relating to the mapped entity.
@@ -189,6 +227,75 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 			mappedIdentifierValueMarshaller = buildMappedIdentifierValueMarshaller(
 					(ComponentType) entityMetamodel.getIdentifierProperty().getType(),
 					(ComponentType) identifierMapperType
+			);
+		}
+	}
+
+	/**
+	 * Constructs a new AbstractEntityTuplizer instance.
+	 *
+	 * @param entityMetamodel The "interpreted" information relating to the mapped entity.
+	 * @param mappingInfo The parsed "raw" mapping data relating to the given entity.
+	 */
+	public AbstractEntityTuplizer(EntityMetamodel entityMetamodel, EntityBinding mappingInfo) {
+		this.entityMetamodel = entityMetamodel;
+
+		if ( !entityMetamodel.getIdentifierProperty().isVirtual() ) {
+			idGetter = buildPropertyGetter( mappingInfo.getEntityIdentifier().getValueBinding() );
+			idSetter = buildPropertySetter( mappingInfo.getEntityIdentifier().getValueBinding() );
+		}
+		else {
+			idGetter = null;
+			idSetter = null;
+		}
+
+		propertySpan = entityMetamodel.getPropertySpan();
+
+		getters = new Getter[ propertySpan ];
+		setters = new Setter[ propertySpan ];
+
+		boolean foundCustomAccessor = false;
+		int i = 0;
+		for ( AttributeBinding property : mappingInfo.getAttributeBindingClosure() ) {
+			if ( property == mappingInfo.getEntityIdentifier().getValueBinding() ) {
+				continue; // ID binding processed above
+			}
+
+			//TODO: redesign how PropertyAccessors are acquired...
+			getters[ i ] = buildPropertyGetter( property );
+			setters[ i ] = buildPropertySetter( property );
+			if ( ! property.isBasicPropertyAccessor() ) {
+				foundCustomAccessor = true;
+			}
+			i++;
+		}
+		hasCustomAccessors = foundCustomAccessor;
+
+		instantiator = buildInstantiator( mappingInfo );
+
+		if ( entityMetamodel.isLazy() ) {
+			proxyFactory = buildProxyFactory( mappingInfo, idGetter, idSetter );
+			if ( proxyFactory == null ) {
+				entityMetamodel.setLazy( false );
+			}
+		}
+		else {
+			proxyFactory = null;
+		}
+
+
+		// TODO: Fix this when components are working (HHH-6173)
+		//Component mapper = mappingInfo.getEntityIdentifier().getIdentifierMapper();
+		Component mapper = null;
+		if ( mapper == null ) {
+			identifierMapperType = null;
+			mappedIdentifierValueMarshaller = null;
+		}
+		else {
+			identifierMapperType = ( CompositeType ) mapper.getType();
+			mappedIdentifierValueMarshaller = buildMappedIdentifierValueMarshaller(
+					( ComponentType ) entityMetamodel.getIdentifierProperty().getType(),
+					( ComponentType ) identifierMapperType
 			);
 		}
 	}

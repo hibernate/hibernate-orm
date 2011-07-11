@@ -39,6 +39,7 @@ import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.relational.Size;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -82,7 +83,7 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	public T fromXMLString(String xml, Mapping factory) throws HibernateException {
-		return xml == null || xml.length() == 0 ? null : fromStringValue( xml );
+		return StringHelper.isEmpty( xml ) ? null : fromStringValue( xml );
 	}
 
 	protected MutabilityPlan<T> getMutabilityPlan() {

@@ -206,6 +206,10 @@ public class HbmColumnRelationalState implements ColumnRelationalState {
 		return container.getNamingStrategy();
 	}
 
+    public boolean isGloballyQuotedIdentifiers(){
+        return  container.isGloballyQuotedIdentifiers();
+    }
+
 	public String getExplicitColumnName() {
 		return explicitColumnName;
 	}

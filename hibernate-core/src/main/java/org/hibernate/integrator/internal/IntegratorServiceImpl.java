@@ -29,7 +29,6 @@ import java.util.ServiceLoader;
 import org.jboss.logging.Logger;
 
 import org.hibernate.cfg.beanvalidation.BeanValidationIntegrator;
-import org.hibernate.cfg.search.HibernateSearchIntegrator;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
 import org.hibernate.internal.CoreMessageLogger;
@@ -49,7 +48,6 @@ public class IntegratorServiceImpl implements IntegratorService {
 		// Standard integrators nameable from here.  Envers and JPA, for example, need to be handled by discovery
 		// because in separate project/jars
 		addIntegrator( new BeanValidationIntegrator() );
-		addIntegrator( new HibernateSearchIntegrator() );
 	}
 
 	@Override

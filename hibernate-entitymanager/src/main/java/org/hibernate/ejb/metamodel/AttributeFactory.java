@@ -34,7 +34,6 @@ import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.Type;
-import org.hibernate.EntityMode;
 import org.hibernate.annotations.common.AssertionFailure;
 import org.hibernate.ejb.internal.EntityManagerMessageLogger;
 import org.hibernate.mapping.Collection;

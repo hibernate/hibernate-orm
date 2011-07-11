@@ -23,6 +23,8 @@
  */
 package org.hibernate.metamodel.relational;
 
+import org.hibernate.dialect.Dialect;
+
 /**
  * Models what ANSI SQL terms a table specification which is a table or a view or an inline view.
  *
@@ -35,6 +37,13 @@ public interface TableSpecification extends ValueContainer, Loggable {
 	 * @return The schema to which this table specification belongs.
 	 */
 	public Schema getSchema();
+
+	/**
+	 * Get the table number.
+	 *
+	 * @return the table number.
+	 */
+	public int getTableNumber();
 
 	/**
 	 * Get the primary key definition for this table spec.
@@ -82,11 +91,13 @@ public interface TableSpecification extends ValueContainer, Loggable {
 
 	public UniqueKey getOrCreateUniqueKey(String name);
 
-	public Iterable<String> getCheckConstraints();
+	public Iterable<CheckConstraint> getCheckConstraints();
 
 	public void addCheckConstraint(String checkCondition);
 
 	public Iterable<String> getComments();
 
 	public void addComment(String comment);
+
+	public String getQualifiedName(Dialect dialect);
 }

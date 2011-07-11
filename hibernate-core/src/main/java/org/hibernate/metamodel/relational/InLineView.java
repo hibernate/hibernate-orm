@@ -25,6 +25,8 @@ package org.hibernate.metamodel.relational;
 
 import java.util.Collections;
 
+import org.hibernate.dialect.Dialect;
+
 /**
  * A <tt>data container</tt> defined by a <tt>SELECT</tt> statement.  This translates into an inline view in the
  * SQL statements: <code>select ... from (select ... from logical_table_table ...) ...</code>
@@ -32,7 +34,7 @@ import java.util.Collections;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class InLineView extends AbstractTableSpecification implements ValueContainer {
+public class InLineView extends AbstractTableSpecification {
 	private final Schema schema;
 	private final String logicalName;
 	private final String select;
@@ -77,7 +79,7 @@ public class InLineView extends AbstractTableSpecification implements ValueConta
 	}
 
 	@Override
-	public Iterable<String> getCheckConstraints() {
+	public Iterable<CheckConstraint> getCheckConstraints() {
 		return Collections.emptyList();
 	}
 
@@ -94,6 +96,15 @@ public class InLineView extends AbstractTableSpecification implements ValueConta
 	@Override
 	public void addComment(String comment) {
 		throw new UnsupportedOperationException( "Cannot comment on inline view" );
+	}
+
+	@Override
+	public String getQualifiedName(Dialect dialect) {
+		return new StringBuilder( select.length() + 4 )
+				.append( "( " )
+				.append( select )
+				.append( " )" )
+				.toString();
 	}
 
 	@Override

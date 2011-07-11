@@ -23,30 +23,23 @@
  */
 package org.hibernate.metamodel.source.annotations.entity;
 
-import org.jboss.jandex.DotName;
+import javax.persistence.AccessType;
 
-import org.hibernate.metamodel.source.annotations.JPADotNames;
+import org.jboss.jandex.ClassInfo;
+
+import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
 
 /**
- * An enum defining the type of mapped attribute.
- *
  * @author Hardy Ferentschik
  */
-public enum AttributeType {
-	BASIC( null ),
-	ONE_TO_ONE( JPADotNames.ONE_TO_ONE ),
-	ONE_TO_MANY( JPADotNames.ONE_TO_MANY ),
-	MANY_TO_ONE( JPADotNames.MANY_TO_ONE ),
-	MANY_TO_MANY( JPADotNames.MANY_TO_MANY ),
-	EMBEDDED( JPADotNames.EMBEDDED );
-
-	private final DotName annotationDotName;
-
-	AttributeType(DotName annotationDotName) {
-		this.annotationDotName = annotationDotName;
-	}
-
-	public DotName getAnnotationDotName() {
-		return annotationDotName;
+public class EmbeddableClass extends ConfiguredClass {
+	// todo - need to take care of the attribute path (HF)
+	public EmbeddableClass(ClassInfo classInfo,
+						   EmbeddableClass parent,
+						   AccessType defaultAccessType,
+						   AnnotationBindingContext context) {
+		super( classInfo, defaultAccessType, parent, context );
 	}
 }
+
+

@@ -23,10 +23,10 @@
  */
 package org.hibernate.metamodel.source.annotations.global;
 
-import javax.persistence.GenerationType;
-import javax.persistence.SequenceGenerator;
 import java.util.HashMap;
 import java.util.Map;
+import javax.persistence.GenerationType;
+import javax.persistence.SequenceGenerator;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.Index;
@@ -64,7 +64,7 @@ public class IdGeneratorBinder {
 										   String element,
 										   Map<String, String> parameters,
 										   String parameter) {
-		String string = JandexHelper.getValueAsString( annotation, element );
+		String string = JandexHelper.getValue( annotation, element, String.class );
 		if ( StringHelper.isNotEmpty( string ) ) {
 			parameters.put( parameter, string );
 		}
@@ -88,30 +88,42 @@ public class IdGeneratorBinder {
 			bindGenericGenerator( metadata, generator );
 		}
 		for ( AnnotationInstance generators : jandex.getAnnotations( HibernateDotNames.GENERIC_GENERATORS ) ) {
-			for ( AnnotationInstance generator : JandexHelper.getValueAsArray( generators, "value" ) ) {
+			for ( AnnotationInstance generator : JandexHelper.getValue(
+					generators,
+					"value",
+					AnnotationInstance[].class
+			) ) {
 				bindGenericGenerator( metadata, generator );
 			}
 		}
 	}
 
 	private static void bindGenericGenerator(MetadataImplementor metadata, AnnotationInstance generator) {
-		String name = JandexHelper.getValueAsString( generator, "name" );
-		Map<String, String> prms = new HashMap<String, String>();
-		for ( AnnotationInstance prm : JandexHelper.getValueAsArray( generator, "parameters" ) ) {
-			prms.put( JandexHelper.getValueAsString( prm, "name" ), JandexHelper.getValueAsString( prm, "value" ) );
+		String name = JandexHelper.getValue( generator, "name", String.class );
+		Map<String, String> parameterMap = new HashMap<String, String>();
+		AnnotationInstance[] parameterAnnotations = JandexHelper.getValue(
+				generator,
+				"parameters",
+				AnnotationInstance[].class
+		);
+		for ( AnnotationInstance parameterAnnotation : parameterAnnotations ) {
+			parameterMap.put(
+					JandexHelper.getValue( parameterAnnotation, "name", String.class ),
+					JandexHelper.getValue( parameterAnnotation, "value", String.class )
+			);
 		}
 		metadata.addIdGenerator(
 				new IdGenerator(
 						name,
-						JandexHelper.getValueAsString( generator, "strategy" ),
-						prms
+						JandexHelper.getValue( generator, "strategy", String.class ),
+						parameterMap
 				)
 		);
 		LOG.tracef( "Add generic generator with name: %s", name );
 	}
 
 	private static void bindSequenceGenerator(MetadataImplementor metadata, AnnotationInstance generator) {
-		String name = JandexHelper.getValueAsString( generator, "name" );
+		String name = JandexHelper.getValue( generator, "name", String.class );
 		String strategy;
 		Map<String, String> prms = new HashMap<String, String>();
 		addStringParameter( generator, "sequenceName", prms, SequenceStyleGenerator.SEQUENCE_PARAM );
@@ -122,20 +134,20 @@ public class IdGeneratorBinder {
 			addStringParameter( generator, "schema", prms, PersistentIdentifierGenerator.SCHEMA );
 			prms.put(
 					SequenceStyleGenerator.INCREMENT_PARAM,
-					String.valueOf( JandexHelper.getValueAsInt( generator, "allocationSize" ) )
+					String.valueOf( JandexHelper.getValue( generator, "allocationSize", Integer.class ) )
 			);
 			prms.put(
 					SequenceStyleGenerator.INITIAL_PARAM,
-					String.valueOf( JandexHelper.getValueAsInt( generator, "initialValue" ) )
+					String.valueOf( JandexHelper.getValue( generator, "initialValue", Integer.class ) )
 			);
 		}
 		else {
-			if ( JandexHelper.getValueAsInt( generator, "initialValue" ) != 1 ) {
+			if ( JandexHelper.getValue( generator, "initialValue", Integer.class ) != 1 ) {
 				LOG.unsupportedInitialValue( AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS );
 			}
 			prms.put(
 					SequenceHiLoGenerator.MAX_LO,
-					String.valueOf( JandexHelper.getValueAsInt( generator, "allocationSize" ) - 1 )
+					String.valueOf( JandexHelper.getValue( generator, "allocationSize", Integer.class ) - 1 )
 			);
 		}
 		metadata.addIdGenerator( new IdGenerator( name, strategy, prms ) );
@@ -143,7 +155,7 @@ public class IdGeneratorBinder {
 	}
 
 	private static void bindTableGenerator(MetadataImplementor metadata, AnnotationInstance generator) {
-		String name = JandexHelper.getValueAsString( generator, "name" );
+		String name = JandexHelper.getValue( generator, "name", String.class );
 		String strategy;
 		Map<String, String> prms = new HashMap<String, String>();
 		addStringParameter( generator, "catalog", prms, PersistentIdentifierGenerator.CATALOG );
@@ -158,11 +170,11 @@ public class IdGeneratorBinder {
 			addStringParameter( generator, "valueColumnName", prms, TableGenerator.VALUE_COLUMN_PARAM );
 			prms.put(
 					TableGenerator.INCREMENT_PARAM,
-					String.valueOf( JandexHelper.getValueAsInt( generator, "allocationSize" ) )
+					String.valueOf( JandexHelper.getValue( generator, "allocationSize", String.class ) )
 			);
 			prms.put(
 					TableGenerator.INITIAL_PARAM,
-					String.valueOf( JandexHelper.getValueAsInt( generator, "initialValue" ) + 1 )
+					String.valueOf( JandexHelper.getValue( generator, "initialValue", String.class ) + 1 )
 			);
 		}
 		else {
@@ -172,10 +184,10 @@ public class IdGeneratorBinder {
 			addStringParameter( generator, "valueColumnName", prms, MultipleHiLoPerTableGenerator.VALUE_COLUMN_NAME );
 			prms.put(
 					TableHiLoGenerator.MAX_LO,
-					String.valueOf( JandexHelper.getValueAsInt( generator, "allocationSize" ) - 1 )
+					String.valueOf( JandexHelper.getValue( generator, "allocationSize", Integer.class ) - 1 )
 			);
 		}
-		if ( JandexHelper.getValueAsArray( generator, "uniqueConstraints" ).length > 0 ) {
+		if ( JandexHelper.getValue( generator, "uniqueConstraints", AnnotationInstance[].class ).length > 0 ) {
 			LOG.ignoringTableGeneratorConstraints( name );
 		}
 		metadata.addIdGenerator( new IdGenerator( name, strategy, prms ) );

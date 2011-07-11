@@ -6,6 +6,40 @@ refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
 
+Changes in version 4.0.0.Beta3 (2011.07.07)
+------------------------------------------------------------------------------------------------------------------------
+http://opensource.atlassian.com/projects/hibernate/browse/HHH/fixforversion/11241
+
+** Sub-task
+    * [HHH-6173] - Implement embedded entities (component) mapping
+    * [HHH-6201] - Handle mapped super classes
+    * [HHH-6352] - Add EntityBinding.getAttributeBindingClosureSpan() and getAttributeBindingClosure()
+    * [HHH-6358] - Integrate new metamodel into EntityMetamodel
+    * [HHH-6359] - Integrate new metamodel into entity tuplizers
+    * [HHH-6360] - Build basic properties from an AttributeBinding
+    * [HHH-6364] - Add AttributeBinding,getValuesSpan() and Tuple.valuesSpan()
+    * [HHH-6365] - Use Identifier.toIdentifier() to create column names
+    * [HHH-6366] - Add integer value to uniquely identify Table and InLineView objects for column aliases
+    * [HHH-6387] - Add EntityBinding.getFilterDefinitions() and addFilterDefinition()
+    * [HHH-6389] - Add TableSpecification.getQualifiedName(Dialect) and implement in subclasses
+    * [HHH-6411] - Integrate new metamodel into SingleTableEntityPersister
+** Bug
+    * [HHH-5917] - Envers doesnt track all columns anymore
+    * [HHH-6289] - Review log level for o.h.m.s.AnnotationBinder and related binder classes
+    * [HHH-6386] - sybase improvement
+    * [HHH-6394] - org.hibernate.metamodel.source.annotations.global.QueryBinder handles resultClass paramter of @NamedNativeQuery wrong
+    * [HHH-6408] - An empty (ie not null) hibernate.connection.isolation raises a java.lang.NumberFormatException
+Improvement
+    * [HHH-6406] - Move JBoss Transaction dependency from 4.14 to 4.15.1 (no more dependency hell)
+** Task
+    * [HHH-6278] - quote all db identifiers
+    * [HHH-6350] - Integrate new metamodel for a root entity with simple attributes and no joins
+    * [HHH-6368] - remove deprecated hibernate annotations
+    * [HHH-6372] - Provide a temporary way to initialize basic types in metamodel
+    * [HHH-6404] - Move Hibernate Search integrator from Hibernate Core to Hibernate Search
+    * [HHH-6407] - Add SimpleValue.getAlias(Dialect) and implement in subclasses
+
+
 Changes in version 4.0.0.Beta2 (2011.06.22)
 ------------------------------------------------------------------------------------------------------------------------
 http://opensource.atlassian.com/projects/hibernate/browse/HHH/fixforversion/11231

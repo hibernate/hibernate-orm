@@ -1,7 +1,8 @@
 package org.hibernate.test.cache;
 
 import net.sf.ehcache.CacheManager;
-import org.hibernate.cache.internal.management.impl.EhcacheStatsImpl;
+import org.hibernate.cache.ehcache.management.impl.EhcacheStatsImpl;
+import org.hibernate.cache.ehcache.management.impl.EhcacheStatsImpl;
 import org.junit.BeforeClass;
 import org.junit.Test;
 

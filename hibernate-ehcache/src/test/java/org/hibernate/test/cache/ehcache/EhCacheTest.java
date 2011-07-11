@@ -183,7 +183,7 @@ public abstract class EhCacheTest extends BaseCoreFunctionalTestCase {
 //			//FIXME don't know what to test here
 //			cachedVersionValue = Long.valueOf( ((ReadWriteCache.Lock) entry).getUnlockTimestamp() );
 //		} else
-		if (entry.getClass().getName().equals("org.hibernate.cache.internal.strategy.AbstractReadWriteEhcacheAccessStrategy$Lock")) {
+		if (entry.getClass().getName().equals("org.hibernate.cache.ehcache.strategy.AbstractReadWriteEhcacheAccessStrategy$Lock")) {
 			//FIXME don't know what to test here
 		} else {
 			cachedVersionValue = (Long)getMapFromCacheEntry(entry).get("_version");

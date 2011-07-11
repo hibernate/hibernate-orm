@@ -1,6 +1,7 @@
 package org.hibernate.test.cache.ehcache;
 
-import org.hibernate.cache.internal.EhCacheRegionFactory;
+import org.hibernate.cache.ehcache.EhCacheRegionFactory;
+import org.hibernate.cache.ehcache.EhCacheRegionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 
@@ -21,7 +22,7 @@ public class EhCacheRegionFactoryImpl extends EhCacheTest {
 	@Override
 	protected Map getMapFromCacheEntry(final Object entry) {
 		final Map map;
-		if ("org.hibernate.cache.internal.strategy.AbstractReadWriteEhcacheAccessStrategy$Item".equals(entry.getClass().getName())) {
+		if ("org.hibernate.cache.ehcache.strategy.AbstractReadWriteEhcacheAccessStrategy$Item".equals(entry.getClass().getName())) {
 			try {
 				Field field = entry.getClass().getDeclaredField("value");
 				field.setAccessible(true);

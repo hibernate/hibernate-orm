@@ -33,13 +33,6 @@ import java.util.Set;
  */
 public interface AttributeContainer extends Type {
 	/**
-	 * Retrieve the attributes contained in this container.
-	 *
-	 * @return The contained attributes
-	 */
-	public Set<Attribute> getAttributes();
-
-	/**
 	 * Retrieve an attribute by name.
 	 *
 	 * @param name The name of the attribute to retrieve.
@@ -48,17 +41,18 @@ public interface AttributeContainer extends Type {
 	 */
 	public Attribute getAttribute(String name);
 
-	public SingularAttribute getOrCreateSingularAttribute(String name);
+	/**
+	 * Retrieve the attributes contained in this container.
+	 *
+	 * @return The contained attributes
+	 */
+	public Set<Attribute> getAttributes();
 
-	public SingularAttribute getOrCreateComponentAttribute(String name);
-
-	public PluralAttribute getOrCreatePluralAttribute(String name, PluralAttributeNature nature);
-
-	public PluralAttribute getOrCreateBag(String name);
-
-	public PluralAttribute getOrCreateSet(String name);
-
-	public IndexedPluralAttribute getOrCreateList(String name);
-
-	public IndexedPluralAttribute getOrCreateMap(String name);
+	public SingularAttribute locateOrCreateSingularAttribute(String name);
+	public SingularAttribute locateOrCreateComponentAttribute(String name);
+	public PluralAttribute locateOrCreatePluralAttribute(String name, PluralAttributeNature nature);
+	public PluralAttribute locateOrCreateBag(String name);
+	public PluralAttribute locateOrCreateSet(String name);
+	public IndexedPluralAttribute locateOrCreateList(String name);
+	public IndexedPluralAttribute locateOrCreateMap(String name);
 }

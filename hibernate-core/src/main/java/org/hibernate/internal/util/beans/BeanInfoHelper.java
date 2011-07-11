@@ -54,6 +54,14 @@ public class BeanInfoHelper {
 			throw new BeanIntrospectionException( "Bean [" + bean + "] was not of declared bean type [" + beanClass.getName() + "]" );
 		}
 
+		visitBeanInfo( beanClass, stopClass, delegate );
+	}
+
+	public static void visitBeanInfo(Class beanClass, BeanInfoDelegate delegate) {
+		visitBeanInfo( beanClass, Object.class, delegate );
+	}
+
+	public static void visitBeanInfo(Class beanClass, Class stopClass, BeanInfoDelegate delegate) {
 		try {
 			BeanInfo info = Introspector.getBeanInfo( beanClass, stopClass );
 			try {
@@ -76,4 +84,6 @@ public class BeanInfoHelper {
 			throw new BeanIntrospectionException( "Unable to determine bean info from class [" + beanClass.getName() + "]", e );
 		}
 	}
+
+
 }

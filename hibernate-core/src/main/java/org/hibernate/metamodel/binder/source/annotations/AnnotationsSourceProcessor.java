@@ -63,7 +63,7 @@ import org.hibernate.metamodel.binder.source.internal.JaxbRoot;
 import org.hibernate.metamodel.binder.source.internal.MetadataImpl;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.domain.Hierarchical;
-import org.hibernate.metamodel.domain.JavaType;
+import org.hibernate.metamodel.domain.Type;
 import org.hibernate.metamodel.domain.NonEntity;
 import org.hibernate.metamodel.domain.Superclass;
 import org.hibernate.metamodel.source.annotation.xml.XMLEntityMappings;
@@ -270,18 +270,13 @@ public class AnnotationsSourceProcessor implements SourceProcessor, AnnotationsB
 		return classLoaderService.getValue().classForName( name );
 	}
 
-	@Override
-	public boolean isGloballyQuotedIdentifiers() {
-		return metadata.isGloballyQuotedIdentifiers();
-	}
-
-	private Map<String,JavaType> nameToJavaTypeMap = new HashMap<String, JavaType>();
+	private Map<String,Type> nameToJavaTypeMap = new HashMap<String, Type>();
 
 	@Override
-	public JavaType makeJavaType(String className) {
-		JavaType javaType = nameToJavaTypeMap.get( className );
+	public Type makeJavaType(String className) {
+		Type javaType = nameToJavaTypeMap.get( className );
 		if ( javaType == null ) {
-			javaType = new JavaType( locateClassByName( className ) );
+			javaType = metadata.makeJavaType( className );
 			nameToJavaTypeMap.put( className, javaType );
 		}
 		return javaType;
@@ -290,6 +285,11 @@ public class AnnotationsSourceProcessor implements SourceProcessor, AnnotationsB
 	@Override
 	public Value<Class<?>> makeClassReference(String className) {
 		return new Value<Class<?>>( locateClassByName( className ) );
+	}
+
+	@Override
+	public boolean isGloballyQuotedIdentifiers() {
+		return metadata.isGloballyQuotedIdentifiers();
 	}
 }
 

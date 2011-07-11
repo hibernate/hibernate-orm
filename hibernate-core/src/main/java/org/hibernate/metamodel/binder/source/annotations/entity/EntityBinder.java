@@ -585,7 +585,7 @@ public class EntityBinder {
 				//todo throw exception?
 			}
 			for ( String columnName : columnNames ) {
-				uniqueKey.addColumn( table.getOrCreateColumn( columnName ) );
+				uniqueKey.addColumn( table.locateOrCreateColumn( columnName ) );
 			}
 		}
 	}
@@ -620,8 +620,7 @@ public class EntityBinder {
 			throw new AssertionFailure( "Unexpected attribute type for id attribute" );
 		}
 
-		SingularAttribute attribute = entityBinding.getEntity().getOrCreateComponentAttribute( idName );
-
+		SingularAttribute attribute = entityBinding.getEntity().locateOrCreateComponentAttribute( idName );
 
 		SimpleAttributeBinding attributeBinding = entityBinding.makeSimpleIdAttributeBinding( attribute );
 
@@ -669,7 +668,7 @@ public class EntityBinder {
 
 		// now that we have the id attribute we can create the attribute and binding
 		MappedAttribute idAttribute = iter.next();
-		Attribute attribute = container.getOrCreateSingularAttribute( idAttribute.getName() );
+		Attribute attribute = container.locateOrCreateSingularAttribute( idAttribute.getName() );
 
 		SimpleAttributeBinding attributeBinding = entityBinding.makeSimpleIdAttributeBinding( attribute );
 		attributeBinding.initialize( new AttributeBindingStateImpl( (SimpleAttribute) idAttribute ) );
@@ -821,7 +820,7 @@ public class EntityBinder {
 		for ( Map.Entry<String, EmbeddableClass> entry : configuredClass.getEmbeddedClasses().entrySet() ) {
 			String attributeName = entry.getKey();
 			EmbeddableClass embeddedClass = entry.getValue();
-			SingularAttribute component = attributeContainer.getOrCreateComponentAttribute( attributeName );
+			SingularAttribute component = attributeContainer.locateOrCreateComponentAttribute( attributeName );
 			for ( SimpleAttribute simpleAttribute : embeddedClass.getSimpleAttributes() ) {
 				bindSingleMappedAttribute(
 						entityBinding,
@@ -845,7 +844,7 @@ public class EntityBinder {
 				AssociationAttribute associationAttribute) {
 		switch ( associationAttribute.getAssociationType() ) {
 			case MANY_TO_ONE: {
-				container.getOrCreateSingularAttribute( associationAttribute.getName() );
+				entityBinding.getEntity().locateOrCreateSingularAttribute( associationAttribute.getName() );
 				ManyToOneAttributeBinding manyToOneAttributeBinding = entityBinding.makeManyToOneAttributeBinding(
 						associationAttribute.getName()
 				);
@@ -877,7 +876,8 @@ public class EntityBinder {
 			return;
 		}
 
-		Attribute attribute = container.getOrCreateSingularAttribute( simpleAttribute.getName() );
+		String attributeName = simpleAttribute.getName();
+		SingularAttribute attribute = entityBinding.getEntity().locateOrCreateSingularAttribute( attributeName );
 		SimpleAttributeBinding attributeBinding;
 
 		if ( simpleAttribute.isDiscriminator() ) {

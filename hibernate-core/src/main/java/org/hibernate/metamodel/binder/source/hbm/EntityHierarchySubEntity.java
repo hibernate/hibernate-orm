@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,43 +21,23 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.binding;
+package org.hibernate.metamodel.binder.source.hbm;
 
-import java.util.Map;
-
-import org.hibernate.type.Type;
+import org.hibernate.metamodel.binder.source.hbm.xml.mapping.EntityElement;
 
 /**
- * TODO : javadoc
- *
+ * A sub entity within an entity hierarchy.
+ * 
  * @author Steve Ebersole
  */
-public class HibernateTypeDescriptor {
-	private String typeName;
-	private Type explicitType;
-	private Map<String, String> typeParameters;
+public class EntityHierarchySubEntity extends AbstractSubEntityContainer {
+	private final EntitySourceInformation entitySourceInformation;
 
-	public String getTypeName() {
-		return typeName;
+	public EntityHierarchySubEntity(EntityElement entityElement, MappingDocument sourceMappingDocument) {
+		this.entitySourceInformation = new EntitySourceInformation( entityElement, sourceMappingDocument );
 	}
 
-	public void setTypeName(String typeName) {
-		this.typeName = typeName;
-	}
-
-	public Type getExplicitType() {
-		return explicitType;
-	}
-
-	public void setExplicitType(Type explicitType) {
-		this.explicitType = explicitType;
-	}
-
-	public Map<String, String> getTypeParameters() {
-		return typeParameters;
-	}
-
-	void setTypeParameters(Map<String, String> typeParameters) {
-		this.typeParameters = typeParameters;
+	public EntitySourceInformation getEntitySourceInformation() {
+		return entitySourceInformation;
 	}
 }

@@ -29,22 +29,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.Value;
 import org.hibernate.metamodel.binder.MappingException;
 import org.hibernate.metamodel.binder.Origin;
-import org.hibernate.metamodel.binder.source.MappingDefaults;
-import org.hibernate.metamodel.binder.source.MetaAttributeContext;
 import org.hibernate.metamodel.binder.source.MetadataImplementor;
-import org.hibernate.metamodel.binder.source.hbm.xml.mapping.EntityElement;
-import org.hibernate.metamodel.binder.source.internal.JaxbRoot;
-import org.hibernate.metamodel.binder.source.internal.OverriddenMappingDefaults;
-import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.FetchProfile;
 import org.hibernate.metamodel.binding.TypeDef;
-import org.hibernate.metamodel.domain.JavaType;
 import org.hibernate.metamodel.relational.AuxiliaryDatabaseObject;
 import org.hibernate.metamodel.relational.BasicAuxiliaryDatabaseObjectImpl;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLFetchProfileElement;
@@ -67,106 +59,38 @@ import org.hibernate.type.Type;
  *
  * @author Steve Ebersole
  */
-public class HibernateMappingProcessor implements HbmBindingContext {
-	private final HbmSourceProcessorImpl hbmHandler;
-	private final JaxbRoot<XMLHibernateMapping> jaxbRoot;
+public class HibernateMappingProcessor {
+	private final MetadataImplementor metadata;
+	private final MappingDocument mappingDocument;
 
-	private final XMLHibernateMapping hibernateMapping;
+	private Value<ClassLoaderService> classLoaderService = new Value<ClassLoaderService>(
+			new Value.DeferredInitializer<ClassLoaderService>() {
+				@Override
+				public ClassLoaderService initialize() {
+					return metadata.getServiceRegistry().getService( ClassLoaderService.class );
+				}
+			}
+	);
 
-	private final MappingDefaults mappingDefaults;
-	private final MetaAttributeContext metaAttributeContext;
-
-	private final boolean autoImport;
-
-	public HibernateMappingProcessor(HbmSourceProcessorImpl hbmHandler, JaxbRoot<XMLHibernateMapping> jaxbRoot) {
-		this.hbmHandler = hbmHandler;
-		this.jaxbRoot = jaxbRoot;
-
-		this.hibernateMapping = jaxbRoot.getRoot();
-		this.mappingDefaults = new OverriddenMappingDefaults(
-				hbmHandler.getMappingDefaults(),
-				hibernateMapping.getPackage(),
-				hibernateMapping.getSchema(),
-				hibernateMapping.getCatalog(),
-				null,	// idColumnName
-				null,	// discriminatorColumnName
-				hibernateMapping.getDefaultCascade(),
-				hibernateMapping.getDefaultAccess(),
-				hibernateMapping.isDefaultLazy()
-		);
-
-		this.autoImport = hibernateMapping.isAutoImport();
-		this.metaAttributeContext = extractMetaAttributes();
+	public HibernateMappingProcessor(MetadataImplementor metadata, MappingDocument mappingDocument) {
+		this.metadata = metadata;
+		this.mappingDocument = mappingDocument;
 	}
 
-	private MetaAttributeContext extractMetaAttributes() {
-		return hibernateMapping.getMeta() == null
-				? new MetaAttributeContext( hbmHandler.getMetadataImplementor().getGlobalMetaAttributeContext() )
-				: Helper.extractMetaAttributeContext(
-				hibernateMapping.getMeta(),
-				true,
-				hbmHandler.getMetadataImplementor()
-						.getGlobalMetaAttributeContext()
-		);
+	private XMLHibernateMapping mappingRoot() {
+		return mappingDocument.getMappingRoot();
 	}
 
-	XMLHibernateMapping getHibernateMapping() {
-		return hibernateMapping;
+	private Origin origin() {
+		return mappingDocument.getOrigin();
 	}
 
-	@Override
-	public boolean isAutoImport() {
-		return autoImport;
+	private HbmBindingContext bindingContext() {
+		return mappingDocument.getMappingLocalBindingContext();
 	}
 
-	@Override
-	public Origin getOrigin() {
-		return jaxbRoot.getOrigin();
-	}
-
-	@Override
-	public ServiceRegistry getServiceRegistry() {
-		return getMetadataImplementor().getServiceRegistry();
-	}
-
-	@Override
-	public NamingStrategy getNamingStrategy() {
-		return getMetadataImplementor().getOptions().getNamingStrategy();
-	}
-
-    @Override
-    public boolean isGloballyQuotedIdentifiers() {
-        return getMetadataImplementor().isGloballyQuotedIdentifiers();
-    }
-
-    @Override
-	public MappingDefaults getMappingDefaults() {
-		return mappingDefaults;
-	}
-
-	@Override
-	public MetaAttributeContext getMetaAttributeContext() {
-		return metaAttributeContext;
-	}
-
-	@Override
-	public MetadataImplementor getMetadataImplementor() {
-		return hbmHandler.getMetadataImplementor();
-	}
-
-	@Override
-	public <T> Class<T> locateClassByName(String name) {
-		return getMetadataImplementor().locateClassByName( name );
-	}
-
-	@Override
-	public JavaType makeJavaType(String className) {
-		return getMetadataImplementor().makeJavaType( className );
-	}
-
-	@Override
-	public Value<Class<?>> makeClassReference(String className) {
-		return getMetadataImplementor().makeClassReference( className );
+	private <T> Class<T> classForName(String name) {
+		return classLoaderService.getValue().classForName( bindingContext().qualifyClassName( name ) );
 	}
 
 	public void processIndependentMetadata() {
@@ -175,15 +99,16 @@ public class HibernateMappingProcessor implements HbmBindingContext {
 	}
 
 	private void processDatabaseObjectDefinitions() {
-		if ( hibernateMapping.getDatabaseObject() == null ) {
+		if ( mappingRoot().getDatabaseObject() == null ) {
 			return;
 		}
-		for ( XMLHibernateMapping.XMLDatabaseObject databaseObjectElement : hibernateMapping.getDatabaseObject() ) {
+
+		for ( XMLHibernateMapping.XMLDatabaseObject databaseObjectElement : mappingRoot().getDatabaseObject() ) {
 			final AuxiliaryDatabaseObject auxiliaryDatabaseObject;
 			if ( databaseObjectElement.getDefinition() != null ) {
 				final String className = databaseObjectElement.getDefinition().getClazz();
 				try {
-					auxiliaryDatabaseObject = (AuxiliaryDatabaseObject) classLoaderService.getValue().classForName( className ).newInstance();
+					auxiliaryDatabaseObject = (AuxiliaryDatabaseObject) classForName( className ).newInstance();
 				}
 				catch (ClassLoadingException e) {
 					throw e;
@@ -191,7 +116,7 @@ public class HibernateMappingProcessor implements HbmBindingContext {
 				catch (Exception e) {
 					throw new MappingException(
 							"could not instantiate custom database object class [" + className + "]",
-							jaxbRoot.getOrigin()
+							origin()
 					);
 				}
 			}
@@ -208,20 +133,21 @@ public class HibernateMappingProcessor implements HbmBindingContext {
 						dialectScopes
 				);
 			}
-			getMetadataImplementor().addAuxiliaryDatabaseObject( auxiliaryDatabaseObject );
+			metadata.addAuxiliaryDatabaseObject( auxiliaryDatabaseObject );
 		}
 	}
 
 	private void processTypeDefinitions() {
-		if ( hibernateMapping.getTypedef() == null ) {
+		if ( mappingRoot().getTypedef() == null ) {
 			return;
 		}
-		for ( XMLHibernateMapping.XMLTypedef typedef : hibernateMapping.getTypedef() ) {
+
+		for ( XMLHibernateMapping.XMLTypedef typedef : mappingRoot().getTypedef() ) {
 			final Map<String, String> parameters = new HashMap<String, String>();
 			for ( XMLParamElement paramElement : typedef.getParam() ) {
 				parameters.put( paramElement.getName(), paramElement.getValue() );
 			}
-			getMetadataImplementor().addTypeDefinition(
+			metadata.addTypeDefinition(
 					new TypeDef(
 							typedef.getName(),
 							typedef.getClazz(),
@@ -237,10 +163,11 @@ public class HibernateMappingProcessor implements HbmBindingContext {
 	}
 
 	private void processFilterDefinitions() {
-		if(hibernateMapping.getFilterDef() == null){
+		if ( mappingRoot().getFilterDef() == null ) {
 			return;
 		}
-		for ( XMLHibernateMapping.XMLFilterDef filterDefinition : hibernateMapping.getFilterDef() ) {
+
+		for ( XMLHibernateMapping.XMLFilterDef filterDefinition : mappingRoot().getFilterDef() ) {
 			final String name = filterDefinition.getName();
 			final Map<String,Type> parameters = new HashMap<String, Type>();
 			String condition = null;
@@ -257,42 +184,30 @@ public class HibernateMappingProcessor implements HbmBindingContext {
 					// todo : should really delay this resolution until later to allow typedef names
 					parameters.put(
 							paramElement.getName(),
-							getMetadataImplementor().getTypeResolver().heuristicType( paramElement.getType() )
+							metadata.getTypeResolver().heuristicType( paramElement.getType() )
 					);
 				}
 				else {
-					throw new MappingException( "Unrecognized nested filter content", jaxbRoot.getOrigin() );
+					throw new MappingException( "Unrecognized nested filter content", origin() );
 				}
 			}
 			if ( condition == null ) {
 				condition = filterDefinition.getCondition();
 			}
-			getMetadataImplementor().addFilterDefinition( new FilterDefinition( name, condition, parameters ) );
+			metadata.addFilterDefinition( new FilterDefinition( name, condition, parameters ) );
 		}
 	}
 
 	private void processIdentifierGenerators() {
-		if ( hibernateMapping.getIdentifierGenerator() == null ) {
+		if ( mappingRoot().getIdentifierGenerator() == null ) {
 			return;
 		}
-		for ( XMLHibernateMapping.XMLIdentifierGenerator identifierGeneratorElement : hibernateMapping.getIdentifierGenerator() ) {
-			getMetadataImplementor().registerIdentifierGenerator(
+
+		for ( XMLHibernateMapping.XMLIdentifierGenerator identifierGeneratorElement : mappingRoot().getIdentifierGenerator() ) {
+			metadata.registerIdentifierGenerator(
 					identifierGeneratorElement.getName(),
 					identifierGeneratorElement.getClazz()
 			);
-		}
-	}
-
-	public void processMappingMetadata(List<String> processedEntityNames) {
-		if ( hibernateMapping.getClazzOrSubclassOrJoinedSubclass() == null ) {
-			return;
-		}
-
-		final BindingCreator bindingCreator = new BindingCreator( this, processedEntityNames );
-
-		for ( Object entityElementO : hibernateMapping.getClazzOrSubclassOrJoinedSubclass() ) {
-			final EntityElement entityElement = (EntityElement) entityElementO;
-			bindingCreator.createEntityBinding( entityElement, null );
 		}
 	}
 
@@ -304,10 +219,11 @@ public class HibernateMappingProcessor implements HbmBindingContext {
 	}
 
 	private void processFetchProfiles(){
-		if ( hibernateMapping.getFetchProfile() == null ) {
+		if ( mappingRoot().getFetchProfile() == null ) {
 			return;
 		}
-		processFetchProfiles( hibernateMapping.getFetchProfile(), null );
+
+		processFetchProfiles( mappingRoot().getFetchProfile(), null );
 	}
 
 	public void processFetchProfiles(List<XMLFetchProfileElement> fetchProfiles, String containingEntityName) {
@@ -320,39 +236,42 @@ public class HibernateMappingProcessor implements HbmBindingContext {
 					throw new MappingException(
 							"could not determine entity for fetch-profile fetch [" + profileName + "]:[" +
 									fetch.getAssociation() + "]",
-							jaxbRoot.getOrigin()
+							origin()
 					);
 				}
 				fetches.add( new FetchProfile.Fetch( entityName, fetch.getAssociation(), fetch.getStyle() ) );
 			}
-			getMetadataImplementor().addFetchProfile( new FetchProfile( profileName, fetches ) );
+			metadata.addFetchProfile( new FetchProfile( profileName, fetches ) );
 		}
 	}
 
 	private void processImports() {
-		if ( hibernateMapping.getImport() == null ) {
+		if ( mappingRoot().getImport() == null ) {
 			return;
 		}
-		for ( XMLHibernateMapping.XMLImport importValue : hibernateMapping.getImport() ) {
-			String className = qualifyClassName( importValue.getClazz() );
+
+		for ( XMLHibernateMapping.XMLImport importValue : mappingRoot().getImport() ) {
+			String className = mappingDocument.getMappingLocalBindingContext().qualifyClassName( importValue.getClazz() );
 			String rename = importValue.getRename();
 			rename = ( rename == null ) ? StringHelper.unqualify( className ) : rename;
-			getMetadataImplementor().addImport( className, rename );
+			metadata.addImport( className, rename );
 		}
 	}
 
 	private void processResultSetMappings() {
-		if ( hibernateMapping.getResultset() == null ) {
+		if ( mappingRoot().getResultset() == null ) {
 			return;
 		}
+
 //			bindResultSetMappingDefinitions( element, null, mappings );
 	}
 
 	private void processNamedQueries() {
-		if ( hibernateMapping.getQueryOrSqlQuery() == null ) {
+		if ( mappingRoot().getQueryOrSqlQuery() == null ) {
 			return;
 		}
-		for ( Object queryOrSqlQuery : hibernateMapping.getQueryOrSqlQuery() ) {
+
+		for ( Object queryOrSqlQuery : mappingRoot().getQueryOrSqlQuery() ) {
 			if ( XMLQueryElement.class.isInstance( queryOrSqlQuery ) ) {
 //					bindNamedQuery( element, null, mappings );
 			}
@@ -362,28 +281,9 @@ public class HibernateMappingProcessor implements HbmBindingContext {
 			else {
 				throw new MappingException(
 						"unknown type of query: " +
-								queryOrSqlQuery.getClass().getName(), jaxbRoot.getOrigin()
+								queryOrSqlQuery.getClass().getName(), origin()
 				);
 			}
 		}
-	}
-
-	private Value<ClassLoaderService> classLoaderService = new Value<ClassLoaderService>(
-			new Value.DeferredInitializer<ClassLoaderService>() {
-				@Override
-				public ClassLoaderService initialize() {
-					return getMetadataImplementor().getServiceRegistry().getService( ClassLoaderService.class );
-				}
-			}
-	);
-
-	@Override
-	public String qualifyClassName(String unqualifiedName) {
-		return Helper.qualifyIfNeeded( unqualifiedName, mappingDefaults.getPackageName() );
-	}
-
-	@Override
-	public String determineEntityName(EntityElement entityElement) {
-		return Helper.determineEntityName( entityElement, mappingDefaults.getPackageName() );
 	}
 }

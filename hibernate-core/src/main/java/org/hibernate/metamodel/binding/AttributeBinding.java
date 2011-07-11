@@ -58,7 +58,10 @@ public interface AttributeBinding {
 	public Value getValue();
 
 	/**
-	 * Obtain the descriptor for the Hibernate Type for this binding.
+	 * Obtain the descriptor for the Hibernate {@link org.hibernate.type.Type} for this binding.
+	 * <p/>
+	 * For information about the Java type, query the {@link Attribute} obtained from {@link #getAttribute()}
+	 * instead.
 	 *
 	 * @return The type descriptor
 	 */

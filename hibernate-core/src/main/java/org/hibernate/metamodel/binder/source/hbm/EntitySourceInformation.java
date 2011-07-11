@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,43 +21,35 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.binding;
+package org.hibernate.metamodel.binder.source.hbm;
 
-import java.util.Map;
-
-import org.hibernate.type.Type;
+import org.hibernate.metamodel.binder.source.hbm.xml.mapping.EntityElement;
 
 /**
- * TODO : javadoc
- *
+ * An aggregation of information about the source of an entity mapping.
+ * 
  * @author Steve Ebersole
  */
-public class HibernateTypeDescriptor {
-	private String typeName;
-	private Type explicitType;
-	private Map<String, String> typeParameters;
+public class EntitySourceInformation {
+	private final EntityElement entityElement;
+	private final MappingDocument sourceMappingDocument;
+	private final String mappedEntityName;
 
-	public String getTypeName() {
-		return typeName;
+	public EntitySourceInformation(EntityElement entityElement, MappingDocument sourceMappingDocument) {
+		this.entityElement = entityElement;
+		this.sourceMappingDocument = sourceMappingDocument;
+		this.mappedEntityName = sourceMappingDocument.getMappingLocalBindingContext().determineEntityName( entityElement );
 	}
 
-	public void setTypeName(String typeName) {
-		this.typeName = typeName;
+	public EntityElement getEntityElement() {
+		return entityElement;
 	}
 
-	public Type getExplicitType() {
-		return explicitType;
+	public MappingDocument getSourceMappingDocument() {
+		return sourceMappingDocument;
 	}
 
-	public void setExplicitType(Type explicitType) {
-		this.explicitType = explicitType;
-	}
-
-	public Map<String, String> getTypeParameters() {
-		return typeParameters;
-	}
-
-	void setTypeParameters(Map<String, String> typeParameters) {
-		this.typeParameters = typeParameters;
+	public String getMappedEntityName() {
+		return mappedEntityName;
 	}
 }

@@ -52,6 +52,7 @@ import org.hibernate.metamodel.binder.source.MappingDefaults;
 import org.hibernate.metamodel.binder.source.MetaAttributeContext;
 import org.hibernate.metamodel.binder.source.MetadataImplementor;
 import org.hibernate.metamodel.binder.source.SourceProcessor;
+import org.hibernate.metamodel.binder.source.annotations.AnnotationsSourceProcessor;
 import org.hibernate.metamodel.binder.source.hbm.HbmSourceProcessorImpl;
 import org.hibernate.metamodel.binding.AttributeBinding;
 import org.hibernate.metamodel.binding.EntityBinding;
@@ -59,13 +60,12 @@ import org.hibernate.metamodel.binding.FetchProfile;
 import org.hibernate.metamodel.binding.IdGenerator;
 import org.hibernate.metamodel.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.binding.TypeDef;
-import org.hibernate.metamodel.domain.JavaType;
+import org.hibernate.metamodel.domain.BasicType;
+import org.hibernate.metamodel.domain.Type;
 import org.hibernate.metamodel.relational.Database;
-import org.hibernate.metamodel.binder.source.annotations.AnnotationsSourceProcessor;
 import org.hibernate.persister.spi.PersisterClassResolver;
 import org.hibernate.service.BasicServiceRegistry;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
-import org.hibernate.type.Type;
 import org.hibernate.type.TypeResolver;
 
 /**
@@ -311,7 +311,8 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		return typeDefs.values();
 	}
 
-	public TypeDef getTypeDef(String name) {
+	@Override
+	public TypeDef getTypeDefinition(String name) {
 		return typeDefs.get( name );
 	}
 
@@ -345,8 +346,9 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	@Override
-	public JavaType makeJavaType(String className) {
-		return new JavaType( className, classLoaderService() );
+	public Type makeJavaType(String className) {
+		// todo : have this perform some analysis of the incoming type name to determine appropriate return
+		return new BasicType( className, makeClassReference( className ) );
 	}
 
 	@Override
@@ -493,7 +495,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	@Override
-	public Type getIdentifierType(String entityName) throws MappingException {
+	public org.hibernate.type.Type getIdentifierType(String entityName) throws MappingException {
 		EntityBinding entityBinding = getEntityBinding( entityName );
 		if ( entityBinding == null ) {
 			throw new MappingException( "Entity binding not known: " + entityName );
@@ -516,7 +518,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	@Override
-	public Type getReferencedPropertyType(String entityName, String propertyName) throws MappingException {
+	public org.hibernate.type.Type getReferencedPropertyType(String entityName, String propertyName) throws MappingException {
 		EntityBinding entityBinding = getEntityBinding( entityName );
 		if ( entityBinding == null ) {
 			throw new MappingException( "Entity binding not known: " + entityName );

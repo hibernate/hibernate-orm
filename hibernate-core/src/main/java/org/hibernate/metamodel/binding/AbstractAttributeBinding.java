@@ -44,13 +44,14 @@ import org.hibernate.metamodel.relational.state.ValueCreator;
 import org.hibernate.metamodel.relational.state.ValueRelationalState;
 
 /**
- * TODO : javadoc
+ * Basic support for {@link AttributeBinding} implementors
  *
  * @author Steve Ebersole
  */
 public abstract class AbstractAttributeBinding implements AttributeBinding {
-	private final HibernateTypeDescriptor hibernateTypeDescriptor = new HibernateTypeDescriptor();
 	private final EntityBinding entityBinding;
+
+	private final HibernateTypeDescriptor hibernateTypeDescriptor = new HibernateTypeDescriptor();
 	private final Set<EntityReferencingAttributeBinding> entityReferencingAttributeBindings = new HashSet<EntityReferencingAttributeBinding>();
 
 	private Attribute attribute;
@@ -61,9 +62,6 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 	private boolean isAlternateUniqueKey;
 	private Set<CascadeType> cascadeTypes;
 	private boolean optimisticLockable;
-
-	// DOM4J specific...
-	private String nodeName;
 
 	private MetaAttributeContext metaAttributeContext;
 
@@ -79,7 +77,6 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 		isAlternateUniqueKey = state.isAlternateUniqueKey();
 		cascadeTypes = state.getCascadeTypes();
 		optimisticLockable = state.isOptimisticLockable();
-		nodeName = state.getNodeName();
 		metaAttributeContext = state.getMetaAttributeContext();
 	}
 
@@ -95,6 +92,10 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 
 	protected void setAttribute(Attribute attribute) {
 		this.attribute = attribute;
+	}
+
+	public void setValue(Value value) {
+		this.value = value;
 	}
 
 	protected boolean forceNonNullable() {
@@ -154,10 +155,6 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 
 	public boolean isOptimisticLockable() {
 		return optimisticLockable;
-	}
-
-	public String getNodeName() {
-		return nodeName;
 	}
 
 	@Override
@@ -256,7 +253,7 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 		return isLazy;
 	}
 
-	protected void setLazy(boolean isLazy) {
+	public void setLazy(boolean isLazy) {
 		this.isLazy = isLazy;
 	}
 

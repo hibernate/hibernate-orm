@@ -88,7 +88,7 @@ public abstract class AbstractAttributeContainer implements AttributeContainer, 
 	}
 
 	@Override
-	public SingularAttribute getOrCreateSingularAttribute(String name) {
+	public SingularAttribute locateOrCreateSingularAttribute(String name) {
 		SingularAttribute attribute = (SingularAttribute) getAttribute( name );
 		if ( attribute == null ) {
 
@@ -99,7 +99,7 @@ public abstract class AbstractAttributeContainer implements AttributeContainer, 
 	}
 
 	@Override
-	public SingularAttribute getOrCreateComponentAttribute(String name) {
+	public SingularAttribute locateOrCreateComponentAttribute(String name) {
 		SingularAttribute attribute = (SingularAttribute) getAttribute( name );
 		if ( attribute == null ) {
 			Component component = new Component( name, null );
@@ -110,27 +110,27 @@ public abstract class AbstractAttributeContainer implements AttributeContainer, 
 	}
 
 	@Override
-	public PluralAttribute getOrCreateBag(String name) {
-		return getOrCreatePluralAttribute( name, PluralAttributeNature.BAG );
+	public PluralAttribute locateOrCreateBag(String name) {
+		return locateOrCreatePluralAttribute( name, PluralAttributeNature.BAG );
 	}
 
 	@Override
-	public PluralAttribute getOrCreateSet(String name) {
-		return getOrCreatePluralAttribute( name, PluralAttributeNature.SET );
+	public PluralAttribute locateOrCreateSet(String name) {
+		return locateOrCreatePluralAttribute( name, PluralAttributeNature.SET );
 	}
 
 	@Override
-	public IndexedPluralAttribute getOrCreateList(String name) {
-		return (IndexedPluralAttribute) getOrCreatePluralAttribute( name, PluralAttributeNature.LIST );
+	public IndexedPluralAttribute locateOrCreateList(String name) {
+		return (IndexedPluralAttribute) locateOrCreatePluralAttribute( name, PluralAttributeNature.LIST );
 	}
 
 	@Override
-	public IndexedPluralAttribute getOrCreateMap(String name) {
-		return (IndexedPluralAttribute) getOrCreatePluralAttribute( name, PluralAttributeNature.MAP );
+	public IndexedPluralAttribute locateOrCreateMap(String name) {
+		return (IndexedPluralAttribute) locateOrCreatePluralAttribute( name, PluralAttributeNature.MAP );
 	}
 
 	@Override
-	public PluralAttribute getOrCreatePluralAttribute(String name, PluralAttributeNature nature) {
+	public PluralAttribute locateOrCreatePluralAttribute(String name, PluralAttributeNature nature) {
 		PluralAttribute attribute = (PluralAttribute) getAttribute( name );
 		if ( attribute == null ) {
 			attribute = nature.isIndexed()

@@ -26,6 +26,7 @@ package org.hibernate.metamodel.binder.source.hbm.xml.mapping;
 import java.util.List;
 
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLFetchProfileElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLJoinElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLLoaderElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLResultsetElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSqlDeleteElement;
@@ -64,4 +65,6 @@ public interface EntityElement extends MetaAttributeContainer {
     public List<XMLResultsetElement> getResultset();
 
     public List<Object> getQueryOrSqlQuery();
+
+	public List<Object> getPropertyOrManyToOneOrOneToOne();
 }

@@ -36,7 +36,7 @@ import org.hibernate.metamodel.binder.source.MetadataImplementor;
 import org.hibernate.metamodel.binder.source.annotations.entity.ConfiguredClass;
 import org.hibernate.metamodel.binder.source.annotations.entity.EntityBinder;
 import org.hibernate.metamodel.binder.source.internal.OverriddenMappingDefaults;
-import org.hibernate.metamodel.domain.JavaType;
+import org.hibernate.metamodel.domain.Type;
 import org.hibernate.service.ServiceRegistry;
 
 /**
@@ -120,7 +120,7 @@ public class AnnotationsMetadataProcessor implements AnnotationsBindingContext {
 	}
 
 	@Override
-	public JavaType makeJavaType(String className) {
+	public Type makeJavaType(String className) {
 		return parentBindingContext.makeJavaType( className );
 	}
 

@@ -25,7 +25,7 @@ package org.hibernate.metamodel.binder.source;
 
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.internal.util.Value;
-import org.hibernate.metamodel.domain.JavaType;
+import org.hibernate.metamodel.domain.Type;
 import org.hibernate.service.ServiceRegistry;
 
 /**
@@ -42,7 +42,7 @@ public interface BindingContext {
 
     public <T> Class<T> locateClassByName(String name);
 
-    public JavaType makeJavaType(String className);
+	public Type makeJavaType(String className);
 
     public boolean isGloballyQuotedIdentifiers();
 

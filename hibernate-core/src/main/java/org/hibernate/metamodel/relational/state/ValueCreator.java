@@ -37,12 +37,12 @@ import org.hibernate.metamodel.relational.Value;
  */
 public class ValueCreator {
 
-	public static Column createColumn(TableSpecification table,
-									  String attributeName,
-									  ColumnRelationalState state,
-									  boolean forceNonNullable,
-									  boolean forceUnique
-	) {
+	public static Column createColumn(
+			TableSpecification table,
+			String attributeName,
+			ColumnRelationalState state,
+			boolean forceNonNullable,
+			boolean forceUnique) {
 		final String explicitName = state.getExplicitColumnName();
 		final String logicalColumnName = state.getNamingStrategy().logicalColumnName( explicitName, attributeName );
 		String columnName =
@@ -55,25 +55,26 @@ public class ValueCreator {
 		if ( columnName == null ) {
 			throw new IllegalArgumentException( "columnName must be non-null." );
 		}
-        if( state.isGloballyQuotedIdentifiers()){
+        if ( state.isGloballyQuotedIdentifiers() ) {
             columnName = StringHelper.quote( columnName );
         }
-		Column value = table.getOrCreateColumn( columnName );
+		Column value = table.locateOrCreateColumn( columnName );
 		value.initialize( state, forceNonNullable, forceUnique );
 		return value;
 	}
 
-	public static DerivedValue createDerivedValue(TableSpecification table,
-												  DerivedValueRelationalState state) {
-		return table.getOrCreateDerivedValue( state.getFormula() );
+	public static DerivedValue createDerivedValue(
+			TableSpecification table,
+			DerivedValueRelationalState state) {
+		return table.locateOrCreateDerivedValue( state.getFormula() );
 	}
 
-	public static SimpleValue createSimpleValue(TableSpecification table,
-												String attributeName,
-												SimpleValueRelationalState state,
-												boolean forceNonNullable,
-												boolean forceUnique
-	) {
+	public static SimpleValue createSimpleValue(
+			TableSpecification table,
+			String attributeName,
+			SimpleValueRelationalState state,
+			boolean forceNonNullable,
+			boolean forceUnique) {
 		if ( state instanceof ColumnRelationalState ) {
 			ColumnRelationalState columnRelationalState = ColumnRelationalState.class.cast( state );
 			return createColumn( table, attributeName, columnRelationalState, forceNonNullable, forceUnique );
@@ -86,12 +87,12 @@ public class ValueCreator {
 		}
 	}
 
-	public static Tuple createTuple(TableSpecification table,
-									String attributeName,
-									TupleRelationalState state,
-									boolean forceNonNullable,
-									boolean forceUnique
-	) {
+	public static Tuple createTuple(
+			TableSpecification table,
+			String attributeName,
+			TupleRelationalState state,
+			boolean forceNonNullable,
+			boolean forceUnique) {
 		Tuple tuple = table.createTuple( "[" + attributeName + "]" );
 		for ( SimpleValueRelationalState valueState : state.getRelationalStates() ) {
 			tuple.addValue( createSimpleValue( table, attributeName, valueState, forceNonNullable, forceUnique ) );
@@ -99,11 +100,12 @@ public class ValueCreator {
 		return tuple;
 	}
 
-	public static Value createValue(TableSpecification table,
-									String attributeName,
-									ValueRelationalState state,
-									boolean forceNonNullable,
-									boolean forceUnique) {
+	public static Value createValue(
+			TableSpecification table,
+			String attributeName,
+			ValueRelationalState state,
+			boolean forceNonNullable,
+			boolean forceUnique) {
 		Value value = null;
 		if ( SimpleValueRelationalState.class.isInstance( state ) ) {
 			value = createSimpleValue(

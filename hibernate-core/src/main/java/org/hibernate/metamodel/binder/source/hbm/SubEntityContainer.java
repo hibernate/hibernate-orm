@@ -21,11 +21,15 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.binder.source.hbm.xml.mapping;
+package org.hibernate.metamodel.binder.source.hbm;
 
 /**
+ * Contract for elements within a {@link EntityHierarchy} which can contain sub elements.  Essentially this
+ * abstracts that common aspect away from both root and sub entities.
+ *
  * @author Steve Ebersole
  */
-public interface SubclassEntityElement extends EntityElement {
-    public String getExtends();
+public interface SubEntityContainer {
+	public void addSubEntityDescriptor(EntityHierarchySubEntity subEntityDescriptor);
+	public Iterable<EntityHierarchySubEntity> subEntityDescriptors();
 }

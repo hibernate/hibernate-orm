@@ -56,8 +56,8 @@ public abstract class AbstractTableSpecification implements TableSpecification {
 	}
 
 	@Override
-	public Column getOrCreateColumn(String name) {
-		if ( values.containsKey( name ) ) {
+	public Column locateOrCreateColumn(String name) {
+		if(values.containsKey( name )){
 			return (Column) values.get( name );
 		}
 		final Column column = new Column( this, values.size(), name );
@@ -66,8 +66,8 @@ public abstract class AbstractTableSpecification implements TableSpecification {
 	}
 
 	@Override
-	public DerivedValue getOrCreateDerivedValue(String fragment) {
-		if ( values.containsKey( fragment ) ) {
+	public DerivedValue locateOrCreateDerivedValue(String fragment) {
+		if(values.containsKey( fragment )){
 			return (DerivedValue) values.get( fragment );
 		}
 		final DerivedValue value = new DerivedValue( this, values.size(), fragment );

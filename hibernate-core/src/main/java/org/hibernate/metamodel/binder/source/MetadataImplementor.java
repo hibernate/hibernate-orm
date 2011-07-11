@@ -71,8 +71,6 @@ public interface MetadataImplementor extends Metadata, BindingContext, Mapping {
 
 	public void addResultSetMapping(ResultSetMappingDefinition resultSetMappingDefinition);
 
-	public void addAuxiliaryDatabaseObject(AuxiliaryDatabaseObject auxiliaryDatabaseObject);
-
 	// todo : this needs to move to AnnotationBindingContext
 	public void setGloballyQuotedIdentifiers(boolean b);
 

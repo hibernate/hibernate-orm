@@ -29,7 +29,6 @@ import org.junit.Test;
 
 import org.hibernate.internal.util.Value;
 import org.hibernate.metamodel.domain.Entity;
-import org.hibernate.metamodel.domain.JavaType;
 import org.hibernate.metamodel.domain.SingularAttribute;
 import org.hibernate.metamodel.relational.Column;
 import org.hibernate.metamodel.relational.Datatype;
@@ -61,14 +60,14 @@ public class SimpleValueBindingTests extends BaseUnitTestCase {
 		entityBinding.setEntity( entity );
 		entityBinding.setBaseTable( table );
 
-		SingularAttribute idAttribute = entity.getOrCreateSingularAttribute( "id" );
+		SingularAttribute idAttribute = entity.locateOrCreateSingularAttribute( "id" );
 		SimpleAttributeBinding attributeBinding = entityBinding.makeSimpleAttributeBinding( idAttribute );
 		attributeBinding.getHibernateTypeDescriptor().setTypeName( "long" );
 		assertSame( idAttribute, attributeBinding.getAttribute() );
 
 		entityBinding.getEntityIdentifier().setValueBinding( attributeBinding );
 
-		Column idColumn = table.getOrCreateColumn( "id" );
+		Column idColumn = table.locateOrCreateColumn( "id" );
 		idColumn.setDatatype( BIGINT );
 		idColumn.setSize( Size.precision( 18, 0 ) );
 		table.getPrimaryKey().addColumn( idColumn );

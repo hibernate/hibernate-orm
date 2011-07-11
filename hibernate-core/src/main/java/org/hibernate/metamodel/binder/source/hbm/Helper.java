@@ -35,8 +35,12 @@ import org.hibernate.metamodel.binder.source.MetaAttributeContext;
 import org.hibernate.metamodel.binder.source.hbm.xml.mapping.CustomSqlElement;
 import org.hibernate.metamodel.binder.source.hbm.xml.mapping.EntityElement;
 import org.hibernate.metamodel.binding.CustomSQL;
+import org.hibernate.metamodel.binding.InheritanceType;
 import org.hibernate.metamodel.binding.MetaAttribute;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLJoinedSubclassElement;
 import org.hibernate.metamodel.source.hbm.xml.mapping.XMLMetaElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLSubclassElement;
+import org.hibernate.metamodel.source.hbm.xml.mapping.XMLUnionSubclassElement;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.classloading.spi.ClassLoadingException;
@@ -46,6 +50,20 @@ import org.hibernate.service.classloading.spi.ClassLoadingException;
  * @author Gail Badner
  */
 public class Helper {
+	public static InheritanceType interpretInheritanceType(EntityElement entityElement) {
+		if ( XMLSubclassElement.class.isInstance( entityElement ) ) {
+			return InheritanceType.SINGLE_TABLE;
+		}
+		else if ( XMLJoinedSubclassElement.class.isInstance( entityElement ) ) {
+			return InheritanceType.JOINED;
+		}
+		else if ( XMLUnionSubclassElement.class.isInstance( entityElement ) ) {
+			return InheritanceType.TABLE_PER_CLASS;
+		}
+		else {
+			return InheritanceType.NO_INHERITANCE;
+		}
+	}
 
 	/**
 	 * Given a user-specified description of how to perform custom SQL, build the {@link CustomSQL} representation.
@@ -138,6 +156,10 @@ public class Helper {
 
 	public static int getIntValue(String value, int defaultValue) {
 		return value == null ? defaultValue : Integer.parseInt( value );
+	}
+
+	public static long getLongValue(String value, long defaultValue) {
+		return value == null ? defaultValue : Long.parseLong( value );
 	}
 
 	public static boolean getBooleanValue(String value, boolean defaultValue) {

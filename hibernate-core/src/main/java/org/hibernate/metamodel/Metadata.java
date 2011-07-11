@@ -76,6 +76,8 @@ public interface Metadata {
 
 	public Iterable<PluralAttributeBinding> getCollectionBindings();
 
+	public TypeDef getTypeDefinition(String name);
+
 	public Iterable<TypeDef> getTypeDefinitions();
 
 	public Iterable<FilterDefinition> getFilterDefinitions();

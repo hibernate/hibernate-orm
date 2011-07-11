@@ -24,7 +24,10 @@
 package org.hibernate.metamodel.binding;
 
 import org.hibernate.mapping.PropertyGeneration;
+import org.hibernate.metamodel.binder.source.MetaAttributeContext;
 import org.hibernate.metamodel.binding.state.SimpleAttributeBindingState;
+import org.hibernate.metamodel.domain.SingularAttribute;
+import org.hibernate.metamodel.relational.Value;
 import org.hibernate.metamodel.relational.state.ColumnRelationalState;
 import org.hibernate.metamodel.relational.state.ValueRelationalState;
 
@@ -34,13 +37,19 @@ import org.hibernate.metamodel.relational.state.ValueRelationalState;
  * @author Steve Ebersole
  */
 public class SimpleAttributeBinding extends AbstractAttributeBinding implements KeyValueBinding {
-	private final boolean forceNonNullable;
-	private final boolean forceUnique;
 	private boolean insertable;
 	private boolean updatable;
-	private boolean keyCascadeDeleteEnabled;
-	private String unsavedValue;
 	private PropertyGeneration generation;
+
+	private String propertyAccessorName;
+	private String unsavedValue;
+
+	private boolean forceNonNullable;
+	private boolean forceUnique;
+	private boolean keyCascadeDeleteEnabled;
+
+	private boolean includedInOptimisticLocking;
+	private MetaAttributeContext metaAttributeContext;
 
 	SimpleAttributeBinding(EntityBinding entityBinding, boolean forceNonNullable, boolean forceUnique) {
 		super( entityBinding );
@@ -68,6 +77,11 @@ public class SimpleAttributeBinding extends AbstractAttributeBinding implements 
 	}
 
 	@Override
+	public SingularAttribute getAttribute() {
+		return (SingularAttribute) super.getAttribute();
+	}
+
+	@Override
 	public boolean isSimpleValue() {
 		return true;
 	}
@@ -76,7 +90,7 @@ public class SimpleAttributeBinding extends AbstractAttributeBinding implements 
 		return insertable;
 	}
 
-	protected void setInsertable(boolean insertable) {
+	public void setInsertable(boolean insertable) {
 		this.insertable = insertable;
 	}
 
@@ -84,7 +98,7 @@ public class SimpleAttributeBinding extends AbstractAttributeBinding implements 
 		return updatable;
 	}
 
-	protected void setUpdatable(boolean updatable) {
+	public void setUpdatable(boolean updatable) {
 		this.updatable = updatable;
 	}
 
@@ -116,5 +130,33 @@ public class SimpleAttributeBinding extends AbstractAttributeBinding implements 
 
 	public PropertyGeneration getGeneration() {
 		return generation;
+	}
+
+	public void setGeneration(PropertyGeneration generation) {
+		this.generation = generation;
+	}
+
+	public String getPropertyAccessorName() {
+		return propertyAccessorName;
+	}
+
+	public void setPropertyAccessorName(String propertyAccessorName) {
+		this.propertyAccessorName = propertyAccessorName;
+	}
+
+	public boolean isIncludedInOptimisticLocking() {
+		return includedInOptimisticLocking;
+	}
+
+	public void setIncludedInOptimisticLocking(boolean includedInOptimisticLocking) {
+		this.includedInOptimisticLocking = includedInOptimisticLocking;
+	}
+
+	public MetaAttributeContext getMetaAttributeContext() {
+		return metaAttributeContext;
+	}
+
+	public void setMetaAttributeContext(MetaAttributeContext metaAttributeContext) {
+		this.metaAttributeContext = metaAttributeContext;
 	}
 }

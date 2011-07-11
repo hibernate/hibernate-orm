@@ -41,7 +41,7 @@ import org.hibernate.internal.util.Value;
 import org.hibernate.metamodel.binder.source.MappingDefaults;
 import org.hibernate.metamodel.binder.source.MetadataImplementor;
 import org.hibernate.metamodel.binder.source.annotations.AnnotationsBindingContext;
-import org.hibernate.metamodel.domain.JavaType;
+import org.hibernate.metamodel.domain.Type;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 
@@ -93,7 +93,7 @@ public class TestAnnotationsBindingContextImpl implements AnnotationsBindingCont
 	}
 
 	@Override
-	public JavaType makeJavaType(String className) {
+	public Type makeJavaType(String className) {
 		throw new NotYetImplementedException();
 	}
 

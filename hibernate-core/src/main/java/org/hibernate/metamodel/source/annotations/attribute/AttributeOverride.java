@@ -44,6 +44,14 @@ public class AttributeOverride {
 		);
 	}
 
+	public ColumnValues getColumnValues() {
+		return columnValues;
+	}
+
+	public String getAttributePath() {
+		return attributePath;
+	}
+
 	@Override
 	public String toString() {
 		final StringBuilder sb = new StringBuilder();

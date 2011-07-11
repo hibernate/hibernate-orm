@@ -114,6 +114,12 @@ public class ConfiguredClass {
 	 */
 	private final Map<String, EmbeddableClass> embeddedClasses = new HashMap<String, EmbeddableClass>();
 
+	/**
+	 * A map of all attribute overrides defined in this class. The override name is "normalised", meaning as if specified
+	 * on class level. If the override is specified on attribute level the attribute name is used as prefix.
+	 */
+	private final Map<String, AttributeOverride> attributeOverrideMap;
+
 	private final Set<String> transientFieldNames = new HashSet<String>();
 	private final Set<String> transientMethodNames = new HashSet<String>();
 
@@ -134,7 +140,7 @@ public class ConfiguredClass {
 		this.associationAttributeMap = new TreeMap<String, AssociationAttribute>();
 
 		collectAttributes();
-		List<AttributeOverride> attributeOverrideList = findAttributeOverrides();
+		attributeOverrideMap = Collections.unmodifiableMap( findAttributeOverrides() );
 	}
 
 	public String getName() {
@@ -183,6 +189,10 @@ public class ConfiguredClass {
 			attribute = idAttributeMap.get( propertyName );
 		}
 		return attribute;
+	}
+
+	public AttributeOverride geAttributeOverrideForPath(String propertyPath) {
+		return attributeOverrideMap.get( propertyPath );
 	}
 
 	@Override
@@ -533,8 +543,8 @@ public class ConfiguredClass {
 		}
 	}
 
-	private List<AttributeOverride> findAttributeOverrides() {
-		List<AttributeOverride> attributeOverrideList = new ArrayList<AttributeOverride>();
+	private Map<String, AttributeOverride> findAttributeOverrides() {
+		Map<String, AttributeOverride> attributeOverrideList = new HashMap<String, AttributeOverride>();
 
 		AnnotationInstance attributeOverrideAnnotation = JandexHelper.getSingleAnnotation(
 				classInfo,
@@ -542,7 +552,8 @@ public class ConfiguredClass {
 		);
 		if ( attributeOverrideAnnotation != null ) {
 			String prefix = createPathPrefix( attributeOverrideAnnotation );
-			attributeOverrideList.add( new AttributeOverride( prefix, attributeOverrideAnnotation ) );
+			AttributeOverride override = new AttributeOverride( prefix, attributeOverrideAnnotation );
+			attributeOverrideList.put( override.getAttributePath(), override );
 		}
 
 		AnnotationInstance attributeOverridesAnnotation = JandexHelper.getSingleAnnotation(
@@ -553,7 +564,8 @@ public class ConfiguredClass {
 			AnnotationInstance[] annotationInstances = attributeOverridesAnnotation.value().asNestedArray();
 			for ( AnnotationInstance annotationInstance : annotationInstances ) {
 				String prefix = createPathPrefix( annotationInstance );
-				attributeOverrideList.add( new AttributeOverride( prefix, annotationInstance ) );
+				AttributeOverride override = new AttributeOverride( prefix, annotationInstance );
+				attributeOverrideList.put( override.getAttributePath(), override );
 			}
 		}
 		return attributeOverrideList;

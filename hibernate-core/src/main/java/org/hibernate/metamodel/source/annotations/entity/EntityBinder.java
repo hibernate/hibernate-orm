@@ -67,6 +67,7 @@ import org.hibernate.metamodel.relational.UniqueKey;
 import org.hibernate.metamodel.source.annotations.HibernateDotNames;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.attribute.AssociationAttribute;
+import org.hibernate.metamodel.source.annotations.attribute.AttributeOverride;
 import org.hibernate.metamodel.source.annotations.attribute.MappedAttribute;
 import org.hibernate.metamodel.source.annotations.attribute.SimpleAttribute;
 import org.hibernate.metamodel.source.annotations.attribute.state.binding.AttributeBindingStateImpl;
@@ -409,7 +410,7 @@ public class EntityBinder {
 				entityClass.getClassInfo(), JPADotNames.TABLE
 		);
 		if ( tableAnnotation != null ) {
-			schemaName = JandexHelper.getValue( tableAnnotation, "schema", String.class);
+			schemaName = JandexHelper.getValue( tableAnnotation, "schema", String.class );
 			catalogName = JandexHelper.getValue( tableAnnotation, "catalog", String.class );
 			String explicitTableName = JandexHelper.getValue( tableAnnotation, "name", String.class );
 			if ( StringHelper.isNotEmpty( explicitTableName ) ) {
@@ -614,13 +615,15 @@ public class EntityBinder {
 	private void bindAttributes(EntityBinding entityBinding) {
 		// bind the attributes of this entity
 		AttributeContainer entity = entityBinding.getEntity();
-		bindAttributes( entityBinding, entity, entityClass );
+		bindAttributes( entityBinding, entity, entityClass, null );
 
 		// bind potential mapped super class attributes
+		ConfiguredClass childClass  = entityClass;
 		ConfiguredClass parent = entityClass.getParent();
 		Hierarchical superTypeContainer = entityBinding.getEntity().getSuperType();
 		while ( containsPotentialMappedSuperclassAttributes( parent ) ) {
-			bindAttributes( entityBinding, superTypeContainer, parent );
+			bindAttributes( entityBinding, superTypeContainer, parent, childClass );
+			childClass = parent;
 			parent = parent.getParent();
 			superTypeContainer = superTypeContainer.getSuperType();
 		}
@@ -631,8 +634,15 @@ public class EntityBinder {
 				ConfiguredClassType.NON_ENTITY.equals( parent.getConfiguredClassType() ) );
 	}
 
-	private void bindAttributes(EntityBinding entityBinding, AttributeContainer attributeContainer, ConfiguredClass configuredClass) {
+	private void bindAttributes(EntityBinding entityBinding, AttributeContainer attributeContainer, ConfiguredClass configuredClass, ConfiguredClass childClass) {
 		for ( SimpleAttribute simpleAttribute : configuredClass.getSimpleAttributes() ) {
+			String attributeName = simpleAttribute.getName();
+
+			if(childClass != null && childClass.geAttributeOverrideForPath(attributeName) != null) {
+				AttributeOverride override = childClass.geAttributeOverrideForPath(attributeName);
+				simpleAttribute = SimpleAttribute.createSimpleAttribute( simpleAttribute, override.getColumnValues() );
+			}
+
 			bindSingleMappedAttribute(
 					entityBinding,
 					attributeContainer,

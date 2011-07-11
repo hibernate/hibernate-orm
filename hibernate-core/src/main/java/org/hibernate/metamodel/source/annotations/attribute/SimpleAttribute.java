@@ -84,10 +84,16 @@ public class SimpleAttribute extends MappedAttribute {
 	/**
 	 * Defines the column values (relational values) for this property.
 	 */
-	private final ColumnValues columnValues;
+	private ColumnValues columnValues;
 
 	public static SimpleAttribute createSimpleAttribute(String name, String type, Map<DotName, List<AnnotationInstance>> annotations) {
 		return new SimpleAttribute( name, type, annotations, false );
+	}
+
+	public static SimpleAttribute createSimpleAttribute(SimpleAttribute simpleAttribute, ColumnValues columnValues) {
+		SimpleAttribute attribute = new SimpleAttribute( simpleAttribute.getName(), simpleAttribute.getType(), simpleAttribute.getAnnotations(), false );
+		attribute.columnValues = columnValues;
+		return attribute;
 	}
 
 	public static SimpleAttribute createDiscriminatorAttribute(Map<DotName, List<AnnotationInstance>> annotations) {

@@ -48,13 +48,12 @@ import static junit.framework.Assert.assertTrue;
 
 /**
  * Tests for {@link javax.persistence.MappedSuperclass} {@link javax.persistence.AttributeOverrides}
- * and {@code javax.persistence.AttributeOverride}.
+ * and {@link javax.persistence.AttributeOverride}.
  *
  * @author Hardy Ferentschik
  */
 public class MappedSuperclassTests extends BaseAnnotationBindingTestCase {
 	@Test
-	@FailureExpected(jiraKey = "HHH-6392", message = "work in progress")
 	public void testMappedSuperclass() {
 		buildMetadataSources( MyMappedSuperClass.class, MyEntity.class, Address.class );
 
@@ -75,7 +74,7 @@ public class MappedSuperclassTests extends BaseAnnotationBindingTestCase {
 		SimpleValue value = tuple.values().iterator().next();
 		assertTrue( value instanceof Column );
 		Column column = (Column) value;
-		assertEquals( "Wrong column name", "MY_NAME", column.getColumnName().toString() );
+		assertEquals( "Wrong column name", "`MY_NAME`", column.getColumnName().toString() );
 
 		AttributeBinding idBinding = binding.getEntityIdentifier().getValueBinding();
 		assertNotNull( "the id attribute should be bound", idBinding );

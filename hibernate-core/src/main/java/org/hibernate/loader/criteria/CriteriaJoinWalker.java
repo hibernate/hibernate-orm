@@ -142,45 +142,62 @@ public class CriteriaJoinWalker extends AbstractEntityJoinWalker {
 			String[] lhsColumns,
 			final boolean nullable,
 			final int currentDepth) throws MappingException {
+		JoinType ret;
 		if ( translator.isJoin( path.getFullPath() ) ) {
-			return translator.getJoinType( path.getFullPath() );
+			ret = translator.getJoinType( path.getFullPath() );
 		}
 		else {
 			if ( translator.hasProjection() ) {
-				return JoinType.NONE;
+				ret = JoinType.NONE;
 			}
 			else {
 				FetchMode fetchMode = translator.getRootCriteria().getFetchMode( path.getFullPath() );
 				if ( isDefaultFetchMode( fetchMode ) ) {
-					if ( isJoinFetchEnabledByProfile( persister, path, propertyNumber ) ) {
-						return getJoinType( nullable, currentDepth );
+					if ( persister != null ) {
+						if ( isJoinFetchEnabledByProfile( persister, path, propertyNumber ) ) {
+							ret = getJoinType( nullable, currentDepth );
+						}
+						else {
+							ret = super.getJoinType(
+									persister,
+									path,
+									propertyNumber,
+									associationType,
+									metadataFetchMode,
+									metadataCascadeStyle,
+									lhsTable,
+									lhsColumns,
+									nullable,
+									currentDepth
+							);
+						}
 					}
 					else {
-						return super.getJoinType(
-								persister,
-								path,
-								propertyNumber,
+						ret = super.getJoinType(
 								associationType,
 								metadataFetchMode,
-								metadataCascadeStyle,
+								path,
 								lhsTable,
 								lhsColumns,
 								nullable,
-								currentDepth
+								currentDepth,
+								metadataCascadeStyle
 						);
+
 					}
 				}
 				else {
 					if ( fetchMode == FetchMode.JOIN ) {
 						isDuplicateAssociation( lhsTable, lhsColumns, associationType ); //deliberately ignore return value!
-						return getJoinType( nullable, currentDepth );
+						ret = getJoinType( nullable, currentDepth );
 					}
 					else {
-						return JoinType.NONE;
+						ret = JoinType.NONE;
 					}
 				}
 			}
 		}
+		return ret;
 	}
 
 	protected JoinType getJoinType(
@@ -192,18 +209,17 @@ public class CriteriaJoinWalker extends AbstractEntityJoinWalker {
 			boolean nullable,
 			int currentDepth,
 			CascadeStyle cascadeStyle) throws MappingException {
-		return ( translator.isJoin( path.getFullPath() ) ?
-				translator.getJoinType( path.getFullPath() ) :
-				super.getJoinType(
-						associationType,
-						config,
-						path,
-						lhsTable,
-						lhsColumns,
-						nullable,
-						currentDepth,
-						cascadeStyle
-				)
+		return getJoinType(
+				null,
+				path,
+				-1,
+				associationType,
+				config,
+				cascadeStyle,
+				lhsTable,
+				lhsColumns,
+				nullable,
+				currentDepth
 		);
 	}
 

@@ -31,29 +31,24 @@ import org.hibernate.engine.spi.Mapping;
 /**
  * @author Steve Ebersole
  */
-public class BasicAuxiliaryDatabaseObjectImpl implements AuxiliaryDatabaseObject {
+public class BasicAuxiliaryDatabaseObjectImpl extends AbstractAuxiliaryDatabaseObject {
 	private final String createString;
 	private final String dropString;
-	private final Set<String> dialectScopes;
 
 	public BasicAuxiliaryDatabaseObjectImpl(String createString, String dropString, Set<String> dialectScopes) {
+		super( dialectScopes );
 		this.createString = createString;
 		this.dropString = dropString;
-		this.dialectScopes = dialectScopes;
 	}
 
-	@Override
-	public boolean appliesToDialect(Dialect dialect) {
-		// empty means no scoping
-		return dialectScopes.isEmpty() || dialectScopes.contains( dialect.getClass().getName() );
-	}
-
-	@Override
+	// TODO: fix this when HHH-6431 is fixed
+	//@Override
 	public String sqlCreateString(Dialect dialect, Mapping p, String defaultCatalog, String defaultSchema) {
 		return createString;
 	}
 
-	@Override
+	// TODO: fix this when HHH-6431 is fixed
+	//@Override
 	public String sqlDropString(Dialect dialect, String defaultCatalog, String defaultSchema) {
 		return dropString;
 	}

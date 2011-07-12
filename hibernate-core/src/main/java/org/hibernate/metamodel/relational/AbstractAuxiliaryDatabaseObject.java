@@ -24,9 +24,11 @@
 package org.hibernate.metamodel.relational;
 
 import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.mapping.AuxiliaryDatabaseObject;
 
 /**
  * Convenience base class for {@link org.hibernate.mapping.AuxiliaryDatabaseObject}s.
@@ -38,27 +40,37 @@ import org.hibernate.mapping.AuxiliaryDatabaseObject;
  * @author Steve Ebersole
  */
 public abstract class AbstractAuxiliaryDatabaseObject implements AuxiliaryDatabaseObject {
+	// Use a UUID in identifier prefix because this object is not qualified by a schema/catalog
+	// (not sure this matters...)
+	private static final String EXPORT_IDENTIFIER_PREFIX = "auxiliary-object-" + UUID.randomUUID();
+	private static final AtomicInteger counter = new AtomicInteger( 0 );
+	private final String exportIdentifier;
+	private final Set<String> dialectScopes;
 
-	private final HashSet dialectScopes;
-
-	protected AbstractAuxiliaryDatabaseObject() {
-		this.dialectScopes = new HashSet();
-	}
-
-	protected AbstractAuxiliaryDatabaseObject(HashSet dialectScopes) {
-		this.dialectScopes = dialectScopes;
+	protected AbstractAuxiliaryDatabaseObject(Set<String> dialectScopes) {
+		this.dialectScopes =  dialectScopes == null ? new HashSet<String>() : dialectScopes;
+		this.exportIdentifier =
+				new StringBuilder( EXPORT_IDENTIFIER_PREFIX )
+						.append( '.' )
+						.append( counter.getAndIncrement() )
+						.toString();
 	}
 
 	public void addDialectScope(String dialectName) {
 		dialectScopes.add( dialectName );
 	}
 
-	public HashSet getDialectScopes() {
+	public Iterable<String> getDialectScopes() {
 		return dialectScopes;
 	}
 
 	public boolean appliesToDialect(Dialect dialect) {
 		// empty means no scoping
 		return dialectScopes.isEmpty() || dialectScopes.contains( dialect.getClass().getName() );
+	}
+
+	@Override
+	public String getExportIdentifier() {
+		return exportIdentifier;
 	}
 }

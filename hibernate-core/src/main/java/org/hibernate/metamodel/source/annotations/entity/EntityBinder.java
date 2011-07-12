@@ -613,33 +613,55 @@ public class EntityBinder {
 	}
 
 	private void bindAttributes(EntityBinding entityBinding) {
+		// collect attribute overrides as we map the attributes
+		Map<String, AttributeOverride> attributeOverrideMap = new HashMap<String, AttributeOverride>();
+
 		// bind the attributes of this entity
 		AttributeContainer entity = entityBinding.getEntity();
-		bindAttributes( entityBinding, entity, entityClass, null );
+		bindAttributes( entityBinding, entity, entityClass, attributeOverrideMap );
 
 		// bind potential mapped super class attributes
-		ConfiguredClass childClass  = entityClass;
+		attributeOverrideMap.putAll( entityClass.getAttributeOverrideMap() );
 		ConfiguredClass parent = entityClass.getParent();
 		Hierarchical superTypeContainer = entityBinding.getEntity().getSuperType();
-		while ( containsPotentialMappedSuperclassAttributes( parent ) ) {
-			bindAttributes( entityBinding, superTypeContainer, parent, childClass );
-			childClass = parent;
+		while ( containsMappedSuperclassAttributes( parent ) ) {
+			bindAttributes( entityBinding, superTypeContainer, parent, attributeOverrideMap );
+			addNewOverridesToMap( parent, attributeOverrideMap );
 			parent = parent.getParent();
 			superTypeContainer = superTypeContainer.getSuperType();
 		}
 	}
 
-	private boolean containsPotentialMappedSuperclassAttributes(ConfiguredClass parent) {
+	private void addNewOverridesToMap(ConfiguredClass parent, Map<String, AttributeOverride> attributeOverrideMap) {
+		Map<String, AttributeOverride> overrides = parent.getAttributeOverrideMap();
+		for ( Map.Entry<String, AttributeOverride> entry : overrides.entrySet() ) {
+			if ( !attributeOverrideMap.containsKey( entry.getKey() ) ) {
+				attributeOverrideMap.put( entry.getKey(), entry.getValue() );
+			}
+		}
+	}
+
+	private boolean containsMappedSuperclassAttributes(ConfiguredClass parent) {
 		return parent != null && ( ConfiguredClassType.MAPPED_SUPERCLASS.equals( parent.getConfiguredClassType() ) ||
 				ConfiguredClassType.NON_ENTITY.equals( parent.getConfiguredClassType() ) );
 	}
 
-	private void bindAttributes(EntityBinding entityBinding, AttributeContainer attributeContainer, ConfiguredClass configuredClass, ConfiguredClass childClass) {
+	/**
+	 * Creates attribute bindings for the attributes of {@code configuredClass}
+	 *
+	 * @param entityBinding The entity binding for the class we are currently binding
+	 * @param attributeContainer The domain attribute container to which to add the attribute (could be the entity itself, or a mapped super class
+	 * or a component)
+	 * @param configuredClass the configured containing the attributes to be bound
+	 * @param attributeOverrideMap a map with the accumulated attribute overrides
+	 */
+	private void bindAttributes(EntityBinding entityBinding, AttributeContainer attributeContainer, ConfiguredClass configuredClass, Map<String, AttributeOverride> attributeOverrideMap) {
 		for ( SimpleAttribute simpleAttribute : configuredClass.getSimpleAttributes() ) {
 			String attributeName = simpleAttribute.getName();
 
-			if(childClass != null && childClass.geAttributeOverrideForPath(attributeName) != null) {
-				AttributeOverride override = childClass.geAttributeOverrideForPath(attributeName);
+			// if there is a override apply it
+			AttributeOverride override = attributeOverrideMap.get( attributeName );
+			if ( override != null ) {
 				simpleAttribute = SimpleAttribute.createSimpleAttribute( simpleAttribute, override.getColumnValues() );
 			}
 
@@ -665,7 +687,7 @@ public class EntityBinder {
 		// bind potential mapped super class embeddables
 		ConfiguredClass parent = entityClass.getParent();
 		Hierarchical superTypeContainer = entityBinding.getEntity().getSuperType();
-		while ( containsPotentialMappedSuperclassAttributes( parent ) ) {
+		while ( containsMappedSuperclassAttributes( parent ) ) {
 			bindEmbeddedAttributes( entityBinding, superTypeContainer, parent );
 			parent = parent.getParent();
 			superTypeContainer = superTypeContainer.getSuperType();

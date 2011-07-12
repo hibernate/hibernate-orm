@@ -80,10 +80,6 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 		return typeParameters;
 	}
 
-	public Map<DotName, List<AnnotationInstance>> getAnnotations() {
-		return annotations;
-	}
-
 	/**
 	 * Returns the annotation with the specified name or {@code null}
 	 *
@@ -117,6 +113,10 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 		sb.append( "{name='" ).append( name ).append( '\'' );
 		sb.append( '}' );
 		return sb.toString();
+	}
+
+	Map<DotName, List<AnnotationInstance>> annotations() {
+		return annotations;
 	}
 
 	/**

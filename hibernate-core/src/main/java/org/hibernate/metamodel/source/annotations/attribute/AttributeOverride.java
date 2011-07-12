@@ -12,6 +12,7 @@ import org.hibernate.metamodel.source.annotations.util.JandexHelper;
  * are creating during annotation processing and then applied onto the persistence attributes.
  *
  * @author Hardy Ferentschik
+ * @todo Take care of prefixes of the form 'element', 'key' and 'value'. Add another type enum to handle this. (HF)
  */
 public class AttributeOverride {
 	private static final String PROPERTY_PATH_SEPARATOR = ".";

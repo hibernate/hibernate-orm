@@ -91,7 +91,7 @@ public class SimpleAttribute extends MappedAttribute {
 	}
 
 	public static SimpleAttribute createSimpleAttribute(SimpleAttribute simpleAttribute, ColumnValues columnValues) {
-		SimpleAttribute attribute = new SimpleAttribute( simpleAttribute.getName(), simpleAttribute.getType(), simpleAttribute.getAnnotations(), false );
+		SimpleAttribute attribute = new SimpleAttribute( simpleAttribute.getName(), simpleAttribute.getType(), simpleAttribute.annotations(), false );
 		attribute.columnValues = columnValues;
 		return attribute;
 	}

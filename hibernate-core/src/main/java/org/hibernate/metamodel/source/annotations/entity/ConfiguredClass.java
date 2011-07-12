@@ -47,10 +47,12 @@ import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.FieldInfo;
 import org.jboss.jandex.MethodInfo;
+import org.jboss.logging.Logger;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.attribute.AssociationAttribute;
@@ -68,6 +70,11 @@ import org.hibernate.metamodel.source.annotations.util.ReflectionHelper;
  * @author Hardy Ferentschik
  */
 public class ConfiguredClass {
+
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			ConfiguredClass.class.getName()
+	);
 
 	/**
 	 * The parent of this configured class or {@code null} in case this configured class is the root of a hierarchy.
@@ -191,8 +198,8 @@ public class ConfiguredClass {
 		return attribute;
 	}
 
-	public AttributeOverride geAttributeOverrideForPath(String propertyPath) {
-		return attributeOverrideMap.get( propertyPath );
+	public Map<String, AttributeOverride> getAttributeOverrideMap() {
+		return attributeOverrideMap;
 	}
 
 	@Override
@@ -320,33 +327,10 @@ public class ConfiguredClass {
 
 			AccessType accessType = JandexHelper.getValueAsEnum( accessAnnotation, "value", AccessType.class );
 
-			// when class access type is field
-			// overriding access annotations must be placed on properties and have the access type PROPERTY
-			if ( AccessType.FIELD.equals( classAccessType ) ) {
-				if ( !( annotationTarget instanceof MethodInfo ) ) {
-					// todo log warning !?
-					continue;
-				}
-
-				if ( !AccessType.PROPERTY.equals( accessType ) ) {
-					// todo log warning !?
-					continue;
-				}
+			if ( !isExplicitAttributeAccessAnnotationPlacedCorrectly( annotationTarget, accessType ) ) {
+				continue;
 			}
 
-			// when class access type is property
-			// overriding access annotations must be placed on fields and have the access type FIELD
-			if ( AccessType.PROPERTY.equals( classAccessType ) ) {
-				if ( !( annotationTarget instanceof FieldInfo ) ) {
-					// todo log warning !?
-					continue;
-				}
-
-				if ( !AccessType.FIELD.equals( accessType ) ) {
-					// todo log warning !?
-					continue;
-				}
-			}
 
 			// the placement is correct, get the member
 			Member member;
@@ -384,6 +368,53 @@ public class ConfiguredClass {
 			}
 		}
 		return explicitAccessMembers;
+	}
+
+	private boolean isExplicitAttributeAccessAnnotationPlacedCorrectly(AnnotationTarget annotationTarget, AccessType accessType) {
+		// when the access type of the class is FIELD
+		// overriding access annotations must be placed on properties AND have the access type PROPERTY
+		if ( AccessType.FIELD.equals( classAccessType ) ) {
+			if ( !( annotationTarget instanceof MethodInfo ) ) {
+				LOG.tracef(
+						"The access type of class %s is AccessType.FIELD. To override the access for an attribute " +
+								"@Access has to be placed on the property (getter)", classInfo.name().toString()
+				);
+				return false;
+			}
+
+			if ( !AccessType.PROPERTY.equals( accessType ) ) {
+				LOG.tracef(
+						"The access type of class %s is AccessType.FIELD. To override the access for an attribute " +
+								"@Access has to be placed on the property (getter) with an access type of AccessType.PROPERTY. " +
+								"Using AccessType.FIELD on the property has no effect",
+						classInfo.name().toString()
+				);
+				return false;
+			}
+		}
+
+		// when the access type of the class is PROPERTY
+		// overriding access annotations must be placed on fields and have the access type FIELD
+		if ( AccessType.PROPERTY.equals( classAccessType ) ) {
+			if ( !( annotationTarget instanceof FieldInfo ) ) {
+				LOG.tracef(
+						"The access type of class %s is AccessType.PROPERTY. To override the access for a field " +
+								"@Access has to be placed on the field ", classInfo.name().toString()
+				);
+				return false;
+			}
+
+			if ( !AccessType.FIELD.equals( accessType ) ) {
+				LOG.tracef(
+						"The access type of class %s is AccessType.PROPERTY. To override the access for a field " +
+								"@Access has to be placed on the field with an access type of AccessType.FIELD. " +
+								"Using AccessType.PROPERTY on the field has no effect",
+						classInfo.name().toString()
+				);
+				return false;
+			}
+		}
+		return true;
 	}
 
 	private void createMappedProperty(Member member, ResolvedTypeWithMembers resolvedType) {
@@ -519,8 +550,13 @@ public class ConfiguredClass {
 				return resolvedMember.getType().getErasedType();
 			}
 		}
-		// todo - what to do here
-		return null;
+		throw new AssertionFailure(
+				String.format(
+						"Unable to resolve type of attribute %s of class %s",
+						name,
+						classInfo.name().toString()
+				)
+		);
 	}
 
 	/**

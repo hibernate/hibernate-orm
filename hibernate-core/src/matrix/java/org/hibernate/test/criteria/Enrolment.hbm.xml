@@ -58,8 +58,21 @@
 				<property name="zip" />
 			</composite-element>
 		</map>
+                <list name="studyAbroads">
+                    <key column="studentId" />
+                    <list-index column="ind" />
+                    <composite-element class="org.hibernate.test.criteria.StudyAbroad">
+                        <property name="date" />
+                        <many-to-one name="country" />
+                    </composite-element>
+                </list>
 	</class>
 
+        <class name="Country">
+            <id name="code" />
+            <property name="name" />
+        </class>
+        
 	<class name="Enrolment">
 		<composite-id>
 			<key-property name="studentNumber">

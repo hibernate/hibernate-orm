@@ -23,6 +23,8 @@
  */
 package org.hibernate.test.criteria;
 
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -34,6 +36,7 @@ import org.junit.Test;
 
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
+import org.hibernate.Hibernate;
 import org.hibernate.JDBCException;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollableResults;
@@ -1097,7 +1100,7 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 		result = s.createCriteria( Student.class )
 			.setProjection( Projections.count( "cityState.city" ) )
 			.uniqueResult();
-		assertEquals( 2, ( ( Long ) result ).longValue() );
+		assertEquals( 2, ((Long) result).longValue() );
 
 		result = s.createCriteria( Student.class )
 			.setProjection( Projections.countDistinct( "cityState.city" ) )
@@ -1454,8 +1457,8 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 		Transaction t = s.beginTransaction();
 
 		Course course = new Course();
-		course.setCourseCode("HIB");
-		course.setDescription("Hibernate Training");
+		course.setCourseCode( "HIB" );
+		course.setDescription( "Hibernate Training" );
 		course.getCourseMeetings().add( new CourseMeeting( course, "Monday", 1, "1313 Mockingbird Lane" ) );
 		s.save(course);
 		s.flush();
@@ -1477,7 +1480,7 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 		s.save( gaith );
 		s.flush();
 
-		List cityStates = ( List ) s.createCriteria( Student.class).setProjection( Projections.property( "cityState" )).list();
+		List cityStates = ( List ) s.createCriteria( Student.class).setProjection( Projections.property( "cityState" ) ).list();
 		t.rollback();
 		s.close();
 	}
@@ -1610,8 +1613,8 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 						.list();
 		assertEquals( 3, result.size() );
 		assertNotNull( result.get(0) );
-		assertNotNull( result.get(1) );
-		assertNotNull( result.get(2) );
+		assertNotNull( result.get( 1 ) );
+		assertNotNull( result.get( 2 ) );
 
 		result = session.createCriteria( Student.class )
 				.setFetchMode( "preferredCourse", FetchMode.JOIN )
@@ -1621,7 +1624,7 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 		assertEquals( 3, result.size() );
 		assertNotNull( result.get(0) );
 		assertNotNull( result.get(1) );
-		assertNotNull( result.get(2) );
+		assertNotNull( result.get( 2 ) );
 
 		session.delete(gavin);
 		session.delete(leonardo);
@@ -1956,5 +1959,58 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 		t.rollback();
 		session.close();
 	}
+
+        @Test
+	public void testCriteriaFetchMode() {
+		Session session = openSession();
+		Transaction t = session.beginTransaction();
+
+		Student gavin = new Student();
+		gavin.setName("Gavin King");
+		gavin.setStudentNumber(232);
+		
+		Country gb = new Country("GB", "United Kingdom");
+		Country fr = new Country("FR", "France");
+		session.persist(gb);
+		session.persist(fr);
+
+		List studyAbroads = new ArrayList();
+		StudyAbroad sa1 = new StudyAbroad(gb, new Date());
+		StudyAbroad sa2 = new StudyAbroad(fr, new Date(sa1.getDate().getTime()+1));
+		studyAbroads.add(sa1);
+		studyAbroads.add(sa2);
+		gavin.setStudyAbroads(studyAbroads);
+		
+		session.persist(gavin);
+
+		session.flush();
+		session.clear();
+		
+		List results = session.createCriteria(Student.class)
+		    .setFetchMode("studyAbroads", FetchMode.JOIN)
+		    .setFetchMode("studyAbroads.country", FetchMode.JOIN)
+		    .list();
+
+		
+		assertEquals(results.size(), 2);
+		Student st = (Student)results.get(0);
+		
+		assertNotNull(st.getStudyAbroads());
+		assertTrue(Hibernate.isInitialized(st.getStudyAbroads()));
+		assertEquals(st.getStudyAbroads().size(), 2);
+		Country c1 = ((StudyAbroad)st.getStudyAbroads().get(0)).getCountry();
+		Country c2 = ((StudyAbroad)st.getStudyAbroads().get(1)).getCountry();
+		assertTrue( Hibernate.isInitialized( c1 ));
+		assertEquals(c1.getName(), "United Kingdom");
+
+		session.delete(st);
+		session.delete(c1);
+		session.delete(c2);
+		
+		t.commit();
+		session.close();
+		
+	}
+
 }
 

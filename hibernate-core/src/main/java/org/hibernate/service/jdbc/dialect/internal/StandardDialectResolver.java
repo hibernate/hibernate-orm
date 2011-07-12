@@ -88,7 +88,7 @@ public class StandardDialectResolver extends AbstractDialectResolver {
             if ( databaseMajorVersion > 10 || ( databaseMajorVersion == 10 && databaseMinorVersion >= 7 ) ) {
 				return new DerbyTenSevenDialect();
 			}
-			else if ( databaseMajorVersion > 10 || ( databaseMajorVersion == 10 && databaseMinorVersion >= 6 ) ) {
+			else if ( databaseMajorVersion == 10 && databaseMinorVersion == 6 ) {
 				return new DerbyTenSixDialect();
 			}
 			else if ( databaseMajorVersion == 10 && databaseMinorVersion == 5 ) {

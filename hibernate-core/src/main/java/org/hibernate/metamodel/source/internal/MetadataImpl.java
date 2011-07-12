@@ -503,7 +503,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 				.getEntityIdentifier()
 				.getValueBinding()
 				.getHibernateTypeDescriptor()
-				.getExplicitType();
+				.getResolvedTypeMapping();
 	}
 
 	@Override
@@ -527,7 +527,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		if ( attributeBinding == null ) {
 			throw new MappingException( "unknown property: " + entityName + '.' + propertyName );
 		}
-		return attributeBinding.getHibernateTypeDescriptor().getExplicitType();
+		return attributeBinding.getHibernateTypeDescriptor().getResolvedTypeMapping();
 	}
 
 	private class MappingDefaultsImpl implements MappingDefaults {

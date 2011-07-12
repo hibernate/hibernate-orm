@@ -17,7 +17,7 @@
             </jaxb:nameXmlTransform>
         </jaxb:schemaBindings>
 
-        <!-- Inheritance -->
+        <!-- Mix-ins -->
         <jaxb:bindings node="//xsd:element[@name='class']/xsd:complexType">
             <inheritance:implements>org.hibernate.metamodel.source.hbm.jaxb.mapping.EntityElement</inheritance:implements>
             <inheritance:implements>org.hibernate.metamodel.source.hbm.jaxb.mapping.JoinElementSource</inheritance:implements>
@@ -44,6 +44,21 @@
         <jaxb:bindings node="//xsd:complexType[@name='sql-delete-all-element']">
             <inheritance:implements>org.hibernate.metamodel.source.hbm.jaxb.mapping.CustomSqlElement</inheritance:implements>
         </jaxb:bindings>
+
+        <jaxb:bindings node="//xsd:complexType[@name='property-element']">
+            <inheritance:implements>org.hibernate.metamodel.source.hbm.jaxb.mapping.SingularAttributeSource</inheritance:implements>
+        </jaxb:bindings>
+        <jaxb:bindings node="//xsd:element[@name='id']/xsd:complexType">
+            <inheritance:implements>org.hibernate.metamodel.source.hbm.jaxb.mapping.SingularAttributeSource</inheritance:implements>
+        </jaxb:bindings>
+<!--
+        <jaxb:bindings node="//xsd:element[@name='version']/xsd:complexType">
+            <inheritance:implements>org.hibernate.metamodel.source.hbm.jaxb.mapping.SingularAttributeSource</inheritance:implements>
+        </jaxb:bindings>
+        <jaxb:bindings node="//xsd:element[@name='timestamp']/xsd:complexType">
+            <inheritance:implements>org.hibernate.metamodel.source.hbm.jaxb.mapping.SingularAttributeSource</inheritance:implements>
+        </jaxb:bindings>
+-->
 
         <jaxb:bindings node="//xsd:element[@name='class']//xsd:attribute[@name='subselect']">
             <jaxb:property name="subselectAttribute"/>

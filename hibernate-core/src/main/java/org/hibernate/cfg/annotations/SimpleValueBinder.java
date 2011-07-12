@@ -277,7 +277,7 @@ public class SimpleValueBinder {
 		this.explicitType = explicitType;
 	}
 
-	//FIXME raise an assertion failure  if setExplicitType(String) and setExplicitType(Type) are use at the same time
+	//FIXME raise an assertion failure  if setResolvedTypeMapping(String) and setResolvedTypeMapping(Type) are use at the same time
 
 	public void setExplicitType(Type typeAnn) {
 		if ( typeAnn != null ) {

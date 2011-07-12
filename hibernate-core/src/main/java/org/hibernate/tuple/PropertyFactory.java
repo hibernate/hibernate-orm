@@ -37,7 +37,6 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.binding.AttributeBinding;
 import org.hibernate.metamodel.binding.EntityBinding;
-import org.hibernate.metamodel.binding.EntityIdentifier;
 import org.hibernate.metamodel.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.binding.SimpleAttributeBinding;
 import org.hibernate.property.Getter;
@@ -111,7 +110,7 @@ public class PropertyFactory {
 
 		// TODO: the following will cause an NPE with "virtual" IDs; how should they be set?
 		final String mappedUnsavedValue = property.getUnsavedValue();
-		final Type type = property.getHibernateTypeDescriptor().getExplicitType();
+		final Type type = property.getHibernateTypeDescriptor().getResolvedTypeMapping();
 
 		IdentifierValue unsavedValue = UnsavedValueFactory.getUnsavedIdentifierValue(
 				mappedUnsavedValue,
@@ -193,7 +192,7 @@ public class PropertyFactory {
 		VersionValue unsavedValue = UnsavedValueFactory.getUnsavedVersionValue(
 				mappedUnsavedValue,
 				getGetter( property ),
-				( VersionType ) property.getHibernateTypeDescriptor().getExplicitType(),
+				( VersionType ) property.getHibernateTypeDescriptor().getResolvedTypeMapping(),
 				getConstructor( property.getEntityBinding() )
 		);
 
@@ -202,7 +201,7 @@ public class PropertyFactory {
 		return new VersionProperty(
 		        property.getAttribute().getName(),
 		        null,
-		        property.getHibernateTypeDescriptor().getExplicitType(),
+		        property.getHibernateTypeDescriptor().getResolvedTypeMapping(),
 		        lazy,
 				property.isInsertable(),
 				property.isUpdatable(),
@@ -267,7 +266,7 @@ public class PropertyFactory {
 	 */
 	public static StandardProperty buildStandardProperty(AttributeBinding property, boolean lazyAvailable) {
 
-		final Type type = property.getHibernateTypeDescriptor().getExplicitType();
+		final Type type = property.getHibernateTypeDescriptor().getResolvedTypeMapping();
 
 		// we need to dirty check collections, since they can cause an owner
 		// version number increment

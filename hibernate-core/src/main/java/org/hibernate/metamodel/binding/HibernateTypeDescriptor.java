@@ -33,31 +33,50 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  */
 public class HibernateTypeDescriptor {
-	private String typeName;
-	private Type explicitType;
+	private String explicitTypeName;
+	private String javaTypeName;
+	private boolean isToOne;
 	private Map<String, String> typeParameters;
 
-	public String getTypeName() {
-		return typeName;
+	private Type resolvedTypeMapping;
+
+	public String getExplicitTypeName() {
+		return explicitTypeName;
 	}
 
-	public void setTypeName(String typeName) {
-		this.typeName = typeName;
+	public void setExplicitTypeName(String explicitTypeName) {
+		this.explicitTypeName = explicitTypeName;
 	}
 
-	public Type getExplicitType() {
-		return explicitType;
+	public String getJavaTypeName() {
+		return javaTypeName;
 	}
 
-	public void setExplicitType(Type explicitType) {
-		this.explicitType = explicitType;
+	public void setJavaTypeName(String javaTypeName) {
+		this.javaTypeName = javaTypeName;
+	}
+
+	public boolean isToOne() {
+		return isToOne;
+	}
+
+	public void setToOne(boolean toOne) {
+		isToOne = toOne;
 	}
 
 	public Map<String, String> getTypeParameters() {
 		return typeParameters;
 	}
 
-	void setTypeParameters(Map<String, String> typeParameters) {
+	public void setTypeParameters(Map<String, String> typeParameters) {
 		this.typeParameters = typeParameters;
+	}
+
+	public Type getResolvedTypeMapping() {
+		return resolvedTypeMapping;
+	}
+
+	public void setResolvedTypeMapping(Type resolvedTypeMapping) {
+		this.resolvedTypeMapping = resolvedTypeMapping;
 	}
 }

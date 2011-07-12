@@ -29,7 +29,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
-import org.hibernate.EntityMode;
+
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
@@ -586,7 +586,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 							.getEntityDiscriminator()
 							.getValueBinding()
 							.getHibernateTypeDescriptor()
-							.getExplicitType();
+							.getResolvedTypeMapping();
 			if ( entityBinding.getDiscriminatorValue() == null ) {
 				discriminatorValue = NULL_DISCRIMINATOR;
 				discriminatorSQLValue = InFragment.NULL;

@@ -97,7 +97,6 @@ import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metamodel.binding.AttributeBinding;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.relational.DerivedValue;
-import org.hibernate.metamodel.relational.Identifier;
 import org.hibernate.metamodel.relational.SimpleValue;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.property.BackrefPropertyAccessor;
@@ -904,7 +903,7 @@ public abstract class AbstractEntityPersister
 				lazyProperties.add( prop.getAttribute().getName() );
 				lazyNames.add( prop.getAttribute().getName() );
 				lazyNumbers.add( i );
-				lazyTypes.add( prop.getHibernateTypeDescriptor().getExplicitType());
+				lazyTypes.add( prop.getHibernateTypeDescriptor().getResolvedTypeMapping());
 				lazyColAliases.add( colAliases );
 			}
 

@@ -328,7 +328,7 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 									.getEntityIdentifier()
 									.getValueBinding()
 									.getHibernateTypeDescriptor()
-									.getExplicitType() :
+									.getResolvedTypeMapping() :
 			                null
 			);
 		}

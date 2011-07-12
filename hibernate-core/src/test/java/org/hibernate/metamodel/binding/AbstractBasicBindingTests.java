@@ -36,7 +36,6 @@ import org.hibernate.metamodel.source.MetadataImplementor;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
 import org.hibernate.metamodel.domain.BasicType;
 import org.hibernate.metamodel.domain.SingularAttribute;
-import org.hibernate.metamodel.domain.TypeNature;
 import org.hibernate.metamodel.relational.Column;
 import org.hibernate.metamodel.relational.Datatype;
 import org.hibernate.metamodel.relational.SimpleValue;
@@ -137,7 +136,7 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 		AttributeBinding idAttributeBinding = entityBinding.getAttributeBinding( "id" );
 		assertNotNull( idAttributeBinding );
 		assertSame( idAttributeBinding, entityBinding.getEntityIdentifier().getValueBinding() );
-		assertSame( LongType.INSTANCE, idAttributeBinding.getHibernateTypeDescriptor().getExplicitType() );
+		assertSame( LongType.INSTANCE, idAttributeBinding.getHibernateTypeDescriptor().getResolvedTypeMapping() );
 
 		assertTrue( idAttributeBinding.getAttribute().isSingular() );
 		assertNotNull( idAttributeBinding.getAttribute() );
@@ -154,7 +153,7 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 
 		AttributeBinding nameBinding = entityBinding.getAttributeBinding( "name" );
 		assertNotNull( nameBinding );
-		assertSame( StringType.INSTANCE, nameBinding.getHibernateTypeDescriptor().getExplicitType() );
+		assertSame( StringType.INSTANCE, nameBinding.getHibernateTypeDescriptor().getResolvedTypeMapping() );
 		assertNotNull( nameBinding.getAttribute() );
 		assertNotNull( nameBinding.getValue() );
 

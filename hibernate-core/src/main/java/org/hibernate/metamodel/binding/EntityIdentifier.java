@@ -24,7 +24,6 @@
 package org.hibernate.metamodel.binding;
 
 import java.util.Properties;
-import javax.persistence.GenerationType;
 
 import org.jboss.logging.Logger;
 
@@ -93,7 +92,7 @@ public class EntityIdentifier {
 			}
 			identifierGenerator = factory.createIdentifierGenerator(
 					idGenerator.getStrategy(),
-					getValueBinding().getHibernateTypeDescriptor().getExplicitType(),
+					getValueBinding().getHibernateTypeDescriptor().getResolvedTypeMapping(),
 					props
 			);
 		}

@@ -99,7 +99,7 @@ public class CacheDataDescriptionImpl implements CacheDataDescription {
 					( VersionType ) model
 								.getVersioningValueBinding()
 								.getHibernateTypeDescriptor()
-								.getExplicitType()
+								.getResolvedTypeMapping()
 			).getComparator();
 		}
 		return versionComparator;

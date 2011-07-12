@@ -50,7 +50,7 @@ public abstract class CollectionElement {
 
 	/* package-protected */
 	void setTypeName(String typeName) {
-		hibernateTypeDescriptor.setTypeName( typeName );
+		hibernateTypeDescriptor.setExplicitTypeName( typeName );
 	}
 
 	/* package-protected */

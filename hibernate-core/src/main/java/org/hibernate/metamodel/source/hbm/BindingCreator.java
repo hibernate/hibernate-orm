@@ -34,13 +34,13 @@ import org.hibernate.EntityMode;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.engine.OptimisticLockStyle;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.Value;
 import org.hibernate.internal.util.beans.BeanInfoHelper;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.domain.SingularAttribute;
 import org.hibernate.metamodel.source.MappingException;
 import org.hibernate.metamodel.source.MetadataImplementor;
-import org.hibernate.metamodel.source.annotations.attribute.SimpleAttribute;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.EntityElement;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.JoinElementSource;
 import org.hibernate.metamodel.binding.BagBinding;
@@ -59,6 +59,7 @@ import org.hibernate.metamodel.relational.SimpleValue;
 import org.hibernate.metamodel.relational.Size;
 import org.hibernate.metamodel.relational.TableSpecification;
 import org.hibernate.metamodel.relational.Tuple;
+import org.hibernate.metamodel.source.hbm.jaxb.mapping.SingularAttributeSource;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLAnyElement;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLBagElement;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLCacheElement;
@@ -140,7 +141,6 @@ public class BindingCreator {
 	private EntityBinding doCreateEntityBinding(EntitySourceInformation entitySourceInfo, EntityBinding superEntityBinding) {
 		final EntityBinding entityBinding = createBasicEntityBinding( entitySourceInfo, superEntityBinding );
 
-		bindPrimaryTable( entitySourceInfo, entityBinding );
 		bindAttributes( entitySourceInfo, entityBinding );
 		bindSecondaryTables( entitySourceInfo, entityBinding );
 		bindTableUniqueConstraints( entityBinding );
@@ -205,6 +205,7 @@ public class BindingCreator {
 		entityBinding.setEntity( entity );
 
 		performBasicEntityBind( entityBinding, entitySourceInfo );
+		bindIdentifier( entityBinding, entitySourceInfo );
 
 		entityBinding.setMutable( xmlClass.isMutable() );
 		entityBinding.setExplicitPolymorphism( "explicit".equals( xmlClass.getPolymorphism() ) );
@@ -354,6 +355,8 @@ public class BindingCreator {
 
 	@SuppressWarnings( {"unchecked"})
 	private void performBasicEntityBind(EntityBinding entityBinding, EntitySourceInformation entitySourceInfo) {
+		bindPrimaryTable( entitySourceInfo, entityBinding );
+
 		entityBinding.setJpaEntityName( null );
 
 		final EntityElement entityElement = entitySourceInfo.getEntityElement();
@@ -499,6 +502,77 @@ public class BindingCreator {
 
 	private Stack<TableSpecification> attributeColumnTableStack = new Stack<TableSpecification>();
 
+	private void bindIdentifier(EntityBinding entityBinding, EntitySourceInformation entitySourceInfo) {
+		final XMLHibernateMapping.XMLClass rootClassElement = (XMLHibernateMapping.XMLClass) entitySourceInfo.getEntityElement();
+		if ( rootClassElement.getId() != null ) {
+			bindSimpleIdentifierAttribute( entityBinding, entitySourceInfo );
+		}
+		else if ( rootClassElement.getCompositeId() != null ) {
+			bindCompositeIdentifierAttribute( entityBinding, entitySourceInfo );
+		}
+	}
+
+	private void bindSimpleIdentifierAttribute(EntityBinding entityBinding, EntitySourceInformation entitySourceInfo) {
+		final XMLHibernateMapping.XMLClass.XMLId idElement = ( (XMLHibernateMapping.XMLClass) entitySourceInfo.getEntityElement() ).getId();
+		final String idAttributeName = idElement.getName() == null
+				? "id"
+				: idElement.getName();
+
+		final SimpleAttributeBinding idAttributeBinding = doBasicSimpleAttributeBindingCreation(
+				idAttributeName,
+				idElement,
+				entityBinding
+		);
+
+		idAttributeBinding.setInsertable( false );
+		idAttributeBinding.setUpdatable( false );
+		idAttributeBinding.setGeneration( PropertyGeneration.INSERT );
+		idAttributeBinding.setLazy( false );
+		idAttributeBinding.setIncludedInOptimisticLocking( false );
+
+		final org.hibernate.metamodel.relational.Value relationalValue = makeValue(
+				new RelationValueMetadataSource() {
+					@Override
+					public String getColumnAttribute() {
+						return idElement.getColumnAttribute();
+					}
+
+					@Override
+					public String getFormulaAttribute() {
+						return null;
+					}
+
+					@Override
+					public List getColumnOrFormulaElements() {
+						return idElement.getColumn();
+					}
+				},
+				idAttributeBinding
+		);
+
+		idAttributeBinding.setValue( relationalValue );
+		if ( SimpleValue.class.isInstance( relationalValue ) ) {
+			if ( !Column.class.isInstance( relationalValue ) ) {
+				// this should never ever happen..
+				throw new MappingException( "Simple ID is not a column.", currentBindingContext.getOrigin() );
+			}
+			entityBinding.getBaseTable().getPrimaryKey().addColumn( Column.class.cast( relationalValue ) );
+		}
+		else {
+			for ( SimpleValue subValue : ( (Tuple) relationalValue ).values() ) {
+				if ( Column.class.isInstance( subValue ) ) {
+					entityBinding.getBaseTable().getPrimaryKey().addColumn( Column.class.cast( subValue ) );
+				}
+			}
+		}
+	}
+
+	private void bindCompositeIdentifierAttribute(
+			EntityBinding entityBinding,
+			EntitySourceInformation entitySourceInfo) {
+		//To change body of created methods use File | Settings | File Templates.
+	}
+
 	private void bindAttributes(final EntitySourceInformation entitySourceInformation, EntityBinding entityBinding) {
 		// todo : we really need the notion of a Stack here for the table from which the columns come for binding these attributes.
 		// todo : adding the concept (interface) of a source of attribute metadata would allow reuse of this method for entity, component, unique-key, etc
@@ -601,39 +675,69 @@ public class BindingCreator {
 		}
 	}
 
-	private void bindProperty(XMLPropertyElement property, EntityBinding entityBinding) {
-		SingularAttribute attr = entityBinding.getEntity().locateOrCreateSingularAttribute( property.getName() );
-		SimpleAttributeBinding attributeBinding = entityBinding.makeSimpleAttributeBinding( attr );
-		resolveTypeInformation( property, attributeBinding );
+	private void bindProperty(final XMLPropertyElement property, EntityBinding entityBinding) {
+		SimpleAttributeBinding attributeBinding = doBasicSimpleAttributeBindingCreation( property.getName(), property, entityBinding );
 
 		attributeBinding.setInsertable( Helper.getBooleanValue( property.isInsert(), true ) );
-		attributeBinding.setInsertable( Helper.getBooleanValue( property.isUpdate(), true ) );
+		attributeBinding.setUpdatable( Helper.getBooleanValue( property.isUpdate(), true ) );
 		attributeBinding.setGeneration( PropertyGeneration.parse( property.getGenerated() ) );
 		attributeBinding.setLazy( property.isLazy() );
 		attributeBinding.setIncludedInOptimisticLocking( property.isOptimisticLock() );
 
+// todo : implement.  Is this meant to indicate the natural-id?
+//		attributeBinding.setAlternateUniqueKey( ... );
+
+		attributeBinding.setValue(
+				makeValue(
+						new RelationValueMetadataSource() {
+							@Override
+							public String getColumnAttribute() {
+								return property.getColumn();
+							}
+
+							@Override
+							public String getFormulaAttribute() {
+								return property.getFormula();
+							}
+
+							@Override
+							public List getColumnOrFormulaElements() {
+								return property.getColumnOrFormula();
+							}
+						},
+						attributeBinding
+				)
+		);
+	}
+
+	private SimpleAttributeBinding doBasicSimpleAttributeBindingCreation(
+			String attributeName,
+			SingularAttributeSource attributeSource,
+			EntityBinding entityBinding) {
+		// todo : the need to pass in the attribute name here could be alleviated by making name required on <id/> etc
+		SingularAttribute attribute = entityBinding.getEntity().locateOrCreateSingularAttribute( attributeName );
+		SimpleAttributeBinding attributeBinding = entityBinding.makeSimpleAttributeBinding( attribute );
+		resolveTypeInformation( attributeSource, attributeBinding );
+
 		attributeBinding.setPropertyAccessorName(
 				Helper.getPropertyAccessorName(
-						property.getAccess(),
+						attributeSource.getAccess(),
 						false,
 						currentBindingContext.getMappingDefaults().getPropertyAccessorName()
 				)
 		);
 
 		attributeBinding.setMetaAttributeContext(
-				Helper.extractMetaAttributeContext( property.getMeta(), entityBinding.getMetaAttributeContext() )
+				Helper.extractMetaAttributeContext( attributeSource.getMeta(), entityBinding.getMetaAttributeContext() )
 		);
 
-// todo : implement.  Is this meant to indicate the natural-id?
-//		attributeBinding.setAlternateUniqueKey( ... );
-
-		attributeBinding.setValue( makeValue( property, attributeBinding ) );
-
+		return attributeBinding;
 	}
 
-	private void resolveTypeInformation(XMLPropertyElement property, final SimpleAttributeBinding attributeBinding) {
+	private void resolveTypeInformation(SingularAttributeSource property, final SimpleAttributeBinding attributeBinding) {
 		final Class<?> attributeJavaType = determineJavaType( attributeBinding.getAttribute() );
 		if ( attributeJavaType != null ) {
+			attributeBinding.getHibernateTypeDescriptor().setJavaTypeName( attributeJavaType.getName() );
 			( (AbstractAttributeContainer.SingularAttributeImpl) attributeBinding.getAttribute() ).resolveType(
 					currentBindingContext.makeJavaType( attributeJavaType.getName() )
 			);
@@ -644,16 +748,16 @@ public class BindingCreator {
 			final String explicitTypeName = property.getTypeAttribute();
 			final TypeDef typeDef = currentBindingContext.getMetadataImplementor().getTypeDefinition( explicitTypeName );
 			if ( typeDef != null ) {
-				attributeBinding.getHibernateTypeDescriptor().setTypeName( typeDef.getTypeClass() );
+				attributeBinding.getHibernateTypeDescriptor().setExplicitTypeName( typeDef.getTypeClass() );
 				attributeBinding.getHibernateTypeDescriptor().getTypeParameters().putAll( typeDef.getParameters() );
 			}
 			else {
-				attributeBinding.getHibernateTypeDescriptor().setTypeName( explicitTypeName );
+				attributeBinding.getHibernateTypeDescriptor().setExplicitTypeName( explicitTypeName );
 			}
 		}
 		else if ( property.getType() != null ) {
 			// todo : consider changing in-line type definitions to implicitly generate uniquely-named type-defs
-			attributeBinding.getHibernateTypeDescriptor().setTypeName( property.getType().getName() );
+			attributeBinding.getHibernateTypeDescriptor().setExplicitTypeName( property.getType().getName() );
 			for ( XMLParamElement xmlParamElement : property.getType().getParam() ) {
 				attributeBinding.getHibernateTypeDescriptor().getTypeParameters().put(
 						xmlParamElement.getName(),
@@ -662,29 +766,9 @@ public class BindingCreator {
 			}
 		}
 		else {
-			// see if we can reflect to determine the appropriate type
-			try {
-				final String attributeName = attributeBinding.getAttribute().getName();
-				final Class ownerClass = attributeBinding.getAttribute().getAttributeContainer().getClassReference();
-				BeanInfoHelper.visitBeanInfo(
-					ownerClass,
-					new BeanInfoHelper.BeanInfoDelegate() {
-						@Override
-						public void processBeanInfo(BeanInfo beanInfo) throws Exception {
-							for ( PropertyDescriptor propertyDescriptor : beanInfo.getPropertyDescriptors() ) {
-								if ( propertyDescriptor.getName().equals( attributeName ) ) {
-									attributeBinding.getHibernateTypeDescriptor().setTypeName(
-											propertyDescriptor.getPropertyType().getName()
-									);
-									break;
-								}
-							}
-						}
-					}
-				);
-			}
-			catch ( Exception e ) {
-				// todo : log it?
+			if ( attributeJavaType == null ) {
+				// we will have problems later determining the Hibernate Type to use.  Should we throw an
+				// exception now?  Might be better to get better contextual info
 			}
 		}
 	}
@@ -696,7 +780,7 @@ public class BindingCreator {
 			BeanInfoHelper.visitBeanInfo( ownerClass, delegate );
 			return delegate.javaType;
 		}
-		catch ( Exception e ) {
+		catch ( Exception ignore ) {
 			// todo : log it?
 		}
 		return null;
@@ -721,42 +805,51 @@ public class BindingCreator {
 		}
 	}
 
-	private org.hibernate.metamodel.relational.Value makeValue(
-			XMLPropertyElement property,
-			SimpleAttributeBinding attributeBinding) {
+	private static interface RelationValueMetadataSource {
+		public String getColumnAttribute();
+		public String getFormulaAttribute();
+		public List getColumnOrFormulaElements();
+	}
 
+	private org.hibernate.metamodel.relational.Value makeValue(
+			RelationValueMetadataSource relationValueMetadataSource,
+			SimpleAttributeBinding attributeBinding) {
 		// todo : to be completely correct, we need to know which table the value belongs to.
 		// 		There is a note about this somewhere else with ideas on the subject.
 		//		For now, just use the entity's base table.
 		final TableSpecification valueSource = attributeBinding.getEntityBinding().getBaseTable();
 
-		if ( property.getColumn() != null && ! property.getColumn().isEmpty() ) {
-			if ( property.getColumnOrFormula() != null && ! property.getColumnOrFormula().isEmpty() ) {
+		if ( StringHelper.isNotEmpty( relationValueMetadataSource.getColumnAttribute() ) ) {
+			if ( relationValueMetadataSource.getColumnOrFormulaElements() != null
+					&& ! relationValueMetadataSource.getColumnOrFormulaElements().isEmpty() ) {
 				throw new MappingException(
 						"column/formula attribute may not be used together with <column>/<formula> subelement",
 						currentBindingContext.getOrigin()
 				);
 			}
-			if ( property.getFormula() != null ) {
+			if ( StringHelper.isNotEmpty( relationValueMetadataSource.getFormulaAttribute() ) ) {
 				throw new MappingException(
 						"column and formula attributes may not be used together",
 						currentBindingContext.getOrigin()
 				);
 			}
-			return valueSource.locateOrCreateColumn( property.getColumn() );
+			return valueSource.locateOrCreateColumn( relationValueMetadataSource.getColumnAttribute() );
 		}
-		else if ( property.getFormula() != null && ! property.getFormula().isEmpty() ) {
-			if ( property.getColumnOrFormula() != null && ! property.getColumnOrFormula().isEmpty() ) {
+		else if ( StringHelper.isNotEmpty( relationValueMetadataSource.getFormulaAttribute() ) ) {
+			if ( relationValueMetadataSource.getColumnOrFormulaElements() != null
+					&& ! relationValueMetadataSource.getColumnOrFormulaElements().isEmpty() ) {
 				throw new MappingException(
 						"column/formula attribute may not be used together with <column>/<formula> subelement",
 						currentBindingContext.getOrigin()
 				);
 			}
-			return valueSource.locateOrCreateDerivedValue( property.getFormula() );
+			// column/formula attribute combo checked already
+			return valueSource.locateOrCreateDerivedValue( relationValueMetadataSource.getFormulaAttribute() );
 		}
-		else if ( property.getColumnOrFormula() != null && ! property.getColumnOrFormula().isEmpty() ) {
+		else if ( relationValueMetadataSource.getColumnOrFormulaElements() != null
+				&& ! relationValueMetadataSource.getColumnOrFormulaElements().isEmpty() ) {
 			List<SimpleValue> values = new ArrayList<SimpleValue>();
-			for ( Object columnOrFormula : property.getColumnOrFormula() ) {
+			for ( Object columnOrFormula : relationValueMetadataSource.getColumnOrFormulaElements() ) {
 				final SimpleValue value;
 				if ( XMLColumnElement.class.isInstance( columnOrFormula ) ) {
 					final XMLColumnElement columnElement = (XMLColumnElement) columnOrFormula;
@@ -781,9 +874,7 @@ public class BindingCreator {
 					value = column;
 				}
 				else {
-					// todo : ??? Seems jaxb is not generating this class ?!?!?!
-//					final XMLFormulaElement formulaElement = (XMLFormulaElement) columnOrFormula;
-					value = null;
+					value = valueSource.locateOrCreateDerivedValue( (String) columnOrFormula );
 				}
 				if ( value != null ) {
 					values.add( value );
@@ -810,25 +901,6 @@ public class BindingCreator {
 					.propertyToColumnName( attributeBinding.getAttribute().getName() );
 			return valueSource.locateOrCreateColumn( name );
 		}
-
-//		// TODO: not sure I like this here...
-//		if ( isPrimaryKey() ) {
-//			if ( SimpleValue.class.isInstance( value ) ) {
-//				if ( !Column.class.isInstance( value ) ) {
-//					// this should never ever happen..
-//					throw new org.hibernate.MappingException( "Simple ID is not a column." );
-//				}
-//				entityBinding.getBaseTable().getPrimaryKey().addColumn( Column.class.cast( value ) );
-//			}
-//			else {
-//				for ( SimpleValueRelationalState val : TupleRelationalState.class.cast( state )
-//						.getRelationalStates() ) {
-//					if ( Column.class.isInstance( val ) ) {
-//						entityBinding.getBaseTable().getPrimaryKey().addColumn( Column.class.cast( val ) );
-//					}
-//				}
-//			}
-//		}
 	}
 
 	private void makeManyToOneAttributeBinding(XMLManyToOneElement manyToOne, EntityBinding entityBinding) {

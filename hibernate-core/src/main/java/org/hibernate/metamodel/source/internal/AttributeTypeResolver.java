@@ -29,10 +29,7 @@ import org.hibernate.MappingException;
 import org.hibernate.metamodel.binding.AttributeBinding;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.HibernateTypeDescriptor;
-import org.hibernate.metamodel.domain.AbstractAttributeContainer;
 import org.hibernate.metamodel.domain.Attribute;
-import org.hibernate.metamodel.domain.BasicType;
-import org.hibernate.metamodel.domain.JavaType;
 import org.hibernate.metamodel.relational.Datatype;
 import org.hibernate.metamodel.relational.SimpleValue;
 import org.hibernate.metamodel.relational.Value;
@@ -69,29 +66,29 @@ class AttributeTypeResolver {
 	}
 
 	private Type resolveHibernateType(AttributeBinding attributeBinding) {
-		if ( attributeBinding.getHibernateTypeDescriptor().getExplicitType() != null ) {
-			return attributeBinding.getHibernateTypeDescriptor().getExplicitType(); // already resolved
+		if ( attributeBinding.getHibernateTypeDescriptor().getResolvedTypeMapping() != null ) {
+			return attributeBinding.getHibernateTypeDescriptor().getResolvedTypeMapping(); // already resolved
 		}
 
 		// this only works for "basic" attribute types
 		HibernateTypeDescriptor typeDescriptor = attributeBinding.getHibernateTypeDescriptor();
-		if ( typeDescriptor == null || typeDescriptor.getTypeName() == null) {
+		if ( typeDescriptor == null || typeDescriptor.getExplicitTypeName() == null) {
 			throw new MappingException( "Hibernate type name has not been defined for attribute: " +
 					getQualifiedAttributeName( attributeBinding )
 			);
 		}
 		Type type = null;
-		if ( typeDescriptor.getTypeName() != null ) {
+		if ( typeDescriptor.getExplicitTypeName() != null ) {
 			Properties typeParameters = null;
 			if ( typeDescriptor.getTypeParameters() != null ) {
 				typeParameters = new Properties();
 				typeParameters.putAll( typeDescriptor.getTypeParameters() );
 			}
 			type = metadata.getTypeResolver().heuristicType(
-							typeDescriptor.getTypeName(),
+							typeDescriptor.getExplicitTypeName(),
 							typeParameters
 					);
-			typeDescriptor.setExplicitType( type );
+			typeDescriptor.setResolvedTypeMapping( type );
 		}
 		return type;
 	}

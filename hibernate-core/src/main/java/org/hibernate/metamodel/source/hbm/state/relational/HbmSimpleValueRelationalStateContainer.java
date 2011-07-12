@@ -78,7 +78,7 @@ public class HbmSimpleValueRelationalStateContainer implements TupleRelationalSt
 		else if ( id.getColumn() != null ) {
 			throw new MappingException( "column attribute may not be used together with <column> subelement" );
 		}
-		this.hibernateTypeDescriptor.setTypeName( id.getTypeAttribute() );
+		this.hibernateTypeDescriptor.setExplicitTypeName( id.getTypeAttribute() );
 	}
 
 	public HbmSimpleValueRelationalStateContainer(
@@ -95,7 +95,11 @@ public class HbmSimpleValueRelationalStateContainer implements TupleRelationalSt
 		else if ( discriminator.getColumn() != null || discriminator.getFormula() != null) {
 			throw new MappingException( "column/formula attribute may not be used together with <column>/<formula> subelement" );
 		}
-		this.hibernateTypeDescriptor.setTypeName( discriminator.getType() == null ? "string" : discriminator.getType() );
+		this.hibernateTypeDescriptor.setExplicitTypeName(
+				discriminator.getType() == null ?
+						"string" :
+						discriminator.getType()
+		);
 	}
 
 	public HbmSimpleValueRelationalStateContainer(
@@ -112,7 +116,7 @@ public class HbmSimpleValueRelationalStateContainer implements TupleRelationalSt
 		else if ( version.getColumn() != null ) {
 			throw new MappingException( "column attribute may not be used together with <column> subelement" );
 		}
-		this.hibernateTypeDescriptor.setTypeName( version.getType() == null ? "integer" : version.getType() );
+		this.hibernateTypeDescriptor.setExplicitTypeName( version.getType() == null ? "integer" : version.getType() );
 	}
 
 	public HbmSimpleValueRelationalStateContainer(
@@ -129,7 +133,11 @@ public class HbmSimpleValueRelationalStateContainer implements TupleRelationalSt
 		else if ( timestamp.getColumn() != null ) {
 			throw new MappingException( "column attribute may not be used together with <column> subelement" );
 		}
-		this.hibernateTypeDescriptor.setTypeName( "db".equals( timestamp.getSource() ) ? "dbtimestamp" : "timestamp" );
+		this.hibernateTypeDescriptor.setExplicitTypeName(
+				"db".equals( timestamp.getSource() ) ?
+						"dbtimestamp" :
+						"timestamp"
+		);
 	}
 
 	public HbmSimpleValueRelationalStateContainer(
@@ -146,7 +154,7 @@ public class HbmSimpleValueRelationalStateContainer implements TupleRelationalSt
 		else if ( property.getColumn() != null || property.getFormula() != null) {
 			throw new MappingException( "column/formula attribute may not be used together with <column>/<formula> subelement" );
 		}
-		this.hibernateTypeDescriptor.setTypeName( property.getTypeAttribute() );
+		this.hibernateTypeDescriptor.setExplicitTypeName( property.getTypeAttribute() );
 	}
 
 	public HbmSimpleValueRelationalStateContainer(

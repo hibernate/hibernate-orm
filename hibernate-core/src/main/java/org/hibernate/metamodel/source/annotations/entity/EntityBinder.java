@@ -478,7 +478,7 @@ public class EntityBinder {
 		);
 		String name;
 		if ( jpaEntityAnnotation.value( "name" ) == null ) {
-			name = entityClass.getName();
+			name = entityClass.getClass().getSimpleName();
 		}
 		else {
 			name = jpaEntityAnnotation.value( "name" ).asString();

@@ -1,5 +1,6 @@
 //$Id$
 package org.hibernate.test.annotations.embedded;
+
 import javax.persistence.AttributeOverride;
 import javax.persistence.AttributeOverrides;
 import javax.persistence.Column;
@@ -34,10 +35,10 @@ public class Book {
 		this.name = name;
 	}
 
-	@AttributeOverrides({
-	@AttributeOverride(name = "size", column = @Column(name="summ_size", table = "BookSummary")),
-	@AttributeOverride(name = "text", column = @Column(table = "BookSummary"))
-			})
+	@AttributeOverrides( {
+			@AttributeOverride(name = "size", column = @Column(name = "summ_size", table = "BookSummary")),
+			@AttributeOverride(name = "text", column = @Column(table = "BookSummary"))
+	})
 	public Summary getSummary() {
 		return summary;
 	}

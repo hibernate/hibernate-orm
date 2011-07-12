@@ -1,5 +1,6 @@
 //$Id$
 package org.hibernate.test.annotations.embedded;
+
 import java.io.Serializable;
 import javax.persistence.AttributeOverride;
 import javax.persistence.AttributeOverrides;
@@ -26,9 +27,9 @@ public class Person implements Serializable {
 	Address address;
 
 	@Embedded
-	@AttributeOverrides({
-	@AttributeOverride(name = "iso2", column = @Column(name = "bornIso2")),
-	@AttributeOverride(name = "name", column = @Column(name = "bornCountryName"))
-			})
+	@AttributeOverrides( {
+			@AttributeOverride(name = "iso2", column = @Column(name = "bornIso2")),
+			@AttributeOverride(name = "name", column = @Column(name = "bornCountryName"))
+	})
 	Country bornIn;
 }

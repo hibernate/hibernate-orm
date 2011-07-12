@@ -26,7 +26,6 @@ package org.hibernate.metamodel.relational;
 import java.io.Serializable;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.mapping.RelationalModel;
 
 /**
  * Auxiliary database objects (i.e., triggers, stored procedures, etc) defined
@@ -35,7 +34,7 @@ import org.hibernate.mapping.RelationalModel;
  *
  * @author Steve Ebersole
  */
-public interface AuxiliaryDatabaseObject extends RelationalModel, Serializable {
+public interface AuxiliaryDatabaseObject extends Exportable, Serializable {
 	/**
 	 * Does this database object apply to the given dialect?
 	 *

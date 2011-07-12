@@ -192,7 +192,7 @@ public class HibernateMappingProcessor implements HbmBindingContext {
 						dialectScopes
 				);
 			}
-			metadata.addAuxiliaryDatabaseObject( auxiliaryDatabaseObject );
+			metadata.getDatabase().addAuxiliaryDatabaseObject( auxiliaryDatabaseObject );
 		}
 	}
 

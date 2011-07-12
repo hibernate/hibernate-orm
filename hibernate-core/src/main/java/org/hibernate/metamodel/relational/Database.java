@@ -23,7 +23,9 @@
  */
 package org.hibernate.metamodel.relational;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -33,6 +35,7 @@ import java.util.Map;
  */
 public class Database {
 	private Map<Schema.Name,Schema> schemaMap = new HashMap<Schema.Name, Schema>();
+	private final List<AuxiliaryDatabaseObject> auxiliaryDatabaseObjects = new ArrayList<AuxiliaryDatabaseObject>();
 
 	public Schema getSchema(Schema.Name name) {
 		Schema schema = schemaMap.get( name );
@@ -49,5 +52,16 @@ public class Database {
 
 	public Schema getSchema(String schema, String catalog) {
 		return getSchema( new Schema.Name( Identifier.toIdentifier( schema ), Identifier.toIdentifier( catalog ) ) );
+	}
+
+	public void addAuxiliaryDatabaseObject(AuxiliaryDatabaseObject auxiliaryDatabaseObject) {
+		if ( auxiliaryDatabaseObject == null ) {
+			throw new IllegalArgumentException( "Auxiliary database object is null." );
+		}
+		auxiliaryDatabaseObjects.add( auxiliaryDatabaseObject );
+	}
+
+	public Iterable<AuxiliaryDatabaseObject> getAuxiliaryDatabaseObjects() {
+		return auxiliaryDatabaseObjects;
 	}
 }

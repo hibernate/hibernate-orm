@@ -94,7 +94,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	private DefaultIdentifierGeneratorFactory identifierGeneratorFactory = new DefaultIdentifierGeneratorFactory();
 
-	private final Database database = new Database();
+	private final Database database;
 
 	private final MappingDefaults mappingDefaults;
 
@@ -118,6 +118,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	public MetadataImpl(MetadataSources metadataSources, Options options) {
 		this.serviceRegistry = metadataSources.getServiceRegistry();
 		this.options = options;
+		this.database = new Database( options );
 
 		this.mappingDefaults = new MappingDefaultsImpl();
 

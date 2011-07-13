@@ -33,13 +33,13 @@ import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 
 import org.hibernate.HibernateException;
-import org.hibernate.metamodel.source.annotation.xml.XMLAccessType;
-import org.hibernate.metamodel.source.annotation.xml.XMLEnumType;
-import org.hibernate.metamodel.source.annotation.xml.XMLMapKey;
-import org.hibernate.metamodel.source.annotation.xml.XMLMapKeyClass;
-import org.hibernate.metamodel.source.annotation.xml.XMLMapKeyColumn;
-import org.hibernate.metamodel.source.annotation.xml.XMLMapKeyJoinColumn;
-import org.hibernate.metamodel.source.annotation.xml.XMLTemporalType;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLAccessType;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLEnumType;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLMapKey;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLMapKeyClass;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLMapKeyColumn;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLMapKeyJoinColumn;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLTemporalType;
 
 /**
  * @author Strong Liu

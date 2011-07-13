@@ -25,8 +25,8 @@ package org.hibernate.metamodel.source.annotations.xml.mocker;
 
 import org.jboss.jandex.ClassInfo;
 
-import org.hibernate.metamodel.source.annotation.xml.XMLAccessType;
-import org.hibernate.metamodel.source.annotation.xml.XMLEmbeddedId;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLAccessType;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLEmbeddedId;
 
 /**
  * @author Strong Liu

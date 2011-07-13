@@ -18,7 +18,7 @@ import org.jboss.jandex.DotName;
 import org.jboss.jandex.Index;
 import org.junit.Test;
 
-import org.hibernate.metamodel.source.annotation.xml.XMLEntity;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLEntity;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 
 import static org.junit.Assert.assertArrayEquals;

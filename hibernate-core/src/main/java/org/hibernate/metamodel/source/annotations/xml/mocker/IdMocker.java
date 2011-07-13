@@ -31,9 +31,9 @@ import org.jboss.jandex.AnnotationTarget;
 import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
 
-import org.hibernate.metamodel.source.annotation.xml.XMLAccessType;
-import org.hibernate.metamodel.source.annotation.xml.XMLGeneratedValue;
-import org.hibernate.metamodel.source.annotation.xml.XMLId;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLAccessType;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLGeneratedValue;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLId;
 
 /**
  * @author Strong Liu

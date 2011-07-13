@@ -23,10 +23,10 @@
  */
 package org.hibernate.metamodel.source.annotations.xml.mocker;
 
-import org.hibernate.metamodel.source.annotation.xml.XMLCollectionTable;
-import org.hibernate.metamodel.source.annotation.xml.XMLJoinTable;
-import org.hibernate.metamodel.source.annotation.xml.XMLSecondaryTable;
-import org.hibernate.metamodel.source.annotation.xml.XMLTable;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLCollectionTable;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLJoinTable;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLSecondaryTable;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLTable;
 
 /**
  * @author Strong Liu

@@ -38,15 +38,15 @@ import org.jboss.logging.Logger;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.source.MappingException;
-import org.hibernate.metamodel.source.annotation.xml.XMLAttributes;
-import org.hibernate.metamodel.source.annotation.xml.XMLEntity;
-import org.hibernate.metamodel.source.annotation.xml.XMLEntityMappings;
-import org.hibernate.metamodel.source.annotation.xml.XMLId;
-import org.hibernate.metamodel.source.annotation.xml.XMLNamedNativeQuery;
-import org.hibernate.metamodel.source.annotation.xml.XMLNamedQuery;
-import org.hibernate.metamodel.source.annotation.xml.XMLSequenceGenerator;
-import org.hibernate.metamodel.source.annotation.xml.XMLSqlResultSetMapping;
-import org.hibernate.metamodel.source.annotation.xml.XMLTableGenerator;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLAttributes;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLEntity;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLEntityMappings;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLId;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLNamedNativeQuery;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLNamedQuery;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLSequenceGenerator;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLSqlResultSetMapping;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLTableGenerator;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 
 /**

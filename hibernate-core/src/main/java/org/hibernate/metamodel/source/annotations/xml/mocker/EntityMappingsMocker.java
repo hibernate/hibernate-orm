@@ -31,13 +31,13 @@ import org.jboss.jandex.Index;
 import org.jboss.logging.Logger;
 
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.metamodel.source.annotation.xml.XMLAccessType;
-import org.hibernate.metamodel.source.annotation.xml.XMLEmbeddable;
-import org.hibernate.metamodel.source.annotation.xml.XMLEntity;
-import org.hibernate.metamodel.source.annotation.xml.XMLEntityMappings;
-import org.hibernate.metamodel.source.annotation.xml.XMLMappedSuperclass;
-import org.hibernate.metamodel.source.annotation.xml.XMLPersistenceUnitDefaults;
-import org.hibernate.metamodel.source.annotation.xml.XMLPersistenceUnitMetadata;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLAccessType;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLEmbeddable;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLEntity;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLEntityMappings;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLMappedSuperclass;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLPersistenceUnitDefaults;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLPersistenceUnitMetadata;
 import org.hibernate.service.ServiceRegistry;
 
 /**

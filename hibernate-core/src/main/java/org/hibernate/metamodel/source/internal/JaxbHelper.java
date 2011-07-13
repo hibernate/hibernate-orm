@@ -54,7 +54,7 @@ import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.source.MappingException;
 import org.hibernate.metamodel.source.Origin;
 import org.hibernate.metamodel.source.XsdException;
-import org.hibernate.metamodel.source.annotation.xml.XMLEntityMappings;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLEntityMappings;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLHibernateMapping;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 

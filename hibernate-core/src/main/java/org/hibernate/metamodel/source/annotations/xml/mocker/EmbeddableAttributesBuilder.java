@@ -28,19 +28,19 @@ import java.util.List;
 
 import org.jboss.jandex.ClassInfo;
 
-import org.hibernate.metamodel.source.annotation.xml.XMLAccessType;
-import org.hibernate.metamodel.source.annotation.xml.XMLBasic;
-import org.hibernate.metamodel.source.annotation.xml.XMLElementCollection;
-import org.hibernate.metamodel.source.annotation.xml.XMLEmbeddableAttributes;
-import org.hibernate.metamodel.source.annotation.xml.XMLEmbedded;
-import org.hibernate.metamodel.source.annotation.xml.XMLEmbeddedId;
-import org.hibernate.metamodel.source.annotation.xml.XMLId;
-import org.hibernate.metamodel.source.annotation.xml.XMLManyToMany;
-import org.hibernate.metamodel.source.annotation.xml.XMLManyToOne;
-import org.hibernate.metamodel.source.annotation.xml.XMLOneToMany;
-import org.hibernate.metamodel.source.annotation.xml.XMLOneToOne;
-import org.hibernate.metamodel.source.annotation.xml.XMLTransient;
-import org.hibernate.metamodel.source.annotation.xml.XMLVersion;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLAccessType;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLBasic;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLElementCollection;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLEmbeddableAttributes;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLEmbedded;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLEmbeddedId;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLId;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLManyToMany;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLManyToOne;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLOneToMany;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLOneToOne;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLTransient;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLVersion;
 
 /**
  * @author Strong Liu

@@ -31,15 +31,15 @@ import java.util.List;
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
 
-import org.hibernate.metamodel.source.annotation.xml.XMLColumnResult;
-import org.hibernate.metamodel.source.annotation.xml.XMLEntityResult;
-import org.hibernate.metamodel.source.annotation.xml.XMLFieldResult;
-import org.hibernate.metamodel.source.annotation.xml.XMLNamedNativeQuery;
-import org.hibernate.metamodel.source.annotation.xml.XMLNamedQuery;
-import org.hibernate.metamodel.source.annotation.xml.XMLQueryHint;
-import org.hibernate.metamodel.source.annotation.xml.XMLSequenceGenerator;
-import org.hibernate.metamodel.source.annotation.xml.XMLSqlResultSetMapping;
-import org.hibernate.metamodel.source.annotation.xml.XMLTableGenerator;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLColumnResult;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLEntityResult;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLFieldResult;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLNamedNativeQuery;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLNamedQuery;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLQueryHint;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLSequenceGenerator;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLSqlResultSetMapping;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLTableGenerator;
 
 /**
  * @author Strong Liu

@@ -37,10 +37,10 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.JandexHelper;
 import org.hibernate.metamodel.source.annotations.xml.filter.IndexedAnnotationFilter;
-import org.hibernate.metamodel.source.annotation.xml.XMLEmbeddable;
-import org.hibernate.metamodel.source.annotation.xml.XMLEntity;
-import org.hibernate.metamodel.source.annotation.xml.XMLMappedSuperclass;
-import org.hibernate.metamodel.source.annotation.xml.XMLTable;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLEmbeddable;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLEntity;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLMappedSuperclass;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLTable;
 
 /**
  * @author Strong Liu

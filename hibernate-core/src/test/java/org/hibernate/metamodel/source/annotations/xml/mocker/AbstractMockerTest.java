@@ -38,7 +38,7 @@ import org.jboss.jandex.Indexer;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.HibernateException;
-import org.hibernate.metamodel.source.annotation.xml.XMLEntityMappings;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLEntityMappings;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.testing.ServiceRegistryBuilder;

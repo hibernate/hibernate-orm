@@ -26,18 +26,18 @@ package org.hibernate.metamodel.source.annotations.xml.mocker;
 import org.jboss.logging.Logger;
 
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.metamodel.source.annotation.xml.XMLAccessType;
-import org.hibernate.metamodel.source.annotation.xml.XMLAttributes;
-import org.hibernate.metamodel.source.annotation.xml.XMLEntityListeners;
-import org.hibernate.metamodel.source.annotation.xml.XMLIdClass;
-import org.hibernate.metamodel.source.annotation.xml.XMLMappedSuperclass;
-import org.hibernate.metamodel.source.annotation.xml.XMLPostLoad;
-import org.hibernate.metamodel.source.annotation.xml.XMLPostPersist;
-import org.hibernate.metamodel.source.annotation.xml.XMLPostRemove;
-import org.hibernate.metamodel.source.annotation.xml.XMLPostUpdate;
-import org.hibernate.metamodel.source.annotation.xml.XMLPrePersist;
-import org.hibernate.metamodel.source.annotation.xml.XMLPreRemove;
-import org.hibernate.metamodel.source.annotation.xml.XMLPreUpdate;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLAccessType;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLAttributes;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLEntityListeners;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLIdClass;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLMappedSuperclass;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLPostLoad;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLPostPersist;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLPostRemove;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLPostUpdate;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLPrePersist;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLPreRemove;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLPreUpdate;
 
 /**
  * Mock <mapped-superclass> to {@link javax.persistence.MappedSuperclass @MappedSuperClass}

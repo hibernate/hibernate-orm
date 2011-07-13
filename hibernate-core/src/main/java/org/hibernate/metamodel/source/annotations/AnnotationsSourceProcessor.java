@@ -66,7 +66,7 @@ import org.hibernate.metamodel.domain.Hierarchical;
 import org.hibernate.metamodel.domain.Type;
 import org.hibernate.metamodel.domain.NonEntity;
 import org.hibernate.metamodel.domain.Superclass;
-import org.hibernate.metamodel.source.annotation.xml.XMLEntityMappings;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLEntityMappings;
 import org.hibernate.metamodel.source.annotations.entity.EntityClass;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.classloading.spi.ClassLoaderService;

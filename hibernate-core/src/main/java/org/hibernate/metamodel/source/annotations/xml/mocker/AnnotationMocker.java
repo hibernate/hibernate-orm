@@ -35,17 +35,17 @@ import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.DotName;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.metamodel.source.annotation.xml.XMLAssociationOverride;
-import org.hibernate.metamodel.source.annotation.xml.XMLAttributeOverride;
-import org.hibernate.metamodel.source.annotation.xml.XMLCollectionTable;
-import org.hibernate.metamodel.source.annotation.xml.XMLColumn;
-import org.hibernate.metamodel.source.annotation.xml.XMLEnumType;
-import org.hibernate.metamodel.source.annotation.xml.XMLJoinColumn;
-import org.hibernate.metamodel.source.annotation.xml.XMLJoinTable;
-import org.hibernate.metamodel.source.annotation.xml.XMLLob;
-import org.hibernate.metamodel.source.annotation.xml.XMLOrderColumn;
-import org.hibernate.metamodel.source.annotation.xml.XMLPrimaryKeyJoinColumn;
-import org.hibernate.metamodel.source.annotation.xml.XMLTemporalType;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLAssociationOverride;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLAttributeOverride;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLCollectionTable;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLColumn;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLEnumType;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLJoinColumn;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLJoinTable;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLLob;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLOrderColumn;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLPrimaryKeyJoinColumn;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLTemporalType;
 
 /**
  * @author Strong Liu

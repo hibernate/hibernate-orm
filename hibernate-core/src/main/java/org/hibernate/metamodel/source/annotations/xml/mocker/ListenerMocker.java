@@ -32,15 +32,15 @@ import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
 
 import org.hibernate.MappingException;
-import org.hibernate.metamodel.source.annotation.xml.XMLEntityListener;
-import org.hibernate.metamodel.source.annotation.xml.XMLEntityListeners;
-import org.hibernate.metamodel.source.annotation.xml.XMLPostLoad;
-import org.hibernate.metamodel.source.annotation.xml.XMLPostPersist;
-import org.hibernate.metamodel.source.annotation.xml.XMLPostRemove;
-import org.hibernate.metamodel.source.annotation.xml.XMLPostUpdate;
-import org.hibernate.metamodel.source.annotation.xml.XMLPrePersist;
-import org.hibernate.metamodel.source.annotation.xml.XMLPreRemove;
-import org.hibernate.metamodel.source.annotation.xml.XMLPreUpdate;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLEntityListener;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLEntityListeners;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLPostLoad;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLPostPersist;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLPostRemove;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLPostUpdate;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLPrePersist;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLPreRemove;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLPreUpdate;
 
 /**
  * {@link javax.persistence.EntityListeners @EntityListeners} mocker

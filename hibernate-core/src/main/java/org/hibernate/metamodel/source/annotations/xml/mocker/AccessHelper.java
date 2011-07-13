@@ -38,7 +38,7 @@ import org.hibernate.MappingException;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.source.annotations.JandexHelper;
 import org.hibernate.metamodel.source.annotations.xml.PseudoJpaDotNames;
-import org.hibernate.metamodel.source.annotation.xml.XMLAccessType;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLAccessType;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 
 /**

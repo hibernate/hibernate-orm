@@ -8,7 +8,7 @@
 			<cascade-persist/>
 		</persistence-unit-defaults>
 	</persistence-unit-metadata>
-	<package>org.hibernate.metamodel.binder.source.annotations.xml.mocker</package>
+	<package>org.hibernate.metamodel.source.annotations.xml.mocker</package>
 
 	<entity class="Book">
 		<attributes>

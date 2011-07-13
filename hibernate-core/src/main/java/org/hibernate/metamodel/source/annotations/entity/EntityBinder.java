@@ -914,10 +914,11 @@ public class EntityBinder {
 			ColumnRelationalStateImpl columnRelationsState = new ColumnRelationalStateImpl(
 					simpleAttribute, bindingContext.getMetadataImplementor()
 			);
-			TupleRelationalStateImpl relationalState = new TupleRelationalStateImpl();
-			relationalState.addValueState( columnRelationsState );
-
-			attributeBinding.initialize( relationalState );
+//			TupleRelationalStateImpl relationalState = new TupleRelationalStateImpl();
+//			relationalState.addValueState( columnRelationsState );
+//
+//			attributeBinding.initialize( relationalState );
+			attributeBinding.initialize( columnRelationsState );
 		}
 
 		if ( ! attribute.isTypeResolved() ) {

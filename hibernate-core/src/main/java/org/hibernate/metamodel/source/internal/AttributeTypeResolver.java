@@ -62,7 +62,7 @@ class AttributeTypeResolver {
 
 		final HibernateTypeDescriptor hibernateTypeDescriptor = attributeBinding.getHibernateTypeDescriptor();
 
-		Type resolvedHibernateType = attributeBinding.getHibernateTypeDescriptor().getResolvedTypeMapping();
+		Type resolvedHibernateType = hibernateTypeDescriptor.getResolvedTypeMapping();
 		if ( resolvedHibernateType == null ) {
 			resolvedHibernateType = determineHibernateType( attributeBinding );
 			if ( resolvedHibernateType != null ) {

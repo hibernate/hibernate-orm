@@ -35,9 +35,11 @@ import org.hibernate.metamodel.binding.CascadeType;
 public interface AttributeBindingState {
 	String getAttributeName();
 
-	String getTypeName();
+	String getJavaTypeName();
 
-	Map<String, String> getTypeParameters();
+	String getExplicitHibernateTypeName();
+
+	Map<String, String> getExplicitHibernateTypeParameters();
 
 	boolean isLazy();
 

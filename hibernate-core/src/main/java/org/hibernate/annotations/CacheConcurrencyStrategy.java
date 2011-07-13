@@ -43,6 +43,11 @@ public enum CacheConcurrencyStrategy {
 		this.accessType = accessType;
 	}
 
+	private boolean isMatch(String name) {
+		return ( accessType != null && accessType.getExternalName().equalsIgnoreCase( name ) )
+				|| name().equalsIgnoreCase( name );
+	}
+
 	public static CacheConcurrencyStrategy fromAccessType(AccessType accessType) {
 		switch ( accessType ) {
 			case READ_ONLY: {
@@ -64,19 +69,19 @@ public enum CacheConcurrencyStrategy {
 	}
 
 	public static CacheConcurrencyStrategy parse(String name) {
-		if ( READ_ONLY.accessType.getExternalName().equalsIgnoreCase( name ) ) {
+		if ( READ_ONLY.isMatch( name ) ) {
 			return READ_ONLY;
 		}
-		else if ( READ_WRITE.accessType.getExternalName().equalsIgnoreCase( name ) ) {
+		else if ( READ_WRITE.isMatch( name ) ) {
 			return READ_WRITE;
 		}
-		else if ( NONSTRICT_READ_WRITE.accessType.getExternalName().equalsIgnoreCase( name ) ) {
+		else if ( NONSTRICT_READ_WRITE.isMatch( name ) ) {
 			return NONSTRICT_READ_WRITE;
 		}
-		else if ( TRANSACTIONAL.accessType.getExternalName().equalsIgnoreCase( name ) ) {
+		else if ( TRANSACTIONAL.isMatch( name ) ) {
 			return TRANSACTIONAL;
 		}
-		else if ( "none".equalsIgnoreCase( name ) ) {
+		else if ( NONE.isMatch( name ) ) {
 			return NONE;
 		}
 		else {

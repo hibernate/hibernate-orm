@@ -23,11 +23,14 @@
  */
 package org.hibernate.metamodel.source.hbm.state.binding;
 
+import java.beans.BeanInfo;
+import java.beans.PropertyDescriptor;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.MappingException;
+import org.hibernate.internal.util.beans.BeanInfoHelper;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.source.BindingContext;
 import org.hibernate.metamodel.source.MappingDefaults;
@@ -46,8 +49,9 @@ import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLPropertyElement;
  */
 public class HbmSimpleAttributeBindingState extends AbstractHbmAttributeBindingState
 		implements SimpleAttributeBindingState {
-	private final String typeName;
-	private final Map<String, String> typeParameters = new HashMap<String, String>();
+
+	private final String explicitHibernateTypeName;
+	private final Map<String, String> explicitHibernateTypeParameters = new HashMap<String, String>();
 
 	private final boolean isLazy;
 	private final PropertyGeneration propertyGeneration;
@@ -75,13 +79,13 @@ public class HbmSimpleAttributeBindingState extends AbstractHbmAttributeBindingS
 
 		this.isLazy = false;
 		if ( id.getTypeAttribute() != null ) {
-			typeName = maybeConvertToTypeDefName( id.getTypeAttribute(), bindingContext.getMappingDefaults() );
+			explicitHibernateTypeName = maybeConvertToTypeDefName( id.getTypeAttribute(), bindingContext.getMappingDefaults() );
 		}
 		else if ( id.getType() != null ) {
-			typeName = maybeConvertToTypeDefName( id.getType().getName(), bindingContext.getMappingDefaults() );
+			explicitHibernateTypeName = maybeConvertToTypeDefName( id.getType().getName(), bindingContext.getMappingDefaults() );
 		}
 		else {
-			typeName = getTypeNameByReflection();
+			explicitHibernateTypeName = getTypeNameByReflection();
 		}
 
 		// TODO: how should these be set???
@@ -119,7 +123,7 @@ public class HbmSimpleAttributeBindingState extends AbstractHbmAttributeBindingS
 				),
 				true
 		);
-		this.typeName = version.getType() == null ? "integer" : version.getType();
+		this.explicitHibernateTypeName = version.getType() == null ? "integer" : version.getType();
 
 		this.isLazy = false;
 
@@ -155,7 +159,7 @@ public class HbmSimpleAttributeBindingState extends AbstractHbmAttributeBindingS
 		);
 
 		// Timestamp.getType() is not defined
-		this.typeName = "db".equals( timestamp.getSource() ) ? "dbtimestamp" : "timestamp";
+		this.explicitHibernateTypeName = "db".equals( timestamp.getSource() ) ? "dbtimestamp" : "timestamp";
 		this.isLazy = false;
 
 		// for version properties marked as being generated, make sure they are "always"
@@ -222,17 +226,17 @@ public class HbmSimpleAttributeBindingState extends AbstractHbmAttributeBindingS
 		}
 
 		if ( property.getTypeAttribute() != null ) {
-			typeName = maybeConvertToTypeDefName( property.getTypeAttribute(), bindingContext.getMappingDefaults() );
+			explicitHibernateTypeName = maybeConvertToTypeDefName( property.getTypeAttribute(), bindingContext.getMappingDefaults() );
 		}
 		else if ( property.getType() != null ) {
-			typeName = maybeConvertToTypeDefName( property.getType().getName(), bindingContext.getMappingDefaults() );
+			explicitHibernateTypeName = maybeConvertToTypeDefName( property.getType().getName(), bindingContext.getMappingDefaults() );
 			for ( XMLParamElement typeParameter : property.getType().getParam() ) {
 				//TODO: add parameters from typedef
-				typeParameters.put( typeParameter.getName(), typeParameter.getValue().trim() );
+				explicitHibernateTypeParameters.put( typeParameter.getName(), typeParameter.getValue().trim() );
 			}
 		}
 		else {
-			typeName = getTypeNameByReflection();
+			explicitHibernateTypeName = getTypeNameByReflection();
 		}
 
 
@@ -255,12 +259,53 @@ public class HbmSimpleAttributeBindingState extends AbstractHbmAttributeBindingS
 		return false;
 	}
 
-	public String getTypeName() {
-		return typeName;
+	private String javaType;
+
+	@Override
+	public String getJavaTypeName() {
+		if ( javaType == null ) {
+			javaType = tryToResolveAttributeJavaType();
+		}
+		return javaType;
 	}
 
-	public Map<String, String> getTypeParameters() {
-		return typeParameters;
+	private String tryToResolveAttributeJavaType() {
+		try {
+			Class ownerClass = getBindingContext().locateClassByName( super.getOwnerClassName() );
+			AttributeLocatorDelegate delegate = new AttributeLocatorDelegate( getAttributeName() );
+			BeanInfoHelper.visitBeanInfo( ownerClass, delegate );
+			return delegate.attributeTypeName;
+		}
+		catch (Exception ignore) {
+		}
+		return null;
+	}
+
+	private static class AttributeLocatorDelegate implements BeanInfoHelper.BeanInfoDelegate {
+		private final String attributeName;
+		private String attributeTypeName;
+
+		private AttributeLocatorDelegate(String attributeName) {
+			this.attributeName = attributeName;
+		}
+
+		@Override
+		public void processBeanInfo(BeanInfo beanInfo) throws Exception {
+			for ( PropertyDescriptor propertyDescriptor : beanInfo.getPropertyDescriptors() ) {
+				if ( propertyDescriptor.getName().equals( attributeName ) ) {
+					attributeTypeName = propertyDescriptor.getPropertyType().getName();
+					break;
+				}
+			}
+		}
+	}
+
+	public String getExplicitHibernateTypeName() {
+		return explicitHibernateTypeName;
+	}
+
+	public Map<String, String> getExplicitHibernateTypeParameters() {
+		return explicitHibernateTypeParameters;
 	}
 
 	public boolean isLazy() {

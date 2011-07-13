@@ -738,9 +738,7 @@ public class BindingCreator {
 		final Class<?> attributeJavaType = determineJavaType( attributeBinding.getAttribute() );
 		if ( attributeJavaType != null ) {
 			attributeBinding.getHibernateTypeDescriptor().setJavaTypeName( attributeJavaType.getName() );
-			( (AbstractAttributeContainer.SingularAttributeImpl) attributeBinding.getAttribute() ).resolveType(
-					currentBindingContext.makeJavaType( attributeJavaType.getName() )
-			);
+			attributeBinding.getAttribute().resolveType( currentBindingContext.makeJavaType( attributeJavaType.getName() ) );
 		}
 
 		// prefer type attribute over nested <type/> element

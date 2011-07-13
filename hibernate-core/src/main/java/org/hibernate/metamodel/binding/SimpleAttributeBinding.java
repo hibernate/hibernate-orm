@@ -24,6 +24,7 @@
 package org.hibernate.metamodel.binding;
 
 import org.hibernate.mapping.PropertyGeneration;
+import org.hibernate.metamodel.domain.AbstractAttributeContainer;
 import org.hibernate.metamodel.source.MetaAttributeContext;
 import org.hibernate.metamodel.binding.state.SimpleAttributeBindingState;
 import org.hibernate.metamodel.domain.SingularAttribute;

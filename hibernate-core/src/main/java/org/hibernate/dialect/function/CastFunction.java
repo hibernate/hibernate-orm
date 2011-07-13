@@ -57,7 +57,7 @@ public class CastFunction implements SQLFunction {
 		}
 		String sqlType = factory.getDialect().getCastTypeName( sqlTypeCodes[0] );
 		if (sqlType==null) {
-			//TODO: never reached, since getTypeName() actually throws an exception!
+			//TODO: never reached, since getExplicitHibernateTypeName() actually throws an exception!
 			sqlType = type;
 		}
 		/*else {

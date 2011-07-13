@@ -25,10 +25,10 @@ package org.hibernate.metamodel.source.hbm.state.binding;
 
 import java.util.Set;
 
-import org.hibernate.metamodel.source.BindingContext;
-import org.hibernate.metamodel.source.hbm.Helper;
 import org.hibernate.metamodel.binding.CascadeType;
 import org.hibernate.metamodel.binding.state.DiscriminatorBindingState;
+import org.hibernate.metamodel.source.BindingContext;
+import org.hibernate.metamodel.source.hbm.Helper;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLHibernateMapping;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLHibernateMapping.XMLClass.XMLDiscriminator;
 
@@ -41,7 +41,8 @@ public class HbmDiscriminatorBindingState
 	private final String discriminatorValue;
 	private final boolean isForced;
 	private final boolean isInserted;
-	private final String typeName;
+
+	private final String explicitHibernateTypeName;
 
 	public HbmDiscriminatorBindingState(
 			String entityName,
@@ -63,7 +64,7 @@ public class HbmDiscriminatorBindingState
 		);
 		this.isForced = xmlEntityClazz.getDiscriminator().isForce();
 		this.isInserted = discriminator.isInsert();
-		this.typeName =  discriminator.getType() == null ? "string" : discriminator.getType();
+		this.explicitHibernateTypeName = discriminator.getType() == null ? "string" : discriminator.getType();
 	}
 
 	public Set<CascadeType> getCascadeTypes() {
@@ -74,8 +75,13 @@ public class HbmDiscriminatorBindingState
 		return false;
 	}
 
-	public String getTypeName() {
-		return typeName;
+	public String getExplicitHibernateTypeName() {
+		return explicitHibernateTypeName;
+	}
+
+	@Override
+	public String getJavaTypeName() {
+		return null;
 	}
 
 	@Override

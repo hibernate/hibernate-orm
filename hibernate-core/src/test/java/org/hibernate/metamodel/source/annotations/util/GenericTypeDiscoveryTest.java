@@ -64,7 +64,7 @@ public class GenericTypeDiscoveryTest extends BaseAnnotationIndexTestCase {
 		ClassInfo info = configuredClass.getClassInfo();
 		assertEquals( "wrong class", DotName.createSimple( Stuff.class.getName() ), info.name() );
 		MappedAttribute property = configuredClass.getMappedAttribute( "value" );
-		assertEquals( Price.class.getName(), property.getType() );
+		assertEquals( Price.class, property.getJavaType() );
 
 		assertTrue( iter.hasNext() );
 		configuredClass = iter.next();
@@ -80,9 +80,9 @@ public class GenericTypeDiscoveryTest extends BaseAnnotationIndexTestCase {
 		assertEquals( "wrong class", DotName.createSimple( Item.class.getName() ), info.name() );
 		// properties are alphabetically ordered!
 		property = configuredClass.getMappedAttribute( "owner" );
-		assertEquals( SomeGuy.class.getName(), property.getType() );
+		assertEquals( SomeGuy.class, property.getJavaType() );
 		property = configuredClass.getMappedAttribute( "type" );
-		assertEquals( PaperType.class.getName(), property.getType() );
+		assertEquals( PaperType.class, property.getJavaType() );
 
 		assertTrue( iter.hasNext() );
 		configuredClass = iter.next();

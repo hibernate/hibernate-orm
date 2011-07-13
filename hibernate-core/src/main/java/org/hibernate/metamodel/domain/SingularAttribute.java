@@ -35,4 +35,8 @@ public interface SingularAttribute extends Attribute {
 	 * @return THe attribute type.
 	 */
 	public Type getSingularAttributeType();
+
+	public boolean isTypeResolved();
+
+	public void resolveType(Type type);
 }

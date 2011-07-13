@@ -67,13 +67,18 @@ public class AttributeBindingStateImpl implements SimpleAttributeBindingState {
 	}
 
 	@Override
-	public String getTypeName() {
-		return mappedAttribute.getType();
+	public String getJavaTypeName() {
+		return mappedAttribute.getJavaType().getName();
 	}
 
 	@Override
-	public Map<String, String> getTypeParameters() {
-		return mappedAttribute.getTypeParameters();
+	public String getExplicitHibernateTypeName() {
+		return mappedAttribute.getJavaType().getName();
+	}
+
+	@Override
+	public Map<String, String> getExplicitHibernateTypeParameters() {
+		return mappedAttribute.getExplicitHibernateTypeParameters();
 	}
 
 	@Override

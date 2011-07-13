@@ -53,15 +53,15 @@ public class TypeDiscoveryTest extends BaseAnnotationIndexTestCase {
 		ConfiguredClass configuredClass = iter.next();
 
 		MappedAttribute property = configuredClass.getMappedAttribute( "id" );
-		assertEquals( "Unexpected property type", "int", property.getType() );
+		assertEquals( "Unexpected property type", int.class, property.getJavaType() );
 
 		property = configuredClass.getMappedAttribute( "string" );
-		assertEquals( "Unexpected property type", String.class.getName(), property.getType() );
+		assertEquals( "Unexpected property type", String.class, property.getJavaType() );
 
 		property = configuredClass.getMappedAttribute( "customString" );
-		assertEquals( "Unexpected property type", "my.custom.Type", property.getType() );
+		assertEquals( "Unexpected property type", "my.custom.Type", property.getExplicitHibernateTypeName() );
 
-		Map<String, String> typeParameters = property.getTypeParameters();
+		Map<String, String> typeParameters = property.getExplicitHibernateTypeParameters();
 		assertEquals( "There should be a type parameter", "bar", typeParameters.get( "foo" ) );
 	}
 

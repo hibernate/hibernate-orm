@@ -46,12 +46,12 @@ public class AssociationAttribute extends SimpleAttribute {
 	private final String referencedEntityType;
 	private final Set<CascadeType> cascadeTypes;
 
-	public static AssociationAttribute createAssociationAttribute(String name, String type, AttributeType associationType, Map<DotName, List<AnnotationInstance>> annotations) {
-		return new AssociationAttribute( name, type, associationType, annotations );
+	public static AssociationAttribute createAssociationAttribute(String name, Class<?> javaType, AttributeType associationType, Map<DotName, List<AnnotationInstance>> annotations) {
+		return new AssociationAttribute( name, javaType, associationType, annotations );
 	}
 
-	private AssociationAttribute(String name, String type, AttributeType associationType, Map<DotName, List<AnnotationInstance>> annotations) {
-		super( name, type, annotations, false );
+	private AssociationAttribute(String name, Class<?> javaType, AttributeType associationType, Map<DotName, List<AnnotationInstance>> annotations) {
+		super( name, javaType, annotations, false );
 		this.associationType = associationType;
 		this.ignoreNotFound = ignoreNotFound();
 
@@ -94,7 +94,7 @@ public class AssociationAttribute extends SimpleAttribute {
 	}
 
 	private String determineReferencedEntityType(AnnotationInstance associationAnnotation) {
-		String targetTypeName = getType();
+		String targetTypeName = getJavaType().getName();
 
 		AnnotationInstance targetAnnotation = getIfExists( HibernateDotNames.TARGET );
 		if ( targetAnnotation != null ) {

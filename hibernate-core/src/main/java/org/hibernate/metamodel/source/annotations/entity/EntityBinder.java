@@ -125,6 +125,10 @@ public class EntityBinder {
 			}
 		}
 
+		if ( bindingContext.isGloballyQuotedIdentifiers() ) {
+			schema = StringHelper.quote( schema );
+			catalog = StringHelper.quote( catalog );
+		}
 		return new Schema.Name( schema, catalog );
 	}
 
@@ -400,13 +404,13 @@ public class EntityBinder {
 		final AnnotationInstance sqlUpdateAnnotation = JandexHelper.getSingleAnnotation(
 				entityClass.getClassInfo(), HibernateDotNames.SQL_UPDATE
 		);
-		entityBinding.setCustomInsert( createCustomSQL( sqlUpdateAnnotation ) );
+		entityBinding.setCustomUpdate( createCustomSQL( sqlUpdateAnnotation ) );
 
 		// Custom sql delete
 		final AnnotationInstance sqlDeleteAnnotation = JandexHelper.getSingleAnnotation(
 				entityClass.getClassInfo(), HibernateDotNames.SQL_DELETE
 		);
-		entityBinding.setCustomInsert( createCustomSQL( sqlDeleteAnnotation ) );
+		entityBinding.setCustomDelete( createCustomSQL( sqlDeleteAnnotation ) );
 
 		// Batch size
 		final AnnotationInstance batchSizeAnnotation = JandexHelper.getSingleAnnotation(
@@ -423,12 +427,17 @@ public class EntityBinder {
 		if ( hibernateProxyAnnotation != null ) {
 			lazy = hibernateProxyAnnotation.value( "lazy" ) == null
 					|| hibernateProxyAnnotation.value( "lazy" ).asBoolean();
-			final AnnotationValue proxyClassValue = hibernateProxyAnnotation.value( "proxyClass" );
-			if ( proxyClassValue == null ) {
-				proxyInterfaceType = entity.getClassReferenceUnresolved();
+			if ( lazy ) {
+				final AnnotationValue proxyClassValue = hibernateProxyAnnotation.value( "proxyClass" );
+				if ( proxyClassValue == null ) {
+					proxyInterfaceType = entity.getClassReferenceUnresolved();
+				}
+				else {
+					proxyInterfaceType = bindingContext.makeClassReference( proxyClassValue.asString() );
+				}
 			}
 			else {
-				proxyInterfaceType = bindingContext.makeClassReference( proxyClassValue.asString() );
+				proxyInterfaceType = null;
 			}
 		}
 		else {
@@ -495,9 +504,44 @@ public class EntityBinder {
 		return new CustomSQL( sql, isCallable, checkStyle );
 	}
 
+	private void bindPrimaryTable(EntityBinding entityBinding) {
+		final Schema schema = bindingContext.getMetadataImplementor().getDatabase().getSchema( schemaName );
+
+		AnnotationInstance tableAnnotation = JandexHelper.getSingleAnnotation(
+				entityClass.getClassInfo(),
+				JPADotNames.TABLE
+		);
+
+		String tableName = null;
+		if ( tableAnnotation != null ) {
+			String explicitTableName = JandexHelper.getValue( tableAnnotation, "name", String.class );
+			if ( StringHelper.isNotEmpty( explicitTableName ) ) {
+				tableName = bindingContext.getNamingStrategy().tableName( explicitTableName );
+			}
+		}
+
+		// no explicit table name given, let's use the entity name as table name (taking inheritance into consideration
+		if ( StringHelper.isEmpty( tableName ) ) {
+			tableName = bindingContext.getNamingStrategy().classToTableName( entityClass.getClassNameForTable() );
+		}
+
+		if ( bindingContext.isGloballyQuotedIdentifiers() && ! Identifier.isQuoted( tableName ) ) {
+			tableName = StringHelper.quote( tableName );
+		}
+		org.hibernate.metamodel.relational.Table table = schema.locateOrCreateTable( Identifier.toIdentifier( tableName ) );
+		entityBinding.setBaseTable( table );
+
+		AnnotationInstance checkAnnotation = JandexHelper.getSingleAnnotation(
+				entityClass.getClassInfo(), HibernateDotNames.CHECK
+		);
+		if ( checkAnnotation != null ) {
+			table.addCheckConstraint( checkAnnotation.value( "constraints" ).asString() );
+		}
+	}
+
 	private AnnotationInstance locatePojoTuplizerAnnotation() {
 		final AnnotationInstance tuplizersAnnotation = JandexHelper.getSingleAnnotation(
-				entityClass.getClassInfo(), HibernateDotNames.SYNCHRONIZE
+				entityClass.getClassInfo(), HibernateDotNames.TUPLIZERS
 		);
 		if ( tuplizersAnnotation == null ) {
 			return null;
@@ -521,38 +565,6 @@ public class EntityBinder {
 
 		if ( !( discriminatorAttribute.getColumnValues() instanceof DiscriminatorColumnValues) ) {
 			throw new AssertionFailure( "Expected discriminator column values" );
-		}
-	}
-
-	private void bindPrimaryTable(EntityBinding entityBinding) {
-		final Schema schema = bindingContext.getMetadataImplementor().getDatabase().getSchema( schemaName );
-
-		AnnotationInstance tableAnnotation = JandexHelper.getSingleAnnotation(
-				entityClass.getClassInfo(),
-				JPADotNames.TABLE
-		);
-
-		String tableName = null;
-		if ( tableAnnotation != null ) {
-			String explicitTableName = JandexHelper.getValue( tableAnnotation, "name", String.class );
-			if ( StringHelper.isNotEmpty( explicitTableName ) ) {
-				tableName = bindingContext.getNamingStrategy().tableName( explicitTableName );
-			}
-		}
-
-		// no explicit table name given, let's use the entity name as table name (taking inheritance into consideration
-		if ( StringHelper.isEmpty( tableName ) ) {
-			tableName = bindingContext.getNamingStrategy().classToTableName( entityClass.getClassNameForTable() );
-		}
-
-		org.hibernate.metamodel.relational.Table table = schema.locateOrCreateTable( Identifier.toIdentifier( tableName ) );
-		entityBinding.setBaseTable( table );
-
-		AnnotationInstance checkAnnotation = JandexHelper.getSingleAnnotation(
-				entityClass.getClassInfo(), HibernateDotNames.CHECK
-		);
-		if ( checkAnnotation != null ) {
-			table.addCheckConstraint( checkAnnotation.value( "constraints" ).asString() );
 		}
 	}
 
@@ -665,12 +677,16 @@ public class EntityBinder {
 
 		// now that we have the id attribute we can create the attribute and binding
 		MappedAttribute idAttribute = iter.next();
-		Attribute attribute = container.locateOrCreateSingularAttribute( idAttribute.getName() );
+		SingularAttribute attribute = container.locateOrCreateSingularAttribute( idAttribute.getName() );
 
 		SimpleAttributeBinding attributeBinding = entityBinding.makeSimpleIdAttributeBinding( attribute );
 		attributeBinding.initialize( new AttributeBindingStateImpl( (SimpleAttribute) idAttribute ) );
 		attributeBinding.initialize( new ColumnRelationalStateImpl( (SimpleAttribute) idAttribute, bindingContext.getMetadataImplementor() ) );
 		bindSingleIdGeneratedValue( entityBinding, idAttribute.getName() );
+
+		if ( ! attribute.isTypeResolved() ) {
+			attribute.resolveType( bindingContext.makeJavaType( attributeBinding.getHibernateTypeDescriptor().getJavaTypeName() ) );
+		}
 	}
 
 	private void bindSingleIdGeneratedValue(EntityBinding entityBinding, String idPropertyName) {
@@ -902,6 +918,10 @@ public class EntityBinder {
 			relationalState.addValueState( columnRelationsState );
 
 			attributeBinding.initialize( relationalState );
+		}
+
+		if ( ! attribute.isTypeResolved() ) {
+			attribute.resolveType( bindingContext.makeJavaType( attributeBinding.getHibernateTypeDescriptor().getJavaTypeName() ) );
 		}
 	}
 

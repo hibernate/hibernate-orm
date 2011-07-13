@@ -86,12 +86,12 @@ public class SimpleAttribute extends MappedAttribute {
 	 */
 	private ColumnValues columnValues;
 
-	public static SimpleAttribute createSimpleAttribute(String name, String type, Map<DotName, List<AnnotationInstance>> annotations) {
+	public static SimpleAttribute createSimpleAttribute(String name, Class<?> type, Map<DotName, List<AnnotationInstance>> annotations) {
 		return new SimpleAttribute( name, type, annotations, false );
 	}
 
 	public static SimpleAttribute createSimpleAttribute(SimpleAttribute simpleAttribute, ColumnValues columnValues) {
-		SimpleAttribute attribute = new SimpleAttribute( simpleAttribute.getName(), simpleAttribute.getType(), simpleAttribute.annotations(), false );
+		SimpleAttribute attribute = new SimpleAttribute( simpleAttribute.getName(), simpleAttribute.getJavaType(), simpleAttribute.annotations(), false );
 		attribute.columnValues = columnValues;
 		return attribute;
 	}
@@ -101,7 +101,7 @@ public class SimpleAttribute extends MappedAttribute {
 				annotations, JPADotNames.DISCRIMINATOR_COLUMN
 		);
 		String name = DiscriminatorColumnValues.DEFAULT_DISCRIMINATOR_COLUMN_NAME;
-		String type = String.class.toString(); // string is the discriminator default
+		Class<?> type = String.class; // string is the discriminator default
 		if ( discriminatorOptionsAnnotation != null ) {
 			name = discriminatorOptionsAnnotation.value( "name" ).asString();
 
@@ -110,15 +110,15 @@ public class SimpleAttribute extends MappedAttribute {
 			);
 			switch ( discriminatorType ) {
 				case STRING: {
-					type = String.class.toString();
+					type = String.class;
 					break;
 				}
 				case CHAR: {
-					type = Character.class.toString();
+					type = Character.class;
 					break;
 				}
 				case INTEGER: {
-					type = Integer.class.toString();
+					type = Integer.class;
 					break;
 				}
 				default: {
@@ -129,7 +129,7 @@ public class SimpleAttribute extends MappedAttribute {
 		return new SimpleAttribute( name, type, annotations, true );
 	}
 
-	SimpleAttribute(String name, String type, Map<DotName, List<AnnotationInstance>> annotations, boolean isDiscriminator) {
+	SimpleAttribute(String name, Class<?> type, Map<DotName, List<AnnotationInstance>> annotations, boolean isDiscriminator) {
 		super( name, type, annotations );
 
 		this.isDiscriminator = isDiscriminator;

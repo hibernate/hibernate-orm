@@ -29,12 +29,12 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.hibernate.FetchMode;
-import org.hibernate.metamodel.source.BindingContext;
-import org.hibernate.metamodel.source.MetaAttributeContext;
-import org.hibernate.metamodel.source.hbm.Helper;
 import org.hibernate.metamodel.binding.CascadeType;
 import org.hibernate.metamodel.binding.CustomSQL;
 import org.hibernate.metamodel.binding.state.PluralAttributeBindingState;
+import org.hibernate.metamodel.source.BindingContext;
+import org.hibernate.metamodel.source.MetaAttributeContext;
+import org.hibernate.metamodel.source.hbm.Helper;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLBagElement;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLSqlDeleteAllElement;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLSqlDeleteElement;
@@ -49,8 +49,10 @@ public class HbmPluralAttributeBindingState extends AbstractHbmAttributeBindingS
 		implements PluralAttributeBindingState {
 	private final XMLBagElement collection;
 	private final Class collectionPersisterClass;
-	private final String typeName;
 	private final Set<CascadeType> cascadeTypes;
+
+	private final String explicitHibernateCollectionTypeName;
+	private final Class javaType;
 
 	public HbmPluralAttributeBindingState(
 			String ownerClassName,
@@ -91,7 +93,8 @@ public class HbmPluralAttributeBindingState extends AbstractHbmAttributeBindingS
 		   }
 		   */
 		//}
-		typeName = collection.getCollectionType();
+		this.explicitHibernateCollectionTypeName = collection.getCollectionType();
+		this.javaType = java.util.Collection.class;
 	}
 
 	public FetchMode getFetchMode() {
@@ -277,7 +280,12 @@ public class HbmPluralAttributeBindingState extends AbstractHbmAttributeBindingS
 		return null;
 	}
 
-	public String getTypeName() {
-		return typeName;
+	public String getExplicitHibernateTypeName() {
+		return explicitHibernateCollectionTypeName;
+	}
+
+	@Override
+	public String getJavaTypeName() {
+		return javaType.getName();
 	}
 }

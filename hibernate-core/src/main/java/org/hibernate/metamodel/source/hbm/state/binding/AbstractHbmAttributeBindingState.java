@@ -152,7 +152,7 @@ public abstract class AbstractHbmAttributeBindingState implements AttributeBindi
 		return null;
 	}
 
-	public Map<String, String> getTypeParameters() {
+	public Map<String, String> getExplicitHibernateTypeParameters() {
 		return null;
 	}
 }

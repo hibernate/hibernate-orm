@@ -50,34 +50,58 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 	 */
 	private final String name;
 
-	/**
-	 * Optional type parameters for custom types.
-	 */
-	private final Map<String, String> typeParameters;
+	private final Class<?> javaType;
 
-	/**
-	 * The property type as string.
-	 */
-	private final String type;
+	private final String explicitHibernateTypeName;
 
-	MappedAttribute(String name, String type, Map<DotName, List<AnnotationInstance>> annotations) {
+	private final Map<String, String> explicitHibernateTypeParameters;
+
+	MappedAttribute(String name, Class<?> javaType, Map<DotName, List<AnnotationInstance>> annotations) {
 		this.annotations = annotations;
 		this.name = name;
 
-		this.typeParameters = new HashMap<String, String>();
-		this.type = determineType( type, typeParameters );
+		this.javaType = javaType;
+
+		final AnnotationInstance typeAnnotation = getIfExists( HibernateDotNames.TYPE );
+		if ( typeAnnotation != null ) {
+			this.explicitHibernateTypeName = typeAnnotation.value( "type" ).asString();
+			this.explicitHibernateTypeParameters = extractTypeParameters( typeAnnotation );
+		}
+		else {
+			this.explicitHibernateTypeName = null;
+			this.explicitHibernateTypeParameters = new HashMap<String, String>();
+		}
+	}
+
+	private Map<String, String> extractTypeParameters(AnnotationInstance typeAnnotation) {
+		HashMap<String,String> typeParameters = new HashMap<String, String>();
+		AnnotationValue parameterAnnotationValue = typeAnnotation.value( "parameters" );
+		if ( parameterAnnotationValue != null ) {
+			AnnotationInstance[] parameterAnnotations = parameterAnnotationValue.asNestedArray();
+			for ( AnnotationInstance parameterAnnotationInstance : parameterAnnotations ) {
+				typeParameters.put(
+						parameterAnnotationInstance.value( "name" ).asString(),
+						parameterAnnotationInstance.value( "value" ).asString()
+				);
+			}
+		}
+		return typeParameters;
 	}
 
 	public String getName() {
 		return name;
 	}
 
-	public final String getType() {
-		return type;
+	public final Class<?> getJavaType() {
+		return javaType;
 	}
 
-	public Map<String, String> getTypeParameters() {
-		return typeParameters;
+	public String getExplicitHibernateTypeName() {
+		return explicitHibernateTypeName;
+	}
+
+	public Map<String, String> getExplicitHibernateTypeParameters() {
+		return explicitHibernateTypeParameters;
 	}
 
 	/**
@@ -101,6 +125,10 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 		}
 	}
 
+	Map<DotName, List<AnnotationInstance>> annotations() {
+		return annotations;
+	}
+
 	@Override
 	public int compareTo(MappedAttribute mappedProperty) {
 		return name.compareTo( mappedProperty.getName() );
@@ -113,39 +141,6 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 		sb.append( "{name='" ).append( name ).append( '\'' );
 		sb.append( '}' );
 		return sb.toString();
-	}
-
-	Map<DotName, List<AnnotationInstance>> annotations() {
-		return annotations;
-	}
-
-	/**
-	 * We need to check whether the is an explicit type specified via {@link org.hibernate.annotations.Type}.
-	 *
-	 * @param type the type specified via the constructor
-	 * @param typeParameters map for type parameters in case there are any
-	 *
-	 * @return the final type for this mapped attribute
-	 */
-	private String determineType(String type, Map<String, String> typeParameters) {
-		AnnotationInstance typeAnnotation = getIfExists( HibernateDotNames.TYPE );
-		if ( typeAnnotation == null ) {
-			// return discovered type
-			return type;
-		}
-
-		AnnotationValue parameterAnnotationValue = typeAnnotation.value( "parameters" );
-		if ( parameterAnnotationValue != null ) {
-			AnnotationInstance[] parameterAnnotations = parameterAnnotationValue.asNestedArray();
-			for ( AnnotationInstance parameterAnnotationInstance : parameterAnnotations ) {
-				typeParameters.put(
-						parameterAnnotationInstance.value( "name" ).asString(),
-						parameterAnnotationInstance.value( "value" ).asString()
-				);
-			}
-		}
-
-		return typeAnnotation.value( "type" ).asString();
 	}
 }
 

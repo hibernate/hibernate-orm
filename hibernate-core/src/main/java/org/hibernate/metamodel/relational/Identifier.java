@@ -57,7 +57,7 @@ public class Identifier {
 		}
 	}
 
-	private static boolean isQuoted(String name) {
+	public static boolean isQuoted(String name) {
 		return name.startsWith( "`" ) && name.endsWith( "`" );
 	}
 

@@ -131,7 +131,12 @@ public class HbmManyToOneAttributeBindingState
 		return fetchMode;
 	}
 
-	public String getTypeName() {
+	public String getExplicitHibernateTypeName() {
+		return null;
+	}
+
+	@Override
+	public String getJavaTypeName() {
 		return referencedEntityName;
 	}
 

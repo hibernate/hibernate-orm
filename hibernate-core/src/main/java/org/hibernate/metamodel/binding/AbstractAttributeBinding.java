@@ -70,8 +70,9 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 	}
 
 	protected void initialize(AttributeBindingState state) {
-		hibernateTypeDescriptor.setExplicitTypeName( state.getTypeName() );
-		hibernateTypeDescriptor.setTypeParameters( state.getTypeParameters() );
+		hibernateTypeDescriptor.setExplicitTypeName( state.getExplicitHibernateTypeName() );
+		hibernateTypeDescriptor.setTypeParameters( state.getExplicitHibernateTypeParameters() );
+		hibernateTypeDescriptor.setJavaTypeName( state.getJavaTypeName() );
 		isLazy = state.isLazy();
 		propertyAccessorName = state.getPropertyAccessorName();
 		isAlternateUniqueKey = state.isAlternateUniqueKey();

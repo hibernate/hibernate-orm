@@ -430,11 +430,7 @@ public class ConfiguredClass {
 		AttributeType attributeType = determineAttributeType( annotations );
 		switch ( attributeType ) {
 			case BASIC: {
-				SimpleAttribute attribute = SimpleAttribute.createSimpleAttribute(
-						attributeName,
-						type.getName(),
-						annotations
-				);
+				SimpleAttribute attribute = SimpleAttribute.createSimpleAttribute( attributeName, type, annotations );
 				if ( attribute.isId() ) {
 					idAttributeMap.put( attributeName, attribute );
 				}
@@ -452,7 +448,7 @@ public class ConfiguredClass {
 			// TODO handle the different association types
 			default: {
 				AssociationAttribute attribute = AssociationAttribute.createAssociationAttribute(
-						attributeName, type.getName(), attributeType, annotations
+						attributeName, type, attributeType, annotations
 				);
 				associationAttributeMap.put( attributeName, attribute );
 			}

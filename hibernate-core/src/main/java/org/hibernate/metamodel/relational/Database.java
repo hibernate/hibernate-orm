@@ -28,21 +28,50 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.Metadata;
+
 /**
  * Represents a database and manages the named schema/catalog pairs defined within.
  *
  * @author Steve Ebersole
  */
 public class Database {
-	private Map<Schema.Name,Schema> schemaMap = new HashMap<Schema.Name, Schema>();
+	private final Schema.Name implicitSchemaName;
+
+	private final Map<Schema.Name,Schema> schemaMap = new HashMap<Schema.Name, Schema>();
 	private final List<AuxiliaryDatabaseObject> auxiliaryDatabaseObjects = new ArrayList<AuxiliaryDatabaseObject>();
 
+	public Database(Metadata.Options options) {
+		String schemaName = options.getDefaultSchemaName();
+		String catalogName = options.getDefaultCatalogName();
+		if ( options.isGloballyQuotedIdentifiers() ) {
+			schemaName = StringHelper.quote( schemaName );
+			catalogName = StringHelper.quote( catalogName );
+		}
+		implicitSchemaName = new Schema.Name( schemaName, catalogName );
+		makeSchema( implicitSchemaName );
+	}
+
+	public Schema getDefaultSchema() {
+		return schemaMap.get( implicitSchemaName );
+	}
+
 	public Schema getSchema(Schema.Name name) {
+		if ( name.getSchema() == null && name.getCatalog() == null ) {
+			return getDefaultSchema();
+		}
 		Schema schema = schemaMap.get( name );
 		if ( schema == null ) {
-			schema = new Schema( name );
-			schemaMap.put( name, schema );
+			schema = makeSchema( name );
 		}
+		return schema;
+	}
+
+	private Schema makeSchema(Schema.Name name) {
+		Schema schema;
+		schema = new Schema( name );
+		schemaMap.put( name, schema );
 		return schema;
 	}
 

@@ -25,13 +25,11 @@
 package org.hibernate.test.criteria;
 
 import java.util.Arrays;
-import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.Id;
 import javax.persistence.IdClass;
-import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Table;
@@ -101,31 +99,24 @@ import static org.junit.Assert.assertEquals;
  * shouldn't be exposed.
  *
  * @author Chris Wilson
- * @link http://opensource.atlassian.com/projects/hibernate/browse/HHH-4630
+ * @link https://hibernate.onjira.com/browse/HHH-4630
  */
 
 public class ComplexJoinAliasTest extends BaseCoreFunctionalTestCase {
 	@MappedSuperclass
-	private static abstract class VersionedRecord
-			implements java.io.Serializable {
-		@Column(name = "record_version", nullable = false)
+	private static abstract class VersionedRecord implements java.io.Serializable {
 		Long recordVersion;
-
-		@Column(name = "is_deleted", nullable = false, columnDefinition = "smallint")
 		Boolean isDeleted;
 	}
 
 	@Entity
-	@Table(name = "list_action_roles")
+	@IdClass(ListActionRole.class)
 	public static class ListActionRole extends VersionedRecord {
 		@Id
-		@Column(name = "role_code", length = 3)
 		@Enumerated(EnumType.STRING)
-		Role.Code roleCode;
+		Code roleCode;
 
 		@ManyToOne(targetEntity = Role.class)
-		@JoinColumn(name = "role_code", insertable = false, updatable = false)
-		@Id
 		Role role;
 
 		@Override
@@ -142,14 +133,13 @@ public class ComplexJoinAliasTest extends BaseCoreFunctionalTestCase {
 	@Entity
 	@Table(name = "roles")
 	public static class Role extends VersionedRecord {
-		public enum Code {
-			ADM, CEN, RPA, RPP, PRJ, HUB, RQS, OAD, ORP, ORQ
-		}
-
 		@Id
-		@Column(name = "code", length = 3)
 		@Enumerated(EnumType.STRING)
 		Code code;
+	}
+
+	public static enum Code {
+		ADM, CEN, RPA, RPP, PRJ, HUB, RQS, OAD, ORP, ORQ
 	}
 
 	@Override
@@ -178,5 +168,3 @@ public class ComplexJoinAliasTest extends BaseCoreFunctionalTestCase {
 		session.close();
 	}
 }
-
-

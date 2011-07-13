@@ -32,22 +32,18 @@ import java.util.Set;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.Value;
-import org.hibernate.metamodel.source.MappingException;
-import org.hibernate.metamodel.source.Origin;
-import org.hibernate.metamodel.source.MetadataImplementor;
 import org.hibernate.metamodel.binding.FetchProfile;
 import org.hibernate.metamodel.binding.TypeDef;
 import org.hibernate.metamodel.relational.AuxiliaryDatabaseObject;
 import org.hibernate.metamodel.relational.BasicAuxiliaryDatabaseObjectImpl;
+import org.hibernate.metamodel.source.MappingException;
+import org.hibernate.metamodel.source.MetadataImplementor;
+import org.hibernate.metamodel.source.Origin;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLFetchProfileElement;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLHibernateMapping;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLJoinedSubclassElement;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLParamElement;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLQueryElement;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLSqlQueryElement;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLSubclassElement;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLUnionSubclassElement;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.classloading.spi.ClassLoadingException;
 import org.hibernate.type.Type;
@@ -133,7 +129,7 @@ public class HibernateMappingProcessor {
 						dialectScopes
 				);
 			}
-			metadata.addAuxiliaryDatabaseObject( auxiliaryDatabaseObject );
+			metadata.getDatabase().addAuxiliaryDatabaseObject( auxiliaryDatabaseObject );
 		}
 	}
 

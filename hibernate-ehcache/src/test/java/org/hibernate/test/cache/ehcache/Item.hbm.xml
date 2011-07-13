@@ -23,26 +23,26 @@
   ~ Boston, MA  02110-1301  USA
   -->
 <!DOCTYPE hibernate-mapping PUBLIC
-	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
-	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping package="org.hibernate.test.cache.ehcache">
 
-	<class name="Item" table="Items">
-		<id name="id">
-			<generator class="increment"/>
-		</id>
-		<property name="name" not-null="true"/>
-		<property name="description" not-null="true"/>
-	</class>
+    <class name="Item" table="Items">
+        <id name="id">
+            <generator class="increment"/>
+        </id>
+        <property name="name" not-null="true"/>
+        <property name="description" not-null="true"/>
+    </class>
 
-	<class name="VersionedItem" table="VersionedItems">
-		<id name="id">
-			<generator class="increment"/>
-		</id>
+    <class name="VersionedItem" table="VersionedItems">
+        <id name="id">
+            <generator class="increment"/>
+        </id>
         <version name="version" type="long"/>
         <property name="name" not-null="true"/>
-		<property name="description" not-null="true"/>
-	</class>
+        <property name="description" not-null="true"/>
+    </class>
 
 </hibernate-mapping>

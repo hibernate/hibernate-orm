@@ -24,6 +24,7 @@
 package org.hibernate.test.cache.ehcache;
 
 import java.util.Map;
+
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
@@ -62,13 +63,13 @@ public abstract class EhCacheTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	public void configure(Configuration cfg) {
-		super.configure( cfg );
-		cfg.setProperty( Environment.CACHE_REGION_PREFIX, "" );
-		cfg.setProperty( Environment.USE_SECOND_LEVEL_CACHE, "true" );
-		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
-		cfg.setProperty( Environment.USE_STRUCTURED_CACHE, "true" );
+		super.configure(cfg);
+		cfg.setProperty(Environment.CACHE_REGION_PREFIX, "");
+		cfg.setProperty(Environment.USE_SECOND_LEVEL_CACHE, "true");
+		cfg.setProperty(Environment.GENERATE_STATISTICS, "true");
+		cfg.setProperty(Environment.USE_STRUCTURED_CACHE, "true");
 		configCache(cfg);
-		cfg.setProperty( Environment.TRANSACTION_STRATEGY, JdbcTransactionFactory.class.getName() );
+		cfg.setProperty(Environment.TRANSACTION_STRATEGY, JdbcTransactionFactory.class.getName());
 	}
 
 	protected abstract void configCache(final Configuration cfg);
@@ -85,36 +86,36 @@ public abstract class EhCacheTest extends BaseCoreFunctionalTestCase {
 		s.close();
 
 		SecondLevelCacheStatistics slcs = s.getSessionFactory().getStatistics()
-				.getSecondLevelCacheStatistics( Item.class.getName() );
+			.getSecondLevelCacheStatistics(Item.class.getName());
 
-		assertEquals( slcs.getPutCount(), 1 );
-		assertEquals( slcs.getElementCountInMemory(), 1 );
-		assertEquals( slcs.getEntries().size(), 1 );
+		assertEquals(slcs.getPutCount(), 1);
+		assertEquals(slcs.getElementCountInMemory(), 1);
+		assertEquals(slcs.getEntries().size(), 1);
 
 		s = openSession();
 		t = s.beginTransaction();
-		i = (Item) s.get( Item.class, i.getId() );
+		i = (Item)s.get(Item.class, i.getId());
 
-		assertEquals( slcs.getHitCount(), 1 );
-		assertEquals( slcs.getMissCount(), 0 );
+		assertEquals(slcs.getHitCount(), 1);
+		assertEquals(slcs.getMissCount(), 0);
 
 		i.setDescription("A bog standard item");
 
 		t.commit();
 		s.close();
 
-		assertEquals( slcs.getPutCount(), 2 );
+		assertEquals(slcs.getPutCount(), 2);
 
-		Object entry = slcs.getEntries().get( i.getId() );
+		Object entry = slcs.getEntries().get(i.getId());
 		Map map;
 		map = getMapFromCacheEntry(entry);
-		assertTrue( map.get("description").equals("A bog standard item") );
-		assertTrue( map.get("name").equals("widget") );
+		assertTrue(map.get("description").equals("A bog standard item"));
+		assertTrue(map.get("name").equals("widget"));
 
 		// cleanup
 		s = openSession();
 		t = s.beginTransaction();
-		s.delete( i );
+		s.delete(i);
 		t.commit();
 		s.close();
 	}
@@ -123,82 +124,78 @@ public abstract class EhCacheTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testEmptySecondLevelCacheEntry() throws Exception {
-		sessionFactory().getCache().evictEntityRegion( Item.class.getName() );
+		sessionFactory().getCache().evictEntityRegion(Item.class.getName());
 		Statistics stats = sessionFactory().getStatistics();
 		stats.clear();
-		SecondLevelCacheStatistics statistics = stats.getSecondLevelCacheStatistics( Item.class.getName() );
-        Map cacheEntries = statistics.getEntries();
-		assertEquals( 0, cacheEntries.size() );
+		SecondLevelCacheStatistics statistics = stats.getSecondLevelCacheStatistics(Item.class.getName());
+		Map cacheEntries = statistics.getEntries();
+		assertEquals(0, cacheEntries.size());
 	}
 
-	@SuppressWarnings( {"UnnecessaryBoxing", "UnnecessaryUnboxing", "UnusedAssignment"})
+	@SuppressWarnings( { "UnnecessaryBoxing", "UnnecessaryUnboxing", "UnusedAssignment" })
 	@Test
 	public void testStaleWritesLeaveCacheConsistent() {
 		Session s = openSession();
 		Transaction txn = s.beginTransaction();
 		VersionedItem item = new VersionedItem();
-		item.setName( "steve" );
-		item.setDescription( "steve's item" );
-		s.save( item );
+		item.setName("steve");
+		item.setDescription("steve's item");
+		s.save(item);
 		txn.commit();
 		s.close();
 
 		Long initialVersion = item.getVersion();
 
 		// manually revert the version property
-		item.setVersion( Long.valueOf( item.getVersion().longValue() - 1 ) );
+		item.setVersion(Long.valueOf(item.getVersion().longValue() - 1));
 
 		try {
 			s = openSession();
 			txn = s.beginTransaction();
-			s.update( item );
+			s.update(item);
 			txn.commit();
 			s.close();
-			fail( "expected stale write to fail" );
-		}
-		catch( Throwable expected ) {
+			fail("expected stale write to fail");
+		} catch (Throwable expected) {
 			// expected behavior here
-			if ( txn != null ) {
+			if (txn != null) {
 				try {
 					txn.rollback();
-				}
-				catch( Throwable ignore ) {
+				} catch (Throwable ignore) {
 				}
 			}
-		}
-		finally {
-			if ( s != null && s.isOpen() ) {
+		} finally {
+			if (s != null && s.isOpen()) {
 				try {
 					s.close();
-				}
-				catch( Throwable ignore ) {
+				} catch (Throwable ignore) {
 				}
 			}
 		}
 
 		// check the version value in the cache...
 		SecondLevelCacheStatistics slcs = sessionFactory().getStatistics()
-				.getSecondLevelCacheStatistics( VersionedItem.class.getName() );
+			.getSecondLevelCacheStatistics(VersionedItem.class.getName());
 
-		Object entry = slcs.getEntries().get( item.getId() );
+		Object entry = slcs.getEntries().get(item.getId());
 		Long cachedVersionValue;
 //		if ( entry instanceof ReadWriteCache.Lock ) {
 //			//FIXME don't know what to test here
 //			cachedVersionValue = Long.valueOf( ((ReadWriteCache.Lock) entry).getUnlockTimestamp() );
 //		} else
-		if(entry.getClass().getName().equals("net.sf.ehcache.hibernate.strategy.AbstractReadWriteEhcacheAccessStrategy$Lock")) {
+		if (entry.getClass().getName().equals("org.hibernate.cache.ehcache.strategy.AbstractReadWriteEhcacheAccessStrategy$Lock")) {
 			//FIXME don't know what to test here
 		} else {
-			cachedVersionValue = ( Long ) getMapFromCacheEntry(entry).get( "_version" );
-			assertEquals( initialVersion.longValue(), cachedVersionValue.longValue() );
+			cachedVersionValue = (Long)getMapFromCacheEntry(entry).get("_version");
+			assertEquals(initialVersion.longValue(), cachedVersionValue.longValue());
 		}
 
 
 		// cleanup
 		s = openSession();
 		txn = s.beginTransaction();
-		item = ( VersionedItem ) s.load( VersionedItem.class, item.getId() );
-		s.delete( item );
+		item = (VersionedItem)s.load(VersionedItem.class, item.getId());
+		s.delete(item);
 		txn.commit();
 		s.close();
 

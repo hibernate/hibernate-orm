@@ -23,9 +23,11 @@
  */
 package org.hibernate.metamodel.source.hbm;
 
+import javax.validation.constraints.Null;
 import java.beans.BeanInfo;
 import java.beans.PropertyDescriptor;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
@@ -38,8 +40,10 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.Value;
 import org.hibernate.internal.util.beans.BeanInfoHelper;
 import org.hibernate.mapping.PropertyGeneration;
+import org.hibernate.metamodel.binding.IdGenerator;
 import org.hibernate.metamodel.domain.SingularAttribute;
 import org.hibernate.metamodel.source.MappingException;
+import org.hibernate.metamodel.source.MetaAttributeContext;
 import org.hibernate.metamodel.source.MetadataImplementor;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.EntityElement;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.JoinElementSource;
@@ -206,6 +210,8 @@ public class BindingCreator {
 
 		performBasicEntityBind( entityBinding, entitySourceInfo );
 		bindIdentifier( entityBinding, entitySourceInfo );
+		bindVersion( entityBinding, entitySourceInfo );
+		bindDiscriminator( entityBinding, entitySourceInfo );
 
 		entityBinding.setMutable( xmlClass.isMutable() );
 		entityBinding.setExplicitPolymorphism( "explicit".equals( xmlClass.getPolymorphism() ) );
@@ -519,38 +525,115 @@ public class BindingCreator {
 				: idElement.getName();
 
 		final SimpleAttributeBinding idAttributeBinding = doBasicSimpleAttributeBindingCreation(
-				idAttributeName,
-				idElement,
+				new SimpleAttributeSource() {
+					private final ExplicitHibernateTypeSource typeSource = new ExplicitHibernateTypeSource() {
+						private final String name = idElement.getTypeAttribute() != null
+								? idElement.getTypeAttribute()
+								: idElement.getType() != null
+										? idElement.getType().getName()
+										: null;
+						private final Map<String, String> parameters = ( idElement.getType() != null )
+								? extractParameters( idElement.getType().getParam() )
+								: null;
+
+						@Override
+						public String getName() {
+							return name;
+						}
+
+						@Override
+						public Map<String, String> getParameters() {
+							return parameters;
+						}
+					};
+
+					private final RelationValueMetadataSource valueSource = new RelationValueMetadataSource() {
+						@Override
+						public String getColumnAttribute() {
+							return idElement.getColumnAttribute();
+						}
+
+						@Override
+						public String getFormulaAttribute() {
+							return null;
+						}
+
+						@Override
+						public List getColumnOrFormulaElements() {
+							return idElement.getColumn();
+						}
+					};
+
+					@Override
+					public String getName() {
+						return idAttributeName;
+					}
+
+					@Override
+					public ExplicitHibernateTypeSource getTypeInformation() {
+						return typeSource;
+					}
+
+					@Override
+					public String getPropertyAccessorName() {
+						return idElement.getAccess();
+					}
+
+					@Override
+					public boolean isInsertable() {
+						return true;
+					}
+
+					@Override
+					public boolean isUpdatable() {
+						return false;
+					}
+
+					@Override
+					public PropertyGeneration getGeneration() {
+						return PropertyGeneration.INSERT;
+					}
+
+					@Override
+					public boolean isLazy() {
+						return false;
+					}
+
+					@Override
+					public boolean isIncludedInOptimisticLocking() {
+						return false;
+					}
+
+					@Override
+					public RelationValueMetadataSource getValueInformation() {
+						return valueSource;
+					}
+
+					@Override
+					public MetaAttributeContext buildMetaAttributeContext(MetaAttributeContext parentContext) {
+						return Helper.extractMetaAttributeContext( idElement.getMeta(), parentContext );
+					}
+				},
 				entityBinding
 		);
 
-		idAttributeBinding.setInsertable( false );
-		idAttributeBinding.setUpdatable( false );
-		idAttributeBinding.setGeneration( PropertyGeneration.INSERT );
-		idAttributeBinding.setLazy( false );
-		idAttributeBinding.setIncludedInOptimisticLocking( false );
+		entityBinding.getEntityIdentifier().setValueBinding( idAttributeBinding );
 
-		final org.hibernate.metamodel.relational.Value relationalValue = makeValue(
-				new RelationValueMetadataSource() {
-					@Override
-					public String getColumnAttribute() {
-						return idElement.getColumnAttribute();
-					}
+		final org.hibernate.metamodel.relational.Value relationalValue = idAttributeBinding.getValue();
 
-					@Override
-					public String getFormulaAttribute() {
-						return null;
-					}
+		if ( idElement.getGenerator() != null ) {
+			final String generatorName = idElement.getGenerator().getClazz();
+			IdGenerator idGenerator = currentBindingContext.getMetadataImplementor().getIdGenerator( generatorName );
+			if ( idGenerator == null ) {
+				idGenerator = new IdGenerator(
+						entityBinding.getEntity().getName() + generatorName,
+						generatorName,
+						extractParameters( idElement.getGenerator().getParam() )
+				);
+			}
+			entityBinding.getEntityIdentifier().setIdGenerator( idGenerator );
+		}
 
-					@Override
-					public List getColumnOrFormulaElements() {
-						return idElement.getColumn();
-					}
-				},
-				idAttributeBinding
-		);
-
-		idAttributeBinding.setValue( relationalValue );
 		if ( SimpleValue.class.isInstance( relationalValue ) ) {
 			if ( !Column.class.isInstance( relationalValue ) ) {
 				// this should never ever happen..
@@ -567,10 +650,338 @@ public class BindingCreator {
 		}
 	}
 
+	private SimpleAttributeBinding doBasicSimpleAttributeBindingCreation(
+			SimpleAttributeSource simpleAttributeSource,
+			EntityBinding entityBinding) {
+		final SingularAttribute attribute = entityBinding.getEntity().locateOrCreateSingularAttribute( simpleAttributeSource.getName() );
+		final SimpleAttributeBinding attributeBinding = entityBinding.makeSimpleAttributeBinding( attribute );
+		resolveTypeInformation( simpleAttributeSource.getTypeInformation(), attributeBinding );
+
+		attributeBinding.setInsertable( simpleAttributeSource.isInsertable() );
+		attributeBinding.setUpdatable( simpleAttributeSource.isUpdatable() );
+		attributeBinding.setGeneration( simpleAttributeSource.getGeneration() );
+		attributeBinding.setLazy( simpleAttributeSource.isLazy() );
+		attributeBinding.setIncludedInOptimisticLocking( simpleAttributeSource.isIncludedInOptimisticLocking() );
+
+		attributeBinding.setPropertyAccessorName(
+				Helper.getPropertyAccessorName(
+						simpleAttributeSource.getPropertyAccessorName(),
+						false,
+						currentBindingContext.getMappingDefaults().getPropertyAccessorName()
+				)
+		);
+
+		final org.hibernate.metamodel.relational.Value relationalValue = makeValue(
+				simpleAttributeSource.getValueInformation(), attributeBinding
+		);
+		attributeBinding.setValue( relationalValue );
+
+		attributeBinding.setMetaAttributeContext( simpleAttributeSource.buildMetaAttributeContext( entityBinding.getMetaAttributeContext() ) );
+
+		return attributeBinding;
+	}
+
+	private void resolveTypeInformation(ExplicitHibernateTypeSource typeSource, SimpleAttributeBinding attributeBinding) {
+		final Class<?> attributeJavaType = determineJavaType( attributeBinding.getAttribute() );
+		if ( attributeJavaType != null ) {
+			attributeBinding.getHibernateTypeDescriptor().setJavaTypeName( attributeJavaType.getName() );
+			attributeBinding.getAttribute().resolveType( currentBindingContext.makeJavaType( attributeJavaType.getName() ) );
+		}
+
+		final String explicitTypeName = typeSource.getName();
+		if ( explicitTypeName != null ) {
+			final TypeDef typeDef = currentBindingContext.getMetadataImplementor().getTypeDefinition( explicitTypeName );
+			if ( typeDef != null ) {
+				attributeBinding.getHibernateTypeDescriptor().setExplicitTypeName( typeDef.getTypeClass() );
+				attributeBinding.getHibernateTypeDescriptor().getTypeParameters().putAll( typeDef.getParameters() );
+			}
+			else {
+				attributeBinding.getHibernateTypeDescriptor().setExplicitTypeName( explicitTypeName );
+			}
+			final Map<String,String> parameters = typeSource.getParameters();
+			if ( parameters != null ) {
+				attributeBinding.getHibernateTypeDescriptor().getTypeParameters().putAll( parameters );
+			}
+		}
+		else {
+			if ( attributeJavaType == null ) {
+				// we will have problems later determining the Hibernate Type to use.  Should we throw an
+				// exception now?  Might be better to get better contextual info
+			}
+		}
+	}
+
+	private Map<String, String> extractParameters(List<XMLParamElement> xmlParamElements) {
+		if ( xmlParamElements == null || xmlParamElements.isEmpty() ) {
+			return null;
+		}
+		final HashMap<String,String> params = new HashMap<String, String>();
+		for ( XMLParamElement paramElement : xmlParamElements ) {
+			params.put( paramElement.getName(), paramElement.getValue() );
+		}
+		return params;
+	}
+
 	private void bindCompositeIdentifierAttribute(
 			EntityBinding entityBinding,
 			EntitySourceInformation entitySourceInfo) {
 		//To change body of created methods use File | Settings | File Templates.
+	}
+
+	private void bindVersion(EntityBinding entityBinding, EntitySourceInformation entitySourceInfo) {
+		final XMLHibernateMapping.XMLClass rootClassElement = (XMLHibernateMapping.XMLClass) entitySourceInfo.getEntityElement();
+		final XMLHibernateMapping.XMLClass.XMLVersion versionElement = rootClassElement.getVersion();
+		final XMLHibernateMapping.XMLClass.XMLTimestamp timestampElement = rootClassElement.getTimestamp();
+
+		if ( versionElement == null && timestampElement == null ) {
+			return;
+		}
+		else if ( versionElement != null && timestampElement != null ) {
+			throw new MappingException( "version and timestamp elements cannot be specified together", currentBindingContext.getOrigin() );
+		}
+
+		final SimpleAttributeBinding attributeBinding;
+		if ( versionElement != null ) {
+			attributeBinding = doBasicSimpleAttributeBindingCreation(
+					new SimpleAttributeSource() {
+						private final ExplicitHibernateTypeSource typeSource = new ExplicitHibernateTypeSource() {
+							@Override
+							public String getName() {
+								return versionElement.getType() == null ? "integer" : versionElement.getType();
+							}
+
+							@Override
+							public Map<String, String> getParameters() {
+								return null;
+							}
+						};
+
+						private final RelationValueMetadataSource valueSource = new RelationValueMetadataSource() {
+							@Override
+							public String getColumnAttribute() {
+								return versionElement.getColumnAttribute();
+							}
+
+							@Override
+							public String getFormulaAttribute() {
+								return null;
+							}
+
+							@Override
+							public List getColumnOrFormulaElements() {
+								return versionElement.getColumn();
+							}
+						};
+
+						@Override
+						public String getName() {
+							return versionElement.getName();
+						}
+
+						@Override
+						public ExplicitHibernateTypeSource getTypeInformation() {
+							return typeSource;
+						}
+
+						@Override
+						public String getPropertyAccessorName() {
+							return versionElement.getAccess();
+						}
+
+						@Override
+						public boolean isInsertable() {
+							return versionElement.isInsert() == null ? true : versionElement.isInsert();
+						}
+
+						@Override
+						public boolean isUpdatable() {
+							return true;
+						}
+
+						private Value<PropertyGeneration> propertyGenerationValue = new Value<PropertyGeneration>(
+								new Value.DeferredInitializer<PropertyGeneration>() {
+									@Override
+									public PropertyGeneration initialize() {
+										final PropertyGeneration propertyGeneration = versionElement.getGenerated() == null
+												? PropertyGeneration.NEVER
+												: PropertyGeneration.parse( versionElement.getGenerated().value() );
+										if ( propertyGeneration == PropertyGeneration.INSERT ) {
+											throw new MappingException(
+													"'generated' attribute cannot be 'insert' for versioning property",
+													currentBindingContext.getOrigin()
+											);
+										}
+										return propertyGeneration;
+									}
+								}
+						);
+
+						@Override
+						public PropertyGeneration getGeneration() {
+							return propertyGenerationValue.getValue();
+						}
+
+						@Override
+						public boolean isLazy() {
+							return false;
+						}
+
+						@Override
+						public boolean isIncludedInOptimisticLocking() {
+							return false;
+						}
+
+						@Override
+						public RelationValueMetadataSource getValueInformation() {
+							return valueSource;
+						}
+
+						@Override
+						public MetaAttributeContext buildMetaAttributeContext(MetaAttributeContext parentContext) {
+							return Helper.extractMetaAttributeContext( versionElement.getMeta(), parentContext );
+						}
+					},
+					entityBinding
+			);
+		}
+		else {
+			attributeBinding = doBasicSimpleAttributeBindingCreation(
+					new SimpleAttributeSource() {
+						private final ExplicitHibernateTypeSource typeSource = new ExplicitHibernateTypeSource() {
+							@Override
+							public String getName() {
+								return "db".equals( timestampElement.getSource() ) ? "dbtimestamp" : "timestamp";
+							}
+
+							@Override
+							public Map<String, String> getParameters() {
+								return null;
+							}
+						};
+
+						private final RelationValueMetadataSource valueSource = new RelationValueMetadataSource() {
+							@Override
+							public String getColumnAttribute() {
+								return timestampElement.getColumn();
+							}
+
+							@Override
+							public String getFormulaAttribute() {
+								return null;
+							}
+
+							@Override
+							public List getColumnOrFormulaElements() {
+								return null;
+							}
+						};
+
+						@Override
+						public String getName() {
+							return timestampElement.getName();
+						}
+
+						@Override
+						public ExplicitHibernateTypeSource getTypeInformation() {
+							return typeSource;
+						}
+
+						@Override
+						public String getPropertyAccessorName() {
+							return timestampElement.getAccess();
+						}
+
+						@Override
+						public boolean isInsertable() {
+							return true;
+						}
+
+						@Override
+						public boolean isUpdatable() {
+							return true;
+						}
+
+						private Value<PropertyGeneration> propertyGenerationValue = new Value<PropertyGeneration>(
+								new Value.DeferredInitializer<PropertyGeneration>() {
+									@Override
+									public PropertyGeneration initialize() {
+										final PropertyGeneration propertyGeneration = timestampElement.getGenerated() == null
+												? PropertyGeneration.NEVER
+												: PropertyGeneration.parse( timestampElement.getGenerated().value() );
+										if ( propertyGeneration == PropertyGeneration.INSERT ) {
+											throw new MappingException(
+													"'generated' attribute cannot be 'insert' for versioning property",
+													currentBindingContext.getOrigin()
+											);
+										}
+										return propertyGeneration;
+									}
+								}
+						);
+
+						@Override
+						public PropertyGeneration getGeneration() {
+							return propertyGenerationValue.getValue();
+						}
+
+						@Override
+						public boolean isLazy() {
+							return false;
+						}
+
+						@Override
+						public boolean isIncludedInOptimisticLocking() {
+							return false;
+						}
+
+						@Override
+						public RelationValueMetadataSource getValueInformation() {
+							return valueSource;
+						}
+
+						@Override
+						public MetaAttributeContext buildMetaAttributeContext(MetaAttributeContext parentContext) {
+							return Helper.extractMetaAttributeContext( versionElement.getMeta(), parentContext );
+						}
+					},
+					entityBinding
+			);
+		}
+
+		entityBinding.setVersionBinding( attributeBinding );
+	}
+
+	private void bindDiscriminator(EntityBinding entityBinding, EntitySourceInformation entitySourceInfo) {
+		// discriminator is a tad different in that it is a "virtual attribute" because it does not exist in the
+		// actual domain model.
+		final XMLHibernateMapping.XMLClass rootClassElement = (XMLHibernateMapping.XMLClass) entitySourceInfo.getEntityElement();
+		final XMLHibernateMapping.XMLClass.XMLDiscriminator discriminatorElement = rootClassElement.getDiscriminator();
+		if ( discriminatorElement == null ) {
+			return;
+		}
+
+		// todo ...
+	}
+
+	private interface SimpleAttributeSource {
+		public String getName();
+		public ExplicitHibernateTypeSource getTypeInformation();
+		public String getPropertyAccessorName();
+		public boolean isInsertable();
+		public boolean isUpdatable();
+		public PropertyGeneration getGeneration();
+		public boolean isLazy();
+		public boolean isIncludedInOptimisticLocking();
+
+		public RelationValueMetadataSource getValueInformation();
+
+		// todo : would prefer to see this inverted so that we return an Iterable of <name,value,inherit> values from here and aply that in caller to this
+		public MetaAttributeContext buildMetaAttributeContext(MetaAttributeContext parentContext);
+	}
+
+	private interface ExplicitHibernateTypeSource {
+		public String getName();
+		public Map<String,String> getParameters();
 	}
 
 	private void bindAttributes(final EntitySourceInformation entitySourceInformation, EntityBinding entityBinding) {

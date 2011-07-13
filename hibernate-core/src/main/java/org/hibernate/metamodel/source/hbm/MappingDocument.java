@@ -27,15 +27,16 @@ import java.util.List;
 
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.internal.util.Value;
-import org.hibernate.metamodel.source.Origin;
+import org.hibernate.metamodel.domain.Type;
 import org.hibernate.metamodel.source.MappingDefaults;
 import org.hibernate.metamodel.source.MetaAttributeContext;
 import org.hibernate.metamodel.source.MetadataImplementor;
+import org.hibernate.metamodel.source.Origin;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.EntityElement;
-import org.hibernate.metamodel.source.internal.JaxbRoot;
-import org.hibernate.metamodel.domain.Type;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLFetchProfileElement;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLHibernateMapping;
+import org.hibernate.metamodel.source.internal.JaxbRoot;
+import org.hibernate.metamodel.source.internal.OverriddenMappingDefaults;
 import org.hibernate.service.ServiceRegistry;
 
 /**
@@ -50,6 +51,7 @@ public class MappingDocument {
 	public MappingDocument(JaxbRoot<XMLHibernateMapping> hbmJaxbRoot, MetadataImplementor metadata) {
 		this.hbmJaxbRoot = hbmJaxbRoot;
 		this.mappingLocalBindingContext = new LocalBindingContextImpl( metadata );
+
 	}
 
 	public XMLHibernateMapping getMappingRoot() {
@@ -70,10 +72,22 @@ public class MappingDocument {
 
 	private class LocalBindingContextImpl implements HbmBindingContext {
 		private final MetadataImplementor metadata;
+		private final MappingDefaults localMappingDefaults;
 		private final MetaAttributeContext metaAttributeContext;
 
 		private LocalBindingContextImpl(MetadataImplementor metadata) {
 			this.metadata = metadata;
+			this.localMappingDefaults = new OverriddenMappingDefaults(
+					metadata.getMappingDefaults(),
+					hbmJaxbRoot.getRoot().getPackage(),
+					hbmJaxbRoot.getRoot().getSchema(),
+					hbmJaxbRoot.getRoot().getCatalog(),
+					null,
+					null,
+					hbmJaxbRoot.getRoot().getDefaultCascade(),
+					hbmJaxbRoot.getRoot().getDefaultAccess(),
+					hbmJaxbRoot.getRoot().isDefaultLazy()
+			);
 			if ( hbmJaxbRoot.getRoot().getMeta() == null || hbmJaxbRoot.getRoot().getMeta().isEmpty() ) {
 				this.metaAttributeContext = new MetaAttributeContext( metadata.getGlobalMetaAttributeContext() );
 			}
@@ -98,7 +112,7 @@ public class MappingDocument {
 
 		@Override
 		public MappingDefaults getMappingDefaults() {
-			return metadata.getMappingDefaults();
+			return localMappingDefaults;
 		}
 
 		@Override

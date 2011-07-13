@@ -206,6 +206,10 @@ public class EntityBinding {
 		return versionBinding != null;
 	}
 
+	public void setVersionBinding(SimpleAttributeBinding versionBinding) {
+		this.versionBinding = versionBinding;
+	}
+
 	public SimpleAttributeBinding getVersioningValueBinding() {
 		return versionBinding;
 	}

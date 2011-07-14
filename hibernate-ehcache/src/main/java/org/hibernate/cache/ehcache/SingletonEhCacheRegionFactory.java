@@ -1,0 +1,123 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
+package org.hibernate.cache.ehcache;
+
+import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.config.Configuration;
+
+import org.hibernate.cache.CacheException;
+import org.hibernate.cfg.Settings;
+import org.hibernate.service.classloading.spi.ClassLoaderService;
+import org.hibernate.service.spi.InjectService;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.Properties;
+import java.util.concurrent.atomic.AtomicInteger;
+
+/**
+ * A singleton EhCacheRegionFactory implementation.
+ *
+ * @author Chris Dennis
+ * @author Greg Luck
+ * @author Emmanuel Bernard
+ * @author Alex Snaps
+ */
+public class SingletonEhCacheRegionFactory extends AbstractEhcacheRegionFactory {
+
+	private static final Logger LOG = LoggerFactory.getLogger( SingletonEhCacheRegionFactory.class );
+
+	private static final AtomicInteger REFERENCE_COUNT = new AtomicInteger();
+
+	/**
+	 * Returns a representation of the singleton EhCacheRegionFactory
+	 */
+	public SingletonEhCacheRegionFactory(Properties prop) {
+		super();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public void start(Settings settings, Properties properties) throws CacheException {
+		try {
+			String configurationResourceName = null;
+			if ( properties != null ) {
+				configurationResourceName = (String) properties.get( NET_SF_EHCACHE_CONFIGURATION_RESOURCE_NAME );
+			}
+			if ( configurationResourceName == null || configurationResourceName.length() == 0 ) {
+				manager = CacheManager.create();
+				REFERENCE_COUNT.incrementAndGet();
+			}
+			else {
+				URL url;
+				try {
+					url = new URL( configurationResourceName );
+				}
+				catch ( MalformedURLException e ) {
+					if ( !configurationResourceName.startsWith( "/" ) ) {
+						configurationResourceName = "/" + configurationResourceName;
+						LOG.debug(
+								"prepending / to {}. It should be placed in the root of the classpath rather than in a package.",
+								configurationResourceName
+						);
+					}
+					url = loadResource( configurationResourceName );
+				}
+				Configuration configuration = HibernateUtil.loadAndCorrectConfiguration( url );
+				manager = CacheManager.create( configuration );
+				REFERENCE_COUNT.incrementAndGet();
+			}
+			mbeanRegistrationHelper.registerMBean( manager, properties );
+		}
+		catch ( net.sf.ehcache.CacheException e ) {
+			throw new CacheException( e );
+		}
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public void stop() {
+		try {
+			if ( manager != null ) {
+				if ( REFERENCE_COUNT.decrementAndGet() == 0 ) {
+					manager.shutdown();
+				}
+				manager = null;
+			}
+		}
+		catch ( net.sf.ehcache.CacheException e ) {
+			throw new CacheException( e );
+		}
+	}
+
+	@InjectService
+	public void setClassLoaderService(ClassLoaderService classLoaderService) {
+		this.classLoaderService = classLoaderService;
+	}
+}

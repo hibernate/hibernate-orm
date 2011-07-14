@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,20 +21,34 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.cache.internal;
+package org.hibernate.cache.ehcache.strategy;
 
-import java.util.Properties;
+import org.hibernate.cache.ehcache.regions.EhcacheCollectionRegion;
+import org.hibernate.cache.spi.CollectionRegion;
+import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
+import org.hibernate.cfg.Settings;
 
 /**
- * Thin wrapper class around the within Ehcache-core packaged SingletonEhCacheRegionFactory.
- * It directly delegates to the wrapped instance, enabling user to upgrade the Ehcache-core version
- * by simply dropping in a new jar.
+ * Ehcache specific read/write collection region access strategy
  *
+ * @author Chris Dennis
  * @author Alex Snaps
  */
-public final class SingletonEhCacheRegionFactory extends AbstractEhCacheRegionFactory {
+public class ReadWriteEhcacheCollectionRegionAccessStrategy
+		extends AbstractReadWriteEhcacheAccessStrategy<EhcacheCollectionRegion>
+		implements CollectionRegionAccessStrategy {
 
-	public SingletonEhCacheRegionFactory(Properties properties) {
-		super(new net.sf.ehcache.hibernate.SingletonEhCacheRegionFactory(properties));
+	/**
+	 * Create a read/write access strategy accessing the given collection region.
+	 */
+	public ReadWriteEhcacheCollectionRegionAccessStrategy(EhcacheCollectionRegion region, Settings settings) {
+		super( region, settings );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public CollectionRegion getRegion() {
+		return region;
 	}
 }

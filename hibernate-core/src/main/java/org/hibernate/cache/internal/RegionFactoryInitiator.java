@@ -66,7 +66,8 @@ public class RegionFactoryInitiator implements BasicServiceInitiator<RegionFacto
 			customImplClass = (Class<? extends RegionFactory>) impl;
 		}
 		else {
-			customImplClass = registry.getService( ClassLoaderService.class ).classForName( impl.toString() );
+			customImplClass = registry.getService( ClassLoaderService.class )
+					.classForName( mapLegacyNames( impl.toString() ) );
 		}
 
 		try {
@@ -77,5 +78,19 @@ public class RegionFactoryInitiator implements BasicServiceInitiator<RegionFacto
 					"Could not initialize custom RegionFactory impl [" + customImplClass.getName() + "]", e
 			);
 		}
+	}
+
+	// todo this shouldn't be public (nor really static):
+	// hack for org.hibernate.cfg.SettingsFactory.createRegionFactory()
+	public static String mapLegacyNames(final String name) {
+		if ( "org.hibernate.cache.EhCacheRegionFactory".equals( name ) ) {
+			return "org.hibernate.cache.ehcache.EhCacheRegionFactory";
+		}
+
+		if ( "org.hibernate.cache.SingletonEhCacheRegionFactory".equals( name ) ) {
+			return "org.hibernate.cache.ehcache.SingletonEhCacheRegionFactory";
+		}
+
+		return name;
 	}
 }

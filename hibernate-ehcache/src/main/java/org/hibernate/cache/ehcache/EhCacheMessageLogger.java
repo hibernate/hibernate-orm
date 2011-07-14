@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.cache.internal;
+package org.hibernate.cache.ehcache;
 
 import static org.jboss.logging.Logger.Level.WARN;
 

@@ -1,11 +1,11 @@
 package org.hibernate.test.cache.ehcache;
 
+import org.hibernate.cache.ehcache.EhCacheRegionFactory;
+import org.hibernate.cache.ehcache.strategy.ItemValueExtractor;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 
 import java.util.Map;
-
-import net.sf.ehcache.hibernate.EhCacheRegionFactory;
 
 /**
  * @author Alex Snaps
@@ -20,12 +20,14 @@ public class EhCacheRegionTest extends EhCacheTest {
 	@Override
 	protected Map getMapFromCacheEntry(final Object entry) {
 		final Map map;
-//		if ( entry instanceof Item ) {
-//			map = (Map) ( (Item) entry ).getValue();
-//		}
-//		else {
+		if ( entry.getClass()
+				.getName()
+				.equals( "org.hibernate.cache.ehcache.strategy.AbstractReadWriteEhcacheAccessStrategy$Item" ) ) {
+			map = ItemValueExtractor.getValue( entry );
+		}
+		else {
 			map = (Map) entry;
-//		}
+		}
 		return map;
 	}
 }

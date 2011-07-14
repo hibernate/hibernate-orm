@@ -30,6 +30,8 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.metamodel.source.spi.MetadataImplementor;
 
 /**
  * Models the concept of a relational <tt>TABLE</tt> (or <tt>VIEW</tt>).
@@ -148,6 +150,149 @@ public class Table extends AbstractTableSpecification implements Exportable {
 	@Override
 	public String getQualifiedName(Dialect dialect) {
 		return objectName.toText( dialect );
+	}
+
+	public String[] sqlCreateStrings(MetadataImplementor metadata) {
+		Dialect dialect = metadata.getServiceRegistry().getService( JdbcServices.class ).getDialect();
+		boolean hasPrimaryKey = getPrimaryKey().getColumns().iterator().hasNext();
+		StringBuilder buf =
+				new StringBuilder(
+						hasPrimaryKey ? dialect.getCreateTableString() : dialect.getCreateMultisetTableString() )
+				.append( ' ' )
+				.append( objectName.toText( dialect ) )
+				.append( " (" );
+
+
+		// TODO: fix this when identity columns are supported by new metadata (HHH-6436)
+		// for now, assume false
+		//boolean identityColumn = idValue != null && idValue.isIdentityColumn( metadata.getIdentifierGeneratorFactory(), dialect );
+		boolean isPrimaryKeyIdentity = false;
+
+		// Try to find out the name of the primary key to create it as identity if the IdentityGenerator is used
+		String pkColName = null;
+		if ( hasPrimaryKey && isPrimaryKeyIdentity ) {
+			Column pkColumn = getPrimaryKey().getColumns().iterator().next();
+			pkColName = pkColumn.getColumnName().encloseInQuotesIfQuoted( dialect );
+		}
+
+		boolean isFirst = true;
+		for ( SimpleValue simpleValue : values() ) {
+			if ( ! Column.class.isInstance( simpleValue ) ) {
+				continue;
+			}
+			if ( isFirst ) {
+				isFirst = false;
+			}
+			else {
+				buf.append( ", " );
+			}
+			Column col = ( Column ) simpleValue;
+			String colName = col.getColumnName().encloseInQuotesIfQuoted( dialect );
+
+			buf.append( colName ).append( ' ' );
+
+			if ( isPrimaryKeyIdentity && colName.equals( pkColName ) ) {
+				// to support dialects that have their own identity data type
+				if ( dialect.hasDataTypeInIdentityColumn() ) {
+					buf.append( col.getDatatype().getTypeName() );
+				}
+				buf.append( ' ' )
+						.append( dialect.getIdentityColumnString( col.getDatatype().getTypeCode() ) );
+			}
+			else {
+
+				buf.append( col.getDatatype().getTypeName() );
+
+				String defaultValue = col.getDefaultValue();
+				if ( defaultValue != null ) {
+					buf.append( " default " ).append( defaultValue );
+				}
+
+				if ( col.isNullable() ) {
+					buf.append( dialect.getNullColumnString() );
+				}
+				else {
+					buf.append( " not null" );
+				}
+
+			}
+
+			boolean useUniqueConstraint = col.isUnique() &&
+					( !col.isNullable() || dialect.supportsNotNullUnique() );
+			if ( useUniqueConstraint ) {
+				if ( dialect.supportsUnique() ) {
+					buf.append( " unique" );
+				}
+				else {
+					UniqueKey uk = getOrCreateUniqueKey( col.getColumnName().encloseInQuotesIfQuoted( dialect ) + '_' );
+					uk.addColumn( col );
+				}
+			}
+
+			if ( col.getCheckCondition() != null && dialect.supportsColumnCheck() ) {
+				buf.append( " check (" )
+						.append( col.getCheckCondition() )
+						.append( ")" );
+			}
+
+			String columnComment = col.getComment();
+			if ( columnComment != null ) {
+				buf.append( dialect.getColumnComment( columnComment ) );
+			}
+		}
+		if ( hasPrimaryKey ) {
+			buf.append( ", " )
+					.append( getPrimaryKey().sqlConstraintStringInCreateTable( dialect ) );
+		}
+
+		if ( dialect.supportsUniqueConstraintInCreateAlterTable() ) {
+			for ( UniqueKey uk : uniqueKeys.values() ) {
+				String constraint = uk.sqlConstraintStringInCreateTable( dialect );
+				if ( constraint != null ) {
+					buf.append( ", " ).append( constraint );
+				}
+			}
+		}
+
+		if ( dialect.supportsTableCheck() ) {
+			for ( CheckConstraint checkConstraint : checkConstraints ) {
+				buf.append( ", check (" )
+						.append( checkConstraint )
+						.append( ')' );
+			}
+		}
+
+		buf.append( ')' );
+
+		if ( comments != null ) {
+			boolean first = true;
+			for ( String comment : comments ) {
+				if ( first ) {
+					first = false;
+				}
+				else {
+					buf.append( ' ' );
+				}
+				buf.append( dialect.getTableComment( comment ) );
+			}
+		}
+
+		return new String[] { buf.append( dialect.getTableTypeString() ).toString() };
+	}
+
+	@Override
+	public String[] sqlDropStrings(MetadataImplementor metadata) {
+		Dialect dialect = metadata.getServiceRegistry().getService( JdbcServices.class ).getDialect();
+		StringBuilder buf = new StringBuilder( "drop table " );
+		if ( dialect.supportsIfExistsBeforeTableName() ) {
+			buf.append( "if exists " );
+		}
+		buf.append( getQualifiedName( dialect ) )
+				.append( dialect.getCascadeConstraintsString() );
+		if ( dialect.supportsIfExistsAfterTableName() ) {
+			buf.append( " if exists" );
+		}
+		return new String[] { buf.toString() };
 	}
 
 	@Override

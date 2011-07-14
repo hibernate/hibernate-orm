@@ -23,6 +23,11 @@
  */
 package org.hibernate.metamodel.relational;
 
+import org.hibernate.MappingException;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.metamodel.source.spi.MetadataImplementor;
+
 /**
  * Models a database {@code SEQUENCE}.
  *
@@ -66,4 +71,17 @@ public class Sequence implements Exportable {
 	public int getIncrementSize() {
 		return incrementSize;
 	}
+
+	public String[] sqlCreateStrings(MetadataImplementor metadata) throws MappingException {
+		return getDialect( metadata ).getCreateSequenceStrings( name, initialValue,incrementSize );
+	}
+
+	public String[] sqlDropStrings(MetadataImplementor metadata) throws MappingException {
+		return getDialect( metadata ).getDropSequenceStrings( name );
+	}
+
+	private Dialect getDialect(MetadataImplementor metadata) {
+		return metadata.getServiceRegistry().getService( JdbcServices.class ).getDialect();
+	}
+
 }

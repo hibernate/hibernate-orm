@@ -26,12 +26,17 @@ package org.hibernate.metamodel.relational;
 import java.util.List;
 import java.util.ArrayList;
 
+import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.metamodel.source.spi.MetadataImplementor;
+
 /**
  * Support for writing {@link Constraint} implementations
  *
  * @todo do we need to support defining these on particular schemas/catalogs?
  *
  * @author Steve Ebersole
+ * @author Gail Badner
  */
 public abstract class AbstractConstraint implements Constraint {
 	private final TableSpecification table;
@@ -55,6 +60,10 @@ public abstract class AbstractConstraint implements Constraint {
 		return columns;
 	}
 
+	protected int getColumnSpan() {
+		return columns.size();
+	}
+
 	protected List<Column> internalColumnAccess() {
 		return columns;
 	}
@@ -64,5 +73,47 @@ public abstract class AbstractConstraint implements Constraint {
 			throw new IllegalArgumentException( "Unable to add column to constraint; tables did not match" );
 		}
 		columns.add( column );
+	}
+
+	protected boolean isCreationVetoed(Dialect dialect) {
+		return false;
+	}
+
+	protected abstract String sqlConstraintStringInAlterTable(Dialect dialect);
+
+	public String[] sqlDropStrings(MetadataImplementor metadata) {
+		Dialect dialect = getDialect( metadata );
+		if ( isCreationVetoed( dialect ) ) {
+			return null;
+		}
+		else {
+			return new String[] {
+					new StringBuffer()
+						.append( "alter table " )
+						.append( getTable().getQualifiedName( dialect ) )
+						.append( " drop constraint " )
+						.append( dialect.quote( getName() ) )
+						.toString()
+			};
+		}
+	}
+
+	public String[] sqlCreateStrings(MetadataImplementor metadata) {
+		Dialect dialect = getDialect( metadata );
+		if ( isCreationVetoed( dialect ) ) {
+			return null;
+		}
+		else {
+			return new String[] {
+					new StringBuilder( "alter table " )
+							.append( getTable().getQualifiedName( dialect ) )
+							.append( sqlConstraintStringInAlterTable( dialect ) )
+							.toString()
+			};
+		}
+	}
+
+	protected static Dialect getDialect(MetadataImplementor metadata) {
+		return metadata.getServiceRegistry().getService( JdbcServices.class ).getDialect();
 	}
 }

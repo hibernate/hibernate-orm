@@ -24,12 +24,15 @@
 package org.hibernate.metamodel.relational;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
+import org.hibernate.MappingException;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.metamodel.source.spi.MetadataImplementor;
 
 import org.jboss.logging.Logger;
-import org.jboss.logging.Logger.Level;
 
 /**
  * Models the notion of a foreign key.
@@ -43,6 +46,8 @@ import org.jboss.logging.Logger.Level;
 public class ForeignKey extends AbstractConstraint implements Constraint, Exportable {
 
     private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, AbstractConstraint.class.getName());
+	private static final String ON_DELETE = " on delete ";
+	private static final String ON_UPDATE = " on update ";
 
 	private final TableSpecification targetTable;
 	private List<Column> targetColumns;
@@ -129,11 +134,87 @@ public class ForeignKey extends AbstractConstraint implements Constraint, Export
 		this.updateRule = updateRule;
 	}
 
+	@Override
+	public String[] sqlDropStrings(MetadataImplementor metadata) {
+		Dialect dialect = getDialect( metadata );
+		return new String[] {
+				"alter table " +
+						getTable().getQualifiedName( dialect ) +
+						dialect.getDropForeignKeyString() +
+						getName()
+		};
+	}
+
+	public String sqlConstraintStringInAlterTable(Dialect dialect) {
+		String[] columnNames = new String[ getColumnSpan() ];
+		String[] targetColumnNames = new String[ getColumnSpan() ];
+		int i=0;
+		Iterator<Column> itTargetColumn = getTargetColumns().iterator();
+		for ( Column column : getColumns() ) {
+			if ( ! itTargetColumn.hasNext() ) {
+				throw new MappingException( "More constraint columns that foreign key target columns." );
+			}
+			columnNames[i] = column.getColumnName().encloseInQuotesIfQuoted( dialect );
+			targetColumnNames[i] = ( itTargetColumn.next() ).getColumnName().encloseInQuotesIfQuoted( dialect );
+			i++;
+		}
+		if ( itTargetColumn.hasNext() ) {
+			throw new MappingException( "More foreign key target columns than constraint columns." );
+		}
+		StringBuilder sb =
+				new StringBuilder(
+						dialect.getAddForeignKeyConstraintString(
+								getName(),
+								columnNames,
+								targetTable.getQualifiedName( dialect ),
+								targetColumnNames,
+								this.targetColumns == null
+						)
+				);
+		// TODO: If a dialect does not support cascade-delete, can it support other actions? (HHH-6428)
+		// For now, assume not.
+		if ( dialect.supportsCascadeDelete() ) {
+			if ( deleteRule != ReferentialAction.NO_ACTION ) {
+				sb.append( ON_DELETE ).append( deleteRule.getActionString() );
+			}
+			if ( updateRule != ReferentialAction.NO_ACTION ) {
+				sb.append( ON_UPDATE ).append( updateRule.getActionString() );
+			}
+		}
+		return sb.toString();
+	}
+
 	public static enum ReferentialAction {
-		NO_ACTION,
-		CASCADE,
-		SET_NULL,
-		SET_DEFAULT,
-		RESTRICT
+		NO_ACTION {
+			private static final String ACTION_STRING = "no action";
+			public String getActionString() {
+				return ACTION_STRING;
+			}
+		},
+		CASCADE {
+			private static final String ACTION_STRING = "cascade";
+			public String getActionString() {
+				return ACTION_STRING;
+			}
+		},
+		SET_NULL {
+			private static final String ACTION_STRING = "set null";
+			public String getActionString() {
+				return ACTION_STRING;
+			}
+		},
+		SET_DEFAULT {
+			private static final String ACTION_STRING = "set default";
+			public String getActionString() {
+				return ACTION_STRING;
+			}
+		},
+		RESTRICT {
+			private static final String ACTION_STRING = "restrict";
+			public String getActionString() {
+				return ACTION_STRING;
+			}
+		};
+		public abstract String getActionString();
 	}
 }

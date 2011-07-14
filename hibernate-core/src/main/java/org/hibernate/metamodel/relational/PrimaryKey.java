@@ -23,6 +23,8 @@
  */
 package org.hibernate.metamodel.relational;
 
+import org.hibernate.dialect.Dialect;
+
 /**
  * Models a table's primary key.
  * <p/>
@@ -58,4 +60,37 @@ public class PrimaryKey extends AbstractConstraint implements Constraint, Export
 	public String getExportIdentifier() {
 		return getTable().getLoggableValueQualifier() + ".PK";
 	}
+
+	public String sqlConstraintStringInCreateTable(Dialect dialect) {
+		StringBuilder buf = new StringBuilder("primary key (");
+		boolean first = true;
+		for ( Column column : getColumns() ) {
+			if ( first ) {
+				first = false;
+			}
+			else {
+				buf.append(", ");
+			}
+			buf.append( column.getColumnName().encloseInQuotesIfQuoted( dialect ) );
+		}
+		return buf.append(')').toString();
+	}
+
+	public String sqlConstraintStringInAlterTable(Dialect dialect) {
+		StringBuffer buf = new StringBuffer(
+			dialect.getAddPrimaryKeyConstraintString( getName() )
+		).append('(');
+		boolean first = true;
+		for ( Column column : getColumns() ) {
+			if ( first ) {
+				first = false;
+			}
+			else {
+				buf.append(", ");
+			}
+			buf.append( column.getColumnName().encloseInQuotesIfQuoted( dialect ) );
+		}
+		return buf.append(')').toString();
+	}
+
 }

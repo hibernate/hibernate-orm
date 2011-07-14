@@ -25,13 +25,20 @@ package org.hibernate.metamodel.relational;
 
 import java.util.Set;
 
+import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.Mapping;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.Metadata;
+import org.hibernate.metamodel.source.spi.MetadataImplementor;
 
 /**
  * @author Steve Ebersole
+ * @author Gail Badner
  */
 public class BasicAuxiliaryDatabaseObjectImpl extends AbstractAuxiliaryDatabaseObject {
+	private static final String CATALOG_NAME_PLACEHOLDER = "${catalog}";
+	private static final String SCHEMA_NAME_PLACEHOLDER = "${schema}";
 	private final String createString;
 	private final String dropString;
 
@@ -41,15 +48,20 @@ public class BasicAuxiliaryDatabaseObjectImpl extends AbstractAuxiliaryDatabaseO
 		this.dropString = dropString;
 	}
 
-	// TODO: fix this when HHH-6431 is fixed
-	//@Override
-	public String sqlCreateString(Dialect dialect, Mapping p, String defaultCatalog, String defaultSchema) {
-		return createString;
+	@Override
+	public String[] sqlCreateStrings(MetadataImplementor metadata) {
+		return new String[] { injectCatalogAndSchema( createString, metadata.getOptions() ) };
 	}
 
-	// TODO: fix this when HHH-6431 is fixed
-	//@Override
-	public String sqlDropString(Dialect dialect, String defaultCatalog, String defaultSchema) {
-		return dropString;
+	@Override
+	public String[] sqlDropStrings(MetadataImplementor metadata) {
+		return new String[] { injectCatalogAndSchema( dropString, metadata.getOptions() ) };
 	}
+
+	private String injectCatalogAndSchema(String ddlString, Metadata.Options options) {
+		String rtn = StringHelper.replace( ddlString, CATALOG_NAME_PLACEHOLDER, options.getDefaultCatalogName() );
+		rtn = StringHelper.replace( rtn, SCHEMA_NAME_PLACEHOLDER, options.getDefaultSchemaName() );
+		return rtn;
+	}
+
 }

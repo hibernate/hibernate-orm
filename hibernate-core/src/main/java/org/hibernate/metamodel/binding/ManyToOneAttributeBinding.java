@@ -38,11 +38,12 @@ import org.hibernate.metamodel.relational.state.ManyToOneRelationalState;
  * @author Gail Badner
  */
 public class ManyToOneAttributeBinding extends SimpleAttributeBinding implements EntityReferencingAttributeBinding {
-	private boolean isLogicalOneToOne;
-	private boolean isPropertyReference;
-	private String foreignKeyName;
 	private String referencedAttributeName;
 	private String referencedEntityName;
+
+	private boolean isLogicalOneToOne;
+	private String foreignKeyName;
+
 	private AttributeBinding referencedAttributeBinding;
 
 	ManyToOneAttributeBinding(EntityBinding entityBinding) {
@@ -51,7 +52,6 @@ public class ManyToOneAttributeBinding extends SimpleAttributeBinding implements
 
 	public final ManyToOneAttributeBinding initialize(ManyToOneAttributeBindingState state) {
 		super.initialize( state );
-		isPropertyReference = state.getReferencedAttributeName() != null;
 		referencedAttributeName = state.getReferencedAttributeName();
 		referencedEntityName = state.getReferencedEntityName();
 		return this;
@@ -65,20 +65,23 @@ public class ManyToOneAttributeBinding extends SimpleAttributeBinding implements
 	}
 
 	public final boolean isPropertyReference() {
-		return isPropertyReference;
+		return referencedAttributeName != null;
 	}
 
 	public final String getReferencedEntityName() {
 		return referencedEntityName;
 	}
 
+	public void setReferencedEntity(String referencedEntityName) {
+		this.referencedEntityName = referencedEntityName;
+	}
+
 	public final String getReferencedAttributeName() {
-		if ( referencedAttributeName == null ) {
-			throw new IllegalStateException(
-					"Referenced attribute name is not available."
-			);
-		}
 		return referencedAttributeName;
+	}
+
+	public void setReferencedEntityAttributeName(String referencedEntityAttributeName) {
+		this.referencedAttributeName = referencedEntityAttributeName;
 	}
 
 	public final boolean isReferenceResolved() {
@@ -161,4 +164,5 @@ public class ManyToOneAttributeBinding extends SimpleAttributeBinding implements
 		}
 		//TODO: validate that the entity reference is resolved
 	}
+
 }

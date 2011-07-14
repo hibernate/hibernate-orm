@@ -857,10 +857,8 @@ public class EntityBinder {
 				AssociationAttribute associationAttribute) {
 		switch ( associationAttribute.getAssociationType() ) {
 			case MANY_TO_ONE: {
-				entityBinding.getEntity().locateOrCreateSingularAttribute( associationAttribute.getName() );
-				ManyToOneAttributeBinding manyToOneAttributeBinding = entityBinding.makeManyToOneAttributeBinding(
-						associationAttribute.getName()
-				);
+				Attribute attribute = entityBinding.getEntity().locateOrCreateSingularAttribute( associationAttribute.getName() );
+				ManyToOneAttributeBinding manyToOneAttributeBinding = entityBinding.makeManyToOneAttributeBinding( attribute );
 
 				ManyToOneAttributeBindingState bindingState = new ManyToOneBindingStateImpl( associationAttribute );
 				manyToOneAttributeBinding.initialize( bindingState );

@@ -26,15 +26,20 @@ package org.hibernate.metamodel.source.hbm;
 import java.beans.BeanInfo;
 import java.beans.PropertyDescriptor;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Stack;
 
 import org.hibernate.EntityMode;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.NamingStrategy;
+import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.OptimisticLockStyle;
+import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.Value;
 import org.hibernate.internal.util.beans.BeanInfoHelper;
@@ -44,6 +49,7 @@ import org.hibernate.metamodel.binding.Caching;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.IdGenerator;
 import org.hibernate.metamodel.binding.InheritanceType;
+import org.hibernate.metamodel.binding.ManyToOneAttributeBinding;
 import org.hibernate.metamodel.binding.MetaAttribute;
 import org.hibernate.metamodel.binding.SimpleAttributeBinding;
 import org.hibernate.metamodel.binding.TypeDef;
@@ -520,7 +526,7 @@ public class BindingCreator {
 	private void bindSimpleIdentifierAttribute(EntityBinding entityBinding, EntitySourceInformation entitySourceInfo) {
 		final XMLHibernateMapping.XMLClass.XMLId idElement = ( (XMLHibernateMapping.XMLClass) entitySourceInfo.getEntityElement() ).getId();
 		final SimpleAttributeBinding idAttributeBinding = doBasicSimpleAttributeBindingCreation(
-				new SimpleIdentifierAttributeSource( idElement ),
+				new SingularIdentifierAttributeSource( idElement ),
 				entityBinding
 		);
 
@@ -557,35 +563,44 @@ public class BindingCreator {
 		}
 	}
 
-	private SimpleAttributeBinding doBasicSimpleAttributeBindingCreation(
-			SimpleAttributeSource simpleAttributeSource,
-			EntityBinding entityBinding) {
-		final SingularAttribute attribute = entityBinding.getEntity().locateOrCreateSingularAttribute( simpleAttributeSource.getName() );
-		final SimpleAttributeBinding attributeBinding = entityBinding.makeSimpleAttributeBinding( attribute );
-		resolveTypeInformation( simpleAttributeSource.getTypeInformation(), attributeBinding );
+	private SimpleAttributeBinding doBasicSimpleAttributeBindingCreation(SingularAttributeSource attributeSource, EntityBinding entityBinding) {
+		final SingularAttribute attribute = entityBinding.getEntity().locateOrCreateSingularAttribute( attributeSource.getName() );
+		final SimpleAttributeBinding attributeBinding;
+		if ( attributeSource.getNature() == SingularAttributeNature.BASIC ) {
+			attributeBinding = entityBinding.makeSimpleAttributeBinding( attribute );
+			resolveTypeInformation( attributeSource.getTypeInformation(), attributeBinding );
+		}
+		else if ( attributeSource.getNature() == SingularAttributeNature.MANY_TO_ONE ) {
+			attributeBinding = entityBinding.makeManyToOneAttributeBinding( attribute );
+			resolveTypeInformation( attributeSource.getTypeInformation(), attributeBinding );
+			resolveToOneReferenceInformation( (ToOneAttributeSource) attributeSource, (ManyToOneAttributeBinding) attributeBinding );
+		}
+		else {
+			throw new NotYetImplementedException();
+		}
 
-		attributeBinding.setInsertable( simpleAttributeSource.isInsertable() );
-		attributeBinding.setUpdatable( simpleAttributeSource.isUpdatable() );
-		attributeBinding.setGeneration( simpleAttributeSource.getGeneration() );
-		attributeBinding.setLazy( simpleAttributeSource.isLazy() );
-		attributeBinding.setIncludedInOptimisticLocking( simpleAttributeSource.isIncludedInOptimisticLocking() );
+		attributeBinding.setInsertable( attributeSource.isInsertable() );
+		attributeBinding.setUpdatable( attributeSource.isUpdatable() );
+		attributeBinding.setGeneration( attributeSource.getGeneration() );
+		attributeBinding.setLazy( attributeSource.isLazy() );
+		attributeBinding.setIncludedInOptimisticLocking( attributeSource.isIncludedInOptimisticLocking() );
 
 		attributeBinding.setPropertyAccessorName(
 				Helper.getPropertyAccessorName(
-						simpleAttributeSource.getPropertyAccessorName(),
+						attributeSource.getPropertyAccessorName(),
 						false,
 						currentBindingContext.getMappingDefaults().getPropertyAccessorName()
 				)
 		);
 
 		final org.hibernate.metamodel.relational.Value relationalValue = makeValue(
-				simpleAttributeSource.getValueInformation(), attributeBinding
+				attributeSource.getValueInformation(), attributeBinding
 		);
 		attributeBinding.setValue( relationalValue );
 
 		attributeBinding.setMetaAttributeContext(
 				extractMetaAttributeContext(
-						simpleAttributeSource.metaAttributes(),
+						attributeSource.metaAttributes(),
 						entityBinding.getMetaAttributeContext()
 				)
 		);
@@ -674,7 +689,7 @@ public class BindingCreator {
 			}
 			else if ( XMLManyToOneElement.class.isInstance( attribute ) ) {
 				XMLManyToOneElement manyToOne = XMLManyToOneElement.class.cast( attribute );
-				makeManyToOneAttributeBinding( manyToOne, entityBinding );
+				bindManyToOne( manyToOne, entityBinding );
 			}
 			else if ( XMLOneToOneElement.class.isInstance( attribute ) ) {
 // todo : implement
@@ -682,9 +697,8 @@ public class BindingCreator {
 // bindOneToOne( subElement, (OneToOne) value, propertyName, true, mappings );
 			}
 			else if ( XMLBagElement.class.isInstance( attribute ) ) {
-				XMLBagElement collection = XMLBagElement.class.cast( attribute );
-				BagBinding collectionBinding = makeBagAttributeBinding( collection, entityBinding );
-				metadata.addCollection( collectionBinding );
+				XMLBagElement bagElement = XMLBagElement.class.cast( attribute );
+				bindBag( bagElement, entityBinding );
 			}
 			else if ( XMLIdbagElement.class.isInstance( attribute ) ) {
 				XMLIdbagElement collection = XMLIdbagElement.class.cast( attribute );
@@ -748,12 +762,14 @@ public class BindingCreator {
 		doBasicSimpleAttributeBindingCreation( new PropertyAttributeSource( property ), entityBinding );
 	}
 
-	private void makeManyToOneAttributeBinding(XMLManyToOneElement manyToOne, EntityBinding entityBinding) {
-		//To change body of created methods use File | Settings | File Templates.
+	private void bindManyToOne(XMLManyToOneElement manyToOne, EntityBinding entityBinding) {
+		doBasicSimpleAttributeBindingCreation( new ManyToOneAttributeSource( manyToOne ), entityBinding );
 	}
 
-	private BagBinding makeBagAttributeBinding(XMLBagElement collection, EntityBinding entityBinding) {
-		return null;  //To change body of created methods use File | Settings | File Templates.
+	private BagBinding bindBag(XMLBagElement collection, EntityBinding entityBinding) {
+		final BagBinding bagBinding = null;
+//		metadata.addCollection( bagBinding );
+		return bagBinding;
 	}
 
 	private void bindSecondaryTables(EntitySourceInformation entitySourceInfo, EntityBinding entityBinding) {
@@ -783,9 +799,9 @@ public class BindingCreator {
 
 	// Initial prototype/sandbox for notion of "orchestrated information collection from sources" ~~~~~~~~~~~~~~~~~~~~~~
 
-	private static enum SimpleAttributeNature { BASIC, MANY_TO_ONE, ONE_TO_ONE, ANY };
+	private static enum SingularAttributeNature { BASIC, MANY_TO_ONE, ONE_TO_ONE, ANY };
 
-	private interface SimpleAttributeSource {
+	private interface SingularAttributeSource {
 		public String getName();
 		public ExplicitHibernateTypeSource getTypeInformation();
 		public String getPropertyAccessorName();
@@ -795,13 +811,20 @@ public class BindingCreator {
 		public boolean isLazy();
 		public boolean isIncludedInOptimisticLocking();
 
-		public SimpleAttributeNature getNature();
+		public Iterable<CascadeStyle> getCascadeStyle();
+
+		public SingularAttributeNature getNature();
 
 		public boolean isVirtualAttribute();
 
 		public RelationValueMetadataSource getValueInformation();
 
 		public Iterable<MetaAttributeSource> metaAttributes();
+	}
+
+	private interface ToOneAttributeSource extends SingularAttributeSource {
+		public String getReferencedEntityName();
+		public String getReferencedEntityAttributeName();
 	}
 
 	private interface ExplicitHibernateTypeSource {
@@ -827,7 +850,7 @@ public class BindingCreator {
 	/**
 	 * Implementation for {@code <property/>} mappings
 	 */
-	private class PropertyAttributeSource implements SimpleAttributeSource {
+	private class PropertyAttributeSource implements SingularAttributeSource {
 		private final XMLPropertyElement propertyElement;
 		private final ExplicitHibernateTypeSource typeSource;
 		private final RelationValueMetadataSource valueSource;
@@ -913,8 +936,13 @@ public class BindingCreator {
 		}
 
 		@Override
-		public SimpleAttributeNature getNature() {
-			return SimpleAttributeNature.BASIC;
+		public Iterable<CascadeStyle> getCascadeStyle() {
+			return NO_CASCADING;
+		}
+
+		@Override
+		public SingularAttributeNature getNature() {
+			return SingularAttributeNature.BASIC;
 		}
 
 		@Override
@@ -936,12 +964,12 @@ public class BindingCreator {
 	/**
 	 * Implementation for {@code <id/>} mappings
 	 */
-	private class SimpleIdentifierAttributeSource implements SimpleAttributeSource {
+	private class SingularIdentifierAttributeSource implements SingularAttributeSource {
 		private final XMLHibernateMapping.XMLClass.XMLId idElement;
 		private final ExplicitHibernateTypeSource typeSource;
 		private final RelationValueMetadataSource valueSource;
 
-		public SimpleIdentifierAttributeSource(final XMLHibernateMapping.XMLClass.XMLId idElement) {
+		public SingularIdentifierAttributeSource(final XMLHibernateMapping.XMLClass.XMLId idElement) {
 			this.idElement = idElement;
 			this.typeSource = new ExplicitHibernateTypeSource() {
 				private final String name = idElement.getTypeAttribute() != null
@@ -1024,8 +1052,13 @@ public class BindingCreator {
 		}
 
 		@Override
-		public SimpleAttributeNature getNature() {
-			return SimpleAttributeNature.BASIC;
+		public Iterable<CascadeStyle> getCascadeStyle() {
+			return NO_CASCADING;
+		}
+
+		@Override
+		public SingularAttributeNature getNature() {
+			return SingularAttributeNature.BASIC;
 		}
 
 		@Override
@@ -1047,7 +1080,7 @@ public class BindingCreator {
 	/**
 	 * Implementation for {@code <version/>} mappings
 	 */
-	private class VersionAttributeSource implements SimpleAttributeSource {
+	private class VersionAttributeSource implements SingularAttributeSource {
 		private final XMLHibernateMapping.XMLClass.XMLVersion versionElement;
 
 		private VersionAttributeSource(XMLHibernateMapping.XMLClass.XMLVersion versionElement) {
@@ -1142,8 +1175,13 @@ public class BindingCreator {
 		}
 
 		@Override
-		public SimpleAttributeNature getNature() {
-			return SimpleAttributeNature.BASIC;
+		public Iterable<CascadeStyle> getCascadeStyle() {
+			return NO_CASCADING;
+		}
+
+		@Override
+		public SingularAttributeNature getNature() {
+			return SingularAttributeNature.BASIC;
 		}
 
 		@Override
@@ -1165,7 +1203,7 @@ public class BindingCreator {
 	/**
 	 * Implementation for {@code <timestamp/>} mappings
 	 */
-	private class TimestampAttributeSource implements SimpleAttributeSource {
+	private class TimestampAttributeSource implements SingularAttributeSource {
 		private final XMLHibernateMapping.XMLClass.XMLTimestamp timestampElement;
 
 		private TimestampAttributeSource(XMLHibernateMapping.XMLClass.XMLTimestamp timestampElement) {
@@ -1260,8 +1298,13 @@ public class BindingCreator {
 		}
 
 		@Override
-		public SimpleAttributeNature getNature() {
-			return SimpleAttributeNature.BASIC;
+		public Iterable<CascadeStyle> getCascadeStyle() {
+			return NO_CASCADING;
+		}
+
+		@Override
+		public SingularAttributeNature getNature() {
+			return SingularAttributeNature.BASIC;
 		}
 
 		@Override
@@ -1280,8 +1323,127 @@ public class BindingCreator {
 		}
 	}
 
+	/**
+	 * Implementation for {@code <many-to-one/> mappings}
+	 */
+	private class ManyToOneAttributeSource implements ToOneAttributeSource {
+		private final XMLManyToOneElement manyToOneElement;
+		private final RelationValueMetadataSource valueSource;
+
+		private ManyToOneAttributeSource(final XMLManyToOneElement manyToOneElement) {
+			this.manyToOneElement = manyToOneElement;
+			this.valueSource = new RelationValueMetadataSource() {
+				@Override
+				public String getColumnAttribute() {
+					return manyToOneElement.getColumn();
+				}
+
+				@Override
+				public String getFormulaAttribute() {
+					return manyToOneElement.getFormula();
+				}
+
+				@Override
+				public List getColumnOrFormulaElements() {
+					return manyToOneElement.getColumnOrFormula();
+				}
+			};
+		}
+
+		@Override
+		public String getName() {
+				return manyToOneElement.getName();
+		}
+
+		@Override
+		public ExplicitHibernateTypeSource getTypeInformation() {
+			return TO_ONE_ATTRIBUTE_TYPE_SOURCE;
+		}
+
+		@Override
+		public String getPropertyAccessorName() {
+			return manyToOneElement.getAccess();
+		}
+
+		@Override
+		public boolean isInsertable() {
+			return manyToOneElement.isInsert();
+		}
+
+		@Override
+		public boolean isUpdatable() {
+			return manyToOneElement.isUpdate();
+		}
+
+		@Override
+		public PropertyGeneration getGeneration() {
+			return PropertyGeneration.NEVER;
+		}
+
+		@Override
+		public boolean isLazy() {
+			return false;
+		}
+
+		@Override
+		public boolean isIncludedInOptimisticLocking() {
+			return manyToOneElement.isOptimisticLock();
+		}
+
+		@Override
+		public Iterable<CascadeStyle> getCascadeStyle() {
+			return interpretCascadeStyles( manyToOneElement.getCascade() );
+		}
+
+		@Override
+		public SingularAttributeNature getNature() {
+			return SingularAttributeNature.MANY_TO_ONE;
+		}
+
+		@Override
+		public boolean isVirtualAttribute() {
+			return false;
+		}
+
+		@Override
+		public RelationValueMetadataSource getValueInformation() {
+			return valueSource;
+		}
+
+		@Override
+		public Iterable<MetaAttributeSource> metaAttributes() {
+			return buildMetaAttributeSources( manyToOneElement.getMeta() );
+		}
+
+		@Override
+		public String getReferencedEntityName() {
+			return manyToOneElement.getClazz() != null
+					? manyToOneElement.getClazz()
+					: manyToOneElement.getEntityName();
+		}
+
+		@Override
+		public String getReferencedEntityAttributeName() {
+			return manyToOneElement.getPropertyRef();
+		}
+	}
+
+	private static final ExplicitHibernateTypeSource TO_ONE_ATTRIBUTE_TYPE_SOURCE = new ExplicitHibernateTypeSource() {
+		@Override
+		public String getName() {
+			return null;  //To change body of implemented methods use File | Settings | File Templates.
+		}
+
+		@Override
+		public Map<String, String> getParameters() {
+			return null;  //To change body of implemented methods use File | Settings | File Templates.
+		}
+	};
+
 
 	// Helpers for building "attribute sources" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	private static final Iterable<CascadeStyle> NO_CASCADING = Collections.singleton( CascadeStyle.NONE );
 
 	private void resolveTypeInformation(ExplicitHibernateTypeSource typeSource, SimpleAttributeBinding attributeBinding) {
 		final Class<?> attributeJavaType = determineJavaType( attributeBinding.getAttribute() );
@@ -1354,6 +1516,14 @@ public class BindingCreator {
 			params.put( paramElement.getName(), paramElement.getValue() );
 		}
 		return params;
+	}
+
+	private void resolveToOneReferenceInformation(ToOneAttributeSource attributeSource, ManyToOneAttributeBinding attributeBinding) {
+		final String referencedEntityName = attributeSource.getReferencedEntityName() != null
+				? attributeSource.getReferencedEntityName()
+				: attributeBinding.getAttribute().getSingularAttributeType().getClassName();
+		attributeBinding.setReferencedEntity( referencedEntityName );
+		attributeBinding.setReferencedEntityAttributeName( attributeSource.getReferencedEntityAttributeName() );
 	}
 
 	private org.hibernate.metamodel.relational.Value makeValue(
@@ -1505,4 +1675,16 @@ public class BindingCreator {
 		}
 		return result;
 	}
+
+	private Iterable<CascadeStyle> interpretCascadeStyles(String cascades) {
+		final Set<CascadeStyle> cascadeStyles = new HashSet<CascadeStyle>();
+		if ( StringHelper.isEmpty( cascades ) ) {
+			cascades = currentBindingContext.getMappingDefaults().getCascadeStyle();
+		}
+		for ( String cascade : StringHelper.split( cascades, "," ) ) {
+			cascadeStyles.add( CascadeStyle.getCascadeStyle( cascade ) );
+		}
+		return cascadeStyles;
+	}
+
 }

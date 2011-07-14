@@ -34,6 +34,7 @@ import org.hibernate.MappingException;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.util.Value;
+import org.hibernate.metamodel.domain.PluralAttribute;
 import org.hibernate.metamodel.source.MetaAttributeContext;
 import org.hibernate.metamodel.domain.Attribute;
 import org.hibernate.metamodel.domain.Entity;
@@ -286,22 +287,22 @@ public class EntityBinding {
 
 	private SimpleAttributeBinding makeSimpleAttributeBinding(Attribute attribute, boolean forceNonNullable, boolean forceUnique) {
 		final SimpleAttributeBinding binding = new SimpleAttributeBinding( this, forceNonNullable, forceUnique );
-		registerAttributeBinding( attribute.getName(), binding );
 		binding.setAttribute( attribute );
+		registerAttributeBinding( attribute.getName(), binding );
 		return binding;
 	}
 
-	public ManyToOneAttributeBinding makeManyToOneAttributeBinding(String attributeName) {
+	public ManyToOneAttributeBinding makeManyToOneAttributeBinding(Attribute attribute) {
 		final ManyToOneAttributeBinding binding = new ManyToOneAttributeBinding( this );
-		registerAttributeBinding( attributeName, binding );
-		binding.setAttribute( entity.getAttribute( attributeName ) );
+		binding.setAttribute( attribute );
+		registerAttributeBinding( attribute.getName(), binding );
 		return binding;
 	}
 
-	public BagBinding makeBagAttributeBinding(String attributeName, CollectionElementType collectionElementType) {
+	public BagBinding makeBagAttributeBinding(PluralAttribute attribute, CollectionElementType collectionElementType) {
 		final BagBinding binding = new BagBinding( this, collectionElementType );
-		registerAttributeBinding( attributeName, binding );
-		binding.setAttribute( entity.getAttribute( attributeName ) );
+		binding.setAttribute( attribute);
+		registerAttributeBinding( attribute.getName(), binding );
 		return binding;
 	}
 

@@ -25,7 +25,7 @@ package org.hibernate.metamodel.relational;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.metamodel.source.spi.MetadataImplementor;
+import org.hibernate.metamodel.source.MetadataImplementor;
 
 /**
  * Models a SQL <tt>INDEX</tt>

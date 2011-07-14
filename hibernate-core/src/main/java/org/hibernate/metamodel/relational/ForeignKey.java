@@ -30,7 +30,7 @@ import java.util.List;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.metamodel.source.spi.MetadataImplementor;
+import org.hibernate.metamodel.source.MetadataImplementor;
 
 import org.jboss.logging.Logger;
 

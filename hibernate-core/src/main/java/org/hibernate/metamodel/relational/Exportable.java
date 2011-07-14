@@ -23,7 +23,7 @@
  */
 package org.hibernate.metamodel.relational;
 
-import org.hibernate.metamodel.source.spi.MetadataImplementor;
+import org.hibernate.metamodel.source.MetadataImplementor;
 
 /**
  * Contract for entities (in the ERD sense) which can be exported via {@code CREATE}, {@code ALTER}, etc

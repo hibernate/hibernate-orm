@@ -31,7 +31,7 @@ import java.util.Set;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.metamodel.source.spi.MetadataImplementor;
+import org.hibernate.metamodel.source.MetadataImplementor;
 
 /**
  * Models the concept of a relational <tt>TABLE</tt> (or <tt>VIEW</tt>).

@@ -25,12 +25,9 @@ package org.hibernate.metamodel.relational;
 
 import java.util.Set;
 
-import org.hibernate.HibernateException;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.Metadata;
-import org.hibernate.metamodel.source.spi.MetadataImplementor;
+import org.hibernate.metamodel.source.MetadataImplementor;
 
 /**
  * @author Steve Ebersole

@@ -28,7 +28,7 @@ import java.util.ArrayList;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.metamodel.source.spi.MetadataImplementor;
+import org.hibernate.metamodel.source.MetadataImplementor;
 
 /**
  * Support for writing {@link Constraint} implementations

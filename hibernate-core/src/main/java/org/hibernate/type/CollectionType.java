@@ -39,16 +39,11 @@ import java.util.TreeMap;
 import org.dom4j.Element;
 import org.dom4j.Node;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.EntityMode;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.collection.PersistentCollection;
-import org.hibernate.collection.PersistentIdentifierBag;
-import org.hibernate.collection.PersistentMap;
 import org.hibernate.engine.CollectionEntry;
 import org.hibernate.engine.CollectionKey;
 import org.hibernate.engine.EntityEntry;
@@ -63,6 +58,7 @@ import org.hibernate.persister.entity.Joinable;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.util.ArrayHelper;
+import org.hibernate.util.CollectionHelper;
 import org.hibernate.util.MarkerObject;
 
 /**
@@ -71,8 +67,6 @@ import org.hibernate.util.MarkerObject;
  * @author Gavin King
  */
 public abstract class CollectionType extends AbstractType implements AssociationType {
-
-	private static final Logger log = LoggerFactory.getLogger(CollectionType.class);
 
 	private static final Object NOT_NULL_COLLECTION = new MarkerObject( "NOT NULL COLLECTION" );
 	public static final Object UNFETCHED_COLLECTION = new MarkerObject( "UNFETCHED COLLECTION" );
@@ -537,7 +531,6 @@ public abstract class CollectionType extends AbstractType implements Association
 				}
 			}
 		}
-		
 
 		return result;
 	}
@@ -547,15 +540,6 @@ public abstract class CollectionType extends AbstractType implements Association
 		Serializable originalSnapshot = original.getStoredSnapshot();
 		Serializable resultSnapshot = result.getStoredSnapshot();
 		Serializable targetSnapshot;
-		
-		
-		if ( log.isDebugEnabled() ) {
-			log.debug("preserveSnapshot: originalCollection class = " + original.getClass() + "; originalCollection = " + original);
-			log.debug("preserveSnapshot: resultCollection class = " + result.getClass() + "; resultCollection = " + result);
-			log.debug("preserveSnapshot: elemType class = " + elemType.getClass() + "; elemType = " + elemType);
-			log.debug("preserveSnapshot: owner class = " + owner.getClass() + "; owner = " + owner);
-			log.debug("preserveSnapshot: originalSnapshot class = " + originalSnapshot.getClass() + "; originalSnapshot = " + originalSnapshot);
-		}
 		
 		if (originalSnapshot instanceof List) {
 			targetSnapshot = new ArrayList(((List) originalSnapshot).size()); 
@@ -567,7 +551,9 @@ public abstract class CollectionType extends AbstractType implements Association
 			if (originalSnapshot instanceof SortedMap) {
 				targetSnapshot = new TreeMap(((SortedMap) originalSnapshot).comparator());
 			} else {
-				targetSnapshot = new HashMap(((Map)originalSnapshot).size());
+				targetSnapshot = new HashMap(
+						CollectionHelper.determineProperSizing( ((Map) originalSnapshot).size()), 
+						CollectionHelper.LOAD_FACTOR);
 			}
 			
 			for (Map.Entry<Object, Object> entry : ((Map<Object,Object>) originalSnapshot).entrySet()) {
@@ -575,12 +561,6 @@ public abstract class CollectionType extends AbstractType implements Association
 				Object value = entry.getValue();
 				Object resultSnapshotValue = (resultSnapshot == null) ? null : ((Map<Object,Object>) resultSnapshot).get(key);
 
-				if ( log.isDebugEnabled() ) {
-					log.debug("preserveSnapshot: key = " + key);
-					log.debug("preserveSnapshot: value = " + value);
-					log.debug("preserveSnapshot: resultSnapshotValue = " + resultSnapshotValue);
-				}
-				
 				if (key == value) { 
 					Object newValue = elemType.replace(value, resultSnapshotValue, session, owner, copyCache );
 					((Map) targetSnapshot).put(newValue, newValue);
@@ -609,11 +589,6 @@ public abstract class CollectionType extends AbstractType implements Association
 		if (ce != null) {
 			ce.resetStoredSnapshot(result, targetSnapshot);
 		}
-		
-		if ( log.isDebugEnabled() ) {
-			log.debug("preserveSnapshot: preserved targetSnapshot = " + targetSnapshot);
-		}
-		
 	}
 
 	/**

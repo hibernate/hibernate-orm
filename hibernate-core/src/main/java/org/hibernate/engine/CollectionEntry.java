@@ -268,6 +268,8 @@ public final class CollectionEntry implements Serializable {
 	 * @param storedSnapshot the new stored snapshot
 	 */
 	public void resetStoredSnapshot(PersistentCollection collection, Serializable storedSnapshot) {
+		log.debug("Reset storedSnapshot to {} for {}", storedSnapshot, this);
+		
 		snapshot = storedSnapshot;
 		collection.setSnapshot(loadedKey, role, snapshot);
 	}

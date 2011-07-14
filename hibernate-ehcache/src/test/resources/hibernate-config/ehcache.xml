@@ -1,0 +1,9 @@
+<ehcache xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../main/config/ehcache.xsd" name="tc"
+         updateCheck="false">
+
+    <defaultCache
+            maxElementsInMemory="1000"
+            eternal="true"
+            overflowToDisk="false">
+    </defaultCache>
+</ehcache>

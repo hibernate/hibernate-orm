@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,20 +21,41 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.cache.internal;
+package org.hibernate.cache.ehcache.management.impl;
 
 import java.util.Properties;
 
-/**
- * Thin wrapper class around the within Ehcache-core packaged EhCacheRegionFactory.
- * It directly delegates to the wrapped instance, enabling users to upgrade Ehcache-core versions
- * by simply dropping in the new jar.
- *
- * @author Alex Snaps
- */
-public final class EhCacheRegionFactory extends AbstractEhCacheRegionFactory {
+import net.sf.ehcache.CacheManager;
 
-	public EhCacheRegionFactory(Properties properties) {
-		super(new net.sf.ehcache.hibernate.EhCacheRegionFactory(properties));
-	}
+import org.hibernate.SessionFactory;
+
+/**
+ * Interface for helping registering mbeans for ehcache backed hibernate second-level cache
+ * <p/>
+ * <p/>
+ *
+ * @author <a href="mailto:asanoujam@terracottatech.com">Abhishek Sanoujam</a>
+ */
+public interface EhcacheHibernateMBeanRegistration {
+
+	/**
+	 * Registers MBean for the input manager and session factory properties.
+	 * <p/>
+	 * MBeans will be registered based on the input session factory name. If the input name is null or blank, the name of the cache-manager
+	 * is used
+	 *
+	 * @param manager
+	 * @param properties
+	 *
+	 * @throws Exception
+	 */
+	public void registerMBeanForCacheManager(CacheManager manager, Properties properties) throws Exception;
+
+	/**
+	 * Enable hibernate statistics in the mbean.
+	 *
+	 * @param sessionFactory
+	 */
+	public void enableHibernateStatisticsSupport(SessionFactory sessionFactory);
+
 }

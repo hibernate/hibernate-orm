@@ -34,6 +34,7 @@ import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.cache.internal.NoCachingRegionFactory;
+import org.hibernate.cache.internal.RegionFactoryInitiator;
 import org.hibernate.cache.internal.StandardQueryCacheFactory;
 import org.hibernate.cache.spi.QueryCacheFactory;
 import org.hibernate.cache.spi.RegionFactory;
@@ -323,8 +324,10 @@ public class SettingsFactory implements Serializable {
 	}
 
 	private static RegionFactory createRegionFactory(Properties properties, boolean cachingEnabled, ServiceRegistry serviceRegistry) {
-		String regionFactoryClassName = ConfigurationHelper.getString(
-				Environment.CACHE_REGION_FACTORY, properties, null
+		String regionFactoryClassName = RegionFactoryInitiator.mapLegacyNames(
+				ConfigurationHelper.getString(
+						Environment.CACHE_REGION_FACTORY, properties, null
+				)
 		);
 		if ( regionFactoryClassName == null || !cachingEnabled) {
 			regionFactoryClassName = DEF_CACHE_REG_FACTORY;
@@ -354,9 +357,11 @@ public class SettingsFactory implements Serializable {
 	}
 	//todo remove this once we move to new metamodel
 	public static RegionFactory createRegionFactory(Properties properties, boolean cachingEnabled) {
-		// todo : REMOVE!  THIS IS TOTALLY A TEMPORARY HACK FOR org.hibernate.cfg.AnnotationSourceProcessor which will be going away
-		String regionFactoryClassName = ConfigurationHelper.getString(
-				Environment.CACHE_REGION_FACTORY, properties, null
+		// todo : REMOVE!  THIS IS TOTALLY A TEMPORARY HACK FOR org.hibernate.cfg.AnnotationBinder which will be going away
+		String regionFactoryClassName = RegionFactoryInitiator.mapLegacyNames(
+				ConfigurationHelper.getString(
+						Environment.CACHE_REGION_FACTORY, properties, null
+				)
 		);
 		if ( regionFactoryClassName == null ) {
 			regionFactoryClassName = DEF_CACHE_REG_FACTORY;

@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,33 +21,30 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.cache.ehcache;
+package org.hibernate.cache.ehcache.regions;
 
+import net.sf.ehcache.Ehcache;
+import org.hibernate.cache.ehcache.strategy.EhcacheAccessStrategyFactory;
+import org.hibernate.cache.ehcache.strategy.EhcacheAccessStrategyFactory;
+import org.hibernate.cache.spi.TimestampsRegion;
+
+import java.util.Properties;
 
 /**
- * @author Gavin King
+ * A timestamps region specific wrapper around an Ehcache instance.
+ *
+ * @author Chris Dennis
+ * @author Abhishek Sanoujam
+ * @author Alex Snaps
  */
-public class Item {
-	private Long id;
-	private String name;
-	private String description;
+public class EhcacheTimestampsRegion extends EhcacheGeneralDataRegion implements TimestampsRegion {
 
-	public String getDescription() {
-		return description;
-	}
-	public void setDescription(String description) {
-		this.description = description;
-	}
-	public Long getId() {
-		return id;
-	}
-	public void setId(Long id) {
-		this.id = id;
-	}
-	public String getName() {
-		return name;
-	}
-	public void setName(String name) {
-		this.name = name;
+	/**
+	 * Constructs an EhcacheTimestampsRegion around the given underlying cache.
+	 *
+	 * @param accessStrategyFactory
+	 */
+	public EhcacheTimestampsRegion(EhcacheAccessStrategyFactory accessStrategyFactory, Ehcache underlyingCache, Properties properties) {
+		super(accessStrategyFactory, underlyingCache, properties);
 	}
 }

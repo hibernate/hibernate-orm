@@ -30,5 +30,6 @@ package org.hibernate.metamodel.source.binder;
  * @author Steve Ebersole
  */
 public interface SubclassEntityContainer {
+	public void add(SubclassEntitySource subclassEntitySource);
 	public Iterable<SubclassEntitySource> subclassEntitySources();
 }

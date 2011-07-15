@@ -29,6 +29,7 @@ import java.util.List;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.source.MetadataImplementor;
 import org.hibernate.metamodel.source.SourceProcessor;
+import org.hibernate.metamodel.source.binder.Binder;
 import org.hibernate.metamodel.source.internal.JaxbRoot;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLHibernateMapping;
 
@@ -41,7 +42,7 @@ public class HbmSourceProcessorImpl implements SourceProcessor {
 	private final MetadataImplementor metadata;
 
 	private List<HibernateMappingProcessor> processors = new ArrayList<HibernateMappingProcessor>();
-	private List<EntityHierarchy> entityHierarchies;
+	private List<EntityHierarchyImpl> entityHierarchies;
 
 	public HbmSourceProcessorImpl(MetadataImplementor metadata) {
 		this.metadata = metadata;
@@ -50,7 +51,7 @@ public class HbmSourceProcessorImpl implements SourceProcessor {
 	@Override
 	@SuppressWarnings( {"unchecked"})
 	public void prepare(MetadataSources sources) {
-		final HierarchyBuilder hierarchyBuilder = new HierarchyBuilder( metadata );
+		final HierarchyBuilder hierarchyBuilder = new HierarchyBuilder();
 
 		for ( JaxbRoot jaxbRoot : sources.getJaxbRootList() ) {
 			if ( ! XMLHibernateMapping.class.isInstance( jaxbRoot.getRoot() ) ) {
@@ -82,9 +83,9 @@ public class HbmSourceProcessorImpl implements SourceProcessor {
 
 	@Override
 	public void processMappingMetadata(MetadataSources sources, List<String> processedEntityNames) {
-		BindingCreator bindingCreator = new BindingCreator( metadata, processedEntityNames );
-		for ( EntityHierarchy entityHierarchy : entityHierarchies ) {
-			bindingCreator.processEntityHierarchy( entityHierarchy );
+		Binder binder = new Binder( metadata, processedEntityNames );
+		for ( EntityHierarchyImpl entityHierarchy : entityHierarchies ) {
+			binder.processEntityHierarchy( entityHierarchy );
 		}
 	}
 

@@ -183,7 +183,6 @@ public class EntityBinder {
 	private EntityBinding doRootEntityBindingCreation() {
 		EntityBinding entityBinding = new EntityBinding();
 		entityBinding.setInheritanceType( InheritanceType.NO_INHERITANCE );
-		entityBinding.setRoot( entityClass.isEntityRoot() );
 
 		doBasicEntityBinding( entityBinding );
 

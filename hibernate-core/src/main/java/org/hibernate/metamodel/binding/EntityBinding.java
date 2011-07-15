@@ -62,8 +62,8 @@ public class EntityBinding {
 	private Class<? extends EntityPersister> customEntityPersisterClass;
 	private Class<? extends EntityTuplizer> customEntityTuplizerClass;
 
-	private boolean isRoot;
 	private InheritanceType entityInheritanceType;
+	private EntityBinding superEntityBinding;
 
 	private final EntityIdentifier entityIdentifier = new EntityIdentifier( this );
 	private EntityDiscriminator entityDiscriminator;
@@ -170,29 +170,7 @@ public class EntityBinding {
 	}
 
 	public boolean isRoot() {
-		return isRoot;
-	}
-
-	public void setRoot(boolean isRoot) {
-		this.isRoot = isRoot;
-	}
-
-	public EntityIdentifier getEntityIdentifier() {
-		return entityIdentifier;
-	}
-
-	public void bindEntityIdentifier(SimpleAttributeBinding attributeBinding) {
-		if ( !Column.class.isInstance( attributeBinding.getValue() ) ) {
-			throw new MappingException(
-					"Identifier value must be a Column; instead it is: " + attributeBinding.getValue().getClass()
-			);
-		}
-		entityIdentifier.setValueBinding( attributeBinding );
-		baseTable.getPrimaryKey().addColumn( Column.class.cast( attributeBinding.getValue() ) );
-	}
-
-	public EntityDiscriminator getEntityDiscriminator() {
-		return entityDiscriminator;
+		return superEntityBinding == null;
 	}
 
 	public void setInheritanceType(InheritanceType entityInheritanceType) {
@@ -201,6 +179,22 @@ public class EntityBinding {
 
 	public InheritanceType getInheritanceType() {
 		return entityInheritanceType;
+	}
+
+	public void setSuperEntityBinding(EntityBinding superEntityBinding) {
+		this.superEntityBinding = superEntityBinding;
+	}
+
+	public EntityBinding getSuperEntityBinding() {
+		return superEntityBinding;
+	}
+
+	public EntityIdentifier getEntityIdentifier() {
+		return entityIdentifier;
+	}
+
+	public EntityDiscriminator getEntityDiscriminator() {
+		return entityDiscriminator;
 	}
 
 	public boolean isVersioned() {

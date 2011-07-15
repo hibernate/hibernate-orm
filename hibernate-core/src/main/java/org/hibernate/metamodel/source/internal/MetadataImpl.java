@@ -365,6 +365,11 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	@Override
+	public String qualifyClassName(String name) {
+		return name;
+	}
+
+	@Override
 	public Database getDatabase() {
 		return database;
 	}

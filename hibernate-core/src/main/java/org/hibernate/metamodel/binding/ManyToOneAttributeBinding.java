@@ -26,6 +26,7 @@ package org.hibernate.metamodel.binding;
 import java.util.Iterator;
 
 import org.hibernate.MappingException;
+import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.metamodel.binding.state.ManyToOneAttributeBindingState;
 import org.hibernate.metamodel.relational.Column;
 import org.hibernate.metamodel.relational.ForeignKey;
@@ -36,6 +37,7 @@ import org.hibernate.metamodel.relational.state.ManyToOneRelationalState;
  * TODO : javadoc
  *
  * @author Gail Badner
+ * @author Steve Ebersole
  */
 public class ManyToOneAttributeBinding extends SimpleAttributeBinding implements EntityReferencingAttributeBinding {
 	private String referencedAttributeName;
@@ -45,6 +47,8 @@ public class ManyToOneAttributeBinding extends SimpleAttributeBinding implements
 	private String foreignKeyName;
 
 	private AttributeBinding referencedAttributeBinding;
+
+	private Iterable<CascadeStyle> cascadeStyles;
 
 	ManyToOneAttributeBinding(EntityBinding entityBinding) {
 		super( entityBinding, false, false );
@@ -89,18 +93,22 @@ public class ManyToOneAttributeBinding extends SimpleAttributeBinding implements
 		this.referencedAttributeName = referencedEntityAttributeName;
 	}
 
+	@Override
+	public Iterable<CascadeStyle> getCascadeStyles() {
+		return cascadeStyles;
+	}
+
+	@Override
+	public void setCascadeStyles(Iterable<CascadeStyle> cascadeStyles) {
+		this.cascadeStyles = cascadeStyles;
+	}
+
+	@Override
 	public final boolean isReferenceResolved() {
 		return referencedAttributeBinding != null;
 	}
 
-	public final EntityBinding getReferencedEntityBinding() {
-		if ( !isReferenceResolved() ) {
-			throw new IllegalStateException( "EntityBinding reference has not be referenced." );
-		}
-		// TODO: throw exception if referencedEntityBinding is null?
-		return referencedAttributeBinding.getEntityBinding();
-	}
-
+	@Override
 	public final void resolveReference(AttributeBinding referencedAttributeBinding) {
 		if ( !referencedEntityName.equals( referencedAttributeBinding.getEntityBinding().getEntity().getName() ) ) {
 			throw new IllegalStateException(
@@ -120,6 +128,19 @@ public class ManyToOneAttributeBinding extends SimpleAttributeBinding implements
 		}
 		this.referencedAttributeBinding = referencedAttributeBinding;
 		buildForeignKey();
+	}
+
+	@Override
+	public AttributeBinding getReferencedAttributeBinding() {
+		if ( !isReferenceResolved() ) {
+			throw new IllegalStateException( "Referenced AttributeBiding has not been resolved." );
+		}
+		return referencedAttributeBinding;
+	}
+
+	@Override
+	public final EntityBinding getReferencedEntityBinding() {
+		return referencedAttributeBinding.getEntityBinding();
 	}
 
 	private void buildForeignKey() {

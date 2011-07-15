@@ -24,41 +24,38 @@
 package org.hibernate.metamodel.source.hbm;
 
 import org.hibernate.metamodel.binding.InheritanceType;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLHibernateMapping;
+import org.hibernate.metamodel.source.MappingException;
+import org.hibernate.metamodel.source.binder.RootEntitySource;
 
 /**
- * Models the source view of an entity hierarchy.
- *
  * @author Steve Ebersole
  */
-public class EntityHierarchy extends AbstractSubEntityContainer {
-	private final EntitySourceInformation entitySourceInformation;
+public class EntityHierarchyImpl implements org.hibernate.metamodel.source.binder.EntityHierarchy {
+	private final RootEntitySourceImpl rootEntitySource;
 	private InheritanceType hierarchyInheritanceType = InheritanceType.NO_INHERITANCE;
 
-	public EntityHierarchy(XMLHibernateMapping.XMLClass rootEntity, MappingDocument sourceMappingDocument) {
-		this.entitySourceInformation = new EntitySourceInformation( rootEntity, sourceMappingDocument );
+	public EntityHierarchyImpl(RootEntitySourceImpl rootEntitySource) {
+		this.rootEntitySource = rootEntitySource;
+		this.rootEntitySource.injectHierarchy( this );
 	}
 
-	public EntitySourceInformation getEntitySourceInformation() {
-		return entitySourceInformation;
-	}
-
+	@Override
 	public InheritanceType getHierarchyInheritanceType() {
 		return hierarchyInheritanceType;
 	}
 
 	@Override
-	public void addSubEntityDescriptor(EntityHierarchySubEntity subEntityDescriptor) {
-		super.addSubEntityDescriptor( subEntityDescriptor );
+	public RootEntitySource getRootEntitySource() {
+		return rootEntitySource;
+	}
 
-		// check inheritance type consistency
-		final InheritanceType inheritanceType = Helper.interpretInheritanceType(
-				subEntityDescriptor.getEntitySourceInformation().getEntityElement()
-		);
-		if ( this.hierarchyInheritanceType != InheritanceType.NO_INHERITANCE
-				&& this.hierarchyInheritanceType != inheritanceType ) {
-			// throw exception
+	public void processSubclass(SubclassEntitySourceImpl subclassEntitySource) {
+		final InheritanceType inheritanceType = Helper.interpretInheritanceType( subclassEntitySource.entityElement() );
+		if ( hierarchyInheritanceType == InheritanceType.NO_INHERITANCE ) {
+			hierarchyInheritanceType = inheritanceType;
 		}
-		this.hierarchyInheritanceType = inheritanceType;
+		else if ( hierarchyInheritanceType != inheritanceType ) {
+			throw new MappingException( "Mixed inheritance strategies not supported", subclassEntitySource.getOrigin() );
+		}
 	}
 }

@@ -32,6 +32,7 @@ import java.util.Map;
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.beans.BeanInfoHelper;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.InheritanceType;
@@ -43,6 +44,8 @@ import org.hibernate.metamodel.domain.Attribute;
 import org.hibernate.metamodel.domain.Entity;
 import org.hibernate.metamodel.domain.SingularAttribute;
 import org.hibernate.metamodel.relational.Column;
+import org.hibernate.metamodel.relational.Identifier;
+import org.hibernate.metamodel.relational.Schema;
 import org.hibernate.metamodel.relational.SimpleValue;
 import org.hibernate.metamodel.relational.TableSpecification;
 import org.hibernate.metamodel.relational.Tuple;
@@ -61,6 +64,7 @@ public class Binder {
 	private final List<String> processedEntityNames;
 
 	private InheritanceType currentInheritanceType;
+	private EntityMode currentHierarchyEntityMode;
 	private LocalBindingContext currentBindingContext;
 
 	public Binder(MetadataImplementor metadata, List<String> processedEntityNames) {
@@ -74,6 +78,7 @@ public class Binder {
 		if ( currentInheritanceType != InheritanceType.NO_INHERITANCE ) {
 			processHierarchySubEntities( entityHierarchy.getRootEntitySource(), rootEntityBinding );
 		}
+		currentHierarchyEntityMode = null;
 	}
 
 	private void processHierarchySubEntities(SubclassEntityContainer subclassEntitySource, EntityBinding superEntityBinding) {
@@ -97,6 +102,9 @@ public class Binder {
 
 			metadata.addEntity( entityBinding );
 			processedEntityNames.add( entityBinding.getEntity().getName() );
+
+			processFetchProfiles( entitySource, entityBinding );
+
 			return entityBinding;
 		}
 		finally {
@@ -110,7 +118,7 @@ public class Binder {
 		bindSecondaryTables( entitySource, entityBinding );
 		bindAttributes( entitySource, entityBinding );
 
-		bindTableUniqueConstraints( entityBinding );
+		bindTableUniqueConstraints( entitySource, entityBinding );
 
 		return entityBinding;
 	}
@@ -121,13 +129,13 @@ public class Binder {
 		}
 		else {
 			if ( currentInheritanceType == InheritanceType.SINGLE_TABLE ) {
-				return makeDiscriminatedSubclassBinding( entitySource, superEntityBinding );
+				return makeDiscriminatedSubclassBinding( (SubclassEntitySource) entitySource, superEntityBinding );
 			}
 			else if ( currentInheritanceType == InheritanceType.JOINED ) {
-				return makeJoinedSubclassBinding( entitySource, superEntityBinding );
+				return makeJoinedSubclassBinding( (SubclassEntitySource) entitySource, superEntityBinding );
 			}
 			else if ( currentInheritanceType == InheritanceType.TABLE_PER_CLASS ) {
-				return makeUnionedSubclassBinding( entitySource, superEntityBinding );
+				return makeUnionedSubclassBinding( (SubclassEntitySource) entitySource, superEntityBinding );
 			}
 			else {
 				// extreme internal error!
@@ -137,27 +145,11 @@ public class Binder {
 	}
 
 	private EntityBinding makeRootEntityBinding(RootEntitySource entitySource) {
-		final EntityBinding entityBinding = new EntityBinding();
-		entityBinding.setInheritanceType( currentInheritanceType );
-		entityBinding.setRoot( true );
+		currentHierarchyEntityMode = entitySource.getEntityMode();
 
-		final EntityMode entityMode = entitySource.getEntityMode();
-		entityBinding.setEntityMode( entityMode );
+		final EntityBinding entityBinding = buildBasicEntityBinding( entitySource, null );
 
-		final String entityName = entitySource.getEntityName();
-		final String className = entityMode == EntityMode.POJO ? entitySource.getClassName() : null;
-
-		final Entity entity = new Entity(
-				entityName,
-				className,
-				currentBindingContext.makeClassReference( className ),
-				null
-		);
-		entityBinding.setEntity( entity );
-
-		performBasicEntityBind( entitySource, entityBinding );
-
-		bindPrimaryTable( entityBinding, entitySource );
+		bindPrimaryTable( entitySource, entityBinding );
 
 		bindIdentifier( entitySource, entityBinding );
 		bindVersion( entityBinding, entitySource );
@@ -173,19 +165,25 @@ public class Binder {
 		return entityBinding;
 	}
 
-	private EntityBinding makeDiscriminatedSubclassBinding(EntitySource entitySource, EntityBinding superEntityBinding) {
-		return null;  //To change body of created methods use File | Settings | File Templates.
-	}
 
-	private EntityBinding makeJoinedSubclassBinding(EntitySource entitySource, EntityBinding superEntityBinding) {
-		return null;  //To change body of created methods use File | Settings | File Templates.
-	}
+	private EntityBinding buildBasicEntityBinding(EntitySource entitySource, EntityBinding superEntityBinding) {
+		final EntityBinding entityBinding = new EntityBinding();
+		entityBinding.setSuperEntityBinding( superEntityBinding );
+		entityBinding.setInheritanceType( currentInheritanceType );
 
-	private EntityBinding makeUnionedSubclassBinding(EntitySource entitySource, EntityBinding superEntityBinding) {
-		return null;  //To change body of created methods use File | Settings | File Templates.
-	}
+		entityBinding.setEntityMode( currentHierarchyEntityMode );
 
-	private void performBasicEntityBind(EntitySource entitySource, EntityBinding entityBinding) {
+		final String entityName = entitySource.getEntityName();
+		final String className = currentHierarchyEntityMode == EntityMode.POJO ? entitySource.getClassName() : null;
+
+		final Entity entity = new Entity(
+				entityName,
+				className,
+				currentBindingContext.makeClassReference( className ),
+				null
+		);
+		entityBinding.setEntity( entity );
+
 		entityBinding.setJpaEntityName( entitySource.getJpaEntityName() );
 
 		if ( entityBinding.getEntityMode() == EntityMode.POJO ) {
@@ -234,6 +232,54 @@ public class Binder {
 		if ( entitySource.getSynchronizedTableNames() != null ) {
 			entityBinding.addSynchronizedTableNames( entitySource.getSynchronizedTableNames() );
 		}
+
+		return entityBinding;
+	}
+
+	private EntityBinding makeDiscriminatedSubclassBinding(SubclassEntitySource entitySource, EntityBinding superEntityBinding) {
+		final EntityBinding entityBinding = buildBasicEntityBinding( entitySource, superEntityBinding );
+
+		entityBinding.setBaseTable( superEntityBinding.getBaseTable() );
+
+		bindDiscriminatorValue( entitySource, entityBinding );
+
+		return entityBinding;
+	}
+
+	private EntityBinding makeJoinedSubclassBinding(SubclassEntitySource entitySource, EntityBinding superEntityBinding) {
+		final EntityBinding entityBinding = buildBasicEntityBinding( entitySource, superEntityBinding );
+
+		bindPrimaryTable( entitySource, entityBinding );
+
+		// todo : join
+
+		return entityBinding;
+	}
+
+	private EntityBinding makeUnionedSubclassBinding(SubclassEntitySource entitySource, EntityBinding superEntityBinding) {
+		final EntityBinding entityBinding = buildBasicEntityBinding( entitySource, superEntityBinding );
+
+		bindPrimaryTable( entitySource, entityBinding );
+
+		// todo : ??
+
+		return entityBinding;
+	}
+
+
+	// Attributes ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	private void bindAttributes(AttributeSourceContainer attributeSourceContainer, EntityBinding entityBinding) {
+		// todo : we really need the notion of a Stack here for the table from which the columns come for binding these attributes.
+		// todo : adding the concept (interface) of a source of attribute metadata would allow reuse of this method for entity, component, unique-key, etc
+		// for now, simply assume all columns come from the base table....
+
+		for ( AttributeSource attributeSource : attributeSourceContainer.attributeSources() ) {
+			if ( attributeSource.isSingular() ) {
+				doBasicSingularAttributeBindingCreation( (SingularAttributeSource) attributeSource, entityBinding );
+			}
+			// todo : components and collections
+		}
 	}
 
 	private void bindIdentifier(RootEntitySource entitySource, EntityBinding entityBinding) {
@@ -245,9 +291,12 @@ public class Binder {
 				bindSimpleIdentifier( (SimpleIdentifierSource) entitySource.getIdentifierSource(), entityBinding );
 			}
 			case AGGREGATED_COMPOSITE: {
-
+				// composite id with an actual component class
 			}
 			case COMPOSITE: {
+				// what we used to term an "embedded composite identifier", which is not tobe confused with the JPA
+				// term embedded. Specifically a composite id where there is no component class, though there may
+				// be a @IdClass :/
 			}
 		}
 	}
@@ -291,16 +340,11 @@ public class Binder {
 	}
 
 	private void bindDiscriminator(RootEntitySource entitySource, EntityBinding entityBinding) {
-		//To change body of created methods use File | Settings | File Templates.
+		// todo : implement
 	}
 
-	private void bindAttributes(EntitySource entitySource, EntityBinding entityBinding) {
-		for ( AttributeSource attributeSource : entitySource.attributeSources() ) {
-			if ( attributeSource.isSingular() ) {
-				doBasicSingularAttributeBindingCreation( (SingularAttributeSource) attributeSource, entityBinding );
-			}
-			// todo : components and collections
-		}
+	private void bindDiscriminatorValue(SubclassEntitySource entitySource, EntityBinding entityBinding) {
+		// todo : implement
 	}
 
 	private SimpleAttributeBinding doBasicSingularAttributeBindingCreation(
@@ -415,6 +459,7 @@ public class Binder {
 				? attributeSource.getReferencedEntityName()
 				: attributeBinding.getAttribute().getSingularAttributeType().getClassName();
 		attributeBinding.setReferencedEntityName( referencedEntityName );
+		// todo : we should consider basing references on columns instead of property-ref, which would require a resolution (later) of property-ref to column names
 		attributeBinding.setReferencedAttributeName( attributeSource.getReferencedEntityAttributeName() );
 	}
 
@@ -454,6 +499,50 @@ public class Binder {
 		}
 
 		return subContext;
+	}
+
+
+	// Relational ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	private void bindPrimaryTable(EntitySource entitySource, EntityBinding entityBinding) {
+		final TableSource tableSource = entitySource.getPrimaryTable();
+		final String schemaName = StringHelper.isEmpty( tableSource.getExplicitSchemaName() )
+				? currentBindingContext.getMappingDefaults().getSchemaName()
+				: currentBindingContext.getMetadataImplementor().getOptions().isGloballyQuotedIdentifiers()
+						? StringHelper.quote( tableSource.getExplicitSchemaName() )
+						: tableSource.getExplicitSchemaName();
+		final String catalogName = StringHelper.isEmpty( tableSource.getExplicitCatalogName() )
+				? currentBindingContext.getMappingDefaults().getCatalogName()
+				: currentBindingContext.getMetadataImplementor().getOptions().isGloballyQuotedIdentifiers()
+						? StringHelper.quote( tableSource.getExplicitCatalogName() )
+						: tableSource.getExplicitCatalogName();
+
+		String tableName = tableSource.getExplicitTableName();
+		if ( StringHelper.isEmpty( tableName ) ) {
+			tableName = currentBindingContext.getNamingStrategy()
+					.classToTableName( entityBinding.getEntity().getClassName() );
+		}
+		else {
+			tableName = currentBindingContext.getNamingStrategy().tableName( tableName );
+		}
+		if ( currentBindingContext.isGloballyQuotedIdentifiers() ) {
+			tableName = StringHelper.quote( tableName );
+		}
+
+		final org.hibernate.metamodel.relational.Table table = currentBindingContext.getMetadataImplementor()
+				.getDatabase()
+				.getSchema( new Schema.Name( schemaName, catalogName ) )
+				.locateOrCreateTable( Identifier.toIdentifier( tableName ) );
+
+		entityBinding.setBaseTable( table );
+	}
+
+	private void bindSecondaryTables(EntitySource entitySource, EntityBinding entityBinding) {
+		// todo : implement
+	}
+
+	private void bindTableUniqueConstraints(EntitySource entitySource, EntityBinding entityBinding) {
+		// todo : implement
 	}
 
 	private org.hibernate.metamodel.relational.Value makeValue(
@@ -503,6 +592,10 @@ public class Binder {
 					.propertyToColumnName( attributeBinding.getAttribute().getName() );
 			return table.locateOrCreateColumn( name );
 		}
+	}
+
+	private void processFetchProfiles(EntitySource entitySource, EntityBinding entityBinding) {
+		// todo : process the entity-local fetch-profile declaration
 	}
 
 }

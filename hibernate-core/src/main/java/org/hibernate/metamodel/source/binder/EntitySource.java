@@ -40,6 +40,8 @@ public interface EntitySource extends SubclassEntityContainer, AttributeSourceCo
 	public String getClassName();
 	public String getJpaEntityName();
 
+	public TableSource getPrimaryTable();
+
     public boolean isAbstract();
     public boolean isLazy();
     public String getProxy();

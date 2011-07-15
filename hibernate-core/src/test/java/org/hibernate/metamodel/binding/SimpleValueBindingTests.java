@@ -56,7 +56,6 @@ public class SimpleValueBindingTests extends BaseUnitTestCase {
 		Table table = new Table( new Schema( null, null ), "the_table" );
 		Entity entity = new Entity( "TheEntity", "NoSuchClass", makeJavaType( "NoSuchClass" ), null );
 		EntityBinding entityBinding = new EntityBinding();
-		entityBinding.setRoot( true );
 		entityBinding.setEntity( entity );
 		entityBinding.setBaseTable( table );
 

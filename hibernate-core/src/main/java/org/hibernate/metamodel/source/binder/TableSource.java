@@ -21,23 +21,13 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.hbm;
-
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.EntityElement;
+package org.hibernate.metamodel.source.binder;
 
 /**
- * A sub entity within an entity hierarchy.
- * 
  * @author Steve Ebersole
  */
-public class EntityHierarchySubEntity extends AbstractSubEntityContainer {
-	private final EntitySourceInformation entitySourceInformation;
-
-	public EntityHierarchySubEntity(EntityElement entityElement, MappingDocument sourceMappingDocument) {
-		this.entitySourceInformation = new EntitySourceInformation( entityElement, sourceMappingDocument );
-	}
-
-	public EntitySourceInformation getEntitySourceInformation() {
-		return entitySourceInformation;
-	}
+public interface TableSource {
+	public String getExplicitSchemaName();
+	public String getExplicitCatalogName();
+	public String getExplicitTableName();
 }

@@ -199,6 +199,7 @@ public class AnnotationProcessor implements SourceProcessor {
 			throw new HibernateException( "Unable to open input stream for class " + className, e );
 		}
 	}
+
 }
 
 

@@ -23,33 +23,72 @@
  */
 package org.hibernate.metamodel.source.hbm;
 
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.EntityElement;
+import org.hibernate.metamodel.relational.Datatype;
+import org.hibernate.metamodel.relational.Size;
+import org.hibernate.metamodel.source.binder.ColumnSource;
 
 /**
- * An aggregation of information about the source of an entity mapping.
- * 
- * @author Steve Ebersole
- */
-public class EntitySourceInformation {
-	private final EntityElement entityElement;
-	private final MappingDocument sourceMappingDocument;
-	private final String mappedEntityName;
+* @author Steve Ebersole
+*/
+class ColumnAttributeSourceImpl implements ColumnSource {
+	private final String columnName;
 
-	public EntitySourceInformation(EntityElement entityElement, MappingDocument sourceMappingDocument) {
-		this.entityElement = entityElement;
-		this.sourceMappingDocument = sourceMappingDocument;
-		this.mappedEntityName = sourceMappingDocument.getMappingLocalBindingContext().determineEntityName( entityElement );
+	ColumnAttributeSourceImpl(String columnName) {
+		this.columnName = columnName;
 	}
 
-	public EntityElement getEntityElement() {
-		return entityElement;
+	@Override
+	public String getName() {
+		return columnName;
 	}
 
-	public MappingDocument getSourceMappingDocument() {
-		return sourceMappingDocument;
+	@Override
+	public boolean isNullable() {
+		return true;
 	}
 
-	public String getMappedEntityName() {
-		return mappedEntityName;
+	@Override
+	public String getDefaultValue() {
+		return null;
+	}
+
+	@Override
+	public String getSqlType() {
+		return null;
+	}
+
+	@Override
+	public Datatype getDatatype() {
+		return null;
+	}
+
+	@Override
+	public Size getSize() {
+		return null;
+	}
+
+	@Override
+	public String getReadFragment() {
+		return null;
+	}
+
+	@Override
+	public String getWriteFragment() {
+		return null;
+	}
+
+	@Override
+	public boolean isUnique() {
+		return false;
+	}
+
+	@Override
+	public String getCheckCondition() {
+		return null;
+	}
+
+	@Override
+	public String getComment() {
+		return null;
 	}
 }

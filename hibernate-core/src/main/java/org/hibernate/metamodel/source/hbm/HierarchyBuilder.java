@@ -30,7 +30,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.MappingException;
-import org.hibernate.metamodel.source.MetadataImplementor;
+import org.hibernate.metamodel.source.binder.SubclassEntityContainer;
+import org.hibernate.metamodel.source.binder.SubclassEntitySource;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.EntityElement;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.SubEntityElement;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLHibernateMapping;
@@ -42,20 +43,14 @@ import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLUnionSubclassElement;
  * @author Steve Ebersole
  */
 public class HierarchyBuilder {
-	private final MetadataImplementor metadata;
-
-	private final List<EntityHierarchy> entityHierarchies = new ArrayList<EntityHierarchy>();
+	private final List<EntityHierarchyImpl> entityHierarchies = new ArrayList<EntityHierarchyImpl>();
 
 	// process state
-	private final Map<String,SubEntityContainer> subEntityContainerMap = new HashMap<String, SubEntityContainer>();
+	private final Map<String,SubclassEntityContainer> subEntityContainerMap = new HashMap<String, SubclassEntityContainer>();
 	private final List<ExtendsQueueEntry> extendsQueue = new ArrayList<ExtendsQueueEntry>();
 
 	// mapping file specific state
 	private MappingDocument currentMappingDocument;
-
-	public HierarchyBuilder(MetadataImplementor metadata) {
-		this.metadata = metadata;
-	}
 
 	public void processMappingDocument(MappingDocument mappingDocument) {
 		this.currentMappingDocument = mappingDocument;
@@ -73,48 +68,48 @@ public class HierarchyBuilder {
 			if ( XMLHibernateMapping.XMLClass.class.isInstance( entityElement ) ) {
 				// we can immediately handle <class/> elements in terms of creating the hierarchy entry
 				final XMLHibernateMapping.XMLClass xmlClass = (XMLHibernateMapping.XMLClass) entityElement;
-				final EntityHierarchy hierarchy = new EntityHierarchy( xmlClass, currentMappingDocument );
+				final RootEntitySourceImpl rootEntitySource = new RootEntitySourceImpl( currentMappingDocument, xmlClass );
+				final EntityHierarchyImpl hierarchy = new EntityHierarchyImpl( rootEntitySource );
+
 				entityHierarchies.add( hierarchy );
-				subEntityContainerMap.put( hierarchy.getEntitySourceInformation().getMappedEntityName(), hierarchy );
-				processSubElements( entityElement, hierarchy );
+				subEntityContainerMap.put( rootEntitySource.getEntityName(), rootEntitySource );
+
+				processSubElements( entityElement, rootEntitySource );
 			}
 			else {
 				// we have to see if this things super-type has been found yet, and if not add it to the
 				// extends queue
-				final EntityHierarchySubEntity subEntityDescriptor = new EntityHierarchySubEntity(
-						entityElement,
-						currentMappingDocument
-				);
-				final String entityName = subEntityDescriptor.getEntitySourceInformation().getMappedEntityName();
-				subEntityContainerMap.put( entityName, subEntityDescriptor );
+				final SubclassEntitySourceImpl subClassEntitySource = new SubclassEntitySourceImpl( currentMappingDocument, entityElement );
+				final String entityName = subClassEntitySource.getEntityName();
+				subEntityContainerMap.put( entityName, subClassEntitySource );
 				final String entityItExtends = currentMappingDocument.getMappingLocalBindingContext().qualifyClassName(
 						((SubEntityElement) entityElement).getExtends()
 				);
-				processSubElements( entityElement, subEntityDescriptor );
-				final SubEntityContainer container = subEntityContainerMap.get( entityItExtends );
+				processSubElements( entityElement, subClassEntitySource );
+				final SubclassEntityContainer container = subEntityContainerMap.get( entityItExtends );
 				if ( container != null ) {
 					// we already have this entity's super, attach it and continue
-					container.addSubEntityDescriptor( subEntityDescriptor );
+					container.add( subClassEntitySource );
 				}
 				else {
 					// we do not yet have the super and have to wait, so add it fto the extends queue
-					extendsQueue.add( new ExtendsQueueEntry( subEntityDescriptor, entityItExtends ) );
+					extendsQueue.add( new ExtendsQueueEntry( subClassEntitySource, entityItExtends ) );
 				}
 			}
 		}
 	}
 
-	public List<EntityHierarchy> groupEntityHierarchies() {
+	public List<EntityHierarchyImpl> groupEntityHierarchies() {
 		while ( ! extendsQueue.isEmpty() ) {
 			// set up a pass over the queue
 			int numberOfMappingsProcessed = 0;
 			Iterator<ExtendsQueueEntry> iterator = extendsQueue.iterator();
 			while ( iterator.hasNext() ) {
 				final ExtendsQueueEntry entry = iterator.next();
-				final SubEntityContainer container = subEntityContainerMap.get( entry.entityItExtends );
+				final SubclassEntityContainer container = subEntityContainerMap.get( entry.entityItExtends );
 				if ( container != null ) {
 					// we now have this entity's super, attach it and remove entry from extends queue
-					container.addSubEntityDescriptor( entry.subEntityDescriptor );
+					container.add( entry.subClassEntitySource );
 					iterator.remove();
 					numberOfMappingsProcessed++;
 				}
@@ -129,7 +124,7 @@ public class HierarchyBuilder {
 		return entityHierarchies;
 	}
 
-	private void processSubElements(EntityElement entityElement, SubEntityContainer container) {
+	private void processSubElements(EntityElement entityElement, SubclassEntityContainer container) {
 		if ( XMLHibernateMapping.XMLClass.class.isInstance( entityElement ) ) {
 			final XMLHibernateMapping.XMLClass xmlClass = (XMLHibernateMapping.XMLClass) entityElement;
 			processElements( xmlClass.getJoinedSubclass(), container );
@@ -150,25 +145,22 @@ public class HierarchyBuilder {
 		}
 	}
 
-	private void processElements(List subElements, SubEntityContainer container) {
+	private void processElements(List subElements, SubclassEntityContainer container) {
 		for ( Object subElementO : subElements ) {
 			final SubEntityElement subElement = (SubEntityElement) subElementO;
-			final EntityHierarchySubEntity subEntityDescriptor = new EntityHierarchySubEntity(
-					subElement,
-					currentMappingDocument
-			);
-			container.addSubEntityDescriptor( subEntityDescriptor );
-			final String subEntityName = subEntityDescriptor.getEntitySourceInformation().getMappedEntityName();
-			subEntityContainerMap.put( subEntityName, subEntityDescriptor );
+			final SubclassEntitySourceImpl subclassEntitySource = new SubclassEntitySourceImpl( currentMappingDocument, subElement );
+			container.add( subclassEntitySource );
+			final String subEntityName = subclassEntitySource.getEntityName();
+			subEntityContainerMap.put( subEntityName, subclassEntitySource );
 		}
 	}
 
 	private static class ExtendsQueueEntry {
-		private final EntityHierarchySubEntity subEntityDescriptor;
+		private final SubclassEntitySource subClassEntitySource;
 		private final String entityItExtends;
 
-		private ExtendsQueueEntry(EntityHierarchySubEntity subEntityDescriptor, String entityItExtends) {
-			this.subEntityDescriptor = subEntityDescriptor;
+		private ExtendsQueueEntry(SubclassEntitySource subClassEntitySource, String entityItExtends) {
+			this.subClassEntitySource = subClassEntitySource;
 			this.entityItExtends = entityItExtends;
 		}
 	}

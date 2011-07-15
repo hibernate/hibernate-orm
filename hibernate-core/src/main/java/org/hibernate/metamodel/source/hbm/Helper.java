@@ -23,22 +23,33 @@
  */
 package org.hibernate.metamodel.source.hbm;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
 import org.hibernate.MappingException;
+import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
-import org.hibernate.metamodel.source.MetaAttributeContext;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.CustomSqlElement;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.EntityElement;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.binding.CustomSQL;
 import org.hibernate.metamodel.binding.InheritanceType;
 import org.hibernate.metamodel.binding.MetaAttribute;
+import org.hibernate.metamodel.source.LocalBindingContext;
+import org.hibernate.metamodel.source.MetaAttributeContext;
+import org.hibernate.metamodel.source.binder.ExplicitHibernateTypeSource;
+import org.hibernate.metamodel.source.binder.MetaAttributeSource;
+import org.hibernate.metamodel.source.binder.RelationalValueSource;
+import org.hibernate.metamodel.source.hbm.jaxb.mapping.CustomSqlElement;
+import org.hibernate.metamodel.source.hbm.jaxb.mapping.EntityElement;
+import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLColumnElement;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLJoinedSubclassElement;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLMetaElement;
+import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLParamElement;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLSubclassElement;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLUnionSubclassElement;
 import org.hibernate.service.ServiceRegistry;
@@ -50,6 +61,19 @@ import org.hibernate.service.classloading.spi.ClassLoadingException;
  * @author Gail Badner
  */
 public class Helper {
+	static final Iterable<CascadeStyle> NO_CASCADING = Collections.singleton( CascadeStyle.NONE );
+	public static final ExplicitHibernateTypeSource TO_ONE_ATTRIBUTE_TYPE_SOURCE = new ExplicitHibernateTypeSource() {
+		@Override
+		public String getName() {
+			return null;  //To change body of implemented methods use File | Settings | File Templates.
+		}
+
+		@Override
+		public Map<String, String> getParameters() {
+			return null;  //To change body of implemented methods use File | Settings | File Templates.
+		}
+	};
+
 	public static InheritanceType interpretInheritanceType(EntityElement entityElement) {
 		if ( XMLSubclassElement.class.isInstance( entityElement ) ) {
 			return InheritanceType.SINGLE_TABLE;
@@ -194,5 +218,109 @@ public class Helper {
 		catch ( ClassLoadingException e ) {
 			throw new MappingException( "Could not find class: " + className );
 		}
+	}
+
+	public static Iterable<CascadeStyle> interpretCascadeStyles(String cascades, LocalBindingContext bindingContext) {
+		final Set<CascadeStyle> cascadeStyles = new HashSet<CascadeStyle>();
+		if ( StringHelper.isEmpty( cascades ) ) {
+			cascades = bindingContext.getMappingDefaults().getCascadeStyle();
+		}
+		for ( String cascade : StringHelper.split( cascades, "," ) ) {
+			cascadeStyles.add( CascadeStyle.getCascadeStyle( cascade ) );
+		}
+		return cascadeStyles;
+	}
+
+	public static Map<String, String> extractParameters(List<XMLParamElement> xmlParamElements) {
+		if ( xmlParamElements == null || xmlParamElements.isEmpty() ) {
+			return null;
+		}
+		final HashMap<String,String> params = new HashMap<String, String>();
+		for ( XMLParamElement paramElement : xmlParamElements ) {
+			params.put( paramElement.getName(), paramElement.getValue() );
+		}
+		return params;
+	}
+
+	public static Iterable<MetaAttributeSource> buildMetaAttributeSources(List<XMLMetaElement> metaElements) {
+		ArrayList<MetaAttributeSource> result = new ArrayList<MetaAttributeSource>();
+		if ( metaElements == null || metaElements.isEmpty() ) {
+			// do nothing
+		}
+		else {
+			for ( final XMLMetaElement metaElement : metaElements ) {
+				result.add(
+						new MetaAttributeSource() {
+							@Override
+							public String getName() {
+								return metaElement.getAttribute();
+							}
+
+							@Override
+							public String getValue() {
+								return metaElement.getValue();
+							}
+
+							@Override
+							public boolean isInheritable() {
+								return metaElement.isInherit();
+							}
+						}
+				);
+			}
+		}
+		return result;
+	}
+
+	public static interface ValueSourcesAdapter {
+		public String getColumnAttribute();
+		public String getFormulaAttribute();
+		public List getColumnOrFormulaElements();
+	}
+
+	public static List<RelationalValueSource> buildValueSources(
+			ValueSourcesAdapter valueSourcesAdapter,
+			LocalBindingContext bindingContext) {
+		List<RelationalValueSource> result = new ArrayList<RelationalValueSource>();
+
+		if ( StringHelper.isNotEmpty( valueSourcesAdapter.getColumnAttribute() ) ) {
+			if ( valueSourcesAdapter.getColumnOrFormulaElements() != null
+					&& ! valueSourcesAdapter.getColumnOrFormulaElements().isEmpty() ) {
+				throw new org.hibernate.metamodel.source.MappingException(
+						"column/formula attribute may not be used together with <column>/<formula> subelement",
+						bindingContext.getOrigin()
+				);
+			}
+			if ( StringHelper.isNotEmpty( valueSourcesAdapter.getFormulaAttribute() ) ) {
+				throw new org.hibernate.metamodel.source.MappingException(
+						"column and formula attributes may not be used together",
+						bindingContext.getOrigin()
+				);
+			}
+			result.add(  new ColumnAttributeSourceImpl( valueSourcesAdapter.getColumnAttribute() ) );
+		}
+		else if ( StringHelper.isNotEmpty( valueSourcesAdapter.getFormulaAttribute() ) ) {
+			if ( valueSourcesAdapter.getColumnOrFormulaElements() != null
+					&& ! valueSourcesAdapter.getColumnOrFormulaElements().isEmpty() ) {
+				throw new org.hibernate.metamodel.source.MappingException(
+						"column/formula attribute may not be used together with <column>/<formula> subelement",
+						bindingContext.getOrigin()
+				);
+			}
+			// column/formula attribute combo checked already
+			result.add( new FormulaImpl( valueSourcesAdapter.getFormulaAttribute() ) );
+		}
+		else if ( valueSourcesAdapter.getColumnOrFormulaElements() != null
+				&& ! valueSourcesAdapter.getColumnOrFormulaElements().isEmpty() ) {
+			for ( Object columnOrFormulaElement : valueSourcesAdapter.getColumnOrFormulaElements() ) {
+				if ( XMLColumnElement.class.isInstance( columnOrFormulaElement ) ) {
+					result.add( new ColumnSourceImpl( (XMLColumnElement) columnOrFormulaElement ) );
+				}
+				else {
+					result.add( new FormulaImpl( (String) columnOrFormulaElement ) );
+				}
+			}
+		}
+		return result;
 	}
 }

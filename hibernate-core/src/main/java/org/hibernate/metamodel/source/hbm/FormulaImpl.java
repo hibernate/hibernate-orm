@@ -23,26 +23,20 @@
  */
 package org.hibernate.metamodel.source.hbm;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import org.hibernate.metamodel.source.binder.DerivedValueSource;
 
 /**
- * @author Steve Ebersole
- */
-public class AbstractSubEntityContainer implements SubEntityContainer {
-	private List<EntityHierarchySubEntity> subEntityDescriptors;
+* @author Steve Ebersole
+*/
+class FormulaImpl implements DerivedValueSource {
+	private final String expression;
 
-	public void addSubEntityDescriptor(EntityHierarchySubEntity subEntityDescriptor) {
-		if ( subEntityDescriptors == null ) {
-			subEntityDescriptors = new ArrayList<EntityHierarchySubEntity>();
-		}
-		subEntityDescriptors.add( subEntityDescriptor );
+	FormulaImpl(String expression) {
+		this.expression = expression;
 	}
 
-	public Iterable<EntityHierarchySubEntity> subEntityDescriptors() {
-		return subEntityDescriptors == null
-				? Collections.<EntityHierarchySubEntity>emptyList()
-				: subEntityDescriptors;
+	@Override
+	public String getExpression() {
+		return expression;
 	}
 }

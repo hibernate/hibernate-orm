@@ -102,6 +102,11 @@ public class TestAnnotationsBindingContextImpl implements AnnotationBindingConte
 	}
 
 	@Override
+	public String qualifyClassName(String name) {
+		return name;
+	}
+
+	@Override
 	public ClassInfo getClassInfo(String name) {
 		DotName dotName = DotName.createSimple( name );
 		return index.getClassByName( dotName );

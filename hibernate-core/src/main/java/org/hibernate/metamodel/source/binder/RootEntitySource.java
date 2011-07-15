@@ -21,28 +21,27 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.hbm;
+package org.hibernate.metamodel.source.binder;
 
 import java.util.List;
 
-import org.hibernate.metamodel.source.LocalBindingContext;
-import org.hibernate.metamodel.source.Origin;
-import org.hibernate.metamodel.source.BindingContext;
-import org.hibernate.metamodel.source.MetaAttributeContext;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.EntityElement;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLFetchProfileElement;
+import org.hibernate.EntityMode;
+import org.hibernate.engine.OptimisticLockStyle;
+import org.hibernate.metamodel.binding.Caching;
 
 /**
- * Defines features specific to the {@code hbm.xml} variety of a {@link BindingContext}
- * 
  * @author Steve Ebersole
  */
-public interface HbmBindingContext extends LocalBindingContext {
-	public boolean isAutoImport();
+public interface RootEntitySource extends EntitySource {
+	public IdentifierSource getIdentifierSource();
+	public SingularAttributeSource getVersioningAttributeSource();
+	public SingularAttributeSource getDiscriminatorAttributeSource();
 
-	public MetaAttributeContext getMetaAttributeContext();
-
-	public String determineEntityName(EntityElement entityElement);
-
-	public void processFetchProfiles(List<XMLFetchProfileElement> fetchProfiles, String containingEntityName);
+	public EntityMode getEntityMode();
+	public boolean isMutable();
+	public boolean isExplicitPolymorphism();
+	public String getWhere();
+	public String getRowId();
+	public OptimisticLockStyle getOptimisticLockStyle();
+	public Caching getCaching();
 }

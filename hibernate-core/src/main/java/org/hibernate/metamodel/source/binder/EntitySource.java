@@ -21,28 +21,45 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.hbm;
+package org.hibernate.metamodel.source.binder;
 
 import java.util.List;
 
+import org.hibernate.metamodel.binding.CustomSQL;
 import org.hibernate.metamodel.source.LocalBindingContext;
 import org.hibernate.metamodel.source.Origin;
-import org.hibernate.metamodel.source.BindingContext;
-import org.hibernate.metamodel.source.MetaAttributeContext;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.EntityElement;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLFetchProfileElement;
 
 /**
- * Defines features specific to the {@code hbm.xml} variety of a {@link BindingContext}
- * 
  * @author Steve Ebersole
  */
-public interface HbmBindingContext extends LocalBindingContext {
-	public boolean isAutoImport();
+public interface EntitySource extends SubclassEntityContainer, AttributeSourceContainer {
+	public Origin getOrigin();
+	public LocalBindingContext getBindingContext();
 
-	public MetaAttributeContext getMetaAttributeContext();
+	public String getEntityName();
+	public String getClassName();
+	public String getJpaEntityName();
 
-	public String determineEntityName(EntityElement entityElement);
+    public boolean isAbstract();
+    public boolean isLazy();
+    public String getProxy();
+    public int getBatchSize();
+    public boolean isDynamicInsert();
+    public boolean isDynamicUpdate();
+    public boolean isSelectBeforeUpdate();
 
-	public void processFetchProfiles(List<XMLFetchProfileElement> fetchProfiles, String containingEntityName);
+	public String getCustomTuplizerClassName();
+    public String getCustomPersisterClassName();
+
+	public String getCustomLoaderName();
+	public CustomSQL getCustomSqlInsert();
+	public CustomSQL getCustomSqlUpdate();
+	public CustomSQL getCustomSqlDelete();
+
+	public List<String> getSynchronizedTableNames();
+
+	public Iterable<MetaAttributeSource> metaAttributes();
+
+//	public List<XMLFetchProfileElement> getFetchProfile();
+
 }

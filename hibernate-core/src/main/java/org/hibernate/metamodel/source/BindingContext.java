@@ -47,4 +47,6 @@ public interface BindingContext {
     public boolean isGloballyQuotedIdentifiers();
 
 	public Value<Class<?>> makeClassReference(String className);
+
+	public String qualifyClassName(String name);
 }

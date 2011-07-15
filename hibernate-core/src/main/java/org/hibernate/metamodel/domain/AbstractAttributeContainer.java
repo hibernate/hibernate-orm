@@ -29,6 +29,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
+import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.internal.util.Value;
 
 /**
@@ -100,6 +101,11 @@ public abstract class AbstractAttributeContainer implements AttributeContainer, 
 	}
 
 	@Override
+	public SingularAttribute locateOrCreateVirtualAttribute(String name) {
+		throw new NotYetImplementedException();
+	}
+
+	@Override
 	public SingularAttribute locateOrCreateComponentAttribute(String name) {
 		SingularAttributeImpl attribute = (SingularAttributeImpl) getAttribute( name );
 		if ( attribute == null ) {
@@ -140,6 +146,11 @@ public abstract class AbstractAttributeContainer implements AttributeContainer, 
 		@Override
 		public SingularAttribute locateOrCreateSingularAttribute(String name) {
 			return realComponent().locateOrCreateSingularAttribute( name );
+		}
+
+		@Override
+		public SingularAttribute locateOrCreateVirtualAttribute(String name) {
+			return realComponent().locateOrCreateVirtualAttribute( name );
 		}
 
 		@Override

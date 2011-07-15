@@ -64,23 +64,28 @@ public class ManyToOneAttributeBinding extends SimpleAttributeBinding implements
 		return this;
 	}
 
+	@Override
 	public final boolean isPropertyReference() {
 		return referencedAttributeName != null;
 	}
 
+	@Override
 	public final String getReferencedEntityName() {
 		return referencedEntityName;
 	}
 
-	public void setReferencedEntity(String referencedEntityName) {
+	@Override
+	public void setReferencedEntityName(String referencedEntityName) {
 		this.referencedEntityName = referencedEntityName;
 	}
 
+	@Override
 	public final String getReferencedAttributeName() {
 		return referencedAttributeName;
 	}
 
-	public void setReferencedEntityAttributeName(String referencedEntityAttributeName) {
+	@Override
+	public void setReferencedAttributeName(String referencedEntityAttributeName) {
 		this.referencedAttributeName = referencedEntityAttributeName;
 	}
 

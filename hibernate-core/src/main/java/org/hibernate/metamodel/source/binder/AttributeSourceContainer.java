@@ -21,28 +21,11 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.hbm;
-
-import java.util.List;
-
-import org.hibernate.metamodel.source.LocalBindingContext;
-import org.hibernate.metamodel.source.Origin;
-import org.hibernate.metamodel.source.BindingContext;
-import org.hibernate.metamodel.source.MetaAttributeContext;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.EntityElement;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLFetchProfileElement;
+package org.hibernate.metamodel.source.binder;
 
 /**
- * Defines features specific to the {@code hbm.xml} variety of a {@link BindingContext}
- * 
  * @author Steve Ebersole
  */
-public interface HbmBindingContext extends LocalBindingContext {
-	public boolean isAutoImport();
-
-	public MetaAttributeContext getMetaAttributeContext();
-
-	public String determineEntityName(EntityElement entityElement);
-
-	public void processFetchProfiles(List<XMLFetchProfileElement> fetchProfiles, String containingEntityName);
+public interface AttributeSourceContainer {
+	public Iterable<AttributeSource> attributeSources();
 }

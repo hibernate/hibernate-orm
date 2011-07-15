@@ -57,6 +57,7 @@ import org.hibernate.metamodel.domain.Attribute;
 import org.hibernate.metamodel.domain.Entity;
 import org.hibernate.metamodel.domain.SingularAttribute;
 import org.hibernate.metamodel.relational.Column;
+import org.hibernate.metamodel.relational.Datatype;
 import org.hibernate.metamodel.relational.Identifier;
 import org.hibernate.metamodel.relational.Schema;
 import org.hibernate.metamodel.relational.SimpleValue;
@@ -66,6 +67,15 @@ import org.hibernate.metamodel.relational.Tuple;
 import org.hibernate.metamodel.source.MappingException;
 import org.hibernate.metamodel.source.MetaAttributeContext;
 import org.hibernate.metamodel.source.MetadataImplementor;
+import org.hibernate.metamodel.source.binder.ColumnSource;
+import org.hibernate.metamodel.source.binder.DerivedValueSource;
+import org.hibernate.metamodel.source.binder.ExplicitHibernateTypeSource;
+import org.hibernate.metamodel.source.binder.MetaAttributeSource;
+import org.hibernate.metamodel.source.binder.RelationValueMetadataSource;
+import org.hibernate.metamodel.source.binder.RelationalValueSource;
+import org.hibernate.metamodel.source.binder.SingularAttributeNature;
+import org.hibernate.metamodel.source.binder.SingularAttributeSource;
+import org.hibernate.metamodel.source.binder.ToOneAttributeSource;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.EntityElement;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.JoinElementSource;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLAnyElement;
@@ -797,54 +807,6 @@ public class BindingCreator {
 	}
 
 
-	// Initial prototype/sandbox for notion of "orchestrated information collection from sources" ~~~~~~~~~~~~~~~~~~~~~~
-
-	private static enum SingularAttributeNature { BASIC, MANY_TO_ONE, ONE_TO_ONE, ANY };
-
-	private interface SingularAttributeSource {
-		public String getName();
-		public ExplicitHibernateTypeSource getTypeInformation();
-		public String getPropertyAccessorName();
-		public boolean isInsertable();
-		public boolean isUpdatable();
-		public PropertyGeneration getGeneration();
-		public boolean isLazy();
-		public boolean isIncludedInOptimisticLocking();
-
-		public Iterable<CascadeStyle> getCascadeStyle();
-
-		public SingularAttributeNature getNature();
-
-		public boolean isVirtualAttribute();
-
-		public RelationValueMetadataSource getValueInformation();
-
-		public Iterable<MetaAttributeSource> metaAttributes();
-	}
-
-	private interface ToOneAttributeSource extends SingularAttributeSource {
-		public String getReferencedEntityName();
-		public String getReferencedEntityAttributeName();
-	}
-
-	private interface ExplicitHibernateTypeSource {
-		public String getName();
-		public Map<String,String> getParameters();
-	}
-
-	private interface MetaAttributeSource {
-		public String getName();
-		public String getValue();
-		public boolean isInheritable();
-	}
-
-	private static interface RelationValueMetadataSource {
-		public String getColumnAttribute();
-		public String getFormulaAttribute();
-		public List getColumnOrFormulaElements();
-	}
-
-
 	// HBM specific implementations of "attribute sources" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
@@ -853,7 +815,7 @@ public class BindingCreator {
 	private class PropertyAttributeSource implements SingularAttributeSource {
 		private final XMLPropertyElement propertyElement;
 		private final ExplicitHibernateTypeSource typeSource;
-		private final RelationValueMetadataSource valueSource;
+		private final List<RelationalValueSource> valueSources;
 
 		private PropertyAttributeSource(final XMLPropertyElement propertyElement) {
 			this.propertyElement = propertyElement;
@@ -877,22 +839,24 @@ public class BindingCreator {
 					return parameters;
 				}
 			};
-			this.valueSource = new RelationValueMetadataSource() {
-				@Override
-				public String getColumnAttribute() {
-					return propertyElement.getColumn();
-				}
+			this.valueSources = buildValueSources(
+					new ValueSourcesAdapter() {
+						@Override
+						public String getColumnAttribute() {
+							return propertyElement.getColumn();
+						}
 
-				@Override
-				public String getFormulaAttribute() {
-					return propertyElement.getFormula();
-				}
+						@Override
+						public String getFormulaAttribute() {
+							return propertyElement.getFormula();
+						}
 
-				@Override
-				public List getColumnOrFormulaElements() {
-					return propertyElement.getColumnOrFormula();
-				}
-			};
+						@Override
+						public List getColumnOrFormulaElements() {
+							return propertyElement.getColumnOrFormula();
+						}
+					}
+			);
 		}
 
 		@Override
@@ -951,8 +915,13 @@ public class BindingCreator {
 		}
 
 		@Override
-		public RelationValueMetadataSource getValueInformation() {
-			return valueSource;
+		public List<RelationalValueSource> relationalValueSources() {
+			return valueSources;
+		}
+
+		@Override
+		public boolean isSingular() {
+			return true;
 		}
 
 		@Override
@@ -967,7 +936,7 @@ public class BindingCreator {
 	private class SingularIdentifierAttributeSource implements SingularAttributeSource {
 		private final XMLHibernateMapping.XMLClass.XMLId idElement;
 		private final ExplicitHibernateTypeSource typeSource;
-		private final RelationValueMetadataSource valueSource;
+		private final List<RelationalValueSource> valueSources;
 
 		public SingularIdentifierAttributeSource(final XMLHibernateMapping.XMLClass.XMLId idElement) {
 			this.idElement = idElement;
@@ -991,22 +960,24 @@ public class BindingCreator {
 					return parameters;
 				}
 			};
-			this.valueSource = new RelationValueMetadataSource() {
-				@Override
-				public String getColumnAttribute() {
-					return idElement.getColumnAttribute();
-				}
+			this.valueSources = buildValueSources(
+					new ValueSourcesAdapter() {
+						@Override
+						public String getColumnAttribute() {
+							return idElement.getColumnAttribute();
+						}
 
-				@Override
-				public String getFormulaAttribute() {
-					return null;
-				}
+						@Override
+						public String getFormulaAttribute() {
+							return null;
+						}
 
-				@Override
-				public List getColumnOrFormulaElements() {
-					return idElement.getColumn();
-				}
-			};
+						@Override
+						public List getColumnOrFormulaElements() {
+							return idElement.getColumn();
+						}
+					}
+			);
 		}
 
 		@Override
@@ -1067,8 +1038,13 @@ public class BindingCreator {
 		}
 
 		@Override
-		public RelationValueMetadataSource getValueInformation() {
-			return valueSource;
+		public List<RelationalValueSource> relationalValueSources() {
+			return valueSources;
+		}
+
+		@Override
+		public boolean isSingular() {
+			return true;
 		}
 
 		@Override
@@ -1082,9 +1058,28 @@ public class BindingCreator {
 	 */
 	private class VersionAttributeSource implements SingularAttributeSource {
 		private final XMLHibernateMapping.XMLClass.XMLVersion versionElement;
+		private final List<RelationalValueSource> valueSources;
 
-		private VersionAttributeSource(XMLHibernateMapping.XMLClass.XMLVersion versionElement) {
+		private VersionAttributeSource(final XMLHibernateMapping.XMLClass.XMLVersion versionElement) {
 			this.versionElement = versionElement;
+			this.valueSources = buildValueSources(
+					new ValueSourcesAdapter() {
+						@Override
+						public String getColumnAttribute() {
+							return versionElement.getColumnAttribute();
+						}
+
+						@Override
+						public String getFormulaAttribute() {
+							return null;
+						}
+
+						@Override
+						public List getColumnOrFormulaElements() {
+							return versionElement.getColumn();
+						}
+					}
+			);
 		}
 
 		private final ExplicitHibernateTypeSource typeSource = new ExplicitHibernateTypeSource() {
@@ -1096,23 +1091,6 @@ public class BindingCreator {
 			@Override
 			public Map<String, String> getParameters() {
 				return null;
-			}
-		};
-
-		private final RelationValueMetadataSource valueSource = new RelationValueMetadataSource() {
-			@Override
-			public String getColumnAttribute() {
-				return versionElement.getColumnAttribute();
-			}
-
-			@Override
-			public String getFormulaAttribute() {
-				return null;
-			}
-
-			@Override
-			public List getColumnOrFormulaElements() {
-				return versionElement.getColumn();
 			}
 		};
 
@@ -1190,8 +1168,13 @@ public class BindingCreator {
 		}
 
 		@Override
-		public RelationValueMetadataSource getValueInformation() {
-			return valueSource;
+		public List<RelationalValueSource> relationalValueSources() {
+			return valueSources;
+		}
+
+		@Override
+		public boolean isSingular() {
+			return true;
 		}
 
 		@Override
@@ -1205,9 +1188,28 @@ public class BindingCreator {
 	 */
 	private class TimestampAttributeSource implements SingularAttributeSource {
 		private final XMLHibernateMapping.XMLClass.XMLTimestamp timestampElement;
+		private final List<RelationalValueSource> valueSources;
 
-		private TimestampAttributeSource(XMLHibernateMapping.XMLClass.XMLTimestamp timestampElement) {
+		private TimestampAttributeSource(final XMLHibernateMapping.XMLClass.XMLTimestamp timestampElement) {
 			this.timestampElement = timestampElement;
+			this.valueSources = buildValueSources(
+					new ValueSourcesAdapter() {
+						@Override
+						public String getColumnAttribute() {
+							return timestampElement.getColumn();
+						}
+
+						@Override
+						public String getFormulaAttribute() {
+							return null;
+						}
+
+						@Override
+						public List getColumnOrFormulaElements() {
+							return null;
+						}
+					}
+			);
 		}
 
 		private final ExplicitHibernateTypeSource typeSource = new ExplicitHibernateTypeSource() {
@@ -1218,23 +1220,6 @@ public class BindingCreator {
 
 			@Override
 			public Map<String, String> getParameters() {
-				return null;
-			}
-		};
-
-		private final RelationValueMetadataSource valueSource = new RelationValueMetadataSource() {
-			@Override
-			public String getColumnAttribute() {
-				return timestampElement.getColumn();
-			}
-
-			@Override
-			public String getFormulaAttribute() {
-				return null;
-			}
-
-			@Override
-			public List getColumnOrFormulaElements() {
 				return null;
 			}
 		};
@@ -1313,8 +1298,13 @@ public class BindingCreator {
 		}
 
 		@Override
-		public RelationValueMetadataSource getValueInformation() {
-			return valueSource;
+		public List<RelationalValueSource> relationalValueSources() {
+			return valueSources;
+		}
+
+		@Override
+		public boolean isSingular() {
+			return true;
 		}
 
 		@Override
@@ -1328,26 +1318,28 @@ public class BindingCreator {
 	 */
 	private class ManyToOneAttributeSource implements ToOneAttributeSource {
 		private final XMLManyToOneElement manyToOneElement;
-		private final RelationValueMetadataSource valueSource;
+		private final List<RelationalValueSource> valueSources;
 
 		private ManyToOneAttributeSource(final XMLManyToOneElement manyToOneElement) {
 			this.manyToOneElement = manyToOneElement;
-			this.valueSource = new RelationValueMetadataSource() {
-				@Override
-				public String getColumnAttribute() {
-					return manyToOneElement.getColumn();
-				}
+			this.valueSources = buildValueSources(
+					new ValueSourcesAdapter() {
+						@Override
+						public String getColumnAttribute() {
+							return manyToOneElement.getColumn();
+						}
 
-				@Override
-				public String getFormulaAttribute() {
-					return manyToOneElement.getFormula();
-				}
+						@Override
+						public String getFormulaAttribute() {
+							return manyToOneElement.getFormula();
+						}
 
-				@Override
-				public List getColumnOrFormulaElements() {
-					return manyToOneElement.getColumnOrFormula();
-				}
-			};
+						@Override
+						public List getColumnOrFormulaElements() {
+							return manyToOneElement.getColumnOrFormula();
+						}
+					}
+			);
 		}
 
 		@Override
@@ -1406,8 +1398,13 @@ public class BindingCreator {
 		}
 
 		@Override
-		public RelationValueMetadataSource getValueInformation() {
-			return valueSource;
+		public List<RelationalValueSource> relationalValueSources() {
+			return valueSources;
+		}
+
+		@Override
+		public boolean isSingular() {
+			return true;
 		}
 
 		@Override
@@ -1522,8 +1519,8 @@ public class BindingCreator {
 		final String referencedEntityName = attributeSource.getReferencedEntityName() != null
 				? attributeSource.getReferencedEntityName()
 				: attributeBinding.getAttribute().getSingularAttributeType().getClassName();
-		attributeBinding.setReferencedEntity( referencedEntityName );
-		attributeBinding.setReferencedEntityAttributeName( attributeSource.getReferencedEntityAttributeName() );
+		attributeBinding.setReferencedEntityName( referencedEntityName );
+		attributeBinding.setReferencedAttributeName( attributeSource.getReferencedEntityAttributeName() );
 	}
 
 	private org.hibernate.metamodel.relational.Value makeValue(
@@ -1687,4 +1684,199 @@ public class BindingCreator {
 		return cascadeStyles;
 	}
 
+	private static interface ValueSourcesAdapter {
+		public String getColumnAttribute();
+		public String getFormulaAttribute();
+		public List getColumnOrFormulaElements();
+	}
+
+	private List<RelationalValueSource> buildValueSources(final ValueSourcesAdapter valueSourcesAdapter) {
+		List<RelationalValueSource> result = new ArrayList<RelationalValueSource>();
+
+		if ( StringHelper.isNotEmpty( valueSourcesAdapter.getColumnAttribute() ) ) {
+			if ( valueSourcesAdapter.getColumnOrFormulaElements() != null
+					&& ! valueSourcesAdapter.getColumnOrFormulaElements().isEmpty() ) {
+				throw new MappingException(
+						"column/formula attribute may not be used together with <column>/<formula> subelement",
+						currentBindingContext.getOrigin()
+				);
+			}
+			if ( StringHelper.isNotEmpty( valueSourcesAdapter.getFormulaAttribute() ) ) {
+				throw new MappingException(
+						"column and formula attributes may not be used together",
+						currentBindingContext.getOrigin()
+				);
+			}
+			result.add(  new ColumnAttributeSource( valueSourcesAdapter.getColumnAttribute() ) );
+		}
+		else if ( StringHelper.isNotEmpty( valueSourcesAdapter.getFormulaAttribute() ) ) {
+			if ( valueSourcesAdapter.getColumnOrFormulaElements() != null
+					&& ! valueSourcesAdapter.getColumnOrFormulaElements().isEmpty() ) {
+				throw new MappingException(
+						"column/formula attribute may not be used together with <column>/<formula> subelement",
+						currentBindingContext.getOrigin()
+				);
+			}
+			// column/formula attribute combo checked already
+			result.add( new Formula( valueSourcesAdapter.getFormulaAttribute() ) );
+		}
+		else if ( valueSourcesAdapter.getColumnOrFormulaElements() != null
+				&& ! valueSourcesAdapter.getColumnOrFormulaElements().isEmpty() ) {
+			List<SimpleValue> values = new ArrayList<SimpleValue>();
+			for ( Object columnOrFormulaElement : valueSourcesAdapter.getColumnOrFormulaElements() ) {
+				if ( XMLColumnElement.class.isInstance( columnOrFormulaElement ) ) {
+					result.add( new ColumnSource( (XMLColumnElement) columnOrFormulaElement ) );
+				}
+				else {
+					result.add( new Formula( (String) columnOrFormulaElement ) );
+				}
+			}
+		}
+		return result;
+	}
+
+	private static class ColumnAttributeSource implements org.hibernate.metamodel.source.binder.ColumnSource {
+		private final String columnName;
+
+		private ColumnAttributeSource(String columnName) {
+			this.columnName = columnName;
+		}
+
+		@Override
+		public String getName() {
+			return columnName;
+		}
+
+		@Override
+		public boolean isNullable() {
+			return true;
+		}
+
+		@Override
+		public String getDefaultValue() {
+			return null;
+		}
+
+		@Override
+		public String getSqlType() {
+			return null;
+		}
+
+		@Override
+		public Datatype getDatatype() {
+			return null;
+		}
+
+		@Override
+		public Size getSize() {
+			return null;
+		}
+
+		@Override
+		public String getReadFragment() {
+			return null;
+		}
+
+		@Override
+		public String getWriteFragment() {
+			return null;
+		}
+
+		@Override
+		public boolean isUnique() {
+			return false;
+		}
+
+		@Override
+		public String getCheckCondition() {
+			return null;
+		}
+
+		@Override
+		public String getComment() {
+			return null;
+		}
+	}
+
+	private static class Formula implements DerivedValueSource {
+		private final String expression;
+
+		private Formula(String expression) {
+			this.expression = expression;
+		}
+
+		@Override
+		public String getExpression() {
+			return expression;
+		}
+	}
+
+	private class ColumnSource implements org.hibernate.metamodel.source.binder.ColumnSource {
+		private final XMLColumnElement columnElement;
+
+		private ColumnSource(XMLColumnElement columnElement) {
+			this.columnElement = columnElement;
+		}
+
+		@Override
+		public String getName() {
+			return columnElement.getName();
+		}
+
+		@Override
+		public boolean isNullable() {
+			return ! columnElement.isNotNull();
+		}
+
+		@Override
+		public String getDefaultValue() {
+			return columnElement.getDefault();
+		}
+
+		@Override
+		public String getSqlType() {
+			return columnElement.getSqlType();
+		}
+
+		@Override
+		public Datatype getDatatype() {
+			return null;
+		}
+
+		@Override
+		public Size getSize() {
+			return new Size(
+					Helper.getIntValue( columnElement.getPrecision(), -1 ),
+					Helper.getIntValue( columnElement.getScale(), -1 ),
+					Helper.getLongValue( columnElement.getLength(), -1 ),
+					Size.LobMultiplier.NONE
+			);
+		}
+
+		@Override
+		public String getReadFragment() {
+			return columnElement.getRead();
+		}
+
+		@Override
+		public String getWriteFragment() {
+			return columnElement.getWrite();
+		}
+
+		@Override
+		public boolean isUnique() {
+			return columnElement.isUnique();
+		}
+
+		@Override
+		public String getCheckCondition() {
+			return columnElement.getCheck();
+		}
+
+		@Override
+		public String getComment() {
+			return columnElement.getComment();
+		}
+
+	}
 }

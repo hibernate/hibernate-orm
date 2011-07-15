@@ -51,6 +51,7 @@ import org.hibernate.metamodel.binding.Caching;
 import org.hibernate.metamodel.binding.CustomSQL;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.EntityDiscriminator;
+import org.hibernate.metamodel.binding.HibernateTypeDescriptor;
 import org.hibernate.metamodel.binding.IdGenerator;
 import org.hibernate.metamodel.binding.InheritanceType;
 import org.hibernate.metamodel.binding.ManyToOneAttributeBinding;
@@ -952,6 +953,10 @@ public class EntityBinder {
 		attributeBinding.setGeneration( simpleAttribute.getPropertyGeneration() );
 		attributeBinding.setLazy( simpleAttribute.isLazy() );
 		attributeBinding.setIncludedInOptimisticLocking( simpleAttribute.isOptimisticLockable() );
+		HibernateTypeDescriptor hibernateTypeDescriptor= attributeBinding.getHibernateTypeDescriptor();
+		hibernateTypeDescriptor.setExplicitTypeName( simpleAttribute.getExplicitHibernateTypeName() );
+		hibernateTypeDescriptor.setTypeParameters( simpleAttribute.getExplicitHibernateTypeParameters() );
+		hibernateTypeDescriptor.setJavaTypeName( simpleAttribute.getJavaType().getName() );
 
 //		attributeBinding.setPropertyAccessorName(
 //				Helper.getPropertyAccessorName(
@@ -985,10 +990,9 @@ public class EntityBinder {
 
 		attributeBinding.setValue( column );
 
-
-//		if ( ! attribute.isTypeResolved() ) {
-//			attribute.resolveType( bindingContext.makeJavaType( attributeBinding.getHibernateTypeDescriptor().getJavaTypeName() ) );
-//		}
+		if ( ! attribute.isTypeResolved() ) {
+			attribute.resolveType( bindingContext.makeJavaType( attributeBinding.getHibernateTypeDescriptor().getJavaTypeName() ) );
+		}
 	}
 }
 

@@ -85,7 +85,17 @@ public class JarVisitorFactory {
 				}
 			}
 			else {
-				jarUrl = new URL( protocol, url.getHost(), url.getPort(), file );
+				try {
+					//We reconstruct the URL probably to make it work in some specific environments
+					//Forgot the exact details, sorry (and the Git history does not help)
+					jarUrl = new URL( protocol, url.getHost(), url.getPort(), file );
+				}
+				//HHH-6442: Arquilian
+				catch ( final MalformedURLException murle ) {
+					//Just use the provided URL as-is, likely it has a URLStreamHandler
+					//associated w/ the instance
+					jarUrl = url;
+				}
 			}
 		}
 		catch (MalformedURLException e) {

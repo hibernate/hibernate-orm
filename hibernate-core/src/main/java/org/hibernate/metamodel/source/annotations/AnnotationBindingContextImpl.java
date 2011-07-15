@@ -149,6 +149,11 @@ public class AnnotationBindingContextImpl implements AnnotationBindingContext {
 	}
 
 	@Override
+	public String qualifyClassName(String name) {
+		return name;
+	}
+
+	@Override
 	public boolean isGloballyQuotedIdentifiers() {
 		return metadata.isGloballyQuotedIdentifiers();
 	}

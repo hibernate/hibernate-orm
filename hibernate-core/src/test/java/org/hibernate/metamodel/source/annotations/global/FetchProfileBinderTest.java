@@ -26,22 +26,21 @@ package org.hibernate.metamodel.source.annotations.global;
 import java.util.Iterator;
 
 import org.jboss.jandex.Index;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.FetchProfile;
 import org.hibernate.annotations.FetchProfiles;
 import org.hibernate.metamodel.MetadataSources;
+import org.hibernate.metamodel.source.annotations.AnnotationBindingContextImpl;
 import org.hibernate.metamodel.source.annotations.JandexHelper;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
 import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.internal.BasicServiceRegistryImpl;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static junit.framework.Assert.fail;
@@ -78,7 +77,7 @@ public class FetchProfileBinderTest extends BaseUnitTestCase {
 		}
 		Index index = JandexHelper.indexForClass( service, Foo.class );
 
-		FetchProfileBinder.bind( meta, index );
+		FetchProfileBinder.bind( new AnnotationBindingContextImpl( meta, index ) );
 
 		Iterator<org.hibernate.metamodel.binding.FetchProfile> mappedFetchProfiles = meta.getFetchProfiles().iterator();
 		assertTrue( mappedFetchProfiles.hasNext() );
@@ -92,7 +91,7 @@ public class FetchProfileBinderTest extends BaseUnitTestCase {
 	@Test
 	public void testFetchProfiles() {
 		Index index = JandexHelper.indexForClass( service, FooBar.class );
-		FetchProfileBinder.bind( meta, index );
+		FetchProfileBinder.bind( new AnnotationBindingContextImpl( meta, index ) );
 
 		Iterator<org.hibernate.metamodel.binding.FetchProfile> mappedFetchProfiles = meta.getFetchProfiles().iterator();
 		assertTrue( mappedFetchProfiles.hasNext() );
@@ -129,7 +128,7 @@ public class FetchProfileBinderTest extends BaseUnitTestCase {
 		}
 		Index index = JandexHelper.indexForClass( service, Foo.class );
 
-		FetchProfileBinder.bind( meta, index );
+		FetchProfileBinder.bind( new AnnotationBindingContextImpl( meta, index ) );
 	}
 
 	@FetchProfiles( {

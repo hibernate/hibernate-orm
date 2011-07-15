@@ -23,6 +23,8 @@
  */
 package org.hibernate.metamodel.source.annotations.attribute;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import javax.persistence.DiscriminatorType;
@@ -86,12 +88,21 @@ public class SimpleAttribute extends MappedAttribute {
 	 */
 	private ColumnValues columnValues;
 
+	private final String customWriteFragment;
+	private final String customReadFragment;
+	private final String checkCondition;
+
 	public static SimpleAttribute createSimpleAttribute(String name, Class<?> type, Map<DotName, List<AnnotationInstance>> annotations) {
 		return new SimpleAttribute( name, type, annotations, false );
 	}
 
 	public static SimpleAttribute createSimpleAttribute(SimpleAttribute simpleAttribute, ColumnValues columnValues) {
-		SimpleAttribute attribute = new SimpleAttribute( simpleAttribute.getName(), simpleAttribute.getJavaType(), simpleAttribute.annotations(), false );
+		SimpleAttribute attribute = new SimpleAttribute(
+				simpleAttribute.getName(),
+				simpleAttribute.getJavaType(),
+				simpleAttribute.annotations(),
+				false
+		);
 		attribute.columnValues = columnValues;
 		return attribute;
 	}
@@ -134,10 +145,12 @@ public class SimpleAttribute extends MappedAttribute {
 
 		this.isDiscriminator = isDiscriminator;
 
-
 		AnnotationInstance idAnnotation = JandexHelper.getSingleAnnotation( annotations, JPADotNames.ID );
-        AnnotationInstance embeddedIdAnnotation = JandexHelper.getSingleAnnotation( annotations, JPADotNames.EMBEDDED_ID );
-		isId = !(idAnnotation == null && embeddedIdAnnotation == null);
+		AnnotationInstance embeddedIdAnnotation = JandexHelper.getSingleAnnotation(
+				annotations,
+				JPADotNames.EMBEDDED_ID
+		);
+		isId = !( idAnnotation == null && embeddedIdAnnotation == null );
 
 		AnnotationInstance versionAnnotation = JandexHelper.getSingleAnnotation( annotations, JPADotNames.VERSION );
 		isVersioned = versionAnnotation != null;
@@ -160,8 +173,14 @@ public class SimpleAttribute extends MappedAttribute {
 
 		checkBasicAnnotation();
 		checkGeneratedAnnotation();
-	}
 
+		String[] readWrite;
+		List<AnnotationInstance> columnTransformerAnnotations = getAllColumnTransformerAnnotations();
+		readWrite = createCustomReadWrite( columnTransformerAnnotations );
+		this.customReadFragment = readWrite[0];
+		this.customWriteFragment = readWrite[1];
+		this.checkCondition = parseCheckAnnotation();
+	}
 
 	public final ColumnValues getColumnValues() {
 		return columnValues;
@@ -201,6 +220,18 @@ public class SimpleAttribute extends MappedAttribute {
 
 	public boolean isOptimisticLockable() {
 		return isOptimisticLockable;
+	}
+
+	public String getCustomWriteFragment() {
+		return customWriteFragment;
+	}
+
+	public String getCustomReadFragment() {
+		return customReadFragment;
+	}
+
+	public String getCheckCondition() {
+		return checkCondition;
 	}
 
 	@Override
@@ -262,6 +293,58 @@ public class SimpleAttribute extends MappedAttribute {
 				}
 			}
 		}
+	}
+
+	private List<AnnotationInstance> getAllColumnTransformerAnnotations() {
+		List<AnnotationInstance> allColumnTransformerAnnotations = new ArrayList<AnnotationInstance>();
+
+		// not quite sure about the usefulness of @ColumnTransformers (HF)
+		AnnotationInstance columnTransformersAnnotations = getIfExists( HibernateDotNames.COLUMN_TRANSFORMERS );
+		if ( columnTransformersAnnotations != null ) {
+			AnnotationInstance[] annotationInstances = allColumnTransformerAnnotations.get( 0 ).value().asNestedArray();
+			allColumnTransformerAnnotations.addAll( Arrays.asList( annotationInstances ) );
+		}
+
+		AnnotationInstance columnTransformerAnnotation = getIfExists( HibernateDotNames.COLUMN_TRANSFORMER );
+		if ( columnTransformerAnnotation != null ) {
+			allColumnTransformerAnnotations.add( columnTransformerAnnotation );
+		}
+		return allColumnTransformerAnnotations;
+	}
+
+	private String[] createCustomReadWrite(List<AnnotationInstance> columnTransformerAnnotations) {
+		String[] readWrite = new String[2];
+
+		boolean alreadyProcessedForColumn = false;
+		for ( AnnotationInstance annotationInstance : columnTransformerAnnotations ) {
+			String forColumn = annotationInstance.value( "forColumn" ) == null ?
+					null : annotationInstance.value( "forColumn" ).asString();
+
+			if ( forColumn != null && !forColumn.equals( getName() ) ) {
+				continue;
+			}
+
+			if ( alreadyProcessedForColumn ) {
+				throw new AnnotationException( "Multiple definition of read/write conditions for column " + getName() );
+			}
+
+			readWrite[0] = annotationInstance.value( "read" ) == null ?
+					null : annotationInstance.value( "read" ).asString();
+			readWrite[1] = annotationInstance.value( "write" ) == null ?
+					null : annotationInstance.value( "write" ).asString();
+
+			alreadyProcessedForColumn = true;
+		}
+		return readWrite;
+	}
+
+	private String parseCheckAnnotation() {
+		String checkCondition = null;
+		AnnotationInstance checkAnnotation = getIfExists( HibernateDotNames.CHECK );
+		if ( checkAnnotation != null ) {
+			checkCondition = checkAnnotation.value( "constraints" ).toString();
+		}
+		return checkCondition;
 	}
 }
 

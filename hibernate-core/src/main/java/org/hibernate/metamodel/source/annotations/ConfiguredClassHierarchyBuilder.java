@@ -57,7 +57,7 @@ public class ConfiguredClassHierarchyBuilder {
 	 *
 	 * @return a set of {@code ConfiguredClassHierarchy}s. One for each "leaf" entity.
 	 */
-	public static Set<ConfiguredClassHierarchy<EntityClass>> createEntityHierarchies(AnnotationsBindingContext bindingContext) {
+	public static Set<ConfiguredClassHierarchy<EntityClass>> createEntityHierarchies(AnnotationBindingContext bindingContext) {
 		Map<ClassInfo, List<ClassInfo>> processedClassInfos = new HashMap<ClassInfo, List<ClassInfo>>();
 
 		for ( ClassInfo info : bindingContext.getIndex().getKnownClasses() ) {
@@ -115,7 +115,7 @@ public class ConfiguredClassHierarchyBuilder {
 	 *
 	 * @return a set of {@code ConfiguredClassHierarchy}s. One for each "leaf" entity.
 	 */
-	public static ConfiguredClassHierarchy<EmbeddableClass> createEmbeddableHierarchy(Class<?> embeddableClass, AccessType accessType, AnnotationsBindingContext context) {
+	public static ConfiguredClassHierarchy<EmbeddableClass> createEmbeddableHierarchy(Class<?> embeddableClass, AccessType accessType, AnnotationBindingContext context) {
 
 		ClassInfo embeddableClassInfo = context.getClassInfo( embeddableClass.getName() );
 		if ( embeddableClassInfo == null ) {

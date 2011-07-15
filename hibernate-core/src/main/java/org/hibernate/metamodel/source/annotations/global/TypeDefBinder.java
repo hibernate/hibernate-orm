@@ -24,21 +24,27 @@
 package org.hibernate.metamodel.source.annotations.global;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.Index;
 import org.jboss.logging.Logger;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.TypeDefs;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.metamodel.source.MetadataImplementor;
-import org.hibernate.metamodel.source.annotations.JandexHelper;
 import org.hibernate.metamodel.binding.TypeDef;
+import org.hibernate.metamodel.source.MetadataImplementor;
+import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.source.annotations.HibernateDotNames;
+import org.hibernate.metamodel.source.annotations.JandexHelper;
 
+/**
+ * Binds {@link org.hibernate.annotations.TypeDef} and {@link TypeDefs}.
+ *
+ * @author Hardy Ferentschik
+ */
 public class TypeDefBinder {
 
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
@@ -49,21 +55,23 @@ public class TypeDefBinder {
 	/**
 	 * Binds all {@link org.hibernate.annotations.TypeDef} and {@link TypeDefs} annotations to the supplied metadata.
 	 *
-	 * @param metadata the global metadata
-	 * @param jandex the jandex jandex
+	 * @param bindingContext the context for annotation binding
 	 */
-	public static void bind(MetadataImplementor metadata, Index jandex) {
-		for ( AnnotationInstance typeDef : jandex.getAnnotations( HibernateDotNames.TYPE_DEF ) ) {
-			bind( metadata, typeDef );
+	public static void bind(AnnotationBindingContext bindingContext) {
+		List<AnnotationInstance> annotations = bindingContext.getIndex().getAnnotations( HibernateDotNames.TYPE_DEF );
+		for ( AnnotationInstance typeDef : annotations ) {
+			bind( bindingContext.getMetadataImplementor(), typeDef );
 		}
-		for ( AnnotationInstance typeDefs : jandex.getAnnotations( HibernateDotNames.TYPE_DEFS ) ) {
+
+		annotations = bindingContext.getIndex().getAnnotations( HibernateDotNames.TYPE_DEFS );
+		for ( AnnotationInstance typeDefs : annotations ) {
 			AnnotationInstance[] typeDefAnnotations = JandexHelper.getValue(
 					typeDefs,
 					"value",
 					AnnotationInstance[].class
 			);
 			for ( AnnotationInstance typeDef : typeDefAnnotations ) {
-				bind( metadata, typeDef );
+				bind( bindingContext.getMetadataImplementor(), typeDef );
 			}
 		}
 	}

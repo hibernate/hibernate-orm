@@ -31,14 +31,19 @@ import org.jboss.jandex.Index;
 import org.hibernate.metamodel.source.BindingContext;
 
 /**
+ * Defines an interface for providing additional annotation related context information.
+ *
  * @author Steve Ebersole
+ * @author Hardy Ferentschik
  */
-public interface AnnotationsBindingContext extends BindingContext {
-	public Index getIndex();
-	public ClassInfo getClassInfo(String name);
+public interface AnnotationBindingContext extends BindingContext {
+	Index getIndex();
 
-	public void resolveAllTypes(String className);
-	public ResolvedType getResolvedType(Class<?> clazz);
+	ClassInfo getClassInfo(String name);
 
-	public ResolvedTypeWithMembers resolveMemberTypes(ResolvedType type);
+	void resolveAllTypes(String className);
+
+	ResolvedType getResolvedType(Class<?> clazz);
+
+	ResolvedTypeWithMembers resolveMemberTypes(ResolvedType type);
 }

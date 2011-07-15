@@ -30,7 +30,7 @@ import org.hibernate.internal.util.Value;
  *
  * @author Hardy Ferentschik
  */
-public class NonEntity extends AbstractAttributeContainer implements Hierarchical {
+public class NonEntity extends AbstractAttributeContainer {
 	/**
 	 * Constructor for the non-entity
 	 *

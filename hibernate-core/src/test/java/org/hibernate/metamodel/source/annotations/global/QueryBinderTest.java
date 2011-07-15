@@ -35,6 +35,7 @@ import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryRootReturn;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.metamodel.MetadataSources;
+import org.hibernate.metamodel.source.annotations.AnnotationBindingContextImpl;
 import org.hibernate.metamodel.source.annotations.JandexHelper;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
 import org.hibernate.service.ServiceRegistryBuilder;
@@ -73,7 +74,7 @@ public class QueryBinderTest extends BaseUnitTestCase {
 		class Foo {
 		}
 		Index index = JandexHelper.indexForClass( service, Foo.class );
-		QueryBinder.bind( meta, index );
+		QueryBinder.bind( new AnnotationBindingContextImpl( meta, index ) );
 	}
 
 	@Test
@@ -82,7 +83,7 @@ public class QueryBinderTest extends BaseUnitTestCase {
 		class Foo {
 		}
 		Index index = JandexHelper.indexForClass( service, Foo.class );
-		QueryBinder.bind( meta, index );
+		QueryBinder.bind( new AnnotationBindingContextImpl( meta, index ) );
 
 		NamedSQLQueryDefinition namedQuery = meta.getNamedNativeQuery( "fubar" );
 		assertNotNull( namedQuery );

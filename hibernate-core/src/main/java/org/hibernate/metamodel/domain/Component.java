@@ -32,7 +32,7 @@ import org.hibernate.internal.util.Value;
  *
  * @author Steve Ebersole
  */
-public class Component extends AbstractAttributeContainer implements Hierarchical {
+public class Component extends AbstractAttributeContainer {
 	public Component(String name, String className, Value<Class<?>> classReference, Hierarchical superType) {
 		super( name, className, classReference, superType );
 	}

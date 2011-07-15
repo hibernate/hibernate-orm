@@ -57,11 +57,8 @@ public class MappedSuperclassTests extends BaseAnnotationBindingTestCase {
 		AttributeBinding nameBinding = binding.getAttributeBinding( "name" );
 		assertNotNull( "the name attribute should be bound to MyEntity", nameBinding );
 
-		Tuple tuple = (Tuple) nameBinding.getValue();
-		SimpleValue value = tuple.values().iterator().next();
-		assertTrue( value instanceof Column );
-		Column column = (Column) value;
-		assertEquals( "Wrong column name", "`MY_NAME`", column.getColumnName().toString() );
+		Column column = (Column) nameBinding.getValue();
+		assertEquals( "Wrong column name", "MY_NAME", column.getColumnName().toString() );
 	}
 
 	@Test
@@ -72,11 +69,8 @@ public class MappedSuperclassTests extends BaseAnnotationBindingTestCase {
 		AttributeBinding fooBinding = binding.getAttributeBinding( "foo" );
 		assertNotNull( "the foo attribute should be bound to MyEntity", fooBinding );
 
-		Tuple tuple = (Tuple) fooBinding.getValue();
-		SimpleValue value = tuple.values().iterator().next();
-		assertTrue( value instanceof Column );
-		Column column = (Column) value;
-		assertEquals( "Wrong column name", "`MY_FOO`", column.getColumnName().toString() );
+		Column column = (Column) fooBinding.getValue();
+		assertEquals( "Wrong column name", "MY_FOO", column.getColumnName().toString() );
 	}
 
 	@Test

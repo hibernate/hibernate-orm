@@ -23,12 +23,12 @@
  */
 package org.hibernate.metamodel.source.annotations.entity;
 
-import javax.persistence.GenerationType;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import javax.persistence.GenerationType;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
@@ -47,12 +47,6 @@ import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.Value;
-import org.hibernate.metamodel.source.annotations.AnnotationsBindingContext;
-import org.hibernate.metamodel.source.annotations.HibernateDotNames;
-import org.hibernate.metamodel.source.annotations.JPADotNames;
-import org.hibernate.metamodel.source.annotations.JandexHelper;
-import org.hibernate.metamodel.source.annotations.UnknownInheritanceTypeException;
-import org.hibernate.metamodel.source.annotations.global.IdGeneratorBinder;
 import org.hibernate.metamodel.binding.Caching;
 import org.hibernate.metamodel.binding.CustomSQL;
 import org.hibernate.metamodel.binding.EntityBinding;
@@ -61,29 +55,36 @@ import org.hibernate.metamodel.binding.IdGenerator;
 import org.hibernate.metamodel.binding.InheritanceType;
 import org.hibernate.metamodel.binding.ManyToOneAttributeBinding;
 import org.hibernate.metamodel.binding.SimpleAttributeBinding;
-import org.hibernate.metamodel.binding.state.DiscriminatorBindingState;
 import org.hibernate.metamodel.binding.state.ManyToOneAttributeBindingState;
-import org.hibernate.metamodel.binding.state.SimpleAttributeBindingState;
 import org.hibernate.metamodel.domain.Attribute;
 import org.hibernate.metamodel.domain.AttributeContainer;
+import org.hibernate.metamodel.domain.Component;
 import org.hibernate.metamodel.domain.Entity;
 import org.hibernate.metamodel.domain.Hierarchical;
 import org.hibernate.metamodel.domain.SingularAttribute;
+import org.hibernate.metamodel.relational.Column;
 import org.hibernate.metamodel.relational.Identifier;
 import org.hibernate.metamodel.relational.Schema;
+import org.hibernate.metamodel.relational.Size;
 import org.hibernate.metamodel.relational.TableSpecification;
 import org.hibernate.metamodel.relational.UniqueKey;
+import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
+import org.hibernate.metamodel.source.annotations.HibernateDotNames;
+import org.hibernate.metamodel.source.annotations.JPADotNames;
+import org.hibernate.metamodel.source.annotations.JandexHelper;
+import org.hibernate.metamodel.source.annotations.UnknownInheritanceTypeException;
 import org.hibernate.metamodel.source.annotations.attribute.AssociationAttribute;
 import org.hibernate.metamodel.source.annotations.attribute.AttributeOverride;
+import org.hibernate.metamodel.source.annotations.attribute.ColumnValues;
 import org.hibernate.metamodel.source.annotations.attribute.DiscriminatorColumnValues;
 import org.hibernate.metamodel.source.annotations.attribute.MappedAttribute;
 import org.hibernate.metamodel.source.annotations.attribute.SimpleAttribute;
 import org.hibernate.metamodel.source.annotations.attribute.state.binding.AttributeBindingStateImpl;
-import org.hibernate.metamodel.source.annotations.attribute.state.binding.DiscriminatorBindingStateImpl;
 import org.hibernate.metamodel.source.annotations.attribute.state.binding.ManyToOneBindingStateImpl;
 import org.hibernate.metamodel.source.annotations.attribute.state.relational.ColumnRelationalStateImpl;
 import org.hibernate.metamodel.source.annotations.attribute.state.relational.ManyToOneRelationalStateImpl;
 import org.hibernate.metamodel.source.annotations.attribute.state.relational.TupleRelationalStateImpl;
+import org.hibernate.metamodel.source.annotations.global.IdGeneratorBinder;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.tuple.entity.EntityTuplizer;
 
@@ -95,15 +96,28 @@ import org.hibernate.tuple.entity.EntityTuplizer;
 public class EntityBinder {
 	private final EntityClass entityClass;
 	private final Hierarchical superType;
-	private final AnnotationsBindingContext bindingContext;
+	private final AnnotationBindingContext bindingContext;
 
 	private final Schema.Name schemaName;
 
-	public EntityBinder(EntityClass entityClass, Hierarchical superType, AnnotationsBindingContext bindingContext) {
+	public EntityBinder(EntityClass entityClass, Hierarchical superType, AnnotationBindingContext bindingContext) {
 		this.entityClass = entityClass;
 		this.superType = superType;
 		this.bindingContext = bindingContext;
 		this.schemaName = determineSchemaName();
+	}
+
+	public EntityBinding bind(List<String> processedEntityNames) {
+		if ( processedEntityNames.contains( entityClass.getName() ) ) {
+			return bindingContext.getMetadataImplementor().getEntityBinding( entityClass.getName() );
+		}
+
+		final EntityBinding entityBinding = createEntityBinding();
+
+		bindingContext.getMetadataImplementor().addEntity( entityBinding );
+		processedEntityNames.add( entityBinding.getEntity().getName() );
+
+		return entityBinding;
 	}
 
 	private Schema.Name determineSchemaName() {
@@ -132,20 +146,7 @@ public class EntityBinder {
 		return new Schema.Name( schema, catalog );
 	}
 
-	public EntityBinding bind(List<String> processedEntityNames) {
-		if ( processedEntityNames.contains( entityClass.getName() ) ) {
-			return bindingContext.getMetadataImplementor().getEntityBinding( entityClass.getName() );
-		}
-
-		final EntityBinding entityBinding = doEntityBindingCreation();
-
-		bindingContext.getMetadataImplementor().addEntity( entityBinding );
-		processedEntityNames.add( entityBinding.getEntity().getName() );
-
-		return entityBinding;
-	}
-
-	private EntityBinding doEntityBindingCreation() {
+	private EntityBinding createEntityBinding() {
 		final EntityBinding entityBinding = buildBasicEntityBinding();
 
 		// bind all attributes - simple as well as associations
@@ -163,7 +164,8 @@ public class EntityBinder {
 				return doRootEntityBindingCreation();
 			}
 			case SINGLE_TABLE: {
-				return doDiscriminatedSubclassBindingCreation();
+				return doRootEntityBindingCreation();
+				//return doDiscriminatedSubclassBindingCreation();
 			}
 			case JOINED: {
 				return doJoinedSubclassBindingCreation();
@@ -180,7 +182,7 @@ public class EntityBinder {
 	private EntityBinding doRootEntityBindingCreation() {
 		EntityBinding entityBinding = new EntityBinding();
 		entityBinding.setInheritanceType( InheritanceType.NO_INHERITANCE );
-		entityBinding.setRoot( true );
+		entityBinding.setRoot( entityClass.isEntityRoot() );
 
 		doBasicEntityBinding( entityBinding );
 
@@ -201,7 +203,10 @@ public class EntityBinder {
 		// see HHH-6401
 		OptimisticLockType optimisticLockType = OptimisticLockType.VERSION;
 		if ( hibernateEntityAnnotation != null && hibernateEntityAnnotation.value( "optimisticLock" ) != null ) {
-			optimisticLockType = OptimisticLockType.valueOf( hibernateEntityAnnotation.value( "optimisticLock" ).asEnum() );
+			optimisticLockType = OptimisticLockType.valueOf(
+					hibernateEntityAnnotation.value( "optimisticLock" )
+							.asEnum()
+			);
 		}
 		entityBinding.setOptimisticLockStyle( OptimisticLockStyle.valueOf( optimisticLockType.name() ) );
 
@@ -237,7 +242,7 @@ public class EntityBinder {
 		bindPrimaryTable( entityBinding );
 		bindId( entityBinding );
 
-		if ( entityBinding.getInheritanceType() == InheritanceType.SINGLE_TABLE ) {
+		if ( entityClass.getInheritanceType() == InheritanceType.SINGLE_TABLE ) {
 			bindDiscriminatorColumn( entityBinding );
 		}
 
@@ -246,14 +251,15 @@ public class EntityBinder {
 		return entityBinding;
 	}
 
-	private Caching interpretCaching(ConfiguredClass configuredClass, AnnotationsBindingContext bindingContext) {
+	private Caching interpretCaching(ConfiguredClass configuredClass, AnnotationBindingContext bindingContext) {
 		final AnnotationInstance hibernateCacheAnnotation = JandexHelper.getSingleAnnotation(
 				configuredClass.getClassInfo(), HibernateDotNames.CACHE
 		);
 		if ( hibernateCacheAnnotation != null ) {
 			final AccessType accessType = hibernateCacheAnnotation.value( "usage" ) == null
 					? bindingContext.getMappingDefaults().getCacheAccessType()
-					: CacheConcurrencyStrategy.parse( hibernateCacheAnnotation.value( "usage" ).asEnum() ).toAccessType();
+					: CacheConcurrencyStrategy.parse( hibernateCacheAnnotation.value( "usage" ).asEnum() )
+					.toAccessType();
 			return new Caching(
 					hibernateCacheAnnotation.value( "region" ) == null
 							? configuredClass.getName()
@@ -294,7 +300,7 @@ public class EntityBinder {
 			}
 		}
 
-		if ( ! doCaching ) {
+		if ( !doCaching ) {
 			return null;
 		}
 
@@ -416,7 +422,7 @@ public class EntityBinder {
 		final AnnotationInstance batchSizeAnnotation = JandexHelper.getSingleAnnotation(
 				entityClass.getClassInfo(), HibernateDotNames.BATCH_SIZE
 		);
-		entityBinding.setBatchSize( batchSizeAnnotation == null ? -1 : batchSizeAnnotation.value( "size" ).asInt());
+		entityBinding.setBatchSize( batchSizeAnnotation == null ? -1 : batchSizeAnnotation.value( "size" ).asInt() );
 
 		// Proxy generation
 		final boolean lazy;
@@ -454,7 +460,10 @@ public class EntityBinder {
 		);
 		if ( persisterAnnotation == null || persisterAnnotation.value( "impl" ) == null ) {
 			if ( hibernateEntityAnnotation != null && hibernateEntityAnnotation.value( "persister" ) != null ) {
-				entityPersisterClass = bindingContext.locateClassByName( hibernateEntityAnnotation.value( "persister" ).asString() );
+				entityPersisterClass = bindingContext.locateClassByName(
+						hibernateEntityAnnotation.value( "persister" )
+								.asString()
+				);
 			}
 			else {
 				entityPersisterClass = null;
@@ -497,8 +506,8 @@ public class EntityBinder {
 
 		final ExecuteUpdateResultCheckStyle checkStyle = customSqlAnnotation.value( "check" ) == null
 				? isCallable
-						? ExecuteUpdateResultCheckStyle.NONE
-						: ExecuteUpdateResultCheckStyle.COUNT
+				? ExecuteUpdateResultCheckStyle.NONE
+				: ExecuteUpdateResultCheckStyle.COUNT
 				: ExecuteUpdateResultCheckStyle.valueOf( customSqlAnnotation.value( "check" ).asEnum() );
 
 		return new CustomSQL( sql, isCallable, checkStyle );
@@ -525,7 +534,7 @@ public class EntityBinder {
 			tableName = bindingContext.getNamingStrategy().classToTableName( entityClass.getClassNameForTable() );
 		}
 
-		if ( bindingContext.isGloballyQuotedIdentifiers() && ! Identifier.isQuoted( tableName ) ) {
+		if ( bindingContext.isGloballyQuotedIdentifiers() && !Identifier.isQuoted( tableName ) ) {
 			tableName = StringHelper.quote( tableName );
 		}
 		org.hibernate.metamodel.relational.Table table = schema.locateOrCreateTable( Identifier.toIdentifier( tableName ) );
@@ -547,7 +556,12 @@ public class EntityBinder {
 			return null;
 		}
 
-		for ( AnnotationInstance tuplizerAnnotation : JandexHelper.getValue( tuplizersAnnotation, "value", AnnotationInstance[].class ) ) {
+		AnnotationInstance[] annotations = JandexHelper.getValue(
+				tuplizersAnnotation,
+				"value",
+				AnnotationInstance[].class
+		);
+		for ( AnnotationInstance tuplizerAnnotation : annotations ) {
 			if ( EntityMode.valueOf( tuplizerAnnotation.value( "entityModeType" ).asEnum() ) == EntityMode.POJO ) {
 				return tuplizerAnnotation;
 			}
@@ -563,7 +577,7 @@ public class EntityBinder {
 		SimpleAttribute discriminatorAttribute = SimpleAttribute.createDiscriminatorAttribute( typeAnnotations );
 		bindSingleMappedAttribute( entityBinding, entityBinding.getEntity(), discriminatorAttribute );
 
-		if ( !( discriminatorAttribute.getColumnValues() instanceof DiscriminatorColumnValues) ) {
+		if ( !( discriminatorAttribute.getColumnValues() instanceof DiscriminatorColumnValues ) ) {
 			throw new AssertionFailure( "Expected discriminator column values" );
 		}
 	}
@@ -634,7 +648,12 @@ public class EntityBinder {
 		SimpleAttributeBinding attributeBinding = entityBinding.makeSimpleIdAttributeBinding( attribute );
 
 		attributeBinding.initialize( new AttributeBindingStateImpl( (SimpleAttribute) idAttribute ) );
-		attributeBinding.initialize( new ColumnRelationalStateImpl( (SimpleAttribute) idAttribute, bindingContext.getMetadataImplementor() ) );
+		attributeBinding.initialize(
+				new ColumnRelationalStateImpl(
+						(SimpleAttribute) idAttribute,
+						bindingContext.getMetadataImplementor()
+				)
+		);
 		bindSingleIdGeneratedValue( entityBinding, idName );
 
 		TupleRelationalStateImpl state = new TupleRelationalStateImpl();
@@ -643,9 +662,9 @@ public class EntityBinder {
 			state.addValueState( new ColumnRelationalStateImpl( attr, bindingContext.getMetadataImplementor() ) );
 		}
 		attributeBinding.initialize( state );
-		Map<String, String> parms = new HashMap<String, String>( 1 );
-		parms.put( IdentifierGenerator.ENTITY_NAME, entityBinding.getEntity().getName() );
-		IdGenerator generator = new IdGenerator( "NAME", "assigned", parms );
+		Map<String, String> parameterMap = new HashMap<String, String>( 1 );
+		parameterMap.put( IdentifierGenerator.ENTITY_NAME, entityBinding.getEntity().getName() );
+		IdGenerator generator = new IdGenerator( "NAME", "assigned", parameterMap );
 		entityBinding.getEntityIdentifier().setIdGenerator( generator );
 		// entityBinding.getEntityIdentifier().createIdentifierGenerator( meta.getIdentifierGeneratorFactory() );
 	}
@@ -681,11 +700,21 @@ public class EntityBinder {
 
 		SimpleAttributeBinding attributeBinding = entityBinding.makeSimpleIdAttributeBinding( attribute );
 		attributeBinding.initialize( new AttributeBindingStateImpl( (SimpleAttribute) idAttribute ) );
-		attributeBinding.initialize( new ColumnRelationalStateImpl( (SimpleAttribute) idAttribute, bindingContext.getMetadataImplementor() ) );
+		attributeBinding.initialize(
+				new ColumnRelationalStateImpl(
+						(SimpleAttribute) idAttribute,
+						bindingContext.getMetadataImplementor()
+				)
+		);
 		bindSingleIdGeneratedValue( entityBinding, idAttribute.getName() );
 
-		if ( ! attribute.isTypeResolved() ) {
-			attribute.resolveType( bindingContext.makeJavaType( attributeBinding.getHibernateTypeDescriptor().getJavaTypeName() ) );
+		if ( !attribute.isTypeResolved() ) {
+			attribute.resolveType(
+					bindingContext.makeJavaType(
+							attributeBinding.getHibernateTypeDescriptor()
+									.getJavaTypeName()
+					)
+			);
 		}
 	}
 
@@ -784,10 +813,10 @@ public class EntityBinder {
 	}
 
 	private void bindAttributes(
-				EntityBinding entityBinding,
-				AttributeContainer attributeContainer,
-				ConfiguredClass configuredClass,
-				Map<String,AttributeOverride> attributeOverrideMap) {
+			EntityBinding entityBinding,
+			AttributeContainer attributeContainer,
+			ConfiguredClass configuredClass,
+			Map<String, AttributeOverride> attributeOverrideMap) {
 		for ( SimpleAttribute simpleAttribute : configuredClass.getSimpleAttributes() ) {
 			String attributeName = simpleAttribute.getName();
 
@@ -827,24 +856,34 @@ public class EntityBinder {
 	}
 
 	private void bindEmbeddedAttributes(
-				EntityBinding entityBinding,
-				AttributeContainer attributeContainer,
-				ConfiguredClass configuredClass) {
+			EntityBinding entityBinding,
+			AttributeContainer attributeContainer,
+			ConfiguredClass configuredClass) {
 		for ( Map.Entry<String, EmbeddableClass> entry : configuredClass.getEmbeddedClasses().entrySet() ) {
 			String attributeName = entry.getKey();
 			EmbeddableClass embeddedClass = entry.getValue();
-			SingularAttribute component = attributeContainer.locateOrCreateComponentAttribute( attributeName );
+			SingularAttribute componentAttribute = attributeContainer.locateOrCreateComponentAttribute( attributeName );
+			// we have to resolve the type, if the attribute was just created
+			if ( !componentAttribute.isTypeResolved() ) {
+				Component c = new Component(
+						attributeName,
+						embeddedClass.getName(),
+						new Value<Class<?>>( embeddedClass.getConfiguredClass() ),
+						null
+				);
+				componentAttribute.resolveType( c );
+			}
 			for ( SimpleAttribute simpleAttribute : embeddedClass.getSimpleAttributes() ) {
 				bindSingleMappedAttribute(
 						entityBinding,
-						component.getAttributeContainer(),
+						componentAttribute.getAttributeContainer(),
 						simpleAttribute
 				);
 			}
 			for ( AssociationAttribute associationAttribute : embeddedClass.getAssociationAttributes() ) {
 				bindAssociationAttribute(
 						entityBinding,
-						component.getAttributeContainer(),
+						componentAttribute.getAttributeContainer(),
 						associationAttribute
 				);
 			}
@@ -852,13 +891,16 @@ public class EntityBinder {
 	}
 
 	private void bindAssociationAttribute(
-				EntityBinding entityBinding,
-				AttributeContainer container,
-				AssociationAttribute associationAttribute) {
+			EntityBinding entityBinding,
+			AttributeContainer container,
+			AssociationAttribute associationAttribute) {
 		switch ( associationAttribute.getAssociationType() ) {
 			case MANY_TO_ONE: {
-				Attribute attribute = entityBinding.getEntity().locateOrCreateSingularAttribute( associationAttribute.getName() );
-				ManyToOneAttributeBinding manyToOneAttributeBinding = entityBinding.makeManyToOneAttributeBinding( attribute );
+				Attribute attribute = entityBinding.getEntity()
+						.locateOrCreateSingularAttribute( associationAttribute.getName() );
+				ManyToOneAttributeBinding manyToOneAttributeBinding = entityBinding.makeManyToOneAttributeBinding(
+						attribute
+				);
 
 				ManyToOneAttributeBindingState bindingState = new ManyToOneBindingStateImpl( associationAttribute );
 				manyToOneAttributeBinding.initialize( bindingState );
@@ -880,12 +922,14 @@ public class EntityBinder {
 	}
 
 	private void bindSingleMappedAttribute(
-				EntityBinding entityBinding,
-				AttributeContainer container,
-				SimpleAttribute simpleAttribute) {
+			EntityBinding entityBinding,
+			AttributeContainer container,
+			SimpleAttribute simpleAttribute) {
 		if ( simpleAttribute.isId() ) {
 			return;
 		}
+
+		ColumnValues columnValues = simpleAttribute.getColumnValues();
 
 		String attributeName = simpleAttribute.getName();
 		SingularAttribute attribute = container.locateOrCreateSingularAttribute( attributeName );
@@ -893,36 +937,58 @@ public class EntityBinder {
 
 		if ( simpleAttribute.isDiscriminator() ) {
 			EntityDiscriminator entityDiscriminator = entityBinding.makeEntityDiscriminator( attribute );
-			DiscriminatorBindingState bindingState = new DiscriminatorBindingStateImpl( simpleAttribute );
-			entityDiscriminator.initialize( bindingState );
+			entityDiscriminator.setDiscriminatorValue( ( (DiscriminatorColumnValues) columnValues ).getDiscriminatorValue() );
 			attributeBinding = entityDiscriminator.getValueBinding();
 		}
 		else if ( simpleAttribute.isVersioned() ) {
 			attributeBinding = entityBinding.makeVersionBinding( attribute );
-			SimpleAttributeBindingState bindingState = new AttributeBindingStateImpl( simpleAttribute );
-			attributeBinding.initialize( bindingState );
 		}
 		else {
 			attributeBinding = entityBinding.makeSimpleAttributeBinding( attribute );
-			SimpleAttributeBindingState bindingState = new AttributeBindingStateImpl( simpleAttribute );
-			attributeBinding.initialize( bindingState );
 		}
 
-		if ( entityClass.hasOwnTable() ) {
-			ColumnRelationalStateImpl columnRelationsState = new ColumnRelationalStateImpl(
-					simpleAttribute, bindingContext.getMetadataImplementor()
-			);
-//			TupleRelationalStateImpl relationalState = new TupleRelationalStateImpl();
-//			relationalState.addValueState( columnRelationsState );
-//
-//			attributeBinding.initialize( relationalState );
-			attributeBinding.initialize( columnRelationsState );
-		}
+		attributeBinding.setInsertable( simpleAttribute.isInsertable() );
+		attributeBinding.setUpdatable( simpleAttribute.isUpdatable() );
+		attributeBinding.setGeneration( simpleAttribute.getPropertyGeneration() );
+		attributeBinding.setLazy( simpleAttribute.isLazy() );
+		attributeBinding.setIncludedInOptimisticLocking( simpleAttribute.isOptimisticLockable() );
 
-		if ( ! attribute.isTypeResolved() ) {
-			attribute.resolveType( bindingContext.makeJavaType( attributeBinding.getHibernateTypeDescriptor().getJavaTypeName() ) );
-		}
+//		attributeBinding.setPropertyAccessorName(
+//				Helper.getPropertyAccessorName(
+//						simpleAttribute.getPropertyAccessorName(),
+//						false,
+//						bindingContext.getMappingDefaults().getPropertyAccessorName()
+//				)
+//		);
+
+		final TableSpecification valueSource = attributeBinding.getEntityBinding().getBaseTable();
+		String columnName = simpleAttribute.getColumnValues()
+				.getName()
+				.isEmpty() ? attribute.getName() : simpleAttribute.getColumnValues().getName();
+		Column column = valueSource.locateOrCreateColumn( columnName );
+		column.setNullable( columnValues.isNullable() );
+		column.setDefaultValue( null ); // todo
+		column.setSqlType( null ); // todo
+		Size size = new Size(
+				columnValues.getPrecision(),
+				columnValues.getScale(),
+				columnValues.getLength(),
+				Size.LobMultiplier.NONE
+		);
+		column.setSize( size );
+		column.setDatatype( null ); // todo : ???
+		column.setReadFragment( simpleAttribute.getCustomReadFragment() );
+		column.setWriteFragment( simpleAttribute.getCustomWriteFragment() );
+		column.setUnique( columnValues.isUnique() );
+		column.setCheckCondition( simpleAttribute.getCheckCondition() );
+		column.setComment( null ); // todo
+
+		attributeBinding.setValue( column );
+
+
+//		if ( ! attribute.isTypeResolved() ) {
+//			attribute.resolveType( bindingContext.makeJavaType( attributeBinding.getHibernateTypeDescriptor().getJavaTypeName() ) );
+//		}
 	}
-
 }
 

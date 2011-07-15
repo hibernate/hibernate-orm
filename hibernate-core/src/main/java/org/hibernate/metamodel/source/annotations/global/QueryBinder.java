@@ -24,6 +24,7 @@
 package org.hibernate.metamodel.source.annotations.global;
 
 import java.util.HashMap;
+import java.util.List;
 import javax.persistence.NamedNativeQueries;
 import javax.persistence.NamedNativeQuery;
 import javax.persistence.NamedQueries;
@@ -31,7 +32,6 @@ import javax.persistence.NamedQuery;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
-import org.jboss.jandex.Index;
 import org.jboss.logging.Logger;
 
 import org.hibernate.AnnotationException;
@@ -46,10 +46,18 @@ import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.source.MetadataImplementor;
+import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.source.annotations.HibernateDotNames;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.JandexHelper;
 
+/**
+ * Binds {@link NamedQuery}, {@link NamedQueries}, {@link NamedNativeQuery}, {@link NamedNativeQueries},
+ * {@link org.hibernate.annotations.NamedQuery}, {@link org.hibernate.annotations.NamedQueries},
+ * {@link org.hibernate.annotations.NamedNativeQuery}, and {@link org.hibernate.annotations.NamedNativeQueries}.
+ *
+ * @author Hardy Ferentschik
+ */
 public class QueryBinder {
 
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
@@ -66,40 +74,54 @@ public class QueryBinder {
 	 * {@link org.hibernate.annotations.NamedNativeQuery}, and {@link org.hibernate.annotations.NamedNativeQueries}
 	 * annotations to the supplied metadata.
 	 *
-	 * @param metadata the global metadata
-	 * @param jandex the jandex index
+	 * @param bindingContext the context for annotation binding
 	 */
-	public static void bind(MetadataImplementor metadata, Index jandex) {
-		for ( AnnotationInstance query : jandex.getAnnotations( JPADotNames.NAMED_QUERY ) ) {
-			bindNamedQuery( metadata, query );
+	public static void bind(AnnotationBindingContext bindingContext) {
+		List<AnnotationInstance> annotations = bindingContext.getIndex().getAnnotations( JPADotNames.NAMED_QUERY );
+		for ( AnnotationInstance query : annotations ) {
+			bindNamedQuery( bindingContext.getMetadataImplementor(), query );
 		}
-		for ( AnnotationInstance queries : jandex.getAnnotations( JPADotNames.NAMED_QUERIES ) ) {
+
+		annotations = bindingContext.getIndex().getAnnotations( JPADotNames.NAMED_QUERIES );
+		for ( AnnotationInstance queries : annotations ) {
 			for ( AnnotationInstance query : JandexHelper.getValue( queries, "value", AnnotationInstance[].class ) ) {
-				bindNamedQuery( metadata, query );
+				bindNamedQuery( bindingContext.getMetadataImplementor(), query );
 			}
 		}
-		for ( AnnotationInstance query : jandex.getAnnotations( JPADotNames.NAMED_NATIVE_QUERY ) ) {
-			bindNamedNativeQuery( metadata, query );
+
+		annotations = bindingContext.getIndex().getAnnotations( JPADotNames.NAMED_NATIVE_QUERY );
+		for ( AnnotationInstance query : annotations ) {
+			bindNamedNativeQuery( bindingContext.getMetadataImplementor(), query );
 		}
-		for ( AnnotationInstance queries : jandex.getAnnotations( JPADotNames.NAMED_NATIVE_QUERIES ) ) {
+
+		annotations = bindingContext.getIndex().getAnnotations( JPADotNames.NAMED_NATIVE_QUERIES );
+		for ( AnnotationInstance queries : annotations ) {
 			for ( AnnotationInstance query : JandexHelper.getValue( queries, "value", AnnotationInstance[].class ) ) {
-				bindNamedNativeQuery( metadata, query );
+				bindNamedNativeQuery( bindingContext.getMetadataImplementor(), query );
 			}
 		}
-		for ( AnnotationInstance query : jandex.getAnnotations( HibernateDotNames.NAMED_QUERY ) ) {
-			bindNamedQuery( metadata, query );
+
+		annotations = bindingContext.getIndex().getAnnotations( HibernateDotNames.NAMED_QUERY );
+		for ( AnnotationInstance query : annotations ) {
+			bindNamedQuery( bindingContext.getMetadataImplementor(), query );
 		}
-		for ( AnnotationInstance queries : jandex.getAnnotations( HibernateDotNames.NAMED_QUERIES ) ) {
+
+		annotations = bindingContext.getIndex().getAnnotations( HibernateDotNames.NAMED_QUERIES );
+		for ( AnnotationInstance queries : annotations ) {
 			for ( AnnotationInstance query : JandexHelper.getValue( queries, "value", AnnotationInstance[].class ) ) {
-				bindNamedQuery( metadata, query );
+				bindNamedQuery( bindingContext.getMetadataImplementor(), query );
 			}
 		}
-		for ( AnnotationInstance query : jandex.getAnnotations( HibernateDotNames.NAMED_NATIVE_QUERY ) ) {
-			bindNamedNativeQuery( metadata, query );
+
+		annotations = bindingContext.getIndex().getAnnotations( HibernateDotNames.NAMED_NATIVE_QUERY );
+		for ( AnnotationInstance query : annotations ) {
+			bindNamedNativeQuery( bindingContext.getMetadataImplementor(), query );
 		}
-		for ( AnnotationInstance queries : jandex.getAnnotations( HibernateDotNames.NAMED_NATIVE_QUERIES ) ) {
+
+		annotations = bindingContext.getIndex().getAnnotations( HibernateDotNames.NAMED_NATIVE_QUERIES );
+		for ( AnnotationInstance queries : annotations ) {
 			for ( AnnotationInstance query : JandexHelper.getValue( queries, "value", AnnotationInstance[].class ) ) {
-				bindNamedNativeQuery( metadata, query );
+				bindNamedNativeQuery( bindingContext.getMetadataImplementor(), query );
 			}
 		}
 	}

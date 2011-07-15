@@ -26,31 +26,27 @@ package org.hibernate.metamodel.source.annotations;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
-import com.fasterxml.classmate.MemberResolver;
-import com.fasterxml.classmate.ResolvedType;
-import com.fasterxml.classmate.ResolvedTypeWithMembers;
-import com.fasterxml.classmate.TypeResolver;
-import org.jboss.jandex.ClassInfo;
-import org.jboss.jandex.DotName;
 import org.jboss.jandex.Index;
 import org.jboss.jandex.Indexer;
 import org.jboss.logging.Logger;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
-import org.hibernate.cfg.NamingStrategy;
-import org.hibernate.internal.util.Value;
 import org.hibernate.metamodel.MetadataSources;
-import org.hibernate.metamodel.source.MappingDefaults;
+import org.hibernate.metamodel.binding.EntityBinding;
+import org.hibernate.metamodel.domain.Hierarchical;
+import org.hibernate.metamodel.domain.NonEntity;
+import org.hibernate.metamodel.domain.Superclass;
 import org.hibernate.metamodel.source.MetadataImplementor;
 import org.hibernate.metamodel.source.SourceProcessor;
+import org.hibernate.metamodel.source.annotation.jaxb.XMLEntityMappings;
 import org.hibernate.metamodel.source.annotations.entity.ConfiguredClassHierarchy;
 import org.hibernate.metamodel.source.annotations.entity.ConfiguredClassType;
 import org.hibernate.metamodel.source.annotations.entity.EntityBinder;
+import org.hibernate.metamodel.source.annotations.entity.EntityClass;
 import org.hibernate.metamodel.source.annotations.global.FetchProfileBinder;
 import org.hibernate.metamodel.source.annotations.global.FilterDefBinder;
 import org.hibernate.metamodel.source.annotations.global.IdGeneratorBinder;
@@ -61,14 +57,6 @@ import org.hibernate.metamodel.source.annotations.xml.PseudoJpaDotNames;
 import org.hibernate.metamodel.source.annotations.xml.mocker.EntityMappingsMocker;
 import org.hibernate.metamodel.source.internal.JaxbRoot;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
-import org.hibernate.metamodel.binding.EntityBinding;
-import org.hibernate.metamodel.domain.Hierarchical;
-import org.hibernate.metamodel.domain.Type;
-import org.hibernate.metamodel.domain.NonEntity;
-import org.hibernate.metamodel.domain.Superclass;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLEntityMappings;
-import org.hibernate.metamodel.source.annotations.entity.EntityClass;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 
 /**
@@ -79,27 +67,14 @@ import org.hibernate.service.classloading.spi.ClassLoaderService;
  * @author Hardy Ferentschik
  * @author Steve Ebersole
  */
-public class AnnotationsSourceProcessor implements SourceProcessor, AnnotationsBindingContext {
-	private static final Logger LOG = Logger.getLogger( AnnotationsSourceProcessor.class );
+public class AnnotationProcessor implements SourceProcessor {
+	private static final Logger LOG = Logger.getLogger( AnnotationProcessor.class );
 
 	private final MetadataImplementor metadata;
-	private final Value<ClassLoaderService> classLoaderService;
+	private AnnotationBindingContext bindingContext;
 
-	private Index index;
-
-	private final TypeResolver typeResolver = new TypeResolver();
-	private final Map<Class<?>, ResolvedType> resolvedTypeCache = new HashMap<Class<?>, ResolvedType>();
-
-	public AnnotationsSourceProcessor(MetadataImpl metadata) {
+	public AnnotationProcessor(MetadataImpl metadata) {
 		this.metadata = metadata;
-		this.classLoaderService = new Value<ClassLoaderService>(
-				new Value.DeferredInitializer<ClassLoaderService>() {
-					@Override
-					public ClassLoaderService initialize() {
-						return AnnotationsSourceProcessor.this.metadata.getServiceRegistry().getService( ClassLoaderService.class );
-					}
-				}
-		);
 	}
 
 	@Override
@@ -116,7 +91,7 @@ public class AnnotationsSourceProcessor implements SourceProcessor, AnnotationsB
 			indexClass( indexer, packageName.replace( '.', '/' ) + "/package-info.class" );
 		}
 
-		index = indexer.complete();
+		Index index = indexer.complete();
 
 		List<JaxbRoot<XMLEntityMappings>> mappings = new ArrayList<JaxbRoot<XMLEntityMappings>>();
 		for ( JaxbRoot<?> root : sources.getJaxbRootList() ) {
@@ -128,11 +103,81 @@ public class AnnotationsSourceProcessor implements SourceProcessor, AnnotationsB
 			index = parseAndUpdateIndex( mappings, index );
 		}
 
-        if ( index.getAnnotations( PseudoJpaDotNames.DEFAULT_DELIMITED_IDENTIFIERS ) != null ) {
+		if ( index.getAnnotations( PseudoJpaDotNames.DEFAULT_DELIMITED_IDENTIFIERS ) != null ) {
 			// todo : this needs to move to AnnotationBindingContext
 			// what happens right now is that specifying this in an orm.xml causes it to effect all orm.xmls
-            metadata.setGloballyQuotedIdentifiers( true );
-        }
+			metadata.setGloballyQuotedIdentifiers( true );
+		}
+		bindingContext = new AnnotationBindingContextImpl( metadata, index );
+	}
+
+	@Override
+	public void processIndependentMetadata(MetadataSources sources) {
+		assertBindingContextExists();
+		TypeDefBinder.bind( bindingContext );
+	}
+
+	private void assertBindingContextExists() {
+		if ( bindingContext == null ) {
+			throw new AssertionFailure( "The binding context should exist. Has prepare been called!?" );
+		}
+	}
+
+	@Override
+	public void processTypeDependentMetadata(MetadataSources sources) {
+		assertBindingContextExists();
+		IdGeneratorBinder.bind( bindingContext );
+	}
+
+	@Override
+	public void processMappingMetadata(MetadataSources sources, List<String> processedEntityNames) {
+		assertBindingContextExists();
+		// need to order our annotated entities into an order we can process
+		Set<ConfiguredClassHierarchy<EntityClass>> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
+				bindingContext
+		);
+
+		// now we process each hierarchy one at the time
+		Hierarchical parent = null;
+		for ( ConfiguredClassHierarchy<EntityClass> hierarchy : hierarchies ) {
+			for ( EntityClass entityClass : hierarchy ) {
+				// for classes annotated w/ @Entity we create a EntityBinding
+				if ( ConfiguredClassType.ENTITY.equals( entityClass.getConfiguredClassType() ) ) {
+					LOG.debugf( "Binding entity from annotated class: %s", entityClass.getName() );
+					EntityBinder entityBinder = new EntityBinder( entityClass, parent, bindingContext );
+					EntityBinding binding = entityBinder.bind( processedEntityNames );
+					parent = binding.getEntity();
+				}
+				// for classes annotated w/ @MappedSuperclass we just create the domain instance
+				// the attribute bindings will be part of the first entity subclass
+				else if ( ConfiguredClassType.MAPPED_SUPERCLASS.equals( entityClass.getConfiguredClassType() ) ) {
+					parent = new Superclass(
+							entityClass.getName(),
+							entityClass.getName(),
+							bindingContext.makeClassReference( entityClass.getName() ),
+							parent
+					);
+				}
+				// for classes which are not annotated at all we create the NonEntity domain class
+				// todo - not sure whether this is needed. It might be that we don't need this information (HF)
+				else {
+					parent = new NonEntity(
+							entityClass.getName(),
+							entityClass.getName(),
+							bindingContext.makeClassReference( entityClass.getName() ),
+							parent
+					);
+				}
+			}
+		}
+	}
+
+	@Override
+	public void processMappingDependentMetadata(MetadataSources sources) {
+		TableBinder.bind( bindingContext );
+		FetchProfileBinder.bind( bindingContext );
+		QueryBinder.bind( bindingContext );
+		FilterDefBinder.bind( bindingContext );
 	}
 
 	private Index parseAndUpdateIndex(List<JaxbRoot<XMLEntityMappings>> mappings, Index annotationIndex) {
@@ -144,163 +189,15 @@ public class AnnotationsSourceProcessor implements SourceProcessor, AnnotationsB
 	}
 
 	private void indexClass(Indexer indexer, String className) {
-		InputStream stream = classLoaderService.getValue().locateResourceStream( className );
+		InputStream stream = metadata.getServiceRegistry().getService( ClassLoaderService.class ).locateResourceStream(
+				className
+		);
 		try {
 			indexer.index( stream );
 		}
 		catch ( IOException e ) {
 			throw new HibernateException( "Unable to open input stream for class " + className, e );
 		}
-	}
-
-	@Override
-	public void processIndependentMetadata(MetadataSources sources) {
-        TypeDefBinder.bind( metadata, index );
-	}
-
-	@Override
-	public void processTypeDependentMetadata(MetadataSources sources) {
-        IdGeneratorBinder.bind( metadata, index );
-	}
-
-	@Override
-	public void processMappingMetadata(MetadataSources sources, List<String> processedEntityNames) {
-		// need to order our annotated entities into an order we can process
-		Set<ConfiguredClassHierarchy<EntityClass>> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
-				this
-		);
-
-		// now we process each hierarchy one at the time
-		Hierarchical parent = null;
-		for ( ConfiguredClassHierarchy<EntityClass> hierarchy : hierarchies ) {
-			for ( EntityClass entityClass : hierarchy ) {
-				// for classes annotated w/ @Entity we create a EntityBinding
-				if ( ConfiguredClassType.ENTITY.equals( entityClass.getConfiguredClassType() ) ) {
-					LOG.debugf( "Binding entity from annotated class: %s", entityClass.getName() );
-					EntityBinder entityBinder = new EntityBinder( entityClass, parent, this );
-					EntityBinding binding = entityBinder.bind( processedEntityNames );
-					parent = binding.getEntity();
-				}
-				// for classes annotated w/ @MappedSuperclass we just create the domain instance
-				// the attribute bindings will be part of the first entity subclass
-				else if ( ConfiguredClassType.MAPPED_SUPERCLASS.equals( entityClass.getConfiguredClassType() ) ) {
-					parent = new Superclass(
-							entityClass.getName(),
-							entityClass.getName(),
-							makeClassReference( entityClass.getName() ),
-							parent
-					);
-				}
-				// for classes which are not annotated at all we create the NonEntity domain class
-				// todo - not sure whether this is needed. It might be that we don't need this information (HF)
-				else {
-					parent = new NonEntity(
-							entityClass.getName(), 
-							entityClass.getName(),
-							makeClassReference( entityClass.getName() ),
-							parent
-					);
-				}
-			}
-		}
-	}
-
-	private Set<ConfiguredClassHierarchy<EntityClass>> createEntityHierarchies() {
-		return ConfiguredClassHierarchyBuilder.createEntityHierarchies( this );
-	}
-
-	@Override
-	public void processMappingDependentMetadata(MetadataSources sources) {
-		TableBinder.bind( metadata, index );
-		FetchProfileBinder.bind( metadata, index );
-		QueryBinder.bind( metadata, index );
-		FilterDefBinder.bind( metadata, index );
-	}
-
-	@Override
-	public Index getIndex() {
-		return index;
-	}
-
-	@Override
-	public ClassInfo getClassInfo(String name) {
-		DotName dotName = DotName.createSimple( name );
-		return index.getClassByName( dotName );
-	}
-
-	@Override
-	public void resolveAllTypes(String className) {
-		// the resolved type for the top level class in the hierarchy
-		Class<?> clazz = classLoaderService.getValue().classForName( className );
-		ResolvedType resolvedType = typeResolver.resolve( clazz );
-		while ( resolvedType != null ) {
-			// todo - check whether there is already something in the map
-			resolvedTypeCache.put( clazz, resolvedType );
-			resolvedType = resolvedType.getParentClass();
-			if ( resolvedType != null ) {
-				clazz = resolvedType.getErasedType();
-			}
-		}
-	}
-
-	@Override
-	public ResolvedType getResolvedType(Class<?> clazz) {
-		// todo - error handling
-		return resolvedTypeCache.get( clazz );
-	}
-
-	@Override
-	public ResolvedTypeWithMembers resolveMemberTypes(ResolvedType type) {
-		// todo : is there a reason we create this resolver every time?
-		MemberResolver memberResolver = new MemberResolver( typeResolver );
-		return memberResolver.resolve( type, null, null );
-	}
-
-	@Override
-	public ServiceRegistry getServiceRegistry() {
-		return getMetadataImplementor().getServiceRegistry();
-	}
-
-	@Override
-	public NamingStrategy getNamingStrategy() {
-		return metadata.getNamingStrategy();
-	}
-
-	@Override
-	public MappingDefaults getMappingDefaults() {
-		return metadata.getMappingDefaults();
-	}
-
-	@Override
-	public MetadataImplementor getMetadataImplementor() {
-		return metadata;
-	}
-
-	@Override
-	public <T> Class<T> locateClassByName(String name) {
-		return classLoaderService.getValue().classForName( name );
-	}
-
-	private Map<String,Type> nameToJavaTypeMap = new HashMap<String, Type>();
-
-	@Override
-	public Type makeJavaType(String className) {
-		Type javaType = nameToJavaTypeMap.get( className );
-		if ( javaType == null ) {
-			javaType = metadata.makeJavaType( className );
-			nameToJavaTypeMap.put( className, javaType );
-		}
-		return javaType;
-	}
-
-	@Override
-	public Value<Class<?>> makeClassReference(String className) {
-		return new Value<Class<?>>( locateClassByName( className ) );
-	}
-
-	@Override
-	public boolean isGloballyQuotedIdentifiers() {
-		return metadata.isGloballyQuotedIdentifiers();
 	}
 }
 

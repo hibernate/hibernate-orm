@@ -27,7 +27,7 @@ import javax.persistence.AccessType;
 
 import org.jboss.jandex.ClassInfo;
 
-import org.hibernate.metamodel.source.annotations.AnnotationsBindingContext;
+import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
 
 /**
  * @author Hardy Ferentschik
@@ -38,7 +38,7 @@ public class EmbeddableClass extends ConfiguredClass {
 			ClassInfo classInfo,
 			EmbeddableClass parent,
 			AccessType defaultAccessType,
-			AnnotationsBindingContext context) {
+			AnnotationBindingContext context) {
 		super( classInfo, defaultAccessType, parent, context );
 	}
 }

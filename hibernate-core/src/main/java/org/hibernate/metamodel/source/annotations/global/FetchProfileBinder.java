@@ -24,19 +24,20 @@
 package org.hibernate.metamodel.source.annotations.global;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.Index;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.FetchProfiles;
-import org.hibernate.metamodel.source.MetadataImplementor;
-import org.hibernate.metamodel.source.annotations.JandexHelper;
 import org.hibernate.metamodel.binding.FetchProfile;
 import org.hibernate.metamodel.binding.FetchProfile.Fetch;
+import org.hibernate.metamodel.source.MetadataImplementor;
+import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.source.annotations.HibernateDotNames;
+import org.hibernate.metamodel.source.annotations.JandexHelper;
 
 /**
  * Binds fetch profiles found in annotations.
@@ -45,25 +46,32 @@ import org.hibernate.metamodel.source.annotations.HibernateDotNames;
  */
 public class FetchProfileBinder {
 
+	private FetchProfileBinder() {
+	}
+
 	/**
 	 * Binds all {@link FetchProfiles} and {@link org.hibernate.annotations.FetchProfile} annotations to the supplied metadata.
 	 *
-	 * @param metadata the global metadata
-	 * @param jandex the jandex index
+	 * @param bindingContext the context for annotation binding
 	 */
 	// TODO verify that association exists. See former VerifyFetchProfileReferenceSecondPass
-	public static void bind(MetadataImplementor metadata, Index jandex) {
-		for ( AnnotationInstance fetchProfile : jandex.getAnnotations( HibernateDotNames.FETCH_PROFILE ) ) {
-			bind( metadata, fetchProfile );
+	public static void bind(AnnotationBindingContext bindingContext) {
+
+		List<AnnotationInstance> annotations = bindingContext.getIndex()
+				.getAnnotations( HibernateDotNames.FETCH_PROFILE );
+		for ( AnnotationInstance fetchProfile : annotations ) {
+			bind( bindingContext.getMetadataImplementor(), fetchProfile );
 		}
-		for ( AnnotationInstance fetchProfiles : jandex.getAnnotations( HibernateDotNames.FETCH_PROFILES ) ) {
+
+		annotations = bindingContext.getIndex().getAnnotations( HibernateDotNames.FETCH_PROFILES );
+		for ( AnnotationInstance fetchProfiles : annotations ) {
 			AnnotationInstance[] fetchProfileAnnotations = JandexHelper.getValue(
 					fetchProfiles,
 					"value",
 					AnnotationInstance[].class
 			);
 			for ( AnnotationInstance fetchProfile : fetchProfileAnnotations ) {
-				bind( metadata, fetchProfile );
+				bind( bindingContext.getMetadataImplementor(), fetchProfile );
 			}
 		}
 	}
@@ -86,8 +94,5 @@ public class FetchProfileBinder {
 			fetches.add( new Fetch( entityName, associationName, fetchMode.toString().toLowerCase() ) );
 		}
 		metadata.addFetchProfile( new FetchProfile( name, fetches ) );
-	}
-
-	private FetchProfileBinder() {
 	}
 }

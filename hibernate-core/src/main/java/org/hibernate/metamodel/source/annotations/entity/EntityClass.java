@@ -33,7 +33,7 @@ import org.jboss.jandex.DotName;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
-import org.hibernate.metamodel.source.annotations.AnnotationsBindingContext;
+import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.binding.InheritanceType;
 
@@ -55,7 +55,7 @@ public class EntityClass extends ConfiguredClass {
 			EntityClass parent,
 			AccessType hierarchyAccessType,
 			InheritanceType inheritanceType,
-			AnnotationsBindingContext context) {
+			AnnotationBindingContext context) {
 		super( classInfo, hierarchyAccessType, parent, context );
 		this.hierarchyAccessType = hierarchyAccessType;
 		this.inheritanceType = inheritanceType;

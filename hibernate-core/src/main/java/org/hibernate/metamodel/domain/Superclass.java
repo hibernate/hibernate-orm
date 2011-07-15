@@ -30,7 +30,7 @@ import org.hibernate.internal.util.Value;
  *
  * @author Steve Ebersole
  */
-public class Superclass extends AbstractAttributeContainer implements Hierarchical {
+public class Superclass extends AbstractAttributeContainer {
 	/**
 	 * Constructor for the entity
 	 *

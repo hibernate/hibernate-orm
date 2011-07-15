@@ -69,6 +69,10 @@ public class EntityDiscriminator {
 		return discriminatorValue;
 	}
 
+	public void setDiscriminatorValue(String discriminatorValue) {
+		this.discriminatorValue = discriminatorValue;
+	}
+
 	public boolean isForced() {
 		return forced;
 	}

@@ -64,12 +64,11 @@ public class InheritanceBindingTest extends BaseAnnotationBindingTestCase {
 		);
 
 		EntityBinding noInheritanceEntityBinding = getEntityBinding( SingleEntity.class );
-		EntityBinding subclassEntityBinding = getEntityBinding( SubclassOfSingleTableInheritance.class );
-		EntityBinding rootEntityBinding = getEntityBinding( RootOfSingleTableInheritance.class );
-
 		assertTrue( noInheritanceEntityBinding.isRoot() );
 		assertSame( noInheritanceEntityBinding, getRootEntityBinding( SingleEntity.class ) );
 
+		EntityBinding subclassEntityBinding = getEntityBinding( SubclassOfSingleTableInheritance.class );
+		EntityBinding rootEntityBinding = getEntityBinding( RootOfSingleTableInheritance.class );
 		assertFalse( subclassEntityBinding.isRoot() );
 		assertSame( rootEntityBinding, getRootEntityBinding( SubclassOfSingleTableInheritance.class ) );
 

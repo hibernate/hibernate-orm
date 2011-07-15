@@ -23,21 +23,23 @@
  */
 package org.hibernate.metamodel.source.annotations.global;
 
+import java.util.List;
+
 import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.Index;
 import org.jboss.logging.Logger;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.metamodel.source.MetadataImplementor;
-import org.hibernate.metamodel.source.annotations.JandexHelper;
 import org.hibernate.metamodel.relational.Column;
 import org.hibernate.metamodel.relational.ObjectName;
 import org.hibernate.metamodel.relational.Schema;
 import org.hibernate.metamodel.relational.SimpleValue;
 import org.hibernate.metamodel.relational.Table;
+import org.hibernate.metamodel.source.MetadataImplementor;
+import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.source.annotations.HibernateDotNames;
+import org.hibernate.metamodel.source.annotations.JandexHelper;
 
 /**
  * Binds table related information. This binder is called after the entities are bound.
@@ -51,20 +53,25 @@ public class TableBinder {
 			TableBinder.class.getName()
 	);
 
+	private TableBinder() {
+	}
+
 	/**
 	 * Binds {@link org.hibernate.annotations.Tables} and {@link org.hibernate.annotations.Table} annotations to the supplied
 	 * metadata.
 	 *
-	 * @param metadata the global metadata
-	 * @param jandex the annotation index repository
+	 * @param bindingContext the context for annotation binding
 	 */
-	public static void bind(MetadataImplementor metadata, Index jandex) {
-		for ( AnnotationInstance tableAnnotation : jandex.getAnnotations( HibernateDotNames.TABLE ) ) {
-			bind( metadata, tableAnnotation );
+	public static void bind(AnnotationBindingContext bindingContext) {
+		List<AnnotationInstance> annotations = bindingContext.getIndex().getAnnotations( HibernateDotNames.TABLE );
+		for ( AnnotationInstance tableAnnotation : annotations ) {
+			bind( bindingContext.getMetadataImplementor(), tableAnnotation );
 		}
-		for ( AnnotationInstance tables : jandex.getAnnotations( HibernateDotNames.TABLES ) ) {
+
+		annotations = bindingContext.getIndex().getAnnotations( HibernateDotNames.TABLES );
+		for ( AnnotationInstance tables : annotations ) {
 			for ( AnnotationInstance table : JandexHelper.getValue( tables, "value", AnnotationInstance[].class ) ) {
-				bind( metadata, table );
+				bind( bindingContext.getMetadataImplementor(), table );
 			}
 		}
 	}
@@ -119,8 +126,5 @@ public class TableBinder {
 			}
 		}
 		return column;
-	}
-
-	private TableBinder() {
 	}
 }

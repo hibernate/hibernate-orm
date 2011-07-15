@@ -31,8 +31,9 @@ import javax.persistence.Id;
 import org.junit.Test;
 
 import org.hibernate.metamodel.binding.EntityBinding;
-import org.hibernate.metamodel.domain.Attribute;
+
 import org.hibernate.metamodel.domain.Component;
+import org.hibernate.metamodel.domain.SingularAttribute;;
 
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertTrue;
@@ -51,10 +52,10 @@ public class EmbeddableBindingTests extends BaseAnnotationBindingTestCase {
 		assertNotNull( binding.getAttributeBinding( "city" ) );
 		assertNotNull( binding.getAttributeBinding( "postCode" ) );
 
-		Attribute attribute = binding.getEntity().getAttribute( "address" );
+		SingularAttribute attribute = (SingularAttribute) binding.getEntity().getAttribute( "address" );
 		assertTrue(
 				"Wrong container type. Should be a component",
-				attribute.getAttributeContainer() instanceof Component
+				attribute.getSingularAttributeType() instanceof Component
 		);
 	}
 

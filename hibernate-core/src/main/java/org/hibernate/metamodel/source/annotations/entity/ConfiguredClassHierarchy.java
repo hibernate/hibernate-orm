@@ -23,10 +23,10 @@
  */
 package org.hibernate.metamodel.source.annotations.entity;
 
-import javax.persistence.AccessType;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import javax.persistence.AccessType;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.ClassInfo;
@@ -34,10 +34,10 @@ import org.jboss.jandex.FieldInfo;
 import org.jboss.jandex.MethodInfo;
 
 import org.hibernate.AnnotationException;
-import org.hibernate.metamodel.source.annotations.AnnotationsBindingContext;
+import org.hibernate.metamodel.binding.InheritanceType;
+import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.JandexHelper;
-import org.hibernate.metamodel.binding.InheritanceType;
 
 /**
  * Contains information about the access and inheritance type for all classes within a class hierarchy.
@@ -49,7 +49,7 @@ public class ConfiguredClassHierarchy<T extends ConfiguredClass> implements Iter
 	private final InheritanceType inheritanceType;
 	private final List<T> configuredClasses;
 
-	public static ConfiguredClassHierarchy<EntityClass> createEntityClassHierarchy(List<ClassInfo> classInfoList, AnnotationsBindingContext context) {
+	public static ConfiguredClassHierarchy<EntityClass> createEntityClassHierarchy(List<ClassInfo> classInfoList, AnnotationBindingContext context) {
 		AccessType defaultAccessType = determineDefaultAccessType( classInfoList );
 		InheritanceType inheritanceType = determineInheritanceType( classInfoList );
 		return new ConfiguredClassHierarchy<EntityClass>(
@@ -64,7 +64,7 @@ public class ConfiguredClassHierarchy<T extends ConfiguredClass> implements Iter
 	public static ConfiguredClassHierarchy<EmbeddableClass> createEmbeddableClassHierarchy(
 			List<ClassInfo> classes,
 			AccessType accessType,
-			AnnotationsBindingContext context) {
+			AnnotationBindingContext context) {
 		return new ConfiguredClassHierarchy<EmbeddableClass>(
 				classes,
 				context,
@@ -74,9 +74,10 @@ public class ConfiguredClassHierarchy<T extends ConfiguredClass> implements Iter
 		);
 	}
 
+	@SuppressWarnings("unchecked")
 	private ConfiguredClassHierarchy(
 			List<ClassInfo> classInfoList,
-			AnnotationsBindingContext context,
+			AnnotationBindingContext context,
 			AccessType defaultAccessType,
 			InheritanceType inheritanceType,
 			Class<T> configuredClassType) {
@@ -152,35 +153,28 @@ public class ConfiguredClassHierarchy<T extends ConfiguredClass> implements Iter
 	 *         annotations.
 	 */
 	private static AccessType determineDefaultAccessType(List<ClassInfo> classes) {
-        AccessType accessTypeByEmbeddedIdPlacement = null;
-        AccessType accessTypeByIdPlacement = null;
+		AccessType accessTypeByEmbeddedIdPlacement = null;
+		AccessType accessTypeByIdPlacement = null;
 		for ( ClassInfo info : classes ) {
 			List<AnnotationInstance> idAnnotations = info.annotations().get( JPADotNames.ID );
-            List<AnnotationInstance> embeddedIdAnnotations = info.annotations().get( JPADotNames.EMBEDDED_ID );
+			List<AnnotationInstance> embeddedIdAnnotations = info.annotations().get( JPADotNames.EMBEDDED_ID );
 
-            if ( embeddedIdAnnotations != null && !embeddedIdAnnotations.isEmpty() ) {
-                accessTypeByEmbeddedIdPlacement = determineAccessTypeByIdPlacement( embeddedIdAnnotations );
-            }
+			if ( embeddedIdAnnotations != null && !embeddedIdAnnotations.isEmpty() ) {
+				accessTypeByEmbeddedIdPlacement = determineAccessTypeByIdPlacement( embeddedIdAnnotations );
+			}
 			if ( idAnnotations != null && !idAnnotations.isEmpty() ) {
 				accessTypeByIdPlacement = determineAccessTypeByIdPlacement( idAnnotations );
 			}
 		}
-        if ( accessTypeByEmbeddedIdPlacement != null ) {
-            return accessTypeByEmbeddedIdPlacement;
-        } else if (accessTypeByIdPlacement != null ){
-            return accessTypeByIdPlacement;
-        } else {
-            return throwIdNotFoundAnnotationException( classes );
-        }
-
-
-//
-//
-//		if ( accessType == null ) {
-//			return throwIdNotFoundAnnotationException( classes );
-//		}
-//
-//		return accessType;
+		if ( accessTypeByEmbeddedIdPlacement != null ) {
+			return accessTypeByEmbeddedIdPlacement;
+		}
+		else if ( accessTypeByIdPlacement != null ) {
+			return accessTypeByIdPlacement;
+		}
+		else {
+			return throwIdNotFoundAnnotationException( classes );
+		}
 	}
 
 	private static AccessType determineAccessTypeByIdPlacement(List<AnnotationInstance> idAnnotations) {

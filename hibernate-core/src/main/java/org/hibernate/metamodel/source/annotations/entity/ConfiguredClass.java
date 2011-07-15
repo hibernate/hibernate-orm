@@ -52,7 +52,7 @@ import org.jboss.logging.Logger;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
-import org.hibernate.metamodel.source.annotations.AnnotationsBindingContext;
+import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.source.annotations.ConfiguredClassHierarchyBuilder;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.JandexHelper;
@@ -125,13 +125,13 @@ public class ConfiguredClass {
 	private final Set<String> transientFieldNames = new HashSet<String>();
 	private final Set<String> transientMethodNames = new HashSet<String>();
 
-	private final AnnotationsBindingContext context;
+	private final AnnotationBindingContext context;
 
 	public ConfiguredClass(
 			ClassInfo classInfo,
 			AccessType defaultAccessType,
 			ConfiguredClass parent,
-			AnnotationsBindingContext context) {
+			AnnotationBindingContext context) {
 		this.parent = parent;
 		this.context = context;
 		this.classInfo = classInfo;

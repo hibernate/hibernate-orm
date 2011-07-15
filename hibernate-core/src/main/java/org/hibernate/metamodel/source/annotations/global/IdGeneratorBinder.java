@@ -24,12 +24,12 @@
 package org.hibernate.metamodel.source.annotations.global;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import javax.persistence.GenerationType;
 import javax.persistence.SequenceGenerator;
 
 import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.Index;
 import org.jboss.logging.Logger;
 
 import org.hibernate.AssertionFailure;
@@ -44,12 +44,19 @@ import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.enhanced.TableGenerator;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.binding.IdGenerator;
 import org.hibernate.metamodel.source.MetadataImplementor;
+import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
+import org.hibernate.metamodel.source.annotations.HibernateDotNames;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.JandexHelper;
-import org.hibernate.metamodel.binding.IdGenerator;
-import org.hibernate.metamodel.source.annotations.HibernateDotNames;
 
+/**
+ * Binds {@link SequenceGenerator}, {@link javax.persistence.TableGenerator}, {@link GenericGenerator}, and
+ * {@link GenericGenerators} annotations.
+ *
+ * @author Hardy Ferentschik
+ */
 public class IdGeneratorBinder {
 
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
@@ -60,6 +67,41 @@ public class IdGeneratorBinder {
 	private IdGeneratorBinder() {
 	}
 
+	/**
+	 * Binds all {@link SequenceGenerator}, {@link javax.persistence.TableGenerator}, {@link GenericGenerator}, and
+	 * {@link GenericGenerators} annotations to the supplied metadata.
+	 *
+	 * @param bindingContext the context for annotation binding
+	 */
+	public static void bind(AnnotationBindingContext bindingContext) {
+		List<AnnotationInstance> annotations = bindingContext.getIndex()
+				.getAnnotations( JPADotNames.SEQUENCE_GENERATOR );
+		for ( AnnotationInstance generator : annotations ) {
+			bindSequenceGenerator( bindingContext.getMetadataImplementor(), generator );
+		}
+
+		annotations = bindingContext.getIndex().getAnnotations( JPADotNames.TABLE_GENERATOR );
+		for ( AnnotationInstance generator : annotations ) {
+			bindTableGenerator( bindingContext.getMetadataImplementor(), generator );
+		}
+
+		annotations = bindingContext.getIndex().getAnnotations( HibernateDotNames.GENERIC_GENERATOR );
+		for ( AnnotationInstance generator : annotations ) {
+			bindGenericGenerator( bindingContext.getMetadataImplementor(), generator );
+		}
+
+		annotations = bindingContext.getIndex().getAnnotations( HibernateDotNames.GENERIC_GENERATORS );
+		for ( AnnotationInstance generators : annotations ) {
+			for ( AnnotationInstance generator : JandexHelper.getValue(
+					generators,
+					"value",
+					AnnotationInstance[].class
+			) ) {
+				bindGenericGenerator( bindingContext.getMetadataImplementor(), generator );
+			}
+		}
+	}
+
 	private static void addStringParameter(AnnotationInstance annotation,
 										   String element,
 										   Map<String, String> parameters,
@@ -67,34 +109,6 @@ public class IdGeneratorBinder {
 		String string = JandexHelper.getValue( annotation, element, String.class );
 		if ( StringHelper.isNotEmpty( string ) ) {
 			parameters.put( parameter, string );
-		}
-	}
-
-	/**
-	 * Binds all {@link SequenceGenerator}, {@link javax.persistence.TableGenerator}, {@link GenericGenerator}, and {
-	 * {@link GenericGenerators} annotations to the supplied metadata.
-	 *
-	 * @param metadata the global metadata
-	 * @param jandex the jandex index
-	 */
-	public static void bind(MetadataImplementor metadata, Index jandex) {
-		for ( AnnotationInstance generator : jandex.getAnnotations( JPADotNames.SEQUENCE_GENERATOR ) ) {
-			bindSequenceGenerator( metadata, generator );
-		}
-		for ( AnnotationInstance generator : jandex.getAnnotations( JPADotNames.TABLE_GENERATOR ) ) {
-			bindTableGenerator( metadata, generator );
-		}
-		for ( AnnotationInstance generator : jandex.getAnnotations( HibernateDotNames.GENERIC_GENERATOR ) ) {
-			bindGenericGenerator( metadata, generator );
-		}
-		for ( AnnotationInstance generators : jandex.getAnnotations( HibernateDotNames.GENERIC_GENERATORS ) ) {
-			for ( AnnotationInstance generator : JandexHelper.getValue(
-					generators,
-					"value",
-					AnnotationInstance[].class
-			) ) {
-				bindGenericGenerator( metadata, generator );
-			}
 		}
 	}
 

@@ -38,16 +38,16 @@ import org.hibernate.cfg.EJB3NamingStrategy;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.internal.util.Value;
+import org.hibernate.metamodel.domain.Type;
 import org.hibernate.metamodel.source.MappingDefaults;
 import org.hibernate.metamodel.source.MetadataImplementor;
-import org.hibernate.metamodel.domain.Type;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 
 /**
  * @author Steve Ebersole
  */
-public class TestAnnotationsBindingContextImpl implements AnnotationsBindingContext {
+public class TestAnnotationsBindingContextImpl implements AnnotationBindingContext {
 	private Index index;
 	private ServiceRegistry serviceRegistry;
 
@@ -100,6 +100,7 @@ public class TestAnnotationsBindingContextImpl implements AnnotationsBindingCont
 	public Value<Class<?>> makeClassReference(String className) {
 		throw new NotYetImplementedException();
 	}
+
 	@Override
 	public ClassInfo getClassInfo(String name) {
 		DotName dotName = DotName.createSimple( name );

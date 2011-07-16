@@ -31,6 +31,7 @@ import java.util.Map;
 
 import org.jboss.logging.Logger;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.DuplicateMappingException;
 import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
@@ -102,7 +103,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	 * Maps the fully qualified class name of an entity to its entity binding
 	 */
 	private Map<String, EntityBinding> entityBindingMap = new HashMap<String, EntityBinding>();
-	private Map<String, EntityBinding> rootEntityBindingMap = new HashMap<String, EntityBinding>();
+
 	private Map<String, PluralAttributeBinding> collectionBindingMap = new HashMap<String, PluralAttributeBinding>();
 	private Map<String, FetchProfile> fetchProfiles = new HashMap<String, FetchProfile>();
 	private Map<String, String> imports = new HashMap<String, String>();
@@ -380,24 +381,19 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	@Override
 	public EntityBinding getRootEntityBinding(String entityName) {
-		EntityBinding rootEntityBinding = rootEntityBindingMap.get( entityName );
-		if ( rootEntityBinding == null ) {
-			EntityBinding entityBinding = entityBindingMap.get( entityName );
-			if ( entityBinding == null ) {
-				throw new IllegalStateException( "Unknown entity binding: " + entityName );
-			}
-			if ( entityBinding.isRoot() ) {
-				rootEntityBinding = entityBinding;
-			}
-			else {
-				if ( entityBinding.getEntity().getSuperType() == null ) {
-					throw new IllegalStateException( "Entity binding has no root: " + entityName );
-				}
-				rootEntityBinding = getRootEntityBinding( entityBinding.getEntity().getSuperType().getName() );
-			}
-			rootEntityBindingMap.put( entityName, rootEntityBinding );
+		EntityBinding binding = entityBindingMap.get( entityName );
+		if ( binding == null ) {
+			throw new IllegalStateException( "Unknown entity binding: " + entityName );
 		}
-		return rootEntityBinding;
+
+		do {
+			if ( binding.isRoot() ) {
+				return binding;
+			}
+			binding = binding.getSuperEntityBinding();
+		} while ( binding != null );
+
+		throw new AssertionFailure( "Entity binding has no root: " + entityName );
 	}
 
 	public Iterable<EntityBinding> getEntityBindings() {

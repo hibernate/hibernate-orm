@@ -182,7 +182,17 @@ public class EntityBinder {
 
 	private EntityBinding doRootEntityBindingCreation() {
 		EntityBinding entityBinding = new EntityBinding();
-		entityBinding.setInheritanceType( InheritanceType.NO_INHERITANCE );
+
+//temporary (for discrim subclass)
+//		entityBinding.setInheritanceType( InheritanceType.NO_INHERITANCE );
+		entityBinding.setInheritanceType( superType == null ? InheritanceType.NO_INHERITANCE : InheritanceType.SINGLE_TABLE );
+		if ( superType != null ) {
+			EntityBinding superBinding = bindingContext.getMetadataImplementor().getEntityBinding( superType.getName() );
+			if ( superBinding == null ) {
+				throw new AssertionFailure( "EntityBinding for super-type [" + superType.getName() + "] not yet bound" );
+			}
+			entityBinding.setSuperEntityBinding( superBinding );
+		}
 
 		doBasicEntityBinding( entityBinding );
 
@@ -315,6 +325,10 @@ public class EntityBinder {
 		EntityBinding entityBinding = new EntityBinding();
 		entityBinding.setInheritanceType( InheritanceType.SINGLE_TABLE );
 
+		entityBinding.setSuperEntityBinding(
+				bindingContext.getMetadataImplementor().getEntityBinding( superType.getName() )
+		);
+
 		doBasicEntityBinding( entityBinding );
 
 		// todo : bind discriminator-based subclassing specifics...
@@ -326,6 +340,10 @@ public class EntityBinder {
 		EntityBinding entityBinding = new EntityBinding();
 		entityBinding.setInheritanceType( InheritanceType.JOINED );
 
+		entityBinding.setSuperEntityBinding(
+				bindingContext.getMetadataImplementor().getEntityBinding( superType.getName() )
+		);
+
 		doBasicEntityBinding( entityBinding );
 
 		// todo : bind join-based subclassing specifics...
@@ -336,6 +354,10 @@ public class EntityBinder {
 	private EntityBinding doUnionSubclassBindingCreation() {
 		EntityBinding entityBinding = new EntityBinding();
 		entityBinding.setInheritanceType( InheritanceType.TABLE_PER_CLASS );
+
+		entityBinding.setSuperEntityBinding(
+				bindingContext.getMetadataImplementor().getEntityBinding( superType.getName() )
+		);
 
 		doBasicEntityBinding( entityBinding );
 

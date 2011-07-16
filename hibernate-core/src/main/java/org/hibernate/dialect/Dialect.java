@@ -286,7 +286,7 @@ public abstract class Dialect {
 	 * @return the database type name
 	 * @throws HibernateException If no mapping was specified for that type.
 	 */
-	public String getTypeName(int code, int length, int precision, int scale) throws HibernateException {
+	public String getTypeName(int code, long length, int precision, int scale) throws HibernateException {
 		String result = typeNames.get( code, length, precision, scale );
 		if ( result == null ) {
 			throw new HibernateException(
@@ -319,7 +319,7 @@ public abstract class Dialect {
 	 * @param capacity The maximum length of database type
 	 * @param name The database type name
 	 */
-	protected void registerColumnType(int code, int capacity, String name) {
+	protected void registerColumnType(int code, long capacity, String name) {
 		typeNames.put( code, capacity, name );
 	}
 
@@ -580,7 +580,7 @@ public abstract class Dialect {
 	 * @param capacity The maximum length of database type
 	 * @param name The Hibernate {@link org.hibernate.type.Type} name
 	 */
-	protected void registerHibernateType(int code, int capacity, String name) {
+	protected void registerHibernateType(int code, long capacity, String name) {
 		hibernateTypeNames.put( code, capacity, name);
 	}
 

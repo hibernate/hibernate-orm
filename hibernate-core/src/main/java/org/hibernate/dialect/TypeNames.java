@@ -62,7 +62,7 @@ import org.hibernate.internal.util.StringHelper;
  */
 public class TypeNames {
 
-	private Map<Integer, Map<Integer, String>> weighted = new HashMap<Integer, Map<Integer, String>>();
+	private Map<Integer, Map<Long, String>> weighted = new HashMap<Integer, Map<Long, String>>();
 	private Map<Integer, String> defaults = new HashMap<Integer, String>();
 
 	/**
@@ -85,11 +85,11 @@ public class TypeNames {
 	 * @return the associated name with smallest capacity >= size,
 	 * if available and the default type name otherwise
 	 */
-	public String get(int typecode, int size, int precision, int scale) throws MappingException {
-		Map<Integer, String> map = weighted.get( typecode );
+	public String get(int typecode, long size, int precision, int scale) throws MappingException {
+		Map<Long, String> map = weighted.get( typecode );
 		if ( map!=null && map.size()>0 ) {
 			// iterate entries ordered by capacity to find first fit
-			for (Map.Entry<Integer, String> entry: map.entrySet()) {
+			for (Map.Entry<Long, String> entry: map.entrySet()) {
 				if ( size <= entry.getKey() ) {
 					return replace( entry.getValue(), size, precision, scale );
 				}
@@ -98,9 +98,9 @@ public class TypeNames {
 		return replace( get(typecode), size, precision, scale );
 	}
 	
-	private static String replace(String type, int size, int precision, int scale) {
+	private static String replace(String type, long size, int precision, int scale) {
 		type = StringHelper.replaceOnce(type, "$s", Integer.toString(scale) );
-		type = StringHelper.replaceOnce(type, "$l", Integer.toString(size) );
+		type = StringHelper.replaceOnce(type, "$l", Long.toString(size) );
 		return StringHelper.replaceOnce(type, "$p", Integer.toString(precision) );
 	}
 
@@ -108,10 +108,10 @@ public class TypeNames {
 	 * set a type name for specified type key and capacity
 	 * @param typecode the type key
 	 */
-	public void put(int typecode, int capacity, String value) {
-		Map<Integer, String> map = weighted.get( typecode );
+	public void put(int typecode, long capacity, String value) {
+		Map<Long, String> map = weighted.get( typecode );
 		if (map == null) {// add new ordered map
-			map = new TreeMap<Integer, String>();
+			map = new TreeMap<Long, String>();
 			weighted.put( typecode, map );
 		}
 		map.put(capacity, value);

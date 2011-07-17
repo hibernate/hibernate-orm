@@ -182,7 +182,7 @@
       &lt;class&gt;org.acme.Employee&lt;/class&gt;
       &lt;class&gt;org.acme.Person&lt;/class&gt;
       &lt;class&gt;org.acme.Address&lt;/class&gt;
-      &lt;shared-cache-mode&gt;ENABLE_SELECTOVE&lt;/shared-cache-mode&gt;
+      &lt;shared-cache-mode&gt;ENABLE_SELECTIVE&lt;/shared-cache-mode&gt;
       &lt;validation-mode&gt;CALLBACK&lt;/validation-mode&gt;
       &lt;properties&gt;
          &lt;property name="hibernate.dialect" value="org.hibernate.dialect.HSQLDialect"/&gt;

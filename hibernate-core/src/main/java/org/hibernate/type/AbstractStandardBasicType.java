@@ -45,6 +45,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.util.ArrayHelper;
+import org.hibernate.util.StringHelper;
 
 /**
  * TODO : javadoc
@@ -79,7 +80,7 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	public T fromXMLString(String xml, Mapping factory) throws HibernateException {
-		return xml == null || xml.length() == 0 ? null : fromStringValue( xml );
+		return StringHelper.isEmpty( xml ) ? null : fromStringValue( xml );
 	}
 
 	protected MutabilityPlan<T> getMutabilityPlan() {

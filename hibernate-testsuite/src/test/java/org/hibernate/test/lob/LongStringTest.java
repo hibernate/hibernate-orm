@@ -26,6 +26,7 @@
 package org.hibernate.test.lob;
 
 import org.hibernate.Session;
+import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.testing.junit.functional.DatabaseSpecificFunctionalTestCase;
 
 /**
@@ -90,9 +91,15 @@ public abstract class LongStringTest extends DatabaseSpecificFunctionalTestCase 
 		s.beginTransaction();
 		entity = ( LongStringHolder ) s.get( LongStringHolder.class, entity.getId() );
 		if ( entity.getLongString() != null ) {
-			assertEquals( empty.length(), entity.getLongString().length() );
-			assertEquals( empty, entity.getLongString() );
-		}
+            if ( getDialect() instanceof SybaseASE15Dialect ) {
+                assertEquals( empty.length(), entity.getLongString().trim().length() );
+                assertEquals( empty, entity.getLongString().trim() );
+            }
+            else {
+                assertEquals( empty.length(), entity.getLongString().length() );
+                assertEquals( empty, entity.getLongString() );
+            }
+        }
 		s.delete( entity );
 		s.getTransaction().commit();
 		s.close();

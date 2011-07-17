@@ -29,13 +29,14 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
+import org.hibernate.testing.junit.functional.DatabaseSpecificFunctionalTestCase;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 /**
  * @author Gavin King
  */
-public class MixedTest extends FunctionalTestCase {
+public class MixedTest extends DatabaseSpecificFunctionalTestCase {
 
 	public MixedTest(String str) {
 		super( str );

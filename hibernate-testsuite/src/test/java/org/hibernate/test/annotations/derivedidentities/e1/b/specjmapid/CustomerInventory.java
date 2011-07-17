@@ -67,7 +67,7 @@ public class CustomerInventory implements Serializable, Comparator<CustomerInven
 	private int custId;
 
 	@ManyToOne(cascade = CascadeType.MERGE)
-	@JoinColumn(name = "CI_CUSTOMERID")
+	@JoinColumn(name = "CI_CUSTOMERID", nullable = false)
 	private Customer customer;
 
 	@ManyToOne(cascade = CascadeType.MERGE)

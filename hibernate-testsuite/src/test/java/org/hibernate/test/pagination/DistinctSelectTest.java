@@ -32,7 +32,7 @@ public class DistinctSelectTest extends FunctionalTestCase {
 		Transaction t = s.beginTransaction();
 
 		for (int i = 0; i < 5; i++) {
-			Tag tag = new Tag("Tag: " + UUID.randomUUID().toString());
+			Tag tag = new Tag( "Tag: " + UUID.randomUUID().toString() );
 			tags.add(tag);
 			s.save(tag);
 		}
@@ -63,12 +63,16 @@ public class DistinctSelectTest extends FunctionalTestCase {
 		
 		Session s = openSession();
 		s.beginTransaction();
-		Integer size = (Integer) s.createQuery("select count(distinct e.id) from Entry e")
-			.setFirstResult(10)
-			.setMaxResults(5)
-			.uniqueResult();
+		
+		@SuppressWarnings("unchecked")
+		List<Object[]> list = s.createQuery( "select e.id, count(distinct e) from Entry e group by e.id" )
+			.setFirstResult( 10 )
+			.setMaxResults( 5 )
+			.list();
+		
+		assertEquals(5, list.size());
+		
 
-		assertEquals(new Integer(NUM_OF_USERS), size);
 		s.getTransaction().commit();
 		s.close();
 	}

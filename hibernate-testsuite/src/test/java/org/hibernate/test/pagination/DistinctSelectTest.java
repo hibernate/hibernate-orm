@@ -2,6 +2,7 @@ package org.hibernate.test.pagination;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.UUID;
 
 import org.hibernate.Session;
@@ -16,6 +17,7 @@ import org.hibernate.testing.junit.functional.FunctionalTestCase;
  */
 public class DistinctSelectTest extends FunctionalTestCase {
 	private static final int NUM_OF_USERS = 30;
+	private static final int NUM_OF_TAGS = 5;
 
 	public DistinctSelectTest(String string) {
 		super(string);
@@ -31,15 +33,18 @@ public class DistinctSelectTest extends FunctionalTestCase {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 
-		for (int i = 0; i < 5; i++) {
+		for (int i = 0; i < NUM_OF_TAGS; i++) {
 			Tag tag = new Tag( "Tag: " + UUID.randomUUID().toString() );
 			tags.add(tag);
 			s.save(tag);
 		}
 
+		Random r = new Random();
 		for (int i = 0; i < NUM_OF_USERS; i++) {
 			Entry e = new Entry("Entry: " + UUID.randomUUID().toString());
-			e.getTags().addAll(tags);
+			for (Tag tag: tags) {
+				if (r.nextBoolean()) e.getTags().add( tag );
+			};
 			s.save(e);
 		}
 		t.commit();
@@ -58,6 +63,7 @@ public class DistinctSelectTest extends FunctionalTestCase {
 		s.close();
 	}
 	
+	//HHH-6310 bug test case
 	public void testDistinctSelectWithinAggragateFunction() {
 		feedDatabase();
 		
@@ -65,13 +71,18 @@ public class DistinctSelectTest extends FunctionalTestCase {
 		s.beginTransaction();
 		
 		@SuppressWarnings("unchecked")
-		List<Object[]> list = s.createQuery( "select e.id, count(distinct e) from Entry e group by e.id" )
+		List<Object[]> list = s.createQuery( "select e, count(distinct t) from Entry e join e.tags t group by e" )
 			.setFirstResult( 10 )
 			.setMaxResults( 5 )
 			.list();
 		
 		assertEquals(5, list.size());
 		
+		for (Object[] o: list) {
+			Entry e = (Entry) o[0];
+			Long numOfTags = (Long) o[1];
+			assertEquals( e.getTags().size(), numOfTags.intValue() );
+		}
 
 		s.getTransaction().commit();
 		s.close();

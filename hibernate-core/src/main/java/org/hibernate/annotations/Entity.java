@@ -34,7 +34,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @author Emmanuel Bernard
  *
- * @deprecated See individual attributes for intended replacements
+ * @deprecated See individual attributes for intended replacements.  To be removed in 4.1
  */
 @Target(TYPE)
 @Retention(RUNTIME)

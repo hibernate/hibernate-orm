@@ -33,9 +33,12 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * Extends {@link javax.persistence.Entity} with Hibernate features
  *
  * @author Emmanuel Bernard
+ *
+ * @deprecated See individual attributes for intended replacements
  */
 @Target(TYPE)
 @Retention(RUNTIME)
+@Deprecated
 public @interface Entity {
 	/**
 	 * Is this entity mutable (read only) or not
@@ -53,7 +56,10 @@ public @interface Entity {
 	 * @deprecated Use {@link DynamicUpdate} instead
 	 */
 	boolean dynamicUpdate() default false;
-	/** Do a select to retrieve the entity before any potential update */
+	/**
+	 *  Do a select to retrieve the entity before any potential update
+	 *  @deprecated Use {@link SelectBeforeUpdate} instead
+	 */
 	boolean selectBeforeUpdate() default false;
 	/**
 	 * polymorphism strategy for this entity

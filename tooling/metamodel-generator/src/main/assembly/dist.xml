@@ -60,6 +60,7 @@
                 <include>pom.xml</include>
                 <include>license.txt</include>
                 <include>readme.txt</include>
+                <include>changelog.txt</include>
                 <include>src/**</include>
             </includes>
         </fileSet>

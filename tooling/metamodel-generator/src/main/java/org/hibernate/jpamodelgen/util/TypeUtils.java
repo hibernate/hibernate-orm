@@ -337,7 +337,6 @@ public final class TypeUtils {
 	 *         {@code null} is returned.
 	 */
 	private static AccessType getAccessTypeInCaseElementIsRoot(TypeElement searchedElement, Context context) {
-		AccessType defaultAccessType = null;
 		List<? extends Element> myMembers = searchedElement.getEnclosedElements();
 		for ( Element subElement : myMembers ) {
 			List<? extends AnnotationMirror> entityAnnotations =
@@ -345,12 +344,11 @@ public final class TypeUtils {
 			for ( Object entityAnnotation : entityAnnotations ) {
 				AnnotationMirror annotationMirror = (AnnotationMirror) entityAnnotation;
 				if ( isIdAnnotation( annotationMirror ) ) {
-					defaultAccessType = getAccessTypeOfIdAnnotation( subElement );
-					break;
+					return getAccessTypeOfIdAnnotation( subElement );
 				}
 			}
 		}
-		return defaultAccessType;
+		return null;
 	}
 
 	private static AccessType getAccessTypeOfIdAnnotation(Element element) {
@@ -437,3 +435,4 @@ public final class TypeUtils {
 		}
 	}
 }
+

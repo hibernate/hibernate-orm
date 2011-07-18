@@ -85,7 +85,15 @@ public class JarVisitorFactory {
 				}
 			}
 			else {
-				jarUrl = new URL( protocol, url.getHost(), url.getPort(), file );
+				try {
+                    jarUrl = new URL( protocol, url.getHost(), url.getPort(), file );
+                }
+                // HHH-6442
+                catch(final MalformedURLException murle) {
+                    // Just use the provided URL as-is, likely it has a URLStreamHandler
+                    // associated w/ the instance
+                    jarUrl = url;
+                }
 			}
 		}
 		catch (MalformedURLException e) {

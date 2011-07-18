@@ -56,7 +56,10 @@ public @interface Entity {
 	 * @deprecated use {@link Polymorphism} instead
 	 */
 	PolymorphismType polymorphism() default PolymorphismType.IMPLICIT;
-	/** optimistic locking strategy */
+	/**
+	 * optimistic locking strategy
+	 * @deprecated use {@link OptimisticLocking} instead.
+	 */
 	OptimisticLockType optimisticLock() default OptimisticLockType.VERSION;
 	/**
 	 * persister of this entity, default is hibernate internal one

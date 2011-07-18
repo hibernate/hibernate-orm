@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -30,41 +30,13 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Extends {@link javax.persistence.Entity} with Hibernate features
+ * For inserting, should this entity use dynamic sql generation where only non-null columns get referenced in the 
+ * prepared sql statement?
  *
- * @author Emmanuel Bernard
+ * @author Steve Ebersole
  */
-@Target(TYPE)
-@Retention(RUNTIME)
-public @interface Entity {
-	/**
-	 * Is this entity mutable (read only) or not
-	 *
-	 * @deprecated use {@link org.hibernate.annotations.Immutable} 
-	 */
-	boolean mutable() default true;
-	/**
-	 * Needed column only in SQL on insert
-	 * @deprecated use {@link DynamicInsert} instead
-	 */
-	boolean dynamicInsert() default false;
-	/** Needed column only in SQL on update */
-	boolean dynamicUpdate() default false;
-	/** Do a select to retrieve the entity before any potential update */
-	boolean selectBeforeUpdate() default false;
-	/**
-	 * polymorphism strategy for this entity
-	 * @deprecated use {@link Polymorphism} instead
-	 */
-	PolymorphismType polymorphism() default PolymorphismType.IMPLICIT;
-	/**
-	 * optimistic locking strategy
-	 * @deprecated use {@link OptimisticLocking} instead.
-	 */
-	OptimisticLockType optimisticLock() default OptimisticLockType.VERSION;
-	/**
-	 * persister of this entity, default is hibernate internal one
-	 * @deprecated  use {@link Persister} instead
-	 */
-	String persister() default "";
+@Target( TYPE )
+@Retention( RUNTIME )
+public @interface DynamicInsert {
+	boolean value() default true;
 }

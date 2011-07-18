@@ -530,8 +530,6 @@ public final class SessionFactoryImpl
         LOG.debug( "Building session factory" );
 
 		// TODO: remove initialization of final variables; just setting to null to make compiler happy
-		this.name = null;
-		this.uuid = null;
 		this.fetchProfiles = null;
 		this.queryCache = null;
 		this.updateTimestampsCache = null;
@@ -762,6 +760,34 @@ public final class SessionFactoryImpl
 		while ( iter.hasNext() ) {
 			final CollectionPersister persister = ( ( CollectionPersister ) iter.next() );
 			persister.postInstantiate();
+		}
+
+		//JNDI + Serialization:
+
+		name = settings.getSessionFactoryName();
+		try {
+			uuid = (String) UUID_GENERATOR.generate(null, null);
+		}
+		catch (Exception e) {
+			throw new AssertionFailure("Could not generate UUID");
+		}
+		SessionFactoryRegistry.INSTANCE.addSessionFactory( uuid, name, this, serviceRegistry.getService( JndiService.class ) );
+
+		LOG.debugf("Instantiated session factory");
+
+		if ( settings.isAutoCreateSchema() ) {
+			new SchemaExport( metadata ).create( false, true );
+		}
+		/*
+		if ( settings.isAutoUpdateSchema() ) {
+			new SchemaUpdate( metadata ).execute( false, true );
+		}
+		if ( settings.isAutoValidateSchema() ) {
+			new SchemaValidator( metadata ).validate();
+		}
+		*/
+		if ( settings.isAutoDropSchema() ) {
+			schemaExport = new SchemaExport( metadata );
 		}
 
 		// TODO: implement

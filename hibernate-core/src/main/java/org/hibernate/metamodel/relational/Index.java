@@ -38,6 +38,17 @@ public class Index extends AbstractConstraint implements Constraint {
 		super( table, name );
 	}
 
+
+	@Override
+	public String getExportIdentifier() {
+		StringBuilder sb = new StringBuilder( getTable().getLoggableValueQualifier());
+		sb.append( ".IDX" );
+		for ( Column column : getColumns() ) {
+			sb.append( '_' ).append( column.getColumnName().getName() );
+		}
+		return sb.toString();
+	}
+
 	public String[] sqlCreateStrings(MetadataImplementor metadata) {
 		return new String[] {
 				buildSqlCreateIndexString(

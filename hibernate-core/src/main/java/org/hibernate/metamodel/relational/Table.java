@@ -24,13 +24,12 @@
 package org.hibernate.metamodel.relational;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Set;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.source.MetadataImplementor;
 
 /**
@@ -45,10 +44,10 @@ public class Table extends AbstractTableSpecification implements Exportable {
 	private final ObjectName objectName;
 	private final String qualifiedName;
 
-	private LinkedHashMap<String,Index> indexes;
-	private LinkedHashMap<String,UniqueKey> uniqueKeys;
-	private List<CheckConstraint> checkConstraints;
-	private Set<String> comments;
+	private final LinkedHashMap<String,Index> indexes = new LinkedHashMap<String,Index>();
+	private final LinkedHashMap<String,UniqueKey> uniqueKeys = new LinkedHashMap<String,UniqueKey>();
+	private final List<CheckConstraint> checkConstraints = new ArrayList<CheckConstraint>();
+	private final List<String> comments = new ArrayList<String>();
 
 	public Table(Schema database, String tableName) {
 		this( database, Identifier.toIdentifier( tableName ) );
@@ -91,13 +90,10 @@ public class Table extends AbstractTableSpecification implements Exportable {
 	}
 
 	public Index getOrCreateIndex(String name) {
-		if(indexes!=null && indexes.containsKey( name )){
+		if( indexes.containsKey( name ) ){
 			return indexes.get( name );
 		}
 		Index index = new Index( this, name );
-		if ( indexes == null ) {
-			indexes = new LinkedHashMap<String,Index>();
-		}
 		indexes.put(name, index );
 		return index;
 	}
@@ -108,13 +104,10 @@ public class Table extends AbstractTableSpecification implements Exportable {
 	}
 
 	public UniqueKey getOrCreateUniqueKey(String name) {
-		if(uniqueKeys!=null && uniqueKeys.containsKey( name )){
+		if( uniqueKeys.containsKey( name ) ){
 			return uniqueKeys.get( name );
 		}
 		UniqueKey uniqueKey = new UniqueKey( this, name );
-		if ( uniqueKeys == null ) {
-			uniqueKeys = new LinkedHashMap<String,UniqueKey>();
-		}
 		uniqueKeys.put(name, uniqueKey );
 		return uniqueKey;
 	}
@@ -126,9 +119,6 @@ public class Table extends AbstractTableSpecification implements Exportable {
 
 	@Override
 	public void addCheckConstraint(String checkCondition) {
-		if ( checkConstraints == null ) {
-			checkConstraints = new ArrayList<CheckConstraint>();
-		}
         //todo ? StringHelper.isEmpty( checkCondition );
         //todo default name?
 		checkConstraints.add( new CheckConstraint( this, "", checkCondition ) );
@@ -141,9 +131,6 @@ public class Table extends AbstractTableSpecification implements Exportable {
 
 	@Override
 	public void addComment(String comment) {
-		if ( comments == null ) {
-			comments = new HashSet<String>();
-		}
 		comments.add( comment );
 	}
 
@@ -194,14 +181,13 @@ public class Table extends AbstractTableSpecification implements Exportable {
 			if ( isPrimaryKeyIdentity && colName.equals( pkColName ) ) {
 				// to support dialects that have their own identity data type
 				if ( dialect.hasDataTypeInIdentityColumn() ) {
-					buf.append( col.getDatatype().getTypeName() );
+					buf.append( getTypeString( col, dialect ) );
 				}
 				buf.append( ' ' )
 						.append( dialect.getIdentityColumnString( col.getDatatype().getTypeCode() ) );
 			}
 			else {
-
-				buf.append( col.getDatatype().getTypeName() );
+				buf.append( getTypeString( col, dialect ) );
 
 				String defaultValue = col.getDefaultValue();
 				if ( defaultValue != null ) {
@@ -263,21 +249,27 @@ public class Table extends AbstractTableSpecification implements Exportable {
 		}
 
 		buf.append( ')' );
+		buf.append( dialect.getTableTypeString() );
 
-		if ( comments != null ) {
-			boolean first = true;
-			for ( String comment : comments ) {
-				if ( first ) {
-					first = false;
-				}
-				else {
-					buf.append( ' ' );
-				}
-				buf.append( dialect.getTableComment( comment ) );
-			}
+		String[] sqlStrings = new String[ comments.size() + 1 ];
+		sqlStrings[ 0 ] = buf.toString();
+
+		for ( int i = 0 ; i < comments.size(); i++ ) {
+			sqlStrings[ i + 1 ] = dialect.getTableComment( comments.get( i ) );
 		}
 
-		return new String[] { buf.append( dialect.getTableTypeString() ).toString() };
+		return sqlStrings;
+	}
+
+	private static String getTypeString(Column col, Dialect dialect) {
+		return col.getSqlType() == null ?
+				dialect.getTypeName(
+						col.getDatatype().getTypeCode(),
+						col.getSize().getLength(),
+						col.getSize().getPrecision(),
+						col.getSize().getScale()
+				) :
+				col.getSqlType();
 	}
 
 	@Override

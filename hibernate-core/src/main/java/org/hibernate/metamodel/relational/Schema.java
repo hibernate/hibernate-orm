@@ -66,6 +66,10 @@ public class Schema {
 		return existing;
 	}
 
+	public Iterable<Table> getTables() {
+		return tables.values();
+	}
+
 	public InLineView getInLineView(String logicalName) {
 		return inLineViews.get( logicalName );
 	}

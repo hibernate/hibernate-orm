@@ -34,7 +34,7 @@ import java.util.List;
  *
  * @author Steve Ebersole
  */
-public interface Constraint {
+public interface Constraint extends Exportable {
 	/**
 	 * Obtain the table to which this constraint applies.
 	 *

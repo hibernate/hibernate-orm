@@ -55,8 +55,10 @@ import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.internal.util.ConfigHelper;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.metamodel.source.MetadataImplementor;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.ServiceRegistryBuilder;
+import org.hibernate.service.config.spi.ConfigurationService;
 import org.hibernate.service.internal.BasicServiceRegistryImpl;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 
@@ -118,6 +120,25 @@ public class SchemaExport {
 		final Dialect dialect = serviceRegistry.getService( JdbcServices.class ).getDialect();
 		this.dropSQL = configuration.generateDropSchemaScript( dialect );
 		this.createSQL = configuration.generateSchemaCreationScript( dialect );
+	}
+
+	public SchemaExport(MetadataImplementor metadata) {
+		ServiceRegistry serviceRegistry = metadata.getServiceRegistry();
+		this.connectionHelper = new SuppliedConnectionProviderConnectionHelper(
+				serviceRegistry.getService( ConnectionProvider.class )
+		);
+		this.sqlStatementLogger = serviceRegistry.getService( JdbcServices.class ).getSqlStatementLogger();
+		this.formatter = ( sqlStatementLogger.isFormat() ? FormatStyle.DDL : FormatStyle.NONE ).getFormatter();
+		this.sqlExceptionHelper = serviceRegistry.getService( JdbcServices.class ).getSqlExceptionHelper();
+
+		this.importFiles = ConfigurationHelper.getString(
+				Environment.HBM2DDL_IMPORT_FILES,
+				serviceRegistry.getService( ConfigurationService.class ).getSettings(),
+				DEFAULT_IMPORT_FILE
+		);
+
+		this.dropSQL = metadata.getDatabase().generateDropSchemaScript( metadata );
+		this.createSQL = metadata.getDatabase().generateSchemaCreationScript( metadata );
 	}
 
 	/**

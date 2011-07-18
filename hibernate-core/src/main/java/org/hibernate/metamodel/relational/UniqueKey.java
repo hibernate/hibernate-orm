@@ -23,6 +23,8 @@
  */
 package org.hibernate.metamodel.relational;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.StringHelper;
 
@@ -35,6 +37,16 @@ import org.hibernate.internal.util.StringHelper;
 public class UniqueKey extends AbstractConstraint implements Constraint {
 	protected UniqueKey(Table table, String name) {
 		super( table, name );
+	}
+
+	@Override
+	public String getExportIdentifier() {
+		StringBuilder sb = new StringBuilder( getTable().getLoggableValueQualifier());
+		sb.append( ".UK" );
+		for ( Column column : getColumns() ) {
+			sb.append( '_' ).append( column.getColumnName().getName() );
+		}
+		return sb.toString();
 	}
 
 	public boolean isCreationVetoed(Dialect dialect) {

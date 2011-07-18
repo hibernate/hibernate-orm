@@ -66,6 +66,7 @@ public class SessionFactoryBuilderImplTest extends BaseUnitTestCase {
 		assertTrue( EntityNotFoundDelegate.class.isInstance(
 				sessionFactory.getSessionFactoryOptions().getEntityNotFoundDelegate()
 		) );
+		sessionFactory.close();
 	}
 
 	@Test
@@ -83,6 +84,7 @@ public class SessionFactoryBuilderImplTest extends BaseUnitTestCase {
 		SessionFactory sessionFactory = sessionFactoryBuilder.buildSessionFactory();
 		assertSame( interceptor, sessionFactory.getSessionFactoryOptions().getInterceptor() );
 		assertSame( entityNotFoundDelegate, sessionFactory.getSessionFactoryOptions().getEntityNotFoundDelegate() );
+		sessionFactory.close();
 	}
 
 	private SessionFactoryBuilder getSessionFactoryBuilder() {

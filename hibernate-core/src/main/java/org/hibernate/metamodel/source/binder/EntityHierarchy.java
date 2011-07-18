@@ -31,6 +31,19 @@ import org.hibernate.metamodel.binding.InheritanceType;
  * @author Steve Ebersole
  */
 public interface EntityHierarchy {
+	/**
+	 * The inheritance type/strategy for the hierarchy.
+	 * <p/>
+	 * NOTE : The entire hierarchy must comply with the same inheritance strategy.
+	 *
+	 * @return The inheritance type.
+	 */
 	public InheritanceType getHierarchyInheritanceType();
+
+	/**
+	 * Obtain the hierarchy's root entity.
+	 *
+	 * @return THe root entity.
+	 */
 	public RootEntitySource getRootEntitySource();
 }

@@ -21,15 +21,20 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel;
+package org.hibernate.metamodel.source.binder;
+
+import java.util.List;
 
 /**
- * Enumeration of the possible orders for processing metadata sources.  The implication is in terms of precedence;
- * for duplicate information in different sources, whichever is processed first has precedence.
+ * Contract for a container of {@link RelationalValueSource} references.
  *
  * @author Steve Ebersole
  */
-public enum SourceProcessingOrder {
-	ANNOTATIONS_FIRST,
-	HBM_FIRST
+public interface RelationalValueSourceContainer {
+	/**
+	 * Obtain the contained {@link RelationalValueSource} references.
+	 *
+	 * @return The contained {@link RelationalValueSource} references.
+	 */
+	public List<RelationalValueSource> relationalValueSources();
 }

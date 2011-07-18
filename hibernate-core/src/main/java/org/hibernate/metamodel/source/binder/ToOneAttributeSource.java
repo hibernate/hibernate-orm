@@ -24,9 +24,24 @@
 package org.hibernate.metamodel.source.binder;
 
 /**
+ * Further contract for sources of {@code *-to-one} style associations.
+ *
  * @author Steve Ebersole
  */
 public interface ToOneAttributeSource extends SingularAttributeSource {
+	/**
+	 * Obtain the name of the referenced entity.
+	 *
+	 * @return The name of the referenced entity
+	 */
 	public String getReferencedEntityName();
+
+	/**
+	 * Obtain the name of the referenced attribute.  Typically the reference is built based on the identifier
+	 * attribute of the {@link #getReferencedEntityName() referenced entity}, but this value allows using a different
+	 * attribute instead.
+	 *
+	 * @return The name of the referenced attribute; {@code null} indicates the identifier attribute.
+	 */
 	public String getReferencedEntityAttributeName();
 }

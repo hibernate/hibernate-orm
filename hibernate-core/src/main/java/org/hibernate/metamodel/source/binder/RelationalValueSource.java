@@ -24,7 +24,12 @@
 package org.hibernate.metamodel.source.binder;
 
 /**
+ * Unifying interface for {@link ColumnSource} and {@link DerivedValueSource}.
+ *
  * @author Steve Ebersole
+ * 
+ * @see ColumnSource
+ * @see DerivedValueSource
  */
 public interface RelationalValueSource {
 }

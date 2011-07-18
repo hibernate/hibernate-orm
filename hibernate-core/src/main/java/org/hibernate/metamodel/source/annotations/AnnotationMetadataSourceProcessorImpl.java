@@ -41,7 +41,7 @@ import org.hibernate.metamodel.domain.Hierarchical;
 import org.hibernate.metamodel.domain.NonEntity;
 import org.hibernate.metamodel.domain.Superclass;
 import org.hibernate.metamodel.source.MetadataImplementor;
-import org.hibernate.metamodel.source.SourceProcessor;
+import org.hibernate.metamodel.source.MetadataSourceProcessor;
 import org.hibernate.metamodel.source.annotation.jaxb.XMLEntityMappings;
 import org.hibernate.metamodel.source.annotations.entity.ConfiguredClassHierarchy;
 import org.hibernate.metamodel.source.annotations.entity.ConfiguredClassType;
@@ -67,13 +67,13 @@ import org.hibernate.service.classloading.spi.ClassLoaderService;
  * @author Hardy Ferentschik
  * @author Steve Ebersole
  */
-public class AnnotationProcessor implements SourceProcessor {
-	private static final Logger LOG = Logger.getLogger( AnnotationProcessor.class );
+public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProcessor {
+	private static final Logger LOG = Logger.getLogger( AnnotationMetadataSourceProcessorImpl.class );
 
 	private final MetadataImplementor metadata;
 	private AnnotationBindingContext bindingContext;
 
-	public AnnotationProcessor(MetadataImpl metadata) {
+	public AnnotationMetadataSourceProcessorImpl(MetadataImpl metadata) {
 		this.metadata = metadata;
 	}
 

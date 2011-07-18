@@ -30,36 +30,158 @@ import org.hibernate.metamodel.source.LocalBindingContext;
 import org.hibernate.metamodel.source.Origin;
 
 /**
+ * Contract describing source of an entity
+ *
  * @author Steve Ebersole
  */
 public interface EntitySource extends SubclassEntityContainer, AttributeSourceContainer {
+	/**
+	 * Obtain the origin of this source.
+	 *
+	 * @return The origin of this source.
+	 */
 	public Origin getOrigin();
+
+	/**
+	 * Obtain the binding context local to this entity source.
+	 *
+	 * @return The local binding context
+	 */
 	public LocalBindingContext getBindingContext();
 
+	/**
+	 * Obtain the entity name
+	 *
+	 * @return The entity name
+	 */
 	public String getEntityName();
+
+	/**
+	 * Obtain the name of the entity {@link Class}
+	 *
+	 * @return THe entity class name
+	 */
 	public String getClassName();
+
+	/**
+	 * Obtain the JPA name of the entity
+	 *
+	 * @return THe JPA-specific entity name
+	 */
 	public String getJpaEntityName();
 
+	/**
+	 * Obtain the primary table for this entity.
+	 *
+	 * @return The primary table.
+	 */
 	public TableSource getPrimaryTable();
 
-    public boolean isAbstract();
-    public boolean isLazy();
-    public String getProxy();
-    public int getBatchSize();
-    public boolean isDynamicInsert();
-    public boolean isDynamicUpdate();
-    public boolean isSelectBeforeUpdate();
-
+	/**
+	 * Obtain the name of a custom tuplizer class to be used.
+	 *
+	 * @return The custom tuplizer class name
+	 */
 	public String getCustomTuplizerClassName();
+
+	/**
+	 * Obtain the name of a custom persister class to be used.
+	 *
+	 * @return The custom persister class name
+	 */
     public String getCustomPersisterClassName();
 
+	/**
+	 * Is this entity lazy (proxyable)?
+	 *
+	 * @return {@code true} indicates the entity is lazy; {@code false} non-lazy.
+	 */
+    public boolean isLazy();
+
+	/**
+	 * For {@link #isLazy() lazy} entities, obtain the interface to use in constructing its proxies.
+	 *
+	 * @return The proxy interface name
+	 */
+    public String getProxy();
+
+	/**
+	 * Obtain the batch-size to be applied when initializing proxies of this entity.
+	 *
+	 * @return THe batch-size.
+	 */
+    public int getBatchSize();
+
+	/**
+	 * Is the entity abstract?
+	 * <p/>
+	 * The implication is whether the entity maps to a database table.
+	 *
+	 * @return {@code true} indicates the entity is abstract; {@code false} non-abstract.
+	 */
+    public boolean isAbstract();
+
+	/**
+	 * Did the source specify dynamic inserts?
+	 *
+	 * @return {@code true} indicates dynamic inserts will be used; {@code false} otherwise.
+	 */
+    public boolean isDynamicInsert();
+
+	/**
+	 * Did the source specify dynamic updates?
+	 *
+	 * @return {@code true} indicates dynamic updates will be used; {@code false} otherwise.
+	 */
+    public boolean isDynamicUpdate();
+
+	/**
+	 * Did the source specify to perform selects to decide whether to perform (detached) updates?
+	 *
+	 * @return {@code true} indicates selects will be done; {@code false} otherwise.
+	 */
+    public boolean isSelectBeforeUpdate();
+
+	/**
+	 * Obtain the name of a named-query that will be used for loading this entity
+	 *
+	 * @return THe custom loader query name
+	 */
 	public String getCustomLoaderName();
+
+	/**
+	 * Obtain the custom SQL to be used for inserts for this entity
+	 *
+	 * @return The custom insert SQL
+	 */
 	public CustomSQL getCustomSqlInsert();
+
+	/**
+	 * Obtain the custom SQL to be used for updates for this entity
+	 *
+	 * @return The custom update SQL
+	 */
 	public CustomSQL getCustomSqlUpdate();
+
+	/**
+	 * Obtain the custom SQL to be used for deletes for this entity
+	 *
+	 * @return The custom delete SQL
+	 */
 	public CustomSQL getCustomSqlDelete();
 
+	/**
+	 * Obtain any additional table names on which to synchronize (auto flushing) this entity.
+	 *
+	 * @return Additional synchronized table names.
+	 */
 	public List<String> getSynchronizedTableNames();
 
+	/**
+	 * Obtain the meta-attribute sources associated with this entity.
+	 *
+	 * @return The meta-attribute sources.
+	 */
 	public Iterable<MetaAttributeSource> metaAttributes();
 
 //	public List<XMLFetchProfileElement> getFetchProfile();

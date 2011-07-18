@@ -24,10 +24,29 @@
 package org.hibernate.metamodel.source.binder;
 
 /**
+ * Contract describing source of table information
+ *
  * @author Steve Ebersole
  */
 public interface TableSource {
+	/**
+	 * Obtain the supplied schema name
+	 *
+	 * @return The schema name.  If {@code null}, the binder will apply the default.
+	 */
 	public String getExplicitSchemaName();
+
+	/**
+	 * Obtain the supplied catalog name
+	 *
+	 * @return The catalog name.  If {@code null}, the binder will apply the default.
+	 */
 	public String getExplicitCatalogName();
+
+	/**
+	 * Obtain the supplied table name.
+	 *
+	 * @return The table name.
+	 */
 	public String getExplicitTableName();
 }

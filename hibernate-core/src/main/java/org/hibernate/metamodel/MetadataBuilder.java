@@ -35,7 +35,7 @@ import org.hibernate.cfg.NamingStrategy;
 public interface MetadataBuilder {
 	public MetadataBuilder with(NamingStrategy namingStrategy);
 
-	public MetadataBuilder with(SourceProcessingOrder sourceProcessingOrder);
+	public MetadataBuilder with(MetadataSourceProcessingOrder metadataSourceProcessingOrder);
 
 	public MetadataBuilder with(SharedCacheMode cacheMode);
 

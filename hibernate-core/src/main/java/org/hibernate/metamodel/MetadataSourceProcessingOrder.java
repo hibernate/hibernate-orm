@@ -21,11 +21,15 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.binder;
+package org.hibernate.metamodel;
 
 /**
+ * Enumeration of the possible orders for processing metadata sources.  The implication is in terms of precedence;
+ * for duplicate information in different sources, whichever is processed first has precedence.
+ *
  * @author Steve Ebersole
  */
-public interface IdentifierAttributeSource {
-
+public enum MetadataSourceProcessingOrder {
+	ANNOTATIONS_FIRST,
+	HBM_FIRST
 }

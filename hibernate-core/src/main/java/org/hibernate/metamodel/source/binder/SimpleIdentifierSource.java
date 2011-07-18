@@ -26,9 +26,22 @@ package org.hibernate.metamodel.source.binder;
 import org.hibernate.metamodel.binding.IdGenerator;
 
 /**
+ * Contract describing source of a simple identifier mapping.
+ *
  * @author Steve Ebersole
  */
 public interface SimpleIdentifierSource extends IdentifierSource {
+	/**
+	 * Obtain the source descriptor for the identifier attribute.
+	 *
+	 * @return The identifier attribute source.
+	 */
 	public SingularAttributeSource getIdentifierAttributeSource();
+
+	/**
+	 * Obtain the identifier generator source.
+	 *
+	 * @return The generator source.
+	 */
 	public IdGenerator getIdentifierGeneratorDescriptor();
 }

@@ -32,7 +32,7 @@ import org.hibernate.metamodel.MetadataSources;
  *
  * @author Steve Ebersole
  */
-public interface SourceProcessor {
+public interface MetadataSourceProcessor {
 	/**
 	 * Prepare for processing the given sources.
 	 *

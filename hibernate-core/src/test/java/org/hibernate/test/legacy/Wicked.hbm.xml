@@ -3,7 +3,7 @@
 	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
 	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
-<!-- Mapping document mainly used for testing non-reflective SourceProcessor + meta inheritance -->
+<!-- Mapping document mainly used for testing non-reflective MetadataSourceProcessor + meta inheritance -->
 <hibernate-mapping default-lazy="false">
   <meta attribute="global">global value</meta>
   <meta attribute="globalnoinherit" inherit="false">only visible at top level</meta>

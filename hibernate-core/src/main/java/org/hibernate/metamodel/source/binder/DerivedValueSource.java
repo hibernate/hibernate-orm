@@ -24,8 +24,15 @@
 package org.hibernate.metamodel.source.binder;
 
 /**
+ * Contract describing source of a derived value (formula).
+ *
  * @author Steve Ebersole
  */
 public interface DerivedValueSource extends RelationalValueSource {
+	/**
+	 * Obtain the expression used to derive the value.
+	 *
+	 * @return The derived value expression.
+	 */
 	public String getExpression();
 }

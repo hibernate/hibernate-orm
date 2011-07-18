@@ -46,15 +46,15 @@ import org.hibernate.id.factory.DefaultIdentifierGeneratorFactory;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.Value;
+import org.hibernate.metamodel.MetadataSourceProcessingOrder;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.SessionFactoryBuilder;
-import org.hibernate.metamodel.SourceProcessingOrder;
 import org.hibernate.metamodel.source.MappingDefaults;
 import org.hibernate.metamodel.source.MetaAttributeContext;
 import org.hibernate.metamodel.source.MetadataImplementor;
-import org.hibernate.metamodel.source.SourceProcessor;
-import org.hibernate.metamodel.source.annotations.AnnotationProcessor;
-import org.hibernate.metamodel.source.hbm.HbmSourceProcessorImpl;
+import org.hibernate.metamodel.source.MetadataSourceProcessor;
+import org.hibernate.metamodel.source.annotations.AnnotationMetadataSourceProcessorImpl;
+import org.hibernate.metamodel.source.hbm.HbmMetadataSourceProcessorImpl;
 import org.hibernate.metamodel.binding.AttributeBinding;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.FetchProfile;
@@ -123,17 +123,17 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 		this.mappingDefaults = new MappingDefaultsImpl();
 
-		final SourceProcessor[] sourceProcessors;
-		if ( options.getSourceProcessingOrder() == SourceProcessingOrder.HBM_FIRST ) {
-			sourceProcessors = new SourceProcessor[] {
-					new HbmSourceProcessorImpl( this ),
-					new AnnotationProcessor( this )
+		final MetadataSourceProcessor[] metadataSourceProcessors;
+		if ( options.getMetadataSourceProcessingOrder() == MetadataSourceProcessingOrder.HBM_FIRST ) {
+			metadataSourceProcessors = new MetadataSourceProcessor[] {
+					new HbmMetadataSourceProcessorImpl( this ),
+					new AnnotationMetadataSourceProcessorImpl( this )
 			};
 		}
 		else {
-			sourceProcessors = new SourceProcessor[] {
-					new AnnotationProcessor( this ),
-					new HbmSourceProcessorImpl( this )
+			metadataSourceProcessors = new MetadataSourceProcessor[] {
+					new AnnotationMetadataSourceProcessorImpl( this ),
+					new HbmMetadataSourceProcessorImpl( this )
 			};
 		}
 
@@ -157,44 +157,44 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 		final ArrayList<String> processedEntityNames = new ArrayList<String>();
 
-		prepare( sourceProcessors, metadataSources );
-		bindIndependentMetadata( sourceProcessors, metadataSources );
-		bindTypeDependentMetadata( sourceProcessors, metadataSources );
-		bindMappingMetadata( sourceProcessors, metadataSources, processedEntityNames );
-		bindMappingDependentMetadata( sourceProcessors, metadataSources );
+		prepare( metadataSourceProcessors, metadataSources );
+		bindIndependentMetadata( metadataSourceProcessors, metadataSources );
+		bindTypeDependentMetadata( metadataSourceProcessors, metadataSources );
+		bindMappingMetadata( metadataSourceProcessors, metadataSources, processedEntityNames );
+		bindMappingDependentMetadata( metadataSourceProcessors, metadataSources );
 
 		// todo : remove this by coordinated ordering of entity processing
 		new EntityReferenceResolver( this ).resolve();
 		new AttributeTypeResolver( this ).resolve();
 	}
 
-	private void prepare(SourceProcessor[] sourceProcessors, MetadataSources metadataSources) {
-		for ( SourceProcessor sourceProcessor : sourceProcessors ) {
-			sourceProcessor.prepare( metadataSources );
+	private void prepare(MetadataSourceProcessor[] metadataSourceProcessors, MetadataSources metadataSources) {
+		for ( MetadataSourceProcessor metadataSourceProcessor : metadataSourceProcessors ) {
+			metadataSourceProcessor.prepare( metadataSources );
 		}
 	}
 
-	private void bindIndependentMetadata(SourceProcessor[] sourceProcessors, MetadataSources metadataSources) {
-		for ( SourceProcessor sourceProcessor : sourceProcessors ) {
-			sourceProcessor.processIndependentMetadata( metadataSources );
+	private void bindIndependentMetadata(MetadataSourceProcessor[] metadataSourceProcessors, MetadataSources metadataSources) {
+		for ( MetadataSourceProcessor metadataSourceProcessor : metadataSourceProcessors ) {
+			metadataSourceProcessor.processIndependentMetadata( metadataSources );
 		}
 	}
 
-	private void bindTypeDependentMetadata(SourceProcessor[] sourceProcessors, MetadataSources metadataSources) {
-		for ( SourceProcessor sourceProcessor : sourceProcessors ) {
-			sourceProcessor.processTypeDependentMetadata( metadataSources );
+	private void bindTypeDependentMetadata(MetadataSourceProcessor[] metadataSourceProcessors, MetadataSources metadataSources) {
+		for ( MetadataSourceProcessor metadataSourceProcessor : metadataSourceProcessors ) {
+			metadataSourceProcessor.processTypeDependentMetadata( metadataSources );
 		}
 	}
 
-	private void bindMappingMetadata(SourceProcessor[] sourceProcessors, MetadataSources metadataSources, List<String> processedEntityNames) {
-		for ( SourceProcessor sourceProcessor : sourceProcessors ) {
-			sourceProcessor.processMappingMetadata( metadataSources, processedEntityNames );
+	private void bindMappingMetadata(MetadataSourceProcessor[] metadataSourceProcessors, MetadataSources metadataSources, List<String> processedEntityNames) {
+		for ( MetadataSourceProcessor metadataSourceProcessor : metadataSourceProcessors ) {
+			metadataSourceProcessor.processMappingMetadata( metadataSources, processedEntityNames );
 		}
 	}
 
-	private void bindMappingDependentMetadata(SourceProcessor[] sourceProcessors, MetadataSources metadataSources) {
-		for ( SourceProcessor sourceProcessor : sourceProcessors ) {
-			sourceProcessor.processMappingDependentMetadata( metadataSources );
+	private void bindMappingDependentMetadata(MetadataSourceProcessor[] metadataSourceProcessors, MetadataSources metadataSources) {
+		for ( MetadataSourceProcessor metadataSourceProcessor : metadataSourceProcessors ) {
+			metadataSourceProcessor.processMappingDependentMetadata( metadataSources );
 		}
 	}
 

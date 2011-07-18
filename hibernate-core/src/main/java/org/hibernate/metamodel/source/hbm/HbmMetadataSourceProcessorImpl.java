@@ -28,23 +28,23 @@ import java.util.List;
 
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.source.MetadataImplementor;
-import org.hibernate.metamodel.source.SourceProcessor;
+import org.hibernate.metamodel.source.MetadataSourceProcessor;
 import org.hibernate.metamodel.source.binder.Binder;
 import org.hibernate.metamodel.source.internal.JaxbRoot;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLHibernateMapping;
 
 /**
- * The {@link SourceProcessor} implementation responsible for processing {@code hbm.xml} sources.
+ * The {@link org.hibernate.metamodel.source.MetadataSourceProcessor} implementation responsible for processing {@code hbm.xml} sources.
  *
  * @author Steve Ebersole
  */
-public class HbmSourceProcessorImpl implements SourceProcessor {
+public class HbmMetadataSourceProcessorImpl implements MetadataSourceProcessor {
 	private final MetadataImplementor metadata;
 
 	private List<HibernateMappingProcessor> processors = new ArrayList<HibernateMappingProcessor>();
 	private List<EntityHierarchyImpl> entityHierarchies;
 
-	public HbmSourceProcessorImpl(MetadataImplementor metadata) {
+	public HbmMetadataSourceProcessorImpl(MetadataImplementor metadata) {
 		this.metadata = metadata;
 	}
 

@@ -31,8 +31,8 @@ import org.hibernate.cfg.EJB3NamingStrategy;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.metamodel.Metadata;
 import org.hibernate.metamodel.MetadataBuilder;
+import org.hibernate.metamodel.MetadataSourceProcessingOrder;
 import org.hibernate.metamodel.MetadataSources;
-import org.hibernate.metamodel.SourceProcessingOrder;
 import org.hibernate.service.BasicServiceRegistry;
 import org.hibernate.service.config.spi.ConfigurationService;
 
@@ -55,8 +55,8 @@ public class MetadataBuilderImpl implements MetadataBuilder {
 	}
 
 	@Override
-	public MetadataBuilder with(SourceProcessingOrder sourceProcessingOrder) {
-		this.options.sourceProcessingOrder = sourceProcessingOrder;
+	public MetadataBuilder with(MetadataSourceProcessingOrder metadataSourceProcessingOrder) {
+		this.options.metadataSourceProcessingOrder = metadataSourceProcessingOrder;
 		return this;
 	}
 
@@ -84,7 +84,7 @@ public class MetadataBuilderImpl implements MetadataBuilder {
 	}
 
 	private static class OptionsImpl implements Metadata.Options {
-		private SourceProcessingOrder sourceProcessingOrder = SourceProcessingOrder.HBM_FIRST;
+		private MetadataSourceProcessingOrder metadataSourceProcessingOrder = MetadataSourceProcessingOrder.HBM_FIRST;
 		private NamingStrategy namingStrategy = EJB3NamingStrategy.INSTANCE;
 		private SharedCacheMode sharedCacheMode = SharedCacheMode.ENABLE_SELECTIVE;
 		private AccessType defaultCacheAccessType;
@@ -154,8 +154,8 @@ public class MetadataBuilderImpl implements MetadataBuilder {
 
 
 		@Override
-		public SourceProcessingOrder getSourceProcessingOrder() {
-			return sourceProcessingOrder;
+		public MetadataSourceProcessingOrder getMetadataSourceProcessingOrder() {
+			return metadataSourceProcessingOrder;
 		}
 
 		@Override

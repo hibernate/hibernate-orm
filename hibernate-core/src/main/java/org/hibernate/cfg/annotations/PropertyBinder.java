@@ -172,7 +172,7 @@ public class PropertyBinder {
 
 	private Property makePropertyAndValue() {
 		validateBind();
-        LOG.debugf("SourceProcessor property %s with lazy=%s", name, lazy);
+        LOG.debugf("MetadataSourceProcessor property %s with lazy=%s", name, lazy);
 		String containerClassName = holder == null ?
 				null :
 				holder.getClassName();

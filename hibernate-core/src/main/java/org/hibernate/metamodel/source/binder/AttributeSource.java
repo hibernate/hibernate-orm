@@ -24,6 +24,8 @@
 package org.hibernate.metamodel.source.binder;
 
 /**
+ * Contract for sources of persistent attribute descriptions.
+ *
  * @author Steve Ebersole
  */
 public interface AttributeSource {
@@ -34,7 +36,17 @@ public interface AttributeSource {
 	 */
 	public String getName();
 
+	/**
+	 * Is this a singular attribute?  Specifically, can it be cast to {@link SingularAttributeSource}?
+	 *
+	 * @return {@code true} indicates this is castable to {@link SingularAttributeSource}; {@code false} otherwise.
+	 */
 	public boolean isSingular();
 
+	/**
+	 * Obtain the meta-attribute sources associated with this attribute.
+	 *
+	 * @return The meta-attribute sources.
+	 */
 	public Iterable<MetaAttributeSource> metaAttributes();
 }

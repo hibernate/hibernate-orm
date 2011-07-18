@@ -23,8 +23,6 @@
  */
 package org.hibernate.metamodel.source.binder;
 
-import java.util.List;
-
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.mapping.PropertyGeneration;
 
@@ -33,7 +31,7 @@ import org.hibernate.mapping.PropertyGeneration;
  *
  * @author Steve Ebersole
  */
-public interface SingularAttributeSource extends AttributeSource, RelationValueMetadataSource {
+public interface SingularAttributeSource extends AttributeSource, RelationalValueSourceContainer {
 	/**
 	 * Determine whether this is a virtual attribute or whether it physically exists on the users domain model.
 	 *

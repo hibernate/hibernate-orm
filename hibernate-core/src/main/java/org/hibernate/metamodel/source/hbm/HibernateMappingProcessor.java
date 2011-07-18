@@ -51,7 +51,7 @@ import org.hibernate.type.Type;
 /**
  * Responsible for processing a {@code <hibernate-mapping/>} element.  Allows processing to be coordinated across
  * all hbm files in an ordered fashion.  The order is essentially the same as defined in
- * {@link org.hibernate.metamodel.source.SourceProcessor}
+ * {@link org.hibernate.metamodel.source.MetadataSourceProcessor}
  *
  * @author Steve Ebersole
  */

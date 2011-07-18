@@ -24,8 +24,16 @@
 package org.hibernate.metamodel.source.binder;
 
 /**
+ * Contract for a container of {@link AttributeSource} references.  Both entities and components contain
+ * attributes.
+ *
  * @author Steve Ebersole
  */
 public interface AttributeSourceContainer {
+	/**
+	 Obtain this container's attribute sources.
+	 *
+	 * @return TYhe attribute sources.
+	 */
 	public Iterable<AttributeSource> attributeSources();
 }

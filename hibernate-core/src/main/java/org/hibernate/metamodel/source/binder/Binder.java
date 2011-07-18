@@ -57,6 +57,10 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.tuple.entity.EntityTuplizer;
 
 /**
+ * The common binder shared between annotations and {@code hbm.xml} processing.
+ * <p/>
+ * The API consists of {@link #Binder} and {@link #processEntityHierarchy}
+ *
  * @author Steve Ebersole
  */
 public class Binder {
@@ -72,6 +76,11 @@ public class Binder {
 		this.processedEntityNames = processedEntityNames;
 	}
 
+	/**
+	 * Process an entity hierarchy.
+	 *
+	 * @param entityHierarchy THe hierarchy to process.
+	 */
 	public void processEntityHierarchy(EntityHierarchy entityHierarchy) {
 		currentInheritanceType = entityHierarchy.getHierarchyInheritanceType();
 		EntityBinding rootEntityBinding = createEntityBinding( entityHierarchy.getRootEntitySource(), null );
@@ -546,7 +555,7 @@ public class Binder {
 	}
 
 	private org.hibernate.metamodel.relational.Value makeValue(
-			RelationValueMetadataSource relationValueMetadataSource,
+			RelationalValueSourceContainer relationalValueSourceContainer,
 			SimpleAttributeBinding attributeBinding) {
 
 		// todo : to be completely correct, we need to know which table the value belongs to.
@@ -554,9 +563,9 @@ public class Binder {
 		//		For now, just use the entity's base table.
 		final TableSpecification table = attributeBinding.getEntityBinding().getBaseTable();
 
-		if ( relationValueMetadataSource.relationalValueSources().size() > 0 ) {
+		if ( relationalValueSourceContainer.relationalValueSources().size() > 0 ) {
 			List<SimpleValue> values = new ArrayList<SimpleValue>();
-			for ( RelationalValueSource valueSource : relationValueMetadataSource.relationalValueSources() ) {
+			for ( RelationalValueSource valueSource : relationalValueSourceContainer.relationalValueSources() ) {
 				if ( ColumnSource.class.isInstance( valueSource ) ) {
 					final ColumnSource columnSource = ColumnSource.class.cast( valueSource );
 					final Column column = table.locateOrCreateColumn( columnSource.getName() );

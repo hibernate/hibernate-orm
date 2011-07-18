@@ -47,7 +47,7 @@ public interface Metadata {
 	 * Exposes the options used to produce a {@link Metadata} instance.
 	 */
 	public static interface Options {
-		public SourceProcessingOrder getSourceProcessingOrder();
+		public MetadataSourceProcessingOrder getMetadataSourceProcessingOrder();
 		public NamingStrategy getNamingStrategy();
 		public SharedCacheMode getSharedCacheMode();
 		public AccessType getDefaultAccessType();

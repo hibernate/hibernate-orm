@@ -30,7 +30,6 @@ import java.util.List;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.metamodel.source.MetadataImplementor;
 
 import org.jboss.logging.Logger;
 
@@ -135,8 +134,7 @@ public class ForeignKey extends AbstractConstraint implements Constraint, Export
 	}
 
 	@Override
-	public String[] sqlDropStrings(MetadataImplementor metadata) {
-		Dialect dialect = getDialect( metadata );
+	public String[] sqlDropStrings(Dialect dialect) {
 		return new String[] {
 				"alter table " +
 						getTable().getQualifiedName( dialect ) +

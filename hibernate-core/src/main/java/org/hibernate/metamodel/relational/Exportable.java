@@ -23,7 +23,7 @@
  */
 package org.hibernate.metamodel.relational;
 
-import org.hibernate.metamodel.source.MetadataImplementor;
+import org.hibernate.dialect.Dialect;
 
 /**
  * Contract for entities (in the ERD sense) which can be exported via {@code CREATE}, {@code ALTER}, etc
@@ -40,16 +40,17 @@ public interface Exportable {
 
 	/**
 	 * Gets the SQL strings for creating the database object.
-	 * @param metadata the metadata
+	 *
+	 * @param dialect
 	 * @return the SQL strings for creating the database object.
 	 */
-	public String[] sqlCreateStrings(MetadataImplementor metadata);
+	public String[] sqlCreateStrings(Dialect dialect);
 
 	/**
 	 * Gets the SQL strings for dropping the database object.
-	 * @param metadata the metadata
-	 * @return the SQL strings for dropping the database object.
+	 *
+	 * @param dialect@return the SQL strings for dropping the database object.
 	 */
-	public String[] sqlDropStrings(MetadataImplementor metadata);
+	public String[] sqlDropStrings(Dialect dialect);
 
 }

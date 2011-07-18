@@ -124,6 +124,7 @@ public class HibernateMappingProcessor {
 					}
 				}
 				auxiliaryDatabaseObject = new BasicAuxiliaryDatabaseObjectImpl(
+						metadata.getDatabase().getDefaultSchema(),
 						databaseObjectElement.getCreate(),
 						databaseObjectElement.getDrop(),
 						dialectScopes

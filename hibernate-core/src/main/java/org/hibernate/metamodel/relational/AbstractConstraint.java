@@ -27,8 +27,6 @@ import java.util.List;
 import java.util.ArrayList;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.metamodel.source.MetadataImplementor;
 
 /**
  * Support for writing {@link Constraint} implementations
@@ -81,8 +79,7 @@ public abstract class AbstractConstraint implements Constraint {
 
 	protected abstract String sqlConstraintStringInAlterTable(Dialect dialect);
 
-	public String[] sqlDropStrings(MetadataImplementor metadata) {
-		Dialect dialect = getDialect( metadata );
+	public String[] sqlDropStrings(Dialect dialect) {
 		if ( isCreationVetoed( dialect ) ) {
 			return null;
 		}
@@ -98,8 +95,7 @@ public abstract class AbstractConstraint implements Constraint {
 		}
 	}
 
-	public String[] sqlCreateStrings(MetadataImplementor metadata) {
-		Dialect dialect = getDialect( metadata );
+	public String[] sqlCreateStrings(Dialect dialect) {
 		if ( isCreationVetoed( dialect ) ) {
 			return null;
 		}
@@ -111,9 +107,5 @@ public abstract class AbstractConstraint implements Constraint {
 							.toString()
 			};
 		}
-	}
-
-	protected static Dialect getDialect(MetadataImplementor metadata) {
-		return metadata.getServiceRegistry().getService( JdbcServices.class ).getDialect();
 	}
 }

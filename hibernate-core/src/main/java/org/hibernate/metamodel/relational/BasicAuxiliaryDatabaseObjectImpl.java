@@ -25,9 +25,8 @@ package org.hibernate.metamodel.relational;
 
 import java.util.Set;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.metamodel.Metadata;
-import org.hibernate.metamodel.source.MetadataImplementor;
 
 /**
  * @author Steve Ebersole
@@ -36,29 +35,36 @@ import org.hibernate.metamodel.source.MetadataImplementor;
 public class BasicAuxiliaryDatabaseObjectImpl extends AbstractAuxiliaryDatabaseObject {
 	private static final String CATALOG_NAME_PLACEHOLDER = "${catalog}";
 	private static final String SCHEMA_NAME_PLACEHOLDER = "${schema}";
+	private final Schema defaultSchema;
 	private final String createString;
 	private final String dropString;
 
-	public BasicAuxiliaryDatabaseObjectImpl(String createString, String dropString, Set<String> dialectScopes) {
+	public BasicAuxiliaryDatabaseObjectImpl(
+			Schema defaultSchema,
+			String createString,
+			String dropString,
+			Set<String> dialectScopes) {
 		super( dialectScopes );
+		// keep track of the default schema and the raw create/drop strings;
+		// we may want to allow copying into a database with a different default schema in the future;
+		this.defaultSchema = defaultSchema;
 		this.createString = createString;
 		this.dropString = dropString;
 	}
 
 	@Override
-	public String[] sqlCreateStrings(MetadataImplementor metadata) {
-		return new String[] { injectCatalogAndSchema( createString, metadata.getOptions() ) };
+	public String[] sqlCreateStrings(Dialect dialect) {
+		return new String[] { injectCatalogAndSchema( createString, defaultSchema ) };
 	}
 
 	@Override
-	public String[] sqlDropStrings(MetadataImplementor metadata) {
-		return new String[] { injectCatalogAndSchema( dropString, metadata.getOptions() ) };
+	public String[] sqlDropStrings(Dialect dialect) {
+		return new String[] { injectCatalogAndSchema( dropString, defaultSchema ) };
 	}
 
-	private String injectCatalogAndSchema(String ddlString, Metadata.Options options) {
-		String rtn = StringHelper.replace( ddlString, CATALOG_NAME_PLACEHOLDER, options.getDefaultCatalogName() );
-		rtn = StringHelper.replace( rtn, SCHEMA_NAME_PLACEHOLDER, options.getDefaultSchemaName() );
+	private static String injectCatalogAndSchema(String ddlString, Schema schema) {
+		String rtn = StringHelper.replace( ddlString, CATALOG_NAME_PLACEHOLDER, schema.getName().getCatalog().getName() );
+		rtn = StringHelper.replace( rtn, SCHEMA_NAME_PLACEHOLDER, schema.getName().getSchema().getName() );
 		return rtn;
 	}
-
 }

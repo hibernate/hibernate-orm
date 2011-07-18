@@ -25,7 +25,6 @@ package org.hibernate.metamodel.relational;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.metamodel.source.MetadataImplementor;
 
 /**
  * Models a SQL <tt>INDEX</tt>
@@ -49,28 +48,12 @@ public class Index extends AbstractConstraint implements Constraint {
 		return sb.toString();
 	}
 
-	public String[] sqlCreateStrings(MetadataImplementor metadata) {
+	public String[] sqlCreateStrings(Dialect dialect) {
 		return new String[] {
 				buildSqlCreateIndexString(
-						getDialect( metadata ),
-					getName(),
-					getTable(),
-					getColumns(),
-					false
+						dialect, getName(), getTable(), getColumns(), false
 				)
 		};
-	}
-
-	/* package-protected */
-	static String buildSqlDropIndexString(
-			Dialect dialect,
-			TableSpecification table,
-			String name	) {
-		return "drop index " +
-				StringHelper.qualify(
-						table.getQualifiedName( dialect ),
-						name
-				);
 	}
 
 	public static String buildSqlCreateIndexString(
@@ -121,12 +104,12 @@ public class Index extends AbstractConstraint implements Constraint {
 		return buf.append( ')' ).toString();
 	}
 
-	public String[] sqlDropStrings(MetadataImplementor metadata) {
+	public String[] sqlDropStrings(Dialect dialect) {
 		return new String[] {
 				new StringBuffer( "drop index " )
 				.append(
 						StringHelper.qualify(
-								getTable().getQualifiedName( getDialect( metadata ) ),
+								getTable().getQualifiedName( dialect ),
 								getName()
 						)
 				).toString()

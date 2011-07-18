@@ -33,11 +33,9 @@ import java.util.Set;
 
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.Metadata;
-import org.hibernate.metamodel.source.MetadataImplementor;
 
 /**
  * Represents a database and manages the named schema/catalog pairs defined within.
@@ -103,15 +101,14 @@ public class Database {
 		return auxiliaryDatabaseObjects;
 	}
 
-	public String[] generateSchemaCreationScript(MetadataImplementor metadata) {
-		Dialect dialect = getDialect( metadata );
+	public String[] generateSchemaCreationScript(Dialect dialect) {
 		Set<String> exportIdentifiers = new HashSet<String>( 50 );
 		List<String> script = new ArrayList<String>( 50 );
 
 		for ( Schema schema : schemaMap.values() ) {
 			// TODO: create schema/catalog???
 			for ( Table table : schema.getTables() ) {
-				addSqlCreateStrings( metadata, exportIdentifiers, script, table );
+				addSqlCreateStrings( dialect, exportIdentifiers, script, table );
 			}
 		}
 
@@ -120,19 +117,19 @@ public class Database {
 
 				if ( ! dialect.supportsUniqueConstraintInCreateAlterTable() ) {
 					for  ( UniqueKey uniqueKey : table.getUniqueKeys() ) {
-						addSqlCreateStrings( metadata, exportIdentifiers, script, uniqueKey );
+						addSqlCreateStrings( dialect, exportIdentifiers, script, uniqueKey );
 					}
 				}
 
 				for ( Index index : table.getIndexes() ) {
-					addSqlCreateStrings( metadata, exportIdentifiers, script, index );
+					addSqlCreateStrings( dialect, exportIdentifiers, script, index );
 				}
 
 				if ( dialect.hasAlterTable() ) {
 					for ( ForeignKey foreignKey : table.getForeignKeys() ) {
 						// only add the foreign key if its target is a physical table
 						if ( Table.class.isInstance( foreignKey.getTargetTable() ) ) {
-							addSqlCreateStrings( metadata, exportIdentifiers, script, foreignKey );
+							addSqlCreateStrings( dialect, exportIdentifiers, script, foreignKey );
 						}
 					}
 				}
@@ -144,15 +141,14 @@ public class Database {
 
 		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : auxiliaryDatabaseObjects ) {
 			if ( auxiliaryDatabaseObject.appliesToDialect( dialect ) ) {
-				addSqlCreateStrings( metadata, exportIdentifiers, script, auxiliaryDatabaseObject );
+				addSqlCreateStrings( dialect, exportIdentifiers, script, auxiliaryDatabaseObject );
 			}
 		}
 
 		return ArrayHelper.toStringArray( script );
 	}
 
-	public String[] generateDropSchemaScript(MetadataImplementor metadata) {
-		Dialect dialect = getDialect( metadata );
+	public String[] generateDropSchemaScript(Dialect dialect) {
 		Set<String> exportIdentifiers = new HashSet<String>( 50 );
 		List<String> script = new ArrayList<String>( 50 );
 
@@ -161,7 +157,7 @@ public class Database {
 		for ( int i = auxiliaryDatabaseObjects.size() - 1 ; i >= 0 ; i-- ) {
 			AuxiliaryDatabaseObject object = auxiliaryDatabaseObjects.get( i );
 			if ( object.appliesToDialect( dialect ) ) {
-				addSqlDropStrings( metadata, exportIdentifiers, script, object );
+				addSqlDropStrings( dialect, exportIdentifiers, script, object );
 			}
 		}
 
@@ -171,7 +167,7 @@ public class Database {
 					for ( ForeignKey foreignKey : table.getForeignKeys() ) {
 						// only include foreign key if the target table is physical
 						if ( foreignKey.getTargetTable() instanceof Table ) {
-							addSqlDropStrings( metadata, exportIdentifiers, script, foreignKey );
+							addSqlDropStrings( dialect, exportIdentifiers, script, foreignKey );
 						}
 					}
 				}
@@ -180,7 +176,7 @@ public class Database {
 
 		for ( Schema schema : schemaMap.values() ) {
 			for ( Table table : schema.getTables() ) {
-				addSqlDropStrings( metadata, exportIdentifiers, script, table );
+				addSqlDropStrings( dialect, exportIdentifiers, script, table );
 			}
 		}
 
@@ -191,27 +187,23 @@ public class Database {
 		return ArrayHelper.toStringArray( script );
 	}
 
-	private static Dialect getDialect(MetadataImplementor metadata) {
-		return metadata.getServiceRegistry().getService( JdbcServices.class ).getDialect();
-	}
-
 	private static void addSqlDropStrings(
-			MetadataImplementor metadata,
+			Dialect dialect,
 			Set<String> exportIdentifiers,
 			List<String> script,
 			Exportable exportable) {
 		addSqlStrings(
-				exportIdentifiers, script, exportable.getExportIdentifier(), exportable.sqlDropStrings( metadata )
+				exportIdentifiers, script, exportable.getExportIdentifier(), exportable.sqlDropStrings( dialect )
 		);
 	}
 
 	private static void addSqlCreateStrings(
-			MetadataImplementor metadata,
+			Dialect dialect,
 			Set<String> exportIdentifiers,
 			List<String> script,
 			Exportable exportable) {
 		addSqlStrings(
-				exportIdentifiers, script, exportable.getExportIdentifier(), exportable.sqlCreateStrings( metadata )
+				exportIdentifiers, script, exportable.getExportIdentifier(), exportable.sqlCreateStrings( dialect )
 		);
 	}
 

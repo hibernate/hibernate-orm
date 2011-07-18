@@ -28,9 +28,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.metamodel.source.MetadataImplementor;
 
 /**
  * Models the concept of a relational <tt>TABLE</tt> (or <tt>VIEW</tt>).
@@ -139,8 +136,7 @@ public class Table extends AbstractTableSpecification implements Exportable {
 		return objectName.toText( dialect );
 	}
 
-	public String[] sqlCreateStrings(MetadataImplementor metadata) {
-		Dialect dialect = metadata.getServiceRegistry().getService( JdbcServices.class ).getDialect();
+	public String[] sqlCreateStrings(Dialect dialect) {
 		boolean hasPrimaryKey = getPrimaryKey().getColumns().iterator().hasNext();
 		StringBuilder buf =
 				new StringBuilder(
@@ -273,8 +269,7 @@ public class Table extends AbstractTableSpecification implements Exportable {
 	}
 
 	@Override
-	public String[] sqlDropStrings(MetadataImplementor metadata) {
-		Dialect dialect = metadata.getServiceRegistry().getService( JdbcServices.class ).getDialect();
+	public String[] sqlDropStrings(Dialect dialect) {
 		StringBuilder buf = new StringBuilder( "drop table " );
 		if ( dialect.supportsIfExistsBeforeTableName() ) {
 			buf.append( "if exists " );

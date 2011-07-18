@@ -137,8 +137,9 @@ public class SchemaExport {
 				DEFAULT_IMPORT_FILE
 		);
 
-		this.dropSQL = metadata.getDatabase().generateDropSchemaScript( metadata );
-		this.createSQL = metadata.getDatabase().generateSchemaCreationScript( metadata );
+		final Dialect dialect = metadata.getServiceRegistry().getService( JdbcServices.class ).getDialect();
+		this.dropSQL = metadata.getDatabase().generateDropSchemaScript( dialect );
+		this.createSQL = metadata.getDatabase().generateSchemaCreationScript( dialect );
 	}
 
 	/**

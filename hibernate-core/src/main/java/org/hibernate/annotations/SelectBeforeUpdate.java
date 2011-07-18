@@ -30,17 +30,13 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * For updating, should this entity use dynamic sql generation where only changed columns get referenced in the
- * prepared sql statement?
- * <p/>
- * Note, for re-attachment of detached entities this is not possible without select-before-update being enabled.
+ * Should the entity's current state be selected from the database when determining whether to perform an update when
+ * re-attaching detached entities?
  *
  * @author Steve Ebersole
- *
- * @see SelectBeforeUpdate
  */
 @Target( TYPE )
 @Retention( RUNTIME )
-public @interface DynamicUpdate {
+public @interface SelectBeforeUpdate {
 	boolean value() default true;
 }

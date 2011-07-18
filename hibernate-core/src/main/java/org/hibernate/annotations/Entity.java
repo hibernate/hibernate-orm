@@ -43,13 +43,18 @@ public @interface Entity {
 	 * @deprecated use {@link org.hibernate.annotations.Immutable} 
 	 */
 	boolean mutable() default true;
-	/** Needed column only in SQL on insert */
+	/**
+	 * Needed column only in SQL on insert
+	 */
 	boolean dynamicInsert() default false;
 	/** Needed column only in SQL on update */
 	boolean dynamicUpdate() default false;
 	/** Do a select to retrieve the entity before any potential update */
 	boolean selectBeforeUpdate() default false;
-	/** polymorphism strategy for this entity */
+	/**
+	 * polymorphism strategy for this entity
+	 * @deprecated use {@link Polymorphism} instead
+	 */
 	PolymorphismType polymorphism() default PolymorphismType.IMPLICIT;
 	/** optimistic locking strategy */
 	OptimisticLockType optimisticLock() default OptimisticLockType.VERSION;

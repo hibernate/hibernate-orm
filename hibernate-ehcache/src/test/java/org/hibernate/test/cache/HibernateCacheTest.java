@@ -6,7 +6,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
-import org.hibernate.cache.ehcache.strategy.ItemValueExtractor;
+import org.hibernate.cache.ehcache.internal.strategy.ItemValueExtractor;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.stat.QueryStatistics;

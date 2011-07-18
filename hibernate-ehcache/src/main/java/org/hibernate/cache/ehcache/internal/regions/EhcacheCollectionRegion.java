@@ -22,16 +22,14 @@
  * Boston, MA  02110-1301  USA
  */
 
-package org.hibernate.cache.ehcache.regions;
+package org.hibernate.cache.ehcache.internal.regions;
 
 import java.util.Properties;
 
 import net.sf.ehcache.Ehcache;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.ehcache.strategy.EhcacheAccessStrategyFactory;
+import org.hibernate.cache.ehcache.internal.strategy.EhcacheAccessStrategyFactory;
 import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.CollectionRegion;
 import org.hibernate.cache.spi.access.AccessType;
@@ -50,22 +48,21 @@ import org.hibernate.cfg.Settings;
  */
 public class EhcacheCollectionRegion extends EhcacheTransactionalDataRegion implements CollectionRegion {
 
-	private static final Logger LOG = LoggerFactory.getLogger( EhcacheCollectionRegion.class );
 
-	/**
-	 * Constructs an EhcacheCollectionRegion around the given underlying cache.
-	 *
-	 * @param accessStrategyFactory
-	 */
-	public EhcacheCollectionRegion(EhcacheAccessStrategyFactory accessStrategyFactory, Ehcache underlyingCache, Settings settings,
-								   CacheDataDescription metadata, Properties properties) {
-		super( accessStrategyFactory, underlyingCache, settings, metadata, properties );
-	}
+    /**
+     * Constructs an EhcacheCollectionRegion around the given underlying cache.
+     *
+     * @param accessStrategyFactory
+     */
+    public EhcacheCollectionRegion(EhcacheAccessStrategyFactory accessStrategyFactory, Ehcache underlyingCache, Settings settings,
+                                   CacheDataDescription metadata, Properties properties) {
+        super( accessStrategyFactory, underlyingCache, settings, metadata, properties );
+    }
 
-	/**
-	 * {@inheritDoc}
-	 */
-	public CollectionRegionAccessStrategy buildAccessStrategy(AccessType accessType) throws CacheException {
-		return accessStrategyFactory.createCollectionRegionAccessStrategy( this, accessType );
-	}
+    /**
+     * {@inheritDoc}
+     */
+    public CollectionRegionAccessStrategy buildAccessStrategy(AccessType accessType) throws CacheException {
+        return accessStrategyFactory.createCollectionRegionAccessStrategy( this, accessType );
+    }
 }

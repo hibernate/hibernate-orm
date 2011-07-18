@@ -21,30 +21,34 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.cache.ehcache.regions;
+package org.hibernate.cache.ehcache.internal.strategy;
 
-import java.util.Properties;
-
-import net.sf.ehcache.Ehcache;
-
-import org.hibernate.cache.ehcache.strategy.EhcacheAccessStrategyFactory;
-import org.hibernate.cache.spi.QueryResultsRegion;
+import org.hibernate.cache.ehcache.internal.regions.EhcacheCollectionRegion;
+import org.hibernate.cache.spi.CollectionRegion;
+import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
+import org.hibernate.cfg.Settings;
 
 /**
- * A query results region specific wrapper around an Ehcache instance.
+ * Ehcache specific read/write collection region access strategy
  *
  * @author Chris Dennis
  * @author Alex Snaps
  */
-public class EhcacheQueryResultsRegion extends EhcacheGeneralDataRegion implements QueryResultsRegion {
+public class ReadWriteEhcacheCollectionRegionAccessStrategy
+		extends AbstractReadWriteEhcacheAccessStrategy<EhcacheCollectionRegion>
+		implements CollectionRegionAccessStrategy {
 
 	/**
-	 * Constructs an EhcacheQueryResultsRegion around the given underlying cache.
-	 *
-	 * @param accessStrategyFactory
+	 * Create a read/write access strategy accessing the given collection region.
 	 */
-	public EhcacheQueryResultsRegion(EhcacheAccessStrategyFactory accessStrategyFactory, Ehcache underlyingCache, Properties properties) {
-		super( accessStrategyFactory, underlyingCache, properties );
+	public ReadWriteEhcacheCollectionRegionAccessStrategy(EhcacheCollectionRegion region, Settings settings) {
+		super( region, settings );
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
+	public CollectionRegion getRegion() {
+		return region;
+	}
 }

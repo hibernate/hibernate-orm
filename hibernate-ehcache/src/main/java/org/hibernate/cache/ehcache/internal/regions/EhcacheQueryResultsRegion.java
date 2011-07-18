@@ -21,30 +21,30 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.cache.ehcache.regions;
-
-import net.sf.ehcache.Ehcache;
-import org.hibernate.cache.ehcache.strategy.EhcacheAccessStrategyFactory;
-import org.hibernate.cache.ehcache.strategy.EhcacheAccessStrategyFactory;
-import org.hibernate.cache.spi.TimestampsRegion;
+package org.hibernate.cache.ehcache.internal.regions;
 
 import java.util.Properties;
 
+import net.sf.ehcache.Ehcache;
+
+import org.hibernate.cache.ehcache.internal.strategy.EhcacheAccessStrategyFactory;
+import org.hibernate.cache.spi.QueryResultsRegion;
+
 /**
- * A timestamps region specific wrapper around an Ehcache instance.
+ * A query results region specific wrapper around an Ehcache instance.
  *
  * @author Chris Dennis
- * @author Abhishek Sanoujam
  * @author Alex Snaps
  */
-public class EhcacheTimestampsRegion extends EhcacheGeneralDataRegion implements TimestampsRegion {
+public class EhcacheQueryResultsRegion extends EhcacheGeneralDataRegion implements QueryResultsRegion {
 
 	/**
-	 * Constructs an EhcacheTimestampsRegion around the given underlying cache.
+	 * Constructs an EhcacheQueryResultsRegion around the given underlying cache.
 	 *
 	 * @param accessStrategyFactory
 	 */
-	public EhcacheTimestampsRegion(EhcacheAccessStrategyFactory accessStrategyFactory, Ehcache underlyingCache, Properties properties) {
-		super(accessStrategyFactory, underlyingCache, properties);
+	public EhcacheQueryResultsRegion(EhcacheAccessStrategyFactory accessStrategyFactory, Ehcache underlyingCache, Properties properties) {
+		super( accessStrategyFactory, underlyingCache, properties );
 	}
+
 }

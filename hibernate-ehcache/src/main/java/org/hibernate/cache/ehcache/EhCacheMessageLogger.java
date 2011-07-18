@@ -57,4 +57,25 @@ public interface EhCacheMessageLogger extends CoreMessageLogger {
     @LogMessage( level = WARN )
     @Message( value = "A configurationResourceName was set to %s but the resource could not be loaded from the classpath. Ehcache will configure itself using defaults.", id = 20004 )
     void unableToLoadConfiguration( String configurationResourceName );
+
+    @LogMessage( level = WARN )
+    @Message( value = "The default cache value mode for this Ehcache configuration is \"identity\". This is incompatible with clustered "
+								+ "Hibernate caching - the value mode has therefore been switched to \"serialization\"", id = 20005 )
+    void incompatibleCacheValueMode( );
+
+    @LogMessage( level = WARN )
+    @Message( value = "The value mode for the cache[%s] is \"identity\". This is incompatible with clustered Hibernate caching - "
+									+ "the value mode has therefore been switched to \"serialization\"", id = 20006 )
+    void incompatibleCacheValueModePerCache( String cacheName );
+    @LogMessage( level = WARN )
+    @Message( value = "read-only cache configured for mutable entity [%s]", id = 20007 )
+    void readOnlyCacheConfiguredForMutableEntity( String entityName );
+
+    @LogMessage( level = WARN )
+    @Message( value = "Cache[%s] Key[%s] Lockable[%s]\n"
+                        + "A soft-locked cache entry was expired by the underlying Ehcache. "
+                        + "If this happens regularly you should consider increasing the cache timeouts and/or capacity limits", id = 20008 )
+    void softLockedCacheExpired( String regionName, Object key, String lock);
+
+
 }

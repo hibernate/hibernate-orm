@@ -1,7 +1,7 @@
 package org.hibernate.test.cache.ehcache;
 
 import org.hibernate.cache.ehcache.EhCacheRegionFactory;
-import org.hibernate.cache.ehcache.strategy.ItemValueExtractor;
+import org.hibernate.cache.ehcache.internal.strategy.ItemValueExtractor;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 
@@ -22,7 +22,7 @@ public class EhCacheRegionTest extends EhCacheTest {
 		final Map map;
 		if ( entry.getClass()
 				.getName()
-				.equals( "org.hibernate.cache.ehcache.strategy.AbstractReadWriteEhcacheAccessStrategy$Item" ) ) {
+				.equals( "org.hibernate.cache.ehcache.internal.strategy.AbstractReadWriteEhcacheAccessStrategy$Item" ) ) {
 			map = ItemValueExtractor.getValue( entry );
 		}
 		else {

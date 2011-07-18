@@ -21,32 +21,29 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.cache.ehcache.strategy;
+package org.hibernate.cache.ehcache.internal.strategy;
 
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.ehcache.regions.EhcacheEntityRegion;
+import org.hibernate.cache.ehcache.internal.regions.EhcacheEntityRegion;
 import org.hibernate.cache.spi.EntityRegion;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.cfg.Settings;
 
 /**
- * @author Alex Snaps
- */
-
-/**
- * Ehcache specific read-only entity region access strategy
+ * Ehcache specific non-strict read/write entity region access strategy
  *
  * @author Chris Dennis
  * @author Alex Snaps
  */
-public class ReadOnlyEhcacheEntityRegionAccessStrategy extends AbstractEhcacheAccessStrategy<EhcacheEntityRegion>
+public class NonStrictReadWriteEhcacheEntityRegionAccessStrategy
+		extends AbstractEhcacheAccessStrategy<EhcacheEntityRegion>
 		implements EntityRegionAccessStrategy {
 
 	/**
-	 * Create a read-only access strategy accessing the given entity region.
+	 * Create a non-strict read/write access strategy accessing the given collection region.
 	 */
-	public ReadOnlyEhcacheEntityRegionAccessStrategy(EhcacheEntityRegion region, Settings settings) {
+	public NonStrictReadWriteEhcacheEntityRegionAccessStrategy(EhcacheEntityRegion region, Settings settings) {
 		super( region, settings );
 	}
 
@@ -79,53 +76,56 @@ public class ReadOnlyEhcacheEntityRegionAccessStrategy extends AbstractEhcacheAc
 	}
 
 	/**
-	 * Throws UnsupportedOperationException since this cache is read-only
-	 *
-	 * @throws UnsupportedOperationException always
+	 * Since this is a non-strict read/write strategy item locking is not used.
 	 */
-	public SoftLock lockItem(Object key, Object version) throws UnsupportedOperationException {
-		throw new UnsupportedOperationException( "Can't write to a readonly object" );
+	public SoftLock lockItem(Object key, Object version) throws CacheException {
+		return null;
 	}
 
 	/**
-	 * A no-op since this cache is read-only
+	 * Since this is a non-strict read/write strategy item locking is not used.
 	 */
 	public void unlockItem(Object key, SoftLock lock) throws CacheException {
-		//throw new UnsupportedOperationException("Can't write to a readonly object");
+		region.remove( key );
 	}
 
 	/**
-	 * This cache is asynchronous hence a no-op
+	 * Returns <code>false</code> since this is an asynchronous cache access strategy.
 	 */
 	public boolean insert(Object key, Object value, Object version) throws CacheException {
 		return false;
 	}
 
 	/**
-	 * {@inheritDoc}
+	 * Returns <code>false</code> since this is a non-strict read/write cache access strategy
 	 */
 	public boolean afterInsert(Object key, Object value, Object version) throws CacheException {
-		region.put( key, value );
-		return true;
+		return false;
 	}
 
 	/**
-	 * Throws UnsupportedOperationException since this cache is read-only
-	 *
-	 * @throws UnsupportedOperationException always
+	 * Removes the entry since this is a non-strict read/write cache strategy.
 	 */
 	public boolean update(Object key, Object value, Object currentVersion, Object previousVersion)
-			throws UnsupportedOperationException {
-		throw new UnsupportedOperationException( "Can't write to a readonly object" );
+			throws CacheException {
+		remove( key );
+		return false;
 	}
 
 	/**
-	 * Throws UnsupportedOperationException since this cache is read-only
-	 *
-	 * @throws UnsupportedOperationException always
+	 * {@inheritDoc}
 	 */
 	public boolean afterUpdate(Object key, Object value, Object currentVersion, Object previousVersion, SoftLock lock)
-			throws UnsupportedOperationException {
-		throw new UnsupportedOperationException( "Can't write to a readonly object" );
+			throws CacheException {
+		unlockItem( key, lock );
+		return false;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void remove(Object key) throws CacheException {
+		region.remove( key );
 	}
 }

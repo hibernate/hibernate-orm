@@ -21,29 +21,32 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.cache.ehcache.strategy;
+package org.hibernate.cache.ehcache.internal.strategy;
 
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.ehcache.regions.EhcacheEntityRegion;
+import org.hibernate.cache.ehcache.internal.regions.EhcacheEntityRegion;
 import org.hibernate.cache.spi.EntityRegion;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.cfg.Settings;
 
 /**
- * Ehcache specific non-strict read/write entity region access strategy
+ * @author Alex Snaps
+ */
+
+/**
+ * Ehcache specific read-only entity region access strategy
  *
  * @author Chris Dennis
  * @author Alex Snaps
  */
-public class NonStrictReadWriteEhcacheEntityRegionAccessStrategy
-		extends AbstractEhcacheAccessStrategy<EhcacheEntityRegion>
+public class ReadOnlyEhcacheEntityRegionAccessStrategy extends AbstractEhcacheAccessStrategy<EhcacheEntityRegion>
 		implements EntityRegionAccessStrategy {
 
 	/**
-	 * Create a non-strict read/write access strategy accessing the given collection region.
+	 * Create a read-only access strategy accessing the given entity region.
 	 */
-	public NonStrictReadWriteEhcacheEntityRegionAccessStrategy(EhcacheEntityRegion region, Settings settings) {
+	public ReadOnlyEhcacheEntityRegionAccessStrategy(EhcacheEntityRegion region, Settings settings) {
 		super( region, settings );
 	}
 
@@ -76,56 +79,53 @@ public class NonStrictReadWriteEhcacheEntityRegionAccessStrategy
 	}
 
 	/**
-	 * Since this is a non-strict read/write strategy item locking is not used.
+	 * Throws UnsupportedOperationException since this cache is read-only
+	 *
+	 * @throws UnsupportedOperationException always
 	 */
-	public SoftLock lockItem(Object key, Object version) throws CacheException {
-		return null;
+	public SoftLock lockItem(Object key, Object version) throws UnsupportedOperationException {
+		throw new UnsupportedOperationException( "Can't write to a readonly object" );
 	}
 
 	/**
-	 * Since this is a non-strict read/write strategy item locking is not used.
+	 * A no-op since this cache is read-only
 	 */
 	public void unlockItem(Object key, SoftLock lock) throws CacheException {
-		region.remove( key );
+		//throw new UnsupportedOperationException("Can't write to a readonly object");
 	}
 
 	/**
-	 * Returns <code>false</code> since this is an asynchronous cache access strategy.
+	 * This cache is asynchronous hence a no-op
 	 */
 	public boolean insert(Object key, Object value, Object version) throws CacheException {
 		return false;
 	}
 
 	/**
-	 * Returns <code>false</code> since this is a non-strict read/write cache access strategy
+	 * {@inheritDoc}
 	 */
 	public boolean afterInsert(Object key, Object value, Object version) throws CacheException {
-		return false;
+		region.put( key, value );
+		return true;
 	}
 
 	/**
-	 * Removes the entry since this is a non-strict read/write cache strategy.
+	 * Throws UnsupportedOperationException since this cache is read-only
+	 *
+	 * @throws UnsupportedOperationException always
 	 */
 	public boolean update(Object key, Object value, Object currentVersion, Object previousVersion)
-			throws CacheException {
-		remove( key );
-		return false;
+			throws UnsupportedOperationException {
+		throw new UnsupportedOperationException( "Can't write to a readonly object" );
 	}
 
 	/**
-	 * {@inheritDoc}
+	 * Throws UnsupportedOperationException since this cache is read-only
+	 *
+	 * @throws UnsupportedOperationException always
 	 */
 	public boolean afterUpdate(Object key, Object value, Object currentVersion, Object previousVersion, SoftLock lock)
-			throws CacheException {
-		unlockItem( key, lock );
-		return false;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void remove(Object key) throws CacheException {
-		region.remove( key );
+			throws UnsupportedOperationException {
+		throw new UnsupportedOperationException( "Can't write to a readonly object" );
 	}
 }

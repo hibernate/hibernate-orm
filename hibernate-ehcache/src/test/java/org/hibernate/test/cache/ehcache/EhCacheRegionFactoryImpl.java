@@ -21,7 +21,7 @@ public class EhCacheRegionFactoryImpl extends EhCacheTest {
 	@Override
 	protected Map getMapFromCacheEntry(final Object entry) {
 		final Map map;
-		if ( "org.hibernate.cache.ehcache.strategy.AbstractReadWriteEhcacheAccessStrategy$Item".equals(
+		if ( "org.hibernate.cache.ehcache.internal.strategy.AbstractReadWriteEhcacheAccessStrategy$Item".equals(
 				entry.getClass()
 						.getName()
 		) ) {

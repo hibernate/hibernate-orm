@@ -21,30 +21,55 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.cache.ehcache.strategy;
+package org.hibernate.cache.ehcache.internal.strategy;
+
+import net.sf.ehcache.Ehcache;
+import net.sf.ehcache.Element;
 
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.ehcache.regions.EhcacheCollectionRegion;
+import org.hibernate.cache.ehcache.internal.regions.EhcacheCollectionRegion;
 import org.hibernate.cache.spi.CollectionRegion;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.cfg.Settings;
 
 /**
- * Ehcache specific read-only collection region access strategy
+ * JTA CollectionRegionAccessStrategy.
  *
  * @author Chris Dennis
+ * @author Ludovic Orban
  * @author Alex Snaps
  */
-public class ReadOnlyEhcacheCollectionRegionAccessStrategy
+public class TransactionalEhcacheCollectionRegionAccessStrategy
 		extends AbstractEhcacheAccessStrategy<EhcacheCollectionRegion>
 		implements CollectionRegionAccessStrategy {
 
+	private final Ehcache ehcache;
+
 	/**
-	 * Create a read-only access strategy accessing the given collection region.
+	 * Construct a new collection region access strategy.
+	 *
+	 * @param region the Hibernate region.
+	 * @param ehcache the cache.
+	 * @param settings the Hibernate settings.
 	 */
-	public ReadOnlyEhcacheCollectionRegionAccessStrategy(EhcacheCollectionRegion region, Settings settings) {
+	public TransactionalEhcacheCollectionRegionAccessStrategy(EhcacheCollectionRegion region, Ehcache ehcache, Settings settings) {
 		super( region, settings );
+		this.ehcache = ehcache;
+	}
+
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public Object get(Object key, long txTimestamp) throws CacheException {
+		try {
+			Element element = ehcache.get( key );
+			return element == null ? null : element.getObjectValue();
+		}
+		catch ( net.sf.ehcache.CacheException e ) {
+			throw new CacheException( e );
+		}
 	}
 
 	/**
@@ -57,37 +82,46 @@ public class ReadOnlyEhcacheCollectionRegionAccessStrategy
 	/**
 	 * {@inheritDoc}
 	 */
-	public Object get(Object key, long txTimestamp) throws CacheException {
-		return region.get( key );
+	public SoftLock lockItem(Object key, Object version) throws CacheException {
+		return null;
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
-			throws CacheException {
-		if ( minimalPutOverride && region.contains( key ) ) {
-			return false;
-		}
-		else {
-			region.put( key, value );
+	public boolean putFromLoad(Object key, Object value, long txTimestamp,
+							   Object version, boolean minimalPutOverride) throws CacheException {
+		try {
+			if ( minimalPutOverride && ehcache.get( key ) != null ) {
+				return false;
+			}
+			//OptimisticCache? versioning?
+			ehcache.put( new Element( key, value ) );
 			return true;
 		}
+		catch ( net.sf.ehcache.CacheException e ) {
+			throw new CacheException( e );
+		}
 	}
 
 	/**
-	 * Throws UnsupportedOperationException since this cache is read-only
-	 *
-	 * @throws UnsupportedOperationException always
+	 * {@inheritDoc}
 	 */
-	public SoftLock lockItem(Object key, Object version) throws UnsupportedOperationException {
-		throw new UnsupportedOperationException( "Can't write to a readonly object" );
+	@Override
+	public void remove(Object key) throws CacheException {
+		try {
+			ehcache.remove( key );
+		}
+		catch ( net.sf.ehcache.CacheException e ) {
+			throw new CacheException( e );
+		}
 	}
 
 	/**
-	 * A no-op since this cache is read-only
+	 * {@inheritDoc}
 	 */
 	public void unlockItem(Object key, SoftLock lock) throws CacheException {
-		//throw new UnsupportedOperationException("Can't write to a readonly object");
+		// no-op
 	}
+
 }

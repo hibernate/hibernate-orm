@@ -21,10 +21,10 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.cache.ehcache.strategy;
+package org.hibernate.cache.ehcache.internal.strategy;
 
-import org.hibernate.cache.ehcache.regions.EhcacheCollectionRegion;
-import org.hibernate.cache.ehcache.regions.EhcacheEntityRegion;
+import org.hibernate.cache.ehcache.internal.regions.EhcacheCollectionRegion;
+import org.hibernate.cache.ehcache.internal.regions.EhcacheEntityRegion;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
@@ -48,7 +48,7 @@ public interface EhcacheAccessStrategyFactory {
 	public EntityRegionAccessStrategy createEntityRegionAccessStrategy(EhcacheEntityRegion entityRegion, AccessType accessType);
 
 	/**
-	 * Create {@link CollectionRegionAccessStrategy} for the input {@link org.hibernate.cache.ehcache.regions.EhcacheCollectionRegion} and {@link AccessType}
+	 * Create {@link CollectionRegionAccessStrategy} for the input {@link org.hibernate.cache.ehcache.internal.regions.EhcacheCollectionRegion} and {@link AccessType}
 	 *
 	 * @param collectionRegion
 	 * @param accessType

@@ -21,10 +21,10 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.cache.ehcache.strategy;
+package org.hibernate.cache.ehcache.internal.strategy;
 
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.ehcache.regions.EhcacheTransactionalDataRegion;
+import org.hibernate.cache.ehcache.internal.regions.EhcacheTransactionalDataRegion;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.cfg.Settings;
 

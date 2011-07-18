@@ -189,7 +189,7 @@ public abstract class EhCacheTest extends BaseCoreFunctionalTestCase {
 //		} else
 		if ( entry.getClass()
 				.getName()
-				.equals( "org.hibernate.cache.ehcache.strategy.AbstractReadWriteEhcacheAccessStrategy$Lock" ) ) {
+				.equals( "org.hibernate.cache.ehcache.internal.strategy.AbstractReadWriteEhcacheAccessStrategy$Lock" ) ) {
 			//FIXME don't know what to test here
 		}
 		else {

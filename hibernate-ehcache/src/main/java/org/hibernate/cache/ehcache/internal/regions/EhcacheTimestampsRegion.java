@@ -21,34 +21,30 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.cache.ehcache.strategy;
+package org.hibernate.cache.ehcache.internal.regions;
 
-import org.hibernate.cache.ehcache.regions.EhcacheCollectionRegion;
-import org.hibernate.cache.spi.CollectionRegion;
-import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
-import org.hibernate.cfg.Settings;
+import net.sf.ehcache.Ehcache;
+
+import org.hibernate.cache.ehcache.internal.strategy.EhcacheAccessStrategyFactory;
+import org.hibernate.cache.spi.TimestampsRegion;
+
+import java.util.Properties;
 
 /**
- * Ehcache specific read/write collection region access strategy
+ * A timestamps region specific wrapper around an Ehcache instance.
  *
  * @author Chris Dennis
+ * @author Abhishek Sanoujam
  * @author Alex Snaps
  */
-public class ReadWriteEhcacheCollectionRegionAccessStrategy
-		extends AbstractReadWriteEhcacheAccessStrategy<EhcacheCollectionRegion>
-		implements CollectionRegionAccessStrategy {
+public class EhcacheTimestampsRegion extends EhcacheGeneralDataRegion implements TimestampsRegion {
 
 	/**
-	 * Create a read/write access strategy accessing the given collection region.
+	 * Constructs an EhcacheTimestampsRegion around the given underlying cache.
+	 *
+	 * @param accessStrategyFactory
 	 */
-	public ReadWriteEhcacheCollectionRegionAccessStrategy(EhcacheCollectionRegion region, Settings settings) {
-		super( region, settings );
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public CollectionRegion getRegion() {
-		return region;
+	public EhcacheTimestampsRegion(EhcacheAccessStrategyFactory accessStrategyFactory, Ehcache underlyingCache, Properties properties) {
+		super(accessStrategyFactory, underlyingCache, properties);
 	}
 }

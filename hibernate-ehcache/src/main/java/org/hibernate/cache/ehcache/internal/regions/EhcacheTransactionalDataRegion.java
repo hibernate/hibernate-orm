@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.cache.ehcache.regions;
+package org.hibernate.cache.ehcache.internal.regions;
 
 import java.util.Properties;
 
@@ -33,8 +33,8 @@ import net.sf.ehcache.concurrent.StripedReadWriteLockSync;
 import net.sf.ehcache.constructs.nonstop.NonStopCacheException;
 
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.ehcache.nonstop.HibernateNonstopCacheExceptionHandler;
-import org.hibernate.cache.ehcache.strategy.EhcacheAccessStrategyFactory;
+import org.hibernate.cache.ehcache.internal.nonstop.HibernateNonstopCacheExceptionHandler;
+import org.hibernate.cache.ehcache.internal.strategy.EhcacheAccessStrategyFactory;
 import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.TransactionalDataRegion;
 import org.hibernate.cfg.Settings;

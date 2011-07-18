@@ -21,55 +21,30 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.cache.ehcache.strategy;
-
-import net.sf.ehcache.Ehcache;
-import net.sf.ehcache.Element;
+package org.hibernate.cache.ehcache.internal.strategy;
 
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.ehcache.regions.EhcacheCollectionRegion;
+import org.hibernate.cache.ehcache.internal.regions.EhcacheCollectionRegion;
 import org.hibernate.cache.spi.CollectionRegion;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.cfg.Settings;
 
 /**
- * JTA CollectionRegionAccessStrategy.
+ * Ehcache specific non-strict read/write collection region access strategy
  *
  * @author Chris Dennis
- * @author Ludovic Orban
  * @author Alex Snaps
  */
-public class TransactionalEhcacheCollectionRegionAccessStrategy
+public class NonStrictReadWriteEhcacheCollectionRegionAccessStrategy
 		extends AbstractEhcacheAccessStrategy<EhcacheCollectionRegion>
 		implements CollectionRegionAccessStrategy {
 
-	private final Ehcache ehcache;
-
 	/**
-	 * Construct a new collection region access strategy.
-	 *
-	 * @param region the Hibernate region.
-	 * @param ehcache the cache.
-	 * @param settings the Hibernate settings.
+	 * Create a non-strict read/write access strategy accessing the given collection region.
 	 */
-	public TransactionalEhcacheCollectionRegionAccessStrategy(EhcacheCollectionRegion region, Ehcache ehcache, Settings settings) {
+	public NonStrictReadWriteEhcacheCollectionRegionAccessStrategy(EhcacheCollectionRegion region, Settings settings) {
 		super( region, settings );
-		this.ehcache = ehcache;
-	}
-
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public Object get(Object key, long txTimestamp) throws CacheException {
-		try {
-			Element element = ehcache.get( key );
-			return element == null ? null : element.getObjectValue();
-		}
-		catch ( net.sf.ehcache.CacheException e ) {
-			throw new CacheException( e );
-		}
 	}
 
 	/**
@@ -82,26 +57,36 @@ public class TransactionalEhcacheCollectionRegionAccessStrategy
 	/**
 	 * {@inheritDoc}
 	 */
-	public SoftLock lockItem(Object key, Object version) throws CacheException {
-		return null;
+	public Object get(Object key, long txTimestamp) throws CacheException {
+		return region.get( key );
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public boolean putFromLoad(Object key, Object value, long txTimestamp,
-							   Object version, boolean minimalPutOverride) throws CacheException {
-		try {
-			if ( minimalPutOverride && ehcache.get( key ) != null ) {
-				return false;
-			}
-			//OptimisticCache? versioning?
-			ehcache.put( new Element( key, value ) );
+	public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
+			throws CacheException {
+		if ( minimalPutOverride && region.contains( key ) ) {
+			return false;
+		}
+		else {
+			region.put( key, value );
 			return true;
 		}
-		catch ( net.sf.ehcache.CacheException e ) {
-			throw new CacheException( e );
-		}
+	}
+
+	/**
+	 * Since this is a non-strict read/write strategy item locking is not used.
+	 */
+	public SoftLock lockItem(Object key, Object version) throws CacheException {
+		return null;
+	}
+
+	/**
+	 * Since this is a non-strict read/write strategy item locking is not used.
+	 */
+	public void unlockItem(Object key, SoftLock lock) throws CacheException {
+		region.remove( key );
 	}
 
 	/**
@@ -109,19 +94,6 @@ public class TransactionalEhcacheCollectionRegionAccessStrategy
 	 */
 	@Override
 	public void remove(Object key) throws CacheException {
-		try {
-			ehcache.remove( key );
-		}
-		catch ( net.sf.ehcache.CacheException e ) {
-			throw new CacheException( e );
-		}
+		region.remove( key );
 	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public void unlockItem(Object key, SoftLock lock) throws CacheException {
-		// no-op
-	}
-
 }

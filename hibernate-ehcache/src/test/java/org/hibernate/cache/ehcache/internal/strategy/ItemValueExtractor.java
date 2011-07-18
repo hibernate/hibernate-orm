@@ -1,8 +1,7 @@
-package org.hibernate.cache.ehcache.strategy;
+package org.hibernate.cache.ehcache.internal.strategy;
 
-import org.hibernate.cache.ehcache.regions.EhcacheTransactionalDataRegion;
-import org.hibernate.cache.ehcache.regions.EhcacheTransactionalDataRegion;
-import org.hibernate.cache.ehcache.strategy.AbstractReadWriteEhcacheAccessStrategy;
+import org.hibernate.cache.ehcache.internal.regions.EhcacheTransactionalDataRegion;
+import org.hibernate.cache.ehcache.internal.strategy.AbstractReadWriteEhcacheAccessStrategy;
 import org.hibernate.cfg.Settings;
 
 

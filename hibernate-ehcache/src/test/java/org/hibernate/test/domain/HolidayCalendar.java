@@ -15,8 +15,7 @@
  */
 package org.hibernate.test.domain;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -27,7 +26,6 @@ import java.util.Map;
 
 public class HolidayCalendar {
 
-	private static final Logger LOG = LoggerFactory.getLogger(HolidayCalendar.class);
 
 	private Long id;
 	// Date -> String
@@ -41,7 +39,6 @@ public class HolidayCalendar {
 			holidays.put(df.parse("2009.02.14"), "Valentine's Day");
 			holidays.put(df.parse("2009.11.11"), "Armistice Day");
 		} catch (ParseException e) {
-			LOG.info("Error parsing date string");
 			throw new RuntimeException(e);
 		}
 		return this;

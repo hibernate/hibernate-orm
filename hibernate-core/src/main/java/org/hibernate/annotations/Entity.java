@@ -48,7 +48,10 @@ public @interface Entity {
 	 * @deprecated use {@link DynamicInsert} instead
 	 */
 	boolean dynamicInsert() default false;
-	/** Needed column only in SQL on update */
+	/**
+	 * Needed column only in SQL on update
+	 * @deprecated Use {@link DynamicUpdate} instead
+	 */
 	boolean dynamicUpdate() default false;
 	/** Do a select to retrieve the entity before any potential update */
 	boolean selectBeforeUpdate() default false;

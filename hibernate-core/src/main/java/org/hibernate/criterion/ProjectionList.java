@@ -49,7 +49,7 @@ public class ProjectionList implements EnhancedProjection {
 	}
 
 	public ProjectionList add(Projection projection, String alias) {
-		return add( Projections.alias(projection, alias) );
+		return add( Projections.alias( projection, alias ) );
 	}
 
 	public Type[] getTypes(Criteria criteria, CriteriaQuery criteriaQuery)

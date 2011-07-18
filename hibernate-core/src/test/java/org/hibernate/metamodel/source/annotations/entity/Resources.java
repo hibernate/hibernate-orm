@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -23,48 +23,24 @@
  */
 package org.hibernate.metamodel.source.annotations.entity;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
+import javax.persistence.SharedCacheMode;
 
-import org.junit.Test;
-
-import org.hibernate.annotations.RowId;
-import org.hibernate.metamodel.binding.EntityBinding;
-
-import static junit.framework.Assert.assertEquals;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Tests for {@code o.h.a.RowId}.
+ * Allows to specify the annotated classes and xml configuration files for this test
  *
  * @author Hardy Ferentschik
  */
-public class RowIdBindingTests extends BaseAnnotationBindingTestCase {
-	@Test
-	@Resources(annotatedClasses = NoRowIdEntity.class)
-	public void testNoRowId() {
-		EntityBinding binding = getEntityBinding( NoRowIdEntity.class );
-		assertEquals( "Wrong row id", null, binding.getRowId() );
-	}
+@Target(METHOD)
+@Retention(RUNTIME)
+public @interface Resources {
+	Class<?>[] annotatedClasses() default { };
 
-	@Test
-	@Resources(annotatedClasses = RowIdEntity.class)
-	public void testRowId() {
-		EntityBinding binding = getEntityBinding( RowIdEntity.class );
-		assertEquals( "Wrong row id", "rowid", binding.getRowId() );
-	}
+	String ormXmlPath() default "";
 
-	@Entity
-	class NoRowIdEntity {
-		@Id
-		private int id;
-	}
-
-	@Entity
-	@RowId("rowid")
-	class RowIdEntity {
-		@Id
-		private int id;
-	}
+	SharedCacheMode cacheMode() default SharedCacheMode.ENABLE_SELECTIVE;
 }
-
-

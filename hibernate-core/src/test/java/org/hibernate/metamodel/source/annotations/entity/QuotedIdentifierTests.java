@@ -15,11 +15,11 @@ import static org.junit.Assert.assertEquals;
  * @author Strong Liu
  */
 public class QuotedIdentifierTests extends BaseAnnotationBindingTestCase {
-	String ormPath = "org/hibernate/metamodel/source/annotations/xml/orm-quote-identifier.xml";
+	private final String ormPath = "org/hibernate/metamodel/source/annotations/xml/orm-quote-identifier.xml";
 
 	@Test
+	@Resources(annotatedClasses = { Item.class, Item2.class, Item3.class, Item4.class }, ormXmlPath = ormPath)
 	public void testDelimitedIdentifiers() {
-		buildMetadataSources( ormPath, Item.class, Item2.class, Item3.class, Item4.class );
 		EntityBinding item = getEntityBinding( Item.class );
 		assertIdentifierEquals( "`Item`", item );
 

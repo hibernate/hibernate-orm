@@ -47,9 +47,8 @@ import static junit.framework.Assert.assertNull;
  */
 public class CacheBindingTests extends BaseAnnotationBindingTestCase {
 	@Test
+	@Resources(annotatedClasses = HibernateCacheEntity.class, cacheMode = SharedCacheMode.ALL)
 	public void testHibernateCaching() {
-		buildMetadataSources( HibernateCacheEntity.class );
-		sources.getMetadataBuilder().with( SharedCacheMode.ALL );
 		EntityBinding binding = getEntityBinding( HibernateCacheEntity.class );
 		assertNotNull( "There should be a cache binding", binding.getCaching() );
 		Caching caching = binding.getCaching();
@@ -59,9 +58,8 @@ public class CacheBindingTests extends BaseAnnotationBindingTestCase {
 	}
 
 	@Test
+	@Resources(annotatedClasses = JpaCacheEntity.class, cacheMode = SharedCacheMode.ALL)
 	public void testJpaCaching() {
-		buildMetadataSources( JpaCacheEntity.class );
-		sources.getMetadataBuilder().with( SharedCacheMode.ALL );
 		EntityBinding binding = getEntityBinding( JpaCacheEntity.class );
 		assertNotNull( "There should be a cache binding", binding.getCaching() );
 		Caching caching = binding.getCaching();
@@ -74,9 +72,8 @@ public class CacheBindingTests extends BaseAnnotationBindingTestCase {
 	}
 
 	@Test
+	@Resources(annotatedClasses = NoCacheEntity.class, cacheMode = SharedCacheMode.NONE)
 	public void testNoCaching() {
-		buildMetadataSources( NoCacheEntity.class );
-		sources.getMetadataBuilder().with( SharedCacheMode.NONE );
 		EntityBinding binding = getEntityBinding( NoCacheEntity.class );
 		assertNull( "There should be no cache binding", binding.getCaching() );
 	}

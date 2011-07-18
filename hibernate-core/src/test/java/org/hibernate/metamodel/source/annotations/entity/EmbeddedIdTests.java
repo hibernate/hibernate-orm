@@ -21,14 +21,11 @@ import static junit.framework.Assert.assertTrue;
  */
 public class EmbeddedIdTests extends BaseAnnotationBindingTestCase {
     @Test
+	@Resources(annotatedClasses = { User.class, Address.class })
     public void testEmbeddable() {
-        buildMetadataSources( User.class, Address.class );
         EntityBinding binding = getEntityBinding( User.class );
         EntityIdentifier identifier = binding.getEntityIdentifier();
         assertTrue( identifier.isEmbedded() );
-//        assertTrue(
-//                "EmbeddedId generator should be 'assigned'", identifier.getIdentifierGenerator() instanceof Assigned
-//        );
     }
 
     @Entity

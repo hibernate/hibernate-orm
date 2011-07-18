@@ -40,15 +40,15 @@ import static junit.framework.Assert.assertEquals;
  */
 public class BatchSizeBindingTests extends BaseAnnotationBindingTestCase {
 	@Test
+	@Resources(annotatedClasses = NoBatchSizeEntity.class)
 	public void testNoBatchSize() {
-		buildMetadataSources( NoBatchSizeEntity.class );
 		EntityBinding binding = getEntityBinding( NoBatchSizeEntity.class );
 		assertEquals( "Wrong batch size", -1, binding.getBatchSize() );
 	}
 
 	@Test
+	@Resources(annotatedClasses = BatchSizeEntity.class)
 	public void testBatchSize() {
-		buildMetadataSources( BatchSizeEntity.class );
 		EntityBinding binding = getEntityBinding( BatchSizeEntity.class );
 		assertEquals( "Wrong batch size", 100, binding.getBatchSize() );
 	}

@@ -31,9 +31,8 @@ import javax.persistence.Id;
 import org.junit.Test;
 
 import org.hibernate.metamodel.binding.EntityBinding;
-
 import org.hibernate.metamodel.domain.Component;
-import org.hibernate.metamodel.domain.SingularAttribute;;
+import org.hibernate.metamodel.domain.SingularAttribute;
 
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertTrue;
@@ -45,8 +44,8 @@ import static junit.framework.Assert.assertTrue;
  */
 public class EmbeddableBindingTests extends BaseAnnotationBindingTestCase {
 	@Test
+	@Resources(annotatedClasses = { User.class, Address.class })
 	public void testEmbeddable() {
-		buildMetadataSources( User.class, Address.class );
 		EntityBinding binding = getEntityBinding( User.class );
 		assertNotNull( binding.getAttributeBinding( "street" ) );
 		assertNotNull( binding.getAttributeBinding( "city" ) );

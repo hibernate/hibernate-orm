@@ -199,7 +199,6 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 			throw new HibernateException( "Unable to open input stream for class " + className, e );
 		}
 	}
-
 }
 
 

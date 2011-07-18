@@ -157,21 +157,19 @@ public class ConfiguredClassHierarchyBuilder {
 	 *
 	 * @param info the jandex class info
 	 *
-	 * @return {@code true} if the class represented by {@code info} is relevant for the JPA mappings, {@code false} otherwise.
+	 * @return {@code true} if the class represented by {@code info} is annotated with {@code @Entity}, {@code false} otherwise.
 	 */
 	private static boolean isEntityClass(ClassInfo info) {
-		boolean isConfiguredClass = true;
+		// we are only interested in building the class hierarchies for @Entity
 		AnnotationInstance jpaEntityAnnotation = JandexHelper.getSingleAnnotation( info, JPADotNames.ENTITY );
-		AnnotationInstance mappedSuperClassAnnotation = JandexHelper.getSingleAnnotation(
-				info, JPADotNames.MAPPED_SUPERCLASS
-		);
-
-		// we are only interested in building the class hierarchies for @Entity or @MappedSuperclass
-		if ( jpaEntityAnnotation == null && mappedSuperClassAnnotation == null ) {
+		if ( jpaEntityAnnotation == null  ) {
 			return false;
 		}
 
 		// some sanity checks
+		AnnotationInstance mappedSuperClassAnnotation = JandexHelper.getSingleAnnotation(
+				info, JPADotNames.MAPPED_SUPERCLASS
+		);
 		String className = info.toString();
 		assertNotEntityAndMappedSuperClass( jpaEntityAnnotation, mappedSuperClassAnnotation, className );
 
@@ -180,7 +178,7 @@ public class ConfiguredClassHierarchyBuilder {
 		);
 		assertNotEntityAndEmbeddable( jpaEntityAnnotation, embeddableAnnotation, className );
 
-		return isConfiguredClass;
+		return true;
 	}
 
 	private static boolean existsHierarchyWithClassInfoAsLeaf(Map<ClassInfo, List<ClassInfo>> processedClassInfos, ClassInfo tmpClassInfo) {

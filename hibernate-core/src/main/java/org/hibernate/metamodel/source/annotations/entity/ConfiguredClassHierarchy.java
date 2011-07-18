@@ -122,13 +122,6 @@ public class ConfiguredClassHierarchy<T extends ConfiguredClass> implements Iter
 	}
 
 	/**
-	 * @return Returns the top level configured class
-	 */
-	public T getRoot() {
-		return configuredClasses.get( 0 );
-	}
-
-	/**
 	 * @return Returns the leaf configured class
 	 */
 	public T getLeaf() {

@@ -47,12 +47,11 @@ import static junit.framework.Assert.assertTrue;
  *
  * @author Hardy Ferentschik
  */
+@FailureExpected(jiraKey = "HHH-6447", message = "Work in progress")
 public class MappedSuperclassTests extends BaseAnnotationBindingTestCase {
 	@Test
-	@FailureExpected(jiraKey = "HHH-6447", message = "Work in progress")
+//	@Resources(annotatedClasses = { MyMappedSuperClass.class, MyEntity.class, MyMappedSuperClassBase.class })
 	public void testSimpleAttributeOverrideInMappedSuperclass() {
-		buildMetadataSources( MyMappedSuperClass.class, MyEntity.class, MyMappedSuperClassBase.class );
-
 		EntityBinding binding = getEntityBinding( MyEntity.class );
 		AttributeBinding nameBinding = binding.getAttributeBinding( "name" );
 		assertNotNull( "the name attribute should be bound to MyEntity", nameBinding );
@@ -62,10 +61,8 @@ public class MappedSuperclassTests extends BaseAnnotationBindingTestCase {
 	}
 
 	@Test
-	@FailureExpected(jiraKey = "HHH-6447", message = "Work in progress")
+//	@Resources(annotatedClasses = { MyMappedSuperClass.class, MyEntity.class, MyMappedSuperClassBase.class })
 	public void testLastAttributeOverrideWins() {
-		buildMetadataSources( MyMappedSuperClass.class, MyEntity.class, MyMappedSuperClassBase.class );
-
 		EntityBinding binding = getEntityBinding( MyEntity.class );
 		AttributeBinding fooBinding = binding.getAttributeBinding( "foo" );
 		assertNotNull( "the foo attribute should be bound to MyEntity", fooBinding );
@@ -75,9 +72,8 @@ public class MappedSuperclassTests extends BaseAnnotationBindingTestCase {
 	}
 
 	@Test
-	@FailureExpected(jiraKey = "HHH-6447", message = "Work in progress")
+//	@Resources(annotatedClasses = { SubclassOfNoEntity.class, NoEntity.class })
 	public void testNonEntityBaseClass() {
-		buildMetadataSources( SubclassOfNoEntity.class, NoEntity.class );
 		EntityBinding binding = getEntityBinding( SubclassOfNoEntity.class );
 		assertEquals( "Wrong entity name", SubclassOfNoEntity.class.getName(), binding.getEntity().getName() );
 		assertEquals( "Wrong entity name", NoEntity.class.getName(), binding.getEntity().getSuperType().getName() );

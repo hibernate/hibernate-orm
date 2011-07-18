@@ -48,8 +48,8 @@ import static junit.framework.Assert.assertNull;
  */
 public class CustomSQLBindingTests extends BaseAnnotationBindingTestCase {
 	@Test
+	@Resources(annotatedClasses = NoCustomSQLEntity.class)
 	public void testNoCustomSqlAnnotations() {
-		buildMetadataSources( NoCustomSQLEntity.class );
 		EntityBinding binding = getEntityBinding( NoCustomSQLEntity.class );
 		assertNull( binding.getCustomDelete() );
 		assertNull( binding.getCustomInsert() );
@@ -57,8 +57,8 @@ public class CustomSQLBindingTests extends BaseAnnotationBindingTestCase {
 	}
 
 	@Test
+	@Resources(annotatedClasses = CustomSQLEntity.class)
 	public void testCustomSqlAnnotations() {
-		buildMetadataSources( CustomSQLEntity.class );
 		EntityBinding binding = getEntityBinding( CustomSQLEntity.class );
 
 		CustomSQL customSql = binding.getCustomInsert();

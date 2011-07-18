@@ -42,32 +42,32 @@ import static junit.framework.Assert.assertTrue;
  */
 public class ProxyBindingTests extends BaseAnnotationBindingTestCase {
 	@Test
+	@Resources(annotatedClasses = ProxiedEntity.class)
 	public void testProxyNoAttributes() {
-		buildMetadataSources( ProxiedEntity.class );
 		EntityBinding binding = getEntityBinding( ProxiedEntity.class );
 		assertTrue( "Wrong laziness", binding.isLazy() );
 		assertEquals( "Wrong proxy interface", ProxiedEntity.class, binding.getProxyInterfaceType().getValue() );
 	}
 
 	@Test
+	@Resources(annotatedClasses = NoProxyEntity.class)
 	public void testNoProxy() {
-		buildMetadataSources(NoProxyEntity.class);
 		EntityBinding binding = getEntityBinding( NoProxyEntity.class );
 		assertTrue( "Wrong laziness", binding.isLazy() );
 		assertEquals( "Wrong proxy interface", NoProxyEntity.class, binding.getProxyInterfaceType().getValue() );
 	}
 
 	@Test
+	@Resources(annotatedClasses = ProxyDisabledEntity.class)
 	public void testProxyDisabled() {
-		buildMetadataSources( ProxyDisabledEntity.class );
 		EntityBinding binding = getEntityBinding( ProxyDisabledEntity.class );
 		assertFalse( "Wrong laziness", binding.isLazy() );
 		assertEquals( "Wrong proxy interface", null, binding.getProxyInterfaceType() );
 	}
 
 	@Test
+	@Resources(annotatedClasses = ProxyInterfaceEntity.class)
 	public void testProxyInterface() {
-		buildMetadataSources( ProxyInterfaceEntity.class );
 		EntityBinding binding = getEntityBinding( ProxyInterfaceEntity.class );
 		assertTrue( "Wrong laziness", binding.isLazy() );
 		assertEquals(

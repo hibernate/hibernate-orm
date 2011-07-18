@@ -42,8 +42,8 @@ import static junit.framework.Assert.assertTrue;
  */
 public class SynchronizeBindingTests extends BaseAnnotationBindingTestCase {
 	@Test
+	@Resources(annotatedClasses = TestEntityWithSynchronizeAnnotation.class)
 	public void testSynchronizeAnnotation() {
-		buildMetadataSources( TestEntityWithSynchronizeAnnotation.class );
 		EntityBinding binding = getEntityBinding( TestEntityWithSynchronizeAnnotation.class );
 		Set<String> synchronizedTableNames = binding.getSynchronizedTableNames();
 		assertEquals( "Wrong number of synced tables", 2, synchronizedTableNames.size() );
@@ -52,8 +52,8 @@ public class SynchronizeBindingTests extends BaseAnnotationBindingTestCase {
 	}
 
 	@Test
+	@Resources(annotatedClasses = TestEntity.class)
 	public void testNoSynchronizeAnnotation() {
-		buildMetadataSources( TestEntity.class );
 		EntityBinding binding = getEntityBinding( TestEntity.class );
 		assertTrue( "There should be no cache binding", binding.getSynchronizedTableNames().size() == 0 );
 	}

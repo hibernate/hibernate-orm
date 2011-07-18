@@ -24,52 +24,56 @@
 package org.hibernate.metamodel.source.annotations.util;
 
 import java.util.Set;
-
 import javax.persistence.AccessType;
 
 import org.jboss.jandex.Index;
 import org.junit.After;
 import org.junit.Before;
 
+import org.hibernate.metamodel.MetadataSources;
+import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
+import org.hibernate.metamodel.source.annotations.AnnotationBindingContextImpl;
 import org.hibernate.metamodel.source.annotations.ConfiguredClassHierarchyBuilder;
 import org.hibernate.metamodel.source.annotations.JandexHelper;
 import org.hibernate.metamodel.source.annotations.entity.ConfiguredClassHierarchy;
-import org.hibernate.metamodel.source.annotations.TestAnnotationsBindingContextImpl;
 import org.hibernate.metamodel.source.annotations.entity.EmbeddableClass;
 import org.hibernate.metamodel.source.annotations.entity.EntityClass;
+import org.hibernate.metamodel.source.internal.MetadataImpl;
 import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
-import org.hibernate.service.internal.BasicServiceRegistryImpl;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 /**
  * @author Hardy Ferentschik
  */
 public abstract class BaseAnnotationIndexTestCase extends BaseUnitTestCase {
-	private BasicServiceRegistryImpl serviceRegistry;
+	private MetadataImpl meta;
 
 	@Before
 	public void setUp() {
-		serviceRegistry = (BasicServiceRegistryImpl) new ServiceRegistryBuilder().buildServiceRegistry();
+		MetadataSources sources = new MetadataSources( new ServiceRegistryBuilder().buildServiceRegistry() );
+		meta = (MetadataImpl) sources.buildMetadata();
 	}
 
 	@After
 	public void tearDown() {
-		serviceRegistry.destroy();
 	}
 
 	public Set<ConfiguredClassHierarchy<EntityClass>> createEntityHierarchies(Class<?>... clazz) {
-		Index index = JandexHelper.indexForClass( serviceRegistry.getService( ClassLoaderService.class ), clazz );
-		TestAnnotationsBindingContextImpl context = new TestAnnotationsBindingContextImpl( index, serviceRegistry );
+		Index index = JandexHelper.indexForClass(
+				meta.getServiceRegistry().getService( ClassLoaderService.class ),
+				clazz
+		);
+		AnnotationBindingContext context = new AnnotationBindingContextImpl( meta, index );
 		return ConfiguredClassHierarchyBuilder.createEntityHierarchies( context );
 	}
 
 	public ConfiguredClassHierarchy<EmbeddableClass> createEmbeddableHierarchy(AccessType accessType, Class<?>... configuredClasses) {
 		Index index = JandexHelper.indexForClass(
-				serviceRegistry.getService( ClassLoaderService.class ),
+				meta.getServiceRegistry().getService( ClassLoaderService.class ),
 				configuredClasses
 		);
-		TestAnnotationsBindingContextImpl context = new TestAnnotationsBindingContextImpl( index, serviceRegistry );
+		AnnotationBindingContext context = new AnnotationBindingContextImpl( meta, index );
 		return ConfiguredClassHierarchyBuilder.createEmbeddableHierarchy( configuredClasses[0], accessType, context );
 	}
 }

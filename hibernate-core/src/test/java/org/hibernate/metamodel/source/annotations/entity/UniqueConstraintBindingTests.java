@@ -47,8 +47,8 @@ import static junit.framework.Assert.assertTrue;
  */
 public class UniqueConstraintBindingTests extends BaseAnnotationBindingTestCase {
 	@Test
+	@Resources(annotatedClasses = TableWithUniqueConstraint.class)
 	public void testTableUniqueConstraints() {
-		buildMetadataSources( TableWithUniqueConstraint.class );
 		EntityBinding binding = getEntityBinding( TableWithUniqueConstraint.class );
 		TableSpecification table = binding.getBaseTable();
 		Iterable<UniqueKey> uniqueKeyIterable = table.getUniqueKeys();
@@ -67,7 +67,6 @@ public class UniqueConstraintBindingTests extends BaseAnnotationBindingTestCase 
 		}
 		assertEquals( "There should only be one unique constraint", 1, i );
 	}
-
 
 	@Entity
 	@Table(uniqueConstraints = { @UniqueConstraint(name = "u1", columnNames = { "name", "age" }) })

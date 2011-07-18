@@ -43,30 +43,25 @@ import static junit.framework.Assert.assertTrue;
  */
 public class InheritanceBindingTest extends BaseAnnotationBindingTestCase {
 	@Test
+	@Resources(annotatedClasses = SingleEntity.class)
 	public void testNoInheritance() {
-		buildMetadataSources( SingleEntity.class );
 		EntityBinding entityBinding = getEntityBinding( SingleEntity.class );
 		assertNull( entityBinding.getEntityDiscriminator() );
 	}
 
 	@Test
+	@Resources(annotatedClasses = { RootOfSingleTableInheritance.class, SubclassOfSingleTableInheritance.class })
 	public void testDiscriminatorValue() {
-		buildMetadataSources(
-				RootOfSingleTableInheritance.class, SubclassOfSingleTableInheritance.class
-		);
 		EntityBinding entityBinding = getEntityBinding( SubclassOfSingleTableInheritance.class );
 		assertEquals( "Wrong discriminator value", "foo", entityBinding.getDiscriminatorValue() );
 	}
 
 	@Test
+	@Resources(annotatedClasses = { SubclassOfSingleTableInheritance.class, SingleEntity.class, RootOfSingleTableInheritance.class })
 	@FailureExpected(jiraKey = "HHH-6447", message = "Work in progress")
 	public void testRootEntityBinding() {
-		buildMetadataSources(
-				SubclassOfSingleTableInheritance.class, SingleEntity.class, RootOfSingleTableInheritance.class
-		);
-
 		EntityBinding noInheritanceEntityBinding = getEntityBinding( SingleEntity.class );
-		assertTrue( noInheritanceEntityBinding.isRoot() );
+		assertTrue( "SingleEntity should be a root entity", noInheritanceEntityBinding.isRoot() );
 		assertSame( noInheritanceEntityBinding, getRootEntityBinding( SingleEntity.class ) );
 
 		EntityBinding subclassEntityBinding = getEntityBinding( SubclassOfSingleTableInheritance.class );
@@ -75,7 +70,7 @@ public class InheritanceBindingTest extends BaseAnnotationBindingTestCase {
 		assertSame( rootEntityBinding, getRootEntityBinding( SubclassOfSingleTableInheritance.class ) );
 
 		assertTrue( rootEntityBinding.isRoot() );
-		assertSame( rootEntityBinding, getRootEntityBinding( RootOfSingleTableInheritance.class ));
+		assertSame( rootEntityBinding, getRootEntityBinding( RootOfSingleTableInheritance.class ) );
 	}
 
 	@Entity

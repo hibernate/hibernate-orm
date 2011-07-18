@@ -24,10 +24,14 @@
 package org.hibernate.metamodel.source.annotations.entity;
 
 import org.junit.After;
+import org.junit.Rule;
+import org.junit.rules.MethodRule;
+import org.junit.runners.model.FrameworkMethod;
+import org.junit.runners.model.Statement;
 
 import org.hibernate.metamodel.MetadataSources;
-import org.hibernate.metamodel.source.internal.MetadataImpl;
 import org.hibernate.metamodel.binding.EntityBinding;
+import org.hibernate.metamodel.source.internal.MetadataImpl;
 import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
@@ -38,37 +42,38 @@ public abstract class BaseAnnotationBindingTestCase extends BaseUnitTestCase {
 	protected MetadataSources sources;
 	protected MetadataImpl meta;
 
+	@Rule
+	public MethodRule buildMetaData = new MethodRule() {
+		@Override
+		public Statement apply(Statement statement, FrameworkMethod frameworkMethod, Object o) {
+			sources = new MetadataSources( new ServiceRegistryBuilder().buildServiceRegistry() );
+			Resources resourcesAnnotation = frameworkMethod.getAnnotation( Resources.class );
+			if ( resourcesAnnotation != null ) {
+				sources.getMetadataBuilder().with( resourcesAnnotation.cacheMode() );
+
+				for ( Class<?> annotatedClass : resourcesAnnotation.annotatedClasses() ) {
+					sources.addAnnotatedClass( annotatedClass );
+				}
+				if ( !resourcesAnnotation.ormXmlPath().isEmpty() ) {
+					sources.addResource( resourcesAnnotation.ormXmlPath() );
+				}
+			}
+			meta = (MetadataImpl) sources.buildMetadata();
+			return statement;
+		}
+	};
+
 	@After
 	public void tearDown() {
 		sources = null;
 		meta = null;
 	}
 
-	public void buildMetadataSources(String ormPath, Class<?>... classes) {
-		sources = new MetadataSources( new ServiceRegistryBuilder().buildServiceRegistry() );
-		if ( ormPath != null ) {
-			sources.addResource( ormPath );
-		}
-		for ( Class clazz : classes ) {
-			sources.addAnnotatedClass( clazz );
-		}
-	}
-
-	public void buildMetadataSources(Class<?>... classes) {
-		buildMetadataSources( null, classes );
-	}
-
 	public EntityBinding getEntityBinding(Class<?> clazz) {
-		if ( meta == null ) {
-			meta = (MetadataImpl) sources.buildMetadata();
-		}
 		return meta.getEntityBinding( clazz.getName() );
 	}
 
 	public EntityBinding getRootEntityBinding(Class<?> clazz) {
-		if ( meta == null ) {
-			meta = (MetadataImpl) sources.buildMetadata();
-		}
 		return meta.getRootEntityBinding( clazz.getName() );
 	}
 }

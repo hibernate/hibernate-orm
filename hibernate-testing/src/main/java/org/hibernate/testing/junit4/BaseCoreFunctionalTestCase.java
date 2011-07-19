@@ -53,7 +53,6 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.source.MetadataImplementor;
-import org.hibernate.metamodel.source.internal.MetadataImpl;
 import org.hibernate.service.BasicServiceRegistry;
 import org.hibernate.service.config.spi.ConfigurationService;
 import org.hibernate.service.internal.BasicServiceRegistryImpl;
@@ -118,7 +117,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	@SuppressWarnings( {"UnusedDeclaration"})
 	private void buildSessionFactory() {
 		// for now, build the configuration to get all the property settings
-		configuration = buildConfiguration();
+		configuration = constructAndConfigureConfiguration();
 		serviceRegistry = buildServiceRegistry( configuration );
 		isMetadataUsed = serviceRegistry.getService( ConfigurationService.class ).getSetting(
 				AvailableSettings.USE_NEW_METADATA_MAPPINGS,
@@ -134,6 +133,8 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 			sessionFactory = ( SessionFactoryImplementor ) buildMetadata( serviceRegistry ).buildSessionFactory();
 		}
 		else {
+			// this is done here because Configuration does not currently support 4.0 xsd
+			afterConstructAndConfigureConfiguration( configuration );
 			sessionFactory = ( SessionFactoryImplementor ) configuration.buildSessionFactory( serviceRegistry );
 		}
 		afterSessionFactoryBuilt();
@@ -145,14 +146,24 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 			return (MetadataImplementor) sources.buildMetadata();
 	}
 
+	// TODO: is this still needed?
 	protected Configuration buildConfiguration() {
+		Configuration cfg = constructAndConfigureConfiguration();
+		afterConstructAndConfigureConfiguration( cfg );
+		return cfg;
+	}
+
+	private Configuration constructAndConfigureConfiguration() {
 		Configuration cfg = constructConfiguration();
 		configure( cfg );
+		return cfg;
+	}
+
+	private void afterConstructAndConfigureConfiguration(Configuration cfg) {
 		addMappings( cfg );
 		cfg.buildMappings();
 		applyCacheSettings( cfg );
 		afterConfigurationBuilt( cfg );
-		return cfg;
 	}
 
 	protected Configuration constructConfiguration() {

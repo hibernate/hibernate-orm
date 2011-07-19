@@ -51,6 +51,11 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
+import org.hibernate.metamodel.MetadataSources;
+import org.hibernate.metamodel.source.MetadataImplementor;
+import org.hibernate.metamodel.source.internal.MetadataImpl;
+import org.hibernate.service.BasicServiceRegistry;
+import org.hibernate.service.config.spi.ConfigurationService;
 import org.hibernate.service.internal.BasicServiceRegistryImpl;
 
 import org.junit.After;
@@ -73,7 +78,7 @@ import static org.junit.Assert.fail;
 public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	public static final String VALIDATE_DATA_CLEANUP = "hibernate.test.validateDataCleanup";
 	public static final Dialect DIALECT = Dialect.getDialect();
-
+	private boolean isMetadataUsed;
 	private Configuration configuration;
 	private BasicServiceRegistryImpl serviceRegistry;
 	private SessionFactoryImplementor sessionFactory;
@@ -112,10 +117,32 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	@BeforeClassOnce
 	@SuppressWarnings( {"UnusedDeclaration"})
 	private void buildSessionFactory() {
+		// for now, build the configuration to get all the property settings
 		configuration = buildConfiguration();
 		serviceRegistry = buildServiceRegistry( configuration );
-		sessionFactory = (SessionFactoryImplementor) configuration.buildSessionFactory( serviceRegistry );
+		isMetadataUsed = serviceRegistry.getService( ConfigurationService.class ).getSetting(
+				AvailableSettings.USE_NEW_METADATA_MAPPINGS,
+				new ConfigurationService.Converter<Boolean>() {
+					@Override
+					public Boolean convert(Object value) {
+						return Boolean.parseBoolean( ( String ) value );
+					}
+				},
+				false
+		);
+		if ( isMetadataUsed ) {
+			sessionFactory = ( SessionFactoryImplementor ) buildMetadata( serviceRegistry ).buildSessionFactory();
+		}
+		else {
+			sessionFactory = ( SessionFactoryImplementor ) configuration.buildSessionFactory( serviceRegistry );
+		}
 		afterSessionFactoryBuilt();
+	}
+
+	private MetadataImplementor buildMetadata(BasicServiceRegistry serviceRegistry) {
+		 	MetadataSources sources = new MetadataSources( serviceRegistry );
+			addMappings( sources );
+			return (MetadataImplementor) sources.buildMetadata();
 	}
 
 	protected Configuration buildConfiguration() {
@@ -169,6 +196,36 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 			for ( String xmlFile : xmlFiles ) {
 				InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream( xmlFile );
 				configuration.addInputStream( is );
+			}
+		}
+	}
+
+	protected void addMappings(MetadataSources sources) {
+		String[] mappings = getMappings();
+		if ( mappings != null ) {
+			for ( String mapping : mappings ) {
+				sources.addResource(
+						getBaseForMappings() + mapping
+				);
+			}
+		}
+		Class<?>[] annotatedClasses = getAnnotatedClasses();
+		if ( annotatedClasses != null ) {
+			for ( Class<?> annotatedClass : annotatedClasses ) {
+				sources.addAnnotatedClass( annotatedClass );
+			}
+		}
+		String[] annotatedPackages = getAnnotatedPackages();
+		if ( annotatedPackages != null ) {
+			for ( String annotatedPackage : annotatedPackages ) {
+				sources.addPackage( annotatedPackage );
+			}
+		}
+		String[] xmlFiles = getXmlFiles();
+		if ( xmlFiles != null ) {
+			for ( String xmlFile : xmlFiles ) {
+				InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream( xmlFile );
+				sources.addInputStream( is );
 			}
 		}
 	}
@@ -296,7 +353,13 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		serviceRegistry.destroy();
 
 		serviceRegistry = buildServiceRegistry( configuration );
-		sessionFactory = (SessionFactoryImplementor) configuration.buildSessionFactory( serviceRegistry );
+		if ( isMetadataUsed ) {
+			// need to rebuild metadata because serviceRegistry was recreated
+			sessionFactory = ( SessionFactoryImplementor ) buildMetadata( serviceRegistry ).buildSessionFactory();
+		}
+		else {
+			sessionFactory = ( SessionFactoryImplementor ) configuration.buildSessionFactory( serviceRegistry );
+		}
 		afterSessionFactoryBuilt();
 	}
 

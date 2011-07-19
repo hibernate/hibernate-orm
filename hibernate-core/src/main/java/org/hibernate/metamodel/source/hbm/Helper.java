@@ -62,15 +62,16 @@ import org.hibernate.service.classloading.spi.ClassLoadingException;
  */
 public class Helper {
 	static final Iterable<CascadeStyle> NO_CASCADING = Collections.singleton( CascadeStyle.NONE );
+
 	public static final ExplicitHibernateTypeSource TO_ONE_ATTRIBUTE_TYPE_SOURCE = new ExplicitHibernateTypeSource() {
 		@Override
 		public String getName() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+			return null;
 		}
 
 		@Override
 		public Map<String, String> getParameters() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+			return null;
 		}
 	};
 

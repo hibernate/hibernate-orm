@@ -23,25 +23,18 @@
  */
 package org.hibernate.metamodel.source.binder;
 
+import org.hibernate.engine.spi.CascadeStyle;
+
 /**
- * Further contract for sources of {@code *-to-one} style associations.
+ * Contract describing sources for attributes which model associations.
  *
  * @author Steve Ebersole
  */
-public interface ToOneAttributeSource extends SingularAttributeSource, AssociationAttributeSource {
+public interface AssociationAttributeSource extends AttributeSource {
 	/**
-	 * Obtain the name of the referenced entity.
+	 * Obtain the cascade styles to be applied to this association.
 	 *
-	 * @return The name of the referenced entity
+	 * @return The cascade styles.
 	 */
-	public String getReferencedEntityName();
-
-	/**
-	 * Obtain the name of the referenced attribute.  Typically the reference is built based on the identifier
-	 * attribute of the {@link #getReferencedEntityName() referenced entity}, but this value allows using a different
-	 * attribute instead.
-	 *
-	 * @return The name of the referenced attribute; {@code null} indicates the identifier attribute.
-	 */
-	public String getReferencedEntityAttributeName();
+	public Iterable<CascadeStyle> getCascadeStyle();
 }

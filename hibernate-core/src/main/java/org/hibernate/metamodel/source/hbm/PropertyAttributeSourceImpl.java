@@ -130,11 +130,6 @@ class PropertyAttributeSourceImpl implements SingularAttributeSource {
 	}
 
 	@Override
-	public Iterable<CascadeStyle> getCascadeStyle() {
-		return Helper.NO_CASCADING;
-	}
-
-	@Override
 	public SingularAttributeNature getNature() {
 		return SingularAttributeNature.BASIC;
 	}

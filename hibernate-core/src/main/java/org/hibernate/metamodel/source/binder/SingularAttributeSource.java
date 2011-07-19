@@ -100,6 +100,4 @@ public interface SingularAttributeSource extends AttributeSource, RelationalValu
 	 * @return {@code true} indicates it should be included; {@code false}, it should not.
 	 */
 	public boolean isIncludedInOptimisticLocking();
-
-	public Iterable<CascadeStyle> getCascadeStyle();
 }

@@ -766,7 +766,7 @@ Customer customer = (Customer) session.get( Customer.class, customerId );
 
             <entry><literal>org.hibernate.cache.ehcache.EhCacheRegionFactory</literal></entry>
 
-            <entry>memory, disk and cluster</entry>
+            <entry>memory, disk, transactional, clustered</entry>
 
             <entry>yes</entry>
 

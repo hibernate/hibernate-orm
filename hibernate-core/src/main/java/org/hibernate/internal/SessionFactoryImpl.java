@@ -183,7 +183,7 @@ public final class SessionFactoryImpl
 	private final transient Map<String, NamedSQLQueryDefinition> namedSqlQueries;
 	private final transient Map<String, ResultSetMappingDefinition> sqlResultSetMappings;
 	private final transient Map<String, FilterDefinition> filters;
-	private final transient Map fetchProfiles;
+	private final transient Map<String, FetchProfile> fetchProfiles;
 	private final transient Map<String,String> imports;
 	private final transient SessionFactoryServiceRegistry serviceRegistry;
         private final transient JdbcServices jdbcServices;
@@ -530,13 +530,7 @@ public final class SessionFactoryImpl
         LOG.debug( "Building session factory" );
 
 		// TODO: remove initialization of final variables; just setting to null to make compiler happy
-		this.fetchProfiles = null;
-		this.queryCache = null;
-		this.updateTimestampsCache = null;
-		this.queryCaches = null;
-		this.currentSessionContext = null;
 		this.sqlFunctionRegistry = null;
-		this.transactionEnvironment = null;
 
 		this.sessionFactoryOptions = sessionFactoryOptions;
 
@@ -790,7 +784,72 @@ public final class SessionFactoryImpl
 			schemaExport = new SchemaExport( metadata );
 		}
 
-		// TODO: implement
+		currentSessionContext = buildCurrentSessionContext();
+
+		if ( settings.isQueryCacheEnabled() ) {
+			updateTimestampsCache = new UpdateTimestampsCache( settings, properties );
+			queryCache = settings.getQueryCacheFactory()
+			        .getQueryCache( null, updateTimestampsCache, settings, properties );
+			queryCaches = new HashMap<String,QueryCache>();
+			allCacheRegions.put( updateTimestampsCache.getRegion().getName(), updateTimestampsCache.getRegion() );
+			allCacheRegions.put( queryCache.getRegion().getName(), queryCache.getRegion() );
+		}
+		else {
+			updateTimestampsCache = null;
+			queryCache = null;
+			queryCaches = null;
+		}
+
+		//checking for named queries
+		if ( settings.isNamedQueryStartupCheckingEnabled() ) {
+			Map errors = checkNamedQueries();
+			if ( ! errors.isEmpty() ) {
+				Set keys = errors.keySet();
+				StringBuffer failingQueries = new StringBuffer( "Errors in named queries: " );
+				for ( Iterator<String> iterator = keys.iterator() ; iterator.hasNext() ; ) {
+					String queryName = iterator.next();
+					HibernateException e = ( HibernateException ) errors.get( queryName );
+					failingQueries.append( queryName );
+                    if ( iterator.hasNext() ) failingQueries.append( ", " );
+					LOG.namedQueryError( queryName, e );
+				}
+				throw new HibernateException( failingQueries.toString() );
+			}
+		}
+
+		// this needs to happen after persisters are all ready to go...
+		this.fetchProfiles = new HashMap<String,FetchProfile>();
+		for ( org.hibernate.metamodel.binding.FetchProfile mappingProfile : metadata.getFetchProfiles() ) {
+			final FetchProfile fetchProfile = new FetchProfile( mappingProfile.getName() );
+			for ( org.hibernate.metamodel.binding.FetchProfile.Fetch mappingFetch : mappingProfile.getFetches() ) {
+				// resolve the persister owning the fetch
+				final String entityName = getImportedClassName( mappingFetch.getEntity() );
+				final EntityPersister owner = ( EntityPersister ) ( entityName == null ? null : entityPersisters.get( entityName ) );
+				if ( owner == null ) {
+					throw new HibernateException(
+							"Unable to resolve entity reference [" + mappingFetch.getEntity()
+									+ "] in fetch profile [" + fetchProfile.getName() + "]"
+					);
+				}
+
+				// validate the specified association fetch
+				Type associationType = owner.getPropertyType( mappingFetch.getAssociation() );
+				if ( associationType == null || ! associationType.isAssociationType() ) {
+					throw new HibernateException( "Fetch profile [" + fetchProfile.getName() + "] specified an invalid association" );
+				}
+
+				// resolve the style
+				final Fetch.Style fetchStyle = Fetch.Style.parse( mappingFetch.getStyle() );
+
+				// then construct the fetch instance...
+				fetchProfile.addFetch( new Association( owner, mappingFetch.getAssociation() ), fetchStyle );
+				( ( Loadable ) owner ).registerAffectingFetchProfile( fetchProfile.getName() );
+			}
+			fetchProfiles.put( fetchProfile.getName(), fetchProfile );
+		}
+
+		this.transactionEnvironment = new TransactionEnvironmentImpl( this );
+		this.observer.sessionFactoryCreated( this );
 	}
 
 	@SuppressWarnings( {"unchecked"} )

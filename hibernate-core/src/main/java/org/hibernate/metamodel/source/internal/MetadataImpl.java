@@ -438,10 +438,12 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		}
 	}
 
+	@Override
 	public Iterable<Map.Entry<String, String>> getImports() {
 		return imports.entrySet();
 	}
 
+	@Override
 	public Iterable<FetchProfile> getFetchProfiles() {
 		return fetchProfiles.values();
 	}

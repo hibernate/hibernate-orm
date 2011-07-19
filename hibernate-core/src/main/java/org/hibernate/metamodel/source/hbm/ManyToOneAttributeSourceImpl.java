@@ -110,7 +110,7 @@ class ManyToOneAttributeSourceImpl implements ToOneAttributeSource {
 	}
 
 	@Override
-	public Iterable<CascadeStyle> getCascadeStyle() {
+	public Iterable<CascadeStyle> getCascadeStyles() {
 		return Helper.interpretCascadeStyles( manyToOneElement.getCascade(), bindingContext );
 	}
 

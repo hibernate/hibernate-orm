@@ -21,35 +21,10 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.hbm.state.relational;
-
-import org.hibernate.metamodel.source.BindingContext;
-import org.hibernate.metamodel.relational.state.ManyToOneRelationalState;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLManyToOneElement;
+package org.hibernate.metamodel.binding;
 
 /**
- * @author Gail Badner
+ * @author Steve Ebersole
  */
-public class HbmManyToOneRelationalStateContainer extends HbmSimpleValueRelationalStateContainer
-implements ManyToOneRelationalState {
-
-	private final boolean isLogicalOneToOne;
-	private final String foreignKeyName;
-
-	public HbmManyToOneRelationalStateContainer(
-			BindingContext bindingContext,
-			boolean autoColumnCreation,
-			XMLManyToOneElement manyToOne ) {
-		super( bindingContext, autoColumnCreation, manyToOne );
-		this.isLogicalOneToOne = manyToOne.isUnique();
-		this.foreignKeyName = manyToOne.getForeignKey();
-	}
-
-	public boolean isLogicalOneToOne() {
-		return isLogicalOneToOne;
-	}
-
-	public String getForeignKeyName() {
-		return foreignKeyName;
-	}
+public interface SingularAttributeBinding extends AttributeBinding {
 }

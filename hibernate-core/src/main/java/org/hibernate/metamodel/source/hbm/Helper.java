@@ -226,7 +226,7 @@ public class Helper {
 		if ( StringHelper.isEmpty( cascades ) ) {
 			cascades = bindingContext.getMappingDefaults().getCascadeStyle();
 		}
-		for ( String cascade : StringHelper.split( cascades, "," ) ) {
+		for ( String cascade : StringHelper.split( ",", cascades ) ) {
 			cascadeStyles.add( CascadeStyle.getCascadeStyle( cascade ) );
 		}
 		return cascadeStyles;

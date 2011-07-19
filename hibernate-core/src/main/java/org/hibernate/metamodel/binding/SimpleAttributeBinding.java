@@ -31,9 +31,6 @@ import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.mapping.PropertyGeneration;
-import org.hibernate.metamodel.relational.Column;
-import org.hibernate.metamodel.relational.Schema;
-import org.hibernate.metamodel.relational.SimpleValue;
 import org.hibernate.metamodel.source.MetaAttributeContext;
 import org.hibernate.metamodel.binding.state.SimpleAttributeBindingState;
 import org.hibernate.metamodel.domain.SingularAttribute;
@@ -45,7 +42,7 @@ import org.hibernate.metamodel.relational.state.ValueRelationalState;
  *
  * @author Steve Ebersole
  */
-public class SimpleAttributeBinding extends AbstractAttributeBinding implements KeyValueBinding {
+public class SimpleAttributeBinding extends AbstractAttributeBinding implements SingularAttributeBinding, KeyValueBinding {
 	private boolean insertable;
 	private boolean updatable;
 	private PropertyGeneration generation;

@@ -27,28 +27,28 @@ import org.hibernate.MappingException;
 import org.hibernate.metamodel.source.MetadataImplementor;
 import org.hibernate.metamodel.binding.AttributeBinding;
 import org.hibernate.metamodel.binding.EntityBinding;
-import org.hibernate.metamodel.binding.EntityReferencingAttributeBinding;
+import org.hibernate.metamodel.binding.SingularAssociationAttributeBinding;
 
 /**
  * @author Gail Badner
  */
-class EntityReferenceResolver {
+class AssociationResolver {
 
 	private final MetadataImplementor metadata;
 
-	EntityReferenceResolver(MetadataImplementor metadata) {
+	AssociationResolver(MetadataImplementor metadata) {
 		this.metadata = metadata;
 	}
 
 	void resolve() {
 		for ( EntityBinding entityBinding : metadata.getEntityBindings() ) {
-			for ( EntityReferencingAttributeBinding attributeBinding :  entityBinding.getEntityReferencingAttributeBindings() ) {
+			for ( SingularAssociationAttributeBinding attributeBinding :  entityBinding.getEntityReferencingAttributeBindings() ) {
 				resolve( attributeBinding );
 			}
 		}
 	}
 
-	private void resolve(EntityReferencingAttributeBinding attributeBinding) {
+	private void resolve(SingularAssociationAttributeBinding attributeBinding) {
 		if ( attributeBinding.getReferencedEntityName() == null ) {
 			throw new IllegalArgumentException( "attributeBinding has null entityName: " + attributeBinding.getAttribute().getName() );
 		}

@@ -110,9 +110,9 @@ public interface AttributeBinding {
 
 	public boolean isLazy();
 
-	public void addEntityReferencingAttributeBinding(EntityReferencingAttributeBinding attributeBinding);
+	public void addEntityReferencingAttributeBinding(SingularAssociationAttributeBinding attributeBinding);
 
-	public Set<EntityReferencingAttributeBinding> getEntityReferencingAttributeBindings();
+	public Set<SingularAssociationAttributeBinding> getEntityReferencingAttributeBindings();
 
 	public void validate();
 }

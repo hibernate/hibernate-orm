@@ -68,8 +68,9 @@ public class EntityBinding {
 	private SimpleAttributeBinding versionBinding;
 
 	private Map<String, AttributeBinding> attributeBindingMap = new HashMap<String, AttributeBinding>();
-	private Set<FilterDefinition> filterDefinitions = new HashSet<FilterDefinition>();
-	private Set<EntityReferencingAttributeBinding> entityReferencingAttributeBindings = new HashSet<EntityReferencingAttributeBinding>();
+
+	private Set<FilterDefinition> filterDefinitions = new HashSet<FilterDefinition>( );
+	private Set<SingularAssociationAttributeBinding> entityReferencingAttributeBindings = new HashSet<SingularAssociationAttributeBinding>();
 
 	private Caching caching;
 
@@ -97,59 +98,6 @@ public class EntityBinding {
 	private CustomSQL customDelete;
 
 	private Set<String> synchronizedTableNames = new HashSet<String>();
-
-//	public EntityBinding initialize(BindingContext bindingContext, EntityDescriptor state) {
-//		// todo : Entity will need both entityName and className to be effective
-//		this.entity = new Entity( state.getEntityName(), state.getSuperType(), bindingContext.makeJavaType( state.getClassName() ) );
-//
-//		this.isRoot = state.isRoot();
-//		this.entityInheritanceType = state.getEntityInheritanceType();
-//
-//		this.entityMode = state.getEntityMode();
-//		this.jpaEntityName = state.getJpaEntityName();
-//
-//		// todo : handle the entity-persister-resolver stuff
-//		this.customEntityPersisterClass = state.getCustomEntityPersisterClass();
-//		this.customEntityTuplizerClass = state.getCustomEntityTuplizerClass();
-//
-//		this.caching = state.getCaching();
-//		this.metaAttributeContext = state.getMetaAttributeContext();
-//
-//		if ( entityMode == EntityMode.POJO ) {
-//			if ( state.getProxyInterfaceName() != null ) {
-//				this.proxyInterfaceType = bindingContext.makeJavaType( state.getProxyInterfaceName() );
-//				this.lazy = true;
-//			}
-//			else if ( state.isLazy() ) {
-//				this.proxyInterfaceType = entity.getJavaType();
-//				this.lazy = true;
-//			}
-//		}
-//		else {
-//			this.proxyInterfaceType = new JavaType( Map.class );
-//			this.lazy = state.isLazy();
-//		}
-//
-//		this.mutable = state.isMutable();
-//		this.explicitPolymorphism = state.isExplicitPolymorphism();
-//		this.whereFilter = state.getWhereFilter();
-//		this.rowId = state.getRowId();
-//		this.dynamicUpdate = state.isDynamicUpdate();
-//		this.dynamicInsert = state.isDynamicInsert();
-//		this.batchSize = state.getBatchSize();
-//		this.selectBeforeUpdate = state.isSelectBeforeUpdate();
-//		this.optimisticLockMode = state.getOptimisticLockMode();
-//		this.isAbstract = state.isAbstract();
-//		this.customInsert = state.getCustomInsert();
-//		this.customUpdate = state.getCustomUpdate();
-//		this.customDelete = state.getCustomDelete();
-//		if ( state.getSynchronizedTableNames() != null ) {
-//			for ( String synchronizedTableName : state.getSynchronizedTableNames() ) {
-//				addSynchronizedTable( synchronizedTableName );
-//			}
-//		}
-//		return this;
-//	}
 
 	public Entity getEntity() {
 		return entity;
@@ -249,7 +197,7 @@ public class EntityBinding {
 		filterDefinitions.add( filterDefinition );
 	}
 
-	public Iterable<EntityReferencingAttributeBinding> getEntityReferencingAttributeBindings() {
+	public Iterable<SingularAssociationAttributeBinding> getEntityReferencingAttributeBindings() {
 		return entityReferencingAttributeBindings;
 	}
 
@@ -298,7 +246,7 @@ public class EntityBinding {
 		return binding;
 	}
 
-	private void registerAttributeBinding(String name, EntityReferencingAttributeBinding attributeBinding) {
+	private void registerAttributeBinding(String name, SingularAssociationAttributeBinding attributeBinding) {
 		entityReferencingAttributeBindings.add( attributeBinding );
 		registerAttributeBinding( name, (AttributeBinding) attributeBinding );
 	}

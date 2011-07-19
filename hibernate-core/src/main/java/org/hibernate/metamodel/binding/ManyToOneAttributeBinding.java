@@ -39,7 +39,7 @@ import org.hibernate.metamodel.relational.state.ManyToOneRelationalState;
  * @author Gail Badner
  * @author Steve Ebersole
  */
-public class ManyToOneAttributeBinding extends SimpleAttributeBinding implements EntityReferencingAttributeBinding {
+public class ManyToOneAttributeBinding extends SimpleAttributeBinding implements SingularAssociationAttributeBinding {
 	private String referencedAttributeName;
 	private String referencedEntityName;
 

@@ -36,5 +36,5 @@ public interface AssociationAttributeSource extends AttributeSource {
 	 *
 	 * @return The cascade styles.
 	 */
-	public Iterable<CascadeStyle> getCascadeStyle();
+	public Iterable<CascadeStyle> getCascadeStyles();
 }

@@ -26,27 +26,22 @@ package org.hibernate.metamodel.binding;
 import org.hibernate.engine.spi.CascadeStyle;
 
 /**
- * TODO : javadoc
+ * Contract describing a binding for attributes which model associations.
  *
- * @author Gail Badner
  * @author Steve Ebersole
  */
-public interface EntityReferencingAttributeBinding extends AttributeBinding {
-	public boolean isPropertyReference();
-
-	public String getReferencedEntityName();
-	public void setReferencedEntityName(String referencedEntityName);
-
-	public String getReferencedAttributeName();
-	public void setReferencedAttributeName(String referencedAttributeName);
-
+public interface AssociationAttributeBinding extends AttributeBinding {
+	/**
+	 * Obtain the cascade styles in effect for this association.
+	 *
+	 * @return THe cascade styles.
+	 */
 	public Iterable<CascadeStyle> getCascadeStyles();
+
+	/**
+	 * Set the cascade styles in effect for this association.
+	 *
+	 * @param cascadeStyles The cascade styles.
+	 */
 	public void setCascadeStyles(Iterable<CascadeStyle> cascadeStyles);
-
-
-	// "resolvable"
-	public void resolveReference(AttributeBinding attributeBinding);
-	public boolean isReferenceResolved();
-	public EntityBinding getReferencedEntityBinding();
-	public AttributeBinding getReferencedAttributeBinding();
 }

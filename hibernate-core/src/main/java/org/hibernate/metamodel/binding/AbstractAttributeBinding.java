@@ -52,7 +52,7 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 	private final EntityBinding entityBinding;
 
 	private final HibernateTypeDescriptor hibernateTypeDescriptor = new HibernateTypeDescriptor();
-	private final Set<EntityReferencingAttributeBinding> entityReferencingAttributeBindings = new HashSet<EntityReferencingAttributeBinding>();
+	private final Set<SingularAssociationAttributeBinding> entityReferencingAttributeBindings = new HashSet<SingularAssociationAttributeBinding>();
 
 	private Attribute attribute;
 	private Value value;
@@ -258,11 +258,11 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 		this.isLazy = isLazy;
 	}
 
-	public void addEntityReferencingAttributeBinding(EntityReferencingAttributeBinding referencingAttributeBinding) {
+	public void addEntityReferencingAttributeBinding(SingularAssociationAttributeBinding referencingAttributeBinding) {
 		entityReferencingAttributeBindings.add( referencingAttributeBinding );
 	}
 
-	public Set<EntityReferencingAttributeBinding> getEntityReferencingAttributeBindings() {
+	public Set<SingularAssociationAttributeBinding> getEntityReferencingAttributeBindings() {
 		return Collections.unmodifiableSet( entityReferencingAttributeBindings );
 	}
 

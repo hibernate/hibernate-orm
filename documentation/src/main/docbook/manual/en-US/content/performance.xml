@@ -764,11 +764,11 @@ Customer customer = (Customer) session.get( Customer.class, customerId );
           <row>
             <entry>EHCache</entry>
 
-            <entry><literal>org.hibernate.cache.internal.EhCacheRegionFactory</literal></entry>
+            <entry><literal>org.hibernate.cache.ehcache.EhCacheRegionFactory</literal></entry>
 
-            <entry>memory, disk</entry>
+            <entry>memory, disk and cluster</entry>
 
-            <entry></entry>
+            <entry>yes</entry>
 
             <entry>yes</entry>
           </row>

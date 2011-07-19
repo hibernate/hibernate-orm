@@ -28,5 +28,4 @@ package org.hibernate.metamodel.source;
  */
 public interface LocalBindingContext extends BindingContext {
 	public Origin getOrigin();
-	public String qualifyClassName(String unqualifiedName);
 }

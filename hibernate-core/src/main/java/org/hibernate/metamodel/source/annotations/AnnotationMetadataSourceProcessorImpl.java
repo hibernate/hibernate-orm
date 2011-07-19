@@ -36,17 +36,9 @@ import org.jboss.logging.Logger;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.metamodel.MetadataSources;
-import org.hibernate.metamodel.binding.EntityBinding;
-import org.hibernate.metamodel.domain.Hierarchical;
-import org.hibernate.metamodel.domain.NonEntity;
-import org.hibernate.metamodel.domain.Superclass;
 import org.hibernate.metamodel.source.MetadataImplementor;
 import org.hibernate.metamodel.source.MetadataSourceProcessor;
 import org.hibernate.metamodel.source.annotation.jaxb.XMLEntityMappings;
-import org.hibernate.metamodel.source.annotations.entity.ConfiguredClassHierarchy;
-import org.hibernate.metamodel.source.annotations.entity.ConfiguredClassType;
-import org.hibernate.metamodel.source.annotations.entity.EntityBinder;
-import org.hibernate.metamodel.source.annotations.entity.EntityClass;
 import org.hibernate.metamodel.source.annotations.global.FetchProfileBinder;
 import org.hibernate.metamodel.source.annotations.global.FilterDefBinder;
 import org.hibernate.metamodel.source.annotations.global.IdGeneratorBinder;
@@ -55,6 +47,8 @@ import org.hibernate.metamodel.source.annotations.global.TableBinder;
 import org.hibernate.metamodel.source.annotations.global.TypeDefBinder;
 import org.hibernate.metamodel.source.annotations.xml.PseudoJpaDotNames;
 import org.hibernate.metamodel.source.annotations.xml.mocker.EntityMappingsMocker;
+import org.hibernate.metamodel.source.binder.Binder;
+import org.hibernate.metamodel.source.binder.EntityHierarchy;
 import org.hibernate.metamodel.source.internal.JaxbRoot;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
@@ -133,42 +127,11 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 	public void processMappingMetadata(MetadataSources sources, List<String> processedEntityNames) {
 		assertBindingContextExists();
 		// need to order our annotated entities into an order we can process
-		Set<ConfiguredClassHierarchy<EntityClass>> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
-				bindingContext
-		);
+		Set<EntityHierarchy> hierarchies = EntityHierarchyBuilder.createEntityHierarchies( bindingContext );
 
-		// now we process each hierarchy one at the time
-		Hierarchical parent = null;
-		for ( ConfiguredClassHierarchy<EntityClass> hierarchy : hierarchies ) {
-			for ( EntityClass entityClass : hierarchy ) {
-				// for classes annotated w/ @Entity we create a EntityBinding
-				if ( ConfiguredClassType.ENTITY.equals( entityClass.getConfiguredClassType() ) ) {
-					LOG.debugf( "Binding entity from annotated class: %s", entityClass.getName() );
-					EntityBinder entityBinder = new EntityBinder( entityClass, parent, bindingContext );
-					EntityBinding binding = entityBinder.bind( processedEntityNames );
-					parent = binding.getEntity();
-				}
-				// for classes annotated w/ @MappedSuperclass we just create the domain instance
-				// the attribute bindings will be part of the first entity subclass
-				else if ( ConfiguredClassType.MAPPED_SUPERCLASS.equals( entityClass.getConfiguredClassType() ) ) {
-					parent = new Superclass(
-							entityClass.getName(),
-							entityClass.getName(),
-							bindingContext.makeClassReference( entityClass.getName() ),
-							parent
-					);
-				}
-				// for classes which are not annotated at all we create the NonEntity domain class
-				// todo - not sure whether this is needed. It might be that we don't need this information (HF)
-				else {
-					parent = new NonEntity(
-							entityClass.getName(),
-							entityClass.getName(),
-							bindingContext.makeClassReference( entityClass.getName() ),
-							parent
-					);
-				}
-			}
+		Binder binder = new Binder( bindingContext.getMetadataImplementor(), new ArrayList<String>() );
+		for ( EntityHierarchy hierarchy : hierarchies ) {
+			binder.processEntityHierarchy( hierarchy );
 		}
 	}
 

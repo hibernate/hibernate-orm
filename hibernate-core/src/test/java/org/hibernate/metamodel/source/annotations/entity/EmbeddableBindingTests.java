@@ -33,6 +33,7 @@ import org.junit.Test;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.domain.Component;
 import org.hibernate.metamodel.domain.SingularAttribute;
+import org.hibernate.testing.FailureExpected;
 
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertTrue;
@@ -42,9 +43,10 @@ import static junit.framework.Assert.assertTrue;
  *
  * @author Hardy Ferentschik
  */
+@FailureExpected(jiraKey = "HHH-6447", message = "Work in progress")
 public class EmbeddableBindingTests extends BaseAnnotationBindingTestCase {
 	@Test
-	@Resources(annotatedClasses = { User.class, Address.class })
+	//@Resources(annotatedClasses = { User.class, Address.class })
 	public void testEmbeddable() {
 		EntityBinding binding = getEntityBinding( User.class );
 		assertNotNull( binding.getAttributeBinding( "street" ) );

@@ -34,10 +34,11 @@ import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.source.annotations.AnnotationBindingContextImpl;
 import org.hibernate.metamodel.source.annotations.ConfiguredClassHierarchyBuilder;
+import org.hibernate.metamodel.source.annotations.EntityHierarchyBuilder;
 import org.hibernate.metamodel.source.annotations.JandexHelper;
-import org.hibernate.metamodel.source.annotations.entity.ConfiguredClassHierarchy;
 import org.hibernate.metamodel.source.annotations.entity.EmbeddableClass;
-import org.hibernate.metamodel.source.annotations.entity.EntityClass;
+import org.hibernate.metamodel.source.annotations.entity.EmbeddableHierarchy;
+import org.hibernate.metamodel.source.binder.EntityHierarchy;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
 import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
@@ -59,16 +60,16 @@ public abstract class BaseAnnotationIndexTestCase extends BaseUnitTestCase {
 	public void tearDown() {
 	}
 
-	public Set<ConfiguredClassHierarchy<EntityClass>> createEntityHierarchies(Class<?>... clazz) {
+	public Set<EntityHierarchy> createEntityHierarchies(Class<?>... clazz) {
 		Index index = JandexHelper.indexForClass(
 				meta.getServiceRegistry().getService( ClassLoaderService.class ),
 				clazz
 		);
 		AnnotationBindingContext context = new AnnotationBindingContextImpl( meta, index );
-		return ConfiguredClassHierarchyBuilder.createEntityHierarchies( context );
+		return EntityHierarchyBuilder.createEntityHierarchies( context );
 	}
 
-	public ConfiguredClassHierarchy<EmbeddableClass> createEmbeddableHierarchy(AccessType accessType, Class<?>... configuredClasses) {
+	public EmbeddableHierarchy<EmbeddableClass> createEmbeddableHierarchy(AccessType accessType, Class<?>... configuredClasses) {
 		Index index = JandexHelper.indexForClass(
 				meta.getServiceRegistry().getService( ClassLoaderService.class ),
 				configuredClasses

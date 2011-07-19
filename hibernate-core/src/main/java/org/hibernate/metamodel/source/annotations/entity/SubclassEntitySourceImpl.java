@@ -21,22 +21,17 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
+package org.hibernate.metamodel.source.annotations.entity;
 
-package org.hibernate.metamodel.source;
+import org.hibernate.metamodel.source.binder.SubclassEntitySource;
 
 /**
- * From where did the metadata come from?
- *
- * @author Steve Ebersole
+ * @author Hardy Ferentschik
  */
-public enum SourceType {
-	RESOURCE,
-	FILE,
-	INPUT_STREAM,
-	URL,
-	STRING,
-	DOM,
-	JAR,
-	ANNOTATION,
-	OTHER
+public class SubclassEntitySourceImpl extends EntitySourceImpl implements SubclassEntitySource {
+	public SubclassEntitySourceImpl(EntityClass entityClass) {
+		super( entityClass );
+	}
 }
+
+

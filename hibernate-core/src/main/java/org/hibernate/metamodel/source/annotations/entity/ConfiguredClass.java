@@ -23,7 +23,6 @@
  */
 package org.hibernate.metamodel.source.annotations.entity;
 
-import javax.persistence.AccessType;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
@@ -37,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import javax.persistence.AccessType;
 
 import com.fasterxml.classmate.ResolvedTypeWithMembers;
 import com.fasterxml.classmate.members.HierarchicType;
@@ -112,6 +112,11 @@ public class ConfiguredClass {
 	private final Map<String, SimpleAttribute> simpleAttributeMap;
 
 	/**
+	 * The mapped simple attributes for this entity
+	 */
+	private SimpleAttribute versionAttribute;
+
+	/**
 	 * The embedded classes for this entity
 	 */
 	private final Map<String, EmbeddableClass> embeddedClasses = new HashMap<String, EmbeddableClass>();
@@ -162,6 +167,10 @@ public class ConfiguredClass {
 		return parent;
 	}
 
+	public AnnotationBindingContext getContext() {
+		return context;
+	}
+
 	public ConfiguredClassType getConfiguredClassType() {
 		return configuredClassType;
 	}
@@ -172,6 +181,10 @@ public class ConfiguredClass {
 
 	public Iterable<SimpleAttribute> getIdAttributes() {
 		return idAttributeMap.values();
+	}
+
+	public SimpleAttribute getVersionAttribute() {
+		return versionAttribute;
 	}
 
 	public Iterable<AssociationAttribute> getAssociationAttributes() {
@@ -433,6 +446,9 @@ public class ConfiguredClass {
 				SimpleAttribute attribute = SimpleAttribute.createSimpleAttribute( attributeName, type, annotations );
 				if ( attribute.isId() ) {
 					idAttributeMap.put( attributeName, attribute );
+				} else if (attribute.isVersioned()) {
+					// todo - error handling in case there are multiple version attributes
+					versionAttribute = attribute;
 				}
 				else {
 					simpleAttributeMap.put( attributeName, attribute );
@@ -468,7 +484,7 @@ public class ConfiguredClass {
 		}
 
 		context.resolveAllTypes( type.getName() );
-		ConfiguredClassHierarchy<EmbeddableClass> hierarchy = ConfiguredClassHierarchyBuilder.createEmbeddableHierarchy(
+		EmbeddableHierarchy<EmbeddableClass> hierarchy = ConfiguredClassHierarchyBuilder.createEmbeddableHierarchy(
 				context.<Object>locateClassByName( embeddableClassInfo.toString() ),
 				classAccessType,
 				context

@@ -35,6 +35,7 @@ import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.relational.Column;
 import org.hibernate.metamodel.relational.TableSpecification;
 import org.hibernate.metamodel.relational.UniqueKey;
+import org.hibernate.testing.FailureExpected;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
@@ -45,6 +46,7 @@ import static junit.framework.Assert.assertTrue;
  *
  * @author Strong Liu
  */
+@FailureExpected(jiraKey = "HHH-6447", message = "Work in progress")
 public class UniqueConstraintBindingTests extends BaseAnnotationBindingTestCase {
 	@Test
 	@Resources(annotatedClasses = TableWithUniqueConstraint.class)

@@ -21,27 +21,32 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.annotations.attribute.state.relational;
+package org.hibernate.metamodel.source.annotations;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.hibernate.metamodel.relational.state.SimpleValueRelationalState;
-import org.hibernate.metamodel.relational.state.TupleRelationalState;
+import org.hibernate.metamodel.binding.InheritanceType;
+import org.hibernate.metamodel.source.binder.EntityHierarchy;
+import org.hibernate.metamodel.source.binder.RootEntitySource;
 
 /**
  * @author Hardy Ferentschik
  */
-public class TupleRelationalStateImpl implements TupleRelationalState {
-	List<SimpleValueRelationalState> valueStates = new ArrayList<SimpleValueRelationalState>();
+public class EntityHierarchyImpl implements EntityHierarchy {
+	private final RootEntitySource rootEntitySource;
+	private final InheritanceType inheritanceType;
 
-	public void addValueState(SimpleValueRelationalState state) {
-		valueStates.add( state );
+	public EntityHierarchyImpl(RootEntitySource source, InheritanceType inheritanceType) {
+		this.rootEntitySource = source;
+		this.inheritanceType = inheritanceType;
 	}
 
 	@Override
-	public List<SimpleValueRelationalState> getRelationalStates() {
-		return valueStates;
+	public InheritanceType getHierarchyInheritanceType() {
+		return inheritanceType;
+	}
+
+	@Override
+	public RootEntitySource getRootEntitySource() {
+		return rootEntitySource;
 	}
 }
 

@@ -21,22 +21,36 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
+package org.hibernate.metamodel.source.annotations.attribute;
 
-package org.hibernate.metamodel.source;
+import org.hibernate.metamodel.binding.IdGenerator;
+import org.hibernate.metamodel.source.binder.SimpleIdentifierSource;
+import org.hibernate.metamodel.source.binder.SingularAttributeSource;
 
 /**
- * From where did the metadata come from?
- *
- * @author Steve Ebersole
+ * @author Hardy Ferentschik
  */
-public enum SourceType {
-	RESOURCE,
-	FILE,
-	INPUT_STREAM,
-	URL,
-	STRING,
-	DOM,
-	JAR,
-	ANNOTATION,
-	OTHER
+public class SimpleIdentifierSourceImpl implements SimpleIdentifierSource {
+	private final SimpleAttribute attribute;
+
+	public SimpleIdentifierSourceImpl(SimpleAttribute attribute) {
+		this.attribute = attribute;
+	}
+
+	@Override
+	public Nature getNature() {
+		return Nature.SIMPLE;
+	}
+
+	@Override
+	public SingularAttributeSource getIdentifierAttributeSource() {
+		return new SingularAttributeSourceImpl( attribute );
+	}
+
+	@Override
+	public IdGenerator getIdentifierGeneratorDescriptor() {
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
+	}
 }
+
+

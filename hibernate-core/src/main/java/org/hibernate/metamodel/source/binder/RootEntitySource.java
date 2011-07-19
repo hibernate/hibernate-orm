@@ -43,7 +43,7 @@ public interface RootEntitySource extends EntitySource {
 	/**
 	 * Obtain the source information about the attribute used for versioning.
 	 *
-	 * @return
+	 * @return the source information about the attribute used for versioning
 	 */
 	public SingularAttributeSource getVersioningAttributeSource();
 

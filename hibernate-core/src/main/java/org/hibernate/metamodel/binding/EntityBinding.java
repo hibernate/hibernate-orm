@@ -30,16 +30,14 @@ import java.util.Set;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
-import org.hibernate.MappingException;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.util.Value;
-import org.hibernate.metamodel.domain.PluralAttribute;
-import org.hibernate.metamodel.source.MetaAttributeContext;
 import org.hibernate.metamodel.domain.Attribute;
 import org.hibernate.metamodel.domain.Entity;
-import org.hibernate.metamodel.relational.Column;
+import org.hibernate.metamodel.domain.PluralAttribute;
 import org.hibernate.metamodel.relational.TableSpecification;
+import org.hibernate.metamodel.source.MetaAttributeContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.tuple.entity.EntityTuplizer;
 
@@ -70,7 +68,7 @@ public class EntityBinding {
 	private SimpleAttributeBinding versionBinding;
 
 	private Map<String, AttributeBinding> attributeBindingMap = new HashMap<String, AttributeBinding>();
-	private Set<FilterDefinition> filterDefinitions = new HashSet<FilterDefinition>( );
+	private Set<FilterDefinition> filterDefinitions = new HashSet<FilterDefinition>();
 	private Set<EntityReferencingAttributeBinding> entityReferencingAttributeBindings = new HashSet<EntityReferencingAttributeBinding>();
 
 	private Caching caching;
@@ -295,7 +293,7 @@ public class EntityBinding {
 
 	public BagBinding makeBagAttributeBinding(PluralAttribute attribute, CollectionElementType collectionElementType) {
 		final BagBinding binding = new BagBinding( this, collectionElementType );
-		binding.setAttribute( attribute);
+		binding.setAttribute( attribute );
 		registerAttributeBinding( attribute.getName(), binding );
 		return binding;
 	}

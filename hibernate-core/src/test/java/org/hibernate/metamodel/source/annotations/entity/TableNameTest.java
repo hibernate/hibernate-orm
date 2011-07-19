@@ -26,12 +26,13 @@ package org.hibernate.metamodel.source.annotations.entity;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Inheritance;
+import javax.persistence.Table;
 
 import org.junit.Test;
 
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.InheritanceType;
-import org.hibernate.metamodel.relational.Table;
 
 import static junit.framework.Assert.assertEquals;
 
@@ -55,109 +56,87 @@ public class TableNameTest extends BaseAnnotationBindingTestCase {
 	@Resources(annotatedClasses = { A.class, B.class })
 	public void testSingleInheritanceDefaultTableName() {
 		EntityBinding binding = getEntityBinding( A.class );
-//		assertEquals( "wrong inheritance type", InheritanceType.SINGLE_TABLE, binding.getInheritanceType() );
-		assertEquals( "wrong table name", "A", ( (Table) binding.getBaseTable() ).getTableName().getName() );
+		assertEquals( "wrong inheritance type", InheritanceType.SINGLE_TABLE, binding.getInheritanceType() );
+		assertEquals(
+				"wrong table name",
+				"TableNameTest$A",
+				( (org.hibernate.metamodel.relational.Table) binding.getBaseTable() ).getTableName().getName()
+		);
 
 		binding = getEntityBinding( B.class );
 		assertEquals( "wrong inheritance type", InheritanceType.SINGLE_TABLE, binding.getInheritanceType() );
-		assertEquals( "wrong table name", "A", ( (Table) binding.getBaseTable() ).getTableName().getName() );
+		assertEquals(
+				"wrong table name",
+				"TableNameTest$A",
+				( (org.hibernate.metamodel.relational.Table) binding.getBaseTable() ).getTableName().getName()
+		);
+	}
+
+	@Entity
+	@Inheritance(strategy = javax.persistence.InheritanceType.JOINED)
+	@Table(name = "FOO")
+	class JoinedA {
+		@Id
+		@GeneratedValue
+		private int id;
+	}
+
+	@Entity
+	class JoinedB extends JoinedA {
+	}
+
+	@Test
+	@Resources(annotatedClasses = { JoinedA.class, JoinedB.class })
+	public void testJoinedSubclassDefaultTableName() {
+		EntityBinding binding = getEntityBinding( JoinedA.class );
+		assertEquals( "wrong inheritance type", InheritanceType.JOINED, binding.getInheritanceType() );
+		assertEquals(
+				"wrong table name",
+				"FOO",
+				( (org.hibernate.metamodel.relational.Table) binding.getBaseTable() ).getTableName().getName()
+		);
+
+		binding = getEntityBinding( JoinedB.class );
+		assertEquals( "wrong inheritance type", InheritanceType.JOINED, binding.getInheritanceType() );
+		assertEquals(
+				"wrong table name",
+				"TableNameTest$JoinedB",
+				( (org.hibernate.metamodel.relational.Table) binding.getBaseTable() ).getTableName().getName()
+		);
 	}
 
 
-//	@Test
-//	public void testTablePerClassDefaultTableName() {
-//		@Entity
-//		@Inheritance(strategy = javax.persistence.InheritanceType.TABLE_PER_CLASS)
-//		class A {
-//			@Id
-//			@GeneratedValue
-//			private int id;
-//		}
-//
-//		@Entity
-//		class B extends A {
-//		}
-//
-//		Index index = JandexHelper.indexForClass( service, A.class, B.class );
-//		Set<ConfiguredClassHierarchy<EntityClass>> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
-//				new TestAnnotationsBindingContextImpl( index, serviceRegistry )
-//		);
-//		assertEquals( "There should be only one hierarchy", 1, hierarchies.size() );
-//
-//		Iterator<EntityClass> iter = hierarchies.iterator().next().iterator();
-//		EntityClass entityClass = iter.next();
-//		ClassInfo info = entityClass.getClassInfo();
-//		assertEquals( "wrong class", DotName.createSimple( A.class.getName() ), info.name() );
-//		assertTrue( entityClass.hasOwnTable() );
-//		Assert.assertEquals(
-//				"wrong inheritance type", InheritanceType.TABLE_PER_CLASS, entityClass.getInheritanceType()
-//		);
-//		Assert.assertEquals(
-//				"wrong table name", "A", entityClass.getClassNameForTable()
-//		);
-//
-//		assertTrue( iter.hasNext() );
-//		entityClass = iter.next();
-//		info = entityClass.getClassInfo();
-//		assertEquals( "wrong class", DotName.createSimple( B.class.getName() ), info.name() );
-//		assertTrue( entityClass.hasOwnTable() );
-//		Assert.assertEquals(
-//				"wrong inheritance type", InheritanceType.TABLE_PER_CLASS, entityClass.getInheritanceType()
-//		);
-//		Assert.assertEquals(
-//				"wrong table name", "B", entityClass.getClassNameForTable()
-//		);
-//
-//		assertFalse( iter.hasNext() );
-//	}
-//
-//	@Test
-//	public void testJoinedSubclassDefaultTableName() {
-//		@Entity
-//		@Inheritance(strategy = javax.persistence.InheritanceType.JOINED)
-//		@Table(name = "FOO")
-//		class A {
-//			@Id
-//			@GeneratedValue
-//			private int id;
-//		}
-//
-//		@Entity
-//		class B extends A {
-//		}
-//
-//		Index index = JandexHelper.indexForClass( service, B.class, A.class );
-//		Set<ConfiguredClassHierarchy<EntityClass>> hierarchies = ConfiguredClassHierarchyBuilder.createEntityHierarchies(
-//				new TestAnnotationsBindingContextImpl( index, serviceRegistry )
-//		);
-//		assertEquals( "There should be only one hierarchy", 1, hierarchies.size() );
-//
-//		Iterator<EntityClass> iter = hierarchies.iterator().next().iterator();
-//		EntityClass entityClass = iter.next();
-//		ClassInfo info = entityClass.getClassInfo();
-//		assertEquals( "wrong class", DotName.createSimple( A.class.getName() ), info.name() );
-//		assertTrue( entityClass.hasOwnTable() );
-//		Assert.assertEquals(
-//				"wrong inheritance type", InheritanceType.JOINED, entityClass.getInheritanceType()
-//		);
-//		Assert.assertEquals(
-//				"wrong table name", "A", entityClass.getClassNameForTable()
-//		);
-//
-//		assertTrue( iter.hasNext() );
-//		entityClass = iter.next();
-//		info = entityClass.getClassInfo();
-//		assertEquals( "wrong class", DotName.createSimple( B.class.getName() ), info.name() );
-//		assertTrue( entityClass.hasOwnTable() );
-//		Assert.assertEquals(
-//				"wrong inheritance type", InheritanceType.JOINED, entityClass.getInheritanceType()
-//		);
-//		Assert.assertEquals(
-//				"wrong table name", "B", entityClass.getClassNameForTable()
-//		);
-//
-//		assertFalse( iter.hasNext() );
-//	}
+	@Entity
+	@Inheritance(strategy = javax.persistence.InheritanceType.TABLE_PER_CLASS)
+	class TablePerClassA {
+		@Id
+		@GeneratedValue
+		private int id;
+	}
+
+	@Entity
+	class TablePerClassB extends TablePerClassA {
+	}
+
+	@Test
+	@Resources(annotatedClasses = { TablePerClassA.class, TablePerClassB.class })
+	public void testTablePerClassDefaultTableName() {
+		EntityBinding binding = getEntityBinding( TablePerClassA.class );
+		assertEquals( "wrong inheritance type", InheritanceType.TABLE_PER_CLASS, binding.getInheritanceType() );
+		assertEquals(
+				"wrong table name",
+				"TableNameTest$TablePerClassA",
+				( (org.hibernate.metamodel.relational.Table) binding.getBaseTable() ).getTableName().getName()
+		);
+
+		binding = getEntityBinding( TablePerClassB.class );
+		assertEquals( "wrong inheritance type", InheritanceType.TABLE_PER_CLASS, binding.getInheritanceType() );
+		assertEquals(
+				"wrong table name",
+				"TableNameTest$TablePerClassB",
+				( (org.hibernate.metamodel.relational.Table) binding.getBaseTable() ).getTableName().getName()
+		);
+	}
 }
 
 

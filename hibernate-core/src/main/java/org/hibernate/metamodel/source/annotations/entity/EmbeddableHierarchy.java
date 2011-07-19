@@ -44,28 +44,17 @@ import org.hibernate.metamodel.source.annotations.JandexHelper;
  *
  * @author Hardy Ferentschik
  */
-public class ConfiguredClassHierarchy<T extends ConfiguredClass> implements Iterable<T> {
+public class EmbeddableHierarchy<T extends ConfiguredClass> implements Iterable<T> {
 	private final AccessType defaultAccessType;
 	private final InheritanceType inheritanceType;
 	private final List<T> configuredClasses;
 
-	public static ConfiguredClassHierarchy<EntityClass> createEntityClassHierarchy(List<ClassInfo> classInfoList, AnnotationBindingContext context) {
-		AccessType defaultAccessType = determineDefaultAccessType( classInfoList );
-		InheritanceType inheritanceType = determineInheritanceType( classInfoList );
-		return new ConfiguredClassHierarchy<EntityClass>(
-				classInfoList,
-				context,
-				defaultAccessType,
-				inheritanceType,
-				EntityClass.class
-		);
-	}
 
-	public static ConfiguredClassHierarchy<EmbeddableClass> createEmbeddableClassHierarchy(
+	public static EmbeddableHierarchy<EmbeddableClass> createEmbeddableClassHierarchy(
 			List<ClassInfo> classes,
 			AccessType accessType,
 			AnnotationBindingContext context) {
-		return new ConfiguredClassHierarchy<EmbeddableClass>(
+		return new EmbeddableHierarchy<EmbeddableClass>(
 				classes,
 				context,
 				accessType,
@@ -75,7 +64,7 @@ public class ConfiguredClassHierarchy<T extends ConfiguredClass> implements Iter
 	}
 
 	@SuppressWarnings("unchecked")
-	private ConfiguredClassHierarchy(
+	private EmbeddableHierarchy(
 			List<ClassInfo> classInfoList,
 			AnnotationBindingContext context,
 			AccessType defaultAccessType,

@@ -23,15 +23,12 @@
  */
 package org.hibernate.metamodel.binding;
 
-import java.util.Iterator;
+import java.util.ArrayList;
+import java.util.List;
 
-import org.hibernate.MappingException;
+import org.hibernate.FetchMode;
 import org.hibernate.engine.spi.CascadeStyle;
-import org.hibernate.metamodel.binding.state.ManyToOneAttributeBindingState;
-import org.hibernate.metamodel.relational.Column;
-import org.hibernate.metamodel.relational.ForeignKey;
-import org.hibernate.metamodel.relational.SimpleValue;
-import org.hibernate.metamodel.relational.state.ManyToOneRelationalState;
+import org.hibernate.metamodel.domain.SingularAttribute;
 
 /**
  * TODO : javadoc
@@ -39,33 +36,24 @@ import org.hibernate.metamodel.relational.state.ManyToOneRelationalState;
  * @author Gail Badner
  * @author Steve Ebersole
  */
-public class ManyToOneAttributeBinding extends SimpleAttributeBinding implements SingularAssociationAttributeBinding {
-	private String referencedAttributeName;
+public class ManyToOneAttributeBinding extends SimpleSingularAttributeBinding implements SingularAssociationAttributeBinding {
 	private String referencedEntityName;
+	private String referencedAttributeName;
+	private AttributeBinding referencedAttributeBinding;
 
 	private boolean isLogicalOneToOne;
 	private String foreignKeyName;
 
-	private AttributeBinding referencedAttributeBinding;
+	private CascadeStyle cascadeStyle;
+	private FetchMode fetchMode;
 
-	private Iterable<CascadeStyle> cascadeStyles;
-
-	ManyToOneAttributeBinding(EntityBinding entityBinding) {
-		super( entityBinding, false, false );
+	ManyToOneAttributeBinding(EntityBinding entityBinding, SingularAttribute attribute) {
+		super( entityBinding, attribute, false, false );
 	}
 
-	public final ManyToOneAttributeBinding initialize(ManyToOneAttributeBindingState state) {
-		super.initialize( state );
-		referencedAttributeName = state.getReferencedAttributeName();
-		referencedEntityName = state.getReferencedEntityName();
-		return this;
-	}
-
-	public final ManyToOneAttributeBinding initialize(ManyToOneRelationalState state) {
-		super.initializeValueRelationalState( state );
-		isLogicalOneToOne = state.isLogicalOneToOne();
-		foreignKeyName = state.getForeignKeyName();
-		return this;
+	@Override
+	public boolean isAssociation() {
+		return true;
 	}
 
 	@Override
@@ -94,13 +82,39 @@ public class ManyToOneAttributeBinding extends SimpleAttributeBinding implements
 	}
 
 	@Override
-	public Iterable<CascadeStyle> getCascadeStyles() {
-		return cascadeStyles;
+	public CascadeStyle getCascadeStyle() {
+		return cascadeStyle;
 	}
 
 	@Override
 	public void setCascadeStyles(Iterable<CascadeStyle> cascadeStyles) {
-		this.cascadeStyles = cascadeStyles;
+		List<CascadeStyle> cascadeStyleList = new ArrayList<CascadeStyle>();
+		for ( CascadeStyle style : cascadeStyles ) {
+			if ( style != CascadeStyle.NONE ) {
+				cascadeStyleList.add( style );
+			}
+		}
+		if ( cascadeStyleList.isEmpty() ) {
+			cascadeStyle = CascadeStyle.NONE;
+		}
+		else if ( cascadeStyleList.size() == 1 ) {
+			cascadeStyle = cascadeStyleList.get( 0 );
+		}
+		else {
+			cascadeStyle = new CascadeStyle.MultipleCascadeStyle(
+					cascadeStyleList.toArray( new CascadeStyle[ cascadeStyleList.size() ] )
+			);
+		}
+	}
+
+	@Override
+	public FetchMode getFetchMode() {
+		return fetchMode;
+	}
+
+	@Override
+	public void setFetchMode(FetchMode fetchMode) {
+		this.fetchMode = fetchMode;
 	}
 
 	@Override
@@ -127,7 +141,7 @@ public class ManyToOneAttributeBinding extends SimpleAttributeBinding implements
 			);
 		}
 		this.referencedAttributeBinding = referencedAttributeBinding;
-		buildForeignKey();
+//		buildForeignKey();
 	}
 
 	@Override
@@ -143,52 +157,47 @@ public class ManyToOneAttributeBinding extends SimpleAttributeBinding implements
 		return referencedAttributeBinding.getEntityBinding();
 	}
 
-	private void buildForeignKey() {
-		// TODO: move this stuff to relational model
-		ForeignKey foreignKey = getValue().getTable()
-				.createForeignKey( referencedAttributeBinding.getValue().getTable(), foreignKeyName );
-		Iterator<SimpleValue> referencingValueIterator = getValues().iterator();
-		Iterator<SimpleValue> targetValueIterator = referencedAttributeBinding.getValues().iterator();
-		while ( referencingValueIterator.hasNext() ) {
-			if ( !targetValueIterator.hasNext() ) {
-				// TODO: improve this message
-				throw new MappingException(
-						"number of values in many-to-one reference is greater than number of values in target"
-				);
-			}
-			SimpleValue referencingValue = referencingValueIterator.next();
-			SimpleValue targetValue = targetValueIterator.next();
-			if ( Column.class.isInstance( referencingValue ) ) {
-				if ( !Column.class.isInstance( targetValue ) ) {
-					// TODO improve this message
-					throw new MappingException( "referencing value is a column, but target is not a column" );
-				}
-				foreignKey.addColumnMapping( Column.class.cast( referencingValue ), Column.class.cast( targetValue ) );
-			}
-			else if ( Column.class.isInstance( targetValue ) ) {
-				// TODO: improve this message
-				throw new MappingException( "referencing value is not a column, but target is a column." );
-			}
-		}
-		if ( targetValueIterator.hasNext() ) {
-			throw new MappingException( "target value has more simple values than referencing value" );
-		}
-	}
-
-	public boolean isSimpleValue() {
-		return false;
-	}
-
-	public void validate() {
-		// can't check this until both the domain and relational states are initialized...
-		if ( getCascadeTypes().contains( CascadeType.DELETE_ORPHAN ) ) {
-			if ( !isLogicalOneToOne ) {
-				throw new MappingException(
-						"many-to-one attribute [" + getAttribute().getName() + "] does not support orphan delete as it is not unique"
-				);
-			}
-		}
-		//TODO: validate that the entity reference is resolved
-	}
-
+//	private void buildForeignKey() {
+//		// TODO: move this stuff to relational model
+//		ForeignKey foreignKey = getValue().getTable()
+//				.createForeignKey( referencedAttributeBinding.getValue().getTable(), foreignKeyName );
+//		Iterator<SimpleValue> referencingValueIterator = getSimpleValues().iterator();
+//		Iterator<SimpleValue> targetValueIterator = referencedAttributeBinding.getSimpleValues().iterator();
+//		while ( referencingValueIterator.hasNext() ) {
+//			if ( !targetValueIterator.hasNext() ) {
+//				// TODO: improve this message
+//				throw new MappingException(
+//						"number of values in many-to-one reference is greater than number of values in target"
+//				);
+//			}
+//			SimpleValue referencingValue = referencingValueIterator.next();
+//			SimpleValue targetValue = targetValueIterator.next();
+//			if ( Column.class.isInstance( referencingValue ) ) {
+//				if ( !Column.class.isInstance( targetValue ) ) {
+//					// TODO improve this message
+//					throw new MappingException( "referencing value is a column, but target is not a column" );
+//				}
+//				foreignKey.addColumnMapping( Column.class.cast( referencingValue ), Column.class.cast( targetValue ) );
+//			}
+//			else if ( Column.class.isInstance( targetValue ) ) {
+//				// TODO: improve this message
+//				throw new MappingException( "referencing value is not a column, but target is a column." );
+//			}
+//		}
+//		if ( targetValueIterator.hasNext() ) {
+//			throw new MappingException( "target value has more simple values than referencing value" );
+//		}
+//	}
+//
+//	public void validate() {
+//		// can't check this until both the domain and relational states are initialized...
+//		if ( getCascadeTypes().contains( CascadeType.DELETE_ORPHAN ) ) {
+//			if ( !isLogicalOneToOne ) {
+//				throw new MappingException(
+//						"many-to-one attribute [" + getAttribute().getName() + "] does not support orphan delete as it is not unique"
+//				);
+//			}
+//		}
+//		//TODO: validate that the entity reference is resolved
+//	}
 }

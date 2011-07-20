@@ -27,7 +27,7 @@ package org.hibernate.metamodel.binding;
  * @author Gail Badner
  */
 public class CompositeCollectionElement extends CollectionElement {
-	public CompositeCollectionElement(PluralAttributeBinding binding) {
-		super( binding, CollectionElementType.COMPOSITE );
+	public CompositeCollectionElement(AbstractPluralAttributeBinding binding) {
+		super( binding, CollectionElementNature.COMPOSITE );
 	}
 }

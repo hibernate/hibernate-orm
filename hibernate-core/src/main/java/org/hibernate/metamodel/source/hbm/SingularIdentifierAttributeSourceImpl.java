@@ -26,7 +26,6 @@ package org.hibernate.metamodel.source.hbm;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.source.LocalBindingContext;
 import org.hibernate.metamodel.source.binder.ExplicitHibernateTypeSource;
@@ -86,6 +85,22 @@ class SingularIdentifierAttributeSourceImpl implements SingularAttributeSource {
 					public List getColumnOrFormulaElements() {
 						return idElement.getColumn();
 					}
+
+					@Override
+					public String getContainingTableName() {
+						// by definition, the identifier should be bound to the primary table of the root entity
+						return null;
+					}
+
+					@Override
+					public boolean isIncludedInInsertByDefault() {
+						return true;
+					}
+
+					@Override
+					public boolean isIncludedInUpdateByDefault() {
+						return false;
+					}
 				},
 				bindingContext
 		);
@@ -140,6 +155,21 @@ class SingularIdentifierAttributeSourceImpl implements SingularAttributeSource {
 
 	@Override
 	public boolean isVirtualAttribute() {
+		return false;
+	}
+
+	@Override
+	public boolean areValuesIncludedInInsertByDefault() {
+		return true;
+	}
+
+	@Override
+	public boolean areValuesIncludedInUpdateByDefault() {
+		return true;
+	}
+
+	@Override
+	public boolean areValuesNullableByDefault() {
 		return false;
 	}
 

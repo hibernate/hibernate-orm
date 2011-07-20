@@ -25,6 +25,7 @@ package org.hibernate.metamodel.source.hbm;
 
 import java.util.List;
 
+import org.hibernate.FetchMode;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.source.LocalBindingContext;
@@ -63,6 +64,22 @@ class ManyToOneAttributeSourceImpl implements ToOneAttributeSource {
 					@Override
 					public List getColumnOrFormulaElements() {
 						return manyToOneElement.getColumnOrFormula();
+					}
+
+					@Override
+					public String getContainingTableName() {
+						// todo : need to implement this...
+						return null;
+					}
+
+					@Override
+					public boolean isIncludedInInsertByDefault() {
+						return manyToOneElement.isInsert();
+					}
+
+					@Override
+					public boolean isIncludedInUpdateByDefault() {
+						return manyToOneElement.isUpdate();
 					}
 				},
 				bindingContext
@@ -115,6 +132,13 @@ class ManyToOneAttributeSourceImpl implements ToOneAttributeSource {
 	}
 
 	@Override
+	public FetchMode getFetchMode() {
+		return manyToOneElement.getFetch() == null
+				? FetchMode.DEFAULT
+				: FetchMode.valueOf( manyToOneElement.getFetch().value() );
+	}
+
+	@Override
 	public SingularAttributeNature getNature() {
 		return SingularAttributeNature.MANY_TO_ONE;
 	}
@@ -122,6 +146,21 @@ class ManyToOneAttributeSourceImpl implements ToOneAttributeSource {
 	@Override
 	public boolean isVirtualAttribute() {
 		return false;
+	}
+
+	@Override
+	public boolean areValuesIncludedInInsertByDefault() {
+		return manyToOneElement.isInsert();
+	}
+
+	@Override
+	public boolean areValuesIncludedInUpdateByDefault() {
+		return manyToOneElement.isUpdate();
+	}
+
+	@Override
+	public boolean areValuesNullableByDefault() {
+		return ! Helper.getBooleanValue( manyToOneElement.isNotNull(), false );
 	}
 
 	@Override

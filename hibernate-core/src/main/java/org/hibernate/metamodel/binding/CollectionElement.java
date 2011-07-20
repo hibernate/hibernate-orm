@@ -31,39 +31,31 @@ import org.hibernate.metamodel.relational.Value;
  * @author Steve Ebersole
  */
 public abstract class CollectionElement {
+	private final AbstractPluralAttributeBinding collectionBinding;
+	private final CollectionElementNature collectionElementNature;
 
 	private final HibernateTypeDescriptor hibernateTypeDescriptor = new HibernateTypeDescriptor();
-	private final PluralAttributeBinding collectionBinding;
-	private final CollectionElementType collectionElementType;
-	private String nodeName;
 
 	private Value elementValue;
 
-	CollectionElement(PluralAttributeBinding collectionBinding, CollectionElementType collectionElementType) {
+	CollectionElement(AbstractPluralAttributeBinding collectionBinding, CollectionElementNature collectionElementNature) {
 		this.collectionBinding = collectionBinding;
-		this.collectionElementType = collectionElementType;
+		this.collectionElementNature = collectionElementNature;
 	}
 
-	public final CollectionElementType getCollectionElementType() {
-		return collectionElementType;
+	public AbstractPluralAttributeBinding getCollectionBinding() {
+		return collectionBinding;
 	}
 
-	/* package-protected */
-	void setTypeName(String typeName) {
-		hibernateTypeDescriptor.setExplicitTypeName( typeName );
+	public Value getElementValue() {
+		return elementValue;
 	}
 
-	/* package-protected */
-	void setNodeName(String nodeName) {
-		this.nodeName = nodeName;
+	public final CollectionElementNature getCollectionElementNature() {
+		return collectionElementNature;
 	}
 
-	public boolean isOneToMany() {
-		return collectionElementType.isOneToMany();
+	public HibernateTypeDescriptor getHibernateTypeDescriptor() {
+		return hibernateTypeDescriptor;
 	}
-
-	public boolean isManyToMany() {
-		return collectionElementType.isManyToMany();
-	}
-
 }

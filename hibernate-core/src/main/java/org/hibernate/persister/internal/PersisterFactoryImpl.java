@@ -34,7 +34,7 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.source.MetadataImplementor;
 import org.hibernate.metamodel.binding.EntityBinding;
-import org.hibernate.metamodel.binding.PluralAttributeBinding;
+import org.hibernate.metamodel.binding.AbstractPluralAttributeBinding;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.spi.PersisterClassResolver;
@@ -95,7 +95,7 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 
 	/**
 	 * The constructor signature for {@link CollectionPersister} implementations using
-	 * a {@link PluralAttributeBinding}
+	 * a {@link org.hibernate.metamodel.binding.AbstractPluralAttributeBinding}
 	 *
 	 * @todo still need to make collection persisters EntityMode-aware
 	 * @todo make EntityPersister *not* depend on {@link SessionFactoryImplementor} if possible.
@@ -103,7 +103,7 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 	 * when new metamodel is integrated
 	 */
 	private static final Class[] COLLECTION_PERSISTER_CONSTRUCTOR_ARGS_NEW = new Class[] {
-			PluralAttributeBinding.class,
+			AbstractPluralAttributeBinding.class,
 			CollectionRegionAccessStrategy.class,
 			MetadataImplementor.class,
 			SessionFactoryImplementor.class
@@ -198,7 +198,7 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 	@Override
 	@SuppressWarnings( {"unchecked"})
 	public CollectionPersister createCollectionPersister(MetadataImplementor metadata,
-														 PluralAttributeBinding collectionMetadata,
+														 AbstractPluralAttributeBinding collectionMetadata,
 														 CollectionRegionAccessStrategy cacheAccessStrategy,
 														 SessionFactoryImplementor factory) throws HibernateException {
 		Class<? extends CollectionPersister> persisterClass = collectionMetadata.getCollectionPersisterClass();
@@ -209,7 +209,7 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 		return create( persisterClass, COLLECTION_PERSISTER_CONSTRUCTOR_ARGS_NEW, metadata, collectionMetadata, cacheAccessStrategy, factory );
 	}
 
-	// TODO: change collectionMetadata arg type to PluralAttributeBinding when new metadata is integrated
+	// TODO: change collectionMetadata arg type to AbstractPluralAttributeBinding when new metadata is integrated
 	// TODO: change metadata arg type to MetadataImplementor when new metadata is integrated
 	private static CollectionPersister create(
 			Class<? extends CollectionPersister> persisterClass,

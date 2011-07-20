@@ -37,7 +37,7 @@ import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.FetchProfile;
 import org.hibernate.metamodel.binding.IdGenerator;
-import org.hibernate.metamodel.binding.PluralAttributeBinding;
+import org.hibernate.metamodel.binding.AbstractPluralAttributeBinding;
 import org.hibernate.metamodel.binding.TypeDef;
 
 /**
@@ -75,7 +75,7 @@ public interface Metadata {
 	 */
 	public EntityBinding getRootEntityBinding(String entityName);
 
-	public Iterable<PluralAttributeBinding> getCollectionBindings();
+	public Iterable<AbstractPluralAttributeBinding> getCollectionBindings();
 
 	public TypeDef getTypeDefinition(String name);
 

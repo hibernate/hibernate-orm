@@ -21,14 +21,13 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.binding;
+package org.hibernate.metamodel.source.binder;
 
 /**
- * @author Gail Badner
+ * @author Steve Ebersole
  */
-public class OneToManyCollectionElement extends CollectionElement {
-
-	OneToManyCollectionElement(AbstractPluralAttributeBinding binding) {
-		super( binding, CollectionElementNature.ONE_TO_MANY );
-	}
+public interface PluralAttributeSource extends AttributeSource {
+	public PluralAttributeNature getPluralAttributeNature();
+	public PluralAttributeElementNature getPluralAttributeElementNature();
+	
 }

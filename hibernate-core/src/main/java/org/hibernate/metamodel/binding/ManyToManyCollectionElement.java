@@ -31,13 +31,14 @@ import org.dom4j.Element;
  * @author Gail Badner
  */
 public class ManyToManyCollectionElement extends CollectionElement {
+
 	private final java.util.Map manyToManyFilters = new HashMap();
 	private String manyToManyWhere;
 	private String manyToManyOrderBy;
 
 
-	ManyToManyCollectionElement(PluralAttributeBinding binding) {
-		super( binding, CollectionElementType.MANY_TO_MANY );
+	ManyToManyCollectionElement(AbstractPluralAttributeBinding binding) {
+		super( binding, CollectionElementNature.MANY_TO_MANY );
 	}
 
 	public void fromHbmXml(Element node){

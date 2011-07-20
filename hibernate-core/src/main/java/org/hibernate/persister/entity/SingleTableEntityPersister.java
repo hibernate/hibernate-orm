@@ -50,6 +50,8 @@ import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.binding.AttributeBinding;
 import org.hibernate.metamodel.binding.CustomSQL;
 import org.hibernate.metamodel.binding.EntityBinding;
+import org.hibernate.metamodel.binding.SimpleValueBinding;
+import org.hibernate.metamodel.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.relational.DerivedValue;
 import org.hibernate.metamodel.relational.SimpleValue;
 import org.hibernate.metamodel.relational.TableSpecification;
@@ -643,6 +645,9 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			if ( attributeBinding == entityBinding.getEntityIdentifier().getValueBinding() ) {
 				continue; // skip identifier binding
 			}
+			if ( ! attributeBinding.getAttribute().isSingular() ) {
+				continue;
+			}
 			propertyTableNumbers[ i++ ] = 0;
 		}
 
@@ -654,20 +659,25 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 		// TODO: fix when subclasses are working (HHH-6337)
 		//for ( AttributeBinding prop : entityBinding.getSubclassAttributeBindingClosure() ) {
-		for ( AttributeBinding prop : entityBinding.getAttributeBindingClosure() ) {
+		for ( AttributeBinding attributeBinding : entityBinding.getAttributeBindingClosure() ) {
+			if ( ! attributeBinding.getAttribute().isSingular() ) {
+				continue;
+			}
+			SingularAttributeBinding singularAttributeBinding = (SingularAttributeBinding) attributeBinding;
+
 			// TODO: fix when joins are working (HHH-6391)
-			//int join = entityBinding.getJoinNumber(prop);
+			//int join = entityBinding.getJoinNumber(singularAttributeBinding);
 			int join = 0;
 			propertyJoinNumbers.add(join);
 
-			//propertyTableNumbersByName.put( prop.getName(), join );
+			//propertyTableNumbersByName.put( singularAttributeBinding.getName(), join );
 			propertyTableNumbersByNameAndSubclass.put(
-					prop.getEntityBinding().getEntity().getName() + '.' + prop.getAttribute().getName(),
+					singularAttributeBinding.getEntityBinding().getEntity().getName() + '.' + singularAttributeBinding.getAttribute().getName(),
 					join
 			);
 
-			for ( SimpleValue simpleValue : prop.getValues() ) {
-				if ( DerivedValue.class.isInstance( simpleValue ) ) {
+			for ( SimpleValueBinding simpleValueBinding : singularAttributeBinding.getSimpleValueBindings() ) {
+				if ( DerivedValue.class.isInstance( simpleValueBinding.getSimpleValue() ) ) {
 					formulaJoinedNumbers.add( join );
 				}
 				else {

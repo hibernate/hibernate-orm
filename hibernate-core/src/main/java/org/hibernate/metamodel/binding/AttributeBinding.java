@@ -25,13 +25,11 @@ package org.hibernate.metamodel.binding;
 
 import java.util.Set;
 
-import org.hibernate.metamodel.source.MetaAttributeContext;
 import org.hibernate.metamodel.domain.Attribute;
-import org.hibernate.metamodel.relational.SimpleValue;
-import org.hibernate.metamodel.relational.Value;
+import org.hibernate.metamodel.source.MetaAttributeContext;
 
 /**
- * The basic contract for binding between an {@link #getAttribute() attribute} and a {@link #getValue() value}
+ * The basic contract for binding a {@link #getAttribute() attribute} from the domain model to the relational model.
  *
  * @author Steve Ebersole
  */
@@ -51,13 +49,6 @@ public interface AttributeBinding {
 	public Attribute getAttribute();
 
 	/**
-	 * Obtain the value bound
-	 *
-	 * @return The value
-	 */
-	public Value getValue();
-
-	/**
 	 * Obtain the descriptor for the Hibernate {@link org.hibernate.type.Type} for this binding.
 	 * <p/>
 	 * For information about the Java type, query the {@link Attribute} obtained from {@link #getAttribute()}
@@ -67,6 +58,18 @@ public interface AttributeBinding {
 	 */
 	public HibernateTypeDescriptor getHibernateTypeDescriptor();
 
+	public boolean isAssociation();
+
+	public boolean isBasicPropertyAccessor();
+
+	public String getPropertyAccessorName();
+
+	public void setPropertyAccessorName(String propertyAccessorName);
+
+	public boolean isIncludedInOptimisticLocking();
+
+	public void setIncludedInOptimisticLocking(boolean includedInOptimisticLocking);
+
 	/**
 	 * Obtain the meta attributes associated with this binding
 	 *
@@ -74,39 +77,9 @@ public interface AttributeBinding {
 	 */
 	public MetaAttributeContext getMetaAttributeContext();
 
-	/**
-	 * Returns the number of {@link org.hibernate.metamodel.relational.SimpleValue}
-	 * objects that will be returned by {@link #getValues()}
-	 *
-	 * @return the number of objects that will be returned by {@link #getValues()}.
-	 *
-	 * @see {@link org.hibernate.metamodel.relational.SimpleValue}
-	 * @see {@link #getValues()}
-	 */
-	public int getValuesSpan();
 
-	/**
-	 * @return In the case that {@link #getValue()} represents a {@link org.hibernate.metamodel.relational.Tuple} this method
-	 *         gives access to its compound values.  In the case of {@link org.hibernate.metamodel.relational.SimpleValue},
-	 *         we return an Iterable over that single simple value.
-	 */
-	public Iterable<SimpleValue> getValues();
-
-	public String getPropertyAccessorName();
-
-	public boolean isBasicPropertyAccessor();
-
-	public boolean hasFormula();
 
 	public boolean isAlternateUniqueKey();
-
-	public boolean isNullable();
-
-	public boolean[] getColumnUpdateability();
-
-	public boolean[] getColumnInsertability();
-
-	public boolean isSimpleValue();
 
 	public boolean isLazy();
 

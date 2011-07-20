@@ -47,7 +47,7 @@ public class SingularAttributeSourceImpl implements SingularAttributeSource {
 
 	@Override
 	public boolean isVirtualAttribute() {
-		return false;  //To change body of implemented methods use File | Settings | File Templates.
+		return false;
 	}
 
 	@Override
@@ -72,7 +72,8 @@ public class SingularAttributeSourceImpl implements SingularAttributeSource {
 
 	@Override
 	public String getPropertyAccessorName() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		// todo : implememt
+		return null;
 	}
 
 	@Override
@@ -113,6 +114,21 @@ public class SingularAttributeSourceImpl implements SingularAttributeSource {
 	@Override
 	public Iterable<MetaAttributeSource> metaAttributes() {
 		return Collections.emptySet();
+	}
+
+	@Override
+	public boolean areValuesIncludedInInsertByDefault() {
+		return true;
+	}
+
+	@Override
+	public boolean areValuesIncludedInUpdateByDefault() {
+		return true;
+	}
+
+	@Override
+	public boolean areValuesNullableByDefault() {
+		return true;
 	}
 
 	@Override

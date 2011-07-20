@@ -44,7 +44,7 @@ public class EntityIdentifier {
 	);
 
 	private final EntityBinding entityBinding;
-	private SimpleAttributeBinding attributeBinding;
+	private SimpleSingularAttributeBinding attributeBinding;
 	private IdentifierGenerator identifierGenerator;
 	private IdGenerator idGenerator;
 	private boolean isIdentifierMapper = false;
@@ -59,11 +59,11 @@ public class EntityIdentifier {
 		this.entityBinding = entityBinding;
 	}
 
-	public SimpleAttributeBinding getValueBinding() {
+	public SimpleSingularAttributeBinding getValueBinding() {
 		return attributeBinding;
 	}
 
-	public void setValueBinding(SimpleAttributeBinding attributeBinding) {
+	public void setValueBinding(SimpleSingularAttributeBinding attributeBinding) {
 		if ( this.attributeBinding != null ) {
 			// todo : error?  or just log?  For now throw exception and see what happens. Easier to see whether this
 			// method gets called multiple times
@@ -77,7 +77,7 @@ public class EntityIdentifier {
 	}
 
 	public boolean isEmbedded() {
-		return attributeBinding.getValuesSpan()>1;
+		return attributeBinding.getSimpleValueSpan()>1;
 	}
 
 	public boolean isIdentifierMapper() {

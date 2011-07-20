@@ -55,6 +55,12 @@ public class SubclassEntitySourceImpl extends AbstractEntitySourceImpl implement
 				public String getExplicitTableName() {
 					return ( (XMLJoinedSubclassElement) entityElement() ).getTable();
 				}
+
+				@Override
+				public String getLogicalName() {
+					// logical name for the primary table is null
+					return null;
+				}
 			};
 		}
 		else if ( XMLUnionSubclassElement.class.isInstance( entityElement() ) ) {
@@ -72,6 +78,12 @@ public class SubclassEntitySourceImpl extends AbstractEntitySourceImpl implement
 				@Override
 				public String getExplicitTableName() {
 					return ( (XMLUnionSubclassElement) entityElement() ).getTable();
+				}
+
+				@Override
+				public String getLogicalName() {
+					// logical name for the primary table is null
+					return null;
 				}
 			};
 		}

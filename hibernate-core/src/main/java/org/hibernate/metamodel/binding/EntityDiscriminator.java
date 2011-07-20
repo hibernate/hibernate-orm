@@ -32,7 +32,7 @@ import org.hibernate.metamodel.relational.state.ValueRelationalState;
  * @author Steve Ebersole
  */
 public class EntityDiscriminator {
-	private SimpleAttributeBinding valueBinding;
+	private SimpleSingularAttributeBinding valueBinding;
 	private String discriminatorValue;
 	private boolean forced;
 	private boolean inserted = true;
@@ -40,12 +40,12 @@ public class EntityDiscriminator {
 	public EntityDiscriminator() {
 	}
 
-	public SimpleAttributeBinding getValueBinding() {
+	public SimpleSingularAttributeBinding getValueBinding() {
 		return valueBinding;
 	}
 
 	/* package-protected */
-	void setValueBinding(SimpleAttributeBinding valueBinding) {
+	void setValueBinding(SimpleSingularAttributeBinding valueBinding) {
 		this.valueBinding = valueBinding;
 	}
 
@@ -57,11 +57,6 @@ public class EntityDiscriminator {
 		this.discriminatorValue = state.getDiscriminatorValue();
 		this.forced = state.isForced();
 		this.inserted = state.isInserted();
-		return this;
-	}
-
-	public EntityDiscriminator initialize(ValueRelationalState state) {
-		valueBinding.initialize( state );
 		return this;
 	}
 

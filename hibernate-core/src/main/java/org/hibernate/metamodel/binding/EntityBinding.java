@@ -28,14 +28,13 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.util.Value;
-import org.hibernate.metamodel.domain.Attribute;
 import org.hibernate.metamodel.domain.Entity;
 import org.hibernate.metamodel.domain.PluralAttribute;
+import org.hibernate.metamodel.domain.SingularAttribute;
 import org.hibernate.metamodel.relational.TableSpecification;
 import org.hibernate.metamodel.source.MetaAttributeContext;
 import org.hibernate.persister.entity.EntityPersister;
@@ -65,7 +64,7 @@ public class EntityBinding {
 
 	private final EntityIdentifier entityIdentifier = new EntityIdentifier( this );
 	private EntityDiscriminator entityDiscriminator;
-	private SimpleAttributeBinding versionBinding;
+	private SimpleSingularAttributeBinding versionBinding;
 
 	private Map<String, AttributeBinding> attributeBindingMap = new HashMap<String, AttributeBinding>();
 
@@ -115,6 +114,11 @@ public class EntityBinding {
 		this.baseTable = baseTable;
 	}
 
+	public TableSpecification getTable(String containingTableName) {
+		// todo : implement this for secondary table look ups.  for now we just return the base table
+		return baseTable;
+	}
+
 	public boolean isRoot() {
 		return superEntityBinding == null;
 	}
@@ -147,11 +151,11 @@ public class EntityBinding {
 		return versionBinding != null;
 	}
 
-	public void setVersionBinding(SimpleAttributeBinding versionBinding) {
+	public void setVersionBinding(SimpleSingularAttributeBinding versionBinding) {
 		this.versionBinding = versionBinding;
 	}
 
-	public SimpleAttributeBinding getVersioningValueBinding() {
+	public SimpleSingularAttributeBinding getVersioningValueBinding() {
 		return versionBinding;
 	}
 
@@ -201,47 +205,44 @@ public class EntityBinding {
 		return entityReferencingAttributeBindings;
 	}
 
-	public SimpleAttributeBinding makeSimpleIdAttributeBinding(Attribute attribute) {
-		final SimpleAttributeBinding binding = makeSimpleAttributeBinding( attribute, true, true );
+	public SimpleSingularAttributeBinding makeSimpleIdAttributeBinding(SingularAttribute attribute) {
+		final SimpleSingularAttributeBinding binding = makeSimpleAttributeBinding( attribute, true, true );
 		getEntityIdentifier().setValueBinding( binding );
 		return binding;
 	}
+//
+//	public EntityDiscriminator makeEntityDiscriminator(Attribute attribute) {
+//		if ( entityDiscriminator != null ) {
+//			throw new AssertionFailure( "Creation of entity discriminator was called more than once" );
+//		}
+//		entityDiscriminator = new EntityDiscriminator();
+//		entityDiscriminator.setValueBinding( makeSimpleAttributeBinding( attribute, true, false ) );
+//		return entityDiscriminator;
+//	}
 
-	public EntityDiscriminator makeEntityDiscriminator(Attribute attribute) {
-		if ( entityDiscriminator != null ) {
-			throw new AssertionFailure( "Creation of entity discriminator was called more than once" );
-		}
-		entityDiscriminator = new EntityDiscriminator();
-		entityDiscriminator.setValueBinding( makeSimpleAttributeBinding( attribute, true, false ) );
-		return entityDiscriminator;
-	}
-
-	public SimpleAttributeBinding makeVersionBinding(Attribute attribute) {
+	public SimpleSingularAttributeBinding makeVersionBinding(SingularAttribute attribute) {
 		versionBinding = makeSimpleAttributeBinding( attribute, true, false );
 		return versionBinding;
 	}
 
-	public SimpleAttributeBinding makeSimpleAttributeBinding(Attribute attribute) {
+	public SimpleSingularAttributeBinding makeSimpleAttributeBinding(SingularAttribute attribute) {
 		return makeSimpleAttributeBinding( attribute, false, false );
 	}
 
-	private SimpleAttributeBinding makeSimpleAttributeBinding(Attribute attribute, boolean forceNonNullable, boolean forceUnique) {
-		final SimpleAttributeBinding binding = new SimpleAttributeBinding( this, forceNonNullable, forceUnique );
-		binding.setAttribute( attribute );
+	private SimpleSingularAttributeBinding makeSimpleAttributeBinding(SingularAttribute attribute, boolean forceNonNullable, boolean forceUnique) {
+		final SimpleSingularAttributeBinding binding = new SimpleSingularAttributeBinding( this, attribute, forceNonNullable, forceUnique );
 		registerAttributeBinding( attribute.getName(), binding );
 		return binding;
 	}
 
-	public ManyToOneAttributeBinding makeManyToOneAttributeBinding(Attribute attribute) {
-		final ManyToOneAttributeBinding binding = new ManyToOneAttributeBinding( this );
-		binding.setAttribute( attribute );
+	public ManyToOneAttributeBinding makeManyToOneAttributeBinding(SingularAttribute attribute) {
+		final ManyToOneAttributeBinding binding = new ManyToOneAttributeBinding( this, attribute );
 		registerAttributeBinding( attribute.getName(), binding );
 		return binding;
 	}
 
-	public BagBinding makeBagAttributeBinding(PluralAttribute attribute, CollectionElementType collectionElementType) {
-		final BagBinding binding = new BagBinding( this, collectionElementType );
-		binding.setAttribute( attribute );
+	public BagBinding makeBagAttributeBinding(PluralAttribute attribute, CollectionElementNature nature) {
+		final BagBinding binding = new BagBinding( this, attribute, nature );
 		registerAttributeBinding( attribute.getName(), binding );
 		return binding;
 	}

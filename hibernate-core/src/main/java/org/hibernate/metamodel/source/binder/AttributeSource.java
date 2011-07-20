@@ -43,10 +43,15 @@ public interface AttributeSource {
 	 */
 	public boolean isSingular();
 
+	public String getPropertyAccessorName();
+
+	public boolean isIncludedInOptimisticLocking();
+
 	/**
 	 * Obtain the meta-attribute sources associated with this attribute.
 	 *
 	 * @return The meta-attribute sources.
 	 */
 	public Iterable<MetaAttributeSource> metaAttributes();
+
 }

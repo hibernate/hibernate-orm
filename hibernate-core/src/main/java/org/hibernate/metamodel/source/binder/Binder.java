@@ -34,14 +34,20 @@ import org.hibernate.EntityMode;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.beans.BeanInfoHelper;
+import org.hibernate.metamodel.binding.AbstractPluralAttributeBinding;
+import org.hibernate.metamodel.binding.AttributeBinding;
+import org.hibernate.metamodel.binding.CollectionElementNature;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.InheritanceType;
 import org.hibernate.metamodel.binding.ManyToOneAttributeBinding;
 import org.hibernate.metamodel.binding.MetaAttribute;
-import org.hibernate.metamodel.binding.SimpleAttributeBinding;
+import org.hibernate.metamodel.binding.SimpleSingularAttributeBinding;
+import org.hibernate.metamodel.binding.SimpleValueBinding;
+import org.hibernate.metamodel.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.binding.TypeDef;
 import org.hibernate.metamodel.domain.Attribute;
 import org.hibernate.metamodel.domain.Entity;
+import org.hibernate.metamodel.domain.PluralAttribute;
 import org.hibernate.metamodel.domain.SingularAttribute;
 import org.hibernate.metamodel.relational.Column;
 import org.hibernate.metamodel.relational.Identifier;
@@ -278,19 +284,6 @@ public class Binder {
 
 	// Attributes ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	private void bindAttributes(AttributeSourceContainer attributeSourceContainer, EntityBinding entityBinding) {
-		// todo : we really need the notion of a Stack here for the table from which the columns come for binding these attributes.
-		// todo : adding the concept (interface) of a source of attribute metadata would allow reuse of this method for entity, component, unique-key, etc
-		// for now, simply assume all columns come from the base table....
-
-		for ( AttributeSource attributeSource : attributeSourceContainer.attributeSources() ) {
-			if ( attributeSource.isSingular() ) {
-				doBasicSingularAttributeBindingCreation( (SingularAttributeSource) attributeSource, entityBinding );
-			}
-			// todo : components and collections
-		}
-	}
-
 	private void bindIdentifier(RootEntitySource entitySource, EntityBinding entityBinding) {
 		if ( entitySource.getIdentifierSource() == null ) {
 			throw new AssertionFailure( "Expecting identifier information on root entity descriptor" );
@@ -311,7 +304,7 @@ public class Binder {
 	}
 
 	private void bindSimpleIdentifier(SimpleIdentifierSource identifierSource, EntityBinding entityBinding) {
-		final SimpleAttributeBinding idAttributeBinding = doBasicSingularAttributeBindingCreation(
+		final SimpleSingularAttributeBinding idAttributeBinding = doBasicSingularAttributeBindingCreation(
 				identifierSource.getIdentifierAttributeSource(), entityBinding
 		);
 
@@ -342,7 +335,7 @@ public class Binder {
 			return;
 		}
 
-		SimpleAttributeBinding attributeBinding = doBasicSingularAttributeBindingCreation(
+		SimpleSingularAttributeBinding attributeBinding = doBasicSingularAttributeBindingCreation(
 				versioningAttributeSource, entityBinding
 		);
 		entityBinding.setVersionBinding( attributeBinding );
@@ -356,14 +349,58 @@ public class Binder {
 		// todo : implement
 	}
 
-	private SimpleAttributeBinding doBasicSingularAttributeBindingCreation(
+	private void bindAttributes(AttributeSourceContainer attributeSourceContainer, EntityBinding entityBinding) {
+		// todo : we really need the notion of a Stack here for the table from which the columns come for binding these attributes.
+		// todo : adding the concept (interface) of a source of attribute metadata would allow reuse of this method for entity, component, unique-key, etc
+		// for now, simply assume all columns come from the base table....
+
+		for ( AttributeSource attributeSource : attributeSourceContainer.attributeSources() ) {
+			if ( attributeSource.isSingular() ) {
+				final SingularAttributeSource singularAttributeSource = (SingularAttributeSource) attributeSource;
+				if ( singularAttributeSource.getNature() == SingularAttributeNature.COMPONENT ) {
+					throw new NotYetImplementedException( "Component binding not yet implemented :(" );
+				}
+				else {
+					doBasicSingularAttributeBindingCreation( singularAttributeSource, entityBinding );
+				}
+			}
+			else {
+				bindPersistentCollection( (PluralAttributeSource) attributeSource, entityBinding );
+			}
+		}
+	}
+
+	private void bindPersistentCollection(PluralAttributeSource attributeSource, EntityBinding entityBinding) {
+		final AbstractPluralAttributeBinding pluralAttributeBinding;
+		if ( attributeSource.getPluralAttributeNature() == PluralAttributeNature.BAG ) {
+			final PluralAttribute pluralAttribute = entityBinding.getEntity().locateOrCreateBag( attributeSource.getName() );
+			pluralAttributeBinding = entityBinding.makeBagAttributeBinding( pluralAttribute, convert( attributeSource.getPluralAttributeElementNature() ) );
+		}
+		else {
+			// todo : implement other collection types
+			throw new NotYetImplementedException( "Collections other than bag not yet implmented :(" );
+		}
+
+		doBasicAttributeBinding( attributeSource, pluralAttributeBinding );
+	}
+
+	private void doBasicAttributeBinding(AttributeSource attributeSource, AttributeBinding attributeBinding) {
+		attributeBinding.setPropertyAccessorName( attributeSource.getPropertyAccessorName() );
+		attributeBinding.setIncludedInOptimisticLocking( attributeSource.isIncludedInOptimisticLocking() );
+	}
+
+	private CollectionElementNature convert(PluralAttributeElementNature pluralAttributeElementNature) {
+		return CollectionElementNature.valueOf( pluralAttributeElementNature.name() );
+	}
+
+	private SimpleSingularAttributeBinding doBasicSingularAttributeBindingCreation(
 			SingularAttributeSource attributeSource,
 			EntityBinding entityBinding) {
 		final SingularAttribute attribute = attributeSource.isVirtualAttribute()
 				? entityBinding.getEntity().locateOrCreateVirtualAttribute( attributeSource.getName() )
 				: entityBinding.getEntity().locateOrCreateSingularAttribute( attributeSource.getName() );
 
-		final SimpleAttributeBinding attributeBinding;
+		final SimpleSingularAttributeBinding attributeBinding;
 		if ( attributeSource.getNature() == SingularAttributeNature.BASIC ) {
 			attributeBinding = entityBinding.makeSimpleAttributeBinding( attribute );
 			resolveTypeInformation( attributeSource.getTypeInformation(), attributeBinding );
@@ -377,8 +414,6 @@ public class Binder {
 			throw new NotYetImplementedException();
 		}
 
-		attributeBinding.setInsertable( attributeSource.isInsertable() );
-		attributeBinding.setUpdatable( attributeSource.isUpdatable() );
 		attributeBinding.setGeneration( attributeSource.getGeneration() );
 		attributeBinding.setLazy( attributeSource.isLazy() );
 		attributeBinding.setIncludedInOptimisticLocking( attributeSource.isIncludedInOptimisticLocking() );
@@ -391,8 +426,7 @@ public class Binder {
 				)
 		);
 
-		final org.hibernate.metamodel.relational.Value relationalValue = makeValue( attributeSource, attributeBinding );
-		attributeBinding.setValue( relationalValue );
+		bindRelationalValues( attributeSource, attributeBinding );
 
 		attributeBinding.setMetaAttributeContext(
 				buildMetaAttributeContext( attributeSource.metaAttributes(), entityBinding.getMetaAttributeContext() )
@@ -401,7 +435,7 @@ public class Binder {
 		return attributeBinding;
 	}
 
-	private void resolveTypeInformation(ExplicitHibernateTypeSource typeSource, SimpleAttributeBinding attributeBinding) {
+	private void resolveTypeInformation(ExplicitHibernateTypeSource typeSource, SimpleSingularAttributeBinding attributeBinding) {
 		final Class<?> attributeJavaType = determineJavaType( attributeBinding.getAttribute() );
 		if ( attributeJavaType != null ) {
 			attributeBinding.getHibernateTypeDescriptor().setJavaTypeName( attributeJavaType.getName() );
@@ -472,6 +506,7 @@ public class Binder {
 		attributeBinding.setReferencedAttributeName( attributeSource.getReferencedEntityAttributeName() );
 
 		attributeBinding.setCascadeStyles( attributeSource.getCascadeStyles() );
+		attributeBinding.setFetchMode( attributeSource.getFetchMode() );
 	}
 
 	private MetaAttributeContext buildMetaAttributeContext(EntitySource entitySource) {
@@ -556,18 +591,17 @@ public class Binder {
 		// todo : implement
 	}
 
-	private org.hibernate.metamodel.relational.Value makeValue(
+	private void bindRelationalValues(
 			RelationalValueSourceContainer relationalValueSourceContainer,
-			SimpleAttributeBinding attributeBinding) {
+			SingularAttributeBinding attributeBinding) {
 
-		// todo : to be completely correct, we need to know which table the value belongs to.
-		// 		There is a note about this somewhere else with ideas on the subject.
-		//		For now, just use the entity's base table.
-		final TableSpecification table = attributeBinding.getEntityBinding().getBaseTable();
+		List<SimpleValueBinding> valueBindings = new ArrayList<SimpleValueBinding>();
 
 		if ( relationalValueSourceContainer.relationalValueSources().size() > 0 ) {
-			List<SimpleValue> values = new ArrayList<SimpleValue>();
 			for ( RelationalValueSource valueSource : relationalValueSourceContainer.relationalValueSources() ) {
+				final TableSpecification table = attributeBinding.getEntityBinding()
+						.getTable( valueSource.getContainingTableName() );
+
 				if ( ColumnSource.class.isInstance( valueSource ) ) {
 					final ColumnSource columnSource = ColumnSource.class.cast( valueSource );
 					final Column column = table.locateOrCreateColumn( columnSource.getName() );
@@ -581,28 +615,35 @@ public class Binder {
 					column.setUnique( columnSource.isUnique() );
 					column.setCheckCondition( columnSource.getCheckCondition() );
 					column.setComment( columnSource.getComment() );
-					values.add( column );
+					valueBindings.add(
+							new SimpleValueBinding(
+									column,
+									columnSource.isIncludedInInsert(),
+									columnSource.isIncludedInUpdate()
+							)
+					);
 				}
 				else {
-					values.add( table.locateOrCreateDerivedValue( ( (DerivedValueSource) valueSource ).getExpression() ) );
+					valueBindings.add(
+							new SimpleValueBinding(
+									table.locateOrCreateDerivedValue( ( (DerivedValueSource) valueSource ).getExpression() )
+							)
+					);
 				}
 			}
-			if ( values.size() == 1 ) {
-				return values.get( 0 );
-			}
-			Tuple tuple = new Tuple( table, null );
-			for ( SimpleValue value : values ) {
-				tuple.addValue( value );
-			}
-			return tuple;
 		}
 		else {
-			// assume a column named based on the NamingStrategy
 			final String name = metadata.getOptions()
 					.getNamingStrategy()
 					.propertyToColumnName( attributeBinding.getAttribute().getName() );
-			return table.locateOrCreateColumn( name );
+			final SimpleValueBinding valueBinding = new SimpleValueBinding();
+			valueBindings.add(
+					new SimpleValueBinding(
+							attributeBinding.getEntityBinding().getBaseTable().locateOrCreateColumn( name )
+					)
+			);
 		}
+		attributeBinding.setSimpleValueBindings( valueBindings );
 	}
 
 	private void processFetchProfiles(EntitySource entitySource, EntityBinding entityBinding) {

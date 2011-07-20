@@ -140,35 +140,32 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 
 		assertTrue( idAttributeBinding.getAttribute().isSingular() );
 		assertNotNull( idAttributeBinding.getAttribute() );
+		SingularAttributeBinding singularIdAttributeBinding = (SingularAttributeBinding) idAttributeBinding;
 		SingularAttribute singularIdAttribute =  ( SingularAttribute ) idAttributeBinding.getAttribute();
 		BasicType basicIdAttributeType = ( BasicType ) singularIdAttribute.getSingularAttributeType();
 		assertSame( Long.class, basicIdAttributeType.getClassReference() );
 
-		assertNotNull( idAttributeBinding.getValue() );
-		assertTrue( idAttributeBinding.getValue() instanceof Column );
-		Datatype idDataType = ( (Column) idAttributeBinding.getValue() ).getDatatype();
+		assertNotNull( singularIdAttributeBinding.getValue() );
+		assertTrue( singularIdAttributeBinding.getValue() instanceof Column );
+		Datatype idDataType = ( (Column) singularIdAttributeBinding.getValue() ).getDatatype();
 		assertSame( Long.class, idDataType.getJavaType() );
 		assertSame( Types.BIGINT, idDataType.getTypeCode() );
 		assertSame( LongType.INSTANCE.getName(), idDataType.getTypeName() );
 
-		AttributeBinding nameBinding = entityBinding.getAttributeBinding( "name" );
-		assertNotNull( nameBinding );
+		assertNotNull( entityBinding.getAttributeBinding( "name" ) );
+		assertNotNull( entityBinding.getAttributeBinding( "name" ).getAttribute() );
+		assertTrue( entityBinding.getAttributeBinding( "name" ).getAttribute().isSingular() );
+
+		SingularAttributeBinding nameBinding = (SingularAttributeBinding) entityBinding.getAttributeBinding( "name" );
 		assertSame( StringType.INSTANCE, nameBinding.getHibernateTypeDescriptor().getResolvedTypeMapping() );
 		assertNotNull( nameBinding.getAttribute() );
 		assertNotNull( nameBinding.getValue() );
-
-		assertTrue( nameBinding.getAttribute().isSingular() );
-		assertNotNull( nameBinding.getAttribute() );
 		SingularAttribute singularNameAttribute =  ( SingularAttribute ) nameBinding.getAttribute();
 		BasicType basicNameAttributeType = ( BasicType ) singularNameAttribute.getSingularAttributeType();
 		assertSame( String.class, basicNameAttributeType.getClassReference() );
 
 		assertNotNull( nameBinding.getValue() );
-		// until HHH-6380 is fixed, need to call getValues()
-		assertEquals( 1, nameBinding.getValuesSpan() );
-		Iterator<SimpleValue> it = nameBinding.getValues().iterator();
-		assertTrue( it.hasNext() );
-		SimpleValue nameValue = it.next();
+		SimpleValue nameValue = (SimpleValue) nameBinding.getValue();
 		assertTrue( nameValue instanceof Column );
 		Datatype nameDataType = nameValue.getDatatype();
 		assertSame( String.class, nameDataType.getJavaType() );

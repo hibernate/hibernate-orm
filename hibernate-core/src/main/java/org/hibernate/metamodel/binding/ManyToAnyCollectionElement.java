@@ -23,15 +23,11 @@
  */
 package org.hibernate.metamodel.binding;
 
-import java.util.HashMap;
-
-import org.dom4j.Element;
-
 /**
  * @author Gail Badner
  */
 public class ManyToAnyCollectionElement extends CollectionElement {
-	ManyToAnyCollectionElement(PluralAttributeBinding binding) {
-		super( binding, CollectionElementType.MANY_TO_ANY );
+	ManyToAnyCollectionElement(AbstractPluralAttributeBinding binding) {
+		super( binding, CollectionElementNature.MANY_TO_ANY );
 	}
 }

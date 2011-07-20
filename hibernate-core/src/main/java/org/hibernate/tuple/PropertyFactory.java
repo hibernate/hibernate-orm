@@ -35,10 +35,12 @@ import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.PropertyGeneration;
+import org.hibernate.metamodel.binding.AssociationAttributeBinding;
 import org.hibernate.metamodel.binding.AttributeBinding;
 import org.hibernate.metamodel.binding.EntityBinding;
-import org.hibernate.metamodel.binding.PluralAttributeBinding;
-import org.hibernate.metamodel.binding.SimpleAttributeBinding;
+import org.hibernate.metamodel.binding.AbstractPluralAttributeBinding;
+import org.hibernate.metamodel.binding.SimpleSingularAttributeBinding;
+import org.hibernate.metamodel.binding.SingularAttributeBinding;
 import org.hibernate.property.Getter;
 import org.hibernate.property.PropertyAccessor;
 import org.hibernate.property.PropertyAccessorFactory;
@@ -106,7 +108,7 @@ public class PropertyFactory {
 	 */
 	public static IdentifierProperty buildIdentifierProperty(EntityBinding mappedEntity, IdentifierGenerator generator) {
 
-		final SimpleAttributeBinding property = mappedEntity.getEntityIdentifier().getValueBinding();
+		final SimpleSingularAttributeBinding property = mappedEntity.getEntityIdentifier().getValueBinding();
 
 		// TODO: the following will cause an NPE with "virtual" IDs; how should they be set?
 		final String mappedUnsavedValue = property.getUnsavedValue();
@@ -186,7 +188,7 @@ public class PropertyFactory {
 	 * @param lazyAvailable Is property lazy loading currently available.
 	 * @return The appropriate VersionProperty definition.
 	 */
-	public static VersionProperty buildVersionProperty(SimpleAttributeBinding property, boolean lazyAvailable) {
+	public static VersionProperty buildVersionProperty(SimpleSingularAttributeBinding property, boolean lazyAvailable) {
 		String mappedUnsavedValue = ( (KeyValue) property.getValue() ).getNullValue();
 
 		VersionValue unsavedValue = UnsavedValueFactory.getUnsavedVersionValue(
@@ -198,21 +200,24 @@ public class PropertyFactory {
 
 		boolean lazy = lazyAvailable && property.isLazy();
 
+		final CascadeStyle cascadeStyle = property.isAssociation()
+				? ( (AssociationAttributeBinding) property ).getCascadeStyle()
+				: CascadeStyle.NONE;
+
 		return new VersionProperty(
 		        property.getAttribute().getName(),
 		        null,
 		        property.getHibernateTypeDescriptor().getResolvedTypeMapping(),
 		        lazy,
-				property.isInsertable(),
-				property.isUpdatable(),
-		        property.getGeneration() == PropertyGeneration.INSERT || property.getGeneration() == PropertyGeneration.ALWAYS,
+				true, // insertable
+				true, // updatable
+		        property.getGeneration() == PropertyGeneration.INSERT
+						|| property.getGeneration() == PropertyGeneration.ALWAYS,
 				property.getGeneration() == PropertyGeneration.ALWAYS,
 				property.isNullable(),
-				property.isUpdatable() && !lazy,
-				property.isOptimisticLockable(),
-				// TODO: get cascadeStyle from property when HHH-6355 is fixed; for now, assume NONE
-				//property.getCascadeStyle(),
-				CascadeStyle.NONE,
+				!lazy,
+				property.isIncludedInOptimisticLocking(),
+				cascadeStyle,
 		        unsavedValue
 			);
 	}
@@ -275,57 +280,63 @@ public class PropertyFactory {
 		// to update the cache (not the database), since in this case a null
 		// entity reference can lose information
 
-		boolean alwaysDirtyCheck = type.isAssociationType() &&
-				( (AssociationType) type ).isAlwaysDirtyChecked();
+		final boolean alwaysDirtyCheck = type.isAssociationType() && ( (AssociationType) type ).isAlwaysDirtyChecked();
 
-		if ( property.isSimpleValue() ) {
-			SimpleAttributeBinding simpleProperty = ( SimpleAttributeBinding ) property;
+		if ( property.getAttribute().isSingular() ) {
+			final SingularAttributeBinding singularAttributeBinding = ( SingularAttributeBinding ) property;
+			final CascadeStyle cascadeStyle = singularAttributeBinding.isAssociation()
+					? ( (AssociationAttributeBinding) singularAttributeBinding ).getCascadeStyle()
+					: CascadeStyle.NONE;
+			final FetchMode fetchMode = singularAttributeBinding.isAssociation()
+					? ( (AssociationAttributeBinding) singularAttributeBinding ).getFetchMode()
+					: FetchMode.DEFAULT;
+
 			return new StandardProperty(
-					simpleProperty.getAttribute().getName(),
+					singularAttributeBinding.getAttribute().getName(),
 					null,
 					type,
-					lazyAvailable && simpleProperty.isLazy(),
-					simpleProperty.isInsertable(),
-					simpleProperty.isUpdatable(),
-					simpleProperty.getGeneration() == PropertyGeneration.INSERT || simpleProperty.getGeneration() == PropertyGeneration.ALWAYS,
-					simpleProperty.getGeneration() == PropertyGeneration.ALWAYS,
-					simpleProperty.isNullable(),
-					alwaysDirtyCheck || simpleProperty.isUpdatable(),
-					simpleProperty.isOptimisticLockable(),
-					// TODO: get cascadeStyle from simpleProperty when HHH-6355 is fixed; for now, assume NONE
-					//simpleProperty.getCascadeStyle(),
-					CascadeStyle.NONE,
-					// TODO: get fetchMode() from simpleProperty when HHH-6357 is fixed; for now, assume FetchMode.DEFAULT
-					//simpleProperty.getFetchMode()
-					FetchMode.DEFAULT
-				);
+					lazyAvailable && singularAttributeBinding.isLazy(),
+					true, // insertable
+					true, // updatable
+					singularAttributeBinding.getGeneration() == PropertyGeneration.INSERT
+							|| singularAttributeBinding.getGeneration() == PropertyGeneration.ALWAYS,
+					singularAttributeBinding.getGeneration() == PropertyGeneration.ALWAYS,
+					singularAttributeBinding.isNullable(),
+					alwaysDirtyCheck,
+					singularAttributeBinding.isIncludedInOptimisticLocking(),
+					cascadeStyle,
+					fetchMode
+			);
 		}
 		else {
-			PluralAttributeBinding pluralProperty = ( PluralAttributeBinding ) property;
+			final AbstractPluralAttributeBinding pluralAttributeBinding = (AbstractPluralAttributeBinding) property;
+			final CascadeStyle cascadeStyle = pluralAttributeBinding.isAssociation()
+					? ( (AssociationAttributeBinding) pluralAttributeBinding ).getCascadeStyle()
+					: CascadeStyle.NONE;
+			final FetchMode fetchMode = pluralAttributeBinding.isAssociation()
+					? ( (AssociationAttributeBinding) pluralAttributeBinding ).getFetchMode()
+					: FetchMode.DEFAULT;
 
 			return new StandardProperty(
-					pluralProperty.getAttribute().getName(),
+					pluralAttributeBinding.getAttribute().getName(),
 					null,
 					type,
-					lazyAvailable && pluralProperty.isLazy(),
-					// TODO: fix this when HHH-6356 is fixed; for now assume PluralAttributeBinding is updatable and insertable
-					// pluralProperty.isInsertable(),
-					//pluralProperty.isUpdatable(),
+					lazyAvailable && pluralAttributeBinding.isLazy(),
+					// TODO: fix this when HHH-6356 is fixed; for now assume AbstractPluralAttributeBinding is updatable and insertable
+					// pluralAttributeBinding.isInsertable(),
+					//pluralAttributeBinding.isUpdatable(),
 					true,
 					true,
 					false,
 					false,
-					pluralProperty.isNullable(),
-					// TODO: fix this when HHH-6356 is fixed; for now assume PluralAttributeBinding is updatable and insertable
-					//alwaysDirtyCheck || pluralProperty.isUpdatable(),
+//					pluralAttributeBinding.isNullable(),
+					false, // nullable - not sure what that means for a collection
+					// TODO: fix this when HHH-6356 is fixed; for now assume AbstractPluralAttributeBinding is updatable and insertable
+					//alwaysDirtyCheck || pluralAttributeBinding.isUpdatable(),
 					true,
-					pluralProperty.isOptimisticLocked(),
-					// TODO: get cascadeStyle from property when HHH-6355 is fixed; for now, assume NONE
-					//pluralProperty.getCascadeStyle(),
-					CascadeStyle.NONE,
-					// TODO: get fetchMode() from simpleProperty when HHH-6357 is fixed; for now, assume FetchMode.DEFAULT
-					//pluralProperty.getFetchMode()
-					FetchMode.DEFAULT
+					pluralAttributeBinding.isIncludedInOptimisticLocking(),
+					cascadeStyle,
+					fetchMode
 				);
 		}
 	}

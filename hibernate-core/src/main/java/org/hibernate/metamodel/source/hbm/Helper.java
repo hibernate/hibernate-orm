@@ -24,13 +24,11 @@
 package org.hibernate.metamodel.source.hbm;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.StringTokenizer;
 
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.CascadeStyle;
@@ -61,8 +59,6 @@ import org.hibernate.service.classloading.spi.ClassLoadingException;
  * @author Gail Badner
  */
 public class Helper {
-	static final Iterable<CascadeStyle> NO_CASCADING = Collections.singleton( CascadeStyle.NONE );
-
 	public static final ExplicitHibernateTypeSource TO_ONE_ATTRIBUTE_TYPE_SOURCE = new ExplicitHibernateTypeSource() {
 		@Override
 		public String getName() {
@@ -147,12 +143,6 @@ public class Helper {
 
 	public static MetaAttributeContext extractMetaAttributeContext(
 			List<XMLMetaElement> metaElementList,
-			MetaAttributeContext parentContext) {
-		return extractMetaAttributeContext( metaElementList, false, parentContext );
-	}
-
-	public static MetaAttributeContext extractMetaAttributeContext(
-			List<XMLMetaElement> metaElementList,
 			boolean onlyInheritable,
 			MetaAttributeContext parentContext) {
 		final MetaAttributeContext subContext = new MetaAttributeContext( parentContext );
@@ -187,38 +177,8 @@ public class Helper {
 		return value == null ? defaultValue : Long.parseLong( value );
 	}
 
-	public static boolean getBooleanValue(String value, boolean defaultValue) {
-		return value == null ? defaultValue : Boolean.valueOf( value );
-	}
-
 	public static boolean getBooleanValue(Boolean value, boolean defaultValue) {
 		return value == null ? defaultValue : value;
-	}
-
-	public static Set<String> getStringValueTokens(String str, String delimiters) {
-		if ( str == null ) {
-			return Collections.emptySet();
-		}
-		else {
-			StringTokenizer tokenizer = new StringTokenizer( str, delimiters );
-			Set<String> tokens = new HashSet<String>();
-			while ( tokenizer.hasMoreTokens() ) {
-				tokens.add( tokenizer.nextToken() );
-			}
-			return tokens;
-		}
-	}
-
-	// todo : remove this once the state objects are cleaned up
-
-	public static Class classForName(String className, ServiceRegistry serviceRegistry) {
-		ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
-		try {
-			return classLoaderService.classForName( className );
-		}
-		catch ( ClassLoadingException e ) {
-			throw new MappingException( "Could not find class: " + className );
-		}
 	}
 
 	public static Iterable<CascadeStyle> interpretCascadeStyles(String cascades, LocalBindingContext bindingContext) {
@@ -274,6 +234,9 @@ public class Helper {
 	}
 
 	public static interface ValueSourcesAdapter {
+		public String getContainingTableName();
+		public boolean isIncludedInInsertByDefault();
+		public boolean isIncludedInUpdateByDefault();
 		public String getColumnAttribute();
 		public String getFormulaAttribute();
 		public List getColumnOrFormulaElements();
@@ -298,7 +261,14 @@ public class Helper {
 						bindingContext.getOrigin()
 				);
 			}
-			result.add(  new ColumnAttributeSourceImpl( valueSourcesAdapter.getColumnAttribute() ) );
+			result.add(
+					new ColumnAttributeSourceImpl(
+							valueSourcesAdapter.getContainingTableName(),
+							valueSourcesAdapter.getColumnAttribute(),
+							valueSourcesAdapter.isIncludedInInsertByDefault(),
+							valueSourcesAdapter.isIncludedInUpdateByDefault()
+					)
+			);
 		}
 		else if ( StringHelper.isNotEmpty( valueSourcesAdapter.getFormulaAttribute() ) ) {
 			if ( valueSourcesAdapter.getColumnOrFormulaElements() != null
@@ -309,19 +279,48 @@ public class Helper {
 				);
 			}
 			// column/formula attribute combo checked already
-			result.add( new FormulaImpl( valueSourcesAdapter.getFormulaAttribute() ) );
+			result.add(
+					new FormulaImpl(
+							valueSourcesAdapter.getContainingTableName(),
+							valueSourcesAdapter.getFormulaAttribute()
+					)
+			);
 		}
 		else if ( valueSourcesAdapter.getColumnOrFormulaElements() != null
 				&& ! valueSourcesAdapter.getColumnOrFormulaElements().isEmpty() ) {
 			for ( Object columnOrFormulaElement : valueSourcesAdapter.getColumnOrFormulaElements() ) {
 				if ( XMLColumnElement.class.isInstance( columnOrFormulaElement ) ) {
-					result.add( new ColumnSourceImpl( (XMLColumnElement) columnOrFormulaElement ) );
+					result.add(
+							new ColumnSourceImpl(
+									valueSourcesAdapter.getContainingTableName(),
+									(XMLColumnElement) columnOrFormulaElement,
+									valueSourcesAdapter.isIncludedInInsertByDefault(),
+									valueSourcesAdapter.isIncludedInUpdateByDefault()
+							)
+					);
 				}
 				else {
-					result.add( new FormulaImpl( (String) columnOrFormulaElement ) );
+					result.add(
+							new FormulaImpl(
+									valueSourcesAdapter.getContainingTableName(),
+									(String) columnOrFormulaElement
+							)
+					);
 				}
 			}
 		}
 		return result;
+	}
+
+	// todo : remove this once the state objects are cleaned up
+
+	public static Class classForName(String className, ServiceRegistry serviceRegistry) {
+		ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+		try {
+			return classLoaderService.classForName( className );
+		}
+		catch ( ClassLoadingException e ) {
+			throw new MappingException( "Could not find class: " + className );
+		}
 	}
 }

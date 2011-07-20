@@ -32,4 +32,10 @@ package org.hibernate.metamodel.source.binder;
  * @see DerivedValueSource
  */
 public interface RelationalValueSource {
+	/**
+	 * Obtain the name of the table that contains this value.
+	 *
+	 * @return
+	 */
+	public String getContainingTableName();
 }

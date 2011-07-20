@@ -51,6 +51,7 @@ import org.hibernate.internal.util.Value;
 import org.hibernate.metamodel.MetadataSourceProcessingOrder;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.SessionFactoryBuilder;
+import org.hibernate.metamodel.binding.AbstractPluralAttributeBinding;
 import org.hibernate.metamodel.source.MappingDefaults;
 import org.hibernate.metamodel.source.MetaAttributeContext;
 import org.hibernate.metamodel.source.MetadataImplementor;
@@ -61,7 +62,6 @@ import org.hibernate.metamodel.binding.AttributeBinding;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.FetchProfile;
 import org.hibernate.metamodel.binding.IdGenerator;
-import org.hibernate.metamodel.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.binding.TypeDef;
 import org.hibernate.metamodel.domain.BasicType;
 import org.hibernate.metamodel.domain.Type;
@@ -106,7 +106,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	 */
 	private Map<String, EntityBinding> entityBindingMap = new HashMap<String, EntityBinding>();
 
-	private Map<String, PluralAttributeBinding> collectionBindingMap = new HashMap<String, PluralAttributeBinding>();
+	private Map<String, AbstractPluralAttributeBinding> collectionBindingMap = new HashMap<String, AbstractPluralAttributeBinding>();
 	private Map<String, FetchProfile> fetchProfiles = new HashMap<String, FetchProfile>();
 	private Map<String, String> imports = new HashMap<String, String>();
 	private Map<String, TypeDef> typeDefs = new HashMap<String, TypeDef>();
@@ -414,16 +414,16 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		entityBindingMap.put( entityName, entityBinding );
 	}
 
-	public PluralAttributeBinding getCollection(String collectionRole) {
+	public AbstractPluralAttributeBinding getCollection(String collectionRole) {
 		return collectionBindingMap.get( collectionRole );
 	}
 
 	@Override
-	public Iterable<PluralAttributeBinding> getCollectionBindings() {
+	public Iterable<AbstractPluralAttributeBinding> getCollectionBindings() {
 		return collectionBindingMap.values();
 	}
 
-	public void addCollection(PluralAttributeBinding pluralAttributeBinding) {
+	public void addCollection(AbstractPluralAttributeBinding pluralAttributeBinding) {
 		final String owningEntityName = pluralAttributeBinding.getEntityBinding().getEntity().getName();
 		final String attributeName = pluralAttributeBinding.getAttribute().getName();
 		final String collectionRole = owningEntityName + '.' + attributeName;

@@ -31,16 +31,16 @@ import org.hibernate.metamodel.relational.ForeignKey;
  * @author Steve Ebersole
  */
 public class CollectionKey {
-	private final PluralAttributeBinding collection;
+	private final AbstractPluralAttributeBinding collection;
 
 	private ForeignKey foreignKey;
 	private boolean inverse;
 	private HibernateTypeDescriptor hibernateTypeDescriptor;
 
 // todo : this would be nice to have but we do not always know it, especially in HBM case.
-//	private SimpleAttributeBinding otherSide;
+//	private SimpleSingularAttributeBinding otherSide;
 
-	public CollectionKey(PluralAttributeBinding collection) {
+	public CollectionKey(AbstractPluralAttributeBinding collection) {
 		this.collection = collection;
 	}
 }

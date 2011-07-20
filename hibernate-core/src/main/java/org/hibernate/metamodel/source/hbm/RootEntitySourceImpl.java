@@ -173,6 +173,12 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 			public String getExplicitTableName() {
 				return entityElement().getTable();
 			}
+
+			@Override
+			public String getLogicalName() {
+				// logical name for the primary table is null
+				return null;
+			}
 		};
 	}
 }

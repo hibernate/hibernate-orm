@@ -23,6 +23,7 @@
  */
 package org.hibernate.metamodel.binding;
 
+import org.hibernate.FetchMode;
 import org.hibernate.engine.spi.CascadeStyle;
 
 /**
@@ -32,11 +33,11 @@ import org.hibernate.engine.spi.CascadeStyle;
  */
 public interface AssociationAttributeBinding extends AttributeBinding {
 	/**
-	 * Obtain the cascade styles in effect for this association.
+	 * Obtain the cascade style in effect for this association.
 	 *
-	 * @return THe cascade styles.
+	 * @return The (potentially aggregated) cascade style.
 	 */
-	public Iterable<CascadeStyle> getCascadeStyles();
+	public CascadeStyle getCascadeStyle();
 
 	/**
 	 * Set the cascade styles in effect for this association.
@@ -44,4 +45,8 @@ public interface AssociationAttributeBinding extends AttributeBinding {
 	 * @param cascadeStyles The cascade styles.
 	 */
 	public void setCascadeStyles(Iterable<CascadeStyle> cascadeStyles);
+
+	public FetchMode getFetchMode();
+
+	public void setFetchMode(FetchMode fetchMode);
 }

@@ -21,23 +21,17 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.binding.state;
-
-import org.hibernate.mapping.PropertyGeneration;
+package org.hibernate.metamodel.source.binder;
 
 /**
- * @author Gail Badner
- * @todo - We need to get a better split into the states. For example this SimpleAttributeBindingState contains
- * state which is only relevant for primary/foreign keys. This should be in a different interface. (HF)
+ * Describes the nature of the collection itself as declared by the metadata.
+ *
+ * @author Steve Ebersole
  */
-public interface SimpleAttributeBindingState extends AttributeBindingState {
-	boolean isInsertable();
-
-	boolean isUpdatable();
-
-	boolean isKeyCascadeDeleteEnabled();
-
-	String getUnsavedValue();
-
-	public PropertyGeneration getPropertyGeneration();
+public enum PluralAttributeNature {
+	BAG,
+	ID_BAG,
+	SET,
+	LIST,
+	MAP
 }

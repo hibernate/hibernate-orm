@@ -97,8 +97,11 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metamodel.binding.AttributeBinding;
 import org.hibernate.metamodel.binding.EntityBinding;
+import org.hibernate.metamodel.binding.SimpleValueBinding;
+import org.hibernate.metamodel.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.relational.DerivedValue;
 import org.hibernate.metamodel.relational.SimpleValue;
+import org.hibernate.metamodel.relational.Value;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.property.BackrefPropertyAccessor;
 import org.hibernate.sql.Alias;
@@ -788,7 +791,7 @@ public abstract class AbstractEntityPersister
 
 		// IDENTIFIER
 
-		identifierColumnSpan = entityBinding.getEntityIdentifier().getValueBinding().getValuesSpan();
+		identifierColumnSpan = entityBinding.getEntityIdentifier().getValueBinding().getSimpleValueSpan();
 		rootTableKeyColumnNames = new String[identifierColumnSpan];
 		rootTableKeyColumnReaders = new String[identifierColumnSpan];
 		rootTableKeyColumnReaderTemplates = new String[identifierColumnSpan];
@@ -818,14 +821,11 @@ public abstract class AbstractEntityPersister
 		// VERSION
 
 		if ( entityBinding.isVersioned() ) {
-			// Use AttributeBinding.getValues() due to HHH-6380
-			Iterator<SimpleValue> valueIterator = entityBinding.getVersioningValueBinding().getValues().iterator();
-			SimpleValue versionValue = valueIterator.next();
-			if ( ! ( versionValue instanceof org.hibernate.metamodel.relational.Column ) || valueIterator.hasNext() ) {
-				throw new MappingException( "Version must be a single column value." );
+			final Value versioningValue = entityBinding.getVersioningValueBinding().getValue();
+			if ( ! org.hibernate.metamodel.relational.Column.class.isInstance( versioningValue ) ) {
+				throw new AssertionFailure( "Bad versioning attribute binding : " + versioningValue );
 			}
-			org.hibernate.metamodel.relational.Column versionColumn =
-					( org.hibernate.metamodel.relational.Column ) versionValue;
+			org.hibernate.metamodel.relational.Column versionColumn = org.hibernate.metamodel.relational.Column.class.cast( versioningValue );
 			versionColumnName = versionColumn.getColumnName().encloseInQuotesIfQuoted( factory.getDialect() );
 		}
 		else {
@@ -863,35 +863,50 @@ public abstract class AbstractEntityPersister
 
 		i = 0;
 		boolean foundFormula = false;
-		for ( AttributeBinding prop : entityBinding.getAttributeBindingClosure() ) {
-			if ( prop == entityBinding.getEntityIdentifier().getValueBinding() ) {
+		for ( AttributeBinding attributeBinding : entityBinding.getAttributeBindingClosure() ) {
+			if ( attributeBinding == entityBinding.getEntityIdentifier().getValueBinding() ) {
 				// entity identifier is not considered a "normal" property
 				continue;
 			}
 
-			thisClassProperties.add( prop );
+			if ( ! attributeBinding.getAttribute().isSingular() ) {
+				// collections handled separately
+				continue;
+			}
 
-			int span = prop.getValuesSpan();
+			final SingularAttributeBinding singularAttributeBinding = (SingularAttributeBinding) attributeBinding;
+
+			thisClassProperties.add( singularAttributeBinding );
+
+			propertySubclassNames[i] = singularAttributeBinding.getEntityBinding().getEntity().getName();
+
+			int span = singularAttributeBinding.getSimpleValueSpan();
 			propertyColumnSpans[i] = span;
-			propertySubclassNames[i] = prop.getEntityBinding().getEntity().getName();
+
 			String[] colNames = new String[span];
 			String[] colAliases = new String[span];
 			String[] colReaderTemplates = new String[span];
 			String[] colWriters = new String[span];
 			String[] formulaTemplates = new String[span];
+			boolean[] propertyColumnInsertability = new boolean[span];
+			boolean[] propertyColumnUpdatability = new boolean[span];
+
 			int k = 0;
-			for ( SimpleValue thing : prop.getValues() ) {
-				colAliases[k] = thing.getAlias( factory.getDialect() );
-				if ( thing instanceof DerivedValue ) {
+
+			for ( SimpleValueBinding valueBinding : singularAttributeBinding.getSimpleValueBindings() ) {
+				colAliases[k] = valueBinding.getSimpleValue().getAlias( factory.getDialect() );
+				if ( valueBinding.isDerived() ) {
 					foundFormula = true;
-					formulaTemplates[ k ] = getTemplateFromString( ( (DerivedValue) thing ).getExpression(), factory );
+					formulaTemplates[ k ] = getTemplateFromString( ( (DerivedValue) valueBinding.getSimpleValue() ).getExpression(), factory );
 				}
 				else {
-					org.hibernate.metamodel.relational.Column col = ( org.hibernate.metamodel.relational.Column ) thing;
+					org.hibernate.metamodel.relational.Column col = ( org.hibernate.metamodel.relational.Column ) valueBinding.getSimpleValue();
 					colNames[k] = col.getColumnName().encloseInQuotesIfQuoted( factory.getDialect() );
 					colReaderTemplates[k] = getTemplateFromColumn( col, factory );
 					colWriters[k] = col.getWriteFragment() == null ? "?" : col.getWriteFragment();
 				}
+				propertyColumnInsertability[k] = valueBinding.isIncludeInInsert();
+				propertyColumnUpdatability[k] = valueBinding.isIncludeInUpdate();
 				k++;
 			}
 			propertyColumnNames[i] = colNames;
@@ -900,22 +915,23 @@ public abstract class AbstractEntityPersister
 			propertyColumnWriters[i] = colWriters;
 			propertyColumnAliases[i] = colAliases;
 
-			if ( lazyAvailable && prop.isLazy() ) {
-				lazyProperties.add( prop.getAttribute().getName() );
-				lazyNames.add( prop.getAttribute().getName() );
+			propertyColumnUpdateable[i] = propertyColumnInsertability;
+			propertyColumnInsertable[i] = propertyColumnUpdatability;
+
+			if ( lazyAvailable && singularAttributeBinding.isLazy() ) {
+				lazyProperties.add( singularAttributeBinding.getAttribute().getName() );
+				lazyNames.add( singularAttributeBinding.getAttribute().getName() );
 				lazyNumbers.add( i );
-				lazyTypes.add( prop.getHibernateTypeDescriptor().getResolvedTypeMapping());
+				lazyTypes.add( singularAttributeBinding.getHibernateTypeDescriptor().getResolvedTypeMapping());
 				lazyColAliases.add( colAliases );
 			}
 
-			propertyColumnUpdateable[i] = prop.getColumnUpdateability();
-			propertyColumnInsertable[i] = prop.getColumnInsertability();
 
 			// TODO: fix this when backrefs are working
-			//propertySelectable[i] = prop.isBackRef();
+			//propertySelectable[i] = singularAttributeBinding.isBackRef();
 			propertySelectable[i] = true;
 
-			propertyUniqueness[i] = prop.isAlternateUniqueKey();
+			propertyUniqueness[i] = singularAttributeBinding.isAlternateUniqueKey();
 
 			i++;
 

@@ -29,19 +29,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.hibernate.MappingException;
-import org.hibernate.metamodel.source.MetaAttributeContext;
 import org.hibernate.metamodel.binding.state.AttributeBindingState;
 import org.hibernate.metamodel.domain.Attribute;
 import org.hibernate.metamodel.relational.Column;
 import org.hibernate.metamodel.relational.DerivedValue;
 import org.hibernate.metamodel.relational.SimpleValue;
-import org.hibernate.metamodel.relational.Tuple;
-import org.hibernate.metamodel.relational.Value;
-import org.hibernate.metamodel.relational.state.SimpleValueRelationalState;
-import org.hibernate.metamodel.relational.state.TupleRelationalState;
-import org.hibernate.metamodel.relational.state.ValueCreator;
-import org.hibernate.metamodel.relational.state.ValueRelationalState;
+import org.hibernate.metamodel.source.MetaAttributeContext;
 
 /**
  * Basic support for {@link AttributeBinding} implementors
@@ -50,23 +43,22 @@ import org.hibernate.metamodel.relational.state.ValueRelationalState;
  */
 public abstract class AbstractAttributeBinding implements AttributeBinding {
 	private final EntityBinding entityBinding;
+	private final Attribute attribute;
 
 	private final HibernateTypeDescriptor hibernateTypeDescriptor = new HibernateTypeDescriptor();
 	private final Set<SingularAssociationAttributeBinding> entityReferencingAttributeBindings = new HashSet<SingularAssociationAttributeBinding>();
 
-	private Attribute attribute;
-	private Value value;
+	private boolean includedInOptimisticLocking;
 
 	private boolean isLazy;
 	private String propertyAccessorName;
 	private boolean isAlternateUniqueKey;
-	private Set<CascadeType> cascadeTypes;
-	private boolean optimisticLockable;
 
 	private MetaAttributeContext metaAttributeContext;
 
-	protected AbstractAttributeBinding(EntityBinding entityBinding) {
+	protected AbstractAttributeBinding(EntityBinding entityBinding, Attribute attribute) {
 		this.entityBinding = entityBinding;
+		this.attribute = attribute;
 	}
 
 	protected void initialize(AttributeBindingState state) {
@@ -74,10 +66,7 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 		hibernateTypeDescriptor.setTypeParameters( state.getExplicitHibernateTypeParameters() );
 		hibernateTypeDescriptor.setJavaTypeName( state.getJavaTypeName() );
 		isLazy = state.isLazy();
-		propertyAccessorName = state.getPropertyAccessorName();
 		isAlternateUniqueKey = state.isAlternateUniqueKey();
-		cascadeTypes = state.getCascadeTypes();
-		optimisticLockable = state.isOptimisticLockable();
 		metaAttributeContext = state.getMetaAttributeContext();
 	}
 
@@ -91,12 +80,32 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 		return attribute;
 	}
 
-	protected void setAttribute(Attribute attribute) {
-		this.attribute = attribute;
+	@Override
+	public HibernateTypeDescriptor getHibernateTypeDescriptor() {
+		return hibernateTypeDescriptor;
 	}
 
-	public void setValue(Value value) {
-		this.value = value;
+	@Override
+	public boolean isBasicPropertyAccessor() {
+		return propertyAccessorName == null || "property".equals( propertyAccessorName );
+	}
+
+	@Override
+	public String getPropertyAccessorName() {
+		return propertyAccessorName;
+	}
+
+	public void setPropertyAccessorName(String propertyAccessorName) {
+		this.propertyAccessorName = propertyAccessorName;
+	}
+
+	@Override
+	public boolean isIncludedInOptimisticLocking() {
+		return includedInOptimisticLocking;
+	}
+
+	public void setIncludedInOptimisticLocking(boolean includedInOptimisticLocking) {
+		this.includedInOptimisticLocking = includedInOptimisticLocking;
 	}
 
 	protected boolean forceNonNullable() {
@@ -111,100 +120,13 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 		return this == getEntityBinding().getEntityIdentifier().getValueBinding();
 	}
 
-	protected void initializeValueRelationalState(ValueRelationalState state) {
-		// TODO: change to have ValueRelationalState generate the value
-		value = ValueCreator.createValue(
-				getEntityBinding().getBaseTable(),
-				getAttribute().getName(),
-				state,
-				forceNonNullable(),
-				forceUnique()
-		);
-		// TODO: not sure I like this here...
-		if ( isPrimaryKey() ) {
-			if ( SimpleValue.class.isInstance( value ) ) {
-				if ( !Column.class.isInstance( value ) ) {
-					// this should never ever happen..
-					throw new MappingException( "Simple ID is not a column." );
-				}
-				entityBinding.getBaseTable().getPrimaryKey().addColumn( Column.class.cast( value ) );
-			}
-			else {
-				for ( SimpleValueRelationalState val : TupleRelationalState.class.cast( state )
-						.getRelationalStates() ) {
-					if ( Column.class.isInstance( val ) ) {
-						entityBinding.getBaseTable().getPrimaryKey().addColumn( Column.class.cast( val ) );
-					}
-				}
-			}
-		}
-	}
-
-	@Override
-	public Value getValue() {
-		return value;
-	}
-
-	@Override
-	public HibernateTypeDescriptor getHibernateTypeDescriptor() {
-		return hibernateTypeDescriptor;
-	}
-
-	public Set<CascadeType> getCascadeTypes() {
-		return cascadeTypes;
-	}
-
-	public boolean isOptimisticLockable() {
-		return optimisticLockable;
-	}
-
 	@Override
 	public MetaAttributeContext getMetaAttributeContext() {
 		return metaAttributeContext;
 	}
 
-	@Override
-	public int getValuesSpan() {
-		if ( value == null ) {
-			return 0;
-		}
-		else if ( value instanceof Tuple ) {
-			return ( ( Tuple ) value ).valuesSpan();
-		}
-		else {
-			return 1;
-		}
-	}
-
-
-	@Override
-	public Iterable<SimpleValue> getValues() {
-		return value == null
-				? Collections.<SimpleValue>emptyList()
-				: value instanceof Tuple
-				? ( (Tuple) value ).values()
-				: Collections.singletonList( (SimpleValue) value );
-	}
-
-	@Override
-	public String getPropertyAccessorName() {
-		return propertyAccessorName;
-	}
-
-	@Override
-	public boolean isBasicPropertyAccessor() {
-		return propertyAccessorName==null || "property".equals( propertyAccessorName );
-	}
-
-
-	@Override
-	public boolean hasFormula() {
-		for ( SimpleValue simpleValue : getValues() ) {
-			if ( simpleValue instanceof DerivedValue ) {
-				return true;
-			}
-		}
-		return false;
+	public void setMetaAttributeContext(MetaAttributeContext metaAttributeContext) {
+		this.metaAttributeContext = metaAttributeContext;
 	}
 
 	@Override
@@ -214,39 +136,6 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 
 	public void setAlternateUniqueKey(boolean alternateUniqueKey) {
 		this.isAlternateUniqueKey = alternateUniqueKey;
-	}
-
-	@Override
-	public boolean isNullable() {
-		for ( SimpleValue simpleValue : getValues() ) {
-			if ( simpleValue instanceof DerivedValue ) {
-				return true;
-			}
-			Column column = (Column) simpleValue;
-			if ( column.isNullable() ) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	@Override
-	public boolean[] getColumnInsertability() {
-		List<Boolean> tmp = new ArrayList<Boolean>();
-		for ( SimpleValue simpleValue : getValues() ) {
-			tmp.add( !( simpleValue instanceof DerivedValue ) );
-		}
-		boolean[] rtn = new boolean[tmp.size()];
-		int i = 0;
-		for ( Boolean insertable : tmp ) {
-			rtn[i++] = insertable.booleanValue();
-		}
-		return rtn;
-	}
-
-	@Override
-	public boolean[] getColumnUpdateability() {
-		return getColumnInsertability();
 	}
 
 	@Override

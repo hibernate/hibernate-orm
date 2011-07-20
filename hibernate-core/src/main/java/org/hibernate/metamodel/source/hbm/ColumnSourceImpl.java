@@ -25,16 +25,27 @@ package org.hibernate.metamodel.source.hbm;
 
 import org.hibernate.metamodel.relational.Datatype;
 import org.hibernate.metamodel.relational.Size;
+import org.hibernate.metamodel.source.binder.ColumnSource;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLColumnElement;
 
 /**
 * @author Steve Ebersole
 */
-class ColumnSourceImpl implements org.hibernate.metamodel.source.binder.ColumnSource {
+class ColumnSourceImpl implements ColumnSource {
+	private final String tableName;
 	private final XMLColumnElement columnElement;
+	private boolean includedInInsert;
+	private boolean includedInUpdate;
 
-	ColumnSourceImpl(XMLColumnElement columnElement) {
+	ColumnSourceImpl(
+			String tableName,
+			XMLColumnElement columnElement,
+			boolean isIncludedInInsert,
+			boolean isIncludedInUpdate) {
+		this.tableName = tableName;
 		this.columnElement = columnElement;
+		includedInInsert = isIncludedInInsert;
+		includedInUpdate = isIncludedInUpdate;
 	}
 
 	@Override
@@ -97,4 +108,18 @@ class ColumnSourceImpl implements org.hibernate.metamodel.source.binder.ColumnSo
 		return columnElement.getComment();
 	}
 
+	@Override
+	public boolean isIncludedInInsert() {
+		return includedInInsert;
+	}
+
+	@Override
+	public boolean isIncludedInUpdate() {
+		return includedInUpdate;
+	}
+
+	@Override
+	public String getContainingTableName() {
+		return tableName;
+	}
 }

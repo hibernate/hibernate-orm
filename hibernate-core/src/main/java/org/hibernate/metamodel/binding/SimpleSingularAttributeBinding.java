@@ -31,81 +31,68 @@ import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.mapping.PropertyGeneration;
-import org.hibernate.metamodel.source.MetaAttributeContext;
-import org.hibernate.metamodel.binding.state.SimpleAttributeBindingState;
 import org.hibernate.metamodel.domain.SingularAttribute;
 import org.hibernate.metamodel.relational.state.ColumnRelationalState;
-import org.hibernate.metamodel.relational.state.ValueRelationalState;
+import org.hibernate.metamodel.source.MetaAttributeContext;
 
 /**
  * TODO : javadoc
  *
  * @author Steve Ebersole
  */
-public class SimpleAttributeBinding extends AbstractAttributeBinding implements SingularAttributeBinding, KeyValueBinding {
-	private boolean insertable;
-	private boolean updatable;
-	private PropertyGeneration generation;
+public class SimpleSingularAttributeBinding
+		extends AbstractSingularAttributeBinding
+		implements SingularAttributeBinding, KeyValueBinding {
 
-	private String propertyAccessorName;
 	private String unsavedValue;
+	private PropertyGeneration generation;
+	private boolean includedInOptimisticLocking;
 
 	private boolean forceNonNullable;
 	private boolean forceUnique;
 	private boolean keyCascadeDeleteEnabled;
 
-	private boolean includedInOptimisticLocking;
 	private MetaAttributeContext metaAttributeContext;
 
-	SimpleAttributeBinding(EntityBinding entityBinding, boolean forceNonNullable, boolean forceUnique) {
-		super( entityBinding );
+	SimpleSingularAttributeBinding(
+			EntityBinding entityBinding,
+			SingularAttribute attribute,
+			boolean forceNonNullable,
+			boolean forceUnique) {
+		super( entityBinding, attribute );
 		this.forceNonNullable = forceNonNullable;
 		this.forceUnique = forceUnique;
 	}
 
-	public final SimpleAttributeBinding initialize(SimpleAttributeBindingState state) {
-		super.initialize( state );
-		insertable = state.isInsertable();
-		updatable = state.isUpdatable();
-		keyCascadeDeleteEnabled = state.isKeyCascadeDeleteEnabled();
-		unsavedValue = state.getUnsavedValue();
-		generation = state.getPropertyGeneration() == null ? PropertyGeneration.NEVER : state.getPropertyGeneration();
-		return this;
-	}
-
-	public SimpleAttributeBinding initialize(ValueRelationalState state) {
-		super.initializeValueRelationalState( state );
-		return this;
-	}
-
-	private boolean isUnique(ColumnRelationalState state) {
-		return isPrimaryKey() || state.isUnique();
+	@Override
+	public boolean isAssociation() {
+		return false;
 	}
 
 	@Override
-	public SingularAttribute getAttribute() {
-		return (SingularAttribute) super.getAttribute();
+	public String getUnsavedValue() {
+		return unsavedValue;
+	}
+
+	public void setUnsavedValue(String unsavedValue) {
+		this.unsavedValue = unsavedValue;
 	}
 
 	@Override
-	public boolean isSimpleValue() {
-		return true;
+	public PropertyGeneration getGeneration() {
+		return generation;
 	}
 
-	public boolean isInsertable() {
-		return insertable;
+	public void setGeneration(PropertyGeneration generation) {
+		this.generation = generation;
 	}
 
-	public void setInsertable(boolean insertable) {
-		this.insertable = insertable;
+	public boolean isIncludedInOptimisticLocking() {
+		return includedInOptimisticLocking;
 	}
 
-	public boolean isUpdatable() {
-		return updatable;
-	}
-
-	public void setUpdatable(boolean updatable) {
-		this.updatable = updatable;
+	public void setIncludedInOptimisticLocking(boolean includedInOptimisticLocking) {
+		this.includedInOptimisticLocking = includedInOptimisticLocking;
 	}
 
 	@Override
@@ -117,45 +104,12 @@ public class SimpleAttributeBinding extends AbstractAttributeBinding implements 
 		this.keyCascadeDeleteEnabled = keyCascadeDeleteEnabled;
 	}
 
-	@Override
-	public String getUnsavedValue() {
-		return unsavedValue;
-	}
-
-	public void setUnsavedValue(String unsaveValue) {
-		this.unsavedValue = unsaveValue;
-	}
-
 	public boolean forceNonNullable() {
 		return forceNonNullable;
 	}
 
 	public boolean forceUnique() {
 		return forceUnique;
-	}
-
-	public PropertyGeneration getGeneration() {
-		return generation;
-	}
-
-	public void setGeneration(PropertyGeneration generation) {
-		this.generation = generation;
-	}
-
-	public String getPropertyAccessorName() {
-		return propertyAccessorName;
-	}
-
-	public void setPropertyAccessorName(String propertyAccessorName) {
-		this.propertyAccessorName = propertyAccessorName;
-	}
-
-	public boolean isIncludedInOptimisticLocking() {
-		return includedInOptimisticLocking;
-	}
-
-	public void setIncludedInOptimisticLocking(boolean includedInOptimisticLocking) {
-		this.includedInOptimisticLocking = includedInOptimisticLocking;
 	}
 
 	public MetaAttributeContext getMetaAttributeContext() {

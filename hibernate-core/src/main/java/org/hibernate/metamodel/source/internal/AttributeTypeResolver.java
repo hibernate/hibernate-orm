@@ -28,6 +28,7 @@ import java.util.Properties;
 import org.hibernate.metamodel.binding.AttributeBinding;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.HibernateTypeDescriptor;
+import org.hibernate.metamodel.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.domain.SingularAttribute;
 import org.hibernate.metamodel.relational.Datatype;
 import org.hibernate.metamodel.relational.SimpleValue;
@@ -135,17 +136,19 @@ class AttributeTypeResolver {
 
 		// todo : this can be made a lot smarter, but for now this will suffice.  currently we only handle single value bindings
 
-		Value value = attributeBinding.getValue();
-		if ( SimpleValue.class.isInstance( value ) ) {
-			SimpleValue simpleValue = (SimpleValue) value;
-			if ( simpleValue.getDatatype() == null ) {
-				simpleValue.setDatatype(
-						new Datatype(
-								resolvedHibernateType.sqlTypes( metadata )[0],
-								resolvedHibernateType.getName(),
-								resolvedHibernateType.getReturnedClass()
-						)
-				);
+		if ( SingularAttribute.class.isInstance( attributeBinding.getAttribute() ) ) {
+			final Value value = SingularAttributeBinding.class.cast( attributeBinding ).getValue();
+			if ( SimpleValue.class.isInstance( value ) ) {
+				SimpleValue simpleValue = (SimpleValue) value;
+				if ( simpleValue.getDatatype() == null ) {
+					simpleValue.setDatatype(
+							new Datatype(
+									resolvedHibernateType.sqlTypes( metadata )[0],
+									resolvedHibernateType.getName(),
+									resolvedHibernateType.getReturnedClass()
+							)
+					);
+				}
 			}
 		}
 	}

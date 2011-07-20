@@ -33,6 +33,7 @@ import org.junit.Test;
 
 import org.hibernate.metamodel.binding.AttributeBinding;
 import org.hibernate.metamodel.binding.EntityBinding;
+import org.hibernate.metamodel.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.domain.NonEntity;
 import org.hibernate.metamodel.relational.Column;
 import org.hibernate.testing.FailureExpected;
@@ -53,7 +54,7 @@ public class MappedSuperclassTests extends BaseAnnotationBindingTestCase {
 //	@Resources(annotatedClasses = { MyMappedSuperClass.class, MyEntity.class, MyMappedSuperClassBase.class })
 	public void testSimpleAttributeOverrideInMappedSuperclass() {
 		EntityBinding binding = getEntityBinding( MyEntity.class );
-		AttributeBinding nameBinding = binding.getAttributeBinding( "name" );
+		SingularAttributeBinding nameBinding = (SingularAttributeBinding) binding.getAttributeBinding( "name" );
 		assertNotNull( "the name attribute should be bound to MyEntity", nameBinding );
 
 		Column column = (Column) nameBinding.getValue();
@@ -64,7 +65,7 @@ public class MappedSuperclassTests extends BaseAnnotationBindingTestCase {
 //	@Resources(annotatedClasses = { MyMappedSuperClass.class, MyEntity.class, MyMappedSuperClassBase.class })
 	public void testLastAttributeOverrideWins() {
 		EntityBinding binding = getEntityBinding( MyEntity.class );
-		AttributeBinding fooBinding = binding.getAttributeBinding( "foo" );
+		SingularAttributeBinding fooBinding = (SingularAttributeBinding) binding.getAttributeBinding( "foo" );
 		assertNotNull( "the foo attribute should be bound to MyEntity", fooBinding );
 
 		Column column = (Column) fooBinding.getValue();

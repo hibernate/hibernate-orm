@@ -27,7 +27,7 @@ package org.hibernate.metamodel.binding;
  * @author Gail Badner
  */
 public class BasicCollectionElement extends CollectionElement {
-	public BasicCollectionElement(PluralAttributeBinding binding) {
-		super( binding, CollectionElementType.BASIC );
+	public BasicCollectionElement(AbstractPluralAttributeBinding binding) {
+		super( binding, CollectionElementNature.BASIC );
 	}
 }

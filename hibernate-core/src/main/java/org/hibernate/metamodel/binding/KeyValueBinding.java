@@ -32,6 +32,4 @@ public interface KeyValueBinding extends AttributeBinding {
 	public boolean isKeyCascadeDeleteEnabled();
 
 	public String getUnsavedValue();
-
-	public boolean isUpdatable();
 }

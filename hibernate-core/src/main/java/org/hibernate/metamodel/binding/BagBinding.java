@@ -23,20 +23,15 @@
  */
 package org.hibernate.metamodel.binding;
 
-import org.hibernate.metamodel.binding.state.PluralAttributeBindingState;
+import org.hibernate.metamodel.domain.PluralAttribute;
 
 /**
  * TODO : javadoc
  *
  * @author Steve Ebersole
  */
-public class BagBinding extends PluralAttributeBinding {
-	protected BagBinding(EntityBinding entityBinding, CollectionElementType collectionElementType) {
-		super( entityBinding, collectionElementType );
-	}
-
-	public BagBinding initialize(PluralAttributeBindingState bindingState) {
-		super.initialize( bindingState );
-		return this;
+public class BagBinding extends AbstractPluralAttributeBinding {
+	protected BagBinding(EntityBinding entityBinding, PluralAttribute attribute, CollectionElementNature nature) {
+		super( entityBinding, attribute, nature );
 	}
 }

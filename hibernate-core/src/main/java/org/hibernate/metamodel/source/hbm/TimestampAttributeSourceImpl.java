@@ -26,7 +26,6 @@ package org.hibernate.metamodel.source.hbm;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.internal.util.Value;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.source.LocalBindingContext;
@@ -68,6 +67,22 @@ class TimestampAttributeSourceImpl implements SingularAttributeSource {
 					@Override
 					public List getColumnOrFormulaElements() {
 						return null;
+					}
+
+					@Override
+					public String getContainingTableName() {
+						// by definition the version should come from the primary table of the root entity.
+						return null;
+					}
+
+					@Override
+					public boolean isIncludedInInsertByDefault() {
+						return true;
+					}
+
+					@Override
+					public boolean isIncludedInUpdateByDefault() {
+						return true;
 					}
 				},
 				bindingContext
@@ -152,6 +167,21 @@ class TimestampAttributeSourceImpl implements SingularAttributeSource {
 	@Override
 	public boolean isVirtualAttribute() {
 		return false;
+	}
+
+	@Override
+	public boolean areValuesIncludedInInsertByDefault() {
+		return true;
+	}
+
+	@Override
+	public boolean areValuesIncludedInUpdateByDefault() {
+		return true;
+	}
+
+	@Override
+	public boolean areValuesNullableByDefault() {
+		return true;
 	}
 
 	@Override

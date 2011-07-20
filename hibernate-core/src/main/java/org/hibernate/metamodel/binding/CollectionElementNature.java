@@ -24,11 +24,17 @@
 package org.hibernate.metamodel.binding;
 
 /**
+ * Describes the nature of persistent collection elements.
+ *
+ * @author Steve Ebersole
  * @author Gail Badner
+ *
+ * @todo Merge with {@link org.hibernate.metamodel.source.binder.PluralAttributeNature} ?  package separation kept me from doing that initially
  */
-public class OneToManyCollectionElement extends CollectionElement {
-
-	OneToManyCollectionElement(AbstractPluralAttributeBinding binding) {
-		super( binding, CollectionElementNature.ONE_TO_MANY );
-	}
+public enum CollectionElementNature {
+	BASIC,
+	COMPOSITE,
+	ONE_TO_MANY,
+	MANY_TO_MANY,
+	MANY_TO_ANY
 }

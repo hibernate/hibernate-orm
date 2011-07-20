@@ -49,4 +49,14 @@ public interface TableSource {
 	 * @return The table name.
 	 */
 	public String getExplicitTableName();
+
+	/**
+	 * Obtain the logical name of the table.  This value is used to uniquely reference the table when binding
+	 * values to the binding model.
+	 * 
+	 * @return The logical name.  Can be {@code null} in the case of the "primary table".
+	 *
+	 * @see RelationalValueSource#getContainingTableName()
+	 */
+	public String getLogicalName();
 }

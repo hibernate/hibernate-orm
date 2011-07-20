@@ -21,17 +21,17 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.binding.state;
+package org.hibernate.metamodel.source.binder;
 
 /**
- * @author Gail Badner
+ * Describes the nature of the collection elements as declared by the metadata.
+ *
+ * @author Steve Ebersole
  */
-public interface ManyToOneAttributeBindingState extends SimpleAttributeBindingState {
-	boolean isUnwrapProxy();
-
-	String getReferencedAttributeName();
-
-	String getReferencedEntityName();
-
-	boolean ignoreNotFound();
+public enum PluralAttributeElementNature {
+	BASIC,
+	COMPONENT,
+	ONE_TO_MANY,
+	MANY_TO_MANY,
+	MANY_TO_ANY
 }

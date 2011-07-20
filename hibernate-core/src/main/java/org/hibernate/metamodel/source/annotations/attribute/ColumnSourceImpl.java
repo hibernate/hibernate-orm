@@ -102,6 +102,21 @@ public class ColumnSourceImpl implements ColumnSource {
 		// todo
 		return null;
 	}
+
+	@Override
+	public boolean isIncludedInInsert() {
+		return columnValues.isInsertable();
+	}
+
+	@Override
+	public boolean isIncludedInUpdate() {
+		return columnValues.isUpdatable();
+	}
+
+	@Override
+	public String getContainingTableName() {
+		return columnValues.getTable();
+	}
 }
 
 

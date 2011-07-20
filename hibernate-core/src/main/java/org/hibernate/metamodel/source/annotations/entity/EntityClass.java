@@ -632,5 +632,11 @@ public class EntityClass extends ConfiguredClass {
 		public String getExplicitTableName() {
 			return tableName;
 		}
+
+		@Override
+		public String getLogicalName() {
+			// todo : (steve) hardy, not sure what to use here... null is ok for the primary table name.  this is part of the secondary table support.
+			return null;
+		}
 	}
 }

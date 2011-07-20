@@ -45,7 +45,7 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metamodel.binding.EntityBinding;
-import org.hibernate.metamodel.binding.PluralAttributeBinding;
+import org.hibernate.metamodel.binding.AbstractPluralAttributeBinding;
 import org.hibernate.persister.internal.PersisterClassResolverInitiator;
 import org.hibernate.persister.spi.PersisterClassResolver;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -92,7 +92,7 @@ public class PersisterClassProviderTest extends junit.framework.TestCase {
 		}
 
 		@Override
-		public Class<? extends CollectionPersister> getCollectionPersisterClass(PluralAttributeBinding metadata) {
+		public Class<? extends CollectionPersister> getCollectionPersisterClass(AbstractPluralAttributeBinding metadata) {
 			return null;
 		}
 	}

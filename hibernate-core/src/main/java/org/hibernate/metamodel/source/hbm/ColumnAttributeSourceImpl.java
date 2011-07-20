@@ -31,10 +31,35 @@ import org.hibernate.metamodel.source.binder.ColumnSource;
 * @author Steve Ebersole
 */
 class ColumnAttributeSourceImpl implements ColumnSource {
+	private final String tableName;
 	private final String columnName;
+	private boolean includedInInsert;
+	private boolean includedInUpdate;
 
-	ColumnAttributeSourceImpl(String columnName) {
+	ColumnAttributeSourceImpl(
+			String tableName,
+			String columnName,
+			boolean includedInInsert,
+			boolean includedInUpdate) {
+		this.tableName = tableName;
 		this.columnName = columnName;
+		this.includedInInsert = includedInInsert;
+		this.includedInUpdate = includedInUpdate;
+	}
+
+	@Override
+	public boolean isIncludedInInsert() {
+		return includedInInsert;
+	}
+
+	@Override
+	public boolean isIncludedInUpdate() {
+		return includedInUpdate;
+	}
+
+	@Override
+	public String getContainingTableName() {
+		return tableName;
 	}
 
 	@Override

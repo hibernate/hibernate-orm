@@ -26,7 +26,6 @@ package org.hibernate.metamodel.source.hbm;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.source.LocalBindingContext;
 import org.hibernate.metamodel.source.binder.ExplicitHibernateTypeSource;
@@ -84,6 +83,22 @@ class PropertyAttributeSourceImpl implements SingularAttributeSource {
 					public List getColumnOrFormulaElements() {
 						return propertyElement.getColumnOrFormula();
 					}
+
+					@Override
+					public String getContainingTableName() {
+						// todo : need to implement this...
+						return null;
+					}
+
+					@Override
+					public boolean isIncludedInInsertByDefault() {
+						return propertyElement.isInsert();
+					}
+
+					@Override
+					public boolean isIncludedInUpdateByDefault() {
+						return propertyElement.isUpdate();
+					}
 				},
 				bindingContext
 		);
@@ -137,6 +152,21 @@ class PropertyAttributeSourceImpl implements SingularAttributeSource {
 	@Override
 	public boolean isVirtualAttribute() {
 		return false;
+	}
+
+	@Override
+	public boolean areValuesIncludedInInsertByDefault() {
+		return Helper.getBooleanValue( propertyElement.isInsert(), true );
+	}
+
+	@Override
+	public boolean areValuesIncludedInUpdateByDefault() {
+		return Helper.getBooleanValue( propertyElement.isUpdate(), true );
+	}
+
+	@Override
+	public boolean areValuesNullableByDefault() {
+		return ! Helper.getBooleanValue( propertyElement.isNotNull(), false );
 	}
 
 	@Override

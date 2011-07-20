@@ -29,14 +29,21 @@ import org.hibernate.metamodel.source.binder.DerivedValueSource;
 * @author Steve Ebersole
 */
 class FormulaImpl implements DerivedValueSource {
+	private String tableName;
 	private final String expression;
 
-	FormulaImpl(String expression) {
+	FormulaImpl(String tableName, String expression) {
+		this.tableName = tableName;
 		this.expression = expression;
 	}
 
 	@Override
 	public String getExpression() {
 		return expression;
+	}
+
+	@Override
+	public String getContainingTableName() {
+		return tableName;
 	}
 }

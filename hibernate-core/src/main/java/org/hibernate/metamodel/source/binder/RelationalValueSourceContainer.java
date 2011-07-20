@@ -31,6 +31,11 @@ import java.util.List;
  * @author Steve Ebersole
  */
 public interface RelationalValueSourceContainer {
+	public boolean areValuesIncludedInInsertByDefault();
+	public boolean areValuesIncludedInUpdateByDefault();
+
+	public boolean areValuesNullableByDefault();
+
 	/**
 	 * Obtain the contained {@link RelationalValueSource} references.
 	 *

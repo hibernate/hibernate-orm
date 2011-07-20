@@ -33,6 +33,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -889,7 +890,7 @@ public abstract class AbstractEntityPersister
 					org.hibernate.metamodel.relational.Column col = ( org.hibernate.metamodel.relational.Column ) thing;
 					colNames[k] = col.getColumnName().encloseInQuotesIfQuoted( factory.getDialect() );
 					colReaderTemplates[k] = getTemplateFromColumn( col, factory );
-					colWriters[k] = col.getWriteFragment();
+					colWriters[k] = col.getWriteFragment() == null ? "?" : col.getWriteFragment();
 				}
 				k++;
 			}
@@ -927,28 +928,100 @@ public abstract class AbstractEntityPersister
 
 		// SUBCLASS PROPERTY CLOSURE
 
-		ArrayList columns = new ArrayList();
-		ArrayList columnsLazy = new ArrayList();
-		ArrayList columnReaderTemplates = new ArrayList();
-		ArrayList aliases = new ArrayList();
-		ArrayList formulas = new ArrayList();
-		ArrayList formulaAliases = new ArrayList();
-		ArrayList formulaTemplates = new ArrayList();
-		ArrayList formulasLazy = new ArrayList();
-		ArrayList types = new ArrayList();
-		ArrayList names = new ArrayList();
-		ArrayList classes = new ArrayList();
-		ArrayList templates = new ArrayList();
-		ArrayList propColumns = new ArrayList();
-		ArrayList propColumnReaders = new ArrayList();
-		ArrayList propColumnReaderTemplates = new ArrayList();
-		ArrayList<FetchMode> joinedFetchesList = new ArrayList<FetchMode>();
-		ArrayList<CascadeStyle> cascades = new ArrayList<CascadeStyle>();
-		ArrayList<Boolean> definedBySubclass = new ArrayList<Boolean>();
-		ArrayList propColumnNumbers = new ArrayList();
-		ArrayList propFormulaNumbers = new ArrayList();
-		ArrayList columnSelectables = new ArrayList();
-		ArrayList propNullables = new ArrayList();
+		List<String> columns = new ArrayList<String>();
+		List<Boolean> columnsLazy = new ArrayList<Boolean>();
+		List<String> columnReaderTemplates = new ArrayList<String>();
+		List<String> aliases = new ArrayList<String>();
+		List<String> formulas = new ArrayList<String>();
+		List<String> formulaAliases = new ArrayList<String>();
+		List<String> formulaTemplates = new ArrayList<String>();
+		List<Boolean> formulasLazy = new ArrayList<Boolean>();
+		List<Type> types = new ArrayList<Type>();
+		List<String> names = new ArrayList<String>();
+		List<String> classes = new ArrayList<String>();
+		List<String[]> templates = new ArrayList<String[]>();
+		List<String[]> propColumns = new ArrayList<String[]>();
+		List<String[]> propColumnReaders = new ArrayList<String[]>();
+		List<String[]> propColumnReaderTemplates = new ArrayList<String[]>();
+		List<FetchMode> joinedFetchesList = new ArrayList<FetchMode>();
+		List<CascadeStyle> cascades = new ArrayList<CascadeStyle>();
+		List<Boolean> definedBySubclass = new ArrayList<Boolean>();
+		List<int[]> propColumnNumbers = new ArrayList<int[]>();
+		List<int[]> propFormulaNumbers = new ArrayList<int[]>();
+		List<Boolean> columnSelectables = new ArrayList<Boolean>();
+		List<Boolean> propNullables = new ArrayList<Boolean>();
+
+		// TODO: fix this when EntityBinding.getSubclassAttributeBindingClosure() is working
+		// for ( AttributeBinding prop : entityBinding.getSubclassAttributeBindingClosure() ) {
+		for ( AttributeBinding prop : entityBinding.getAttributeBindingClosure() ) {
+			if ( prop == entityBinding.getEntityIdentifier().getValueBinding() ) {
+				// entity identifier is not considered a "normal" property
+				continue;
+			}
+
+			names.add( prop.getAttribute().getName() );
+			classes.add( prop.getEntityBinding().getEntity().getName() );
+			boolean isDefinedBySubclass = ! thisClassProperties.contains( prop );
+			definedBySubclass.add( isDefinedBySubclass );
+			propNullables.add( prop.isNullable() || isDefinedBySubclass ); //TODO: is this completely correct?
+			types.add( prop.getHibernateTypeDescriptor().getResolvedTypeMapping() );
+
+			String[] cols = new String[ prop.getValuesSpan() ];
+			String[] readers = new String[ prop.getValuesSpan() ];
+			String[] readerTemplates = new String[ prop.getValuesSpan() ];
+			String[] forms = new String[ prop.getValuesSpan() ];
+			int[] colnos = new int[ prop.getValuesSpan() ];
+			int[] formnos = new int[ prop.getValuesSpan() ];
+			int l = 0;
+			Boolean lazy = prop.isLazy() && lazyAvailable;
+			for ( SimpleValue thing : prop.getValues() ) {
+				if ( DerivedValue.class.isInstance( thing ) ) {
+					DerivedValue derivedValue = DerivedValue.class.cast( thing );
+					String template = getTemplateFromString( derivedValue.getExpression(), factory );
+					formnos[l] = formulaTemplates.size();
+					colnos[l] = -1;
+					formulaTemplates.add( template );
+					forms[l] = template;
+					formulas.add( derivedValue.getExpression() );
+					formulaAliases.add( derivedValue.getAlias( factory.getDialect() ) );
+					formulasLazy.add( lazy );
+				}
+				else if ( org.hibernate.metamodel.relational.Column.class.isInstance( thing )) {
+					org.hibernate.metamodel.relational.Column col = org.hibernate.metamodel.relational.Column.class.cast( thing );
+					String colName = col.getColumnName().encloseInQuotesIfQuoted( factory.getDialect() );
+					colnos[l] = columns.size(); //before add :-)
+					formnos[l] = -1;
+					columns.add( colName );
+					cols[l] = colName;
+					aliases.add( thing.getAlias( factory.getDialect() ) );
+					columnsLazy.add( lazy );
+					// TODO: properties only selectable if they are non-plural???
+					columnSelectables.add( prop.isSimpleValue() );
+
+					readers[l] =
+							col.getReadFragment() == null ?
+									col.getColumnName().encloseInQuotesIfQuoted( factory.getDialect() ) :
+									col.getReadFragment();
+					String readerTemplate = getTemplateFromColumn( col, factory );
+					readerTemplates[l] = readerTemplate;
+					columnReaderTemplates.add( readerTemplate );
+				}
+				l++;
+			}
+			propColumns.add( cols );
+			propColumnReaders.add( readers );
+			propColumnReaderTemplates.add( readerTemplates );
+			templates.add( forms );
+			propColumnNumbers.add( colnos );
+			propFormulaNumbers.add( formnos );
+
+			// TODO: fix this when HHH-6357 is fixed; for now, assume FetchMode.DEFAULT
+			//joinedFetchesList.add( prop.getValue().getFetchMode() );
+			joinedFetchesList.add( FetchMode.DEFAULT );
+			// TODO: fix this when HHH-6355 is fixed; for now assume CascadeStyle.NONE
+			//cascades.add( prop.getCascadeStyle() );
+			cascades.add( CascadeStyle.NONE );
+		}
 
 		subclassColumnClosure = ArrayHelper.toStringArray( columns );
 		subclassColumnAliasClosure = ArrayHelper.toStringArray( aliases );

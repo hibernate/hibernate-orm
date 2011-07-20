@@ -521,12 +521,4 @@ public interface AvailableSettings {
 	 * Default to false to keep backward compatibility.
 	 */
 	public static final String USE_NEW_ID_GENERATOR_MAPPINGS = "hibernate.id.new_generator_mappings";
-
-
-	/**
-	 * Setting which indicates whether or not the new {@link org.hibernate.metamodel.source.MetadataImplementor}
-	 * is used to build the {@link org.hibernate.engine.spi.SessionFactoryImplementor}.
-	 * Default to false until the new metadata is complete.
-	 */
-	public static final String USE_NEW_METADATA_MAPPINGS = "hibernate.new_metadata_mappings";
 }

@@ -76,7 +76,10 @@ import static org.junit.Assert.fail;
  */
 public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	public static final String VALIDATE_DATA_CLEANUP = "hibernate.test.validateDataCleanup";
+	public static final String USE_NEW_METADATA_MAPPINGS = "hibernate.test.new_metadata_mappings";
+
 	public static final Dialect DIALECT = Dialect.getDialect();
+
 	private boolean isMetadataUsed;
 	private Configuration configuration;
 	private BasicServiceRegistryImpl serviceRegistry;
@@ -120,7 +123,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		configuration = constructAndConfigureConfiguration();
 		serviceRegistry = buildServiceRegistry( configuration );
 		isMetadataUsed = serviceRegistry.getService( ConfigurationService.class ).getSetting(
-				AvailableSettings.USE_NEW_METADATA_MAPPINGS,
+				USE_NEW_METADATA_MAPPINGS,
 				new ConfigurationService.Converter<Boolean>() {
 					@Override
 					public Boolean convert(Object value) {

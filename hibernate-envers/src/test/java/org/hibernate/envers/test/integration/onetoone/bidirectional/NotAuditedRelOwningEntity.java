@@ -20,10 +20,6 @@ public class NotAuditedRelOwningEntity {
     public NotAuditedRelOwningEntity() {
     }
 
-    public NotAuditedRelOwningEntity(String data, AuditedRelOwnedEntity reference) {
-        this(null, data, reference);
-    }
-
     public NotAuditedRelOwningEntity(Long id, String data, AuditedRelOwnedEntity reference) {
         this.id = id;
         this.data = data;

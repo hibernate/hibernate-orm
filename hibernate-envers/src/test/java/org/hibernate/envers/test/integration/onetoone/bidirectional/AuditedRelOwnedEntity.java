@@ -25,10 +25,6 @@ public class AuditedRelOwnedEntity {
     public AuditedRelOwnedEntity() {
     }
 
-    public AuditedRelOwnedEntity(String data, NotAuditedRelOwningEntity target) {
-        this(null, data, target);
-    }
-
     public AuditedRelOwnedEntity(Long id, String data, NotAuditedRelOwningEntity target) {
         this.id = id;
         this.data = data;

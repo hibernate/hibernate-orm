@@ -8,7 +8,7 @@ import javax.persistence.Id;
 import javax.persistence.OneToOne;
 
 /**
- * Because of HHH-5695, two pairs of classes have to be created (AuditedRelOwnedEntity + NotAuditedRelOwningEntity
+ * Because of HHH-5695, two pairs of entity classes have to be created (AuditedRelOwnedEntity + NotAuditedRelOwningEntity
  * and AuditedNoProxyRelOwnedEntity + NotAuditedNoProxyRelOwningEntity).
  * TODO: Refactor so that AuditedRelOwnedEntity encapsulates two one-to-one references - NotAuditedRelOwningEntity and NotAuditedNoProxyRelOwningEntity.
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
@@ -26,10 +26,6 @@ public class AuditedNoProxyRelOwnedEntity {
     private NotAuditedNoProxyRelOwningEntity target;
 
     public AuditedNoProxyRelOwnedEntity() {
-    }
-
-    public AuditedNoProxyRelOwnedEntity(String data, NotAuditedNoProxyRelOwningEntity target) {
-        this(null, data, target);
     }
 
     public AuditedNoProxyRelOwnedEntity(Long id, String data, NotAuditedNoProxyRelOwningEntity target) {

@@ -23,10 +23,6 @@ public class NotAuditedNoProxyRelOwningEntity {
     public NotAuditedNoProxyRelOwningEntity() {
     }
 
-    public NotAuditedNoProxyRelOwningEntity(String data, AuditedNoProxyRelOwnedEntity reference) {
-        this(null, data, reference);
-    }
-
     public NotAuditedNoProxyRelOwningEntity(Long id, String data, AuditedNoProxyRelOwnedEntity reference) {
         this.id = id;
         this.data = data;

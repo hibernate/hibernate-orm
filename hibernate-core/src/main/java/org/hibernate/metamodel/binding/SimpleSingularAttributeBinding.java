@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -26,13 +26,14 @@ package org.hibernate.metamodel.binding;
 import java.util.Properties;
 
 import org.hibernate.MappingException;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.domain.SingularAttribute;
-import org.hibernate.metamodel.relational.state.ColumnRelationalState;
+import org.hibernate.metamodel.relational.Column;
+import org.hibernate.metamodel.relational.Schema;
+import org.hibernate.metamodel.relational.SimpleValue;
 import org.hibernate.metamodel.source.MetaAttributeContext;
 
 /**
@@ -154,10 +155,10 @@ public class SimpleSingularAttributeBinding
 		params.setProperty( PersistentIdentifierGenerator.TABLE, tableName );
 
 		//pass the column name (a generated id almost always has a single column)
-		if ( getValuesSpan() != 1 ) {
-			throw new MappingException( "A SimpleAttributeBinding has a more than 1 Value: " + getAttribute().getName() );
+		if ( getSimpleValueSpan() > 1 ) {
+			throw new MappingException( "A SimpleAttributeBinding used for an identifier has a more than 1 Value: " + getAttribute().getName() );
 		}
-		SimpleValue simpleValue = getValues().iterator().next();
+		SimpleValue simpleValue = (SimpleValue) getValue();
 		if ( ! Column.class.isInstance( simpleValue ) ) {
 			throw new MappingException(
 					"Cannot create an IdentifierGenerator because the value is not a column: " +

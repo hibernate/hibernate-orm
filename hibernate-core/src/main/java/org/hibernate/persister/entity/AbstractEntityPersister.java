@@ -969,30 +969,38 @@ public abstract class AbstractEntityPersister
 
 		// TODO: fix this when EntityBinding.getSubclassAttributeBindingClosure() is working
 		// for ( AttributeBinding prop : entityBinding.getSubclassAttributeBindingClosure() ) {
-		for ( AttributeBinding prop : entityBinding.getAttributeBindingClosure() ) {
-			if ( prop == entityBinding.getEntityIdentifier().getValueBinding() ) {
+		for ( AttributeBinding attributeBinding : entityBinding.getAttributeBindingClosure() ) {
+			if ( attributeBinding == entityBinding.getEntityIdentifier().getValueBinding() ) {
 				// entity identifier is not considered a "normal" property
 				continue;
 			}
 
-			names.add( prop.getAttribute().getName() );
-			classes.add( prop.getEntityBinding().getEntity().getName() );
-			boolean isDefinedBySubclass = ! thisClassProperties.contains( prop );
-			definedBySubclass.add( isDefinedBySubclass );
-			propNullables.add( prop.isNullable() || isDefinedBySubclass ); //TODO: is this completely correct?
-			types.add( prop.getHibernateTypeDescriptor().getResolvedTypeMapping() );
+			if ( ! attributeBinding.getAttribute().isSingular() ) {
+				// collections handled separately
+				continue;
+			}
 
-			String[] cols = new String[ prop.getValuesSpan() ];
-			String[] readers = new String[ prop.getValuesSpan() ];
-			String[] readerTemplates = new String[ prop.getValuesSpan() ];
-			String[] forms = new String[ prop.getValuesSpan() ];
-			int[] colnos = new int[ prop.getValuesSpan() ];
-			int[] formnos = new int[ prop.getValuesSpan() ];
+			final SingularAttributeBinding singularAttributeBinding = (SingularAttributeBinding) attributeBinding;
+
+			names.add( singularAttributeBinding.getAttribute().getName() );
+			classes.add( singularAttributeBinding.getEntityBinding().getEntity().getName() );
+			boolean isDefinedBySubclass = ! thisClassProperties.contains( singularAttributeBinding );
+			definedBySubclass.add( isDefinedBySubclass );
+			propNullables.add( singularAttributeBinding.isNullable() || isDefinedBySubclass ); //TODO: is this completely correct?
+			types.add( singularAttributeBinding.getHibernateTypeDescriptor().getResolvedTypeMapping() );
+
+			final int span = singularAttributeBinding.getSimpleValueSpan();
+			String[] cols = new String[ span ];
+			String[] readers = new String[ span ];
+			String[] readerTemplates = new String[ span ];
+			String[] forms = new String[ span ];
+			int[] colnos = new int[ span ];
+			int[] formnos = new int[ span ];
 			int l = 0;
-			Boolean lazy = prop.isLazy() && lazyAvailable;
-			for ( SimpleValue thing : prop.getValues() ) {
-				if ( DerivedValue.class.isInstance( thing ) ) {
-					DerivedValue derivedValue = DerivedValue.class.cast( thing );
+			Boolean lazy = singularAttributeBinding.isLazy() && lazyAvailable;
+			for ( SimpleValueBinding valueBinding : singularAttributeBinding.getSimpleValueBindings() ) {
+				if ( valueBinding.isDerived() ) {
+					DerivedValue derivedValue = DerivedValue.class.cast( valueBinding.getSimpleValue() );
 					String template = getTemplateFromString( derivedValue.getExpression(), factory );
 					formnos[l] = formulaTemplates.size();
 					colnos[l] = -1;
@@ -1002,17 +1010,17 @@ public abstract class AbstractEntityPersister
 					formulaAliases.add( derivedValue.getAlias( factory.getDialect() ) );
 					formulasLazy.add( lazy );
 				}
-				else if ( org.hibernate.metamodel.relational.Column.class.isInstance( thing )) {
-					org.hibernate.metamodel.relational.Column col = org.hibernate.metamodel.relational.Column.class.cast( thing );
+				else {
+					org.hibernate.metamodel.relational.Column col = org.hibernate.metamodel.relational.Column.class.cast( valueBinding.getSimpleValue() );
 					String colName = col.getColumnName().encloseInQuotesIfQuoted( factory.getDialect() );
 					colnos[l] = columns.size(); //before add :-)
 					formnos[l] = -1;
 					columns.add( colName );
 					cols[l] = colName;
-					aliases.add( thing.getAlias( factory.getDialect() ) );
+					aliases.add( col.getAlias( factory.getDialect() ) );
 					columnsLazy.add( lazy );
 					// TODO: properties only selectable if they are non-plural???
-					columnSelectables.add( prop.isSimpleValue() );
+					columnSelectables.add( singularAttributeBinding.getAttribute().isSingular() );
 
 					readers[l] =
 							col.getReadFragment() == null ?
@@ -1032,10 +1040,10 @@ public abstract class AbstractEntityPersister
 			propFormulaNumbers.add( formnos );
 
 			// TODO: fix this when HHH-6357 is fixed; for now, assume FetchMode.DEFAULT
-			//joinedFetchesList.add( prop.getValue().getFetchMode() );
+			//joinedFetchesList.add( singularAttributeBinding.getValue().getFetchMode() );
 			joinedFetchesList.add( FetchMode.DEFAULT );
 			// TODO: fix this when HHH-6355 is fixed; for now assume CascadeStyle.NONE
-			//cascades.add( prop.getCascadeStyle() );
+			//cascades.add( singularAttributeBinding.getCascadeStyle() );
 			cascades.add( CascadeStyle.NONE );
 		}
 

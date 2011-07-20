@@ -63,6 +63,13 @@ public class IdGenerator implements Serializable {
      * @return generator configuration parameters
      */
     public Map<String, String> getParameters() {
-        return Collections.unmodifiableMap(parameters);
+		Map<String, String> returnedParameters;
+		if ( parameters == null ) {
+			returnedParameters = Collections.emptyMap();
+		}
+		else {
+			returnedParameters = Collections.unmodifiableMap(parameters);
+		}
+		return returnedParameters;
     }
 }

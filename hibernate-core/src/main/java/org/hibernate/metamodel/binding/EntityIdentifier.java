@@ -84,17 +84,9 @@ public class EntityIdentifier {
 		return isIdentifierMapper;
 	}
 
-	public IdentifierGenerator createIdentifierGenerator(IdentifierGeneratorFactory factory) {
-		if ( identifierGenerator == null ) {
-			Properties props = new Properties();
-			if ( idGenerator != null ) {
-				props.putAll( idGenerator.getParameters() );
-			}
-			identifierGenerator = factory.createIdentifierGenerator(
-					idGenerator.getStrategy(),
-					getValueBinding().getHibernateTypeDescriptor().getResolvedTypeMapping(),
-					props
-			);
+	public IdentifierGenerator createIdentifierGenerator(IdentifierGeneratorFactory factory, Properties properties) {
+		if ( idGenerator != null ) {
+			identifierGenerator = attributeBinding.createIdentifierGenerator( idGenerator, factory, properties );
 		}
 		return identifierGenerator;
 	}

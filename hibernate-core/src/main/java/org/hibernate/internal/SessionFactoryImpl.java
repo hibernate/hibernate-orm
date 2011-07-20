@@ -178,7 +178,7 @@ public final class SessionFactoryImpl
 	private final transient Map collectionPersisters;
 	private final transient Map collectionMetadata;
 	private final transient Map<String,Set<String>> collectionRolesByEntityParticipant;
-	private final transient Map identifierGenerators;
+	private final transient Map<String,IdentifierGenerator> identifierGenerators;
 	private final transient Map<String, NamedQueryDefinition> namedQueries;
 	private final transient Map<String, NamedSQLQueryDefinition> namedSqlQueries;
 	private final transient Map<String, ResultSetMappingDefinition> sqlResultSetMappings;
@@ -600,16 +600,13 @@ public final class SessionFactoryImpl
 
 		//Generators:
 
-		identifierGenerators = new HashMap();
+		identifierGenerators = new HashMap<String,IdentifierGenerator>();
 		for ( EntityBinding entityBinding : metadata.getEntityBindings() ) {
 			if ( entityBinding.isRoot() ) {
-				// TODO: create the IdentifierGenerator while the metadata is being build, then simply
-				// use EntityBinding.getIdentifierGenerator() (also remove getIdentifierGeneratorFactory from Mappings)
-				// TODO: this is broken; throws NullPointerException
-				//IdentifierGenerator generator = entityBinding.getEntityIdentifier().createIdentifierGenerator(
-				//		metadata.getIdentifierGeneratorFactory()
-				//);
-				//identifierGenerators.put( entityBinding.getEntity().getName(), generator );
+				identifierGenerators.put(
+						entityBinding.getEntity().getName(),
+						entityBinding.getEntityIdentifier().getIdentifierGenerator()
+				);
 			}
 		}
 

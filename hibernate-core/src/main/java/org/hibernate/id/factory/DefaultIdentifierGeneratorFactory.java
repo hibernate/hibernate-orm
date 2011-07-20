@@ -69,6 +69,16 @@ public class DefaultIdentifierGeneratorFactory implements IdentifierGeneratorFac
 	private ConcurrentHashMap<String, Class> generatorStrategyToClassNameMap = new ConcurrentHashMap<String, Class>();
 
 	/**
+	 * Constructs a new DefaultIdentifierGeneratorFactory
+	 *
+	 * @param dialect The dialect.
+	 */
+	public DefaultIdentifierGeneratorFactory(Dialect dialect) {
+		this();
+		this.dialect = dialect;
+	}
+
+	/**
 	 * Constructs a new DefaultIdentifierGeneratorFactory.
 	 */
 	public DefaultIdentifierGeneratorFactory() {
@@ -97,6 +107,10 @@ public class DefaultIdentifierGeneratorFactory implements IdentifierGeneratorFac
 		}
 	}
 
+	@Override
+	public Dialect getDialect() {
+		return dialect;
+	}
 
 	@Override
 	public void setDialect(Dialect dialect) {

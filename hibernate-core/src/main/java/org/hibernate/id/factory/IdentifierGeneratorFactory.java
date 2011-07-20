@@ -34,6 +34,12 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  */
 public interface IdentifierGeneratorFactory {
+	/**
+	 * Get the dialect.
+	 *
+	 * @return the dialect
+	 */
+	public Dialect getDialect();
 
 	/**
 	 * Allow injection of the dialect to use.

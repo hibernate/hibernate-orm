@@ -4,7 +4,7 @@
         xmlns:xsd="http://www.w3.org/2001/XMLSchema"
         xmlns:inheritance="http://jaxb2-commons.dev.java.net/basic/inheritance"
         jaxb:extensionBindingPrefixes="inheritance"
-        jaxb:version="2.1">
+        version="2.1">
 
     <jaxb:bindings schemaLocation="../resources/org/hibernate/hibernate-mapping-4.0.xsd" node="/xsd:schema">
 

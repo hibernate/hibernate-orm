@@ -112,9 +112,14 @@ public class ConfiguredClass {
 	private final Map<String, SimpleAttribute> simpleAttributeMap;
 
 	/**
-	 * The mapped simple attributes for this entity
+	 * The version attribute or {@code null} in case none exists.
 	 */
 	private SimpleAttribute versionAttribute;
+
+	/**
+	 * The discriminator attribute or {@code null} in case none exists.
+	 */
+	private SimpleAttribute discriminatorAttribute;
 
 	/**
 	 * The embedded classes for this entity
@@ -185,6 +190,10 @@ public class ConfiguredClass {
 
 	public SimpleAttribute getVersionAttribute() {
 		return versionAttribute;
+	}
+
+	public SimpleAttribute getDiscriminatorAttribute() {
+		return discriminatorAttribute;
 	}
 
 	public Iterable<AssociationAttribute> getAssociationAttributes() {
@@ -448,6 +457,9 @@ public class ConfiguredClass {
 					idAttributeMap.put( attributeName, attribute );
 				} else if (attribute.isVersioned()) {
 					// todo - error handling in case there are multiple version attributes
+					versionAttribute = attribute;
+				} else if (attribute.isDiscriminator()) {
+					// todo - error handling in case there are multiple discriminator attributes
 					versionAttribute = attribute;
 				}
 				else {

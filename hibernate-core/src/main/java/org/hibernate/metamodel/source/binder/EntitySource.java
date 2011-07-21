@@ -89,28 +89,28 @@ public interface EntitySource extends SubclassEntityContainer, AttributeSourceCo
 	 *
 	 * @return The custom persister class name
 	 */
-    public String getCustomPersisterClassName();
+	public String getCustomPersisterClassName();
 
 	/**
 	 * Is this entity lazy (proxyable)?
 	 *
 	 * @return {@code true} indicates the entity is lazy; {@code false} non-lazy.
 	 */
-    public boolean isLazy();
+	public boolean isLazy();
 
 	/**
 	 * For {@link #isLazy() lazy} entities, obtain the interface to use in constructing its proxies.
 	 *
 	 * @return The proxy interface name
 	 */
-    public String getProxy();
+	public String getProxy();
 
 	/**
 	 * Obtain the batch-size to be applied when initializing proxies of this entity.
 	 *
 	 * @return THe batch-size.
 	 */
-    public int getBatchSize();
+	public int getBatchSize();
 
 	/**
 	 * Is the entity abstract?
@@ -119,28 +119,28 @@ public interface EntitySource extends SubclassEntityContainer, AttributeSourceCo
 	 *
 	 * @return {@code true} indicates the entity is abstract; {@code false} non-abstract.
 	 */
-    public boolean isAbstract();
+	public boolean isAbstract();
 
 	/**
 	 * Did the source specify dynamic inserts?
 	 *
 	 * @return {@code true} indicates dynamic inserts will be used; {@code false} otherwise.
 	 */
-    public boolean isDynamicInsert();
+	public boolean isDynamicInsert();
 
 	/**
 	 * Did the source specify dynamic updates?
 	 *
 	 * @return {@code true} indicates dynamic updates will be used; {@code false} otherwise.
 	 */
-    public boolean isDynamicUpdate();
+	public boolean isDynamicUpdate();
 
 	/**
 	 * Did the source specify to perform selects to decide whether to perform (detached) updates?
 	 *
 	 * @return {@code true} indicates selects will be done; {@code false} otherwise.
 	 */
-    public boolean isSelectBeforeUpdate();
+	public boolean isSelectBeforeUpdate();
 
 	/**
 	 * Obtain the name of a named-query that will be used for loading this entity
@@ -183,7 +183,4 @@ public interface EntitySource extends SubclassEntityContainer, AttributeSourceCo
 	 * @return The meta-attribute sources.
 	 */
 	public Iterable<MetaAttributeSource> metaAttributes();
-
-//	public List<XMLFetchProfileElement> getFetchProfile();
-
 }

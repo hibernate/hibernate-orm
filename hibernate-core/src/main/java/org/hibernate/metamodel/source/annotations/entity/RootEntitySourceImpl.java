@@ -75,7 +75,11 @@ public class RootEntitySourceImpl extends EntitySourceImpl implements RootEntity
 
 	@Override
 	public SingularAttributeSource getDiscriminatorAttributeSource() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		SingularAttributeSource attributeSource = null;
+		if ( getEntityClass().getDiscriminatorAttribute() != null ) {
+			attributeSource = new SingularAttributeSourceImpl( getEntityClass().getVersionAttribute() );
+		}
+		return attributeSource;
 	}
 
 	@Override

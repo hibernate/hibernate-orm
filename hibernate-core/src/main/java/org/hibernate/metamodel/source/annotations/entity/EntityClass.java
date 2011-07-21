@@ -117,10 +117,6 @@ public class EntityClass extends ConfiguredClass {
 		return JandexHelper.getValue( jpaEntityAnnotation, "name", String.class );
 	}
 
-	public InheritanceType getInheritanceType() {
-		return inheritanceType;
-	}
-
 	public IdType getIdType() {
 		return idType;
 	}

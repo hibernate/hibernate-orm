@@ -50,7 +50,7 @@ public class InheritanceBindingTest extends BaseAnnotationBindingTestCase {
 	}
 
 	@Test
-	//@Resources(annotatedClasses = { RootOfSingleTableInheritance.class, SubclassOfSingleTableInheritance.class })
+//	@Resources(annotatedClasses = { RootOfSingleTableInheritance.class, SubclassOfSingleTableInheritance.class })
 	@FailureExpected(jiraKey = "HHH-6447", message = "Work in progress")
 	public void testDiscriminatorValue() {
 		EntityBinding entityBinding = getEntityBinding( SubclassOfSingleTableInheritance.class );

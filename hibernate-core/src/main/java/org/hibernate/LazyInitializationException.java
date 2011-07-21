@@ -24,6 +24,7 @@
  */
 package org.hibernate;
 
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -36,10 +37,13 @@ import org.slf4j.LoggerFactory;
  * @author Gavin King
  */
 public class LazyInitializationException extends HibernateException {
+	private static final Logger log = LoggerFactory.getLogger( LazyInitializationException.class );
 
 	public LazyInitializationException(String msg) {
 		super(msg);
-		LoggerFactory.getLogger( LazyInitializationException.class ).error( msg, this );
+		if ( log.isTraceEnabled() ) {
+			log.trace( msg, this );
+		}
 	}
 
 }

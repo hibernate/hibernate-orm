@@ -387,7 +387,7 @@ public class EntityMetamodel implements Serializable {
 
 		// TODO: Fix after HHH-6337 is fixed; for now assume entityBinding is the root binding
 		//SimpleSingularAttributeBinding rootEntityIdentifier = entityBinding.getRootEntityBinding().getEntityIdentifier().getValueBinding();
-		SimpleSingularAttributeBinding rootEntityIdentifier = entityBinding.getEntityIdentifier().getValueBinding();
+		SimpleSingularAttributeBinding rootEntityIdentifier = entityBinding.getHierarchyDetails().getEntityIdentifier().getValueBinding();
 		// entityBinding.getAttributeClosureSpan() includes the identifier binding;
 		// "properties" here excludes the ID, so subtract 1 if the identifier binding is non-null
 		propertySpan = rootEntityIdentifier == null ?
@@ -428,9 +428,11 @@ public class EntityMetamodel implements Serializable {
 				continue;
 			}
 
-			if ( attributeBinding == entityBinding.getVersioningValueBinding() ) {
+			if ( attributeBinding == entityBinding.getHierarchyDetails().getVersioningAttributeBinding() ) {
 				tempVersionProperty = i;
-				properties[i] = PropertyFactory.buildVersionProperty( entityBinding.getVersioningValueBinding(), lazyAvailable );
+				properties[i] = PropertyFactory.buildVersionProperty(
+						entityBinding.getHierarchyDetails().getVersioningAttributeBinding(), lazyAvailable
+				);
 			}
 			else {
 				properties[i] = PropertyFactory.buildStandardProperty( attributeBinding, lazyAvailable );
@@ -546,13 +548,13 @@ public class EntityMetamodel implements Serializable {
 		//polymorphic = ! entityBinding.isRoot() || entityBinding.hasSubclasses();
 		polymorphic = ! entityBinding.isRoot() || hasSubclasses;
 
-		explicitPolymorphism = entityBinding.isExplicitPolymorphism();
+		explicitPolymorphism = entityBinding.getHierarchyDetails().isExplicitPolymorphism();
 		inherited = ! entityBinding.isRoot();
 		superclass = inherited ?
 				entityBinding.getEntity().getSuperType().getName() :
 				null;
 
-		optimisticLockStyle = entityBinding.getOptimisticLockStyle();
+		optimisticLockStyle = entityBinding.getHierarchyDetails().getOptimisticLockStyle();
 		final boolean isAllOrDirty =
 				optimisticLockStyle == OptimisticLockStyle.ALL
 						|| optimisticLockStyle == OptimisticLockStyle.DIRTY;

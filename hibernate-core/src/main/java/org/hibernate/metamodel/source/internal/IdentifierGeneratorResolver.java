@@ -67,7 +67,7 @@ public class IdentifierGeneratorResolver {
 							new ObjectNameNormalizerImpl( metadata )
 					);
 				}
-				entityBinding.getEntityIdentifier().createIdentifierGenerator(
+				entityBinding.getHierarchyDetails().getEntityIdentifier().createIdentifierGenerator(
 						metadata.getIdentifierGeneratorFactory(),
 						properties
 				);

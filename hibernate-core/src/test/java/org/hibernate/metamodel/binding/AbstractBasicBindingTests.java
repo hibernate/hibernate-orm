@@ -85,7 +85,7 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 		assertRoot( metadata, entityBinding );
 		assertIdAndSimpleProperty( entityBinding );
 
-		assertNull( entityBinding.getVersioningValueBinding() );
+		assertNull( entityBinding.getHierarchyDetails().getVersioningAttributeBinding() );
 	}
 
 	@Test
@@ -94,8 +94,8 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 		EntityBinding entityBinding = metadata.getEntityBinding( SimpleVersionedEntity.class.getName() );
 		assertIdAndSimpleProperty( entityBinding );
 
-		assertNotNull( entityBinding.getVersioningValueBinding() );
-		assertNotNull( entityBinding.getVersioningValueBinding().getAttribute() );
+		assertNotNull( entityBinding.getHierarchyDetails().getVersioningAttributeBinding() );
+		assertNotNull( entityBinding.getHierarchyDetails().getVersioningAttributeBinding().getAttribute() );
 	}
 
 	@Test
@@ -130,12 +130,12 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 
 	protected void assertIdAndSimpleProperty(EntityBinding entityBinding) {
 		assertNotNull( entityBinding );
-		assertNotNull( entityBinding.getEntityIdentifier() );
-		assertNotNull( entityBinding.getEntityIdentifier().getValueBinding() );
+		assertNotNull( entityBinding.getHierarchyDetails().getEntityIdentifier() );
+		assertNotNull( entityBinding.getHierarchyDetails().getEntityIdentifier().getValueBinding() );
 
 		AttributeBinding idAttributeBinding = entityBinding.getAttributeBinding( "id" );
 		assertNotNull( idAttributeBinding );
-		assertSame( idAttributeBinding, entityBinding.getEntityIdentifier().getValueBinding() );
+		assertSame( idAttributeBinding, entityBinding.getHierarchyDetails().getEntityIdentifier().getValueBinding() );
 		assertSame( LongType.INSTANCE, idAttributeBinding.getHibernateTypeDescriptor().getResolvedTypeMapping() );
 
 		assertTrue( idAttributeBinding.getAttribute().isSingular() );

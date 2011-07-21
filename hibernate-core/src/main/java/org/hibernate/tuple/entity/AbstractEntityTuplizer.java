@@ -241,8 +241,8 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 		this.entityMetamodel = entityMetamodel;
 
 		if ( !entityMetamodel.getIdentifierProperty().isVirtual() ) {
-			idGetter = buildPropertyGetter( mappingInfo.getEntityIdentifier().getValueBinding() );
-			idSetter = buildPropertySetter( mappingInfo.getEntityIdentifier().getValueBinding() );
+			idGetter = buildPropertyGetter( mappingInfo.getHierarchyDetails().getEntityIdentifier().getValueBinding() );
+			idSetter = buildPropertySetter( mappingInfo.getHierarchyDetails().getEntityIdentifier().getValueBinding() );
 		}
 		else {
 			idGetter = null;
@@ -257,7 +257,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 		boolean foundCustomAccessor = false;
 		int i = 0;
 		for ( AttributeBinding property : mappingInfo.getAttributeBindingClosure() ) {
-			if ( property == mappingInfo.getEntityIdentifier().getValueBinding() ) {
+			if ( property == mappingInfo.getHierarchyDetails().getEntityIdentifier().getValueBinding() ) {
 				continue; // ID binding processed above
 			}
 

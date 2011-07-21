@@ -117,7 +117,7 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 	}
 
 	protected final boolean isPrimaryKey() {
-		return this == getEntityBinding().getEntityIdentifier().getValueBinding();
+		return this == getEntityBinding().getHierarchyDetails().getEntityIdentifier().getValueBinding();
 	}
 
 	@Override

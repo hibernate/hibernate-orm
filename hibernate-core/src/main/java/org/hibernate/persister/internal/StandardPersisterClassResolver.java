@@ -47,12 +47,10 @@ import org.hibernate.persister.spi.UnknownPersisterException;
 public class StandardPersisterClassResolver implements PersisterClassResolver {
 
 	public Class<? extends EntityPersister> getEntityPersisterClass(EntityBinding metadata) {
-		// todo : make sure this is based on an attribute kept on the metamodel in the new code, not the concrete PersistentClass impl found!
-
 		if ( metadata.isRoot() ) {
 			return singleTableEntityPersister(); // EARLY RETURN!
 		}
-		switch ( metadata.getInheritanceType() ) {
+		switch ( metadata.getHierarchyDetails().getInheritanceType() ) {
 			case JOINED: {
 				return joinedSubclassEntityPersister();
 			}

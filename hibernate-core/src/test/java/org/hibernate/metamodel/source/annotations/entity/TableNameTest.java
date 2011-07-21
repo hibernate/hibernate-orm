@@ -56,7 +56,7 @@ public class TableNameTest extends BaseAnnotationBindingTestCase {
 	@Resources(annotatedClasses = { A.class, B.class })
 	public void testSingleInheritanceDefaultTableName() {
 		EntityBinding binding = getEntityBinding( A.class );
-		assertEquals( "wrong inheritance type", InheritanceType.SINGLE_TABLE, binding.getInheritanceType() );
+		assertEquals( "wrong inheritance type", InheritanceType.SINGLE_TABLE, binding.getHierarchyDetails().getInheritanceType() );
 		assertEquals(
 				"wrong table name",
 				"TableNameTest$A",
@@ -64,7 +64,7 @@ public class TableNameTest extends BaseAnnotationBindingTestCase {
 		);
 
 		binding = getEntityBinding( B.class );
-		assertEquals( "wrong inheritance type", InheritanceType.SINGLE_TABLE, binding.getInheritanceType() );
+		assertEquals( "wrong inheritance type", InheritanceType.SINGLE_TABLE, binding.getHierarchyDetails().getInheritanceType() );
 		assertEquals(
 				"wrong table name",
 				"TableNameTest$A",
@@ -89,7 +89,7 @@ public class TableNameTest extends BaseAnnotationBindingTestCase {
 	@Resources(annotatedClasses = { JoinedA.class, JoinedB.class })
 	public void testJoinedSubclassDefaultTableName() {
 		EntityBinding binding = getEntityBinding( JoinedA.class );
-		assertEquals( "wrong inheritance type", InheritanceType.JOINED, binding.getInheritanceType() );
+		assertEquals( "wrong inheritance type", InheritanceType.JOINED, binding.getHierarchyDetails().getInheritanceType() );
 		assertEquals(
 				"wrong table name",
 				"FOO",
@@ -97,7 +97,7 @@ public class TableNameTest extends BaseAnnotationBindingTestCase {
 		);
 
 		binding = getEntityBinding( JoinedB.class );
-		assertEquals( "wrong inheritance type", InheritanceType.JOINED, binding.getInheritanceType() );
+		assertEquals( "wrong inheritance type", InheritanceType.JOINED, binding.getHierarchyDetails().getInheritanceType() );
 		assertEquals(
 				"wrong table name",
 				"TableNameTest$JoinedB",
@@ -122,7 +122,7 @@ public class TableNameTest extends BaseAnnotationBindingTestCase {
 	@Resources(annotatedClasses = { TablePerClassA.class, TablePerClassB.class })
 	public void testTablePerClassDefaultTableName() {
 		EntityBinding binding = getEntityBinding( TablePerClassA.class );
-		assertEquals( "wrong inheritance type", InheritanceType.TABLE_PER_CLASS, binding.getInheritanceType() );
+		assertEquals( "wrong inheritance type", InheritanceType.TABLE_PER_CLASS, binding.getHierarchyDetails().getInheritanceType() );
 		assertEquals(
 				"wrong table name",
 				"TableNameTest$TablePerClassA",
@@ -130,7 +130,7 @@ public class TableNameTest extends BaseAnnotationBindingTestCase {
 		);
 
 		binding = getEntityBinding( TablePerClassB.class );
-		assertEquals( "wrong inheritance type", InheritanceType.TABLE_PER_CLASS, binding.getInheritanceType() );
+		assertEquals( "wrong inheritance type", InheritanceType.TABLE_PER_CLASS, binding.getHierarchyDetails().getInheritanceType() );
 		assertEquals(
 				"wrong table name",
 				"TableNameTest$TablePerClassB",

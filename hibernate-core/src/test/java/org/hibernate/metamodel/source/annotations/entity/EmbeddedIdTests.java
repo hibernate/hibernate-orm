@@ -26,7 +26,7 @@ public class EmbeddedIdTests extends BaseAnnotationBindingTestCase {
 //	@Resources(annotatedClasses = { User.class, Address.class })
     public void testEmbeddable() {
         EntityBinding binding = getEntityBinding( User.class );
-        EntityIdentifier identifier = binding.getEntityIdentifier();
+        EntityIdentifier identifier = binding.getHierarchyDetails().getEntityIdentifier();
         assertTrue( identifier.isEmbedded() );
     }
 

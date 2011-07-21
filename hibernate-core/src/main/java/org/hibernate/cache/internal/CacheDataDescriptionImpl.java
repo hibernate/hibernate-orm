@@ -96,10 +96,10 @@ public class CacheDataDescriptionImpl implements CacheDataDescription {
 		Comparator versionComparator = null;
 		if ( model.isVersioned() ) {
 			versionComparator = (
-					( VersionType ) model
-								.getVersioningValueBinding()
-								.getHibernateTypeDescriptor()
-								.getResolvedTypeMapping()
+					( VersionType ) model.getHierarchyDetails()
+							.getVersioningAttributeBinding()
+							.getHibernateTypeDescriptor()
+							.getResolvedTypeMapping()
 			).getComparator();
 		}
 		return versionComparator;

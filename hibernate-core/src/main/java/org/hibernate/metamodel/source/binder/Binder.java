@@ -171,23 +171,22 @@ public class Binder {
 		bindVersion( entityBinding, entitySource );
 		bindDiscriminator( entitySource, entityBinding );
 
+		entityBinding.getHierarchyDetails().setCaching( entitySource.getCaching() );
+		entityBinding.getHierarchyDetails().setExplicitPolymorphism( entitySource.isExplicitPolymorphism() );
+		entityBinding.getHierarchyDetails().setOptimisticLockStyle( entitySource.getOptimisticLockStyle() );
+
 		entityBinding.setMutable( entitySource.isMutable() );
-		entityBinding.setExplicitPolymorphism( entitySource.isExplicitPolymorphism() );
 		entityBinding.setWhereFilter( entitySource.getWhere() );
 		entityBinding.setRowId( entitySource.getRowId() );
-		entityBinding.setOptimisticLockStyle( entitySource.getOptimisticLockStyle() );
-		entityBinding.setCaching( entitySource.getCaching() );
 
 		return entityBinding;
 	}
 
 
 	private EntityBinding buildBasicEntityBinding(EntitySource entitySource, EntityBinding superEntityBinding) {
-		final EntityBinding entityBinding = new EntityBinding();
-		entityBinding.setSuperEntityBinding( superEntityBinding );
-		entityBinding.setInheritanceType( currentInheritanceType );
-
-		entityBinding.setEntityMode( currentHierarchyEntityMode );
+		final EntityBinding entityBinding = superEntityBinding == null
+				? new EntityBinding( currentInheritanceType, currentHierarchyEntityMode )
+				: new EntityBinding( superEntityBinding );
 
 		final String entityName = entitySource.getEntityName();
 		final String className = currentHierarchyEntityMode == EntityMode.POJO ? entitySource.getClassName() : null;
@@ -202,7 +201,7 @@ public class Binder {
 
 		entityBinding.setJpaEntityName( entitySource.getJpaEntityName() );
 
-		if ( entityBinding.getEntityMode() == EntityMode.POJO ) {
+		if ( currentHierarchyEntityMode == EntityMode.POJO ) {
 			final String proxy = entitySource.getProxy();
 			if ( proxy != null ) {
 				entityBinding.setProxyInterfaceType(
@@ -317,8 +316,8 @@ public class Binder {
 				identifierSource.getIdentifierAttributeSource(), entityBinding
 		);
 
-		entityBinding.getEntityIdentifier().setValueBinding( idAttributeBinding );
-		entityBinding.getEntityIdentifier().setIdGenerator( identifierSource.getIdentifierGeneratorDescriptor() );
+		entityBinding.getHierarchyDetails().getEntityIdentifier().setValueBinding( idAttributeBinding );
+		entityBinding.getHierarchyDetails().getEntityIdentifier().setIdGenerator( identifierSource.getIdentifierGeneratorDescriptor() );
 
 		final org.hibernate.metamodel.relational.Value relationalValue = idAttributeBinding.getValue();
 
@@ -347,7 +346,7 @@ public class Binder {
 		SimpleSingularAttributeBinding attributeBinding = doBasicSingularAttributeBindingCreation(
 				versioningAttributeSource, entityBinding
 		);
-		entityBinding.setVersionBinding( attributeBinding );
+		entityBinding.getHierarchyDetails().setVersioningAttributeBinding( attributeBinding );
 	}
 
 	private void bindDiscriminator(RootEntitySource entitySource, EntityBinding entityBinding) {

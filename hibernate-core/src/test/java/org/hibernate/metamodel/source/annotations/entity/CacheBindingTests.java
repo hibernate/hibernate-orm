@@ -50,8 +50,8 @@ public class CacheBindingTests extends BaseAnnotationBindingTestCase {
 	@Resources(annotatedClasses = HibernateCacheEntity.class, cacheMode = SharedCacheMode.ALL)
 	public void testHibernateCaching() {
 		EntityBinding binding = getEntityBinding( HibernateCacheEntity.class );
-		assertNotNull( "There should be a cache binding", binding.getCaching() );
-		Caching caching = binding.getCaching();
+		assertNotNull( "There should be a cache binding", binding.getHierarchyDetails().getCaching() );
+		Caching caching = binding.getHierarchyDetails().getCaching();
 		assertEquals( "Wrong region", "foo", caching.getRegion() );
 		assertEquals( "Wrong strategy", AccessType.READ_WRITE, caching.getAccessType() );
 		assertEquals( "Wrong lazy properties configuration", false, caching.isCacheLazyProperties() );
@@ -61,8 +61,8 @@ public class CacheBindingTests extends BaseAnnotationBindingTestCase {
 	@Resources(annotatedClasses = JpaCacheEntity.class, cacheMode = SharedCacheMode.ALL)
 	public void testJpaCaching() {
 		EntityBinding binding = getEntityBinding( JpaCacheEntity.class );
-		assertNotNull( "There should be a cache binding", binding.getCaching() );
-		Caching caching = binding.getCaching();
+		assertNotNull( "There should be a cache binding", binding.getHierarchyDetails().getCaching() );
+		Caching caching = binding.getHierarchyDetails().getCaching();
 		assertEquals(
 				"Wrong region",
 				this.getClass().getName() + "$" + JpaCacheEntity.class.getSimpleName(),
@@ -75,7 +75,7 @@ public class CacheBindingTests extends BaseAnnotationBindingTestCase {
 	@Resources(annotatedClasses = NoCacheEntity.class, cacheMode = SharedCacheMode.NONE)
 	public void testNoCaching() {
 		EntityBinding binding = getEntityBinding( NoCacheEntity.class );
-		assertNull( "There should be no cache binding", binding.getCaching() );
+		assertNull( "There should be no cache binding", binding.getHierarchyDetails().getCaching() );
 	}
 
 	@Entity

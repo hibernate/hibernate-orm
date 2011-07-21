@@ -29,7 +29,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.EntityMode;
-import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.util.Value;
 import org.hibernate.metamodel.domain.Entity;
@@ -48,10 +47,12 @@ import org.hibernate.tuple.entity.EntityTuplizer;
  * @author Gail Badner
  */
 public class EntityBinding {
+	private final EntityBinding superEntityBinding;
+	private final HierarchyDetails hierarchyDetails;
+
 	private Entity entity;
 	private TableSpecification baseTable;
 
-	private EntityMode entityMode;
 	private Value<Class<?>> proxyInterfaceType;
 
 	private String jpaEntityName;
@@ -59,26 +60,33 @@ public class EntityBinding {
 	private Class<? extends EntityPersister> customEntityPersisterClass;
 	private Class<? extends EntityTuplizer> customEntityTuplizerClass;
 
-	private InheritanceType entityInheritanceType;
-	private EntityBinding superEntityBinding;
-
-	private final EntityIdentifier entityIdentifier = new EntityIdentifier( this );
-	private EntityDiscriminator entityDiscriminator;
-	private String discriminatorValue;
-	private SimpleSingularAttributeBinding versionBinding;
+	private String discriminatorMatchValue;
 
 	private Map<String, AttributeBinding> attributeBindingMap = new HashMap<String, AttributeBinding>();
 
 	private Set<FilterDefinition> filterDefinitions = new HashSet<FilterDefinition>();
 	private Set<SingularAssociationAttributeBinding> entityReferencingAttributeBindings = new HashSet<SingularAssociationAttributeBinding>();
 
-	private Caching caching;
+	/**
+	 * Used to instantiate the EntityBinding for an entity that is the root of an inheritance hierarchy
+	 *
+	 * @param inheritanceType The inheritance type for the hierarchy
+	 * @param entityMode The entity mode used in this hierarchy.
+	 */
+	public EntityBinding(InheritanceType inheritanceType, EntityMode entityMode) {
+		this.superEntityBinding = null;
+		this.hierarchyDetails = new HierarchyDetails( this, inheritanceType, entityMode );
+	}
+
+	public EntityBinding(EntityBinding superEntityBinding) {
+		this.superEntityBinding = superEntityBinding;
+		this.hierarchyDetails = superEntityBinding.getHierarchyDetails();
+	}
 
 	private MetaAttributeContext metaAttributeContext;
 
 	private boolean lazy;
 	private boolean mutable;
-	private boolean explicitPolymorphism;
 	private String whereFilter;
 	private String rowId;
 
@@ -88,7 +96,6 @@ public class EntityBinding {
 	private int batchSize;
 	private boolean selectBeforeUpdate;
 	private boolean hasSubselectLoadableCollections;
-	private OptimisticLockStyle optimisticLockStyle;
 
 	private Boolean isAbstract;
 
@@ -98,6 +105,19 @@ public class EntityBinding {
 	private CustomSQL customDelete;
 
 	private Set<String> synchronizedTableNames = new HashSet<String>();
+
+
+	public HierarchyDetails getHierarchyDetails() {
+		return hierarchyDetails;
+	}
+
+	public EntityBinding getSuperEntityBinding() {
+		return superEntityBinding;
+	}
+
+	public boolean isRoot() {
+		return superEntityBinding == null;
+	}
 
 	public Entity getEntity() {
 		return entity;
@@ -120,56 +140,12 @@ public class EntityBinding {
 		return baseTable;
 	}
 
-	public boolean isRoot() {
-		return superEntityBinding == null;
-	}
-
-	public void setInheritanceType(InheritanceType entityInheritanceType) {
-		this.entityInheritanceType = entityInheritanceType;
-	}
-
-	public InheritanceType getInheritanceType() {
-		return entityInheritanceType;
-	}
-
-	public void setSuperEntityBinding(EntityBinding superEntityBinding) {
-		this.superEntityBinding = superEntityBinding;
-	}
-
-	public EntityBinding getSuperEntityBinding() {
-		return superEntityBinding;
-	}
-
-	public EntityIdentifier getEntityIdentifier() {
-		return entityIdentifier;
-	}
-
-	public EntityDiscriminator getEntityDiscriminator() {
-		return entityDiscriminator;
-	}
-
-	public void setEntityDiscriminator(EntityDiscriminator entityDiscriminator) {
-		this.entityDiscriminator = entityDiscriminator;
-	}
-
-	public String getDiscriminatorValue() {
-		return discriminatorValue;
-	}
-
-	public void setDiscriminatorValue(String discriminatorValue) {
-		this.discriminatorValue = discriminatorValue;
-	}
-
 	public boolean isVersioned() {
-		return versionBinding != null;
+		return getHierarchyDetails().getVersioningAttributeBinding() != null;
 	}
 
-	public void setVersionBinding(SimpleSingularAttributeBinding versionBinding) {
-		this.versionBinding = versionBinding;
-	}
-
-	public SimpleSingularAttributeBinding getVersioningValueBinding() {
-		return versionBinding;
+	public String getDiscriminatorMatchValue() {
+		return discriminatorMatchValue;
 	}
 
 	public Iterable<AttributeBinding> getAttributeBindings() {
@@ -254,14 +230,6 @@ public class EntityBinding {
 		attributeBindingMap.put( name, attributeBinding );
 	}
 
-	public Caching getCaching() {
-		return caching;
-	}
-
-	public void setCaching(Caching caching) {
-		this.caching = caching;
-	}
-
 	public MetaAttributeContext getMetaAttributeContext() {
 		return metaAttributeContext;
 	}
@@ -300,14 +268,6 @@ public class EntityBinding {
 
 	public void setWhereFilter(String whereFilter) {
 		this.whereFilter = whereFilter;
-	}
-
-	public boolean isExplicitPolymorphism() {
-		return explicitPolymorphism;
-	}
-
-	public void setExplicitPolymorphism(boolean explicitPolymorphism) {
-		this.explicitPolymorphism = explicitPolymorphism;
 	}
 
 	public String getRowId() {
@@ -359,14 +319,6 @@ public class EntityBinding {
 		this.hasSubselectLoadableCollections = hasSubselectLoadableCollections;
 	}
 
-	public OptimisticLockStyle getOptimisticLockStyle() {
-		return optimisticLockStyle;
-	}
-
-	public void setOptimisticLockStyle(OptimisticLockStyle optimisticLockStyle) {
-		this.optimisticLockStyle = optimisticLockStyle;
-	}
-
 	public Class<? extends EntityPersister> getCustomEntityPersisterClass() {
 		return customEntityPersisterClass;
 	}
@@ -397,14 +349,6 @@ public class EntityBinding {
 
 	public void addSynchronizedTableNames(java.util.Collection<String> synchronizedTableNames) {
 		this.synchronizedTableNames.addAll( synchronizedTableNames );
-	}
-
-	public EntityMode getEntityMode() {
-		return entityMode;
-	}
-
-	public void setEntityMode(EntityMode entityMode) {
-		this.entityMode = entityMode;
 	}
 
 	public String getJpaEntityName() {

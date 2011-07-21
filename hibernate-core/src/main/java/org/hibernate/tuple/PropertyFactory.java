@@ -109,7 +109,7 @@ public class PropertyFactory {
 	 */
 	public static IdentifierProperty buildIdentifierProperty(EntityBinding mappedEntity, IdentifierGenerator generator) {
 
-		final SimpleSingularAttributeBinding property = mappedEntity.getEntityIdentifier().getValueBinding();
+		final SimpleSingularAttributeBinding property = mappedEntity.getHierarchyDetails().getEntityIdentifier().getValueBinding();
 
 		// TODO: the following will cause an NPE with "virtual" IDs; how should they be set?
 		// (steve) virtual attributes will still be attributes, they will simply be marked as virtual.
@@ -129,8 +129,8 @@ public class PropertyFactory {
 			// this is a virtual id property...
 			return new IdentifierProperty(
 			        type,
-					mappedEntity.getEntityIdentifier().isEmbedded(),
-					mappedEntity.getEntityIdentifier().isIdentifierMapper(),
+					mappedEntity.getHierarchyDetails().getEntityIdentifier().isEmbedded(),
+					mappedEntity.getHierarchyDetails().getEntityIdentifier().isIdentifierMapper(),
 					unsavedValue,
 					generator
 				);
@@ -140,7 +140,7 @@ public class PropertyFactory {
 					property.getAttribute().getName(),
 					null,
 					type,
-					mappedEntity.getEntityIdentifier().isEmbedded(),
+					mappedEntity.getHierarchyDetails().getEntityIdentifier().isEmbedded(),
 					unsavedValue,
 					generator
 				);

@@ -27,6 +27,7 @@ import java.sql.Types;
 
 import org.junit.Test;
 
+import org.hibernate.EntityMode;
 import org.hibernate.internal.util.Value;
 import org.hibernate.metamodel.domain.Entity;
 import org.hibernate.metamodel.domain.SingularAttribute;
@@ -55,7 +56,7 @@ public class SimpleValueBindingTests extends BaseUnitTestCase {
 	public void testBasicMiddleOutBuilding() {
 		Table table = new Table( new Schema( null, null ), "the_table" );
 		Entity entity = new Entity( "TheEntity", "NoSuchClass", makeJavaType( "NoSuchClass" ), null );
-		EntityBinding entityBinding = new EntityBinding();
+		EntityBinding entityBinding = new EntityBinding( InheritanceType.NO_INHERITANCE, EntityMode.POJO );
 		entityBinding.setEntity( entity );
 		entityBinding.setBaseTable( table );
 
@@ -64,7 +65,7 @@ public class SimpleValueBindingTests extends BaseUnitTestCase {
 		attributeBinding.getHibernateTypeDescriptor().setExplicitTypeName( "long" );
 		assertSame( idAttribute, attributeBinding.getAttribute() );
 
-		entityBinding.getEntityIdentifier().setValueBinding( attributeBinding );
+		entityBinding.getHierarchyDetails().getEntityIdentifier().setValueBinding( attributeBinding );
 
 		Column idColumn = table.locateOrCreateColumn( "id" );
 		idColumn.setDatatype( BIGINT );

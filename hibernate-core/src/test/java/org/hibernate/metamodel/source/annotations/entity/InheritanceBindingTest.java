@@ -46,7 +46,7 @@ public class InheritanceBindingTest extends BaseAnnotationBindingTestCase {
 	@Resources(annotatedClasses = SingleEntity.class)
 	public void testNoInheritance() {
 		EntityBinding entityBinding = getEntityBinding( SingleEntity.class );
-		assertNull( entityBinding.getEntityDiscriminator() );
+		assertNull( entityBinding.getHierarchyDetails().getEntityDiscriminator() );
 	}
 
 	@Test

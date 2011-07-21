@@ -548,11 +548,11 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		final Object discriminatorValue;
 		if ( isPolymorphic ) {
 			org.hibernate.metamodel.relational.Value discrimValue =
-					entityBinding.getEntityDiscriminator().getValueBinding().getValue();
+					entityBinding.getHierarchyDetails().getEntityDiscriminator().getValueBinding().getValue();
 			if (discrimValue==null) {
 				throw new MappingException("discriminator mapping required for single table polymorphic persistence");
 			}
-			forceDiscriminator = entityBinding.getEntityDiscriminator().isForced();
+			forceDiscriminator = entityBinding.getHierarchyDetails().getEntityDiscriminator().isForced();
 			if ( ! SimpleValue.class.isInstance(  discrimValue ) ) {
 				throw new MappingException( "discriminator must be mapped to a single column or formula." );
 			}
@@ -585,6 +585,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			}
 			discriminatorType =
 					entityBinding
+							.getHierarchyDetails()
 							.getEntityDiscriminator()
 							.getValueBinding()
 							.getHibernateTypeDescriptor()
@@ -606,7 +607,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			}
 			else {
 				discriminatorInsertable =
-						entityBinding.getEntityDiscriminator().isInserted() &&
+						entityBinding.getHierarchyDetails().getEntityDiscriminator().isInserted() &&
 								! DerivedValue.class.isInstance( discrimValue );
 				try {
 					DiscriminatorType dtype = ( DiscriminatorType ) discriminatorType;
@@ -642,7 +643,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		for( AttributeBinding attributeBinding : entityBinding.getAttributeBindingClosure() ) {
 			// TODO: fix when joins are working (HHH-6391)
 			//propertyTableNumbers[i++] = entityBinding.getJoinNumber( attributeBinding);
-			if ( attributeBinding == entityBinding.getEntityIdentifier().getValueBinding() ) {
+			if ( attributeBinding == entityBinding.getHierarchyDetails().getEntityIdentifier().getValueBinding() ) {
 				continue; // skip identifier binding
 			}
 			if ( ! attributeBinding.getAttribute().isSingular() ) {

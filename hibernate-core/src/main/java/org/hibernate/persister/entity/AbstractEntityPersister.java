@@ -772,9 +772,9 @@ public abstract class AbstractEntityPersister
 		this.factory = factory;
 		this.cacheAccessStrategy = cacheAccessStrategy;
 		this.isLazyPropertiesCacheable =
-				entityBinding.getCaching() == null ?
+				entityBinding.getHierarchyDetails().getCaching() == null ?
 						false :
-						entityBinding.getCaching().isCacheLazyProperties();
+						entityBinding.getHierarchyDetails().getCaching().isCacheLazyProperties();
 		this.cacheEntryStructure =
 				factory.getSettings().isStructuredCacheEntriesEnabled() ?
 						new StructuredCacheEntry(this) :
@@ -791,7 +791,7 @@ public abstract class AbstractEntityPersister
 
 		// IDENTIFIER
 
-		identifierColumnSpan = entityBinding.getEntityIdentifier().getValueBinding().getSimpleValueSpan();
+		identifierColumnSpan = entityBinding.getHierarchyDetails().getEntityIdentifier().getValueBinding().getSimpleValueSpan();
 		rootTableKeyColumnNames = new String[identifierColumnSpan];
 		rootTableKeyColumnReaders = new String[identifierColumnSpan];
 		rootTableKeyColumnReaderTemplates = new String[identifierColumnSpan];
@@ -821,7 +821,7 @@ public abstract class AbstractEntityPersister
 		// VERSION
 
 		if ( entityBinding.isVersioned() ) {
-			final Value versioningValue = entityBinding.getVersioningValueBinding().getValue();
+			final Value versioningValue = entityBinding.getHierarchyDetails().getVersioningAttributeBinding().getValue();
 			if ( ! org.hibernate.metamodel.relational.Column.class.isInstance( versioningValue ) ) {
 				throw new AssertionFailure( "Bad versioning attribute binding : " + versioningValue );
 			}
@@ -864,7 +864,7 @@ public abstract class AbstractEntityPersister
 		i = 0;
 		boolean foundFormula = false;
 		for ( AttributeBinding attributeBinding : entityBinding.getAttributeBindingClosure() ) {
-			if ( attributeBinding == entityBinding.getEntityIdentifier().getValueBinding() ) {
+			if ( attributeBinding == entityBinding.getHierarchyDetails().getEntityIdentifier().getValueBinding() ) {
 				// entity identifier is not considered a "normal" property
 				continue;
 			}
@@ -970,7 +970,7 @@ public abstract class AbstractEntityPersister
 		// TODO: fix this when EntityBinding.getSubclassAttributeBindingClosure() is working
 		// for ( AttributeBinding prop : entityBinding.getSubclassAttributeBindingClosure() ) {
 		for ( AttributeBinding attributeBinding : entityBinding.getAttributeBindingClosure() ) {
-			if ( attributeBinding == entityBinding.getEntityIdentifier().getValueBinding() ) {
+			if ( attributeBinding == entityBinding.getHierarchyDetails().getEntityIdentifier().getValueBinding() ) {
 				// entity identifier is not considered a "normal" property
 				continue;
 			}

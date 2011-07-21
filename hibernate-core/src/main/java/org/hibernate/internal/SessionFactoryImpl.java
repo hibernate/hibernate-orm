@@ -605,7 +605,7 @@ public final class SessionFactoryImpl
 			if ( entityBinding.isRoot() ) {
 				identifierGenerators.put(
 						entityBinding.getEntity().getName(),
-						entityBinding.getEntityIdentifier().getIdentifierGenerator()
+						entityBinding.getHierarchyDetails().getEntityIdentifier().getIdentifierGenerator()
 				);
 			}
 		}
@@ -632,13 +632,13 @@ public final class SessionFactoryImpl
 			EntityBinding rootEntityBinding = metadata.getRootEntityBinding( model.getEntity().getName() );
 			EntityRegionAccessStrategy accessStrategy = null;
 			if ( settings.isSecondLevelCacheEnabled() &&
-					rootEntityBinding.getCaching() != null &&
-					model.getCaching() != null &&
-					model.getCaching().getAccessType() != null ) {
-				final String cacheRegionName = cacheRegionPrefix + rootEntityBinding.getCaching().getRegion();
+					rootEntityBinding.getHierarchyDetails().getCaching() != null &&
+					model.getHierarchyDetails().getCaching() != null &&
+					model.getHierarchyDetails().getCaching().getAccessType() != null ) {
+				final String cacheRegionName = cacheRegionPrefix + rootEntityBinding.getHierarchyDetails().getCaching().getRegion();
 				accessStrategy = EntityRegionAccessStrategy.class.cast( entityAccessStrategies.get( cacheRegionName ) );
 				if ( accessStrategy == null ) {
-					final AccessType accessType = model.getCaching().getAccessType();
+					final AccessType accessType = model.getHierarchyDetails().getCaching().getAccessType();
 					LOG.trace("Building cache for entity data [" + model.getEntity().getName() + "]");
 					EntityRegion entityRegion =
 							settings.getRegionFactory().buildEntityRegion(

@@ -6,6 +6,61 @@ refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
 
+Changes in version 4.0.0.Beta4 (2011.07.20)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.onjira.com/browse/HHH/fixforversion/11242
+
+** Sub-task
+    * [HHH-6392] - Implement attribute overrides for mapped super classes
+
+** Bug
+    * [HHH-2614] - Blob Length Set to 255 By Default With Derby DB
+    * [HHH-6380] - Annotations source maps SingleColumnType values to Tuple
+    * [HHH-6381] - using @SecondaryTable with optional=true not handled for joined subclasses (@Inheritance(strategy = InheritanceType.JOINED)
+    * [HHH-6401] - Create @OptimisticLocking annotation
+    * [HHH-6418] - org.hibernate.metamodel.relational.AuxiliaryDatabaseObject extends org.hibernate.mapping.RelationalModel
+    * [HHH-6419] - Thread Local bound session proxy does not let SessionImplementor#getFactory() go through on inactive transactions
+    * [HHH-6442] - JarVisitorFactory is reconstructing URLs without the URLStreamHandler association
+    * [HHH-6451] - adapt hibernate-ehcache to the new api
+    * [HHH-6456] - Test failure in CachedPropertyRefCollectionTest behind a proxy
+    * [HHH-6460] - AbstractEntityPersister is missing simple property information
+    * [HHH-6467] - Non-association attributes are not dirty-checked
+
+** Deprecation
+    * [HHH-6395] - Deprecate org.hibernate.annotations.Entity
+
+** Improvement
+    * [HHH-6417] - Make EventType more debugger friendly by implementing toString
+    * [HHH-6421] - Reduce log level of LazyInitializationException from ERROR to TRACE
+    * [HHH-6437] - Improve Database to track default Schema object
+    * [HHH-6447] - Develop shared binding creation approach
+
+** New Feature
+    * [HHH-6397] - Create @DynamicInsert annotation
+    * [HHH-6398] - Create @DynamicUpdate annotation
+    * [HHH-6399] - Create @SelectBeforeUpdate annotation
+    * [HHH-6400] - Create @Polymorphism annotation
+
+** Patch
+    * [HHH-4630] - Criteria join on composite identifier generates wrong alias, SQL error
+
+** Remove Feature
+    * [HHH-6402] - Remove previously deprecated annotations
+
+** Task
+    * [HHH-6257] - Add IdentifierGenerator to EntityIdentifier binding
+    * [HHH-6355] - Have attribute bindings return single, aggregated CascadeStyle
+    * [HHH-6357] - Add AttributeBinding.getFetchMode()
+    * [HHH-6371] - Develop metamodel binding creation using a push approach
+    * [HHH-6416] - Move AuxiliaryDatabaseObject into Database
+    * [HHH-6420] - SQL Server dialect is broken (Tomaz Cerar)
+    * [HHH-6444] - Integrate new metamodel into SchemaExport
+    * [HHH-6449] - Change Exportable.sqlCreateStrings/sqlDropStrings(MetadataImplementor) to take Dialect argument instead
+    * [HHH-6450] - Change length argument of Dialect.getTypeName() and TypeNames size/capacity to long
+    * [HHH-6453] - Enable new metamodel in BaseCoreFunctionalTestCase
+    * [HHH-6462] - Build fetch profiles, caches, current session context and transaction environment from new metadata
+
+
 Changes in version 4.0.0.Beta3 (2011.07.07)
 ------------------------------------------------------------------------------------------------------------------------
 http://opensource.atlassian.com/projects/hibernate/browse/HHH/fixforversion/11241

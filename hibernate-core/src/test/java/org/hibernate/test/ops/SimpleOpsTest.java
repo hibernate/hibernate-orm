@@ -50,7 +50,6 @@ public class SimpleOpsTest extends AbstractOperationTestCase {
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-6467" )
 	public void testBasicOperations() {
 		clearCounts();
 

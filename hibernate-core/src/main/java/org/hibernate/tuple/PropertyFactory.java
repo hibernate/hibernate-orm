@@ -40,6 +40,7 @@ import org.hibernate.metamodel.binding.AttributeBinding;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.AbstractPluralAttributeBinding;
 import org.hibernate.metamodel.binding.SimpleSingularAttributeBinding;
+import org.hibernate.metamodel.binding.SimpleValueBinding;
 import org.hibernate.metamodel.binding.SingularAttributeBinding;
 import org.hibernate.property.Getter;
 import org.hibernate.property.PropertyAccessor;
@@ -111,6 +112,9 @@ public class PropertyFactory {
 		final SimpleSingularAttributeBinding property = mappedEntity.getEntityIdentifier().getValueBinding();
 
 		// TODO: the following will cause an NPE with "virtual" IDs; how should they be set?
+		// (steve) virtual attributes will still be attributes, they will simply be marked as virtual.
+		//		see org.hibernate.metamodel.domain.AbstractAttributeContainer.locateOrCreateVirtualAttribute()
+
 		final String mappedUnsavedValue = property.getUnsavedValue();
 		final Type type = property.getHibernateTypeDescriptor().getResolvedTypeMapping();
 
@@ -194,7 +198,7 @@ public class PropertyFactory {
 		VersionValue unsavedValue = UnsavedValueFactory.getUnsavedVersionValue(
 				mappedUnsavedValue,
 				getGetter( property ),
-				( VersionType ) property.getHibernateTypeDescriptor().getResolvedTypeMapping(),
+				(VersionType) property.getHibernateTypeDescriptor().getResolvedTypeMapping(),
 				getConstructor( property.getEntityBinding() )
 		);
 
@@ -302,7 +306,7 @@ public class PropertyFactory {
 							|| singularAttributeBinding.getGeneration() == PropertyGeneration.ALWAYS,
 					singularAttributeBinding.getGeneration() == PropertyGeneration.ALWAYS,
 					singularAttributeBinding.isNullable(),
-					alwaysDirtyCheck,
+					alwaysDirtyCheck || areAllValuesIncludedInUpdate( singularAttributeBinding ),
 					singularAttributeBinding.isIncludedInOptimisticLocking(),
 					cascadeStyle,
 					fetchMode
@@ -311,10 +315,10 @@ public class PropertyFactory {
 		else {
 			final AbstractPluralAttributeBinding pluralAttributeBinding = (AbstractPluralAttributeBinding) property;
 			final CascadeStyle cascadeStyle = pluralAttributeBinding.isAssociation()
-					? ( (AssociationAttributeBinding) pluralAttributeBinding ).getCascadeStyle()
+					? pluralAttributeBinding.getCascadeStyle()
 					: CascadeStyle.NONE;
 			final FetchMode fetchMode = pluralAttributeBinding.isAssociation()
-					? ( (AssociationAttributeBinding) pluralAttributeBinding ).getFetchMode()
+					? pluralAttributeBinding.getFetchMode()
 					: FetchMode.DEFAULT;
 
 			return new StandardProperty(
@@ -323,13 +327,10 @@ public class PropertyFactory {
 					type,
 					lazyAvailable && pluralAttributeBinding.isLazy(),
 					// TODO: fix this when HHH-6356 is fixed; for now assume AbstractPluralAttributeBinding is updatable and insertable
-					// pluralAttributeBinding.isInsertable(),
-					//pluralAttributeBinding.isUpdatable(),
-					true,
-					true,
+					true, // pluralAttributeBinding.isInsertable(),
+					true, //pluralAttributeBinding.isUpdatable(),
 					false,
 					false,
-//					pluralAttributeBinding.isNullable(),
 					false, // nullable - not sure what that means for a collection
 					// TODO: fix this when HHH-6356 is fixed; for now assume AbstractPluralAttributeBinding is updatable and insertable
 					//alwaysDirtyCheck || pluralAttributeBinding.isUpdatable(),
@@ -339,6 +340,18 @@ public class PropertyFactory {
 					fetchMode
 				);
 		}
+	}
+
+	private static boolean areAllValuesIncludedInUpdate(SingularAttributeBinding attributeBinding) {
+		if ( attributeBinding.hasDerivedValue() ) {
+			return false;
+		}
+		for ( SimpleValueBinding valueBinding : attributeBinding.getSimpleValueBindings() ) {
+			if ( ! valueBinding.isIncludeInUpdate() ) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	private static Constructor getConstructor(PersistentClass persistentClass) {

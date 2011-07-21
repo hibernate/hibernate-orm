@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,54 +21,30 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.binding;
+package org.hibernate.metamodel.source.annotations.attribute;
+
+import org.hibernate.metamodel.source.binder.DiscriminatorSource;
 
 /**
- * Binding of the discriminator in a entity hierarchy
- *
- * @author Steve Ebersole
  * @author Hardy Ferentschik
  */
-public class EntityDiscriminator {
-	private SimpleSingularAttributeBinding valueBinding;
-	private boolean forced;
-	private boolean inserted = true;
+public class DiscriminatorSourceImpl extends SingularAttributeSourceImpl implements DiscriminatorSource {
+	private final DiscriminatorColumnValues discriminatorColumnValues;
 
-	public EntityDiscriminator() {
-	}
-
-	public SimpleSingularAttributeBinding getValueBinding() {
-		return valueBinding;
-	}
-
-	public void setValueBinding(SimpleSingularAttributeBinding valueBinding) {
-		this.valueBinding = valueBinding;
-	}
-
-	public boolean isForced() {
-		return forced;
-	}
-
-	public void setForced(boolean forced) {
-		this.forced = forced;
-	}
-
-	public boolean isInserted() {
-		return inserted;
-	}
-
-	public void setInserted(boolean inserted) {
-		this.inserted = inserted;
+	public DiscriminatorSourceImpl(SimpleAttribute attribute) {
+		super( attribute );
+		discriminatorColumnValues = (DiscriminatorColumnValues)attribute.getColumnValues();
 	}
 
 	@Override
-	public String toString() {
-		final StringBuilder sb = new StringBuilder();
-		sb.append( "EntityDiscriminator" );
-		sb.append( "{valueBinding=" ).append( valueBinding );
-		sb.append( ", forced=" ).append( forced );
-		sb.append( ", inserted=" ).append( inserted );
-		sb.append( '}' );
-		return sb.toString();
+	public boolean isForced() {
+		return discriminatorColumnValues.isForced();
+	}
+
+	@Override
+	public boolean isInserted() {
+		return discriminatorColumnValues.isIncludedInSql();
 	}
 }
+
+

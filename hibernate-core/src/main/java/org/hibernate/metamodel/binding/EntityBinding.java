@@ -64,11 +64,12 @@ public class EntityBinding {
 
 	private final EntityIdentifier entityIdentifier = new EntityIdentifier( this );
 	private EntityDiscriminator entityDiscriminator;
+	private String discriminatorValue;
 	private SimpleSingularAttributeBinding versionBinding;
 
 	private Map<String, AttributeBinding> attributeBindingMap = new HashMap<String, AttributeBinding>();
 
-	private Set<FilterDefinition> filterDefinitions = new HashSet<FilterDefinition>( );
+	private Set<FilterDefinition> filterDefinitions = new HashSet<FilterDefinition>();
 	private Set<SingularAssociationAttributeBinding> entityReferencingAttributeBindings = new HashSet<SingularAssociationAttributeBinding>();
 
 	private Caching caching;
@@ -147,6 +148,18 @@ public class EntityBinding {
 		return entityDiscriminator;
 	}
 
+	public void setEntityDiscriminator(EntityDiscriminator entityDiscriminator) {
+		this.entityDiscriminator = entityDiscriminator;
+	}
+
+	public String getDiscriminatorValue() {
+		return discriminatorValue;
+	}
+
+	public void setDiscriminatorValue(String discriminatorValue) {
+		this.discriminatorValue = discriminatorValue;
+	}
+
 	public boolean isVersioned() {
 		return versionBinding != null;
 	}
@@ -205,32 +218,17 @@ public class EntityBinding {
 		return entityReferencingAttributeBindings;
 	}
 
-	public SimpleSingularAttributeBinding makeSimpleIdAttributeBinding(SingularAttribute attribute) {
-		final SimpleSingularAttributeBinding binding = makeSimpleAttributeBinding( attribute, true, true );
-		getEntityIdentifier().setValueBinding( binding );
-		return binding;
-	}
-//
-//	public EntityDiscriminator makeEntityDiscriminator(Attribute attribute) {
-//		if ( entityDiscriminator != null ) {
-//			throw new AssertionFailure( "Creation of entity discriminator was called more than once" );
-//		}
-//		entityDiscriminator = new EntityDiscriminator();
-//		entityDiscriminator.setValueBinding( makeSimpleAttributeBinding( attribute, true, false ) );
-//		return entityDiscriminator;
-//	}
-
-	public SimpleSingularAttributeBinding makeVersionBinding(SingularAttribute attribute) {
-		versionBinding = makeSimpleAttributeBinding( attribute, true, false );
-		return versionBinding;
-	}
-
 	public SimpleSingularAttributeBinding makeSimpleAttributeBinding(SingularAttribute attribute) {
 		return makeSimpleAttributeBinding( attribute, false, false );
 	}
 
 	private SimpleSingularAttributeBinding makeSimpleAttributeBinding(SingularAttribute attribute, boolean forceNonNullable, boolean forceUnique) {
-		final SimpleSingularAttributeBinding binding = new SimpleSingularAttributeBinding( this, attribute, forceNonNullable, forceUnique );
+		final SimpleSingularAttributeBinding binding = new SimpleSingularAttributeBinding(
+				this,
+				attribute,
+				forceNonNullable,
+				forceUnique
+		);
 		registerAttributeBinding( attribute.getName(), binding );
 		return binding;
 	}
@@ -320,10 +318,6 @@ public class EntityBinding {
 		this.rowId = rowId;
 	}
 
-	public String getDiscriminatorValue() {
-		return entityDiscriminator == null ? null : entityDiscriminator.getDiscriminatorValue();
-	}
-
 	public boolean isDynamicUpdate() {
 		return dynamicUpdate;
 	}
@@ -401,10 +395,6 @@ public class EntityBinding {
 		return synchronizedTableNames;
 	}
 
-	public void addSynchronizedTable(String tableName) {
-		synchronizedTableNames.add( tableName );
-	}
-
 	public void addSynchronizedTableNames(java.util.Collection<String> synchronizedTableNames) {
 		this.synchronizedTableNames.addAll( synchronizedTableNames );
 	}
@@ -455,5 +445,14 @@ public class EntityBinding {
 
 	public void setCustomDelete(CustomSQL customDelete) {
 		this.customDelete = customDelete;
+	}
+
+	@Override
+	public String toString() {
+		final StringBuilder sb = new StringBuilder();
+		sb.append( "EntityBinding" );
+		sb.append( "{entity=" ).append( entity != null ? entity.getName() : "not set" );
+		sb.append( '}' );
+		return sb.toString();
 	}
 }

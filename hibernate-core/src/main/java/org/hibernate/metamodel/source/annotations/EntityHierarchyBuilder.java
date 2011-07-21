@@ -374,6 +374,11 @@ public class EntityHierarchyBuilder {
 	}
 
 	private static InheritanceType determineInheritanceType(ClassInfo rootClassInfo, List<ClassInfo> classes) {
+		if(classes.size() == 1) {
+			return InheritanceType.NO_INHERITANCE;
+		}
+
+		// if we have more than one entity class the default is SINGLE_TABLE
 		InheritanceType inheritanceType = InheritanceType.SINGLE_TABLE;
 		AnnotationInstance inheritanceAnnotation = JandexHelper.getSingleAnnotation(
 				rootClassInfo, JPADotNames.INHERITANCE

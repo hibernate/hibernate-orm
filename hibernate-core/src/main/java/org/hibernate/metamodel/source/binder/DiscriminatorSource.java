@@ -21,13 +21,25 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.binding.state;
+package org.hibernate.metamodel.source.binder;
 
 /**
- * @author Gail Badner
+ * @author Hardy Ferentschik
  */
-public interface DiscriminatorBindingState extends AttributeBindingState {
-	String getDiscriminatorValue();
+public interface DiscriminatorSource extends SingularAttributeSource {
+	/**
+	 * "Forces" Hibernate to specify the allowed discriminator values, even when retrieving all instances of the root class.
+	 *
+	 * @return {@code true} in case the discriminator value should be forces, {@code false} otherwise. Default is {@code false}.
+	 */
 	boolean isForced();
+
+	/**
+	 * Set this to {@code false}, if your discriminator column is also part of a mapped composite identifier.
+	 * It tells Hibernate not to include the column in SQL INSERTs.
+	 *
+	 * @return {@code true} in case the discriminator value should be included in inserts, {@code false} otherwise.
+	 *         Default is {@code true}.
+	 */
 	boolean isInserted();
 }

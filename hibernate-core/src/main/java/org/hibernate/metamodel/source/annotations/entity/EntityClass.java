@@ -51,6 +51,7 @@ import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.source.annotations.HibernateDotNames;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.JandexHelper;
+import org.hibernate.metamodel.source.annotations.attribute.SimpleAttribute;
 import org.hibernate.metamodel.source.binder.TableSource;
 
 /**
@@ -87,6 +88,11 @@ public class EntityClass extends ConfiguredClass {
 	private boolean isLazy;
 	private String proxy;
 
+	/**
+	 * The discriminator attribute or {@code null} in case none exists.
+	 */
+	private SimpleAttribute discriminatorAttribute;
+
 	public EntityClass(
 			ClassInfo classInfo,
 			EntityClass parent,
@@ -107,14 +113,14 @@ public class EntityClass extends ConfiguredClass {
 		processHibernateEntitySpecificAnnotations();
 		processCustomSqlAnnotations();
 		processProxyGeneration();
+
+		if ( InheritanceType.SINGLE_TABLE.equals( inheritanceType ) ) {
+			discriminatorAttribute = SimpleAttribute.createDiscriminatorAttribute( classInfo.annotations() );
+		}
 	}
 
-	private String determineExplicitEntityName() {
-		final AnnotationInstance jpaEntityAnnotation = JandexHelper.getSingleAnnotation(
-				getClassInfo(), JPADotNames.ENTITY
-		);
-
-		return JandexHelper.getValue( jpaEntityAnnotation, "name", String.class );
+	public SimpleAttribute getDiscriminatorAttribute() {
+		return discriminatorAttribute;
 	}
 
 	public IdType getIdType() {
@@ -217,6 +223,15 @@ public class EntityClass extends ConfiguredClass {
 	public boolean isEntityRoot() {
 		return getParent() == null;
 	}
+
+	private String determineExplicitEntityName() {
+		final AnnotationInstance jpaEntityAnnotation = JandexHelper.getSingleAnnotation(
+				getClassInfo(), JPADotNames.ENTITY
+		);
+
+		return JandexHelper.getValue( jpaEntityAnnotation, "name", String.class );
+	}
+
 
 	private boolean definesItsOwnTable() {
 		return !InheritanceType.SINGLE_TABLE.equals( inheritanceType ) || isEntityRoot();

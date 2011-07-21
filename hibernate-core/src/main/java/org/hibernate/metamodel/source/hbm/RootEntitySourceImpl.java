@@ -29,6 +29,7 @@ import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.metamodel.binding.Caching;
 import org.hibernate.metamodel.binding.IdGenerator;
 import org.hibernate.metamodel.source.MappingException;
+import org.hibernate.metamodel.source.binder.DiscriminatorSource;
 import org.hibernate.metamodel.source.binder.IdentifierSource;
 import org.hibernate.metamodel.source.binder.RootEntitySource;
 import org.hibernate.metamodel.source.binder.SimpleIdentifierSource;
@@ -56,7 +57,10 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 			return new SimpleIdentifierSource() {
 				@Override
 				public SingularAttributeSource getIdentifierAttributeSource() {
-					return new SingularIdentifierAttributeSourceImpl( entityElement().getId(), sourceMappingDocument().getMappingLocalBindingContext() );
+					return new SingularIdentifierAttributeSourceImpl(
+							entityElement().getId(),
+							sourceMappingDocument().getMappingLocalBindingContext()
+					);
 				}
 
 				@Override
@@ -90,17 +94,17 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 	@Override
 	public SingularAttributeSource getVersioningAttributeSource() {
 		if ( entityElement().getVersion() != null ) {
-			return new VersionAttributeSourceImpl( entityElement().getVersion(), sourceMappingDocument().getMappingLocalBindingContext() );
+			return new VersionAttributeSourceImpl(
+					entityElement().getVersion(),
+					sourceMappingDocument().getMappingLocalBindingContext()
+			);
 		}
 		else if ( entityElement().getTimestamp() != null ) {
-			return new TimestampAttributeSourceImpl( entityElement().getTimestamp(), sourceMappingDocument().getMappingLocalBindingContext() );
+			return new TimestampAttributeSourceImpl(
+					entityElement().getTimestamp(),
+					sourceMappingDocument().getMappingLocalBindingContext()
+			);
 		}
-		return null;
-	}
-
-	@Override
-	public SingularAttributeSource getDiscriminatorAttributeSource() {
-		// todo : implement
 		return null;
 	}
 
@@ -136,7 +140,7 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 		try {
 			return OptimisticLockStyle.valueOf( optimisticLockModeString.toUpperCase() );
 		}
-		catch (Exception e) {
+		catch ( Exception e ) {
 			throw new MappingException(
 					"Unknown optimistic-lock value : " + optimisticLockModeString,
 					sourceMappingDocument().getOrigin()
@@ -180,5 +184,11 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 				return null;
 			}
 		};
+	}
+
+	@Override
+	public DiscriminatorSource getDiscriminatorSource() {
+		// todo : implement
+		return null;
 	}
 }

@@ -242,4 +242,9 @@ public abstract class AbstractEntitySourceImpl implements EntitySource {
 	public Iterable<SubclassEntitySource> subclassEntitySources() {
 		return subclassEntitySources;
 	}
+
+	@Override
+	public String getDiscriminatorValue() {
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
+	}
 }

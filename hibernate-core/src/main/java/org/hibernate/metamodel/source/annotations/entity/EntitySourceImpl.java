@@ -40,6 +40,7 @@ import org.hibernate.metamodel.source.Origin;
 import org.hibernate.metamodel.source.SourceType;
 import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.source.annotations.attribute.AssociationAttribute;
+import org.hibernate.metamodel.source.annotations.attribute.DiscriminatorColumnValues;
 import org.hibernate.metamodel.source.annotations.attribute.SimpleAttribute;
 import org.hibernate.metamodel.source.annotations.attribute.SingularAttributeSourceImpl;
 import org.hibernate.metamodel.source.annotations.attribute.ToOneAttributeSourceImpl;
@@ -194,6 +195,12 @@ public class EntitySourceImpl implements EntitySource {
 	@Override
 	public Iterable<SubclassEntitySource> subclassEntitySources() {
 		return subclassEntitySources;
+	}
+
+	@Override
+	public String getDiscriminatorValue() {
+		return ( (DiscriminatorColumnValues) entityClass.getDiscriminatorAttribute()
+				.getColumnValues() ).getDiscriminatorValue();
 	}
 
 	class LocalBindingContextImpl implements LocalBindingContext {

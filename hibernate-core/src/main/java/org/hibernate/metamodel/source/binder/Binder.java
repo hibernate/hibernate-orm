@@ -38,6 +38,7 @@ import org.hibernate.metamodel.binding.AbstractPluralAttributeBinding;
 import org.hibernate.metamodel.binding.AttributeBinding;
 import org.hibernate.metamodel.binding.CollectionElementNature;
 import org.hibernate.metamodel.binding.EntityBinding;
+import org.hibernate.metamodel.binding.EntityDiscriminator;
 import org.hibernate.metamodel.binding.InheritanceType;
 import org.hibernate.metamodel.binding.ManyToOneAttributeBinding;
 import org.hibernate.metamodel.binding.MetaAttribute;
@@ -223,12 +224,20 @@ public class Binder {
 
 		final String customTuplizerClassName = entitySource.getCustomTuplizerClassName();
 		if ( customTuplizerClassName != null ) {
-			entityBinding.setCustomEntityTuplizerClass( currentBindingContext.<EntityTuplizer>locateClassByName( customTuplizerClassName ) );
+			entityBinding.setCustomEntityTuplizerClass(
+					currentBindingContext.<EntityTuplizer>locateClassByName(
+							customTuplizerClassName
+					)
+			);
 		}
 
 		final String customPersisterClassName = entitySource.getCustomPersisterClassName();
 		if ( customPersisterClassName != null ) {
-			entityBinding.setCustomEntityPersisterClass( currentBindingContext.<EntityPersister>locateClassByName( customPersisterClassName ) );
+			entityBinding.setCustomEntityPersisterClass(
+					currentBindingContext.<EntityPersister>locateClassByName(
+							customPersisterClassName
+					)
+			);
 		}
 
 		entityBinding.setMetaAttributeContext( buildMetaAttributeContext( entitySource ) );
@@ -342,11 +351,27 @@ public class Binder {
 	}
 
 	private void bindDiscriminator(RootEntitySource entitySource, EntityBinding entityBinding) {
-		// todo : implement
+		final DiscriminatorSource discriminatorSource = entitySource.getDiscriminatorSource();
+		if ( discriminatorSource == null ) {
+			return;
+		}
+
+		SimpleSingularAttributeBinding attributeBinding = doBasicSingularAttributeBindingCreation(
+				discriminatorSource, entityBinding
+		);
+		EntityDiscriminator discriminator = new EntityDiscriminator();
+		discriminator.setValueBinding( attributeBinding );
+		discriminator.setInserted( discriminatorSource.isInserted() );
+		discriminator.setForced( discriminatorSource.isForced() );
+		entityBinding.setEntityDiscriminator( discriminator );
 	}
 
 	private void bindDiscriminatorValue(SubclassEntitySource entitySource, EntityBinding entityBinding) {
-		// todo : implement
+		final String discriminatorValue = entitySource.getDiscriminatorValue();
+		if ( discriminatorValue == null ) {
+			return;
+		}
+		entityBinding.setDiscriminatorValue( discriminatorValue );
 	}
 
 	private void bindAttributes(AttributeSourceContainer attributeSourceContainer, EntityBinding entityBinding) {
@@ -373,8 +398,12 @@ public class Binder {
 	private void bindPersistentCollection(PluralAttributeSource attributeSource, EntityBinding entityBinding) {
 		final AbstractPluralAttributeBinding pluralAttributeBinding;
 		if ( attributeSource.getPluralAttributeNature() == PluralAttributeNature.BAG ) {
-			final PluralAttribute pluralAttribute = entityBinding.getEntity().locateOrCreateBag( attributeSource.getName() );
-			pluralAttributeBinding = entityBinding.makeBagAttributeBinding( pluralAttribute, convert( attributeSource.getPluralAttributeElementNature() ) );
+			final PluralAttribute pluralAttribute = entityBinding.getEntity()
+					.locateOrCreateBag( attributeSource.getName() );
+			pluralAttributeBinding = entityBinding.makeBagAttributeBinding(
+					pluralAttribute,
+					convert( attributeSource.getPluralAttributeElementNature() )
+			);
 		}
 		else {
 			// todo : implement other collection types
@@ -408,7 +437,10 @@ public class Binder {
 		else if ( attributeSource.getNature() == SingularAttributeNature.MANY_TO_ONE ) {
 			attributeBinding = entityBinding.makeManyToOneAttributeBinding( attribute );
 			resolveTypeInformation( attributeSource.getTypeInformation(), attributeBinding );
-			resolveToOneInformation( (ToOneAttributeSource) attributeSource, (ManyToOneAttributeBinding) attributeBinding );
+			resolveToOneInformation(
+					(ToOneAttributeSource) attributeSource,
+					(ManyToOneAttributeBinding) attributeBinding
+			);
 		}
 		else {
 			throw new NotYetImplementedException();
@@ -439,12 +471,14 @@ public class Binder {
 		final Class<?> attributeJavaType = determineJavaType( attributeBinding.getAttribute() );
 		if ( attributeJavaType != null ) {
 			attributeBinding.getHibernateTypeDescriptor().setJavaTypeName( attributeJavaType.getName() );
-			attributeBinding.getAttribute().resolveType( currentBindingContext.makeJavaType( attributeJavaType.getName() ) );
+			attributeBinding.getAttribute()
+					.resolveType( currentBindingContext.makeJavaType( attributeJavaType.getName() ) );
 		}
 
 		final String explicitTypeName = typeSource.getName();
 		if ( explicitTypeName != null ) {
-			final TypeDef typeDef = currentBindingContext.getMetadataImplementor().getTypeDefinition( explicitTypeName );
+			final TypeDef typeDef = currentBindingContext.getMetadataImplementor()
+					.getTypeDefinition( explicitTypeName );
 			if ( typeDef != null ) {
 				attributeBinding.getHibernateTypeDescriptor().setExplicitTypeName( typeDef.getTypeClass() );
 				attributeBinding.getHibernateTypeDescriptor().getTypeParameters().putAll( typeDef.getParameters() );
@@ -452,7 +486,7 @@ public class Binder {
 			else {
 				attributeBinding.getHibernateTypeDescriptor().setExplicitTypeName( explicitTypeName );
 			}
-			final Map<String,String> parameters = typeSource.getParameters();
+			final Map<String, String> parameters = typeSource.getParameters();
 			if ( parameters != null ) {
 				attributeBinding.getHibernateTypeDescriptor().getTypeParameters().putAll( parameters );
 			}
@@ -555,13 +589,13 @@ public class Binder {
 		final String schemaName = StringHelper.isEmpty( tableSource.getExplicitSchemaName() )
 				? currentBindingContext.getMappingDefaults().getSchemaName()
 				: currentBindingContext.getMetadataImplementor().getOptions().isGloballyQuotedIdentifiers()
-						? StringHelper.quote( tableSource.getExplicitSchemaName() )
-						: tableSource.getExplicitSchemaName();
+				? StringHelper.quote( tableSource.getExplicitSchemaName() )
+				: tableSource.getExplicitSchemaName();
 		final String catalogName = StringHelper.isEmpty( tableSource.getExplicitCatalogName() )
 				? currentBindingContext.getMappingDefaults().getCatalogName()
 				: currentBindingContext.getMetadataImplementor().getOptions().isGloballyQuotedIdentifiers()
-						? StringHelper.quote( tableSource.getExplicitCatalogName() )
-						: tableSource.getExplicitCatalogName();
+				? StringHelper.quote( tableSource.getExplicitCatalogName() )
+				: tableSource.getExplicitCatalogName();
 
 		String tableName = tableSource.getExplicitTableName();
 		if ( StringHelper.isEmpty( tableName ) ) {

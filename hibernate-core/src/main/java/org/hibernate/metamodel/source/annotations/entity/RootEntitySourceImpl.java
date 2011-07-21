@@ -27,9 +27,11 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.metamodel.binding.Caching;
+import org.hibernate.metamodel.source.annotations.attribute.DiscriminatorSourceImpl;
 import org.hibernate.metamodel.source.annotations.attribute.SimpleAttribute;
 import org.hibernate.metamodel.source.annotations.attribute.SimpleIdentifierSourceImpl;
 import org.hibernate.metamodel.source.annotations.attribute.SingularAttributeSourceImpl;
+import org.hibernate.metamodel.source.binder.DiscriminatorSource;
 import org.hibernate.metamodel.source.binder.IdentifierSource;
 import org.hibernate.metamodel.source.binder.RootEntitySource;
 import org.hibernate.metamodel.source.binder.SingularAttributeSource;
@@ -74,10 +76,10 @@ public class RootEntitySourceImpl extends EntitySourceImpl implements RootEntity
 	}
 
 	@Override
-	public SingularAttributeSource getDiscriminatorAttributeSource() {
-		SingularAttributeSource attributeSource = null;
+	public DiscriminatorSource getDiscriminatorSource() {
+		DiscriminatorSource attributeSource = null;
 		if ( getEntityClass().getDiscriminatorAttribute() != null ) {
-			attributeSource = new SingularAttributeSourceImpl( getEntityClass().getVersionAttribute() );
+			attributeSource = new DiscriminatorSourceImpl( getEntityClass().getDiscriminatorAttribute() );
 		}
 		return attributeSource;
 	}

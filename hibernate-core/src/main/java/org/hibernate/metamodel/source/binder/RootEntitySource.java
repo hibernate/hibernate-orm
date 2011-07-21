@@ -47,8 +47,12 @@ public interface RootEntitySource extends EntitySource {
 	 */
 	public SingularAttributeSource getVersioningAttributeSource();
 
-	// todo : I think this needs to go away
-	public SingularAttributeSource getDiscriminatorAttributeSource();
+	/**
+	 * Obtain the source information about the discriminator attribute for single table inheritance
+	 *
+	 * @return the source information about the discriminator attribute for single table inheritance
+	 */
+	public DiscriminatorSource getDiscriminatorSource();
 
 	/**
 	 * Obtain the entity mode for this entity.

@@ -117,11 +117,6 @@ public class ConfiguredClass {
 	private SimpleAttribute versionAttribute;
 
 	/**
-	 * The discriminator attribute or {@code null} in case none exists.
-	 */
-	private SimpleAttribute discriminatorAttribute;
-
-	/**
 	 * The embedded classes for this entity
 	 */
 	private final Map<String, EmbeddableClass> embeddedClasses = new HashMap<String, EmbeddableClass>();
@@ -190,10 +185,6 @@ public class ConfiguredClass {
 
 	public SimpleAttribute getVersionAttribute() {
 		return versionAttribute;
-	}
-
-	public SimpleAttribute getDiscriminatorAttribute() {
-		return discriminatorAttribute;
 	}
 
 	public Iterable<AssociationAttribute> getAssociationAttributes() {
@@ -458,11 +449,7 @@ public class ConfiguredClass {
 				} else if (attribute.isVersioned()) {
 					// todo - error handling in case there are multiple version attributes
 					versionAttribute = attribute;
-				} else if (attribute.isDiscriminator()) {
-					// todo - error handling in case there are multiple discriminator attributes
-					versionAttribute = attribute;
-				}
-				else {
+				} else {
 					simpleAttributeMap.put( attributeName, attribute );
 				}
 				break;

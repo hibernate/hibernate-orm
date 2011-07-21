@@ -23,7 +23,6 @@
  */
 package org.hibernate.metamodel.source.binder;
 
-import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.mapping.PropertyGeneration;
 
 /**
@@ -36,7 +35,7 @@ public interface SingularAttributeSource extends AttributeSource, RelationalValu
 	 * Determine whether this is a virtual attribute or whether it physically exists on the users domain model.
 	 *
 	 * @return {@code true} indicates the attribute is virtual, meaning it does NOT exist on the domain model;
-	 * {@code false} indicates the attribute physically exists.
+	 *         {@code false} indicates the attribute physically exists.
 	 */
 	public boolean isVirtualAttribute();
 
@@ -58,6 +57,7 @@ public interface SingularAttributeSource extends AttributeSource, RelationalValu
 	 * Obtain the name of the property accessor style used to access this attribute.
 	 *
 	 * @return The property accessor style for this attribute.
+	 *
 	 * @see org.hibernate.property.PropertyAccessor
 	 */
 	public String getPropertyAccessorName();
@@ -66,7 +66,7 @@ public interface SingularAttributeSource extends AttributeSource, RelationalValu
 	 * Determine whether this attribute is insertable.
 	 *
 	 * @return {@code true} indicates the attribute value should be used in the {@code SQL INSERT}; {@code false}
-	 * indicates it should not.
+	 *         indicates it should not.
 	 */
 	public boolean isInsertable();
 
@@ -74,7 +74,7 @@ public interface SingularAttributeSource extends AttributeSource, RelationalValu
 	 * Determine whether this attribute is updateable.
 	 *
 	 * @return {@code true} indicates the attribute value should be used in the {@code SQL UPDATE}; {@code false}
-	 * indicates it should not.
+	 *         indicates it should not.
 	 */
 	public boolean isUpdatable();
 

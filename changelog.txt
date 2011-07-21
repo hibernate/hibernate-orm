@@ -5,6 +5,31 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 3.6.6 (2011.07.20)
+-------------------------------------------
+https://hibernate.onjira.com/browse/HHH/fixforversion/11232
+
+** Bug
+    * [HHH-2614] - Blob Length Set to 255 By Default With Derby DB
+    * [HHH-6381] - using @SecondaryTable with optional=true not handled for joined subclasses (@Inheritance(strategy = InheritanceType.JOINED)
+    * [HHH-6386] - sybase improvement
+    * [HHH-6442] - JarVisitorFactory is reconstructing URLs without the URLStreamHandler association
+    * [HHH-6456] - Test failure in CachedPropertyRefCollectionTest behind a proxy
+
+** Improvement
+    * [HHH-5478] - Update Ehcache capabilities in the section [21.2. The Second Level Cache] of the documentation
+    * [HHH-6083] - Upgrade to latest Ehcache & add org.hibernate 3.3 SPI wrappers
+    * [HHH-6421] - Reduce log level of LazyInitializationException from ERROR to TRACE
+
+** Patch
+    * [HHH-4630] - Criteria join on composite identifier generates wrong alias, SQL error
+
+** Task
+    * [HHH-6322] - upgrade to hibernate-jpa-2.0-api-1.0.1.Final
+    * [HHH-6420] - SQL Server dialect is broken (Tomaz Cerar)
+    * [HHH-6455] - Update Hibernate-ehcache to Ehcache 2.4.3
+
+
 Changes in version 3.6.5 (2011.06.08)
 -------------------------------------------
 http://opensource.atlassian.com/projects/hibernate/browse/HHH/fixforversion/11226

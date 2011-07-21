@@ -590,17 +590,17 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 							.getValueBinding()
 							.getHibernateTypeDescriptor()
 							.getResolvedTypeMapping();
-			if ( entityBinding.getDiscriminatorValue() == null ) {
+			if ( entityBinding.getDiscriminatorMatchValue() == null ) {
 				discriminatorValue = NULL_DISCRIMINATOR;
 				discriminatorSQLValue = InFragment.NULL;
 				discriminatorInsertable = false;
 			}
-			else if ( entityBinding.getDiscriminatorValue().equals( NULL_STRING ) ) {
+			else if ( entityBinding.getDiscriminatorMatchValue().equals( NULL_STRING ) ) {
 				discriminatorValue = NOT_NULL_DISCRIMINATOR;
 				discriminatorSQLValue = InFragment.NOT_NULL;
 				discriminatorInsertable = false;
 			}
-			else if ( entityBinding.getDiscriminatorValue().equals( NOT_NULL_STRING ) ) {
+			else if ( entityBinding.getDiscriminatorMatchValue().equals( NOT_NULL_STRING ) ) {
 				discriminatorValue = NOT_NULL_DISCRIMINATOR;
 				discriminatorSQLValue = InFragment.NOT_NULL;
 				discriminatorInsertable = false;
@@ -611,7 +611,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 								! DerivedValue.class.isInstance( discrimValue );
 				try {
 					DiscriminatorType dtype = ( DiscriminatorType ) discriminatorType;
-					discriminatorValue = dtype.stringToObject( entityBinding.getDiscriminatorValue() );
+					discriminatorValue = dtype.stringToObject( entityBinding.getDiscriminatorMatchValue() );
 					discriminatorSQLValue = dtype.objectToSQLString( discriminatorValue, factory.getDialect() );
 				}
 				catch (ClassCastException cce) {

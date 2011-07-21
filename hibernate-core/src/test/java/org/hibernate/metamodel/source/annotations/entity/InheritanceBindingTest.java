@@ -53,7 +53,7 @@ public class InheritanceBindingTest extends BaseAnnotationBindingTestCase {
 	@Resources(annotatedClasses = { RootOfSingleTableInheritance.class, SubclassOfSingleTableInheritance.class })
 	public void testDiscriminatorValue() {
 		EntityBinding entityBinding = getEntityBinding( SubclassOfSingleTableInheritance.class );
-		assertEquals( "Wrong discriminator value", "foo", entityBinding.getDiscriminatorValue() );
+		assertEquals( "Wrong discriminator value", "foo", entityBinding.getDiscriminatorMatchValue() );
 	}
 
 	@Test

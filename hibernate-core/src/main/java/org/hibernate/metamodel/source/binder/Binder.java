@@ -362,7 +362,7 @@ public class Binder {
 		discriminator.setValueBinding( attributeBinding );
 		discriminator.setInserted( discriminatorSource.isInserted() );
 		discriminator.setForced( discriminatorSource.isForced() );
-		entityBinding.setEntityDiscriminator( discriminator );
+		entityBinding.getHierarchyDetails().setEntityDiscriminator( discriminator );
 	}
 
 	private void bindDiscriminatorValue(SubclassEntitySource entitySource, EntityBinding entityBinding) {
@@ -370,7 +370,7 @@ public class Binder {
 		if ( discriminatorValue == null ) {
 			return;
 		}
-		entityBinding.setDiscriminatorValue( discriminatorValue );
+		entityBinding.setDiscriminatorMatchValue( discriminatorValue );
 	}
 
 	private void bindAttributes(AttributeSourceContainer attributeSourceContainer, EntityBinding entityBinding) {

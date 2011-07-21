@@ -148,6 +148,10 @@ public class EntityBinding {
 		return discriminatorMatchValue;
 	}
 
+	public void setDiscriminatorMatchValue(String discriminatorMatchValue) {
+		this.discriminatorMatchValue = discriminatorMatchValue;
+	}
+
 	public Iterable<AttributeBinding> getAttributeBindings() {
 		return attributeBindingMap.values();
 	}

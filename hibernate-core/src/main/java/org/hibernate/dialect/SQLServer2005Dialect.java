@@ -53,6 +53,9 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 		registerColumnType( Types.VARCHAR, "varchar(MAX)" );
 		registerColumnType( Types.VARCHAR, MAX_LENGTH, "varchar($l)" );
 		
+		registerColumnType( Types.BIGINT, "bigint" );
+		registerColumnType( Types.BIT, "bit" );
+		registerColumnType( Types.BOOLEAN, "bit" );
 		
 		registerFunction("row_number", new NoArgSQLFunction("row_number", StandardBasicTypes.INTEGER, true));
 	}

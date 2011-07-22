@@ -392,7 +392,7 @@ public class Binder {
 			if ( attributeSource.isSingular() ) {
 				final SingularAttributeSource singularAttributeSource = (SingularAttributeSource) attributeSource;
 				if ( singularAttributeSource.getNature() == SingularAttributeNature.COMPONENT ) {
-					throw new NotYetImplementedException( "Component binding not yet implemented :(" );
+					bindComponent( singularAttributeSource, entityBinding );
 				}
 				else {
 					doBasicSingularAttributeBindingCreation( singularAttributeSource, entityBinding );
@@ -404,13 +404,20 @@ public class Binder {
 		}
 	}
 
+	private void bindComponent(SingularAttributeSource singularAttributeSource, EntityBinding entityBinding) {
+		throw new NotYetImplementedException( "Component binding not yet implemented :(" );
+	}
+
 	private void bindPersistentCollection(PluralAttributeSource attributeSource, EntityBinding entityBinding) {
+		final PluralAttribute existingAttribute = entityBinding.getEntity().locatePluralAttribute( attributeSource.getName() );
 		final AbstractPluralAttributeBinding pluralAttributeBinding;
-		if ( attributeSource.getPluralAttributeNature() == PluralAttributeNature.BAG ) {
-			final PluralAttribute pluralAttribute = entityBinding.getEntity()
-					.locateOrCreateBag( attributeSource.getName() );
+
+		if ( attributeSource.getPluralAttributeNature() == PluralAttributeNature.BAG  ) {
+			final PluralAttribute attribute = existingAttribute != null
+					? existingAttribute
+					: entityBinding.getEntity().createBag( attributeSource.getName() );
 			pluralAttributeBinding = entityBinding.makeBagAttributeBinding(
-					pluralAttribute,
+					attribute,
 					convert( attributeSource.getPluralAttributeElementNature() )
 			);
 		}
@@ -434,9 +441,17 @@ public class Binder {
 	private SimpleSingularAttributeBinding doBasicSingularAttributeBindingCreation(
 			SingularAttributeSource attributeSource,
 			EntityBinding entityBinding) {
-		final SingularAttribute attribute = attributeSource.isVirtualAttribute()
-				? entityBinding.getEntity().locateOrCreateVirtualAttribute( attributeSource.getName() )
-				: entityBinding.getEntity().locateOrCreateSingularAttribute( attributeSource.getName() );
+		final SingularAttribute existingAttribute = entityBinding.getEntity().locateSingularAttribute( attributeSource.getName() );
+		final SingularAttribute attribute;
+		if ( existingAttribute != null ) {
+			attribute = existingAttribute;
+		}
+		else if ( attributeSource.isVirtualAttribute() ) {
+			attribute = entityBinding.getEntity().createVirtualSingularAttribute( attributeSource.getName() );
+		}
+		else {
+			attribute = entityBinding.getEntity().createSingularAttribute( attributeSource.getName() );
+		}
 
 		final SimpleSingularAttributeBinding attributeBinding;
 		if ( attributeSource.getNature() == SingularAttributeNature.BASIC ) {

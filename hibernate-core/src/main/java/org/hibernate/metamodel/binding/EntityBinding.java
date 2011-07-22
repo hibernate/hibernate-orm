@@ -67,21 +67,6 @@ public class EntityBinding {
 	private Set<FilterDefinition> filterDefinitions = new HashSet<FilterDefinition>();
 	private Set<SingularAssociationAttributeBinding> entityReferencingAttributeBindings = new HashSet<SingularAssociationAttributeBinding>();
 
-	/**
-	 * Used to instantiate the EntityBinding for an entity that is the root of an inheritance hierarchy
-	 *
-	 * @param inheritanceType The inheritance type for the hierarchy
-	 * @param entityMode The entity mode used in this hierarchy.
-	 */
-	public EntityBinding(InheritanceType inheritanceType, EntityMode entityMode) {
-		this.superEntityBinding = null;
-		this.hierarchyDetails = new HierarchyDetails( this, inheritanceType, entityMode );
-	}
-
-	public EntityBinding(EntityBinding superEntityBinding) {
-		this.superEntityBinding = superEntityBinding;
-		this.hierarchyDetails = superEntityBinding.getHierarchyDetails();
-	}
 
 	private MetaAttributeContext metaAttributeContext;
 
@@ -105,6 +90,27 @@ public class EntityBinding {
 	private CustomSQL customDelete;
 
 	private Set<String> synchronizedTableNames = new HashSet<String>();
+
+	/**
+	 * Used to instantiate the EntityBinding for an entity that is the root of an inheritance hierarchy
+	 *
+	 * @param inheritanceType The inheritance type for the hierarchy
+	 * @param entityMode The entity mode used in this hierarchy.
+	 */
+	public EntityBinding(InheritanceType inheritanceType, EntityMode entityMode) {
+		this.superEntityBinding = null;
+		this.hierarchyDetails = new HierarchyDetails( this, inheritanceType, entityMode );
+	}
+
+	/**
+	 * Used to instantiate the EntityBinding for an entity that is a subclass (sub-entity) in an inheritance hierarchy
+	 *
+	 * @param superEntityBinding The entity binding of this binding's super
+	 */
+	public EntityBinding(EntityBinding superEntityBinding) {
+		this.superEntityBinding = superEntityBinding;
+		this.hierarchyDetails = superEntityBinding.getHierarchyDetails();
+	}
 
 
 	public HierarchyDetails getHierarchyDetails() {

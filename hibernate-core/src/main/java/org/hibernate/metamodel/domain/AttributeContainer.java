@@ -39,23 +39,34 @@ public interface AttributeContainer extends Type {
 	 *
 	 * @return The attribute matching the given name, or null.
 	 */
-	public Attribute getAttribute(String name);
+	public Attribute locateAttribute(String name);
 
 	/**
 	 * Retrieve the attributes contained in this container.
 	 *
 	 * @return The contained attributes
 	 */
-	public Set<Attribute> getAttributes();
+	public Set<Attribute> attributes();
 
-	public SingularAttribute locateOrCreateSingularAttribute(String name);
-	public SingularAttribute locateOrCreateVirtualAttribute(String name);
+	public SingularAttribute locateSingularAttribute(String name);
+	public SingularAttribute createSingularAttribute(String name);
+	public SingularAttribute createVirtualSingularAttribute(String name);
 
-	public PluralAttribute locateOrCreatePluralAttribute(String name, PluralAttributeNature nature);
-	public PluralAttribute locateOrCreateBag(String name);
-	public PluralAttribute locateOrCreateSet(String name);
-	public IndexedPluralAttribute locateOrCreateList(String name);
-	public IndexedPluralAttribute locateOrCreateMap(String name);
+	public SingularAttribute locateComponentAttribute(String name);
+	public SingularAttribute createComponentAttribute(String name, Component component);
 
-	public SingularAttribute locateOrCreateComponentAttribute(String name);
+	public PluralAttribute locatePluralAttribute(String name);
+
+	public PluralAttribute locateBag(String name);
+	public PluralAttribute createBag(String name);
+
+	public PluralAttribute locateSet(String name);
+	public PluralAttribute createSet(String name);
+
+	public IndexedPluralAttribute locateList(String name);
+	public IndexedPluralAttribute createList(String name);
+
+	public IndexedPluralAttribute locateMap(String name);
+	public IndexedPluralAttribute createMap(String name);
+
 }

@@ -53,7 +53,7 @@ public class EmbeddableBindingTests extends BaseAnnotationBindingTestCase {
 		assertNotNull( binding.getAttributeBinding( "city" ) );
 		assertNotNull( binding.getAttributeBinding( "postCode" ) );
 
-		SingularAttribute attribute = (SingularAttribute) binding.getEntity().getAttribute( "address" );
+		SingularAttribute attribute = (SingularAttribute) binding.getEntity().locateAttribute( "address" );
 		assertTrue(
 				"Wrong container type. Should be a component",
 				attribute.getSingularAttributeType() instanceof Component

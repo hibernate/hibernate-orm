@@ -194,7 +194,7 @@ public class ManyToOneAttributeBinding extends SimpleSingularAttributeBinding im
 //		if ( getCascadeTypes().contains( CascadeType.DELETE_ORPHAN ) ) {
 //			if ( !isLogicalOneToOne ) {
 //				throw new MappingException(
-//						"many-to-one attribute [" + getAttribute().getName() + "] does not support orphan delete as it is not unique"
+//						"many-to-one attribute [" + locateAttribute().getName() + "] does not support orphan delete as it is not unique"
 //				);
 //			}
 //		}

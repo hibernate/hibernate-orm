@@ -10,6 +10,7 @@ in JNDI.
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
            xmlns="http://www.hibernate.org/xsd/hibernate-configuration"
            targetNamespace="http://www.hibernate.org/xsd/hibernate-configuration"
+           elementFormDefault="qualified"
            version="4.0">
 
   <xs:element name="hibernate-configuration">

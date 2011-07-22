@@ -32,6 +32,7 @@ import java.util.List;
  */
 public interface RelationalValueSourceContainer {
 	public boolean areValuesIncludedInInsertByDefault();
+
 	public boolean areValuesIncludedInUpdateByDefault();
 
 	public boolean areValuesNullableByDefault();

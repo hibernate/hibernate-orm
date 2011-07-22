@@ -46,12 +46,20 @@ public class AssociationAttribute extends SimpleAttribute {
 	private final String referencedEntityType;
 	private final Set<CascadeType> cascadeTypes;
 
-	public static AssociationAttribute createAssociationAttribute(String name, Class<?> javaType, AttributeType associationType, Map<DotName, List<AnnotationInstance>> annotations) {
-		return new AssociationAttribute( name, javaType, associationType, annotations );
+	public static AssociationAttribute createAssociationAttribute(String name,
+																  Class<?> attributeType,
+																  AttributeType attributeNature,
+																  String accessType,
+																  Map<DotName, List<AnnotationInstance>> annotations) {
+		return new AssociationAttribute( name, attributeType, attributeNature, accessType, annotations );
 	}
 
-	private AssociationAttribute(String name, Class<?> javaType, AttributeType associationType, Map<DotName, List<AnnotationInstance>> annotations) {
-		super( name, javaType, annotations, false );
+	private AssociationAttribute(String name,
+								 Class<?> javaType,
+								 AttributeType associationType,
+								 String accessType,
+								 Map<DotName, List<AnnotationInstance>> annotations) {
+		super( name, javaType, accessType, annotations );
 		this.associationType = associationType;
 		this.ignoreNotFound = ignoreNotFound();
 
@@ -82,7 +90,10 @@ public class AssociationAttribute extends SimpleAttribute {
 
 	private boolean ignoreNotFound() {
 		NotFoundAction action = NotFoundAction.EXCEPTION;
-		AnnotationInstance notFoundAnnotation = getIfExists( HibernateDotNames.NOT_FOUND );
+		AnnotationInstance notFoundAnnotation = JandexHelper.getSingleAnnotation(
+				annotations(),
+				HibernateDotNames.NOT_FOUND
+		);
 		if ( notFoundAnnotation != null ) {
 			AnnotationValue actionValue = notFoundAnnotation.value( "action" );
 			if ( actionValue != null ) {
@@ -94,9 +105,12 @@ public class AssociationAttribute extends SimpleAttribute {
 	}
 
 	private String determineReferencedEntityType(AnnotationInstance associationAnnotation) {
-		String targetTypeName = getJavaType().getName();
+		String targetTypeName = getAttributeType().getName();
 
-		AnnotationInstance targetAnnotation = getIfExists( HibernateDotNames.TARGET );
+		AnnotationInstance targetAnnotation = JandexHelper.getSingleAnnotation(
+				annotations(),
+				HibernateDotNames.TARGET
+		);
 		if ( targetAnnotation != null ) {
 			targetTypeName = targetAnnotation.value().asClass().name().toString();
 		}

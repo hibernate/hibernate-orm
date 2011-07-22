@@ -32,7 +32,7 @@ public interface AttributeSource {
 	/**
 	 * Obtain the attribute name.
 	 *
-	 * @return The attribute name.  {@code nulls} are NOT allowed!
+	 * @return The attribute name. {@code null} ais NOT allowed!
 	 */
 	public String getName();
 
@@ -53,5 +53,4 @@ public interface AttributeSource {
 	 * @return The meta-attribute sources.
 	 */
 	public Iterable<MetaAttributeSource> metaAttributes();
-
 }

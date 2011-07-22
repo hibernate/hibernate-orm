@@ -245,7 +245,7 @@ public class ConfiguredClass {
 		AccessType accessType = defaultAccessType;
 
 		AnnotationInstance accessAnnotation = JandexHelper.getSingleAnnotation( classInfo, JPADotNames.ACCESS );
-		if ( accessAnnotation != null ) {
+		if ( accessAnnotation != null && accessAnnotation.target().getClass().equals( ClassInfo.class ) ) {
 			accessType = JandexHelper.getValueAsEnum( accessAnnotation, "value", AccessType.class );
 		}
 
@@ -279,7 +279,7 @@ public class ConfiguredClass {
 			Field.setAccessible( fields, true );
 			for ( Field field : fields ) {
 				if ( isPersistentMember( transientFieldNames, explicitlyConfiguredMemberNames, field ) ) {
-					createMappedProperty( field, resolvedType );
+					createMappedAttribute( field, resolvedType, AccessType.FIELD );
 				}
 			}
 		}
@@ -288,7 +288,7 @@ public class ConfiguredClass {
 			Method.setAccessible( methods, true );
 			for ( Method method : methods ) {
 				if ( isPersistentMember( transientMethodNames, explicitlyConfiguredMemberNames, method ) ) {
-					createMappedProperty( method, resolvedType );
+					createMappedAttribute( method, resolvedType, AccessType.PROPERTY );
 				}
 			}
 		}
@@ -303,7 +303,7 @@ public class ConfiguredClass {
 			return false;
 		}
 
-		if ( explicitlyConfiguredMemberNames.contains( member.getName() ) ) {
+		if ( explicitlyConfiguredMemberNames.contains( ReflectionHelper.getPropertyName( member ) ) ) {
 			return false;
 		}
 
@@ -318,11 +318,11 @@ public class ConfiguredClass {
 	 * @return the property names of the explicitly configured attribute names in a set
 	 */
 	private Set<String> createExplicitlyConfiguredAccessProperties(ResolvedTypeWithMembers resolvedMembers) {
-		Set<String> explicitAccessMembers = new HashSet<String>();
+		Set<String> explicitAccessPropertyNames = new HashSet<String>();
 
 		List<AnnotationInstance> accessAnnotations = classInfo.annotations().get( JPADotNames.ACCESS );
 		if ( accessAnnotations == null ) {
-			return explicitAccessMembers;
+			return explicitAccessPropertyNames;
 		}
 
 		// iterate over all @Access annotations defined on the current class
@@ -340,7 +340,6 @@ public class ConfiguredClass {
 				continue;
 			}
 
-
 			// the placement is correct, get the member
 			Member member;
 			if ( annotationTarget instanceof MethodInfo ) {
@@ -356,6 +355,7 @@ public class ConfiguredClass {
 					);
 				}
 				member = m;
+				accessType = AccessType.PROPERTY;
 			}
 			else {
 				Field f;
@@ -370,13 +370,14 @@ public class ConfiguredClass {
 					);
 				}
 				member = f;
+				accessType = AccessType.FIELD;
 			}
 			if ( ReflectionHelper.isProperty( member ) ) {
-				createMappedProperty( member, resolvedMembers );
-				explicitAccessMembers.add( member.getName() );
+				createMappedAttribute( member, resolvedMembers, accessType );
+				explicitAccessPropertyNames.add( ReflectionHelper.getPropertyName( member ) );
 			}
 		}
-		return explicitAccessMembers;
+		return explicitAccessPropertyNames;
 	}
 
 	private boolean isExplicitAttributeAccessAnnotationPlacedCorrectly(AnnotationTarget annotationTarget, AccessType accessType) {
@@ -426,7 +427,7 @@ public class ConfiguredClass {
 		return true;
 	}
 
-	private void createMappedProperty(Member member, ResolvedTypeWithMembers resolvedType) {
+	private void createMappedAttribute(Member member, ResolvedTypeWithMembers resolvedType, AccessType accessType) {
 		final String attributeName = ReflectionHelper.getPropertyName( member );
 		ResolvedMember[] resolvedMembers;
 		if ( member instanceof Field ) {
@@ -435,21 +436,26 @@ public class ConfiguredClass {
 		else {
 			resolvedMembers = resolvedType.getMemberMethods();
 		}
-		final Class<?> type = (Class<?>) findResolvedType( member.getName(), resolvedMembers );
+		final Class<?> attributeType = (Class<?>) findResolvedType( member.getName(), resolvedMembers );
 		final Map<DotName, List<AnnotationInstance>> annotations = JandexHelper.getMemberAnnotations(
 				classInfo, member.getName()
 		);
 
-		AttributeType attributeType = determineAttributeType( annotations );
-		switch ( attributeType ) {
+		AttributeType attributeNature = determineAttributeType( annotations );
+		String accessTypeString = accessType.toString().toLowerCase();
+		switch ( attributeNature ) {
 			case BASIC: {
-				SimpleAttribute attribute = SimpleAttribute.createSimpleAttribute( attributeName, type, annotations );
+				SimpleAttribute attribute = SimpleAttribute.createSimpleAttribute(
+						attributeName, attributeType, annotations, accessTypeString
+				);
 				if ( attribute.isId() ) {
 					idAttributeMap.put( attributeName, attribute );
-				} else if (attribute.isVersioned()) {
+				}
+				else if ( attribute.isVersioned() ) {
 					// todo - error handling in case there are multiple version attributes
 					versionAttribute = attribute;
-				} else {
+				}
+				else {
 					simpleAttributeMap.put( attributeName, attribute );
 				}
 				break;
@@ -458,12 +464,12 @@ public class ConfiguredClass {
 			case EMBEDDED_ID:
 
 			case EMBEDDED: {
-				resolveEmbeddable( attributeName, type );
+				resolveEmbeddable( attributeName, attributeType );
 			}
 			// TODO handle the different association types
 			default: {
 				AssociationAttribute attribute = AssociationAttribute.createAssociationAttribute(
-						attributeName, type, attributeType, annotations
+						attributeName, attributeType, attributeNature, accessTypeString, annotations
 				);
 				associationAttributeMap.put( attributeName, attribute );
 			}

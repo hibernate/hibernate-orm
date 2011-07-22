@@ -77,8 +77,6 @@ public interface AttributeBinding {
 	 */
 	public MetaAttributeContext getMetaAttributeContext();
 
-
-
 	public boolean isAlternateUniqueKey();
 
 	public boolean isLazy();

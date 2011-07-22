@@ -73,6 +73,9 @@ public class SimpleAttribute extends MappedAttribute {
 	 */
 	private boolean isOptional = true;
 
+	/**
+	 * Are this properties generated and when
+	 */
 	private PropertyGeneration propertyGeneration;
 	private boolean isInsertable = true;
 	private boolean isUpdatable = true;
@@ -86,23 +89,12 @@ public class SimpleAttribute extends MappedAttribute {
 	private final String customReadFragment;
 	private final String checkCondition;
 
-	public static SimpleAttribute createSimpleAttribute(String name, Class<?> type, Map<DotName, List<AnnotationInstance>> annotations) {
-		return new SimpleAttribute( name, type, annotations, false );
+	public static SimpleAttribute createSimpleAttribute(String name, Class<?> attributeType, Map<DotName, List<AnnotationInstance>> annotations, String accessType) {
+		return new SimpleAttribute( name, attributeType, accessType, annotations );
 	}
 
-	public static SimpleAttribute createSimpleAttribute(SimpleAttribute simpleAttribute, ColumnValues columnValues) {
-		SimpleAttribute attribute = new SimpleAttribute(
-				simpleAttribute.getName(),
-				simpleAttribute.getJavaType(),
-				simpleAttribute.annotations(),
-				false
-		);
-		attribute.columnValues = columnValues;
-		return attribute;
-	}
-
-	SimpleAttribute(String name, Class<?> type, Map<DotName, List<AnnotationInstance>> annotations, boolean isDiscriminator) {
-		super( name, type, annotations );
+	SimpleAttribute(String name, Class<?> attributeType, String accessType, Map<DotName, List<AnnotationInstance>> annotations) {
+		super( name, attributeType, accessType, annotations );
 
 		AnnotationInstance idAnnotation = JandexHelper.getSingleAnnotation( annotations, JPADotNames.ID );
 		AnnotationInstance embeddedIdAnnotation = JandexHelper.getSingleAnnotation(
@@ -114,13 +106,8 @@ public class SimpleAttribute extends MappedAttribute {
 		AnnotationInstance versionAnnotation = JandexHelper.getSingleAnnotation( annotations, JPADotNames.VERSION );
 		isVersioned = versionAnnotation != null;
 
-		if ( isDiscriminator ) {
-			columnValues = new DiscriminatorColumnValues( annotations );
-		}
-		else {
-			AnnotationInstance columnAnnotation = JandexHelper.getSingleAnnotation( annotations, JPADotNames.COLUMN );
-			columnValues = new ColumnValues( columnAnnotation );
-		}
+		AnnotationInstance columnAnnotation = JandexHelper.getSingleAnnotation( annotations, JPADotNames.COLUMN );
+		columnValues = new ColumnValues( columnAnnotation );
 
 		if ( isId ) {
 			// an id must be unique and cannot be nullable
@@ -193,21 +180,16 @@ public class SimpleAttribute extends MappedAttribute {
 	public String toString() {
 		final StringBuilder sb = new StringBuilder();
 		sb.append( "SimpleAttribute" );
-		sb.append( "{isId=" ).append( isId );
-		sb.append( ", isVersioned=" ).append( isVersioned );
-		sb.append( ", isOptimisticLockable=" ).append( isOptimisticLockable );
-		sb.append( ", isLazy=" ).append( isLazy );
-		sb.append( ", isOptional=" ).append( isOptional );
-		sb.append( ", propertyGeneration=" ).append( propertyGeneration );
-		sb.append( ", isInsertable=" ).append( isInsertable );
-		sb.append( ", isUpdatable=" ).append( isUpdatable );
-		sb.append( '}' );
+		sb.append( "{name=" ).append( getName() );
 		return sb.toString();
 	}
 
 	private boolean checkOptimisticLockAnnotation() {
 		boolean triggersVersionIncrement = true;
-		AnnotationInstance optimisticLockAnnotation = getIfExists( HibernateDotNames.OPTIMISTIC_LOCK );
+		AnnotationInstance optimisticLockAnnotation = JandexHelper.getSingleAnnotation(
+				annotations(),
+				HibernateDotNames.OPTIMISTIC_LOCK
+		);
 		if ( optimisticLockAnnotation != null ) {
 			boolean exclude = optimisticLockAnnotation.value( "excluded" ).asBoolean();
 			triggersVersionIncrement = !exclude;
@@ -216,7 +198,7 @@ public class SimpleAttribute extends MappedAttribute {
 	}
 
 	private void checkBasicAnnotation() {
-		AnnotationInstance basicAnnotation = getIfExists( JPADotNames.BASIC );
+		AnnotationInstance basicAnnotation = JandexHelper.getSingleAnnotation( annotations(), JPADotNames.BASIC );
 		if ( basicAnnotation != null ) {
 			FetchType fetchType = FetchType.LAZY;
 			AnnotationValue fetchValue = basicAnnotation.value( "fetch" );
@@ -234,7 +216,10 @@ public class SimpleAttribute extends MappedAttribute {
 
 	// TODO - there is more todo for updatable and insertable. Checking the @Generated annotation is only one part (HF)
 	private void checkGeneratedAnnotation() {
-		AnnotationInstance generatedAnnotation = getIfExists( HibernateDotNames.GENERATED );
+		AnnotationInstance generatedAnnotation = JandexHelper.getSingleAnnotation(
+				annotations(),
+				HibernateDotNames.GENERATED
+		);
 		if ( generatedAnnotation != null ) {
 			this.isInsertable = false;
 
@@ -253,13 +238,19 @@ public class SimpleAttribute extends MappedAttribute {
 		List<AnnotationInstance> allColumnTransformerAnnotations = new ArrayList<AnnotationInstance>();
 
 		// not quite sure about the usefulness of @ColumnTransformers (HF)
-		AnnotationInstance columnTransformersAnnotations = getIfExists( HibernateDotNames.COLUMN_TRANSFORMERS );
+		AnnotationInstance columnTransformersAnnotations = JandexHelper.getSingleAnnotation(
+				annotations(),
+				HibernateDotNames.COLUMN_TRANSFORMERS
+		);
 		if ( columnTransformersAnnotations != null ) {
 			AnnotationInstance[] annotationInstances = allColumnTransformerAnnotations.get( 0 ).value().asNestedArray();
 			allColumnTransformerAnnotations.addAll( Arrays.asList( annotationInstances ) );
 		}
 
-		AnnotationInstance columnTransformerAnnotation = getIfExists( HibernateDotNames.COLUMN_TRANSFORMER );
+		AnnotationInstance columnTransformerAnnotation = JandexHelper.getSingleAnnotation(
+				annotations(),
+				HibernateDotNames.COLUMN_TRANSFORMER
+		);
 		if ( columnTransformerAnnotation != null ) {
 			allColumnTransformerAnnotations.add( columnTransformerAnnotation );
 		}
@@ -294,7 +285,7 @@ public class SimpleAttribute extends MappedAttribute {
 
 	private String parseCheckAnnotation() {
 		String checkCondition = null;
-		AnnotationInstance checkAnnotation = getIfExists( HibernateDotNames.CHECK );
+		AnnotationInstance checkAnnotation = JandexHelper.getSingleAnnotation( annotations(), HibernateDotNames.CHECK );
 		if ( checkAnnotation != null ) {
 			checkCondition = checkAnnotation.value( "constraints" ).toString();
 		}

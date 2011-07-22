@@ -25,6 +25,7 @@ package org.hibernate.metamodel.source.annotations.entity;
 
 import org.junit.After;
 import org.junit.Rule;
+import org.junit.Test;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
@@ -45,21 +46,8 @@ public abstract class BaseAnnotationBindingTestCase extends BaseUnitTestCase {
 	@Rule
 	public MethodRule buildMetaData = new MethodRule() {
 		@Override
-		public Statement apply(Statement statement, FrameworkMethod frameworkMethod, Object o) {
-			sources = new MetadataSources( new ServiceRegistryBuilder().buildServiceRegistry() );
-			Resources resourcesAnnotation = frameworkMethod.getAnnotation( Resources.class );
-			if ( resourcesAnnotation != null ) {
-				sources.getMetadataBuilder().with( resourcesAnnotation.cacheMode() );
-
-				for ( Class<?> annotatedClass : resourcesAnnotation.annotatedClasses() ) {
-					sources.addAnnotatedClass( annotatedClass );
-				}
-				if ( !resourcesAnnotation.ormXmlPath().isEmpty() ) {
-					sources.addResource( resourcesAnnotation.ormXmlPath() );
-				}
-			}
-			meta = (MetadataImpl) sources.buildMetadata();
-			return statement;
+		public Statement apply(final Statement statement, FrameworkMethod frameworkMethod, Object o) {
+			return new KeepSetupFailureStatement( statement, frameworkMethod );
 		}
 	};
 
@@ -75,6 +63,65 @@ public abstract class BaseAnnotationBindingTestCase extends BaseUnitTestCase {
 
 	public EntityBinding getRootEntityBinding(Class<?> clazz) {
 		return meta.getRootEntityBinding( clazz.getName() );
+	}
+
+	class KeepSetupFailureStatement extends Statement {
+		private final Statement origStatement;
+		private final FrameworkMethod origFrameworkMethod;
+		private Throwable setupError;
+		private boolean expectedException;
+
+		KeepSetupFailureStatement(Statement statement, FrameworkMethod frameworkMethod) {
+			this.origStatement = statement;
+			this.origFrameworkMethod = frameworkMethod;
+		}
+
+		@Override
+		public void evaluate() throws Throwable {
+			try {
+				createBindings();
+				origStatement.evaluate();
+				if ( setupError != null ) {
+					throw setupError;
+				}
+			}
+			catch ( Throwable t ) {
+				if ( setupError == null ) {
+					throw t;
+				}
+				else {
+					if ( !expectedException ) {
+						throw setupError;
+					}
+				}
+			}
+		}
+
+		private void createBindings() {
+			try {
+				sources = new MetadataSources( new ServiceRegistryBuilder().buildServiceRegistry() );
+				Resources resourcesAnnotation = origFrameworkMethod.getAnnotation( Resources.class );
+				if ( resourcesAnnotation != null ) {
+					sources.getMetadataBuilder().with( resourcesAnnotation.cacheMode() );
+
+					for ( Class<?> annotatedClass : resourcesAnnotation.annotatedClasses() ) {
+						sources.addAnnotatedClass( annotatedClass );
+					}
+					if ( !resourcesAnnotation.ormXmlPath().isEmpty() ) {
+						sources.addResource( resourcesAnnotation.ormXmlPath() );
+					}
+				}
+				meta = (MetadataImpl) sources.buildMetadata();
+			}
+			catch ( final Throwable t ) {
+				setupError = t;
+				Test testAnnotation = origFrameworkMethod.getAnnotation( Test.class );
+				Class<?> expected = testAnnotation.expected();
+				if ( t.getClass().equals( expected ) ) {
+					expectedException = true;
+				}
+			}
+		}
 	}
 }
 

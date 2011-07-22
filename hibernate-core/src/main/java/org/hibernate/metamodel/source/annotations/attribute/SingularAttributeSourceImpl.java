@@ -46,16 +46,6 @@ public class SingularAttributeSourceImpl implements SingularAttributeSource {
 	}
 
 	@Override
-	public boolean isVirtualAttribute() {
-		return false;
-	}
-
-	@Override
-	public SingularAttributeNature getNature() {
-		return SingularAttributeNature.BASIC;
-	}
-
-	@Override
 	public ExplicitHibernateTypeSource getTypeInformation() {
 		return new ExplicitHibernateTypeSource() {
 			@Override
@@ -72,8 +62,7 @@ public class SingularAttributeSourceImpl implements SingularAttributeSource {
 
 	@Override
 	public String getPropertyAccessorName() {
-		// todo : implememt
-		return null;
+		return attribute.getAccessType();
 	}
 
 	@Override
@@ -107,14 +96,32 @@ public class SingularAttributeSourceImpl implements SingularAttributeSource {
 	}
 
 	@Override
+	public List<RelationalValueSource> relationalValueSources() {
+		List<RelationalValueSource> valueSources = new ArrayList<RelationalValueSource>();
+		valueSources.add( new ColumnSourceImpl( attribute ) );
+		return valueSources;
+	}
+
+	@Override
+	public boolean isVirtualAttribute() {
+		return false;
+	}
+
+	@Override
 	public boolean isSingular() {
 		return true;
+	}
+
+	@Override
+	public SingularAttributeNature getNature() {
+		return SingularAttributeNature.BASIC;
 	}
 
 	@Override
 	public Iterable<MetaAttributeSource> metaAttributes() {
 		return Collections.emptySet();
 	}
+
 
 	@Override
 	public boolean areValuesIncludedInInsertByDefault() {
@@ -129,13 +136,6 @@ public class SingularAttributeSourceImpl implements SingularAttributeSource {
 	@Override
 	public boolean areValuesNullableByDefault() {
 		return true;
-	}
-
-	@Override
-	public List<RelationalValueSource> relationalValueSources() {
-		List<RelationalValueSource> valueSources = new ArrayList<RelationalValueSource>();
-		valueSources.add( new ColumnSourceImpl( attribute ) );
-		return valueSources;
 	}
 }
 

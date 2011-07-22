@@ -31,8 +31,8 @@ import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.DotName;
 
-import org.hibernate.AssertionFailure;
 import org.hibernate.metamodel.source.annotations.HibernateDotNames;
+import org.hibernate.metamodel.source.annotations.JandexHelper;
 
 /**
  * Base class for the different types of mapped attributes
@@ -50,19 +50,34 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 	 */
 	private final String name;
 
-	private final Class<?> javaType;
+	/**
+	 * The java type of the attribute
+	 */
+	private final Class<?> attributeType;
 
+	/**
+	 * The access type for this property. At the moment this is either 'field' or 'property', but Hibernate
+	 * also allows custom named accessors (see {@link org.hibernate.property.PropertyAccessorFactory}).
+	 */
+	private final String accessType;
+
+	/**
+	 * An optional  explicit hibernate type name specified via {@link org.hibernate.annotations.Type}.
+	 */
 	private final String explicitHibernateTypeName;
 
+	/**
+	 * Optional type parameters. See {@link #explicitHibernateTypeName}.
+	 */
 	private final Map<String, String> explicitHibernateTypeParameters;
 
-	MappedAttribute(String name, Class<?> javaType, Map<DotName, List<AnnotationInstance>> annotations) {
+	MappedAttribute(String name, Class<?> attributeType, String accessType, Map<DotName, List<AnnotationInstance>> annotations) {
 		this.annotations = annotations;
 		this.name = name;
+		this.attributeType = attributeType;
+		this.accessType = accessType;
 
-		this.javaType = javaType;
-
-		final AnnotationInstance typeAnnotation = getIfExists( HibernateDotNames.TYPE );
+		final AnnotationInstance typeAnnotation = JandexHelper.getSingleAnnotation(annotations(), HibernateDotNames.TYPE );
 		if ( typeAnnotation != null ) {
 			this.explicitHibernateTypeName = typeAnnotation.value( "type" ).asString();
 			this.explicitHibernateTypeParameters = extractTypeParameters( typeAnnotation );
@@ -74,7 +89,7 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 	}
 
 	private Map<String, String> extractTypeParameters(AnnotationInstance typeAnnotation) {
-		HashMap<String,String> typeParameters = new HashMap<String, String>();
+		HashMap<String, String> typeParameters = new HashMap<String, String>();
 		AnnotationValue parameterAnnotationValue = typeAnnotation.value( "parameters" );
 		if ( parameterAnnotationValue != null ) {
 			AnnotationInstance[] parameterAnnotations = parameterAnnotationValue.asNestedArray();
@@ -92,8 +107,12 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 		return name;
 	}
 
-	public final Class<?> getJavaType() {
-		return javaType;
+	public final Class<?> getAttributeType() {
+		return attributeType;
+	}
+
+	public String getAccessType() {
+		return accessType;
 	}
 
 	public String getExplicitHibernateTypeName() {
@@ -102,27 +121,6 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 
 	public Map<String, String> getExplicitHibernateTypeParameters() {
 		return explicitHibernateTypeParameters;
-	}
-
-	/**
-	 * Returns the annotation with the specified name or {@code null}
-	 *
-	 * @param annotationDotName The annotation to retrieve/check
-	 *
-	 * @return Returns the annotation with the specified name or {@code null}. Note, since these are the
-	 *         annotations defined on a single attribute there can never be more than one.
-	 */
-	public final AnnotationInstance getIfExists(DotName annotationDotName) {
-		if ( annotations.containsKey( annotationDotName ) ) {
-			List<AnnotationInstance> instanceList = annotations.get( annotationDotName );
-			if ( instanceList.size() > 1 ) {
-				throw new AssertionFailure( "There cannot be more than one @" + annotationDotName.toString() + " annotation per mapped attribute" );
-			}
-			return instanceList.get( 0 );
-		}
-		else {
-			return null;
-		}
 	}
 
 	Map<DotName, List<AnnotationInstance>> annotations() {

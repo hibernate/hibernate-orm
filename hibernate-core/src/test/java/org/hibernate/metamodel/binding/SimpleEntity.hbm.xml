@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<hhh:hibernate-mapping package="org.hibernate.metamodel.binding" xmlns:hhh="http://www.hibernate.org/xsd/hibernate-mapping"
+<hibernate-mapping package="org.hibernate.metamodel.binding" xmlns="http://www.hibernate.org/xsd/hibernate-mapping"
                    xsi:schemaLocation="http://www.hibernate.org/xsd/hibernate-mapping hibernate-mapping-4.0.xsd"
                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
@@ -11,4 +11,4 @@
         <property name="name"/>
 	</class>
 
-</hhh:hibernate-mapping>
+</hibernate-mapping>

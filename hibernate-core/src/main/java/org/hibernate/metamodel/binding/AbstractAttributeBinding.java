@@ -23,17 +23,11 @@
  */
 package org.hibernate.metamodel.binding;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
-import org.hibernate.metamodel.binding.state.AttributeBindingState;
 import org.hibernate.metamodel.domain.Attribute;
-import org.hibernate.metamodel.relational.Column;
-import org.hibernate.metamodel.relational.DerivedValue;
-import org.hibernate.metamodel.relational.SimpleValue;
 import org.hibernate.metamodel.source.MetaAttributeContext;
 
 /**
@@ -59,15 +53,6 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 	protected AbstractAttributeBinding(EntityBinding entityBinding, Attribute attribute) {
 		this.entityBinding = entityBinding;
 		this.attribute = attribute;
-	}
-
-	protected void initialize(AttributeBindingState state) {
-		hibernateTypeDescriptor.setExplicitTypeName( state.getExplicitHibernateTypeName() );
-		hibernateTypeDescriptor.setTypeParameters( state.getExplicitHibernateTypeParameters() );
-		hibernateTypeDescriptor.setJavaTypeName( state.getJavaTypeName() );
-		isLazy = state.isLazy();
-		isAlternateUniqueKey = state.isAlternateUniqueKey();
-		metaAttributeContext = state.getMetaAttributeContext();
 	}
 
 	@Override

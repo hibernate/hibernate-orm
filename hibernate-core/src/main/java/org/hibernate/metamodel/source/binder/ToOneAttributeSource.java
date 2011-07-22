@@ -23,8 +23,6 @@
  */
 package org.hibernate.metamodel.source.binder;
 
-import org.hibernate.FetchMode;
-
 /**
  * Further contract for sources of {@code *-to-one} style associations.
  *

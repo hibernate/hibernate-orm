@@ -29,8 +29,13 @@ import org.hibernate.metamodel.binding.Caching;
 
 /**
  * Contract for the entity that is the root of an inheritance hierarchy.
+ * <p/>
+ * <b>NOTE</b> : I think most of this could be moved to {@link EntityHierarchy} much like was done with
+ * {@link org.hibernate.metamodel.binding.HierarchyDetails}
  *
  * @author Steve Ebersole
+ *
+ * @todo Move these concepts to {@link EntityHierarchy} ?
  */
 public interface RootEntitySource extends EntitySource {
 	/**
@@ -56,8 +61,6 @@ public interface RootEntitySource extends EntitySource {
 
 	/**
 	 * Obtain the entity mode for this entity.
-	 * <p/>
-	 * todo : I think this should probably move to EntityHierarchy.
 	 *
 	 * @return The entity mode.
 	 */

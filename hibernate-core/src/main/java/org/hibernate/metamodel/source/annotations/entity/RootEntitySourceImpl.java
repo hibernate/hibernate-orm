@@ -77,11 +77,11 @@ public class RootEntitySourceImpl extends EntitySourceImpl implements RootEntity
 
 	@Override
 	public DiscriminatorSource getDiscriminatorSource() {
-		DiscriminatorSource attributeSource = null;
-		if ( getEntityClass().getDiscriminatorAttribute() != null ) {
-			attributeSource = new DiscriminatorSourceImpl( getEntityClass().getDiscriminatorAttribute() );
+		DiscriminatorSource discriminatorSource = null;
+		if ( getEntityClass().getDiscriminatorColumnValues() != null ) {
+			discriminatorSource = new DiscriminatorSourceImpl( getEntityClass() );
 		}
-		return attributeSource;
+		return discriminatorSource;
 	}
 
 	@Override

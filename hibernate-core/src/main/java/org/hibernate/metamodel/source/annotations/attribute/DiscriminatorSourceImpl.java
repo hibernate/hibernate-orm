@@ -23,17 +23,20 @@
  */
 package org.hibernate.metamodel.source.annotations.attribute;
 
+import org.hibernate.metamodel.source.annotations.entity.EntityClass;
 import org.hibernate.metamodel.source.binder.DiscriminatorSource;
+import org.hibernate.metamodel.source.binder.RelationalValueSource;
 
 /**
  * @author Hardy Ferentschik
  */
-public class DiscriminatorSourceImpl extends SingularAttributeSourceImpl implements DiscriminatorSource {
+public class DiscriminatorSourceImpl implements DiscriminatorSource {
 	private final DiscriminatorColumnValues discriminatorColumnValues;
+	private final Class<?> discriminatorType;
 
-	public DiscriminatorSourceImpl(SimpleAttribute attribute) {
-		super( attribute );
-		discriminatorColumnValues = (DiscriminatorColumnValues)attribute.getColumnValues();
+	public DiscriminatorSourceImpl(EntityClass entityClass) {
+		this.discriminatorColumnValues = entityClass.getDiscriminatorColumnValues();
+		this.discriminatorType = entityClass.getDiscriminatorType();
 	}
 
 	@Override
@@ -44,6 +47,16 @@ public class DiscriminatorSourceImpl extends SingularAttributeSourceImpl impleme
 	@Override
 	public boolean isInserted() {
 		return discriminatorColumnValues.isIncludedInSql();
+	}
+
+	@Override
+	public RelationalValueSource getDiscriminatorRelationalValueSource() {
+		return new ColumnValuesSourceImpl( discriminatorColumnValues );
+	}
+
+	@Override
+	public String getExplicitHibernateTypeName() {
+		return discriminatorType.getName();
 	}
 }
 

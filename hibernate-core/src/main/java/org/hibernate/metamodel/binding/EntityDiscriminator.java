@@ -23,6 +23,8 @@
  */
 package org.hibernate.metamodel.binding;
 
+import org.hibernate.metamodel.relational.SimpleValue;
+
 /**
  * Binding of the discriminator in a entity hierarchy
  *
@@ -30,19 +32,25 @@ package org.hibernate.metamodel.binding;
  * @author Hardy Ferentschik
  */
 public class EntityDiscriminator {
-	private SimpleSingularAttributeBinding valueBinding;
+	private final HibernateTypeDescriptor explicitHibernateTypeDescriptor = new HibernateTypeDescriptor();
+
+	private SimpleValue boundValue;
 	private boolean forced;
 	private boolean inserted = true;
 
 	public EntityDiscriminator() {
 	}
 
-	public SimpleSingularAttributeBinding getValueBinding() {
-		return valueBinding;
+	public SimpleValue getBoundValue() {
+		return boundValue;
 	}
 
-	public void setValueBinding(SimpleSingularAttributeBinding valueBinding) {
-		this.valueBinding = valueBinding;
+	public void setBoundValue(SimpleValue boundValue) {
+		this.boundValue = boundValue;
+	}
+
+	public HibernateTypeDescriptor getExplicitHibernateTypeDescriptor() {
+		return explicitHibernateTypeDescriptor;
 	}
 
 	public boolean isForced() {
@@ -65,7 +73,7 @@ public class EntityDiscriminator {
 	public String toString() {
 		final StringBuilder sb = new StringBuilder();
 		sb.append( "EntityDiscriminator" );
-		sb.append( "{valueBinding=" ).append( valueBinding );
+		sb.append( "{boundValue=" ).append( boundValue );
 		sb.append( ", forced=" ).append( forced );
 		sb.append( ", inserted=" ).append( inserted );
 		sb.append( '}' );

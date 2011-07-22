@@ -28,6 +28,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import javax.persistence.AccessType;
+import javax.persistence.DiscriminatorType;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
@@ -51,7 +52,7 @@ import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.source.annotations.HibernateDotNames;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.JandexHelper;
-import org.hibernate.metamodel.source.annotations.attribute.SimpleAttribute;
+import org.hibernate.metamodel.source.annotations.attribute.DiscriminatorColumnValues;
 import org.hibernate.metamodel.source.binder.TableSource;
 
 /**
@@ -88,10 +89,9 @@ public class EntityClass extends ConfiguredClass {
 	private boolean isLazy;
 	private String proxy;
 
-	/**
-	 * The discriminator attribute or {@code null} in case none exists.
-	 */
-	private SimpleAttribute discriminatorAttribute;
+	private DiscriminatorColumnValues discriminatorColumnValues;
+	private Class<?> discriminatorType;
+	private String discriminatorMatchValue;
 
 	public EntityClass(
 			ClassInfo classInfo,
@@ -114,13 +114,15 @@ public class EntityClass extends ConfiguredClass {
 		processCustomSqlAnnotations();
 		processProxyGeneration();
 
-		if ( InheritanceType.SINGLE_TABLE.equals( inheritanceType ) ) {
-			discriminatorAttribute = SimpleAttribute.createDiscriminatorAttribute( classInfo.annotations() );
-		}
+		processDiscriminator();
 	}
 
-	public SimpleAttribute getDiscriminatorAttribute() {
-		return discriminatorAttribute;
+	public DiscriminatorColumnValues getDiscriminatorColumnValues() {
+		return discriminatorColumnValues;
+	}
+
+	public Class<?> getDiscriminatorType() {
+		return discriminatorType;
 	}
 
 	public IdType getIdType() {
@@ -301,6 +303,49 @@ public class EntityClass extends ConfiguredClass {
 
 		}
 		return idAnnotationList;
+	}
+
+	private void processDiscriminator() {
+		if ( !InheritanceType.SINGLE_TABLE.equals( inheritanceType ) ) {
+			return;
+		}
+
+		final AnnotationInstance discriminatorValueAnnotation = JandexHelper.getSingleAnnotation(
+				getClassInfo(), JPADotNames.DISCRIMINATOR_VALUE
+		);
+		if ( discriminatorValueAnnotation != null ) {
+			this.discriminatorMatchValue = discriminatorValueAnnotation.value().asString();
+		}
+
+		final AnnotationInstance discriminatorOptionsAnnotation = JandexHelper.getSingleAnnotation(
+				getClassInfo(), JPADotNames.DISCRIMINATOR_COLUMN
+		);
+		Class<?> type = String.class; // string is the discriminator default
+		if ( discriminatorOptionsAnnotation != null ) {
+			DiscriminatorType discriminatorType = Enum.valueOf(
+					DiscriminatorType.class, discriminatorOptionsAnnotation.value( "discriminatorType" ).asEnum()
+			);
+			switch ( discriminatorType ) {
+				case STRING: {
+					type = String.class;
+					break;
+				}
+				case CHAR: {
+					type = Character.class;
+					break;
+				}
+				case INTEGER: {
+					type = Integer.class;
+					break;
+				}
+				default: {
+					throw new AnnotationException( "Unsupported discriminator type: " + discriminatorType );
+				}
+			}
+		}
+
+		discriminatorColumnValues = new DiscriminatorColumnValues( getClassInfo().annotations() );
+		discriminatorType = type;
 	}
 
 	private void processHibernateEntitySpecificAnnotations() {
@@ -616,6 +661,10 @@ public class EntityClass extends ConfiguredClass {
 				getClassInfo(), HibernateDotNames.BATCH_SIZE
 		);
 		return batchSizeAnnotation == null ? -1 : batchSizeAnnotation.value( "size" ).asInt();
+	}
+
+	public String getDiscriminatorMatchValue() {
+		return discriminatorMatchValue;
 	}
 
 	class TableSourceImpl implements TableSource {

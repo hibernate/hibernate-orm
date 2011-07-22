@@ -198,9 +198,8 @@ public class EntitySourceImpl implements EntitySource {
 	}
 
 	@Override
-	public String getDiscriminatorValue() {
-		return ( (DiscriminatorColumnValues) entityClass.getDiscriminatorAttribute()
-				.getColumnValues() ).getDiscriminatorValue();
+	public String getDiscriminatorMatchValue() {
+		return entityClass.getDiscriminatorMatchValue();
 	}
 
 	class LocalBindingContextImpl implements LocalBindingContext {

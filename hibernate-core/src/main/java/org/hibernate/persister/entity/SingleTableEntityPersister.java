@@ -547,17 +547,13 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		boolean isPolymorphic = ! entityBinding.isRoot() || hasSubclasses;
 		final Object discriminatorValue;
 		if ( isPolymorphic ) {
-			org.hibernate.metamodel.relational.Value discrimValue =
-					entityBinding.getHierarchyDetails().getEntityDiscriminator().getValueBinding().getValue();
-			if (discrimValue==null) {
+			SimpleValue discriminatorRelationalValue = entityBinding.getHierarchyDetails().getEntityDiscriminator().getBoundValue();
+			if ( discriminatorRelationalValue == null ) {
 				throw new MappingException("discriminator mapping required for single table polymorphic persistence");
 			}
 			forceDiscriminator = entityBinding.getHierarchyDetails().getEntityDiscriminator().isForced();
-			if ( ! SimpleValue.class.isInstance(  discrimValue ) ) {
-				throw new MappingException( "discriminator must be mapped to a single column or formula." );
-			}
-			if ( DerivedValue.class.isInstance( discrimValue ) ) {
-				DerivedValue formula = ( DerivedValue ) discrimValue;
+			if ( DerivedValue.class.isInstance( discriminatorRelationalValue ) ) {
+				DerivedValue formula = ( DerivedValue ) discriminatorRelationalValue;
 				discriminatorFormula = formula.getExpression();
 				discriminatorFormulaTemplate = getTemplateFromString( formula.getExpression(), factory );
 				discriminatorColumnName = null;
@@ -565,8 +561,8 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 				discriminatorColumnReaderTemplate = null;
 				discriminatorAlias = "clazz_";
 			}
-			else if ( org.hibernate.metamodel.relational.Column.class.isInstance( discrimValue ) ) {
-				org.hibernate.metamodel.relational.Column column = ( org.hibernate.metamodel.relational.Column ) discrimValue;
+			else {
+				org.hibernate.metamodel.relational.Column column = ( org.hibernate.metamodel.relational.Column ) discriminatorRelationalValue;
 				discriminatorColumnName = column.getColumnName().encloseInQuotesIfQuoted( factory.getDialect() );
 				discriminatorColumnReaders =
 						column.getReadFragment() == null ?
@@ -580,16 +576,11 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 				discriminatorFormula = null;
 				discriminatorFormulaTemplate = null;
 			}
-			else {
-				throw new MappingException( "Unknown discriminator value type:" + discrimValue.toLoggableString() );
-			}
-			discriminatorType =
-					entityBinding
-							.getHierarchyDetails()
-							.getEntityDiscriminator()
-							.getValueBinding()
-							.getHibernateTypeDescriptor()
-							.getResolvedTypeMapping();
+
+			discriminatorType = entityBinding.getHierarchyDetails()
+					.getEntityDiscriminator()
+					.getExplicitHibernateTypeDescriptor()
+					.getResolvedTypeMapping();
 			if ( entityBinding.getDiscriminatorMatchValue() == null ) {
 				discriminatorValue = NULL_DISCRIMINATOR;
 				discriminatorSQLValue = InFragment.NULL;
@@ -606,9 +597,8 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 				discriminatorInsertable = false;
 			}
 			else {
-				discriminatorInsertable =
-						entityBinding.getHierarchyDetails().getEntityDiscriminator().isInserted() &&
-								! DerivedValue.class.isInstance( discrimValue );
+				discriminatorInsertable = entityBinding.getHierarchyDetails().getEntityDiscriminator().isInserted()
+						&& ! DerivedValue.class.isInstance( discriminatorRelationalValue );
 				try {
 					DiscriminatorType dtype = ( DiscriminatorType ) discriminatorType;
 					discriminatorValue = dtype.stringToObject( entityBinding.getDiscriminatorMatchValue() );

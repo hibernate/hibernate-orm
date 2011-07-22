@@ -51,6 +51,7 @@ import org.hibernate.metamodel.domain.Entity;
 import org.hibernate.metamodel.domain.PluralAttribute;
 import org.hibernate.metamodel.domain.SingularAttribute;
 import org.hibernate.metamodel.relational.Column;
+import org.hibernate.metamodel.relational.DerivedValue;
 import org.hibernate.metamodel.relational.Identifier;
 import org.hibernate.metamodel.relational.Schema;
 import org.hibernate.metamodel.relational.SimpleValue;
@@ -355,18 +356,27 @@ public class Binder {
 			return;
 		}
 
-		SimpleSingularAttributeBinding attributeBinding = doBasicSingularAttributeBindingCreation(
-				discriminatorSource, entityBinding
-		);
 		EntityDiscriminator discriminator = new EntityDiscriminator();
-		discriminator.setValueBinding( attributeBinding );
+		SimpleValue relationalValue = makeSimpleValue(
+				entityBinding,
+				discriminatorSource.getDiscriminatorRelationalValueSource()
+		);
+		discriminator.setBoundValue( relationalValue );
+
+		discriminator.getExplicitHibernateTypeDescriptor().setExplicitTypeName(
+				discriminatorSource.getExplicitHibernateTypeName() != null
+						? discriminatorSource.getExplicitHibernateTypeName()
+						: "string"
+		);
+
 		discriminator.setInserted( discriminatorSource.isInserted() );
 		discriminator.setForced( discriminatorSource.isForced() );
+
 		entityBinding.getHierarchyDetails().setEntityDiscriminator( discriminator );
 	}
 
 	private void bindDiscriminatorValue(SubclassEntitySource entitySource, EntityBinding entityBinding) {
-		final String discriminatorValue = entitySource.getDiscriminatorValue();
+		final String discriminatorValue = entitySource.getDiscriminatorMatchValue();
 		if ( discriminatorValue == null ) {
 			return;
 		}
@@ -637,17 +647,7 @@ public class Binder {
 
 				if ( ColumnSource.class.isInstance( valueSource ) ) {
 					final ColumnSource columnSource = ColumnSource.class.cast( valueSource );
-					final Column column = table.locateOrCreateColumn( columnSource.getName() );
-					column.setNullable( columnSource.isNullable() );
-					column.setDefaultValue( columnSource.getDefaultValue() );
-					column.setSqlType( columnSource.getSqlType() );
-					column.setSize( columnSource.getSize() );
-					column.setDatatype( columnSource.getDatatype() );
-					column.setReadFragment( columnSource.getReadFragment() );
-					column.setWriteFragment( columnSource.getWriteFragment() );
-					column.setUnique( columnSource.isUnique() );
-					column.setCheckCondition( columnSource.getCheckCondition() );
-					column.setComment( columnSource.getComment() );
+					final Column column = makeColumn( (ColumnSource) valueSource, table );
 					valueBindings.add(
 							new SimpleValueBinding(
 									column,
@@ -659,7 +659,7 @@ public class Binder {
 				else {
 					valueBindings.add(
 							new SimpleValueBinding(
-									table.locateOrCreateDerivedValue( ( (DerivedValueSource) valueSource ).getExpression() )
+									makeDerivedValue( ((DerivedValueSource) valueSource), table )
 							)
 					);
 				}
@@ -669,7 +669,6 @@ public class Binder {
 			final String name = metadata.getOptions()
 					.getNamingStrategy()
 					.propertyToColumnName( attributeBinding.getAttribute().getName() );
-			final SimpleValueBinding valueBinding = new SimpleValueBinding();
 			valueBindings.add(
 					new SimpleValueBinding(
 							attributeBinding.getEntityBinding().getBaseTable().locateOrCreateColumn( name )
@@ -677,6 +676,38 @@ public class Binder {
 			);
 		}
 		attributeBinding.setSimpleValueBindings( valueBindings );
+	}
+
+	private SimpleValue makeSimpleValue(
+			EntityBinding entityBinding,
+			RelationalValueSource valueSource) {
+		final TableSpecification table = entityBinding.getTable( valueSource.getContainingTableName() );
+
+		if ( ColumnSource.class.isInstance( valueSource ) ) {
+			return makeColumn( (ColumnSource) valueSource, table );
+		}
+		else {
+			return makeDerivedValue( (DerivedValueSource) valueSource, table );
+		}
+	}
+
+	private Column makeColumn(ColumnSource columnSource, TableSpecification table) {
+		final Column column = table.locateOrCreateColumn( columnSource.getName() );
+		column.setNullable( columnSource.isNullable() );
+		column.setDefaultValue( columnSource.getDefaultValue() );
+		column.setSqlType( columnSource.getSqlType() );
+		column.setSize( columnSource.getSize() );
+		column.setDatatype( columnSource.getDatatype() );
+		column.setReadFragment( columnSource.getReadFragment() );
+		column.setWriteFragment( columnSource.getWriteFragment() );
+		column.setUnique( columnSource.isUnique() );
+		column.setCheckCondition( columnSource.getCheckCondition() );
+		column.setComment( columnSource.getComment() );
+		return column;
+	}
+
+	private DerivedValue makeDerivedValue(DerivedValueSource derivedValueSource, TableSpecification table) {
+		return table.locateOrCreateDerivedValue( derivedValueSource.getExpression() );
 	}
 
 	private void processFetchProfiles(EntitySource entitySource, EntityBinding entityBinding) {

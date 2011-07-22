@@ -23,58 +23,20 @@
  */
 package org.hibernate.metamodel.source.annotations.attribute;
 
-import org.hibernate.metamodel.relational.Datatype;
-import org.hibernate.metamodel.relational.Size;
-import org.hibernate.metamodel.source.binder.ColumnSource;
-
 /**
  * @author Hardy Ferentschik
  */
-public class ColumnSourceImpl implements ColumnSource {
+public class ColumnSourceImpl extends ColumnValuesSourceImpl {
 	private final SimpleAttribute attribute;
-	private final ColumnValues columnValues;
 
 	ColumnSourceImpl(SimpleAttribute attribute) {
+		super( attribute.getColumnValues() );
 		this.attribute = attribute;
-		this.columnValues = attribute.getColumnValues();
 	}
 
 	@Override
 	public String getName() {
-		return columnValues.getName().isEmpty() ? attribute.getName() : columnValues.getName();
-	}
-
-	@Override
-	public boolean isNullable() {
-		return columnValues.isNullable();
-	}
-
-	@Override
-	public String getDefaultValue() {
-		// todo
-		return null;
-	}
-
-	@Override
-	public String getSqlType() {
-		// todo
-		return null;
-	}
-
-	@Override
-	public Datatype getDatatype() {
-		// todo
-		return null;
-	}
-
-	@Override
-	public Size getSize() {
-		return new Size(
-				columnValues.getPrecision(),
-				columnValues.getScale(),
-				columnValues.getLength(),
-				Size.LobMultiplier.NONE
-		);
+		return super.getName().isEmpty() ? attribute.getName() : super.getName();
 	}
 
 	@Override
@@ -88,34 +50,8 @@ public class ColumnSourceImpl implements ColumnSource {
 	}
 
 	@Override
-	public boolean isUnique() {
-		return columnValues.isUnique();
-	}
-
-	@Override
 	public String getCheckCondition() {
 		return attribute.getCheckCondition();
-	}
-
-	@Override
-	public String getComment() {
-		// todo
-		return null;
-	}
-
-	@Override
-	public boolean isIncludedInInsert() {
-		return columnValues.isInsertable();
-	}
-
-	@Override
-	public boolean isIncludedInUpdate() {
-		return columnValues.isUpdatable();
-	}
-
-	@Override
-	public String getContainingTableName() {
-		return columnValues.getTable();
 	}
 }
 

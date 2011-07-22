@@ -27,7 +27,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import javax.persistence.DiscriminatorType;
 import javax.persistence.FetchType;
 
 import org.jboss.jandex.AnnotationInstance;
@@ -57,11 +56,6 @@ public class SimpleAttribute extends MappedAttribute {
 	 * Is this a versioned property (annotated w/ {@code @Version}.
 	 */
 	private final boolean isVersioned;
-
-	/**
-	 * Is this property a discriminator property.
-	 */
-	private final boolean isDiscriminator;
 
 	/**
 	 * Whether a change of the property's value triggers a version increment of the entity (in case of optimistic
@@ -107,43 +101,8 @@ public class SimpleAttribute extends MappedAttribute {
 		return attribute;
 	}
 
-	public static SimpleAttribute createDiscriminatorAttribute(Map<DotName, List<AnnotationInstance>> annotations) {
-		AnnotationInstance discriminatorOptionsAnnotation = JandexHelper.getSingleAnnotation(
-				annotations, JPADotNames.DISCRIMINATOR_COLUMN
-		);
-		String name = DiscriminatorColumnValues.DEFAULT_DISCRIMINATOR_COLUMN_NAME;
-		Class<?> type = String.class; // string is the discriminator default
-		if ( discriminatorOptionsAnnotation != null ) {
-			name = discriminatorOptionsAnnotation.value( "name" ).asString();
-
-			DiscriminatorType discriminatorType = Enum.valueOf(
-					DiscriminatorType.class, discriminatorOptionsAnnotation.value( "discriminatorType" ).asEnum()
-			);
-			switch ( discriminatorType ) {
-				case STRING: {
-					type = String.class;
-					break;
-				}
-				case CHAR: {
-					type = Character.class;
-					break;
-				}
-				case INTEGER: {
-					type = Integer.class;
-					break;
-				}
-				default: {
-					throw new AnnotationException( "Unsupported discriminator type: " + discriminatorType );
-				}
-			}
-		}
-		return new SimpleAttribute( name, type, annotations, true );
-	}
-
 	SimpleAttribute(String name, Class<?> type, Map<DotName, List<AnnotationInstance>> annotations, boolean isDiscriminator) {
 		super( name, type, annotations );
-
-		this.isDiscriminator = isDiscriminator;
 
 		AnnotationInstance idAnnotation = JandexHelper.getSingleAnnotation( annotations, JPADotNames.ID );
 		AnnotationInstance embeddedIdAnnotation = JandexHelper.getSingleAnnotation(
@@ -194,10 +153,6 @@ public class SimpleAttribute extends MappedAttribute {
 		return isVersioned;
 	}
 
-	public boolean isDiscriminator() {
-		return isDiscriminator;
-	}
-
 	public boolean isLazy() {
 		return isLazy;
 	}
@@ -240,7 +195,6 @@ public class SimpleAttribute extends MappedAttribute {
 		sb.append( "SimpleAttribute" );
 		sb.append( "{isId=" ).append( isId );
 		sb.append( ", isVersioned=" ).append( isVersioned );
-		sb.append( ", isDiscriminator=" ).append( isDiscriminator );
 		sb.append( ", isOptimisticLockable=" ).append( isOptimisticLockable );
 		sb.append( ", isLazy=" ).append( isLazy );
 		sb.append( ", isOptional=" ).append( isOptional );

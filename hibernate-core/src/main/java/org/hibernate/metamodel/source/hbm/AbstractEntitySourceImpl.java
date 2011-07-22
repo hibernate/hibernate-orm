@@ -244,7 +244,7 @@ public abstract class AbstractEntitySourceImpl implements EntitySource {
 	}
 
 	@Override
-	public String getDiscriminatorValue() {
+	public String getDiscriminatorMatchValue() {
 		return null;  //To change body of implemented methods use File | Settings | File Templates.
 	}
 }

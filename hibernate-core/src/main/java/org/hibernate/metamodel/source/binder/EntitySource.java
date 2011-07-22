@@ -190,5 +190,5 @@ public interface EntitySource extends SubclassEntityContainer, AttributeSourceCo
 	 * @return the actual discriminator value in case of a single table inheritance or {@code null} in case there is no
 	 * explicit value or a different inheritance scheme
 	 */
-	public String getDiscriminatorValue();
+	public String getDiscriminatorMatchValue();
 }

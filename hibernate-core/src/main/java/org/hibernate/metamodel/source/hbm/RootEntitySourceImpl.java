@@ -26,11 +26,13 @@ package org.hibernate.metamodel.source.hbm;
 import org.hibernate.EntityMode;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.engine.OptimisticLockStyle;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.binding.Caching;
 import org.hibernate.metamodel.binding.IdGenerator;
 import org.hibernate.metamodel.source.MappingException;
 import org.hibernate.metamodel.source.binder.DiscriminatorSource;
 import org.hibernate.metamodel.source.binder.IdentifierSource;
+import org.hibernate.metamodel.source.binder.RelationalValueSource;
 import org.hibernate.metamodel.source.binder.RootEntitySource;
 import org.hibernate.metamodel.source.binder.SimpleIdentifierSource;
 import org.hibernate.metamodel.source.binder.SingularAttributeSource;
@@ -188,7 +190,55 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 
 	@Override
 	public DiscriminatorSource getDiscriminatorSource() {
-		// todo : implement
-		return null;
+		final XMLHibernateMapping.XMLClass.XMLDiscriminator discriminatorElement = entityElement().getDiscriminator();
+		if ( discriminatorElement == null ) {
+			return null;
+		}
+
+		return new DiscriminatorSource() {
+			@Override
+			public RelationalValueSource getDiscriminatorRelationalValueSource() {
+				if ( StringHelper.isNotEmpty( discriminatorElement.getColumnAttribute() ) ) {
+					return new ColumnAttributeSourceImpl(
+							null, // root table
+							discriminatorElement.getColumnAttribute(),
+							discriminatorElement.isInsert(),
+							discriminatorElement.isInsert()
+					);
+				}
+				else if ( StringHelper.isNotEmpty( discriminatorElement.getFormulaAttribute() ) ) {
+					return new FormulaImpl( null, discriminatorElement.getFormulaAttribute() );
+				}
+				else if ( discriminatorElement.getColumn() != null ) {
+					return new ColumnSourceImpl(
+							null, // root table
+							discriminatorElement.getColumn(),
+							discriminatorElement.isInsert(),
+							discriminatorElement.isInsert()
+					);
+				}
+				else if ( StringHelper.isNotEmpty( discriminatorElement.getFormula() ) ) {
+					return new FormulaImpl( null, discriminatorElement.getFormula() );
+				}
+				else {
+					throw new MappingException( "could not determine source of discriminator mapping", getOrigin() );
+				}
+			}
+
+			@Override
+			public String getExplicitHibernateTypeName() {
+				return discriminatorElement.getType();
+			}
+
+			@Override
+			public boolean isForced() {
+				return discriminatorElement.isForce();
+			}
+
+			@Override
+			public boolean isInserted() {
+				return discriminatorElement.isInsert();
+			}
+		};
 	}
 }

@@ -24,9 +24,19 @@
 package org.hibernate.metamodel.source.binder;
 
 /**
+ * Source for discriminator metadata.
+ * <p/>
+ * <b>NOTE</b> : extends the notion of {@link SingularAttributeSource} only for convenience in that both share many of
+ * the same source options.  However, a discriminator is <b>NEVER</b> a physical attribute on the domain model.
+ *
  * @author Hardy Ferentschik
+ * @author Steve Ebersole
  */
-public interface DiscriminatorSource extends SingularAttributeSource {
+public interface DiscriminatorSource {
+	public RelationalValueSource getDiscriminatorRelationalValueSource();
+
+	public String getExplicitHibernateTypeName();
+
 	/**
 	 * "Forces" Hibernate to specify the allowed discriminator values, even when retrieving all instances of the root class.
 	 *

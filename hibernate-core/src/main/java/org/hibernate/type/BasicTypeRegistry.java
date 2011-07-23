@@ -23,15 +23,17 @@
  */
 package org.hibernate.type;
 
-import java.io.Serializable;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.HibernateException;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
+import org.jboss.logging.Logger;
+
+import java.io.Serializable;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * A registry of {@link BasicType} instances
@@ -124,7 +126,8 @@ public class BasicTypeRegistry implements Serializable {
 	@SuppressWarnings({ "UnusedDeclaration" })
 	private BasicTypeRegistry(Map<String, BasicType> registeredTypes) {
 		registry.putAll( registeredTypes );
-		locked = true;
+        //TODO - this is just a temporary work-around!
+//		locked = true;
 	}
 
 	public void register(BasicType type) {

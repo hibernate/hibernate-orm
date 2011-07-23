@@ -8,6 +8,7 @@ dependencies {
     compile ( libraries.jboss_jta ) {
         transitive=false;
     }
+
 }
 
 // todo : Fold into hibernate-core and publish in separate publications
@@ -26,3 +27,4 @@ def pomDescription() {
 def osgiDescription() {
 	return pomDescription()
 }
+

@@ -1,0 +1,32 @@
+apply plugin: 'java'
+
+dependencies {
+    compile( project( ':hibernate-core' ) )
+    compile( [group: 'com.vividsolutions', name: 'jts', version: '1.11'] ) {
+        transitive = false
+    }
+    compile( [group: 'org.postgis', name: 'postgis-jdbc', version: '1.1.6'] )
+    compile( [group: 'postgresql', name: 'postgresql', version: '8.1-407.jdbc3'] )
+
+
+    compile( libraries.dom4j ) {
+        transitive = false
+    }
+
+    compile( libraries.slf4j_log4j12) {
+        transitive = true
+    }
+
+    testCompile( libraries.junit )
+    testCompile( project(':hibernate-testing') )
+    testCompile( [group: 'commons-dbcp', name: 'commons-dbcp', version: '1.4'])
+}
+
+sourceSets {
+    test {
+        // resources inherently exclude sources
+        resources {
+            setSrcDirs( ['src/test/java','src/test/resources'] )
+        }
+    }
+}

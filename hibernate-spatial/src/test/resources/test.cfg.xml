@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hibernate-spatial>
+    <default_dialect>org.hibernate.spatial.postgis.PostgisDialect</default_dialect>
+    <precision_model>FIXED</precision_model>
+    <precision_model_scale>5</precision_model_scale>
+</hibernate-spatial>

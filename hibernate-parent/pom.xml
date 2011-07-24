@@ -1076,6 +1076,25 @@
             </properties>
         </profile>
 
+		<profile>
+            <id>mssql2008jtds</id>
+            <dependencies>
+                <dependency>
+                    <groupId>net.sourceforge.jtds</groupId>
+                    <artifactId>jtds</artifactId>
+                     <version>1.2.4</version>
+                </dependency>
+            </dependencies>
+            <properties>
+                <!-- db.dialect>org.hibernate.dialect.SQLServer2005Dialect</db.dialect -->
+                <db.dialect>org.hibernate.dialect.SQLServerDialect</db.dialect>
+                <jdbc.driver>net.sourceforge.jtds.jdbc.Driver</jdbc.driver>
+                <jdbc.url>jdbc:jtds:sqlserver://localhost:1433/test</jdbc.url>
+                <jdbc.user>tester</jdbc.user>
+                <jdbc.pass>tester</jdbc.pass>
+                <jdbc.isolation>4096</jdbc.isolation>
+            </properties>
+        </profile>
     </profiles>
 
     <properties>

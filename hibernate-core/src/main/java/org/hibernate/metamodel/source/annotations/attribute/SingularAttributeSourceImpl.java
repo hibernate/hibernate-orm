@@ -39,9 +39,9 @@ import org.hibernate.metamodel.source.binder.SingularAttributeSource;
  * @author Hardy Ferentschik
  */
 public class SingularAttributeSourceImpl implements SingularAttributeSource {
-	private final SimpleAttribute attribute;
+	private final BasicAttribute attribute;
 
-	public SingularAttributeSourceImpl(SimpleAttribute attribute) {
+	public SingularAttributeSourceImpl(BasicAttribute attribute) {
 		this.attribute = attribute;
 	}
 

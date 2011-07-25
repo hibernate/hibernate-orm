@@ -28,7 +28,7 @@ import org.hibernate.EntityMode;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.metamodel.binding.Caching;
 import org.hibernate.metamodel.source.annotations.attribute.DiscriminatorSourceImpl;
-import org.hibernate.metamodel.source.annotations.attribute.SimpleAttribute;
+import org.hibernate.metamodel.source.annotations.attribute.BasicAttribute;
 import org.hibernate.metamodel.source.annotations.attribute.SimpleIdentifierSourceImpl;
 import org.hibernate.metamodel.source.annotations.attribute.SingularAttributeSourceImpl;
 import org.hibernate.metamodel.source.binder.DiscriminatorSource;
@@ -49,7 +49,7 @@ public class RootEntitySourceImpl extends EntitySourceImpl implements RootEntity
 		IdType idType = getEntityClass().getIdType();
 		switch ( idType ) {
 			case SIMPLE: {
-				SimpleAttribute attribute = getEntityClass().getIdAttributes().iterator().next();
+				BasicAttribute attribute = getEntityClass().getIdAttributes().iterator().next();
 				return new SimpleIdentifierSourceImpl( attribute );
 			}
 			case COMPOSED: {

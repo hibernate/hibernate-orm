@@ -40,7 +40,7 @@ import org.hibernate.metamodel.source.annotations.JandexHelper;
 /**
  * @author Hardy Ferentschik
  */
-public class AssociationAttribute extends SimpleAttribute {
+public class AssociationAttribute extends BasicAttribute {
 	private final AttributeType associationType;
 	private final boolean ignoreNotFound;
 	private final String referencedEntityType;

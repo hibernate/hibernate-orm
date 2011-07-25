@@ -61,7 +61,7 @@ import org.hibernate.metamodel.source.annotations.attribute.AssociationAttribute
 import org.hibernate.metamodel.source.annotations.attribute.AttributeOverride;
 import org.hibernate.metamodel.source.annotations.attribute.AttributeType;
 import org.hibernate.metamodel.source.annotations.attribute.MappedAttribute;
-import org.hibernate.metamodel.source.annotations.attribute.SimpleAttribute;
+import org.hibernate.metamodel.source.annotations.attribute.BasicAttribute;
 
 /**
  * Base class for a configured entity, mapped super class or embeddable
@@ -99,7 +99,7 @@ public class ConfiguredClass {
 	/**
 	 * The id attributes
 	 */
-	private final Map<String, SimpleAttribute> idAttributeMap;
+	private final Map<String, BasicAttribute> idAttributeMap;
 
 	/**
 	 * The mapped association attributes for this entity
@@ -109,12 +109,12 @@ public class ConfiguredClass {
 	/**
 	 * The mapped simple attributes for this entity
 	 */
-	private final Map<String, SimpleAttribute> simpleAttributeMap;
+	private final Map<String, BasicAttribute> simpleAttributeMap;
 
 	/**
 	 * The version attribute or {@code null} in case none exists.
 	 */
-	private SimpleAttribute versionAttribute;
+	private BasicAttribute versionAttribute;
 
 	/**
 	 * The embedded classes for this entity
@@ -143,8 +143,8 @@ public class ConfiguredClass {
 		this.clazz = context.locateClassByName( classInfo.toString() );
 		this.configuredClassType = determineType();
 		this.classAccessType = determineClassAccessType( defaultAccessType );
-		this.simpleAttributeMap = new TreeMap<String, SimpleAttribute>();
-		this.idAttributeMap = new TreeMap<String, SimpleAttribute>();
+		this.simpleAttributeMap = new TreeMap<String, BasicAttribute>();
+		this.idAttributeMap = new TreeMap<String, BasicAttribute>();
 		this.associationAttributeMap = new TreeMap<String, AssociationAttribute>();
 
 		collectAttributes();
@@ -175,15 +175,15 @@ public class ConfiguredClass {
 		return configuredClassType;
 	}
 
-	public Iterable<SimpleAttribute> getSimpleAttributes() {
+	public Iterable<BasicAttribute> getSimpleAttributes() {
 		return simpleAttributeMap.values();
 	}
 
-	public Iterable<SimpleAttribute> getIdAttributes() {
+	public Iterable<BasicAttribute> getIdAttributes() {
 		return idAttributeMap.values();
 	}
 
-	public SimpleAttribute getVersionAttribute() {
+	public BasicAttribute getVersionAttribute() {
 		return versionAttribute;
 	}
 
@@ -445,7 +445,7 @@ public class ConfiguredClass {
 		String accessTypeString = accessType.toString().toLowerCase();
 		switch ( attributeNature ) {
 			case BASIC: {
-				SimpleAttribute attribute = SimpleAttribute.createSimpleAttribute(
+				BasicAttribute attribute = BasicAttribute.createSimpleAttribute(
 						attributeName, attributeType, annotations, accessTypeString
 				);
 				if ( attribute.isId() ) {

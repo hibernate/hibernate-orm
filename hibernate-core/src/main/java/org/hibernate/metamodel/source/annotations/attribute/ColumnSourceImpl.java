@@ -27,9 +27,9 @@ package org.hibernate.metamodel.source.annotations.attribute;
  * @author Hardy Ferentschik
  */
 public class ColumnSourceImpl extends ColumnValuesSourceImpl {
-	private final SimpleAttribute attribute;
+	private final BasicAttribute attribute;
 
-	ColumnSourceImpl(SimpleAttribute attribute) {
+	ColumnSourceImpl(BasicAttribute attribute) {
 		super( attribute.getColumnValues() );
 		this.attribute = attribute;
 	}

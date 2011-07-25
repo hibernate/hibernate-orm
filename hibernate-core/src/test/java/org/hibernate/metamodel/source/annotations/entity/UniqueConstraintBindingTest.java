@@ -45,7 +45,7 @@ import static junit.framework.Assert.assertTrue;
  *
  * @author Strong Liu
  */
-public class UniqueConstraintBindingTests extends BaseAnnotationBindingTestCase {
+public class UniqueConstraintBindingTest extends BaseAnnotationBindingTestCase {
 	@Test
 	@Resources(annotatedClasses = TableWithUniqueConstraint.class)
 	public void testTableUniqueConstraints() {

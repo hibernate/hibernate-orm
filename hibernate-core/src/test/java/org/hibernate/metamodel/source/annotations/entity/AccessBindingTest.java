@@ -41,7 +41,7 @@ import static junit.framework.Assert.assertEquals;
  * @author Hardy Ferentschik
  */
 
-public class AccessBindingTests extends BaseAnnotationBindingTestCase {
+public class AccessBindingTest extends BaseAnnotationBindingTestCase {
 	@Entity
 	class FieldAccess {
 		@Id

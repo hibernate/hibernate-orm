@@ -44,7 +44,7 @@ import static junit.framework.Assert.assertTrue;
  * @author Hardy Ferentschik
  */
 @FailureExpected(jiraKey = "HHH-6447", message = "Work in progress")
-public class EmbeddableBindingTests extends BaseAnnotationBindingTestCase {
+public class EmbeddableBindingTest extends BaseAnnotationBindingTestCase {
 	@Test
 	//@Resources(annotatedClasses = { User.class, Address.class })
 	public void testEmbeddable() {

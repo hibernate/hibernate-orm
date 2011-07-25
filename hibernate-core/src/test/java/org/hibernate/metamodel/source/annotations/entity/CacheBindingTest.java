@@ -45,7 +45,7 @@ import static junit.framework.Assert.assertNull;
  *
  * @author Hardy Ferentschik
  */
-public class CacheBindingTests extends BaseAnnotationBindingTestCase {
+public class CacheBindingTest extends BaseAnnotationBindingTestCase {
 	@Test
 	@Resources(annotatedClasses = HibernateCacheEntity.class, cacheMode = SharedCacheMode.ALL)
 	public void testHibernateCaching() {

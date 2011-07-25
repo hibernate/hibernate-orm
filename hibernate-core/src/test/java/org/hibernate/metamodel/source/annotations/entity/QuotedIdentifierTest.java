@@ -14,7 +14,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Strong Liu
  */
-public class QuotedIdentifierTests extends BaseAnnotationBindingTestCase {
+public class QuotedIdentifierTest extends BaseAnnotationBindingTestCase {
 	private final String ormPath = "org/hibernate/metamodel/source/annotations/xml/orm-quote-identifier.xml";
 
 	@Test

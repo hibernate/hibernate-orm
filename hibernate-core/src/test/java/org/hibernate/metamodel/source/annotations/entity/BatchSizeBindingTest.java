@@ -38,7 +38,7 @@ import static junit.framework.Assert.assertEquals;
  *
  * @author Hardy Ferentschik
  */
-public class BatchSizeBindingTests extends BaseAnnotationBindingTestCase {
+public class BatchSizeBindingTest extends BaseAnnotationBindingTestCase {
 	@Test
 	@Resources(annotatedClasses = NoBatchSizeEntity.class)
 	public void testNoBatchSize() {

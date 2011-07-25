@@ -49,7 +49,7 @@ import static junit.framework.Assert.assertTrue;
  * @author Hardy Ferentschik
  */
 @FailureExpected(jiraKey = "HHH-6447", message = "Work in progress")
-public class MappedSuperclassTests extends BaseAnnotationBindingTestCase {
+public class MappedSuperclassTest extends BaseAnnotationBindingTestCase {
 	@Test
 //	@Resources(annotatedClasses = { MyMappedSuperClass.class, MyEntity.class, MyMappedSuperClassBase.class })
 	public void testSimpleAttributeOverrideInMappedSuperclass() {

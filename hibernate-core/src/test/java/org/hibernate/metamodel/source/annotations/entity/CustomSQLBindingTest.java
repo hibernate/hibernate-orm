@@ -46,7 +46,7 @@ import static junit.framework.Assert.assertNull;
  *
  * @author Hardy Ferentschik
  */
-public class CustomSQLBindingTests extends BaseAnnotationBindingTestCase {
+public class CustomSQLBindingTest extends BaseAnnotationBindingTestCase {
 	@Test
 	@Resources(annotatedClasses = NoCustomSQLEntity.class)
 	public void testNoCustomSqlAnnotations() {

@@ -40,7 +40,7 @@ import static junit.framework.Assert.assertTrue;
  *
  * @author Hardy Ferentschik
  */
-public class ProxyBindingTests extends BaseAnnotationBindingTestCase {
+public class ProxyBindingTest extends BaseAnnotationBindingTestCase {
 	@Test
 	@Resources(annotatedClasses = ProxiedEntity.class)
 	public void testProxyNoAttributes() {

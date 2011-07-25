@@ -28,6 +28,6 @@ package org.hibernate.metamodel.source.binder;
  */
 public interface PluralAttributeSource extends AttributeSource {
 	public PluralAttributeNature getPluralAttributeNature();
+
 	public PluralAttributeElementNature getPluralAttributeElementNature();
-	
 }

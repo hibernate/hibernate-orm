@@ -21,34 +21,25 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.annotations.attribute;
-
-import org.jboss.jandex.DotName;
-
-import org.hibernate.metamodel.source.annotations.JPADotNames;
+package org.hibernate.metamodel.source.binder;
 
 /**
- * An enum defining the type of a mapped attribute.
+ * Contract describing source of table constraints
  *
  * @author Hardy Ferentschik
  */
-public enum AttributeType {
-	BASIC( null ),
-	ONE_TO_ONE( JPADotNames.ONE_TO_ONE ),
-	ONE_TO_MANY( JPADotNames.ONE_TO_MANY ),
-	MANY_TO_ONE( JPADotNames.MANY_TO_ONE ),
-	MANY_TO_MANY( JPADotNames.MANY_TO_MANY ),
-	ELEMENT_COLLECTION( JPADotNames.ELEMENT_COLLECTION ),
-    EMBEDDED_ID( JPADotNames.EMBEDDED_ID ),
-	EMBEDDED( JPADotNames.EMBEDDED );
+public interface UniqueConstraintSource {
 
-	private final DotName annotationDotName;
+	/**
+	 * @return returns the name of the constraint or {@code null} in case a generated name should be used
+	 */
+	public String name();
 
-	AttributeType(DotName annotationDotName) {
-		this.annotationDotName = annotationDotName;
-	}
-
-	public DotName getAnnotationDotName() {
-		return annotationDotName;
-	}
+	/**
+	 * Obtain the logical name of the table for this constraint.
+	 *
+	 * @return The logical table name. Can be {@code null} in the case of the "primary table".
+	 *
+	 */
+	public String getTableName();
 }

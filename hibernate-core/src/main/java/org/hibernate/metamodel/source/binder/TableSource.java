@@ -32,14 +32,14 @@ public interface TableSource {
 	/**
 	 * Obtain the supplied schema name
 	 *
-	 * @return The schema name.  If {@code null}, the binder will apply the default.
+	 * @return The schema name. If {@code null}, the binder will apply the default.
 	 */
 	public String getExplicitSchemaName();
 
 	/**
 	 * Obtain the supplied catalog name
 	 *
-	 * @return The catalog name.  If {@code null}, the binder will apply the default.
+	 * @return The catalog name. If {@code null}, the binder will apply the default.
 	 */
 	public String getExplicitCatalogName();
 
@@ -53,8 +53,8 @@ public interface TableSource {
 	/**
 	 * Obtain the logical name of the table.  This value is used to uniquely reference the table when binding
 	 * values to the binding model.
-	 * 
-	 * @return The logical name.  Can be {@code null} in the case of the "primary table".
+	 *
+	 * @return The logical name. Can be {@code null} in the case of the "primary table".
 	 *
 	 * @see RelationalValueSource#getContainingTableName()
 	 */

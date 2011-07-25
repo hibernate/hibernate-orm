@@ -41,12 +41,11 @@ import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.JandexHelper;
 
 /**
- * Represent a mapped attribute (explicitly or implicitly mapped). Also used for synthetic attributes like a
- * discriminator column.
+ * Represent a mapped attribute (explicitly or implicitly mapped).
  *
  * @author Hardy Ferentschik
  */
-public class SimpleAttribute extends MappedAttribute {
+public class BasicAttribute extends MappedAttribute {
 	/**
 	 * Is this property an id property (or part thereof).
 	 */
@@ -89,11 +88,11 @@ public class SimpleAttribute extends MappedAttribute {
 	private final String customReadFragment;
 	private final String checkCondition;
 
-	public static SimpleAttribute createSimpleAttribute(String name, Class<?> attributeType, Map<DotName, List<AnnotationInstance>> annotations, String accessType) {
-		return new SimpleAttribute( name, attributeType, accessType, annotations );
+	public static BasicAttribute createSimpleAttribute(String name, Class<?> attributeType, Map<DotName, List<AnnotationInstance>> annotations, String accessType) {
+		return new BasicAttribute( name, attributeType, accessType, annotations );
 	}
 
-	SimpleAttribute(String name, Class<?> attributeType, String accessType, Map<DotName, List<AnnotationInstance>> annotations) {
+	BasicAttribute(String name, Class<?> attributeType, String accessType, Map<DotName, List<AnnotationInstance>> annotations) {
 		super( name, attributeType, accessType, annotations );
 
 		AnnotationInstance idAnnotation = JandexHelper.getSingleAnnotation( annotations, JPADotNames.ID );

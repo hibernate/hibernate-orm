@@ -23,8 +23,6 @@
  */
 package org.hibernate.metamodel.relational;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.StringHelper;
 
@@ -41,7 +39,7 @@ public class UniqueKey extends AbstractConstraint implements Constraint {
 
 	@Override
 	public String getExportIdentifier() {
-		StringBuilder sb = new StringBuilder( getTable().getLoggableValueQualifier());
+		StringBuilder sb = new StringBuilder( getTable().getLoggableValueQualifier() );
 		sb.append( ".UK" );
 		for ( Column column : getColumns() ) {
 			sb.append( '_' ).append( column.getColumnName().getName() );
@@ -71,15 +69,15 @@ public class UniqueKey extends AbstractConstraint implements Constraint {
 				first = false;
 			}
 			else {
-				buf.append(", ");
+				buf.append( ", " );
 			}
-			if ( ! hadNullableColumn && column.isNullable() ) {
+			if ( !hadNullableColumn && column.isNullable() ) {
 				hadNullableColumn = true;
 			}
 			buf.append( column.getColumnName().encloseInQuotesIfQuoted( dialect ) );
 		}
 		//do not add unique constraint on DB not supporting unique and nullable columns
-		return ! hadNullableColumn || dialect.supportsNotNullUnique() ?
+		return !hadNullableColumn || dialect.supportsNotNullUnique() ?
 				buf.append( ')' ).toString() :
 				null;
 	}
@@ -95,14 +93,14 @@ public class UniqueKey extends AbstractConstraint implements Constraint {
 				first = false;
 			}
 			else {
-				buf.append(", ");
+				buf.append( ", " );
 			}
-			if ( ! nullable && column.isNullable() ) {
+			if ( !nullable && column.isNullable() ) {
 				nullable = true;
 			}
 			buf.append( column.getColumnName().encloseInQuotesIfQuoted( dialect ) );
 		}
-		return ! nullable || dialect.supportsNotNullUnique() ?
+		return !nullable || dialect.supportsNotNullUnique() ?
 				StringHelper.replace( buf.append( ')' ).toString(), "primary key", "unique" ) :
 				//TODO: improve this hack!
 				null;

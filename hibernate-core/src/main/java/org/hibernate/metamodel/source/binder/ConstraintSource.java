@@ -21,34 +21,42 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.annotations.attribute;
-
-import org.jboss.jandex.DotName;
-
-import org.hibernate.metamodel.source.annotations.JPADotNames;
+package org.hibernate.metamodel.source.binder;
 
 /**
- * An enum defining the type of a mapped attribute.
+ * Contract describing source of table information
  *
- * @author Hardy Ferentschik
+ * @author Steve Ebersole
  */
-public enum AttributeType {
-	BASIC( null ),
-	ONE_TO_ONE( JPADotNames.ONE_TO_ONE ),
-	ONE_TO_MANY( JPADotNames.ONE_TO_MANY ),
-	MANY_TO_ONE( JPADotNames.MANY_TO_ONE ),
-	MANY_TO_MANY( JPADotNames.MANY_TO_MANY ),
-	ELEMENT_COLLECTION( JPADotNames.ELEMENT_COLLECTION ),
-    EMBEDDED_ID( JPADotNames.EMBEDDED_ID ),
-	EMBEDDED( JPADotNames.EMBEDDED );
+public interface ConstraintSource {
+	/**
+	 * Obtain the supplied schema name
+	 *
+	 * @return The schema name. If {@code null}, the binder will apply the default.
+	 */
+	public String getExplicitSchemaName();
 
-	private final DotName annotationDotName;
+	/**
+	 * Obtain the supplied catalog name
+	 *
+	 * @return The catalog name. If {@code null}, the binder will apply the default.
+	 */
+	public String getExplicitCatalogName();
 
-	AttributeType(DotName annotationDotName) {
-		this.annotationDotName = annotationDotName;
-	}
+	/**
+	 * Obtain the supplied table name.
+	 *
+	 * @return The table name.
+	 */
+	public String getExplicitTableName();
 
-	public DotName getAnnotationDotName() {
-		return annotationDotName;
-	}
+	/**
+	 * Obtain the logical name of the table.  This value is used to uniquely reference the table when binding
+	 * values to the binding model.
+	 *
+	 * @return The logical name. Can be {@code null} in the case of the "primary table".
+	 *
+	 * @see org.hibernate.metamodel.source.binder.RelationalValueSource#getContainingTableName()
+	 */
+	public String getLogicalName();
 }

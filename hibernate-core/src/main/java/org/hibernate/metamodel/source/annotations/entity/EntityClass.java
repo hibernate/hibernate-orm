@@ -57,24 +57,25 @@ import org.hibernate.metamodel.source.annotations.JandexHelper;
 import org.hibernate.metamodel.source.annotations.attribute.DiscriminatorColumnValues;
 import org.hibernate.metamodel.source.binder.ConstraintSource;
 import org.hibernate.metamodel.source.binder.TableSource;
-import org.hibernate.metamodel.source.binder.UniqueConstraintSource;
 
 /**
- * Represents an entity or mapped superclass configured via annotations/xml.
+ * Represents an entity or mapped superclass configured via annotations/orm-xml.
  *
  * @author Hardy Ferentschik
  */
 public class EntityClass extends ConfiguredClass {
 	private final IdType idType;
 	private final InheritanceType inheritanceType;
-	private final TableSource tableSource;
-	private final Set<ConstraintSource> constraintSources;
-	private final boolean hasOwnTable;
+
 	private final String explicitEntityName;
 	private final String customLoaderQueryName;
 	private final List<String> synchronizedTableNames;
 	private final String customTuplizer;
 	private final int batchSize;
+
+	private final TableSource primaryTableSource;
+	private final Set<TableSource> secondaryTableSources;
+	private final Set<ConstraintSource> constraintSources;
 
 	private boolean isMutable;
 	private boolean isExplicitPolymorphism;
@@ -107,10 +108,23 @@ public class EntityClass extends ConfiguredClass {
 		super( classInfo, hierarchyAccessType, parent, context );
 		this.inheritanceType = inheritanceType;
 		this.idType = determineIdType();
-		this.hasOwnTable = definesItsOwnTable();
+		boolean hasOwnTable = definesItsOwnTable();
 		this.explicitEntityName = determineExplicitEntityName();
 		this.constraintSources = new HashSet<ConstraintSource>();
-		this.tableSource = createTableSource();
+
+		if ( hasOwnTable ) {
+			this.primaryTableSource = createTableSource(
+					JandexHelper.getSingleAnnotation(
+							getClassInfo(),
+							JPADotNames.TABLE
+					)
+			);
+		}
+		else {
+			this.primaryTableSource = null;
+		}
+
+		this.secondaryTableSources = createSecondaryTableSources();
 		this.customLoaderQueryName = determineCustomLoader();
 		this.synchronizedTableNames = determineSynchronizedTableNames();
 		this.customTuplizer = determineCustomTuplizer();
@@ -159,13 +173,17 @@ public class EntityClass extends ConfiguredClass {
 		return caching;
 	}
 
-	public TableSource getTableSource() {
+	public TableSource getPrimaryTableSource() {
 		if ( definesItsOwnTable() ) {
-			return tableSource;
+			return primaryTableSource;
 		}
 		else {
-			return ( (EntityClass) getParent() ).getTableSource();
+			return ( (EntityClass) getParent() ).getPrimaryTableSource();
 		}
+	}
+
+	public Set<TableSource> getSecondaryTableSources() {
+		return secondaryTableSources;
 	}
 
 	public Set<ConstraintSource> getConstraintSources() {
@@ -247,22 +265,6 @@ public class EntityClass extends ConfiguredClass {
 
 	private boolean definesItsOwnTable() {
 		return !InheritanceType.SINGLE_TABLE.equals( inheritanceType ) || isEntityRoot();
-	}
-
-	private String processTableAnnotation(AnnotationInstance tableAnnotation) {
-		String tableName = null;
-		if ( tableAnnotation != null ) {
-			String explicitTableName = JandexHelper.getValue( tableAnnotation, "name", String.class );
-			if ( StringHelper.isNotEmpty( explicitTableName ) ) {
-				tableName = getContext().getNamingStrategy().tableName( explicitTableName );
-				if ( getContext().isGloballyQuotedIdentifiers() && !Identifier.isQuoted( explicitTableName ) ) {
-					tableName = StringHelper.quote( tableName );
-				}
-			}
-			createUniqueConstraints( tableAnnotation, tableName );
-		}
-
-		return tableName;
 	}
 
 	private IdType determineIdType() {
@@ -501,17 +503,16 @@ public class EntityClass extends ConfiguredClass {
 		);
 	}
 
-	private TableSource createTableSource() {
-		if ( !hasOwnTable ) {
-			return null;
-		}
-
+	/**
+	 * @param tableAnnotation a annotation instance, either {@link javax.persistence.Table} or {@link javax.persistence.SecondaryTable}
+	 *
+	 * @return A table source for the specified annotation instance
+	 */
+	private TableSource createTableSource(AnnotationInstance tableAnnotation) {
 		String schema = getContext().getMappingDefaults().getSchemaName();
 		String catalog = getContext().getMappingDefaults().getCatalogName();
 
-		final AnnotationInstance tableAnnotation = JandexHelper.getSingleAnnotation(
-				getClassInfo(), JPADotNames.TABLE
-		);
+
 		if ( tableAnnotation != null ) {
 			final AnnotationValue schemaValue = tableAnnotation.value( "schema" );
 			if ( schemaValue != null ) {
@@ -529,7 +530,22 @@ public class EntityClass extends ConfiguredClass {
 			catalog = StringHelper.quote( catalog );
 		}
 
-		String tableName = processTableAnnotation( tableAnnotation );
+		// process the table name
+		String tableName = null;
+		String explicitTableName = null;
+
+		if ( tableAnnotation != null ) {
+			explicitTableName = JandexHelper.getValue( tableAnnotation, "name", String.class );
+			if ( StringHelper.isNotEmpty( explicitTableName ) ) {
+				tableName = getContext().getNamingStrategy().tableName( explicitTableName );
+				if ( getContext().isGloballyQuotedIdentifiers() && !Identifier.isQuoted( explicitTableName ) ) {
+					tableName = StringHelper.quote( tableName );
+				}
+			}
+			createUniqueConstraints( tableAnnotation, tableName );
+		}
+
+
 		// use the simple table name as default in case there was no table annotation
 		if ( tableName == null ) {
 			if ( explicitEntityName == null ) {
@@ -540,8 +556,47 @@ public class EntityClass extends ConfiguredClass {
 			}
 		}
 
-		return new TableSourceImpl( schema, catalog, tableName );
+		TableSourceImpl tableSourceImpl;
+		if ( tableAnnotation == null || JPADotNames.TABLE.equals( tableAnnotation.name() ) ) {
+			// for the main table @Table we use 'null' as logical name
+			tableSourceImpl = new TableSourceImpl( schema, catalog, tableName, null );
+		}
+		else {
+			// for secondary tables a name must be specified which is used as logical table name
+			tableSourceImpl = new TableSourceImpl( schema, catalog, tableName, explicitTableName );
+		}
+		return tableSourceImpl;
 	}
+
+	private Set<TableSource> createSecondaryTableSources() {
+		Set<TableSource> secondaryTableSources = new HashSet<TableSource>();
+
+		// collect all @secondaryTable annotations
+		List<AnnotationInstance> secondaryTableAnnotations = new ArrayList<AnnotationInstance>();
+		secondaryTableAnnotations.add(
+				JandexHelper.getSingleAnnotation( getClassInfo(), JPADotNames.SECONDARY_TABLE )
+		);
+
+		AnnotationInstance secondaryTables = JandexHelper.getSingleAnnotation(
+				getClassInfo(),
+				JPADotNames.SECONDARY_TABLES
+		);
+		if ( secondaryTables != null ) {
+			secondaryTableAnnotations.addAll(
+					Arrays.asList(
+							JandexHelper.getValue( secondaryTables, "value", AnnotationInstance[].class )
+					)
+			);
+		}
+
+		// create table sources
+		for ( AnnotationInstance annotationInstance : secondaryTableAnnotations ) {
+			secondaryTableSources.add( createTableSource( annotationInstance ) );
+		}
+
+		return secondaryTableSources;
+	}
+
 
 	private void createUniqueConstraints(AnnotationInstance tableAnnotation, String tableName) {
 		AnnotationValue value = tableAnnotation.value( "uniqueConstraints" );
@@ -691,65 +746,5 @@ public class EntityClass extends ConfiguredClass {
 
 	public String getDiscriminatorMatchValue() {
 		return discriminatorMatchValue;
-	}
-
-	class UniqueConstraintSourceImpl implements UniqueConstraintSource {
-		private final String name;
-		private final String tableName;
-		private final List<String> columnNames;
-
-		UniqueConstraintSourceImpl(String name, String tableName, List<String> columnNames) {
-			this.name = name;
-			this.tableName = tableName;
-			this.columnNames = columnNames;
-		}
-
-		@Override
-		public String name() {
-			return name;
-		}
-
-		@Override
-		public String getTableName() {
-			return tableName;
-		}
-
-		@Override
-		public Iterable<String> columnNames() {
-			return columnNames;
-		}
-	}
-
-	class TableSourceImpl implements TableSource {
-		private final String schema;
-		private final String catalog;
-		private final String tableName;
-
-		TableSourceImpl(String schema, String catalog, String tableName) {
-			this.schema = schema;
-			this.catalog = catalog;
-			this.tableName = tableName;
-		}
-
-		@Override
-		public String getExplicitSchemaName() {
-			return schema;
-		}
-
-		@Override
-		public String getExplicitCatalogName() {
-			return catalog;
-		}
-
-		@Override
-		public String getExplicitTableName() {
-			return tableName;
-		}
-
-		@Override
-		public String getLogicalName() {
-			// todo : (steve) hardy, not sure what to use here... null is ok for the primary table name.  this is part of the secondary table support.
-			return null;
-		}
 	}
 }

@@ -41,7 +41,7 @@ public class ColumnValues {
 	private boolean insertable = true;
 	private boolean updatable = true;
 	private String columnDefinition = "";
-	private String table = "";
+	private String table = null;
 	private int length = 255;
 	private int precision = 0;
 	private int scale = 0;

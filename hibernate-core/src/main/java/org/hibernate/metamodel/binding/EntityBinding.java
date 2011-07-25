@@ -52,6 +52,7 @@ public class EntityBinding {
 
 	private Entity entity;
 	private TableSpecification baseTable;
+	private Map<String, TableSpecification> secondaryTables = new HashMap<String, TableSpecification>();
 
 	private Value<Class<?>> proxyInterfaceType;
 
@@ -142,8 +143,19 @@ public class EntityBinding {
 	}
 
 	public TableSpecification getTable(String containingTableName) {
-		// todo : implement this for secondary table look ups.  for now we just return the base table
-		return baseTable;
+		if ( containingTableName == null ) {
+			return baseTable;
+		}
+
+		TableSpecification tableSpec = secondaryTables.get( containingTableName );
+		if ( tableSpec == null ) {
+		   // todo throw exception !? (HF)
+		}
+		return tableSpec;
+	}
+
+	public void addSecondaryTable(String tableName, TableSpecification table) {
+		secondaryTables.put( tableName, table );
 	}
 
 	public boolean isVersioned() {

@@ -78,6 +78,13 @@ public interface EntitySource extends SubclassEntityContainer, AttributeSourceCo
 	public TableSource getPrimaryTable();
 
 	/**
+	 * Obtain the secondary tables for this entity
+	 *
+	 * @return returns an iterator over the secondary tables for this entity
+	 */
+	public Iterable<TableSource> getSecondaryTables();
+
+	/**
 	 * Obtain the name of a custom tuplizer class to be used.
 	 *
 	 * @return The custom tuplizer class name

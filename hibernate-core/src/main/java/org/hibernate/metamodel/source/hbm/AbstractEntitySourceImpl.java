@@ -25,6 +25,7 @@ package org.hibernate.metamodel.source.hbm;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.EntityMode;
@@ -37,6 +38,7 @@ import org.hibernate.metamodel.source.binder.ConstraintSource;
 import org.hibernate.metamodel.source.binder.EntitySource;
 import org.hibernate.metamodel.source.binder.MetaAttributeSource;
 import org.hibernate.metamodel.source.binder.SubclassEntitySource;
+import org.hibernate.metamodel.source.binder.TableSource;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.EntityElement;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLAnyElement;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLManyToManyElement;
@@ -49,6 +51,7 @@ import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLTuplizerElement;
 
 /**
  * @author Steve Ebersole
+ * @author Hardy Ferentschik
  */
 public abstract class AbstractEntitySourceImpl implements EntitySource {
 	private final MappingDocument sourceMappingDocument;
@@ -252,6 +255,11 @@ public abstract class AbstractEntitySourceImpl implements EntitySource {
 
 	@Override
 	public Iterable<ConstraintSource> getConstraints() {
+		return Collections.emptySet();
+	}
+
+	@Override
+	public Iterable<TableSource> getSecondaryTables() {
 		return Collections.emptySet();
 	}
 }

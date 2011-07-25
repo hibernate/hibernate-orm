@@ -96,7 +96,7 @@ public class EntitySourceImpl implements EntitySource {
 
 	@Override
 	public TableSource getPrimaryTable() {
-		return entityClass.getTableSource();
+		return entityClass.getPrimaryTableSource();
 	}
 
 	@Override
@@ -204,6 +204,11 @@ public class EntitySourceImpl implements EntitySource {
 	@Override
 	public Iterable<ConstraintSource> getConstraints() {
 		return entityClass.getConstraintSources();
+	}
+
+	@Override
+	public Iterable<TableSource> getSecondaryTables() {
+		return entityClass.getSecondaryTableSources();
 	}
 
 	class LocalBindingContextImpl implements LocalBindingContext {

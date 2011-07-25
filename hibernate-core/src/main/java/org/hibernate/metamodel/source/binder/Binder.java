@@ -55,6 +55,7 @@ import org.hibernate.metamodel.relational.DerivedValue;
 import org.hibernate.metamodel.relational.Identifier;
 import org.hibernate.metamodel.relational.Schema;
 import org.hibernate.metamodel.relational.SimpleValue;
+import org.hibernate.metamodel.relational.Table;
 import org.hibernate.metamodel.relational.TableSpecification;
 import org.hibernate.metamodel.relational.Tuple;
 import org.hibernate.metamodel.relational.UniqueKey;
@@ -610,11 +611,22 @@ public class Binder {
 		return subContext;
 	}
 
-
 	// Relational ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	private void bindPrimaryTable(EntitySource entitySource, EntityBinding entityBinding) {
 		final TableSource tableSource = entitySource.getPrimaryTable();
+		final Table table = createTable( entityBinding, tableSource );
+		entityBinding.setBaseTable( table );
+	}
+
+	private void bindSecondaryTables(EntitySource entitySource, EntityBinding entityBinding) {
+		for ( TableSource secondaryTableSource : entitySource.getSecondaryTables() ) {
+			final Table table = createTable( entityBinding, secondaryTableSource );
+			entityBinding.addSecondaryTable( secondaryTableSource.getLogicalName(), table );
+		}
+	}
+
+	private Table createTable(EntityBinding entityBinding, TableSource tableSource) {
 		final String schemaName = StringHelper.isEmpty( tableSource.getExplicitSchemaName() )
 				? currentBindingContext.getMappingDefaults().getSchemaName()
 				: currentBindingContext.getMetadataImplementor().getOptions().isGloballyQuotedIdentifiers()
@@ -638,16 +650,10 @@ public class Binder {
 			tableName = StringHelper.quote( tableName );
 		}
 
-		final org.hibernate.metamodel.relational.Table table = currentBindingContext.getMetadataImplementor()
+		return currentBindingContext.getMetadataImplementor()
 				.getDatabase()
 				.getSchema( new Schema.Name( schemaName, catalogName ) )
 				.locateOrCreateTable( Identifier.toIdentifier( tableName ) );
-
-		entityBinding.setBaseTable( table );
-	}
-
-	private void bindSecondaryTables(EntitySource entitySource, EntityBinding entityBinding) {
-		// todo : implement
 	}
 
 	private void bindTableUniqueConstraints(EntitySource entitySource, EntityBinding entityBinding) {

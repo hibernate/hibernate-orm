@@ -23,6 +23,8 @@
  */
 package org.hibernate.metamodel.source.hbm;
 
+import java.util.Iterator;
+
 import org.hibernate.EntityMode;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.engine.OptimisticLockStyle;

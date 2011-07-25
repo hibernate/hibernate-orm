@@ -15,12 +15,14 @@ public class Car {
 	
 	private Person owner;
 
+    private Person driver;
 	
 	public Car() { }
 
-	public Car(int number, Person owner) {
+	public Car(int number, Person owner, Person driver) {
 		this.number = number;
 		this.owner = owner;
+        this.driver = driver;
 	}
 
 	
@@ -48,6 +50,11 @@ public class Car {
 		this.number = number;
 	}
 
+    public Person getDriver() {
+        return driver;
+    }
 
-
+    public void setDriver(Person driver) {
+        this.driver = driver;
+    }
 }

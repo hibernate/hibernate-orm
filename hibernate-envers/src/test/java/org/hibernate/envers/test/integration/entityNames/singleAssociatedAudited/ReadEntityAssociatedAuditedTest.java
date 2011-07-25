@@ -45,8 +45,8 @@ public class ReadEntityAssociatedAuditedTest extends AbstractOneSessionTest{
         Person pers1 = new Person("Hernan", 15);
         Person pers2 = new Person("Leandro", 19);
         
-        Car car1 = new Car(1, pers1);
-        Car car2 = new Car(2, pers2);
+        Car car1 = new Car(1, pers1, null);
+        Car car2 = new Car(2, pers2, null);
         
         //REV 1 
         getSession().getTransaction().begin();

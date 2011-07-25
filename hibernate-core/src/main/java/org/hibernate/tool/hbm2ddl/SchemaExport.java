@@ -42,6 +42,7 @@ import java.util.Properties;
 import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
@@ -127,17 +128,18 @@ public class SchemaExport {
 		this.connectionHelper = new SuppliedConnectionProviderConnectionHelper(
 				serviceRegistry.getService( ConnectionProvider.class )
 		);
-		this.sqlStatementLogger = serviceRegistry.getService( JdbcServices.class ).getSqlStatementLogger();
+        JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
+		this.sqlStatementLogger = jdbcServices.getSqlStatementLogger();
 		this.formatter = ( sqlStatementLogger.isFormat() ? FormatStyle.DDL : FormatStyle.NONE ).getFormatter();
-		this.sqlExceptionHelper = serviceRegistry.getService( JdbcServices.class ).getSqlExceptionHelper();
+		this.sqlExceptionHelper = jdbcServices.getSqlExceptionHelper();
 
 		this.importFiles = ConfigurationHelper.getString(
-				Environment.HBM2DDL_IMPORT_FILES,
+				AvailableSettings.HBM2DDL_IMPORT_FILES,
 				serviceRegistry.getService( ConfigurationService.class ).getSettings(),
 				DEFAULT_IMPORT_FILE
 		);
 
-		final Dialect dialect = metadata.getServiceRegistry().getService( JdbcServices.class ).getDialect();
+		final Dialect dialect = jdbcServices.getDialect();
 		this.dropSQL = metadata.getDatabase().generateDropSchemaScript( dialect );
 		this.createSQL = metadata.getDatabase().generateSchemaCreationScript( dialect );
 	}
@@ -389,7 +391,7 @@ public class SchemaExport {
 	        if ( delimiter != null ) {
 				formatted += delimiter;
 			}
-			sqlStatementLogger.logStatement( formatted );
+			sqlStatementLogger.logStatement( sqlCommand, formatter );
 			for ( Exporter exporter : exporters ) {
 				try {
 					exporter.export( formatted );

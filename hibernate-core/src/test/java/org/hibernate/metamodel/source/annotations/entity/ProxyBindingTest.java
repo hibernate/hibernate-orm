@@ -72,7 +72,7 @@ public class ProxyBindingTest extends BaseAnnotationBindingTestCase {
 		assertTrue( "Wrong laziness", binding.isLazy() );
 		assertEquals(
 				"Wrong proxy interface",
-				"org.hibernate.metamodel.source.annotations.entity.ProxyBindingTests$ProxyInterfaceEntity",
+				"org.hibernate.metamodel.source.annotations.entity.ProxyBindingTest$ProxyInterfaceEntity",
 				binding.getProxyInterfaceType().getValue().getName()
 		);
 	}

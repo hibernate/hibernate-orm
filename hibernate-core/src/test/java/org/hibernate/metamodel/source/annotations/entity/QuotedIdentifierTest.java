@@ -21,7 +21,7 @@ public class QuotedIdentifierTest extends BaseAnnotationBindingTestCase {
 	@Resources(annotatedClasses = { Item.class, Item2.class, Item3.class, Item4.class }, ormXmlPath = ormPath)
 	public void testDelimitedIdentifiers() {
 		EntityBinding item = getEntityBinding( Item.class );
-		assertIdentifierEquals( "`QuotedIdentifierTests$Item`", item );
+		assertIdentifierEquals( "`QuotedIdentifierTest$Item`", item );
 
 		item = getEntityBinding( Item2.class );
 		assertIdentifierEquals( "`TABLE_ITEM2`", item );

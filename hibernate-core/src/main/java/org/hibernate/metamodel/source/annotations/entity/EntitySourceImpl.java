@@ -40,11 +40,11 @@ import org.hibernate.metamodel.source.Origin;
 import org.hibernate.metamodel.source.SourceType;
 import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.source.annotations.attribute.AssociationAttribute;
-import org.hibernate.metamodel.source.annotations.attribute.DiscriminatorColumnValues;
-import org.hibernate.metamodel.source.annotations.attribute.SimpleAttribute;
+import org.hibernate.metamodel.source.annotations.attribute.BasicAttribute;
 import org.hibernate.metamodel.source.annotations.attribute.SingularAttributeSourceImpl;
 import org.hibernate.metamodel.source.annotations.attribute.ToOneAttributeSourceImpl;
 import org.hibernate.metamodel.source.binder.AttributeSource;
+import org.hibernate.metamodel.source.binder.ConstraintSource;
 import org.hibernate.metamodel.source.binder.EntitySource;
 import org.hibernate.metamodel.source.binder.MetaAttributeSource;
 import org.hibernate.metamodel.source.binder.SubclassEntitySource;
@@ -101,7 +101,6 @@ public class EntitySourceImpl implements EntitySource {
 
 	@Override
 	public boolean isAbstract() {
-		// todo - check if this is correct for annotations
 		return false;
 	}
 
@@ -178,7 +177,7 @@ public class EntitySourceImpl implements EntitySource {
 	@Override
 	public Iterable<AttributeSource> attributeSources() {
 		List<AttributeSource> attributeList = new ArrayList<AttributeSource>();
-		for ( SimpleAttribute attribute : entityClass.getSimpleAttributes() ) {
+		for ( BasicAttribute attribute : entityClass.getSimpleAttributes() ) {
 			attributeList.add( new SingularAttributeSourceImpl( attribute ) );
 		}
 		for ( AssociationAttribute associationAttribute : entityClass.getAssociationAttributes() ) {
@@ -200,6 +199,11 @@ public class EntitySourceImpl implements EntitySource {
 	@Override
 	public String getDiscriminatorMatchValue() {
 		return entityClass.getDiscriminatorMatchValue();
+	}
+
+	@Override
+	public Iterable<ConstraintSource> getConstraints() {
+		return entityClass.getConstraintSources();
 	}
 
 	class LocalBindingContextImpl implements LocalBindingContext {

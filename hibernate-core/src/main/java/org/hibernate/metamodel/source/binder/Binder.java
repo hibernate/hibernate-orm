@@ -57,6 +57,7 @@ import org.hibernate.metamodel.relational.Schema;
 import org.hibernate.metamodel.relational.SimpleValue;
 import org.hibernate.metamodel.relational.TableSpecification;
 import org.hibernate.metamodel.relational.Tuple;
+import org.hibernate.metamodel.relational.UniqueKey;
 import org.hibernate.metamodel.source.LocalBindingContext;
 import org.hibernate.metamodel.source.MetaAttributeContext;
 import org.hibernate.metamodel.source.MetadataImplementor;
@@ -318,7 +319,9 @@ public class Binder {
 		);
 
 		entityBinding.getHierarchyDetails().getEntityIdentifier().setValueBinding( idAttributeBinding );
-		entityBinding.getHierarchyDetails().getEntityIdentifier().setIdGenerator( identifierSource.getIdentifierGeneratorDescriptor() );
+		entityBinding.getHierarchyDetails()
+				.getEntityIdentifier()
+				.setIdGenerator( identifierSource.getIdentifierGeneratorDescriptor() );
 
 		final org.hibernate.metamodel.relational.Value relationalValue = idAttributeBinding.getValue();
 
@@ -409,10 +412,11 @@ public class Binder {
 	}
 
 	private void bindPersistentCollection(PluralAttributeSource attributeSource, EntityBinding entityBinding) {
-		final PluralAttribute existingAttribute = entityBinding.getEntity().locatePluralAttribute( attributeSource.getName() );
+		final PluralAttribute existingAttribute = entityBinding.getEntity()
+				.locatePluralAttribute( attributeSource.getName() );
 		final AbstractPluralAttributeBinding pluralAttributeBinding;
 
-		if ( attributeSource.getPluralAttributeNature() == PluralAttributeNature.BAG  ) {
+		if ( attributeSource.getPluralAttributeNature() == PluralAttributeNature.BAG ) {
 			final PluralAttribute attribute = existingAttribute != null
 					? existingAttribute
 					: entityBinding.getEntity().createBag( attributeSource.getName() );
@@ -441,7 +445,8 @@ public class Binder {
 	private SimpleSingularAttributeBinding doBasicSingularAttributeBindingCreation(
 			SingularAttributeSource attributeSource,
 			EntityBinding entityBinding) {
-		final SingularAttribute existingAttribute = entityBinding.getEntity().locateSingularAttribute( attributeSource.getName() );
+		final SingularAttribute existingAttribute = entityBinding.getEntity()
+				.locateSingularAttribute( attributeSource.getName() );
 		final SingularAttribute attribute;
 		if ( existingAttribute != null ) {
 			attribute = existingAttribute;
@@ -646,7 +651,23 @@ public class Binder {
 	}
 
 	private void bindTableUniqueConstraints(EntitySource entitySource, EntityBinding entityBinding) {
-		// todo : implement
+		for ( ConstraintSource constraintSource : entitySource.getConstraints() ) {
+			if ( constraintSource instanceof UniqueConstraintSource ) {
+				TableSpecification table = entityBinding.getTable( constraintSource.getTableName() );
+				if ( table == null ) {
+					// throw exception !?
+				}
+				String constraintName = constraintSource.name();
+				if ( constraintName == null ) {
+					// create a default name
+				}
+
+				UniqueKey uniqueKey = table.getOrCreateUniqueKey( constraintName );
+				for ( String columnName : constraintSource.columnNames() ) {
+					uniqueKey.addColumn( table.locateOrCreateColumn( columnName ) );
+				}
+			}
+		}
 	}
 
 	private void bindRelationalValues(
@@ -674,7 +695,7 @@ public class Binder {
 				else {
 					valueBindings.add(
 							new SimpleValueBinding(
-									makeDerivedValue( ((DerivedValueSource) valueSource), table )
+									makeDerivedValue( ( (DerivedValueSource) valueSource ), table )
 							)
 					);
 				}

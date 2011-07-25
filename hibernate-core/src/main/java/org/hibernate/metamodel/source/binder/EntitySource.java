@@ -108,7 +108,7 @@ public interface EntitySource extends SubclassEntityContainer, AttributeSourceCo
 	/**
 	 * Obtain the batch-size to be applied when initializing proxies of this entity.
 	 *
-	 * @return THe batch-size.
+	 * @return returns the the batch-size.
 	 */
 	public int getBatchSize();
 
@@ -188,7 +188,12 @@ public interface EntitySource extends SubclassEntityContainer, AttributeSourceCo
 	 * Get the actual discriminator value in case of a single table inheritance
 	 *
 	 * @return the actual discriminator value in case of a single table inheritance or {@code null} in case there is no
-	 * explicit value or a different inheritance scheme
+	 *         explicit value or a different inheritance scheme
 	 */
 	public String getDiscriminatorMatchValue();
+
+	/**
+	 * @return returns the source information for constraints defined on the table
+	 */
+	public Iterable<ConstraintSource> getConstraints();
 }

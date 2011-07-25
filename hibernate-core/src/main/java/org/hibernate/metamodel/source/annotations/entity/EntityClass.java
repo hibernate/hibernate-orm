@@ -26,7 +26,9 @@ package org.hibernate.metamodel.source.annotations.entity;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import javax.persistence.AccessType;
 import javax.persistence.DiscriminatorType;
 
@@ -53,7 +55,9 @@ import org.hibernate.metamodel.source.annotations.HibernateDotNames;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.JandexHelper;
 import org.hibernate.metamodel.source.annotations.attribute.DiscriminatorColumnValues;
+import org.hibernate.metamodel.source.binder.ConstraintSource;
 import org.hibernate.metamodel.source.binder.TableSource;
+import org.hibernate.metamodel.source.binder.UniqueConstraintSource;
 
 /**
  * Represents an entity or mapped superclass configured via annotations/xml.
@@ -64,6 +68,7 @@ public class EntityClass extends ConfiguredClass {
 	private final IdType idType;
 	private final InheritanceType inheritanceType;
 	private final TableSource tableSource;
+	private final Set<ConstraintSource> constraintSources;
 	private final boolean hasOwnTable;
 	private final String explicitEntityName;
 	private final String customLoaderQueryName;
@@ -104,6 +109,7 @@ public class EntityClass extends ConfiguredClass {
 		this.idType = determineIdType();
 		this.hasOwnTable = definesItsOwnTable();
 		this.explicitEntityName = determineExplicitEntityName();
+		this.constraintSources = new HashSet<ConstraintSource>();
 		this.tableSource = createTableSource();
 		this.customLoaderQueryName = determineCustomLoader();
 		this.synchronizedTableNames = determineSynchronizedTableNames();
@@ -160,6 +166,10 @@ public class EntityClass extends ConfiguredClass {
 		else {
 			return ( (EntityClass) getParent() ).getTableSource();
 		}
+	}
+
+	public Set<ConstraintSource> getConstraintSources() {
+		return constraintSources;
 	}
 
 	public String getExplicitEntityName() {
@@ -239,12 +249,7 @@ public class EntityClass extends ConfiguredClass {
 		return !InheritanceType.SINGLE_TABLE.equals( inheritanceType ) || isEntityRoot();
 	}
 
-	private String processTableAnnotation() {
-		AnnotationInstance tableAnnotation = JandexHelper.getSingleAnnotation(
-				getClassInfo(),
-				JPADotNames.TABLE
-		);
-
+	private String processTableAnnotation(AnnotationInstance tableAnnotation) {
 		String tableName = null;
 		if ( tableAnnotation != null ) {
 			String explicitTableName = JandexHelper.getValue( tableAnnotation, "name", String.class );
@@ -254,7 +259,9 @@ public class EntityClass extends ConfiguredClass {
 					tableName = StringHelper.quote( tableName );
 				}
 			}
+			createUniqueConstraints( tableAnnotation, tableName );
 		}
+
 		return tableName;
 	}
 
@@ -522,7 +529,7 @@ public class EntityClass extends ConfiguredClass {
 			catalog = StringHelper.quote( catalog );
 		}
 
-		String tableName = processTableAnnotation();
+		String tableName = processTableAnnotation( tableAnnotation );
 		// use the simple table name as default in case there was no table annotation
 		if ( tableName == null ) {
 			if ( explicitEntityName == null ) {
@@ -532,7 +539,26 @@ public class EntityClass extends ConfiguredClass {
 				tableName = explicitEntityName;
 			}
 		}
+
 		return new TableSourceImpl( schema, catalog, tableName );
+	}
+
+	private void createUniqueConstraints(AnnotationInstance tableAnnotation, String tableName) {
+		AnnotationValue value = tableAnnotation.value( "uniqueConstraints" );
+		if ( value == null ) {
+			return;
+		}
+
+		AnnotationInstance[] uniqueConstraints = value.asNestedArray();
+		for ( AnnotationInstance unique : uniqueConstraints ) {
+			String name = unique.value( "name" ).asString();
+			String[] columnNames = unique.value( "columnNames" ).asStringArray();
+			UniqueConstraintSourceImpl uniqueConstraintSource =
+					new UniqueConstraintSourceImpl(
+							name, tableName, Arrays.asList( columnNames )
+					);
+			constraintSources.add( uniqueConstraintSource );
+		}
 	}
 
 	private String determineCustomLoader() {
@@ -665,6 +691,33 @@ public class EntityClass extends ConfiguredClass {
 
 	public String getDiscriminatorMatchValue() {
 		return discriminatorMatchValue;
+	}
+
+	class UniqueConstraintSourceImpl implements UniqueConstraintSource {
+		private final String name;
+		private final String tableName;
+		private final List<String> columnNames;
+
+		UniqueConstraintSourceImpl(String name, String tableName, List<String> columnNames) {
+			this.name = name;
+			this.tableName = tableName;
+			this.columnNames = columnNames;
+		}
+
+		@Override
+		public String name() {
+			return name;
+		}
+
+		@Override
+		public String getTableName() {
+			return tableName;
+		}
+
+		@Override
+		public Iterable<String> columnNames() {
+			return columnNames;
+		}
 	}
 
 	class TableSourceImpl implements TableSource {

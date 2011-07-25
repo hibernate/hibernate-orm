@@ -24,22 +24,9 @@
 package org.hibernate.metamodel.source.binder;
 
 /**
- * Contract describing source of table constraints
+ * Defining a unique constraint source
  *
  * @author Hardy Ferentschik
  */
-public interface UniqueConstraintSource {
-
-	/**
-	 * @return returns the name of the constraint or {@code null} in case a generated name should be used
-	 */
-	public String name();
-
-	/**
-	 * Obtain the logical name of the table for this constraint.
-	 *
-	 * @return The logical table name. Can be {@code null} in the case of the "primary table".
-	 *
-	 */
-	public String getTableName();
+public interface UniqueConstraintSource extends ConstraintSource {
 }

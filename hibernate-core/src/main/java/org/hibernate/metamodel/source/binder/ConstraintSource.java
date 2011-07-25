@@ -24,39 +24,25 @@
 package org.hibernate.metamodel.source.binder;
 
 /**
- * Contract describing source of table information
+ * Contract describing source of table constraints
  *
- * @author Steve Ebersole
+ * @author Hardy Ferentschik
  */
 public interface ConstraintSource {
 	/**
-	 * Obtain the supplied schema name
-	 *
-	 * @return The schema name. If {@code null}, the binder will apply the default.
+	 * @return returns the name of the constraint or {@code null} in case a generated name should be used
 	 */
-	public String getExplicitSchemaName();
+	public String name();
 
 	/**
-	 * Obtain the supplied catalog name
+	 * Obtain the logical name of the table for this constraint.
 	 *
-	 * @return The catalog name. If {@code null}, the binder will apply the default.
+	 * @return The logical table name. Can be {@code null} in the case of the "primary table".
 	 */
-	public String getExplicitCatalogName();
+	public String getTableName();
 
 	/**
-	 * Obtain the supplied table name.
-	 *
-	 * @return The table name.
+	 * @return returns the names of the column which are part of this constraint
 	 */
-	public String getExplicitTableName();
-
-	/**
-	 * Obtain the logical name of the table.  This value is used to uniquely reference the table when binding
-	 * values to the binding model.
-	 *
-	 * @return The logical name. Can be {@code null} in the case of the "primary table".
-	 *
-	 * @see org.hibernate.metamodel.source.binder.RelationalValueSource#getContainingTableName()
-	 */
-	public String getLogicalName();
+	Iterable<String> columnNames();
 }

@@ -24,6 +24,7 @@
 package org.hibernate.metamodel.source.hbm;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.EntityMode;
@@ -32,6 +33,7 @@ import org.hibernate.metamodel.binding.CustomSQL;
 import org.hibernate.metamodel.source.LocalBindingContext;
 import org.hibernate.metamodel.source.Origin;
 import org.hibernate.metamodel.source.binder.AttributeSource;
+import org.hibernate.metamodel.source.binder.ConstraintSource;
 import org.hibernate.metamodel.source.binder.EntitySource;
 import org.hibernate.metamodel.source.binder.MetaAttributeSource;
 import org.hibernate.metamodel.source.binder.SubclassEntitySource;
@@ -246,5 +248,10 @@ public abstract class AbstractEntitySourceImpl implements EntitySource {
 	@Override
 	public String getDiscriminatorMatchValue() {
 		return null;  //To change body of implemented methods use File | Settings | File Templates.
+	}
+
+	@Override
+	public Iterable<ConstraintSource> getConstraints() {
+		return Collections.emptySet();
 	}
 }

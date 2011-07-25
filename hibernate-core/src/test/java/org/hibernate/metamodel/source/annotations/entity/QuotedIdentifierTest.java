@@ -34,7 +34,7 @@ public class QuotedIdentifierTest extends BaseAnnotationBindingTestCase {
 	}
 
 	private void assertIdentifierEquals(String expected, EntityBinding realValue) {
-		org.hibernate.metamodel.relational.Table table = (org.hibernate.metamodel.relational.Table) realValue.getBaseTable();
+		org.hibernate.metamodel.relational.Table table = (org.hibernate.metamodel.relational.Table) realValue.getPrimaryTable();
 		assertEquals( Identifier.toIdentifier( expected ), table.getTableName() );
 	}
 

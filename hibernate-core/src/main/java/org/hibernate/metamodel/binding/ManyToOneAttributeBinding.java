@@ -26,6 +26,7 @@ package org.hibernate.metamodel.binding;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.metamodel.domain.SingularAttribute;
@@ -47,8 +48,8 @@ public class ManyToOneAttributeBinding extends SimpleSingularAttributeBinding im
 	private CascadeStyle cascadeStyle;
 	private FetchMode fetchMode;
 
-	ManyToOneAttributeBinding(EntityBinding entityBinding, SingularAttribute attribute) {
-		super( entityBinding, attribute, false, false );
+	ManyToOneAttributeBinding(AttributeBindingContainer container, SingularAttribute attribute) {
+		super( container, attribute, false, false );
 	}
 
 	@Override
@@ -124,10 +125,14 @@ public class ManyToOneAttributeBinding extends SimpleSingularAttributeBinding im
 
 	@Override
 	public final void resolveReference(AttributeBinding referencedAttributeBinding) {
-		if ( !referencedEntityName.equals( referencedAttributeBinding.getEntityBinding().getEntity().getName() ) ) {
+		if ( ! EntityBinding.class.isInstance( referencedAttributeBinding.getContainer() ) ) {
+			throw new AssertionFailure( "Illegal attempt to resolve many-to-one reference based on non-entity attribute" );
+		}
+		final EntityBinding entityBinding = (EntityBinding) referencedAttributeBinding.getContainer();
+		if ( !referencedEntityName.equals( entityBinding.getEntity().getName() ) ) {
 			throw new IllegalStateException(
 					"attempt to set EntityBinding with name: [" +
-							referencedAttributeBinding.getEntityBinding().getEntity().getName() +
+							entityBinding.getEntity().getName() +
 							"; entity name should be: " + referencedEntityName
 			);
 		}
@@ -154,7 +159,7 @@ public class ManyToOneAttributeBinding extends SimpleSingularAttributeBinding im
 
 	@Override
 	public final EntityBinding getReferencedEntityBinding() {
-		return referencedAttributeBinding.getEntityBinding();
+		return (EntityBinding) referencedAttributeBinding.getContainer();
 	}
 
 //	private void buildForeignKey() {

@@ -56,11 +56,11 @@ public class SimpleSingularAttributeBinding
 	private MetaAttributeContext metaAttributeContext;
 
 	SimpleSingularAttributeBinding(
-			EntityBinding entityBinding,
+			AttributeBindingContainer container,
 			SingularAttribute attribute,
 			boolean forceNonNullable,
 			boolean forceUnique) {
-		super( entityBinding, attribute );
+		super( container, attribute );
 		this.forceNonNullable = forceNonNullable;
 		this.forceUnique = forceUnique;
 	}
@@ -144,7 +144,7 @@ public class SimpleSingularAttributeBinding
 		// TODO: not sure how this works for collection IDs...
 		//pass the entity-name, if not a collection-id
 		//if ( rootClass!=null) {
-		params.setProperty( IdentifierGenerator.ENTITY_NAME, getEntityBinding().getEntity().getName() );
+			params.setProperty( IdentifierGenerator.ENTITY_NAME, getContainer().seekEntityBinding().getEntity().getName() );
 		//}
 
 		//init the table here instead of earlier, so that we can get a quoted table name

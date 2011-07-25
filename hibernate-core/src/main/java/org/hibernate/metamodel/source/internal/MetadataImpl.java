@@ -424,7 +424,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	public void addCollection(AbstractPluralAttributeBinding pluralAttributeBinding) {
-		final String owningEntityName = pluralAttributeBinding.getEntityBinding().getEntity().getName();
+		final String owningEntityName = pluralAttributeBinding.getContainer().getPathBase();
 		final String attributeName = pluralAttributeBinding.getAttribute().getName();
 		final String collectionRole = owningEntityName + '.' + attributeName;
 		if ( collectionBindingMap.containsKey( collectionRole ) ) {
@@ -535,7 +535,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 			throw new MappingException( "Entity binding not known: " + entityName );
 		}
 		// TODO: should this call EntityBinding.getReferencedAttributeBindingString), which does not exist yet?
-		AttributeBinding attributeBinding = entityBinding.getAttributeBinding( propertyName );
+		AttributeBinding attributeBinding = entityBinding.locateAttributeBinding( propertyName );
 		if ( attributeBinding == null ) {
 			throw new MappingException( "unknown property: " + entityName + '.' + propertyName );
 		}

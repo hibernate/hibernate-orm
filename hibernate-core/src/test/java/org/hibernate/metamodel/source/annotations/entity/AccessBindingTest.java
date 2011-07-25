@@ -52,7 +52,7 @@ public class AccessBindingTest extends BaseAnnotationBindingTestCase {
 	@Resources(annotatedClasses = { FieldAccess.class })
 	public void testDefaultFieldAccess() {
 		EntityBinding binding = getEntityBinding( FieldAccess.class );
-		assertEquals( "Wrong access type", "field", binding.getAttributeBinding( "id" ).getPropertyAccessorName() );
+		assertEquals( "Wrong access type", "field", binding.locateAttributeBinding( "id" ).getPropertyAccessorName() );
 	}
 
 	@Entity
@@ -69,7 +69,7 @@ public class AccessBindingTest extends BaseAnnotationBindingTestCase {
 	@Resources(annotatedClasses = { PropertyAccess.class })
 	public void testDefaultPropertyAccess() {
 		EntityBinding binding = getEntityBinding( PropertyAccess.class );
-		assertEquals( "Wrong access type", "property", binding.getAttributeBinding( "id" ).getPropertyAccessorName() );
+		assertEquals( "Wrong access type", "property", binding.locateAttributeBinding( "id" ).getPropertyAccessorName() );
 	}
 
 
@@ -105,11 +105,11 @@ public class AccessBindingTest extends BaseAnnotationBindingTestCase {
 	@Resources(annotatedClasses = { MixedAccess.class })
 	public void testMixedAccess() {
 		EntityBinding binding = getEntityBinding( MixedAccess.class );
-		assertEquals( "Wrong access type", "field", binding.getAttributeBinding( "id" ).getPropertyAccessorName() );
+		assertEquals( "Wrong access type", "field", binding.locateAttributeBinding( "id" ).getPropertyAccessorName() );
 		assertEquals(
 				"Wrong access type",
 				"property",
-				binding.getAttributeBinding( "name" ).getPropertyAccessorName()
+				binding.locateAttributeBinding( "name" ).getPropertyAccessorName()
 		);
 	}
 
@@ -136,7 +136,7 @@ public class AccessBindingTest extends BaseAnnotationBindingTestCase {
 		assertEquals(
 				"Wrong access type",
 				"field",
-				binding.getAttributeBinding( "id" ).getPropertyAccessorName()
+				binding.locateAttributeBinding( "id" ).getPropertyAccessorName()
 		);
 
 
@@ -144,7 +144,7 @@ public class AccessBindingTest extends BaseAnnotationBindingTestCase {
 		assertEquals(
 				"Wrong access type",
 				"property",
-				binding.getAttributeBinding( "name" ).getPropertyAccessorName()
+				binding.locateAttributeBinding( "name" ).getPropertyAccessorName()
 		);
 	}
 

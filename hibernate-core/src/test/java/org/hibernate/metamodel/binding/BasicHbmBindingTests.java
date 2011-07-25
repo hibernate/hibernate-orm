@@ -24,7 +24,6 @@
 package org.hibernate.metamodel.binding;
 
 import org.hibernate.metamodel.MetadataSources;
-import org.hibernate.metamodel.source.internal.MetadataImpl;
 
 /**
  * Basic tests of {@code hbm.xml} binding code
@@ -32,19 +31,19 @@ import org.hibernate.metamodel.source.internal.MetadataImpl;
  * @author Steve Ebersole
  */
 public class BasicHbmBindingTests extends AbstractBasicBindingTests {
-	public MetadataImpl addSourcesForSimpleEntityBinding(MetadataSources sources) {
+	public void addSourcesForSimpleEntityBinding(MetadataSources sources) {
 		sources.addResource( "org/hibernate/metamodel/binding/SimpleEntity.hbm.xml" );
-		return (MetadataImpl) sources.buildMetadata();
 	}
 
-	public MetadataImpl addSourcesForSimpleVersionedEntityBinding(MetadataSources sources) {
+	public void addSourcesForSimpleVersionedEntityBinding(MetadataSources sources) {
 		sources.addResource( "org/hibernate/metamodel/binding/SimpleVersionedEntity.hbm.xml" );
-		return (MetadataImpl) sources.buildMetadata();
 	}
 
-	public MetadataImpl addSourcesForManyToOne(MetadataSources sources) {
+	public void addSourcesForManyToOne(MetadataSources sources) {
 		sources.addResource( "org/hibernate/metamodel/binding/ManyToOneEntity.hbm.xml" );
-		sources.addResource( "org/hibernate/metamodel/binding/SimpleEntity.hbm.xml" );
-		return (MetadataImpl) sources.buildMetadata();
+	}
+
+	public void addSourcesForComponentBinding(MetadataSources sources) {
+		sources.addResource( "org/hibernate/metamodel/binding/SimpleEntityWithSimpleComponent.hbm.xml" );
 	}
 }

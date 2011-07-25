@@ -58,11 +58,13 @@ public class EntitySourceImpl implements EntitySource {
 	private final EntityClass entityClass;
 	private final Set<SubclassEntitySource> subclassEntitySources;
 	private final Origin origin;
+	private final LocalBindingContextImpl localBindingContext;
 
 	public EntitySourceImpl(EntityClass entityClass) {
 		this.entityClass = entityClass;
 		this.subclassEntitySources = new HashSet<SubclassEntitySource>();
 		this.origin = new Origin( SourceType.ANNOTATION, entityClass.getName() );
+		this.localBindingContext = new LocalBindingContextImpl( entityClass.getContext() );
 	}
 
 	public EntityClass getEntityClass() {
@@ -75,8 +77,8 @@ public class EntitySourceImpl implements EntitySource {
 	}
 
 	@Override
-	public LocalBindingContext getBindingContext() {
-		return new LocalBindingContextImpl( entityClass.getContext() );
+	public LocalBindingContext getLocalBindingContext() {
+		return localBindingContext;
 	}
 
 	@Override
@@ -172,6 +174,11 @@ public class EntitySourceImpl implements EntitySource {
 	@Override
 	public Iterable<MetaAttributeSource> metaAttributes() {
 		return Collections.emptySet();
+	}
+
+	@Override
+	public String getPath() {
+		return entityClass.getName();
 	}
 
 	@Override

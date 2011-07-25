@@ -47,7 +47,7 @@ public interface EntitySource extends SubclassEntityContainer, AttributeSourceCo
 	 *
 	 * @return The local binding context
 	 */
-	public LocalBindingContext getBindingContext();
+	public LocalBindingContext getLocalBindingContext();
 
 	/**
 	 * Obtain the entity name

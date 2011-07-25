@@ -52,7 +52,7 @@ class AttributeTypeResolver {
 
 	void resolve() {
 		for ( EntityBinding entityBinding : metadata.getEntityBindings() ) {
-			for ( AttributeBinding attributeBinding : entityBinding.getAttributeBindings() ) {
+			for ( AttributeBinding attributeBinding : entityBinding.attributeBindings() ) {
 				resolveTypeInformation( attributeBinding );
 			}
 		}

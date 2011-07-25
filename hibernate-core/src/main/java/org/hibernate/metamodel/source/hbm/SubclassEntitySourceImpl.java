@@ -27,6 +27,7 @@ import org.hibernate.metamodel.source.binder.SubclassEntitySource;
 import org.hibernate.metamodel.source.binder.TableSource;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.EntityElement;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLJoinedSubclassElement;
+import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLSubclassElement;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLUnionSubclassElement;
 
 /**
@@ -88,5 +89,12 @@ public class SubclassEntitySourceImpl extends AbstractEntitySourceImpl implement
 			};
 		}
 		return null;
+	}
+
+	@Override
+	public String getDiscriminatorMatchValue() {
+		return XMLSubclassElement.class.isInstance( entityElement() )
+				? ( (XMLSubclassElement) entityElement() ).getDiscriminatorValue()
+				: null;
 	}
 }

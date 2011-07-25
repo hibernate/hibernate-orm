@@ -23,6 +23,8 @@
  */
 package org.hibernate.metamodel.source.binder;
 
+import org.hibernate.metamodel.source.LocalBindingContext;
+
 /**
  * Contract for a container of {@link AttributeSource} references.  Both entities and components contain
  * attributes.
@@ -31,9 +33,23 @@ package org.hibernate.metamodel.source.binder;
  */
 public interface AttributeSourceContainer {
 	/**
-	 Obtain this container's attribute sources.
+	 * Obtain the path used to uniquely identify this container.
 	 *
-	 * @return TYhe attribute sources.
+	 * @return The unique identifier path
+	 */
+	public String getPath();
+
+	/**
+	 * Obtain this container's attribute sources.
+	 *
+	 * @return The attribute sources.
 	 */
 	public Iterable<AttributeSource> attributeSources();
+
+	/**
+	 * Obtain the local binding context associated with this container.
+	 *
+	 * @return The local binding context
+	 */
+	public LocalBindingContext getLocalBindingContext();
 }

@@ -294,7 +294,7 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 		//	}
 		//}
 
-		for ( AttributeBinding property : entityBinding.getAttributeBindings() ) {
+		for ( AttributeBinding property : entityBinding.attributeBindings() ) {
 			Method method = getGetter( property ).getMethod();
 			if ( method != null && Modifier.isFinal( method.getModifiers() ) ) {
 				LOG.gettersOfLazyClassesCannotBeFinal(entityBinding.getEntity().getName(), property.getAttribute().getName());
@@ -462,14 +462,14 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 
 	private Getter getGetter(AttributeBinding mappedProperty)  throws PropertyNotFoundException, MappingException {
 		return getPropertyAccessor( mappedProperty ).getGetter(
-				mappedProperty.getEntityBinding().getEntity().getClassReference(),
+				mappedProperty.getContainer().getClassReference(),
 				mappedProperty.getAttribute().getName()
 		);
 	}
 
 	private Setter getSetter(AttributeBinding mappedProperty) throws PropertyNotFoundException, MappingException {
 		return getPropertyAccessor( mappedProperty ).getSetter(
-				mappedProperty.getEntityBinding().getEntity().getClassReference(),
+				mappedProperty.getContainer().getClassReference(),
 				mappedProperty.getAttribute().getName()
 		);
 	}
@@ -477,7 +477,7 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 	private PropertyAccessor getPropertyAccessor(AttributeBinding mappedProperty) throws MappingException {
 		// TODO: Fix this then backrefs are working in new metamodel
 		return PropertyAccessorFactory.getPropertyAccessor(
-				mappedProperty.getEntityBinding().getEntity().getClassReference(),
+				mappedProperty.getContainer().getClassReference(),
 				mappedProperty.getPropertyAccessorName()
 		);
 	}

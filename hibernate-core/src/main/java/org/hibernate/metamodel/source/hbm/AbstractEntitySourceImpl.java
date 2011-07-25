@@ -41,6 +41,7 @@ import org.hibernate.metamodel.source.binder.SubclassEntitySource;
 import org.hibernate.metamodel.source.binder.TableSource;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.EntityElement;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLAnyElement;
+import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLComponentElement;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLManyToManyElement;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLManyToOneElement;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLOneToManyElement;
@@ -78,7 +79,7 @@ public abstract class AbstractEntitySourceImpl implements EntitySource {
 	}
 
 	@Override
-	public LocalBindingContext getBindingContext() {
+	public LocalBindingContext getLocalBindingContext() {
 		return sourceMappingDocument.getMappingLocalBindingContext();
 	}
 
@@ -91,7 +92,7 @@ public abstract class AbstractEntitySourceImpl implements EntitySource {
 
 	@Override
 	public String getClassName() {
-		return getBindingContext().qualifyClassName( entityElement.getName() );
+		return getLocalBindingContext().qualifyClassName( entityElement.getName() );
 	}
 
 	@Override
@@ -154,7 +155,7 @@ public abstract class AbstractEntitySourceImpl implements EntitySource {
 
 	@Override
 	public String getCustomPersisterClassName() {
-		return getBindingContext().qualifyClassName( entityElement.getPersister() );
+		return getLocalBindingContext().qualifyClassName( entityElement.getPersister() );
 	}
 
 	@Override
@@ -192,6 +193,11 @@ public abstract class AbstractEntitySourceImpl implements EntitySource {
 	}
 
 	@Override
+	public String getPath() {
+		return sourceMappingDocument.getMappingLocalBindingContext().determineEntityName( entityElement );
+	}
+
+	@Override
 	public Iterable<AttributeSource> attributeSources() {
 		List<AttributeSource> attributeSources = new ArrayList<AttributeSource>();
 		for ( Object attributeElement : entityElement.getPropertyOrManyToOneOrOneToOne() ) {
@@ -200,6 +206,15 @@ public abstract class AbstractEntitySourceImpl implements EntitySource {
 						new PropertyAttributeSourceImpl(
 								XMLPropertyElement.class.cast( attributeElement ),
 								sourceMappingDocument().getMappingLocalBindingContext()
+						)
+				);
+			}
+			else if ( XMLComponentElement.class.isInstance( attributeElement ) ) {
+				attributeSources.add(
+						new ComponentAttributeSourceImpl(
+								(XMLComponentElement) attributeElement,
+								this,
+								sourceMappingDocument.getMappingLocalBindingContext()
 						)
 				);
 			}

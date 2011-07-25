@@ -36,7 +36,7 @@ import org.hibernate.metamodel.source.MetaAttributeContext;
  * @author Steve Ebersole
  */
 public abstract class AbstractAttributeBinding implements AttributeBinding {
-	private final EntityBinding entityBinding;
+	private final AttributeBindingContainer container;
 	private final Attribute attribute;
 
 	private final HibernateTypeDescriptor hibernateTypeDescriptor = new HibernateTypeDescriptor();
@@ -50,14 +50,14 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 
 	private MetaAttributeContext metaAttributeContext;
 
-	protected AbstractAttributeBinding(EntityBinding entityBinding, Attribute attribute) {
-		this.entityBinding = entityBinding;
+	protected AbstractAttributeBinding(AttributeBindingContainer container, Attribute attribute) {
+		this.container = container;
 		this.attribute = attribute;
 	}
 
 	@Override
-	public EntityBinding getEntityBinding() {
-		return entityBinding;
+	public AttributeBindingContainer getContainer() {
+		return container;
 	}
 
 	@Override
@@ -91,18 +91,6 @@ public abstract class AbstractAttributeBinding implements AttributeBinding {
 
 	public void setIncludedInOptimisticLocking(boolean includedInOptimisticLocking) {
 		this.includedInOptimisticLocking = includedInOptimisticLocking;
-	}
-
-	protected boolean forceNonNullable() {
-		return false;
-	}
-
-	protected boolean forceUnique() {
-		return false;
-	}
-
-	protected final boolean isPrimaryKey() {
-		return this == getEntityBinding().getHierarchyDetails().getEntityIdentifier().getValueBinding();
 	}
 
 	@Override

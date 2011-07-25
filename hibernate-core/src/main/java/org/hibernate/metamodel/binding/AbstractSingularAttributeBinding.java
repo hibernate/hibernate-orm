@@ -45,8 +45,8 @@ public abstract class AbstractSingularAttributeBinding
 	private boolean hasDerivedValue;
 	private boolean isNullable = true;
 
-	protected AbstractSingularAttributeBinding(EntityBinding entityBinding, SingularAttribute attribute) {
-		super( entityBinding, attribute );
+	protected AbstractSingularAttributeBinding(AttributeBindingContainer container, SingularAttribute attribute) {
+		super( container, attribute );
 	}
 
 	@Override
@@ -79,7 +79,7 @@ public abstract class AbstractSingularAttributeBinding
 	}
 
 	private String getRole() {
-		return getEntityBinding().getEntity().getName() + '.' + getAttribute().getName();
+		return getContainer().getPathBase() + '.' + getAttribute().getName();
 	}
 
 	@Override
@@ -88,7 +88,7 @@ public abstract class AbstractSingularAttributeBinding
 		return simpleValueBindings.size();
 	}
 
-	private void checkValueBinding() {
+	protected void checkValueBinding() {
 		if ( value == null ) {
 			throw new AssertionFailure( "No values yet bound!" );
 		}

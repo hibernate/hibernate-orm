@@ -191,6 +191,11 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 	}
 
 	@Override
+	public String getDiscriminatorMatchValue() {
+		return entityElement().getDiscriminatorValue();
+	}
+
+	@Override
 	public DiscriminatorSource getDiscriminatorSource() {
 		final XMLHibernateMapping.XMLClass.XMLDiscriminator discriminatorElement = entityElement().getDiscriminator();
 		if ( discriminatorElement == null ) {

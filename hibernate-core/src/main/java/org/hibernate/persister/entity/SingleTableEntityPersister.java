@@ -467,8 +467,8 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		keyColumnNames = new String[joinSpan][];
 
 		// TODO: fix when EntityBinhding.getRootEntityBinding() exists (HHH-6337)
-		//final Table table = entityBinding.getRootEntityBinding().getBaseTable();
-		final TableSpecification table = entityBinding.getBaseTable();
+		//final Table table = entityBinding.getRootEntityBinding().getPrimaryTable();
+		final TableSpecification table = entityBinding.getPrimaryTable();
 		qualifiedTableNames[0] = table.getQualifiedName( factory.getDialect() );
 		isInverseTable[0] = false;
 		isNullableTable[0] = false;
@@ -571,7 +571,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 				discriminatorColumnReaderTemplate = getTemplateFromColumn( column, factory );
 				// TODO: fix this when EntityBinding.getRootEntityBinding() is implemented;
 				// for now, assume entityBinding is the root
-				//discriminatorAlias = column.getAlias( factory.getDialect(), entityBinding.getRootEntityBinding().getBaseTable );
+				//discriminatorAlias = column.getAlias( factory.getDialect(), entityBinding.getRootEntityBinding().getPrimaryTable );
 				discriminatorAlias = column.getAlias( factory.getDialect() );
 				discriminatorFormula = null;
 				discriminatorFormulaTemplate = null;
@@ -663,7 +663,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 			//propertyTableNumbersByName.put( singularAttributeBinding.getName(), join );
 			propertyTableNumbersByNameAndSubclass.put(
-					singularAttributeBinding.getEntityBinding().getEntity().getName() + '.' + singularAttributeBinding.getAttribute().getName(),
+					singularAttributeBinding.getContainer().getPathBase() + '.' + singularAttributeBinding.getAttribute().getName(),
 					join
 			);
 

@@ -31,7 +31,6 @@ import javax.persistence.MappedSuperclass;
 
 import org.junit.Test;
 
-import org.hibernate.metamodel.binding.AttributeBinding;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.domain.NonEntity;
@@ -54,7 +53,7 @@ public class MappedSuperclassTest extends BaseAnnotationBindingTestCase {
 //	@Resources(annotatedClasses = { MyMappedSuperClass.class, MyEntity.class, MyMappedSuperClassBase.class })
 	public void testSimpleAttributeOverrideInMappedSuperclass() {
 		EntityBinding binding = getEntityBinding( MyEntity.class );
-		SingularAttributeBinding nameBinding = (SingularAttributeBinding) binding.getAttributeBinding( "name" );
+		SingularAttributeBinding nameBinding = (SingularAttributeBinding) binding.locateAttributeBinding( "name" );
 		assertNotNull( "the name attribute should be bound to MyEntity", nameBinding );
 
 		Column column = (Column) nameBinding.getValue();
@@ -65,7 +64,7 @@ public class MappedSuperclassTest extends BaseAnnotationBindingTestCase {
 //	@Resources(annotatedClasses = { MyMappedSuperClass.class, MyEntity.class, MyMappedSuperClassBase.class })
 	public void testLastAttributeOverrideWins() {
 		EntityBinding binding = getEntityBinding( MyEntity.class );
-		SingularAttributeBinding fooBinding = (SingularAttributeBinding) binding.getAttributeBinding( "foo" );
+		SingularAttributeBinding fooBinding = (SingularAttributeBinding) binding.locateAttributeBinding( "foo" );
 		assertNotNull( "the foo attribute should be bound to MyEntity", fooBinding );
 
 		Column column = (Column) fooBinding.getValue();

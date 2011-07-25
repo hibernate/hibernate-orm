@@ -87,8 +87,8 @@ public class CacheDataDescriptionImpl implements CacheDataDescription {
 	public static CacheDataDescriptionImpl decode(AbstractPluralAttributeBinding model) {
 		return new CacheDataDescriptionImpl(
 				model.isMutable(),
-				model.getEntityBinding().isVersioned(),
-				getVersionComparator( model.getEntityBinding() )
+				model.getContainer().seekEntityBinding().isVersioned(),
+				getVersionComparator( model.getContainer().seekEntityBinding() )
 		);
 	}
 

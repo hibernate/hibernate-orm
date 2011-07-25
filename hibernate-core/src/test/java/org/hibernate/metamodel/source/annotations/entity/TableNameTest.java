@@ -60,7 +60,7 @@ public class TableNameTest extends BaseAnnotationBindingTestCase {
 		assertEquals(
 				"wrong table name",
 				"TableNameTest$A",
-				( (org.hibernate.metamodel.relational.Table) binding.getBaseTable() ).getTableName().getName()
+				( (org.hibernate.metamodel.relational.Table) binding.getPrimaryTable() ).getTableName().getName()
 		);
 
 		binding = getEntityBinding( B.class );
@@ -68,7 +68,7 @@ public class TableNameTest extends BaseAnnotationBindingTestCase {
 		assertEquals(
 				"wrong table name",
 				"TableNameTest$A",
-				( (org.hibernate.metamodel.relational.Table) binding.getBaseTable() ).getTableName().getName()
+				( (org.hibernate.metamodel.relational.Table) binding.getPrimaryTable() ).getTableName().getName()
 		);
 	}
 
@@ -93,7 +93,7 @@ public class TableNameTest extends BaseAnnotationBindingTestCase {
 		assertEquals(
 				"wrong table name",
 				"FOO",
-				( (org.hibernate.metamodel.relational.Table) binding.getBaseTable() ).getTableName().getName()
+				( (org.hibernate.metamodel.relational.Table) binding.getPrimaryTable() ).getTableName().getName()
 		);
 
 		binding = getEntityBinding( JoinedB.class );
@@ -101,7 +101,7 @@ public class TableNameTest extends BaseAnnotationBindingTestCase {
 		assertEquals(
 				"wrong table name",
 				"TableNameTest$JoinedB",
-				( (org.hibernate.metamodel.relational.Table) binding.getBaseTable() ).getTableName().getName()
+				( (org.hibernate.metamodel.relational.Table) binding.getPrimaryTable() ).getTableName().getName()
 		);
 	}
 
@@ -126,7 +126,7 @@ public class TableNameTest extends BaseAnnotationBindingTestCase {
 		assertEquals(
 				"wrong table name",
 				"TableNameTest$TablePerClassA",
-				( (org.hibernate.metamodel.relational.Table) binding.getBaseTable() ).getTableName().getName()
+				( (org.hibernate.metamodel.relational.Table) binding.getPrimaryTable() ).getTableName().getName()
 		);
 
 		binding = getEntityBinding( TablePerClassB.class );
@@ -134,7 +134,7 @@ public class TableNameTest extends BaseAnnotationBindingTestCase {
 		assertEquals(
 				"wrong table name",
 				"TableNameTest$TablePerClassB",
-				( (org.hibernate.metamodel.relational.Table) binding.getBaseTable() ).getTableName().getName()
+				( (org.hibernate.metamodel.relational.Table) binding.getPrimaryTable() ).getTableName().getName()
 		);
 	}
 }

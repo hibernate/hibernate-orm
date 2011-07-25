@@ -32,19 +32,23 @@ import org.hibernate.metamodel.source.internal.MetadataImpl;
  * @author Hardy Ferentschik
  */
 public class BasicAnnotationBindingTests extends AbstractBasicBindingTests {
-	public MetadataImpl addSourcesForSimpleEntityBinding(MetadataSources sources) {
+	@Override
+	public void addSourcesForSimpleEntityBinding(MetadataSources sources) {
 		sources.addAnnotatedClass( SimpleEntity.class );
-		return (MetadataImpl) sources.buildMetadata();
 	}
 
-	public MetadataImpl addSourcesForSimpleVersionedEntityBinding(MetadataSources sources) {
+	@Override
+	public void addSourcesForSimpleVersionedEntityBinding(MetadataSources sources) {
 		sources.addAnnotatedClass( SimpleVersionedEntity.class );
-		return (MetadataImpl) sources.buildMetadata();
 	}
 
-	public MetadataImpl addSourcesForManyToOne(MetadataSources sources) {
+	@Override
+	public void addSourcesForManyToOne(MetadataSources sources) {
 		sources.addAnnotatedClass( ManyToOneEntity.class );
-		sources.addAnnotatedClass( SimpleEntity.class );
-		return (MetadataImpl) sources.buildMetadata();
+	}
+
+	@Override
+	public void addSourcesForComponentBinding(MetadataSources sources) {
+		sources.addAnnotatedClass(  SimpleEntityWithSimpleComponent.class );
 	}
 }

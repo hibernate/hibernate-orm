@@ -50,7 +50,7 @@ public class UniqueConstraintBindingTest extends BaseAnnotationBindingTestCase {
 	@Resources(annotatedClasses = TableWithUniqueConstraint.class)
 	public void testTableUniqueConstraints() {
 		EntityBinding binding = getEntityBinding( TableWithUniqueConstraint.class );
-		TableSpecification table = binding.getBaseTable();
+		TableSpecification table = binding.getPrimaryTable();
 		Iterable<UniqueKey> uniqueKeyIterable = table.getUniqueKeys();
 		assertNotNull( uniqueKeyIterable );
 		int i = 0;

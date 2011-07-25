@@ -34,10 +34,11 @@ import org.hibernate.EntityMode;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.beans.BeanInfoHelper;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.binding.AbstractPluralAttributeBinding;
 import org.hibernate.metamodel.binding.AttributeBinding;
+import org.hibernate.metamodel.binding.AttributeBindingContainer;
 import org.hibernate.metamodel.binding.CollectionElementNature;
+import org.hibernate.metamodel.binding.ComponentAttributeBinding;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.EntityDiscriminator;
 import org.hibernate.metamodel.binding.InheritanceType;
@@ -48,6 +49,7 @@ import org.hibernate.metamodel.binding.SimpleValueBinding;
 import org.hibernate.metamodel.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.binding.TypeDef;
 import org.hibernate.metamodel.domain.Attribute;
+import org.hibernate.metamodel.domain.Component;
 import org.hibernate.metamodel.domain.Entity;
 import org.hibernate.metamodel.domain.PluralAttribute;
 import org.hibernate.metamodel.domain.SingularAttribute;
@@ -116,7 +118,7 @@ public class Binder {
 			return metadata.getEntityBinding( entitySource.getEntityName() );
 		}
 
-		currentBindingContext = entitySource.getBindingContext();
+		currentBindingContext = entitySource.getLocalBindingContext();
 		try {
 			final EntityBinding entityBinding = doCreateEntityBinding( entitySource, superEntityBinding );
 
@@ -266,7 +268,7 @@ public class Binder {
 	private EntityBinding makeDiscriminatedSubclassBinding(SubclassEntitySource entitySource, EntityBinding superEntityBinding) {
 		final EntityBinding entityBinding = buildBasicEntityBinding( entitySource, superEntityBinding );
 
-		entityBinding.setBaseTable( superEntityBinding.getBaseTable() );
+		entityBinding.setBaseTable( superEntityBinding.getPrimaryTable() );
 
 		bindDiscriminatorValue( entitySource, entityBinding );
 
@@ -332,12 +334,12 @@ public class Binder {
 				// this should never ever happen..
 				throw new AssertionFailure( "Simple-id was not a column." );
 			}
-			entityBinding.getBaseTable().getPrimaryKey().addColumn( Column.class.cast( relationalValue ) );
+			entityBinding.getPrimaryTable().getPrimaryKey().addColumn( Column.class.cast( relationalValue ) );
 		}
 		else {
 			for ( SimpleValue subValue : ( (Tuple) relationalValue ).values() ) {
 				if ( Column.class.isInstance( subValue ) ) {
-					entityBinding.getBaseTable().getPrimaryKey().addColumn( Column.class.cast( subValue ) );
+					entityBinding.getPrimaryTable().getPrimaryKey().addColumn( Column.class.cast( subValue ) );
 				}
 			}
 		}
@@ -388,7 +390,7 @@ public class Binder {
 		entityBinding.setDiscriminatorMatchValue( discriminatorValue );
 	}
 
-	private void bindAttributes(AttributeSourceContainer attributeSourceContainer, EntityBinding entityBinding) {
+	private void bindAttributes(AttributeSourceContainer attributeSourceContainer, AttributeBindingContainer attributeBindingContainer) {
 		// todo : we really need the notion of a Stack here for the table from which the columns come for binding these attributes.
 		// todo : adding the concept (interface) of a source of attribute metadata would allow reuse of this method for entity, component, unique-key, etc
 		// for now, simply assume all columns come from the base table....
@@ -397,32 +399,54 @@ public class Binder {
 			if ( attributeSource.isSingular() ) {
 				final SingularAttributeSource singularAttributeSource = (SingularAttributeSource) attributeSource;
 				if ( singularAttributeSource.getNature() == SingularAttributeNature.COMPONENT ) {
-					bindComponent( singularAttributeSource, entityBinding );
+					bindComponent( (ComponentAttributeSource) singularAttributeSource, attributeBindingContainer );
 				}
 				else {
-					doBasicSingularAttributeBindingCreation( singularAttributeSource, entityBinding );
+					doBasicSingularAttributeBindingCreation( singularAttributeSource, attributeBindingContainer );
 				}
 			}
 			else {
-				bindPersistentCollection( (PluralAttributeSource) attributeSource, entityBinding );
+				bindPersistentCollection( (PluralAttributeSource) attributeSource, attributeBindingContainer );
 			}
 		}
 	}
 
-	private void bindComponent(SingularAttributeSource singularAttributeSource, EntityBinding entityBinding) {
-		throw new NotYetImplementedException( "Component binding not yet implemented :(" );
+	private void bindComponent(ComponentAttributeSource attributeSource, AttributeBindingContainer container) {
+		final String attributeName = attributeSource.getName();
+		SingularAttribute attribute = container.getAttributeContainer().locateComponentAttribute( attributeName );
+		if ( attribute == null ) {
+			final Component component = new Component(
+					attributeSource.getPath(),
+					attributeSource.getClassName(),
+					attributeSource.getClassReference(),
+					null // component inheritance not YET supported
+			);
+			attribute = container.getAttributeContainer().createComponentAttribute( attributeName, component );
+		}
+		ComponentAttributeBinding componentAttributeBinding = container.makeComponentAttributeBinding( attribute );
+
+		if ( StringHelper.isNotEmpty( attributeSource.getParentReferenceAttributeName() ) ) {
+			final SingularAttribute parentReferenceAttribute =
+					componentAttributeBinding.getComponent().createSingularAttribute( attributeSource.getParentReferenceAttributeName() );
+			componentAttributeBinding.setParentReference( parentReferenceAttribute );
+		}
+
+		componentAttributeBinding.setMetaAttributeContext(
+				buildMetaAttributeContext( attributeSource.metaAttributes(), container.getMetaAttributeContext() )
+		);
+
+		bindAttributes( attributeSource, componentAttributeBinding );
 	}
 
-	private void bindPersistentCollection(PluralAttributeSource attributeSource, EntityBinding entityBinding) {
-		final PluralAttribute existingAttribute = entityBinding.getEntity()
-				.locatePluralAttribute( attributeSource.getName() );
+	private void bindPersistentCollection(PluralAttributeSource attributeSource, AttributeBindingContainer attributeBindingContainer) {
+		final PluralAttribute existingAttribute = attributeBindingContainer.getAttributeContainer().locatePluralAttribute( attributeSource.getName() );
 		final AbstractPluralAttributeBinding pluralAttributeBinding;
 
 		if ( attributeSource.getPluralAttributeNature() == PluralAttributeNature.BAG ) {
 			final PluralAttribute attribute = existingAttribute != null
 					? existingAttribute
-					: entityBinding.getEntity().createBag( attributeSource.getName() );
-			pluralAttributeBinding = entityBinding.makeBagAttributeBinding(
+					: attributeBindingContainer.getAttributeContainer().createBag( attributeSource.getName() );
+			pluralAttributeBinding = attributeBindingContainer.makeBagAttributeBinding(
 					attribute,
 					convert( attributeSource.getPluralAttributeElementNature() )
 			);
@@ -446,27 +470,26 @@ public class Binder {
 
 	private SimpleSingularAttributeBinding doBasicSingularAttributeBindingCreation(
 			SingularAttributeSource attributeSource,
-			EntityBinding entityBinding) {
-		final SingularAttribute existingAttribute = entityBinding.getEntity()
-				.locateSingularAttribute( attributeSource.getName() );
+			AttributeBindingContainer attributeBindingContainer) {
+		final SingularAttribute existingAttribute = attributeBindingContainer.getAttributeContainer().locateSingularAttribute( attributeSource.getName() );
 		final SingularAttribute attribute;
 		if ( existingAttribute != null ) {
 			attribute = existingAttribute;
 		}
 		else if ( attributeSource.isVirtualAttribute() ) {
-			attribute = entityBinding.getEntity().createVirtualSingularAttribute( attributeSource.getName() );
+			attribute = attributeBindingContainer.getAttributeContainer().createVirtualSingularAttribute( attributeSource.getName() );
 		}
 		else {
-			attribute = entityBinding.getEntity().createSingularAttribute( attributeSource.getName() );
+			attribute = attributeBindingContainer.getAttributeContainer().createSingularAttribute( attributeSource.getName() );
 		}
 
 		final SimpleSingularAttributeBinding attributeBinding;
 		if ( attributeSource.getNature() == SingularAttributeNature.BASIC ) {
-			attributeBinding = entityBinding.makeSimpleAttributeBinding( attribute );
+			attributeBinding = attributeBindingContainer.makeSimpleAttributeBinding( attribute );
 			resolveTypeInformation( attributeSource.getTypeInformation(), attributeBinding );
 		}
 		else if ( attributeSource.getNature() == SingularAttributeNature.MANY_TO_ONE ) {
-			attributeBinding = entityBinding.makeManyToOneAttributeBinding( attribute );
+			attributeBinding = attributeBindingContainer.makeManyToOneAttributeBinding( attribute );
 			resolveTypeInformation( attributeSource.getTypeInformation(), attributeBinding );
 			resolveToOneInformation(
 					(ToOneAttributeSource) attributeSource,
@@ -492,7 +515,7 @@ public class Binder {
 		bindRelationalValues( attributeSource, attributeBinding );
 
 		attributeBinding.setMetaAttributeContext(
-				buildMetaAttributeContext( attributeSource.metaAttributes(), entityBinding.getMetaAttributeContext() )
+				buildMetaAttributeContext( attributeSource.metaAttributes(), attributeBindingContainer.getMetaAttributeContext() )
 		);
 
 		return attributeBinding;
@@ -660,7 +683,7 @@ public class Binder {
 	private void bindTableUniqueConstraints(EntitySource entitySource, EntityBinding entityBinding) {
 		for ( ConstraintSource constraintSource : entitySource.getConstraints() ) {
 			if ( constraintSource instanceof UniqueConstraintSource ) {
-				TableSpecification table = entityBinding.getTable( constraintSource.getTableName() );
+				TableSpecification table = entityBinding.locateTable( constraintSource.getTableName() );
 				if ( table == null ) {
 					// throw exception !?
 				}
@@ -685,8 +708,8 @@ public class Binder {
 
 		if ( relationalValueSourceContainer.relationalValueSources().size() > 0 ) {
 			for ( RelationalValueSource valueSource : relationalValueSourceContainer.relationalValueSources() ) {
-				final TableSpecification table = attributeBinding.getEntityBinding()
-						.getTable( valueSource.getContainingTableName() );
+				final TableSpecification table = attributeBinding.getContainer()
+						.locateTable( valueSource.getContainingTableName() );
 
 				if ( ColumnSource.class.isInstance( valueSource ) ) {
 					final ColumnSource columnSource = ColumnSource.class.cast( valueSource );
@@ -714,7 +737,7 @@ public class Binder {
 					.propertyToColumnName( attributeBinding.getAttribute().getName() );
 			valueBindings.add(
 					new SimpleValueBinding(
-							attributeBinding.getEntityBinding().getBaseTable().locateOrCreateColumn( name )
+							attributeBinding.getContainer().getPrimaryTable().locateOrCreateColumn( name )
 					)
 			);
 		}
@@ -724,7 +747,7 @@ public class Binder {
 	private SimpleValue makeSimpleValue(
 			EntityBinding entityBinding,
 			RelationalValueSource valueSource) {
-		final TableSpecification table = entityBinding.getTable( valueSource.getContainingTableName() );
+		final TableSpecification table = entityBinding.locateTable( valueSource.getContainingTableName() );
 
 		if ( ColumnSource.class.isInstance( valueSource ) ) {
 			return makeColumn( (ColumnSource) valueSource, table );

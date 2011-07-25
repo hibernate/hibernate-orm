@@ -28,6 +28,7 @@ import java.util.Iterator;
 import java.util.Set;
 
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -61,12 +62,10 @@ import static org.junit.Assert.assertTrue;
 public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 
 	private BasicServiceRegistryImpl serviceRegistry;
-	private MetadataSources sources;
 
 	@Before
 	public void setUp() {
 		serviceRegistry = (BasicServiceRegistryImpl) new ServiceRegistryBuilder().buildServiceRegistry();
-		sources = new MetadataSources( new ServiceRegistryBuilder().buildServiceRegistry() );
 	}
 
 	@After
@@ -80,7 +79,9 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 
 	@Test
 	public void testSimpleEntityMapping() {
-		MetadataImpl metadata = addSourcesForSimpleEntityBinding( sources );
+		MetadataSources sources = new MetadataSources( serviceRegistry );
+		addSourcesForSimpleEntityBinding( sources );
+		MetadataImpl metadata = (MetadataImpl) sources.buildMetadata();
 		EntityBinding entityBinding = metadata.getEntityBinding( SimpleEntity.class.getName() );
 		assertRoot( metadata, entityBinding );
 		assertIdAndSimpleProperty( entityBinding );
@@ -90,7 +91,9 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 
 	@Test
 	public void testSimpleVersionedEntityMapping() {
-		MetadataImpl metadata = addSourcesForSimpleVersionedEntityBinding( sources );
+		MetadataSources sources = new MetadataSources( serviceRegistry );
+		addSourcesForSimpleVersionedEntityBinding( sources );
+		MetadataImpl metadata = (MetadataImpl) sources.buildMetadata();
 		EntityBinding entityBinding = metadata.getEntityBinding( SimpleVersionedEntity.class.getName() );
 		assertIdAndSimpleProperty( entityBinding );
 
@@ -100,12 +103,15 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 
 	@Test
 	public void testEntityWithManyToOneMapping() {
-		MetadataImpl metadata = addSourcesForManyToOne( sources );
+		MetadataSources sources = new MetadataSources( serviceRegistry );
+		addSourcesForSimpleEntityBinding( sources );
+		addSourcesForManyToOne( sources );
+		MetadataImpl metadata = (MetadataImpl) sources.buildMetadata();
 
 		EntityBinding simpleEntityBinding = metadata.getEntityBinding( SimpleEntity.class.getName() );
 		assertIdAndSimpleProperty( simpleEntityBinding );
 
-		Set<SingularAssociationAttributeBinding> referenceBindings = simpleEntityBinding.getAttributeBinding( "id" )
+		Set<SingularAssociationAttributeBinding> referenceBindings = simpleEntityBinding.locateAttributeBinding( "id" )
 				.getEntityReferencingAttributeBindings();
 		assertEquals( "There should be only one reference binding", 1, referenceBindings.size() );
 
@@ -118,22 +124,41 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 		Iterator<SingularAssociationAttributeBinding> it = entityWithManyToOneBinding.getEntityReferencingAttributeBindings()
 				.iterator();
 		assertTrue( it.hasNext() );
-		assertSame( entityWithManyToOneBinding.getAttributeBinding( "simpleEntity" ), it.next() );
+		assertSame( entityWithManyToOneBinding.locateAttributeBinding( "simpleEntity" ), it.next() );
 		assertFalse( it.hasNext() );
 	}
 
-	public abstract MetadataImpl addSourcesForSimpleVersionedEntityBinding(MetadataSources sources);
+	@Test
+	public void testSimpleEntityWithSimpleComponentMapping() {
+		MetadataSources sources = new MetadataSources( serviceRegistry );
+		addSourcesForComponentBinding( sources );
+		MetadataImpl metadata = (MetadataImpl) sources.buildMetadata();
+		EntityBinding entityBinding = metadata.getEntityBinding( SimpleEntityWithSimpleComponent.class.getName() );
+		assertRoot( metadata, entityBinding );
+		assertIdAndSimpleProperty( entityBinding );
 
-	public abstract MetadataImpl addSourcesForSimpleEntityBinding(MetadataSources sources);
+		ComponentAttributeBinding componentAttributeBinding = (ComponentAttributeBinding) entityBinding.locateAttributeBinding( "simpleComponent" );
+		assertNotNull( componentAttributeBinding );
+		assertSame( componentAttributeBinding.getAttribute().getSingularAttributeType(), componentAttributeBinding.getAttributeContainer() );
+		assertEquals( SimpleEntityWithSimpleComponent.class.getName() + ".simpleComponent", componentAttributeBinding.getPathBase() );
+		assertSame( entityBinding.getPrimaryTable(), componentAttributeBinding.getPrimaryTable() );
+		assertNotNull( componentAttributeBinding.getComponent() );
+	}
 
-	public abstract MetadataImpl addSourcesForManyToOne(MetadataSources sources);
+	public abstract void addSourcesForSimpleVersionedEntityBinding(MetadataSources sources);
+
+	public abstract void addSourcesForSimpleEntityBinding(MetadataSources sources);
+
+	public abstract void addSourcesForManyToOne(MetadataSources sources);
+
+	public abstract void addSourcesForComponentBinding(MetadataSources sources);
 
 	protected void assertIdAndSimpleProperty(EntityBinding entityBinding) {
 		assertNotNull( entityBinding );
 		assertNotNull( entityBinding.getHierarchyDetails().getEntityIdentifier() );
 		assertNotNull( entityBinding.getHierarchyDetails().getEntityIdentifier().getValueBinding() );
 
-		AttributeBinding idAttributeBinding = entityBinding.getAttributeBinding( "id" );
+		AttributeBinding idAttributeBinding = entityBinding.locateAttributeBinding( "id" );
 		assertNotNull( idAttributeBinding );
 		assertSame( idAttributeBinding, entityBinding.getHierarchyDetails().getEntityIdentifier().getValueBinding() );
 		assertSame( LongType.INSTANCE, idAttributeBinding.getHibernateTypeDescriptor().getResolvedTypeMapping() );
@@ -152,11 +177,11 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 		assertSame( Types.BIGINT, idDataType.getTypeCode() );
 		assertSame( LongType.INSTANCE.getName(), idDataType.getTypeName() );
 
-		assertNotNull( entityBinding.getAttributeBinding( "name" ) );
-		assertNotNull( entityBinding.getAttributeBinding( "name" ).getAttribute() );
-		assertTrue( entityBinding.getAttributeBinding( "name" ).getAttribute().isSingular() );
+		assertNotNull( entityBinding.locateAttributeBinding( "name" ) );
+		assertNotNull( entityBinding.locateAttributeBinding( "name" ).getAttribute() );
+		assertTrue( entityBinding.locateAttributeBinding( "name" ).getAttribute().isSingular() );
 
-		SingularAttributeBinding nameBinding = (SingularAttributeBinding) entityBinding.getAttributeBinding( "name" );
+		SingularAttributeBinding nameBinding = (SingularAttributeBinding) entityBinding.locateAttributeBinding( "name" );
 		assertSame( StringType.INSTANCE, nameBinding.getHibernateTypeDescriptor().getResolvedTypeMapping() );
 		assertNotNull( nameBinding.getAttribute() );
 		assertNotNull( nameBinding.getValue() );

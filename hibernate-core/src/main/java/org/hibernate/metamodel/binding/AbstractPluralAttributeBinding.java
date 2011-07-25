@@ -77,10 +77,10 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 	private String loaderName;
 
 	protected AbstractPluralAttributeBinding(
-			EntityBinding entityBinding,
+			AttributeBindingContainer container,
 			PluralAttribute attribute,
 			CollectionElementNature collectionElementNature) {
-		super( entityBinding, attribute );
+		super( container, attribute );
 		this.collectionElement = interpretNature( collectionElementNature );
 	}
 

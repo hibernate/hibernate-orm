@@ -39,7 +39,7 @@ public interface AttributeBinding {
 	 *
 	 * @return The entity binding.
 	 */
-	public EntityBinding getEntityBinding();
+	public AttributeBindingContainer getContainer();
 
 	/**
 	 * Obtain the attribute bound.

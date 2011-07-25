@@ -199,7 +199,7 @@ public class PropertyFactory {
 				mappedUnsavedValue,
 				getGetter( property ),
 				(VersionType) property.getHibernateTypeDescriptor().getResolvedTypeMapping(),
-				getConstructor( property.getEntityBinding() )
+				getConstructor( (EntityBinding) property.getContainer() )
 		);
 
 		boolean lazy = lazyAvailable && property.isLazy();
@@ -390,13 +390,13 @@ public class PropertyFactory {
 	}
 
 	private static Getter getGetter(AttributeBinding mappingProperty) {
-		if ( mappingProperty == null || mappingProperty.getEntityBinding().getEntity() == null ) {
+		if ( mappingProperty == null || mappingProperty.getContainer().getClassReference() == null ) {
 			return null;
 		}
 
 		PropertyAccessor pa = PropertyAccessorFactory.getPropertyAccessor( mappingProperty, EntityMode.POJO );
 		return pa.getGetter(
-				mappingProperty.getEntityBinding().getEntity().getClassReference(),
+				mappingProperty.getContainer().getClassReference(),
 				mappingProperty.getAttribute().getName()
 		);
 	}

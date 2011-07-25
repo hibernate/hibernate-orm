@@ -112,7 +112,8 @@ public abstract class AbstractAttributeContainer implements AttributeContainer, 
 
 	@Override
 	public SingularAttribute createComponentAttribute(String name, Component component) {
-		SingularAttributeImpl attribute = new SingularAttributeImpl( name, component );
+		SingularAttributeImpl attribute = new SingularAttributeImpl( name, this );
+		attribute.resolveType( component );
 		addAttribute( attribute );
 		return attribute;
 	}

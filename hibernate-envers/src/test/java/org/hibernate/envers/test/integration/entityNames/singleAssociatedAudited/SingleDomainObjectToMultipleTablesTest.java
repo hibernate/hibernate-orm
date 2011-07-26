@@ -34,10 +34,9 @@ public class SingleDomainObjectToMultipleTablesTest extends AbstractOneSessionTe
         getSession().getTransaction().begin();
         Person owner = new Person("Lukasz", 25);
         Person driver = new Person("Kinga", 24);
-        Car car = new Car(1, owner, null);
+        Car car = new Car(1, owner, driver);
         getSession().persist("Personaje", owner);
         getSession().persist("Driveraje", driver);
-        car.setDriver(driver);
         getSession().persist(car);
         getSession().getTransaction().commit();
         

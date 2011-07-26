@@ -2,7 +2,7 @@
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 <hibernate-mapping>
 
-	<class name="org.hibernate.envers.test.integration.entityNames.singleAssociatedAudited.Person" entity-name="Personaje">
+	<class name="org.hibernate.envers.test.integration.entityNames.singleAssociatedAudited.Person" entity-name="Personaje" table="OWNERS">
 		
 		<id name="id" column="ID_person" type="long" >
 			<generator class="native" />
@@ -14,6 +14,20 @@
 		<property name="age" type="int" column="AGE"/>
 			
 	</class>
+
+    <!-- Deliberately use the same domain object and map it to a different database table. See issue HHH-4648. -->
+	<class name="org.hibernate.envers.test.integration.entityNames.singleAssociatedAudited.Person" entity-name="Driveraje" table="DRIVERS">
+
+		<id name="id" column="ID_person" type="long" >
+			<generator class="native" />
+		</id>
+
+		<property name="name" type="string" length="255"
+			column="NAME" not-null="true" />
+
+		<property name="age" type="int" column="AGE"/>
+
+	</class>
 	
 	<class name="org.hibernate.envers.test.integration.entityNames.singleAssociatedAudited.Car" >
 
@@ -24,7 +38,9 @@
 		<property name="number" type="int" column="int" not-null="true" />
 
 		<many-to-one name="owner" entity-name="Personaje"/>
-		
+
+        <many-to-one name="driver" entity-name="Driveraje"/>
+
 	</class>	
 
 </hibernate-mapping>

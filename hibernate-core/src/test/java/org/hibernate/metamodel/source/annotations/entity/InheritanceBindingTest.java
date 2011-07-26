@@ -23,14 +23,16 @@
  */
 package org.hibernate.metamodel.source.annotations.entity;
 
+import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
 import org.junit.Test;
 
+import org.hibernate.annotations.DiscriminatorOptions;
 import org.hibernate.metamodel.binding.EntityBinding;
-import org.hibernate.testing.FailureExpected;
+import org.hibernate.metamodel.binding.EntityDiscriminator;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
@@ -57,7 +59,11 @@ public class InheritanceBindingTest extends BaseAnnotationBindingTestCase {
 	}
 
 	@Test
-	@Resources(annotatedClasses = { SubclassOfSingleTableInheritance.class, SingleEntity.class, RootOfSingleTableInheritance.class })
+	@Resources(annotatedClasses = {
+			SubclassOfSingleTableInheritance.class,
+			SingleEntity.class,
+			RootOfSingleTableInheritance.class
+	})
 	public void testRootEntityBinding() {
 		EntityBinding noInheritanceEntityBinding = getEntityBinding( SingleEntity.class );
 		assertTrue( "SingleEntity should be a root entity", noInheritanceEntityBinding.isRoot() );
@@ -72,11 +78,53 @@ public class InheritanceBindingTest extends BaseAnnotationBindingTestCase {
 		assertSame( rootEntityBinding, getRootEntityBinding( RootOfSingleTableInheritance.class ) );
 	}
 
+	@Test
+	@Resources(annotatedClasses = { RootOfSingleTableInheritance.class, SubclassOfSingleTableInheritance.class })
+	public void testDefaultDiscriminatorOptions() {
+		EntityBinding rootEntityBinding = getEntityBinding( RootOfSingleTableInheritance.class );
+		EntityDiscriminator discriminator = rootEntityBinding.getHierarchyDetails().getEntityDiscriminator();
+		assertFalse( "Wrong default value", discriminator.isForced() );
+		assertTrue( "Wrong default value", discriminator.isInserted() );
+	}
+
+	@Test
+	@Resources(annotatedClasses = { Base.class, Jump.class })
+	public void testExplicitDiscriminatorOptions() {
+		EntityBinding rootEntityBinding = getEntityBinding( Base.class );
+		EntityDiscriminator discriminator = rootEntityBinding.getHierarchyDetails().getEntityDiscriminator();
+		assertTrue( "Wrong default value", discriminator.isForced() );
+		assertFalse( "Wrong default value", discriminator.isInserted() );
+	}
+
 	@Entity
 	class SingleEntity {
 		@Id
 		@GeneratedValue
 		private int id;
+	}
+
+	@Entity
+	class RootOfSingleTableInheritance {
+		@Id
+		@GeneratedValue
+		private int id;
+	}
+
+	@Entity
+	@DiscriminatorValue("foo")
+	public class SubclassOfSingleTableInheritance extends RootOfSingleTableInheritance {
+	}
+
+	@Entity
+	@DiscriminatorOptions(force = true, insert = false)
+	class Base {
+		@Id
+		@GeneratedValue
+		private int id;
+	}
+
+	@Entity
+	class Jump extends Base {
 	}
 }
 

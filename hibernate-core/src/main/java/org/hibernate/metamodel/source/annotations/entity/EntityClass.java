@@ -54,7 +54,7 @@ import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.source.annotations.HibernateDotNames;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.JandexHelper;
-import org.hibernate.metamodel.source.annotations.attribute.DiscriminatorColumnValues;
+import org.hibernate.metamodel.source.annotations.attribute.ColumnValues;
 import org.hibernate.metamodel.source.binder.ConstraintSource;
 import org.hibernate.metamodel.source.binder.TableSource;
 
@@ -95,9 +95,12 @@ public class EntityClass extends ConfiguredClass {
 	private boolean isLazy;
 	private String proxy;
 
-	private DiscriminatorColumnValues discriminatorColumnValues;
+	private ColumnValues discriminatorColumnValues;
 	private Class<?> discriminatorType;
 	private String discriminatorMatchValue;
+	private boolean isDiscriminatorForced = true;
+	private boolean isDiscriminatorIncludedInSql = true;
+
 
 	public EntityClass(
 			ClassInfo classInfo,
@@ -137,7 +140,7 @@ public class EntityClass extends ConfiguredClass {
 		processDiscriminator();
 	}
 
-	public DiscriminatorColumnValues getDiscriminatorColumnValues() {
+	public ColumnValues getDiscriminatorColumnValues() {
 		return discriminatorColumnValues;
 	}
 
@@ -254,11 +257,18 @@ public class EntityClass extends ConfiguredClass {
 		return getParent() == null;
 	}
 
+	public boolean isDiscriminatorForced() {
+		return isDiscriminatorForced;
+	}
+
+	public boolean isDiscriminatorIncludedInSql() {
+		return isDiscriminatorIncludedInSql;
+	}
+
 	private String determineExplicitEntityName() {
 		final AnnotationInstance jpaEntityAnnotation = JandexHelper.getSingleAnnotation(
 				getClassInfo(), JPADotNames.ENTITY
 		);
-
 		return JandexHelper.getValue( jpaEntityAnnotation, "name", String.class );
 	}
 
@@ -326,13 +336,15 @@ public class EntityClass extends ConfiguredClass {
 			this.discriminatorMatchValue = discriminatorValueAnnotation.value().asString();
 		}
 
-		final AnnotationInstance discriminatorOptionsAnnotation = JandexHelper.getSingleAnnotation(
+		final AnnotationInstance discriminatorColumnAnnotation = JandexHelper.getSingleAnnotation(
 				getClassInfo(), JPADotNames.DISCRIMINATOR_COLUMN
 		);
+		discriminatorColumnValues = new ColumnValues( discriminatorColumnAnnotation );
+		discriminatorColumnValues.setNullable( false ); // discriminator column cannot be null
 		Class<?> type = String.class; // string is the discriminator default
-		if ( discriminatorOptionsAnnotation != null ) {
+		if ( discriminatorColumnAnnotation != null ) {
 			DiscriminatorType discriminatorType = Enum.valueOf(
-					DiscriminatorType.class, discriminatorOptionsAnnotation.value( "discriminatorType" ).asEnum()
+					DiscriminatorType.class, discriminatorColumnAnnotation.value( "discriminatorType" ).asEnum()
 			);
 			switch ( discriminatorType ) {
 				case STRING: {
@@ -351,10 +363,41 @@ public class EntityClass extends ConfiguredClass {
 					throw new AnnotationException( "Unsupported discriminator type: " + discriminatorType );
 				}
 			}
-		}
 
-		discriminatorColumnValues = new DiscriminatorColumnValues( getClassInfo().annotations() );
+			discriminatorColumnValues.setName(
+					JandexHelper.getValue(
+							discriminatorColumnAnnotation,
+							"name",
+							String.class
+					)
+			);
+			discriminatorColumnValues.setLength(
+					JandexHelper.getValue(
+							discriminatorColumnAnnotation,
+							"length",
+							Integer.class
+					)
+			);
+			if ( discriminatorColumnAnnotation.value( "columnDefinition" ) != null ) {
+				discriminatorColumnValues.setColumnDefinition(
+						discriminatorColumnAnnotation.value( "columnDefinition" )
+								.asString()
+				);
+			}
+		}
 		discriminatorType = type;
+
+		AnnotationInstance discriminatorOptionsAnnotation = JandexHelper.getSingleAnnotation(
+				getClassInfo(), HibernateDotNames.DISCRIMINATOR_OPTIONS
+		);
+		if ( discriminatorOptionsAnnotation != null ) {
+			isDiscriminatorForced = discriminatorOptionsAnnotation.value( "force" ).asBoolean();
+			isDiscriminatorIncludedInSql = discriminatorOptionsAnnotation.value( "insert" ).asBoolean();
+		}
+		else {
+			isDiscriminatorForced = false;
+			isDiscriminatorIncludedInSql = true;
+		}
 	}
 
 	private void processHibernateEntitySpecificAnnotations() {

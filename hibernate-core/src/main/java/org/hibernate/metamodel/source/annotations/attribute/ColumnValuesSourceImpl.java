@@ -37,10 +37,6 @@ public class ColumnValuesSourceImpl implements ColumnSource {
 		this.columnValues = columnValues;
 	}
 
-	protected ColumnValues columnValues() {
-		return columnValues;
-	}
-
 	@Override
 	public String getName() {
 		return columnValues.getName();
@@ -53,7 +49,6 @@ public class ColumnValuesSourceImpl implements ColumnSource {
 
 	@Override
 	public String getDefaultValue() {
-		// todo
 		return null;
 	}
 

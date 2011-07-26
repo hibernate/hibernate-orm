@@ -31,32 +31,30 @@ import org.hibernate.metamodel.source.binder.RelationalValueSource;
  * @author Hardy Ferentschik
  */
 public class DiscriminatorSourceImpl implements DiscriminatorSource {
-	private final DiscriminatorColumnValues discriminatorColumnValues;
-	private final Class<?> discriminatorType;
+	private final EntityClass entityClass;
 
 	public DiscriminatorSourceImpl(EntityClass entityClass) {
-		this.discriminatorColumnValues = entityClass.getDiscriminatorColumnValues();
-		this.discriminatorType = entityClass.getDiscriminatorType();
+		this.entityClass = entityClass;
 	}
 
 	@Override
 	public boolean isForced() {
-		return discriminatorColumnValues.isForced();
+		return entityClass.isDiscriminatorForced();
 	}
 
 	@Override
 	public boolean isInserted() {
-		return discriminatorColumnValues.isIncludedInSql();
+		return entityClass.isDiscriminatorIncludedInSql();
 	}
 
 	@Override
 	public RelationalValueSource getDiscriminatorRelationalValueSource() {
-		return new ColumnValuesSourceImpl( discriminatorColumnValues );
+		return new ColumnValuesSourceImpl( entityClass.getDiscriminatorColumnValues() );
 	}
 
 	@Override
 	public String getExplicitHibernateTypeName() {
-		return discriminatorType.getName();
+		return entityClass.getDiscriminatorType().getName();
 	}
 }
 

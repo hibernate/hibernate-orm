@@ -52,7 +52,7 @@ public class SingleDomainObjectToMultipleTablesTest extends AbstractOneSessionTe
         Person ownerVer1 = getAuditReader().find(Person.class, "Personaje", ownerId, 1);
         Person driverVer1 = getAuditReader().find(Person.class, "Driveraje", driverId, 1);
 
-        /* Check references. */
+        /* Check ids. */
         Assert.assertEquals(ownerVer1.getId(), carVer1.getOwner().getId());
         Assert.assertEquals(driverVer1.getId(), carVer1.getDriver().getId());
 

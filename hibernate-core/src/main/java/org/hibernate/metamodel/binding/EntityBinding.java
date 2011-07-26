@@ -28,6 +28,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.util.Value;
@@ -142,14 +143,14 @@ public class EntityBinding {
 		this.baseTable = baseTable;
 	}
 
-	public TableSpecification getTable(String containingTableName) {
-		if ( containingTableName == null ) {
+	public TableSpecification getTable(String tableName) {
+		if ( tableName == null ) {
 			return baseTable;
 		}
 
-		TableSpecification tableSpec = secondaryTables.get( containingTableName );
+		TableSpecification tableSpec = secondaryTables.get( tableName );
 		if ( tableSpec == null ) {
-		   // todo throw exception !? (HF)
+		   throw new AssertionFailure( String.format("Unable to find table %s amongst tables %s", tableName, secondaryTables.keySet()) );
 		}
 		return tableSpec;
 	}

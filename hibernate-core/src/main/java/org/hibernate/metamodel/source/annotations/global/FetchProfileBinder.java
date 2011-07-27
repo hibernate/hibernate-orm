@@ -85,7 +85,7 @@ public class FetchProfileBinder {
 				AnnotationInstance[].class
 		);
 		for ( AnnotationInstance override : overrideAnnotations ) {
-			FetchMode fetchMode = JandexHelper.getValueAsEnum( override, "mode", FetchMode.class );
+			FetchMode fetchMode = JandexHelper.getEnumValue( override, "mode", FetchMode.class );
 			if ( !fetchMode.equals( org.hibernate.annotations.FetchMode.JOIN ) ) {
 				throw new MappingException( "Only FetchMode.JOIN is currently supported" );
 			}

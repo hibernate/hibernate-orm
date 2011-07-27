@@ -43,7 +43,6 @@ import org.jboss.jandex.Indexer;
 import org.jboss.jandex.MethodInfo;
 import org.jboss.jandex.Type;
 
-import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
@@ -61,7 +60,7 @@ public class JandexHelper {
 	 * annotation class is retrieved instead.
 	 * <p>
 	 * There are two special cases. {@code Class} parameters should be retrieved as strings (and then can later be
-	 * loaded) and enumerated values should be retrieved via {@link #getValueAsEnum(AnnotationInstance, String, Class)}.
+	 * loaded) and enumerated values should be retrieved via {@link #getEnumValue(AnnotationInstance, String, Class)}.
 	 * </p>
 	 *
 	 * @param annotation the annotation containing the element with the supplied name
@@ -131,7 +130,7 @@ public class JandexHelper {
 	 * @see #getValue(AnnotationInstance, String, Class)
 	 */
 	@SuppressWarnings("unchecked")
-	public static <T extends Enum<T>> T getValueAsEnum(AnnotationInstance annotation, String element, Class<T> type) {
+	public static <T extends Enum<T>> T getEnumValue(AnnotationInstance annotation, String element, Class<T> type) {
 		AnnotationValue val = annotation.value( element );
 		if ( val == null ) {
 			return (T) getDefaultValue( annotation, element );
@@ -323,7 +322,10 @@ public class JandexHelper {
 			throw error;
 		}
 		catch ( Exception error ) {
-			throw new AnnotationException( error );
+			throw new AssertionFailure(
+					String.format( "The annotation %s does not define a parameter '%s'", name, element ),
+					error
+			);
 		}
 	}
 

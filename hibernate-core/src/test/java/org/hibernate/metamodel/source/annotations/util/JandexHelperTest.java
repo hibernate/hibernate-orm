@@ -28,6 +28,7 @@ import java.util.Map;
 import javax.persistence.AttributeOverride;
 import javax.persistence.Basic;
 import javax.persistence.Column;
+import javax.persistence.Entity;
 import javax.persistence.LockModeType;
 import javax.persistence.NamedQuery;
 
@@ -48,12 +49,12 @@ import org.hibernate.metamodel.source.annotations.JandexHelper;
 import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.internal.BasicServiceRegistryImpl;
-
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static junit.framework.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 /**
  * Tests for the helper class {@link JandexHelper}.
@@ -156,7 +157,7 @@ public class JandexHelperTest extends BaseUnitTestCase {
 		assertTrue( annotationInstances.size() == 1 );
 		AnnotationInstance annotationInstance = annotationInstances.get( 0 );
 
-		LockModeType lockMode = JandexHelper.getValueAsEnum( annotationInstance, "lockMode", LockModeType.class );
+		LockModeType lockMode = JandexHelper.getEnumValue( annotationInstance, "lockMode", LockModeType.class );
 		assertEquals( "Wrong lock mode", LockModeType.NONE, lockMode );
 	}
 
@@ -171,7 +172,7 @@ public class JandexHelperTest extends BaseUnitTestCase {
 		assertTrue( annotationInstances.size() == 1 );
 		AnnotationInstance annotationInstance = annotationInstances.get( 0 );
 
-		LockModeType lockMode = JandexHelper.getValueAsEnum( annotationInstance, "lockMode", LockModeType.class );
+		LockModeType lockMode = JandexHelper.getEnumValue( annotationInstance, "lockMode", LockModeType.class );
 		assertEquals( "Wrong lock mode", LockModeType.OPTIMISTIC, lockMode );
 	}
 
@@ -219,6 +220,30 @@ public class JandexHelperTest extends BaseUnitTestCase {
 		String fqcn = JandexHelper.getValue( annotationInstance, "resultClass", String.class );
 		assertEquals( "Wrong class names", Foo.class.getName(), fqcn );
 	}
+
+	@Test
+	public void testRetrieveUnknownParameter() {
+		@Entity
+		class Foo {
+		}
+
+		Index index = JandexHelper.indexForClass( classLoaderService, Foo.class );
+		List<AnnotationInstance> annotationInstances = index.getAnnotations( JPADotNames.ENTITY );
+		assertTrue( annotationInstances.size() == 1 );
+		AnnotationInstance annotationInstance = annotationInstances.get( 0 );
+
+		try {
+			JandexHelper.getValue( annotationInstance, "foo", String.class );
+			fail();
+		}
+		catch ( AssertionFailure e ) {
+			assertTrue(
+					e.getMessage()
+							.startsWith( "The annotation javax.persistence.Entity does not define a parameter 'foo'" )
+			);
+		}
+	}
+
 }
 
 

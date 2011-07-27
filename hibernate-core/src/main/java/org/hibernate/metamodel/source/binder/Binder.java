@@ -37,6 +37,7 @@ import org.hibernate.internal.util.beans.BeanInfoHelper;
 import org.hibernate.metamodel.binding.AbstractPluralAttributeBinding;
 import org.hibernate.metamodel.binding.AttributeBinding;
 import org.hibernate.metamodel.binding.AttributeBindingContainer;
+import org.hibernate.metamodel.binding.BasicAttributeBinding;
 import org.hibernate.metamodel.binding.CollectionElementNature;
 import org.hibernate.metamodel.binding.ComponentAttributeBinding;
 import org.hibernate.metamodel.binding.EntityBinding;
@@ -44,7 +45,6 @@ import org.hibernate.metamodel.binding.EntityDiscriminator;
 import org.hibernate.metamodel.binding.InheritanceType;
 import org.hibernate.metamodel.binding.ManyToOneAttributeBinding;
 import org.hibernate.metamodel.binding.MetaAttribute;
-import org.hibernate.metamodel.binding.SimpleSingularAttributeBinding;
 import org.hibernate.metamodel.binding.SimpleValueBinding;
 import org.hibernate.metamodel.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.binding.TypeDef;
@@ -268,7 +268,7 @@ public class Binder {
 	private EntityBinding makeDiscriminatedSubclassBinding(SubclassEntitySource entitySource, EntityBinding superEntityBinding) {
 		final EntityBinding entityBinding = buildBasicEntityBinding( entitySource, superEntityBinding );
 
-		entityBinding.setBaseTable( superEntityBinding.getPrimaryTable() );
+		entityBinding.setPrimaryTable( superEntityBinding.getPrimaryTable() );
 
 		bindDiscriminatorValue( entitySource, entityBinding );
 
@@ -318,7 +318,7 @@ public class Binder {
 	}
 
 	private void bindSimpleIdentifier(SimpleIdentifierSource identifierSource, EntityBinding entityBinding) {
-		final SimpleSingularAttributeBinding idAttributeBinding = doBasicSingularAttributeBindingCreation(
+		final BasicAttributeBinding idAttributeBinding = doBasicSingularAttributeBindingCreation(
 				identifierSource.getIdentifierAttributeSource(), entityBinding
 		);
 
@@ -351,7 +351,7 @@ public class Binder {
 			return;
 		}
 
-		SimpleSingularAttributeBinding attributeBinding = doBasicSingularAttributeBindingCreation(
+		BasicAttributeBinding attributeBinding = doBasicSingularAttributeBindingCreation(
 				versioningAttributeSource, entityBinding
 		);
 		entityBinding.getHierarchyDetails().setVersioningAttributeBinding( attributeBinding );
@@ -468,7 +468,7 @@ public class Binder {
 		return CollectionElementNature.valueOf( pluralAttributeElementNature.name() );
 	}
 
-	private SimpleSingularAttributeBinding doBasicSingularAttributeBindingCreation(
+	private BasicAttributeBinding doBasicSingularAttributeBindingCreation(
 			SingularAttributeSource attributeSource,
 			AttributeBindingContainer attributeBindingContainer) {
 		final SingularAttribute existingAttribute = attributeBindingContainer.getAttributeContainer().locateSingularAttribute( attributeSource.getName() );
@@ -483,9 +483,9 @@ public class Binder {
 			attribute = attributeBindingContainer.getAttributeContainer().createSingularAttribute( attributeSource.getName() );
 		}
 
-		final SimpleSingularAttributeBinding attributeBinding;
+		final BasicAttributeBinding attributeBinding;
 		if ( attributeSource.getNature() == SingularAttributeNature.BASIC ) {
-			attributeBinding = attributeBindingContainer.makeSimpleAttributeBinding( attribute );
+			attributeBinding = attributeBindingContainer.makeBasicAttributeBinding( attribute );
 			resolveTypeInformation( attributeSource.getTypeInformation(), attributeBinding );
 		}
 		else if ( attributeSource.getNature() == SingularAttributeNature.MANY_TO_ONE ) {
@@ -521,7 +521,7 @@ public class Binder {
 		return attributeBinding;
 	}
 
-	private void resolveTypeInformation(ExplicitHibernateTypeSource typeSource, SimpleSingularAttributeBinding attributeBinding) {
+	private void resolveTypeInformation(ExplicitHibernateTypeSource typeSource, BasicAttributeBinding attributeBinding) {
 		final Class<?> attributeJavaType = determineJavaType( attributeBinding.getAttribute() );
 		if ( attributeJavaType != null ) {
 			attributeBinding.getHibernateTypeDescriptor().setJavaTypeName( attributeJavaType.getName() );
@@ -640,7 +640,7 @@ public class Binder {
 	private void bindPrimaryTable(EntitySource entitySource, EntityBinding entityBinding) {
 		final TableSource tableSource = entitySource.getPrimaryTable();
 		final Table table = createTable( entityBinding, tableSource );
-		entityBinding.setBaseTable( table );
+		entityBinding.setPrimaryTable( table );
 	}
 
 	private void bindSecondaryTables(EntitySource entitySource, EntityBinding entityBinding) {
@@ -709,6 +709,7 @@ public class Binder {
 		if ( relationalValueSourceContainer.relationalValueSources().size() > 0 ) {
 			for ( RelationalValueSource valueSource : relationalValueSourceContainer.relationalValueSources() ) {
 				final TableSpecification table = attributeBinding.getContainer()
+						.seekEntityBinding()
 						.locateTable( valueSource.getContainingTableName() );
 
 				if ( ColumnSource.class.isInstance( valueSource ) ) {
@@ -737,7 +738,7 @@ public class Binder {
 					.propertyToColumnName( attributeBinding.getAttribute().getName() );
 			valueBindings.add(
 					new SimpleValueBinding(
-							attributeBinding.getContainer().getPrimaryTable().locateOrCreateColumn( name )
+							attributeBinding.getContainer().seekEntityBinding().getPrimaryTable().locateOrCreateColumn( name )
 					)
 			);
 		}

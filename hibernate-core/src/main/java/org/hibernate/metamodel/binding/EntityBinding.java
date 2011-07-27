@@ -34,6 +34,8 @@ import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.util.Value;
 import org.hibernate.metamodel.domain.AttributeContainer;
 import org.hibernate.metamodel.domain.Entity;
+import org.hibernate.metamodel.domain.PluralAttribute;
+import org.hibernate.metamodel.domain.SingularAttribute;
 import org.hibernate.metamodel.relational.TableSpecification;
 import org.hibernate.metamodel.source.MetaAttributeContext;
 import org.hibernate.persister.entity.EntityPersister;
@@ -46,12 +48,12 @@ import org.hibernate.tuple.entity.EntityTuplizer;
  * @author Hardy Ferentschik
  * @author Gail Badner
  */
-public class EntityBinding extends AbstractAttributeBindingContainer {
+public class EntityBinding implements AttributeBindingContainer {
 	private final EntityBinding superEntityBinding;
 	private final HierarchyDetails hierarchyDetails;
 
 	private Entity entity;
-	private TableSpecification baseTable;
+	private TableSpecification primaryTable;
 	private Map<String, TableSpecification> secondaryTables = new HashMap<String, TableSpecification>();
 
 	private Value<Class<?>> proxyInterfaceType;
@@ -88,6 +90,7 @@ public class EntityBinding extends AbstractAttributeBindingContainer {
 	private CustomSQL customDelete;
 
 	private Set<String> synchronizedTableNames = new HashSet<String>();
+	private Map<String, AttributeBinding> attributeBindingMap = new HashMap<String, AttributeBinding>();
 
 	/**
 	 * Used to instantiate the EntityBinding for an entity that is the root of an inheritance hierarchy
@@ -131,18 +134,17 @@ public class EntityBinding extends AbstractAttributeBindingContainer {
 		this.entity = entity;
 	}
 
-	@Override
 	public TableSpecification getPrimaryTable() {
-		return baseTable;
+		return primaryTable;
 	}
 
-	public void setBaseTable(TableSpecification baseTable) {
-		this.baseTable = baseTable;
+	public void setPrimaryTable(TableSpecification primaryTable) {
+		this.primaryTable = primaryTable;
 	}
 
 	public TableSpecification locateTable(String tableName) {
 		if ( tableName == null ) {
-			return baseTable;
+			return primaryTable;
 		}
 
 		TableSpecification tableSpec = secondaryTables.get( tableName );
@@ -200,12 +202,11 @@ public class EntityBinding extends AbstractAttributeBindingContainer {
 		return getEntity();
 	}
 
-	@Override
 	protected void registerAttributeBinding(String name, AttributeBinding attributeBinding) {
 		if ( SingularAssociationAttributeBinding.class.isInstance( attributeBinding ) ) {
 			entityReferencingAttributeBindings.add( (SingularAssociationAttributeBinding) attributeBinding );
 		}
-		super.registerAttributeBinding( name, attributeBinding );
+		attributeBindingMap.put( name, attributeBinding );
 	}
 
 	@Override
@@ -377,5 +378,78 @@ public class EntityBinding extends AbstractAttributeBindingContainer {
 		sb.append( "{entity=" ).append( entity != null ? entity.getName() : "not set" );
 		sb.append( '}' );
 		return sb.toString();
+	}
+
+	@Override
+	public BasicAttributeBinding makeBasicAttributeBinding(SingularAttribute attribute) {
+		return makeSimpleAttributeBinding( attribute, false, false );
+	}
+
+	private BasicAttributeBinding makeSimpleAttributeBinding(SingularAttribute attribute, boolean forceNonNullable, boolean forceUnique) {
+		final BasicAttributeBinding binding = new BasicAttributeBinding(
+				this,
+				attribute,
+				forceNonNullable,
+				forceUnique
+		);
+		registerAttributeBinding( attribute.getName(), binding );
+		return binding;
+	}
+
+	@Override
+	public ComponentAttributeBinding makeComponentAttributeBinding(SingularAttribute attribute) {
+		final ComponentAttributeBinding binding = new ComponentAttributeBinding( this, attribute );
+		registerAttributeBinding( attribute.getName(), binding );
+		return binding;
+	}
+
+	@Override
+	public ManyToOneAttributeBinding makeManyToOneAttributeBinding(SingularAttribute attribute) {
+		final ManyToOneAttributeBinding binding = new ManyToOneAttributeBinding( this, attribute );
+		registerAttributeBinding( attribute.getName(), binding );
+		return binding;
+	}
+
+	@Override
+	public BagBinding makeBagAttributeBinding(PluralAttribute attribute, CollectionElementNature nature) {
+		final BagBinding binding = new BagBinding( this, attribute, nature );
+		registerAttributeBinding( attribute.getName(), binding );
+		return binding;
+	}
+
+	@Override
+	public AttributeBinding locateAttributeBinding(String name) {
+		return attributeBindingMap.get( name );
+	}
+
+	@Override
+	public Iterable<AttributeBinding> attributeBindings() {
+		return attributeBindingMap.values();
+	}
+
+	/**
+	 * Gets the number of attribute bindings defined on this class, including the
+	 * identifier attribute binding and attribute bindings defined
+	 * as part of a join.
+	 *
+	 * @return The number of attribute bindings
+	 */
+	public int getAttributeBindingClosureSpan() {
+		// TODO: fix this after HHH-6337 is fixed; for now just return size of attributeBindingMap
+		// if this is not a root, then need to include the superclass attribute bindings
+		return attributeBindingMap.size();
+	}
+
+	/**
+	 * Gets the attribute bindings defined on this class, including the
+	 * identifier attribute binding and attribute bindings defined
+	 * as part of a join.
+	 *
+	 * @return The attribute bindings.
+	 */
+	public Iterable<AttributeBinding> getAttributeBindingClosure() {
+		// TODO: fix this after HHH-6337 is fixed. for now, just return attributeBindings
+		// if this is not a root, then need to include the superclass attribute bindings
+		return attributeBindings();
 	}
 }

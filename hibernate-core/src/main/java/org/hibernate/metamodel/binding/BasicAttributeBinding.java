@@ -41,7 +41,7 @@ import org.hibernate.metamodel.source.MetaAttributeContext;
  *
  * @author Steve Ebersole
  */
-public class SimpleSingularAttributeBinding
+public class BasicAttributeBinding
 		extends AbstractSingularAttributeBinding
 		implements SingularAttributeBinding, KeyValueBinding {
 
@@ -55,7 +55,7 @@ public class SimpleSingularAttributeBinding
 
 	private MetaAttributeContext metaAttributeContext;
 
-	SimpleSingularAttributeBinding(
+	BasicAttributeBinding(
 			AttributeBindingContainer container,
 			SingularAttribute attribute,
 			boolean forceNonNullable,

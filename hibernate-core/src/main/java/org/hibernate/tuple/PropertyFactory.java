@@ -39,7 +39,7 @@ import org.hibernate.metamodel.binding.AssociationAttributeBinding;
 import org.hibernate.metamodel.binding.AttributeBinding;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.AbstractPluralAttributeBinding;
-import org.hibernate.metamodel.binding.SimpleSingularAttributeBinding;
+import org.hibernate.metamodel.binding.BasicAttributeBinding;
 import org.hibernate.metamodel.binding.SimpleValueBinding;
 import org.hibernate.metamodel.binding.SingularAttributeBinding;
 import org.hibernate.property.Getter;
@@ -109,7 +109,7 @@ public class PropertyFactory {
 	 */
 	public static IdentifierProperty buildIdentifierProperty(EntityBinding mappedEntity, IdentifierGenerator generator) {
 
-		final SimpleSingularAttributeBinding property = mappedEntity.getHierarchyDetails().getEntityIdentifier().getValueBinding();
+		final BasicAttributeBinding property = mappedEntity.getHierarchyDetails().getEntityIdentifier().getValueBinding();
 
 		// TODO: the following will cause an NPE with "virtual" IDs; how should they be set?
 		// (steve) virtual attributes will still be attributes, they will simply be marked as virtual.
@@ -192,7 +192,7 @@ public class PropertyFactory {
 	 * @param lazyAvailable Is property lazy loading currently available.
 	 * @return The appropriate VersionProperty definition.
 	 */
-	public static VersionProperty buildVersionProperty(SimpleSingularAttributeBinding property, boolean lazyAvailable) {
+	public static VersionProperty buildVersionProperty(BasicAttributeBinding property, boolean lazyAvailable) {
 		String mappedUnsavedValue = ( (KeyValue) property.getValue() ).getNullValue();
 
 		VersionValue unsavedValue = UnsavedValueFactory.getUnsavedVersionValue(

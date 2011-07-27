@@ -37,7 +37,7 @@ import org.hibernate.metamodel.domain.SingularAttribute;
  * @author Gail Badner
  * @author Steve Ebersole
  */
-public class ManyToOneAttributeBinding extends SimpleSingularAttributeBinding implements SingularAssociationAttributeBinding {
+public class ManyToOneAttributeBinding extends BasicAttributeBinding implements SingularAssociationAttributeBinding {
 	private String referencedEntityName;
 	private String referencedAttributeName;
 	private AttributeBinding referencedAttributeBinding;

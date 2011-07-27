@@ -58,10 +58,10 @@ public class SimpleValueBindingTests extends BaseUnitTestCase {
 		Entity entity = new Entity( "TheEntity", "NoSuchClass", makeJavaType( "NoSuchClass" ), null );
 		EntityBinding entityBinding = new EntityBinding( InheritanceType.NO_INHERITANCE, EntityMode.POJO );
 		entityBinding.setEntity( entity );
-		entityBinding.setBaseTable( table );
+		entityBinding.setPrimaryTable( table );
 
 		SingularAttribute idAttribute = entity.createSingularAttribute( "id" );
-		SimpleSingularAttributeBinding attributeBinding = entityBinding.makeSimpleAttributeBinding( idAttribute );
+		BasicAttributeBinding attributeBinding = entityBinding.makeBasicAttributeBinding( idAttribute );
 		attributeBinding.getHibernateTypeDescriptor().setExplicitTypeName( "long" );
 		assertSame( idAttribute, attributeBinding.getAttribute() );
 

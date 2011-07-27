@@ -38,7 +38,7 @@ public class CollectionKey {
 	private HibernateTypeDescriptor hibernateTypeDescriptor;
 
 // todo : this would be nice to have but we do not always know it, especially in HBM case.
-//	private SimpleSingularAttributeBinding otherSide;
+//	private BasicAttributeBinding otherSide;
 
 	public CollectionKey(AbstractPluralAttributeBinding collection) {
 		this.collection = collection;

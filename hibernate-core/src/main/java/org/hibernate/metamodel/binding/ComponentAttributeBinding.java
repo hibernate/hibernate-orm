@@ -31,7 +31,6 @@ import org.hibernate.metamodel.domain.AttributeContainer;
 import org.hibernate.metamodel.domain.Component;
 import org.hibernate.metamodel.domain.PluralAttribute;
 import org.hibernate.metamodel.domain.SingularAttribute;
-import org.hibernate.metamodel.relational.TableSpecification;
 import org.hibernate.metamodel.source.MetaAttributeContext;
 
 /**
@@ -84,16 +83,6 @@ public class ComponentAttributeBinding extends AbstractSingularAttributeBinding 
 	}
 
 	@Override
-	public TableSpecification getPrimaryTable() {
-		return getContainer().getPrimaryTable();
-	}
-
-	@Override
-	public TableSpecification locateTable(String containingTableName) {
-		return getContainer().locateTable( containingTableName );
-	}
-
-	@Override
 	public AttributeBinding locateAttributeBinding(String name) {
 		return attributeBindingMap.get( name );
 	}
@@ -109,8 +98,8 @@ public class ComponentAttributeBinding extends AbstractSingularAttributeBinding 
 	}
 
 	@Override
-	public SimpleSingularAttributeBinding makeSimpleAttributeBinding(SingularAttribute attribute) {
-		final SimpleSingularAttributeBinding binding = new SimpleSingularAttributeBinding(
+	public BasicAttributeBinding makeBasicAttributeBinding(SingularAttribute attribute) {
+		final BasicAttributeBinding binding = new BasicAttributeBinding(
 				this,
 				attribute,
 				isNullable(),

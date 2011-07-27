@@ -141,7 +141,7 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 		assertNotNull( componentAttributeBinding );
 		assertSame( componentAttributeBinding.getAttribute().getSingularAttributeType(), componentAttributeBinding.getAttributeContainer() );
 		assertEquals( SimpleEntityWithSimpleComponent.class.getName() + ".simpleComponent", componentAttributeBinding.getPathBase() );
-		assertSame( entityBinding.getPrimaryTable(), componentAttributeBinding.getPrimaryTable() );
+		assertSame( entityBinding, componentAttributeBinding.seekEntityBinding() );
 		assertNotNull( componentAttributeBinding.getComponent() );
 	}
 

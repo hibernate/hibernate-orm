@@ -33,12 +33,13 @@ package org.hibernate.spatial.test;
  */
 public interface SQLExpressionTemplate {
 
-    /**
-     * Returns an insert SQL statement for the specified <code>TestDataElement</code>
-     *
-     * @param testDataElement
-     * @return an insert SQL for testDataElement
-     */
-    public String toInsertSql(TestDataElement testDataElement);
+	/**
+	 * Returns an insert SQL statement for the specified <code>TestDataElement</code>
+	 *
+	 * @param testDataElement
+	 *
+	 * @return an insert SQL for testDataElement
+	 */
+	public String toInsertSql(TestDataElement testDataElement);
 
 }

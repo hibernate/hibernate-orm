@@ -3,7 +3,7 @@
  *
  * This file is part of Hibernate Spatial, an extension to the 
  * hibernate ORM solution for geographic data. 
- *  
+ *
  * Copyright © 2007 Geovise BVBA
  * Copyright © 2007 K.U. Leuven LRD, Spatial Applications Division, Belgium
  *
@@ -41,15 +41,15 @@ public class EnvelopeAdapter {
 	static public Polygon toPolygon(Envelope env, int SRID) {
 		Coordinate[] coords = new Coordinate[5];
 
-		coords[0] = new Coordinate(env.getMinX(), env.getMinY());
-		coords[1] = new Coordinate(env.getMinX(), env.getMaxY());
-		coords[2] = new Coordinate(env.getMaxX(), env.getMaxY());
-		coords[3] = new Coordinate(env.getMaxX(), env.getMinY());
-		coords[4] = new Coordinate(env.getMinX(), env.getMinY());
-		LinearRing shell = geomFactory.createLinearRing(coords);
+		coords[0] = new Coordinate( env.getMinX(), env.getMinY() );
+		coords[1] = new Coordinate( env.getMinX(), env.getMaxY() );
+		coords[2] = new Coordinate( env.getMaxX(), env.getMaxY() );
+		coords[3] = new Coordinate( env.getMaxX(), env.getMinY() );
+		coords[4] = new Coordinate( env.getMinX(), env.getMinY() );
+		LinearRing shell = geomFactory.createLinearRing( coords );
 
-		Polygon pg = geomFactory.createPolygon(shell, null);
-		pg.setSRID(SRID);
+		Polygon pg = geomFactory.createPolygon( shell, null );
+		pg.setSRID( SRID );
 		return pg;
 	}
 

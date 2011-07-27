@@ -3,7 +3,7 @@
  *
  * This file is part of Hibernate Spatial, an extension to the 
  * hibernate ORM solution for geographic data. 
- *  
+ *
  * Copyright © 2008 Geovise BVBA
  *
  * This library is free software; you can redistribute it and/or
@@ -28,24 +28,22 @@ package org.hibernate.spatial.helper;
  * A <code>FinderStrategy</code> is used to find a specific feature. It is
  * useful in cases where reflection is used to determine some property of a
  * class.
- * 
+ *
+ * @param <T> the return type of the <code>find</code> method
+ * @param <S> the type of subject
+ *
  * @author Karel Maesen
- * 
- * @param <T>
- *            the return type of the <code>find</code> method
- * @param <S>
- *            the type of subject
  */
 public interface FinderStrategy<T, S> {
 
 	/**
 	 * Find a feature or property of a subject
-	 * 
-	 * @param subject
-	 *            the object that is being searched
+	 *
+	 * @param subject the object that is being searched
+	 *
 	 * @return the object sought
-	 * @throws FinderException
-	 *             thrown when the feature can be found;
+	 *
+	 * @throws FinderException thrown when the feature can be found;
 	 */
 	public T find(S subject) throws FinderException;
 

@@ -28,6 +28,7 @@
 package org.hibernate.spatial.criterion;
 
 import com.vividsolutions.jts.geom.Geometry;
+
 import org.hibernate.Criteria;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
@@ -45,28 +46,28 @@ import org.hibernate.type.StandardBasicTypes;
 public class DWithinExpression implements Criterion {
 
 
-    private final String propertyName;
-    private final Geometry geometry;
-    private final double distance;
+	private final String propertyName;
+	private final Geometry geometry;
+	private final double distance;
 
-    public DWithinExpression(String propertyName, Geometry geometry, double distance) {
-        this.propertyName = propertyName;
-        this.geometry = geometry;
-        this.distance = distance;
-    }
+	public DWithinExpression(String propertyName, Geometry geometry, double distance) {
+		this.propertyName = propertyName;
+		this.geometry = geometry;
+		this.distance = distance;
+	}
 
-    public String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery) throws HibernateException {
-        String column = ExpressionUtil.findColumn(propertyName, criteria, criteriaQuery);
-        SpatialDialect spatialDialect = ExpressionUtil.getSpatialDialect(criteriaQuery, SpatialFunction.dwithin);
-        return spatialDialect.getDWithinSQL(column);
+	public String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery) throws HibernateException {
+		String column = ExpressionUtil.findColumn( propertyName, criteria, criteriaQuery );
+		SpatialDialect spatialDialect = ExpressionUtil.getSpatialDialect( criteriaQuery, SpatialFunction.dwithin );
+		return spatialDialect.getDWithinSQL( column );
 
-    }
+	}
 
 
-    public TypedValue[] getTypedValues(Criteria criteria, CriteriaQuery criteriaQuery) throws HibernateException {
-        return new TypedValue[]{
-                criteriaQuery.getTypedValue(criteria, propertyName, geometry),
-                new TypedValue(StandardBasicTypes.DOUBLE, Double.valueOf(distance), EntityMode.POJO)
-        };
-    }
+	public TypedValue[] getTypedValues(Criteria criteria, CriteriaQuery criteriaQuery) throws HibernateException {
+		return new TypedValue[] {
+				criteriaQuery.getTypedValue( criteria, propertyName, geometry ),
+				new TypedValue( StandardBasicTypes.DOUBLE, Double.valueOf( distance ), EntityMode.POJO )
+		};
+	}
 }

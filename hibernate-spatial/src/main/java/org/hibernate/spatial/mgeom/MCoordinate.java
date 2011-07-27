@@ -3,7 +3,7 @@
  *
  * This file is part of Hibernate Spatial, an extension to the 
  * hibernate ORM solution for geographic data. 
- *  
+ *
  * Copyright © 2007 Geovise BVBA
  * Copyright © 2007 K.U. Leuven LRD, Spatial Applications Division, Belgium
  *
@@ -40,12 +40,12 @@ import com.vividsolutions.jts.geom.CoordinateSequence;
  * While this class extends the Coordinate class, it can be used seamlessly as a
  * substitute in the event that the Measure value is not used. In these cases
  * the Measure value shall simply be Double.NaN
- * 
+ *
  * @see com.vividsolutions.jts.geom.Coordinate
  */
 public class MCoordinate extends Coordinate {
 	/**
-	 * 
+	 *
 	 */
 	private static final long serialVersionUID = 1L;
 
@@ -60,25 +60,27 @@ public class MCoordinate extends Coordinate {
 	}
 
 	public MCoordinate(double x, double y, double z, double m) {
-		super(x, y, z);
+		super( x, y, z );
 		this.m = m;
 	}
 
 	public MCoordinate(double x, double y) {
-		super(x, y);
+		super( x, y );
 		m = Double.NaN;
 	}
 
 	public MCoordinate(Coordinate coord) {
-		super(coord);
-		if (coord instanceof MCoordinate)
-			m = ((MCoordinate) coord).m;
-		else
+		super( coord );
+		if ( coord instanceof MCoordinate ) {
+			m = ( (MCoordinate) coord ).m;
+		}
+		else {
 			m = Double.NaN;
+		}
 	}
 
 	public MCoordinate(MCoordinate coord) {
-		super(coord);
+		super( coord );
 		m = coord.m;
 	}
 
@@ -92,22 +94,22 @@ public class MCoordinate extends Coordinate {
 	 * imply the desired ordinate in the case where one is using a 2 dimensional
 	 * geometry with a measure value. Therefore, these constants are highly
 	 * recommended.
-	 * 
-	 * @param ordinateIndex
-	 *            the desired ordinate index.
+	 *
+	 * @param ordinateIndex the desired ordinate index.
+	 *
 	 * @return the value of stored in the ordinate index. Incorrect or unused
 	 *         indexes shall return Double.NaN
 	 */
 	public double getOrdinate(int ordinateIndex) {
-		switch (ordinateIndex) {
-		case CoordinateSequence.X:
-			return this.x;
-		case CoordinateSequence.Y:
-			return this.y;
-		case CoordinateSequence.Z:
-			return this.z;
-		case CoordinateSequence.M:
-			return this.m;
+		switch ( ordinateIndex ) {
+			case CoordinateSequence.X:
+				return this.x;
+			case CoordinateSequence.Y:
+				return this.y;
+			case CoordinateSequence.Z:
+				return this.z;
+			case CoordinateSequence.M:
+				return this.m;
 		}
 		return Double.NaN;
 	}
@@ -116,48 +118,46 @@ public class MCoordinate extends Coordinate {
 	 * TODO: I'd like to see this method added to the base Coordinate class Sets
 	 * the value for a given ordinate. This should be specified using the
 	 * CoordinateSequence ordinate index constants.
-	 * 
-	 * @param ordinateIndex
-	 *            the desired ordinate index.
-	 * @param value
-	 *            the new ordinate value
-	 * @throws IllegalArgumentException
-	 *             if the ordinateIndex value is incorrect
+	 *
+	 * @param ordinateIndex the desired ordinate index.
+	 * @param value the new ordinate value
+	 *
+	 * @throws IllegalArgumentException if the ordinateIndex value is incorrect
 	 * @see #getOrdinate(int)
 	 */
 	public void setOrdinate(int ordinateIndex, double value) {
-		switch (ordinateIndex) {
-		case CoordinateSequence.X:
-			this.x = value;
-			break;
-		case CoordinateSequence.Y:
-			this.y = value;
-			break;
-		case CoordinateSequence.Z:
-			this.z = value;
-			break;
-		case CoordinateSequence.M:
-			this.m = value;
-			break;
-		default:
-			throw new IllegalArgumentException("invalid ordinateIndex");
+		switch ( ordinateIndex ) {
+			case CoordinateSequence.X:
+				this.x = value;
+				break;
+			case CoordinateSequence.Y:
+				this.y = value;
+				break;
+			case CoordinateSequence.Z:
+				this.z = value;
+				break;
+			case CoordinateSequence.M:
+				this.m = value;
+				break;
+			default:
+				throw new IllegalArgumentException( "invalid ordinateIndex" );
 		}
 	}
 
 	public boolean equals2DWithMeasure(Coordinate other) {
-		boolean result = this.equals2D(other);
-		if (result) {
-			MCoordinate mc = convertCoordinate(other);
-			result = (Double.compare(this.m, mc.m) == 0);
+		boolean result = this.equals2D( other );
+		if ( result ) {
+			MCoordinate mc = convertCoordinate( other );
+			result = ( Double.compare( this.m, mc.m ) == 0 );
 		}
 		return result;
 	}
 
 	public boolean equals3DWithMeasure(Coordinate other) {
-		boolean result = this.equals3D(other);
-		if (result) {
-			MCoordinate mc = convertCoordinate(other);
-			result = (Double.compare(this.m, mc.m) == 0);
+		boolean result = this.equals3D( other );
+		if ( result ) {
+			MCoordinate mc = convertCoordinate( other );
+			result = ( Double.compare( this.m, mc.m ) == 0 );
 		}
 		return result;
 	}
@@ -173,9 +173,10 @@ public class MCoordinate extends Coordinate {
 	 * @see com.vividsolutions.jts.geom.Coordinate#equals(java.lang.Object)
 	 */
 	public boolean equals(Object other) {
-		if (other instanceof Coordinate) {
-			return equals2D((Coordinate) other);
-		} else {
+		if ( other instanceof Coordinate ) {
+			return equals2D( (Coordinate) other );
+		}
+		else {
 			return false;
 		}
 	}
@@ -189,85 +190,79 @@ public class MCoordinate extends Coordinate {
 	 * coordinate is already an instance of an MCoordinate, then it is simply
 	 * returned. In cases where it is converted, the measure value of the
 	 * coordinate is initialized to Double.NaN.
-	 * 
-	 * @param coordinate
-	 *            The coordinate to be converted
+	 *
+	 * @param coordinate The coordinate to be converted
+	 *
 	 * @return an instance of MCoordinate corresponding to the
 	 *         <code>coordinate</code> parameter
 	 */
 	public static MCoordinate convertCoordinate(Coordinate coordinate) {
-		if (coordinate == null)
+		if ( coordinate == null ) {
 			return null;
-		if (coordinate instanceof MCoordinate)
+		}
+		if ( coordinate instanceof MCoordinate ) {
 			return (MCoordinate) coordinate;
-		return new MCoordinate(coordinate);
+		}
+		return new MCoordinate( coordinate );
 	}
 
 	/**
 	 * A convenience method for creating a MCoordinate instance where there are
 	 * only 2 coordinates and an lrs measure value. The z value of the
 	 * coordinate shall be set to Double.NaN
-	 * 
-	 * @param x
-	 *            the x coordinate value
-	 * @param y
-	 *            the y coordinate value
-	 * @param m
-	 *            the lrs measure value
+	 *
+	 * @param x the x coordinate value
+	 * @param y the y coordinate value
+	 * @param m the lrs measure value
+	 *
 	 * @return The constructed MCoordinate value
 	 */
 	public static MCoordinate create2dWithMeasure(double x, double y, double m) {
-		return new MCoordinate(x, y, Double.NaN, m);
+		return new MCoordinate( x, y, Double.NaN, m );
 	}
 
 	/**
 	 * A convenience method for creating a MCoordinate instance where there are
 	 * only 2 coordinates and an lrs measure value. The z and m value of the
 	 * coordinate shall be set to Double.NaN
-	 * 
-	 * @param x
-	 *            the x coordinate value
-	 * @param y
-	 *            the y coordinate value
+	 *
+	 * @param x the x coordinate value
+	 * @param y the y coordinate value
+	 *
 	 * @return The constructed MCoordinate value
 	 */
 	public static MCoordinate create2d(double x, double y) {
-		return new MCoordinate(x, y, Double.NaN, Double.NaN);
+		return new MCoordinate( x, y, Double.NaN, Double.NaN );
 	}
 
 	/**
 	 * A convenience method for creating a MCoordinate instance where there are
 	 * 3 coordinates and an lrs measure value.
-	 * 
-	 * @param x
-	 *            the x coordinate value
-	 * @param y
-	 *            the y coordinate value
-	 * @param z
-	 *            the z coordinate value
-	 * @param m
-	 *            the lrs measure value
+	 *
+	 * @param x the x coordinate value
+	 * @param y the y coordinate value
+	 * @param z the z coordinate value
+	 * @param m the lrs measure value
+	 *
 	 * @return The constructed MCoordinate value
 	 */
 	public static MCoordinate create3dWithMeasure(double x, double y, double z,
-			double m) {
-		return new MCoordinate(x, y, z, m);
+												  double m) {
+		return new MCoordinate( x, y, z, m );
 	}
 
 	/**
 	 * A convenience method for creating a MCoordinate instance where there are
 	 * 3 coordinates but no lrs measure value. The m value of the coordinate
 	 * shall be set to Double.NaN
-	 * 
-	 * @param x
-	 *            the x coordinate value
-	 * @param y
-	 *            the y coordinate value
-	 * @param z
-	 *            the z coordinate value
+	 *
+	 * @param x the x coordinate value
+	 * @param y the y coordinate value
+	 * @param z the z coordinate value
+	 *
 	 * @return The constructed MCoordinate value
 	 */
 	public static MCoordinate create3d(double x, double y, double z) {
-		return new MCoordinate(x, y, z, Double.NaN);
+		return new MCoordinate( x, y, z, Double.NaN );
 	}
 }

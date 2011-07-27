@@ -11,12 +11,12 @@ import com.vividsolutions.jts.geom.Geometry;
  */
 public interface TestFeature {
 
-    public Integer getId();
+	public Integer getId();
 
-    public void setId(Integer id);
+	public void setId(Integer id);
 
-    public Geometry getGeom();
+	public Geometry getGeom();
 
-    public void setGeom(Geometry geom);
+	public void setGeom(Geometry geom);
 
 }

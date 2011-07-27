@@ -3,7 +3,7 @@
  *
  * This file is part of Hibernate Spatial, an extension to the 
  * hibernate ORM solution for geographic data. 
- *  
+ *
  * Copyright © 2007 Geovise BVBA
  * Copyright © 2007 K.U. Leuven LRD, Spatial Applications Division, Belgium
  *
@@ -42,7 +42,7 @@ public class MCoordinateSequenceFactory implements CoordinateSequenceFactory,
 		Serializable {
 
 	/**
-	 * 
+	 *
 	 */
 	private static final long serialVersionUID = 1L;
 
@@ -65,22 +65,24 @@ public class MCoordinateSequenceFactory implements CoordinateSequenceFactory,
 	 */
 	public CoordinateSequence create(Coordinate[] coordinates) {
 		return coordinates instanceof MCoordinate[] ? new MCoordinateSequence(
-				(MCoordinate[]) coordinates) : new MCoordinateSequence(
-				coordinates);
+				(MCoordinate[]) coordinates
+		) : new MCoordinateSequence(
+				coordinates
+		);
 	}
 
 	public CoordinateSequence create(CoordinateSequence coordSeq) {
-		return new MCoordinateSequence(coordSeq);
+		return new MCoordinateSequence( coordSeq );
 	}
 
 	/**
 	 * Creates a MCoordinateSequence instance initialized to the size parameter.
 	 * Note that the dimension argument is ignored.
-	 * 
-	 * @see com.vividsolutions.jts.geom.CoordinateSequenceFactory#create(int,int)
+	 *
+	 * @see com.vividsolutions.jts.geom.CoordinateSequenceFactory#create(int, int)
 	 */
 	public CoordinateSequence create(int size, int dimension) {
-		return new MCoordinateSequence(size);
+		return new MCoordinateSequence( size );
 	}
 
 }

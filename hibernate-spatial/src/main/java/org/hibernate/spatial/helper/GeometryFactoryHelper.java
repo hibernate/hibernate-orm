@@ -24,13 +24,14 @@
  */
 package org.hibernate.spatial.helper;
 
+import java.util.Map;
+
 import com.vividsolutions.jts.geom.PrecisionModel;
-import org.hibernate.spatial.cfg.HSProperty;
-import org.hibernate.spatial.mgeom.MGeometryFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Map;
+import org.hibernate.spatial.cfg.HSProperty;
+import org.hibernate.spatial.mgeom.MGeometryFactory;
 
 /**
  * Factory for creating a <code>GeometryFactory</code> given a map of
@@ -40,46 +41,59 @@ import java.util.Map;
  */
 public class GeometryFactoryHelper {
 
-    private static Logger logger = LoggerFactory.getLogger(GeometryFactoryHelper.class);
+	private static Logger logger = LoggerFactory.getLogger( GeometryFactoryHelper.class );
 
-    public static MGeometryFactory createGeometryFactory(Map map) {
+	public static MGeometryFactory createGeometryFactory(Map map) {
 
-        if (map == null) {
-            return new MGeometryFactory();
-        }
-        String precisionModelName = null;
-        Double scale = null;
-        if (map.containsKey(HSProperty.PRECISION_MODEL.toString())) {
-            precisionModelName = (String) map.get(HSProperty.PRECISION_MODEL
-                    .toString());
-        }
-        if (map.containsKey(HSProperty.PRECISION_MODEL_SCALE.toString())) {
-            scale = Double.parseDouble(((String) map
-                    .get(HSProperty.PRECISION_MODEL_SCALE.toString())));
-        }
-        if (scale != null && !scale.isNaN() && precisionModelName != null
-                && precisionModelName.equalsIgnoreCase("FIXED")) {
-            return new MGeometryFactory(new PrecisionModel(scale));
-        }
-        if (precisionModelName == null) {
-            return new MGeometryFactory();
-        }
-        if (precisionModelName.equalsIgnoreCase("FIXED")) {
-            return new MGeometryFactory(
-                    new PrecisionModel(PrecisionModel.FIXED));
-        }
-        if (precisionModelName.equalsIgnoreCase("FLOATING")) {
-            return new MGeometryFactory(new PrecisionModel(
-                    PrecisionModel.FLOATING));
-        }
-        if (precisionModelName.equalsIgnoreCase("FLOATING_SINGLE")) {
-            return new MGeometryFactory(new PrecisionModel(
-                    PrecisionModel.FLOATING_SINGLE));
-        }
-        logger.warn("Configured for PrecisionModel: " + precisionModelName
-                + " but don't know how to instantiate.");
-        logger.warn("Reverting to default GeometryModel");
-        return new MGeometryFactory();
-    }
+		if ( map == null ) {
+			return new MGeometryFactory();
+		}
+		String precisionModelName = null;
+		Double scale = null;
+		if ( map.containsKey( HSProperty.PRECISION_MODEL.toString() ) ) {
+			precisionModelName = (String) map.get(
+					HSProperty.PRECISION_MODEL
+							.toString()
+			);
+		}
+		if ( map.containsKey( HSProperty.PRECISION_MODEL_SCALE.toString() ) ) {
+			scale = Double.parseDouble(
+					( (String) map
+							.get( HSProperty.PRECISION_MODEL_SCALE.toString() ) )
+			);
+		}
+		if ( scale != null && !scale.isNaN() && precisionModelName != null
+				&& precisionModelName.equalsIgnoreCase( "FIXED" ) ) {
+			return new MGeometryFactory( new PrecisionModel( scale ) );
+		}
+		if ( precisionModelName == null ) {
+			return new MGeometryFactory();
+		}
+		if ( precisionModelName.equalsIgnoreCase( "FIXED" ) ) {
+			return new MGeometryFactory(
+					new PrecisionModel( PrecisionModel.FIXED )
+			);
+		}
+		if ( precisionModelName.equalsIgnoreCase( "FLOATING" ) ) {
+			return new MGeometryFactory(
+					new PrecisionModel(
+							PrecisionModel.FLOATING
+					)
+			);
+		}
+		if ( precisionModelName.equalsIgnoreCase( "FLOATING_SINGLE" ) ) {
+			return new MGeometryFactory(
+					new PrecisionModel(
+							PrecisionModel.FLOATING_SINGLE
+					)
+			);
+		}
+		logger.warn(
+				"Configured for PrecisionModel: " + precisionModelName
+						+ " but don't know how to instantiate."
+		);
+		logger.warn( "Reverting to default GeometryModel" );
+		return new MGeometryFactory();
+	}
 
 }

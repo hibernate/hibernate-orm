@@ -25,24 +25,17 @@ package org.hibernate.metamodel.binding;
 
 import java.util.Properties;
 
-import org.jboss.logging.Logger;
-
+import org.hibernate.AssertionFailure;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
-import org.hibernate.internal.CoreMessageLogger;
 
 /**
  * Binds the entity identifier.
  *
  * @author Steve Ebersole
+ * @author Hardy Ferentschik
  */
 public class EntityIdentifier {
-
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class,
-			EntityIdentifier.class.getName()
-	);
-
 	private final EntityBinding entityBinding;
 	private SimpleSingularAttributeBinding attributeBinding;
 	private IdentifierGenerator identifierGenerator;
@@ -65,9 +58,12 @@ public class EntityIdentifier {
 
 	public void setValueBinding(SimpleSingularAttributeBinding attributeBinding) {
 		if ( this.attributeBinding != null ) {
-			// todo : error?  or just log?  For now throw exception and see what happens. Easier to see whether this
-			// method gets called multiple times
-			LOG.entityIdentifierValueBindingExists( entityBinding.getEntity().getName() );
+			throw new AssertionFailure(
+					String.format(
+							"Identifier value binding already existed for %s",
+							entityBinding.getEntity().getName()
+					)
+			);
 		}
 		this.attributeBinding = attributeBinding;
 	}
@@ -77,13 +73,15 @@ public class EntityIdentifier {
 	}
 
 	public boolean isEmbedded() {
-		return attributeBinding.getSimpleValueSpan()>1;
+		return attributeBinding.getSimpleValueSpan() > 1;
 	}
 
 	public boolean isIdentifierMapper() {
 		return isIdentifierMapper;
 	}
 
+	// todo do we really need this createIdentifierGenerator and how do we make sure the getter is not called too early
+	// maybe some sort of visitor pattern here!? (HF)
 	public IdentifierGenerator createIdentifierGenerator(IdentifierGeneratorFactory factory, Properties properties) {
 		if ( idGenerator != null ) {
 			identifierGenerator = attributeBinding.createIdentifierGenerator( idGenerator, factory, properties );

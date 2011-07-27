@@ -121,7 +121,6 @@ public class SimpleSingularAttributeBinding
 		this.metaAttributeContext = metaAttributeContext;
 	}
 
-	/* package-protected */
 	IdentifierGenerator createIdentifierGenerator(
 			IdGenerator idGenerator,
 			IdentifierGeneratorFactory identifierGeneratorFactory,
@@ -138,14 +137,14 @@ public class SimpleSingularAttributeBinding
 				params.setProperty( PersistentIdentifierGenerator.SCHEMA, schema.getName().getSchema().getName() );
 			}
 			if ( schema.getName().getCatalog() != null ) {
-				params.setProperty(PersistentIdentifierGenerator.CATALOG, schema.getName().getCatalog().getName() );
+				params.setProperty( PersistentIdentifierGenerator.CATALOG, schema.getName().getCatalog().getName() );
 			}
 		}
 
 		// TODO: not sure how this works for collection IDs...
 		//pass the entity-name, if not a collection-id
 		//if ( rootClass!=null) {
-			params.setProperty( IdentifierGenerator.ENTITY_NAME, getEntityBinding().getEntity().getName() );
+		params.setProperty( IdentifierGenerator.ENTITY_NAME, getEntityBinding().getEntity().getName() );
 		//}
 
 		//init the table here instead of earlier, so that we can get a quoted table name
@@ -156,10 +155,12 @@ public class SimpleSingularAttributeBinding
 
 		//pass the column name (a generated id almost always has a single column)
 		if ( getSimpleValueSpan() > 1 ) {
-			throw new MappingException( "A SimpleAttributeBinding used for an identifier has a more than 1 Value: " + getAttribute().getName() );
+			throw new MappingException(
+					"A SimpleAttributeBinding used for an identifier has more than 1 Value: " + getAttribute().getName()
+			);
 		}
 		SimpleValue simpleValue = (SimpleValue) getValue();
-		if ( ! Column.class.isInstance( simpleValue ) ) {
+		if ( !Column.class.isInstance( simpleValue ) ) {
 			throw new MappingException(
 					"Cannot create an IdentifierGenerator because the value is not a column: " +
 							simpleValue.toLoggableString()
@@ -167,7 +168,7 @@ public class SimpleSingularAttributeBinding
 		}
 		params.setProperty(
 				PersistentIdentifierGenerator.PK,
-				( ( Column ) simpleValue ).getColumnName().encloseInQuotesIfQuoted(
+				( (Column) simpleValue ).getColumnName().encloseInQuotesIfQuoted(
 						identifierGeneratorFactory.getDialect()
 				)
 		);
@@ -184,7 +185,7 @@ public class SimpleSingularAttributeBinding
 		//	params.setProperty( PersistentIdentifierGenerator.TABLES, tables.toString() );
 		//}
 		//else {
-			params.setProperty( PersistentIdentifierGenerator.TABLES, tableName );
+		params.setProperty( PersistentIdentifierGenerator.TABLES, tableName );
 		//}
 
 		params.putAll( idGenerator.getParameters() );

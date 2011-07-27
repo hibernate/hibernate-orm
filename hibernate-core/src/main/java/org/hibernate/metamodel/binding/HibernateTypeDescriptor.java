@@ -23,6 +23,7 @@
  */
 package org.hibernate.metamodel.binding;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.type.Type;
@@ -36,7 +37,7 @@ public class HibernateTypeDescriptor {
 	private String explicitTypeName;
 	private String javaTypeName;
 	private boolean isToOne;
-	private Map<String, String> typeParameters;
+	private Map<String, String> typeParameters = new HashMap<String, String>(  );
 
 	private Type resolvedTypeMapping;
 

@@ -3,7 +3,7 @@
  *
  * This file is part of Hibernate Spatial, an extension to the 
  * hibernate ORM solution for geographic data. 
- *  
+ *
  * Copyright © 2007 Geovise BVBA
  * Copyright © 2007 K.U. Leuven LRD, Spatial Applications Division, Belgium
  *
@@ -30,6 +30,7 @@ package org.hibernate.spatial.criterion;
 
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
+
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.criterion.CriteriaQuery;
@@ -44,7 +45,7 @@ import org.hibernate.spatial.helper.EnvelopeAdapter;
  * An implementation for a simple spatial filter. This <code>Criterion</code>
  * restricts the resultset to those features whose bounding box overlaps the
  * filter geometry. It is intended for quick, but inexact spatial queries.
- * 
+ *
  * @author Karel Maesen
  */
 public class SpatialFilter implements Criterion {
@@ -62,28 +63,37 @@ public class SpatialFilter implements Criterion {
 
 	public SpatialFilter(String propertyName, Envelope envelope, int SRID) {
 		this.propertyName = propertyName;
-		this.filter = EnvelopeAdapter.toPolygon(envelope, SRID);
+		this.filter = EnvelopeAdapter.toPolygon( envelope, SRID );
 
 	}
 
 	public TypedValue[] getTypedValues(Criteria criteria,
-			CriteriaQuery criteriaQuery) throws HibernateException {
-		return new TypedValue[] { criteriaQuery.getTypedValue(criteria,
-				propertyName, filter) };
+									   CriteriaQuery criteriaQuery) throws HibernateException {
+		return new TypedValue[] {
+				criteriaQuery.getTypedValue(
+						criteria,
+						propertyName, filter
+				)
+		};
 	}
 
 	public String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery)
 			throws HibernateException {
 		SessionFactoryImplementor factory = criteriaQuery.getFactory();
-		String[] columns = criteriaQuery.getColumnsUsingProjection(criteria,
-				this.propertyName);
+		String[] columns = criteriaQuery.getColumnsUsingProjection(
+				criteria,
+				this.propertyName
+		);
 		Dialect dialect = factory.getDialect();
-		if (dialect instanceof SpatialDialect) {
+		if ( dialect instanceof SpatialDialect ) {
 			SpatialDialect seDialect = (SpatialDialect) dialect;
-			return seDialect.getSpatialFilterExpression(columns[0]);
-		} else
+			return seDialect.getSpatialFilterExpression( columns[0] );
+		}
+		else {
 			throw new IllegalStateException(
-					"Dialect must be spatially enabled dialect");
+					"Dialect must be spatially enabled dialect"
+			);
+		}
 
 	}
 

@@ -3,7 +3,7 @@
  *
  * This file is part of Hibernate Spatial, an extension to the 
  * hibernate ORM solution for geographic data. 
- *  
+ *
  * Copyright © 2007 Geovise BVBA
  * Copyright © 2007 K.U. Leuven LRD, Spatial Applications Division, Belgium
  *
@@ -28,16 +28,16 @@
  */
 package org.hibernate.spatial.mgeom;
 
+import java.io.Serializable;
+
 import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.CoordinateSequence;
 import com.vividsolutions.jts.geom.Geometry;
-
-import java.io.Serializable;
+import com.vividsolutions.jts.geom.GeometryFactory;
 
 /**
  * Defines geometries that carry measures in their CoordinateSequence.
- * 
+ *
  * @author Karel Maesen
  */
 
@@ -65,19 +65,18 @@ public interface MGeometry extends Cloneable, Serializable {
 
 	/**
 	 * Returns the measure value at the Coordinate
-	 * 
-	 * @param c
-	 *            the Coordinate for which the measure value is sought
-	 * @param tolerance
-	 *            distance to the MGeometry within which Coordinate c has to lie
+	 *
+	 * @param c the Coordinate for which the measure value is sought
+	 * @param tolerance distance to the MGeometry within which Coordinate c has to lie
+	 *
 	 * @return the measure value if Coordinate c is within tolerance of the
 	 *         Geometry, else Double.NaN
 	 *         <p>
 	 *         When the geometry is a ring or is self-intersecting more
 	 *         coordinates may be determined by one coordinate. In that case,
 	 *         the lowest measure is returned.
-	 * @throws MGeometryException
-	 *             when this MGeometry is not monotone
+	 *
+	 * @throws MGeometryException when this MGeometry is not monotone
 	 */
 	public double getMatCoordinate(Coordinate c, double tolerance)
 			throws MGeometryException;
@@ -85,58 +84,57 @@ public interface MGeometry extends Cloneable, Serializable {
 	/**
 	 * Builds measures along the Geometry based on the length from the beginning
 	 * (first coordinate) of the Geometry.
-	 * 
+	 *
 	 * @param keepBeginMeasure -
-	 *            if true, the measure of the first coordinate is maintained and
-	 *            used as start value, unless this measure is Double.NaN
+	 * if true, the measure of the first coordinate is maintained and
+	 * used as start value, unless this measure is Double.NaN
 	 */
 	public void measureOnLength(boolean keepBeginMeasure);
 
 	/**
 	 * Returns the Coordinate along the Geometry at the measure value
-	 * 
-	 * @param m
-	 *            measure value
+	 *
+	 * @param m measure value
+	 *
 	 * @return the Coordinate if m is on the MGeometry otherwise null
-	 * @throws MGeometryException
-	 *             when MGeometry is not monotone
+	 *
+	 * @throws MGeometryException when MGeometry is not monotone
 	 */
 	public Coordinate getCoordinateAtM(double m) throws MGeometryException;
 
 	/**
 	 * Returns the coordinatesequence(s) containing all coordinates between the
 	 * begin and end measures.
-	 * 
-	 * @param begin
-	 *            begin measure
-	 * @param end
-	 *            end measure
+	 *
+	 * @param begin begin measure
+	 * @param end end measure
+	 *
 	 * @return an array containing all coordinatesequences in order between
 	 *         begin and end. Each CoordinateSequence covers a contiguous
 	 *         stretch of the MGeometry.
-	 * @throws MGeometryException
-	 *             when this MGeometry is not monotone
+	 *
+	 * @throws MGeometryException when this MGeometry is not monotone
 	 */
 	public CoordinateSequence[] getCoordinatesBetween(double begin, double end)
 			throws MGeometryException;
 
 	/**
 	 * Returns the GeometryFactory of the MGeometry
-	 * 
+	 *
 	 * @return the GeometryFactory of this MGeometry
 	 */
 	public GeometryFactory getFactory();
 
 	/**
 	 * Returns the minimum M-value of the MGeometry
-	 * 
+	 *
 	 * @return the minimum M-value
 	 */
 	public double getMinM();
 
 	/**
 	 * Returns the maximum M-value of the MGeometry
-	 * 
+	 *
 	 * @return the maximum M-value
 	 */
 	public double getMaxM();
@@ -155,7 +153,7 @@ public interface MGeometry extends Cloneable, Serializable {
 	 * <li> [0,1,1,2,3] - Non-strict Monotone Increasing
 	 * <li> [5,3,3,0] - Non-strict Monotone Decreasing
 	 * </ul>
-	 * 
+	 *
 	 * @return true if the coordinates in the CoordinateSequence of the geometry
 	 *         are monotone.
 	 */
@@ -175,13 +173,13 @@ public interface MGeometry extends Cloneable, Serializable {
 	// */
 	// public boolean isStrictMonotone();
 
-    /**
-     * Returns this <code>MGeometry</code> as a <code>Geometry</code>.
-     *
-     * Modifying the returned <code>Geometry</code> will result in internal state changes. 
-     *
-     * @return this object as a Geometry.
-     */
-     public Geometry asGeometry();
+	/**
+	 * Returns this <code>MGeometry</code> as a <code>Geometry</code>.
+	 *
+	 * Modifying the returned <code>Geometry</code> will result in internal state changes.
+	 *
+	 * @return this object as a Geometry.
+	 */
+	public Geometry asGeometry();
 
 }

@@ -3,7 +3,7 @@
  *
  * This file is part of Hibernate Spatial, an extension to the 
  * hibernate ORM solution for geographic data. 
- *  
+ *
  * Copyright © 2007 Geovise BVBA
  *
  * This work was partially supported by the European Commission, 
@@ -30,9 +30,8 @@ package org.hibernate.spatial.cfg;
 /**
  * This enum contains the configurable properties of the Hibernate Spatial
  * Extension.
- * 
+ *
  * @author Karel Maesen
- * 
  */
 public enum HSProperty {
 

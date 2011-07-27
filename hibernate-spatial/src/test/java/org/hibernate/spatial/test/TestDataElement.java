@@ -33,17 +33,17 @@ package org.hibernate.spatial.test;
 public class TestDataElement {
 
 
-    final public String wkt;
-    final public int id;
-    final public int srid;
-    final public String type;
+	final public String wkt;
+	final public int id;
+	final public int srid;
+	final public String type;
 
-    protected TestDataElement(int id, String type, String wkt, int srid) {
-        this.wkt = wkt;
-        this.id = id;
-        this.type = type;
-        this.srid = srid;
-    }
+	protected TestDataElement(int id, String type, String wkt, int srid) {
+		this.wkt = wkt;
+		this.id = id;
+		this.type = type;
+		this.srid = srid;
+	}
 
 }
 

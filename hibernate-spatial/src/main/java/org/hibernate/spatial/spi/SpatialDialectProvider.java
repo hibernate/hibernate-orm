@@ -40,31 +40,32 @@ import org.hibernate.spatial.SpatialDialect;
 
 public interface SpatialDialectProvider {
 
-    /**
-     * create Spatial Dialect with the provided name.
-     *
-     * @param dialect Name of the dialect to create.
-     * @return a SpatialDialect
-     */
-    public SpatialDialect createSpatialDialect(String dialect);
+	/**
+	 * create Spatial Dialect with the provided name.
+	 *
+	 * @param dialect Name of the dialect to create.
+	 *
+	 * @return a SpatialDialect
+	 */
+	public SpatialDialect createSpatialDialect(String dialect);
 
-    /**
-     * Returns the default dialect for this provider.
-     *
-     * @return The Default Dialect provided by the implementation.
-     *         <p/>
-     *         Implementations should never return null for this method.
-     */
-    public SpatialDialect getDefaultDialect();
+	/**
+	 * Returns the default dialect for this provider.
+	 *
+	 * @return The Default Dialect provided by the implementation.
+	 *         <p/>
+	 *         Implementations should never return null for this method.
+	 */
+	public SpatialDialect getDefaultDialect();
 
-    /**
-     * Returns the Dialect names
-     * <p/>
-     * This method must return the canonical class names of the Spatialdialect
-     * implementations that this provider provides.
-     *
-     * @return array of dialect names.
-     */
-    public String[] getSupportedDialects();
+	/**
+	 * Returns the Dialect names
+	 * <p/>
+	 * This method must return the canonical class names of the Spatialdialect
+	 * implementations that this provider provides.
+	 *
+	 * @return array of dialect names.
+	 */
+	public String[] getSupportedDialects();
 
 }

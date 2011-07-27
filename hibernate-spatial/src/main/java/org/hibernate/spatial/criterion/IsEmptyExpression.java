@@ -1,4 +1,3 @@
-
 /*
  * This file is part of Hibernate Spatial, an extension to the
  * hibernate ORM solution for geographic data.
@@ -42,24 +41,24 @@ import org.hibernate.spatial.SpatialFunction;
  */
 public class IsEmptyExpression implements Criterion {
 
-    private final static TypedValue[] NO_VALUES = new TypedValue[0];
+	private final static TypedValue[] NO_VALUES = new TypedValue[0];
 
-    private final String propertyName;
-    private final boolean isEmpty;
+	private final String propertyName;
+	private final boolean isEmpty;
 
-    public IsEmptyExpression(String propertyName, boolean isEmpty) {
-        this.propertyName = propertyName;
-        this.isEmpty = isEmpty;
-    }
+	public IsEmptyExpression(String propertyName, boolean isEmpty) {
+		this.propertyName = propertyName;
+		this.isEmpty = isEmpty;
+	}
 
-    public String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery) throws HibernateException {
-        String column = ExpressionUtil.findColumn(propertyName, criteria, criteriaQuery);
-        SpatialDialect spatialDialect = ExpressionUtil.getSpatialDialect(criteriaQuery, SpatialFunction.isempty);
-        return spatialDialect.getIsEmptySQL(column, isEmpty);
-    }
+	public String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery) throws HibernateException {
+		String column = ExpressionUtil.findColumn( propertyName, criteria, criteriaQuery );
+		SpatialDialect spatialDialect = ExpressionUtil.getSpatialDialect( criteriaQuery, SpatialFunction.isempty );
+		return spatialDialect.getIsEmptySQL( column, isEmpty );
+	}
 
-    public TypedValue[] getTypedValues(Criteria criteria, CriteriaQuery criteriaQuery) throws HibernateException {
-        return NO_VALUES;
-    }
+	public TypedValue[] getTypedValues(Criteria criteria, CriteriaQuery criteriaQuery) throws HibernateException {
+		return NO_VALUES;
+	}
 
 }

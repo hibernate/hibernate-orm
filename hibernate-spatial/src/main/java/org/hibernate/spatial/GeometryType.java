@@ -29,6 +29,7 @@
 package org.hibernate.spatial;
 
 import com.vividsolutions.jts.geom.Geometry;
+
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 
 /**
@@ -38,29 +39,29 @@ import org.hibernate.type.AbstractSingleColumnStandardBasicType;
  */
 public class GeometryType extends AbstractSingleColumnStandardBasicType<Geometry> {
 
-    public static final GeometryType INSTANCE = new GeometryType();
+	public static final GeometryType INSTANCE = new GeometryType();
 
-    @Override
-    public String[] getRegistrationKeys() {
-        return new String[]{
-                com.vividsolutions.jts.geom.Geometry.class.getCanonicalName(),
-                com.vividsolutions.jts.geom.Point.class.getCanonicalName(),
-                com.vividsolutions.jts.geom.Polygon.class.getCanonicalName(),
-                com.vividsolutions.jts.geom.MultiPolygon.class.getCanonicalName(),
-                com.vividsolutions.jts.geom.LineString.class.getCanonicalName(),
-                com.vividsolutions.jts.geom.MultiLineString.class.getCanonicalName(),
-                com.vividsolutions.jts.geom.MultiPoint.class.getCanonicalName(),
-                com.vividsolutions.jts.geom.GeometryCollection.class.getCanonicalName()
-        };
-    }
+	@Override
+	public String[] getRegistrationKeys() {
+		return new String[] {
+				com.vividsolutions.jts.geom.Geometry.class.getCanonicalName(),
+				com.vividsolutions.jts.geom.Point.class.getCanonicalName(),
+				com.vividsolutions.jts.geom.Polygon.class.getCanonicalName(),
+				com.vividsolutions.jts.geom.MultiPolygon.class.getCanonicalName(),
+				com.vividsolutions.jts.geom.LineString.class.getCanonicalName(),
+				com.vividsolutions.jts.geom.MultiLineString.class.getCanonicalName(),
+				com.vividsolutions.jts.geom.MultiPoint.class.getCanonicalName(),
+				com.vividsolutions.jts.geom.GeometryCollection.class.getCanonicalName()
+		};
+	}
 
-    public GeometryType() {
-        super(SpatialGeometrySqlTypeDescriptor.INSTANCE, SpatialGeometryJavaTypeDescriptor.INSTANCE);
-    }
+	public GeometryType() {
+		super( SpatialGeometrySqlTypeDescriptor.INSTANCE, SpatialGeometryJavaTypeDescriptor.INSTANCE );
+	}
 
-    @Override
-    public String getName() {
-        return "Geometry";
-    }
+	@Override
+	public String getName() {
+		return "Geometry";
+	}
 
 }

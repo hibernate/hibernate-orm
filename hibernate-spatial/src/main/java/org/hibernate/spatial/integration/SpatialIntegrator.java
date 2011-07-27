@@ -12,13 +12,13 @@ import org.hibernate.spatial.GeometryType;
  */
 public class SpatialIntegrator implements Integrator {
 
-    @Override
-    public void integrate(Configuration configuration, SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry) {
-            sessionFactory.getTypeResolver().registerTypeOverride(GeometryType.INSTANCE);
-    }
+	@Override
+	public void integrate(Configuration configuration, SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry) {
+		sessionFactory.getTypeResolver().registerTypeOverride( GeometryType.INSTANCE );
+	}
 
-    @Override
-    public void disintegrate(SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry) {
-        //do nothing.
-    }
+	@Override
+	public void disintegrate(SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry) {
+		//do nothing.
+	}
 }

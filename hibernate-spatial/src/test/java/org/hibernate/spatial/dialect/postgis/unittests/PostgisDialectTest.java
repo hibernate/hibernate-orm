@@ -1,10 +1,11 @@
 package org.hibernate.spatial.dialect.postgis.unittests;
 
 import junit.framework.TestCase;
+import org.junit.Test;
+
 import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.spatial.dialect.postgis.PostgisDialect;
-import org.junit.Test;
 
 /**
  * Tests support for
@@ -14,12 +15,12 @@ import org.junit.Test;
  */
 public class PostgisDialectTest extends TestCase {
 
-    SpatialDialect dialect = new PostgisDialect();
+	SpatialDialect dialect = new PostgisDialect();
 
-    @Test
-    public void testSupports() throws Exception {
-        for (SpatialFunction sf : SpatialFunction.values()) {
-            assertTrue("Dialect doesn't support " + sf, dialect.supports(sf));
-        }
-    }
+	@Test
+	public void testSupports() throws Exception {
+		for ( SpatialFunction sf : SpatialFunction.values() ) {
+			assertTrue( "Dialect doesn't support " + sf, dialect.supports( sf ) );
+		}
+	}
 }

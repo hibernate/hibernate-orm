@@ -3,7 +3,7 @@
  *
  * This file is part of Hibernate Spatial, an extension to the 
  * hibernate ORM solution for geographic data. 
- *  
+ *
  * Copyright © 2007 Geovise BVBA
  * Copyright © 2007 K.U. Leuven LRD, Spatial Applications Division, Belgium
  *
@@ -30,13 +30,11 @@ package org.hibernate.spatial.mgeom;
 
 /**
  * @author Karel Maesen
- * 
- * 
  */
 public class MGeometryException extends Exception {
 
 	/**
-	 * 
+	 *
 	 */
 	private static final long serialVersionUID = 1L;
 
@@ -50,7 +48,7 @@ public class MGeometryException extends Exception {
 	private final int type;
 
 	public MGeometryException(String s) {
-		super(s);
+		super( s );
 		type = 0;
 	}
 
@@ -59,8 +57,8 @@ public class MGeometryException extends Exception {
 		this.type = type;
 	}
 
-    public MGeometryException(int type, String msg) {
-		super(msg);
+	public MGeometryException(int type, String msg) {
+		super( msg );
 		this.type = type;
 	}
 

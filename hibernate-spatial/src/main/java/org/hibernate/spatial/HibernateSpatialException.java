@@ -3,7 +3,7 @@
  *
  * This file is part of Hibernate Spatial, an extension to the 
  * hibernate ORM solution for geographic data. 
- *  
+ *
  * Copyright © 2007 Geovise BVBA
  * Copyright © 2007 K.U. Leuven LRD, Spatial Applications Division, Belgium
  *
@@ -30,7 +30,7 @@ package org.hibernate.spatial;
 
 /**
  * Exception for Hibernate Spatial
- * 
+ *
  * @author Karel Maesen
  */
 public class HibernateSpatialException extends RuntimeException {
@@ -41,15 +41,15 @@ public class HibernateSpatialException extends RuntimeException {
 	private static final long serialVersionUID = -2153256823661407568L;
 
 	public HibernateSpatialException(String msg) {
-		super(msg);
+		super( msg );
 	}
 
 	public HibernateSpatialException(Throwable cause) {
-		super(cause);
+		super( cause );
 	}
 
 	public HibernateSpatialException(String msg, Throwable cause) {
-		super(msg, cause);
+		super( msg, cause );
 	}
 
 }

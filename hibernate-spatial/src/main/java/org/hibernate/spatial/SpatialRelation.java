@@ -36,23 +36,23 @@ package org.hibernate.spatial;
  */
 public interface SpatialRelation {
 
-    public static int EQUALS = 0;
+	public static int EQUALS = 0;
 
-    public static int DISJOINT = 1;
+	public static int DISJOINT = 1;
 
-    public static int TOUCHES = 2;
+	public static int TOUCHES = 2;
 
-    public static int CROSSES = 3;
+	public static int CROSSES = 3;
 
-    public static int WITHIN = 4;
+	public static int WITHIN = 4;
 
-    public static int OVERLAPS = 5;
+	public static int OVERLAPS = 5;
 
-    public static int CONTAINS = 6;
+	public static int CONTAINS = 6;
 
-    public static int INTERSECTS = 7;
+	public static int INTERSECTS = 7;
 
-    @Deprecated
-    public static int FILTER = 8;
+	@Deprecated
+	public static int FILTER = 8;
 
 }

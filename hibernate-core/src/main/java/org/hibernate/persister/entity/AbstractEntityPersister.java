@@ -95,6 +95,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.metamodel.binding.AssociationAttributeBinding;
 import org.hibernate.metamodel.binding.AttributeBinding;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.SimpleValueBinding;
@@ -1038,12 +1039,16 @@ public abstract class AbstractEntityPersister
 			propColumnNumbers.add( colnos );
 			propFormulaNumbers.add( formnos );
 
-			// TODO: fix this when HHH-6357 is fixed; for now, assume FetchMode.DEFAULT
-			//joinedFetchesList.add( singularAttributeBinding.getValue().getFetchMode() );
-			joinedFetchesList.add( FetchMode.DEFAULT );
-			// TODO: fix this when HHH-6355 is fixed; for now assume CascadeStyle.NONE
-			//cascades.add( singularAttributeBinding.getCascadeStyle() );
-			cascades.add( CascadeStyle.NONE );
+			if ( singularAttributeBinding.isAssociation() ) {
+				AssociationAttributeBinding associationAttributeBinding =
+						( AssociationAttributeBinding ) singularAttributeBinding;
+				cascades.add( associationAttributeBinding.getCascadeStyle() );
+				joinedFetchesList.add( associationAttributeBinding.getFetchMode() );
+			}
+			else {
+				cascades.add( CascadeStyle.NONE );
+				joinedFetchesList.add( FetchMode.SELECT );
+			}
 		}
 
 		subclassColumnClosure = ArrayHelper.toStringArray( columns );

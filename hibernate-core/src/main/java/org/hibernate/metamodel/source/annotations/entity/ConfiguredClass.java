@@ -60,8 +60,8 @@ import org.hibernate.metamodel.source.annotations.ReflectionHelper;
 import org.hibernate.metamodel.source.annotations.attribute.AssociationAttribute;
 import org.hibernate.metamodel.source.annotations.attribute.AttributeOverride;
 import org.hibernate.metamodel.source.annotations.attribute.AttributeType;
-import org.hibernate.metamodel.source.annotations.attribute.MappedAttribute;
 import org.hibernate.metamodel.source.annotations.attribute.BasicAttribute;
+import org.hibernate.metamodel.source.annotations.attribute.MappedAttribute;
 
 /**
  * Base class for a configured entity, mapped super class or embeddable
@@ -246,7 +246,7 @@ public class ConfiguredClass {
 
 		AnnotationInstance accessAnnotation = JandexHelper.getSingleAnnotation( classInfo, JPADotNames.ACCESS );
 		if ( accessAnnotation != null && accessAnnotation.target().getClass().equals( ClassInfo.class ) ) {
-			accessType = JandexHelper.getValueAsEnum( accessAnnotation, "value", AccessType.class );
+			accessType = JandexHelper.getEnumValue( accessAnnotation, "value", AccessType.class );
 		}
 
 		return accessType;
@@ -334,7 +334,7 @@ public class ConfiguredClass {
 				continue;
 			}
 
-			AccessType accessType = JandexHelper.getValueAsEnum( accessAnnotation, "value", AccessType.class );
+			AccessType accessType = JandexHelper.getEnumValue( accessAnnotation, "value", AccessType.class );
 
 			if ( !isExplicitAttributeAccessAnnotationPlacedCorrectly( annotationTarget, accessType ) ) {
 				continue;
@@ -446,7 +446,7 @@ public class ConfiguredClass {
 		switch ( attributeNature ) {
 			case BASIC: {
 				BasicAttribute attribute = BasicAttribute.createSimpleAttribute(
-						attributeName, attributeType, annotations, accessTypeString
+						attributeName, attributeType, annotations, accessTypeString, getContext()
 				);
 				if ( attribute.isId() ) {
 					idAttributeMap.put( attributeName, attribute );
@@ -469,7 +469,7 @@ public class ConfiguredClass {
 			// TODO handle the different association types
 			default: {
 				AssociationAttribute attribute = AssociationAttribute.createAssociationAttribute(
-						attributeName, attributeType, attributeNature, accessTypeString, annotations
+						attributeName, attributeType, attributeNature, accessTypeString, annotations, getContext()
 				);
 				associationAttributeMap.put( attributeName, attribute );
 			}

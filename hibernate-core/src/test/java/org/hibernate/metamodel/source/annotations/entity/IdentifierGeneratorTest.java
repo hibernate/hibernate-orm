@@ -1,20 +1,25 @@
 package org.hibernate.metamodel.source.annotations.entity;
 
-import java.util.Iterator;
-import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.SecondaryTable;
 
 import org.junit.Test;
 
-import org.hibernate.AssertionFailure;
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.id.IdentityGenerator;
+import org.hibernate.id.MultipleHiLoPerTableGenerator;
+import org.hibernate.id.SequenceHiLoGenerator;
+import org.hibernate.id.UUIDHexGenerator;
+import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.binding.EntityBinding;
-import org.hibernate.metamodel.relational.SimpleValue;
-import org.hibernate.metamodel.relational.Table;
+import org.hibernate.metamodel.source.MappingException;
+import org.hibernate.service.ServiceRegistryBuilder;
 
 import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertFalse;
+import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
 import static junit.framework.Assert.fail;
 
@@ -23,40 +28,123 @@ import static junit.framework.Assert.fail;
  */
 public class IdentifierGeneratorTest extends BaseAnnotationBindingTestCase {
 	@Entity
-	@SecondaryTable(name = "SECOND_TABLE")
-	class EntityWithSecondaryTable {
+	class NoGenerationEntity {
 		@Id
 		private long id;
-
-		@Column(table = "SECOND_TABLE")
-		private String name;
 	}
 
 	@Test
-	@Resources(annotatedClasses = EntityWithSecondaryTable.class)
-	public void testSecondaryTableExists() {
-		EntityBinding binding = getEntityBinding( EntityWithSecondaryTable.class );
-		Table table = (Table) binding.getTable( "SECOND_TABLE" );
-		assertEquals( "The secondary table should exist", "SECOND_TABLE", table.getTableName().getName() );
+	@Resources(annotatedClasses = NoGenerationEntity.class)
+	public void testNoIdGeneration() {
+		EntityBinding binding = getEntityBinding( NoGenerationEntity.class );
+		IdentifierGenerator generator = binding.getHierarchyDetails().getEntityIdentifier().getIdentifierGenerator();
+		assertNull( generator );
+	}
 
-		Iterator<SimpleValue> valueIterator = table.values().iterator();
-		assertTrue( valueIterator.hasNext() );
-		org.hibernate.metamodel.relational.Column column = (org.hibernate.metamodel.relational.Column) valueIterator.next();
-		assertEquals( "Wrong column name", "name", column.getColumnName().getName() );
-		assertFalse( valueIterator.hasNext() );
+	@Entity
+	class AutoEntity {
+		@Id
+		@GeneratedValue
+		private long id;
+
+		public long getId() {
+			return id;
+		}
 	}
 
 	@Test
-	@Resources(annotatedClasses = EntityWithSecondaryTable.class)
-	public void testRetrievingUnknownTable() {
-		EntityBinding binding = getEntityBinding( EntityWithSecondaryTable.class );
+	@Resources(annotatedClasses = AutoEntity.class)
+	public void testAutoGenerationType() {
+		EntityBinding binding = getEntityBinding( AutoEntity.class );
+		IdentifierGenerator generator = binding.getHierarchyDetails().getEntityIdentifier().getIdentifierGenerator();
+
+		assertEquals( "Wrong generator", IdentityGenerator.class, generator.getClass() );
+	}
+
+	@Entity
+	class TableEntity {
+		@Id
+		@GeneratedValue(strategy = GenerationType.TABLE)
+		private long id;
+
+		public long getId() {
+			return id;
+		}
+	}
+
+	@Test
+	@Resources(annotatedClasses = TableEntity.class)
+	public void testTableGenerationType() {
+		EntityBinding binding = getEntityBinding( TableEntity.class );
+		IdentifierGenerator generator = binding.getHierarchyDetails().getEntityIdentifier().getIdentifierGenerator();
+
+		assertEquals( "Wrong generator", MultipleHiLoPerTableGenerator.class, generator.getClass() );
+	}
+
+	@Entity
+	class SequenceEntity {
+		@Id
+		@GeneratedValue(strategy = GenerationType.SEQUENCE)
+		private long id;
+
+		public long getId() {
+			return id;
+		}
+	}
+
+	@Test
+	@Resources(annotatedClasses = SequenceEntity.class)
+	public void testSequenceGenerationType() {
+		EntityBinding binding = getEntityBinding( SequenceEntity.class );
+		IdentifierGenerator generator = binding.getHierarchyDetails().getEntityIdentifier().getIdentifierGenerator();
+
+		assertEquals( "Wrong generator", SequenceHiLoGenerator.class, generator.getClass() );
+	}
+
+
+	@Entity
+	class NamedGeneratorEntity {
+		@Id
+		@GeneratedValue(generator = "my-generator")
+		private long id;
+
+		public long getId() {
+			return id;
+		}
+	}
+
+	@Test
+	public void testUndefinedGenerator() {
 		try {
-			binding.getTable( "FOO" );
+			sources = new MetadataSources( new ServiceRegistryBuilder().buildServiceRegistry() );
+			sources.addAnnotatedClass( NamedGeneratorEntity.class );
+			sources.buildMetadata();
 			fail();
 		}
-		catch ( AssertionFailure e ) {
-			assertTrue( e.getMessage().startsWith( "Unable to find table" ) );
+		catch ( MappingException e ) {
+			assertTrue( e.getMessage().startsWith( "Unable to find named generator" ) );
 		}
+	}
+
+	@Entity
+	@GenericGenerator(name = "my-generator", strategy = "uuid")
+	class NamedGeneratorEntity2 {
+		@Id
+		@GeneratedValue(generator = "my-generator")
+		private long id;
+
+		public long getId() {
+			return id;
+		}
+	}
+
+	@Test
+	@Resources(annotatedClasses = NamedGeneratorEntity2.class)
+	public void testNamedGenerator() {
+		EntityBinding binding = getEntityBinding( NamedGeneratorEntity2.class );
+		IdentifierGenerator generator = binding.getHierarchyDetails().getEntityIdentifier().getIdentifierGenerator();
+
+		assertEquals( "Wrong generator", UUIDHexGenerator.class, generator.getClass() );
 	}
 }
 

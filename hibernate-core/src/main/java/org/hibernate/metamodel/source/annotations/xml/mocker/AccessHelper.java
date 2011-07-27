@@ -59,7 +59,7 @@ class AccessHelper implements JPADotNames {
 			return null;
 		}
 		else {
-			return JandexHelper.getValueAsEnum( annotationInstance, "value", XMLAccessType.class );
+			return JandexHelper.getEnumValue( annotationInstance, "value", XMLAccessType.class );
 		}
 
 	}
@@ -149,7 +149,7 @@ class AccessHelper implements JPADotNames {
 		if ( MockHelper.isNotEmpty( accessAnnotationInstances ) ) {
 			for ( AnnotationInstance annotationInstance : accessAnnotationInstances ) {
 				if ( annotationInstance.target() != null && annotationInstance.target() instanceof ClassInfo ) {
-					return JandexHelper.getValueAsEnum(
+					return JandexHelper.getEnumValue(
 							annotationInstance,
 							"value",
 							XMLAccessType.class
@@ -179,7 +179,7 @@ class AccessHelper implements JPADotNames {
 						continue;
 					}
 					if ( JandexHelper.getPropertyName( indexedPropertyTarget ).equals( attributeName ) ) {
-						XMLAccessType accessType = JandexHelper.getValueAsEnum(
+						XMLAccessType accessType = JandexHelper.getEnumValue(
 								annotationInstance,
 								"value",
 								XMLAccessType.class

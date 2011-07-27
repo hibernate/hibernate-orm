@@ -31,6 +31,7 @@ import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.DotName;
 
+import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.source.annotations.HibernateDotNames;
 import org.hibernate.metamodel.source.annotations.JandexHelper;
 
@@ -71,13 +72,19 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 	 */
 	private final Map<String, String> explicitHibernateTypeParameters;
 
-	MappedAttribute(String name, Class<?> attributeType, String accessType, Map<DotName, List<AnnotationInstance>> annotations) {
+	private final AnnotationBindingContext context;
+
+	MappedAttribute(String name, Class<?> attributeType, String accessType, Map<DotName, List<AnnotationInstance>> annotations, AnnotationBindingContext context) {
+		this.context = context;
 		this.annotations = annotations;
 		this.name = name;
 		this.attributeType = attributeType;
 		this.accessType = accessType;
 
-		final AnnotationInstance typeAnnotation = JandexHelper.getSingleAnnotation(annotations(), HibernateDotNames.TYPE );
+		final AnnotationInstance typeAnnotation = JandexHelper.getSingleAnnotation(
+				annotations(),
+				HibernateDotNames.TYPE
+		);
 		if ( typeAnnotation != null ) {
 			this.explicitHibernateTypeName = typeAnnotation.value( "type" ).asString();
 			this.explicitHibernateTypeParameters = extractTypeParameters( typeAnnotation );
@@ -121,6 +128,10 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 
 	public Map<String, String> getExplicitHibernateTypeParameters() {
 		return explicitHibernateTypeParameters;
+	}
+
+	public AnnotationBindingContext getContext() {
+		return context;
 	}
 
 	Map<DotName, List<AnnotationInstance>> annotations() {

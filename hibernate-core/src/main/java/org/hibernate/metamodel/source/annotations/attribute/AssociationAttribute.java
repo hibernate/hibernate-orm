@@ -34,6 +34,7 @@ import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.DotName;
 
 import org.hibernate.annotations.NotFoundAction;
+import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.source.annotations.HibernateDotNames;
 import org.hibernate.metamodel.source.annotations.JandexHelper;
 
@@ -50,16 +51,18 @@ public class AssociationAttribute extends BasicAttribute {
 																  Class<?> attributeType,
 																  AttributeType attributeNature,
 																  String accessType,
-																  Map<DotName, List<AnnotationInstance>> annotations) {
-		return new AssociationAttribute( name, attributeType, attributeNature, accessType, annotations );
+																  Map<DotName, List<AnnotationInstance>> annotations,
+																  AnnotationBindingContext context) {
+		return new AssociationAttribute( name, attributeType, attributeNature, accessType, annotations, context );
 	}
 
 	private AssociationAttribute(String name,
 								 Class<?> javaType,
 								 AttributeType associationType,
 								 String accessType,
-								 Map<DotName, List<AnnotationInstance>> annotations) {
-		super( name, javaType, accessType, annotations );
+								 Map<DotName, List<AnnotationInstance>> annotations,
+								 AnnotationBindingContext context) {
+		super( name, javaType, accessType, annotations, context );
 		this.associationType = associationType;
 		this.ignoreNotFound = ignoreNotFound();
 

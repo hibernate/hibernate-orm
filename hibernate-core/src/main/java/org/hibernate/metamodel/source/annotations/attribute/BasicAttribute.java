@@ -28,6 +28,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import javax.persistence.FetchType;
+import javax.persistence.GenerationType;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
@@ -35,10 +36,15 @@ import org.jboss.jandex.DotName;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.GenerationTime;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.PropertyGeneration;
+import org.hibernate.metamodel.binding.IdGenerator;
+import org.hibernate.metamodel.source.MappingException;
+import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.source.annotations.HibernateDotNames;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.JandexHelper;
+import org.hibernate.metamodel.source.annotations.TypeEnumConversionHelper;
 
 /**
  * Represent a mapped attribute (explicitly or implicitly mapped).
@@ -50,6 +56,12 @@ public class BasicAttribute extends MappedAttribute {
 	 * Is this property an id property (or part thereof).
 	 */
 	private final boolean isId;
+
+	/**
+	 * The id generator in case this basic attribute represents an simple id. Will be {@code null} in case there
+	 * is no explicit id generator or the containing entity does not have a simple id
+	 */
+	private final IdGenerator idGenerator;
 
 	/**
 	 * Is this a versioned property (annotated w/ {@code @Version}.
@@ -88,12 +100,20 @@ public class BasicAttribute extends MappedAttribute {
 	private final String customReadFragment;
 	private final String checkCondition;
 
-	public static BasicAttribute createSimpleAttribute(String name, Class<?> attributeType, Map<DotName, List<AnnotationInstance>> annotations, String accessType) {
-		return new BasicAttribute( name, attributeType, accessType, annotations );
+	public static BasicAttribute createSimpleAttribute(String name,
+													   Class<?> attributeType,
+													   Map<DotName, List<AnnotationInstance>> annotations,
+													   String accessType,
+													   AnnotationBindingContext context) {
+		return new BasicAttribute( name, attributeType, accessType, annotations, context );
 	}
 
-	BasicAttribute(String name, Class<?> attributeType, String accessType, Map<DotName, List<AnnotationInstance>> annotations) {
-		super( name, attributeType, accessType, annotations );
+	BasicAttribute(String name,
+				   Class<?> attributeType,
+				   String accessType,
+				   Map<DotName, List<AnnotationInstance>> annotations,
+				   AnnotationBindingContext context) {
+		super( name, attributeType, accessType, annotations, context );
 
 		AnnotationInstance idAnnotation = JandexHelper.getSingleAnnotation( annotations, JPADotNames.ID );
 		AnnotationInstance embeddedIdAnnotation = JandexHelper.getSingleAnnotation(
@@ -112,6 +132,10 @@ public class BasicAttribute extends MappedAttribute {
 			// an id must be unique and cannot be nullable
 			columnValues.setUnique( true );
 			columnValues.setNullable( false );
+			idGenerator = checkGeneratedValueAnnotation();
+		}
+		else {
+			idGenerator = null;
 		}
 
 		this.isOptimisticLockable = checkOptimisticLockAnnotation();
@@ -173,6 +197,10 @@ public class BasicAttribute extends MappedAttribute {
 
 	public String getCheckCondition() {
 		return checkCondition;
+	}
+
+	public IdGenerator getIdGenerator() {
+		return idGenerator;
 	}
 
 	@Override
@@ -289,6 +317,36 @@ public class BasicAttribute extends MappedAttribute {
 			checkCondition = checkAnnotation.value( "constraints" ).toString();
 		}
 		return checkCondition;
+	}
+
+	private IdGenerator checkGeneratedValueAnnotation() {
+		IdGenerator generator = null;
+		AnnotationInstance generatedValueAnnotation = JandexHelper.getSingleAnnotation(
+				annotations(),
+				JPADotNames.GENERATED_VALUE
+		);
+		if ( generatedValueAnnotation != null ) {
+			String name = JandexHelper.getValue( generatedValueAnnotation, "generator", String.class );
+			if ( StringHelper.isNotEmpty( name ) ) {
+				generator = getContext().getMetadataImplementor().getIdGenerator( name );
+				if ( generator == null ) {
+					throw new MappingException( String.format( "Unable to find named generator %s", name ), null );
+				}
+			}
+			else {
+				GenerationType genType = JandexHelper.getEnumValue(
+						generatedValueAnnotation,
+						"strategy",
+						GenerationType.class
+				);
+				String strategy = TypeEnumConversionHelper.generationTypeToGeneratorStrategyName(
+						genType,
+						getContext().getMetadataImplementor().getOptions().useNewIdentifierGenerators()
+				);
+				generator = new IdGenerator( null, strategy, null );
+			}
+		}
+		return generator;
 	}
 }
 

@@ -531,7 +531,7 @@ public class Binder {
 
 	private Class<?> determineJavaType(final Attribute attribute) {
 		try {
-			final Class ownerClass = attribute.getAttributeContainer().getClassReference();
+			final Class<?> ownerClass = attribute.getAttributeContainer().getClassReference();
 			AttributeJavaTypeDeterminerDelegate delegate = new AttributeJavaTypeDeterminerDelegate( attribute.getName() );
 			BeanInfoHelper.visitBeanInfo( ownerClass, delegate );
 			return delegate.javaType;

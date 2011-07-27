@@ -23,6 +23,7 @@
  */
 package org.hibernate.metamodel.source.annotations.attribute;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.metamodel.binding.IdGenerator;
 import org.hibernate.metamodel.source.binder.SimpleIdentifierSource;
 import org.hibernate.metamodel.source.binder.SingularAttributeSource;
@@ -34,6 +35,14 @@ public class SimpleIdentifierSourceImpl implements SimpleIdentifierSource {
 	private final BasicAttribute attribute;
 
 	public SimpleIdentifierSourceImpl(BasicAttribute attribute) {
+		if ( !attribute.isId() ) {
+			throw new AssertionFailure(
+					String.format(
+							"A non id attribute was passed to SimpleIdentifierSourceImpl: %s",
+							attribute.toString()
+					)
+			);
+		}
 		this.attribute = attribute;
 	}
 
@@ -49,7 +58,7 @@ public class SimpleIdentifierSourceImpl implements SimpleIdentifierSource {
 
 	@Override
 	public IdGenerator getIdentifierGeneratorDescriptor() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		return attribute.getIdGenerator();
 	}
 }
 

@@ -33,78 +33,85 @@ import java.io.Serializable;
  */
 public interface SpatialDialect extends Serializable {
 
-    /**
-     * Returns the SQL fragment for the SQL WHERE-clause when parsing
-     * <code>org.hibernatespatial.criterion.SpatialRelateExpression</code>s
-     * into prepared statements.
-     * <p/>
-     *
-     * @param columnName      The name of the geometry-typed column to which the relation is
-     *                        applied
-     * @param spatialRelation The type of spatial relation (as defined in
-     *                        <code>SpatialRelation</code>).
-     * @return SQL fragment for use in the SQL WHERE-clause.
-     */
-    public String getSpatialRelateSQL(String columnName, int spatialRelation);
+	/**
+	 * Returns the SQL fragment for the SQL WHERE-clause when parsing
+	 * <code>org.hibernatespatial.criterion.SpatialRelateExpression</code>s
+	 * into prepared statements.
+	 * <p/>
+	 *
+	 * @param columnName The name of the geometry-typed column to which the relation is
+	 * applied
+	 * @param spatialRelation The type of spatial relation (as defined in
+	 * <code>SpatialRelation</code>).
+	 *
+	 * @return SQL fragment for use in the SQL WHERE-clause.
+	 */
+	public String getSpatialRelateSQL(String columnName, int spatialRelation);
 
-    /**
-     * Returns the SQL fragment for the SQL WHERE-expression when parsing
-     * <code>org.hibernate.spatial.criterion.SpatialFilterExpression</code>s
-     * into prepared statements.
-     *
-     * @param columnName- the name of the geometry-typed column to which the filter is
-     *                    be applied.
-     * @return
-     */
-    public String getSpatialFilterExpression(String columnName);
+	/**
+	 * Returns the SQL fragment for the SQL WHERE-expression when parsing
+	 * <code>org.hibernate.spatial.criterion.SpatialFilterExpression</code>s
+	 * into prepared statements.
+	 *
+	 * @param columnName- the name of the geometry-typed column to which the filter is
+	 * be applied.
+	 *
+	 * @return
+	 */
+	public String getSpatialFilterExpression(String columnName);
 
-    /**
-     * @param columnName  the name of the Geometry property
-     * @param aggregation the type of <code>SpatialAggregate</code>
-     * @return the SQL fragment for the projection
-     */
-    public String getSpatialAggregateSQL(String columnName, int aggregation);
+	/**
+	 * @param columnName the name of the Geometry property
+	 * @param aggregation the type of <code>SpatialAggregate</code>
+	 *
+	 * @return the SQL fragment for the projection
+	 */
+	public String getSpatialAggregateSQL(String columnName, int aggregation);
 
-    /**
-     * Returns the SQL fragment when parsing a <code>DWithinExpression</code>.
-     *
-     * @param columnName the geometry column to test against
-     * @return
-     */
-    public String getDWithinSQL(String columnName);
+	/**
+	 * Returns the SQL fragment when parsing a <code>DWithinExpression</code>.
+	 *
+	 * @param columnName the geometry column to test against
+	 *
+	 * @return
+	 */
+	public String getDWithinSQL(String columnName);
 
-    /**
-     * Returns the SQL fragment when parsing an <code>HavingSridExpression</code>.
-     *
-     * @param columnName the geometry column to test against
-     * @return
-     */
-    public String getHavingSridSQL(String columnName);
+	/**
+	 * Returns the SQL fragment when parsing an <code>HavingSridExpression</code>.
+	 *
+	 * @param columnName the geometry column to test against
+	 *
+	 * @return
+	 */
+	public String getHavingSridSQL(String columnName);
 
 
-    /**
-     * Returns the SQL fragment when parsing a <code>IsEmptyExpression</code> or
-     * <code>IsNotEmpty</code> expression.
-     *
-     * @param columnName the geometry column
-     * @param isEmpty    whether the geometry is tested for empty or non-empty
-     * @return
-     */
-    public String getIsEmptySQL(String columnName, boolean isEmpty);
+	/**
+	 * Returns the SQL fragment when parsing a <code>IsEmptyExpression</code> or
+	 * <code>IsNotEmpty</code> expression.
+	 *
+	 * @param columnName the geometry column
+	 * @param isEmpty whether the geometry is tested for empty or non-empty
+	 *
+	 * @return
+	 */
+	public String getIsEmptySQL(String columnName, boolean isEmpty);
 
-    /**
-     * Returns true if this <code>SpatialDialect</code> supports a specific filtering function.
-     * <p/>
-     * This is intended to signal DB-support for fast window queries, or MBR-overlap queries
-     */
-    public boolean supportsFiltering();
+	/**
+	 * Returns true if this <code>SpatialDialect</code> supports a specific filtering function.
+	 * <p/>
+	 * This is intended to signal DB-support for fast window queries, or MBR-overlap queries
+	 */
+	public boolean supportsFiltering();
 
-    /**
-     * Does this dialect supports the specified <code>SpatialFunction</code>.
-     *
-     * @param function <code>SpatialFunction</code>
-     * @return true if this <code>SpatialDialect</code> supports the spatial function specified by the function parameter.
-     */
-    public boolean supports(SpatialFunction function);
+	/**
+	 * Does this dialect supports the specified <code>SpatialFunction</code>.
+	 *
+	 * @param function <code>SpatialFunction</code>
+	 *
+	 * @return true if this <code>SpatialDialect</code> supports the spatial function specified by the function parameter.
+	 */
+	public boolean supports(SpatialFunction function);
 
 }

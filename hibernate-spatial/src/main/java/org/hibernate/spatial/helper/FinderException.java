@@ -3,7 +3,7 @@
  *
  * This file is part of Hibernate Spatial, an extension to the 
  * hibernate ORM solution for geographic data. 
- *  
+ *
  * Copyright © 2008 Geovise BVBA
  *
  * This library is free software; you can redistribute it and/or
@@ -27,16 +27,15 @@ package org.hibernate.spatial.helper;
 /**
  * This exception is thrown when Hibernate Spatial fails to find a required
  * resource.
- * 
+ *
  * @author maesenka
- * 
  */
 public class FinderException extends Exception {
 
 	private static final long serialVersionUID = 1L;
 
 	public FinderException(String msg) {
-		super(msg);
+		super( msg );
 	}
 
 }

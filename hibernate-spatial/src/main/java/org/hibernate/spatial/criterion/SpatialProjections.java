@@ -3,7 +3,7 @@
  *
  * This file is part of Hibernate Spatial, an extension to the 
  * hibernate ORM solution for geographic data. 
- *  
+ *
  * Copyright © 2007 Geovise BVBA
  *
  * This work was partially supported by the European Commission, 
@@ -40,7 +40,6 @@ import org.hibernate.type.Type;
 
 /**
  * @author Karel Maesen
- *
  */
 public class SpatialProjections {
 
@@ -48,25 +47,34 @@ public class SpatialProjections {
 		return new SimpleProjection() {
 
 			public Type[] getTypes(Criteria criteria,
-					CriteriaQuery criteriaQuery) throws HibernateException {
-				return new Type[] { criteriaQuery.getType(criteria,
-						propertyName) };
+								   CriteriaQuery criteriaQuery) throws HibernateException {
+				return new Type[] {
+						criteriaQuery.getType(
+								criteria,
+								propertyName
+						)
+				};
 			}
 
 			public String toSqlString(Criteria criteria, int position,
-					CriteriaQuery criteriaQuery) throws HibernateException {
+									  CriteriaQuery criteriaQuery) throws HibernateException {
 				StringBuilder stbuf = new StringBuilder();
 
 				SessionFactoryImplementor factory = criteriaQuery.getFactory();
 				String[] columns = criteriaQuery.getColumnsUsingProjection(
-						criteria, propertyName);
+						criteria, propertyName
+				);
 				Dialect dialect = factory.getDialect();
-				if (dialect instanceof SpatialDialect) {
+				if ( dialect instanceof SpatialDialect ) {
 					SpatialDialect seDialect = (SpatialDialect) dialect;
 
-					stbuf.append(seDialect.getSpatialAggregateSQL(columns[0],
-							SpatialAggregate.EXTENT));
-					stbuf.append(" as y").append(position).append('_');
+					stbuf.append(
+							seDialect.getSpatialAggregateSQL(
+									columns[0],
+									SpatialAggregate.EXTENT
+							)
+					);
+					stbuf.append( " as y" ).append( position ).append( '_' );
 					return stbuf.toString();
 				}
 				return null;

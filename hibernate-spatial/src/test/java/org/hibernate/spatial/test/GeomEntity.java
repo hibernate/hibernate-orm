@@ -33,61 +33,67 @@ import com.vividsolutions.jts.io.ParseException;
  */
 public class GeomEntity implements TestFeature {
 
-    private Integer id;
+	private Integer id;
 
-    private String type;
+	private String type;
 
-    private Geometry geom;
+	private Geometry geom;
 
-    public Integer getId() {
-        return id;
-    }
+	public Integer getId() {
+		return id;
+	}
 
-    public void setId(Integer id) {
-        this.id = id;
-    }
+	public void setId(Integer id) {
+		this.id = id;
+	}
 
-    public String getType() {
-        return type;
-    }
+	public String getType() {
+		return type;
+	}
 
-    public void setType(String type) {
-        this.type = type;
-    }
+	public void setType(String type) {
+		this.type = type;
+	}
 
-    public Geometry getGeom() {
-        return geom;
-    }
+	public Geometry getGeom() {
+		return geom;
+	}
 
-    public void setGeom(Geometry geom) {
-        this.geom = geom;
-    }
+	public void setGeom(Geometry geom) {
+		this.geom = geom;
+	}
 
-    public static GeomEntity createFrom(TestDataElement element) throws ParseException {
-        EWKTReader reader = new EWKTReader();
-        GeomEntity result = new GeomEntity();
-        result.setId(element.id);
-        Geometry geom = reader.read(element.wkt);
-        geom.setSRID(element.srid);
-        result.setGeom(geom);
-        result.setType(element.type);
-        return result;
-    }
+	public static GeomEntity createFrom(TestDataElement element) throws ParseException {
+		EWKTReader reader = new EWKTReader();
+		GeomEntity result = new GeomEntity();
+		result.setId( element.id );
+		Geometry geom = reader.read( element.wkt );
+		geom.setSRID( element.srid );
+		result.setGeom( geom );
+		result.setType( element.type );
+		return result;
+	}
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
 
-        GeomEntity geomEntity = (GeomEntity) o;
+		GeomEntity geomEntity = (GeomEntity) o;
 
-        if (id != geomEntity.id) return false;
+		if ( id != geomEntity.id ) {
+			return false;
+		}
 
-        return true;
-    }
+		return true;
+	}
 
-    @Override
-    public int hashCode() {
-        return id;
-    }
+	@Override
+	public int hashCode() {
+		return id;
+	}
 }

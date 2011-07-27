@@ -3,7 +3,7 @@
  *
  * This file is part of Hibernate Spatial, an extension to the 
  * hibernate ORM solution for geographic data. 
- *  
+ *
  * Copyright © 2007 Geovise BVBA
  * Copyright © 2007 K.U. Leuven LRD, Spatial Applications Division, Belgium
  *
@@ -43,19 +43,18 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Helper class to read settings and properties files.
- * 
+ *
  * @author Karel Maesen
- * 
  */
 public class PropertyFileReader {
 
-	private static final Logger log = LoggerFactory.getLogger(PropertyFileReader.class);
+	private static final Logger log = LoggerFactory.getLogger( PropertyFileReader.class );
 
 	/**
 	 * pattern for comment lines. If it matches, it is a comment.
 	 */
 	private static final Pattern nonCommentPattern = Pattern
-			.compile("^([^#]+)");
+			.compile( "^([^#]+)" );
 
 	private InputStream is = null;
 
@@ -64,28 +63,30 @@ public class PropertyFileReader {
 	}
 
 	public Properties getProperties() throws IOException {
-		if (is == null)
+		if ( is == null ) {
 			return null;
+		}
 		Properties props = new Properties();
-		props.load(is);
+		props.load( is );
 		return props;
 	}
 
 	/**
 	 * Returns the non-comment lines in a file.
-	 * 
+	 *
 	 * @return set of non-comment strings.
+	 *
 	 * @throws IOException
 	 */
 	public Set<String> getNonCommentLines() throws IOException {
 		Set<String> lines = new HashSet<String>();
 		String line;
-		BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-		while ((line = reader.readLine()) != null) {
+		BufferedReader reader = new BufferedReader( new InputStreamReader( is ) );
+		while ( ( line = reader.readLine() ) != null ) {
 			line = line.trim();
-			Matcher m = nonCommentPattern.matcher(line);
-			if (m.find()) {
-				lines.add(m.group().trim());
+			Matcher m = nonCommentPattern.matcher( line );
+			if ( m.find() ) {
+				lines.add( m.group().trim() );
 			}
 		}
 		return lines;
@@ -94,8 +95,9 @@ public class PropertyFileReader {
 	public void close() {
 		try {
 			this.is.close();
-		} catch (IOException e) {
-			log.warn("Exception when closing PropertyFileReader: " + e);
+		}
+		catch ( IOException e ) {
+			log.warn( "Exception when closing PropertyFileReader: " + e );
 		}
 	}
 

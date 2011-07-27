@@ -10,36 +10,36 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
  */
 public abstract class TestSupport {
 
-    protected Configuration configuration;
+	protected Configuration configuration;
 
-    public DataSourceUtils createDataSourceUtil(Configuration configuration) {
-        this.configuration = configuration;
-        return new DataSourceUtils(driver(), url(), user(), passwd(), getSQLExpressionTemplate());
-    }
+	public DataSourceUtils createDataSourceUtil(Configuration configuration) {
+		this.configuration = configuration;
+		return new DataSourceUtils( driver(), url(), user(), passwd(), getSQLExpressionTemplate() );
+	}
 
-    public GeometryEquality createGeometryEquality() {
-        return new GeometryEquality();
-    }
+	public GeometryEquality createGeometryEquality() {
+		return new GeometryEquality();
+	}
 
-    public abstract TestData createTestData(BaseCoreFunctionalTestCase testcase);
+	public abstract TestData createTestData(BaseCoreFunctionalTestCase testcase);
 
-    public abstract AbstractExpectationsFactory createExpectationsFactory(DataSourceUtils dataSourceUtils);
+	public abstract AbstractExpectationsFactory createExpectationsFactory(DataSourceUtils dataSourceUtils);
 
-    public abstract SQLExpressionTemplate getSQLExpressionTemplate();
+	public abstract SQLExpressionTemplate getSQLExpressionTemplate();
 
-    protected String driver() {
-        return configuration.getProperty("hibernate.connection.driver_class");
-    }
+	protected String driver() {
+		return configuration.getProperty( "hibernate.connection.driver_class" );
+	}
 
-    protected String url() {
-        return configuration.getProperty("hibernate.connection.url");
-    }
+	protected String url() {
+		return configuration.getProperty( "hibernate.connection.url" );
+	}
 
-    protected String user() {
-        return configuration.getProperty("hibernate.connection.username");
-    }
+	protected String user() {
+		return configuration.getProperty( "hibernate.connection.username" );
+	}
 
-    protected String passwd() {
-        return configuration.getProperty("hibernate.connection.password");
-    }
+	protected String passwd() {
+		return configuration.getProperty( "hibernate.connection.password" );
+	}
 }

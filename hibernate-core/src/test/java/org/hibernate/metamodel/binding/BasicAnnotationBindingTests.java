@@ -26,6 +26,8 @@ package org.hibernate.metamodel.binding;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
 
+import org.hibernate.testing.FailureExpected;
+
 /**
  * Basic tests of annotation based binding code
  *
@@ -50,5 +52,11 @@ public class BasicAnnotationBindingTests extends AbstractBasicBindingTests {
 	@Override
 	public void addSourcesForComponentBinding(MetadataSources sources) {
 		sources.addAnnotatedClass(  SimpleEntityWithSimpleComponent.class );
+	}
+
+	@Override
+	@FailureExpected( jiraKey = "HHH-6495" )
+	public void testSimpleEntityWithSimpleComponentMapping() {
+		super.testSimpleEntityWithSimpleComponentMapping();
 	}
 }

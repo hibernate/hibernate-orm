@@ -29,16 +29,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.hibernate.cfg.NamingStrategy;
-import org.hibernate.internal.util.Value;
 import org.hibernate.metamodel.binding.CustomSQL;
-import org.hibernate.metamodel.domain.Type;
 import org.hibernate.metamodel.source.LocalBindingContext;
-import org.hibernate.metamodel.source.MappingDefaults;
-import org.hibernate.metamodel.source.MetadataImplementor;
 import org.hibernate.metamodel.source.Origin;
-import org.hibernate.metamodel.source.SourceType;
-import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.source.annotations.attribute.AssociationAttribute;
 import org.hibernate.metamodel.source.annotations.attribute.BasicAttribute;
 import org.hibernate.metamodel.source.annotations.attribute.SingularAttributeSourceImpl;
@@ -49,7 +42,6 @@ import org.hibernate.metamodel.source.binder.EntitySource;
 import org.hibernate.metamodel.source.binder.MetaAttributeSource;
 import org.hibernate.metamodel.source.binder.SubclassEntitySource;
 import org.hibernate.metamodel.source.binder.TableSource;
-import org.hibernate.service.ServiceRegistry;
 
 /**
  * @author Hardy Ferentschik
@@ -57,14 +49,10 @@ import org.hibernate.service.ServiceRegistry;
 public class EntitySourceImpl implements EntitySource {
 	private final EntityClass entityClass;
 	private final Set<SubclassEntitySource> subclassEntitySources;
-	private final Origin origin;
-	private final LocalBindingContextImpl localBindingContext;
 
 	public EntitySourceImpl(EntityClass entityClass) {
 		this.entityClass = entityClass;
 		this.subclassEntitySources = new HashSet<SubclassEntitySource>();
-		this.origin = new Origin( SourceType.ANNOTATION, entityClass.getName() );
-		this.localBindingContext = new LocalBindingContextImpl( entityClass.getContext() );
 	}
 
 	public EntityClass getEntityClass() {
@@ -73,12 +61,12 @@ public class EntitySourceImpl implements EntitySource {
 
 	@Override
 	public Origin getOrigin() {
-		return origin;
+		return entityClass.getLocalBindingContext().getOrigin();
 	}
 
 	@Override
 	public LocalBindingContext getLocalBindingContext() {
-		return localBindingContext;
+		return entityClass.getLocalBindingContext();
 	}
 
 	@Override
@@ -187,6 +175,9 @@ public class EntitySourceImpl implements EntitySource {
 		for ( BasicAttribute attribute : entityClass.getSimpleAttributes() ) {
 			attributeList.add( new SingularAttributeSourceImpl( attribute ) );
 		}
+		for ( EmbeddableClass component : entityClass.getEmbeddedClasses().values() ) {
+			attributeList.add( new ComponentAttributeSourceImpl( component, entityClass ) );
+		}
 		for ( AssociationAttribute associationAttribute : entityClass.getAssociationAttributes() ) {
 			attributeList.add( new ToOneAttributeSourceImpl( associationAttribute ) );
 		}
@@ -218,63 +209,6 @@ public class EntitySourceImpl implements EntitySource {
 		return entityClass.getSecondaryTableSources();
 	}
 
-	class LocalBindingContextImpl implements LocalBindingContext {
-		private final AnnotationBindingContext contextDelegate;
-
-		LocalBindingContextImpl(AnnotationBindingContext context) {
-			this.contextDelegate = context;
-		}
-
-		@Override
-		public Origin getOrigin() {
-			return origin;
-		}
-
-		@Override
-		public ServiceRegistry getServiceRegistry() {
-			return contextDelegate.getServiceRegistry();
-		}
-
-		@Override
-		public NamingStrategy getNamingStrategy() {
-			return contextDelegate.getNamingStrategy();
-		}
-
-		@Override
-		public MappingDefaults getMappingDefaults() {
-			return contextDelegate.getMappingDefaults();
-		}
-
-		@Override
-		public MetadataImplementor getMetadataImplementor() {
-			return contextDelegate.getMetadataImplementor();
-		}
-
-		@Override
-		public <T> Class<T> locateClassByName(String name) {
-			return contextDelegate.locateClassByName( name );
-		}
-
-		@Override
-		public Type makeJavaType(String className) {
-			return contextDelegate.makeJavaType( className );
-		}
-
-		@Override
-		public boolean isGloballyQuotedIdentifiers() {
-			return contextDelegate.isGloballyQuotedIdentifiers();
-		}
-
-		@Override
-		public Value<Class<?>> makeClassReference(String className) {
-			return contextDelegate.makeClassReference( className );
-		}
-
-		@Override
-		public String qualifyClassName(String name) {
-			return contextDelegate.qualifyClassName( name );
-		}
-	}
 }
 
 

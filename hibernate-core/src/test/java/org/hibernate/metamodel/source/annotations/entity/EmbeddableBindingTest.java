@@ -49,9 +49,9 @@ public class EmbeddableBindingTest extends BaseAnnotationBindingTestCase {
 	//@Resources(annotatedClasses = { User.class, Address.class })
 	public void testEmbeddable() {
 		EntityBinding binding = getEntityBinding( User.class );
-		assertNotNull( binding.getAttributeBinding( "street" ) );
-		assertNotNull( binding.getAttributeBinding( "city" ) );
-		assertNotNull( binding.getAttributeBinding( "postCode" ) );
+		assertNotNull( binding.locateAttributeBinding( "street" ) );
+		assertNotNull( binding.locateAttributeBinding( "city" ) );
+		assertNotNull( binding.locateAttributeBinding( "postCode" ) );
 
 		SingularAttribute attribute = (SingularAttribute) binding.getEntity().locateAttribute( "address" );
 		assertTrue(

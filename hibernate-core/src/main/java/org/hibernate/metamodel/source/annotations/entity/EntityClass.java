@@ -492,7 +492,7 @@ public class EntityClass extends ConfiguredClass {
 		);
 		if ( hibernateCacheAnnotation != null ) {
 			final org.hibernate.cache.spi.access.AccessType accessType = hibernateCacheAnnotation.value( "usage" ) == null
-					? getContext().getMappingDefaults().getCacheAccessType()
+					? getLocalBindingContext().getMappingDefaults().getCacheAccessType()
 					: CacheConcurrencyStrategy.parse( hibernateCacheAnnotation.value( "usage" ).asEnum() )
 					.toAccessType();
 			return new Caching(
@@ -515,7 +515,7 @@ public class EntityClass extends ConfiguredClass {
 		}
 
 		final boolean doCaching;
-		switch ( getContext().getMetadataImplementor().getOptions().getSharedCacheMode() ) {
+		switch ( getLocalBindingContext().getMetadataImplementor().getOptions().getSharedCacheMode() ) {
 			case ALL: {
 				doCaching = true;
 				break;
@@ -541,7 +541,7 @@ public class EntityClass extends ConfiguredClass {
 
 		return new Caching(
 				getName(),
-				getContext().getMappingDefaults().getCacheAccessType(),
+				getLocalBindingContext().getMappingDefaults().getCacheAccessType(),
 				true
 		);
 	}
@@ -552,8 +552,8 @@ public class EntityClass extends ConfiguredClass {
 	 * @return A table source for the specified annotation instance
 	 */
 	private TableSource createTableSource(AnnotationInstance tableAnnotation) {
-		String schema = getContext().getMappingDefaults().getSchemaName();
-		String catalog = getContext().getMappingDefaults().getCatalogName();
+		String schema = getLocalBindingContext().getMappingDefaults().getSchemaName();
+		String catalog = getLocalBindingContext().getMappingDefaults().getCatalogName();
 
 
 		if ( tableAnnotation != null ) {
@@ -568,7 +568,7 @@ public class EntityClass extends ConfiguredClass {
 			}
 		}
 
-		if ( getContext().isGloballyQuotedIdentifiers() ) {
+		if ( getLocalBindingContext().isGloballyQuotedIdentifiers() ) {
 			schema = StringHelper.quote( schema );
 			catalog = StringHelper.quote( catalog );
 		}
@@ -580,8 +580,8 @@ public class EntityClass extends ConfiguredClass {
 		if ( tableAnnotation != null ) {
 			explicitTableName = JandexHelper.getValue( tableAnnotation, "name", String.class );
 			if ( StringHelper.isNotEmpty( explicitTableName ) ) {
-				tableName = getContext().getNamingStrategy().tableName( explicitTableName );
-				if ( getContext().isGloballyQuotedIdentifiers() && !Identifier.isQuoted( explicitTableName ) ) {
+				tableName = getLocalBindingContext().getNamingStrategy().tableName( explicitTableName );
+				if ( getLocalBindingContext().isGloballyQuotedIdentifiers() && !Identifier.isQuoted( explicitTableName ) ) {
 					tableName = StringHelper.quote( tableName );
 				}
 			}

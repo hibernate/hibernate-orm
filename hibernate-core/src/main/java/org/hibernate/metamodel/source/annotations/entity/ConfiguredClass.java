@@ -130,7 +130,7 @@ public class ConfiguredClass {
 	private final Set<String> transientFieldNames = new HashSet<String>();
 	private final Set<String> transientMethodNames = new HashSet<String>();
 
-	private final AnnotationBindingContext context;
+	private final LocalBindingContextImpl localBindingContext;
 
 	public ConfiguredClass(
 			ClassInfo classInfo,
@@ -138,7 +138,6 @@ public class ConfiguredClass {
 			ConfiguredClass parent,
 			AnnotationBindingContext context) {
 		this.parent = parent;
-		this.context = context;
 		this.classInfo = classInfo;
 		this.clazz = context.locateClassByName( classInfo.toString() );
 		this.configuredClassType = determineType();
@@ -146,6 +145,8 @@ public class ConfiguredClass {
 		this.simpleAttributeMap = new TreeMap<String, BasicAttribute>();
 		this.idAttributeMap = new TreeMap<String, BasicAttribute>();
 		this.associationAttributeMap = new TreeMap<String, AssociationAttribute>();
+
+		this.localBindingContext = new LocalBindingContextImpl( context, this );
 
 		collectAttributes();
 		attributeOverrideMap = Collections.unmodifiableMap( findAttributeOverrides() );
@@ -167,8 +168,8 @@ public class ConfiguredClass {
 		return parent;
 	}
 
-	public AnnotationBindingContext getContext() {
-		return context;
+	public LocalBindingContextImpl getLocalBindingContext() {
+		return localBindingContext;
 	}
 
 	public ConfiguredClassType getConfiguredClassType() {
@@ -260,10 +261,10 @@ public class ConfiguredClass {
 		findTransientFieldAndMethodNames();
 
 		// use the class mate library to generic types
-		ResolvedTypeWithMembers resolvedType = context.resolveMemberTypes( context.getResolvedType( clazz ) );
+		ResolvedTypeWithMembers resolvedType = localBindingContext.resolveMemberTypes( localBindingContext.getResolvedType( clazz ) );
 		for ( HierarchicType hierarchicType : resolvedType.allTypesAndOverrides() ) {
 			if ( hierarchicType.getType().getErasedType().equals( clazz ) ) {
-				resolvedType = context.resolveMemberTypes( hierarchicType.getType() );
+				resolvedType = localBindingContext.resolveMemberTypes( hierarchicType.getType() );
 				break;
 			}
 		}
@@ -446,7 +447,7 @@ public class ConfiguredClass {
 		switch ( attributeNature ) {
 			case BASIC: {
 				BasicAttribute attribute = BasicAttribute.createSimpleAttribute(
-						attributeName, attributeType, annotations, accessTypeString, getContext()
+						attributeName, attributeType, annotations, accessTypeString, getLocalBindingContext()
 				);
 				if ( attribute.isId() ) {
 					idAttributeMap.put( attributeName, attribute );
@@ -469,7 +470,7 @@ public class ConfiguredClass {
 			// TODO handle the different association types
 			default: {
 				AssociationAttribute attribute = AssociationAttribute.createAssociationAttribute(
-						attributeName, attributeType, attributeNature, accessTypeString, annotations, getContext()
+						attributeName, attributeType, attributeNature, accessTypeString, annotations, getLocalBindingContext()
 				);
 				associationAttributeMap.put( attributeName, attribute );
 			}
@@ -477,7 +478,7 @@ public class ConfiguredClass {
 	}
 
 	private void resolveEmbeddable(String attributeName, Class<?> type) {
-		ClassInfo embeddableClassInfo = context.getClassInfo( type.getName() );
+		ClassInfo embeddableClassInfo = localBindingContext.getClassInfo( type.getName() );
 		if ( classInfo == null ) {
 			String msg = String.format(
 					"Attribute %s of entity %s is annotated with @Embedded, but no embeddable configuration for type %s can be found.",
@@ -488,11 +489,11 @@ public class ConfiguredClass {
 			throw new AnnotationException( msg );
 		}
 
-		context.resolveAllTypes( type.getName() );
+		localBindingContext.resolveAllTypes( type.getName() );
 		EmbeddableHierarchy<EmbeddableClass> hierarchy = ConfiguredClassHierarchyBuilder.createEmbeddableHierarchy(
-				context.<Object>locateClassByName( embeddableClassInfo.toString() ),
+				localBindingContext.<Object>locateClassByName( embeddableClassInfo.toString() ),
 				classAccessType,
-				context
+				localBindingContext
 		);
 		embeddedClasses.put( attributeName, hierarchy.getLeaf() );
 	}

@@ -23,6 +23,8 @@
  */
 package org.hibernate.metamodel.source.annotations.entity;
 
+import javax.persistence.DiscriminatorColumn;
+import javax.persistence.DiscriminatorType;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -30,9 +32,12 @@ import javax.persistence.Id;
 
 import org.junit.Test;
 
+import org.hibernate.annotations.DiscriminatorFormula;
 import org.hibernate.annotations.DiscriminatorOptions;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.EntityDiscriminator;
+import org.hibernate.metamodel.relational.DerivedValue;
+import org.hibernate.metamodel.relational.SimpleValue;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
@@ -114,7 +119,23 @@ public class InheritanceBindingTest extends BaseAnnotationBindingTestCase {
 		assertFalse( "Wrong default value", discriminator.isInserted() );
 	}
 
-	@Entity
+    @Test
+    @Resources(annotatedClasses = { Fruit.class, Apple.class })
+    public void testDiscriminatorFormula() {
+        EntityBinding rootEntityBinding = getEntityBinding( Fruit.class );
+        assertTrue( rootEntityBinding.isRoot() );
+        EntityBinding entityBinding = getEntityBinding( Apple.class );
+        assertFalse( entityBinding.isRoot() );
+		EntityDiscriminator discriminator = rootEntityBinding.getHierarchyDetails().getEntityDiscriminator();
+        SimpleValue simpleValue = discriminator.getBoundValue();
+        assertTrue( simpleValue instanceof DerivedValue);
+        DerivedValue derivedValue = (DerivedValue)simpleValue;
+        assertEquals( "case when zik_type is null then 0 else zik_type end", derivedValue.getExpression() );
+		assertTrue( "Wrong default value", discriminator.isForced() );
+		assertFalse( "Wrong default value", discriminator.isInserted() );
+    }
+
+    @Entity
 	class SingleEntity {
 		@Id
 		@GeneratedValue
@@ -144,6 +165,21 @@ public class InheritanceBindingTest extends BaseAnnotationBindingTestCase {
 	@Entity
 	class Jump extends Base {
 	}
+
+    @Entity
+    @DiscriminatorColumn(discriminatorType = DiscriminatorType.INTEGER)
+    @DiscriminatorFormula("case when zik_type is null then 0 else zik_type end")
+    @DiscriminatorOptions(force = true, insert = false)
+    class Fruit {
+        @Id
+        private int id;
+    }
+
+    @Entity
+    class Apple extends Fruit {
+
+    }
+
 }
 
 

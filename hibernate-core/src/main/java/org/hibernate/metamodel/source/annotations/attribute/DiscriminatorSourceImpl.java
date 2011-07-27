@@ -47,10 +47,12 @@ public class DiscriminatorSourceImpl implements DiscriminatorSource {
 		return entityClass.isDiscriminatorIncludedInSql();
 	}
 
-	@Override
-	public RelationalValueSource getDiscriminatorRelationalValueSource() {
-		return new ColumnValuesSourceImpl( entityClass.getDiscriminatorColumnValues() );
-	}
+    @Override
+    public RelationalValueSource getDiscriminatorRelationalValueSource() {
+        return entityClass.getDiscriminatorFormula() != null ? entityClass.getDiscriminatorFormula() : new ColumnValuesSourceImpl(
+                entityClass.getDiscriminatorColumnValues()
+        );
+    }
 
 	@Override
 	public String getExplicitHibernateTypeName() {

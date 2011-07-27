@@ -269,7 +269,7 @@ public class Binder {
 		final EntityBinding entityBinding = buildBasicEntityBinding( entitySource, superEntityBinding );
 
 		entityBinding.setPrimaryTable( superEntityBinding.getPrimaryTable() );
-
+        entityBinding.setPrimaryTableName( superEntityBinding.getPrimaryTableName() );
 		bindDiscriminatorValue( entitySource, entityBinding );
 
 		return entityBinding;
@@ -439,7 +439,9 @@ public class Binder {
 	}
 
 	private void bindPersistentCollection(PluralAttributeSource attributeSource, AttributeBindingContainer attributeBindingContainer) {
-		final PluralAttribute existingAttribute = attributeBindingContainer.getAttributeContainer().locatePluralAttribute( attributeSource.getName() );
+		final PluralAttribute existingAttribute = attributeBindingContainer.getAttributeContainer().locatePluralAttribute(
+                attributeSource.getName()
+        );
 		final AbstractPluralAttributeBinding pluralAttributeBinding;
 
 		if ( attributeSource.getPluralAttributeNature() == PluralAttributeNature.BAG ) {
@@ -471,7 +473,9 @@ public class Binder {
 	private BasicAttributeBinding doBasicSingularAttributeBindingCreation(
 			SingularAttributeSource attributeSource,
 			AttributeBindingContainer attributeBindingContainer) {
-		final SingularAttribute existingAttribute = attributeBindingContainer.getAttributeContainer().locateSingularAttribute( attributeSource.getName() );
+		final SingularAttribute existingAttribute = attributeBindingContainer.getAttributeContainer().locateSingularAttribute(
+                attributeSource.getName()
+        );
 		final SingularAttribute attribute;
 		if ( existingAttribute != null ) {
 			attribute = existingAttribute;
@@ -641,6 +645,7 @@ public class Binder {
 		final TableSource tableSource = entitySource.getPrimaryTable();
 		final Table table = createTable( entityBinding, tableSource );
 		entityBinding.setPrimaryTable( table );
+        entityBinding.setPrimaryTableName( table.getTableName().getName() );
 	}
 
 	private void bindSecondaryTables(EntitySource entitySource, EntityBinding entityBinding) {
@@ -653,12 +658,12 @@ public class Binder {
 	private Table createTable(EntityBinding entityBinding, TableSource tableSource) {
 		final String schemaName = StringHelper.isEmpty( tableSource.getExplicitSchemaName() )
 				? currentBindingContext.getMappingDefaults().getSchemaName()
-				: currentBindingContext.getMetadataImplementor().getOptions().isGloballyQuotedIdentifiers()
+				: currentBindingContext.isGloballyQuotedIdentifiers()
 				? StringHelper.quote( tableSource.getExplicitSchemaName() )
 				: tableSource.getExplicitSchemaName();
 		final String catalogName = StringHelper.isEmpty( tableSource.getExplicitCatalogName() )
 				? currentBindingContext.getMappingDefaults().getCatalogName()
-				: currentBindingContext.getMetadataImplementor().getOptions().isGloballyQuotedIdentifiers()
+				: currentBindingContext.isGloballyQuotedIdentifiers()
 				? StringHelper.quote( tableSource.getExplicitCatalogName() )
 				: tableSource.getExplicitCatalogName();
 

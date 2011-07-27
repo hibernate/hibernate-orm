@@ -56,6 +56,7 @@ import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.JandexHelper;
 import org.hibernate.metamodel.source.annotations.attribute.ColumnValues;
 import org.hibernate.metamodel.source.binder.ConstraintSource;
+import org.hibernate.metamodel.source.binder.DerivedValueSource;
 import org.hibernate.metamodel.source.binder.TableSource;
 
 /**
@@ -96,6 +97,7 @@ public class EntityClass extends ConfiguredClass {
 	private String proxy;
 
 	private ColumnValues discriminatorColumnValues;
+    private DerivedValueSource discriminatorFormula;
 	private Class<?> discriminatorType;
 	private String discriminatorMatchValue;
 	private boolean isDiscriminatorForced = true;
@@ -143,6 +145,10 @@ public class EntityClass extends ConfiguredClass {
 	public ColumnValues getDiscriminatorColumnValues() {
 		return discriminatorColumnValues;
 	}
+
+    public DerivedValueSource getDiscriminatorFormula() {
+        return discriminatorFormula;
+    }
 
 	public Class<?> getDiscriminatorType() {
 		return discriminatorType;
@@ -339,10 +345,22 @@ public class EntityClass extends ConfiguredClass {
 		final AnnotationInstance discriminatorColumnAnnotation = JandexHelper.getSingleAnnotation(
 				getClassInfo(), JPADotNames.DISCRIMINATOR_COLUMN
 		);
-		discriminatorColumnValues = new ColumnValues( discriminatorColumnAnnotation );
-		discriminatorColumnValues.setNullable( false ); // discriminator column cannot be null
+
+        final AnnotationInstance discriminatorFormulaAnnotation = JandexHelper.getSingleAnnotation(
+                getClassInfo(),
+                HibernateDotNames.DISCRIMINATOR_FORMULA
+        );
+
+
 		Class<?> type = String.class; // string is the discriminator default
+        if ( discriminatorFormulaAnnotation != null ) {
+            String expression = JandexHelper.getValue( discriminatorFormulaAnnotation, "value", String.class );
+            discriminatorFormula = new FormulaImpl( getPrimaryTableSource().getExplicitTableName(), expression );
+        }
+         discriminatorColumnValues = new ColumnValues( null ); //(stliu) give null here, will populate values below
+            discriminatorColumnValues.setNullable( false ); // discriminator column cannot be null
 		if ( discriminatorColumnAnnotation != null ) {
+
 			DiscriminatorType discriminatorType = Enum.valueOf(
 					DiscriminatorType.class, discriminatorColumnAnnotation.value( "discriminatorType" ).asEnum()
 			);
@@ -378,12 +396,13 @@ public class EntityClass extends ConfiguredClass {
 							Integer.class
 					)
 			);
-			if ( discriminatorColumnAnnotation.value( "columnDefinition" ) != null ) {
-				discriminatorColumnValues.setColumnDefinition(
-						discriminatorColumnAnnotation.value( "columnDefinition" )
-								.asString()
+            discriminatorColumnValues.setColumnDefinition(
+						JandexHelper.getValue(
+                                discriminatorColumnAnnotation,
+                                "columnDefinition",
+                                String.class
+                        )
 				);
-			}
 		}
 		discriminatorType = type;
 
@@ -547,56 +566,28 @@ public class EntityClass extends ConfiguredClass {
 	}
 
 	/**
+     * todo see {@code Binder#createTable}
 	 * @param tableAnnotation a annotation instance, either {@link javax.persistence.Table} or {@link javax.persistence.SecondaryTable}
 	 *
 	 * @return A table source for the specified annotation instance
 	 */
 	private TableSource createTableSource(AnnotationInstance tableAnnotation) {
-		String schema = getLocalBindingContext().getMappingDefaults().getSchemaName();
-		String catalog = getLocalBindingContext().getMappingDefaults().getCatalogName();
-
-
+		String schema = null;
+		String catalog = null;
 		if ( tableAnnotation != null ) {
-			final AnnotationValue schemaValue = tableAnnotation.value( "schema" );
-			if ( schemaValue != null ) {
-				schema = schemaValue.asString();
-			}
-
-			final AnnotationValue catalogValue = tableAnnotation.value( "catalog" );
-			if ( catalogValue != null ) {
-				catalog = catalogValue.asString();
-			}
+            schema = JandexHelper.getValue( tableAnnotation, "schema", String.class );
+            catalog = JandexHelper.getValue( tableAnnotation, "catalog", String.class );
 		}
-
-		if ( getLocalBindingContext().isGloballyQuotedIdentifiers() ) {
-			schema = StringHelper.quote( schema );
-			catalog = StringHelper.quote( catalog );
-		}
-
 		// process the table name
 		String tableName = null;
-		String explicitTableName = null;
+		String logicalTableName = null;
 
 		if ( tableAnnotation != null ) {
-			explicitTableName = JandexHelper.getValue( tableAnnotation, "name", String.class );
-			if ( StringHelper.isNotEmpty( explicitTableName ) ) {
-				tableName = getLocalBindingContext().getNamingStrategy().tableName( explicitTableName );
-				if ( getLocalBindingContext().isGloballyQuotedIdentifiers() && !Identifier.isQuoted( explicitTableName ) ) {
-					tableName = StringHelper.quote( tableName );
-				}
+			logicalTableName = JandexHelper.getValue( tableAnnotation, "name", String.class );
+			if ( StringHelper.isNotEmpty( logicalTableName ) ) {
+                tableName = logicalTableName;
 			}
 			createUniqueConstraints( tableAnnotation, tableName );
-		}
-
-
-		// use the simple table name as default in case there was no table annotation
-		if ( tableName == null ) {
-			if ( explicitEntityName == null ) {
-				tableName = getConfiguredClass().getSimpleName();
-			}
-			else {
-				tableName = explicitEntityName;
-			}
 		}
 
 		TableSourceImpl tableSourceImpl;
@@ -606,24 +597,29 @@ public class EntityClass extends ConfiguredClass {
 		}
 		else {
 			// for secondary tables a name must be specified which is used as logical table name
-			tableSourceImpl = new TableSourceImpl( schema, catalog, tableName, explicitTableName );
+			tableSourceImpl = new TableSourceImpl( schema, catalog, tableName, logicalTableName );
 		}
 		return tableSourceImpl;
 	}
 
-	private Set<TableSource> createSecondaryTableSources() {
+    private Set<TableSource> createSecondaryTableSources() {
 		Set<TableSource> secondaryTableSources = new HashSet<TableSource>();
-
+        AnnotationInstance secondaryTables = JandexHelper.getSingleAnnotation(
+                getClassInfo(),
+                JPADotNames.SECONDARY_TABLES
+        );
+        AnnotationInstance secondaryTable = JandexHelper.getSingleAnnotation(
+                getClassInfo(),
+                JPADotNames.SECONDARY_TABLE
+        );
 		// collect all @secondaryTable annotations
 		List<AnnotationInstance> secondaryTableAnnotations = new ArrayList<AnnotationInstance>();
-		secondaryTableAnnotations.add(
-				JandexHelper.getSingleAnnotation( getClassInfo(), JPADotNames.SECONDARY_TABLE )
-		);
+        if ( secondaryTable != null ) {
+            secondaryTableAnnotations.add(
+                    secondaryTable
+            );
+        }
 
-		AnnotationInstance secondaryTables = JandexHelper.getSingleAnnotation(
-				getClassInfo(),
-				JPADotNames.SECONDARY_TABLES
-		);
 		if ( secondaryTables != null ) {
 			secondaryTableAnnotations.addAll(
 					Arrays.asList(

@@ -2,9 +2,13 @@
 package org.hibernate.test.hql;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.util.Stack;
+
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+
+import org.hibernate.hql.internal.antlr.HqlTokenTypes;
 import org.hibernate.hql.internal.ast.HqlParser;
 import org.hibernate.hql.internal.ast.tree.Node;
 import org.hibernate.hql.internal.ast.util.ASTIterator;
@@ -1017,7 +1021,48 @@ public class HqlParserTest extends TestCase {
 	public void testHHH1247() throws Exception {
 		parse("select distinct user.party from com.itf.iceclaims.domain.party.user.UserImpl user inner join user.party.$RelatedWorkgroups relatedWorkgroups where relatedWorkgroups.workgroup.id = :workgroup and relatedWorkgroups.effectiveTime.start <= :datesnow and relatedWorkgroups.effectiveTime.end > :dateenow ");
 	}
-	public void testLineAndColumnNumber() throws Exception {
+
+    public void testHHH1780() throws Exception {
+        // verifies the tree contains a NOT->EXISTS subtree
+        class Verifier {
+            public boolean verify(AST root) {
+                Stack<AST> queue = new Stack<AST>();
+                queue.push( root );
+                while ( !queue.isEmpty() ) {
+                    AST parent = queue.pop();
+                    AST child = parent.getFirstChild();
+                    while ( child != null ) {
+                        if ( parent.getType() == HqlTokenTypes.NOT &&
+                                child.getType() == HqlTokenTypes.EXISTS ) {
+                            return true;
+                        }
+                        queue.push( child );
+                        child = child.getNextSibling();
+                    }
+                }
+                return false;
+            }
+        }
+
+        // test inversion of AND
+        AST ast = doParse(
+                "from Person p where not ( p.name is null and exists(select a.id from Address a where a.id=p.id))",
+                false
+        );
+
+        assertTrue( new Verifier().verify( ast ) );
+
+        // test inversion of OR
+        ast = doParse(
+                "from Person p where not ( p.name is null or exists(select a.id from Address a where a.id=p.id))",
+                false
+        );
+
+        assertTrue( new Verifier().verify( ast ) );
+    }
+
+
+    public void testLineAndColumnNumber() throws Exception {
 		AST ast = doParse("from Foo f\nwhere f.name = 'fred'",false);
 		// Find some of the nodes and check line and column values.
 		ASTIterator iter = new ASTIterator(ast);

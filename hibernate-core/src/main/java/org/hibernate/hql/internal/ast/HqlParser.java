@@ -167,14 +167,14 @@ public final class HqlParser extends HqlBaseParser {
 			case OR:
 				x.setType(AND);
 				x.setText("{and}");
-				negateNode( x.getFirstChild() );
-				negateNode( x.getFirstChild().getNextSibling() );
-				return x;
+                x.setFirstChild(negateNode( x.getFirstChild() ));
+                x.getFirstChild().setNextSibling(negateNode( x.getFirstChild().getNextSibling() ));
+                return x;
 			case AND:
 				x.setType(OR);
 				x.setText("{or}");
-				negateNode( x.getFirstChild() );
-				negateNode( x.getFirstChild().getNextSibling() );
+                x.setFirstChild(negateNode( x.getFirstChild() ));
+                x.getFirstChild().setNextSibling(negateNode( x.getFirstChild().getNextSibling() ));
 				return x;
 			case EQ:
 				x.setType( NE );
@@ -237,7 +237,13 @@ public final class HqlParser extends HqlBaseParser {
 				return x.getFirstChild();			// (NOT (NOT x) ) => (x)
 */
 			default:
-				return super.negateNode( x );		// Just add a 'not' parent.
+				AST not = super.negateNode( x );		// Just add a 'not' parent.
+                if ( not != x ) {
+                   // relink the next sibling to the new 'not' parent
+                    not.setNextSibling(x.getNextSibling());
+                    x.setNextSibling(null);
+                }
+                return not;
 		}
 	}
 

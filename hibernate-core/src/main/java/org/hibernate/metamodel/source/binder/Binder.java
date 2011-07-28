@@ -201,7 +201,7 @@ public class Binder {
 				entityName,
 				className,
 				currentBindingContext.makeClassReference( className ),
-				null
+				superEntityBinding == null ? null : superEntityBinding.getEntity()
 		);
 		entityBinding.setEntity( entity );
 

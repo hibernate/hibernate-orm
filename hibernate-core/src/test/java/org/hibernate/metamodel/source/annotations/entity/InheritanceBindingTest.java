@@ -36,6 +36,7 @@ import org.hibernate.metamodel.binding.EntityDiscriminator;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
+import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertSame;
 import static junit.framework.Assert.assertTrue;
@@ -56,6 +57,23 @@ public class InheritanceBindingTest extends BaseAnnotationBindingTestCase {
 	public void testDiscriminatorValue() {
 		EntityBinding entityBinding = getEntityBinding( SubclassOfSingleTableInheritance.class );
 		assertEquals( "Wrong discriminator value", "foo", entityBinding.getDiscriminatorMatchValue() );
+	}
+
+	@Test
+	@Resources(annotatedClasses = { RootOfSingleTableInheritance.class, SubclassOfSingleTableInheritance.class })
+	public void testSubclassEntitySuperType() {
+		EntityBinding entityBinding = getEntityBinding( SubclassOfSingleTableInheritance.class );
+		assertNotNull( entityBinding.getEntity().getSuperType() );
+		assertSame( RootOfSingleTableInheritance.class, entityBinding.getEntity().getSuperType().getClassReference() );
+		assertEquals( RootOfSingleTableInheritance.class.getName(), entityBinding.getEntity().getSuperType().getClassName() );
+		assertNull( entityBinding.getEntity().getSuperType().getSuperType() );
+	}
+
+	@Test
+	@Resources(annotatedClasses = { RootOfSingleTableInheritance.class, SubclassOfSingleTableInheritance.class })
+	public void testRootEntitySuperType() {
+		EntityBinding entityBinding = getEntityBinding( RootOfSingleTableInheritance.class );
+		assertNull( entityBinding.getEntity().getSuperType() );
 	}
 
 	@Test

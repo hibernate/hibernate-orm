@@ -28,11 +28,16 @@ import org.hibernate.metamodel.source.internal.MetadataImpl;
 
 import org.hibernate.testing.FailureExpected;
 
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
+
 /**
  * Basic tests of annotation based binding code
  *
  * @author Hardy Ferentschik
  */
+@FailureExpected( jiraKey = "HHH-6495" )
 public class BasicAnnotationBindingTests extends AbstractBasicBindingTests {
 	@Override
 	public void addSourcesForSimpleEntityBinding(MetadataSources sources) {
@@ -52,11 +57,5 @@ public class BasicAnnotationBindingTests extends AbstractBasicBindingTests {
 	@Override
 	public void addSourcesForComponentBinding(MetadataSources sources) {
 		sources.addAnnotatedClass(  SimpleEntityWithSimpleComponent.class );
-	}
-
-	@Override
-	@FailureExpected( jiraKey = "HHH-6495" )
-	public void testSimpleEntityWithSimpleComponentMapping() {
-		super.testSimpleEntityWithSimpleComponentMapping();
 	}
 }

@@ -24,6 +24,7 @@
 package org.hibernate.metamodel.binding;
 
 import javax.persistence.Embeddable;
+import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
@@ -35,6 +36,7 @@ public class SimpleEntityWithSimpleComponent {
 	@Id
 	private Long id;
 	private String name;
+	@Embedded
 	private SimpleComponent simpleComponent;
 
 	public SimpleEntityWithSimpleComponent() {

@@ -54,6 +54,7 @@ public class EntityBinding implements AttributeBindingContainer {
 
 	private Entity entity;
 	private TableSpecification primaryTable;
+    private String primaryTableName;
 	private Map<String, TableSpecification> secondaryTables = new HashMap<String, TableSpecification>();
 
 	private Value<Class<?>> proxyInterfaceType;
@@ -142,17 +143,29 @@ public class EntityBinding implements AttributeBindingContainer {
 		this.primaryTable = primaryTable;
 	}
 
-	public TableSpecification locateTable(String tableName) {
-		if ( tableName == null ) {
-			return primaryTable;
-		}
+    public TableSpecification locateTable(String tableName) {
+        if ( tableName == null || tableName.equals( getPrimaryTableName() ) ) {
+            return primaryTable;
+        }
+        TableSpecification tableSpec = secondaryTables.get( tableName );
+        if ( tableSpec == null ) {
+            throw new AssertionFailure(
+                    String.format(
+                            "Unable to find table %s amongst tables %s",
+                            tableName,
+                            secondaryTables.keySet()
+                    )
+            );
+        }
+        return tableSpec;
+    }
+    public String getPrimaryTableName() {
+        return primaryTableName;
+    }
 
-		TableSpecification tableSpec = secondaryTables.get( tableName );
-		if ( tableSpec == null ) {
-		   throw new AssertionFailure( String.format("Unable to find table %s amongst tables %s", tableName, secondaryTables.keySet()) );
-		}
-		return tableSpec;
-	}
+    public void setPrimaryTableName(String primaryTableName) {
+        this.primaryTableName = primaryTableName;
+    }
 
 	public void addSecondaryTable(String tableName, TableSpecification table) {
 		secondaryTables.put( tableName, table );

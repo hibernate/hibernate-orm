@@ -34,7 +34,7 @@ import org.hibernate.metamodel.relational.state.ColumnRelationalState;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class Column extends AbstractSimpleValue implements SimpleValue {
+public class Column extends AbstractSimpleValue {
 	private final Identifier columnName;
 	private boolean nullable;
 	private boolean unique;

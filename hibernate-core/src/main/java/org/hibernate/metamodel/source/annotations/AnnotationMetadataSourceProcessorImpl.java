@@ -35,6 +35,7 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.source.MetadataImplementor;
 import org.hibernate.metamodel.source.MetadataSourceProcessor;
@@ -97,7 +98,7 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 			index = parseAndUpdateIndex( mappings, index );
 		}
 
-		if ( index.getAnnotations( PseudoJpaDotNames.DEFAULT_DELIMITED_IDENTIFIERS ) != null ) {
+		if ( CollectionHelper.isNotEmpty( index.getAnnotations( PseudoJpaDotNames.DEFAULT_DELIMITED_IDENTIFIERS ) ) ) {
 			// todo : this needs to move to AnnotationBindingContext
 			// what happens right now is that specifying this in an orm.xml causes it to effect all orm.xmls
 			metadata.setGloballyQuotedIdentifiers( true );

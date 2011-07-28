@@ -49,9 +49,9 @@ public class DiscriminatorSourceImpl implements DiscriminatorSource {
 
     @Override
     public RelationalValueSource getDiscriminatorRelationalValueSource() {
-        return entityClass.getDiscriminatorFormula() != null ? entityClass.getDiscriminatorFormula() : new ColumnValuesSourceImpl(
-                entityClass.getDiscriminatorColumnValues()
-        );
+        return entityClass.getDiscriminatorFormula() != null ?
+                new DerivedValueSourceImpl( entityClass.getDiscriminatorFormula() )
+                : new ColumnValuesSourceImpl( entityClass.getDiscriminatorColumnValues() );
     }
 
 	@Override

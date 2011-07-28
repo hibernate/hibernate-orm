@@ -49,12 +49,13 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.binding.Caching;
 import org.hibernate.metamodel.binding.CustomSQL;
 import org.hibernate.metamodel.binding.InheritanceType;
-import org.hibernate.metamodel.relational.Identifier;
 import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.source.annotations.HibernateDotNames;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.JandexHelper;
 import org.hibernate.metamodel.source.annotations.attribute.ColumnValues;
+import org.hibernate.metamodel.source.annotations.attribute.DerivedValueSourceImpl;
+import org.hibernate.metamodel.source.annotations.attribute.FormulaValue;
 import org.hibernate.metamodel.source.binder.ConstraintSource;
 import org.hibernate.metamodel.source.binder.DerivedValueSource;
 import org.hibernate.metamodel.source.binder.TableSource;
@@ -97,7 +98,7 @@ public class EntityClass extends ConfiguredClass {
 	private String proxy;
 
 	private ColumnValues discriminatorColumnValues;
-    private DerivedValueSource discriminatorFormula;
+    private FormulaValue discriminatorFormula;
 	private Class<?> discriminatorType;
 	private String discriminatorMatchValue;
 	private boolean isDiscriminatorForced = true;
@@ -146,7 +147,7 @@ public class EntityClass extends ConfiguredClass {
 		return discriminatorColumnValues;
 	}
 
-    public DerivedValueSource getDiscriminatorFormula() {
+    public FormulaValue getDiscriminatorFormula() {
         return discriminatorFormula;
     }
 
@@ -355,7 +356,7 @@ public class EntityClass extends ConfiguredClass {
 		Class<?> type = String.class; // string is the discriminator default
         if ( discriminatorFormulaAnnotation != null ) {
             String expression = JandexHelper.getValue( discriminatorFormulaAnnotation, "value", String.class );
-            discriminatorFormula = new FormulaImpl( getPrimaryTableSource().getExplicitTableName(), expression );
+            discriminatorFormula = new FormulaValue( getPrimaryTableSource().getExplicitTableName(), expression );
         }
          discriminatorColumnValues = new ColumnValues( null ); //(stliu) give null here, will populate values below
             discriminatorColumnValues.setNullable( false ); // discriminator column cannot be null

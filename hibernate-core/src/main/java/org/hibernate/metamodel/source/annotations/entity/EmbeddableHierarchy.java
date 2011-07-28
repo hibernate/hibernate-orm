@@ -28,13 +28,10 @@ import java.util.Iterator;
 import java.util.List;
 import javax.persistence.AccessType;
 
-import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.ClassInfo;
-import org.jboss.jandex.FieldInfo;
-import org.jboss.jandex.MethodInfo;
+import org.jboss.jandex.DotName;
 
-import org.hibernate.AnnotationException;
-import org.hibernate.metamodel.binding.InheritanceType;
+import org.hibernate.AssertionFailure;
 import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.JandexHelper;
@@ -44,211 +41,111 @@ import org.hibernate.metamodel.source.annotations.JandexHelper;
  *
  * @author Hardy Ferentschik
  */
-public class EmbeddableHierarchy<T extends ConfiguredClass> implements Iterable<T> {
+public class EmbeddableHierarchy implements Iterable<EmbeddableClass> {
 	private final AccessType defaultAccessType;
-	private final InheritanceType inheritanceType;
-	private final List<T> configuredClasses;
+	private final List<EmbeddableClass> embeddables;
 
+	/**
+	 * Builds the configured class hierarchy for a an embeddable class.
+	 *
+	 * @param embeddableClass the top level embedded class
+	 * @param propertyName the name of the property in the entity class embedding this embeddable
+	 * @param accessType the access type inherited from the class in which the embeddable gets embedded
+	 * @param context the annotation binding context with access to the service registry and the annotation index
+	 *
+	 * @return a set of {@code ConfiguredClassHierarchy}s. One for each "leaf" entity.
+	 */
+	public static EmbeddableHierarchy createEmbeddableHierarchy(Class<?> embeddableClass, String propertyName, AccessType accessType, AnnotationBindingContext context) {
 
-	public static EmbeddableHierarchy<EmbeddableClass> createEmbeddableClassHierarchy(
-			List<ClassInfo> classes,
-			AccessType accessType,
-			AnnotationBindingContext context) {
-		return new EmbeddableHierarchy<EmbeddableClass>(
-				classes,
+		ClassInfo embeddableClassInfo = context.getClassInfo( embeddableClass.getName() );
+		if ( embeddableClassInfo == null ) {
+			throw new AssertionFailure(
+					String.format(
+							"The specified class %s cannot be found in the annotation index",
+							embeddableClass.getName()
+					)
+			);
+		}
+
+		if ( JandexHelper.getSingleAnnotation( embeddableClassInfo, JPADotNames.EMBEDDABLE ) == null ) {
+			throw new AssertionFailure(
+					String.format(
+							"The specified class %s is not annotated with @Embeddable",
+							embeddableClass.getName()
+					)
+			);
+		}
+
+		List<ClassInfo> classInfoList = new ArrayList<ClassInfo>();
+		ClassInfo tmpClassInfo;
+		Class<?> clazz = embeddableClass;
+		while ( clazz != null && !clazz.equals( Object.class ) ) {
+			tmpClassInfo = context.getIndex().getClassByName( DotName.createSimple( clazz.getName() ) );
+			clazz = clazz.getSuperclass();
+			if ( tmpClassInfo == null ) {
+				continue;
+			}
+
+			classInfoList.add( 0, tmpClassInfo );
+		}
+
+		return new EmbeddableHierarchy(
+				classInfoList,
+				propertyName,
 				context,
-				accessType,
-				InheritanceType.NO_INHERITANCE,
-				EmbeddableClass.class
+				accessType
 		);
 	}
 
 	@SuppressWarnings("unchecked")
 	private EmbeddableHierarchy(
 			List<ClassInfo> classInfoList,
+			String propertyName,
 			AnnotationBindingContext context,
-			AccessType defaultAccessType,
-			InheritanceType inheritanceType,
-			Class<T> configuredClassType) {
+			AccessType defaultAccessType) {
 		this.defaultAccessType = defaultAccessType;
-		this.inheritanceType = inheritanceType;
 
 		// the resolved type for the top level class in the hierarchy
 		context.resolveAllTypes( classInfoList.get( classInfoList.size() - 1 ).name().toString() );
 
-		configuredClasses = new ArrayList<T>();
-		T parent = null;
+		embeddables = new ArrayList<EmbeddableClass>();
+		ConfiguredClass parent = null;
+		EmbeddableClass embeddable;
 		for ( ClassInfo info : classInfoList ) {
-			T configuredClass;
-			if ( EntityClass.class.equals( configuredClassType ) ) {
-				configuredClass = (T) new EntityClass(
-						info, (EntityClass) parent, defaultAccessType, inheritanceType, context
-				);
-			}
-			else {
-				configuredClass = (T) new EmbeddableClass(
-						info, (EmbeddableClass) parent, defaultAccessType, context
-				);
-			}
-			configuredClasses.add( configuredClass );
-			parent = configuredClass;
+			embeddable = new EmbeddableClass(
+					info, propertyName, parent, defaultAccessType, context
+			);
+			embeddables.add( embeddable );
+			parent = embeddable;
 		}
 	}
+
 
 	public AccessType getDefaultAccessType() {
 		return defaultAccessType;
 	}
 
-	public InheritanceType getInheritanceType() {
-		return inheritanceType;
-	}
-
 	/**
 	 * @return An iterator iterating in top down manner over the configured classes in this hierarchy.
 	 */
-	public Iterator<T> iterator() {
-		return configuredClasses.iterator();
+	public Iterator<EmbeddableClass> iterator() {
+		return embeddables.iterator();
 	}
 
 	/**
 	 * @return Returns the leaf configured class
 	 */
-	public T getLeaf() {
-		return configuredClasses.get( configuredClasses.size() - 1 );
+	public EmbeddableClass getLeaf() {
+		return embeddables.get( embeddables.size() - 1 );
 	}
 
 	@Override
 	public String toString() {
 		final StringBuilder sb = new StringBuilder();
-		sb.append( "ConfiguredClassHierarchy" );
+		sb.append( "EmbeddableHierarchy" );
 		sb.append( "{defaultAccessType=" ).append( defaultAccessType );
-		sb.append( ", configuredClasses=" ).append( configuredClasses );
+		sb.append( ", embeddables=" ).append( embeddables );
 		sb.append( '}' );
 		return sb.toString();
-	}
-
-	/**
-	 * @param classes the classes in the hierarchy
-	 *
-	 * @return Returns the default access type for the configured class hierarchy independent of explicit
-	 *         {@code AccessType} annotations. The default access type is determined by the placement of the
-	 *         annotations.
-	 */
-	private static AccessType determineDefaultAccessType(List<ClassInfo> classes) {
-		AccessType accessTypeByEmbeddedIdPlacement = null;
-		AccessType accessTypeByIdPlacement = null;
-		for ( ClassInfo info : classes ) {
-			List<AnnotationInstance> idAnnotations = info.annotations().get( JPADotNames.ID );
-			List<AnnotationInstance> embeddedIdAnnotations = info.annotations().get( JPADotNames.EMBEDDED_ID );
-
-			if ( embeddedIdAnnotations != null && !embeddedIdAnnotations.isEmpty() ) {
-				accessTypeByEmbeddedIdPlacement = determineAccessTypeByIdPlacement( embeddedIdAnnotations );
-			}
-			if ( idAnnotations != null && !idAnnotations.isEmpty() ) {
-				accessTypeByIdPlacement = determineAccessTypeByIdPlacement( idAnnotations );
-			}
-		}
-		if ( accessTypeByEmbeddedIdPlacement != null ) {
-			return accessTypeByEmbeddedIdPlacement;
-		}
-		else if ( accessTypeByIdPlacement != null ) {
-			return accessTypeByIdPlacement;
-		}
-		else {
-			return throwIdNotFoundAnnotationException( classes );
-		}
-	}
-
-	private static AccessType determineAccessTypeByIdPlacement(List<AnnotationInstance> idAnnotations) {
-		AccessType accessType = null;
-		for ( AnnotationInstance annotation : idAnnotations ) {
-			AccessType tmpAccessType;
-			if ( annotation.target() instanceof FieldInfo ) {
-				tmpAccessType = AccessType.FIELD;
-			}
-			else if ( annotation.target() instanceof MethodInfo ) {
-				tmpAccessType = AccessType.PROPERTY;
-			}
-			else {
-				throw new AnnotationException( "Invalid placement of @Id annotation" );
-			}
-
-			if ( accessType == null ) {
-				accessType = tmpAccessType;
-			}
-			else {
-				if ( !accessType.equals( tmpAccessType ) ) {
-					throw new AnnotationException( "Inconsistent placement of @Id annotation within hierarchy " );
-				}
-			}
-		}
-		return accessType;
-	}
-
-	private static InheritanceType determineInheritanceType(List<ClassInfo> classes) {
-		if ( classes.size() == 1 ) {
-			return InheritanceType.NO_INHERITANCE;
-		}
-
-		InheritanceType inheritanceType = null;
-		for ( ClassInfo info : classes ) {
-			AnnotationInstance inheritanceAnnotation = JandexHelper.getSingleAnnotation(
-					info, JPADotNames.INHERITANCE
-			);
-			if ( inheritanceAnnotation == null ) {
-				continue;
-			}
-
-			javax.persistence.InheritanceType jpaInheritanceType = Enum.valueOf(
-					javax.persistence.InheritanceType.class, inheritanceAnnotation.value( "strategy" ).asEnum()
-			);
-			InheritanceType tmpInheritanceType = InheritanceType.get( jpaInheritanceType );
-			if ( tmpInheritanceType == null ) {
-				// default inheritance type is single table
-				inheritanceType = InheritanceType.SINGLE_TABLE;
-			}
-
-			if ( inheritanceType == null ) {
-				inheritanceType = tmpInheritanceType;
-			}
-			else {
-				if ( !inheritanceType.equals( tmpInheritanceType ) ) {
-					throw new AnnotationException(
-							"Multiple incompatible instances of @Inheritance specified within classes "
-									+ hierarchyListString( classes )
-					);
-				}
-			}
-		}
-
-		if ( inheritanceType == null ) {
-			// default inheritance type is single table
-			inheritanceType = InheritanceType.SINGLE_TABLE;
-		}
-
-		return inheritanceType;
-	}
-
-	private static AccessType throwIdNotFoundAnnotationException(List<ClassInfo> classes) {
-		StringBuilder builder = new StringBuilder();
-		builder.append( "Unable to determine identifier attribute for class hierarchy consisting of the classe(s) " );
-		builder.append( hierarchyListString( classes ) );
-		throw new AnnotationException( builder.toString() );
-	}
-
-	private static String hierarchyListString(List<ClassInfo> classes) {
-		StringBuilder builder = new StringBuilder();
-		builder.append( "[" );
-
-		int count = 0;
-		for ( ClassInfo info : classes ) {
-			builder.append( info.name().toString() );
-			if ( count < classes.size() - 1 ) {
-				builder.append( ", " );
-			}
-			count++;
-		}
-		builder.append( "]" );
-		return builder.toString();
 	}
 }

@@ -23,11 +23,17 @@
  */
 package org.hibernate.metamodel.source.annotations.entity;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.internal.util.Value;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.source.LocalBindingContext;
+import org.hibernate.metamodel.source.annotations.attribute.AssociationAttribute;
+import org.hibernate.metamodel.source.annotations.attribute.BasicAttribute;
+import org.hibernate.metamodel.source.annotations.attribute.SingularAttributeSourceImpl;
+import org.hibernate.metamodel.source.annotations.attribute.ToOneAttributeSourceImpl;
 import org.hibernate.metamodel.source.binder.AttributeSource;
 import org.hibernate.metamodel.source.binder.ComponentAttributeSource;
 import org.hibernate.metamodel.source.binder.ExplicitHibernateTypeSource;
@@ -39,21 +45,32 @@ import org.hibernate.metamodel.source.binder.SingularAttributeNature;
  * @author Steve Ebersole
  */
 public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
-	private final EmbeddableClass component;
-	private final ConfiguredClass parent;
-
+	private final EmbeddableClass embeddableClass;
 	private final Value<Class<?>> classReference;
 
-	public ComponentAttributeSourceImpl(EmbeddableClass component, ConfiguredClass parent) {
-		this.component = component;
-		this.parent = parent;
+	public ComponentAttributeSourceImpl(EmbeddableClass embeddableClass) {
+		this.embeddableClass = embeddableClass;
+		this.classReference = new Value<Class<?>>( embeddableClass.getClass() );
+	}
 
-		this.classReference = new Value<Class<?>>( component.getClass() );
+	@Override
+	public boolean isVirtualAttribute() {
+		return false;
+	}
+
+	@Override
+	public SingularAttributeNature getNature() {
+		return SingularAttributeNature.COMPONENT;
+	}
+
+	@Override
+	public boolean isSingular() {
+		return true;
 	}
 
 	@Override
 	public String getClassName() {
-		return component.getClass().getName();
+		return embeddableClass.getClass().getName();
 	}
 
 	@Override
@@ -63,7 +80,6 @@ public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
 
 	@Override
 	public String getParentReferenceAttributeName() {
-		// todo : do annotations support this?
 		return null;
 	}
 
@@ -76,41 +92,33 @@ public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
 
 	@Override
 	public Iterable<AttributeSource> attributeSources() {
-		// todo : implement
-		return null;
+		List<AttributeSource> attributeList = new ArrayList<AttributeSource>();
+		for ( BasicAttribute attribute : embeddableClass.getSimpleAttributes() ) {
+			attributeList.add( new SingularAttributeSourceImpl( attribute ) );
+		}
+		for ( EmbeddableClass component : embeddableClass.getEmbeddedClasses().values() ) {
+			attributeList.add( new ComponentAttributeSourceImpl( component ) );
+		}
+		for ( AssociationAttribute associationAttribute : embeddableClass.getAssociationAttributes() ) {
+			attributeList.add( new ToOneAttributeSourceImpl( associationAttribute ) );
+		}
+		return attributeList;
 	}
 
 	@Override
 	public LocalBindingContext getLocalBindingContext() {
-		return component.getLocalBindingContext();
-	}
-
-	@Override
-	public boolean isVirtualAttribute() {
-		// todo : verify
-		return false;
-	}
-
-	@Override
-	public SingularAttributeNature getNature() {
-		return SingularAttributeNature.COMPONENT;
+		return embeddableClass.getLocalBindingContext();
 	}
 
 	@Override
 	public ExplicitHibernateTypeSource getTypeInformation() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
-	}
-
-	@Override
-	public String getName() {
-		// todo : implement
-		// do not see how this is possible currently given how annotations currently handle components
+		// probably need to check for @Target in EmbeddableClass (HF)
 		return null;
 	}
 
 	@Override
-	public boolean isSingular() {
-		return true;
+	public String getName() {
+	   return embeddableClass.getEmbeddedAttributeName();
 	}
 
 	@Override
@@ -151,7 +159,7 @@ public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
 
 	@Override
 	public Iterable<MetaAttributeSource> metaAttributes() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		return Collections.emptySet();
 	}
 
 	@Override

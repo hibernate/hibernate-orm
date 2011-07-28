@@ -39,9 +39,7 @@ import org.hibernate.metamodel.source.MetaAttributeContext;
 public class ComponentAttributeBinding extends AbstractSingularAttributeBinding implements AttributeBindingContainer {
 	private final String path;
 	private Map<String, AttributeBinding> attributeBindingMap = new HashMap<String, AttributeBinding>();
-
 	private SingularAttribute parentReference;
-
 	private MetaAttributeContext metaAttributeContext;
 
 	public ComponentAttributeBinding(AttributeBindingContainer container, SingularAttribute attribute) {

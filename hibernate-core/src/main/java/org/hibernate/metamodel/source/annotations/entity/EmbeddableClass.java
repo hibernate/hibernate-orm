@@ -30,16 +30,25 @@ import org.jboss.jandex.ClassInfo;
 import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
 
 /**
+ * Represents the information about an entity annotated with {@code @Embeddable}.
+ *
  * @author Hardy Ferentschik
  */
 public class EmbeddableClass extends ConfiguredClass {
-	// todo - need to take care of the attribute path (HF)
+	private final String embeddedAttributeName;
+
 	public EmbeddableClass(
 			ClassInfo classInfo,
-			EmbeddableClass parent,
+			String embeddedAttributeName,
+			ConfiguredClass parent,
 			AccessType defaultAccessType,
 			AnnotationBindingContext context) {
 		super( classInfo, defaultAccessType, parent, context );
+		this.embeddedAttributeName = embeddedAttributeName;
+	}
+
+	public String getEmbeddedAttributeName() {
+		return embeddedAttributeName;
 	}
 }
 

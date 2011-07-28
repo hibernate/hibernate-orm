@@ -114,7 +114,6 @@ public class EntityBinding implements AttributeBindingContainer {
 		this.hierarchyDetails = superEntityBinding.getHierarchyDetails();
 	}
 
-
 	public HierarchyDetails getHierarchyDetails() {
 		return hierarchyDetails;
 	}

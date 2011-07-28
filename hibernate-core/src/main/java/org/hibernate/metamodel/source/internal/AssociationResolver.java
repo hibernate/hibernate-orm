@@ -23,17 +23,15 @@
  */
 package org.hibernate.metamodel.source.internal;
 
-import org.hibernate.MappingException;
-import org.hibernate.metamodel.source.MetadataImplementor;
 import org.hibernate.metamodel.binding.AttributeBinding;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.SingularAssociationAttributeBinding;
+import org.hibernate.metamodel.source.MetadataImplementor;
 
 /**
  * @author Gail Badner
  */
 class AssociationResolver {
-
 	private final MetadataImplementor metadata;
 
 	AssociationResolver(MetadataImplementor metadata) {
@@ -42,7 +40,7 @@ class AssociationResolver {
 
 	void resolve() {
 		for ( EntityBinding entityBinding : metadata.getEntityBindings() ) {
-			for ( SingularAssociationAttributeBinding attributeBinding :  entityBinding.getEntityReferencingAttributeBindings() ) {
+			for ( SingularAssociationAttributeBinding attributeBinding : entityBinding.getEntityReferencingAttributeBindings() ) {
 				resolve( attributeBinding );
 			}
 		}
@@ -50,13 +48,19 @@ class AssociationResolver {
 
 	private void resolve(SingularAssociationAttributeBinding attributeBinding) {
 		if ( attributeBinding.getReferencedEntityName() == null ) {
-			throw new IllegalArgumentException( "attributeBinding has null entityName: " + attributeBinding.getAttribute().getName() );
+			throw new IllegalArgumentException(
+					"attributeBinding has null entityName: " + attributeBinding.getAttribute().getName()
+			);
 		}
 		EntityBinding entityBinding = metadata.getEntityBinding( attributeBinding.getReferencedEntityName() );
 		if ( entityBinding == null ) {
 			throw new org.hibernate.MappingException(
-					"Attribute [" + attributeBinding.getAttribute().getName() +
-					"] refers to unknown entity: [" + attributeBinding.getReferencedEntityName() + "]" );
+					String.format(
+							"Attribute [%s] refers to unknown entity: [%s]",
+							attributeBinding.getAttribute().getName(),
+							attributeBinding.getReferencedEntityName()
+					)
+			);
 		}
 		AttributeBinding referencedAttributeBinding =
 				attributeBinding.isPropertyReference() ?
@@ -64,9 +68,12 @@ class AssociationResolver {
 						entityBinding.getHierarchyDetails().getEntityIdentifier().getValueBinding();
 		if ( referencedAttributeBinding == null ) {
 			// TODO: does attribute name include path w/ entity name?
-			throw new MappingException(
-					"Attribute [" + attributeBinding.getAttribute().getName() +
-					"] refers to unknown attribute: [" + attributeBinding.getReferencedEntityName() + "]"
+			throw new org.hibernate.MappingException(
+					String.format(
+							"Attribute [%s] refers to unknown attribute: [%s]",
+							attributeBinding.getAttribute().getName(),
+							attributeBinding.getReferencedEntityName()
+					)
 			);
 		}
 		attributeBinding.resolveReference( referencedAttributeBinding );

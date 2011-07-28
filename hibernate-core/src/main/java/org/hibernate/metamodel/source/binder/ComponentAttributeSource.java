@@ -30,6 +30,7 @@ import org.hibernate.internal.util.Value;
  */
 public interface ComponentAttributeSource extends SingularAttributeSource, AttributeSourceContainer {
 	public String getClassName();
+
 	public Value<Class<?>> getClassReference();
 
 	public String getParentReferenceAttributeName();

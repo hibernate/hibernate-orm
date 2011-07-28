@@ -33,10 +33,8 @@ import org.junit.Before;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.source.annotations.AnnotationBindingContextImpl;
-import org.hibernate.metamodel.source.annotations.ConfiguredClassHierarchyBuilder;
 import org.hibernate.metamodel.source.annotations.EntityHierarchyBuilder;
 import org.hibernate.metamodel.source.annotations.JandexHelper;
-import org.hibernate.metamodel.source.annotations.entity.EmbeddableClass;
 import org.hibernate.metamodel.source.annotations.entity.EmbeddableHierarchy;
 import org.hibernate.metamodel.source.binder.EntityHierarchy;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
@@ -69,13 +67,13 @@ public abstract class BaseAnnotationIndexTestCase extends BaseUnitTestCase {
 		return EntityHierarchyBuilder.createEntityHierarchies( context );
 	}
 
-	public EmbeddableHierarchy<EmbeddableClass> createEmbeddableHierarchy(AccessType accessType, Class<?>... configuredClasses) {
+	public EmbeddableHierarchy createEmbeddableHierarchy(AccessType accessType, Class<?>... configuredClasses) {
 		Index index = JandexHelper.indexForClass(
 				meta.getServiceRegistry().getService( ClassLoaderService.class ),
 				configuredClasses
 		);
 		AnnotationBindingContext context = new AnnotationBindingContextImpl( meta, index );
-		return ConfiguredClassHierarchyBuilder.createEmbeddableHierarchy( configuredClasses[0], accessType, context );
+		return EmbeddableHierarchy.createEmbeddableHierarchy( configuredClasses[0], "", accessType, context );
 	}
 }
 

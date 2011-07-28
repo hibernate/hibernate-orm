@@ -52,8 +52,9 @@ import org.jboss.logging.Logger;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
+import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.metamodel.source.MappingException;
 import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
-import org.hibernate.metamodel.source.annotations.ConfiguredClassHierarchyBuilder;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.JandexHelper;
 import org.hibernate.metamodel.source.annotations.ReflectionHelper;
@@ -61,7 +62,6 @@ import org.hibernate.metamodel.source.annotations.attribute.AssociationAttribute
 import org.hibernate.metamodel.source.annotations.attribute.AttributeOverride;
 import org.hibernate.metamodel.source.annotations.attribute.AttributeType;
 import org.hibernate.metamodel.source.annotations.attribute.BasicAttribute;
-import org.hibernate.metamodel.source.annotations.attribute.MappedAttribute;
 
 /**
  * Base class for a configured entity, mapped super class or embeddable
@@ -196,18 +196,6 @@ public class ConfiguredClass {
 		return embeddedClasses;
 	}
 
-	public MappedAttribute getMappedAttribute(String propertyName) {
-		MappedAttribute attribute;
-		attribute = simpleAttributeMap.get( propertyName );
-		if ( attribute == null ) {
-			attribute = associationAttributeMap.get( propertyName );
-		}
-		if ( attribute == null ) {
-			attribute = idAttributeMap.get( propertyName );
-		}
-		return attribute;
-	}
-
 	public Map<String, AttributeOverride> getAttributeOverrideMap() {
 		return attributeOverrideMap;
 	}
@@ -217,11 +205,6 @@ public class ConfiguredClass {
 		final StringBuilder sb = new StringBuilder();
 		sb.append( "ConfiguredClass" );
 		sb.append( "{clazz=" ).append( clazz.getSimpleName() );
-		sb.append( ", classAccessType=" ).append( classAccessType );
-		sb.append( ", configuredClassType=" ).append( configuredClassType );
-		sb.append( ", idAttributeMap=" ).append( idAttributeMap );
-		sb.append( ", simpleAttributeMap=" ).append( simpleAttributeMap );
-		sb.append( ", associationAttributeMap=" ).append( associationAttributeMap );
 		sb.append( '}' );
 		return sb.toString();
 	}
@@ -261,7 +244,11 @@ public class ConfiguredClass {
 		findTransientFieldAndMethodNames();
 
 		// use the class mate library to generic types
-		ResolvedTypeWithMembers resolvedType = localBindingContext.resolveMemberTypes( localBindingContext.getResolvedType( clazz ) );
+		ResolvedTypeWithMembers resolvedType = localBindingContext.resolveMemberTypes(
+				localBindingContext.getResolvedType(
+						clazz
+				)
+		);
 		for ( HierarchicType hierarchicType : resolvedType.allTypesAndOverrides() ) {
 			if ( hierarchicType.getType().getErasedType().equals( clazz ) ) {
 				resolvedType = localBindingContext.resolveMemberTypes( hierarchicType.getType() );
@@ -453,24 +440,38 @@ public class ConfiguredClass {
 					idAttributeMap.put( attributeName, attribute );
 				}
 				else if ( attribute.isVersioned() ) {
-					// todo - error handling in case there are multiple version attributes
-					versionAttribute = attribute;
+					if (
+							versionAttribute == null ) {
+						versionAttribute = attribute;
+					}
+					else {
+						throw new MappingException( "Multiple version attributes", localBindingContext.getOrigin() );
+					}
 				}
 				else {
 					simpleAttributeMap.put( attributeName, attribute );
 				}
 				break;
 			}
-			case ELEMENT_COLLECTION:
-			case EMBEDDED_ID:
-
+			case ELEMENT_COLLECTION: {
+				throw new NotYetImplementedException( "Element collections must still be implemented." );
+			}
+			case EMBEDDED_ID: {
+				throw new NotYetImplementedException( "Embedded ids must still be implemented." );
+			}
 			case EMBEDDED: {
 				resolveEmbeddable( attributeName, attributeType );
+				break;
 			}
 			// TODO handle the different association types
 			default: {
 				AssociationAttribute attribute = AssociationAttribute.createAssociationAttribute(
-						attributeName, attributeType, attributeNature, accessTypeString, annotations, getLocalBindingContext()
+						attributeName,
+						attributeType,
+						attributeNature,
+						accessTypeString,
+						annotations,
+						getLocalBindingContext()
 				);
 				associationAttributeMap.put( attributeName, attribute );
 			}
@@ -479,19 +480,21 @@ public class ConfiguredClass {
 
 	private void resolveEmbeddable(String attributeName, Class<?> type) {
 		ClassInfo embeddableClassInfo = localBindingContext.getClassInfo( type.getName() );
-		if ( classInfo == null ) {
+		if ( embeddableClassInfo == null ) {
 			String msg = String.format(
-					"Attribute %s of entity %s is annotated with @Embedded, but no embeddable configuration for type %s can be found.",
+					"Attribute '%s#%s' is annotated with @Embedded, but '%s' does not seem to be annotated " +
+							"with @Embeddable. Are all annotated classes added to the configuration?",
+					getConfiguredClass().getSimpleName(),
 					attributeName,
-					getName(),
-					type.getName()
+					type.getSimpleName()
 			);
 			throw new AnnotationException( msg );
 		}
 
 		localBindingContext.resolveAllTypes( type.getName() );
-		EmbeddableHierarchy<EmbeddableClass> hierarchy = ConfiguredClassHierarchyBuilder.createEmbeddableHierarchy(
+		EmbeddableHierarchy hierarchy = EmbeddableHierarchy.createEmbeddableHierarchy(
 				localBindingContext.<Object>locateClassByName( embeddableClassInfo.toString() ),
+				attributeName,
 				classAccessType,
 				localBindingContext
 		);

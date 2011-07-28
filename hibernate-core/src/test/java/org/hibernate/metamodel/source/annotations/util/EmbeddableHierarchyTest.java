@@ -61,7 +61,7 @@ public class EmbeddableHierarchyTest extends BaseAnnotationIndexTestCase {
 			String bar;
 		}
 
-		EmbeddableHierarchy<EmbeddableClass> hierarchy = createEmbeddableHierarchy(
+		EmbeddableHierarchy hierarchy = createEmbeddableHierarchy(
 				AccessType.FIELD,
 				C.class,
 				A.class,

@@ -80,6 +80,7 @@ public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
 
 	@Override
 	public String getParentReferenceAttributeName() {
+		// see HHH-6501
 		return null;
 	}
 

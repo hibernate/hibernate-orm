@@ -131,18 +131,18 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 	@Test
 	public void testSimpleEntityWithSimpleComponentMapping() {
 		MetadataSources sources = new MetadataSources( serviceRegistry );
-//		addSourcesForComponentBinding( sources );
-//		MetadataImpl metadata = (MetadataImpl) sources.buildMetadata();
-//		EntityBinding entityBinding = metadata.getEntityBinding( SimpleEntityWithSimpleComponent.class.getName() );
-//		assertRoot( metadata, entityBinding );
-//		assertIdAndSimpleProperty( entityBinding );
-//
-//		ComponentAttributeBinding componentAttributeBinding = (ComponentAttributeBinding) entityBinding.locateAttributeBinding( "simpleComponent" );
-//		assertNotNull( componentAttributeBinding );
-//		assertSame( componentAttributeBinding.getAttribute().getSingularAttributeType(), componentAttributeBinding.getAttributeContainer() );
-//		assertEquals( SimpleEntityWithSimpleComponent.class.getName() + ".simpleComponent", componentAttributeBinding.getPathBase() );
-//		assertSame( entityBinding, componentAttributeBinding.seekEntityBinding() );
-//		assertNotNull( componentAttributeBinding.getComponent() );
+		addSourcesForComponentBinding( sources );
+		MetadataImpl metadata = (MetadataImpl) sources.buildMetadata();
+		EntityBinding entityBinding = metadata.getEntityBinding( SimpleEntityWithSimpleComponent.class.getName() );
+		assertRoot( metadata, entityBinding );
+		assertIdAndSimpleProperty( entityBinding );
+
+		ComponentAttributeBinding componentAttributeBinding = (ComponentAttributeBinding) entityBinding.locateAttributeBinding( "simpleComponent" );
+		assertNotNull( componentAttributeBinding );
+		assertSame( componentAttributeBinding.getAttribute().getSingularAttributeType(), componentAttributeBinding.getAttributeContainer() );
+		assertEquals( SimpleEntityWithSimpleComponent.class.getName() + ".simpleComponent", componentAttributeBinding.getPathBase() );
+		assertSame( entityBinding, componentAttributeBinding.seekEntityBinding() );
+		assertNotNull( componentAttributeBinding.getComponent() );
 	}
 
 	public abstract void addSourcesForSimpleVersionedEntityBinding(MetadataSources sources);

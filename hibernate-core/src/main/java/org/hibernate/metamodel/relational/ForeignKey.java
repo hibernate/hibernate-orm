@@ -27,9 +27,9 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.internal.CoreMessageLogger;
 
 import org.jboss.logging.Logger;
 
@@ -43,15 +43,16 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class ForeignKey extends AbstractConstraint implements Constraint, Exportable {
+    private static final Logger LOG = Logger.getLogger( ForeignKey.class );
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, AbstractConstraint.class.getName());
 	private static final String ON_DELETE = " on delete ";
 	private static final String ON_UPDATE = " on update ";
 
 	private final TableSpecification targetTable;
 	private List<Column> targetColumns;
+
 	private ReferentialAction deleteRule = ReferentialAction.NO_ACTION;
-	public ReferentialAction updateRule = ReferentialAction.NO_ACTION;
+	private ReferentialAction updateRule = ReferentialAction.NO_ACTION;
 
 	protected ForeignKey(TableSpecification sourceTable, TableSpecification targetTable, String name) {
 		super( sourceTable, name );
@@ -96,6 +97,7 @@ public class ForeignKey extends AbstractConstraint implements Constraint, Export
 			}
 		}
 		else {
+			checkTargetTable( targetColumn );
 			if ( targetColumns == null ) {
 				if (!internalColumnAccess().isEmpty()) {
 					LOG.debugf(
@@ -109,7 +111,19 @@ public class ForeignKey extends AbstractConstraint implements Constraint, Export
 			}
 			targetColumns.add( targetColumn );
 		}
-		internalColumnAccess().add( sourceColumn );
+		internalAddColumn( sourceColumn );
+	}
+
+	private void checkTargetTable(Column targetColumn) {
+		if ( targetColumn.getTable() != getTargetTable() ) {
+			throw new AssertionFailure(
+					String.format(
+							"Unable to add column to constraint; tables [%s, %s] did not match",
+							targetColumn.getTable().toLoggableString(),
+							getTargetTable().toLoggableString()
+					)
+			);
+		}
 	}
 
 	@Override
@@ -183,36 +197,20 @@ public class ForeignKey extends AbstractConstraint implements Constraint, Export
 	}
 
 	public static enum ReferentialAction {
-		NO_ACTION {
-			private static final String ACTION_STRING = "no action";
-			public String getActionString() {
-				return ACTION_STRING;
-			}
-		},
-		CASCADE {
-			private static final String ACTION_STRING = "cascade";
-			public String getActionString() {
-				return ACTION_STRING;
-			}
-		},
-		SET_NULL {
-			private static final String ACTION_STRING = "set null";
-			public String getActionString() {
-				return ACTION_STRING;
-			}
-		},
-		SET_DEFAULT {
-			private static final String ACTION_STRING = "set default";
-			public String getActionString() {
-				return ACTION_STRING;
-			}
-		},
-		RESTRICT {
-			private static final String ACTION_STRING = "restrict";
-			public String getActionString() {
-				return ACTION_STRING;
-			}
-		};
-		public abstract String getActionString();
+		NO_ACTION( "no action" ),
+		CASCADE( "cascade" ),
+		SET_NULL( "set null" ),
+		SET_DEFAULT( "set default" ),
+		RESTRICT( "restrict" );
+
+		private final String actionString;
+
+		private ReferentialAction(String actionString) {
+			this.actionString = actionString;
+		}
+
+		public String getActionString() {
+			return actionString;
+		}
 	}
 }

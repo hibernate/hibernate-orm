@@ -30,16 +30,18 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Convenience base class for implementing the {@link ValueContainer} contract centralizing commonality
- * between modelling tables views and inline views.
+ * between modeling tables, views and inline views.
  *
  * @author Steve Ebersole
  */
 public abstract class AbstractTableSpecification implements TableSpecification {
 	private final static AtomicInteger tableCounter = new AtomicInteger( 0 );
 	private final int tableNumber;
+
 	private final LinkedHashMap<String, SimpleValue> values = new LinkedHashMap<String, SimpleValue>();
-	private PrimaryKey primaryKey = new PrimaryKey( this );
-	private List<ForeignKey> foreignKeys = new ArrayList<ForeignKey>();
+
+	private final PrimaryKey primaryKey = new PrimaryKey( this );
+	private final List<ForeignKey> foreignKeys = new ArrayList<ForeignKey>();
 
 	public AbstractTableSpecification() {
 		this.tableNumber = tableCounter.getAndIncrement();
@@ -92,9 +94,7 @@ public abstract class AbstractTableSpecification implements TableSpecification {
 		return fk;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public PrimaryKey getPrimaryKey() {
 		return primaryKey;
 	}

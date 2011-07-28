@@ -26,6 +26,7 @@ package org.hibernate.metamodel.relational;
 import java.util.List;
 import java.util.ArrayList;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.dialect.Dialect;
 
 /**
@@ -67,8 +68,18 @@ public abstract class AbstractConstraint implements Constraint {
 	}
 
 	public void addColumn(Column column) {
+		internalAddColumn( column );
+	}
+
+	protected void internalAddColumn(Column column) {
 		if ( column.getTable() != getTable() ) {
-			throw new IllegalArgumentException( "Unable to add column to constraint; tables did not match" );
+			throw new AssertionFailure(
+					String.format(
+							"Unable to add column to constraint; tables [%s, %s] did not match",
+							column.getTable().toLoggableString(),
+							getTable().toLoggableString()
+					)
+			);
 		}
 		columns.add( column );
 	}

@@ -92,12 +92,12 @@ class PropertyAttributeSourceImpl implements SingularAttributeSource {
 
 					@Override
 					public boolean isIncludedInInsertByDefault() {
-						return propertyElement.isInsert();
+						return Helper.getBooleanValue( propertyElement.isInsert(), true );
 					}
 
 					@Override
 					public boolean isIncludedInUpdateByDefault() {
-						return propertyElement.isUpdate();
+						return Helper.getBooleanValue( propertyElement.isUpdate(), true );
 					}
 				},
 				bindingContext

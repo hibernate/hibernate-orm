@@ -77,7 +77,7 @@ class VersionAttributeSourceImpl implements SingularAttributeSource {
 
 					@Override
 					public boolean isIncludedInInsertByDefault() {
-						return versionElement.isInsert();
+						return Helper.getBooleanValue( versionElement.isInsert(), true );
 					}
 
 					@Override

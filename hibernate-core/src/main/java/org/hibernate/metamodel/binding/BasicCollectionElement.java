@@ -24,10 +24,21 @@
 package org.hibernate.metamodel.binding;
 
 /**
+ * @author Steve Ebersole
  * @author Gail Badner
  */
-public class BasicCollectionElement extends CollectionElement {
+public class BasicCollectionElement extends AbstractCollectionElement {
+	private final HibernateTypeDescriptor hibernateTypeDescriptor = new HibernateTypeDescriptor();
+
 	public BasicCollectionElement(AbstractPluralAttributeBinding binding) {
-		super( binding, CollectionElementNature.BASIC );
+		super( binding );
+	}
+
+	public CollectionElementNature getCollectionElementNature() {
+		return CollectionElementNature.BASIC;
+	}
+
+	public HibernateTypeDescriptor getHibernateTypeDescriptor() {
+		return hibernateTypeDescriptor;
 	}
 }

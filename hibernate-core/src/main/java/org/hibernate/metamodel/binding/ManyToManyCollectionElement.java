@@ -28,9 +28,10 @@ import java.util.HashMap;
 import org.dom4j.Element;
 
 /**
+ * @author Steve Ebersole
  * @author Gail Badner
  */
-public class ManyToManyCollectionElement extends CollectionElement {
+public class ManyToManyCollectionElement extends AbstractCollectionElement {
 
 	private final java.util.Map manyToManyFilters = new HashMap();
 	private String manyToManyWhere;
@@ -38,7 +39,12 @@ public class ManyToManyCollectionElement extends CollectionElement {
 
 
 	ManyToManyCollectionElement(AbstractPluralAttributeBinding binding) {
-		super( binding, CollectionElementNature.MANY_TO_MANY );
+		super( binding );
+	}
+
+	@Override
+	public CollectionElementNature getCollectionElementNature() {
+		return CollectionElementNature.MANY_TO_MANY;
 	}
 
 	public void fromHbmXml(Element node){

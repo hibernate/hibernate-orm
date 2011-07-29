@@ -32,8 +32,10 @@ import java.util.List;
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
 import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.metamodel.domain.Attribute;
 import org.hibernate.metamodel.domain.PluralAttribute;
 import org.hibernate.metamodel.relational.Table;
+import org.hibernate.metamodel.relational.TableSpecification;
 
 /**
  * TODO : javadoc
@@ -42,7 +44,7 @@ import org.hibernate.metamodel.relational.Table;
  */
 public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBinding implements PluralAttributeBinding {
 	private final CollectionKey collectionKey;
-	private final CollectionElement collectionElement;
+	private final AbstractCollectionElement collectionElement;
 
 	private Table collectionTable;
 
@@ -85,7 +87,7 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 		this.collectionElement = interpretNature( collectionElementNature );
 	}
 
-	private CollectionElement interpretNature(CollectionElementNature collectionElementNature) {
+	private AbstractCollectionElement interpretNature(CollectionElementNature collectionElementNature) {
 		switch ( collectionElementNature ) {
 			case BASIC: {
 				return new BasicCollectionElement( this );
@@ -143,13 +145,18 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 //	}
 
 	@Override
+	public PluralAttribute getAttribute() {
+		return (PluralAttribute) super.getAttribute();
+	}
+
+	@Override
 	public boolean isAssociation() {
 		return collectionElement.getCollectionElementNature() == CollectionElementNature.MANY_TO_ANY
 				|| collectionElement.getCollectionElementNature() == CollectionElementNature.MANY_TO_MANY
 				|| collectionElement.getCollectionElementNature() == CollectionElementNature.ONE_TO_MANY;
 	}
 
-	public Table getCollectionTable() {
+	public TableSpecification getCollectionTable() {
 		return collectionTable;
 	}
 
@@ -161,7 +168,7 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 		return collectionKey;
 	}
 
-	public CollectionElement getCollectionElement() {
+	public AbstractCollectionElement getCollectionElement() {
 		return collectionElement;
 	}
 
@@ -229,8 +236,16 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 		return orderBy;
 	}
 
+	public void setOrderBy(String orderBy) {
+		this.orderBy = orderBy;
+	}
+
 	public String getWhere() {
 		return where;
+	}
+
+	public void setWhere(String where) {
+		this.where = where;
 	}
 
 	public String getReferencedPropertyName() {

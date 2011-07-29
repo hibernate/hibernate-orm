@@ -37,6 +37,8 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.binding.CustomSQL;
 import org.hibernate.metamodel.binding.InheritanceType;
 import org.hibernate.metamodel.binding.MetaAttribute;
+import org.hibernate.metamodel.relational.Identifier;
+import org.hibernate.metamodel.relational.Schema;
 import org.hibernate.metamodel.source.LocalBindingContext;
 import org.hibernate.metamodel.source.MetaAttributeContext;
 import org.hibernate.metamodel.source.binder.ExplicitHibernateTypeSource;
@@ -231,6 +233,32 @@ public class Helper {
 			}
 		}
 		return result;
+	}
+
+	public static Schema.Name determineDatabaseSchemaName(
+			String explicitSchemaName,
+			String explicitCatalogName,
+			LocalBindingContext bindingContext) {
+		return new Schema.Name(
+				resolveIdentifier(
+						explicitSchemaName,
+						bindingContext.getMappingDefaults().getSchemaName(),
+						bindingContext.isGloballyQuotedIdentifiers()
+				),
+				resolveIdentifier(
+						explicitCatalogName,
+						bindingContext.getMappingDefaults().getCatalogName(),
+						bindingContext.isGloballyQuotedIdentifiers()
+				)
+		);
+	}
+
+	public static Identifier resolveIdentifier(String explicitName, String defaultName, boolean globalQuoting) {
+		String name = StringHelper.isNotEmpty( explicitName ) ? explicitName : defaultName;
+		if ( globalQuoting ) {
+			name = StringHelper.quote( name );
+		}
+		return Identifier.toIdentifier( name );
 	}
 
 	public static interface ValueSourcesAdapter {

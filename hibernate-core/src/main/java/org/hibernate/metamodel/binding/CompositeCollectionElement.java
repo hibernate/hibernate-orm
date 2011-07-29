@@ -24,10 +24,16 @@
 package org.hibernate.metamodel.binding;
 
 /**
+ * @author Steve Ebersole
  * @author Gail Badner
  */
-public class CompositeCollectionElement extends CollectionElement {
+public class CompositeCollectionElement extends AbstractCollectionElement {
 	public CompositeCollectionElement(AbstractPluralAttributeBinding binding) {
-		super( binding, CollectionElementNature.COMPOSITE );
+		super( binding );
+	}
+
+	@Override
+	public CollectionElementNature getCollectionElementNature() {
+		return CollectionElementNature.COMPOSITE;
 	}
 }

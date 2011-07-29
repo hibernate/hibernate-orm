@@ -23,62 +23,18 @@
  */
 package org.hibernate.metamodel.source.hbm;
 
-import org.hibernate.FetchMode;
-import org.hibernate.cfg.NotYetImplementedException;
-import org.hibernate.engine.spi.CascadeStyle;
-import org.hibernate.metamodel.source.LocalBindingContext;
-import org.hibernate.metamodel.source.MappingException;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.source.binder.AttributeSourceContainer;
-import org.hibernate.metamodel.source.binder.MetaAttributeSource;
-import org.hibernate.metamodel.source.binder.PluralAttributeElementSource;
-import org.hibernate.metamodel.source.binder.PluralAttributeKeySource;
+import org.hibernate.metamodel.source.binder.Orderable;
 import org.hibernate.metamodel.source.binder.PluralAttributeNature;
-import org.hibernate.metamodel.source.binder.PluralAttributeSource;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLBagElement;
 
 /**
  * @author Steve Ebersole
  */
-public class BagAttributeSourceImpl implements PluralAttributeSource {
-	private final XMLBagElement bagElement;
-	private final AttributeSourceContainer container;
-
-	// todo : a lot of this could be consolidated with common JAXB interface for collection mappings and moved to a base class
-
-	private final PluralAttributeKeySource keySource;
-	private final PluralAttributeElementSource elementSource;
-
+public class BagAttributeSourceImpl extends AbstractPluralAttributeSourceImpl implements Orderable {
 	public BagAttributeSourceImpl(XMLBagElement bagElement, AttributeSourceContainer container) {
-		this.bagElement = bagElement;
-		this.container = container;
-
-		this.keySource = new PluralAttributeKeySourceImpl( bagElement.getKey(), container );
-		this.elementSource = interpretElementType( bagElement );
-	}
-
-	private PluralAttributeElementSource interpretElementType(XMLBagElement bagElement) {
-		if ( bagElement.getElement() != null ) {
-			return new BasicPluralAttributeElementSourceImpl( bagElement.getElement(), container.getLocalBindingContext() );
-		}
-		else if ( bagElement.getCompositeElement() != null ) {
-			return new CompositePluralAttributeElementSourceImpl( bagElement.getCompositeElement(), container.getLocalBindingContext() );
-		}
-		else if ( bagElement.getOneToMany() != null ) {
-			return new OneToManyPluralAttributeElementSourceImpl( bagElement.getOneToMany(), container.getLocalBindingContext() );
-		}
-		else if ( bagElement.getManyToMany() != null ) {
-			return new ManyToManyPluralAttributeElementSourceImpl( bagElement.getManyToMany(), container.getLocalBindingContext() );
-		}
-		else if ( bagElement.getManyToAny() != null ) {
-			throw new NotYetImplementedException( "Support for many-to-any not yet implemented" );
-//			return PluralAttributeElementNature.MANY_TO_ANY;
-		}
-		else {
-			throw new MappingException(
-					"Unexpected collection element type : " + bagElement.getName(),
-					bindingContext().getOrigin()
-			);
-		}
+		super( bagElement, container );
 	}
 
 	@Override
@@ -87,63 +43,17 @@ public class BagAttributeSourceImpl implements PluralAttributeSource {
 	}
 
 	@Override
-	public PluralAttributeKeySource getKeySource() {
-		return keySource;
+	public XMLBagElement getPluralAttributeElement() {
+		return (XMLBagElement) super.getPluralAttributeElement();
 	}
 
 	@Override
-	public PluralAttributeElementSource getElementSource() {
-		return elementSource;
+	public boolean isOrdered() {
+		return StringHelper.isNotEmpty( getOrder() );
 	}
 
 	@Override
-	public String getExplicitCollectionTableName() {
-		return bagElement.getTable();
-	}
-
-	private LocalBindingContext bindingContext() {
-		return container.getLocalBindingContext();
-	}
-
-	@Override
-	public String getName() {
-		return bagElement.getName();
-	}
-
-	@Override
-	public boolean isSingular() {
-		return false;
-	}
-
-	@Override
-	public String getPropertyAccessorName() {
-		return bagElement.getAccess();
-	}
-
-	@Override
-	public boolean isIncludedInOptimisticLocking() {
-		return bagElement.isOptimisticLock();
-	}
-
-	@Override
-	public boolean isInverse() {
-		return bagElement.isInverse();
-	}
-
-	@Override
-	public Iterable<MetaAttributeSource> metaAttributes() {
-		return Helper.buildMetaAttributeSources( bagElement.getMeta() );
-	}
-
-	@Override
-	public Iterable<CascadeStyle> getCascadeStyles() {
-		return Helper.interpretCascadeStyles( bagElement.getCascade(), bindingContext() );
-	}
-
-	@Override
-	public FetchMode getFetchMode() {
-		return bagElement.getFetch() == null
-				? FetchMode.DEFAULT
-				: FetchMode.valueOf( bagElement.getFetch().value() );
+	public String getOrder() {
+		return getPluralAttributeElement().getOrderBy();
 	}
 }

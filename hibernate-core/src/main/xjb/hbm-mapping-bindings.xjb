@@ -59,6 +59,23 @@
             <inheritance:implements>org.hibernate.metamodel.source.hbm.jaxb.mapping.SingularAttributeSource</inheritance:implements>
         </jaxb:bindings>
 -->
+        <jaxb:bindings node="//xsd:complexType[@name='bag-element']">
+            <inheritance:implements>org.hibernate.metamodel.source.hbm.jaxb.mapping.PluralAttributeElement</inheritance:implements>
+        </jaxb:bindings>
+        <jaxb:bindings node="//xsd:complexType[@name='idbag-element']">
+            <inheritance:implements>org.hibernate.metamodel.source.hbm.jaxb.mapping.PluralAttributeElement</inheritance:implements>
+            <inheritance:extends>org.hibernate.metamodel.source.hbm.jaxb.mapping.IdBagPluralAttributeElementAdapter</inheritance:extends>
+        </jaxb:bindings>
+        <jaxb:bindings node="//xsd:complexType[@name='list-element']">
+            <inheritance:implements>org.hibernate.metamodel.source.hbm.jaxb.mapping.PluralAttributeElement</inheritance:implements>
+        </jaxb:bindings>
+        <jaxb:bindings node="//xsd:complexType[@name='map-element']">
+            <inheritance:implements>org.hibernate.metamodel.source.hbm.jaxb.mapping.PluralAttributeElement</inheritance:implements>
+        </jaxb:bindings>
+        <jaxb:bindings node="//xsd:complexType[@name='set-element']">
+            <inheritance:implements>org.hibernate.metamodel.source.hbm.jaxb.mapping.PluralAttributeElement</inheritance:implements>
+        </jaxb:bindings>
+
 
         <jaxb:bindings node="//xsd:element[@name='class']//xsd:attribute[@name='subselect']">
             <jaxb:property name="subselectAttribute"/>

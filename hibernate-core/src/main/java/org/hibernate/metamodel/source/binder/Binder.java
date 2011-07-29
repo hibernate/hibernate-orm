@@ -25,7 +25,10 @@ package org.hibernate.metamodel.source.binder;
 
 import java.beans.BeanInfo;
 import java.beans.PropertyDescriptor;
+import java.lang.reflect.Member;
+import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -34,14 +37,17 @@ import org.hibernate.EntityMode;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.beans.BeanInfoHelper;
+import org.hibernate.metamodel.binding.AbstractCollectionElement;
 import org.hibernate.metamodel.binding.AbstractPluralAttributeBinding;
 import org.hibernate.metamodel.binding.AttributeBinding;
 import org.hibernate.metamodel.binding.AttributeBindingContainer;
 import org.hibernate.metamodel.binding.BasicAttributeBinding;
+import org.hibernate.metamodel.binding.BasicCollectionElement;
 import org.hibernate.metamodel.binding.CollectionElementNature;
 import org.hibernate.metamodel.binding.ComponentAttributeBinding;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.EntityDiscriminator;
+import org.hibernate.metamodel.binding.HibernateTypeDescriptor;
 import org.hibernate.metamodel.binding.InheritanceType;
 import org.hibernate.metamodel.binding.ManyToOneAttributeBinding;
 import org.hibernate.metamodel.binding.MetaAttribute;
@@ -53,6 +59,7 @@ import org.hibernate.metamodel.domain.Component;
 import org.hibernate.metamodel.domain.Entity;
 import org.hibernate.metamodel.domain.PluralAttribute;
 import org.hibernate.metamodel.domain.SingularAttribute;
+import org.hibernate.metamodel.domain.Type;
 import org.hibernate.metamodel.relational.Column;
 import org.hibernate.metamodel.relational.DerivedValue;
 import org.hibernate.metamodel.relational.Identifier;
@@ -440,8 +447,8 @@ public class Binder {
 
 	private void bindPersistentCollection(PluralAttributeSource attributeSource, AttributeBindingContainer attributeBindingContainer) {
 		final PluralAttribute existingAttribute = attributeBindingContainer.getAttributeContainer().locatePluralAttribute(
-                attributeSource.getName()
-        );
+				attributeSource.getName()
+		);
 		final AbstractPluralAttributeBinding pluralAttributeBinding;
 
 		if ( attributeSource.getPluralAttributeNature() == PluralAttributeNature.BAG ) {
@@ -467,13 +474,32 @@ public class Binder {
 			throw new NotYetImplementedException( "Collections other than bag not yet implemented :(" );
 		}
 
-		doBasicAttributeBinding( attributeSource, pluralAttributeBinding );
+		doBasicPluralAttributeBinding( attributeSource, pluralAttributeBinding );
 
 		bindCollectionTable( attributeSource, pluralAttributeBinding );
-		bindCollectionKey( attributeSource, pluralAttributeBinding );
 		bindSortingAndOrdering( attributeSource, pluralAttributeBinding );
 
+		bindCollectionKey( attributeSource, pluralAttributeBinding );
+		bindCollectionElement( attributeSource, pluralAttributeBinding );
+		bindCollectionIndex( attributeSource, pluralAttributeBinding );
+
 		metadata.addCollection( pluralAttributeBinding );
+	}
+
+	private void doBasicPluralAttributeBinding(
+			PluralAttributeSource attributeSource,
+			AbstractPluralAttributeBinding pluralAttributeBinding) {
+		pluralAttributeBinding.setFetchMode( attributeSource.getFetchMode() );
+		pluralAttributeBinding.setCascadeStyles( attributeSource.getCascadeStyles() );
+
+		pluralAttributeBinding.setMetaAttributeContext(
+				buildMetaAttributeContext(
+						attributeSource.metaAttributes(),
+						pluralAttributeBinding.getContainer().getMetaAttributeContext()
+				)
+		);
+
+		doBasicAttributeBinding( attributeSource, pluralAttributeBinding );
 	}
 
 	private void bindCollectionTable(
@@ -483,23 +509,101 @@ public class Binder {
 			return;
 		}
 
-		if ( StringHelper.isNotEmpty( attributeSource.getExplicitCollectionTableName() ) ) {
-			final Identifier tableIdentifier = Identifier.toIdentifier( attributeSource.getExplicitCollectionTableName() );
-			Table collectionTable = metadata.getDatabase().getDefaultSchema().locateTable( tableIdentifier );
+		final Schema.Name schemaName = Helper.determineDatabaseSchemaName(
+				attributeSource.getExplicitSchemaName(),
+				attributeSource.getExplicitCatalogName(),
+				currentBindingContext
+		);
+		final Schema schema = metadata.getDatabase().locateSchema( schemaName );
+
+		final String tableName = attributeSource.getExplicitCollectionTableName();
+		if ( StringHelper.isNotEmpty( tableName ) ) {
+			final Identifier tableIdentifier = Identifier.toIdentifier( currentBindingContext.getNamingStrategy().tableName(
+					tableName
+			) );
+			Table collectionTable = schema.locateTable( tableIdentifier );
 			if ( collectionTable == null ) {
-				collectionTable = metadata.getDatabase().getDefaultSchema().createTable( tableIdentifier );
+				collectionTable = schema.createTable( tableIdentifier );
 			}
 			pluralAttributeBinding.setCollectionTable( collectionTable );
 		}
 		else {
-			// todo : we need to infer the name, but that requires possibly knowing the other side
+			// todo : not sure wel have all the needed info here in all cases, specifically when needing to know the "other side"
+			final EntityBinding owner = pluralAttributeBinding.getContainer().seekEntityBinding();
+			final String ownerTableLogicalName = Table.class.isInstance( owner.getPrimaryTable() )
+					? Table.class.cast( owner.getPrimaryTable() ).getTableName().getName()
+					: null;
+			String collectionTableName = currentBindingContext.getNamingStrategy().collectionTableName(
+					owner.getEntity().getName(),
+					ownerTableLogicalName,
+					null,	// todo : here
+					null,	// todo : and here
+					pluralAttributeBinding.getContainer().getPathBase() + '.' + attributeSource.getName()
+			);
+			if ( currentBindingContext.isGloballyQuotedIdentifiers() ) {
+				collectionTableName = StringHelper.quote( collectionTableName );
+			}
+			pluralAttributeBinding.setCollectionTable( schema.locateOrCreateTable( Identifier.toIdentifier( collectionTableName ) ) );
 		}
+
+		if ( StringHelper.isNotEmpty( attributeSource.getCollectionTableComment() ) ) {
+			pluralAttributeBinding.getCollectionTable().addComment( attributeSource.getCollectionTableComment() );
+		}
+
+		if ( StringHelper.isNotEmpty( attributeSource.getCollectionTableCheck() ) ) {
+			pluralAttributeBinding.getCollectionTable().addCheckConstraint( attributeSource.getCollectionTableCheck() );
+		}
+
+		pluralAttributeBinding.setWhere( attributeSource.getWhere() );
 	}
 
 	private void bindCollectionKey(
 			PluralAttributeSource attributeSource,
 			AbstractPluralAttributeBinding pluralAttributeBinding) {
+		pluralAttributeBinding.getCollectionKey().prepareForeignKey(
+				attributeSource.getKeySource().getExplicitForeignKeyName(),
+				null  // todo : handle secondary table names
+		);
+		pluralAttributeBinding.getCollectionKey().getForeignKey().setDeleteRule(
+				attributeSource.getKeySource().getOnDeleteAction()
+		);
+		// todo : need to bind "relational values", account for property-ref
+	}
+
+	private void bindCollectionElement(
+			PluralAttributeSource attributeSource,
+			AbstractPluralAttributeBinding pluralAttributeBinding) {
+		final PluralAttributeElementSource elementSource = attributeSource.getElementSource();
+		if ( elementSource.getNature() == PluralAttributeElementNature.BASIC ) {
+			final BasicPluralAttributeElementSource basicElementSource = (BasicPluralAttributeElementSource) elementSource;
+			final BasicCollectionElement basicCollectionElement = (BasicCollectionElement) pluralAttributeBinding.getCollectionElement();
+			resolveTypeInformation(
+					basicElementSource.getExplicitHibernateTypeSource(),
+					pluralAttributeBinding.getAttribute(),
+					basicCollectionElement
+			);
+			// todo : temp
+			return;
+		}
 		// todo : implement
+		throw new NotYetImplementedException(
+				String.format(
+						"Support for collection elements of type %s not yet implemented",
+						elementSource.getNature()
+				)
+		);
+	}
+
+	private void bindCollectionIndex(
+			PluralAttributeSource attributeSource,
+			AbstractPluralAttributeBinding pluralAttributeBinding) {
+		if ( attributeSource.getPluralAttributeNature() != PluralAttributeNature.LIST
+				&& attributeSource.getPluralAttributeNature() != PluralAttributeNature.MAP ) {
+			return;
+		}
+
+		// todo : implement
+		throw new NotYetImplementedException();
 	}
 
 	private void bindSortingAndOrdering(
@@ -536,8 +640,8 @@ public class Binder {
 			SingularAttributeSource attributeSource,
 			AttributeBindingContainer attributeBindingContainer) {
 		final SingularAttribute existingAttribute = attributeBindingContainer.getAttributeContainer().locateSingularAttribute(
-                attributeSource.getName()
-        );
+				attributeSource.getName()
+		);
 		final SingularAttribute attribute;
 		if ( existingAttribute != null ) {
 			attribute = existingAttribute;
@@ -590,9 +694,28 @@ public class Binder {
 	private void resolveTypeInformation(ExplicitHibernateTypeSource typeSource, BasicAttributeBinding attributeBinding) {
 		final Class<?> attributeJavaType = determineJavaType( attributeBinding.getAttribute() );
 		if ( attributeJavaType != null ) {
-			attributeBinding.getHibernateTypeDescriptor().setJavaTypeName( attributeJavaType.getName() );
 			attributeBinding.getAttribute()
 					.resolveType( currentBindingContext.makeJavaType( attributeJavaType.getName() ) );
+		}
+
+		resolveTypeInformation( typeSource, attributeBinding.getHibernateTypeDescriptor(), attributeJavaType );
+	}
+
+	private void resolveTypeInformation(
+			ExplicitHibernateTypeSource typeSource,
+			PluralAttribute attribute,
+			BasicCollectionElement collectionElement) {
+		final Class<?> attributeJavaType = determineJavaType( attribute );
+
+		resolveTypeInformation( typeSource, collectionElement.getHibernateTypeDescriptor(), attributeJavaType );
+	}
+
+	private void resolveTypeInformation(
+			ExplicitHibernateTypeSource typeSource,
+			HibernateTypeDescriptor hibernateTypeDescriptor,
+			Class<?> discoveredJavaType) {
+		if ( discoveredJavaType != null ) {
+			hibernateTypeDescriptor.setJavaTypeName( discoveredJavaType.getName() );
 		}
 
 		final String explicitTypeName = typeSource.getName();
@@ -600,26 +723,26 @@ public class Binder {
 			final TypeDef typeDef = currentBindingContext.getMetadataImplementor()
 					.getTypeDefinition( explicitTypeName );
 			if ( typeDef != null ) {
-				attributeBinding.getHibernateTypeDescriptor().setExplicitTypeName( typeDef.getTypeClass() );
-				attributeBinding.getHibernateTypeDescriptor().getTypeParameters().putAll( typeDef.getParameters() );
+				hibernateTypeDescriptor.setExplicitTypeName( typeDef.getTypeClass() );
+				hibernateTypeDescriptor.getTypeParameters().putAll( typeDef.getParameters() );
 			}
 			else {
-				attributeBinding.getHibernateTypeDescriptor().setExplicitTypeName( explicitTypeName );
+				hibernateTypeDescriptor.setExplicitTypeName( explicitTypeName );
 			}
 			final Map<String, String> parameters = typeSource.getParameters();
 			if ( parameters!=null) {
-				attributeBinding.getHibernateTypeDescriptor().getTypeParameters().putAll( parameters );
+				hibernateTypeDescriptor.getTypeParameters().putAll( parameters );
 			}
 		}
 		else {
-			if ( attributeJavaType == null ) {
+			if ( discoveredJavaType == null ) {
 				// we will have problems later determining the Hibernate Type to use.  Should we throw an
 				// exception now?  Might be better to get better contextual info
 			}
 		}
 	}
 
-	private Class<?> determineJavaType(final Attribute attribute) {
+	private Class<?> determineJavaType(final SingularAttribute attribute) {
 		try {
 			final Class<?> ownerClass = attribute.getAttributeContainer().getClassReference();
 			AttributeJavaTypeDeterminerDelegate delegate = new AttributeJavaTypeDeterminerDelegate( attribute.getName() );
@@ -648,6 +771,76 @@ public class Binder {
 					break;
 				}
 			}
+		}
+	}
+
+	private Class<?> determineJavaType(PluralAttribute attribute) {
+		try {
+			final Class<?> ownerClass = attribute.getAttributeContainer().getClassReference();
+			PluralAttributeJavaTypeDeterminerDelegate delegate = new PluralAttributeJavaTypeDeterminerDelegate( ownerClass, attribute.getName() );
+			BeanInfoHelper.visitBeanInfo( ownerClass, delegate );
+			return delegate.javaType;
+		}
+		catch ( Exception ignore ) {
+			// todo : log it?
+		}
+		return null;
+	}
+
+	private class PluralAttributeJavaTypeDeterminerDelegate implements BeanInfoHelper.BeanInfoDelegate {
+		private final Class<?> ownerClass;
+		private final String attributeName;
+
+		private Class<?> javaType = null;
+
+		private PluralAttributeJavaTypeDeterminerDelegate(Class<?> ownerClass, String attributeName) {
+			this.ownerClass = ownerClass;
+			this.attributeName = attributeName;
+		}
+
+		@Override
+		public void processBeanInfo(BeanInfo beanInfo) throws Exception {
+			for ( PropertyDescriptor propertyDescriptor : beanInfo.getPropertyDescriptors() ) {
+				if ( propertyDescriptor.getName().equals( attributeName ) ) {
+					javaType = extractCollectionComponentType( beanInfo, propertyDescriptor );
+					break;
+				}
+			}
+		}
+
+		@SuppressWarnings( {"unchecked"})
+		private Class<?> extractCollectionComponentType(BeanInfo beanInfo, PropertyDescriptor propertyDescriptor) {
+			final java.lang.reflect.Type collectionAttributeType;
+			if ( propertyDescriptor.getReadMethod() != null ) {
+				collectionAttributeType = propertyDescriptor.getReadMethod().getGenericReturnType();
+			}
+			else if ( propertyDescriptor.getWriteMethod() != null ) {
+				collectionAttributeType = propertyDescriptor.getWriteMethod().getGenericParameterTypes()[0];
+			}
+			else {
+				// we need to look for the field and look at it...
+				try {
+					collectionAttributeType = ownerClass.getField( propertyDescriptor.getName() ).getGenericType();
+				}
+				catch (Exception e) {
+					return null;
+				}
+			}
+
+			if ( ParameterizedType.class.isInstance( collectionAttributeType ) ) {
+				final java.lang.reflect.Type[] types = ( (ParameterizedType) collectionAttributeType ).getActualTypeArguments();
+				if ( types == null ) {
+					return null;
+				}
+				else if ( types.length == 1 ) {
+					return (Class<?>) types[0];
+				}
+				else if ( types.length == 2 ) {
+					// Map<K,V>
+					return (Class<?>) types[1];
+				}
+			}
+			return null;
 		}
 	}
 
@@ -718,17 +911,6 @@ public class Binder {
 	}
 
 	private Table createTable(EntityBinding entityBinding, TableSource tableSource) {
-		final String schemaName = StringHelper.isEmpty( tableSource.getExplicitSchemaName() )
-				? currentBindingContext.getMappingDefaults().getSchemaName()
-				: currentBindingContext.isGloballyQuotedIdentifiers()
-				? StringHelper.quote( tableSource.getExplicitSchemaName() )
-				: tableSource.getExplicitSchemaName();
-		final String catalogName = StringHelper.isEmpty( tableSource.getExplicitCatalogName() )
-				? currentBindingContext.getMappingDefaults().getCatalogName()
-				: currentBindingContext.isGloballyQuotedIdentifiers()
-				? StringHelper.quote( tableSource.getExplicitCatalogName() )
-				: tableSource.getExplicitCatalogName();
-
 		String tableName = tableSource.getExplicitTableName();
 		if ( StringHelper.isEmpty( tableName ) ) {
 			tableName = currentBindingContext.getNamingStrategy()
@@ -741,9 +923,14 @@ public class Binder {
 			tableName = StringHelper.quote( tableName );
 		}
 
+		final Schema.Name databaseSchemaName = Helper.determineDatabaseSchemaName(
+				tableSource.getExplicitSchemaName(),
+				tableSource.getExplicitCatalogName(),
+				currentBindingContext
+		);
 		return currentBindingContext.getMetadataImplementor()
 				.getDatabase()
-				.getSchema( new Schema.Name( schemaName, catalogName ) )
+				.locateSchema( databaseSchemaName )
 				.locateOrCreateTable( Identifier.toIdentifier( tableName ) );
 	}
 
@@ -847,5 +1034,4 @@ public class Binder {
 	private void processFetchProfiles(EntitySource entitySource, EntityBinding entityBinding) {
 		// todo : process the entity-local fetch-profile declaration
 	}
-
 }

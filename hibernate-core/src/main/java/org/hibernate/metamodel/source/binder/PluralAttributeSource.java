@@ -33,7 +33,14 @@ public interface PluralAttributeSource extends AssociationAttributeSource {
 
 	public PluralAttributeElementSource getElementSource();
 
+	public String getExplicitSchemaName();
+	public String getExplicitCatalogName();
 	public String getExplicitCollectionTableName();
+
+	public String getCollectionTableComment();
+	public String getCollectionTableCheck();
+
+	public String getWhere();
 
 	public boolean isInverse();
 }

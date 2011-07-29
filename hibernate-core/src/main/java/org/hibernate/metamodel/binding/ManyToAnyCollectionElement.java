@@ -24,10 +24,16 @@
 package org.hibernate.metamodel.binding;
 
 /**
+ * @author Steve Ebersole
  * @author Gail Badner
  */
-public class ManyToAnyCollectionElement extends CollectionElement {
+public class ManyToAnyCollectionElement extends AbstractCollectionElement {
 	ManyToAnyCollectionElement(AbstractPluralAttributeBinding binding) {
-		super( binding, CollectionElementNature.MANY_TO_ANY );
+		super( binding );
+	}
+
+	@Override
+	public CollectionElementNature getCollectionElementNature() {
+		return CollectionElementNature.MANY_TO_ANY;
 	}
 }

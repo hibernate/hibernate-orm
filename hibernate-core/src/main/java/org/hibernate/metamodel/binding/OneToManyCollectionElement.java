@@ -24,11 +24,17 @@
 package org.hibernate.metamodel.binding;
 
 /**
+ * @author Steve Ebersole
  * @author Gail Badner
  */
-public class OneToManyCollectionElement extends CollectionElement {
+public class OneToManyCollectionElement extends AbstractCollectionElement {
 
 	OneToManyCollectionElement(AbstractPluralAttributeBinding binding) {
-		super( binding, CollectionElementNature.ONE_TO_MANY );
+		super( binding );
+	}
+
+	@Override
+	public CollectionElementNature getCollectionElementNature() {
+		return CollectionElementNature.ONE_TO_MANY;
 	}
 }

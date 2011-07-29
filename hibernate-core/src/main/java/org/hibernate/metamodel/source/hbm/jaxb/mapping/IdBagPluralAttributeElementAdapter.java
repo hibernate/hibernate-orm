@@ -21,28 +21,23 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.binding;
-
-import org.hibernate.metamodel.relational.TableSpecification;
-import org.hibernate.persister.collection.CollectionPersister;
+package org.hibernate.metamodel.source.hbm.jaxb.mapping;
 
 /**
+ * Adaptive implementation of the {@link PluralAttributeElement} for {@code <idbag/>} mappings which
+ * do not support all the configuration available on other collection mappings.
+ *
  * @author Steve Ebersole
  */
-public interface PluralAttributeBinding extends AttributeBinding, AssociationAttributeBinding {
-	// todo : really it is the element (and/or index) that can be associative not the collection itself...
+public abstract class IdBagPluralAttributeElementAdapter implements PluralAttributeElement {
+	public XMLOneToManyElement getOneToMany() {
+		// idbag collections cannot contain 1-m mappings.
+		return null;
+	}
 
-	public CollectionKey getCollectionKey();
-
-	public AbstractCollectionElement getCollectionElement();
-
-	public TableSpecification getCollectionTable();
-
-	public boolean isMutable();
-
-	public String getCacheRegionName();
-
-	public String getCacheConcurrencyStrategy();
-
-	public Class<CollectionPersister> getCollectionPersisterClass();
+	@Override
+	public boolean isInverse() {
+		// idbag collections own the association, and are therefore non-inverse
+		return false;
+	}
 }

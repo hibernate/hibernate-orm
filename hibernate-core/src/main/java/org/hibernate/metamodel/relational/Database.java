@@ -64,7 +64,7 @@ public class Database {
 		return schemaMap.get( implicitSchemaName );
 	}
 
-	public Schema getSchema(Schema.Name name) {
+	public Schema locateSchema(Schema.Name name) {
 		if ( name.getSchema() == null && name.getCatalog() == null ) {
 			return getDefaultSchema();
 		}
@@ -83,11 +83,11 @@ public class Database {
 	}
 
 	public Schema getSchema(Identifier schema, Identifier catalog) {
-		return getSchema( new Schema.Name( schema, catalog ) );
+		return locateSchema( new Schema.Name( schema, catalog ) );
 	}
 
 	public Schema getSchema(String schema, String catalog) {
-		return getSchema( new Schema.Name( Identifier.toIdentifier( schema ), Identifier.toIdentifier( catalog ) ) );
+		return locateSchema( new Schema.Name( Identifier.toIdentifier( schema ), Identifier.toIdentifier( catalog ) ) );
 	}
 
 	public void addAuxiliaryDatabaseObject(AuxiliaryDatabaseObject auxiliaryDatabaseObject) {

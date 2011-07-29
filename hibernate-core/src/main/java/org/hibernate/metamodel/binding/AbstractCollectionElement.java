@@ -26,22 +26,20 @@ package org.hibernate.metamodel.binding;
 import org.hibernate.metamodel.relational.Value;
 
 /**
- * TODO : javadoc
+ * Basic contract describing the commonality between the various types of collection element mappings.
  *
  * @author Steve Ebersole
  */
-public abstract class CollectionElement {
+public abstract class AbstractCollectionElement {
 	private final AbstractPluralAttributeBinding collectionBinding;
-	private final CollectionElementNature collectionElementNature;
-
-	private final HibernateTypeDescriptor hibernateTypeDescriptor = new HibernateTypeDescriptor();
 
 	private Value elementValue;
 
-	CollectionElement(AbstractPluralAttributeBinding collectionBinding, CollectionElementNature collectionElementNature) {
+	AbstractCollectionElement(AbstractPluralAttributeBinding collectionBinding) {
 		this.collectionBinding = collectionBinding;
-		this.collectionElementNature = collectionElementNature;
 	}
+
+	public abstract CollectionElementNature getCollectionElementNature();
 
 	public AbstractPluralAttributeBinding getCollectionBinding() {
 		return collectionBinding;
@@ -49,13 +47,5 @@ public abstract class CollectionElement {
 
 	public Value getElementValue() {
 		return elementValue;
-	}
-
-	public final CollectionElementNature getCollectionElementNature() {
-		return collectionElementNature;
-	}
-
-	public HibernateTypeDescriptor getHibernateTypeDescriptor() {
-		return hibernateTypeDescriptor;
 	}
 }

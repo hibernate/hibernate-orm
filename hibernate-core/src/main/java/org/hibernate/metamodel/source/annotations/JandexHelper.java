@@ -44,6 +44,7 @@ import org.jboss.jandex.MethodInfo;
 import org.jboss.jandex.Type;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 
@@ -362,5 +363,26 @@ public class JandexHelper {
 		}
 
 		return type.cast( returnValue );
+	}
+
+	public static AnnotationInstance locatePojoTuplizerAnnotation(ClassInfo classInfo) {
+		final AnnotationInstance tuplizersAnnotation = getSingleAnnotation(
+				classInfo, HibernateDotNames.TUPLIZERS
+		);
+		if ( tuplizersAnnotation == null ) {
+			return null;
+		}
+
+		AnnotationInstance[] annotations = getValue(
+				tuplizersAnnotation,
+				"value",
+				AnnotationInstance[].class
+		);
+		for ( AnnotationInstance tuplizerAnnotation : annotations ) {
+			if ( EntityMode.valueOf( tuplizerAnnotation.value( "entityModeType" ).asEnum() ) == EntityMode.POJO ) {
+				return tuplizerAnnotation;
+			}
+		}
+		return null;
 	}
 }

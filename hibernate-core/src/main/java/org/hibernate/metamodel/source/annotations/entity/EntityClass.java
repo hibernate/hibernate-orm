@@ -23,14 +23,14 @@
  */
 package org.hibernate.metamodel.source.annotations.entity;
 
+import javax.persistence.AccessType;
+import javax.persistence.DiscriminatorType;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import javax.persistence.AccessType;
-import javax.persistence.DiscriminatorType;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
@@ -38,7 +38,6 @@ import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 
 import org.hibernate.AnnotationException;
-import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.OptimisticLockType;
@@ -54,10 +53,8 @@ import org.hibernate.metamodel.source.annotations.HibernateDotNames;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.JandexHelper;
 import org.hibernate.metamodel.source.annotations.attribute.ColumnValues;
-import org.hibernate.metamodel.source.annotations.attribute.DerivedValueSourceImpl;
 import org.hibernate.metamodel.source.annotations.attribute.FormulaValue;
 import org.hibernate.metamodel.source.binder.ConstraintSource;
-import org.hibernate.metamodel.source.binder.DerivedValueSource;
 import org.hibernate.metamodel.source.binder.TableSource;
 
 /**
@@ -722,32 +719,11 @@ public class EntityClass extends ConfiguredClass {
 	private String determineCustomTuplizer() {
 		// Custom tuplizer
 		String customTuplizer = null;
-		final AnnotationInstance pojoTuplizerAnnotation = locatePojoTuplizerAnnotation();
+		final AnnotationInstance pojoTuplizerAnnotation = JandexHelper.locatePojoTuplizerAnnotation( getClassInfo() );
 		if ( pojoTuplizerAnnotation != null ) {
 			customTuplizer = pojoTuplizerAnnotation.value( "impl" ).asString();
 		}
 		return customTuplizer;
-	}
-
-	private AnnotationInstance locatePojoTuplizerAnnotation() {
-		final AnnotationInstance tuplizersAnnotation = JandexHelper.getSingleAnnotation(
-				getClassInfo(), HibernateDotNames.TUPLIZERS
-		);
-		if ( tuplizersAnnotation == null ) {
-			return null;
-		}
-
-		AnnotationInstance[] annotations = JandexHelper.getValue(
-				tuplizersAnnotation,
-				"value",
-				AnnotationInstance[].class
-		);
-		for ( AnnotationInstance tuplizerAnnotation : annotations ) {
-			if ( EntityMode.valueOf( tuplizerAnnotation.value( "entityModeType" ).asEnum() ) == EntityMode.POJO ) {
-				return tuplizerAnnotation;
-			}
-		}
-		return null;
 	}
 
 	private void processProxyGeneration() {

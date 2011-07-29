@@ -41,8 +41,8 @@ import org.hibernate.metamodel.relational.Table;
  * @author Steve Ebersole
  */
 public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBinding implements PluralAttributeBinding {
-	private CollectionKey collectionKey;
-	private CollectionElement collectionElement;
+	private final CollectionKey collectionKey;
+	private final CollectionElement collectionElement;
 
 	private Table collectionTable;
 
@@ -81,6 +81,7 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 			PluralAttribute attribute,
 			CollectionElementNature collectionElementNature) {
 		super( container, attribute );
+		this.collectionKey = new CollectionKey( this );
 		this.collectionElement = interpretNature( collectionElementNature );
 	}
 
@@ -158,10 +159,6 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 
 	public CollectionKey getCollectionKey() {
 		return collectionKey;
-	}
-
-	public void setCollectionKey(CollectionKey collectionKey) {
-		this.collectionKey = collectionKey;
 	}
 
 	public CollectionElement getCollectionElement() {

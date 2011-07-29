@@ -23,17 +23,16 @@
  */
 package org.hibernate.metamodel.source.binder;
 
+import java.util.List;
+
+import org.hibernate.metamodel.relational.ForeignKey;
+
 /**
  * @author Steve Ebersole
  */
-public interface PluralAttributeSource extends AssociationAttributeSource {
-	public PluralAttributeNature getPluralAttributeNature();
-
-	public PluralAttributeKeySource getKeySource();
-
-	public PluralAttributeElementSource getElementSource();
-
-	public String getExplicitCollectionTableName();
-
-	public boolean isInverse();
+public interface PluralAttributeKeySource {
+	public List<RelationalValueSource> getValueSources();
+	public String getExplicitForeignKeyName();
+	public ForeignKey.ReferentialAction getOnDeleteAction();
+	public String getReferencedEntityAttributeName();
 }

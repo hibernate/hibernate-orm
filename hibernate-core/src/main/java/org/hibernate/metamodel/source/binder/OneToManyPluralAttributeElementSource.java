@@ -26,14 +26,7 @@ package org.hibernate.metamodel.source.binder;
 /**
  * @author Steve Ebersole
  */
-public interface PluralAttributeSource extends AssociationAttributeSource {
-	public PluralAttributeNature getPluralAttributeNature();
-
-	public PluralAttributeKeySource getKeySource();
-
-	public PluralAttributeElementSource getElementSource();
-
-	public String getExplicitCollectionTableName();
-
-	public boolean isInverse();
+public interface OneToManyPluralAttributeElementSource extends PluralAttributeElementSource {
+	public String getReferencedEntityName();
+	public boolean isNotFoundAnException();
 }

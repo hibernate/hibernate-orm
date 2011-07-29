@@ -21,19 +21,32 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.binder;
+package org.hibernate.metamodel.source.hbm;
+
+import org.hibernate.metamodel.source.LocalBindingContext;
+import org.hibernate.metamodel.source.binder.AttributeSourceContainer;
+import org.hibernate.metamodel.source.binder.PluralAttributeSource;
 
 /**
  * @author Steve Ebersole
  */
-public interface PluralAttributeSource extends AssociationAttributeSource {
-	public PluralAttributeNature getPluralAttributeNature();
+public abstract class AbstractPluralAttributeSourceImpl implements PluralAttributeSource {
+	private final AttributeSourceContainer container;
 
-	public PluralAttributeKeySource getKeySource();
+	protected AbstractPluralAttributeSourceImpl(AttributeSourceContainer container) {
+		this.container = container;
+	}
 
-	public PluralAttributeElementSource getElementSource();
+	protected AttributeSourceContainer container() {
+		return container;
+	}
 
-	public String getExplicitCollectionTableName();
+	protected LocalBindingContext bindingContext() {
+		return container().getLocalBindingContext();
+	}
 
-	public boolean isInverse();
+	@Override
+	public boolean isSingular() {
+		return false;
+	}
 }

@@ -30,6 +30,7 @@ import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.domain.AttributeContainer;
 import org.hibernate.metamodel.domain.Component;
 import org.hibernate.metamodel.domain.PluralAttribute;
+import org.hibernate.metamodel.domain.PluralAttributeNature;
 import org.hibernate.metamodel.domain.SingularAttribute;
 import org.hibernate.metamodel.source.MetaAttributeContext;
 
@@ -128,7 +129,16 @@ public class ComponentAttributeBinding extends AbstractSingularAttributeBinding 
 
 	@Override
 	public BagBinding makeBagAttributeBinding(PluralAttribute attribute, CollectionElementNature nature) {
+		Helper.checkPluralAttributeNature( attribute, PluralAttributeNature.BAG );
 		final BagBinding binding = new BagBinding( this, attribute, nature );
+		registerAttributeBinding( attribute.getName(), binding );
+		return binding;
+	}
+
+	@Override
+	public SetBinding makeSetAttributeBinding(PluralAttribute attribute, CollectionElementNature nature) {
+		Helper.checkPluralAttributeNature( attribute, PluralAttributeNature.SET );
+		final SetBinding binding = new SetBinding( this, attribute, nature );
 		registerAttributeBinding( attribute.getName(), binding );
 		return binding;
 	}

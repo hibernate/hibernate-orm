@@ -21,19 +21,27 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.binder;
+package org.hibernate.metamodel.binding;
+
+import org.hibernate.AssertionFailure;
+import org.hibernate.metamodel.domain.PluralAttribute;
+import org.hibernate.metamodel.domain.PluralAttributeNature;
 
 /**
+ * Helper utilities specific to the binding package.
+ *
  * @author Steve Ebersole
  */
-public interface PluralAttributeSource extends AssociationAttributeSource {
-	public PluralAttributeNature getPluralAttributeNature();
-
-	public PluralAttributeKeySource getKeySource();
-
-	public PluralAttributeElementSource getElementSource();
-
-	public String getExplicitCollectionTableName();
-
-	public boolean isInverse();
+public class Helper {
+	public static void checkPluralAttributeNature(PluralAttribute attribute, PluralAttributeNature expected) {
+		if ( attribute.getNature() != expected ) {
+			throw new AssertionFailure(
+					String.format(
+							"Mismatched collection natures; expecting %s, but found %s",
+							expected.getName(),
+							attribute.getNature().getName()
+					)
+			);
+		}
+	}
 }

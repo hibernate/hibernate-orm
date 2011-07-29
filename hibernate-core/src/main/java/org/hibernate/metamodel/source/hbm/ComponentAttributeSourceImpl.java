@@ -26,6 +26,8 @@ package org.hibernate.metamodel.source.hbm;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.EntityMode;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.Value;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.source.LocalBindingContext;
@@ -43,6 +45,7 @@ import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLManyToOneElement;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLOneToManyElement;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLOneToOneElement;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLPropertyElement;
+import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLTuplizerElement;
 
 /**
  * @author Steve Ebersole
@@ -61,7 +64,9 @@ public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
 		this.componentElement = componentElement;
 		this.parentContainer = parentContainer;
 
-		this.componentClassReference = bindingContext.makeClassReference( componentElement.getClazz() );
+		this.componentClassReference = bindingContext.makeClassReference(
+				bindingContext.qualifyClassName( componentElement.getClazz() )
+		);
 		this.path = parentContainer.getPath() + '.' + componentElement.getName();
 	}
 
@@ -88,6 +93,20 @@ public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
 	@Override
 	public String getParentReferenceAttributeName() {
 		return componentElement.getParent() == null ? null : componentElement.getParent().getName();
+	}
+
+	@Override
+	public String getExplicitTuplizerClassName() {
+		if ( componentElement.getTuplizer() == null ) {
+			return null;
+		}
+		final EntityMode entityMode = StringHelper.isEmpty( componentElement.getClazz() ) ? EntityMode.MAP : EntityMode.POJO;
+		for ( XMLTuplizerElement tuplizerElement : componentElement.getTuplizer() ) {
+			if ( entityMode == EntityMode.parse( tuplizerElement.getEntityMode() ) ) {
+				return tuplizerElement.getClazz();
+			}
+		}
+		return null;
 	}
 
 	@Override

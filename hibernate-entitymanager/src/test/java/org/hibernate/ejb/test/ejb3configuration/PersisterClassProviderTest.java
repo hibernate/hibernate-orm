@@ -20,12 +20,11 @@
  */
 package org.hibernate.ejb.test.ejb3configuration;
 
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.PersistenceException;
 import java.io.Serializable;
 import java.util.Comparator;
 import java.util.Map;
-
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.PersistenceException;
 
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
@@ -45,11 +44,11 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metamodel.binding.EntityBinding;
-import org.hibernate.metamodel.binding.AbstractPluralAttributeBinding;
-import org.hibernate.persister.internal.PersisterClassResolverInitiator;
-import org.hibernate.persister.spi.PersisterClassResolver;
+import org.hibernate.metamodel.binding.PluralAttributeBinding;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.internal.PersisterClassResolverInitiator;
+import org.hibernate.persister.spi.PersisterClassResolver;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.Type;
@@ -92,7 +91,7 @@ public class PersisterClassProviderTest extends junit.framework.TestCase {
 		}
 
 		@Override
-		public Class<? extends CollectionPersister> getCollectionPersisterClass(AbstractPluralAttributeBinding metadata) {
+		public Class<? extends CollectionPersister> getCollectionPersisterClass(PluralAttributeBinding metadata) {
 			return null;
 		}
 	}

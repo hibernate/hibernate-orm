@@ -23,26 +23,64 @@
  */
 package org.hibernate.metamodel.binding;
 
-import org.hibernate.metamodel.relational.Table;
-import org.hibernate.persister.collection.CollectionPersister;
+import javax.persistence.ElementCollection;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
+ * @author Gail Badner
  * @author Steve Ebersole
  */
-public interface PluralAttributeBinding extends AttributeBinding, AssociationAttributeBinding {
-	// todo : really it is the element (and/or index) that can be associative not the collection itself...
+@Entity
+public class EntityWithBasicCollections {
+	private Long id;
+	private String name;
+	private Collection<String> theBag = new ArrayList<String>();
+	private Set<String> theSet = new HashSet<String>();
 
-	public CollectionKey getCollectionKey();
+	public EntityWithBasicCollections() {
+	}
 
-	public CollectionElement getCollectionElement();
+	public EntityWithBasicCollections(String name) {
+		this.name = name;
+	}
 
-	public Table getCollectionTable();
+	@Id
+	public Long getId() {
+		return id;
+	}
 
-	public boolean isMutable();
+	public void setId(Long id) {
+		this.id = id;
+	}
 
-	public String getCacheRegionName();
+	public String getName() {
+		return name;
+	}
 
-	public String getCacheConcurrencyStrategy();
+	public void setName(String name) {
+		this.name = name;
+	}
 
-	public Class<CollectionPersister> getCollectionPersisterClass();
+	@ElementCollection
+	public Collection<String> getTheBag() {
+		return theBag;
+	}
+
+	public void setTheBag(Collection<String> theBag) {
+		this.theBag = theBag;
+	}
+
+	@ElementCollection
+	public Set<String> getTheSet() {
+		return theSet;
+	}
+
+	public void setTheSet(Set<String> theSet) {
+		this.theSet = theSet;
+	}
 }

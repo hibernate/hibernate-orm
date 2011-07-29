@@ -25,8 +25,8 @@ package org.hibernate.persister.spi;
 
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.metamodel.binding.AbstractPluralAttributeBinding;
 import org.hibernate.metamodel.binding.EntityBinding;
+import org.hibernate.metamodel.binding.PluralAttributeBinding;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.Service;
@@ -80,5 +80,5 @@ public interface PersisterClassResolver extends Service {
 	 *
 	 * @return The collection persister class to use
 	 */
-	Class<? extends CollectionPersister> getCollectionPersisterClass(AbstractPluralAttributeBinding metadata);
+	Class<? extends CollectionPersister> getCollectionPersisterClass(PluralAttributeBinding metadata);
 }

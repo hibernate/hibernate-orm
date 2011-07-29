@@ -21,47 +21,12 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.binding;
-
-import java.util.HashSet;
-import java.util.Set;
+package org.hibernate.metamodel.source.binder;
 
 /**
- * @author Gail Badner
+ * @author Steve Ebersole
  */
-public class EntityWithCollection {
-	private Long id;
-	private String name;
-	Set<String> otherNames = new HashSet<String>();
-
-	public EntityWithCollection() {
-	}
-
-	public EntityWithCollection(String name) {
-		this.name = name;
-	}
-
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public Set<String> getOtherNames() {
-		return otherNames;
-	}
-
-	public void setOtherNames(Set<String> otherNames) {
-		this.otherNames = otherNames;
-	}
+public interface Orderable {
+	public boolean isOrdered();
+	public String getOrder();
 }

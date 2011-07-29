@@ -28,13 +28,11 @@ import java.util.Comparator;
 import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.metamodel.binding.AbstractPluralAttributeBinding;
 import org.hibernate.metamodel.binding.EntityBinding;
+import org.hibernate.metamodel.binding.PluralAttributeBinding;
 import org.hibernate.type.VersionType;
 
 /**
- * {@inheritDoc}
- *
  * @author Steve Ebersole
  */
 public class CacheDataDescriptionImpl implements CacheDataDescription {
@@ -84,7 +82,7 @@ public class CacheDataDescriptionImpl implements CacheDataDescription {
 		);
 	}
 
-	public static CacheDataDescriptionImpl decode(AbstractPluralAttributeBinding model) {
+	public static CacheDataDescriptionImpl decode(PluralAttributeBinding model) {
 		return new CacheDataDescriptionImpl(
 				model.isMutable(),
 				model.getContainer().seekEntityBinding().isVersioned(),

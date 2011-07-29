@@ -450,15 +450,77 @@ public class Binder {
 					: attributeBindingContainer.getAttributeContainer().createBag( attributeSource.getName() );
 			pluralAttributeBinding = attributeBindingContainer.makeBagAttributeBinding(
 					attribute,
-					convert( attributeSource.getPluralAttributeElementNature() )
+					convert( attributeSource.getElementSource().getNature() )
+			);
+		}
+		else if ( attributeSource.getPluralAttributeNature() == PluralAttributeNature.SET ) {
+			final PluralAttribute attribute = existingAttribute != null
+					? existingAttribute
+					: attributeBindingContainer.getAttributeContainer().createSet( attributeSource.getName() );
+			pluralAttributeBinding = attributeBindingContainer.makeSetAttributeBinding(
+					attribute,
+					convert( attributeSource.getElementSource().getNature() )
 			);
 		}
 		else {
 			// todo : implement other collection types
-			throw new NotYetImplementedException( "Collections other than bag not yet implmented :(" );
+			throw new NotYetImplementedException( "Collections other than bag not yet implemented :(" );
 		}
 
 		doBasicAttributeBinding( attributeSource, pluralAttributeBinding );
+
+		bindCollectionTable( attributeSource, pluralAttributeBinding );
+		bindCollectionKey( attributeSource, pluralAttributeBinding );
+		bindSortingAndOrdering( attributeSource, pluralAttributeBinding );
+
+		metadata.addCollection( pluralAttributeBinding );
+	}
+
+	private void bindCollectionTable(
+			PluralAttributeSource attributeSource,
+			AbstractPluralAttributeBinding pluralAttributeBinding) {
+		if ( attributeSource.getElementSource().getNature() == PluralAttributeElementNature.ONE_TO_MANY ) {
+			return;
+		}
+
+		if ( StringHelper.isNotEmpty( attributeSource.getExplicitCollectionTableName() ) ) {
+			final Identifier tableIdentifier = Identifier.toIdentifier( attributeSource.getExplicitCollectionTableName() );
+			Table collectionTable = metadata.getDatabase().getDefaultSchema().locateTable( tableIdentifier );
+			if ( collectionTable == null ) {
+				collectionTable = metadata.getDatabase().getDefaultSchema().createTable( tableIdentifier );
+			}
+			pluralAttributeBinding.setCollectionTable( collectionTable );
+		}
+		else {
+			// todo : we need to infer the name, but that requires possibly knowing the other side
+		}
+	}
+
+	private void bindCollectionKey(
+			PluralAttributeSource attributeSource,
+			AbstractPluralAttributeBinding pluralAttributeBinding) {
+		// todo : implement
+	}
+
+	private void bindSortingAndOrdering(
+			PluralAttributeSource attributeSource,
+			AbstractPluralAttributeBinding pluralAttributeBinding) {
+		if ( Sortable.class.isInstance( attributeSource ) ) {
+			final Sortable sortable = Sortable.class.cast( attributeSource );
+			if ( sortable.isSorted() ) {
+				// todo : handle setting comparator
+
+				// and then return because sorting and ordering are mutually exclusive
+				return;
+			}
+		}
+
+		if ( Orderable.class.isInstance( attributeSource ) ) {
+			final Orderable orderable = Orderable.class.cast( attributeSource );
+			if ( orderable.isOrdered() ) {
+				// todo : handle setting ordering
+			}
+		}
 	}
 
 	private void doBasicAttributeBinding(AttributeSource attributeSource, AttributeBinding attributeBinding) {

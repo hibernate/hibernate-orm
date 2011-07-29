@@ -28,6 +28,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.binding.CustomSQL;
@@ -41,12 +42,17 @@ import org.hibernate.metamodel.source.binder.SubclassEntitySource;
 import org.hibernate.metamodel.source.binder.TableSource;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.EntityElement;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLAnyElement;
+import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLBagElement;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLComponentElement;
+import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLIdbagElement;
+import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLListElement;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLManyToManyElement;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLManyToOneElement;
+import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLMapElement;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLOneToManyElement;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLOneToOneElement;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLPropertyElement;
+import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLSetElement;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLSynchronizeElement;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLTuplizerElement;
 
@@ -232,11 +238,33 @@ public abstract class AbstractEntitySourceImpl implements EntitySource {
 			else if ( XMLAnyElement.class.isInstance( attributeElement ) ) {
 				// todo : implement
 			}
-			else if ( XMLOneToManyElement.class.isInstance( attributeElement ) ) {
+			else if ( XMLBagElement.class.isInstance( attributeElement ) ) {
+				attributeSources.add(
+						new BagAttributeSourceImpl(
+								XMLBagElement.class.cast( attributeElement ),
+								this
+						)
+				);
+			}
+			else if ( XMLIdbagElement.class.isInstance( attributeElement ) ) {
 				// todo : implement
 			}
-			else if ( XMLManyToManyElement.class.isInstance( attributeElement ) ) {
+			else if ( XMLSetElement.class.isInstance( attributeElement ) ) {
+				attributeSources.add(
+						new SetAttributeSourceImpl(
+								XMLSetElement.class.cast( attributeElement ),
+								this
+						)
+				);
+			}
+			else if ( XMLListElement.class.isInstance( attributeElement ) ) {
 				// todo : implement
+			}
+			else if ( XMLMapElement.class.isInstance( attributeElement ) ) {
+				// todo : implement
+			}
+			else {
+				throw new AssertionFailure( "Unexpected attribute element type encountered : " + attributeElement.getClass() );
 			}
 		}
 		return attributeSources;

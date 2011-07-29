@@ -23,17 +23,26 @@
  */
 package org.hibernate.metamodel.source.binder;
 
+import java.util.List;
+
+import org.hibernate.FetchMode;
+
 /**
  * @author Steve Ebersole
  */
-public interface PluralAttributeSource extends AssociationAttributeSource {
-	public PluralAttributeNature getPluralAttributeNature();
+public interface ManyToManyPluralAttributeElementSource extends PluralAttributeElementSource {
+	public String getReferencedEntityName();
+	public String getReferencedEntityAttributeName();
 
-	public PluralAttributeKeySource getKeySource();
+	public List<RelationalValueSource> getValueSources(); // these describe the "outgoing" link
 
-	public PluralAttributeElementSource getElementSource();
+	public boolean isNotFoundAnException();
+	public String getExplicitForeignKeyName();
+	public boolean isUnique();
 
-	public String getExplicitCollectionTableName();
+	public String getOrderBy();
+	public String getWhere();
 
-	public boolean isInverse();
+	public FetchMode getFetchMode();
+	public boolean fetchImmediately();
 }

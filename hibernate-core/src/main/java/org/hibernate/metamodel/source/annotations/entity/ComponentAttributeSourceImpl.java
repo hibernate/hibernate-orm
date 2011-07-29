@@ -27,9 +27,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.jboss.jandex.AnnotationInstance;
+
 import org.hibernate.internal.util.Value;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.source.LocalBindingContext;
+import org.hibernate.metamodel.source.annotations.JandexHelper;
 import org.hibernate.metamodel.source.annotations.attribute.AssociationAttribute;
 import org.hibernate.metamodel.source.annotations.attribute.BasicAttribute;
 import org.hibernate.metamodel.source.annotations.attribute.SingularAttributeSourceImpl;
@@ -91,6 +94,16 @@ public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
 	@Override
 	public String getName() {
 		return embeddableClass.getEmbeddedAttributeName();
+	}
+
+	@Override
+	public String getExplicitTuplizerClassName() {
+		String customTuplizer = null;
+		final AnnotationInstance pojoTuplizerAnnotation = JandexHelper.locatePojoTuplizerAnnotation( embeddableClass.getClassInfo() );
+		if ( pojoTuplizerAnnotation != null ) {
+			customTuplizer = pojoTuplizerAnnotation.value( "impl" ).asString();
+		}
+		return customTuplizer;
 	}
 
 	@Override

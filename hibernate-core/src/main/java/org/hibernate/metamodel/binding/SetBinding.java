@@ -21,19 +21,30 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.binder;
+package org.hibernate.metamodel.binding;
+
+import java.util.Comparator;
+
+import org.hibernate.metamodel.domain.PluralAttribute;
 
 /**
  * @author Steve Ebersole
  */
-public interface PluralAttributeSource extends AssociationAttributeSource {
-	public PluralAttributeNature getPluralAttributeNature();
+public class SetBinding extends AbstractPluralAttributeBinding {
+	private Comparator comparator;
 
-	public PluralAttributeKeySource getKeySource();
+	protected SetBinding(
+			AttributeBindingContainer container,
+			PluralAttribute attribute,
+			CollectionElementNature collectionElementNature) {
+		super( container, attribute, collectionElementNature );
+	}
 
-	public PluralAttributeElementSource getElementSource();
+	public Comparator getComparator() {
+		return comparator;
+	}
 
-	public String getExplicitCollectionTableName();
-
-	public boolean isInverse();
+	public void setComparator(Comparator comparator) {
+		this.comparator = comparator;
+	}
 }

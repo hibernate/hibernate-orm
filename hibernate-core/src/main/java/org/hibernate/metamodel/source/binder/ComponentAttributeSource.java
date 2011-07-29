@@ -34,4 +34,6 @@ public interface ComponentAttributeSource extends SingularAttributeSource, Attri
 	public Value<Class<?>> getClassReference();
 
 	public String getParentReferenceAttributeName();
+
+	public String getExplicitTuplizerClassName();
 }

@@ -35,6 +35,7 @@ import org.hibernate.internal.util.Value;
 import org.hibernate.metamodel.domain.AttributeContainer;
 import org.hibernate.metamodel.domain.Entity;
 import org.hibernate.metamodel.domain.PluralAttribute;
+import org.hibernate.metamodel.domain.PluralAttributeNature;
 import org.hibernate.metamodel.domain.SingularAttribute;
 import org.hibernate.metamodel.relational.TableSpecification;
 import org.hibernate.metamodel.source.MetaAttributeContext;
@@ -424,7 +425,16 @@ public class EntityBinding implements AttributeBindingContainer {
 
 	@Override
 	public BagBinding makeBagAttributeBinding(PluralAttribute attribute, CollectionElementNature nature) {
+		Helper.checkPluralAttributeNature( attribute, PluralAttributeNature.BAG );
 		final BagBinding binding = new BagBinding( this, attribute, nature );
+		registerAttributeBinding( attribute.getName(), binding );
+		return binding;
+	}
+
+	@Override
+	public SetBinding makeSetAttributeBinding(PluralAttribute attribute, CollectionElementNature nature) {
+		Helper.checkPluralAttributeNature( attribute, PluralAttributeNature.SET );
+		final SetBinding binding = new SetBinding( this, attribute, nature );
 		registerAttributeBinding( attribute.getName(), binding );
 		return binding;
 	}

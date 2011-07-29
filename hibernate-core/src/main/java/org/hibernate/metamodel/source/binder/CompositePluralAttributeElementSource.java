@@ -23,17 +23,17 @@
  */
 package org.hibernate.metamodel.source.binder;
 
+import org.hibernate.internal.util.Value;
+
 /**
  * @author Steve Ebersole
  */
-public interface PluralAttributeSource extends AssociationAttributeSource {
-	public PluralAttributeNature getPluralAttributeNature();
+public interface CompositePluralAttributeElementSource extends PluralAttributeElementSource, AttributeSourceContainer {
+	public String getClassName();
 
-	public PluralAttributeKeySource getKeySource();
+	public Value<Class<?>> getClassReference();
 
-	public PluralAttributeElementSource getElementSource();
+	public String getParentReferenceAttributeName();
 
-	public String getExplicitCollectionTableName();
-
-	public boolean isInverse();
+	public String getExplicitTuplizerClassName();
 }

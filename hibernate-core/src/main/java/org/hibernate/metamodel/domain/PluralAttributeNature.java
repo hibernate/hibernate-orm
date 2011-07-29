@@ -35,6 +35,7 @@ import java.util.Set;
  */
 public enum PluralAttributeNature {
 	BAG( "bag", Collection.class ),
+	IDBAG( "idbag", Collection.class ),
 	SET( "set", Set.class ),
 	LIST( "list", List.class ),
 	MAP( "map", Map.class );

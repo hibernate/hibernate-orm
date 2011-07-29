@@ -30,34 +30,41 @@ import javax.persistence.Id;
 
 import org.junit.Test;
 
+import org.hibernate.metamodel.binding.ComponentAttributeBinding;
 import org.hibernate.metamodel.binding.EntityBinding;
-import org.hibernate.metamodel.domain.Component;
-import org.hibernate.metamodel.domain.SingularAttribute;
-import org.hibernate.testing.FailureExpected;
 
+import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertTrue;
 
 /**
- * Tests for {@code j.p.Embeddable}.
+ * Tests for {@code javax.persistence.Embeddable}.
  *
  * @author Hardy Ferentschik
  */
-@FailureExpected(jiraKey = "HHH-6447", message = "Work in progress")
+
 public class EmbeddableBindingTest extends BaseAnnotationBindingTestCase {
 	@Test
-	//@Resources(annotatedClasses = { User.class, Address.class })
+	@Resources(annotatedClasses = { User.class, Address.class })
 	public void testEmbeddable() {
 		EntityBinding binding = getEntityBinding( User.class );
-		assertNotNull( binding.locateAttributeBinding( "street" ) );
-		assertNotNull( binding.locateAttributeBinding( "city" ) );
-		assertNotNull( binding.locateAttributeBinding( "postCode" ) );
 
-		SingularAttribute attribute = (SingularAttribute) binding.getEntity().locateAttribute( "address" );
-		assertTrue(
-				"Wrong container type. Should be a component",
-				attribute.getSingularAttributeType() instanceof Component
+		assertNotNull( binding.locateAttributeBinding( "address" ) );
+		assertTrue( binding.locateAttributeBinding( "address" ) instanceof ComponentAttributeBinding );
+		ComponentAttributeBinding componentBinding = (ComponentAttributeBinding) binding.locateAttributeBinding(
+				"address"
 		);
+
+		// todo - is this really correct? Does the path start w/ the class name
+		assertEquals(
+				"Wrong path",
+				"org.hibernate.metamodel.source.annotations.entity.EmbeddableBindingTest$User.address",
+				componentBinding.getPathBase()
+		);
+
+		assertNotNull( componentBinding.locateAttributeBinding( "street" ) );
+		assertNotNull( componentBinding.locateAttributeBinding( "city" ) );
+		assertNotNull( componentBinding.locateAttributeBinding( "postCode" ) );
 	}
 
 	@Entity

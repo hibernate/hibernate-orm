@@ -200,6 +200,10 @@ public class ConfiguredClass {
 		return attributeOverrideMap;
 	}
 
+	public AccessType getClassAccessType() {
+		return classAccessType;
+	}
+
 	@Override
 	public String toString() {
 		final StringBuilder sb = new StringBuilder();

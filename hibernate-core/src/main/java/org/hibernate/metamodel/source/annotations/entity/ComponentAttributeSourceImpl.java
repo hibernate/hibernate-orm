@@ -42,15 +42,25 @@ import org.hibernate.metamodel.source.binder.RelationalValueSource;
 import org.hibernate.metamodel.source.binder.SingularAttributeNature;
 
 /**
+ * Annotation backed implementation of {@code ComponentAttributeSource}.
+ *
  * @author Steve Ebersole
+ * @author Hardy Ferentschik
  */
 public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
 	private final EmbeddableClass embeddableClass;
 	private final Value<Class<?>> classReference;
+	private final String path;
 
 	public ComponentAttributeSourceImpl(EmbeddableClass embeddableClass) {
 		this.embeddableClass = embeddableClass;
 		this.classReference = new Value<Class<?>>( embeddableClass.getClass() );
+		String tmpPath = embeddableClass.getEmbeddedAttributeName();
+		ConfiguredClass parent = embeddableClass.getParent();
+		while ( parent != null && parent instanceof EmbeddableClass ) {
+			tmpPath = ( (EmbeddableClass) parent ).getEmbeddedAttributeName() + "." + tmpPath;
+		}
+		path = tmpPath;
 	}
 
 	@Override
@@ -79,16 +89,18 @@ public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
 	}
 
 	@Override
-	public String getParentReferenceAttributeName() {
-		// see HHH-6501
-		return null;
+	public String getName() {
+		return embeddableClass.getEmbeddedAttributeName();
 	}
 
 	@Override
-	public String getPath() {
-		// todo : implement
-		// do not see how this is possible currently given how annotations currently handle components
-		return null;
+	public String getPropertyAccessorName() {
+		return embeddableClass.getClassAccessType().toString().toLowerCase();
+	}
+
+	@Override
+	public LocalBindingContext getLocalBindingContext() {
+		return embeddableClass.getLocalBindingContext();
 	}
 
 	@Override
@@ -107,8 +119,26 @@ public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
 	}
 
 	@Override
-	public LocalBindingContext getLocalBindingContext() {
-		return embeddableClass.getLocalBindingContext();
+	public String getPath() {
+		return path;
+	}
+
+	@Override
+	public Iterable<MetaAttributeSource> metaAttributes() {
+		// not relevant for annotations
+		return Collections.emptySet();
+	}
+
+	@Override
+	public List<RelationalValueSource> relationalValueSources() {
+		// none, they are defined on the simple sub-attributes
+		return null;
+	}
+
+	@Override
+	public String getParentReferenceAttributeName() {
+		// see HHH-6501
+		return null;
 	}
 
 	@Override
@@ -118,31 +148,17 @@ public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
 	}
 
 	@Override
-	public String getName() {
-	   return embeddableClass.getEmbeddedAttributeName();
-	}
-
-	@Override
-	public String getPropertyAccessorName() {
-		// todo : implement
-		return null;
-	}
-
-	@Override
 	public boolean isInsertable() {
-		// todo : implement
 		return true;
 	}
 
 	@Override
 	public boolean isUpdatable() {
-		// todo : implement
 		return true;
 	}
 
 	@Override
 	public PropertyGeneration getGeneration() {
-		// todo : implement
 		return null;
 	}
 
@@ -159,30 +175,17 @@ public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
 	}
 
 	@Override
-	public Iterable<MetaAttributeSource> metaAttributes() {
-		return Collections.emptySet();
-	}
-
-	@Override
 	public boolean areValuesIncludedInInsertByDefault() {
-		// todo : implement
 		return true;
 	}
 
 	@Override
 	public boolean areValuesIncludedInUpdateByDefault() {
-		// todo : implement
 		return true;
 	}
 
 	@Override
 	public boolean areValuesNullableByDefault() {
-		// todo : implement
 		return true;
-	}
-
-	@Override
-	public List<RelationalValueSource> relationalValueSources() {
-		return null;
 	}
 }

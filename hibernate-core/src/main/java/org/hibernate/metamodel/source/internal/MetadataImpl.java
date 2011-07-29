@@ -170,7 +170,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 		// todo : remove this by coordinated ordering of entity processing
 		new AssociationResolver( this ).resolve();
-		new AttributeTypeResolver( this ).resolve();
+		new HibernateTypeResolver( this ).resolve();
 		// IdentifierGeneratorResolver.resolve() must execute after AttributeTypeResolver.resolve()
 		new IdentifierGeneratorResolver( this ).resolve();
 	}

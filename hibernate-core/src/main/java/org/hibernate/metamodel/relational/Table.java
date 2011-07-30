@@ -259,14 +259,23 @@ public class Table extends AbstractTableSpecification implements Exportable {
 	}
 
 	private static String getTypeString(Column col, Dialect dialect) {
-		return col.getSqlType() == null ?
-				dialect.getTypeName(
+		String typeString = null;
+		if ( col.getSqlType() != null ) {
+			typeString = col.getSqlType();
+		}
+		else {
+			Size size = col.getSize() == null ?
+					new Size( ) :
+					col.getSize();
+
+			typeString = dialect.getTypeName(
 						col.getDatatype().getTypeCode(),
-						col.getSize().getLength(),
-						col.getSize().getPrecision(),
-						col.getSize().getScale()
-				) :
-				col.getSqlType();
+						size.getLength(),
+						size.getPrecision(),
+						size.getScale()
+			);
+		}
+		return typeString;
 	}
 
 	@Override

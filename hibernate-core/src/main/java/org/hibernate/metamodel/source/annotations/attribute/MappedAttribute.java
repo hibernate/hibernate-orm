@@ -23,6 +23,9 @@
  */
 package org.hibernate.metamodel.source.annotations.attribute;
 
+import java.io.Serializable;
+import java.sql.Blob;
+import java.sql.Clob;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -41,6 +44,11 @@ import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.source.annotations.HibernateDotNames;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.JandexHelper;
+import org.hibernate.type.CharacterArrayClobType;
+import org.hibernate.type.PrimitiveCharacterArrayClobType;
+import org.hibernate.type.SerializableToBlobType;
+import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.WrappedMaterializedBlobType;
 
 /**
  * Base class for the different types of mapped attributes
@@ -70,16 +78,6 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 	private final String accessType;
 
 	/**
-	 * An optional  explicit hibernate type name specified via {@link org.hibernate.annotations.Type}.
-	 */
-	private final String explicitHibernateTypeName;
-
-	/**
-	 * Optional type parameters. See {@link #explicitHibernateTypeName}.
-	 */
-	private final Map<String, String> explicitHibernateTypeParameters;
-
-	/**
 	 * The binding context
 	 */
 	private final AnnotationBindingContext context;
@@ -90,8 +88,6 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 		this.name = name;
 		this.attributeType = attributeType;
 		this.accessType = accessType;
-		this.explicitHibernateTypeParameters = new HashMap<String, String>();
-		this.explicitHibernateTypeName = determineExplicitHibernateTypeName();
 	}
 
 	public String getName() {
@@ -104,14 +100,6 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 
 	public String getAccessType() {
 		return accessType;
-	}
-
-	public String getExplicitHibernateTypeName() {
-		return explicitHibernateTypeName;
-	}
-
-	public Map<String, String> getExplicitHibernateTypeParameters() {
-		return explicitHibernateTypeParameters;
 	}
 
 	public AnnotationBindingContext getContext() {
@@ -127,6 +115,8 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 		return name.compareTo( mappedProperty.getName() );
 	}
 
+    public abstract HibernateTypeResolver getHibernateTypeResolver();
+
 	@Override
 	public String toString() {
 		final StringBuilder sb = new StringBuilder();
@@ -136,85 +126,8 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 		return sb.toString();
 	}
 
-	private String getTemporalType() {
-		final AnnotationInstance temporalAnnotation = JandexHelper.getSingleAnnotation(
-				annotations(),
-				JPADotNames.TEMPORAL
-		);
-		if ( isTemporalType( attributeType ) ) {
-			if ( temporalAnnotation == null ) {
-				//SPEC 11.1.47 The Temporal annotation must be specified for persistent fields or properties of type java.util.Date and java.util.Calendar.
-				throw new AnnotationException( "Attribute " + name + " is a Temporal type, but no @Temporal annotation found." );
-			}
-			TemporalType temporalType = JandexHelper.getEnumValue( temporalAnnotation, "value", TemporalType.class );
-			boolean isDate = Date.class.isAssignableFrom( attributeType );
-			String type = null;
-			switch ( temporalType ) {
-				case DATE:
-					type = isDate ? "date" : "calendar_date";
-					break;
-				case TIME:
-					type = "time";
-					if ( !isDate ) {
-						throw new NotYetImplementedException( "Calendar cannot persist TIME only" );
-					}
-					break;
-				case TIMESTAMP:
-					type = isDate ? "timestamp" : "calendar";
-					break;
-				default:
-					throw new AssertionFailure( "Unknown temporal type: " + temporalType );
-			}
-			return type;
-		}
-		else {
-			if ( temporalAnnotation != null ) {
-				throw new AnnotationException(
-						"@Temporal should only be set on a java.util.Date or java.util.Calendar property: " + name
-				);
-			}
-		}
-		return null;
-	}
 
-	private boolean isTemporalType(Class type) {
-		return Date.class.isAssignableFrom( type ) || Calendar.class.isAssignableFrom( type );
-		//todo (stliu) java.sql.Date is not listed in spec
-		// || java.sql.Date.class.isAssignableFrom( type )
-	}
 
-	private Map<String, String> extractTypeParameters(AnnotationInstance typeAnnotation) {
-		HashMap<String, String> typeParameters = new HashMap<String, String>();
-		AnnotationValue parameterAnnotationValue = typeAnnotation.value( "parameters" );
-		if ( parameterAnnotationValue != null ) {
-			AnnotationInstance[] parameterAnnotations = parameterAnnotationValue.asNestedArray();
-			for ( AnnotationInstance parameterAnnotationInstance : parameterAnnotations ) {
-				typeParameters.put(
-						parameterAnnotationInstance.value( "name" ).asString(),
-						parameterAnnotationInstance.value( "value" ).asString()
-				);
-			}
-		}
-		return typeParameters;
-	}
-
-	private String determineExplicitHibernateTypeName() {
-		String typeName = null;
-		String temporalType = getTemporalType();
-		final AnnotationInstance typeAnnotation = JandexHelper.getSingleAnnotation(
-				annotations(),
-				HibernateDotNames.TYPE
-		);
-		if ( typeAnnotation != null ) {
-			typeName = typeAnnotation.value( "type" ).asString();
-			this.explicitHibernateTypeParameters.putAll( extractTypeParameters( typeAnnotation ) );
-		}
-		else if ( temporalType != null ) {
-			typeName = temporalType;
-
-		}
-		return typeName;
-	}
 }
 
 

@@ -99,6 +99,7 @@ public class BasicAttribute extends MappedAttribute {
 	private final String customWriteFragment;
 	private final String customReadFragment;
 	private final String checkCondition;
+    private HibernateTypeResolver resolver;
 
 	public static BasicAttribute createSimpleAttribute(String name,
 													   Class<?> attributeType,
@@ -348,6 +349,27 @@ public class BasicAttribute extends MappedAttribute {
 		}
 		return generator;
 	}
+
+    @Override
+    public HibernateTypeResolver getHibernateTypeResolver() {
+        if ( resolver == null ) {
+            resolver = getDefaultHibernateTypeResolver();
+        }
+        return resolver;
+    }
+
+    protected HibernateTypeResolver getDefaultHibernateTypeResolver() {
+
+        CompositeHibernateTypeResolver resolver = new CompositeHibernateTypeResolver(
+                new ExplicitHibernateTypeResolver(
+                        this
+                )
+        );
+        resolver.addHibernateTypeResolver( new TemporalTypeResolver( this ) );
+        resolver.addHibernateTypeResolver( new LobTypeResolver( this ) );
+        resolver.addHibernateTypeResolver( new EnumeratedTypeResolver( this ) );
+        return resolver;
+    }
 }
 
 

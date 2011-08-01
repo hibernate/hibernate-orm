@@ -21,55 +21,31 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.binding;
 
-import java.io.Serializable;
-import java.util.Collections;
+package org.hibernate.metamodel.source.annotations.attribute;
+
 import java.util.Map;
 
-import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.metamodel.source.annotations.attribute.type.AttributeTypeResolver;
+import org.hibernate.metamodel.source.binder.ExplicitHibernateTypeSource;
 
 /**
- * Identifier generator container, Useful to keep named generator in annotations
- *
- * @author Emmanuel Bernard
+ * @author Strong Liu
  */
-public class IdGenerator implements Serializable {
-    private final String name;
-    private final String strategy;
-    private final Map<String, String> parameters;
+public class ExplicitHibernateTypeSourceImpl implements ExplicitHibernateTypeSource {
+    private final AttributeTypeResolver typeResolver;
 
-    public IdGenerator( String name,
-                        String strategy,
-                        Map<String, String> parameters ) {
-        this.name = name;
-        this.strategy = strategy;
-        if ( CollectionHelper.isEmpty( parameters ) ) {
-            this.parameters = Collections.emptyMap();
-        }
-        else {
-            this.parameters = Collections.unmodifiableMap( parameters );
-        }
+    public ExplicitHibernateTypeSourceImpl(AttributeTypeResolver typeResolver) {
+        this.typeResolver = typeResolver;
     }
 
-    /**
-     * @return identifier generator strategy
-     */
-    public String getStrategy() {
-        return strategy;
-    }
-
-    /**
-     * @return generator name
-     */
+    @Override
     public String getName() {
-        return name;
+        return typeResolver.getExplicitHibernateTypeName();
     }
 
-    /**
-     * @return generator configuration parameters
-     */
+    @Override
     public Map<String, String> getParameters() {
-		return parameters;
+        return typeResolver.getExplicitHibernateTypeParameters();
     }
 }

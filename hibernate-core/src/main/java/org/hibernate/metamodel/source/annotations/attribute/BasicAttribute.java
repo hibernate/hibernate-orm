@@ -45,6 +45,12 @@ import org.hibernate.metamodel.source.annotations.HibernateDotNames;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.JandexHelper;
 import org.hibernate.metamodel.source.annotations.TypeEnumConversionHelper;
+import org.hibernate.metamodel.source.annotations.attribute.type.AttributeTypeResolver;
+import org.hibernate.metamodel.source.annotations.attribute.type.CompositeAttributeTypeResolver;
+import org.hibernate.metamodel.source.annotations.attribute.type.EnumeratedTypeResolver;
+import org.hibernate.metamodel.source.annotations.attribute.type.ExplicitAttributeTypeResolver;
+import org.hibernate.metamodel.source.annotations.attribute.type.LobTypeResolver;
+import org.hibernate.metamodel.source.annotations.attribute.type.TemporalTypeResolver;
 
 /**
  * Represent a mapped attribute (explicitly or implicitly mapped).
@@ -99,6 +105,7 @@ public class BasicAttribute extends MappedAttribute {
 	private final String customWriteFragment;
 	private final String customReadFragment;
 	private final String checkCondition;
+    private AttributeTypeResolver resolver;
 
 	public static BasicAttribute createSimpleAttribute(String name,
 													   Class<?> attributeType,
@@ -120,7 +127,8 @@ public class BasicAttribute extends MappedAttribute {
 				annotations,
 				JPADotNames.EMBEDDED_ID
 		);
-		isId = !( idAnnotation == null && embeddedIdAnnotation == null );
+        //if this attribute has either @Id or @EmbeddedId, then it is an id attribute
+		isId = ( idAnnotation != null || embeddedIdAnnotation != null );
 
 		AnnotationInstance versionAnnotation = JandexHelper.getSingleAnnotation( annotations, JPADotNames.VERSION );
 		isVersioned = versionAnnotation != null;
@@ -143,9 +151,8 @@ public class BasicAttribute extends MappedAttribute {
 		checkBasicAnnotation();
 		checkGeneratedAnnotation();
 
-		String[] readWrite;
 		List<AnnotationInstance> columnTransformerAnnotations = getAllColumnTransformerAnnotations();
-		readWrite = createCustomReadWrite( columnTransformerAnnotations );
+		String[] readWrite = createCustomReadWrite( columnTransformerAnnotations );
 		this.customReadFragment = readWrite[0];
 		this.customWriteFragment = readWrite[1];
 		this.checkCondition = parseCheckAnnotation();
@@ -348,6 +355,27 @@ public class BasicAttribute extends MappedAttribute {
 		}
 		return generator;
 	}
+
+    @Override
+    public AttributeTypeResolver getHibernateTypeResolver() {
+        if ( resolver == null ) {
+            resolver = getDefaultHibernateTypeResolver();
+        }
+        return resolver;
+    }
+
+    protected AttributeTypeResolver getDefaultHibernateTypeResolver() {
+
+        CompositeAttributeTypeResolver resolver = new CompositeAttributeTypeResolver(
+                new ExplicitAttributeTypeResolver(
+                        this
+                )
+        );
+        resolver.addHibernateTypeResolver( new TemporalTypeResolver( this ) );
+        resolver.addHibernateTypeResolver( new LobTypeResolver( this ) );
+        resolver.addHibernateTypeResolver( new EnumeratedTypeResolver( this ) );
+        return resolver;
+    }
 }
 
 

@@ -162,7 +162,7 @@ public class MappingDocument {
 
 		@Override
 		public boolean isGloballyQuotedIdentifiers() {
-			return metadata.getOptions().isGloballyQuotedIdentifiers();
+			return metadata.isGloballyQuotedIdentifiers();
 		}
 
 		@Override

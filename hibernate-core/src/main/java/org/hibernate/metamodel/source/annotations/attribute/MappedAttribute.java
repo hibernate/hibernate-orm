@@ -23,32 +23,14 @@
  */
 package org.hibernate.metamodel.source.annotations.attribute;
 
-import java.io.Serializable;
-import java.sql.Blob;
-import java.sql.Clob;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.persistence.TemporalType;
 
 import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.DotName;
 
-import org.hibernate.AnnotationException;
-import org.hibernate.AssertionFailure;
-import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
-import org.hibernate.metamodel.source.annotations.HibernateDotNames;
-import org.hibernate.metamodel.source.annotations.JPADotNames;
-import org.hibernate.metamodel.source.annotations.JandexHelper;
-import org.hibernate.type.CharacterArrayClobType;
-import org.hibernate.type.PrimitiveCharacterArrayClobType;
-import org.hibernate.type.SerializableToBlobType;
-import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.WrappedMaterializedBlobType;
+import org.hibernate.metamodel.source.annotations.attribute.type.AttributeTypeResolver;
 
 /**
  * Base class for the different types of mapped attributes
@@ -106,7 +88,7 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 		return context;
 	}
 
-	Map<DotName, List<AnnotationInstance>> annotations() {
+	public Map<DotName, List<AnnotationInstance>> annotations() {
 		return annotations;
 	}
 
@@ -115,7 +97,7 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 		return name.compareTo( mappedProperty.getName() );
 	}
 
-    public abstract HibernateTypeResolver getHibernateTypeResolver();
+    public abstract AttributeTypeResolver getHibernateTypeResolver();
 
 	@Override
 	public String toString() {

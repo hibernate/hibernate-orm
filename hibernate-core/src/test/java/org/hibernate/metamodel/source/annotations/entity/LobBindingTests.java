@@ -1,3 +1,27 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
+
 package org.hibernate.metamodel.source.annotations.entity;
 
 import java.io.Serializable;
@@ -23,8 +47,6 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.WrappedMaterializedBlobType;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -55,92 +77,174 @@ public class LobBindingTests extends BaseAnnotationBindingTestCase {
         String noLob;
     }
 
-    class Thing implements Serializable{
+    class Thing implements Serializable {
         int size;
+    }
+
+    private HibernateTypeDescriptor getTypeDescriptor(String attributeName) {
+        EntityBinding binding = getEntityBinding( Item.class );
+        AttributeBinding attributeBinding = binding.locateAttributeBinding( attributeName );
+        return attributeBinding.getHibernateTypeDescriptor();
+    }
+
+    private class ExpectedValue {
+        String explicitTypeName;
+        String javaTypeName;
+        boolean isResolvedTypeMappingNull;
+        Class resolvedTypeMappingClass;
+        boolean isTypeParametersNull;
+        boolean isTypeParametersEmpty;
+
+        private ExpectedValue(String explicitTypeName,
+                              String javaTypeName,
+                              boolean resolvedTypeMappingNull,
+                              Class resolvedTypeMappingClass,
+                              boolean typeParametersNull,
+                              boolean typeParametersEmpty
+        ) {
+            this.explicitTypeName = explicitTypeName;
+            this.isResolvedTypeMappingNull = resolvedTypeMappingNull;
+            this.isTypeParametersEmpty = typeParametersEmpty;
+            this.isTypeParametersNull = typeParametersNull;
+            this.javaTypeName = javaTypeName;
+            this.resolvedTypeMappingClass = resolvedTypeMappingClass;
+        }
+    }
+
+    private void checkHibernateTypeDescriptor(ExpectedValue expectedValue, String attributeName) {
+        HibernateTypeDescriptor descriptor = getTypeDescriptor( attributeName );
+        assertEquals( expectedValue.explicitTypeName, descriptor.getExplicitTypeName() );
+        assertEquals( expectedValue.javaTypeName, descriptor.getJavaTypeName() );
+        assertEquals( expectedValue.isResolvedTypeMappingNull, descriptor.getResolvedTypeMapping() == null );
+        assertEquals( expectedValue.resolvedTypeMappingClass, descriptor.getResolvedTypeMapping().getClass() );
+        assertEquals( expectedValue.isTypeParametersNull, descriptor.getTypeParameters() == null );
+        assertEquals( expectedValue.isTypeParametersEmpty, descriptor.getTypeParameters().isEmpty() );
     }
 
     @Test
     @Resources(annotatedClasses = Item.class)
-    public void testLobTypeAttribute() {
-        EntityBinding binding = getEntityBinding( Item.class );
+    public void testClobWithLobAnnotation() {
+        ExpectedValue expectedValue = new ExpectedValue(
+                "clob",
+                Clob.class.getName(),
+                false,
+                ClobType.class,
+                false,
+                true
+        );
+        checkHibernateTypeDescriptor( expectedValue, "clob" );
+    }
 
-        AttributeBinding attributeBinding = binding.locateAttributeBinding( "clob" );
-        HibernateTypeDescriptor descriptor = attributeBinding.getHibernateTypeDescriptor();
-        assertEquals( "clob", descriptor.getExplicitTypeName() );
-        assertEquals( Clob.class.getName(), descriptor.getJavaTypeName() );
-        assertNotNull( descriptor.getResolvedTypeMapping() );
-        assertEquals( ClobType.class, descriptor.getResolvedTypeMapping().getClass() );
-        assertNotNull( descriptor.getTypeParameters() );
-        assertTrue( descriptor.getTypeParameters().isEmpty() );
+    @Test
+    @Resources(annotatedClasses = Item.class)
+    public void testBlobWithLobAnnotation() {
+        ExpectedValue expectedValue = new ExpectedValue(
+                "blob",
+                Blob.class.getName(),
+                false,
+                BlobType.class,
+                false,
+                true
+        );
+        checkHibernateTypeDescriptor( expectedValue, "blob" );
+    }
 
-        attributeBinding = binding.locateAttributeBinding( "blob" );
-        descriptor = attributeBinding.getHibernateTypeDescriptor();
-        assertEquals( "blob", descriptor.getExplicitTypeName() );
-        assertEquals( Blob.class.getName(), descriptor.getJavaTypeName() );
-        assertNotNull( descriptor.getResolvedTypeMapping() );
-        assertEquals( BlobType.class, descriptor.getResolvedTypeMapping().getClass() );
-        assertNotNull( descriptor.getTypeParameters() );
-        assertTrue( descriptor.getTypeParameters().isEmpty() );
+    @Test
+    @Resources(annotatedClasses = Item.class)
+    public void testStringWithLobAnnotation() {
+        ExpectedValue expectedValue = new ExpectedValue(
+                "materialized_clob",
+                String.class.getName(),
+                false,
+                MaterializedClobType.class,
+                false,
+                true
+        );
+        checkHibernateTypeDescriptor( expectedValue, "str" );
+    }
 
-        attributeBinding = binding.locateAttributeBinding( "str" );
-        descriptor = attributeBinding.getHibernateTypeDescriptor();
-        assertEquals( "materialized_clob", descriptor.getExplicitTypeName() );
-        assertEquals( String.class.getName(), descriptor.getJavaTypeName() );
-        assertNotNull( descriptor.getResolvedTypeMapping() );
-        assertEquals( MaterializedClobType.class, descriptor.getResolvedTypeMapping().getClass() );
-        assertNotNull( descriptor.getTypeParameters() );
-        assertTrue( descriptor.getTypeParameters().isEmpty() );
+    @Test
+    @Resources(annotatedClasses = Item.class)
+    public void testCharacterArrayWithLobAnnotation() {
+        ExpectedValue expectedValue = new ExpectedValue(
+                CharacterArrayClobType.class.getName(),
+                Character[].class.getName(),
+                false,
+                CharacterArrayClobType.class,
+                false,
+                true
+        );
+        checkHibernateTypeDescriptor( expectedValue, "characters" );
+    }
 
-        attributeBinding = binding.locateAttributeBinding( "characters" );
-        descriptor = attributeBinding.getHibernateTypeDescriptor();
-        assertEquals( CharacterArrayClobType.class.getName(), descriptor.getExplicitTypeName() );
-        assertEquals( Character[].class.getName(), descriptor.getJavaTypeName() );
-        assertNotNull( descriptor.getResolvedTypeMapping() );
-        assertEquals( CharacterArrayClobType.class, descriptor.getResolvedTypeMapping().getClass() );
-        assertNotNull( descriptor.getTypeParameters() );
-        assertTrue( descriptor.getTypeParameters().isEmpty() );
+    @Test
+    @Resources(annotatedClasses = Item.class)
+    public void testPrimitiveCharacterArrayWithLobAnnotation() {
+        ExpectedValue expectedValue = new ExpectedValue(
+                PrimitiveCharacterArrayClobType.class.getName(),
+                char[].class.getName(),
+                false,
+                PrimitiveCharacterArrayClobType.class,
+                false,
+                true
+        );
+        checkHibernateTypeDescriptor( expectedValue, "chars" );
+    }
 
-        attributeBinding = binding.locateAttributeBinding( "chars" );
-        descriptor = attributeBinding.getHibernateTypeDescriptor();
-        assertEquals( PrimitiveCharacterArrayClobType.class.getName(), descriptor.getExplicitTypeName() );
-        assertEquals( char[].class.getName(), descriptor.getJavaTypeName() );
-        assertNotNull( descriptor.getResolvedTypeMapping() );
-        assertEquals( PrimitiveCharacterArrayClobType.class, descriptor.getResolvedTypeMapping().getClass() );
-        assertNotNull( descriptor.getTypeParameters() );
-        assertTrue( descriptor.getTypeParameters().isEmpty() );
+    @Test
+    @Resources(annotatedClasses = Item.class)
+    public void testByteArrayWithLobAnnotation() {
+        ExpectedValue expectedValue = new ExpectedValue(
+                WrappedMaterializedBlobType.class.getName(),
+                Byte[].class.getName(),
+                false,
+                WrappedMaterializedBlobType.class,
+                false,
+                true
+        );
+        checkHibernateTypeDescriptor( expectedValue, "bytes" );
+    }
 
-        attributeBinding = binding.locateAttributeBinding( "bytes" );
-        descriptor = attributeBinding.getHibernateTypeDescriptor();
-        assertEquals( WrappedMaterializedBlobType.class.getName(), descriptor.getExplicitTypeName() );
-        assertEquals( Byte[].class.getName(), descriptor.getJavaTypeName() );
-        assertNotNull( descriptor.getResolvedTypeMapping() );
-        assertEquals( WrappedMaterializedBlobType.class, descriptor.getResolvedTypeMapping().getClass() );
-        assertNotNull( descriptor.getTypeParameters() );
-        assertTrue( descriptor.getTypeParameters().isEmpty() );
+    @Test
+    @Resources(annotatedClasses = Item.class)
+    public void testPrimitiveByteArrayWithLobAnnotation() {
+        ExpectedValue expectedValue = new ExpectedValue(
+                StandardBasicTypes.MATERIALIZED_BLOB.getName(),
+                byte[].class.getName(),
+                false,
+                MaterializedBlobType.class,
+                false,
+                true
+        );
+        checkHibernateTypeDescriptor( expectedValue, "bytes2" );
+    }
 
-        attributeBinding = binding.locateAttributeBinding( "bytes2" );
-        descriptor = attributeBinding.getHibernateTypeDescriptor();
-        assertEquals( StandardBasicTypes.MATERIALIZED_BLOB.getName(), descriptor.getExplicitTypeName() );
-        assertEquals( byte[].class.getName(), descriptor.getJavaTypeName() );
-        assertNotNull( descriptor.getResolvedTypeMapping() );
-        assertEquals( MaterializedBlobType.class, descriptor.getResolvedTypeMapping().getClass() );
-        assertNotNull( descriptor.getTypeParameters() );
-        assertTrue( descriptor.getTypeParameters().isEmpty() );
+    @Test
+    @Resources(annotatedClasses = Item.class)
+    public void testSerializableWithLobAnnotation() {
+        ExpectedValue expectedValue = new ExpectedValue(
+                SerializableToBlobType.class.getName(),
+                Thing.class.getName(),
+                false,
+                SerializableToBlobType.class,
+                false,
+                false
+        );
+        checkHibernateTypeDescriptor( expectedValue, "serializable" );
 
-        attributeBinding = binding.locateAttributeBinding( "serializable" );
-        descriptor = attributeBinding.getHibernateTypeDescriptor();
-        assertEquals( SerializableToBlobType.class.getName(), descriptor.getExplicitTypeName() );
-        assertEquals( Thing.class.getName(), descriptor.getJavaTypeName() );
-        assertNotNull( descriptor.getResolvedTypeMapping() );
-        assertEquals( SerializableToBlobType.class, descriptor.getResolvedTypeMapping().getClass() );
-        assertNotNull( descriptor.getTypeParameters() );
-        assertEquals( 1,descriptor.getTypeParameters().size() );
-        assertTrue( descriptor.getTypeParameters().get( SerializableToBlobType.CLASS_NAME ).equals( Thing.class.getName() ) );
+        assertTrue(
+                getTypeDescriptor( "serializable" ).getTypeParameters()
+                        .get( SerializableToBlobType.CLASS_NAME )
+                        .equals( Thing.class.getName() )
+        );
+    }
 
-        attributeBinding = binding.locateAttributeBinding( "noLob" );
-        descriptor = attributeBinding.getHibernateTypeDescriptor();
-        assertNull( descriptor.getExplicitTypeName() );
-        assertTrue( descriptor.getTypeParameters().isEmpty() );
+
+    @Test
+    @Resources(annotatedClasses = Item.class)
+    public void testNoLobAttribute() {
+        assertNull( getTypeDescriptor( "noLob" ).getExplicitTypeName() );
+        assertTrue( getTypeDescriptor( "noLob" ).getTypeParameters().isEmpty() );
 
     }
 }

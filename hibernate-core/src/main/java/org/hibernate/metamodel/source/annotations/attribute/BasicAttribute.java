@@ -46,9 +46,9 @@ import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.JandexHelper;
 import org.hibernate.metamodel.source.annotations.TypeEnumConversionHelper;
 import org.hibernate.metamodel.source.annotations.attribute.type.AttributeTypeResolver;
-import org.hibernate.metamodel.source.annotations.attribute.type.AttributeTypeResolverImpl;
 import org.hibernate.metamodel.source.annotations.attribute.type.CompositeAttributeTypeResolver;
 import org.hibernate.metamodel.source.annotations.attribute.type.EnumeratedTypeResolver;
+import org.hibernate.metamodel.source.annotations.attribute.type.AttributeTypeResolverImpl;
 import org.hibernate.metamodel.source.annotations.attribute.type.LobTypeResolver;
 import org.hibernate.metamodel.source.annotations.attribute.type.TemporalTypeResolver;
 
@@ -105,7 +105,7 @@ public class BasicAttribute extends MappedAttribute {
 	private final String customWriteFragment;
 	private final String customReadFragment;
 	private final String checkCondition;
-	private final AttributeTypeResolver resolver;
+    private AttributeTypeResolver resolver;
 
 	public static BasicAttribute createSimpleAttribute(String name,
 													   Class<?> attributeType,
@@ -127,7 +127,7 @@ public class BasicAttribute extends MappedAttribute {
 				annotations,
 				JPADotNames.EMBEDDED_ID
 		);
-		//if this attribute has either @Id or @EmbeddedId, then it is an id attribute
+        //if this attribute has either @Id or @EmbeddedId, then it is an id attribute
 		isId = ( idAnnotation != null || embeddedIdAnnotation != null );
 
 		AnnotationInstance versionAnnotation = JandexHelper.getSingleAnnotation( annotations, JPADotNames.VERSION );
@@ -156,7 +156,6 @@ public class BasicAttribute extends MappedAttribute {
 		this.customReadFragment = readWrite[0];
 		this.customWriteFragment = readWrite[1];
 		this.checkCondition = parseCheckAnnotation();
-		this.resolver = getDefaultHibernateTypeResolver();
 	}
 
 	public final ColumnValues getColumnValues() {
@@ -357,22 +356,25 @@ public class BasicAttribute extends MappedAttribute {
 		return generator;
 	}
 
-	@Override
-	public AttributeTypeResolver getHibernateTypeResolver() {
-		return resolver;
-	}
+    @Override
+    public AttributeTypeResolver getHibernateTypeResolver() {
+        if ( resolver == null ) {
+            resolver = getDefaultHibernateTypeResolver();
+        }
+        return resolver;
+    }
 
-	private AttributeTypeResolver getDefaultHibernateTypeResolver() {
-		CompositeAttributeTypeResolver resolver = new CompositeAttributeTypeResolver(
-				new AttributeTypeResolverImpl(
-						this
-				)
-		);
-		resolver.addHibernateTypeResolver( new TemporalTypeResolver( this ) );
-		resolver.addHibernateTypeResolver( new LobTypeResolver( this ) );
-		resolver.addHibernateTypeResolver( new EnumeratedTypeResolver( this ) );
-		return resolver;
-	}
+    private AttributeTypeResolver getDefaultHibernateTypeResolver() {
+        CompositeAttributeTypeResolver resolver = new CompositeAttributeTypeResolver(
+                new AttributeTypeResolverImpl(
+                        this
+                )
+        );
+        resolver.addHibernateTypeResolver( new TemporalTypeResolver( this ) );
+        resolver.addHibernateTypeResolver( new LobTypeResolver( this ) );
+        resolver.addHibernateTypeResolver( new EnumeratedTypeResolver( this ) );
+        return resolver;
+    }
 }
 
 

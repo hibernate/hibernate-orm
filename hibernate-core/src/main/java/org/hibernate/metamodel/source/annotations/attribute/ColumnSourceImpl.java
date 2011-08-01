@@ -23,20 +23,32 @@
  */
 package org.hibernate.metamodel.source.annotations.attribute;
 
+import org.hibernate.internal.util.StringHelper;
+
 /**
  * @author Hardy Ferentschik
  */
 public class ColumnSourceImpl extends ColumnValuesSourceImpl {
 	private final BasicAttribute attribute;
-
+    private final String name;
 	ColumnSourceImpl(BasicAttribute attribute) {
 		super( attribute.getColumnValues() );
 		this.attribute = attribute;
+        this.name = resolveColumnName();
 	}
 
+    protected String resolveColumnName() {
+        if ( StringHelper.isEmpty( super.getName() ) ) {
+            //no @Column defined.
+            return attribute.getContext().getNamingStrategy().propertyToColumnName( attribute.getName() );
+        }
+        else {
+            return super.getName();
+        }
+    }
 	@Override
 	public String getName() {
-		return super.getName().isEmpty() ? attribute.getName() : super.getName();
+         return name;
 	}
 
 	@Override

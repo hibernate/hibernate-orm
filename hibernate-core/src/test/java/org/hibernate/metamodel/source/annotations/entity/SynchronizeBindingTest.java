@@ -40,7 +40,7 @@ import static junit.framework.Assert.assertTrue;
  *
  * @author Hardy Ferentschik
  */
-public class SynchronizeBindingTests extends BaseAnnotationBindingTestCase {
+public class SynchronizeBindingTest extends BaseAnnotationBindingTestCase {
 	@Test
 	@Resources(annotatedClasses = TestEntityWithSynchronizeAnnotation.class)
 	public void testSynchronizeAnnotation() {

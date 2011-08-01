@@ -42,7 +42,6 @@ import static junit.framework.Assert.assertTrue;
  *
  * @author Hardy Ferentschik
  */
-
 public class EmbeddableBindingTest extends BaseAnnotationBindingTestCase {
 	@Test
 	@Resources(annotatedClasses = { User.class, Address.class })

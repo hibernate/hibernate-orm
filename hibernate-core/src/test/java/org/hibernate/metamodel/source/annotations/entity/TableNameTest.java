@@ -40,7 +40,6 @@ import static junit.framework.Assert.assertEquals;
  * @author Hardy Ferentschik
  */
 public class TableNameTest extends BaseAnnotationBindingTestCase {
-
 	@Entity
 	class A {
 		@Id

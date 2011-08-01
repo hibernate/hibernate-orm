@@ -44,7 +44,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Strong Liu
  */
-public class TemporalBindingTests extends BaseAnnotationBindingTestCase {
+public class TemporalBindingTest extends BaseAnnotationBindingTestCase {
     @Entity
     class Item1 {
         @Id
@@ -53,7 +53,7 @@ public class TemporalBindingTests extends BaseAnnotationBindingTestCase {
     }
 
     @Test(expected = AnnotationException.class)
-    @Resources(annotatedClasses = TemporalBindingTests.Item1.class)
+    @Resources(annotatedClasses = TemporalBindingTest.Item1.class)
     public void testNoTemporalAnnotationOnTemporalTypeAttribute() {
         getEntityBinding( Item1.class );
 
@@ -68,7 +68,7 @@ public class TemporalBindingTests extends BaseAnnotationBindingTestCase {
     }
 
     @Test
-    @Resources(annotatedClasses = TemporalBindingTests.Item2.class)
+    @Resources(annotatedClasses = TemporalBindingTest.Item2.class)
     public void testTemporalTypeAttribute() {
         EntityBinding binding = getEntityBinding( Item2.class );
         AttributeBinding attributeBinding = binding.locateAttributeBinding( "date" );
@@ -89,7 +89,7 @@ public class TemporalBindingTests extends BaseAnnotationBindingTestCase {
     }
 
     @Test
-    @Resources(annotatedClasses = TemporalBindingTests.Item3.class)
+    @Resources(annotatedClasses = TemporalBindingTest.Item3.class)
     public void testTemporalTypeAsId() {
         EntityBinding binding = getEntityBinding( Item3.class );
         AttributeBinding attributeBinding = binding.locateAttributeBinding( "date" );

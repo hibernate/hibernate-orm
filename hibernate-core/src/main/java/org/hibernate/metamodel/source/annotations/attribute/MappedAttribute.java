@@ -107,9 +107,6 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 		sb.append( '}' );
 		return sb.toString();
 	}
-
-
-
 }
 
 

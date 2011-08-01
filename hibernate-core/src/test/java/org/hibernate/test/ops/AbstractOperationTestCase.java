@@ -38,9 +38,9 @@ public abstract class AbstractOperationTestCase extends BaseCoreFunctionalTestCa
 		cfg.setProperty( Environment.STATEMENT_BATCH_SIZE, "0" );
 	}
 
-	public String[] getMappings() {
-		return new String[] { "ops/Node.hbm.xml", "ops/Employer.hbm.xml", "ops/OptLockEntity.hbm.xml", "ops/OneToOne.hbm.xml", "ops/Competition.hbm.xml" };
-	}
+//	public String[] getMappings() {
+//		return new String[] { "ops/Node.hbm.xml", "ops/Employer.hbm.xml", "ops/OptLockEntity.hbm.xml", "ops/OneToOne.hbm.xml", "ops/Competition.hbm.xml" };
+//	}
 
 	public String getCacheConcurrencyStrategy() {
 		return null;

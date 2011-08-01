@@ -29,12 +29,14 @@ import java.lang.reflect.Member;
 import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.beans.BeanInfoHelper;
 import org.hibernate.metamodel.binding.AbstractCollectionElement;
@@ -48,6 +50,7 @@ import org.hibernate.metamodel.binding.ComponentAttributeBinding;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.EntityDiscriminator;
 import org.hibernate.metamodel.binding.HibernateTypeDescriptor;
+import org.hibernate.metamodel.binding.IdGenerator;
 import org.hibernate.metamodel.binding.InheritanceType;
 import org.hibernate.metamodel.binding.ManyToOneAttributeBinding;
 import org.hibernate.metamodel.binding.MetaAttribute;
@@ -328,9 +331,15 @@ public class Binder {
 		);
 
 		entityBinding.getHierarchyDetails().getEntityIdentifier().setValueBinding( idAttributeBinding );
+        IdGenerator generator = identifierSource.getIdentifierGeneratorDescriptor();
+        if(generator == null){
+            Map<String,String> params = new HashMap<String, String>(  );
+            params.put( IdentifierGenerator.ENTITY_NAME, entityBinding.getEntity().getName() );
+           generator = new IdGenerator( "default_assign_identity_generator", "assigned", params );
+        }
 		entityBinding.getHierarchyDetails()
 				.getEntityIdentifier()
-				.setIdGenerator( identifierSource.getIdentifierGeneratorDescriptor() );
+				.setIdGenerator( generator );
 
 		final org.hibernate.metamodel.relational.Value relationalValue = idAttributeBinding.getValue();
 

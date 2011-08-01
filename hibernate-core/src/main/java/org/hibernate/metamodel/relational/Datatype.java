@@ -43,14 +43,18 @@ public class Datatype {
 		this.hashCode = generateHashCode();
 	}
 
-	private int generateHashCode() {
-		int result = typeCode;
-		result = 31 * result + typeName.hashCode();
-		result = 31 * result + javaType.hashCode();
-		return result;
-	}
+    private int generateHashCode() {
+        int result = typeCode;
+        if ( typeName != null ) {
+            result = 31 * result + typeName.hashCode();
+        }
+        if ( javaType != null ) {
+            result = 31 * result + javaType.hashCode();
+        }
+        return result;
+    }
 
-	public int getTypeCode() {
+    public int getTypeCode() {
 		return typeCode;
 	}
 

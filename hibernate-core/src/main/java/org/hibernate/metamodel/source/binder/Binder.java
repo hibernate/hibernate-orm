@@ -157,19 +157,17 @@ public class Binder {
 			return makeRootEntityBinding( (RootEntitySource) entitySource );
 		}
 		else {
-			if ( currentInheritanceType == InheritanceType.SINGLE_TABLE ) {
-				return makeDiscriminatedSubclassBinding( (SubclassEntitySource) entitySource, superEntityBinding );
-			}
-			else if ( currentInheritanceType == InheritanceType.JOINED ) {
-				return makeJoinedSubclassBinding( (SubclassEntitySource) entitySource, superEntityBinding );
-			}
-			else if ( currentInheritanceType == InheritanceType.TABLE_PER_CLASS ) {
-				return makeUnionedSubclassBinding( (SubclassEntitySource) entitySource, superEntityBinding );
-			}
-			else {
-				// extreme internal error!
-				throw new AssertionFailure( "Internal condition failure" );
-			}
+            switch ( currentInheritanceType ){
+                case SINGLE_TABLE:
+                    return makeDiscriminatedSubclassBinding( (SubclassEntitySource) entitySource, superEntityBinding );
+                case JOINED:
+                    return makeJoinedSubclassBinding( (SubclassEntitySource) entitySource, superEntityBinding );
+                case TABLE_PER_CLASS:
+                    return makeUnionedSubclassBinding( (SubclassEntitySource) entitySource, superEntityBinding );
+                default:
+                    // extreme internal error!
+				    throw new AssertionFailure( "Internal condition failure" );
+            }
 		}
 	}
 

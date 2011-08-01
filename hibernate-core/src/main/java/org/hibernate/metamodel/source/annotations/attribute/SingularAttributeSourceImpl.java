@@ -47,17 +47,7 @@ public class SingularAttributeSourceImpl implements SingularAttributeSource {
 
 	@Override
 	public ExplicitHibernateTypeSource getTypeInformation() {
-		return new ExplicitHibernateTypeSource() {
-			@Override
-			public String getName() {
-				return attribute.getExplicitHibernateTypeName();
-			}
-
-			@Override
-			public Map<String, String> getParameters() {
-				return attribute.getExplicitHibernateTypeParameters();
-			}
-		};
+		return new ExplicitHibernateTypeSourceImpl( attribute.getHibernateTypeResolver() );
 	}
 
 	@Override

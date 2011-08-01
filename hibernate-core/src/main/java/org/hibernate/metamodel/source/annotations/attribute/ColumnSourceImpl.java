@@ -30,25 +30,30 @@ import org.hibernate.internal.util.StringHelper;
  */
 public class ColumnSourceImpl extends ColumnValuesSourceImpl {
 	private final BasicAttribute attribute;
-    private final String name;
-	ColumnSourceImpl(BasicAttribute attribute) {
+	private final String name;
+
+	ColumnSourceImpl(BasicAttribute attribute, AttributeOverride attributeOverride) {
 		super( attribute.getColumnValues() );
+		if(attributeOverride != null) {
+		   setOverrideColumnValues( attributeOverride.getColumnValues() );
+		}
 		this.attribute = attribute;
-        this.name = resolveColumnName();
+		this.name = resolveColumnName();
 	}
 
-    protected String resolveColumnName() {
-        if ( StringHelper.isEmpty( super.getName() ) ) {
-            //no @Column defined.
-            return attribute.getContext().getNamingStrategy().propertyToColumnName( attribute.getName() );
-        }
-        else {
-            return super.getName();
-        }
-    }
+	protected String resolveColumnName() {
+		if ( StringHelper.isEmpty( super.getName() ) ) {
+			//no @Column defined.
+			return attribute.getContext().getNamingStrategy().propertyToColumnName( attribute.getName() );
+		}
+		else {
+			return super.getName();
+		}
+	}
+
 	@Override
 	public String getName() {
-         return name;
+		return name;
 	}
 
 	@Override

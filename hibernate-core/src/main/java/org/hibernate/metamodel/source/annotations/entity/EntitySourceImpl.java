@@ -176,7 +176,7 @@ public class EntitySourceImpl implements EntitySource {
 			attributeList.add( new SingularAttributeSourceImpl( attribute ) );
 		}
 		for ( EmbeddableClass component : entityClass.getEmbeddedClasses().values() ) {
-			attributeList.add( new ComponentAttributeSourceImpl( component ) );
+			attributeList.add( new ComponentAttributeSourceImpl( component, entityClass.getAttributeOverrideMap() ) );
 		}
 		for ( AssociationAttribute associationAttribute : entityClass.getAssociationAttributes() ) {
 			attributeList.add( new ToOneAttributeSourceImpl( associationAttribute ) );

@@ -26,7 +26,6 @@ package org.hibernate.metamodel.source.annotations.attribute;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.source.binder.ExplicitHibernateTypeSource;
@@ -40,9 +39,15 @@ import org.hibernate.metamodel.source.binder.SingularAttributeSource;
  */
 public class SingularAttributeSourceImpl implements SingularAttributeSource {
 	private final BasicAttribute attribute;
+	private final AttributeOverride attributeOverride;
 
 	public SingularAttributeSourceImpl(BasicAttribute attribute) {
+		this(attribute, null);
+	}
+
+	public SingularAttributeSourceImpl(BasicAttribute attribute, AttributeOverride attributeOverride) {
 		this.attribute = attribute;
+		this.attributeOverride = attributeOverride;
 	}
 
 	@Override
@@ -88,7 +93,7 @@ public class SingularAttributeSourceImpl implements SingularAttributeSource {
 	@Override
 	public List<RelationalValueSource> relationalValueSources() {
 		List<RelationalValueSource> valueSources = new ArrayList<RelationalValueSource>();
-		valueSources.add( new ColumnSourceImpl( attribute ) );
+		valueSources.add( new ColumnSourceImpl( attribute, attributeOverride ) );
 		return valueSources;
 	}
 

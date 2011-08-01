@@ -26,6 +26,7 @@ package org.hibernate.metamodel.source.annotations.entity;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import org.jboss.jandex.AnnotationInstance;
 
@@ -34,6 +35,7 @@ import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.source.LocalBindingContext;
 import org.hibernate.metamodel.source.annotations.JandexHelper;
 import org.hibernate.metamodel.source.annotations.attribute.AssociationAttribute;
+import org.hibernate.metamodel.source.annotations.attribute.AttributeOverride;
 import org.hibernate.metamodel.source.annotations.attribute.BasicAttribute;
 import org.hibernate.metamodel.source.annotations.attribute.SingularAttributeSourceImpl;
 import org.hibernate.metamodel.source.annotations.attribute.ToOneAttributeSourceImpl;
@@ -53,11 +55,13 @@ import org.hibernate.metamodel.source.binder.SingularAttributeNature;
 public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
 	private final EmbeddableClass embeddableClass;
 	private final Value<Class<?>> classReference;
+	private final Map<String, AttributeOverride> attributeOverrides;
 	private final String path;
 
-	public ComponentAttributeSourceImpl(EmbeddableClass embeddableClass) {
+	public ComponentAttributeSourceImpl(EmbeddableClass embeddableClass, Map<String, AttributeOverride> attributeOverrides) {
 		this.embeddableClass = embeddableClass;
 		this.classReference = new Value<Class<?>>( embeddableClass.getClass() );
+		this.attributeOverrides = attributeOverrides;
 		String tmpPath = embeddableClass.getEmbeddedAttributeName();
 		ConfiguredClass parent = embeddableClass.getParent();
 		while ( parent != null && parent instanceof EmbeddableClass ) {
@@ -120,10 +124,20 @@ public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
 	public Iterable<AttributeSource> attributeSources() {
 		List<AttributeSource> attributeList = new ArrayList<AttributeSource>();
 		for ( BasicAttribute attribute : embeddableClass.getSimpleAttributes() ) {
-			attributeList.add( new SingularAttributeSourceImpl( attribute ) );
+			AttributeOverride attributeOverride = null;
+			String tmp = getPath() + "." + attribute.getName();
+			if ( attributeOverrides.containsKey( tmp ) ) {
+				attributeOverride = attributeOverrides.get( tmp );
+			}
+			attributeList.add( new SingularAttributeSourceImpl( attribute, attributeOverride ) );
 		}
 		for ( EmbeddableClass component : embeddableClass.getEmbeddedClasses().values() ) {
-			attributeList.add( new ComponentAttributeSourceImpl( component ) );
+			attributeList.add(
+					new ComponentAttributeSourceImpl(
+							component,
+							embeddableClass.getAttributeOverrideMap()
+					)
+			);
 		}
 		for ( AssociationAttribute associationAttribute : embeddableClass.getAssociationAttributes() ) {
 			attributeList.add( new ToOneAttributeSourceImpl( associationAttribute ) );

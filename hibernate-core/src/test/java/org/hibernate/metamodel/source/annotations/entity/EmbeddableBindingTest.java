@@ -23,6 +23,8 @@
  */
 package org.hibernate.metamodel.source.annotations.entity;
 
+import javax.persistence.AttributeOverride;
+import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
@@ -30,6 +32,7 @@ import javax.persistence.Id;
 
 import org.junit.Test;
 
+import org.hibernate.metamodel.binding.BasicAttributeBinding;
 import org.hibernate.metamodel.binding.ComponentAttributeBinding;
 import org.hibernate.metamodel.binding.EntityBinding;
 
@@ -43,15 +46,32 @@ import static junit.framework.Assert.assertTrue;
  * @author Hardy Ferentschik
  */
 public class EmbeddableBindingTest extends BaseAnnotationBindingTestCase {
+	@Entity
+	class User {
+		@Id
+		private int id;
+
+		@Embedded
+		private Address address;
+	}
+
+	@Embeddable
+	class Address {
+		String street;
+		String city;
+		String postCode;
+	}
+
 	@Test
 	@Resources(annotatedClasses = { User.class, Address.class })
 	public void testEmbeddable() {
 		EntityBinding binding = getEntityBinding( User.class );
 
-		assertNotNull( binding.locateAttributeBinding( "address" ) );
-		assertTrue( binding.locateAttributeBinding( "address" ) instanceof ComponentAttributeBinding );
+		final String componentName = "address";
+		assertNotNull( binding.locateAttributeBinding( componentName ) );
+		assertTrue( binding.locateAttributeBinding( componentName ) instanceof ComponentAttributeBinding );
 		ComponentAttributeBinding componentBinding = (ComponentAttributeBinding) binding.locateAttributeBinding(
-				"address"
+				componentName
 		);
 
 		// todo - is this really correct? Does the path start w/ the class name
@@ -67,19 +87,37 @@ public class EmbeddableBindingTest extends BaseAnnotationBindingTestCase {
 	}
 
 	@Entity
-	class User {
+	@AttributeOverride(name = "embedded.name", column = @Column(name = "FUBAR", length = 42))
+	class BaseEntity {
 		@Id
 		private int id;
 
 		@Embedded
-		private Address address;
+		private EmbeddedEntity embedded;
 	}
 
 	@Embeddable
-	class Address {
-		String street;
-		String city;
-		String postCode;
+	class EmbeddedEntity {
+		String name;
+	}
+
+	@Test
+	@Resources(annotatedClasses = { BaseEntity.class, EmbeddedEntity.class })
+	public void testEmbeddableWithAttributeOverride() {
+		EntityBinding binding = getEntityBinding( BaseEntity.class );
+
+		final String componentName = "embedded";
+		assertNotNull( binding.locateAttributeBinding( componentName ) );
+		assertTrue( binding.locateAttributeBinding( componentName ) instanceof ComponentAttributeBinding );
+		ComponentAttributeBinding componentBinding = (ComponentAttributeBinding) binding.locateAttributeBinding(
+				componentName
+		);
+
+		assertNotNull( componentBinding.locateAttributeBinding( "name" ) );
+		BasicAttributeBinding nameAttribute = (BasicAttributeBinding) componentBinding.locateAttributeBinding( "name" );
+		org.hibernate.metamodel.relational.Column column = (org.hibernate.metamodel.relational.Column) nameAttribute.getValue();
+		assertEquals( "Attribute override specifies a custom column name", "FUBAR", column.getColumnName().getName() );
+		assertEquals( "Attribute override specifies a custom size", 42, column.getSize().getLength() );
 	}
 }
 

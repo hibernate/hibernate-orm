@@ -23,6 +23,8 @@
  */
 package org.hibernate.metamodel.source.annotations.attribute;
 
+import java.util.Map;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.metamodel.binding.IdGenerator;
 import org.hibernate.metamodel.source.binder.SimpleIdentifierSource;
@@ -33,8 +35,9 @@ import org.hibernate.metamodel.source.binder.SingularAttributeSource;
  */
 public class SimpleIdentifierSourceImpl implements SimpleIdentifierSource {
 	private final BasicAttribute attribute;
+	private final Map<String, AttributeOverride> attributeOverrideMap;
 
-	public SimpleIdentifierSourceImpl(BasicAttribute attribute) {
+	public SimpleIdentifierSourceImpl(BasicAttribute attribute, Map<String, AttributeOverride> attributeOverrideMap) {
 		if ( !attribute.isId() ) {
 			throw new AssertionFailure(
 					String.format(
@@ -44,6 +47,7 @@ public class SimpleIdentifierSourceImpl implements SimpleIdentifierSource {
 			);
 		}
 		this.attribute = attribute;
+		this.attributeOverrideMap = attributeOverrideMap;
 	}
 
 	@Override

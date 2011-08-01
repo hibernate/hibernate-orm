@@ -50,7 +50,7 @@ public class RootEntitySourceImpl extends EntitySourceImpl implements RootEntity
 		switch ( idType ) {
 			case SIMPLE: {
 				BasicAttribute attribute = getEntityClass().getIdAttributes().iterator().next();
-				return new SimpleIdentifierSourceImpl( attribute );
+				return new SimpleIdentifierSourceImpl( attribute, getEntityClass().getAttributeOverrideMap() );
 			}
 			case COMPOSED: {
 				break;
@@ -69,8 +69,9 @@ public class RootEntitySourceImpl extends EntitySourceImpl implements RootEntity
 	@Override
 	public SingularAttributeSource getVersioningAttributeSource() {
 		SingularAttributeSource attributeSource = null;
-		if ( getEntityClass().getVersionAttribute() != null ) {
-			attributeSource = new SingularAttributeSourceImpl( getEntityClass().getVersionAttribute() );
+		EntityClass entityClass = getEntityClass();
+		if ( entityClass.getVersionAttribute() != null ) {
+			attributeSource = new SingularAttributeSourceImpl( entityClass.getVersionAttribute() );
 		}
 		return attributeSource;
 	}

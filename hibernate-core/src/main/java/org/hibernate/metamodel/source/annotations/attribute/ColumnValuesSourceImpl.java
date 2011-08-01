@@ -31,9 +31,13 @@ import org.hibernate.metamodel.source.binder.ColumnSource;
  * @author Steve Ebersole
  */
 public class ColumnValuesSourceImpl implements ColumnSource {
-	private final ColumnValues columnValues;
+	private ColumnValues columnValues;
 
 	public ColumnValuesSourceImpl(ColumnValues columnValues) {
+		this.columnValues = columnValues;
+	}
+
+	void setOverrideColumnValues(ColumnValues columnValues) {
 		this.columnValues = columnValues;
 	}
 

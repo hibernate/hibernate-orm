@@ -36,48 +36,48 @@ import org.hibernate.internal.util.collections.CollectionHelper;
  * @author Strong Liu
  */
 public class CompositeAttributeTypeResolver implements AttributeTypeResolver {
-    private List<AttributeTypeResolver> resolvers = new ArrayList<AttributeTypeResolver>();
-    private final ExplicitAttributeTypeResolver explicitHibernateTypeResolver;
+	private List<AttributeTypeResolver> resolvers = new ArrayList<AttributeTypeResolver>();
+	private final AttributeTypeResolverImpl explicitHibernateTypeResolver;
 
-    public CompositeAttributeTypeResolver(ExplicitAttributeTypeResolver explicitHibernateTypeResolver) {
-        if ( explicitHibernateTypeResolver == null ) {
-            throw new AssertionFailure( "The Given AttributeTypeResolver is null." );
-        }
-        this.explicitHibernateTypeResolver = explicitHibernateTypeResolver;
-    }
+	public CompositeAttributeTypeResolver(AttributeTypeResolverImpl explicitHibernateTypeResolver) {
+		if ( explicitHibernateTypeResolver == null ) {
+			throw new AssertionFailure( "The Given AttributeTypeResolver is null." );
+		}
+		this.explicitHibernateTypeResolver = explicitHibernateTypeResolver;
+	}
 
-    public void addHibernateTypeResolver(AttributeTypeResolver resolver) {
-        if ( resolver == null ) {
-            throw new AssertionFailure( "The Given AttributeTypeResolver is null." );
-        }
-        resolvers.add( resolver );
-    }
+	public void addHibernateTypeResolver(AttributeTypeResolver resolver) {
+		if ( resolver == null ) {
+			throw new AssertionFailure( "The Given AttributeTypeResolver is null." );
+		}
+		resolvers.add( resolver );
+	}
 
-    @Override
-    public String getExplicitHibernateTypeName() {
-        String type = explicitHibernateTypeResolver.getExplicitHibernateTypeName();
-        if ( StringHelper.isEmpty( type ) ) {
-            for ( AttributeTypeResolver resolver : resolvers ) {
-                type = resolver.getExplicitHibernateTypeName();
-                if ( StringHelper.isNotEmpty( type ) ) {
-                    break;
-                }
-            }
-        }
-        return type;
-    }
+	@Override
+	public String getExplicitHibernateTypeName() {
+		String type = explicitHibernateTypeResolver.getExplicitHibernateTypeName();
+		if ( StringHelper.isEmpty( type ) ) {
+			for ( AttributeTypeResolver resolver : resolvers ) {
+				type = resolver.getExplicitHibernateTypeName();
+				if ( StringHelper.isNotEmpty( type ) ) {
+					break;
+				}
+			}
+		}
+		return type;
+	}
 
-    @Override
-    public Map<String, String> getExplicitHibernateTypeParameters() {
-        Map<String, String> parameters = explicitHibernateTypeResolver.getExplicitHibernateTypeParameters();
-        if ( CollectionHelper.isEmpty( parameters ) ) {
-            for ( AttributeTypeResolver resolver : resolvers ) {
-                parameters = resolver.getExplicitHibernateTypeParameters();
-                if ( CollectionHelper.isNotEmpty( parameters ) ) {
-                    break;
-                }
-            }
-        }
-        return parameters;
-    }
+	@Override
+	public Map<String, String> getExplicitHibernateTypeParameters() {
+		Map<String, String> parameters = explicitHibernateTypeResolver.getExplicitHibernateTypeParameters();
+		if ( CollectionHelper.isEmpty( parameters ) ) {
+			for ( AttributeTypeResolver resolver : resolvers ) {
+				parameters = resolver.getExplicitHibernateTypeParameters();
+				if ( CollectionHelper.isNotEmpty( parameters ) ) {
+					break;
+				}
+			}
+		}
+		return parameters;
+	}
 }

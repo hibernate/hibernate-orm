@@ -22,7 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 
-package org.hibernate.metamodel.source.annotations.attribute;
+package org.hibernate.metamodel.source.annotations.attribute.type;
 
 import java.util.Collections;
 import java.util.Map;
@@ -30,39 +30,31 @@ import java.util.Map;
 import org.jboss.jandex.AnnotationInstance;
 
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.metamodel.source.annotations.attribute.type.AttributeTypeResolver;
 
 /**
  * @author Strong Liu
  */
 public abstract class AbstractAttributeTypeResolver implements AttributeTypeResolver {
-    protected abstract AnnotationInstance getAnnotationInstance();
+	protected abstract AnnotationInstance getTypeDeterminingAnnotationInstance();
 
-    protected abstract String resolveHibernateTypeName(AnnotationInstance annotationInstance);
+	protected abstract String resolveHibernateTypeName(AnnotationInstance annotationInstance);
 
-    protected Map<String, String> resolveHibernateTypeParameters(AnnotationInstance annotationInstance) {
-        return Collections.emptyMap();
-    }
-//    private String explicitHibernateTypeName;
-//    private Map<String,String> explicitHibernateTypeParameters;
-    /**
-     * An optional  explicit hibernate type name specified via {@link org.hibernate.annotations.Type}.
-     */
-    @Override
-    final public String getExplicitHibernateTypeName() {
-        return resolveHibernateTypeName( getAnnotationInstance() );
-    }
+	protected Map<String, String> resolveHibernateTypeParameters(AnnotationInstance annotationInstance) {
+		return Collections.emptyMap();
+	}
 
-    /**
-     * Optional type parameters. See {@link #getExplicitHibernateTypeName()}.
-     */
-    @Override
-    final public Map<String, String> getExplicitHibernateTypeParameters() {
-        if ( StringHelper.isNotEmpty( getExplicitHibernateTypeName() ) ) {
-            return resolveHibernateTypeParameters( getAnnotationInstance() );
-        }
-        else {
-            return Collections.emptyMap();
-        }
-    }
+	@Override
+	final public String getExplicitHibernateTypeName() {
+		return resolveHibernateTypeName( getTypeDeterminingAnnotationInstance() );
+	}
+
+	@Override
+	final public Map<String, String> getExplicitHibernateTypeParameters() {
+		if ( StringHelper.isNotEmpty( getExplicitHibernateTypeName() ) ) {
+			return resolveHibernateTypeParameters( getTypeDeterminingAnnotationInstance() );
+		}
+		else {
+			return Collections.emptyMap();
+		}
+	}
 }

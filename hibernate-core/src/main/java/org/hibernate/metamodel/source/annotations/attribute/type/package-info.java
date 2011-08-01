@@ -21,29 +21,8 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-
 package org.hibernate.metamodel.source.annotations.attribute.type;
 
-import java.util.Map;
-
 /**
- * Determines explicit Hibernate type information for JPA mapped attributes when additional type information is
- * provided via annotations like {@link javax.persistence.Lob}, {@link javax.persistence.Enumerated} and
- * {@link javax.persistence.Temporal}.
- *
- * @author Strong Liu
+ * This package contains type binding code for basic attributes.
  */
-public interface AttributeTypeResolver {
-	/**
-	 * @return returns an explicit hibernate type name in case the mapped attribute has an additional
-	 *         {@link org.hibernate.annotations.Type} annotation or an implicit type is given via the use of annotations like
-	 *         {@link javax.persistence.Lob}, {@link javax.persistence.Enumerated} and
-	 *         {@link javax.persistence.Temporal}.
-	 */
-	String getExplicitHibernateTypeName();
-
-	/**
-	 * @return Returns a map of optional type parameters. See {@link #getExplicitHibernateTypeName()}.
-	 */
-	Map<String, String> getExplicitHibernateTypeParameters();
-}

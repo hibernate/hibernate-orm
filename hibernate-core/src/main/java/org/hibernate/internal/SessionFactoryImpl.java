@@ -1529,7 +1529,7 @@ public final class SessionFactoryImpl
 	}
 
 	public IdentifierGenerator getIdentifierGenerator(String rootEntityName) {
-		return (IdentifierGenerator) identifierGenerators.get(rootEntityName);
+		return identifierGenerators.get(rootEntityName);
 	}
 
 	private org.hibernate.engine.transaction.spi.TransactionFactory transactionFactory() {

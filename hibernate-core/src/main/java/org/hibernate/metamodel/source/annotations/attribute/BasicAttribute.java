@@ -127,7 +127,8 @@ public class BasicAttribute extends MappedAttribute {
 				annotations,
 				JPADotNames.EMBEDDED_ID
 		);
-		isId = !( idAnnotation == null && embeddedIdAnnotation == null );
+        //if this attribute has either @Id or @EmbeddedId, then it is an id attribute
+		isId = ( idAnnotation != null || embeddedIdAnnotation != null );
 
 		AnnotationInstance versionAnnotation = JandexHelper.getSingleAnnotation( annotations, JPADotNames.VERSION );
 		isVersioned = versionAnnotation != null;
@@ -150,9 +151,8 @@ public class BasicAttribute extends MappedAttribute {
 		checkBasicAnnotation();
 		checkGeneratedAnnotation();
 
-		String[] readWrite;
 		List<AnnotationInstance> columnTransformerAnnotations = getAllColumnTransformerAnnotations();
-		readWrite = createCustomReadWrite( columnTransformerAnnotations );
+		String[] readWrite = createCustomReadWrite( columnTransformerAnnotations );
 		this.customReadFragment = readWrite[0];
 		this.customWriteFragment = readWrite[1];
 		this.checkCondition = parseCheckAnnotation();

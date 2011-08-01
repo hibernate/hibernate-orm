@@ -538,9 +538,7 @@ public class Binder {
 					null,	// todo : and here
 					pluralAttributeBinding.getContainer().getPathBase() + '.' + attributeSource.getName()
 			);
-			if ( currentBindingContext.isGloballyQuotedIdentifiers() ) {
-				collectionTableName = StringHelper.quote( collectionTableName );
-			}
+			collectionTableName = quoteIdentifier( collectionTableName );
 			pluralAttributeBinding.setCollectionTable( schema.locateOrCreateTable( Identifier.toIdentifier( collectionTableName ) ) );
 		}
 
@@ -917,9 +915,7 @@ public class Binder {
 		else {
 			tableName = currentBindingContext.getNamingStrategy().tableName( tableName );
 		}
-		if ( currentBindingContext.isGloballyQuotedIdentifiers() ) {
-			tableName = StringHelper.quote( tableName );
-		}
+		tableName = quoteIdentifier( tableName );
 
 		final Schema.Name databaseSchemaName = Helper.determineDatabaseSchemaName(
 				tableSource.getExplicitSchemaName(),
@@ -958,7 +954,7 @@ public class Binder {
 
 		List<SimpleValueBinding> valueBindings = new ArrayList<SimpleValueBinding>();
 
-		if ( relationalValueSourceContainer.relationalValueSources().size() > 0 ) {
+		if ( !relationalValueSourceContainer.relationalValueSources().isEmpty() ) {
 			for ( RelationalValueSource valueSource : relationalValueSourceContainer.relationalValueSources() ) {
 				final TableSpecification table = attributeBinding.getContainer()
 						.seekEntityBinding()
@@ -985,17 +981,25 @@ public class Binder {
 			}
 		}
 		else {
-			final String name = metadata.getOptions()
-					.getNamingStrategy()
-					.propertyToColumnName( attributeBinding.getAttribute().getName() );
-			valueBindings.add(
-					new SimpleValueBinding(
-							attributeBinding.getContainer().seekEntityBinding().getPrimaryTable().locateOrCreateColumn( name )
-					)
-			);
+            String name = metadata.getOptions()
+                    .getNamingStrategy()
+                    .propertyToColumnName( attributeBinding.getAttribute().getName() );
+            name = quoteIdentifier( name );
+            valueBindings.add(
+                    new SimpleValueBinding(
+                            attributeBinding.getContainer()
+                                    .seekEntityBinding()
+                                    .getPrimaryTable()
+                                    .locateOrCreateColumn( name )
+                    )
+            );
 		}
 		attributeBinding.setSimpleValueBindings( valueBindings );
 	}
+
+    private String quoteIdentifier(String identifier) {
+        return currentBindingContext.isGloballyQuotedIdentifiers() ? StringHelper.quote( identifier ) : identifier;
+    }
 
 	private SimpleValue makeSimpleValue(
 			EntityBinding entityBinding,
@@ -1011,7 +1015,10 @@ public class Binder {
 	}
 
 	private Column makeColumn(ColumnSource columnSource, TableSpecification table) {
-		final Column column = table.locateOrCreateColumn( columnSource.getName() );
+        String name = columnSource.getName();
+        name = metadata.getOptions().getNamingStrategy().columnName( name );
+        name = quoteIdentifier( name );
+		final Column column = table.locateOrCreateColumn( name );
 		column.setNullable( columnSource.isNullable() );
 		column.setDefaultValue( columnSource.getDefaultValue() );
 		column.setSqlType( columnSource.getSqlType() );

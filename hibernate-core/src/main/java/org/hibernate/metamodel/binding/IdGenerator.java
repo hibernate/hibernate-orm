@@ -27,6 +27,8 @@ import java.io.Serializable;
 import java.util.Collections;
 import java.util.Map;
 
+import org.hibernate.internal.util.collections.CollectionHelper;
+
 /**
  * Identifier generator container, Useful to keep named generator in annotations
  *
@@ -42,7 +44,12 @@ public class IdGenerator implements Serializable {
                         Map<String, String> parameters ) {
         this.name = name;
         this.strategy = strategy;
-        this.parameters = parameters;
+        if ( CollectionHelper.isEmpty( parameters ) ) {
+            this.parameters = Collections.emptyMap();
+        }
+        else {
+            this.parameters = Collections.unmodifiableMap( parameters );
+        }
     }
 
     /**
@@ -63,13 +70,6 @@ public class IdGenerator implements Serializable {
      * @return generator configuration parameters
      */
     public Map<String, String> getParameters() {
-		Map<String, String> returnedParameters;
-		if ( parameters == null ) {
-			returnedParameters = Collections.emptyMap();
-		}
-		else {
-			returnedParameters = Collections.unmodifiableMap(parameters);
-		}
-		return returnedParameters;
+		return parameters;
     }
 }

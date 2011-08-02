@@ -276,6 +276,10 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 		return batchSize;
 	}
 
+	public boolean isEmbedded() {
+		return embedded;
+	}
+
 	public Class getCollectionPersisterClass() {
 		return collectionPersisterClass;
 	}

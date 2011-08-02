@@ -25,18 +25,23 @@ package org.hibernate.metamodel.source.internal;
 
 import java.util.Properties;
 
+import org.hibernate.AssertionFailure;
+import org.hibernate.metamodel.binding.AbstractCollectionElement;
+import org.hibernate.metamodel.binding.AbstractPluralAttributeBinding;
 import org.hibernate.metamodel.binding.AttributeBinding;
+import org.hibernate.metamodel.binding.BasicCollectionElement;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.EntityDiscriminator;
 import org.hibernate.metamodel.binding.HibernateTypeDescriptor;
+import org.hibernate.metamodel.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.binding.SingularAttributeBinding;
-import org.hibernate.metamodel.domain.Attribute;
 import org.hibernate.metamodel.domain.SingularAttribute;
 import org.hibernate.metamodel.relational.Datatype;
 import org.hibernate.metamodel.relational.SimpleValue;
 import org.hibernate.metamodel.relational.Value;
 import org.hibernate.metamodel.source.MetadataImplementor;
 import org.hibernate.type.Type;
+import org.hibernate.type.TypeFactory;
 
 /**
  * This is a TEMPORARY way to initialize Hibernate types.
@@ -58,7 +63,19 @@ class HibernateTypeResolver {
 				resolveDiscriminatorTypeInformation( entityBinding.getHierarchyDetails().getEntityDiscriminator() );
 			}
 			for ( AttributeBinding attributeBinding : entityBinding.attributeBindings() ) {
-				resolveAttributeTypeInformation( attributeBinding );
+				if ( SingularAttributeBinding.class.isInstance( attributeBinding ) ) {
+					resolveSingularAttributeTypeInformation(
+							SingularAttributeBinding.class.cast( attributeBinding  )
+					);
+				}
+				else if ( AbstractPluralAttributeBinding.class.isInstance( attributeBinding ) ) {
+					resolvePluralAttributeTypeInformation(
+							AbstractPluralAttributeBinding.class.cast( attributeBinding )
+					);
+				}
+				else {
+					throw new AssertionFailure( "Unknown type of AttributeBinding: " + attributeBinding.getClass().getName() );
+				}
 			}
 		}
 	}
@@ -66,7 +83,7 @@ class HibernateTypeResolver {
 	// perform any needed type resolutions for discriminator
 	private void resolveDiscriminatorTypeInformation(EntityDiscriminator discriminator) {
 		// perform any needed type resolutions for discriminator
-		Type resolvedHibernateType = determineHibernateTypeFromDescriptor( discriminator.getExplicitHibernateTypeDescriptor() );
+		Type resolvedHibernateType = determineSingularTypeFromDescriptor( discriminator.getExplicitHibernateTypeDescriptor() );
 		if ( resolvedHibernateType != null ) {
 			pushHibernateTypeInformationDownIfNeeded(
 					discriminator.getExplicitHibernateTypeDescriptor(),
@@ -76,50 +93,138 @@ class HibernateTypeResolver {
 		}
 	}
 
-	// perform any needed type resolutions
-	private void resolveAttributeTypeInformation(AttributeBinding attributeBinding) {
-
-		// we can determine the Hibernate Type if either:
-		// 		1) the user explicitly named a Type in a HibernateTypeDescriptor
-		// 		2) we know the java type of the attribute
-		Type resolvedHibernateType = determineHibernateTypeFromDescriptor( attributeBinding.getHibernateTypeDescriptor() );
-		if ( resolvedHibernateType == null ) {
-			resolvedHibernateType = determineHibernateTypeFromAttribute( attributeBinding.getAttribute() );
-		}
-		if ( resolvedHibernateType != null ) {
-			pushHibernateTypeInformationDownIfNeeded( attributeBinding, resolvedHibernateType );
-		}
-	}
-
-	private Type determineHibernateTypeFromDescriptor(HibernateTypeDescriptor hibernateTypeDescriptor) {
+	private Type determineSingularTypeFromDescriptor(HibernateTypeDescriptor hibernateTypeDescriptor) {
 		if ( hibernateTypeDescriptor.getResolvedTypeMapping() != null ) {
 			return hibernateTypeDescriptor.getResolvedTypeMapping();
 		}
-		String typeName = null;
-		Properties typeParameters = new Properties( );
-		if ( hibernateTypeDescriptor.getExplicitTypeName() != null ) {
-			typeName = hibernateTypeDescriptor.getExplicitTypeName();
-			if ( hibernateTypeDescriptor.getTypeParameters() != null ) {
-				typeParameters.putAll( hibernateTypeDescriptor.getTypeParameters() );
-			}
-		}
-		else if ( hibernateTypeDescriptor.getJavaTypeName() != null ) {
-			typeName = hibernateTypeDescriptor.getJavaTypeName();
-		}
+		String typeName = determineTypeName( hibernateTypeDescriptor );
+		Properties typeParameters = getTypeParameters( hibernateTypeDescriptor );
 		return getHeuristicType( typeName, typeParameters );
 	}
 
-	private Type determineHibernateTypeFromAttribute(Attribute attribute) {
-		// currently, we only handle singular attributes
-		if ( attribute.isSingular() ) {
-			final SingularAttribute singularAttribute = ( SingularAttribute ) attribute;
+	private static String determineTypeName(HibernateTypeDescriptor hibernateTypeDescriptor) {
+		return hibernateTypeDescriptor.getExplicitTypeName() != null ?
+				hibernateTypeDescriptor.getExplicitTypeName() :
+				hibernateTypeDescriptor.getJavaTypeName();
+	}
+
+	private static Properties getTypeParameters(HibernateTypeDescriptor hibernateTypeDescriptor) {
+		Properties typeParameters = new Properties( );
+		if ( hibernateTypeDescriptor.getTypeParameters() != null ) {
+			typeParameters.putAll( hibernateTypeDescriptor.getTypeParameters() );
+		}
+		return typeParameters;
+	}
+
+	// perform any needed type resolutions for SingularAttributeBinding
+	private void resolveSingularAttributeTypeInformation(SingularAttributeBinding attributeBinding) {
+		if ( attributeBinding.getHibernateTypeDescriptor().getResolvedTypeMapping() != null ) {
+			return;
+		}
+		// we can determine the Hibernate Type if either:
+		// 		1) the user explicitly named a Type in a HibernateTypeDescriptor
+		// 		2) we know the java type of the attribute
+		Type resolvedType;
+		resolvedType = determineSingularTypeFromDescriptor( attributeBinding.getHibernateTypeDescriptor() );
+		if ( resolvedType == null ) {
+			if ( ! attributeBinding.getAttribute().isSingular() ) {
+				throw new AssertionFailure( "SingularAttributeBinding object has a plural attribute: " + attributeBinding.getAttribute().getName() );
+			}
+			final SingularAttribute singularAttribute = ( SingularAttribute ) attributeBinding.getAttribute();
 			if ( singularAttribute.getSingularAttributeType() != null ) {
-				 return getHeuristicType(
+				resolvedType = getHeuristicType(
 						singularAttribute.getSingularAttributeType().getClassName(), new Properties()
 				);
 			}
 		}
-		return null;
+		if ( resolvedType != null ) {
+			pushHibernateTypeInformationDownIfNeeded( attributeBinding, resolvedType );
+		}
+	}
+
+	// perform any needed type resolutions for PluralAttributeBinding
+	private void resolvePluralAttributeTypeInformation(AbstractPluralAttributeBinding attributeBinding) {
+		if ( attributeBinding.getHibernateTypeDescriptor().getResolvedTypeMapping() != null ) {
+			return;
+		}
+		Type resolvedType;
+		String typeName = determineTypeName( attributeBinding.getHibernateTypeDescriptor() );
+		if ( typeName != null ) {
+			resolvedType =
+					metadata.getTypeResolver()
+							.getTypeFactory()
+							.customCollection(
+									typeName,
+									getTypeParameters( attributeBinding.getHibernateTypeDescriptor() ),
+									attributeBinding.getAttribute().getName(),
+									attributeBinding.getReferencedPropertyName(),
+									attributeBinding.isEmbedded()
+							);
+		}
+		else {
+			resolvedType = determineDefaultCollectionInformation( attributeBinding );
+		}
+		if ( resolvedType != null ) {
+			pushHibernateTypeInformationDownIfNeeded(
+					attributeBinding.getHibernateTypeDescriptor(),
+					null,
+					resolvedType );
+		}
+		resolveCollectionElementTypeInformation( attributeBinding.getCollectionElement() );
+	}
+
+	private Type determineDefaultCollectionInformation(AbstractPluralAttributeBinding attributeBinding) {
+		final TypeFactory typeFactory = metadata.getTypeResolver().getTypeFactory();
+		switch ( attributeBinding.getAttribute().getNature() ) {
+			case SET: {
+				return typeFactory.set(
+						attributeBinding.getAttribute().getName(),
+						attributeBinding.getReferencedPropertyName(),
+						attributeBinding.isEmbedded()
+				);
+			}
+			case BAG: {
+				return typeFactory.set(
+						attributeBinding.getAttribute().getName(),
+						attributeBinding.getReferencedPropertyName(),
+						attributeBinding.isEmbedded()
+				);
+			}
+			default: {
+				throw new UnsupportedOperationException(
+						"Collection type not supported yet:" + attributeBinding.getAttribute().getNature()
+				);
+			}
+		}
+	}
+
+	private void resolveCollectionElementTypeInformation(AbstractCollectionElement collectionElement) {
+		switch ( collectionElement.getCollectionElementNature() ) {
+			case BASIC: {
+				resolveBasicCollectionElement( BasicCollectionElement.class.cast( collectionElement ) );
+				break;
+			}
+			case COMPOSITE:
+			case ONE_TO_MANY:
+			case MANY_TO_MANY:
+			case MANY_TO_ANY: {
+				throw new UnsupportedOperationException( "Collection element nature not supported yet: " + collectionElement.getCollectionElementNature() );
+			}
+			default: {
+				throw new AssertionFailure( "Unknown collection element nature : " + collectionElement.getCollectionElementNature() );
+			}
+		}
+	}
+
+	private void resolveBasicCollectionElement(BasicCollectionElement basicCollectionElement) {
+		Type resolvedHibernateType = determineSingularTypeFromDescriptor( basicCollectionElement.getHibernateTypeDescriptor() );
+		if ( resolvedHibernateType != null ) {
+			pushHibernateTypeInformationDownIfNeeded(
+					basicCollectionElement.getHibernateTypeDescriptor(),
+					basicCollectionElement.getElementValue(),
+					resolvedHibernateType
+			);
+		}
 	}
 
 	private Type getHeuristicType(String typeName, Properties typeParameters) {
@@ -134,18 +239,13 @@ class HibernateTypeResolver {
 		return null;
 	}
 
-	private void pushHibernateTypeInformationDownIfNeeded(AttributeBinding attributeBinding, Type resolvedHibernateType) {
+	private void pushHibernateTypeInformationDownIfNeeded(SingularAttributeBinding attributeBinding, Type resolvedHibernateType) {
 
 		final HibernateTypeDescriptor hibernateTypeDescriptor = attributeBinding.getHibernateTypeDescriptor();
-		Value value = null;
-		if ( SingularAttribute.class.isInstance( attributeBinding.getAttribute() ) ) {
-			value = SingularAttributeBinding.class.cast( attributeBinding ).getValue();
-			final SingularAttribute singularAttribute = (SingularAttribute) attributeBinding.getAttribute();
-			if ( ! singularAttribute.isTypeResolved() ) {
-				if ( hibernateTypeDescriptor.getJavaTypeName() != null ) {
-					singularAttribute.resolveType( metadata.makeJavaType( hibernateTypeDescriptor.getJavaTypeName() ) );
-				}
-			}
+		final SingularAttribute singularAttribute = SingularAttribute.class.cast( attributeBinding.getAttribute() );
+		final Value value = attributeBinding.getValue();
+		if ( ! singularAttribute.isTypeResolved() && hibernateTypeDescriptor.getJavaTypeName() != null ) {
+			singularAttribute.resolveType( metadata.makeJavaType( hibernateTypeDescriptor.getJavaTypeName() ) );
 		}
 
 		// sql type information ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

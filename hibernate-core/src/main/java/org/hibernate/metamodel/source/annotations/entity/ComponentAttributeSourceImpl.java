@@ -25,11 +25,13 @@ package org.hibernate.metamodel.source.annotations.entity;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.jboss.jandex.AnnotationInstance;
 
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.Value;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.source.LocalBindingContext;
@@ -53,21 +55,22 @@ import org.hibernate.metamodel.source.binder.SingularAttributeNature;
  * @author Hardy Ferentschik
  */
 public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
+	private static final String PATH_SEPERATOR = ".";
 	private final EmbeddableClass embeddableClass;
 	private final Value<Class<?>> classReference;
 	private final Map<String, AttributeOverride> attributeOverrides;
 	private final String path;
 
-	public ComponentAttributeSourceImpl(EmbeddableClass embeddableClass, Map<String, AttributeOverride> attributeOverrides) {
+	public ComponentAttributeSourceImpl(EmbeddableClass embeddableClass, String parentPath, Map<String, AttributeOverride> attributeOverrides) {
 		this.embeddableClass = embeddableClass;
 		this.classReference = new Value<Class<?>>( embeddableClass.getClass() );
 		this.attributeOverrides = attributeOverrides;
-		String tmpPath = embeddableClass.getEmbeddedAttributeName();
-		ConfiguredClass parent = embeddableClass.getParent();
-		while ( parent != null && parent instanceof EmbeddableClass ) {
-			tmpPath = ( (EmbeddableClass) parent ).getEmbeddedAttributeName() + "." + tmpPath;
+		if ( StringHelper.isEmpty( parentPath ) ) {
+			path = embeddableClass.getEmbeddedAttributeName();
 		}
-		path = tmpPath;
+		else {
+			path = parentPath + "." + embeddableClass.getEmbeddedAttributeName();
+		}
 	}
 
 	@Override
@@ -125,17 +128,18 @@ public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
 		List<AttributeSource> attributeList = new ArrayList<AttributeSource>();
 		for ( BasicAttribute attribute : embeddableClass.getSimpleAttributes() ) {
 			AttributeOverride attributeOverride = null;
-			String tmp = getPath() + "." + attribute.getName();
+			String tmp = getPath() + PATH_SEPERATOR + attribute.getName();
 			if ( attributeOverrides.containsKey( tmp ) ) {
 				attributeOverride = attributeOverrides.get( tmp );
 			}
 			attributeList.add( new SingularAttributeSourceImpl( attribute, attributeOverride ) );
 		}
-		for ( EmbeddableClass component : embeddableClass.getEmbeddedClasses().values() ) {
+		for ( EmbeddableClass embeddable : embeddableClass.getEmbeddedClasses().values() ) {
 			attributeList.add(
 					new ComponentAttributeSourceImpl(
-							component,
-							embeddableClass.getAttributeOverrideMap()
+							embeddable,
+							getPath(),
+							createAggregatedOverrideMap()
 					)
 			);
 		}
@@ -191,13 +195,11 @@ public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
 
 	@Override
 	public boolean isLazy() {
-		// todo : implement
 		return false;
 	}
 
 	@Override
 	public boolean isIncludedInOptimisticLocking() {
-		// todo : implement
 		return true;
 	}
 
@@ -214,5 +216,30 @@ public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
 	@Override
 	public boolean areValuesNullableByDefault() {
 		return true;
+	}
+
+	@Override
+	public String toString() {
+		final StringBuilder sb = new StringBuilder();
+		sb.append( "ComponentAttributeSourceImpl" );
+		sb.append( "{embeddableClass=" ).append( embeddableClass.getConfiguredClass().getSimpleName() );
+		sb.append( '}' );
+		return sb.toString();
+	}
+
+	private Map<String, AttributeOverride> createAggregatedOverrideMap() {
+		// add all overrides passed down to this instance - they override overrides ;-) which are defined further down
+		// the embeddable chain
+		Map<String, AttributeOverride> aggregatedOverrideMap = new HashMap<String, AttributeOverride>(
+				attributeOverrides
+		);
+
+		for ( Map.Entry<String, AttributeOverride> entry : embeddableClass.getAttributeOverrideMap().entrySet() ) {
+			String fullPath = getPath() + PATH_SEPERATOR + entry.getKey();
+			if ( !aggregatedOverrideMap.containsKey( fullPath ) ) {
+				aggregatedOverrideMap.put( fullPath, entry.getValue() );
+			}
+		}
+		return aggregatedOverrideMap;
 	}
 }

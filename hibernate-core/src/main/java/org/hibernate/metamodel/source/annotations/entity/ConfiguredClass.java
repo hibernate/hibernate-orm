@@ -608,7 +608,7 @@ public class ConfiguredClass {
 				JPADotNames.ATTRIBUTE_OVERRIDE
 		);
 		if ( attributeOverrideAnnotation != null ) {
-			String prefix = createPathPrefix( attributeOverrideAnnotation );
+			String prefix = createPathPrefix( attributeOverrideAnnotation.target() );
 			AttributeOverride override = new AttributeOverride( prefix, attributeOverrideAnnotation );
 			attributeOverrideList.put( override.getAttributePath(), override );
 		}
@@ -620,7 +620,7 @@ public class ConfiguredClass {
 		if ( attributeOverridesAnnotation != null ) {
 			AnnotationInstance[] annotationInstances = attributeOverridesAnnotation.value().asNestedArray();
 			for ( AnnotationInstance annotationInstance : annotationInstances ) {
-				String prefix = createPathPrefix( annotationInstance );
+				String prefix = createPathPrefix( attributeOverridesAnnotation.target() );
 				AttributeOverride override = new AttributeOverride( prefix, annotationInstance );
 				attributeOverrideList.put( override.getAttributePath(), override );
 			}
@@ -628,9 +628,8 @@ public class ConfiguredClass {
 		return attributeOverrideList;
 	}
 
-	private String createPathPrefix(AnnotationInstance attributeOverrideAnnotation) {
+	private String createPathPrefix(AnnotationTarget target) {
 		String prefix = null;
-		AnnotationTarget target = attributeOverrideAnnotation.target();
 		if ( target instanceof FieldInfo || target instanceof MethodInfo ) {
 			prefix = JandexHelper.getPropertyName( target );
 		}

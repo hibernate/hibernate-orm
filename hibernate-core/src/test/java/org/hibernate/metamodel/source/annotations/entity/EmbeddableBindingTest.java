@@ -24,6 +24,7 @@
 package org.hibernate.metamodel.source.annotations.entity;
 
 import javax.persistence.AttributeOverride;
+import javax.persistence.AttributeOverrides;
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.persistence.Embedded;
@@ -52,22 +53,22 @@ public class EmbeddableBindingTest extends BaseAnnotationBindingTestCase {
 		private int id;
 
 		@Embedded
-		private Address address;
+		private Phone phone;
 	}
 
 	@Embeddable
-	class Address {
-		String street;
-		String city;
-		String postCode;
+	class Phone {
+		String countryCode;
+		String areaCode;
+		String number;
 	}
 
 	@Test
-	@Resources(annotatedClasses = { User.class, Address.class })
+	@Resources(annotatedClasses = { User.class, Phone.class })
 	public void testEmbeddable() {
 		EntityBinding binding = getEntityBinding( User.class );
 
-		final String componentName = "address";
+		final String componentName = "phone";
 		assertNotNull( binding.locateAttributeBinding( componentName ) );
 		assertTrue( binding.locateAttributeBinding( componentName ) instanceof ComponentAttributeBinding );
 		ComponentAttributeBinding componentBinding = (ComponentAttributeBinding) binding.locateAttributeBinding(
@@ -77,13 +78,13 @@ public class EmbeddableBindingTest extends BaseAnnotationBindingTestCase {
 		// todo - is this really correct? Does the path start w/ the class name
 		assertEquals(
 				"Wrong path",
-				"org.hibernate.metamodel.source.annotations.entity.EmbeddableBindingTest$User.address",
+				"org.hibernate.metamodel.source.annotations.entity.EmbeddableBindingTest$User.phone",
 				componentBinding.getPathBase()
 		);
 
-		assertNotNull( componentBinding.locateAttributeBinding( "street" ) );
-		assertNotNull( componentBinding.locateAttributeBinding( "city" ) );
-		assertNotNull( componentBinding.locateAttributeBinding( "postCode" ) );
+		assertNotNull( componentBinding.locateAttributeBinding( "countryCode" ) );
+		assertNotNull( componentBinding.locateAttributeBinding( "areaCode" ) );
+		assertNotNull( componentBinding.locateAttributeBinding( "number" ) );
 	}
 
 	@Entity
@@ -118,6 +119,141 @@ public class EmbeddableBindingTest extends BaseAnnotationBindingTestCase {
 		org.hibernate.metamodel.relational.Column column = (org.hibernate.metamodel.relational.Column) nameAttribute.getValue();
 		assertEquals( "Attribute override specifies a custom column name", "FUBAR", column.getColumnName().getName() );
 		assertEquals( "Attribute override specifies a custom size", 42, column.getSize().getLength() );
+	}
+
+	@Embeddable
+	public class Address {
+		protected String street;
+		protected String city;
+		protected String state;
+		@Embedded
+		protected Zipcode zipcode;
+	}
+
+	@Embeddable
+	public class Zipcode {
+		protected String zip;
+		protected String plusFour;
+	}
+
+	@Entity
+	public class Customer {
+		@Id
+		protected Integer id;
+		protected String name;
+		@AttributeOverrides( {
+				@AttributeOverride(name = "state",
+						column = @Column(name = "ADDR_STATE")),
+				@AttributeOverride(name = "zipcode.zip",
+						column = @Column(name = "ADDR_ZIP"))
+		})
+		@Embedded
+		protected Address address;
+	}
+
+	@Test
+	@Resources(annotatedClasses = { Zipcode.class, Address.class, Customer.class })
+	public void testNestedEmbeddable() {
+		EntityBinding binding = getEntityBinding( Customer.class );
+
+		final String addressComponentName = "address";
+		assertNotNull( binding.locateAttributeBinding( addressComponentName ) );
+		assertTrue( binding.locateAttributeBinding( addressComponentName ) instanceof ComponentAttributeBinding );
+		ComponentAttributeBinding attributeComponentBinding = (ComponentAttributeBinding) binding.locateAttributeBinding(
+				addressComponentName
+		);
+
+		assertNotNull( attributeComponentBinding.locateAttributeBinding( "street" ) );
+		assertNotNull( attributeComponentBinding.locateAttributeBinding( "city" ) );
+		assertNotNull( attributeComponentBinding.locateAttributeBinding( "state" ) );
+
+		BasicAttributeBinding stateAttribute = (BasicAttributeBinding) attributeComponentBinding.locateAttributeBinding(
+				"state"
+		);
+		org.hibernate.metamodel.relational.Column column = (org.hibernate.metamodel.relational.Column) stateAttribute.getValue();
+		assertEquals(
+				"Attribute override specifies a custom column name",
+				"ADDR_STATE",
+				column.getColumnName().getName()
+		);
+
+
+		final String zipComponentName = "zipcode";
+		assertNotNull( attributeComponentBinding.locateAttributeBinding( zipComponentName ) );
+		assertTrue( attributeComponentBinding.locateAttributeBinding( zipComponentName ) instanceof ComponentAttributeBinding );
+		ComponentAttributeBinding zipComponentBinding = (ComponentAttributeBinding) attributeComponentBinding.locateAttributeBinding(
+				zipComponentName
+		);
+
+		BasicAttributeBinding nameAttribute = (BasicAttributeBinding) zipComponentBinding.locateAttributeBinding( "zip" );
+		column = (org.hibernate.metamodel.relational.Column) nameAttribute.getValue();
+		assertEquals(
+				"Attribute override specifies a custom column name",
+				"ADDR_ZIP",
+				column.getColumnName().getName()
+		);
+	}
+
+	@Embeddable
+	public class A {
+		@Embedded
+		@AttributeOverrides( {
+				@AttributeOverride(name = "foo", column = @Column(name = "BAR")),
+				@AttributeOverride(name = "fubar", column = @Column(name = "A_WINS"))
+		})
+		protected B b;
+	}
+
+	@Embeddable
+	public class B {
+		protected String foo;
+		private String fubar;
+	}
+
+	@Entity
+	public class C {
+		@Id
+		int id;
+
+		@Embedded
+		@AttributeOverride(name = "b.fubar", column = @Column(name = "C_WINS"))
+		protected A a;
+	}
+
+	@Test
+	@Resources(annotatedClasses = { A.class, B.class, C.class })
+	public void testAttributeOverrideInEmbeddable() {
+		EntityBinding binding = getEntityBinding( C.class );
+
+		final String aComponentName = "a";
+		assertNotNull( binding.locateAttributeBinding( aComponentName ) );
+		assertTrue( binding.locateAttributeBinding( aComponentName ) instanceof ComponentAttributeBinding );
+		ComponentAttributeBinding aComponentBinding = (ComponentAttributeBinding) binding.locateAttributeBinding(
+				aComponentName
+		);
+
+		final String bComponentName = "b";
+		assertNotNull( aComponentBinding.locateAttributeBinding( bComponentName ) );
+		assertTrue( aComponentBinding.locateAttributeBinding( bComponentName ) instanceof ComponentAttributeBinding );
+		ComponentAttributeBinding bComponentBinding = (ComponentAttributeBinding) aComponentBinding.locateAttributeBinding(
+				bComponentName
+		);
+
+		BasicAttributeBinding attribute = (BasicAttributeBinding) bComponentBinding.locateAttributeBinding( "foo" );
+		org.hibernate.metamodel.relational.Column column = (org.hibernate.metamodel.relational.Column) attribute.getValue();
+		assertEquals(
+				"Attribute override specifies a custom column name",
+				"BAR",
+				column.getColumnName().getName()
+		);
+
+		attribute = (BasicAttributeBinding) bComponentBinding.locateAttributeBinding( "fubar" );
+		column = (org.hibernate.metamodel.relational.Column) attribute.getValue();
+		assertEquals(
+				"Attribute override specifies a custom column name",
+				"C_WINS",
+				column.getColumnName().getName()
+		);
 	}
 }
 

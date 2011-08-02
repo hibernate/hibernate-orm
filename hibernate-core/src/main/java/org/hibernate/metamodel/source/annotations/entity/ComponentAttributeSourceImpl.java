@@ -60,7 +60,7 @@ public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
 
 	public ComponentAttributeSourceImpl(EmbeddableClass embeddableClass, String parentPath, Map<String, AttributeOverride> attributeOverrides) {
 		this.embeddableClass = embeddableClass;
-		this.classReference = new Value<Class<?>>( embeddableClass.getClass() );
+		this.classReference = new Value<Class<?>>( embeddableClass.getConfiguredClass() );
 		this.attributeOverrides = attributeOverrides;
 		if ( StringHelper.isEmpty( parentPath ) ) {
 			path = embeddableClass.getEmbeddedAttributeName();
@@ -87,7 +87,7 @@ public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
 
 	@Override
 	public String getClassName() {
-		return embeddableClass.getClass().getName();
+		return embeddableClass.getConfiguredClass().getName();
 	}
 
 	@Override

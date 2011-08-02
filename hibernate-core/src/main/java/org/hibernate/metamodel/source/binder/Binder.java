@@ -25,10 +25,8 @@ package org.hibernate.metamodel.source.binder;
 
 import java.beans.BeanInfo;
 import java.beans.PropertyDescriptor;
-import java.lang.reflect.Member;
 import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,7 +37,6 @@ import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.beans.BeanInfoHelper;
-import org.hibernate.metamodel.binding.AbstractCollectionElement;
 import org.hibernate.metamodel.binding.AbstractPluralAttributeBinding;
 import org.hibernate.metamodel.binding.AttributeBinding;
 import org.hibernate.metamodel.binding.AttributeBindingContainer;
@@ -57,12 +54,10 @@ import org.hibernate.metamodel.binding.MetaAttribute;
 import org.hibernate.metamodel.binding.SimpleValueBinding;
 import org.hibernate.metamodel.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.binding.TypeDef;
-import org.hibernate.metamodel.domain.Attribute;
 import org.hibernate.metamodel.domain.Component;
 import org.hibernate.metamodel.domain.Entity;
 import org.hibernate.metamodel.domain.PluralAttribute;
 import org.hibernate.metamodel.domain.SingularAttribute;
-import org.hibernate.metamodel.domain.Type;
 import org.hibernate.metamodel.relational.Column;
 import org.hibernate.metamodel.relational.DerivedValue;
 import org.hibernate.metamodel.relational.Identifier;
@@ -85,6 +80,7 @@ import org.hibernate.tuple.entity.EntityTuplizer;
  * The API consists of {@link #Binder} and {@link #processEntityHierarchy}
  *
  * @author Steve Ebersole
+ * @author Hardy Ferentschik
  */
 public class Binder {
 	private final MetadataImplementor metadata;
@@ -160,17 +156,17 @@ public class Binder {
 			return makeRootEntityBinding( (RootEntitySource) entitySource );
 		}
 		else {
-            switch ( currentInheritanceType ){
-                case SINGLE_TABLE:
-                    return makeDiscriminatedSubclassBinding( (SubclassEntitySource) entitySource, superEntityBinding );
-                case JOINED:
-                    return makeJoinedSubclassBinding( (SubclassEntitySource) entitySource, superEntityBinding );
-                case TABLE_PER_CLASS:
-                    return makeUnionedSubclassBinding( (SubclassEntitySource) entitySource, superEntityBinding );
-                default:
-                    // extreme internal error!
-				    throw new AssertionFailure( "Internal condition failure" );
-            }
+			switch ( currentInheritanceType ) {
+				case SINGLE_TABLE:
+					return makeDiscriminatedSubclassBinding( (SubclassEntitySource) entitySource, superEntityBinding );
+				case JOINED:
+					return makeJoinedSubclassBinding( (SubclassEntitySource) entitySource, superEntityBinding );
+				case TABLE_PER_CLASS:
+					return makeUnionedSubclassBinding( (SubclassEntitySource) entitySource, superEntityBinding );
+				default:
+					// extreme internal error!
+					throw new AssertionFailure( "Internal condition failure" );
+			}
 		}
 	}
 
@@ -195,7 +191,6 @@ public class Binder {
 
 		return entityBinding;
 	}
-
 
 	private EntityBinding buildBasicEntityBinding(EntitySource entitySource, EntityBinding superEntityBinding) {
 		final EntityBinding entityBinding = superEntityBinding == null
@@ -277,7 +272,7 @@ public class Binder {
 		final EntityBinding entityBinding = buildBasicEntityBinding( entitySource, superEntityBinding );
 
 		entityBinding.setPrimaryTable( superEntityBinding.getPrimaryTable() );
-        entityBinding.setPrimaryTableName( superEntityBinding.getPrimaryTableName() );
+		entityBinding.setPrimaryTableName( superEntityBinding.getPrimaryTableName() );
 		bindDiscriminatorValue( entitySource, entityBinding );
 
 		return entityBinding;
@@ -302,7 +297,6 @@ public class Binder {
 
 		return entityBinding;
 	}
-
 
 	// Attributes ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -331,12 +325,12 @@ public class Binder {
 		);
 
 		entityBinding.getHierarchyDetails().getEntityIdentifier().setValueBinding( idAttributeBinding );
-        IdGenerator generator = identifierSource.getIdentifierGeneratorDescriptor();
-        if(generator == null){
-            Map<String,String> params = new HashMap<String, String>(  );
-            params.put( IdentifierGenerator.ENTITY_NAME, entityBinding.getEntity().getName() );
-           generator = new IdGenerator( "default_assign_identity_generator", "assigned", params );
-        }
+		IdGenerator generator = identifierSource.getIdentifierGeneratorDescriptor();
+		if ( generator == null ) {
+			Map<String, String> params = new HashMap<String, String>();
+			params.put( IdentifierGenerator.ENTITY_NAME, entityBinding.getEntity().getName() );
+			generator = new IdGenerator( "default_assign_identity_generator", "assigned", params );
+		}
 		entityBinding.getHierarchyDetails()
 				.getEntityIdentifier()
 				.setIdGenerator( generator );
@@ -441,7 +435,8 @@ public class Binder {
 
 		if ( StringHelper.isNotEmpty( attributeSource.getParentReferenceAttributeName() ) ) {
 			final SingularAttribute parentReferenceAttribute =
-					componentAttributeBinding.getComponent().createSingularAttribute( attributeSource.getParentReferenceAttributeName() );
+					componentAttributeBinding.getComponent()
+							.createSingularAttribute( attributeSource.getParentReferenceAttributeName() );
 			componentAttributeBinding.setParentReference( parentReferenceAttribute );
 		}
 
@@ -453,9 +448,8 @@ public class Binder {
 	}
 
 	private void bindPersistentCollection(PluralAttributeSource attributeSource, AttributeBindingContainer attributeBindingContainer) {
-		final PluralAttribute existingAttribute = attributeBindingContainer.getAttributeContainer().locatePluralAttribute(
-				attributeSource.getName()
-		);
+		final PluralAttribute existingAttribute = attributeBindingContainer.getAttributeContainer()
+				.locatePluralAttribute( attributeSource.getName() );
 		final AbstractPluralAttributeBinding pluralAttributeBinding;
 
 		if ( attributeSource.getPluralAttributeNature() == PluralAttributeNature.BAG ) {
@@ -525,9 +519,9 @@ public class Binder {
 
 		final String tableName = attributeSource.getExplicitCollectionTableName();
 		if ( StringHelper.isNotEmpty( tableName ) ) {
-			final Identifier tableIdentifier = Identifier.toIdentifier( currentBindingContext.getNamingStrategy().tableName(
-					tableName
-			) );
+			final Identifier tableIdentifier = Identifier.toIdentifier(
+					currentBindingContext.getNamingStrategy().tableName( tableName )
+			);
 			Table collectionTable = schema.locateTable( tableIdentifier );
 			if ( collectionTable == null ) {
 				collectionTable = schema.createTable( tableIdentifier );
@@ -548,7 +542,13 @@ public class Binder {
 					pluralAttributeBinding.getContainer().getPathBase() + '.' + attributeSource.getName()
 			);
 			collectionTableName = quoteIdentifier( collectionTableName );
-			pluralAttributeBinding.setCollectionTable( schema.locateOrCreateTable( Identifier.toIdentifier( collectionTableName ) ) );
+			pluralAttributeBinding.setCollectionTable(
+					schema.locateOrCreateTable(
+							Identifier.toIdentifier(
+									collectionTableName
+							)
+					)
+			);
 		}
 
 		if ( StringHelper.isNotEmpty( attributeSource.getCollectionTableComment() ) ) {
@@ -644,18 +644,20 @@ public class Binder {
 	private BasicAttributeBinding doBasicSingularAttributeBindingCreation(
 			SingularAttributeSource attributeSource,
 			AttributeBindingContainer attributeBindingContainer) {
-		final SingularAttribute existingAttribute = attributeBindingContainer.getAttributeContainer().locateSingularAttribute(
-				attributeSource.getName()
-		);
+		final SingularAttribute existingAttribute = attributeBindingContainer.getAttributeContainer()
+				.locateSingularAttribute( attributeSource.getName() );
 		final SingularAttribute attribute;
 		if ( existingAttribute != null ) {
 			attribute = existingAttribute;
 		}
 		else if ( attributeSource.isVirtualAttribute() ) {
-			attribute = attributeBindingContainer.getAttributeContainer().createVirtualSingularAttribute( attributeSource.getName() );
+			attribute = attributeBindingContainer.getAttributeContainer().createVirtualSingularAttribute(
+					attributeSource.getName()
+			);
 		}
 		else {
-			attribute = attributeBindingContainer.getAttributeContainer().createSingularAttribute( attributeSource.getName() );
+			attribute = attributeBindingContainer.getAttributeContainer()
+					.createSingularAttribute( attributeSource.getName() );
 		}
 
 		final BasicAttributeBinding attributeBinding;
@@ -690,7 +692,10 @@ public class Binder {
 		bindRelationalValues( attributeSource, attributeBinding );
 
 		attributeBinding.setMetaAttributeContext(
-				buildMetaAttributeContext( attributeSource.metaAttributes(), attributeBindingContainer.getMetaAttributeContext() )
+				buildMetaAttributeContext(
+						attributeSource.metaAttributes(),
+						attributeBindingContainer.getMetaAttributeContext()
+				)
 		);
 
 		return attributeBinding;
@@ -711,7 +716,6 @@ public class Binder {
 			PluralAttribute attribute,
 			BasicCollectionElement collectionElement) {
 		final Class<?> attributeJavaType = determineJavaType( attribute );
-
 		resolveTypeInformation( typeSource, collectionElement.getHibernateTypeDescriptor(), attributeJavaType );
 	}
 
@@ -735,7 +739,7 @@ public class Binder {
 				hibernateTypeDescriptor.setExplicitTypeName( explicitTypeName );
 			}
 			final Map<String, String> parameters = typeSource.getParameters();
-			if ( parameters!=null) {
+			if ( parameters != null ) {
 				hibernateTypeDescriptor.getTypeParameters().putAll( parameters );
 			}
 		}
@@ -747,6 +751,11 @@ public class Binder {
 		}
 	}
 
+	/**
+	 * @param attribute the domain attribute
+	 *
+	 * @return Returns the Java type of the attribute using reflection or {@code null} if the type cannot be discovered
+	 */
 	private Class<?> determineJavaType(final SingularAttribute attribute) {
 		try {
 			final Class<?> ownerClass = attribute.getAttributeContainer().getClassReference();
@@ -760,29 +769,13 @@ public class Binder {
 		return null;
 	}
 
-	private static class AttributeJavaTypeDeterminerDelegate implements BeanInfoHelper.BeanInfoDelegate {
-		private final String attributeName;
-		private Class<?> javaType = null;
-
-		private AttributeJavaTypeDeterminerDelegate(String attributeName) {
-			this.attributeName = attributeName;
-		}
-
-		@Override
-		public void processBeanInfo(BeanInfo beanInfo) throws Exception {
-			for ( PropertyDescriptor propertyDescriptor : beanInfo.getPropertyDescriptors() ) {
-				if ( propertyDescriptor.getName().equals( attributeName ) ) {
-					javaType = propertyDescriptor.getPropertyType();
-					break;
-				}
-			}
-		}
-	}
-
 	private Class<?> determineJavaType(PluralAttribute attribute) {
 		try {
 			final Class<?> ownerClass = attribute.getAttributeContainer().getClassReference();
-			PluralAttributeJavaTypeDeterminerDelegate delegate = new PluralAttributeJavaTypeDeterminerDelegate( ownerClass, attribute.getName() );
+			PluralAttributeJavaTypeDeterminerDelegate delegate = new PluralAttributeJavaTypeDeterminerDelegate(
+					ownerClass,
+					attribute.getName()
+			);
 			BeanInfoHelper.visitBeanInfo( ownerClass, delegate );
 			return delegate.javaType;
 		}
@@ -813,7 +806,7 @@ public class Binder {
 			}
 		}
 
-		@SuppressWarnings( {"unchecked"})
+		@SuppressWarnings( { "unchecked" })
 		private Class<?> extractCollectionComponentType(BeanInfo beanInfo, PropertyDescriptor propertyDescriptor) {
 			final java.lang.reflect.Type collectionAttributeType;
 			if ( propertyDescriptor.getReadMethod() != null ) {
@@ -827,7 +820,7 @@ public class Binder {
 				try {
 					collectionAttributeType = ownerClass.getField( propertyDescriptor.getName() ).getGenericType();
 				}
-				catch (Exception e) {
+				catch ( Exception e ) {
 					return null;
 				}
 			}
@@ -905,7 +898,7 @@ public class Binder {
 		final TableSource tableSource = entitySource.getPrimaryTable();
 		final Table table = createTable( entityBinding, tableSource );
 		entityBinding.setPrimaryTable( table );
-        entityBinding.setPrimaryTableName( table.getTableName().getName() );
+		entityBinding.setPrimaryTableName( table.getTableName().getName() );
 	}
 
 	private void bindSecondaryTables(EntitySource entitySource, EntityBinding entityBinding) {
@@ -990,25 +983,25 @@ public class Binder {
 			}
 		}
 		else {
-            String name = metadata.getOptions()
-                    .getNamingStrategy()
-                    .propertyToColumnName( attributeBinding.getAttribute().getName() );
-            name = quoteIdentifier( name );
-            valueBindings.add(
-                    new SimpleValueBinding(
-                            attributeBinding.getContainer()
-                                    .seekEntityBinding()
-                                    .getPrimaryTable()
-                                    .locateOrCreateColumn( name )
-                    )
-            );
+			String name = metadata.getOptions()
+					.getNamingStrategy()
+					.propertyToColumnName( attributeBinding.getAttribute().getName() );
+			name = quoteIdentifier( name );
+			valueBindings.add(
+					new SimpleValueBinding(
+							attributeBinding.getContainer()
+									.seekEntityBinding()
+									.getPrimaryTable()
+									.locateOrCreateColumn( name )
+					)
+			);
 		}
 		attributeBinding.setSimpleValueBindings( valueBindings );
 	}
 
-    private String quoteIdentifier(String identifier) {
-        return currentBindingContext.isGloballyQuotedIdentifiers() ? StringHelper.quote( identifier ) : identifier;
-    }
+	private String quoteIdentifier(String identifier) {
+		return currentBindingContext.isGloballyQuotedIdentifiers() ? StringHelper.quote( identifier ) : identifier;
+	}
 
 	private SimpleValue makeSimpleValue(
 			EntityBinding entityBinding,
@@ -1024,9 +1017,9 @@ public class Binder {
 	}
 
 	private Column makeColumn(ColumnSource columnSource, TableSpecification table) {
-        String name = columnSource.getName();
-        name = metadata.getOptions().getNamingStrategy().columnName( name );
-        name = quoteIdentifier( name );
+		String name = columnSource.getName();
+		name = metadata.getOptions().getNamingStrategy().columnName( name );
+		name = quoteIdentifier( name );
 		final Column column = table.locateOrCreateColumn( name );
 		column.setNullable( columnSource.isNullable() );
 		column.setDefaultValue( columnSource.getDefaultValue() );
@@ -1047,5 +1040,24 @@ public class Binder {
 
 	private void processFetchProfiles(EntitySource entitySource, EntityBinding entityBinding) {
 		// todo : process the entity-local fetch-profile declaration
+	}
+
+	private static class AttributeJavaTypeDeterminerDelegate implements BeanInfoHelper.BeanInfoDelegate {
+		private final String attributeName;
+		private Class<?> javaType = null;
+
+		private AttributeJavaTypeDeterminerDelegate(String attributeName) {
+			this.attributeName = attributeName;
+		}
+
+		@Override
+		public void processBeanInfo(BeanInfo beanInfo) throws Exception {
+			for ( PropertyDescriptor propertyDescriptor : beanInfo.getPropertyDescriptors() ) {
+				if ( propertyDescriptor.getName().equals( attributeName ) ) {
+					javaType = propertyDescriptor.getPropertyType();
+					break;
+				}
+			}
+		}
 	}
 }

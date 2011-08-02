@@ -34,6 +34,7 @@ import javax.persistence.Id;
 import org.junit.Test;
 
 import org.hibernate.annotations.Parent;
+import org.hibernate.annotations.Target;
 import org.hibernate.metamodel.binding.BasicAttributeBinding;
 import org.hibernate.metamodel.binding.ComponentAttributeBinding;
 import org.hibernate.metamodel.binding.EntityBinding;
@@ -88,6 +89,8 @@ public class EmbeddableBindingTest extends BaseAnnotationBindingTestCase {
 		assertNotNull( componentBinding.locateAttributeBinding( "number" ) );
 	}
 
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 	@Entity
 	@AttributeOverride(name = "embedded.name", column = @Column(name = "FUBAR", length = 42))
 	class BaseEntity {
@@ -122,6 +125,8 @@ public class EmbeddableBindingTest extends BaseAnnotationBindingTestCase {
 		assertEquals( "Attribute override specifies a custom size", 42, column.getSize().getLength() );
 	}
 
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 	@Embeddable
 	public class Address {
 		protected String street;
@@ -151,6 +156,8 @@ public class EmbeddableBindingTest extends BaseAnnotationBindingTestCase {
 		@Embedded
 		protected Address address;
 	}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	@Test
 	@Resources(annotatedClasses = { Zipcode.class, Address.class, Customer.class })
@@ -195,6 +202,8 @@ public class EmbeddableBindingTest extends BaseAnnotationBindingTestCase {
 		);
 	}
 
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 	@Embeddable
 	public class A {
 		@Embedded
@@ -202,13 +211,25 @@ public class EmbeddableBindingTest extends BaseAnnotationBindingTestCase {
 				@AttributeOverride(name = "foo", column = @Column(name = "BAR")),
 				@AttributeOverride(name = "fubar", column = @Column(name = "A_WINS"))
 		})
-		protected B b;
+		private B b;
+
+		public B getB() {
+			return b;
+		}
 	}
 
 	@Embeddable
 	public class B {
-		protected String foo;
+		private String foo;
 		private String fubar;
+
+		public String getFoo() {
+			return foo;
+		}
+
+		public String getFubar() {
+			return fubar;
+		}
 	}
 
 	@Entity
@@ -219,6 +240,14 @@ public class EmbeddableBindingTest extends BaseAnnotationBindingTestCase {
 		@Embedded
 		@AttributeOverride(name = "b.fubar", column = @Column(name = "C_WINS"))
 		protected A a;
+
+		public int getId() {
+			return id;
+		}
+
+		public A getA() {
+			return a;
+		}
 	}
 
 	@Test
@@ -257,6 +286,7 @@ public class EmbeddableBindingTest extends BaseAnnotationBindingTestCase {
 		);
 	}
 
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	@Embeddable
 	public class EmbeddableEntity {
@@ -287,6 +317,58 @@ public class EmbeddableBindingTest extends BaseAnnotationBindingTestCase {
 		);
 
 		assertEquals( "Wrong parent reference name", "parent", componentBinding.getParentReference().getName() );
+	}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	public interface Car {
+		int getHorsePower();
+	}
+
+	@Embeddable
+	public class CarImpl implements Car {
+		@Override
+		public int getHorsePower() {
+			return 0;
+		}
+	}
+
+	@Entity
+	public class Owner {
+		private int id;
+		private Car car;
+
+		@Id
+		public int getId() {
+			return id;
+		}
+
+		@Embedded
+		@Target(CarImpl.class)
+		public Car getCar() {
+			return car;
+		}
+	}
+
+	@Test
+	@Resources(annotatedClasses = { Owner.class, CarImpl.class, Car.class })
+	public void testTargetAnnotationWithEmbeddable() {
+		EntityBinding binding = getEntityBinding( Owner.class );
+
+		final String componentName = "car";
+		assertNotNull( binding.locateAttributeBinding( componentName ) );
+		assertTrue( binding.locateAttributeBinding( componentName ) instanceof ComponentAttributeBinding );
+		ComponentAttributeBinding componentBinding = (ComponentAttributeBinding) binding.locateAttributeBinding(
+				componentName
+		);
+
+		BasicAttributeBinding attribute = (BasicAttributeBinding) componentBinding.locateAttributeBinding( "horsePower" );
+		assertTrue( attribute.getAttribute().isTypeResolved() );
+		assertEquals(
+				"Wrong resolved type",
+				"int",
+				attribute.getAttribute().getSingularAttributeType().getClassName()
+		);
 	}
 }
 

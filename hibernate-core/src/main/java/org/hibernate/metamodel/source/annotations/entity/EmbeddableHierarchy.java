@@ -70,7 +70,7 @@ public class EmbeddableHierarchy implements Iterable<EmbeddableClass> {
 		if ( JandexHelper.getSingleAnnotation( embeddableClassInfo, JPADotNames.EMBEDDABLE ) == null ) {
 			throw new AssertionFailure(
 					String.format(
-							"The specified class %s is not annotated with @Embeddable",
+							"The specified class %s is not annotated with @Embeddable even though it is as embeddable",
 							embeddableClass.getName()
 					)
 			);

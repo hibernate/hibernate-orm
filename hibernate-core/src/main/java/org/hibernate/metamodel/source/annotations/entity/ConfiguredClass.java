@@ -441,7 +441,7 @@ public class ConfiguredClass {
 		else {
 			resolvedMembers = resolvedType.getMemberMethods();
 		}
-		final Class<?> attributeType = (Class<?>) findResolvedType( member.getName(), resolvedMembers );
+		Class<?> attributeType = (Class<?>) findResolvedType( member.getName(), resolvedMembers );
 		final Map<DotName, List<AnnotationInstance>> annotations = JandexHelper.getMemberAnnotations(
 				classInfo, member.getName()
 		);
@@ -477,6 +477,15 @@ public class ConfiguredClass {
 				throw new NotYetImplementedException( "Embedded ids must still be implemented." );
 			}
 			case EMBEDDED: {
+				AnnotationInstance targetAnnotation = JandexHelper.getSingleAnnotation(
+						getClassInfo(),
+						HibernateDotNames.TARGET
+				);
+				if ( targetAnnotation != null ) {
+					attributeType = localBindingContext.locateClassByName(
+							JandexHelper.getValue( targetAnnotation, "value", String.class )
+					);
+				}
 				resolveEmbeddable( attributeName, attributeType );
 				break;
 			}

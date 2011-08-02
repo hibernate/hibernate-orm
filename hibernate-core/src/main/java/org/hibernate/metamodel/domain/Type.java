@@ -59,5 +59,6 @@ public interface Type {
 	public Value<Class<?>> getClassReferenceUnresolved();
 
 	public boolean isAssociation();
+
 	public boolean isComponent();
 }

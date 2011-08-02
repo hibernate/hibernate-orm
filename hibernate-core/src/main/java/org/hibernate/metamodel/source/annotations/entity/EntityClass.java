@@ -69,7 +69,6 @@ public class EntityClass extends ConfiguredClass {
 	private final String explicitEntityName;
 	private final String customLoaderQueryName;
 	private final List<String> synchronizedTableNames;
-	private final String customTuplizer;
 	private final int batchSize;
 
 	private final TableSource primaryTableSource;
@@ -130,7 +129,6 @@ public class EntityClass extends ConfiguredClass {
 		this.secondaryTableSources = createSecondaryTableSources();
 		this.customLoaderQueryName = determineCustomLoader();
 		this.synchronizedTableNames = determineSynchronizedTableNames();
-		this.customTuplizer = determineCustomTuplizer();
 		this.batchSize = determineBatchSize();
 
 		processHibernateEntitySpecificAnnotations();
@@ -239,10 +237,6 @@ public class EntityClass extends ConfiguredClass {
 
 	public String getCustomPersister() {
 		return customPersister;
-	}
-
-	public String getCustomTuplizer() {
-		return customTuplizer;
 	}
 
 	public boolean isLazy() {
@@ -714,16 +708,6 @@ public class EntityClass extends ConfiguredClass {
 		else {
 			return Collections.emptyList();
 		}
-	}
-
-	private String determineCustomTuplizer() {
-		// Custom tuplizer
-		String customTuplizer = null;
-		final AnnotationInstance pojoTuplizerAnnotation = JandexHelper.locatePojoTuplizerAnnotation( getClassInfo() );
-		if ( pojoTuplizerAnnotation != null ) {
-			customTuplizer = pojoTuplizerAnnotation.value( "impl" ).asString();
-		}
-		return customTuplizer;
 	}
 
 	private void processProxyGeneration() {

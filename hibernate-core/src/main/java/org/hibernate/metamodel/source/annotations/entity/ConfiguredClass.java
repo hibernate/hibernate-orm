@@ -51,10 +51,12 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
+import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.metamodel.source.MappingException;
 import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
+import org.hibernate.metamodel.source.annotations.HibernateDotNames;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.JandexHelper;
 import org.hibernate.metamodel.source.annotations.ReflectionHelper;
@@ -130,6 +132,11 @@ public class ConfiguredClass {
 	private final Set<String> transientFieldNames = new HashSet<String>();
 	private final Set<String> transientMethodNames = new HashSet<String>();
 
+	/**
+	 * Fully qualified name of a custom tuplizer
+	 */
+	private final String customTuplizer;
+
 	private final LocalBindingContextImpl localBindingContext;
 
 	public ConfiguredClass(
@@ -142,6 +149,8 @@ public class ConfiguredClass {
 		this.clazz = context.locateClassByName( classInfo.toString() );
 		this.configuredClassType = determineType();
 		this.classAccessType = determineClassAccessType( defaultAccessType );
+		this.customTuplizer = determineCustomTuplizer();
+
 		this.simpleAttributeMap = new TreeMap<String, BasicAttribute>();
 		this.idAttributeMap = new TreeMap<String, BasicAttribute>();
 		this.associationAttributeMap = new TreeMap<String, AssociationAttribute>();
@@ -202,6 +211,10 @@ public class ConfiguredClass {
 
 	public AccessType getClassAccessType() {
 		return classAccessType;
+	}
+
+	public String getCustomTuplizer() {
+		return customTuplizer;
 	}
 
 	@Override
@@ -657,5 +670,34 @@ public class ConfiguredClass {
 		}
 
 		return associationOverrideList;
+	}
+
+	private String determineCustomTuplizer() {
+		final AnnotationInstance tuplizersAnnotation = JandexHelper.getSingleAnnotation(
+				classInfo, HibernateDotNames.TUPLIZERS
+		);
+		if ( tuplizersAnnotation == null ) {
+			return null;
+		}
+
+		AnnotationInstance[] annotations = JandexHelper.getValue(
+				tuplizersAnnotation,
+				"value",
+				AnnotationInstance[].class
+		);
+
+		AnnotationInstance pojoTuplizerAnnotation = null;
+		for ( AnnotationInstance tuplizerAnnotation : annotations ) {
+			if ( EntityMode.valueOf( tuplizerAnnotation.value( "entityModeType" ).asEnum() ) == EntityMode.POJO ) {
+				pojoTuplizerAnnotation = tuplizerAnnotation;
+				break;
+			}
+		}
+
+		String customTuplizer = null;
+		if ( pojoTuplizerAnnotation != null ) {
+			customTuplizer = pojoTuplizerAnnotation.value( "impl" ).asString();
+		}
+		return customTuplizer;
 	}
 }

@@ -105,12 +105,7 @@ public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
 
 	@Override
 	public String getExplicitTuplizerClassName() {
-		String customTuplizer = null;
-		final AnnotationInstance pojoTuplizerAnnotation = JandexHelper.locatePojoTuplizerAnnotation( embeddableClass.getClassInfo() );
-		if ( pojoTuplizerAnnotation != null ) {
-			customTuplizer = pojoTuplizerAnnotation.value( "impl" ).asString();
-		}
-		return customTuplizer;
+		return embeddableClass.getCustomTuplizer();
 	}
 
 	@Override

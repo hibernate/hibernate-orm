@@ -25,9 +25,12 @@ package org.hibernate.metamodel.source.annotations.entity;
 
 import javax.persistence.AccessType;
 
+import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.ClassInfo;
 
 import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
+import org.hibernate.metamodel.source.annotations.HibernateDotNames;
+import org.hibernate.metamodel.source.annotations.JandexHelper;
 
 /**
  * Represents the information about an entity annotated with {@code @Embeddable}.
@@ -36,6 +39,7 @@ import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
  */
 public class EmbeddableClass extends ConfiguredClass {
 	private final String embeddedAttributeName;
+	private final String parentReferencingAttributeName;
 
 	public EmbeddableClass(
 			ClassInfo classInfo,
@@ -45,10 +49,28 @@ public class EmbeddableClass extends ConfiguredClass {
 			AnnotationBindingContext context) {
 		super( classInfo, defaultAccessType, parent, context );
 		this.embeddedAttributeName = embeddedAttributeName;
+		this.parentReferencingAttributeName = checkParentAnnotation();
+	}
+
+	private String checkParentAnnotation() {
+		AnnotationInstance parentAnnotation = JandexHelper.getSingleAnnotation(
+				getClassInfo(),
+				HibernateDotNames.PARENT
+		);
+		if ( parentAnnotation == null ) {
+			return null;
+		}
+		else {
+			return JandexHelper.getPropertyName( parentAnnotation.target() );
+		}
 	}
 
 	public String getEmbeddedAttributeName() {
 		return embeddedAttributeName;
+	}
+
+	public String getParentReferencingAttributeName() {
+		return parentReferencingAttributeName;
 	}
 }
 

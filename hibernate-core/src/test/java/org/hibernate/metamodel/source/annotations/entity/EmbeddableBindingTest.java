@@ -33,6 +33,7 @@ import javax.persistence.Id;
 
 import org.junit.Test;
 
+import org.hibernate.annotations.Parent;
 import org.hibernate.metamodel.binding.BasicAttributeBinding;
 import org.hibernate.metamodel.binding.ComponentAttributeBinding;
 import org.hibernate.metamodel.binding.EntityBinding;
@@ -254,6 +255,38 @@ public class EmbeddableBindingTest extends BaseAnnotationBindingTestCase {
 				"C_WINS",
 				column.getColumnName().getName()
 		);
+	}
+
+
+	@Embeddable
+	public class EmbeddableEntity {
+		private String test;
+		@Parent
+		private MainEntity parent;
+	}
+
+	@Entity
+	public class MainEntity {
+		@Id
+		private int id;
+
+		@Embedded
+		private EmbeddableEntity embedded;
+	}
+
+	@Test
+	@Resources(annotatedClasses = { MainEntity.class, EmbeddableEntity.class })
+	public void testParentReferencingAttributeName() {
+		EntityBinding binding = getEntityBinding( MainEntity.class );
+
+		final String componentName = "embedded";
+		assertNotNull( binding.locateAttributeBinding( componentName ) );
+		assertTrue( binding.locateAttributeBinding( componentName ) instanceof ComponentAttributeBinding );
+		ComponentAttributeBinding componentBinding = (ComponentAttributeBinding) binding.locateAttributeBinding(
+				componentName
+		);
+
+		assertEquals( "Wrong parent reference name", "parent", componentBinding.getParentReference().getName() );
 	}
 }
 

@@ -29,13 +29,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.jboss.jandex.AnnotationInstance;
-
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.Value;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.source.LocalBindingContext;
-import org.hibernate.metamodel.source.annotations.JandexHelper;
 import org.hibernate.metamodel.source.annotations.attribute.AssociationAttribute;
 import org.hibernate.metamodel.source.annotations.attribute.AttributeOverride;
 import org.hibernate.metamodel.source.annotations.attribute.BasicAttribute;
@@ -150,6 +147,11 @@ public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
 	}
 
 	@Override
+	public String getParentReferenceAttributeName() {
+		return embeddableClass.getParentReferencingAttributeName();
+	}
+
+	@Override
 	public Iterable<MetaAttributeSource> metaAttributes() {
 		// not relevant for annotations
 		return Collections.emptySet();
@@ -158,12 +160,6 @@ public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
 	@Override
 	public List<RelationalValueSource> relationalValueSources() {
 		// none, they are defined on the simple sub-attributes
-		return null;
-	}
-
-	@Override
-	public String getParentReferenceAttributeName() {
-		// see HHH-6501
 		return null;
 	}
 

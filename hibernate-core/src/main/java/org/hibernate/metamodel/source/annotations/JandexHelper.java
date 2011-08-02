@@ -274,22 +274,6 @@ public class JandexHelper {
 		return annotations;
 	}
 
-	public static Map<DotName, List<AnnotationInstance>> getTypeAnnotations(ClassInfo classInfo) {
-		if ( classInfo == null ) {
-			throw new IllegalArgumentException( "classInfo cannot be null" );
-		}
-
-		Map<DotName, List<AnnotationInstance>> annotations = new HashMap<DotName, List<AnnotationInstance>>();
-		for ( List<AnnotationInstance> annotationList : classInfo.annotations().values() ) {
-			for ( AnnotationInstance instance : annotationList ) {
-				if ( instance.target() instanceof ClassInfo ) {
-					addAnnotationToMap( instance, annotations );
-				}
-			}
-		}
-		return annotations;
-	}
-
 	public static void addAnnotationToMap(AnnotationInstance instance, Map<DotName, List<AnnotationInstance>> annotations) {
 		DotName dotName = instance.name();
 		List<AnnotationInstance> list;

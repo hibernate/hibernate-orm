@@ -25,7 +25,7 @@ package org.hibernate.metamodel.source.binder;
 
 /**
  * Contract describing source of identifier information for the entity.
- * 
+ *
  * @author Steve Ebersole
  */
 public interface IdentifierSource {
@@ -35,12 +35,14 @@ public interface IdentifierSource {
 		 * annotation.  Indicates the {@link IdentifierSource} is castable to {@link SimpleIdentifierSource}.
 		 */
 		SIMPLE,
+
 		/**
 		 * What we used to term an "embedded composite identifier", which is not to be confused with the JPA
 		 * term embedded.  Specifically a composite id where there is no component class, though there may be an
 		 * {@code @IdClass}.
 		 */
 		COMPOSITE,
+
 		/**
 		 * Composite identifier with an actual component class used to aggregate the individual attributes
 		 */

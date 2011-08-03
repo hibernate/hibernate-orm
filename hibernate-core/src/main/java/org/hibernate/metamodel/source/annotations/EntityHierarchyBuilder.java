@@ -39,6 +39,7 @@ import org.jboss.jandex.Index;
 import org.jboss.jandex.MethodInfo;
 
 import org.hibernate.AnnotationException;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.binding.InheritanceType;
 import org.hibernate.metamodel.source.annotations.entity.EntityClass;
 import org.hibernate.metamodel.source.annotations.entity.RootEntitySourceImpl;
@@ -158,7 +159,7 @@ public class EntityHierarchyBuilder {
 
 	/**
 	 * Finds the root entity starting at the entity given by {@code info}. The root entity is not the highest superclass
-	 * in a java type sense, but the highest superclass which is also an entity (annotated w/ {@code @Index}.
+	 * in a java type sense, but the highest superclass which is also an entity (annotated w/ {@code @Entity}.
 	 *
 	 * @param index the annotation repository
 	 * @param info the class info representing an entity
@@ -329,10 +330,10 @@ public class EntityHierarchyBuilder {
 			List<AnnotationInstance> idAnnotations = info.annotations().get( JPADotNames.ID );
 			List<AnnotationInstance> embeddedIdAnnotations = info.annotations().get( JPADotNames.EMBEDDED_ID );
 
-			if ( embeddedIdAnnotations != null && !embeddedIdAnnotations.isEmpty() ) {
+			if ( CollectionHelper.isNotEmpty( embeddedIdAnnotations ) ) {
 				accessTypeByEmbeddedIdPlacement = determineAccessTypeByIdPlacement( embeddedIdAnnotations );
 			}
-			if ( idAnnotations != null && !idAnnotations.isEmpty() ) {
+			if ( CollectionHelper.isNotEmpty( idAnnotations ) ) {
 				accessTypeByIdPlacement = determineAccessTypeByIdPlacement( idAnnotations );
 			}
 		}

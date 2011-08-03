@@ -1101,22 +1101,20 @@ public abstract class Dialect {
 	 * @since 3.2
 	 */
 	public LockingStrategy getLockingStrategy(Lockable lockable, LockMode lockMode) {
-		if ( lockMode==LockMode.PESSIMISTIC_FORCE_INCREMENT) {
-			return new PessimisticForceIncrementLockingStrategy( lockable, lockMode);
-		}
-		else if ( lockMode==LockMode.PESSIMISTIC_WRITE) {
-			return new PessimisticWriteSelectLockingStrategy( lockable, lockMode);
-		}
-		else if ( lockMode==LockMode.PESSIMISTIC_READ) {
-			return new PessimisticReadSelectLockingStrategy( lockable, lockMode);
-		}
-		else if ( lockMode==LockMode.OPTIMISTIC) {
-			return new OptimisticLockingStrategy( lockable, lockMode);
-		}
-		else if ( lockMode==LockMode.OPTIMISTIC_FORCE_INCREMENT) {
-			return new OptimisticForceIncrementLockingStrategy( lockable, lockMode);
-		}
-		return new SelectLockingStrategy( lockable, lockMode );
+        switch ( lockMode ) {
+            case PESSIMISTIC_FORCE_INCREMENT:
+                return new PessimisticForceIncrementLockingStrategy( lockable, lockMode );
+            case PESSIMISTIC_WRITE:
+                return new PessimisticWriteSelectLockingStrategy( lockable, lockMode );
+            case PESSIMISTIC_READ:
+                return new PessimisticReadSelectLockingStrategy( lockable, lockMode );
+            case OPTIMISTIC:
+                return new OptimisticLockingStrategy( lockable, lockMode );
+            case OPTIMISTIC_FORCE_INCREMENT:
+                return new OptimisticForceIncrementLockingStrategy( lockable, lockMode );
+            default:
+                return new SelectLockingStrategy( lockable, lockMode );
+        }
 	}
 
 	/**
@@ -1126,26 +1124,26 @@ public abstract class Dialect {
 	 * @return The appropriate for update fragment.
 	 */
 	public String getForUpdateString(LockOptions lockOptions) {
-		LockMode lockMode = lockOptions.getLockMode();
-		if ( lockMode==LockMode.UPGRADE) {
-			return getForUpdateString();
-		}
-		else if( lockMode==LockMode.PESSIMISTIC_READ ) {
-			return getReadLockString(lockOptions.getTimeOut());
-		}
-		else if( lockMode==LockMode.PESSIMISTIC_WRITE ) {
-			return getWriteLockString(lockOptions.getTimeOut());
-		}
-		else if ( lockMode==LockMode.UPGRADE_NOWAIT ) {
-			return getForUpdateNowaitString();
-		}
-		else if ( lockMode==LockMode.FORCE || lockMode==LockMode.PESSIMISTIC_FORCE_INCREMENT) {
-			return getForUpdateNowaitString();
-		}
-		else {
-			return "";
-		}
+        LockMode lockMode = lockOptions.getLockMode();
+        return getForUpdateString( lockMode, lockOptions.getTimeOut() );
 	}
+
+    private String getForUpdateString(LockMode lockMode, int timeout){
+       switch ( lockMode ) {
+            case UPGRADE:
+                return getForUpdateString();
+            case PESSIMISTIC_READ:
+                return getReadLockString( timeout );
+            case PESSIMISTIC_WRITE:
+                return getWriteLockString( timeout );
+            case UPGRADE_NOWAIT:
+            case FORCE:
+            case PESSIMISTIC_FORCE_INCREMENT:
+                return getForUpdateNowaitString();
+            default:
+                return "";
+        }
+    }
 
 	/**
 	 * Given a lock mode, determine the appropriate for update fragment to use.
@@ -1154,24 +1152,7 @@ public abstract class Dialect {
 	 * @return The appropriate for update fragment.
 	 */
 	public String getForUpdateString(LockMode lockMode) {
-		if ( lockMode==LockMode.UPGRADE ) {
-			return getForUpdateString();
-		}
-		else if( lockMode==LockMode.PESSIMISTIC_READ ) {
-			return getReadLockString(LockOptions.WAIT_FOREVER);
-		}
-		else if( lockMode==LockMode.PESSIMISTIC_WRITE ) {
-			return getWriteLockString(LockOptions.WAIT_FOREVER);
-		}
-		else if ( lockMode==LockMode.UPGRADE_NOWAIT ) {
-			return getForUpdateNowaitString();
-		}
-		else if ( lockMode==LockMode.FORCE || lockMode==LockMode.PESSIMISTIC_FORCE_INCREMENT) {
-			return getForUpdateNowaitString();
-		}
-		else {
-			return "";
-		}
+		return getForUpdateString( lockMode, LockOptions.WAIT_FOREVER );
 	}
 
 	/**

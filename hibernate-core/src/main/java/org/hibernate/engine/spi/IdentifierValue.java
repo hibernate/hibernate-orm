@@ -89,7 +89,7 @@ public class IdentifierValue implements UnsavedValueStrategy {
 		@Override
         public final Boolean isUnsaved(Object id) {
             LOG.trace("ID unsaved-value strategy NULL");
-			return id==null ? Boolean.TRUE : Boolean.FALSE;
+			return id==null;
 		}
 		@Override
         public Serializable getDefaultValue(Object currentValue) {
@@ -137,7 +137,7 @@ public class IdentifierValue implements UnsavedValueStrategy {
 	 */
 	public Boolean isUnsaved(Object id) {
         LOG.trace("ID unsaved-value: " + value);
-		return id==null || id.equals(value) ? Boolean.TRUE : Boolean.FALSE;
+		return id==null || id.equals(value);
 	}
 
 	public Serializable getDefaultValue(Object currentValue) {

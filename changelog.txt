@@ -6,6 +6,44 @@ refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
 
+Changes in version 4.0.0.Beta5 (2011.08.03)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.onjira.com/browse/HHH/fixforversion/11251
+
+** Sub-task
+    * [HHH-6202] - Bind inheritance type
+    * [HHH-6212] - Handle secondary tables
+    * [HHH-6393] - Implement attribute overrides for embeddables
+    * [HHH-6430] - MappedAttribute should make use of HibernateTypeDescriptor
+    * [HHH-6476] - Implement AttributeSource.getPropertyAccessorName
+    * [HHH-6485] - Add support for @DiscriminatorFormula
+    * [HHH-6488] - Implement SimpleIdentifierSource#getIdentifierGeneratorDescriptor
+    * [HHH-6489] - Support @javax.persistence.Temporal
+    * [HHH-6490] - Support @javax.persistence.Lob
+    * [HHH-6501] - Support @org.hibernate.annotations.Parent
+    * [HHH-6520] - if no @GeneratedValue on an simple @Id property, then the generator strategy should be assigned
+    * [HHH-6521] - Column name is not quoted even the global quote identifier property is enabled
+    * [HHH-6535] - Support @org.hibernate.annotations.Target
+
+** Bug
+    * [HHH-1780] - negation of EXISTS in hql query does not work
+    * [HHH-4648] - Mapping exception when one class maps to multiple tables.
+    * [HHH-6469] - build error when using open jdk
+    * [HHH-6471] - Redesign how EntityBinding models hierarchy-shared information
+    * [HHH-6478] - Code cleanup in metamodel package
+    * [HHH-6479] - Split notions of locating and creating an attribute
+    * [HHH-6480] - Develop component binding for new metamodel
+    * [HHH-6495] - Components not handled correctly from annotations
+    * [HHH-6499] - NPE can be thrown by some implementations of Helper.ValueSourcesAdapter.isIncludedInInsertByDefault() and isIncludedInUpdateByDefault()
+    * [HHH-6500] - EntityBinding.getEntity().getSuperType() is null for subclass EntityBinding
+    * [HHH-6506] - Descriminator type is not resolved
+    * [HHH-6529] - Type is not resolved for plural attributes
+
+** Improvement
+    * [HHH-6472] - Implementing EntityDiscriminator and discriminator match value
+    * [HHH-6482] - ddl from schema export is not correctly formatted
+
+
 Changes in version 4.0.0.Beta4 (2011.07.20)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.onjira.com/browse/HHH/fixforversion/11242

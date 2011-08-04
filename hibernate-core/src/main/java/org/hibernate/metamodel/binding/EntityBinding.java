@@ -23,8 +23,10 @@
  */
 package org.hibernate.metamodel.binding;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -32,6 +34,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.util.Value;
+import org.hibernate.internal.util.collections.JoinedIterable;
 import org.hibernate.metamodel.domain.AttributeContainer;
 import org.hibernate.metamodel.domain.Entity;
 import org.hibernate.metamodel.domain.PluralAttribute;
@@ -51,6 +54,7 @@ import org.hibernate.tuple.entity.EntityTuplizer;
  */
 public class EntityBinding implements AttributeBindingContainer {
 	private final EntityBinding superEntityBinding;
+	private final List<EntityBinding> subEntityBindings = new ArrayList<EntityBinding>();
 	private final HierarchyDetails hierarchyDetails;
 
 	private Entity entity;
@@ -112,6 +116,7 @@ public class EntityBinding implements AttributeBindingContainer {
 	 */
 	public EntityBinding(EntityBinding superEntityBinding) {
 		this.superEntityBinding = superEntityBinding;
+		this.superEntityBinding.subEntityBindings.add( this );
 		this.hierarchyDetails = superEntityBinding.getHierarchyDetails();
 	}
 
@@ -125,6 +130,38 @@ public class EntityBinding implements AttributeBindingContainer {
 
 	public boolean isRoot() {
 		return superEntityBinding == null;
+	}
+
+	public boolean isPolymorphic() {
+		return  superEntityBinding != null ||
+				hierarchyDetails.getEntityDiscriminator() != null ||
+				! subEntityBindings.isEmpty();
+	}
+
+	public boolean hasSubEntityBindings() {
+		return subEntityBindings.size() > 0;
+	}
+
+	public int getSubEntityBindingSpan() {
+		int n = subEntityBindings.size();
+		for ( EntityBinding subEntityBinding : subEntityBindings ) {
+			n += subEntityBinding.getSubEntityBindingSpan();
+		}
+		return n;
+	}
+	/**
+	 * Iterate over subclasses in a special 'order', most derived subclasses
+	 * first.
+	 * @return sub-entity bindings ordered by those entity bindings that are most derived.
+	 */
+	public Iterable<EntityBinding> getSubEntityBindingClosure() {
+		List<Iterable<EntityBinding>> subclassIterables =
+				new ArrayList<Iterable<EntityBinding>>( subEntityBindings.size() + 1 );
+		for ( EntityBinding subEntityBinding : subEntityBindings ) {
+			subclassIterables.add( subEntityBinding.getSubEntityBindingClosure() );
+		}
+		subclassIterables.add( subEntityBindings );
+		return new JoinedIterable<EntityBinding>( subclassIterables );
 	}
 
 	public Entity getEntity() {
@@ -457,9 +494,10 @@ public class EntityBinding implements AttributeBindingContainer {
 	 * @return The number of attribute bindings
 	 */
 	public int getAttributeBindingClosureSpan() {
-		// TODO: fix this after HHH-6337 is fixed; for now just return size of attributeBindingMap
-		// if this is not a root, then need to include the superclass attribute bindings
-		return attributeBindingMap.size();
+		// TODO: update account for join attribute bindings
+		return superEntityBinding != null ?
+				superEntityBinding.getAttributeBindingClosureSpan() + attributeBindingMap.size() :
+				attributeBindingMap.size();
 	}
 
 	/**
@@ -470,8 +508,17 @@ public class EntityBinding implements AttributeBindingContainer {
 	 * @return The attribute bindings.
 	 */
 	public Iterable<AttributeBinding> getAttributeBindingClosure() {
-		// TODO: fix this after HHH-6337 is fixed. for now, just return attributeBindings
-		// if this is not a root, then need to include the superclass attribute bindings
-		return attributeBindings();
+		// TODO: update size to account for joins
+		Iterable<AttributeBinding> iterable;
+		if ( superEntityBinding != null ) {
+			List<Iterable<AttributeBinding>> iterables = new ArrayList<Iterable<AttributeBinding>>( 2 );
+			iterables.add( superEntityBinding.getAttributeBindingClosure() );
+			iterables.add( attributeBindings() );
+			iterable = new JoinedIterable<AttributeBinding>( iterables );
+		}
+		else {
+			iterable = attributeBindings();
+		}
+		return iterable;
 	}
 }

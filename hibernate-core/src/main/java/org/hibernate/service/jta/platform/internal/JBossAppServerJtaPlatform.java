@@ -32,7 +32,7 @@ import javax.transaction.UserTransaction;
  * @author Steve Ebersole
  */
 public class JBossAppServerJtaPlatform extends AbstractJtaPlatform {
-	public static final String TM_NAME = "java:/TransactionManager";
+	public static final String TM_NAME = "java:jboss/TransactionManager";
 	public static final String UT_NAME = "UserTransaction";
 
 	@Override

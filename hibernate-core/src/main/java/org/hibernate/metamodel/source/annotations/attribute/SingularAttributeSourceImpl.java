@@ -38,14 +38,14 @@ import org.hibernate.metamodel.source.binder.SingularAttributeSource;
  * @author Hardy Ferentschik
  */
 public class SingularAttributeSourceImpl implements SingularAttributeSource {
-	private final BasicAttribute attribute;
+	private final MappedAttribute attribute;
 	private final AttributeOverride attributeOverride;
 
-	public SingularAttributeSourceImpl(BasicAttribute attribute) {
+	public SingularAttributeSourceImpl(MappedAttribute attribute) {
 		this(attribute, null);
 	}
 
-	public SingularAttributeSourceImpl(BasicAttribute attribute, AttributeOverride attributeOverride) {
+	public SingularAttributeSourceImpl(MappedAttribute attribute, AttributeOverride attributeOverride) {
 		this.attribute = attribute;
 		this.attributeOverride = attributeOverride;
 	}
@@ -116,7 +116,6 @@ public class SingularAttributeSourceImpl implements SingularAttributeSource {
 	public Iterable<MetaAttributeSource> metaAttributes() {
 		return Collections.emptySet();
 	}
-
 
 	@Override
 	public boolean areValuesIncludedInInsertByDefault() {

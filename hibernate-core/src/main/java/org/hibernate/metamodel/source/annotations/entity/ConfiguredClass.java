@@ -61,8 +61,8 @@ import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.JandexHelper;
 import org.hibernate.metamodel.source.annotations.ReflectionHelper;
 import org.hibernate.metamodel.source.annotations.attribute.AssociationAttribute;
+import org.hibernate.metamodel.source.annotations.attribute.AttributeNature;
 import org.hibernate.metamodel.source.annotations.attribute.AttributeOverride;
-import org.hibernate.metamodel.source.annotations.attribute.AttributeType;
 import org.hibernate.metamodel.source.annotations.attribute.BasicAttribute;
 
 /**
@@ -179,10 +179,6 @@ public class ConfiguredClass {
 
 	public LocalBindingContextImpl getLocalBindingContext() {
 		return localBindingContext;
-	}
-
-	public ConfiguredClassType getConfiguredClassType() {
-		return configuredClassType;
 	}
 
 	public Iterable<BasicAttribute> getSimpleAttributes() {
@@ -446,7 +442,7 @@ public class ConfiguredClass {
 				classInfo, member.getName()
 		);
 
-		AttributeType attributeNature = determineAttributeType( annotations );
+		AttributeNature attributeNature = determineAttributeNature( annotations );
 		String accessTypeString = accessType.toString().toLowerCase();
 		switch ( attributeNature ) {
 			case BASIC: {
@@ -457,8 +453,7 @@ public class ConfiguredClass {
 					idAttributeMap.put( attributeName, attribute );
 				}
 				else if ( attribute.isVersioned() ) {
-					if (
-							versionAttribute == null ) {
+					if ( versionAttribute == null ) {
 						versionAttribute = attribute;
 					}
 					else {
@@ -489,7 +484,7 @@ public class ConfiguredClass {
 				resolveEmbeddable( attributeName, attributeType );
 				break;
 			}
-			// TODO handle the different association types
+			// OneToOne, OneToMany, ManyToOne, ManyToMany
 			default: {
 				AssociationAttribute attribute = AssociationAttribute.createAssociationAttribute(
 						attributeName,
@@ -534,38 +529,38 @@ public class ConfiguredClass {
 	 *
 	 * @return an instance of the {@code AttributeType} enum
 	 */
-	private AttributeType determineAttributeType(Map<DotName, List<AnnotationInstance>> annotations) {
-		EnumMap<AttributeType, AnnotationInstance> discoveredAttributeTypes =
-				new EnumMap<AttributeType, AnnotationInstance>( AttributeType.class );
+	private AttributeNature determineAttributeNature(Map<DotName, List<AnnotationInstance>> annotations) {
+		EnumMap<AttributeNature, AnnotationInstance> discoveredAttributeTypes =
+				new EnumMap<AttributeNature, AnnotationInstance>( AttributeNature.class );
 
 		AnnotationInstance oneToOne = JandexHelper.getSingleAnnotation( annotations, JPADotNames.ONE_TO_ONE );
 		if ( oneToOne != null ) {
-			discoveredAttributeTypes.put( AttributeType.ONE_TO_ONE, oneToOne );
+			discoveredAttributeTypes.put( AttributeNature.ONE_TO_ONE, oneToOne );
 		}
 
 		AnnotationInstance oneToMany = JandexHelper.getSingleAnnotation( annotations, JPADotNames.ONE_TO_MANY );
 		if ( oneToMany != null ) {
-			discoveredAttributeTypes.put( AttributeType.ONE_TO_MANY, oneToMany );
+			discoveredAttributeTypes.put( AttributeNature.ONE_TO_MANY, oneToMany );
 		}
 
 		AnnotationInstance manyToOne = JandexHelper.getSingleAnnotation( annotations, JPADotNames.MANY_TO_ONE );
 		if ( manyToOne != null ) {
-			discoveredAttributeTypes.put( AttributeType.MANY_TO_ONE, manyToOne );
+			discoveredAttributeTypes.put( AttributeNature.MANY_TO_ONE, manyToOne );
 		}
 
 		AnnotationInstance manyToMany = JandexHelper.getSingleAnnotation( annotations, JPADotNames.MANY_TO_MANY );
 		if ( manyToMany != null ) {
-			discoveredAttributeTypes.put( AttributeType.MANY_TO_MANY, manyToMany );
+			discoveredAttributeTypes.put( AttributeNature.MANY_TO_MANY, manyToMany );
 		}
 
 		AnnotationInstance embedded = JandexHelper.getSingleAnnotation( annotations, JPADotNames.EMBEDDED );
 		if ( embedded != null ) {
-			discoveredAttributeTypes.put( AttributeType.EMBEDDED, embedded );
+			discoveredAttributeTypes.put( AttributeNature.EMBEDDED, embedded );
 		}
 
-		AnnotationInstance embeddIded = JandexHelper.getSingleAnnotation( annotations, JPADotNames.EMBEDDED_ID );
-		if ( embeddIded != null ) {
-			discoveredAttributeTypes.put( AttributeType.EMBEDDED_ID, embeddIded );
+		AnnotationInstance embeddedId = JandexHelper.getSingleAnnotation( annotations, JPADotNames.EMBEDDED_ID );
+		if ( embeddedId != null ) {
+			discoveredAttributeTypes.put( AttributeNature.EMBEDDED_ID, embeddedId );
 		}
 
 		AnnotationInstance elementCollection = JandexHelper.getSingleAnnotation(
@@ -573,11 +568,11 @@ public class ConfiguredClass {
 				JPADotNames.ELEMENT_COLLECTION
 		);
 		if ( elementCollection != null ) {
-			discoveredAttributeTypes.put( AttributeType.ELEMENT_COLLECTION, elementCollection );
+			discoveredAttributeTypes.put( AttributeNature.ELEMENT_COLLECTION, elementCollection );
 		}
 
 		if ( discoveredAttributeTypes.size() == 0 ) {
-			return AttributeType.BASIC;
+			return AttributeNature.BASIC;
 		}
 		else if ( discoveredAttributeTypes.size() == 1 ) {
 			return discoveredAttributeTypes.keySet().iterator().next();

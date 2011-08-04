@@ -44,7 +44,7 @@ import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.source.annotations.HibernateDotNames;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.JandexHelper;
-import org.hibernate.metamodel.source.annotations.TypeEnumConversionHelper;
+import org.hibernate.metamodel.source.annotations.EnumConversionHelper;
 import org.hibernate.metamodel.source.annotations.attribute.type.AttributeTypeResolver;
 import org.hibernate.metamodel.source.annotations.attribute.type.CompositeAttributeTypeResolver;
 import org.hibernate.metamodel.source.annotations.attribute.type.EnumeratedTypeResolver;
@@ -53,15 +53,11 @@ import org.hibernate.metamodel.source.annotations.attribute.type.LobTypeResolver
 import org.hibernate.metamodel.source.annotations.attribute.type.TemporalTypeResolver;
 
 /**
- * Represent a mapped attribute (explicitly or implicitly mapped).
+ * Represent a basic attribute (explicitly or implicitly mapped).
  *
  * @author Hardy Ferentschik
  */
 public class BasicAttribute extends MappedAttribute {
-	/**
-	 * Is this property an id property (or part thereof).
-	 */
-	private final boolean isId;
 
 	/**
 	 * The id generator in case this basic attribute represents an simple id. Will be {@code null} in case there
@@ -73,12 +69,6 @@ public class BasicAttribute extends MappedAttribute {
 	 * Is this a versioned property (annotated w/ {@code @Version}.
 	 */
 	private final boolean isVersioned;
-
-	/**
-	 * Whether a change of the property's value triggers a version increment of the entity (in case of optimistic
-	 * locking).
-	 */
-	private final boolean isOptimisticLockable;
 
 	/**
 	 * Is this property lazy loaded (see {@link javax.persistence.Basic}).
@@ -96,11 +86,6 @@ public class BasicAttribute extends MappedAttribute {
 	private PropertyGeneration propertyGeneration;
 	private boolean isInsertable = true;
 	private boolean isUpdatable = true;
-
-	/**
-	 * Defines the column values (relational values) for this property.
-	 */
-	private ColumnValues columnValues;
 
 	private final String customWriteFragment;
 	private final String customReadFragment;
@@ -122,31 +107,18 @@ public class BasicAttribute extends MappedAttribute {
 				   AnnotationBindingContext context) {
 		super( name, attributeType, accessType, annotations, context );
 
-		AnnotationInstance idAnnotation = JandexHelper.getSingleAnnotation( annotations, JPADotNames.ID );
-		AnnotationInstance embeddedIdAnnotation = JandexHelper.getSingleAnnotation(
-				annotations,
-				JPADotNames.EMBEDDED_ID
-		);
-        //if this attribute has either @Id or @EmbeddedId, then it is an id attribute
-		isId = ( idAnnotation != null || embeddedIdAnnotation != null );
-
 		AnnotationInstance versionAnnotation = JandexHelper.getSingleAnnotation( annotations, JPADotNames.VERSION );
 		isVersioned = versionAnnotation != null;
 
-		AnnotationInstance columnAnnotation = JandexHelper.getSingleAnnotation( annotations, JPADotNames.COLUMN );
-		columnValues = new ColumnValues( columnAnnotation );
-
-		if ( isId ) {
+		if ( isId() ) {
 			// an id must be unique and cannot be nullable
-			columnValues.setUnique( true );
-			columnValues.setNullable( false );
+			getColumnValues().setUnique( true );
+			getColumnValues().setNullable( false );
 			idGenerator = checkGeneratedValueAnnotation();
 		}
 		else {
 			idGenerator = null;
 		}
-
-		this.isOptimisticLockable = checkOptimisticLockAnnotation();
 
 		checkBasicAnnotation();
 		checkGeneratedAnnotation();
@@ -156,14 +128,6 @@ public class BasicAttribute extends MappedAttribute {
 		this.customReadFragment = readWrite[0];
 		this.customWriteFragment = readWrite[1];
 		this.checkCondition = parseCheckAnnotation();
-	}
-
-	public final ColumnValues getColumnValues() {
-		return columnValues;
-	}
-
-	public boolean isId() {
-		return isId;
 	}
 
 	public boolean isVersioned() {
@@ -190,10 +154,6 @@ public class BasicAttribute extends MappedAttribute {
 		return propertyGeneration;
 	}
 
-	public boolean isOptimisticLockable() {
-		return isOptimisticLockable;
-	}
-
 	public String getCustomWriteFragment() {
 		return customWriteFragment;
 	}
@@ -216,19 +176,6 @@ public class BasicAttribute extends MappedAttribute {
 		sb.append( "SimpleAttribute" );
 		sb.append( "{name=" ).append( getName() );
 		return sb.toString();
-	}
-
-	private boolean checkOptimisticLockAnnotation() {
-		boolean triggersVersionIncrement = true;
-		AnnotationInstance optimisticLockAnnotation = JandexHelper.getSingleAnnotation(
-				annotations(),
-				HibernateDotNames.OPTIMISTIC_LOCK
-		);
-		if ( optimisticLockAnnotation != null ) {
-			boolean exclude = optimisticLockAnnotation.value( "excluded" ).asBoolean();
-			triggersVersionIncrement = !exclude;
-		}
-		return triggersVersionIncrement;
 	}
 
 	private void checkBasicAnnotation() {
@@ -346,7 +293,7 @@ public class BasicAttribute extends MappedAttribute {
 						"strategy",
 						GenerationType.class
 				);
-				String strategy = TypeEnumConversionHelper.generationTypeToGeneratorStrategyName(
+				String strategy = EnumConversionHelper.generationTypeToGeneratorStrategyName(
 						genType,
 						getContext().getMetadataImplementor().getOptions().useNewIdentifierGenerators()
 				);

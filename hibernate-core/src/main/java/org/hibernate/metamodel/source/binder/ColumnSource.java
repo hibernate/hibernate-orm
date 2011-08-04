@@ -110,5 +110,6 @@ public interface ColumnSource extends RelationalValueSource {
 	public String getComment();
 
 	public boolean isIncludedInInsert();
+
 	public boolean isIncludedInUpdate();
 }

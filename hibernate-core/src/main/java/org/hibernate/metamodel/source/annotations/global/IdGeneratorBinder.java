@@ -49,7 +49,7 @@ import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.source.annotations.HibernateDotNames;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.JandexHelper;
-import org.hibernate.metamodel.source.annotations.TypeEnumConversionHelper;
+import org.hibernate.metamodel.source.annotations.EnumConversionHelper;
 
 /**
  * Binds {@link SequenceGenerator}, {@link javax.persistence.TableGenerator}, {@link GenericGenerator}, and
@@ -141,7 +141,7 @@ public class IdGeneratorBinder {
 		Map<String, String> parameterMap = new HashMap<String, String>();
 		addStringParameter( generator, "sequenceName", parameterMap, SequenceStyleGenerator.SEQUENCE_PARAM );
 		boolean useNewIdentifierGenerators = metadata.getOptions().useNewIdentifierGenerators();
-		String strategy = TypeEnumConversionHelper.generationTypeToGeneratorStrategyName(
+		String strategy = EnumConversionHelper.generationTypeToGeneratorStrategyName(
 				GenerationType.SEQUENCE,
 				useNewIdentifierGenerators
 		);
@@ -176,7 +176,7 @@ public class IdGeneratorBinder {
 		addStringParameter( generator, "catalog", parameterMap, PersistentIdentifierGenerator.CATALOG );
 		addStringParameter( generator, "schema", parameterMap, PersistentIdentifierGenerator.SCHEMA );
 		boolean useNewIdentifierGenerators = metadata.getOptions().useNewIdentifierGenerators();
-		String strategy = TypeEnumConversionHelper.generationTypeToGeneratorStrategyName(
+		String strategy = EnumConversionHelper.generationTypeToGeneratorStrategyName(
 				GenerationType.TABLE,
 				useNewIdentifierGenerators
 		);

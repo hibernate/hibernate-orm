@@ -55,6 +55,9 @@ import org.hibernate.service.classloading.spi.ClassLoaderService;
 public class JandexHelper {
 	private static final Map<String, Object> DEFAULT_VALUES_BY_ELEMENT = new HashMap<String, Object>();
 
+	private JandexHelper() {
+	}
+
 	/**
 	 * Retrieves a jandex annotation element value. If the value is {@code null}, the default value specified in the
 	 * annotation class is retrieved instead.
@@ -213,6 +216,19 @@ public class JandexHelper {
 	}
 
 	/**
+	 * @param annotations List of annotation instances keyed against their dot name.
+	 * @param annotationName the annotation to check
+	 *
+	 * @return returns {@code true} if the map contains only a single instance of specified annotation or {@code false} otherwise.
+	 *
+	 * @throws org.hibernate.AssertionFailure in case there is there is more than one annotation of this type.
+	 */
+	public static boolean containsSingleAnnotations(Map<DotName, List<AnnotationInstance>> annotations, DotName annotationName)
+			throws AssertionFailure {
+		return getSingleAnnotation( annotations, annotationName ) != null;
+	}
+
+	/**
 	 * Creates a jandex index for the specified classes
 	 *
 	 * @param classLoaderService class loader service
@@ -274,7 +290,7 @@ public class JandexHelper {
 		return annotations;
 	}
 
-	public static void addAnnotationToMap(AnnotationInstance instance, Map<DotName, List<AnnotationInstance>> annotations) {
+	private static void addAnnotationToMap(AnnotationInstance instance, Map<DotName, List<AnnotationInstance>> annotations) {
 		DotName dotName = instance.name();
 		List<AnnotationInstance> list;
 		if ( annotations.containsKey( dotName ) ) {
@@ -285,9 +301,6 @@ public class JandexHelper {
 			annotations.put( dotName, list );
 		}
 		list.add( instance );
-	}
-
-	private JandexHelper() {
 	}
 
 	private static Object getDefaultValue(AnnotationInstance annotation, String element) {

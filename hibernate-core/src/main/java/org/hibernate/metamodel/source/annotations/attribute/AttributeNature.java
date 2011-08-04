@@ -32,19 +32,19 @@ import org.hibernate.metamodel.source.annotations.JPADotNames;
  *
  * @author Hardy Ferentschik
  */
-public enum AttributeType {
-	BASIC( null ),
+public enum AttributeNature {
+	BASIC( JPADotNames.BASIC ),
 	ONE_TO_ONE( JPADotNames.ONE_TO_ONE ),
 	ONE_TO_MANY( JPADotNames.ONE_TO_MANY ),
 	MANY_TO_ONE( JPADotNames.MANY_TO_ONE ),
 	MANY_TO_MANY( JPADotNames.MANY_TO_MANY ),
 	ELEMENT_COLLECTION( JPADotNames.ELEMENT_COLLECTION ),
-    EMBEDDED_ID( JPADotNames.EMBEDDED_ID ),
+	EMBEDDED_ID( JPADotNames.EMBEDDED_ID ),
 	EMBEDDED( JPADotNames.EMBEDDED );
 
 	private final DotName annotationDotName;
 
-	AttributeType(DotName annotationDotName) {
+	AttributeNature(DotName annotationDotName) {
 		this.annotationDotName = annotationDotName;
 	}
 

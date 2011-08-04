@@ -311,13 +311,11 @@ public class EntityClass extends ConfiguredClass {
 			idAnnotationList.addAll( getClassInfo().annotations().get( idAnnotationType ) );
 		}
 		ConfiguredClass parent = getParent();
-		while ( parent != null && ( ConfiguredClassType.MAPPED_SUPERCLASS.equals( parent.getConfiguredClassType() ) ||
-				ConfiguredClassType.NON_ENTITY.equals( parent.getConfiguredClassType() ) ) ) {
+		while ( parent != null ) {
 			if ( parent.getClassInfo().annotations().get( idAnnotationType ) != null ) {
 				idAnnotationList.addAll( parent.getClassInfo().annotations().get( idAnnotationType ) );
 			}
 			parent = parent.getParent();
-
 		}
 		return idAnnotationList;
 	}

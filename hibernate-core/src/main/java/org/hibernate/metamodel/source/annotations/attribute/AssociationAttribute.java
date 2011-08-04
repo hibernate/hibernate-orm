@@ -28,42 +28,67 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.persistence.CascadeType;
+import javax.persistence.FetchType;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.DotName;
 
+import org.hibernate.FetchMode;
 import org.hibernate.annotations.NotFoundAction;
+import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.source.annotations.HibernateDotNames;
 import org.hibernate.metamodel.source.annotations.JandexHelper;
+import org.hibernate.metamodel.source.annotations.attribute.type.AttributeTypeResolver;
+import org.hibernate.metamodel.source.annotations.attribute.type.AttributeTypeResolverImpl;
+import org.hibernate.metamodel.source.annotations.attribute.type.CompositeAttributeTypeResolver;
 
 /**
+ * Represents an association attribute.
+ *
  * @author Hardy Ferentschik
+ * @todo Check whether we need further subclasses for different association types. Needs to evolve during development (HF)
  */
-public class AssociationAttribute extends BasicAttribute {
-	private final AttributeType associationType;
+public class AssociationAttribute extends MappedAttribute {
+	private final AttributeNature associationNature;
 	private final boolean ignoreNotFound;
 	private final String referencedEntityType;
+	private final String mappedBy;
 	private final Set<CascadeType> cascadeTypes;
+	private final boolean isOptional;
+	private final boolean isLazy;
+	private final boolean isOrphanRemoval;
+	private final FetchMode fetchMode;
+
+	private boolean isInsertable = true;
+	private boolean isUpdatable = true;
+	private AttributeTypeResolver resolver;
 
 	public static AssociationAttribute createAssociationAttribute(String name,
 																  Class<?> attributeType,
-																  AttributeType attributeNature,
+																  AttributeNature attributeNature,
 																  String accessType,
 																  Map<DotName, List<AnnotationInstance>> annotations,
 																  AnnotationBindingContext context) {
-		return new AssociationAttribute( name, attributeType, attributeNature, accessType, annotations, context );
+		return new AssociationAttribute(
+				name,
+				attributeType,
+				attributeNature,
+				accessType,
+				annotations,
+				context
+		);
 	}
 
 	private AssociationAttribute(String name,
 								 Class<?> javaType,
-								 AttributeType associationType,
+								 AttributeNature associationType,
 								 String accessType,
 								 Map<DotName, List<AnnotationInstance>> annotations,
 								 AnnotationBindingContext context) {
 		super( name, javaType, accessType, annotations, context );
-		this.associationType = associationType;
+		this.associationNature = associationType;
 		this.ignoreNotFound = ignoreNotFound();
 
 		AnnotationInstance associationAnnotation = JandexHelper.getSingleAnnotation(
@@ -71,8 +96,15 @@ public class AssociationAttribute extends BasicAttribute {
 				associationType.getAnnotationDotName()
 		);
 
-		referencedEntityType = determineReferencedEntityType( associationAnnotation );
-		cascadeTypes = determineCascadeTypes( associationAnnotation );
+		// using jandex we don't really care which exact type of annotation we are dealing with
+		this.referencedEntityType = determineReferencedEntityType( associationAnnotation );
+		this.mappedBy = determineMappedByAttributeName( associationAnnotation );
+		this.isOptional = determineOptionality( associationAnnotation );
+		this.isLazy = determineFetchType( associationAnnotation );
+		this.isOrphanRemoval = determineOrphanRemoval( associationAnnotation );
+		this.cascadeTypes = determineCascadeTypes( associationAnnotation );
+
+		this.fetchMode = determineFetchMode();
 	}
 
 	public boolean isIgnoreNotFound() {
@@ -83,12 +115,61 @@ public class AssociationAttribute extends BasicAttribute {
 		return referencedEntityType;
 	}
 
-	public AttributeType getAssociationType() {
-		return associationType;
+	public String getMappedBy() {
+		return mappedBy;
+	}
+
+	public AttributeNature getAssociationNature() {
+		return associationNature;
 	}
 
 	public Set<CascadeType> getCascadeTypes() {
 		return cascadeTypes;
+	}
+
+	public boolean isOrphanRemoval() {
+		return isOrphanRemoval;
+	}
+
+	public FetchMode getFetchMode() {
+		return fetchMode;
+	}
+
+	@Override
+	public AttributeTypeResolver getHibernateTypeResolver() {
+		if ( resolver == null ) {
+			resolver = getDefaultHibernateTypeResolver();
+		}
+		return resolver;
+	}
+
+	@Override
+	public boolean isLazy() {
+		return isLazy;
+	}
+
+	@Override
+	public boolean isOptional() {
+		return isOptional;
+	}
+
+	@Override
+	public boolean isInsertable() {
+		return isInsertable;
+	}
+
+	@Override
+	public boolean isUpdatable() {
+		return isUpdatable;
+	}
+
+	@Override
+	public PropertyGeneration getPropertyGeneration() {
+		return PropertyGeneration.NEVER;
+	}
+
+	private AttributeTypeResolver getDefaultHibernateTypeResolver() {
+		return new CompositeAttributeTypeResolver( new AttributeTypeResolverImpl( this ) );
 	}
 
 	private boolean ignoreNotFound() {
@@ -105,6 +186,38 @@ public class AssociationAttribute extends BasicAttribute {
 		}
 
 		return NotFoundAction.IGNORE.equals( action );
+	}
+
+	private boolean determineOptionality(AnnotationInstance associationAnnotation) {
+		boolean optional = true;
+
+		AnnotationValue optionalValue = associationAnnotation.value( "optional" );
+		if ( optionalValue != null ) {
+			optional = optionalValue.asBoolean();
+		}
+
+		return optional;
+	}
+
+	private boolean determineOrphanRemoval(AnnotationInstance associationAnnotation) {
+		boolean orphanRemoval = false;
+		AnnotationValue orphanRemovalValue = associationAnnotation.value( "orphanRemoval" );
+		if ( orphanRemovalValue != null ) {
+			orphanRemoval = orphanRemovalValue.asBoolean();
+		}
+		return orphanRemoval;
+	}
+
+	private boolean determineFetchType(AnnotationInstance associationAnnotation) {
+		boolean lazy = false;
+		AnnotationValue fetchValue = associationAnnotation.value( "fetch" );
+		if ( fetchValue != null ) {
+			FetchType fetchType = Enum.valueOf( FetchType.class, fetchValue.asEnum() );
+			if ( FetchType.LAZY.equals( fetchType ) ) {
+				lazy = true;
+			}
+		}
+		return lazy;
 	}
 
 	private String determineReferencedEntityType(AnnotationInstance associationAnnotation) {
@@ -126,6 +239,16 @@ public class AssociationAttribute extends BasicAttribute {
 		return targetTypeName;
 	}
 
+	private String determineMappedByAttributeName(AnnotationInstance associationAnnotation) {
+		String mappedBy = null;
+		AnnotationValue mappedByAnnotationValue = associationAnnotation.value( "mappedBy" );
+		if ( mappedByAnnotationValue != null ) {
+			mappedBy = mappedByAnnotationValue.asString();
+		}
+
+		return mappedBy;
+	}
+
 	private Set<CascadeType> determineCascadeTypes(AnnotationInstance associationAnnotation) {
 		Set<CascadeType> cascadeTypes = new HashSet<CascadeType>();
 		AnnotationValue cascadeValue = associationAnnotation.value( "cascade" );
@@ -136,6 +259,21 @@ public class AssociationAttribute extends BasicAttribute {
 			}
 		}
 		return cascadeTypes;
+	}
+
+	private FetchMode determineFetchMode() {
+		FetchMode mode = FetchMode.DEFAULT;
+
+		AnnotationInstance fetchAnnotation = JandexHelper.getSingleAnnotation( annotations(), HibernateDotNames.FETCH );
+		if ( fetchAnnotation != null ) {
+			org.hibernate.annotations.FetchMode annotationFetchMode = JandexHelper.getEnumValue(
+					fetchAnnotation,
+					"value",
+					org.hibernate.annotations.FetchMode.class
+			);
+		}
+
+		return mode;
 	}
 }
 

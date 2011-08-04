@@ -23,11 +23,11 @@
  */
 package org.hibernate.metamodel.source.annotations.attribute;
 
-import java.util.HashSet;
 import java.util.Set;
 
 import org.hibernate.FetchMode;
 import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.metamodel.source.annotations.EnumConversionHelper;
 import org.hibernate.metamodel.source.binder.SingularAttributeNature;
 import org.hibernate.metamodel.source.binder.ToOneAttributeSource;
 
@@ -36,15 +36,12 @@ import org.hibernate.metamodel.source.binder.ToOneAttributeSource;
  */
 public class ToOneAttributeSourceImpl extends SingularAttributeSourceImpl implements ToOneAttributeSource {
 	private final AssociationAttribute associationAttribute;
-	private final Set<CascadeStyle> cascadeStyles = new HashSet<CascadeStyle>();
+	private final Set<CascadeStyle> cascadeStyles;
 
 	public ToOneAttributeSourceImpl(AssociationAttribute associationAttribute) {
 		super( associationAttribute );
 		this.associationAttribute = associationAttribute;
-
-		for ( javax.persistence.CascadeType cascadeType : associationAttribute.getCascadeTypes() ) {
-			// todo : ...
-		}
+		this.cascadeStyles = EnumConversionHelper.cascadeTypeToCascadeStyleSet( associationAttribute.getCascadeTypes() );
 	}
 
 	@Override
@@ -59,7 +56,7 @@ public class ToOneAttributeSourceImpl extends SingularAttributeSourceImpl implem
 
 	@Override
 	public String getReferencedEntityAttributeName() {
-		return null;
+		return associationAttribute.getMappedBy();
 	}
 
 	@Override
@@ -69,8 +66,7 @@ public class ToOneAttributeSourceImpl extends SingularAttributeSourceImpl implem
 
 	@Override
 	public FetchMode getFetchMode() {
-		// todo : implement
-		return FetchMode.DEFAULT;
+		return associationAttribute.getFetchMode();
 	}
 }
 

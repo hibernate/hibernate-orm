@@ -29,13 +29,13 @@ import org.hibernate.internal.util.StringHelper;
  * @author Hardy Ferentschik
  */
 public class ColumnSourceImpl extends ColumnValuesSourceImpl {
-	private final BasicAttribute attribute;
+	private final MappedAttribute attribute;
 	private final String name;
 
-	ColumnSourceImpl(BasicAttribute attribute, AttributeOverride attributeOverride) {
+	ColumnSourceImpl(MappedAttribute attribute, AttributeOverride attributeOverride) {
 		super( attribute.getColumnValues() );
-		if(attributeOverride != null) {
-		   setOverrideColumnValues( attributeOverride.getColumnValues() );
+		if ( attributeOverride != null ) {
+			setOverrideColumnValues( attributeOverride.getColumnValues() );
 		}
 		this.attribute = attribute;
 		this.name = resolveColumnName();
@@ -58,17 +58,32 @@ public class ColumnSourceImpl extends ColumnValuesSourceImpl {
 
 	@Override
 	public String getReadFragment() {
-		return attribute.getCustomReadFragment();
+		if ( attribute instanceof BasicAttribute ) {
+			return ( (BasicAttribute) attribute ).getCustomReadFragment();
+		}
+		else {
+			return null;
+		}
 	}
 
 	@Override
 	public String getWriteFragment() {
-		return attribute.getCustomWriteFragment();
+		if ( attribute instanceof BasicAttribute ) {
+			return ( (BasicAttribute) attribute ).getCustomWriteFragment();
+		}
+		else {
+			return null;
+		}
 	}
 
 	@Override
 	public String getCheckCondition() {
-		return attribute.getCheckCondition();
+		if ( attribute instanceof BasicAttribute ) {
+			return ( (BasicAttribute) attribute ).getCheckCondition();
+		}
+		else {
+			return null;
+		}
 	}
 }
 

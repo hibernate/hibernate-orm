@@ -166,6 +166,7 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 		assertTrue( idAttributeBinding.getAttribute().isSingular() );
 		assertNotNull( idAttributeBinding.getAttribute() );
 		SingularAttributeBinding singularIdAttributeBinding = (SingularAttributeBinding) idAttributeBinding;
+		assertFalse( singularIdAttributeBinding.isNullable() );
 		SingularAttribute singularIdAttribute =  ( SingularAttribute ) idAttributeBinding.getAttribute();
 		BasicType basicIdAttributeType = ( BasicType ) singularIdAttribute.getSingularAttributeType();
 		assertSame( Long.class, basicIdAttributeType.getClassReference() );
@@ -182,6 +183,7 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 		assertTrue( entityBinding.locateAttributeBinding( "name" ).getAttribute().isSingular() );
 
 		SingularAttributeBinding nameBinding = (SingularAttributeBinding) entityBinding.locateAttributeBinding( "name" );
+		assertTrue( nameBinding.isNullable() );
 		assertSame( StringType.INSTANCE, nameBinding.getHibernateTypeDescriptor().getResolvedTypeMapping() );
 		assertNotNull( nameBinding.getAttribute() );
 		assertNotNull( nameBinding.getValue() );

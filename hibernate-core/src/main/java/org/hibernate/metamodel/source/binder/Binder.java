@@ -987,12 +987,16 @@ public class Binder {
 					.getNamingStrategy()
 					.propertyToColumnName( attributeBinding.getAttribute().getName() );
 			name = quoteIdentifier( name );
-			valueBindings.add(
-					new SimpleValueBinding(
-							attributeBinding.getContainer()
+			Column column = attributeBinding.getContainer()
 									.seekEntityBinding()
 									.getPrimaryTable()
-									.locateOrCreateColumn( name )
+									.locateOrCreateColumn( name );
+			column.setNullable( relationalValueSourceContainer.areValuesNullableByDefault() );
+			valueBindings.add(
+					new SimpleValueBinding(
+							column,
+							relationalValueSourceContainer.areValuesIncludedInInsertByDefault(),
+							relationalValueSourceContainer.areValuesIncludedInUpdateByDefault()
 					)
 			);
 		}

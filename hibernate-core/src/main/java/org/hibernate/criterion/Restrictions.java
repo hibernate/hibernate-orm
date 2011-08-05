@@ -246,6 +246,31 @@ public class Restrictions {
 		return new LogicalExpression(lhs, rhs, "or");
 	}
 	/**
+	 * Return the conjunction of an expressions array
+	 * @param ands the criterion array
+	 * @return Criterion
+	 */
+	public static Criterion and(Criterion... ands) {
+		Conjunction conj = conjunction();
+		for ( Criterion and : ands ) {
+			conj.add(and);
+		}
+		return conj;
+	}
+	/**
+	 * Return the disjunction of an expressions array
+	 * @param ors the criterion array
+	 * @return Criterion
+	 */
+	public static Criterion or(Criterion... ors) {
+		Disjunction dis = disjunction();
+		for ( Criterion or : ors ) {
+			dis.add(or);
+		}
+		return dis;
+	}
+	
+	/**
 	 * Return the negation of an expression
 	 *
 	 * @param expression

@@ -37,12 +37,15 @@ import org.jboss.jandex.DotName;
 import org.hibernate.FetchMode;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.mapping.PropertyGeneration;
-import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
+import org.hibernate.metamodel.source.MappingException;
+import org.hibernate.metamodel.source.annotations.EnumConversionHelper;
 import org.hibernate.metamodel.source.annotations.HibernateDotNames;
+import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.JandexHelper;
 import org.hibernate.metamodel.source.annotations.attribute.type.AttributeTypeResolver;
 import org.hibernate.metamodel.source.annotations.attribute.type.AttributeTypeResolverImpl;
 import org.hibernate.metamodel.source.annotations.attribute.type.CompositeAttributeTypeResolver;
+import org.hibernate.metamodel.source.annotations.entity.EntityBindingContext;
 
 /**
  * Represents an association attribute.
@@ -60,6 +63,8 @@ public class AssociationAttribute extends MappedAttribute {
 	private final boolean isLazy;
 	private final boolean isOrphanRemoval;
 	private final FetchMode fetchMode;
+	private final boolean mapsId;
+	private final String referencedIdAttributeName;
 
 	private boolean isInsertable = true;
 	private boolean isUpdatable = true;
@@ -70,7 +75,7 @@ public class AssociationAttribute extends MappedAttribute {
 																  AttributeNature attributeNature,
 																  String accessType,
 																  Map<DotName, List<AnnotationInstance>> annotations,
-																  AnnotationBindingContext context) {
+																  EntityBindingContext context) {
 		return new AssociationAttribute(
 				name,
 				attributeType,
@@ -86,7 +91,7 @@ public class AssociationAttribute extends MappedAttribute {
 								 AttributeNature associationType,
 								 String accessType,
 								 Map<DotName, List<AnnotationInstance>> annotations,
-								 AnnotationBindingContext context) {
+								 EntityBindingContext context) {
 		super( name, javaType, accessType, annotations, context );
 		this.associationNature = associationType;
 		this.ignoreNotFound = ignoreNotFound();
@@ -105,6 +110,8 @@ public class AssociationAttribute extends MappedAttribute {
 		this.cascadeTypes = determineCascadeTypes( associationAnnotation );
 
 		this.fetchMode = determineFetchMode();
+		this.referencedIdAttributeName = determineMapsId();
+		this.mapsId = referencedIdAttributeName != null;
 	}
 
 	public boolean isIgnoreNotFound() {
@@ -133,6 +140,14 @@ public class AssociationAttribute extends MappedAttribute {
 
 	public FetchMode getFetchMode() {
 		return fetchMode;
+	}
+
+	public String getReferencedIdAttributeName() {
+		return referencedIdAttributeName;
+	}
+
+	public boolean mapsId() {
+		return mapsId;
 	}
 
 	@Override
@@ -271,9 +286,30 @@ public class AssociationAttribute extends MappedAttribute {
 					"value",
 					org.hibernate.annotations.FetchMode.class
 			);
+			mode = EnumConversionHelper.annotationFetchModeToHibernateFetchMode( annotationFetchMode );
 		}
 
 		return mode;
+	}
+
+	private String determineMapsId() {
+		String referencedIdAttributeName;
+		AnnotationInstance mapsIdAnnotation = JandexHelper.getSingleAnnotation( annotations(), JPADotNames.MAPS_ID );
+		if ( mapsIdAnnotation == null ) {
+			return null;
+		}
+
+		if ( !( AttributeNature.MANY_TO_ONE.equals( getAssociationNature() ) || AttributeNature.MANY_TO_ONE
+				.equals( getAssociationNature() ) ) ) {
+			throw new MappingException(
+					"@MapsId can only be specified on a many-to-one or one-to-one associations",
+					getContext().getOrigin()
+			);
+		}
+
+		referencedIdAttributeName = JandexHelper.getValue( mapsIdAnnotation, "value", String.class );
+
+		return referencedIdAttributeName;
 	}
 }
 

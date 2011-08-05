@@ -40,17 +40,17 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.binding.IdGenerator;
 import org.hibernate.metamodel.source.MappingException;
-import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
+import org.hibernate.metamodel.source.annotations.EnumConversionHelper;
 import org.hibernate.metamodel.source.annotations.HibernateDotNames;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.JandexHelper;
-import org.hibernate.metamodel.source.annotations.EnumConversionHelper;
 import org.hibernate.metamodel.source.annotations.attribute.type.AttributeTypeResolver;
+import org.hibernate.metamodel.source.annotations.attribute.type.AttributeTypeResolverImpl;
 import org.hibernate.metamodel.source.annotations.attribute.type.CompositeAttributeTypeResolver;
 import org.hibernate.metamodel.source.annotations.attribute.type.EnumeratedTypeResolver;
-import org.hibernate.metamodel.source.annotations.attribute.type.AttributeTypeResolverImpl;
 import org.hibernate.metamodel.source.annotations.attribute.type.LobTypeResolver;
 import org.hibernate.metamodel.source.annotations.attribute.type.TemporalTypeResolver;
+import org.hibernate.metamodel.source.annotations.entity.EntityBindingContext;
 
 /**
  * Represent a basic attribute (explicitly or implicitly mapped).
@@ -90,13 +90,13 @@ public class BasicAttribute extends MappedAttribute {
 	private final String customWriteFragment;
 	private final String customReadFragment;
 	private final String checkCondition;
-    private AttributeTypeResolver resolver;
+	private AttributeTypeResolver resolver;
 
 	public static BasicAttribute createSimpleAttribute(String name,
 													   Class<?> attributeType,
 													   Map<DotName, List<AnnotationInstance>> annotations,
 													   String accessType,
-													   AnnotationBindingContext context) {
+													   EntityBindingContext context) {
 		return new BasicAttribute( name, attributeType, accessType, annotations, context );
 	}
 
@@ -104,7 +104,7 @@ public class BasicAttribute extends MappedAttribute {
 				   Class<?> attributeType,
 				   String accessType,
 				   Map<DotName, List<AnnotationInstance>> annotations,
-				   AnnotationBindingContext context) {
+				   EntityBindingContext context) {
 		super( name, attributeType, accessType, annotations, context );
 
 		AnnotationInstance versionAnnotation = JandexHelper.getSingleAnnotation( annotations, JPADotNames.VERSION );
@@ -303,25 +303,25 @@ public class BasicAttribute extends MappedAttribute {
 		return generator;
 	}
 
-    @Override
-    public AttributeTypeResolver getHibernateTypeResolver() {
-        if ( resolver == null ) {
-            resolver = getDefaultHibernateTypeResolver();
-        }
-        return resolver;
-    }
+	@Override
+	public AttributeTypeResolver getHibernateTypeResolver() {
+		if ( resolver == null ) {
+			resolver = getDefaultHibernateTypeResolver();
+		}
+		return resolver;
+	}
 
-    private AttributeTypeResolver getDefaultHibernateTypeResolver() {
-        CompositeAttributeTypeResolver resolver = new CompositeAttributeTypeResolver(
-                new AttributeTypeResolverImpl(
-                        this
-                )
-        );
-        resolver.addHibernateTypeResolver( new TemporalTypeResolver( this ) );
-        resolver.addHibernateTypeResolver( new LobTypeResolver( this ) );
-        resolver.addHibernateTypeResolver( new EnumeratedTypeResolver( this ) );
-        return resolver;
-    }
+	private AttributeTypeResolver getDefaultHibernateTypeResolver() {
+		CompositeAttributeTypeResolver resolver = new CompositeAttributeTypeResolver(
+				new AttributeTypeResolverImpl(
+						this
+				)
+		);
+		resolver.addHibernateTypeResolver( new TemporalTypeResolver( this ) );
+		resolver.addHibernateTypeResolver( new LobTypeResolver( this ) );
+		resolver.addHibernateTypeResolver( new EnumeratedTypeResolver( this ) );
+		return resolver;
+	}
 }
 
 

@@ -30,11 +30,11 @@ import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.DotName;
 
 import org.hibernate.mapping.PropertyGeneration;
-import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.source.annotations.HibernateDotNames;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.JandexHelper;
 import org.hibernate.metamodel.source.annotations.attribute.type.AttributeTypeResolver;
+import org.hibernate.metamodel.source.annotations.entity.EntityBindingContext;
 
 /**
  * Base class for the different types of mapped attributes
@@ -82,9 +82,9 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 	/**
 	 * The binding context
 	 */
-	private final AnnotationBindingContext context;
+	private final EntityBindingContext context;
 
-	MappedAttribute(String name, Class<?> attributeType, String accessType, Map<DotName, List<AnnotationInstance>> annotations, AnnotationBindingContext context) {
+	MappedAttribute(String name, Class<?> attributeType, String accessType, Map<DotName, List<AnnotationInstance>> annotations, EntityBindingContext context) {
 		this.context = context;
 		this.annotations = annotations;
 		this.name = name;
@@ -120,7 +120,7 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 		return accessType;
 	}
 
-	public AnnotationBindingContext getContext() {
+	public EntityBindingContext getContext() {
 		return context;
 	}
 

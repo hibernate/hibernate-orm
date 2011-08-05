@@ -44,11 +44,11 @@ import org.hibernate.service.ServiceRegistry;
  * 
  * @author Steve Ebersole
  */
-public class LocalBindingContextImpl implements LocalBindingContext, AnnotationBindingContext {
+public class EntityBindingContext implements LocalBindingContext, AnnotationBindingContext {
 	private final AnnotationBindingContext contextDelegate;
 	private final Origin origin;
 
-	public LocalBindingContextImpl(AnnotationBindingContext contextDelegate, ConfiguredClass source) {
+	public EntityBindingContext(AnnotationBindingContext contextDelegate, ConfiguredClass source) {
 		this.contextDelegate = contextDelegate;
 		this.origin = new Origin( SourceType.ANNOTATION, source.getName() );
 	}

@@ -137,7 +137,7 @@ public class ConfiguredClass {
 	 */
 	private final String customTuplizer;
 
-	private final LocalBindingContextImpl localBindingContext;
+	private final EntityBindingContext localBindingContext;
 
 	public ConfiguredClass(
 			ClassInfo classInfo,
@@ -155,7 +155,7 @@ public class ConfiguredClass {
 		this.idAttributeMap = new TreeMap<String, BasicAttribute>();
 		this.associationAttributeMap = new TreeMap<String, AssociationAttribute>();
 
-		this.localBindingContext = new LocalBindingContextImpl( context, this );
+		this.localBindingContext = new EntityBindingContext( context, this );
 
 		collectAttributes();
 		attributeOverrideMap = Collections.unmodifiableMap( findAttributeOverrides() );
@@ -177,7 +177,7 @@ public class ConfiguredClass {
 		return parent;
 	}
 
-	public LocalBindingContextImpl getLocalBindingContext() {
+	public EntityBindingContext getLocalBindingContext() {
 		return localBindingContext;
 	}
 

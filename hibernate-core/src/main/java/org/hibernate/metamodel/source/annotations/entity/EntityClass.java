@@ -295,24 +295,19 @@ public class EntityClass extends ConfiguredClass {
 		}
 
 		if ( !idAnnotations.isEmpty() ) {
-			if ( idAnnotations.size() == 1 ) {
-				return IdType.SIMPLE;
-			}
-			else {
-				return IdType.COMPOSED;
-			}
+            return idAnnotations.size() == 1 ? IdType.SIMPLE : IdType.COMPOSED;
 		}
 		return IdType.NONE;
 	}
 
 	private List<AnnotationInstance> findIdAnnotations(DotName idAnnotationType) {
 		List<AnnotationInstance> idAnnotationList = new ArrayList<AnnotationInstance>();
-		if ( getClassInfo().annotations().get( idAnnotationType ) != null ) {
+		if ( getClassInfo().annotations().containsKey( idAnnotationType ) ) {
 			idAnnotationList.addAll( getClassInfo().annotations().get( idAnnotationType ) );
 		}
 		ConfiguredClass parent = getParent();
 		while ( parent != null ) {
-			if ( parent.getClassInfo().annotations().get( idAnnotationType ) != null ) {
+			if ( parent.getClassInfo().annotations().containsKey( idAnnotationType ) ) {
 				idAnnotationList.addAll( parent.getClassInfo().annotations().get( idAnnotationType ) );
 			}
 			parent = parent.getParent();

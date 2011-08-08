@@ -21,21 +21,17 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
+
 package org.hibernate.metamodel.source.binder;
 
-import org.hibernate.metamodel.binding.IdGenerator;
-
 /**
- * Contract describing source of a simple identifier mapping.
- *
- * @author Steve Ebersole
+ * @author Strong Liu
  */
-public interface SimpleIdentifierSource extends IdentifierSource {
-	/**
-	 * Obtain the source descriptor for the identifier attribute.
-	 *
-	 * @return The identifier attribute source.
-	 */
-	public SingularAttributeSource getIdentifierAttributeSource();
-
+public interface ComponentIdentifierSource extends IdentifierSource {
+    /**
+     * Obtain the source descriptor for the identifier attribute.
+     *
+     * @return The identifier attribute source.
+     */
+    public ComponentAttributeSource getIdentifierAttributeSource();
 }

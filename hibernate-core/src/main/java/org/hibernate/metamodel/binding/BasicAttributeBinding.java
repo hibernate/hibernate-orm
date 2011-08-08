@@ -43,7 +43,7 @@ import org.hibernate.metamodel.source.MetaAttributeContext;
  */
 public class BasicAttributeBinding
 		extends AbstractSingularAttributeBinding
-		implements SingularAttributeBinding, KeyValueBinding {
+		implements  KeyValueBinding {
 
 	private String unsavedValue;
 	private PropertyGeneration generation;

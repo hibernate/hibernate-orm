@@ -29,7 +29,7 @@ import org.hibernate.persister.collection.CollectionPersister;
 /**
  * @author Steve Ebersole
  */
-public interface PluralAttributeBinding extends AttributeBinding, AssociationAttributeBinding {
+public interface PluralAttributeBinding extends  AssociationAttributeBinding {
 	// todo : really it is the element (and/or index) that can be associative not the collection itself...
 
 	public CollectionKey getCollectionKey();

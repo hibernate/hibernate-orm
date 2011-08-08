@@ -23,13 +23,22 @@
  */
 package org.hibernate.metamodel.source.binder;
 
+import org.hibernate.metamodel.binding.IdGenerator;
+
 /**
  * Contract describing source of identifier information for the entity.
  *
  * @author Steve Ebersole
  */
 public interface IdentifierSource {
-	public static enum Nature {
+    /**
+     * Obtain the identifier generator source.
+     *
+     * @return The generator source.
+     */
+    IdGenerator getIdentifierGeneratorDescriptor();
+
+    public static enum Nature {
 		/**
 		 * A single, simple identifier.  Equivalent of an {@code <id/>} mapping or a single {@code @Id}
 		 * annotation.  Indicates the {@link IdentifierSource} is castable to {@link SimpleIdentifierSource}.

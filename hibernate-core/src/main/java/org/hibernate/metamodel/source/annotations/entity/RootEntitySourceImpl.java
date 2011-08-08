@@ -25,6 +25,7 @@ package org.hibernate.metamodel.source.annotations.entity;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
+import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.metamodel.binding.Caching;
 import org.hibernate.metamodel.source.annotations.attribute.BasicAttribute;
@@ -53,17 +54,15 @@ public class RootEntitySourceImpl extends EntitySourceImpl implements RootEntity
 				return new SimpleIdentifierSourceImpl( attribute, getEntityClass().getAttributeOverrideMap() );
 			}
 			case COMPOSED: {
-				break;
+				throw new NotYetImplementedException( "Composed ids must still be implemented." );
 			}
 			case EMBEDDED: {
-				break;
+				throw new NotYetImplementedException( "Embedded ids must still be implemented." );
 			}
 			default: {
 				throw new AssertionFailure( "The root entity needs to specify an identifier" );
 			}
 		}
-
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
 	}
 
 	@Override

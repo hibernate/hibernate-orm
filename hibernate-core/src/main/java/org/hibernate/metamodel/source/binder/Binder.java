@@ -388,6 +388,7 @@ public class Binder {
 		discriminator.setForced( discriminatorSource.isForced() );
 
 		entityBinding.getHierarchyDetails().setEntityDiscriminator( discriminator );
+		entityBinding.setDiscriminatorMatchValue( entitySource.getDiscriminatorMatchValue() );
 	}
 
 	private void bindDiscriminatorValue(SubclassEntitySource entitySource, EntityBinding entityBinding) {

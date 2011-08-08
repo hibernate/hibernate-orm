@@ -287,6 +287,13 @@ public class InheritanceBindingTest extends BaseAnnotationBindingTestCase {
 		assertFalse( "Wrong default value", discriminator.isInserted() );
 	}
 
+	@Test
+	@Resources(annotatedClasses = { Base.class, Jump.class })
+	public void testRootDiscriminatorMatchValue() {
+		EntityBinding rootEntityBinding = getEntityBinding( Base.class );
+		assertEquals( "base", rootEntityBinding.getDiscriminatorMatchValue() );
+	}
+
     @Test
     @Resources(annotatedClasses = { Fruit.class, Apple.class })
     public void testDiscriminatorFormula() {
@@ -336,6 +343,7 @@ public class InheritanceBindingTest extends BaseAnnotationBindingTestCase {
 	}
 
 	@Entity
+	@DiscriminatorValue("base")
 	@DiscriminatorOptions(force = true, insert = false)
 	class Base {
 		@Id

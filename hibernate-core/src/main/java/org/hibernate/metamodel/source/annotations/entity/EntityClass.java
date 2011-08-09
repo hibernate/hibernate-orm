@@ -630,7 +630,7 @@ public class EntityClass extends ConfiguredClass {
 
 		AnnotationInstance[] uniqueConstraints = value.asNestedArray();
 		for ( AnnotationInstance unique : uniqueConstraints ) {
-			String name = unique.value( "name" ).asString();
+			String name = unique.value( "name" ) == null ? null : unique.value( "name" ).asString();
 			String[] columnNames = unique.value( "columnNames" ).asStringArray();
 			UniqueConstraintSourceImpl uniqueConstraintSource =
 					new UniqueConstraintSourceImpl(

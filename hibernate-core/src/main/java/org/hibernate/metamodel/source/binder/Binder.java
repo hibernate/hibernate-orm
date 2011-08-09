@@ -702,11 +702,9 @@ public class Binder {
 	}
 
 	private void resolveTypeInformation(HibernateTypeSource typeSource, BasicAttributeBinding attributeBinding) {
-        Class<?> attributeJavaType = typeSource.getAttributeType();
-        if (attributeJavaType == null){
-            //hbm
-            attributeJavaType = determineJavaType( attributeBinding.getAttribute() );
-        }
+        final Class<?> attributeJavaType = typeSource.getAttributeType() != null ? typeSource.getAttributeType() : determineJavaType(
+                attributeBinding.getAttribute()
+        );
         if ( attributeJavaType != null ) {
             attributeBinding.getAttribute()
                     .resolveType( currentBindingContext.makeJavaType( attributeJavaType.getName() ) );
@@ -718,8 +716,10 @@ public class Binder {
 			HibernateTypeSource typeSource,
 			PluralAttribute attribute,
 			BasicCollectionElement collectionElement) {
-		final Class<?> attributeJavaType = determineJavaType( attribute );
-		resolveTypeInformation( typeSource, collectionElement.getHibernateTypeDescriptor(), attributeJavaType );
+        final Class<?> attributeJavaType = typeSource.getAttributeType() != null ? typeSource.getAttributeType() : determineJavaType(
+                attribute
+        );
+        resolveTypeInformation( typeSource, collectionElement.getHibernateTypeDescriptor(), attributeJavaType );
 	}
 
 	private void resolveTypeInformation(

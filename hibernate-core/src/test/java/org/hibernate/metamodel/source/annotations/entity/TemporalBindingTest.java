@@ -39,6 +39,7 @@ import org.hibernate.type.TimestampType;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -52,10 +53,18 @@ public class TemporalBindingTest extends BaseAnnotationBindingTestCase {
         Date date;
     }
 
-    @Test(expected = AnnotationException.class)
+    @Test
     @Resources(annotatedClasses = TemporalBindingTest.Item1.class)
     public void testNoTemporalAnnotationOnTemporalTypeAttribute() {
-        getEntityBinding( Item1.class );
+        EntityBinding binding = getEntityBinding( Item1.class );
+        AttributeBinding attributeBinding = binding.locateAttributeBinding( "date" );
+        HibernateTypeDescriptor descriptor = attributeBinding.getHibernateTypeDescriptor();
+        assertNull( descriptor.getExplicitTypeName()  );
+        assertEquals( Date.class.getName(), descriptor.getJavaTypeName() );
+        assertNotNull( descriptor.getResolvedTypeMapping() );
+        assertEquals( TimestampType.class, descriptor.getResolvedTypeMapping().getClass() );
+        assertNotNull( descriptor.getTypeParameters() );
+        assertTrue( descriptor.getTypeParameters().isEmpty() );
 
     }
 

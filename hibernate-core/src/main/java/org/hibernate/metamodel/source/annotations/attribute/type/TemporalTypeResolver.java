@@ -59,7 +59,8 @@ public class TemporalTypeResolver extends AbstractAttributeTypeResolver {
 		if ( isTemporalType( mappedAttribute.getAttributeType() ) ) {
 			if ( temporalAnnotation == null ) {
 				//SPEC 11.1.47 The Temporal annotation must be specified for persistent fields or properties of type java.util.Date and java.util.Calendar.
-				throw new AnnotationException( "Attribute " + mappedAttribute.getName() + " is a Temporal type, but no @Temporal annotation found." );
+				//throw new AnnotationException( "Attribute " + mappedAttribute.getName() + " is a Temporal type, but no @Temporal annotation found." );
+                return null;
 			}
 			TemporalType temporalType = JandexHelper.getEnumValue( temporalAnnotation, "value", TemporalType.class );
 			boolean isDate = Date.class.isAssignableFrom( mappedAttribute.getAttributeType() );

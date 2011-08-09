@@ -702,34 +702,37 @@ public class Binder {
 		return attributeBinding;
 	}
 
-	private void resolveTypeInformation(ExplicitHibernateTypeSource typeSource, BasicAttributeBinding attributeBinding) {
-		final Class<?> attributeJavaType = determineJavaType( attributeBinding.getAttribute() );
-		if ( attributeJavaType != null ) {
-			attributeBinding.getAttribute()
-					.resolveType( currentBindingContext.makeJavaType( attributeJavaType.getName() ) );
-		}
-
-		resolveTypeInformation( typeSource, attributeBinding.getHibernateTypeDescriptor(), attributeJavaType );
+	private void resolveTypeInformation(HibernateTypeSource typeSource, BasicAttributeBinding attributeBinding) {
+        final Class<?> attributeJavaType = typeSource.getAttributeType() != null ? typeSource.getAttributeType() : determineJavaType(
+                attributeBinding.getAttribute()
+        );
+        if ( attributeJavaType != null ) {
+            attributeBinding.getAttribute()
+                    .resolveType( currentBindingContext.makeJavaType( attributeJavaType.getName() ) );
+        }
+        resolveTypeInformation( typeSource, attributeBinding.getHibernateTypeDescriptor(), attributeJavaType );
 	}
 
 	private void resolveTypeInformation(
-			ExplicitHibernateTypeSource typeSource,
+			HibernateTypeSource typeSource,
 			PluralAttribute attribute,
 			BasicCollectionElement collectionElement) {
-		final Class<?> attributeJavaType = determineJavaType( attribute );
-		resolveTypeInformation( typeSource, collectionElement.getHibernateTypeDescriptor(), attributeJavaType );
+        final Class<?> attributeJavaType = typeSource.getAttributeType() != null ? typeSource.getAttributeType() : determineJavaType(
+                attribute
+        );
+        resolveTypeInformation( typeSource, collectionElement.getHibernateTypeDescriptor(), attributeJavaType );
 	}
 
 	private void resolveTypeInformation(
-			ExplicitHibernateTypeSource typeSource,
+			HibernateTypeSource typeSource,
 			HibernateTypeDescriptor hibernateTypeDescriptor,
 			Class<?> discoveredJavaType) {
 		if ( discoveredJavaType != null ) {
 			hibernateTypeDescriptor.setJavaTypeName( discoveredJavaType.getName() );
 		}
 
-		final String explicitTypeName = typeSource.getName();
-		if ( explicitTypeName != null ) {
+		final String explicitTypeName = typeSource.getExplicitTypeName();
+		if ( StringHelper.isNotEmpty( explicitTypeName ) ) {
 			final TypeDef typeDef = currentBindingContext.getMetadataImplementor()
 					.getTypeDefinition( explicitTypeName );
 			if ( typeDef != null ) {
@@ -739,7 +742,7 @@ public class Binder {
 			else {
 				hibernateTypeDescriptor.setExplicitTypeName( explicitTypeName );
 			}
-			final Map<String, String> parameters = typeSource.getParameters();
+			final Map<String, String> parameters = typeSource.getExplicitTypeParameters();
 			if ( parameters != null ) {
 				hibernateTypeDescriptor.getTypeParameters().putAll( parameters );
 			}

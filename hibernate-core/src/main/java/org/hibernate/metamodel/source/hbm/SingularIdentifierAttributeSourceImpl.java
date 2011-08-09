@@ -28,7 +28,7 @@ import java.util.Map;
 
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.source.LocalBindingContext;
-import org.hibernate.metamodel.source.binder.ExplicitHibernateTypeSource;
+import org.hibernate.metamodel.source.binder.HibernateTypeSource;
 import org.hibernate.metamodel.source.binder.MetaAttributeSource;
 import org.hibernate.metamodel.source.binder.RelationalValueSource;
 import org.hibernate.metamodel.source.binder.SingularAttributeNature;
@@ -42,14 +42,14 @@ import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLHibernateMapping;
  */
 class SingularIdentifierAttributeSourceImpl implements SingularAttributeSource {
 	private final XMLHibernateMapping.XMLClass.XMLId idElement;
-	private final ExplicitHibernateTypeSource typeSource;
+	private final HibernateTypeSource typeSource;
 	private final List<RelationalValueSource> valueSources;
 
 	public SingularIdentifierAttributeSourceImpl(
 			final XMLHibernateMapping.XMLClass.XMLId idElement,
 			LocalBindingContext bindingContext) {
 		this.idElement = idElement;
-		this.typeSource = new ExplicitHibernateTypeSource() {
+		this.typeSource = new AbstractHibernateTypeSource() {
 			private final String name = idElement.getTypeAttribute() != null
 					? idElement.getTypeAttribute()
 					: idElement.getType() != null
@@ -60,12 +60,12 @@ class SingularIdentifierAttributeSourceImpl implements SingularAttributeSource {
 					: null;
 
 			@Override
-			public String getName() {
+			public String getExplicitTypeName() {
 				return name;
 			}
 
 			@Override
-			public Map<String, String> getParameters() {
+			public Map<String, String> getExplicitTypeParameters() {
 				return parameters;
 			}
 		};
@@ -114,7 +114,7 @@ class SingularIdentifierAttributeSourceImpl implements SingularAttributeSource {
 	}
 
 	@Override
-	public ExplicitHibernateTypeSource getTypeInformation() {
+	public HibernateTypeSource getTypeInformation() {
 		return typeSource;
 	}
 

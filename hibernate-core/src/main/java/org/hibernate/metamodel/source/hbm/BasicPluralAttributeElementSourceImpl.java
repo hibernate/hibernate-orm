@@ -28,7 +28,7 @@ import java.util.Map;
 
 import org.hibernate.metamodel.source.LocalBindingContext;
 import org.hibernate.metamodel.source.binder.BasicPluralAttributeElementSource;
-import org.hibernate.metamodel.source.binder.ExplicitHibernateTypeSource;
+import org.hibernate.metamodel.source.binder.HibernateTypeSource;
 import org.hibernate.metamodel.source.binder.PluralAttributeElementNature;
 import org.hibernate.metamodel.source.binder.RelationalValueSource;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLElementElement;
@@ -38,7 +38,7 @@ import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLElementElement;
  */
 public class BasicPluralAttributeElementSourceImpl implements BasicPluralAttributeElementSource {
 	private final List<RelationalValueSource> valueSources;
-	private final ExplicitHibernateTypeSource typeSource;
+	private final HibernateTypeSource typeSource;
 
 	public BasicPluralAttributeElementSourceImpl(
 			final XMLElementElement elementElement,
@@ -78,9 +78,9 @@ public class BasicPluralAttributeElementSourceImpl implements BasicPluralAttribu
 				bindingContext
 		);
 
-		this.typeSource = new ExplicitHibernateTypeSource() {
+		this.typeSource = new AbstractHibernateTypeSource() {
 			@Override
-			public String getName() {
+			public String getExplicitTypeName() {
 				if ( elementElement.getTypeAttribute() != null ) {
 					return elementElement.getTypeAttribute();
 				}
@@ -93,7 +93,7 @@ public class BasicPluralAttributeElementSourceImpl implements BasicPluralAttribu
 			}
 
 			@Override
-			public Map<String, String> getParameters() {
+			public Map<String, String> getExplicitTypeParameters() {
 				return elementElement.getType() != null
 						? Helper.extractParameters( elementElement.getType().getParam() )
 						: java.util.Collections.<String, String>emptyMap();
@@ -112,7 +112,7 @@ public class BasicPluralAttributeElementSourceImpl implements BasicPluralAttribu
 	}
 
 	@Override
-	public ExplicitHibernateTypeSource getExplicitHibernateTypeSource() {
+	public HibernateTypeSource getExplicitHibernateTypeSource() {
 		return typeSource;
 	}
 }

@@ -27,25 +27,37 @@ package org.hibernate.metamodel.source.annotations.attribute;
 import java.util.Map;
 
 import org.hibernate.metamodel.source.annotations.attribute.type.AttributeTypeResolver;
-import org.hibernate.metamodel.source.binder.ExplicitHibernateTypeSource;
+import org.hibernate.metamodel.source.binder.HibernateTypeSource;
 
 /**
  * @author Strong Liu
  */
-public class ExplicitHibernateTypeSourceImpl implements ExplicitHibernateTypeSource {
+public class ExplicitHibernateTypeSourceImpl implements HibernateTypeSource {
     private final AttributeTypeResolver typeResolver;
+    private final Class attributeType;
 
-    public ExplicitHibernateTypeSourceImpl(AttributeTypeResolver typeResolver) {
+    public ExplicitHibernateTypeSourceImpl(AttributeTypeResolver typeResolver, Class attributeType) {
         this.typeResolver = typeResolver;
+        this.attributeType = attributeType;
     }
 
     @Override
-    public String getName() {
+    public String getExplicitTypeName() {
         return typeResolver.getExplicitHibernateTypeName();
     }
 
     @Override
-    public Map<String, String> getParameters() {
+    public Map<String, String> getExplicitTypeParameters() {
         return typeResolver.getExplicitHibernateTypeParameters();
+    }
+
+    @Override
+    public Class getAttributeType() {
+        return attributeType;
+    }
+
+    @Override
+    public String getDefaultTypeName() {
+        return null;
     }
 }

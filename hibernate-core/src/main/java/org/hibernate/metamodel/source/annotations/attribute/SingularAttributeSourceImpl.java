@@ -28,7 +28,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.mapping.PropertyGeneration;
-import org.hibernate.metamodel.source.binder.ExplicitHibernateTypeSource;
+import org.hibernate.metamodel.source.binder.HibernateTypeSource;
 import org.hibernate.metamodel.source.binder.MetaAttributeSource;
 import org.hibernate.metamodel.source.binder.RelationalValueSource;
 import org.hibernate.metamodel.source.binder.SingularAttributeNature;
@@ -51,8 +51,8 @@ public class SingularAttributeSourceImpl implements SingularAttributeSource {
 	}
 
 	@Override
-	public ExplicitHibernateTypeSource getTypeInformation() {
-		return new ExplicitHibernateTypeSourceImpl( attribute.getHibernateTypeResolver() );
+	public HibernateTypeSource getTypeInformation() {
+		return new ExplicitHibernateTypeSourceImpl( attribute.getHibernateTypeResolver(), attribute.getAttributeType() );
 	}
 
 	@Override

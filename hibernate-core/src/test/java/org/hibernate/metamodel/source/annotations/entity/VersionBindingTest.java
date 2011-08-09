@@ -24,16 +24,24 @@
 
 package org.hibernate.metamodel.source.annotations.entity;
 
+import java.util.Date;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Version;
 
 import org.junit.Test;
-import static org.junit.Assert.*;
 
+import org.hibernate.annotations.Source;
+import org.hibernate.annotations.SourceType;
 import org.hibernate.metamodel.binding.AttributeBinding;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.HibernateTypeDescriptor;
+import org.hibernate.type.DbTimestampType;
+import org.hibernate.type.TimestampType;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Strong Liu
@@ -52,8 +60,53 @@ public class VersionBindingTest extends BaseAnnotationBindingTestCase {
     public void testVersionAttributeType() {
         EntityBinding entityBinding = getEntityBinding( Item.class );
         AttributeBinding attributeBinding = entityBinding.locateAttributeBinding( "version" );
-        HibernateTypeDescriptor typeDescriptor= attributeBinding.getHibernateTypeDescriptor();
+        assertTrue( entityBinding.isVersioned() );
+        HibernateTypeDescriptor typeDescriptor = attributeBinding.getHibernateTypeDescriptor();
         assertNotNull( typeDescriptor );
+        assertEquals( Long.class.getName(), typeDescriptor.getJavaTypeName() );
         assertTrue( typeDescriptor.getTypeParameters().isEmpty() );
+    }
+
+    @Entity
+    class Item2 {
+        @Id
+        Long id;
+        @Version
+        Date version;
+    }
+
+    @Test
+    @Resources(annotatedClasses = Item2.class)
+    public void testVersionAttributeDefaultTemporalType() {
+        EntityBinding entityBinding = getEntityBinding( Item2.class );
+        AttributeBinding attributeBinding = entityBinding.locateAttributeBinding( "version" );
+        assertTrue( entityBinding.isVersioned() );
+        HibernateTypeDescriptor typeDescriptor = attributeBinding.getHibernateTypeDescriptor();
+        assertNotNull( typeDescriptor );
+        assertEquals( Date.class.getName(), typeDescriptor.getJavaTypeName() );
+        assertTrue( typeDescriptor.getTypeParameters().isEmpty() );
+        assertEquals( TimestampType.INSTANCE.getName(), typeDescriptor.getResolvedTypeMapping().getName() );
+    }
+
+        @Entity
+    class Item3 {
+        @Id
+        Long id;
+        @Version
+                @Source(SourceType.DB)
+        Date version;
+    }
+
+    @Test
+    @Resources(annotatedClasses = Item3.class)
+    public void testVersionAttributeWithSource() {
+        EntityBinding entityBinding = getEntityBinding( Item3.class );
+        AttributeBinding attributeBinding = entityBinding.locateAttributeBinding( "version" );
+        assertTrue( entityBinding.isVersioned() );
+        HibernateTypeDescriptor typeDescriptor = attributeBinding.getHibernateTypeDescriptor();
+        assertNotNull( typeDescriptor );
+        assertEquals( Date.class.getName(), typeDescriptor.getJavaTypeName() );
+        assertTrue( typeDescriptor.getTypeParameters().isEmpty() );
+        assertEquals( DbTimestampType.INSTANCE.getName(), typeDescriptor.getResolvedTypeMapping().getName() );
     }
 }

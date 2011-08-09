@@ -30,18 +30,34 @@ import java.util.Map;
  *
  * @author Steve Ebersole
  */
-public interface ExplicitHibernateTypeSource {
+public interface HibernateTypeSource {
 	/**
 	 * Obtain the supplied Hibernate type name.
 	 *
 	 * @return The Hibernate type name
 	 */
-	public String getName();
+	String getExplicitTypeName();
 
 	/**
 	 * Obtain any supplied Hibernate type parameters.
 	 *
 	 * @return The Hibernate type parameters.
 	 */
-	public Map<String,String> getParameters();
+	Map<String,String> getExplicitTypeParameters();
+
+    /**
+     * Obtain resolved attribute type name.
+     *
+     * @return  The attribute type name or {@code null} if can't resolve.
+     */
+    Class getAttributeType();
+
+    /**
+     * Obtain default Hibernate type name.
+     * If there is no explicit type given, and attribute type can't be resolved either,
+     * then this default Hibernate type will be used.
+     *
+     * @return The default Hibernate type name, or {@code null}.
+     */
+    String getDefaultTypeName();
 }

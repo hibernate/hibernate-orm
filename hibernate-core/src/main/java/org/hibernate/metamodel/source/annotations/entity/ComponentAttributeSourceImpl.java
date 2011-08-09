@@ -40,7 +40,7 @@ import org.hibernate.metamodel.source.annotations.attribute.SingularAttributeSou
 import org.hibernate.metamodel.source.annotations.attribute.ToOneAttributeSourceImpl;
 import org.hibernate.metamodel.source.binder.AttributeSource;
 import org.hibernate.metamodel.source.binder.ComponentAttributeSource;
-import org.hibernate.metamodel.source.binder.ExplicitHibernateTypeSource;
+import org.hibernate.metamodel.source.binder.HibernateTypeSource;
 import org.hibernate.metamodel.source.binder.MetaAttributeSource;
 import org.hibernate.metamodel.source.binder.RelationalValueSource;
 import org.hibernate.metamodel.source.binder.SingularAttributeNature;
@@ -164,7 +164,7 @@ public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
 	}
 
 	@Override
-	public ExplicitHibernateTypeSource getTypeInformation() {
+	public HibernateTypeSource getTypeInformation() {
 		// probably need to check for @Target in EmbeddableClass (HF)
 		return null;
 	}

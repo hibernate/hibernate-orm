@@ -30,12 +30,13 @@ import org.hibernate.internal.util.Value;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.source.LocalBindingContext;
 import org.hibernate.metamodel.source.MappingException;
-import org.hibernate.metamodel.source.binder.ExplicitHibernateTypeSource;
+import org.hibernate.metamodel.source.binder.HibernateTypeSource;
 import org.hibernate.metamodel.source.binder.MetaAttributeSource;
 import org.hibernate.metamodel.source.binder.RelationalValueSource;
 import org.hibernate.metamodel.source.binder.SingularAttributeNature;
 import org.hibernate.metamodel.source.binder.SingularAttributeSource;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLHibernateMapping;
+import org.hibernate.type.IntegerType;
 
 /**
  * Implementation for {@code <version/>} mappings
@@ -89,17 +90,17 @@ class VersionAttributeSourceImpl implements SingularAttributeSource {
 		);
 	}
 
-	private final ExplicitHibernateTypeSource typeSource = new ExplicitHibernateTypeSource() {
+	private final HibernateTypeSource typeSource = new AbstractHibernateTypeSource() {
 		@Override
-		public String getName() {
-			return versionElement.getType() == null ? "integer" : versionElement.getType();
+		public String getExplicitTypeName() {
+			return versionElement.getType();
 		}
 
-		@Override
-		public Map<String, String> getParameters() {
-			return null;
-		}
-	};
+        @Override
+        public String getDefaultTypeName() {
+            return IntegerType.INSTANCE.getName();
+        }
+    };
 
 	@Override
 	public String getName() {
@@ -107,7 +108,7 @@ class VersionAttributeSourceImpl implements SingularAttributeSource {
 	}
 
 	@Override
-	public ExplicitHibernateTypeSource getTypeInformation() {
+	public HibernateTypeSource getTypeInformation() {
 		return typeSource;
 	}
 

@@ -34,6 +34,7 @@ import org.hibernate.MappingException;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.binding.CustomSQL;
 import org.hibernate.metamodel.binding.InheritanceType;
 import org.hibernate.metamodel.binding.MetaAttribute;
@@ -41,7 +42,7 @@ import org.hibernate.metamodel.relational.Identifier;
 import org.hibernate.metamodel.relational.Schema;
 import org.hibernate.metamodel.source.LocalBindingContext;
 import org.hibernate.metamodel.source.MetaAttributeContext;
-import org.hibernate.metamodel.source.binder.ExplicitHibernateTypeSource;
+import org.hibernate.metamodel.source.binder.HibernateTypeSource;
 import org.hibernate.metamodel.source.binder.MetaAttributeSource;
 import org.hibernate.metamodel.source.binder.RelationalValueSource;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.CustomSqlElement;
@@ -61,16 +62,8 @@ import org.hibernate.service.classloading.spi.ClassLoadingException;
  * @author Gail Badner
  */
 public class Helper {
-	public static final ExplicitHibernateTypeSource TO_ONE_ATTRIBUTE_TYPE_SOURCE = new ExplicitHibernateTypeSource() {
-		@Override
-		public String getName() {
-			return null;
-		}
+	public static final HibernateTypeSource TO_ONE_ATTRIBUTE_TYPE_SOURCE = new AbstractHibernateTypeSource() {
 
-		@Override
-		public Map<String, String> getParameters() {
-			return null;
-		}
 	};
 
 	public static InheritanceType interpretInheritanceType(EntityElement entityElement) {
@@ -195,7 +188,7 @@ public class Helper {
 	}
 
 	public static Map<String, String> extractParameters(List<XMLParamElement> xmlParamElements) {
-		if ( xmlParamElements == null || xmlParamElements.isEmpty() ) {
+		if ( CollectionHelper.isEmpty( xmlParamElements ) ) {
 			return null;
 		}
 		final HashMap<String,String> params = new HashMap<String, String>();
@@ -207,7 +200,7 @@ public class Helper {
 
 	public static Iterable<MetaAttributeSource> buildMetaAttributeSources(List<XMLMetaElement> metaElements) {
 		ArrayList<MetaAttributeSource> result = new ArrayList<MetaAttributeSource>();
-		if ( metaElements == null || metaElements.isEmpty() ) {
+		if ( CollectionHelper.isEmpty( metaElements ) ) {
 			// do nothing
 		}
 		else {

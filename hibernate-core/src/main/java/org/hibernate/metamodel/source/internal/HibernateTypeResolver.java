@@ -26,6 +26,7 @@ package org.hibernate.metamodel.source.internal;
 import java.util.Properties;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.binding.AbstractCollectionElement;
 import org.hibernate.metamodel.binding.AbstractPluralAttributeBinding;
 import org.hibernate.metamodel.binding.AttributeBinding;
@@ -110,7 +111,7 @@ class HibernateTypeResolver {
 
 	private static Properties getTypeParameters(HibernateTypeDescriptor hibernateTypeDescriptor) {
 		Properties typeParameters = new Properties( );
-		if ( hibernateTypeDescriptor.getTypeParameters() != null ) {
+		if ( CollectionHelper.isNotEmpty( hibernateTypeDescriptor.getTypeParameters() ) ) {
 			typeParameters.putAll( hibernateTypeDescriptor.getTypeParameters() );
 		}
 		return typeParameters;
@@ -124,8 +125,7 @@ class HibernateTypeResolver {
 		// we can determine the Hibernate Type if either:
 		// 		1) the user explicitly named a Type in a HibernateTypeDescriptor
 		// 		2) we know the java type of the attribute
-		Type resolvedType;
-		resolvedType = determineSingularTypeFromDescriptor( attributeBinding.getHibernateTypeDescriptor() );
+		Type resolvedType = determineSingularTypeFromDescriptor( attributeBinding.getHibernateTypeDescriptor() );
 		if ( resolvedType == null ) {
 			if ( ! attributeBinding.getAttribute().isSingular() ) {
 				throw new AssertionFailure( "SingularAttributeBinding object has a plural attribute: " + attributeBinding.getAttribute().getName() );

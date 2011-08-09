@@ -28,7 +28,7 @@ import java.util.Map;
 
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.source.LocalBindingContext;
-import org.hibernate.metamodel.source.binder.ExplicitHibernateTypeSource;
+import org.hibernate.metamodel.source.binder.HibernateTypeSource;
 import org.hibernate.metamodel.source.binder.MetaAttributeSource;
 import org.hibernate.metamodel.source.binder.RelationalValueSource;
 import org.hibernate.metamodel.source.binder.SingularAttributeNature;
@@ -42,12 +42,12 @@ import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLPropertyElement;
  */
 class PropertyAttributeSourceImpl implements SingularAttributeSource {
 	private final XMLPropertyElement propertyElement;
-	private final ExplicitHibernateTypeSource typeSource;
+	private final HibernateTypeSource typeSource;
 	private final List<RelationalValueSource> valueSources;
 
 	PropertyAttributeSourceImpl(final XMLPropertyElement propertyElement, LocalBindingContext bindingContext) {
 		this.propertyElement = propertyElement;
-		this.typeSource = new ExplicitHibernateTypeSource() {
+		this.typeSource = new AbstractHibernateTypeSource() {
 			private final String name = propertyElement.getTypeAttribute() != null
 					? propertyElement.getTypeAttribute()
 					: propertyElement.getType() != null
@@ -58,12 +58,12 @@ class PropertyAttributeSourceImpl implements SingularAttributeSource {
 					: null;
 
 			@Override
-			public String getName() {
+			public String getExplicitTypeName() {
 				return name;
 			}
 
 			@Override
-			public Map<String, String> getParameters() {
+			public Map<String, String> getExplicitTypeParameters() {
 				return parameters;
 			}
 		};
@@ -110,7 +110,7 @@ class PropertyAttributeSourceImpl implements SingularAttributeSource {
 	}
 
 	@Override
-	public ExplicitHibernateTypeSource getTypeInformation() {
+	public HibernateTypeSource getTypeInformation() {
 		return typeSource;
 	}
 

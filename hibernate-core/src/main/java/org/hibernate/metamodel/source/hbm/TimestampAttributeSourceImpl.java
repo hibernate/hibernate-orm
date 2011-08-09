@@ -30,12 +30,14 @@ import org.hibernate.internal.util.Value;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.source.LocalBindingContext;
 import org.hibernate.metamodel.source.MappingException;
-import org.hibernate.metamodel.source.binder.ExplicitHibernateTypeSource;
+import org.hibernate.metamodel.source.binder.HibernateTypeSource;
 import org.hibernate.metamodel.source.binder.MetaAttributeSource;
 import org.hibernate.metamodel.source.binder.RelationalValueSource;
 import org.hibernate.metamodel.source.binder.SingularAttributeNature;
 import org.hibernate.metamodel.source.binder.SingularAttributeSource;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLHibernateMapping;
+import org.hibernate.type.DbTimestampType;
+import org.hibernate.type.TimestampType;
 
 /**
  * Implementation for {@code <timestamp/>} mappings
@@ -89,17 +91,13 @@ class TimestampAttributeSourceImpl implements SingularAttributeSource {
 		);
 	}
 
-	private final ExplicitHibernateTypeSource typeSource = new ExplicitHibernateTypeSource() {
-		@Override
-		public String getName() {
-			return "db".equals( timestampElement.getSource() ) ? "dbtimestamp" : "timestamp";
-		}
-
-		@Override
-		public Map<String, String> getParameters() {
-			return null;
-		}
-	};
+    private final HibernateTypeSource typeSource = new AbstractHibernateTypeSource() {
+        @Override
+        public String getExplicitTypeName() {
+            return "db".equals( timestampElement.getSource() ) ? DbTimestampType.INSTANCE
+                    .getName() : TimestampType.INSTANCE.getName();
+        }
+    };
 
 	@Override
 	public String getName() {
@@ -107,7 +105,7 @@ class TimestampAttributeSourceImpl implements SingularAttributeSource {
 	}
 
 	@Override
-	public ExplicitHibernateTypeSource getTypeInformation() {
+	public HibernateTypeSource getTypeInformation() {
 		return typeSource;
 	}
 

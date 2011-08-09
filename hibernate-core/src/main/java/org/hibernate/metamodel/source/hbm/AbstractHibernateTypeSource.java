@@ -21,14 +21,34 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.binder;
 
-import java.util.List;
+package org.hibernate.metamodel.source.hbm;
+
+import java.util.Map;
+
+import org.hibernate.metamodel.source.binder.HibernateTypeSource;
 
 /**
- * @author Steve Ebersole
+ * @author Strong Liu
  */
-public interface BasicPluralAttributeElementSource extends PluralAttributeElementSource {
-	public List<RelationalValueSource> getValueSources();
-	public HibernateTypeSource getExplicitHibernateTypeSource();
+abstract class AbstractHibernateTypeSource implements HibernateTypeSource{
+    @Override
+    public Class getAttributeType() {
+        return null;
+    }
+
+    @Override
+    public String getExplicitTypeName() {
+        return null;
+    }
+
+    @Override
+    public Map<String, String> getExplicitTypeParameters() {
+        return null;
+    }
+
+    @Override
+    public String getDefaultTypeName() {
+        return null;
+    }
 }

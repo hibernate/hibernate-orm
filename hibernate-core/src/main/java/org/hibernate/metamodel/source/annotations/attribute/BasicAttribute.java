@@ -50,6 +50,7 @@ import org.hibernate.metamodel.source.annotations.attribute.type.CompositeAttrib
 import org.hibernate.metamodel.source.annotations.attribute.type.EnumeratedTypeResolver;
 import org.hibernate.metamodel.source.annotations.attribute.type.LobTypeResolver;
 import org.hibernate.metamodel.source.annotations.attribute.type.TemporalTypeResolver;
+import org.hibernate.metamodel.source.annotations.attribute.type.TimestampSourceTypeResolver;
 import org.hibernate.metamodel.source.annotations.entity.EntityBindingContext;
 
 /**
@@ -320,6 +321,7 @@ public class BasicAttribute extends MappedAttribute {
 		resolver.addHibernateTypeResolver( new TemporalTypeResolver( this ) );
 		resolver.addHibernateTypeResolver( new LobTypeResolver( this ) );
 		resolver.addHibernateTypeResolver( new EnumeratedTypeResolver( this ) );
+        resolver.addHibernateTypeResolver( new TimestampSourceTypeResolver(this) );
 		return resolver;
 	}
 }

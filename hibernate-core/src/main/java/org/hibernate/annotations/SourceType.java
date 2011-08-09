@@ -25,6 +25,10 @@
 package org.hibernate.annotations;
 
 
+import org.hibernate.type.DbTimestampType;
+import org.hibernate.type.TimestampType;
+import org.hibernate.type.VersionType;
+
 /**
  * Where should Hibernate retrieve the value from? From the database, or from the current JVM?
  *
@@ -35,17 +39,17 @@ public enum SourceType {
 	 * Get the timestamp from the current VM.
 	 * @see 
 	 */
-	VM("timestamp"),
+    VM( TimestampType.INSTANCE ),
 
-	/**
-	 * Get the timestamp from the database.
-	 */
-	DB("dbtimestamp");
+    /**
+     * Get the timestamp from the database.
+     */
+    DB( DbTimestampType.INSTANCE );
 
 	private final String typeName;
 
-	SourceType(String typeName ) {
-		this.typeName = typeName;
+	SourceType( VersionType type ) {
+		this.typeName = type.getName();
 	}
 
 	public String typeName() {

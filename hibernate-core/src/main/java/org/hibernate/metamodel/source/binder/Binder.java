@@ -945,7 +945,7 @@ public class Binder {
 
 				UniqueKey uniqueKey = table.getOrCreateUniqueKey( constraintName );
 				for ( String columnName : constraintSource.columnNames() ) {
-					uniqueKey.addColumn( table.locateOrCreateColumn( columnName ) );
+					uniqueKey.addColumn( table.locateOrCreateColumn( quoteIdentifier( columnName ) ) );
 				}
 			}
 		}

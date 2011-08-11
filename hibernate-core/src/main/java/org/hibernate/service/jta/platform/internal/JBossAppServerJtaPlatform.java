@@ -23,6 +23,8 @@
  */
 package org.hibernate.service.jta.platform.internal;
 
+import org.hibernate.service.jndi.JndiException;
+
 import javax.transaction.TransactionManager;
 import javax.transaction.UserTransaction;
 
@@ -32,12 +34,23 @@ import javax.transaction.UserTransaction;
  * @author Steve Ebersole
  */
 public class JBossAppServerJtaPlatform extends AbstractJtaPlatform {
-	public static final String TM_NAME = "java:jboss/TransactionManager";
-	public static final String UT_NAME = "UserTransaction";
+	public static final String AS7_TM_NAME = "java:jboss/TransactionManager";
+	public static final String AS4_TM_NAME = "java:/TransactionManager";
+	public static final String UT_NAME = "java:comp/UserTransaction";  // should work with AS7 and earlier
 
 	@Override
 	protected TransactionManager locateTransactionManager() {
-		return (TransactionManager) jndiService().locate( TM_NAME );
+		try {
+			return (TransactionManager) jndiService().locate(AS7_TM_NAME);
+		}
+		catch(JndiException jndiException) {
+			try {
+				return (TransactionManager) jndiService().locate(AS4_TM_NAME);
+			}
+			catch(JndiException jndiExceptionInner) {
+				throw new JndiException("unable to find transaction manager", jndiException);
+			}
+		}
 	}
 
 	@Override

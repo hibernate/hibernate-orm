@@ -21,48 +21,25 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.binder;
-
-import org.hibernate.metamodel.binding.Caching;
-import org.hibernate.metamodel.binding.CustomSQL;
+package org.hibernate.engine;
 
 /**
+ * Enumeration of values describing <b>WHEN</b> fetching should occur.
+ * 
  * @author Steve Ebersole
+ * @see FetchStyle
  */
-public interface PluralAttributeSource extends AssociationAttributeSource {
-	public PluralAttributeNature getPluralAttributeNature();
-
-	public PluralAttributeKeySource getKeySource();
-
-	public PluralAttributeElementSource getElementSource();
-
-	public String getExplicitSchemaName();
-	public String getExplicitCatalogName();
-	public String getExplicitCollectionTableName();
-
-	public String getCollectionTableComment();
-	public String getCollectionTableCheck();
-
-	public Caching getCaching();
-
+public enum FetchTiming {
 	/**
-	 * Obtain the name of a custom persister class to be used.
-	 *
-	 * @return The custom persister class name
+	 * Perform fetching immediately.  Also called eager fetching
 	 */
-	public String getCustomPersisterClassName();
-
-	public String getWhere();
-
-	public boolean isInverse();
-
-	public String getCustomLoaderName();
-
-	public CustomSQL getCustomSqlInsert();
-
-	public CustomSQL getCustomSqlUpdate();
-
-	public CustomSQL getCustomSqlDelete();
-
-	public CustomSQL getCustomSqlDeleteAll();
+	IMMEDIATE,
+	/**
+	 * Performing fetching later, when needed.  Also called lazy fetching.
+	 */
+	DELAYED,
+	/**
+	 * Take extra care to ensure laziness.  <b>Only available in regards to collections</b>
+	 */
+	EXTRA_LAZY
 }

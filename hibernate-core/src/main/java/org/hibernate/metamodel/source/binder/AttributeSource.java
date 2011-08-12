@@ -43,8 +43,29 @@ public interface AttributeSource {
 	 */
 	public boolean isSingular();
 
+	/**
+	 * Obtain information about the Hibernate type ({@link org.hibernate.type.Type}) for this attribute.
+	 *
+	 * @return The Hibernate type information
+	 */
+	public ExplicitHibernateTypeSource getTypeInformation();
+
+	/**
+	 * Obtain the name of the property accessor style used to access this attribute.
+	 *
+	 * @return The property accessor style for this attribute.
+	 *
+	 * @see org.hibernate.property.PropertyAccessor
+	 */
 	public String getPropertyAccessorName();
 
+	/**
+	 * If the containing entity is using {@link org.hibernate.engine.OptimisticLockStyle#ALL} or
+	 * {@link org.hibernate.engine.OptimisticLockStyle#DIRTY} style optimistic locking, should this attribute
+	 * be used?
+	 *
+	 * @return {@code true} indicates it should be included; {@code false}, it should not.
+	 */
 	public boolean isIncludedInOptimisticLocking();
 
 	/**

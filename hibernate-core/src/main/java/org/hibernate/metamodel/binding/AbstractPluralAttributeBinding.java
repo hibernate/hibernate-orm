@@ -31,11 +31,13 @@ import java.util.List;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
+import org.hibernate.engine.FetchStyle;
+import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CascadeStyle;
-import org.hibernate.metamodel.domain.Attribute;
 import org.hibernate.metamodel.domain.PluralAttribute;
 import org.hibernate.metamodel.relational.Table;
 import org.hibernate.metamodel.relational.TableSpecification;
+import org.hibernate.persister.collection.CollectionPersister;
 
 /**
  * TODO : javadoc
@@ -48,35 +50,36 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 
 	private Table collectionTable;
 
-	private CascadeStyle cascadeStyle;
-	private FetchMode fetchMode;
+	private FetchTiming fetchTiming;
+	private FetchStyle fetchStyle;
+	private int batchSize = -1;
 
-	private boolean extraLazy;
+	private CascadeStyle cascadeStyle;
+	private boolean orphanDelete;
+
+	private Caching caching;
+
 	private boolean inverse;
 	private boolean mutable = true;
-	private boolean subselectLoadable;
-	private String cacheConcurrencyStrategy;
-	private String cacheRegionName;
-	private String orderBy;
+
+	private Class<? extends CollectionPersister> collectionPersisterClass;
+
 	private String where;
-	private String referencedPropertyName;
+	private String orderBy;
 	private boolean sorted;
 	private Comparator comparator;
 	private String comparatorClassName;
-	private boolean orphanDelete;
-	private int batchSize = -1;
-	private boolean embedded = true;
-	private boolean optimisticLocked = true;
-	private Class collectionPersisterClass;
+
+	private String customLoaderName;
+	private CustomSQL customSqlInsert;
+	private CustomSQL customSqlUpdate;
+	private CustomSQL customSqlDelete;
+	private CustomSQL customSqlDeleteAll;
+
+	private String referencedPropertyName;
+
 	private final java.util.Map filters = new HashMap();
 	private final java.util.Set<String> synchronizedTables = new HashSet<String>();
-
-	private CustomSQL customSQLInsert;
-	private CustomSQL customSQLUpdate;
-	private CustomSQL customSQLDelete;
-	private CustomSQL customSQLDeleteAll;
-
-	private String loaderName;
 
 	protected AbstractPluralAttributeBinding(
 			AttributeBindingContainer container,
@@ -156,6 +159,7 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 				|| collectionElement.getCollectionElementNature() == CollectionElementNature.ONE_TO_MANY;
 	}
 
+	@Override
 	public TableSpecification getCollectionTable() {
 		return collectionTable;
 	}
@@ -164,10 +168,12 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 		this.collectionTable = collectionTable;
 	}
 
+	@Override
 	public CollectionKey getCollectionKey() {
 		return collectionKey;
 	}
 
+	@Override
 	public AbstractCollectionElement getCollectionElement() {
 		return collectionElement;
 	}
@@ -184,7 +190,12 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 			if ( style != CascadeStyle.NONE ) {
 				cascadeStyleList.add( style );
 			}
+			if ( style == CascadeStyle.DELETE_ORPHAN ||
+					style == CascadeStyle.ALL_DELETE_ORPHAN ) {
+				orphanDelete = true;
+			}
 		}
+
 		if ( cascadeStyleList.isEmpty() ) {
 			cascadeStyle = CascadeStyle.NONE;
 		}
@@ -199,39 +210,102 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 	}
 
 	@Override
-	public FetchMode getFetchMode() {
-		return fetchMode;
+	public boolean isOrphanDelete() {
+		return orphanDelete;
 	}
 
 	@Override
-	public void setFetchMode(FetchMode fetchMode) {
-		this.fetchMode = fetchMode;
+	public FetchMode getFetchMode() {
+		if ( getFetchStyle() == FetchStyle.JOIN ) {
+			return FetchMode.JOIN;
+		}
+		else {
+			return FetchMode.SELECT;
+		}
 	}
 
-	public boolean isExtraLazy() {
-		return extraLazy;
+	@Override
+	public FetchTiming getFetchTiming() {
+		return fetchTiming;
 	}
 
-	public boolean isInverse() {
-		return inverse;
+	@Override
+	public void setFetchTiming(FetchTiming fetchTiming) {
+		this.fetchTiming = fetchTiming;
 	}
 
-	public boolean isMutable() {
-		return mutable;
+	@Override
+	public FetchStyle getFetchStyle() {
+		return fetchStyle;
 	}
 
-	public boolean isSubselectLoadable() {
-		return subselectLoadable;
+	@Override
+	public void setFetchStyle(FetchStyle fetchStyle) {
+		this.fetchStyle = fetchStyle;
 	}
 
-	public String getCacheConcurrencyStrategy() {
-		return cacheConcurrencyStrategy;
+	@Override
+	public String getCustomLoaderName() {
+		return customLoaderName;
 	}
 
-	public String getCacheRegionName() {
-		return cacheRegionName;
+	public void setCustomLoaderName(String customLoaderName) {
+		this.customLoaderName = customLoaderName;
 	}
 
+	@Override
+	public CustomSQL getCustomSqlInsert() {
+		return customSqlInsert;
+	}
+
+	public void setCustomSqlInsert(CustomSQL customSqlInsert) {
+		this.customSqlInsert = customSqlInsert;
+	}
+
+	@Override
+	public CustomSQL getCustomSqlUpdate() {
+		return customSqlUpdate;
+	}
+
+	public void setCustomSqlUpdate(CustomSQL customSqlUpdate) {
+		this.customSqlUpdate = customSqlUpdate;
+	}
+
+	@Override
+	public CustomSQL getCustomSqlDelete() {
+		return customSqlDelete;
+	}
+
+	public void setCustomSqlDelete(CustomSQL customSqlDelete) {
+		this.customSqlDelete = customSqlDelete;
+	}
+
+	@Override
+	public CustomSQL getCustomSqlDeleteAll() {
+		return customSqlDeleteAll;
+	}
+
+	public void setCustomSqlDeleteAll(CustomSQL customSqlDeleteAll) {
+		this.customSqlDeleteAll = customSqlDeleteAll;
+	}
+
+	public Class<? extends CollectionPersister> getCollectionPersisterClass() {
+		return collectionPersisterClass;
+	}
+
+	public void setCollectionPersisterClass(Class<? extends CollectionPersister> collectionPersisterClass) {
+		this.collectionPersisterClass = collectionPersisterClass;
+	}
+
+	public Caching getCaching() {
+		return caching;
+	}
+
+	public void setCaching(Caching caching) {
+		this.caching = caching;
+	}
+
+	@Override
 	public String getOrderBy() {
 		return orderBy;
 	}
@@ -240,6 +314,7 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 		this.orderBy = orderBy;
 	}
 
+	@Override
 	public String getWhere() {
 		return where;
 	}
@@ -248,14 +323,53 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 		this.where = where;
 	}
 
+	@Override
+	public boolean isInverse() {
+		return inverse;
+	}
+
+	public void setInverse(boolean inverse) {
+		this.inverse = inverse;
+	}
+
+	@Override
+	public boolean isMutable() {
+		return mutable;
+	}
+
+	public void setMutable(boolean mutable) {
+		this.mutable = mutable;
+	}
+
+	@Override
+	public int getBatchSize() {
+		return batchSize;
+	}
+
+	public void setBatchSize(int batchSize) {
+		this.batchSize = batchSize;
+	}
+
+
+
+
+
+
+
+
+
+
+
 	public String getReferencedPropertyName() {
 		return referencedPropertyName;
 	}
 
+	@Override
 	public boolean isSorted() {
 		return sorted;
 	}
 
+	@Override
 	public Comparator getComparator() {
 		return comparator;
 	}
@@ -268,47 +382,12 @@ public abstract class AbstractPluralAttributeBinding extends AbstractAttributeBi
 		return comparatorClassName;
 	}
 
-	public boolean isOrphanDelete() {
-		return orphanDelete;
-	}
-
-	public int getBatchSize() {
-		return batchSize;
-	}
-
-	public boolean isEmbedded() {
-		return embedded;
-	}
-
-	public Class getCollectionPersisterClass() {
-		return collectionPersisterClass;
-	}
-
 	public void addFilter(String name, String condition) {
 		filters.put( name, condition );
 	}
 
+	@Override
 	public java.util.Map getFilterMap() {
 		return filters;
-	}
-
-	public CustomSQL getCustomSQLInsert() {
-		return customSQLInsert;
-	}
-
-	public CustomSQL getCustomSQLUpdate() {
-		return customSQLUpdate;
-	}
-
-	public CustomSQL getCustomSQLDelete() {
-		return customSQLDelete;
-	}
-
-	public CustomSQL getCustomSQLDeleteAll() {
-		return customSQLDeleteAll;
-	}
-
-	public String getLoaderName() {
-		return loaderName;
 	}
 }

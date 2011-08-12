@@ -42,6 +42,7 @@ import org.hibernate.metamodel.binding.AttributeBindingContainer;
 import org.hibernate.metamodel.binding.BasicAttributeBinding;
 import org.hibernate.metamodel.binding.BasicCollectionElement;
 import org.hibernate.metamodel.binding.CollectionElementNature;
+import org.hibernate.metamodel.binding.CollectionLaziness;
 import org.hibernate.metamodel.binding.ComponentAttributeBinding;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.EntityDiscriminator;
@@ -67,9 +68,11 @@ import org.hibernate.metamodel.relational.TableSpecification;
 import org.hibernate.metamodel.relational.Tuple;
 import org.hibernate.metamodel.relational.UniqueKey;
 import org.hibernate.metamodel.source.LocalBindingContext;
+import org.hibernate.metamodel.source.MappingException;
 import org.hibernate.metamodel.source.MetaAttributeContext;
 import org.hibernate.metamodel.source.MetadataImplementor;
 import org.hibernate.metamodel.source.hbm.Helper;
+import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.tuple.entity.EntityTuplizer;
 
@@ -477,7 +480,7 @@ public class Binder {
 		}
 		else {
 			// todo : implement other collection types
-			throw new NotYetImplementedException( "Collections other than bag not yet implemented :(" );
+			throw new NotYetImplementedException( "Collections other than bag and set not yet implemented :(" );
 		}
 
 		doBasicPluralAttributeBinding( attributeSource, pluralAttributeBinding );
@@ -492,20 +495,66 @@ public class Binder {
 		metadata.addCollection( pluralAttributeBinding );
 	}
 
-	private void doBasicPluralAttributeBinding(
-			PluralAttributeSource attributeSource,
-			AbstractPluralAttributeBinding pluralAttributeBinding) {
-		pluralAttributeBinding.setFetchMode( attributeSource.getFetchMode() );
-		pluralAttributeBinding.setCascadeStyles( attributeSource.getCascadeStyles() );
+	private void doBasicPluralAttributeBinding(PluralAttributeSource source, AbstractPluralAttributeBinding binding) {
+		binding.setFetchTiming( source.getFetchTiming() );
+		binding.setFetchStyle( source.getFetchStyle() );
+		binding.setCascadeStyles( source.getCascadeStyles() );
 
-		pluralAttributeBinding.setMetaAttributeContext(
+		binding.setCaching( source.getCaching() );
+
+		binding.getHibernateTypeDescriptor().setJavaTypeName(
+				source.getPluralAttributeNature().reportedJavaType().getName()
+		);
+		binding.getHibernateTypeDescriptor().setExplicitTypeName( source.getTypeInformation().getName() );
+		binding.getHibernateTypeDescriptor().getTypeParameters().putAll( source.getTypeInformation().getParameters() );
+
+		if ( StringHelper.isNotEmpty( source.getCustomPersisterClassName() ) ) {
+			binding.setCollectionPersisterClass(
+					currentBindingContext.<CollectionPersister>locateClassByName( source.getCustomPersisterClassName() )
+			);
+		}
+
+		if ( source.getCustomPersisterClassName() != null ) {
+			binding.setCollectionPersisterClass(
+					metadata.<CollectionPersister>locateClassByName( source.getCustomPersisterClassName() )
+			);
+		}
+
+		binding.setCustomLoaderName( source.getCustomLoaderName() );
+		binding.setCustomSqlInsert( source.getCustomSqlInsert() );
+		binding.setCustomSqlUpdate( source.getCustomSqlUpdate() );
+		binding.setCustomSqlDelete( source.getCustomSqlDelete() );
+		binding.setCustomSqlDeleteAll( source.getCustomSqlDeleteAll() );
+
+		binding.setMetaAttributeContext(
 				buildMetaAttributeContext(
-						attributeSource.metaAttributes(),
-						pluralAttributeBinding.getContainer().getMetaAttributeContext()
+						source.metaAttributes(),
+						binding.getContainer().getMetaAttributeContext()
 				)
 		);
 
-		doBasicAttributeBinding( attributeSource, pluralAttributeBinding );
+		doBasicAttributeBinding( source, binding );
+	}
+
+	private CollectionLaziness interpretLaziness(String laziness) {
+		if ( laziness == null ) {
+			laziness = Boolean.toString( metadata.getMappingDefaults().areAssociationsLazy() );
+		}
+
+		if ( "extra".equals( laziness ) ) {
+			return CollectionLaziness.EXTRA;
+		}
+		else if ( "false".equals( laziness ) ) {
+			return CollectionLaziness.NOT;
+		}
+		else if ( "true".equals( laziness ) ) {
+			return CollectionLaziness.LAZY;
+		}
+
+		throw new MappingException(
+				String.format( "Unexpected collection laziness value %s", laziness ),
+				currentBindingContext.getOrigin()
+		);
 	}
 
 	private void bindCollectionTable(
@@ -856,7 +905,8 @@ public class Binder {
 		attributeBinding.setReferencedAttributeName( attributeSource.getReferencedEntityAttributeName() );
 
 		attributeBinding.setCascadeStyles( attributeSource.getCascadeStyles() );
-		attributeBinding.setFetchMode( attributeSource.getFetchMode() );
+		attributeBinding.setFetchTiming( attributeSource.getFetchTiming() );
+		attributeBinding.setFetchStyle( attributeSource.getFetchStyle() );
 	}
 
 	private MetaAttributeContext buildMetaAttributeContext(EntitySource entitySource) {

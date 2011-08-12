@@ -29,6 +29,7 @@ package org.hibernate.metamodel.domain;
  * @author Steve Ebersole
  */
 public interface PluralAttribute extends Attribute {
+	public String getRole();
 	public PluralAttributeNature getNature();
 	public Type getElementType();
 	public void setElementType(Type elementType);

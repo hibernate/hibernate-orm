@@ -24,6 +24,8 @@
 package org.hibernate.metamodel.source.binder;
 
 import org.hibernate.FetchMode;
+import org.hibernate.engine.FetchStyle;
+import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CascadeStyle;
 
 /**
@@ -45,4 +47,8 @@ public interface AssociationAttributeSource extends AttributeSource {
 	 * @return The fetch mode.
 	 */
 	public FetchMode getFetchMode();
+
+	public FetchTiming getFetchTiming();
+
+	public FetchStyle getFetchStyle();
 }

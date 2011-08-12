@@ -26,9 +26,12 @@ package org.hibernate.metamodel.source.hbm;
 import java.util.List;
 
 import org.hibernate.FetchMode;
+import org.hibernate.engine.FetchStyle;
+import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.source.LocalBindingContext;
+import org.hibernate.metamodel.source.MappingException;
 import org.hibernate.metamodel.source.binder.ExplicitHibernateTypeSource;
 import org.hibernate.metamodel.source.binder.MetaAttributeSource;
 import org.hibernate.metamodel.source.binder.RelationalValueSource;
@@ -129,6 +132,82 @@ class ManyToOneAttributeSourceImpl implements ToOneAttributeSource {
 	@Override
 	public Iterable<CascadeStyle> getCascadeStyles() {
 		return Helper.interpretCascadeStyles( manyToOneElement.getCascade(), bindingContext );
+	}
+
+	@Override
+	public FetchTiming getFetchTiming() {
+		final String fetchSelection = manyToOneElement.getFetch() != null
+				? manyToOneElement.getFetch().value()
+				: null;
+		final String lazySelection = manyToOneElement.getLazy() != null
+				? manyToOneElement.getLazy().value()
+				: null;
+		final String outerJoinSelection = manyToOneElement.getOuterJoin() != null
+				? manyToOneElement.getOuterJoin().value()
+				: null;
+
+		if ( lazySelection == null ) {
+			if ( "join".equals( fetchSelection ) || "true".equals( outerJoinSelection ) ) {
+				return FetchTiming.IMMEDIATE;
+			}
+			else if ( "false".equals( outerJoinSelection ) ) {
+				return FetchTiming.DELAYED;
+			}
+			else {
+				return bindingContext.getMappingDefaults().areAssociationsLazy()
+						? FetchTiming.DELAYED
+						: FetchTiming.IMMEDIATE;
+			}
+		}
+		else  if ( "extra".equals( lazySelection ) ) {
+			return FetchTiming.EXTRA_LAZY;
+		}
+		else if ( "true".equals( lazySelection ) ) {
+			return FetchTiming.DELAYED;
+		}
+		else if ( "false".equals( lazySelection ) ) {
+			return FetchTiming.IMMEDIATE;
+		}
+
+		throw new MappingException(
+				String.format(
+						"Unexpected lazy selection [%s] on '%s'",
+						lazySelection,
+						manyToOneElement.getName()
+				),
+				bindingContext.getOrigin()
+		);
+	}
+
+	@Override
+	public FetchStyle getFetchStyle() {
+		// todo : handle batch fetches?
+
+		final String fetchSelection = manyToOneElement.getFetch() != null
+				? manyToOneElement.getFetch().value()
+				: null;
+		final String outerJoinSelection = manyToOneElement.getOuterJoin() != null
+				? manyToOneElement.getOuterJoin().value()
+				: null;
+
+		if ( fetchSelection == null ) {
+			if ( outerJoinSelection == null ) {
+				return FetchStyle.SELECT;
+			}
+			else {
+				if ( "auto".equals( outerJoinSelection ) ) {
+					return bindingContext.getMappingDefaults().areAssociationsLazy()
+							? FetchStyle.SELECT
+							: FetchStyle.JOIN;
+				}
+				else {
+					return "true".equals( outerJoinSelection ) ? FetchStyle.JOIN : FetchStyle.SELECT;
+				}
+			}
+		}
+		else {
+			return "join".equals( fetchSelection ) ? FetchStyle.JOIN : FetchStyle.SELECT;
+		}
 	}
 
 	@Override

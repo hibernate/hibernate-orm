@@ -26,6 +26,8 @@ package org.hibernate.metamodel.source.annotations.attribute;
 import java.util.Set;
 
 import org.hibernate.FetchMode;
+import org.hibernate.engine.FetchStyle;
+import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.metamodel.source.annotations.EnumConversionHelper;
 import org.hibernate.metamodel.source.binder.SingularAttributeNature;
@@ -67,6 +69,18 @@ public class ToOneAttributeSourceImpl extends SingularAttributeSourceImpl implem
 	@Override
 	public FetchMode getFetchMode() {
 		return associationAttribute.getFetchMode();
+	}
+
+	@Override
+	public FetchTiming getFetchTiming() {
+		  // todo : implement
+		return FetchTiming.IMMEDIATE;
+	}
+
+	@Override
+	public FetchStyle getFetchStyle() {
+		// todo : implement
+		return FetchStyle.JOIN;
 	}
 }
 

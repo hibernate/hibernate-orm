@@ -21,48 +21,13 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.binder;
-
-import org.hibernate.metamodel.binding.Caching;
-import org.hibernate.metamodel.binding.CustomSQL;
+package org.hibernate.metamodel.binding;
 
 /**
  * @author Steve Ebersole
  */
-public interface PluralAttributeSource extends AssociationAttributeSource {
-	public PluralAttributeNature getPluralAttributeNature();
-
-	public PluralAttributeKeySource getKeySource();
-
-	public PluralAttributeElementSource getElementSource();
-
-	public String getExplicitSchemaName();
-	public String getExplicitCatalogName();
-	public String getExplicitCollectionTableName();
-
-	public String getCollectionTableComment();
-	public String getCollectionTableCheck();
-
-	public Caching getCaching();
-
-	/**
-	 * Obtain the name of a custom persister class to be used.
-	 *
-	 * @return The custom persister class name
-	 */
-	public String getCustomPersisterClassName();
-
-	public String getWhere();
-
-	public boolean isInverse();
-
-	public String getCustomLoaderName();
-
-	public CustomSQL getCustomSqlInsert();
-
-	public CustomSQL getCustomSqlUpdate();
-
-	public CustomSQL getCustomSqlDelete();
-
-	public CustomSQL getCustomSqlDeleteAll();
+public enum CollectionLaziness {
+	LAZY,
+	NOT,
+	EXTRA
 }

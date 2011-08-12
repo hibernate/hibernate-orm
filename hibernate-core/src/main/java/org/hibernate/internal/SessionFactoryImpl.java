@@ -640,12 +640,9 @@ public final class SessionFactoryImpl
 				if ( accessStrategy == null ) {
 					final AccessType accessType = model.getHierarchyDetails().getCaching().getAccessType();
 					LOG.trace("Building cache for entity data [" + model.getEntity().getName() + "]");
-					EntityRegion entityRegion =
-							settings.getRegionFactory().buildEntityRegion(
-									cacheRegionName,
-									properties,
-									CacheDataDescriptionImpl.decode( model )
-							);
+					EntityRegion entityRegion = settings.getRegionFactory().buildEntityRegion(
+							cacheRegionName, properties, CacheDataDescriptionImpl.decode( model )
+					);
 					accessStrategy = entityRegion.buildAccessStrategy( accessType );
 					entityAccessStrategies.put( cacheRegionName, accessStrategy );
 					allCacheRegions.put( cacheRegionName, entityRegion );
@@ -670,28 +667,22 @@ public final class SessionFactoryImpl
 						"AbstractPluralAttributeBinding has a Singular attribute defined: " + model.getAttribute().getName()
 				);
 			}
-			// TODO: Add AbstractPluralAttributeBinding.getCaching()
-			final String cacheRegionName = cacheRegionPrefix + model.getCacheRegionName();
-			final AccessType accessType = AccessType.fromExternalName( model.getCacheConcurrencyStrategy() );
+			final String cacheRegionName = cacheRegionPrefix + model.getCaching().getRegion();
+			final AccessType accessType = model.getCaching().getAccessType();
 			CollectionRegionAccessStrategy accessStrategy = null;
 			if ( accessType != null && settings.isSecondLevelCacheEnabled() ) {
-				// TODO: is model.locateAttribute().getName() the collection's role??? For now, assuming it is
-                LOG.trace("Building cache for collection data [" + model.getAttribute().getName() + "]");
-				CollectionRegion collectionRegion =
-						settings.getRegionFactory()
-								.buildCollectionRegion(
-										cacheRegionName, properties, CacheDataDescriptionImpl.decode( model )
-								);
+                LOG.trace("Building cache for collection data [" + model.getAttribute().getRole() + "]");
+				CollectionRegion collectionRegion = settings.getRegionFactory().buildCollectionRegion(
+						cacheRegionName, properties, CacheDataDescriptionImpl.decode( model )
+				);
 				accessStrategy = collectionRegion.buildAccessStrategy( accessType );
 				entityAccessStrategies.put( cacheRegionName, accessStrategy );
 				allCacheRegions.put( cacheRegionName, collectionRegion );
 			}
-			CollectionPersister persister =
-					serviceRegistry
-							.getService( PersisterFactory.class )
-							.createCollectionPersister( metadata, model, accessStrategy, this );
-			// TODO: is model.locateAttribute().getName() the collection's role??? For now, assuming it is
-			collectionPersisters.put( model.getAttribute().getName(), persister.getCollectionMetadata() );
+			CollectionPersister persister = serviceRegistry
+					.getService( PersisterFactory.class )
+					.createCollectionPersister( metadata, model, accessStrategy, this );
+			collectionPersisters.put( model.getAttribute().getRole(), persister.getCollectionMetadata() );
 			Type indexType = persister.getIndexType();
 			if ( indexType != null && indexType.isAssociationType() && !indexType.isAnyType() ) {
 				String entityName = ( ( AssociationType ) indexType ).getAssociatedEntityName( this );

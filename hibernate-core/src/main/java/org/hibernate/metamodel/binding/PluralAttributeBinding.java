@@ -23,6 +23,11 @@
  */
 package org.hibernate.metamodel.binding;
 
+import java.util.Comparator;
+
+import org.hibernate.engine.FetchTiming;
+import org.hibernate.metamodel.domain.Attribute;
+import org.hibernate.metamodel.domain.PluralAttribute;
 import org.hibernate.metamodel.relational.TableSpecification;
 import org.hibernate.persister.collection.CollectionPersister;
 
@@ -32,6 +37,9 @@ import org.hibernate.persister.collection.CollectionPersister;
 public interface PluralAttributeBinding extends  AssociationAttributeBinding {
 	// todo : really it is the element (and/or index) that can be associative not the collection itself...
 
+	@Override
+	public PluralAttribute getAttribute();
+
 	public CollectionKey getCollectionKey();
 
 	public AbstractCollectionElement getCollectionElement();
@@ -40,9 +48,33 @@ public interface PluralAttributeBinding extends  AssociationAttributeBinding {
 
 	public boolean isMutable();
 
-	public String getCacheRegionName();
+	public Caching getCaching();
 
-	public String getCacheConcurrencyStrategy();
+	public Class<? extends CollectionPersister> getCollectionPersisterClass();
 
-	public Class<CollectionPersister> getCollectionPersisterClass();
+	public String getCustomLoaderName();
+
+	public CustomSQL getCustomSqlInsert();
+
+	public CustomSQL getCustomSqlUpdate();
+
+	public CustomSQL getCustomSqlDelete();
+
+	public CustomSQL getCustomSqlDeleteAll();
+
+	public boolean isOrphanDelete();
+
+	String getWhere();
+
+	boolean isSorted();
+
+	Comparator getComparator();
+
+	int getBatchSize();
+
+	java.util.Map getFilterMap();
+
+	boolean isInverse();
+
+	String getOrderBy();
 }

@@ -23,17 +23,28 @@
  */
 package org.hibernate.metamodel.source.hbm;
 
+import java.util.Collections;
+import java.util.Map;
+
 import org.hibernate.FetchMode;
+import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.engine.FetchStyle;
+import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.binding.Caching;
+import org.hibernate.metamodel.binding.CustomSQL;
 import org.hibernate.metamodel.source.LocalBindingContext;
 import org.hibernate.metamodel.source.MappingException;
 import org.hibernate.metamodel.source.binder.AttributeSourceContainer;
+import org.hibernate.metamodel.source.binder.ExplicitHibernateTypeSource;
 import org.hibernate.metamodel.source.binder.MetaAttributeSource;
 import org.hibernate.metamodel.source.binder.PluralAttributeElementSource;
 import org.hibernate.metamodel.source.binder.PluralAttributeKeySource;
 import org.hibernate.metamodel.source.binder.PluralAttributeSource;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.PluralAttributeElement;
+import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLCacheElement;
 
 /**
  * @author Steve Ebersole
@@ -42,17 +53,31 @@ public abstract class AbstractPluralAttributeSourceImpl implements PluralAttribu
 	private final PluralAttributeElement pluralAttributeElement;
 	private final AttributeSourceContainer container;
 
+	private final ExplicitHibernateTypeSource typeInformation;
+
 	private final PluralAttributeKeySource keySource;
 	private final PluralAttributeElementSource elementSource;
 
 	protected AbstractPluralAttributeSourceImpl(
-			PluralAttributeElement pluralAttributeElement,
+			final PluralAttributeElement pluralAttributeElement,
 			AttributeSourceContainer container) {
 		this.pluralAttributeElement = pluralAttributeElement;
 		this.container = container;
 
 		this.keySource = new PluralAttributeKeySourceImpl( pluralAttributeElement.getKey(), container );
 		this.elementSource = interpretElementType();
+
+		this.typeInformation = new ExplicitHibernateTypeSource() {
+			@Override
+			public String getName() {
+				return pluralAttributeElement.getCollectionType();
+			}
+
+			@Override
+			public Map<String, String> getParameters() {
+				return Collections.emptyMap();
+			}
+		};
 	}
 
 	private PluralAttributeElementSource interpretElementType() {
@@ -136,6 +161,20 @@ public abstract class AbstractPluralAttributeSourceImpl implements PluralAttribu
 	}
 
 	@Override
+	public Caching getCaching() {
+		final XMLCacheElement cache = pluralAttributeElement.getCache();
+		if ( cache == null ) {
+			return null;
+		}
+		final String region = cache.getRegion() != null
+				? cache.getRegion()
+				: StringHelper.qualify( container().getPath(), getName() );
+		final AccessType accessType = Enum.valueOf( AccessType.class, cache.getUsage() );
+		final boolean cacheLazyProps = !"non-lazy".equals( cache.getInclude() );
+		return new Caching( region, accessType, cacheLazyProps );
+	}
+
+	@Override
 	public String getWhere() {
 		return pluralAttributeElement.getWhere();
 	}
@@ -148,6 +187,11 @@ public abstract class AbstractPluralAttributeSourceImpl implements PluralAttribu
 	@Override
 	public boolean isSingular() {
 		return false;
+	}
+
+	@Override
+	public ExplicitHibernateTypeSource getTypeInformation() {
+		return typeInformation;
 	}
 
 	@Override
@@ -166,6 +210,38 @@ public abstract class AbstractPluralAttributeSourceImpl implements PluralAttribu
 	}
 
 	@Override
+	public String getCustomPersisterClassName() {
+		return pluralAttributeElement.getPersister();
+	}
+
+	@Override
+	public String getCustomLoaderName() {
+		return pluralAttributeElement.getLoader() == null
+				? null
+				: pluralAttributeElement.getLoader().getQueryRef();
+	}
+
+	@Override
+	public CustomSQL getCustomSqlInsert() {
+		return Helper.buildCustomSql( pluralAttributeElement.getSqlInsert() );
+	}
+
+	@Override
+	public CustomSQL getCustomSqlUpdate() {
+		return Helper.buildCustomSql( pluralAttributeElement.getSqlUpdate() );
+	}
+
+	@Override
+	public CustomSQL getCustomSqlDelete() {
+		return Helper.buildCustomSql( pluralAttributeElement.getSqlDelete() );
+	}
+
+	@Override
+	public CustomSQL getCustomSqlDeleteAll() {
+		return Helper.buildCustomSql( pluralAttributeElement.getSqlDeleteAll() );
+	}
+
+	@Override
 	public Iterable<MetaAttributeSource> metaAttributes() {
 		return Helper.buildMetaAttributeSources( pluralAttributeElement.getMeta() );
 	}
@@ -173,6 +249,86 @@ public abstract class AbstractPluralAttributeSourceImpl implements PluralAttribu
 	@Override
 	public Iterable<CascadeStyle> getCascadeStyles() {
 		return Helper.interpretCascadeStyles( pluralAttributeElement.getCascade(), bindingContext() );
+	}
+
+	@Override
+	public FetchTiming getFetchTiming() {
+		final String fetchSelection = pluralAttributeElement.getFetch() != null ?
+				pluralAttributeElement.getFetch().value() :
+				null;
+		final String lazySelection = pluralAttributeElement.getLazy() != null
+				? pluralAttributeElement.getLazy().value()
+				: null;
+		final String outerJoinSelection = pluralAttributeElement.getOuterJoin() != null
+				? pluralAttributeElement.getOuterJoin().value()
+				: null;
+
+		if ( lazySelection == null ) {
+			if ( "join".equals( fetchSelection ) || "true".equals( outerJoinSelection ) ) {
+				return FetchTiming.IMMEDIATE;
+			}
+			else if ( "false".equals( outerJoinSelection ) ) {
+				return FetchTiming.DELAYED;
+			}
+			else {
+				return bindingContext().getMappingDefaults().areAssociationsLazy()
+						? FetchTiming.DELAYED
+						: FetchTiming.IMMEDIATE;
+			}
+		}
+		else  if ( "extra".equals( lazySelection ) ) {
+			return FetchTiming.EXTRA_LAZY;
+		}
+		else if ( "true".equals( lazySelection ) ) {
+			return FetchTiming.DELAYED;
+		}
+		else if ( "false".equals( lazySelection ) ) {
+			return FetchTiming.IMMEDIATE;
+		}
+
+		throw new MappingException(
+				String.format(
+						"Unexpected lazy selection [%s] on '%s'",
+						lazySelection,
+						pluralAttributeElement.getName()
+				),
+				bindingContext().getOrigin()
+		);
+	}
+
+	@Override
+	public FetchStyle getFetchStyle() {
+		final String fetchSelection = pluralAttributeElement.getFetch() != null ?
+				pluralAttributeElement.getFetch().value() :
+				null;
+		final String outerJoinSelection = pluralAttributeElement.getOuterJoin() != null
+				? pluralAttributeElement.getOuterJoin().value()
+				: null;
+		final int batchSize = Helper.getIntValue( pluralAttributeElement.getBatchSize(), -1 );
+
+		if ( fetchSelection == null ) {
+			if ( outerJoinSelection == null ) {
+				return batchSize > 1 ? FetchStyle.BATCH : FetchStyle.SELECT;
+			}
+			else {
+				if ( "auto".equals( outerJoinSelection ) ) {
+					return bindingContext().getMappingDefaults().areAssociationsLazy()
+							? FetchStyle.SELECT
+							: FetchStyle.JOIN;
+				}
+				else {
+					return "true".equals( outerJoinSelection ) ? FetchStyle.JOIN : FetchStyle.SELECT;
+				}
+			}
+		}
+		else {
+			if ( "subselect".equals( fetchSelection ) ) {
+				return FetchStyle.SUBSELECT;
+			}
+			else {
+				return "join".equals( fetchSelection ) ? FetchStyle.JOIN : FetchStyle.SELECT;
+			}
+		}
 	}
 
 	@Override

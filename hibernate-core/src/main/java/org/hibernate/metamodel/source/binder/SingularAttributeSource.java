@@ -47,22 +47,6 @@ public interface SingularAttributeSource extends AttributeSource, RelationalValu
 	public SingularAttributeNature getNature();
 
 	/**
-	 * Obtain information about the Hibernate type ({@link org.hibernate.type.Type}) for this attribute.
-	 *
-	 * @return The Hibernate type information
-	 */
-	public ExplicitHibernateTypeSource getTypeInformation();
-
-	/**
-	 * Obtain the name of the property accessor style used to access this attribute.
-	 *
-	 * @return The property accessor style for this attribute.
-	 *
-	 * @see org.hibernate.property.PropertyAccessor
-	 */
-	public String getPropertyAccessorName();
-
-	/**
 	 * Determine whether this attribute is insertable.
 	 *
 	 * @return {@code true} indicates the attribute value should be used in the {@code SQL INSERT}; {@code false}
@@ -91,13 +75,4 @@ public interface SingularAttributeSource extends AttributeSource, RelationalValu
 	 * @return {@code true} to indicate the attribute should be lazily loaded.
 	 */
 	public boolean isLazy();
-
-	/**
-	 * If the containing entity is using {@link org.hibernate.engine.OptimisticLockStyle#ALL} or
-	 * {@link org.hibernate.engine.OptimisticLockStyle#DIRTY} style optimistic locking, should this attribute
-	 * be used?
-	 *
-	 * @return {@code true} indicates it should be included; {@code false}, it should not.
-	 */
-	public boolean isIncludedInOptimisticLocking();
 }

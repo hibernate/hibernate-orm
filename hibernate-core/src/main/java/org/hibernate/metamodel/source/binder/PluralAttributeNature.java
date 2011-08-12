@@ -23,15 +23,30 @@
  */
 package org.hibernate.metamodel.source.binder;
 
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 /**
  * Describes the nature of the collection itself as declared by the metadata.
  *
  * @author Steve Ebersole
  */
 public enum PluralAttributeNature {
-	BAG,
-	ID_BAG,
-	SET,
-	LIST,
-	MAP
+	BAG( Collection.class ),
+	ID_BAG( Collection.class ),
+	SET( Set.class ),
+	LIST( List.class ),
+	MAP( Map.class );
+
+	private final Class<?> reportedJavaType;
+
+	PluralAttributeNature(Class<?> reportedJavaType) {
+		this.reportedJavaType = reportedJavaType;
+	}
+
+	public Class<?> reportedJavaType() {
+		return reportedJavaType;
+	}
 }

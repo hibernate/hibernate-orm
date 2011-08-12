@@ -24,6 +24,8 @@
 package org.hibernate.metamodel.binding;
 
 import org.hibernate.FetchMode;
+import org.hibernate.engine.FetchStyle;
+import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CascadeStyle;
 
 /**
@@ -46,7 +48,19 @@ public interface AssociationAttributeBinding extends AttributeBinding {
 	 */
 	public void setCascadeStyles(Iterable<CascadeStyle> cascadeStyles);
 
-	public FetchMode getFetchMode();
+	public FetchTiming getFetchTiming();
+	public void setFetchTiming(FetchTiming fetchTiming);
 
-	public void setFetchMode(FetchMode fetchMode);
+	public FetchStyle getFetchStyle();
+	public void setFetchStyle(FetchStyle fetchStyle);
+
+
+	/**
+	 * Temporary.  Needed for integration with legacy {@link org.hibernate.mapping} configuration of persisters.
+	 *
+	 * @deprecated
+	 */
+	@Deprecated
+	@SuppressWarnings( {"JavaDoc"})
+	public FetchMode getFetchMode();
 }

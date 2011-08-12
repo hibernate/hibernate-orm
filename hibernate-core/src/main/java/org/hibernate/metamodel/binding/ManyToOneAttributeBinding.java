@@ -28,6 +28,8 @@ import java.util.List;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
+import org.hibernate.engine.FetchStyle;
+import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.metamodel.domain.SingularAttribute;
 
@@ -46,7 +48,8 @@ public class ManyToOneAttributeBinding extends BasicAttributeBinding implements 
 	private String foreignKeyName;
 
 	private CascadeStyle cascadeStyle;
-	private FetchMode fetchMode;
+	private FetchTiming fetchTiming;
+	private FetchStyle fetchStyle;
 
 	ManyToOneAttributeBinding(AttributeBindingContainer container, SingularAttribute attribute) {
 		super( container, attribute, false, false );
@@ -109,13 +112,42 @@ public class ManyToOneAttributeBinding extends BasicAttributeBinding implements 
 	}
 
 	@Override
-	public FetchMode getFetchMode() {
-		return fetchMode;
+	public FetchTiming getFetchTiming() {
+		return fetchTiming;
 	}
 
 	@Override
-	public void setFetchMode(FetchMode fetchMode) {
-		this.fetchMode = fetchMode;
+	public void setFetchTiming(FetchTiming fetchTiming) {
+		this.fetchTiming = fetchTiming;
+	}
+
+	@Override
+	public FetchStyle getFetchStyle() {
+		return fetchStyle;
+	}
+
+	@Override
+	public void setFetchStyle(FetchStyle fetchStyle) {
+		if ( fetchStyle == FetchStyle.SUBSELECT ) {
+			throw new AssertionFailure( "Subselect fetching not yet supported for singular associations" );
+		}
+		this.fetchStyle = fetchStyle;
+	}
+
+	@Override
+	public FetchMode getFetchMode() {
+		if ( fetchStyle == FetchStyle.JOIN ) {
+			return FetchMode.JOIN;
+		}
+		else if ( fetchStyle == FetchStyle.SELECT ) {
+			return FetchMode.SELECT;
+		}
+		else if ( fetchStyle == FetchStyle.BATCH ) {
+			// we need the subsequent select...
+			return FetchMode.SELECT;
+		}
+
+		throw new AssertionFailure( "Unexpected fetch style : " + fetchStyle.name() );
 	}
 
 	@Override

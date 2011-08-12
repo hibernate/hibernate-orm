@@ -46,4 +46,11 @@ public class Component extends AbstractAttributeContainer {
 	public boolean isComponent() {
 		return true;
 	}
+
+	@Override
+	public String getRoleBaseName() {
+		// todo : this is not really completely accurate atm
+		//		the role base here should really be the role of the component attribute.
+		return getClassName();
+	}
 }

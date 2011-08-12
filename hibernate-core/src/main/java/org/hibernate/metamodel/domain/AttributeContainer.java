@@ -33,6 +33,16 @@ import java.util.Set;
  */
 public interface AttributeContainer extends Type {
 	/**
+	 * Obtain the name of this container in terms of creating attribute role names.
+	 * <p/>
+	 * NOTE : A role uniquely names each attribute.  The role name is the name of the attribute prefixed by the "path"
+	 * to its container.
+	 *
+	 * @return The container base name for role construction.
+	 */
+	public String getRoleBaseName();
+
+	/**
 	 * Retrieve an attribute by name.
 	 *
 	 * @param name The name of the attribute to retrieve.

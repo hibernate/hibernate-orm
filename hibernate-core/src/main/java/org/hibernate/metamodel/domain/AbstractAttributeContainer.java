@@ -29,6 +29,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.Value;
 
 /**
@@ -81,6 +82,11 @@ public abstract class AbstractAttributeContainer implements AttributeContainer, 
 	@Override
 	public Set<Attribute> attributes() {
 		return Collections.unmodifiableSet( attributeSet );
+	}
+
+	@Override
+	public String getRoleBaseName() {
+		return getClassName();
 	}
 
 	@Override
@@ -264,6 +270,11 @@ public abstract class AbstractAttributeContainer implements AttributeContainer, 
 		@Override
 		public String getName() {
 			return name;
+		}
+
+		@Override
+		public String getRole() {
+			return StringHelper.qualify( attributeContainer.getRoleBaseName(), name );
 		}
 
 		@Override

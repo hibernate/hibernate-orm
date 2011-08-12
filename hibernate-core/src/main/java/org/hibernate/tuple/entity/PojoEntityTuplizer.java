@@ -278,21 +278,18 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 			proxyInterfaces.add( mappedClass );
 		}
 
-		// TODO: fix when it's possible to get subclasses from an EntityBinding
-		//Iterator subclasses = entityBinding.getSubclassIterator();
-		//while ( subclasses.hasNext() ) {
-		//	final Subclass subclass = ( Subclass ) subclasses.next();
-		//	final Class subclassProxy = subclass.getProxyInterface();
-		//	final Class subclassClass = subclass.getMappedClass();
-		//	if ( subclassProxy!=null && !subclassClass.equals( subclassProxy ) ) {
-		//		if ( !subclassProxy.isInterface() ) {
-		//			throw new MappingException(
-		//					"proxy must be either an interface, or the class itself: " + subclass.getEntityName()
-		//			);
-		//		}
-		//		proxyInterfaces.add( subclassProxy );
-		//	}
-		//}
+		for ( EntityBinding subEntityBinding : entityBinding.getPostOrderSubEntityBindingClosure() ) {
+			final Class subclassProxy = subEntityBinding.getProxyInterfaceType().getValue();
+			final Class subclassClass = subEntityBinding.getClassReference();
+			if ( subclassProxy!=null && !subclassClass.equals( subclassProxy ) ) {
+				if ( ! subclassProxy.isInterface() ) {
+					throw new MappingException(
+							"proxy must be either an interface, or the class itself: " + subEntityBinding.getEntity().getName()
+					);
+				}
+				proxyInterfaces.add( subclassProxy );
+			}
+		}
 
 		for ( AttributeBinding property : entityBinding.attributeBindings() ) {
 			Method method = getGetter( property ).getMethod();

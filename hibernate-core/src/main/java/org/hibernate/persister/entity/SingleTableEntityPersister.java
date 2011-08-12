@@ -466,8 +466,6 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		isNullableTable = new boolean[joinSpan];
 		keyColumnNames = new String[joinSpan][];
 
-		// TODO: fix when EntityBinhding.getRootEntityBinding() exists (HHH-6337)
-		//final Table table = entityBinding.getRootEntityBinding().getPrimaryTable();
 		final TableSpecification table = entityBinding.getPrimaryTable();
 		qualifiedTableNames[0] = table.getQualifiedName( factory.getDialect() );
 		isInverseTable[0] = false;
@@ -538,15 +536,8 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 		// DISCRIMINATOR
 
-		// TODO: fix this when can get subclass info from EntityBinding (HHH-6337)
-		//  for now set hasSubclasses to false
-		//hasSubclasses = entityBinding.hasSubclasses();
-		boolean hasSubclasses = false;
-
-		//polymorphic = ! entityBinding.isRoot() || entityBinding.hasSubclasses();
-		boolean isPolymorphic = ! entityBinding.isRoot() || hasSubclasses;
 		final Object discriminatorValue;
-		if ( isPolymorphic ) {
+		if ( entityBinding.isPolymorphic() ) {
 			SimpleValue discriminatorRelationalValue = entityBinding.getHierarchyDetails().getEntityDiscriminator().getBoundValue();
 			if ( discriminatorRelationalValue == null ) {
 				throw new MappingException("discriminator mapping required for single table polymorphic persistence");
@@ -569,9 +560,6 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 								column.getColumnName().encloseInQuotesIfQuoted( factory.getDialect() ) :
 								column.getReadFragment();
 				discriminatorColumnReaderTemplate = getTemplateFromColumn( column, factory );
-				// TODO: fix this when EntityBinding.getRootEntityBinding() is implemented;
-				// for now, assume entityBinding is the root
-				//discriminatorAlias = column.getAlias( factory.getDialect(), entityBinding.getRootEntityBinding().getPrimaryTable );
 				discriminatorAlias = column.getAlias( factory.getDialect() );
 				discriminatorFormula = null;
 				discriminatorFormulaTemplate = null;
@@ -648,9 +636,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		ArrayList formulaJoinedNumbers = new ArrayList();
 		ArrayList propertyJoinNumbers = new ArrayList();
 
-		// TODO: fix when subclasses are working (HHH-6337)
-		//for ( AttributeBinding prop : entityBinding.getSubclassAttributeBindingClosure() ) {
-		for ( AttributeBinding attributeBinding : entityBinding.getAttributeBindingClosure() ) {
+		for ( AttributeBinding attributeBinding : entityBinding.getSubEntityAttributeBindingClosure() ) {
 			if ( ! attributeBinding.getAttribute().isSingular() ) {
 				continue;
 			}
@@ -680,18 +666,41 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		subclassFormulaTableNumberClosure = ArrayHelper.toIntArray(formulaJoinedNumbers);
 		subclassPropertyTableNumberClosure = ArrayHelper.toIntArray(propertyJoinNumbers);
 
-		// TODO; fix when subclasses are working (HHH-6337)
-		//int subclassSpan = entityBinding.getSubclassSpan() + 1;
-		int subclassSpan = 1;
+		int subclassSpan = entityBinding.getSubEntityBindingClosureSpan() + 1;
 		subclassClosure = new String[subclassSpan];
 		subclassClosure[0] = getEntityName();
-		if ( isPolymorphic ) {
+		if ( entityBinding.isPolymorphic() ) {
 			subclassesByDiscriminatorValue.put( discriminatorValue, getEntityName() );
 		}
 
 		// SUBCLASSES
-
-		// TODO; fix when subclasses are working (HHH-6337)
+		if ( entityBinding.isPolymorphic() ) {
+			int k=1;
+			for ( EntityBinding subEntityBinding : entityBinding.getPostOrderSubEntityBindingClosure() ) {
+				subclassClosure[k++] = subEntityBinding.getEntity().getName();
+				if ( subEntityBinding.isDiscriminatorMatchValueNull() ) {
+					subclassesByDiscriminatorValue.put( NULL_DISCRIMINATOR, subEntityBinding.getEntity().getName() );
+				}
+				else if ( subEntityBinding.isDiscriminatorMatchValueNotNull() ) {
+					subclassesByDiscriminatorValue.put( NOT_NULL_DISCRIMINATOR, subEntityBinding.getEntity().getName() );
+				}
+				else {
+					try {
+						DiscriminatorType dtype = (DiscriminatorType) discriminatorType;
+						subclassesByDiscriminatorValue.put(
+							dtype.stringToObject( subEntityBinding.getDiscriminatorMatchValue() ),
+							subEntityBinding.getEntity().getName()
+						);
+					}
+					catch (ClassCastException cce) {
+						throw new MappingException("Illegal discriminator type: " + discriminatorType.getName() );
+					}
+					catch (Exception e) {
+						throw new MappingException("Error parsing discriminator value", e);
+					}
+				}
+			}
+		}
 
 		initLockers();
 

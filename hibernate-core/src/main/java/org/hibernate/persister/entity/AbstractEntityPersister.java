@@ -768,7 +768,6 @@ public abstract class AbstractEntityPersister
 			final EntityBinding entityBinding,
 			final EntityRegionAccessStrategy cacheAccessStrategy,
 			final SessionFactoryImplementor factory) throws HibernateException {
-		// TODO: Implement! Initializing final fields to make compiler happy
 		this.factory = factory;
 		this.cacheAccessStrategy = cacheAccessStrategy;
 		this.isLazyPropertiesCacheable =
@@ -812,8 +811,6 @@ public abstract class AbstractEntityPersister
 				rootTableKeyColumnReaders[i] = col.getReadFragment();
 				rootTableKeyColumnReaderTemplates[i] = getTemplateFromString( col.getReadFragment(), factory );
 			}
-			// TODO: Fix when HHH-6337 is fixed; for now assume entityBinding is the root
-			// identifierAliases[i] = col.getAlias( factory.getDialect(), entityBinding.getRootEntityBinding().getPrimaryTable() );
 			identifierAliases[i] = col.getAlias( factory.getDialect() );
 			i++;
 		}
@@ -915,8 +912,8 @@ public abstract class AbstractEntityPersister
 			propertyColumnWriters[i] = colWriters;
 			propertyColumnAliases[i] = colAliases;
 
-			propertyColumnUpdateable[i] = propertyColumnInsertability;
-			propertyColumnInsertable[i] = propertyColumnUpdatability;
+			propertyColumnUpdateable[i] = propertyColumnUpdatability;
+			propertyColumnInsertable[i] = propertyColumnInsertability;
 
 			if ( lazyAvailable && singularAttributeBinding.isLazy() ) {
 				lazyProperties.add( singularAttributeBinding.getAttribute().getName() );
@@ -967,9 +964,7 @@ public abstract class AbstractEntityPersister
 		List<Boolean> columnSelectables = new ArrayList<Boolean>();
 		List<Boolean> propNullables = new ArrayList<Boolean>();
 
-		// TODO: fix this when EntityBinding.getSubclassAttributeBindingClosure() is working
-		// for ( AttributeBinding prop : entityBinding.getSubclassAttributeBindingClosure() ) {
-		for ( AttributeBinding attributeBinding : entityBinding.getAttributeBindingClosure() ) {
+		for ( AttributeBinding attributeBinding : entityBinding.getSubEntityAttributeBindingClosure() ) {
 			if ( attributeBinding == entityBinding.getHierarchyDetails().getEntityIdentifier().getValueBinding() ) {
 				// entity identifier is not considered a "normal" property
 				continue;

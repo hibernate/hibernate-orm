@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+<hibernate-mapping package="org.hibernate.test.discriminator" default-access="field"
+                   xmlns="http://www.hibernate.org/xsd/hibernate-mapping"
+                   xsi:schemaLocation="http://www.hibernate.org/xsd/hibernate-mapping hibernate-mapping-4.0.xsd"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+<!--
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping
+	package="org.hibernate.test.discriminator"
+	default-access="field">
+-->
+<!--
+
+  This mapping demonstrates a simple table-per-hierarchy mapping strategy;
+  each subclass has simple properties
+
+-->
+
+	<class name="Person"
+		discriminator-value="P">
+		
+		<id name="id" 
+			column="person_id" 
+			unsaved-value="0">
+			<generator class="assigned"/>
+		</id>
+		
+        <discriminator column="TYPE" type="character"/>
+
+		<property name="name"
+			not-null="true"
+			length="80"/>
+
+		<property name="sex"
+			not-null="true"
+			update="false"/>
+		
+		<subclass name="Employee"
+			discriminator-value="E">
+				<property name="title" length="20"/>
+				<property name="salary" />
+            <!-- commented out until HHH-6551 is fixed
+			<subclass name="PartTimeEmployee" discriminator-value="M">
+				<property name="percent"/>
+			</subclass>
+			-->
+   		</subclass>
+		
+		<subclass name="Customer" 
+			discriminator-value="C">
+				<property name="comments"/>
+		</subclass>
+		
+	</class>
+	
+
+</hibernate-mapping>

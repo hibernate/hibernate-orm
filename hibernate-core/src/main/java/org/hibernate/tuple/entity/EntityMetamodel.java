@@ -360,9 +360,7 @@ public class EntityMetamodel implements Serializable {
 
 		name = entityBinding.getEntity().getName();
 
-		// TODO: Fix after HHH-6337 is fixed; for now assume entityBinding is the root binding
-		//rootName = entityBinding.getRootEntityBinding().getName();
-		rootName = name;
+		rootName = entityBinding.getHierarchyDetails().getRootEntityBinding().getEntity().getName();
 		entityType = sessionFactory.getTypeResolver().getTypeFactory().manyToOne( name );
 
 		identifierProperty = PropertyFactory.buildIdentifierProperty(
@@ -386,7 +384,6 @@ public class EntityMetamodel implements Serializable {
 		boolean hasLazy = false;
 
 		// TODO: Fix after HHH-6337 is fixed; for now assume entityBinding is the root binding
-		//BasicAttributeBinding rootEntityIdentifier = entityBinding.getRootEntityBinding().getEntityIdentifier().getValueBinding();
 		BasicAttributeBinding rootEntityIdentifier = entityBinding.getHierarchyDetails().getEntityIdentifier().getValueBinding();
 		// entityBinding.getAttributeClosureSpan() includes the identifier binding;
 		// "properties" here excludes the ID, so subtract 1 if the identifier binding is non-null
@@ -540,13 +537,8 @@ public class EntityMetamodel implements Serializable {
 		dynamicUpdate = entityBinding.isDynamicUpdate();
 		dynamicInsert = entityBinding.isDynamicInsert();
 
-		// TODO: fix this when can get subclass info from EntityBinding (HHH-6337)
-		//  for now set hasSubclasses to false
-		//hasSubclasses = entityBinding.hasSubclasses();
-		hasSubclasses = false;
-
-		//polymorphic = ! entityBinding.isRoot() || entityBinding.hasSubclasses();
-		polymorphic = ! entityBinding.isRoot() || hasSubclasses;
+		hasSubclasses = entityBinding.hasSubEntityBindings();
+		polymorphic = entityBinding.isPolymorphic();
 
 		explicitPolymorphism = entityBinding.getHierarchyDetails().isExplicitPolymorphism();
 		inherited = ! entityBinding.isRoot();
@@ -568,24 +560,17 @@ public class EntityMetamodel implements Serializable {
 		hasCollections = foundCollection;
 		hasMutableProperties = foundMutable;
 
-		// TODO: fix this when can get subclass info from EntityBinding (HHH-6337)
-		// TODO: uncomment when it's possible to get subclasses from an EntityBinding
-		//iter = entityBinding.getSubclassIterator();
-		//while ( iter.hasNext() ) {
-		//	subclassEntityNames.add( ( (PersistentClass) iter.next() ).getEntityName() );
-		//}
+		for ( EntityBinding subEntityBinding : entityBinding.getPostOrderSubEntityBindingClosure() ) {
+			subclassEntityNames.add( subEntityBinding.getEntity().getName() );
+			if ( subEntityBinding.getEntity().getClassReference() != null ) {
+				entityNameByInheritenceClassMap.put(
+						subEntityBinding.getEntity().getClassReference(),
+						subEntityBinding.getEntity().getName() );
+			}
+		}
 		subclassEntityNames.add( name );
-
 		if ( mappedClass != null ) {
 			entityNameByInheritenceClassMap.put( mappedClass, name );
-		// TODO: uncomment when it's possible to get subclasses from an EntityBinding
-		//	iter = entityBinding.getSubclassIterator();
-		//	while ( iter.hasNext() ) {
-		//		final EntityBinding subclassEntityBinding = ( EntityBinding ) iter.next();
-		//		entityNameByInheritenceClassMap.put(
-		//				subclassEntityBinding.getEntity().getPojoEntitySpecifics().getEntityClass(),
-		//				subclassEntityBinding.getEntity().getName() );
-		//	}
 		}
 
 		entityMode = hasPojoRepresentation ? EntityMode.POJO : EntityMode.MAP;

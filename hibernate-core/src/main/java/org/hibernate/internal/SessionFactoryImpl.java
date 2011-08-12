@@ -83,6 +83,7 @@ import org.hibernate.context.internal.ManagedSessionContext;
 import org.hibernate.context.internal.ThreadLocalSessionContext;
 import org.hibernate.context.spi.CurrentSessionContext;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.dialect.function.SQLFunctionRegistry;
 import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -187,8 +188,8 @@ public final class SessionFactoryImpl
 	private final transient Map<String, FetchProfile> fetchProfiles;
 	private final transient Map<String,String> imports;
 	private final transient SessionFactoryServiceRegistry serviceRegistry;
-        private final transient JdbcServices jdbcServices;
-        private final transient Dialect dialect;
+	private final transient JdbcServices jdbcServices;
+	private final transient Dialect dialect;
 	private final transient Settings settings;
 	private final transient Properties properties;
 	private transient SchemaExport schemaExport;
@@ -530,9 +531,6 @@ public final class SessionFactoryImpl
 			SessionFactoryObserver observer) throws HibernateException {
         LOG.debug( "Building session factory" );
 
-		// TODO: remove initialization of final variables; just setting to null to make compiler happy
-		this.sqlFunctionRegistry = null;
-
 		this.sessionFactoryOptions = sessionFactoryOptions;
 
 		this.properties = createPropertiesFromMap(
@@ -552,6 +550,10 @@ public final class SessionFactoryImpl
 
 		this.jdbcServices = this.serviceRegistry.getService( JdbcServices.class );
 		this.dialect = this.jdbcServices.getDialect();
+
+		// TODO: get SQL functions from JdbcServices (HHH-6559)
+		//this.sqlFunctionRegistry = new SQLFunctionRegistry( this.jdbcServices.getSqlFunctions() );
+		this.sqlFunctionRegistry = new SQLFunctionRegistry( this.dialect, new HashMap<String, SQLFunction>() );
 
 		// TODO: get SQL functions from a new service
 		// this.sqlFunctionRegistry = new SQLFunctionRegistry( getDialect(), cfg.getSqlFunctions() );

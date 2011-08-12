@@ -29,6 +29,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.binding.EntityBinding;
 
@@ -58,14 +59,9 @@ public class DynamicMapInstantiator implements Instantiator {
 	public DynamicMapInstantiator(EntityBinding mappingInfo) {
 		this.entityName = mappingInfo.getEntity().getName();
 		isInstanceEntityNames.add( entityName );
-		// TODO: fix this when can get subclass info from EntityBinding (HHH-6337)
-		//if ( mappingInfo.hasSubclasses() ) {
-		//	Iterator itr = mappingInfo.getSubclassClosureIterator();
-		//	while ( itr.hasNext() ) {
-		//		final PersistentClass subclassInfo = ( PersistentClass ) itr.next();
-		//		isInstanceEntityNames.add( subclassInfo.getEntityName() );
-		//	}
-		//}
+		for ( EntityBinding subEntityBinding : mappingInfo.getPostOrderSubEntityBindingClosure() ) {
+			isInstanceEntityNames.add( subEntityBinding.getEntity().getName() );
+		}
 	}
 
 	public final Object instantiate(Serializable id) {

@@ -53,6 +53,9 @@ import org.hibernate.tuple.entity.EntityTuplizer;
  * @author Gail Badner
  */
 public class EntityBinding implements AttributeBindingContainer {
+	private static final String NULL_DISCRIMINATOR_MATCH_VALUE = "null";
+	private static final String NOT_NULL_DISCRIMINATOR_MATCH_VALUE = "not null";
+
 	private final EntityBinding superEntityBinding;
 	private final List<EntityBinding> subEntityBindings = new ArrayList<EntityBinding>();
 	private final HierarchyDetails hierarchyDetails;
@@ -142,26 +145,68 @@ public class EntityBinding implements AttributeBindingContainer {
 		return subEntityBindings.size() > 0;
 	}
 
-	public int getSubEntityBindingSpan() {
+	public int getSubEntityBindingClosureSpan() {
 		int n = subEntityBindings.size();
 		for ( EntityBinding subEntityBinding : subEntityBindings ) {
-			n += subEntityBinding.getSubEntityBindingSpan();
+			n += subEntityBinding.getSubEntityBindingClosureSpan();
 		}
 		return n;
 	}
+
+	/* used for testing */
+	public Iterable<EntityBinding> getDirectSubEntityBindings() {
+		return subEntityBindings;
+	}
+
 	/**
-	 * Iterate over subclasses in a special 'order', most derived subclasses
-	 * first.
+	 * Returns sub-EntityBinding objects in a special 'order', most derived subclasses
+	 * first. Specifically, the sub-entity bindings follow a depth-first,
+	 * post-order traversal
+	 *
+	 * Note that the returned value excludes this entity binding.
+	 *
 	 * @return sub-entity bindings ordered by those entity bindings that are most derived.
 	 */
-	public Iterable<EntityBinding> getSubEntityBindingClosure() {
-		List<Iterable<EntityBinding>> subclassIterables =
-				new ArrayList<Iterable<EntityBinding>>( subEntityBindings.size() + 1 );
+	public Iterable<EntityBinding> getPostOrderSubEntityBindingClosure() {
+		// TODO: why this order?
+		List<Iterable<EntityBinding>> subclassIterables = new ArrayList<Iterable<EntityBinding>>( subEntityBindings.size() + 1 );
 		for ( EntityBinding subEntityBinding : subEntityBindings ) {
-			subclassIterables.add( subEntityBinding.getSubEntityBindingClosure() );
+			Iterable<EntityBinding> subSubEntityBindings = subEntityBinding.getPostOrderSubEntityBindingClosure();
+			if ( subSubEntityBindings.iterator().hasNext() ) {
+				subclassIterables.add( subSubEntityBindings );
+			}
 		}
-		subclassIterables.add( subEntityBindings );
+		if ( ! subEntityBindings.isEmpty() ) {
+			subclassIterables.add( subEntityBindings );
+		}
 		return new JoinedIterable<EntityBinding>( subclassIterables );
+	}
+
+	/**
+	 * Returns sub-EntityBinding ordered as a depth-first,
+	 * pre-order traversal (a subclass precedes its own subclasses).
+	 *
+	 * Note that the returned value specifically excludes this entity binding.
+	 *
+	 * @return sub-entity bindings ordered as a depth-first,
+	 * pre-order traversal
+	 */
+	public Iterable<EntityBinding> getPreOrderSubEntityBindingClosure() {
+		return getPreOrderSubEntityBindingClosure( false );
+	}
+
+	private Iterable<EntityBinding> getPreOrderSubEntityBindingClosure(boolean includeThis) {
+		List<Iterable<EntityBinding>> iterables = new ArrayList<Iterable<EntityBinding>>();
+		if ( includeThis ) {
+			iterables.add( java.util.Collections.singletonList( this ) );
+		}
+		for ( EntityBinding subEntityBinding : subEntityBindings ) {
+			Iterable<EntityBinding> subSubEntityBindingClosure =  subEntityBinding.getPreOrderSubEntityBindingClosure( true );
+			if ( subSubEntityBindingClosure.iterator().hasNext() ) {
+				iterables.add( subSubEntityBindingClosure );
+			}
+		}
+		return new JoinedIterable<EntityBinding>( iterables );
 	}
 
 	public Entity getEntity() {
@@ -210,6 +255,14 @@ public class EntityBinding implements AttributeBindingContainer {
 
 	public boolean isVersioned() {
 		return getHierarchyDetails().getVersioningAttributeBinding() != null;
+	}
+
+	public boolean isDiscriminatorMatchValueNull() {
+		return NULL_DISCRIMINATOR_MATCH_VALUE.equals( discriminatorMatchValue );
+	}
+
+	public boolean isDiscriminatorMatchValueNotNull() {
+		return NOT_NULL_DISCRIMINATOR_MATCH_VALUE.equals( discriminatorMatchValue );
 	}
 
 	public String getDiscriminatorMatchValue() {
@@ -520,5 +573,22 @@ public class EntityBinding implements AttributeBindingContainer {
 			iterable = attributeBindings();
 		}
 		return iterable;
+	}
+
+	/**
+	 * Gets the attribute bindings for this EntityBinding and all of its
+	 * sub-EntityBinding, starting from the root of the hierarchy; includes
+	 * the identifier and attribute bindings defined as part of a join.
+	 * @return
+	 */
+	public Iterable<AttributeBinding> getSubEntityAttributeBindingClosure() {
+		List<Iterable<AttributeBinding>> iterables = new ArrayList<Iterable<AttributeBinding>>();
+		iterables.add( getAttributeBindingClosure() );
+		for ( EntityBinding subEntityBinding : getPreOrderSubEntityBindingClosure() ) {
+			// only add attribute bindings declared for the subEntityBinding
+			iterables.add( subEntityBinding.attributeBindings() );
+			// TODO: if EntityBinding.attributeBindings() excludes joined attributes, then they need to be added here
+		}
+		return new JoinedIterable<AttributeBinding>( iterables );
 	}
 }

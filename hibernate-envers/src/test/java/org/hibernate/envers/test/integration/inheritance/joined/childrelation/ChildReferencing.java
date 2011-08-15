@@ -25,6 +25,7 @@
 package org.hibernate.envers.test.integration.inheritance.joined.childrelation;
 
 import org.hibernate.ejb.Ejb3Configuration;
+import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.tools.TestTools;
@@ -32,6 +33,9 @@ import org.junit.Test;
 
 import javax.persistence.EntityManager;
 import java.util.Arrays;
+import java.util.List;
+
+import static junit.framework.Assert.assertEquals;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -121,4 +125,29 @@ public class ChildReferencing extends AbstractEntityTest {
         assert getAuditReader().find(ChildIngEntity.class, c_id, 3).getReferenced().equals(
                 new ReferencedEntity(re_id2));
     }
+
+	@Test
+	public void testReferencedEntityHasChanged() throws Exception {
+		List list = getAuditReader().createQuery().forRevisionsOfEntity(ReferencedEntity.class, false, false)
+				.add(AuditEntity.id().eq(re_id1))
+				.add(AuditEntity.property("referencing").hasChanged())
+				.getResultList();
+		assertEquals(2, list.size());
+		assertEquals(TestTools.makeList(2, 3), extractRevisionNumbers(list));
+
+		list = getAuditReader().createQuery().forRevisionsOfEntity(ReferencedEntity.class, false, false)
+				.add(AuditEntity.id().eq(re_id1))
+				.add(AuditEntity.property("referencing").hasNotChanged())
+				.getResultList();
+		assertEquals(1, list.size()); // initially referencing collection is null
+		assertEquals(TestTools.makeList(1), extractRevisionNumbers(list));
+
+		list = getAuditReader().createQuery().forRevisionsOfEntity(ReferencedEntity.class, false, false)
+				.add(AuditEntity.id().eq(re_id2))
+				.add(AuditEntity.property("referencing").hasChanged())
+				.getResultList();
+		assertEquals(1, list.size());
+		assertEquals(TestTools.makeList(3), extractRevisionNumbers(list));
+	}
+
 }

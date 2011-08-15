@@ -32,6 +32,7 @@ import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.ejb.EntityManagerFactoryImpl;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
+import org.hibernate.envers.configuration.GlobalConfiguration;
 import org.hibernate.envers.event.EnversIntegrator;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.service.BootstrapServiceRegistryBuilder;
@@ -99,6 +100,9 @@ public abstract class AbstractEntityTest extends AbstractEnversTest {
         if (auditStrategy != null && !"".equals(auditStrategy)) {
             configurationProperties.setProperty("org.hibernate.envers.audit_strategy", auditStrategy);
         }
+
+		configurationProperties.setProperty(GlobalConfiguration.OVERRIDE_USING_MODIFIED_FLAG_PROPERTY, "true");
+		configurationProperties.setProperty(GlobalConfiguration.USING_MODIFIED_FLAG_PROPERTY, "true");
 
         addConfigurationProperties(configurationProperties);
 

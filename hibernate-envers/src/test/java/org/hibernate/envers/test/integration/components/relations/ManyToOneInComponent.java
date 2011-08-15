@@ -24,15 +24,20 @@
 package org.hibernate.envers.test.integration.components.relations;
 
 import org.hibernate.ejb.Ejb3Configuration;
+import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.envers.test.entities.components.relations.ManyToOneComponent;
 import org.hibernate.envers.test.entities.components.relations.ManyToOneComponentTestEntity;
+import org.hibernate.envers.test.tools.TestTools;
 import org.junit.Test;
 
 import javax.persistence.EntityManager;
 import java.util.Arrays;
+import java.util.List;
+
+import static junit.framework.Assert.assertEquals;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -106,4 +111,21 @@ public class ManyToOneInComponent extends AbstractEntityTest {
         assert getAuditReader().find(ManyToOneComponentTestEntity.class, mtocte_id1, 2).equals(ver2);
         assert getAuditReader().find(ManyToOneComponentTestEntity.class, mtocte_id1, 3).equals(ver3);
     }
+
+	@Test
+	public void testHasChangedId1() throws Exception {
+		List list = getAuditReader().createQuery().forRevisionsOfEntity(ManyToOneComponentTestEntity.class, false, false)
+				.add(AuditEntity.id().eq(mtocte_id1))
+				.add(AuditEntity.property("comp1").hasChanged())
+				.getResultList();
+		assertEquals(2, list.size());
+		assertEquals(TestTools.makeList(2, 3), extractRevisionNumbers(list));
+
+		list = getAuditReader().createQuery().forRevisionsOfEntity(ManyToOneComponentTestEntity.class, false, false)
+				.add(AuditEntity.id().eq(mtocte_id1))
+				.add(AuditEntity.property("comp1").hasNotChanged())
+				.getResultList();
+		assertEquals(0, list.size());
+	}
+
 }

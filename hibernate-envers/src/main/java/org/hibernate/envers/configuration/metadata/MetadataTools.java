@@ -22,8 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.configuration.metadata;
-import java.util.Iterator;
-import javax.persistence.JoinColumn;
+
 import org.dom4j.Attribute;
 import org.dom4j.Document;
 import org.dom4j.Element;
@@ -31,12 +30,18 @@ import org.hibernate.envers.tools.StringTools;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Formula;
 
+import javax.persistence.JoinColumn;
+import java.util.Iterator;
+
 /**
  * @author Adam Warski (adam at warski dot org)
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Michal Skowronek (mskowr at o2 dot pl)
  */
 public class MetadataTools {
-    public static Element addNativelyGeneratedId(Element parent, String name, String type) {
+	public static final String MOD_SUFFIX = "_mod";
+
+	public static Element addNativelyGeneratedId(Element parent, String name, String type) {
         Element id_mapping = parent.addElement("id");
         id_mapping.addAttribute("name", name).addAttribute("type", type);
 
@@ -71,7 +76,15 @@ public class MetadataTools {
         return addProperty(parent, name, type, insertable, false, key);
     }
 
-    private static void addOrModifyAttribute(Element parent, String name, String value) {
+	public static Element addModifiedFlagProperty(Element parent, String propertyName) {
+		return addProperty(parent, getModifiedFlagPropertyName(propertyName), "boolean", true, false, false);
+	}
+
+	public static String getModifiedFlagPropertyName(String propertyName) {
+		return propertyName + MOD_SUFFIX;
+	}
+
+	private static void addOrModifyAttribute(Element parent, String name, String value) {
         Attribute attribute = parent.attribute(name);
         if (attribute == null) {
             parent.addAttribute(name, value);

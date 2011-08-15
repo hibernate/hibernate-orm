@@ -22,19 +22,22 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.entities.mapper;
-import java.io.Serializable;
-import java.util.List;
-import java.util.Map;
+
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.entities.PropertyData;
 import org.hibernate.envers.reader.AuditReaderImplementor;
 
+import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
+
 /**
  * A mapper which maps from a parent mapper and a "main" one, but adds only to the "main". The "main" mapper
  * should be the mapper of the subclass.
  * @author Adam Warski (adam at warski dot org)
+ * @author Michal Skowronek (mskowr at o2 dot pl)
  */
 public class SubclassPropertyMapper implements ExtendedPropertyMapper {
     private ExtendedPropertyMapper main;
@@ -59,7 +62,19 @@ public class SubclassPropertyMapper implements ExtendedPropertyMapper {
         return parentDiffs || mainDiffs;
     }
 
-    public void mapToEntityFromMap(AuditConfiguration verCfg, Object obj, Map data, Object primaryKey, AuditReaderImplementor versionsReader, Number revision) {
+	@Override
+	public void mapModifiedFlagsToMapFromEntity(SessionImplementor session, Map<String, Object> data, Object newObj, Object oldObj) {
+		parentMapper.mapModifiedFlagsToMapFromEntity(session, data, newObj, oldObj);
+        main.mapModifiedFlagsToMapFromEntity(session, data, newObj, oldObj);
+	}
+
+	@Override
+	public void mapModifiedFlagsToMapForCollectionChange(String collectionPropertyName, Map<String, Object> data) {
+		parentMapper.mapModifiedFlagsToMapForCollectionChange(collectionPropertyName, data);
+		main.mapModifiedFlagsToMapForCollectionChange(collectionPropertyName, data);
+	}
+
+	public void mapToEntityFromMap(AuditConfiguration verCfg, Object obj, Map data, Object primaryKey, AuditReaderImplementor versionsReader, Number revision) {
         parentMapper.mapToEntityFromMap(verCfg, obj, data, primaryKey, versionsReader, revision);
         main.mapToEntityFromMap(verCfg, obj, data, primaryKey, versionsReader, revision);
     }

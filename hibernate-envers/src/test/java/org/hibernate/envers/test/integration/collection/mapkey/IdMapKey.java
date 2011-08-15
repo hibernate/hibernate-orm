@@ -24,6 +24,7 @@
 package org.hibernate.envers.test.integration.collection.mapkey;
 
 import org.hibernate.ejb.Ejb3Configuration;
+import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
@@ -32,6 +33,9 @@ import org.junit.Test;
 
 import javax.persistence.EntityManager;
 import java.util.Arrays;
+import java.util.List;
+
+import static junit.framework.Assert.assertEquals;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -103,4 +107,20 @@ public class IdMapKey extends AbstractEntityTest {
         assert rev1.getIdmap().equals(TestTools.makeMap(ste1.getId(), ste1));
         assert rev2.getIdmap().equals(TestTools.makeMap(ste1.getId(), ste1, ste2.getId(), ste2));
     }
+
+	@Test
+	public void testHasChanged() throws Exception {
+		List list = getAuditReader().createQuery().forRevisionsOfEntity(IdMapKeyEntity.class, false, false)
+				.add(AuditEntity.id().eq(imke_id))
+				.add(AuditEntity.property("idmap").hasChanged())
+				.getResultList();
+		assertEquals(2, list.size());
+		assertEquals(TestTools.makeList(1, 2), extractRevisionNumbers(list));
+
+		list = getAuditReader().createQuery().forRevisionsOfEntity(IdMapKeyEntity.class, false, false)
+				.add(AuditEntity.id().eq(imke_id))
+				.add(AuditEntity.property("idmap").hasNotChanged())
+				.getResultList();
+		assertEquals(0, list.size());
+	}
 }

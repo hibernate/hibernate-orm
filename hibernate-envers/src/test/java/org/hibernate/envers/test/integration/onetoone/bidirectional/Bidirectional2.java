@@ -24,12 +24,17 @@
 package org.hibernate.envers.test.integration.onetoone.bidirectional;
 
 import org.hibernate.ejb.Ejb3Configuration;
+import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.Priority;
+import org.hibernate.envers.test.tools.TestTools;
 import org.junit.Test;
 
 import javax.persistence.EntityManager;
 import java.util.Arrays;
+import java.util.List;
+
+import static junit.framework.Assert.assertEquals;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -148,4 +153,21 @@ public class Bidirectional2 extends AbstractEntityTest {
         assert rev3.getReferencing() == null;
         assert rev4.getReferencing().equals(ing1);
     }
+
+	@Test
+	public void testHasChanged() throws Exception {
+		List list = getAuditReader().createQuery().forRevisionsOfEntity(BiRefEdEntity.class, false, false)
+				.add(AuditEntity.id().eq(ed1_id))
+				.add(AuditEntity.property("referencing").hasChanged())
+				.getResultList();
+		assertEquals(3, list.size());
+		assertEquals(TestTools.makeList(2, 3, 4), extractRevisionNumbers(list));
+
+		list = getAuditReader().createQuery().forRevisionsOfEntity(BiRefEdEntity.class, false, false)
+				.add(AuditEntity.id().eq(ed2_id))
+				.add(AuditEntity.property("referencing").hasChanged())
+				.getResultList();
+		assertEquals(1, list.size());
+		assertEquals(TestTools.makeList(4), extractRevisionNumbers(list));
+	}
 }

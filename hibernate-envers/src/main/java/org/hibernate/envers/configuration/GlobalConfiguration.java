@@ -22,11 +22,13 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.configuration;
-import org.hibernate.MappingException;
-import org.hibernate.envers.RevisionListener;
 
-import static org.hibernate.envers.tools.Tools.getProperty;
-import java.util.Properties;
+import org.hibernate.*;
+import org.hibernate.envers.*;
+
+import java.util.*;
+
+import static org.hibernate.envers.tools.Tools.*;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -34,7 +36,9 @@ import java.util.Properties;
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public class GlobalConfiguration {
-    // Should a revision be generated when a not-owned relation field changes
+	public static final String OVERRIDE_USING_MODIFIED_FLAG_PROPERTY = "org.hibernate.envers.override_using_modified_flag";
+	public static final String USING_MODIFIED_FLAG_PROPERTY = "org.hibernate.envers.using_modified_flag";
+	// Should a revision be generated when a not-owned relation field changes
     private final boolean generateRevisionsForCollections;
 
     // Should the optimistic locking property of an entity be considered unversioned
@@ -54,6 +58,10 @@ public class GlobalConfiguration {
 
     // Revision listener class name.
     private final Class<? extends RevisionListener> revisionListenerClass;
+	// Should default setting (false) for modified property flags be overridden
+    private boolean overrideUsingModifiedFlag;
+	// Should Envers use modified property flags by default
+    private boolean usingModifiedFlag;
 
     /*
      Which operator to use in correlated subqueries (when we want a property to be equal to the result of
@@ -94,6 +102,18 @@ public class GlobalConfiguration {
         		"false");
         trackEntitiesChangedInRevisionEnabled = Boolean.parseBoolean(trackEntitiesChangedInRevisionEnabledStr);
 
+		String overrideUsingModifiedFlagStr = getProperty(properties,
+				OVERRIDE_USING_MODIFIED_FLAG_PROPERTY,
+				OVERRIDE_USING_MODIFIED_FLAG_PROPERTY,
+				"false");
+        overrideUsingModifiedFlag = Boolean.parseBoolean(overrideUsingModifiedFlagStr);
+
+		String usingModifiedFlagStr = getProperty(properties,
+				USING_MODIFIED_FLAG_PROPERTY,
+        		USING_MODIFIED_FLAG_PROPERTY,
+        		"false");
+        usingModifiedFlag = Boolean.parseBoolean(usingModifiedFlagStr);
+		
         String revisionListenerClassName = properties.getProperty("org.hibernate.envers.revision_listener", null);
         if (revisionListenerClassName != null) {
             try {
@@ -141,4 +161,12 @@ public class GlobalConfiguration {
     public Class<? extends RevisionListener> getRevisionListenerClass() {
         return revisionListenerClass;
     }
+	
+	public boolean isOverrideUsingModifiedFlag() {
+		return overrideUsingModifiedFlag;
+	}
+
+	public boolean isUsingModifiedFlag() {
+		return usingModifiedFlag;
+	}
 }

@@ -23,16 +23,22 @@
  */
 package org.hibernate.envers.test.integration.components;
 
+import org.hibernate.QueryException;
 import org.hibernate.ejb.Ejb3Configuration;
+import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.components.Component1;
 import org.hibernate.envers.test.entities.components.Component2;
 import org.hibernate.envers.test.entities.components.ComponentTestEntity;
+import org.hibernate.envers.test.tools.TestTools;
 import org.junit.Test;
 
 import javax.persistence.EntityManager;
 import java.util.Arrays;
+import java.util.List;
+
+import static junit.framework.Assert.assertEquals;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -172,4 +178,76 @@ public class Components extends AbstractEntityTest {
         assert getAuditReader().find(ComponentTestEntity.class, id4, 3).equals(ver3);
         assert getAuditReader().find(ComponentTestEntity.class, id4, 4).equals(ver3);
     }
+
+	@Test(expected = QueryException.class)
+	public void testHasChangedNotAudited() throws Exception {
+		getAuditReader().createQuery().forRevisionsOfEntity(ComponentTestEntity.class, false, false)
+				.add(AuditEntity.property("comp2").hasChanged())
+				.getResultList();
+	}
+
+	@Test
+	public void testHasChangedId1() throws Exception {
+		List list = getAuditReader().createQuery().forRevisionsOfEntity(ComponentTestEntity.class, false, false)
+				.add(AuditEntity.id().eq(id1))
+				.add(AuditEntity.property("comp1").hasChanged())
+				.getResultList();
+		assertEquals(2, list.size());
+		assertEquals(TestTools.makeList(1, 2), extractRevisionNumbers(list));
+
+		list = getAuditReader().createQuery().forRevisionsOfEntity(ComponentTestEntity.class, false, false)
+				.add(AuditEntity.id().eq(id1))
+				.add(AuditEntity.property("comp1").hasNotChanged())
+				.getResultList();
+		assertEquals(0, list.size());
+	}
+
+	@Test
+	public void testHasChangedId2() throws Exception {
+		List list = getAuditReader().createQuery().forRevisionsOfEntity(ComponentTestEntity.class, false, true)
+				.add(AuditEntity.id().eq(id2))
+				.add(AuditEntity.property("comp1").hasChanged())
+				.getResultList();
+		assertEquals(3, list.size());
+		assertEquals(TestTools.makeList(1, 2, 4), extractRevisionNumbers(list));
+
+		list = getAuditReader().createQuery().forRevisionsOfEntity(ComponentTestEntity.class, false, true)
+				.add(AuditEntity.id().eq(id2))
+				.add(AuditEntity.property("comp1").hasNotChanged())
+				.getResultList();
+		assertEquals(0, list.size());
+	}
+
+	@Test
+	public void testHasChangedId3() throws Exception {
+		List list = getAuditReader().createQuery().forRevisionsOfEntity(ComponentTestEntity.class, false, true)
+				.add(AuditEntity.id().eq(id3))
+				.add(AuditEntity.property("comp1").hasChanged())
+				.getResultList();
+		assertEquals(2, list.size());
+		assertEquals(TestTools.makeList(1, 3), extractRevisionNumbers(list));
+
+		list = getAuditReader().createQuery().forRevisionsOfEntity(ComponentTestEntity.class, false, true)
+				.add(AuditEntity.id().eq(id3))
+				.add(AuditEntity.property("comp1").hasNotChanged())
+				.getResultList();
+		assertEquals(0, list.size());
+	}
+
+	@Test
+	public void testHasChangedId4() throws Exception {
+		List list = getAuditReader().createQuery().forRevisionsOfEntity(ComponentTestEntity.class, false, true)
+				.add(AuditEntity.id().eq(id4))
+				.add(AuditEntity.property("comp1").hasChanged())
+				.getResultList();
+		assertEquals(2, list.size());
+		assertEquals(TestTools.makeList(2, 3), extractRevisionNumbers(list));
+
+		list = getAuditReader().createQuery().forRevisionsOfEntity(ComponentTestEntity.class, false, true)
+				.add(AuditEntity.id().eq(id4))
+				.add(AuditEntity.property("comp1").hasNotChanged())
+				.getResultList();
+		assertEquals(1, list.size());
+		assertEquals(TestTools.makeList(1), extractRevisionNumbers(list));
+	}
 }

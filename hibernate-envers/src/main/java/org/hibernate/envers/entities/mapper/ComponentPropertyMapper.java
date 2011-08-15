@@ -22,9 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.entities.mapper;
-import java.io.Serializable;
-import java.util.List;
-import java.util.Map;
+
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.configuration.AuditConfiguration;
@@ -32,11 +30,17 @@ import org.hibernate.envers.entities.PropertyData;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.reader.AuditReaderImplementor;
 import org.hibernate.envers.tools.reflection.ReflectionTools;
-import org.hibernate.property.Setter;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.property.Setter;
+
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Michal Skowronek (mskowr at o2 dot pl)
  */
 public class ComponentPropertyMapper implements PropertyMapper, CompositeMapperBuilder {
     private final PropertyData propertyData;
@@ -65,7 +69,29 @@ public class ComponentPropertyMapper implements PropertyMapper, CompositeMapperB
         return delegate.mapToMapFromEntity(session, data, newObj, oldObj);
     }
 
-    public void mapToEntityFromMap(AuditConfiguration verCfg, Object obj, Map data, Object primaryKey, AuditReaderImplementor versionsReader, Number revision) {
+	@Override
+	public void mapModifiedFlagsToMapFromEntity(SessionImplementor session, Map<String, Object> data, Object newObj, Object oldObj) {
+		if (propertyData.isUsingModifiedFlag()) {
+			data.put(propertyData.getModifiedFlagPropertyName(),
+					delegate.mapToMapFromEntity(session, new HashMap<String, Object>(), newObj, oldObj));
+		}
+	}
+
+	@Override
+	public void mapModifiedFlagsToMapForCollectionChange(String collectionPropertyName, Map<String, Object> data) {
+		if (propertyData.isUsingModifiedFlag()) {
+			boolean hasModifiedCollection = false;
+			for (PropertyData propData : delegate.getProperties().keySet()) {
+				if (collectionPropertyName.equals(propData.getName())) {
+					hasModifiedCollection = true;
+					break;
+				}
+			}
+			data.put(propertyData.getModifiedFlagPropertyName(), hasModifiedCollection);
+		}
+	}
+
+	public void mapToEntityFromMap(AuditConfiguration verCfg, Object obj, Map data, Object primaryKey, AuditReaderImplementor versionsReader, Number revision) {
         if (data == null || obj == null) {
             return;
         }

@@ -45,6 +45,7 @@ import java.util.Map;
 /**
  * @author Adam Warski (adam at warski dot org)
  * @author Hern�n Chanfreau
+ * @author Michal Skowronek (mskowr at o2 dot pl)
  */
 public class ToOneIdMapper implements PropertyMapper {
     private final IdMapper delegate;
@@ -71,11 +72,29 @@ public class ToOneIdMapper implements PropertyMapper {
 			data.put(entry.getKey(), entry.getValue());
 		}
 
-        //noinspection SimplifiableConditionalExpression
-        return nonInsertableFake ? false : !Tools.entitiesEqual(session, referencedEntityName, newObj, oldObj);
+        return checkModified(session, newObj, oldObj);
     }
 
-    public void mapToEntityFromMap(AuditConfiguration verCfg, Object obj, Map data, Object primaryKey,
+	@Override
+	public void mapModifiedFlagsToMapFromEntity(SessionImplementor session, Map<String, Object> data, Object newObj, Object oldObj) {
+		if (propertyData.isUsingModifiedFlag()) {
+			data.put(propertyData.getModifiedFlagPropertyName(), checkModified(session, newObj, oldObj));
+		}
+	}
+
+	@Override
+	public void mapModifiedFlagsToMapForCollectionChange(String collectionPropertyName, Map<String, Object> data) {
+		if (propertyData.isUsingModifiedFlag()) {
+			data.put(propertyData.getModifiedFlagPropertyName(), collectionPropertyName.equals(propertyData.getName()));
+		}
+	}
+
+	private boolean checkModified(SessionImplementor session, Object newObj, Object oldObj) {
+		//noinspection SimplifiableConditionalExpression
+		return nonInsertableFake ? false : !Tools.entitiesEqual(session, referencedEntityName, newObj, oldObj);
+	}
+
+	public void mapToEntityFromMap(AuditConfiguration verCfg, Object obj, Map data, Object primaryKey,
                                    AuditReaderImplementor versionsReader, Number revision) {
         if (obj == null) {
             return;

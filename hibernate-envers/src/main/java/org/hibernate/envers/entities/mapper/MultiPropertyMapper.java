@@ -22,21 +22,24 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.entities.mapper;
-import java.io.Serializable;
-import java.util.List;
-import java.util.Map;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.entities.PropertyData;
 import org.hibernate.envers.reader.AuditReaderImplementor;
 import org.hibernate.envers.tools.MappingTools;
+import org.hibernate.envers.tools.Pair;
 import org.hibernate.envers.tools.Tools;
 import org.hibernate.envers.tools.reflection.ReflectionTools;
 import org.hibernate.property.Getter;
 
+import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
+
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Michal Skowronek (mskowr at o2 dot pl)
  */
 public class MultiPropertyMapper implements ExtendedPropertyMapper {
     protected final Map<PropertyData, PropertyMapper> properties;
@@ -79,9 +82,11 @@ public class MultiPropertyMapper implements ExtendedPropertyMapper {
             String propertyName = propertyNames[i];
 
             if (propertyDatas.containsKey(propertyName)) {
-                ret |= properties.get(propertyDatas.get(propertyName)).mapToMapFromEntity(session, data,
-                        getAtIndexOrNull(newState, i),
-                        getAtIndexOrNull(oldState, i));
+				PropertyMapper propertyMapper = properties.get(propertyDatas.get(propertyName));
+				Object newObj = getAtIndexOrNull(newState, i);
+				Object oldObj = getAtIndexOrNull(oldState, i);
+				ret |= propertyMapper.mapToMapFromEntity(session, data, newObj, oldObj);
+				propertyMapper.mapModifiedFlagsToMapFromEntity(session, data, newObj, oldObj);
             }
         }
 
@@ -108,18 +113,33 @@ public class MultiPropertyMapper implements ExtendedPropertyMapper {
         return ret;
     }
 
-    public void mapToEntityFromMap(AuditConfiguration verCfg, Object obj, Map data, Object primaryKey,
+	@Override
+	public void mapModifiedFlagsToMapFromEntity(SessionImplementor session, Map<String, Object> data, Object newObj, Object oldObj) {
+        for (PropertyData propertyData : properties.keySet()) {
+            Getter getter;
+            if (newObj != null) {
+                getter = ReflectionTools.getGetter(newObj.getClass(), propertyData);
+            } else if (oldObj != null) {
+                getter = ReflectionTools.getGetter(oldObj.getClass(), propertyData);
+            } else {
+                return;
+            }
+
+            properties.get(propertyData).mapModifiedFlagsToMapFromEntity(session, data,
+					newObj == null ? null : getter.get(newObj),
+					oldObj == null ? null : getter.get(oldObj));
+        }
+	}
+
+	public void mapToEntityFromMap(AuditConfiguration verCfg, Object obj, Map data, Object primaryKey,
                                    AuditReaderImplementor versionsReader, Number revision) {
         for (PropertyMapper mapper : properties.values()) {
             mapper.mapToEntityFromMap(verCfg, obj, data, primaryKey, versionsReader, revision);
         }
     }
 
-    public List<PersistentCollectionChangeData> mapCollectionChanges(String referencingPropertyName,
-                                                                                    PersistentCollection newColl,
-                                                                                    Serializable oldColl,
-                                                                                    Serializable id) {
-		// Name of the properyt, to which we will delegate the mapping.
+	private Pair<PropertyMapper, String> getMapperAndDelegatePropName(String referencingPropertyName){
+		// Name of the property, to which we will delegate the mapping.
 		String delegatePropertyName;
 
 		// Checking if the property name doesn't reference a collection in a component - then the name will containa a .
@@ -139,14 +159,30 @@ public class MultiPropertyMapper implements ExtendedPropertyMapper {
 			// If this is not a component, we delegate to the same property.
 			delegatePropertyName = referencingPropertyName;
 		}
+		return Pair.make(properties.get(propertyDatas.get(referencingPropertyName)), delegatePropertyName);
+	}
 
-        PropertyMapper mapper = properties.get(propertyDatas.get(referencingPropertyName));
-        if (mapper != null) {
-            return mapper.mapCollectionChanges(delegatePropertyName, newColl, oldColl, id);
-        } else {
-            return null;
-        }
-    }
+	@Override
+	public void mapModifiedFlagsToMapForCollectionChange(String collectionPropertyName, Map<String, Object> data) {
+		Pair<PropertyMapper, String> pair = getMapperAndDelegatePropName(collectionPropertyName);
+		PropertyMapper mapper = pair.getFirst();
+		if (mapper != null) {
+			mapper.mapModifiedFlagsToMapForCollectionChange(pair.getSecond(), data);
+		}
+	}
+
+	public List<PersistentCollectionChangeData> mapCollectionChanges(String referencingPropertyName,
+                                                                                    PersistentCollection newColl,
+                                                                                    Serializable oldColl,
+                                                                                    Serializable id) {
+		Pair<PropertyMapper, String> pair = getMapperAndDelegatePropName(referencingPropertyName);
+		PropertyMapper mapper = pair.getFirst();
+		if (mapper != null) {
+			return mapper.mapCollectionChanges(pair.getSecond(), newColl, oldColl, id);
+		} else {
+			return null;
+		}
+	}
 
 	public Map<PropertyData, PropertyMapper> getProperties() {
 		return properties;

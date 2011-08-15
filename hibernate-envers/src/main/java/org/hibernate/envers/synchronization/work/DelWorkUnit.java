@@ -22,13 +22,14 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.synchronization.work;
-import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.persister.entity.EntityPersister;
+
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -56,6 +57,9 @@ public class DelWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
 		if (verCfg.getGlobalCfg().isStoreDataAtDelete()) {
 			verCfg.getEntCfg().get(getEntityName()).getPropertyMapper().map(sessionImplementor, data,
 					propertyNames, state, state);
+		} else {
+			verCfg.getEntCfg().get(getEntityName()).getPropertyMapper().map(sessionImplementor, data,
+					propertyNames, null, state);
 		}
 
         return data;

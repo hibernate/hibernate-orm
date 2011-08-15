@@ -1,19 +1,21 @@
 package org.hibernate.envers.test;
 
-import java.io.File;
-import java.net.URISyntaxException;
-import java.net.URL;
 import org.hibernate.MappingException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
+import org.hibernate.envers.configuration.GlobalConfiguration;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.junit.Before;
+
+import java.io.File;
+import java.net.URISyntaxException;
+import java.net.URL;
 
 /**
  * Base class for testing envers with Session when the same session and
@@ -39,6 +41,8 @@ public abstract class AbstractOneSessionTest extends AbstractEnversTest  {
         if (auditStrategy != null && !"".equals(auditStrategy)) {
             config.setProperty("org.hibernate.envers.audit_strategy", auditStrategy);
         }
+		config.setProperty(GlobalConfiguration.OVERRIDE_USING_MODIFIED_FLAG_PROPERTY, "true");
+		config.setProperty(GlobalConfiguration.USING_MODIFIED_FLAG_PROPERTY, "true");
 
         this.initMappings();
 

@@ -25,6 +25,7 @@
 package org.hibernate.envers.test.integration.inheritance.joined.notownedrelation;
 
 import org.hibernate.ejb.Ejb3Configuration;
+import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.tools.TestTools;
@@ -32,6 +33,9 @@ import org.junit.Test;
 
 import javax.persistence.EntityManager;
 import java.util.Arrays;
+import java.util.List;
+
+import static junit.framework.Assert.assertEquals;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -112,4 +116,28 @@ public class NotOwnedBidirectional extends AbstractEntityTest {
         assert getAuditReader().find(PersonalContact.class, pc_id, 2).getAddresses().equals(
                 TestTools.makeSet(new Address(a1_id, "a1"), new Address(a2_id, "a2")));
     }
+
+	@Test
+	public void testReferencedEntityHasChanged() throws Exception {
+		List list = getAuditReader().createQuery().forRevisionsOfEntity(PersonalContact.class, false, false)
+				.add(AuditEntity.id().eq(pc_id))
+				.add(AuditEntity.property("addresses").hasChanged())
+				.getResultList();
+		assertEquals(2, list.size());
+		assertEquals(TestTools.makeList(1, 2), extractRevisionNumbers(list));
+
+		list = getAuditReader().createQuery().forRevisionsOfEntity(Address.class, false, false)
+				.add(AuditEntity.id().eq(a1_id))
+				.add(AuditEntity.property("contact").hasChanged())
+				.getResultList();
+		assertEquals(1, list.size());
+		assertEquals(TestTools.makeList(1), extractRevisionNumbers(list));
+
+		list = getAuditReader().createQuery().forRevisionsOfEntity(Address.class, false, false)
+				.add(AuditEntity.id().eq(a2_id))
+				.add(AuditEntity.property("contact").hasChanged())
+				.getResultList();
+		assertEquals(1, list.size());
+		assertEquals(TestTools.makeList(2), extractRevisionNumbers(list));
+	}
 }

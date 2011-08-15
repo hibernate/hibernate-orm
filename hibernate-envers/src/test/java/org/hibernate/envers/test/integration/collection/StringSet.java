@@ -24,6 +24,7 @@
 package org.hibernate.envers.test.integration.collection;
 
 import org.hibernate.ejb.Ejb3Configuration;
+import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.collection.StringSetEntity;
@@ -33,6 +34,9 @@ import org.junit.Test;
 import javax.persistence.EntityManager;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
+
+import static junit.framework.Assert.assertEquals;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -121,4 +125,33 @@ public class StringSet extends AbstractEntityTest {
         assert rev2.getStrings().equals(TestTools.makeSet("sse2_string1", "sse2_string2"));
         assert rev3.getStrings().equals(TestTools.makeSet("sse2_string2"));
     }
+
+	@Test
+	public void testHasChanged() throws Exception {
+		List list = getAuditReader().createQuery().forRevisionsOfEntity(StringSetEntity.class, false, false)
+				.add(AuditEntity.id().eq(sse1_id))
+				.add(AuditEntity.property("strings").hasChanged())
+				.getResultList();
+		assertEquals(2, list.size());
+		assertEquals(TestTools.makeList(1, 2), extractRevisionNumbers(list));
+
+		list = getAuditReader().createQuery().forRevisionsOfEntity(StringSetEntity.class, false, false)
+				.add(AuditEntity.id().eq(sse2_id))
+				.add(AuditEntity.property("strings").hasChanged())
+				.getResultList();
+		assertEquals(2, list.size());
+		assertEquals(TestTools.makeList(1, 3), extractRevisionNumbers(list));
+
+		list = getAuditReader().createQuery().forRevisionsOfEntity(StringSetEntity.class, false, false)
+				.add(AuditEntity.id().eq(sse1_id))
+				.add(AuditEntity.property("strings").hasNotChanged())
+				.getResultList();
+		assertEquals(0, list.size());
+
+		list = getAuditReader().createQuery().forRevisionsOfEntity(StringSetEntity.class, false, false)
+				.add(AuditEntity.id().eq(sse2_id))
+				.add(AuditEntity.property("strings").hasNotChanged())
+				.getResultList();
+		assertEquals(0, list.size());
+	}
 }

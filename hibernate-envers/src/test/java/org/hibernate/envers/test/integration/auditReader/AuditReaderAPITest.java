@@ -25,12 +25,17 @@ package org.hibernate.envers.test.integration.auditReader;
 
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.exception.NotAuditedException;
+import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.Priority;
 import org.junit.Test;
 
 import javax.persistence.EntityManager;
 import java.util.Arrays;
+import java.util.List;
+
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertTrue;
 
 /**
  * A test which checks the correct behavior of AuditReader.isEntityClassAudited(Class entityClass).
@@ -71,7 +76,20 @@ public class AuditReaderAPITest extends AbstractEntityTest {
         assert Arrays.asList(1, 2).equals(getAuditReader().getRevisions(AuditedTestEntity.class, 1));
     }
 
-    @Test
+	@Test
+	public void testHasChangedHasNotChangedCriteria() throws Exception {
+		List list = getAuditReader().createQuery().forRevisionsOfEntity(AuditedTestEntity.class, true, true).
+				add(AuditEntity.property("str1").hasChanged()).getResultList();
+		assertEquals(2, list.size());
+		assertEquals("str1", ((AuditedTestEntity) list.get(0)).getStr1());
+		assertEquals("str2", ((AuditedTestEntity) list.get(1)).getStr1());
+
+		list = getAuditReader().createQuery().forRevisionsOfEntity(AuditedTestEntity.class, true, true).
+				add(AuditEntity.property("str1").hasNotChanged()).getResultList();
+		assertTrue(list.isEmpty());
+	}
+
+	@Test
     public void testIsEntityClassAuditedForNotAuditedEntity() {
     	
         assert !getAuditReader().isEntityClassAudited(NotAuditedTestEntity.class);

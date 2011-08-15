@@ -1,13 +1,14 @@
 package org.hibernate.envers.synchronization.work;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.envers.RevisionType;
+import org.hibernate.envers.configuration.AuditConfiguration;
+import org.hibernate.envers.entities.RelationDescription;
+
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.envers.RevisionType;
-import org.hibernate.envers.configuration.AuditConfiguration;
-import org.hibernate.envers.entities.RelationDescription;
 
 /**
  * A work unit that handles "fake" bidirectional one-to-many relations (mapped with {@code @OneToMany+@JoinColumn} and
@@ -152,11 +153,15 @@ public class FakeBidirectionalRelationWorkUnit extends AbstractAuditWorkUnit imp
             // new owner will in fact be null.
             rd.getFakeBidirectionalRelationMapper().mapToMapFromEntity(sessionImplementor, data,
                     revisionType == RevisionType.DEL ? null : owningEntity, null);
+			rd.getFakeBidirectionalRelationMapper().mapModifiedFlagsToMapFromEntity(sessionImplementor, data,
+					revisionType == RevisionType.DEL ? null : owningEntity, null);
 
-            // Also mapping the index, if the collection is indexed.
+			// Also mapping the index, if the collection is indexed.
             if (rd.getFakeBidirectionalRelationIndexMapper() != null) {
                 rd.getFakeBidirectionalRelationIndexMapper().mapToMapFromEntity(sessionImplementor, data,
                         revisionType == RevisionType.DEL ? null : index, null);
+				rd.getFakeBidirectionalRelationIndexMapper().mapModifiedFlagsToMapFromEntity(sessionImplementor, data,
+						revisionType == RevisionType.DEL ? null : index, null);
             }
         }
 

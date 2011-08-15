@@ -34,8 +34,9 @@ import org.junit.Test;
 import javax.persistence.EntityManager;
 import java.util.Arrays;
 
-import static org.hibernate.envers.test.tools.TestTools.*;
-import static org.junit.Assert.*;
+import static org.hibernate.envers.test.tools.TestTools.checkList;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test for a double "fake" bidirectional mapping where one side uses @OneToMany+@JoinColumn
@@ -298,4 +299,6 @@ public class DoubleJoinColumnBidirectionalList extends AbstractEntityTest {
         assertEquals(rev3.getData(), "ed2_2 bis");
         assertEquals(rev4.getData(), "ed2_2 bis");
     }
+
+	// todo write tests for haschanged
 }

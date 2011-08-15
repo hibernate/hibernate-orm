@@ -24,6 +24,7 @@
 package org.hibernate.envers.test.integration.collection;
 
 import org.hibernate.ejb.Ejb3Configuration;
+import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.collection.EnumSetEntity;
@@ -34,6 +35,9 @@ import org.junit.Test;
 
 import javax.persistence.EntityManager;
 import java.util.Arrays;
+import java.util.List;
+
+import static junit.framework.Assert.assertEquals;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -106,4 +110,30 @@ public class EnumSet extends AbstractEntityTest {
         assert rev2.getEnums2().equals(TestTools.makeSet(E2.A));
         assert rev3.getEnums2().equals(TestTools.makeSet(E2.A));
     }
+
+	@Test
+	public void testHasChanged() throws Exception {
+		List list = getAuditReader().createQuery().forRevisionsOfEntity(EnumSetEntity.class, false, false)
+				.add(AuditEntity.property("enums1").hasChanged())
+				.getResultList();
+		assertEquals(3, list.size());
+		assertEquals(TestTools.makeList(1, 2, 3), extractRevisionNumbers(list));
+
+		list = getAuditReader().createQuery().forRevisionsOfEntity(EnumSetEntity.class, false, false)
+				.add(AuditEntity.property("enums2").hasChanged())
+				.getResultList();
+		assertEquals(1, list.size());
+		assertEquals(TestTools.makeList(1), extractRevisionNumbers(list));
+
+		list = getAuditReader().createQuery().forRevisionsOfEntity(EnumSetEntity.class, false, false)
+				.add(AuditEntity.property("enums1").hasNotChanged())
+				.getResultList();
+		assertEquals(0, list.size());
+
+		list = getAuditReader().createQuery().forRevisionsOfEntity(EnumSetEntity.class, false, false)
+				.add(AuditEntity.property("enums2").hasNotChanged())
+				.getResultList();
+		assertEquals(2, list.size());
+		assertEquals(TestTools.makeList(2, 3), extractRevisionNumbers(list));
+	}
 }

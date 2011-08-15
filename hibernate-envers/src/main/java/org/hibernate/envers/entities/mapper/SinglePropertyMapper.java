@@ -22,9 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.entities.mapper;
-import java.io.Serializable;
-import java.util.List;
-import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -37,9 +34,14 @@ import org.hibernate.envers.tools.reflection.ReflectionTools;
 import org.hibernate.property.DirectPropertyAccessor;
 import org.hibernate.property.Setter;
 
+import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
+
 /**
  * TODO: diff
  * @author Adam Warski (adam at warski dot org)
+ * @author Michal Skowronek (mskowr at o2 dot pl)
  */
 public class SinglePropertyMapper implements PropertyMapper, SimpleMapperBuilder {
     private PropertyData propertyData;
@@ -64,7 +66,18 @@ public class SinglePropertyMapper implements PropertyMapper, SimpleMapperBuilder
         return !Tools.objectsEqual(newObj, oldObj);
     }
 
-    public void mapToEntityFromMap(AuditConfiguration verCfg, Object obj, Map data, Object primaryKey,
+	@Override
+	public void mapModifiedFlagsToMapFromEntity(SessionImplementor session, Map<String, Object> data, Object newObj, Object oldObj) {
+		if (propertyData.isUsingModifiedFlag()) {
+			data.put(propertyData.getModifiedFlagPropertyName(), !Tools.objectsEqual(newObj, oldObj));
+		}
+	}
+
+	@Override
+	public void mapModifiedFlagsToMapForCollectionChange(String collectionPropertyName, Map<String, Object> data) {
+	}
+
+	public void mapToEntityFromMap(AuditConfiguration verCfg, Object obj, Map data, Object primaryKey,
                                    AuditReaderImplementor versionsReader, Number revision) {
         if (data == null || obj == null) {
             return;

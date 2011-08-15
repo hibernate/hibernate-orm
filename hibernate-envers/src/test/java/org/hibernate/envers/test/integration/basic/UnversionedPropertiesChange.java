@@ -23,7 +23,9 @@
  */
 package org.hibernate.envers.test.integration.basic;
 
+import org.hibernate.QueryException;
 import org.hibernate.ejb.Ejb3Configuration;
+import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.Priority;
 import org.junit.Test;
@@ -82,4 +84,11 @@ public class UnversionedPropertiesChange extends AbstractEntityTest {
         assert getAuditReader().find(BasicTestEntity2.class, id1, 1).equals(ver1);
         assert getAuditReader().find(BasicTestEntity2.class, id1, 2).equals(ver2);
     }
+
+	@Test(expected = QueryException.class)
+	public void testExceptionOnHasChangedQuery() throws Exception {
+		getAuditReader().createQuery().forRevisionsOfEntity(BasicTestEntity2.class, true, false)
+				.add(AuditEntity.property("str2").hasChanged())
+				.getResultList();
+	}
 }

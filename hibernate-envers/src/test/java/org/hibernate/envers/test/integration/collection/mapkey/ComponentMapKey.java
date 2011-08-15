@@ -24,6 +24,7 @@
 package org.hibernate.envers.test.integration.collection.mapkey;
 
 import org.hibernate.ejb.Ejb3Configuration;
+import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.components.Component1;
@@ -34,6 +35,9 @@ import org.junit.Test;
 
 import javax.persistence.EntityManager;
 import java.util.Arrays;
+import java.util.List;
+
+import static junit.framework.Assert.assertEquals;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -109,4 +113,20 @@ public class ComponentMapKey extends AbstractEntityTest {
         assert rev1.getIdmap().equals(TestTools.makeMap(cte1.getComp1(), cte1));
         assert rev2.getIdmap().equals(TestTools.makeMap(cte1.getComp1(), cte1, cte2.getComp1(), cte2));
     }
+
+	@Test
+	public void testHasChanged() throws Exception {
+		List list = getAuditReader().createQuery().forRevisionsOfEntity(ComponentMapKeyEntity.class, false, false)
+				.add(AuditEntity.id().eq(cmke_id))
+				.add(AuditEntity.property("idmap").hasChanged())
+				.getResultList();
+		assertEquals(2, list.size());
+		assertEquals(TestTools.makeList(1, 2), extractRevisionNumbers(list));
+
+		list = getAuditReader().createQuery().forRevisionsOfEntity(ComponentMapKeyEntity.class, false, false)
+				.add(AuditEntity.id().eq(cmke_id))
+				.add(AuditEntity.property("idmap").hasNotChanged())
+				.getResultList();
+		assertEquals(0, list.size());
+	}
 }

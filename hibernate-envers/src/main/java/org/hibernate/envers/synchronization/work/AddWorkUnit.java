@@ -22,13 +22,14 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.synchronization.work;
-import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.persister.entity.EntityPersister;
+
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -74,8 +75,9 @@ public class AddWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
     }
 
     public AuditWorkUnit merge(CollectionChangeWorkUnit second) {
-        return this;
-    }
+		second.addCollectionModifiedData(data);
+		return this;
+	}
 
     public AuditWorkUnit merge(FakeBidirectionalRelationWorkUnit second) {
         return FakeBidirectionalRelationWorkUnit.merge(second, this, second.getNestedWorkUnit());

@@ -29,12 +29,14 @@ import org.hibernate.mapping.PersistentClass;
 
 import org.junit.Test;
 
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
 
 /**
  * @author Emmanuel Bernard
+ * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public class NamingStrategyTest extends BaseCoreFunctionalTestCase {
 	@Override
@@ -42,6 +44,13 @@ public class NamingStrategyTest extends BaseCoreFunctionalTestCase {
 		super.configure( cfg );
 		cfg.setNamingStrategy( new TestNamingStrategy() );
 	}
+
+    @Override
+    protected Class<?>[] getAnnotatedClasses() {
+        return new Class<?>[] {
+                Item.class
+        };
+    }
 
 	@Override
 	public String[] getMappings() {
@@ -51,10 +60,19 @@ public class NamingStrategyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testCorrectDatabase() {
+	public void testDatabaseColumnNames() {
 		PersistentClass classMapping = configuration().getClassMapping( Customers.class.getName() );
 		Column stateColumn = (Column) classMapping.getProperty( "specified_column" ).getColumnIterator().next();
 		assertEquals( "CN_specified_column", stateColumn.getName() );
 	}
 
+    @Test
+    @TestForIssue(jiraKey = "HHH-5848")
+    public void testDatabaseTableNames() {
+        PersistentClass classMapping = configuration().getClassMapping( Item.class.getName() );
+        Column secTabColumn = (Column) classMapping.getProperty( "specialPrice" ).getColumnIterator().next();
+        assertEquals( "TAB_ITEMS_SEC", secTabColumn.getValue().getTable().getName() );
+        Column tabColumn = (Column) classMapping.getProperty( "price" ).getColumnIterator().next();
+        assertEquals( "TAB_ITEMS", tabColumn.getValue().getTable().getName() );
+    }
 }

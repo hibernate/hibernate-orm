@@ -69,7 +69,7 @@ public class VersionValue implements UnsavedValueStrategy {
 		@Override
         public final Boolean isUnsaved(Object version) {
             LOG.trace("Version unsaved-value strategy UNDEFINED");
-			return version==null;
+			return version==null ? Boolean.TRUE : null;
 		}
 		@Override
         public Object getDefaultValue(Object currentValue) {

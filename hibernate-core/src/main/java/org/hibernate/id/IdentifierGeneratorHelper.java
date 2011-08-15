@@ -84,7 +84,7 @@ public final class IdentifierGeneratorHelper {
 		if ( !rs.next() ) {
 			throw new HibernateException( "The database returned no natively generated identity value" );
 		}
-		final Serializable id = IdentifierGeneratorHelper.get( rs, type );
+		final Serializable id = get( rs, type );
         LOG.debugf("Natively generated identity: %s", id);
 		return id;
 	}

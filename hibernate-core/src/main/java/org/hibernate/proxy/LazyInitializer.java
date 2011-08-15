@@ -42,14 +42,14 @@ public interface LazyInitializer {
 	public void initialize() throws HibernateException;
 
 	/**
-	 * Retrieve the identifier value for the enity our owning proxy represents.
+	 * Retrieve the identifier value for the entity our owning proxy represents.
 	 *
 	 * @return The identifier value.
 	 */
 	public Serializable getIdentifier();
 
 	/**
-	 * Set the identifier value for the enity our owning proxy represents.
+	 * Set the identifier value for the entity our owning proxy represents.
 	 *
 	 * @param id The identifier value.
 	 */
@@ -93,7 +93,7 @@ public interface LazyInitializer {
 	 *
 	 * @throws HibernateException Indicates problem locating the target.
 	 */
-	public abstract Object getImplementation(SessionImplementor session) throws HibernateException;
+	public Object getImplementation(SessionImplementor session) throws HibernateException;
 
 	/**
 	 * Initialize the proxy manually by injecting its target.

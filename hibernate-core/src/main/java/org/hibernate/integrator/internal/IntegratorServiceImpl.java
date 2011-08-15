@@ -24,15 +24,13 @@
 package org.hibernate.integrator.internal;
 
 import java.util.LinkedHashSet;
-import java.util.ServiceLoader;
-
 import org.jboss.logging.Logger;
-
 import org.hibernate.cfg.beanvalidation.BeanValidationIntegrator;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+
 
 /**
  * @author Steve Ebersole
@@ -60,8 +58,7 @@ public class IntegratorServiceImpl implements IntegratorService {
 	public Iterable<Integrator> getIntegrators() {
 		LinkedHashSet<Integrator> integrators = new LinkedHashSet<Integrator>();
 		integrators.addAll( this.integrators );
-
-		for ( Integrator integrator : ServiceLoader.load( Integrator.class ) ) {
+		for ( Integrator integrator : ServiceLoader.load( Integrator.class,serviceRegistry ) ) {
 			LOG.debugf( "Adding Integrator [%s].", integrator.getClass().getName() );
 			integrators.add( integrator );
 		}

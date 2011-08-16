@@ -46,10 +46,8 @@ import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLBagElement;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLComponentElement;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLIdbagElement;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLListElement;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLManyToManyElement;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLManyToOneElement;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLMapElement;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLOneToManyElement;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLOneToOneElement;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLPropertyElement;
 import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLSetElement;
@@ -306,11 +304,6 @@ public abstract class AbstractEntitySourceImpl implements EntitySource {
 		return Collections.emptySet();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see org.hibernate.metamodel.source.binder.EntitySource#getJpaCallbackClasses()
-	 */
 	@Override
 	public List<JpaCallbackClass> getJpaCallbackClasses() {
 	    return Collections.EMPTY_LIST;

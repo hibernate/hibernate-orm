@@ -202,18 +202,18 @@ public final class CallbackResolver {
 		return callbacks.toArray( new Callback[ callbacks.size() ] );
 	}
 
-    public static Callback[] resolveCallbacks( Class entityClass,
-                                               Class callbackAnnotationClass,
+    public static Callback[] resolveCallbacks( Class<?> entityClass,
+                                               Class<?> callbackClass,
                                                ClassLoaderService classLoaderService,
                                                EntityBinding binding ) {
         List<Callback> callbacks = new ArrayList<Callback>();
         for (JpaCallbackClass jpaCallbackClass : binding.getJpaCallbackClasses()) {
             Object listener = classLoaderService.classForName(jpaCallbackClass.getName());
-            String methodName = jpaCallbackClass.getCallback(callbackAnnotationClass);
+            String methodName = jpaCallbackClass.getCallbackMethod( callbackClass );
             Callback callback = jpaCallbackClass.isListener() ?
-                                createListenerCallback(entityClass, callbackAnnotationClass, listener, methodName) :
-                                createBeanCallback(callbackAnnotationClass, methodName);
-            LOG.debugf("Adding %s as %s callback for entity %s", methodName, callbackAnnotationClass.getName(),
+                                createListenerCallback(entityClass, callbackClass, listener, methodName) :
+                                createBeanCallback(callbackClass, methodName);
+            LOG.debugf("Adding %s as %s callback for entity %s", methodName, callbackClass.getName(),
                        entityClass.getName());
             assert callback != null;
             callbacks.add(callback);

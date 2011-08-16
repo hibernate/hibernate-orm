@@ -37,12 +37,12 @@ import javax.persistence.PreUpdate;
 public interface JpaCallbackClass {
 
     /**
-     * @param callbackAnnotationClass {@link PrePersist}, {@link PreRemove}, {@link PreUpdate}, {@link PostLoad},
+     * @param callbackType {@link PrePersist}, {@link PreRemove}, {@link PreUpdate}, {@link PostLoad},
      *        {@link PostPersist}, {@link PostRemove}, or {@link PostUpdate}
      * @return the name of the JPA callback method defined for the associated {@link Entity entity} or {@link MappedSuperclass
      *         mapped superclass} and for the supplied callback annotation class.
      */
-    String getCallback( Class<?> callbackAnnotationClass );
+    String getCallbackMethod(Class<?> callbackType);
 
     /**
      * @return the name of the instantiated container where the JPA callbacks for the associated {@link Entity entity} or

@@ -3,10 +3,6 @@
         "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
         "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
-<!--
-
--->
-
 <hibernate-mapping package="org.hibernate.test.event.collection.values">
 
     <class name="ParentWithCollectionOfValues" table="PARENT">

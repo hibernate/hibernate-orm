@@ -177,7 +177,13 @@ public class EntitySourceImpl implements EntitySource {
 			attributeList.add( new SingularAttributeSourceImpl( attribute ) );
 		}
 		for ( EmbeddableClass component : entityClass.getEmbeddedClasses().values() ) {
-			attributeList.add( new ComponentAttributeSourceImpl( component, "", entityClass.getAttributeOverrideMap() ) );
+			attributeList.add(
+					new ComponentAttributeSourceImpl(
+							component,
+							"",
+							entityClass.getAttributeOverrideMap()
+					)
+			);
 		}
 		for ( AssociationAttribute associationAttribute : entityClass.getAssociationAttributes() ) {
 			attributeList.add( new ToOneAttributeSourceImpl( associationAttribute ) );
@@ -205,21 +211,15 @@ public class EntitySourceImpl implements EntitySource {
 		return entityClass.getConstraintSources();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see org.hibernate.metamodel.source.binder.EntitySource#getJpaCallbackClasses()
-	 */
 	@Override
 	public List<JpaCallbackClass> getJpaCallbackClasses() {
-	    return entityClass.getJpaCallbackClasses();
+		return entityClass.getJpaCallbacks();
 	}
 
 	@Override
 	public Iterable<TableSource> getSecondaryTables() {
 		return entityClass.getSecondaryTableSources();
 	}
-
 }
 
 

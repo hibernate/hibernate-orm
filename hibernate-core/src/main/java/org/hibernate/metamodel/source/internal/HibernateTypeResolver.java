@@ -30,10 +30,10 @@ import org.hibernate.metamodel.binding.AbstractCollectionElement;
 import org.hibernate.metamodel.binding.AbstractPluralAttributeBinding;
 import org.hibernate.metamodel.binding.AttributeBinding;
 import org.hibernate.metamodel.binding.BasicCollectionElement;
+import org.hibernate.metamodel.binding.CollectionElementNature;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.EntityDiscriminator;
 import org.hibernate.metamodel.binding.HibernateTypeDescriptor;
-import org.hibernate.metamodel.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.domain.SingularAttribute;
 import org.hibernate.metamodel.relational.Datatype;
@@ -103,9 +103,9 @@ class HibernateTypeResolver {
 	}
 
 	private static String determineTypeName(HibernateTypeDescriptor hibernateTypeDescriptor) {
-		return hibernateTypeDescriptor.getExplicitTypeName() != null ?
-				hibernateTypeDescriptor.getExplicitTypeName() :
-				hibernateTypeDescriptor.getJavaTypeName();
+		return hibernateTypeDescriptor.getExplicitTypeName() != null
+				? hibernateTypeDescriptor.getExplicitTypeName()
+				: hibernateTypeDescriptor.getJavaTypeName();
 	}
 
 	private static Properties getTypeParameters(HibernateTypeDescriptor hibernateTypeDescriptor) {
@@ -148,7 +148,9 @@ class HibernateTypeResolver {
 			return;
 		}
 		Type resolvedType;
-		String typeName = determineTypeName( attributeBinding.getHibernateTypeDescriptor() );
+		// do NOT look at java type...
+		//String typeName = determineTypeName( attributeBinding.getHibernateTypeDescriptor() );
+		String typeName = attributeBinding.getHibernateTypeDescriptor().getExplicitTypeName();
 		if ( typeName != null ) {
 			resolvedType =
 					metadata.getTypeResolver()
@@ -158,7 +160,8 @@ class HibernateTypeResolver {
 									getTypeParameters( attributeBinding.getHibernateTypeDescriptor() ),
 									attributeBinding.getAttribute().getName(),
 									attributeBinding.getReferencedPropertyName(),
-									attributeBinding.isEmbedded()
+									attributeBinding.getCollectionElement().getCollectionElementNature() ==
+											CollectionElementNature.COMPOSITE
 							);
 		}
 		else {
@@ -180,14 +183,15 @@ class HibernateTypeResolver {
 				return typeFactory.set(
 						attributeBinding.getAttribute().getName(),
 						attributeBinding.getReferencedPropertyName(),
-						attributeBinding.isEmbedded()
+						attributeBinding.getCollectionElement().getCollectionElementNature() == CollectionElementNature.COMPOSITE
 				);
 			}
 			case BAG: {
-				return typeFactory.set(
+				return typeFactory.bag(
 						attributeBinding.getAttribute().getName(),
 						attributeBinding.getReferencedPropertyName(),
-						attributeBinding.isEmbedded()
+						attributeBinding.getCollectionElement()
+								.getCollectionElementNature() == CollectionElementNature.COMPOSITE
 				);
 			}
 			default: {

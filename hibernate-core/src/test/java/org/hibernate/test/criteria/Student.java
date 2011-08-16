@@ -1,6 +1,7 @@
 //$Id: Student.java 9116 2006-01-23 21:21:01Z steveebersole $
 package org.hibernate.test.criteria;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.Map;
 
@@ -14,6 +15,7 @@ public class Student {
 	private Course preferredCourse;
 	private Set enrolments = new HashSet();
 	private Map addresses;
+	private List studyAbroads;
 
 	public String getName() {
 		return name;
@@ -61,5 +63,13 @@ public class Student {
 
 	public void setAddresses(Map addresses) {
 		this.addresses = addresses;
+	}
+
+	public List getStudyAbroads() {
+	    	return studyAbroads;
+	}
+
+	public void setStudyAbroads(List studyAbroads) {
+	    	this.studyAbroads = studyAbroads;
 	}
 }

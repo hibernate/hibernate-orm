@@ -23,6 +23,8 @@
  */
 package org.hibernate.test.criteria;
 
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -1775,5 +1777,58 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 		session.close();
 		
 	}
+
+        @Test
+	public void testCriteriaFetchMode() {
+		Session session = openSession();
+		Transaction t = session.beginTransaction();
+
+		Student gavin = new Student();
+		gavin.setName("Gavin King");
+		gavin.setStudentNumber(232);
+		
+		Country gb = new Country("GB", "United Kingdom");
+		Country fr = new Country("FR", "France");
+		session.persist(gb);
+		session.persist(fr);
+
+		List studyAbroads = new ArrayList();
+		StudyAbroad sa1 = new StudyAbroad(gb, new Date());
+		StudyAbroad sa2 = new StudyAbroad(fr, new Date(sa1.getDate().getTime()+1));
+		studyAbroads.add(sa1);
+		studyAbroads.add(sa2);
+		gavin.setStudyAbroads(studyAbroads);
+		
+		session.persist(gavin);
+
+		session.flush();
+		session.clear();
+		
+		List results = session.createCriteria(Student.class)
+		    .setFetchMode("studyAbroads", FetchMode.JOIN)
+		    .setFetchMode("studyAbroads.country", FetchMode.JOIN)
+		    .list();
+
+		
+		assertEquals(results.size(), 2);
+		Student st = (Student)results.get(0);
+		
+		assertNotNull(st.getStudyAbroads());
+		assertTrue(Hibernate.isInitialized(st.getStudyAbroads()));
+		assertEquals(st.getStudyAbroads().size(), 2);
+		Country c1 = ((StudyAbroad)st.getStudyAbroads().get(0)).getCountry();
+		Country c2 = ((StudyAbroad)st.getStudyAbroads().get(1)).getCountry();
+		assertTrue(Hibernate.isInitialized(c1));
+		assertEquals(c1.getName(), "United Kingdom");
+
+		session.delete(st);
+		session.delete(c1);
+		session.delete(c2);
+		
+		t.commit();
+		session.close();
+		
+	}
+
 }
 

@@ -58,8 +58,8 @@ import org.jboss.logging.Logger;
  * <p/>
  * Note this version supports HSQLDB version 1.8 and higher, only.
  * <p/>
- * Enhancements to version 3.5.0 GA to provide basic support for both HSQLDB 1.8.x and 2.0
- * Should work with Hibernate 3.2 and later
+ * Enhancements to version 3.5.0 GA to provide basic support for both HSQLDB 1.8.x and 2.x
+ * Does not works with Hibernate 3.2 - 3.4 without alteration.
  *
  * @author Christoph Sturm
  * @author Phillip Baird
@@ -126,8 +126,10 @@ public class HSQLDialect extends Dialect {
 			registerColumnType( Types.CLOB, "clob" );
 		}
 
+		// aggregate functions
 		registerFunction( "avg", new AvgWithArgumentCastFunction( "double" ) );
 
+		// string functions
 		registerFunction( "ascii", new StandardSQLFunction( "ascii", StandardBasicTypes.INTEGER ) );
 		registerFunction( "char", new StandardSQLFunction( "char", StandardBasicTypes.CHARACTER ) );
 		registerFunction( "lower", new StandardSQLFunction( "lower" ) );
@@ -139,13 +141,20 @@ public class HSQLDialect extends Dialect {
 		registerFunction( "rtrim", new StandardSQLFunction( "rtrim" ) );
 		registerFunction( "reverse", new StandardSQLFunction( "reverse" ) );
 		registerFunction( "space", new StandardSQLFunction( "space", StandardBasicTypes.STRING ) );
+		registerFunction( "str", new SQLFunctionTemplate( StandardBasicTypes.STRING, "cast(?1 as varchar(256))" ) );
 		registerFunction( "rawtohex", new StandardSQLFunction( "rawtohex" ) );
 		registerFunction( "hextoraw", new StandardSQLFunction( "hextoraw" ) );
-		registerFunction( "str", new SQLFunctionTemplate( StandardBasicTypes.STRING, "cast(?1 as varchar(24))" ) );
+
+		// system functions
 		registerFunction( "user", new NoArgSQLFunction( "user", StandardBasicTypes.STRING ) );
 		registerFunction( "database", new NoArgSQLFunction( "database", StandardBasicTypes.STRING ) );
 
+		// datetime functions
+		if ( hsqldbVersion < 20 ) {
 		registerFunction( "sysdate", new NoArgSQLFunction( "sysdate", StandardBasicTypes.DATE, false ) );
+		} else {
+		    registerFunction( "sysdate", new NoArgSQLFunction( "sysdate", StandardBasicTypes.TIMESTAMP, false ) );
+		}
 		registerFunction( "current_date", new NoArgSQLFunction( "current_date", StandardBasicTypes.DATE, false ) );
 		registerFunction( "curdate", new NoArgSQLFunction( "curdate", StandardBasicTypes.DATE ) );
 		registerFunction(
@@ -164,10 +173,11 @@ public class HSQLDialect extends Dialect {
 		registerFunction( "quarter", new StandardSQLFunction( "quarter", StandardBasicTypes.INTEGER ) );
 		registerFunction( "hour", new StandardSQLFunction( "hour", StandardBasicTypes.INTEGER ) );
 		registerFunction( "minute", new StandardSQLFunction( "minute", StandardBasicTypes.INTEGER ) );
-		registerFunction( "second", new StandardSQLFunction( "second", StandardBasicTypes.INTEGER ) );
+		registerFunction( "second", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "cast(second(?1) as int)" ) );
 		registerFunction( "dayname", new StandardSQLFunction( "dayname", StandardBasicTypes.STRING ) );
 		registerFunction( "monthname", new StandardSQLFunction( "monthname", StandardBasicTypes.STRING ) );
 
+		// numeric functions
 		registerFunction( "abs", new StandardSQLFunction( "abs" ) );
 		registerFunction( "sign", new StandardSQLFunction( "sign", StandardBasicTypes.INTEGER ) );
 
@@ -187,13 +197,19 @@ public class HSQLDialect extends Dialect {
 
 		registerFunction( "radians", new StandardSQLFunction( "radians", StandardBasicTypes.DOUBLE ) );
 		registerFunction( "degrees", new StandardSQLFunction( "degrees", StandardBasicTypes.DOUBLE ) );
+		registerFunction( "round", new StandardSQLFunction( "round" ) );
 		registerFunction( "roundmagic", new StandardSQLFunction( "roundmagic" ) );
+		registerFunction( "truncate", new StandardSQLFunction( "truncate" ) );
 
 		registerFunction( "ceiling", new StandardSQLFunction( "ceiling" ) );
 		registerFunction( "floor", new StandardSQLFunction( "floor" ) );
 
-		// Multi-param dialect functions...
-		registerFunction( "mod", new StandardSQLFunction( "mod", StandardBasicTypes.INTEGER ) );
+		// special functions
+		// from v. 2.2.0 ROWNUM() is supported in all modes as the equivalent of Oracle ROWNUM
+		if ( hsqldbVersion > 21 ) {
+		    registerFunction("rownum",
+				     new NoArgSQLFunction("rownum", StandardBasicTypes.INTEGER));
+		}
 
 		// function templates
 		registerFunction( "concat", new VarArgsSQLFunction( StandardBasicTypes.STRING, "(", "||", ")" ) );
@@ -377,15 +393,33 @@ public class HSQLDialect extends Dialect {
 	public String getSelectClauseNullString(int sqlType) {
 		String literal;
 		switch ( sqlType ) {
+		        case Types.LONGVARCHAR:
 			case Types.VARCHAR:
 			case Types.CHAR:
 				literal = "cast(null as varchar(100))";
+				break;
+		        case Types.LONGVARBINARY:
+		        case Types.VARBINARY:
+		        case Types.BINARY:
+				literal = "cast(null as varbinary(100))";
+				break;
+		        case Types.CLOB:
+				literal = "cast(null as clob)";
+				break;
+		        case Types.BLOB:
+				literal = "cast(null as blob)";
 				break;
 			case Types.DATE:
 				literal = "cast(null as date)";
 				break;
 			case Types.TIMESTAMP:
 				literal = "cast(null as timestamp)";
+				break;
+		        case Types.BOOLEAN:
+				literal = "cast(null as boolean)";
+				break;
+		        case Types.BIT:
+				literal = "cast(null as bit)";
 				break;
 			case Types.TIME:
 				literal = "cast(null as time)";
@@ -496,9 +530,12 @@ public class HSQLDialect extends Dialect {
 	 * Do we need to drop the temporary table after use?
 	 *
 	 * todo - clarify usage by Hibernate
+	 *
 	 * Version 1.8 GLOBAL TEMPORARY table definitions persist beyond the end
-	 * of the session (data is cleared). If there are not too many such tables,
-	 * perhaps we can avoid dropping them and reuse the table next time?
+	 * of the session (by default, data is cleared at commit).<p>
+	 *
+	 * Version 2.x LOCAL TEMPORARY table definitions do not persist beyond
+	 * the end of the session (by default, data is cleared at commit).
 	 *
 	 * @return True if the table should be dropped.
 	 */
@@ -523,7 +560,10 @@ public class HSQLDialect extends Dialect {
 	/**
 	 * Should the value returned by {@link #getCurrentTimestampSelectString}
 	 * be treated as callable.  Typically this indicates that JDBC escape
-	 * syntax is being used...
+	 * syntax is being used...<p>
+	 *
+	 * CALL CURRENT_TIMESTAMP is used but this should not
+	 * be treated as a callable statement.
 	 *
 	 * @return True if the {@link #getCurrentTimestampSelectString} return
 	 *         is callable; false otherwise.
@@ -602,7 +642,7 @@ public class HSQLDialect extends Dialect {
 	}
 
 	public boolean supportsCommentOn() {
-		return true;
+		return hsqldbVersion >= 20;
 	}
 
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

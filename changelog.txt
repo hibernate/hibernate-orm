@@ -5,6 +5,17 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 3.6.7 (2011.08.17)
+-------------------------------------------
+https://hibernate.onjira.com/browse/HHH/fixforversion/11250
+
+** Bug
+    * [HHH-1780] - negation of EXISTS in hql query does not work
+
+** Patch
+    * [HHH-6370] - HSQLDB dialect - fixes reported issues and adds minor enhancement (Fred Toussi)
+
+
 Changes in version 3.6.6 (2011.07.20)
 -------------------------------------------
 https://hibernate.onjira.com/browse/HHH/fixforversion/11232

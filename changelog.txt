@@ -6,6 +6,31 @@ refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
 
+Changes in version 4.0.0.CR1 (2011.08.17)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.onjira.com/browse/HHH/fixforversion/11350
+
+** Bug
+    * [HHH-6543] - JBoss AS7 transaction manager jndi lookup is wrong
+    * [HHH-6547] - Basic properties cannot be made nullable in HBM XML
+    * [HHH-6560] - Discriminator match value is not initialized in root EntityBinding
+    * [HHH-6563] - NullPointerException using annotations source if a unique constraint is not mapped with a constraint name
+    * [HHH-6564] - JBoss AS6 and earlier transaction manager jndi lookup is wrong
+    * [HHH-6565] - Unique constraint columns that already exist in the table are not found
+
+** Improvement
+    * [HHH-6573] - change to use ClassLoaderService to locate service initiator
+
+** Patch
+    * [HHH-6370] - HSQLDB dialect - fixes reported issues and adds minor enhancement (Fred Toussi)
+
+** Task
+    * [HHH-6268] - Plumb MetadataImplementor into integrators
+    * [HHH-6337] - Add EntityBinding methods to support single-table inheritance
+    * [HHH-6410] - Update EntityBinding.getAttributeBindingClosureSpan() and getAttributeBindingClosure() to work for subclass EntityBindings
+    * [HHH-6498] - Update entity persisters and tuplizers to use EntityBinding superclass and subclass information
+
+
 Changes in version 4.0.0.Beta5 (2011.08.03)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.onjira.com/browse/HHH/fixforversion/11251

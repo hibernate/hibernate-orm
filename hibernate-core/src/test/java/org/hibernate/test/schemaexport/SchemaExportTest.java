@@ -1,0 +1,112 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
+package org.hibernate.test.schemaexport;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
+import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.Environment;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.service.ServiceRegistry;
+import org.hibernate.testing.ServiceRegistryBuilder;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.tool.hbm2ddl.SchemaExport;
+
+import static org.junit.Assert.assertEquals;
+
+/**
+ * @author Gail Badner
+ */
+public class SchemaExportTest extends BaseUnitTestCase {
+	private final String MAPPING = "org/hibernate/test/schemaexport/mapping.hbm.xml";
+
+	private ServiceRegistry serviceRegistry;
+
+	@Before
+	public void setUp() {
+		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() );
+	}
+
+	@After
+	public void tearDown() {
+		ServiceRegistryBuilder.destroy( serviceRegistry );
+		serviceRegistry = null;
+	}
+
+	protected JdbcServices getJdbcServices() {
+		return serviceRegistry.getService( JdbcServices.class );
+	}
+
+	@Test
+	public void testCreateAndDropOnlyType() {
+		Configuration cfg = new Configuration();
+		cfg.addResource( MAPPING );
+		SchemaExport schemaExport = new SchemaExport( serviceRegistry, cfg );
+		// create w/o dropping first; (OK because tables don't exist yet
+		schemaExport.execute( false, true, false, true );
+		assertEquals( 0, schemaExport.getExceptions().size() );
+		// create w/o dropping again; should be an exception for each table
+		// (2 total) because the tables exist already
+		assertEquals( 0, schemaExport.getExceptions().size() );
+		schemaExport.execute( false, true, false, true );
+		assertEquals( 2, schemaExport.getExceptions().size() );
+		// drop tables only
+		schemaExport.execute( false, true, true, false );
+		assertEquals( 0, schemaExport.getExceptions().size() );
+	}
+
+	@Test
+	public void testBothType() {
+		Configuration cfg = new Configuration();
+		cfg.addResource( MAPPING );
+		SchemaExport schemaExport = new SchemaExport( serviceRegistry, cfg );
+		// drop before create (nothing to drop yeT)
+		schemaExport.execute( false, true, false, false );
+		assertEquals( 0, schemaExport.getExceptions().size() );
+		// drop before crete again (this time drops the tables before re-creating)
+		schemaExport.execute( false, true, false, false );
+		assertEquals( 0, schemaExport.getExceptions().size() );
+		// drop tables
+		schemaExport.execute( false, true, true, false );
+		assertEquals( 0, schemaExport.getExceptions().size() );
+	}
+
+	@Test
+	public void testCreateAndDrop() {
+		Configuration cfg = new Configuration();
+		cfg.addResource( MAPPING );
+		SchemaExport schemaExport = new SchemaExport( serviceRegistry, cfg );
+		// should drop before creating, but tables don't exist yet
+		schemaExport.create( false, true);
+		assertEquals( 0, schemaExport.getExceptions().size() );
+		// call create again; it should drop tables before re-creating
+		schemaExport.create( false, true );
+		assertEquals( 0, schemaExport.getExceptions().size() );
+		// drop the tables
+		schemaExport.drop( false, true );
+		assertEquals( 0, schemaExport.getExceptions().size() );
+	}
+}

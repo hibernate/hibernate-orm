@@ -270,7 +270,8 @@ public class SchemaExport {
 	}
 
 	/**
-	 * Run the schema creation script.
+	 * Run the schema creation script; drop script is automatically
+	 * executed before running the creation script.
 	 *
 	 * @param script print the DDL to the console
 	 * @param export export the script to the database
@@ -279,8 +280,15 @@ public class SchemaExport {
 		create( Target.interpret( script, export ) );
 	}
 
+	/**
+	 * Run the schema creation script; drop script is automatically
+	 * executed before running the creation script.
+	 *
+	 * @param output the target of the script.
+	 */
 	public void create(Target output) {
-		execute( output, Type.CREATE );
+		// need to drop tables before creating so need to specify Type.BOTH
+		execute( output, Type.BOTH );
 	}
 
 	/**

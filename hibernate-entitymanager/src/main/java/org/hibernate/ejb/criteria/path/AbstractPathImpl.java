@@ -194,10 +194,10 @@ public abstract class AbstractPathImpl<X>
 		if ( attribute.isCollection() ) {
 			final PluralAttribute<X,Y,?> pluralAttribute = (PluralAttribute<X,Y,?>) attribute;
 			if ( PluralAttribute.CollectionType.MAP.equals( pluralAttribute.getCollectionType() ) ) {
-				return (PluralAttributePath<Y>) get( (MapAttribute<X,?,?>) pluralAttribute );
+				return (PluralAttributePath<Y>) this.get( (MapAttribute<X,?,?>) pluralAttribute );
 			}
 			else {
-				return (PluralAttributePath<Y>) get( (PluralAttribute) pluralAttribute );
+				return (PluralAttributePath<Y>) this.get( (PluralAttribute) pluralAttribute );
 			}
 		}
 		else {

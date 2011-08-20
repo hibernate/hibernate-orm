@@ -28,6 +28,7 @@ import java.sql.SQLException;
 
 import org.jboss.logging.Logger;
 
+import org.hibernate.dialect.CUBRIDDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.DerbyTenFiveDialect;
@@ -66,6 +67,10 @@ public class StandardDialectResolver extends AbstractDialectResolver {
     protected Dialect resolveDialectInternal(DatabaseMetaData metaData) throws SQLException {
 		String databaseName = metaData.getDatabaseProductName();
 		int databaseMajorVersion = metaData.getDatabaseMajorVersion();
+
+		if ( "CUBRID".equalsIgnoreCase( databaseName ) ) {
+			return new CUBRIDDialect();
+		}
 
 		if ( "HSQL Database Engine".equals( databaseName ) ) {
 			return new HSQLDialect();

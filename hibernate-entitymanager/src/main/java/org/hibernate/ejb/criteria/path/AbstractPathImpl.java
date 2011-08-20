@@ -194,7 +194,7 @@ public abstract class AbstractPathImpl<X>
 		if ( attribute.isCollection() ) {
 			final PluralAttribute<X,Y,?> pluralAttribute = (PluralAttribute<X,Y,?>) attribute;
 			if ( PluralAttribute.CollectionType.MAP.equals( pluralAttribute.getCollectionType() ) ) {
-				return (PluralAttributePath<Y>) this.get( (MapAttribute<X,?,?>) pluralAttribute );
+				return (PluralAttributePath<Y>) this.<Object,Object,Map<Object, Object>>get( (MapAttribute) pluralAttribute );
 			}
 			else {
 				return (PluralAttributePath<Y>) this.get( (PluralAttribute) pluralAttribute );

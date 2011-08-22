@@ -20,6 +20,7 @@ dependencies {
     testCompile( libraries.junit )
     testCompile( project(':hibernate-testing') )
     testCompile( [group: 'commons-dbcp', name: 'commons-dbcp', version: '1.4'])
+    testCompile([group: 'com.oracle.jdbc', name:'ojdbc6', version:'11.1.0.7.0'])
 }
 
 sourceSets {

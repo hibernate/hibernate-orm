@@ -260,6 +260,13 @@ public interface Query {
 	public Query setComment(String comment);
 	
 	/**
+	 * Add a DB hint to the SQL query.
+	 * 
+	 * @param hint The database specific hint to add.
+	 */
+	public Query setQueryHint(String hint);
+	
+	/**
 	 * Override the current session flush mode, just for
 	 * this query.
 	 * @see org.hibernate.FlushMode

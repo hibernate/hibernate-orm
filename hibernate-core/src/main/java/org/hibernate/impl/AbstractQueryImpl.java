@@ -95,6 +95,7 @@ public abstract class AbstractQueryImpl implements Query {
 	private boolean cacheable;
 	private String cacheRegion;
 	private String comment;
+	private String queryHint;
 	private FlushMode flushMode;
 	private CacheMode cacheMode;
 	private FlushMode sessionFlushMode;
@@ -160,6 +161,11 @@ public abstract class AbstractQueryImpl implements Query {
 
 	public Query setComment(String comment) {
 		this.comment = comment;
+		return this;
+	}
+	
+	public Query setQueryHint(String hint) {
+		this.queryHint = hint;
 		return this;
 	}
 
@@ -926,6 +932,7 @@ public abstract class AbstractQueryImpl implements Query {
 				cacheable,
 				cacheRegion,
 				comment,
+				queryHint,
 				collectionKey == null ? null : new Serializable[] { collectionKey },
 				optionalObject,
 				optionalEntityName,

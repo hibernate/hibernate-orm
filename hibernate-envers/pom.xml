@@ -106,6 +106,7 @@
         <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-tools</artifactId>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>ant</groupId>

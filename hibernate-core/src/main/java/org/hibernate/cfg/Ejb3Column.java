@@ -443,7 +443,9 @@ public class Ejb3Column {
 					final String sqlType = col.columnDefinition().equals( "" )
 							? null
 							: nameNormalizer.normalizeIdentifierQuoting( col.columnDefinition() );
-					final String tableName = nameNormalizer.normalizeIdentifierQuoting( col.table() );
+					final String tableName = ! StringHelper.isEmpty(col.table())
+                                             ? nameNormalizer.normalizeIdentifierQuoting( mappings.getNamingStrategy().tableName( col.table() ) )
+                                             : "";
 					final String columnName = nameNormalizer.normalizeIdentifierQuoting( col.name() );
 					Ejb3Column column = new Ejb3Column();
 					column.setImplicit( false );

@@ -871,6 +871,18 @@ public abstract class Dialect {
 		return zeroBasedFirstResult;
 	}
 
+	// query hint support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	/**
+	 * Apply a hint to the query.
+	 * 
+	 * @param query The query to which to apply the limit.
+	 * @param hint The database specific hint to apply
+	 * @return the modified SQL
+	 */
+	public String getQueryHintString(String query, String hint) {
+	    return query;
+	}
 
 	// lock acquisition support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

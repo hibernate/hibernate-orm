@@ -91,7 +91,6 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 	}
 
 	public String getBaseForMappings() {
-//        return "org/hibernatespatial/test/";
 		return "";
 	}
 

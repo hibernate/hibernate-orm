@@ -12,12 +12,12 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  * @author Karel Maesen, Geovise BVBA
  *         creation-date: 7/27/11
  */
-public class SpatialGeometryJavaTypeDescriptor extends AbstractTypeDescriptor<Geometry> {
+public class GeometryJavaTypeDescriptor extends AbstractTypeDescriptor<Geometry> {
 
 
-	public static final JavaTypeDescriptor<Geometry> INSTANCE = new SpatialGeometryJavaTypeDescriptor( Geometry.class );
+	public static final JavaTypeDescriptor<Geometry> INSTANCE = new GeometryJavaTypeDescriptor( Geometry.class );
 
-	protected SpatialGeometryJavaTypeDescriptor(Class<Geometry> type) {
+	protected GeometryJavaTypeDescriptor(Class<Geometry> type) {
 		super( type );
 	}
 

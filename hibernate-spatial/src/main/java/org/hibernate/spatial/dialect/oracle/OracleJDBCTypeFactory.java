@@ -1,5 +1,9 @@
 package org.hibernate.spatial.dialect.oracle;
 
+import org.hibernate.HibernateException;
+import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.spatial.helper.FinderException;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -7,10 +11,6 @@ import java.sql.Array;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Struct;
-
-import org.hibernate.HibernateException;
-import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.spatial.helper.FinderException;
 
 /**
  * Factory for Oracle JDBC extension types (ARRAY, STRUCT, ...).

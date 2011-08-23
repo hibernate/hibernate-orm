@@ -1,0 +1,1 @@
+DROP TABLE "HBS"."dbo"."geomtest";

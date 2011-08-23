@@ -20,10 +20,10 @@ public class SpatialGeometrySqlTypeDescriptor implements SqlTypeDescriptor {
 
 	@Override
 	public int getSqlType() {
-		return Types.STRUCT; //this works only for postgis!
+//		return Types.STRUCT; //this works only for postgis!
+		return Types.ARRAY;
 		//sqltype remapping issue: HHH-6074 needs to be resolved first.
 //        return Types.OTHER;
-
 	}
 
 	@Override

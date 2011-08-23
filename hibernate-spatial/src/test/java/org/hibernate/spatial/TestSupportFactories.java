@@ -49,9 +49,9 @@ public class TestSupportFactories {
 //        if ("org.hibernate.spatial.geodb.GeoDBDialect".equals(canonicalName)) {
 //            return "org.hibernate.spatial.geodb.GeoDBSupport";
 //        }
-//        if ("org.hibernatespatial.sqlserver.SQLServerSpatialDialect".equals(canonicalName)) {
-//            return "org.hibernatespatial.sqlserver.SQLServerTestSupport";
-//        }
+        if ("org.hibernate.spatial.dialect.sqlserver.SqlServer2008SpatialDialect".equals(canonicalName)) {
+            return "org.hibernate.spatial.dialect.sqlserver.SQLServerTestSupport";
+        }
 //        if ("org.hibernatespatial.mysql.MySQLSpatialDialect".equals(canonicalName) ||
 //                "org.hibernatespatial.mysql.MySQLSpatialInnoDBDialect".equals(canonicalName)) {
 //            return "org.hibernatespatial.mysql.MySQLTestSupport";

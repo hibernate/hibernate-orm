@@ -1,7 +1,5 @@
 package org.hibernate.spatial;
 
-import java.sql.Types;
-
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
@@ -14,16 +12,13 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
  * @author Karel Maesen, Geovise BVBA
  *         creation-date: 7/27/11
  */
-public class SpatialGeometrySqlTypeDescriptor implements SqlTypeDescriptor {
+public class GeometrySqlTypeDescriptor implements SqlTypeDescriptor {
 
-	public static final SpatialGeometrySqlTypeDescriptor INSTANCE = new SpatialGeometrySqlTypeDescriptor();
+	public static final GeometrySqlTypeDescriptor INSTANCE = new GeometrySqlTypeDescriptor();
 
 	@Override
 	public int getSqlType() {
-		return Types.STRUCT; //this works only for postgis!
-		//sqltype remapping issue: HHH-6074 needs to be resolved first.
-//        return Types.OTHER;
-
+        return 3000; //this value doesn't conflict with presently defined java.sql.Types values.
 	}
 
 	@Override

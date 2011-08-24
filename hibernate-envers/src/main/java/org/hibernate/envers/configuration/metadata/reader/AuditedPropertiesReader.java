@@ -270,15 +270,19 @@ public class AuditedPropertiesReader {
 		if (aud != null) {
 			propertyData.setStore(aud.modStore());
 			propertyData.setRelationTargetAuditMode(aud.targetAuditMode());
-			propertyData.setUsingModifiedFlag(globalCfg.isOverrideUsingModifiedFlag() ?
-					globalCfg.isUsingModifiedFlag() : aud.usingModifiedFlag());
+			propertyData.setUsingModifiedFlag(checkUsingModifiedFlag(aud));
 			return true;
 		} else {
 			return false;
 		}
 	}
 
-    private void setPropertyAuditMappedBy(XProperty property, PropertyAuditingData propertyData) {
+	protected boolean checkUsingModifiedFlag(Audited aud) {
+		return globalCfg.isOverrideUsingModifiedFlag() ?
+				globalCfg.isUsingModifiedFlag() : aud.usingModifiedFlag();
+	}
+
+	private void setPropertyAuditMappedBy(XProperty property, PropertyAuditingData propertyData) {
         AuditMappedBy auditMappedBy = property.getAnnotation(AuditMappedBy.class);
         if (auditMappedBy != null) {
 		    propertyData.setAuditMappedBy(auditMappedBy.mappedBy());

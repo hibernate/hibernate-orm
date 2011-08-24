@@ -9,7 +9,7 @@ import org.hibernate.envers.configuration.GlobalConfiguration;
  * Reads the audited properties for components.
  * 
  * @author Hern&aacut;n Chanfreau
- *
+ * @author Michal Skowronek (mskowr at o2 dot pl)
  */
 public class ComponentAuditedPropertiesReader extends AuditedPropertiesReader {
 
@@ -30,6 +30,7 @@ public class ComponentAuditedPropertiesReader extends AuditedPropertiesReader {
 		if (aud != null) {
 			propertyData.setStore(aud.modStore());
 			propertyData.setRelationTargetAuditMode(aud.targetAuditMode());
+			propertyData.setUsingModifiedFlag(checkUsingModifiedFlag(aud));
 		} else {
 			propertyData.setStore(ModificationStore.FULL);
 		}	

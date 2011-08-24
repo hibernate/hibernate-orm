@@ -22,10 +22,13 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.synchronization.work;
+
+import org.hibernate.Hibernate;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.configuration.metadata.MetadataTools;
+import org.hibernate.proxy.HibernateProxy;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -36,7 +39,7 @@ import java.util.Map;
  * @author Michal Skowronek (mskowr at o2 dot pl)
  */
 public class CollectionChangeWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit {
-    private final Object entity;
+    private Object entity;
 	private final String collectionPropertyName;
 	private final Map<String, Object> data = new HashMap<String, Object>();
 
@@ -46,6 +49,7 @@ public class CollectionChangeWorkUnit extends AbstractAuditWorkUnit implements A
         this.entity = entity;
 		this.collectionPropertyName = collectionPropertyName;
 		assert collectionPropertyName != null;
+		assert entity != null;
     }
 
     public boolean containsWork() {
@@ -54,6 +58,7 @@ public class CollectionChangeWorkUnit extends AbstractAuditWorkUnit implements A
 
     public Map<String, Object> generateData(Object revisionData) {
         fillDataWithId(data, revisionData);
+		resolveProxyIfNeeded();
 		verCfg.getEntCfg().get(getEntityName()).getPropertyMapper()
 				.mapToMapFromEntity(sessionImplementor, data, entity, null);
 		verCfg.getEntCfg().get(getEntityName()).getPropertyMapper()
@@ -62,6 +67,14 @@ public class CollectionChangeWorkUnit extends AbstractAuditWorkUnit implements A
 				.mapModifiedFlagsToMapForCollectionChange(collectionPropertyName, data);
         return data;
     }
+
+	private void resolveProxyIfNeeded() {
+		if (entity instanceof HibernateProxy) {
+			Hibernate.initialize(entity);
+			this.entity = ((HibernateProxy) entity)
+					.getHibernateLazyInitializer().getImplementation();
+		}
+	}
 
 	public void addCollectionModifiedData(Map<String, Object> data) {
 		String modifiedFlagForCollection = getModifiedFlagPropertyNameForCollection();

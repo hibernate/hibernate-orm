@@ -22,21 +22,13 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.tools;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
 import javassist.util.proxy.ProxyFactory;
 import org.hibernate.Session;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
+
+import java.util.*;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -75,28 +67,6 @@ public class Tools {
 
 		return session.getEntityPersister(entityName, obj).getIdentifier(obj, session);
 	}	    
-
-
-    public static Object getTargetFromProxy(SessionFactoryImplementor sessionFactoryImplementor, HibernateProxy proxy) {
-        if (!proxy.getHibernateLazyInitializer().isUninitialized()) {
-            return proxy.getHibernateLazyInitializer().getImplementation();
-        }
-
-        SessionImplementor sessionImplementor = proxy.getHibernateLazyInitializer().getSession();
-        Session tempSession = sessionImplementor==null
-				? sessionFactoryImplementor.openTemporarySession()
-				: sessionImplementor.getFactory().openTemporarySession();
-        try {
-			Object target = tempSession.get(
-					proxy.getHibernateLazyInitializer().getEntityName(),
-					proxy.getHibernateLazyInitializer().getIdentifier()
-			);
-			return target;
-        }
-		finally {
-            tempSession.close();
-        }
-    }
 
     /**
      * @param clazz Class wrapped with a proxy or not.

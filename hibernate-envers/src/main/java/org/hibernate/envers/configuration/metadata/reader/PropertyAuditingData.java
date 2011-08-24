@@ -32,6 +32,7 @@ import java.util.List;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Michal Skowronek (mskowr at o2 dot pl)
  */
 public class PropertyAuditingData {
     private String name;

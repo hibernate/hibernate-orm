@@ -109,10 +109,6 @@ public abstract class BaseEnversEventListener implements EnversListener {
 			HibernateProxy hibernateProxy = (HibernateProxy) value;
 			toEntityName = session.bestGuessEntityName(value);
 			id = hibernateProxy.getHibernateLazyInitializer().getIdentifier();
-			// MiSk - make sure this is fine
-			value = hibernateProxy.getHibernateLazyInitializer().getImplementation(session);
-			// We've got to initialize the object from the proxy to later read its state.
-			// value = Tools.getTargetFromProxy(session.getFactory(), hibernateProxy);
 		} else {
 			toEntityName =  session.guessEntityName(value);
 

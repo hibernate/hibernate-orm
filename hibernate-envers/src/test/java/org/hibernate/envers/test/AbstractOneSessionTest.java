@@ -6,7 +6,6 @@ import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
-import org.hibernate.envers.configuration.GlobalConfiguration;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
@@ -41,8 +40,7 @@ public abstract class AbstractOneSessionTest extends AbstractEnversTest  {
         if (auditStrategy != null && !"".equals(auditStrategy)) {
             config.setProperty("org.hibernate.envers.audit_strategy", auditStrategy);
         }
-		config.setProperty(GlobalConfiguration.OVERRIDE_USING_MODIFIED_FLAG_PROPERTY, "true");
-		config.setProperty(GlobalConfiguration.USING_MODIFIED_FLAG_PROPERTY, "true");
+		addProperties(config);
 
         this.initMappings();
 
@@ -51,6 +49,8 @@ public abstract class AbstractOneSessionTest extends AbstractEnversTest  {
     }
 
 	protected abstract void initMappings() throws MappingException, URISyntaxException ;
+
+	protected void addProperties(Configuration configuration) {}
 
 	protected String getHibernateConfigurationFileName(){
 		return "hibernate.test.session-cfg.xml";

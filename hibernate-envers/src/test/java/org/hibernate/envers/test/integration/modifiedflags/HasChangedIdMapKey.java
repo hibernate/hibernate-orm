@@ -21,22 +21,25 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.envers.test.integration.collection.mapkey;
+package org.hibernate.envers.test.integration.modifiedflags;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
+import org.hibernate.envers.test.integration.collection.mapkey.IdMapKeyEntity;
 import org.hibernate.envers.test.tools.TestTools;
 import org.junit.Test;
 
 import javax.persistence.EntityManager;
-import java.util.Arrays;
+import java.util.List;
+
+import static junit.framework.Assert.assertEquals;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Michal Skowronek (mskowr at o2 dot pl)
  */
-public class IdMapKey extends AbstractEntityTest {
+public class HasChangedIdMapKey extends AbstractModifiedFlagsEntityTest {
     private Integer imke_id;
 
     private Integer ste1_id;
@@ -87,21 +90,15 @@ public class IdMapKey extends AbstractEntityTest {
         ste2_id = ste2.getId();
     }
 
-    @Test
-    public void testRevisionsCounts() {
-        assert Arrays.asList(1, 2).equals(getAuditReader().getRevisions(IdMapKeyEntity.class, imke_id));
-    }
+	@Test
+	public void testHasChanged() throws Exception {
+		List list = queryForPropertyHasChanged(IdMapKeyEntity.class, imke_id,
+				"idmap");
+		assertEquals(2, list.size());
+		assertEquals(TestTools.makeList(1, 2), extractRevisionNumbers(list));
 
-    @Test
-    public void testHistoryOfImke() {
-        StrTestEntity ste1 = getEntityManager().find(StrTestEntity.class, ste1_id);
-        StrTestEntity ste2 = getEntityManager().find(StrTestEntity.class, ste2_id);
-
-        IdMapKeyEntity rev1 = getAuditReader().find(IdMapKeyEntity.class, imke_id, 1);
-        IdMapKeyEntity rev2 = getAuditReader().find(IdMapKeyEntity.class, imke_id, 2);
-
-        assert rev1.getIdmap().equals(TestTools.makeMap(ste1.getId(), ste1));
-        assert rev2.getIdmap().equals(TestTools.makeMap(ste1.getId(), ste1, ste2.getId(), ste2));
-    }
-
+		list = queryForPropertyHasNotChanged(IdMapKeyEntity.class, imke_id,
+				"idmap");
+		assertEquals(0, list.size());
+	}
 }

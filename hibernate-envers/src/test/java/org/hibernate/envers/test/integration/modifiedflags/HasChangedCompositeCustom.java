@@ -21,22 +21,25 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.envers.test.integration.customtype;
+package org.hibernate.envers.test.integration.modifiedflags;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.customtype.Component;
 import org.hibernate.envers.test.entities.customtype.CompositeCustomTypeEntity;
+import org.hibernate.envers.test.tools.TestTools;
 import org.junit.Test;
 
 import javax.persistence.EntityManager;
-import java.util.Arrays;
+import java.util.List;
+
+import static junit.framework.Assert.assertEquals;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Michal Skowronek (mskowr at o2 dot pl)
  */
-public class CompositeCustom extends AbstractEntityTest {
+public class HasChangedCompositeCustom extends AbstractModifiedFlagsEntityTest {
     private Integer ccte_id;
 
     public void configure(Ejb3Configuration cfg) {
@@ -82,20 +85,13 @@ public class CompositeCustom extends AbstractEntityTest {
         ccte_id = ccte.getId();
     }
 
-    @Test
-    public void testRevisionsCounts() {
-        assert Arrays.asList(1, 2, 3).equals(getAuditReader().getRevisions(CompositeCustomTypeEntity.class, ccte_id));
-    }
+	@Test
+	public void testHasChanged() throws Exception {
+		List list = queryForPropertyHasChanged(CompositeCustomTypeEntity.class,ccte_id, "component");
+		assertEquals(3, list.size());
+		assertEquals(TestTools.makeList(1, 2, 3), extractRevisionNumbers(list));
 
-    @Test
-    public void testHistoryOfCcte() {
-        CompositeCustomTypeEntity rev1 = getAuditReader().find(CompositeCustomTypeEntity.class, ccte_id, 1);
-        CompositeCustomTypeEntity rev2 = getAuditReader().find(CompositeCustomTypeEntity.class, ccte_id, 2);
-        CompositeCustomTypeEntity rev3 = getAuditReader().find(CompositeCustomTypeEntity.class, ccte_id, 3);
-
-        assert rev1.getComponent().equals(new Component("a", 1));
-        assert rev2.getComponent().equals(new Component("b", 1));
-        assert rev3.getComponent().equals(new Component("c", 3));
-    }
-
+		list = queryForPropertyHasNotChanged(CompositeCustomTypeEntity.class,ccte_id, "component");
+		assertEquals(0, list.size());
+	}
 }

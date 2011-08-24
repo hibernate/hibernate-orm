@@ -21,31 +21,34 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.envers.test.integration.components.relations;
+package org.hibernate.envers.test.integration.modifiedflags;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.envers.test.entities.components.relations
-.ManyToOneComponent;
+		.OneToManyComponent;
 import org.hibernate.envers.test.entities.components.relations
-.ManyToOneComponentTestEntity;
+		.OneToManyComponentTestEntity;
+import org.hibernate.envers.test.tools.TestTools;
 import org.junit.Test;
 
 import javax.persistence.EntityManager;
-import java.util.Arrays;
+import java.util.List;
+
+import static junit.framework.Assert.assertEquals;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Michal Skowronek (mskowr at o2 dot pl)
  */
-public class ManyToOneInComponent extends AbstractEntityTest {
-    private Integer mtocte_id1;
+public class HasChangedOneToManyInComponent extends AbstractModifiedFlagsEntityTest {
+    private Integer otmcte_id1;
 	private Integer ste_id1;
 	private Integer ste_id2;
 
-    public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(ManyToOneComponentTestEntity.class);
+	public void configure(Ejb3Configuration cfg) {
+        cfg.addAnnotatedClass(OneToManyComponentTestEntity.class);
 		cfg.addAnnotatedClass(StrTestEntity.class);
     }
 
@@ -71,9 +74,10 @@ public class ManyToOneInComponent extends AbstractEntityTest {
         em = getEntityManager();
         em.getTransaction().begin();
 
-		ManyToOneComponentTestEntity mtocte1 = new ManyToOneComponentTestEntity(new ManyToOneComponent(ste1, "data1"));
+		OneToManyComponentTestEntity otmcte1 = new OneToManyComponentTestEntity(new OneToManyComponent("data1"));
+		otmcte1.getComp1().getEntities().add(ste1);
 
-		em.persist(mtocte1);
+		em.persist(otmcte1);
 
         em.getTransaction().commit();
 
@@ -81,32 +85,26 @@ public class ManyToOneInComponent extends AbstractEntityTest {
         em = getEntityManager();
         em.getTransaction().begin();
 
-        mtocte1 = em.find(ManyToOneComponentTestEntity.class, mtocte1.getId());
-        mtocte1.getComp1().setEntity(ste2);
+        otmcte1 = em.find(OneToManyComponentTestEntity.class, otmcte1.getId());
+        otmcte1.getComp1().getEntities().add(ste2);
 
         em.getTransaction().commit();
 
-        mtocte_id1 = mtocte1.getId();
+        otmcte_id1 = otmcte1.getId();
 		ste_id1 = ste1.getId();
 		ste_id2 = ste2.getId();
     }
 
-    @Test
-    public void testRevisionsCounts() {
-        assert Arrays.asList(2, 3).equals(getAuditReader().getRevisions(ManyToOneComponentTestEntity.class, mtocte_id1));
-    }
+	@Test
+	public void testHasChangedId1() throws Exception {
+		List list =
+				queryForPropertyHasChanged(OneToManyComponentTestEntity.class,
+				otmcte_id1, "comp1");
+		assertEquals(2, list.size());
+		assertEquals(TestTools.makeList(2, 3), extractRevisionNumbers(list));
 
-    @Test
-    public void testHistoryOfId1() {
-		StrTestEntity ste1 = getEntityManager().find(StrTestEntity.class, ste_id1);
-		StrTestEntity ste2 = getEntityManager().find(StrTestEntity.class, ste_id2);
-
-        ManyToOneComponentTestEntity ver2 = new ManyToOneComponentTestEntity(mtocte_id1, new ManyToOneComponent(ste1, "data1"));
-		ManyToOneComponentTestEntity ver3 = new ManyToOneComponentTestEntity(mtocte_id1, new ManyToOneComponent(ste2, "data1"));
-
-        assert getAuditReader().find(ManyToOneComponentTestEntity.class, mtocte_id1, 1) == null;
-        assert getAuditReader().find(ManyToOneComponentTestEntity.class, mtocte_id1, 2).equals(ver2);
-        assert getAuditReader().find(ManyToOneComponentTestEntity.class, mtocte_id1, 3).equals(ver3);
-    }
-
+		list = queryForPropertyHasNotChanged(OneToManyComponentTestEntity.class,
+				otmcte_id1, "comp1");
+		assertEquals(0, list.size());
+	}
 }

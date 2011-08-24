@@ -1,10 +1,9 @@
 package org.hibernate.envers.test.integration.entityNames.singleAssociatedAudited;
 
+
 import org.hibernate.MappingException;
-import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.test.AbstractOneSessionTest;
 import org.hibernate.envers.test.Priority;
-import org.hibernate.envers.test.tools.TestTools;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Assert;
 import org.junit.Test;
@@ -12,9 +11,6 @@ import org.junit.Test;
 import java.io.File;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.List;
-
-import static junit.framework.Assert.assertEquals;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
@@ -67,14 +63,4 @@ public class SingleDomainObjectToMultipleTablesTest extends AbstractOneSessionTe
         Assert.assertEquals(1, carVer1.getNumber());
     }
 
-	@Test
-	public void testHasChangedCar1() throws Exception {
-		List list = getAuditReader().createQuery().forRevisionsOfEntity(Car.class, false, false)
-				.add(AuditEntity.id().eq(carId))
-				.add(AuditEntity.property("owner").hasChanged())
-				.add(AuditEntity.property("driver").hasChanged())
-				.getResultList();
-		assertEquals(1, list.size());
-		assertEquals(TestTools.makeList(1), extractRevisionNumbers(list));
-	}
 }

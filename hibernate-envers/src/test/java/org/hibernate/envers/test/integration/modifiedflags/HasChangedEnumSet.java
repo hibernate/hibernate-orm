@@ -21,10 +21,9 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.envers.test.integration.collection;
+package org.hibernate.envers.test.integration.modifiedflags;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.collection.EnumSetEntity;
 import org.hibernate.envers.test.entities.collection.EnumSetEntity.E1;
@@ -33,12 +32,15 @@ import org.hibernate.envers.test.tools.TestTools;
 import org.junit.Test;
 
 import javax.persistence.EntityManager;
-import java.util.Arrays;
+import java.util.List;
+
+import static junit.framework.Assert.assertEquals;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Michal Skowronek (mskowr at o2 dot pl)
  */
-public class EnumSet extends AbstractEntityTest {
+public class HasChangedEnumSet extends AbstractModifiedFlagsEntityTest {
     private Integer sse1_id;
 
     public void configure(Ejb3Configuration cfg) {
@@ -87,24 +89,25 @@ public class EnumSet extends AbstractEntityTest {
         sse1_id = sse1.getId();
     }
 
-    @Test
-    public void testRevisionsCounts() {
-        assert Arrays.asList(1, 2, 3).equals(getAuditReader().getRevisions(EnumSetEntity.class, sse1_id));
-    }
+	@Test
+	public void testHasChanged() throws Exception {
+		List list = queryForPropertyHasChanged(EnumSetEntity.class, sse1_id,
+				"enums1");
+		assertEquals(3, list.size());
+		assertEquals(TestTools.makeList(1, 2, 3), extractRevisionNumbers(list));
 
-    @Test
-    public void testHistoryOfSse1() {
-        EnumSetEntity rev1 = getAuditReader().find(EnumSetEntity.class, sse1_id, 1);
-        EnumSetEntity rev2 = getAuditReader().find(EnumSetEntity.class, sse1_id, 2);
-        EnumSetEntity rev3 = getAuditReader().find(EnumSetEntity.class, sse1_id, 3);
+		list = queryForPropertyHasChanged(EnumSetEntity.class, sse1_id,
+				"enums2");
+		assertEquals(1, list.size());
+		assertEquals(TestTools.makeList(1), extractRevisionNumbers(list));
 
-        assert rev1.getEnums1().equals(TestTools.makeSet(E1.X));
-        assert rev2.getEnums1().equals(TestTools.makeSet(E1.X, E1.Y));
-        assert rev3.getEnums1().equals(TestTools.makeSet(E1.Y));
+		list = queryForPropertyHasNotChanged(EnumSetEntity.class, sse1_id,
+				"enums1");
+		assertEquals(0, list.size());
 
-        assert rev1.getEnums2().equals(TestTools.makeSet(E2.A));
-        assert rev2.getEnums2().equals(TestTools.makeSet(E2.A));
-        assert rev3.getEnums2().equals(TestTools.makeSet(E2.A));
-    }
-
+		list = queryForPropertyHasNotChanged(EnumSetEntity.class, sse1_id,
+				"enums2");
+		assertEquals(2, list.size());
+		assertEquals(TestTools.makeList(2, 3), extractRevisionNumbers(list));
+	}
 }

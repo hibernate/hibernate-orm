@@ -300,5 +300,4 @@ public class DoubleJoinColumnBidirectionalList extends AbstractEntityTest {
         assertEquals(rev4.getData(), "ed2_2 bis");
     }
 
-	// todo write tests for haschanged
 }

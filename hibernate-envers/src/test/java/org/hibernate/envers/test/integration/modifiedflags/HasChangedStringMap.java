@@ -21,23 +21,24 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.envers.test.integration.collection;
+package org.hibernate.envers.test.integration.modifiedflags;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.collection.StringMapEntity;
 import org.hibernate.envers.test.tools.TestTools;
 import org.junit.Test;
 
 import javax.persistence.EntityManager;
-import java.util.Arrays;
-import java.util.Collections;
+import java.util.List;
+
+import static junit.framework.Assert.assertEquals;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Michal Skowronek (mskowr at o2 dot pl)
  */
-public class StringMap extends AbstractEntityTest {
+public class HasChangedStringMap extends AbstractModifiedFlagsEntityTest {
     private Integer sme1_id;
     private Integer sme2_id;
 
@@ -102,36 +103,24 @@ public class StringMap extends AbstractEntityTest {
         sme2_id = sme2.getId();
     }
 
-    @Test
-    public void testRevisionsCounts() {
-        assert Arrays.asList(1, 2, 3).equals(getAuditReader().getRevisions(StringMapEntity.class, sme1_id));
-        assert Arrays.asList(1, 3).equals(getAuditReader().getRevisions(StringMapEntity.class, sme2_id));
-    }
+	@Test
+	public void testHasChanged() throws Exception {
+		List list = queryForPropertyHasChanged(StringMapEntity.class, sme1_id,
+				"strings");
+		assertEquals(3, list.size());
+		assertEquals(TestTools.makeList(1, 2, 3), extractRevisionNumbers(list));
 
-    @Test
-    public void testHistoryOfSse1() {
-        StringMapEntity rev1 = getAuditReader().find(StringMapEntity.class, sme1_id, 1);
-        StringMapEntity rev2 = getAuditReader().find(StringMapEntity.class, sme1_id, 2);
-        StringMapEntity rev3 = getAuditReader().find(StringMapEntity.class, sme1_id, 3);
-        StringMapEntity rev4 = getAuditReader().find(StringMapEntity.class, sme1_id, 4);
+		list = queryForPropertyHasChanged(StringMapEntity.class, sme2_id,
+				"strings");
+		assertEquals(2, list.size());
+		assertEquals(TestTools.makeList(1, 3), extractRevisionNumbers(list));
 
-        assert rev1.getStrings().equals(Collections.EMPTY_MAP);
-        assert rev2.getStrings().equals(TestTools.makeMap("1", "a", "2", "b"));
-        assert rev3.getStrings().equals(TestTools.makeMap("2", "b"));
-        assert rev4.getStrings().equals(TestTools.makeMap("2", "b"));
-    }
+		list = queryForPropertyHasNotChanged(StringMapEntity.class, sme1_id,
+				"strings");
+		assertEquals(0, list.size());
 
-    @Test
-    public void testHistoryOfSse2() {
-        StringMapEntity rev1 = getAuditReader().find(StringMapEntity.class, sme2_id, 1);
-        StringMapEntity rev2 = getAuditReader().find(StringMapEntity.class, sme2_id, 2);
-        StringMapEntity rev3 = getAuditReader().find(StringMapEntity.class, sme2_id, 3);
-        StringMapEntity rev4 = getAuditReader().find(StringMapEntity.class, sme2_id, 4);
-
-        assert rev1.getStrings().equals(TestTools.makeMap("1", "a"));
-        assert rev2.getStrings().equals(TestTools.makeMap("1", "a"));
-        assert rev3.getStrings().equals(TestTools.makeMap("1", "b"));
-        assert rev4.getStrings().equals(TestTools.makeMap("1", "b"));
-    }
-
+		list = queryForPropertyHasNotChanged(StringMapEntity.class, sme2_id,
+				"strings");
+		assertEquals(0, list.size()); // in rev 2 there was no version generated for sme2_id
+	}
 }

@@ -21,20 +21,25 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.envers.test.integration.basic;
+package org.hibernate.envers.test.integration.modifiedflags;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.test.Priority;
+import org.hibernate.envers.test.integration.basic.BasicTestEntity1;
+import org.hibernate.envers.test.tools.TestTools;
 import org.junit.Test;
 
 import javax.persistence.EntityManager;
-import java.util.Arrays;
+import java.util.List;
+
+import static junit.framework.Assert.assertEquals;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Michal Skowronek (mskowr at o2 dot pl)
  */
-public class NullProperties extends AbstractEntityTest {
+public class HasChangedNullProperties extends AbstractModifiedFlagsEntityTest {
     private Integer id1;
     private Integer id2;
 
@@ -71,33 +76,34 @@ public class NullProperties extends AbstractEntityTest {
         modifyEntity(id2, "y2", 20); // rev 4
     }
 
-    @Test
-    public void testRevisionsCounts() {
-        assert Arrays.asList(1, 3).equals(getAuditReader().getRevisions(BasicTestEntity1.class, id1));
-
-        assert Arrays.asList(2, 4).equals(getAuditReader().getRevisions(BasicTestEntity1.class, id2));
-    }
-
 	@Test
-    public void testHistoryOfId1() {
-        BasicTestEntity1 ver1 = new BasicTestEntity1(id1, "x", 1);
-        BasicTestEntity1 ver2 = new BasicTestEntity1(id1, null, 1);
+	public void testHasChanged() throws Exception {
+		List list = queryForPropertyHasChangedWithDeleted(BasicTestEntity1.class,
+				id1, "str1");
+		assertEquals(2, list.size());
+		assertEquals(TestTools.makeList(1, 3), extractRevisionNumbers(list));
 
-        assert getAuditReader().find(BasicTestEntity1.class, id1, 1).equals(ver1);
-        assert getAuditReader().find(BasicTestEntity1.class, id1, 2).equals(ver1);
-        assert getAuditReader().find(BasicTestEntity1.class, id1, 3).equals(ver2);
-        assert getAuditReader().find(BasicTestEntity1.class, id1, 4).equals(ver2);
-    }
+		list = queryForPropertyHasChangedWithDeleted(BasicTestEntity1.class,
+				id1, "long1");
+		assertEquals(1, list.size());
+		assertEquals(TestTools.makeList(1), extractRevisionNumbers(list));
 
-    @Test
-    public void testHistoryOfId2() {
-        BasicTestEntity1 ver1 = new BasicTestEntity1(id2, null, 20);
-        BasicTestEntity1 ver2 = new BasicTestEntity1(id2, "y2", 20);
+		list = queryForPropertyHasChangedWithDeleted(BasicTestEntity1.class,
+				id2, "str1");
+		// str1 property was null before insert and after insert so in a way it didn't change - is it a good way to go?
+		assertEquals(1, list.size());
+		assertEquals(TestTools.makeList(4), extractRevisionNumbers(list));
 
-        assert getAuditReader().find(BasicTestEntity1.class, id2, 1) == null;
-        assert getAuditReader().find(BasicTestEntity1.class, id2, 2).equals(ver1);
-        assert getAuditReader().find(BasicTestEntity1.class, id2, 3).equals(ver1);
-        assert getAuditReader().find(BasicTestEntity1.class, id2, 4).equals(ver2);
-    }
+		list = queryForPropertyHasChangedWithDeleted(BasicTestEntity1.class,
+				id2, "long1");
+		assertEquals(1, list.size());
+		assertEquals(TestTools.makeList(2), extractRevisionNumbers(list));
 
+		list = getAuditReader().createQuery().forRevisionsOfEntity(BasicTestEntity1.class, false, true)
+				.add(AuditEntity.property("str1").hasChanged())
+				.add(AuditEntity.property("long1").hasChanged())
+				.getResultList();
+		assertEquals(1, list.size());
+		assertEquals(TestTools.makeList(1), extractRevisionNumbers(list));
+	}
 }

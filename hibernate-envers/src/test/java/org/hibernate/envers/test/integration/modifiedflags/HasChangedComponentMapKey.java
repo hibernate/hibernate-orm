@@ -21,24 +21,28 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.envers.test.integration.collection.mapkey;
+package org.hibernate.envers.test.integration.modifiedflags;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.components.Component1;
 import org.hibernate.envers.test.entities.components.Component2;
 import org.hibernate.envers.test.entities.components.ComponentTestEntity;
+import org.hibernate.envers.test.integration.collection.mapkey
+.ComponentMapKeyEntity;
 import org.hibernate.envers.test.tools.TestTools;
 import org.junit.Test;
 
 import javax.persistence.EntityManager;
-import java.util.Arrays;
+import java.util.List;
+
+import static junit.framework.Assert.assertEquals;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Michal Skowronek (mskowr at o2 dot pl)
  */
-public class ComponentMapKey extends AbstractEntityTest {
+public class HasChangedComponentMapKey extends AbstractModifiedFlagsEntityTest {
     private Integer cmke_id;
 
     private Integer cte1_id;
@@ -89,24 +93,33 @@ public class ComponentMapKey extends AbstractEntityTest {
         cte2_id = cte2.getId();
     }
 
-    @Test
-    public void testRevisionsCounts() {
-        assert Arrays.asList(1, 2).equals(getAuditReader().getRevisions(ComponentMapKeyEntity.class, cmke_id));
-    }
+	@Test
+	public void testHasChangedMapEntity() throws Exception {
+		List list = queryForPropertyHasChanged(ComponentMapKeyEntity.class, cmke_id, "idmap");
+		assertEquals(2, list.size());
+		assertEquals(TestTools.makeList(1, 2), extractRevisionNumbers(list));
 
-    @Test
-    public void testHistoryOfImke() {
-        ComponentTestEntity cte1 = getEntityManager().find(ComponentTestEntity.class, cte1_id);
-        ComponentTestEntity cte2 = getEntityManager().find(ComponentTestEntity.class, cte2_id);
+		list = queryForPropertyHasNotChanged(ComponentMapKeyEntity.class,
+				cmke_id, "idmap");
+		assertEquals(0, list.size());
+	}
 
-        // These fields are unversioned.
-        cte1.setComp2(null);
-        cte2.setComp2(null);
+	@Test
+	public void testHasChangedComponentEntity() throws Exception {
+		List list = queryForPropertyHasChanged(ComponentTestEntity.class,
+				cte1_id, "comp1");
+		assertEquals(1, list.size());
+		assertEquals(TestTools.makeList(1), extractRevisionNumbers(list));
 
-        ComponentMapKeyEntity rev1 = getAuditReader().find(ComponentMapKeyEntity.class, cmke_id, 1);
-        ComponentMapKeyEntity rev2 = getAuditReader().find(ComponentMapKeyEntity.class, cmke_id, 2);
+		list = queryForPropertyHasNotChanged(ComponentTestEntity.class, cte1_id,
+				"comp1");
+		assertEquals(0, list.size());
 
-        assert rev1.getIdmap().equals(TestTools.makeMap(cte1.getComp1(), cte1));
-        assert rev2.getIdmap().equals(TestTools.makeMap(cte1.getComp1(), cte1, cte2.getComp1(), cte2));
-    }
+		list = queryForPropertyHasChanged(ComponentTestEntity.class, cte2_id, "comp1");
+		assertEquals(1, list.size());
+		assertEquals(TestTools.makeList(1), extractRevisionNumbers(list));
+
+		list = queryForPropertyHasNotChanged(ComponentTestEntity.class, cte2_id, "comp1");
+		assertEquals(0, list.size());
+	}
 }

@@ -27,7 +27,6 @@ import org.hibernate.Hibernate;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.configuration.AuditConfiguration;
-import org.hibernate.envers.configuration.metadata.MetadataTools;
 import org.hibernate.proxy.HibernateProxy;
 
 import java.io.Serializable;
@@ -59,12 +58,14 @@ public class CollectionChangeWorkUnit extends AbstractAuditWorkUnit implements A
     public Map<String, Object> generateData(Object revisionData) {
         fillDataWithId(data, revisionData);
 		resolveProxyIfNeeded();
+		Map<String, Object> preGenerateData = new HashMap<String, Object>(data);
 		verCfg.getEntCfg().get(getEntityName()).getPropertyMapper()
 				.mapToMapFromEntity(sessionImplementor, data, entity, null);
 		verCfg.getEntCfg().get(getEntityName()).getPropertyMapper()
 				.mapModifiedFlagsToMapFromEntity(sessionImplementor, data, entity, entity);
 		verCfg.getEntCfg().get(getEntityName()).getPropertyMapper()
 				.mapModifiedFlagsToMapForCollectionChange(collectionPropertyName, data);
+		data.putAll(preGenerateData);
         return data;
     }
 
@@ -76,19 +77,10 @@ public class CollectionChangeWorkUnit extends AbstractAuditWorkUnit implements A
 		}
 	}
 
-	public void addCollectionModifiedData(Map<String, Object> data) {
-		String modifiedFlagForCollection = getModifiedFlagPropertyNameForCollection();
-		if(data.containsKey(modifiedFlagForCollection)) {
-			data.put(modifiedFlagForCollection, true);
-		}
-	}
-
-	private String getModifiedFlagPropertyNameForCollection() {
-		int dotIdx = collectionPropertyName.indexOf('.');
-		if (dotIdx != -1) { // in component
-			return MetadataTools.getModifiedFlagPropertyName(collectionPropertyName.substring(0, dotIdx));
-		}
-		return MetadataTools.getModifiedFlagPropertyName(collectionPropertyName);
+	public void mergeCollectionModifiedData(Map<String, Object> data) {
+		verCfg.getEntCfg().get(getEntityName()).getPropertyMapper()
+				.mapModifiedFlagsToMapForCollectionChange(
+						collectionPropertyName, data);
 	}
 
 	public AuditWorkUnit merge(AddWorkUnit second) {
@@ -104,6 +96,7 @@ public class CollectionChangeWorkUnit extends AbstractAuditWorkUnit implements A
     }
 
     public AuditWorkUnit merge(CollectionChangeWorkUnit second) {
+		second.mergeCollectionModifiedData(data);
         return this;
     }
 

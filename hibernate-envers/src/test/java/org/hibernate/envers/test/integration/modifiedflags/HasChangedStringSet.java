@@ -21,23 +21,24 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.envers.test.integration.collection;
+package org.hibernate.envers.test.integration.modifiedflags;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.collection.StringSetEntity;
 import org.hibernate.envers.test.tools.TestTools;
 import org.junit.Test;
 
 import javax.persistence.EntityManager;
-import java.util.Arrays;
-import java.util.Collections;
+import java.util.List;
+
+import static junit.framework.Assert.assertEquals;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Michal Skowronek (mskowr at o2 dot pl)
  */
-public class StringSet extends AbstractEntityTest {
+public class HasChangedStringSet extends AbstractModifiedFlagsEntityTest {
     private Integer sse1_id;
     private Integer sse2_id;
 
@@ -94,32 +95,24 @@ public class StringSet extends AbstractEntityTest {
         sse2_id = sse2.getId();
     }
 
-    @Test
-    public void testRevisionsCounts() {
-        assert Arrays.asList(1, 2).equals(getAuditReader().getRevisions(StringSetEntity.class, sse1_id));
-        assert Arrays.asList(1, 3).equals(getAuditReader().getRevisions(StringSetEntity.class, sse2_id));
-    }
+	@Test
+	public void testHasChanged() throws Exception {
+		List list = queryForPropertyHasChanged(StringSetEntity.class, sse1_id,
+				"strings");
+		assertEquals(2, list.size());
+		assertEquals(TestTools.makeList(1, 2), extractRevisionNumbers(list));
 
-    @Test
-    public void testHistoryOfSse1() {
-        StringSetEntity rev1 = getAuditReader().find(StringSetEntity.class, sse1_id, 1);
-        StringSetEntity rev2 = getAuditReader().find(StringSetEntity.class, sse1_id, 2);
-        StringSetEntity rev3 = getAuditReader().find(StringSetEntity.class, sse1_id, 3);
+		list = queryForPropertyHasChanged(StringSetEntity.class, sse2_id,
+				"strings");
+		assertEquals(2, list.size());
+		assertEquals(TestTools.makeList(1, 3), extractRevisionNumbers(list));
 
-        assert rev1.getStrings().equals(Collections.EMPTY_SET);
-        assert rev2.getStrings().equals(TestTools.makeSet("sse1_string1", "sse1_string2"));
-        assert rev3.getStrings().equals(TestTools.makeSet("sse1_string1", "sse1_string2"));
-    }
+		list = queryForPropertyHasNotChanged(StringSetEntity.class, sse1_id,
+				"strings");
+		assertEquals(0, list.size());
 
-    @Test
-    public void testHistoryOfSse2() {
-        StringSetEntity rev1 = getAuditReader().find(StringSetEntity.class, sse2_id, 1);
-        StringSetEntity rev2 = getAuditReader().find(StringSetEntity.class, sse2_id, 2);
-        StringSetEntity rev3 = getAuditReader().find(StringSetEntity.class, sse2_id, 3);
-
-        assert rev1.getStrings().equals(TestTools.makeSet("sse2_string1", "sse2_string2"));
-        assert rev2.getStrings().equals(TestTools.makeSet("sse2_string1", "sse2_string2"));
-        assert rev3.getStrings().equals(TestTools.makeSet("sse2_string2"));
-    }
-
+		list = queryForPropertyHasNotChanged(StringSetEntity.class, sse2_id,
+				"strings");
+		assertEquals(0, list.size());
+	}
 }

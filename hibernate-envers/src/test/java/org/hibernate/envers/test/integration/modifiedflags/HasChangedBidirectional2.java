@@ -21,20 +21,27 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.envers.test.integration.onetoone.bidirectional;
+package org.hibernate.envers.test.integration.modifiedflags;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.Priority;
+import org.hibernate.envers.test.integration.onetoone.bidirectional
+.BiRefEdEntity;
+import org.hibernate.envers.test.integration.onetoone.bidirectional
+.BiRefIngEntity;
+import org.hibernate.envers.test.tools.TestTools;
 import org.junit.Test;
 
 import javax.persistence.EntityManager;
-import java.util.Arrays;
+import java.util.List;
+
+import static junit.framework.Assert.assertEquals;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Michal Skowronek (mskowr at o2 dot pl)
  */
-public class Bidirectional2 extends AbstractEntityTest {
+public class HasChangedBidirectional2 extends AbstractModifiedFlagsEntityTest {
     private Integer ed1_id;
     private Integer ed2_id;
 
@@ -109,44 +116,16 @@ public class Bidirectional2 extends AbstractEntityTest {
         ing2_id = ing2.getId();
     }
 
-    @Test
-    public void testRevisionsCounts() {
-        assert Arrays.asList(1, 2, 3, 4).equals(getAuditReader().getRevisions(BiRefEdEntity.class, ed1_id));
-        assert Arrays.asList(1, 4).equals(getAuditReader().getRevisions(BiRefEdEntity.class, ed2_id));
+	@Test
+	public void testHasChanged() throws Exception {
+		List list = queryForPropertyHasChanged(BiRefEdEntity.class, ed1_id,
+				"referencing");
+		assertEquals(3, list.size());
+		assertEquals(TestTools.makeList(2, 3, 4), extractRevisionNumbers(list));
 
-        assert Arrays.asList(2, 3, 4).equals(getAuditReader().getRevisions(BiRefIngEntity.class, ing1_id));
-        assert Arrays.asList(2, 3, 4).equals(getAuditReader().getRevisions(BiRefIngEntity.class, ing2_id));
-    }
-
-    @Test
-    public void testHistoryOfEdId1() {
-        BiRefIngEntity ing1 = getEntityManager().find(BiRefIngEntity.class, ing1_id);
-        BiRefIngEntity ing2 = getEntityManager().find(BiRefIngEntity.class, ing2_id);
-
-        BiRefEdEntity rev1 = getAuditReader().find(BiRefEdEntity.class, ed1_id, 1);
-        BiRefEdEntity rev2 = getAuditReader().find(BiRefEdEntity.class, ed1_id, 2);
-        BiRefEdEntity rev3 = getAuditReader().find(BiRefEdEntity.class, ed1_id, 3);
-        BiRefEdEntity rev4 = getAuditReader().find(BiRefEdEntity.class, ed1_id, 4);
-
-        assert rev1.getReferencing() == null;
-        assert rev2.getReferencing().equals(ing1);
-        assert rev3.getReferencing().equals(ing2);
-        assert rev4.getReferencing() == null;
-    }
-
-    @Test
-    public void testHistoryOfEdId2() {
-        BiRefIngEntity ing1 = getEntityManager().find(BiRefIngEntity.class, ing1_id);
-
-        BiRefEdEntity rev1 = getAuditReader().find(BiRefEdEntity.class, ed2_id, 1);
-        BiRefEdEntity rev2 = getAuditReader().find(BiRefEdEntity.class, ed2_id, 2);
-        BiRefEdEntity rev3 = getAuditReader().find(BiRefEdEntity.class, ed2_id, 3);
-        BiRefEdEntity rev4 = getAuditReader().find(BiRefEdEntity.class, ed2_id, 4);
-
-        assert rev1.getReferencing() == null;
-        assert rev2.getReferencing() == null;
-        assert rev3.getReferencing() == null;
-        assert rev4.getReferencing().equals(ing1);
-    }
-
+		list = queryForPropertyHasChanged(BiRefEdEntity.class, ed2_id,
+				"referencing");
+		assertEquals(1, list.size());
+		assertEquals(TestTools.makeList(4), extractRevisionNumbers(list));
+	}
 }

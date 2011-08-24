@@ -21,23 +21,28 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.envers.test.integration.auditReader;
+package org.hibernate.envers.test.integration.modifiedflags;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.exception.NotAuditedException;
-import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.test.Priority;
+import org.hibernate.envers.test.integration.auditReader.AuditedTestEntity;
+import org.hibernate.envers.test.integration.auditReader.NotAuditedTestEntity;
 import org.junit.Test;
 
 import javax.persistence.EntityManager;
-import java.util.Arrays;
+import java.util.List;
+
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertTrue;
 
 /**
  * A test which checks the correct behavior of AuditReader.isEntityClassAudited(Class entityClass).
  * 
  * @author Hernan Chanfreau
+ * @author Michal Skowronek (mskowr at o2 dot pl)
  */
-public class AuditReaderAPITest extends AbstractEntityTest {
+public class HasChangedAPITest extends AbstractModifiedFlagsEntityTest {
     public void configure(Ejb3Configuration cfg) {
         cfg.addAnnotatedClass(AuditedTestEntity.class);
         cfg.addAnnotatedClass(NotAuditedTestEntity.class);
@@ -56,7 +61,7 @@ public class AuditReaderAPITest extends AbstractEntityTest {
         em.getTransaction().commit();
 
         em.getTransaction().begin();
-        
+
         ent1 = em.find(AuditedTestEntity.class, 1);
         ent2 = em.find(NotAuditedTestEntity.class, 1);
         ent1.setStr1("str2");
@@ -65,24 +70,16 @@ public class AuditReaderAPITest extends AbstractEntityTest {
     }
 
     @Test
-    public void testIsEntityClassAuditedForAuditedEntity() {
-        assert getAuditReader().isEntityClassAudited(AuditedTestEntity.class);
-        
-        assert Arrays.asList(1, 2).equals(getAuditReader().getRevisions(AuditedTestEntity.class, 1));
-    }
+	public void testHasChangedHasNotChangedCriteria() throws Exception {
+		List list = getAuditReader().createQuery().forRevisionsOfEntity(AuditedTestEntity.class, true, true).
+				add(AuditEntity.property("str1").hasChanged()).getResultList();
+		assertEquals(2, list.size());
+		assertEquals("str1", ((AuditedTestEntity) list.get(0)).getStr1());
+		assertEquals("str2", ((AuditedTestEntity) list.get(1)).getStr1());
 
-	@Test
-    public void testIsEntityClassAuditedForNotAuditedEntity() {
-    	
-        assert !getAuditReader().isEntityClassAudited(NotAuditedTestEntity.class);
-        
-        try {
-        	getAuditReader().getRevisions(NotAuditedTestEntity.class, 1);
-        } catch (NotAuditedException nae) {
-			// it's ok because the entity is not audited
-        	assert true;
-		}
-    }
-
+		list = getAuditReader().createQuery().forRevisionsOfEntity(AuditedTestEntity.class, true, true).
+				add(AuditEntity.property("str1").hasNotChanged()).getResultList();
+		assertTrue(list.isEmpty());
+	}
 
 }

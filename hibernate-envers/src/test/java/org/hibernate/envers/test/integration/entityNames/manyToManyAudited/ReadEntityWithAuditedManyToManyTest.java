@@ -1,10 +1,8 @@
 package org.hibernate.envers.test.integration.entityNames.manyToManyAudited;
 
 import org.hibernate.MappingException;
-import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.test.AbstractOneSessionTest;
 import org.hibernate.envers.test.Priority;
-import org.hibernate.envers.test.tools.TestTools;
 import org.junit.Test;
 
 import java.io.File;
@@ -12,8 +10,6 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-
-import static junit.framework.Assert.assertEquals;
 
 /**
  * @author Hern&aacute;n Chanfreau
@@ -134,52 +130,4 @@ public class ReadEntityWithAuditedManyToManyTest extends AbstractOneSessionTest{
 
     }
 
-	@Test
-	public void testHasChangedPerson1() throws Exception {
-		List list = getAuditReader().createQuery().forRevisionsOfEntity(Person.class, "Personaje", false, false)
-				.add(AuditEntity.id().eq(id_pers1))
-				.add(AuditEntity.property("cars").hasChanged())
-				.getResultList();
-		assertEquals(1, list.size());
-		assertEquals(TestTools.makeList(1), extractRevisionNumbers(list));
-
-		list = getAuditReader().createQuery().forRevisionsOfEntity(Person.class, "Personaje", false, false)
-				.add(AuditEntity.id().eq(id_pers1))
-				.add(AuditEntity.property("cars").hasNotChanged())
-				.getResultList();
-		assertEquals(1, list.size());
-		assertEquals(TestTools.makeList(2), extractRevisionNumbers(list));
-	}
-
-	@Test
-	public void testHasChangedPerson2() throws Exception {
-		List list = getAuditReader().createQuery().forRevisionsOfEntity(Person.class, "Personaje", false, false)
-				.add(AuditEntity.id().eq(id_pers2))
-				.add(AuditEntity.property("cars").hasChanged())
-				.getResultList();
-		assertEquals(2, list.size());
-		assertEquals(TestTools.makeList(1, 2), extractRevisionNumbers(list));
-
-		list = getAuditReader().createQuery().forRevisionsOfEntity(Person.class, "Personaje", false, false)
-				.add(AuditEntity.id().eq(id_pers2))
-				.add(AuditEntity.property("cars").hasNotChanged())
-				.getResultList();
-		assertEquals(0, list.size());
-	}
-
-	@Test
-	public void testHasChangedCar1() throws Exception {
-		List list = getAuditReader().createQuery().forRevisionsOfEntity(Car.class, false, false)
-				.add(AuditEntity.id().eq(id_car1))
-				.add(AuditEntity.property("owners").hasChanged())
-				.getResultList();
-		assertEquals(1, list.size());
-		assertEquals(TestTools.makeList(1), extractRevisionNumbers(list));
-
-		list = getAuditReader().createQuery().forRevisionsOfEntity(Car.class, false, false)
-				.add(AuditEntity.id().eq(id_car1))
-				.add(AuditEntity.property("owners").hasNotChanged())
-				.getResultList();
-		assertEquals(0, list.size());
-	}
 }

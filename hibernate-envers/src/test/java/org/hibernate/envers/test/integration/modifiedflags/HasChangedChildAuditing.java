@@ -22,20 +22,25 @@
  * Boston, MA  02110-1301  USA
  */
 
-package org.hibernate.envers.test.integration.inheritance.joined;
+package org.hibernate.envers.test.integration.modifiedflags;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.Priority;
+import org.hibernate.envers.test.integration.inheritance.joined.ChildEntity;
+import org.hibernate.envers.test.integration.inheritance.joined.ParentEntity;
+import org.hibernate.envers.test.tools.TestTools;
 import org.junit.Test;
 
 import javax.persistence.EntityManager;
-import java.util.Arrays;
+import java.util.List;
+
+import static junit.framework.Assert.assertEquals;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Michal Skowronek (mskowr at o2 dot pl)
  */
-public class ChildAuditing extends AbstractEntityTest {
+public class HasChangedChildAuditing extends AbstractModifiedFlagsEntityTest {
     private Integer id1;
 
     public void configure(Ejb3Configuration cfg) {
@@ -64,32 +69,30 @@ public class ChildAuditing extends AbstractEntityTest {
         em.getTransaction().commit();
     }
 
-    @Test
-    public void testRevisionsCounts() {
-        assert Arrays.asList(1, 2).equals(getAuditReader().getRevisions(ChildEntity.class, id1));
-    }
+	@Test
+	public void testChildHasChanged() throws Exception {
+		List list = queryForPropertyHasChanged(ChildEntity.class, id1, "data");
+		assertEquals(2, list.size());
+		assertEquals(TestTools.makeList(1, 2), extractRevisionNumbers(list));
 
-    @Test
-    public void testHistoryOfChildId1() {
-        ChildEntity ver1 = new ChildEntity(id1, "x", 1l);
-        ChildEntity ver2 = new ChildEntity(id1, "y", 2l);
+		list = queryForPropertyHasChanged(ChildEntity.class, id1, "number");
+		assertEquals(2, list.size());
+		assertEquals(TestTools.makeList(1, 2), extractRevisionNumbers(list));
 
-        assert getAuditReader().find(ChildEntity.class, id1, 1).equals(ver1);
-        assert getAuditReader().find(ChildEntity.class, id1, 2).equals(ver2);
+		list = queryForPropertyHasNotChanged(ChildEntity.class, id1, "data");
+		assertEquals(0, list.size());
 
-        assert getAuditReader().find(ParentEntity.class, id1, 1).equals(ver1);
-        assert getAuditReader().find(ParentEntity.class, id1, 2).equals(ver2);
-    }
+		list = queryForPropertyHasNotChanged(ChildEntity.class, id1, "number");
+		assertEquals(0, list.size());
+	}
 
-    @Test
-    public void testPolymorphicQuery() {
-        ChildEntity childVer1 = new ChildEntity(id1, "x", 1l);
+	@Test
+	public void testParentHasChanged() throws Exception {
+		List list = queryForPropertyHasChanged(ParentEntity.class, id1, "data");
+		assertEquals(2, list.size());
+		assertEquals(TestTools.makeList(1, 2), extractRevisionNumbers(list));
 
-        assert getAuditReader().createQuery().forEntitiesAtRevision(ChildEntity.class, 1).getSingleResult()
-                .equals(childVer1);
-
-        assert getAuditReader().createQuery().forEntitiesAtRevision(ParentEntity.class, 1).getSingleResult()
-                .equals(childVer1);
-    }
-
+		list = queryForPropertyHasNotChanged(ParentEntity.class, id1, "data");
+		assertEquals(0, list.size());
+	}
 }

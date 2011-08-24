@@ -22,21 +22,29 @@
  * Boston, MA  02110-1301  USA
  */
 
-package org.hibernate.envers.test.integration.inheritance.joined.childrelation;
+package org.hibernate.envers.test.integration.modifiedflags;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.Priority;
+import org.hibernate.envers.test.integration.inheritance.joined.childrelation
+.ChildIngEntity;
+import org.hibernate.envers.test.integration.inheritance.joined.childrelation
+.ParentNotIngEntity;
+import org.hibernate.envers.test.integration.inheritance.joined.childrelation
+.ReferencedEntity;
 import org.hibernate.envers.test.tools.TestTools;
 import org.junit.Test;
 
 import javax.persistence.EntityManager;
-import java.util.Arrays;
+import java.util.List;
+
+import static junit.framework.Assert.assertEquals;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Michal Skowronek (mskowr at o2 dot pl)
  */
-public class ChildReferencing extends AbstractEntityTest {
+public class HasChangedChildReferencing extends AbstractModifiedFlagsEntityTest {
     private Integer re_id1;
     private Integer re_id2;
     private Integer c_id;
@@ -90,36 +98,19 @@ public class ChildReferencing extends AbstractEntityTest {
         em.getTransaction().commit();
     }
 
-    @Test
-    public void testRevisionsCounts() {
-        assert Arrays.asList(1, 2, 3).equals(getAuditReader().getRevisions(ReferencedEntity.class, re_id1));
-        assert Arrays.asList(1, 3).equals(getAuditReader().getRevisions(ReferencedEntity.class, re_id2));
-        assert Arrays.asList(2, 3).equals(getAuditReader().getRevisions(ChildIngEntity.class, c_id));
-    }
+	@Test
+	public void testReferencedEntityHasChanged() throws Exception {
+		List list = queryForPropertyHasChanged(ReferencedEntity.class, re_id1, "referencing");
+		assertEquals(2, list.size());
+		assertEquals(TestTools.makeList(2, 3), extractRevisionNumbers(list));
 
-    @Test
-    public void testHistoryOfReferencedCollection1() {
-        assert getAuditReader().find(ReferencedEntity.class, re_id1, 1).getReferencing().size() == 0;
-        assert getAuditReader().find(ReferencedEntity.class, re_id1, 2).getReferencing().equals(
-                TestTools.makeSet(new ChildIngEntity(c_id, "y", 1l)));
-        assert getAuditReader().find(ReferencedEntity.class, re_id1, 3).getReferencing().size() == 0;
-    }
+		list = queryForPropertyHasNotChanged(ReferencedEntity.class, re_id1, "referencing");
+		assertEquals(1, list.size()); // initially referencing collection is null
+		assertEquals(TestTools.makeList(1), extractRevisionNumbers(list));
 
-    @Test
-    public void testHistoryOfReferencedCollection2() {
-        assert getAuditReader().find(ReferencedEntity.class, re_id2, 1).getReferencing().size() == 0;
-        assert getAuditReader().find(ReferencedEntity.class, re_id2, 2).getReferencing().size() == 0;
-        assert getAuditReader().find(ReferencedEntity.class, re_id2, 3).getReferencing().equals(
-                TestTools.makeSet(new ChildIngEntity(c_id, "y", 1l)));
-    }
-
-    @Test
-    public void testChildHistory() {
-        assert getAuditReader().find(ChildIngEntity.class, c_id, 1) == null;
-        assert getAuditReader().find(ChildIngEntity.class, c_id, 2).getReferenced().equals(
-                new ReferencedEntity(re_id1));
-        assert getAuditReader().find(ChildIngEntity.class, c_id, 3).getReferenced().equals(
-                new ReferencedEntity(re_id2));
-    }
+		list = queryForPropertyHasChanged(ReferencedEntity.class, re_id2, "referencing");
+		assertEquals(1, list.size());
+		assertEquals(TestTools.makeList(3), extractRevisionNumbers(list));
+	}
 
 }

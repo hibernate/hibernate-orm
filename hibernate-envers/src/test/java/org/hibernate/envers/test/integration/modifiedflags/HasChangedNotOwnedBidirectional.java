@@ -22,22 +22,29 @@
  * Boston, MA  02110-1301  USA
  */
 
-package org.hibernate.envers.test.integration.inheritance.joined.notownedrelation;
-
+package org.hibernate.envers.test.integration.modifiedflags;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.Priority;
+import org.hibernate.envers.test.integration.inheritance.joined
+.notownedrelation.Address;
+import org.hibernate.envers.test.integration.inheritance.joined
+.notownedrelation.Contact;
+import org.hibernate.envers.test.integration.inheritance.joined
+.notownedrelation.PersonalContact;
 import org.hibernate.envers.test.tools.TestTools;
 import org.junit.Test;
 
 import javax.persistence.EntityManager;
-import java.util.Arrays;
+import java.util.List;
+
+import static junit.framework.Assert.assertEquals;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Michal Skowronek (mskowr at o2 dot pl)
  */
-public class NotOwnedBidirectional extends AbstractEntityTest {
+public class HasChangedNotOwnedBidirectional extends AbstractModifiedFlagsEntityTest {
     private Long pc_id;
     private Long a1_id;
     private Long a2_id;
@@ -83,35 +90,19 @@ public class NotOwnedBidirectional extends AbstractEntityTest {
         em.getTransaction().commit();
     }
 
-    @Test
-    public void testRevisionsCounts() {
-        assert Arrays.asList(1, 2).equals(getAuditReader().getRevisions(Contact.class, pc_id));
-        assert Arrays.asList(1, 2).equals(getAuditReader().getRevisions(PersonalContact.class, pc_id));
+	@Test
+	public void testReferencedEntityHasChanged() throws Exception {
+		List list = queryForPropertyHasChanged(PersonalContact.class, pc_id,
+				"addresses");
+		assertEquals(2, list.size());
+		assertEquals(TestTools.makeList(1, 2), extractRevisionNumbers(list));
 
-        assert Arrays.asList(1).equals(getAuditReader().getRevisions(Address.class, a1_id));
-        assert Arrays.asList(1).equals(getAuditReader().getRevisions(Address.class, a1_id));
+		list = queryForPropertyHasChanged(Address.class, a1_id, "contact");
+		assertEquals(1, list.size());
+		assertEquals(TestTools.makeList(1), extractRevisionNumbers(list));
 
-        assert Arrays.asList(2).equals(getAuditReader().getRevisions(Address.class, a2_id));
-        assert Arrays.asList(2).equals(getAuditReader().getRevisions(Address.class, a2_id));
-    }
-
-    @Test
-    public void testHistoryOfContact() {
-        assert getAuditReader().find(Contact.class, pc_id, 1).getAddresses().equals(
-                TestTools.makeSet(new Address(a1_id, "a1")));
-
-        assert getAuditReader().find(Contact.class, pc_id, 2).getAddresses().equals(
-                TestTools.makeSet(new Address(a1_id, "a1"), new Address(a2_id, "a2")));
-    }
-
-    @Test
-    public void testHistoryOfPersonalContact() {
-        System.out.println(getAuditReader().find(PersonalContact.class, pc_id, 1).getAddresses());
-        assert getAuditReader().find(PersonalContact.class, pc_id, 1).getAddresses().equals(
-                TestTools.makeSet(new Address(a1_id, "a1")));
-
-        assert getAuditReader().find(PersonalContact.class, pc_id, 2).getAddresses().equals(
-                TestTools.makeSet(new Address(a1_id, "a1"), new Address(a2_id, "a2")));
-    }
-
+		list = queryForPropertyHasChanged(Address.class, a2_id, "contact");
+		assertEquals(1, list.size());
+		assertEquals(TestTools.makeList(2), extractRevisionNumbers(list));
+	}
 }

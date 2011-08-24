@@ -21,23 +21,27 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.envers.test.integration.components;
+package org.hibernate.envers.test.integration.modifiedflags;
 
+import org.hibernate.QueryException;
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.components.Component1;
 import org.hibernate.envers.test.entities.components.Component2;
 import org.hibernate.envers.test.entities.components.ComponentTestEntity;
+import org.hibernate.envers.test.tools.TestTools;
 import org.junit.Test;
 
 import javax.persistence.EntityManager;
-import java.util.Arrays;
+import java.util.List;
+
+import static junit.framework.Assert.assertEquals;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Michal Skowronek (mskowr at o2 dot pl)
  */
-public class Components extends AbstractEntityTest {
+public class HasChangedComponents extends AbstractModifiedFlagsEntityTest {
     private Integer id1;
     private Integer id2;
     private Integer id3;
@@ -117,60 +121,49 @@ public class Components extends AbstractEntityTest {
         id4 = cte4.getId();
     }
 
-    @Test
-    public void testRevisionsCounts() {
-        assert Arrays.asList(1, 2).equals(getAuditReader().getRevisions(ComponentTestEntity.class, id1));
+	@Test(expected = QueryException.class)
+	public void testHasChangedNotAudited() throws Exception {
+		queryForPropertyHasChanged(ComponentTestEntity.class, id1, "comp2");
+	}
 
-        assert Arrays.asList(1, 2, 4).equals(getAuditReader().getRevisions(ComponentTestEntity.class, id2));
+	@Test
+	public void testHasChangedId1() throws Exception {
+		List list = queryForPropertyHasChanged(ComponentTestEntity.class, id1, "comp1");
+		assertEquals(2, list.size());
+		assertEquals(TestTools.makeList(1, 2), extractRevisionNumbers(list));
 
-        assert Arrays.asList(1, 3).equals(getAuditReader().getRevisions(ComponentTestEntity.class, id3));
+		list = queryForPropertyHasNotChanged(ComponentTestEntity.class, id1, "comp1");
+		assertEquals(0, list.size());
+	}
 
-		assert Arrays.asList(1, 2, 3).equals(getAuditReader().getRevisions(ComponentTestEntity.class, id4));
-    }
+	@Test
+	public void testHasChangedId2() throws Exception {
+		List list = queryForPropertyHasChangedWithDeleted(ComponentTestEntity.class, id2, "comp1");
+		assertEquals(3, list.size());
+		assertEquals(TestTools.makeList(1, 2, 4), extractRevisionNumbers(list));
 
-    @Test
-    public void testHistoryOfId1() {
-        ComponentTestEntity ver1 = new ComponentTestEntity(id1, new Component1("a", "b"), null);
-        ComponentTestEntity ver2 = new ComponentTestEntity(id1, new Component1("a'", "b'"), null);
+		list = queryForPropertyHasNotChangedWithDeleted(ComponentTestEntity.class, id2, "comp1");
+		assertEquals(0, list.size());
+	}
 
-        assert getAuditReader().find(ComponentTestEntity.class, id1, 1).equals(ver1);
-        assert getAuditReader().find(ComponentTestEntity.class, id1, 2).equals(ver2);
-        assert getAuditReader().find(ComponentTestEntity.class, id1, 3).equals(ver2);
-        assert getAuditReader().find(ComponentTestEntity.class, id1, 4).equals(ver2);
-    }
+	@Test
+	public void testHasChangedId3() throws Exception {
+		List list = queryForPropertyHasChangedWithDeleted(ComponentTestEntity.class, id3, "comp1");
+		assertEquals(2, list.size());
+		assertEquals(TestTools.makeList(1, 3), extractRevisionNumbers(list));
 
-    @Test
-    public void testHistoryOfId2() {
-        ComponentTestEntity ver1 = new ComponentTestEntity(id2, new Component1("a2", "b2"), null);
-        ComponentTestEntity ver2 = new ComponentTestEntity(id2, new Component1("a2'", "b2"), null);
+		list = queryForPropertyHasNotChangedWithDeleted(ComponentTestEntity.class, id3, "comp1");
+		assertEquals(0, list.size());
+	}
 
-        assert getAuditReader().find(ComponentTestEntity.class, id2, 1).equals(ver1);
-        assert getAuditReader().find(ComponentTestEntity.class, id2, 2).equals(ver2);
-        assert getAuditReader().find(ComponentTestEntity.class, id2, 3).equals(ver2);
-        assert getAuditReader().find(ComponentTestEntity.class, id2, 4) == null;
-    }
+	@Test
+	public void testHasChangedId4() throws Exception {
+		List list = queryForPropertyHasChangedWithDeleted(ComponentTestEntity.class, id4, "comp1");
+		assertEquals(2, list.size());
+		assertEquals(TestTools.makeList(2, 3), extractRevisionNumbers(list));
 
-    @Test
-    public void testHistoryOfId3() {
-        ComponentTestEntity ver1 = new ComponentTestEntity(id3, new Component1("a3", "b3"), null);
-        ComponentTestEntity ver2 = new ComponentTestEntity(id3, new Component1("a3", "b3'"), null);
-
-        assert getAuditReader().find(ComponentTestEntity.class, id3, 1).equals(ver1);
-        assert getAuditReader().find(ComponentTestEntity.class, id3, 2).equals(ver1);
-        assert getAuditReader().find(ComponentTestEntity.class, id3, 3).equals(ver2);
-        assert getAuditReader().find(ComponentTestEntity.class, id3, 4).equals(ver2);
-    }
-
-    @Test
-    public void testHistoryOfId4() {
-        ComponentTestEntity ver1 = new ComponentTestEntity(id4, null, null);
-        ComponentTestEntity ver2 = new ComponentTestEntity(id4, new Component1("n", null), null);
-        ComponentTestEntity ver3 = new ComponentTestEntity(id4, null, null);
-
-        assert getAuditReader().find(ComponentTestEntity.class, id4, 1).equals(ver1);
-        assert getAuditReader().find(ComponentTestEntity.class, id4, 2).equals(ver2);
-        assert getAuditReader().find(ComponentTestEntity.class, id4, 3).equals(ver3);
-        assert getAuditReader().find(ComponentTestEntity.class, id4, 4).equals(ver3);
-    }
-
+		list = queryForPropertyHasNotChangedWithDeleted(ComponentTestEntity.class, id4, "comp1");
+		assertEquals(1, list.size());
+		assertEquals(TestTools.makeList(1), extractRevisionNumbers(list));
+	}
 }

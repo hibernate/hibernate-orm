@@ -611,7 +611,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Overriding %s is dangerous, this might break the EJB3 specification implementation", id = 193)
 	void overridingTransactionStrategyDangerous(String transactionStrategy);
 
-	@LogMessage(level = WARN)
+	@LogMessage(level = DEBUG)
 	@Message(value = "Package not found or wo package-info.java: %s", id = 194)
 	void packageNotFound(String packageName);
 

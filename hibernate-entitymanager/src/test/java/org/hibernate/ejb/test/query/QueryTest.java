@@ -1,21 +1,41 @@
-//$Id$
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.ejb.test.query;
-
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.HashSet;
-import java.util.Set;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.persistence.TemporalType;
+import javax.persistence.Tuple;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 import org.hibernate.Hibernate;
-import org.hibernate.ejb.test.TestCase;
-import org.hibernate.ejb.test.Item;
-import org.hibernate.ejb.test.Wallet;
 import org.hibernate.ejb.test.Distributor;
+import org.hibernate.ejb.test.Item;
+import org.hibernate.ejb.test.TestCase;
+import org.hibernate.ejb.test.Wallet;
 
 /**
  * @author Emmanuel Bernard
@@ -517,6 +537,33 @@ public class QueryTest extends TestCase {
 		em.close();
 	}
 
+	public void testTypedScalarQueries() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		Item item = new Item( "Mouse", "Micro$oft mouse" );
+		em.persist( item );
+		assertTrue( em.contains( item ) );
+		em.getTransaction().commit();
+
+		em.getTransaction().begin();
+		Object[] itemData = em.createQuery( "select i.name,i.descr from Item i", Object[].class ).getSingleResult();
+		assertEquals( 2, itemData.length );
+		assertEquals( String.class, itemData[0].getClass() );
+		assertEquals( String.class, itemData[1].getClass() );
+		Tuple itemTuple = em.createQuery( "select i.name,i.descr from Item i", Tuple.class ).getSingleResult();
+		assertEquals( 2, itemTuple.getElements().size() );
+		assertEquals( String.class, itemTuple.get( 0 ).getClass() );
+		assertEquals( String.class, itemTuple.get( 1 ).getClass() );
+		Item itemView = em.createQuery( "select new Item(i.name,i.descr) from Item i", Item.class ).getSingleResult();
+		assertNotNull( itemView );
+		assertEquals( "Micro$oft mouse", itemView.getDescr() );
+		em.remove( item );
+		em.getTransaction().commit();
+
+		em.close();
+	}
+
+	@Override
 	public Class[] getAnnotatedClasses() {
 		return new Class[]{
 				Item.class,

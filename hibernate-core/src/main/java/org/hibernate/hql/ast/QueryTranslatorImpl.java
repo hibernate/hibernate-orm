@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,16 +20,24 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.hql.ast;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import antlr.ANTLRException;
 import antlr.RecognitionException;
 import antlr.TokenStreamException;
 import antlr.collections.AST;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
@@ -40,8 +48,8 @@ import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.event.EventSource;
 import org.hibernate.hql.FilterTranslator;
-import org.hibernate.hql.QueryExecutionRequestException;
 import org.hibernate.hql.ParameterTranslations;
+import org.hibernate.hql.QueryExecutionRequestException;
 import org.hibernate.hql.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.antlr.HqlTokenTypes;
 import org.hibernate.hql.antlr.SqlTokenTypes;
@@ -49,26 +57,20 @@ import org.hibernate.hql.ast.exec.BasicExecutor;
 import org.hibernate.hql.ast.exec.MultiTableDeleteExecutor;
 import org.hibernate.hql.ast.exec.MultiTableUpdateExecutor;
 import org.hibernate.hql.ast.exec.StatementExecutor;
+import org.hibernate.hql.ast.tree.AggregatedSelectExpression;
 import org.hibernate.hql.ast.tree.FromElement;
 import org.hibernate.hql.ast.tree.InsertStatement;
 import org.hibernate.hql.ast.tree.QueryNode;
 import org.hibernate.hql.ast.tree.Statement;
 import org.hibernate.hql.ast.util.ASTPrinter;
-import org.hibernate.hql.ast.util.NodeTraverser;
 import org.hibernate.hql.ast.util.ASTUtil;
+import org.hibernate.hql.ast.util.NodeTraverser;
 import org.hibernate.loader.hql.QueryLoader;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.type.Type;
 import org.hibernate.util.IdentitySet;
-import org.hibernate.util.StringHelper;
 import org.hibernate.util.ReflectHelper;
-
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.ArrayList;
+import org.hibernate.util.StringHelper;
 
 /**
  * A QueryTranslator that uses an Antlr-based parser.
@@ -572,6 +574,11 @@ public class QueryTranslatorImpl implements FilterTranslator {
 
 	public List getCollectedParameterSpecifications() {
 		return collectedParameterSpecifications;
+	}
+
+	public Class getDynamicInstantiationResultType() {
+		AggregatedSelectExpression aggregation = queryLoader.getAggregatedSelectExpression();
+		return aggregation == null ? null : aggregation.getAggregationResultType();
 	}
 
 	public static class JavaConstantConverter implements NodeTraverser.VisitationStrategy {

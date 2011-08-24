@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,38 +20,38 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.engine.query;
 
-import org.hibernate.hql.QuerySplitter;
-import org.hibernate.hql.QueryTranslator;
-import org.hibernate.hql.ParameterTranslations;
-import org.hibernate.hql.FilterTranslator;
-import org.hibernate.util.ArrayHelper;
-import org.hibernate.util.EmptyIterator;
-import org.hibernate.util.JoinedIterator;
-import org.hibernate.util.IdentitySet;
-import org.hibernate.HibernateException;
-import org.hibernate.ScrollableResults;
-import org.hibernate.QueryException;
-import org.hibernate.type.Type;
-import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.engine.QueryParameters;
-import org.hibernate.engine.SessionImplementor;
-import org.hibernate.engine.RowSelection;
-import org.hibernate.event.EventSource;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.Serializable;
-import java.util.Map;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.HashMap;
+import org.hibernate.HibernateException;
+import org.hibernate.QueryException;
+import org.hibernate.ScrollableResults;
+import org.hibernate.engine.QueryParameters;
+import org.hibernate.engine.RowSelection;
+import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.SessionImplementor;
+import org.hibernate.event.EventSource;
+import org.hibernate.hql.FilterTranslator;
+import org.hibernate.hql.ParameterTranslations;
+import org.hibernate.hql.QuerySplitter;
+import org.hibernate.hql.QueryTranslator;
+import org.hibernate.type.Type;
+import org.hibernate.util.ArrayHelper;
+import org.hibernate.util.EmptyIterator;
+import org.hibernate.util.IdentitySet;
+import org.hibernate.util.JoinedIterator;
 
 /**
  * Defines a query execution plan for an HQL query (or filter).
@@ -335,5 +335,9 @@ public class HQLQueryPlan implements Serializable {
 		QueryTranslator[] copy = new QueryTranslator[translators.length];
 		System.arraycopy(translators, 0, copy, 0, copy.length);
 		return copy;
+	}
+
+	public Class getDynamicInstantiationResultType() {
+		return translators[0].getDynamicInstantiationResultType();
 	}
 }

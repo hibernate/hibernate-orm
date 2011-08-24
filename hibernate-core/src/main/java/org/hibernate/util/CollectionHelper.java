@@ -93,4 +93,8 @@ public final class CollectionHelper {
 		int actual = ( (int) (numberOfElements / LOAD_FACTOR) ) + 1;
 		return Math.max( actual, MINIMUM_INITIAL_CAPACITY );
 	}
+
+	public static <T> List<T> arrayList(int anticipatedSize) {
+		return new ArrayList<T>( anticipatedSize );
+	}
 }

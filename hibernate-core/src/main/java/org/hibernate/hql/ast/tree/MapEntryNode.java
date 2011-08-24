@@ -66,6 +66,10 @@ public class MapEntryNode extends AbstractMapComponentNode implements Aggregated
 		return "entry(*)";
 	}
 
+	public Class getAggregationResultType() {
+		return Map.Entry.class;
+	}
+
 	protected Type resolveType(QueryableCollection collectionPersister) {
 		Type keyType = collectionPersister.getIndexType();
 		Type valueType = collectionPersister.getElementType();

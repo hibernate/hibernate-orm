@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.loader.hql;
 
@@ -100,7 +99,7 @@ public class QueryLoader extends BasicLoader {
 
 	private int selectLength;
 
-	private ResultTransformer implicitResultTransformer;
+	private AggregatedSelectExpression aggregatedSelectExpression;
 	private String[] queryReturnAliases;
 
 	private LockMode[] defaultLockModes;
@@ -132,10 +131,7 @@ public class QueryLoader extends BasicLoader {
 		//sqlResultTypes = selectClause.getSqlResultTypes();
 		queryReturnTypes = selectClause.getQueryReturnTypes();
 
-		AggregatedSelectExpression aggregatedSelectExpression = selectClause.getAggregatedSelectExpression();
-		implicitResultTransformer = aggregatedSelectExpression == null
-				? null
-				: aggregatedSelectExpression.getResultTransformer();
+		aggregatedSelectExpression = selectClause.getAggregatedSelectExpression();
 		queryReturnAliases = selectClause.getQueryReturnAliases();
 
 		List collectionFromElements = selectClause.getCollectionFromElements();
@@ -202,6 +198,11 @@ public class QueryLoader extends BasicLoader {
 		//NONE, because its the requested lock mode, not the actual! 
 		defaultLockModes = ArrayHelper.fillArray( LockMode.NONE, size );
 	}
+
+	public AggregatedSelectExpression getAggregatedSelectExpression() {
+		return aggregatedSelectExpression;
+	}
+
 
 	// -- Loader implementation --
 
@@ -379,10 +380,13 @@ public class QueryLoader extends BasicLoader {
 	}
 
 	private boolean hasSelectNew() {
-		return implicitResultTransformer != null;
+		return aggregatedSelectExpression != null &&  aggregatedSelectExpression.getResultTransformer() != null;
 	}
 
 	protected ResultTransformer resolveResultTransformer(ResultTransformer resultTransformer) {
+		final ResultTransformer implicitResultTransformer = aggregatedSelectExpression == null
+				? null
+				: aggregatedSelectExpression.getResultTransformer();
 		return HolderInstantiator.resolveResultTransformer( implicitResultTransformer, resultTransformer );
 	}
 	
@@ -437,6 +441,9 @@ public class QueryLoader extends BasicLoader {
 	}
 
 	private HolderInstantiator buildHolderInstantiator(ResultTransformer queryLocalResultTransformer) {
+		final ResultTransformer implicitResultTransformer = aggregatedSelectExpression == null
+				? null
+				: aggregatedSelectExpression.getResultTransformer();
 		return HolderInstantiator.getHolderInstantiator(
 				implicitResultTransformer,
 				queryLocalResultTransformer,

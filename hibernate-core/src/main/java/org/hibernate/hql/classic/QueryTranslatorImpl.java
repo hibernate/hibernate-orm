@@ -1169,6 +1169,10 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 		return false;
 	}
 
+	public Class getDynamicInstantiationResultType() {
+		return holderClass;
+	}
+
 	public ParameterTranslations getParameterTranslations() {
 		return new ParameterTranslations() {
 

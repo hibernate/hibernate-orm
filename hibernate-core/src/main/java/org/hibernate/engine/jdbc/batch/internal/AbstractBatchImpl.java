@@ -42,6 +42,7 @@ import org.jboss.logging.Logger;
  * Convenience base class for implementors of the Batch interface.
  *
  * @author Steve Ebersole
+ * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public abstract class AbstractBatchImpl implements Batch {
 
@@ -134,6 +135,7 @@ public abstract class AbstractBatchImpl implements Batch {
 	}
 
 	private PreparedStatement buildBatchStatement(String sql, boolean callable) {
+		sql = jdbcCoordinator.getTransactionCoordinator().getTransactionContext().onPrepareStatement( sql );
 		try {
 			if ( callable ) {
 				return jdbcCoordinator.getLogicalConnection().getShareableConnectionProxy().prepareCall( sql );

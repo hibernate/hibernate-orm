@@ -112,5 +112,7 @@ public interface TransactionContext extends Serializable {
 
 	public void afterTransactionCompletion(TransactionImplementor hibernateTransaction, boolean successful);
 
+	public String onPrepareStatement(String sql); 
+
 	public JdbcConnectionAccess getJdbcConnectionAccess();
 }

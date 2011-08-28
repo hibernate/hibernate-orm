@@ -45,6 +45,7 @@ import java.util.Set;
 
 import org.jboss.logging.Logger;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.CacheMode;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.Criteria;
@@ -535,6 +536,16 @@ public final class SessionImpl
 		if ( autoClear ) {
 			clear();
 		}
+	}
+
+	@Override
+	public String onPrepareStatement(String sql) {
+		errorIfClosed();
+		sql = interceptor.onPrepareStatement( sql );
+		if ( sql == null || sql.length() == 0 ) {
+			throw new AssertionFailure( "Interceptor.onPrepareStatement() returned null or empty string." );
+		}
+		return sql;
 	}
 
 	/**

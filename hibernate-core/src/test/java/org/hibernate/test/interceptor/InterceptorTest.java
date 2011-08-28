@@ -23,9 +23,13 @@
  */
 package org.hibernate.test.interceptor;
 import java.io.Serializable;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.EmptyInterceptor;
+import org.hibernate.Interceptor;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.type.Type;
@@ -39,9 +43,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Gavin King
+ * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public class InterceptorTest extends BaseCoreFunctionalTestCase {
 	@Override
@@ -230,6 +236,79 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 		assertEquals( u.getPassword(), reloaded.getPassword() );
 
 		s.delete( reloaded );
+		t.commit();
+		s.close();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-6594" )
+	public void testPrepareStatementIntercept() {
+		final Queue<String> expectedSQLs = new LinkedList<String>();
+		// Transaction 1
+		expectedSQLs.add( "insert" );
+		// Transaction 2
+		expectedSQLs.add( "select" );
+		expectedSQLs.add( "select" );
+		// Transaction 3
+		expectedSQLs.add( "select" );
+		expectedSQLs.add( "select" );
+		expectedSQLs.add( "update" );
+		// Transaction 4
+		expectedSQLs.add( "select" );
+		expectedSQLs.add( "delete" );
+
+		final Interceptor interceptor = new EmptyInterceptor() {
+			@Override
+			public String onPrepareStatement(String sql) {
+				assertNotNull( sql );
+				assertTrue( sql.toLowerCase().startsWith( expectedSQLs.poll().toLowerCase() ) );
+				return sql;
+			}
+		};
+
+		Session s = openSession(interceptor);
+		Transaction t = s.beginTransaction();
+		User u = new User( "Lukasz", "Antoniak" );
+		s.persist( u );
+		t.commit();
+		s.close();
+
+		s = openSession(interceptor);
+		t = s.beginTransaction();
+		s.get( User.class, "Lukasz" );
+		s.createQuery( "from User u" ).list();
+		t.commit();
+		s.close();
+
+		u.setPassword( "Kinga" );
+		s = openSession(interceptor);
+		t = s.beginTransaction();
+		s.merge( u );
+		t.commit();
+		s.close();
+
+		s = openSession(interceptor);
+		t = s.beginTransaction();
+		s.delete( u );
+		t.commit();
+		s.close();
+
+		assertTrue( expectedSQLs.isEmpty() );
+	}
+
+	@Test(expected = AssertionFailure.class)
+	public void testPrepareStatementFaultIntercept() {
+		final Interceptor interceptor = new EmptyInterceptor() {
+			@Override
+			public String onPrepareStatement(String sql) {
+				return null;
+			}
+		};
+
+		Session s = openSession(interceptor);
+		Transaction t = s.beginTransaction();
+		User u = new User( "Kinga", "Mroz" );
+		s.persist( u );
 		t.commit();
 		s.close();
 	}

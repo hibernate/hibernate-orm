@@ -37,7 +37,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 /**
-* @author Steve Ebersole
+ * @author Steve Ebersole
+ * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
 */
 class StatementPreparerImpl implements StatementPreparer {
 	private long transactionTimeOut = -1;
@@ -169,7 +170,7 @@ class StatementPreparerImpl implements StatementPreparer {
 		protected final String sql;
 
 		protected StatementPreparationTemplate(String sql) {
-			this.sql = sql;
+			this.sql = jdbcCoordinator.getTransactionCoordinator().getTransactionContext().onPrepareStatement( sql );
 		}
 
 		public PreparedStatement prepareStatement() {

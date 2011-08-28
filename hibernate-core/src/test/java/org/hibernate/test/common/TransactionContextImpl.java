@@ -114,4 +114,9 @@ public class TransactionContextImpl implements TransactionContext {
 	@Override
 	public void afterTransactionCompletion(TransactionImplementor hibernateTransaction, boolean successful) {
 	}
+
+	@Override
+	public String onPrepareStatement(String sql) {
+		return sql;
+	}
 }

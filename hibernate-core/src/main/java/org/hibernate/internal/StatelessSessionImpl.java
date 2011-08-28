@@ -361,6 +361,11 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 		// nothing to do here
 	}
 
+	@Override
+	public String onPrepareStatement(String sql) {
+		return sql;
+	}
+
 	public String bestGuessEntityName(Object object) {
 		if (object instanceof HibernateProxy) {
 			object = ( (HibernateProxy) object ).getHibernateLazyInitializer().getImplementation();

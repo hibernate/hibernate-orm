@@ -32,6 +32,7 @@ import javax.persistence.Id;
 
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import org.hibernate.AssertionFailure;
@@ -47,6 +48,7 @@ import static org.junit.Assert.assertFalse;
  */
 public class EmbeddableHierarchyTest extends BaseAnnotationIndexTestCase {
 	@Test
+    @Ignore("HHH-6606 ignore for now")
 	public void testEmbeddableHierarchy() {
 		@Embeddable
 		class A {

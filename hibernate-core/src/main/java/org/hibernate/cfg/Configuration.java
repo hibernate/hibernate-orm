@@ -156,15 +156,17 @@ import org.hibernate.usertype.UserType;
  * <br>
  * A new <tt>Configuration</tt> will use the properties specified in
  * <tt>hibernate.properties</tt> by default.
+ * <p/>
+ * NOTE : This will be replaced by use of {@link ServiceRegistryBuilder} and
+ * {@link org.hibernate.metamodel.MetadataSources} instead after the 4.0 release at which point this class will become
+ * deprecated and scheduled for removal in 5.0.  See
+ * <a href="http://opensource.atlassian.com/projects/hibernate/browse/HHH-6183">HHH-6183</a>,
+ * <a href="http://opensource.atlassian.com/projects/hibernate/browse/HHH-2578">HHH-2578</a> and
+ * <a href="http://opensource.atlassian.com/projects/hibernate/browse/HHH-6586">HHH-6586</a> for details
  *
  * @author Gavin King
  * @see org.hibernate.SessionFactory
- *
- * @deprecated use {@link ServiceRegistryBuilder} and {@link org.hibernate.metamodel.MetadataSources} instead.  See
- * <a href="http://opensource.atlassian.com/projects/hibernate/browse/HHH-6183">HHH-6183</a> and
- * <a href="http://opensource.atlassian.com/projects/hibernate/browse/HHH-2578">HHH-2578</a> for details
  */
-@Deprecated
 public class Configuration implements Serializable {
 
     private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, Configuration.class.getName());

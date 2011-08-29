@@ -122,7 +122,12 @@ import org.hibernate.service.jdbc.connections.internal.DatasourceConnectionProvi
  *
  * @author Emmanuel Bernard
  *
- * @deprecated See <a href="http://opensource.atlassian.com/projects/hibernate/browse/HHH-6181">HHH-6181</a> and
+ * @deprecated Direct usage of this class has never been supported.  Instead, the application should obtain reference
+ * to the {@link EntityManagerFactory} as outlined in the JPA specification, section <i>7.3 Obtaining an Entity
+ * Manager Factory</i> based on runtime environment.  Additionally this class will be removed in Hibernate release
+ * 5.0 for the same reasoning outlined on {@link Configuration} due to move towards new
+ * {@link org.hibernate.SessionFactory} building methodology.  See
+ * <a href="http://opensource.atlassian.com/projects/hibernate/browse/HHH-6181">HHH-6181</a> and
  * <a href="http://opensource.atlassian.com/projects/hibernate/browse/HHH-6159">HHH-6159</a> for details
  */
 @Deprecated

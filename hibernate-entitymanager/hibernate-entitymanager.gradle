@@ -1,7 +1,7 @@
 import org.apache.tools.ant.filters.ReplaceTokens
 
 apply plugin: 'java'
-apply plugin: org.hibernate.gradle.testing.matrix.MatrixTestingPlugin
+//apply plugin: org.hibernate.gradle.testing.matrix.MatrixTestingPlugin
 
 dependencies {
     shrinkwrapVersion = '1.0.0-beta-5'
@@ -27,9 +27,20 @@ sourceSets.test {
     generatedJpaMetamodelSrcDir = file( "${buildDir}/generated-src/jpamodelgen/${name}" )
     java.srcDir generatedJpaMetamodelSrcDir
 }
-
+sourceSets {
+    matrix {
+        java {
+            srcDir 'src/matrix/java'
+        }
+        resources {
+            srcDir 'src/matrix/resources'
+        }
+    }
+}
 ideaModule {
     excludeDirs += file("$buildDir/bundles")
+    testSourceDirs += file( 'src/matrix/java')
+    testSourceDirs += file( 'src/matrix/resources')
 }
 
 task generateJpaMetamodelClasses(type: Compile) {

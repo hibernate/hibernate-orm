@@ -32,7 +32,16 @@ dependencies {
 manifest.mainAttributes(
         'Main-Class': 'org.hibernate.Version'
 )
-
+sourceSets {
+    matrix {
+        java {
+            srcDir 'src/matrix/java'
+        }
+        resources {
+            srcDir 'src/matrix/resources'
+        }
+    }
+}
 sourceSets.main {
     originalJavaSrcDirs = java.srcDirs
     jaxbTargetDir = file( "${buildDir}/generated-src/jaxb/main" )
@@ -45,7 +54,9 @@ sourceSets.test.resources {
 }
 
 ideaModule {
-    sourceDirs.add( file( '$buildDir/generated-src/antlr/main' ) )
+    sourceDirs += file( '$buildDir/generated-src/antlr/main' )
+    testSourceDirs += file( 'src/matrix/java')
+    testSourceDirs += file( 'src/matrix/resources')
 }
 
 task jaxb {

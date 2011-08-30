@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.util;
+package org.hibernate.test.util;
 import java.io.InputStream;
 import java.io.Serializable;
 
@@ -60,7 +60,7 @@ public class SerializationHelperTest extends BaseUnitTestCase {
 
 	@Test
 	public void testSerializeDeserialize() throws Exception {
-		Class clazz = Thread.currentThread().getContextClassLoader().loadClass( "org.hibernate.util.SerializableThing" );
+		Class clazz = Thread.currentThread().getContextClassLoader().loadClass( "org.hibernate.test.util.SerializableThing" );
 		Object instance = clazz.newInstance();
 
 		// SerializableType.toBytes() logic, as called from SerializableType.disassemble()
@@ -105,7 +105,7 @@ public class SerializationHelperTest extends BaseUnitTestCase {
 			if ( name.equals( "org.hibernate.LockMode" ) ) {
 				throw new ClassNotFoundException( "Could not find "+ name );
 			}
-			if ( ! name.equals( "org.hibernate.util.SerializableThing" ) ) {
+			if ( ! name.equals( "org.hibernate.test.util.SerializableThing" ) ) {
 				return getParent().loadClass( name );
 			}
 

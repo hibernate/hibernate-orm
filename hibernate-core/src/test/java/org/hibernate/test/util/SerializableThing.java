@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -22,28 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.util;
-
-import org.hibernate.internal.util.StringHelper;
-
-import org.junit.Test;
-
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-
-import static org.junit.Assert.assertEquals;
+import java.io.Serializable;
 
 /**
  * @author Steve Ebersole
  */
-public class StringHelperTest extends BaseUnitTestCase {
-	@Test
-	public void testAliasGeneration() {
-		assertSimpleAlias( "xyz", "xyz_" );
-		assertSimpleAlias( "_xyz", "xyz_" );
-		assertSimpleAlias( "!xyz", "xyz_" );
-		assertSimpleAlias( "abcdefghijklmnopqrstuvwxyz", "abcdefghij_" );
-	}
-
-	private void assertSimpleAlias(String source, String expected) {
-		assertEquals( expected, StringHelper.generateAlias( source ) );
-	}
+public class SerializableThing implements Serializable {
 }

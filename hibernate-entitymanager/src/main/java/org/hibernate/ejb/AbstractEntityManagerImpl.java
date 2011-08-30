@@ -54,6 +54,7 @@ import javax.transaction.Status;
 import javax.transaction.Synchronization;
 import javax.transaction.SystemException;
 import javax.transaction.TransactionManager;
+import javax.transaction.Status;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -1124,7 +1125,9 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 					);
 				}
 				try {
-					transactionManager.setRollbackOnly();
+                    if ( transactionManager.getStatus() != Status.STATUS_NO_TRANSACTION ) {
+                        transactionManager.setRollbackOnly();
+                    }
 				}
 				catch ( SystemException e ) {
 					throw new PersistenceException( "Unable to set the JTA transaction as RollbackOnly", e );

@@ -36,7 +36,7 @@ import org.jboss.logging.Logger;
  */
 public class SqlStatementLogger {
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, SqlStatementLogger.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, "org.hibernate.SQL");
 
 	private boolean logToStdout;
 	private boolean format;

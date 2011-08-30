@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<entity-mappings xmlns="http://java.sun.com/xml/ns/persistence/orm"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+                 version="2.0">
+    <!-- no grammar specified should pass -->
+    <persistence-unit-metadata>
+        <persistence-unit-defaults>
+            <cascade-persist/>
+        </persistence-unit-defaults>
+    </persistence-unit-metadata>
+    <package>org.hibernate.test.annotations.xml.ejb3</package>
+    <table-generator name="generator" table="table_id"/>
+    <named-query name="manufacturer.findAll">
+        <query>select m from Manufacturer m</query>
+    </named-query>
+    <entity class="Model" access="PROPERTY" name="ModelZ" metadata-complete="true">
+        <table name="ModelZ">
+        </table>
+        <inheritance strategy="JOINED"/>
+        <attributes>
+            <id name="id">
+                <column name="fld_id"/>
+                <generated-value strategy="TABLE" generator="generator"/>
+            </id>
+            <basic name="unknownProperty"/>
+            <many-to-one name="manufacturer" fetch="LAZY">
+                <join-column name="manufacturer_pk"/>
+            </many-to-one>
+        </attributes>
+    </entity>
+    <entity class="CarModel" metadata-complete="true">
+        <primary-key-join-column name="model_id"/>
+        <inheritance strategy="JOINED"/>
+        <named-query name="allModelsPerManufacturer">
+            <query>from ModelZ m where m.manufacturer = :manufacturer</query>
+            <hint name="org.hibernate.timeout" value="200"/>
+        </named-query>
+        <exclude-default-listeners/>
+        <exclude-superclass-listeners/>
+        <attributes>
+            <basic name="year" optional="false">
+                <temporal>DATE</temporal>
+            </basic>
+        </attributes>
+    </entity>
+    <entity class="Manufacturer">
+        <attributes>
+            <id name="id">
+                <generated-value strategy="AUTO"/>
+            </id>
+            <one-to-many name="models" mapped-by="manufacturer"/>
+        </attributes>
+    </entity>
+</entity-mappings>

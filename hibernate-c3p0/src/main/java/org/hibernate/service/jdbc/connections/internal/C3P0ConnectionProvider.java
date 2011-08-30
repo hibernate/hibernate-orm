@@ -119,6 +119,7 @@ public class C3P0ConnectionProvider implements ConnectionProvider, Configurable,
 	 * {@inheritDoc}
 	 */
 	@Override
+    @SuppressWarnings( {"unchecked"})
 	public void configure(Map props) {
 		String jdbcDriverClass = (String) props.get( Environment.DRIVER );
 		String jdbcUrl = (String) props.get( Environment.URL );

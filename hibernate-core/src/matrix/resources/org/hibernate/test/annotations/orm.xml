@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<entity-mappings xmlns="http://java.sun.com/xml/ns/persistence/orm"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="1.0"
+        >
+    <sequence-generator name="SEQ_GEN" sequence-name="my_sequence"/>
+    <table-generator name="EMP_GEN" table="GENERATOR_TABLE"
+                     pk-column-name="pkey" pk-column-value="EMP"
+                     value-column-name="hi" allocation-size="20"/>
+</entity-mappings>

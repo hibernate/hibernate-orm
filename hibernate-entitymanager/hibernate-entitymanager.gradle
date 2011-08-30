@@ -1,9 +1,10 @@
 import org.apache.tools.ant.filters.ReplaceTokens
 
 apply plugin: 'java'
+apply plugin: org.hibernate.gradle.testing.matrix.MatrixTestingPlugin
 
 dependencies {
-    shrinkwrapVersion = '1.0.0-alpha-6'
+    shrinkwrapVersion = '1.0.0-beta-5'
 
     compile( project(':hibernate-core') )
     compile( libraries.dom4j )

@@ -229,7 +229,8 @@ subprojects { subProject ->
                     file("$buildDir/libs"),
                     file("$buildDir/reports"),
                     file("$buildDir/test-results"),
-                    file("$buildDir/tmp")
+                    file("$buildDir/tmp"),
+                    file("$buildDir/matrix")
             ] as Set
         }
 

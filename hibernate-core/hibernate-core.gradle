@@ -1,6 +1,7 @@
 apply plugin: 'java'
 apply plugin: 'antlr'
 apply plugin: org.hibernate.build.gradle.inject.InjectionPlugin
+apply plugin: org.hibernate.gradle.testing.matrix.MatrixTestingPlugin
 
 dependencies {
 	compile( libraries.commons_collections )
@@ -31,7 +32,6 @@ dependencies {
 manifest.mainAttributes(
         'Main-Class': 'org.hibernate.Version'
 )
-
 
 sourceSets.main {
     originalJavaSrcDirs = java.srcDirs

@@ -1,0 +1,9 @@
+
+
+    <class name="Child">
+		<id name="id" column="ID">
+            <generator class="increment"/>
+        </id>
+		<property name="age" column="AGE" not-null="true"/>
+        <many-to-one name="parent" class="Parent" column="PRNT_ID"/>
+    </class>

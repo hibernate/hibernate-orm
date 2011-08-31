@@ -436,17 +436,23 @@ public final class SessionFactoryImpl
 
         LOG.debugf("Instantiated session factory");
 
-		if ( settings.isAutoCreateSchema() ) {
-			new SchemaExport( serviceRegistry, cfg ).create( false, true );
+		if ( settings.isAutoCreateSchema() && !settings.isAutoDropSchema() ) {
+			// "create" option used.
+			schemaExport = new SchemaExport( serviceRegistry, cfg );
+			// Try to drop schema first (useful for test cases).
+			schemaExport.drop( false, true );
+			schemaExport.create( false, true );
+		}
+		if ( settings.isAutoCreateSchema() && settings.isAutoDropSchema() ) {
+			// "create-drop" option used.
+			schemaExport = new SchemaExport( serviceRegistry, cfg );
+			schemaExport.create( false, true );
 		}
 		if ( settings.isAutoUpdateSchema() ) {
 			new SchemaUpdate( serviceRegistry, cfg ).execute( false, true );
 		}
 		if ( settings.isAutoValidateSchema() ) {
 			new SchemaValidator( serviceRegistry, cfg ).validate();
-		}
-		if ( settings.isAutoDropSchema() ) {
-			schemaExport = new SchemaExport( serviceRegistry, cfg );
 		}
 
 		currentSessionContext = buildCurrentSessionContext();
@@ -757,8 +763,17 @@ public final class SessionFactoryImpl
 
 		LOG.debugf("Instantiated session factory");
 
-		if ( settings.isAutoCreateSchema() ) {
-			new SchemaExport( metadata ).create( false, true );
+		if ( settings.isAutoCreateSchema() && !settings.isAutoDropSchema() ) {
+			// "create" option used.
+			schemaExport = new SchemaExport( metadata );
+			// Try to drop schema first (useful for test cases).
+			schemaExport.drop( false, true );
+			schemaExport.create( false, true );
+		}
+		if ( settings.isAutoCreateSchema() && settings.isAutoDropSchema() ) {
+			// "create-drop" option used.
+			schemaExport = new SchemaExport( metadata );
+			schemaExport.create( false, true );
 		}
 		/*
 		if ( settings.isAutoUpdateSchema() ) {
@@ -768,9 +783,6 @@ public final class SessionFactoryImpl
 			new SchemaValidator( metadata ).validate();
 		}
 		*/
-		if ( settings.isAutoDropSchema() ) {
-			schemaExport = new SchemaExport( metadata );
-		}
 
 		currentSessionContext = buildCurrentSessionContext();
 

@@ -37,6 +37,7 @@ import org.hibernate.property.Setter;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public class DefaultRevisionInfoGenerator implements RevisionInfoGenerator {
     private final String revisionInfoEntityName;

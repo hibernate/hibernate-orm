@@ -84,7 +84,6 @@
             <package name="org.hibernate.envers.test.integration.entityNames.oneToManyNotAudited" />
             <package name="org.hibernate.envers.test.integration.entityNames.singleAssociatedAudited" />
             <package name="org.hibernate.envers.test.integration.entityNames.singleAssociatedNotAudited" />
-            <package name="org.hibernate.envers.test.integration.cascade" />
 		'>
 ]>
 

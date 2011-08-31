@@ -22,7 +22,7 @@
  * Boston, MA  02110-1301  USA
  *
  */
-package org.hibernate.pretty;
+package org.hibernate.internal.util;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -42,9 +42,9 @@ import org.hibernate.type.Type;
  * Renders entities to a nicely readable string.
  * @author Gavin King
  */
-public final class Printer {
+public final class EntityPrinter {
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, Printer.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, EntityPrinter.class.getName());
 
     private SessionFactoryImplementor factory;
 
@@ -119,7 +119,7 @@ public final class Printer {
 		}
 	}
 
-	public Printer(SessionFactoryImplementor factory) {
+	public EntityPrinter(SessionFactoryImplementor factory) {
 		this.factory = factory;
 	}
 }

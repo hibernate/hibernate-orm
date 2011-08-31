@@ -41,8 +41,8 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.hql.internal.classic.ParserHelper;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.FilterImpl;
+import org.hibernate.internal.util.EntityPrinter;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.pretty.Printer;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.Type;
 
@@ -277,7 +277,7 @@ public final class QueryParameters {
 	}
 
 	public void traceParameters(SessionFactoryImplementor factory) throws HibernateException {
-		Printer print = new Printer( factory );
+		EntityPrinter print = new EntityPrinter( factory );
         if (positionalParameterValues.length != 0) LOG.trace("Parameters: "
                                                              + print.toString(positionalParameterTypes, positionalParameterValues));
         if (namedParameters != null) LOG.trace("Named parameters: " + print.toString(namedParameters));

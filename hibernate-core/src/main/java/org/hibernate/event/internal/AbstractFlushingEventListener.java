@@ -51,10 +51,10 @@ import org.hibernate.engine.spi.ActionQueue;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.FlushEntityEventListener;
 import org.hibernate.event.spi.FlushEvent;
+import org.hibernate.internal.util.EntityPrinter;
 import org.hibernate.internal.util.collections.IdentityMap;
 import org.hibernate.internal.util.collections.LazyIterator;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.pretty.Printer;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 
@@ -125,7 +125,7 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 					session.getActionQueue().numberOfCollectionRemovals(),
 					persistenceContext.getCollectionEntries().size()
 			);
-			new Printer( session.getFactory() ).toString(
+			new EntityPrinter( session.getFactory() ).toString(
 					persistenceContext.getEntitiesByKey().values().iterator()
 			);
 		}

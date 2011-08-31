@@ -314,5 +314,5 @@ dependsOnChildren()
 //  3) /wrapper which is a directory named by the "jarPath" config which contains other needed files.
 task wrapper(type: Wrapper) {
     // HHH-6106 - this is needed for IntellJ generation until 1.0-milestone-3 is released.
-    gradleVersion = '1.0-milestone-3-20110411214339+0200'
+    gradleVersion = '1.0-milestone-3'
 }

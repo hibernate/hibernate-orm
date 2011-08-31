@@ -33,6 +33,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
+
+import junit.framework.Assert;
 import junit.framework.TestCase;
 import org.hibernate.cache.infinispan.access.PutFromLoadValidator;
 import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeJtaTransactionManagerImpl;
@@ -353,12 +355,28 @@ public class PutFromLoadValidatorUnitTestCase extends TestCase {
       TestValidator testee = new TestValidator(null, 200, 1000, 500, 10000);
       testee.invalidateKey("KEY1");
       testee.invalidateKey("KEY2");
-      Thread.sleep(210);
+      expectRemovalLenth(2, testee, 3000l);
       assertEquals(2, testee.getRemovalQueueLength());
-      testee.invalidateKey("KEY1");
+      expectRemovalLenth(2, testee, 3000l);
       assertEquals(2, testee.getRemovalQueueLength());
-      testee.invalidateKey("KEY2");
-      assertEquals(2, testee.getRemovalQueueLength());
+      expectRemovalLenth(2, testee, 3000l);
+   }
+
+   private void expectRemovalLenth(int expectedLength, TestValidator testee, long timeout) throws InterruptedException {
+      long timeoutMilestone = System.currentTimeMillis() + timeout;
+      while ( true ) {
+         int queueLength = testee.getRemovalQueueLength();
+         if ( queueLength == expectedLength ) {
+            //finally it happened
+            return;
+         }
+         else {
+            if ( System.currentTimeMillis() > timeoutMilestone ) {
+               Assert.fail("condition not reached after " + timeout + " milliseconds. giving up!");
+            }
+            Thread.sleep(20);
+         }
+      }
    }
 
    /**

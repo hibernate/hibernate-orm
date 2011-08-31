@@ -78,7 +78,7 @@ libraries = [
         jacc:           'org.jboss.javaee:jboss-jacc-api:1.1.0.GA',
 
         // logging
-        logging:        'org.jboss.logging:jboss-logging:3.0.0.Beta5',
+        logging:        'org.jboss.logging:jboss-logging:3.0.0.GA',
         logging_tools:  'org.jboss.logging:jboss-logging-tools:1.0.0.Beta4',
         slf4j_api:      'org.slf4j:slf4j-api:' + slf4jVersion,
         slf4j_log4j12:  'org.slf4j:slf4j-log4j12:' + slf4jVersion,

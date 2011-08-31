@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.schemaexport;
+package org.hibernate.test.schemaupdate;
 
 import org.junit.After;
 import org.junit.Before;
@@ -41,7 +41,7 @@ import static org.junit.Assert.assertEquals;
  * @author Gail Badner
  */
 public class SchemaExportTest extends BaseUnitTestCase {
-	private final String MAPPING = "org/hibernate/test/schemaexport/mapping.hbm.xml";
+	private final String MAPPING = "org/hibernate/test/schemaupdate/mapping.hbm.xml";
 
 	private ServiceRegistry serviceRegistry;
 

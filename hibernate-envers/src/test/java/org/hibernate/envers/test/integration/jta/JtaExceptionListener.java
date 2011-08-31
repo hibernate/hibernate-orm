@@ -75,7 +75,6 @@ public class JtaExceptionListener extends AbstractEntityTest {
     }
 
     @Test
-    @FailureExpected(jiraKey = "HHH-6020")
     public void testDataNotPersisted() throws Exception {
         tm.begin();
 

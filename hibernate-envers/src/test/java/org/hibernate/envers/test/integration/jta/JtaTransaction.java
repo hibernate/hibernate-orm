@@ -5,6 +5,8 @@ import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.EnversTestingJtaBootstrap;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.IntTestEntity;
+import org.hibernate.testing.FailureExpected;
+
 import org.junit.Test;
 
 import javax.persistence.EntityManager;
@@ -34,6 +36,7 @@ public class JtaTransaction extends AbstractEntityTest {
 
     @Test
     @Priority(10)
+    @FailureExpected(jiraKey = "HHH-6624")
     public void initData() throws Exception {
         tm.begin();
 
@@ -64,11 +67,13 @@ public class JtaTransaction extends AbstractEntityTest {
     }
 
     @Test
+	@FailureExpected(jiraKey = "HHH-6624")
     public void testRevisionsCounts() throws Exception {
         assert Arrays.asList(1, 2).equals(getAuditReader().getRevisions(IntTestEntity.class, id1));
     }
 
     @Test
+	@FailureExpected(jiraKey = "HHH-6624")
     public void testHistoryOfId1() {
         IntTestEntity ver1 = new IntTestEntity(10, id1);
         IntTestEntity ver2 = new IntTestEntity(20, id1);

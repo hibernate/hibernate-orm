@@ -43,7 +43,7 @@ public class EnversTestingJtaBootstrap {
 		catch (SQLException e) {
 			throw new RuntimeException( "Unable to set DataSource JDBC driver name", e );
 		}
-		dataSource.setUrl(configValues.get(Environment.URL).toString());
+		dataSource.setUrl(configValues.get(Environment.URL).toString() + ";AUTOCOMMIT=OFF");
 		dataSource.setUser(configValues.get(Environment.USER).toString());
 
         configValues.remove(Environment.URL);

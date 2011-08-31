@@ -50,7 +50,7 @@ libraries = [
 
         // Annotations
         commons_annotations:
-                        'org.hibernate:hibernate-commons-annotations:3.2.0.Final',
+                        'org.hibernate.common:hibernate-commons-annotations:4.0.0.CR2',
         jandex:         'org.jboss:jandex:1.0.0.Beta7',
         classmate:      'com.fasterxml:classmate:0.5.4',
 

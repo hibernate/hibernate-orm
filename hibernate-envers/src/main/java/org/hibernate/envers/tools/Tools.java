@@ -23,6 +23,7 @@
  */
 package org.hibernate.envers.tools;
 
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.SessionFactoryImplementor;
@@ -171,5 +172,13 @@ public class Tools {
         } else {
             return value;
         }
+    }
+
+    /**
+     * @return Java class mapped to specified entity name.
+     */
+    public static Class getEntityClass(SessionImplementor sessionImplementor, Session session, String entityName) {
+        EntityPersister entityPersister = sessionImplementor.getFactory().getEntityPersister(entityName);
+        return entityPersister.getMappedClass(session.getEntityMode());
     }
 }

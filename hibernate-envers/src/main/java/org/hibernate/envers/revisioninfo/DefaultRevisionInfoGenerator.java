@@ -23,11 +23,14 @@
  */
 package org.hibernate.envers.revisioninfo;
 
+import java.io.Serializable;
 import java.util.Date;
 
 import org.hibernate.MappingException;
 import org.hibernate.Session;
+import org.hibernate.envers.EntityTrackingRevisionListener;
 import org.hibernate.envers.RevisionListener;
+import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.entities.PropertyData;
 import org.hibernate.envers.tools.reflection.ReflectionTools;
 import org.hibernate.property.Setter;
@@ -87,5 +90,13 @@ public class DefaultRevisionInfoGenerator implements RevisionInfoGenerator {
         }
 
         return revisionInfo;
+    }
+
+    public void entityChanged(Class entityClass, String entityName, Serializable entityId, RevisionType revisionType,
+                              Object revisionInfo) {
+        if (listener instanceof EntityTrackingRevisionListener) {
+            ((EntityTrackingRevisionListener) listener).entityChanged(entityClass, entityName, entityId, revisionType,
+                                                                      revisionInfo);
+        }
     }
 }

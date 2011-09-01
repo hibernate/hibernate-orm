@@ -47,6 +47,7 @@ import javassist.bytecode.ConstantAttribute;
 import javassist.bytecode.FieldInfo;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
+import org.gradle.api.Task;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.tasks.SourceSet;
 
@@ -56,7 +57,7 @@ import org.slf4j.LoggerFactory;
 /**
  * @author Steve Ebersole
  */
-public class InjectionAction implements Action {
+public class InjectionAction implements Action<Task> {
 	private static final Logger log = LoggerFactory.getLogger( InjectionAction.class );
 
 	private final Project project;
@@ -75,7 +76,7 @@ public class InjectionAction implements Action {
 	}
 
 	@Override
-	public void execute(Object o) {
+	public void execute(Task task) {
 		final ClassLoader runtimeScopeClassLoader = buildRuntimeScopeClassLoader();
 
 		loaderClassPath = new LoaderClassPath( runtimeScopeClassLoader );

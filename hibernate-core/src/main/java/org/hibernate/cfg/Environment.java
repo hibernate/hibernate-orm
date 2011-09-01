@@ -204,8 +204,8 @@ public final class Environment implements AvailableSettings {
 	}
 
 	static {
+		Version.logVersion();
 
-        LOG.version(Version.getVersionString());
 		Map<Integer,String> temp = new HashMap<Integer,String>();
 		temp.put( Connection.TRANSACTION_NONE, "NONE" );
 		temp.put( Connection.TRANSACTION_READ_UNCOMMITTED, "READ_UNCOMMITTED" );

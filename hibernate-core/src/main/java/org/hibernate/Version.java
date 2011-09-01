@@ -23,6 +23,10 @@
  */
 package org.hibernate;
 
+import org.jboss.logging.Logger;
+
+import org.hibernate.internal.CoreMessageLogger;
+
 /**
  * Information about the Hibernate version.
  *
@@ -33,8 +37,11 @@ public class Version {
 		return "[WORKING]";
 	}
 
+	public static void logVersion() {
+		Logger.getMessageLogger( CoreMessageLogger.class, Version.class.getName() ).version( getVersionString() );
+	}
 
 	public static void main(String[] args) {
-		System.out.println( "Hibernate version " + getVersionString() );
+		System.out.println( "Hibernate Core {" + getVersionString() + "}" );
 	}
 }

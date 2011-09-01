@@ -40,7 +40,7 @@ public class InjectionPlugin implements Plugin<Project> {
 		Injection versionInjection = new Injection( project.getVersion().toString() );
 		versionInjection.into( "org.hibernate.Version", "getVersionString" );
 		injectionAction.addInjection( versionInjection );
-		project.getTasks().findByName( "jar" ).doLast( injectionAction );
+		project.getTasks().findByName( "compileJava" ).doLast( injectionAction );
 	}
 
 }

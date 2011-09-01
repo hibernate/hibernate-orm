@@ -6,6 +6,36 @@ refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
 
+Changes in version 4.0.0.CR2 (2011.08.31)
+------------------------------------------------------------------------------------------------------------------------
+http://hibernate.onjira.com/browse/HHH/fixforversion/11352
+
+** Bug
+    * [HHH-5789] - Hibernate 3.5.4 doesn't build with OpenJDK 6b18-1.8.2 or greater
+    * [HHH-5848] - Columns's table name not processed by naming strategy
+    * [HHH-6020] - Move to JBossTS caused some test failures in hibernate-envers
+    * [HHH-6384] - hibernate.hbm2ddl.auto=create does not drop tables
+    * [HHH-6412] - hibernate version is not injected by the injection plugin
+    * [HHH-6586] - Document metamodel package as experimental and unsupported
+    * [HHH-6594] - Interceptor.onPrepareStatement no longer being called
+    * [HHH-6599] - Hibernate mark as rollback even for no transaction requests
+
+** Improvement
+    * [HHH-6588] - rollback to use "org.hibernate.SQL" category to log sql
+
+** New Feature
+    * [HHH-6618] - running hibernate functional test cases on DB matrix
+
+** Patch
+    * [HHH-6577] - CUBRID Database Dialect
+
+** Task
+    * [HHH-5930] - Remove hibernate-tools dependency from runtime scope if it's not needed
+    * [HHH-6619] - Move org.hibernate.pretty.Printer to org.hibernate.internal.util.EntityPrinter
+    * [HHH-6621] - Migrate to Hibernate Commons Annotations 4.0.0.CR2
+    * [HHH-6622] - Upgrade JBoss Logging to 3.0.0.GA
+
+
 Changes in version 4.0.0.CR1 (2011.08.17)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.onjira.com/browse/HHH/fixforversion/11350

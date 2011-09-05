@@ -65,6 +65,7 @@
             <package name="org.hibernate.envers.test.integration.readwriteexpression" />
             <package name="org.hibernate.envers.test.integration.reference" />
             <package name="org.hibernate.envers.test.integration.reventity" />
+            <package name="org.hibernate.envers.test.integration.reventity.trackmodifiedentities" />
             <package name="org.hibernate.envers.test.integration.revfordate" />
             <package name="org.hibernate.envers.test.integration.sameids" />
             <package name="org.hibernate.envers.test.integration.secondary" />

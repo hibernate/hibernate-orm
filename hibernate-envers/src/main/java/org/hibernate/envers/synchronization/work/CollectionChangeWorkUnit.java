@@ -40,7 +40,7 @@ public class CollectionChangeWorkUnit extends AbstractAuditWorkUnit implements A
 
     public CollectionChangeWorkUnit(SessionImplementor session, String entityName, AuditConfiguration verCfg,
 									Serializable id, Object entity) {
-        super(session, entityName, verCfg, id);
+        super(session, entityName, verCfg, id, RevisionType.MOD);
 
         this.entity = entity;
     }
@@ -51,7 +51,7 @@ public class CollectionChangeWorkUnit extends AbstractAuditWorkUnit implements A
 
     public Map<String, Object> generateData(Object revisionData) {
         Map<String, Object> data = new HashMap<String, Object>();
-        fillDataWithId(data, revisionData, RevisionType.MOD);
+        fillDataWithId(data, revisionData);
 
         verCfg.getEntCfg().get(getEntityName()).getPropertyMapper().mapToMapFromEntity(sessionImplementor,
 				data, entity, null);

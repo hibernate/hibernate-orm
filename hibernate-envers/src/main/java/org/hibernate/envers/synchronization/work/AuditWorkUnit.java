@@ -24,7 +24,9 @@
 package org.hibernate.envers.synchronization.work;
 
 import org.hibernate.Session;
+import org.hibernate.envers.RevisionType;
 
+import java.io.Serializable;
 import java.util.Map;
 
 /**
@@ -32,7 +34,7 @@ import java.util.Map;
  * @author Adam Warski (adam at warski dot org)
  */
 public interface AuditWorkUnit extends WorkUnitMergeVisitor, WorkUnitMergeDispatcher {
-    Object getEntityId();
+    Serializable getEntityId();
     String getEntityName();
     
     boolean containsWork();
@@ -54,4 +56,9 @@ public interface AuditWorkUnit extends WorkUnitMergeVisitor, WorkUnitMergeDispat
      * @return Generates data that should be saved when performing this work unit.
      */
     Map<String, Object> generateData(Object revisionData);
+
+    /**
+     * @return Performed modification type.
+     */
+    RevisionType getRevisionType();
 }

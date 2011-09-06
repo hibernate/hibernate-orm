@@ -46,6 +46,7 @@ import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.id.factory.DefaultIdentifierGeneratorFactory;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
+import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.Value;
 import org.hibernate.metamodel.MetadataSourceProcessingOrder;
@@ -96,7 +97,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	private SessionFactoryBuilder sessionFactoryBuilder = new SessionFactoryBuilderImpl( this );
 
-	private final DefaultIdentifierGeneratorFactory identifierGeneratorFactory;
+	private final MutableIdentifierGeneratorFactory identifierGeneratorFactory;
 
 	private final Database database;
 
@@ -120,10 +121,10 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
     private boolean globallyQuotedIdentifiers = false;
 
 	public MetadataImpl(MetadataSources metadataSources, Options options) {
-		Dialect dialect = metadataSources.getServiceRegistry().getService( JdbcServices.class ).getDialect();
-		this.serviceRegistry = metadataSources.getServiceRegistry();
+		this.serviceRegistry =  metadataSources.getServiceRegistry();
 		this.options = options;
-		this.identifierGeneratorFactory = new DefaultIdentifierGeneratorFactory( dialect );
+		this.identifierGeneratorFactory = serviceRegistry.getService( MutableIdentifierGeneratorFactory.class );
+				//new DefaultIdentifierGeneratorFactory( dialect );
 		this.database = new Database( options );
 
 		this.mappingDefaults = new MappingDefaultsImpl();

@@ -27,13 +27,12 @@ import java.io.Serializable;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.persistence.GenerationType;
 
 import org.jboss.logging.Logger;
 
-import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.id.Assigned;
 import org.hibernate.id.Configurable;
 import org.hibernate.id.ForeignGenerator;
@@ -41,7 +40,6 @@ import org.hibernate.id.GUIDGenerator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.IdentityGenerator;
 import org.hibernate.id.IncrementGenerator;
-import org.hibernate.id.MultipleHiLoPerTableGenerator;
 import org.hibernate.id.SelectGenerator;
 import org.hibernate.id.SequenceGenerator;
 import org.hibernate.id.SequenceHiLoGenerator;
@@ -51,8 +49,11 @@ import org.hibernate.id.UUIDGenerator;
 import org.hibernate.id.UUIDHexGenerator;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.enhanced.TableGenerator;
+import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.service.spi.ServiceRegistryAwareService;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.type.Type;
 
 /**
@@ -60,23 +61,13 @@ import org.hibernate.type.Type;
  *
  * @author Steve Ebersole
  */
-public class DefaultIdentifierGeneratorFactory implements IdentifierGeneratorFactory, Serializable {
+public class DefaultIdentifierGeneratorFactory implements MutableIdentifierGeneratorFactory, Serializable, ServiceRegistryAwareService {
 
     private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
                                                                        DefaultIdentifierGeneratorFactory.class.getName());
 
 	private transient Dialect dialect;
 	private ConcurrentHashMap<String, Class> generatorStrategyToClassNameMap = new ConcurrentHashMap<String, Class>();
-
-	/**
-	 * Constructs a new DefaultIdentifierGeneratorFactory
-	 *
-	 * @param dialect The dialect.
-	 */
-	public DefaultIdentifierGeneratorFactory(Dialect dialect) {
-		this();
-		this.dialect = dialect;
-	}
 
 	/**
 	 * Constructs a new DefaultIdentifierGeneratorFactory.
@@ -150,5 +141,10 @@ public class DefaultIdentifierGeneratorFactory implements IdentifierGeneratorFac
 			throw new MappingException( String.format( "Could not interpret id generator strategy [%s]", strategy ) );
 		}
 		return generatorClass;
+	}
+
+	@Override
+	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
+		this.dialect = serviceRegistry.getService( JdbcServices.class ).getDialect();
 	}
 }

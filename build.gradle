@@ -51,7 +51,7 @@ libraries = [
         // Annotations
         commons_annotations:
                         'org.hibernate.common:hibernate-commons-annotations:4.0.0.CR2',
-        jandex:         'org.jboss:jandex:1.0.0.Beta7',
+        jandex:         'org.jboss:jandex:1.0.3.Final',
         classmate:      'com.fasterxml:classmate:0.5.4',
 
         // Jakarta commons-collections  todo : get rid of commons-collections dependency

@@ -69,6 +69,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.NamedQueryDefinition;
+import org.hibernate.id.factory.internal.DefaultIdentifierGeneratorFactory;
+import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.Interceptor;
 import org.hibernate.InvalidMappingException;
@@ -91,7 +93,6 @@ import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.IdentifierGeneratorAggregator;
 import org.hibernate.id.PersistentIdentifierGenerator;
-import org.hibernate.id.factory.DefaultIdentifierGeneratorFactory;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.internal.util.ConfigHelper;
@@ -230,7 +231,7 @@ public class Configuration implements Serializable {
 
 	private transient Mapping mapping = buildMapping();
 
-	private DefaultIdentifierGeneratorFactory identifierGeneratorFactory;
+	private MutableIdentifierGeneratorFactory identifierGeneratorFactory;
 
 	private Map<Class<?>, org.hibernate.mapping.MappedSuperclass> mappedSuperClasses;
 
@@ -2285,7 +2286,7 @@ public class Configuration implements Serializable {
 	 *
 	 * @return This configuration's IdentifierGeneratorFactory.
 	 */
-	public DefaultIdentifierGeneratorFactory getIdentifierGeneratorFactory() {
+	public MutableIdentifierGeneratorFactory getIdentifierGeneratorFactory() {
 		return identifierGeneratorFactory;
 	}
 
@@ -2963,7 +2964,7 @@ public class Configuration implements Serializable {
 			extendsQueue.put( entry, null );
 		}
 
-		public DefaultIdentifierGeneratorFactory getIdentifierGeneratorFactory() {
+		public MutableIdentifierGeneratorFactory getIdentifierGeneratorFactory() {
 			return identifierGeneratorFactory;
 		}
 

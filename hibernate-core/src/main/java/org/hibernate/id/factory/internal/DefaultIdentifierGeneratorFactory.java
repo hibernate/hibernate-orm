@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.id.factory;
+package org.hibernate.id.factory.internal;
 
 import java.io.Serializable;
 import java.util.Properties;
@@ -57,7 +57,7 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.type.Type;
 
 /**
- * Basic <tt>templated</tt> support for {@link IdentifierGeneratorFactory} implementations.
+ * Basic <tt>templated</tt> support for {@link org.hibernate.id.factory.IdentifierGeneratorFactory} implementations.
  *
  * @author Steve Ebersole
  */

@@ -29,6 +29,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
  * Descriptor for {@link Byte} handling.
  *
  * @author Steve Ebersole
+ * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public class ByteTypeDescriptor extends AbstractTypeDescriptor<Byte> {
 	public static final ByteTypeDescriptor INSTANCE = new ByteTypeDescriptor();
@@ -39,12 +40,12 @@ public class ByteTypeDescriptor extends AbstractTypeDescriptor<Byte> {
 
 	@SuppressWarnings({ "UnnecessaryUnboxing" })
 	public String toString(Byte value) {
-		return Integer.toHexString( value.byteValue() - Byte.MIN_VALUE );
+		return value == null ? null : value.toString();
 	}
 
 	@SuppressWarnings({ "UnnecessaryBoxing" })
 	public Byte fromString(String string) {
-		return Byte.valueOf( (byte) (Integer.parseInt( string, 16) + Byte.MIN_VALUE) );
+		return Byte.valueOf( string );
 	}
 
 	@SuppressWarnings({ "unchecked" })

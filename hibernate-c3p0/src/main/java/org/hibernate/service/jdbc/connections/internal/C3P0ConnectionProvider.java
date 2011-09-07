@@ -165,7 +165,7 @@ public class C3P0ConnectionProvider implements ConnectionProvider, Configurable,
 			for ( Iterator ii = props.keySet().iterator(); ii.hasNext(); ) {
 				String key = ( String ) ii.next();
 				if ( key.startsWith( "hibernate.c3p0." ) ) {
-					String newKey = key.substring( 10 );
+					String newKey = key.substring( 15 );
 					if ( props.containsKey( newKey ) ) {
 						warnPropertyConflict( key, newKey );
 					}
@@ -239,7 +239,8 @@ public class C3P0ConnectionProvider implements ConnectionProvider, Configurable,
 
 	private void setOverwriteProperty(String hibernateStyleKey, String c3p0StyleKey, Map hibp, Properties c3p, Integer value) {
 		if ( value != null ) {
-			c3p.put( c3p0StyleKey, String.valueOf( value ).trim() );
+            String peeledC3p0Key = c3p0StyleKey.substring(5);
+			c3p.put( peeledC3p0Key, String.valueOf( value ).trim() );
 			if ( hibp.containsKey( c3p0StyleKey )  ) {
 				warnPropertyConflict( hibernateStyleKey, c3p0StyleKey );
 			}

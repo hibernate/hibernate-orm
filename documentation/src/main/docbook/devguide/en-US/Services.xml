@@ -60,24 +60,32 @@
             Services are allowed to declare dependencies on other services using either of 2 approaches.
         </para>
         <section>
-            <title>@InjectService</title>
+            <title>@<interfacename>org.hibernate.service.spi.InjectService</interfacename></title>
             <para>
                 Any method on the service implementation class accepting a single parameter and annotated with
-                @<interfacename>org.hibernate.service.spi.InjectService</interfacename> is considered requesting
-                injection of another service.
+                @<interfacename>InjectService</interfacename> is considered requesting injection of another service.
             </para>
             <para>
                 By default the type of the method parameter is expected to be the service role to be injected.  If the
                 parameter type is different than the service role, the <methodname>serviceRole</methodname> attribute
-                of the <interfacename>org.hibernate.service.spi.InjectService</interfacename> should be used to
-                explicitly name the role.
+                of the <interfacename>InjectService</interfacename> should be used to explicitly name the role.
             </para>
             <para>
                 By default injected services are considered required, that is the start up will fail if a named
                 dependent service is missing.  If the service to be injected is optional, the
-                <methodname>required</methodname> attribute of the
-                <interfacename>org.hibernate.service.spi.InjectService</interfacename> should be declared as
-                <literal>false</literal> (default is <literal>true</literal>).
+                <methodname>required</methodname> attribute of the <interfacename>InjectService</interfacename>
+                should be declared as <literal>false</literal> (default is <literal>true</literal>).
+            </para>
+        </section>
+        <section>
+            <title><interfacename>org.hibernate.service.spi.ServiceRegistryAwareService</interfacename></title>
+            <para>
+                The second approach is a pull approach where the service implements the optional service interface
+                <interfacename>org.hibernate.service.spi.ServiceRegistryAwareService</interfacename> which declares
+                a single <methodname>injectServices</methodname> method.  During startup, Hibernate will inject the
+                <interfacename>org.hibernate.service.ServiceRegistry</interfacename> itself into services which
+                implement this interface.  The service can then use the <interfacename>ServiceRegistry</interfacename>
+                reference to locate any additional services it needs.
             </para>
         </section>
     </section>

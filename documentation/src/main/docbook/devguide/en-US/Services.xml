@@ -50,35 +50,8 @@
         <title>ServiceRegistryBuilder</title>
         <para>
             Building a <interfacename>org.hibernate.service.ServiceRegistry</interfacename> is the purpose of the
-            <classname>org.hibernate.service.ServiceRegistryBuilder</classname>.  Once a
-            <interfacename>org.hibernate.service.ServiceRegistry</interfacename> is built, the service it contains
-            are immutable (the services themselves might accept re-configuration, but immutable here means
-            adding/replacing services).  So another role provided by the
-            <classname>org.hibernate.service.ServiceRegistryBuilder</classname> is to allow tweaking of the services
-            that will be contained in the <interfacename>org.hibernate.service.ServiceRegistry</interfacename>
-            generated from it.
+            <classname>org.hibernate.service.ServiceRegistryBuilder</classname>.
         </para>
-        <para>
-            There are 2 means to tell a <classname>org.hibernate.service.ServiceRegistryBuilder</classname> about
-            custom services.
-        </para>
-        <itemizedlist>
-            <listitem>
-                <para>
-                    Implement a <interfacename>org.hibernate.service.spi.BasicServiceInitiator</interfacename> class
-                    to control on-demand construction of the service class and add it to the
-                    <classname>org.hibernate.service.ServiceRegistryBuilder</classname> via its
-                    <methodname>addInitiator</methodname> method.
-                </para>
-            </listitem>
-            <listitem>
-                <para>
-                    Just instantiate the service class and add it to the
-                    <classname>org.hibernate.service.ServiceRegistryBuilder</classname> via its
-                    <methodname>addService</methodname> method.
-                </para>
-            </listitem>
-        </itemizedlist>
     </section>
 
     <section>
@@ -111,19 +84,39 @@
 
     <section>
         <title>Custom services</title>
-        <section>
-            <title>Extending services</title>
-            <para>
-                Adding additional services can be achieved by ...
-            </para>
-        </section>
-
-        <section>
-            <title>Overriding services</title>
-            <para>
-                Services can be overridden by ...
-            </para>
-        </section>
+        <para>
+            Once a <interfacename>org.hibernate.service.ServiceRegistry</interfacename> is built it is considered
+            immutable; the services themselves might accept re-configuration, but immutability here means
+            adding/replacing services.  So another role provided by the
+            <classname>org.hibernate.service.ServiceRegistryBuilder</classname> is to allow tweaking of the services
+            that will be contained in the <interfacename>org.hibernate.service.ServiceRegistry</interfacename>
+            generated from it.
+        </para>
+        <para>
+            There are 2 means to tell a <classname>org.hibernate.service.ServiceRegistryBuilder</classname> about
+            custom services.
+        </para>
+        <itemizedlist>
+            <listitem>
+                <para>
+                    Implement a <interfacename>org.hibernate.service.spi.BasicServiceInitiator</interfacename> class
+                    to control on-demand construction of the service class and add it to the
+                    <classname>org.hibernate.service.ServiceRegistryBuilder</classname> via its
+                    <methodname>addInitiator</methodname> method.
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    Just instantiate the service class and add it to the
+                    <classname>org.hibernate.service.ServiceRegistryBuilder</classname> via its
+                    <methodname>addService</methodname> method.
+                </para>
+            </listitem>
+        </itemizedlist>
+        <para>
+            Either approach the adding a service approach or the adding an initiator approach are valid for extending a
+            registry (adding new service roles) and overriding services (replacing service implementations).
+        </para>
     </section>
 
     <section>

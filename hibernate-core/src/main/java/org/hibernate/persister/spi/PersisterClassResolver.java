@@ -32,11 +32,13 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.Service;
 
 /**
- * Provides persister classes based on the entity or collection role.
- * The persister class is chosen according to the following rules in decreasing priority:
- *  - the persister class defined explicitly via annotation or XML
- *  - the persister class returned by the PersisterClassResolver implementation (if not null)
- *  - the default provider as chosen by Hibernate Core (best choice most of the time)
+ * Given an entity or collection mapping, resolve the appropriate persister class to use.
+ * <p/>
+ * The persister class is chosen according to the following rules:<ol>
+ *     <li>the persister class defined explicitly via annotation or XML</li>
+ *     <li>the persister class returned by the installed {@link PersisterClassResolver}</li>
+ *     <li>the default provider as chosen by Hibernate Core (best choice most of the time)</li>
+ * </ol>
  *
  * @author Emmanuel Bernard <emmanuel@hibernate.org>
  * @author Steve Ebersole

@@ -1,13 +1,17 @@
 package org.hibernate.envers.strategy;
 import java.io.Serializable;
 import org.hibernate.Session;
+import org.hibernate.action.spi.AfterTransactionCompletionProcess;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.configuration.GlobalConfiguration;
 import org.hibernate.envers.entities.mapper.PersistentCollectionChangeData;
 import org.hibernate.envers.entities.mapper.relation.MiddleComponentData;
 import org.hibernate.envers.entities.mapper.relation.MiddleIdData;
+import org.hibernate.envers.synchronization.SessionCacheCleaner;
 import org.hibernate.envers.tools.query.Parameters;
 import org.hibernate.envers.tools.query.QueryBuilder;
+import org.hibernate.event.spi.EventSource;
 
 /**
  * Default strategy is to simply persist the audit data.
@@ -16,14 +20,22 @@ import org.hibernate.envers.tools.query.QueryBuilder;
  * @author Stephanie Pau
  */
 public class DefaultAuditStrategy implements AuditStrategy {
+    private final SessionCacheCleaner sessionCacheCleaner;
+
+    public DefaultAuditStrategy() {
+        sessionCacheCleaner = new SessionCacheCleaner();
+    }
+
     public void perform(Session session, String entityName, AuditConfiguration auditCfg, Serializable id, Object data,
                         Object revision) {
         session.save(auditCfg.getAuditEntCfg().getAuditEntityName(entityName), data);
+        sessionCacheCleaner.scheduleAuditDataRemoval(session, data);
     }
 
     public void performCollectionChange(Session session, AuditConfiguration auditCfg,
                                         PersistentCollectionChangeData persistentCollectionChangeData, Object revision) {
         session.save(persistentCollectionChangeData.getEntityName(), persistentCollectionChangeData.getData());
+        sessionCacheCleaner.scheduleAuditDataRemoval(session, persistentCollectionChangeData.getData());
     }
 
     

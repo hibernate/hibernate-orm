@@ -47,11 +47,13 @@ import org.hibernate.testing.TestForIssue;
 public class AccessMappingTest extends TestCase {
 	private ServiceRegistry serviceRegistry;
 
-	protected void setUp() {
+	@Override
+    protected void setUp() {
 		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() );
 	}
 
-	protected void tearDown() {
+	@Override
+    protected void tearDown() {
 		if ( serviceRegistry != null ) {
 			ServiceRegistryBuilder.destroy( serviceRegistry );
 		}
@@ -202,8 +204,8 @@ public class AccessMappingTest extends TestCase {
 				.getEntityMetamodel()
 				.getTuplizer();
 		assertTrue(
-				"Property access should be used since the default access mode gets inherited",
-				tuplizer.getGetter( 0 ) instanceof BasicPropertyAccessor.BasicGetter
+				"Field access should be used since the default access mode gets inherited",
+				tuplizer.getGetter( 0 ) instanceof DirectPropertyAccessor.DirectGetter
 		);
 	}
 

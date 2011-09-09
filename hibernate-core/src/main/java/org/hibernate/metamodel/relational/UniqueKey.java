@@ -24,7 +24,6 @@
 package org.hibernate.metamodel.relational;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.internal.util.StringHelper;
 
 /**
  * Models a SQL <tt>INDEX</tt> defined as UNIQUE
@@ -47,7 +46,8 @@ public class UniqueKey extends AbstractConstraint implements Constraint {
 		return sb.toString();
 	}
 
-	public boolean isCreationVetoed(Dialect dialect) {
+	@Override
+    public boolean isCreationVetoed(Dialect dialect) {
 		if ( dialect.supportsNotNullUnique() ) {
 			return false;
 		}
@@ -82,9 +82,10 @@ public class UniqueKey extends AbstractConstraint implements Constraint {
 				null;
 	}
 
-	public String sqlConstraintStringInAlterTable(Dialect dialect) {
+	@Override
+    public String sqlConstraintStringInAlterTable(Dialect dialect) {
 		StringBuffer buf = new StringBuffer(
-				dialect.getAddPrimaryKeyConstraintString( getName() )
+				dialect.getAddUniqueConstraintString( getName() )
 		).append( '(' );
 		boolean nullable = false;
 		boolean first = true;
@@ -100,9 +101,6 @@ public class UniqueKey extends AbstractConstraint implements Constraint {
 			}
 			buf.append( column.getColumnName().encloseInQuotesIfQuoted( dialect ) );
 		}
-		return !nullable || dialect.supportsNotNullUnique() ?
-				StringHelper.replace( buf.append( ')' ).toString(), "primary key", "unique" ) :
-				//TODO: improve this hack!
-				null;
+		return !nullable || dialect.supportsNotNullUnique() ? buf.append( ')' ).toString() : null;
 	}
 }

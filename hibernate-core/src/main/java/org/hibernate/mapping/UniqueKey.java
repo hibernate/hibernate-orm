@@ -25,7 +25,6 @@ package org.hibernate.mapping;
 import java.util.Iterator;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.Mapping;
-import org.hibernate.internal.util.StringHelper;
 
 /**
  * A relational unique key constraint
@@ -54,13 +53,14 @@ public class UniqueKey extends Constraint {
 				null;
 	}
 
-	public String sqlConstraintString(
+	@Override
+    public String sqlConstraintString(
 			Dialect dialect,
 			String constraintName,
 			String defaultCatalog,
 			String defaultSchema) {
 		StringBuffer buf = new StringBuffer(
-				dialect.getAddPrimaryKeyConstraintString( constraintName )
+				dialect.getAddUniqueConstraintString( constraintName )
 		).append( '(' );
 		Iterator iter = getColumnIterator();
 		boolean nullable = false;
@@ -70,13 +70,11 @@ public class UniqueKey extends Constraint {
 			buf.append( column.getQuotedName( dialect ) );
 			if ( iter.hasNext() ) buf.append( ", " );
 		}
-		return !nullable || dialect.supportsNotNullUnique() ?
-				StringHelper.replace( buf.append( ')' ).toString(), "primary key", "unique" ) :
-				//TODO: improve this hack!
-				null;
+		return !nullable || dialect.supportsNotNullUnique() ? buf.append( ')' ).toString() : null;
 	}
 
-	public String sqlCreateString(Dialect dialect, Mapping p, String defaultCatalog, String defaultSchema) {
+	@Override
+    public String sqlCreateString(Dialect dialect, Mapping p, String defaultCatalog, String defaultSchema) {
 		if ( dialect.supportsUniqueConstraintInCreateAlterTable() ) {
 			return super.sqlCreateString( dialect, p, defaultCatalog, defaultSchema );
 		}
@@ -86,7 +84,8 @@ public class UniqueKey extends Constraint {
 		}
 	}
 
-	public String sqlDropString(Dialect dialect, String defaultCatalog, String defaultSchema) {
+	@Override
+    public String sqlDropString(Dialect dialect, String defaultCatalog, String defaultSchema) {
 		if ( dialect.supportsUniqueConstraintInCreateAlterTable() ) {
 			return super.sqlDropString( dialect, defaultCatalog, defaultSchema );
 		}
@@ -95,7 +94,8 @@ public class UniqueKey extends Constraint {
 		}
 	}
 
-	public boolean isGenerated(Dialect dialect) {
+	@Override
+    public boolean isGenerated(Dialect dialect) {
 		if ( dialect.supportsNotNullUnique() ) return true;
 		Iterator iter = getColumnIterator();
 		while ( iter.hasNext() ) {

@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.configuration.AuditConfiguration;
@@ -66,7 +67,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
             addEndRevisionNulLRestriction(auditCfg, qb);
 
             @SuppressWarnings({"unchecked"})
-            List<Object> l = qb.toQuery(session).list();
+            List<Object> l = qb.toQuery(session).setLockOptions(LockOptions.UPGRADE).list();
 
             updateLastRevision(session, auditCfg, l, id, auditedEntityName, revision);
         }
@@ -94,7 +95,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 
         addEndRevisionNulLRestriction(auditCfg, qb);
 
-        final List<Object> l = qb.toQuery(session).list();
+        final List<Object> l = qb.toQuery(session).setLockOptions(LockOptions.UPGRADE).list();
 
         // Update the last revision if one exists.
         // HHH-5967: with collections, the same element can be added and removed multiple times. So even if it's an

@@ -68,7 +68,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
             IdMapper idMapper = auditCfg.getEntCfg().get(entityName).getIdMapper();
             idMapper.addIdEqualsToQuery(qb.getRootParameters(), id, auditCfg.getAuditEntCfg().getOriginalIdPropName(), true);
 
-            addEndRevisionNulLRestriction(auditCfg, qb);
+            addEndRevisionNullRestriction(auditCfg, qb);
 
             @SuppressWarnings({"unchecked"})
             List<Object> l = qb.toQuery(session).list();
@@ -98,7 +98,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
             }
         }
 
-        addEndRevisionNulLRestriction(auditCfg, qb);
+        addEndRevisionNullRestriction(auditCfg, qb);
 
         final List<Object> l = qb.toQuery(session).list();
 
@@ -114,7 +114,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
         sessionCacheCleaner.scheduleAuditDataRemoval(session, persistentCollectionChangeData.getData());
     }
 
-    private void addEndRevisionNulLRestriction(AuditConfiguration auditCfg, QueryBuilder qb) {
+    private void addEndRevisionNullRestriction(AuditConfiguration auditCfg, QueryBuilder qb) {
         // e.end_rev is null
         qb.getRootParameters().addWhere(auditCfg.getAuditEntCfg().getRevisionEndFieldName(), true, "is", "null", false);
     }

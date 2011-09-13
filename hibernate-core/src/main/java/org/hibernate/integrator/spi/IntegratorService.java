@@ -30,15 +30,6 @@ import org.hibernate.service.Service;
  */
 public interface IntegratorService extends Service {
 	/**
-	 * Manually add an integrator.  Added integrators supplement the set of discovered ones.
-	 * <p/>
-	 * This is mostly an internal contract used between modules.
-	 *
-	 * @param integrator The integrator
-	 */
-	public void addIntegrator(Integrator integrator);
-
-	/**
 	 * Retrieve all integrators.
 	 *
 	 * @return All integrators.

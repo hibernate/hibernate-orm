@@ -68,7 +68,8 @@ public class BatchingTest extends BaseUnitTestCase implements BatchKey {
 
 	@Before
 	public void setUp() throws Exception {
-		serviceRegistry = (BasicServiceRegistryImpl) new ServiceRegistryBuilder( ConnectionProviderBuilder.getConnectionProviderProperties() )
+		serviceRegistry = (BasicServiceRegistryImpl) new ServiceRegistryBuilder()
+				.applySettings( ConnectionProviderBuilder.getConnectionProviderProperties() )
 				.buildServiceRegistry();
 	}
 

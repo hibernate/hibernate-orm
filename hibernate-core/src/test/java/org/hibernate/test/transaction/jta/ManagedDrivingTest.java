@@ -71,7 +71,9 @@ public class ManagedDrivingTest extends BaseUnitTestCase {
 		TestingJtaBootstrap.prepare( configValues );
 		configValues.put( Environment.TRANSACTION_STRATEGY, CMTTransactionFactory.class.getName() );
 
-		serviceRegistry = (BasicServiceRegistryImpl) new ServiceRegistryBuilder( configValues ).buildServiceRegistry();
+		serviceRegistry = (BasicServiceRegistryImpl) new ServiceRegistryBuilder()
+				.applySettings( configValues )
+				.buildServiceRegistry();
 	}
 
 	@After

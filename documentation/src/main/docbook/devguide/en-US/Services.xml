@@ -160,36 +160,6 @@
             </variablelist>
         </section>
 
-        <section id="services-ConfigurationService">
-            <title><interfacename>org.hibernate.service.config.spi.ConfigurationService</interfacename></title>
-            <variablelist>
-                <varlistentry>
-                    <term>Notes</term>
-                    <listitem>
-                        <para>
-                            Provides access to the initial raw, user-provided configuration values
-                        </para>
-                    </listitem>
-                </varlistentry>
-                <varlistentry>
-                    <term>Initiator</term>
-                    <listitem>
-                        <para>
-                            <classname>org.hibernate.service.config.internal.ConfigurationServiceInitiator</classname>
-                        </para>
-                    </listitem>
-                </varlistentry>
-                <varlistentry>
-                    <term>Implementations</term>
-                    <listitem>
-                        <para>
-                            <classname>org.hibernate.service.config.internal.ConfigurationServiceImpl</classname>
-                        </para>
-                    </listitem>
-                </varlistentry>
-            </variablelist>
-        </section>
-
         <section id="services-ConnectionProvider">
             <title><interfacename>org.hibernate.service.jdbc.connections.spi.ConnectionProvider</interfacename></title>
             <variablelist>
@@ -902,7 +872,37 @@
     </section>
 
     <section>
-        <title>Special services</title>
+        <title>Boot-strap services</title>
+
+        <section id="services-ConfigurationService">
+            <title><interfacename>org.hibernate.service.config.spi.ConfigurationService</interfacename></title>
+            <variablelist>
+                <varlistentry>
+                    <term>Notes</term>
+                    <listitem>
+                        <para>
+                            Provides access to the initial raw, user-provided configuration values
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term>Initiator</term>
+                    <listitem>
+                        <para>
+                            N/A
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term>Implementations</term>
+                    <listitem>
+                        <para>
+                            <classname>org.hibernate.service.config.internal.ConfigurationServiceImpl</classname>
+                        </para>
+                    </listitem>
+                </varlistentry>
+            </variablelist>
+        </section>
 
         <section id="services-ClassLoaderService">
         </section>

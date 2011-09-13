@@ -28,41 +28,38 @@ import org.jboss.logging.Logger;
 import org.hibernate.cfg.beanvalidation.BeanValidationIntegrator;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.service.spi.ServiceRegistryImplementor;
-
+import org.hibernate.service.classloading.spi.ClassLoaderService;
 
 /**
  * @author Steve Ebersole
  */
 public class IntegratorServiceImpl implements IntegratorService {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			 CoreMessageLogger.class, IntegratorServiceImpl.class.getName());
-	private final ServiceRegistryImplementor serviceRegistry;
-	private LinkedHashSet<Integrator> integrators = new LinkedHashSet<Integrator>();
+	private static final Logger LOG = Logger.getLogger( IntegratorServiceImpl.class.getName() );
 
-	public IntegratorServiceImpl(ServiceRegistryImplementor serviceRegistry) {
-		this.serviceRegistry = serviceRegistry;
-		// Standard integrators nameable from here.  Envers and JPA, for example, need to be handled by discovery
-		// because in separate project/jars
+	private final LinkedHashSet<Integrator> integrators = new LinkedHashSet<Integrator>();
+
+	public IntegratorServiceImpl(LinkedHashSet<Integrator> providedIntegrators, ClassLoaderService classLoaderService) {
+		// register standard integrators.  Envers and JPA, for example, need to be handled by discovery because in
+		// separate project/jars.
 		addIntegrator( new BeanValidationIntegrator() );
+
+		// register provided integrators
+		for ( Integrator integrator : providedIntegrators ) {
+			addIntegrator( integrator );
+		}
+
+		for ( Integrator integrator : classLoaderService.loadJavaServices( Integrator.class ) ) {
+			addIntegrator( integrator );
+		}
 	}
 
-	@Override
-	public void addIntegrator(Integrator integrator) {
+	private void addIntegrator(Integrator integrator) {
 		LOG.debugf( "Adding Integrator [%s].", integrator.getClass().getName() );
 		integrators.add( integrator );
 	}
 
 	@Override
 	public Iterable<Integrator> getIntegrators() {
-		LinkedHashSet<Integrator> integrators = new LinkedHashSet<Integrator>();
-		integrators.addAll( this.integrators );
-		for ( Integrator integrator : ServiceLoader.load( Integrator.class,serviceRegistry ) ) {
-			LOG.debugf( "Adding Integrator [%s].", integrator.getClass().getName() );
-			integrators.add( integrator );
-		}
-
 		return integrators;
 	}
 }

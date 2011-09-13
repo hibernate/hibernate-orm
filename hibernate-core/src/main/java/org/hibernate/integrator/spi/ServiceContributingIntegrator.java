@@ -21,27 +21,22 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.integrator.internal;
+package org.hibernate.integrator.spi;
 
-import java.util.Map;
-
-import org.hibernate.integrator.spi.IntegratorService;
-import org.hibernate.service.spi.BasicServiceInitiator;
-import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.service.ServiceRegistryBuilder;
 
 /**
+ * Additional, optional contract for Integrators that wish to contribute {@link org.hibernate.service.Service services}
+ * to the Hibernate {@link org.hibernate.service.ServiceRegistry}.
+ *
  * @author Steve Ebersole
  */
-public class IntegratorServiceInitiator implements BasicServiceInitiator<IntegratorService> {
-	public static final IntegratorServiceInitiator INSTANCE = new IntegratorServiceInitiator();
-
-	@Override
-	public Class<IntegratorService> getServiceInitiated() {
-		return IntegratorService.class;
-	}
-
-	@Override
-	public IntegratorService initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
-		return new IntegratorServiceImpl( registry );
-	}
+public interface ServiceContributingIntegrator extends Integrator {
+	/**
+	 * Allow the integrator to alter the builder of {@link org.hibernate.service.ServiceRegistry}, presumably to
+	 * register services into it.
+	 *
+	 * @param serviceRegistryBuilder The build to prepare.
+	 */
+	public void prepareServices(ServiceRegistryBuilder serviceRegistryBuilder);
 }

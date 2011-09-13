@@ -23,28 +23,30 @@
  */
 package org.hibernate.envers.test;
 
+import javax.persistence.EntityManager;
+import java.io.IOException;
+import java.util.Properties;
+
 import org.hibernate.cfg.Environment;
 import org.hibernate.ejb.Ejb3Configuration;
+import org.hibernate.ejb.EntityManagerFactoryImpl;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.event.EnversIntegrator;
-import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.service.ServiceRegistryBuilder;
+import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.service.internal.BasicServiceRegistryImpl;
-import org.hibernate.testing.AfterClassOnce;
-import org.hibernate.testing.BeforeClassOnce;
+import org.hibernate.service.internal.BootstrapServiceRegistryImpl;
+
 import org.junit.Before;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import java.io.IOException;
-import java.util.Properties;
+import org.hibernate.testing.AfterClassOnce;
+import org.hibernate.testing.BeforeClassOnce;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
 public abstract class AbstractEntityTest extends AbstractEnversTest {
-    private EntityManagerFactory emf;
+    private EntityManagerFactoryImpl emf;
     private EntityManager entityManager;
     private AuditReader auditReader;
     private Ejb3Configuration cfg;
@@ -104,21 +106,19 @@ public abstract class AbstractEntityTest extends AbstractEnversTest {
         configure(cfg);
         cfg.configure(configurationProperties);
 
-        serviceRegistry = createServiceRegistry(cfg);
+        emf = (EntityManagerFactoryImpl) cfg.buildEntityManagerFactory( createBootstrapRegistryBuilder() );
 
-        emf = cfg.buildEntityManagerFactory( serviceRegistry );
+		serviceRegistry = (BasicServiceRegistryImpl) ( (SessionFactoryImpl) emf.getSessionFactory() ).getServiceRegistry().getParentServiceRegistry();
 
         newEntityManager();
     }
 
-    private BasicServiceRegistryImpl createServiceRegistry(Ejb3Configuration configuration) {
-        Properties properties = new Properties();
-		properties.putAll(configuration.getHibernateConfiguration().getProperties());
-		ConfigurationHelper.resolvePlaceHolders(properties);
-		return (BasicServiceRegistryImpl) new ServiceRegistryBuilder(properties).buildServiceRegistry();
-    }
+	private BootstrapServiceRegistryImpl.Builder createBootstrapRegistryBuilder() {
+		return BootstrapServiceRegistryImpl.builder();
+	}
 
-    @AfterClassOnce
+
+	@AfterClassOnce
     public void close() {
         closeEntityManager();
         emf.close();

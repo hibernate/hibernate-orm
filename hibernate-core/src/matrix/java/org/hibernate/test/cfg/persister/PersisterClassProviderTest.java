@@ -42,13 +42,16 @@ public class PersisterClassProviderTest extends BaseUnitTestCase {
 
 		Configuration cfg = new Configuration();
 		cfg.addAnnotatedClass( Gate.class );
-		BasicServiceRegistry serviceRegistry = new ServiceRegistryBuilder( cfg.getProperties() ).buildServiceRegistry();
+		BasicServiceRegistry serviceRegistry = new ServiceRegistryBuilder()
+				.applySettings( cfg.getProperties() )
+				.buildServiceRegistry();
 		//no exception as the GoofyPersisterClassProvider is not set
 		SessionFactory sessionFactory = cfg.buildSessionFactory( serviceRegistry );
 		sessionFactory.close();
 		ServiceRegistryBuilder.destroy( serviceRegistry );
 
-		serviceRegistry = new ServiceRegistryBuilder( cfg.getProperties() )
+		serviceRegistry = new ServiceRegistryBuilder()
+				.applySettings( cfg.getProperties() )
 				.addService( PersisterClassResolver.class, new GoofyPersisterClassProvider() )
 				.buildServiceRegistry();
 		cfg = new Configuration();
@@ -71,7 +74,8 @@ public class PersisterClassProviderTest extends BaseUnitTestCase {
 		cfg = new Configuration();
 		cfg.addAnnotatedClass( Portal.class );
 		cfg.addAnnotatedClass( Window.class );
-		serviceRegistry = new ServiceRegistryBuilder( cfg.getProperties() )
+		serviceRegistry = new ServiceRegistryBuilder()
+				.applySettings( cfg.getProperties() )
 				.addService( PersisterClassResolver.class, new GoofyPersisterClassProvider() )
 				.buildServiceRegistry();
 		try {

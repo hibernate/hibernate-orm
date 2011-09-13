@@ -109,7 +109,9 @@ public class NodeEnvironment {
 	}
 
 	public void prepare() throws Exception {
-		serviceRegistry = (BasicServiceRegistryImpl) new ServiceRegistryBuilder( configuration.getProperties() ).buildServiceRegistry();
+		serviceRegistry = (BasicServiceRegistryImpl) new ServiceRegistryBuilder()
+				.applySettings( configuration.getProperties() )
+				.buildServiceRegistry();
 		regionFactory = CacheTestUtil.startRegionFactory( serviceRegistry, configuration );
 	}
 

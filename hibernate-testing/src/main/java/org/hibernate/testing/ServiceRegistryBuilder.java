@@ -38,7 +38,9 @@ public class ServiceRegistryBuilder {
 	}
 
 	public static BasicServiceRegistryImpl buildServiceRegistry(Map serviceRegistryConfig) {
-		return (BasicServiceRegistryImpl) new org.hibernate.service.ServiceRegistryBuilder( serviceRegistryConfig ).buildServiceRegistry();
+		return (BasicServiceRegistryImpl) new org.hibernate.service.ServiceRegistryBuilder()
+				.applySettings( serviceRegistryConfig )
+				.buildServiceRegistry();
 	}
 
 	public static void destroy(ServiceRegistry serviceRegistry) {

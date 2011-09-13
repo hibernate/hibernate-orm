@@ -59,7 +59,8 @@ public class TestExpectedUsage extends BaseUnitTestCase {
 
 	@Before
 	public void setUp() throws Exception {
-		serviceRegistry = (BasicServiceRegistryImpl) new ServiceRegistryBuilder( ConnectionProviderBuilder.getConnectionProviderProperties() )
+		serviceRegistry = (BasicServiceRegistryImpl) new ServiceRegistryBuilder()
+				.applySettings( ConnectionProviderBuilder.getConnectionProviderProperties() )
 				.buildServiceRegistry();
 	}
 

@@ -26,13 +26,13 @@ package org.hibernate.test.flush;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.event.spi.EventType;
 import org.hibernate.event.service.spi.EventListenerRegistry;
-import org.hibernate.integrator.spi.IntegratorService;
-import org.hibernate.service.internal.BasicServiceRegistryImpl;
-import org.hibernate.service.spi.SessionFactoryServiceRegistry;
+import org.hibernate.event.spi.EventType;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.metamodel.source.MetadataImplementor;
+import org.hibernate.service.internal.BootstrapServiceRegistryImpl;
+import org.hibernate.service.spi.SessionFactoryServiceRegistry;
+
 import org.junit.Test;
 
 import org.hibernate.testing.FailureExpected;
@@ -50,9 +50,9 @@ public class TestCollectionInitializingDuringFlush extends BaseCoreFunctionalTes
 	}
 
 	@Override
-	protected void applyServices(BasicServiceRegistryImpl serviceRegistry) {
-		super.applyServices( serviceRegistry );
-		serviceRegistry.getService( IntegratorService.class ).addIntegrator(
+	protected void prepareBootstrapRegistryBuilder(BootstrapServiceRegistryImpl.Builder builder) {
+		super.prepareBootstrapRegistryBuilder( builder );
+		builder.with(
 				new Integrator() {
 
 					@Override
@@ -60,19 +60,21 @@ public class TestCollectionInitializingDuringFlush extends BaseCoreFunctionalTes
 							Configuration configuration,
 							SessionFactoryImplementor sessionFactory,
 							SessionFactoryServiceRegistry serviceRegistry) {
-                        integrate(serviceRegistry);
+						integrate( serviceRegistry );
 					}
 
 					@Override
-					public void integrate( MetadataImplementor metadata,
-					                       SessionFactoryImplementor sessionFactory,
-					                       SessionFactoryServiceRegistry serviceRegistry ) {
-					    integrate(serviceRegistry);
+					public void integrate(
+							MetadataImplementor metadata,
+							SessionFactoryImplementor sessionFactory,
+							SessionFactoryServiceRegistry serviceRegistry) {
+						integrate( serviceRegistry );
 					}
 
-					private void integrate( SessionFactoryServiceRegistry serviceRegistry ) {
-                        serviceRegistry.getService(EventListenerRegistry.class).getEventListenerGroup(EventType.PRE_UPDATE)
-                                       .appendListener(new InitializingPreUpdateEventListener());
+					private void integrate(SessionFactoryServiceRegistry serviceRegistry) {
+						serviceRegistry.getService( EventListenerRegistry.class )
+								.getEventListenerGroup( EventType.PRE_UPDATE )
+								.appendListener( new InitializingPreUpdateEventListener() );
 					}
 
 					@Override

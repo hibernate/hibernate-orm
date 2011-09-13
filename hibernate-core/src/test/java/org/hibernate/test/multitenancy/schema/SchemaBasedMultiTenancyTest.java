@@ -150,7 +150,8 @@ public class SchemaBasedMultiTenancyTest extends BaseUnitTestCase {
 				false	// do not *just* perform the create
 		);
 
-		serviceRegistry = (ServiceRegistryImplementor) new ServiceRegistryBuilder( cfg.getProperties() )
+		serviceRegistry = (ServiceRegistryImplementor) new ServiceRegistryBuilder()
+				.applySettings( cfg.getProperties() )
 				.addService( MultiTenantConnectionProvider.class, multiTenantConnectionProvider )
 				.buildServiceRegistry();
 

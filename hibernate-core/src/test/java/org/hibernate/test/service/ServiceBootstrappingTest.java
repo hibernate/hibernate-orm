@@ -47,9 +47,9 @@ import org.hibernate.testing.junit4.BaseUnitTestCase;
 public class ServiceBootstrappingTest extends BaseUnitTestCase {
 	@Test
 	public void testBasicBuild() {
-		BasicServiceRegistryImpl serviceRegistry = (BasicServiceRegistryImpl) new ServiceRegistryBuilder(
-				ConnectionProviderBuilder.getConnectionProviderProperties()
-		).buildServiceRegistry();
+		BasicServiceRegistryImpl serviceRegistry = (BasicServiceRegistryImpl) new ServiceRegistryBuilder()
+				.applySettings( ConnectionProviderBuilder.getConnectionProviderProperties() )
+				.buildServiceRegistry();
 		JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
 
 		assertTrue( jdbcServices.getDialect() instanceof H2Dialect );
@@ -64,7 +64,9 @@ public class ServiceBootstrappingTest extends BaseUnitTestCase {
 		Properties props = ConnectionProviderBuilder.getConnectionProviderProperties();
 		props.put( Environment.SHOW_SQL, "true" );
 
-		BasicServiceRegistryImpl serviceRegistry = (BasicServiceRegistryImpl) new ServiceRegistryBuilder( props ).buildServiceRegistry();
+		BasicServiceRegistryImpl serviceRegistry = (BasicServiceRegistryImpl) new ServiceRegistryBuilder()
+				.applySettings( props )
+				.buildServiceRegistry();
 
 		JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
 
@@ -77,7 +79,8 @@ public class ServiceBootstrappingTest extends BaseUnitTestCase {
 
 	@Test
 	public void testBuildWithServiceOverride() {
-		BasicServiceRegistryImpl serviceRegistry = (BasicServiceRegistryImpl) new ServiceRegistryBuilder( ConnectionProviderBuilder.getConnectionProviderProperties() )
+		BasicServiceRegistryImpl serviceRegistry = (BasicServiceRegistryImpl) new ServiceRegistryBuilder()
+				.applySettings( ConnectionProviderBuilder.getConnectionProviderProperties() )
 				.buildServiceRegistry();
 		JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
 
@@ -87,7 +90,8 @@ public class ServiceBootstrappingTest extends BaseUnitTestCase {
 		Properties props = ConnectionProviderBuilder.getConnectionProviderProperties();
 		props.setProperty( Environment.DIALECT, H2Dialect.class.getName() );
 
-		serviceRegistry = (BasicServiceRegistryImpl) new ServiceRegistryBuilder( props )
+		serviceRegistry = (BasicServiceRegistryImpl) new ServiceRegistryBuilder()
+				.applySettings( props )
 				.addService( ConnectionProvider.class, new UserSuppliedConnectionProviderImpl() )
 				.buildServiceRegistry();
 		jdbcServices = serviceRegistry.getService( JdbcServices.class );

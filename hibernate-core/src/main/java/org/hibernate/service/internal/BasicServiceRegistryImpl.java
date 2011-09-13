@@ -32,6 +32,7 @@ import org.hibernate.service.spi.BasicServiceInitiator;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.ServiceInitiator;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
  * Standard Hibernate implementation of the service registry.
@@ -39,15 +40,15 @@ import org.hibernate.service.spi.ServiceRegistryAwareService;
  * @author Steve Ebersole
  */
 public class BasicServiceRegistryImpl extends AbstractServiceRegistryImpl implements BasicServiceRegistry {
-
 	private final Map configurationValues;
 
 	@SuppressWarnings( {"unchecked"})
 	public BasicServiceRegistryImpl(
-			final List<BasicServiceInitiator> serviceInitiators,
-			final List<ProvidedService> providedServices,
-			final Map configurationValues) {
-		super();
+			ServiceRegistryImplementor bootstrapServiceRegistry,
+			List<BasicServiceInitiator> serviceInitiators,
+			List<ProvidedService> providedServices,
+			Map<?, ?> configurationValues) {
+		super( bootstrapServiceRegistry );
 
 		this.configurationValues = configurationValues;
 

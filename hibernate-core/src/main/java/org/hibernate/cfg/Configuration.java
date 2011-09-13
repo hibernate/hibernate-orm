@@ -1743,7 +1743,9 @@ public class Configuration implements Serializable {
 	public SessionFactory buildSessionFactory() throws HibernateException {
 		Environment.verifyProperties( properties );
 		ConfigurationHelper.resolvePlaceHolders( properties );
-		final ServiceRegistry serviceRegistry =  new ServiceRegistryBuilder( properties ).buildServiceRegistry();
+		final ServiceRegistry serviceRegistry =  new ServiceRegistryBuilder()
+				.applySettings( properties )
+				.buildServiceRegistry();
 		setSessionFactoryObserver(
 				new SessionFactoryObserver() {
 					@Override

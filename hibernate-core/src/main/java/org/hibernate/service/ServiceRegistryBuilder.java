@@ -23,14 +23,30 @@
  */
 package org.hibernate.service;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
+
+import org.jboss.logging.Logger;
 
 import org.hibernate.cfg.Environment;
+import org.hibernate.integrator.spi.Integrator;
+import org.hibernate.integrator.spi.IntegratorService;
+import org.hibernate.integrator.spi.ServiceContributingIntegrator;
+import org.hibernate.internal.util.Value;
+import org.hibernate.internal.util.config.ConfigurationException;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.metamodel.source.Origin;
+import org.hibernate.metamodel.source.SourceType;
+import org.hibernate.metamodel.source.hbm.jaxb.config.XMLHibernateConfiguration;
+import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.internal.BasicServiceRegistryImpl;
+import org.hibernate.service.internal.BootstrapServiceRegistryImpl;
+import org.hibernate.service.internal.JaxbProcessor;
 import org.hibernate.service.internal.ProvidedService;
 import org.hibernate.service.spi.BasicServiceInitiator;
 
@@ -40,28 +56,38 @@ import org.hibernate.service.spi.BasicServiceInitiator;
  * @author Steve Ebersole
  */
 public class ServiceRegistryBuilder {
+	private static final Logger log = Logger.getLogger( ServiceRegistryBuilder.class );
+
 	public static final String DEFAULT_CFG_RESOURCE_NAME = "hibernate.cfg.xml";
 
 	private final Map settings;
 	private final List<BasicServiceInitiator> initiators = standardInitiatorList();
 	private final List<ProvidedService> providedServices = new ArrayList<ProvidedService>();
 
+	private final BootstrapServiceRegistryImpl bootstrapServiceRegistry;
+
 	/**
 	 * Create a default builder
 	 */
 	public ServiceRegistryBuilder() {
-		this( Environment.getProperties() );
+		this( new BootstrapServiceRegistryImpl() );
 	}
 
 	/**
-	 * Create a builder with the specified settings
+	 * Create a builder with the specified bootstrap services.
 	 *
-	 * @param settings The initial set of settings to use.
+	 * @param bootstrapServiceRegistry Provided bootstrap registry to use.
 	 */
-	public ServiceRegistryBuilder(Map settings) {
-		this.settings = settings;
+	public ServiceRegistryBuilder(BootstrapServiceRegistryImpl bootstrapServiceRegistry) {
+		this.settings = Environment.getProperties();
+		this.bootstrapServiceRegistry = bootstrapServiceRegistry;
 	}
 
+	/**
+	 * Used from the {@link #initiators} variable initializer
+	 *
+	 * @return List of standard initiators
+	 */
 	private static List<BasicServiceInitiator> standardInitiatorList() {
 		final List<BasicServiceInitiator> initiators = new ArrayList<BasicServiceInitiator>();
 		initiators.addAll( StandardServiceInitiators.LIST );
@@ -69,29 +95,86 @@ public class ServiceRegistryBuilder {
 	}
 
 	/**
-	 * Read setting information from the standard resource location
+	 * Read settings from a {@link Properties} file.  Differs from {@link #configure()} and {@link #configure(String)}
+	 * in that here we read a {@link Properties} file while for {@link #configure} we read the XML variant.
+	 *
+	 * @param resourceName The name by which to perform a resource look up for the properties file.
+	 *
+	 * @return this, for method chaining
+	 *
+	 * @see #configure()
+	 * @see #configure(String)
+	 */
+	@SuppressWarnings( {"unchecked"})
+	public ServiceRegistryBuilder loadProperties(String resourceName) {
+		InputStream stream = bootstrapServiceRegistry.getService( ClassLoaderService.class ).locateResourceStream( resourceName );
+		try {
+			Properties properties = new Properties();
+			properties.load( stream );
+			settings.putAll( properties );
+		}
+		catch (IOException e) {
+			throw new ConfigurationException( "Unable to apply settings from properties file [" + resourceName + "]", e );
+		}
+		finally {
+			try {
+				stream.close();
+			}
+			catch (IOException e) {
+				log.debug(
+						String.format( "Unable to close properties file [%s] stream", resourceName ),
+						e
+				);
+			}
+		}
+
+		return this;
+	}
+
+	/**
+	 * Read setting information from an XML file using the standard resource location
 	 *
 	 * @return this, for method chaining
 	 *
 	 * @see #DEFAULT_CFG_RESOURCE_NAME
+	 * @see #configure(String)
+	 * @see #loadProperties(String)
 	 */
 	public ServiceRegistryBuilder configure() {
 		return configure( DEFAULT_CFG_RESOURCE_NAME );
 	}
 
 	/**
-	 * Read setting information from the named resource location
+	 * Read setting information from an XML file using the named resource location
 	 *
 	 * @param resourceName The named resource
 	 *
 	 * @return this, for method chaining
+	 *
+	 * @see #loadProperties(String)
 	 */
+	@SuppressWarnings( {"unchecked"})
 	public ServiceRegistryBuilder configure(String resourceName) {
-		// todo : parse and apply XML
-		// we run into a chicken-egg problem here, in that we need the service registry in order to know how to do this
-		// resource lookup (ClassLoaderService)
+		InputStream stream = bootstrapServiceRegistry.getService( ClassLoaderService.class ).locateResourceStream( resourceName );
+		XMLHibernateConfiguration configurationElement = jaxbProcessorHolder.getValue().unmarshal(
+				stream,
+				new Origin( SourceType.RESOURCE, resourceName )
+		);
+		for ( XMLHibernateConfiguration.XMLSessionFactory.XMLProperty xmlProperty : configurationElement.getSessionFactory().getProperty() ) {
+			settings.put( xmlProperty.getName(), xmlProperty.getValue() );
+		}
+
 		return this;
 	}
+
+	private Value<JaxbProcessor> jaxbProcessorHolder = new Value<JaxbProcessor>(
+			new Value.DeferredInitializer<JaxbProcessor>() {
+				@Override
+				public JaxbProcessor initialize() {
+					return new JaxbProcessor( bootstrapServiceRegistry.getService( ClassLoaderService.class ) );
+				}
+			}
+	);
 
 	/**
 	 * Apply a setting value
@@ -157,7 +240,14 @@ public class ServiceRegistryBuilder {
 		settingsCopy.putAll( settings );
 		Environment.verifyProperties( settingsCopy );
 		ConfigurationHelper.resolvePlaceHolders( settingsCopy );
-		return new BasicServiceRegistryImpl( initiators, providedServices, settingsCopy );
+
+		for ( Integrator integrator : bootstrapServiceRegistry.getService( IntegratorService.class ).getIntegrators() ) {
+			if ( ServiceContributingIntegrator.class.isInstance( integrator ) ) {
+				ServiceContributingIntegrator.class.cast( integrator ).prepareServices( this );
+			}
+		}
+
+		return new BasicServiceRegistryImpl( bootstrapServiceRegistry, initiators, providedServices, settingsCopy );
 	}
 
 	/**

@@ -26,6 +26,7 @@ package org.hibernate.integrator.spi;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.source.MetadataImplementor;
+import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
 /**
@@ -44,6 +45,7 @@ import org.hibernate.service.spi.SessionFactoryServiceRegistry;
  * @jira HHH-6081
  */
 public interface Integrator {
+
 	/**
 	 * Perform integration.
 	 *
@@ -74,4 +76,5 @@ public interface Integrator {
 	 * @param serviceRegistry That session factory's service registry
 	 */
 	public void disintegrate(SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry);
+
 }

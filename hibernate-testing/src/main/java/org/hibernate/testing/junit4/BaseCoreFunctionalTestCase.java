@@ -54,8 +54,10 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.source.MetadataImplementor;
 import org.hibernate.service.BasicServiceRegistry;
+import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.service.config.spi.ConfigurationService;
 import org.hibernate.service.internal.BasicServiceRegistryImpl;
+import org.hibernate.service.internal.BootstrapServiceRegistryImpl;
 
 import org.junit.After;
 import org.junit.Before;
@@ -321,12 +323,24 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		properties.putAll( configuration.getProperties() );
 		Environment.verifyProperties( properties );
 		ConfigurationHelper.resolvePlaceHolders( properties );
-		BasicServiceRegistryImpl serviceRegistry = (BasicServiceRegistryImpl) new org.hibernate.service.ServiceRegistryBuilder( properties ).buildServiceRegistry();
-		applyServices( serviceRegistry );
-		return serviceRegistry;
+
+		final BootstrapServiceRegistryImpl bootstrapServiceRegistry = generateBootstrapRegistry( properties );
+		ServiceRegistryBuilder registryBuilder = new ServiceRegistryBuilder( bootstrapServiceRegistry )
+				.applySettings( properties );
+		prepareBasicRegistryBuilder( registryBuilder );
+		return (BasicServiceRegistryImpl) registryBuilder.buildServiceRegistry();
 	}
 
-	protected void applyServices(BasicServiceRegistryImpl serviceRegistry) {
+	protected BootstrapServiceRegistryImpl generateBootstrapRegistry(Properties properties) {
+		final BootstrapServiceRegistryImpl.Builder builder = BootstrapServiceRegistryImpl.builder();
+		prepareBootstrapRegistryBuilder( builder );
+		return builder.build();
+	}
+
+	protected void prepareBootstrapRegistryBuilder(BootstrapServiceRegistryImpl.Builder builder) {
+	}
+
+	protected void prepareBasicRegistryBuilder(ServiceRegistryBuilder serviceRegistryBuilder) {
 	}
 
 	protected void afterSessionFactoryBuilt() {

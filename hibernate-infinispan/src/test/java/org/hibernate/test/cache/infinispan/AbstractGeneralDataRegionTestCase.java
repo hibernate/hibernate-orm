@@ -79,7 +79,7 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
 	private void evictOrRemoveTest() throws Exception {
 		Configuration cfg = createConfiguration();
 		InfinispanRegionFactory regionFactory = CacheTestUtil.startRegionFactory(
-				new ServiceRegistryBuilder( cfg.getProperties() ).buildServiceRegistry(),
+				new ServiceRegistryBuilder().applySettings( cfg.getProperties() ).buildServiceRegistry(),
 				cfg,
 				getCacheTestSupport()
 		);
@@ -96,7 +96,7 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
 
 		cfg = createConfiguration();
 		regionFactory = CacheTestUtil.startRegionFactory(
-				new ServiceRegistryBuilder( cfg.getProperties() ).buildServiceRegistry(),
+				new ServiceRegistryBuilder().applySettings( cfg.getProperties() ).buildServiceRegistry(),
 				cfg,
 				getCacheTestSupport()
 		);
@@ -142,7 +142,7 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
 	private void evictOrRemoveAllTest(String configName) throws Exception {
 		Configuration cfg = createConfiguration();
 		InfinispanRegionFactory regionFactory = CacheTestUtil.startRegionFactory(
-				new ServiceRegistryBuilder( cfg.getProperties() ).buildServiceRegistry(),
+				new ServiceRegistryBuilder().applySettings( cfg.getProperties() ).buildServiceRegistry(),
 				cfg,
 				getCacheTestSupport()
 		);
@@ -160,7 +160,7 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
 
 		cfg = createConfiguration();
 		regionFactory = CacheTestUtil.startRegionFactory(
-				new ServiceRegistryBuilder( cfg.getProperties() ).buildServiceRegistry(),
+				new ServiceRegistryBuilder().applySettings( cfg.getProperties() ).buildServiceRegistry(),
 				cfg,
 				getCacheTestSupport()
 		);

@@ -66,7 +66,7 @@ public class HibernateService extends ExternalSessionFactoryConfig implements Hi
         LOG.startingServiceAtJndiName( boundName );
         LOG.serviceProperties( properties );
         return buildConfiguration().buildSessionFactory(
-				new ServiceRegistryBuilder( properties ).buildServiceRegistry()
+				new ServiceRegistryBuilder().applySettings( properties ).buildServiceRegistry()
 		);
 	}
 

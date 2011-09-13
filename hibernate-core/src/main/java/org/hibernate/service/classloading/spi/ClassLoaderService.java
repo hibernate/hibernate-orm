@@ -25,6 +25,7 @@ package org.hibernate.service.classloading.spi;
 
 import java.io.InputStream;
 import java.net.URL;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 import org.hibernate.service.Service;
@@ -35,7 +36,6 @@ import org.hibernate.service.Service;
  * @author Steve Ebersole
  */
 public interface ClassLoaderService extends Service {
-
 	/**
 	 * Locate a class by name
 	 *
@@ -73,4 +73,17 @@ public interface ClassLoaderService extends Service {
 	 * @return The list of URL matching; may return {@code null} to indicate the resource was not found
 	 */
 	public List<URL> locateResources(String name);
+
+	/**
+	 * Discovers and instantiates implementations of the named service contract.
+	 * <p/>
+	 * NOTE : the terms service here is used differently than {@link Service}.  Instead here we are talking about
+	 * services as defined by {@link java.util.ServiceLoader}.
+	 *
+	 * @param serviceContract The java type defining the service contract
+	 * @param <S> The type of the service contract
+	 *     
+	 * @return The ordered set of discovered services.
+	 */
+	public <S> LinkedHashSet<S> loadJavaServices(Class<S> serviceContract);
 }

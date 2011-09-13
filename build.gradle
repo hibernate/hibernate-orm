@@ -75,7 +75,7 @@ libraries = [
         jta:            'javax.transaction:jta:1.1',
         validation:     'javax.validation:validation-api:1.0.0.GA',
         validator:      'org.hibernate:hibernate-validator:4.2.0.Final',
-        jacc:           'org.jboss.javaee:jboss-jacc-api:1.1.0.GA',
+        jacc:           'org.jboss.spec.javax.security.jacc:jboss-jacc-api_1.4_spec:1.0.0.Final',
 
         // logging
         logging:        'org.jboss.logging:jboss-logging:3.0.0.GA',

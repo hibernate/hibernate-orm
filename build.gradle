@@ -43,7 +43,7 @@ ideaModule {
 slf4jVersion = '1.6.1'
 libraries = [
         // Ant
-        ant:            'ant:ant:1.6.5',
+        ant:            'org.apache.ant:ant:1.8.2',
 
         // Antlr
         antlr:          'antlr:antlr:2.7.7',

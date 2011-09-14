@@ -29,16 +29,16 @@ import java.util.List;
 import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
 
-import org.hibernate.metamodel.source.annotation.jaxb.XMLAccessType;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLOneToMany;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbAccessType;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbOneToMany;
 
 /**
  * @author Strong Liu
  */
 class OneToManyMocker extends PropertyMocker {
-	private XMLOneToMany oneToMany;
+	private JaxbOneToMany oneToMany;
 
-	OneToManyMocker(IndexBuilder indexBuilder, ClassInfo classInfo, EntityMappingsMocker.Default defaults, XMLOneToMany oneToMany) {
+	OneToManyMocker(IndexBuilder indexBuilder, ClassInfo classInfo, EntityMappingsMocker.Default defaults, JaxbOneToMany oneToMany) {
 		super( indexBuilder, classInfo, defaults );
 		this.oneToMany = oneToMany;
 	}
@@ -75,12 +75,12 @@ class OneToManyMocker extends PropertyMocker {
 	}
 
 	@Override
-	protected XMLAccessType getAccessType() {
+	protected JaxbAccessType getAccessType() {
 		return oneToMany.getAccess();
 	}
 
 	@Override
-	protected void setAccessType(XMLAccessType accessType) {
+	protected void setAccessType(JaxbAccessType accessType) {
 		oneToMany.setAccess( accessType );
 	}
 }

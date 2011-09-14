@@ -41,7 +41,7 @@ import org.jboss.jandex.Type;
 
 import org.hibernate.HibernateException;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLCascadeType;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbCascadeType;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
@@ -185,7 +185,7 @@ public class MockHelper {
 		return null;
 	}
 
-	static void cascadeValue(String name, XMLCascadeType cascadeType, boolean isCascadePersistDefault, List<AnnotationValue> annotationValueList) {
+	static void cascadeValue(String name, JaxbCascadeType cascadeType, boolean isCascadePersistDefault, List<AnnotationValue> annotationValueList) {
 		List<Enum> enumList = new ArrayList<Enum>();
 		if ( isCascadePersistDefault ) {
 			enumList.add( javax.persistence.CascadeType.PERSIST );

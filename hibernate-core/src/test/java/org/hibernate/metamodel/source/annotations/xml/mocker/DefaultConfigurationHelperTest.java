@@ -18,7 +18,7 @@ import org.jboss.jandex.DotName;
 import org.jboss.jandex.Index;
 import org.junit.Test;
 
-import org.hibernate.metamodel.source.annotation.jaxb.XMLEntity;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbEntity;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 
 import static org.junit.Assert.assertArrayEquals;
@@ -33,7 +33,7 @@ import static org.junit.Assert.assertTrue;
 public class DefaultConfigurationHelperTest extends AbstractMockerTest {
 	@Test
 	public void applyNullDefaultToEntity() {
-		XMLEntity entity = new XMLEntity();
+		JaxbEntity entity = new JaxbEntity();
 		entity.setClazz( "Entity" );
 		DefaultConfigurationHelper.INSTANCE.applyDefaults( entity, null );
 		assertNull( entity.getTable() );
@@ -46,7 +46,7 @@ public class DefaultConfigurationHelperTest extends AbstractMockerTest {
 		defaults.setPackageName( "org.test" );
 		defaults.setSchema( "schema" );
 		defaults.setMetadataComplete( true );
-		XMLEntity entity = new XMLEntity();
+		JaxbEntity entity = new JaxbEntity();
 		entity.setClazz( "Entity" );
 		DefaultConfigurationHelper.INSTANCE.applyDefaults( entity, defaults );
 		assertNotNull( entity.getTable() );

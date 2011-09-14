@@ -35,7 +35,7 @@ import org.hibernate.metamodel.source.binder.MetaAttributeSource;
 import org.hibernate.metamodel.source.binder.RelationalValueSource;
 import org.hibernate.metamodel.source.binder.SingularAttributeNature;
 import org.hibernate.metamodel.source.binder.SingularAttributeSource;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLHibernateMapping;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbHibernateMapping;
 
 /**
  * Implementation for {@code <version/>} mappings
@@ -43,12 +43,12 @@ import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLHibernateMapping;
  * @author Steve Ebersole
  */
 class VersionAttributeSourceImpl implements SingularAttributeSource {
-	private final XMLHibernateMapping.XMLClass.XMLVersion versionElement;
+	private final JaxbHibernateMapping.JaxbClass.JaxbVersion versionElement;
 	private final LocalBindingContext bindingContext;
 	private final List<RelationalValueSource> valueSources;
 
 	VersionAttributeSourceImpl(
-			final XMLHibernateMapping.XMLClass.XMLVersion versionElement,
+			final JaxbHibernateMapping.JaxbClass.JaxbVersion versionElement,
 			LocalBindingContext bindingContext) {
 		this.versionElement = versionElement;
 		this.bindingContext = bindingContext;

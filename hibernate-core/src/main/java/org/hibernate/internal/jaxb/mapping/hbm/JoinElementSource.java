@@ -21,17 +21,13 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.hbm.jaxb.mapping;
+package org.hibernate.internal.jaxb.mapping.hbm;
+
+import java.util.List;
 
 /**
  * @author Steve Ebersole
  */
-public interface SingularAttributeSource extends MetaAttributeContainer {
-	public String getName();
-
-	public String getTypeAttribute();
-
-    public XMLTypeElement getType();
-
-	public String getAccess();
+public interface JoinElementSource {
+	public List<JaxbJoinElement> getJoin();
 }

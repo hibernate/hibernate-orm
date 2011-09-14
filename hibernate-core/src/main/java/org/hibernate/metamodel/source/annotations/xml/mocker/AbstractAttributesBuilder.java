@@ -27,21 +27,21 @@ import java.util.List;
 
 import org.jboss.jandex.ClassInfo;
 
-import org.hibernate.metamodel.source.annotation.jaxb.XMLBasic;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLElementCollection;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLEmbedded;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLEmbeddedId;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLId;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLManyToMany;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLManyToOne;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLOneToMany;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLOneToOne;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLTransient;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLVersion;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbBasic;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbElementCollection;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbEmbedded;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbEmbeddedId;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbId;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbManyToMany;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbManyToOne;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbOneToMany;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbOneToOne;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbTransient;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbVersion;
 
 /**
- * Abstract Parser to handle {@link org.hibernate.metamodel.source.annotation.jaxb.XMLAttributes XMLAttributes}
- * and {@link org.hibernate.metamodel.source.annotation.jaxb.XMLEmbeddableAttributes XMLEmbeddableAttributes}.
+ * Abstract Parser to handle {@link org.hibernate.internal.jaxb.mapping.orm.JaxbAttributes JaxbAttributes}
+ * and {@link org.hibernate.internal.jaxb.mapping.orm.JaxbEmbeddableAttributes JaxbEmbeddableAttributes}.
  *
  * It would be really helpful if these two classes can implement an interface with those abstract methods in this class.
  *
@@ -60,40 +60,40 @@ abstract class AbstractAttributesBuilder {
 	}
 
 	final void parser() {
-		for ( XMLId id : getId() ) {
+		for ( JaxbId id : getId() ) {
 			new IdMocker( indexBuilder, classInfo, defaults, id ).process();
 		}
-		for ( XMLTransient transientObj : getTransient() ) {
+		for ( JaxbTransient transientObj : getTransient() ) {
 			new TransientMocker( indexBuilder, classInfo, defaults, transientObj ).process();
 		}
-		for ( XMLVersion version : getVersion() ) {
+		for ( JaxbVersion version : getVersion() ) {
 			new VersionMocker( indexBuilder, classInfo, defaults, version ).process();
 		}
 
-		for ( XMLBasic basic : getBasic() ) {
+		for ( JaxbBasic basic : getBasic() ) {
 			new BasicMocker( indexBuilder, classInfo, defaults, basic ).process();
 		}
-		for ( XMLElementCollection elementCollection : getElementCollection() ) {
+		for ( JaxbElementCollection elementCollection : getElementCollection() ) {
 			new ElementCollectionMocker(
 					indexBuilder, classInfo, defaults, elementCollection
 			).process();
 		}
-		for ( XMLEmbedded embedded : getEmbedded() ) {
+		for ( JaxbEmbedded embedded : getEmbedded() ) {
 			new EmbeddedMocker( indexBuilder, classInfo, defaults, embedded ).process();
 		}
-		for ( XMLManyToMany manyToMany : getManyToMany() ) {
+		for ( JaxbManyToMany manyToMany : getManyToMany() ) {
 			new ManyToManyMocker( indexBuilder, classInfo, defaults, manyToMany ).process();
 		}
 
-		for ( XMLManyToOne manyToOne : getManyToOne() ) {
+		for ( JaxbManyToOne manyToOne : getManyToOne() ) {
 			new ManyToOneMocker( indexBuilder, classInfo, defaults, manyToOne ).process();
 		}
-		for ( XMLOneToMany oneToMany : getOneToMany() ) {
+		for ( JaxbOneToMany oneToMany : getOneToMany() ) {
 			new OneToManyMocker(
 					indexBuilder, classInfo, defaults, oneToMany
 			).process();
 		}
-		for ( XMLOneToOne oneToOne : getOneToOne() ) {
+		for ( JaxbOneToOne oneToOne : getOneToOne() ) {
 			new OneToOneMocker( indexBuilder, classInfo, defaults, oneToOne ).process();
 		}
 		if ( getEmbeddedId() != null ) {
@@ -103,25 +103,25 @@ abstract class AbstractAttributesBuilder {
 		}
 	}
 
-	abstract List<XMLId> getId();
+	abstract List<JaxbId> getId();
 
-	abstract List<XMLTransient> getTransient();
+	abstract List<JaxbTransient> getTransient();
 
-	abstract List<XMLVersion> getVersion();
+	abstract List<JaxbVersion> getVersion();
 
-	abstract List<XMLBasic> getBasic();
+	abstract List<JaxbBasic> getBasic();
 
-	abstract List<XMLElementCollection> getElementCollection();
+	abstract List<JaxbElementCollection> getElementCollection();
 
-	abstract List<XMLEmbedded> getEmbedded();
+	abstract List<JaxbEmbedded> getEmbedded();
 
-	abstract List<XMLManyToMany> getManyToMany();
+	abstract List<JaxbManyToMany> getManyToMany();
 
-	abstract List<XMLManyToOne> getManyToOne();
+	abstract List<JaxbManyToOne> getManyToOne();
 
-	abstract List<XMLOneToMany> getOneToMany();
+	abstract List<JaxbOneToMany> getOneToMany();
 
-	abstract List<XMLOneToOne> getOneToOne();
+	abstract List<JaxbOneToOne> getOneToOne();
 
-	abstract XMLEmbeddedId getEmbeddedId();
+	abstract JaxbEmbeddedId getEmbeddedId();
 }

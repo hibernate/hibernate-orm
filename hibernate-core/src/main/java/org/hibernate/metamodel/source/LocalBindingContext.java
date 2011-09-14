@@ -23,6 +23,8 @@
  */
 package org.hibernate.metamodel.source;
 
+import org.hibernate.internal.jaxb.Origin;
+
 /**
  * @author Steve Ebersole
  */

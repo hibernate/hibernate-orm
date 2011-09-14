@@ -38,15 +38,15 @@ import org.jboss.logging.Logger;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.source.MappingException;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLAttributes;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLEntity;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLEntityMappings;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLId;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLNamedNativeQuery;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLNamedQuery;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLSequenceGenerator;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLSqlResultSetMapping;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLTableGenerator;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbAttributes;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbEntity;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbEntityMappings;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbId;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbNamedNativeQuery;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbNamedQuery;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbSequenceGenerator;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbSqlResultSetMapping;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbTableGenerator;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 
 /**
@@ -57,11 +57,11 @@ class GlobalAnnotations implements JPADotNames {
 			CoreMessageLogger.class,
 			GlobalAnnotations.class.getName()
 	);
-	private Map<String, XMLSequenceGenerator> sequenceGeneratorMap = new HashMap<String, XMLSequenceGenerator>();
-	private Map<String, XMLTableGenerator> tableGeneratorMap = new HashMap<String, XMLTableGenerator>();
-	private Map<String, XMLNamedQuery> namedQueryMap = new HashMap<String, XMLNamedQuery>();
-	private Map<String, XMLNamedNativeQuery> namedNativeQueryMap = new HashMap<String, XMLNamedNativeQuery>();
-	private Map<String, XMLSqlResultSetMapping> sqlResultSetMappingMap = new HashMap<String, XMLSqlResultSetMapping>();
+	private Map<String, JaxbSequenceGenerator> sequenceGeneratorMap = new HashMap<String, JaxbSequenceGenerator>();
+	private Map<String, JaxbTableGenerator> tableGeneratorMap = new HashMap<String, JaxbTableGenerator>();
+	private Map<String, JaxbNamedQuery> namedQueryMap = new HashMap<String, JaxbNamedQuery>();
+	private Map<String, JaxbNamedNativeQuery> namedNativeQueryMap = new HashMap<String, JaxbNamedNativeQuery>();
+	private Map<String, JaxbSqlResultSetMapping> sqlResultSetMappingMap = new HashMap<String, JaxbSqlResultSetMapping>();
 	private Map<DotName, List<AnnotationInstance>> annotationInstanceMap = new HashMap<DotName, List<AnnotationInstance>>();
 	private List<AnnotationInstance> indexedAnnotationInstanceList = new ArrayList<AnnotationInstance>();
 	//---------------------------
@@ -102,23 +102,23 @@ class GlobalAnnotations implements JPADotNames {
 				.isEmpty() && sqlResultSetMappingMap.isEmpty() );
 	}
 
-	Map<String, XMLNamedNativeQuery> getNamedNativeQueryMap() {
+	Map<String, JaxbNamedNativeQuery> getNamedNativeQueryMap() {
 		return namedNativeQueryMap;
 	}
 
-	Map<String, XMLNamedQuery> getNamedQueryMap() {
+	Map<String, JaxbNamedQuery> getNamedQueryMap() {
 		return namedQueryMap;
 	}
 
-	Map<String, XMLSequenceGenerator> getSequenceGeneratorMap() {
+	Map<String, JaxbSequenceGenerator> getSequenceGeneratorMap() {
 		return sequenceGeneratorMap;
 	}
 
-	Map<String, XMLSqlResultSetMapping> getSqlResultSetMappingMap() {
+	Map<String, JaxbSqlResultSetMapping> getSqlResultSetMappingMap() {
 		return sqlResultSetMappingMap;
 	}
 
-	Map<String, XMLTableGenerator> getTableGeneratorMap() {
+	Map<String, JaxbTableGenerator> getTableGeneratorMap() {
 		return tableGeneratorMap;
 	}
 
@@ -152,31 +152,31 @@ class GlobalAnnotations implements JPADotNames {
 		}
 	}
 
-	void collectGlobalMappings(XMLEntityMappings entityMappings, EntityMappingsMocker.Default defaults) {
-		for ( XMLSequenceGenerator generator : entityMappings.getSequenceGenerator() ) {
+	void collectGlobalMappings(JaxbEntityMappings entityMappings, EntityMappingsMocker.Default defaults) {
+		for ( JaxbSequenceGenerator generator : entityMappings.getSequenceGenerator() ) {
 			put( generator, defaults );
 			defaultNamedGenerators.add( generator.getName() );
 		}
-		for ( XMLTableGenerator generator : entityMappings.getTableGenerator() ) {
+		for ( JaxbTableGenerator generator : entityMappings.getTableGenerator() ) {
 			put( generator, defaults );
 			defaultNamedGenerators.add( generator.getName() );
 		}
-		for ( XMLNamedQuery namedQuery : entityMappings.getNamedQuery() ) {
+		for ( JaxbNamedQuery namedQuery : entityMappings.getNamedQuery() ) {
 			put( namedQuery );
 			defaultNamedQueryNames.add( namedQuery.getName() );
 		}
-		for ( XMLNamedNativeQuery namedNativeQuery : entityMappings.getNamedNativeQuery() ) {
+		for ( JaxbNamedNativeQuery namedNativeQuery : entityMappings.getNamedNativeQuery() ) {
 			put( namedNativeQuery );
 			defaultNamedNativeQueryNames.add( namedNativeQuery.getName() );
 		}
-		for ( XMLSqlResultSetMapping sqlResultSetMapping : entityMappings.getSqlResultSetMapping() ) {
+		for ( JaxbSqlResultSetMapping sqlResultSetMapping : entityMappings.getSqlResultSetMapping() ) {
 			put( sqlResultSetMapping );
 			defaultSqlResultSetMappingNames.add( sqlResultSetMapping.getName() );
 		}
 	}
 
-	void collectGlobalMappings(XMLEntity entity, EntityMappingsMocker.Default defaults) {
-		for ( XMLNamedQuery namedQuery : entity.getNamedQuery() ) {
+	void collectGlobalMappings(JaxbEntity entity, EntityMappingsMocker.Default defaults) {
+		for ( JaxbNamedQuery namedQuery : entity.getNamedQuery() ) {
 			if ( !defaultNamedQueryNames.contains( namedQuery.getName() ) ) {
 				put( namedQuery );
 			}
@@ -184,7 +184,7 @@ class GlobalAnnotations implements JPADotNames {
 				LOG.warn( "Named Query [" + namedQuery.getName() + "] duplicated." );
 			}
 		}
-		for ( XMLNamedNativeQuery namedNativeQuery : entity.getNamedNativeQuery() ) {
+		for ( JaxbNamedNativeQuery namedNativeQuery : entity.getNamedNativeQuery() ) {
 			if ( !defaultNamedNativeQueryNames.contains( namedNativeQuery.getName() ) ) {
 				put( namedNativeQuery );
 			}
@@ -192,26 +192,26 @@ class GlobalAnnotations implements JPADotNames {
 				LOG.warn( "Named native Query [" + namedNativeQuery.getName() + "] duplicated." );
 			}
 		}
-		for ( XMLSqlResultSetMapping sqlResultSetMapping : entity.getSqlResultSetMapping() ) {
+		for ( JaxbSqlResultSetMapping sqlResultSetMapping : entity.getSqlResultSetMapping() ) {
 			if ( !defaultSqlResultSetMappingNames.contains( sqlResultSetMapping.getName() ) ) {
 				put( sqlResultSetMapping );
 			}
 		}
-		XMLSequenceGenerator sequenceGenerator = entity.getSequenceGenerator();
+		JaxbSequenceGenerator sequenceGenerator = entity.getSequenceGenerator();
 		if ( sequenceGenerator != null ) {
 			if ( !defaultNamedGenerators.contains( sequenceGenerator.getName() ) ) {
 				put( sequenceGenerator, defaults );
 			}
 		}
-		XMLTableGenerator tableGenerator = entity.getTableGenerator();
+		JaxbTableGenerator tableGenerator = entity.getTableGenerator();
 		if ( tableGenerator != null ) {
 			if ( !defaultNamedGenerators.contains( tableGenerator.getName() ) ) {
 				put( tableGenerator, defaults );
 			}
 		}
-		XMLAttributes attributes = entity.getAttributes();
+		JaxbAttributes attributes = entity.getAttributes();
 		if ( attributes != null ) {
-			for ( XMLId id : attributes.getId() ) {
+			for ( JaxbId id : attributes.getId() ) {
 				sequenceGenerator = id.getSequenceGenerator();
 				if ( sequenceGenerator != null ) {
 					put( sequenceGenerator, defaults );
@@ -227,7 +227,7 @@ class GlobalAnnotations implements JPADotNames {
 	/**
 	 * Override SequenceGenerator using info definded in EntityMappings/Persistence-Metadata-Unit
 	 */
-	private static XMLSequenceGenerator overrideGenerator(XMLSequenceGenerator generator, EntityMappingsMocker.Default defaults) {
+	private static JaxbSequenceGenerator overrideGenerator(JaxbSequenceGenerator generator, EntityMappingsMocker.Default defaults) {
 		if ( StringHelper.isEmpty( generator.getSchema() ) && defaults != null ) {
 			generator.setSchema( defaults.getSchema() );
 		}
@@ -240,7 +240,7 @@ class GlobalAnnotations implements JPADotNames {
 	/**
 	 * Override TableGenerator using info definded in EntityMappings/Persistence-Metadata-Unit
 	 */
-	private static XMLTableGenerator overrideGenerator(XMLTableGenerator generator, EntityMappingsMocker.Default defaults) {
+	private static JaxbTableGenerator overrideGenerator(JaxbTableGenerator generator, EntityMappingsMocker.Default defaults) {
 		if ( StringHelper.isEmpty( generator.getSchema() ) && defaults != null ) {
 			generator.setSchema( defaults.getSchema() );
 		}
@@ -250,7 +250,7 @@ class GlobalAnnotations implements JPADotNames {
 		return generator;
 	}
 
-	private void put(XMLNamedNativeQuery query) {
+	private void put(JaxbNamedNativeQuery query) {
 		if ( query != null ) {
 			checkQueryName( query.getName() );
 			namedNativeQueryMap.put( query.getName(), query );
@@ -263,14 +263,14 @@ class GlobalAnnotations implements JPADotNames {
 		}
 	}
 
-	private void put(XMLNamedQuery query) {
+	private void put(JaxbNamedQuery query) {
 		if ( query != null ) {
 			checkQueryName( query.getName() );
 			namedQueryMap.put( query.getName(), query );
 		}
 	}
 
-	private void put(XMLSequenceGenerator generator, EntityMappingsMocker.Default defaults) {
+	private void put(JaxbSequenceGenerator generator, EntityMappingsMocker.Default defaults) {
 		if ( generator != null ) {
 			Object old = sequenceGeneratorMap.put( generator.getName(), overrideGenerator( generator, defaults ) );
 			if ( old != null ) {
@@ -279,7 +279,7 @@ class GlobalAnnotations implements JPADotNames {
 		}
 	}
 
-	private void put(XMLTableGenerator generator, EntityMappingsMocker.Default defaults) {
+	private void put(JaxbTableGenerator generator, EntityMappingsMocker.Default defaults) {
 		if ( generator != null ) {
 			Object old = tableGeneratorMap.put( generator.getName(), overrideGenerator( generator, defaults ) );
 			if ( old != null ) {
@@ -288,7 +288,7 @@ class GlobalAnnotations implements JPADotNames {
 		}
 	}
 
-	private void put(XMLSqlResultSetMapping mapping) {
+	private void put(JaxbSqlResultSetMapping mapping) {
 		if ( mapping != null ) {
 			Object old = sqlResultSetMappingMap.put( mapping.getName(), mapping );
 			if ( old != null ) {

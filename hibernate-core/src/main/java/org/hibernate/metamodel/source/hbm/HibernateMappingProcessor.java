@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.engine.spi.FilterDefinition;
+import org.hibernate.internal.jaxb.Origin;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.Value;
 import org.hibernate.metamodel.binding.FetchProfile;
@@ -38,12 +39,11 @@ import org.hibernate.metamodel.relational.AuxiliaryDatabaseObject;
 import org.hibernate.metamodel.relational.BasicAuxiliaryDatabaseObjectImpl;
 import org.hibernate.metamodel.source.MappingException;
 import org.hibernate.metamodel.source.MetadataImplementor;
-import org.hibernate.metamodel.source.Origin;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLFetchProfileElement;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLHibernateMapping;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLParamElement;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLQueryElement;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLSqlQueryElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbFetchProfileElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbHibernateMapping;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbParamElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbQueryElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbSqlQueryElement;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.classloading.spi.ClassLoadingException;
 import org.hibernate.type.Type;
@@ -73,7 +73,7 @@ public class HibernateMappingProcessor {
 		this.mappingDocument = mappingDocument;
 	}
 
-	private XMLHibernateMapping mappingRoot() {
+	private JaxbHibernateMapping mappingRoot() {
 		return mappingDocument.getMappingRoot();
 	}
 
@@ -99,7 +99,7 @@ public class HibernateMappingProcessor {
 			return;
 		}
 
-		for ( XMLHibernateMapping.XMLDatabaseObject databaseObjectElement : mappingRoot().getDatabaseObject() ) {
+		for ( JaxbHibernateMapping.JaxbDatabaseObject databaseObjectElement : mappingRoot().getDatabaseObject() ) {
 			final AuxiliaryDatabaseObject auxiliaryDatabaseObject;
 			if ( databaseObjectElement.getDefinition() != null ) {
 				final String className = databaseObjectElement.getDefinition().getClazz();
@@ -119,7 +119,7 @@ public class HibernateMappingProcessor {
 			else {
 				Set<String> dialectScopes = new HashSet<String>();
 				if ( databaseObjectElement.getDialectScope() != null ) {
-					for ( XMLHibernateMapping.XMLDatabaseObject.XMLDialectScope dialectScope : databaseObjectElement.getDialectScope() ) {
+					for ( JaxbHibernateMapping.JaxbDatabaseObject.JaxbDialectScope dialectScope : databaseObjectElement.getDialectScope() ) {
 						dialectScopes.add( dialectScope.getName() );
 					}
 				}
@@ -139,9 +139,9 @@ public class HibernateMappingProcessor {
 			return;
 		}
 
-		for ( XMLHibernateMapping.XMLTypedef typedef : mappingRoot().getTypedef() ) {
+		for ( JaxbHibernateMapping.JaxbTypedef typedef : mappingRoot().getTypedef() ) {
 			final Map<String, String> parameters = new HashMap<String, String>();
-			for ( XMLParamElement paramElement : typedef.getParam() ) {
+			for ( JaxbParamElement paramElement : typedef.getParam() ) {
 				parameters.put( paramElement.getName(), paramElement.getValue() );
 			}
 			metadata.addTypeDefinition(
@@ -164,7 +164,7 @@ public class HibernateMappingProcessor {
 			return;
 		}
 
-		for ( XMLHibernateMapping.XMLFilterDef filterDefinition : mappingRoot().getFilterDef() ) {
+		for ( JaxbHibernateMapping.JaxbFilterDef filterDefinition : mappingRoot().getFilterDef() ) {
 			final String name = filterDefinition.getName();
 			final Map<String,Type> parameters = new HashMap<String, Type>();
 			String condition = null;
@@ -176,8 +176,9 @@ public class HibernateMappingProcessor {
 					}
 					condition = (String) o;
 				}
-				else if ( o instanceof XMLHibernateMapping.XMLFilterDef.XMLFilterParam ) {
-					final XMLHibernateMapping.XMLFilterDef.XMLFilterParam paramElement = (XMLHibernateMapping.XMLFilterDef.XMLFilterParam) o;
+				else if ( o instanceof JaxbHibernateMapping.JaxbFilterDef.JaxbFilterParam ) {
+					final JaxbHibernateMapping.JaxbFilterDef.JaxbFilterParam paramElement =
+							JaxbHibernateMapping.JaxbFilterDef.JaxbFilterParam.class.cast( o );
 					// todo : should really delay this resolution until later to allow typedef names
 					parameters.put(
 							paramElement.getName(),
@@ -200,7 +201,7 @@ public class HibernateMappingProcessor {
 			return;
 		}
 
-		for ( XMLHibernateMapping.XMLIdentifierGenerator identifierGeneratorElement : mappingRoot().getIdentifierGenerator() ) {
+		for ( JaxbHibernateMapping.JaxbIdentifierGenerator identifierGeneratorElement : mappingRoot().getIdentifierGenerator() ) {
 			metadata.registerIdentifierGenerator(
 					identifierGeneratorElement.getName(),
 					identifierGeneratorElement.getClazz()
@@ -223,11 +224,11 @@ public class HibernateMappingProcessor {
 		processFetchProfiles( mappingRoot().getFetchProfile(), null );
 	}
 
-	public void processFetchProfiles(List<XMLFetchProfileElement> fetchProfiles, String containingEntityName) {
-		for ( XMLFetchProfileElement fetchProfile : fetchProfiles ) {
+	public void processFetchProfiles(List<JaxbFetchProfileElement> fetchProfiles, String containingEntityName) {
+		for ( JaxbFetchProfileElement fetchProfile : fetchProfiles ) {
 			String profileName = fetchProfile.getName();
 			Set<FetchProfile.Fetch> fetches = new HashSet<FetchProfile.Fetch>();
-			for ( XMLFetchProfileElement.XMLFetch fetch : fetchProfile.getFetch() ) {
+			for ( JaxbFetchProfileElement.JaxbFetch fetch : fetchProfile.getFetch() ) {
 				String entityName = fetch.getEntity() == null ? containingEntityName : fetch.getEntity();
 				if ( entityName == null ) {
 					throw new MappingException(
@@ -247,7 +248,7 @@ public class HibernateMappingProcessor {
 			return;
 		}
 
-		for ( XMLHibernateMapping.XMLImport importValue : mappingRoot().getImport() ) {
+		for ( JaxbHibernateMapping.JaxbImport importValue : mappingRoot().getImport() ) {
 			String className = mappingDocument.getMappingLocalBindingContext().qualifyClassName( importValue.getClazz() );
 			String rename = importValue.getRename();
 			rename = ( rename == null ) ? StringHelper.unqualify( className ) : rename;
@@ -269,10 +270,10 @@ public class HibernateMappingProcessor {
 		}
 
 		for ( Object queryOrSqlQuery : mappingRoot().getQueryOrSqlQuery() ) {
-			if ( XMLQueryElement.class.isInstance( queryOrSqlQuery ) ) {
+			if ( JaxbQueryElement.class.isInstance( queryOrSqlQuery ) ) {
 //					bindNamedQuery( element, null, mappings );
 			}
-			else if ( XMLSqlQueryElement.class.isInstance( queryOrSqlQuery ) ) {
+			else if ( JaxbSqlQueryElement.class.isInstance( queryOrSqlQuery ) ) {
 //				bindNamedSQLQuery( element, null, mappings );
 			}
 			else {

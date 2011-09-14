@@ -21,13 +21,23 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.hbm.jaxb.mapping;
-
-import java.util.List;
+package org.hibernate.internal.jaxb.mapping.hbm;
 
 /**
+ * Adaptive implementation of the {@link PluralAttributeElement} for {@code <idbag/>} mappings which
+ * do not support all the configuration available on other collection mappings.
+ *
  * @author Steve Ebersole
  */
-public interface JoinElementSource {
-	public List<XMLJoinElement> getJoin();
+public abstract class IdBagPluralAttributeElementAdapter implements PluralAttributeElement {
+	public JaxbOneToManyElement getOneToMany() {
+		// idbag collections cannot contain 1-m mappings.
+		return null;
+	}
+
+	@Override
+	public boolean isInverse() {
+		// idbag collections own the association, and are therefore non-inverse
+		return false;
+	}
 }

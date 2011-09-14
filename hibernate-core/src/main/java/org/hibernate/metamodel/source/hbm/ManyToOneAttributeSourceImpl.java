@@ -37,7 +37,7 @@ import org.hibernate.metamodel.source.binder.MetaAttributeSource;
 import org.hibernate.metamodel.source.binder.RelationalValueSource;
 import org.hibernate.metamodel.source.binder.SingularAttributeNature;
 import org.hibernate.metamodel.source.binder.ToOneAttributeSource;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLManyToOneElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbManyToOneElement;
 
 /**
  * Implementation for {@code <many-to-one/> mappings}
@@ -45,11 +45,11 @@ import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLManyToOneElement;
  * @author Steve Ebersole
  */
 class ManyToOneAttributeSourceImpl implements ToOneAttributeSource {
-	private final XMLManyToOneElement manyToOneElement;
+	private final JaxbManyToOneElement manyToOneElement;
 	private final LocalBindingContext bindingContext;
 	private final List<RelationalValueSource> valueSources;
 
-	ManyToOneAttributeSourceImpl(final XMLManyToOneElement manyToOneElement, LocalBindingContext bindingContext) {
+	ManyToOneAttributeSourceImpl(final JaxbManyToOneElement manyToOneElement, LocalBindingContext bindingContext) {
 		this.manyToOneElement = manyToOneElement;
 		this.bindingContext = bindingContext;
 		this.valueSources = Helper.buildValueSources(

@@ -44,14 +44,14 @@ import org.hibernate.metamodel.source.MetaAttributeContext;
 import org.hibernate.metamodel.source.binder.ExplicitHibernateTypeSource;
 import org.hibernate.metamodel.source.binder.MetaAttributeSource;
 import org.hibernate.metamodel.source.binder.RelationalValueSource;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.CustomSqlElement;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.EntityElement;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLColumnElement;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLJoinedSubclassElement;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLMetaElement;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLParamElement;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLSubclassElement;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLUnionSubclassElement;
+import org.hibernate.internal.jaxb.mapping.hbm.CustomSqlElement;
+import org.hibernate.internal.jaxb.mapping.hbm.EntityElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbColumnElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbJoinedSubclassElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbMetaElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbParamElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbSubclassElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbUnionSubclassElement;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.classloading.spi.ClassLoadingException;
@@ -74,13 +74,13 @@ public class Helper {
 	};
 
 	public static InheritanceType interpretInheritanceType(EntityElement entityElement) {
-		if ( XMLSubclassElement.class.isInstance( entityElement ) ) {
+		if ( JaxbSubclassElement.class.isInstance( entityElement ) ) {
 			return InheritanceType.SINGLE_TABLE;
 		}
-		else if ( XMLJoinedSubclassElement.class.isInstance( entityElement ) ) {
+		else if ( JaxbJoinedSubclassElement.class.isInstance( entityElement ) ) {
 			return InheritanceType.JOINED;
 		}
-		else if ( XMLUnionSubclassElement.class.isInstance( entityElement ) ) {
+		else if ( JaxbUnionSubclassElement.class.isInstance( entityElement ) ) {
 			return InheritanceType.TABLE_PER_CLASS;
 		}
 		else {
@@ -144,12 +144,12 @@ public class Helper {
 	}
 
 	public static MetaAttributeContext extractMetaAttributeContext(
-			List<XMLMetaElement> metaElementList,
+			List<JaxbMetaElement> metaElementList,
 			boolean onlyInheritable,
 			MetaAttributeContext parentContext) {
 		final MetaAttributeContext subContext = new MetaAttributeContext( parentContext );
 
-		for ( XMLMetaElement metaElement : metaElementList ) {
+		for ( JaxbMetaElement metaElement : metaElementList ) {
 			if ( onlyInheritable & !metaElement.isInherit() ) {
 				continue;
 			}
@@ -194,24 +194,24 @@ public class Helper {
 		return cascadeStyles;
 	}
 
-	public static Map<String, String> extractParameters(List<XMLParamElement> xmlParamElements) {
+	public static Map<String, String> extractParameters(List<JaxbParamElement> xmlParamElements) {
 		if ( xmlParamElements == null || xmlParamElements.isEmpty() ) {
 			return null;
 		}
 		final HashMap<String,String> params = new HashMap<String, String>();
-		for ( XMLParamElement paramElement : xmlParamElements ) {
+		for ( JaxbParamElement paramElement : xmlParamElements ) {
 			params.put( paramElement.getName(), paramElement.getValue() );
 		}
 		return params;
 	}
 
-	public static Iterable<MetaAttributeSource> buildMetaAttributeSources(List<XMLMetaElement> metaElements) {
+	public static Iterable<MetaAttributeSource> buildMetaAttributeSources(List<JaxbMetaElement> metaElements) {
 		ArrayList<MetaAttributeSource> result = new ArrayList<MetaAttributeSource>();
 		if ( metaElements == null || metaElements.isEmpty() ) {
 			// do nothing
 		}
 		else {
-			for ( final XMLMetaElement metaElement : metaElements ) {
+			for ( final JaxbMetaElement metaElement : metaElements ) {
 				result.add(
 						new MetaAttributeSource() {
 							@Override
@@ -317,11 +317,11 @@ public class Helper {
 		else if ( valueSourcesAdapter.getColumnOrFormulaElements() != null
 				&& ! valueSourcesAdapter.getColumnOrFormulaElements().isEmpty() ) {
 			for ( Object columnOrFormulaElement : valueSourcesAdapter.getColumnOrFormulaElements() ) {
-				if ( XMLColumnElement.class.isInstance( columnOrFormulaElement ) ) {
+				if ( JaxbColumnElement.class.isInstance( columnOrFormulaElement ) ) {
 					result.add(
 							new ColumnSourceImpl(
 									valueSourcesAdapter.getContainingTableName(),
-									(XMLColumnElement) columnOrFormulaElement,
+									(JaxbColumnElement) columnOrFormulaElement,
 									valueSourcesAdapter.isIncludedInInsertByDefault(),
 									valueSourcesAdapter.isIncludedInUpdateByDefault()
 							)

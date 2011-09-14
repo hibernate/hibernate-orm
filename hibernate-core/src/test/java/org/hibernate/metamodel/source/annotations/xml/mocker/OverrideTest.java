@@ -32,7 +32,7 @@ import org.jboss.jandex.DotName;
 import org.jboss.jandex.Index;
 import org.junit.Test;
 
-import org.hibernate.metamodel.source.annotation.jaxb.XMLEntity;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbEntity;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 
 import static org.junit.Assert.assertArrayEquals;
@@ -56,7 +56,7 @@ public class OverrideTest extends AbstractMockerTest {
 
 	@Test
 	public void testPersistenceUnitMetadataMetadataComplete() {
-		XMLEntity author = new XMLEntity();
+		JaxbEntity author = new JaxbEntity();
 		author.setClazz( Author.class.getName() );
 		IndexBuilder indexBuilder = getIndexBuilder();
 		EntityMappingsMocker.Default defaults = new EntityMappingsMocker.Default();
@@ -98,7 +98,7 @@ public class OverrideTest extends AbstractMockerTest {
 
 	@Test
 	public void testPersistenceUnitDefaultsCascadePersistInAnnotation() {
-		XMLEntity author = new XMLEntity();
+		JaxbEntity author = new JaxbEntity();
 		author.setClazz( Author.class.getName() );
 		IndexBuilder indexBuilder = getIndexBuilder();
 		EntityMappingsMocker.Default defaults = new EntityMappingsMocker.Default();

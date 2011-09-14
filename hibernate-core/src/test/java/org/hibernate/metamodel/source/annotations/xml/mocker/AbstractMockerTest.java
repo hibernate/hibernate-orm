@@ -38,7 +38,7 @@ import org.jboss.jandex.Indexer;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.HibernateException;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLEntityMappings;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbEntityMappings;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.testing.ServiceRegistryBuilder;
@@ -67,19 +67,19 @@ public abstract class AbstractMockerTest {
 
 	protected EntityMappingsMocker getEntityMappingsMocker(String... mappingFiles) {
 		ClassLoaderService classLoaderService = getServiceRegistry().getService( ClassLoaderService.class );
-		List<XMLEntityMappings> xmlEntityMappingsList = new ArrayList<XMLEntityMappings>();
+		List<JaxbEntityMappings> xmlEntityMappingsList = new ArrayList<JaxbEntityMappings>();
 		for ( String fileName : mappingFiles ) {
-			XMLEntityMappings entityMappings;
+			JaxbEntityMappings entityMappings;
 			try {
 				entityMappings = XmlHelper.unmarshallXml(
-						packagePrefix + fileName, ORM2_MAPPING_XSD, XMLEntityMappings.class, classLoaderService
+						packagePrefix + fileName, ORM2_MAPPING_XSD, JaxbEntityMappings.class, classLoaderService
 				).getRoot();
 			}
 			catch ( JAXBException orm2Exception ) {
 				// if we cannot parse against orm_2_0.xsd we try orm_1_0.xsd for backwards compatibility
 				try {
 					entityMappings = XmlHelper.unmarshallXml(
-							packagePrefix + fileName, ORM1_MAPPING_XSD, XMLEntityMappings.class, classLoaderService
+							packagePrefix + fileName, ORM1_MAPPING_XSD, JaxbEntityMappings.class, classLoaderService
 					).getRoot();
 				}
 				catch ( JAXBException orm1Exception ) {

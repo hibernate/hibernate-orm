@@ -27,83 +27,83 @@ import java.util.List;
 
 import org.jboss.jandex.ClassInfo;
 
-import org.hibernate.metamodel.source.annotation.jaxb.XMLAccessType;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLAttributes;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLBasic;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLElementCollection;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLEmbedded;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLEmbeddedId;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLId;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLManyToMany;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLManyToOne;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLOneToMany;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLOneToOne;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLTransient;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLVersion;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbAccessType;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbAttributes;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbBasic;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbElementCollection;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbEmbedded;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbEmbeddedId;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbId;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbManyToMany;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbManyToOne;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbOneToMany;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbOneToOne;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbTransient;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbVersion;
 
 /**
  * @author Strong Liu
  */
 class AttributesBuilder extends AbstractAttributesBuilder {
-	private XMLAttributes attributes;
+	private JaxbAttributes attributes;
 
-	AttributesBuilder(IndexBuilder indexBuilder, ClassInfo classInfo, XMLAccessType accessType, EntityMappingsMocker.Default defaults, XMLAttributes attributes) {
+	AttributesBuilder(IndexBuilder indexBuilder, ClassInfo classInfo, JaxbAccessType accessType, EntityMappingsMocker.Default defaults, JaxbAttributes attributes) {
 		super( indexBuilder, classInfo, defaults );
 		this.attributes = attributes;
 	}
 
 	@Override
-	List<XMLBasic> getBasic() {
+	List<JaxbBasic> getBasic() {
 		return attributes.getBasic();
 	}
 
 	@Override
-	List<XMLId> getId() {
+	List<JaxbId> getId() {
 		return attributes.getId();
 	}
 
 	@Override
-	List<XMLTransient> getTransient() {
+	List<JaxbTransient> getTransient() {
 		return attributes.getTransient();
 	}
 
 	@Override
-	List<XMLVersion> getVersion() {
+	List<JaxbVersion> getVersion() {
 		return attributes.getVersion();
 	}
 
 	@Override
-	List<XMLElementCollection> getElementCollection() {
+	List<JaxbElementCollection> getElementCollection() {
 		return attributes.getElementCollection();
 	}
 
 	@Override
-	List<XMLEmbedded> getEmbedded() {
+	List<JaxbEmbedded> getEmbedded() {
 		return attributes.getEmbedded();
 	}
 
 	@Override
-	List<XMLManyToMany> getManyToMany() {
+	List<JaxbManyToMany> getManyToMany() {
 		return attributes.getManyToMany();
 	}
 
 	@Override
-	List<XMLManyToOne> getManyToOne() {
+	List<JaxbManyToOne> getManyToOne() {
 		return attributes.getManyToOne();
 	}
 
 	@Override
-	List<XMLOneToMany> getOneToMany() {
+	List<JaxbOneToMany> getOneToMany() {
 		return attributes.getOneToMany();
 	}
 
 	@Override
-	List<XMLOneToOne> getOneToOne() {
+	List<JaxbOneToOne> getOneToOne() {
 		return attributes.getOneToOne();
 	}
 
 	@Override
-	XMLEmbeddedId getEmbeddedId() {
+	JaxbEmbeddedId getEmbeddedId() {
 		return attributes.getEmbeddedId();
 	}
 }

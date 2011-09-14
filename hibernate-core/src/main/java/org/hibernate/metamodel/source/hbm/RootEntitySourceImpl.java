@@ -23,8 +23,6 @@
  */
 package org.hibernate.metamodel.source.hbm;
 
-import java.util.Iterator;
-
 import org.hibernate.EntityMode;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.engine.OptimisticLockStyle;
@@ -39,20 +37,20 @@ import org.hibernate.metamodel.source.binder.RootEntitySource;
 import org.hibernate.metamodel.source.binder.SimpleIdentifierSource;
 import org.hibernate.metamodel.source.binder.SingularAttributeSource;
 import org.hibernate.metamodel.source.binder.TableSource;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLCacheElement;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLHibernateMapping;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbCacheElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbHibernateMapping;
 
 /**
  * @author Steve Ebersole
  */
 public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements RootEntitySource {
-	protected RootEntitySourceImpl(MappingDocument sourceMappingDocument, XMLHibernateMapping.XMLClass entityElement) {
+	protected RootEntitySourceImpl(MappingDocument sourceMappingDocument, JaxbHibernateMapping.JaxbClass entityElement) {
 		super( sourceMappingDocument, entityElement );
 	}
 
 	@Override
-	protected XMLHibernateMapping.XMLClass entityElement() {
-		return (XMLHibernateMapping.XMLClass) super.entityElement();
+	protected JaxbHibernateMapping.JaxbClass entityElement() {
+		return (JaxbHibernateMapping.JaxbClass) super.entityElement();
 	}
 
 	@Override
@@ -154,7 +152,7 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 
 	@Override
 	public Caching getCaching() {
-		final XMLCacheElement cache = entityElement().getCache();
+		final JaxbCacheElement cache = entityElement().getCache();
 		if ( cache == null ) {
 			return null;
 		}
@@ -197,7 +195,7 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 
 	@Override
 	public DiscriminatorSource getDiscriminatorSource() {
-		final XMLHibernateMapping.XMLClass.XMLDiscriminator discriminatorElement = entityElement().getDiscriminator();
+		final JaxbHibernateMapping.JaxbClass.JaxbDiscriminator discriminatorElement = entityElement().getDiscriminator();
 		if ( discriminatorElement == null ) {
 			return null;
 		}

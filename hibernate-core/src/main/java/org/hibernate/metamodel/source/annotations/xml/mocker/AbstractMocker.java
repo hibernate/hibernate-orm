@@ -31,8 +31,8 @@ import org.jboss.jandex.AnnotationTarget;
 import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.DotName;
 
-import org.hibernate.metamodel.source.annotation.jaxb.XMLAccessType;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLUniqueConstraint;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbAccessType;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbUniqueConstraint;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 
 /**
@@ -68,14 +68,14 @@ abstract class AbstractMocker implements JPADotNames {
 	}
 
 
-	protected AnnotationInstance parserAccessType(XMLAccessType accessType, AnnotationTarget target) {
+	protected AnnotationInstance parserAccessType(JaxbAccessType accessType, AnnotationTarget target) {
 		if ( accessType == null ) {
 			return null;
 		}
 		return create( ACCESS, target, MockHelper.enumValueArray( "value", ACCESS_TYPE, accessType ) );
 	}
 
-	protected void nestedUniqueConstraintList(String name, List<XMLUniqueConstraint> constraints, List<AnnotationValue> annotationValueList) {
+	protected void nestedUniqueConstraintList(String name, List<JaxbUniqueConstraint> constraints, List<AnnotationValue> annotationValueList) {
 		if ( MockHelper.isNotEmpty( constraints ) ) {
 			AnnotationValue[] values = new AnnotationValue[constraints.size()];
 			for ( int i = 0; i < constraints.size(); i++ ) {
@@ -92,7 +92,7 @@ abstract class AbstractMocker implements JPADotNames {
 	}
 
 	//@UniqueConstraint
-	protected AnnotationInstance parserUniqueConstraint(XMLUniqueConstraint uniqueConstraint, AnnotationTarget target) {
+	protected AnnotationInstance parserUniqueConstraint(JaxbUniqueConstraint uniqueConstraint, AnnotationTarget target) {
 		if ( uniqueConstraint == null ) {
 			return null;
 		}

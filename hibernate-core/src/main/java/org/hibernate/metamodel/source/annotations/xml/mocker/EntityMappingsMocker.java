@@ -31,17 +31,17 @@ import org.jboss.jandex.Index;
 import org.jboss.logging.Logger;
 
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLAccessType;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLEmbeddable;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLEntity;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLEntityMappings;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLMappedSuperclass;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLPersistenceUnitDefaults;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLPersistenceUnitMetadata;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbAccessType;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbEmbeddable;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbEntity;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbEntityMappings;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbMappedSuperclass;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbPersistenceUnitDefaults;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbPersistenceUnitMetadata;
 import org.hibernate.service.ServiceRegistry;
 
 /**
- * Parse all {@link XMLEntityMappings} generated from orm.xml.
+ * Parse all {@link org.hibernate.internal.jaxb.mapping.orm.JaxbEntityMappings} generated from orm.xml.
  *
  * @author Strong Liu
  */
@@ -50,7 +50,7 @@ public class EntityMappingsMocker {
 			CoreMessageLogger.class,
 			EntityMappingsMocker.class.getName()
 	);
-	private final List<XMLEntityMappings> entityMappingsList;
+	private final List<JaxbEntityMappings> entityMappingsList;
 	/**
 	 * Default configuration defined in Persistence Metadata Unit, one or zero per Persistence Unit.
 	 */
@@ -58,14 +58,14 @@ public class EntityMappingsMocker {
 	private final IndexBuilder indexBuilder;
 	private final GlobalAnnotations globalAnnotations;
 
-	public EntityMappingsMocker(List<XMLEntityMappings> entityMappingsList, Index index, ServiceRegistry serviceRegistry) {
+	public EntityMappingsMocker(List<JaxbEntityMappings> entityMappingsList, Index index, ServiceRegistry serviceRegistry) {
 		this.entityMappingsList = entityMappingsList;
 		this.indexBuilder = new IndexBuilder( index, serviceRegistry );
 		this.globalAnnotations = new GlobalAnnotations();
 	}
 
 	/**
-	 * Create new {@link Index} with mocking JPA annotations from {@link XMLEntityMappings} and merge them with existing {@link Index}
+	 * Create new {@link Index} with mocking JPA annotations from {@link org.hibernate.internal.jaxb.mapping.orm.JaxbEntityMappings} and merge them with existing {@link Index}
 	 *
 	 * @return new {@link Index}
 	 */
@@ -79,10 +79,10 @@ public class EntityMappingsMocker {
 	/**
 	 * processing PersistenceUnitMetadata, there should be only one PersistenceUnitMetadata in all mapping xml files.
 	 */
-	private void processPersistenceUnitMetadata(List<XMLEntityMappings> entityMappingsList) {
-		for ( XMLEntityMappings entityMappings : entityMappingsList ) {
+	private void processPersistenceUnitMetadata(List<JaxbEntityMappings> entityMappingsList) {
+		for ( JaxbEntityMappings entityMappings : entityMappingsList ) {
 			//we have to iterate entityMappingsList first to find persistence-unit-metadata
-			XMLPersistenceUnitMetadata pum = entityMappings.getPersistenceUnitMetadata();
+			JaxbPersistenceUnitMetadata pum = entityMappings.getPersistenceUnitMetadata();
 			if ( globalDefaults != null ) {
 				LOG.duplicateMetadata();
 				return;
@@ -95,7 +95,7 @@ public class EntityMappingsMocker {
 				globalDefaults.setMetadataComplete( true );
 				indexBuilder.mappingMetadataComplete();
 			}
-			XMLPersistenceUnitDefaults pud = pum.getPersistenceUnitDefaults();
+			JaxbPersistenceUnitDefaults pud = pum.getPersistenceUnitDefaults();
 			if ( pud == null ) {
 				return;
 			}
@@ -108,24 +108,24 @@ public class EntityMappingsMocker {
 	}
 
 
-	private void processEntityMappings(List<XMLEntityMappings> entityMappingsList) {
+	private void processEntityMappings(List<JaxbEntityMappings> entityMappingsList) {
 		List<AbstractEntityObjectMocker> mockerList = new ArrayList<AbstractEntityObjectMocker>();
-		for ( XMLEntityMappings entityMappings : entityMappingsList ) {
+		for ( JaxbEntityMappings entityMappings : entityMappingsList ) {
 			final Default defaults = getEntityMappingsDefaults( entityMappings );
 			globalAnnotations.collectGlobalMappings( entityMappings, defaults );
-			for ( XMLMappedSuperclass mappedSuperclass : entityMappings.getMappedSuperclass() ) {
+			for ( JaxbMappedSuperclass mappedSuperclass : entityMappings.getMappedSuperclass() ) {
 				AbstractEntityObjectMocker mocker =
 						new MappedSuperclassMocker( indexBuilder, mappedSuperclass, defaults );
 				mockerList.add( mocker );
 				mocker.preProcess();
 			}
-			for ( XMLEmbeddable embeddable : entityMappings.getEmbeddable() ) {
+			for ( JaxbEmbeddable embeddable : entityMappings.getEmbeddable() ) {
 				AbstractEntityObjectMocker mocker =
 						new EmbeddableMocker( indexBuilder, embeddable, defaults );
 				mockerList.add( mocker );
 				mocker.preProcess();
 			}
-			for ( XMLEntity entity : entityMappings.getEntity() ) {
+			for ( JaxbEntity entity : entityMappings.getEntity() ) {
 				globalAnnotations.collectGlobalMappings( entity, defaults );
 				AbstractEntityObjectMocker mocker =
 						new EntityMocker( indexBuilder, entity, defaults );
@@ -147,7 +147,7 @@ public class EntityMappingsMocker {
 		}
 	}
 
-	private Default getEntityMappingsDefaults(XMLEntityMappings entityMappings) {
+	private Default getEntityMappingsDefaults(JaxbEntityMappings entityMappings) {
 		Default entityMappingDefault = new Default();
 		entityMappingDefault.setPackageName( entityMappings.getPackage() );
 		entityMappingDefault.setSchema( entityMappings.getSchema() );
@@ -161,18 +161,18 @@ public class EntityMappingsMocker {
 
 
 	public static class Default implements Serializable {
-		private XMLAccessType access;
+		private JaxbAccessType access;
 		private String packageName;
 		private String schema;
 		private String catalog;
 		private Boolean metadataComplete;
 		private Boolean cascadePersist;
 
-		public XMLAccessType getAccess() {
+		public JaxbAccessType getAccess() {
 			return access;
 		}
 
-		void setAccess(XMLAccessType access) {
+		void setAccess(JaxbAccessType access) {
 			this.access = access;
 		}
 

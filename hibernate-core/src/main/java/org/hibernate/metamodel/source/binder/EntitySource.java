@@ -27,9 +27,10 @@ import java.util.List;
 import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
 import javax.persistence.MappedSuperclass;
+
+import org.hibernate.internal.jaxb.Origin;
 import org.hibernate.metamodel.binding.CustomSQL;
 import org.hibernate.metamodel.source.LocalBindingContext;
-import org.hibernate.metamodel.source.Origin;
 
 /**
  * Contract describing source of an entity

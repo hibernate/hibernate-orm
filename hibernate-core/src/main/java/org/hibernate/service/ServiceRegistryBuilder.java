@@ -37,12 +37,12 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
 import org.hibernate.integrator.spi.ServiceContributingIntegrator;
+import org.hibernate.internal.jaxb.Origin;
+import org.hibernate.internal.jaxb.SourceType;
 import org.hibernate.internal.util.Value;
 import org.hibernate.internal.util.config.ConfigurationException;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.metamodel.source.Origin;
-import org.hibernate.metamodel.source.SourceType;
-import org.hibernate.metamodel.source.hbm.jaxb.config.XMLHibernateConfiguration;
+import org.hibernate.internal.jaxb.cfg.JaxbHibernateConfiguration;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.internal.BasicServiceRegistryImpl;
 import org.hibernate.service.internal.BootstrapServiceRegistryImpl;
@@ -156,11 +156,11 @@ public class ServiceRegistryBuilder {
 	@SuppressWarnings( {"unchecked"})
 	public ServiceRegistryBuilder configure(String resourceName) {
 		InputStream stream = bootstrapServiceRegistry.getService( ClassLoaderService.class ).locateResourceStream( resourceName );
-		XMLHibernateConfiguration configurationElement = jaxbProcessorHolder.getValue().unmarshal(
+		JaxbHibernateConfiguration configurationElement = jaxbProcessorHolder.getValue().unmarshal(
 				stream,
 				new Origin( SourceType.RESOURCE, resourceName )
 		);
-		for ( XMLHibernateConfiguration.XMLSessionFactory.XMLProperty xmlProperty : configurationElement.getSessionFactory().getProperty() ) {
+		for ( JaxbHibernateConfiguration.JaxbSessionFactory.JaxbProperty xmlProperty : configurationElement.getSessionFactory().getProperty() ) {
 			settings.put( xmlProperty.getName(), xmlProperty.getValue() );
 		}
 

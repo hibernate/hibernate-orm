@@ -35,10 +35,11 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
+import org.hibernate.internal.jaxb.JaxbRoot;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.source.MetadataImplementor;
 import org.hibernate.metamodel.source.MetadataSourceProcessor;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLEntityMappings;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbEntityMappings;
 import org.hibernate.metamodel.source.annotations.global.FetchProfileBinder;
 import org.hibernate.metamodel.source.annotations.global.FilterDefBinder;
 import org.hibernate.metamodel.source.annotations.global.IdGeneratorBinder;
@@ -49,7 +50,6 @@ import org.hibernate.metamodel.source.annotations.xml.PseudoJpaDotNames;
 import org.hibernate.metamodel.source.annotations.xml.mocker.EntityMappingsMocker;
 import org.hibernate.metamodel.source.binder.Binder;
 import org.hibernate.metamodel.source.binder.EntityHierarchy;
-import org.hibernate.metamodel.source.internal.JaxbRoot;
 import org.hibernate.metamodel.source.internal.MetadataImpl;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 
@@ -87,10 +87,10 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 
 		Index index = indexer.complete();
 
-		List<JaxbRoot<XMLEntityMappings>> mappings = new ArrayList<JaxbRoot<XMLEntityMappings>>();
+		List<JaxbRoot<JaxbEntityMappings>> mappings = new ArrayList<JaxbRoot<JaxbEntityMappings>>();
 		for ( JaxbRoot<?> root : sources.getJaxbRootList() ) {
-			if ( root.getRoot() instanceof XMLEntityMappings ) {
-				mappings.add( (JaxbRoot<XMLEntityMappings>) root );
+			if ( root.getRoot() instanceof JaxbEntityMappings ) {
+				mappings.add( (JaxbRoot<JaxbEntityMappings>) root );
 			}
 		}
 		if ( !mappings.isEmpty() ) {
@@ -143,9 +143,9 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 		FilterDefBinder.bind( bindingContext );
 	}
 
-	private Index parseAndUpdateIndex(List<JaxbRoot<XMLEntityMappings>> mappings, Index annotationIndex) {
-		List<XMLEntityMappings> list = new ArrayList<XMLEntityMappings>( mappings.size() );
-		for ( JaxbRoot<XMLEntityMappings> jaxbRoot : mappings ) {
+	private Index parseAndUpdateIndex(List<JaxbRoot<JaxbEntityMappings>> mappings, Index annotationIndex) {
+		List<JaxbEntityMappings> list = new ArrayList<JaxbEntityMappings>( mappings.size() );
+		for ( JaxbRoot<JaxbEntityMappings> jaxbRoot : mappings ) {
 			list.add( jaxbRoot.getRoot() );
 		}
 		return new EntityMappingsMocker( list, annotationIndex, metadata.getServiceRegistry() ).mockNewIndex();

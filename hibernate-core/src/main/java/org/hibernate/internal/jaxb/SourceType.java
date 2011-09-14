@@ -22,10 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 
-package org.hibernate.metamodel.source;
+package org.hibernate.internal.jaxb;
 
 /**
- * From where did the metadata come from?
+ * From what type of source did we obtain the data
  *
  * @author Steve Ebersole
  */

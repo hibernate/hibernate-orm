@@ -23,12 +23,12 @@
  */
 package org.hibernate.metamodel.source.hbm;
 
+import org.hibernate.internal.jaxb.mapping.hbm.EntityElement;
 import org.hibernate.metamodel.source.binder.SubclassEntitySource;
 import org.hibernate.metamodel.source.binder.TableSource;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.EntityElement;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLJoinedSubclassElement;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLSubclassElement;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLUnionSubclassElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbJoinedSubclassElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbSubclassElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbUnionSubclassElement;
 
 /**
  * @author Steve Ebersole
@@ -40,21 +40,21 @@ public class SubclassEntitySourceImpl extends AbstractEntitySourceImpl implement
 
 	@Override
 	public TableSource getPrimaryTable() {
-		if ( XMLJoinedSubclassElement.class.isInstance( entityElement() ) ) {
+		if ( JaxbJoinedSubclassElement.class.isInstance( entityElement() ) ) {
 			return new TableSource() {
 				@Override
 				public String getExplicitSchemaName() {
-					return ( (XMLJoinedSubclassElement) entityElement() ).getSchema();
+					return ( (JaxbJoinedSubclassElement) entityElement() ).getSchema();
 				}
 
 				@Override
 				public String getExplicitCatalogName() {
-					return ( (XMLJoinedSubclassElement) entityElement() ).getCatalog();
+					return ( (JaxbJoinedSubclassElement) entityElement() ).getCatalog();
 				}
 
 				@Override
 				public String getExplicitTableName() {
-					return ( (XMLJoinedSubclassElement) entityElement() ).getTable();
+					return ( (JaxbJoinedSubclassElement) entityElement() ).getTable();
 				}
 
 				@Override
@@ -64,21 +64,21 @@ public class SubclassEntitySourceImpl extends AbstractEntitySourceImpl implement
 				}
 			};
 		}
-		else if ( XMLUnionSubclassElement.class.isInstance( entityElement() ) ) {
+		else if ( JaxbUnionSubclassElement.class.isInstance( entityElement() ) ) {
 			return new TableSource() {
 				@Override
 				public String getExplicitSchemaName() {
-					return ( (XMLUnionSubclassElement) entityElement() ).getSchema();
+					return ( (JaxbUnionSubclassElement) entityElement() ).getSchema();
 				}
 
 				@Override
 				public String getExplicitCatalogName() {
-					return ( (XMLUnionSubclassElement) entityElement() ).getCatalog();
+					return ( (JaxbUnionSubclassElement) entityElement() ).getCatalog();
 				}
 
 				@Override
 				public String getExplicitTableName() {
-					return ( (XMLUnionSubclassElement) entityElement() ).getTable();
+					return ( (JaxbUnionSubclassElement) entityElement() ).getTable();
 				}
 
 				@Override
@@ -93,8 +93,8 @@ public class SubclassEntitySourceImpl extends AbstractEntitySourceImpl implement
 
 	@Override
 	public String getDiscriminatorMatchValue() {
-		return XMLSubclassElement.class.isInstance( entityElement() )
-				? ( (XMLSubclassElement) entityElement() ).getDiscriminatorValue()
+		return JaxbSubclassElement.class.isInstance( entityElement() )
+				? ( (JaxbSubclassElement) entityElement() ).getDiscriminatorValue()
 				: null;
 	}
 }

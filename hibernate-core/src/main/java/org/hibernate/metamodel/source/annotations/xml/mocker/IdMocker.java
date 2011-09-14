@@ -31,17 +31,17 @@ import org.jboss.jandex.AnnotationTarget;
 import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
 
-import org.hibernate.metamodel.source.annotation.jaxb.XMLAccessType;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLGeneratedValue;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLId;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbAccessType;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbGeneratedValue;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbId;
 
 /**
  * @author Strong Liu
  */
 class IdMocker extends PropertyMocker {
-	private XMLId id;
+	private JaxbId id;
 
-	IdMocker(IndexBuilder indexBuilder, ClassInfo classInfo, EntityMappingsMocker.Default defaults, XMLId id) {
+	IdMocker(IndexBuilder indexBuilder, ClassInfo classInfo, EntityMappingsMocker.Default defaults, JaxbId id) {
 		super( indexBuilder, classInfo, defaults );
 		this.id = id;
 	}
@@ -54,7 +54,7 @@ class IdMocker extends PropertyMocker {
 		parserTemporalType( id.getTemporal(), getTarget() );
 	}
 
-	private AnnotationInstance parserGeneratedValue(XMLGeneratedValue generatedValue, AnnotationTarget target) {
+	private AnnotationInstance parserGeneratedValue(JaxbGeneratedValue generatedValue, AnnotationTarget target) {
 		if ( generatedValue == null ) {
 			return null;
 		}
@@ -73,12 +73,12 @@ class IdMocker extends PropertyMocker {
 	}
 
 	@Override
-	protected XMLAccessType getAccessType() {
+	protected JaxbAccessType getAccessType() {
 		return id.getAccess();
 	}
 
 	@Override
-	protected void setAccessType(XMLAccessType accessType) {
+	protected void setAccessType(JaxbAccessType accessType) {
 		id.setAccess( accessType );
 	}
 }

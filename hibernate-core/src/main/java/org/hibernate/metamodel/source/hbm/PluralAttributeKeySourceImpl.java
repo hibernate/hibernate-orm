@@ -29,18 +29,18 @@ import org.hibernate.metamodel.relational.ForeignKey;
 import org.hibernate.metamodel.source.binder.AttributeSourceContainer;
 import org.hibernate.metamodel.source.binder.PluralAttributeKeySource;
 import org.hibernate.metamodel.source.binder.RelationalValueSource;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLKeyElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbKeyElement;
 
 /**
  * @author Steve Ebersole
  */
 public class PluralAttributeKeySourceImpl implements PluralAttributeKeySource {
-	private final XMLKeyElement keyElement;
+	private final JaxbKeyElement keyElement;
 
 	private final List<RelationalValueSource> valueSources;
 
 	public PluralAttributeKeySourceImpl(
-			final XMLKeyElement keyElement,
+			final JaxbKeyElement keyElement,
 			final AttributeSourceContainer container) {
 		this.keyElement = keyElement;
 

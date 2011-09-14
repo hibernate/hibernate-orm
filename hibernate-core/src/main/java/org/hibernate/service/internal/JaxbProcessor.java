@@ -43,11 +43,11 @@ import java.net.URL;
 import org.jboss.logging.Logger;
 import org.xml.sax.SAXException;
 
+import org.hibernate.internal.jaxb.Origin;
 import org.hibernate.internal.util.config.ConfigurationException;
 import org.hibernate.metamodel.source.MappingException;
-import org.hibernate.metamodel.source.Origin;
 import org.hibernate.metamodel.source.XsdException;
-import org.hibernate.metamodel.source.hbm.jaxb.config.XMLHibernateConfiguration;
+import org.hibernate.internal.jaxb.cfg.JaxbHibernateConfiguration;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 
 /**
@@ -62,7 +62,7 @@ public class JaxbProcessor {
 		this.classLoaderService = classLoaderService;
 	}
 
-	public XMLHibernateConfiguration unmarshal(InputStream stream, Origin origin) {
+	public JaxbHibernateConfiguration unmarshal(InputStream stream, Origin origin) {
 		try {
 			XMLStreamReader staxReader = staxFactory().createXMLStreamReader( stream );
 			try {
@@ -97,16 +97,16 @@ public class JaxbProcessor {
 	}
 
 	@SuppressWarnings( { "unchecked" })
-	private XMLHibernateConfiguration unmarshal(XMLStreamReader staxReader, final Origin origin) {
+	private JaxbHibernateConfiguration unmarshal(XMLStreamReader staxReader, final Origin origin) {
 		final Object target;
 		final ContextProvidingValidationEventHandler handler = new ContextProvidingValidationEventHandler();
 		try {
-			JAXBContext jaxbContext = JAXBContext.newInstance( XMLHibernateConfiguration.class );
+			JAXBContext jaxbContext = JAXBContext.newInstance( JaxbHibernateConfiguration.class );
 			Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
 			unmarshaller.setSchema( schema() );
 			unmarshaller.setEventHandler( handler );
 			target = unmarshaller.unmarshal( staxReader );
-			return (XMLHibernateConfiguration) target;
+			return (JaxbHibernateConfiguration) target;
 		}
 		catch ( JAXBException e ) {
 			StringBuilder builder = new StringBuilder();

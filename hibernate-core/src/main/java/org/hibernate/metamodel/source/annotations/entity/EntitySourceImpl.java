@@ -29,9 +29,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.hibernate.internal.jaxb.Origin;
 import org.hibernate.metamodel.binding.CustomSQL;
 import org.hibernate.metamodel.source.LocalBindingContext;
-import org.hibernate.metamodel.source.Origin;
 import org.hibernate.metamodel.source.annotations.attribute.AssociationAttribute;
 import org.hibernate.metamodel.source.annotations.attribute.BasicAttribute;
 import org.hibernate.metamodel.source.annotations.attribute.SingularAttributeSourceImpl;

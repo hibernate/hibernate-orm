@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.hbm.jaxb.mapping;
+package org.hibernate.internal.jaxb.mapping.hbm;
 
 import java.util.List;
 
@@ -34,13 +34,13 @@ public interface PluralAttributeElement extends MetaAttributeContainer {
 	public String getName();
 	public String getAccess();
 
-	public XMLKeyElement getKey();
+	public JaxbKeyElement getKey();
 
-	public XMLElementElement getElement();
-	public XMLCompositeElementElement getCompositeElement();
-	public XMLOneToManyElement getOneToMany();
-	public XMLManyToManyElement getManyToMany();
-    public XMLManyToAnyElement getManyToAny();
+	public JaxbElementElement getElement();
+	public JaxbCompositeElementElement getCompositeElement();
+	public JaxbOneToManyElement getOneToMany();
+	public JaxbManyToManyElement getManyToMany();
+    public JaxbManyToAnyElement getManyToAny();
 
 	public String getSchema();
 	public String getCatalog();
@@ -51,21 +51,21 @@ public interface PluralAttributeElement extends MetaAttributeContainer {
 	public String getSubselectAttribute();
 	public String getWhere();
 
-	public XMLLoaderElement getLoader();
-	public XMLSqlInsertElement getSqlInsert();
-    public XMLSqlUpdateElement getSqlUpdate();
-    public XMLSqlDeleteElement getSqlDelete();
-    public XMLSqlDeleteAllElement getSqlDeleteAll();
+	public JaxbLoaderElement getLoader();
+	public JaxbSqlInsertElement getSqlInsert();
+    public JaxbSqlUpdateElement getSqlUpdate();
+    public JaxbSqlDeleteElement getSqlDelete();
+    public JaxbSqlDeleteAllElement getSqlDeleteAll();
 
-	public List<XMLSynchronizeElement> getSynchronize();
+	public List<JaxbSynchronizeElement> getSynchronize();
 
-	public XMLCacheElement getCache();
-	public List<XMLFilterElement> getFilter();
+	public JaxbCacheElement getCache();
+	public List<JaxbFilterElement> getFilter();
 
 	public String getCascade();
-	public XMLFetchAttributeWithSubselect getFetch();
-	public XMLLazyAttributeWithExtra getLazy();
-	public XMLOuterJoinAttribute getOuterJoin();
+	public JaxbFetchAttributeWithSubselect getFetch();
+	public JaxbLazyAttributeWithExtra getLazy();
+	public JaxbOuterJoinAttribute getOuterJoin();
 
 	public String getBatchSize();
 	public boolean isInverse();

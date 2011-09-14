@@ -29,17 +29,17 @@ import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLAccessType;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLAttributes;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLEntityListeners;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLIdClass;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLPostLoad;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLPostPersist;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLPostRemove;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLPostUpdate;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLPrePersist;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLPreRemove;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLPreUpdate;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbAccessType;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbAttributes;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbEntityListeners;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbIdClass;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbPostLoad;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbPostPersist;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbPostRemove;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbPostUpdate;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbPrePersist;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbPreRemove;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbPreUpdate;
 
 /**
  * @author Strong Liu
@@ -74,7 +74,7 @@ abstract class AbstractEntityObjectMocker extends AnnotationMocker {
 			throw new AssertionFailure( "preProcess should be called before process" );
 		}
 		if ( getAccessType() == null ) {
-			XMLAccessType accessType = AccessHelper.getEntityAccess( getTargetName(), indexBuilder );
+			JaxbAccessType accessType = AccessHelper.getEntityAccess( getTargetName(), indexBuilder );
 			if ( accessType == null ) {
 				accessType = getDefaults().getAccess();
 			}
@@ -121,29 +121,29 @@ abstract class AbstractEntityObjectMocker extends AnnotationMocker {
 
 	abstract protected boolean isExcludeSuperclassListeners();
 
-	abstract protected XMLIdClass getIdClass();
+	abstract protected JaxbIdClass getIdClass();
 
-	abstract protected XMLEntityListeners getEntityListeners();
+	abstract protected JaxbEntityListeners getEntityListeners();
 
-	abstract protected XMLAccessType getAccessType();
+	abstract protected JaxbAccessType getAccessType();
 
 	abstract protected String getClassName();
 
-	abstract protected XMLPrePersist getPrePersist();
+	abstract protected JaxbPrePersist getPrePersist();
 
-	abstract protected XMLPreRemove getPreRemove();
+	abstract protected JaxbPreRemove getPreRemove();
 
-	abstract protected XMLPreUpdate getPreUpdate();
+	abstract protected JaxbPreUpdate getPreUpdate();
 
-	abstract protected XMLPostPersist getPostPersist();
+	abstract protected JaxbPostPersist getPostPersist();
 
-	abstract protected XMLPostUpdate getPostUpdate();
+	abstract protected JaxbPostUpdate getPostUpdate();
 
-	abstract protected XMLPostRemove getPostRemove();
+	abstract protected JaxbPostRemove getPostRemove();
 
-	abstract protected XMLPostLoad getPostLoad();
+	abstract protected JaxbPostLoad getPostLoad();
 
-	abstract protected XMLAttributes getAttributes();
+	abstract protected JaxbAttributes getAttributes();
 
 	protected ListenerMocker getListenerParser() {
 		if ( listenerParser == null ) {
@@ -161,7 +161,7 @@ abstract class AbstractEntityObjectMocker extends AnnotationMocker {
 		return attributesBuilder;
 	}
 
-	protected AnnotationInstance parserIdClass(XMLIdClass idClass) {
+	protected AnnotationInstance parserIdClass(JaxbIdClass idClass) {
 		if ( idClass == null ) {
 			return null;
 		}

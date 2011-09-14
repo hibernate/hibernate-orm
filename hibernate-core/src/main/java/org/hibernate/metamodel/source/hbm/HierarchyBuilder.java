@@ -30,14 +30,14 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.MappingException;
+import org.hibernate.internal.jaxb.mapping.hbm.EntityElement;
+import org.hibernate.internal.jaxb.mapping.hbm.SubEntityElement;
 import org.hibernate.metamodel.source.binder.SubclassEntityContainer;
 import org.hibernate.metamodel.source.binder.SubclassEntitySource;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.EntityElement;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.SubEntityElement;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLHibernateMapping;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLJoinedSubclassElement;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLSubclassElement;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLUnionSubclassElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbHibernateMapping;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbJoinedSubclassElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbSubclassElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbUnionSubclassElement;
 
 /**
  * @author Steve Ebersole
@@ -65,10 +65,12 @@ public class HierarchyBuilder {
 	private void processCurrentMappingDocument() {
 		for ( Object entityElementO : currentMappingDocument.getMappingRoot().getClazzOrSubclassOrJoinedSubclass() ) {
 			final EntityElement entityElement = (EntityElement) entityElementO;
-			if ( XMLHibernateMapping.XMLClass.class.isInstance( entityElement ) ) {
+			if ( JaxbHibernateMapping.JaxbClass.class.isInstance( entityElement ) ) {
 				// we can immediately handle <class/> elements in terms of creating the hierarchy entry
-				final XMLHibernateMapping.XMLClass xmlClass = (XMLHibernateMapping.XMLClass) entityElement;
-				final RootEntitySourceImpl rootEntitySource = new RootEntitySourceImpl( currentMappingDocument, xmlClass );
+				final JaxbHibernateMapping.JaxbClass jaxbClass = (JaxbHibernateMapping.JaxbClass) entityElement;
+				final RootEntitySourceImpl rootEntitySource = new RootEntitySourceImpl( currentMappingDocument,
+																						jaxbClass
+				);
 				final EntityHierarchyImpl hierarchy = new EntityHierarchyImpl( rootEntitySource );
 
 				entityHierarchies.add( hierarchy );
@@ -125,23 +127,23 @@ public class HierarchyBuilder {
 	}
 
 	private void processSubElements(EntityElement entityElement, SubclassEntityContainer container) {
-		if ( XMLHibernateMapping.XMLClass.class.isInstance( entityElement ) ) {
-			final XMLHibernateMapping.XMLClass xmlClass = (XMLHibernateMapping.XMLClass) entityElement;
-			processElements( xmlClass.getJoinedSubclass(), container );
-			processElements( xmlClass.getSubclass(), container );
-			processElements( xmlClass.getUnionSubclass(), container );
+		if ( JaxbHibernateMapping.JaxbClass.class.isInstance( entityElement ) ) {
+			final JaxbHibernateMapping.JaxbClass jaxbClass = (JaxbHibernateMapping.JaxbClass) entityElement;
+			processElements( jaxbClass.getJoinedSubclass(), container );
+			processElements( jaxbClass.getSubclass(), container );
+			processElements( jaxbClass.getUnionSubclass(), container );
 		}
-		else if ( XMLSubclassElement.class.isInstance( entityElement ) ) {
-			final XMLSubclassElement xmlSubclass = (XMLSubclassElement) entityElement;
-			processElements( xmlSubclass.getSubclass(), container );
+		else if ( JaxbSubclassElement.class.isInstance( entityElement ) ) {
+			final JaxbSubclassElement jaxbSubclass = (JaxbSubclassElement) entityElement;
+			processElements( jaxbSubclass.getSubclass(), container );
 		}
-		else if ( XMLJoinedSubclassElement.class.isInstance( entityElement ) ) {
-			final XMLJoinedSubclassElement xmlJoinedSubclass = (XMLJoinedSubclassElement) entityElement;
-			processElements( xmlJoinedSubclass.getJoinedSubclass(), container );
+		else if ( JaxbJoinedSubclassElement.class.isInstance( entityElement ) ) {
+			final JaxbJoinedSubclassElement jaxbJoinedSubclass = (JaxbJoinedSubclassElement) entityElement;
+			processElements( jaxbJoinedSubclass.getJoinedSubclass(), container );
 		}
-		else if ( XMLUnionSubclassElement.class.isInstance( entityElement ) ) {
-			final XMLUnionSubclassElement xmlUnionSubclass = (XMLUnionSubclassElement) entityElement;
-			processElements( xmlUnionSubclass.getUnionSubclass(), container );
+		else if ( JaxbUnionSubclassElement.class.isInstance( entityElement ) ) {
+			final JaxbUnionSubclassElement jaxbUnionSubclass = (JaxbUnionSubclassElement) entityElement;
+			processElements( jaxbUnionSubclass.getUnionSubclass(), container );
 		}
 	}
 

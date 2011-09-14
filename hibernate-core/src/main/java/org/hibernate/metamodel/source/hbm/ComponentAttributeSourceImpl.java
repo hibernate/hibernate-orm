@@ -38,27 +38,27 @@ import org.hibernate.metamodel.source.binder.ExplicitHibernateTypeSource;
 import org.hibernate.metamodel.source.binder.MetaAttributeSource;
 import org.hibernate.metamodel.source.binder.RelationalValueSource;
 import org.hibernate.metamodel.source.binder.SingularAttributeNature;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLAnyElement;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLComponentElement;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLManyToManyElement;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLManyToOneElement;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLOneToManyElement;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLOneToOneElement;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLPropertyElement;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLTuplizerElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbAnyElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbComponentElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbManyToManyElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbManyToOneElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbOneToManyElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbOneToOneElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbPropertyElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbTuplizerElement;
 
 /**
  * @author Steve Ebersole
  */
 public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
-	private final XMLComponentElement componentElement;
+	private final JaxbComponentElement componentElement;
 	private final AttributeSourceContainer parentContainer;
 
 	private final Value<Class<?>> componentClassReference;
 	private final String path;
 
 	public ComponentAttributeSourceImpl(
-			XMLComponentElement componentElement,
+			JaxbComponentElement componentElement,
 			AttributeSourceContainer parentContainer,
 			LocalBindingContext bindingContext) {
 		this.componentElement = componentElement;
@@ -101,7 +101,7 @@ public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
 			return null;
 		}
 		final EntityMode entityMode = StringHelper.isEmpty( componentElement.getClazz() ) ? EntityMode.MAP : EntityMode.POJO;
-		for ( XMLTuplizerElement tuplizerElement : componentElement.getTuplizer() ) {
+		for ( JaxbTuplizerElement tuplizerElement : componentElement.getTuplizer() ) {
 			if ( entityMode == EntityMode.parse( tuplizerElement.getEntityMode() ) ) {
 				return tuplizerElement.getClazz();
 			}
@@ -113,41 +113,41 @@ public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
 	public Iterable<AttributeSource> attributeSources() {
 		List<AttributeSource> attributeSources = new ArrayList<AttributeSource>();
 		for ( Object attributeElement : componentElement.getPropertyOrManyToOneOrOneToOne() ) {
-			if ( XMLPropertyElement.class.isInstance( attributeElement ) ) {
+			if ( JaxbPropertyElement.class.isInstance( attributeElement ) ) {
 				attributeSources.add(
 						new PropertyAttributeSourceImpl(
-								XMLPropertyElement.class.cast( attributeElement ),
+								JaxbPropertyElement.class.cast( attributeElement ),
 								getLocalBindingContext()
 						)
 				);
 			}
-			else if ( XMLComponentElement.class.isInstance( attributeElement ) ) {
+			else if ( JaxbComponentElement.class.isInstance( attributeElement ) ) {
 				attributeSources.add(
 						new ComponentAttributeSourceImpl(
-								(XMLComponentElement) attributeElement,
+								(JaxbComponentElement) attributeElement,
 								this,
 								getLocalBindingContext()
 						)
 				);
 			}
-			else if ( XMLManyToOneElement.class.isInstance( attributeElement ) ) {
+			else if ( JaxbManyToOneElement.class.isInstance( attributeElement ) ) {
 				attributeSources.add(
 						new ManyToOneAttributeSourceImpl(
-								XMLManyToOneElement.class.cast( attributeElement ),
+								JaxbManyToOneElement.class.cast( attributeElement ),
 								getLocalBindingContext()
 						)
 				);
 			}
-			else if ( XMLOneToOneElement.class.isInstance( attributeElement ) ) {
+			else if ( JaxbOneToOneElement.class.isInstance( attributeElement ) ) {
 				// todo : implement
 			}
-			else if ( XMLAnyElement.class.isInstance( attributeElement ) ) {
+			else if ( JaxbAnyElement.class.isInstance( attributeElement ) ) {
 				// todo : implement
 			}
-			else if ( XMLOneToManyElement.class.isInstance( attributeElement ) ) {
+			else if ( JaxbOneToManyElement.class.isInstance( attributeElement ) ) {
 				// todo : implement
 			}
-			else if ( XMLManyToManyElement.class.isInstance( attributeElement ) ) {
+			else if ( JaxbManyToManyElement.class.isInstance( attributeElement ) ) {
 				// todo : implement
 			}
 		}

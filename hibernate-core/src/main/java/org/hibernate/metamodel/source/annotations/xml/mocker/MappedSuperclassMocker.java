@@ -26,18 +26,18 @@ package org.hibernate.metamodel.source.annotations.xml.mocker;
 import org.jboss.logging.Logger;
 
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLAccessType;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLAttributes;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLEntityListeners;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLIdClass;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLMappedSuperclass;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLPostLoad;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLPostPersist;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLPostRemove;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLPostUpdate;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLPrePersist;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLPreRemove;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLPreUpdate;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbAccessType;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbAttributes;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbEntityListeners;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbIdClass;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbMappedSuperclass;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbPostLoad;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbPostPersist;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbPostRemove;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbPostUpdate;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbPrePersist;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbPreRemove;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbPreUpdate;
 
 /**
  * Mock <mapped-superclass> to {@link javax.persistence.MappedSuperclass @MappedSuperClass}
@@ -49,9 +49,9 @@ class MappedSuperclassMocker extends AbstractEntityObjectMocker {
 			CoreMessageLogger.class,
 			MappedSuperclassMocker.class.getName()
 	);
-	private XMLMappedSuperclass mappedSuperclass;
+	private JaxbMappedSuperclass mappedSuperclass;
 
-	MappedSuperclassMocker(IndexBuilder indexBuilder, XMLMappedSuperclass mappedSuperclass, EntityMappingsMocker.Default defaults) {
+	MappedSuperclassMocker(IndexBuilder indexBuilder, JaxbMappedSuperclass mappedSuperclass, EntityMappingsMocker.Default defaults) {
 		super( indexBuilder, defaults );
 		this.mappedSuperclass = mappedSuperclass;
 	}
@@ -67,12 +67,12 @@ class MappedSuperclassMocker extends AbstractEntityObjectMocker {
 	}
 
 	@Override
-	protected XMLAttributes getAttributes() {
+	protected JaxbAttributes getAttributes() {
 		return mappedSuperclass.getAttributes();
 	}
 
 	@Override
-	protected XMLAccessType getAccessType() {
+	protected JaxbAccessType getAccessType() {
 		return mappedSuperclass.getAccess();
 	}
 
@@ -92,12 +92,12 @@ class MappedSuperclassMocker extends AbstractEntityObjectMocker {
 	}
 
 	@Override
-	protected XMLIdClass getIdClass() {
+	protected JaxbIdClass getIdClass() {
 		return mappedSuperclass.getIdClass();
 	}
 
 	@Override
-	protected XMLEntityListeners getEntityListeners() {
+	protected JaxbEntityListeners getEntityListeners() {
 		return mappedSuperclass.getEntityListeners();
 	}
 
@@ -106,37 +106,37 @@ class MappedSuperclassMocker extends AbstractEntityObjectMocker {
 	}
 
 	@Override
-	protected XMLPrePersist getPrePersist() {
+	protected JaxbPrePersist getPrePersist() {
 		return mappedSuperclass.getPrePersist();
 	}
 
 	@Override
-	protected XMLPreRemove getPreRemove() {
+	protected JaxbPreRemove getPreRemove() {
 		return mappedSuperclass.getPreRemove();
 	}
 
 	@Override
-	protected XMLPreUpdate getPreUpdate() {
+	protected JaxbPreUpdate getPreUpdate() {
 		return mappedSuperclass.getPreUpdate();
 	}
 
 	@Override
-	protected XMLPostPersist getPostPersist() {
+	protected JaxbPostPersist getPostPersist() {
 		return mappedSuperclass.getPostPersist();
 	}
 
 	@Override
-	protected XMLPostUpdate getPostUpdate() {
+	protected JaxbPostUpdate getPostUpdate() {
 		return mappedSuperclass.getPostUpdate();
 	}
 
 	@Override
-	protected XMLPostRemove getPostRemove() {
+	protected JaxbPostRemove getPostRemove() {
 		return mappedSuperclass.getPostRemove();
 	}
 
 	@Override
-	protected XMLPostLoad getPostLoad() {
+	protected JaxbPostLoad getPostLoad() {
 		return mappedSuperclass.getPostLoad();
 	}
 }

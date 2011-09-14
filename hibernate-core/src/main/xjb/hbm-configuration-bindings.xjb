@@ -7,10 +7,10 @@
     <jaxb:bindings schemaLocation="../resources/org/hibernate/hibernate-configuration-4.0.xsd" node="/xsd:schema">
         <jaxb:schemaBindings>
             <jaxb:nameXmlTransform>
-                <jaxb:typeName prefix="XML"/>
-                <jaxb:elementName prefix="XML"/>
-                <jaxb:modelGroupName prefix="XML"/>
-                <jaxb:anonymousTypeName prefix="XML"/>
+                <jaxb:typeName prefix="Jaxb"/>
+                <jaxb:elementName prefix="Jaxb"/>
+                <jaxb:modelGroupName prefix="Jaxb"/>
+                <jaxb:anonymousTypeName prefix="Jaxb"/>
             </jaxb:nameXmlTransform>
         </jaxb:schemaBindings>
     </jaxb:bindings>

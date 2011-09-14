@@ -35,17 +35,17 @@ import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.DotName;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLAssociationOverride;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLAttributeOverride;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLCollectionTable;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLColumn;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLEnumType;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLJoinColumn;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLJoinTable;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLLob;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLOrderColumn;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLPrimaryKeyJoinColumn;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLTemporalType;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbAssociationOverride;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbAttributeOverride;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbCollectionTable;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbColumn;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbEnumType;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbJoinColumn;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbJoinTable;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbLob;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbOrderColumn;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbPrimaryKeyJoinColumn;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbTemporalType;
 
 /**
  * @author Strong Liu
@@ -69,7 +69,7 @@ abstract class AnnotationMocker extends AbstractMocker {
 	}
 
 	//@JoinTable
-	protected AnnotationInstance parserJoinTable(XMLJoinTable joinTable, AnnotationTarget target) {
+	protected AnnotationInstance parserJoinTable(JaxbJoinTable joinTable, AnnotationTarget target) {
 		if ( joinTable == null ) {
 			return null;
 		}
@@ -92,14 +92,14 @@ abstract class AnnotationMocker extends AbstractMocker {
 	}
 
 	//@AssociationOverride
-	private AnnotationInstance parserAssociationOverride(XMLAssociationOverride associationOverride, AnnotationTarget target) {
+	private AnnotationInstance parserAssociationOverride(JaxbAssociationOverride associationOverride, AnnotationTarget target) {
 		if ( associationOverride == null ) {
 			return null;
 		}
 		List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
 		MockHelper.stringValue( "name", associationOverride.getName(), annotationValueList );
-		if ( associationOverride instanceof XMLAssociationOverrideProxy ) {
-			XMLAssociationOverrideProxy proxy = (XMLAssociationOverrideProxy) associationOverride;
+		if ( associationOverride instanceof JaxbAssociationOverrideProxy ) {
+			JaxbAssociationOverrideProxy proxy = (JaxbAssociationOverrideProxy) associationOverride;
 			MockHelper.addToCollectionIfNotNull( annotationValueList, proxy.getJoinColumnsAnnotationValue() );
 			MockHelper.addToCollectionIfNotNull( annotationValueList, proxy.getJoinTableAnnotationValue() );
 		}
@@ -114,7 +114,7 @@ abstract class AnnotationMocker extends AbstractMocker {
 		return create( ASSOCIATION_OVERRIDE, target, annotationValueList );
 	}
 
-	private AnnotationValue[] nestedJoinColumnList(String name, List<XMLJoinColumn> columns, List<AnnotationValue> annotationValueList) {
+	private AnnotationValue[] nestedJoinColumnList(String name, List<JaxbJoinColumn> columns, List<AnnotationValue> annotationValueList) {
 		if ( MockHelper.isNotEmpty( columns ) ) {
 			AnnotationValue[] values = new AnnotationValue[columns.size()];
 			for ( int i = 0; i < columns.size(); i++ ) {
@@ -133,7 +133,7 @@ abstract class AnnotationMocker extends AbstractMocker {
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	//@Column
-	protected AnnotationInstance parserColumn(XMLColumn column, AnnotationTarget target) {
+	protected AnnotationInstance parserColumn(JaxbColumn column, AnnotationTarget target) {
 		if ( column == null ) {
 			return null;
 		}
@@ -152,14 +152,14 @@ abstract class AnnotationMocker extends AbstractMocker {
 	}
 
 	//@AttributeOverride
-	private AnnotationInstance parserAttributeOverride(XMLAttributeOverride attributeOverride, AnnotationTarget target) {
+	private AnnotationInstance parserAttributeOverride(JaxbAttributeOverride attributeOverride, AnnotationTarget target) {
 		if ( attributeOverride == null ) {
 			return null;
 		}
 		List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
 		MockHelper.stringValue( "name", attributeOverride.getName(), annotationValueList );
-		if ( attributeOverride instanceof XMLAttributeOverrideProxy ) {
-			XMLAttributeOverrideProxy proxy = (XMLAttributeOverrideProxy) attributeOverride;
+		if ( attributeOverride instanceof JaxbAttributeOverrideProxy ) {
+			JaxbAttributeOverrideProxy proxy = (JaxbAttributeOverrideProxy) attributeOverride;
 			MockHelper.addToCollectionIfNotNull( annotationValueList, proxy.getColumnAnnotationValue() );
 		}
 		else {
@@ -175,7 +175,7 @@ abstract class AnnotationMocker extends AbstractMocker {
 	}
 
 
-	protected AnnotationInstance parserOrderColumn(XMLOrderColumn orderColumn, AnnotationTarget target) {
+	protected AnnotationInstance parserOrderColumn(JaxbOrderColumn orderColumn, AnnotationTarget target) {
 		if ( orderColumn == null ) {
 			return null;
 		}
@@ -189,7 +189,7 @@ abstract class AnnotationMocker extends AbstractMocker {
 	}
 
 	//@JoinColumn
-	protected AnnotationInstance parserJoinColumn(XMLJoinColumn column, AnnotationTarget target) {
+	protected AnnotationInstance parserJoinColumn(JaxbJoinColumn column, AnnotationTarget target) {
 		if ( column == null ) {
 			return null;
 		}
@@ -207,21 +207,21 @@ abstract class AnnotationMocker extends AbstractMocker {
 		return create( JOIN_COLUMN, target, annotationValueList );
 	}
 
-	protected AnnotationInstance parserLob(XMLLob lob, AnnotationTarget target) {
+	protected AnnotationInstance parserLob(JaxbLob lob, AnnotationTarget target) {
 		if ( lob == null ) {
 			return null;
 		}
 		return create( LOB, target );
 	}
 
-	protected AnnotationInstance parserTemporalType(XMLTemporalType temporalType, AnnotationTarget target) {
+	protected AnnotationInstance parserTemporalType(JaxbTemporalType temporalType, AnnotationTarget target) {
 		if ( temporalType == null ) {
 			return null;
 		}
 		return create( TEMPORAL, target, MockHelper.enumValueArray( "value", TEMPORAL_TYPE, temporalType ) );
 	}
 
-	protected AnnotationInstance parserEnumType(XMLEnumType enumerated, AnnotationTarget target) {
+	protected AnnotationInstance parserEnumType(JaxbEnumType enumerated, AnnotationTarget target) {
 		if ( enumerated == null ) {
 			return null;
 		}
@@ -229,7 +229,7 @@ abstract class AnnotationMocker extends AbstractMocker {
 	}
 
 
-	protected AnnotationInstance parserPrimaryKeyJoinColumn(XMLPrimaryKeyJoinColumn primaryKeyJoinColumn, AnnotationTarget target) {
+	protected AnnotationInstance parserPrimaryKeyJoinColumn(JaxbPrimaryKeyJoinColumn primaryKeyJoinColumn, AnnotationTarget target) {
 		if ( primaryKeyJoinColumn == null ) {
 			return null;
 		}
@@ -248,7 +248,7 @@ abstract class AnnotationMocker extends AbstractMocker {
 				);
 	}
 
-	protected AnnotationInstance parserPrimaryKeyJoinColumnList(List<XMLPrimaryKeyJoinColumn> primaryKeyJoinColumnList, AnnotationTarget target) {
+	protected AnnotationInstance parserPrimaryKeyJoinColumnList(List<JaxbPrimaryKeyJoinColumn> primaryKeyJoinColumnList, AnnotationTarget target) {
 		if ( MockHelper.isNotEmpty( primaryKeyJoinColumnList ) ) {
 			if ( primaryKeyJoinColumnList.size() == 1 ) {
 				return parserPrimaryKeyJoinColumn( primaryKeyJoinColumnList.get( 0 ), target );
@@ -266,7 +266,7 @@ abstract class AnnotationMocker extends AbstractMocker {
 
 	}
 
-	protected AnnotationValue[] nestedPrimaryKeyJoinColumnList(String name, List<XMLPrimaryKeyJoinColumn> constraints, List<AnnotationValue> annotationValueList) {
+	protected AnnotationValue[] nestedPrimaryKeyJoinColumnList(String name, List<JaxbPrimaryKeyJoinColumn> constraints, List<AnnotationValue> annotationValueList) {
 		if ( MockHelper.isNotEmpty( constraints ) ) {
 			AnnotationValue[] values = new AnnotationValue[constraints.size()];
 			for ( int i = 0; i < constraints.size(); i++ ) {
@@ -303,7 +303,7 @@ abstract class AnnotationMocker extends AbstractMocker {
 	}
 
 
-	protected AnnotationInstance parserAttributeOverrides(List<XMLAttributeOverride> attributeOverrides, AnnotationTarget target) {
+	protected AnnotationInstance parserAttributeOverrides(List<JaxbAttributeOverride> attributeOverrides, AnnotationTarget target) {
 		if ( target == null ) {
 			throw new AssertionFailure( "target can not be null" );
 		}
@@ -311,7 +311,7 @@ abstract class AnnotationMocker extends AbstractMocker {
 			return null;
 		}
 		Set<String> names = new HashSet<String>();
-		for ( XMLAttributeOverride attributeOverride : attributeOverrides ) {
+		for ( JaxbAttributeOverride attributeOverride : attributeOverrides ) {
 			names.add( attributeOverride.getName() );
 		}
 		Operation operation = new AttributeOverrideOperation( names, attributeOverrides );
@@ -339,7 +339,7 @@ abstract class AnnotationMocker extends AbstractMocker {
 		}
 	}
 
-	protected AnnotationInstance parserAssociationOverrides(List<XMLAssociationOverride> associationOverrides, AnnotationTarget target) {
+	protected AnnotationInstance parserAssociationOverrides(List<JaxbAssociationOverride> associationOverrides, AnnotationTarget target) {
 		if ( target == null ) {
 			throw new AssertionFailure( "target can not be null" );
 		}
@@ -348,7 +348,7 @@ abstract class AnnotationMocker extends AbstractMocker {
 		}
 
 		Set<String> names = new HashSet<String>();
-		for ( XMLAssociationOverride associationOverride : associationOverrides ) {
+		for ( JaxbAssociationOverride associationOverride : associationOverrides ) {
 			names.add( associationOverride.getName() );
 		}
 		Operation operation = new AssociationOverrideOperation( names, associationOverrides );
@@ -379,7 +379,7 @@ abstract class AnnotationMocker extends AbstractMocker {
 
 	}
 
-	protected AnnotationInstance parserCollectionTable(XMLCollectionTable collectionTable, AnnotationTarget target) {
+	protected AnnotationInstance parserCollectionTable(JaxbCollectionTable collectionTable, AnnotationTarget target) {
 		if ( collectionTable == null ) {
 			return null;
 		}
@@ -397,7 +397,7 @@ abstract class AnnotationMocker extends AbstractMocker {
 	}
 
 
-	protected AnnotationInstance parserJoinColumnList(List<XMLJoinColumn> joinColumnList, AnnotationTarget target) {
+	protected AnnotationInstance parserJoinColumnList(List<JaxbJoinColumn> joinColumnList, AnnotationTarget target) {
 		if ( MockHelper.isNotEmpty( joinColumnList ) ) {
 			if ( joinColumnList.size() == 1 ) {
 				return parserJoinColumn( joinColumnList.get( 0 ), target );
@@ -439,9 +439,9 @@ abstract class AnnotationMocker extends AbstractMocker {
 
 	class AttributeOverrideOperation implements Operation {
 		private Set<String> names;
-		private List<XMLAttributeOverride> attributeOverrides;
+		private List<JaxbAttributeOverride> attributeOverrides;
 
-		AttributeOverrideOperation(Set<String> names, List<XMLAttributeOverride> attributeOverrides) {
+		AttributeOverrideOperation(Set<String> names, List<JaxbAttributeOverride> attributeOverrides) {
 			this.names = names;
 			this.attributeOverrides = attributeOverrides;
 		}
@@ -450,7 +450,7 @@ abstract class AnnotationMocker extends AbstractMocker {
 		public boolean process(AnnotationInstance annotationInstance) {
 			String name = annotationInstance.value( "name" ).asString();
 			if ( !names.contains( name ) ) {
-				XMLAttributeOverrideProxy attributeOverride = new XMLAttributeOverrideProxy();
+				JaxbAttributeOverrideProxy attributeOverride = new JaxbAttributeOverrideProxy();
 				attributeOverride.setName( name );
 				attributeOverride.setColumnAnnotationValue( annotationInstance.value( "column" ) );
 				attributeOverrides.add( attributeOverride );
@@ -462,9 +462,9 @@ abstract class AnnotationMocker extends AbstractMocker {
 
 	class AssociationOverrideOperation implements Operation {
 		private Set<String> names;
-		private List<XMLAssociationOverride> associationOverrides;
+		private List<JaxbAssociationOverride> associationOverrides;
 
-		AssociationOverrideOperation(Set<String> names, List<XMLAssociationOverride> associationOverrides) {
+		AssociationOverrideOperation(Set<String> names, List<JaxbAssociationOverride> associationOverrides) {
 			this.names = names;
 			this.associationOverrides = associationOverrides;
 		}
@@ -473,7 +473,7 @@ abstract class AnnotationMocker extends AbstractMocker {
 		public boolean process(AnnotationInstance annotationInstance) {
 			String name = annotationInstance.value( "name" ).asString();
 			if ( !names.contains( name ) ) {
-				XMLAssociationOverrideProxy associationOverride = new XMLAssociationOverrideProxy();
+				JaxbAssociationOverrideProxy associationOverride = new JaxbAssociationOverrideProxy();
 				associationOverride.setName( name );
 				associationOverride.setJoinColumnsAnnotationValue( annotationInstance.value( "joinColumns" ) );
 				associationOverride.setJoinTableAnnotationValue( annotationInstance.value( "joinTable" ) );
@@ -484,7 +484,7 @@ abstract class AnnotationMocker extends AbstractMocker {
 
 	}
 
-	class XMLAssociationOverrideProxy extends XMLAssociationOverride {
+	class JaxbAssociationOverrideProxy extends JaxbAssociationOverride {
 		private AnnotationValue joinTableAnnotationValue;
 		private AnnotationValue joinColumnsAnnotationValue;
 
@@ -505,7 +505,7 @@ abstract class AnnotationMocker extends AbstractMocker {
 		}
 	}
 
-	class XMLAttributeOverrideProxy extends XMLAttributeOverride {
+	class JaxbAttributeOverrideProxy extends JaxbAttributeOverride {
 		private AnnotationValue columnAnnotationValue;
 
 		AnnotationValue getColumnAnnotationValue() {

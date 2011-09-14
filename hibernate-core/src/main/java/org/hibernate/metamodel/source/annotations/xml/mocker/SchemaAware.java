@@ -23,10 +23,10 @@
  */
 package org.hibernate.metamodel.source.annotations.xml.mocker;
 
-import org.hibernate.metamodel.source.annotation.jaxb.XMLCollectionTable;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLJoinTable;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLSecondaryTable;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLTable;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbCollectionTable;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbJoinTable;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbSecondaryTable;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbTable;
 
 /**
  * @author Strong Liu
@@ -41,9 +41,9 @@ interface SchemaAware {
 	void setCatalog(String catalog);
 
 	static class SecondaryTableSchemaAware implements SchemaAware {
-		private XMLSecondaryTable table;
+		private JaxbSecondaryTable table;
 
-		SecondaryTableSchemaAware(XMLSecondaryTable table) {
+		SecondaryTableSchemaAware(JaxbSecondaryTable table) {
 			this.table = table;
 		}
 
@@ -69,9 +69,9 @@ interface SchemaAware {
 	}
 
 	static class TableSchemaAware implements SchemaAware {
-		private XMLTable table;
+		private JaxbTable table;
 
-		public TableSchemaAware(XMLTable table) {
+		public TableSchemaAware(JaxbTable table) {
 			this.table = table;
 		}
 
@@ -97,9 +97,9 @@ interface SchemaAware {
 	}
 
 	static class JoinTableSchemaAware implements SchemaAware {
-		private XMLJoinTable table;
+		private JaxbJoinTable table;
 
-		public JoinTableSchemaAware(XMLJoinTable table) {
+		public JoinTableSchemaAware(JaxbJoinTable table) {
 			this.table = table;
 		}
 
@@ -125,9 +125,9 @@ interface SchemaAware {
 	}
 
 	static class CollectionTableSchemaAware implements SchemaAware {
-		private XMLCollectionTable table;
+		private JaxbCollectionTable table;
 
-		public CollectionTableSchemaAware(XMLCollectionTable table) {
+		public CollectionTableSchemaAware(JaxbCollectionTable table) {
 			this.table = table;
 		}
 

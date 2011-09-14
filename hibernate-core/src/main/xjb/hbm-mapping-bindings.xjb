@@ -10,70 +10,70 @@
 
         <jaxb:schemaBindings>
             <jaxb:nameXmlTransform>
-                <jaxb:typeName prefix="XML"/>
-                <jaxb:elementName prefix="XML"/>
-                <jaxb:modelGroupName prefix="XML"/>
-                <jaxb:anonymousTypeName prefix="XML"/>
+                <jaxb:typeName prefix="Jaxb"/>
+                <jaxb:elementName prefix="Jaxb"/>
+                <jaxb:modelGroupName prefix="Jaxb"/>
+                <jaxb:anonymousTypeName prefix="Jaxb"/>
             </jaxb:nameXmlTransform>
         </jaxb:schemaBindings>
 
         <!-- Mix-ins -->
         <jaxb:bindings node="//xsd:element[@name='class']/xsd:complexType">
-            <inheritance:implements>org.hibernate.metamodel.source.hbm.jaxb.mapping.EntityElement</inheritance:implements>
-            <inheritance:implements>org.hibernate.metamodel.source.hbm.jaxb.mapping.JoinElementSource</inheritance:implements>
+            <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.EntityElement</inheritance:implements>
+            <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.JoinElementSource</inheritance:implements>
         </jaxb:bindings>
         <jaxb:bindings node="//xsd:complexType[@name='subclass-element']">
-            <inheritance:implements>org.hibernate.metamodel.source.hbm.jaxb.mapping.SubEntityElement</inheritance:implements>
-            <inheritance:implements>org.hibernate.metamodel.source.hbm.jaxb.mapping.JoinElementSource</inheritance:implements>
+            <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.SubEntityElement</inheritance:implements>
+            <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.JoinElementSource</inheritance:implements>
         </jaxb:bindings>
         <jaxb:bindings node="//xsd:complexType[@name='joined-subclass-element']">
-            <inheritance:implements>org.hibernate.metamodel.source.hbm.jaxb.mapping.SubEntityElement</inheritance:implements>
+            <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.SubEntityElement</inheritance:implements>
         </jaxb:bindings>
         <jaxb:bindings node="//xsd:complexType[@name='union-subclass-element']">
-            <inheritance:implements>org.hibernate.metamodel.source.hbm.jaxb.mapping.SubEntityElement</inheritance:implements>
+            <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.SubEntityElement</inheritance:implements>
         </jaxb:bindings>
         <jaxb:bindings node="//xsd:complexType[@name='sql-insert-element']">
-            <inheritance:implements>org.hibernate.metamodel.source.hbm.jaxb.mapping.CustomSqlElement</inheritance:implements>
+            <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.CustomSqlElement</inheritance:implements>
         </jaxb:bindings>
         <jaxb:bindings node="//xsd:complexType[@name='sql-update-element']">
-            <inheritance:implements>org.hibernate.metamodel.source.hbm.jaxb.mapping.CustomSqlElement</inheritance:implements>
+            <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.CustomSqlElement</inheritance:implements>
         </jaxb:bindings>
         <jaxb:bindings node="//xsd:complexType[@name='sql-delete-element']">
-            <inheritance:implements>org.hibernate.metamodel.source.hbm.jaxb.mapping.CustomSqlElement</inheritance:implements>
+            <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.CustomSqlElement</inheritance:implements>
         </jaxb:bindings>
         <jaxb:bindings node="//xsd:complexType[@name='sql-delete-all-element']">
-            <inheritance:implements>org.hibernate.metamodel.source.hbm.jaxb.mapping.CustomSqlElement</inheritance:implements>
+            <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.CustomSqlElement</inheritance:implements>
         </jaxb:bindings>
 
         <jaxb:bindings node="//xsd:complexType[@name='property-element']">
-            <inheritance:implements>org.hibernate.metamodel.source.hbm.jaxb.mapping.SingularAttributeSource</inheritance:implements>
+            <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.SingularAttributeSource</inheritance:implements>
         </jaxb:bindings>
         <jaxb:bindings node="//xsd:element[@name='id']/xsd:complexType">
-            <inheritance:implements>org.hibernate.metamodel.source.hbm.jaxb.mapping.SingularAttributeSource</inheritance:implements>
+            <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.SingularAttributeSource</inheritance:implements>
         </jaxb:bindings>
 <!--
         <jaxb:bindings node="//xsd:element[@name='version']/xsd:complexType">
-            <inheritance:implements>org.hibernate.metamodel.source.hbm.jaxb.mapping.SingularAttributeSource</inheritance:implements>
+            <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.SingularAttributeSource</inheritance:implements>
         </jaxb:bindings>
         <jaxb:bindings node="//xsd:element[@name='timestamp']/xsd:complexType">
-            <inheritance:implements>org.hibernate.metamodel.source.hbm.jaxb.mapping.SingularAttributeSource</inheritance:implements>
+            <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.SingularAttributeSource</inheritance:implements>
         </jaxb:bindings>
 -->
         <jaxb:bindings node="//xsd:complexType[@name='bag-element']">
-            <inheritance:implements>org.hibernate.metamodel.source.hbm.jaxb.mapping.PluralAttributeElement</inheritance:implements>
+            <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.PluralAttributeElement</inheritance:implements>
         </jaxb:bindings>
         <jaxb:bindings node="//xsd:complexType[@name='idbag-element']">
-            <inheritance:implements>org.hibernate.metamodel.source.hbm.jaxb.mapping.PluralAttributeElement</inheritance:implements>
-            <inheritance:extends>org.hibernate.metamodel.source.hbm.jaxb.mapping.IdBagPluralAttributeElementAdapter</inheritance:extends>
+            <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.PluralAttributeElement</inheritance:implements>
+            <inheritance:extends>org.hibernate.internal.jaxb.mapping.hbm.IdBagPluralAttributeElementAdapter</inheritance:extends>
         </jaxb:bindings>
         <jaxb:bindings node="//xsd:complexType[@name='list-element']">
-            <inheritance:implements>org.hibernate.metamodel.source.hbm.jaxb.mapping.PluralAttributeElement</inheritance:implements>
+            <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.PluralAttributeElement</inheritance:implements>
         </jaxb:bindings>
         <jaxb:bindings node="//xsd:complexType[@name='map-element']">
-            <inheritance:implements>org.hibernate.metamodel.source.hbm.jaxb.mapping.PluralAttributeElement</inheritance:implements>
+            <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.PluralAttributeElement</inheritance:implements>
         </jaxb:bindings>
         <jaxb:bindings node="//xsd:complexType[@name='set-element']">
-            <inheritance:implements>org.hibernate.metamodel.source.hbm.jaxb.mapping.PluralAttributeElement</inheritance:implements>
+            <inheritance:implements>org.hibernate.internal.jaxb.mapping.hbm.PluralAttributeElement</inheritance:implements>
         </jaxb:bindings>
 
 

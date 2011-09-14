@@ -21,40 +21,13 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source;
+package org.hibernate.internal.jaxb.mapping.hbm;
 
-import java.io.Serializable;
+import java.util.List;
 
 /**
- * Describes the origin of an xml document
- *
  * @author Steve Ebersole
  */
-public class Origin implements Serializable {
-	private final SourceType type;
-	private final String name;
-
-	public Origin(SourceType type, String name) {
-		this.type = type;
-		this.name = name;
-	}
-
-	/**
-	 * Retrieve the type of origin.
-	 *
-	 * @return The origin type.
-	 */
-	public SourceType getType() {
-		return type;
-	}
-
-	/**
-	 * The name of the document origin.  Interpretation is relative to the type, but might be the
-	 * resource name or file URL.
-	 *
-	 * @return The name.
-	 */
-	public String getName() {
-		return name;
-	}
+public interface MetaAttributeContainer {
+	public List<JaxbMetaElement> getMeta();
 }

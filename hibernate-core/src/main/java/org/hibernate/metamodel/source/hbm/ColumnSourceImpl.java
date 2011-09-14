@@ -26,20 +26,20 @@ package org.hibernate.metamodel.source.hbm;
 import org.hibernate.metamodel.relational.Datatype;
 import org.hibernate.metamodel.relational.Size;
 import org.hibernate.metamodel.source.binder.ColumnSource;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLColumnElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbColumnElement;
 
 /**
 * @author Steve Ebersole
 */
 class ColumnSourceImpl implements ColumnSource {
 	private final String tableName;
-	private final XMLColumnElement columnElement;
+	private final JaxbColumnElement columnElement;
 	private boolean includedInInsert;
 	private boolean includedInUpdate;
 
 	ColumnSourceImpl(
 			String tableName,
-			XMLColumnElement columnElement,
+			JaxbColumnElement columnElement,
 			boolean isIncludedInInsert,
 			boolean isIncludedInUpdate) {
 		this.tableName = tableName;

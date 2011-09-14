@@ -35,7 +35,7 @@ import org.hibernate.metamodel.source.binder.MetaAttributeSource;
 import org.hibernate.metamodel.source.binder.RelationalValueSource;
 import org.hibernate.metamodel.source.binder.SingularAttributeNature;
 import org.hibernate.metamodel.source.binder.SingularAttributeSource;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLHibernateMapping;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbHibernateMapping;
 
 /**
  * Implementation for {@code <timestamp/>} mappings
@@ -43,12 +43,12 @@ import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLHibernateMapping;
  * @author Steve Ebersole
  */
 class TimestampAttributeSourceImpl implements SingularAttributeSource {
-	private final XMLHibernateMapping.XMLClass.XMLTimestamp timestampElement;
+	private final JaxbHibernateMapping.JaxbClass.JaxbTimestamp timestampElement;
 	private final LocalBindingContext bindingContext;
 	private final List<RelationalValueSource> valueSources;
 
 	TimestampAttributeSourceImpl(
-			final XMLHibernateMapping.XMLClass.XMLTimestamp timestampElement,
+			final JaxbHibernateMapping.JaxbClass.JaxbTimestamp timestampElement,
 			LocalBindingContext bindingContext) {
 		this.timestampElement = timestampElement;
 		this.bindingContext = bindingContext;

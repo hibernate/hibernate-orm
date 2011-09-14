@@ -21,13 +21,13 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.hbm.jaxb.mapping;
-
-import java.util.List;
+package org.hibernate.internal.jaxb.mapping.hbm;
 
 /**
  * @author Steve Ebersole
  */
-public interface MetaAttributeContainer {
-	public List<XMLMetaElement> getMeta();
+public interface CustomSqlElement {
+	public String getValue();
+	public boolean isCallable();
+	public JaxbCheckAttribute getCheck();
 }

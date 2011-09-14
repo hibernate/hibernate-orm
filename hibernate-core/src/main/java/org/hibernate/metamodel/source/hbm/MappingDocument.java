@@ -26,16 +26,16 @@ package org.hibernate.metamodel.source.hbm;
 import java.util.List;
 
 import org.hibernate.cfg.NamingStrategy;
+import org.hibernate.internal.jaxb.JaxbRoot;
+import org.hibernate.internal.jaxb.Origin;
 import org.hibernate.internal.util.Value;
 import org.hibernate.metamodel.domain.Type;
 import org.hibernate.metamodel.source.MappingDefaults;
 import org.hibernate.metamodel.source.MetaAttributeContext;
 import org.hibernate.metamodel.source.MetadataImplementor;
-import org.hibernate.metamodel.source.Origin;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.EntityElement;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLFetchProfileElement;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLHibernateMapping;
-import org.hibernate.metamodel.source.internal.JaxbRoot;
+import org.hibernate.internal.jaxb.mapping.hbm.EntityElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbFetchProfileElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbHibernateMapping;
 import org.hibernate.metamodel.source.internal.OverriddenMappingDefaults;
 import org.hibernate.service.ServiceRegistry;
 
@@ -45,16 +45,16 @@ import org.hibernate.service.ServiceRegistry;
  * @author Steve Ebersole
  */
 public class MappingDocument {
-	private final JaxbRoot<XMLHibernateMapping> hbmJaxbRoot;
+	private final JaxbRoot<JaxbHibernateMapping> hbmJaxbRoot;
 	private final LocalBindingContextImpl mappingLocalBindingContext;
 
-	public MappingDocument(JaxbRoot<XMLHibernateMapping> hbmJaxbRoot, MetadataImplementor metadata) {
+	public MappingDocument(JaxbRoot<JaxbHibernateMapping> hbmJaxbRoot, MetadataImplementor metadata) {
 		this.hbmJaxbRoot = hbmJaxbRoot;
 		this.mappingLocalBindingContext = new LocalBindingContextImpl( metadata );
 
 	}
 
-	public XMLHibernateMapping getMappingRoot() {
+	public JaxbHibernateMapping getMappingRoot() {
 		return hbmJaxbRoot.getRoot();
 	}
 
@@ -62,7 +62,7 @@ public class MappingDocument {
 		return hbmJaxbRoot.getOrigin();
 	}
 
-	public JaxbRoot<XMLHibernateMapping> getJaxbRoot() {
+	public JaxbRoot<JaxbHibernateMapping> getJaxbRoot() {
 		return hbmJaxbRoot;
 	}
 
@@ -166,7 +166,7 @@ public class MappingDocument {
 		}
 
 		@Override
-		public void processFetchProfiles(List<XMLFetchProfileElement> fetchProfiles, String containingEntityName) {
+		public void processFetchProfiles(List<JaxbFetchProfileElement> fetchProfiles, String containingEntityName) {
 			// todo : this really needs to not be part of the context
 		}
 	}

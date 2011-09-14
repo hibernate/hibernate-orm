@@ -21,23 +21,40 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.hbm.jaxb.mapping;
+package org.hibernate.internal.jaxb.mapping.hbm;
+
+import java.util.List;
 
 /**
- * Adaptive implementation of the {@link PluralAttributeElement} for {@code <idbag/>} mappings which
- * do not support all the configuration available on other collection mappings.
- *
  * @author Steve Ebersole
  */
-public abstract class IdBagPluralAttributeElementAdapter implements PluralAttributeElement {
-	public XMLOneToManyElement getOneToMany() {
-		// idbag collections cannot contain 1-m mappings.
-		return null;
-	}
+public interface EntityElement extends MetaAttributeContainer {
+	public String getName();
+	public String getEntityName();
 
-	@Override
-	public boolean isInverse() {
-		// idbag collections own the association, and are therefore non-inverse
-		return false;
-	}
+    public Boolean isAbstract();
+    public Boolean isLazy();
+    public String getProxy();
+    public String getBatchSize();
+    public boolean isDynamicInsert();
+    public boolean isDynamicUpdate();
+    public boolean isSelectBeforeUpdate();
+
+	public List<JaxbTuplizerElement> getTuplizer();
+    public String getPersister();
+
+	public JaxbLoaderElement getLoader();
+	public JaxbSqlInsertElement getSqlInsert();
+	public JaxbSqlUpdateElement getSqlUpdate();
+	public JaxbSqlDeleteElement getSqlDelete();
+
+	public List<JaxbSynchronizeElement> getSynchronize();
+
+	public List<JaxbFetchProfileElement> getFetchProfile();
+
+    public List<JaxbResultsetElement> getResultset();
+
+    public List<Object> getQueryOrSqlQuery();
+
+	public List<Object> getPropertyOrManyToOneOrOneToOne();
 }

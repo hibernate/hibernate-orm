@@ -29,16 +29,16 @@ import java.util.List;
 import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
 
-import org.hibernate.metamodel.source.annotation.jaxb.XMLAccessType;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLBasic;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbAccessType;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbBasic;
 
 /**
  * @author Strong Liu
  */
 class BasicMocker extends PropertyMocker {
-	private XMLBasic basic;
+	private JaxbBasic basic;
 
-	BasicMocker(IndexBuilder indexBuilder, ClassInfo classInfo, EntityMappingsMocker.Default defaults, XMLBasic basic) {
+	BasicMocker(IndexBuilder indexBuilder, ClassInfo classInfo, EntityMappingsMocker.Default defaults, JaxbBasic basic) {
 		super( indexBuilder, classInfo, defaults );
 		this.basic = basic;
 	}
@@ -63,12 +63,12 @@ class BasicMocker extends PropertyMocker {
 
 
 	@Override
-	protected XMLAccessType getAccessType() {
+	protected JaxbAccessType getAccessType() {
 		return basic.getAccess();
 	}
 
 	@Override
-	protected void setAccessType(XMLAccessType accessType) {
+	protected void setAccessType(JaxbAccessType accessType) {
 		basic.setAccess( accessType );
 	}
 }

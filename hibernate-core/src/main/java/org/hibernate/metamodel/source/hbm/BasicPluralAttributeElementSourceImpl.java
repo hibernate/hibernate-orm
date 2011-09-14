@@ -31,7 +31,7 @@ import org.hibernate.metamodel.source.binder.BasicPluralAttributeElementSource;
 import org.hibernate.metamodel.source.binder.ExplicitHibernateTypeSource;
 import org.hibernate.metamodel.source.binder.PluralAttributeElementNature;
 import org.hibernate.metamodel.source.binder.RelationalValueSource;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLElementElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbElementElement;
 
 /**
  * @author Steve Ebersole
@@ -41,7 +41,7 @@ public class BasicPluralAttributeElementSourceImpl implements BasicPluralAttribu
 	private final ExplicitHibernateTypeSource typeSource;
 
 	public BasicPluralAttributeElementSourceImpl(
-			final XMLElementElement elementElement,
+			final JaxbElementElement elementElement,
 			LocalBindingContext bindingContext) {
 		this.valueSources = Helper.buildValueSources(
 				new Helper.ValueSourcesAdapter() {

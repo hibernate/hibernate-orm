@@ -33,7 +33,7 @@ import org.hibernate.metamodel.source.binder.MetaAttributeSource;
 import org.hibernate.metamodel.source.binder.RelationalValueSource;
 import org.hibernate.metamodel.source.binder.SingularAttributeNature;
 import org.hibernate.metamodel.source.binder.SingularAttributeSource;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLHibernateMapping;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbHibernateMapping;
 
 /**
  * Implementation for {@code <id/>} mappings
@@ -41,12 +41,12 @@ import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLHibernateMapping;
  * @author Steve Ebersole
  */
 class SingularIdentifierAttributeSourceImpl implements SingularAttributeSource {
-	private final XMLHibernateMapping.XMLClass.XMLId idElement;
+	private final JaxbHibernateMapping.JaxbClass.JaxbId idElement;
 	private final ExplicitHibernateTypeSource typeSource;
 	private final List<RelationalValueSource> valueSources;
 
 	public SingularIdentifierAttributeSourceImpl(
-			final XMLHibernateMapping.XMLClass.XMLId idElement,
+			final JaxbHibernateMapping.JaxbClass.JaxbId idElement,
 			LocalBindingContext bindingContext) {
 		this.idElement = idElement;
 		this.typeSource = new ExplicitHibernateTypeSource() {

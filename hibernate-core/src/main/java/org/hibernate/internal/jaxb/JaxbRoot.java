@@ -21,9 +21,9 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.internal;
+package org.hibernate.internal.jaxb;
 
-import org.hibernate.metamodel.source.Origin;
+import org.hibernate.internal.jaxb.Origin;
 
 /**
  * Holds information about a JAXB-unmarshalled XML document.

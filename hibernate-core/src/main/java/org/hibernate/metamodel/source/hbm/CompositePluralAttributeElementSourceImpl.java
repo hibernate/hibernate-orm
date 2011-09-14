@@ -33,18 +33,18 @@ import org.hibernate.metamodel.source.LocalBindingContext;
 import org.hibernate.metamodel.source.binder.AttributeSource;
 import org.hibernate.metamodel.source.binder.CompositePluralAttributeElementSource;
 import org.hibernate.metamodel.source.binder.PluralAttributeElementNature;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLCompositeElementElement;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLTuplizerElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbCompositeElementElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbTuplizerElement;
 
 /**
  * @author Steve Ebersole
  */
 public class CompositePluralAttributeElementSourceImpl implements CompositePluralAttributeElementSource {
-	private final XMLCompositeElementElement compositeElement;
+	private final JaxbCompositeElementElement compositeElement;
 	private final LocalBindingContext bindingContext;
 
 	public CompositePluralAttributeElementSourceImpl(
-			XMLCompositeElementElement compositeElement,
+			JaxbCompositeElementElement compositeElement,
 			LocalBindingContext bindingContext) {
 		this.compositeElement = compositeElement;
 		this.bindingContext = bindingContext;
@@ -78,7 +78,7 @@ public class CompositePluralAttributeElementSourceImpl implements CompositePlura
 			return null;
 		}
 		final EntityMode entityMode = StringHelper.isEmpty( compositeElement.getClazz() ) ? EntityMode.MAP : EntityMode.POJO;
-		for ( XMLTuplizerElement tuplizerElement : compositeElement.getTuplizer() ) {
+		for ( JaxbTuplizerElement tuplizerElement : compositeElement.getTuplizer() ) {
 			if ( entityMode == EntityMode.parse( tuplizerElement.getEntityMode() ) ) {
 				return tuplizerElement.getClazz();
 			}

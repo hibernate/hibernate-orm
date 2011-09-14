@@ -87,7 +87,7 @@ task jaxb {
         // hibernate-configuration
         ant.xjc(
                 destdir: '${jaxbTargetDir}',
-                package: 'org.hibernate.metamodel.source.hbm.jaxb.config',
+                package: 'org.hibernate.internal.jaxb.cfg',
                 binding: 'src/main/xjb/hbm-configuration-bindings.xjb',
                 schema: cfgXsd.path
         )
@@ -95,7 +95,7 @@ task jaxb {
         // hibernate-mapping
         ant.xjc(
                 destdir: '${jaxbTargetDir}',
-                package: 'org.hibernate.metamodel.source.hbm.jaxb.mapping',
+                package: 'org.hibernate.internal.jaxb.mapping.hbm',
                 binding: hbmXjb.path,
                 schema: hbmXsd.path,
                 extension: 'true'
@@ -106,7 +106,7 @@ task jaxb {
         // orm.xml (jpa)
         ant.xjc(
                 destdir: '${jaxbTargetDir}',
-                package: 'org.hibernate.metamodel.source.annotation.jaxb',
+                package: 'org.hibernate.internal.jaxb.mapping.orm',
                 binding: 'src/main/xjb/orm-bindings.xjb',
                 schema: ormXsd.path
         )

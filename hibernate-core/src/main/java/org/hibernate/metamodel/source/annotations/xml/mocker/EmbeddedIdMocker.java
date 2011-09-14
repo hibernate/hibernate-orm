@@ -25,16 +25,16 @@ package org.hibernate.metamodel.source.annotations.xml.mocker;
 
 import org.jboss.jandex.ClassInfo;
 
-import org.hibernate.metamodel.source.annotation.jaxb.XMLAccessType;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLEmbeddedId;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbAccessType;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbEmbeddedId;
 
 /**
  * @author Strong Liu
  */
 class EmbeddedIdMocker extends PropertyMocker {
-	private XMLEmbeddedId embeddedId;
+	private JaxbEmbeddedId embeddedId;
 
-	EmbeddedIdMocker(IndexBuilder indexBuilder, ClassInfo classInfo, EntityMappingsMocker.Default defaults, XMLEmbeddedId embeddedId) {
+	EmbeddedIdMocker(IndexBuilder indexBuilder, ClassInfo classInfo, EntityMappingsMocker.Default defaults, JaxbEmbeddedId embeddedId) {
 		super( indexBuilder, classInfo, defaults );
 		this.embeddedId = embeddedId;
 	}
@@ -50,12 +50,12 @@ class EmbeddedIdMocker extends PropertyMocker {
 	}
 
 	@Override
-	protected XMLAccessType getAccessType() {
+	protected JaxbAccessType getAccessType() {
 		return embeddedId.getAccess();
 	}
 
 	@Override
-	protected void setAccessType(XMLAccessType accessType) {
+	protected void setAccessType(JaxbAccessType accessType) {
 		embeddedId.setAccess( accessType );
 	}
 }

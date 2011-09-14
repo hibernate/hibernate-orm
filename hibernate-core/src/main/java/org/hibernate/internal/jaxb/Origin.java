@@ -21,40 +21,40 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.source.hbm.jaxb.mapping;
+package org.hibernate.internal.jaxb;
 
-import java.util.List;
+import java.io.Serializable;
 
 /**
+ * Describes the origin of an xml document
+ *
  * @author Steve Ebersole
  */
-public interface EntityElement extends MetaAttributeContainer {
-	public String getName();
-	public String getEntityName();
+public class Origin implements Serializable {
+	private final SourceType type;
+	private final String name;
 
-    public Boolean isAbstract();
-    public Boolean isLazy();
-    public String getProxy();
-    public String getBatchSize();
-    public boolean isDynamicInsert();
-    public boolean isDynamicUpdate();
-    public boolean isSelectBeforeUpdate();
+	public Origin(SourceType type, String name) {
+		this.type = type;
+		this.name = name;
+	}
 
-	public List<XMLTuplizerElement> getTuplizer();
-    public String getPersister();
+	/**
+	 * Retrieve the type of origin.
+	 *
+	 * @return The origin type.
+	 */
+	public SourceType getType() {
+		return type;
+	}
 
-	public XMLLoaderElement getLoader();
-	public XMLSqlInsertElement getSqlInsert();
-	public XMLSqlUpdateElement getSqlUpdate();
-	public XMLSqlDeleteElement getSqlDelete();
-
-	public List<XMLSynchronizeElement> getSynchronize();
-
-	public List<XMLFetchProfileElement> getFetchProfile();
-
-    public List<XMLResultsetElement> getResultset();
-
-    public List<Object> getQueryOrSqlQuery();
-
-	public List<Object> getPropertyOrManyToOneOrOneToOne();
+	/**
+	 * The name of the document origin.  Interpretation is relative to the type, but might be the
+	 * resource name or file URL.
+	 *
+	 * @return The name.
+	 */
+	public String getName() {
+		return name;
+	}
 }

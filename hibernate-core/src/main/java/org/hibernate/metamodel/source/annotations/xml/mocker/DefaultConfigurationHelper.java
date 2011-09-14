@@ -37,10 +37,10 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.JandexHelper;
 import org.hibernate.metamodel.source.annotations.xml.filter.IndexedAnnotationFilter;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLEmbeddable;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLEntity;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLMappedSuperclass;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLTable;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbEmbeddable;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbEntity;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbMappedSuperclass;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbTable;
 
 /**
  * @author Strong Liu
@@ -100,15 +100,15 @@ class DefaultConfigurationHelper {
 		}
 	}
 
-	void applyDefaults(XMLMappedSuperclass mappedSuperclass, EntityMappingsMocker.Default defaults) {
+	void applyDefaults(JaxbMappedSuperclass mappedSuperclass, EntityMappingsMocker.Default defaults) {
 		applyDefaultsToEntityObject( new MappedSuperClassEntityObject( mappedSuperclass ), defaults );
 	}
 
-	void applyDefaults(XMLEmbeddable embeddable, EntityMappingsMocker.Default defaults) {
+	void applyDefaults(JaxbEmbeddable embeddable, EntityMappingsMocker.Default defaults) {
 		applyDefaultsToEntityObject( new EmbeddableEntityObject( embeddable ), defaults );
 	}
 
-	void applyDefaults(XMLEntity entity, EntityMappingsMocker.Default defaults) {
+	void applyDefaults(JaxbEntity entity, EntityMappingsMocker.Default defaults) {
 		mockTableIfNonExist( entity, defaults );
 		applyDefaultsToEntityObject( new EntityEntityObject( entity ), defaults );
 	}
@@ -162,11 +162,11 @@ class DefaultConfigurationHelper {
 		}
 	}
 
-	private void mockTableIfNonExist(XMLEntity entity, EntityMappingsMocker.Default defaults) {
+	private void mockTableIfNonExist(JaxbEntity entity, EntityMappingsMocker.Default defaults) {
 		if ( hasSchemaOrCatalogDefined( defaults ) ) {
-			XMLTable table = entity.getTable();
+			JaxbTable table = entity.getTable();
 			if ( table == null ) {
-				table = new XMLTable();
+				table = new JaxbTable();
 				entity.setTable( table );
 			}
 		}
@@ -303,9 +303,9 @@ class DefaultConfigurationHelper {
 	}
 
 	private static class EntityEntityObject implements EntityObject {
-		private XMLEntity entity;
+		private JaxbEntity entity;
 
-		private EntityEntityObject(XMLEntity entity) {
+		private EntityEntityObject(JaxbEntity entity) {
 			this.entity = entity;
 		}
 
@@ -331,9 +331,9 @@ class DefaultConfigurationHelper {
 	}
 
 	private static class EmbeddableEntityObject implements EntityObject {
-		private XMLEmbeddable entity;
+		private JaxbEmbeddable entity;
 
-		private EmbeddableEntityObject(XMLEmbeddable entity) {
+		private EmbeddableEntityObject(JaxbEmbeddable entity) {
 			this.entity = entity;
 		}
 
@@ -359,9 +359,9 @@ class DefaultConfigurationHelper {
 	}
 
 	private static class MappedSuperClassEntityObject implements EntityObject {
-		private XMLMappedSuperclass entity;
+		private JaxbMappedSuperclass entity;
 
-		private MappedSuperClassEntityObject(XMLMappedSuperclass entity) {
+		private MappedSuperClassEntityObject(JaxbMappedSuperclass entity) {
 			this.entity = entity;
 		}
 

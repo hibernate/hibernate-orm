@@ -25,16 +25,16 @@ package org.hibernate.metamodel.source.annotations.xml.mocker;
 
 import org.jboss.jandex.ClassInfo;
 
-import org.hibernate.metamodel.source.annotation.jaxb.XMLAccessType;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLTransient;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbAccessType;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbTransient;
 
 /**
  * @author Strong Liu
  */
 class TransientMocker extends PropertyMocker {
-	private XMLTransient transientObj;
+	private JaxbTransient transientObj;
 
-	TransientMocker(IndexBuilder indexBuilder, ClassInfo classInfo, EntityMappingsMocker.Default defaults, XMLTransient transientObj) {
+	TransientMocker(IndexBuilder indexBuilder, ClassInfo classInfo, EntityMappingsMocker.Default defaults, JaxbTransient transientObj) {
 		super( indexBuilder, classInfo, defaults );
 		this.transientObj = transientObj;
 	}
@@ -50,12 +50,12 @@ class TransientMocker extends PropertyMocker {
 	}
 
 	@Override
-	protected XMLAccessType getAccessType() {
-		return XMLAccessType.FIELD;
+	protected JaxbAccessType getAccessType() {
+		return JaxbAccessType.FIELD;
 	}
 
 	@Override
-	protected void setAccessType(XMLAccessType accessType) {
+	protected void setAccessType(JaxbAccessType accessType) {
 		//ignore
 	}
 }

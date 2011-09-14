@@ -32,6 +32,7 @@ import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.internal.jaxb.mapping.hbm.PluralAttributeElement;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.binding.Caching;
 import org.hibernate.metamodel.binding.CustomSQL;
@@ -43,8 +44,7 @@ import org.hibernate.metamodel.source.binder.MetaAttributeSource;
 import org.hibernate.metamodel.source.binder.PluralAttributeElementSource;
 import org.hibernate.metamodel.source.binder.PluralAttributeKeySource;
 import org.hibernate.metamodel.source.binder.PluralAttributeSource;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.PluralAttributeElement;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLCacheElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbCacheElement;
 
 /**
  * @author Steve Ebersole
@@ -162,7 +162,7 @@ public abstract class AbstractPluralAttributeSourceImpl implements PluralAttribu
 
 	@Override
 	public Caching getCaching() {
-		final XMLCacheElement cache = pluralAttributeElement.getCache();
+		final JaxbCacheElement cache = pluralAttributeElement.getCache();
 		if ( cache == null ) {
 			return null;
 		}

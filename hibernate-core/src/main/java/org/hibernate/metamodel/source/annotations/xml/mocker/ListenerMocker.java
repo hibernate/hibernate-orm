@@ -32,15 +32,15 @@ import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
 
 import org.hibernate.MappingException;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLEntityListener;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLEntityListeners;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLPostLoad;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLPostPersist;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLPostRemove;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLPostUpdate;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLPrePersist;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLPreRemove;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLPreUpdate;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbEntityListener;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbEntityListeners;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbPostLoad;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbPostPersist;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbPostRemove;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbPostUpdate;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbPrePersist;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbPreRemove;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbPreUpdate;
 
 /**
  * {@link javax.persistence.EntityListeners @EntityListeners} mocker
@@ -55,13 +55,13 @@ class ListenerMocker extends AbstractMocker {
 		this.classInfo = classInfo;
 	}
 
-	AnnotationInstance parser(XMLEntityListeners entityListeners) {
+	AnnotationInstance parser(JaxbEntityListeners entityListeners) {
 		if ( entityListeners.getEntityListener().isEmpty() ) {
 			throw new MappingException( "No child element of <entity-listener> found under <entity-listeners>." );
 		}
 		List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>( 1 );
 		List<String> clazzNameList = new ArrayList<String>( entityListeners.getEntityListener().size() );
-		for ( XMLEntityListener listener : entityListeners.getEntityListener() ) {
+		for ( JaxbEntityListener listener : entityListeners.getEntityListener() ) {
 			MockHelper.addToCollectionIfNotNull( clazzNameList, listener.getClazz() );
 			parserEntityListener( listener );
 		}
@@ -69,7 +69,7 @@ class ListenerMocker extends AbstractMocker {
 		return create( ENTITY_LISTENERS, classInfo, annotationValueList );
 	}
 
-	private void parserEntityListener(XMLEntityListener listener) {
+	private void parserEntityListener(JaxbEntityListener listener) {
 		String clazz = listener.getClazz();
 		ClassInfo tempClassInfo = indexBuilder.createClassInfo( clazz );
 		ListenerMocker mocker = createListenerMocker( indexBuilder, tempClassInfo );
@@ -88,7 +88,7 @@ class ListenerMocker extends AbstractMocker {
 	}
 
 	//@PrePersist
-	AnnotationInstance parser(XMLPrePersist callback) {
+	AnnotationInstance parser(JaxbPrePersist callback) {
 		if ( callback == null ) {
 			return null;
 		}
@@ -96,7 +96,7 @@ class ListenerMocker extends AbstractMocker {
 	}
 
 	//@PreRemove
-	AnnotationInstance parser(XMLPreRemove callback) {
+	AnnotationInstance parser(JaxbPreRemove callback) {
 		if ( callback == null ) {
 			return null;
 		}
@@ -104,7 +104,7 @@ class ListenerMocker extends AbstractMocker {
 	}
 
 	//@PreUpdate
-	AnnotationInstance parser(XMLPreUpdate callback) {
+	AnnotationInstance parser(JaxbPreUpdate callback) {
 		if ( callback == null ) {
 			return null;
 		}
@@ -112,7 +112,7 @@ class ListenerMocker extends AbstractMocker {
 	}
 
 	//@PostPersist
-	AnnotationInstance parser(XMLPostPersist callback) {
+	AnnotationInstance parser(JaxbPostPersist callback) {
 		if ( callback == null ) {
 			return null;
 		}
@@ -120,7 +120,7 @@ class ListenerMocker extends AbstractMocker {
 	}
 
 	//@PostUpdate
-	AnnotationInstance parser(XMLPostUpdate callback) {
+	AnnotationInstance parser(JaxbPostUpdate callback) {
 		if ( callback == null ) {
 			return null;
 		}
@@ -128,7 +128,7 @@ class ListenerMocker extends AbstractMocker {
 	}
 
 	//@PostRemove
-	AnnotationInstance parser(XMLPostRemove callback) {
+	AnnotationInstance parser(JaxbPostRemove callback) {
 		if ( callback == null ) {
 			return null;
 		}
@@ -136,7 +136,7 @@ class ListenerMocker extends AbstractMocker {
 	}
 
 	//@PostLoad
-	AnnotationInstance parser(XMLPostLoad callback) {
+	AnnotationInstance parser(JaxbPostLoad callback) {
 		if ( callback == null ) {
 			return null;
 		}

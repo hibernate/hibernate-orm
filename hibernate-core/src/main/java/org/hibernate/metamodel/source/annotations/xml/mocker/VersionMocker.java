@@ -25,16 +25,16 @@ package org.hibernate.metamodel.source.annotations.xml.mocker;
 
 import org.jboss.jandex.ClassInfo;
 
-import org.hibernate.metamodel.source.annotation.jaxb.XMLAccessType;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLVersion;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbAccessType;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbVersion;
 
 /**
  * @author Strong Liu
  */
 class VersionMocker extends PropertyMocker {
-	private XMLVersion version;
+	private JaxbVersion version;
 
-	VersionMocker(IndexBuilder indexBuilder, ClassInfo classInfo, EntityMappingsMocker.Default defaults, XMLVersion version) {
+	VersionMocker(IndexBuilder indexBuilder, ClassInfo classInfo, EntityMappingsMocker.Default defaults, JaxbVersion version) {
 		super( indexBuilder, classInfo, defaults );
 		this.version = version;
 	}
@@ -52,12 +52,12 @@ class VersionMocker extends PropertyMocker {
 	}
 
 	@Override
-	protected XMLAccessType getAccessType() {
+	protected JaxbAccessType getAccessType() {
 		return version.getAccess();
 	}
 
 	@Override
-	protected void setAccessType(XMLAccessType accessType) {
+	protected void setAccessType(JaxbAccessType accessType) {
 		version.setAccess( accessType );
 	}
 }

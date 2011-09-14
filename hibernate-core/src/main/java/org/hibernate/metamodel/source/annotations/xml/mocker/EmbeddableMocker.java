@@ -26,18 +26,18 @@ package org.hibernate.metamodel.source.annotations.xml.mocker;
 import org.jboss.logging.Logger;
 
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLAccessType;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLAttributes;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLEmbeddable;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLEntityListeners;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLIdClass;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLPostLoad;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLPostPersist;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLPostRemove;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLPostUpdate;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLPrePersist;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLPreRemove;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLPreUpdate;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbAccessType;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbAttributes;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbEmbeddable;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbEntityListeners;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbIdClass;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbPostLoad;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbPostPersist;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbPostRemove;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbPostUpdate;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbPrePersist;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbPreRemove;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbPreUpdate;
 
 /**
  * Mock <embeddable> to {@link javax.persistence.Embeddable @Embeddable}
@@ -49,9 +49,9 @@ class EmbeddableMocker extends AbstractEntityObjectMocker {
 			CoreMessageLogger.class,
 			EmbeddableMocker.class.getName()
 	);
-	private XMLEmbeddable embeddable;
+	private JaxbEmbeddable embeddable;
 
-	EmbeddableMocker(IndexBuilder indexBuilder, XMLEmbeddable embeddable, EntityMappingsMocker.Default defaults) {
+	EmbeddableMocker(IndexBuilder indexBuilder, JaxbEmbeddable embeddable, EntityMappingsMocker.Default defaults) {
 		super( indexBuilder, defaults );
 		this.embeddable = embeddable;
 	}
@@ -92,17 +92,17 @@ class EmbeddableMocker extends AbstractEntityObjectMocker {
 	}
 
 	@Override
-	protected XMLIdClass getIdClass() {
+	protected JaxbIdClass getIdClass() {
 		return null;
 	}
 
 	@Override
-	protected XMLEntityListeners getEntityListeners() {
+	protected JaxbEntityListeners getEntityListeners() {
 		return null;
 	}
 
 	@Override
-	protected XMLAccessType getAccessType() {
+	protected JaxbAccessType getAccessType() {
 		return embeddable.getAccess();
 	}
 
@@ -112,42 +112,42 @@ class EmbeddableMocker extends AbstractEntityObjectMocker {
 	}
 
 	@Override
-	protected XMLPrePersist getPrePersist() {
+	protected JaxbPrePersist getPrePersist() {
 		return null;
 	}
 
 	@Override
-	protected XMLPreRemove getPreRemove() {
+	protected JaxbPreRemove getPreRemove() {
 		return null;
 	}
 
 	@Override
-	protected XMLPreUpdate getPreUpdate() {
+	protected JaxbPreUpdate getPreUpdate() {
 		return null;
 	}
 
 	@Override
-	protected XMLPostPersist getPostPersist() {
+	protected JaxbPostPersist getPostPersist() {
 		return null;
 	}
 
 	@Override
-	protected XMLPostUpdate getPostUpdate() {
+	protected JaxbPostUpdate getPostUpdate() {
 		return null;
 	}
 
 	@Override
-	protected XMLPostRemove getPostRemove() {
+	protected JaxbPostRemove getPostRemove() {
 		return null;
 	}
 
 	@Override
-	protected XMLPostLoad getPostLoad() {
+	protected JaxbPostLoad getPostLoad() {
 		return null;
 	}
 
 	@Override
-	protected XMLAttributes getAttributes() {
+	protected JaxbAttributes getAttributes() {
 		return null;
 	}
 }

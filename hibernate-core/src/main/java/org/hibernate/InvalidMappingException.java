@@ -23,8 +23,8 @@
  */
 package org.hibernate;
 
+import org.hibernate.internal.jaxb.Origin;
 import org.hibernate.internal.util.xml.XmlDocument;
-import org.hibernate.metamodel.source.Origin;
 
 /**
  * Thrown when a mapping is found to be invalid.

@@ -38,7 +38,7 @@ import org.hibernate.MappingException;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.source.annotations.JandexHelper;
 import org.hibernate.metamodel.source.annotations.xml.PseudoJpaDotNames;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLAccessType;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbAccessType;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 
 /**
@@ -50,7 +50,7 @@ class AccessHelper implements JPADotNames {
 			AccessHelper.class.getName()
 	);
 
-	static XMLAccessType getAccessFromDefault(IndexBuilder indexBuilder) {
+	static JaxbAccessType getAccessFromDefault(IndexBuilder indexBuilder) {
 		AnnotationInstance annotationInstance = JandexHelper.getSingleAnnotation(
 				indexBuilder.getAnnotations(),
 				PseudoJpaDotNames.DEFAULT_ACCESS
@@ -59,15 +59,15 @@ class AccessHelper implements JPADotNames {
 			return null;
 		}
 		else {
-			return JandexHelper.getEnumValue( annotationInstance, "value", XMLAccessType.class );
+			return JandexHelper.getEnumValue( annotationInstance, "value", JaxbAccessType.class );
 		}
 
 	}
 
-	static XMLAccessType getAccessFromIdPosition(DotName className, IndexBuilder indexBuilder) {
+	static JaxbAccessType getAccessFromIdPosition(DotName className, IndexBuilder indexBuilder) {
 		Map<DotName, List<AnnotationInstance>> indexedAnnotations = indexBuilder.getIndexedAnnotations( className );
 		Map<DotName, List<AnnotationInstance>> ormAnnotations = indexBuilder.getClassInfoAnnotationsMap( className );
-		XMLAccessType accessType = getAccessFromIdPosition( ormAnnotations );
+		JaxbAccessType accessType = getAccessFromIdPosition( ormAnnotations );
 		if ( accessType == null ) {
 			accessType = getAccessFromIdPosition( indexedAnnotations );
 		}
@@ -86,7 +86,7 @@ class AccessHelper implements JPADotNames {
 		return accessType;
 	}
 
-	private static XMLAccessType getAccessFromIdPosition(Map<DotName, List<AnnotationInstance>> annotations) {
+	private static JaxbAccessType getAccessFromIdPosition(Map<DotName, List<AnnotationInstance>> annotations) {
 		if ( annotations == null || annotations.isEmpty() || !( annotations.containsKey( ID ) ) ) {
 			return null;
 		}
@@ -97,8 +97,8 @@ class AccessHelper implements JPADotNames {
 		return null;
 	}
 
-	private static XMLAccessType processIdAnnotations(List<AnnotationInstance> idAnnotations) {
-		XMLAccessType accessType = null;
+	private static JaxbAccessType processIdAnnotations(List<AnnotationInstance> idAnnotations) {
+		JaxbAccessType accessType = null;
 		for ( AnnotationInstance annotation : idAnnotations ) {
 			AnnotationTarget tmpTarget = annotation.target();
 			if ( tmpTarget == null ) {
@@ -116,14 +116,14 @@ class AccessHelper implements JPADotNames {
 		return accessType;
 	}
 
-	static XMLAccessType annotationTargetToAccessType(AnnotationTarget target) {
-		return ( target instanceof MethodInfo ) ? XMLAccessType.PROPERTY : XMLAccessType.FIELD;
+	static JaxbAccessType annotationTargetToAccessType(AnnotationTarget target) {
+		return ( target instanceof MethodInfo ) ? JaxbAccessType.PROPERTY : JaxbAccessType.FIELD;
 	}
 
-	static XMLAccessType getEntityAccess(DotName className, IndexBuilder indexBuilder) {
+	static JaxbAccessType getEntityAccess(DotName className, IndexBuilder indexBuilder) {
 		Map<DotName, List<AnnotationInstance>> indexedAnnotations = indexBuilder.getIndexedAnnotations( className );
 		Map<DotName, List<AnnotationInstance>> ormAnnotations = indexBuilder.getClassInfoAnnotationsMap( className );
-		XMLAccessType accessType = getAccess( ormAnnotations );
+		JaxbAccessType accessType = getAccess( ormAnnotations );
 		if ( accessType == null ) {
 			accessType = getAccess( indexedAnnotations );
 		}
@@ -141,7 +141,7 @@ class AccessHelper implements JPADotNames {
 
 	}
 
-	private static XMLAccessType getAccess(Map<DotName, List<AnnotationInstance>> annotations) {
+	private static JaxbAccessType getAccess(Map<DotName, List<AnnotationInstance>> annotations) {
 		if ( annotations == null || annotations.isEmpty() || !isEntityObject( annotations ) ) {
 			return null;
 		}
@@ -152,7 +152,7 @@ class AccessHelper implements JPADotNames {
 					return JandexHelper.getEnumValue(
 							annotationInstance,
 							"value",
-							XMLAccessType.class
+							JaxbAccessType.class
 					);
 				}
 			}
@@ -168,7 +168,7 @@ class AccessHelper implements JPADotNames {
 	/**
 	 * Get {@link javax.persistence.AccessType } from {@link javax.persistence.Access @Access} on the attribute of the given class
 	 */
-	static XMLAccessType getAccessFromAttributeAnnotation(DotName className, String attributeName, IndexBuilder indexBuilder) {
+	static JaxbAccessType getAccessFromAttributeAnnotation(DotName className, String attributeName, IndexBuilder indexBuilder) {
 		Map<DotName, List<AnnotationInstance>> indexedAnnotations = indexBuilder.getIndexedAnnotations( className );
 		if ( indexedAnnotations != null && indexedAnnotations.containsKey( ACCESS ) ) {
 			List<AnnotationInstance> annotationInstances = indexedAnnotations.get( ACCESS );
@@ -179,15 +179,15 @@ class AccessHelper implements JPADotNames {
 						continue;
 					}
 					if ( JandexHelper.getPropertyName( indexedPropertyTarget ).equals( attributeName ) ) {
-						XMLAccessType accessType = JandexHelper.getEnumValue(
+						JaxbAccessType accessType = JandexHelper.getEnumValue(
 								annotationInstance,
 								"value",
-								XMLAccessType.class
+								JaxbAccessType.class
 						);
 						/**
 						 * here we ignore @Access(FIELD) on property (getter) and @Access(PROPERTY) on field
 						 */
-						XMLAccessType targetAccessType = annotationTargetToAccessType( indexedPropertyTarget );
+						JaxbAccessType targetAccessType = annotationTargetToAccessType( indexedPropertyTarget );
 						if ( accessType.equals( targetAccessType ) ) {
 							return targetAccessType;
 						}

@@ -29,16 +29,16 @@ import java.util.List;
 import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
 
-import org.hibernate.metamodel.source.annotation.jaxb.XMLAccessType;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLElementCollection;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbAccessType;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbElementCollection;
 
 /**
  * @author Strong Liu
  */
 class ElementCollectionMocker extends PropertyMocker {
-	private XMLElementCollection elementCollection;
+	private JaxbElementCollection elementCollection;
 
-	ElementCollectionMocker(IndexBuilder indexBuilder, ClassInfo classInfo, EntityMappingsMocker.Default defaults, XMLElementCollection elementCollection) {
+	ElementCollectionMocker(IndexBuilder indexBuilder, ClassInfo classInfo, EntityMappingsMocker.Default defaults, JaxbElementCollection elementCollection) {
 		super( indexBuilder, classInfo, defaults );
 		this.elementCollection = elementCollection;
 	}
@@ -79,12 +79,12 @@ class ElementCollectionMocker extends PropertyMocker {
 	}
 
 	@Override
-	protected XMLAccessType getAccessType() {
+	protected JaxbAccessType getAccessType() {
 		return elementCollection.getAccess();
 	}
 
 	@Override
-	protected void setAccessType(XMLAccessType accessType) {
+	protected void setAccessType(JaxbAccessType accessType) {
 		elementCollection.setAccess( accessType );
 	}
 }

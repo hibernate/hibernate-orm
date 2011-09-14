@@ -29,10 +29,10 @@ import org.jboss.jandex.DotName;
 import org.jboss.jandex.Index;
 import org.junit.Test;
 
-import org.hibernate.metamodel.source.annotation.jaxb.XMLAttributes;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLEntity;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLGeneratedValue;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLId;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbAttributes;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbEntity;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbGeneratedValue;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbId;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 
 import static org.junit.Assert.assertEquals;
@@ -43,7 +43,7 @@ import static org.junit.Assert.assertEquals;
 public class BasicMockerTest extends AbstractMockerTest {
 	@Test
 	public void testEntity() {
-		XMLEntity entity = createEntity();
+		JaxbEntity entity = createEntity();
 		IndexBuilder indexBuilder = getIndexBuilder();
 		EntityMocker entityMocker = new EntityMocker( indexBuilder, entity, new EntityMappingsMocker.Default() );
 		entityMocker.preProcess();
@@ -59,7 +59,7 @@ public class BasicMockerTest extends AbstractMockerTest {
 
 	@Test
 	public void testEntityWithEntityMappingsConfiguration() {
-		XMLEntity entity = new XMLEntity();
+		JaxbEntity entity = new JaxbEntity();
 		entity.setName( "Item" );
 		entity.setClazz( "Item" );
 		IndexBuilder indexBuilder = getIndexBuilder();
@@ -91,14 +91,14 @@ public class BasicMockerTest extends AbstractMockerTest {
 	}
 
 
-	private XMLEntity createEntity() {
-		XMLEntity entity = new XMLEntity();
+	private JaxbEntity createEntity() {
+		JaxbEntity entity = new JaxbEntity();
 		entity.setName( "Item" );
 		entity.setClazz( Item.class.getName() );
-		XMLAttributes attributes = new XMLAttributes();
-		XMLId id = new XMLId();
+		JaxbAttributes attributes = new JaxbAttributes();
+		JaxbId id = new JaxbId();
 		id.setName( "id" );
-		id.setGeneratedValue( new XMLGeneratedValue() );
+		id.setGeneratedValue( new JaxbGeneratedValue() );
 		attributes.getId().add( id );
 		entity.setAttributes( attributes );
 		return entity;

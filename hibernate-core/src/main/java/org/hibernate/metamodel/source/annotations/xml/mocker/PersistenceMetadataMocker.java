@@ -10,13 +10,13 @@ import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 
 import org.hibernate.metamodel.source.annotations.xml.PseudoJpaDotNames;
-import org.hibernate.metamodel.source.annotation.jaxb.XMLPersistenceUnitDefaults;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbPersistenceUnitDefaults;
 
 /**
  * @author Strong Liu
  */
 class PersistenceMetadataMocker extends AbstractMocker {
-	private final XMLPersistenceUnitDefaults persistenceUnitDefaults;
+	private final JaxbPersistenceUnitDefaults persistenceUnitDefaults;
 	private final GlobalAnnotations globalAnnotations = new GlobalAnnotations();
 	/**
 	 * Map JPA Annotations name to Pseudo JPA Annotations name.
@@ -39,7 +39,7 @@ class PersistenceMetadataMocker extends AbstractMocker {
 		);
 	}
 
-	PersistenceMetadataMocker(IndexBuilder indexBuilder, XMLPersistenceUnitDefaults persistenceUnitDefaults) {
+	PersistenceMetadataMocker(IndexBuilder indexBuilder, JaxbPersistenceUnitDefaults persistenceUnitDefaults) {
 		super( indexBuilder );
 		this.persistenceUnitDefaults = persistenceUnitDefaults;
 	}

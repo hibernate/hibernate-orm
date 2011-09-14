@@ -29,10 +29,10 @@ import java.util.List;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
+import org.hibernate.internal.jaxb.Origin;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.binding.CustomSQL;
 import org.hibernate.metamodel.source.LocalBindingContext;
-import org.hibernate.metamodel.source.Origin;
 import org.hibernate.metamodel.source.binder.AttributeSource;
 import org.hibernate.metamodel.source.binder.ConstraintSource;
 import org.hibernate.metamodel.source.binder.EntitySource;
@@ -40,19 +40,19 @@ import org.hibernate.metamodel.source.binder.JpaCallbackClass;
 import org.hibernate.metamodel.source.binder.MetaAttributeSource;
 import org.hibernate.metamodel.source.binder.SubclassEntitySource;
 import org.hibernate.metamodel.source.binder.TableSource;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.EntityElement;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLAnyElement;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLBagElement;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLComponentElement;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLIdbagElement;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLListElement;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLManyToOneElement;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLMapElement;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLOneToOneElement;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLPropertyElement;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLSetElement;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLSynchronizeElement;
-import org.hibernate.metamodel.source.hbm.jaxb.mapping.XMLTuplizerElement;
+import org.hibernate.internal.jaxb.mapping.hbm.EntityElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbAnyElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbBagElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbComponentElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbIdbagElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbListElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbManyToOneElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbMapElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbOneToOneElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbPropertyElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbSetElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbSynchronizeElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbTuplizerElement;
 
 /**
  * @author Steve Ebersole
@@ -149,7 +149,7 @@ public abstract class AbstractEntitySourceImpl implements EntitySource {
 			return null;
 		}
 		final EntityMode entityMode = determineEntityMode();
-		for ( XMLTuplizerElement tuplizerElement : entityElement.getTuplizer() ) {
+		for ( JaxbTuplizerElement tuplizerElement : entityElement.getTuplizer() ) {
 			if ( entityMode == EntityMode.parse( tuplizerElement.getEntityMode() ) ) {
 				return tuplizerElement.getClazz();
 			}
@@ -185,7 +185,7 @@ public abstract class AbstractEntitySourceImpl implements EntitySource {
 	@Override
 	public List<String> getSynchronizedTableNames() {
 		List<String> tableNames = new ArrayList<String>();
-		for ( XMLSynchronizeElement synchronizeElement : entityElement.getSynchronize() ) {
+		for ( JaxbSynchronizeElement synchronizeElement : entityElement.getSynchronize() ) {
 			tableNames.add( synchronizeElement.getTable() );
 		}
 		return tableNames;
@@ -205,60 +205,60 @@ public abstract class AbstractEntitySourceImpl implements EntitySource {
 	public Iterable<AttributeSource> attributeSources() {
 		List<AttributeSource> attributeSources = new ArrayList<AttributeSource>();
 		for ( Object attributeElement : entityElement.getPropertyOrManyToOneOrOneToOne() ) {
-			if ( XMLPropertyElement.class.isInstance( attributeElement ) ) {
+			if ( JaxbPropertyElement.class.isInstance( attributeElement ) ) {
 				attributeSources.add(
 						new PropertyAttributeSourceImpl(
-								XMLPropertyElement.class.cast( attributeElement ),
+								JaxbPropertyElement.class.cast( attributeElement ),
 								sourceMappingDocument().getMappingLocalBindingContext()
 						)
 				);
 			}
-			else if ( XMLComponentElement.class.isInstance( attributeElement ) ) {
+			else if ( JaxbComponentElement.class.isInstance( attributeElement ) ) {
 				attributeSources.add(
 						new ComponentAttributeSourceImpl(
-								(XMLComponentElement) attributeElement,
+								(JaxbComponentElement) attributeElement,
 								this,
 								sourceMappingDocument.getMappingLocalBindingContext()
 						)
 				);
 			}
-			else if ( XMLManyToOneElement.class.isInstance( attributeElement ) ) {
+			else if ( JaxbManyToOneElement.class.isInstance( attributeElement ) ) {
 				attributeSources.add(
 						new ManyToOneAttributeSourceImpl(
-								XMLManyToOneElement.class.cast( attributeElement ),
+								JaxbManyToOneElement.class.cast( attributeElement ),
 								sourceMappingDocument().getMappingLocalBindingContext()
 						)
 				);
 			}
-			else if ( XMLOneToOneElement.class.isInstance( attributeElement ) ) {
+			else if ( JaxbOneToOneElement.class.isInstance( attributeElement ) ) {
 				// todo : implement
 			}
-			else if ( XMLAnyElement.class.isInstance( attributeElement ) ) {
+			else if ( JaxbAnyElement.class.isInstance( attributeElement ) ) {
 				// todo : implement
 			}
-			else if ( XMLBagElement.class.isInstance( attributeElement ) ) {
+			else if ( JaxbBagElement.class.isInstance( attributeElement ) ) {
 				attributeSources.add(
 						new BagAttributeSourceImpl(
-								XMLBagElement.class.cast( attributeElement ),
+								JaxbBagElement.class.cast( attributeElement ),
 								this
 						)
 				);
 			}
-			else if ( XMLIdbagElement.class.isInstance( attributeElement ) ) {
+			else if ( JaxbIdbagElement.class.isInstance( attributeElement ) ) {
 				// todo : implement
 			}
-			else if ( XMLSetElement.class.isInstance( attributeElement ) ) {
+			else if ( JaxbSetElement.class.isInstance( attributeElement ) ) {
 				attributeSources.add(
 						new SetAttributeSourceImpl(
-								XMLSetElement.class.cast( attributeElement ),
+								JaxbSetElement.class.cast( attributeElement ),
 								this
 						)
 				);
 			}
-			else if ( XMLListElement.class.isInstance( attributeElement ) ) {
+			else if ( JaxbListElement.class.isInstance( attributeElement ) ) {
 				// todo : implement
 			}
-			else if ( XMLMapElement.class.isInstance( attributeElement ) ) {
+			else if ( JaxbMapElement.class.isInstance( attributeElement ) ) {
 				// todo : implement
 			}
 			else {

@@ -25,6 +25,7 @@
 package org.hibernate.metamodel.source;
 
 import org.hibernate.HibernateException;
+import org.hibernate.internal.jaxb.Origin;
 
 /**
  * Indicates a problem parsing a mapping document.

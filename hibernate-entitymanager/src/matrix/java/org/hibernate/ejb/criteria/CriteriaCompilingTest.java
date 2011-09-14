@@ -24,14 +24,20 @@
 package org.hibernate.ejb.criteria;
 
 import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
+import javax.persistence.TypedQuery;
+import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
+import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.Metamodel;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 
+import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.ejb.metamodel.Address;
 import org.hibernate.ejb.metamodel.Alias;
 import org.hibernate.ejb.metamodel.Country;
@@ -50,6 +56,8 @@ import org.hibernate.ejb.test.callbacks.Television;
 import org.hibernate.ejb.test.callbacks.VideoSystem;
 import org.hibernate.ejb.test.inheritance.Fruit;
 import org.hibernate.ejb.test.inheritance.Strawberry;
+import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.RequiresDialect;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -82,6 +90,58 @@ public class CriteriaCompilingTest extends BaseEntityManagerFunctionalTestCase {
 				RemoteControl.class
 		};
 	}
+
+    @Test
+    @RequiresDialect( DB2Dialect.class )
+    @FailureExpected( jiraKey = "HHH-6655" )
+    public void testTrim() {
+        final String expectedResult = "David R. Vincent";
+        EntityManager em = getOrCreateEntityManager();
+        em.getTransaction().begin();
+        Customer customer = new Customer(  );
+        customer.setId( "id" );
+        customer.setName( " David R. Vincent " );
+        em.persist( customer );
+        em.getTransaction().commit();
+        em.close();
+
+        em = getOrCreateEntityManager();
+
+
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+
+        EntityTransaction et = em.getTransaction();
+        et.begin();
+        CriteriaQuery<String> cquery = cb.createQuery( String.class );
+        Root<Customer> cust = cquery.from( Customer.class );
+
+
+        //Get Metamodel from Root
+        EntityType<Customer> Customer_ = cust.getModel();
+
+        cquery.where(
+                cb.equal(
+                        cust.get( Customer_.getSingularAttribute( "name", String.class ) ),
+                        cb.literal( " David R. Vincent " )
+                )
+        );
+        cquery.select(
+                cb.trim(
+                        CriteriaBuilder.Trimspec.BOTH,
+                        cust.get( Customer_.getSingularAttribute( "name", String.class ) )
+                )
+        );
+
+
+        TypedQuery<String> tq = em.createQuery( cquery );
+
+        String result = tq.getSingleResult();
+        et.commit();
+        em.close();
+        Assert.assertEquals( "Mismatch in received results", expectedResult, result );
+
+
+    }
 
 	@Test
 	public void testJustSimpleRootCriteria() {

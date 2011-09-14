@@ -15,6 +15,7 @@ import org.hibernate.envers.entities.mapper.PersistentCollectionChangeData;
 import org.hibernate.envers.entities.mapper.id.IdMapper;
 import org.hibernate.envers.entities.mapper.relation.MiddleComponentData;
 import org.hibernate.envers.entities.mapper.relation.MiddleIdData;
+import org.hibernate.envers.synchronization.SessionCacheCleaner;
 import org.hibernate.envers.tools.query.Parameters;
 import org.hibernate.envers.tools.query.QueryBuilder;
 import org.hibernate.property.Getter;
@@ -46,6 +47,12 @@ public class ValidityAuditStrategy implements AuditStrategy {
     /** getter for the revision entity field annotated with @RevisionTimestamp */
     private Getter revisionTimestampGetter = null;
 
+    private final SessionCacheCleaner sessionCacheCleaner;
+
+    public ValidityAuditStrategy() {
+        sessionCacheCleaner = new SessionCacheCleaner();
+    }
+
     public void perform(Session session, String entityName, AuditConfiguration auditCfg, Serializable id, Object data,
                         Object revision) {
         AuditEntitiesConfiguration audEntCfg = auditCfg.getAuditEntCfg();
@@ -74,6 +81,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 
         // Save the audit data
         session.save(auditedEntityName, data);
+        sessionCacheCleaner.scheduleAuditDataRemoval(session, data);
     }
 
     @SuppressWarnings({"unchecked"})
@@ -106,6 +114,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 
         // Save the audit data
         session.save(persistentCollectionChangeData.getEntityName(), persistentCollectionChangeData.getData());
+        sessionCacheCleaner.scheduleAuditDataRemoval(session, persistentCollectionChangeData.getData());
     }
 
     private void addEndRevisionNulLRestriction(AuditConfiguration auditCfg, QueryBuilder qb) {
@@ -178,7 +187,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
             
             // Saving the previous version
             session.save(auditedEntityName, previousData);
-
+            sessionCacheCleaner.scheduleAuditDataRemoval(session, previousData);
         } else {
             throw new RuntimeException("Cannot find previous revision for entity " + auditedEntityName + " and id " + id);
         }

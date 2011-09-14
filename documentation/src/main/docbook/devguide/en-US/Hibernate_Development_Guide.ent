@@ -1,4 +1,4 @@
-<!ENTITY PRODUCT "Hibernate">
-<!ENTITY BOOKID "Hibernate_Development_Guide">
-<!ENTITY YEAR "2011">
-<!ENTITY HOLDER "Red Hat">
+<!ENTITY version "WORKING">
+<!ENTITY today "NOW">
+<!ENTITY copyrightYear "2011">
+<!ENTITY copyrightHolder "Red Hat, Inc.">

@@ -57,9 +57,9 @@ import org.hibernate.sql.JoinFragment;
 import org.hibernate.type.StandardBasicTypes;
 
 /**
- * Cach&eacute; 2007.1 dialect. This class is required in order to use Hibernate with Intersystems Cach� SQL.<br>
+ * Cach&eacute; 2007.1 dialect. This class is required in order to use Hibernate with Intersystems Cach&eacute; SQL.<br>
  * <br>
- * Compatible with Cach� 2007.1.
+ * Compatible with Cach&eacute; 2007.1.
  * <br>
  * <head>
  * <title>Cach&eacute; and Hibernate</title>
@@ -214,8 +214,8 @@ import org.hibernate.type.StandardBasicTypes;
 public class Cache71Dialect extends Dialect {
 
 	/**
-	 * Creates new <code>Cach�71Dialect</code> instance. Sets up the JDBC /
-	 * Cach� type mappings.
+	 * Creates new <code>Cache71Dialect</code> instance. Sets up the JDBC /
+	 * Cach&eacute; type mappings.
 	 */
 	public Cache71Dialect() {
 		super();

@@ -135,8 +135,6 @@ class EntityMocker extends AbstractEntityObjectMocker {
 	}
 
 	protected AccessType getAccessFromIndex(DotName className) {
-		//todo 这里实际上不应该从getIndexedAnnotations获取，而是应该先处理完所有的entity，mapped-superclass，先不处理attributes呢
-		//然后获取这个
 		Map<DotName, List<AnnotationInstance>> indexedAnnotations = indexBuilder.getIndexedAnnotations( className );
 		List<AnnotationInstance> accessAnnotationInstances = indexedAnnotations.get( ACCESS );
 		if ( MockHelper.isNotEmpty( accessAnnotationInstances ) ) {

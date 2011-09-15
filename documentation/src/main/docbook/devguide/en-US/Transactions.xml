@@ -9,7 +9,7 @@
     <section>
         <title>Defining Transaction</title>
         <para>
-            It is important to understand that the term transaction has many related, yet different meanings in relation
+            It is important to understand that the term transaction has many related, yet different meanings in regards
             to persistence and Object/Relational Mapping.  In most use cases these definitions align, but that is not
             always the case.
         </para>
@@ -29,13 +29,12 @@
                     It might refer to the application notion of a Unit-of-Work, as defined by the archetypal pattern.
                 </para>
             </listitem>
-            <note>
-                <para>
-                    This documentation largely treats the physical and logic notions of transaction as one-in-the-same.
-                </para>
-            </note>
         </itemizedlist>
-
+        <note>
+            <para>
+                This documentation largely treats the physical and logic notions of transaction as one-in-the-same.
+            </para>
+        </note>
     </section>
 
     <section>
@@ -67,13 +66,10 @@
                 </para>
             </listitem>
         </itemizedlist>
+
         <para>
-            <interfacename>org.hibernate.engine.transaction.spi.TransactionFactory</interfacename> is a
-            standard Hibernate service.  The default initiator,
-            <classname>org.hibernate.engine.transaction.internal.TransactionFactoryInitiator</classname>,
-            looks for a <literal>hibernate.transaction.factory_class</literal> configuration setting to determine
-            the factory to use.
-            <!-- todo : see service registry appendix -->
+            <interfacename>org.hibernate.engine.transaction.spi.TransactionFactory</interfacename> is a standard
+            Hibernate service.  See <xref linkend="services-TransactionFactory"/> for details.
         </para>
 
         <section>
@@ -90,12 +86,15 @@
         <section>
             <title>Physical Transactions - JTA</title>
             <para>
-                JTA-based transaction management leverages the
+                JTA-based transaction management leverages the JTA
                 <interfacename>javax.transaction.TransactionManager</interfacename> interface as obtained from
                 <interfacename>org.hibernate.service.jta.platform.spi.JtaPlatform</interfacename> API.  This approach
                 is represented by the
                 <classname>org.hibernate.engine.transaction.internal.jta.JtaTransactionFactory</classname> class.
-                <!-- todo : see service registry appendix -->
+            </para>
+            <para>
+                See <xref linkend="services-JtaPlatform"/> for information on integration with the underlying JTA
+                system.
             </para>
         </section>
 
@@ -108,7 +107,10 @@
                 <interfacename>org.hibernate.service.jta.platform.spi.JtaPlatform</interfacename> API.  This approach
                 is represented by the
                 <classname>org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory</classname> class.
-                <!-- todo : see service registry appendix -->
+            </para>
+            <para>
+                See <xref linkend="services-JtaPlatform"/> for information on integration with the underlying JTA
+                system.
             </para>
         </section>
 
@@ -172,7 +174,7 @@
         <title>Hibernate Transaction Usage</title>
         <para>
             Hibernate uses JDBC connections and JTA resources directly, without adding any additional locking behavior.
-            It is important for you to become familiar with the JBDC, ANSI SQL, and transaction isolation specification
+            It is important for you to become familiar with the JDBC, ANSI SQL, and transaction isolation specifics
             of your database management system.
         </para>
         <para>
@@ -184,14 +186,14 @@
         </para>
     </section>
 
-    <sidebar>
+    <important>
         <para>
             To reduce lock contention in the database, a database transaction needs to be as short as possible.  Long
             database transactions prevent your application from scaling to a highly-concurrent load.  Do not hold a
             database transaction open during end-user-level work, but open it after the end-user-level work is finished.
             This is concept is referred to as <literal>transactional write-behind</literal>.
         </para>
-    </sidebar>
+    </important>
 
 
     <section>
@@ -199,10 +201,10 @@
 
         <section id="session-per-operation">
             <title>Session-per-operation</title>
-            <subtitle>Antipatterns to avoid</subtitle>
+            <subtitle>Anti-patterns to avoid</subtitle>
       <para>
-        <firstterm>Session-per-operation</firstterm> refers to the antipattern of opening and closing a
-        <classname>Session</classname> for each database call in a single thread. It is also an antipattern in terms of
+        <firstterm>Session-per-operation</firstterm> refers to the anti-pattern of opening and closing a
+        <classname>Session</classname> for each database call in a single thread. It is also an anti-pattern in terms of
         database transactions. Group your database calls into a planned sequence. In the same way, do not auto-commit
         after every SQL statement in your application. Hibernate disables, or expects the application server to disable,
         auto-commit mode immediately. Database transactions are never optional. All communication with a database must
@@ -211,7 +213,7 @@
         extend.
       </para>
       <para>
-        For more antipatterns to avoid, see <xref linkend="transaction-antipatterns" />.
+        For more anti-patterns to avoid, see <xref linkend="transaction-antipatterns" />.
       </para>
     </section>
     
@@ -251,8 +253,8 @@
       </itemizedlist>
       <para>
         An EJB container is a standardized way to implement cross-cutting aspects such as transaction demarcation on EJB
-        session beans, declaratively with CMT. If you use programmatic transaction demarcation, use the <xref
-        linkend="hibernate-transaction-api" />.
+        session beans in a declarative manner with CMT. If you prefer programmatic transaction demarcation, see
+          <xref linkend="hibernate-transaction-api" />.
       </para>
       <para>
         To access a current session to process the request, call method
@@ -392,7 +394,7 @@
         identity. Conflicts are resolved using an optimistic approach and automatic versioning at flush/commit time.
       </para>
       <para>
-        This approach places responsibility for conscurrency on Hibernate and the database. It also provides the best
+        This approach places responsibility for concurrency on Hibernate and the database. It also provides the best
         scalability, since expensive locking is not needed to guarantee identity in single-threaded units of work. The
         application does not need to synchronize on any business object, as long as it maintains a single thread per
         <classname>Session</classname>. Within a <classname>Session</classname> the application can safely use the
@@ -403,11 +405,11 @@
         may introduce problems.. If you put two detached instances into the same <classname>Set</classname>, they might
         use the same database identity, which means they represent the same row in the database. They would not be
         guaranteed to have the same JVM identity if they are in a detached state. Override the
-        <methodname>equals</methodname> and <methodname>hashCode</methodname> methods in persistant classes, so that
+        <methodname>equals</methodname> and <methodname>hashCode</methodname> methods in persistent classes, so that
         they have their own notion of object equality. Never use the database identifier to implement equality. Instead,
         use a business key that is a combination of unique, typically immutable, attributes. The database identifier
         changes if a transient object is made persistent. If the transient instance, together with detached instances,
-        is held in a <classname>Set</classname>, changing the hashcode breaks the contract of the
+        is held in a <classname>Set</classname>, changing the hash-code breaks the contract of the
         <classname>Set</classname>. Attributes for business keys can be less stable than database primary keys. You only
         need to guarantee stability as long as the objects are in the same <classname>Set</classname>.This is not a
         Hibernate issue, but relates to Java's implementation of object identity and equality.
@@ -416,7 +418,7 @@
     </section>
 
     <section id="transaction-antipatterns">
-      <title>Problems and antipatterns</title>
+      <title>Problems and anti-patterns</title>
       <para>
         Avoid the anti-patterns session-per-user-session or session-per-application, for the most part. The reasons are
         outlined in <xref linkend="session-per-operation" />. In addition, keep the following points in mind when
@@ -436,7 +438,7 @@
           </listitem>
         </varlistentry>
         <varlistentry>
-          <term>If Hibernate throws an exception, you must rullback your database transaction and close the
+          <term>If Hibernate throws an exception, you must rollback your database transaction and close the
           <classname>Session</classname> immediately.</term>
           <listitem>
             <para>
@@ -501,8 +503,8 @@
     <section>
       <title>Container-managed transactions (CMT)</title>
       <para>
-        With CMT, transaction demarcation is completed in session bean deployment descriptors, rather than
-        programmatically.This reduces the amount of code.
+        With CMT, transaction demarcation is declared in session bean deployment descriptors, rather than performed in
+          a programmatic manner.  This reduces the amount of code.
       </para>
       <example>
         <title>CMT idiom</title>

@@ -160,6 +160,38 @@
             </variablelist>
         </section>
 
+        <section id="services-ConfigurationService">
+            <title><interfacename>org.hibernate.service.config.spi.ConfigurationService</interfacename></title>
+            <variablelist>
+                <varlistentry>
+                    <term>Notes</term>
+                    <listitem>
+                        <para>
+                            Provides access to the configuration settings, combining those explicitly provided as well
+                            as those contributed by any registered
+                            <interfacename>org.hibernate.integrator.spi.Integrator</interfacename> implementations
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term>Initiator</term>
+                    <listitem>
+                        <para>
+                            <classname>org.hibernate.service.config.internal.ConfigurationServiceInitiator</classname>
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term>Implementations</term>
+                    <listitem>
+                        <para>
+                            <classname>org.hibernate.service.config.internal.ConfigurationServiceImpl</classname>
+                        </para>
+                    </listitem>
+                </varlistentry>
+            </variablelist>
+        </section>
+
         <section id="services-ConnectionProvider">
             <title><interfacename>org.hibernate.service.jdbc.connections.spi.ConnectionProvider</interfacename></title>
             <variablelist>
@@ -874,40 +906,18 @@
     <section>
         <title>Boot-strap services</title>
 
-        <section id="services-ConfigurationService">
-            <title><interfacename>org.hibernate.service.config.spi.ConfigurationService</interfacename></title>
-            <variablelist>
-                <varlistentry>
-                    <term>Notes</term>
-                    <listitem>
-                        <para>
-                            Provides access to the initial raw, user-provided configuration values
-                        </para>
-                    </listitem>
-                </varlistentry>
-                <varlistentry>
-                    <term>Initiator</term>
-                    <listitem>
-                        <para>
-                            N/A
-                        </para>
-                    </listitem>
-                </varlistentry>
-                <varlistentry>
-                    <term>Implementations</term>
-                    <listitem>
-                        <para>
-                            <classname>org.hibernate.service.config.internal.ConfigurationServiceImpl</classname>
-                        </para>
-                    </listitem>
-                </varlistentry>
-            </variablelist>
-        </section>
-
         <section id="services-ClassLoaderService">
+            <title><interfacename>org.hibernate.service.classloading.spi.ClassLoaderService</interfacename></title>
+            <para>
+                Coming soon...  See <ulink url="https://hibernate.onjira.com/browse/HHH-6656" />
+            </para>
         </section>
 
         <section id="services-IntegratorService">
+            <title><interfacename>org.hibernate.integrator.spi.IntegratorService</interfacename></title>
+            <para>
+                Coming soon...  See <ulink url="https://hibernate.onjira.com/browse/HHH-6657" />
+            </para>
         </section>
     </section>
 </chapter>

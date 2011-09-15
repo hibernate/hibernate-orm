@@ -25,7 +25,7 @@ package org.hibernate.engine.jdbc;
 
 import java.sql.SQLException;
 import java.sql.ResultSet;
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.Map;
 
 /**
@@ -36,11 +36,11 @@ import java.util.Map;
 public class ColumnNameCache {
 	public static final float LOAD_FACTOR = .75f;
 
-	private final Map columnNameToIndexCache;
+	private final Map<String, Integer> columnNameToIndexCache;
 
 	public ColumnNameCache(int columnCount) {
 		// should *not* need to grow beyond the size of the total number of columns in the rs
-		this.columnNameToIndexCache = new HashMap( columnCount + (int)( columnCount * LOAD_FACTOR ) + 1, LOAD_FACTOR );
+		this.columnNameToIndexCache = new ConcurrentHashMap<String, Integer>( columnCount + (int)( columnCount * LOAD_FACTOR ) + 1, LOAD_FACTOR );
 	}
 
 	public int getIndexForColumnName(String columnName, ResultSet rs) throws SQLException {

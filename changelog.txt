@@ -5,6 +5,34 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 4.0.0.CR3 (2011.09.14)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.onjira.com/browse/HHH/fixforversion/11363
+
+** Bug
+    * [HHH-6533] - ByteTypeDescriptor is not working properly
+    * [HHH-6581] - JPA 2.0 Spec. Violation with Access and MappedSuperclass
+    * [HHH-6614] - Bad performance: audited entity updates (lots of them) with no EntityManager clear
+    * [HHH-6635] - C3P0: hibernate.c3p0.* configuration properties not properly parsed
+    * [HHH-6645] - Fix entity information
+    * [HHH-6647] - ValidityAuditStrategy breaks in case of concurrent updates to the same entity
+
+** Improvement
+    * [HHH-6640] - Add ability for Integrator to prepare ServiceRegistryBuilder as part of lifecycle
+    * [HHH-6653] - Clean up JAXB generated classes
+
+** New Feature
+    * [HHH-6091] - Let people customize identifier generator strategy mappings programmatically in Hibernate 4
+
+** Task
+    * [HHH-6439] - Add Dialect.getAddUniqueConstraintString()
+    * [HHH-6626] - Improve PutFromLoadValidatorUnitTestCase to be less timesensitive
+    * [HHH-6634] - upgrade to jandex 1.0.3.Final
+    * [HHH-6641] - Document services
+    * [HHH-6650] - upgrade jacc dependency
+    * [HHH-6654] - upgrade ant to 1.8.2
+    * [HHH-6658] - upgrade jboss-logging-tools to 1.0.0.Beta7
+
 
 Changes in version 4.0.0.CR2 (2011.08.31)
 ------------------------------------------------------------------------------------------------------------------------

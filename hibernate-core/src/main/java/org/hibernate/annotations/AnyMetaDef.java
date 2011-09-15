@@ -50,7 +50,7 @@ public @interface AnyMetaDef {
 
 	/**
 	 * Hibernate type of the id column
-	 * @return
+	 * @return Hibernate type of the id column
 	 */
 	String idType();
 

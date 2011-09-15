@@ -38,7 +38,6 @@ public interface LoadEventListener extends Serializable {
 	 * Handle the given load event.
      *
      * @param event The load event to be handled.
-     * @return The result (i.e., the loaded entity).
      * @throws HibernateException
      */
 	public void onLoad(LoadEvent event, LoadType loadType) throws HibernateException;

@@ -100,10 +100,7 @@ public interface CompositeUserType {
 	/**
 	 * Compare two instances of the class mapped by this type for persistence "equality".
 	 * Equality of the persistent state.
-	 *
-	 * @param x
-	 * @param y
-	 * @return boolean
+     *
 	 * @throws HibernateException
 	 */
 	public boolean equals(Object x, Object y) throws HibernateException;
@@ -190,14 +187,9 @@ public interface CompositeUserType {
 	 * with a new (original) value from the detached entity we are merging. For immutable
 	 * objects, or null values, it is safe to simply return the first parameter. For
 	 * mutable objects, it is safe to return a copy of the first parameter. However, since
-	 * composite user types often define component values, it might make sense to recursively 
+	 * composite user types often define component values, it might make sense to recursively
 	 * replace component values in the target object.
-	 * 
-	 * @param original
-	 * @param target
-	 * @param session
-	 * @param owner
-	 * @return
+	 *
 	 * @throws HibernateException
 	 */
 	public Object replace(Object original, Object target, SessionImplementor session, Object owner) 

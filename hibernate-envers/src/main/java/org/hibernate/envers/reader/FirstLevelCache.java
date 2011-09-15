@@ -70,10 +70,10 @@ public class FirstLevelCache {
 
     /**
      * Adds the entityName into the cache. The key is a triple make with primaryKey, revision and entity
-     * @param entityName, value of the cache
      * @param id, primaryKey
      * @param revision, revision number
      * @param entity, object retrieved by envers
+     * @param entityName, value of the cache
      */
     public void putOnEntityNameCache(Object id, Number revision, Object entity, String entityName) {
         LOG.debugf("Caching entityName on First Level Cache:  - primaryKey:%s - revision:%s - entity:%s -> entityName:%s",
@@ -86,7 +86,6 @@ public class FirstLevelCache {
 
     /**
      * Gets the entityName from the cache. The key is a triple make with primaryKey, revision and entity
-     * @param entityName, value of the cache
      * @param id, primaryKey
      * @param revision, revision number
      * @param entity, object retrieved by envers
@@ -100,12 +99,9 @@ public class FirstLevelCache {
     }
 
 	/**
-	 * @param id
-	 *            , primaryKey
-	 * @param revision
-	 *            , revision number
-	 * @param entity
-	 *            , object retrieved by envers
+	 * @param id primaryKey
+	 * @param revision revision number
+	 * @param entity object retrieved by envers
 	 * @return true if entityNameCache contains the triple
 	 */
     public boolean containsEntityName(Object id, Number revision, Object entity) {

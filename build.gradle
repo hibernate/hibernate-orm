@@ -147,7 +147,7 @@ subprojects { subProject ->
             jaxb( libraries.jaxb )
             jaxb( libraries.jaxb2_basics )
             jaxb( libraries.jaxb2_ant )
-            deployerJars "org.apache.maven.wagon:wagon-http:1.0-beta-6"
+            deployerJars "org.apache.maven.wagon:wagon-http:1.0"
         }
 
         aptDumpDir = file( buildDirName + "/tmp/apt" )

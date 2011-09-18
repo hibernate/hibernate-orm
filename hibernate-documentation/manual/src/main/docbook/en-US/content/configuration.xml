@@ -317,7 +317,11 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect</programlisting>
     connections by implementing the interface
     <interfacename>org.hibernate.connection.ConnectionProvider</interfacename>,
     and specifying your custom implementation via the
-    <property>hibernate.connection.provider_class</property> property.</para>
+    <property>hibernate.connection.provider_class</property> property. If your
+    class does not provide the default constructor, or requires special
+    initialization, register the concrete instance using
+    <methodname>ConnectionProviderFactory.registerConnectionProviderInstance()</methodname>
+    method.</para>
   </section>
 
   <section id="configuration-optional" revision="1">

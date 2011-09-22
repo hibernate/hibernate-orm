@@ -25,13 +25,13 @@
 package org.hibernate.internal.util;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.instrumentation.spi.LazyPropertyInitializer;
+import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.internal.CoreMessageLogger;
@@ -39,7 +39,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.Type;
 
 /**
- * Renders entities to a nicely readable string.
+ * Renders entities and query parameters to a nicely readable string.
  * @author Gavin King
  */
 public final class EntityPrinter {
@@ -49,12 +49,14 @@ public final class EntityPrinter {
     private SessionFactoryImplementor factory;
 
 	/**
+	 * Renders an entity to a string.
+	 *
+	 * @param entityName the entity name
 	 * @param entity an actual entity object, not a proxy!
+	 * @return the entity rendered to a string
 	 */
-	public String toString(Object entity) throws HibernateException {
-		// todo : this call will not work for anything other than pojos!
-		// need a means to access the entity name resolver(s).  problem is accounting for session interceptor from here...
-		EntityPersister entityPersister = factory.getEntityPersister( entity.getClass().getName() );
+	public String toString(String entityName, Object entity) throws HibernateException {
+		EntityPersister entityPersister = factory.getEntityPersister( entityName );
 
 		if ( entityPersister == null ) {
 			return entity.getClass().getName();
@@ -80,7 +82,7 @@ public final class EntityPrinter {
 				result.put( names[i], strValue );
 			}
 		}
-		return entityPersister.getEntityName() + result.toString();
+		return entityName + result.toString();
 	}
 
 	public String toString(Type[] types, Object[] values) throws HibernateException {
@@ -106,16 +108,17 @@ public final class EntityPrinter {
 		return result.toString();
 	}
 
-	public void toString(Iterator iterator) throws HibernateException {
-        if (!LOG.isDebugEnabled() || !iterator.hasNext()) return;
+	// Cannot use Map as an argument because it clashes with the previous method (due to type erasure)
+	public void toString(Iterable<Map.Entry<EntityKey,Object>> entitiesByEntityKey) throws HibernateException {
+        if ( ! LOG.isDebugEnabled() || ! entitiesByEntityKey.iterator().hasNext() ) return;
         LOG.debugf( "Listing entities:" );
 		int i=0;
-		while ( iterator.hasNext() ) {
+		for (  Map.Entry<EntityKey,Object> entityKeyAndEntity : entitiesByEntityKey ) {
 			if (i++>20) {
                 LOG.debugf("More......");
 				break;
 			}
-            LOG.debugf( toString( iterator.next() ) );
+            LOG.debugf( toString( entityKeyAndEntity.getKey().getEntityName(), entityKeyAndEntity.getValue() ) );
 		}
 	}
 

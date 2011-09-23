@@ -1880,7 +1880,6 @@ public abstract class Dialect {
 	 * <p/>
 	 * Note that the spaces are important!
 	 *
-	 * @return
 	 */
 	public String getCrossJoinSeparator() {
 		return " cross join ";

@@ -125,7 +125,7 @@ public abstract class AbstractInstrumenter implements Instrumenter {
 	}
 
 	/**
-	 * Extract the names of classes from file, addding them to the classNames collection.
+	 * Extract the names of classes from file, adding them to the classNames collection.
 	 * <p/>
 	 * IMPL NOTE : file here may be either a class file or a jar.  If a jar, all entries in the jar file are
 	 * processed.
@@ -202,7 +202,7 @@ public abstract class AbstractInstrumenter implements Instrumenter {
 	 *
 	 * @param file The file to process.
 	 * @param classNames The 'pipeline' of classes to be processed.  Only actually populated when the user
-	 * specifies to perform {@link Options#performExtendedInstrumentation() extended} instrumentation.
+	 * specifies to perform {@link org.hibernate.bytecode.buildtime.spi.Instrumenter.Options#performExtendedInstrumentation() extended} instrumentation.
 	 *
 	 * @throws Exception Indicates an issue either access files or applying the transformations.
 	 */
@@ -225,7 +225,7 @@ public abstract class AbstractInstrumenter implements Instrumenter {
 	 *
 	 * @param file The class file to process.
 	 * @param classNames The 'pipeline' of classes to be processed.  Only actually populated when the user
-	 * specifies to perform {@link Options#performExtendedInstrumentation() extended} instrumentation.
+	 * specifies to perform {@link org.hibernate.bytecode.buildtime.spi.Instrumenter.Options#performExtendedInstrumentation() extended} instrumentation.
 	 *
 	 * @throws Exception Indicates an issue either access files or applying the transformations.
 	 */
@@ -267,7 +267,7 @@ public abstract class AbstractInstrumenter implements Instrumenter {
 	 *
 	 * @param file The archive file to process.
 	 * @param classNames The 'pipeline' of classes to be processed.  Only actually populated when the user
-	 * specifies to perform {@link Options#performExtendedInstrumentation() extended} instrumentation.
+	 * specifies to perform {@link org.hibernate.bytecode.buildtime.spi.Instrumenter.Options#performExtendedInstrumentation() extended} instrumentation.
 	 *
 	 * @throws Exception Indicates an issue either access files or applying the transformations.
 	 */
@@ -352,7 +352,7 @@ public abstract class AbstractInstrumenter implements Instrumenter {
 	}
 
 	/**
-	 * Allows control over what exacctly to transform.
+	 * Allows control over what exactly to transform.
 	 */
 	protected class CustomFieldFilter implements FieldFilter {
 		private final ClassDescriptor descriptor;

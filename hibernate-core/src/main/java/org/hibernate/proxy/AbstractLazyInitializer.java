@@ -267,7 +267,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	 * This method should only be called during serialization when read-only/modifiable setting
 	 * is not available (i.e., isReadOnlySettingAvailable() == false)
 	 *
-	 * @returns, null, if the default setting should be used;
+	 * @return null, if the default setting should be used;
 	 *           true, for read-only;
 	 *           false, for modifiable
 	 * @throws IllegalStateException if isReadOnlySettingAvailable() == true

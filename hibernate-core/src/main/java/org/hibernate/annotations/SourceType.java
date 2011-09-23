@@ -33,7 +33,6 @@ package org.hibernate.annotations;
 public enum SourceType {
 	/**
 	 * Get the timestamp from the current VM.
-	 * @see 
 	 */
 	VM("timestamp"),
 

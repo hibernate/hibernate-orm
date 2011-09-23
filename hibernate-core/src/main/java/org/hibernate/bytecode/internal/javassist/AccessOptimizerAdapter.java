@@ -29,7 +29,7 @@ import org.hibernate.PropertyAccessException;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
 
 /**
- * The {@link ReflectionOptimizer.AccessOptimizer} implementation for Javassist
+ * The {@link org.hibernate.bytecode.spi.ReflectionOptimizer.AccessOptimizer} implementation for Javassist
  * which simply acts as an adapter to the {@link BulkAccessor} class.
  *
  * @author Steve Ebersole

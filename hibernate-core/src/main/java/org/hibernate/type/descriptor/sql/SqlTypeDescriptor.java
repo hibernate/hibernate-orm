@@ -38,7 +38,7 @@ public interface SqlTypeDescriptor extends Serializable {
 	/**
 	 * Return the {@linkplain java.sql.Types JDBC type-code} for the column mapped by this type.
 	 *
-	 * @return The JDBC type-code
+	 * @return typeCode The JDBC type-code
 	 */
 	public int getSqlType();
 

@@ -33,9 +33,6 @@ import org.hibernate.service.Service;
 public interface ServiceProxy extends Service {
 	/**
 	 * Get the target service instance represented by this proxy.
-	 *
-	 * @param <T>
-	 * @return
 	 */
 	public <T extends Service> T getTargetInstance();
 }

@@ -125,7 +125,7 @@ public class JaxbProcessor {
 
 	private Schema schema() {
 		if ( schema == null ) {
-			schema = resolveLocalSchema( "/org/hibernate/hibernate-configuration-4.0.xsd" );
+			schema = resolveLocalSchema( "org/hibernate/hibernate-configuration-4.0.xsd" );
 		}
 		return schema;
 	}

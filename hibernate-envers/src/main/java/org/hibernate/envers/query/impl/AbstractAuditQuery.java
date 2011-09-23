@@ -191,7 +191,7 @@ public abstract class AbstractAuditQuery implements AuditQuery {
 
 	/**
 	 * Set lock mode
-	 * @param lockMode
+	 * @param lockMode The {@link LockMode} used for this query.
 	 * @return this object
 	 * @deprecated Instead use setLockOptions
 	 */
@@ -202,7 +202,7 @@ public abstract class AbstractAuditQuery implements AuditQuery {
 
 	/**
 	 * Set lock options
-	 * @param lockOptions
+	 * @param lockOptions The @{link LockOptions} used for this query.
 	 * @return this object
 	 */
 	public AuditQuery setLockOptions(LockOptions lockOptions) {

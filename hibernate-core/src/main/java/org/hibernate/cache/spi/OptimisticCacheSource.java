@@ -49,7 +49,7 @@ public interface OptimisticCacheSource {
 	 * Get the comparator used to compare two different version values.
 	 * <p/>
 	 * May return null <b>if</b> {@link #isVersioned()} returns false.
-	 * @return
+	 * @return Comparator used to compare two different version values.
 	 */
 	public Comparator getVersionComparator();
 }

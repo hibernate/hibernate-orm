@@ -28,10 +28,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.service.ServiceRegistry;
-import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 
@@ -40,31 +36,16 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Gail Badner
  */
-public class SchemaExportTest extends BaseUnitTestCase {
+public abstract class SchemaExportTest extends BaseUnitTestCase {
 	private final String MAPPING = "org/hibernate/test/schemaupdate/mapping.hbm.xml";
 
-	private ServiceRegistry serviceRegistry;
-
-	@Before
-	public void setUp() {
-		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() );
-	}
-
-	@After
-	public void tearDown() {
-		ServiceRegistryBuilder.destroy( serviceRegistry );
-		serviceRegistry = null;
-	}
-
-	protected JdbcServices getJdbcServices() {
-		return serviceRegistry.getService( JdbcServices.class );
-	}
+	protected abstract SchemaExport createSchemaExport(Configuration cfg);
 
 	@Test
 	public void testCreateAndDropOnlyType() {
 		Configuration cfg = new Configuration();
 		cfg.addResource( MAPPING );
-		SchemaExport schemaExport = new SchemaExport( serviceRegistry, cfg );
+		SchemaExport schemaExport = createSchemaExport( cfg );
 		// create w/o dropping first; (OK because tables don't exist yet
 		schemaExport.execute( false, true, false, true );
 		assertEquals( 0, schemaExport.getExceptions().size() );
@@ -82,7 +63,7 @@ public class SchemaExportTest extends BaseUnitTestCase {
 	public void testBothType() {
 		Configuration cfg = new Configuration();
 		cfg.addResource( MAPPING );
-		SchemaExport schemaExport = new SchemaExport( serviceRegistry, cfg );
+		SchemaExport schemaExport = createSchemaExport( cfg );
 		// drop before create (nothing to drop yeT)
 		schemaExport.execute( false, true, false, false );
 		assertEquals( 0, schemaExport.getExceptions().size() );
@@ -98,7 +79,7 @@ public class SchemaExportTest extends BaseUnitTestCase {
 	public void testCreateAndDrop() {
 		Configuration cfg = new Configuration();
 		cfg.addResource( MAPPING );
-		SchemaExport schemaExport = new SchemaExport( serviceRegistry, cfg );
+		SchemaExport schemaExport = createSchemaExport( cfg );
 		// should drop before creating, but tables don't exist yet
 		schemaExport.create( false, true);
 		assertEquals( 0, schemaExport.getExceptions().size() );

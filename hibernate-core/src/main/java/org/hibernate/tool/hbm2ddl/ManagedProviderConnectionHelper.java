@@ -27,9 +27,13 @@ package org.hibernate.tool.hbm2ddl;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Properties;
+
+import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
+import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.service.ServiceRegistryBuilder;
+import org.hibernate.service.internal.BasicServiceRegistryImpl;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.service.spi.Stoppable;
 
 /**
  * A {@link ConnectionHelper} implementation based on an internally
@@ -39,7 +43,7 @@ import org.hibernate.service.spi.Stoppable;
  */
 class ManagedProviderConnectionHelper implements ConnectionHelper {
 	private Properties cfgProperties;
-	private ConnectionProvider connectionProvider;
+	private BasicServiceRegistryImpl serviceRegistry;
 	private Connection connection;
 
 	public ManagedProviderConnectionHelper(Properties cfgProperties) {
@@ -47,14 +51,18 @@ class ManagedProviderConnectionHelper implements ConnectionHelper {
 	}
 
 	public void prepare(boolean needsAutoCommit) throws SQLException {
-		/* TEMP TEMP TEMP
-		connectionProvider = ConnectionProviderBuilder.buildConnectionProvider();
-		connection = connectionProvider.getConnection();
-		if ( needsAutoCommit && !connection.getAutoCommit() ) {
+		serviceRegistry = createServiceRegistry( cfgProperties );
+		connection = serviceRegistry.getService( ConnectionProvider.class ).getConnection();
+		if ( needsAutoCommit && ! connection.getAutoCommit() ) {
 			connection.commit();
 			connection.setAutoCommit( true );
 		}
-		*/
+	}
+
+	private static BasicServiceRegistryImpl createServiceRegistry(Properties properties) {
+		Environment.verifyProperties( properties );
+		ConfigurationHelper.resolvePlaceHolders( properties );
+		return (BasicServiceRegistryImpl) new ServiceRegistryBuilder().applySettings( properties ).buildServiceRegistry();
 	}
 
 	public Connection getConnection() throws SQLException {
@@ -62,18 +70,38 @@ class ManagedProviderConnectionHelper implements ConnectionHelper {
 	}
 
 	public void release() throws SQLException {
+		try {
+			releaseConnection();
+		}
+		finally {
+			releaseServiceRegistry();
+		}
+	}
+
+	private void releaseConnection() throws SQLException {
 		if ( connection != null ) {
 			try {
 				new SqlExceptionHelper().logAndClearWarnings( connection );
-				connectionProvider.closeConnection( connection );
 			}
 			finally {
-				if ( connectionProvider instanceof Stoppable ) {
-						( ( Stoppable ) connectionProvider ).stop();
+				try  {
+					serviceRegistry.getService( ConnectionProvider.class ).closeConnection( connection );
 				}
-				connectionProvider = null;
+				finally {
+					connection = null;
+				}
 			}
 		}
-		connection = null;
+	}
+
+	private void releaseServiceRegistry() {
+		if ( serviceRegistry != null ) {
+			try {
+				serviceRegistry.destroy();
+			}
+			finally {
+				serviceRegistry = null;
+			}
+		}
 	}
 }

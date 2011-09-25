@@ -179,7 +179,7 @@ abstract class AbstractReadWriteEhcacheAccessStrategy<T extends EhcacheTransacti
      * Handle the timeout of a previous lock mapped to this key
      */
     protected void handleLockExpiry(Object key, Lockable lock) {
-        LOG.softLockedCacheExpired( region.getName(), key, lock.toString() );
+        LOG.softLockedCacheExpired( region.getName(), key, lock == null ? "(null)" : lock.toString() );
 
         long ts = region.nextTimestamp() + region.getTimeout();
         // create new lock that times out immediately

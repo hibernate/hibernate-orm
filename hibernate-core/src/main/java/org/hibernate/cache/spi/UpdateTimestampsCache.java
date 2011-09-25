@@ -33,6 +33,7 @@ import org.jboss.logging.Logger;
 import org.hibernate.HibernateException;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cfg.Settings;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 
 /**
@@ -53,8 +54,10 @@ public class UpdateTimestampsCache {
 
 	private ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
 	private final TimestampsRegion region;
+	private final SessionFactoryImplementor factory;
 
-	public UpdateTimestampsCache(Settings settings, Properties props) throws HibernateException {
+	public UpdateTimestampsCache(Settings settings, Properties props, final SessionFactoryImplementor factory) throws HibernateException {
+		this.factory = factory;
 		String prefix = settings.getCacheRegionPrefix();
 		String regionName = prefix == null ? REGION_NAME : prefix + '.' + REGION_NAME;
         LOG.startingUpdateTimestampsCache(regionName);
@@ -74,6 +77,9 @@ public class UpdateTimestampsCache {
 				//put() has nowait semantics, is this really appropriate?
 				//note that it needs to be async replication, never local or sync
 				region.put( space, ts );
+				if ( factory.getStatistics().isStatisticsEnabled() ) {
+					factory.getStatisticsImplementor().updateTimestampsCachePut();
+				}
 			}
 			//TODO: return new Lock(ts);
 		}
@@ -96,6 +102,9 @@ public class UpdateTimestampsCache {
 		        //put() has nowait semantics, is this really appropriate?
 				//note that it needs to be async replication, never local or sync
 				region.put( space, ts );
+				if ( factory.getStatistics().isStatisticsEnabled() ) {
+					factory.getStatisticsImplementor().updateTimestampsCachePut();
+				}
 			}
 		}
 		finally {
@@ -111,6 +120,9 @@ public class UpdateTimestampsCache {
 			for ( Serializable space : (Set<Serializable>) spaces ) {
 				Long lastUpdate = (Long) region.get( space );
 				if ( lastUpdate == null ) {
+					if ( factory.getStatistics().isStatisticsEnabled() ) {
+						factory.getStatisticsImplementor().updateTimestampsCacheMiss();
+					}
 					//the last update timestamp was lost from the cache
 					//(or there were no updates since startup!)
 					//updateTimestamps.put( space, new Long( updateTimestamps.nextTimestamp() ) );
@@ -118,6 +130,9 @@ public class UpdateTimestampsCache {
 				}
 				else {
 	                LOG.debugf("[%s] last update timestamp: %s", space, lastUpdate + ", result set timestamp: " + timestamp);
+					if ( factory.getStatistics().isStatisticsEnabled() ) {
+						factory.getStatisticsImplementor().updateTimestampsCacheHit();
+					}
 					if ( lastUpdate.longValue() >= timestamp.longValue() ) return false;
 				}
 			}

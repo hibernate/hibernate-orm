@@ -56,7 +56,7 @@ libraries = [
 
         // Jakarta commons-collections  todo : get rid of commons-collections dependency
         commons_collections:
-                        'commons-collections:commons-collections:3.1',
+                        'commons-collections:commons-collections:3.2.1',
 
         // Dom4J
         dom4j:          'dom4j:dom4j:1.6.1@jar',
@@ -68,11 +68,11 @@ libraries = [
         h2:             'com.h2database:h2:1.2.145',
 
         // Javassist
-        javassist:      'javassist:javassist:3.12.0.GA',
+        javassist:      'javassist:javassist:3.12.1.GA',
 
         // javax
         jpa:            'org.hibernate.javax.persistence:hibernate-jpa-2.0-api:1.0.1.Final',
-        jta:            'javax.transaction:jta:1.1',
+        jta:            'org.jboss.spec.javax.transaction:jboss-transaction-api_1.1_spec:1.0.0.Final',
         validation:     'javax.validation:validation-api:1.0.0.GA',
         validator:      'org.hibernate:hibernate-validator:4.2.0.Final',
         jacc:           'org.jboss.spec.javax.security.jacc:jboss-jacc-api_1.4_spec:1.0.0.Final',
@@ -90,8 +90,8 @@ libraries = [
         // testing
         junit:          'junit:junit:4.8.2',
         jpa_modelgen:   'org.hibernate:hibernate-jpamodelgen:1.1.1.Final',
-        shrinkwrap_api: 'org.jboss.shrinkwrap:shrinkwrap-api:1.0.0-alpha-6',
-        shrinkwrap:     'org.jboss.shrinkwrap:shrinkwrap-impl-base:1.0.0-alpha-6'
+        shrinkwrap_api: 'org.jboss.shrinkwrap:shrinkwrap-api:1.0.0-beta-6',
+        shrinkwrap:     'org.jboss.shrinkwrap:shrinkwrap-impl-base:1.0.0-beta-6'
 ]
 
 

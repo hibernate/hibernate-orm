@@ -28,6 +28,11 @@ ideaProject {
         def node = provider.asNode()
         def vcsConfig = node.component.find { it.'@name' == 'VcsDirectoryMappings' }
         vcsConfig.mapping[0].'@vcs' = 'Git'
+        def maxHeapSizeConfig =  node.component.find { it.'@name' == 'JavacSettings' }
+        if( maxHeapSizeConfig == null ){
+            def javacSettingsNode =  node.appendNode('component',[name: 'JavacSettings'])
+            javacSettingsNode.appendNode('option', [name:"MAXIMUM_HEAP_SIZE", value:"512"])
+        }
     }
     beforeConfigured { module ->
         module.modulePaths.removeAll { it.filePath.endsWith('hibernate-core.iml') }

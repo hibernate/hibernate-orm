@@ -452,7 +452,7 @@ public final class SessionFactoryImpl
 		currentSessionContext = buildCurrentSessionContext();
 
 		if ( settings.isQueryCacheEnabled() ) {
-			updateTimestampsCache = new UpdateTimestampsCache(settings, properties);
+			updateTimestampsCache = new UpdateTimestampsCache(settings, properties, this);
 			queryCache = settings.getQueryCacheFactory()
 			        .getQueryCache(null, updateTimestampsCache, settings, properties);
 			queryCaches = new HashMap<String,QueryCache>();
@@ -775,7 +775,7 @@ public final class SessionFactoryImpl
 		currentSessionContext = buildCurrentSessionContext();
 
 		if ( settings.isQueryCacheEnabled() ) {
-			updateTimestampsCache = new UpdateTimestampsCache( settings, properties );
+			updateTimestampsCache = new UpdateTimestampsCache( settings, properties, this );
 			queryCache = settings.getQueryCacheFactory()
 			        .getQueryCache( null, updateTimestampsCache, settings, properties );
 			queryCaches = new HashMap<String,QueryCache>();

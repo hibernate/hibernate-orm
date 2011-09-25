@@ -184,6 +184,19 @@ public class StatisticsService implements StatisticsServiceMBean {
 	public long getQueryCachePutCount() {
 		return stats.getQueryCachePutCount();
 	}
+
+	public long getUpdateTimestampsCacheHitCount() {
+		return stats.getUpdateTimestampsCacheHitCount();
+	}
+
+	public long getUpdateTimestampsCacheMissCount() {
+		return stats.getUpdateTimestampsCacheMissCount();
+	}
+
+	public long getUpdateTimestampsCachePutCount() {
+		return stats.getUpdateTimestampsCachePutCount();
+	}
+
 	/**
 	 * @see StatisticsServiceMBean#getFlushCount()
 	 */

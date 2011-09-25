@@ -84,6 +84,10 @@ public class ConcurrentStatisticsImpl implements StatisticsImplementor, Service 
 	private AtomicLong queryCacheMissCount = new AtomicLong();
 	private AtomicLong queryCachePutCount = new AtomicLong();
 
+	private AtomicLong updateTimestampsCacheHitCount = new AtomicLong();
+	private AtomicLong updateTimestampsCacheMissCount = new AtomicLong();
+	private AtomicLong updateTimestampsCachePutCount = new AtomicLong();
+
 	private AtomicLong committedTransactionCount = new AtomicLong();
 	private AtomicLong transactionCount = new AtomicLong();
 
@@ -150,6 +154,10 @@ public class ConcurrentStatisticsImpl implements StatisticsImplementor, Service 
 		queryExecutionMaxTimeQueryString = null;
 		queryCacheMissCount.set( 0 );
 		queryCachePutCount.set( 0 );
+
+		updateTimestampsCacheMissCount.set( 0 );
+		updateTimestampsCacheHitCount.set( 0 );
+		updateTimestampsCachePutCount.set( 0 );
 
 		transactionCount.set( 0 );
 		committedTransactionCount.set( 0 );
@@ -374,6 +382,21 @@ public class ConcurrentStatisticsImpl implements StatisticsImplementor, Service 
 		slcs.incrementPutCount();
 	}
 
+	@Override
+	public void updateTimestampsCacheHit() {
+		updateTimestampsCacheHitCount.getAndIncrement();
+	}
+
+	@Override
+	public void updateTimestampsCacheMiss() {
+		updateTimestampsCacheMissCount.getAndIncrement();
+	}
+
+	@Override
+	public void updateTimestampsCachePut() {
+		updateTimestampsCachePutCount.getAndIncrement();
+	}
+
 	/**
 	 * Query statistics from query string (HQL or SQL)
 	 *
@@ -444,6 +467,18 @@ public class ConcurrentStatisticsImpl implements StatisticsImplementor, Service 
 
 	public long getQueryCachePutCount() {
 		return queryCachePutCount.get();
+	}
+
+	public long getUpdateTimestampsCacheHitCount() {
+		return updateTimestampsCacheHitCount.get();
+	}
+
+	public long getUpdateTimestampsCacheMissCount() {
+		return updateTimestampsCacheMissCount.get();
+	}
+
+	public long getUpdateTimestampsCachePutCount() {
+		return updateTimestampsCachePutCount.get();
 	}
 
 	/**
@@ -568,6 +603,9 @@ public class ConcurrentStatisticsImpl implements StatisticsImplementor, Service 
         LOG.collectionsFetched(collectionFetchCount.get());
         LOG.queriesExecuted(queryExecutionCount.get());
         LOG.queryCachePuts(queryCachePutCount.get());
+		LOG.timestampCachePuts( updateTimestampsCachePutCount.get() );
+		LOG.timestampCacheHits( updateTimestampsCacheHitCount.get() );
+		LOG.timestampCacheMisses( updateTimestampsCacheMissCount.get() );
         LOG.queryCacheHits(queryCacheHitCount.get());
         LOG.queryCacheMisses(queryCacheMissCount.get());
         LOG.maxQueryTime(queryExecutionMaxTime.get());
@@ -709,6 +747,9 @@ public class ConcurrentStatisticsImpl implements StatisticsImplementor, Service 
 				.append( ",query cache puts=" ).append( queryCachePutCount )
 				.append( ",query cache hits=" ).append( queryCacheHitCount )
 				.append( ",query cache misses=" ).append( queryCacheMissCount )
+				.append(",update timestamps cache puts=").append(updateTimestampsCachePutCount)
+				.append(",update timestamps cache hits=").append(updateTimestampsCacheHitCount)
+				.append(",update timestamps cache misses=").append(updateTimestampsCacheMissCount)
 				.append( ",max query time=" ).append( queryExecutionMaxTime )
 				.append( ']' )
 				.toString();

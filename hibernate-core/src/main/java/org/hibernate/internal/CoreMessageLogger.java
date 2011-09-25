@@ -1534,4 +1534,17 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = WARN)
 	@Message(value = "There were not column names specified for index %s on table %s", id = 432)
 	void noColumnsSpecifiedForIndex(String indexName, String tableName);
+
+	@LogMessage(level = INFO)
+	@Message(value = "update timestamps cache puts: %s", id = 433)
+	void timestampCachePuts(long updateTimestampsCachePutCount);
+
+	@LogMessage(level = INFO)
+	@Message(value = "update timestamps cache hits: %s", id = 434)
+	void timestampCacheHits(long updateTimestampsCachePutCount);
+
+	@LogMessage(level = INFO)
+	@Message(value = "update timestamps cache misses: %s", id = 435)
+	void timestampCacheMisses(long updateTimestampsCachePutCount);
+
 }

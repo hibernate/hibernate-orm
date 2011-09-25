@@ -80,6 +80,9 @@ public class CMTTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testConcurrent() throws Exception {
 		sessionFactory().getStatistics().clear();
+		assertEquals( 0, sessionFactory().getStatistics().getUpdateTimestampsCacheHitCount() );
+		assertEquals( 0, sessionFactory().getStatistics().getUpdateTimestampsCachePutCount() );
+		assertEquals( 0, sessionFactory().getStatistics().getUpdateTimestampsCacheMissCount() );
 		assertNotNull( sessionFactory().getEntityPersister( "Item" ).getCacheAccessStrategy() );
 		assertEquals( 0, sessionFactory().getStatistics().getEntityLoadCount() );
 
@@ -94,6 +97,9 @@ public class CMTTest extends BaseCoreFunctionalTestCase {
 		bar.put( "description", "a small bar" );
 		s.persist( "Item", bar );
 		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
+		assertEquals(0, sessionFactory().getStatistics().getUpdateTimestampsCacheHitCount());
+		assertEquals(3, sessionFactory().getStatistics().getUpdateTimestampsCachePutCount()); // Twice preinvalidate & one invalidate
+		assertEquals(0, sessionFactory().getStatistics().getUpdateTimestampsCacheMissCount());
 
 		sessionFactory().evictEntity( "Item" );
 
@@ -139,6 +145,8 @@ public class CMTTest extends BaseCoreFunctionalTestCase {
 		assertEquals( 3, sessionFactory().getStatistics().getQueryExecutionCount() );
 		assertEquals( 0, sessionFactory().getStatistics().getQueryCacheHitCount() );
 		assertEquals( 0, sessionFactory().getStatistics().getQueryCacheMissCount() );
+		assertEquals( 0, sessionFactory().getStatistics().getUpdateTimestampsCacheHitCount() );
+		assertEquals( 3, sessionFactory().getStatistics().getUpdateTimestampsCachePutCount() );
 
 		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = openSession();
@@ -194,6 +202,8 @@ public class CMTTest extends BaseCoreFunctionalTestCase {
 		assertEquals( sessionFactory().getStatistics().getQueryCachePutCount(), 1 );
 		assertEquals( sessionFactory().getStatistics().getQueryCacheHitCount(), 1 );
 		assertEquals( sessionFactory().getStatistics().getQueryCacheMissCount(), 1 );
+		assertEquals( sessionFactory().getStatistics().getUpdateTimestampsCacheHitCount(), 1 );
+		assertEquals( sessionFactory().getStatistics().getUpdateTimestampsCachePutCount(), 0 );
 
 		TestingJtaBootstrap.INSTANCE.getTransactionManager().resume( tx1 );
 		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
@@ -212,6 +222,9 @@ public class CMTTest extends BaseCoreFunctionalTestCase {
 		assertEquals( sessionFactory().getStatistics().getQueryCachePutCount(), 1 );
 		assertEquals( sessionFactory().getStatistics().getQueryCacheHitCount(), 2 );
 		assertEquals( sessionFactory().getStatistics().getQueryCacheMissCount(), 1 );
+		assertEquals( sessionFactory().getStatistics().getUpdateTimestampsCacheHitCount(), 2 );
+		assertEquals( sessionFactory().getStatistics().getUpdateTimestampsCachePutCount(), 0 );
+		assertEquals( sessionFactory().getStatistics().getUpdateTimestampsCacheMissCount(), 0 );
 
 		TestingJtaBootstrap.INSTANCE.getTransactionManager().resume( tx4 );
 		List r4 = s4.createCriteria( "Item" ).addOrder( Order.asc( "description" ) )
@@ -227,6 +240,9 @@ public class CMTTest extends BaseCoreFunctionalTestCase {
 		assertEquals( sessionFactory().getStatistics().getQueryCachePutCount(), 1 );
 		assertEquals( sessionFactory().getStatistics().getQueryCacheHitCount(), 3 );
 		assertEquals( sessionFactory().getStatistics().getQueryCacheMissCount(), 1 );
+		assertEquals( sessionFactory().getStatistics().getUpdateTimestampsCacheHitCount(), 3 );
+		assertEquals( sessionFactory().getStatistics().getUpdateTimestampsCachePutCount(), 0 );
+
 
 		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = openSession();
@@ -289,9 +305,13 @@ public class CMTTest extends BaseCoreFunctionalTestCase {
 		assertEquals( sessionFactory().getStatistics().getQueryCachePutCount(), 2 );
 		assertEquals( sessionFactory().getStatistics().getQueryCacheHitCount(), 0 );
 		assertEquals( sessionFactory().getStatistics().getQueryCacheMissCount(), 2 );
+		assertEquals( sessionFactory().getStatistics().getUpdateTimestampsCacheHitCount(), 4 );
+		assertEquals( sessionFactory().getStatistics().getUpdateTimestampsCachePutCount(), 2 );
 
 		TestingJtaBootstrap.INSTANCE.getTransactionManager().resume( tx1 );
 		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
+		assertEquals( sessionFactory().getStatistics().getUpdateTimestampsCachePutCount(), 3 );
+		assertEquals( sessionFactory().getStatistics().getUpdateTimestampsCacheHitCount(), 5 );
 
 		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		Session s3 = openSession();
@@ -307,6 +327,7 @@ public class CMTTest extends BaseCoreFunctionalTestCase {
 		assertEquals( sessionFactory().getStatistics().getQueryCachePutCount(), 3 );
 		assertEquals( sessionFactory().getStatistics().getQueryCacheHitCount(), 0 );
 		assertEquals( sessionFactory().getStatistics().getQueryCacheMissCount(), 3 );
+		assertEquals( sessionFactory().getStatistics().getUpdateTimestampsCacheHitCount(), 6 );
 
 		TestingJtaBootstrap.INSTANCE.getTransactionManager().resume( tx4 );
 		List r4 = s4.createCriteria( "Item" ).addOrder( Order.asc( "description" ) )
@@ -322,6 +343,7 @@ public class CMTTest extends BaseCoreFunctionalTestCase {
 		assertEquals( sessionFactory().getStatistics().getQueryCachePutCount(), 3 );
 		assertEquals( sessionFactory().getStatistics().getQueryCacheHitCount(), 1 );
 		assertEquals( sessionFactory().getStatistics().getQueryCacheMissCount(), 3 );
+		assertEquals( sessionFactory().getStatistics().getUpdateTimestampsCacheHitCount(), 7 );
 
 		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = openSession();

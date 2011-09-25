@@ -204,4 +204,20 @@ public interface StatisticsImplementor extends Statistics, Service {
 	 * @param time execution time
 	 */
 	public void queryExecuted(String hql, int rows, long time);
+
+
+	/**
+	 * Callback indicating a hit to the timestamp cache
+	 */
+	public void updateTimestampsCacheHit();
+
+	/**
+	 * Callback indicating a miss to the timestamp cache
+	 */
+	public void updateTimestampsCacheMiss();
+
+	/**
+	 * Callback indicating a put to the timestamp cache
+	 */
+	public void updateTimestampsCachePut();
 }

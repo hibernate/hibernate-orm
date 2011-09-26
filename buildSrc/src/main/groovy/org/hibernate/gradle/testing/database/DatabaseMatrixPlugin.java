@@ -54,18 +54,21 @@ import org.hibernate.gradle.util.Jdk;
 public class DatabaseMatrixPlugin implements Plugin<Project>, MatrixNodeProvider {
     private static final Logger log = Logging.getLogger( DatabaseMatrixPlugin.class );
     public static final String DEFAULT_DATABASE_DIRECTORY = "databases";
+    public static final String MATRIX_DATABASES_LOCATION = "hibernate-matrix-databases";
+    public static final String HIBERNATE_MATRIX_IGNORE = "hibernate-matrix-ignore";
+    private static final String MATRIX_NODE_CONVENTION_KEY = "matrixNode";
+    private static final String MATRIX_BUILD_FILE = "matrix.gradle";
+
     private Project project;
     private Map<String, MatrixNode> matrixNodeMap = new HashMap();
 
     public void apply(Project project) {
         this.project = project;
-        applyDatabaseDirectories( getRootProject( project ).file( DEFAULT_DATABASE_DIRECTORY ) );
-        String databasesDirPath = System.getProperty( "hibernate-matrix-databases" );
-        if(databasesDirPath!=null){
+        applyDatabaseDirectories( getRootProject( project ).file( DEFAULT_DATABASE_DIRECTORY ) , true);
+        String databasesDirPath = System.getProperty( MATRIX_DATABASES_LOCATION );
+        if ( databasesDirPath != null ) {
             File databaseDir = new File( databasesDirPath );
-            if(FileUtil.isDirectory( databaseDir )){
-                applyDatabaseDirectories( databaseDir );
-            }
+            applyDatabaseDirectories( databaseDir, false );
         }
     }
 
@@ -74,31 +77,29 @@ public class DatabaseMatrixPlugin implements Plugin<Project>, MatrixNodeProvider
     }
 
 
-    private void applyDatabaseDirectories(Object databasesBaseDirObject) {
-        if ( databasesBaseDirObject == null ) {
+    private void applyDatabaseDirectories(File databasesBaseDirObject, boolean isDefault) {
+        if ( !FileUtil.isDirectory( databasesBaseDirObject ) ) {
+            log.warn( "Giving DB profile location [" + databasesBaseDirObject +  "] is not a valid directory, ignored." );
             return;
         }
         log.debug( "Applying database directory: " + databasesBaseDirObject );
-        final File databasesBaseDir = project.file( databasesBaseDirObject );
-        for ( File entry : databasesBaseDir.listFiles() ) {
-            if ( entry.isDirectory() ) {
-                applyPossibleDatabaseDirectory( entry );
+        for ( File entry : databasesBaseDirObject.listFiles() ) {
+            if ( FileUtil.isDirectory(entry) ) {
+                applyPossibleDatabaseDirectory( entry, isDefault );
             }
         }
     }
 
-    private static final String MATRIX_NODE_CONVENTION_KEY = "matrixNode";
-    private static final String MATRIX_BUILD_FILE = "matrix.gradle";
-//    private static final String IVY_XML_FILE = "ivy.xml";
 
     private boolean ignoreDefault(String databaseName) {
-        String value = System.getProperty( "hibernate-matrix-ignore" );
+        String value = System.getProperty( HIBERNATE_MATRIX_IGNORE );
         return ( value != null && ( value.equals( "all" ) || value.contains( databaseName ) ) );
     }
 
-    private void applyPossibleDatabaseDirectory(final File databaseDir) {
+    private void applyPossibleDatabaseDirectory(final File databaseDir, final boolean isDefault) {
         final String databaseName = databaseDir.getName();
-        if ( ignoreDefault( databaseName ) ) {
+        if ( isDefault &&  ignoreDefault( databaseName ) ) {
+            log.debug( "Ignore default DB profile [{}]", databaseName );
             return;
         }
         log.debug( "Checking potential database directory : {}", databaseName );
@@ -123,10 +124,10 @@ public class DatabaseMatrixPlugin implements Plugin<Project>, MatrixNodeProvider
 //                node = prepareFromIvyXmlFile( ivyXmlFile );
 //            }
 //            else {
-                final File jdbcDir = new File( databaseDir, "jdbc" );
-                if ( FileUtil.isDirectory( jdbcDir ) ) {
-                    node = prepareFromJdbcDir( jdbcDir );
-                }
+            final File jdbcDir = new File( databaseDir, "jdbc" );
+            if ( FileUtil.isDirectory( jdbcDir ) ) {
+                node = prepareFromJdbcDir( jdbcDir );
+            }
 //            }
         }
 

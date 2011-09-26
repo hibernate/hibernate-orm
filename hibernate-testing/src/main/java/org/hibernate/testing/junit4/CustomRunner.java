@@ -71,16 +71,43 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 		return testClassMetadata;
 	}
 
-	@Override
-	protected Statement withBeforeClasses(Statement statement) {
-		return new BeforeClassCallbackHandler(
-				this,
-				super.withBeforeClasses( statement )
-		);
-	}
+    private Boolean isAllTestsIgnored = null;
+
+    private boolean isAllTestsIgnored() {
+        if ( isAllTestsIgnored == null ) {
+            if ( computeTestMethods().isEmpty() ) {
+                isAllTestsIgnored = true;
+            }
+            else {
+                isAllTestsIgnored = true;
+                for ( FrameworkMethod method : computeTestMethods() ) {
+                    Ignore ignore = method.getAnnotation( Ignore.class );
+                    if ( ignore == null ) {
+                        isAllTestsIgnored = false;
+                        break;
+                    }
+                }
+            }
+        }
+        return isAllTestsIgnored;
+    }
+
+    @Override
+    protected Statement withBeforeClasses(Statement statement) {
+        if ( isAllTestsIgnored() ) {
+            return super.withBeforeClasses( statement );
+        }
+        return new BeforeClassCallbackHandler(
+                this,
+                super.withBeforeClasses( statement )
+        );
+    }
 
 	@Override
 	protected Statement withAfterClasses(Statement statement) {
+        if ( isAllTestsIgnored() ) {
+            return super.withAfterClasses( statement );
+        }
 		return new AfterClassCallbackHandler(
 				this,
 				super.withAfterClasses( statement )

@@ -123,6 +123,18 @@ public interface Statistics {
      * Get the global number of cacheable queries put in cache
      */
 	public long getQueryCachePutCount();
+    /**
+     * Get the global number of timestamps successfully retrieved from cache
+     */
+	public long getUpdateTimestampsCacheHitCount();
+    /**
+     * Get the global number of tables for which no update timestamps was *not* found in cache
+     */
+	public long getUpdateTimestampsCacheMissCount();
+    /**
+     * Get the global number of timestamps put in cache
+     */
+	public long getUpdateTimestampsCachePutCount();
 	/**
      * Get the global number of flush executed by sessions (either implicit or explicit)
      */

@@ -27,23 +27,23 @@ import java.util.Map;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.service.internal.BasicServiceRegistryImpl;
+import org.hibernate.service.internal.StandardServiceRegistryImpl;
 
 /**
  * @author Steve Ebersole
  */
 public class ServiceRegistryBuilder {
-	public static BasicServiceRegistryImpl buildServiceRegistry() {
+	public static StandardServiceRegistryImpl buildServiceRegistry() {
 		return buildServiceRegistry( Environment.getProperties() );
 	}
 
-	public static BasicServiceRegistryImpl buildServiceRegistry(Map serviceRegistryConfig) {
-		return (BasicServiceRegistryImpl) new org.hibernate.service.ServiceRegistryBuilder()
+	public static StandardServiceRegistryImpl buildServiceRegistry(Map serviceRegistryConfig) {
+		return (StandardServiceRegistryImpl) new org.hibernate.service.ServiceRegistryBuilder()
 				.applySettings( serviceRegistryConfig )
 				.buildServiceRegistry();
 	}
 
 	public static void destroy(ServiceRegistry serviceRegistry) {
-		( (BasicServiceRegistryImpl) serviceRegistry ).destroy();
+		( (StandardServiceRegistryImpl) serviceRegistry ).destroy();
 	}
 }

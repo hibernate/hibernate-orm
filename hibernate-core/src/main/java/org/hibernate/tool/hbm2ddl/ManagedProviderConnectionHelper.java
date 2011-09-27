@@ -32,7 +32,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.ServiceRegistryBuilder;
-import org.hibernate.service.internal.BasicServiceRegistryImpl;
+import org.hibernate.service.internal.StandardServiceRegistryImpl;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 
 /**
@@ -43,7 +43,7 @@ import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
  */
 class ManagedProviderConnectionHelper implements ConnectionHelper {
 	private Properties cfgProperties;
-	private BasicServiceRegistryImpl serviceRegistry;
+	private StandardServiceRegistryImpl serviceRegistry;
 	private Connection connection;
 
 	public ManagedProviderConnectionHelper(Properties cfgProperties) {
@@ -59,10 +59,10 @@ class ManagedProviderConnectionHelper implements ConnectionHelper {
 		}
 	}
 
-	private static BasicServiceRegistryImpl createServiceRegistry(Properties properties) {
+	private static StandardServiceRegistryImpl createServiceRegistry(Properties properties) {
 		Environment.verifyProperties( properties );
 		ConfigurationHelper.resolvePlaceHolders( properties );
-		return (BasicServiceRegistryImpl) new ServiceRegistryBuilder().applySettings( properties ).buildServiceRegistry();
+		return (StandardServiceRegistryImpl) new ServiceRegistryBuilder().applySettings( properties ).buildServiceRegistry();
 	}
 
 	public Connection getConnection() throws SQLException {

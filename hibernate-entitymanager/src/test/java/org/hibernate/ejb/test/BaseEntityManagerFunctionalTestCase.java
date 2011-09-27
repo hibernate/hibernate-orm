@@ -43,8 +43,9 @@ import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.ejb.EntityManagerFactoryImpl;
 import org.hibernate.internal.SessionFactoryImpl;
+import org.hibernate.service.BootstrapServiceRegistryBuilder;
 import org.hibernate.service.ServiceRegistryBuilder;
-import org.hibernate.service.internal.BasicServiceRegistryImpl;
+import org.hibernate.service.internal.StandardServiceRegistryImpl;
 import org.hibernate.service.internal.BootstrapServiceRegistryImpl;
 
 import org.junit.After;
@@ -67,7 +68,7 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 	private static final Dialect dialect = Dialect.getDialect();
 
 	private Ejb3Configuration ejb3Configuration;
-	private BasicServiceRegistryImpl serviceRegistry;
+	private StandardServiceRegistryImpl serviceRegistry;
 	private EntityManagerFactoryImpl entityManagerFactory;
 
 	private EntityManager em;
@@ -81,7 +82,7 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 		return entityManagerFactory;
 	}
 
-	protected BasicServiceRegistryImpl serviceRegistry() {
+	protected StandardServiceRegistryImpl serviceRegistry() {
 		return serviceRegistry;
 	}
 
@@ -94,12 +95,12 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 		afterConfigurationBuilt( ejb3Configuration );
 
 		entityManagerFactory = (EntityManagerFactoryImpl) ejb3Configuration.buildEntityManagerFactory( bootstrapRegistryBuilder() );
-		serviceRegistry = (BasicServiceRegistryImpl) ( (SessionFactoryImpl) entityManagerFactory.getSessionFactory() ).getServiceRegistry().getParentServiceRegistry();
+		serviceRegistry = (StandardServiceRegistryImpl) ( (SessionFactoryImpl) entityManagerFactory.getSessionFactory() ).getServiceRegistry().getParentServiceRegistry();
 
 		afterEntityManagerFactoryBuilt();
 	}
 
-	private BootstrapServiceRegistryImpl.Builder bootstrapRegistryBuilder() {
+	private BootstrapServiceRegistryBuilder bootstrapRegistryBuilder() {
 		return BootstrapServiceRegistryImpl.builder();
 	}
 

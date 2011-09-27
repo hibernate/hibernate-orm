@@ -21,9 +21,10 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.service;
+package org.hibernate.service.internal;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.event.service.internal.EventListenerServiceInitiator;
@@ -31,6 +32,9 @@ import org.hibernate.service.spi.SessionFactoryServiceInitiator;
 import org.hibernate.stat.internal.StatisticsInitiator;
 
 /**
+ * Central definition of the standard set of initiators defined by Hibernate for the
+ * {@link org.hibernate.service.spi.SessionFactoryServiceRegistry}
+ *
  * @author Steve Ebersole
  */
 public class StandardSessionFactoryServiceInitiators {
@@ -42,6 +46,6 @@ public class StandardSessionFactoryServiceInitiators {
 		serviceInitiators.add( EventListenerServiceInitiator.INSTANCE );
 		serviceInitiators.add( StatisticsInitiator.INSTANCE );
 
-		return serviceInitiators;
+		return Collections.unmodifiableList( serviceInitiators );
 	}
 }

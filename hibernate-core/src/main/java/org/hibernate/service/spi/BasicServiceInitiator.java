@@ -28,7 +28,7 @@ import java.util.Map;
 import org.hibernate.service.Service;
 
 /**
- * Responsible for initiating services.
+ * Contract for an initiator of services that target the standard {@link org.hibernate.service.ServiceRegistry}
  *
  * @author Steve Ebersole
  */

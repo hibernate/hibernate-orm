@@ -875,6 +875,11 @@
                 is the root registry (no parent) in normal use.
             </para>
 
+            <para>
+                Instances of boot-strap registries are built using the
+                <classname>org.hibernate.service.BootstrapServiceRegistryBuilder</classname> builder.
+            </para>
+
             <section id="services-registry-bootstrap-services">
                 <title>Boot-strap registry services</title>
                 <section id="services-ClassLoaderService">

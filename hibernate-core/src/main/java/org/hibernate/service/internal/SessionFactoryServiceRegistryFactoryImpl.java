@@ -31,7 +31,7 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistryFactory;
 
 /**
- * Acts as a {@link Service} in the {@link BasicServiceRegistryImpl} whose function is as a factory for
+ * Acts as a {@link Service} in the {@link StandardServiceRegistryImpl} whose function is as a factory for
  * {@link SessionFactoryServiceRegistryImpl} implementations.
  *
  * @author Steve Ebersole

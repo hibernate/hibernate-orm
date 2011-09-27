@@ -132,7 +132,7 @@ import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.secure.internal.JACCConfiguration;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.ServiceRegistryBuilder;
-import org.hibernate.service.internal.BasicServiceRegistryImpl;
+import org.hibernate.service.internal.StandardServiceRegistryImpl;
 import org.hibernate.tool.hbm2ddl.DatabaseMetadata;
 import org.hibernate.tool.hbm2ddl.IndexMetadata;
 import org.hibernate.tool.hbm2ddl.TableMetadata;
@@ -1754,7 +1754,7 @@ public class Configuration implements Serializable {
 
 					@Override
 					public void sessionFactoryClosed(SessionFactory factory) {
-						( (BasicServiceRegistryImpl) serviceRegistry ).destroy();
+						( (StandardServiceRegistryImpl) serviceRegistry ).destroy();
 					}
 				}
 		);

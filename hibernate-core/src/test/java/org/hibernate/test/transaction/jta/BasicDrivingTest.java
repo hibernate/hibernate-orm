@@ -30,10 +30,6 @@ import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.engine.transaction.internal.TransactionCoordinatorImpl;
@@ -41,15 +37,19 @@ import org.hibernate.engine.transaction.internal.jta.JtaTransactionFactory;
 import org.hibernate.engine.transaction.spi.TransactionContext;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.service.ServiceRegistryBuilder;
-import org.hibernate.service.internal.BasicServiceRegistryImpl;
-import org.hibernate.service.internal.ServiceProxy;
+import org.hibernate.service.internal.StandardServiceRegistryImpl;
 import org.hibernate.service.jta.platform.spi.JtaPlatform;
-import org.hibernate.test.common.JournalingTransactionObserver;
-import org.hibernate.test.common.TransactionContextImpl;
-import org.hibernate.test.common.TransactionEnvironmentImpl;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
 import org.hibernate.testing.env.ConnectionProviderBuilder;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.test.common.JournalingTransactionObserver;
+import org.hibernate.test.common.TransactionContextImpl;
+import org.hibernate.test.common.TransactionEnvironmentImpl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -62,7 +62,7 @@ import static org.junit.Assert.fail;
  * @author Steve Ebersole
  */
 public class BasicDrivingTest extends BaseUnitTestCase {
-	private BasicServiceRegistryImpl serviceRegistry;
+	private StandardServiceRegistryImpl serviceRegistry;
 
 	@Before
 	@SuppressWarnings( {"unchecked"})
@@ -71,7 +71,7 @@ public class BasicDrivingTest extends BaseUnitTestCase {
 		configValues.putAll( ConnectionProviderBuilder.getConnectionProviderProperties() );
 		configValues.put( Environment.TRANSACTION_STRATEGY, JtaTransactionFactory.class.getName() );
 		TestingJtaBootstrap.prepare( configValues );
-		serviceRegistry = (BasicServiceRegistryImpl) new ServiceRegistryBuilder()
+		serviceRegistry = (StandardServiceRegistryImpl) new ServiceRegistryBuilder()
 				.applySettings( configValues )
 				.buildServiceRegistry();
 	}
@@ -142,8 +142,7 @@ public class BasicDrivingTest extends BaseUnitTestCase {
 		}
 		catch ( SQLException sqle ) {
 			try {
-				JtaPlatform instance = ( (ServiceProxy) serviceRegistry.getService( JtaPlatform.class ) ).getTargetInstance();
-				instance.retrieveTransactionManager().rollback();
+				serviceRegistry.getService( JtaPlatform.class ).retrieveTransactionManager().rollback();
 			}
 			catch (Exception ignore) {
 			}
@@ -151,8 +150,7 @@ public class BasicDrivingTest extends BaseUnitTestCase {
 		}
 		catch (Throwable reThrowable) {
 			try {
-				JtaPlatform instance = ( (ServiceProxy) serviceRegistry.getService( JtaPlatform.class ) ).getTargetInstance();
-				instance.retrieveTransactionManager().rollback();
+				serviceRegistry.getService( JtaPlatform.class ).retrieveTransactionManager().rollback();
 			}
 			catch (Exception ignore) {
 			}

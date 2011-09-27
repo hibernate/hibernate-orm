@@ -44,7 +44,7 @@ import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.internal.util.collections.IdentityMap;
 import org.hibernate.metamodel.source.MetadataImplementor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
-import org.hibernate.service.internal.BootstrapServiceRegistryImpl;
+import org.hibernate.service.BootstrapServiceRegistryBuilder;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -69,7 +69,7 @@ public abstract class AbstractJPATest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Override
-	protected void prepareBootstrapRegistryBuilder(BootstrapServiceRegistryImpl.Builder builder) {
+	protected void prepareBootstrapRegistryBuilder(BootstrapServiceRegistryBuilder builder) {
 		builder.with(
 				new Integrator() {
 

@@ -34,7 +34,8 @@ import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.event.EnversIntegrator;
 import org.hibernate.internal.SessionFactoryImpl;
-import org.hibernate.service.internal.BasicServiceRegistryImpl;
+import org.hibernate.service.BootstrapServiceRegistryBuilder;
+import org.hibernate.service.internal.StandardServiceRegistryImpl;
 import org.hibernate.service.internal.BootstrapServiceRegistryImpl;
 
 import org.junit.Before;
@@ -50,7 +51,7 @@ public abstract class AbstractEntityTest extends AbstractEnversTest {
     private EntityManager entityManager;
     private AuditReader auditReader;
     private Ejb3Configuration cfg;
-	private BasicServiceRegistryImpl serviceRegistry;
+	private StandardServiceRegistryImpl serviceRegistry;
     private boolean audited;
 
     public abstract void configure(Ejb3Configuration cfg);
@@ -108,12 +109,12 @@ public abstract class AbstractEntityTest extends AbstractEnversTest {
 
         emf = (EntityManagerFactoryImpl) cfg.buildEntityManagerFactory( createBootstrapRegistryBuilder() );
 
-		serviceRegistry = (BasicServiceRegistryImpl) ( (SessionFactoryImpl) emf.getSessionFactory() ).getServiceRegistry().getParentServiceRegistry();
+		serviceRegistry = (StandardServiceRegistryImpl) ( (SessionFactoryImpl) emf.getSessionFactory() ).getServiceRegistry().getParentServiceRegistry();
 
         newEntityManager();
     }
 
-	private BootstrapServiceRegistryImpl.Builder createBootstrapRegistryBuilder() {
+	private BootstrapServiceRegistryBuilder createBootstrapRegistryBuilder() {
 		return BootstrapServiceRegistryImpl.builder();
 	}
 

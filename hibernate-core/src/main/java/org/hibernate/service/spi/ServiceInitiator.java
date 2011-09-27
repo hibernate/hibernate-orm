@@ -26,6 +26,8 @@ package org.hibernate.service.spi;
 import org.hibernate.service.Service;
 
 /**
+ * Base contract for an initiator of a service.
+ *
  * @author Steve Ebersole
  */
 public interface ServiceInitiator<R extends Service> {

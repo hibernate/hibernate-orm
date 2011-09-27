@@ -33,7 +33,7 @@ import org.hibernate.metamodel.Metadata;
 import org.hibernate.metamodel.MetadataBuilder;
 import org.hibernate.metamodel.MetadataSourceProcessingOrder;
 import org.hibernate.metamodel.MetadataSources;
-import org.hibernate.service.BasicServiceRegistry;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.config.spi.ConfigurationService;
 
 /**
@@ -93,7 +93,7 @@ public class MetadataBuilderImpl implements MetadataBuilder {
 		private String defaultSchemaName;
 		private String defaultCatalogName;
 
-		public OptionsImpl(BasicServiceRegistry serviceRegistry) {
+		public OptionsImpl(ServiceRegistry serviceRegistry) {
 			ConfigurationService configService = serviceRegistry.getService( ConfigurationService.class );
 
 			// cache access type

@@ -24,6 +24,7 @@
 package org.hibernate.service;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.cache.internal.RegionFactoryInitiator;
@@ -45,6 +46,8 @@ import org.hibernate.service.jta.platform.internal.JtaPlatformInitiator;
 import org.hibernate.service.spi.BasicServiceInitiator;
 
 /**
+ * Central definition of the standard set of service initiators defined by Hibernate.
+ * 
  * @author Steve Ebersole
  */
 public class StandardServiceInitiators {
@@ -77,6 +80,6 @@ public class StandardServiceInitiators {
 
 		serviceInitiators.add( RegionFactoryInitiator.INSTANCE );
 
-		return serviceInitiators;
+		return Collections.unmodifiableList( serviceInitiators );
 	}
 }

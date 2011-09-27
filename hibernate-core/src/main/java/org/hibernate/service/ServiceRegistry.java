@@ -24,7 +24,7 @@
 package org.hibernate.service;
 
 /**
- * The registry of {@link Service services}.
+ * A registry of {@link Service services}.
  *
  * @author Steve Ebersole
  */

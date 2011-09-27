@@ -59,6 +59,7 @@ public abstract class AbstractServiceRegistryImpl implements ServiceRegistryImpl
 	// iterate it in reverse order which is only available through ListIterator
 	private List<Service> serviceList = new ArrayList<Service>();
 
+	@SuppressWarnings( {"UnusedDeclaration"})
 	protected AbstractServiceRegistryImpl() {
 		this( null );
 	}

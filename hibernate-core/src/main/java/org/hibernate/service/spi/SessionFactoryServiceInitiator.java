@@ -29,6 +29,9 @@ import org.hibernate.metamodel.source.MetadataImplementor;
 import org.hibernate.service.Service;
 
 /**
+ * Contract for an initiator of services that target the specialized service registry
+ * {@link SessionFactoryServiceRegistry}
+ *
  * @author Steve Ebersole
  */
 public interface SessionFactoryServiceInitiator<R extends Service> extends ServiceInitiator<R>{

@@ -24,7 +24,7 @@ import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.persister.spi.PersisterClassResolver;
-import org.hibernate.service.BasicServiceRegistry;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.ServiceRegistryBuilder;
 
 import org.junit.Test;
@@ -42,7 +42,7 @@ public class PersisterClassProviderTest extends BaseUnitTestCase {
 
 		Configuration cfg = new Configuration();
 		cfg.addAnnotatedClass( Gate.class );
-		BasicServiceRegistry serviceRegistry = new ServiceRegistryBuilder()
+		ServiceRegistry serviceRegistry = new ServiceRegistryBuilder()
 				.applySettings( cfg.getProperties() )
 				.buildServiceRegistry();
 		//no exception as the GoofyPersisterClassProvider is not set

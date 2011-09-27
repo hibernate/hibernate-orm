@@ -23,9 +23,8 @@
  */
 package org.hibernate.service.spi;
 
-
 /**
- * Lifecyle contract for services which wish to be notified when it is time to stop.
+ * Lifecycle contract for services which wish to be notified when it is time to stop.
  *
  * @author Steve Ebersole
  */

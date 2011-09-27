@@ -44,16 +44,19 @@ import org.hibernate.internal.util.config.ConfigurationException;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.internal.jaxb.cfg.JaxbHibernateConfiguration;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
-import org.hibernate.service.internal.BasicServiceRegistryImpl;
+import org.hibernate.service.internal.StandardServiceRegistryImpl;
 import org.hibernate.service.internal.BootstrapServiceRegistryImpl;
 import org.hibernate.service.internal.JaxbProcessor;
 import org.hibernate.service.internal.ProvidedService;
 import org.hibernate.service.spi.BasicServiceInitiator;
 
 /**
- * Builder for basic service registry instances.
+ * Builder for standard {@link ServiceRegistry} instances.
  *
  * @author Steve Ebersole
+ * 
+ * @see StandardServiceRegistryImpl
+ * @see BootstrapServiceRegistryBuilder
  */
 public class ServiceRegistryBuilder {
 	private static final Logger log = Logger.getLogger( ServiceRegistryBuilder.class );
@@ -235,7 +238,7 @@ public class ServiceRegistryBuilder {
 	 *
 	 * @return The built service registry
 	 */
-	public BasicServiceRegistry buildServiceRegistry() {
+	public ServiceRegistry buildServiceRegistry() {
 		Map<?,?> settingsCopy = new HashMap();
 		settingsCopy.putAll( settings );
 		Environment.verifyProperties( settingsCopy );
@@ -247,7 +250,7 @@ public class ServiceRegistryBuilder {
 			}
 		}
 
-		return new BasicServiceRegistryImpl( bootstrapServiceRegistry, initiators, providedServices, settingsCopy );
+		return new StandardServiceRegistryImpl( bootstrapServiceRegistry, initiators, providedServices, settingsCopy );
 	}
 
 	/**
@@ -255,7 +258,7 @@ public class ServiceRegistryBuilder {
 	 *
 	 * @param serviceRegistry The registry to be closed.
 	 */
-	public static void destroy(BasicServiceRegistry serviceRegistry) {
-		( (BasicServiceRegistryImpl) serviceRegistry ).destroy();
+	public static void destroy(ServiceRegistry serviceRegistry) {
+		( (StandardServiceRegistryImpl) serviceRegistry ).destroy();
 	}
 }

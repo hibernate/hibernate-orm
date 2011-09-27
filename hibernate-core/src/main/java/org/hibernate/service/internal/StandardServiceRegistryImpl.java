@@ -26,7 +26,7 @@ package org.hibernate.service.internal;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.service.BasicServiceRegistry;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.Service;
 import org.hibernate.service.spi.BasicServiceInitiator;
 import org.hibernate.service.spi.Configurable;
@@ -35,15 +35,15 @@ import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
- * Standard Hibernate implementation of the service registry.
+ * Hibernate implementation of the standard service registry.
  *
  * @author Steve Ebersole
  */
-public class BasicServiceRegistryImpl extends AbstractServiceRegistryImpl implements BasicServiceRegistry {
+public class StandardServiceRegistryImpl extends AbstractServiceRegistryImpl implements ServiceRegistry {
 	private final Map configurationValues;
 
 	@SuppressWarnings( {"unchecked"})
-	public BasicServiceRegistryImpl(
+	public StandardServiceRegistryImpl(
 			ServiceRegistryImplementor bootstrapServiceRegistry,
 			List<BasicServiceInitiator> serviceInitiators,
 			List<ProvidedService> providedServices,

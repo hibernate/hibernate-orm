@@ -29,6 +29,7 @@ import org.hibernate.service.Service;
 
 /**
  * Models a binding for a particular service
+ *
  * @author Steve Ebersole
  */
 public final class ServiceBinding<R extends Service> {

@@ -30,8 +30,9 @@ import org.hibernate.service.Service;
 import org.hibernate.service.internal.SessionFactoryServiceRegistryImpl;
 
 /**
- * Contract for builder of {@link SessionFactoryServiceRegistry} instances.  Defined as a service to
- * "sit inside" the {@link org.hibernate.service.BasicServiceRegistry}.
+ * Contract for builder of {@link SessionFactoryServiceRegistry} instances.
+ * <p/>
+ * Is itself a service within the standard service registry.
  *
  * @author Steve Ebersole
  */

@@ -24,6 +24,10 @@
 package org.hibernate.service.spi;
 
 /**
+ * Optional contract for services that wrap stuff that to which it is useful to have access.  For example, a service
+ * that maintains a {@link javax.sql.DataSource} might want to expose access to the {@link javax.sql.DataSource} or
+ * its {@link java.sql.Connection} instances.
+ *
  * @author Steve Ebersole
  */
 public interface Wrapped {

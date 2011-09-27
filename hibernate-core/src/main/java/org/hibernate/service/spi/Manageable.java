@@ -23,7 +23,6 @@
  */
 package org.hibernate.service.spi;
 
-
 /**
  * Optional {@link org.hibernate.service.Service} contract for services which can be managed in JMX
  *

@@ -27,9 +27,23 @@ import org.hibernate.service.Service;
 import org.hibernate.service.ServiceRegistry;
 
 /**
+ * Additional integration contracts for a service registry.
+ *
  * @author Steve Ebersole
  */
 public interface ServiceRegistryImplementor extends ServiceRegistry {
+	/**
+	 * Locate the binding for the given role.  Should, generally speaking, look into parent registry if one.
+	 *
+	 * @param serviceRole The service role for which to locate a binding.
+	 * @param <R> generic return type.
+	 *
+	 * @return The located binding; may be {@code null}
+	 */
 	public <R extends Service> ServiceBinding<R> locateServiceBinding(Class<R> serviceRole);
+
+	/**
+	 * Release resources
+	 */
 	public void destroy();
 }

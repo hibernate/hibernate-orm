@@ -24,8 +24,8 @@
 package org.hibernate.service.spi;
 
 /**
- * Acts as a {@link org.hibernate.service.Service} in the {@link org.hibernate.service.internal.BasicServiceRegistryImpl} whose function is as a factory for
- * {@link org.hibernate.service.internal.SessionFactoryServiceRegistryImpl} implementations.
+ * Specialized {@link org.hibernate.service.ServiceRegistry} implementation that holds services which need access
+ * to the {@link org.hibernate.SessionFactory} during initialization.
  *
  * @author Steve Ebersole
  */

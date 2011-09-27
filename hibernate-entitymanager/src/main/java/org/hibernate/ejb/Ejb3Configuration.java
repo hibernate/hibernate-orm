@@ -102,6 +102,7 @@ import org.hibernate.mapping.AuxiliaryDatabaseObject;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.secure.internal.JACCConfiguration;
+import org.hibernate.service.BootstrapServiceRegistryBuilder;
 import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.service.internal.BootstrapServiceRegistryImpl;
 import org.hibernate.service.jdbc.connections.internal.DatasourceConnectionProviderImpl;
@@ -886,7 +887,7 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 		return buildEntityManagerFactory( BootstrapServiceRegistryImpl.builder() );
 	}
 
-	public EntityManagerFactory buildEntityManagerFactory(BootstrapServiceRegistryImpl.Builder builder) {
+	public EntityManagerFactory buildEntityManagerFactory(BootstrapServiceRegistryBuilder builder) {
 		Thread thread = null;
 		ClassLoader contextClassLoader = null;
 

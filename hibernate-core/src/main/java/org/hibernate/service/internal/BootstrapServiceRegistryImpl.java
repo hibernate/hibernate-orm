@@ -28,6 +28,7 @@ import java.util.LinkedHashSet;
 import org.hibernate.integrator.internal.IntegratorServiceImpl;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
+import org.hibernate.service.BootstrapServiceRegistryBuilder;
 import org.hibernate.service.Service;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.classloading.internal.ClassLoaderServiceImpl;
@@ -51,8 +52,8 @@ public class BootstrapServiceRegistryImpl implements ServiceRegistryImplementor,
 	private final ServiceBinding<ClassLoaderService> classLoaderServiceBinding;
 	private final ServiceBinding<IntegratorService> integratorServiceBinding;
 
-	public static Builder builder() {
-		return new Builder();
+	public static BootstrapServiceRegistryBuilder builder() {
+		return new BootstrapServiceRegistryBuilder();
 	}
 
 	public BootstrapServiceRegistryImpl() {
@@ -118,52 +119,4 @@ public class BootstrapServiceRegistryImpl implements ServiceRegistryImplementor,
 		throw new ServiceException( "Boot-strap registry should only contain directly built services" );
 	}
 
-	public static class Builder {
-		private final LinkedHashSet<Integrator> providedIntegrators = new LinkedHashSet<Integrator>();
-		private ClassLoader applicationClassLoader;
-		private ClassLoader resourcesClassLoader;
-		private ClassLoader hibernateClassLoader;
-		private ClassLoader environmentClassLoader;
-
-		public Builder with(Integrator integrator) {
-			providedIntegrators.add( integrator );
-			return this;
-		}
-
-		public Builder withApplicationClassLoader(ClassLoader classLoader) {
-			this.applicationClassLoader = classLoader;
-			return this;
-		}
-
-		public Builder withResourceClassLoader(ClassLoader classLoader) {
-			this.resourcesClassLoader = classLoader;
-			return this;
-		}
-
-		public Builder withHibernateClassLoader(ClassLoader classLoader) {
-			this.hibernateClassLoader = classLoader;
-			return this;
-		}
-
-		public Builder withEnvironmentClassLoader(ClassLoader classLoader) {
-			this.environmentClassLoader = classLoader;
-			return this;
-		}
-
-		public BootstrapServiceRegistryImpl build() {
-			final ClassLoaderServiceImpl classLoaderService = new ClassLoaderServiceImpl(
-					applicationClassLoader,
-					resourcesClassLoader,
-					hibernateClassLoader,
-					environmentClassLoader
-			);
-
-			final IntegratorServiceImpl integratorService = new IntegratorServiceImpl(
-					providedIntegrators,
-					classLoaderService
-			);
-
-			return new BootstrapServiceRegistryImpl( classLoaderService, integratorService );
-		}
-	}
 }

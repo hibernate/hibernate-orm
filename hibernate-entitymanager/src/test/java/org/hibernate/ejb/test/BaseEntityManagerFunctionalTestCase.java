@@ -46,7 +46,6 @@ import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.service.BootstrapServiceRegistryBuilder;
 import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.service.internal.StandardServiceRegistryImpl;
-import org.hibernate.service.internal.BootstrapServiceRegistryImpl;
 
 import org.junit.After;
 import org.junit.Before;
@@ -101,7 +100,7 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 	}
 
 	private BootstrapServiceRegistryBuilder bootstrapRegistryBuilder() {
-		return BootstrapServiceRegistryImpl.builder();
+		return new BootstrapServiceRegistryBuilder();
 	}
 
 	protected Ejb3Configuration buildConfiguration() {

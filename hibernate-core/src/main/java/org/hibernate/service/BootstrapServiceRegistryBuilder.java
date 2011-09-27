@@ -36,7 +36,7 @@ import org.hibernate.service.internal.BootstrapServiceRegistryImpl;
  * @author Steve Ebersole
  *
  * @see BootstrapServiceRegistryImpl
- * @see ServiceRegistryBuilder#ServiceRegistryBuilder(BootstrapServiceRegistryImpl)
+ * @see ServiceRegistryBuilder#ServiceRegistryBuilder(BootstrapServiceRegistry)
  */
 public class BootstrapServiceRegistryBuilder {
 	private final LinkedHashSet<Integrator> providedIntegrators = new LinkedHashSet<Integrator>();
@@ -109,7 +109,7 @@ public class BootstrapServiceRegistryBuilder {
 	 *
 	 * @return The built bootstrap registry
 	 */
-	public ServiceRegistry build() {
+	public BootstrapServiceRegistry build() {
 		final ClassLoaderServiceImpl classLoaderService = new ClassLoaderServiceImpl(
 				applicationClassLoader,
 				resourcesClassLoader,

@@ -28,7 +28,7 @@ import java.util.LinkedHashSet;
 import org.hibernate.integrator.internal.IntegratorServiceImpl;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
-import org.hibernate.service.BootstrapServiceRegistryBuilder;
+import org.hibernate.service.BootstrapServiceRegistry;
 import org.hibernate.service.Service;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.classloading.internal.ClassLoaderServiceImpl;
@@ -46,15 +46,12 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
  *
  * @author Steve Ebersole
  */
-public class BootstrapServiceRegistryImpl implements ServiceRegistryImplementor, ServiceBinding.OwningRegistry {
+public class BootstrapServiceRegistryImpl
+		implements ServiceRegistryImplementor, BootstrapServiceRegistry, ServiceBinding.OwningRegistry {
 	private static final LinkedHashSet<Integrator> NO_INTEGRATORS = new LinkedHashSet<Integrator>();
 
 	private final ServiceBinding<ClassLoaderService> classLoaderServiceBinding;
 	private final ServiceBinding<IntegratorService> integratorServiceBinding;
-
-	public static BootstrapServiceRegistryBuilder builder() {
-		return new BootstrapServiceRegistryBuilder();
-	}
 
 	public BootstrapServiceRegistryImpl() {
 		this( new ClassLoaderServiceImpl(), NO_INTEGRATORS );

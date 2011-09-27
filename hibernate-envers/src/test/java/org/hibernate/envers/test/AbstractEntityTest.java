@@ -36,7 +36,6 @@ import org.hibernate.envers.event.EnversIntegrator;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.service.BootstrapServiceRegistryBuilder;
 import org.hibernate.service.internal.StandardServiceRegistryImpl;
-import org.hibernate.service.internal.BootstrapServiceRegistryImpl;
 
 import org.junit.Before;
 
@@ -115,7 +114,7 @@ public abstract class AbstractEntityTest extends AbstractEnversTest {
     }
 
 	private BootstrapServiceRegistryBuilder createBootstrapRegistryBuilder() {
-		return BootstrapServiceRegistryImpl.builder();
+		return new BootstrapServiceRegistryBuilder();
 	}
 
 

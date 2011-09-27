@@ -884,7 +884,7 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 	}
 
 	public EntityManagerFactory buildEntityManagerFactory() {
-		return buildEntityManagerFactory( BootstrapServiceRegistryImpl.builder() );
+		return buildEntityManagerFactory( new BootstrapServiceRegistryBuilder() );
 	}
 
 	public EntityManagerFactory buildEntityManagerFactory(BootstrapServiceRegistryBuilder builder) {

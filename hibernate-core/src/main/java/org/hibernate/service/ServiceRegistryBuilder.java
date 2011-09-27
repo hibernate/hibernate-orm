@@ -67,7 +67,7 @@ public class ServiceRegistryBuilder {
 	private final List<BasicServiceInitiator> initiators = standardInitiatorList();
 	private final List<ProvidedService> providedServices = new ArrayList<ProvidedService>();
 
-	private final BootstrapServiceRegistryImpl bootstrapServiceRegistry;
+	private final BootstrapServiceRegistry bootstrapServiceRegistry;
 
 	/**
 	 * Create a default builder
@@ -81,7 +81,7 @@ public class ServiceRegistryBuilder {
 	 *
 	 * @param bootstrapServiceRegistry Provided bootstrap registry to use.
 	 */
-	public ServiceRegistryBuilder(BootstrapServiceRegistryImpl bootstrapServiceRegistry) {
+	public ServiceRegistryBuilder(BootstrapServiceRegistry bootstrapServiceRegistry) {
 		this.settings = Environment.getProperties();
 		this.bootstrapServiceRegistry = bootstrapServiceRegistry;
 	}

@@ -53,6 +53,7 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.source.MetadataImplementor;
+import org.hibernate.service.BootstrapServiceRegistry;
 import org.hibernate.service.BootstrapServiceRegistryBuilder;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.ServiceRegistryBuilder;
@@ -325,15 +326,15 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		Environment.verifyProperties( properties );
 		ConfigurationHelper.resolvePlaceHolders( properties );
 
-		final BootstrapServiceRegistryImpl bootstrapServiceRegistry = generateBootstrapRegistry( properties );
+		final BootstrapServiceRegistry bootstrapServiceRegistry = generateBootstrapRegistry( properties );
 		ServiceRegistryBuilder registryBuilder = new ServiceRegistryBuilder( bootstrapServiceRegistry )
 				.applySettings( properties );
 		prepareBasicRegistryBuilder( registryBuilder );
 		return (StandardServiceRegistryImpl) registryBuilder.buildServiceRegistry();
 	}
 
-	protected BootstrapServiceRegistryImpl generateBootstrapRegistry(Properties properties) {
-		final BootstrapServiceRegistryBuilder builder = BootstrapServiceRegistryImpl.builder();
+	protected BootstrapServiceRegistry generateBootstrapRegistry(Properties properties) {
+		final BootstrapServiceRegistryBuilder builder = new BootstrapServiceRegistryBuilder();
 		prepareBootstrapRegistryBuilder( builder );
 		return builder.build();
 	}

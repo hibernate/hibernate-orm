@@ -26,6 +26,7 @@ package org.hibernate.service.internal;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.service.BootstrapServiceRegistry;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.Service;
 import org.hibernate.service.spi.BasicServiceInitiator;
@@ -44,7 +45,7 @@ public class StandardServiceRegistryImpl extends AbstractServiceRegistryImpl imp
 
 	@SuppressWarnings( {"unchecked"})
 	public StandardServiceRegistryImpl(
-			ServiceRegistryImplementor bootstrapServiceRegistry,
+			BootstrapServiceRegistry bootstrapServiceRegistry,
 			List<BasicServiceInitiator> serviceInitiators,
 			List<ProvidedService> providedServices,
 			Map<?, ?> configurationValues) {

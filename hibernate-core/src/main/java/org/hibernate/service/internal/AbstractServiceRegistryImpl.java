@@ -33,6 +33,7 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.service.BootstrapServiceRegistry;
 import org.hibernate.service.Service;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.UnknownServiceException;
@@ -61,14 +62,27 @@ public abstract class AbstractServiceRegistryImpl implements ServiceRegistryImpl
 
 	@SuppressWarnings( {"UnusedDeclaration"})
 	protected AbstractServiceRegistryImpl() {
-		this( null );
+		this( (ServiceRegistryImplementor) null );
 	}
 
 	protected AbstractServiceRegistryImpl(ServiceRegistryImplementor parent) {
 		this.parent = parent;
+		prepare();
+
+	}
+
+	private void prepare() {
 		// assume 20 services for initial sizing
 		this.serviceBindingMap = CollectionHelper.concurrentMap( 20 );
 		this.serviceList = CollectionHelper.arrayList( 20 );
+	}
+
+	public AbstractServiceRegistryImpl(BootstrapServiceRegistry bootstrapServiceRegistry) {
+		if ( ! ServiceRegistryImplementor.class.isInstance( bootstrapServiceRegistry ) ) {
+			throw new IllegalArgumentException( "Boot-strap registry was not " );
+		}
+		this.parent = (ServiceRegistryImplementor) bootstrapServiceRegistry;
+		prepare();
 	}
 
 	@SuppressWarnings({ "unchecked" })

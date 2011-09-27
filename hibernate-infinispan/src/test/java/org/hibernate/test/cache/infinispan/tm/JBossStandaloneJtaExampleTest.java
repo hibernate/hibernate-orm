@@ -76,9 +76,11 @@ public class JBossStandaloneJtaExampleTest extends TestCase {
    @Override
    protected void setUp() throws Exception {
       super.setUp();
-	  serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() );
+	   serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() );
       jndiServer = startJndiServer();
       ctx = createJndiContext();
+      // Inject configuration to initialise transaction manager from config classloader
+      lookup.init(new org.infinispan.config.Configuration());
       bindTransactionManager();
       bindUserTransaction();
       bindDataSource();

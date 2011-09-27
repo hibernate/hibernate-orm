@@ -5,7 +5,7 @@ configurations {
 }
 
 dependencies {
-   infinispanVersion = '5.0.0.CR4'
+   infinispanVersion = '5.0.1.FINAL'
    jnpVersion = '5.0.3.GA'
 
    compile(project(':hibernate-core'))
@@ -32,7 +32,7 @@ dependencies {
    testCompile([group: 'org.jboss.naming', name: 'jnp-client', version: jnpVersion])
    testCompile([group: 'org.jboss.naming', name: 'jnpserver', version: jnpVersion])
    testCompile([group: 'com.experlog', name: 'xapool', version: '1.5.0'])
-   testCompile([group: 'jboss.jbossts', name: 'jbossjta', version: '4.9.0.GA'])
+   testCompile([group: 'org.jboss.jbossts', name: 'jbossjta', version: '4.15.1.Final'])
    testCompile(libraries.jta)
    testCompile(libraries.h2)
    // testCompile( [group: 'hsqldb', name: 'hsqldb', version: '1.8.0.2'] )

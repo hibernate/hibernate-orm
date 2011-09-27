@@ -117,12 +117,18 @@ public class TypeOverrides {
 
    public Configuration createInfinispanConfiguration() {
       Configuration cacheCfg = new Configuration();
-      if (overridden.contains("evictionStrategy")) cacheCfg.setEvictionStrategy(evictionStrategy);
-      if (overridden.contains("evictionWakeUpInterval")) cacheCfg.setEvictionWakeUpInterval(evictionWakeUpInterval);
-      if (overridden.contains("evictionMaxEntries")) cacheCfg.setEvictionMaxEntries(evictionMaxEntries);
-      if (overridden.contains("expirationLifespan")) cacheCfg.setExpirationLifespan(expirationLifespan);
-      if (overridden.contains("expirationMaxIdle")) cacheCfg.setExpirationMaxIdle(expirationMaxIdle);
-      if (overridden.contains("isExposeStatistics")) cacheCfg.setExposeJmxStatistics(isExposeStatistics);
+      if (overridden.contains("evictionStrategy"))
+         cacheCfg.fluent().eviction().strategy(evictionStrategy);
+      if (overridden.contains("evictionWakeUpInterval"))
+         cacheCfg.fluent().expiration().wakeUpInterval(evictionWakeUpInterval);
+      if (overridden.contains("evictionMaxEntries"))
+         cacheCfg.fluent().eviction().maxEntries(evictionMaxEntries);
+      if (overridden.contains("expirationLifespan"))
+         cacheCfg.fluent().expiration().lifespan(expirationLifespan);
+      if (overridden.contains("expirationMaxIdle"))
+         cacheCfg.fluent().expiration().maxIdle(expirationMaxIdle);
+      if (overridden.contains("isExposeStatistics") && isExposeStatistics)
+         cacheCfg.fluent().jmxStatistics();
       return cacheCfg;
    }
 

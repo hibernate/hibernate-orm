@@ -29,28 +29,9 @@
             Optionally, the service can also implement the
             <interfacename>org.hibernate.service.spi.Startable</interfacename> and
             <interfacename>org.hibernate.service.spi.Stoppable</interfacename> interfaces to receive notifications
-            of when they are becoming active and becoming deactivated.
-        </para>
-        <para>
-            Another optional service contract is <interfacename>org.hibernate.service.spi.Manageable</interfacename>
-            which marks the service as manageable in JMX provided the JMX integration is enabled.
-        </para>
-    </section>
-
-    <section>
-        <title>ServiceRegistry</title>
-        <para>
-            The central service API, aside from the services themselves, is the
-            <interfacename>org.hibernate.service.ServiceRegistry</interfacename> interface, the main purpose of which
-            is hold, manage and provide access to services.
-        </para>
-    </section>
-
-    <section>
-        <title>ServiceRegistryBuilder</title>
-        <para>
-            Building a <interfacename>org.hibernate.service.ServiceRegistry</interfacename> is the purpose of the
-            <classname>org.hibernate.service.ServiceRegistryBuilder</classname>.
+            of being started and stopped.  Another optional service contract is
+            <interfacename>org.hibernate.service.spi.Manageable</interfacename> which marks the service as manageable
+            in JMX provided the JMX integration is enabled.
         </para>
     </section>
 
@@ -90,42 +71,23 @@
         </section>
     </section>
 
-    <section>
-        <title>Custom services</title>
+    <section id="services-registry">
+        <title>ServiceRegistry</title>
         <para>
-            Once a <interfacename>org.hibernate.service.ServiceRegistry</interfacename> is built it is considered
-            immutable; the services themselves might accept re-configuration, but immutability here means
-            adding/replacing services.  So another role provided by the
-            <classname>org.hibernate.service.ServiceRegistryBuilder</classname> is to allow tweaking of the services
-            that will be contained in the <interfacename>org.hibernate.service.ServiceRegistry</interfacename>
-            generated from it.
+            The central service API, aside from the services themselves, is the
+            <interfacename>org.hibernate.service.ServiceRegistry</interfacename> interface. The main purpose of
+            a service registry is to hold, manage and provide access to services.
         </para>
         <para>
-            There are 2 means to tell a <classname>org.hibernate.service.ServiceRegistryBuilder</classname> about
-            custom services.
+            Service registries are hierarchical.  Services in one registry can depend on and utilize services in that
+            same registry as well as any parent registries.
         </para>
-        <itemizedlist>
-            <listitem>
-                <para>
-                    Implement a <interfacename>org.hibernate.service.spi.BasicServiceInitiator</interfacename> class
-                    to control on-demand construction of the service class and add it to the
-                    <classname>org.hibernate.service.ServiceRegistryBuilder</classname> via its
-                    <methodname>addInitiator</methodname> method.
-                </para>
-            </listitem>
-            <listitem>
-                <para>
-                    Just instantiate the service class and add it to the
-                    <classname>org.hibernate.service.ServiceRegistryBuilder</classname> via its
-                    <methodname>addService</methodname> method.
-                </para>
-            </listitem>
-        </itemizedlist>
         <para>
-            Either approach the adding a service approach or the adding an initiator approach are valid for extending a
-            registry (adding new service roles) and overriding services (replacing service implementations).
+            Use <classname>org.hibernate.service.ServiceRegistryBuilder</classname> to build a
+            <interfacename>org.hibernate.service.ServiceRegistry</interfacename> instance.
         </para>
     </section>
+
 
     <section>
         <title>Standard services</title>
@@ -732,7 +694,7 @@
                             instances which acts as a specialized
                             <interfacename>org.hibernate.service.ServiceRegistry</interfacename> for
                             <interfacename>org.hibernate.SessionFactory</interfacename> scoped services.  See
-                            <xref linkend="services-SessionFactoryServices"/> for more details.
+                            <xref linkend="services-registry-sessionfactory"/> for more details.
                         </para>
                     </listitem>
                 </varlistentry>
@@ -862,62 +824,125 @@
 
     </section>
 
-    <section id="services-SessionFactoryServices">
-        <title>SessionFactory services</title>
-
-        <para>
-            There are also a number of services that are specific to each
-            <interfacename>org.hibernate.SessionFactory</interfacename> that are maintained as part of
-            <interfacename>org.hibernate.service.spi.SessionFactoryServiceRegistry</interfacename>
-        </para>
-
-        <section id="service-EventListenerRegistry">
-            <title><interfacename>org.hibernate.event.service.spi.EventListenerRegistry</interfacename></title>
-            <variablelist>
-                <varlistentry>
-                    <term>Notes</term>
-                    <listitem>
-                        <para>
-                            Service for managing event listeners.
-                        </para>
-                    </listitem>
-                </varlistentry>
-                <varlistentry>
-                    <term>Initiator</term>
-                    <listitem>
-                        <para>
-                            <classname>org.hibernate.event.service.internal.EventListenerServiceInitiator</classname>
-                        </para>
-                    </listitem>
-                </varlistentry>
-                <varlistentry>
-                    <term>Implementations</term>
-                    <listitem>
-                        <para>
-                            <classname>org.hibernate.event.service.internal.EventListenerRegistryImpl</classname>
-                        </para>
-                    </listitem>
-                </varlistentry>
-            </variablelist>
-        </section>
-
-    </section>
 
     <section>
-        <title>Boot-strap services</title>
-
-        <section id="services-ClassLoaderService">
-            <title><interfacename>org.hibernate.service.classloading.spi.ClassLoaderService</interfacename></title>
-            <para>
-                Coming soon...  See <ulink url="https://hibernate.onjira.com/browse/HHH-6656" />
-            </para>
-        </section>
-
-        <section id="services-IntegratorService">
-            <title><interfacename>org.hibernate.integrator.spi.IntegratorService</interfacename></title>
-            <para>
-                Coming soon...  See <ulink url="https://hibernate.onjira.com/browse/HHH-6657" />
-            </para>
-        </section>
+        <title>Custom services</title>
+        <para>
+            Once a <interfacename>org.hibernate.service.ServiceRegistry</interfacename> is built it is considered
+            immutable; the services themselves might accept re-configuration, but immutability here means
+            adding/replacing services.  So another role provided by the
+            <classname>org.hibernate.service.ServiceRegistryBuilder</classname> is to allow tweaking of the services
+            that will be contained in the <interfacename>org.hibernate.service.ServiceRegistry</interfacename>
+            generated from it.
+        </para>
+        <para>
+            There are 2 means to tell a <classname>org.hibernate.service.ServiceRegistryBuilder</classname> about
+            custom services.
+        </para>
+        <itemizedlist>
+            <listitem>
+                <para>
+                    Implement a <interfacename>org.hibernate.service.spi.BasicServiceInitiator</interfacename> class
+                    to control on-demand construction of the service class and add it to the
+                    <classname>org.hibernate.service.ServiceRegistryBuilder</classname> via its
+                    <methodname>addInitiator</methodname> method.
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    Just instantiate the service class and add it to the
+                    <classname>org.hibernate.service.ServiceRegistryBuilder</classname> via its
+                    <methodname>addService</methodname> method.
+                </para>
+            </listitem>
+        </itemizedlist>
+        <para>
+            Either approach the adding a service approach or the adding an initiator approach are valid for extending a
+            registry (adding new service roles) and overriding services (replacing service implementations).
+        </para>
     </section>
+
+
+    <section>
+        <title>Special service registries</title>
+
+        <section id="services-registry-bootstrap">
+            <title>Boot-strap registry</title>
+            <para>
+                The boot-strap registry holds services that absolutely have to be available for most things to work.
+                The main service here is the <xref linkend="services-ClassLoaderService"/> which is a perfect example.
+                Even resolving configuration files needs access to class loading services (resource look ups).  This
+                is the root registry (no parent) in normal use.
+            </para>
+
+            <section id="services-registry-bootstrap-services">
+                <title>Boot-strap registry services</title>
+                <section id="services-ClassLoaderService">
+                    <title><interfacename>org.hibernate.service.classloading.spi.ClassLoaderService</interfacename></title>
+                    <para>
+                        Coming soon...  See <ulink url="https://hibernate.onjira.com/browse/HHH-6656" />
+                    </para>
+                </section>
+
+                <section id="services-IntegratorService">
+                    <title><interfacename>org.hibernate.integrator.spi.IntegratorService</interfacename></title>
+                    <para>
+                        Coming soon...  See <ulink url="https://hibernate.onjira.com/browse/HHH-6657" />
+                    </para>
+                </section>
+            </section>
+        </section>
+
+        <section id="services-registry-sessionfactory">
+            <title>SessionFactory registry</title>
+            <para>
+                While it is best practice to treat instances of all the registry types as targeting a given
+                <interfacename>org.hibernate.SessionFactory</interfacename>, the instances of services in this group
+                explicitly belong to a single <interfacename>org.hibernate.SessionFactory</interfacename>.  The
+                difference is a matter of timing in when they need to be initiated.  Generally they need access to the
+                <interfacename>org.hibernate.SessionFactory</interfacename> to be initiated.  This special registry is
+                <interfacename>org.hibernate.service.spi.SessionFactoryServiceRegistry</interfacename>
+            </para>
+
+            <section id="services-EventListenerRegistry">
+                <title><interfacename>org.hibernate.event.service.spi.EventListenerRegistry</interfacename></title>
+                <variablelist>
+                    <varlistentry>
+                        <term>Notes</term>
+                        <listitem>
+                            <para>
+                                Service for managing event listeners.
+                            </para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term>Initiator</term>
+                        <listitem>
+                            <para>
+                                <classname>org.hibernate.event.service.internal.EventListenerServiceInitiator</classname>
+                            </para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term>Implementations</term>
+                        <listitem>
+                            <para>
+                                <classname>org.hibernate.event.service.internal.EventListenerRegistryImpl</classname>
+                            </para>
+                        </listitem>
+                    </varlistentry>
+                </variablelist>
+            </section>
+        </section>
+
+    </section>
+
+
+    <section id="services-use">
+        <title>Using services and registries</title>
+        <para>
+            Coming soon...
+        </para>
+    </section>
+
 </chapter>

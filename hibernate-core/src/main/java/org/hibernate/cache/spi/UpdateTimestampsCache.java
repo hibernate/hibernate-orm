@@ -64,6 +64,11 @@ public class UpdateTimestampsCache {
 		this.region = settings.getRegionFactory().buildTimestampsRegion( regionName, props );
 	}
 
+    public UpdateTimestampsCache(Settings settings, Properties props)
+            throws HibernateException {
+        this(settings, props, null);
+    }
+
 	@SuppressWarnings({"UnnecessaryBoxing"})
 	public void preinvalidate(Serializable[] spaces) throws CacheException {
 		// TODO: to handle concurrent writes correctly, this should return a Lock to the client
@@ -77,7 +82,7 @@ public class UpdateTimestampsCache {
 				//put() has nowait semantics, is this really appropriate?
 				//note that it needs to be async replication, never local or sync
 				region.put( space, ts );
-				if ( factory.getStatistics().isStatisticsEnabled() ) {
+				if ( factory != null && factory.getStatistics().isStatisticsEnabled() ) {
 					factory.getStatisticsImplementor().updateTimestampsCachePut();
 				}
 			}
@@ -102,7 +107,7 @@ public class UpdateTimestampsCache {
 		        //put() has nowait semantics, is this really appropriate?
 				//note that it needs to be async replication, never local or sync
 				region.put( space, ts );
-				if ( factory.getStatistics().isStatisticsEnabled() ) {
+				if ( factory != null && factory.getStatistics().isStatisticsEnabled() ) {
 					factory.getStatisticsImplementor().updateTimestampsCachePut();
 				}
 			}
@@ -120,7 +125,7 @@ public class UpdateTimestampsCache {
 			for ( Serializable space : (Set<Serializable>) spaces ) {
 				Long lastUpdate = (Long) region.get( space );
 				if ( lastUpdate == null ) {
-					if ( factory.getStatistics().isStatisticsEnabled() ) {
+					if ( factory != null && factory.getStatistics().isStatisticsEnabled() ) {
 						factory.getStatisticsImplementor().updateTimestampsCacheMiss();
 					}
 					//the last update timestamp was lost from the cache
@@ -129,8 +134,14 @@ public class UpdateTimestampsCache {
 					//result = false; // safer
 				}
 				else {
-	                LOG.debugf("[%s] last update timestamp: %s", space, lastUpdate + ", result set timestamp: " + timestamp);
-					if ( factory.getStatistics().isStatisticsEnabled() ) {
+                    if ( LOG.isDebugEnabled() ) {
+                        LOG.debugf(
+                                "[%s] last update timestamp: %s",
+                                space,
+                                lastUpdate + ", result set timestamp: " + timestamp
+                        );
+                    }
+					if ( factory != null && factory.getStatistics().isStatisticsEnabled() ) {
 						factory.getStatisticsImplementor().updateTimestampsCacheHit();
 					}
 					if ( lastUpdate.longValue() >= timestamp.longValue() ) return false;

@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.metamodel;
 import java.io.Serializable;
+import java.util.HashSet;
 import java.util.Set;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.IdentifiableType;
@@ -68,6 +69,17 @@ public abstract class AbstractIdentifiableType<X>
 		return ( AbstractIdentifiableType<? super X> ) super.getSupertype();
 	}
 
+	/**
+	 * Indicates if a non-null super type is required to provide the
+	 * identifier attribute(s) if this object does not have a declared
+	 * identifier.
+	 * .
+	 * @return true, if a non-null super type is required to provide
+	 * the identifier attribute(s) if this object does not have a
+	 * declared identifier; false, otherwise.
+	 */
+	protected abstract boolean requiresSupertypeForNonDeclaredIdentifier();
+
 	protected AbstractIdentifiableType<? super X> requireSupertype() {
 		if ( getSupertype() == null ) {
 			throw new IllegalStateException( "No supertype found" );
@@ -97,7 +109,7 @@ public abstract class AbstractIdentifiableType<X>
 		}
 		else {
 			//yuk yuk bad me
-			if (this instanceof MappedSuperclassTypeImpl) {
+			if ( ! requiresSupertypeForNonDeclaredIdentifier()) {
 				final AbstractIdentifiableType<? super X> supertype = getSupertype();
 				if (supertype != null) {
 					id_ = supertype.getId( javaType );
@@ -162,11 +174,33 @@ public abstract class AbstractIdentifiableType<X>
 		}
 	}
 
+	private boolean hasIdClassAttributesDefined() {
+		return idClassAttributes != null ||
+				( getSupertype() != null && getSupertype().hasIdClassAttributesDefined() );
+	}
+
 	/**
 	 * {@inheritDoc}
 	 */
 	public Set<SingularAttribute<? super X, ?>> getIdClassAttributes() {
-		checkIdClass();
+		if ( idClassAttributes != null ) {
+			checkIdClass();
+		}
+		else {
+			// Java does not allow casting requireSupertype().getIdClassAttributes()
+			// to Set<SingularAttribute<? super X, ?>> because the
+			// superclass X is a different Java type from this X
+			// (i.e, getSupertype().getJavaType() != getJavaType()).
+			// It will, however, allow a Set<SingularAttribute<? super X, ?>>
+			// to be initialized with requireSupertype().getIdClassAttributes(),
+			// since getSupertype().getJavaType() is a superclass of getJavaType()
+			if ( requiresSupertypeForNonDeclaredIdentifier() ) {
+				idClassAttributes = new HashSet<SingularAttribute<? super X, ?>>( requireSupertype().getIdClassAttributes() );
+			}
+			else if ( getSupertype() != null && hasIdClassAttributesDefined() ) {
+				idClassAttributes = new HashSet<SingularAttribute<? super X, ?>>( getSupertype().getIdClassAttributes() );
+			}
+		}
 		return idClassAttributes;
 	}
 
@@ -254,6 +288,13 @@ public abstract class AbstractIdentifiableType<X>
 			}
 
 			public void applyIdClassAttributes(Set<SingularAttribute<? super X,?>> idClassAttributes) {
+				for ( SingularAttribute<? super X,?> idClassAttribute : idClassAttributes ) {
+					if ( AbstractIdentifiableType.this == idClassAttribute.getDeclaringType() ) {
+						@SuppressWarnings({ "unchecked" })
+						SingularAttribute<X,?> declaredAttribute = ( SingularAttribute<X,?> ) idClassAttribute;
+						addAttribute( declaredAttribute );
+					}
+				}
 				AbstractIdentifiableType.this.idClassAttributes = idClassAttributes;
 			}
 

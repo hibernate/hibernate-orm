@@ -244,7 +244,10 @@ class MetadataContext {
 			}
 		}
 		else if ( persistentClass.hasIdentifierMapper() ) {
-			jpaEntityType.getBuilder().applyIdClassAttributes( buildIdClassAttributes( jpaEntityType, persistentClass ) );
+			@SuppressWarnings( "unchecked")
+			Iterator<Property> propertyIterator = persistentClass.getIdentifierMapper().getPropertyIterator();
+			Set<SingularAttribute<? super X, ?>> attributes = buildIdClassAttributes( jpaEntityType, propertyIterator );
+			jpaEntityType.getBuilder().applyIdClassAttributes( attributes );
 		}
 		else {
 			final KeyValue value = persistentClass.getIdentifier();
@@ -276,9 +279,9 @@ class MetadataContext {
 		}
 		//an MappedSuperclass can have no identifier if the id is set below in the hierarchy
 		else if ( mappingType.getIdentifierMapper() != null ){
-			final Set<SingularAttribute<? super X, ?>> attributes = buildIdClassAttributes(
-					jpaMappingType, mappingType
-			);
+			@SuppressWarnings( "unchecked")
+			Iterator<Property> propertyIterator = mappingType.getIdentifierMapper().getPropertyIterator();
+			Set<SingularAttribute<? super X, ?>> attributes = buildIdClassAttributes( jpaMappingType, propertyIterator );
 			jpaMappingType.getBuilder().applyIdClassAttributes( attributes );
 		}
 	}
@@ -302,26 +305,12 @@ class MetadataContext {
 	}
 
 	private <X> Set<SingularAttribute<? super X, ?>> buildIdClassAttributes(
-			EntityTypeImpl<X> jpaEntityType,
-			PersistentClass persistentClass) {
-		Set<SingularAttribute<? super X, ?>> attributes = new HashSet<SingularAttribute<? super X, ?>>();
-		@SuppressWarnings( "unchecked")
-		Iterator<Property> properties = persistentClass.getIdentifierMapper().getPropertyIterator();
-		while ( properties.hasNext() ) {
-			attributes.add( attributeFactory.buildIdAttribute( jpaEntityType, properties.next() ) );
-		}
-		return attributes;
-	}
-
-	private <X> Set<SingularAttribute<? super X, ?>> buildIdClassAttributes(
-			MappedSuperclassTypeImpl<X> jpaMappingType,
-			MappedSuperclass mappingType) {
-        LOG.trace("Building old-school composite identifier [" + mappingType.getMappedClass().getName() + "]");
-		Set<SingularAttribute<? super X, ?>> attributes = new HashSet<SingularAttribute<? super X, ?>>();
-		@SuppressWarnings( "unchecked" )
-		Iterator<Property> properties = mappingType.getIdentifierMapper().getPropertyIterator();
-		while ( properties.hasNext() ) {
-			attributes.add( attributeFactory.buildIdAttribute( jpaMappingType, properties.next() ) );
+			AbstractIdentifiableType<X> ownerType,
+			Iterator<Property> propertyIterator) {
+		LOG.trace("Building old-school composite identifier [" + ownerType.getJavaType().getName() + "]");
+		Set<SingularAttribute<? super X, ?>> attributes	= new HashSet<SingularAttribute<? super X, ?>>();
+		while ( propertyIterator.hasNext() ) {
+			attributes.add( attributeFactory.buildIdAttribute( ownerType, propertyIterator.next() ) );
 		}
 		return attributes;
 	}

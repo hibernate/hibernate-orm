@@ -59,4 +59,9 @@ public class EntityTypeImpl<X>
 	public PersistenceType getPersistenceType() {
 		return PersistenceType.ENTITY;
 	}
+
+	@Override
+	protected boolean requiresSupertypeForNonDeclaredIdentifier() {
+		return true;
+	}
 }

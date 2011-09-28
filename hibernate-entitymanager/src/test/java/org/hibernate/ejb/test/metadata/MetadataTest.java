@@ -49,6 +49,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -133,6 +134,39 @@ public class MetadataTest extends BaseEntityManagerFunctionalTestCase {
 		assertEquals( 2, ids.size() );
 		for (SingularAttribute<? super Person,?> localId : ids) {
 			assertTrue( localId.isId() );
+			assertSame( personType, localId.getDeclaringType() );
+			assertSame( localId, personType.getDeclaredAttribute( localId.getName() ) );
+			assertSame( localId, personType.getDeclaredSingularAttribute( localId.getName() ) );
+			assertSame( localId, personType.getAttribute( localId.getName() ) );
+			assertSame( localId, personType.getSingularAttribute( localId.getName() ) );
+			assertTrue( personType.getAttributes().contains( localId ) );
+		}
+
+		final EntityType<Giant> giantType = entityManagerFactory().getMetamodel().entity( Giant.class );
+		assertEquals( "HomoGigantus", giantType.getName() );
+		assertFalse( giantType.hasSingleIdAttribute() );
+		final Set<SingularAttribute<? super Giant,?>> giantIds = giantType.getIdClassAttributes();
+		assertNotNull( giantIds );
+		assertEquals( 2, giantIds.size() );
+		assertEquals( personType.getIdClassAttributes(), giantIds );
+		for (SingularAttribute<? super Giant,?> localGiantId : giantIds) {
+			assertTrue( localGiantId.isId() );
+			try {
+				giantType.getDeclaredAttribute( localGiantId.getName() );
+				fail( localGiantId.getName() + " is a declared attribute, but shouldn't be");
+			}
+			catch ( IllegalArgumentException ex) {
+				// expected
+			}
+			try {
+				giantType.getDeclaredSingularAttribute( localGiantId.getName() );
+				fail( localGiantId.getName() + " is a declared singular attribute, but shouldn't be");
+			}
+			catch ( IllegalArgumentException ex) {
+				// expected
+			}
+			assertSame( localGiantId, giantType.getAttribute( localGiantId.getName() ) );
+			assertTrue( giantType.getAttributes().contains( localGiantId ) );
 		}
 
 		final EntityType<FoodItem> foodType = entityManagerFactory().getMetamodel().entity( FoodItem.class );
@@ -369,6 +403,7 @@ public class MetadataTest extends BaseEntityManagerFunctionalTestCase {
 				Fridge.class,
 				FoodItem.class,
 				Person.class,
+				Giant.class,
 				House.class,
 				Dog.class,
 				Cat.class,

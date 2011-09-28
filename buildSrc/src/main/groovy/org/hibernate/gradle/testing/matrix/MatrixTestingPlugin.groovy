@@ -55,6 +55,7 @@ public class MatrixTestingPlugin implements Plugin<Project> {
     public static final String MATRIX_RUNTIME_CONFIG_NAME = "matrixRuntime";
     public static final String MATRIX_TASK_NAME = "matrix";
     public static final String MATRIX_SOURCE_SET_NAME = "matrix";
+    public static final String SKIP_UNIT_TEST = "hibernate-matrix-skip-unittest";
     private Project project;
     private Configuration matrixCompileConfig;
     private Configuration matrixRuntimeConfig;
@@ -75,6 +76,7 @@ public class MatrixTestingPlugin implements Plugin<Project> {
         matrixTask.group = "Verification"
         matrixTask.description = "Runs the unit tests on Database Matrix"
         generateNodes();
+        if(!System.properties[SKIP_UNIT_TEST].equals('true'))
         createTestTaskForMatrixSourceSet();
     }
 

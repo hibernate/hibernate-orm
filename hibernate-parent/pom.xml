@@ -557,6 +557,14 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
+	
+	<repositories>
+	    <repository>
+		    <id>JBossPublic</id>
+            <url>https://repository.jboss.org/nexus/content/groups/public-jboss</url>
+            <name>Public JBoss Repository Group</name>
+		</repository>
+	</repositories>
 
     <distributionManagement>
         <repository>

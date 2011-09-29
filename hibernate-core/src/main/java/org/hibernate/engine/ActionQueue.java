@@ -282,7 +282,7 @@ public class ActionQueue {
 		if ( session.getFactory().getSettings().isQueryCacheEnabled() ) {
 			final String[] spaces = (String[]) executable.getPropertySpaces();
 			afterTransactionProcesses.addSpacesToInvalidate( spaces );
-			session.getFactory().getUpdateTimestampsCache().preinvalidate( spaces );
+			session.getFactory().getUpdateTimestampsCache().invalidate( spaces );
 		}
 		afterTransactionProcesses.register( executable.getAfterTransactionCompletionProcess() );
 	}

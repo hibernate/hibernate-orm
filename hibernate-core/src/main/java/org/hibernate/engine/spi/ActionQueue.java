@@ -30,10 +30,12 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import org.hibernate.persister.entity.EntityPersister;
 import org.jboss.logging.Logger;
 
 import org.hibernate.AssertionFailure;
@@ -63,6 +65,7 @@ import org.hibernate.type.Type;
  * until a flush forces them to be executed against the database.
  *
  * @author Steve Ebersole
+ * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public class ActionQueue {
 
@@ -166,6 +169,30 @@ public class ActionQueue {
 
 	public void registerProcess(BeforeTransactionCompletionProcess process) {
 		beforeTransactionProcesses.register( process );
+	}
+
+	/**
+	 * Removes all actions (insertions, updates, deletions) associated with a given entity instance.
+	 *
+	 * @param persister Entity persister.
+	 * @param id Entity identifier.
+	 */
+	public void removeAllEntityActions(EntityPersister persister, Serializable id) {
+		removeEntityActions( insertions, persister, id );
+		removeEntityActions( updates, persister, id );
+		removeEntityActions( deletions, persister, id );
+	}
+
+	private void removeEntityActions(ArrayList list, EntityPersister persister, Serializable id) {
+		if ( list != null ) {
+			Iterator listIterator = list.iterator();
+			while ( listIterator.hasNext() ) {
+				EntityAction action = (EntityAction) listIterator.next();
+				if ( action.getEntityName().equals( persister.getEntityName() ) && action.getId().equals( id ) ) {
+					listIterator.remove();
+				}
+			}
+		}
 	}
 
 	/**

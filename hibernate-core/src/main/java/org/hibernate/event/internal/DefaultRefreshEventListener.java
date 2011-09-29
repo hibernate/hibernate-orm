@@ -123,6 +123,8 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		if ( e != null ) {
 			final EntityKey key = source.generateEntityKey( id, persister );
 			source.getPersistenceContext().removeEntity(key);
+			// If the entity is being refreshed, remove previously scheduled DML operations.
+			source.getActionQueue().removeAllEntityActions( persister, id );
 			if ( persister.hasCollections() ) new EvictVisitor( source ).process(object, persister);
 		}
 

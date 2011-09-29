@@ -26,6 +26,7 @@ package org.hibernate.ejb;
 
 import javax.persistence.CacheRetrieveMode;
 import javax.persistence.CacheStoreMode;
+import javax.persistence.EntityExistsException;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityNotFoundException;
 import javax.persistence.EntityTransaction;
@@ -1351,6 +1352,11 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		}
 		else if ( e instanceof ObjectNotFoundException ) {
 			EntityNotFoundException converted = new EntityNotFoundException( e.getMessage() );
+			handlePersistenceException( converted );
+			return converted;
+		}
+		else if ( e instanceof org.hibernate.NonUniqueObjectException ) {
+			EntityExistsException converted = new EntityExistsException( e.getMessage() );
 			handlePersistenceException( converted );
 			return converted;
 		}

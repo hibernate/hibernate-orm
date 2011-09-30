@@ -796,7 +796,7 @@ public interface Session extends SharedSessionContract {
      * @param entityName The name of the entity that will be retrieved
      * @throws HibernateException If the specified entity name is not found or if the entity does not have a natural id specified
      */
-    public NaturalIdLoadAccess<Object> byNaturalKey(String entityName);
+    public NaturalIdLoadAccess<Object> byNaturalId(String entityName);
     
     /**
      * Create an {@link NaturalIdLoadAccess} instance to retrieve the specified entity by
@@ -805,7 +805,7 @@ public interface Session extends SharedSessionContract {
      * @param entityClass The type of the entity that will be retrieved
      * @throws HibernateException If the specified Class is not an entity or if the entity does not have a natural id specified 
      */
-    public <T> NaturalIdLoadAccess<T> byNaturalKey(Class<T> entityClass);
+    public <T> NaturalIdLoadAccess<T> byNaturalId(Class<T> entityClass);
 
 	/**
 	 * Enable the named filter for this current session.

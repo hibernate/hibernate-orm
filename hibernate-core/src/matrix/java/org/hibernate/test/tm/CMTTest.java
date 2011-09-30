@@ -101,7 +101,7 @@ public class CMTTest extends BaseCoreFunctionalTestCase {
 		assertEquals(3, sessionFactory().getStatistics().getUpdateTimestampsCachePutCount()); // Twice preinvalidate & one invalidate
 		assertEquals(0, sessionFactory().getStatistics().getUpdateTimestampsCacheMissCount());
 
-		sessionFactory().evictEntity( "Item" );
+		sessionFactory().getCache().evictEntityRegion( "Item" );
 
 		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		Session s1 = openSession();
@@ -118,7 +118,7 @@ public class CMTTest extends BaseCoreFunctionalTestCase {
 		TestingJtaBootstrap.INSTANCE.getTransactionManager().resume( tx );
 		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
-		sessionFactory().evictEntity( "Item" );
+		sessionFactory().getCache().evictEntityRegion( "Item" );
 
 		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s1 = openSession();
@@ -174,7 +174,7 @@ public class CMTTest extends BaseCoreFunctionalTestCase {
 
 		sessionFactory().getStatistics().clear();
 
-		sessionFactory().evictEntity( "Item" );
+		sessionFactory().getCache().evictEntityRegion( "Item" );
 
 		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		Session s4 = openSession();
@@ -274,7 +274,7 @@ public class CMTTest extends BaseCoreFunctionalTestCase {
 
 		sessionFactory().getStatistics().clear();
 
-		sessionFactory().evictEntity( "Item" );
+		sessionFactory().getCache().evictEntityRegion( "Item" );
 
 		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		Session s4 = openSession();
@@ -296,7 +296,6 @@ public class CMTTest extends BaseCoreFunctionalTestCase {
 				.setCacheable( true ).list();
 		assertEquals( r2.size(), 2 );
 		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
-
 		assertEquals( sessionFactory().getStatistics().getSecondLevelCacheHitCount(), 0 );
 		assertEquals( sessionFactory().getStatistics().getSecondLevelCacheMissCount(), 0 );
 		assertEquals( sessionFactory().getStatistics().getEntityLoadCount(), 4 );

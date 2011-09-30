@@ -89,8 +89,8 @@ public abstract class CustomSQLTestSupport extends BaseCoreFunctionalTestCase {
 		assertEquals( jboss.getName(), "JBOSS" );
 		emp = ( Employment ) jboss.getEmployments().iterator().next();
 		gavin = emp.getEmployee();
-		assertEquals( gavin.getName(), "GAVIN" );
-		assertEquals( s.getCurrentLockMode( gavin ), LockMode.PESSIMISTIC_WRITE );
+		assertEquals( "GAVIN" , gavin.getName() );
+		assertEquals( LockMode.UPGRADE , s.getCurrentLockMode( gavin ));
 		emp.setEndDate( new Date() );
 		Employment emp3 = new Employment( gavin, jboss, "US" );
 		s.save( emp3 );

@@ -31,9 +31,9 @@
         <id name="id" type="long">
             <generator class="increment"/>
         </id>
-        <property name="type" type="string" />
-        <property name="value" type="string" />
-        <property name="key" type="string" />
+        <property name="type" type="string" column="`type`"/>
+        <property name="value" type="string" column="`value`"/>
+        <property name="key" type="string" column="`key`"/>
         <property name="entry" type="string" />
     </class>
 

@@ -8,6 +8,8 @@ Resources
 
 To start with - please following this link to set up your settings.xml to use JBoss Nexus repo
 
+* JBoss Nexus User Guide : http://community.jboss.org/wiki/MavenGettingStarted-Users
+
 Common Java-module tasks
 ------------------------
 

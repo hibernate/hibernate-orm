@@ -23,8 +23,6 @@
  */
 package org.hibernate.test.schemaupdate;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
 import org.hibernate.cfg.Configuration;
@@ -38,66 +36,77 @@ import static org.junit.Assert.assertEquals;
  * @author Gail Badner
  */
 public abstract class SchemaExportTest extends BaseUnitTestCase {
-	private final String MAPPING = "org/hibernate/test/schemaupdate/mapping.hbm.xml";
+    private final String MAPPING = "org/hibernate/test/schemaupdate/mapping.hbm.xml";
 
-	protected abstract SchemaExport createSchemaExport(Configuration cfg);
+    protected abstract SchemaExport createSchemaExport(Configuration cfg);
 
-    private boolean doesDialectSupportDropTableIfExist(){
-        return Dialect.getDialect().supportsIfExistsAfterTableName() || Dialect.getDialect().supportsIfExistsBeforeTableName();
+    private boolean doesDialectSupportDropTableIfExist() {
+        return Dialect.getDialect().supportsIfExistsAfterTableName() || Dialect.getDialect()
+                .supportsIfExistsBeforeTableName();
     }
 
-	@Test
-	public void testCreateAndDropOnlyType() {
-		Configuration cfg = new Configuration();
-		cfg.addResource( MAPPING );
-		SchemaExport schemaExport = createSchemaExport( cfg );
-		// create w/o dropping first; (OK because tables don't exist yet
-		schemaExport.execute( false, true, false, true );
-		assertEquals( 0, schemaExport.getExceptions().size() );
-		// create w/o dropping again; should be an exception for each table
-		// (2 total) because the tables exist already
-		assertEquals( 0, schemaExport.getExceptions().size() );
-		schemaExport.execute( false, true, false, true );
-		assertEquals( 2, schemaExport.getExceptions().size() );
-		// drop tables only
-		schemaExport.execute( false, true, true, false );
-		assertEquals( 0, schemaExport.getExceptions().size() );
-	}
-
-	@Test
-	public void testBothType() {
-		Configuration cfg = new Configuration();
-		cfg.addResource( MAPPING );
-		SchemaExport schemaExport = createSchemaExport( cfg );
-		// drop before create (nothing to drop yeT)
-		schemaExport.execute( false, true, false, false );
+    @Test
+    public void testCreateAndDropOnlyType() {
+        Configuration cfg = new Configuration();
+        cfg.addResource( MAPPING );
+        SchemaExport schemaExport = createSchemaExport( cfg );
+        // create w/o dropping first; (OK because tables don't exist yet
+        schemaExport.execute( false, true, false, true );
         if ( doesDialectSupportDropTableIfExist() ) {
             assertEquals( 0, schemaExport.getExceptions().size() );
         }
         else {
             assertEquals( 2, schemaExport.getExceptions().size() );
         }
-		// drop before crete again (this time drops the tables before re-creating)
-		schemaExport.execute( false, true, false, false );
-		assertEquals( 0, schemaExport.getExceptions().size() );
-		// drop tables
-		schemaExport.execute( false, true, true, false );
-		assertEquals( 0, schemaExport.getExceptions().size() );
-	}
+        // create w/o dropping again; should be an exception for each table
+        // (2 total) because the tables exist already
+        assertEquals( 0, schemaExport.getExceptions().size() );
+        schemaExport.execute( false, true, false, true );
+        assertEquals( 2, schemaExport.getExceptions().size() );
+        // drop tables only
+        schemaExport.execute( false, true, true, false );
+        assertEquals( 0, schemaExport.getExceptions().size() );
+    }
 
-	@Test
-	public void testCreateAndDrop() {
-		Configuration cfg = new Configuration();
-		cfg.addResource( MAPPING );
-		SchemaExport schemaExport = createSchemaExport( cfg );
-		// should drop before creating, but tables don't exist yet
-		schemaExport.create( false, true);
-		assertEquals( 0, schemaExport.getExceptions().size() );
-		// call create again; it should drop tables before re-creating
-		schemaExport.create( false, true );
-		assertEquals( 0, schemaExport.getExceptions().size() );
-		// drop the tables
-		schemaExport.drop( false, true );
-		assertEquals( 0, schemaExport.getExceptions().size() );
-	}
+    @Test
+    public void testBothType() {
+        Configuration cfg = new Configuration();
+        cfg.addResource( MAPPING );
+        SchemaExport schemaExport = createSchemaExport( cfg );
+        // drop before create (nothing to drop yeT)
+        schemaExport.execute( false, true, false, false );
+        if ( doesDialectSupportDropTableIfExist() ) {
+            assertEquals( 0, schemaExport.getExceptions().size() );
+        }
+        else {
+            assertEquals( 2, schemaExport.getExceptions().size() );
+        }
+        // drop before crete again (this time drops the tables before re-creating)
+        schemaExport.execute( false, true, false, false );
+        assertEquals( 0, schemaExport.getExceptions().size() );
+        // drop tables
+        schemaExport.execute( false, true, true, false );
+        assertEquals( 0, schemaExport.getExceptions().size() );
+    }
+
+    @Test
+    public void testCreateAndDrop() {
+        Configuration cfg = new Configuration();
+        cfg.addResource( MAPPING );
+        SchemaExport schemaExport = createSchemaExport( cfg );
+        // should drop before creating, but tables don't exist yet
+        schemaExport.create( false, true );
+        if ( doesDialectSupportDropTableIfExist() ) {
+            assertEquals( 0, schemaExport.getExceptions().size() );
+        }
+        else {
+            assertEquals( 2, schemaExport.getExceptions().size() );
+        }
+        // call create again; it should drop tables before re-creating
+        schemaExport.create( false, true );
+        assertEquals( 0, schemaExport.getExceptions().size() );
+        // drop the tables
+        schemaExport.drop( false, true );
+        assertEquals( 0, schemaExport.getExceptions().size() );
+    }
 }

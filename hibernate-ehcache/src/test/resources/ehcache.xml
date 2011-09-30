@@ -32,7 +32,7 @@
          user.home - User's home directory
          user.dir - User's current working directory
          java.io.tmpdir - Default temp file path -->
-    <diskStore path="hibernate-ehcache/target/tmp"/>
+    <diskStore path="./target/tmp"/>
 
 
     <!--Default Cache configuration. These will applied to caches programmatically created through

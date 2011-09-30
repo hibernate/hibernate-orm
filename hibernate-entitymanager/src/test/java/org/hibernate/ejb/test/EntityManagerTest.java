@@ -24,9 +24,11 @@
  */
 package org.hibernate.ejb.test;
 
+import javax.persistence.EntityExistsException;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityNotFoundException;
 import javax.persistence.FlushModeType;
+import javax.persistence.PersistenceException;
 import javax.persistence.Query;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -318,7 +320,7 @@ public class EntityManagerTest extends BaseEntityManagerFunctionalTestCase {
 	public void testGet() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
-		Item item = ( Item ) em.getReference( Item.class, "nonexistentone" );
+		Item item = em.getReference( Item.class, "nonexistentone" );
 		try {
 			item.getDescr();
 			em.getTransaction().commit();
@@ -391,4 +393,39 @@ public class EntityManagerTest extends BaseEntityManagerFunctionalTestCase {
 		assertEquals( "MANUAL", em.getProperties().get( AvailableSettings.FLUSH_MODE ) );
 		em.close();
 	}
+
+    @Test
+    public void testPersistExisting() throws Exception {
+        EntityManager em = getOrCreateEntityManager();
+        em.getTransaction().begin();
+        Wallet w = new Wallet();
+        w.setBrand( "Lacoste" );
+        w.setModel( "Minimic" );
+        w.setSerial( "0100202002" );
+        em.persist( w );
+        w = new Wallet();
+        w.setBrand( "Lacoste" );
+        w.setModel( "Minimic" );
+        w.setSerial( "0100202002" );
+        try {
+            em.persist( w );
+        }
+        catch ( EntityExistsException eee ) {
+            //success
+            if ( em.getTransaction() != null ) {
+                em.getTransaction().rollback();
+            }
+            em.close();
+            return;
+        }
+        try {
+            em.getTransaction().commit();
+            fail( "Should have raised an exception" );
+        }
+        catch ( PersistenceException pe ) {
+        }
+        finally {
+            em.close();
+        }
+    }
 }

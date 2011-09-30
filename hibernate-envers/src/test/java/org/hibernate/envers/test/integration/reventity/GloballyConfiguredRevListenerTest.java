@@ -4,6 +4,7 @@ import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
+import org.hibernate.testing.TestForIssue;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -12,6 +13,7 @@ import javax.persistence.EntityManager;
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
+@TestForIssue(jiraKey = "HHH-6696")
 public class GloballyConfiguredRevListenerTest extends AbstractEntityTest {
     public void configure(Ejb3Configuration cfg) {
         cfg.addAnnotatedClass(StrTestEntity.class);

@@ -101,7 +101,12 @@ class SingularIdentifierAttributeSourceImpl implements SingularAttributeSource {
 					public boolean isIncludedInUpdateByDefault() {
 						return false;
 					}
-				},
+
+                    @Override
+                    public boolean isForceNotNull() {
+                        return true;
+                    }
+                },
 				bindingContext
 		);
 	}

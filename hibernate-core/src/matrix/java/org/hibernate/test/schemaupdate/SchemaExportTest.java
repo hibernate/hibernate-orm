@@ -28,6 +28,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import org.hibernate.cfg.Configuration;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 
@@ -40,6 +41,10 @@ public abstract class SchemaExportTest extends BaseUnitTestCase {
 	private final String MAPPING = "org/hibernate/test/schemaupdate/mapping.hbm.xml";
 
 	protected abstract SchemaExport createSchemaExport(Configuration cfg);
+
+    private boolean doesDialectSupportDropTableIfExist(){
+        return Dialect.getDialect().supportsIfExistsAfterTableName() || Dialect.getDialect().supportsIfExistsBeforeTableName();
+    }
 
 	@Test
 	public void testCreateAndDropOnlyType() {
@@ -66,7 +71,12 @@ public abstract class SchemaExportTest extends BaseUnitTestCase {
 		SchemaExport schemaExport = createSchemaExport( cfg );
 		// drop before create (nothing to drop yeT)
 		schemaExport.execute( false, true, false, false );
-		assertEquals( 0, schemaExport.getExceptions().size() );
+        if ( doesDialectSupportDropTableIfExist() ) {
+            assertEquals( 0, schemaExport.getExceptions().size() );
+        }
+        else {
+            assertEquals( 2, schemaExport.getExceptions().size() );
+        }
 		// drop before crete again (this time drops the tables before re-creating)
 		schemaExport.execute( false, true, false, false );
 		assertEquals( 0, schemaExport.getExceptions().size() );

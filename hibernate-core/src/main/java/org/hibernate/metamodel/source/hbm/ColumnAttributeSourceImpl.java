@@ -35,16 +35,27 @@ class ColumnAttributeSourceImpl implements ColumnSource {
 	private final String columnName;
 	private boolean includedInInsert;
 	private boolean includedInUpdate;
+    private boolean isForceNotNull;
 
 	ColumnAttributeSourceImpl(
 			String tableName,
 			String columnName,
 			boolean includedInInsert,
 			boolean includedInUpdate) {
+		this(tableName, columnName, includedInInsert, includedInUpdate, false);
+	}
+
+    ColumnAttributeSourceImpl(
+			String tableName,
+			String columnName,
+			boolean includedInInsert,
+			boolean includedInUpdate,
+            boolean isForceNotNull) {
 		this.tableName = tableName;
 		this.columnName = columnName;
 		this.includedInInsert = includedInInsert;
 		this.includedInUpdate = includedInUpdate;
+        this.isForceNotNull = isForceNotNull;
 	}
 
 	@Override
@@ -69,7 +80,7 @@ class ColumnAttributeSourceImpl implements ColumnSource {
 
 	@Override
 	public boolean isNullable() {
-		return true;
+		return !isForceNotNull;
 	}
 
 	@Override

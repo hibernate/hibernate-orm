@@ -36,17 +36,27 @@ class ColumnSourceImpl implements ColumnSource {
 	private final JaxbColumnElement columnElement;
 	private boolean includedInInsert;
 	private boolean includedInUpdate;
+    private final boolean isForceNotNull;
 
 	ColumnSourceImpl(
 			String tableName,
 			JaxbColumnElement columnElement,
 			boolean isIncludedInInsert,
 			boolean isIncludedInUpdate) {
-		this.tableName = tableName;
-		this.columnElement = columnElement;
-		includedInInsert = isIncludedInInsert;
-		includedInUpdate = isIncludedInUpdate;
+		this(tableName, columnElement, isIncludedInInsert, isIncludedInUpdate, false);
 	}
+    ColumnSourceImpl(
+            String tableName,
+            JaxbColumnElement columnElement,
+            boolean isIncludedInInsert,
+            boolean isIncludedInUpdate,
+            boolean isForceNotNull) {
+        this.tableName = tableName;
+        this.columnElement = columnElement;
+        this.isForceNotNull = isForceNotNull;
+        includedInInsert = isIncludedInInsert;
+        includedInUpdate = isIncludedInUpdate;
+    }
 
 	@Override
 	public String getName() {
@@ -55,6 +65,7 @@ class ColumnSourceImpl implements ColumnSource {
 
 	@Override
 	public boolean isNullable() {
+        if(isForceNotNull)return false;
 		return ! columnElement.isNotNull();
 	}
 

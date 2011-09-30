@@ -261,16 +261,37 @@ public class Helper {
 		return Identifier.toIdentifier( name );
 	}
 
-	public static interface ValueSourcesAdapter {
-		public String getContainingTableName();
-		public boolean isIncludedInInsertByDefault();
-		public boolean isIncludedInUpdateByDefault();
-		public String getColumnAttribute();
-		public String getFormulaAttribute();
-		public List getColumnOrFormulaElements();
-	}
+    public static class ValueSourcesAdapter {
+        public String getContainingTableName() {
+            return null;
+        }
 
-	public static List<RelationalValueSource> buildValueSources(
+        public boolean isIncludedInInsertByDefault() {
+            return false;
+        }
+
+        public boolean isIncludedInUpdateByDefault() {
+            return false;
+        }
+
+        public String getColumnAttribute() {
+            return null;
+        }
+
+        public String getFormulaAttribute() {
+            return null;
+        }
+
+        public List getColumnOrFormulaElements() {
+            return null;
+        }
+
+        public boolean isForceNotNull() {
+            return false;
+        }
+    }
+
+    public static List<RelationalValueSource> buildValueSources(
 			ValueSourcesAdapter valueSourcesAdapter,
 			LocalBindingContext bindingContext) {
 		List<RelationalValueSource> result = new ArrayList<RelationalValueSource>();
@@ -294,7 +315,8 @@ public class Helper {
 							valueSourcesAdapter.getContainingTableName(),
 							valueSourcesAdapter.getColumnAttribute(),
 							valueSourcesAdapter.isIncludedInInsertByDefault(),
-							valueSourcesAdapter.isIncludedInUpdateByDefault()
+							valueSourcesAdapter.isIncludedInUpdateByDefault(),
+                            valueSourcesAdapter.isForceNotNull()
 					)
 			);
 		}
@@ -323,7 +345,8 @@ public class Helper {
 									valueSourcesAdapter.getContainingTableName(),
 									(JaxbColumnElement) columnOrFormulaElement,
 									valueSourcesAdapter.isIncludedInInsertByDefault(),
-									valueSourcesAdapter.isIncludedInUpdateByDefault()
+									valueSourcesAdapter.isIncludedInUpdateByDefault(),
+                                    valueSourcesAdapter.isForceNotNull()
 							)
 					);
 				}

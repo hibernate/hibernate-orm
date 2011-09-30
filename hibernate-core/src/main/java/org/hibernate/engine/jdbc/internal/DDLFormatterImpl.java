@@ -25,6 +25,8 @@ package org.hibernate.engine.jdbc.internal;
 
 import java.util.StringTokenizer;
 
+import org.hibernate.internal.util.StringHelper;
+
 /**
  * Performs formatting of DDL SQL statements.
  *
@@ -43,6 +45,7 @@ public class DDLFormatterImpl implements Formatter {
 	 * @param sql The statement to be fornmatted.
 	 */
 	public String format(String sql) {
+        if ( StringHelper.isEmpty( sql ) ) return sql;
 		if ( sql.toLowerCase().startsWith( "create table" ) ) {
 			return formatCreateTable( sql );
 		}

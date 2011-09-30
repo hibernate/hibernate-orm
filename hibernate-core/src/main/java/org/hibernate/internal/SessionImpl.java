@@ -842,40 +842,19 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	}
 
 	public Object load(Class entityClass, Serializable id) throws HibernateException {
-		return load( entityClass.getName(), id );
+	    return this.byId(entityClass).getReference(id);
 	}
 
 	public Object load(String entityName, Serializable id) throws HibernateException {
-		LoadEvent event = new LoadEvent(id, entityName, false, this);
-		boolean success = false;
-		try {
-			fireLoad( event, LoadEventListener.LOAD );
-			if ( event.getResult() == null ) {
-				getFactory().getEntityNotFoundDelegate().handleEntityNotFound( entityName, id );
-			}
-			success = true;
-			return event.getResult();
-		}
-		finally {
-			afterOperation(success);
-		}
+	    return this.byId(entityName).getReference(id);
 	}
 
 	public Object get(Class entityClass, Serializable id) throws HibernateException {
-		return get( entityClass.getName(), id );
+        return this.byId(entityClass).load(id);
 	}
 
 	public Object get(String entityName, Serializable id) throws HibernateException {
-		LoadEvent event = new LoadEvent(id, entityName, false, this);
-		boolean success = false;
-		try {
-			fireLoad(event, LoadEventListener.GET);
-			success = true;
-			return event.getResult();
-		}
-		finally {
-			afterOperation(success);
-		}
+        return this.byId(entityName).load(id);
 	}
 
 	/**
@@ -910,75 +889,67 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	}
 
 	public Object load(Class entityClass, Serializable id, LockMode lockMode) throws HibernateException {
-		return load( entityClass.getName(), id, lockMode );
+	    return this.byId(entityClass).with(lockMode).getReference(id);
 	}
 
 	public Object load(Class entityClass, Serializable id, LockOptions lockOptions) throws HibernateException {
-		return load( entityClass.getName(), id, lockOptions );
+	    return this.byId(entityClass).with(lockOptions).getReference(id);
 	}
 
 	public Object load(String entityName, Serializable id, LockMode lockMode) throws HibernateException {
-		LoadEvent event = new LoadEvent(id, entityName, lockMode, this);
-		fireLoad( event, LoadEventListener.LOAD );
-		return event.getResult();
+	    return this.byId(entityName).with(lockMode).getReference(id);
 	}
 
 	public Object load(String entityName, Serializable id, LockOptions lockOptions) throws HibernateException {
-		LoadEvent event = new LoadEvent(id, entityName, lockOptions, this);
-		fireLoad( event, LoadEventListener.LOAD );
-		return event.getResult();
+	    return this.byId(entityName).with(lockOptions).getReference(id);
 	}
 
 	public Object get(Class entityClass, Serializable id, LockMode lockMode) throws HibernateException {
-		return get( entityClass.getName(), id, lockMode );
+	    return this.byId(entityClass).with(lockMode).load(id);
 	}
 
 	public Object get(Class entityClass, Serializable id, LockOptions lockOptions) throws HibernateException {
-		return get( entityClass.getName(), id, lockOptions );
+	    return this.byId(entityClass).with(lockOptions).load(id);
 	}
 
 	public Object get(String entityName, Serializable id, LockMode lockMode) throws HibernateException {
-		LoadEvent event = new LoadEvent(id, entityName, lockMode, this);
-	   	fireLoad(event, LoadEventListener.GET);
-		return event.getResult();
+	    return this.byId(entityName).with(lockMode).load(id);
 	}
 
 	public Object get(String entityName, Serializable id, LockOptions lockOptions) throws HibernateException {
-		LoadEvent event = new LoadEvent(id, entityName, lockOptions, this);
-	   	fireLoad( event, LoadEventListener.GET );
-		return event.getResult();
+	    return this.byId(entityName).with(lockOptions).load(id);
 	}
 	
 	/* (non-Javadoc)
      * @see org.hibernate.Session#byId(java.lang.String)
      */
     @Override
-    public IdentifierLoadAccess<Object> byId(String entityName) {
-        return new IdentifierLoadAccessByName(entityName);
+    public IdentifierLoadAccessImpl<Object> byId(String entityName) {
+        return new IdentifierLoadAccessImpl<Object>(entityName, Object.class);
     }
 
     /* (non-Javadoc)
      * @see org.hibernate.Session#byId(java.lang.Class)
      */
     @Override
-    public <T> IdentifierLoadAccess<T> byId(Class<T> entityClass) {
-        return new IdentifierLoadAccessByClass<T>(entityClass);
+    public <T> IdentifierLoadAccessImpl<T> byId(Class<T> entityClass) {
+        return new IdentifierLoadAccessImpl<T>(entityClass.getName(), entityClass);
     }
 
     /* (non-Javadoc)
-     * @see org.hibernate.Session#byNaturalKey(java.lang.String)
+     * @see org.hibernate.Session#byNaturalId(java.lang.String)
      */
     @Override
-    public NaturalIdLoadAccess<Object> byNaturalKey(String entityName) {
-        return new NaturalIdLoadAccessByName(entityName);
+    public NaturalIdLoadAccess<Object> byNaturalId(String entityName) {
+        return new NaturalIdLoadAccessImpl<Object>(entityName, Object.class);
     }
 
     /* (non-Javadoc)
-     * @see org.hibernate.Session#byNaturalKey(java.lang.Class)
+     * @see org.hibernate.Session#byNaturalId(java.lang.Class)
      */
     @Override
-    public <T> NaturalIdLoadAccess<T> byNaturalKey(Class<T> entityClass) {
-        return new NaturalIdLoadAccessByClass<T>(entityClass);
+    public <T> NaturalIdLoadAccess<T> byNaturalId(Class<T> entityClass) {
+        return new NaturalIdLoadAccessImpl<T>(entityClass.getName(), entityClass);
     }
 
     private void fireLoad(LoadEvent event, LoadType loadType) {
@@ -2199,15 +2170,44 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		}
 	}
     
-    private abstract class AbstractIdentifierLoadAccess<T> implements IdentifierLoadAccess<T> {
+    private class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T> {
+        private final String entityName;
+        private final Class<T> entityClass;
         private LockOptions lockOptions;
+        @Deprecated
+        private LockMode lockMode;
+        
+        /**
+         * Note that the specified entity MUST be castable using {@link Class#cast(Object)}
+         * on the specified entityClass
+         */
+        private IdentifierLoadAccessImpl(String entityName, Class<T> entityClass) {
+            this.entityName = entityName;
+            this.entityClass = entityClass;
+        }
 
         /* (non-Javadoc)
          * @see org.hibernate.IdentifierLoadAccess#with(org.hibernate.LockOptions)
          */
         @Override
-        public final IdentifierLoadAccess<T> with(LockOptions lockOptions) {
+        public final IdentifierLoadAccessImpl<T> with(LockOptions lockOptions) {
+            if (this.lockMode != null) {
+                throw new IllegalArgumentException("Cannot specify by LockOptions and LockMode on a single IdentifierLoadAccessImpl");
+            }
             this.lockOptions = lockOptions;
+            return this;
+        }
+
+        /**
+         * Support for legacy {@link Session#load(Class, Serializable, LockMode)} and {@link Session#load(String, Serializable, LockMode)
+         * @deprecated
+         */
+        @Deprecated
+        public final IdentifierLoadAccessImpl<T> with(LockMode lockMode) {
+            if (this.lockOptions != null) {
+                throw new IllegalArgumentException("Cannot specify by LockOptions and LockMode on a single IdentifierLoadAccessImpl");
+            }
+            this.lockMode = lockMode;
             return this;
         }
 
@@ -2217,10 +2217,29 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
         @Override
         public final T getReference(Serializable id) {
             if (this.lockOptions != null) {
-                return getReferenceInternal(id, lockOptions);
+                LoadEvent event = new LoadEvent(id, entityName, lockOptions, SessionImpl.this);
+                fireLoad( event, LoadEventListener.LOAD );
+                return this.entityClass.cast(event.getResult());
+            }
+            if (this.lockMode != null) {
+                LoadEvent event = new LoadEvent(id, entityName, lockMode, SessionImpl.this);
+                fireLoad( event, LoadEventListener.LOAD );
+                return this.entityClass.cast(event.getResult());
             } 
             
-            return getReferenceInternal(id);
+            LoadEvent event = new LoadEvent(id, entityName, false, SessionImpl.this);
+            boolean success = false;
+            try {
+                fireLoad( event, LoadEventListener.LOAD );
+                if ( event.getResult() == null ) {
+                    getFactory().getEntityNotFoundDelegate().handleEntityNotFound( entityName, id );
+                }
+                success = true;
+                return this.entityClass.cast(event.getResult());
+            }
+            finally {
+                afterOperation(success);
+            }
         }
 
         /* (non-Javadoc)
@@ -2229,102 +2248,43 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
         @Override
         public final T load(Serializable id) {
             if (this.lockOptions != null) {
-                return loadInternal(id, lockOptions);
+                LoadEvent event = new LoadEvent(id, entityName, lockOptions, SessionImpl.this);
+                fireLoad( event, LoadEventListener.GET );
+                return this.entityClass.cast(event.getResult());
             }
+            if (this.lockMode != null) {
+                LoadEvent event = new LoadEvent(id, entityName, lockMode, SessionImpl.this);
+                fireLoad( event, LoadEventListener.GET );
+                return this.entityClass.cast(event.getResult());
+            } 
             
-            return loadInternal(id);
-        }
-        
-        protected abstract T getReferenceInternal(Serializable id, LockOptions lockOptions);
-        protected abstract T getReferenceInternal(Serializable id);
-        protected abstract T loadInternal(Serializable id, LockOptions lockOptions);
-        protected abstract T loadInternal(Serializable id);
-    }
-	
-	private class IdentifierLoadAccessByName extends AbstractIdentifierLoadAccess<Object> {
-	    private final String entityName;
-
-        public IdentifierLoadAccessByName(String entityName) {
-            this.entityName = entityName;
-        }
-
-        /* (non-Javadoc)
-         * @see org.hibernate.internal.SessionImpl.AbstractIdentifierLoadAccess#getReferenceInternal(java.io.Serializable, org.hibernate.LockOptions)
-         */
-        @Override
-        protected Object getReferenceInternal(Serializable id, LockOptions lockOptions) {
-            return SessionImpl.this.load(entityName, id, lockOptions);
-        }
-
-        /* (non-Javadoc)
-         * @see org.hibernate.internal.SessionImpl.AbstractIdentifierLoadAccess#getReferenceInternal(java.io.Serializable)
-         */
-        @Override
-        protected Object getReferenceInternal(Serializable id) {
-            return SessionImpl.this.load(entityName, id);
-        }
-
-        /* (non-Javadoc)
-         * @see org.hibernate.internal.SessionImpl.AbstractIdentifierLoadAccess#loadInternal(java.io.Serializable, org.hibernate.LockOptions)
-         */
-        @Override
-        protected Object loadInternal(Serializable id, LockOptions lockOptions) {
-            return SessionImpl.this.get(entityName, id, lockOptions);
-        }
-
-        /* (non-Javadoc)
-         * @see org.hibernate.internal.SessionImpl.AbstractIdentifierLoadAccess#loadInternal(java.io.Serializable)
-         */
-        @Override
-        protected Object loadInternal(Serializable id) {
-            return SessionImpl.this.get(entityName, id);
+            LoadEvent event = new LoadEvent(id, entityName, false, SessionImpl.this);
+            boolean success = false;
+            try {
+                fireLoad(event, LoadEventListener.GET);
+                success = true;
+                return this.entityClass.cast(event.getResult());
+            }
+            finally {
+                afterOperation(success);
+            }
         }
 	}
     
-    private class IdentifierLoadAccessByClass<T> extends AbstractIdentifierLoadAccess<T> {
+    private class NaturalIdLoadAccessImpl<T> implements NaturalIdLoadAccess<T> {
+        private final String entityName;
         private final Class<T> entityClass;
-
-        public IdentifierLoadAccessByClass(Class<T> entityName) {
-            this.entityClass = entityName;
-        }
-
-        /* (non-Javadoc)
-         * @see org.hibernate.internal.SessionImpl.AbstractIdentifierLoadAccess#getReferenceInternal(java.io.Serializable, org.hibernate.LockOptions)
-         */
-        @Override
-        protected T getReferenceInternal(Serializable id, LockOptions lockOptions) {
-            return entityClass.cast(SessionImpl.this.load(entityClass, id, lockOptions));
-        }
-
-        /* (non-Javadoc)
-         * @see org.hibernate.internal.SessionImpl.AbstractIdentifierLoadAccess#getReferenceInternal(java.io.Serializable)
-         */
-        @Override
-        protected T getReferenceInternal(Serializable id) {
-            return entityClass.cast(SessionImpl.this.load(entityClass, id));
-        }
-
-        /* (non-Javadoc)
-         * @see org.hibernate.internal.SessionImpl.AbstractIdentifierLoadAccess#loadInternal(java.io.Serializable, org.hibernate.LockOptions)
-         */
-        @Override
-        protected T loadInternal(Serializable id, LockOptions lockOptions) {
-            return entityClass.cast(SessionImpl.this.get(entityClass, id, lockOptions));
-        }
-
-        /* (non-Javadoc)
-         * @see org.hibernate.internal.SessionImpl.AbstractIdentifierLoadAccess#loadInternal(java.io.Serializable)
-         */
-        @Override
-        protected T loadInternal(Serializable id) {
-            return entityClass.cast(SessionImpl.this.get(entityClass, id));
-        }
-    }
-    
-    
-    private abstract class AbstractNaturalIdLoadAccess<T> implements NaturalIdLoadAccess<T> {
         private final Map<String, Object> naturalIdParameters = new LinkedHashMap<String, Object>();
         private LockOptions lockOptions;
+        
+        /**
+         * Note that the specified entity MUST be castable using {@link Class#cast(Object)}
+         * on the specified entityClass
+         */
+        private NaturalIdLoadAccessImpl(String entityName, Class<T> entityClass) {
+            this.entityName = entityName;
+            this.entityClass = entityClass;
+        }
 
         /* (non-Javadoc)
          * @see org.hibernate.IdentifierLoadAccess#with(org.hibernate.LockOptions)
@@ -2350,10 +2310,12 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
         @Override
         public final T getReference() {
             if (this.lockOptions != null) {
-                return getReferenceInternal(naturalIdParameters, lockOptions);
+                //TODO
             } 
             
-            return getReferenceInternal(naturalIdParameters);
+            //TODO
+            
+            throw new UnsupportedOperationException();
         }
 
         /* (non-Javadoc)
@@ -2362,95 +2324,12 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
         @Override
         public final T load() {
             if (this.lockOptions != null) {
-                return loadInternal(naturalIdParameters, lockOptions);
+              //TODO
             }
             
-            return loadInternal(naturalIdParameters);
-        }
-        
-        protected abstract T getReferenceInternal(Map<String, Object> naturalIdParameters, LockOptions lockOptions);
-        protected abstract T getReferenceInternal(Map<String, Object> naturalIdParameters);
-        protected abstract T loadInternal(Map<String, Object> naturalIdParameters, LockOptions lockOptions);
-        protected abstract T loadInternal(Map<String, Object> naturalIdParameters);
-    }
-    
-    private class NaturalIdLoadAccessByName extends AbstractNaturalIdLoadAccess<Object> {
-        private final String entityName;
-
-        public NaturalIdLoadAccessByName(String entityName) {
-            this.entityName = entityName;
-        }
-
-        /* (non-Javadoc)
-         * @see org.hibernate.internal.SessionImpl.AbstractNaturalIdLoadAccess#getReferenceInternal(java.util.Map, org.hibernate.LockOptions)
-         */
-        @Override
-        protected Object getReferenceInternal(Map<String, Object> naturalIdParameters, LockOptions lockOptions) {
-            throw new UnsupportedOperationException("Not Implemented Yet");
-        }
-
-        /* (non-Javadoc)
-         * @see org.hibernate.internal.SessionImpl.AbstractNaturalIdLoadAccess#getReferenceInternal(java.util.Map)
-         */
-        @Override
-        protected Object getReferenceInternal(Map<String, Object> naturalIdParameters) {
-            throw new UnsupportedOperationException("Not Implemented Yet");
-        }
-
-        /* (non-Javadoc)
-         * @see org.hibernate.internal.SessionImpl.AbstractNaturalIdLoadAccess#loadInternal(java.util.Map, org.hibernate.LockOptions)
-         */
-        @Override
-        protected Object loadInternal(Map<String, Object> naturalIdParameters, LockOptions lockOptions) {
-            throw new UnsupportedOperationException("Not Implemented Yet");
-        }
-
-        /* (non-Javadoc)
-         * @see org.hibernate.internal.SessionImpl.AbstractNaturalIdLoadAccess#loadInternal(java.util.Map)
-         */
-        @Override
-        protected Object loadInternal(Map<String, Object> naturalIdParameters) {
-            throw new UnsupportedOperationException("Not Implemented Yet");
-        }
-    }
-    
-    private class NaturalIdLoadAccessByClass<T> extends AbstractNaturalIdLoadAccess<T> {
-        private final Class<T> entityClass;
-
-        public NaturalIdLoadAccessByClass(Class<T> entityName) {
-            this.entityClass = entityName;
-        }
-
-        /* (non-Javadoc)
-         * @see org.hibernate.internal.SessionImpl.AbstractNaturalIdLoadAccess#getReferenceInternal(java.util.Map, org.hibernate.LockOptions)
-         */
-        @Override
-        protected T getReferenceInternal(Map<String, Object> naturalIdParameters, LockOptions lockOptions) {
-            throw new UnsupportedOperationException("Not Implemented Yet");
-        }
-
-        /* (non-Javadoc)
-         * @see org.hibernate.internal.SessionImpl.AbstractNaturalIdLoadAccess#getReferenceInternal(java.util.Map)
-         */
-        @Override
-        protected T getReferenceInternal(Map<String, Object> naturalIdParameters) {
-            throw new UnsupportedOperationException("Not Implemented Yet");
-        }
-
-        /* (non-Javadoc)
-         * @see org.hibernate.internal.SessionImpl.AbstractNaturalIdLoadAccess#loadInternal(java.util.Map, org.hibernate.LockOptions)
-         */
-        @Override
-        protected T loadInternal(Map<String, Object> naturalIdParameters, LockOptions lockOptions) {
-            throw new UnsupportedOperationException("Not Implemented Yet");
-        }
-
-        /* (non-Javadoc)
-         * @see org.hibernate.internal.SessionImpl.AbstractNaturalIdLoadAccess#loadInternal(java.util.Map)
-         */
-        @Override
-        protected T loadInternal(Map<String, Object> naturalIdParameters) {
-            throw new UnsupportedOperationException("Not Implemented Yet");
+            //TODO
+            
+            throw new UnsupportedOperationException();
         }
     }
 }

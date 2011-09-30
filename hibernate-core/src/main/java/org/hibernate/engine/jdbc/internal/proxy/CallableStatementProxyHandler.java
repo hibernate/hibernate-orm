@@ -53,6 +53,6 @@ public class CallableStatementProxyHandler extends PreparedStatementProxyHandler
 	}
 
 	private Object executeQuery() throws SQLException {
-		return getConnectionProxy().getJdbcServices().getDialect().getResultSet( ( CallableStatement ) this );
+		return getConnectionProxy().getJdbcServices().getDialect().getResultSet( ( CallableStatement ) getStatementWithoutChecks() );
 	}
 }

@@ -14,6 +14,10 @@ To start with - here is a list of resources to obtain more information about Gra
 * Gradle DSL Guide : http://gradle.org/latest/docs/dsl/index.html
 * Additional Hibernate/Gradle information : http://community.jboss.org/wiki/GradleFAQ
 
+Here is the link of how to set up ~/.m2/settings.xml to use JBoss Nexus repo.
+
+* JBoss Nexus User Guide ; http://community.jboss.org/wiki/MavenGettingStarted-Users
+
 Executing Tasks Across All Modules
 ----------------------------------
 

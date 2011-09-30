@@ -2174,12 +2174,8 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
         private final String entityName;
         private final Class<T> entityClass;
         private LockOptions lockOptions;
-        @Deprecated
-        private LockMode lockMode;
         
         /**
-         * Note that the specified entity MUST be castable using {@link Class#cast(Object)}
-         * on the specified entityClass
          */
         private IdentifierLoadAccessImpl(String entityName, Class<T> entityClass) {
             this.entityName = entityName;
@@ -2191,9 +2187,6 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
          */
         @Override
         public final IdentifierLoadAccessImpl<T> with(LockOptions lockOptions) {
-            if (this.lockMode != null) {
-                throw new IllegalArgumentException("Cannot specify by LockOptions and LockMode on a single IdentifierLoadAccessImpl");
-            }
             this.lockOptions = lockOptions;
             return this;
         }
@@ -2204,10 +2197,8 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
          */
         @Deprecated
         public final IdentifierLoadAccessImpl<T> with(LockMode lockMode) {
-            if (this.lockOptions != null) {
-                throw new IllegalArgumentException("Cannot specify by LockOptions and LockMode on a single IdentifierLoadAccessImpl");
-            }
-            this.lockMode = lockMode;
+            this.lockOptions = new LockOptions();
+            this.lockOptions.setLockMode(lockMode);
             return this;
         }
 
@@ -2215,17 +2206,12 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
          * @see org.hibernate.IdentifierLoadAccess#getReference(java.io.Serializable)
          */
         @Override
-        public final T getReference(Serializable id) {
+        public final Object getReference(Serializable id) {
             if (this.lockOptions != null) {
                 LoadEvent event = new LoadEvent(id, entityName, lockOptions, SessionImpl.this);
                 fireLoad( event, LoadEventListener.LOAD );
-                return this.entityClass.cast(event.getResult());
+                return event.getResult();
             }
-            if (this.lockMode != null) {
-                LoadEvent event = new LoadEvent(id, entityName, lockMode, SessionImpl.this);
-                fireLoad( event, LoadEventListener.LOAD );
-                return this.entityClass.cast(event.getResult());
-            } 
             
             LoadEvent event = new LoadEvent(id, entityName, false, SessionImpl.this);
             boolean success = false;
@@ -2235,7 +2221,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
                     getFactory().getEntityNotFoundDelegate().handleEntityNotFound( entityName, id );
                 }
                 success = true;
-                return this.entityClass.cast(event.getResult());
+                return event.getResult();
             }
             finally {
                 afterOperation(success);
@@ -2246,16 +2232,11 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
          * @see org.hibernate.IdentifierLoadAccess#load(java.io.Serializable)
          */
         @Override
-        public final T load(Serializable id) {
+        public final Object load(Serializable id) {
             if (this.lockOptions != null) {
                 LoadEvent event = new LoadEvent(id, entityName, lockOptions, SessionImpl.this);
                 fireLoad( event, LoadEventListener.GET );
-                return this.entityClass.cast(event.getResult());
-            }
-            if (this.lockMode != null) {
-                LoadEvent event = new LoadEvent(id, entityName, lockMode, SessionImpl.this);
-                fireLoad( event, LoadEventListener.GET );
-                return this.entityClass.cast(event.getResult());
+                return event.getResult();
             } 
             
             LoadEvent event = new LoadEvent(id, entityName, false, SessionImpl.this);
@@ -2263,7 +2244,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
             try {
                 fireLoad(event, LoadEventListener.GET);
                 success = true;
-                return this.entityClass.cast(event.getResult());
+                return event.getResult();
             }
             finally {
                 afterOperation(success);

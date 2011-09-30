@@ -38,19 +38,33 @@ public interface IdentifierLoadAccess<T> {
     public IdentifierLoadAccess<T> with(LockOptions lockOptions);
 
     /**
-     * Same behavior as {@link Session#load(Class, java.io.Serializable)}
-     * 
-     * @param id The primary key of the entity
-     * @return The entity 
-     * @throws HibernateException if the entity does not exist
+     * Return the persistent instance of the given entity class with the given identifier,
+     * assuming that the instance exists. This method might return a proxied instance that
+     * is initialized on-demand, when a non-identifier method is accessed.
+     * <br><br>
+     * You should not use this method to determine if an instance exists (use <tt>get()</tt>
+     * instead). Use this only to retrieve an instance that you assume exists, where non-existence
+     * would be an actual error.
+     * <br><br>
+     * Due to the nature of the proxy functionality the return type of this method cannot use
+     * the generic type.
+     *
+     * @param theClass a persistent class
+     * @param id a valid identifier of an existing persistent instance of the class
+     * @return the persistent instance or proxy
+     * @throws HibernateException
      */
-    public T getReference(Serializable id);
+    public Object getReference(Serializable id);
 
     /**
-     * Same behavior as {@link Session#get(Class, java.io.Serializable)}
-     * 
-     * @param id The primary key of the entity
-     * @return The entity or null if it does not exist
+     * Return the persistent instance of the given entity class with the given identifier,
+     * or null if there is no such persistent instance. (If the instance is already associated
+     * with the session, return that instance. This method never returns an uninitialized instance.)
+     *
+     * @param clazz a persistent class
+     * @param id an identifier
+     * @return a persistent instance or null
+     * @throws HibernateException
      */
-    public T load(Serializable id);
+    public Object load(Serializable id);
 }

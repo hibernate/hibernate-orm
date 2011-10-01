@@ -286,8 +286,8 @@ public class RevisionInfoConfiguration {
                 }
 
                 revisionInfoEntityName = pc.getEntityName();
-
                 revisionInfoClass = pc.getMappedClass();
+                Class<? extends RevisionListener> revisionListenerClass = getRevisionListenerClass(revisionEntity.value());
                 revisionInfoTimestampType = pc.getProperty(revisionInfoTimestampData.getName()).getType();
                 if (globalCfg.isTrackEntitiesChangedInRevisionEnabled() ||
                         DefaultTrackingModifiedEntitiesRevisionEntity.class.isAssignableFrom(revisionInfoClass) ||
@@ -295,12 +295,12 @@ public class RevisionInfoConfiguration {
                     // If tracking modified entities parameter is enabled, custom revision info entity is a subtype
                     // of DefaultTrackingModifiedEntitiesRevisionEntity class, or @ModifiedEntityNames annotation is used.
                     revisionInfoGenerator = new DefaultTrackingModifiedEntitiesRevisionInfoGenerator(revisionInfoEntityName,
-                            revisionInfoClass, revisionEntity.value(), revisionInfoTimestampData, isTimestampAsDate(),
+                            revisionInfoClass, revisionListenerClass, revisionInfoTimestampData, isTimestampAsDate(),
                             modifiedEntityNamesData);
                     globalCfg.setTrackEntitiesChangedInRevisionEnabled(true);
                 } else {
                     revisionInfoGenerator = new DefaultRevisionInfoGenerator(revisionInfoEntityName, revisionInfoClass,
-                            revisionEntity.value(), revisionInfoTimestampData, isTimestampAsDate());
+                            revisionListenerClass, revisionInfoTimestampData, isTimestampAsDate());
                 }
             }
         }
@@ -308,16 +308,18 @@ public class RevisionInfoConfiguration {
         // In case of a custom revision info generator, the mapping will be null.
         Document revisionInfoXmlMapping = null;
 
+        Class<? extends RevisionListener> revisionListenerClass = getRevisionListenerClass(RevisionListener.class);
+
         if (revisionInfoGenerator == null) {
             if (globalCfg.isTrackEntitiesChangedInRevisionEnabled()) {
                 revisionInfoClass = DefaultTrackingModifiedEntitiesRevisionEntity.class;
                 revisionInfoEntityName = DefaultTrackingModifiedEntitiesRevisionEntity.class.getName();
                 revisionInfoGenerator = new DefaultTrackingModifiedEntitiesRevisionInfoGenerator(revisionInfoEntityName, revisionInfoClass,
-                        RevisionListener.class, revisionInfoTimestampData, isTimestampAsDate(), modifiedEntityNamesData);
+                        revisionListenerClass, revisionInfoTimestampData, isTimestampAsDate(), modifiedEntityNamesData);
             } else {
                 revisionInfoClass = DefaultRevisionEntity.class;
                 revisionInfoGenerator = new DefaultRevisionInfoGenerator(revisionInfoEntityName, revisionInfoClass,
-                        RevisionListener.class, revisionInfoTimestampData, isTimestampAsDate());
+                        revisionListenerClass, revisionInfoTimestampData, isTimestampAsDate());
             }
             revisionInfoXmlMapping = generateDefaultRevisionInfoXmlMapping();
         }
@@ -336,6 +338,18 @@ public class RevisionInfoConfiguration {
     private boolean isTimestampAsDate() {
     	String typename = revisionInfoTimestampType.getName();
     	return "date".equals(typename) || "time".equals(typename) || "timestamp".equals(typename);
+    }
+
+    /**
+     * @param defaultListener Revision listener that shall be applied if {@code org.hibernate.envers.revision_listener}
+     *                        parameter has not been set.
+     * @return Revision listener.  
+     */
+    private Class<? extends RevisionListener> getRevisionListenerClass(Class<? extends RevisionListener> defaultListener) {
+        if (globalCfg.getRevisionListenerClass() != null) {
+            return globalCfg.getRevisionListenerClass();
+        }
+        return defaultListener;
     }
 }
 

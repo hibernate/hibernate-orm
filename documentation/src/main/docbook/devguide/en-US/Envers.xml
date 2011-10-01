@@ -407,7 +407,11 @@
                     You tell Envers your custom <interfacename>org.hibernate.envers.RevisionListener</interfacename>
                     implementation to use by specifying it on the
                     <interfacename>@org.hibernate.envers.RevisionEntity</interfacename> annotation, using the
-                    <methodname>value</methodname> attribute.
+                    <methodname>value</methodname> attribute. If your <interfacename>RevisionListener</interfacename>
+                    class is inaccessible from <interfacename>@RevisionEntity</interfacename> (e.g. exists in a different
+                    module), set <property>org.hibernate.envers.revision_listener</property> property to it's fully
+                    qualified name. Class name defined by the configuration parameter overrides revision entity's
+                    <methodname>value</methodname> attribute. 
                 </para>
             </listitem>
         </orderedlist>

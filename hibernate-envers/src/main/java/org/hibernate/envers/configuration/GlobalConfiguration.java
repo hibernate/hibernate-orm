@@ -22,6 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.configuration;
+import org.hibernate.MappingException;
+import org.hibernate.envers.RevisionListener;
+
 import static org.hibernate.envers.tools.Tools.getProperty;
 import java.util.Properties;
 
@@ -48,6 +51,9 @@ public class GlobalConfiguration {
 
     // Should Envers track (persist) entity names that have been changed during each revision.
     private boolean trackEntitiesChangedInRevisionEnabled;
+
+    // Revision listener class name.
+    private final Class<? extends RevisionListener> revisionListenerClass;
 
     /*
      Which operator to use in correlated subqueries (when we want a property to be equal to the result of
@@ -87,6 +93,17 @@ public class GlobalConfiguration {
         		"org.hibernate.envers.track_entities_changed_in_revision",
         		"false");
         trackEntitiesChangedInRevisionEnabled = Boolean.parseBoolean(trackEntitiesChangedInRevisionEnabledStr);
+
+        String revisionListenerClassName = properties.getProperty("org.hibernate.envers.revision_listener", null);
+        if (revisionListenerClassName != null) {
+            try {
+                revisionListenerClass = (Class<? extends RevisionListener>) Thread.currentThread().getContextClassLoader().loadClass(revisionListenerClassName);
+            } catch (ClassNotFoundException e) {
+                throw new MappingException("Revision listener class not found: " + revisionListenerClassName + ".", e);
+            }
+        } else {
+            revisionListenerClass = null;
+        }
     }
 
     public boolean isGenerateRevisionsForCollections() {
@@ -119,5 +136,9 @@ public class GlobalConfiguration {
 
     public void setTrackEntitiesChangedInRevisionEnabled(boolean trackEntitiesChangedInRevisionEnabled) {
         this.trackEntitiesChangedInRevisionEnabled = trackEntitiesChangedInRevisionEnabled;
+    }
+
+    public Class<? extends RevisionListener> getRevisionListenerClass() {
+        return revisionListenerClass;
     }
 }

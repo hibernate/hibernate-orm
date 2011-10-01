@@ -40,5 +40,9 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 public @interface RevisionEntity {
+    /**
+     * @return The optional listener that will be used to fill in the custom revision entity.
+     * May also be specified using the {@code org.hibernate.envers.revision_listener} configuration property.
+     */
     Class<? extends RevisionListener> value() default RevisionListener.class;
 }

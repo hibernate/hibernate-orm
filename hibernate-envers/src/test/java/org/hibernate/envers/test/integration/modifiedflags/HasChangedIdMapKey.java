@@ -27,13 +27,14 @@ import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.envers.test.integration.collection.mapkey.IdMapKeyEntity;
-import org.hibernate.envers.test.tools.TestTools;
 import org.junit.Test;
 
 import javax.persistence.EntityManager;
 import java.util.List;
 
 import static junit.framework.Assert.assertEquals;
+import static org.hibernate.envers.test.tools.TestTools.extractRevisionNumbers;
+import static org.hibernate.envers.test.tools.TestTools.makeList;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -42,10 +43,7 @@ import static junit.framework.Assert.assertEquals;
 public class HasChangedIdMapKey extends AbstractModifiedFlagsEntityTest {
     private Integer imke_id;
 
-    private Integer ste1_id;
-    private Integer ste2_id;
-
-    public void configure(Ejb3Configuration cfg) {
+	public void configure(Ejb3Configuration cfg) {
         cfg.addAnnotatedClass(IdMapKeyEntity.class);
         cfg.addAnnotatedClass(StrTestEntity.class);
     }
@@ -86,16 +84,14 @@ public class HasChangedIdMapKey extends AbstractModifiedFlagsEntityTest {
 
         imke_id = imke.getId();
 
-        ste1_id = ste1.getId();
-        ste2_id = ste2.getId();
-    }
+	}
 
 	@Test
 	public void testHasChanged() throws Exception {
 		List list = queryForPropertyHasChanged(IdMapKeyEntity.class, imke_id,
 				"idmap");
 		assertEquals(2, list.size());
-		assertEquals(TestTools.makeList(1, 2), extractRevisionNumbers(list));
+		assertEquals(makeList(1, 2), extractRevisionNumbers(list));
 
 		list = queryForPropertyHasNotChanged(IdMapKeyEntity.class, imke_id,
 				"idmap");

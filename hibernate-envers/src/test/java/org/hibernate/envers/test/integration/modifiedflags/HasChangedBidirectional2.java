@@ -25,17 +25,16 @@ package org.hibernate.envers.test.integration.modifiedflags;
 
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.Priority;
-import org.hibernate.envers.test.integration.onetoone.bidirectional
-.BiRefEdEntity;
-import org.hibernate.envers.test.integration.onetoone.bidirectional
-.BiRefIngEntity;
-import org.hibernate.envers.test.tools.TestTools;
+import org.hibernate.envers.test.integration.onetoone.bidirectional.BiRefEdEntity;
+import org.hibernate.envers.test.integration.onetoone.bidirectional.BiRefIngEntity;
 import org.junit.Test;
 
 import javax.persistence.EntityManager;
 import java.util.List;
 
 import static junit.framework.Assert.assertEquals;
+import static org.hibernate.envers.test.tools.TestTools.extractRevisionNumbers;
+import static org.hibernate.envers.test.tools.TestTools.makeList;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -45,10 +44,7 @@ public class HasChangedBidirectional2 extends AbstractModifiedFlagsEntityTest {
     private Integer ed1_id;
     private Integer ed2_id;
 
-    private Integer ing1_id;
-    private Integer ing2_id;
-
-    public void configure(Ejb3Configuration cfg) {
+	public void configure(Ejb3Configuration cfg) {
         cfg.addAnnotatedClass(BiRefEdEntity.class);
         cfg.addAnnotatedClass(BiRefIngEntity.class);
     }
@@ -112,20 +108,18 @@ public class HasChangedBidirectional2 extends AbstractModifiedFlagsEntityTest {
         ed1_id = ed1.getId();
         ed2_id = ed2.getId();
 
-        ing1_id = ing1.getId();
-        ing2_id = ing2.getId();
-    }
+	}
 
 	@Test
 	public void testHasChanged() throws Exception {
 		List list = queryForPropertyHasChanged(BiRefEdEntity.class, ed1_id,
 				"referencing");
 		assertEquals(3, list.size());
-		assertEquals(TestTools.makeList(2, 3, 4), extractRevisionNumbers(list));
+		assertEquals(makeList(2, 3, 4), extractRevisionNumbers(list));
 
 		list = queryForPropertyHasChanged(BiRefEdEntity.class, ed2_id,
 				"referencing");
 		assertEquals(1, list.size());
-		assertEquals(TestTools.makeList(4), extractRevisionNumbers(list));
+		assertEquals(makeList(4), extractRevisionNumbers(list));
 	}
 }

@@ -27,13 +27,14 @@ import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.customtype.Component;
 import org.hibernate.envers.test.entities.customtype.CompositeCustomTypeEntity;
-import org.hibernate.envers.test.tools.TestTools;
 import org.junit.Test;
 
 import javax.persistence.EntityManager;
 import java.util.List;
 
 import static junit.framework.Assert.assertEquals;
+import static org.hibernate.envers.test.tools.TestTools.extractRevisionNumbers;
+import static org.hibernate.envers.test.tools.TestTools.makeList;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -89,7 +90,7 @@ public class HasChangedCompositeCustom extends AbstractModifiedFlagsEntityTest {
 	public void testHasChanged() throws Exception {
 		List list = queryForPropertyHasChanged(CompositeCustomTypeEntity.class,ccte_id, "component");
 		assertEquals(3, list.size());
-		assertEquals(TestTools.makeList(1, 2, 3), extractRevisionNumbers(list));
+		assertEquals(makeList(1, 2, 3), extractRevisionNumbers(list));
 
 		list = queryForPropertyHasNotChanged(CompositeCustomTypeEntity.class,ccte_id, "component");
 		assertEquals(0, list.size());

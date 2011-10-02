@@ -28,13 +28,14 @@ import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.collection.EnumSetEntity;
 import org.hibernate.envers.test.entities.collection.EnumSetEntity.E1;
 import org.hibernate.envers.test.entities.collection.EnumSetEntity.E2;
-import org.hibernate.envers.test.tools.TestTools;
 import org.junit.Test;
 
 import javax.persistence.EntityManager;
 import java.util.List;
 
 import static junit.framework.Assert.assertEquals;
+import static org.hibernate.envers.test.tools.TestTools.extractRevisionNumbers;
+import static org.hibernate.envers.test.tools.TestTools.makeList;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -94,12 +95,12 @@ public class HasChangedEnumSet extends AbstractModifiedFlagsEntityTest {
 		List list = queryForPropertyHasChanged(EnumSetEntity.class, sse1_id,
 				"enums1");
 		assertEquals(3, list.size());
-		assertEquals(TestTools.makeList(1, 2, 3), extractRevisionNumbers(list));
+		assertEquals(makeList(1, 2, 3), extractRevisionNumbers(list));
 
 		list = queryForPropertyHasChanged(EnumSetEntity.class, sse1_id,
 				"enums2");
 		assertEquals(1, list.size());
-		assertEquals(TestTools.makeList(1), extractRevisionNumbers(list));
+		assertEquals(makeList(1), extractRevisionNumbers(list));
 
 		list = queryForPropertyHasNotChanged(EnumSetEntity.class, sse1_id,
 				"enums1");
@@ -108,6 +109,6 @@ public class HasChangedEnumSet extends AbstractModifiedFlagsEntityTest {
 		list = queryForPropertyHasNotChanged(EnumSetEntity.class, sse1_id,
 				"enums2");
 		assertEquals(2, list.size());
-		assertEquals(TestTools.makeList(2, 3), extractRevisionNumbers(list));
+		assertEquals(makeList(2, 3), extractRevisionNumbers(list));
 	}
 }

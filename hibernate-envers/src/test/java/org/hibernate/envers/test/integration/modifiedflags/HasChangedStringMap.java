@@ -26,13 +26,14 @@ package org.hibernate.envers.test.integration.modifiedflags;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.collection.StringMapEntity;
-import org.hibernate.envers.test.tools.TestTools;
 import org.junit.Test;
 
 import javax.persistence.EntityManager;
 import java.util.List;
 
 import static junit.framework.Assert.assertEquals;
+import static org.hibernate.envers.test.tools.TestTools.extractRevisionNumbers;
+import static org.hibernate.envers.test.tools.TestTools.makeList;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -108,12 +109,12 @@ public class HasChangedStringMap extends AbstractModifiedFlagsEntityTest {
 		List list = queryForPropertyHasChanged(StringMapEntity.class, sme1_id,
 				"strings");
 		assertEquals(3, list.size());
-		assertEquals(TestTools.makeList(1, 2, 3), extractRevisionNumbers(list));
+		assertEquals(makeList(1, 2, 3), extractRevisionNumbers(list));
 
 		list = queryForPropertyHasChanged(StringMapEntity.class, sme2_id,
 				"strings");
 		assertEquals(2, list.size());
-		assertEquals(TestTools.makeList(1, 3), extractRevisionNumbers(list));
+		assertEquals(makeList(1, 3), extractRevisionNumbers(list));
 
 		list = queryForPropertyHasNotChanged(StringMapEntity.class, sme1_id,
 				"strings");

@@ -29,10 +29,8 @@ import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.envers.test.entities.components.Component1;
 import org.hibernate.envers.test.entities.components.Component2;
-import org.hibernate.envers.test.integration.modifiedflags.entities
-.NotUsingModifiedFlagsEntity;
+import org.hibernate.envers.test.integration.modifiedflags.entities.NotUsingModifiedFlagsEntity;
 import org.hibernate.envers.test.integration.modifiedflags.entities.RefEntity;
-import org.hibernate.envers.test.tools.TestTools;
 import org.junit.Test;
 
 import javax.persistence.EntityManager;
@@ -40,6 +38,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import static junit.framework.Assert.assertEquals;
+import static org.hibernate.envers.test.tools.TestTools.extractRevisionNumbers;
+import static org.hibernate.envers.test.tools.TestTools.makeList;
 
 /**
  * @author Michal Skowronek (mskowr at o2 dot pl)
@@ -113,7 +113,7 @@ public class HasChangedForDefaultNotUsing extends AbstractModifiedFlagsEntityTes
 		refEntity = em.find(RefEntity.class, refEntityId);
 		refEntity.setReference(null);
 		refEntity.setSecondReference(entity);
-		refEntity = em.merge(refEntity);
+		em.merge(refEntity);
 
 		em.getTransaction().commit();
 
@@ -156,7 +156,7 @@ public class HasChangedForDefaultNotUsing extends AbstractModifiedFlagsEntityTes
 
 		entity.getEntitiesSet().remove(strTestEntity);
 		entity.getEntitiesMap().put("someKey", strTestEntity);
-		entity = em.merge(entity);
+		em.merge(entity);
 
 		em.getTransaction().commit();
 
@@ -164,7 +164,7 @@ public class HasChangedForDefaultNotUsing extends AbstractModifiedFlagsEntityTes
 		em.getTransaction().begin();
 
 		strTestEntity.setStr("second");
-		strTestEntity = em.merge(strTestEntity);
+		em.merge(strTestEntity);
 
 		em.getTransaction().commit();
 
@@ -184,7 +184,7 @@ public class HasChangedForDefaultNotUsing extends AbstractModifiedFlagsEntityTes
 				NotUsingModifiedFlagsEntity.class,
 				entityId, "data");
 		assertEquals(1, list.size());
-		assertEquals(TestTools.makeList(2), extractRevisionNumbers(list));
+		assertEquals(makeList(2), extractRevisionNumbers(list));
 	}
 
 	@Test
@@ -193,7 +193,7 @@ public class HasChangedForDefaultNotUsing extends AbstractModifiedFlagsEntityTes
 				NotUsingModifiedFlagsEntity.class,
 				entityId, "comp1");
 		assertEquals(1, list.size());
-		assertEquals(TestTools.makeList(3), extractRevisionNumbers(list));
+		assertEquals(makeList(3), extractRevisionNumbers(list));
 	}
 
 	@Test(expected = QueryException.class)
@@ -208,7 +208,7 @@ public class HasChangedForDefaultNotUsing extends AbstractModifiedFlagsEntityTes
 				NotUsingModifiedFlagsEntity.class,
 				entityId, "referencing");
 		assertEquals(2, list.size());
-		assertEquals(TestTools.makeList(5, 6), extractRevisionNumbers(list));
+		assertEquals(makeList(5, 6), extractRevisionNumbers(list));
 	}
 
 	@Test(expected = QueryException.class)
@@ -223,7 +223,7 @@ public class HasChangedForDefaultNotUsing extends AbstractModifiedFlagsEntityTes
 				NotUsingModifiedFlagsEntity.class,
 				entityId, "stringSet");
 		assertEquals(3, list.size());
-		assertEquals(TestTools.makeList(1, 7, 8), extractRevisionNumbers(list));
+		assertEquals(makeList(1, 7, 8), extractRevisionNumbers(list));
 	}
 
 	@Test
@@ -232,7 +232,7 @@ public class HasChangedForDefaultNotUsing extends AbstractModifiedFlagsEntityTes
 				NotUsingModifiedFlagsEntity.class,
 				entityId, "stringMap");
 		assertEquals(2, list.size());
-		assertEquals(TestTools.makeList(1, 8), extractRevisionNumbers(list));
+		assertEquals(makeList(1, 8), extractRevisionNumbers(list));
 	}
 
 	@Test
@@ -241,7 +241,7 @@ public class HasChangedForDefaultNotUsing extends AbstractModifiedFlagsEntityTes
 				NotUsingModifiedFlagsEntity.class,
 				entityId, "stringSet", "stringMap");
 		assertEquals(2, list.size());
-		assertEquals(TestTools.makeList(1, 8), extractRevisionNumbers(list));
+		assertEquals(makeList(1, 8), extractRevisionNumbers(list));
 	}
 
 	@Test
@@ -250,7 +250,7 @@ public class HasChangedForDefaultNotUsing extends AbstractModifiedFlagsEntityTes
 				NotUsingModifiedFlagsEntity.class,
 				entityId, "entitiesSet");
 		assertEquals(3, list.size());
-		assertEquals(TestTools.makeList(1, 10, 11), extractRevisionNumbers(list));
+		assertEquals(makeList(1, 10, 11), extractRevisionNumbers(list));
 	}
 
 	@Test
@@ -259,7 +259,7 @@ public class HasChangedForDefaultNotUsing extends AbstractModifiedFlagsEntityTes
 				NotUsingModifiedFlagsEntity.class,
 				entityId, "entitiesMap");
 		assertEquals(2, list.size());
-		assertEquals(TestTools.makeList(1, 11), extractRevisionNumbers(list));
+		assertEquals(makeList(1, 11), extractRevisionNumbers(list));
 	}
 
 	@Test
@@ -268,7 +268,7 @@ public class HasChangedForDefaultNotUsing extends AbstractModifiedFlagsEntityTes
 				NotUsingModifiedFlagsEntity.class,
 				entityId, "entitiesSet", "entitiesMap");
 		assertEquals(2, list.size());
-		assertEquals(TestTools.makeList(1, 11), extractRevisionNumbers(list));
+		assertEquals(makeList(1, 11), extractRevisionNumbers(list));
 	}
 
 }

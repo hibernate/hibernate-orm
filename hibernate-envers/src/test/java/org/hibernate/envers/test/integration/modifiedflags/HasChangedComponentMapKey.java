@@ -28,15 +28,15 @@ import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.components.Component1;
 import org.hibernate.envers.test.entities.components.Component2;
 import org.hibernate.envers.test.entities.components.ComponentTestEntity;
-import org.hibernate.envers.test.integration.collection.mapkey
-.ComponentMapKeyEntity;
-import org.hibernate.envers.test.tools.TestTools;
+import org.hibernate.envers.test.integration.collection.mapkey.ComponentMapKeyEntity;
 import org.junit.Test;
 
 import javax.persistence.EntityManager;
 import java.util.List;
 
 import static junit.framework.Assert.assertEquals;
+import static org.hibernate.envers.test.tools.TestTools.extractRevisionNumbers;
+import static org.hibernate.envers.test.tools.TestTools.makeList;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -97,7 +97,7 @@ public class HasChangedComponentMapKey extends AbstractModifiedFlagsEntityTest {
 	public void testHasChangedMapEntity() throws Exception {
 		List list = queryForPropertyHasChanged(ComponentMapKeyEntity.class, cmke_id, "idmap");
 		assertEquals(2, list.size());
-		assertEquals(TestTools.makeList(1, 2), extractRevisionNumbers(list));
+		assertEquals(makeList(1, 2), extractRevisionNumbers(list));
 
 		list = queryForPropertyHasNotChanged(ComponentMapKeyEntity.class,
 				cmke_id, "idmap");
@@ -109,7 +109,7 @@ public class HasChangedComponentMapKey extends AbstractModifiedFlagsEntityTest {
 		List list = queryForPropertyHasChanged(ComponentTestEntity.class,
 				cte1_id, "comp1");
 		assertEquals(1, list.size());
-		assertEquals(TestTools.makeList(1), extractRevisionNumbers(list));
+		assertEquals(makeList(1), extractRevisionNumbers(list));
 
 		list = queryForPropertyHasNotChanged(ComponentTestEntity.class, cte1_id,
 				"comp1");
@@ -117,7 +117,7 @@ public class HasChangedComponentMapKey extends AbstractModifiedFlagsEntityTest {
 
 		list = queryForPropertyHasChanged(ComponentTestEntity.class, cte2_id, "comp1");
 		assertEquals(1, list.size());
-		assertEquals(TestTools.makeList(1), extractRevisionNumbers(list));
+		assertEquals(makeList(1), extractRevisionNumbers(list));
 
 		list = queryForPropertyHasNotChanged(ComponentTestEntity.class, cte2_id, "comp1");
 		assertEquals(0, list.size());

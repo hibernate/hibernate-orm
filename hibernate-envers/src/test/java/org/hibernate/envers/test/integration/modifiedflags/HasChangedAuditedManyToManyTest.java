@@ -4,9 +4,7 @@ import org.hibernate.MappingException;
 import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.integration.entityNames.manyToManyAudited.Car;
-import org.hibernate.envers.test.integration.entityNames.manyToManyAudited
-		.Person;
-import org.hibernate.envers.test.tools.TestTools;
+import org.hibernate.envers.test.integration.entityNames.manyToManyAudited.Person;
 import org.junit.Test;
 
 import java.io.File;
@@ -16,6 +14,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static junit.framework.Assert.assertEquals;
+import static org.hibernate.envers.test.tools.TestTools.extractRevisionNumbers;
+import static org.hibernate.envers.test.tools.TestTools.makeList;
 
 /**
  * @author Hern&aacute;n Chanfreau
@@ -25,23 +25,15 @@ import static junit.framework.Assert.assertEquals;
 public class HasChangedAuditedManyToManyTest extends AbstractModifiedFlagsOneSessionTest{
 
 	private long id_car1;
-	private long id_car2;
-	
+
 	private long id_pers1;
 	private long id_pers2;
 
-	private Person person1;
-	private Car car1;
-	
-	private Person person1_1;
-	private Car car1_2;
-	
 	protected void initMappings() throws MappingException, URISyntaxException {
 		URL url = Thread.currentThread().getContextClassLoader().getResource("mappings/entityNames/manyToManyAudited/mappings.hbm.xml");
         config.addFile(new File(url.toURI()));
 	}
-	
-	
+
     @Test
     @Priority(10)
     public void initData() {
@@ -80,8 +72,7 @@ public class HasChangedAuditedManyToManyTest extends AbstractModifiedFlagsOneSes
         getSession().persist(car1);
         getSession().persist(car2);
         getSession().getTransaction().commit();
-        id_car2 = car2.getId();
-    }
+	}
 
 	@Test
 	public void testHasChangedPerson1() throws Exception {
@@ -90,14 +81,14 @@ public class HasChangedAuditedManyToManyTest extends AbstractModifiedFlagsOneSes
 				.add(AuditEntity.property("cars").hasChanged())
 				.getResultList();
 		assertEquals(1, list.size());
-		assertEquals(TestTools.makeList(1), extractRevisionNumbers(list));
+		assertEquals(makeList(1), extractRevisionNumbers(list));
 
 		list = getAuditReader().createQuery().forRevisionsOfEntity(Person.class, "Personaje", false, false)
 				.add(AuditEntity.id().eq(id_pers1))
 				.add(AuditEntity.property("cars").hasNotChanged())
 				.getResultList();
 		assertEquals(1, list.size());
-		assertEquals(TestTools.makeList(2), extractRevisionNumbers(list));
+		assertEquals(makeList(2), extractRevisionNumbers(list));
 	}
 
 	@Test
@@ -107,7 +98,7 @@ public class HasChangedAuditedManyToManyTest extends AbstractModifiedFlagsOneSes
 				.add(AuditEntity.property("cars").hasChanged())
 				.getResultList();
 		assertEquals(2, list.size());
-		assertEquals(TestTools.makeList(1, 2), extractRevisionNumbers(list));
+		assertEquals(makeList(1, 2), extractRevisionNumbers(list));
 
 		list = getAuditReader().createQuery().forRevisionsOfEntity(Person.class, "Personaje", false, false)
 				.add(AuditEntity.id().eq(id_pers2))
@@ -123,7 +114,7 @@ public class HasChangedAuditedManyToManyTest extends AbstractModifiedFlagsOneSes
 				.add(AuditEntity.property("owners").hasChanged())
 				.getResultList();
 		assertEquals(1, list.size());
-		assertEquals(TestTools.makeList(1), extractRevisionNumbers(list));
+		assertEquals(makeList(1), extractRevisionNumbers(list));
 
 		list = getAuditReader().createQuery().forRevisionsOfEntity(Car.class, false, false)
 				.add(AuditEntity.id().eq(id_car1))

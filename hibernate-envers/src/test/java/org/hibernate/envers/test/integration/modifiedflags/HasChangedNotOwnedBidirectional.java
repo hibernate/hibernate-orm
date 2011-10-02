@@ -26,19 +26,17 @@ package org.hibernate.envers.test.integration.modifiedflags;
 
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.Priority;
-import org.hibernate.envers.test.integration.inheritance.joined
-.notownedrelation.Address;
-import org.hibernate.envers.test.integration.inheritance.joined
-.notownedrelation.Contact;
-import org.hibernate.envers.test.integration.inheritance.joined
-.notownedrelation.PersonalContact;
-import org.hibernate.envers.test.tools.TestTools;
+import org.hibernate.envers.test.integration.inheritance.joined.notownedrelation.Address;
+import org.hibernate.envers.test.integration.inheritance.joined.notownedrelation.Contact;
+import org.hibernate.envers.test.integration.inheritance.joined.notownedrelation.PersonalContact;
 import org.junit.Test;
 
 import javax.persistence.EntityManager;
 import java.util.List;
 
 import static junit.framework.Assert.assertEquals;
+import static org.hibernate.envers.test.tools.TestTools.extractRevisionNumbers;
+import static org.hibernate.envers.test.tools.TestTools.makeList;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -95,14 +93,14 @@ public class HasChangedNotOwnedBidirectional extends AbstractModifiedFlagsEntity
 		List list = queryForPropertyHasChanged(PersonalContact.class, pc_id,
 				"addresses");
 		assertEquals(2, list.size());
-		assertEquals(TestTools.makeList(1, 2), extractRevisionNumbers(list));
+		assertEquals(makeList(1, 2), extractRevisionNumbers(list));
 
 		list = queryForPropertyHasChanged(Address.class, a1_id, "contact");
 		assertEquals(1, list.size());
-		assertEquals(TestTools.makeList(1), extractRevisionNumbers(list));
+		assertEquals(makeList(1), extractRevisionNumbers(list));
 
 		list = queryForPropertyHasChanged(Address.class, a2_id, "contact");
 		assertEquals(1, list.size());
-		assertEquals(TestTools.makeList(2), extractRevisionNumbers(list));
+		assertEquals(makeList(2), extractRevisionNumbers(list));
 	}
 }

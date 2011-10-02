@@ -25,19 +25,17 @@ package org.hibernate.envers.test.integration.modifiedflags;
 
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.Priority;
-import org.hibernate.envers.test.entities.onetomany.detached
-.DoubleListJoinColumnBidirectionalRefEdEntity1;
-import org.hibernate.envers.test.entities.onetomany.detached
-.DoubleListJoinColumnBidirectionalRefEdEntity2;
-import org.hibernate.envers.test.entities.onetomany.detached
-.DoubleListJoinColumnBidirectionalRefIngEntity;
-import org.hibernate.envers.test.tools.TestTools;
+import org.hibernate.envers.test.entities.onetomany.detached.DoubleListJoinColumnBidirectionalRefEdEntity1;
+import org.hibernate.envers.test.entities.onetomany.detached.DoubleListJoinColumnBidirectionalRefEdEntity2;
+import org.hibernate.envers.test.entities.onetomany.detached.DoubleListJoinColumnBidirectionalRefIngEntity;
 import org.junit.Test;
 
 import javax.persistence.EntityManager;
 import java.util.List;
 
 import static junit.framework.Assert.assertEquals;
+import static org.hibernate.envers.test.tools.TestTools.extractRevisionNumbers;
+import static org.hibernate.envers.test.tools.TestTools.makeList;
 
 /**
  * Test for a double "fake" bidirectional mapping where one side uses @OneToMany+@JoinColumn
@@ -164,19 +162,19 @@ public class HasChangedDoubleJoinColumnBidirectionalList extends AbstractModifie
 				DoubleListJoinColumnBidirectionalRefEdEntity1.class, ed1_1_id,
 				"owner");
 		assertEquals(2, list.size());
-		assertEquals(TestTools.makeList(1, 4), extractRevisionNumbers(list));
+		assertEquals(makeList(1, 4), extractRevisionNumbers(list));
 
 		list = queryForPropertyHasNotChanged(
 				DoubleListJoinColumnBidirectionalRefEdEntity1.class, ed1_1_id,
 				"owner");
 		assertEquals(1, list.size());
-		assertEquals(TestTools.makeList(3), extractRevisionNumbers(list));
+		assertEquals(makeList(3), extractRevisionNumbers(list));
 
 		list = queryForPropertyHasChanged(
 				DoubleListJoinColumnBidirectionalRefEdEntity1.class, ed1_2_id,
 				"owner");
 		assertEquals(3, list.size());
-		assertEquals(TestTools.makeList(1,2, 4), extractRevisionNumbers(list));
+		assertEquals(makeList(1, 2, 4), extractRevisionNumbers(list));
 
 		list = queryForPropertyHasNotChanged(
 				DoubleListJoinColumnBidirectionalRefEdEntity1.class, ed1_2_id,
@@ -190,7 +188,7 @@ public class HasChangedDoubleJoinColumnBidirectionalList extends AbstractModifie
 				DoubleListJoinColumnBidirectionalRefEdEntity2.class, ed2_1_id,
 				"owner");
 		assertEquals(2, list.size());
-		assertEquals(TestTools.makeList(1, 4), extractRevisionNumbers(list));
+		assertEquals(makeList(1, 4), extractRevisionNumbers(list));
 
 		list = queryForPropertyHasNotChanged(
 				DoubleListJoinColumnBidirectionalRefEdEntity2.class, ed2_1_id,
@@ -201,13 +199,13 @@ public class HasChangedDoubleJoinColumnBidirectionalList extends AbstractModifie
 				DoubleListJoinColumnBidirectionalRefEdEntity2.class, ed2_2_id,
 				"owner");
 		assertEquals(2, list.size());
-		assertEquals(TestTools.makeList(1, 2), extractRevisionNumbers(list));
+		assertEquals(makeList(1, 2), extractRevisionNumbers(list));
 
 		list = queryForPropertyHasNotChanged(
 				DoubleListJoinColumnBidirectionalRefEdEntity2.class, ed2_2_id,
 				"owner");
 		assertEquals(1, list.size());
-		assertEquals(TestTools.makeList(3), extractRevisionNumbers(list));
+		assertEquals(makeList(3), extractRevisionNumbers(list));
 	}
 
 	@Test
@@ -216,13 +214,13 @@ public class HasChangedDoubleJoinColumnBidirectionalList extends AbstractModifie
 				DoubleListJoinColumnBidirectionalRefIngEntity.class, ing1_id,
 				"references1");
 		assertEquals(3, list.size());
-		assertEquals(TestTools.makeList(1, 2, 4), extractRevisionNumbers(list));
+		assertEquals(makeList(1, 2, 4), extractRevisionNumbers(list));
 
 		list = queryForPropertyHasChanged(
 				DoubleListJoinColumnBidirectionalRefIngEntity.class, ing2_id,
 				"references1");
 		assertEquals(3, list.size());
-		assertEquals(TestTools.makeList(1, 2, 4), extractRevisionNumbers(list));
+		assertEquals(makeList(1, 2, 4), extractRevisionNumbers(list));
 
 		list = queryForPropertyHasNotChanged(
 				DoubleListJoinColumnBidirectionalRefIngEntity.class, ing1_id,
@@ -241,13 +239,13 @@ public class HasChangedDoubleJoinColumnBidirectionalList extends AbstractModifie
 				DoubleListJoinColumnBidirectionalRefIngEntity.class, ing1_id,
 				"references2");
 		assertEquals(3, list.size());
-		assertEquals(TestTools.makeList(1, 2, 4), extractRevisionNumbers(list));
+		assertEquals(makeList(1, 2, 4), extractRevisionNumbers(list));
 
 		list = queryForPropertyHasChanged(
 				DoubleListJoinColumnBidirectionalRefIngEntity.class, ing2_id,
 				"references2");
 		assertEquals(3, list.size());
-		assertEquals(TestTools.makeList(1, 2, 4), extractRevisionNumbers(list));
+		assertEquals(makeList(1, 2, 4), extractRevisionNumbers(list));
 
 		list = queryForPropertyHasNotChanged(
 				DoubleListJoinColumnBidirectionalRefIngEntity.class, ing1_id,

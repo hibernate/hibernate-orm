@@ -26,19 +26,17 @@ package org.hibernate.envers.test.integration.modifiedflags;
 
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.Priority;
-import org.hibernate.envers.test.integration.inheritance.joined.childrelation
-.ChildIngEntity;
-import org.hibernate.envers.test.integration.inheritance.joined.childrelation
-.ParentNotIngEntity;
-import org.hibernate.envers.test.integration.inheritance.joined.childrelation
-.ReferencedEntity;
-import org.hibernate.envers.test.tools.TestTools;
+import org.hibernate.envers.test.integration.inheritance.joined.childrelation.ChildIngEntity;
+import org.hibernate.envers.test.integration.inheritance.joined.childrelation.ParentNotIngEntity;
+import org.hibernate.envers.test.integration.inheritance.joined.childrelation.ReferencedEntity;
 import org.junit.Test;
 
 import javax.persistence.EntityManager;
 import java.util.List;
 
 import static junit.framework.Assert.assertEquals;
+import static org.hibernate.envers.test.tools.TestTools.extractRevisionNumbers;
+import static org.hibernate.envers.test.tools.TestTools.makeList;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -47,9 +45,8 @@ import static junit.framework.Assert.assertEquals;
 public class HasChangedChildReferencing extends AbstractModifiedFlagsEntityTest {
     private Integer re_id1;
     private Integer re_id2;
-    private Integer c_id;
 
-    public void configure(Ejb3Configuration cfg) {
+	public void configure(Ejb3Configuration cfg) {
         cfg.addAnnotatedClass(ChildIngEntity.class);
         cfg.addAnnotatedClass(ParentNotIngEntity.class);
         cfg.addAnnotatedClass(ReferencedEntity.class);
@@ -62,7 +59,7 @@ public class HasChangedChildReferencing extends AbstractModifiedFlagsEntityTest 
 
         re_id1 = 1;
         re_id2 = 10;
-        c_id = 100;
+		Integer c_id = 100;
 
         // Rev 1
         em.getTransaction().begin();
@@ -102,15 +99,15 @@ public class HasChangedChildReferencing extends AbstractModifiedFlagsEntityTest 
 	public void testReferencedEntityHasChanged() throws Exception {
 		List list = queryForPropertyHasChanged(ReferencedEntity.class, re_id1, "referencing");
 		assertEquals(2, list.size());
-		assertEquals(TestTools.makeList(2, 3), extractRevisionNumbers(list));
+		assertEquals(makeList(2, 3), extractRevisionNumbers(list));
 
 		list = queryForPropertyHasNotChanged(ReferencedEntity.class, re_id1, "referencing");
 		assertEquals(1, list.size()); // initially referencing collection is null
-		assertEquals(TestTools.makeList(1), extractRevisionNumbers(list));
+		assertEquals(makeList(1), extractRevisionNumbers(list));
 
 		list = queryForPropertyHasChanged(ReferencedEntity.class, re_id2, "referencing");
 		assertEquals(1, list.size());
-		assertEquals(TestTools.makeList(3), extractRevisionNumbers(list));
+		assertEquals(makeList(3), extractRevisionNumbers(list));
 	}
 
 }

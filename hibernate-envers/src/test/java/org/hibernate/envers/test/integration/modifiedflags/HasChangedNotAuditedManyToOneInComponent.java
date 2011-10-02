@@ -26,17 +26,16 @@ package org.hibernate.envers.test.integration.modifiedflags;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.UnversionedStrTestEntity;
-import org.hibernate.envers.test.entities.components.relations
-.NotAuditedManyToOneComponent;
-import org.hibernate.envers.test.entities.components.relations
-.NotAuditedManyToOneComponentTestEntity;
-import org.hibernate.envers.test.tools.TestTools;
+import org.hibernate.envers.test.entities.components.relations.NotAuditedManyToOneComponent;
+import org.hibernate.envers.test.entities.components.relations.NotAuditedManyToOneComponentTestEntity;
 import org.junit.Test;
 
 import javax.persistence.EntityManager;
 import java.util.List;
 
 import static junit.framework.Assert.assertEquals;
+import static org.hibernate.envers.test.tools.TestTools.extractRevisionNumbers;
+import static org.hibernate.envers.test.tools.TestTools.makeList;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -106,7 +105,7 @@ public class HasChangedNotAuditedManyToOneInComponent extends AbstractModifiedFl
 				NotAuditedManyToOneComponentTestEntity.class, mtocte_id1,
 				"comp1");
 		assertEquals(2, list.size());
-		assertEquals(TestTools.makeList(1, 2), extractRevisionNumbers(list));
+		assertEquals(makeList(1, 2), extractRevisionNumbers(list));
 
 		list = queryForPropertyHasNotChanged(
 				NotAuditedManyToOneComponentTestEntity.class, mtocte_id1,

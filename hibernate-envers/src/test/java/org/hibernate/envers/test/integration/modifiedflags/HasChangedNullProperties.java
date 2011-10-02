@@ -27,13 +27,14 @@ import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.integration.basic.BasicTestEntity1;
-import org.hibernate.envers.test.tools.TestTools;
 import org.junit.Test;
 
 import javax.persistence.EntityManager;
 import java.util.List;
 
 import static junit.framework.Assert.assertEquals;
+import static org.hibernate.envers.test.tools.TestTools.extractRevisionNumbers;
+import static org.hibernate.envers.test.tools.TestTools.makeList;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -81,29 +82,29 @@ public class HasChangedNullProperties extends AbstractModifiedFlagsEntityTest {
 		List list = queryForPropertyHasChangedWithDeleted(BasicTestEntity1.class,
 				id1, "str1");
 		assertEquals(2, list.size());
-		assertEquals(TestTools.makeList(1, 3), extractRevisionNumbers(list));
+		assertEquals(makeList(1, 3), extractRevisionNumbers(list));
 
 		list = queryForPropertyHasChangedWithDeleted(BasicTestEntity1.class,
 				id1, "long1");
 		assertEquals(1, list.size());
-		assertEquals(TestTools.makeList(1), extractRevisionNumbers(list));
+		assertEquals(makeList(1), extractRevisionNumbers(list));
 
 		list = queryForPropertyHasChangedWithDeleted(BasicTestEntity1.class,
 				id2, "str1");
 		// str1 property was null before insert and after insert so in a way it didn't change - is it a good way to go?
 		assertEquals(1, list.size());
-		assertEquals(TestTools.makeList(4), extractRevisionNumbers(list));
+		assertEquals(makeList(4), extractRevisionNumbers(list));
 
 		list = queryForPropertyHasChangedWithDeleted(BasicTestEntity1.class,
 				id2, "long1");
 		assertEquals(1, list.size());
-		assertEquals(TestTools.makeList(2), extractRevisionNumbers(list));
+		assertEquals(makeList(2), extractRevisionNumbers(list));
 
 		list = getAuditReader().createQuery().forRevisionsOfEntity(BasicTestEntity1.class, false, true)
 				.add(AuditEntity.property("str1").hasChanged())
 				.add(AuditEntity.property("long1").hasChanged())
 				.getResultList();
 		assertEquals(1, list.size());
-		assertEquals(TestTools.makeList(1), extractRevisionNumbers(list));
+		assertEquals(makeList(1), extractRevisionNumbers(list));
 	}
 }

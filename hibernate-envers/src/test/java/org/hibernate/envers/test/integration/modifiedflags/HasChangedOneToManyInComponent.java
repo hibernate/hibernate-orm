@@ -26,17 +26,16 @@ package org.hibernate.envers.test.integration.modifiedflags;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
-import org.hibernate.envers.test.entities.components.relations
-		.OneToManyComponent;
-import org.hibernate.envers.test.entities.components.relations
-		.OneToManyComponentTestEntity;
-import org.hibernate.envers.test.tools.TestTools;
+import org.hibernate.envers.test.entities.components.relations.OneToManyComponent;
+import org.hibernate.envers.test.entities.components.relations.OneToManyComponentTestEntity;
 import org.junit.Test;
 
 import javax.persistence.EntityManager;
 import java.util.List;
 
 import static junit.framework.Assert.assertEquals;
+import static org.hibernate.envers.test.tools.TestTools.extractRevisionNumbers;
+import static org.hibernate.envers.test.tools.TestTools.makeList;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -44,8 +43,6 @@ import static junit.framework.Assert.assertEquals;
  */
 public class HasChangedOneToManyInComponent extends AbstractModifiedFlagsEntityTest {
     private Integer otmcte_id1;
-	private Integer ste_id1;
-	private Integer ste_id2;
 
 	public void configure(Ejb3Configuration cfg) {
         cfg.addAnnotatedClass(OneToManyComponentTestEntity.class);
@@ -91,9 +88,7 @@ public class HasChangedOneToManyInComponent extends AbstractModifiedFlagsEntityT
         em.getTransaction().commit();
 
         otmcte_id1 = otmcte1.getId();
-		ste_id1 = ste1.getId();
-		ste_id2 = ste2.getId();
-    }
+	}
 
 	@Test
 	public void testHasChangedId1() throws Exception {
@@ -101,7 +96,7 @@ public class HasChangedOneToManyInComponent extends AbstractModifiedFlagsEntityT
 				queryForPropertyHasChanged(OneToManyComponentTestEntity.class,
 				otmcte_id1, "comp1");
 		assertEquals(2, list.size());
-		assertEquals(TestTools.makeList(2, 3), extractRevisionNumbers(list));
+		assertEquals(makeList(2, 3), extractRevisionNumbers(list));
 
 		list = queryForPropertyHasNotChanged(OneToManyComponentTestEntity.class,
 				otmcte_id1, "comp1");

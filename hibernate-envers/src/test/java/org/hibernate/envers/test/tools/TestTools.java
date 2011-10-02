@@ -22,6 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.tools;
+
+import org.hibernate.envers.DefaultRevisionEntity;
+
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -71,4 +75,13 @@ public class TestTools {
 
         return true;
     }
+
+	public static List<Integer> extractRevisionNumbers(List queryResults) {
+		List<Integer> result = new ArrayList<Integer>();
+		for (Object queryResult : queryResults) {
+			result.add(((DefaultRevisionEntity) ((Object[]) queryResult)[1])
+					.getId());
+		}
+		return result;
+	}
 }

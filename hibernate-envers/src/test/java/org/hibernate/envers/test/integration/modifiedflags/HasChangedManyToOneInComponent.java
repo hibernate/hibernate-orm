@@ -26,17 +26,16 @@ package org.hibernate.envers.test.integration.modifiedflags;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
-import org.hibernate.envers.test.entities.components.relations
-.ManyToOneComponent;
-import org.hibernate.envers.test.entities.components.relations
-.ManyToOneComponentTestEntity;
-import org.hibernate.envers.test.tools.TestTools;
+import org.hibernate.envers.test.entities.components.relations.ManyToOneComponent;
+import org.hibernate.envers.test.entities.components.relations.ManyToOneComponentTestEntity;
 import org.junit.Test;
 
 import javax.persistence.EntityManager;
 import java.util.List;
 
 import static junit.framework.Assert.assertEquals;
+import static org.hibernate.envers.test.tools.TestTools.extractRevisionNumbers;
+import static org.hibernate.envers.test.tools.TestTools.makeList;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -44,10 +43,8 @@ import static junit.framework.Assert.assertEquals;
  */
 public class HasChangedManyToOneInComponent extends AbstractModifiedFlagsEntityTest {
     private Integer mtocte_id1;
-	private Integer ste_id1;
-	private Integer ste_id2;
 
-    public void configure(Ejb3Configuration cfg) {
+	public void configure(Ejb3Configuration cfg) {
         cfg.addAnnotatedClass(ManyToOneComponentTestEntity.class);
 		cfg.addAnnotatedClass(StrTestEntity.class);
     }
@@ -90,16 +87,14 @@ public class HasChangedManyToOneInComponent extends AbstractModifiedFlagsEntityT
         em.getTransaction().commit();
 
         mtocte_id1 = mtocte1.getId();
-		ste_id1 = ste1.getId();
-		ste_id2 = ste2.getId();
-    }
+	}
 
 	@Test
 	public void testHasChangedId1() throws Exception {
 		List list = queryForPropertyHasChanged(ManyToOneComponentTestEntity.class,
 				mtocte_id1, "comp1");
 		assertEquals(2, list.size());
-		assertEquals(TestTools.makeList(2, 3), extractRevisionNumbers(list));
+		assertEquals(makeList(2, 3), extractRevisionNumbers(list));
 
 		list = queryForPropertyHasNotChanged(ManyToOneComponentTestEntity.class,
 				mtocte_id1, "comp1");

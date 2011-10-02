@@ -4,7 +4,13 @@ import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
-import org.hibernate.envers.*;
+import org.hibernate.envers.AuditJoinTable;
+import org.hibernate.envers.AuditMappedBy;
+import org.hibernate.envers.AuditOverride;
+import org.hibernate.envers.AuditOverrides;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.ModificationStore;
+import org.hibernate.envers.NotAudited;
 import org.hibernate.envers.configuration.GlobalConfiguration;
 import org.hibernate.envers.tools.MappingTools;
 import org.hibernate.mapping.Component;
@@ -113,7 +119,7 @@ public class AuditedPropertiesReader {
 	private void readPersistentPropertiesAccess() {
 		Iterator<Property> propertyIter = persistentPropertiesSource.getPropertyIterator();
 		while (propertyIter.hasNext()) {
-			Property property = (Property) propertyIter.next();
+			Property property = propertyIter.next();
 			if ("field".equals(property.getPropertyAccessorName())) {
 				fieldAccessedPersistentProperties.add(property.getName());
 			} else {
@@ -186,8 +192,8 @@ public class AuditedPropertiesReader {
 		boolean isAudited = fillPropertyData(property, componentData, accessType,
 				allClassAudited);
 
-		PersistentPropertiesSource componentPropertiesSource = new ComponentPropertiesSource(
-				(Component) propertyValue);
+		PersistentPropertiesSource componentPropertiesSource =
+				new ComponentPropertiesSource(propertyValue);
 		
 		ComponentAuditedPropertiesReader audPropReader = new ComponentAuditedPropertiesReader(
 				ModificationStore.FULL, componentPropertiesSource,
@@ -278,7 +284,7 @@ public class AuditedPropertiesReader {
 	}
 
 	protected boolean checkUsingModifiedFlag(Audited aud) {
-		return globalCfg.isOverrideUsingModifiedFlag() ?
+		return globalCfg.hasSettingForUsingModifiedFlag() ?
 				globalCfg.isUsingModifiedFlag() : aud.usingModifiedFlag();
 	}
 

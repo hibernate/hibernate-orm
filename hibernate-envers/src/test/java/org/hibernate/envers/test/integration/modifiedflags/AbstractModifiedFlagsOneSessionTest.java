@@ -40,12 +40,7 @@ public abstract class AbstractModifiedFlagsOneSessionTest extends
 		super.addProperties(configuration);
 		if (forceModifiedFlags()) {
 			configuration.setProperty(
-					GlobalConfiguration.OVERRIDE_USING_MODIFIED_FLAG_PROPERTY,
-					"true");
-			configuration
-					.setProperty(
-							GlobalConfiguration.USING_MODIFIED_FLAG_PROPERTY,
-							"true");
+					GlobalConfiguration.USING_MODIFIED_FLAG_PROPERTY, "true");
 		}
 	}
 

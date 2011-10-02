@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.entities.mapper.relation;
-
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.RevisionType;
@@ -39,7 +38,13 @@ import org.hibernate.property.Setter;
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -135,11 +140,11 @@ public abstract class AbstractCollectionMapper<T> implements PropertyMapper {
 		PropertyData propertyData = commonCollectionMapperData.getCollectionReferencingPropertyData();
 		if (propertyData.isUsingModifiedFlag()) {
 			if(isFromNullToEmptyOrFromEmptyToNull((PersistentCollection) newObj, (Serializable) oldObj)){
-				data.put(propertyData.getModifiedFlagPropertyName(), true);
+				propertyData.addModifiedFlag(data, true);
 			} else {
 				List<PersistentCollectionChangeData> changes = mapCollectionChanges(commonCollectionMapperData.getCollectionReferencingPropertyData().getName(),
 						(PersistentCollection) newObj, (Serializable) oldObj, null);
-				data.put(propertyData.getModifiedFlagPropertyName(), !changes.isEmpty());
+				propertyData.addModifiedFlag(data, !changes.isEmpty());
 			}
 		}
 	}
@@ -157,7 +162,7 @@ public abstract class AbstractCollectionMapper<T> implements PropertyMapper {
 	public void mapModifiedFlagsToMapForCollectionChange(String collectionPropertyName, Map<String, Object> data) {
 		PropertyData propertyData = commonCollectionMapperData.getCollectionReferencingPropertyData();
 		if (propertyData.isUsingModifiedFlag()) {
-			data.put(propertyData.getModifiedFlagPropertyName(), propertyData.getName().equals(collectionPropertyName));
+			propertyData.addModifiedFlag(data, propertyData.getName().equals(collectionPropertyName));
 		}
 	}
 

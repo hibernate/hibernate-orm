@@ -72,7 +72,7 @@ public class ComponentPropertyMapper implements PropertyMapper, CompositeMapperB
 	@Override
 	public void mapModifiedFlagsToMapFromEntity(SessionImplementor session, Map<String, Object> data, Object newObj, Object oldObj) {
 		if (propertyData.isUsingModifiedFlag()) {
-			data.put(propertyData.getModifiedFlagPropertyName(),
+			propertyData.addModifiedFlag(data,
 					delegate.mapToMapFromEntity(session, new HashMap<String, Object>(), newObj, oldObj));
 		}
 	}
@@ -87,7 +87,7 @@ public class ComponentPropertyMapper implements PropertyMapper, CompositeMapperB
 					break;
 				}
 			}
-			data.put(propertyData.getModifiedFlagPropertyName(), hasModifiedCollection);
+			propertyData.addModifiedFlag(data, hasModifiedCollection);
 		}
 	}
 

@@ -69,7 +69,7 @@ public class SinglePropertyMapper implements PropertyMapper, SimpleMapperBuilder
 	@Override
 	public void mapModifiedFlagsToMapFromEntity(SessionImplementor session, Map<String, Object> data, Object newObj, Object oldObj) {
 		if (propertyData.isUsingModifiedFlag()) {
-			data.put(propertyData.getModifiedFlagPropertyName(), !Tools.objectsEqual(newObj, oldObj));
+			propertyData.addModifiedFlag(data, !Tools.objectsEqual(newObj, oldObj));
 		}
 	}
 

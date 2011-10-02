@@ -69,8 +69,7 @@ public class OneToOneNotOwningMapper implements PropertyMapper {
 	@Override
 	public void mapModifiedFlagsToMapForCollectionChange(String collectionPropertyName, Map<String, Object> data) {
 		if (propertyData.isUsingModifiedFlag()) {
-			data.put(propertyData.getModifiedFlagPropertyName(),
-					collectionPropertyName.equals(propertyData.getName()));
+			propertyData.addModifiedFlag(data, collectionPropertyName.equals(propertyData.getName()));
 		}
 	}
 

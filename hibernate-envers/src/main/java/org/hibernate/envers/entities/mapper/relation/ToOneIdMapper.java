@@ -78,14 +78,14 @@ public class ToOneIdMapper implements PropertyMapper {
 	@Override
 	public void mapModifiedFlagsToMapFromEntity(SessionImplementor session, Map<String, Object> data, Object newObj, Object oldObj) {
 		if (propertyData.isUsingModifiedFlag()) {
-			data.put(propertyData.getModifiedFlagPropertyName(), checkModified(session, newObj, oldObj));
+			propertyData.addModifiedFlag(data, checkModified(session, newObj, oldObj));
 		}
 	}
 
 	@Override
 	public void mapModifiedFlagsToMapForCollectionChange(String collectionPropertyName, Map<String, Object> data) {
 		if (propertyData.isUsingModifiedFlag()) {
-			data.put(propertyData.getModifiedFlagPropertyName(), collectionPropertyName.equals(propertyData.getName()));
+			propertyData.addModifiedFlag(data, collectionPropertyName.equals(propertyData.getName()));
 		}
 	}
 

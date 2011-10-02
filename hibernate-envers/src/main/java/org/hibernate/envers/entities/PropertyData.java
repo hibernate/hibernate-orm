@@ -25,6 +25,8 @@ package org.hibernate.envers.entities;
 import org.hibernate.envers.ModificationStore;
 import org.hibernate.envers.configuration.metadata.MetadataTools;
 
+import java.util.Map;
+
 /**
  * Holds information on a property that is audited.
  * @author Adam Warski (adam at warski dot org)
@@ -96,7 +98,11 @@ public class PropertyData {
 		return usingModifiedFlag;
 	}
 
-	public String getModifiedFlagPropertyName() {
+	public void addModifiedFlag(Map<String, Object> data, boolean flagValue) {
+		data.put(getModifiedFlagPropertyName(), flagValue);
+	}
+
+	private String getModifiedFlagPropertyName() {
 		return MetadataTools.getModifiedFlagPropertyName(name);
 	}
 

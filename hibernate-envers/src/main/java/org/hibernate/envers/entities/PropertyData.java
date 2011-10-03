@@ -23,7 +23,6 @@
  */
 package org.hibernate.envers.entities;
 import org.hibernate.envers.ModificationStore;
-import org.hibernate.envers.configuration.metadata.MetadataTools;
 
 import java.util.Map;
 
@@ -40,6 +39,7 @@ public class PropertyData {
     private final String accessType;
     private final ModificationStore store;
 	private boolean usingModifiedFlag;
+	private String modifiedFlagName;
 
     /**
      * Copies the given property data, except the name.
@@ -73,9 +73,10 @@ public class PropertyData {
      * @param store How this property should be stored.
      * @param usingModifiedFlag Defines if field changes should be tracked
      */
-	public PropertyData(String name, String beanName, String accessType, ModificationStore store, boolean usingModifiedFlag) {
+	public PropertyData(String name, String beanName, String accessType, ModificationStore store, boolean usingModifiedFlag, String modifiedFlagName) {
 		this(name, beanName, accessType, store);
 		this.usingModifiedFlag = usingModifiedFlag;
+		this.modifiedFlagName = modifiedFlagName;
 	}
 
     public String getName() {
@@ -103,7 +104,7 @@ public class PropertyData {
 	}
 
 	private String getModifiedFlagPropertyName() {
-		return MetadataTools.getModifiedFlagPropertyName(name);
+		return modifiedFlagName;
 	}
 
 	@Override

@@ -38,6 +38,8 @@ public class ModifiedFlagPropertyName implements PropertyNameGetter {
     }
 
     public String get(AuditConfiguration auditCfg) {
-		return MetadataTools.getModifiedFlagPropertyName(propertyNameGetter.get(auditCfg));
+		return MetadataTools
+				.getModifiedFlagPropertyName(propertyNameGetter.get(auditCfg),
+						auditCfg.getGlobalCfg().getModifiedFlagSuffix());
     }
 }

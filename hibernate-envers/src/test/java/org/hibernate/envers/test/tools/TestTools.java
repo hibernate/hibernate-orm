@@ -24,11 +24,15 @@
 package org.hibernate.envers.test.tools;
 
 import org.hibernate.envers.DefaultRevisionEntity;
+import org.hibernate.envers.configuration.GlobalConfiguration;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Property;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -81,6 +85,27 @@ public class TestTools {
 		for (Object queryResult : queryResults) {
 			result.add(((DefaultRevisionEntity) ((Object[]) queryResult)[1])
 					.getId());
+		}
+		return result;
+	}
+
+	public static Set<String> extractModProperties(
+			PersistentClass persistentClass) {
+		return extractModProperties(persistentClass,
+				GlobalConfiguration.DEFAULT_MODIFIED_FLAG_SUFFIX);
+	}
+
+	public static Set<String> extractModProperties(
+			PersistentClass persistentClass, String suffix) {
+		Set<String> result = new HashSet<String>();
+		Iterator iterator = persistentClass.getPropertyIterator();
+
+		while (iterator.hasNext()) {
+			Property property = (Property) iterator.next();
+			String propertyName = property.getName();
+			if (propertyName.endsWith(suffix)) {
+				result.add(propertyName);
+			}
 		}
 		return result;
 	}

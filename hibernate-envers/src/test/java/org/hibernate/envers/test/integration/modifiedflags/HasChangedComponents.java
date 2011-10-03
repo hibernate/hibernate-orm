@@ -29,6 +29,7 @@ import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.components.Component1;
 import org.hibernate.envers.test.entities.components.Component2;
 import org.hibernate.envers.test.entities.components.ComponentTestEntity;
+import org.hibernate.envers.test.tools.TestTools;
 import org.junit.Test;
 
 import javax.persistence.EntityManager;
@@ -121,6 +122,13 @@ public class HasChangedComponents extends AbstractModifiedFlagsEntityTest {
         id3 = cte3.getId();
         id4 = cte4.getId();
     }
+
+	@Test
+    public void testModFlagProperties() {
+		assertEquals(TestTools.makeSet("comp1_MOD"),
+				TestTools.extractModProperties(getCfg().getClassMapping(
+						"org.hibernate.envers.test.entities.components.ComponentTestEntity_AUD")));
+	}
 
 	@Test(expected = QueryException.class)
 	public void testHasChangedNotAudited() throws Exception {

@@ -12,6 +12,7 @@ import org.hibernate.envers.Audited;
 import org.hibernate.envers.ModificationStore;
 import org.hibernate.envers.NotAudited;
 import org.hibernate.envers.configuration.GlobalConfiguration;
+import org.hibernate.envers.configuration.metadata.MetadataTools;
 import org.hibernate.envers.tools.MappingTools;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
@@ -250,9 +251,12 @@ public class AuditedPropertiesReader {
 		if(!this.checkAudited(property, propertyData, allClassAudited)){
 			return false;
 		}
-	
 
-		propertyData.setName(propertyNamePrefix + property.getName());
+		String propertyName = propertyNamePrefix + property.getName();
+		propertyData.setName(propertyName);
+		propertyData.setModifiedFlagName(MetadataTools
+				.getModifiedFlagPropertyName(propertyName,
+						globalCfg.getModifiedFlagSuffix()));
 		propertyData.setBeanName(property.getName());
 		propertyData.setAccessType(accessType);
 

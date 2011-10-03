@@ -39,7 +39,6 @@ import java.util.Iterator;
  * @author Michal Skowronek (mskowr at o2 dot pl)
  */
 public class MetadataTools {
-	public static final String MOD_SUFFIX = "_mod";
 
 	public static Element addNativelyGeneratedId(Element parent, String name, String type) {
         Element id_mapping = parent.addElement("id");
@@ -76,12 +75,12 @@ public class MetadataTools {
         return addProperty(parent, name, type, insertable, false, key);
     }
 
-	public static Element addModifiedFlagProperty(Element parent, String propertyName) {
-		return addProperty(parent, getModifiedFlagPropertyName(propertyName), "boolean", true, false, false);
+	public static Element addModifiedFlagProperty(Element parent, String propertyName, String suffix) {
+		return addProperty(parent, getModifiedFlagPropertyName(propertyName, suffix), "boolean", true, false, false);
 	}
 
-	public static String getModifiedFlagPropertyName(String propertyName) {
-		return propertyName + MOD_SUFFIX;
+	public static String getModifiedFlagPropertyName(String propertyName, String suffix) {
+		return propertyName + suffix;
 	}
 
 	private static void addOrModifyAttribute(Element parent, String name, String value) {

@@ -37,6 +37,8 @@ import static org.hibernate.envers.tools.Tools.getProperty;
  */
 public class GlobalConfiguration {
 	public static final String USING_MODIFIED_FLAG_PROPERTY = "org.hibernate.envers.using_modified_flag";
+	public static final String MODIFIED_FLAG_SUFFIX_PROPERTY = "org.hibernate.envers.modified_flag_suffix";
+	public static final String DEFAULT_MODIFIED_FLAG_SUFFIX = "_MOD";
 	// Should a revision be generated when a not-owned relation field changes
     private final boolean generateRevisionsForCollections;
 
@@ -57,10 +59,13 @@ public class GlobalConfiguration {
 
     // Revision listener class name.
     private final Class<? extends RevisionListener> revisionListenerClass;
+
 	// Should Envers use modified property flags by default
     private boolean usingModifiedFlag;
 	// Indicates that user defined global behavior for modified flags feature
 	private boolean hasSettingForUsingModifiedFlag;
+	// Suffix to be used for modified flags columns
+	private String modifiedFlagSuffix;
 
     /*
      Which operator to use in correlated subqueries (when we want a property to be equal to the result of
@@ -108,8 +113,13 @@ public class GlobalConfiguration {
         		USING_MODIFIED_FLAG_PROPERTY,
         		"false");
         usingModifiedFlag = Boolean.parseBoolean(usingModifiedFlagStr);
-		
-        String revisionListenerClassName = properties.getProperty("org.hibernate.envers.revision_listener", null);
+
+		modifiedFlagSuffix =
+				getProperty(properties, MODIFIED_FLAG_SUFFIX_PROPERTY,
+						MODIFIED_FLAG_SUFFIX_PROPERTY,
+						DEFAULT_MODIFIED_FLAG_SUFFIX);
+
+		String revisionListenerClassName = properties.getProperty("org.hibernate.envers.revision_listener", null);
         if (revisionListenerClassName != null) {
             try {
                 revisionListenerClass = (Class<? extends RevisionListener>) Thread.currentThread().getContextClassLoader().loadClass(revisionListenerClassName);
@@ -163,5 +173,9 @@ public class GlobalConfiguration {
 
 	public boolean isUsingModifiedFlag() {
 		return usingModifiedFlag;
+	}
+
+	public String getModifiedFlagSuffix() {
+		return modifiedFlagSuffix;
 	}
 }

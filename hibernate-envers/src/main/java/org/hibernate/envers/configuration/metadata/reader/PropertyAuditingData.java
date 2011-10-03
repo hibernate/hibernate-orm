@@ -23,12 +23,14 @@
  *
  */
 package org.hibernate.envers.configuration.metadata.reader;
-
-import org.hibernate.envers.*;
-import org.hibernate.envers.entities.PropertyData;
-
 import java.util.ArrayList;
 import java.util.List;
+import org.hibernate.envers.AuditJoinTable;
+import org.hibernate.envers.AuditOverride;
+import org.hibernate.envers.AuditOverrides;
+import org.hibernate.envers.ModificationStore;
+import org.hibernate.envers.RelationTargetAuditMode;
+import org.hibernate.envers.entities.PropertyData;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -47,6 +49,7 @@ public class PropertyAuditingData {
     private String positionMappedBy;
     private boolean forceInsertable;
 	private boolean usingModifiedFlag;
+	private String modifiedFlagName;
 
 	public PropertyAuditingData() {
     }
@@ -114,7 +117,8 @@ public class PropertyAuditingData {
     }
 
     public PropertyData getPropertyData() {
-        return new PropertyData(name, beanName, accessType, store, usingModifiedFlag);
+		return new PropertyData(name, beanName, accessType, store,
+				usingModifiedFlag, modifiedFlagName);
     }
 
 	public List<AuditOverride> getAuditingOverrides() {
@@ -151,6 +155,10 @@ public class PropertyAuditingData {
 
 	public void setUsingModifiedFlag(boolean usingModifiedFlag) {
 		this.usingModifiedFlag = usingModifiedFlag;
+	}
+
+	public void setModifiedFlagName(String modifiedFlagName) {
+		this.modifiedFlagName = modifiedFlagName;
 	}
 
 	public void addAuditingOverride(AuditOverride annotation) {

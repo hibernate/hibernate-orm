@@ -2361,8 +2361,13 @@ public abstract class Loader {
 		List result = null;
 
 		if ( session.getCacheMode().isGetEnabled() ) {
-			boolean isImmutableNaturalKeyLookup = queryParameters.isNaturalKeyLookup()
-					&& getEntityPersisters()[0].getEntityMetamodel().hasImmutableNaturalId();
+			boolean isImmutableNaturalKeyLookup =
+					queryParameters.isNaturalKeyLookup() &&
+							resultTypes.length == 1 &&
+							resultTypes[0].isEntityType() &&
+							getEntityPersister( EntityType.class.cast( resultTypes[0] ) )
+									.getEntityMetamodel()
+									.hasImmutableNaturalId();
 
 			final PersistenceContext persistenceContext = session.getPersistenceContext();
 			boolean defaultReadOnlyOrig = persistenceContext.isDefaultReadOnly();
@@ -2402,6 +2407,10 @@ public abstract class Loader {
 		}
 
 		return result;
+	}
+
+	private EntityPersister getEntityPersister(EntityType entityType) {
+		return factory.getEntityPersister( entityType.getAssociatedEntityName() );
 	}
 
 	private void putResultInQueryCache(

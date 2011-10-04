@@ -260,6 +260,12 @@ public class PersisterClassProviderTest {
 		public Object[] getNaturalIdentifierSnapshot(Serializable id, SessionImplementor session) {
 			return new Object[0];
 		}
+		
+        @Override
+        public Serializable loadEntityIdByNaturalId(Map<String, ?> naturalIdParameters, LockOptions lockOptions,
+                SessionImplementor session) {
+            return null;
+        }
 
 		@Override
 		public IdentifierGenerator getIdentifierGenerator() {

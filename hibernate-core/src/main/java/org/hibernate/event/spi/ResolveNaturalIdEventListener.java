@@ -21,43 +21,25 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate;
+package org.hibernate.event.spi;
 
+import java.io.Serializable;
+
+import org.hibernate.HibernateException;
 
 /**
- * Loads an entity by its natural identifier
- * 
- * @author Eric Dalquist
- * @version $Revision$
- * @see org.hibernate.annotations.NaturalId
+ * Defines the contract for handling of resolve natural id events generated from a session.
+ *
+ * @author Steve Ebersole
  */
-public interface NaturalIdLoadAccess<T> {
-    /**
-     * Set the {@link LockOptions} to use when retrieving the entity.
-     */
-    public NaturalIdLoadAccess<T> with(LockOptions lockOptions);
+public interface ResolveNaturalIdEventListener extends Serializable {
 
-    /**
-     * Add a NaturalId attribute value.
-     * 
-     * @param attributeName The entity attribute name that is marked as a NaturalId
-     * @param value The value of the attribute
+	/** 
+	 * Handle the given resolve natural id event.
+     *
+     * @param event The resolve natural id event to be handled.
+     * @throws HibernateException
      */
-    public NaturalIdLoadAccess<T> using(String attributeName, Object value);
-
-    /**
-     * Same behavior as {@link Session#load(Class, java.io.Serializable)}
-     * 
-     * @return The entity 
-     * @throws HibernateException if the entity does not exist
-     */
-    public Object getReference();
-
-    /**
-     * Same behavior as {@link Session#get(Class, java.io.Serializable)}
-     * 
-     * @return The entity or null if it does not exist
-     */
-    public Object load();
+	public void onResolveNaturalId(ResolveNaturalIdEvent event) throws HibernateException;
 
 }

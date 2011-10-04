@@ -238,8 +238,14 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		public Object[] getNaturalIdentifierSnapshot(Serializable id, SessionImplementor session) {
 			return new Object[0];
 		}
+		
+        @Override
+        public Serializable loadEntityIdByNaturalId(Map<String, ?> naturalIdParameters, LockOptions lockOptions,
+                SessionImplementor session) {
+            return null;
+        }
 
-		@Override
+        @Override
 		public IdentifierGenerator getIdentifierGenerator() {
 			return null;
 		}

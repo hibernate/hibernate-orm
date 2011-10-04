@@ -105,6 +105,66 @@ public class ImmutableNaturalIdTest extends AbstractJPATest {
 		t.commit();
 		s.close();
 	}
+	
+
+
+    @Test
+    public void testNaturalIdLoadAccessCache() {
+        Session s = openSession();
+        s.beginTransaction();
+        User u = new User( "steve", "superSecret" );
+        s.persist( u );
+        s.getTransaction().commit();
+        s.close();
+
+        sessionFactory().getStatistics().clear();
+//        sessionFactory().getStatistics().logSummary();
+
+        s = openSession();
+        s.beginTransaction();
+        u = ( User )s.byNaturalId(User.class).using( "userName", "steve" ).load();
+        assertNotNull( u );
+        s.getTransaction().commit();
+        s.close();
+        
+//        sessionFactory().getStatistics().logSummary();
+
+        assertEquals( 1, sessionFactory().getStatistics().getEntityLoadCount() );
+        assertEquals( 0, sessionFactory().getStatistics().getSecondLevelCacheMissCount() );
+        assertEquals( 0, sessionFactory().getStatistics().getSecondLevelCacheHitCount() );
+        assertEquals( 0, sessionFactory().getStatistics().getSecondLevelCachePutCount() );
+        assertEquals( 0, sessionFactory().getStatistics().getQueryExecutionCount() );
+        assertEquals( 0, sessionFactory().getStatistics().getQueryCacheHitCount() );
+        assertEquals( 0, sessionFactory().getStatistics().getQueryCachePutCount() );
+
+        s = openSession();
+        s.beginTransaction();
+        User v = new User( "gavin", "supsup" );
+        s.persist( v );
+        s.getTransaction().commit();
+        s.close();
+
+        sessionFactory().getStatistics().clear();
+
+        s = openSession();
+        s.beginTransaction();
+        u = ( User )s.byNaturalId(User.class).using( "userName", "steve" ).load();
+        assertNotNull( u );
+        assertEquals( sessionFactory().getStatistics().getQueryExecutionCount(), 0 );
+        assertEquals( sessionFactory().getStatistics().getQueryCacheHitCount(), 0 );
+        u = ( User )s.byNaturalId(User.class).using( "userName", "steve" ).load();
+        assertNotNull( u );
+        assertEquals( sessionFactory().getStatistics().getQueryExecutionCount(), 0 );
+        assertEquals( sessionFactory().getStatistics().getQueryCacheHitCount(), 0 );
+        s.getTransaction().commit();
+        s.close();
+
+        s = openSession();
+        s.beginTransaction();
+        s.createQuery( "delete User" ).executeUpdate();
+        s.getTransaction().commit();
+        s.close();
+    }
 
 	@Test
 	public void testNaturalIdCache() {

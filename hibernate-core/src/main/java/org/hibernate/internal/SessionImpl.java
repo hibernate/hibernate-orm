@@ -125,6 +125,8 @@ import org.hibernate.event.spi.RefreshEvent;
 import org.hibernate.event.spi.RefreshEventListener;
 import org.hibernate.event.spi.ReplicateEvent;
 import org.hibernate.event.spi.ReplicateEventListener;
+import org.hibernate.event.spi.ResolveNaturalIdEvent;
+import org.hibernate.event.spi.ResolveNaturalIdEventListener;
 import org.hibernate.event.spi.SaveOrUpdateEvent;
 import org.hibernate.event.spi.SaveOrUpdateEventListener;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -959,6 +961,14 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 			listener.onLoad( event, loadType );
 		}
 	}
+
+    private void fireResolveNaturalId(ResolveNaturalIdEvent event) {
+        errorIfClosed();
+        checkTransactionSynchStatus();
+        for ( ResolveNaturalIdEventListener listener : listeners( EventType.RESOLVE_NATURAL_ID ) ) {
+            listener.onResolveNaturalId(event);
+        }
+    }
 
 
 	// refresh() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2284,33 +2294,43 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
             naturalIdParameters.put(attributeName, value);
             return this;
         }
+        
+        protected Serializable resolveNaturalId() {
+            final ResolveNaturalIdEvent event = new ResolveNaturalIdEvent(naturalIdParameters, entityName, SessionImpl.this);
+            fireResolveNaturalId(event);
+            return event.getEntityId();
+        }
+        
+        protected IdentifierLoadAccess<T> getIdentifierLoadAccess() {
+            final IdentifierLoadAccessImpl<T> identifierLoadAccess = new SessionImpl.IdentifierLoadAccessImpl<T>(entityName, entityClass);
+            if (this.lockOptions != null) {
+                identifierLoadAccess.with(lockOptions);
+            }
+            return identifierLoadAccess;
+        }
 
         /* (non-Javadoc)
          * @see org.hibernate.NaturalIdLoadAccess#getReference()
          */
         @Override
-        public final T getReference() {
-            if (this.lockOptions != null) {
-                //TODO
-            } 
-            
-            //TODO
-            
-            throw new UnsupportedOperationException();
+        public final Object getReference() {
+            final Serializable entityId = resolveNaturalId();
+            if (entityId == null) {
+                return null;
+            }
+            return this.getIdentifierLoadAccess().getReference(entityId);
         }
 
         /* (non-Javadoc)
          * @see org.hibernate.NaturalIdLoadAccess#load()
          */
         @Override
-        public final T load() {
-            if (this.lockOptions != null) {
-              //TODO
+        public final Object load() {
+            final Serializable entityId = resolveNaturalId();
+            if (entityId == null) {
+                return null;
             }
-            
-            //TODO
-            
-            throw new UnsupportedOperationException();
+            return this.getIdentifierLoadAccess().load(entityId);
         }
     }
 }

@@ -222,6 +222,8 @@ public abstract class AbstractEntityPersister
 	private final Map loaders = new HashMap();
 
 	// SQL strings
+	private String sqlEntityIdByNaturalIdString;
+	
 	private String sqlVersionSelectString;
 	private String sqlSnapshotSelectString;
 	private String sqlLazySelectString;
@@ -3387,6 +3389,8 @@ public abstract class AbstractEntityPersister
                                                                          sqlInsertGeneratedValuesSelectString);
             if (sqlUpdateGeneratedValuesSelectString != null) LOG.debugf("Update-generated property select: %s",
                                                                          sqlUpdateGeneratedValuesSelectString);
+            if (sqlEntityIdByNaturalIdString != null) LOG.debugf("Id by Natural Id: %s",
+                    sqlEntityIdByNaturalIdString);
 		}
 	}
 
@@ -3587,6 +3591,10 @@ public abstract class AbstractEntityPersister
 		}
 		else {
 			sqlIdentityInsertString = null;
+		}
+		
+		if (hasNaturalIdentifier()) {
+		    sqlEntityIdByNaturalIdString = generateEntityIdByNaturalIdSql();
 		}
 
 		logStaticSQL();
@@ -4506,49 +4514,14 @@ public abstract class AbstractEntityPersister
         if (LOG.isTraceEnabled()) LOG.trace("Getting entity id for natural-id for: "
                                             + MessageHelper.infoString(this, naturalIdParameters, getFactory()));
 
-        ///////////////////////////////////////////////////////////////////////
-        // TODO : look at perhaps caching this...
-        Select select = new Select( getFactory().getDialect() );
-        if ( getFactory().getSettings().isCommentsEnabled() ) {
-            select.setComment( "get current natural-id->entity-id state " + getEntityName() );
-        }
-        
-        final String rootAlias = getRootAlias();
-        
-        select.setSelectClause( identifierSelectFragment(rootAlias, "") );
-        select.setFromClause( fromTableFragment( rootAlias ) + fromJoinFragment( rootAlias, true, false ) );
-        
-        final StringBuilder whereClause = new StringBuilder();
-        final int[] propertyTableNumbers = getPropertyTableNumbers();
-        final int[] naturalIdPropertyIndexes = this.getNaturalIdentifierProperties();
-        for (int propIdx = 0; propIdx < naturalIdPropertyIndexes.length; propIdx++) {
-            if (propIdx > 0) {
-                whereClause.append(" and ");
-            }
-            
-            final int naturalIdIdx = naturalIdPropertyIndexes[propIdx];
-            final String tableAlias = generateTableAlias( rootAlias, propertyTableNumbers[naturalIdIdx] );
-            
-            final String[] propertyColumnNames = getPropertyColumnNames(naturalIdIdx);
-            final String[] aliasedPropertyColumns = StringHelper.qualify( rootAlias, propertyColumnNames );
-            
-            whereClause.append( StringHelper.join( "=? and ", aliasedPropertyColumns ) ).append( "=?" );
-        }
-        
-        whereClause.append( whereJoinFragment( getRootAlias(), true, false ) );
-        
-        String sql = select.setOuterJoins( "", "" )
-                .setWhereClause( whereClause.toString() )
-                .toStatementString();
-        ///////////////////////////////////////////////////////////////////////
-
         try {
             PreparedStatement ps = session.getTransactionCoordinator()
                     .getJdbcCoordinator()
                     .getStatementPreparer()
-                    .prepareStatement( sql );
+                    .prepareStatement( sqlEntityIdByNaturalIdString );
             try {
                 int positions = 1;
+                final int[] naturalIdPropertyIndexes = this.getNaturalIdentifierProperties();
                 for (int propIdx = 0; propIdx < naturalIdPropertyIndexes.length; propIdx++) {
                     final int naturalIdIdx = naturalIdPropertyIndexes[propIdx];
                     
@@ -4583,10 +4556,49 @@ public abstract class AbstractEntityPersister
         catch ( SQLException e ) {
             throw getFactory().getSQLExceptionHelper().convert(
                     e,
-                    "could not retrieve snapshot: " + MessageHelper.infoString( this, naturalIdParameters, getFactory() ),
-                    sql
+                    "could not retrieve entity id: " + MessageHelper.infoString( this, naturalIdParameters, getFactory() ),
+                    sqlEntityIdByNaturalIdString
             );
         }
+    }
+
+    /**
+     * @return
+     */
+    private String generateEntityIdByNaturalIdSql() {
+        Select select = new Select( getFactory().getDialect() );
+        if ( getFactory().getSettings().isCommentsEnabled() ) {
+            select.setComment( "get current natural-id->entity-id state " + getEntityName() );
+        }
+        
+        final String rootAlias = getRootAlias();
+        
+        select.setSelectClause( identifierSelectFragment(rootAlias, "") );
+        select.setFromClause( fromTableFragment( rootAlias ) + fromJoinFragment( rootAlias, true, false ) );
+        
+        final StringBuilder whereClause = new StringBuilder();
+        final int[] propertyTableNumbers = getPropertyTableNumbers();
+        final int[] naturalIdPropertyIndexes = this.getNaturalIdentifierProperties();
+        for (int propIdx = 0; propIdx < naturalIdPropertyIndexes.length; propIdx++) {
+            if (propIdx > 0) {
+                whereClause.append(" and ");
+            }
+            
+            final int naturalIdIdx = naturalIdPropertyIndexes[propIdx];
+            final String tableAlias = generateTableAlias( rootAlias, propertyTableNumbers[naturalIdIdx] );
+            
+            final String[] propertyColumnNames = getPropertyColumnNames(naturalIdIdx);
+            final String[] aliasedPropertyColumns = StringHelper.qualify( rootAlias, propertyColumnNames );
+            
+            whereClause.append( StringHelper.join( "=? and ", aliasedPropertyColumns ) ).append( "=?" );
+        }
+        
+        whereClause.append( whereJoinFragment( getRootAlias(), true, false ) );
+        
+        String sql = select.setOuterJoins( "", "" )
+                .setWhereClause( whereClause.toString() )
+                .toStatementString();
+        return sql;
     }
 
 	protected String concretePropertySelectFragmentSansLeadingComma(String alias, boolean[] include) {

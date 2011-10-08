@@ -114,6 +114,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	private final String discriminatorFormulaTemplate;
 	private final String discriminatorAlias;
 	private final Type discriminatorType;
+	private final Object discriminatorValue;
 	private final String discriminatorSQLValue;
 	private final boolean discriminatorInsertable;
 
@@ -292,7 +293,6 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 		// DISCRIMINATOR
 
-		final Object discriminatorValue;
 		if ( persistentClass.isPolymorphic() ) {
 			Value discrimValue = persistentClass.getDiscriminator();
 			if (discrimValue==null) {
@@ -536,7 +536,6 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 		// DISCRIMINATOR
 
-		final Object discriminatorValue;
 		if ( entityBinding.isPolymorphic() ) {
 			SimpleValue discriminatorRelationalValue = entityBinding.getHierarchyDetails().getEntityDiscriminator().getBoundValue();
 			if ( discriminatorRelationalValue == null ) {
@@ -756,6 +755,10 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 	public Type getDiscriminatorType() {
 		return discriminatorType;
+	}
+
+	public Object getDiscriminatorValue() {
+		return discriminatorValue;
 	}
 
 	public String getDiscriminatorSQLValue() {

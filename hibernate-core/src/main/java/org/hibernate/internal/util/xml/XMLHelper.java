@@ -100,8 +100,22 @@ public final class XMLHelper {
 	}
 
 	public static Element generateDom4jElement(String elementName) {
-		return DocumentFactory.getInstance().createElement( elementName );
+		return getDocumentFactory().createElement( elementName );
 	}
+
+    public static DocumentFactory getDocumentFactory() {
+
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        DocumentFactory factory;
+        try {
+            Thread.currentThread().setContextClassLoader( XMLHelper.class.getClassLoader() );
+            factory = DocumentFactory.getInstance();
+        }
+        finally {
+            Thread.currentThread().setContextClassLoader( cl );
+        }
+        return factory;
+    }
 
 	public static void dump(Element element) {
 		try {

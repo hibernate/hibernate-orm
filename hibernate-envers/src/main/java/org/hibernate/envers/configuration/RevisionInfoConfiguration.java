@@ -52,6 +52,7 @@ import org.hibernate.envers.revisioninfo.RevisionInfoGenerator;
 import org.hibernate.envers.revisioninfo.RevisionInfoNumberReader;
 import org.hibernate.envers.revisioninfo.RevisionInfoQueryCreator;
 import org.hibernate.envers.tools.MutableBoolean;
+import org.hibernate.internal.util.xml.XMLHelper;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.type.LongType;
 import org.hibernate.type.Type;
@@ -83,7 +84,7 @@ public class RevisionInfoConfiguration {
     }
 
     private Document generateDefaultRevisionInfoXmlMapping() {
-        Document document = DocumentHelper.createDocument();
+        Document document = XMLHelper.getDocumentFactory().createDocument();
 
         Element class_mapping = MetadataTools.createEntity(document, new AuditTableData(null, null, globalCfg.getDefaultSchemaName(), globalCfg.getDefaultCatalogName()), null);
 
@@ -140,7 +141,7 @@ public class RevisionInfoConfiguration {
     }
 
     private Element generateRevisionInfoRelationMapping() {
-        Document document = DocumentHelper.createDocument();
+        Document document = XMLHelper.getDocumentFactory().createDocument();
         Element rev_rel_mapping = document.addElement("key-many-to-one");
         rev_rel_mapping.addAttribute("type", revisionPropType);
         rev_rel_mapping.addAttribute("class", revisionInfoEntityName);

@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -22,19 +22,22 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.metamodel;
-import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
+
+import javax.persistence.Entity;
+import javax.persistence.Id;
 
 /**
- * @author Steve Ebersole
+ * @author James Gilbertson
  */
-public abstract class AbstractMetamodelSpecificTest extends BaseEntityManagerFunctionalTestCase {
-	@Override
-	public Class[] getAnnotatedClasses() {
-		return new Class[] {
-				Address.class, Alias.class, Country.class, CreditCard.class, Customer.class,
-				Info.class, LineItem.class, Order.class, Phone.class, Product.class,
-				ShelfLife.class, Spouse.class, Thing.class, ThingWithQuantity.class,
-				VersionedEntity.class
-		};
+@Entity
+public class ThingWithQuantity extends Thing {
+	private int quantity;
+
+	public int getQuantity() {
+		return quantity;
+	}
+
+	public void setQuantity(int quantity) {
+		this.quantity = quantity;
 	}
 }

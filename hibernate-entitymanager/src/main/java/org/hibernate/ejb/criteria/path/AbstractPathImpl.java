@@ -67,7 +67,7 @@ public abstract class AbstractPathImpl<X>
 			PathSource pathSource) {
 		super( criteriaBuilder, javaType );
 		this.pathSource = pathSource;
-		this.typeExpression =  new PathTypeExpression( criteriaBuilder(), getJavaType() );
+		this.typeExpression =  new PathTypeExpression( criteriaBuilder(), getJavaType(), this );
 	}
 
 	public PathSource getPathSource() {

@@ -26,6 +26,7 @@ import java.io.Serializable;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.ParameterRegistry;
+import org.hibernate.ejb.criteria.path.AbstractPathImpl;
 
 /**
  * Used to construct the result of {@link javax.persistence.criteria.Path#type()}
@@ -33,8 +34,11 @@ import org.hibernate.ejb.criteria.ParameterRegistry;
  * @author Steve Ebersole
  */
 public class PathTypeExpression<T> extends ExpressionImpl<T> implements Serializable {
-	public PathTypeExpression(CriteriaBuilderImpl criteriaBuilder, Class<T> javaType) {
+	private final AbstractPathImpl<T> pathImpl;
+
+	public PathTypeExpression(CriteriaBuilderImpl criteriaBuilder, Class<T> javaType, AbstractPathImpl<T> pathImpl) {
 		super( criteriaBuilder, javaType );
+		this.pathImpl = pathImpl;
 	}
 
 	public void registerParameters(ParameterRegistry registry) {
@@ -42,8 +46,7 @@ public class PathTypeExpression<T> extends ExpressionImpl<T> implements Serializ
 	}
 
 	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
-		// todo : is it valid for this to get rendered into the query itself?
-		throw new IllegalArgumentException( "Unexpected call on EntityTypeExpression#render" );
+		return "type(" + pathImpl.getPathIdentifier() + ")";
 	}
 
 	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {

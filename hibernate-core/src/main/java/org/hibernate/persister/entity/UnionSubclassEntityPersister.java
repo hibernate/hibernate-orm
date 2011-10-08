@@ -70,6 +70,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	private final String[] subclassClosure;
 	private final String[] spaces;
 	private final String[] subclassSpaces;
+	private final Object discriminatorValue;
 	private final String discriminatorSQLValue;
 	private final Map subclassByDiscriminatorValue = new HashMap();
 
@@ -144,6 +145,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		deleteCallable = new boolean[] { callable };
 		deleteResultCheckStyles = new ExecuteUpdateResultCheckStyle[] { checkStyle };
 
+		discriminatorValue = new Integer( persistentClass.getSubclassId() );
 		discriminatorSQLValue = String.valueOf( persistentClass.getSubclassId() );
 
 		// PROPERTIES
@@ -248,6 +250,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		subclassClosure = null;
 		spaces = null;
 		subclassSpaces = null;
+		discriminatorValue = null;
 		discriminatorSQLValue = null;
 		constraintOrderedTableNames = null;
 		constraintOrderedKeyColumnNames = null;
@@ -263,6 +266,10 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 
 	public Type getDiscriminatorType() {
 		return StandardBasicTypes.INTEGER;
+	}
+
+	public Object getDiscriminatorValue() {
+		return discriminatorValue;
 	}
 
 	public String getDiscriminatorSQLValue() {

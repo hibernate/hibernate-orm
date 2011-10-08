@@ -52,6 +52,11 @@ public interface Loadable extends EntityPersister {
 	public Type getDiscriminatorType();
 
 	/**
+	 * Get the discriminator value
+	 */
+	public Object getDiscriminatorValue();
+
+	/**
 	 * Get the concrete subclass corresponding to the given discriminator
 	 * value
 	 */

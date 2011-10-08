@@ -86,6 +86,8 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 		assertEquals( s.createQuery("from Person").list().size(), 3 );
 		assertEquals( s.createQuery("from Person p where p.class = Customer").list().size(), 1 );
 		assertEquals( s.createQuery("from Person p where p.class = Person").list().size(), 1 );
+		assertEquals( s.createQuery("from Person p where type(p) in :who").setParameter("who", Customer.class).list().size(), 1 );
+		assertEquals( s.createQuery("from Person p where type(p) in :who").setParameterList("who", new Class[] {Customer.class, Person.class}).list().size(), 2 );
 		s.clear();
 
 		List customers = s.createQuery("from Customer c left join fetch c.salesperson").list();

@@ -88,6 +88,8 @@ public class SimpleInheritanceTest extends BaseCoreFunctionalTestCase {
 		assertEquals( s.createQuery("from org.hibernate.test.discriminator.Person").list().size(), 3 );
 		assertEquals( s.createQuery("from org.hibernate.test.discriminator.Person p where p.class = org.hibernate.test.discriminator.Person").list().size(), 1 );
 		assertEquals( s.createQuery("from org.hibernate.test.discriminator.Person p where p.class = org.hibernate.test.discriminator.Customer").list().size(), 1 );
+		assertEquals( s.createQuery("from org.hibernate.test.discriminator.Person p where type(p) = :who").setParameter("who", Person.class).list().size(), 1 );
+		assertEquals( s.createQuery("from org.hibernate.test.discriminator.Person p where type(p) in :who").setParameterList("who", new Class[] {Customer.class, Person.class}).list().size(), 2 );
 		s.clear();
 
 		List customers = s.createQuery("from org.hibernate.test.discriminator.Customer").list();

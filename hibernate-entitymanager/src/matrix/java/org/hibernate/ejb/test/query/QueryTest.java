@@ -83,6 +83,22 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	public void testTypeExpression() throws Exception {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		Item item = new Item( "Mouse", "Micro$oft mouse" );
+		em.persist( item );
+		item = new Item( "Computer", "Apple II" );
+		em.persist( item );
+		Query q = em.createQuery( "select i from Item i where TYPE(i) = :itemType" );
+		q.setParameter( "itemType", Item.class );
+		List result = q.getResultList();
+		assertNotNull( result );
+		assertEquals( 2, result.size() );
+		em.getTransaction().rollback();
+		em.close();
+	}
+
 	@Test
 	public void testParameterList() throws Exception {
 		final Item item = new Item( "Mouse", "Micro$oft mouse" );

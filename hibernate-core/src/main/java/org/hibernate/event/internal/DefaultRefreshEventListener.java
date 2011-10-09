@@ -163,14 +163,14 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 
 	private void evictCachedCollections(Type[] types, Serializable id, SessionFactoryImplementor factory)
 	throws HibernateException {
-		for ( int i = 0; i < types.length; i++ ) {
-			if ( types[i].isCollectionType() ) {
-				factory.getCache().evictCollection( ( (CollectionType) types[i] ).getRole(), id );
-			}
-			else if ( types[i].isComponentType() ) {
-				CompositeType actype = (CompositeType) types[i];
-				evictCachedCollections( actype.getSubtypes(), id, factory );
-			}
-		}
+        for ( Type type : types ) {
+            if ( type.isCollectionType() ) {
+                factory.getCache().evictCollection( ( (CollectionType) type ).getRole(), id );
+            }
+            else if ( type.isComponentType() ) {
+                CompositeType actype = (CompositeType) type;
+                evictCachedCollections( actype.getSubtypes(), id, factory );
+            }
+        }
 	}
 }

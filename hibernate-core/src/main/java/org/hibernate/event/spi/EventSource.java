@@ -69,7 +69,7 @@ public interface EventSource extends SessionImplementor, Session {
 	 */
 	public void persistOnFlush(String entityName, Object object, Map copiedAlready);
 	/**
-	 * Cascade refesh an entity instance
+	 * Cascade refresh an entity instance
 	 */
 	public void refresh(Object object, Map refreshedAlready) throws HibernateException;
 	/**

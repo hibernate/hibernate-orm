@@ -30,10 +30,12 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import org.hibernate.persister.entity.EntityPersister;
 import org.jboss.logging.Logger;
 
 import org.hibernate.AssertionFailure;
@@ -67,6 +69,7 @@ import org.hibernate.type.Type;
 public class ActionQueue {
 
     static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, ActionQueue.class.getName());
+    static final boolean TRACE = LOG.isTraceEnabled();
 	private static final int INIT_QUEUE_LIST_SIZE = 5;
 
 	private SessionImplementor session;
@@ -301,7 +304,7 @@ public class ActionQueue {
 	 */
 	@Override
     public String toString() {
-		return new StringBuffer()
+		return new StringBuilder()
 				.append( "ActionQueue[insertions=" ).append( insertions )
 				.append( " updates=" ).append( updates )
 				.append( " deletions=" ).append( deletions )
@@ -413,45 +416,45 @@ public class ActionQueue {
 	 * @throws IOException Indicates an error writing to the stream
 	 */
 	public void serialize(ObjectOutputStream oos) throws IOException {
-        LOG.trace("Serializing action-queue");
+        if(TRACE) LOG.trace("Serializing action-queue");
 
 		int queueSize = insertions.size();
-        LOG.trace("Starting serialization of [" + queueSize + "] insertions entries");
+        if(TRACE) LOG.trace("Starting serialization of [" + queueSize + "] insertions entries");
 		oos.writeInt( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			oos.writeObject( insertions.get( i ) );
 		}
 
 		queueSize = deletions.size();
-        LOG.trace("Starting serialization of [" + queueSize + "] deletions entries");
+        if(TRACE) LOG.trace("Starting serialization of [" + queueSize + "] deletions entries");
 		oos.writeInt( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			oos.writeObject( deletions.get( i ) );
 		}
 
 		queueSize = updates.size();
-        LOG.trace("Starting serialization of [" + queueSize + "] updates entries");
+        if(TRACE) LOG.trace("Starting serialization of [" + queueSize + "] updates entries");
 		oos.writeInt( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			oos.writeObject( updates.get( i ) );
 		}
 
 		queueSize = collectionUpdates.size();
-        LOG.trace("Starting serialization of [" + queueSize + "] collectionUpdates entries");
+        if(TRACE) LOG.trace("Starting serialization of [" + queueSize + "] collectionUpdates entries");
 		oos.writeInt( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			oos.writeObject( collectionUpdates.get( i ) );
 		}
 
 		queueSize = collectionRemovals.size();
-        LOG.trace("Starting serialization of [" + queueSize + "] collectionRemovals entries");
+        if(TRACE) LOG.trace("Starting serialization of [" + queueSize + "] collectionRemovals entries");
 		oos.writeInt( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			oos.writeObject( collectionRemovals.get( i ) );
 		}
 
 		queueSize = collectionCreations.size();
-        LOG.trace("Starting serialization of [" + queueSize + "] collectionCreations entries");
+        if(TRACE) LOG.trace("Starting serialization of [" + queueSize + "] collectionCreations entries");
 		oos.writeInt( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			oos.writeObject( collectionCreations.get( i ) );
@@ -474,11 +477,11 @@ public class ActionQueue {
 	public static ActionQueue deserialize(
 			ObjectInputStream ois,
 			SessionImplementor session) throws IOException, ClassNotFoundException {
-        LOG.trace("Dedeserializing action-queue");
+        if(TRACE) LOG.trace("Dedeserializing action-queue");
 		ActionQueue rtn = new ActionQueue( session );
 
 		int queueSize = ois.readInt();
-        LOG.trace("Starting deserialization of [" + queueSize + "] insertions entries");
+        if(TRACE) LOG.trace("Starting deserialization of [" + queueSize + "] insertions entries");
 		rtn.insertions = new ArrayList<Executable>( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			EntityAction action = ( EntityAction ) ois.readObject();
@@ -487,7 +490,7 @@ public class ActionQueue {
 		}
 
 		queueSize = ois.readInt();
-        LOG.trace("Starting deserialization of [" + queueSize + "] deletions entries");
+        if(TRACE) LOG.trace("Starting deserialization of [" + queueSize + "] deletions entries");
 		rtn.deletions = new ArrayList<Executable>( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			EntityAction action = ( EntityAction ) ois.readObject();
@@ -496,7 +499,7 @@ public class ActionQueue {
 		}
 
 		queueSize = ois.readInt();
-        LOG.trace("Starting deserialization of [" + queueSize + "] updates entries");
+        if(TRACE) LOG.trace("Starting deserialization of [" + queueSize + "] updates entries");
 		rtn.updates = new ArrayList<Executable>( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			EntityAction action = ( EntityAction ) ois.readObject();
@@ -505,7 +508,7 @@ public class ActionQueue {
 		}
 
 		queueSize = ois.readInt();
-        LOG.trace("Starting deserialization of [" + queueSize + "] collectionUpdates entries");
+        if(TRACE) LOG.trace("Starting deserialization of [" + queueSize + "] collectionUpdates entries");
 		rtn.collectionUpdates = new ArrayList<Executable>( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			CollectionAction action = (CollectionAction) ois.readObject();
@@ -514,7 +517,7 @@ public class ActionQueue {
 		}
 
 		queueSize = ois.readInt();
-        LOG.trace("Starting deserialization of [" + queueSize + "] collectionRemovals entries");
+        if(TRACE) LOG.trace("Starting deserialization of [" + queueSize + "] collectionRemovals entries");
 		rtn.collectionRemovals = new ArrayList<Executable>( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			CollectionAction action = ( CollectionAction ) ois.readObject();
@@ -523,7 +526,7 @@ public class ActionQueue {
 		}
 
 		queueSize = ois.readInt();
-        LOG.trace("Starting deserialization of [" + queueSize + "] collectionCreations entries");
+        if(TRACE) LOG.trace("Starting deserialization of [" + queueSize + "] collectionCreations entries");
 		rtn.collectionCreations = new ArrayList<Executable>( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			CollectionAction action = ( CollectionAction ) ois.readObject();
@@ -629,15 +632,15 @@ public class ActionQueue {
 	 */
 	private class InsertActionSorter {
 		// the mapping of entity names to their latest batch numbers.
-		private HashMap latestBatches = new HashMap();
-		private HashMap entityBatchNumber;
+		private HashMap<String,Integer> latestBatches = new HashMap<String,Integer>();
+		private HashMap<Object,Integer> entityBatchNumber;
 
 		// the map of batch numbers to EntityInsertAction lists
-		private HashMap actionBatches = new HashMap();
+		private HashMap<Integer,List<EntityInsertAction>> actionBatches = new HashMap<Integer,List<EntityInsertAction>>();
 
 		public InsertActionSorter() {
 			//optimize the hash size to eliminate a rehash.
-			entityBatchNumber = new HashMap( insertions.size() + 1, 1.0f );
+			entityBatchNumber = new HashMap<Object,Integer>( insertions.size() + 1, 1.0f );
 		}
 
 		/**
@@ -667,7 +670,7 @@ public class ActionQueue {
 					// doing the batch number before adding the name to the list is
 					// a faster way to get an accurate number.
 
-					batchNumber = Integer.valueOf( actionBatches.size() );
+					batchNumber = actionBatches.size();
 					latestBatches.put( entityName, batchNumber );
 				}
 				entityBatchNumber.put( currentEntity, batchNumber );
@@ -677,9 +680,8 @@ public class ActionQueue {
 
 			// now rebuild the insertions list. There is a batch for each entry in the name list.
 			for ( int i = 0; i < actionBatches.size(); i++ ) {
-				List batch = ( List ) actionBatches.get( i );
-				for ( Object aBatch : batch ) {
-					EntityInsertAction action = (EntityInsertAction) aBatch;
+				List<EntityInsertAction> batch = actionBatches.get( i );
+				for ( EntityInsertAction action : batch ) {
 					insertions.add( action );
 				}
 			}
@@ -702,7 +704,7 @@ public class ActionQueue {
 			// batch associated with this entity type.
 
 			// the current batch number is the latest batch for this entity type.
-			Integer latestBatchNumberForType = ( Integer ) latestBatches.get( entityName );
+			Integer latestBatchNumberForType = latestBatches.get( entityName );
 
 			// loop through all the associations of the current entity and make sure that they are processed
 			// before the current batch number
@@ -715,10 +717,10 @@ public class ActionQueue {
 				Type type = propertyTypes[i];
 				if ( type.isEntityType() && value != null ) {
 					// find the batch number associated with the current association, if any.
-					Integer associationBatchNumber = ( Integer ) entityBatchNumber.get( value );
+					Integer associationBatchNumber = entityBatchNumber.get( value );
 					if ( associationBatchNumber != null && associationBatchNumber.compareTo( latestBatchNumberForType ) > 0 ) {
 						// create a new batch for this type. The batch number is the number of current batches.
-						latestBatchNumberForType = Integer.valueOf( actionBatches.size() );
+						latestBatchNumberForType = actionBatches.size();
 						latestBatches.put( entityName, latestBatchNumberForType );
 						// since this entity will now be processed in the latest possible batch,
 						// we can be assured that it will come after all other associations,
@@ -732,10 +734,10 @@ public class ActionQueue {
 
 		@SuppressWarnings({ "unchecked" })
 		private void addToBatch(Integer batchNumber, EntityInsertAction action) {
-			List actions = ( List ) actionBatches.get( batchNumber );
+			List<EntityInsertAction> actions = actionBatches.get( batchNumber );
 
 			if ( actions == null ) {
-				actions = new LinkedList();
+				actions = new LinkedList<EntityInsertAction>();
 				actionBatches.put( batchNumber, actions );
 			}
 			actions.add( action );

@@ -134,7 +134,7 @@ public final class Cascade {
 
 	/**
 	 * Cascade an action from the parent entity instance to all its children.  This
-	 * form is typicaly called from within cascade actions.
+	 * form is typically called from within cascade actions.
 	 *
 	 * @param persister The parent's entity persister
 	 * @param parent The parent reference.

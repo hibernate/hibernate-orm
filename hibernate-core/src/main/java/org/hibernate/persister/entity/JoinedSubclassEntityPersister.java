@@ -109,6 +109,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	private final String[] constraintOrderedTableNames;
 	private final String[][] constraintOrderedKeyColumnNames;
 
+	private final Object discriminatorValue;
 	private final String discriminatorSQLString;
 
 	// Span of the tables directly mapped by this entity and super-classes, if any
@@ -128,7 +129,6 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 		// DISCRIMINATOR
 
-		final Object discriminatorValue;
 		if ( persistentClass.isPolymorphic() ) {
 			try {
 				discriminatorValue = new Integer( persistentClass.getSubclassId() );
@@ -537,6 +537,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		notNullColumnTableNumbers = null;
 		constraintOrderedTableNames = null;
 		constraintOrderedKeyColumnNames = null;
+		discriminatorValue = null;
 		discriminatorSQLString = null;
 		coreTableSpan = -1;
 		isNullableTable = null;
@@ -567,10 +568,13 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		return StandardBasicTypes.INTEGER;
 	}
 
+	public Object getDiscriminatorValue() {
+		return discriminatorValue;
+	}
+
 	public String getDiscriminatorSQLValue() {
 		return discriminatorSQLString;
 	}
-
 
 	public String getSubclassForDiscriminatorValue(Object value) {
 		return (String) subclassesByDiscriminatorValue.get( value );

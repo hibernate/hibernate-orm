@@ -87,12 +87,7 @@ public class DiscriminatorType extends AbstractType {
 			throw new HibernateException( "Unable to resolve discriminator value [" + discriminatorValue + "] to entity name" );
 		}
 		final EntityPersister entityPersister = session.getEntityPersister( entityName, null );
-		if ( EntityMode.POJO == entityPersister.getEntityMode() ) {
-			return entityPersister.getMappedClass();
-		}
-		else {
-			return entityName;
-		}
+        return ( EntityMode.POJO == entityPersister.getEntityMode() ) ? entityPersister.getMappedClass() : entityName;
 	}
 
 	public void nullSafeSet(

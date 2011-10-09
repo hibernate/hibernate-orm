@@ -63,7 +63,7 @@ public class UpdateTimestampsCache {
         LOG.startingUpdateTimestampsCache(regionName);
 		this.region = settings.getRegionFactory().buildTimestampsRegion( regionName, props );
 	}
-
+    @SuppressWarnings({"UnusedDeclaration"})
     public UpdateTimestampsCache(Settings settings, Properties props)
             throws HibernateException {
         this(settings, props, null);
@@ -71,8 +71,6 @@ public class UpdateTimestampsCache {
 
 	@SuppressWarnings({"UnnecessaryBoxing"})
 	public void preinvalidate(Serializable[] spaces) throws CacheException {
-		// TODO: to handle concurrent writes correctly, this should return a Lock to the client
-
 		readWriteLock.writeLock().lock();
 
 		try {
@@ -86,7 +84,6 @@ public class UpdateTimestampsCache {
 					factory.getStatisticsImplementor().updateTimestampsCachePut();
 				}
 			}
-			//TODO: return new Lock(ts);
 		}
 		finally {
 			readWriteLock.writeLock().unlock();
@@ -95,13 +92,10 @@ public class UpdateTimestampsCache {
 
 	 @SuppressWarnings({"UnnecessaryBoxing"})
 	public void invalidate(Serializable[] spaces) throws CacheException {
-		//TODO: to handle concurrent writes correctly, the client should pass in a Lock
-
 		readWriteLock.writeLock().lock();
 
 		try {
 			Long ts = new Long( region.nextTimestamp() );
-			//TODO: if lock.getTimestamp().equals(ts)
 			for (Serializable space : spaces) {
 		        LOG.debugf("Invalidating space [%s], timestamp: %s", space, ts);
 		        //put() has nowait semantics, is this really appropriate?
@@ -144,7 +138,7 @@ public class UpdateTimestampsCache {
 					if ( factory != null && factory.getStatistics().isStatisticsEnabled() ) {
 						factory.getStatisticsImplementor().updateTimestampsCacheHit();
 					}
-					if ( lastUpdate.longValue() >= timestamp.longValue() ) return false;
+					if ( lastUpdate >= timestamp ) return false;
 				}
 			}
 			return true;

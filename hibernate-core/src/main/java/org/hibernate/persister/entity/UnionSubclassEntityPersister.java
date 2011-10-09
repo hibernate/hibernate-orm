@@ -145,7 +145,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		deleteCallable = new boolean[] { callable };
 		deleteResultCheckStyles = new ExecuteUpdateResultCheckStyle[] { checkStyle };
 
-		discriminatorValue = new Integer( persistentClass.getSubclassId() );
+		discriminatorValue = persistentClass.getSubclassId();
 		discriminatorSQLValue = String.valueOf( persistentClass.getSubclassId() );
 
 		// PROPERTIES
@@ -156,7 +156,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 
 		// SUBCLASSES
 		subclassByDiscriminatorValue.put( 
-				new Integer( persistentClass.getSubclassId() ), 
+				persistentClass.getSubclassId(),
 				persistentClass.getEntityName() 
 		);
 		if ( persistentClass.isPolymorphic() ) {
@@ -165,7 +165,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			while ( iter.hasNext() ) {
 				Subclass sc = (Subclass) iter.next();
 				subclassClosure[k++] = sc.getEntityName();
-				subclassByDiscriminatorValue.put( new Integer( sc.getSubclassId() ), sc.getEntityName() );
+				subclassByDiscriminatorValue.put( sc.getSubclassId(), sc.getEntityName() );
 			}
 		}
 		

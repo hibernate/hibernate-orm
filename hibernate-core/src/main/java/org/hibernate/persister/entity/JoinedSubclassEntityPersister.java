@@ -131,7 +131,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 		if ( persistentClass.isPolymorphic() ) {
 			try {
-				discriminatorValue = new Integer( persistentClass.getSubclassId() );
+				discriminatorValue = persistentClass.getSubclassId();
 				discriminatorSQLString = discriminatorValue.toString();
 			}
 			catch ( Exception e ) {
@@ -416,7 +416,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 					factory.getSettings().getDefaultCatalogName(),
 					factory.getSettings().getDefaultSchemaName()
 			);
-			Integer tabnum = new Integer( getTableId( tabname, subclassTableNameClosure ) );
+			Integer tabnum = getTableId( tabname, subclassTableNameClosure );
 			propTableNumbers.add( tabnum );
 
 			Iterator citer = prop.getColumnIterator();
@@ -474,7 +474,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 					// we now use subclass ids that are consistent across all
 					// persisters for a class hierarchy, so that the use of
 					// "foo.class = Bar" works in HQL
-					Integer subclassId = new Integer( sc.getSubclassId() );//new Integer(k+1);
+					Integer subclassId = sc.getSubclassId();
 					subclassesByDiscriminatorValue.put( subclassId, sc.getEntityName() );
 					discriminatorValues[k] = subclassId.toString();
 					int id = getTableId(

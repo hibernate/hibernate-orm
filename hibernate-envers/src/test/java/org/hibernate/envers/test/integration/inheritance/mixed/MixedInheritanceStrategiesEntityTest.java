@@ -2,13 +2,18 @@ package org.hibernate.envers.test.integration.inheritance.mixed;
 
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
-import org.hibernate.envers.test.Priority;
-import org.hibernate.envers.test.integration.inheritance.mixed.entities.*;
-import org.junit.Test;
+import org.hibernate.envers.test.integration.inheritance.mixed.entities.AbstractActivity;
+import org.hibernate.envers.test.integration.inheritance.mixed.entities.AbstractCheckActivity;
+import org.hibernate.envers.test.integration.inheritance.mixed.entities.Activity;
+import org.hibernate.envers.test.integration.inheritance.mixed.entities.ActivityId;
+import org.hibernate.envers.test.integration.inheritance.mixed.entities.CheckInActivity;
+import org.hibernate.envers.test.integration.inheritance.mixed.entities.NormalActivity;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
 
 import java.util.Arrays;
 
-import static org.junit.Assert.assertEquals;
+import static org.testng.Assert.assertEquals;
 
 /**
  * @author Michal Skowronek (mskowr at o2 pl)
@@ -27,8 +32,7 @@ public class MixedInheritanceStrategiesEntityTest extends AbstractEntityTest {
         cfg.addAnnotatedClass(NormalActivity.class);
     }
 
-    @Test
-    @Priority(10)
+    @BeforeClass(dependsOnMethods = "init")
     public void initData() {
         NormalActivity normalActivity = new NormalActivity();
 		id1 = new ActivityId(1, 2);

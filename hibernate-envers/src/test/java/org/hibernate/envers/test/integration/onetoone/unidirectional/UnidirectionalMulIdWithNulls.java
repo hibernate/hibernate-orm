@@ -10,7 +10,10 @@ import org.testng.annotations.Test;
 
 import javax.persistence.EntityManager;
 
-import static org.junit.Assert.*;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
+
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)

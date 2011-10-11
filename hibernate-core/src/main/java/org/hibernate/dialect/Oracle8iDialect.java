@@ -384,7 +384,7 @@ public class Oracle8iDialect extends Dialect {
 		public String extractConstraintName(SQLException sqle) {
 			int errorCode = JdbcExceptionHelper.extractErrorCode( sqle );
 			if ( errorCode == 1 || errorCode == 2291 || errorCode == 2292 ) {
-				return extractUsingTemplate( "constraint (", ") violated", sqle.getMessage() );
+				return extractUsingTemplate( "(", ")", sqle.getMessage() );
 			}
 			else if ( errorCode == 1400 ) {
 				// simple nullability constraint

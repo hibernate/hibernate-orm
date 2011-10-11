@@ -236,7 +236,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 			protected Class<?> findClass(String name) throws ClassNotFoundException {
 				for ( ClassLoader classLoader : classLoaderArray ) {
 					try {
-						classLoader.loadClass( name );
+						return classLoader.loadClass( name );
 					}
 					catch (Exception ignore) {
 					}

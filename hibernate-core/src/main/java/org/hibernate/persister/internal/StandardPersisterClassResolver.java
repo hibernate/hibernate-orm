@@ -23,10 +23,14 @@
  */
 package org.hibernate.persister.internal;
 
+import java.util.Iterator;
+
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.JoinedSubclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
+import org.hibernate.mapping.SingleTableSubclass;
+import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.UnionSubclass;
 import org.hibernate.metamodel.binding.CollectionElementNature;
 import org.hibernate.metamodel.binding.EntityBinding;
@@ -48,7 +52,14 @@ public class StandardPersisterClassResolver implements PersisterClassResolver {
 
 	public Class<? extends EntityPersister> getEntityPersisterClass(EntityBinding metadata) {
 		if ( metadata.isRoot() ) {
-			return singleTableEntityPersister(); // EARLY RETURN!
+            Iterator<EntityBinding> subEntityBindingIterator = metadata.getDirectSubEntityBindings().iterator();
+            if ( subEntityBindingIterator.hasNext() ) {
+                //If the class has children, we need to find of which kind
+                metadata = subEntityBindingIterator.next();
+            }
+            else {
+			    return singleTableEntityPersister();
+            }
 		}
 		switch ( metadata.getHierarchyDetails().getInheritanceType() ) {
 			case JOINED: {
@@ -73,13 +84,22 @@ public class StandardPersisterClassResolver implements PersisterClassResolver {
 	public Class<? extends EntityPersister> getEntityPersisterClass(PersistentClass metadata) {
 		// todo : make sure this is based on an attribute kept on the metamodel in the new code, not the concrete PersistentClass impl found!
 		if ( RootClass.class.isInstance( metadata ) ) {
-			return singleTableEntityPersister();
+            if ( metadata.hasSubclasses() ) {
+                //If the class has children, we need to find of which kind
+                metadata = (PersistentClass) metadata.getDirectSubclasses().next();
+            }
+            else {
+			    return singleTableEntityPersister();
+            }
 		}
-		else if ( JoinedSubclass.class.isInstance( metadata ) ) {
+		if ( JoinedSubclass.class.isInstance( metadata ) ) {
 			return joinedSubclassEntityPersister();
 		}
 		else if ( UnionSubclass.class.isInstance( metadata ) ) {
 			return unionSubclassEntityPersister();
+		}
+        else if ( SingleTableSubclass.class.isInstance( metadata ) ) {
+			return singleTableEntityPersister();
 		}
 		else {
 			throw new UnknownPersisterException(
@@ -88,7 +108,7 @@ public class StandardPersisterClassResolver implements PersisterClassResolver {
 		}
 	}
 
-	public Class<? extends EntityPersister> singleTableEntityPersister() {
+    public Class<? extends EntityPersister> singleTableEntityPersister() {
 		return SingleTableEntityPersister.class;
 	}
 

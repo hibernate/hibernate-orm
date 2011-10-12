@@ -821,11 +821,6 @@ public final class HbmBinder {
 		bindClass( node, unionSubclass, mappings, inheritedMetas );
 		inheritedMetas = getMetas( node, inheritedMetas, true ); // get meta's from <subclass>
 
-		if ( unionSubclass.getEntityPersisterClass() == null ) {
-			unionSubclass.getRootClass().setEntityPersisterClass(
-				UnionSubclassEntityPersister.class );
-		}
-
 		Attribute schemaNode = node.attribute( "schema" );
 		String schema = schemaNode == null ?
 				mappings.getSchemaName() : schemaNode.getValue();
@@ -858,11 +853,6 @@ public final class HbmBinder {
 
 		bindClass( node, subclass, mappings, inheritedMetas );
 		inheritedMetas = getMetas( node, inheritedMetas, true ); // get meta's from <subclass>
-
-		if ( subclass.getEntityPersisterClass() == null ) {
-			subclass.getRootClass()
-					.setEntityPersisterClass( SingleTableEntityPersister.class );
-		}
 
         LOG.debugf( "Mapping subclass: %s -> %s", subclass.getEntityName(), subclass.getTable().getName() );
 
@@ -900,11 +890,6 @@ public final class HbmBinder {
 																	// <joined-subclass>
 
 		// joined subclasses
-		if ( joinedSubclass.getEntityPersisterClass() == null ) {
-			joinedSubclass.getRootClass()
-				.setEntityPersisterClass( JoinedSubclassEntityPersister.class );
-		}
-
 		Attribute schemaNode = node.attribute( "schema" );
 		String schema = schemaNode == null ?
 				mappings.getSchemaName() : schemaNode.getValue();

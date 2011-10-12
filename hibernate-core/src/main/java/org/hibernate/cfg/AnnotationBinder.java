@@ -604,9 +604,6 @@ public final class AnnotationBinder {
 		if ( InheritanceType.JOINED.equals( inheritanceState.getType() ) && inheritanceState.hasParents() ) {
 			onDeleteAppropriate = true;
 			final JoinedSubclass jsc = ( JoinedSubclass ) persistentClass;
-			if ( persistentClass.getEntityPersisterClass() == null ) {
-				persistentClass.getRootClass().setEntityPersisterClass( JoinedSubclassEntityPersister.class );
-			}
 			SimpleValue key = new DependantValue( mappings, jsc.getTable(), jsc.getIdentifier() );
 			jsc.setKey( key );
 			ForeignKey fk = clazzToProcess.getAnnotation( ForeignKey.class );
@@ -626,12 +623,7 @@ public final class AnnotationBinder {
 
 		}
 		else if ( InheritanceType.SINGLE_TABLE.equals( inheritanceState.getType() ) ) {
-			if ( inheritanceState.hasParents() ) {
-				if ( persistentClass.getEntityPersisterClass() == null ) {
-					persistentClass.getRootClass().setEntityPersisterClass( SingleTableEntityPersister.class );
-				}
-			}
-			else {
+			if ( ! inheritanceState.hasParents() ) {
 				if ( inheritanceState.hasSiblings() || !discriminatorColumn.isImplicit() ) {
 					//need a discriminator column
 					bindDiscriminatorToPersistentClass(
@@ -646,11 +638,7 @@ public final class AnnotationBinder {
 			}
 		}
 		else if ( InheritanceType.TABLE_PER_CLASS.equals( inheritanceState.getType() ) ) {
-			if ( inheritanceState.hasParents() ) {
-				if ( persistentClass.getEntityPersisterClass() == null ) {
-					persistentClass.getRootClass().setEntityPersisterClass( UnionSubclassEntityPersister.class );
-				}
-			}
+			//nothing to do
 		}
         if (onDeleteAnn != null && !onDeleteAppropriate) LOG.invalidOnDeleteAnnotation(propertyHolder.getEntityName());
 

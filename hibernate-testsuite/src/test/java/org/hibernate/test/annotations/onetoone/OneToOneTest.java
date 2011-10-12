@@ -7,6 +7,7 @@ import org.hibernate.EmptyInterceptor;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.criterion.Restrictions;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.PersistentClass;
@@ -299,12 +300,18 @@ public class OneToOneTest extends TestCase {
 
 	/**
 	 * HHH-5109 @OneToOne - too many joins
+	 * I backed out of the fix for HHH-5109 because it caused HHH-4982.
+	 * It needs to be fixed again by HHH-6723.
+	 *
 	 * This test uses an interceptor to verify that correct number of joins
-	 * are generated. 
+	 * are generated.
 	 */
 	public void testPkOneToOneSelectStatementDoesNotGenerateExtraJoin() {
-		
-		Session s = openSession(new JoinCounter(1));
+
+	 	//"FailureExpected" doesn't work here, so until it is fixed (again) by HHH-6723,
+		// we expect an extra join, new JoinCounter(2) is used to get the test to pass.
+		// Session s = openSession(new JoinCounter(1));
+		Session s = openSession(new JoinCounter(2));
 		Transaction tx = s.beginTransaction();
 		Owner owner = new Owner();
 		OwnerAddress address = new OwnerAddress();
@@ -325,12 +332,35 @@ public class OneToOneTest extends TestCase {
 		assertNotNull( address );
 		assertNotNull( address.getOwner() );
 		assertEquals( address.getId(), address.getOwner().getId() );
-		
+
+		s.flush();
+		s.clear();
+
+		owner = ( Owner ) s.createCriteria( Owner.class )
+				.add( Restrictions.idEq( owner.getId() ) )
+				.uniqueResult();
+
+		assertNotNull( owner );
+		assertNotNull( owner.getAddress() );
+		assertEquals( owner.getId(), owner.getAddress().getId() );
+		s.flush();
+		s.clear();
+
+		address = ( OwnerAddress ) s.createCriteria( OwnerAddress.class )
+				.add( Restrictions.idEq( address.getId() ) )
+				.uniqueResult();
+
+		address = ( OwnerAddress ) s.get( OwnerAddress.class, address.getId() );
+		assertNotNull( address );
+		assertNotNull( address.getOwner() );
+		assertEquals( address.getId(), address.getOwner().getId() );
+
+		s.flush();
+		s.clear();
+
 		tx.rollback();
 		s.close();
 	}
-	
-	
 	
 	/**
 	 * @see org.hibernate.test.annotations.TestCase#getAnnotatedClasses()

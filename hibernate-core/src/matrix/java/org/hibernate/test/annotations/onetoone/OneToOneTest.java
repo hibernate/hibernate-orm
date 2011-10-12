@@ -331,7 +331,7 @@ public class OneToOneTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-6723" )
+	@TestForIssue( jiraKey = "HHH-6723" )
 	public void testPkOneToOneSelectStatementDoesNotGenerateExtraJoin() {
 		// This test uses an interceptor to verify that correct number of joins are generated.
 		Session s = openSession(new JoinCounter(1));

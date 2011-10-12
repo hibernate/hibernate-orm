@@ -24,6 +24,7 @@
  */
 package org.hibernate.loader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -184,6 +185,21 @@ public abstract class AbstractEntityJoinWalker extends JoinWalker {
 	}
 
 	public abstract String getComment();
+
+	@Override
+    protected boolean isDuplicateAssociation(
+		final String foreignKeyTable,
+		final String[] foreignKeyColumns
+	) {
+		//disable a join back to this same association
+		final boolean isSameJoin =
+				persister.getTableName().equals( foreignKeyTable ) &&
+						Arrays.equals( foreignKeyColumns, persister.getKeyColumnNames() );
+		return isSameJoin ||
+			super.isDuplicateAssociation(foreignKeyTable, foreignKeyColumns);
+	}
+
+
 
 	protected final Loadable getPersister() {
 		return persister;

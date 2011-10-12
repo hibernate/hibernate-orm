@@ -1577,8 +1577,8 @@ public final class AnnotationBinder {
 					}
 				}
 				//MapsId means the columns belong to the pk => not null
-				//@PKJC must be constrained
-				final boolean mandatory = !ann.optional() || forcePersist || trueOneToOne;
+				//@OneToOne with @PKJC can still be optional
+				final boolean mandatory = !ann.optional() || forcePersist;
 				bindOneToOne(
 						getCascadeStrategy( ann.cascade(), hibernateCascade, ann.orphanRemoval(), forcePersist ),
 						joinColumns,

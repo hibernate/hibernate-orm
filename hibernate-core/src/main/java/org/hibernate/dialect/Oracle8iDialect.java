@@ -83,7 +83,7 @@ public class Oracle8iDialect extends Dialect {
 		registerColumnType( Types.NUMERIC, "number($p,$s)" );
 		registerColumnType( Types.DECIMAL, "number($p,$s)" );
 
-        registerColumnType( Types.BOOLEAN, "char(1)" );
+        registerColumnType( Types.BOOLEAN, "number(1,0)" );
 	}
 
 	protected void registerDateTimeTypeMappings() {

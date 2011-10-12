@@ -29,6 +29,8 @@ import java.io.Serializable;
 import org.hibernate.SessionFactory;
 
 /**
+ * Contract giving access to the underlying {@link SessionFactory} from an {@link EntityManagerFactory}
+ *
  * @author Gavin King
  */
 public interface HibernateEntityManagerFactory extends EntityManagerFactory, Serializable {

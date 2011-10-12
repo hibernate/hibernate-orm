@@ -48,7 +48,7 @@ import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.service.ServiceRegistry;
 
 /**
- * Actual Hiberate implementation of {@link javax.persistence.EntityManagerFactory}.
+ * Actual Hibernate implementation of {@link javax.persistence.EntityManagerFactory}.
  *
  * @author Gavin King
  * @author Emmanuel Bernard

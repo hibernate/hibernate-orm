@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<infinispan xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:infinispan:config:4.0">
+<infinispan xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:infinispan:config:5.0">
    <global>
       <transport transportClass = "org.infinispan.remoting.transport.jgroups.JGroupsTransport" 
             clusterName="infinispan-hibernate-cluster" distributedSyncTimeout="50000">
@@ -20,24 +20,25 @@
    <!-- Default configuration is appropriate for entity/collection caching. -->
    <namedCache name="entity">
       <clustering mode="invalidation">
-         <stateRetrieval fetchInMemoryState="false" timeout="20000"/>
+         <stateRetrieval fetchInMemoryState="false" timeout="60000"/>
          <sync replTimeout="20000"/>
       </clustering>
+      <storeAsBinary storeKeysAsBinary="true" storeValuesAsBinary="true" />
       <locking isolationLevel="READ_COMMITTED" concurrencyLevel="1000"
                lockAcquisitionTimeout="15000" useLockStriping="false" />
       <!-- Eviction configuration.  WakeupInterval defines how often the eviction thread runs, in milliseconds.  
            0 means the eviction thread will never run.  A separate executor is used for eviction in each cache. -->
-      <eviction wakeUpInterval="5000" maxEntries="10000" strategy="LRU"/>
-      <expiration maxIdle="100000"/>
-      <lazyDeserialization enabled="true"/>
+      <eviction maxEntries="10000" strategy="LRU"/>
+      <expiration wakeUpInterval="5000" maxIdle="100000"/>
    </namedCache>
    
    <!-- Default configuration is appropriate for entity/collection caching. -->
    <namedCache name="entity-repeatable">
       <clustering mode="invalidation">
-         <stateRetrieval fetchInMemoryState="false" timeout="20000"/>
+         <stateRetrieval fetchInMemoryState="false" timeout="60000"/>
          <sync replTimeout="20000"/>
       </clustering>
+      <storeAsBinary storeKeysAsBinary="true" storeValuesAsBinary="true" />
       <!-- Note: REPEATABLE_READ is only useful if the application evicts/clears entities 
         from the Hibernate Session and then expects to repeatably re-read them in 
         the same transaction. Otherwise, the Session's internal cache provides a 
@@ -48,26 +49,24 @@
                lockAcquisitionTimeout="15000" useLockStriping="false"/>
       <!-- Eviction configuration.  WakeupInterval defines how often the eviction thread runs, in milliseconds.  
            0 means the eviction thread will never run.  A separate executor is used for eviction in each cache. -->
-      <eviction wakeUpInterval="5000" maxEntries="10000" strategy="LRU"/>
-      <expiration maxIdle="100000"/>
-      <lazyDeserialization enabled="true"/>
+      <eviction maxEntries="10000" strategy="LRU"/>
+      <expiration wakeUpInterval="5000" maxIdle="100000"/>
    </namedCache>
    
    <!-- An alternative configuration for entity/collection caching that uses replication instead of invalidation -->
    <namedCache name="replicated-entity">
       <clustering mode="replication">
-         <stateRetrieval fetchInMemoryState="false" timeout="20000"/>
+         <stateRetrieval fetchInMemoryState="false" timeout="60000"/>
          <sync replTimeout="20000"/>
       </clustering>
+      <storeAsBinary storeKeysAsBinary="true" storeValuesAsBinary="true" />
       <locking isolationLevel="READ_COMMITTED" concurrencyLevel="1000"
                lockAcquisitionTimeout="15000" useLockStriping="false"/>
       <!-- Eviction configuration.  WakeupInterval defines how often the eviction thread runs, in milliseconds.  
            0 means the eviction thread will never run.  A separate executor is used for eviction in each cache. -->
-      <eviction wakeUpInterval="5000" maxEntries="10000" strategy="LRU"/>
-      <expiration maxIdle="100000"/>
-      <lazyDeserialization enabled="true"/>
+      <eviction maxEntries="10000" strategy="LRU"/>
+      <expiration wakeUpInterval="5000" maxIdle="100000"/>
    </namedCache>
-   
    
    <!-- A config appropriate for query caching. Does not replicate queries. -->
    <namedCache name="local-query">
@@ -75,8 +74,8 @@
                lockAcquisitionTimeout="15000" useLockStriping="false"/>
       <!--Eviction configuration.  WakeupInterval defines how often the eviction thread runs, in milliseconds.  0 means
          the eviction thread will never run.  A separate executor is used for eviction in each cache. -->
-      <eviction wakeUpInterval="5000" maxEntries="10000" strategy="LRU"/>
-      <expiration maxIdle="100000"/>
+      <eviction maxEntries="10000" strategy="LRU"/>
+      <expiration wakeUpInterval="5000" maxIdle="100000"/>
    </namedCache>
 
    <!-- A query cache that replicates queries. Replication is asynchronous. -->
@@ -88,8 +87,8 @@
                lockAcquisitionTimeout="15000" useLockStriping="false"/>
       <!--Eviction configuration.  WakeupInterval defines how often the eviction thread runs, in milliseconds.  0 means
          the eviction thread will never run.  A separate executor is used for eviction in each cache. -->
-      <eviction wakeUpInterval="5000" maxEntries="10000" strategy="LRU"/>
-      <expiration maxIdle="100000"/>
+      <eviction maxEntries="10000" strategy="LRU"/>
+      <expiration wakeUpInterval="5000" maxIdle="100000"/>
       <!-- State transfer forces all replication calls to be synchronous,
            so for calls to remain async, use a cluster cache loader instead -->
       <loaders passivation="false" shared="false" preload="false">
@@ -113,7 +112,7 @@
                lockAcquisitionTimeout="15000" useLockStriping="false"/>
       <lazyDeserialization enabled="true"/>
       <!--  Don't ever evict modification timestamps -->
-      <eviction wakeUpInterval="0" strategy="NONE"/>
+      <eviction strategy="NONE"/>
       <!-- State transfer forces all replication calls to be synchronous,
            so for calls to remain async, use a cluster cache loader instead -->
       <loaders passivation="false" shared="false" preload="false">

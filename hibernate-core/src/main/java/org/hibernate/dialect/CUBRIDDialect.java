@@ -32,25 +32,22 @@ import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
 import org.hibernate.type.StandardBasicTypes;
 /**
- * An SQL dialect for CUBRID (8.3.x and later).
+ * An SQL dialect for CUBRID (8.4.x and later).
  *
- * @author Seok Jeong Il
+ * @author JONG-IL SEOK, Esen Sagynov
  */
 public class CUBRIDDialect extends Dialect
 {
     @Override
-    protected String getIdentityColumnString() throws MappingException
+    protected String getIdentityColumnString()
     {
         return "auto_increment"; //starts with 1, implicitly
     }
-
+    
     @Override
-    public String getIdentitySelectString(String table, String column, int type)
-    throws MappingException
+    public String getIdentitySelectString()
     {
-        // CUBRID 8.4.0 support last_insert_id()
-        // return "select last_insert_id()";
-        return "select current_val from db_serial where name = '" + (table + "_ai_" + column).toLowerCase() + "'";
+        return "select last_insert_id()";
     }
 
     public CUBRIDDialect()
@@ -58,13 +55,13 @@ public class CUBRIDDialect extends Dialect
         super();
 
         registerColumnType(Types.BIT,         "bit(8)"            );
-        registerColumnType(Types.BIGINT,      "numeric(19,0)"     );
-        registerColumnType(Types.SMALLINT,    "short"             );
-        registerColumnType(Types.TINYINT,     "short"             );
+        registerColumnType(Types.BIGINT,      "bigint"            );
+        registerColumnType(Types.SMALLINT,    "smallint"          );
+        registerColumnType(Types.TINYINT,     "smallint"          );
         registerColumnType(Types.INTEGER,     "integer"           );
         registerColumnType(Types.CHAR,        "char(1)"           );
         registerColumnType(Types.VARCHAR, 4000, "varchar($l)"     );
-        registerColumnType(Types.FLOAT,       "float"             );
+        registerColumnType(Types.FLOAT,       "numeric"           );
         registerColumnType(Types.DOUBLE,      "double"            );
         registerColumnType(Types.DATE,        "date"              );
         registerColumnType(Types.TIME,        "time"              );
@@ -72,7 +69,8 @@ public class CUBRIDDialect extends Dialect
         registerColumnType(Types.VARBINARY, 2000,"bit varying($l)");
         registerColumnType(Types.NUMERIC,     "numeric($p,$s)"    );
         registerColumnType(Types.BLOB,        "blob"              );
-        registerColumnType(Types.CLOB,        "string"              );
+        registerColumnType(Types.CLOB,        "string"            );
+        registerColumnType(Types.BOOLEAN,     "smallint(1)"       );
 
         getDefaultProperties().setProperty(Environment.USE_STREAMS_FOR_BINARY, "true");
         getDefaultProperties().setProperty(Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE);
@@ -112,9 +110,9 @@ public class CUBRIDDialect extends Dialect
         registerFunction("substr",    new StandardSQLFunction("substr",       StandardBasicTypes.STRING)   );
         registerFunction("substrb",   new StandardSQLFunction("substrb",      StandardBasicTypes.STRING)   );
         registerFunction("translate", new StandardSQLFunction("translate",    StandardBasicTypes.STRING)   );
+
         registerFunction("add_months",        new StandardSQLFunction("add_months",       StandardBasicTypes.DATE)             );
         registerFunction("months_between",    new StandardSQLFunction("months_between",   StandardBasicTypes.FLOAT)            );
-
         registerFunction("current_date",      new NoArgSQLFunction("current_date",        StandardBasicTypes.DATE,     false)  );
         registerFunction("current_time",      new NoArgSQLFunction("current_time",        StandardBasicTypes.TIME,     false)  );
         registerFunction("current_timestamp", new NoArgSQLFunction("current_timestamp",   StandardBasicTypes.TIMESTAMP,false)  );
@@ -125,10 +123,12 @@ public class CUBRIDDialect extends Dialect
         registerFunction("rownum",            new NoArgSQLFunction("rownum",              StandardBasicTypes.LONG,     false)  );
         registerFunction("concat",            new VarArgsSQLFunction(StandardBasicTypes.STRING, "", "||", ""));
     }
-
+    /*
+     * CUBRID supports "ADD [COLUMN | ATTRIBUTE]"
+    */
     public String getAddColumnString()
     {
-        return "add";
+        return "add column";
     }
 
     public String getSequenceNextValString(String sequenceName)
@@ -173,17 +173,7 @@ public class CUBRIDDialect extends Dialect
             .append(hasOffset ? " limit ?, ?" : " limit ?").toString();
     }
 
-    public boolean bindLimitParametersInReverseOrder() 
-    {
-        return true;
-    }
-
     public boolean useMaxForLimit() 
-    {
-        return true;
-    }
-
-    public boolean forUpdateOfColumns() 
     {
         return true;
     }
@@ -198,11 +188,6 @@ public class CUBRIDDialect extends Dialect
         return '[';
     }
 
-    public boolean hasAlterTable()
-    {
-        return false;
-    }
-
     public String getForUpdateString()
     {
         return " ";
@@ -213,16 +198,6 @@ public class CUBRIDDialect extends Dialect
         return true;
     }
 
-    public boolean supportsCommentOn() 
-    {
-        return false;
-    }
-
-    public boolean supportsTemporaryTables() 
-    {
-        return false;
-    }
-
     public boolean supportsCurrentTimestampSelection() 
     {
         return true;
@@ -230,10 +205,15 @@ public class CUBRIDDialect extends Dialect
 
     public String getCurrentTimestampSelectString() 
     {
-        return "select systimestamp from table({1}) as T(X)";
+        return "select now()";
     }
 
     public boolean isCurrentTimestampSelectStringCallable() 
+    {
+        return false;
+    }
+
+    public boolean supportsEmptyInList()
     {
         return false;
     }

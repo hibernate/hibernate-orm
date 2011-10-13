@@ -46,7 +46,7 @@ public class NullAuditExpression implements AuditCriterion {
         if (relatedEntity == null) {
             parameters.addNullRestriction(propertyName, true);
         } else {
-            relatedEntity.getIdMapper().addIdEqualsToQuery(parameters, null, propertyName, true);
+            relatedEntity.getIdMapper().addIdEqualsToQuery(parameters, null, null, true);
         }
     }
 }

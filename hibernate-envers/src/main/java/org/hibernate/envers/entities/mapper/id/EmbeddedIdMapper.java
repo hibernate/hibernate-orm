@@ -23,18 +23,17 @@
  */
 package org.hibernate.envers.entities.mapper.id;
 
+import org.hibernate.envers.entities.PropertyData;
+import org.hibernate.envers.exception.AuditException;
+import org.hibernate.envers.tools.reflection.ReflectionTools;
+import org.hibernate.property.Getter;
+import org.hibernate.property.Setter;
+import org.hibernate.util.ReflectHelper;
+
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.hibernate.envers.exception.AuditException;
-import org.hibernate.envers.tools.reflection.ReflectionTools;
-import org.hibernate.envers.entities.PropertyData;
-
-import org.hibernate.property.Getter;
-import org.hibernate.property.Setter;
-import org.hibernate.util.ReflectHelper;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -63,21 +62,27 @@ public class EmbeddedIdMapper extends AbstractCompositeIdMapper implements Simpl
         mapToMapFromId(data, getter.get(obj));
     }
 
-    public void mapToEntityFromMap(Object obj, Map data) {
+    public boolean mapToEntityFromMap(Object obj, Map data) {
         if (data == null || obj == null) {
-            return;
+            return false;
         }
 
         Getter getter = ReflectionTools.getGetter(obj.getClass(), idPropertyData);
         Setter setter = ReflectionTools.getSetter(obj.getClass(), idPropertyData);
 
         try {
-            Object subObj = ReflectHelper.getDefaultConstructor(getter.getReturnType()).newInstance();
-            setter.set(obj, subObj, null);
+            Object subObj = ReflectHelper.getDefaultConstructor( getter.getReturnType() ).newInstance();
 
+            boolean ret = true;
             for (IdMapper idMapper : ids.values()) {
-                idMapper.mapToEntityFromMap(subObj, data);
+                ret &= idMapper.mapToEntityFromMap(subObj, data);
             }
+
+            if (ret) {
+                setter.set(obj, subObj, null);
+            }
+
+            return ret;
         } catch (Exception e) {
             throw new AuditException(e);
         }

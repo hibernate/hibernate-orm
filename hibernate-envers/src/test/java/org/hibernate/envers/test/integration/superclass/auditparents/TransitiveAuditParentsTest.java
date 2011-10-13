@@ -3,12 +3,12 @@ package org.hibernate.envers.test.integration.superclass.auditparents;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.AbstractEntityTest;
-import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.tools.TestTools;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
-import org.junit.Assert;
-import org.junit.Test;
+import org.testng.Assert;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
 
 import javax.persistence.EntityManager;
 import java.util.Set;
@@ -30,8 +30,7 @@ public class TransitiveAuditParentsTest extends AbstractEntityTest {
         cfg.addAnnotatedClass(ExplicitTransitiveChildEntity.class);
     }
 
-    @Test
-    @Priority(10)
+    @BeforeClass(dependsOnMethods = "init")
     public void initData() {
         EntityManager em = getEntityManager();
 

@@ -1181,8 +1181,12 @@ public final class HbmBinder {
 		Properties parameters = new Properties();
 
 		Attribute typeNode = node.attribute( "type" );
-		if ( typeNode == null ) typeNode = node.attribute( "id-type" ); // for an any
-		if ( typeNode != null ) typeName = typeNode.getValue();
+        if ( typeNode == null ) {
+            typeNode = node.attribute( "id-type" ); // for an any
+        }
+        else {
+            typeName = typeNode.getValue();
+        }
 
 		Element typeChild = node.element( "type" );
 		if ( typeName == null && typeChild != null ) {

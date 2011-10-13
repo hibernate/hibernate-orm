@@ -26,6 +26,7 @@ package org.hibernate.dialect;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.internal.CoreMessageLogger;
@@ -183,8 +184,8 @@ public class H2Dialect extends Dialect {
 		registerFunction( "database", new NoArgSQLFunction( "database", StandardBasicTypes.STRING ) );
 		registerFunction( "user", new NoArgSQLFunction( "user", StandardBasicTypes.STRING ) );
 
-		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
-		getDefaultProperties().setProperty( Environment.NON_CONTEXTUAL_LOB_CREATION, "true" );  // http://code.google.com/p/h2database/issues/detail?id=235
+		getDefaultProperties().setProperty( AvailableSettings.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
+		getDefaultProperties().setProperty( AvailableSettings.NON_CONTEXTUAL_LOB_CREATION, "true" );  // http://code.google.com/p/h2database/issues/detail?id=235
 	}
 
 	public String getAddColumnString() {

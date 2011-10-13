@@ -21,36 +21,47 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.typedescriptor;
-
-import java.io.Serializable;
+ package org.hibernate.test.typedescriptor;
+ 
+import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.Lob;
 
-/**
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
- */
+ /**
+  * @author Strong Liu
+  */
 @Entity
-public class VariousTypesEntity implements Serializable {
-	@Id
-	private Integer id;
+ public class Issue {
+    @Id
+    @GeneratedValue
+    private Long id;
+    private String description;
+    @Column(columnDefinition = "char(8)")
+    private String issueNumber;
 
-	private byte byteData;
 
-	public Integer getId() {
-		return id;
-	}
+    public String getDescription() {
+        return description;
+    }
 
-	public void setId(Integer id) {
-		this.id = id;
-	}
+    public void setDescription(String description) {
+        this.description = description;
+    }
 
-	public byte getByteData() {
-		return byteData;
-	}
+    public Long getId() {
+        return id;
+    }
 
-	public void setByteData(byte byteData) {
-		this.byteData = byteData;
-	}
-}
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getIssueNumber() {
+        return issueNumber;
+    }
+
+    public void setIssueNumber(String issueNumber) {
+        this.issueNumber = issueNumber;
+    }
+ }

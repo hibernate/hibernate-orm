@@ -179,6 +179,8 @@ public abstract class Dialect {
 		registerHibernateType( Types.BIT, StandardBasicTypes.BOOLEAN.getName() );
 		registerHibernateType( Types.BOOLEAN, StandardBasicTypes.BOOLEAN.getName() );
 		registerHibernateType( Types.CHAR, StandardBasicTypes.CHARACTER.getName() );
+        registerHibernateType( Types.CHAR, 1, StandardBasicTypes.CHARACTER.getName() );
+        registerHibernateType( Types.CHAR, 255, StandardBasicTypes.STRING.getName() );
 		registerHibernateType( Types.DATE, StandardBasicTypes.DATE.getName() );
 		registerHibernateType( Types.DOUBLE, StandardBasicTypes.DOUBLE.getName() );
 		registerHibernateType( Types.FLOAT, StandardBasicTypes.FLOAT.getName() );
@@ -289,12 +291,7 @@ public abstract class Dialect {
 	public String getTypeName(int code, long length, int precision, int scale) throws HibernateException {
 		String result = typeNames.get( code, length, precision, scale );
 		if ( result == null ) {
-			throw new HibernateException(
-					"No type mapping for java.sql.Types code: " +
-					code +
-					", length: " +
-					length
-			);
+			throw new HibernateException(String.format( "No type mapping for java.sql.Types code: %s, length: %s", code, length ));
 		}
 		return result;
 	}

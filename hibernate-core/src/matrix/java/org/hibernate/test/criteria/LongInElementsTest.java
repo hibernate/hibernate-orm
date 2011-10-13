@@ -35,7 +35,7 @@ import org.hibernate.dialect.TeradataDialect;
 
 import org.junit.Test;
 
-import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.test.hql.StateProvince;
@@ -59,7 +59,7 @@ public class LongInElementsTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-2166" )
-	@RequiresDialect(
+	@SkipForDialect(
 			value = { SQLServerDialect.class, Oracle8iDialect.class, TeradataDialect.class },
 			comment = "this test fails on oracle and ms sql server, for more info, see HHH-1123"
 	)
@@ -89,7 +89,7 @@ public class LongInElementsTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-2166" )
-	@RequiresDialect(
+	@SkipForDialect(
 			value = { SQLServerDialect.class, Oracle8iDialect.class, TeradataDialect.class },
 			comment = "this test fails on oracle and ms sql server, for more info, see HHH-1123"
 	)

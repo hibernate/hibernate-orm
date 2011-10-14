@@ -56,7 +56,7 @@ import org.jboss.logging.Logger;
  */
 public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, LogicalConnectionImpl.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, LogicalConnectionImpl.class.getName() );
 
 	private transient Connection physicalConnection;
 	private transient Connection shareableConnectionProxy;
@@ -117,7 +117,7 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 		}
 		else if ( connectionReleaseMode == ConnectionReleaseMode.AFTER_STATEMENT &&
 				! jdbcServices.getConnectionProvider().supportsAggressiveRelease() ) {
-            LOG.debugf("Connection provider reports to not support aggressive release; overriding");
+			LOG.debugf( "Connection provider reports to not support aggressive release; overriding" );
 			return ConnectionReleaseMode.AFTER_TRANSACTION;
 		}
 		else {
@@ -205,7 +205,7 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 			// no matter what
 			physicalConnection = null;
 			isClosed = true;
-            LOG.trace("Logical connection closed");
+			LOG.trace( "Logical connection closed" );
 			for ( ConnectionObserver observer : observers ) {
 				observer.logicalConnectionClosed();
 			}
@@ -232,14 +232,14 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 
 	@Override
 	public void afterStatementExecution() {
-        LOG.trace("Starting after statement execution processing [" + connectionReleaseMode + "]");
+		LOG.tracev( "Starting after statement execution processing [{0}]", connectionReleaseMode );
 		if ( connectionReleaseMode == ConnectionReleaseMode.AFTER_STATEMENT ) {
 			if ( ! releasesEnabled ) {
-                LOG.debugf("Skipping aggressive release due to manual disabling");
+				LOG.debugf( "Skipping aggressive release due to manual disabling" );
 				return;
 			}
 			if ( jdbcResourceRegistry.hasRegisteredResources() ) {
-                LOG.debugf("Skipping aggressive release due to registered resources");
+				LOG.debugf( "Skipping aggressive release due to registered resources" );
 				return;
 			}
 			releaseConnection();
@@ -251,7 +251,7 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 		if ( connectionReleaseMode == ConnectionReleaseMode.AFTER_STATEMENT ||
 				connectionReleaseMode == ConnectionReleaseMode.AFTER_TRANSACTION ) {
 			if ( jdbcResourceRegistry.hasRegisteredResources() ) {
-                LOG.forcingContainerResourceCleanup();
+				LOG.forcingContainerResourceCleanup();
 				jdbcResourceRegistry.releaseResources();
 			}
 			aggressiveRelease();
@@ -260,13 +260,13 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 
 	@Override
 	public void disableReleases() {
-        LOG.trace("Disabling releases");
+		LOG.trace( "Disabling releases" );
 		releasesEnabled = false;
 	}
 
 	@Override
 	public void enableReleases() {
-        LOG.trace("(Re)enabling releases");
+		LOG.trace( "(Re)enabling releases" );
 		releasesEnabled = true;
 		afterStatementExecution();
 	}
@@ -275,9 +275,11 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 	 * Force aggressive release of the underlying connection.
 	 */
 	public void aggressiveRelease() {
-        if (isUserSuppliedConnection) LOG.debugf("Cannot aggressively release user-supplied connection; skipping");
+		if ( isUserSuppliedConnection ) {
+			LOG.debugf( "Cannot aggressively release user-supplied connection; skipping" );
+		}
 		else {
-            LOG.debugf("Aggressively releasing JDBC connection");
+			LOG.debugf( "Aggressively releasing JDBC connection" );
 			if ( physicalConnection != null ) {
 				releaseConnection();
 			}
@@ -291,13 +293,13 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 	 * @throws org.hibernate.JDBCException Indicates problem opening a connection
 	 */
 	private void obtainConnection() throws JDBCException {
-        LOG.debugf("Obtaining JDBC connection");
+		LOG.debugf( "Obtaining JDBC connection" );
 		try {
 			physicalConnection = jdbcConnectionAccess.obtainConnection();
 			for ( ConnectionObserver observer : observers ) {
 				observer.physicalConnectionObtained( physicalConnection );
 			}
-            LOG.debugf("Obtained JDBC connection");
+			LOG.debugf( "Obtained JDBC connection" );
 		}
 		catch ( SQLException sqle) {
 			throw getJdbcServices().getSqlExceptionHelper().convert( sqle, "Could not open connection" );
@@ -310,15 +312,15 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 	 * @throws JDBCException Indicates problem closing a connection
 	 */
 	private void releaseConnection() throws JDBCException {
-        LOG.debugf("Releasing JDBC connection");
+		LOG.debugf( "Releasing JDBC connection" );
 		if ( physicalConnection == null ) {
 			return;
 		}
 		try {
-            if ( ! physicalConnection.isClosed() ) {
+			if ( !physicalConnection.isClosed() ) {
 				getJdbcServices().getSqlExceptionHelper().logAndClearWarnings( physicalConnection );
 			}
-            if ( ! isUserSuppliedConnection ) {
+			if ( !isUserSuppliedConnection ) {
 				jdbcConnectionAccess.releaseConnection( physicalConnection );
 			}
 		}
@@ -328,7 +330,7 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 		finally {
 			physicalConnection = null;
 		}
-        LOG.debugf("Released JDBC connection");
+		LOG.debugf( "Released JDBC connection" );
 		for ( ConnectionObserver observer : observers ) {
 			observer.physicalConnectionReleased();
 		}
@@ -369,7 +371,7 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 				throw new IllegalArgumentException( "cannot reconnect a null user-supplied connection" );
 			}
 			else if ( suppliedConnection == physicalConnection ) {
-                LOG.debug("reconnecting the same connection that is already connected; should this connection have been disconnected?");
+				LOG.debug( "reconnecting the same connection that is already connected; should this connection have been disconnected?" );
 			}
 			else if ( physicalConnection != null ) {
 				throw new IllegalArgumentException(
@@ -377,7 +379,7 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 				);
 			}
 			physicalConnection = suppliedConnection;
-            LOG.debugf("Reconnected JDBC connection");
+			LOG.debugf( "Reconnected JDBC connection" );
 		}
 	}
 

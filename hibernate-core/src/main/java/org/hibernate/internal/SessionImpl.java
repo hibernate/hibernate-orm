@@ -167,7 +167,7 @@ public final class SessionImpl
 	// a separate class responsible for generating/dispatching events just duplicates most of the Session methods...
 	// passing around separate interceptor, factory, actionQueue, and persistentContext is not manageable...
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, SessionImpl.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, SessionImpl.class.getName());
 
 	private transient long timestamp;
 
@@ -242,9 +242,9 @@ public final class SessionImpl
 
 		loadQueryInfluencers = new LoadQueryInfluencers( factory );
 
-        if (factory.getStatistics().isStatisticsEnabled()) factory.getStatisticsImplementor().openSession();
+		if (factory.getStatistics().isStatisticsEnabled()) factory.getStatisticsImplementor().openSession();
 
-        LOG.debugf("Opened session at timestamp: %s", timestamp);
+		LOG.debugf( "Opened session at timestamp: %s", timestamp );
 	}
 
 	@Override
@@ -265,7 +265,7 @@ public final class SessionImpl
 	}
 
 	public Connection close() throws HibernateException {
-        LOG.trace("Closing session");
+		LOG.trace( "Closing session" );
 		if ( isClosed() ) {
 			throw new SessionException( "Session was already closed" );
 		}
@@ -312,10 +312,10 @@ public final class SessionImpl
 
 	public void managedFlush() {
 		if ( isClosed() ) {
-            LOG.trace("Skipping auto-flush due to session closed");
+			LOG.trace( "Skipping auto-flush due to session closed" );
 			return;
 		}
-        LOG.trace( "Automatically flushing session" );
+		LOG.trace( "Automatically flushing session" );
 		flush();
 	}
 
@@ -445,7 +445,7 @@ public final class SessionImpl
 	}
 
 	public void managedClose() {
-        LOG.trace( "Automatically closing session" );
+		LOG.trace( "Automatically closing session" );
 		close();
 	}
 
@@ -467,14 +467,14 @@ public final class SessionImpl
 	@Override
 	public Connection disconnect() throws HibernateException {
 		errorIfClosed();
-        LOG.debugf( "Disconnecting session" );
+		LOG.debugf( "Disconnecting session" );
 		return transactionCoordinator.getJdbcCoordinator().getLogicalConnection().manualDisconnect();
 	}
 
 	@Override
 	public void reconnect(Connection conn) throws HibernateException {
 		errorIfClosed();
-        LOG.debugf("Reconnecting session");
+		LOG.debugf( "Reconnecting session" );
 		checkTransactionSynchStatus();
 		transactionCoordinator.getJdbcCoordinator().getLogicalConnection().manualReconnect( conn );
 	}
@@ -516,7 +516,7 @@ public final class SessionImpl
 			interceptor.beforeTransactionCompletion( hibernateTransaction );
 		}
 		catch (Throwable t) {
-			LOG.exceptionInBeforeTransactionCompletionInterceptor(t);
+			LOG.exceptionInBeforeTransactionCompletionInterceptor( t );
 		}
 	}
 
@@ -530,7 +530,7 @@ public final class SessionImpl
 				interceptor.afterTransactionCompletion( hibernateTransaction );
 			}
 			catch (Throwable t) {
-                LOG.exceptionInAfterTransactionCompletionInterceptor(t);
+				LOG.exceptionInAfterTransactionCompletionInterceptor( t );
 			}
 		}
 		if ( autoClear ) {
@@ -886,9 +886,9 @@ public final class SessionImpl
 	 * Do NOT return a proxy.
 	 */
 	public Object immediateLoad(String entityName, Serializable id) throws HibernateException {
-        if (LOG.isDebugEnabled()) {
+		if ( LOG.isDebugEnabled() ) {
 			EntityPersister persister = getFactory().getEntityPersister(entityName);
-            LOG.debugf("Initializing proxy: %s", MessageHelper.infoString(persister, id, getFactory()));
+			LOG.debugf( "Initializing proxy: %s", MessageHelper.infoString( persister, id, getFactory() ) );
 		}
 
 		LoadEvent event = new LoadEvent(id, entityName, true, this);
@@ -1062,16 +1062,16 @@ public final class SessionImpl
 	public boolean isDirty() throws HibernateException {
 		errorIfClosed();
 		checkTransactionSynchStatus();
-        LOG.debugf("Checking session dirtiness");
+		LOG.debugf( "Checking session dirtiness" );
 		if ( actionQueue.areInsertionsOrDeletionsQueued() ) {
-            LOG.debugf("Session dirty (scheduled updates and insertions)");
+			LOG.debugf( "Session dirty (scheduled updates and insertions)" );
 			return true;
 		}
-        DirtyCheckEvent event = new DirtyCheckEvent( this );
+		DirtyCheckEvent event = new DirtyCheckEvent( this );
 		for ( DirtyCheckEventListener listener : listeners( EventType.DIRTY_CHECK ) ) {
 			listener.onDirtyCheck( event );
 		}
-        return event.isDirty();
+		return event.isDirty();
 	}
 
 	public void flush() throws HibernateException {
@@ -1087,8 +1087,10 @@ public final class SessionImpl
 
 	public void forceFlush(EntityEntry entityEntry) throws HibernateException {
 		errorIfClosed();
-        if (LOG.isDebugEnabled()) LOG.debugf("Flushing to force deletion of re-saved object: %s",
-                                             MessageHelper.infoString(entityEntry.getPersister(), entityEntry.getId(), getFactory()));
+		if ( LOG.isDebugEnabled() ) {
+			LOG.debugf( "Flushing to force deletion of re-saved object: %s",
+					MessageHelper.infoString( entityEntry.getPersister(), entityEntry.getId(), getFactory() ) );
+		}
 
 		if ( persistenceContext.getCascadeLevel() > 0 ) {
 			throw new ObjectDeletedException(
@@ -1232,7 +1234,7 @@ public final class SessionImpl
 	public void setFlushMode(FlushMode flushMode) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
-        LOG.trace("Setting flush mode to: " + flushMode);
+		LOG.tracev( "Setting flush mode to: {0}", flushMode );
 		this.flushMode = flushMode;
 	}
 
@@ -1249,7 +1251,7 @@ public final class SessionImpl
 	public void setCacheMode(CacheMode cacheMode) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
-        LOG.trace("Setting cache mode to: " + cacheMode);
+		LOG.tracev( "Setting cache mode to: {0}", cacheMode );
 		this.cacheMode= cacheMode;
 	}
 
@@ -1549,7 +1551,9 @@ public final class SessionImpl
 		errorIfClosed();
 		checkTransactionSynchStatus();
 
-        LOG.trace("Scroll SQL query: " + customQuery.getSQL());
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace( "Scroll SQL query: " + customQuery.getSQL() );
+		}
 
 		CustomLoader loader = new CustomLoader( customQuery, getFactory() );
 
@@ -1570,7 +1574,9 @@ public final class SessionImpl
 		errorIfClosed();
 		checkTransactionSynchStatus();
 
-        LOG.trace("SQL query: " + customQuery.getSQL());
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace( "SQL query: " + customQuery.getSQL() );
+		}
 
 		CustomLoader loader = new CustomLoader( customQuery, getFactory() );
 
@@ -1872,7 +1878,7 @@ public final class SessionImpl
 	 * @throws ClassNotFoundException Indicates a class resolution issue
 	 */
 	private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException {
-        LOG.trace("Deserializing session");
+		LOG.trace( "Deserializing session" );
 
 		ois.defaultReadObject();
 
@@ -1915,7 +1921,7 @@ public final class SessionImpl
 			throw new IllegalStateException( "Cannot serialize a session while connected" );
 		}
 
-        LOG.trace( "Serializing session" );
+		LOG.trace( "Serializing session" );
 
 		oos.defaultWriteObject();
 

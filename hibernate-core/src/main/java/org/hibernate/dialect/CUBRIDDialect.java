@@ -60,7 +60,7 @@ public class CUBRIDDialect extends Dialect
         registerColumnType(Types.TINYINT,     "smallint"          );
         registerColumnType(Types.INTEGER,     "integer"           );
         registerColumnType(Types.CHAR,        "char(1)"           );
-        registerColumnType(Types.VARCHAR, 4000, "varchar($l)"     );
+        registerColumnType(Types.REAL,        "numeric"           );
         registerColumnType(Types.FLOAT,       "numeric"           );
         registerColumnType(Types.DOUBLE,      "double"            );
         registerColumnType(Types.DATE,        "date"              );
@@ -71,6 +71,10 @@ public class CUBRIDDialect extends Dialect
         registerColumnType(Types.BLOB,        "blob"              );
         registerColumnType(Types.CLOB,        "string"            );
         registerColumnType(Types.BOOLEAN,     "smallint(1)"       );
+		registerColumnType(Types.VARCHAR, 255, "varchar($l)"      );
+        registerColumnType(Types.VARCHAR, 65535, "varchar($l)"    );
+		registerColumnType(Types.VARCHAR,     "string"            );
+		registerColumnType(Types.LONGVARCHAR, "string"            );
 
         getDefaultProperties().setProperty(Environment.USE_STREAMS_FOR_BINARY, "true");
         getDefaultProperties().setProperty(Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE);

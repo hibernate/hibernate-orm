@@ -21,7 +21,7 @@
  */
 package org.hibernate.test.cache.infinispan;
 import java.util.Properties;
-import junit.framework.TestCase;
+import static org.junit.Assert.*;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.infinispan.collection.CollectionRegionImpl;
@@ -34,6 +34,7 @@ import org.infinispan.config.Configuration.CacheMode;
 import org.infinispan.eviction.EvictionStrategy;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
+import org.junit.Test;
 
 /**
  * InfinispanRegionFactoryTestCase.
@@ -41,8 +42,8 @@ import org.infinispan.manager.EmbeddedCacheManager;
  * @author Galder Zamarreño
  * @since 3.5
  */
-public class InfinispanRegionFactoryTestCase extends TestCase {
-
+public class InfinispanRegionFactoryTestCase  {
+   @Test
    public void testConfigurationProcessing() {
       final String person = "com.acme.Person";
       final String addresses = "com.acme.Person.addresses";
@@ -84,7 +85,7 @@ public class InfinispanRegionFactoryTestCase extends TestCase {
       assertEquals(3000, factory.getTypeOverrides().get("query").getEvictionWakeUpInterval());
       assertEquals(10000, factory.getTypeOverrides().get("query").getEvictionMaxEntries());
    }
-   
+   @Test
    public void testBuildEntityCollectionRegionsPersonPlusEntityCollectionOverrides() {
       final String person = "com.acme.Person";
       final String address = "com.acme.Address";
@@ -198,7 +199,7 @@ public class InfinispanRegionFactoryTestCase extends TestCase {
          factory.stop();
       }
    }
-
+   @Test
    public void testBuildEntityCollectionRegionOverridesOnly() {
       CacheAdapter cache = null;
       Properties p = new Properties();
@@ -233,7 +234,7 @@ public class InfinispanRegionFactoryTestCase extends TestCase {
          factory.stop();
       }
    }
-
+   @Test
    public void testBuildEntityRegionPersonPlusEntityOverridesWithoutCfg() {
       final String person = "com.acme.Person";
       Properties p = new Properties();
@@ -266,7 +267,7 @@ public class InfinispanRegionFactoryTestCase extends TestCase {
          factory.stop();
       }
    }
-
+   @Test
    public void testTimestampValidation() {
       Properties p = new Properties();
       final DefaultCacheManager manager = new DefaultCacheManager();
@@ -285,7 +286,7 @@ public class InfinispanRegionFactoryTestCase extends TestCase {
       } catch(CacheException ce) {
       }
    }
-
+    @Test
    public void testBuildDefaultTimestampsRegion() {
       final String timestamps = "org.hibernate.cache.spi.UpdateTimestampsCache";
       Properties p = new Properties();
@@ -309,7 +310,7 @@ public class InfinispanRegionFactoryTestCase extends TestCase {
          factory.stop();
       }
    }
-   
+   @Test
    public void testBuildDiffCacheNameTimestampsRegion() {
       final String timestamps = "org.hibernate.cache.spi.UpdateTimestampsCache";
       Properties p = new Properties();
@@ -336,7 +337,7 @@ public class InfinispanRegionFactoryTestCase extends TestCase {
          factory.stop();
       }
    }
-
+   @Test
    public void testBuildTimestamRegionWithCacheNameOverride() {
       final String timestamps = "org.hibernate.cache.spi.UpdateTimestampsCache";
       Properties p = new Properties();
@@ -352,7 +353,7 @@ public class InfinispanRegionFactoryTestCase extends TestCase {
          factory.stop();
       }
    }
-   
+   @Test
    public void testBuildTimestamRegionWithFifoEvictionOverride() {
       final String timestamps = "org.hibernate.cache.spi.UpdateTimestampsCache";
       Properties p = new Properties();
@@ -373,7 +374,7 @@ public class InfinispanRegionFactoryTestCase extends TestCase {
          factory.stop();
       }
    }
-
+   @Test
    public void testBuildTimestamRegionWithNoneEvictionOverride() {
       final String timestamps = "org.hibernate.cache.spi.UpdateTimestampsCache";
       Properties p = new Properties();
@@ -392,7 +393,7 @@ public class InfinispanRegionFactoryTestCase extends TestCase {
          factory.stop();
       }
    }
-
+   @Test
    public void testBuildQueryRegion() {
       final String query = "org.hibernate.cache.internal.StandardQueryCache";
       Properties p = new Properties();
@@ -411,7 +412,7 @@ public class InfinispanRegionFactoryTestCase extends TestCase {
          factory.stop();
       }
    }
-
+   @Test
    public void testBuildQueryRegionWithCustomRegionName() {
       final String queryRegionName = "myquery";
       Properties p = new Properties();
@@ -437,7 +438,7 @@ public class InfinispanRegionFactoryTestCase extends TestCase {
          factory.stop();
       }
    }
-
+   @Test
    public void testEnableStatistics() {
       Properties p = new Properties();
       p.setProperty("hibernate.cache.infinispan.statistics", "true");
@@ -485,7 +486,7 @@ public class InfinispanRegionFactoryTestCase extends TestCase {
          factory.stop();
       }
    }
-
+   @Test
    public void testDisableStatistics() {
       Properties p = new Properties();
       p.setProperty("hibernate.cache.infinispan.statistics", "false");

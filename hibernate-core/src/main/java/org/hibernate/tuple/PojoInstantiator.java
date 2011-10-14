@@ -43,7 +43,7 @@ import org.jboss.logging.Logger;
  */
 public class PojoInstantiator implements Instantiator, Serializable {
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, PojoInstantiator.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, PojoInstantiator.class.getName());
 
 	private transient Constructor constructor;
 

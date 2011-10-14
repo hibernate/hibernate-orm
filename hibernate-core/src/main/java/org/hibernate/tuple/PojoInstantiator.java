@@ -51,9 +51,11 @@ public class PojoInstantiator implements Instantiator, Serializable {
 	private final transient ReflectionOptimizer.InstantiationOptimizer optimizer;
 	private final boolean embeddedIdentifier;
 	private final Class proxyInterface;
+	private final boolean isAbstract;
 
 	public PojoInstantiator(Component component, ReflectionOptimizer.InstantiationOptimizer optimizer) {
 		this.mappedClass = component.getComponentClass();
+		this.isAbstract = ReflectHelper.isAbstractClass( mappedClass );
 		this.optimizer = optimizer;
 
 		this.proxyInterface = null;
@@ -63,13 +65,14 @@ public class PojoInstantiator implements Instantiator, Serializable {
 			constructor = ReflectHelper.getDefaultConstructor(mappedClass);
 		}
 		catch ( PropertyNotFoundException pnfe ) {
-            LOG.noDefaultConstructor(mappedClass.getName());
+			LOG.noDefaultConstructor(mappedClass.getName());
 			constructor = null;
 		}
 	}
 
 	public PojoInstantiator(PersistentClass persistentClass, ReflectionOptimizer.InstantiationOptimizer optimizer) {
 		this.mappedClass = persistentClass.getMappedClass();
+		this.isAbstract = ReflectHelper.isAbstractClass( mappedClass );
 		this.proxyInterface = persistentClass.getProxyInterface();
 		this.embeddedIdentifier = persistentClass.hasEmbeddedIdentifier();
 		this.optimizer = optimizer;
@@ -78,13 +81,14 @@ public class PojoInstantiator implements Instantiator, Serializable {
 			constructor = ReflectHelper.getDefaultConstructor( mappedClass );
 		}
 		catch ( PropertyNotFoundException pnfe ) {
-            LOG.noDefaultConstructor(mappedClass.getName());
+			LOG.noDefaultConstructor(mappedClass.getName());
 			constructor = null;
 		}
 	}
 
 	public PojoInstantiator(EntityBinding entityBinding, ReflectionOptimizer.InstantiationOptimizer optimizer) {
 		this.mappedClass = entityBinding.getEntity().getClassReference();
+		this.isAbstract = ReflectHelper.isAbstractClass( mappedClass );
 		this.proxyInterface = entityBinding.getProxyInterfaceType().getValue();
 		this.embeddedIdentifier = entityBinding.getHierarchyDetails().getEntityIdentifier().isEmbedded();
 		this.optimizer = optimizer;
@@ -105,7 +109,7 @@ public class PojoInstantiator implements Instantiator, Serializable {
 	}
 
 	public Object instantiate() {
-		if ( ReflectHelper.isAbstractClass(mappedClass) ) {
+		if ( isAbstract ) {
 			throw new InstantiationException( "Cannot instantiate abstract class or interface: ", mappedClass );
 		}
 		else if ( optimizer != null ) {

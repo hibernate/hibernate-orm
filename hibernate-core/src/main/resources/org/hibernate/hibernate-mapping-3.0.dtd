@@ -993,7 +993,7 @@ finder methods for named queries -->
 	<!ATTLIST return alias CDATA #IMPLIED>
 	<!ATTLIST return entity-name CDATA #IMPLIED>
 	<!ATTLIST return class CDATA #IMPLIED>
-	<!ATTLIST return lock-mode (none|read|upgrade|upgrade-nowait|write) "read">	
+	<!ATTLIST return lock-mode (none|read|upgrade|upgrade-nowait|upgrade-skiplocked|write) "read">	
 
 <!ELEMENT return-property (return-column*)> 
 	<!ATTLIST return-property name CDATA #REQUIRED>
@@ -1008,12 +1008,12 @@ finder methods for named queries -->
 <!ELEMENT return-join (return-property)*> 
 	<!ATTLIST return-join alias CDATA #REQUIRED>
 	<!ATTLIST return-join property CDATA #REQUIRED>
-	<!ATTLIST return-join lock-mode (none|read|upgrade|upgrade-nowait|write) "read">
+	<!ATTLIST return-join lock-mode (none|read|upgrade|upgrade-nowait|upgrade-skiplocked|write) "read">
 
 <!ELEMENT load-collection (return-property)*> 
 	<!ATTLIST load-collection alias CDATA #REQUIRED>
 	<!ATTLIST load-collection role CDATA #REQUIRED>
-	<!ATTLIST load-collection lock-mode (none|read|upgrade|upgrade-nowait|write) "read">
+	<!ATTLIST load-collection lock-mode (none|read|upgrade|upgrade-nowait|upgrade-skiplocked|write) "read">
 
 <!ELEMENT return-scalar EMPTY>
 	<!ATTLIST return-scalar column CDATA #REQUIRED>

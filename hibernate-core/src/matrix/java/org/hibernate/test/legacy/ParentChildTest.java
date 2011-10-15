@@ -1100,10 +1100,13 @@ public class ParentChildTest extends LegacyTestCase {
 		s3.setCount(3);
 		Simple s4 = new Simple( Long.valueOf(4) );
 		s4.setCount(4);
+		Simple s5 = new Simple( Long.valueOf(5) );
+		s5.setCount(5);
 		s.save( s1 );
 		s.save( s2 );
 		s.save( s3 );
 		s.save( s4 );
+		s.save( s5 );		
 		assertTrue( s.getCurrentLockMode(s1)==LockMode.WRITE );
 		tx.commit();
 		s.close();
@@ -1118,6 +1121,8 @@ public class ParentChildTest extends LegacyTestCase {
 		assertTrue( s.getCurrentLockMode(s3)==LockMode.UPGRADE );
 		s4 = (Simple) s.get(Simple.class, new Long(4), LockMode.UPGRADE_NOWAIT);
 		assertTrue( s.getCurrentLockMode(s4)==LockMode.UPGRADE_NOWAIT );
+		s5 = (Simple) s.get(Simple.class, new Long(5), LockMode.UPGRADE_SKIPLOCKED);
+		assertTrue( s.getCurrentLockMode(s5)==LockMode.UPGRADE_SKIPLOCKED );
 
 		s1 = (Simple) s.load(Simple.class, new Long(1), LockMode.UPGRADE); //upgrade
 		assertTrue( s.getCurrentLockMode(s1)==LockMode.UPGRADE );
@@ -1127,6 +1132,8 @@ public class ParentChildTest extends LegacyTestCase {
 		assertTrue( s.getCurrentLockMode(s3)==LockMode.UPGRADE );
 		s4 = (Simple) s.load(Simple.class, new Long(4), LockMode.UPGRADE);
 		assertTrue( s.getCurrentLockMode(s4)==LockMode.UPGRADE_NOWAIT );
+		s5 = (Simple) s.load(Simple.class, new Long(5), LockMode.UPGRADE);
+		assertTrue( s.getCurrentLockMode(s5)==LockMode.UPGRADE_SKIPLOCKED );
 
 		s.lock(s2, LockMode.UPGRADE); //upgrade
 		assertTrue( s.getCurrentLockMode(s2)==LockMode.UPGRADE );
@@ -1134,7 +1141,9 @@ public class ParentChildTest extends LegacyTestCase {
 		assertTrue( s.getCurrentLockMode(s3)==LockMode.UPGRADE );
 		s.lock(s1, LockMode.UPGRADE_NOWAIT);
 		s.lock(s4, LockMode.NONE);
+		s.lock(s5, LockMode.UPGRADE_SKIPLOCKED);
 		assertTrue( s.getCurrentLockMode(s4)==LockMode.UPGRADE_NOWAIT );
+		assertTrue( s.getCurrentLockMode(s5)==LockMode.UPGRADE_SKIPLOCKED );
 
 		tx.commit();
 		tx = s.beginTransaction();
@@ -1143,6 +1152,7 @@ public class ParentChildTest extends LegacyTestCase {
 		assertTrue( s.getCurrentLockMode(s1)==LockMode.NONE );
 		assertTrue( s.getCurrentLockMode(s2)==LockMode.NONE );
 		assertTrue( s.getCurrentLockMode(s4)==LockMode.NONE );
+		assertTrue( s.getCurrentLockMode(s5)==LockMode.NONE );
 
 		s.lock(s1, LockMode.READ); //upgrade
 		assertTrue( s.getCurrentLockMode(s1)==LockMode.READ );
@@ -1164,8 +1174,9 @@ public class ParentChildTest extends LegacyTestCase {
 		assertTrue( s.getCurrentLockMode(s1)==LockMode.NONE );
 		assertTrue( s.getCurrentLockMode(s2)==LockMode.NONE );
 		assertTrue( s.getCurrentLockMode(s4)==LockMode.NONE );
-
-		s.delete(s1); s.delete(s2); s.delete(s3); s.delete(s4);
+		assertTrue( s.getCurrentLockMode(s5)==LockMode.NONE );
+		
+		s.delete(s1); s.delete(s2); s.delete(s3); s.delete(s4); s.delete(s5);
 		tx.commit();
 		s.close();
 	}

@@ -1137,10 +1137,13 @@ public abstract class Dialect {
             case FORCE:
             case PESSIMISTIC_FORCE_INCREMENT:
                 return getForUpdateNowaitString();
+            case UPGRADE_SKIPLOCKED:
+            	  return getForUpdateSkipLockedString();
             default:
                 return "";
         }
     }
+
 
 	/**
 	 * Given a lock mode, determine the appropriate for update fragment to use.
@@ -1244,6 +1247,16 @@ public abstract class Dialect {
 		// by default we report no support for NOWAIT lock semantics
 		return getForUpdateString();
 	}
+	
+	/**
+	 * Retrieves the <tt>FOR UPDATE SKIP LOCKED</tt> syntax specific to this dialect.
+	 *
+	 * @return The appropriate <tt>FOR UPDATE SKIP LOCKED</tt> clause string.
+	 */
+	private String getForUpdateSkipLockedString() {
+		// by default we report no support for NOWAIT lock semantics
+		return getForUpdateString();
+	}
 
 	/**
 	 * Get the <tt>FOR UPDATE OF column_list NOWAIT</tt> fragment appropriate
@@ -1253,6 +1266,17 @@ public abstract class Dialect {
 	 * @return The appropriate <tt>FOR UPDATE colunm_list NOWAIT</tt> clause string.
 	 */
 	public String getForUpdateNowaitString(String aliases) {
+		return getForUpdateString( aliases );
+	}
+
+	/**
+	 * Get the <tt>FOR UPDATE OF column_list SKIP LOCKED</tt> fragment appropriate
+	 * for this dialect given the aliases of the columns to be write locked.
+	 *
+	 * @param aliases The columns to be write locked.
+	 * @return The appropriate <tt>FOR UPDATE colunm_list SKIP LOCKED</tt> clause string.
+	 */
+	public String getForUpdateSkipLockedString(String aliases) {
 		return getForUpdateString( aliases );
 	}
 

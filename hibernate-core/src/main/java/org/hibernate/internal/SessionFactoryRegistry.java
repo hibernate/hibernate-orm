@@ -120,11 +120,11 @@ public class SessionFactoryRegistry {
 	}
 
 	public SessionFactory getSessionFactory(String uuid) {
-        LOG.debugf( "Lookup: uid=%s", uuid );
+		LOG.debugf( "Lookup: uid=%s", uuid );
 		final SessionFactory sessionFactory = sessionFactoryMap.get( uuid );
-		if ( sessionFactory == null ) {
+		if ( sessionFactory == null && LOG.isDebugEnabled() ) {
 			LOG.debugf( "Not found: %s", uuid );
-            LOG.debugf( sessionFactoryMap.toString() );
+			LOG.debugf( sessionFactoryMap.toString() );
 		}
 		return sessionFactory;
 	}

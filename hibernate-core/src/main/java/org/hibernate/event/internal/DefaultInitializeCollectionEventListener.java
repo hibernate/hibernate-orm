@@ -46,8 +46,7 @@ import org.hibernate.pretty.MessageHelper;
  */
 public class DefaultInitializeCollectionEventListener implements InitializeCollectionEventListener {
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
-                                                                       DefaultInitializeCollectionEventListener.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, DefaultInitializeCollectionEventListener.class.getName() );
 
 	/**
 	 * called by a collection that wants to initialize itself
@@ -61,12 +60,13 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 		CollectionEntry ce = source.getPersistenceContext().getCollectionEntry(collection);
 		if (ce==null) throw new HibernateException("collection was evicted");
 		if ( !collection.wasInitialized() ) {
-            if (LOG.isTraceEnabled()) LOG.trace("Initializing collection "
-                                                + MessageHelper.collectionInfoString(ce.getLoadedPersister(),
-                                                                                     ce.getLoadedKey(),
-                                                                                     source.getFactory()));
+			if ( LOG.isTraceEnabled() ) {
+				LOG.tracev( "Initializing collection {0}",
+						MessageHelper.collectionInfoString( ce.getLoadedPersister(), ce.getLoadedKey(),
+						source.getFactory() ) );
+			}
 
-            LOG.trace("Checking second-level cache");
+			LOG.trace( "Checking second-level cache" );
 			final boolean foundInCache = initializeCollectionFromCache(
 					ce.getLoadedKey(),
 					ce.getLoadedPersister(),
@@ -74,11 +74,13 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 					source
 				);
 
-            if (foundInCache) LOG.trace("Collection initialized from cache");
+			if ( foundInCache ) {
+				LOG.trace( "Collection initialized from cache" );
+			}
 			else {
-                LOG.trace("Collection not cached");
+				LOG.trace( "Collection not cached" );
 				ce.getLoadedPersister().initialize( ce.getLoadedKey(), source );
-                LOG.trace("Collection initialized");
+				LOG.trace( "Collection initialized" );
 
 				if ( source.getFactory().getStatistics().isStatisticsEnabled() ) {
 					source.getFactory().getStatisticsImplementor().fetchCollection(
@@ -106,7 +108,7 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 			SessionImplementor source) {
 
 		if ( !source.getEnabledFilters().isEmpty() && persister.isAffectedByEnabledFilters( source ) ) {
-            LOG.trace("Disregarding cached version (if any) of collection due to enabled filters");
+			LOG.trace( "Disregarding cached version (if any) of collection due to enabled filters" );
 			return false;
 		}
 

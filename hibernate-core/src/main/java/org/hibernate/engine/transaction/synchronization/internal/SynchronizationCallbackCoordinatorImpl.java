@@ -44,7 +44,7 @@ import org.hibernate.internal.CoreMessageLogger;
  */
 public class SynchronizationCallbackCoordinatorImpl implements SynchronizationCallbackCoordinator {
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, SynchronizationCallbackCoordinatorImpl.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, SynchronizationCallbackCoordinatorImpl.class.getName() );
 
 	private final TransactionCoordinator transactionCoordinator;
 
@@ -82,7 +82,7 @@ public class SynchronizationCallbackCoordinatorImpl implements SynchronizationCa
 	// sync callbacks ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	public void beforeCompletion() {
-        LOG.trace("Transaction before completion callback");
+		LOG.trace( "Transaction before completion callback" );
 
 		boolean flush;
 		try {
@@ -100,7 +100,7 @@ public class SynchronizationCallbackCoordinatorImpl implements SynchronizationCa
 
 		try {
 			if ( flush ) {
-                LOG.trace("Automatically flushing session");
+				LOG.trace( "Automatically flushing session" );
 				transactionCoordinator.getTransactionContext().managedFlush();
 			}
 		}
@@ -119,7 +119,7 @@ public class SynchronizationCallbackCoordinatorImpl implements SynchronizationCa
 	}
 
 	public void afterCompletion(int status) {
-        LOG.trace("Transaction after completion callback [status=" + status + "]");
+		LOG.tracev( "Transaction after completion callback [status={0}]", status );
 
 		try {
 			afterCompletionAction.doAction( transactionCoordinator, status );
@@ -127,8 +127,8 @@ public class SynchronizationCallbackCoordinatorImpl implements SynchronizationCa
 		}
 		finally {
 			reset();
-            if (transactionContext().shouldAutoClose() && !transactionContext().isClosed()) {
-                LOG.trace("Automatically closing session");
+			if ( transactionContext().shouldAutoClose() && !transactionContext().isClosed() ) {
+				LOG.trace( "Automatically closing session" );
 				transactionContext().managedClose();
 			}
 		}
@@ -150,12 +150,12 @@ public class SynchronizationCallbackCoordinatorImpl implements SynchronizationCa
 
 	private static final ExceptionMapper STANDARD_EXCEPTION_MAPPER = new ExceptionMapper() {
 		public RuntimeException mapStatusCheckFailure(String message, SystemException systemException) {
-            LOG.error(LOG.unableToDetermineTransactionStatus(), systemException);
+			LOG.error( LOG.unableToDetermineTransactionStatus(), systemException );
 			return new TransactionException( "could not determine transaction status in beforeCompletion()", systemException );
 		}
 
 		public RuntimeException mapManagedFlushFailure(String message, RuntimeException failure) {
-            LOG.unableToPerformManagedFlush(failure.getMessage());
+			LOG.unableToPerformManagedFlush( failure.getMessage() );
 			return failure;
 		}
 	};

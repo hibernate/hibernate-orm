@@ -78,7 +78,7 @@ public class DerbyDialect extends DB2Dialect {
 			driverVersionMinor = ( (Integer) minorVersionGetter.invoke( null, ReflectHelper.NO_PARAMS ) ).intValue();
 		}
 		catch ( Exception e ) {
-            LOG.unableToLoadDerbyDriver(e.getMessage());
+			LOG.unableToLoadDerbyDriver( e.getMessage() );
 			driverVersionMajor = -1;
 			driverVersionMinor = -1;
 		}

@@ -124,7 +124,9 @@ public final class QuerySplitter {
 
 		}
 		String[] results = StringHelper.multiply( templateQuery.toString(), placeholders.iterator(), replacements.iterator() );
-        if (results.length == 0) LOG.noPersistentClassesFound(query);
+		if ( results.length == 0 ) {
+			LOG.noPersistentClassesFound( query );
+		}
 		return results;
 	}
 	

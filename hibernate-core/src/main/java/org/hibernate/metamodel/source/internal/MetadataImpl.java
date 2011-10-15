@@ -435,7 +435,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		if ( importName == null || entityName == null ) {
 			throw new IllegalArgumentException( "Import name or entity name is null" );
 		}
-		LOG.trace( "Import: " + importName + " -> " + entityName );
+		LOG.tracev( "Import: {0} -> {1}", importName, entityName );
 		String old = imports.put( importName, entityName );
 		if ( old != null ) {
 			LOG.debug( "import name [" + importName + "] overrode previous [{" + old + "}]" );

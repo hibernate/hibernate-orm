@@ -38,18 +38,11 @@ import org.hibernate.internal.CoreMessageLogger;
  */
 public class LazyInitializationException extends HibernateException {
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
-                                                                       LazyInitializationException.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, LazyInitializationException.class.getName() );
 
 	public LazyInitializationException(String msg) {
-		super(msg);
-        LOG.trace(msg, this);
+		super( msg );
+		LOG.trace( msg, this );
 	}
 
 }
-
-
-
-
-
-

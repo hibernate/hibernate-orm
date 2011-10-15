@@ -55,7 +55,7 @@ public class JavassistClassTransformer extends AbstractClassTransformerImpl {
 	}
 
 	@Override
-    protected byte[] doTransform(
+	protected byte[] doTransform(
 			ClassLoader loader,
 			String className,
 			Class classBeingRedefined,
@@ -67,12 +67,12 @@ public class JavassistClassTransformer extends AbstractClassTransformerImpl {
 			classfile = new ClassFile( new DataInputStream( new ByteArrayInputStream( classfileBuffer ) ) );
 		}
 		catch (IOException e) {
-            LOG.unableToBuildEnhancementMetamodel(className);
+			LOG.unableToBuildEnhancementMetamodel( className );
 			return classfileBuffer;
 		}
 		FieldTransformer transformer = getFieldTransformer( classfile );
 		if ( transformer != null ) {
-            LOG.debugf("Enhancing %s", className);
+			LOG.debugf( "Enhancing %s", className );
 			DataOutputStream out = null;
 			try {
 				transformer.transform( classfile );
@@ -82,7 +82,7 @@ public class JavassistClassTransformer extends AbstractClassTransformerImpl {
 				return byteStream.toByteArray();
 			}
 			catch (Exception e) {
-                LOG.unableToTransformClass(e.getMessage());
+				LOG.unableToTransformClass( e.getMessage() );
 				throw new HibernateException( "Unable to transform class: " + e.getMessage() );
 			}
 			finally {

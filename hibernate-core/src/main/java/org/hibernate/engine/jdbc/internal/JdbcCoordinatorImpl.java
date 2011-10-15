@@ -132,7 +132,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	@Override
 	public Connection close() {
 		if ( currentBatch != null ) {
-            LOG.closingUnreleasedBatch();
+			LOG.closingUnreleasedBatch();
 			currentBatch.release();
 		}
 		return logicalConnection.close();
@@ -205,7 +205,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 				}
 			}
 			catch (SQLException e) {
-                LOG.debug("Error closing connection proxy", e);
+				LOG.debug( "Error closing connection proxy", e );
 			}
 		}
 	}

@@ -342,7 +342,7 @@ class FromElementType {
 					enabledFilters,
 					propertyMapping.toColumns( tableAlias, path )
 			);
-            LOG.debugf("toColumns(%s,%s) : subquery = %s", tableAlias, path, subquery);
+			LOG.debugf( "toColumns(%s,%s) : subquery = %s", tableAlias, path, subquery );
 			return new String[]{"(" + subquery + ")"};
 		}
         if (forceAlias) {
@@ -371,9 +371,9 @@ class FromElementType {
 			}
             return propertyMapping.toColumns(tableAlias, path);
         } else {
-            String[] columns = propertyMapping.toColumns(path);
-            LOG.trace("Using non-qualified column reference [" + path + " -> (" + ArrayHelper.toString(columns) + ")]");
-            return columns;
+			String[] columns = propertyMapping.toColumns( path );
+			LOG.tracev( "Using non-qualified column reference [{0} -> ({1})]", path, ArrayHelper.toString( columns ) );
+			return columns;
         }
 	}
 

@@ -37,7 +37,7 @@ import org.hibernate.internal.CoreMessageLogger;
 public abstract class FromReferenceNode extends AbstractSelectExpression
         implements ResolvableNode, DisplayableNode, InitializeableNode, PathNode {
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, FromReferenceNode.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, FromReferenceNode.class.getName() );
 
 	private FromElement fromElement;
 	private boolean resolved = false;
@@ -70,7 +70,9 @@ public abstract class FromReferenceNode extends AbstractSelectExpression
 
 	public void setResolved() {
 		this.resolved = true;
-        LOG.debugf("Resolved : %s -> %s", this.getPath(), this.getText());
+		if ( LOG.isDebugEnabled() ) {
+			LOG.debugf( "Resolved : %s -> %s", this.getPath(), this.getText() );
+		}
 	}
 
 	public String getDisplayText() {

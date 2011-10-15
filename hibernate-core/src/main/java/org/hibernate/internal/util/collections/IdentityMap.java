@@ -27,8 +27,8 @@ package org.hibernate.internal.util.collections;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -53,8 +53,8 @@ public final class IdentityMap<K,V> implements Map<K,V> {
 	 * @param size The size of the map
 	 * @return Map
 	 */
-	public static <K,V> IdentityMap<K,V> instantiate(int size) {
-		return new IdentityMap<K,V>( new HashMap<IdentityKey<K>,V>( size ) );
+	public static <K,V> Map<K,V> instantiate(int size) {
+		return new java.util.IdentityHashMap<K, V>( size );
 	}
 
 	/**
@@ -278,8 +278,8 @@ public final class IdentityMap<K,V> implements Map<K,V> {
 		return map.toString();
 	}
 
-	public static <K,V> IdentityMap<V,K> invert(IdentityMap<K,V> map) {
-		IdentityMap<V,K> result = instantiate( map.size() );
+	public static <K,V> Map<V,K> invert(Map<K,V> map) {
+		Map<V,K> result = new IdentityHashMap( map.size() );
 		for ( Entry<K, V> entry : map.entrySet() ) {
 			result.put( entry.getValue(), entry.getKey() );
 		}

@@ -111,7 +111,7 @@ public class ResultSetWrapperProxy implements InvocationHandler {
 				sqlExceptionHelper.logExceptions( ex, buf.toString() );
 			}
 			catch ( NoSuchMethodException ex ) {
-                LOG.unableToSwitchToMethodUsingColumnIndex(method);
+				LOG.unableToSwitchToMethodUsingColumnIndex( method );
 			}
 		}
 		return invokeMethod( method, args );

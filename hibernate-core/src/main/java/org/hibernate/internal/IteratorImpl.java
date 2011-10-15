@@ -129,7 +129,7 @@ public final class IteratorImpl implements HibernateIterator {
 		try {
 			boolean isHolder = holderInstantiator.isRequired();
 
-            LOG.debugf("Assembling results");
+			LOG.debugf( "Assembling results" );
 			if ( single && !isHolder ) {
 				currentResult = types[0].nullSafeGet( rs, names[0], session, null );
 			}
@@ -148,7 +148,7 @@ public final class IteratorImpl implements HibernateIterator {
 			}
 
 			postNext();
-            LOG.debugf("Returning current results");
+			LOG.debugf( "Returning current results" );
 			return currentResult;
 		}
 		catch (SQLException sqle) {

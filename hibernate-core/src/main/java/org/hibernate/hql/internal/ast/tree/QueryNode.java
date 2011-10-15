@@ -98,7 +98,7 @@ public class QueryNode extends AbstractRestrictableStatement implements SelectEx
 
 			// if there is no order by, make one
 			if ( orderByClause == null ) {
-                LOG.debugf("getOrderByClause() : Creating a new ORDER BY clause");
+				LOG.debugf( "getOrderByClause() : Creating a new ORDER BY clause" );
 				orderByClause = ( OrderByClause ) ASTUtil.create( getWalker().getASTFactory(), SqlTokenTypes.ORDER, "ORDER" );
 
 				// Find the WHERE; if there is no WHERE, find the FROM...

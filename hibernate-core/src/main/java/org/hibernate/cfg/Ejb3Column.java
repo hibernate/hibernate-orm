@@ -184,7 +184,7 @@ public class Ejb3Column {
 
 	public void bind() {
 		if ( StringHelper.isNotEmpty( formulaString ) ) {
-            LOG.debugf("Binding formula %s", formulaString);
+			LOG.debugf( "Binding formula %s", formulaString );
 			formula = new Formula();
 			formula.setFormula( formulaString );
 		}
@@ -192,7 +192,9 @@ public class Ejb3Column {
 			initMappingColumn(
 					logicalColumnName, propertyName, length, precision, scale, nullable, sqlType, unique, true
 			);
-            LOG.debugf("Binding column: %s", toString());
+			if ( LOG.isDebugEnabled() ) {
+				LOG.debugf( "Binding column: %s", toString() );
+			}
 		}
 	}
 
@@ -423,7 +425,7 @@ public class Ejb3Column {
 					throw new AnnotationException( "AttributeOverride.column() should override all columns for now" );
 				}
 				actualCols = overriddenCols.length == 0 ? null : overriddenCols;
-                LOG.debugf("Column(s) overridden for property %s", inferredData.getPropertyName());
+				LOG.debugf( "Column(s) overridden for property %s", inferredData.getPropertyName() );
 			}
 			if ( actualCols == null ) {
 				columns = buildImplicitColumn(

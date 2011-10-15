@@ -109,7 +109,9 @@ public class SequenceStructure implements DatabaseStructure {
 							rs.next();
 							IntegralDataTypeHolder value = IdentifierGeneratorHelper.getIntegralDataTypeHolder( numberType );
 							value.initialize( rs, 1 );
-                            LOG.debugf("Sequence value obtained: %s", value.makeValue());
+							if ( LOG.isDebugEnabled() ) {
+								LOG.debugf( "Sequence value obtained: %s", value.makeValue() );
+							}
 							return value;
 						}
 						finally {

@@ -153,7 +153,7 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 					lobCreatorBuilder = new LobCreatorBuilder( configValues, connection );
 				}
 				catch ( SQLException sqle ) {
-                    LOG.unableToObtainConnectionMetadata(sqle.getMessage());
+					LOG.unableToObtainConnectionMetadata( sqle.getMessage() );
 				}
 				finally {
 					if ( connection != null ) {
@@ -162,7 +162,7 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 				}
 			}
 			catch ( SQLException sqle ) {
-                LOG.unableToObtainConnectionToQueryMetadata(sqle.getMessage());
+				LOG.unableToObtainConnectionToQueryMetadata( sqle.getMessage() );
 				dialect = dialectFactory.buildDialect( configValues, null );
 			}
 			catch ( UnsupportedOperationException uoe ) {
@@ -268,13 +268,13 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 				return (SchemaNameResolver) ReflectHelper.getDefaultConstructor( resolverClass ).newInstance();
 			}
 			catch ( ClassNotFoundException e ) {
-                LOG.unableToLocateConfiguredSchemaNameResolver(resolverClassName, e.toString());
+				LOG.unableToLocateConfiguredSchemaNameResolver( resolverClassName, e.toString() );
 			}
 			catch ( InvocationTargetException e ) {
-                LOG.unableToInstantiateConfiguredSchemaNameResolver(resolverClassName, e.getTargetException().toString());
+				LOG.unableToInstantiateConfiguredSchemaNameResolver( resolverClassName, e.getTargetException().toString() );
 			}
 			catch ( Exception e ) {
-                LOG.unableToInstantiateConfiguredSchemaNameResolver(resolverClassName, e.toString());
+				LOG.unableToInstantiateConfiguredSchemaNameResolver( resolverClassName, e.toString() );
 			}
 		}
 		return null;

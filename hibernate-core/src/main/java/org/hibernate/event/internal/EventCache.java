@@ -51,7 +51,7 @@ import org.hibernate.internal.util.collections.IdentityMap;
  * @author Gail Badner
  */
 class EventCache implements Map {
-	private IdentityMap entityToCopyMap = IdentityMap.instantiate(10);
+	private Map entityToCopyMap = IdentityMap.instantiate(10);
 		// key is an entity involved with the operation performed by the listener;
 		// value can be either a copy of the entity or the entity itself
 
@@ -245,7 +245,7 @@ class EventCache implements Map {
 	 * Returns the copy-entity mappings
 	 * @return the copy-entity mappings
 	 */
-	public IdentityMap invertMap() {
+	public Map invertMap() {
 		return IdentityMap.invert( entityToCopyMap );
 	}
 }

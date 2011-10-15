@@ -89,7 +89,7 @@ public class JdbcIsolationDelegate implements IsolationDelegate {
 					}
 				}
 				catch ( Exception ignore ) {
-                    LOG.unableToRollbackConnection(ignore);
+					LOG.unableToRollbackConnection( ignore );
 				}
 
 				if ( e instanceof HibernateException ) {
@@ -108,14 +108,14 @@ public class JdbcIsolationDelegate implements IsolationDelegate {
 						connection.setAutoCommit( true );
 					}
 					catch ( Exception ignore ) {
-                        LOG.trace("was unable to reset connection back to auto-commit");
+						LOG.trace( "was unable to reset connection back to auto-commit" );
 					}
 				}
 				try {
 					connectionProvider().closeConnection( connection );
 				}
 				catch ( Exception ignore ) {
-                    LOG.unableToReleaseIsolatedConnection(ignore);
+					LOG.unableToReleaseIsolatedConnection( ignore );
 				}
 			}
 		}

@@ -133,13 +133,11 @@ public class TransactionCoordinatorImpl implements TransactionCoordinator {
 	}
 
 	public void afterTransaction(TransactionImplementor hibernateTransaction, int status) {
-                if (LOG.isTraceEnabled()) {
-		   LOG.trace( "after transaction completion" );
-                }
+		LOG.trace( "after transaction completion" );
 
 		final boolean success = JtaStatusHelper.isCommitted( status );
 
-                transactionEnvironment.getStatisticsImplementor().endTransaction( success );
+		transactionEnvironment.getStatisticsImplementor().endTransaction( success );
 
 		getJdbcCoordinator().afterTransaction();
 
@@ -173,11 +171,11 @@ public class TransactionCoordinatorImpl implements TransactionCoordinator {
 	}
 
 	private TransactionFactory transactionFactory() {
-                return transactionFactory;
+		return transactionFactory;
 	}
 
 	private TransactionEnvironment getTransactionEnvironment() {
-                return transactionEnvironment;
+		return transactionEnvironment;
 	}
 
 	@Override
@@ -220,9 +218,7 @@ public class TransactionCoordinatorImpl implements TransactionCoordinator {
 
 		if ( ! transactionContext.shouldAutoJoinTransaction() ) {
 			if ( currentHibernateTransaction.getJoinStatus() != JoinStatus.MARKED_FOR_JOINED ) {
-                                if (LOG.isDebugEnabled()) {
-				   LOG.debug( "Skipping JTA sync registration due to auto join checking" );
-                                }
+				LOG.debug( "Skipping JTA sync registration due to auto join checking" );
 				return;
 			}
 		}
@@ -239,26 +235,20 @@ public class TransactionCoordinatorImpl implements TransactionCoordinator {
 		}
 
 		// Can we resister a synchronization
-		if ( ! jtaPlatform.canRegisterSynchronization() ) {
-                        if (LOG.isTraceEnabled()) {
-			   LOG.trace(  "registered JTA platform says we cannot currently resister synchronization; skipping" );
-                        }
+		if ( !jtaPlatform.canRegisterSynchronization() ) {
+			LOG.trace( "registered JTA platform says we cannot currently resister synchronization; skipping" );
 			return;
 		}
 
 		// Should we resister a synchronization
 		if ( ! transactionFactory().isJoinableJtaTransaction( this, currentHibernateTransaction ) ) {
-                        if (LOG.isTraceEnabled()) {
-			   LOG.trace( "TransactionFactory reported no JTA transaction to join; skipping Synchronization registration" );
-                        }
+			LOG.trace( "TransactionFactory reported no JTA transaction to join; skipping Synchronization registration" );
 			return;
 		}
 
 		jtaPlatform.registerSynchronization( new RegisteredSynchronization( getSynchronizationCallbackCoordinator() ) );
 		synchronizationRegistered = true;
-                if (LOG.isDebugEnabled()) {
-		   LOG.debug( "successfully registered Synchronization" );
-                }
+		LOG.debug( "successfully registered Synchronization" );
 	}
 
 	@Override
@@ -270,9 +260,7 @@ public class TransactionCoordinatorImpl implements TransactionCoordinator {
 	}
 
 	public void pulse() {
-                if (LOG.isTraceEnabled()) {
-		   LOG.trace( "Starting transaction coordinator pulse" );
-                }
+		LOG.trace( "Starting transaction coordinator pulse" );
 		if ( transactionFactory().compatibleWithJtaSynchronization() ) {
 			// the configured transaction strategy says it supports callbacks via JTA synchronization, so attempt to
 			// register JTA synchronization if possible

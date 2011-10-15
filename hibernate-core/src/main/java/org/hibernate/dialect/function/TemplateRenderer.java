@@ -99,9 +99,10 @@ public class TemplateRenderer {
 	@SuppressWarnings({ "UnusedDeclaration" })
 	public String render(List args, SessionFactoryImplementor factory) {
 		int numberOfArguments = args.size();
-        if (getAnticipatedNumberOfArguments() > 0 && numberOfArguments != getAnticipatedNumberOfArguments()) LOG.missingArguments(getAnticipatedNumberOfArguments(),
-                                                                                                                                  numberOfArguments);
-		StringBuffer buf = new StringBuffer();
+		if ( getAnticipatedNumberOfArguments() > 0 && numberOfArguments != getAnticipatedNumberOfArguments() ) {
+			LOG.missingArguments( getAnticipatedNumberOfArguments(), numberOfArguments );
+		}
+		StringBuilder buf = new StringBuilder();
 		for ( int i = 0; i < chunks.length; ++i ) {
 			if ( i < paramIndexes.length ) {
 				final int index = paramIndexes[i] - 1;

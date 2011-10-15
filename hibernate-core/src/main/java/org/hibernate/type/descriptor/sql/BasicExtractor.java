@@ -40,7 +40,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  */
 public abstract class BasicExtractor<J> implements ValueExtractor<J> {
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, BasicExtractor.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, BasicExtractor.class.getName() );
 
 	private final JavaTypeDescriptor<J> javaDescriptor;
 	private final SqlTypeDescriptor sqlDescriptor;
@@ -64,15 +64,13 @@ public abstract class BasicExtractor<J> implements ValueExtractor<J> {
 	public J extract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
 		final J value = doExtract( rs, name, options );
 		if ( value == null || rs.wasNull() ) {
-                        if (LOG.isTraceEnabled()) {
-                           LOG.trace("Found [null] as column [" + name + "]");
-                        }
+			LOG.tracev( "Found [null] as column [{0}]", name );
 			return null;
 		}
 		else {
-                        if (LOG.isTraceEnabled()) {
-                           LOG.trace("Found [" + getJavaDescriptor().extractLoggableRepresentation(value) + "] as column [" + name + "]");
-                        }
+			if ( LOG.isTraceEnabled() ) {
+				LOG.tracev( "Found [{0}] as column [{1}]", getJavaDescriptor().extractLoggableRepresentation( value ), name );
+			}
 			return value;
 		}
 	}

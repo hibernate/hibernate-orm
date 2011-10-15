@@ -132,7 +132,9 @@ public abstract class AbstractScrollableResults implements ScrollableResults {
 			}
 			catch( Throwable ignore ) {
 				// ignore this error for now
-                LOG.trace("Exception trying to cleanup load context : " + ignore.getMessage());
+				if ( LOG.isTraceEnabled() ) {
+					LOG.tracev( "Exception trying to cleanup load context : {0}", ignore.getMessage() );
+				}
 			}
 		}
 	}

@@ -144,7 +144,7 @@ public class MethodNode extends AbstractSelectExpression implements FunctionNode
 
 		SqlNode expr = ( SqlNode ) path;
 		Type type = expr.getDataType();
-        LOG.debugf("collectionProperty() :  name=%s type=%s", name, type);
+		LOG.debugf( "collectionProperty() :  name=%s type=%s", name, type );
 
 		resolveCollectionProperty( expr );
 	}
@@ -206,7 +206,7 @@ public class MethodNode extends AbstractSelectExpression implements FunctionNode
 		QueryableCollection queryableCollection = collectionFromElement.getQueryableCollection();
 
 		String path = collectionNode.getPath() + "[]." + propertyName;
-        LOG.debugf("Creating elements for %s", path);
+		LOG.debugf( "Creating elements for %s", path );
 
 		fromElement = collectionFromElement;
 		if ( !collectionFromElement.isCollectionOfValuesOrComponents() ) {

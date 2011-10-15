@@ -52,7 +52,7 @@ import org.hibernate.type.Type;
  */
 public class IndexNode extends FromReferenceNode {
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, IndexNode.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, IndexNode.class.getName() );
 
 	public void setScalarColumnText(int i) throws SemanticException {
 		throw new UnsupportedOperationException( "An IndexNode cannot generate column text!" );
@@ -69,7 +69,7 @@ public class IndexNode extends FromReferenceNode {
 
 			FromReferenceNode collectionNode = ( FromReferenceNode ) getFirstChild();
 			String path = collectionNode.getPath() + "[]." + propertyName;
-            LOG.debugf("Creating join for many-to-many elements for %s", path);
+			LOG.debugf( "Creating join for many-to-many elements for %s", path );
 			FromElementFactory factory = new FromElementFactory( fromElement.getFromClause(), fromElement, path );
 			// This will add the new from element to the origin.
 			FromElement elementJoin = factory.createElementJoin( queryableCollection );
@@ -110,8 +110,11 @@ public class IndexNode extends FromReferenceNode {
 		if ( elem == null ) {
 			FromElementFactory factory = new FromElementFactory( fromClause, fromElement, path );
 			elem = factory.createCollectionElementsJoin( queryableCollection, elementTable );
-            LOG.debugf("No FROM element found for the elements of collection join path %s, created %s", path, elem);
-        } else LOG.debugf("FROM element found for collection join path %s", path);
+			LOG.debugf( "No FROM element found for the elements of collection join path %s, created %s", path, elem );
+		}
+		else {
+			LOG.debugf( "FROM element found for collection join path %s", path );
+		}
 
 		// The 'from element' that represents the elements of the collection.
 		setFromElement( fromElement );

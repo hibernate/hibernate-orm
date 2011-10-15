@@ -341,7 +341,7 @@ public class TableBinder {
 			 * Get the columns of the mapped-by property
 			 * copy them and link the copy to the actual value
 			 */
-            LOG.debugf("Retrieving property %s.%s", associatedClass.getEntityName(), mappedByProperty);
+			LOG.debugf( "Retrieving property %s.%s", associatedClass.getEntityName(), mappedByProperty );
 
 			final Property property = associatedClass.getRecursiveProperty( columns[0].getMappedBy() );
 			Iterator mappedByColumns;
@@ -448,7 +448,9 @@ public class TableBinder {
 					Iterator idColItr = referencedEntity.getKey().getColumnIterator();
 					org.hibernate.mapping.Column col;
 					Table table = referencedEntity.getTable(); //works cause the pk has to be on the primary table
-                    if (!idColItr.hasNext()) LOG.debugf("No column in the identifier!");
+					if ( !idColItr.hasNext() ) {
+						LOG.debugf( "No column in the identifier!" );
+					}
 					while ( idColItr.hasNext() ) {
 						boolean match = false;
 						//for each PK column, find the associated FK column.
@@ -528,7 +530,7 @@ public class TableBinder {
 	 * @deprecated Use {@link #buildUniqueConstraintHolders} instead
 	 */
 	@Deprecated
-    @SuppressWarnings({ "JavaDoc" })
+	@SuppressWarnings({ "JavaDoc" })
 	public static List<String[]> buildUniqueConstraints(UniqueConstraint[] constraintsArray) {
 		List<String[]> result = new ArrayList<String[]>();
 		if ( constraintsArray.length != 0 ) {

@@ -67,7 +67,6 @@ import org.hibernate.type.Type;
 public class ActionQueue {
 
 	static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, ActionQueue.class.getName());
-	static final boolean TRACE = LOG.isTraceEnabled();
 	private static final int INIT_QUEUE_LIST_SIZE = 5;
 
 	private SessionImplementor session;
@@ -414,45 +413,45 @@ public class ActionQueue {
 	 * @throws IOException Indicates an error writing to the stream
 	 */
 	public void serialize(ObjectOutputStream oos) throws IOException {
-		if ( TRACE ) LOG.trace( "Serializing action-queue" );
+		LOG.trace( "Serializing action-queue" );
 
 		int queueSize = insertions.size();
-		if ( TRACE ) LOG.trace( "Starting serialization of [" + queueSize + "] insertions entries" );
+		LOG.tracev( "Starting serialization of [{0}] insertions entries", queueSize );
 		oos.writeInt( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			oos.writeObject( insertions.get( i ) );
 		}
 
 		queueSize = deletions.size();
-		if ( TRACE ) LOG.trace( "Starting serialization of [" + queueSize + "] deletions entries" );
+		LOG.tracev( "Starting serialization of [{0}] deletions entries", queueSize );
 		oos.writeInt( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			oos.writeObject( deletions.get( i ) );
 		}
 
 		queueSize = updates.size();
-		if ( TRACE ) LOG.trace( "Starting serialization of [" + queueSize + "] updates entries" );
+		LOG.tracev( "Starting serialization of [{0}] updates entries", queueSize );
 		oos.writeInt( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			oos.writeObject( updates.get( i ) );
 		}
 
 		queueSize = collectionUpdates.size();
-		if ( TRACE ) LOG.trace( "Starting serialization of [" + queueSize + "] collectionUpdates entries" );
+		LOG.tracev( "Starting serialization of [{0}] collectionUpdates entries", queueSize );
 		oos.writeInt( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			oos.writeObject( collectionUpdates.get( i ) );
 		}
 
 		queueSize = collectionRemovals.size();
-		if ( TRACE ) LOG.trace( "Starting serialization of [" + queueSize + "] collectionRemovals entries" );
+		LOG.tracev( "Starting serialization of [{0}] collectionRemovals entries", queueSize );
 		oos.writeInt( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			oos.writeObject( collectionRemovals.get( i ) );
 		}
 
 		queueSize = collectionCreations.size();
-		if ( TRACE ) LOG.trace( "Starting serialization of [" + queueSize + "] collectionCreations entries" );
+		LOG.tracev( "Starting serialization of [{0}] collectionCreations entries", queueSize );
 		oos.writeInt( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			oos.writeObject( collectionCreations.get( i ) );
@@ -475,11 +474,11 @@ public class ActionQueue {
 	public static ActionQueue deserialize(
 			ObjectInputStream ois,
 			SessionImplementor session) throws IOException, ClassNotFoundException {
-		if ( TRACE ) LOG.trace( "Dedeserializing action-queue" );
+		LOG.tracev( "Dedeserializing action-queue" );
 		ActionQueue rtn = new ActionQueue( session );
 
 		int queueSize = ois.readInt();
-		if ( TRACE ) LOG.trace( "Starting deserialization of [" + queueSize + "] insertions entries" );
+		LOG.tracev( "Starting deserialization of [{0}] insertions entries", queueSize );
 		rtn.insertions = new ArrayList<Executable>( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			EntityAction action = ( EntityAction ) ois.readObject();
@@ -488,7 +487,7 @@ public class ActionQueue {
 		}
 
 		queueSize = ois.readInt();
-		if ( TRACE ) LOG.trace( "Starting deserialization of [" + queueSize + "] deletions entries" );
+		LOG.tracev( "Starting deserialization of [{0}] deletions entries", queueSize );
 		rtn.deletions = new ArrayList<Executable>( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			EntityAction action = ( EntityAction ) ois.readObject();
@@ -497,7 +496,7 @@ public class ActionQueue {
 		}
 
 		queueSize = ois.readInt();
-		if ( TRACE ) LOG.trace( "Starting deserialization of [" + queueSize + "] updates entries" );
+		LOG.tracev( "Starting deserialization of [{0}] updates entries", queueSize );
 		rtn.updates = new ArrayList<Executable>( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			EntityAction action = ( EntityAction ) ois.readObject();
@@ -506,7 +505,7 @@ public class ActionQueue {
 		}
 
 		queueSize = ois.readInt();
-		if ( TRACE ) LOG.trace( "Starting deserialization of [" + queueSize + "] collectionUpdates entries" );
+		LOG.tracev( "Starting deserialization of [{0}] collectionUpdates entries", queueSize );
 		rtn.collectionUpdates = new ArrayList<Executable>( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			CollectionAction action = (CollectionAction) ois.readObject();
@@ -515,7 +514,7 @@ public class ActionQueue {
 		}
 
 		queueSize = ois.readInt();
-		if ( TRACE ) LOG.trace( "Starting deserialization of [" + queueSize + "] collectionRemovals entries" );
+		LOG.tracev( "Starting deserialization of [{0}] collectionRemovals entries", queueSize );
 		rtn.collectionRemovals = new ArrayList<Executable>( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			CollectionAction action = ( CollectionAction ) ois.readObject();
@@ -524,7 +523,7 @@ public class ActionQueue {
 		}
 
 		queueSize = ois.readInt();
-		if ( TRACE ) LOG.trace( "Starting deserialization of [" + queueSize + "] collectionCreations entries" );
+		LOG.tracev( "Starting deserialization of [{0}] collectionCreations entries", queueSize );
 		rtn.collectionCreations = new ArrayList<Executable>( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			CollectionAction action = ( CollectionAction ) ois.readObject();

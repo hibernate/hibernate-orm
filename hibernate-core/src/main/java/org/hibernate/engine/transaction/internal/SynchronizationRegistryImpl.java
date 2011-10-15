@@ -38,8 +38,7 @@ import org.hibernate.internal.CoreMessageLogger;
  */
 public class SynchronizationRegistryImpl implements SynchronizationRegistry {
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
-                                                                       SynchronizationRegistryImpl.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, SynchronizationRegistryImpl.class.getName() );
 
 	private LinkedHashSet<Synchronization> synchronizations;
 
@@ -54,7 +53,9 @@ public class SynchronizationRegistryImpl implements SynchronizationRegistry {
 		}
 
 		boolean added = synchronizations.add( synchronization );
-        if (!added) LOG.synchronizationAlreadyRegistered(synchronization);
+		if ( !added ) {
+			LOG.synchronizationAlreadyRegistered( synchronization );
+		}
 	}
 
 	@Override
@@ -65,7 +66,7 @@ public class SynchronizationRegistryImpl implements SynchronizationRegistry {
 					synchronization.beforeCompletion();
 				}
 				catch ( Throwable t ) {
-                    LOG.synchronizationFailed(synchronization, t);
+					LOG.synchronizationFailed( synchronization, t );
 				}
 			}
 		}
@@ -79,7 +80,7 @@ public class SynchronizationRegistryImpl implements SynchronizationRegistry {
 					synchronization.afterCompletion( status );
 				}
 				catch ( Throwable t ) {
-                    LOG.synchronizationFailed(synchronization, t);
+					LOG.synchronizationFailed( synchronization, t );
 				}
 			}
 		}

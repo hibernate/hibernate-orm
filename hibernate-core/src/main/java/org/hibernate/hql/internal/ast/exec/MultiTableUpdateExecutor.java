@@ -73,7 +73,7 @@ public class MultiTableUpdateExecutor extends AbstractStatementExecutor {
 		this.persister = fromElement.getQueryable();
 
 		this.idInsertSelect = generateIdInsertSelect( persister, bulkTargetAlias, updateStatement.getWhereClause() );
-        LOG.trace("Generated ID-INSERT-SELECT SQL (multi-table update) : " + idInsertSelect);
+		LOG.tracev( "Generated ID-INSERT-SELECT SQL (multi-table update) : {0}", idInsertSelect );
 
 		String[] tableNames = persister.getConstraintOrderedTableNameClosure();
 		String[][] columnNames = persister.getContraintOrderedTableKeyColumnClosure();

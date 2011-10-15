@@ -100,15 +100,17 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 					Object transientEntity = ( ( Map.Entry ) it.next() ).getKey();
 					String transientEntityName = event.getSession().guessEntityName( transientEntity );
 					transientEntityNames.add( transientEntityName );
-                    LOG.trace("Transient instance could not be processed by merge when checking nullability: "
-                              + transientEntityName + "[" + transientEntity + "]");
+					LOG.tracev(
+							"Transient instance could not be processed by merge when checking nullability: {0} [{1}]",
+							transientEntityName, transientEntity );
 				}
-                if (isNullabilityCheckedGlobal(event.getSession())) throw new TransientObjectException(
+				if ( isNullabilityCheckedGlobal( event.getSession() ) )
+					throw new TransientObjectException(
 						"one or more objects is an unsaved transient instance - save transient instance(s) before merging: " +
 						transientEntityNames );
-                LOG.trace("Retry saving transient instances without checking nullability");
-                // failures will be detected later...
-                retryMergeTransientEntities(event, transientCopyCache, copyCache, false);
+				LOG.trace( "Retry saving transient instances without checking nullability" );
+				// failures will be detected later...
+				retryMergeTransientEntities( event, transientCopyCache, copyCache, false );
 			}
 		}
 		copyCache.clear();
@@ -127,9 +129,10 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 			EntityEntry copyEntry = event.getSession().getPersistenceContext().getEntry( copy );
 			if ( copyEntry == null ) {
 				// entity name will not be available for non-POJO entities
-				// TODO: cache the entity name somewhere so that it is available to this exception
-                LOG.trace("Transient instance could not be processed by merge: " + event.getSession().guessEntityName(copy) + "["
-                          + entity + "]");
+				if ( LOG.isTraceEnabled() ) {
+					LOG.tracev( "Transient instance could not be processed by merge: {0} [{1}]",
+							event.getSession().guessEntityName( copy ), entity );
+				}
 				// merge did not cascade to this entity; it's in copyCache because a
 				// different entity has a non-nullable reference to this entity;
 				// this entity should not be put in transientCopyCache, because it was
@@ -198,7 +201,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 			if ( original instanceof HibernateProxy ) {
 				LazyInitializer li = ( (HibernateProxy) original ).getHibernateLazyInitializer();
 				if ( li.isUninitialized() ) {
-                    LOG.trace("Ignoring uninitialized proxy");
+					LOG.trace( "Ignoring uninitialized proxy" );
 					event.setResult( source.load( li.getEntityName(), li.getIdentifier() ) );
 					return; //EARLY EXIT!
 				}
@@ -212,12 +215,12 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 
 			if ( copyCache.containsKey( entity ) &&
 					( copyCache.isOperatedOn( entity ) ) ) {
-                LOG.trace("Already in merge process");
+				LOG.trace( "Already in merge process" );
 				event.setResult( entity );
 			}
 			else {
 				if ( copyCache.containsKey( entity ) ) {
-                    LOG.trace("Already in copyCache; setting in merge process");
+					LOG.trace( "Already in copyCache; setting in merge process" );
 					copyCache.setOperatedOn( entity, true );
 				}
 				event.setEntity( entity );
@@ -272,7 +275,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 	}
 
 	protected void entityIsPersistent(MergeEvent event, Map copyCache) {
-        LOG.trace("Ignoring persistent instance");
+		LOG.trace( "Ignoring persistent instance" );
 
 		//TODO: check that entry.getIdentifier().equals(requestedId)
 
@@ -290,7 +293,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 
 	protected void entityIsTransient(MergeEvent event, Map copyCache) {
 
-        LOG.trace("Merging transient instance");
+		LOG.trace( "Merging transient instance" );
 
 		final Object entity = event.getEntity();
 		final EventSource source = event.getSession();
@@ -313,7 +316,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 			Map copyCache,
 			boolean isNullabilityChecked) {
 
-        LOG.trace("Merging transient instance");
+		LOG.trace( "Merging transient instance" );
 
 		final EntityPersister persister = source.getEntityPersister( entityName, entity );
 
@@ -428,7 +431,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 	}
 	protected void entityIsDetached(MergeEvent event, Map copyCache) {
 
-        LOG.trace("Merging detached instance");
+		LOG.trace( "Merging detached instance" );
 
 		final Object entity = event.getEntity();
 		final EventSource source = event.getSession();

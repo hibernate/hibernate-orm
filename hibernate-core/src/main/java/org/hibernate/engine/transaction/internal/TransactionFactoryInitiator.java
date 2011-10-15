@@ -65,12 +65,12 @@ public class TransactionFactoryInitiator<T extends TransactionImplementor> imple
 		}
 
 		if ( strategy == null ) {
-            LOG.usingDefaultTransactionStrategy();
+			LOG.usingDefaultTransactionStrategy();
 			return new JdbcTransactionFactory();
 		}
 
 		final String strategyClassName = mapLegacyNames( strategy.toString() );
-        LOG.transactionStrategy(strategyClassName);
+		LOG.transactionStrategy( strategyClassName );
 
 		ClassLoaderService classLoaderService = registry.getService( ClassLoaderService.class );
 		try {

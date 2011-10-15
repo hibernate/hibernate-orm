@@ -254,9 +254,11 @@ public class OptimizerFactory {
 
 		public HiLoOptimizer(Class returnClass, int incrementSize) {
 			super( returnClass, incrementSize );
-            if (incrementSize < 1) throw new HibernateException("increment size cannot be less than 1");
-            LOG.trace("Creating hilo optimizer with [incrementSize=" + incrementSize + "; returnClass=" + returnClass.getName()
-                      + "]");
+			if ( incrementSize < 1 )
+				throw new HibernateException( "increment size cannot be less than 1" );
+			if ( LOG.isTraceEnabled() ) {
+				LOG.tracev( "Creating hilo optimizer with [incrementSize={0}; returnClass={1}]", incrementSize, returnClass.getName() );
+			}
 		}
 
 		/**
@@ -331,9 +333,11 @@ public class OptimizerFactory {
 
 		public LegacyHiLoAlgorithmOptimizer(Class returnClass, int incrementSize) {
 			super( returnClass, incrementSize );
-            if (incrementSize < 1) throw new HibernateException("increment size cannot be less than 1");
-            LOG.trace("Creating hilo optimizer (legacy) with [incrementSize=" + incrementSize + "; returnClass="
-                      + returnClass.getName() + "]");
+			if ( incrementSize < 1 )
+				throw new HibernateException( "increment size cannot be less than 1" );
+			if ( LOG.isTraceEnabled() ) {
+				LOG.tracev( "Creating hilo optimizer (legacy) with [incrementSize={0}; returnClass={1}]", incrementSize, returnClass.getName() );
+			}
 			maxLo = incrementSize;
 			lo = maxLo+1;
 		}
@@ -398,8 +402,9 @@ public class OptimizerFactory {
 			if ( incrementSize < 1 ) {
 				throw new HibernateException( "increment size cannot be less than 1" );
 			}
-            LOG.trace("Creating pooled optimizer with [incrementSize=" + incrementSize + "; returnClass=" + returnClass.getName()
-                      + "]");
+			if ( LOG.isTraceEnabled() ) {
+				LOG.tracev( "Creating pooled optimizer with [incrementSize={0}; returnClass={1}]", incrementSize, returnClass.getName() );
+			}
 		}
 
 		/**
@@ -469,8 +474,9 @@ public class OptimizerFactory {
 			if ( incrementSize < 1 ) {
 				throw new HibernateException( "increment size cannot be less than 1" );
 			}
-            LOG.trace("Creating pooled optimizer (lo) with [incrementSize=" + incrementSize + "; returnClass="
-                      + returnClass.getName() + "]");
+			if ( LOG.isTraceEnabled() ) {
+				LOG.tracev( "Creating pooled optimizer (lo) with [incrementSize={0}; returnClass=]", incrementSize, returnClass.getName() );
+			}
 		}
 
 		public Serializable generate(AccessCallback callback) {

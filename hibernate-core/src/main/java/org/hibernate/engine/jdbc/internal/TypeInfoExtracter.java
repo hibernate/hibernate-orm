@@ -78,19 +78,19 @@ public class TypeInfoExtracter {
 				}
 			}
 			catch ( SQLException e ) {
-                LOG.unableToAccessTypeInfoResultSet(e.toString());
+				LOG.unableToAccessTypeInfoResultSet( e.toString() );
 			}
 			finally {
 				try {
 					resultSet.close();
 				}
 				catch ( SQLException e ) {
-                    LOG.unableToReleaseTypeInfoResultSet();
+					LOG.unableToReleaseTypeInfoResultSet();
 				}
 			}
 		}
 		catch ( SQLException e ) {
-            LOG.unableToRetrieveTypeInfoResultSet(e.toString());
+			LOG.unableToRetrieveTypeInfoResultSet( e.toString() );
 		}
 
 		return typeInfoSet;

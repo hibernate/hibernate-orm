@@ -114,7 +114,7 @@ public class SequenceGenerator implements PersistentIdentifierGenerator, Configu
 					rs.next();
 					IntegralDataTypeHolder result = buildHolder();
 					result.initialize( rs, 1 );
-                    LOG.debugf("Sequence identifier generated: %s", result);
+					LOG.debugf( "Sequence identifier generated: %s", result );
 					return result;
 				}
 				finally {

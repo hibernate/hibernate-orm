@@ -43,7 +43,7 @@ import org.hibernate.persister.collection.QueryableCollection;
  */
 public class BasicCollectionLoader extends CollectionLoader {
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, BasicCollectionLoader.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, BasicCollectionLoader.class.getName() );
 
 	public BasicCollectionLoader(
 			QueryableCollection collectionPersister,
@@ -79,6 +79,8 @@ public class BasicCollectionLoader extends CollectionLoader {
 
 		postInstantiate();
 
-        LOG.debugf("Static select for collection %s: %s", collectionPersister.getRole(), getSQLString());
+		if ( LOG.isDebugEnabled() ) {
+			LOG.debugf( "Static select for collection %s: %s", collectionPersister.getRole(), getSQLString() );
+		}
 	}
 }

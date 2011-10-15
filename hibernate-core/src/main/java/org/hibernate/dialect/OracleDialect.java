@@ -41,11 +41,11 @@ import org.hibernate.sql.OracleJoinFragment;
 @Deprecated
 public class OracleDialect extends Oracle9Dialect {
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, OracleDialect.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, OracleDialect.class.getName());
 
 	public OracleDialect() {
 		super();
-        LOG.deprecatedOracleDialect();
+		LOG.deprecatedOracleDialect();
 		// Oracle8 and previous define only a "DATE" type which
 		//      is used to represent all aspects of date/time
 		registerColumnType( Types.TIMESTAMP, "date" );

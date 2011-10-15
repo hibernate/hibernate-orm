@@ -134,7 +134,7 @@ public class LiteralProcessor implements HqlSqlTokenTypes {
 	}
 
 	private void setSQLValue(DotNode node, String text, String value) {
-        LOG.debugf("setSQLValue() %s -> %s", text, value);
+		LOG.debugf( "setSQLValue() %s -> %s", text, value );
 		node.setFirstChild( null );	// Chop off the rest of the tree.
 		node.setType( SqlTokenTypes.SQL_TOKEN );
 		node.setText(value);
@@ -142,7 +142,9 @@ public class LiteralProcessor implements HqlSqlTokenTypes {
 	}
 
 	private void setConstantValue(DotNode node, String text, Object value) {
-        LOG.debugf("setConstantValue() %s -> %s %s", text, value, value.getClass().getName());
+		if ( LOG.isDebugEnabled() ) {
+			LOG.debugf( "setConstantValue() %s -> %s %s", text, value, value.getClass().getName() );
+		}
 		node.setFirstChild( null );	// Chop off the rest of the tree.
 		if ( value instanceof String ) {
 			node.setType( SqlTokenTypes.QUOTED_STRING );
@@ -210,7 +212,9 @@ public class LiteralProcessor implements HqlSqlTokenTypes {
 	private void processLiteral(AST constant) {
 		String replacement = ( String ) walker.getTokenReplacements().get( constant.getText() );
 		if ( replacement != null ) {
-            LOG.debugf("processConstant() : Replacing '%s' with '%s'", constant.getText(), replacement);
+			if ( LOG.isDebugEnabled() ) {
+				LOG.debugf("processConstant() : Replacing '%s' with '%s'", constant.getText(), replacement);
+			}
 			constant.setText( replacement );
 		}
 	}
@@ -241,8 +245,9 @@ public class LiteralProcessor implements HqlSqlTokenTypes {
 					return Integer.valueOf( text ).toString();
 				}
 				catch( NumberFormatException e ) {
-                    LOG.trace("Could not format incoming text [" + text
-                              + "] as a NUM_INT; assuming numeric overflow and attempting as NUM_LONG");
+					LOG.tracev(
+							"Could not format incoming text [{0}] as a NUM_INT; assuming numeric overflow and attempting as NUM_LONG",
+							text );
 				}
 			}
 			String literalValue = text;

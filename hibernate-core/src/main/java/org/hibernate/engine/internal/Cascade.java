@@ -257,7 +257,7 @@ public final class Cascade {
 							if ( LOG.isTraceEnabled() ) {
 								final Serializable id = entry.getPersister().getIdentifier( loadedValue, eventSource );
 								final String description = MessageHelper.infoString( entityName, id );
-								LOG.trace( "Deleting orphaned entity instance: " + description );
+								LOG.tracev( "Deleting orphaned entity instance: {0}", description );
 							}
 							eventSource.delete( entityName, loadedValue, false, new HashSet() );
 						}
@@ -418,7 +418,7 @@ public final class Cascade {
 			}
 
 			if ( LOG.isTraceEnabled() ) {
-				LOG.trace( "Done cascade " + action + " for collection: " + collectionType.getRole() );
+				LOG.tracev( "Done cascade {0} for collection: {1}", action, collectionType.getRole() );
 			}
 		}
 
@@ -429,7 +429,7 @@ public final class Cascade {
 
 		if ( deleteOrphans ) { // handle orphaned entities!!
 			if ( LOG.isTraceEnabled() ) {
-				LOG.trace( "Deleting orphans for collection: " + collectionType.getRole() );
+				LOG.tracev( "Deleting orphans for collection: {0}", collectionType.getRole() );
 			}
 			// we can do the cast since orphan-delete does not apply to:
 			// 1. newly instantiated collections
@@ -438,7 +438,7 @@ public final class Cascade {
 			deleteOrphans( entityName, (PersistentCollection) child );
 
 			if ( LOG.isTraceEnabled() ) {
-				LOG.trace( "Done deleting orphans for collection: " + collectionType.getRole() );
+				LOG.tracev( "Done deleting orphans for collection: {0}", collectionType.getRole() );
 			}
 		}
 	}

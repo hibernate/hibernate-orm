@@ -39,7 +39,7 @@ import org.hibernate.internal.util.StringHelper;
  */
 public final class PathHelper {
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, PathHelper.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, PathHelper.class.getName() );
 
 	private PathHelper() {
 	}
@@ -64,7 +64,9 @@ public final class PathHelper {
 				lhs = ASTUtil.createBinarySubtree( factory, HqlSqlTokenTypes.DOT, ".", lhs, child );
 			}
 		}
-        if (LOG.isDebugEnabled()) LOG.debugf("parsePath() : %s -> %s", path, ASTUtil.getDebugString(lhs));
+		if ( LOG.isDebugEnabled() ) {
+			LOG.debugf( "parsePath() : %s -> %s", path, ASTUtil.getDebugString( lhs ) );
+		}
 		return lhs;
 	}
 

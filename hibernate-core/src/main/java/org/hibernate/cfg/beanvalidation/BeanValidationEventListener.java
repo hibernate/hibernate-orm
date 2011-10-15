@@ -139,7 +139,7 @@ public class BeanValidationEventListener
 						new HashSet<ConstraintViolation<?>>( constraintViolations.size() );
 				Set<String> classNames = new HashSet<String>();
 				for ( ConstraintViolation<?> violation : constraintViolations ) {
-                    LOG.trace(violation);
+					LOG.trace( violation );
 					propagatedViolations.add( violation );
 					classNames.add( violation.getLeafBean().getClass().getName() );
 				}

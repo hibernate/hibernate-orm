@@ -38,8 +38,7 @@ import org.hibernate.internal.CoreMessageLogger;
  */
 public class OrderByFragmentTranslator {
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
-                                                                       OrderByFragmentTranslator.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, OrderByFragmentTranslator.class.getName() );
 
 	public final TranslationContext context;
 
@@ -67,9 +66,9 @@ public class OrderByFragmentTranslator {
 			throw new HibernateException( "Unable to parse order-by fragment", t );
 		}
 
-        if (LOG.isTraceEnabled()) {
+		if ( LOG.isTraceEnabled() ) {
 			ASTPrinter printer = new ASTPrinter( OrderByTemplateTokenTypes.class );
-            LOG.trace(printer.showAsString(parser.getAST(), "--- {order-by fragment} ---"));
+			LOG.trace( printer.showAsString( parser.getAST(), "--- {order-by fragment} ---" ) );
 		}
 
 		OrderByFragmentRenderer renderer = new OrderByFragmentRenderer();

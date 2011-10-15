@@ -128,17 +128,19 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 			return performSave( entity, null, persister, true, anything, source, requiresImmediateIdAccess );
 		}
 		else {
-            // TODO: define toString()s for generators
-            if (LOG.isDebugEnabled()) LOG.debugf("Generated identifier: %s, using strategy: %s",
-                                                 persister.getIdentifierType().toLoggableString(generatedId, source.getFactory()),
-                                                 persister.getIdentifierGenerator().getClass().getName());
+			// TODO: define toString()s for generators
+			if ( LOG.isDebugEnabled() ) {
+				LOG.debugf( "Generated identifier: %s, using strategy: %s",
+						persister.getIdentifierType().toLoggableString( generatedId, source.getFactory() ),
+						persister.getIdentifierGenerator().getClass().getName() );
+			}
 
 			return performSave( entity, generatedId, persister, false, anything, source, true );
 		}
 	}
 
 	/**
-	 * Ppepares the save call by checking the session caches for a pre-existing
+	 * Prepares the save call by checking the session caches for a pre-existing
 	 * entity and performing any lifecycle callbacks.
 	 *
 	 * @param entity The entity to be saved.
@@ -164,8 +166,8 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 			EventSource source,
 			boolean requiresImmediateIdAccess) {
 
-        if ( LOG.isTraceEnabled() ) {
-			LOG.trace("Saving " + MessageHelper.infoString(persister, id, source.getFactory()));
+		if ( LOG.isTraceEnabled() ) {
+			LOG.tracev( "Saving {0}", MessageHelper.infoString( persister, id, source.getFactory() ) );
 		}
 
 		final EntityKey key;
@@ -205,9 +207,9 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 		// Sub-insertions should occur before containing insertion so
 		// Try to do the callback now
 		if ( persister.implementsLifecycle() ) {
-            LOG.debugf("Calling onSave()");
+			LOG.debugf( "Calling onSave()" );
 			if ( ( ( Lifecycle ) entity ).onSave( source ) ) {
-                LOG.debugf("Insertion vetoed by onSave()");
+				LOG.debugf( "Insertion vetoed by onSave()" );
 				return true;
 			}
 		}
@@ -264,7 +266,7 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 		cascadeBeforeSave( source, persister, entity, anything );
 
 		if ( useIdentityColumn && !shouldDelayIdentityInserts ) {
-            LOG.trace("Executing insertions");
+			LOG.trace( "Executing insertions" );
 			source.getActionQueue().executeInserts();
 		}
 
@@ -298,14 +300,14 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 					values, entity, persister, source, shouldDelayIdentityInserts
 			);
 			if ( !shouldDelayIdentityInserts ) {
-                LOG.debugf("Executing identity-insert immediately");
+				LOG.debugf( "Executing identity-insert immediately" );
 				source.getActionQueue().execute( insert );
 				id = insert.getGeneratedId();
 				key = source.generateEntityKey( id, persister );
 				source.getPersistenceContext().checkUniqueness( key, entity );
 			}
 			else {
-                LOG.debugf("Delaying identity-insert due to no transaction in progress");
+				LOG.debugf( "Delaying identity-insert due to no transaction in progress" );
 				source.getActionQueue().addAction( insert );
 				key = insert.getDelayedEntityKey();
 			}
@@ -488,25 +490,32 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 			//the entity is associated with the session, so check its status
 			if ( entry.getStatus() != Status.DELETED ) {
 				// do nothing for persistent instances
-                if (LOG.isTraceEnabled()) LOG.trace("Persistent instance of: " + getLoggableName(entityName, entity));
+				if ( LOG.isTraceEnabled() ) {
+					LOG.tracev( "Persistent instance of: {0}", getLoggableName( entityName, entity ) );
+				}
 				return EntityState.PERSISTENT;
 			}
-            // ie. e.status==DELETED
-            if (LOG.isTraceEnabled()) LOG.trace("Deleted instance of: " + getLoggableName(entityName, entity));
-            return EntityState.DELETED;
-
+			// ie. e.status==DELETED
+			if ( LOG.isTraceEnabled() ) {
+				LOG.tracev( "Deleted instance of: {0}", getLoggableName( entityName, entity ) );
+			}
+			return EntityState.DELETED;
 		}
-        // the object is transient or detached
+		// the object is transient or detached
 
 		// the entity is not associated with the session, so
-        // try interceptor and unsaved-value
+		// try interceptor and unsaved-value
 
 		if ( ForeignKeys.isTransient( entityName, entity, getAssumedUnsaved(), source )) {
-            if (LOG.isTraceEnabled()) LOG.trace("Transient instance of: " + getLoggableName(entityName, entity));
-            return EntityState.TRANSIENT;
+			if ( LOG.isTraceEnabled() ) {
+				LOG.tracev( "Transient instance of: {0}", getLoggableName( entityName, entity ) );
+			}
+			return EntityState.TRANSIENT;
 		}
-        if (LOG.isTraceEnabled()) LOG.trace("Detached instance of: " + getLoggableName(entityName, entity));
-        return EntityState.DETACHED;
+		if ( LOG.isTraceEnabled() ) {
+			LOG.tracev( "Detached instance of: {0}", getLoggableName( entityName, entity ) );
+		}
+		return EntityState.DETACHED;
 	}
 
 	protected String getLoggableName(String entityName, Object entity) {

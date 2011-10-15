@@ -41,7 +41,7 @@ import org.hibernate.internal.CoreMessageLogger;
  */
 public class BatchingBatch extends AbstractBatchImpl {
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, BatchingBatch.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, BatchingBatch.class.getName() );
 
 	// IMPL NOTE : Until HHH-5797 is fixed, there will only be 1 statement in a batch
 
@@ -94,7 +94,7 @@ public class BatchingBatch extends AbstractBatchImpl {
 	@Override
 	protected void doExecuteBatch() {
 		if ( batchPosition == 0 ) {
-		    LOG.debugf("No batched statements to execute");
+			LOG.debugf( "No batched statements to execute" );
 		}
 		else {
 			LOG.debugf( "Executing batch size: %s", batchPosition );
@@ -110,7 +110,7 @@ public class BatchingBatch extends AbstractBatchImpl {
 					checkRowCounts( statement.executeBatch(), statement );
 				}
 				catch ( SQLException e ) {
-		            LOG.debugf( "SQLException escaped proxy", e );
+					LOG.debugf( "SQLException escaped proxy", e );
 					throw sqlExceptionHelper().convert( e, "could not perform addBatch", entry.getKey() );
 				}
 			}
@@ -127,7 +127,7 @@ public class BatchingBatch extends AbstractBatchImpl {
 	private void checkRowCounts(int[] rowCounts, PreparedStatement ps) throws SQLException, HibernateException {
 		int numberOfRowCounts = rowCounts.length;
 		if ( numberOfRowCounts != batchPosition ) {
-            LOG.unexpectedRowCounts();
+			LOG.unexpectedRowCounts();
 		}
 		for ( int i = 0; i < numberOfRowCounts; i++ ) {
 			getKey().getExpectation().verifyOutcome( rowCounts[i], ps, i );

@@ -40,31 +40,34 @@ import org.hibernate.internal.CoreMessageLogger;
  */
 public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener implements AutoFlushEventListener {
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
-                                                                       DefaultAutoFlushEventListener.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, DefaultAutoFlushEventListener.class.getName() );
 
-    /** Handle the given auto-flush event.
-     *
-     * @param event The auto-flush event to be handled.
-     * @throws HibernateException
-     */
+	/**
+	 * Handle the given auto-flush event.
+	 * 
+	 * @param event
+	 *            The auto-flush event to be handled.
+	 * @throws HibernateException
+	 */
 	public void onAutoFlush(AutoFlushEvent event) throws HibernateException {
 		final EventSource source = event.getSession();
 		if ( flushMightBeNeeded(source) ) {
 			final int oldSize = source.getActionQueue().numberOfCollectionRemovals();
 			flushEverythingToExecutions(event);
 			if ( flushIsReallyNeeded(event, source) ) {
-                LOG.trace("Need to execute flush");
+				LOG.trace( "Need to execute flush" );
 
 				performExecutions(source);
 				postFlush(source);
 				// note: performExecutions() clears all collectionXxxxtion
 				// collections (the collection actions) in the session
 
-                if (source.getFactory().getStatistics().isStatisticsEnabled()) source.getFactory().getStatisticsImplementor().flush();
+				if ( source.getFactory().getStatistics().isStatisticsEnabled() ) {
+					source.getFactory().getStatisticsImplementor().flush();
+				}
 			}
 			else {
-                LOG.trace("Don't need to execute flush");
+				LOG.trace( "Don't need to execute flush" );
 				source.getActionQueue().clearFromFlushNeededCheck( oldSize );
 			}
 

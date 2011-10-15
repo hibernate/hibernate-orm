@@ -170,8 +170,8 @@ public class HQLQueryPlan implements Serializable {
 	public List performList(
 			QueryParameters queryParameters,
 	        SessionImplementor session) throws HibernateException {
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("Find: " + getSourceQuery());
+		if ( LOG.isTraceEnabled() ) {
+			LOG.tracev( "Find: {0}", getSourceQuery() );
 			queryParameters.traceParameters( session.getFactory() );
 		}
 		boolean hasLimit = queryParameters.getRowSelection() != null &&
@@ -179,7 +179,7 @@ public class HQLQueryPlan implements Serializable {
 		boolean needsLimit = hasLimit && translators.length > 1;
 		QueryParameters queryParametersToUse;
 		if ( needsLimit ) {
-            LOG.needsLimit();
+			LOG.needsLimit();
 			RowSelection selection = new RowSelection();
 			selection.setFetchSize( queryParameters.getRowSelection().getFetchSize() );
 			selection.setTimeout( queryParameters.getRowSelection().getTimeout() );
@@ -229,8 +229,8 @@ public class HQLQueryPlan implements Serializable {
 	public Iterator performIterate(
 			QueryParameters queryParameters,
 	        EventSource session) throws HibernateException {
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("Iterate: " + getSourceQuery());
+		if ( LOG.isTraceEnabled() ) {
+			LOG.tracev( "Iterate: {0}", getSourceQuery() );
 			queryParameters.traceParameters( session.getFactory() );
 		}
 		if ( translators.length == 0 ) {
@@ -255,8 +255,8 @@ public class HQLQueryPlan implements Serializable {
 	public ScrollableResults performScroll(
 			QueryParameters queryParameters,
 	        SessionImplementor session) throws HibernateException {
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("Iterate: " + getSourceQuery());
+		if ( LOG.isTraceEnabled() ) {
+			LOG.tracev( "Iterate: {0}", getSourceQuery() );
 			queryParameters.traceParameters( session.getFactory() );
 		}
 		if ( translators.length != 1 ) {
@@ -271,11 +271,13 @@ public class HQLQueryPlan implements Serializable {
 
 	public int performExecuteUpdate(QueryParameters queryParameters, SessionImplementor session)
 			throws HibernateException {
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("Execute update: " + getSourceQuery());
+		if ( LOG.isTraceEnabled() ) {
+			LOG.tracev( "Execute update: {0}", getSourceQuery() );
 			queryParameters.traceParameters( session.getFactory() );
 		}
-        if (translators.length != 1) LOG.splitQueries(getSourceQuery(), translators.length);
+		if ( translators.length != 1 ) {
+			LOG.splitQueries( getSourceQuery(), translators.length );
+		}
 		int result = 0;
 		for ( int i = 0; i < translators.length; i++ ) {
 			result += translators[i].executeUpdate( queryParameters, session );
@@ -287,7 +289,7 @@ public class HQLQueryPlan implements Serializable {
 		long start = System.currentTimeMillis();
 		ParamLocationRecognizer recognizer = ParamLocationRecognizer.parseLocations( hql );
 		long end = System.currentTimeMillis();
-        LOG.trace("HQL param location recognition took " + (end - start) + " mills (" + hql + ")");
+		LOG.tracev( "HQL param location recognition took {0} mills ({1})", ( end - start ), hql );
 
 		int ordinalParamCount = parameterTranslations.getOrdinalParameterCount();
 		int[] locations = ArrayHelper.toIntArray( recognizer.getOrdinalParameterLocationList() );

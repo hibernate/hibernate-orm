@@ -50,7 +50,7 @@ import org.hibernate.type.Type;
 public class PersistentArrayHolder extends AbstractPersistentCollection {
 	protected Object array;
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, PersistentArrayHolder.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, PersistentArrayHolder.class.getName());
 
 	//just to help out during the load (ugly, i know)
 	private transient Class elementClass;
@@ -71,7 +71,7 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 				Array.set( result, i, persister.getElementType().deepCopy(elt, persister.getFactory()) );
 			}
 			catch (IllegalArgumentException iae) {
-                LOG.invalidArrayElementType(iae.getMessage());
+				LOG.invalidArrayElementType( iae.getMessage() );
 				throw new HibernateException( "Array element type error", iae );
 			}
 		}
@@ -83,7 +83,7 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 	}
 
 	@Override
-    public Collection getOrphans(Serializable snapshot, String entityName) throws HibernateException {
+	public Collection getOrphans(Serializable snapshot, String entityName) throws HibernateException {
 		Object[] sn = (Object[]) snapshot;
 		Object[] arr = (Object[]) array;
 		ArrayList result = new ArrayList();
@@ -126,7 +126,7 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 		return list.iterator();
 	}
 	@Override
-    public boolean empty() {
+	public boolean empty() {
 		return false;
 	}
 
@@ -147,7 +147,7 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 	}
 
 	@Override
-    public void beginRead() {
+	public void beginRead() {
 		super.beginRead();
 		tempList = new ArrayList();
 	}

@@ -43,7 +43,7 @@ import org.hibernate.service.spi.Configurable;
  */
 public class BatchBuilderImpl implements BatchBuilder, Configurable {
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, BatchBuilderImpl.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, BatchBuilderImpl.class.getName() );
 
 	private int size;
 
@@ -65,7 +65,7 @@ public class BatchBuilderImpl implements BatchBuilder, Configurable {
 
 	@Override
 	public Batch buildBatch(BatchKey key, JdbcCoordinator jdbcCoordinator) {
-        LOG.tracef("Building batch [size=%s]", size);
+		LOG.tracef( "Building batch [size=%s]", size );
 		return size > 1
 				? new BatchingBatch( key, jdbcCoordinator, size )
 				: new NonBatchingBatch( key, jdbcCoordinator );

@@ -123,7 +123,7 @@ public class SequenceIdentityGenerator extends SequenceGenerator
         public Insert setComment(String comment) {
 			// don't allow comments on these insert statements as comments totally
 			// blow up the Oracle getGeneratedKeys "support" :(
-            LOG.disallowingInsertStatementComment();
+			LOG.disallowingInsertStatementComment();
 			return this;
 		}
 	}

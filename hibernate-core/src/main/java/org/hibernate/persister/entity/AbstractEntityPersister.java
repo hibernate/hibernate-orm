@@ -1159,12 +1159,8 @@ public abstract class AbstractEntityPersister
 			throw new HibernateException( "entity is not associated with the session: " + id );
 		}
 
-        if ( LOG.isTraceEnabled() ) {
-			LOG.trace(
-					"Initializing lazy properties of: " +
-							MessageHelper.infoString( this, id, getFactory() ) +
-							", field access: " + fieldName
-			);
+		if ( LOG.isTraceEnabled() ) {
+			LOG.tracev( "Initializing lazy properties of: {0}, field access: {1}", MessageHelper.infoString( this, id, getFactory() ), fieldName );
 		}
 
 		if ( hasCache() ) {
@@ -1190,9 +1186,9 @@ public abstract class AbstractEntityPersister
 			final Serializable id,
 			final EntityEntry entry) {
 
-        if (!hasLazyProperties()) throw new AssertionFailure("no lazy properties");
+		if ( !hasLazyProperties() ) throw new AssertionFailure( "no lazy properties" );
 
-        LOG.trace("Initializing lazy properties from datastore");
+		LOG.trace( "Initializing lazy properties from datastore" );
 
 		try {
 
@@ -1234,7 +1230,7 @@ public abstract class AbstractEntityPersister
 				}
 			}
 
-            LOG.trace("Done initializing lazy properties");
+			LOG.trace( "Done initializing lazy properties" );
 
 			return result;
 
@@ -1257,7 +1253,7 @@ public abstract class AbstractEntityPersister
 			final CacheEntry cacheEntry
 	) {
 
-        LOG.trace("Initializing lazy properties from second-level cache");
+		LOG.trace( "Initializing lazy properties from second-level cache" );
 
 		Object result = null;
 		Serializable[] disassembledValues = cacheEntry.getDisassembledState();
@@ -1273,7 +1269,7 @@ public abstract class AbstractEntityPersister
 			}
 		}
 
-        LOG.trace("Done initializing lazy properties");
+		LOG.trace( "Done initializing lazy properties" );
 
 		return result;
 	}
@@ -1451,8 +1447,9 @@ public abstract class AbstractEntityPersister
 	public Object[] getDatabaseSnapshot(Serializable id, SessionImplementor session)
 			throws HibernateException {
 
-        if (LOG.isTraceEnabled()) LOG.trace("Getting current persistent state for: "
-                                            + MessageHelper.infoString(this, id, getFactory()));
+		if ( LOG.isTraceEnabled() ) {
+			LOG.tracev( "Getting current persistent state for: {0}", MessageHelper.infoString( this, id, getFactory() ) );
+		}
 
 		try {
 			PreparedStatement ps = session.getTransactionCoordinator()
@@ -1712,7 +1709,9 @@ public abstract class AbstractEntityPersister
 	 */
 	public Object getCurrentVersion(Serializable id, SessionImplementor session) throws HibernateException {
 
-        if (LOG.isTraceEnabled()) LOG.trace("Getting version: " + MessageHelper.infoString(this, id, getFactory()));
+		if ( LOG.isTraceEnabled() ) {
+			LOG.tracev( "Getting version: {0}", MessageHelper.infoString( this, id, getFactory() ) );
+		}
 
 		try {
 			PreparedStatement st = session.getTransactionCoordinator()
@@ -2585,7 +2584,9 @@ public abstract class AbstractEntityPersister
 	        final SessionImplementor session,
 	        int index) throws SQLException, HibernateException {
 
-        if (LOG.isTraceEnabled()) LOG.trace("Dehydrating entity: " + MessageHelper.infoString(this, id, getFactory()));
+		if ( LOG.isTraceEnabled() ) {
+			LOG.tracev( "Dehydrating entity: {0}", MessageHelper.infoString( this, id, getFactory() ) );
+		}
 
 		for ( int i = 0; i < entityMetamodel.getPropertySpan(); i++ ) {
 			if ( includeProperty[i] && isPropertyOfTable( i, j ) ) {
@@ -2622,7 +2623,9 @@ public abstract class AbstractEntityPersister
 	        final boolean allProperties,
 	        final SessionImplementor session) throws SQLException, HibernateException {
 
-        if (LOG.isTraceEnabled()) LOG.trace("Hydrating entity: " + MessageHelper.infoString(this, id, getFactory()));
+		if ( LOG.isTraceEnabled() ) {
+			LOG.tracev( "Hydrating entity: {0}", MessageHelper.infoString( this, id, getFactory() ) );
+		}
 
 		final AbstractEntityPersister rootPersister = (AbstractEntityPersister) rootLoadable;
 
@@ -2736,9 +2739,11 @@ public abstract class AbstractEntityPersister
 	        final Object object,
 	        final SessionImplementor session) throws HibernateException {
 
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("Inserting entity: " + getEntityName() + " (native id)");
-            if (isVersioned()) LOG.trace("Version: " + Versioning.getVersion(fields, this));
+		if ( LOG.isTraceEnabled() ) {
+			LOG.tracev( "Inserting entity: {0} (native id)", getEntityName() );
+			if ( isVersioned() ) {
+				LOG.tracev( "Version: {0}", Versioning.getVersion( fields, this ) );
+			}
 		}
 
 		Binder binder = new Binder() {
@@ -2796,9 +2801,10 @@ public abstract class AbstractEntityPersister
 			return;
 		}
 
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("Inserting entity: " + MessageHelper.infoString(this, id, getFactory()));
-            if (j == 0 && isVersioned()) LOG.trace("Version: " + Versioning.getVersion(fields, this));
+		if ( LOG.isTraceEnabled() ) {
+			LOG.tracev( "Inserting entity: {0}", MessageHelper.infoString( this, id, getFactory() ) );
+			if ( j == 0 && isVersioned() )
+				LOG.tracev( "Version: {0}", Versioning.getVersion( fields, this ) );
 		}
 
 		// TODO : shouldn't inserts be Expectations.NONE?
@@ -2938,9 +2944,10 @@ public abstract class AbstractEntityPersister
 		final boolean callable = isUpdateCallable( j );
 		final boolean useVersion = j == 0 && isVersioned();
 
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("Updating entity: " + MessageHelper.infoString(this, id, getFactory()));
-            if (useVersion) LOG.trace("Existing version: " + oldVersion + " -> New version:" + fields[getVersionProperty()]);
+		if ( LOG.isTraceEnabled() ) {
+			LOG.tracev( "Updating entity: {0}", MessageHelper.infoString( this, id, getFactory() ) );
+			if ( useVersion )
+				LOG.tracev( "Existing version: {0} -> New version:{1}", oldVersion, fields[getVersionProperty()] );
 		}
 
 		try {
@@ -3055,13 +3062,16 @@ public abstract class AbstractEntityPersister
 			);
 		}
 
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("Deleting entity: " + MessageHelper.infoString(this, id, getFactory()));
-            if (useVersion) LOG.trace("Version: " + version);
+		if ( LOG.isTraceEnabled() ) {
+			LOG.tracev( "Deleting entity: {0}", MessageHelper.infoString( this, id, getFactory() ) );
+			if ( useVersion )
+				LOG.tracev( "Version: {0}", version );
 		}
 
 		if ( isTableCascadeDeleteEnabled( j ) ) {
-            LOG.trace("Delete handled by foreign key constraint: " + getTableName(j));
+			if ( LOG.isTraceEnabled() ) {
+				LOG.tracev( "Delete handled by foreign key constraint: {0}", getTableName( j ) );
+			}
 			return; //EARLY EXIT!
 		}
 
@@ -3381,7 +3391,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	public String filterFragment(String alias, Map enabledFilters) throws MappingException {
-		final StringBuffer sessionFilterFragment = new StringBuffer();
+		final StringBuilder sessionFilterFragment = new StringBuilder();
 		filterHelper.render( sessionFilterFragment, generateFilterConditionAlias( alias ), enabledFilters );
 
 		return sessionFilterFragment.append( filterFragment( alias ) ).toString();
@@ -3679,7 +3689,9 @@ public abstract class AbstractEntityPersister
 	public Object load(Serializable id, Object optionalObject, LockOptions lockOptions, SessionImplementor session)
 			throws HibernateException {
 
-        if (LOG.isTraceEnabled()) LOG.trace("Fetching entity: " + MessageHelper.infoString(this, id, getFactory()));
+		if ( LOG.isTraceEnabled() ) {
+			LOG.tracev( "Fetching entity: {0}", MessageHelper.infoString( this, id, getFactory() ) );
+		}
 
 		final UniqueEntityLoader loader = getAppropriateLoader(lockOptions, session );
 		return loader.load( id, optionalObject, session, lockOptions );
@@ -3712,7 +3724,7 @@ public abstract class AbstractEntityPersister
 		}
 		else if ( isAffectedByEnabledFilters( session ) ) {
 			// because filters affect the rows returned (because they add
-			// restirctions) these need to be next in precendence
+			// restrictions) these need to be next in precedence
 			return createEntityLoader(lockOptions, session.getLoadQueryInfluencers() );
 		}
 		else if ( session.getLoadQueryInfluencers().getInternalFetchProfile() != null && LockMode.UPGRADE.greaterThan( lockOptions.getLockMode() ) ) {
@@ -3786,7 +3798,7 @@ public abstract class AbstractEntityPersister
 	 * @param currentState The current state of the entity (the state to be checked).
 	 * @param previousState The previous state of the entity (the state to be checked against).
 	 * @param entity The entity for which we are checking state dirtiness.
-	 * @param session The session in which the check is ccurring.
+	 * @param session The session in which the check is occurring.
 	 * @return <tt>null</tt> or the indices of the dirty properties
 	 * @throws HibernateException
 	 */
@@ -3815,7 +3827,7 @@ public abstract class AbstractEntityPersister
 	 * @param old The old state of the entity.
 	 * @param current The current state of the entity.
 	 * @param entity The entity for which we are checking state modification.
-	 * @param session The session in which the check is ccurring.
+	 * @param session The session in which the check is occurring.
 	 * @return <tt>null</tt> or the indices of the modified properties
 	 * @throws HibernateException
 	 */
@@ -3849,10 +3861,10 @@ public abstract class AbstractEntityPersister
 	}
 
 	private void logDirtyProperties(int[] props) {
-        if (LOG.isTraceEnabled()) {
+		if ( LOG.isTraceEnabled() ) {
 			for ( int i = 0; i < props.length; i++ ) {
 				String propertyName = entityMetamodel.getProperties()[ props[i] ].getName();
-                LOG.trace(StringHelper.qualify(getEntityName(), propertyName) + " is dirty");
+				LOG.trace( StringHelper.qualify( getEntityName(), propertyName ) + " is dirty" );
 			}
 		}
 	}
@@ -4406,8 +4418,10 @@ public abstract class AbstractEntityPersister
 		if ( !hasNaturalIdentifier() ) {
 			throw new MappingException( "persistent class did not define a natural-id : " + MessageHelper.infoString( this ) );
 		}
-        if (LOG.isTraceEnabled()) LOG.trace("Getting current natural-id snapshot state for: "
-                                            + MessageHelper.infoString(this, id, getFactory()));
+		if ( LOG.isTraceEnabled() ) {
+			LOG.tracev( "Getting current natural-id snapshot state for: {0}",
+					MessageHelper.infoString( this, id, getFactory() ) );
+		}
 
 		int[] naturalIdPropertyIndexes = getNaturalIdentifierProperties();
 		int naturalIdPropertyCount = naturalIdPropertyIndexes.length;

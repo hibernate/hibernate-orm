@@ -281,12 +281,13 @@ public class RootClass extends PersistentClass implements TableOwner {
 		if ( getIdentifier() instanceof Component ) {
 			Component id = (Component) getIdentifier();
 			if ( !id.isDynamic() ) {
-				Class idClass = id.getComponentClass();
-                if (idClass != null && !ReflectHelper.overridesEquals(idClass)) LOG.compositeIdClassDoesNotOverrideEquals(id.getComponentClass().getName());
-                if (!ReflectHelper.overridesHashCode(idClass)) LOG.compositeIdClassDoesNotOverrideHashCode(id.getComponentClass().getName());
+				final Class idClass = id.getComponentClass();
+				final String idComponendClassName = idClass.getName();
+                if (idClass != null && !ReflectHelper.overridesEquals(idClass)) LOG.compositeIdClassDoesNotOverrideEquals( idComponendClassName );
+                if (!ReflectHelper.overridesHashCode(idClass)) LOG.compositeIdClassDoesNotOverrideHashCode( idComponendClassName );
                 if (!Serializable.class.isAssignableFrom(idClass)) throw new MappingException(
                                                                                               "Composite-id class must implement Serializable: "
-                                                                                              + id.getComponentClass().getName());
+                                                                                              + idComponendClassName);
 			}
 		}
 	}

@@ -301,7 +301,7 @@ public class SimpleValueBinder {
 	public SimpleValue make() {
 
 		validate();
-        LOG.debugf("building SimpleValue for %s", propertyName);
+		LOG.debugf( "building SimpleValue for %s", propertyName );
 		if ( table == null ) {
 			table = columns[0].getTable();
 		}
@@ -339,7 +339,7 @@ public class SimpleValueBinder {
 
 	public void fillSimpleValue() {
 
-        LOG.debugf("Setting SimpleValue typeName for %s", propertyName);
+		LOG.debugf( "Setting SimpleValue typeName for %s", propertyName );
 
 		String type = BinderHelper.isEmptyAnnotationValue( explicitType ) ? returnedClassName : explicitType;
 		org.hibernate.mapping.TypeDef typeDef = mappings.getTypeDef( type );

@@ -482,7 +482,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 							subId = pcEntry.getId();
 						}
 						else {
-                            LOG.debugf( "Performing implicit derived identity cascade" );
+							LOG.debug( "Performing implicit derived identity cascade" );
 							final PersistEvent event = new PersistEvent( null, propertyValues[i], (EventSource) session );
 							for ( PersistEventListener listener : persistEventListeners( session ) ) {
 								listener.onPersist( event );

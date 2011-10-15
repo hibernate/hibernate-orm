@@ -453,7 +453,7 @@ public class Configuration implements Serializable {
 	 * have indicated a problem parsing the XML document, but that is now delayed until after {@link #buildMappings}
 	 */
 	public Configuration addFile(final File xmlFile) throws MappingException {
-        LOG.readingMappingsFromFile(xmlFile.getPath());
+		LOG.readingMappingsFromFile( xmlFile.getPath() );
 		final String name =  xmlFile.getAbsolutePath();
 		final InputSource inputSource;
 		try {
@@ -522,10 +522,10 @@ public class Configuration implements Serializable {
 			return addCacheableFileStrictly( xmlFile );
 		}
 		catch ( SerializationException e ) {
-            LOG.unableToDeserializeCache(cachedFile.getPath(), e);
+			LOG.unableToDeserializeCache( cachedFile.getPath(), e );
 		}
 		catch ( FileNotFoundException e ) {
-            LOG.cachedFileNotFound( cachedFile.getPath(), e );
+			LOG.cachedFileNotFound( cachedFile.getPath(), e );
 		}
 
 		final String name = xmlFile.getAbsolutePath();
@@ -537,14 +537,15 @@ public class Configuration implements Serializable {
 			throw new MappingNotFoundException( "file", xmlFile.toString() );
 		}
 
-        LOG.readingMappingsFromFile(xmlFile.getPath());
+		LOG.readingMappingsFromFile( xmlFile.getPath() );
 		XmlDocument metadataXml = add( inputSource, "file", name );
 
 		try {
-            LOG.debugf("Writing cache file for: %s to: %s", xmlFile, cachedFile);
+			LOG.debugf( "Writing cache file for: %s to: %s", xmlFile, cachedFile );
 			SerializationHelper.serialize( ( Serializable ) metadataXml.getDocumentTree(), new FileOutputStream( cachedFile ) );
-        } catch (Exception e) {
-            LOG.unableToWriteCachedFile(cachedFile.getPath(), e.getMessage());
+		}
+		catch ( Exception e ) {
+			LOG.unableToWriteCachedFile( cachedFile.getPath(), e.getMessage() );
 		}
 
 		return this;
@@ -578,7 +579,7 @@ public class Configuration implements Serializable {
 			throw new FileNotFoundException( "Cached file could not be found or could not be used" );
 		}
 
-        LOG.readingCachedMappings(cachedFile);
+		LOG.readingCachedMappings( cachedFile );
 		Document document = ( Document ) SerializationHelper.deserialize( new FileInputStream( cachedFile ) );
 		add( new XmlDocumentImpl( document, "file", xmlFile.getAbsolutePath() ) );
 		return this;
@@ -608,7 +609,7 @@ public class Configuration implements Serializable {
 	 * given XML string
 	 */
 	public Configuration addXML(String xml) throws MappingException {
-        LOG.debugf("Mapping XML:\n%s", xml);
+		LOG.debugf( "Mapping XML:\n%s", xml );
 		final InputSource inputSource = new InputSource( new StringReader( xml ) );
 		add( inputSource, "string", "XML String" );
 		return this;
@@ -625,7 +626,7 @@ public class Configuration implements Serializable {
 	public Configuration addURL(URL url) throws MappingException {
 		final String urlExternalForm = url.toExternalForm();
 
-        LOG.debugf("Reading mapping document from URL : %s", urlExternalForm);
+		LOG.debugf( "Reading mapping document from URL : %s", urlExternalForm );
 
 		try {
 			add( url.openStream(), "URL", urlExternalForm );
@@ -646,7 +647,7 @@ public class Configuration implements Serializable {
 				inputStream.close();
 			}
 			catch ( IOException ignore ) {
-                LOG.trace("Was unable to close input stream");
+				LOG.trace( "Was unable to close input stream");
 			}
 		}
 	}
@@ -660,7 +661,7 @@ public class Configuration implements Serializable {
 	 * the mapping document.
 	 */
 	public Configuration addDocument(org.w3c.dom.Document doc) throws MappingException {
-        LOG.debugf("Mapping Document:\n%s", doc);
+		LOG.debugf( "Mapping Document:\n%s", doc );
 
 		final Document document = xmlHelper.createDOMReader().read( doc );
 		add( new XmlDocumentImpl( document, "unknown", null ) );
@@ -691,7 +692,7 @@ public class Configuration implements Serializable {
 	 * processing the contained mapping document.
 	 */
 	public Configuration addResource(String resourceName, ClassLoader classLoader) throws MappingException {
-        LOG.readingMappingsFromResource(resourceName);
+		LOG.readingMappingsFromResource( resourceName );
 		InputStream resourceInputStream = classLoader.getResourceAsStream( resourceName );
 		if ( resourceInputStream == null ) {
 			throw new MappingNotFoundException( "resource", resourceName );
@@ -710,7 +711,7 @@ public class Configuration implements Serializable {
 	 * processing the contained mapping document.
 	 */
 	public Configuration addResource(String resourceName) throws MappingException {
-        LOG.readingMappingsFromResource(resourceName);
+		LOG.readingMappingsFromResource( resourceName );
 		ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
 		InputStream resourceInputStream = null;
 		if ( contextClassLoader != null ) {
@@ -738,7 +739,7 @@ public class Configuration implements Serializable {
 	 */
 	public Configuration addClass(Class persistentClass) throws MappingException {
 		String mappingResourceName = persistentClass.getName().replace( '.', '/' ) + ".hbm.xml";
-        LOG.readingMappingsFromResource(mappingResourceName);
+		LOG.readingMappingsFromResource( mappingResourceName );
 		return addResource( mappingResourceName, persistentClass.getClassLoader() );
 	}
 
@@ -766,13 +767,13 @@ public class Configuration implements Serializable {
 	 * @throws MappingException in case there is an error in the mapping data
 	 */
 	public Configuration addPackage(String packageName) throws MappingException {
-        LOG.debugf( "Mapping Package %s", packageName );
+		LOG.debugf( "Mapping Package %s", packageName );
 		try {
 			AnnotationBinder.bindPackage( packageName, createMappings() );
 			return this;
 		}
 		catch ( MappingException me ) {
-            LOG.unableToParseMetadata(packageName);
+			LOG.unableToParseMetadata( packageName );
 			throw me;
 		}
 	}
@@ -788,7 +789,7 @@ public class Configuration implements Serializable {
 	 * processing the contained mapping documents.
 	 */
 	public Configuration addJar(File jar) throws MappingException {
-        LOG.searchingForMappingDocuments(jar.getName());
+		LOG.searchingForMappingDocuments( jar.getName() );
 		JarFile jarFile = null;
 		try {
 			try {
@@ -804,7 +805,7 @@ public class Configuration implements Serializable {
 			while ( jarEntries.hasMoreElements() ) {
 				ZipEntry ze = (ZipEntry) jarEntries.nextElement();
 				if ( ze.getName().endsWith( ".hbm.xml" ) ) {
-                    LOG.foundMappingDocument(ze.getName());
+					LOG.foundMappingDocument( ze.getName() );
 					try {
 						addInputStream( jarFile.getInputStream( ze ) );
 					}
@@ -826,7 +827,7 @@ public class Configuration implements Serializable {
 				}
 			}
 			catch (IOException ioe) {
-                LOG.unableToCloseJar(ioe.getMessage());
+				LOG.unableToCloseJar( ioe.getMessage() );
 			}
 		}
 
@@ -1300,7 +1301,7 @@ public class Configuration implements Serializable {
 	}
 
 	protected void secondPassCompile() throws MappingException {
-        LOG.trace("Starting secondPassCompile() processing");
+		LOG.trace( "Starting secondPassCompile() processing" );
 
 		//process default values first
 		{
@@ -1563,10 +1564,10 @@ public class Configuration implements Serializable {
 	}
 
 	private void originalSecondPassCompile() throws MappingException {
-        LOG.debugf("Processing extends queue");
+		LOG.debugf( "Processing extends queue" );
 		processExtendsQueue();
 
-        LOG.debugf("Processing collection mappings");
+		LOG.debugf( "Processing collection mappings" );
 		Iterator itr = secondPasses.iterator();
 		while ( itr.hasNext() ) {
 			SecondPass sp = (SecondPass) itr.next();
@@ -1576,7 +1577,7 @@ public class Configuration implements Serializable {
 			}
 		}
 
-        LOG.debugf("Processing native query and ResultSetMapping mappings");
+		LOG.debugf( "Processing native query and ResultSetMapping mappings" );
 		itr = secondPasses.iterator();
 		while ( itr.hasNext() ) {
 			SecondPass sp = (SecondPass) itr.next();
@@ -1584,7 +1585,7 @@ public class Configuration implements Serializable {
 			itr.remove();
 		}
 
-        LOG.debugf("Processing association property references");
+		LOG.debugf( "Processing association property references" );
 
 		itr = propertyReferences.iterator();
 		while ( itr.hasNext() ) {
@@ -1606,7 +1607,7 @@ public class Configuration implements Serializable {
 
 		//TODO: Somehow add the newly created foreign keys to the internal collection
 
-        LOG.debugf("Processing foreign key constraints");
+		LOG.debugf( "Processing foreign key constraints" );
 
 		itr = getTableMappings();
 		Set done = new HashSet();
@@ -1617,7 +1618,7 @@ public class Configuration implements Serializable {
 	}
 
 	private int processExtendsQueue() {
-        LOG.debugf("Processing extends queue");
+		LOG.debugf( "Processing extends queue" );
 		int added = 0;
 		ExtendsQueueEntry extendsQueueEntry = findPossibleExtends();
 		while ( extendsQueueEntry != null ) {
@@ -1674,7 +1675,7 @@ public class Configuration implements Serializable {
 							" does not specify the referenced entity"
 						);
 				}
-                LOG.debugf("Resolving reference to class: %s", referencedEntityName);
+				LOG.debugf( "Resolving reference to class: %s", referencedEntityName );
 				PersistentClass referencedClass = classes.get( referencedEntityName );
 				if ( referencedClass == null ) {
 					throw new MappingException(
@@ -1707,10 +1708,12 @@ public class Configuration implements Serializable {
 	 * @throws HibernateException usually indicates an invalid configuration or invalid mapping information
 	 */
 	public SessionFactory buildSessionFactory(ServiceRegistry serviceRegistry) throws HibernateException {
-        LOG.debugf("Preparing to build session factory with filters : %s", filterDefinitions);
+		LOG.debugf( "Preparing to build session factory with filters : %s", filterDefinitions );
 
 		secondPassCompile();
-        if (!metadataSourceQueue.isEmpty()) LOG.incompleteMappingMetadataCacheProcessing();
+		if ( !metadataSourceQueue.isEmpty() ) {
+			LOG.incompleteMappingMetadataCacheProcessing();
+		}
 
 		validate();
 
@@ -1865,7 +1868,7 @@ public class Configuration implements Serializable {
 			Element node = (Element) itr.next();
 			String name = node.attributeValue( "name" );
 			String value = node.getText().trim();
-            LOG.debugf("%s=%s", name, value);
+			LOG.debugf( "%s=%s", name, value );
 			properties.setProperty( name, value );
 			if ( !name.startsWith( "hibernate" ) ) {
 				properties.setProperty( "hibernate." + name, value );
@@ -1903,7 +1906,7 @@ public class Configuration implements Serializable {
 	 * @see #doConfigure(java.io.InputStream, String)
 	 */
 	public Configuration configure(String resource) throws HibernateException {
-        LOG.configuringFromResource(resource);
+		LOG.configuringFromResource( resource );
 		InputStream stream = getConfigurationInputStream( resource );
 		return doConfigure( stream, resource );
 	}
@@ -1922,7 +1925,7 @@ public class Configuration implements Serializable {
 	 * @throws HibernateException Generally indicates we cannot find the named resource
 	 */
 	protected InputStream getConfigurationInputStream(String resource) throws HibernateException {
-        LOG.configurationResource(resource);
+		LOG.configurationResource( resource );
 		return ConfigHelper.getResourceAsStream( resource );
 	}
 
@@ -1939,7 +1942,7 @@ public class Configuration implements Serializable {
 	 * @see #doConfigure(java.io.InputStream, String)
 	 */
 	public Configuration configure(URL url) throws HibernateException {
-        LOG.configuringFromUrl(url);
+		LOG.configuringFromUrl( url );
 		try {
 			return doConfigure( url.openStream(), url.toString() );
 		}
@@ -1961,7 +1964,7 @@ public class Configuration implements Serializable {
 	 * @see #doConfigure(java.io.InputStream, String)
 	 */
 	public Configuration configure(File configFile) throws HibernateException {
-        LOG.configuringFromFile(configFile.getName());
+		LOG.configuringFromFile( configFile.getName() );
 		try {
 			return doConfigure( new FileInputStream( configFile ), configFile.toString() );
 		}
@@ -2000,7 +2003,7 @@ public class Configuration implements Serializable {
 				stream.close();
 			}
 			catch (IOException ioe) {
-                LOG.unableToCloseInputStreamForResource(resourceName, ioe);
+				LOG.unableToCloseInputStreamForResource( resourceName, ioe );
 			}
 		}
 		return this;
@@ -2016,7 +2019,7 @@ public class Configuration implements Serializable {
 	 * @throws HibernateException if there is problem in accessing the file.
 	 */
 	public Configuration configure(org.w3c.dom.Document document) throws HibernateException {
-        LOG.configuringFromXmlDocument();
+		LOG.configuringFromXmlDocument();
 		return doConfigure( xmlHelper.createDOMReader().read( document ) );
 	}
 
@@ -2044,8 +2047,8 @@ public class Configuration implements Serializable {
 			parseSecurity( secNode );
 		}
 
-        LOG.configuredSessionFactory(name);
-        LOG.debugf("Properties: %s", properties);
+		LOG.configuredSessionFactory( name );
+		LOG.debugf( "Properties: %s", properties );
 
 		return this;
 	}
@@ -2084,27 +2087,27 @@ public class Configuration implements Serializable {
 
 		if ( resourceAttribute != null ) {
 			final String resourceName = resourceAttribute.getValue();
-            LOG.debugf("Session-factory config [%s] named resource [%s] for mapping", name, resourceName);
+			LOG.debugf( "Session-factory config [%s] named resource [%s] for mapping", name, resourceName );
 			addResource( resourceName );
 		}
 		else if ( fileAttribute != null ) {
 			final String fileName = fileAttribute.getValue();
-            LOG.debugf("Session-factory config [%s] named file [%s] for mapping", name, fileName);
+			LOG.debugf( "Session-factory config [%s] named file [%s] for mapping", name, fileName );
 			addFile( fileName );
 		}
 		else if ( jarAttribute != null ) {
 			final String jarFileName = jarAttribute.getValue();
-            LOG.debugf("Session-factory config [%s] named jar file [%s] for mapping", name, jarFileName);
+			LOG.debugf( "Session-factory config [%s] named jar file [%s] for mapping", name, jarFileName );
 			addJar( new File( jarFileName ) );
 		}
 		else if ( packageAttribute != null ) {
 			final String packageName = packageAttribute.getValue();
-            LOG.debugf("Session-factory config [%s] named package [%s] for mapping", name, packageName);
+			LOG.debugf( "Session-factory config [%s] named package [%s] for mapping", name, packageName );
 			addPackage( packageName );
 		}
 		else if ( classAttribute != null ) {
 			final String className = classAttribute.getValue();
-            LOG.debugf("Session-factory config [%s] named class [%s] for mapping", name, className);
+			LOG.debugf( "Session-factory config [%s] named class [%s] for mapping", name, className );
 			try {
 				addAnnotatedClass( ReflectHelper.classForName( className ) );
 			}
@@ -2122,8 +2125,8 @@ public class Configuration implements Serializable {
 
 	private void parseSecurity(Element secNode) {
 		String contextId = secNode.attributeValue( "context" );
-        setProperty(Environment.JACC_CONTEXTID, contextId);
-        LOG.jaccContextId(contextId);
+		setProperty( Environment.JACC_CONTEXTID, contextId );
+		LOG.jaccContextId( contextId );
 		JACCConfiguration jcfg = new JACCConfiguration( contextId );
 		Iterator grantElements = secNode.elementIterator();
 		while ( grantElements.hasNext() ) {
@@ -2719,7 +2722,7 @@ public class Configuration implements Serializable {
 		public void addTypeDef(String typeName, String typeClass, Properties paramMap) {
 			TypeDef def = new TypeDef( typeClass, paramMap );
 			typeDefs.put( typeName, def );
-            LOG.debugf("Added %s with class %s", typeName, typeClass);
+			LOG.debugf( "Added %s with class %s", typeName, typeClass );
 		}
 
 		public Map getFilterDefinitions() {
@@ -3065,13 +3068,17 @@ public class Configuration implements Serializable {
 		public void addGenerator(IdGenerator generator) {
 			if ( !defaultNamedGenerators.contains( generator.getName() ) ) {
 				IdGenerator old = namedGenerators.put( generator.getName(), generator );
-                if (old != null) LOG.duplicateGeneratorName(old.getName());
+				if ( old != null ) {
+					LOG.duplicateGeneratorName( old.getName() );
+				}
 			}
 		}
 
 		public void addGeneratorTable(String name, Properties params) {
 			Object old = generatorTables.put( name, params );
-            if (old != null) LOG.duplicateGeneratorTable(name);
+			if ( old != null ) {
+				LOG.duplicateGeneratorTable( name );
+			}
 		}
 
 		public Properties getGeneratorTableProperties(String name, Map<String, Properties> localGeneratorTables) {
@@ -3090,7 +3097,9 @@ public class Configuration implements Serializable {
 
 		public void addJoins(PersistentClass persistentClass, Map<String, Join> joins) {
 			Object old = Configuration.this.joins.put( persistentClass.getEntityName(), joins );
-            if (old != null) LOG.duplicateJoins(persistentClass.getEntityName());
+			if ( old != null ) {
+				LOG.duplicateJoins( persistentClass.getEntityName() );
+			}
 		}
 
 		public AnnotatedClassType getClassType(XClass clazz) {
@@ -3343,7 +3352,7 @@ public class Configuration implements Serializable {
 		}
 
 		private void processHbmXmlQueue() {
-            LOG.debugf("Processing hbm.xml files");
+			LOG.debugf( "Processing hbm.xml files" );
 			for ( Map.Entry<XmlDocument, Set<String>> entry : hbmMetadataToEntityNamesMap.entrySet() ) {
 				// Unfortunately we have to create a Mappings instance for each iteration here
 				processHbmXml( entry.getKey(), entry.getValue() );
@@ -3373,7 +3382,7 @@ public class Configuration implements Serializable {
 		}
 
 		private void processAnnotatedClassesQueue() {
-            LOG.debugf("Process annotated classes");
+			LOG.debugf( "Process annotated classes" );
 			//bind classes in the correct order calculating some inheritance state
 			List<XClass> orderedClasses = orderAndFillHierarchy( annotatedClasses );
 			Mappings mappings = createMappings();

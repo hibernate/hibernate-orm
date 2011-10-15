@@ -50,10 +50,10 @@ import org.hibernate.internal.CoreMessageLogger;
 public class DbTimestampType extends TimestampType {
 	public static final DbTimestampType INSTANCE = new DbTimestampType();
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, DbTimestampType.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, DbTimestampType.class.getName() );
 
 	@Override
-    public String getName() {
+	public String getName() {
 		return "dbtimestamp";
 	}
 
@@ -63,14 +63,18 @@ public class DbTimestampType extends TimestampType {
 	}
 
 	@Override
-    public Date seed(SessionImplementor session) {
+	public Date seed(SessionImplementor session) {
 		if ( session == null ) {
-            LOG.trace("Incoming session was null; using current jvm time");
+			LOG.trace( "Incoming session was null; using current jvm time" );
 			return super.seed( session );
-        } else if (!session.getFactory().getDialect().supportsCurrentTimestampSelection()) {
-            LOG.debugf("Falling back to vm-based timestamp, as dialect does not support current timestamp selection");
+		}
+		else if ( !session.getFactory().getDialect().supportsCurrentTimestampSelection() ) {
+			LOG.debugf( "Falling back to vm-based timestamp, as dialect does not support current timestamp selection" );
 			return super.seed( session );
-        } else return getCurrentTimestamp(session);
+		}
+		else {
+			return getCurrentTimestamp( session );
+		}
 	}
 
 	private Date getCurrentTimestamp(SessionImplementor session) {
@@ -90,7 +94,9 @@ public class DbTimestampType extends TimestampType {
 			ResultSet rs = ps.executeQuery();
 			rs.next();
 			Timestamp ts = rs.getTimestamp( 1 );
-            LOG.trace("Current timestamp retreived from db : " + ts + " (nanos=" + ts.getNanos() + ", time=" + ts.getTime() + ")");
+			if ( LOG.isTraceEnabled() ) {
+				LOG.tracev( "Current timestamp retreived from db : {0} (nanos={1}, time={2})", ts, ts.getNanos(), ts.getTime() );
+			}
 			return ts;
 		}
 		catch( SQLException e ) {
@@ -106,7 +112,7 @@ public class DbTimestampType extends TimestampType {
 					ps.close();
 				}
 				catch( SQLException sqle ) {
-                    LOG.unableToCleanUpPreparedStatement(sqle);
+					LOG.unableToCleanUpPreparedStatement( sqle );
 				}
 			}
 		}
@@ -122,7 +128,9 @@ public class DbTimestampType extends TimestampType {
 			cs.registerOutParameter( 1, java.sql.Types.TIMESTAMP );
 			cs.execute();
 			Timestamp ts = cs.getTimestamp( 1 );
-            LOG.trace("Current timestamp retreived from db : " + ts + " (nanos=" + ts.getNanos() + ", time=" + ts.getTime() + ")");
+			if ( LOG.isTraceEnabled() ) {
+				LOG.tracev( "Current timestamp retreived from db : {0} (nanos={1}, time={2})", ts, ts.getNanos(), ts.getTime() );
+			}
 			return ts;
 		}
 		catch( SQLException e ) {
@@ -138,7 +146,7 @@ public class DbTimestampType extends TimestampType {
 					cs.close();
 				}
 				catch( SQLException sqle ) {
-                    LOG.unableToCleanUpCallableStatement(sqle);
+					LOG.unableToCleanUpCallableStatement( sqle );
 				}
 			}
 		}

@@ -55,6 +55,7 @@ import org.hibernate.metamodel.binding.BasicAttributeBinding;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.domain.Attribute;
 import org.hibernate.metamodel.domain.SingularAttribute;
+import org.hibernate.service.instrumentation.spi.InstrumentationService;
 import org.hibernate.tuple.IdentifierProperty;
 import org.hibernate.tuple.PropertyFactory;
 import org.hibernate.tuple.StandardProperty;
@@ -131,6 +132,7 @@ public class EntityMetamodel implements Serializable {
 
 	private final EntityMode entityMode;
 	private final EntityTuplizer entityTuplizer;
+	private boolean lazyAvailable;
 
 	public EntityMetamodel(PersistentClass persistentClass, SessionFactoryImplementor sessionFactory) {
 		this.sessionFactory = sessionFactory;
@@ -146,8 +148,9 @@ public class EntityMetamodel implements Serializable {
 
 		versioned = persistentClass.isVersioned();
 
-		boolean lazyAvailable = persistentClass.hasPojoRepresentation() &&
-		                        FieldInterceptionHelper.isInstrumented( persistentClass.getMappedClass() );
+		InstrumentationService instrumentationService = sessionFactory.getServiceRegistry().getService( InstrumentationService.class );
+		lazyAvailable = persistentClass.hasPojoRepresentation() &&
+		                        instrumentationService.isInstrumented( persistentClass.getMappedClass() );
 		boolean hasLazy = false;
 
 		propertySpan = persistentClass.getPropertyClosureSpan();
@@ -373,12 +376,14 @@ public class EntityMetamodel implements Serializable {
 		boolean hasPojoRepresentation = false;
 		Class<?> mappedClass = null;
 		Class<?> proxyInterfaceClass = null;
-		boolean lazyAvailable = false;
-		if (  entityBinding.getEntity().getClassReferenceUnresolved() != null ) {
+		lazyAvailable = false;
+		if ( entityBinding.getEntity().getClassReferenceUnresolved() != null ) {
 			hasPojoRepresentation = true;
 			mappedClass = entityBinding.getEntity().getClassReference();
 			proxyInterfaceClass = entityBinding.getProxyInterfaceType().getValue();
-			lazyAvailable = FieldInterceptionHelper.isInstrumented( mappedClass );
+			InstrumentationService instrumentationService = sessionFactory.getServiceRegistry()
+					.getService( InstrumentationService.class );
+			lazyAvailable = instrumentationService.isInstrumented( mappedClass );
 		}
 
 		boolean hasLazy = false;
@@ -934,5 +939,12 @@ public class EntityMetamodel implements Serializable {
 
 	public EntityMode getEntityMode() {
 		return entityMode;
+	}
+
+	/**
+	 * Whether or not this class can be lazy (ie intercepted)
+	 */
+	public boolean isInstrumented() {
+		return lazyAvailable;
 	}
 }

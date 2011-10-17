@@ -35,6 +35,7 @@ import org.hibernate.bytecode.instrumentation.internal.FieldInterceptionHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.pretty.MessageHelper;
+import org.hibernate.service.instrumentation.spi.InstrumentationService;
 
 /**
  * We need an entry to tell us all about the current state of an object with respect to its persistent state
@@ -256,8 +257,8 @@ public final class EntityEntry implements Serializable {
 	public boolean requiresDirtyCheck(Object entity) {		
 		return isModifiableEntity() && (
 				getPersister().hasMutableProperties() ||
-				!FieldInterceptionHelper.isInstrumented( entity ) ||
-				FieldInterceptionHelper.extractFieldInterceptor( entity).isDirty()
+				!getPersister().getFactory().getServiceRegistry().getService( InstrumentationService.class ).isInstrumented(entity) ||
+				FieldInterceptionHelper.extractFieldInterceptor(entity).isDirty()
 			);
 	}
 

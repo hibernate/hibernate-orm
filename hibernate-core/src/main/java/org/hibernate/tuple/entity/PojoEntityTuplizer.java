@@ -76,12 +76,14 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 	private final boolean lifecycleImplementor;
 	private final Set lazyPropertyNames = new HashSet();
 	private final ReflectionOptimizer optimizer;
+	private final boolean isInstrumented;
 
 	public PojoEntityTuplizer(EntityMetamodel entityMetamodel, PersistentClass mappedEntity) {
 		super( entityMetamodel, mappedEntity );
 		this.mappedClass = mappedEntity.getMappedClass();
 		this.proxyInterface = mappedEntity.getProxyInterface();
 		this.lifecycleImplementor = Lifecycle.class.isAssignableFrom( mappedClass );
+		this.isInstrumented = entityMetamodel.isInstrumented();
 
 		Iterator iter = mappedEntity.getPropertyClosureIterator();
 		while ( iter.hasNext() ) {
@@ -118,6 +120,7 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 		this.mappedClass = mappedEntity.getEntity().getClassReference();
 		this.proxyInterface = mappedEntity.getProxyInterfaceType().getValue();
 		this.lifecycleImplementor = Lifecycle.class.isAssignableFrom( mappedClass );
+		this.isInstrumented = entityMetamodel.isInstrumented();
 
 		for ( AttributeBinding property : mappedEntity.getAttributeBindingClosure() ) {
 			if ( property.isLazy() ) {
@@ -520,7 +523,7 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 	 * {@inheritDoc}
 	 */
 	public boolean isInstrumented() {
-		return FieldInterceptionHelper.isInstrumented( getMappedClass() );
+		return isInstrumented;
 	}
 
 	/**

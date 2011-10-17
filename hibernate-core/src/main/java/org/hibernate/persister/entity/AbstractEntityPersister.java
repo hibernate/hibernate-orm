@@ -104,6 +104,7 @@ import org.hibernate.metamodel.relational.DerivedValue;
 import org.hibernate.metamodel.relational.Value;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.property.BackrefPropertyAccessor;
+import org.hibernate.service.instrumentation.spi.InstrumentationService;
 import org.hibernate.sql.Alias;
 import org.hibernate.sql.Delete;
 import org.hibernate.sql.Insert;
@@ -3943,7 +3944,10 @@ public abstract class AbstractEntityPersister
 
 	public void afterReassociate(Object entity, SessionImplementor session) {
 		//if ( hasLazyProperties() ) {
-		if ( FieldInterceptionHelper.isInstrumented( entity ) ) {
+		InstrumentationService instrumentationService = session.getFactory()
+				.getServiceRegistry()
+				.getService( InstrumentationService.class );
+		if ( instrumentationService.isInstrumented( entity ) ) {
 			FieldInterceptor interceptor = FieldInterceptionHelper.extractFieldInterceptor( entity );
 			if ( interceptor != null ) {
 				interceptor.setSession( session );

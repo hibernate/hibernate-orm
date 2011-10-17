@@ -35,6 +35,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.MergeEvent;
@@ -53,6 +54,7 @@ import org.hibernate.engine.spi.Status;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
+import org.hibernate.service.instrumentation.spi.InstrumentationService;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
@@ -493,15 +495,18 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 			copyValues(persister, entity, target, source, copyCache);
 
 			//copyValues works by reflection, so explicitly mark the entity instance dirty
-			markInterceptorDirty( entity, target );
+			markInterceptorDirty( entity, target, persister.getFactory() );
 
 			event.setResult(result);
 		}
 
 	}
 
-	private void markInterceptorDirty(final Object entity, final Object target) {
-		if ( FieldInterceptionHelper.isInstrumented( entity ) ) {
+	private void markInterceptorDirty(final Object entity, final Object target, SessionFactoryImplementor factory) {
+		InstrumentationService instrumentationService = factory
+				.getServiceRegistry()
+				.getService( InstrumentationService.class );
+		if ( instrumentationService.isInstrumented( entity ) ) {
 			FieldInterceptor interceptor = FieldInterceptionHelper.extractFieldInterceptor( target );
 			if ( interceptor != null ) {
 				interceptor.dirty();

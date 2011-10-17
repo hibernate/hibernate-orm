@@ -137,6 +137,7 @@ public class JtaIsolationDelegate implements IsolationDelegate {
 				catch ( Exception ignore ) {
                     LOG.unableToRollbackIsolatedTransaction(e, ignore);
 				}
+				throw new HibernateException( "Could not apply work", e );
 			}
 		}
 		catch ( SystemException e ) {

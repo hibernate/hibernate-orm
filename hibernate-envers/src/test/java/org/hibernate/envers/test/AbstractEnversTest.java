@@ -9,6 +9,7 @@ import java.util.List;
 /**
  * An abstract Envers test which runs the tests using two audit strategies.
  * @author Adam Warski (adam at warski dot org)
+ * @author Michal Skowronek (mskowr at o2 dot pl)
  */
 @RunWith(EnversRunner.class)
 public abstract class AbstractEnversTest {

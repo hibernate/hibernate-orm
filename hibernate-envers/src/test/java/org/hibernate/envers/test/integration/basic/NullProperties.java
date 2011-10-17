@@ -78,7 +78,7 @@ public class NullProperties extends AbstractEntityTest {
         assert Arrays.asList(2, 4).equals(getAuditReader().getRevisions(BasicTestEntity1.class, id2));
     }
 
-    @Test
+	@Test
     public void testHistoryOfId1() {
         BasicTestEntity1 ver1 = new BasicTestEntity1(id1, "x", 1);
         BasicTestEntity1 ver2 = new BasicTestEntity1(id1, null, 1);
@@ -99,4 +99,5 @@ public class NullProperties extends AbstractEntityTest {
         assert getAuditReader().find(BasicTestEntity1.class, id2, 3).equals(ver1);
         assert getAuditReader().find(BasicTestEntity1.class, id2, 4).equals(ver2);
     }
+
 }

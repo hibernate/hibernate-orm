@@ -23,9 +23,6 @@
  */
 package org.hibernate.envers.event;
 
-import java.io.Serializable;
-import java.util.List;
-
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.envers.RevisionType;
@@ -42,12 +39,17 @@ import org.hibernate.envers.synchronization.work.PersistentCollectionChangeWorkU
 import org.hibernate.event.spi.AbstractCollectionEvent;
 import org.hibernate.persister.collection.AbstractCollectionPersister;
 
+import java.io.Serializable;
+import java.util.List;
+import java.util.Set;
+
 /**
  * Base class for Envers' collection event related listeners
  *
  * @author Adam Warski (adam at warski dot org)
  * @author Hern�n Chanfreau
  * @author Steve Ebersole
+ * @author Michal Skowronek (mskowr at o2 dot pl)
  */
 public abstract class BaseEnversCollectionEventListener extends BaseEnversEventListener {
 	protected BaseEnversCollectionEventListener(AuditConfiguration enversConfiguration) {
@@ -106,6 +108,7 @@ public abstract class BaseEnversCollectionEventListener extends BaseEnversEventL
 							new CollectionChangeWorkUnit(
 									event.getSession(),
 									event.getAffectedOwnerEntityName(),
+									referencingPropertyName,
 									getAuditConfiguration(),
 									event.getAffectedOwnerIdOrNull(),
 									event.getAffectedOwnerOrNull()
@@ -174,6 +177,7 @@ public abstract class BaseEnversCollectionEventListener extends BaseEnversEventL
             AuditWorkUnit nestedWorkUnit = new CollectionChangeWorkUnit(
 					event.getSession(),
 					realRelatedEntityName,
+					rd.getMappedByPropertyName(),
 					getAuditConfiguration(),
                     relatedId,
 					relatedObj
@@ -200,6 +204,7 @@ public abstract class BaseEnversCollectionEventListener extends BaseEnversEventL
 				new CollectionChangeWorkUnit(
 						event.getSession(),
 						collectionEntityName,
+						referencingPropertyName,
 						getAuditConfiguration(),
 						event.getAffectedOwnerIdOrNull(),
 						event.getAffectedOwnerOrNull()
@@ -224,6 +229,11 @@ public abstract class BaseEnversCollectionEventListener extends BaseEnversEventL
             String relatedEntityName = rd.getToEntityName();
             IdMapper relatedIdMapper = getAuditConfiguration().getEntCfg().get( relatedEntityName ).getIdMapper();
 
+			Set<String> toPropertyNames = getAuditConfiguration().getEntCfg()
+					.getToPropertyNames(event.getAffectedOwnerEntityName(), rd.getFromPropertyName(), relatedEntityName);
+			assert toPropertyNames.size() == 1;
+			String toPropertyName = toPropertyNames.iterator().next();
+
             for ( PersistentCollectionChangeData changeData : workUnit.getCollectionChanges() ) {
                 Object relatedObj = changeData.getChangedElement();
                 Serializable relatedId = (Serializable) relatedIdMapper.mapToIdFromEntity( relatedObj );
@@ -232,6 +242,7 @@ public abstract class BaseEnversCollectionEventListener extends BaseEnversEventL
 						new CollectionChangeWorkUnit(
 								event.getSession(),
 								relatedEntityName,
+								toPropertyName,
 								getAuditConfiguration(),
 								relatedId,
 								relatedObj

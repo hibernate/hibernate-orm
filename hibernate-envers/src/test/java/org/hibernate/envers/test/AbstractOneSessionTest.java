@@ -1,8 +1,5 @@
 package org.hibernate.envers.test;
 
-import java.io.File;
-import java.net.URISyntaxException;
-import java.net.URL;
 import org.hibernate.MappingException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -14,6 +11,10 @@ import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.junit.Before;
+
+import java.io.File;
+import java.net.URISyntaxException;
+import java.net.URL;
 
 /**
  * Base class for testing envers with Session when the same session and
@@ -39,6 +40,7 @@ public abstract class AbstractOneSessionTest extends AbstractEnversTest  {
         if (auditStrategy != null && !"".equals(auditStrategy)) {
             config.setProperty("org.hibernate.envers.audit_strategy", auditStrategy);
         }
+		addProperties(config);
 
         this.initMappings();
 
@@ -47,6 +49,8 @@ public abstract class AbstractOneSessionTest extends AbstractEnversTest  {
     }
 
 	protected abstract void initMappings() throws MappingException, URISyntaxException ;
+
+	protected void addProperties(Configuration configuration) {}
 
 	protected String getHibernateConfigurationFileName(){
 		return "hibernate.test.session-cfg.xml";

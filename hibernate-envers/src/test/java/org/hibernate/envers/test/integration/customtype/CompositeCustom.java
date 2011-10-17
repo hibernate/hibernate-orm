@@ -97,4 +97,5 @@ public class CompositeCustom extends AbstractEntityTest {
         assert rev2.getComponent().equals(new Component("b", 1));
         assert rev3.getComponent().equals(new Component("c", 3));
     }
+
 }

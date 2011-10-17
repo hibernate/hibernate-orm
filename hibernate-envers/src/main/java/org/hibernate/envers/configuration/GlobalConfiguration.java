@@ -25,16 +25,21 @@ package org.hibernate.envers.configuration;
 import org.hibernate.MappingException;
 import org.hibernate.envers.RevisionListener;
 
-import static org.hibernate.envers.tools.Tools.getProperty;
 import java.util.Properties;
+
+import static org.hibernate.envers.tools.Tools.getProperty;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  * @author Nicolas Doroskevich
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Michal Skowronek (mskowr at o2 dot pl)
  */
 public class GlobalConfiguration {
-    // Should a revision be generated when a not-owned relation field changes
+	public static final String USING_MODIFIED_FLAG_PROPERTY = "org.hibernate.envers.using_modified_flag";
+	public static final String MODIFIED_FLAG_SUFFIX_PROPERTY = "org.hibernate.envers.modified_flag_suffix";
+	public static final String DEFAULT_MODIFIED_FLAG_SUFFIX = "_MOD";
+	// Should a revision be generated when a not-owned relation field changes
     private final boolean generateRevisionsForCollections;
 
     // Should the optimistic locking property of an entity be considered unversioned
@@ -54,6 +59,13 @@ public class GlobalConfiguration {
 
     // Revision listener class name.
     private final Class<? extends RevisionListener> revisionListenerClass;
+
+	// Should Envers use modified property flags by default
+    private boolean usingModifiedFlag;
+	// Indicates that user defined global behavior for modified flags feature
+	private boolean hasSettingForUsingModifiedFlag;
+	// Suffix to be used for modified flags columns
+	private String modifiedFlagSuffix;
 
     /*
      Which operator to use in correlated subqueries (when we want a property to be equal to the result of
@@ -94,7 +106,20 @@ public class GlobalConfiguration {
         		"false");
         trackEntitiesChangedInRevisionEnabled = Boolean.parseBoolean(trackEntitiesChangedInRevisionEnabledStr);
 
-        String revisionListenerClassName = properties.getProperty("org.hibernate.envers.revision_listener", null);
+		hasSettingForUsingModifiedFlag =
+				properties.getProperty(USING_MODIFIED_FLAG_PROPERTY) != null;
+		String usingModifiedFlagStr = getProperty(properties,
+				USING_MODIFIED_FLAG_PROPERTY,
+        		USING_MODIFIED_FLAG_PROPERTY,
+        		"false");
+        usingModifiedFlag = Boolean.parseBoolean(usingModifiedFlagStr);
+
+		modifiedFlagSuffix =
+				getProperty(properties, MODIFIED_FLAG_SUFFIX_PROPERTY,
+						MODIFIED_FLAG_SUFFIX_PROPERTY,
+						DEFAULT_MODIFIED_FLAG_SUFFIX);
+
+		String revisionListenerClassName = properties.getProperty("org.hibernate.envers.revision_listener", null);
         if (revisionListenerClassName != null) {
             try {
                 revisionListenerClass = (Class<? extends RevisionListener>) Thread.currentThread().getContextClassLoader().loadClass(revisionListenerClassName);
@@ -141,4 +166,16 @@ public class GlobalConfiguration {
     public Class<? extends RevisionListener> getRevisionListenerClass() {
         return revisionListenerClass;
     }
+	
+	public boolean hasSettingForUsingModifiedFlag() {
+		return hasSettingForUsingModifiedFlag;
+	}
+
+	public boolean isUsingModifiedFlag() {
+		return usingModifiedFlag;
+	}
+
+	public String getModifiedFlagSuffix() {
+		return modifiedFlagSuffix;
+	}
 }

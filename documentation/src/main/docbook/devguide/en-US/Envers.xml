@@ -259,6 +259,33 @@
                             and <xref linkend="envers-tracking-modified-entities-queries"/>.
                         </entry>
                     </row>
+                    <row>
+                        <entry>
+                            <property>org.hibernate.envers.using_modified_flag</property>
+                        </entry>
+                        <entry>
+                            false, driven by @Audited annotation parameter
+                        </entry>
+                        <entry>
+                            Indicates if detailed information about individual properties changes (so-called "Modified Flags") should be stored for all entities.
+                            When set to true all audit tables will contain for each property an additional BOOLEAN column
+                            saying if the property has changed in the generated revision. When set to false, the feature will be disabled.
+                            For more information refer to <xref linkend="envers-tracking-properties-changes"/>
+                            and <xref linkend="envers-envers-tracking-properties-changes-queries"/>.
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>
+                            <property>org.hibernate.envers.modified_flag_suffix</property>
+                        </entry>
+                        <entry>
+                            _MOD
+                        </entry>
+                        <entry>
+                            The suffix for columns storing "Modified Flags".
+                            For example: a property called "age", will by default get modified flag with column name "age_MOD".
+                        </entry>
+                    </row>
                 </tbody>
             </tgroup>
         </table>
@@ -269,6 +296,12 @@
                 <orderedlist>
                     <listitem>
                         org.hibernate.envers.track_entities_changed_in_revision
+                    </listitem>
+                    <listitem>
+                        org.hibernate.envers.using_modified_flag
+                    </listitem>
+                    <listitem>
+                        org.hibernate.envers.modified_flag_suffix
                     </listitem>
                 </orderedlist>
             </para>
@@ -616,6 +649,65 @@ Set<ModifiedEntityTypeEntity> modifiedEntityTypes = revEntity.getModifiedEntityT
 
     </section>
 
+    <section id="envers-tracking-properties-changes">
+        <title>Tracking entity changes at property level</title>
+        <para>
+            By default the only information stored at commit time by Envers are
+            "snapshots" (new revisions) of modified entities.
+            This approach lets user create audit queries based on historical
+            values of entity's properties.
+            In most cases this is good enough, however there are many scenarios
+            in which auditor is more concerned about types of changes, not
+            resulting values.
+            The feature described in
+            <xref linkend="envers-tracking-modified-entities-revchanges"/>
+            makes it possible to tell
+            which entities were modified in given revision.
+            Feature describe here takes it one step further - with so-called
+            "Modified Flags" enabled, Envers can say which parts (properties) of
+            those entities were modified in a given revision.
+        </para>
+        <para>
+            Tracking entity changes at property level can be enabled by:
+        </para>
+        <orderedlist>
+            <listitem>
+                setting
+                <property>org.hibernate.envers.using_modified_flag</property>
+                parameter to
+                <literal>true</literal>. This global switch will force tracking
+                changes for all audited properties in all audited entities.
+            </listitem>
+            <listitem>
+                setting
+                <property>usingModifiedFlag</property>
+                parameter of the annotation
+                <interfacename>@org.hibernate.envers.Audited</interfacename>
+                to true. When the parameter is set at class-level, all class
+                properties will be tracked. When it's set for a property, then
+                it affects only that one property.
+                Class-level settings will always be overriden by field-level ones.
+            </listitem>
+        </orderedlist>
+        <para>
+            The trade-off coming with this functionality is an increased size of
+            audit tables and a very little, almost negligible, performance drop
+            during audit writes. This is due to the fact, that every tracked
+            property has to have an accompanying, boolean type, column in the
+            schema that stores information about property's modifications. Of
+            course it's
+            Envers job to fill these columns accordingly - no additional work of
+            developer is required. Because of costs mentioned, it is recommended
+            to enable the feature selectively, when needed with use of the
+            granular configuration means described above.
+        </para>
+        <para>
+            To see how "Modified Flags" can be utilized, check out the very
+            simple API that uses them: <xref
+                linkend="envers-envers-tracking-properties-changes-queries"/>.
+        </para>
+    </section>
+
     <section id="envers-queries">
 
         <title>Queries</title>
@@ -804,6 +896,78 @@ query.add(AuditEntity.relatedId("address").eq(relatedEntityId));]]></programlist
             </para>
 
         </section>
+
+        <section id="envers-envers-tracking-properties-changes-queries">
+
+            <title>Querying for revisions of entity that modified given property</title>
+
+            <para>
+                For the two types of queries described above it's possible to use
+                special Audit criteria called
+                <literal>hasChanged()</literal>
+                and
+                <literal>hasNotChanged()</literal>
+                that makes use of the functionality
+                described in <xref linkend="envers-tracking-properties-changes"/>.
+                They're best suited for vertical queries,
+                however existing API doesn't restrict their usage for horizontal
+                ones.
+
+                Let's have a look at following examples:
+            </para>
+
+            <programlisting><![CDATA[
+            AuditQuery query = getAuditReader().createQuery()
+            .forRevisionsOfEntity(MyEntity.class, false, true)
+            .add(AuditEntity.id().eq(id));
+            .add(AuditEntity.property("actualDate").hasChanged())]]>
+            </programlisting>
+
+            <para>
+                This query will return all revisions of MyEntity with given id,
+                that modified property
+                <property>actualDate</property>.
+                Using this query we won't get all other revisions in which
+                <property>actualDate</property>
+                wasn't touched. Of course nothing prevents user from combining
+                hasChanged condition with some additional criteria - add method
+                can be used here in a normal way.
+            </para>
+
+            <programlisting><![CDATA[
+            AuditQuery query = getAuditReader().createQuery()
+            .forEntitiesAtRevision(MyEntity.class, revisionNumber)
+            .add(AuditEntity.property("prop1").hasChanged())
+            .add(AuditEntity.property("prop2").hasNotChanged());]]>
+            </programlisting>
+
+            <para>
+                This query will return horizontal slice for MyEntity at the time
+                revisionNumber was generated. It will be limited to revisions
+                that modified
+                <property>prop1</property>
+                but not <property>prop2</property>.
+                Note that the result set will usually also contain revisions
+                with numbers lower than the revisionNumber, so we cannot read
+                this query as "Give me all MyEntities changed in revisionNumber
+                with
+                <property>prop1</property>
+                modified and
+                <property>prop2</property>
+                untouched". To get such result we would have to refine the query
+                as follows (or use forRevisionsOfEntity API):
+            </para>
+
+            <programlisting><![CDATA[
+            AuditQuery query = getAuditReader().createQuery()
+            .forEntitiesAtRevision(MyEntity.class, revisionNumber)
+            .add(AuditEntity.revisionNumber().eq(revisionNumber))
+            .add(AuditEntity.property("prop1").hasChanged())
+            .add(AuditEntity.property("prop2").hasNotChanged());]]>
+            </programlisting>
+
+        </section>
+
 
         <section id="envers-tracking-modified-entities-queries">
             <title>Querying for entities modified in a given revision</title>

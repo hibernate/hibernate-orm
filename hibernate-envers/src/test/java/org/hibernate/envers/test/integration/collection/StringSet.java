@@ -121,4 +121,5 @@ public class StringSet extends AbstractEntityTest {
         assert rev2.getStrings().equals(TestTools.makeSet("sse2_string1", "sse2_string2"));
         assert rev3.getStrings().equals(TestTools.makeSet("sse2_string2"));
     }
+
 }

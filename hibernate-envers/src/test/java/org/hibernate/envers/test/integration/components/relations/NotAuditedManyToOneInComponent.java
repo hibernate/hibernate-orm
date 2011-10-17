@@ -27,8 +27,10 @@ import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.UnversionedStrTestEntity;
-import org.hibernate.envers.test.entities.components.relations.NotAuditedManyToOneComponent;
-import org.hibernate.envers.test.entities.components.relations.NotAuditedManyToOneComponentTestEntity;
+import org.hibernate.envers.test.entities.components.relations
+.NotAuditedManyToOneComponent;
+import org.hibernate.envers.test.entities.components.relations
+.NotAuditedManyToOneComponentTestEntity;
 import org.junit.Test;
 
 import javax.persistence.EntityManager;
@@ -110,4 +112,5 @@ public class NotAuditedManyToOneInComponent extends AbstractEntityTest {
         assert getAuditReader().find(NotAuditedManyToOneComponentTestEntity.class, mtocte_id1, 1).equals(ver1);
         assert getAuditReader().find(NotAuditedManyToOneComponentTestEntity.class, mtocte_id1, 2).equals(ver2);
     }
+
 }

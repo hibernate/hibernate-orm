@@ -34,6 +34,7 @@ import org.hibernate.envers.entities.PropertyData;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Michal Skowronek (mskowr at o2 dot pl)
  */
 public class PropertyAuditingData {
     private String name;
@@ -47,6 +48,8 @@ public class PropertyAuditingData {
     private String auditMappedBy;
     private String positionMappedBy;
     private boolean forceInsertable;
+	private boolean usingModifiedFlag;
+	private String modifiedFlagName;
 
 	public PropertyAuditingData() {
     }
@@ -114,7 +117,8 @@ public class PropertyAuditingData {
     }
 
     public PropertyData getPropertyData() {
-        return new PropertyData(name, beanName, accessType, store);
+		return new PropertyData(name, beanName, accessType, store,
+				usingModifiedFlag, modifiedFlagName);
     }
 
 	public List<AuditOverride> getAuditingOverrides() {
@@ -145,7 +149,19 @@ public class PropertyAuditingData {
         this.forceInsertable = forceInsertable;
     }
 
-    public void addAuditingOverride(AuditOverride annotation) {
+	public boolean isUsingModifiedFlag() {
+		return usingModifiedFlag;
+	}
+
+	public void setUsingModifiedFlag(boolean usingModifiedFlag) {
+		this.usingModifiedFlag = usingModifiedFlag;
+	}
+
+	public void setModifiedFlagName(String modifiedFlagName) {
+		this.modifiedFlagName = modifiedFlagName;
+	}
+
+	public void addAuditingOverride(AuditOverride annotation) {
 		if (annotation != null) {
 			String overrideName = annotation.name();
 			boolean present = false;

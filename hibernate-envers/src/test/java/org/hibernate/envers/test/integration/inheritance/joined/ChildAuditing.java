@@ -91,4 +91,5 @@ public class ChildAuditing extends AbstractEntityTest {
         assert getAuditReader().createQuery().forEntitiesAtRevision(ParentEntity.class, 1).getSingleResult()
                 .equals(childVer1);
     }
+
 }

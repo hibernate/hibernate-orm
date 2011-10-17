@@ -24,6 +24,7 @@
 
 package org.hibernate.envers.test.integration.inheritance.joined.notownedrelation;
 
+
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.Priority;
@@ -112,4 +113,5 @@ public class NotOwnedBidirectional extends AbstractEntityTest {
         assert getAuditReader().find(PersonalContact.class, pc_id, 2).getAddresses().equals(
                 TestTools.makeSet(new Address(a1_id, "a1"), new Address(a2_id, "a2")));
     }
+
 }

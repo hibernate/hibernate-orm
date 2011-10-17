@@ -133,4 +133,5 @@ public class StringMap extends AbstractEntityTest {
         assert rev3.getStrings().equals(TestTools.makeMap("1", "b"));
         assert rev4.getStrings().equals(TestTools.makeMap("1", "b"));
     }
+
 }

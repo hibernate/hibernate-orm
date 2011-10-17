@@ -24,6 +24,8 @@
 package org.hibernate.envers.entities;
 import org.hibernate.envers.ModificationStore;
 
+import java.util.Map;
+
 /**
  * Holds information on a property that is audited.
  * @author Adam Warski (adam at warski dot org)
@@ -36,6 +38,8 @@ public class PropertyData {
 	private final String beanName;
     private final String accessType;
     private final ModificationStore store;
+	private boolean usingModifiedFlag;
+	private String modifiedFlagName;
 
     /**
      * Copies the given property data, except the name.
@@ -62,6 +66,19 @@ public class PropertyData {
         this.store = store;
     }
 
+	/**
+     * @param name Name of the property.
+	 * @param beanName Name of the property in the bean.
+     * @param accessType Accessor type for this property.
+     * @param store How this property should be stored.
+     * @param usingModifiedFlag Defines if field changes should be tracked
+     */
+	public PropertyData(String name, String beanName, String accessType, ModificationStore store, boolean usingModifiedFlag, String modifiedFlagName) {
+		this(name, beanName, accessType, store);
+		this.usingModifiedFlag = usingModifiedFlag;
+		this.modifiedFlagName = modifiedFlagName;
+	}
+
     public String getName() {
         return name;
     }
@@ -78,6 +95,18 @@ public class PropertyData {
         return store;
     }
 
+	public boolean isUsingModifiedFlag() {
+		return usingModifiedFlag;
+	}
+
+	public void addModifiedFlag(Map<String, Object> data, boolean flagValue) {
+		data.put(getModifiedFlagPropertyName(), flagValue);
+	}
+
+	private String getModifiedFlagPropertyName() {
+		return modifiedFlagName;
+	}
+
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) return true;
@@ -89,6 +118,7 @@ public class PropertyData {
 		if (beanName != null ? !beanName.equals(that.beanName) : that.beanName != null) return false;
 		if (name != null ? !name.equals(that.name) : that.name != null) return false;
 		if (store != that.store) return false;
+		if (usingModifiedFlag != that.usingModifiedFlag) return false;
 
 		return true;
 	}
@@ -99,6 +129,7 @@ public class PropertyData {
 		result = 31 * result + (beanName != null ? beanName.hashCode() : 0);
 		result = 31 * result + (accessType != null ? accessType.hashCode() : 0);
 		result = 31 * result + (store != null ? store.hashCode() : 0);
+		result = 31 * result + (usingModifiedFlag ? 1 : 0);
 		return result;
 	}
 }

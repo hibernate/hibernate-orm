@@ -21,7 +21,8 @@ public class ReadEntityWithAuditedManyToManyTest extends AbstractOneSessionTest{
 	private long id_car2;
 	
 	private long id_pers1;
-	
+	private long id_pers2;
+
 	private Person person1;
 	private Car car1;
 	
@@ -57,6 +58,7 @@ public class ReadEntityWithAuditedManyToManyTest extends AbstractOneSessionTest{
         getSession().getTransaction().commit();
         id_pers1 = pers1.getId();
         id_car1 = car1.getId();
+		id_pers2 = pers2.getId();
 
         owners = new ArrayList<Person>();
         owners.add(pers2);
@@ -126,5 +128,6 @@ public class ReadEntityWithAuditedManyToManyTest extends AbstractOneSessionTest{
     	
     	checkEntityNames();
 
-    }    
+    }
+
 }

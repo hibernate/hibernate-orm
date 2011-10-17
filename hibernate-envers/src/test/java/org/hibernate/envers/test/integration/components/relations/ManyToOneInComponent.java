@@ -27,8 +27,10 @@ import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
-import org.hibernate.envers.test.entities.components.relations.ManyToOneComponent;
-import org.hibernate.envers.test.entities.components.relations.ManyToOneComponentTestEntity;
+import org.hibernate.envers.test.entities.components.relations
+.ManyToOneComponent;
+import org.hibernate.envers.test.entities.components.relations
+.ManyToOneComponentTestEntity;
 import org.junit.Test;
 
 import javax.persistence.EntityManager;
@@ -106,4 +108,5 @@ public class ManyToOneInComponent extends AbstractEntityTest {
         assert getAuditReader().find(ManyToOneComponentTestEntity.class, mtocte_id1, 2).equals(ver2);
         assert getAuditReader().find(ManyToOneComponentTestEntity.class, mtocte_id1, 3).equals(ver3);
     }
+
 }

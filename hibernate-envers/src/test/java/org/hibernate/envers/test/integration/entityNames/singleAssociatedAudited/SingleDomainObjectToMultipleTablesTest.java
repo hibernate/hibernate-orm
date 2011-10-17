@@ -1,5 +1,6 @@
 package org.hibernate.envers.test.integration.entityNames.singleAssociatedAudited;
 
+
 import org.hibernate.MappingException;
 import org.hibernate.envers.test.AbstractOneSessionTest;
 import org.hibernate.envers.test.Priority;
@@ -61,4 +62,5 @@ public class SingleDomainObjectToMultipleTablesTest extends AbstractOneSessionTe
         Assert.assertEquals("Kinga", driverVer1.getName());
         Assert.assertEquals(1, carVer1.getNumber());
     }
+
 }

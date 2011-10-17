@@ -22,24 +22,33 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.synchronization.work;
-import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
+
+import org.hibernate.Hibernate;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.configuration.AuditConfiguration;
+import org.hibernate.proxy.HibernateProxy;
+
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Michal Skowronek (mskowr at o2 dot pl)
  */
 public class CollectionChangeWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit {
-    private final Object entity;
+    private Object entity;
+	private final String collectionPropertyName;
+	private final Map<String, Object> data = new HashMap<String, Object>();
 
-    public CollectionChangeWorkUnit(SessionImplementor session, String entityName, AuditConfiguration verCfg,
-									Serializable id, Object entity) {
+    public CollectionChangeWorkUnit(SessionImplementor session, String entityName, String collectionPropertyName,
+									AuditConfiguration verCfg, Serializable id, Object entity) {
         super(session, entityName, verCfg, id, RevisionType.MOD);
-
         this.entity = entity;
+		this.collectionPropertyName = collectionPropertyName;
+		assert collectionPropertyName != null;
+		assert entity != null;
     }
 
     public boolean containsWork() {
@@ -47,16 +56,34 @@ public class CollectionChangeWorkUnit extends AbstractAuditWorkUnit implements A
     }
 
     public Map<String, Object> generateData(Object revisionData) {
-        Map<String, Object> data = new HashMap<String, Object>();
         fillDataWithId(data, revisionData);
-
-        verCfg.getEntCfg().get(getEntityName()).getPropertyMapper().mapToMapFromEntity(sessionImplementor,
-				data, entity, null);
-
+		resolveProxyIfNeeded();
+		Map<String, Object> preGenerateData = new HashMap<String, Object>(data);
+		verCfg.getEntCfg().get(getEntityName()).getPropertyMapper()
+				.mapToMapFromEntity(sessionImplementor, data, entity, null);
+		verCfg.getEntCfg().get(getEntityName()).getPropertyMapper()
+				.mapModifiedFlagsToMapFromEntity(sessionImplementor, data, entity, entity);
+		verCfg.getEntCfg().get(getEntityName()).getPropertyMapper()
+				.mapModifiedFlagsToMapForCollectionChange(collectionPropertyName, data);
+		data.putAll(preGenerateData);
         return data;
     }
 
-    public AuditWorkUnit merge(AddWorkUnit second) {
+	private void resolveProxyIfNeeded() {
+		if (entity instanceof HibernateProxy) {
+			Hibernate.initialize(entity);
+			this.entity = ((HibernateProxy) entity)
+					.getHibernateLazyInitializer().getImplementation();
+		}
+	}
+
+	public void mergeCollectionModifiedData(Map<String, Object> data) {
+		verCfg.getEntCfg().get(getEntityName()).getPropertyMapper()
+				.mapModifiedFlagsToMapForCollectionChange(
+						collectionPropertyName, data);
+	}
+
+	public AuditWorkUnit merge(AddWorkUnit second) {
         return second;
     }
 
@@ -69,6 +96,7 @@ public class CollectionChangeWorkUnit extends AbstractAuditWorkUnit implements A
     }
 
     public AuditWorkUnit merge(CollectionChangeWorkUnit second) {
+		second.mergeCollectionModifiedData(data);
         return this;
     }
 

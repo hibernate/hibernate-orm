@@ -106,4 +106,5 @@ public class EnumSet extends AbstractEntityTest {
         assert rev2.getEnums2().equals(TestTools.makeSet(E2.A));
         assert rev3.getEnums2().equals(TestTools.makeSet(E2.A));
     }
+
 }

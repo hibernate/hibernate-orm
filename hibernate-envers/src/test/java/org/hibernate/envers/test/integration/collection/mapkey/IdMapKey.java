@@ -103,4 +103,5 @@ public class IdMapKey extends AbstractEntityTest {
         assert rev1.getIdmap().equals(TestTools.makeMap(ste1.getId(), ste1));
         assert rev2.getIdmap().equals(TestTools.makeMap(ste1.getId(), ste1, ste2.getId(), ste2));
     }
+
 }

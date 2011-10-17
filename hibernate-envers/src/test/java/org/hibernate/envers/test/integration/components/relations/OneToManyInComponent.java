@@ -27,8 +27,10 @@ import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
-import org.hibernate.envers.test.entities.components.relations.OneToManyComponent;
-import org.hibernate.envers.test.entities.components.relations.OneToManyComponentTestEntity;
+import org.hibernate.envers.test.entities.components.relations
+.OneToManyComponent;
+import org.hibernate.envers.test.entities.components.relations
+.OneToManyComponentTestEntity;
 import org.junit.Test;
 
 import javax.persistence.EntityManager;
@@ -110,4 +112,5 @@ public class OneToManyInComponent extends AbstractEntityTest {
         assert getAuditReader().find(OneToManyComponentTestEntity.class, otmcte_id1, 2).equals(ver2);
         assert getAuditReader().find(OneToManyComponentTestEntity.class, otmcte_id1, 3).equals(ver3);
     }
+
 }

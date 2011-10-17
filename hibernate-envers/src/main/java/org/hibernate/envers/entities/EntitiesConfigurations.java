@@ -22,13 +22,14 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.entities;
-import java.util.HashMap;
-import java.util.Map;
+
+import java.util.*;
 
 /**
  * Configuration of the user entities: property mapping of the entities, relations, inheritance.
  * @author Adam Warski (adam at warski dot org)
  * @author Hern&aacute;n Chanfreau
+ * @author Michal Skowronek (mskowr at o2 dot pl)
  */
 public class EntitiesConfigurations {
     private Map<String, EntityConfiguration> entitiesConfigurations;
@@ -113,4 +114,44 @@ public class EntitiesConfigurations {
         }
     }
 
+	private Collection<RelationDescription> getRelationDescriptions(String entityName) {
+		EntityConfiguration entCfg = entitiesConfigurations.get(entityName);
+		Collection<RelationDescription> descriptions = new ArrayList<RelationDescription>();
+		if (entCfg.getParentEntityName() != null) {
+			// collect descriptions from super classes
+			descriptions.addAll(getRelationDescriptions(entCfg.getParentEntityName()));
+		}
+		for (RelationDescription relationDescription : entCfg.getRelationsIterator()) {
+			descriptions.add(relationDescription);
+		}
+		return descriptions;
+	}
+
+	private void addWithParentEntityNames(String entityName, Set<String> entityNames) {
+		entityNames.add(entityName);
+		EntityConfiguration entCfg = entitiesConfigurations.get(entityName);
+		if (entCfg.getParentEntityName() != null) {
+			// collect descriptions from super classes
+			addWithParentEntityNames(entCfg.getParentEntityName(), entityNames);
+		}
+	}
+
+	private Set<String> getEntityAndParentsNames(String entityName) {
+		Set<String> names = new HashSet<String>();
+		addWithParentEntityNames(entityName, names);
+		return names;
+	}
+
+	public Set<String> getToPropertyNames(String fromEntityName, String fromPropertyName, String toEntityName) {
+		Set<String> entityAndParentsNames = getEntityAndParentsNames(fromEntityName);
+		Set<String> toPropertyNames = new HashSet<String>();
+		for (RelationDescription relationDescription : getRelationDescriptions(toEntityName)) {
+			String relToEntityName = relationDescription.getToEntityName();
+			String mappedByPropertyName = relationDescription.getMappedByPropertyName();
+			if (entityAndParentsNames.contains(relToEntityName) && mappedByPropertyName.equals(fromPropertyName)) {
+				toPropertyNames.add(relationDescription.getFromPropertyName());
+			}
+		}
+		return toPropertyNames;
+	}
 }

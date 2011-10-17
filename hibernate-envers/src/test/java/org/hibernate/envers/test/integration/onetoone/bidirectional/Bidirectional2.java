@@ -148,4 +148,5 @@ public class Bidirectional2 extends AbstractEntityTest {
         assert rev3.getReferencing() == null;
         assert rev4.getReferencing().equals(ing1);
     }
+
 }

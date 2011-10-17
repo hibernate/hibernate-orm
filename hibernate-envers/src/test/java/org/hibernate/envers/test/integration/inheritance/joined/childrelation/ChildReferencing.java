@@ -121,4 +121,5 @@ public class ChildReferencing extends AbstractEntityTest {
         assert getAuditReader().find(ChildIngEntity.class, c_id, 3).getReferenced().equals(
                 new ReferencedEntity(re_id2));
     }
+
 }

@@ -172,4 +172,5 @@ public class Components extends AbstractEntityTest {
         assert getAuditReader().find(ComponentTestEntity.class, id4, 3).equals(ver3);
         assert getAuditReader().find(ComponentTestEntity.class, id4, 4).equals(ver3);
     }
+
 }

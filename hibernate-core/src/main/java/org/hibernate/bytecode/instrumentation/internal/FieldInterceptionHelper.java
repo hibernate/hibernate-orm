@@ -33,6 +33,9 @@ import org.hibernate.engine.spi.SessionImplementor;
 /**
  * Helper class for dealing with enhanced entity classes.
  *
+ * These operations are expensive. When under a SessionFactory, try and use (or guard with)
+ * {@link org.hibernate.service.instrumentation.spi.InstrumentationService#isInstrumented}
+ *
  * @author Steve Ebersole
  */
 public class FieldInterceptionHelper {

@@ -46,6 +46,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
+import org.hibernate.service.instrumentation.spi.InstrumentationService;
 import org.hibernate.type.Type;
 
 /**
@@ -220,7 +221,13 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 				return true;
 			}
 			else {
-				FieldInterceptionHelper.clearDirty( event.getEntity() );
+				InstrumentationService instrumentationService = event.getSession()
+						.getFactory()
+						.getServiceRegistry()
+						.getService( InstrumentationService.class );
+				if ( instrumentationService.isInstrumented( event.getEntity() ) ) {
+					FieldInterceptionHelper.clearDirty( event.getEntity() );
+				}
 				return false;
 			}
 		}

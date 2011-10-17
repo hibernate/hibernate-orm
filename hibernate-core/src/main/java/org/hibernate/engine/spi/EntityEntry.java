@@ -218,8 +218,9 @@ public final class EntityEntry implements Serializable {
 			this.version = nextVersion;
 			getPersister().setPropertyValue( entity, getPersister().getVersionProperty(), nextVersion );
 		}
-
-		FieldInterceptionHelper.clearDirty( entity );
+		if ( getPersister().getFactory().getServiceRegistry().getService( InstrumentationService.class ).isInstrumented( entity ) ) {
+			FieldInterceptionHelper.clearDirty( entity );
+		}
 	}
 
 	/**

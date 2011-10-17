@@ -23,6 +23,7 @@
  */
 
 package org.hibernate.test.annotations.beanvalidation;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -38,6 +39,7 @@ public class Range {
 	private Long id;
 
 	@org.hibernate.validator.constraints.Range(min = 2, max = 10)
+    @Column(name = "`value`")
 	private Integer value;
 
 	private Range() {

@@ -147,6 +147,7 @@ public class Boy {
 
 	@ElementCollection
 	@Enumerated(EnumType.STRING)
+    @Column(name = "`characters`")
 	public Set<Character> getCharacters() {
 		return characters;
 	}

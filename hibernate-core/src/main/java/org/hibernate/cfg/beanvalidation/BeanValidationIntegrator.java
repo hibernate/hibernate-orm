@@ -33,6 +33,8 @@ import java.util.Set;
 import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.internal.CoreMessageLogger;
@@ -106,7 +108,7 @@ public class BeanValidationIntegrator implements Integrator {
 		final Set<ValidationMode> modes = ValidationMode.getModes( configuration.getProperties().get( MODE_PROPERTY ) );
 
 		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
-
+        Dialect dialect = serviceRegistry.getService( JdbcServices.class ).getDialect();
 		// try to locate a BV class to see if it is available on the classpath
 		boolean isBeanValidationAvailable;
 		try {
@@ -121,12 +123,13 @@ public class BeanValidationIntegrator implements Integrator {
 		final Class typeSafeActivatorClass = loadTypeSafeActivatorClass( serviceRegistry );
 
 		// todo : if this works out, probably better to simply alter TypeSafeActivator into a single method...
-
 		applyRelationalConstraints(
 				modes,
 				isBeanValidationAvailable,
 				typeSafeActivatorClass,
-				configuration
+				configuration,
+                dialect
+
 		);
 		applyHibernateListeners(
 				modes,
@@ -178,7 +181,8 @@ public class BeanValidationIntegrator implements Integrator {
 			Set<ValidationMode> modes,
 			boolean beanValidationAvailable,
 			Class typeSafeActivatorClass,
-			Configuration configuration) {
+			Configuration configuration,
+            Dialect dialect) {
 		if ( ! ConfigurationHelper.getBoolean( APPLY_CONSTRAINTS, configuration.getProperties(), true ) ){
 			LOG.debug( "Skipping application of relational constraints from legacy Hibernate Validator" );
 			return;
@@ -199,12 +203,13 @@ public class BeanValidationIntegrator implements Integrator {
 		}
 
 		try {
-			Method applyDDLMethod = typeSafeActivatorClass.getMethod( DDL_METHOD, Collection.class, Properties.class );
+			Method applyDDLMethod = typeSafeActivatorClass.getMethod( DDL_METHOD, Collection.class, Properties.class, Dialect.class );
 			try {
 				applyDDLMethod.invoke(
 						null,
 						configuration.createMappings().getClasses().values(),
-						configuration.getProperties()
+						configuration.getProperties(),
+                        dialect
 				);
 			}
 			catch (HibernateException e) {

@@ -46,6 +46,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.internal.CoreMessageLogger;
@@ -112,7 +113,7 @@ class TypeSafeActivator {
 //    }
 
 	@SuppressWarnings( {"UnusedDeclaration"})
-	public static void applyDDL(Collection<PersistentClass> persistentClasses, Properties properties) {
+	public static void applyDDL(Collection<PersistentClass> persistentClasses, Properties properties, Dialect dialect) {
 		ValidatorFactory factory = getValidatorFactory( properties );
 		Class<?>[] groupsArray = new GroupsPerOperation( properties ).get( GroupsPerOperation.Operation.DDL );
 		Set<Class<?>> groups = new HashSet<Class<?>>( Arrays.asList( groupsArray ) );
@@ -132,7 +133,7 @@ class TypeSafeActivator {
 			}
 
 			try {
-				applyDDL( "", persistentClass, clazz, factory, groups, true );
+				applyDDL( "", persistentClass, clazz, factory, groups, true, dialect );
 			}
 			catch (Exception e) {
                 LOG.unableToApplyConstraints(className, e);
@@ -164,7 +165,8 @@ class TypeSafeActivator {
 								 Class<?> clazz,
 								 ValidatorFactory factory,
 								 Set<Class<?>> groups,
-								 boolean activateNotNull) {
+								 boolean activateNotNull,
+                                 Dialect dialect) {
 		final BeanDescriptor descriptor = factory.getValidator().getConstraintsForClass( clazz );
 		//no bean level constraints can be applied, go to the properties
 
@@ -173,7 +175,7 @@ class TypeSafeActivator {
 			boolean hasNotNull;
 			if ( property != null ) {
 				hasNotNull = applyConstraints(
-						propertyDesc.getConstraintDescriptors(), property, propertyDesc, groups, activateNotNull
+						propertyDesc.getConstraintDescriptors(), property, propertyDesc, groups, activateNotNull, dialect
 				);
 				if ( property.isComposite() && propertyDesc.isCascaded() ) {
 					Class<?> componentClass = ( (Component) property.getValue() ).getComponentClass();
@@ -187,7 +189,8 @@ class TypeSafeActivator {
 					applyDDL(
 							prefix + propertyDesc.getPropertyName() + ".",
 							persistentClass, componentClass, factory, groups,
-							canSetNotNullOnColumns
+							canSetNotNullOnColumns,
+                            dialect
 					);
 				}
 				//FIXME add collection of components
@@ -216,7 +219,8 @@ class TypeSafeActivator {
 											Property property,
 											PropertyDescriptor propertyDesc,
 											Set<Class<?>> groups,
-											boolean canApplyNotNull
+											boolean canApplyNotNull,
+                                            Dialect dialect
 	) {
 		boolean hasNotNull = false;
 		for ( ConstraintDescriptor<?> descriptor : constraintDescriptors ) {
@@ -231,8 +235,8 @@ class TypeSafeActivator {
 			// apply bean validation specific constraints
 			applyDigits( property, descriptor );
 			applySize( property, descriptor, propertyDesc );
-			applyMin( property, descriptor );
-			applyMax( property, descriptor );
+			applyMin( property, descriptor, dialect );
+			applyMax( property, descriptor, dialect );
 
 			// apply hibernate validator specific constraints - we cannot import any HV specific classes though!
 			// no need to check explicitly for @Range. @Range is a composed constraint using @Min and @Max which
@@ -243,7 +247,8 @@ class TypeSafeActivator {
 			hasNotNull = hasNotNull || applyConstraints(
 					descriptor.getComposingConstraints(),
 					property, propertyDesc, null,
-					canApplyNotNull
+					canApplyNotNull,
+                    dialect
 			);
 		}
 		return hasNotNull;
@@ -280,25 +285,25 @@ class TypeSafeActivator {
 //        return hasNotNull;
 //    }
 
-	private static void applyMin(Property property, ConstraintDescriptor<?> descriptor) {
+	private static void applyMin(Property property, ConstraintDescriptor<?> descriptor, Dialect dialect) {
 		if ( Min.class.equals( descriptor.getAnnotation().annotationType() ) ) {
 			@SuppressWarnings("unchecked")
 			ConstraintDescriptor<Min> minConstraint = (ConstraintDescriptor<Min>) descriptor;
 			long min = minConstraint.getAnnotation().value();
 
 			Column col = (Column) property.getColumnIterator().next();
-			String checkConstraint = col.getName() + ">=" + min;
+			String checkConstraint = col.getQuotedName(dialect) + ">=" + min;
 			applySQLCheck( col, checkConstraint );
 		}
 	}
 
-	private static void applyMax(Property property, ConstraintDescriptor<?> descriptor) {
+	private static void applyMax(Property property, ConstraintDescriptor<?> descriptor, Dialect dialect) {
 		if ( Max.class.equals( descriptor.getAnnotation().annotationType() ) ) {
 			@SuppressWarnings("unchecked")
 			ConstraintDescriptor<Max> maxConstraint = (ConstraintDescriptor<Max>) descriptor;
 			long max = maxConstraint.getAnnotation().value();
 			Column col = (Column) property.getColumnIterator().next();
-			String checkConstraint = col.getName() + "<=" + max;
+			String checkConstraint = col.getQuotedName(dialect) + "<=" + max;
 			applySQLCheck( col, checkConstraint );
 		}
 	}

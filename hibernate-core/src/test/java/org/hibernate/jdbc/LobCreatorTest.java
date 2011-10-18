@@ -73,7 +73,7 @@ public class LobCreatorTest extends org.hibernate.testing.junit4.BaseUnitTestCas
 
 		connection.close();
 	}
-
+    @Test
 	public void testJdbc3LobCreator() throws SQLException {
 		final Connection connection = createConnectionProxy( 3, new JdbcLobBuilderImpl( false) );
 		LobCreationContext lobCreationContext = new LobCreationContextImpl( connection );
@@ -86,7 +86,7 @@ public class LobCreatorTest extends org.hibernate.testing.junit4.BaseUnitTestCas
 		testLobCreation( lobCreator );
 		connection.close();
 	}
-
+    @Test
 	public void testJdbc4UnsupportedLobCreator() throws SQLException {
 		final Connection connection = createConnectionProxy( 4, new JdbcLobBuilderImpl( false ) );
 		LobCreationContext lobCreationContext = new LobCreationContextImpl( connection );
@@ -99,7 +99,7 @@ public class LobCreatorTest extends org.hibernate.testing.junit4.BaseUnitTestCas
 		testLobCreation( lobCreator );
 		connection.close();
 	}
-
+    @Test
 	public void testConfiguredNonContextualLobCreator() throws SQLException {
 		final Connection connection = createConnectionProxy( 4, new JdbcLobBuilderImpl( true ) );
 		LobCreationContext lobCreationContext = new LobCreationContextImpl( connection );

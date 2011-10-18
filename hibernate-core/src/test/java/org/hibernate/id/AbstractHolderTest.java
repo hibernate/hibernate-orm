@@ -142,7 +142,7 @@ public abstract class AbstractHolderTest extends BaseUnitTestCase {
 		}
 		assertEquals( holder.copy().initialize( i ), holder );
 	}
-
+    @Test
 	public void testBasicHiloAlgorithm() {
 		// mimic an initialValue of 1 and increment of 20
 		final long initialValue = 1;

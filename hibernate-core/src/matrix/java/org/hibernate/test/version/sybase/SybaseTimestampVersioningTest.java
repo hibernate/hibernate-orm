@@ -26,6 +26,7 @@ package org.hibernate.test.version.sybase;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.type.BinaryType;
 
@@ -43,7 +44,7 @@ import static org.junit.Assert.fail;
  *
  * @author Steve Ebersole
  */
-@RequiresDialect( SybaseDialect.class )
+@RequiresDialect( SybaseASE15Dialect.class )
 public class SybaseTimestampVersioningTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] { "version/sybase/User.hbm.xml" };

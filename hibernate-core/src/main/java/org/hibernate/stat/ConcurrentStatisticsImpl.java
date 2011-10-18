@@ -316,7 +316,9 @@ public class ConcurrentStatisticsImpl implements Statistics, StatisticsImplement
 
 	@SuppressWarnings({ "UnnecessaryBoxing" })
 	public void queryExecuted(String hql, int rows, long time) {
-		PERF_LOG.info( "HQL: {}, time: {}ms, rows: {}", new Object[] {hql, Long.valueOf( time ), Long.valueOf(rows)} );
+		if (PERF_LOG.isDebugEnabled()) {
+			PERF_LOG.debug( "HQL: {}, time: {}ms, rows: {}", new Object[] {hql, Long.valueOf( time ), Long.valueOf(rows)} );
+		}
 		queryExecutionCount.getAndIncrement();
 		boolean isLongestQuery = false;
 		for ( long old = queryExecutionMaxTime.get();

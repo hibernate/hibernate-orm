@@ -1,4 +1,5 @@
 apply plugin: 'java'
+apply plugin: org.hibernate.gradle.testing.matrix.MatrixTestingPlugin
 
 dependencies {
     compile( project( ':hibernate-core' ) )
@@ -17,10 +18,17 @@ dependencies {
 }
 
 sourceSets {
-    test {
-        // resources inherently exclude sources
+    matrix {
+        java {
+            srcDir 'src/matrix/java'
+        }
         resources {
-            setSrcDirs( ['src/test/java','src/test/resources'] )
+            srcDir 'src/matrix/resources'
+            srcDir 'src/matrix/java'
         }
     }
+}
+ideaModule {
+    testSourceDirs += file( 'src/matrix/java')
+    testSourceDirs += file( 'src/matrix/resources')
 }

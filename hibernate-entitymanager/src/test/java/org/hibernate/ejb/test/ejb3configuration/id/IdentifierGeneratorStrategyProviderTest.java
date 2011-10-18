@@ -24,6 +24,8 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
 import junit.framework.TestCase;
+import org.junit.Assert;
+import org.junit.Test;
 
 import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.Ejb3Configuration;
@@ -31,7 +33,8 @@ import org.hibernate.ejb.Ejb3Configuration;
 /**
  * @author Emmanuel Bernard <emmanuel@hibernate.org>
  */
-public class IdentifierGeneratorStrategyProviderTest extends TestCase {
+public class IdentifierGeneratorStrategyProviderTest {
+    @Test
 	public void testIdentifierGeneratorStrategyProvider() {
         Ejb3Configuration conf = new Ejb3Configuration();
         conf.setProperty(
@@ -43,7 +46,7 @@ public class IdentifierGeneratorStrategyProviderTest extends TestCase {
         try {
 			entityManager.persist( new Cable() );
 			entityManager.flush();
-            fail("FunkyException should have been thrown when the id is generated");
+            Assert.fail( "FunkyException should have been thrown when the id is generated" );
         }
         catch ( FunkyException e ) {
 			entityManager.close();

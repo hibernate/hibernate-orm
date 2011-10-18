@@ -55,11 +55,6 @@ public class ProxyBreakingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[0];
-	}
-
-	@Override
 	protected String[] getXmlFiles() {
 		return new String[] {
 				"org/hibernate/test/annotations/bytecode/Hammer.hbm.xml"

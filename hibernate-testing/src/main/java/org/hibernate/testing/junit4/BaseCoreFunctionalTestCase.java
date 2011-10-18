@@ -451,9 +451,9 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 				for ( Object element : list ) {
 					Integer l = items.get( tmpSession.getEntityName( element ) );
 					if ( l == null ) {
-						l = Integer.valueOf( 0 );
+						l = 0;
 					}
-					l = Integer.valueOf( l.intValue() + 1 ) ;
+					l = l + 1 ;
 					items.put( tmpSession.getEntityName( element ), l );
 					System.out.println( "Data left: " + element );
 				}

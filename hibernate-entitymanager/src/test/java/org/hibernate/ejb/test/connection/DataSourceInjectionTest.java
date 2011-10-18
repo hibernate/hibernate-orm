@@ -23,12 +23,16 @@
 package org.hibernate.ejb.test.connection;
 import java.io.File;
 import junit.framework.TestCase;
+import org.junit.Assert;
+import org.junit.Test;
+
 import org.hibernate.ejb.HibernatePersistence;
 
 /**
  * @author Emmanuel Bernard
  */
-public class DataSourceInjectionTest extends TestCase {
+public class DataSourceInjectionTest {
+    @Test
 	public void testDatasourceInjection() throws Exception {
 		File current = new File(".");
 		File sub = new File(current, "puroot");
@@ -36,7 +40,7 @@ public class DataSourceInjectionTest extends TestCase {
 		PersistenceUnitInfoImpl info = new PersistenceUnitInfoImpl( sub.toURI().toURL(), new String[]{} );
 		try {
 			new HibernatePersistence().createContainerEntityManagerFactory( info, null );
-			fail( "FakeDatasource should have been used" );
+			Assert.fail( "FakeDatasource should have been used" );
 		}
 		catch (FakeDataSourceException fde) {
 			//success

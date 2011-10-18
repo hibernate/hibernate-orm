@@ -3,9 +3,12 @@ package org.hibernate.test.annotations;
 
 import java.util.Properties;
 import junit.framework.TestCase;
+import org.junit.Assert;
+import org.junit.Test;
+
 import org.hibernate.HibernateException;
 import org.hibernate.SessionFactory;
-import org.hibernate.cfg.AnnotationConfiguration;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.service.ServiceRegistry;
 
@@ -14,14 +17,12 @@ import org.hibernate.testing.ServiceRegistryBuilder;
 /**
  * @author Emmanuel Bernard
  */
-public class SecuredBindingTest extends TestCase {
+public class SecuredBindingTest {
 
-	public SecuredBindingTest(String x) {
-		super( x );
-	}
 
+     @Test
 	public void testConfigurationMethods() throws Exception {
-		AnnotationConfiguration ac = new AnnotationConfiguration();
+		Configuration ac = new Configuration();
 		Properties p = new Properties();
 		p.put( Environment.DIALECT, "org.hibernate.dialect.HSQLDialect" );
 		p.put( "hibernate.connection.driver_class", "org.hsqldb.jdbcDrive" );
@@ -41,7 +42,7 @@ public class SecuredBindingTest extends TestCase {
 			}
 			catch (Exception ignore) {
 			}
-			fail( "Driver property overriding should work" );
+            Assert.fail( "Driver property overriding should work" );
 		}
 		catch (HibernateException he) {
 			//success

@@ -4,9 +4,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.Stack;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
 
 import org.hibernate.hql.internal.antlr.HqlTokenTypes;
 import org.hibernate.hql.internal.ast.HqlParser;
@@ -16,30 +13,26 @@ import org.hibernate.hql.internal.ast.util.ASTPrinter;
 import antlr.RecognitionException;
 import antlr.TokenStreamException;
 import antlr.collections.AST;
+import org.junit.Test;
+import static org.junit.Assert.*;
 
 /**
  * Tests the HQL parser on various inputs, just makes sure that the first phase of the parser
  * works properly (i.e. no unexpected syntax errors).
+ * todo this should be a unit test.
  */
-public class HqlParserTest extends TestCase {
+public class HqlParserTest{
 
-	/**
-	 * Standard JUnit test case constructor.
-	 *
-	 * @param name The name of the test case.
-	 */
-	public HqlParserTest(String name) {
-		super( name );
-	}
-	
-	public void testUnion() throws Exception {
+
+	@Test
+    public void testUnion() throws Exception {
 		parse("from Animal a where a in (from Cat union from Dog) ");
 	}
 
 	/**
 	 * Section 9.2 - from *
 	 */
-	public void testDocoExamples92() throws Exception {
+	@Test public void testDocoExamples92() throws Exception {
 		parse( "from eg.Cat" );
 		parse( "from eg.Cat as cat" );
 		parse( "from eg.Cat cat" );
@@ -50,7 +43,7 @@ public class HqlParserTest extends TestCase {
 	/**
 	 * Section 9.3 - Associations and joins *
 	 */
-	public void testDocoExamples93() throws Exception {
+	@Test public void testDocoExamples93() throws Exception {
 		parse( "from eg.Cat as cat inner join cat.mate as mate left outer join cat.kittens as kitten" );
 		parse( "from eg.Cat as cat left join cat.mate.kittens as kittens" );
 		parse( "from Formula form full join form.parameter param" );
@@ -61,7 +54,7 @@ public class HqlParserTest extends TestCase {
 	/**
 	 * Section 9.4 - Select *
 	 */
-	public void testDocoExamples94() throws Exception {
+	@Test public void testDocoExamples94() throws Exception {
 		parse( "select mate from eg.Cat as cat inner join cat.mate as mate" );
 		parse( "select cat.mate from eg.Cat cat" );
 		parse( "select elements(cat.kittens) from eg.Cat cat" );
@@ -79,7 +72,7 @@ public class HqlParserTest extends TestCase {
 	/**
 	 * Section 9.5 - Aggregate functions *
 	 */
-	public void testDocoExamples95() throws Exception {
+	@Test public void testDocoExamples95() throws Exception {
 		parse( "select avg(cat.weight), sum(cat.weight), max(cat.weight), count(cat)\n"
 				+ "from eg.Cat cat" );
 		parse( "select cat, count( elements(cat.kittens) )\n"
@@ -91,7 +84,7 @@ public class HqlParserTest extends TestCase {
 	/**
 	 * Section 9.6 - Polymorphism *
 	 */
-	public void testDocoExamples96() throws Exception {
+	@Test public void testDocoExamples96() throws Exception {
 		parse( "from eg.Cat as cat" );
 		parse( "from java.lang.Object o" );
 		parse( "from eg.Named n, eg.Named m where n.name = m.name" );
@@ -100,7 +93,7 @@ public class HqlParserTest extends TestCase {
 	/**
 	 * Section 9.7 - Where *
 	 */
-	public void testDocoExamples97() throws Exception {
+	@Test public void testDocoExamples97() throws Exception {
 		parse( "from eg.Cat as cat where cat.name='Fritz'" );
 		parse( "select foo\n"
 				+ "from eg.Foo foo, eg.Bar bar\n"
@@ -126,7 +119,7 @@ public class HqlParserTest extends TestCase {
 	/**
 	 * Section 9.8 - Expressions *
 	 */
-	public void testDocoExamples98() throws Exception {
+	@Test public void testDocoExamples98() throws Exception {
 		parse( "from eg.DomesticCat cat where cat.name between 'A' and 'B'" );
 		parse( "from eg.DomesticCat cat where cat.name in ( 'Foo', 'Bar', 'Baz' )" );
 		parse( "from eg.DomesticCat cat where cat.name not between 'A' and 'B'" );
@@ -182,12 +175,12 @@ public class HqlParserTest extends TestCase {
 
 	}
 
-	public void testDocoExamples99() throws Exception {
+	@Test public void testDocoExamples99() throws Exception {
 		parse( "from eg.DomesticCat cat\n"
 				+ "order by cat.name asc, cat.weight desc, cat.birthdate" );
 	}
 
-	public void testDocoExamples910() throws Exception {
+	@Test public void testDocoExamples910() throws Exception {
 		parse( "select cat.color, sum(cat.weight), count(cat)\n"
 				+ "from eg.Cat cat group by cat.color" );
 		parse( "select foo.id, avg( elements(foo.names) ), max( indices(foo.names) )\n"
@@ -200,7 +193,7 @@ public class HqlParserTest extends TestCase {
 				+ "order by count(kitten) asc, sum(kitten.weight) desc" );
 	}
 
-	public void testDocoExamples911() throws Exception {
+	@Test public void testDocoExamples911() throws Exception {
 		parse( "from eg.Cat as fatcat where fatcat.weight > (\n"
 				+ "select avg(cat.weight) from eg.DomesticCat cat)" );
 		parse( "from eg.DomesticCat as cat where cat.name = some (\n"
@@ -211,7 +204,7 @@ public class HqlParserTest extends TestCase {
 				+ "select name.nickName from eg.Name as name)" );
 	}
 
-	public void testDocoExamples912() throws Exception {
+	@Test public void testDocoExamples912() throws Exception {
 		parse( "select ord.id, sum(price.amount), count(item)\n"
 				+ "from Order as ord join ord.lineItems as item\n"
 				+ "join item.product as product, Catalog as catalog\n"
@@ -271,7 +264,7 @@ public class HqlParserTest extends TestCase {
 				+ "order by account.type.sortOrder, account.accountNumber, payment.dueDate" );
 	}
 
-	public void testExamples1() throws Exception {
+	@Test public void testExamples1() throws Exception {
 		parse( "select new org.hibernate.test.S(s.count, s.address)\n"
 				+ "from s in class Simple" );
 		parse( "select s.name, sysdate, trunc(s.pay), round(s.pay) from s in class Simple" );
@@ -280,32 +273,32 @@ public class HqlParserTest extends TestCase {
 		parse( "select trunc(round(sysdate)) from s in class Simple" );
 	}
 
-	public void testArrayExpr() throws Exception {
+	@Test public void testArrayExpr() throws Exception {
 		parse( "from Order ord where ord.items[0].id = 1234" );
 	}
 
-	public void testMultipleActualParameters() throws Exception {
+	@Test public void testMultipleActualParameters() throws Exception {
 		parse( "select round(s.pay, 2) from s" );
 	}
 
-	public void testMultipleFromClasses() throws Exception {
+	@Test public void testMultipleFromClasses() throws Exception {
 		parse( "FROM eg.mypackage.Cat qat, com.toadstool.Foo f" );
 		parse( "FROM eg.mypackage.Cat qat, org.jabberwocky.Dipstick" );
 	}
 
-	public void testFromWithJoin() throws Exception {
+	@Test public void testFromWithJoin() throws Exception {
 		parse( "FROM eg.mypackage.Cat qat, com.toadstool.Foo f join net.sf.blurb.Blurb" );
 		parse( "FROM eg.mypackage.Cat qat  left join com.multijoin.JoinORama , com.toadstool.Foo f join net.sf.blurb.Blurb" );
 	}
 
-	public void testSelect() throws Exception {
+	@Test public void testSelect() throws Exception {
 		parse( "SELECT f FROM eg.mypackage.Cat qat, com.toadstool.Foo f join net.sf.blurb.Blurb" );
 		parse( "SELECT DISTINCT bar FROM eg.mypackage.Cat qat  left join com.multijoin.JoinORama as bar, com.toadstool.Foo f join net.sf.blurb.Blurb" );
 		parse( "SELECT count(*) FROM eg.mypackage.Cat qat" );
 		parse( "SELECT avg(qat.weight) FROM eg.mypackage.Cat qat" );
 	}
 
-	public void testWhere() throws Exception {
+	@Test public void testWhere() throws Exception {
 		parse( "FROM eg.mypackage.Cat qat where qat.name like '%fluffy%' or qat.toes > 5" );
 		parse( "FROM eg.mypackage.Cat qat where not qat.name like '%fluffy%' or qat.toes > 5" );
 		parse( "FROM eg.mypackage.Cat qat where not qat.name not like '%fluffy%'" );
@@ -315,33 +308,33 @@ public class HqlParserTest extends TestCase {
 		parse( "from Animal an where (an.bodyWeight > 10 and an.bodyWeight < 100) or an.bodyWeight is null" );
 	}
 
-	public void testGroupBy() throws Exception {
+	@Test public void testGroupBy() throws Exception {
 		parse( "FROM eg.mypackage.Cat qat group by qat.breed" );
 		parse( "FROM eg.mypackage.Cat qat group by qat.breed, qat.eyecolor" );
 	}
 
-	public void testOrderBy() throws Exception {
+	@Test public void testOrderBy() throws Exception {
 		parse( "FROM eg.mypackage.Cat qat order by avg(qat.toes)" );
 		parse( "from Animal an order by sqrt(an.bodyWeight)/2" );
 	}
 
-	public void testDoubleLiteral() throws Exception {
+	@Test public void testDoubleLiteral() throws Exception {
 		parse( "from eg.Cat as tinycat where fatcat.weight < 3.1415" );
 		parse( "from eg.Cat as enormouscat where fatcat.weight > 3.1415e3" );
 	}
 
-	public void testComplexConstructor() throws Exception {
+	@Test public void testComplexConstructor() throws Exception {
 		parse( "select new Foo(count(bar)) from bar" );
 		parse( "select new Foo(count(bar),(select count(*) from doofus d where d.gob = 'fat' )) from bar" );
 	}
 
 
-	public void testInNotIn() throws Exception {
+	@Test public void testInNotIn() throws Exception {
 		parse( "from foo where foo.bar in ('a' , 'b', 'c')" );
 		parse( "from foo where foo.bar not in ('a' , 'b', 'c')" );
 	}
 
-	public void testOperatorPrecedence() throws Exception {
+	@Test public void testOperatorPrecedence() throws Exception {
 		parse( "from foo where foo.bar = 123 + foo.baz * foo.not" );
 		parse( "from foo where foo.bar like 'testzzz' || foo.baz or foo.bar in ('duh', 'gob')" );
 	}
@@ -351,7 +344,7 @@ public class HqlParserTest extends TestCase {
 	 *
 	 * @throws Exception if the HQL could not be parsed.
 	 */
-	public void testUnitTestHql() throws Exception {
+	@Test public void testUnitTestHql() throws Exception {
 		parse( "select foo from foo in class org.hibernate.test.Foo, fee in class org.hibernate.test.Fee where foo.dependent = fee order by foo.string desc, foo.component.count asc, fee.id" );
 		parse( "select foo.foo, foo.dependent from foo in class org.hibernate.test.Foo order by foo.foo.string desc, foo.component.count asc, foo.dependent.id" );
 		parse( "select foo from foo in class org.hibernate.test.Foo order by foo.dependent.id, foo.dependent.fi" );
@@ -880,26 +873,26 @@ public class HqlParserTest extends TestCase {
 		parse( "from org.hibernate.test.Componentizable" );
 	}
 
-	public void testUnnamedParameter() throws Exception {
+	@Test public void testUnnamedParameter() throws Exception {
 		parse( "select foo, bar from org.hibernate.test.Foo foo left outer join foo.foo bar where foo = ?" ); // Added '?' as a valid expression.
 	}
 
-	public void testInElements() throws Exception {
+	@Test public void testInElements() throws Exception {
 		parse( "from bar in class org.hibernate.test.Bar, foo in elements(bar.baz.fooArray)" );   // Added collectionExpr as a valid 'in' clause.
 	}
 
-	public void testDotElements() throws Exception {
+	@Test public void testDotElements() throws Exception {
 		parse( "select distinct foo from baz in class org.hibernate.test.Baz, foo in elements(baz.fooArray)" );
 		parse( "select foo from baz in class org.hibernate.test.Baz, foo in elements(baz.fooSet)" );
 		parse( "select foo from baz in class org.hibernate.test.Baz, foo in elements(baz.fooArray)" );
 		parse( "from org.hibernate.test.Baz baz where 'b' in elements(baz.collectionComponent.nested.foos) and 1.0 in elements(baz.collectionComponent.nested.floats)" );
 	}
 
-	public void testSelectAll() throws Exception {
+	@Test public void testSelectAll() throws Exception {
 		parse( "select all s, s.other from s in class org.hibernate.test.Simple where s = :s" );
 	}
 
-	public void testNot() throws Exception {
+	@Test public void testNot() throws Exception {
 		// Cover NOT optimization in HqlParser
 		parse( "from eg.Cat cat where not ( cat.kittens.size < 1 )" );
 		parse( "from eg.Cat cat where not ( cat.kittens.size > 1 )" );
@@ -911,7 +904,7 @@ public class HqlParserTest extends TestCase {
 		parse( "from eg.Cat cat where not  not ( not cat.kittens.size <= 1 )" );
 	}
 
-	public void testOtherSyntax() throws Exception {
+	@Test public void testOtherSyntax() throws Exception {
 		parse( "select bar from org.hibernate.test.Bar bar order by ((bar.x - :valueX)*(bar.x - :valueX))" );
 		parse( "from bar in class org.hibernate.test.Bar, foo in elements(bar.baz.fooSet)" );
 		parse( "from one in class org.hibernate.test.One, many in elements(one.manies) where one.id = 1 and many.id = 1" );
@@ -928,25 +921,25 @@ public class HqlParserTest extends TestCase {
 //        parse("from sm in class org.hibernate.test.SubMulti where exists sm.children.elements");
 	}
 
-	public void testEjbqlExtensions() throws Exception {
+	@Test public void testEjbqlExtensions() throws Exception {
 		parse( "select object(a) from Animal a where a.mother member of a.offspring" );
 		parse( "select object(a) from Animal a where a.mother member a.offspring" ); //no member of
 		parse( "select object(a) from Animal a where a.offspring is empty" );
 	}
 
-	public void testEmptyFilter() throws Exception {
+	@Test public void testEmptyFilter() throws Exception {
 		parseFilter( "" );  //  Blank is a legitimate filter.
 	}
 
-	public void testOrderByFilter() throws Exception {
+	@Test public void testOrderByFilter() throws Exception {
 		parseFilter( "order by this.id" );
 	}
 
-	public void testRestrictionFilter() throws Exception {
+	@Test public void testRestrictionFilter() throws Exception {
 		parseFilter( "where this.name = ?" );
 	}
 
-	public void testNoFrom() throws Exception {
+	@Test public void testNoFrom() throws Exception {
 		System.out.println( "***** This test ensures that an error is detected ERROR MESSAGES ARE OKAY!  *****" );
 		HqlParser parser = HqlParser.getInstance( "" );
 		parser.setFilter( false );
@@ -955,11 +948,11 @@ public class HqlParserTest extends TestCase {
 		System.out.println( "***** END OF ERROR TEST  *****" );
 	}
 
-	public void testHB1042() throws Exception {
+	@Test public void testHB1042() throws Exception {
 		parse( "select x from fmc_web.pool.Pool x left join x.containers c0 where (upper(x.name) = upper(':') and c0.id = 1)" );
 	}
 
-	public void testKeywordInPath() throws Exception {
+	@Test public void testKeywordInPath() throws Exception {
 		// The keyword 'order' used as a property name.
 		parse( "from Customer c where c.order.status = 'argh'" );
 		// The keyword 'order' and 'count' used as a property name.
@@ -970,7 +963,7 @@ public class HqlParserTest extends TestCase {
 		parse( "from Letter l where l.case = :case" );
 	}
 
-	public void testPathologicalKeywordAsIdentifier() throws Exception {
+	@Test public void testPathologicalKeywordAsIdentifier() throws Exception {
 		// Super evil badness... a legitimate keyword!
 		parse( "from Order order" );
 		//parse( "from Order order join order.group" );
@@ -984,45 +977,45 @@ public class HqlParserTest extends TestCase {
 		parse( "from Group as group group by group.by.from" );
 	}
 
-    public void testHHH354() throws Exception {
+    @Test public void testHHH354() throws Exception {
         parse( "from Foo f where f.full = 'yep'");
     }
 
-    public void testWhereAsIdentifier() throws Exception {
+    @Test public void testWhereAsIdentifier() throws Exception {
         // 'where' as a package name
         parse( "from where.Order" );
     }
 
-	public void testEjbqlKeywordsAsIdentifier() throws Exception {
+	@Test public void testEjbqlKeywordsAsIdentifier() throws Exception {
 		parse( "from org.hibernate.test.Bar bar where bar.object.id = ? and bar.object.class = ?" );
 	}
 
-	public void testConstructorIn() throws Exception {
+	@Test public void testConstructorIn() throws Exception {
 		parse( "from org.hibernate.test.Bar bar where (b.x, b.y, b.z) in (select foo, bar, baz from org.hibernate.test.Foo)" );
 	}
 
-    public void testMultiByteCharacters() throws Exception {
+    @Test public void testMultiByteCharacters() throws Exception {
         parse ("from User user where user.name like '%nn\u4e2dnn%'");
         // Test for HHH-558
         parse ("from User user where user.\u432d like '%\u4e2d%'");
         parse ("from \u432d \u432d where \u432d.name like '%fred%'");        
     }
 
-    public void testHHH719() throws Exception {
+    @Test public void testHHH719() throws Exception {
         // Some SQLs have function names with package qualifiers.
         parse("from Foo f order by com.fooco.SpecialFunction(f.id)");
     }
 
-	public void testHHH1107() throws Exception {
+	@Test public void testHHH1107() throws Exception {
 		parse("from Animal where zoo.address.street = '123 Bogus St.'");
 	}
 
 
-	public void testHHH1247() throws Exception {
+	@Test public void testHHH1247() throws Exception {
 		parse("select distinct user.party from com.itf.iceclaims.domain.party.user.UserImpl user inner join user.party.$RelatedWorkgroups relatedWorkgroups where relatedWorkgroups.workgroup.id = :workgroup and relatedWorkgroups.effectiveTime.start <= :datesnow and relatedWorkgroups.effectiveTime.end > :dateenow ");
 	}
 
-    public void testHHH1780() throws Exception {
+    @Test public void testHHH1780() throws Exception {
         // verifies the tree contains a NOT->EXISTS subtree
         class Verifier {
             public boolean verify(AST root) {
@@ -1062,7 +1055,7 @@ public class HqlParserTest extends TestCase {
     }
 
 
-    public void testLineAndColumnNumber() throws Exception {
+    @Test public void testLineAndColumnNumber() throws Exception {
 		AST ast = doParse("from Foo f\nwhere f.name = 'fred'",false);
 		// Find some of the nodes and check line and column values.
 		ASTIterator iter = new ASTIterator(ast);
@@ -1116,7 +1109,5 @@ public class HqlParserTest extends TestCase {
 		return ast;
 	}
 
-	public static Test suite() {
-		return new TestSuite( HqlParserTest.class );
-	}
+
 }

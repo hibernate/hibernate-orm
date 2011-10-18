@@ -113,7 +113,7 @@ public class SchemaExport {
 		this.sqlExceptionHelper = serviceRegistry.getService( JdbcServices.class ).getSqlExceptionHelper();
 
 		this.importFiles = ConfigurationHelper.getString(
-				Environment.HBM2DDL_IMPORT_FILES,
+				AvailableSettings.HBM2DDL_IMPORT_FILES,
 				configuration.getProperties(),
 				DEFAULT_IMPORT_FILE
 		);
@@ -178,7 +178,7 @@ public class SchemaExport {
 		this.sqlExceptionHelper = new SqlExceptionHelper();
 
 		this.importFiles = ConfigurationHelper.getString(
-				Environment.HBM2DDL_IMPORT_FILES,
+				AvailableSettings.HBM2DDL_IMPORT_FILES,
 				properties,
 				DEFAULT_IMPORT_FILE
 		);
@@ -202,7 +202,7 @@ public class SchemaExport {
 		this.sqlExceptionHelper = new SqlExceptionHelper();
 
 		this.importFiles = ConfigurationHelper.getString(
-				Environment.HBM2DDL_IMPORT_FILES,
+				AvailableSettings.HBM2DDL_IMPORT_FILES,
 				configuration.getProperties(),
 				DEFAULT_IMPORT_FILE
 		);
@@ -573,7 +573,7 @@ public class SchemaExport {
 			}
 
 			if (importFile != null) {
-				cfg.setProperty( Environment.HBM2DDL_IMPORT_FILES, importFile );
+				cfg.setProperty( AvailableSettings.HBM2DDL_IMPORT_FILES, importFile );
 			}
 
 			StandardServiceRegistryImpl serviceRegistry = createServiceRegistry( cfg.getProperties() );

@@ -1,6 +1,9 @@
 //$Id$
 package org.hibernate.test.annotations.onetoone;
 
+import org.junit.Assert;
+import org.junit.Test;
+
 import org.hibernate.AnnotationException;
 import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.cfg.Environment;
@@ -10,7 +13,8 @@ import org.hibernate.testing.ServiceRegistryBuilder;
 /**
  * @author Emmanuel Bernard
  */
-public class OneToOneErrorTest extends junit.framework.TestCase {
+public class OneToOneErrorTest {
+    @Test
 	public void testWrongOneToOne() throws Exception {
 		AnnotationConfiguration cfg = new AnnotationConfiguration();
 		cfg.addAnnotatedClass( Show.class )
@@ -20,7 +24,7 @@ public class OneToOneErrorTest extends junit.framework.TestCase {
 		try {
 			serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() );
 			cfg.buildSessionFactory( serviceRegistry );
-			fail( "Wrong mappedBy does not fail property" );
+            Assert.fail( "Wrong mappedBy does not fail property" );
 		}
 		catch (AnnotationException e) {
 			//success

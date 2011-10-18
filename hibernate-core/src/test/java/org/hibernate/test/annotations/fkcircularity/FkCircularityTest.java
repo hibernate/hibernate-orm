@@ -6,39 +6,42 @@ import java.io.StringWriter;
 
 import org.jboss.logging.Logger;
 
-import junit.framework.TestCase;
-import org.hibernate.cfg.AnnotationConfiguration;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+
+import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.service.ServiceRegistry;
 
 import org.hibernate.testing.ServiceRegistryBuilder;
-import org.hibernate.testing.TestForIssue;
 
 /**
  * Test case for ANN-722 and ANN-730.
  *
  * @author Hardy Ferentschik
  */
-public class FkCircularityTest extends TestCase {
+public class FkCircularityTest {
 	private static final Logger log = Logger.getLogger( FkCircularityTest.class );
 
 	private ServiceRegistry serviceRegistry;
 
-	@Override
-    protected void setUp() {
+	@Before
+    public void setUp() {
 		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() );
 	}
 
-	@Override
-    protected void tearDown() {
+	@After
+    public void tearDown() {
         if (serviceRegistry != null) ServiceRegistryBuilder.destroy(serviceRegistry);
 	}
-
+    @Test
 	public void testJoinedSublcassesInPK() {
 		try {
-			AnnotationConfiguration config = new AnnotationConfiguration();
+			Configuration config = new Configuration();
 			config.addAnnotatedClass(A.class);
 			config.addAnnotatedClass(B.class);
 			config.addAnnotatedClass(C.class);
@@ -54,13 +57,13 @@ public class FkCircularityTest extends TestCase {
 			StringWriter writer = new StringWriter();
 			e.printStackTrace(new PrintWriter(writer));
             log.debug(writer.toString());
-			fail(e.getMessage());
+            Assert.fail( e.getMessage() );
 		}
 	}
-
+    @Test
 	public void testDeepJoinedSuclassesHierachy() {
 		try {
-			AnnotationConfiguration config = new AnnotationConfiguration();
+			Configuration config = new Configuration();
 			config.addAnnotatedClass(ClassA.class);
 			config.addAnnotatedClass(ClassB.class);
 			config.addAnnotatedClass(ClassC.class);
@@ -76,7 +79,7 @@ public class FkCircularityTest extends TestCase {
 			StringWriter writer = new StringWriter();
 			e.printStackTrace(new PrintWriter(writer));
             log.debug(writer.toString());
-			fail(e.getMessage());
+			Assert.fail(e.getMessage());
 		}
 	}
 }

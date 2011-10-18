@@ -26,6 +26,9 @@ import java.io.Serializable;
 import java.util.Comparator;
 import java.util.Map;
 
+import org.junit.Assert;
+import org.junit.Test;
+
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -57,7 +60,8 @@ import org.hibernate.type.VersionType;
 /**
  * @author Emmanuel Bernard <emmanuel@hibernate.org>
  */
-public class PersisterClassProviderTest extends junit.framework.TestCase {
+public class PersisterClassProviderTest {
+    @Test
 	public void testPersisterClassProvider() {
 		Ejb3Configuration conf = new Ejb3Configuration();
 		conf.getProperties().put( PersisterClassResolverInitiator.IMPL_NAME, GoofyPersisterClassProvider.class );
@@ -67,9 +71,9 @@ public class PersisterClassProviderTest extends junit.framework.TestCase {
 			entityManagerFactory.close();
 		}
 		catch ( PersistenceException e ) {
-			assertNotNull( e.getCause() );
-			assertNotNull( e.getCause().getCause() );
-			assertEquals( GoofyException.class, e.getCause().getCause().getClass() );
+            Assert.assertNotNull( e.getCause() );
+			Assert.assertNotNull( e.getCause().getCause() );
+			Assert.assertEquals( GoofyException.class, e.getCause().getCause().getClass() );
 
 		}
 	}

@@ -1,6 +1,8 @@
 //$Id$
 package org.hibernate.test.annotations.duplicatedgenerator;
 import junit.framework.TestCase;
+import org.junit.Assert;
+import org.junit.Test;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.cfg.AnnotationConfiguration;
@@ -12,7 +14,8 @@ import org.hibernate.testing.ServiceRegistryBuilder;
 /**
  * @author Emmanuel Bernard
  */
-public class DuplicateTest extends TestCase {
+public class DuplicateTest  {
+    @Test
 	public void testDuplicateEntityName() throws Exception {
 		AnnotationConfiguration cfg = new AnnotationConfiguration();
 		cfg.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
@@ -24,7 +27,7 @@ public class DuplicateTest extends TestCase {
 			cfg.addResource( "org/hibernate/test/annotations/duplicatedgenerator/orm.xml" );
 			serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( cfg.getProperties() );
 			cfg.buildSessionFactory( serviceRegistry );
-			fail( "Should not be able to map the same entity name twice" );
+            Assert.fail( "Should not be able to map the same entity name twice" );
 		}
 		catch (AnnotationException ae) {
 			//success

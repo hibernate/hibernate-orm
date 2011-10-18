@@ -38,6 +38,7 @@ import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.SessionImpl;
 import org.hibernate.jdbc.Work;
 import org.hibernate.mapping.SimpleAuxiliaryDatabaseObject;
@@ -67,6 +68,7 @@ public class SequenceHiLoGeneratorNoIncrementTest extends BaseUnitTestCase {
 	private ServiceRegistry serviceRegistry;
 	private SessionFactoryImplementor sessionFactory;
 	private SequenceHiLoGenerator generator;
+    private SessionImplementor session;
 
 	@Before
 	public void setUp() throws Exception {
@@ -108,6 +110,9 @@ public class SequenceHiLoGeneratorNoIncrementTest extends BaseUnitTestCase {
 
 	@After
 	public void tearDown() throws Exception {
+        if(session != null && !session.isClosed()) {
+            ((Session)session).close();
+        }
 		if ( sessionFactory != null ) {
 			sessionFactory.close();
 		}
@@ -118,12 +123,12 @@ public class SequenceHiLoGeneratorNoIncrementTest extends BaseUnitTestCase {
 
 	@Test
 	public void testHiLoAlgorithm() {
-		SessionImpl session = (SessionImpl) sessionFactory.openSession();
-		session.beginTransaction();
+		session = (SessionImpl) sessionFactory.openSession();
+		((Session)session).beginTransaction();
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// initially sequence should be uninitialized
-		assertEquals( 0L, extractSequenceValue( session ) );
+		assertEquals( 0L, extractSequenceValue( ((Session)session) ) );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// historically the hilo generators skipped the initial block of values;
@@ -131,30 +136,30 @@ public class SequenceHiLoGeneratorNoIncrementTest extends BaseUnitTestCase {
 		Long generatedValue = (Long) generator.generate( session, null );
 		assertEquals( 1L, generatedValue.longValue() );
 		// which should also perform the first read on the sequence which should set it to its "start with" value (1)
-		assertEquals( 1L, extractSequenceValue( session ) );
+		assertEquals( 1L, extractSequenceValue( ((Session)session) ) );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		generatedValue = (Long) generator.generate( session, null );
 		assertEquals( 2L, generatedValue.longValue() );
-		assertEquals( 2L, extractSequenceValue( session ) );
+		assertEquals( 2L, extractSequenceValue( ((Session)session) ) );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		generatedValue = (Long) generator.generate( session, null );
 		assertEquals( 3L, generatedValue.longValue() );
-		assertEquals( 3L, extractSequenceValue( session ) );
+		assertEquals( 3L, extractSequenceValue( ((Session)session) ) );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		generatedValue = (Long) generator.generate( session, null );
 		assertEquals( 4L, generatedValue.longValue() );
-		assertEquals( 4L, extractSequenceValue( session ) );
+		assertEquals( 4L, extractSequenceValue( ((Session)session) ) );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		generatedValue = (Long) generator.generate( session, null );
 		assertEquals( 5L, generatedValue.longValue() );
-		assertEquals( 5L, extractSequenceValue( session ) );
+		assertEquals( 5L, extractSequenceValue( ((Session)session) ) );
 
-		session.getTransaction().commit();
-		session.close();
+		((Session)session).getTransaction().commit();
+		((Session)session).close();
 	}
 
 	private long extractSequenceValue(Session session) {

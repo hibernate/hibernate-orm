@@ -4,17 +4,20 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import junit.framework.TestCase;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author Emmanuel Bernard
  * @author Hardy Ferentschik
  */
-public class InterceptFieldClassFileTransformerTest extends TestCase {
+public class InterceptFieldClassFileTransformerTest {
 	/**
 	 * Tests that class file enhancement works.
 	 * 
 	 * @throws Exception in case the test fails.
 	 */
+    @Test
 	public void testEnhancement() throws Exception {
 		List<String> entities = new ArrayList<String>();
 		entities.add( "org.hibernate.ejb.test.instrument.Simple" );
@@ -22,7 +25,7 @@ public class InterceptFieldClassFileTransformerTest extends TestCase {
 		// sanity check that the class is unmodified and does not contain getFieldHandler()
 		try {
 			org.hibernate.ejb.test.instrument.Simple.class.getDeclaredMethod( "getFieldHandler" );
-			fail();
+			Assert.fail();
 		} catch ( NoSuchMethodException nsme ) {
 			// success
 		}
@@ -35,6 +38,6 @@ public class InterceptFieldClassFileTransformerTest extends TestCase {
 		// javassist is our default byte code enhancer. Enhancing will eg add the method getFieldHandler()
 		// see org.hibernate.bytecode.internal.javassist.FieldTransformer
 		Method method = clazz.getDeclaredMethod( "getFieldHandler" );
-		assertNotNull( method );
+		Assert.assertNotNull( method );
 	}
 }

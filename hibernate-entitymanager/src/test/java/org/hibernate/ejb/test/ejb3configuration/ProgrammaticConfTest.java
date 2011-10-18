@@ -6,6 +6,10 @@ import java.util.Date;
 import java.util.Properties;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+
+import org.junit.Assert;
+import org.junit.Test;
+
 import org.hibernate.cfg.Environment;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.ejb.test.Cat;
@@ -15,8 +19,8 @@ import org.hibernate.internal.util.ConfigHelper;
 /**
  * @author Emmanuel Bernard
  */
-public class ProgrammaticConfTest extends junit.framework.TestCase {
-
+public class ProgrammaticConfTest {
+    @Test
 	public void testProgrammaticAPI() throws Exception {
 		Ejb3Configuration conf = new Ejb3Configuration();
 		conf.addAnnotatedClass( Cat.class );
@@ -32,11 +36,11 @@ public class ProgrammaticConfTest extends junit.framework.TestCase {
 		em.getTransaction().begin();
 		em.persist( cat );
 		em.flush();
-		assertNotNull( em.find(Cat.class, cat.getId() ) );
+		Assert.assertNotNull( em.find( Cat.class, cat.getId() ) );
 		em.getTransaction().rollback();
 		emf.close();
 	}
-
+    @Test
 	public void testProgrammaticCfg() throws Exception {
 		Ejb3Configuration conf = new Ejb3Configuration();
 		conf.configure( "org/hibernate/ejb/test/ejb3configuration/hibernate.cfg.xml" );
@@ -51,7 +55,7 @@ public class ProgrammaticConfTest extends junit.framework.TestCase {
 		em.getTransaction().begin();
 		em.persist( cat );
 		em.flush();
-		assertNotNull( em.find(Cat.class, cat.getId() ) );
+		Assert.assertNotNull( em.find(Cat.class, cat.getId() ) );
 		em.getTransaction().rollback();
 		emf.close();
 	}

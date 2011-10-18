@@ -14,8 +14,11 @@ import org.hibernate.cfg.Mappings;
 import org.hibernate.mapping.Table;
 import org.hibernate.service.ServiceRegistry;
 
-import junit.framework.TestCase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
+import static org.junit.Assert.*;
 import org.hibernate.testing.ServiceRegistryBuilder;
 
 /**
@@ -23,21 +26,21 @@ import org.hibernate.testing.ServiceRegistryBuilder;
  *
  * @author Hardy Ferentschik
  */
-public class NamingStrategyTest extends TestCase {
+public class NamingStrategyTest {
 	private static final Logger log = Logger.getLogger( NamingStrategyTest.class );
 
 	private ServiceRegistry serviceRegistry;
 
-	@Override
-    protected void setUp() {
+	@Before
+    public void setUp() {
 		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() );
 	}
 
-	@Override
-    protected void tearDown() {
+	@After
+    public void tearDown() {
         if (serviceRegistry != null) ServiceRegistryBuilder.destroy(serviceRegistry);
 	}
-
+    @Test
 	public void testWithCustomNamingStrategy() throws Exception {
 		try {
 			AnnotationConfiguration config = new AnnotationConfiguration();
@@ -53,7 +56,7 @@ public class NamingStrategyTest extends TestCase {
 			fail(e.getMessage());
 		}
 	}
-
+    @Test
 	public void testWithEJB3NamingStrategy() throws Exception {
 		try {
 			AnnotationConfiguration config = new AnnotationConfiguration();
@@ -82,7 +85,7 @@ public class NamingStrategyTest extends TestCase {
 			fail(e.getMessage());
 		}
 	}
-
+    @Test
 	public void testWithoutCustomNamingStrategy() throws Exception {
 		try {
 			AnnotationConfiguration config = new AnnotationConfiguration();

@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.Properties;
 import org.hibernate.HibernateException;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.util.ReflectHelper;
@@ -87,8 +88,8 @@ public class DriverManagerConnectionProviderImpl implements ConnectionProvider, 
 	public void configure(Map configurationValues) {
         LOG.usingHibernateBuiltInConnectionPool();
 
-		String driverClassName = (String) configurationValues.get( Environment.DRIVER );
-        if (driverClassName == null) LOG.jdbcDriverNotSpecified(Environment.DRIVER);
+		String driverClassName = (String) configurationValues.get( AvailableSettings.DRIVER );
+        if (driverClassName == null) LOG.jdbcDriverNotSpecified(AvailableSettings.DRIVER);
 		else {
 			try {
 				// trying via forName() first to be as close to DriverManager's semantics
@@ -104,18 +105,18 @@ public class DriverManagerConnectionProviderImpl implements ConnectionProvider, 
 			}
 		}
 
-		poolSize = ConfigurationHelper.getInt( Environment.POOL_SIZE, configurationValues, 20 ); // default pool size 20
+		poolSize = ConfigurationHelper.getInt( AvailableSettings.POOL_SIZE, configurationValues, 20 ); // default pool size 20
         LOG.hibernateConnectionPoolSize(poolSize);
 
-		autocommit = ConfigurationHelper.getBoolean( Environment.AUTOCOMMIT, configurationValues );
+		autocommit = ConfigurationHelper.getBoolean( AvailableSettings.AUTOCOMMIT, configurationValues );
         LOG.autoCommitMode( autocommit );
 
-		isolation = ConfigurationHelper.getInteger( Environment.ISOLATION, configurationValues );
+		isolation = ConfigurationHelper.getInteger( AvailableSettings.ISOLATION, configurationValues );
         if (isolation != null) LOG.jdbcIsolationLevel(Environment.isolationLevelToString(isolation.intValue()));
 
-		url = (String) configurationValues.get( Environment.URL );
+		url = (String) configurationValues.get( AvailableSettings.URL );
 		if ( url == null ) {
-            String msg = LOG.jdbcUrlNotSpecified(Environment.URL);
+            String msg = LOG.jdbcUrlNotSpecified(AvailableSettings.URL);
             LOG.error(msg);
 			throw new HibernateException( msg );
 		}

@@ -4,6 +4,9 @@ package org.hibernate.test.annotations.onetoone.primarykey;
 import org.jboss.logging.Logger;
 
 import junit.framework.TestCase;
+import org.junit.Assert;
+import org.junit.Test;
+
 import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.SQLServerDialect;
@@ -16,9 +19,9 @@ import org.hibernate.testing.ServiceRegistryBuilder;
  * @author Hardy Ferentschik
  *
  */
-public class NullablePrimaryKeyTest extends TestCase {
+public class NullablePrimaryKeyTest {
 	private static final Logger log = Logger.getLogger( NullablePrimaryKeyTest.class );
-
+    @Test
 	public void testGeneratedSql() {
 
 		ServiceRegistry serviceRegistry = null;
@@ -35,9 +38,9 @@ public class NullablePrimaryKeyTest extends TestCase {
 			}
 			String expectedMappingTableSql = "create table personAddress (address_id numeric(19,0) null, " +
 					"person_id numeric(19,0) not null, primary key (person_id))";
-			assertEquals("Wrong SQL", expectedMappingTableSql, schema[2]);
+            Assert.assertEquals( "Wrong SQL", expectedMappingTableSql, schema[2] );
 		} catch (Exception e) {
-			fail(e.getMessage());
+			Assert.fail(e.getMessage());
 		}
 		finally {
 			if ( serviceRegistry != null ) {

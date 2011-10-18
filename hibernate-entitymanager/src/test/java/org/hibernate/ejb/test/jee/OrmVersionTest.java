@@ -35,6 +35,9 @@ import javax.persistence.spi.PersistenceUnitInfo;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 import javax.sql.DataSource;
 import junit.framework.TestCase;
+import org.junit.Assert;
+import org.junit.Test;
+
 import org.hibernate.InvalidMappingException;
 import org.hibernate.ejb.HibernatePersistence;
 
@@ -43,7 +46,8 @@ import org.hibernate.ejb.HibernatePersistence;
  *
  * @author Steve Ebersole
  */
-public class OrmVersionTest extends TestCase {
+public class OrmVersionTest {
+    @Test
 	public void testOrm1() {
 		PersistenceUnitInfoImpl pui = new PersistenceUnitInfoImpl( "orm1-test", "1.0" )
 				.addMappingFileName( "org/hibernate/ejb/test/jee/valid-orm-1.xml" );
@@ -51,7 +55,7 @@ public class OrmVersionTest extends TestCase {
 		EntityManagerFactory emf = hp.createContainerEntityManagerFactory( pui, Collections.EMPTY_MAP );
 		emf.getMetamodel().entity( org.hibernate.ejb.test.pack.defaultpar_1_0.Lighter1.class ); // exception if not entity
 	}
-
+    @Test
 	public void testOrm2() {
 		PersistenceUnitInfoImpl pui = new PersistenceUnitInfoImpl( "orm2-test", "2.0" )
 				.addMappingFileName( "org/hibernate/ejb/test/jee/valid-orm-2.xml" );
@@ -59,14 +63,14 @@ public class OrmVersionTest extends TestCase {
 		EntityManagerFactory emf = hp.createContainerEntityManagerFactory( pui, Collections.EMPTY_MAP );
 		emf.getMetamodel().entity( org.hibernate.ejb.test.pack.defaultpar.Lighter.class ); // exception if not entity
 	}
-
+    @Test
 	public void testInvalidOrm1() {
 		PersistenceUnitInfoImpl pui = new PersistenceUnitInfoImpl( "invalid-orm1-test", "1.0" )
 				.addMappingFileName( "org/hibernate/ejb/test/jee/invalid-orm-1.xml" );
 		HibernatePersistence hp = new HibernatePersistence();
 		try {
 			hp.createContainerEntityManagerFactory( pui, Collections.EMPTY_MAP );
-			fail( "expecting 'invalid content' error" );
+            Assert.fail( "expecting 'invalid content' error" );
 		}
 		catch ( InvalidMappingException expected ) {
 			// expected condition

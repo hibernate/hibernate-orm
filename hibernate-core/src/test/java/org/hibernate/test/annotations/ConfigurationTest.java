@@ -1,11 +1,16 @@
 //$Id$
 package org.hibernate.test.annotations;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
+import static org.junit.Assert.*;
 import org.hibernate.HibernateException;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
-import org.hibernate.cfg.AnnotationConfiguration;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.service.ServiceRegistry;
 
@@ -14,21 +19,21 @@ import org.hibernate.testing.ServiceRegistryBuilder;
 /**
  * @author Emmanuel Bernard
  */
-public class ConfigurationTest extends junit.framework.TestCase {
+public class ConfigurationTest {
 	private ServiceRegistry serviceRegistry;
-
-	protected void setUp() {
+    @Before
+	public void setUp() {
 		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() );
 	}
-
-	protected void tearDown() {
+     @After
+	public void tearDown() {
 		if ( serviceRegistry != null ) {
 			ServiceRegistryBuilder.destroy( serviceRegistry );
 		}
 	}
-
+     @Test
 	public void testDeclarativeMix() throws Exception {
-		AnnotationConfiguration cfg = new AnnotationConfiguration();
+		Configuration cfg = new Configuration();
 		cfg.configure( "org/hibernate/test/annotations/hibernate.cfg.xml" );
 		cfg.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
 		SessionFactory sf = cfg.buildSessionFactory( serviceRegistry );
@@ -43,12 +48,12 @@ public class ConfigurationTest extends junit.framework.TestCase {
 		s.close();
 		sf.close();
 	}
-
+     @Test
 	public void testIgnoringHbm() throws Exception {
-		AnnotationConfiguration cfg = new AnnotationConfiguration();
+		Configuration cfg = new Configuration();
 		cfg.configure( "org/hibernate/test/annotations/hibernate.cfg.xml" );
 		cfg.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
-		cfg.setProperty( AnnotationConfiguration.ARTEFACT_PROCESSING_ORDER, "class" );
+		cfg.setProperty( Configuration.ARTEFACT_PROCESSING_ORDER, "class" );
 		SessionFactory sf = cfg.buildSessionFactory( serviceRegistry );
 		assertNotNull( sf );
 		Session s = sf.openSession();
@@ -67,9 +72,9 @@ public class ConfigurationTest extends junit.framework.TestCase {
 		s.close();
 		sf.close();
 	}
-
+    @Test
 	public void testPrecedenceHbm() throws Exception {
-		AnnotationConfiguration cfg = new AnnotationConfiguration();
+		Configuration cfg = new Configuration();
 		cfg.configure( "org/hibernate/test/annotations/hibernate.cfg.xml" );
 		cfg.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
 		cfg.addAnnotatedClass( Boat.class );
@@ -92,12 +97,12 @@ public class ConfigurationTest extends junit.framework.TestCase {
 		s.close();
 		sf.close();
 	}
-
+     @Test
 	public void testPrecedenceAnnotation() throws Exception {
-		AnnotationConfiguration cfg = new AnnotationConfiguration();
+		Configuration cfg = new Configuration();
 		cfg.configure( "org/hibernate/test/annotations/hibernate.cfg.xml" );
 		cfg.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
-		cfg.setProperty( AnnotationConfiguration.ARTEFACT_PROCESSING_ORDER, "class, hbm" );
+		cfg.setProperty( Configuration.ARTEFACT_PROCESSING_ORDER, "class, hbm" );
 		cfg.addAnnotatedClass( Boat.class );
 		SessionFactory sf = cfg.buildSessionFactory( serviceRegistry );
 		assertNotNull( sf );
@@ -117,9 +122,9 @@ public class ConfigurationTest extends junit.framework.TestCase {
 		s.close();
 		sf.close();
 	}
-
+     @Test
 	public void testHbmWithSubclassExtends() throws Exception {
-		AnnotationConfiguration cfg = new AnnotationConfiguration();
+		Configuration cfg = new Configuration();
 		cfg.configure( "org/hibernate/test/annotations/hibernate.cfg.xml" );
 		cfg.addClass( Ferry.class );
 		cfg.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
@@ -135,9 +140,9 @@ public class ConfigurationTest extends junit.framework.TestCase {
 		s.close();
 		sf.close();
 	}
-
+      @Test
 	public void testAnnReferencesHbm() throws Exception {
-		AnnotationConfiguration cfg = new AnnotationConfiguration();
+		Configuration cfg = new Configuration();
 		cfg.configure( "org/hibernate/test/annotations/hibernate.cfg.xml" );
 		cfg.addAnnotatedClass( Port.class );
 		cfg.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );

@@ -95,18 +95,13 @@ public abstract class SchemaExportTest extends BaseUnitTestCase {
         cfg.addResource( MAPPING );
         SchemaExport schemaExport = createSchemaExport( cfg );
         // should drop before creating, but tables don't exist yet
-        schemaExport.create( false, true );
-        if ( doesDialectSupportDropTableIfExist() ) {
-            assertEquals( 0, schemaExport.getExceptions().size() );
-        }
-        else {
-            assertEquals( 2, schemaExport.getExceptions().size() );
-        }
+        schemaExport.create( true, true );
+        assertEquals( 0, schemaExport.getExceptions().size() );
         // call create again; it should drop tables before re-creating
-        schemaExport.create( false, true );
+        schemaExport.create( true, true );
         assertEquals( 0, schemaExport.getExceptions().size() );
         // drop the tables
-        schemaExport.drop( false, true );
+        schemaExport.drop( true, true );
         assertEquals( 0, schemaExport.getExceptions().size() );
     }
 }

@@ -22,6 +22,9 @@ package org.hibernate.ejb.test.ejb3configuration;
 
 import javax.persistence.EntityManagerFactory;
 
+import org.junit.Assert;
+import org.junit.Test;
+
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.ejb.AvailableSettings;
@@ -30,7 +33,8 @@ import org.hibernate.ejb.Ejb3Configuration;
 /**
  * @author Emmanuel Bernard <emmanuel@hibernate.org>
  */
-public class SessionFactoryObserverTest extends junit.framework.TestCase {
+public class SessionFactoryObserverTest {
+    @Test
 	public void testSessionFactoryObserverProperty() {
 		Ejb3Configuration conf = new Ejb3Configuration();
 		conf.setProperty( AvailableSettings.SESSION_FACTORY_OBSERVER, GoofySessionFactoryObserver.class.getName() );
@@ -38,7 +42,7 @@ public class SessionFactoryObserverTest extends junit.framework.TestCase {
 		try {
 			final EntityManagerFactory entityManagerFactory = conf.buildEntityManagerFactory();
 			entityManagerFactory.close();
-			fail( "GoofyException should have been thrown" );
+            Assert.fail( "GoofyException should have been thrown" );
 		}
 		catch ( GoofyException e ) {
 			//success

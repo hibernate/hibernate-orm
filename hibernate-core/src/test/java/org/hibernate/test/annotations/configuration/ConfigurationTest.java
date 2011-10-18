@@ -2,12 +2,16 @@
 package org.hibernate.test.annotations.configuration;
 
 import junit.framework.TestCase;
+import org.junit.Assert;
+import org.junit.Test;
+
 import org.hibernate.cfg.AnnotationConfiguration;
 
 /**
  * @author Emmanuel Bernard
  */
-public class ConfigurationTest extends TestCase {
+public class ConfigurationTest  {
+    @Test
 	public void testMixPackageAndResourceOrdering() throws Exception {
 		try {
 			AnnotationConfiguration config = new AnnotationConfiguration();
@@ -15,7 +19,7 @@ public class ConfigurationTest extends TestCase {
 			config.addPackage( "org.hibernate.test.annotations.configuration" );
 		}
 		catch( Exception e ) {
-			fail("Processing package first when ORM.xml is used should not fail");
+            Assert.fail( "Processing package first when ORM.xml is used should not fail" );
 		}
 	}
 }

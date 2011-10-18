@@ -7,6 +7,7 @@ import java.io.StringWriter;
 import org.jboss.logging.Logger;
 
 import org.hibernate.MappingException;
+import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.service.ServiceRegistry;
@@ -32,6 +33,7 @@ public class BackquoteTest extends BaseUnitTestCase {
 	private static final Logger log = Logger.getLogger( BackquoteTest.class );
 
 	private ServiceRegistry serviceRegistry;
+    private SessionFactory sessionFactory;
 
 	@Before
     public void setUp() {
@@ -40,6 +42,7 @@ public class BackquoteTest extends BaseUnitTestCase {
 
 	@After
     public void tearDown() {
+        if(sessionFactory !=null) sessionFactory.close();
         if (serviceRegistry != null) ServiceRegistryBuilder.destroy(serviceRegistry);
 	}
 
@@ -50,7 +53,7 @@ public class BackquoteTest extends BaseUnitTestCase {
 			Configuration config = new Configuration();
 			config.addAnnotatedClass(Bug.class);
 			config.addAnnotatedClass(Category.class);
-			config.buildSessionFactory( serviceRegistry );
+			sessionFactory = config.buildSessionFactory( serviceRegistry );
 		}
 		catch( Exception e ) {
 			StringWriter writer = new StringWriter();
@@ -74,7 +77,7 @@ public class BackquoteTest extends BaseUnitTestCase {
     		Configuration config = new Configuration();
     		config.addAnnotatedClass(Printer.class);
     		config.addAnnotatedClass(PrinterCable.class);
-    		config.buildSessionFactory( serviceRegistry );
+    		sessionFactory = config.buildSessionFactory( serviceRegistry );
     		fail("expected MappingException to be thrown");
     	}
     	//we WANT MappingException to be thrown

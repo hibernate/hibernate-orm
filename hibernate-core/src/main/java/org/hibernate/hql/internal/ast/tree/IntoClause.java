@@ -26,11 +26,16 @@ package org.hibernate.hql.internal.ast.tree;
 
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
 import org.hibernate.QueryException;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.persister.entity.Queryable;
+import org.hibernate.type.ComponentType;
 import org.hibernate.type.Type;
+
 import antlr.collections.AST;
 
 /**
@@ -49,6 +54,8 @@ public class IntoClause extends HqlSqlWalkerNode implements DisplayableNode {
 	private boolean explicitIdInsertion;
 	private boolean explicitVersionInsertion;
 
+	private Set componentIds;
+	private List explicitComponentIds;
 
 	public void initialize(Queryable persister) {
 		if ( persister.isAbstract() ) {
@@ -165,10 +172,27 @@ public class IntoClause extends HqlSqlWalkerNode implements DisplayableNode {
 			throw new QueryException( "INSERT statements cannot refer to superclass/joined properties [" + name + "]" );
 		}
 
-		if ( name.equals( persister.getIdentifierPropertyName() ) ) {
-			explicitIdInsertion = true;
+		if ( !explicitIdInsertion ) {
+			if ( persister.getIdentifierType() instanceof ComponentType ) {
+				if ( componentIds == null ) {
+					String[] propertyNames = ( (ComponentType) persister.getIdentifierType() ).getPropertyNames();
+					componentIds = new HashSet();
+					for ( int i = 0; i < propertyNames.length; i++ ) {
+						componentIds.add( propertyNames[i] );
+					}
+				}
+				if ( componentIds.contains(name) ) {
+					if ( explicitComponentIds == null ) {
+						explicitComponentIds = new ArrayList( componentIds.size() );
+					}
+					explicitComponentIds.add( name );
+					explicitIdInsertion = explicitComponentIds.size() == componentIds.size();
+				}
+			} else if ( name.equals( persister.getIdentifierPropertyName() ) ) {
+				explicitIdInsertion = true;
+			}
 		}
-
+			
 		if ( persister.isVersioned() ) {
 			if ( name.equals( persister.getPropertyNames()[ persister.getVersionProperty() ] ) ) {
 				explicitVersionInsertion = true;

@@ -296,7 +296,9 @@ public class StatisticsImpl implements Statistics, StatisticsImplementor {
 		if (hql!=null) {
 			QueryStatisticsImpl qs = (QueryStatisticsImpl) getQueryStatistics(hql);
 			qs.executed(rows, time);
-			log.info( "HQL: {}, time: {}ms, rows: {}", new Object[]{hql, new Long( time ), new Long( rows )} );
+			if (log.isDebugEnabled()) {
+				log.debug( "HQL: {}, time: {}ms, rows: {}", new Object[]{hql, new Long( time ), new Long( rows )} );
+			}
 		}
 	}
 	

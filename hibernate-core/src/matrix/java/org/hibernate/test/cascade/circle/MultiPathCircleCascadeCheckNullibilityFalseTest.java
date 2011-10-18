@@ -23,8 +23,13 @@
  */
 package org.hibernate.test.cascade.circle;
 
+import org.junit.Test;
+
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.Oracle10gDialect;
+import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.testing.SkipForDialect;
 
 /**
  * @author Gail Badner
@@ -34,5 +39,12 @@ public class MultiPathCircleCascadeCheckNullibilityFalseTest extends MultiPathCi
 	 public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty( Environment.CHECK_NULLABILITY, "false" );
+	}
+
+	@Override
+	@SkipForDialect(value = { Oracle10gDialect.class, PostgreSQLDialect.class }, comment = "This test is known to fail for dialects using a sequence for the native generator. See HHH-6744")
+	@Test
+	public void testMergeEntityWithNonNullableTransientEntity() {
+		super.testMergeEntityWithNonNullableTransientEntity();
 	}
 }

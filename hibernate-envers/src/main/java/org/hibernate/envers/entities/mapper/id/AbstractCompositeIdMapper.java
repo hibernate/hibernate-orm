@@ -60,7 +60,9 @@ public abstract class AbstractCompositeIdMapper extends AbstractIdMapper impleme
         }
 
         for (SingleIdMapper mapper : ids.values()) {
-            mapper.mapToEntityFromMap(ret, data);
+            if (!mapper.mapToEntityFromMap(ret, data)) {
+                return null;
+            }
         }
 
         return ret;

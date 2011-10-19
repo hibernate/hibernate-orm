@@ -396,7 +396,7 @@ public interface CoreMessageLogger extends BasicLogger {
 								  String incrementParam,
 								  int incrementSize);
 
-	@LogMessage(level = INFO)
+	@LogMessage(level = DEBUG)
 	@Message(value = "HQL: %s, time: %sms, rows: %s", id = 117)
 	void hql(String hql,
 			 Long valueOf,

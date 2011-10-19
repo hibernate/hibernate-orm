@@ -256,7 +256,7 @@ from Cat cat</programlisting>
     </itemizedlist>
 
     <para>You may use arithmetic operators, concatenation, and recognized SQL
-    functions in the select clause (dpending on configured dialect, HQL
+    functions in the select clause (depending on configured dialect, HQL
     specific feature):</para>
 
     <programlisting>select cat.weight + sum(kitten.weight) 

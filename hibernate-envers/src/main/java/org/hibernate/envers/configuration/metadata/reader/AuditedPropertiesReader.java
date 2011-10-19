@@ -123,8 +123,8 @@ public class AuditedPropertiesReader {
 			Property property = (Property) propertyIter.next();
 			addPersistentProperty(property);
 			if ("embedded".equals(property.getPropertyAccessorName()) && property.getName().equals(property.getNodeName())) {
-				// If property name equals node name and embedded accessor type is used, processing field
-				// has been defined inside <properties> tag. See HHH-6636 JIRA issue.
+				// If property name equals node name and embedded accessor type is used, processing component
+				// has been defined with <properties> tag. See HHH-6636 JIRA issue.
 				createPropertiesGroupMapping(property);
 			}
 		}
@@ -225,7 +225,7 @@ public class AuditedPropertiesReader {
 			PersistentPropertiesSource componentPropertiesSource = new ComponentPropertiesSource((Component) propertyValue);
 			AuditedPropertiesReader audPropReader = new AuditedPropertiesReader(
 					ModificationStore.FULL, componentPropertiesSource, componentData, globalCfg, reflectionManager,
-					propertyNamePrefix + MappingTools.createComponentPrefix( embeddedName )
+					propertyNamePrefix + MappingTools.createComponentPrefix(embeddedName)
 			);
 			audPropReader.read();
 

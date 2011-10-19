@@ -42,36 +42,41 @@ public class DBAllocationHelper {
     private static final String PASSWORD_PROP = "hibernate.connection.password";
     //DBAllocator supports the following DBs
     private static def supportedDB = ["oracle9i", "oracle10g", "oracle11gR1", "oracle11gR2",
-            "oracle11gR2RAC","oracle11gR1RAC",
+            "oracle11gR2RAC", "oracle11gR1RAC",
             "postgresql82", "postgresql83", "postgresql84", "mysql50", "mysql51",
             "db2-91", "db2-97", "mssql2005", "mssql2008R1", "mssql2008R2", "sybase155"];
+    private static final Map<MatrixNode, Map<String, String>> cache = new HashMap<MatrixNode, Map<String, String>>();
 
     public static Map<String, String> getProperties(MatrixNode node) {
-        Map<String, String> map = new HashMap<String, String>();
-        if ( FileUtil.isFile(node.hibernatePropertyFile) ) {
-            Properties hibernateProperties = new Properties();
-            hibernateProperties.load(new FileInputStream(node.hibernatePropertyFile));
-            map.putAll(hibernateProperties);
-        }
-        if ( isDBAllocationEnabled(node.name) ) {
-            log.lifecycle("using DBAllocator to get DB[${node.name}] connection info");
-            try {
-                DBAllocation db = node.DBAllocation
-                db.allocate(node.name, 300);
-                Properties prop = db.properties
-                log.lifecycle("DBAllocating finished for DB[${node.name}], uuid is [${prop['uuid']}]")
-                map[DRIVER_PROP] = prop["db.jdbc_class"]
-                map[URL_PROP] = prop["db.jdbc_url"]
-                map[USERNAME_PROP] = prop["db.username"]
-                map[PASSWORD_PROP] = prop["db.password"]
-                map["uuid"] = prop["uuid"];
-                db.clean();
+        if ( !cache.containsKey(node) ) {
+            Map<String, String> map = new HashMap<String, String>();
+            cache.put(node, map);
+            if ( FileUtil.isFile(node.hibernatePropertyFile) ) {
+                Properties hibernateProperties = new Properties();
+                hibernateProperties.load(new FileInputStream(node.hibernatePropertyFile));
+                map.putAll(hibernateProperties);
             }
-            catch (RuntimeException e) {
-                log.debug("DBAllocating error, ignore", e);
+            if ( isDBAllocationEnabled(node.name) ) {
+                log.lifecycle("using DBAllocator to get DB[${node.name}] connection info");
+                try {
+                    DBAllocation db = node.DBAllocation
+                    db.allocate(node.name, 300);
+                    Properties prop = db.properties
+                    log.lifecycle("DBAllocating finished for DB[${node.name}], uuid is [${prop['uuid']}]")
+                    map[DRIVER_PROP] = prop["db.jdbc_class"]
+                    map[URL_PROP] = prop["db.jdbc_url"]
+                    map[USERNAME_PROP] = prop["db.username"]
+                    map[PASSWORD_PROP] = prop["db.password"]
+                    map["uuid"] = prop["uuid"];
+                    db.clean();
+                }
+                catch (RuntimeException e) {
+                    log.debug("DBAllocating error, ignore", e);
+                }
             }
+
         }
-        return map;
+        return cache.get(node);
     }
     /**
      * use -Dhibernate-matrix-dballocation=all to enable DBAllocation for all matrix node

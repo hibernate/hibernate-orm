@@ -45,10 +45,10 @@ class DBAllocation {
         this.ant = ant;
         this.dbinstallPath = dbinstallPath;
         this.dbConfigFile = new File(dbinstallPath, outPropsFileName);
-        if(System.properties.containsKey("hibernate-matrix-dballocation-requestee"))
-        requestee = System.properties["hibernate-matrix-dballocation-requestee"]
+        if ( System.properties.containsKey("hibernate-matrix-dballocation-requestee") )
+            requestee = System.properties["hibernate-matrix-dballocation-requestee"]
         else
-        requestee = "hibernate"
+            requestee = "hibernate"
     }
 
     def getProperties() {

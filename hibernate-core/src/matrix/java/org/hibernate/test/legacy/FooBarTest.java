@@ -1651,10 +1651,10 @@ public class FooBarTest extends LegacyTestCase {
 			.iterate();
 		int count=0;
 		while ( iter.hasNext() ) {
-			iter.next();
+			System.out.println("ROW = " + iter.next());
 			count++;
 		}
-		assertTrue(count==4);
+		assertEquals(DIALECT.useMaxForLimit() ? 7 : 4, count);
 		iter = s.createQuery("select distinct foo from Foo foo")
 			.setMaxResults(2)
 			.setFirstResult(2)

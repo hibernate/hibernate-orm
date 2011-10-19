@@ -53,6 +53,7 @@ import org.hibernate.dialect.IngresDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.SQLServer2008Dialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.Sybase11Dialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
@@ -1370,7 +1371,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 		s.close();
 	}
-	
+
 	@Test
 	public void testOrderedWithCustomColumnReadAndWrite() {
 		Session s = openSession();
@@ -1400,7 +1401,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 		s.close();
 	}
-	
+
 	@Test
 	public void testHavingWithCustomColumnReadAndWrite() {
 		Session s = openSession();
@@ -1465,7 +1466,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 		s.close();
 	}
-		
+
 	private Human genSimpleHuman(String fName, String lName) {
 		Human h = new Human();
 		h.setName( new Name( fName, 'X', lName ) );
@@ -1730,7 +1731,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		assertEquals( 3L, results[2] );
 		// avg() should return a double
 		assertTrue( Double.class.isInstance( results[3] ) );
-		assertEquals( 1.5D, results[3] );
+		if (getDialect() instanceof SQLServer2008Dialect) assertEquals( 1.0D, results[3] );
+		else assertEquals( 1.5D, results[3] );
 		s.delete(h);
 		s.delete(h2);
 		s.getTransaction().commit();

@@ -35,6 +35,10 @@ import org.hibernate.engine.spi.SessionImplementor;
 
 import org.junit.Test;
 
+import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.id.IncrementGenerator;
+import org.hibernate.id.SequenceGenerator;
+import org.hibernate.testing.SkipLog;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -90,6 +94,20 @@ public class MultiPathCircleCascadeTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testMergeEntityWithNonNullableTransientEntity() {
+		// Skip if CHECK_NULLABILITY is false and route ID is a sequence or incrment generator (see HHH-6744)
+		IdentifierGenerator routeIdentifierGenerator = sessionFactory().getEntityPersister( Route.class.getName() ).getIdentifierGenerator();
+		if ( ! sessionFactory().getSettings().isCheckNullability() &&
+				( SequenceGenerator.class.isInstance( routeIdentifierGenerator) ||
+						IncrementGenerator.class.isInstance( routeIdentifierGenerator ) )
+				) {
+			SkipLog.reportSkip(
+					"delayed-insert without checking nullability",
+					"delayed-insert without checking nullability is known to fail when dirty-checking; see HHH-6744"
+			);
+			return;
+		}
+
+
 		Route route = getUpdatedDetachedEntity();
 
 		Node node = (Node) route.getNodes().iterator().next();

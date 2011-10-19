@@ -33,6 +33,7 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Emmanuel Bernard
@@ -47,10 +48,10 @@ public class JoinedSubclassAndSecondaryTable extends BaseCoreFunctionalTestCase 
 		s.flush();
 		s.clear();
 
-		BigInteger rowCount = getTableRowCount( s );
+		long rowCount = getTableRowCount( s );
 		assertEquals(
 				"The address table is marked as optional. For null values no database row should be created",
-				BigInteger.valueOf( 0 ),
+				0,
 				rowCount
 		);
 
@@ -68,7 +69,7 @@ public class JoinedSubclassAndSecondaryTable extends BaseCoreFunctionalTestCase 
 		rowCount = getTableRowCount( s );
 		assertEquals(
 				"Now we should have a row in the pool address table ",
-				BigInteger.valueOf( 1 ),
+				1,
 				rowCount
 		);
 		assertFalse( sp2.getAddress() == null );
@@ -78,8 +79,13 @@ public class JoinedSubclassAndSecondaryTable extends BaseCoreFunctionalTestCase 
 		s.close();
 	}
 
-	private BigInteger getTableRowCount(Session s) {
-		return (BigInteger) s.createSQLQuery( "select count(*) from POOL_ADDRESS" ).uniqueResult();
+	private long getTableRowCount(Session s) {
+		// the type returned for count(*) in a native query depends on the dialect
+		// Oracle returns Types.NUMERIC, which is mapped to BigDecimal;
+		// H2 returns Types.BIGINT, which is mapped to BigInteger;
+		Object retVal = s.createSQLQuery( "select count(*) from POOL_ADDRESS" ).uniqueResult();
+		assertTrue( Number.class.isInstance( retVal ) );
+		return ( ( Number ) retVal ).longValue();
 	}
 
 	@Override

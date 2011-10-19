@@ -44,6 +44,7 @@ import org.hibernate.util.ArrayHelper;
 public class ConcurrentStatisticsImpl implements Statistics, StatisticsImplementor {
 	private static final Logger log = LoggerFactory.getLogger( ConcurrentStatisticsImpl.class );
 	private static final Logger PERF_LOG = LoggerFactory.getLogger( Statistics.class );
+    private static final boolean isDebugEnabled = PERF_LOG.isDebugEnabled();
 
 	private SessionFactoryImplementor sessionFactory;
 
@@ -316,7 +317,7 @@ public class ConcurrentStatisticsImpl implements Statistics, StatisticsImplement
 
 	@SuppressWarnings({ "UnnecessaryBoxing" })
 	public void queryExecuted(String hql, int rows, long time) {
-		if (PERF_LOG.isDebugEnabled()) {
+		if (isDebugEnabled) {
 			PERF_LOG.debug( "HQL: {}, time: {}ms, rows: {}", new Object[] {hql, Long.valueOf( time ), Long.valueOf(rows)} );
 		}
 		queryExecutionCount.getAndIncrement();

@@ -70,6 +70,13 @@ public class ComponentPropertyMapper implements PropertyMapper, CompositeMapperB
             return;
         }
 
+        if (propertyData.getBeanName() == null) {
+            // If properties are not encapsulated in a component but placed directly in a class
+            // (e.g. by applying <properties> tag).
+            delegate.mapToEntityFromMap(verCfg, obj, data, primaryKey, versionsReader, revision);
+            return;
+        }
+
         Setter setter = ReflectionTools.getSetter(obj.getClass(), propertyData);
 
 		// If all properties are null and single, then the component has to be null also.

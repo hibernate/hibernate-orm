@@ -34,9 +34,11 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.revisioninfo.RevisionInfoGenerator;
 import org.hibernate.envers.synchronization.work.AuditWorkUnit;
 import org.hibernate.envers.tools.Pair;
+import org.hibernate.tuple.entity.EntityMetamodel; 
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public class AuditProcess implements BeforeTransactionCompletionProcess {
     private final RevisionInfoGenerator revisionInfoGenerator;
@@ -78,9 +80,8 @@ public class AuditProcess implements BeforeTransactionCompletionProcess {
                 String entityName = vwu.getEntityName();
                 Pair<String, Object> usedIdsKey = Pair.make(entityName, entityId);
 
-                if (usedIds.containsKey(usedIdsKey)) {
-                    AuditWorkUnit other = usedIds.get(usedIdsKey);
-
+                AuditWorkUnit other = getAlreadyScheduledWorkUnit(usedIdsKey); 
+                if (other != null) {
                     AuditWorkUnit result = vwu.dispatch(other);
 
                     if (result != other) {
@@ -97,6 +98,25 @@ public class AuditProcess implements BeforeTransactionCompletionProcess {
                 }
             }
         }
+    }
+
+    /**
+     * Checks if another work unit associated with the same entity hierarchy and identifier has already been scheduled.
+     * @param idKey Work unit's identifier.
+     * @return Corresponding work unit or {@code null} if no satisfying result was found.
+     */
+    private AuditWorkUnit getAlreadyScheduledWorkUnit(Pair<String, Object> idKey) {
+        EntityMetamodel entityMetamodel = session.getFactory().getEntityPersister(idKey.getFirst()).getEntityMetamodel();
+        String rootEntityName = entityMetamodel.getRootName();
+        EntityMetamodel rootEntityMetamodel = session.getFactory().getEntityPersister(rootEntityName).getEntityMetamodel();
+        // Checking all possible subtypes, supertypes and the actual class.
+        for (Object entityName : rootEntityMetamodel.getSubclassEntityNames()) {
+            Pair<String, Object> key = Pair.make((String) entityName, idKey.getSecond());
+            if (usedIds.containsKey(key)) {
+                return usedIds.get(key);
+            }
+        }
+        return null;
     }
 
     private void executeInSession(Session session) {

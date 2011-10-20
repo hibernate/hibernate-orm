@@ -49,13 +49,21 @@ public class ColumnTransformerTest extends BaseCoreFunctionalTestCase {
 		s.flush();
 
 		// Test value conversion during insert
-		Double heightViaSql = (Double)s.createSQLQuery("select size_in_cm from t_staff where t_staff.id=1").uniqueResult();
+		// Value returned by Oracle native query is a Types.NUMERIC, which is mapped to a BigDecimalType;
+		// Cast returned value to Number then call Number.doubleValue() so it works on all dialects.
+		double heightViaSql =
+				( (Number)s.createSQLQuery("select size_in_cm from t_staff where t_staff.id=1").uniqueResult() )
+						.doubleValue();
 		assertEquals(HEIGHT_CENTIMETERS, heightViaSql, 0.01d);
 
-		heightViaSql = (Double)s.createSQLQuery("select radiusS from t_staff where t_staff.id=1").uniqueResult();
+		heightViaSql =
+				( (Number)s.createSQLQuery("select radiusS from t_staff where t_staff.id=1").uniqueResult() )
+						.doubleValue();
 		assertEquals(HEIGHT_CENTIMETERS, heightViaSql, 0.01d);
 
-		heightViaSql = (Double)s.createSQLQuery("select diamet from t_staff where t_staff.id=1").uniqueResult();
+		heightViaSql =
+				( (Number)s.createSQLQuery("select diamet from t_staff where t_staff.id=1").uniqueResult() )
+						.doubleValue();
 		assertEquals(HEIGHT_CENTIMETERS*2, heightViaSql, 0.01d);
 
 		// Test projection
@@ -78,7 +86,9 @@ public class ColumnTransformerTest extends BaseCoreFunctionalTestCase {
 		// Test update
 		staff.setSizeInInches(1);
 		s.flush();
-		heightViaSql = (Double)s.createSQLQuery("select size_in_cm from t_staff where t_staff.id=1").uniqueResult();
+		heightViaSql =
+				( (Number)s.createSQLQuery("select size_in_cm from t_staff where t_staff.id=1").uniqueResult() )
+						.doubleValue();
 		assertEquals(2.54d, heightViaSql, 0.01d);
 		s.delete(staff);
 		t.commit();

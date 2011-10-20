@@ -224,11 +224,17 @@ public class JoinedSubclassTest extends BaseCoreFunctionalTestCase {
 		s.flush();
 		
 		// Test value conversion during insert
-		Double heightViaSql = (Double)s.createSQLQuery("select height_centimeters from JPerson where name='Emmanuel'").uniqueResult();
+		// Value returned by Oracle native query is a Types.NUMERIC, which is mapped to a BigDecimalType;
+		// Cast returned value to Number then call Number.doubleValue() so it works on all dialects.
+		Double heightViaSql =
+				( (Number)s.createSQLQuery("select height_centimeters from JPerson where name='Emmanuel'").uniqueResult() )
+						.doubleValue();
 		assertEquals(HEIGHT_CENTIMETERS, heightViaSql, 0.01d);
-		Double expiryViaSql = (Double)s.createSQLQuery("select pwd_expiry_weeks from JEmployee where person_id=?")
-			.setLong(0, e.getId())
-			.uniqueResult();
+		Double expiryViaSql =
+				( (Number)s.createSQLQuery("select pwd_expiry_weeks from JEmployee where person_id=?")
+						.setLong(0, e.getId())
+						.uniqueResult()
+				).doubleValue();
 		assertEquals(PASSWORD_EXPIRY_WEEKS, expiryViaSql, 0.01d);
 		
 		// Test projection
@@ -263,11 +269,15 @@ public class JoinedSubclassTest extends BaseCoreFunctionalTestCase {
 		p.setHeightInches(1);
 		e.setPasswordExpiryDays(7);
 		s.flush();
-		heightViaSql = (Double)s.createSQLQuery("select height_centimeters from JPerson where name='Emmanuel'").uniqueResult();
+		heightViaSql =
+				( (Number)s.createSQLQuery("select height_centimeters from JPerson where name='Emmanuel'").uniqueResult() )
+						.doubleValue();
 		assertEquals(2.54d, heightViaSql, 0.01d);
-		expiryViaSql = (Double)s.createSQLQuery("select pwd_expiry_weeks from JEmployee where person_id=?")
-			.setLong(0, e.getId())
-			.uniqueResult();
+		expiryViaSql =
+				( (Number)s.createSQLQuery("select pwd_expiry_weeks from JEmployee where person_id=?")
+						.setLong(0, e.getId())
+						.uniqueResult()
+				).doubleValue();
 		assertEquals(1d, expiryViaSql, 0.01d);
 		s.delete(p);
 		s.delete(e);	

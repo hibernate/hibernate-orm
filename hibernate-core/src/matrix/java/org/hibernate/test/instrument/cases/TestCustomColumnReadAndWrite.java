@@ -42,7 +42,11 @@ public class TestCustomColumnReadAndWrite extends AbstractExecutable {
 		t = s.beginTransaction();
 		
 		// Check value conversion on insert
-		Double sizeViaSql = (Double)s.createSQLQuery("select size_mb from documents").uniqueResult();
+		// Value returned by Oracle native query is a Types.NUMERIC, which is mapped to a BigDecimalType;
+		// Cast returned value to Number then call Number.doubleValue() so it works on all dialects.
+		Double sizeViaSql =
+				( (Number)s.createSQLQuery("select size_mb from documents").uniqueResult() )
+						.doubleValue();
 		assertEquals( SIZE_IN_MB, sizeViaSql, 0.01d );
 
 		// Test explicit fetch of all properties

@@ -109,9 +109,13 @@ public class SubselectTest extends BaseCoreFunctionalTestCase {
 		s.flush();
 		
 		// Test value conversion during insert
-		Double humanHeightViaSql = (Double)s.createSQLQuery("select height_centimeters from humans").uniqueResult();
+		// Value returned by Oracle native query is a Types.NUMERIC, which is mapped to a BigDecimalType;
+		// Cast returned value to Number then call Number.doubleValue() so it works on all dialects.
+		Double humanHeightViaSql =
+				( (Number)s.createSQLQuery("select height_centimeters from humans").uniqueResult() ).doubleValue();
 		assertEquals(HUMAN_CENTIMETERS, humanHeightViaSql, 0.01d);
-		Double alienHeightViaSql = (Double)s.createSQLQuery("select height_centimeters from aliens").uniqueResult();
+		Double alienHeightViaSql =
+				( (Number)s.createSQLQuery("select height_centimeters from aliens").uniqueResult() ).doubleValue();
 		assertEquals(ALIEN_CENTIMETERS, alienHeightViaSql, 0.01d);
 		s.clear();
 		

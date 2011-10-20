@@ -249,7 +249,11 @@ public class ComponentTest extends BaseCoreFunctionalTestCase {
 		s.flush();
 		
 		// Test value conversion during insert
-		Double heightViaSql = (Double)s.createSQLQuery("select height_centimeters from T_USER where T_USER.username='steve'").uniqueResult();
+		// Value returned by Oracle native query is a Types.NUMERIC, which is mapped to a BigDecimalType;
+		// Cast returned value to Number then call Number.doubleValue() so it works on all dialects.
+		Double heightViaSql =
+				( (Number)s.createSQLQuery("select height_centimeters from T_USER where T_USER.username='steve'").uniqueResult())
+						.doubleValue();
 		assertEquals(HEIGHT_CENTIMETERS, heightViaSql, 0.01d);
 
 		// Test projection
@@ -272,7 +276,9 @@ public class ComponentTest extends BaseCoreFunctionalTestCase {
 		// Test update
 		u.getPerson().setHeightInches(1);
 		s.flush();
-		heightViaSql = (Double)s.createSQLQuery("select height_centimeters from T_USER where T_USER.username='steve'").uniqueResult();
+		heightViaSql =
+				( (Number)s.createSQLQuery("select height_centimeters from T_USER where T_USER.username='steve'").uniqueResult() )
+						.doubleValue();
 		assertEquals(2.54d, heightViaSql, 0.01d);
 		s.delete(u);
 		t.commit();

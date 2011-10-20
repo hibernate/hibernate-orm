@@ -1446,7 +1446,9 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		s.persist( image );
 		s.flush();
 
-		Double sizeViaSql = (Double)s.createSQLQuery("select size_mb from image").uniqueResult();
+		// Value returned by Oracle is a Types.NUMERIC, which is mapped to a BigDecimalType;
+		// Cast returned value to Number then call Number.doubleValue() so it works on all dialects.
+		Double sizeViaSql = ( (Number)s.createSQLQuery("select size_mb from image").uniqueResult() ).doubleValue();
 		assertEquals(SIZE_IN_MB, sizeViaSql, 0.01d);
 		t.commit();
 		s.close();
@@ -1459,7 +1461,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		s.update( image );
 		s.flush();
 
-		sizeViaSql = (Double)s.createSQLQuery("select size_mb from image").uniqueResult();
+		sizeViaSql = ( (Number)s.createSQLQuery("select size_mb from image").uniqueResult() ).doubleValue();
 		assertEquals(NEW_SIZE_IN_MB, sizeViaSql, 0.01d);
 
 		s.delete(image);

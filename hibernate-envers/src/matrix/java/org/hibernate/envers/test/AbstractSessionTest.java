@@ -83,7 +83,9 @@ public abstract class AbstractSessionTest extends AbstractEnversTest {
 		return session;
 	}
 
-
+	protected Configuration getCfg() {
+		return config;
+	}
 
 	protected AuditReader getAuditReader() {
 		return auditReader;

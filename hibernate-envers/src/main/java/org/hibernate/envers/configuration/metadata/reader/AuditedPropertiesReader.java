@@ -1,9 +1,11 @@
 package org.hibernate.envers.configuration.metadata.reader;
+import static org.hibernate.envers.tools.Tools.newHashMap;
 import static org.hibernate.envers.tools.Tools.newHashSet;
 import java.lang.annotation.Annotation;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import javax.persistence.JoinColumn;
 import javax.persistence.MapKey;
@@ -46,6 +48,8 @@ public class AuditedPropertiesReader {
 
 	private final Set<String> propertyAccessedPersistentProperties;
 	private final Set<String> fieldAccessedPersistentProperties;
+	// Mapping class field to corresponding <properties> element.
+	private final Map<String, String> propertiesGroupMapping;
 
 	public AuditedPropertiesReader(ModificationStore defaultStore,
 								   PersistentPropertiesSource persistentPropertiesSource,
@@ -62,6 +66,7 @@ public class AuditedPropertiesReader {
 
 		propertyAccessedPersistentProperties = newHashSet();
 		fieldAccessedPersistentProperties = newHashSet();
+		propertiesGroupMapping = newHashMap();
 	}
 
 	public void read() {
@@ -116,13 +121,31 @@ public class AuditedPropertiesReader {
 		Iterator<Property> propertyIter = persistentPropertiesSource.getPropertyIterator();
 		while (propertyIter.hasNext()) {
 			Property property = (Property) propertyIter.next();
-			if ("field".equals(property.getPropertyAccessorName())) {
-				fieldAccessedPersistentProperties.add(property.getName());
-			} else {
-				propertyAccessedPersistentProperties.add(property.getName());
+			addPersistentProperty(property);
+			if ("embedded".equals(property.getPropertyAccessorName()) && property.getName().equals(property.getNodeName())) {
+				// If property name equals node name and embedded accessor type is used, processing component
+				// has been defined with <properties> tag. See HHH-6636 JIRA issue.
+				createPropertiesGroupMapping(property);
 			}
 		}
 	}
+
+    private void addPersistentProperty(Property property) {
+        if ("field".equals(property.getPropertyAccessorName())) {
+            fieldAccessedPersistentProperties.add(property.getName());
+        } else {
+            propertyAccessedPersistentProperties.add(property.getName());
+        }
+    }
+
+    private void createPropertiesGroupMapping(Property property) {
+        Component component = (Component) property.getValue();
+        Iterator<Property> componentProperties = component.getPropertyIterator();
+        while (componentProperties.hasNext()) {
+            Property componentProperty = componentProperties.next();
+            propertiesGroupMapping.put(componentProperty.getName(), component.getNodeName());
+        }
+    }
 
     /**
      * @param clazz Class which properties are currently being added.
@@ -177,7 +200,36 @@ public class AuditedPropertiesReader {
 				} else {
 					this.addFromNotComponentProperty(property, accessType, allClassAudited);
 				}
+			} else if (propertiesGroupMapping.containsKey(property.getName())) {
+				// Retrieve embedded component name based on class field.
+				final String embeddedName = propertiesGroupMapping.get(property.getName());
+				if (!auditedPropertiesHolder.contains(embeddedName)) {
+					// Manage properties mapped within <properties> tag.
+					Value propertyValue = persistentPropertiesSource.getProperty(embeddedName).getValue();
+					this.addFromPropertiesGroup(embeddedName, property, accessType, (Component)propertyValue, allClassAudited);
+				}
 			}
+		}
+	}
+
+	private void addFromPropertiesGroup(String embeddedName, XProperty property, String accessType, Component propertyValue,
+										Audited allClassAudited) {
+		ComponentAuditingData componentData = new ComponentAuditingData();
+		boolean isAudited = fillPropertyData(property, componentData, accessType, allClassAudited);
+		if (isAudited) {
+			// EntityPersister.getPropertyNames() returns name of embedded component instead of class field.
+			componentData.setName(embeddedName);
+			// Marking component properties as placed directly in class (not inside another component).
+			componentData.setBeanName(null);
+
+			PersistentPropertiesSource componentPropertiesSource = new ComponentPropertiesSource((Component) propertyValue);
+			AuditedPropertiesReader audPropReader = new AuditedPropertiesReader(
+					ModificationStore.FULL, componentPropertiesSource, componentData, globalCfg, reflectionManager,
+					propertyNamePrefix + MappingTools.createComponentPrefix(embeddedName)
+			);
+			audPropReader.read();
+
+			auditedPropertiesHolder.addPropertyAuditingData(embeddedName, componentData);
 		}
 	}
 	

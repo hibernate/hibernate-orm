@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping SYSTEM "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd" >
+
+<hibernate-mapping package="org.hibernate.test.hql">
+
+    <class name="CompositeIdEntity">
+    	<composite-id>
+    		<key-property name="key1" />
+    		<key-property name="key2" />
+    	</composite-id>
+    	
+    	<property name="someProperty" />
+    </class>
+
+</hibernate-mapping>

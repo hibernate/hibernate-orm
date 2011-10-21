@@ -95,6 +95,9 @@ public class Oracle8iDialect extends Dialect {
 	}
 
 	protected void registerLargeObjectTypeMappings() {
+		registerColumnType( Types.BINARY, 2000, "raw($l)" );
+		registerColumnType( Types.BINARY, "long raw" );
+
 		registerColumnType( Types.VARBINARY, 2000, "raw($l)" );
 		registerColumnType( Types.VARBINARY, "long raw" );
 

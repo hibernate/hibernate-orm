@@ -129,16 +129,16 @@ public class QueryCacheTest extends BaseCoreFunctionalTestCase {
 			s.persist( a );
 		}
 		s.getTransaction().commit();
-		
+
 //		s.close();
 //		s=openSession();
-		
+
 		s.beginTransaction();
 		String queryString = "from Item";
 		// this query will hit the database and create the cache
 		s.createQuery( queryString ).setCacheable( true ).list();
 		s.getTransaction().commit();
-		
+
 		s.beginTransaction();
 		//and this one SHOULD served by the cache
 		s.createQuery( queryString ).setCacheable( true ).list();
@@ -154,14 +154,14 @@ public class QueryCacheTest extends BaseCoreFunctionalTestCase {
 		}
 		s.getTransaction().commit();
 		s.close();
-		
+
 	}
 
 	private static final String queryString = "from Item i where i.name='widget'";
 
 	@Test
 	public void testQueryCacheInvalidation() throws Exception {
-		
+
 		sessionFactory().evictQueries();
 		sessionFactory().getStatistics().clear();
 
@@ -176,7 +176,7 @@ public class QueryCacheTest extends BaseCoreFunctionalTestCase {
 		s.save(i);
 		t.commit();
 		s.close();
-		
+
 		QueryStatistics qs = s.getSessionFactory().getStatistics().getQueryStatistics( queryString );
 		EntityStatistics es = s.getSessionFactory().getStatistics().getEntityStatistics( Item.class.getName() );
 
@@ -188,19 +188,19 @@ public class QueryCacheTest extends BaseCoreFunctionalTestCase {
 		assertEquals( result.size(), 1 );
 		t.commit();
 		s.close();
-		
+
 		assertEquals( qs.getCacheHitCount(), 0 );
-				
+
 		s = openSession();
 		t = s.beginTransaction();
 		result = s.createQuery( queryString ).setCacheable(true).list();
 		assertEquals( result.size(), 1 );
 		t.commit();
 		s.close();
-		
+
 		assertEquals( qs.getCacheHitCount(), 1 );
 		assertEquals( s.getSessionFactory().getStatistics().getEntityFetchCount(), 0 );
-		
+
 		s = openSession();
 		t = s.beginTransaction();
 		result = s.createQuery( queryString ).setCacheable(true).list();
@@ -210,7 +210,7 @@ public class QueryCacheTest extends BaseCoreFunctionalTestCase {
 		i.setName("Widget");
 		t.commit();
 		s.close();
-		
+
 		assertEquals( qs.getCacheHitCount(), 2 );
 		assertEquals( qs.getCacheMissCount(), 2 );
 		assertEquals( s.getSessionFactory().getStatistics().getEntityFetchCount(), 0 );
@@ -231,7 +231,7 @@ public class QueryCacheTest extends BaseCoreFunctionalTestCase {
 		assertEquals( qs.getCachePutCount(), 3 );
 		assertEquals( qs.getExecutionCount(), 3 );
 		assertEquals( es.getFetchCount(), 0 ); //check that it was being cached
-		
+
 	}
 
 	@Test
@@ -243,7 +243,7 @@ public class QueryCacheTest extends BaseCoreFunctionalTestCase {
 		Session s = openSession();
 		s.beginTransaction();
 		Item i = new Item();
-		i.setName( "widget" );
+		i.setName( "Widget" );
 		i.setDescription( "A really top-quality, full-featured widget." );
 		s.save( i );
 		s.getTransaction().commit();
@@ -252,7 +252,7 @@ public class QueryCacheTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		s.beginTransaction();
 		List result = s.createQuery( queryString ).list();
-		assertEquals( result.size(), 0 );
+		assertEquals(1, result.size());
 		i = (Item) s.get( Item.class, new Long(i.getId()) );
 		assertEquals( i.getName(), "Widget" );
 		s.delete(i);
@@ -264,7 +264,7 @@ public class QueryCacheTest extends BaseCoreFunctionalTestCase {
 	public void testQueryCacheFetch() throws Exception {
 		sessionFactory().evictQueries();
 		sessionFactory().getStatistics().clear();
-		
+
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 		Item i = new Item();
@@ -290,12 +290,12 @@ public class QueryCacheTest extends BaseCoreFunctionalTestCase {
 		assertEquals( result.size(), 2 );
 		t.commit();
 		s.close();
-		
+
 		assertEquals( qs.getCacheHitCount(), 0 );
 		assertEquals( s.getSessionFactory().getStatistics().getEntityFetchCount(), 0 );
-		
+
 		sessionFactory().evict(Item.class);
-				
+
 		s = openSession();
 		t = s.beginTransaction();
 		result = s.createQuery( queryString ).setCacheable(true).list();
@@ -304,7 +304,7 @@ public class QueryCacheTest extends BaseCoreFunctionalTestCase {
 		assertTrue( Hibernate.isInitialized( result.get(1) ) );
 		t.commit();
 		s.close();
-		
+
 		assertEquals( qs.getCacheHitCount(), 1 );
 		assertEquals( s.getSessionFactory().getStatistics().getEntityFetchCount(), 1 );
 
@@ -313,7 +313,7 @@ public class QueryCacheTest extends BaseCoreFunctionalTestCase {
 		s.createQuery("delete Item").executeUpdate();
 		t.commit();
 		s.close();
-		
+
 	}
 
 	@Test
@@ -346,7 +346,7 @@ public class QueryCacheTest extends BaseCoreFunctionalTestCase {
 		t = s.beginTransaction();
 		List result = s.createQuery( queryString ).setCacheable(true).list();
 		assertEquals( result.size(), 1 );
-		assertEquals( i.getDescription(), ( ( String ) result.get( 0 ) ) );
+		assertEquals( i.getDescription(), ( result.get( 0 ) ) );
 		t.commit();
 		s.close();
 
@@ -416,7 +416,7 @@ public class QueryCacheTest extends BaseCoreFunctionalTestCase {
 		result = s.createQuery( queryString ).setCacheable(true).list();
 		assertEquals( result.size(), 1 );
 		i = (Item) s.get( Item.class, new Long(i.getId()) );
-		assertEquals( (String) result.get(0), "A middle-quality widget." );
+		assertEquals( result.get(0), "A middle-quality widget." );
 
 		assertEquals( qs.getCacheHitCount(), 4 );
 		assertEquals( qs.getCacheMissCount(), 3 );

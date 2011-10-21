@@ -43,6 +43,8 @@ import org.hibernate.sql.DecodeCaseFragment;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.OracleJoinFragment;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.descriptor.sql.BitTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**
  * A dialect for Oracle 8i.
@@ -195,6 +197,11 @@ public class Oracle8iDialect extends Dialect {
 		// be returned (via its RETURNING clause).  No other driver seems to
 		// support this overloaded version.
 		getDefaultProperties().setProperty( Environment.USE_GET_GENERATED_KEYS, "false" );
+	}
+
+	@Override
+	protected SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
+		return sqlCode == Types.BOOLEAN ? BitTypeDescriptor.INSTANCE : super.getSqlTypeDescriptorOverride( sqlCode );
 	}
 
 

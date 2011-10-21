@@ -33,7 +33,11 @@ import org.hibernate.criterion.Property;
 
 import org.junit.Test;
 
+import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.type.AbstractSingleColumnStandardBasicType;
+import org.hibernate.type.TextType;
+import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -46,11 +50,24 @@ import static org.junit.Assert.assertTrue;
  * @author Gavin King
  */
 public class OneToOneFormulaTest extends BaseCoreFunctionalTestCase {
+	private static class TextAsMaterializedClobType extends AbstractSingleColumnStandardBasicType<String> {
+		public final static TextAsMaterializedClobType INSTANCE = new TextAsMaterializedClobType();
+		public TextAsMaterializedClobType() {
+			super(  ClobTypeDescriptor.DEFAULT, TextType.INSTANCE.getJavaTypeDescriptor() );
+		}
+		public String getName() {
+			return TextType.INSTANCE.getName();
+		}
+	}
+
 	public String[] getMappings() {
 		return new String[] { "onetoone/formula/Person.hbm.xml" };
 	}
 
 	public void configure(Configuration cfg) {
+		if ( Oracle8iDialect.class.isInstance( getDialect() ) ) {
+			cfg.registerTypeOverride( TextAsMaterializedClobType.INSTANCE );
+		}
 		cfg.setProperty(Environment.USE_SECOND_LEVEL_CACHE, "false");
 		cfg.setProperty(Environment.GENERATE_STATISTICS, "true");
 		cfg.setProperty(Environment.DEFAULT_BATCH_FETCH_SIZE, "2");

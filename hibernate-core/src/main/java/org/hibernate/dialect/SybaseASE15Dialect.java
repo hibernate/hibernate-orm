@@ -48,7 +48,6 @@ public class SybaseASE15Dialect extends AbstractTransactSQLDialect {
 		registerColumnType( Types.DATE, "date" );
 		registerColumnType( Types.DECIMAL, "numeric($p,$s)" );
 		registerColumnType( Types.TIME, "time" );
-        registerColumnType( Types.BINARY, "binary($l)" );
         registerColumnType( Types.REAL, "real" );
         registerColumnType( Types.BOOLEAN, "tinyint" );
 

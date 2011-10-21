@@ -46,6 +46,7 @@ import org.hibernate.type.StandardBasicTypes;
 abstract class AbstractTransactSQLDialect extends Dialect {
 	public AbstractTransactSQLDialect() {
 		super();
+        registerColumnType( Types.BINARY, "binary($l)" );
 		registerColumnType( Types.BIT, "tinyint" ); //Sybase BIT type does not support null values
 		registerColumnType( Types.BIGINT, "numeric(19,0)" );
 		registerColumnType( Types.SMALLINT, "smallint" );
@@ -165,7 +166,7 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 	}
 
 	public String applyLocksToSql(String sql, LockOptions aliasedLockOptions, Map keyColumnNames) {
-		// TODO:  merge additional lockoptions support in Dialect.applyLocksToSql 
+		// TODO:  merge additional lockoptions support in Dialect.applyLocksToSql
 		Iterator itr = aliasedLockOptions.getAliasLockIterator();
 		StringBuffer buffer = new StringBuffer( sql );
 		int correction = 0;

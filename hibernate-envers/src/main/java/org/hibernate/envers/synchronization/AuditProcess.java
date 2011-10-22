@@ -34,7 +34,6 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.revisioninfo.RevisionInfoGenerator;
 import org.hibernate.envers.synchronization.work.AuditWorkUnit;
 import org.hibernate.envers.tools.Pair;
-import org.hibernate.tuple.entity.EntityMetamodel; 
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -81,6 +80,7 @@ public class AuditProcess implements BeforeTransactionCompletionProcess {
 
                 if (usedIds.containsKey(usedIdsKey)) {
                     AuditWorkUnit other = usedIds.get(usedIdsKey);
+
                     AuditWorkUnit result = vwu.dispatch(other);
 
                     if (result != other) {

@@ -33,6 +33,7 @@ package org.hibernate.criterion;
  * @see Projection
  * @see org.hibernate.Criteria
  * @author Gavin King
+ * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public class Subqueries {
 		
@@ -58,6 +59,22 @@ public class Subqueries {
 	
 	public static Criterion propertyEq(String propertyName, DetachedCriteria dc) {
 		return new PropertySubqueryExpression(propertyName, "=", null, dc);
+	}
+
+	public static Criterion propertiesEq(String[] propertyNames, DetachedCriteria dc) {
+		return new PropertiesSubqueryExpression(propertyNames, "=", dc);
+	}
+
+	public static Criterion propertiesNotEq(String[] propertyNames, DetachedCriteria dc) {
+		return new PropertiesSubqueryExpression(propertyNames, "<>", dc);
+	}
+
+	public static Criterion propertiesIn(String[] propertyNames, DetachedCriteria dc) {
+		return new PropertiesSubqueryExpression(propertyNames, "in", dc);
+	}
+
+	public static Criterion propertiesNotIn(String[] propertyNames, DetachedCriteria dc) {
+		return new PropertiesSubqueryExpression(propertyNames, "not in", dc);
 	}
 	
 	public static Criterion propertyNe(String propertyName, DetachedCriteria dc) {

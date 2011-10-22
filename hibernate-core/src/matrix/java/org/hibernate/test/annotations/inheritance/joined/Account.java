@@ -42,7 +42,7 @@ public class Account implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@GeneratedValue
 	private int id;
 
 	private String number;

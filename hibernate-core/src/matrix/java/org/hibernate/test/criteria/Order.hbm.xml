@@ -4,7 +4,7 @@
 <hibernate-mapping  package="org.hibernate.test.criteria">
   <class name="Order" table="t_order">
     <id name="orderId" column="order_id" type="int" unsaved-value="0" access="field" >
-      <generator class="identity" />
+      <generator class="increment" />
     </id>
     <set name="orderLines" cascade="all-delete-orphan" access="field" inverse="true" fetch="select">
       <key column="order_id" />
@@ -13,7 +13,7 @@
   </class>
   <class name="OrderLine" table="order_line">
     <id name="lineId" column="order_line_id" type="int" unsaved-value="0" access="field" >
-      <generator class="identity" />
+      <generator class="increment" />
     </id>
     <many-to-one name="order" column="order_id" class="Order" />
     <property name="articleId" column="article_id" type="string" />

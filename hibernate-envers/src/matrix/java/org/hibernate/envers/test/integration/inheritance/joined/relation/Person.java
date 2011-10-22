@@ -9,7 +9,6 @@ import javax.persistence.Table;
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @Entity
-@Table(name = "APP_PERSON")
 @Audited
 public class Person extends RightsSubject {
     private String name;

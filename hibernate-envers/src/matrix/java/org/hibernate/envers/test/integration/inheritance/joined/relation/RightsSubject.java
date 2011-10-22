@@ -10,16 +10,12 @@ import java.util.Set;
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @Entity
-@Table(name = "APP_RIGHTSSUBJCT")
 @Inheritance(strategy = InheritanceType.JOINED)
 @Audited
 public class RightsSubject {
     @Id
     @GeneratedValue
     private Long id;
-    
-    @Version
-    private Long version;
 
     @Column(name = "APP_GROUP")
     private String group;
@@ -57,7 +53,7 @@ public class RightsSubject {
 
     @Override
     public String toString() {
-        return "RightsSubject(id = " + id + ", version = " + version + ", group = " + group + ")";
+        return "RightsSubject(id = " + id + ", group = " + group + ")";
     }
 
     public Long getId() {
@@ -66,14 +62,6 @@ public class RightsSubject {
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public Long getVersion() {
-        return version;
-    }
-
-    public void setVersion(Long version) {
-        this.version = version;
     }
 
     public Set<Role> getRoles() {

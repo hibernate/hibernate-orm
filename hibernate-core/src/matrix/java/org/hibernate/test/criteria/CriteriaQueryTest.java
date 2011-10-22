@@ -59,6 +59,9 @@ import org.hibernate.test.hql.Animal;
 import org.hibernate.test.hql.Reptile;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.transform.Transformers;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
@@ -72,11 +75,14 @@ import static org.junit.Assert.fail;
 
 /**
  * @author Gavin King
+ * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
-		return new String[] { "criteria/Enrolment.hbm.xml","criteria/Foo.hbm.xml", "hql/Animal.hbm.xml" };
+		return new String[] {
+				"criteria/Enrolment.hbm.xml", "criteria/Foo.hbm.xml", "hql/Animal.hbm.xml", "criteria/Person.hbm.xml"
+		};
 	}
 
 	@Override
@@ -1718,6 +1724,85 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 		session.close();
 
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-6766" )
+	public void testMultiplePropertiesSubquery() {
+		Session session = openSession();
+		Transaction tx = session.beginTransaction();
+
+		Man lukasz = new Man();
+		lukasz.setName( "Lukasz" );
+		lukasz.setHeight( 170 );
+		lukasz.setWeight( 60 );
+		session.persist( lukasz );
+
+		Man robert = new Man();
+		robert.setName( "Robert" );
+		robert.setHeight( 170 );
+		robert.setWeight( 78 );
+		session.persist( robert );
+
+		Woman kinga = new Woman();
+		kinga.setName( "Kinga" );
+		kinga.setHeight( 170 );
+		kinga.setWeight( 60 );
+		session.persist( kinga );
+
+		tx.commit();
+		session.close();
+
+		session = openSession();
+		tx = session.beginTransaction();
+
+		DetachedCriteria sizeQuery = DetachedCriteria.forClass( Man.class ).setProjection(
+				Projections.projectionList().add( Projections.property( "weight" ) )
+						                    .add( Projections.property( "height" ) ) )
+				.add( Restrictions.eq( "name", "Lukasz" )
+		);
+		
+		List result = session.createCriteria( Woman.class )
+				             .add( Subqueries.propertiesEq( new String[] { "weight", "height" }, sizeQuery ) )
+				             .list();
+		assertEquals( 1, result.size() );
+		assertEquals( kinga, result.get( 0 ) );
+
+		if (getDialect().supportsRowValueConstructorSyntaxInInList()) {
+			result = session.createCriteria( Woman.class )
+			                .add( Subqueries.propertiesIn( new String[] { "weight", "height" }, sizeQuery ) )
+			                .list();
+			assertEquals( 1, result.size() );
+			assertEquals( kinga, result.get( 0 ) );
+		}
+		
+		tx.commit();
+		session.close();
+
+		session = openSession();
+		tx = session.beginTransaction();
+		
+		sizeQuery = DetachedCriteria.forClass( Man.class ).setProjection(
+				Projections.projectionList().add( Projections.property( "weight" ) )
+						                    .add( Projections.property( "height" ) ) )
+				.add( Restrictions.ne( "name", "Lukasz" )
+		);
+		result = session.createCriteria( Woman.class )
+				        .add( Subqueries.propertiesNotEq( new String[] { "weight", "height" }, sizeQuery ) )
+				        .list();
+		assertEquals( 1, result.size() );
+		assertEquals( kinga, result.get( 0 ) );
+
+		if (getDialect().supportsRowValueConstructorSyntaxInInList()) {
+			result = session.createCriteria( Woman.class )
+							.add( Subqueries.propertiesNotIn( new String[] { "weight", "height" }, sizeQuery ) )
+							.list();
+			assertEquals( 1, result.size() );
+			assertEquals( kinga, result.get( 0 ) );
+		}
+
+		tx.commit();
+		session.close();
 	}
 
         @Test

@@ -24,16 +24,16 @@
 package org.hibernate.internal.util.xml;
 
 import java.io.StringReader;
+
 import org.dom4j.Document;
 import org.dom4j.io.SAXReader;
-
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.InvalidMappingException;
-
 import org.jboss.logging.Logger;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
+
+import org.hibernate.InvalidMappingException;
+import org.hibernate.internal.CoreMessageLogger;
 
 /**
  * Handles reading mapping documents, both {@code hbm} and {@code orm} varieties.

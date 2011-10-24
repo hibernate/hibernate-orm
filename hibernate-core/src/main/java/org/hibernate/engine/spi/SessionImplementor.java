@@ -30,7 +30,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.CacheMode;
-import org.hibernate.EntityMode;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;

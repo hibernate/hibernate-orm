@@ -27,6 +27,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import junit.framework.AssertionFailedError;
+import org.junit.Test;
+
 import org.hibernate.QueryException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -35,10 +38,6 @@ import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.hql.internal.ast.HqlSqlWalker;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.persister.entity.EntityPersister;
-
-import org.junit.Test;
-import junit.framework.AssertionFailedError;
-
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipLog;

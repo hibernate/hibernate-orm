@@ -23,16 +23,21 @@
  */
 package org.hibernate.envers.test.integration.manytomany;
 
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.SortedMap;
+import java.util.SortedSet;
+import javax.persistence.EntityManager;
+
+import org.junit.Test;
+
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.envers.test.entities.StrTestEntityComparator;
 import org.hibernate.envers.test.entities.manytomany.SortedSetEntity;
-import org.junit.Test;
-
-import javax.persistence.EntityManager;
-import java.util.*;
 
 import static org.junit.Assert.assertEquals;
 

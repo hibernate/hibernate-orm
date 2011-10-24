@@ -23,13 +23,13 @@
  */
 package org.hibernate.service.jta.platform.internal;
 
-import org.hibernate.service.jndi.spi.JndiService;
-import org.hibernate.transaction.TransactionManagerLookup;
-
+import java.util.Properties;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 import javax.transaction.UserTransaction;
-import java.util.Properties;
+
+import org.hibernate.service.jndi.spi.JndiService;
+import org.hibernate.transaction.TransactionManagerLookup;
 
 /**
  * @author Steve Ebersole

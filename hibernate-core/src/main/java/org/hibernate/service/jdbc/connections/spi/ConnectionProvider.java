@@ -24,6 +24,7 @@
 package org.hibernate.service.jdbc.connections.spi;
 import java.sql.Connection;
 import java.sql.SQLException;
+
 import org.hibernate.HibernateException;
 import org.hibernate.service.Service;
 import org.hibernate.service.spi.Wrapped;

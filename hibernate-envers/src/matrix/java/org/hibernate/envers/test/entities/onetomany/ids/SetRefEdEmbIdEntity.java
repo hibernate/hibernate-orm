@@ -26,6 +26,7 @@ import java.util.Set;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.OneToMany;
+
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.entities.ids.EmbId;
 

@@ -25,10 +25,9 @@ package org.hibernate.test.entitymode.map.subclass;
 
 import java.util.HashMap;
 
-import org.hibernate.Session;
-
 import org.junit.Test;
 
+import org.hibernate.Session;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**

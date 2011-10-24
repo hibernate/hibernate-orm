@@ -1,6 +1,7 @@
 package org.hibernate.test.dynamicentity.interceptor;
 import java.io.Serializable;
 import java.lang.reflect.Proxy;
+
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.EntityMode;
 import org.hibernate.test.dynamicentity.Company;

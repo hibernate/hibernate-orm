@@ -24,6 +24,7 @@
  */
 package org.hibernate.classic;
 import java.io.Serializable;
+
 import org.hibernate.CallbackException;
 import org.hibernate.Session;
 

@@ -24,6 +24,7 @@
  */
 package org.hibernate.hql.spi;
 import java.util.Set;
+
 import org.hibernate.type.Type;
 
 /**

@@ -23,18 +23,19 @@
  */
 package org.hibernate.envers.test.integration.naming;
 
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+import javax.persistence.EntityManager;
+
+import org.junit.Test;
+
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.components.Component1;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
-import org.junit.Test;
-
-import javax.persistence.EntityManager;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
 
 /**
  * Test class for {@link VersionsJoinTableRangeComponentTestEntity}, to test

@@ -1,10 +1,11 @@
 package org.hibernate.envers.test.integration.reventity.trackmodifiedentities;
 
+import org.junit.Test;
+
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.DefaultTrackingModifiedEntitiesRevisionEntity;
 import org.hibernate.envers.test.entities.reventity.trackmodifiedentities.ExtendedRevisionEntity;
 import org.hibernate.envers.test.entities.reventity.trackmodifiedentities.ExtendedRevisionListener;
-import org.junit.Test;
 
 /**
  * Tests proper behavior of revision entity that extends {@link DefaultTrackingModifiedEntitiesRevisionEntity}.

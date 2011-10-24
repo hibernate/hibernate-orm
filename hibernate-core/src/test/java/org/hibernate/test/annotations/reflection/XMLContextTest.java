@@ -5,16 +5,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import junit.framework.TestCase;
-import org.dom4j.io.SAXReader;
-import org.hibernate.cfg.EJB3DTDEntityResolver;
-import org.hibernate.cfg.annotations.reflection.XMLContext;
-import org.hibernate.internal.util.xml.XMLHelper;
 
+import org.dom4j.io.SAXReader;
 import org.junit.Assert;
 import org.junit.Test;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXNotSupportedException;
+
+import org.hibernate.cfg.EJB3DTDEntityResolver;
+import org.hibernate.cfg.annotations.reflection.XMLContext;
+import org.hibernate.internal.util.xml.XMLHelper;
 
 /**
  * @author Emmanuel Bernard

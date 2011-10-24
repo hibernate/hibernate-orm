@@ -24,6 +24,7 @@
  */
 package org.hibernate.persister.entity;
 import java.util.Map;
+
 import org.hibernate.MappingException;
 
 /**

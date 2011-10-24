@@ -25,16 +25,17 @@ package org.hibernate.engine.transaction.internal.jdbc;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+
+import org.jboss.logging.Logger;
+
 import org.hibernate.HibernateException;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.transaction.spi.IsolationDelegate;
 import org.hibernate.engine.transaction.spi.TransactionCoordinator;
-import org.hibernate.jdbc.WorkExecutorVisitable;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jdbc.WorkExecutor;
+import org.hibernate.jdbc.WorkExecutorVisitable;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
-
-import org.jboss.logging.Logger;
 
 /**
  * The isolation delegate for JDBC {@link Connection} based transactions

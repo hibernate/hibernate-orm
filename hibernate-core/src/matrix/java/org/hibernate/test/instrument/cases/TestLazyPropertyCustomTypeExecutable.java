@@ -1,9 +1,10 @@
 package org.hibernate.test.instrument.cases;
 import java.util.Iterator;
+
 import junit.framework.Assert;
+
 import org.hibernate.Session;
 import org.hibernate.bytecode.instrumentation.internal.FieldInterceptionHelper;
-
 import org.hibernate.test.instrument.domain.Problematic;
 
 /**

@@ -1,6 +1,7 @@
 package org.hibernate.envers.test.entities.onetomany.detached;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
+
 import org.hibernate.envers.Audited;
 
 /**

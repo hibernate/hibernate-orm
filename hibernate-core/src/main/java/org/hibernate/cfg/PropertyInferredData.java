@@ -23,6 +23,7 @@
  */
 package org.hibernate.cfg;
 import javax.persistence.Access;
+
 import org.hibernate.MappingException;
 import org.hibernate.annotations.Target;
 import org.hibernate.annotations.common.reflection.ReflectionManager;

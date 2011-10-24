@@ -1,14 +1,15 @@
 package org.hibernate.envers.test.integration.reventity;
 
+import javax.persistence.EntityManager;
+
+import org.junit.Assert;
+import org.junit.Test;
+
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.testing.TestForIssue;
-import org.junit.Assert;
-import org.junit.Test;
-
-import javax.persistence.EntityManager;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)

@@ -24,12 +24,13 @@
  */
 package org.hibernate.hql.internal.ast.util;
 
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
-import org.hibernate.internal.util.StringHelper;
-import org.jboss.logging.Logger;
 import antlr.ASTFactory;
 import antlr.collections.AST;
+import org.jboss.logging.Logger;
+
+import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
+import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.StringHelper;
 
 /**
  * Provides utility methods for paths.

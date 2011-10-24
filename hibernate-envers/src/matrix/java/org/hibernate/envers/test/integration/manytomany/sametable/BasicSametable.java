@@ -23,6 +23,11 @@
  */
 package org.hibernate.envers.test.integration.manytomany.sametable;
 
+import java.util.Arrays;
+import javax.persistence.EntityManager;
+
+import org.junit.Test;
+
 import org.hibernate.Session;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
@@ -31,10 +36,6 @@ import org.hibernate.envers.test.entities.manytomany.sametable.Child1Entity;
 import org.hibernate.envers.test.entities.manytomany.sametable.Child2Entity;
 import org.hibernate.envers.test.entities.manytomany.sametable.ParentEntity;
 import org.hibernate.envers.test.tools.TestTools;
-import org.junit.Test;
-
-import javax.persistence.EntityManager;
-import java.util.Arrays;
 
 /**
  * Test which checks that auditing entities which contain multiple mappings to same tables work.

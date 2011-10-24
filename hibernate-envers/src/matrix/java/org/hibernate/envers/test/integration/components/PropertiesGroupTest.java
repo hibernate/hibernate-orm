@@ -1,5 +1,12 @@
 package org.hibernate.envers.test.integration.components;
 
+import java.io.File;
+import java.net.URISyntaxException;
+import java.net.URL;
+
+import org.junit.Assert;
+import org.junit.Test;
+
 import org.hibernate.MappingException;
 import org.hibernate.envers.test.AbstractSessionTest;
 import org.hibernate.envers.test.Priority;
@@ -8,12 +15,6 @@ import org.hibernate.envers.test.entities.components.UniquePropsNotAuditedEntity
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.testing.TestForIssue;
-import org.junit.Assert;
-import org.junit.Test;
-
-import java.io.File;
-import java.net.URISyntaxException;
-import java.net.URL;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)

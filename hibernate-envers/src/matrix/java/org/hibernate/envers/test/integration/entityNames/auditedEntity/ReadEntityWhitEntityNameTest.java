@@ -1,14 +1,15 @@
 package org.hibernate.envers.test.integration.entityNames.auditedEntity;
 
-import org.hibernate.MappingException;
-import org.hibernate.envers.test.AbstractOneSessionTest;
-import org.hibernate.envers.test.Priority;
-import org.junit.Test;
-
 import java.io.File;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.List;
+
+import org.junit.Test;
+
+import org.hibernate.MappingException;
+import org.hibernate.envers.test.AbstractOneSessionTest;
+import org.hibernate.envers.test.Priority;
 
 /**
  * @author Hern&aacute;n Chanfreau

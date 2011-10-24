@@ -24,6 +24,7 @@
 package org.hibernate.cfg;
 import javax.persistence.DiscriminatorColumn;
 import javax.persistence.DiscriminatorType;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.DiscriminatorFormula;
 

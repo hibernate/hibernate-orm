@@ -26,14 +26,15 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.hibernate.internal.CoreMessageLogger;
+import org.jboss.logging.Logger;
+
 import org.hibernate.MappingException;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Value;
-import org.jboss.logging.Logger;
 
 /**
  * Collection second pass

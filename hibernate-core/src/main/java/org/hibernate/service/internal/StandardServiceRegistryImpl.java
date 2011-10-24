@@ -27,13 +27,12 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.service.BootstrapServiceRegistry;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.Service;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.BasicServiceInitiator;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.ServiceInitiator;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
-import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
  * Hibernate implementation of the standard service registry.

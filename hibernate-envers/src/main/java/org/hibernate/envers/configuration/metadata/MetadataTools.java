@@ -24,9 +24,11 @@
 package org.hibernate.envers.configuration.metadata;
 import java.util.Iterator;
 import javax.persistence.JoinColumn;
+
 import org.dom4j.Attribute;
 import org.dom4j.Document;
 import org.dom4j.Element;
+
 import org.hibernate.envers.tools.StringTools;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Formula;

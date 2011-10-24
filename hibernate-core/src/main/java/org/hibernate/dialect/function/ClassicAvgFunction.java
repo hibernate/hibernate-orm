@@ -23,6 +23,7 @@
  */
 package org.hibernate.dialect.function;
 import java.sql.Types;
+
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.engine.spi.Mapping;

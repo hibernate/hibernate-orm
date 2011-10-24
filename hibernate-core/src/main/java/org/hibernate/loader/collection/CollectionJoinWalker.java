@@ -25,8 +25,8 @@
 package org.hibernate.loader.collection;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.loader.JoinWalker;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.loader.JoinWalker;
 
 /**
  * Superclass of walkers for collection initializers

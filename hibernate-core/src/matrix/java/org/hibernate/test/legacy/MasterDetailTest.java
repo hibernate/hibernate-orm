@@ -32,6 +32,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
+import org.junit.Test;
+
 import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
 import org.hibernate.ObjectNotFoundException;
@@ -45,12 +47,8 @@ import org.hibernate.dialect.MckoiDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.SAPDBDialect;
 import org.hibernate.jdbc.AbstractWork;
-import org.hibernate.jdbc.Work;
 import org.hibernate.mapping.MetaAttribute;
 import org.hibernate.mapping.PersistentClass;
-
-import org.junit.Test;
-
 import org.hibernate.testing.SkipLog;
 
 import static org.junit.Assert.assertEquals;

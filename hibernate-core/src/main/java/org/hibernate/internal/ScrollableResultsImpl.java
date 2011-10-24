@@ -25,6 +25,7 @@ package org.hibernate.internal;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.ScrollableResults;

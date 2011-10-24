@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.jboss.logging.Logger;
+import org.junit.Test;
 
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
@@ -50,11 +51,8 @@ import org.hibernate.dialect.IngresDialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.testing.SkipForDialect;
-import org.hibernate.transform.DistinctRootEntityResultTransformer;
-
-import org.junit.Test;
-
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.transform.DistinctRootEntityResultTransformer;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;

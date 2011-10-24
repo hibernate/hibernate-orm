@@ -25,6 +25,7 @@
 package org.hibernate.test.dynamicentity.tuplizer2;
 
 import java.io.Serializable;
+
 import org.hibernate.HibernateException;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.test.dynamicentity.Address;

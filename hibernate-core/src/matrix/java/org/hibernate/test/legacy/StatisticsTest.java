@@ -23,13 +23,13 @@
  */
 package org.hibernate.test.legacy;
 
+import org.junit.Test;
+
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.stat.Statistics;
-
-import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 

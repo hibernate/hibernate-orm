@@ -25,6 +25,7 @@
 package org.hibernate.engine.query.spi;
 import java.io.Serializable;
 import java.util.Map;
+
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 /**

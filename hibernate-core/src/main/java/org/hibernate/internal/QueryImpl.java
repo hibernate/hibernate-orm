@@ -26,6 +26,7 @@ package org.hibernate.internal;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -33,9 +34,9 @@ import org.hibernate.LockOptions;
 import org.hibernate.Query;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
+import org.hibernate.engine.query.spi.ParameterMetadata;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.engine.query.spi.ParameterMetadata;
 
 /**
  * default implementation of the <tt>Query</tt> interface,

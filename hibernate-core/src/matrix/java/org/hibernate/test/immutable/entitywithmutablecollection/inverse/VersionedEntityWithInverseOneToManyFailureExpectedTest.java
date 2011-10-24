@@ -25,8 +25,8 @@ package org.hibernate.test.immutable.entitywithmutablecollection.inverse;
 
 import org.junit.Test;
 
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.test.immutable.entitywithmutablecollection.AbstractEntityWithOneToManyTest;
+import org.hibernate.testing.FailureExpected;
 
 /**
  * @author Gail Badner

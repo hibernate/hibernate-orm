@@ -1,6 +1,4 @@
 package org.hibernate.envers.configuration.metadata.reader;
-import static org.hibernate.envers.tools.Tools.newHashMap;
-import static org.hibernate.envers.tools.Tools.newHashSet;
 import java.lang.annotation.Annotation;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -10,6 +8,7 @@ import java.util.Set;
 import javax.persistence.JoinColumn;
 import javax.persistence.MapKey;
 import javax.persistence.Version;
+
 import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
@@ -26,6 +25,9 @@ import org.hibernate.envers.tools.MappingTools;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Value;
+
+import static org.hibernate.envers.tools.Tools.newHashMap;
+import static org.hibernate.envers.tools.Tools.newHashSet;
 
 /**
  * Reads persistent properties form a

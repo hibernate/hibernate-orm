@@ -1,5 +1,6 @@
 package org.hibernate.envers.test.integration.entityNames.manyToManyAudited;
 import java.util.List;
+
 import org.hibernate.envers.Audited;
 
 /**

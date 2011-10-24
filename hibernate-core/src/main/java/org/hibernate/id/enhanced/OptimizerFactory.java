@@ -25,12 +25,13 @@ package org.hibernate.id.enhanced;
 
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
-import org.hibernate.HibernateException;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.id.IntegralDataTypeHolder;
-import org.hibernate.internal.util.ReflectHelper;
 
 import org.jboss.logging.Logger;
+
+import org.hibernate.HibernateException;
+import org.hibernate.id.IntegralDataTypeHolder;
+import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.ReflectHelper;
 
 /**
  * Factory for {@link Optimizer} instances.

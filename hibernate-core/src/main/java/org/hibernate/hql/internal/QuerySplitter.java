@@ -28,12 +28,13 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.MappingException;
-import org.hibernate.hql.internal.classic.ParserHelper;
-import org.hibernate.internal.util.StringHelper;
 import org.jboss.logging.Logger;
+
+import org.hibernate.MappingException;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.hql.internal.classic.ParserHelper;
+import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.StringHelper;
 
 /**
  * Provides query splitting methods, which were originally in QueryTranslator.

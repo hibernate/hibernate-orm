@@ -26,16 +26,16 @@ package org.hibernate.cfg;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
+
 import org.dom4j.Attribute;
 import org.dom4j.Element;
+import org.jboss.logging.Logger;
 
-import org.hibernate.engine.spi.NamedSQLQueryDefinition;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.MappingException;
 import org.hibernate.engine.ResultSetMappingDefinition;
+import org.hibernate.engine.spi.NamedSQLQueryDefinition;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
-
-import org.jboss.logging.Logger;
 
 /**
  * @author Emmanuel Bernard

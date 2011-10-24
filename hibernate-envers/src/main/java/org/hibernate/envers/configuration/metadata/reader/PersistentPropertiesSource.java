@@ -1,5 +1,6 @@
 package org.hibernate.envers.configuration.metadata.reader;
 import java.util.Iterator;
+
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.mapping.Property;
 

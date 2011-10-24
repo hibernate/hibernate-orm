@@ -24,15 +24,14 @@
 package org.hibernate.test.lob;
 import java.sql.Clob;
 
-import org.hibernate.LockMode;
-import org.hibernate.Session;
-import org.hibernate.type.descriptor.java.DataHelper;
-
 import org.junit.Test;
 
+import org.hibernate.LockMode;
+import org.hibernate.Session;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.type.descriptor.java.DataHelper;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;

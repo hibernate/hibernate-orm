@@ -30,8 +30,6 @@ import java.util.Map;
 
 import org.junit.Test;
 
-import org.hibernate.EntityMode;
-import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.testing.junit4.BaseUnitTestCase;

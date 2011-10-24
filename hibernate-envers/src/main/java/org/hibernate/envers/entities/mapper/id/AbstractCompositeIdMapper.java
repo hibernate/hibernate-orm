@@ -23,6 +23,7 @@
  */
 package org.hibernate.envers.entities.mapper.id;
 import java.util.Map;
+
 import org.hibernate.envers.entities.PropertyData;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.tools.Tools;

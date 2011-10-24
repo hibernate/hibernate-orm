@@ -29,6 +29,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Properties;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
 import org.hibernate.Session;
 import org.hibernate.TestingDatabaseInfo;
 import org.hibernate.cfg.Configuration;
@@ -42,14 +46,9 @@ import org.hibernate.internal.SessionImpl;
 import org.hibernate.jdbc.Work;
 import org.hibernate.mapping.SimpleAuxiliaryDatabaseObject;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.StandardBasicTypes;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.type.StandardBasicTypes;
 
 import static org.junit.Assert.assertEquals;
 

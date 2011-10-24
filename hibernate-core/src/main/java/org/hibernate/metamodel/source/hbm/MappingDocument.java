@@ -28,14 +28,14 @@ import java.util.List;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.internal.jaxb.JaxbRoot;
 import org.hibernate.internal.jaxb.Origin;
+import org.hibernate.internal.jaxb.mapping.hbm.EntityElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbFetchProfileElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbHibernateMapping;
 import org.hibernate.internal.util.Value;
 import org.hibernate.metamodel.domain.Type;
 import org.hibernate.metamodel.source.MappingDefaults;
 import org.hibernate.metamodel.source.MetaAttributeContext;
 import org.hibernate.metamodel.source.MetadataImplementor;
-import org.hibernate.internal.jaxb.mapping.hbm.EntityElement;
-import org.hibernate.internal.jaxb.mapping.hbm.JaxbFetchProfileElement;
-import org.hibernate.internal.jaxb.mapping.hbm.JaxbHibernateMapping;
 import org.hibernate.metamodel.source.internal.OverriddenMappingDefaults;
 import org.hibernate.service.ServiceRegistry;
 

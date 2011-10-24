@@ -24,6 +24,7 @@
  */
 package org.hibernate.id;
 import java.util.Properties;
+
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.Type;

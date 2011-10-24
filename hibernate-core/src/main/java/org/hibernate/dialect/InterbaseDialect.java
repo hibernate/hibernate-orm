@@ -23,6 +23,7 @@
  */
 package org.hibernate.dialect;
 import java.sql.Types;
+
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
 import org.hibernate.type.StandardBasicTypes;

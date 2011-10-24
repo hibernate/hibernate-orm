@@ -24,6 +24,7 @@
 package org.hibernate.dialect;
 import java.sql.Types;
 import java.util.Properties;
+
 import org.hibernate.cfg.Environment;
 
 /**

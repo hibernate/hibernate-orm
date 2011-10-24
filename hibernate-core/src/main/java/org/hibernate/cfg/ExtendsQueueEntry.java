@@ -24,6 +24,7 @@
 package org.hibernate.cfg;
 
 import java.util.Set;
+
 import org.hibernate.internal.util.xml.XmlDocument;
 
 /**

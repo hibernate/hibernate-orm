@@ -25,10 +25,10 @@ package org.hibernate.test.legacy;
 
 import java.util.List;
 
+import org.junit.Test;
+
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-
-import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;

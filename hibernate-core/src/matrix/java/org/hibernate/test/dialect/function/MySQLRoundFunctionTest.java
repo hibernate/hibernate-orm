@@ -23,13 +23,13 @@
  */
 package org.hibernate.test.dialect.function;
 import java.math.BigDecimal;
+
+import org.junit.Test;
+
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.MySQLDialect;
-
-import org.junit.Test;
-
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 

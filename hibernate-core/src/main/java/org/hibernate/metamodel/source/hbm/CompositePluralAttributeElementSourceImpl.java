@@ -27,14 +27,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.EntityMode;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbCompositeElementElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbTuplizerElement;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.Value;
 import org.hibernate.metamodel.source.LocalBindingContext;
 import org.hibernate.metamodel.source.binder.AttributeSource;
 import org.hibernate.metamodel.source.binder.CompositePluralAttributeElementSource;
 import org.hibernate.metamodel.source.binder.PluralAttributeElementNature;
-import org.hibernate.internal.jaxb.mapping.hbm.JaxbCompositeElementElement;
-import org.hibernate.internal.jaxb.mapping.hbm.JaxbTuplizerElement;
 
 /**
  * @author Steve Ebersole

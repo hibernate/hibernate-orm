@@ -26,6 +26,7 @@ package org.hibernate.id.insert;
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.id.PostInsertIdentityPersister;
 import org.hibernate.pretty.MessageHelper;

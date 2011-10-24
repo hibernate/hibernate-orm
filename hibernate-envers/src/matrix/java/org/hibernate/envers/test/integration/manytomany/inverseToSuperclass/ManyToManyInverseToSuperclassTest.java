@@ -1,15 +1,16 @@
 package org.hibernate.envers.test.integration.manytomany.inverseToSuperclass;
 
-import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
-import org.hibernate.envers.test.Priority;
-import org.junit.Test;
-
-import javax.persistence.EntityManager;
 import java.io.File;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
+import javax.persistence.EntityManager;
+
+import org.junit.Test;
+
+import org.hibernate.ejb.Ejb3Configuration;
+import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.Priority;
 
 /**
  * @author Hern�n Chanfreau

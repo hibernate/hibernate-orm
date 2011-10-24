@@ -29,15 +29,15 @@ import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.util.Map;
 
-import org.hibernate.internal.CoreMessageLogger;
+import org.jboss.logging.Logger;
+
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.ContextualLobCreator;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.NonContextualLobCreator;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-
-import org.jboss.logging.Logger;
 
 /**
  * Builds {@link LobCreator} instances based on the capabilities of the environment.

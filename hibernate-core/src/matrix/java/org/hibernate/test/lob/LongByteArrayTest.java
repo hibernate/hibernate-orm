@@ -23,16 +23,15 @@
  */
 package org.hibernate.test.lob;
 
+import junit.framework.AssertionFailedError;
+import org.junit.Assert;
+import org.junit.Test;
+
 import org.hibernate.Session;
 import org.hibernate.internal.util.collections.ArrayHelper;
-
-import junit.framework.AssertionFailedError;
-
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertNull;
-import org.junit.Assert;
-import org.junit.Test;
 
 /**
  * Tests eager materialization and mutation of long byte arrays.

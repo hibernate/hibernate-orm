@@ -26,13 +26,12 @@ package org.hibernate.test.cfg;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
+import org.junit.Test;
+
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.service.ServiceRegistry;
-
-import org.junit.Test;
-
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 

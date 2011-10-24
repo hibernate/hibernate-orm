@@ -3,6 +3,7 @@ package org.hibernate.test.annotations.immutable;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+
 import org.hibernate.annotations.Immutable;
 
 /**

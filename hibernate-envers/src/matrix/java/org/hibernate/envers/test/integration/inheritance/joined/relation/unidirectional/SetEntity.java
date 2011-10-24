@@ -24,6 +24,7 @@
 
 package org.hibernate.envers.test.integration.inheritance.joined.relation.unidirectional;
 import javax.persistence.Entity;
+
 import org.hibernate.envers.Audited;
 
 /**

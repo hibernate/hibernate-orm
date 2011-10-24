@@ -30,9 +30,9 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.event.EnversListener;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.reader.AuditReaderImpl;
+import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PostInsertEventListener;
-import org.hibernate.event.service.spi.EventListenerRegistry;
 
 /**
  * @author Adam Warski (adam at warski dot org)

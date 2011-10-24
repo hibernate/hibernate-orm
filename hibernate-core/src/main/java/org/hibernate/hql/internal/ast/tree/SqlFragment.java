@@ -25,6 +25,7 @@
 package org.hibernate.hql.internal.ast.tree;
 import java.util.ArrayList;
 import java.util.List;
+
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.sql.JoinFragment;
 

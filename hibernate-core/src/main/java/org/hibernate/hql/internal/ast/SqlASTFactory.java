@@ -24,6 +24,11 @@
  */
 package org.hibernate.hql.internal.ast;
 import java.lang.reflect.Constructor;
+
+import antlr.ASTFactory;
+import antlr.Token;
+import antlr.collections.AST;
+
 import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.internal.ast.tree.AggregateNode;
 import org.hibernate.hql.internal.ast.tree.BetweenOperatorNode;
@@ -66,9 +71,6 @@ import org.hibernate.hql.internal.ast.tree.SqlNode;
 import org.hibernate.hql.internal.ast.tree.UnaryArithmeticNode;
 import org.hibernate.hql.internal.ast.tree.UnaryLogicOperatorNode;
 import org.hibernate.hql.internal.ast.tree.UpdateStatement;
-import antlr.ASTFactory;
-import antlr.Token;
-import antlr.collections.AST;
 
 /**
  * Custom AST factory the intermediate tree that causes ANTLR to create specialized

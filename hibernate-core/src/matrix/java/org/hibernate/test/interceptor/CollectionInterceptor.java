@@ -1,6 +1,7 @@
 //$Id: CollectionInterceptor.java 7700 2005-07-30 05:02:47Z oneovthafew $
 package org.hibernate.test.interceptor;
 import java.io.Serializable;
+
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.type.Type;
 

@@ -21,6 +21,7 @@
  */
 package org.hibernate.test.event.collection.association.bidirectional.manytomany;
 import java.util.Collection;
+
 import org.hibernate.test.event.collection.ChildEntity;
 
 /**

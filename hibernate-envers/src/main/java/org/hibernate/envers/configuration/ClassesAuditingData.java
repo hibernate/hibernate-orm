@@ -3,13 +3,15 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+
+import org.jboss.logging.Logger;
+
 import org.hibernate.MappingException;
-import org.hibernate.envers.internal.EnversMessageLogger;
 import org.hibernate.envers.configuration.metadata.reader.ClassAuditingData;
 import org.hibernate.envers.configuration.metadata.reader.PropertyAuditingData;
+import org.hibernate.envers.internal.EnversMessageLogger;
 import org.hibernate.envers.tools.MappingTools;
 import org.hibernate.mapping.PersistentClass;
-import org.jboss.logging.Logger;
 
 /**
  * A helper class holding auditing meta-data for all persistent classes.

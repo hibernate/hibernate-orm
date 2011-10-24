@@ -24,6 +24,7 @@
 package org.hibernate.envers.synchronization;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
 import org.hibernate.Transaction;
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.engine.spi.SessionImplementor;

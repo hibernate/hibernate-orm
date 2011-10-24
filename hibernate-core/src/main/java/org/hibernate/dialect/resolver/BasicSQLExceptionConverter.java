@@ -24,12 +24,12 @@
 package org.hibernate.dialect.resolver;
 import java.sql.SQLException;
 
+import org.jboss.logging.Logger;
+
+import org.hibernate.JDBCException;
 import org.hibernate.exception.internal.SQLStateConverter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.JDBCException;
-
-import org.jboss.logging.Logger;
 
 /**
  * A helper to centralize conversion of {@link java.sql.SQLException}s to {@link org.hibernate.JDBCException}s.

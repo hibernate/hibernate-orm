@@ -25,18 +25,20 @@ package org.hibernate.dialect.lock;
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+
+import org.jboss.logging.Logger;
+
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.StaleObjectStateException;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.sql.Update;
-import org.jboss.logging.Logger;
 
 /**
  * A pessimistic locking strategy where the locks are obtained through update statements.

@@ -27,6 +27,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.EntityMode;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbAnyElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbComponentElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbManyToManyElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbManyToOneElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbOneToManyElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbOneToOneElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbPropertyElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbTuplizerElement;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.Value;
 import org.hibernate.mapping.PropertyGeneration;
@@ -38,14 +46,6 @@ import org.hibernate.metamodel.source.binder.ExplicitHibernateTypeSource;
 import org.hibernate.metamodel.source.binder.MetaAttributeSource;
 import org.hibernate.metamodel.source.binder.RelationalValueSource;
 import org.hibernate.metamodel.source.binder.SingularAttributeNature;
-import org.hibernate.internal.jaxb.mapping.hbm.JaxbAnyElement;
-import org.hibernate.internal.jaxb.mapping.hbm.JaxbComponentElement;
-import org.hibernate.internal.jaxb.mapping.hbm.JaxbManyToManyElement;
-import org.hibernate.internal.jaxb.mapping.hbm.JaxbManyToOneElement;
-import org.hibernate.internal.jaxb.mapping.hbm.JaxbOneToManyElement;
-import org.hibernate.internal.jaxb.mapping.hbm.JaxbOneToOneElement;
-import org.hibernate.internal.jaxb.mapping.hbm.JaxbPropertyElement;
-import org.hibernate.internal.jaxb.mapping.hbm.JaxbTuplizerElement;
 
 /**
  * @author Steve Ebersole

@@ -23,10 +23,10 @@
  */
 package org.hibernate.metamodel.source.hbm;
 
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbColumnElement;
 import org.hibernate.metamodel.relational.Datatype;
 import org.hibernate.metamodel.relational.Size;
 import org.hibernate.metamodel.source.binder.ColumnSource;
-import org.hibernate.internal.jaxb.mapping.hbm.JaxbColumnElement;
 
 /**
 * @author Steve Ebersole

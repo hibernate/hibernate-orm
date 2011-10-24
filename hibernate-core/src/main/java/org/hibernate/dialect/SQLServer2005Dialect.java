@@ -23,6 +23,7 @@
  */
 package org.hibernate.dialect;
 import java.sql.Types;
+
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.type.StandardBasicTypes;
 

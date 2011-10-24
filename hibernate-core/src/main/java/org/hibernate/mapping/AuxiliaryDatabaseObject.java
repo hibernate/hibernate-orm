@@ -23,6 +23,7 @@
  */
 package org.hibernate.mapping;
 import java.io.Serializable;
+
 import org.hibernate.dialect.Dialect;
 
 /**

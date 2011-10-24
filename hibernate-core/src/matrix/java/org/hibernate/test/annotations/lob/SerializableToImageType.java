@@ -23,6 +23,7 @@
  */
 package org.hibernate.test.annotations.lob;
 import java.io.Serializable;
+
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.descriptor.java.SerializableTypeDescriptor;
 import org.hibernate.type.descriptor.sql.LongVarbinaryTypeDescriptor;

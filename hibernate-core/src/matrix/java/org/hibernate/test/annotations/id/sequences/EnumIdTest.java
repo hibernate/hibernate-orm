@@ -24,16 +24,14 @@
 package org.hibernate.test.annotations.id.sequences;
 
 import org.jboss.logging.Logger;
+import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-
-import org.junit.Test;
-
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.test.annotations.id.sequences.entities.Planet;
 import org.hibernate.test.annotations.id.sequences.entities.PlanetCheatSheet;
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;

@@ -23,13 +23,11 @@
  */
 package org.hibernate.test.annotations.id;
 
+import org.junit.Test;
+
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.mapping.Column;
-
-import org.junit.Test;
-
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.test.annotations.id.entities.Ball;
 import org.hibernate.test.annotations.id.entities.BreakDance;
 import org.hibernate.test.annotations.id.entities.Computer;
@@ -47,6 +45,7 @@ import org.hibernate.test.annotations.id.entities.Shoe;
 import org.hibernate.test.annotations.id.entities.SoundSystem;
 import org.hibernate.test.annotations.id.entities.Store;
 import org.hibernate.test.annotations.id.entities.Tree;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;

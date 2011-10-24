@@ -24,6 +24,7 @@
 package org.hibernate.envers.test.entities.ids;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
+
 import org.hibernate.envers.Audited;
 
 /**

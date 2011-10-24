@@ -1,10 +1,10 @@
 package org.hibernate.envers;
 
-import org.hibernate.envers.tools.Pair;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.hibernate.envers.tools.Pair;
 
 /**
  * Queries that allow retrieving snapshots of all entities (regardless of their particular type) changed in the given

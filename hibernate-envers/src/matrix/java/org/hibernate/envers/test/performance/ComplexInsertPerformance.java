@@ -24,16 +24,17 @@
 
 package org.hibernate.envers.test.performance;
 
+import java.io.IOException;
+import java.util.Date;
+import java.util.HashSet;
+import javax.persistence.EntityManager;
+
+import org.junit.Ignore;
+
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.performance.complex.ChildEntity1;
 import org.hibernate.envers.test.performance.complex.ChildEntity2;
 import org.hibernate.envers.test.performance.complex.RootEntity;
-import org.junit.Ignore;
-
-import javax.persistence.EntityManager;
-import java.io.IOException;
-import java.util.Date;
-import java.util.HashSet;
 
 /**
  * @author Adam Warski (adam at warski dot org)

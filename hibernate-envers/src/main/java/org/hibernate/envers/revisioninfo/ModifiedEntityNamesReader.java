@@ -1,12 +1,10 @@
 package org.hibernate.envers.revisioninfo;
 
+import java.util.Set;
+
 import org.hibernate.envers.entities.PropertyData;
 import org.hibernate.envers.tools.reflection.ReflectionTools;
 import org.hibernate.property.Getter;
-
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * Returns modified entity names from a persisted revision info entity.

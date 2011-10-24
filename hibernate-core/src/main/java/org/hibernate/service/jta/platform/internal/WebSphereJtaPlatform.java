@@ -26,10 +26,11 @@ package org.hibernate.service.jta.platform.internal;
 import java.lang.reflect.Method;
 import javax.transaction.TransactionManager;
 import javax.transaction.UserTransaction;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.service.jta.platform.spi.JtaPlatformException;
 
 import org.jboss.logging.Logger;
+
+import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.service.jta.platform.spi.JtaPlatformException;
 
 /**
  * JTA platform implementation for WebSphere (versions 4, 5.0 and 5.1)

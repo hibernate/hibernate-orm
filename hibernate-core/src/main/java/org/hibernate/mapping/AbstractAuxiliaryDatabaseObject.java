@@ -23,6 +23,7 @@
  */
 package org.hibernate.mapping;
 import java.util.HashSet;
+
 import org.hibernate.dialect.Dialect;
 
 /**

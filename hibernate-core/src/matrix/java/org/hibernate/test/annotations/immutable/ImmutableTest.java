@@ -27,15 +27,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.jboss.logging.Logger;
+import org.junit.Test;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
-
-import org.junit.Test;
-
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 

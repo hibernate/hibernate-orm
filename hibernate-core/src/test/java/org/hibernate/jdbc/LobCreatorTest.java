@@ -38,6 +38,8 @@ import java.sql.NClob;
 import java.sql.SQLException;
 import java.util.Properties;
 
+import org.junit.Test;
+
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.BlobImplementer;
 import org.hibernate.engine.jdbc.ClobImplementer;
@@ -49,8 +51,6 @@ import org.hibernate.engine.jdbc.NonContextualLobCreator;
 import org.hibernate.engine.jdbc.WrappedBlob;
 import org.hibernate.engine.jdbc.WrappedClob;
 import org.hibernate.engine.jdbc.internal.LobCreatorBuilder;
-
-import org.junit.Test;
 
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;

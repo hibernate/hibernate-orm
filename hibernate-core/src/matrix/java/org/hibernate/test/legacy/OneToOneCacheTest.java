@@ -24,11 +24,11 @@
 package org.hibernate.test.legacy;
 import java.io.Serializable;
 
+import org.junit.Test;
+
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-
-import org.junit.Test;
 
 import static org.junit.Assert.assertNotNull;
 

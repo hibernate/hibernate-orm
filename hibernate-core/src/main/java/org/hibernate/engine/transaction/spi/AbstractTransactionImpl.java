@@ -25,11 +25,13 @@ package org.hibernate.engine.transaction.spi;
 
 import javax.transaction.Status;
 import javax.transaction.Synchronization;
-import org.hibernate.HibernateException;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.TransactionException;
-import org.hibernate.service.jta.platform.spi.JtaPlatform;
+
 import org.jboss.logging.Logger;
+
+import org.hibernate.HibernateException;
+import org.hibernate.TransactionException;
+import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.service.jta.platform.spi.JtaPlatform;
 
 /**
  * Abstract support for creating {@link TransactionImplementor transaction} implementations

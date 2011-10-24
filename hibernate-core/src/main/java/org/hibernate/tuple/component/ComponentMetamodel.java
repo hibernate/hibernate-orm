@@ -34,7 +34,6 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
 import org.hibernate.tuple.PropertyFactory;
 import org.hibernate.tuple.StandardProperty;
-import org.hibernate.tuple.Tuplizer;
 
 /**
  * Centralizes metamodel information about a component.

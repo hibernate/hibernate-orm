@@ -23,14 +23,13 @@
  */
 package org.hibernate.test.bytecode.javassist;
 
-import org.hibernate.bytecode.spi.ReflectionOptimizer;
-import org.hibernate.bytecode.internal.javassist.BytecodeProviderImpl;
-
 import org.junit.Test;
 
-import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.bytecode.internal.javassist.BytecodeProviderImpl;
+import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.test.bytecode.Bean;
 import org.hibernate.test.bytecode.BeanReflectionHelper;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;

@@ -23,14 +23,14 @@
  */
 package org.hibernate.engine.transaction.internal.jta;
 
+import javax.transaction.SystemException;
+import javax.transaction.TransactionManager;
+
 import org.hibernate.TransactionException;
 import org.hibernate.engine.transaction.spi.AbstractTransactionImpl;
 import org.hibernate.engine.transaction.spi.IsolationDelegate;
 import org.hibernate.engine.transaction.spi.JoinStatus;
 import org.hibernate.engine.transaction.spi.TransactionCoordinator;
-
-import javax.transaction.SystemException;
-import javax.transaction.TransactionManager;
 
 /**
  * Implements a transaction strategy for Container Managed Transaction (CMT) scenarios.  All work is done in

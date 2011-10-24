@@ -24,6 +24,7 @@
 package org.hibernate;
 
 import javax.transaction.Synchronization;
+
 import org.hibernate.engine.transaction.spi.LocalStatus;
 
 /**

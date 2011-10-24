@@ -23,6 +23,7 @@
  */
 package org.hibernate.cfg;
 import javax.persistence.JoinTable;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;

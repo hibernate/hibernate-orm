@@ -25,10 +25,9 @@ package org.hibernate.test.component.cascading.collection;
 
 import java.util.Locale;
 
-import org.hibernate.Session;
-
 import org.junit.Test;
 
+import org.hibernate.Session;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;

@@ -24,8 +24,6 @@
  */
 package org.hibernate;
 
-import java.util.EnumSet;
-
 /**
  * Defines the various policies by which Hibernate might release its underlying
  * JDBC connection.

@@ -2,6 +2,7 @@
 package org.hibernate.test.interceptor;
 import java.io.Serializable;
 import java.util.Calendar;
+
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.type.Type;
 

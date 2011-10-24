@@ -10,6 +10,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.TableGenerator;
+
 import org.hibernate.annotations.CollectionId;
 import org.hibernate.annotations.Type;
 

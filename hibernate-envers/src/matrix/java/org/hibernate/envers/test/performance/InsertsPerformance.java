@@ -23,12 +23,13 @@
  */
 package org.hibernate.envers.test.performance;
 
-import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.entities.StrTestEntity;
+import java.io.IOException;
+import javax.persistence.EntityManager;
+
 import org.junit.Ignore;
 
-import javax.persistence.EntityManager;
-import java.io.IOException;
+import org.hibernate.ejb.Ejb3Configuration;
+import org.hibernate.envers.test.entities.StrTestEntity;
 
 /**
  * @author Adam Warski (adam at warski dot org)

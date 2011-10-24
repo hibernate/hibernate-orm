@@ -25,6 +25,7 @@ package org.hibernate.proxy.map;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.Set;
+
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.proxy.HibernateProxy;

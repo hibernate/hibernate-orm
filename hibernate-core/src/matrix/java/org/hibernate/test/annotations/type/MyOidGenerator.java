@@ -1,6 +1,7 @@
 //$Id$
 package org.hibernate.test.annotations.type;
 import java.io.Serializable;
+
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.id.IdentifierGenerator;

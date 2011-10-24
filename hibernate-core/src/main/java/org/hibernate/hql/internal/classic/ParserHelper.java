@@ -24,6 +24,7 @@
  */
 package org.hibernate.hql.internal.classic;
 import java.util.StringTokenizer;
+
 import org.hibernate.QueryException;
 import org.hibernate.internal.util.StringHelper;
 

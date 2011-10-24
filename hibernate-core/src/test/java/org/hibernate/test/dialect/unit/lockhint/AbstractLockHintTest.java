@@ -25,15 +25,14 @@ package org.hibernate.test.dialect.unit.lockhint;
 
 import java.util.Collections;
 
-import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.internal.util.StringHelper;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.assertEquals;

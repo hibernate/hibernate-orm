@@ -30,13 +30,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import antlr.collections.AST;
+
 import org.hibernate.QueryException;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.Type;
-
-import antlr.collections.AST;
 
 /**
  * Represents an entity referenced in the INTO clause of an HQL

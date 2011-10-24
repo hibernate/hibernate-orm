@@ -1,7 +1,6 @@
 //$Id$
 package org.hibernate.test.annotations.configuration;
 
-import junit.framework.TestCase;
 import org.junit.Assert;
 import org.junit.Test;
 

@@ -23,10 +23,9 @@
  */
 package org.hibernate.test.annotations.collectionelement.deepcollectionelements;
 
-import org.hibernate.cfg.Configuration;
-
 import org.junit.Test;
 
+import org.hibernate.cfg.Configuration;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.junit4.BaseUnitTestCase;

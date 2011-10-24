@@ -25,6 +25,7 @@ package org.hibernate.envers.test.entities.ids;
 import java.util.Date;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+
 import org.hibernate.envers.Audited;
 
 /**

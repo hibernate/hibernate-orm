@@ -29,6 +29,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Version;
+
 import org.hibernate.annotations.Source;
 import org.hibernate.annotations.SourceType;
 

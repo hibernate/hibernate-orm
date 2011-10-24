@@ -23,8 +23,6 @@
  */
 package org.hibernate.internal.jaxb;
 
-import org.hibernate.internal.jaxb.Origin;
-
 /**
  * Holds information about a JAXB-unmarshalled XML document.
  *

@@ -29,9 +29,11 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Map;
+
+import antlr.collections.AST;
+
 import org.hibernate.hql.internal.ast.tree.DisplayableNode;
 import org.hibernate.internal.util.StringHelper;
-import antlr.collections.AST;
 
 /**
  * Utility for generating pretty "ASCII art" representations of syntax trees.

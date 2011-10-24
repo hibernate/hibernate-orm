@@ -24,6 +24,8 @@
 package org.hibernate.test.immutable;
 import java.util.Iterator;
 
+import org.junit.Test;
+
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
@@ -33,14 +35,9 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Projections;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.proxy.HibernateProxy;
-
-import org.junit.Test;
-
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
-import org.hibernate.type.MaterializedClobType;
 import org.hibernate.type.TextType;
-import org.hibernate.type.descriptor.java.StringTypeDescriptor;
 import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
 
 import static org.junit.Assert.assertEquals;

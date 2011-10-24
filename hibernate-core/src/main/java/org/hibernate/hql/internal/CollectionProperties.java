@@ -25,6 +25,7 @@
 package org.hibernate.hql.internal;
 import java.util.HashMap;
 import java.util.Map;
+
 import org.hibernate.persister.collection.CollectionPropertyNames;
 
 /**

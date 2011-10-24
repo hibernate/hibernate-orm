@@ -1,11 +1,11 @@
 package org.hibernate.envers.test.integration.inheritance.mixed.entities;
 
-import org.hibernate.envers.Audited;
-
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
+
+import org.hibernate.envers.Audited;
 
 @Audited
 @Entity

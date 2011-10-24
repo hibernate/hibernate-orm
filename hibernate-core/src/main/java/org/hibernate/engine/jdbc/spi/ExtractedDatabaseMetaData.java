@@ -25,6 +25,7 @@ package org.hibernate.engine.jdbc.spi;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
+
 import org.hibernate.engine.jdbc.internal.TypeInfo;
 
 /**

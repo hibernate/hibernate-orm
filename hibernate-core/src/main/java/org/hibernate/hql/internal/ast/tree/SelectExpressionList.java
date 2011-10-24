@@ -24,9 +24,11 @@
  */
 package org.hibernate.hql.internal.ast.tree;
 import java.util.ArrayList;
+
+import antlr.collections.AST;
+
 import org.hibernate.hql.internal.antlr.SqlTokenTypes;
 import org.hibernate.hql.internal.ast.util.ASTPrinter;
-import antlr.collections.AST;
 
 /**
  * Common behavior - a node that contains a list of select expressions.

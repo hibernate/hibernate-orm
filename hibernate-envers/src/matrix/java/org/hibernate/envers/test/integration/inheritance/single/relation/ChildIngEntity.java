@@ -25,6 +25,7 @@ package org.hibernate.envers.test.integration.inheritance.single.relation;
 import javax.persistence.Basic;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
+
 import org.hibernate.envers.Audited;
 
 /**

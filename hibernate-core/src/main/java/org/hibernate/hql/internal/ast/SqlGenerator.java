@@ -29,10 +29,13 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.CoreMessageLogger;
+import antlr.RecognitionException;
+import antlr.collections.AST;
+import org.jboss.logging.Logger;
+
 import org.hibernate.QueryException;
 import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.hql.internal.antlr.SqlGeneratorBase;
 import org.hibernate.hql.internal.antlr.SqlTokenTypes;
 import org.hibernate.hql.internal.ast.tree.FromElement;
@@ -41,12 +44,10 @@ import org.hibernate.hql.internal.ast.tree.Node;
 import org.hibernate.hql.internal.ast.tree.ParameterContainer;
 import org.hibernate.hql.internal.ast.tree.ParameterNode;
 import org.hibernate.hql.internal.ast.util.ASTPrinter;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.type.Type;
-import org.jboss.logging.Logger;
-import antlr.RecognitionException;
-import antlr.collections.AST;
 
 /**
  * Generates SQL by overriding callback methods in the base class, which does

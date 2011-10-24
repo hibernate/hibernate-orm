@@ -1,12 +1,13 @@
 package org.hibernate.envers.test.integration.collection.norevision;
 
+import java.net.URISyntaxException;
+import java.util.List;
+
+import org.junit.Test;
+
 import org.hibernate.MappingException;
 import org.hibernate.envers.test.AbstractSessionTest;
 import org.hibernate.envers.test.Priority;
-import org.junit.Test;
-
-import java.net.URISyntaxException;
-import java.util.List;
 
 public abstract class AbstractCollectionChangeTest extends AbstractSessionTest {
     protected Integer personId;

@@ -1,7 +1,12 @@
 package org.hibernate.test.namingstrategy;
 
-import javax.persistence.*;
 import java.io.Serializable;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.SecondaryTable;
+import javax.persistence.Table;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)

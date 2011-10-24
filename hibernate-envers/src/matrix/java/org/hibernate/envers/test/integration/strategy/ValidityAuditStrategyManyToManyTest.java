@@ -1,17 +1,18 @@
 package org.hibernate.envers.test.integration.strategy;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import javax.persistence.EntityManager;
+
+import org.junit.Test;
+
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.manytomany.SetOwnedEntity;
 import org.hibernate.envers.test.entities.manytomany.SetOwningEntity;
-import org.junit.Test;
 
-import javax.persistence.EntityManager;
-import java.util.Arrays;
-import java.util.HashSet;
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Tests the ValidityAuditStrategy on many-to-many Sets.

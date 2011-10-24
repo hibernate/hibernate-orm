@@ -23,6 +23,7 @@
  */
 package org.hibernate.envers.configuration.metadata;
 import org.dom4j.Element;
+
 import org.hibernate.MappingException;
 import org.hibernate.envers.configuration.metadata.reader.PropertyAuditingData;
 import org.hibernate.envers.entities.EntityConfiguration;

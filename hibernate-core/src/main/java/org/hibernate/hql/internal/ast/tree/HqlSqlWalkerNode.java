@@ -23,10 +23,11 @@
  *
  */
 package org.hibernate.hql.internal.ast.tree;
+import antlr.ASTFactory;
+
 import org.hibernate.hql.internal.ast.HqlSqlWalker;
 import org.hibernate.hql.internal.ast.util.AliasGenerator;
 import org.hibernate.hql.internal.ast.util.SessionFactoryHelper;
-import antlr.ASTFactory;
 
 /**
  * A semantic analysis node, that points back to the main analyzer.

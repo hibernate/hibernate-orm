@@ -28,14 +28,15 @@ import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.Statement;
 
-import org.hibernate.exception.internal.SQLStateConverter;
-import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.JDBCException;
-import org.hibernate.exception.spi.SQLExceptionConverter;
-import org.hibernate.internal.util.StringHelper;
 import org.jboss.logging.Logger;
 import org.jboss.logging.Logger.Level;
+
+import org.hibernate.JDBCException;
+import org.hibernate.exception.internal.SQLStateConverter;
+import org.hibernate.exception.spi.SQLExceptionConverter;
+import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
+import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.StringHelper;
 
 /**
  * Helper for handling SQLExceptions in various manners.

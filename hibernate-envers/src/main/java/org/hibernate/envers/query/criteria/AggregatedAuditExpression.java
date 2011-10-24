@@ -24,6 +24,7 @@
 package org.hibernate.envers.query.criteria;
 import java.util.ArrayList;
 import java.util.List;
+
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.query.property.PropertyNameGetter;
 import org.hibernate.envers.tools.query.Parameters;

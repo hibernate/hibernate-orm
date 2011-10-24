@@ -25,13 +25,12 @@ package org.hibernate.test.cfg;
 
 import java.io.File;
 
-import org.hibernate.cfg.Configuration;
-import org.hibernate.internal.util.SerializationHelper;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.hibernate.cfg.Configuration;
+import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.assertFalse;

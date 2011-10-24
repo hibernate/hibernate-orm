@@ -25,6 +25,7 @@ package org.hibernate.proxy.dom4j;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.Set;
+
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.proxy.HibernateProxy;

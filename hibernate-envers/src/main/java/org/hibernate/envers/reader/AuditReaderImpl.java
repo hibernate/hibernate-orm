@@ -22,9 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.reader;
-import static org.hibernate.envers.tools.ArgumentsTools.checkNotNull;
-import static org.hibernate.envers.tools.ArgumentsTools.checkPositive;
-import static org.hibernate.envers.tools.Tools.getTargetClassIfProxied;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -32,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.persistence.NoResultException;
+
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.NonUniqueResultException;
@@ -47,6 +45,10 @@ import org.hibernate.envers.query.AuditQueryCreator;
 import org.hibernate.envers.synchronization.AuditProcess;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.proxy.HibernateProxy;
+
+import static org.hibernate.envers.tools.ArgumentsTools.checkNotNull;
+import static org.hibernate.envers.tools.ArgumentsTools.checkPositive;
+import static org.hibernate.envers.tools.Tools.getTargetClassIfProxied;
 
 /**
  * @author Adam Warski (adam at warski dot org)

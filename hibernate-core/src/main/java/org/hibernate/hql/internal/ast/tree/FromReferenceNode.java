@@ -23,11 +23,11 @@
  *
  */
 package org.hibernate.hql.internal.ast.tree;
-import org.hibernate.internal.CoreMessageLogger;
-
-import org.jboss.logging.Logger;
 import antlr.SemanticException;
 import antlr.collections.AST;
+import org.jboss.logging.Logger;
+
+import org.hibernate.internal.CoreMessageLogger;
 
 /**
  * Represents a reference to a FROM element, for example a class alias in a WHERE clause.

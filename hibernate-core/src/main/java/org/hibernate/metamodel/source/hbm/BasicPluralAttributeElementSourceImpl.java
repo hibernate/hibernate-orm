@@ -26,12 +26,12 @@ package org.hibernate.metamodel.source.hbm;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbElementElement;
 import org.hibernate.metamodel.source.LocalBindingContext;
 import org.hibernate.metamodel.source.binder.BasicPluralAttributeElementSource;
 import org.hibernate.metamodel.source.binder.ExplicitHibernateTypeSource;
 import org.hibernate.metamodel.source.binder.PluralAttributeElementNature;
 import org.hibernate.metamodel.source.binder.RelationalValueSource;
-import org.hibernate.internal.jaxb.mapping.hbm.JaxbElementElement;
 
 /**
  * @author Steve Ebersole

@@ -26,12 +26,11 @@
   */
 package org.hibernate.test.annotations.manytoonewithformula;
 
+import org.junit.Test;
+
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.HSQLDialect;
-
-import org.junit.Test;
-
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 

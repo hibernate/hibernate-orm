@@ -23,12 +23,20 @@
  */
 package org.hibernate.engine.transaction.internal;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.sql.Connection;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.jboss.logging.Logger;
+
 import org.hibernate.ConnectionReleaseMode;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.ResourceClosedException;
 import org.hibernate.engine.jdbc.internal.JdbcCoordinatorImpl;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.spi.JoinStatus;
 import org.hibernate.engine.transaction.spi.SynchronizationRegistry;
@@ -41,16 +49,9 @@ import org.hibernate.engine.transaction.spi.TransactionObserver;
 import org.hibernate.engine.transaction.synchronization.internal.RegisteredSynchronization;
 import org.hibernate.engine.transaction.synchronization.internal.SynchronizationCallbackCoordinatorImpl;
 import org.hibernate.engine.transaction.synchronization.spi.SynchronizationCallbackCoordinator;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.service.jta.platform.spi.JtaPlatform;
-import org.jboss.logging.Logger;
-
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.sql.Connection;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Standard implementation of the Hibernate {@link TransactionCoordinator}

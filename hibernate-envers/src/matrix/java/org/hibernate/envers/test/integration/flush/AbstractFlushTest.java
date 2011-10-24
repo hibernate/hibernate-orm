@@ -23,15 +23,16 @@
  */
 package org.hibernate.envers.test.integration.flush;
 
+import java.io.IOException;
+import javax.persistence.EntityManager;
+
+import org.junit.Before;
+
 import org.hibernate.FlushMode;
 import org.hibernate.Session;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.entities.StrTestEntity;
-import org.junit.Before;
-
-import javax.persistence.EntityManager;
-import java.io.IOException;
 
 /**
  * @author Adam Warski (adam at warski dot org)

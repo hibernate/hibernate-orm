@@ -23,16 +23,17 @@
  */
 package org.hibernate.envers.test.integration.superclass.auditedAtSuperclassLevel.auditMethodSubclass;
 
+import java.util.Arrays;
+import javax.persistence.EntityManager;
+
+import org.junit.Test;
+
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.exception.NotAuditedException;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.integration.superclass.auditedAtSuperclassLevel.AuditedAllMappedSuperclass;
 import org.hibernate.envers.test.integration.superclass.auditedAtSuperclassLevel.NotAuditedSubclassEntity;
-import org.junit.Test;
-
-import javax.persistence.EntityManager;
-import java.util.Arrays;
 
 /**
  * @author Adam Warski (adam at warski dot org)

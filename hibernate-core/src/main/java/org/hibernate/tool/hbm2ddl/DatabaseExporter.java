@@ -30,8 +30,8 @@ import java.sql.Statement;
 
 import org.jboss.logging.Logger;
 
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
+import org.hibernate.internal.CoreMessageLogger;
 
 /**
 * @author Steve Ebersole

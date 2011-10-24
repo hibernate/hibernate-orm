@@ -24,14 +24,13 @@
 package org.hibernate.property;
 
 import java.util.Map;
+
 import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.binding.AttributeBinding;
-import org.hibernate.type.Type;
 
 /**
  * A factory for building/retrieving PropertyAccessor instances.

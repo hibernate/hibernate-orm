@@ -25,6 +25,7 @@ package org.hibernate.dialect;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
+
 import org.hibernate.MappingException;
 import org.hibernate.internal.util.StringHelper;
 

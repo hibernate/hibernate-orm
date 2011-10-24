@@ -24,6 +24,7 @@
 package org.hibernate.envers.test.integration.auditReader;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+
 import org.hibernate.envers.Audited;
 
 /**

@@ -24,6 +24,7 @@
  */
 package org.hibernate.engine.query.spi.sql;
 import java.util.Map;
+
 import org.hibernate.LockMode;
 
 /**

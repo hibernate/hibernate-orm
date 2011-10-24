@@ -29,6 +29,8 @@ import java.util.List;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.event.internal.DefaultInitializeCollectionEventListener;
+import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.AbstractCollectionEvent;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.InitializeCollectionEvent;
@@ -44,8 +46,6 @@ import org.hibernate.event.spi.PreCollectionRemoveEvent;
 import org.hibernate.event.spi.PreCollectionRemoveEventListener;
 import org.hibernate.event.spi.PreCollectionUpdateEvent;
 import org.hibernate.event.spi.PreCollectionUpdateEventListener;
-import org.hibernate.event.internal.DefaultInitializeCollectionEventListener;
-import org.hibernate.event.service.spi.EventListenerRegistry;
 
 /**
  * @author Gail Badner

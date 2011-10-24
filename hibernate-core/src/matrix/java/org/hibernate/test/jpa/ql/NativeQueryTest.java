@@ -23,10 +23,9 @@
  */
 package org.hibernate.test.jpa.ql;
 
-import org.hibernate.Session;
-
 import org.junit.Test;
 
+import org.hibernate.Session;
 import org.hibernate.test.jpa.AbstractJPATest;
 
 /**

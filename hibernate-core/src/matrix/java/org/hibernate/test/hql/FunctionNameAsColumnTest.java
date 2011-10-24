@@ -24,6 +24,8 @@
 package org.hibernate.test.hql;
 import java.util.List;
 
+import org.junit.Test;
+
 import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
@@ -32,9 +34,6 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.function.SQLFunction;
-
-import org.junit.Test;
-
 import org.hibernate.testing.SkipLog;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 

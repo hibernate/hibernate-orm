@@ -23,6 +23,11 @@
  */
 package org.hibernate.engine.jdbc.internal;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.ScrollMode;
 import org.hibernate.TransactionException;
@@ -30,11 +35,6 @@ import org.hibernate.cfg.Settings;
 import org.hibernate.engine.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.StatementPreparer;
-
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 
 /**
  * @author Steve Ebersole

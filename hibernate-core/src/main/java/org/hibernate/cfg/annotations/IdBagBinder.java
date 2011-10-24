@@ -24,6 +24,7 @@
 package org.hibernate.cfg.annotations;
 import java.util.Collections;
 import java.util.Map;
+
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.CollectionId;
 import org.hibernate.annotations.Type;
@@ -36,12 +37,12 @@ import org.hibernate.cfg.Mappings;
 import org.hibernate.cfg.PropertyData;
 import org.hibernate.cfg.PropertyInferredData;
 import org.hibernate.cfg.WrappedInferredData;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.IdentifierCollection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
-import org.hibernate.internal.util.StringHelper;
 
 /**
  * @author Emmanuel Bernard

@@ -24,6 +24,7 @@
 package org.hibernate.envers.entities.mapper.id;
 import java.util.List;
 import java.util.Map;
+
 import org.hibernate.envers.tools.query.Parameters;
 
 /**

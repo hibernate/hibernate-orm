@@ -24,6 +24,7 @@
 package org.hibernate.internal;
 import java.io.Serializable;
 import java.util.Properties;
+
 import org.hibernate.TypeHelper;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;

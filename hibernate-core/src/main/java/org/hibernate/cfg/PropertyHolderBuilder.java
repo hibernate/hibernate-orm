@@ -23,6 +23,7 @@
  */
 package org.hibernate.cfg;
 import java.util.Map;
+
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.cfg.annotations.EntityBinder;

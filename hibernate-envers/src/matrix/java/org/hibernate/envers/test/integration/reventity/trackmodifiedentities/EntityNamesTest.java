@@ -1,5 +1,13 @@
 package org.hibernate.envers.test.integration.reventity.trackmodifiedentities;
 
+import java.io.File;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.junit.Test;
+
 import org.hibernate.MappingException;
 import org.hibernate.envers.test.AbstractSessionTest;
 import org.hibernate.envers.test.Priority;
@@ -7,13 +15,6 @@ import org.hibernate.envers.test.integration.entityNames.manyToManyAudited.Car;
 import org.hibernate.envers.test.integration.entityNames.manyToManyAudited.Person;
 import org.hibernate.envers.test.tools.TestTools;
 import org.hibernate.envers.tools.Pair;
-import org.junit.Test;
-
-import java.io.File;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)

@@ -23,8 +23,9 @@
  *
  */
 package org.hibernate.hql.internal.ast;
-import org.hibernate.hql.internal.ast.tree.Node;
 import antlr.ASTFactory;
+
+import org.hibernate.hql.internal.ast.tree.Node;
 
 /**
  * User: Joshua Davis<br>

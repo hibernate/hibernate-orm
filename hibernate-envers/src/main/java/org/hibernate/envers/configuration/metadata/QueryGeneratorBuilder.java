@@ -24,6 +24,7 @@
 package org.hibernate.envers.configuration.metadata;
 import java.util.ArrayList;
 import java.util.List;
+
 import org.hibernate.MappingException;
 import org.hibernate.envers.configuration.AuditEntitiesConfiguration;
 import org.hibernate.envers.configuration.GlobalConfiguration;

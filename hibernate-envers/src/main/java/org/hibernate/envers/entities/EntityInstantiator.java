@@ -25,6 +25,7 @@ package org.hibernate.envers.entities;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.entities.mapper.id.IdMapper;
 import org.hibernate.envers.exception.AuditException;

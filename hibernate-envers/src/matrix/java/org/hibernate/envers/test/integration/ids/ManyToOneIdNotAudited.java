@@ -1,5 +1,9 @@
 package org.hibernate.envers.test.integration.ids;
 
+import javax.persistence.EntityManager;
+
+import org.junit.Test;
+
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.Priority;
@@ -7,9 +11,6 @@ import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.envers.test.entities.UnversionedStrTestEntity;
 import org.hibernate.envers.test.entities.ids.ManyToOneIdNotAuditedTestEntity;
 import org.hibernate.envers.test.entities.ids.ManyToOneNotAuditedEmbId;
-import org.junit.Test;
-
-import javax.persistence.EntityManager;
 
 /**
  * A test checking that when using Envers it is possible to have non-audited entities that use unsupported

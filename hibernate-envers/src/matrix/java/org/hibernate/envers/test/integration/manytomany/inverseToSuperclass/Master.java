@@ -1,5 +1,6 @@
 package org.hibernate.envers.test.integration.manytomany.inverseToSuperclass;
 import java.util.List;
+
 import org.hibernate.envers.Audited;
 
 @Audited

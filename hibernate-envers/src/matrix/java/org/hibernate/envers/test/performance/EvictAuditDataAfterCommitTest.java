@@ -1,5 +1,14 @@
 package org.hibernate.envers.test.performance;
 
+import java.net.URISyntaxException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import org.junit.Assert;
+import org.junit.Test;
+
 import org.hibernate.MappingException;
 import org.hibernate.Session;
 import org.hibernate.engine.spi.EntityEntry;
@@ -11,14 +20,6 @@ import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.envers.test.entities.onetomany.SetRefEdEntity;
 import org.hibernate.envers.test.entities.onetomany.SetRefIngEntity;
 import org.hibernate.testing.TestForIssue;
-import org.junit.Assert;
-import org.junit.Test;
-
-import java.net.URISyntaxException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)

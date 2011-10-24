@@ -7,6 +7,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.MapKey;
+
 import org.hibernate.annotations.Sort;
 import org.hibernate.annotations.SortType;
 

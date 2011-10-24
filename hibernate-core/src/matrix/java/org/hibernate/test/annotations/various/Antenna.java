@@ -3,6 +3,7 @@ package org.hibernate.test.annotations.various;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+
 import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.GenerationTime;
 

@@ -23,9 +23,11 @@
  */
 package org.hibernate.envers.test;
 
-import javax.persistence.EntityManager;
 import java.io.IOException;
 import java.util.Properties;
+import javax.persistence.EntityManager;
+
+import org.junit.Before;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.ejb.Ejb3Configuration;
@@ -36,9 +38,6 @@ import org.hibernate.envers.event.EnversIntegrator;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.service.BootstrapServiceRegistryBuilder;
 import org.hibernate.service.internal.StandardServiceRegistryImpl;
-
-import org.junit.Before;
-
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
 

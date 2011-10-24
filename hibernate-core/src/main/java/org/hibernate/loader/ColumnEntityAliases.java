@@ -23,6 +23,7 @@
  */
 package org.hibernate.loader;
 import java.util.Map;
+
 import org.hibernate.persister.entity.Loadable;
 
 /**

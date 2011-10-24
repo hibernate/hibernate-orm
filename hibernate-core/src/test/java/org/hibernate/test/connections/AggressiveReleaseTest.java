@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.junit.Test;
+
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.Hibernate;
 import org.hibernate.ScrollableResults;
@@ -15,13 +17,9 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
-
-import org.junit.Test;
-
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 

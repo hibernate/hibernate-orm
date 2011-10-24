@@ -26,7 +26,9 @@ package org.hibernate.hql.internal.ast.util;
 
 import java.util.Map;
 
-import org.hibernate.internal.CoreMessageLogger;
+import antlr.collections.AST;
+import org.jboss.logging.Logger;
+
 import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.internal.ast.HqlSqlWalker;
 import org.hibernate.hql.internal.ast.tree.FromElement;
@@ -34,13 +36,12 @@ import org.hibernate.hql.internal.ast.tree.Node;
 import org.hibernate.hql.internal.ast.tree.QueryNode;
 import org.hibernate.hql.internal.ast.tree.RestrictableStatement;
 import org.hibernate.hql.internal.ast.tree.SqlFragment;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.param.CollectionFilterKeyParameterSpecification;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.type.Type;
-import org.jboss.logging.Logger;
-import antlr.collections.AST;
 
 /**
  * Creates synthetic and nodes based on the where fragment part of a JoinSequence.

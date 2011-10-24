@@ -26,6 +26,7 @@ package org.hibernate.internal;
 
 import java.util.Iterator;
 import java.util.Map;
+
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.SQLFunctionRegistry;
 import org.hibernate.internal.util.StringHelper;

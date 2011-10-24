@@ -1,9 +1,9 @@
 package org.hibernate.envers.test.entities.reventity.trackmodifiedentities;
 
+import java.io.Serializable;
+
 import org.hibernate.envers.EntityTrackingRevisionListener;
 import org.hibernate.envers.RevisionType;
-
-import java.io.Serializable;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)

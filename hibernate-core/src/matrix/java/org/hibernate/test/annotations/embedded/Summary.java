@@ -2,6 +2,7 @@
 package org.hibernate.test.annotations.embedded;
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
+
 import org.hibernate.annotations.Parent;
 
 /**

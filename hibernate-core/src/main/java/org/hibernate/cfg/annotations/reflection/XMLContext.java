@@ -32,12 +32,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.persistence.AccessType;
+
 import org.dom4j.Document;
 import org.dom4j.Element;
+import org.jboss.logging.Logger;
+
 import org.hibernate.AnnotationException;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
-import org.jboss.logging.Logger;
 
 /**
  * @author Emmanuel Bernard

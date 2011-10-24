@@ -23,16 +23,21 @@
  */
 package org.hibernate.envers.test.integration.reventity;
 
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import javax.persistence.EntityManager;
+
+import org.junit.Test;
+
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.exception.RevisionDoesNotExistException;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
-import org.junit.Test;
-
-import javax.persistence.EntityManager;
-import java.util.*;
 
 /**
  * @author Adam Warski (adam at warski dot org)

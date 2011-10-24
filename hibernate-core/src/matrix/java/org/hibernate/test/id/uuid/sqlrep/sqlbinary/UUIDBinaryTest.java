@@ -23,12 +23,11 @@
  */
 package org.hibernate.test.id.uuid.sqlrep.sqlbinary;
 
-import org.hibernate.Session;
-
 import org.junit.Test;
 
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.Session;
 import org.hibernate.test.id.uuid.sqlrep.Node;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertNotNull;
 

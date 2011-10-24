@@ -23,10 +23,10 @@
  */
 package org.hibernate.service.jta.platform.internal;
 
+import javax.transaction.Synchronization;
+
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.service.jta.platform.spi.JtaPlatformException;
-
-import javax.transaction.Synchronization;
 
 /**
  * Implementation of the {@link JtaSynchronizationStrategy} contract based on using a

@@ -26,6 +26,7 @@ package org.hibernate.sql;
 
 import java.util.Iterator;
 import java.util.Map;
+
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.QueryException;

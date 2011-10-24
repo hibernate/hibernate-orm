@@ -8,6 +8,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.MapKeyColumn;
+
 import org.hibernate.annotations.MapKeyType;
 import org.hibernate.annotations.Sort;
 import org.hibernate.annotations.SortType;

@@ -24,11 +24,12 @@
  */
 package org.hibernate.sql.ordering.antlr;
 import java.io.StringReader;
-import org.hibernate.HibernateException;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.hql.internal.ast.util.ASTPrinter;
 
 import org.jboss.logging.Logger;
+
+import org.hibernate.HibernateException;
+import org.hibernate.hql.internal.ast.util.ASTPrinter;
+import org.hibernate.internal.CoreMessageLogger;
 
 /**
  * A translator which coordinates translation of an <tt>order-by</tt> mapping.

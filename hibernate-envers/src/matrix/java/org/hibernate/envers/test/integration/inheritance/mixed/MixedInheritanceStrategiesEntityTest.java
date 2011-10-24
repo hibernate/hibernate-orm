@@ -1,12 +1,18 @@
 package org.hibernate.envers.test.integration.inheritance.mixed;
 
+import java.util.Arrays;
+
+import org.junit.Test;
+
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.Priority;
-import org.hibernate.envers.test.integration.inheritance.mixed.entities.*;
-import org.junit.Test;
-
-import java.util.Arrays;
+import org.hibernate.envers.test.integration.inheritance.mixed.entities.AbstractActivity;
+import org.hibernate.envers.test.integration.inheritance.mixed.entities.AbstractCheckActivity;
+import org.hibernate.envers.test.integration.inheritance.mixed.entities.Activity;
+import org.hibernate.envers.test.integration.inheritance.mixed.entities.ActivityId;
+import org.hibernate.envers.test.integration.inheritance.mixed.entities.CheckInActivity;
+import org.hibernate.envers.test.integration.inheritance.mixed.entities.NormalActivity;
 
 import static org.junit.Assert.assertEquals;
 

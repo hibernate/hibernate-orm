@@ -1,5 +1,6 @@
 package org.hibernate.test.annotations.entity;
 import javax.persistence.MappedSuperclass;
+
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;

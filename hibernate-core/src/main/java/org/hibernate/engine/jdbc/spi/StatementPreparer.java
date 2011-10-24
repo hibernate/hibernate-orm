@@ -23,9 +23,9 @@
  */
 package org.hibernate.engine.jdbc.spi;
 
-import org.hibernate.ScrollMode;
-
 import java.sql.PreparedStatement;
+
+import org.hibernate.ScrollMode;
 
 /**
  * @author Steve Ebersole

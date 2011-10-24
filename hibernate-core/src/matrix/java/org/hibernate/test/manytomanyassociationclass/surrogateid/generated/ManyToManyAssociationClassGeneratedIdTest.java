@@ -24,11 +24,10 @@
 package org.hibernate.test.manytomanyassociationclass.surrogateid.generated;
 import java.util.HashSet;
 
-import org.hibernate.Session;
-import org.hibernate.exception.ConstraintViolationException;
-
 import org.junit.Test;
 
+import org.hibernate.Session;
+import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.test.manytomanyassociationclass.AbstractManyToManyAssociationClassTest;
 import org.hibernate.test.manytomanyassociationclass.Membership;
 

@@ -1,9 +1,9 @@
 package org.hibernate.envers.test.entities.reventity.trackmodifiedentities;
 
+import javax.persistence.Entity;
+
 import org.hibernate.envers.DefaultTrackingModifiedEntitiesRevisionEntity;
 import org.hibernate.envers.RevisionEntity;
-
-import javax.persistence.Entity;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)

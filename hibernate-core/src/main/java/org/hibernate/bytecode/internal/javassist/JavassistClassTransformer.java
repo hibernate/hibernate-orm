@@ -34,9 +34,9 @@ import javassist.bytecode.ClassFile;
 import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.bytecode.buildtime.spi.ClassFilter;
 import org.hibernate.bytecode.spi.AbstractClassTransformerImpl;
+import org.hibernate.internal.CoreMessageLogger;
 
 /**
  * Enhance the classes allowing them to implements InterceptFieldEnabled

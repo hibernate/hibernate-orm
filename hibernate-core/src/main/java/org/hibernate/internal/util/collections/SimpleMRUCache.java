@@ -26,6 +26,7 @@ package org.hibernate.internal.util.collections;
 
 import java.io.IOException;
 import java.io.Serializable;
+
 import org.apache.commons.collections.map.LRUMap;
 
 /**

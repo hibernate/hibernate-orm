@@ -30,10 +30,10 @@ import java.lang.reflect.Proxy;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
-
 import org.jboss.logging.Logger;
+
+import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
+import org.hibernate.internal.CoreMessageLogger;
 
 /**
  * A proxy for a ResultSet delegate, responsible for locally caching the columnName-to-columnIndex resolution that

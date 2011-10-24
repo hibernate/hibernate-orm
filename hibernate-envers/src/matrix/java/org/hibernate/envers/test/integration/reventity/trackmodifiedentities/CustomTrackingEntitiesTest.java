@@ -1,5 +1,9 @@
 package org.hibernate.envers.test.integration.reventity.trackmodifiedentities;
 
+import javax.persistence.EntityManager;
+
+import org.junit.Test;
+
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.EntityTrackingRevisionListener;
 import org.hibernate.envers.exception.AuditException;
@@ -11,9 +15,6 @@ import org.hibernate.envers.test.entities.reventity.trackmodifiedentities.Custom
 import org.hibernate.envers.test.entities.reventity.trackmodifiedentities.CustomTrackingRevisionListener;
 import org.hibernate.envers.test.entities.reventity.trackmodifiedentities.ModifiedEntityTypeEntity;
 import org.hibernate.envers.test.tools.TestTools;
-import org.junit.Test;
-
-import javax.persistence.EntityManager;
 
 /**
  * Tests proper behavior of entity listener that implements {@link EntityTrackingRevisionListener}

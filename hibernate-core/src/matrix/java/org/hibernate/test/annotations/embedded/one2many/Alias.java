@@ -24,6 +24,7 @@
 package org.hibernate.test.annotations.embedded.one2many;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+
 import org.hibernate.annotations.Entity;
 
 /**

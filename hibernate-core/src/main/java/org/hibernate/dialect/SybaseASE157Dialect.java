@@ -23,17 +23,13 @@
  */
 package org.hibernate.dialect;
 
-import java.sql.Types;
 import java.util.Map;
 
-import org.hibernate.dialect.function.AnsiTrimEmulationFunction;
-import org.hibernate.dialect.function.NoArgSQLFunction;
-import org.hibernate.dialect.function.SQLFunctionTemplate;
-import org.hibernate.dialect.function.VarArgsSQLFunction;
-import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.sql.ForUpdateFragment;
+import org.hibernate.type.StandardBasicTypes;
 
 /**
  * An SQL dialect targeting Sybase Adaptive Server Enterprise (ASE) 15.7 and higher.

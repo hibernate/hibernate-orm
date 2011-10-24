@@ -1,12 +1,18 @@
 package org.hibernate.envers.test.entities.reventity.trackmodifiedentities;
 
+import java.util.Set;
+import javax.persistence.Column;
+import javax.persistence.ElementCollection;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+
 import org.hibernate.envers.ModifiedEntityNames;
 import org.hibernate.envers.RevisionEntity;
 import org.hibernate.envers.RevisionNumber;
 import org.hibernate.envers.RevisionTimestamp;
-
-import javax.persistence.*;
-import java.util.Set;
 
 /**
  * Sample revision entity that uses {@link ModifiedEntityNames} annotation.

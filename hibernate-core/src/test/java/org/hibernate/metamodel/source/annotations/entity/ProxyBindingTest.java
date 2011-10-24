@@ -26,10 +26,10 @@ package org.hibernate.metamodel.source.annotations.entity;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
+import org.junit.Test;
+
 import org.hibernate.annotations.Proxy;
 import org.hibernate.metamodel.binding.EntityBinding;
-
-import org.junit.Test;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;

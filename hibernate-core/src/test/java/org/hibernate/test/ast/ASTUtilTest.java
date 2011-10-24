@@ -25,11 +25,9 @@ package org.hibernate.test.ast;
 
 import antlr.ASTFactory;
 import antlr.collections.AST;
-
-import org.hibernate.hql.internal.ast.util.ASTUtil;
-
 import org.junit.Test;
 
+import org.hibernate.hql.internal.ast.util.ASTUtil;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.assertEquals;

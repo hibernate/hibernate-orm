@@ -1,8 +1,17 @@
 package org.hibernate.envers.test.integration.inheritance.mixed.entities;
 
-import org.hibernate.envers.Audited;
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.DiscriminatorValue;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinColumns;
+import javax.persistence.ManyToOne;
+import javax.persistence.PrimaryKeyJoinColumn;
+import javax.persistence.SecondaryTable;
 
-import javax.persistence.*;
+import org.hibernate.envers.Audited;
 
 @Audited
 @Entity

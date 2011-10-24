@@ -23,8 +23,8 @@
  */
 package org.hibernate.test.jpa;
 
-import javax.persistence.EntityNotFoundException;
 import java.io.Serializable;
+import javax.persistence.EntityNotFoundException;
 
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
@@ -46,7 +46,6 @@ import org.hibernate.metamodel.source.MetadataImplementor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.service.BootstrapServiceRegistryBuilder;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
-
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**

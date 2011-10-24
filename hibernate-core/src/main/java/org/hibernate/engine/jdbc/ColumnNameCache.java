@@ -24,8 +24,8 @@
 package org.hibernate.engine.jdbc;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Cache of column-name -> column-index resolutions

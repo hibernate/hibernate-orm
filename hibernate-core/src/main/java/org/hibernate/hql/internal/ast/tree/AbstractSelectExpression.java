@@ -23,8 +23,9 @@
  *
  */
 package org.hibernate.hql.internal.ast.tree;
-import org.hibernate.type.Type;
 import antlr.SemanticException;
+
+import org.hibernate.type.Type;
 
 /**
  * Partial implementation of SelectExpression for all the nodes that aren't constructors.

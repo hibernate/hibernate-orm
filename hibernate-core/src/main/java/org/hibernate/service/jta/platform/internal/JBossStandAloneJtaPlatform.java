@@ -23,11 +23,11 @@
  */
 package org.hibernate.service.jta.platform.internal;
 
-import org.hibernate.service.classloading.spi.ClassLoaderService;
-import org.hibernate.service.jta.platform.spi.JtaPlatformException;
-
 import javax.transaction.TransactionManager;
 import javax.transaction.UserTransaction;
+
+import org.hibernate.service.classloading.spi.ClassLoaderService;
+import org.hibernate.service.jta.platform.spi.JtaPlatformException;
 
 /**
  * Return a standalone JTA transaction manager for JBoss Transactions

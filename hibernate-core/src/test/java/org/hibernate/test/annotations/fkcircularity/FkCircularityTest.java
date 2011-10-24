@@ -5,7 +5,6 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 
 import org.jboss.logging.Logger;
-
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -16,7 +15,6 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.service.ServiceRegistry;
-
 import org.hibernate.testing.ServiceRegistryBuilder;
 
 /**

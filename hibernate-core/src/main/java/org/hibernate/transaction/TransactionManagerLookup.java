@@ -26,6 +26,7 @@ package org.hibernate.transaction;
 import java.util.Properties;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
+
 import org.hibernate.HibernateException;
 
 /**

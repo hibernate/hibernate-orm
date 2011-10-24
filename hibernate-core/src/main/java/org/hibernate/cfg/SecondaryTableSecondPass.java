@@ -23,6 +23,7 @@
  */
 package org.hibernate.cfg;
 import java.util.Map;
+
 import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.XAnnotatedElement;
 import org.hibernate.cfg.annotations.EntityBinder;

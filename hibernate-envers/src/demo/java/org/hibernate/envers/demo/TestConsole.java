@@ -20,20 +20,23 @@
  * Red Hat Author(s): Adam Warski
  */
 package org.hibernate.envers.demo;
-import org.jboss.logging.Logger;
-
-
-import org.hibernate.envers.query.AuditEntity;
-import org.hibernate.envers.DefaultRevisionEntity;
-import org.hibernate.envers.AuditReader;
-import org.hibernate.envers.AuditReaderFactory;
-
+import java.io.File;
+import java.io.PrintStream;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.InputMismatchException;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Scanner;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
-import java.util.*;
-import java.io.PrintStream;
-import java.io.File;
+
+import org.hibernate.envers.AuditReader;
+import org.hibernate.envers.AuditReaderFactory;
+import org.hibernate.envers.DefaultRevisionEntity;
+import org.hibernate.envers.query.AuditEntity;
 
 /**
  * @author Adam Warski (adam at warski dot org)

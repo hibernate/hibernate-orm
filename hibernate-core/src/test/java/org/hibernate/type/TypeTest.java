@@ -39,15 +39,16 @@ import java.util.TimeZone;
 
 import org.junit.Before;
 import org.junit.Test;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 import org.hibernate.EntityMode;
 import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.SerializationHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Steve Ebersole

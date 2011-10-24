@@ -23,6 +23,7 @@
  */
 package org.hibernate.loader;
 import java.util.List;
+
 import org.hibernate.HibernateException;
 
 /**

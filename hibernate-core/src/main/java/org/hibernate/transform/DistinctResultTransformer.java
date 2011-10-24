@@ -28,9 +28,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.hibernate.internal.CoreMessageLogger;
-
 import org.jboss.logging.Logger;
+
+import org.hibernate.internal.CoreMessageLogger;
 
 /**
  * Distinctions the result tuples in the final result based on the defined

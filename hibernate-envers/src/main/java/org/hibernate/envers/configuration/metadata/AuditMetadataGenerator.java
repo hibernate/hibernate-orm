@@ -25,10 +25,12 @@ package org.hibernate.envers.configuration.metadata;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+
 import org.dom4j.Element;
+import org.jboss.logging.Logger;
+
 import org.hibernate.MappingException;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.envers.internal.EnversMessageLogger;
 import org.hibernate.envers.RelationTargetAuditMode;
 import org.hibernate.envers.configuration.AuditEntitiesConfiguration;
 import org.hibernate.envers.configuration.GlobalConfiguration;
@@ -40,6 +42,7 @@ import org.hibernate.envers.entities.mapper.CompositeMapperBuilder;
 import org.hibernate.envers.entities.mapper.ExtendedPropertyMapper;
 import org.hibernate.envers.entities.mapper.MultiPropertyMapper;
 import org.hibernate.envers.entities.mapper.SubclassPropertyMapper;
+import org.hibernate.envers.internal.EnversMessageLogger;
 import org.hibernate.envers.strategy.AuditStrategy;
 import org.hibernate.envers.strategy.ValidityAuditStrategy;
 import org.hibernate.envers.tools.StringTools;
@@ -56,7 +59,6 @@ import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.OneToOneType;
 import org.hibernate.type.TimestampType;
 import org.hibernate.type.Type;
-import org.jboss.logging.Logger;
 
 /**
  * @author Adam Warski (adam at warski dot org)

@@ -23,7 +23,6 @@
  */
 package org.hibernate.context.internal;
 
-import javax.transaction.Synchronization;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -34,20 +33,21 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.HashMap;
 import java.util.Map;
+import javax.transaction.Synchronization;
 
 import org.jboss.logging.Logger;
 
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.HibernateException;
-import org.hibernate.context.spi.CurrentSessionContext;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.context.spi.CurrentSessionContext;
 import org.hibernate.engine.jdbc.LobCreationContext;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.transaction.spi.TransactionContext;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.internal.CoreMessageLogger;
 
 /**
  * A {@link CurrentSessionContext} impl which scopes the notion of current

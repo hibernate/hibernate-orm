@@ -26,11 +26,12 @@ import java.sql.Blob;
 import java.sql.SQLException;
 
 import org.junit.Test;
+
+import org.hibernate.engine.jdbc.BlobProxy;
+
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-
-import org.hibernate.engine.jdbc.BlobProxy;
 
 /**
  * @author Steve Ebersole

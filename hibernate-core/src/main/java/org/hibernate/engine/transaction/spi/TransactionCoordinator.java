@@ -23,11 +23,11 @@
  */
 package org.hibernate.engine.transaction.spi;
 
-import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
-import org.hibernate.engine.transaction.synchronization.spi.SynchronizationCallbackCoordinator;
-
 import java.io.Serializable;
 import java.sql.Connection;
+
+import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
+import org.hibernate.engine.transaction.synchronization.spi.SynchronizationCallbackCoordinator;
 
 /**
  * Acts as the coordinator between the Hibernate engine and physical transactions.

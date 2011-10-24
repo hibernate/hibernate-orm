@@ -23,22 +23,21 @@
  */
 package org.hibernate.test.annotations.access.xml;
 
-import javax.persistence.AccessType;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import javax.persistence.AccessType;
+
+import org.junit.Assert;
+import org.junit.Test;
 
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.property.BasicPropertyAccessor;
 import org.hibernate.property.DirectPropertyAccessor;
-import org.hibernate.tuple.entity.EntityTuplizer;
-
-import org.junit.Assert;
-import org.junit.Test;
-
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.tuple.entity.EntityTuplizer;
 
 
 /**

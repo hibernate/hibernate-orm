@@ -23,12 +23,12 @@
  */
 package org.hibernate.cache.internal;
 
-import javax.persistence.EntityNotFoundException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
+import javax.persistence.EntityNotFoundException;
 
 import org.jboss.logging.Logger;
 

@@ -2,6 +2,7 @@
 package org.hibernate.test.annotations.polymorphism;
 import javax.persistence.Entity;
 import javax.persistence.Table;
+
 import org.hibernate.annotations.PolymorphismType;
 
 /**

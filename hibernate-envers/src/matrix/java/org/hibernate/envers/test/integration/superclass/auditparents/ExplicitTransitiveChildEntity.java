@@ -1,8 +1,8 @@
 package org.hibernate.envers.test.integration.superclass.auditparents;
 
-import org.hibernate.envers.Audited;
-
 import javax.persistence.Entity;
+
+import org.hibernate.envers.Audited;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)

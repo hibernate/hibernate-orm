@@ -9,6 +9,8 @@ import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 
+import org.junit.Test;
+
 import org.hibernate.DuplicateMappingException;
 import org.hibernate.Hibernate;
 import org.hibernate.InvalidMappingException;
@@ -16,9 +18,6 @@ import org.hibernate.MappingException;
 import org.hibernate.MappingNotFoundException;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.internal.util.ConfigHelper;
-
-import org.junit.Test;
-
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.assertEquals;

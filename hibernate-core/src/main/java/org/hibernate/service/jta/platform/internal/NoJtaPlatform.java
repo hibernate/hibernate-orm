@@ -23,14 +23,14 @@
  */
 package org.hibernate.service.jta.platform.internal;
 
-import org.hibernate.service.jta.platform.spi.JtaPlatform;
-
 import javax.transaction.Status;
 import javax.transaction.Synchronization;
 import javax.transaction.SystemException;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 import javax.transaction.UserTransaction;
+
+import org.hibernate.service.jta.platform.spi.JtaPlatform;
 
 /**
  * The non-configured form of JTA platform.  This is what is used if none was set up.

@@ -25,10 +25,10 @@ package org.hibernate.engine.transaction.synchronization.internal;
 
 import javax.transaction.Synchronization;
 
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.engine.transaction.synchronization.spi.SynchronizationCallbackCoordinator;
-
 import org.jboss.logging.Logger;
+
+import org.hibernate.engine.transaction.synchronization.spi.SynchronizationCallbackCoordinator;
+import org.hibernate.internal.CoreMessageLogger;
 
 /**
  * The JTA {@link javax.transaction.Synchronization} Hibernate registers when needed for JTA callbacks

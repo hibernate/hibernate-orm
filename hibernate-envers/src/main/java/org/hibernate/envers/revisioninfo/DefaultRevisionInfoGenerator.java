@@ -23,6 +23,9 @@
  */
 package org.hibernate.envers.revisioninfo;
 
+import java.io.Serializable;
+import java.util.Date;
+
 import org.hibernate.MappingException;
 import org.hibernate.Session;
 import org.hibernate.envers.EntityTrackingRevisionListener;
@@ -32,9 +35,6 @@ import org.hibernate.envers.entities.PropertyData;
 import org.hibernate.envers.synchronization.SessionCacheCleaner;
 import org.hibernate.envers.tools.reflection.ReflectionTools;
 import org.hibernate.property.Setter;
-
-import java.io.Serializable;
-import java.util.Date;
 
 /**
  * @author Adam Warski (adam at warski dot org)

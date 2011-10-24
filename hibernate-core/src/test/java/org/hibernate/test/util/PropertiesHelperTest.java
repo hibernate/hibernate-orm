@@ -1,11 +1,10 @@
 package org.hibernate.test.util;
 import java.util.Properties;
 
-import org.hibernate.internal.util.config.ConfigurationHelper;
-
 import org.junit.Before;
 import org.junit.Test;
 
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.assertEquals;

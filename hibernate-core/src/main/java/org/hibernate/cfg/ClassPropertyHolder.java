@@ -25,6 +25,7 @@ package org.hibernate.cfg;
 import java.util.HashMap;
 import java.util.Map;
 import javax.persistence.JoinTable;
+
 import org.hibernate.annotations.common.AssertionFailure;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.cfg.annotations.EntityBinder;

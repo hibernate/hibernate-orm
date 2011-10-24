@@ -23,13 +23,13 @@
  */
 package org.hibernate.envers.revisioninfo;
 
+import java.util.Date;
+import java.util.Set;
+
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
-
-import java.util.Date;
-import java.util.Set;
 
 /**
  * @author Adam Warski (adam at warski dot org)

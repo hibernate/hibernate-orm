@@ -23,6 +23,7 @@
  */
 package org.hibernate.cfg;
 import java.io.Serializable;
+
 import org.hibernate.MappingException;
 
 /**

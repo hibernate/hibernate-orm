@@ -23,6 +23,7 @@
  */
 package org.hibernate.service.jmx.internal;
 import javax.management.ObjectName;
+
 import org.hibernate.service.jmx.spi.JmxService;
 import org.hibernate.service.spi.Manageable;
 

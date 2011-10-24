@@ -25,15 +25,14 @@ package org.hibernate.test.instrument.runtime;
 
 import java.lang.reflect.InvocationTargetException;
 
+import org.junit.Rule;
+import org.junit.Test;
+
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.buildtime.spi.BasicClassFilter;
 import org.hibernate.bytecode.buildtime.spi.FieldFilter;
 import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.bytecode.spi.InstrumentedClassLoader;
-
-import org.junit.Rule;
-import org.junit.Test;
-
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseUnitTestCase;

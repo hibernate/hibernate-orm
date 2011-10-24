@@ -26,11 +26,10 @@ package org.hibernate.test.annotations.loader;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-
 import org.junit.Test;
 
+import org.hibernate.Session;
+import org.hibernate.Transaction;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;

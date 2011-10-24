@@ -23,12 +23,11 @@
  */
 package org.hibernate.test.annotations.beanvalidation;
 
+import org.junit.Test;
+
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-
-import org.junit.Test;
-
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 

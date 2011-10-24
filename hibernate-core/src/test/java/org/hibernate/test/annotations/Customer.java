@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.test.annotations;
-import static org.hibernate.annotations.CascadeType.ALL;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.SortedSet;
@@ -12,9 +11,12 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
+
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.Sort;
 import org.hibernate.annotations.SortType;
+
+import static org.hibernate.annotations.CascadeType.ALL;
 
 
 /**

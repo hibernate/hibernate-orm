@@ -24,6 +24,7 @@
 package org.hibernate.engine.transaction.synchronization.spi;
 
 import java.io.Serializable;
+
 import org.hibernate.engine.transaction.spi.TransactionCoordinator;
 
 /**

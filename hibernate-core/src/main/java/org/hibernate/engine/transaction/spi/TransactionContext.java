@@ -23,10 +23,10 @@
  */
 package org.hibernate.engine.transaction.spi;
 
+import java.io.Serializable;
+
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.engine.jdbc.spi.JdbcConnectionAccess;
-
-import java.io.Serializable;
 
 /**
  * Access to services needed in the context of processing transaction requests.

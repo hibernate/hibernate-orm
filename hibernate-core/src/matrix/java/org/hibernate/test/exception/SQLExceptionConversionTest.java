@@ -27,14 +27,13 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+import org.junit.Test;
+
 import org.hibernate.Session;
 import org.hibernate.dialect.MySQLMyISAMDialect;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.SQLGrammarException;
 import org.hibernate.jdbc.Work;
-
-import org.junit.Test;
-
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 

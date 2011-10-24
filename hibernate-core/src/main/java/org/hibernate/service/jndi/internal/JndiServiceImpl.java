@@ -23,6 +23,8 @@
  */
 package org.hibernate.service.jndi.internal;
 
+import java.util.Hashtable;
+import java.util.Map;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.InvalidNameException;
@@ -31,8 +33,6 @@ import javax.naming.NameNotFoundException;
 import javax.naming.NamingException;
 import javax.naming.event.EventContext;
 import javax.naming.event.NamespaceChangeListener;
-import java.util.Hashtable;
-import java.util.Map;
 
 import org.jboss.logging.Logger;
 

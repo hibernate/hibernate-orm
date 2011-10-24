@@ -25,6 +25,7 @@
 package org.hibernate.hql.internal.ast.util;
 import java.util.Iterator;
 import java.util.LinkedList;
+
 import antlr.collections.AST;
 
 /**

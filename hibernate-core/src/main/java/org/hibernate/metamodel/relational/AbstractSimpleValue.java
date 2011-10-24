@@ -23,9 +23,10 @@
  */
 package org.hibernate.metamodel.relational;
 
+import org.jboss.logging.Logger;
+
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.ValidationException;
-import org.jboss.logging.Logger;
 
 /**
  * Basic support for {@link SimpleValue} implementations.

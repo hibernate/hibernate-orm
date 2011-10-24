@@ -1,5 +1,9 @@
 package org.hibernate.envers.test.integration.query;
 
+import javax.persistence.EntityManager;
+
+import org.junit.Test;
+
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.test.AbstractEntityTest;
@@ -10,9 +14,6 @@ import org.hibernate.envers.test.entities.onetomany.CollectionRefEdEntity;
 import org.hibernate.envers.test.entities.onetomany.CollectionRefIngEntity;
 import org.hibernate.envers.test.entities.onetomany.ids.SetRefEdEmbIdEntity;
 import org.hibernate.envers.test.entities.onetomany.ids.SetRefIngEmbIdEntity;
-import org.junit.Test;
-
-import javax.persistence.EntityManager;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)

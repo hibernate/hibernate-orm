@@ -27,16 +27,15 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.collection.internal.PersistentSet;
-import org.hibernate.event.spi.AbstractCollectionEvent;
-
 import org.junit.Test;
 
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.Session;
+import org.hibernate.Transaction;
+import org.hibernate.collection.internal.PersistentSet;
+import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.event.spi.AbstractCollectionEvent;
 import org.hibernate.test.event.collection.association.bidirectional.manytomany.ChildWithBidirectionalManyToMany;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;

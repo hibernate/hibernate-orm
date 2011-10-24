@@ -25,10 +25,9 @@ package org.hibernate.test.annotations.various;
 
 import java.util.Date;
 
-import org.hibernate.Session;
-
 import org.junit.Test;
 
+import org.hibernate.Session;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**

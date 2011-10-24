@@ -1,15 +1,16 @@
 package org.hibernate.envers.test.integration.entityNames.singleAssociatedAudited;
 
+import java.io.File;
+import java.net.URISyntaxException;
+import java.net.URL;
+
+import org.junit.Assert;
+import org.junit.Test;
+
 import org.hibernate.MappingException;
 import org.hibernate.envers.test.AbstractOneSessionTest;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.testing.TestForIssue;
-import org.junit.Assert;
-import org.junit.Test;
-
-import java.io.File;
-import java.net.URISyntaxException;
-import java.net.URL;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)

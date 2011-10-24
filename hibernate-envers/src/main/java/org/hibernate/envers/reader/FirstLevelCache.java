@@ -22,12 +22,15 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.reader;
-import static org.hibernate.envers.tools.Tools.newHashMap;
-import static org.hibernate.envers.tools.Triple.make;
 import java.util.Map;
+
+import org.jboss.logging.Logger;
+
 import org.hibernate.envers.internal.EnversMessageLogger;
 import org.hibernate.envers.tools.Triple;
-import org.jboss.logging.Logger;
+
+import static org.hibernate.envers.tools.Tools.newHashMap;
+import static org.hibernate.envers.tools.Triple.make;
 
 /**
  * First level cache for versioned entities, versions reader-scoped. Each entity is uniquely identified by a

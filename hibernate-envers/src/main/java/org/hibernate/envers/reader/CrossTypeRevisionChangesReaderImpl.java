@@ -1,5 +1,13 @@
 package org.hibernate.envers.reader;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -9,8 +17,6 @@ import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.query.criteria.RevisionTypeAuditExpression;
 import org.hibernate.envers.tools.Pair;
 import org.hibernate.envers.tools.Tools;
-
-import java.util.*;
 
 import static org.hibernate.envers.tools.ArgumentsTools.checkNotNull;
 import static org.hibernate.envers.tools.ArgumentsTools.checkPositive;

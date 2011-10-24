@@ -32,6 +32,7 @@ import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.NClob;
 import java.sql.SQLException;
+
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 

@@ -27,11 +27,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.internal.jaxb.JaxbRoot;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbHibernateMapping;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.source.MetadataImplementor;
 import org.hibernate.metamodel.source.MetadataSourceProcessor;
 import org.hibernate.metamodel.source.binder.Binder;
-import org.hibernate.internal.jaxb.mapping.hbm.JaxbHibernateMapping;
 
 /**
  * The {@link org.hibernate.metamodel.source.MetadataSourceProcessor} implementation responsible for processing {@code hbm.xml} sources.

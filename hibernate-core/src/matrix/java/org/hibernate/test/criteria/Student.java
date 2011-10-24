@@ -1,8 +1,8 @@
 //$Id: Student.java 9116 2006-01-23 21:21:01Z steveebersole $
 package org.hibernate.test.criteria;
 import java.util.HashSet;
-import java.util.Set;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Gavin King

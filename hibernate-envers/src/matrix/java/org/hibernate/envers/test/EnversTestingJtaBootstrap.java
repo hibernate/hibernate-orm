@@ -1,18 +1,19 @@
 package org.hibernate.envers.test;
 
+import java.sql.SQLException;
+import java.util.Map;
+import javax.transaction.Status;
+import javax.transaction.TransactionManager;
+
 import com.arjuna.ats.arjuna.common.ObjectStoreEnvironmentBean;
 import com.arjuna.ats.internal.arjuna.objectstore.VolatileStore;
 import com.arjuna.common.internal.util.propertyservice.BeanPopulator;
 import org.enhydra.jdbc.standard.StandardXADataSource;
+
 import org.hibernate.cfg.Environment;
 import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.service.jdbc.connections.internal.DatasourceConnectionProviderImpl;
 import org.hibernate.service.jta.platform.internal.JBossStandAloneJtaPlatform;
-
-import javax.transaction.Status;
-import javax.transaction.TransactionManager;
-import java.sql.SQLException;
-import java.util.Map;
 
 /**
  * Copied from {@link org.hibernate.testing.jta.TestingJtaBootstrap}, as Envers tests use a different URL for

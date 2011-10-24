@@ -27,18 +27,16 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 
 import org.jboss.logging.Logger;
+import org.junit.Test;
 
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.SQLServerDialect;
-
-import org.junit.Test;
-
-import org.hibernate.testing.ServiceRegistryBuilder;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.test.annotations.id.entities.Bunny;
 import org.hibernate.test.annotations.id.entities.PointyTooth;
 import org.hibernate.test.annotations.id.entities.TwinkleToes;
+import org.hibernate.testing.ServiceRegistryBuilder;
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;

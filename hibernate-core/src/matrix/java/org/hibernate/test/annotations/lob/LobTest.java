@@ -24,8 +24,8 @@
  */
 package org.hibernate.test.annotations.lob;
 
-import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 
 /**
  * @author Emmanuel Bernard

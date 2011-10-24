@@ -25,6 +25,7 @@ package org.hibernate.envers.test.performance;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
 import org.hibernate.envers.test.AbstractEntityTest;
 
 /**

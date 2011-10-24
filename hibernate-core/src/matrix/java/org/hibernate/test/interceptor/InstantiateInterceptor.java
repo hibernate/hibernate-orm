@@ -28,6 +28,7 @@
  */
 package org.hibernate.test.interceptor;
 import java.io.Serializable;
+
 import org.hibernate.CallbackException;
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.EntityMode;

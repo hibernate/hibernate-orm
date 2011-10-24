@@ -28,14 +28,15 @@ import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Types;
-import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.StaleStateException;
-import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
-import org.hibernate.exception.GenericJDBCException;
 
 import org.jboss.logging.Logger;
+
+import org.hibernate.HibernateException;
+import org.hibernate.StaleStateException;
+import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
+import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
+import org.hibernate.exception.GenericJDBCException;
+import org.hibernate.internal.CoreMessageLogger;
 
 /**
  * Holds various often used {@link Expectation} definitions.

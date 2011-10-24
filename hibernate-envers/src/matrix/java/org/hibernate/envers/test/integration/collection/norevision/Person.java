@@ -8,6 +8,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
+
 import org.hibernate.envers.AuditMappedBy;
 import org.hibernate.envers.Audited;
 

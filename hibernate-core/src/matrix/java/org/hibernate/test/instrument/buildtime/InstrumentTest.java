@@ -23,12 +23,9 @@
  */
 package org.hibernate.test.instrument.buildtime;
 
-import org.hibernate.bytecode.instrumentation.internal.FieldInterceptionHelper;
-
 import org.junit.Test;
 
-import org.hibernate.testing.Skip;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.bytecode.instrumentation.internal.FieldInterceptionHelper;
 import org.hibernate.test.instrument.cases.Executable;
 import org.hibernate.test.instrument.cases.TestCustomColumnReadAndWrite;
 import org.hibernate.test.instrument.cases.TestDirtyCheckExecutable;
@@ -41,6 +38,8 @@ import org.hibernate.test.instrument.cases.TestLazyPropertyCustomTypeExecutable;
 import org.hibernate.test.instrument.cases.TestManyToOneProxyExecutable;
 import org.hibernate.test.instrument.cases.TestSharedPKOneToOneExecutable;
 import org.hibernate.test.instrument.domain.Document;
+import org.hibernate.testing.Skip;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 /**
  * @author Gavin King

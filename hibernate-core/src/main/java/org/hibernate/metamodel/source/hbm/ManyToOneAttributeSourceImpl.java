@@ -29,6 +29,7 @@ import org.hibernate.FetchMode;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbManyToOneElement;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.source.LocalBindingContext;
 import org.hibernate.metamodel.source.MappingException;
@@ -37,7 +38,6 @@ import org.hibernate.metamodel.source.binder.MetaAttributeSource;
 import org.hibernate.metamodel.source.binder.RelationalValueSource;
 import org.hibernate.metamodel.source.binder.SingularAttributeNature;
 import org.hibernate.metamodel.source.binder.ToOneAttributeSource;
-import org.hibernate.internal.jaxb.mapping.hbm.JaxbManyToOneElement;
 
 /**
  * Implementation for {@code <many-to-one/> mappings}

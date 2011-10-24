@@ -23,12 +23,12 @@
  */
 package org.hibernate.metamodel.source.hbm;
 
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbSetElement;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.source.binder.AttributeSourceContainer;
 import org.hibernate.metamodel.source.binder.Orderable;
 import org.hibernate.metamodel.source.binder.PluralAttributeNature;
 import org.hibernate.metamodel.source.binder.Sortable;
-import org.hibernate.internal.jaxb.mapping.hbm.JaxbSetElement;
 
 /**
  * @author Steve Ebersole

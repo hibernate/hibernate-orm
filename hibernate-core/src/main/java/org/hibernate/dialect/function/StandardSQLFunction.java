@@ -23,6 +23,7 @@
  */
 package org.hibernate.dialect.function;
 import java.util.List;
+
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.Type;

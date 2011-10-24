@@ -24,7 +24,9 @@
 package org.hibernate.envers.configuration.metadata;
 
 import java.util.Properties;
+
 import org.dom4j.Element;
+
 import org.hibernate.envers.configuration.metadata.reader.PropertyAuditingData;
 import org.hibernate.envers.entities.mapper.SimpleMapperBuilder;
 import org.hibernate.mapping.SimpleValue;

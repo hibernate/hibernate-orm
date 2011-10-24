@@ -26,7 +26,9 @@ package org.hibernate.tuple;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Iterator;
+
 import org.dom4j.Element;
+
 import org.hibernate.internal.util.xml.XMLHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;

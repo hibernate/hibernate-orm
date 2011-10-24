@@ -23,12 +23,11 @@
  */
 package org.hibernate.test.generatedkeys.seqidentity;
 
+import org.junit.Test;
+
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.Oracle9iDialect;
-
-import org.junit.Test;
-
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 

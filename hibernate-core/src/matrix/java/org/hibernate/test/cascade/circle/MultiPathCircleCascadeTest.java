@@ -25,6 +25,8 @@ package org.hibernate.test.cascade.circle;
 
 import java.util.Iterator;
 
+import org.junit.Test;
+
 import org.hibernate.JDBCException;
 import org.hibernate.PropertyValueException;
 import org.hibernate.Session;
@@ -32,9 +34,6 @@ import org.hibernate.TransientObjectException;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionImplementor;
-
-import org.junit.Test;
-
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.IncrementGenerator;
 import org.hibernate.id.SequenceGenerator;

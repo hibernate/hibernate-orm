@@ -23,12 +23,12 @@
  */
 package org.hibernate.test.hql;
 
+import org.junit.Test;
+
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.hql.internal.classic.ClassicQueryTranslatorFactory;
-
-import org.junit.Test;
 
 /**
  * Some simple test queries using the classic translator explicitly

@@ -23,16 +23,15 @@
  */
 package org.hibernate.test.annotations;
 
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-
 import org.junit.Test;
 
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.Session;
+import org.hibernate.Transaction;
 import org.hibernate.test.annotations.inheritance.Carrot;
 import org.hibernate.test.annotations.inheritance.Tomato;
 import org.hibernate.test.annotations.inheritance.Vegetable;
 import org.hibernate.test.annotations.inheritance.VegetablePk;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;

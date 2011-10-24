@@ -23,6 +23,7 @@
  */
 package org.hibernate.envers.entities.mapper.relation.lazy;
 import java.io.Serializable;
+
 import org.hibernate.HibernateException;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.entities.EntitiesConfigurations;

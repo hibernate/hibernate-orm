@@ -23,9 +23,10 @@
  */
 package org.hibernate.hql.internal.ast.tree;
 
+import antlr.SemanticException;
+
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
-import antlr.SemanticException;
 
 /**
  * Represents a reference to a result_variable as defined in the JPA 2 spec.

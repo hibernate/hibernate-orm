@@ -26,6 +26,7 @@ package org.hibernate.service.jta.platform.internal;
 import java.lang.reflect.Method;
 import javax.transaction.TransactionManager;
 import javax.transaction.UserTransaction;
+
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.jta.platform.spi.JtaPlatformException;
 

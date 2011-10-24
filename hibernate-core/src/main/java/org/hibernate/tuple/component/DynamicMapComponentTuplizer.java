@@ -24,6 +24,7 @@
  */
 package org.hibernate.tuple.component;
 import java.util.Map;
+
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
 import org.hibernate.property.Getter;

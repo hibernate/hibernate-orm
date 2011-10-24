@@ -23,12 +23,11 @@
  */
 package org.hibernate.test.cascade;
 
+import org.junit.Test;
+
 import org.hibernate.Session;
 import org.hibernate.TransientObjectException;
 import org.hibernate.proxy.HibernateProxy;
-
-import org.junit.Test;
-
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;

@@ -25,12 +25,14 @@
 package org.hibernate.tuple.component;
 import java.io.Serializable;
 import java.lang.reflect.Method;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.spi.BasicProxyFactory;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
 import org.hibernate.property.BackrefPropertyAccessor;
@@ -40,7 +42,6 @@ import org.hibernate.property.PropertyAccessorFactory;
 import org.hibernate.property.Setter;
 import org.hibernate.tuple.Instantiator;
 import org.hibernate.tuple.PojoInstantiator;
-import org.hibernate.internal.util.ReflectHelper;
 
 /**
  * A {@link ComponentTuplizer} specific to the pojo entity mode.

@@ -23,21 +23,21 @@
  */
 package org.hibernate.service.jta.platform.internal;
 
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.service.jndi.spi.JndiService;
-import org.hibernate.service.jta.platform.spi.JtaPlatform;
-import org.hibernate.service.spi.Configurable;
-import org.hibernate.service.ServiceRegistry;
-import org.hibernate.service.spi.ServiceRegistryAwareService;
-import org.hibernate.service.spi.ServiceRegistryImplementor;
-
+import java.util.Map;
 import javax.transaction.Synchronization;
 import javax.transaction.SystemException;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 import javax.transaction.UserTransaction;
-import java.util.Map;
+
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.service.ServiceRegistry;
+import org.hibernate.service.jndi.spi.JndiService;
+import org.hibernate.service.jta.platform.spi.JtaPlatform;
+import org.hibernate.service.spi.Configurable;
+import org.hibernate.service.spi.ServiceRegistryAwareService;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
  * @author Steve Ebersole

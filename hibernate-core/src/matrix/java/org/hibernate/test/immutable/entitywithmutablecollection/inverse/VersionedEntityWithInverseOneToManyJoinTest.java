@@ -23,8 +23,8 @@
  */
 package org.hibernate.test.immutable.entitywithmutablecollection.inverse;
 
-import org.hibernate.testing.TestForIssue;
 import org.hibernate.test.immutable.entitywithmutablecollection.AbstractEntityWithOneToManyTest;
+import org.hibernate.testing.TestForIssue;
 
 
 /**

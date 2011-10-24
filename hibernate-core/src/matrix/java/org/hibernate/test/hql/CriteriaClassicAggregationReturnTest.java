@@ -24,22 +24,22 @@
 package org.hibernate.test.hql;
 import java.util.Collections;
 
+import org.junit.Test;
+
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.function.ClassicAvgFunction;
 import org.hibernate.dialect.function.ClassicCountFunction;
 import org.hibernate.dialect.function.ClassicSumFunction;
-import org.hibernate.hql.spi.QueryTranslator;
-import org.hibernate.hql.spi.QueryTranslatorFactory;
 import org.hibernate.hql.internal.ast.QueryTranslatorImpl;
 import org.hibernate.hql.internal.classic.ClassicQueryTranslatorFactory;
+import org.hibernate.hql.spi.QueryTranslator;
+import org.hibernate.hql.spi.QueryTranslatorFactory;
 import org.hibernate.type.BigDecimalType;
 import org.hibernate.type.BigIntegerType;
 import org.hibernate.type.DoubleType;
 import org.hibernate.type.FloatType;
 import org.hibernate.type.IntegerType;
 import org.hibernate.type.LongType;
-
-import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 

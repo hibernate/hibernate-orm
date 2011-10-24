@@ -26,14 +26,16 @@ package org.hibernate.hql.internal.ast.tree;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+
+import antlr.SemanticException;
+import antlr.collections.AST;
+
 import org.hibernate.QueryException;
 import org.hibernate.hql.internal.antlr.SqlTokenTypes;
 import org.hibernate.hql.internal.ast.util.ASTAppender;
 import org.hibernate.hql.internal.ast.util.ASTIterator;
 import org.hibernate.hql.internal.ast.util.ASTPrinter;
 import org.hibernate.type.Type;
-import antlr.SemanticException;
-import antlr.collections.AST;
 
 /**
  * Represents the list of expressions in a SELECT clause.

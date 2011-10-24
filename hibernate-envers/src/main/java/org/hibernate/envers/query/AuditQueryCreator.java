@@ -29,7 +29,8 @@ import org.hibernate.envers.query.impl.EntitiesModifiedAtRevisionQuery;
 import org.hibernate.envers.query.impl.RevisionsOfEntityQuery;
 import org.hibernate.envers.reader.AuditReaderImplementor;
 
-import static org.hibernate.envers.tools.ArgumentsTools.*;
+import static org.hibernate.envers.tools.ArgumentsTools.checkNotNull;
+import static org.hibernate.envers.tools.ArgumentsTools.checkPositive;
 import static org.hibernate.envers.tools.Tools.getTargetClassIfProxied;
 
 /**

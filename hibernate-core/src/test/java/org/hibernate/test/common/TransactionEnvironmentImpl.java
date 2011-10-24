@@ -24,8 +24,8 @@
 package org.hibernate.test.common;
 
 import org.hibernate.cfg.NotYetImplementedException;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.transaction.spi.TransactionEnvironment;
 import org.hibernate.engine.transaction.spi.TransactionFactory;
 import org.hibernate.service.ServiceRegistry;

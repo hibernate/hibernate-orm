@@ -27,8 +27,9 @@ import java.util.List;
 
 import org.junit.Test;
 
-import static org.junit.Assert.*;
 import org.hibernate.dialect.function.AnsiTrimEmulationFunction;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * TODO : javadoc

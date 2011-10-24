@@ -24,6 +24,7 @@
  */
 package org.hibernate.id.insert;
 import java.io.Serializable;
+
 import org.hibernate.engine.spi.SessionImplementor;
 
 /**

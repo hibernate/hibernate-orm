@@ -36,9 +36,8 @@ import org.jboss.jandex.DotName;
 import org.jboss.logging.Logger;
 
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbAttributes;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbAccessType;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbAttributes;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbDiscriminatorColumn;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbEntity;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbEntityListeners;
@@ -53,6 +52,7 @@ import org.hibernate.internal.jaxb.mapping.orm.JaxbPreRemove;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbPreUpdate;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbSecondaryTable;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbTable;
+import org.hibernate.internal.util.StringHelper;
 
 /**
  * Mock <entity> to {@link javax.persistence.Entity @Entity}

@@ -24,6 +24,7 @@
  */
 package org.hibernate.hql.spi;
 import java.util.Map;
+
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 /**

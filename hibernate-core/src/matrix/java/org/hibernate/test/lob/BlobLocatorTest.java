@@ -24,20 +24,19 @@
 package org.hibernate.test.lob;
 import java.sql.Blob;
 
+import junit.framework.AssertionFailedError;
+import org.junit.Assert;
+import org.junit.Test;
+
 import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.hibernate.internal.util.collections.ArrayHelper;
-
-import org.junit.Test;
-import junit.framework.AssertionFailedError;
-
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertNotNull;
-import org.junit.Assert;
 
 /**
  * Tests lazy materialization of data mapped by

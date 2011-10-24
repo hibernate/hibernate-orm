@@ -24,6 +24,7 @@
  */
 package org.hibernate.id;
 import java.net.InetAddress;
+
 import org.hibernate.internal.util.BytesHelper;
 
 /**

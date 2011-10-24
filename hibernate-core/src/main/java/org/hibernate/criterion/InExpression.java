@@ -23,6 +23,7 @@
  */
 package org.hibernate.criterion;
 import java.util.ArrayList;
+
 import org.hibernate.Criteria;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;

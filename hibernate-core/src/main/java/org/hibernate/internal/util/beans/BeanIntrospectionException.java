@@ -23,6 +23,7 @@
  */
 package org.hibernate.internal.util.beans;
 import java.beans.BeanInfo;
+
 import org.hibernate.HibernateException;
 
 /**

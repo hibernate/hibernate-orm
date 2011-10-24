@@ -25,17 +25,16 @@ package org.hibernate.sql;
 
 import java.util.Collections;
 
+import org.junit.Test;
+
 import org.hibernate.QueryException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.function.SQLFunctionRegistry;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.sql.ordering.antlr.ColumnMapper;
-import org.hibernate.type.Type;
-
-import org.junit.Test;
-
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.type.Type;
 
 import static org.junit.Assert.assertEquals;
 

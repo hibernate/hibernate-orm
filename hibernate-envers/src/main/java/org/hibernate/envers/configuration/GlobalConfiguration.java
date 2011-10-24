@@ -22,11 +22,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.configuration;
+import java.util.Properties;
+
 import org.hibernate.MappingException;
 import org.hibernate.envers.RevisionListener;
 
 import static org.hibernate.envers.tools.Tools.getProperty;
-import java.util.Properties;
 
 /**
  * @author Adam Warski (adam at warski dot org)

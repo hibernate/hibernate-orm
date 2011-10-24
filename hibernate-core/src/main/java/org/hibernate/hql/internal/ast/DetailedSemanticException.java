@@ -25,6 +25,7 @@
 package org.hibernate.hql.internal.ast;
 import java.io.PrintStream;
 import java.io.PrintWriter;
+
 import antlr.SemanticException;
 
 /**

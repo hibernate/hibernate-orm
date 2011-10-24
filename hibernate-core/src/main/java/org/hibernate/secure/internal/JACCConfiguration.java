@@ -23,11 +23,11 @@
  */
 package org.hibernate.secure.internal;
 
+import java.util.StringTokenizer;
 import javax.security.jacc.EJBMethodPermission;
 import javax.security.jacc.PolicyConfiguration;
 import javax.security.jacc.PolicyConfigurationFactory;
 import javax.security.jacc.PolicyContextException;
-import java.util.StringTokenizer;
 
 import org.jboss.logging.Logger;
 

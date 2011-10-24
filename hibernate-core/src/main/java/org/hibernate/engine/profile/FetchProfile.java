@@ -24,11 +24,13 @@
 package org.hibernate.engine.profile;
 import java.util.HashMap;
 import java.util.Map;
-import org.hibernate.internal.CoreMessageLogger;
+
+import org.jboss.logging.Logger;
+
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.type.BagType;
 import org.hibernate.type.Type;
-import org.jboss.logging.Logger;
 
 /**
  * A 'fetch profile' allows a user to dynamically modify the fetching strategy used for particular associations at

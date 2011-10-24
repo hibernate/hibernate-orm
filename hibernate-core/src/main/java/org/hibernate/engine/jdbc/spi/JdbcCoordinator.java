@@ -23,13 +23,13 @@
  */
 package org.hibernate.engine.jdbc.spi;
 
+import java.io.Serializable;
+import java.sql.Connection;
+
 import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.transaction.spi.TransactionCoordinator;
 import org.hibernate.jdbc.WorkExecutorVisitable;
-
-import java.io.Serializable;
-import java.sql.Connection;
 
 /**
  * Coordinates JDBC-related activities.

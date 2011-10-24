@@ -24,6 +24,7 @@
 package org.hibernate.bytecode.instrumentation.spi;
 import java.io.Serializable;
 import java.util.Set;
+
 import org.hibernate.LazyInitializationException;
 import org.hibernate.engine.spi.SessionImplementor;
 

@@ -3,6 +3,7 @@ package org.hibernate.test.annotations.embedded;
 import java.io.Serializable;
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
+
 import org.hibernate.annotations.AccessType;
 
 /**

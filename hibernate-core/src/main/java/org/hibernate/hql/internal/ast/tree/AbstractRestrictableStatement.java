@@ -23,10 +23,11 @@
  *
  */
 package org.hibernate.hql.internal.ast.tree;
-import org.hibernate.internal.CoreMessageLogger;
+import antlr.collections.AST;
+
 import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.internal.ast.util.ASTUtil;
-import antlr.collections.AST;
+import org.hibernate.internal.CoreMessageLogger;
 
 /**
  * Convenience implementation of {@link RestrictableStatement}

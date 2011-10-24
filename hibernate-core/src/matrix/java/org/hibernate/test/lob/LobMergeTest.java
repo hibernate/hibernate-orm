@@ -23,11 +23,10 @@
  */
 package org.hibernate.test.lob;
 
-import org.hibernate.Session;
-import org.hibernate.internal.util.collections.ArrayHelper;
-
 import org.junit.Test;
 
+import org.hibernate.Session;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;

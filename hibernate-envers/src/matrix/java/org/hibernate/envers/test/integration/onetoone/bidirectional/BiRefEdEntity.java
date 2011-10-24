@@ -25,6 +25,7 @@ package org.hibernate.envers.test.integration.onetoone.bidirectional;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.OneToOne;
+
 import org.hibernate.envers.Audited;
 
 /**

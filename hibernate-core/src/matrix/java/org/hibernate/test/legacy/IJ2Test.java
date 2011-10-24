@@ -24,10 +24,10 @@
 package org.hibernate.test.legacy;
 import java.io.Serializable;
 
+import org.junit.Test;
+
 import org.hibernate.LockMode;
 import org.hibernate.Session;
-
-import org.junit.Test;
 
 import static org.junit.Assert.assertTrue;
 

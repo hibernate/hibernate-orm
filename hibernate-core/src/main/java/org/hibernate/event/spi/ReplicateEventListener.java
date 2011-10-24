@@ -24,6 +24,7 @@
 package org.hibernate.event.spi;
 
 import java.io.Serializable;
+
 import org.hibernate.HibernateException;
 
 /**

@@ -26,9 +26,10 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.Set;
 import javax.persistence.Column;
+
 import org.dom4j.Document;
-import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
+
 import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;

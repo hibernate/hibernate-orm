@@ -23,8 +23,6 @@
  */
 package org.hibernate.metamodel.relational;
 
-import java.util.List;
-
 /**
  * Basic contract for the types of constraints we fully support as metadata constructs:<ul>
  * <li>primary key</li>

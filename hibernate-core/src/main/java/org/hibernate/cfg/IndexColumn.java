@@ -24,6 +24,7 @@
 package org.hibernate.cfg;
 import java.util.Map;
 import javax.persistence.OrderColumn;
+
 import org.hibernate.mapping.Join;
 
 /**

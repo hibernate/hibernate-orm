@@ -24,16 +24,15 @@
 package org.hibernate.test.bytecode.javassist;
 import java.text.ParseException;
 
+import org.junit.Test;
+
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.bytecode.internal.javassist.BytecodeProviderImpl;
 import org.hibernate.cfg.Environment;
-
-import org.junit.Test;
-
+import org.hibernate.test.bytecode.Bean;
 import org.hibernate.testing.Skip;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.test.bytecode.Bean;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;

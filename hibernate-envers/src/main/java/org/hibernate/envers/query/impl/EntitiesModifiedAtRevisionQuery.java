@@ -1,13 +1,13 @@
 package org.hibernate.envers.query.impl;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.hibernate.Query;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.configuration.AuditEntitiesConfiguration;
 import org.hibernate.envers.query.criteria.AuditCriterion;
 import org.hibernate.envers.reader.AuditReaderImplementor;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * In comparison to {@link EntitiesAtRevisionQuery} this query returns an empty collection if an entity

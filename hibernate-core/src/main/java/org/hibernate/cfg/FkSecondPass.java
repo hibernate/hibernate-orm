@@ -23,6 +23,7 @@
  */
 package org.hibernate.cfg;
 import java.util.concurrent.atomic.AtomicInteger;
+
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Value;
 

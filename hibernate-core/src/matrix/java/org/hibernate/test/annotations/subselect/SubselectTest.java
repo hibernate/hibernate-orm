@@ -26,15 +26,14 @@
   */
 package org.hibernate.test.annotations.subselect;
 
-import org.hibernate.Query;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-import org.hibernate.type.StringType;
-
 import org.junit.Assert;
 import org.junit.Test;
 
+import org.hibernate.Query;
+import org.hibernate.Session;
+import org.hibernate.Transaction;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.type.StringType;
 
 /**
  * @author Sharath Reddy

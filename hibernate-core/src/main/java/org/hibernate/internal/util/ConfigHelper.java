@@ -30,11 +30,12 @@ import java.io.Reader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Properties;
-import org.hibernate.HibernateException;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.cfg.Environment;
 
 import org.jboss.logging.Logger;
+
+import org.hibernate.HibernateException;
+import org.hibernate.cfg.Environment;
+import org.hibernate.internal.CoreMessageLogger;
 
 /**
  * A simple class to centralize logic needed to locate config files on the system.

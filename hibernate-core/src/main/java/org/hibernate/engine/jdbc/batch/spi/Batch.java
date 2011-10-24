@@ -23,7 +23,6 @@
  */
 package org.hibernate.engine.jdbc.batch.spi;
 import java.sql.PreparedStatement;
-import org.hibernate.jdbc.Expectation;
 
 /**
  * Conceptually models a batch.

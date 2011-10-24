@@ -23,14 +23,13 @@
  */
 package org.hibernate.test.abstractembeddedcomponents.propertyref;
 
+import org.junit.Test;
+
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertNotNull;
-
-import org.junit.Test;
 
 /**
  * @author Steve Ebersole

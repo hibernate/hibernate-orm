@@ -25,15 +25,15 @@ package org.hibernate.event.internal;
 
 import org.jboss.logging.Logger;
 
-import org.hibernate.cache.spi.CacheKey;
-import org.hibernate.engine.spi.Status;
-import org.hibernate.event.spi.EventSource;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.ObjectDeletedException;
+import org.hibernate.cache.spi.CacheKey;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.Status;
+import org.hibernate.event.spi.EventSource;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 

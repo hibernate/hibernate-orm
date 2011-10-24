@@ -24,11 +24,10 @@
 package org.hibernate.test.collection.idbag;
 import java.util.ArrayList;
 
-import org.hibernate.Session;
-import org.hibernate.collection.internal.PersistentIdentifierBag;
-
 import org.junit.Test;
 
+import org.hibernate.Session;
+import org.hibernate.collection.internal.PersistentIdentifierBag;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertFalse;

@@ -1,9 +1,9 @@
 package org.hibernate.envers.test.integration.superclass.auditparents;
 
-import org.hibernate.envers.test.entities.StrIntTestEntity;
-
 import javax.persistence.ManyToOne;
 import javax.persistence.MappedSuperclass;
+
+import org.hibernate.envers.test.entities.StrIntTestEntity;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)

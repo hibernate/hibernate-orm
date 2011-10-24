@@ -28,6 +28,7 @@ import java.lang.reflect.Proxy;
 import java.sql.Clob;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+
 import junit.framework.Assert;
 
 /**

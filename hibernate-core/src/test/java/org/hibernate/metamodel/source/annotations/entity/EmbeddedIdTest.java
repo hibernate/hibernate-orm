@@ -32,11 +32,8 @@ import javax.persistence.Entity;
 
 import org.junit.Test;
 
-import org.hibernate.id.Assigned;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.EntityIdentifier;
-import org.hibernate.metamodel.domain.Attribute;
-import org.hibernate.metamodel.domain.Component;
 import org.hibernate.testing.FailureExpected;
 
 import static junit.framework.Assert.assertTrue;

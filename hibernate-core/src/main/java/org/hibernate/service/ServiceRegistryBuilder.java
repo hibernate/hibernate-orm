@@ -39,15 +39,15 @@ import org.hibernate.integrator.spi.IntegratorService;
 import org.hibernate.integrator.spi.ServiceContributingIntegrator;
 import org.hibernate.internal.jaxb.Origin;
 import org.hibernate.internal.jaxb.SourceType;
+import org.hibernate.internal.jaxb.cfg.JaxbHibernateConfiguration;
 import org.hibernate.internal.util.Value;
 import org.hibernate.internal.util.config.ConfigurationException;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.internal.jaxb.cfg.JaxbHibernateConfiguration;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
-import org.hibernate.service.internal.StandardServiceRegistryImpl;
 import org.hibernate.service.internal.BootstrapServiceRegistryImpl;
 import org.hibernate.service.internal.JaxbProcessor;
 import org.hibernate.service.internal.ProvidedService;
+import org.hibernate.service.internal.StandardServiceRegistryImpl;
 import org.hibernate.service.spi.BasicServiceInitiator;
 
 /**

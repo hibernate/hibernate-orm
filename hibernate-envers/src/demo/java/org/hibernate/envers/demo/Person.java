@@ -20,12 +20,12 @@
  * Red Hat Author(s): Adam Warski
  */
 package org.hibernate.envers.demo;
-import org.jboss.logging.Logger;
-
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.ManyToOne;
 
 import org.hibernate.envers.Audited;
-
-import javax.persistence.*;
 
 /**
  * @author Adam Warski (adam at warski dot org)

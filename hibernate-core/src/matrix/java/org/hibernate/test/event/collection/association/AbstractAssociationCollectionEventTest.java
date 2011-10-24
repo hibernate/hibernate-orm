@@ -22,11 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.event.collection.association;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-
 import org.junit.Test;
 
+import org.hibernate.Session;
+import org.hibernate.Transaction;
 import org.hibernate.test.event.collection.AbstractCollectionEventTest;
 import org.hibernate.test.event.collection.ChildEntity;
 import org.hibernate.test.event.collection.CollectionListeners;

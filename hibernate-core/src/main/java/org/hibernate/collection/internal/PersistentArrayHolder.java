@@ -33,7 +33,6 @@ import java.util.Iterator;
 
 import org.jboss.logging.Logger;
 
-import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.CoreMessageLogger;

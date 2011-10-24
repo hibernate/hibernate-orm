@@ -25,20 +25,19 @@ package org.hibernate.test.jpa.lock;
 
 import java.math.BigDecimal;
 
+import org.junit.Test;
+
 import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.exception.SQLGrammarException;
-
-import org.junit.Test;
-
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.test.jpa.AbstractJPATest;
 import org.hibernate.test.jpa.Item;
 import org.hibernate.test.jpa.Part;
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;

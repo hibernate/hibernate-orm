@@ -23,8 +23,9 @@
  *
  */
 package org.hibernate.envers.configuration.metadata.reader;
-import static org.hibernate.envers.tools.Tools.newHashMap;
 import java.util.Map;
+
+import static org.hibernate.envers.tools.Tools.newHashMap;
 
 /**
  * Audit mapping meta-data for component.

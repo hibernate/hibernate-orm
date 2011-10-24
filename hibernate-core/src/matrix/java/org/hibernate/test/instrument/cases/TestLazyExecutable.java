@@ -1,5 +1,6 @@
 package org.hibernate.test.instrument.cases;
 import junit.framework.TestCase;
+
 import org.hibernate.CacheMode;
 import org.hibernate.Hibernate;
 import org.hibernate.LockMode;

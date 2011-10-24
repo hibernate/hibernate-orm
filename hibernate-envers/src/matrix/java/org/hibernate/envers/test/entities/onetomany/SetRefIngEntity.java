@@ -25,6 +25,7 @@ package org.hibernate.envers.test.entities.onetomany;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+
 import org.hibernate.envers.Audited;
 
 /**

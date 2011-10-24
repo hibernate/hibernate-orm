@@ -23,11 +23,11 @@
  */
 package org.hibernate;
 
-import javax.naming.Referenceable;
 import java.io.Serializable;
 import java.sql.Connection;
 import java.util.Map;
 import java.util.Set;
+import javax.naming.Referenceable;
 
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.metadata.ClassMetadata;

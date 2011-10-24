@@ -23,12 +23,12 @@
  *
  */
 package org.hibernate.sql.ordering.antlr;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.hql.internal.ast.util.ASTPrinter;
-import org.hibernate.internal.util.StringHelper;
-
-import org.jboss.logging.Logger;
 import antlr.collections.AST;
+import org.jboss.logging.Logger;
+
+import org.hibernate.hql.internal.ast.util.ASTPrinter;
+import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.StringHelper;
 
 /**
  * TODO : javadoc

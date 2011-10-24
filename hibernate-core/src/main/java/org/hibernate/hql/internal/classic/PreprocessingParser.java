@@ -27,6 +27,7 @@ package org.hibernate.hql.internal.classic;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
 import org.hibernate.QueryException;
 import org.hibernate.hql.internal.CollectionProperties;
 import org.hibernate.internal.util.StringHelper;

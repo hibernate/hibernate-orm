@@ -24,11 +24,10 @@
 package org.hibernate.test.collection.list;
 import java.util.ArrayList;
 
-import org.hibernate.Session;
-import org.hibernate.collection.internal.PersistentList;
-
 import org.junit.Test;
 
+import org.hibernate.Session;
+import org.hibernate.collection.internal.PersistentList;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertFalse;

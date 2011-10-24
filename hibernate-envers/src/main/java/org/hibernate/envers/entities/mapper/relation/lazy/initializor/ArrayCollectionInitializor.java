@@ -24,6 +24,7 @@
 package org.hibernate.envers.entities.mapper.relation.lazy.initializor;
 import java.util.List;
 import java.util.Map;
+
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.entities.mapper.relation.MiddleComponentData;
 import org.hibernate.envers.entities.mapper.relation.query.RelationQueryGenerator;

@@ -1,9 +1,9 @@
 package org.hibernate.envers.test.integration.inheritance.single.discriminatorformula;
 
-import org.hibernate.envers.Audited;
-
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
+
+import org.hibernate.envers.Audited;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)

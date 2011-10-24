@@ -24,12 +24,11 @@
 package org.hibernate.test.jpa.fetch;
 import java.util.Date;
 
+import org.junit.Test;
+
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-
-import org.junit.Test;
-
 import org.hibernate.test.jpa.AbstractJPATest;
 
 import static org.junit.Assert.assertEquals;

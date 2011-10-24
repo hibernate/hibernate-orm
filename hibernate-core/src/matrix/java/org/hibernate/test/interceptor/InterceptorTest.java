@@ -27,17 +27,16 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
+import org.junit.Test;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.type.Type;
-
-import org.junit.Test;
-
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.type.Type;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;

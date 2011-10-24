@@ -23,16 +23,17 @@
  */
 package org.hibernate.test.criteria;
 
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.HashSet;
-import java.util.HashMap;
+
+import org.junit.Test;
 
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
-import org.hibernate.Hibernate;
 import org.hibernate.JDBCException;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollableResults;
@@ -51,15 +52,12 @@ import org.hibernate.criterion.Restrictions;
 import org.hibernate.criterion.Subqueries;
 import org.hibernate.exception.SQLGrammarException;
 import org.hibernate.internal.util.SerializationHelper;
+import org.hibernate.test.hql.Animal;
+import org.hibernate.test.hql.Reptile;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.transform.Transformers;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
-
-import org.junit.Test;
-
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.test.hql.Animal;
-import org.hibernate.test.hql.Reptile;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;

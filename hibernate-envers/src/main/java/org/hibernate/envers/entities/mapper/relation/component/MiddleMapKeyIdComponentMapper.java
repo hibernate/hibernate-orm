@@ -23,6 +23,7 @@
  */
 package org.hibernate.envers.entities.mapper.relation.component;
 import java.util.Map;
+
 import org.hibernate.envers.configuration.AuditEntitiesConfiguration;
 import org.hibernate.envers.entities.EntityInstantiator;
 import org.hibernate.envers.entities.mapper.id.IdMapper;

@@ -34,11 +34,10 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.service.jdbc.connections.internal.UserSuppliedConnectionProviderImpl;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.spi.Stoppable;
-import org.hibernate.tool.hbm2ddl.SchemaExport;
-
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.env.ConnectionProviderBuilder;
+import org.hibernate.tool.hbm2ddl.SchemaExport;
 
 /**
  * Implementation of SuppliedConnectionTest.

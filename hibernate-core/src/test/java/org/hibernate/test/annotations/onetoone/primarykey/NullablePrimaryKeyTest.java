@@ -2,8 +2,6 @@
 package org.hibernate.test.annotations.onetoone.primarykey;
 
 import org.jboss.logging.Logger;
-
-import junit.framework.TestCase;
 import org.junit.Assert;
 import org.junit.Test;
 

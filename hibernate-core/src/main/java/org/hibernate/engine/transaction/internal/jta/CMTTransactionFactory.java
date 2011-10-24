@@ -24,6 +24,7 @@
 package org.hibernate.engine.transaction.internal.jta;
 
 import javax.transaction.SystemException;
+
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.TransactionException;
 import org.hibernate.engine.transaction.spi.TransactionCoordinator;

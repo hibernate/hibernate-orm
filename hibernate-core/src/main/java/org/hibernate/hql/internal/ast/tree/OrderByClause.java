@@ -23,9 +23,10 @@
  *
  */
 package org.hibernate.hql.internal.ast.tree;
+import antlr.collections.AST;
+
 import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.internal.ast.util.ASTUtil;
-import antlr.collections.AST;
 
 /**
  * Implementation of OrderByClause.

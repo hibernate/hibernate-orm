@@ -24,6 +24,7 @@
 package org.hibernate.cfg.annotations;
 import java.lang.annotation.Annotation;
 import javax.persistence.Column;
+
 import org.hibernate.annotations.Columns;
 
 /**

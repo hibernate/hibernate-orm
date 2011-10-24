@@ -23,7 +23,9 @@
  */
 package org.hibernate.cfg;
 import java.util.Map;
+
 import org.dom4j.Element;
+
 import org.hibernate.MappingException;
 import org.hibernate.engine.ResultSetMappingDefinition;
 

@@ -25,8 +25,6 @@ package org.hibernate.dialect.resolver;
 import java.sql.SQLException;
 
 import org.junit.Test;
-import static org.junit.Assert.fail;
-import static org.junit.Assert.assertEquals;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.Mocks;
@@ -36,6 +34,9 @@ import org.hibernate.service.jdbc.dialect.internal.BasicDialectResolver;
 import org.hibernate.service.jdbc.dialect.internal.DialectResolverSet;
 import org.hibernate.service.jdbc.dialect.spi.DialectResolver;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 /**
  * @author Steve Ebersole

@@ -1,9 +1,9 @@
 package org.hibernate.envers.test.integration.superclass.auditparents;
 
-import org.hibernate.envers.NotAudited;
-
 import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
+
+import org.hibernate.envers.NotAudited;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)

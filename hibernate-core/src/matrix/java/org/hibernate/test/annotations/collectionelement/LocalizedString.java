@@ -7,6 +7,7 @@ import java.util.Map;
 import javax.persistence.ElementCollection;
 import javax.persistence.Embeddable;
 import javax.persistence.MapKeyColumn;
+
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.Filter;

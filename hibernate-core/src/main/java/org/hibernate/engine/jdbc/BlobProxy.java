@@ -29,6 +29,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.sql.Blob;
 import java.sql.SQLException;
+
 import org.hibernate.type.descriptor.java.BinaryStreamImpl;
 import org.hibernate.type.descriptor.java.DataHelper;
 

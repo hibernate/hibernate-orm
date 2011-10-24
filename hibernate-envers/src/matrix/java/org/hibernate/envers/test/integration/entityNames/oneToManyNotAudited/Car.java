@@ -1,5 +1,6 @@
 package org.hibernate.envers.test.integration.entityNames.oneToManyNotAudited;
 import java.util.List;
+
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.RelationTargetAuditMode;
 

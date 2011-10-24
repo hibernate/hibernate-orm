@@ -23,17 +23,17 @@
  */
 package org.hibernate.cfg.annotations;
 
+import java.io.Serializable;
+import java.sql.Types;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Properties;
 import javax.persistence.Enumerated;
 import javax.persistence.Lob;
 import javax.persistence.MapKeyEnumerated;
 import javax.persistence.MapKeyTemporal;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
-import java.io.Serializable;
-import java.sql.Types;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Properties;
 
 import org.jboss.logging.Logger;
 

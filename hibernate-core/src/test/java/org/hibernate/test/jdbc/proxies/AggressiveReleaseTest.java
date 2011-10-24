@@ -28,18 +28,17 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import org.hibernate.ConnectionReleaseMode;
-import org.hibernate.engine.jdbc.internal.LogicalConnectionImpl;
-import org.hibernate.engine.jdbc.internal.proxy.ProxyBuilder;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.ConnectionReleaseMode;
+import org.hibernate.engine.jdbc.internal.LogicalConnectionImpl;
+import org.hibernate.engine.jdbc.internal.proxy.ProxyBuilder;
 import org.hibernate.test.common.BasicTestingJdbcServiceImpl;
 import org.hibernate.test.common.JdbcConnectionAccessImpl;
 import org.hibernate.test.common.JournalingConnectionObserver;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

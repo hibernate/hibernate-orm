@@ -25,6 +25,10 @@
 package org.hibernate.hql.internal.ast.tree;
 
 import java.util.List;
+
+import antlr.SemanticException;
+import antlr.collections.AST;
+
 import org.hibernate.QueryException;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.hql.internal.antlr.SqlTokenTypes;
@@ -32,12 +36,9 @@ import org.hibernate.hql.internal.ast.util.ColumnHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.Queryable;
-import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.JoinType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.Type;
-import antlr.SemanticException;
-import antlr.collections.AST;
 
 /**
  * Represents an identifier all by itself, which may be a function name,

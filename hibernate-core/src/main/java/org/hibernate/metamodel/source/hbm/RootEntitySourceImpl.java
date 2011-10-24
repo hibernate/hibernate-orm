@@ -26,6 +26,8 @@ package org.hibernate.metamodel.source.hbm;
 import org.hibernate.EntityMode;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.engine.OptimisticLockStyle;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbCacheElement;
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbHibernateMapping;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.binding.Caching;
 import org.hibernate.metamodel.binding.IdGenerator;
@@ -37,8 +39,6 @@ import org.hibernate.metamodel.source.binder.RootEntitySource;
 import org.hibernate.metamodel.source.binder.SimpleIdentifierSource;
 import org.hibernate.metamodel.source.binder.SingularAttributeSource;
 import org.hibernate.metamodel.source.binder.TableSource;
-import org.hibernate.internal.jaxb.mapping.hbm.JaxbCacheElement;
-import org.hibernate.internal.jaxb.mapping.hbm.JaxbHibernateMapping;
 
 /**
  * @author Steve Ebersole

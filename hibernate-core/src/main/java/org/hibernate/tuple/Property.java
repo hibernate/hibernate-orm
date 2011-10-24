@@ -24,6 +24,7 @@
  */
 package org.hibernate.tuple;
 import java.io.Serializable;
+
 import org.hibernate.type.Type;
 
 /**

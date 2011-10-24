@@ -23,11 +23,11 @@
  */
 package org.hibernate.internal;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.jdbc.spi.ConnectionObserver;
-
 import java.io.Serializable;
 import java.sql.Connection;
+
+import org.hibernate.engine.jdbc.spi.ConnectionObserver;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 /**
  * @author Steve Ebersole

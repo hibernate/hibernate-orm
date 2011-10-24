@@ -27,6 +27,7 @@ package org.hibernate.transform;
 import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.List;
+
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.type.Type;
 

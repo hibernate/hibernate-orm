@@ -23,8 +23,9 @@
  *
  */
 package org.hibernate.hql.internal.ast;
-import org.hibernate.QueryException;
 import antlr.RecognitionException;
+
+import org.hibernate.QueryException;
 
 /**
  * Exception thrown when there is a syntax error in the HQL.

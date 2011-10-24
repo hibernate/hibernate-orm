@@ -23,8 +23,8 @@
  */
 package org.hibernate.engine.transaction.spi;
 
-import javax.transaction.Synchronization;
 import java.io.Serializable;
+import javax.transaction.Synchronization;
 
 /**
  * Manages a registry of {@link Synchronization Synchronizations}.

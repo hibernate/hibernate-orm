@@ -24,6 +24,7 @@
  */
 package org.hibernate;
 import java.util.Collection;
+
 import org.hibernate.engine.spi.FilterDefinition;
 
 /**

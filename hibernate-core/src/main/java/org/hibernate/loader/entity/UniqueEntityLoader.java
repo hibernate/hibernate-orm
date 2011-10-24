@@ -24,6 +24,7 @@
  */
 package org.hibernate.loader.entity;
 import java.io.Serializable;
+
 import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.SessionImplementor;

@@ -31,13 +31,13 @@ import java.util.Map;
 
 import org.hibernate.MappingException;
 import org.hibernate.internal.jaxb.mapping.hbm.EntityElement;
-import org.hibernate.internal.jaxb.mapping.hbm.SubEntityElement;
-import org.hibernate.metamodel.source.binder.SubclassEntityContainer;
-import org.hibernate.metamodel.source.binder.SubclassEntitySource;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbHibernateMapping;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbJoinedSubclassElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbSubclassElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbUnionSubclassElement;
+import org.hibernate.internal.jaxb.mapping.hbm.SubEntityElement;
+import org.hibernate.metamodel.source.binder.SubclassEntityContainer;
+import org.hibernate.metamodel.source.binder.SubclassEntitySource;
 
 /**
  * @author Steve Ebersole

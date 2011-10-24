@@ -26,6 +26,11 @@ package org.hibernate.test.multitenancy.schema;
 import java.sql.Connection;
 import java.sql.SQLException;
 
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+
 import org.hibernate.HibernateException;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.Session;
@@ -40,16 +45,10 @@ import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.testing.cache.CachingRegionFactory;
-import org.hibernate.tool.hbm2ddl.ConnectionHelper;
-import org.hibernate.tool.hbm2ddl.SchemaExport;
-
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-
 import org.hibernate.testing.env.ConnectionProviderBuilder;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.tool.hbm2ddl.ConnectionHelper;
+import org.hibernate.tool.hbm2ddl.SchemaExport;
 
 /**
  * @author Steve Ebersole

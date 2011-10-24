@@ -25,6 +25,7 @@
 package org.hibernate.tuple.component;
 import java.lang.reflect.Method;
 import java.util.Iterator;
+
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.Component;

@@ -24,6 +24,7 @@
  */
 package org.hibernate.usertype;
 import java.util.Comparator;
+
 import org.hibernate.engine.spi.SessionImplementor;
 
 /**

@@ -24,6 +24,7 @@
 package org.hibernate.envers.entities;
 import java.util.HashMap;
 import java.util.Map;
+
 import org.hibernate.envers.entities.mapper.ExtendedPropertyMapper;
 import org.hibernate.envers.entities.mapper.PropertyMapper;
 import org.hibernate.envers.entities.mapper.id.IdMapper;

@@ -26,12 +26,11 @@ import java.math.BigDecimal;
 import java.util.Currency;
 import java.util.List;
 
+import org.junit.Test;
+
 import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.HSQLDialect;
-
-import org.junit.Test;
-
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;

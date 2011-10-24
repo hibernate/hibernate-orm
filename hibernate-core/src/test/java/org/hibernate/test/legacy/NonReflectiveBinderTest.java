@@ -25,6 +25,10 @@ package org.hibernate.test.legacy;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
 import org.hibernate.cfg.Configuration;
 import org.hibernate.mapping.Bag;
 import org.hibernate.mapping.Collection;
@@ -32,11 +36,6 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.MetaAttribute;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 

@@ -23,11 +23,11 @@
  */
 package org.hibernate.envers.revisioninfo;
 
+import java.io.Serializable;
+
 import org.hibernate.Session;
 import org.hibernate.envers.EntityTrackingRevisionListener;
 import org.hibernate.envers.RevisionType;
-
-import java.io.Serializable;
 
 /**
  * @author Adam Warski (adam at warski dot org)

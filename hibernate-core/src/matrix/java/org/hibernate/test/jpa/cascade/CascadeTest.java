@@ -24,15 +24,13 @@
 package org.hibernate.test.jpa.cascade;
 
 import org.jboss.logging.Logger;
+import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.TransientObjectException;
+import org.hibernate.test.jpa.AbstractJPATest;
 
 import static org.junit.Assert.fail;
-
-import org.junit.Test;
-
-import org.hibernate.test.jpa.AbstractJPATest;
 
 /**
  * According to the JPA spec, persist()ing an entity should throw an exception

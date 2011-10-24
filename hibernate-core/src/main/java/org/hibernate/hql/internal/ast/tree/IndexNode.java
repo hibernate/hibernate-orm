@@ -28,21 +28,22 @@ import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.List;
 
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.internal.CoreMessageLogger;
+import antlr.RecognitionException;
+import antlr.SemanticException;
+import antlr.collections.AST;
+import org.jboss.logging.Logger;
+
 import org.hibernate.QueryException;
 import org.hibernate.engine.internal.JoinSequence;
 import org.hibernate.engine.spi.QueryParameters;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.hql.internal.ast.SqlGenerator;
 import org.hibernate.hql.internal.ast.util.SessionFactoryHelper;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.Type;
-import org.jboss.logging.Logger;
-import antlr.RecognitionException;
-import antlr.SemanticException;
-import antlr.collections.AST;
 
 /**
  * Represents the [] operator and provides it's semantics.

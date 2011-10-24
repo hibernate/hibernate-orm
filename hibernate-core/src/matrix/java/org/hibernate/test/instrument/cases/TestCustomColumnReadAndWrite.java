@@ -3,7 +3,6 @@ package org.hibernate.test.instrument.cases;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-
 import org.hibernate.test.instrument.domain.Document;
 import org.hibernate.test.instrument.domain.Folder;
 import org.hibernate.test.instrument.domain.Owner;

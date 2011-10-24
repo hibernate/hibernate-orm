@@ -24,11 +24,11 @@
 package org.hibernate.metamodel.source.hbm;
 
 import org.hibernate.internal.jaxb.mapping.hbm.EntityElement;
-import org.hibernate.metamodel.source.binder.SubclassEntitySource;
-import org.hibernate.metamodel.source.binder.TableSource;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbJoinedSubclassElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbSubclassElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbUnionSubclassElement;
+import org.hibernate.metamodel.source.binder.SubclassEntitySource;
+import org.hibernate.metamodel.source.binder.TableSource;
 
 /**
  * @author Steve Ebersole

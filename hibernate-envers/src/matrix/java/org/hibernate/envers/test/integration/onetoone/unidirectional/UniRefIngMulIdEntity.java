@@ -1,11 +1,11 @@
 package org.hibernate.envers.test.integration.onetoone.unidirectional;
 
-import org.hibernate.envers.Audited;
-import org.hibernate.envers.test.entities.ids.EmbIdTestEntity;
-
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.OneToOne;
+
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.test.entities.ids.EmbIdTestEntity;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)

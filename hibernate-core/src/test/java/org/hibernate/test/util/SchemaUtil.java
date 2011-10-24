@@ -23,6 +23,7 @@
  */
 package org.hibernate.test.util;
 import java.util.Iterator;
+
 import org.hibernate.cfg.Configuration;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;

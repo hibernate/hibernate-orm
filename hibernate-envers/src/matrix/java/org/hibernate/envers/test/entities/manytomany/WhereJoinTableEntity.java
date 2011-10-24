@@ -6,6 +6,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
+
 import org.hibernate.annotations.WhereJoinTable;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.entities.IntNoAutoIdTestEntity;

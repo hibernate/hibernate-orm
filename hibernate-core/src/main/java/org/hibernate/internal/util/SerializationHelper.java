@@ -33,10 +33,12 @@ import java.io.ObjectOutputStream;
 import java.io.ObjectStreamClass;
 import java.io.OutputStream;
 import java.io.Serializable;
+
+import org.jboss.logging.Logger;
+
 import org.hibernate.Hibernate;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.type.SerializationException;
-import org.jboss.logging.Logger;
 
 /**
  * <p>Assists with the serialization process and performs additional functionality based

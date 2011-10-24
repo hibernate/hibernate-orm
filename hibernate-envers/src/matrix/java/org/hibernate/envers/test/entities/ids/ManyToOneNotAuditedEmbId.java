@@ -2,6 +2,7 @@ package org.hibernate.envers.test.entities.ids;
 import java.io.Serializable;
 import javax.persistence.Embeddable;
 import javax.persistence.ManyToOne;
+
 import org.hibernate.envers.test.entities.UnversionedStrTestEntity;
 
 /**

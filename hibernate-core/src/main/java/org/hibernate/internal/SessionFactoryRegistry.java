@@ -23,6 +23,8 @@
  */
 package org.hibernate.internal;
 
+import java.util.Hashtable;
+import java.util.concurrent.ConcurrentHashMap;
 import javax.naming.Context;
 import javax.naming.Name;
 import javax.naming.Reference;
@@ -30,8 +32,6 @@ import javax.naming.event.NamespaceChangeListener;
 import javax.naming.event.NamingEvent;
 import javax.naming.event.NamingExceptionEvent;
 import javax.naming.spi.ObjectFactory;
-import java.util.Hashtable;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.jboss.logging.Logger;
 

@@ -23,8 +23,8 @@
  */
 package org.hibernate.metamodel.relational;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.dialect.Dialect;

@@ -25,6 +25,7 @@
 package org.hibernate.tuple.entity;
 import java.io.Serializable;
 import java.util.Map;
+
 import org.hibernate.EntityMode;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;

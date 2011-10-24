@@ -24,6 +24,7 @@
 package org.hibernate.dialect;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
+
 import org.hibernate.HibernateException;
 import org.hibernate.service.jdbc.dialect.internal.AbstractDialectResolver;
 import org.hibernate.service.jdbc.dialect.internal.BasicDialectResolver;

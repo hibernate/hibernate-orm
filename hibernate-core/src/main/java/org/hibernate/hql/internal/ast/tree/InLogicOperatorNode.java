@@ -25,13 +25,15 @@
 package org.hibernate.hql.internal.ast.tree;
 import java.util.ArrayList;
 import java.util.List;
+
+import antlr.SemanticException;
+import antlr.collections.AST;
+
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.internal.antlr.HqlTokenTypes;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.type.Type;
-import antlr.SemanticException;
-import antlr.collections.AST;
 
 /**
  * @author Steve Ebersole

@@ -26,12 +26,11 @@ package org.hibernate.test.annotations.collectionelement;
 import java.util.HashSet;
 import java.util.Iterator;
 
+import junit.framework.Assert;
+import org.junit.Test;
+
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-
-import org.junit.Test;
-import junit.framework.Assert;
-
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 public class OrderByTest extends BaseCoreFunctionalTestCase {

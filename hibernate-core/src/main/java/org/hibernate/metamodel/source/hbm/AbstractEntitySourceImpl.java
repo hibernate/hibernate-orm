@@ -30,16 +30,6 @@ import java.util.List;
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.internal.jaxb.Origin;
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.metamodel.binding.CustomSQL;
-import org.hibernate.metamodel.source.LocalBindingContext;
-import org.hibernate.metamodel.source.binder.AttributeSource;
-import org.hibernate.metamodel.source.binder.ConstraintSource;
-import org.hibernate.metamodel.source.binder.EntitySource;
-import org.hibernate.metamodel.source.binder.JpaCallbackClass;
-import org.hibernate.metamodel.source.binder.MetaAttributeSource;
-import org.hibernate.metamodel.source.binder.SubclassEntitySource;
-import org.hibernate.metamodel.source.binder.TableSource;
 import org.hibernate.internal.jaxb.mapping.hbm.EntityElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbAnyElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbBagElement;
@@ -53,6 +43,16 @@ import org.hibernate.internal.jaxb.mapping.hbm.JaxbPropertyElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbSetElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbSynchronizeElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbTuplizerElement;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.binding.CustomSQL;
+import org.hibernate.metamodel.source.LocalBindingContext;
+import org.hibernate.metamodel.source.binder.AttributeSource;
+import org.hibernate.metamodel.source.binder.ConstraintSource;
+import org.hibernate.metamodel.source.binder.EntitySource;
+import org.hibernate.metamodel.source.binder.JpaCallbackClass;
+import org.hibernate.metamodel.source.binder.MetaAttributeSource;
+import org.hibernate.metamodel.source.binder.SubclassEntitySource;
+import org.hibernate.metamodel.source.binder.TableSource;
 
 /**
  * @author Steve Ebersole

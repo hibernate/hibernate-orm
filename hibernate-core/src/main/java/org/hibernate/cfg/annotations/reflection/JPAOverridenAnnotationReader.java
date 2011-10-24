@@ -115,10 +115,12 @@ import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 import javax.persistence.Version;
+
 import org.dom4j.Attribute;
 import org.dom4j.Element;
+import org.jboss.logging.Logger;
+
 import org.hibernate.AnnotationException;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.Columns;
 import org.hibernate.annotations.common.annotationfactory.AnnotationDescriptor;
@@ -126,9 +128,9 @@ import org.hibernate.annotations.common.annotationfactory.AnnotationFactory;
 import org.hibernate.annotations.common.reflection.AnnotationReader;
 import org.hibernate.annotations.common.reflection.Filter;
 import org.hibernate.annotations.common.reflection.ReflectionUtil;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
-import org.jboss.logging.Logger;
 
 /**
  * Encapsulates the overriding of Java annotations from an EJB 3.0 descriptor.

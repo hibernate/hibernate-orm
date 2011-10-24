@@ -22,9 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.engine.jdbc.spi;
-import org.hibernate.ConnectionReleaseMode;
-
 import java.sql.Connection;
+
+import org.hibernate.ConnectionReleaseMode;
 
 /**
  * The "internal" contract for LogicalConnection

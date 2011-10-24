@@ -6,6 +6,7 @@ import javax.persistence.Embeddable;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
+
 import org.hibernate.annotations.FetchMode;
 
 /**

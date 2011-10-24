@@ -24,6 +24,7 @@
  */
 package org.hibernate.engine.query.spi;
 import java.io.Serializable;
+
 import org.hibernate.type.Type;
 
 /**

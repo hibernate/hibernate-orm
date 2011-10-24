@@ -23,10 +23,10 @@
  */
 package org.hibernate.service.jta.platform.internal;
 
-import org.hibernate.service.jndi.JndiException;
-
 import javax.transaction.TransactionManager;
 import javax.transaction.UserTransaction;
+
+import org.hibernate.service.jndi.JndiException;
 
 /**
  * JtaPlatform definition for JBoss Application Server.

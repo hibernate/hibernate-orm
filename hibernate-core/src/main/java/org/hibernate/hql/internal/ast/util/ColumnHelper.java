@@ -23,11 +23,12 @@
  *
  */
 package org.hibernate.hql.internal.ast.util;
+import antlr.ASTFactory;
+import antlr.collections.AST;
+
 import org.hibernate.hql.internal.NameGenerator;
 import org.hibernate.hql.internal.antlr.SqlTokenTypes;
 import org.hibernate.hql.internal.ast.tree.HqlSqlWalkerNode;
-import antlr.ASTFactory;
-import antlr.collections.AST;
 
 /**
  * Provides utility methods for dealing with arrays of SQL column names.

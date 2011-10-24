@@ -30,10 +30,10 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Set;
 
-import org.hibernate.event.spi.EventType;
 import org.hibernate.event.service.spi.DuplicationStrategy;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistrationException;
+import org.hibernate.event.spi.EventType;
 
 /**
  * @author Steve Ebersole

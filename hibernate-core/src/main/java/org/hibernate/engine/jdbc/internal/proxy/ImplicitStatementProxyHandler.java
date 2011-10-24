@@ -25,6 +25,7 @@ package org.hibernate.engine.jdbc.internal.proxy;
 import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.Statement;
+
 import org.hibernate.HibernateException;
 
 /**

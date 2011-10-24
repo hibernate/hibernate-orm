@@ -22,14 +22,16 @@
 package org.hibernate.hql.internal.ast.tree;
 
 import java.util.Map;
+
+import antlr.SemanticException;
+import antlr.collections.AST;
+
 import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.internal.ast.util.ColumnHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.Type;
-import antlr.SemanticException;
-import antlr.collections.AST;
 
 /**
  * TODO : javadoc

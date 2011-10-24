@@ -24,6 +24,7 @@
 package org.hibernate.envers.test.entities.components.relations;
 import javax.persistence.Embeddable;
 import javax.persistence.ManyToOne;
+
 import org.hibernate.envers.test.entities.StrTestEntity;
 
 /**

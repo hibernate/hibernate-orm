@@ -24,11 +24,10 @@
 package org.hibernate.test.collection.map;
 import java.util.HashMap;
 
-import org.hibernate.Session;
-import org.hibernate.collection.internal.PersistentMap;
-
 import org.junit.Test;
 
+import org.hibernate.Session;
+import org.hibernate.collection.internal.PersistentMap;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;

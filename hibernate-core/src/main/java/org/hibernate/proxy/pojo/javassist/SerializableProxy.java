@@ -24,6 +24,7 @@
 package org.hibernate.proxy.pojo.javassist;
 import java.io.Serializable;
 import java.lang.reflect.Method;
+
 import org.hibernate.HibernateException;
 import org.hibernate.proxy.AbstractSerializableProxy;
 import org.hibernate.proxy.HibernateProxy;

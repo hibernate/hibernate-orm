@@ -3,6 +3,7 @@ package org.hibernate.test.dynamicentity.tuplizer;
 import java.io.Serializable;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
+
 import org.hibernate.HibernateException;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.test.dynamicentity.Address;

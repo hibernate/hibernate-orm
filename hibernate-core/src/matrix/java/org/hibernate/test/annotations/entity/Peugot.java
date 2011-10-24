@@ -23,6 +23,7 @@
  */
 package org.hibernate.test.annotations.entity;
 import javax.persistence.Entity;
+
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.TypeDef;
 

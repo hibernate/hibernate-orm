@@ -28,10 +28,10 @@ import java.io.Serializable;
 import org.jboss.logging.Logger;
 
 import org.hibernate.FlushMode;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.AbstractQueryImpl;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.loader.entity.UniqueEntityLoader;
 
 /**

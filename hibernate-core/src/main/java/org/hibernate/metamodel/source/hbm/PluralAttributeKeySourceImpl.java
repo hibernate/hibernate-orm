@@ -25,11 +25,11 @@ package org.hibernate.metamodel.source.hbm;
 
 import java.util.List;
 
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbKeyElement;
 import org.hibernate.metamodel.relational.ForeignKey;
 import org.hibernate.metamodel.source.binder.AttributeSourceContainer;
 import org.hibernate.metamodel.source.binder.PluralAttributeKeySource;
 import org.hibernate.metamodel.source.binder.RelationalValueSource;
-import org.hibernate.internal.jaxb.mapping.hbm.JaxbKeyElement;
 
 /**
  * @author Steve Ebersole

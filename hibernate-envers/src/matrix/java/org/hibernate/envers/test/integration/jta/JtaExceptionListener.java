@@ -23,21 +23,21 @@
  */
 package org.hibernate.envers.test.integration.jta;
 
+import java.util.Properties;
+import javax.persistence.EntityManager;
+import javax.transaction.RollbackException;
+import javax.transaction.TransactionManager;
+
+import org.junit.Test;
+
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.EnversTestingJtaBootstrap;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.envers.test.integration.reventity.ExceptionListenerRevEntity;
-import org.hibernate.testing.FailureExpected;
-import org.junit.Test;
 
-import javax.persistence.EntityManager;
-import javax.transaction.RollbackException;
-import javax.transaction.TransactionManager;
-import java.util.Properties;
-
-import static org.hibernate.envers.test.EnversTestingJtaBootstrap.*;
+import static org.hibernate.envers.test.EnversTestingJtaBootstrap.tryCommit;
 
 /**
  * Same as {@link org.hibernate.envers.test.integration.reventity.ExceptionListener}, but in a JTA environment.

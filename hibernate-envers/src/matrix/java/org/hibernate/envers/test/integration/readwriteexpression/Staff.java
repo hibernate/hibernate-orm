@@ -1,12 +1,12 @@
 package org.hibernate.envers.test.integration.readwriteexpression;
 
-import org.hibernate.annotations.ColumnTransformer;
-import org.hibernate.envers.Audited;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
+
+import org.hibernate.annotations.ColumnTransformer;
+import org.hibernate.envers.Audited;
 
 @Entity
 @Table(name="t_staff")

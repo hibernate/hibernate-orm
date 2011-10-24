@@ -1,11 +1,12 @@
 package org.hibernate.envers.test.integration.interfaces.hbm.propertiesAudited;
 
+import javax.persistence.EntityManager;
+
+import org.junit.Test;
+
 import org.hibernate.envers.exception.NotAuditedException;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.Priority;
-import org.junit.Test;
-
-import javax.persistence.EntityManager;
 
 /**
  * @author Hern�n Chanfreau

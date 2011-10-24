@@ -99,7 +99,7 @@ List cats = crit.list();]]></programlisting>
     .list();]]></programlisting>
     
         <para>
-            The <literal>{alias}</literal> placeholder with be replaced by the row alias
+            The <literal>{alias}</literal> placeholder will be replaced by the row alias
             of the queried entity.
         </para>
         

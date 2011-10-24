@@ -24,6 +24,7 @@
  */
 package org.hibernate.criterion;
 import java.io.Serializable;
+
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.TypedValue;

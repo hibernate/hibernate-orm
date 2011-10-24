@@ -27,25 +27,24 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Collections;
 
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-import org.hibernate.criterion.Projections;
-import org.hibernate.exception.SQLGrammarException;
-import org.hibernate.hql.spi.QueryTranslator;
-import org.hibernate.hql.spi.QueryTranslatorFactory;
-import org.hibernate.hql.internal.ast.QueryTranslatorImpl;
-import org.hibernate.hql.internal.ast.tree.SelectClause;
-import org.hibernate.hql.internal.classic.ClassicQueryTranslatorFactory;
-import org.hibernate.type.BigDecimalType;
-import org.hibernate.type.BigIntegerType;
-import org.hibernate.type.DoubleType;
-import org.hibernate.type.LongType;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.hibernate.Session;
+import org.hibernate.Transaction;
+import org.hibernate.criterion.Projections;
+import org.hibernate.exception.SQLGrammarException;
+import org.hibernate.hql.internal.ast.QueryTranslatorImpl;
+import org.hibernate.hql.internal.ast.tree.SelectClause;
+import org.hibernate.hql.internal.classic.ClassicQueryTranslatorFactory;
+import org.hibernate.hql.spi.QueryTranslator;
+import org.hibernate.hql.spi.QueryTranslatorFactory;
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.type.BigDecimalType;
+import org.hibernate.type.BigIntegerType;
+import org.hibernate.type.DoubleType;
+import org.hibernate.type.LongType;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;

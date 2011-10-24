@@ -24,6 +24,7 @@
 package org.hibernate.dialect;
 
 import java.sql.Types;
+
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.SQLFunctionTemplate;

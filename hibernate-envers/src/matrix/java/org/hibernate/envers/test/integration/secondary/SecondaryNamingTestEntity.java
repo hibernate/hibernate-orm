@@ -27,6 +27,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.SecondaryTable;
+
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.SecondaryAuditTable;
 

@@ -1,5 +1,7 @@
 package org.hibernate.envers.synchronization;
 
+import java.io.Serializable;
+
 import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.RevisionType;
@@ -7,8 +9,6 @@ import org.hibernate.envers.revisioninfo.RevisionInfoGenerator;
 import org.hibernate.envers.synchronization.work.AuditWorkUnit;
 import org.hibernate.envers.synchronization.work.PersistentCollectionChangeWorkUnit;
 import org.hibernate.envers.tools.Tools;
-
-import java.io.Serializable;
 
 /**
  * Notifies {@link RevisionInfoGenerator} about changes made in the current revision.

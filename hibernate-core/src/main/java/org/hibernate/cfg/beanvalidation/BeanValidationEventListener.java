@@ -32,19 +32,20 @@ import javax.validation.TraversableResolver;
 import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
-import org.hibernate.EntityMode;
-import org.hibernate.event.spi.PreDeleteEvent;
-import org.hibernate.event.spi.PreInsertEventListener;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.event.spi.PreDeleteEventListener;
-import org.hibernate.event.spi.PreInsertEvent;
-import org.hibernate.event.spi.PreUpdateEvent;
-import org.hibernate.event.spi.PreUpdateEventListener;
-import org.hibernate.persister.entity.EntityPersister;
 
 import org.jboss.logging.Logger;
+
+import org.hibernate.EntityMode;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.event.spi.PreDeleteEvent;
+import org.hibernate.event.spi.PreDeleteEventListener;
+import org.hibernate.event.spi.PreInsertEvent;
+import org.hibernate.event.spi.PreInsertEventListener;
+import org.hibernate.event.spi.PreUpdateEvent;
+import org.hibernate.event.spi.PreUpdateEventListener;
+import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * Event listener used to enable Bean Validation for insert/update/delete events.

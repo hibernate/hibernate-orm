@@ -30,6 +30,7 @@ import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
+
 import org.hibernate.HibernateException;
 
 /**

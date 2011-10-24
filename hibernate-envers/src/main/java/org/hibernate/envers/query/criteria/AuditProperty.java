@@ -24,6 +24,7 @@
 
 package org.hibernate.envers.query.criteria;
 import java.util.Collection;
+
 import org.hibernate.criterion.MatchMode;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.query.order.AuditOrder;

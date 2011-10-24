@@ -26,14 +26,15 @@ package org.hibernate.sql.ordering.antlr;
 
 import java.util.ArrayList;
 
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.dialect.function.SQLFunction;
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.sql.Template;
-import org.jboss.logging.Logger;
 import antlr.CommonAST;
 import antlr.TokenStream;
 import antlr.collections.AST;
+import org.jboss.logging.Logger;
+
+import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.sql.Template;
 
 /**
  * Extension of the Antlr-generated parser for the purpose of adding our custom parsing behavior.

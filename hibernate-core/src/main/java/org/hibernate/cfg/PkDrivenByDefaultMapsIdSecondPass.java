@@ -23,6 +23,7 @@
  */
 package org.hibernate.cfg;
 import java.util.Map;
+
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.annotations.TableBinder;

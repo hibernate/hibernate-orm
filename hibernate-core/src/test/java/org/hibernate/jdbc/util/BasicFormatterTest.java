@@ -25,10 +25,9 @@ package org.hibernate.jdbc.util;
 
 import java.util.StringTokenizer;
 
-import org.hibernate.engine.jdbc.internal.FormatStyle;
-
 import org.junit.Test;
 
+import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.assertEquals;

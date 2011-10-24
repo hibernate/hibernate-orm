@@ -24,6 +24,7 @@
 package org.hibernate.criterion;
 import java.util.Collections;
 import java.util.List;
+
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.function.SQLFunction;

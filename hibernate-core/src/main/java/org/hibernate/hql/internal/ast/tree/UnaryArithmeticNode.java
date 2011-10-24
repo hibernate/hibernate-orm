@@ -25,9 +25,10 @@
 
 //$Id: UnaryArithmeticNode.java 8407 2005-10-14 17:23:18Z steveebersole $
 package org.hibernate.hql.internal.ast.tree;
+import antlr.SemanticException;
+
 import org.hibernate.hql.internal.ast.util.ColumnHelper;
 import org.hibernate.type.Type;
-import antlr.SemanticException;
 
 public class UnaryArithmeticNode extends AbstractSelectExpression implements UnaryOperatorNode {
 

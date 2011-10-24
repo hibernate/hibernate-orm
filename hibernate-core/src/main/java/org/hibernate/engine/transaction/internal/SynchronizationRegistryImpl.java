@@ -26,9 +26,10 @@ package org.hibernate.engine.transaction.internal;
 import java.util.LinkedHashSet;
 import javax.transaction.Synchronization;
 
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.engine.transaction.spi.SynchronizationRegistry;
 import org.jboss.logging.Logger;
+
+import org.hibernate.engine.transaction.spi.SynchronizationRegistry;
+import org.hibernate.internal.CoreMessageLogger;
 
 /**
  * Manages a registry of {@link Synchronization Synchronizations}.

@@ -30,20 +30,22 @@ import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
+import org.jboss.logging.Logger;
+
 import org.hibernate.HibernateException;
+import org.hibernate.QueryException;
+import org.hibernate.action.internal.BulkOperationCleanupAction;
+import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.TypedValue;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.QueryException;
-import org.hibernate.action.internal.BulkOperationCleanupAction;
-import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.custom.sql.SQLCustomQuery;
 import org.hibernate.type.Type;
-import org.jboss.logging.Logger;
 
 /**
  * Defines a query execution plan for a native-SQL query.

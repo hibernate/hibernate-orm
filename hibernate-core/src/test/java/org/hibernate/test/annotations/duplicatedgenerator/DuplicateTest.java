@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.test.annotations.duplicatedgenerator;
-import junit.framework.TestCase;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -8,7 +7,6 @@ import org.hibernate.AnnotationException;
 import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.service.ServiceRegistry;
-
 import org.hibernate.testing.ServiceRegistryBuilder;
 
 /**

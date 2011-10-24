@@ -29,6 +29,7 @@ import java.io.Writer;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
 import org.dom4j.Attribute;
 import org.dom4j.Branch;
 import org.dom4j.CDATA;
@@ -44,6 +45,7 @@ import org.dom4j.QName;
 import org.dom4j.Text;
 import org.dom4j.Visitor;
 import org.dom4j.XPath;
+
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 

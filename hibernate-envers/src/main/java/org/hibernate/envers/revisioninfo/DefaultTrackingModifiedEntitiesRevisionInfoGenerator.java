@@ -1,5 +1,9 @@
 package org.hibernate.envers.revisioninfo;
 
+import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.hibernate.envers.DefaultTrackingModifiedEntitiesRevisionEntity;
 import org.hibernate.envers.ModifiedEntityNames;
 import org.hibernate.envers.RevisionListener;
@@ -8,10 +12,6 @@ import org.hibernate.envers.entities.PropertyData;
 import org.hibernate.envers.tools.reflection.ReflectionTools;
 import org.hibernate.property.Getter;
 import org.hibernate.property.Setter;
-
-import java.io.Serializable;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * Automatically adds entity names, that have been changed during current revision, to revision entity.

@@ -27,9 +27,9 @@ import java.sql.Connection;
 import java.sql.Statement;
 import java.util.Arrays;
 
-import org.hibernate.internal.CoreMessageLogger;
-
 import org.jboss.logging.Logger;
+
+import org.hibernate.internal.CoreMessageLogger;
 
 /**
  * Invocation handler for {@link java.sql.PreparedStatement} proxies

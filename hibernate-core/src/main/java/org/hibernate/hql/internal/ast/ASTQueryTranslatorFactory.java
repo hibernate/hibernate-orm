@@ -25,13 +25,13 @@
 package org.hibernate.hql.internal.ast;
 import java.util.Map;
 
+import org.jboss.logging.Logger;
+
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.hql.spi.FilterTranslator;
 import org.hibernate.hql.spi.QueryTranslator;
 import org.hibernate.hql.spi.QueryTranslatorFactory;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.hql.spi.FilterTranslator;
-
-import org.jboss.logging.Logger;
 
 /**
  * Generates translators which uses the Antlr-based parser to perform

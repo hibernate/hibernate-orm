@@ -1,13 +1,14 @@
 //$Id$
 package org.hibernate.test.annotations.cascade;
-import static javax.persistence.CascadeType.DETACH;
-import static javax.persistence.CascadeType.REMOVE;
 import java.util.Collection;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
+
+import static javax.persistence.CascadeType.DETACH;
+import static javax.persistence.CascadeType.REMOVE;
 
 /**
  * @author Emmanuel Bernard

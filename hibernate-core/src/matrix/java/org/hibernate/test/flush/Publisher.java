@@ -23,13 +23,13 @@
  */
 package org.hibernate.test.flush;
 
+import java.util.HashSet;
+import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
-import java.util.HashSet;
-import java.util.Set;
 
 import org.hibernate.annotations.GenericGenerator;
 

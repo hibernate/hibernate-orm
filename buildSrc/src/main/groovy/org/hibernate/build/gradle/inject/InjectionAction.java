@@ -50,7 +50,6 @@ import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.tasks.SourceSet;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

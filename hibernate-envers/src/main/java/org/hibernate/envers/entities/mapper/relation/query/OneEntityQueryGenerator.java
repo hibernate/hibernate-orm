@@ -23,6 +23,7 @@
  */
 package org.hibernate.envers.entities.mapper.relation.query;
 import java.util.Collections;
+
 import org.hibernate.Query;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.configuration.AuditEntitiesConfiguration;

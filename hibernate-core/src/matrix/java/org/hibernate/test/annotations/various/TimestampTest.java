@@ -23,15 +23,14 @@
  */
 package org.hibernate.test.annotations.various;
 
+import org.junit.Test;
+
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.type.DbTimestampType;
 import org.hibernate.type.TimestampType;
-
-import org.junit.Test;
-
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;

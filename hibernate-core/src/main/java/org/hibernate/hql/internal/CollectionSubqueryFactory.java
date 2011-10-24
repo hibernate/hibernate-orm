@@ -25,6 +25,7 @@
 package org.hibernate.hql.internal;
 
 import java.util.Map;
+
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.engine.internal.JoinSequence;

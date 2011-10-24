@@ -29,11 +29,13 @@ import java.math.BigInteger;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+
+import org.jboss.logging.Logger;
+
 import org.hibernate.HibernateException;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.Type;
-import org.jboss.logging.Logger;
 
 /**
  * Factory and helper methods for {@link IdentifierGenerator} framework.

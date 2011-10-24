@@ -24,12 +24,13 @@
 package org.hibernate.dialect;
 import java.sql.Types;
 
+import org.jboss.logging.Logger;
+
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.DecodeCaseFragment;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.OracleJoinFragment;
-import org.jboss.logging.Logger;
 
 /**
  * An SQL dialect for Oracle, compatible with Oracle 8.

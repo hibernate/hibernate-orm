@@ -27,6 +27,7 @@ import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.Embeddable;
 import javax.persistence.OneToMany;
+
 import org.hibernate.annotations.AccessType;
 
 /**

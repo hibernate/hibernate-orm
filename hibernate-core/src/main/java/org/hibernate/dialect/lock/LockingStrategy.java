@@ -23,6 +23,7 @@
  */
 package org.hibernate.dialect.lock;
 import java.io.Serializable;
+
 import org.hibernate.JDBCException;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.engine.spi.SessionImplementor;

@@ -24,16 +24,17 @@
 package org.hibernate.loader;
 import java.util.List;
 import java.util.Map;
+
 import org.hibernate.MappingException;
 import org.hibernate.engine.internal.JoinHelper;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.JoinType;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.EntityType;
-import org.hibernate.internal.util.collections.CollectionHelper;
 
 /**
  * Part of the Hibernate SQL rendering internals.  This class represents

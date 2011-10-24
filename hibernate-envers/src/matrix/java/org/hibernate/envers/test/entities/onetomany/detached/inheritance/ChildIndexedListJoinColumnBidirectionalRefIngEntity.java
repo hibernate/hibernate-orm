@@ -1,5 +1,6 @@
 package org.hibernate.envers.test.entities.onetomany.detached.inheritance;
 import javax.persistence.Entity;
+
 import org.hibernate.envers.Audited;
 
 /**

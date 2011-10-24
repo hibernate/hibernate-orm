@@ -23,11 +23,11 @@
  */
 package org.hibernate.metamodel.source.hbm;
 
+import org.hibernate.internal.jaxb.mapping.hbm.JaxbOneToManyElement;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.source.LocalBindingContext;
 import org.hibernate.metamodel.source.binder.OneToManyPluralAttributeElementSource;
 import org.hibernate.metamodel.source.binder.PluralAttributeElementNature;
-import org.hibernate.internal.jaxb.mapping.hbm.JaxbOneToManyElement;
 
 /**
  * @author Steve Ebersole

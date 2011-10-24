@@ -1,9 +1,9 @@
 package org.hibernate.envers.test.integration.inheritance.mixed.entities;
 
-import org.hibernate.envers.Audited;
-
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
+
+import org.hibernate.envers.Audited;
 
 @Audited
 @Entity

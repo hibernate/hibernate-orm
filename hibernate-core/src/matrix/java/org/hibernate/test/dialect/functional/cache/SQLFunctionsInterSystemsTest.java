@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.jboss.logging.Logger;
+import org.junit.Test;
 
 import org.hibernate.LockMode;
 import org.hibernate.Query;
@@ -45,16 +46,13 @@ import org.hibernate.Transaction;
 import org.hibernate.dialect.Cache71Dialect;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.jdbc.Work;
-
-import org.junit.Test;
-
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.test.legacy.Blobber;
 import org.hibernate.test.legacy.Broken;
 import org.hibernate.test.legacy.Fixed;
 import org.hibernate.test.legacy.Simple;
 import org.hibernate.test.legacy.Single;
+import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;

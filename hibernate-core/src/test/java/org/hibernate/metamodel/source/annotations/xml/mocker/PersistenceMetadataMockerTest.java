@@ -28,9 +28,10 @@ import javax.persistence.AccessType;
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.Index;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 import org.hibernate.metamodel.source.annotations.xml.PseudoJpaDotNames;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Strong Liu

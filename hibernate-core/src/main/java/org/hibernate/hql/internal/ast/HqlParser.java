@@ -28,15 +28,6 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringReader;
 
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.QueryException;
-import org.hibernate.hql.internal.antlr.HqlBaseParser;
-import org.hibernate.hql.internal.antlr.HqlTokenTypes;
-import org.hibernate.hql.internal.ast.util.ASTPrinter;
-import org.hibernate.hql.internal.ast.util.ASTUtil;
-import org.hibernate.internal.util.StringHelper;
-
-import org.jboss.logging.Logger;
 import antlr.ASTPair;
 import antlr.MismatchedTokenException;
 import antlr.RecognitionException;
@@ -44,6 +35,15 @@ import antlr.Token;
 import antlr.TokenStream;
 import antlr.TokenStreamException;
 import antlr.collections.AST;
+import org.jboss.logging.Logger;
+
+import org.hibernate.QueryException;
+import org.hibernate.hql.internal.antlr.HqlBaseParser;
+import org.hibernate.hql.internal.antlr.HqlTokenTypes;
+import org.hibernate.hql.internal.ast.util.ASTPrinter;
+import org.hibernate.hql.internal.ast.util.ASTUtil;
+import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.StringHelper;
 
 /**
  * Implements the semantic action methods defined in the HQL base parser to keep the grammar

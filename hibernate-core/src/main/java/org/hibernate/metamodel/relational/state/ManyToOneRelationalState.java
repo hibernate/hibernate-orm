@@ -23,8 +23,6 @@
  */
 package org.hibernate.metamodel.relational.state;
 
-import org.hibernate.metamodel.relational.state.ValueRelationalState;
-
 /**
  * @author Gail Badner
  */

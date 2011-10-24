@@ -24,10 +24,9 @@
 package org.hibernate.test.idgen.biginteger.increment;
 import java.math.BigInteger;
 
-import org.hibernate.Session;
-
 import org.junit.Test;
 
+import org.hibernate.Session;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;

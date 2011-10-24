@@ -25,6 +25,7 @@
 package org.hibernate.hql.internal.classic;
 import java.util.HashMap;
 import java.util.Map;
+
 import org.hibernate.QueryException;
 import org.hibernate.hql.spi.QueryTranslator;
 import org.hibernate.persister.entity.Queryable;

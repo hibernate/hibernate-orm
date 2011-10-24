@@ -1,5 +1,12 @@
 package org.hibernate.envers.test.integration.superclass.auditparents;
 
+import java.util.Set;
+import javax.persistence.EntityManager;
+import javax.persistence.MappedSuperclass;
+
+import org.junit.Assert;
+import org.junit.Test;
+
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.AbstractEntityTest;
@@ -8,12 +15,6 @@ import org.hibernate.envers.test.entities.StrIntTestEntity;
 import org.hibernate.envers.test.tools.TestTools;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
-import org.junit.Assert;
-import org.junit.Test;
-
-import javax.persistence.EntityManager;
-import javax.persistence.MappedSuperclass;
-import java.util.Set;
 
 /**
  * Tests mapping of child entity that declares all of its ancestors as audited with {@link Audited#auditParents()} property.

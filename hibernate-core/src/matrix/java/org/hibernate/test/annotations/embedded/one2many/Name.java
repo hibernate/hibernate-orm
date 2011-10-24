@@ -23,6 +23,7 @@
  */
 package org.hibernate.test.annotations.embedded.one2many;
 import javax.persistence.Embeddable;
+
 import org.hibernate.annotations.AccessType;
 
 /**

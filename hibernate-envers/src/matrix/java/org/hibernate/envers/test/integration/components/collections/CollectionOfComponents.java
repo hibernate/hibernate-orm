@@ -23,17 +23,18 @@
  */
 package org.hibernate.envers.test.integration.components.collections;
 
+import java.util.Arrays;
+import java.util.Set;
+import javax.persistence.EntityManager;
+
+import org.junit.Ignore;
+import org.junit.Test;
+
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.components.Component1;
 import org.hibernate.envers.test.entities.components.ComponentSetTestEntity;
-import org.junit.Ignore;
-import org.junit.Test;
-
-import javax.persistence.EntityManager;
-import java.util.Arrays;
-import java.util.Set;
 
 /**
  * TODO: enable and implement

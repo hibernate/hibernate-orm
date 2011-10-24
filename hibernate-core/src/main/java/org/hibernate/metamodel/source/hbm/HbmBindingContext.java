@@ -25,11 +25,11 @@ package org.hibernate.metamodel.source.hbm;
 
 import java.util.List;
 
-import org.hibernate.metamodel.source.LocalBindingContext;
-import org.hibernate.metamodel.source.BindingContext;
-import org.hibernate.metamodel.source.MetaAttributeContext;
 import org.hibernate.internal.jaxb.mapping.hbm.EntityElement;
 import org.hibernate.internal.jaxb.mapping.hbm.JaxbFetchProfileElement;
+import org.hibernate.metamodel.source.BindingContext;
+import org.hibernate.metamodel.source.LocalBindingContext;
+import org.hibernate.metamodel.source.MetaAttributeContext;
 
 /**
  * Defines features specific to the {@code hbm.xml} variety of a {@link BindingContext}

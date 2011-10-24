@@ -24,6 +24,7 @@
 package org.hibernate.engine.jdbc.internal.proxy;
 import java.sql.ResultSet;
 import java.sql.Statement;
+
 import org.hibernate.engine.jdbc.spi.JdbcResourceRegistry;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 

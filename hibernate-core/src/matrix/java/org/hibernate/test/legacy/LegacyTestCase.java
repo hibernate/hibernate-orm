@@ -23,6 +23,8 @@
  */
 package org.hibernate.test.legacy;
 
+import org.junit.Before;
+
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
@@ -31,11 +33,8 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.hql.internal.classic.ClassicQueryTranslatorFactory;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.type.Type;
-
-import org.junit.Before;
-
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.type.Type;
 
 /**
  * @author Steve Ebersole

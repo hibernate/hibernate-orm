@@ -25,6 +25,7 @@
 package org.hibernate.transform;
 import java.lang.reflect.Constructor;
 import java.util.List;
+
 import org.hibernate.QueryException;
 
 /**

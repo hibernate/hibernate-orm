@@ -1,10 +1,10 @@
 package org.hibernate.envers.test;
 
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-
 import java.util.Arrays;
 import java.util.List;
+
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 /**
  * An abstract Envers test which runs the tests using two audit strategies.

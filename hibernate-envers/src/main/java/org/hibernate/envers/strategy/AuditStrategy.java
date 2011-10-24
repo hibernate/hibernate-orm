@@ -1,5 +1,6 @@
 package org.hibernate.envers.strategy;
 import java.io.Serializable;
+
 import org.hibernate.Session;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.configuration.GlobalConfiguration;

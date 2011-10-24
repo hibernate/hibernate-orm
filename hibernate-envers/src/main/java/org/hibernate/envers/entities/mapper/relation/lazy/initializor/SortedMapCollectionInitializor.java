@@ -23,15 +23,15 @@
  */
 package org.hibernate.envers.entities.mapper.relation.lazy.initializor;
 
+import java.lang.reflect.InvocationTargetException;
+import java.util.Comparator;
+import java.util.SortedMap;
+
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.entities.mapper.relation.MiddleComponentData;
 import org.hibernate.envers.entities.mapper.relation.query.RelationQueryGenerator;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.reader.AuditReaderImplementor;
-
-import java.lang.reflect.InvocationTargetException;
-import java.util.Comparator;
-import java.util.SortedMap;
 
 /**
  * Initializes SortedMap collection with proper Comparator

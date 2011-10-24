@@ -1,12 +1,14 @@
 //$Id$
 package org.hibernate.test.annotations;
 import org.junit.Test;
-import static org.junit.Assert.*;
+
 import org.hibernate.AnnotationException;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.testing.ServiceRegistryBuilder;
+
+import static org.junit.Assert.fail;
 
 /**
  * @author Emmanuel Bernard

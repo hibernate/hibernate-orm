@@ -29,8 +29,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 
-import java.util.Set;
-
 import org.hibernate.annotations.GenericGenerator;
 
 /**

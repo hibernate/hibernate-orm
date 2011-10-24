@@ -27,14 +27,16 @@ package org.hibernate.hql.internal.ast.tree;
 import java.util.List;
 import java.util.Map;
 
+import org.jboss.logging.Logger;
+
+import org.hibernate.MappingException;
+import org.hibernate.QueryException;
 import org.hibernate.engine.internal.JoinSequence;
 import org.hibernate.hql.internal.CollectionProperties;
 import org.hibernate.hql.internal.CollectionSubqueryFactory;
 import org.hibernate.hql.internal.NameGenerator;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.MappingException;
-import org.hibernate.QueryException;
 import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.collection.CollectionPropertyMapping;
@@ -46,7 +48,6 @@ import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
-import org.jboss.logging.Logger;
 
 /**
  * Delegate that handles the type and join sequence information for a FromElement.

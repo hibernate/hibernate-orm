@@ -1,16 +1,17 @@
 package org.hibernate.envers.test.integration.proxy;
 
+import java.net.URISyntaxException;
+import java.util.Arrays;
+import java.util.List;
+
+import org.junit.Assert;
+import org.junit.Test;
+
 import org.hibernate.MappingException;
 import org.hibernate.envers.test.AbstractSessionTest;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.testing.TestForIssue;
-import org.junit.Assert;
-import org.junit.Test;
-
-import java.net.URISyntaxException;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)

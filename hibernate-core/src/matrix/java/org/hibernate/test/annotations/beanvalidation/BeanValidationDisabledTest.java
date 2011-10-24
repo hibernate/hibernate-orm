@@ -23,17 +23,16 @@
  */
 package org.hibernate.test.annotations.beanvalidation;
 
-import javax.validation.ConstraintViolationException;
 import java.math.BigDecimal;
+import javax.validation.ConstraintViolationException;
+
+import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
-
-import org.junit.Test;
-
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertTrue;

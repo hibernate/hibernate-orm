@@ -23,8 +23,6 @@
  */
 package org.hibernate.test.annotations.inheritance.joined;
 
-import java.math.BigInteger;
-
 import org.junit.Test;
 
 import org.hibernate.Session;

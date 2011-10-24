@@ -26,11 +26,10 @@ package org.hibernate.test.annotations.derivedidentities.e1.b.specjmapid;
 import java.math.BigDecimal;
 import java.util.List;
 
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-
 import org.junit.Test;
 
+import org.hibernate.Session;
+import org.hibernate.Transaction;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;

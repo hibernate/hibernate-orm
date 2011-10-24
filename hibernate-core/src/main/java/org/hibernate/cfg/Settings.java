@@ -24,6 +24,7 @@
 package org.hibernate.cfg;
 
 import java.util.Map;
+
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.EntityMode;
 import org.hibernate.MultiTenancyStrategy;

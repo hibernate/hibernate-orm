@@ -26,6 +26,7 @@ package org.hibernate.hql.internal.classic;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+
 import org.hibernate.QueryException;
 
 /**

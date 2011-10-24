@@ -23,6 +23,7 @@
  */
 package org.hibernate.mapping;
 import java.util.Map;
+
 import org.hibernate.MappingException;
 import org.hibernate.cfg.Mappings;
 import org.hibernate.type.MetaType;

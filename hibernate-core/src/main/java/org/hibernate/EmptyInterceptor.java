@@ -25,6 +25,7 @@
 package org.hibernate;
 import java.io.Serializable;
 import java.util.Iterator;
+
 import org.hibernate.type.Type;
 
 /**

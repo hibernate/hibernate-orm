@@ -25,8 +25,6 @@ package org.hibernate.metamodel.binding;
 
 import java.util.Comparator;
 
-import org.hibernate.engine.FetchTiming;
-import org.hibernate.metamodel.domain.Attribute;
 import org.hibernate.metamodel.domain.PluralAttribute;
 import org.hibernate.metamodel.relational.TableSpecification;
 import org.hibernate.persister.collection.CollectionPersister;

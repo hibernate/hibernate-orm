@@ -1,5 +1,12 @@
 package org.hibernate.envers.test.integration.reventity.trackmodifiedentities;
 
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import javax.persistence.EntityManager;
+
+import org.junit.Test;
+
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.CrossTypeRevisionChangesReader;
 import org.hibernate.envers.RevisionType;
@@ -11,12 +18,6 @@ import org.hibernate.envers.test.tools.TestTools;
 import org.hibernate.envers.tools.Pair;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
-import org.junit.Test;
-
-import javax.persistence.EntityManager;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Tests proper behavior of tracking modified entity names when {@code org.hibernate.envers.track_entities_changed_in_revision}

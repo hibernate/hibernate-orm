@@ -23,9 +23,9 @@
  */
 package org.hibernate.test.common;
 
-import org.hibernate.engine.jdbc.spi.ConnectionObserver;
-
 import java.sql.Connection;
+
+import org.hibernate.engine.jdbc.spi.ConnectionObserver;
 
 /**
  * @author Steve Ebersole

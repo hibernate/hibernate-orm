@@ -24,6 +24,7 @@
 package org.hibernate.cfg;
 
 import java.util.Iterator;
+
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;

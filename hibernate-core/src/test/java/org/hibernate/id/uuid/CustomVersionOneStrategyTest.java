@@ -23,13 +23,14 @@
  */
 package org.hibernate.id.uuid;
 
-import org.junit.Test;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-
 import java.util.UUID;
 
+import org.junit.Test;
+
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 /**
  * @author Steve Ebersole

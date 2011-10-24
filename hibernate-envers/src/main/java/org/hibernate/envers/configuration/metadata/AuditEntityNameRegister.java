@@ -1,6 +1,7 @@
 package org.hibernate.envers.configuration.metadata;
 import java.util.HashSet;
 import java.util.Set;
+
 import org.hibernate.MappingException;
 
 /**

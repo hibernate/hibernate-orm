@@ -32,9 +32,6 @@ import java.sql.Statement;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.JDBCException;
@@ -43,6 +40,10 @@ import org.hibernate.engine.jdbc.internal.proxy.ProxyBuilder;
 import org.hibernate.test.common.BasicTestingJdbcServiceImpl;
 import org.hibernate.test.common.JdbcConnectionAccessImpl;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author Steve Ebersole

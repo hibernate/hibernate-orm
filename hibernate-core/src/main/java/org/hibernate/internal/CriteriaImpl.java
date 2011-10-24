@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
 import org.hibernate.CacheMode;
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
@@ -42,9 +43,9 @@ import org.hibernate.criterion.NaturalIdentifier;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projection;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.sql.JoinType;
 import org.hibernate.transform.ResultTransformer;
-import org.hibernate.internal.util.StringHelper;
 
 /**
  * Implementation of the <tt>Criteria</tt> interface

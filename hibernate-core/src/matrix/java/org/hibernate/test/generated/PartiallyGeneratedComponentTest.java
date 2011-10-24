@@ -23,17 +23,16 @@
  */
 package org.hibernate.test.generated;
 
+import org.junit.Test;
+
 import org.hibernate.Session;
 import org.hibernate.dialect.Oracle9iDialect;
+import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-
-import org.junit.Test;
-
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**
  * {@inheritDoc}

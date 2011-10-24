@@ -3,6 +3,7 @@ package org.hibernate.test.annotations.collectionelement;
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.persistence.ManyToOne;
+
 import org.hibernate.test.annotations.Country;
 
 /**

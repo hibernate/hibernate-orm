@@ -9,8 +9,8 @@ import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 
-import org.hibernate.metamodel.source.annotations.xml.PseudoJpaDotNames;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbPersistenceUnitDefaults;
+import org.hibernate.metamodel.source.annotations.xml.PseudoJpaDotNames;
 
 /**
  * @author Strong Liu

@@ -26,6 +26,7 @@ package org.hibernate.envers.test.integration.inheritance.joined.childrelation;
 import javax.persistence.Basic;
 import javax.persistence.Entity;
 import javax.persistence.ManyToOne;
+
 import org.hibernate.envers.Audited;
 
 /**

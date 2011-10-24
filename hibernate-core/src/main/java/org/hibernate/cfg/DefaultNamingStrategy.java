@@ -24,6 +24,7 @@
 package org.hibernate.cfg;
 
 import java.io.Serializable;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.internal.util.StringHelper;
 

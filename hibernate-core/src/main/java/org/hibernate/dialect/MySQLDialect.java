@@ -26,11 +26,12 @@ import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.StandardSQLFunction;
-import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.type.StandardBasicTypes;
 
 /**
  * An SQL dialect for MySQL (prior to 5.x).

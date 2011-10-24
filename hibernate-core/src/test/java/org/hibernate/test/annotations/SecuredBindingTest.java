@@ -2,7 +2,7 @@
 package org.hibernate.test.annotations;
 
 import java.util.Properties;
-import junit.framework.TestCase;
+
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -11,7 +11,6 @@ import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.service.ServiceRegistry;
-
 import org.hibernate.testing.ServiceRegistryBuilder;
 
 /**

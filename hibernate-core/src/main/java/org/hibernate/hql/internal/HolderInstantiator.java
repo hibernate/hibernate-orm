@@ -24,6 +24,7 @@
  */
 package org.hibernate.hql.internal;
 import java.lang.reflect.Constructor;
+
 import org.hibernate.transform.AliasToBeanConstructorResultTransformer;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.transform.Transformers;

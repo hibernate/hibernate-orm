@@ -27,7 +27,6 @@ import java.io.Serializable;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
-
 import org.jboss.logging.Logger;
 
 import org.hibernate.MappingException;

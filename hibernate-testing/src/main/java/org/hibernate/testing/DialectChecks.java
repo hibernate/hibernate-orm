@@ -148,7 +148,7 @@ abstract public class DialectChecks {
 
 	public static class SupportsExistsInSelectCheck implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			return ! dialect.supportsExistsInSelect();
+			return dialect.supportsExistsInSelect();
 		}
 	}
 }

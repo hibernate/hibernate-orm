@@ -50,6 +50,7 @@ import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.criterion.Subqueries;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.exception.SQLGrammarException;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.test.hql.Animal;
@@ -143,7 +144,7 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 		session.close();
 	}
-	
+
 	@Test
 	public void testSubselect() {
 		Session session = openSession();
@@ -212,7 +213,8 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 
 		dc4.getExecutableCriteria( session ).list();
 
-		dc4.getExecutableCriteria( session ).addOrder( Order.asc( "stname" ) ).list();
+		// SQL Server doesn't normally support ORDER BY in subqueries...
+		if (!(getDialect() instanceof SQLServerDialect)) dc4.getExecutableCriteria(session).addOrder(Order.asc("stname")).list();
 
 		session.createCriteria(Enrolment.class, "e")
 			.add( Subqueries.eq("Gavin King", dc4) )
@@ -1583,7 +1585,7 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 		session.close();
 	}
-	
+
 	@Test
 	public void testAliasJoinCriterion() {
 		Session session = openSession();
@@ -1704,10 +1706,10 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 		assertEquals( 2, course.getCrossListedAs().size() );
 
 		session.delete(course);
-		
+
 		t.commit();
 		session.close();
-		
+
 	}
 
         @Test
@@ -1726,14 +1728,14 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 		addr.setState("NY");
 		addr.setZip("10016");
 		addresses.put("HOME", addr);
-		
+
 		addr = new StudentAddress();
 		addr.setLine1("202 Spring St.");
 		addr.setCity("Springfield");
 		addr.setState("MA");
 		addr.setZip("99999");
 		addresses.put("SCHOOL", addr);
-	       
+
 		gavin.setAddresses(addresses);
 		session.persist(gavin);
 
@@ -1768,10 +1770,10 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 
 		session.delete(gavin);
 		session.delete(xam);
-		
+
 		t.commit();
 		session.close();
-		
+
 	}
 }
 

@@ -47,6 +47,12 @@ This feature is disabled by default, to enable it, you need system property 'hib
 for example, if you want to run matrix test on postgresql84, default DB profile, you can 
 './gradlew clean test matrix_postgresql84 -Dhibernate-matrix-dballocation=postgresql84'
 
+some DBs need we tweak url with some configurations after get it from DB allocator, so, we can use this system property:
+"hibernate-matrix-dballocation-url-postfix-${dbname} = configurations"
+for example:
+
+-Dhibernate-matrix-dballocation-url-postfix-sybase155="?SQLINITSTRING=set quoted_identifier on&amp;DYNAMIC_PREPARE=true"
+
 what does this command do actually?
 1. test
 run 'src/test/java' on default H2, test results in 'target/test-results'

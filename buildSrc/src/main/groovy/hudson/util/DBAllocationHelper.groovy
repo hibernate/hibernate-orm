@@ -40,6 +40,7 @@ public class DBAllocationHelper {
     private static final String URL_PROP = "hibernate.connection.url";
     private static final String USERNAME_PROP = "hibernate.connection.username";
     private static final String PASSWORD_PROP = "hibernate.connection.password";
+    private static final String DB_ALLOCATION_URL_POSTFIX = "hibernate-matrix-dballocation-url-postfix";
     //DBAllocator supports the following DBs
     private static def supportedDB = ["oracle9i", "oracle10g", "oracle11gR1", "oracle11gR2",
             "oracle11gR2RAC", "oracle11gR1RAC",
@@ -64,7 +65,7 @@ public class DBAllocationHelper {
                     Properties prop = db.properties
                     log.lifecycle("DBAllocating finished for DB[${node.name}], uuid is [${prop['uuid']}]")
                     map[DRIVER_PROP] = prop["db.jdbc_class"]
-                    map[URL_PROP] = prop["db.jdbc_url"]
+                    map[URL_PROP] = prop["db.jdbc_url"] + getURLPostfix(node.name)
                     map[USERNAME_PROP] = prop["db.username"]
                     map[PASSWORD_PROP] = prop["db.password"]
                     map["uuid"] = prop["uuid"];
@@ -77,6 +78,22 @@ public class DBAllocationHelper {
 
         }
         return cache.get(node);
+    }
+
+    private static String getURLPostfix(String dbName) {
+        for ( String key: System.properties ) {
+            if ( key.startsWith(DB_ALLOCATION_URL_POSTFIX) ) {
+                String db = key.substring(DB_ALLOCATION_URL_POSTFIX.length() + 1, key.length())
+                if ( db.equalsIgnoreCase(dbName) ) {
+                    String postfix = System.properties[key];
+                    log.debug("found URL postfix[%s] for DB[%s]", postfix, db );
+                    return postfix;
+                }
+                else {
+                    continue;
+                }
+            }
+        }
     }
     /**
      * use -Dhibernate-matrix-dballocation=all to enable DBAllocation for all matrix node

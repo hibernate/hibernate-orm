@@ -38,11 +38,13 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.stat.Statistics;
 import org.hibernate.test.annotations.A320;
 import org.hibernate.test.annotations.A320b;
 import org.hibernate.test.annotations.Plane;
 import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -58,7 +60,9 @@ import static org.junit.Assert.fail;
  * @author Emmanuel Bernard
  */
 public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
-	@Test
+
+    @Test
+    @SkipForDialect(value = {SQLServerDialect.class})
 	public void testNativeQueryWithFormulaAttribute() {
 		String sql = "select t.table_name as {t.tableName}, sysdate() as {t.daysOld} from ALL_TABLES t  where t.table_name = 'AUDIT_ACTIONS' ";
 		String sql2 = "select table_name as t_name, sysdate() as t_time from ALL_TABLES   where table_name = 'AUDIT_ACTIONS' ";
@@ -72,7 +76,24 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 	}
+
 	@Test
+	@RequiresDialect(value = {SQLServerDialect.class})
+    public void testNativeQueryWithFormulaAttributeSqlServer() {
+        String sql = "select t.table_name as {t.tableName}, getdate() as {t.daysOld} from ALL_TABLES t  where t.table_name = 'AUDIT_ACTIONS' ";
+        String sql2 = "select table_name as t_name, getdate() as t_time from ALL_TABLES   where table_name = 'AUDIT_ACTIONS' ";
+        Session s = openSession();
+        s.beginTransaction();
+        s.createSQLQuery( sql ).addEntity( "t", AllTables.class ).list();
+        s.createSQLQuery( sql2 ).setResultSetMapping( "all" ).list();
+        SQLQuery q = s.createSQLQuery( sql2 );
+        q.addRoot( "t", AllTables.class ).addProperty( "tableName", "t_name" ).addProperty( "daysOld", "t_time" );
+        q.list();
+        s.getTransaction().commit();
+        s.close();
+    }
+
+    @Test
 	@FailureExpected( jiraKey = "HHH-2225")
 	public void testNativeQueryWithFormulaAttributeWithoutAlias() {
 		String sql = "select table_name , sysdate() from all_tables  where table_name = 'AUDIT_ACTIONS' ";
@@ -172,13 +193,13 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 		s.close();
 	}
 
-	
+
 	/**
 	 * We are testing 2 things here:
 	 * 1. The query 'night.olderThan' is defined in a MappedSuperClass - Darkness.
-	 *    We are verifying that queries defined in a MappedSuperClass are processed.  
-	 * 2. There are 2 Entity classes that extend from Darkness - Night and Twilight. 
-	 *    We are verifying that this does not cause any issues.eg. Double processing of the 
+	 *    We are verifying that queries defined in a MappedSuperClass are processed.
+	 * 2. There are 2 Entity classes that extend from Darkness - Night and Twilight.
+	 *    We are verifying that this does not cause any issues.eg. Double processing of the
 	 *    MappedSuperClass
 	 */
 	@Test
@@ -192,7 +213,7 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 		}
 		s.close();
 	}
-	
+
 	@Test
 	public void testSQLQueryWithManyToOne() {
 		Night n = new Night();

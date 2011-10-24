@@ -2,24 +2,24 @@
   * Hibernate, Relational Persistence for Idiomatic Java
   *
   * Copyright (c) 2009, Red Hat, Inc. and/or its affiliates or third-
-  * party contributors as indicated by the @author tags or express 
-  * copyright attribution statements applied by the authors.  
-  * All third-party contributions are distributed under license by 
+  * party contributors as indicated by the @author tags or express
+  * copyright attribution statements applied by the authors.
+  * All third-party contributions are distributed under license by
   * Red Hat, Inc.
   *
-  * This copyrighted material is made available to anyone wishing to 
-  * use, modify, copy, or redistribute it subject to the terms and 
-  * conditions of the GNU Lesser General Public License, as published 
+  * This copyrighted material is made available to anyone wishing to
+  * use, modify, copy, or redistribute it subject to the terms and
+  * conditions of the GNU Lesser General Public License, as published
   * by the Free Software Foundation.
   *
   * This program is distributed in the hope that it will be useful,
-  * but WITHOUT ANY WARRANTY; without even the implied warranty of 
-  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU 
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
   * Lesser General Public License for more details.
   *
-  * You should have received a copy of the GNU Lesser General Public 
+  * You should have received a copy of the GNU Lesser General Public
   * License along with this distribution; if not, write to:
-  * 
+  *
   * Free Software Foundation, Inc.
   * 51 Franklin Street, Fifth Floor
   * Boston, MA  02110-1301  USA
@@ -31,6 +31,8 @@ import org.junit.Test;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.dialect.SQLServer2005Dialect;
+import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -115,7 +117,7 @@ public class ManyToOneWithFormulaTest extends BaseCoreFunctionalTestCase {
 	public void testReferencedColumnNameBelongsToEmbeddedIdOfReferencedEntity() throws Exception {
 		Session session = openSession();
 		Transaction tx = session.beginTransaction();
-		
+
 		Integer companyCode = 10;
 		Integer mfgCode = 100;
 		String contractNumber = "NSAR97841";
@@ -126,7 +128,7 @@ public class ManyToOneWithFormulaTest extends BaseCoreFunctionalTestCase {
 
 		Model model = new Model(new ModelId(companyCode, mfgCode, "FOCUS"),
 				"FORD FOCUS");
- 
+
 		session.persist(manufacturer);
 		session.persist(model);
 
@@ -149,29 +151,29 @@ public class ManyToOneWithFormulaTest extends BaseCoreFunctionalTestCase {
 		tx.commit();
 		session.close();
 	}
-	
+
 	@Test
-	@SkipForDialect(value = { HSQLDialect.class }, comment = "The used join conditions does not work in HSQLDB. See HHH-4497")
+	@SkipForDialect(value = { HSQLDialect.class, SQLServer2005Dialect.class }, comment = "The used join conditions does not work in HSQLDB. See HHH-4497")
 	public void testManyToOneFromNonPkToNonPk() throws Exception {
 		// also tests usage of the stand-alone @JoinFormula annotation (i.e. not wrapped within @JoinColumnsOrFormulas)
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
-		
+
         Product kit = new Product();
         kit.id = 1;
         kit.productIdnf = "KIT";
         kit.description = "Kit";
         s.persist(kit);
-        
+
         Product kitkat = new Product();
         kitkat.id = 2;
         kitkat.productIdnf = "KIT_KAT";
         kitkat.description = "Chocolate";
         s.persist(kitkat);
-        
+
         s.flush();
-        s.clear();    
-        
+        s.clear();
+
         kit = (Product) s.get(Product.class, 1);
         kitkat = (Product) s.get(Product.class, 2);
         System.out.println(kitkat.description);
@@ -180,10 +182,45 @@ public class ManyToOneWithFormulaTest extends BaseCoreFunctionalTestCase {
         assertEquals(kit.productIdnf, kitkat.getProductFamily().productIdnf);
         assertEquals("KIT_KAT", kitkat.productIdnf.trim());
         assertEquals("Chocolate", kitkat.description.trim());
-                
+
         tx.rollback();
 		s.close();
-    }    
+    }
+
+    @Test
+    @RequiresDialect(value = {SQLServer2005Dialect.class})
+    public void testManyToOneFromNonPkToNonPkSqlServer() throws Exception {
+        // also tests usage of the stand-alone @JoinFormula annotation (i.e. not wrapped within @JoinColumnsOrFormulas)
+        Session s = openSession();
+        Transaction tx = s.beginTransaction();
+
+        ProductSqlServer kit = new ProductSqlServer();
+        kit.id = 1;
+        kit.productIdnf = "KIT";
+        kit.description = "Kit";
+        s.persist(kit);
+
+        ProductSqlServer kitkat = new ProductSqlServer();
+        kitkat.id = 2;
+        kitkat.productIdnf = "KIT_KAT";
+        kitkat.description = "Chocolate";
+        s.persist(kitkat);
+
+        s.flush();
+        s.clear();
+
+        kit = (ProductSqlServer) s.get(ProductSqlServer.class, 1);
+        kitkat = (ProductSqlServer) s.get(ProductSqlServer.class, 2);
+        System.out.println(kitkat.description);
+        assertNotNull(kitkat);
+        assertEquals(kit, kitkat.getProductFamily());
+        assertEquals(kit.productIdnf, kitkat.getProductFamily().productIdnf);
+        assertEquals("KIT_KAT", kitkat.productIdnf.trim());
+        assertEquals("Chocolate", kitkat.description.trim());
+
+        tx.rollback();
+        s.close();
+    }
 
 	@Override
 	protected java.lang.Class<?>[] getAnnotatedClasses() {
@@ -200,7 +237,8 @@ public class ManyToOneWithFormulaTest extends BaseCoreFunctionalTestCase {
 				ModelId.class,
 				Manufacturer.class,
 				ManufacturerId.class,
-				Product.class
+				Product.class,
+                ProductSqlServer.class
 		};
 	}
 

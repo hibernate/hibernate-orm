@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.join;
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Iterator;
@@ -181,12 +182,14 @@ public class JoinTest extends BaseCoreFunctionalTestCase {
 		s.flush();
 		
 		// Test value conversion during insert
-		Double heightViaSql = (Double)s.createSQLQuery("select height_centimeters from person where name='Emmanuel'").uniqueResult();
-		assertEquals(HEIGHT_CENTIMETERS, heightViaSql, 0.01d);
-		Double expiryViaSql = (Double)s.createSQLQuery("select pwd_expiry_weeks from t_user where person_id=?")
+		// Oracle returns BigDecimaal while other dialects return Double;
+		// casting to Number so it works on all dialects
+		Number heightViaSql = (Number)s.createSQLQuery("select height_centimeters from person where name='Emmanuel'").uniqueResult();
+		assertEquals(HEIGHT_CENTIMETERS, heightViaSql.doubleValue(), 0.01d);
+		Number expiryViaSql = (Number)s.createSQLQuery("select pwd_expiry_weeks from t_user where person_id=?")
 			.setLong(0, u.getId())
 			.uniqueResult();
-		assertEquals(PASSWORD_EXPIRY_WEEKS, expiryViaSql, 0.01d);
+		assertEquals(PASSWORD_EXPIRY_WEEKS, expiryViaSql.doubleValue(), 0.01d);
 		
 		// Test projection
 		Double heightViaHql = (Double)s.createQuery("select p.heightInches from Person p where p.name = 'Emmanuel'").uniqueResult();
@@ -220,12 +223,12 @@ public class JoinTest extends BaseCoreFunctionalTestCase {
 		p.setHeightInches(1);
 		u.setPasswordExpiryDays(7d);
 		s.flush();
-		heightViaSql = (Double)s.createSQLQuery("select height_centimeters from person where name='Emmanuel'").uniqueResult();
-		assertEquals(2.54d, heightViaSql, 0.01d);
-		expiryViaSql = (Double)s.createSQLQuery("select pwd_expiry_weeks from t_user where person_id=?")
+		heightViaSql = (Number)s.createSQLQuery("select height_centimeters from person where name='Emmanuel'").uniqueResult();
+		assertEquals(2.54d, heightViaSql.doubleValue(), 0.01d);
+		expiryViaSql = (Number)s.createSQLQuery("select pwd_expiry_weeks from t_user where person_id=?")
 			.setLong(0, u.getId())
 			.uniqueResult();
-		assertEquals(1d, expiryViaSql, 0.01d);
+		assertEquals(1d, expiryViaSql.doubleValue(), 0.01d);
 		
 		s.delete(p);
 		s.delete(u);

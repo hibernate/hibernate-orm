@@ -50,6 +50,7 @@ import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.criterion.Subqueries;
+import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.exception.SQLGrammarException;
 import org.hibernate.internal.util.SerializationHelper;
@@ -213,8 +214,11 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 
 		dc4.getExecutableCriteria( session ).list();
 
-		// SQL Server doesn't normally support ORDER BY in subqueries...
-		if (!(getDialect() instanceof SQLServerDialect)) dc4.getExecutableCriteria(session).addOrder(Order.asc("stname")).list();
+		// SQL Server and Oracle doesn't normally support ORDER BY in subqueries...
+		if ( !( getDialect() instanceof SQLServerDialect ) &&
+				! ( getDialect() instanceof Oracle8iDialect ) ) {
+			dc4.getExecutableCriteria(session).addOrder(Order.asc("stname")).list();
+		}
 
 		session.createCriteria(Enrolment.class, "e")
 			.add( Subqueries.eq("Gavin King", dc4) )

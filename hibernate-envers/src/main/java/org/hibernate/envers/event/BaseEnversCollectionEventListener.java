@@ -231,7 +231,7 @@ public abstract class BaseEnversCollectionEventListener extends BaseEnversEventL
                 auditProcess.addWorkUnit(
 						new CollectionChangeWorkUnit(
 								event.getSession(),
-								relatedEntityName,
+								event.getSession().bestGuessEntityName(relatedObj),
 								getAuditConfiguration(),
 								relatedId,
 								relatedObj

@@ -81,7 +81,7 @@ public class DBAllocationHelper {
     }
 
     private static String getURLPostfix(String dbName) {
-        for ( String key: System.properties ) {
+        for ( String key: System.properties.keySet() ) {
             if ( key.startsWith(DB_ALLOCATION_URL_POSTFIX) ) {
                 String db = key.substring(DB_ALLOCATION_URL_POSTFIX.length() + 1, key.length())
                 if ( db.equalsIgnoreCase(dbName) ) {
@@ -94,6 +94,7 @@ public class DBAllocationHelper {
                 }
             }
         }
+        return ""
     }
     /**
      * use -Dhibernate-matrix-dballocation=all to enable DBAllocation for all matrix node

@@ -35,6 +35,7 @@ class DBAllocation {
     private UUID = ""
     private ant
     private File dbConfigFile;
+    private File tmpFile;
     private String requestee;
 
     def DBAllocation(dbinstallPath) {
@@ -45,6 +46,7 @@ class DBAllocation {
         this.ant = ant;
         this.dbinstallPath = dbinstallPath;
         this.dbConfigFile = new File(dbinstallPath, outPropsFileName);
+        this.tmpFile = new File(dbinstallPath, "tmpfile")
         if ( System.properties.containsKey("hibernate-matrix-dballocation-requestee") )
             requestee = System.properties["hibernate-matrix-dballocation-requestee"]
         else
@@ -87,7 +89,7 @@ class DBAllocation {
     def release(UUID) {
         println 'De-allocating DB...'
         def allocatorUrl = DB_ALLOCATOR_URL + "?operation=dealloc&uuid=$UUID"
-        ant.get(src: allocatorUrl, dest: "/tmp/.tmpfile")
+        ant.get(src: allocatorUrl, dest: tmpFile.absolutePath)
     }
 
     def clean() {
@@ -97,7 +99,7 @@ class DBAllocation {
     def clean(UUID) {
         println 'Cleaning DB...'
         def allocatorUrl = DB_ALLOCATOR_URL + "?operation=erase&uuid=$UUID"
-        ant.get(src: allocatorUrl, dest: "/tmp/.tmpfile")
+        ant.get(src: allocatorUrl, dest: tmpFile.absolutePath)
     }
 
     def reallocate(newExpiry) {
@@ -107,7 +109,7 @@ class DBAllocation {
     def reallocate(UUID, newExpiry) {
         println 'Re-allocating DB...'
         def allocatorUrl = DB_ALLOCATOR_URL + "?operation=realloc&uuid=$UUID&expiry=$newExpiry"
-        ant.get(src: allocatorUrl, dest: "/tmp/.tmpfile")
+        ant.get(src: allocatorUrl, dest: tmpFile.absolutePath)
     }
 }
 

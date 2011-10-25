@@ -487,6 +487,18 @@ session.createCriteria(Cat.class, "cat")
     .add( Property.forName("weight").gt(avgWeightForSex) )
     .list();]]></programlisting>
 
+        <para>
+            Example of multi-column restriction based on a subquery:
+        </para>
+
+        <programlisting role="JAVA"><![CDATA[DetachedCriteria sizeQuery = DetachedCriteria.forClass( Man.class )
+    .setProjection( Projections.projectionList().add( Projections.property( "weight" ) )
+                                                .add( Projections.property( "height" ) ) )
+    .add( Restrictions.eq( "name", "John" ) );
+session.createCriteria( Woman.class )
+    .add( Subqueries.propertiesEq( new String[] { "weight", "height" }, sizeQuery ) )
+    .list();]]></programlisting>
+
     </section>
 
         <!--TODO: ResultSetTransformer + aliasing. AliasToBeanTransformer allow returning arbitrary 

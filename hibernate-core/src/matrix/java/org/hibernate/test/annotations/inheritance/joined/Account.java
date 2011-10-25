@@ -29,6 +29,7 @@ package org.hibernate.test.annotations.inheritance.joined;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -44,6 +45,7 @@ public class Account implements Serializable {
 	@GeneratedValue
 	private int id;
 
+	@Column(name="fld_number")
 	private String number;
 	
 	@OneToMany(mappedBy="account")

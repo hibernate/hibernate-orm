@@ -23,6 +23,7 @@
  */
 
 package org.hibernate.test.annotations.beanvalidation;
+import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.NotNull;
@@ -46,6 +47,7 @@ public class Button {
 		this.name = name;
 	}
 
+	@Column(name = "fld_size")
 	@Max(10)
 	public Integer getSize() {
 		return size;

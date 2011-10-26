@@ -1,5 +1,6 @@
 package org.hibernate.ejb.test.util;
 import java.io.Serializable;
+import javax.persistence.Column;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 
@@ -21,6 +22,7 @@ public class Umbrella {
 		this.id = id;
 	}
 
+	@Column(name="fld_size")
 	public int getSize() {
 		return size;
 	}

@@ -155,6 +155,7 @@ public class Order implements java.io.Serializable {
 		domen = d;
 	}
 
+	@Column(name="fld_number")
 	public byte[] getNumber() {
 		return number;
 	}

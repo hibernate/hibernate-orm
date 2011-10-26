@@ -30,6 +30,7 @@ import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.Id;
 import javax.persistence.IdClass;
+import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Table;
@@ -117,6 +118,7 @@ public class ComplexJoinAliasTest extends BaseCoreFunctionalTestCase {
 		Code roleCode;
 
 		@ManyToOne(targetEntity = Role.class)
+        @JoinColumn(nullable = false)
 		Role role;
 
 		@Override

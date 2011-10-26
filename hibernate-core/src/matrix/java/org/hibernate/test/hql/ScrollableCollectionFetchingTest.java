@@ -30,8 +30,10 @@ import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -69,6 +71,7 @@ public class ScrollableCollectionFetchingTest extends BaseCoreFunctionalTestCase
 	}
 
 	@Test
+    @SkipForDialect( value = SybaseASE15Dialect.class, jiraKey = "HHH-5229")
 	public void testScrollingJoinFetchesEmptyResultSet() {
 		Session s = openSession();
 		Transaction txn = s.beginTransaction();

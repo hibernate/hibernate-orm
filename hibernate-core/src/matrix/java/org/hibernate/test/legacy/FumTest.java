@@ -36,7 +36,9 @@ import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MckoiDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.PointbaseDialect;
+import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.TimesTenDialect;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.transform.Transformers;
 import org.hibernate.type.DateType;
 import org.hibernate.type.EntityType;
@@ -713,6 +715,7 @@ public class FumTest extends LegacyTestCase {
 	}
 
 	@Test
+    @SkipForDialect( value = SybaseASE15Dialect.class, jiraKey = "HHH-3690" )
 	public void testCompositeKeyPathExpressions() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();

@@ -82,7 +82,7 @@ abstract public class DialectChecks {
 
 	public static class SupportsUnboundedLobLocatorMaterializationCheck implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			return dialect.supportsUnboundedLobLocatorMaterialization();
+			return dialect.supportsExpectedLobUsagePattern() && dialect.supportsUnboundedLobLocatorMaterialization();
 		}
 	}
 

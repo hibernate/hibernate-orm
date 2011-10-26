@@ -31,6 +31,8 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Example;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.dialect.SybaseASE15Dialect;
+import org.hibernate.testing.SkipForDialect;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -67,6 +69,7 @@ public class QueryByExampleTest extends LegacyTestCase {
     }
 
 	@Test
+    @SkipForDialect( value = SybaseASE15Dialect.class, jiraKey = "HHH-4580")
     public void testJunctionNotExpressionQBE() throws Exception {
         deleteData();
         initData();

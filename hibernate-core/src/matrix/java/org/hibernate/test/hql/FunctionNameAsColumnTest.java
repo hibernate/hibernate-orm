@@ -33,7 +33,10 @@ import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.dialect.SybaseASE157Dialect;
+import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.SkipLog;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -46,6 +49,7 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Gail Badner
  */
+@SkipForDialect( value = SybaseASE15Dialect.class, jiraKey = "HHH-6426")
 public class FunctionNameAsColumnTest  extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

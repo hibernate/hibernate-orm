@@ -245,17 +245,22 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		final EntityPersister persister = entry.getPersister();
 		final Object[] values = event.getPropertyValues();
 
-        if (LOG.isTraceEnabled()) {
+		if ( LOG.isTraceEnabled() ) {
 			if ( status == Status.DELETED ) {
-                if (!persister.isMutable()) LOG.trace("Updating immutable, deleted entity: "
-                                                      + MessageHelper.infoString(persister, entry.getId(), session.getFactory()));
-                else if (!entry.isModifiableEntity()) LOG.trace("Updating non-modifiable, deleted entity: "
-                                                                + MessageHelper.infoString(persister,
-                                                                                           entry.getId(),
-                                                                                           session.getFactory()));
-                else LOG.trace("Updating deleted entity: "
-                               + MessageHelper.infoString(persister, entry.getId(), session.getFactory()));
-            } else LOG.trace("Updating entity: " + MessageHelper.infoString(persister, entry.getId(), session.getFactory()));
+				if ( !persister.isMutable() ) {
+					LOG.tracev( "Updating immutable, deleted entity: {0}",
+							MessageHelper.infoString( persister, entry.getId(), session.getFactory() ) );
+				}
+				else if ( !entry.isModifiableEntity() )
+					LOG.tracev( "Updating non-modifiable, deleted entity: {0}",
+							MessageHelper.infoString( persister, entry.getId(), session.getFactory() ) );
+				else
+					LOG.tracev( "Updating deleted entity: ",
+							MessageHelper.infoString( persister, entry.getId(), session.getFactory() ) );
+			}
+			else
+				LOG.tracev( "Updating entity: {0}",
+						MessageHelper.infoString( persister, entry.getId(), session.getFactory() ) );
 		}
 
 		final boolean intercepted = !entry.isBeingReplicated() && handleInterception( event );
@@ -525,14 +530,15 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 	}
 
 	private void logDirtyProperties(Serializable id, int[] dirtyProperties, EntityPersister persister) {
-        if (LOG.isTraceEnabled() && dirtyProperties != null && dirtyProperties.length > 0) {
+		if ( LOG.isTraceEnabled() && dirtyProperties != null && dirtyProperties.length > 0 ) {
 			final String[] allPropertyNames = persister.getPropertyNames();
 			final String[] dirtyPropertyNames = new String[ dirtyProperties.length ];
 			for ( int i = 0; i < dirtyProperties.length; i++ ) {
 				dirtyPropertyNames[i] = allPropertyNames[ dirtyProperties[i]];
 			}
-            LOG.trace("Found dirty properties [" + MessageHelper.infoString(persister.getEntityName(), id) + "] : "
-                      + dirtyPropertyNames);
+			LOG.tracev( "Found dirty properties [{0}] : {1}",
+					MessageHelper.infoString( persister.getEntityName(), id ),
+					dirtyPropertyNames );
 		}
 	}
 
@@ -548,10 +554,10 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 				}
 				throw new StaleObjectStateException( persister.getEntityName(), id );
 			}
-            return snapshot;
+			return snapshot;
 		}
-        // TODO: optimize away this lookup for entities w/o unsaved-value="undefined"
-        final EntityKey entityKey = session.generateEntityKey( id, persister );
-        return session.getPersistenceContext().getCachedDatabaseSnapshot(entityKey);
+		// TODO: optimize away this lookup for entities w/o unsaved-value="undefined"
+		final EntityKey entityKey = session.generateEntityKey( id, persister );
+		return session.getPersistenceContext().getCachedDatabaseSnapshot( entityKey );
 	}
 }

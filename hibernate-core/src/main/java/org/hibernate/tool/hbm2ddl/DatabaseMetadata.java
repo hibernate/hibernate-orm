@@ -117,7 +117,7 @@ public class DatabaseMetadata {
 						}
 					}
 
-                    LOG.tableNotFound(name);
+					LOG.tableNotFound( name );
 					return null;
 
 				}

@@ -64,9 +64,7 @@ import org.hibernate.type.TypeHelper;
  */
 public final class TwoPhaseLoad {
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class, TwoPhaseLoad.class.getName()
-	);
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, TwoPhaseLoad.class.getName() );
 
 	private TwoPhaseLoad() {}
 
@@ -103,11 +101,11 @@ public final class TwoPhaseLoad {
 				lazyPropertiesAreUnfetched
 			);
 
-        if (LOG.isTraceEnabled() && version != null) {
+		if ( LOG.isTraceEnabled() && version != null ) {
 			String versionStr = persister.isVersioned()
 					? persister.getVersionType().toLoggableString( version, session.getFactory() )
-			        : "null";
-            LOG.trace("Version: " + versionStr);
+					: "null";
+			LOG.tracev( "Version: {0}", versionStr );
 		}
 
 	}
@@ -138,10 +136,12 @@ public final class TwoPhaseLoad {
 		Serializable id = entityEntry.getId();
 		Object[] hydratedState = entityEntry.getLoadedState();
 
-        if (LOG.isDebugEnabled()) LOG.debugf(
+		if ( LOG.isDebugEnabled() ) {
+			LOG.debugf(
 				"Resolving associations for %s",
 				MessageHelper.infoString( persister, id, session.getFactory() )
-		);
+					);
+		}
 
 		Type[] types = persister.getPropertyTypes();
 		for ( int i = 0; i < hydratedState.length; i++ ) {
@@ -170,10 +170,12 @@ public final class TwoPhaseLoad {
 		final SessionFactoryImplementor factory = session.getFactory();
 		if ( persister.hasCache() && session.getCacheMode().isPutEnabled() ) {
 
-            if (LOG.isDebugEnabled()) LOG.debugf(
+			if ( LOG.isDebugEnabled() ) {
+				LOG.debugf(
 					"Adding entity to second-level cache: %s",
 					MessageHelper.infoString( persister, id, session.getFactory() )
-			);
+						);
+			}
 
 			Object version = Versioning.getVersion(hydratedState, persister);
 			CacheEntry entry = new CacheEntry(
@@ -265,7 +267,7 @@ public final class TwoPhaseLoad {
 			}
 		}
 
-        if ( LOG.isDebugEnabled() ) {
+		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf(
 					"Done materializing entity %s",
 					MessageHelper.infoString( persister, id, session.getFactory() )

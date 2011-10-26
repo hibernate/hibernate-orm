@@ -38,7 +38,7 @@ import org.hibernate.internal.CoreMessageLogger;
  */
 public class EntityLoadContext {
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, EntityLoadContext.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, EntityLoadContext.class.getName() );
 
 	private final LoadContexts loadContexts;
 	private final ResultSet resultSet;
@@ -50,13 +50,13 @@ public class EntityLoadContext {
 	}
 
 	void cleanup() {
-        if (!hydratingEntities.isEmpty()) LOG.hydratingEntitiesCount(hydratingEntities.size());
+		if ( !hydratingEntities.isEmpty() ) LOG.hydratingEntitiesCount( hydratingEntities.size() );
 		hydratingEntities.clear();
 	}
 
 
 	@Override
-    public String toString() {
+	public String toString() {
 		return super.toString() + "<rs=" + resultSet + ">";
 	}
 }

@@ -80,7 +80,9 @@ public class MappingReader {
 			return new XmlDocumentImpl( document, origin.getType(), origin.getName() );
 		}
 		catch ( Exception orm2Problem ) {
-            LOG.debugf("Problem parsing XML using orm 2 xsd : %s", orm2Problem.getMessage());
+			if ( LOG.isDebugEnabled() ) {
+				LOG.debugf( "Problem parsing XML using orm 2 xsd : %s", orm2Problem.getMessage() );
+			}
 			failure = orm2Problem;
 			errorHandler.reset();
 
@@ -95,7 +97,9 @@ public class MappingReader {
 					return new XmlDocumentImpl( document, origin.getType(), origin.getName() );
 				}
 				catch ( Exception orm1Problem ) {
-                    LOG.debugf("Problem parsing XML using orm 1 xsd : %s", orm1Problem.getMessage());
+					if ( LOG.isDebugEnabled() ) {
+						LOG.debugf("Problem parsing XML using orm 1 xsd : %s", orm1Problem.getMessage());
+					}
 				}
 			}
 		}

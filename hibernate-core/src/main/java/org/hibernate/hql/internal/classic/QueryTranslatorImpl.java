@@ -234,8 +234,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 	 * failure.
 	 */
 	private void compile() throws QueryException, MappingException {
-
-        LOG.trace("Compiling query");
+		LOG.trace( "Compiling query" );
 		try {
 			ParserHelper.parse( new PreprocessingParser( tokenReplacements ),
 					queryString,
@@ -251,7 +250,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 			throw me;
 		}
 		catch ( Exception e ) {
-            LOG.debug("Unexpected query compilation problem", e);
+			LOG.debug( "Unexpected query compilation problem", e );
 			e.printStackTrace();
 			QueryException qe = new QueryException( "Incorrect query syntax", e );
 			qe.setQueryString( queryString );
@@ -306,9 +305,9 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 	}
 
 	private static void logQuery(String hql, String sql) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debugf("HQL: %s", hql);
-            LOG.debugf("SQL: %s", sql);
+		if ( LOG.isDebugEnabled() ) {
+			LOG.debugf( "HQL: %s", hql );
+			LOG.debugf( "SQL: %s", sql );
 		}
 	}
 

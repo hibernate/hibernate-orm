@@ -147,7 +147,7 @@ public abstract class AbstractServiceRegistryImpl implements ServiceRegistryImpl
 
 	private <R extends Service> R initializeService(ServiceBinding<R> serviceBinding) {
 		if ( LOG.isTraceEnabled() ) {
-			LOG.trace( "Initializing service [role=" + serviceBinding.getServiceRole().getName() + "]" );
+			LOG.tracev( "Initializing service [role={0}]", serviceBinding.getServiceRole().getName() );
 		}
 
 		// PHASE 1 : create service
@@ -262,7 +262,7 @@ public abstract class AbstractServiceRegistryImpl implements ServiceRegistryImpl
 					( (Stoppable) service ).stop();
 				}
 				catch ( Exception e ) {
-                    LOG.unableToStopService(service.getClass(), e.toString());
+					LOG.unableToStopService( service.getClass(), e.toString() );
 				}
 			}
 		}

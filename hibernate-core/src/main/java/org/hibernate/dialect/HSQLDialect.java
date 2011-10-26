@@ -637,7 +637,9 @@ public class HSQLDialect extends Dialect {
 
 		public void lock(Serializable id, Object version, Object object, int timeout, SessionImplementor session)
 				throws StaleObjectStateException, JDBCException {
-            if (getLockMode().greaterThan(LockMode.READ)) LOG.hsqldbSupportsOnlyReadCommittedIsolation();
+			if ( getLockMode().greaterThan( LockMode.READ ) ) {
+				LOG.hsqldbSupportsOnlyReadCommittedIsolation();
+			}
 			super.lock( id, version, object, timeout, session );
 		}
 	}

@@ -83,7 +83,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		final Object object = source.getPersistenceContext().unproxyAndReassociate( event.getObject() );
 
 		if ( refreshedAlready.containsKey(object) ) {
-            LOG.trace("Already refreshed");
+			LOG.trace( "Already refreshed" );
 			return;
 		}
 
@@ -94,8 +94,9 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		if ( e == null ) {
 			persister = source.getEntityPersister(event.getEntityName(), object); //refresh() does not pass an entityName
 			id = persister.getIdentifier( object, event.getSession() );
-            if (LOG.isTraceEnabled()) LOG.trace("Refreshing transient "
-                                                + MessageHelper.infoString(persister, id, source.getFactory()));
+			if ( LOG.isTraceEnabled() ) {
+				LOG.tracev( "Refreshing transient {0}", MessageHelper.infoString( persister, id, source.getFactory() ) );
+			}
 			final EntityKey key = source.generateEntityKey( id, persister );
 			if ( source.getPersistenceContext().getEntry(key) != null ) {
 				throw new PersistentObjectException(
@@ -105,8 +106,9 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 			}
 		}
 		else {
-            if (LOG.isTraceEnabled()) LOG.trace("Refreshing "
-                                                + MessageHelper.infoString(e.getPersister(), e.getId(), source.getFactory()));
+			if ( LOG.isTraceEnabled() ) {
+				LOG.tracev( "Refreshing ", MessageHelper.infoString( e.getPersister(), e.getId(), source.getFactory() ) );
+			}
 			if ( !e.isExistsInDatabase() ) {
 				throw new HibernateException( "this instance does not yet exist as a row in the database" );
 			}

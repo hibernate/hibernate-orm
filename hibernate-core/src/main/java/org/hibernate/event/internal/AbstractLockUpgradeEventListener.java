@@ -45,8 +45,7 @@ import org.hibernate.pretty.MessageHelper;
  */
 public class AbstractLockUpgradeEventListener extends AbstractReassociateEventListener {
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
-                                                                       AbstractLockUpgradeEventListener.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, AbstractLockUpgradeEventListener.class.getName() );
 
 	/**
 	 * Performs a pessimistic lock upgrade on a given entity, if needed.
@@ -73,9 +72,9 @@ public class AbstractLockUpgradeEventListener extends AbstractReassociateEventLi
 
 			final EntityPersister persister = entry.getPersister();
 
-            if (LOG.isTraceEnabled()) LOG.trace("Locking "
-                                                + MessageHelper.infoString(persister, entry.getId(), source.getFactory())
-                                                + " in mode: " + requestedLockMode);
+			if ( LOG.isTraceEnabled() ) {
+				LOG.tracev( "Locking {0} in mode: {1}", MessageHelper.infoString( persister, entry.getId(), source.getFactory() ), requestedLockMode );
+			}
 
 			final SoftLock lock;
 			final CacheKey ck;

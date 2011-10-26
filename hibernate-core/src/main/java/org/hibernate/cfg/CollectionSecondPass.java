@@ -43,7 +43,7 @@ import org.hibernate.mapping.Value;
  */
 public abstract class CollectionSecondPass implements SecondPass {
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, CollectionSecondPass.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, CollectionSecondPass.class.getName());
 
 	Mappings mappings;
 	Collection collection;
@@ -61,12 +61,12 @@ public abstract class CollectionSecondPass implements SecondPass {
 
 	public void doSecondPass(java.util.Map persistentClasses)
 			throws MappingException {
-        LOG.debugf("Second pass for collection: %s", collection.getRole());
+		LOG.debugf( "Second pass for collection: %s", collection.getRole() );
 
 		secondPass( persistentClasses, localInheritedMetas ); // using local since the inheritedMetas at this point is not the correct map since it is always the empty map
 		collection.createAllKeys();
 
-        if (LOG.isDebugEnabled()) {
+		if ( LOG.isDebugEnabled() ) {
 			String msg = "Mapped collection key: " + columns( collection.getKey() );
 			if ( collection.isIndexed() )
 				msg += ", index: " + columns( ( (IndexedCollection) collection ).getIndex() );
@@ -77,7 +77,7 @@ public abstract class CollectionSecondPass implements SecondPass {
 			else {
 				msg += ", element: " + columns( collection.getElement() );
 			}
-            LOG.debugf(msg);
+			LOG.debugf( msg );
 		}
 	}
 

@@ -49,8 +49,7 @@ import org.hibernate.internal.CoreMessageLogger;
 public class UpdateTimestampsCache {
 
 	public static final String REGION_NAME = UpdateTimestampsCache.class.getName();
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
-                                                                                UpdateTimestampsCache.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, UpdateTimestampsCache.class.getName() );
 
 	private ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
 	private final TimestampsRegion region;
@@ -60,7 +59,7 @@ public class UpdateTimestampsCache {
 		this.factory = factory;
 		String prefix = settings.getCacheRegionPrefix();
 		String regionName = prefix == null ? REGION_NAME : prefix + '.' + REGION_NAME;
-        LOG.startingUpdateTimestampsCache(regionName);
+		LOG.startingUpdateTimestampsCache( regionName );
 		this.region = settings.getRegionFactory().buildTimestampsRegion( regionName, props );
 	}
     @SuppressWarnings({"UnusedDeclaration"})
@@ -76,7 +75,7 @@ public class UpdateTimestampsCache {
 		try {
 			Long ts = new Long( region.nextTimestamp() + region.getTimeout() );
 			for ( Serializable space : spaces ) {
-	            LOG.debugf("Pre-invalidating space [%s]", space);
+				LOG.debugf( "Pre-invalidating space [%s]", space );
 				//put() has nowait semantics, is this really appropriate?
 				//note that it needs to be async replication, never local or sync
 				region.put( space, ts );
@@ -97,8 +96,8 @@ public class UpdateTimestampsCache {
 		try {
 			Long ts = new Long( region.nextTimestamp() );
 			for (Serializable space : spaces) {
-		        LOG.debugf("Invalidating space [%s], timestamp: %s", space, ts);
-		        //put() has nowait semantics, is this really appropriate?
+				LOG.debugf( "Invalidating space [%s], timestamp: %s", space, ts );
+				//put() has nowait semantics, is this really appropriate?
 				//note that it needs to be async replication, never local or sync
 				region.put( space, ts );
 				if ( factory != null && factory.getStatistics().isStatisticsEnabled() ) {
@@ -107,7 +106,7 @@ public class UpdateTimestampsCache {
 			}
 		}
 		finally {
-		    readWriteLock.writeLock().unlock();
+			readWriteLock.writeLock().unlock();
 		}
 	}
 
@@ -157,7 +156,7 @@ public class UpdateTimestampsCache {
 			region.destroy();
 		}
 		catch (Exception e) {
-            LOG.unableToDestroyUpdateTimestampsCache(region.getName(), e.getMessage());
+			LOG.unableToDestroyUpdateTimestampsCache( region.getName(), e.getMessage() );
 		}
 	}
 
@@ -167,7 +166,7 @@ public class UpdateTimestampsCache {
 
 	@Override
     public String toString() {
-        return "UpdateTimestampsCache";
+		return "UpdateTimestampsCache";
 	}
 
 }

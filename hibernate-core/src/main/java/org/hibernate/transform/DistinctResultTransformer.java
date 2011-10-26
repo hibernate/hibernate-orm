@@ -95,7 +95,7 @@ public class DistinctResultTransformer extends BasicTransformerAdapter {
 				result.add( entity );
 			}
 		}
-        LOG.debugf("Transformed: %s rows to: %s distinct results", list.size(), result.size());
+		LOG.debugf( "Transformed: %s rows to: %s distinct results", list.size(), result.size() );
 		return result;
 	}
 

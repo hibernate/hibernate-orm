@@ -59,8 +59,9 @@ public abstract class QueryBinder {
 
 	public static void bindQuery(NamedQuery queryAnn, Mappings mappings, boolean isDefault) {
 		if ( queryAnn == null ) return;
-        if (BinderHelper.isEmptyAnnotationValue(queryAnn.name())) throw new AnnotationException(
-                                                                                                "A named query must have a name when used in class or package level");
+		if ( BinderHelper.isEmptyAnnotationValue( queryAnn.name() ) ) {
+			throw new AnnotationException( "A named query must have a name when used in class or package level" );
+		}
 		//EJBQL Query
 		QueryHint[] hints = queryAnn.hints();
 		String queryName = queryAnn.query();
@@ -83,15 +84,18 @@ public abstract class QueryBinder {
 		else {
 			mappings.addQuery( query.getName(), query );
 		}
-        LOG.debugf( "Binding named query: %s => %s", query.getName(), query.getQueryString() );
+		if ( LOG.isDebugEnabled() ) {
+			LOG.debugf( "Binding named query: %s => %s", query.getName(), query.getQueryString() );
+		}
 	}
 
 
 	public static void bindNativeQuery(NamedNativeQuery queryAnn, Mappings mappings, boolean isDefault) {
 		if ( queryAnn == null ) return;
 		//ResultSetMappingDefinition mappingDefinition = mappings.getResultSetMapping( queryAnn.resultSetMapping() );
-        if (BinderHelper.isEmptyAnnotationValue(queryAnn.name())) throw new AnnotationException(
-                                                                                                "A named query must have a name when used in class or package level");
+		if ( BinderHelper.isEmptyAnnotationValue( queryAnn.name() ) ) {
+			throw new AnnotationException( "A named query must have a name when used in class or package level" );
+		}
 		NamedSQLQueryDefinition query;
 		String resultSetMapping = queryAnn.resultSetMapping();
 		QueryHint[] hints = queryAnn.hints();
@@ -146,15 +150,18 @@ public abstract class QueryBinder {
 		else {
 			mappings.addSQLQuery( query.getName(), query );
 		}
-        LOG.debugf( "Binding named native query: %s => %s", queryAnn.name(), queryAnn.query() );
+		if ( LOG.isDebugEnabled() ) {
+			LOG.debugf( "Binding named native query: %s => %s", queryAnn.name(), queryAnn.query() );
+		}
 	}
 
 	public static void bindNativeQuery(org.hibernate.annotations.NamedNativeQuery queryAnn, Mappings mappings) {
 		if ( queryAnn == null ) return;
 		//ResultSetMappingDefinition mappingDefinition = mappings.getResultSetMapping( queryAnn.resultSetMapping() );
-        if (BinderHelper.isEmptyAnnotationValue(queryAnn.name())) throw new AnnotationException(
-                                                                                                "A named query must have a name when used in class or package level");
-        NamedSQLQueryDefinition query;
+		if ( BinderHelper.isEmptyAnnotationValue( queryAnn.name() ) ) {
+			throw new AnnotationException( "A named query must have a name when used in class or package level" );
+		}
+		NamedSQLQueryDefinition query;
 		String resultSetMapping = queryAnn.resultSetMapping();
 		if ( !BinderHelper.isEmptyAnnotationValue( resultSetMapping ) ) {
 			//sql result set usage
@@ -201,7 +208,9 @@ public abstract class QueryBinder {
 			throw new NotYetImplementedException( "Pure native scalar queries are not yet supported" );
 		}
 		mappings.addSQLQuery( query.getName(), query );
-        LOG.debugf( "Binding named native query: %s => %s", query.getName(), queryAnn.query() );
+		if ( LOG.isDebugEnabled() ) {
+			LOG.debugf( "Binding named native query: %s => %s", query.getName(), queryAnn.query() );
+		}
 	}
 
 	public static void bindQueries(NamedQueries queriesAnn, Mappings mappings, boolean isDefault) {
@@ -229,8 +238,9 @@ public abstract class QueryBinder {
 
 	public static void bindQuery(org.hibernate.annotations.NamedQuery queryAnn, Mappings mappings) {
 		if ( queryAnn == null ) return;
-        if (BinderHelper.isEmptyAnnotationValue(queryAnn.name())) throw new AnnotationException(
-                                                                                                "A named query must have a name when used in class or package level");
+		if ( BinderHelper.isEmptyAnnotationValue( queryAnn.name() ) ) {
+			throw new AnnotationException( "A named query must have a name when used in class or package level" );
+		}
 		FlushMode flushMode;
 		flushMode = getFlushMode( queryAnn.flushMode() );
 
@@ -249,7 +259,9 @@ public abstract class QueryBinder {
 		);
 
 		mappings.addQuery( query.getName(), query );
-        LOG.debugf( "Binding named query: %s => %s", query.getName(), query.getQueryString() );
+		if ( LOG.isDebugEnabled() ) {
+			LOG.debugf( "Binding named query: %s => %s", query.getName(), query.getQueryString() );
+		}
 	}
 
 	private static FlushMode getFlushMode(FlushModeType flushModeType) {

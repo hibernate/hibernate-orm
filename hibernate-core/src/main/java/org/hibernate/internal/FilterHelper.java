@@ -85,12 +85,12 @@ public class FilterHelper {
 	}
 
 	public String render(String alias, Map enabledFilters) {
-		StringBuffer buffer = new StringBuffer();
+		StringBuilder buffer = new StringBuilder();
 		render( buffer, alias, enabledFilters );
 		return buffer.toString();
 	}
 
-	public void render(StringBuffer buffer, String alias, Map enabledFilters) {
+	public void render(StringBuilder buffer, String alias, Map enabledFilters) {
 		if ( filterNames != null && filterNames.length > 0 ) {
 			for ( int i = 0, max = filterNames.length; i < max; i++ ) {
 				if ( enabledFilters.containsKey( filterNames[i] ) ) {

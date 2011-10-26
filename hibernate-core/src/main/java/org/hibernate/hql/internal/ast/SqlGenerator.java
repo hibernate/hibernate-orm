@@ -83,12 +83,12 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 	private int traceDepth = 0;
 
 	@Override
-    public void traceIn(String ruleName, AST tree) {
-        if (!LOG.isTraceEnabled()) return;
-        if (inputState.guessing > 0) return;
-		String prefix = StringHelper.repeat( '-', (traceDepth++ * 2) ) + "-> ";
-		String traceText = ruleName + " (" + buildTraceNodeName(tree) + ")";
-        LOG.trace(prefix + traceText);
+	public void traceIn(String ruleName, AST tree) {
+		if ( !LOG.isTraceEnabled() ) return;
+		if ( inputState.guessing > 0 ) return;
+		String prefix = StringHelper.repeat( '-', ( traceDepth++ * 2 ) ) + "-> ";
+		String traceText = ruleName + " (" + buildTraceNodeName( tree ) + ")";
+		LOG.trace( prefix + traceText );
 	}
 
 	private String buildTraceNodeName(AST tree) {
@@ -98,11 +98,11 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 	}
 
 	@Override
-    public void traceOut(String ruleName, AST tree) {
-        if (!LOG.isTraceEnabled()) return;
-        if (inputState.guessing > 0) return;
-		String prefix = "<-" + StringHelper.repeat( '-', (--traceDepth * 2) ) + " ";
-        LOG.trace(prefix + ruleName);
+	public void traceOut(String ruleName, AST tree) {
+		if ( !LOG.isTraceEnabled() ) return;
+		if ( inputState.guessing > 0 ) return;
+		String prefix = "<-" + StringHelper.repeat( '-', ( --traceDepth * 2 ) ) + " ";
+		LOG.trace( prefix + ruleName );
 	}
 
 	public List getCollectedParameters() {

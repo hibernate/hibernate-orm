@@ -119,7 +119,9 @@ public class EntityLoader extends AbstractEntityLoader {
 
 		batchLoader = batchSize > 1;
 
-        LOG.debugf("Static select for entity %s [%s]: %s", entityName, lockMode, getSQLString());
+		if ( LOG.isDebugEnabled() ) {
+			LOG.debugf( "Static select for entity %s [%s]: %s", entityName, lockMode, getSQLString() );
+		}
 	}
 
 	public EntityLoader(
@@ -146,11 +148,13 @@ public class EntityLoader extends AbstractEntityLoader {
 
 		batchLoader = batchSize > 1;
 
-        LOG.debugf("Static select for entity %s [%s:%s]: %s",
-                   entityName,
-                   lockOptions.getLockMode(),
-                   lockOptions.getTimeOut(),
-                   getSQLString());
+		if ( LOG.isDebugEnabled() ) {
+			LOG.debugf( "Static select for entity %s [%s:%s]: %s",
+					entityName,
+					lockOptions.getLockMode(),
+					lockOptions.getTimeOut(),
+					getSQLString() );
+		}
 	}
 
 	public Object loadByUniqueKey(SessionImplementor session,Object key) {

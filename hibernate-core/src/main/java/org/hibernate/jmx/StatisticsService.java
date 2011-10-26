@@ -53,7 +53,7 @@ import org.hibernate.stat.internal.ConcurrentStatisticsImpl;
 @Deprecated
 public class StatisticsService implements StatisticsServiceMBean {
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, StatisticsService.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, StatisticsService.class.getName() );
 	//TODO: We probably should have a StatisticsNotPublishedException, to make it clean
 
 	SessionFactory sf;
@@ -78,15 +78,15 @@ public class StatisticsService implements StatisticsServiceMBean {
 			setSessionFactory( sessionFactory );
 		}
 		catch (NameNotFoundException e) {
-            LOG.noSessionFactoryWithJndiName(sfJNDIName, e);
+			LOG.noSessionFactoryWithJndiName( sfJNDIName, e );
 			setSessionFactory(null);
 		}
 		catch (NamingException e) {
-            LOG.unableToAccessSessionFactory(sfJNDIName, e);
+			LOG.unableToAccessSessionFactory( sfJNDIName, e );
 			setSessionFactory(null);
 		}
 		catch (ClassCastException e) {
-            LOG.jndiNameDoesNotHandleSessionFactoryReference(sfJNDIName, e);
+			LOG.jndiNameDoesNotHandleSessionFactoryReference( sfJNDIName, e );
 			setSessionFactory(null);
 		}
 	}

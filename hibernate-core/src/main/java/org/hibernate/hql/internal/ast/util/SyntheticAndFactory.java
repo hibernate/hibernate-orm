@@ -89,7 +89,7 @@ public class SyntheticAndFactory implements HqlSqlTokenTypes {
 			whereFragment = whereFragment.substring( 4 );
 		}
 
-        LOG.debugf("Using unprocessed WHERE-fragment [%s]", whereFragment);
+		LOG.debugf( "Using unprocessed WHERE-fragment [%s]", whereFragment );
 
 		SqlFragment fragment = ( SqlFragment ) create( SQL_TOKEN, whereFragment );
 		fragment.setJoinFragment( joinFragment );
@@ -120,7 +120,9 @@ public class SyntheticAndFactory implements HqlSqlTokenTypes {
 				hqlSqlWalker
 		);
 
-        LOG.debugf("Using processed WHERE-fragment [%s]", fragment.getText());
+		if ( LOG.isDebugEnabled() ) {
+			LOG.debugf( "Using processed WHERE-fragment [%s]", fragment.getText() );
+		}
 
 		// Filter conditions need to be inserted before the HQL where condition and the
 		// theta join node.  This is because org.hibernate.loader.Loader binds the filter parameters first,

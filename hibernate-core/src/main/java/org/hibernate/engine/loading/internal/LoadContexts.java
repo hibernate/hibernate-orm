@@ -170,16 +170,14 @@ public class LoadContexts {
 	 */
 	public CollectionLoadContext getCollectionLoadContext(ResultSet resultSet) {
 		CollectionLoadContext context = null;
-        if ( collectionLoadContexts == null ) {
+		if ( collectionLoadContexts == null ) {
 			collectionLoadContexts = IdentityMap.instantiate( 8 );
 		}
-        else {
+		else {
 			context = collectionLoadContexts.get(resultSet);
 		}
 		if ( context == null ) {
-			if (LOG.isTraceEnabled()) {
-				LOG.trace("Constructing collection load context for result set [" + resultSet + "]");
-			}
+			LOG.tracev( "Constructing collection load context for result set [{0}]", resultSet );
 			context = new CollectionLoadContext( this, resultSet );
 			collectionLoadContexts.put( resultSet, context );
 		}
@@ -197,7 +195,7 @@ public class LoadContexts {
 	public PersistentCollection locateLoadingCollection(CollectionPersister persister, Serializable ownerKey) {
 		LoadingCollectionEntry lce = locateLoadingCollectionEntry( new CollectionKey( persister, ownerKey ) );
 		if ( lce != null ) {
-            if ( LOG.isTraceEnabled() ) {
+			if ( LOG.isTraceEnabled() ) {
 				LOG.tracef(
 						"Returning loading collection: %s",
 						MessageHelper.collectionInfoString( persister, ownerKey, getSession().getFactory() )
@@ -205,14 +203,12 @@ public class LoadContexts {
 			}
 			return lce.getCollection();
 		}
-        // TODO : should really move this log statement to CollectionType, where this is used from...
-        if ( LOG.isTraceEnabled() ) {
-			LOG.tracef(
-					"Creating collection wrapper: %s",
-					MessageHelper.collectionInfoString( persister, ownerKey, getSession().getFactory() )
-			);
+		// TODO : should really move this log statement to CollectionType, where this is used from...
+		if ( LOG.isTraceEnabled() ) {
+			LOG.tracef( "Creating collection wrapper: %s",
+					MessageHelper.collectionInfoString( persister, ownerKey, getSession().getFactory() ) );
 		}
-        return null;
+		return null;
 	}
 
 	// loading collection xrefs ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -277,11 +273,17 @@ public class LoadContexts {
 	 * @return The located entry; or null.
 	 */
 	LoadingCollectionEntry locateLoadingCollectionEntry(CollectionKey key) {
-        if (xrefLoadingCollectionEntries == null) return null;
-        LOG.trace("Attempting to locate loading collection entry [" + key + "] in any result-set context");
+		if ( xrefLoadingCollectionEntries == null ) {
+			return null;
+		}
+		LOG.tracev( "Attempting to locate loading collection entry [{0}] in any result-set context", key );
 		LoadingCollectionEntry rtn = xrefLoadingCollectionEntries.get( key );
-        if (rtn == null) LOG.trace("Collection [" + key + "] not located in load context");
-        else LOG.trace("Collection [" + key + "] located in load context");
+		if ( rtn == null ) {
+			LOG.tracev( "Collection [{0}] not located in load context", key );
+		}
+		else {
+			LOG.tracev( "Collection [{0}] located in load context", key );
+		}
 		return rtn;
 	}
 

@@ -72,7 +72,7 @@ public class ImpliedFromElement extends FromElement {
 	 * @return String - The additional display text.
 	 */
 	public String getDisplayText() {
-		StringBuffer buf = new StringBuffer();
+		StringBuilder buf = new StringBuilder();
 		buf.append( "ImpliedFromElement{" );
 		appendDisplayText( buf );
 		buf.append( "}" );

@@ -55,8 +55,7 @@ import org.hibernate.service.spi.Stoppable;
 @SuppressWarnings( {"UnnecessaryUnboxing"})
 public class DriverManagerConnectionProviderImpl implements ConnectionProvider, Configurable, Stoppable {
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
-                                                                       DriverManagerConnectionProviderImpl.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, DriverManagerConnectionProviderImpl.class.getName() );
 
 	private String url;
 	private Properties connectionProps;
@@ -125,21 +124,23 @@ public class DriverManagerConnectionProviderImpl implements ConnectionProvider, 
 
 		connectionProps = ConnectionProviderInitiator.getConnectionProperties( configurationValues );
 
-        LOG.usingDriver(driverClassName, url);
+		LOG.usingDriver( driverClassName, url );
 		// if debug level is enabled, then log the password, otherwise mask it
-        if (LOG.isDebugEnabled()) LOG.connectionProperties(connectionProps);
-        else LOG.connectionProperties(ConfigurationHelper.maskOut(connectionProps, "password"));
+		if ( LOG.isDebugEnabled() )
+			LOG.connectionProperties( connectionProps );
+		else
+			LOG.connectionProperties( ConfigurationHelper.maskOut( connectionProps, "password" ) );
 	}
 
 	public void stop() {
-        LOG.cleaningUpConnectionPool(url);
+		LOG.cleaningUpConnectionPool( url );
 
 		for ( Connection connection : pool ) {
 			try {
 				connection.close();
 			}
 			catch (SQLException sqle) {
-                LOG.unableToClosePooledConnection(sqle);
+				LOG.unableToClosePooledConnection( sqle );
 			}
 		}
 		pool.clear();
@@ -147,30 +148,28 @@ public class DriverManagerConnectionProviderImpl implements ConnectionProvider, 
 	}
 
 	public Connection getConnection() throws SQLException {
-        LOG.trace("Total checked-out connections: " + checkedOut);
+		LOG.tracev( "Total checked-out connections: {0}", checkedOut );
 
 		// essentially, if we have available connections in the pool, use one...
 		synchronized (pool) {
 			if ( !pool.isEmpty() ) {
 				int last = pool.size() - 1;
-                if (LOG.isTraceEnabled()) {
-                    LOG.trace("Using pooled JDBC connection, pool size: " + last);
-					checkedOut++;
-				}
-				Connection pooled = pool.remove(last);
+				LOG.tracev( "Using pooled JDBC connection, pool size: {0}", last );
+				Connection pooled = pool.remove( last );
 				if ( isolation != null ) {
 					pooled.setTransactionIsolation( isolation.intValue() );
 				}
 				if ( pooled.getAutoCommit() != autocommit ) {
 					pooled.setAutoCommit( autocommit );
 				}
+				checkedOut++;
 				return pooled;
 			}
 		}
 
 		// otherwise we open a new connection...
 
-        LOG.debugf("Opening new JDBC connection");
+		LOG.debugf( "Opening new JDBC connection" );
 		Connection conn = DriverManager.getConnection( url, connectionProps );
 		if ( isolation != null ) {
 			conn.setTransactionIsolation( isolation.intValue() );
@@ -179,10 +178,11 @@ public class DriverManagerConnectionProviderImpl implements ConnectionProvider, 
 			conn.setAutoCommit(autocommit);
 		}
 
-        LOG.debugf("Created connection to: %s, Isolation Level: %s", url, conn.getTransactionIsolation());
+		if ( LOG.isDebugEnabled() ) {
+			LOG.debugf( "Created connection to: %s, Isolation Level: %s", url, conn.getTransactionIsolation() );
+		}
 
 		checkedOut++;
-
 		return conn;
 	}
 
@@ -193,18 +193,18 @@ public class DriverManagerConnectionProviderImpl implements ConnectionProvider, 
 		synchronized (pool) {
 			int currentSize = pool.size();
 			if ( currentSize < poolSize ) {
-                LOG.trace("Returning connection to pool, pool size: " + (currentSize + 1));
+				LOG.tracev( "Returning connection to pool, pool size: {0}", ( currentSize + 1 ) );
 				pool.add(conn);
 				return;
 			}
 		}
 
-        LOG.debugf("Closing JDBC connection");
+		LOG.debugf( "Closing JDBC connection" );
 		conn.close();
 	}
 
 	@Override
-    protected void finalize() throws Throwable {
+	protected void finalize() throws Throwable {
 		if ( !stopped ) {
 			stop();
 		}

@@ -210,20 +210,20 @@ public class ThreadLocalSessionContext implements CurrentSessionContext {
 	private static void cleanupAnyOrphanedSession(SessionFactory factory) {
 		Session orphan = doUnbind( factory, false );
 		if ( orphan != null ) {
-            LOG.alreadySessionBound();
+			LOG.alreadySessionBound();
 			try {
 				if ( orphan.getTransaction() != null && orphan.getTransaction().isActive() ) {
 					try {
 						orphan.getTransaction().rollback();
 					}
 					catch( Throwable t ) {
-                        LOG.debug("Unable to rollback transaction for orphaned session", t);
+						LOG.debug( "Unable to rollback transaction for orphaned session", t );
 					}
 				}
 				orphan.close();
 			}
 			catch( Throwable t ) {
-                LOG.debug("Unable to close orphaned session", t);
+				LOG.debug( "Unable to close orphaned session", t );
 			}
 		}
 	}
@@ -240,8 +240,8 @@ public class ThreadLocalSessionContext implements CurrentSessionContext {
 
 	private static Session existingSession(SessionFactory factory) {
 		Map sessionMap = sessionMap();
-        if (sessionMap == null) return null;
-        return (Session)sessionMap.get(factory);
+		if ( sessionMap == null ) return null;
+		return (Session) sessionMap.get( factory );
 	}
 
 	protected static Map sessionMap() {
@@ -306,17 +306,18 @@ public class ThreadLocalSessionContext implements CurrentSessionContext {
 		 * {@inheritDoc}
 		 */
 		public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+			final String methodName = method.getName(); 
 			try {
 				// If close() is called, guarantee unbind()
-				if ( "close".equals( method.getName()) ) {
+				if ( "close".equals( methodName ) ) {
 					unbind( realSession.getSessionFactory() );
 				}
-				else if ( "toString".equals( method.getName() )
-					     || "equals".equals( method.getName() )
-					     || "hashCode".equals( method.getName() )
-				         || "getStatistics".equals( method.getName() )
-					     || "isOpen".equals( method.getName() )
-						 || "getListeners".equals( method.getName() ) //useful for HSearch in particular
+				else if ( "toString".equals( methodName )
+					     || "equals".equals( methodName )
+					     || "hashCode".equals( methodName )
+				         || "getStatistics".equals( methodName )
+					     || "isOpen".equals( methodName )
+						 || "getListeners".equals( methodName ) //useful for HSearch in particular
 						) {
 					// allow these to go through the the real session no matter what
 				}
@@ -329,23 +330,23 @@ public class ThreadLocalSessionContext implements CurrentSessionContext {
 				}
 				else if ( !realSession.getTransaction().isActive() ) {
 					// limit the methods available if no transaction is active
-					if ( "beginTransaction".equals( method.getName() )
-					     || "getTransaction".equals( method.getName() )
-					     || "isTransactionInProgress".equals( method.getName() )
-					     || "setFlushMode".equals( method.getName() )
-						 || "getFactory".equals( method.getName() ) //from SessionImplementor
-					     || "getSessionFactory".equals( method.getName() ) ) {
-                        LOG.trace("Allowing method [" + method.getName() + "] in non-transacted context");
+					if ( "beginTransaction".equals( methodName )
+					     || "getTransaction".equals( methodName )
+					     || "isTransactionInProgress".equals( methodName )
+					     || "setFlushMode".equals( methodName )
+						 || "getFactory".equals( methodName ) //from SessionImplementor
+					     || "getSessionFactory".equals( methodName ) ) {
+						LOG.tracev( "Allowing method [{0}] in non-transacted context", methodName );
 					}
-					else if ( "reconnect".equals( method.getName() )
-					          || "disconnect".equals( method.getName() ) ) {
+					else if ( "reconnect".equals( methodName )
+					          || "disconnect".equals( methodName ) ) {
 						// allow these (deprecated) methods to pass through
 					}
 					else {
-						throw new HibernateException( method.getName() + " is not valid without active transaction" );
+						throw new HibernateException( methodName + " is not valid without active transaction" );
 					}
 				}
-                LOG.trace("Allowing proxied method [" + method.getName() + "] to proceed to real session");
+				LOG.tracev( "Allowing proxied method [{0}] to proceed to real session", methodName );
 				return method.invoke( realSession, args );
 			}
 			catch ( InvocationTargetException e ) {

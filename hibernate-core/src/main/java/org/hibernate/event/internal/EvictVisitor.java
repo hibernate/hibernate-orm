@@ -43,14 +43,14 @@ import org.hibernate.type.CollectionType;
  */
 public class EvictVisitor extends AbstractVisitor {
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, EvictVisitor.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, EvictVisitor.class.getName() );
 
 	EvictVisitor(EventSource session) {
 		super(session);
 	}
 
 	@Override
-    Object processCollection(Object collection, CollectionType type)
+	Object processCollection(Object collection, CollectionType type)
 		throws HibernateException {
 
 		if (collection!=null) evictCollection(collection, type);
@@ -76,10 +76,12 @@ public class EvictVisitor extends AbstractVisitor {
 
 	private void evictCollection(PersistentCollection collection) {
 		CollectionEntry ce = (CollectionEntry) getSession().getPersistenceContext().getCollectionEntries().remove(collection);
-        if (LOG.isDebugEnabled()) LOG.debugf("Evicting collection: %s",
-                                             MessageHelper.collectionInfoString(ce.getLoadedPersister(),
-                                                                                ce.getLoadedKey(),
-                                                                                getSession().getFactory()));
+		if ( LOG.isDebugEnabled() ) {
+			LOG.debugf( "Evicting collection: %s",
+					MessageHelper.collectionInfoString( ce.getLoadedPersister(),
+							ce.getLoadedKey(),
+							getSession().getFactory() ) );
+		}
 		if ( ce.getLoadedPersister() != null && ce.getLoadedKey() != null ) {
 			//TODO: is this 100% correct?
 			getSession().getPersistenceContext().getCollectionsByKey().remove(

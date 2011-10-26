@@ -195,9 +195,10 @@ public final class CollectionEntry implements Serializable {
 
 		dirty(collection);
 
-        if (LOG.isDebugEnabled() && collection.isDirty() && getLoadedPersister() != null) LOG.debugf("Collection dirty: %s",
-                                                                                                     MessageHelper.collectionInfoString(getLoadedPersister().getRole(),
-                                                                                                                                        getLoadedKey()));
+		if ( LOG.isDebugEnabled() && collection.isDirty() && getLoadedPersister() != null ) {
+			LOG.debugf( "Collection dirty: %s",
+					MessageHelper.collectionInfoString( getLoadedPersister().getRole(), getLoadedKey() ) );
+		}
 
 		setDoupdate(false);
 		setDoremove(false);

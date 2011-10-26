@@ -115,7 +115,9 @@ public class DefaultPersistEventListener extends AbstractSaveEventListener imple
 			// NOTE: entityEntry must be null to get here, so we cannot use any of its values
 			EntityPersister persister = source.getFactory().getEntityPersister( entityName );
 			if ( ForeignGenerator.class.isInstance( persister.getIdentifierGenerator() ) ) {
-                if (LOG.isDebugEnabled() && persister.getIdentifier(entity, source) != null) LOG.debugf("Resetting entity id attribute to null for foreign generator");
+				if ( LOG.isDebugEnabled() && persister.getIdentifier( entity, source ) != null ) {
+					LOG.debugf( "Resetting entity id attribute to null for foreign generator" );
+				}
 				persister.setIdentifier( entity, null, source );
 				entityState = getEntityState( entity, entityName, entityEntry, source );
 			}
@@ -144,7 +146,7 @@ public class DefaultPersistEventListener extends AbstractSaveEventListener imple
 	}
 
 	protected void entityIsPersistent(PersistEvent event, Map createCache) {
-        LOG.trace("Ignoring persistent instance");
+		LOG.trace( "Ignoring persistent instance" );
 		final EventSource source = event.getSession();
 
 		//TODO: check that entry.getIdentifier().equals(requestedId)
@@ -168,7 +170,7 @@ public class DefaultPersistEventListener extends AbstractSaveEventListener imple
 	 */
 	protected void entityIsTransient(PersistEvent event, Map createCache) throws HibernateException {
 
-        LOG.trace("Saving transient instance");
+		LOG.trace( "Saving transient instance" );
 
 		final EventSource source = event.getSession();
 

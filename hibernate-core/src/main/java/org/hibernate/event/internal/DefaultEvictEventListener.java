@@ -102,7 +102,9 @@ public class DefaultEvictEventListener implements EvictEventListener {
 		final EventSource session)
 	throws HibernateException {
 
-        if (LOG.isTraceEnabled()) LOG.trace("Evicting " + MessageHelper.infoString(persister));
+		if ( LOG.isTraceEnabled() ) {
+			LOG.tracev( "Evicting {0}", MessageHelper.infoString( persister ) );
+		}
 
 		// remove all collections for the entity from the session-level cache
 		if ( persister.hasCollections() ) {

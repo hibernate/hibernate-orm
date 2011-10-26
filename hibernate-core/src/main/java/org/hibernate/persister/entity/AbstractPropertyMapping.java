@@ -139,8 +139,9 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 			String[] formulaTemplates) {
 		// TODO : not quite sure yet of the difference, but this is only needed from annotations for @Id @ManyToOne support
 		if ( typesByPropertyPath.containsKey( path ) ) {
-            LOG.trace("Skipping duplicate registration of path [" + path + "], existing type = [" + typesByPropertyPath.get(path)
-                      + "], incoming type = [" + type + "]");
+			if ( LOG.isTraceEnabled() ) {
+				LOG.tracev( "Skipping duplicate registration of path [{0}], existing type = [{1}], incoming type = [{2}]", path, typesByPropertyPath.get( path ), type );
+			}
 			return;
 		}
 		typesByPropertyPath.put(path, type);

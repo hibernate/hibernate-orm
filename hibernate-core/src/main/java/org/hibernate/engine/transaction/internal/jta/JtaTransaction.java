@@ -66,7 +66,7 @@ public class JtaTransaction extends AbstractTransactionImpl {
 
 	@Override
 	protected void doBegin() {
-        LOG.debug("begin");
+		LOG.debug( "begin" );
 
 		userTransaction = jtaPlatform().retrieveUserTransaction();
 		if ( userTransaction == null ) {
@@ -77,7 +77,7 @@ public class JtaTransaction extends AbstractTransactionImpl {
 			if ( userTransaction.getStatus() == Status.STATUS_NO_TRANSACTION ) {
 				userTransaction.begin();
 				isInitiator = true;
-                LOG.debug("Began a new JTA transaction");
+				LOG.debug( "Began a new JTA transaction" );
 			}
 		}
 		catch ( Exception e ) {
@@ -110,7 +110,7 @@ public class JtaTransaction extends AbstractTransactionImpl {
 				}
 			}
 			else {
-                LOG.debug("Unable to apply requested transaction timeout; no UserTransaction.  Will try later");
+				LOG.debug( "Unable to apply requested transaction timeout; no UserTransaction.  Will try later" );
 			}
 		}
 	}
@@ -148,7 +148,7 @@ public class JtaTransaction extends AbstractTransactionImpl {
 		try {
 			if ( isInitiator ) {
 				userTransaction.commit();
-                LOG.debug("Committed JTA UserTransaction");
+				LOG.debug( "Committed JTA UserTransaction" );
 			}
 		}
 		catch ( Exception e ) {
@@ -169,7 +169,7 @@ public class JtaTransaction extends AbstractTransactionImpl {
 		// this method is a noop if there is a Synchronization!
 		if ( isDriver ) {
 			if ( !isInitiator ) {
-                LOG.setManagerLookupClass();
+				LOG.setManagerLookupClass();
 			}
 			try {
 				transactionCoordinator().afterTransaction( this, userTransaction.getStatus() );
@@ -192,7 +192,7 @@ public class JtaTransaction extends AbstractTransactionImpl {
 				// failed commits automatically rollback the transaction per JTA spec
 				if ( getLocalStatus() != LocalStatus.FAILED_COMMIT  ) {
 					userTransaction.rollback();
-                    LOG.debug("Rolled back JTA UserTransaction");
+					LOG.debug( "Rolled back JTA UserTransaction" );
 				}
 			}
 			else {
@@ -206,13 +206,13 @@ public class JtaTransaction extends AbstractTransactionImpl {
 
 	@Override
 	public void markRollbackOnly() {
-        LOG.trace("Marking transaction for rollback only");
+		LOG.trace( "Marking transaction for rollback only" );
 		try {
 			userTransaction.setRollbackOnly();
-            LOG.debug("set JTA UserTransaction to rollback only");
+			LOG.debug( "set JTA UserTransaction to rollback only" );
 		}
 		catch (SystemException e) {
-            LOG.debug("Unable to mark transaction for rollback only", e);
+			LOG.debug( "Unable to mark transaction for rollback only", e );
 		}
 	}
 

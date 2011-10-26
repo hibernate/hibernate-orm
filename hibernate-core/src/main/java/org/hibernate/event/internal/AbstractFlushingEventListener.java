@@ -65,10 +65,7 @@ import org.hibernate.persister.entity.EntityPersister;
  */
 public abstract class AbstractFlushingEventListener implements Serializable {
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class,
-			AbstractFlushingEventListener.class.getName()
-	);
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, AbstractFlushingEventListener.class.getName() );
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Pre-flushing section
@@ -84,7 +81,7 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 	 */
 	protected void flushEverythingToExecutions(FlushEvent event) throws HibernateException {
 
-        LOG.trace("Flushing session");
+		LOG.trace( "Flushing session" );
 
 		EventSource session = event.getSession();
 
@@ -115,7 +112,7 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 
 	@SuppressWarnings( value = {"unchecked"} )
 	private void logFlushResults(FlushEvent event) {
-		if ( ! LOG.isDebugEnabled()) {
+		if ( !LOG.isDebugEnabled() ) {
 			return;
 		}
 		final EventSource session = event.getSession();
@@ -146,7 +143,7 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 	 */
 	private void prepareEntityFlushes(EventSource session) throws HibernateException {
 
-        LOG.debugf( "Processing flush-time cascades" );
+		LOG.debugf( "Processing flush-time cascades" );
 
 		final Map.Entry[] list = IdentityMap.concurrentEntries( session.getPersistenceContext().getEntityEntries() );
 		//safe from concurrent modification because of how entryList() is implemented on IdentityMap
@@ -189,7 +186,7 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 		// Initialize dirty flags for arrays + collections with composite elements
 		// and reset reached, doupdate, etc.
 
-        LOG.debugf( "Dirty checking collections" );
+		LOG.debugf( "Dirty checking collections" );
 
 		final List list = IdentityMap.entries( session.getPersistenceContext().getCollectionEntries() );
 		final int size = list.size();
@@ -206,7 +203,7 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 	 */
 	private void flushEntities(FlushEvent event) throws HibernateException {
 
-        LOG.trace("Flushing entities and processing referenced collections");
+		LOG.trace( "Flushing entities and processing referenced collections" );
 
 		// Among other things, updateReachables() will recursively load all
 		// collections that are moving roles. This might cause entities to
@@ -249,9 +246,7 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 	 */
 	private void flushCollections(EventSource session) throws HibernateException {
 
-                if (LOG.isTraceEnabled()) {
-                   LOG.trace("Processing unreferenced collections");
-                }
+		LOG.trace( "Processing unreferenced collections" );
 
 		List list = IdentityMap.entries( session.getPersistenceContext().getCollectionEntries() );
 		int size = list.size();
@@ -265,9 +260,7 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 
 		// Schedule updates to collections:
 
-                if (LOG.isTraceEnabled()) {
-                   LOG.trace("Scheduling collection removes/(re)creates/updates");
-                }
+		LOG.trace( "Scheduling collection removes/(re)creates/updates" );
 
 		list = IdentityMap.entries( session.getPersistenceContext().getCollectionEntries() );
 		size = list.size();
@@ -333,7 +326,7 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 	 */
 	protected void performExecutions(EventSource session) throws HibernateException {
 
-        LOG.trace("Executing flush");
+		LOG.trace( "Executing flush" );
 
 		try {
 			session.getTransactionCoordinator().getJdbcCoordinator().flushBeginning();
@@ -360,7 +353,7 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 	 */
 	protected void postFlush(SessionImplementor session) throws HibernateException {
 
-        LOG.trace("Post flush");
+		LOG.trace( "Post flush" );
 
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
 		persistenceContext.getCollectionsByKey().clear();

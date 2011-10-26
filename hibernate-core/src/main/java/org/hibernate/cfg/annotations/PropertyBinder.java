@@ -173,7 +173,7 @@ public class PropertyBinder {
 
 	private Property makePropertyAndValue() {
 		validateBind();
-        LOG.debugf("MetadataSourceProcessor property %s with lazy=%s", name, lazy);
+		LOG.debugf( "MetadataSourceProcessor property %s with lazy=%s", name, lazy );
 		String containerClassName = holder == null ?
 				null :
 				holder.getClassName();
@@ -253,7 +253,7 @@ public class PropertyBinder {
 	//used when the value is provided and the binding is done elsewhere
 	public Property makeProperty() {
 		validateMake();
-        LOG.debugf("Building property %s", name);
+		LOG.debugf( "Building property %s", name );
 		Property prop = new Property();
 		prop.setName( name );
 		prop.setNodeName( name );
@@ -310,7 +310,7 @@ public class PropertyBinder {
 				);
 			}
 		}
-        LOG.trace("Cascading " + name + " with " + cascade);
+		LOG.tracev( "Cascading {0} with {1}", name, cascade );
 		this.mappingProperty = prop;
 		return prop;
 	}

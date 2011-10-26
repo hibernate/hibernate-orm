@@ -347,8 +347,11 @@ public class EntityBinder {
 				}
 				persistentClass.addFilter( filterName, cond );
 			}
-        } else if (filters.size() > 0) LOG.filterAnnotationOnSubclass(persistentClass.getEntityName());
-        LOG.debugf("Import with entity name %s", name);
+		}
+		else if ( filters.size() > 0 ) {
+			LOG.filterAnnotationOnSubclass( persistentClass.getEntityName() );
+		}
+		LOG.debugf( "Import with entity name %s", name );
 		try {
 			mappings.addImport( persistentClass.getEntityName(), name );
 			String entityName = persistentClass.getEntityName();
@@ -518,7 +521,7 @@ public class EntityBinder {
 		}
 
 		if ( persistentClass instanceof TableOwner ) {
-            LOG.debugf( "Bind entity %s on table %s", persistentClass.getEntityName(), table.getName() );
+			LOG.debugf( "Bind entity %s on table %s", persistentClass.getEntityName(), table.getName() );
 			( (TableOwner) persistentClass ).setTable( table );
 		}
 		else {

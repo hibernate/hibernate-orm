@@ -38,10 +38,9 @@ import org.hibernate.internal.CoreMessageLogger;
  */
 public class BasicSQLExceptionConverter {
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
-                                                                       BasicSQLExceptionConverter.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, BasicSQLExceptionConverter.class.getName() );
 	public static final BasicSQLExceptionConverter INSTANCE = new BasicSQLExceptionConverter();
-    public static final String MSG = LOG.unableToQueryDatabaseMetadata();
+	public static final String MSG = LOG.unableToQueryDatabaseMetadata();
 
 	private static final SQLStateConverter CONVERTER = new SQLStateConverter( new ConstraintNameExtracter() );
 

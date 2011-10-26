@@ -371,9 +371,9 @@ public abstract class CollectionBinder {
 
 	public void bind() {
 		this.collection = createCollection( propertyHolder.getPersistentClass() );
-        String role = StringHelper.qualify(propertyHolder.getPath(), propertyName);
-        LOG.debugf("Collection role: %s", role);
-        collection.setRole(role);
+		String role = StringHelper.qualify( propertyHolder.getPath(), propertyName );
+		LOG.debugf( "Collection role: %s", role );
+		collection.setRole( role );
 		collection.setNodeName( propertyName );
 
 		if ( property.isAnnotationPresent( MapKeyColumn.class )
@@ -713,7 +713,9 @@ public abstract class CollectionBinder {
 			String hqlOrderBy,
 			Mappings mappings,
 			Map<XClass, InheritanceState> inheritanceStatePerClass) {
-        LOG.debugf("Binding a OneToMany: %s.%s through a foreign key", propertyHolder.getEntityName(), propertyName);
+		if ( LOG.isDebugEnabled() ) {
+			LOG.debugf( "Binding a OneToMany: %s.%s through a foreign key", propertyHolder.getEntityName(), propertyName );
+		}
 		org.hibernate.mapping.OneToMany oneToMany = new org.hibernate.mapping.OneToMany( mappings, collection.getOwner() );
 		collection.setElement( oneToMany );
 		oneToMany.setReferencedEntityName( collectionType.getName() );
@@ -740,7 +742,9 @@ public abstract class CollectionBinder {
 			column.setJoins( joins );
 			collection.setCollectionTable( column.getTable() );
 		}
-        LOG.debugf( "Mapping collection: %s -> %s", collection.getRole(), collection.getCollectionTable().getName() );
+		if ( LOG.isDebugEnabled() ) {
+			LOG.debugf( "Mapping collection: %s -> %s", collection.getRole(), collection.getCollectionTable().getName() );
+		}
 		bindFilters( false );
 		bindCollectionSecondPass( collection, null, fkJoinColumns, cascadeDeleteEnabled, property, mappings );
 		if ( !collection.isInverse()
@@ -1448,7 +1452,7 @@ public abstract class CollectionBinder {
 	/**
 	 * bind the inverse FK of a ManyToMany
 	 * If we are in a mappedBy case, read the columns from the associated
-	 * colletion element
+	 * collection element
 	 * Otherwise delegates to the usual algorithm
 	 */
 	public static void bindManytoManyInverseFk(

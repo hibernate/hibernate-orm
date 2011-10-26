@@ -155,7 +155,7 @@ public abstract class AbstractTransactionImpl implements TransactionImplementor 
 			throw new TransactionException( "reuse of Transaction instances not supported" );
 		}
 
-        LOG.debug("begin");
+		LOG.debug( "begin" );
 
 		doBegin();
 
@@ -170,7 +170,7 @@ public abstract class AbstractTransactionImpl implements TransactionImplementor 
 			throw new TransactionException( "Transaction not successfully started" );
 		}
 
-        LOG.debug("committing");
+		LOG.debug( "committing" );
 
 		beforeTransactionCommit();
 
@@ -200,7 +200,7 @@ public abstract class AbstractTransactionImpl implements TransactionImplementor 
 			throw new TransactionException( "Transaction not successfully started" );
 		}
 
-        LOG.debug("rolling back");
+		LOG.debug( "rolling back" );
 
 		beforeTransactionRollBack();
 

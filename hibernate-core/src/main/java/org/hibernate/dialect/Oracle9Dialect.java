@@ -57,7 +57,7 @@ public class Oracle9Dialect extends Dialect {
 
 	public Oracle9Dialect() {
 		super();
-        LOG.deprecatedOracle9Dialect();
+		LOG.deprecatedOracle9Dialect();
 		registerColumnType( Types.BIT, "number(1,0)" );
 		registerColumnType( Types.BIGINT, "number(19,0)" );
 		registerColumnType( Types.SMALLINT, "number(5,0)" );

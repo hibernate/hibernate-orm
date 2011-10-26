@@ -57,24 +57,26 @@ import org.hibernate.mapping.SimpleValue;
  */
 @SuppressWarnings({"unchecked", "serial"})
 public class ListBinder extends CollectionBinder {
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, ListBinder.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, ListBinder.class.getName() );
 
 	public ListBinder() {
 	}
 
 	@Override
-    protected Collection createCollection(PersistentClass persistentClass) {
+	protected Collection createCollection(PersistentClass persistentClass) {
 		return new org.hibernate.mapping.List( getMappings(), persistentClass );
 	}
 
 	@Override
-    public void setSqlOrderBy(OrderBy orderByAnn) {
-        if (orderByAnn != null) LOG.orderByAnnotationIndexedCollection();
+	public void setSqlOrderBy(OrderBy orderByAnn) {
+		if ( orderByAnn != null )
+			LOG.orderByAnnotationIndexedCollection();
 	}
 
 	@Override
-    public void setSort(Sort sortAnn) {
-        if (sortAnn != null) LOG.sortAnnotationIndexedCollection();
+	public void setSort(Sort sortAnn) {
+		if ( sortAnn != null )
+			LOG.sortAnnotationIndexedCollection();
 	}
 
 	@Override

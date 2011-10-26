@@ -69,7 +69,7 @@ public class MultiTableDeleteExecutor extends AbstractStatementExecutor {
 		this.persister = fromElement.getQueryable();
 
 		this.idInsertSelect = generateIdInsertSelect( persister, bulkTargetAlias, deleteStatement.getWhereClause() );
-        LOG.trace("Generated ID-INSERT-SELECT SQL (multi-table delete) : " + idInsertSelect);
+		LOG.tracev( "Generated ID-INSERT-SELECT SQL (multi-table delete) : {0}", idInsertSelect );
 
 		String[] tableNames = persister.getConstraintOrderedTableNameClosure();
 		String[][] columnNames = persister.getContraintOrderedTableKeyColumnClosure();

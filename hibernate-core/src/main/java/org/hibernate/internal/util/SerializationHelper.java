@@ -88,7 +88,7 @@ public final class SerializationHelper {
 	 * @throws SerializationException (runtime) if the serialization fails
 	 */
 	public static Object clone(Serializable object) throws SerializationException {
-        LOG.trace("Starting clone through serialization");
+		LOG.trace( "Starting clone through serialization" );
 		if ( object == null ) {
 			return null;
 		}
@@ -119,9 +119,13 @@ public final class SerializationHelper {
 			throw new IllegalArgumentException( "The OutputStream must not be null" );
 		}
 
-        if (LOG.isTraceEnabled()) {
-            if (Hibernate.isInitialized(obj)) LOG.trace("Starting serialization of object [" + obj + "]");
-            else LOG.trace("Starting serialization of [uninitialized proxy]");
+		if ( LOG.isTraceEnabled() ) {
+			if ( Hibernate.isInitialized( obj ) ) {
+				LOG.tracev( "Starting serialization of object [{0}]", obj );
+			}
+			else {
+				LOG.trace( "Starting serialization of [uninitialized proxy]" );
+			}
 		}
 
 		ObjectOutputStream out = null;
@@ -227,7 +231,7 @@ public final class SerializationHelper {
 			throw new IllegalArgumentException( "The InputStream must not be null" );
 		}
 
-        LOG.trace("Starting deserialization of object");
+		LOG.trace( "Starting deserialization of object" );
 
 		try {
 			CustomObjectInputStream in = new CustomObjectInputStream(
@@ -331,15 +335,15 @@ public final class SerializationHelper {
 		 * {@inheritDoc}
 		 */
 		@Override
-        protected Class resolveClass(ObjectStreamClass v) throws IOException, ClassNotFoundException {
-			String className = v.getName();
-            LOG.trace("Attempting to locate class [" + className + "]");
+		protected Class resolveClass(ObjectStreamClass v) throws IOException, ClassNotFoundException {
+			final String className = v.getName();
+			LOG.tracev( "Attempting to locate class [{0}]", className );
 
 			try {
 				return Class.forName( className, false, loader1 );
 			}
 			catch ( ClassNotFoundException e ) {
-                LOG.trace("Unable to locate class using given classloader");
+				LOG.trace( "Unable to locate class using given classloader" );
 			}
 
 			if ( different( loader1, loader2 ) ) {
@@ -347,7 +351,7 @@ public final class SerializationHelper {
 					return Class.forName( className, false, loader2 );
 				}
 				catch ( ClassNotFoundException e ) {
-                    LOG.trace("Unable to locate class using given classloader");
+					LOG.trace( "Unable to locate class using given classloader" );
 				}
 			}
 
@@ -356,7 +360,7 @@ public final class SerializationHelper {
 					return Class.forName( className, false, loader3 );
 				}
 				catch ( ClassNotFoundException e ) {
-                    LOG.trace("Unable to locate class using given classloader");
+					LOG.trace( "Unable to locate class using given classloader" );
 				}
 			}
 

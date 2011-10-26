@@ -45,8 +45,7 @@ import org.hibernate.internal.util.StringHelper;
  */
 public class SQLExceptionConverterFactory {
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
-                                                                       SQLExceptionConverterFactory.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, SQLExceptionConverterFactory.class.getName() );
 
 	private SQLExceptionConverterFactory() {
 		// Private constructor - stops checkstyle from complaining.
@@ -74,7 +73,7 @@ public class SQLExceptionConverterFactory {
 		}
 
 		if ( converter == null ) {
-            LOG.trace("Using dialect defined converter");
+			LOG.trace( "Using dialect defined converter" );
 			converter = dialect.buildSQLExceptionConverter();
 		}
 
@@ -83,7 +82,7 @@ public class SQLExceptionConverterFactory {
 				( (Configurable) converter ).configure( properties );
 			}
 			catch ( HibernateException e ) {
-                LOG.unableToConfigureSqlExceptionConverter(e);
+				LOG.unableToConfigureSqlExceptionConverter( e );
 				throw e;
 			}
 		}
@@ -107,7 +106,7 @@ public class SQLExceptionConverterFactory {
 
 	private static SQLExceptionConverter constructConverter(String converterClassName, ViolatedConstraintNameExtracter violatedConstraintNameExtracter) {
 		try {
-            LOG.trace("Attempting to construct instance of specified SQLExceptionConverter [" + converterClassName + "]");
+			LOG.tracev( "Attempting to construct instance of specified SQLExceptionConverter [{0}]", converterClassName );
 			Class converterClass = ReflectHelper.classForName( converterClassName );
 
 			// First, try to find a matching constructor accepting a ViolatedConstraintNameExtracter param...
@@ -131,7 +130,7 @@ public class SQLExceptionConverterFactory {
 
 		}
 		catch ( Throwable t ) {
-            LOG.unableToConstructSqlExceptionConverter(t);
+			LOG.unableToConstructSqlExceptionConverter( t );
 		}
 
 		return null;

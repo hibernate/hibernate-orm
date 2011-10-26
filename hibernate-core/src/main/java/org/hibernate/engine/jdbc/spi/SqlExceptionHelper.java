@@ -136,10 +136,10 @@ public class SqlExceptionHelper {
         if (LOG.isEnabled(Level.ERROR)) {
             if (LOG.isDebugEnabled()) {
                 message = StringHelper.isNotEmpty(message) ? message : DEFAULT_EXCEPTION_MSG;
-                LOG.debug(message, sqlException);
+				LOG.debug( message, sqlException );
             }
             while (sqlException != null) {
-                StringBuffer buf = new StringBuffer(30).append("SQL Error: ").append(sqlException.getErrorCode()).append(", SQLState: ").append(sqlException.getSQLState());
+                StringBuilder buf = new StringBuilder(30).append("SQL Error: ").append(sqlException.getErrorCode()).append(", SQLState: ").append(sqlException.getSQLState());
                 LOG.warn(buf.toString());
                 LOG.error(sqlException.getMessage());
                 sqlException = sqlException.getNextException();

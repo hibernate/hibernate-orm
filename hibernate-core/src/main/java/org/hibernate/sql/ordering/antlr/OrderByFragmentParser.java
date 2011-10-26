@@ -81,8 +81,8 @@ public class OrderByFragmentParser extends GeneratedOrderByFragmentParser {
 	 * {@inheritDoc}
 	 */
 	@Override
-    protected void trace(String msg) {
-        LOG.trace(msg);
+	protected void trace(String msg) {
+		LOG.trace( msg );
 	}
 
 	/**

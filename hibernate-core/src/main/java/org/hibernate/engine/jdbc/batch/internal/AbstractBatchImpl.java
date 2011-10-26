@@ -128,7 +128,7 @@ public abstract class AbstractBatchImpl implements Batch {
 			statements.put( sql, statement );
 		}
 		else {
-            LOG.debugf("Reusing batch statement");
+			LOG.debugf( "Reusing batch statement" );
 			sqlStatementLogger().logStatement( sql );
 		}
 		return statement;
@@ -145,7 +145,7 @@ public abstract class AbstractBatchImpl implements Batch {
 			}
 		}
 		catch ( SQLException sqle ) {
-            LOG.sqlExceptionEscapedProxy(sqle);
+			LOG.sqlExceptionEscapedProxy( sqle );
 			throw sqlExceptionHelper().convert( sqle, "could not prepare batch statement", sql );
 		}
 	}
@@ -175,8 +175,8 @@ public abstract class AbstractBatchImpl implements Batch {
 				statement.close();
 			}
 			catch ( SQLException e ) {
-                LOG.unableToReleaseBatchStatement();
-                LOG.sqlExceptionEscapedProxy(e);
+				LOG.unableToReleaseBatchStatement();
+				LOG.sqlExceptionEscapedProxy( e );
 			}
 		}
 		getStatements().clear();

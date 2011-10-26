@@ -154,7 +154,7 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 		this.elementType = new FromElementType( this, persister, type );
 		// Register the FromElement with the FROM clause, now that we have the names and aliases.
 		fromClause.registerFromElement( this );
-        LOG.debugf("%s : %s (%s) -> %s", fromClause, className, classAlias == null ? "<no alias>" : classAlias, tableAlias);
+		LOG.debugf( "%s : %s (%s) -> %s", fromClause, className, classAlias == null ? "<no alias>" : classAlias, tableAlias );
 	}
 
 	public EntityPersister getEntityPersister() {
@@ -258,14 +258,14 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 	 * @return String - The additional display text.
 	 */
 	public String getDisplayText() {
-		StringBuffer buf = new StringBuffer();
+		StringBuilder buf = new StringBuilder();
 		buf.append( "FromElement{" );
 		appendDisplayText( buf );
 		buf.append( "}" );
 		return buf.toString();
 	}
 
-	protected void appendDisplayText(StringBuffer buf) {
+	protected void appendDisplayText(StringBuilder buf) {
 		buf.append( isImplied() ? (
 				isImpliedInFromClause() ? "implied in FROM clause" : "implied" )
 				: "explicit" );
@@ -311,9 +311,8 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 	}
 
 	public void setIncludeSubclasses(boolean includeSubclasses) {
-        if (LOG.isTraceEnabled() && isDereferencedBySuperclassOrSubclassProperty() && !includeSubclasses) LOG.trace("Attempt to disable subclass-inclusions : "
-                                                                                                                    + new Exception(
-                                                                                                                                    "Stack-trace source"));
+		if ( LOG.isTraceEnabled() && isDereferencedBySuperclassOrSubclassProperty() && !includeSubclasses )
+			LOG.trace( "Attempt to disable subclass-inclusions : ", new Exception( "Stack-trace source" ) );
 		this.includeSubclasses = includeSubclasses;
 	}
 
@@ -621,8 +620,10 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 		if ( persister != null ) {
 			try {
 				Queryable.Declarer propertyDeclarer = persister.getSubclassPropertyDeclarer( propertyName );
-                LOG.trace("Handling property dereference [" + persister.getEntityName() + " (" + getClassAlias() + ") -> "
-                          + propertyName + " (" + propertyDeclarer + ")]");
+				if ( LOG.isTraceEnabled() ) {
+					LOG.tracev( "Handling property dereference [{0} ({1}) -> {2} ({3})]",
+							persister.getEntityName(), getClassAlias(), propertyName, propertyDeclarer );
+				}
 				if ( propertyDeclarer == Queryable.Declarer.SUBCLASS ) {
 					dereferencedBySubclassProperty = true;
 					includeSubclasses = true;

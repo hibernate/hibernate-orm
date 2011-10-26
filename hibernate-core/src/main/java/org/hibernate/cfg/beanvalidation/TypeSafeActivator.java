@@ -138,7 +138,7 @@ class TypeSafeActivator {
 				applyDDL( "", persistentClass, clazz, factory, groups, true, dialect );
 			}
 			catch (Exception e) {
-                LOG.unableToApplyConstraints(className, e);
+				LOG.unableToApplyConstraints( className, e );
 			}
 		}
 	}

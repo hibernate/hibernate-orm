@@ -442,7 +442,9 @@ public class JPAOverridenAnnotationReader implements AnnotationReader {
 			}
 			for ( Element subelement : (List<Element>) element.elements() ) {
 				String propertyName = subelement.attributeValue( "name" );
-                if (!properties.contains(propertyName)) LOG.propertyNotFound(StringHelper.qualify(className, propertyName));
+				if ( !properties.contains( propertyName ) ) {
+					LOG.propertyNotFound( StringHelper.qualify( className, propertyName ) );
+				}
 			}
 		}
 	}

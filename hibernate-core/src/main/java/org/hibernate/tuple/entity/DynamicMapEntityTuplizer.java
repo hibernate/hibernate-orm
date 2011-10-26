@@ -122,7 +122,7 @@ public class DynamicMapEntityTuplizer extends AbstractEntityTuplizer {
 			);
 		}
 		catch ( HibernateException he ) {
-            LOG.unableToCreateProxyFactory(getEntityName(), he);
+			LOG.unableToCreateProxyFactory( getEntityName(), he );
 			pf = null;
 		}
 		return pf;

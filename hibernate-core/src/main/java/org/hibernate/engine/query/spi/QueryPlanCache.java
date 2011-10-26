@@ -115,12 +115,11 @@ public class QueryPlanCache implements Serializable {
 		HQLQueryPlan plan = ( HQLQueryPlan ) planCache.get ( key );
 
 		if ( plan == null ) {
-			if(LOG.isTraceEnabled())
-            LOG.trace("Unable to locate HQL query plan in cache; generating (" + queryString + ")");
+			LOG.tracev( "Unable to locate HQL query plan in cache; generating ({0})", queryString );
 			plan = new HQLQueryPlan(queryString, shallow, enabledFilters, factory );
-        } else {
-			if(LOG.isTraceEnabled())
-			LOG.trace("Located HQL query plan in cache (" + queryString + ")");
+		}
+		else {
+			LOG.tracev( "Located HQL query plan in cache ({0})", queryString );
 		}
 		planCache.put( key, plan );
 
@@ -133,13 +132,12 @@ public class QueryPlanCache implements Serializable {
 		FilterQueryPlan plan = ( FilterQueryPlan ) planCache.get ( key );
 
 		if ( plan == null ) {
-			if(LOG.isTraceEnabled())
-            LOG.trace("Unable to locate collection-filter query plan in cache; generating (" + collectionRole + " : "
-                      + filterString + ")");
+			LOG.tracev( "Unable to locate collection-filter query plan in cache; generating ({0} : {1} )",
+					collectionRole, filterString );
 			plan = new FilterQueryPlan( filterString, collectionRole, shallow, enabledFilters, factory );
-        } else {
-			if(LOG.isTraceEnabled())
-			LOG.trace("Located collection-filter query plan in cache (" + collectionRole + " : " + filterString + ")");
+		}
+		else {
+			LOG.tracev( "Located collection-filter query plan in cache ({0} : {1})", collectionRole, filterString );
 		}
 
 		planCache.put( key, plan );
@@ -151,12 +149,15 @@ public class QueryPlanCache implements Serializable {
 		NativeSQLQueryPlan plan = ( NativeSQLQueryPlan ) planCache.get( spec );
 
 		if ( plan == null ) {
-			if(LOG.isTraceEnabled())
-            LOG.trace("Unable to locate native-sql query plan in cache; generating (" + spec.getQueryString() + ")");
+			if ( LOG.isTraceEnabled() ) {
+				LOG.tracev( "Unable to locate native-sql query plan in cache; generating ({0})", spec.getQueryString() );
+			}
 			plan = new NativeSQLQueryPlan( spec, factory );
-        } else {
-			if(LOG.isTraceEnabled())
-			LOG.trace("Located native-sql query plan in cache (" + spec.getQueryString() + ")");
+		}
+		else {
+			if ( LOG.isTraceEnabled() ) {
+				LOG.tracev( "Located native-sql query plan in cache ({0})", spec.getQueryString() );
+			}
 		}
 
 		planCache.put( spec, plan );
@@ -221,7 +222,7 @@ public class QueryPlanCache implements Serializable {
 		}
 
 		@Override
-        public boolean equals(Object o) {
+		public boolean equals(Object o) {
 			if ( this == o ) {
 				return true;
 			}
@@ -238,7 +239,7 @@ public class QueryPlanCache implements Serializable {
 		}
 
 		@Override
-        public int hashCode() {
+		public int hashCode() {
 			return hashCode;
 		}
 	}
@@ -279,7 +280,7 @@ public class QueryPlanCache implements Serializable {
 		}
 
 		@Override
-        public boolean equals(Object o) {
+		public boolean equals(Object o) {
 			if ( this == o ) {
 				return true;
 			}
@@ -295,7 +296,7 @@ public class QueryPlanCache implements Serializable {
 		}
 
 		@Override
-        public int hashCode() {
+		public int hashCode() {
 			return hashCode;
 		}
 	}
@@ -330,7 +331,7 @@ public class QueryPlanCache implements Serializable {
 		}
 
 		@Override
-        public boolean equals(Object o) {
+		public boolean equals(Object o) {
 			if ( this == o ) {
 				return true;
 			}
@@ -348,7 +349,7 @@ public class QueryPlanCache implements Serializable {
 		}
 
 		@Override
-        public int hashCode() {
+		public int hashCode() {
 			return hashCode;
 		}
 	}

@@ -41,7 +41,7 @@ import org.hibernate.internal.CoreMessageLogger;
  */
 public class NonBatchingBatch extends AbstractBatchImpl {
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, NonBatchingBatch.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, NonBatchingBatch.class.getName() );
 
 	protected NonBatchingBatch(BatchKey key, JdbcCoordinator jdbcCoordinator) {
 		super( key, jdbcCoordinator );
@@ -59,11 +59,11 @@ public class NonBatchingBatch extends AbstractBatchImpl {
 					statement.close();
 				}
 				catch (SQLException e) {
-                    LOG.debug("Unable to close non-batched batch statement", e);
+					LOG.debug( "Unable to close non-batched batch statement", e );
 				}
 			}
 			catch ( SQLException e ) {
-                LOG.debug("SQLException escaped proxy", e);
+				LOG.debug( "SQLException escaped proxy", e );
 				throw sqlExceptionHelper().convert( e, "could not execute batch statement", entry.getKey() );
 			}
 		}

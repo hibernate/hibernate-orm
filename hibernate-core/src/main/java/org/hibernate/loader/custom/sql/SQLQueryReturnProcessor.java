@@ -385,7 +385,7 @@ public class SQLQueryReturnProcessor {
 	private void addPersister(String alias, Map propertyResult, SQLLoadable persister) {
 		alias2Persister.put( alias, persister );
 		String suffix = generateEntitySuffix();
-        LOG.trace("Mapping alias [" + alias + "] to entity-suffix [" + suffix + "]");
+		LOG.tracev( "Mapping alias [{0}] to entity-suffix [{1}]", alias, suffix );
 		alias2Suffix.put( alias, suffix );
 		entityPropertyResultMaps.put( alias, propertyResult );
 	}
@@ -394,7 +394,7 @@ public class SQLQueryReturnProcessor {
 		SQLLoadableCollection collectionPersister = ( SQLLoadableCollection ) factory.getCollectionPersister( role );
 		alias2CollectionPersister.put( alias, collectionPersister );
 		String suffix = generateCollectionSuffix();
-        LOG.trace("Mapping alias [" + alias + "] to collection-suffix [" + suffix + "]");
+		LOG.tracev( "Mapping alias [{0}] to collection-suffix [{1}]", alias, suffix );
 		alias2CollectionSuffix.put( alias, suffix );
 		collectionPropertyResultMaps.put( alias, propertyResults );
 

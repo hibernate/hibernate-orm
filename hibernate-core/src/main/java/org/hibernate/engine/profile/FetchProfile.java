@@ -89,10 +89,11 @@ public class FetchProfile {
 	 *
 	 * @param fetch The fetch to add.
 	 */
-	public void addFetch(Fetch fetch) {
+	public void addFetch(final Fetch fetch) {
+		final String fetchAssociactionRole = fetch.getAssociation().getRole();
 		Type associationType = fetch.getAssociation().getOwner().getPropertyType( fetch.getAssociation().getAssociationPath() );
 		if ( associationType.isCollectionType() ) {
-            LOG.trace("Handling request to add collection fetch [" + fetch.getAssociation().getRole() + "]");
+			LOG.tracev( "Handling request to add collection fetch [{0}]", fetchAssociactionRole );
 
 			// couple of things for which to account in the case of collection
 			// join fetches
@@ -101,7 +102,7 @@ public class FetchProfile {
 				// processed collection join fetches
 				if ( BagType.class.isInstance( associationType ) ) {
 					if ( containsJoinFetchedCollection ) {
-                        LOG.containsJoinFetchedCollection(fetch.getAssociation().getRole());
+						LOG.containsJoinFetchedCollection( fetchAssociactionRole );
 						return; // EARLY EXIT!!!
 					}
 				}
@@ -110,8 +111,10 @@ public class FetchProfile {
 				// fetch where we had already added a bag join fetch previously,
 				// we need to go back and ignore that previous bag join fetch.
 				if ( containsJoinFetchedBag ) {
-                    // just for safety...
-                    if (fetches.remove(bagJoinFetch.getAssociation().getRole()) != bagJoinFetch) LOG.unableToRemoveBagJoinFetch();
+					// just for safety...
+					if ( fetches.remove( bagJoinFetch.getAssociation().getRole() ) != bagJoinFetch ) {
+						LOG.unableToRemoveBagJoinFetch();
+					}
 					bagJoinFetch = null;
 					containsJoinFetchedBag = false;
 				}
@@ -119,7 +122,7 @@ public class FetchProfile {
 				containsJoinFetchedCollection = true;
 			}
 		}
-		fetches.put( fetch.getAssociation().getRole(), fetch );
+		fetches.put( fetchAssociactionRole, fetch );
 	}
 
 	/**

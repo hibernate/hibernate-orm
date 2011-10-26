@@ -180,7 +180,7 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 						rs.close();
 					}
 					catch (SQLException sqle) {
-                        LOG.unableToReadOrInitHiValue(sqle);
+						LOG.unableToReadOrInitHiValue( sqle );
 						throw sqle;
 					}
 					finally {
@@ -198,7 +198,7 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 						rows = ups.executeUpdate();
 					}
 					catch (SQLException sqle) {
-                        LOG.error(LOG.unableToUpdateHiValue(tableName), sqle);
+						LOG.error( LOG.unableToUpdateHiValue( tableName ), sqle );
 						throw sqle;
 					}
 					finally {

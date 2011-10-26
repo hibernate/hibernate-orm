@@ -31,7 +31,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.VersionType;
 
 /**
- * Utilities for dealing with optimisitic locking values.
+ * Utilities for dealing with optimistic locking values.
  *
  * @author Gavin King
  */
@@ -45,24 +45,24 @@ public final class Versioning {
 	public static final int OPTIMISTIC_LOCK_NONE = -1;
 
 	/**
-	 * Apply optimisitc locking based on the defined version or timestamp
+	 * Apply optimistic locking based on the defined version or timestamp
 	 * property.
 	 */
 	public static final int OPTIMISTIC_LOCK_VERSION = 0;
 
 	/**
-	 * Apply optimisitc locking based on the a current vs. snapshot comparison
+	 * Apply optimistic locking based on the a current vs. snapshot comparison
 	 * of <b>all</b> properties.
 	 */
 	public static final int OPTIMISTIC_LOCK_ALL = 2;
 
 	/**
-	 * Apply optimisitc locking based on the a current vs. snapshot comparison
+	 * Apply optimistic locking based on the a current vs. snapshot comparison
 	 * of <b>dirty</b> properties.
 	 */
 	public static final int OPTIMISTIC_LOCK_DIRTY = 1;
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, Versioning.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, Versioning.class.getName() );
 
 	/**
 	 * Private constructor disallowing instantiation.
@@ -70,28 +70,28 @@ public final class Versioning {
 	private Versioning() {}
 
 	/**
-	 * Create an initial optimisitc locking value according the {@link VersionType}
+	 * Create an initial optimistic locking value according the {@link VersionType}
 	 * contract for the version property.
 	 *
 	 * @param versionType The version type.
 	 * @param session The originating session
-	 * @return The initial optimisitc locking value
+	 * @return The initial optimistic locking value
 	 */
 	private static Object seed(VersionType versionType, SessionImplementor session) {
 		Object seed = versionType.seed( session );
-        LOG.trace("Seeding: " + seed);
+		LOG.tracev( "Seeding: {0}", seed );
 		return seed;
 	}
 
 	/**
-	 * Create an initial optimisitc locking value according the {@link VersionType}
+	 * Create an initial optimistic locking value according the {@link VersionType}
 	 * contract for the version property <b>if required</b> and inject it into
 	 * the snapshot state.
 	 *
 	 * @param fields The current snapshot state
 	 * @param versionProperty The index of the version property
 	 * @param versionType The version type
-	 * @param session The orginating session
+	 * @param session The originating session
 	 * @return True if we injected a new version value into the fields array; false
 	 * otherwise.
 	 */
@@ -112,13 +112,13 @@ public final class Versioning {
 			fields[versionProperty] = seed( versionType, session );
 			return true;
 		}
-        LOG.trace("Using initial version: " + initialVersion);
-        return false;
+		LOG.tracev( "Using initial version: {0}", initialVersion );
+		return false;
 	}
 
 
 	/**
-	 * Generate the next increment in the optimisitc locking value according
+	 * Generate the next increment in the optimistic locking value according
 	 * the {@link VersionType} contract for the version property.
 	 *
 	 * @param version The current version
@@ -128,16 +128,18 @@ public final class Versioning {
 	 */
 	public static Object increment(Object version, VersionType versionType, SessionImplementor session) {
 		Object next = versionType.next( version, session );
-        if (LOG.isTraceEnabled()) LOG.trace("Incrementing: " + versionType.toLoggableString(version, session.getFactory()) + " to "
-                                            + versionType.toLoggableString(next, session.getFactory()));
+		if ( LOG.isTraceEnabled() ) {
+			LOG.tracev( "Incrementing: {0} to {1}", versionType.toLoggableString( version, session.getFactory() ),
+					versionType.toLoggableString( next, session.getFactory() ) );
+		}
 		return next;
 	}
 
 	/**
-	 * Inject the optimisitc locking value into the entity state snapshot.
+	 * Inject the optimistic locking value into the entity state snapshot.
 	 *
 	 * @param fields The state snapshot
-	 * @param version The optimisitc locking value
+	 * @param version The optimistic locking value
 	 * @param persister The entity persister
 	 */
 	public static void setVersion(Object[] fields, Object version, EntityPersister persister) {
@@ -148,11 +150,11 @@ public final class Versioning {
 	}
 
 	/**
-	 * Extract the optimisitc locking value out of the entity state snapshot.
+	 * Extract the optimistic locking value out of the entity state snapshot.
 	 *
 	 * @param fields The state snapshot
 	 * @param persister The entity persister
-	 * @return The extracted optimisitc locking value
+	 * @return The extracted optimistic locking value
 	 */
 	public static Object getVersion(Object[] fields, EntityPersister persister) {
 		if ( !persister.isVersioned() ) {
@@ -181,6 +183,6 @@ public final class Versioning {
 				return true;
 			}
 		}
-	    return false;
+		return false;
 	}
 }

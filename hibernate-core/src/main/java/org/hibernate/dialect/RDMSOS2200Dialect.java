@@ -62,11 +62,11 @@ public class RDMSOS2200Dialect extends Dialect {
 
 	public RDMSOS2200Dialect() {
 		super();
-        // Display the dialect version.
-        LOG.rdmsOs2200Dialect();
+		// Display the dialect version.
+		LOG.rdmsOs2200Dialect();
 
         /**
-         * This section registers RDMS Biult-in Functions (BIFs) with Hibernate.
+         * This section registers RDMS Built-in Functions (BIFs) with Hibernate.
          * The first parameter is the 'register' function name with Hibernate.
          * The second parameter is the defined RDMS SQL Function and it's
          * characteristics. If StandardSQLFunction(...) is used, the RDMS BIF

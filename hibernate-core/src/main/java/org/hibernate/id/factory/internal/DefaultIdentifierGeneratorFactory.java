@@ -104,7 +104,7 @@ public class DefaultIdentifierGeneratorFactory implements MutableIdentifierGener
 
 	@Override
 	public void setDialect(Dialect dialect) {
-        LOG.debugf( "Setting dialect [%s]", dialect );
+		LOG.debugf( "Setting dialect [%s]", dialect );
 		this.dialect = dialect;
 	}
 

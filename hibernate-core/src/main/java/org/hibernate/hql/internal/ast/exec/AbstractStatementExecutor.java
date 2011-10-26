@@ -201,13 +201,13 @@ public abstract class AbstractStatementExecutor implements StatementExecutor {
 		}
 
 		public void prepare(SQLWarning warning) {
-            LOG.warningsCreatingTempTable(warning);
+			LOG.warningsCreatingTempTable( warning );
 		}
 
 		@Override
 		protected void logWarning(String description, String message) {
-            LOG.debugf(description);
-            LOG.debugf(message);
+			LOG.debugf( description );
+			LOG.debugf( message );
 		}
 	};
 

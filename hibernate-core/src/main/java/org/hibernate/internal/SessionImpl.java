@@ -1552,7 +1552,7 @@ public final class SessionImpl
 		checkTransactionSynchStatus();
 
 		if ( LOG.isTraceEnabled() ) {
-			LOG.trace( "Scroll SQL query: " + customQuery.getSQL() );
+			LOG.tracev( "Scroll SQL query: {0}", customQuery.getSQL() );
 		}
 
 		CustomLoader loader = new CustomLoader( customQuery, getFactory() );
@@ -1575,7 +1575,7 @@ public final class SessionImpl
 		checkTransactionSynchStatus();
 
 		if ( LOG.isTraceEnabled() ) {
-			LOG.trace( "SQL query: " + customQuery.getSQL() );
+			LOG.tracev( "SQL query: {0}", customQuery.getSQL() );
 		}
 
 		CustomLoader loader = new CustomLoader( customQuery, getFactory() );

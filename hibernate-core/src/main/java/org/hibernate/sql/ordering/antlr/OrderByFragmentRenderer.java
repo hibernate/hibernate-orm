@@ -37,8 +37,7 @@ import org.hibernate.internal.util.StringHelper;
  */
 public class OrderByFragmentRenderer extends GeneratedOrderByFragmentRenderer {
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
-                                                                       OrderByFragmentRenderer.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, OrderByFragmentRenderer.class.getName() );
 	private static final ASTPrinter printer = new ASTPrinter( GeneratedOrderByFragmentRendererTokenTypes.class );
 
 	@Override
@@ -58,7 +57,7 @@ public class OrderByFragmentRenderer extends GeneratedOrderByFragmentRenderer {
 		}
 		String prefix = StringHelper.repeat( '-', (traceDepth++ * 2) ) + "-> ";
 		String traceText = ruleName + " (" + buildTraceNodeName(tree) + ")";
-        LOG.trace(prefix + traceText);
+		LOG.trace( prefix + traceText );
 	}
 
 	private String buildTraceNodeName(AST tree) {
@@ -73,6 +72,6 @@ public class OrderByFragmentRenderer extends GeneratedOrderByFragmentRenderer {
 			return;
 		}
 		String prefix = "<-" + StringHelper.repeat( '-', (--traceDepth * 2) ) + " ";
-        LOG.trace(prefix + ruleName);
+		LOG.trace( prefix + ruleName );
 	}
 }

@@ -134,8 +134,7 @@ public class JoinProcessor implements SqlTokenTypes {
                     boolean containsTableAlias = fromClause.containsTableAlias(alias);
                     if (fromElement.isDereferencedBySubclassProperty()) {
                         // TODO : or should we return 'containsTableAlias'??
-                        LOG.trace("Forcing inclusion of extra joins [alias=" + alias + ", containsTableAlias=" + containsTableAlias
-                                  + "]");
+						LOG.tracev( "Forcing inclusion of extra joins [alias={0}, containsTableAlias={1}]", alias, containsTableAlias );
                         return true;
                     }
                     boolean shallowQuery = walker.isShallowQuery();
@@ -173,7 +172,7 @@ public class JoinProcessor implements SqlTokenTypes {
 		// If there is a FROM fragment and the FROM element is an explicit, then add the from part.
 		if ( fromElement.useFromFragment() /*&& StringHelper.isNotEmpty( frag )*/ ) {
 			String fromFragment = processFromFragment( frag, join ).trim();
-            LOG.debugf("Using FROM fragment [%s]", fromFragment);
+			LOG.debugf( "Using FROM fragment [%s]", fromFragment );
 			processDynamicFilterParameters(
 					fromFragment,
 					fromElement,

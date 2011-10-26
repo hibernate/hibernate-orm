@@ -69,8 +69,6 @@ import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.tuple.ElementWrapper;
 
-import static org.jboss.logging.Logger.Level.WARN;
-
 /**
  * A <tt>PersistenceContext</tt> represents the state of persistent "stuff" which
  * Hibernate is tracking.  This includes persistent entities, collections,
@@ -87,8 +85,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	public static final Object NO_ROW = new MarkerObject( "NO_ROW" );
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
-                                                                       StatefulPersistenceContext.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, StatefulPersistenceContext.class.getName() );
+
 	private static final int INIT_COLL_SIZE = 8;
 
 	private SessionImplementor session;
@@ -560,7 +558,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		}
 
 		if ( value instanceof HibernateProxy ) {
-            LOG.debugf("Setting proxy identifier: %s", id);
+			LOG.debugf( "Setting proxy identifier: %s", id );
 			HibernateProxy proxy = (HibernateProxy) value;
 			LazyInitializer li = proxy.getHibernateLazyInitializer();
 			li.setIdentifier(id);
@@ -671,9 +669,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		boolean alreadyNarrow = concreteProxyClass.isAssignableFrom( proxy.getClass() );
 
 		if ( !alreadyNarrow ) {
-            if ( LOG.isEnabled(WARN) ) {
-				LOG.narrowingProxy( concreteProxyClass );
-			}
+			LOG.narrowingProxy( concreteProxyClass );
 
 			if ( object != null ) {
 				proxiesByKey.remove(key);
@@ -898,7 +894,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	 */
 	public void initializeNonLazyCollections() throws HibernateException {
 		if ( loadCounter == 0 ) {
-            LOG.debugf("Initializing non-lazy collections");
+			LOG.debugf( "Initializing non-lazy collections" );
 			//do this work only at the very highest level of the load
 			loadCounter++; //don't let this method be called recursively
 			try {
@@ -1091,7 +1087,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	/**
-	 * Call this before begining a two-phase load
+	 * Call this before beginning a two-phase load
 	 */
 	public void beforeLoad() {
 		loadCounter++;
@@ -1440,13 +1436,14 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	 * @throws IOException serialization errors.
 	 */
 	public void serialize(ObjectOutputStream oos) throws IOException {
-        LOG.trace("Serializing persistent-context");
+		final boolean tracing = LOG.isTraceEnabled();
+		if ( tracing ) LOG.trace( "Serializing persistent-context" );
 
 		oos.writeBoolean( defaultReadOnly );
 		oos.writeBoolean( hasNonReadOnlyEntities );
 
 		oos.writeInt( entitiesByKey.size() );
-        LOG.trace("Starting serialization of [" + entitiesByKey.size() + "] entitiesByKey entries");
+		if ( tracing ) LOG.trace("Starting serialization of [" + entitiesByKey.size() + "] entitiesByKey entries");
 		Iterator itr = entitiesByKey.entrySet().iterator();
 		while ( itr.hasNext() ) {
 			Map.Entry entry = ( Map.Entry ) itr.next();
@@ -1455,7 +1452,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		}
 
 		oos.writeInt( entitiesByUniqueKey.size() );
-        LOG.trace("Starting serialization of [" + entitiesByUniqueKey.size() + "] entitiesByUniqueKey entries");
+		if ( tracing ) LOG.trace("Starting serialization of [" + entitiesByUniqueKey.size() + "] entitiesByUniqueKey entries");
 		itr = entitiesByUniqueKey.entrySet().iterator();
 		while ( itr.hasNext() ) {
 			Map.Entry entry = ( Map.Entry ) itr.next();
@@ -1464,7 +1461,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		}
 
 		oos.writeInt( proxiesByKey.size() );
-        LOG.trace("Starting serialization of [" + proxiesByKey.size() + "] proxiesByKey entries");
+		if ( tracing ) LOG.trace("Starting serialization of [" + proxiesByKey.size() + "] proxiesByKey entries");
 		itr = proxiesByKey.entrySet().iterator();
 		while ( itr.hasNext() ) {
 			Map.Entry entry = ( Map.Entry ) itr.next();
@@ -1473,7 +1470,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		}
 
 		oos.writeInt( entitySnapshotsByKey.size() );
-        LOG.trace("Starting serialization of [" + entitySnapshotsByKey.size() + "] entitySnapshotsByKey entries");
+		if ( tracing ) LOG.trace("Starting serialization of [" + entitySnapshotsByKey.size() + "] entitySnapshotsByKey entries");
 		itr = entitySnapshotsByKey.entrySet().iterator();
 		while ( itr.hasNext() ) {
 			Map.Entry entry = ( Map.Entry ) itr.next();
@@ -1482,7 +1479,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		}
 
 		oos.writeInt( entityEntries.size() );
-        LOG.trace("Starting serialization of [" + entityEntries.size() + "] entityEntries entries");
+		if ( tracing ) LOG.trace("Starting serialization of [" + entityEntries.size() + "] entityEntries entries");
 		itr = entityEntries.entrySet().iterator();
 		while ( itr.hasNext() ) {
 			Map.Entry entry = ( Map.Entry ) itr.next();
@@ -1491,7 +1488,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		}
 
 		oos.writeInt( collectionsByKey.size() );
-        LOG.trace("Starting serialization of [" + collectionsByKey.size() + "] collectionsByKey entries");
+		if ( tracing ) LOG.trace("Starting serialization of [" + collectionsByKey.size() + "] collectionsByKey entries");
 		itr = collectionsByKey.entrySet().iterator();
 		while ( itr.hasNext() ) {
 			Map.Entry entry = ( Map.Entry ) itr.next();
@@ -1500,7 +1497,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		}
 
 		oos.writeInt( collectionEntries.size() );
-        LOG.trace("Starting serialization of [" + collectionEntries.size() + "] collectionEntries entries");
+		if ( tracing ) LOG.trace("Starting serialization of [" + collectionEntries.size() + "] collectionEntries entries");
 		itr = collectionEntries.entrySet().iterator();
 		while ( itr.hasNext() ) {
 			Map.Entry entry = ( Map.Entry ) itr.next();
@@ -1509,7 +1506,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		}
 
 		oos.writeInt( arrayHolders.size() );
-        LOG.trace("Starting serialization of [" + arrayHolders.size() + "] arrayHolders entries");
+		if ( tracing ) LOG.trace("Starting serialization of [" + arrayHolders.size() + "] arrayHolders entries");
 		itr = arrayHolders.entrySet().iterator();
 		while ( itr.hasNext() ) {
 			Map.Entry entry = ( Map.Entry ) itr.next();
@@ -1518,7 +1515,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		}
 
 		oos.writeInt( nullifiableEntityKeys.size() );
-        LOG.trace("Starting serialization of [" + nullifiableEntityKeys.size() + "] nullifiableEntityKey entries");
+		if ( tracing ) LOG.trace("Starting serialization of [" + nullifiableEntityKeys.size() + "] nullifiableEntityKey entries");
 		itr = nullifiableEntityKeys.iterator();
 		while ( itr.hasNext() ) {
 			EntityKey entry = ( EntityKey ) itr.next();
@@ -1528,8 +1525,9 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	public static StatefulPersistenceContext deserialize(
 			ObjectInputStream ois,
-	        SessionImplementor session) throws IOException, ClassNotFoundException {
-        LOG.trace("Serializing persistent-context");
+			SessionImplementor session) throws IOException, ClassNotFoundException {
+		final boolean tracing = LOG.isTraceEnabled();
+		if ( tracing ) LOG.trace("Serializing persistent-context");
 		StatefulPersistenceContext rtn = new StatefulPersistenceContext( session );
 
 		// during deserialization, we need to reconnect all proxies and
@@ -1543,21 +1541,21 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			rtn.hasNonReadOnlyEntities = ois.readBoolean();
 
 			int count = ois.readInt();
-            LOG.trace("Starting deserialization of [" + count + "] entitiesByKey entries");
+			if ( tracing ) LOG.trace("Starting deserialization of [" + count + "] entitiesByKey entries");
 			rtn.entitiesByKey = new HashMap( count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count );
 			for ( int i = 0; i < count; i++ ) {
 				rtn.entitiesByKey.put( EntityKey.deserialize( ois, session ), ois.readObject() );
 			}
 
 			count = ois.readInt();
-            LOG.trace("Starting deserialization of [" + count + "] entitiesByUniqueKey entries");
+			if ( tracing ) LOG.trace("Starting deserialization of [" + count + "] entitiesByUniqueKey entries");
 			rtn.entitiesByUniqueKey = new HashMap( count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count );
 			for ( int i = 0; i < count; i++ ) {
 				rtn.entitiesByUniqueKey.put( EntityUniqueKey.deserialize( ois, session ), ois.readObject() );
 			}
 
 			count = ois.readInt();
-            LOG.trace("Starting deserialization of [" + count + "] proxiesByKey entries");
+			if ( tracing ) LOG.trace("Starting deserialization of [" + count + "] proxiesByKey entries");
 			rtn.proxiesByKey = new ReferenceMap( AbstractReferenceMap.HARD, AbstractReferenceMap.WEAK, count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count, .75f );
 			for ( int i = 0; i < count; i++ ) {
 				EntityKey ek = EntityKey.deserialize( ois, session );
@@ -1565,19 +1563,21 @@ public class StatefulPersistenceContext implements PersistenceContext {
 				if ( proxy instanceof HibernateProxy ) {
 					( ( HibernateProxy ) proxy ).getHibernateLazyInitializer().setSession( session );
 					rtn.proxiesByKey.put( ek, proxy );
-                } else LOG.trace("Encountered prunded proxy");
+				} else {
+					if ( tracing ) LOG.trace("Encountered prunded proxy");
+				}
 				// otherwise, the proxy was pruned during the serialization process
 			}
 
 			count = ois.readInt();
-            LOG.trace("Starting deserialization of [" + count + "] entitySnapshotsByKey entries");
+			if ( tracing ) LOG.trace("Starting deserialization of [" + count + "] entitySnapshotsByKey entries");
 			rtn.entitySnapshotsByKey = new HashMap( count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count );
 			for ( int i = 0; i < count; i++ ) {
 				rtn.entitySnapshotsByKey.put( EntityKey.deserialize( ois, session ), ois.readObject() );
 			}
 
 			count = ois.readInt();
-            LOG.trace("Starting deserialization of [" + count + "] entityEntries entries");
+			if ( tracing ) LOG.trace("Starting deserialization of [" + count + "] entityEntries entries");
 			rtn.entityEntries = IdentityMap.instantiateSequenced( count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count );
 			for ( int i = 0; i < count; i++ ) {
 				Object entity = ois.readObject();
@@ -1586,14 +1586,14 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			}
 
 			count = ois.readInt();
-            LOG.trace("Starting deserialization of [" + count + "] collectionsByKey entries");
+			if ( tracing ) LOG.trace("Starting deserialization of [" + count + "] collectionsByKey entries");
 			rtn.collectionsByKey = new HashMap( count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count );
 			for ( int i = 0; i < count; i++ ) {
 				rtn.collectionsByKey.put( CollectionKey.deserialize( ois, session ), ois.readObject() );
 			}
 
 			count = ois.readInt();
-            LOG.trace("Starting deserialization of [" + count + "] collectionEntries entries");
+			if ( tracing ) LOG.trace("Starting deserialization of [" + count + "] collectionEntries entries");
 			rtn.collectionEntries = IdentityMap.instantiateSequenced( count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count );
 			for ( int i = 0; i < count; i++ ) {
 				final PersistentCollection pc = ( PersistentCollection ) ois.readObject();
@@ -1603,14 +1603,14 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			}
 
 			count = ois.readInt();
-            LOG.trace("Starting deserialization of [" + count + "] arrayHolders entries");
+			if ( tracing ) LOG.trace("Starting deserialization of [" + count + "] arrayHolders entries");
 			rtn.arrayHolders = IdentityMap.instantiate( count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count );
 			for ( int i = 0; i < count; i++ ) {
 				rtn.arrayHolders.put( ois.readObject(), ois.readObject() );
 			}
 
 			count = ois.readInt();
-            LOG.trace("Starting deserialization of [" + count + "] nullifiableEntityKey entries");
+			if ( tracing ) LOG.trace("Starting deserialization of [" + count + "] nullifiableEntityKey entries");
 			rtn.nullifiableEntityKeys = new HashSet();
 			for ( int i = 0; i < count; i++ ) {
 				rtn.nullifiableEntityKeys.add( EntityKey.deserialize( ois, session ) );

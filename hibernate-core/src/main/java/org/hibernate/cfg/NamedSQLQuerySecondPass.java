@@ -121,7 +121,9 @@ public class NamedSQLQuerySecondPass extends ResultSetMappingBinder implements Q
 			);
 		}
 
-        LOG.debugf("Named SQL query: %s -> %s", namedQuery.getName(), namedQuery.getQueryString());
+		if ( LOG.isDebugEnabled() ) {
+			LOG.debugf( "Named SQL query: %s -> %s", namedQuery.getName(), namedQuery.getQueryString() );
+		}
 		mappings.addSQLQuery( queryName, namedQuery );
 	}
 }

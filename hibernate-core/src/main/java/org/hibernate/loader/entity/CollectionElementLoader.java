@@ -51,8 +51,7 @@ import org.hibernate.type.Type;
  */
 public class CollectionElementLoader extends OuterJoinLoader {
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
-                                                                       CollectionElementLoader.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, CollectionElementLoader.class.getName() );
 
 	private final OuterJoinLoadable persister;
 	private final Type keyType;
@@ -85,7 +84,9 @@ public class CollectionElementLoader extends OuterJoinLoader {
 
 		postInstantiate();
 
-        LOG.debugf("Static select for entity %s: %s", entityName, getSQLString());
+		if ( LOG.isDebugEnabled() ) {
+			LOG.debugf( "Static select for entity %s: %s", entityName, getSQLString() );
+		}
 
 	}
 

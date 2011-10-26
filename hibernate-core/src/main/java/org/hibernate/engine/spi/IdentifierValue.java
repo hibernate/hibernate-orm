@@ -48,16 +48,16 @@ public class IdentifierValue implements UnsavedValueStrategy {
 	 */
 	public static final IdentifierValue ANY = new IdentifierValue() {
 		@Override
-        public final Boolean isUnsaved(Object id) {
-            LOG.trace("ID unsaved-value strategy ANY");
+		public final Boolean isUnsaved(Object id) {
+			LOG.trace( "ID unsaved-value strategy ANY" );
 			return Boolean.TRUE;
 		}
 		@Override
-        public Serializable getDefaultValue(Object currentValue) {
+		public Serializable getDefaultValue(Object currentValue) {
 			return (Serializable) currentValue;
 		}
 		@Override
-        public String toString() {
+		public String toString() {
 			return "SAVE_ANY";
 		}
 	};
@@ -67,16 +67,16 @@ public class IdentifierValue implements UnsavedValueStrategy {
 	 */
 	public static final IdentifierValue NONE = new IdentifierValue() {
 		@Override
-        public final Boolean isUnsaved(Object id) {
-            LOG.trace("ID unsaved-value strategy NONE");
+		public final Boolean isUnsaved(Object id) {
+			LOG.trace( "ID unsaved-value strategy NONE" );
 			return Boolean.FALSE;
 		}
 		@Override
-        public Serializable getDefaultValue(Object currentValue) {
+		public Serializable getDefaultValue(Object currentValue) {
 			return (Serializable) currentValue;
 		}
 		@Override
-        public String toString() {
+		public String toString() {
 			return "SAVE_NONE";
 		}
 	};
@@ -87,16 +87,16 @@ public class IdentifierValue implements UnsavedValueStrategy {
 	 */
 	public static final IdentifierValue NULL = new IdentifierValue() {
 		@Override
-        public final Boolean isUnsaved(Object id) {
-            LOG.trace("ID unsaved-value strategy NULL");
+		public final Boolean isUnsaved(Object id) {
+			LOG.trace( "ID unsaved-value strategy NULL" );
 			return id==null;
 		}
 		@Override
-        public Serializable getDefaultValue(Object currentValue) {
+		public Serializable getDefaultValue(Object currentValue) {
 			return null;
 		}
 		@Override
-        public String toString() {
+		public String toString() {
 			return "SAVE_NULL";
 		}
 	};
@@ -106,16 +106,16 @@ public class IdentifierValue implements UnsavedValueStrategy {
 	 */
 	public static final IdentifierValue UNDEFINED = new IdentifierValue() {
 		@Override
-        public final Boolean isUnsaved(Object id) {
-            LOG.trace("ID unsaved-value strategy UNDEFINED");
+		public final Boolean isUnsaved(Object id) {
+			LOG.trace( "ID unsaved-value strategy UNDEFINED" );
 			return null;
 		}
 		@Override
-        public Serializable getDefaultValue(Object currentValue) {
+		public Serializable getDefaultValue(Object currentValue) {
 			return null;
 		}
 		@Override
-        public String toString() {
+		public String toString() {
 			return "UNDEFINED";
 		}
 	};
@@ -136,7 +136,7 @@ public class IdentifierValue implements UnsavedValueStrategy {
 	 * Does the given identifier belong to a new instance?
 	 */
 	public Boolean isUnsaved(Object id) {
-        LOG.trace("ID unsaved-value: " + value);
+		LOG.tracev( "ID unsaved-value: {0}", value );
 		return id==null || id.equals(value);
 	}
 
@@ -145,7 +145,7 @@ public class IdentifierValue implements UnsavedValueStrategy {
 	}
 
 	@Override
-    public String toString() {
+	public String toString() {
 		return "identifier unsaved-value: " + value;
 	}
 }

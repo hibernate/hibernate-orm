@@ -138,7 +138,7 @@ public abstract class CascadingAction {
 		@Override
         public void cascade(EventSource session, Object child, String entityName, Object anything, boolean isCascadeDeleteEnabled)
 		throws HibernateException {
-            LOG.trace("Cascading to delete: " + entityName);
+			LOG.tracev( "Cascading to delete: {0}", entityName );
 			session.delete( entityName, child, isCascadeDeleteEnabled, ( Set ) anything );
 		}
 		@Override
@@ -164,7 +164,7 @@ public abstract class CascadingAction {
 		@Override
         public void cascade(EventSource session, Object child, String entityName, Object anything, boolean isCascadeDeleteEnabled)
 		throws HibernateException {
-            LOG.trace("Cascading to lock: " + entityName);
+			LOG.tracev( "Cascading to lock: {0}", entityName );
 			LockMode lockMode = LockMode.NONE;
 			LockOptions lr = new LockOptions();
 			if ( anything instanceof LockOptions) {
@@ -200,7 +200,7 @@ public abstract class CascadingAction {
 		@Override
         public void cascade(EventSource session, Object child, String entityName, Object anything, boolean isCascadeDeleteEnabled)
 		throws HibernateException {
-            LOG.trace("Cascading to refresh: " + entityName);
+			LOG.tracev( "Cascading to refresh: {0}", entityName );
 			session.refresh( child, (Map) anything );
 		}
 		@Override
@@ -225,7 +225,7 @@ public abstract class CascadingAction {
 		@Override
         public void cascade(EventSource session, Object child, String entityName, Object anything, boolean isCascadeDeleteEnabled)
 		throws HibernateException {
-            LOG.trace("Cascading to evict: " + entityName);
+			LOG.tracev( "Cascading to evict: {0}", entityName );
 			session.evict(child);
 		}
 		@Override
@@ -254,7 +254,7 @@ public abstract class CascadingAction {
 		@Override
         public void cascade(EventSource session, Object child, String entityName, Object anything, boolean isCascadeDeleteEnabled)
 		throws HibernateException {
-            LOG.trace("Cascading to save or update: " + entityName);
+			LOG.tracev( "Cascading to save or update: {0}", entityName );
 			session.saveOrUpdate(entityName, child);
 		}
 		@Override
@@ -284,7 +284,7 @@ public abstract class CascadingAction {
 		@Override
         public void cascade(EventSource session, Object child, String entityName, Object anything, boolean isCascadeDeleteEnabled)
 		throws HibernateException {
-            LOG.trace("Cascading to merge: " + entityName);
+			LOG.tracev( "Cascading to merge: {0}", entityName );
 			session.merge( entityName, child, (Map) anything );
 		}
 		@Override
@@ -311,7 +311,7 @@ public abstract class CascadingAction {
 		@Override
         public void cascade(EventSource session, Object child, String entityName, Object anything, boolean isCascadeDeleteEnabled)
 		throws HibernateException {
-            LOG.trace("Cascading to persist: " + entityName);
+			LOG.tracev( "Cascading to persist: {0}" + entityName );
 			session.persist( entityName, child, (Map) anything );
 		}
 		@Override
@@ -342,7 +342,7 @@ public abstract class CascadingAction {
 		@Override
         public void cascade(EventSource session, Object child, String entityName, Object anything, boolean isCascadeDeleteEnabled)
 		throws HibernateException {
-            LOG.trace("Cascading to persist on flush: " + entityName);
+			LOG.tracev( "Cascading to persist on flush: {0}", entityName );
 			session.persistOnFlush( entityName, child, (Map) anything );
 		}
 		@Override
@@ -409,7 +409,7 @@ public abstract class CascadingAction {
 		@Override
         public void cascade(EventSource session, Object child, String entityName, Object anything, boolean isCascadeDeleteEnabled)
 		throws HibernateException {
-            LOG.trace("Cascading to replicate: " + entityName);
+			LOG.tracev( "Cascading to replicate: {0}", entityName );
 			session.replicate( entityName, child, (ReplicationMode) anything );
 		}
 		@Override

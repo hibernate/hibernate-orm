@@ -187,12 +187,12 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 	private int traceDepth = 0;
 
 	@Override
-    public void traceIn(String ruleName, AST tree) {
-        if (!LOG.isTraceEnabled()) return;
-        if (inputState.guessing > 0) return;
-		String prefix = StringHelper.repeat( '-', (traceDepth++ * 2) ) + "-> ";
-		String traceText = ruleName + " (" + buildTraceNodeName(tree) + ")";
-        LOG.trace(prefix + traceText);
+	public void traceIn(String ruleName, AST tree) {
+		if ( !LOG.isTraceEnabled() ) return;
+		if ( inputState.guessing > 0 ) return;
+		String prefix = StringHelper.repeat( '-', ( traceDepth++ * 2 ) ) + "-> ";
+		String traceText = ruleName + " (" + buildTraceNodeName( tree ) + ")";
+		LOG.trace( prefix + traceText );
 	}
 
 	private String buildTraceNodeName(AST tree) {
@@ -202,13 +202,12 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 	}
 
 	@Override
-    public void traceOut(String ruleName, AST tree) {
-        if (!LOG.isTraceEnabled()) return;
-        if (inputState.guessing > 0) return;
-		String prefix = "<-" + StringHelper.repeat( '-', (--traceDepth * 2) ) + " ";
-        LOG.trace(prefix + ruleName);
+	public void traceOut(String ruleName, AST tree) {
+		if ( !LOG.isTraceEnabled() ) return;
+		if ( inputState.guessing > 0 ) return;
+		String prefix = "<-" + StringHelper.repeat( '-', ( --traceDepth * 2 ) ) + " ";
+		LOG.trace( prefix + ruleName );
 	}
-
 
 	@Override
     protected void prepareFromClauseInputTree(AST fromClauseInput) {
@@ -592,7 +591,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		if ( fromElements.size() == 1 ) {
 			final FromElement fromElement = ( FromElement ) fromElements.get( 0 );
 			try {
-                LOG.trace("Attempting to resolve property [" + identText + "] as a non-qualified ref");
+				LOG.tracev( "Attempting to resolve property [{0}] as a non-qualified ref", identText );
 				return fromElement.getPropertyMapping( identText ).toType( identText ) != null;
 			}
 			catch( QueryException e ) {
@@ -604,7 +603,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 	}
 
 	@Override
-    protected AST lookupNonQualifiedProperty(AST property) throws SemanticException {
+	protected AST lookupNonQualifiedProperty(AST property) throws SemanticException {
 		final FromElement fromElement = ( FromElement ) currentFromClause.getExplicitFromElements().get( 0 );
 		AST syntheticDotNode = generateSyntheticDotNodeForNonQualifiedPropertyRef( property, fromElement );
 		return lookupProperty( syntheticDotNode, false, getCurrentClauseType() == HqlSqlTokenTypes.SELECT );
@@ -626,8 +625,10 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 	}
 
 	@Override
-    protected void processQuery(AST select, AST query) throws SemanticException {
-        LOG.debugf("processQuery() : %s", query.toStringTree());
+	protected void processQuery(AST select, AST query) throws SemanticException {
+		if ( LOG.isDebugEnabled() ) {
+			LOG.debugf( "processQuery() : %s", query.toStringTree() );
+		}
 
 		try {
 			QueryNode qn = ( QueryNode ) query;
@@ -871,7 +872,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		select.setNextSibling( sibling );
 		selectClause = ( SelectClause ) select;
 		selectClause.initializeDerivedSelectClause( currentFromClause );
-        LOG.debugf("Derived SELECT clause created.");
+		LOG.debugf( "Derived SELECT clause created." );
 	}
 
 	@Override

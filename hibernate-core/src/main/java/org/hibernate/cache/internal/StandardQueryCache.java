@@ -77,7 +77,7 @@ public class StandardQueryCache implements QueryCache {
 		if ( prefix != null ) {
 			regionName = prefix + '.' + regionName;
 		}
-        LOG.startingQueryCache(regionName);
+		LOG.startingQueryCache( regionName );
 
 		this.cacheRegion = settings.getRegionFactory().buildQueryResultsRegion( regionName, props );
 		this.updateTimestampsCache = updateTimestampsCache;
@@ -93,7 +93,7 @@ public class StandardQueryCache implements QueryCache {
         if (isNaturalKeyLookup && result.size() == 0) return false;
         Long ts = new Long(session.getFactory().getSettings().getRegionFactory().nextTimestamp());
 
-        LOG.debugf("Caching query results in region: %s; timestamp=%s", cacheRegion.getName(), ts);
+		LOG.debugf( "Caching query results in region: %s; timestamp=%s", cacheRegion.getName(), ts );
 
 		List cacheable = new ArrayList(result.size() + 1);
         logCachedResultDetails(key, null, returnTypes, cacheable);
@@ -115,23 +115,23 @@ public class StandardQueryCache implements QueryCache {
 			boolean isNaturalKeyLookup,
 			Set spaces,
 			SessionImplementor session) throws HibernateException {
-        LOG.debugf("Checking cached query results in region: %s", cacheRegion.getName());
+		LOG.debugf( "Checking cached query results in region: %s", cacheRegion.getName() );
 
 		List cacheable = ( List ) cacheRegion.get( key );
-        logCachedResultDetails(key, spaces, returnTypes, cacheable);
+		logCachedResultDetails( key, spaces, returnTypes, cacheable );
 
 		if ( cacheable == null ) {
-            LOG.debugf("Query results were not found in cache");
+			LOG.debugf( "Query results were not found in cache" );
 			return null;
 		}
 
 		Long timestamp = ( Long ) cacheable.get( 0 );
 		if ( !isNaturalKeyLookup && !isUpToDate( spaces, timestamp ) ) {
-            LOG.debugf("Cached query results were not up-to-date");
+			LOG.debugf( "Cached query results were not up-to-date" );
 			return null;
 		}
 
-        LOG.debugf("Returning cached query results");
+		LOG.debugf( "Returning cached query results" );
 		for ( int i = 1; i < cacheable.size(); i++ ) {
 			if ( returnTypes.length == 1 ) {
 				returnTypes[0].beforeAssemble( ( Serializable ) cacheable.get( i ), session );
@@ -151,7 +151,7 @@ public class StandardQueryCache implements QueryCache {
 							TypeHelper.assemble( ( Serializable[] ) cacheable.get( i ), returnTypes, session, null )
 					);
 				}
-                logCachedResultRowDetails(returnTypes, result.get(i - 1));
+				logCachedResultRowDetails( returnTypes, result.get( i - 1 ) );
 			}
 			catch ( RuntimeException ex ) {
 				if ( isNaturalKeyLookup &&
@@ -161,18 +161,18 @@ public class StandardQueryCache implements QueryCache {
 					//      the uoe could occur while resolving
 					//      associations, leaving the PC in an
 					//      inconsistent state
-                    LOG.debugf("Unable to reassemble cached result set");
+					LOG.debugf( "Unable to reassemble cached result set" );
 					cacheRegion.evict( key );
 					return null;
 				}
-                throw ex;
+				throw ex;
 			}
 		}
 		return result;
 	}
 
 	protected boolean isUpToDate(Set spaces, Long timestamp) {
-        LOG.debugf("Checking query spaces are up-to-date: %s", spaces);
+		LOG.debugf( "Checking query spaces are up-to-date: %s", spaces );
 		return updateTimestampsCache.isUpToDate( spaces, timestamp );
 	}
 
@@ -181,7 +181,7 @@ public class StandardQueryCache implements QueryCache {
 			cacheRegion.destroy();
 		}
 		catch ( Exception e ) {
-            LOG.unableToDestroyQueryCache(cacheRegion.getName(), e.getMessage());
+			LOG.unableToDestroyQueryCache( cacheRegion.getName(), e.getMessage() );
 		}
 	}
 
@@ -214,7 +214,7 @@ public class StandardQueryCache implements QueryCache {
 	}
 
 	private static void logCachedResultRowDetails(Type[] returnTypes, Object result) {
-        if (!LOG.isTraceEnabled()) return;
+		if ( !LOG.isTraceEnabled() ) return;
 		logCachedResultRowDetails(
 				returnTypes,
 				( result instanceof Object[] ? ( Object[] ) result : new Object[] { result } )

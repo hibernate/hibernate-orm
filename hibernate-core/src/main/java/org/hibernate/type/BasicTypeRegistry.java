@@ -133,7 +133,9 @@ public class BasicTypeRegistry implements Serializable {
 			throw new HibernateException( "Type to register cannot be null" );
 		}
 
-        if (type.getRegistrationKeys() == null || type.getRegistrationKeys().length == 0) LOG.typeDefinedNoRegistrationKeys(type);
+		if ( type.getRegistrationKeys() == null || type.getRegistrationKeys().length == 0 ) {
+			LOG.typeDefinedNoRegistrationKeys( type );
+		}
 
 		for ( String key : type.getRegistrationKeys() ) {
 			// be safe...

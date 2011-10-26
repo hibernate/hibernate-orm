@@ -129,7 +129,7 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 		return "add";
 	}
 	public String getNullColumnString() {
-		return " null";
+		return "";
 	}
 	public boolean qualifyIndexName() {
 		return false;

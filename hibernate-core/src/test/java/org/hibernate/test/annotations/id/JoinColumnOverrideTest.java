@@ -65,11 +65,11 @@ public class JoinColumnOverrideTest extends BaseUnitTestCase {
                 log.debug(s);
 			}
 			String expectedSqlPointyTooth = "create table PointyTooth (id numeric(128,0) not null, " +
-					"bunny_id numeric(128,0) null, primary key (id))";
+					"bunny_id numeric(128,0), primary key (id))";
 			assertEquals("Wrong SQL", expectedSqlPointyTooth, schema[1]);
 
 			String expectedSqlTwinkleToes = "create table TwinkleToes (id numeric(128,0) not null, " +
-			"bunny_id numeric(128,0) null, primary key (id))";
+			"bunny_id numeric(128,0), primary key (id))";
 			assertEquals("Wrong SQL", expectedSqlTwinkleToes, schema[2]);
 		}
 		catch (Exception e) {

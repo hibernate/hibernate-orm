@@ -299,19 +299,11 @@ public class OneToOneTest extends TestCase {
 	}
 
 	/**
-	 * HHH-5109 @OneToOne - too many joins
-	 * I backed out of the fix for HHH-5109 because it caused HHH-4982.
-	 * It needs to be fixed again by HHH-6723.
-	 *
 	 * This test uses an interceptor to verify that correct number of joins
 	 * are generated.
 	 */
 	public void testPkOneToOneSelectStatementDoesNotGenerateExtraJoin() {
-
-	 	//"FailureExpected" doesn't work here, so until it is fixed (again) by HHH-6723,
-		// we expect an extra join, new JoinCounter(2) is used to get the test to pass.
-		// Session s = openSession(new JoinCounter(1));
-		Session s = openSession(new JoinCounter(2));
+		Session s = openSession(new JoinCounter(1));
 		Transaction tx = s.beginTransaction();
 		Owner owner = new Owner();
 		OwnerAddress address = new OwnerAddress();

@@ -52,10 +52,12 @@ import org.hibernate.criterion.Restrictions;
 import org.hibernate.criterion.Subqueries;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.exception.SQLGrammarException;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.test.hql.Animal;
 import org.hibernate.test.hql.Reptile;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.transform.Transformers;
 import org.hibernate.type.StandardBasicTypes;
@@ -147,6 +149,7 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+    @SkipForDialect( value = SybaseASE15Dialect.class, strictMatching = true, jiraKey = "HHH-3032", comment = "I was told this is fixed in Sybase ASE 15.7")
 	public void testSubselect() {
 		Session session = openSession();
 		Transaction t = session.beginTransaction();
@@ -232,6 +235,7 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+    @SkipForDialect( value = SybaseASE15Dialect.class, strictMatching = true, jiraKey = "HHH-3032", comment = "I was told this is fixed in Sybase ASE 15.7")
 	public void testSubselectWithComponent() {
 		Session session = openSession();
 		Transaction t = session.beginTransaction();

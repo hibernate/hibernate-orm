@@ -139,7 +139,7 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 	}
 
 	protected Map getConfig() {
-		Map<Object, Object> config = loadProperties();
+		Map<Object, Object> config = new HashMap<Object, Object>(  );
 		ArrayList<Class> classes = new ArrayList<Class>();
 
 		classes.addAll( Arrays.asList( getAnnotatedClasses() ) );
@@ -161,27 +161,6 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 	}
 
 	protected void addConfigOptions(Map options) {
-	}
-
-	private Properties loadProperties() {
-		Properties props = new Properties();
-		InputStream stream = Persistence.class.getResourceAsStream( "/hibernate.properties" );
-		if ( stream != null ) {
-			try {
-				props.load( stream );
-			}
-			catch ( Exception e ) {
-				throw new RuntimeException( "could not load hibernate.properties" );
-			}
-			finally {
-				try {
-					stream.close();
-				}
-				catch ( IOException ignored ) {
-				}
-			}
-		}
-		return props;
 	}
 
 	protected static final Class<?>[] NO_CLASSES = new Class[0];

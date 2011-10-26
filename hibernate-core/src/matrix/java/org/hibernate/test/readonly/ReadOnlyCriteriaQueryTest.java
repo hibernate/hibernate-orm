@@ -37,9 +37,11 @@ import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.criterion.Subqueries;
+import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
+import org.hibernate.testing.SkipForDialect;
 
 import org.junit.Test;
 
@@ -946,6 +948,7 @@ public class ReadOnlyCriteriaQueryTest extends AbstractReadOnlyTest {
 	}
 	
 	@Test
+    @SkipForDialect( value = SybaseASE15Dialect.class, jiraKey = "HHH-3032", strictMatching = true)
 	public void testSubselect() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

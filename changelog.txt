@@ -5,6 +5,40 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 3.6.8 (2011.10.26)
+-------------------------------------------
+https://hibernate.onjira.com/browse/HHH/fixforversion/11354
+
+** Bug
+    * [HHH-2304] - Wrong type detection for sql type char(x) columns
+    * [HHH-3434] - hql insert doesn't work when inserting into a table with composite-id
+    * [HHH-4838] - 2L-Querycache ImmutableNaturalKeyLookup not properly recognized as hasImmutableNaturalId() is called on wrong EntityMetamodel
+    * [HHH-4982] - JPA OneToOne(optional=true) not supported with @PrimaryKeyJoinColumn
+    * [HHH-5789] - Hibernate 3.5.4 doesn't build with OpenJDK 6b18-1.8.2 or greater
+    * [HHH-5801] - ColumnNameCache.columnNameToIndexCache map should be synchronized
+    * [HHH-5917] - Envers doesnt track all columns anymore
+    * [HHH-6121] - Hibernate statistics should log at DEBUG level instead of INFO
+    * [HHH-6177] - Envers - problem with mapping relation when using mixed inheritance strategy
+    * [HHH-6599] - Hibernate mark as rollback even for no transaction requests
+    * [HHH-6614] - Bad performance: audited entity updates (lots of them) with no EntityManager clear
+    * [HHH-6647] - ValidityAuditStrategy breaks in case of concurrent updates to the same entity
+
+** Improvement
+    * [HHH-6723] - Remove extra join from eager @OneToOne
+    * [HHH-6745] - Sybase ASE dialect improvement
+
+** New Feature
+    * [HHH-5580] - tracking entity names in a revision
+
+** Patch
+    * [HHH-4596] - Bulk insertion with assigned identifiers
+    * [HHH-6577] - CUBRID Database Dialect
+
+** Task
+    * [HHH-5930] - Remove hibernate-tools dependency from runtime scope if it's not needed
+    * [HHH-6591] - Port changes for HHH-5348 to 3.6 branch
+
+
 Changes in version 3.6.7 (2011.08.17)
 -------------------------------------------
 https://hibernate.onjira.com/browse/HHH/fixforversion/11250

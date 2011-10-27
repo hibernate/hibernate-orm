@@ -77,6 +77,7 @@ import static org.junit.Assert.fail;
  * @author Gavin King
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
+@RequiresDialectFeature(DialectChecks.SupportsSequences.class)
 public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

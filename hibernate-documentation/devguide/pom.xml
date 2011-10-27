@@ -29,7 +29,7 @@
     <parent>
         <groupId>org.hibernate</groupId>
         <artifactId>hibernate-parent</artifactId>
-        <version>3.6.8-SNAPSHOT</version>
+        <version>3.6.8.Final</version>
         <relativePath>../../hibernate-parent/pom.xml</relativePath>
     </parent>
 

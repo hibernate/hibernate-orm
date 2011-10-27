@@ -29,7 +29,7 @@
     <parent>
         <artifactId>hibernate-tutorials</artifactId>
         <groupId>org.hibernate.tutorials</groupId>
-        <version>3.6.8-SNAPSHOT</version>
+        <version>3.6.8.Final</version>
     </parent>
 
     <artifactId>hibernate-tutorial-entitymanager</artifactId>

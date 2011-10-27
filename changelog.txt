@@ -5,6 +5,70 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 4.0.0.CR5 (2011.10.27)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.onjira.com/browse/HHH/fixforversion/11550
+
+** Bug
+    * [HHH-2304] - Wrong type detection for sql type char(x) columns
+    * [HHH-3434] - hql insert doesn't work when inserting into a table with composite-id
+    * [HHH-3843] - @Audited and @ManyToMany relation problem - after modyfing an Entity: org.hibernate.NonUniqueObjectException with message: "a different object with the same identifier value was already associated with the session ...
+    * [HHH-4838] - 2L-Querycache ImmutableNaturalKeyLookup not properly recognized as hasImmutableNaturalId() is called on wrong EntityMetamodel
+    * [HHH-4881] - restrict polymorphic query results
+    * [HHH-4982] - JPA OneToOne(optional=true) not supported with @PrimaryKeyJoinColumn
+    * [HHH-5419] - COUNT operator with composite primary key and JPA 2.0 Criteria API produces bad sql
+    * [HHH-6121] - Hibernate statistics should log at DEBUG level instead of INFO
+    * [HHH-6188] - java.util.UUID cannot be used for Ids on Oracle
+    * [HHH-6636] - Properties listed inside "<properties>" tag are not audited
+    * [HHH-6703] - id element has 'column' attribute, then the pk column is nullable in ddl created by schema export
+    * [HHH-6715] - Integrator classes not being located correctly
+    * [HHH-6717] - oracle does not have a boolean type
+    * [HHH-6722] - o.h.test.schemaupdate.SchemaExportTest fails if dialect does not support drop table if exist
+    * [HHH-6724] - AnnotationBinder and HbmBinder improperly set EntityPersisterClass upon class hierarchy
+    * [HHH-6737] - column names in Constraint is not quoted even column name is quoted in mapping
+    * [HHH-6739] - JtaIsolationDelegate.doTheWorkInNewTransaction fails to propagate or otherwise report caught exceptions
+    * [HHH-6748] - Test failures due to inconsistent return type of numeric from native query
+    * [HHH-6749] - FooBarTest.testLimit() fails on MS SQL Server due to dialect interpretation of max row
+    * [HHH-6750] - ASTParserLoadingTest.testAggregation() fails on MS SQL Server performing avg, presumably due to forcing result to match column type
+    * [HHH-6751] - Test failure due to inconsistent scale returned for BigDecimal properties
+    * [HHH-6755] - SQL Server/Sybase dialects don't have type mapping for binary datatype
+    * [HHH-6756] - Test failures due to Oracle LONG limitatations
+    * [HHH-6757] - QueryCacheTest.testCaseInsensitiveComparison() fails for case-insensitive DBs
+    * [HHH-6758] - Test failure due to Oracle restrictions on Blob comparison and missing equals() and hashcode()
+    * [HHH-6759] - Null properties mapped as boolean cause exception on Oracle
+    * [HHH-6760] - Test failures on Oracle due to identity IDs
+    * [HHH-6762] - ManyToOneWithFormulaTest.testManyToOneFromNonPkToNonPk() fails due to unsupported keyword
+    * [HHH-6764] - QueryAndSQLTest.testNativeQueryWithFormulaAttribute() fails on SQL Server due to unsupported function
+    * [HHH-6765] - AuctionTest2.testLazy() fails on SQL Server due to unsupported function in select clause
+    * [HHH-6767] - CriteriaQueryTest.testSubselect() fails on SQL Server since it doesn't support ORDER BY in a subquery
+    * [HHH-6770] - Oracle test failures due to reserved words used as column names
+    * [HHH-6771] - Test failure on Oracle due to ORDER BY in subquery
+    * [HHH-6772] - org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase overrides system properties
+    * [HHH-6775] - TargetTest.testTargetOnMapKey() fails on SQL Server due to nullable column in primary key
+
+** Improvement
+    * [HHH-4854] - Make constraint violation name extraction language neutral
+    * [HHH-6691] - Improve JavaDoc of Wrapped wrt exception thrown upon unexpected type
+    * [HHH-6716] - envers should set the TCCL to the envers classloader before constructing a dom4j instance. This will allow applications to use their own version of dom4j
+    * [HHH-6720] - Refactor QuerySplitter
+    * [HHH-6723] - Remove extra join from eager @OneToOne
+    * [HHH-6732] - Some logging trace statements are missing guards against unneeded string creation
+    * [HHH-6733] - Avoid frequent usage of ReflectHelper in PojoInstantiator
+    * [HHH-6735] - Performance hostpot in FieldInterceptionHelper.JavassistDelegate.isInstrumented(Class)
+    * [HHH-6745] - Sybase ASE dialect improvement
+    * [HHH-6766] - Support Multicolumn Subqueries in Criteria API
+
+** New Feature
+    * [HHH-6696] - Allow specifying revision listener apart from @RevisionEntity annotation
+
+** Patch
+    * [HHH-4596] - Bulk insertion with assigned identifiers
+
+** Task
+    * [HHH-6740] - run envers tests on db matrix
+    * [HHH-6742] - move unit tests back to src/test
+
+
 Changes in version 4.0.0.CR4 (2011.09.28)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.onjira.com/browse/HHH/fixforversion/11357

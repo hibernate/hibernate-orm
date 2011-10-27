@@ -29,6 +29,8 @@ import javax.persistence.LockTimeoutException;
 import javax.persistence.OptimisticLockException;
 import javax.persistence.Query;
 import javax.persistence.QueryTimeoutException;
+
+import java.lang.RuntimeException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -373,11 +375,11 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 					try {
 						boolean timedOut = false;	// true (success) if LockTimeoutException occurred
 						em2.getTransaction().begin();
-                        log.info("testContendedPessimisticReadLockTimeout: (BG) about to read write-locked entity");
+						log.info("testContendedPessimisticReadLockTimeout: (BG) about to read write-locked entity");
 						// we should block on the following read
 						Lock lock2 = em2.getReference( Lock.class, id );
 						lock2.getName();		//  force entity to be read
-                        log.info("testContendedPessimisticReadLockTimeout: (BG) read write-locked entity");
+						log.info("testContendedPessimisticReadLockTimeout: (BG) read write-locked entity");
 						Map<String,Object> props = new HashMap<String, Object>();
 						// timeout is in milliseconds
 						props.put("javax.persistence.lock.timeout", new Integer(1000));
@@ -386,11 +388,14 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 						}
 						catch( LockTimeoutException e) {
 							// success
-                            log.info("testContendedPessimisticReadLockTimeout: (BG) got expected timeout exception");
+							log.info("testContendedPessimisticReadLockTimeout: (BG) got expected timeout exception");
 							 timedOut = true;
+							em2.getTransaction().rollback();
+							return new Boolean(timedOut);
 						}
 						catch ( Throwable e) {
-                            log.info("Expected LockTimeoutException but got unexpected exception", e);
+							log.info("Expected LockTimeoutException but got unexpected exception", e);
+							throw new RuntimeException("Expected LockTimeoutException but got unexpected exception",e);
 						}
 						em2.getTransaction().commit();
 						return new Boolean(timedOut);

@@ -202,7 +202,7 @@ public class Tools {
     }
 
     /**
-     * Converts map's value set to an array. {@code keys} parameter specify requested elements and their order. 
+     * Converts map's value set to an array. {@code keys} parameter specifies requested elements and their order. 
      * @param data Source map.
      * @param keys Array of keys that represent requested map values.
      * @return Array of values stored in the map under specified keys. If map does not contain requested key,

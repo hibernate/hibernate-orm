@@ -127,7 +127,7 @@ public class EntitiesConfigurator {
         }
 
         // Only if there are any versioned classes
-        if (classesAuditingData.getAllClassAuditedData().size() > 0) {
+        if (auditMetaGen.getEntitiesConfigurations().size() > 0) {
             try {
                 if (revisionInfoXmlMapping !=  null) {
                     //writeDocument(revisionInfoXmlMapping);

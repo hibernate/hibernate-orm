@@ -82,7 +82,7 @@ public class JdbcTransaction extends AbstractTransactionImpl {
 	@Override
 	protected void afterTransactionBegin() {
 		if ( getTimeout() > 0 ) {
-			transactionCoordinator().getJdbcCoordinator().setTransactionTimeOut( getTimeout() );
+			transactionCoordinator().getJdbcCoordinator().setTransactionTimeOut( System.currentTimeMillis() + getTimeout() * 1000 );
 		}
 		transactionCoordinator().sendAfterTransactionBeginNotifications( this );
 		if ( isDriver ) {

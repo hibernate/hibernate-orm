@@ -157,7 +157,7 @@ class StatementPreparerImpl implements StatementPreparer {
 	}
 
 	@Override
-	public void setTransactionTimeOut(int timeOut) {
+	public void setTransactionTimeOut(long timeOut) {
 		transactionTimeOut = timeOut;
 	}
 
@@ -192,7 +192,7 @@ class StatementPreparerImpl implements StatementPreparer {
 
 		private void setStatementTimeout(PreparedStatement preparedStatement) throws SQLException {
 			if ( transactionTimeOut > 0 ) {
-				int timeout = (int) ( transactionTimeOut - ( System.currentTimeMillis() / 1000 ) );
+				int timeout = (int) ( transactionTimeOut - System.currentTimeMillis() );
 				if ( timeout <= 0 ) {
 					throw new TransactionException( "transaction timeout expired" );
 				}

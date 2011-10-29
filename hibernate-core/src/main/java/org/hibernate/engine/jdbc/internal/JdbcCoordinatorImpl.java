@@ -171,8 +171,11 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	}
 
 	@Override
-	public void setTransactionTimeOut(int timeOut) {
+	public void setTransactionTimeOut(long timeOut) {
 		getStatementPreparer().setTransactionTimeOut( timeOut );
+		if ( currentBatch != null ) {
+			currentBatch.setTransactionTimeOut( timeOut );
+		}
 	}
 
 	/**
@@ -184,6 +187,9 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 		logicalConnection.afterTransaction();
 		if ( statementPreparer != null ) {
 			statementPreparer.unsetTransactionTimeOut();
+		}
+		if ( currentBatch != null ) {
+			currentBatch.unsetTransactionTimeOut();
 		}
 	}
 

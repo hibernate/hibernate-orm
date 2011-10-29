@@ -92,6 +92,14 @@ public interface StatementPreparer {
 	 */
 	public PreparedStatement prepareQueryStatement(String sql, boolean isCallable, ScrollMode scrollMode);
 
-	public void setTransactionTimeOut(int timeout);
+	/**
+	 * Set time at which timeout should occur.
+	 * @param timeOut Number of milliseconds measured from midnight, January 1, 1970 UTC.
+	 */
+	public void setTransactionTimeOut(long timeOut);
+
+	/**
+	 * Disable transaction timeout.
+	 */
 	public void unsetTransactionTimeOut();
 }

@@ -30,6 +30,7 @@ import java.util.LinkedHashSet;
 
 import org.jboss.logging.Logger;
 
+import org.hibernate.TransactionException;
 import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.batch.spi.BatchObserver;
@@ -52,6 +53,7 @@ public abstract class AbstractBatchImpl implements Batch {
 	private final JdbcCoordinator jdbcCoordinator;
 	private LinkedHashMap<String,PreparedStatement> statements = new LinkedHashMap<String,PreparedStatement>();
 	private LinkedHashSet<BatchObserver> observers = new LinkedHashSet<BatchObserver>();
+	private long transactionTimeOut = -1;
 
 	protected AbstractBatchImpl(BatchKey key, JdbcCoordinator jdbcCoordinator) {
 		if ( key == null ) {
@@ -134,15 +136,36 @@ public abstract class AbstractBatchImpl implements Batch {
 		return statement;
 	}
 
+	@Override
+	public void setTransactionTimeOut(long timeOut) {
+		transactionTimeOut = timeOut;
+	}
+
+	@Override
+	public void unsetTransactionTimeOut() {
+		transactionTimeOut = -1;
+	}
+
 	private PreparedStatement buildBatchStatement(String sql, boolean callable) {
+		PreparedStatement preparedStatement = null;
 		sql = jdbcCoordinator.getTransactionCoordinator().getTransactionContext().onPrepareStatement( sql );
 		try {
 			if ( callable ) {
-				return jdbcCoordinator.getLogicalConnection().getShareableConnectionProxy().prepareCall( sql );
+				preparedStatement = jdbcCoordinator.getLogicalConnection().getShareableConnectionProxy().prepareCall( sql );
 			}
 			else {
-				return jdbcCoordinator.getLogicalConnection().getShareableConnectionProxy().prepareStatement( sql );
+				preparedStatement = jdbcCoordinator.getLogicalConnection().getShareableConnectionProxy().prepareStatement( sql );
 			}
+			if ( transactionTimeOut > 0) {
+				int timeout = (int) ( transactionTimeOut - System.currentTimeMillis() );
+				if ( timeout <= 0 ) {
+					throw new TransactionException( "transaction timeout expired" );
+				}
+				else {
+					preparedStatement.setQueryTimeout( timeout );
+				}
+			}
+			return preparedStatement;
 		}
 		catch ( SQLException sqle ) {
 			LOG.sqlExceptionEscapedProxy( sqle );

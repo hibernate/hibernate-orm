@@ -82,14 +82,12 @@ entityManager.persist(fritz);]]>
             </programlisting>
         </example>
 
-        <sidebar>
-            <para>
-                <interfacename>org.hibernate.Session</interfacename> also has a method named <methodname>persist</methodname>
-                which follows the exact semantic defined in the JPA specification for the <methodname>persist</methodname>
-                method.  It is this method on <interfacename>org.hibernate.Session</interfacename> to which the
-                Hibernate <interfacename>javax.persistence.EntityManager</interfacename> implementation delegates.
-            </para>
-        </sidebar>
+        <para>
+            <interfacename>org.hibernate.Session</interfacename> also has a method named <methodname>persist</methodname>
+            which follows the exact semantic defined in the JPA specification for the <methodname>persist</methodname>
+            method.  It is this method on <interfacename>org.hibernate.Session</interfacename> to which the
+            Hibernate <interfacename>javax.persistence.EntityManager</interfacename> implementation delegates.
+        </para>
 
         <para>
             If the <classname>DomesticCat</classname> entity type has a generated identifier, the value is associated

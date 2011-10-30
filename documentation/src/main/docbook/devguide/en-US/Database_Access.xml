@@ -71,7 +71,7 @@
         <example>
           <title>Letting Hibernate find the mapping files for you</title>
           <para>
-            The <methodname>addConfig()</methodname> method directs Hibernate to search the CLASSPATH for the mapping
+            The <methodname>addClass()</methodname> method directs Hibernate to search the CLASSPATH for the mapping
             files, eliminating hard-coded file names. In the following example, it searches for
             <filename>org/hibernate/auction/Item.hbm.xml</filename> and
             <filename>org/hibernate/auction/Bid.hbm.xml</filename>.
@@ -136,7 +136,7 @@
       <title>c3p0 connection pool</title>
       <para>
         C3P0 is an open source JDBC connection pool distributed along with Hibernate in the <filename>lib/</filename>
-        directory. Hibernate uses its <classname>org.hibernate.connection.C3P0ConnectionProvider</classname> for
+        directory. Hibernate uses its <classname>org.hibernate.service.jdbc.connections.internal.C3P0ConnectionProvider</classname> for
         connection pooling if you set the <property>hibernate.c3p0.*</property> properties.  properties.
       </para>
       <itemizedlist>
@@ -153,7 +153,7 @@
       <para>
         Proxool is another open source JDBC connection pool distributed along with Hibernate in the
         <filename>lib/</filename> directory. Hibernate uses its
-        <classname>org.hibernate.connection.ProxoolConnectionProvider</classname> for connection pooling if you set the
+        <classname>org.hibernate.service.jdbc.connections.internal.ProxoolConnectionProvider</classname> for connection pooling if you set the
         <property>hibernate.proxool.*</property> properties. Unlike c3p0, proxool requires some additional configuration
         parameters, as described by the Proxool documentation available at <ulink
         url="http://proxool.sourceforge.net/configure.html" />.
@@ -223,7 +223,7 @@
       </para>
       <para>
         You can define your own plugin strategy for obtaining JDBC connections by implementing the interface
-        <interfacename>org.hibernate.connection.ConnectionProvider</interfacename> and specifying your custom
+        <interfacename>org.hibernate.service.jdbc.connections.spi.ConnectionProvider</interfacename> and specifying your custom
         implementation with the <property>hibernate.connection.provider_class</property> property.
       </para>
     </section>
@@ -294,8 +294,12 @@
             <entry>org.hibernate.dialect.IngresDialect</entry>
           </row>
           <row>
-            <entry>Microsoft SQL Server</entry>
-            <entry>org.hibernate.dialect.SQLServerDialect</entry>
+            <entry>Microsoft SQL Server 2005</entry>
+            <entry>org.hibernate.dialect.SQLServer2005Dialect</entry>
+          </row>
+          <row>
+            <entry>Microsoft SQL Server 2008</entry>
+            <entry>org.hibernate.dialect.SQLServer2008Dialect</entry>
           </row>
           <row>
             <entry>Mckoi SQL</entry>
@@ -307,7 +311,7 @@
           </row>
           <row>
             <entry>MySQL with InnoDB</entry>
-            <entry>org.hibernate.dialect.MySQLInnoDBDialect</entry>
+            <entry>org.hibernate.dialect.MySQL5InnoDBDialect</entry>
           </row>
           <row>
             <entry>MySQL with MyISAM</entry>
@@ -342,8 +346,12 @@
             <entry>org.hibernate.dialect.SAPDBDialect</entry>
           </row>
           <row>
-            <entry>Sybase</entry>
-            <entry>org.hibernate.dialect.SybaseDialect</entry>
+            <entry>Sybase ASE 15.5</entry>
+            <entry>org.hibernate.dialect.SybaseASE15Dialect</entry>
+          </row>
+          <row>
+            <entry>Sybase ASE 15.7</entry>
+            <entry>org.hibernate.dialect.SybaseASE157Dialect</entry>
           </row>
           <row>
             <entry>Sybase Anywhere</entry>
@@ -365,22 +373,22 @@
       <section>
           <title>Dialect resolution</title>
           <para>
-              Assuming a <interfacename>org.hibernate.connection.ConnectionProvider</interfacename> has been
+              Assuming a <interfacename>org.hibernate.service.jdbc.connections.spi.ConnectionProvider</interfacename> has been
               set up, Hibernate will attempt to automatically determine the Dialect to use based on the
               <interfacename>java.sql.DatabaseMetaData</interfacename> reported by a
               <interfacename>java.sql.Connection</interfacename> obtained from that
-              <interfacename>org.hibernate.connection.ConnectionProvider</interfacename>.
+              <interfacename>org.hibernate.service.jdbc.connections.spi.ConnectionProvider</interfacename>.
           </para>
           <para>
                 This functionality is provided by a series of
-                <interfacename>org.hibernate.dialect.resolver.DialectResolver</interfacename> instances registered
+                <interfacename>org.hibernate.service.jdbc.dialect.spi.DialectResolver</interfacename> instances registered
                 with Hibernate internally.  Hibernate comes with a standard set of recognitions.  If your application
                 requires extra Dialect resolution capabilities, it would simply register a custom implementation
-                of <interfacename>org.hibernate.dialect.resolver.DialectResolver</interfacename> as follows:
+                of <interfacename>org.hibernate.service.jdbc.dialect.spi.DialectResolver</interfacename> as follows:
           </para>
           <!-- document an example using the service registry -->
             <para>
-                Registered <interfacename>org.hibernate.dialect.resolver.DialectResolver</interfacename> are
+                Registered <interfacename>org.hibernate.service.jdbc.dialect.spi.DialectResolver</interfacename> are
                 <emphasis>prepended</emphasis> to an internal list of resolvers, so they take precedence
                 before any already registered resolvers including the standard one.
             </para>

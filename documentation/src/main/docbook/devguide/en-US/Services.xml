@@ -227,7 +227,7 @@
                             Contract for Hibernate to obtain <classname>org.hibernate.dialect.Dialect</classname>
                             instance to use.  This is either explicitly defined by the
                             <property>hibernate.dialect</property> property or determined by the
-                            <xref id="service-DialectResolver"/> service which is a delegate to this service.
+                            <xref linkend="services-DialectResolver"/> service which is a delegate to this service.
                         </para>
                     </listitem>
                 </varlistentry>

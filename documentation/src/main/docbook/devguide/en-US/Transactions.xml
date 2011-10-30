@@ -390,7 +390,7 @@
       <para>
         For objects attached to a particular Session, the two notions are equivalent, and JVM identity for database
         identity is guaranteed by Hibernate. The application might concurrently access a business object with the same
-        identity in two different sessions, the two instances are actually actually different, in terms of JVM
+        identity in two different sessions, the two instances are actually different, in terms of JVM
         identity. Conflicts are resolved using an optimistic approach and automatic versioning at flush/commit time.
       </para>
       <para>

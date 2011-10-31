@@ -100,7 +100,7 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 
 	@Override
 	public TransactionEnvironment getTransactionEnvironment() {
-		return factory.getTransactionEnvironment();
+		return getFactory().getTransactionEnvironment();
 	}
 
 	// inserts ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -311,7 +311,7 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 	}
 
 	public ConnectionReleaseMode getConnectionReleaseMode() {
-		return factory.getSettings().getConnectionReleaseMode();
+		return getFactory().getSettings().getConnectionReleaseMode();
 	}
 
 	@Override
@@ -320,7 +320,7 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 	}
 
 	public boolean isAutoCloseSessionEnabled() {
-		return factory.getSettings().isAutoCloseSessionEnabled();
+		return getFactory().getSettings().isAutoCloseSessionEnabled();
 	}
 
 	public boolean isFlushBeforeCompletionEnabled() {
@@ -423,10 +423,10 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 			throws HibernateException {
 		errorIfClosed();
 		if ( entityName==null ) {
-			return factory.getEntityPersister( guessEntityName( object ) );
+			return getFactory().getEntityPersister( guessEntityName( object ) );
 		}
 		else {
-			return factory.getEntityPersister( entityName ).getSubclassEntityPersister( object, getFactory() );
+			return getFactory().getEntityPersister( entityName ).getSubclassEntityPersister( object, getFactory() );
 		}
 	}
 
@@ -574,7 +574,7 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 		String entityName = criteria.getEntityOrClassName();
 		CriteriaLoader loader = new CriteriaLoader(
 				getOuterJoinLoadable( entityName ),
-		        factory,
+		        getFactory(),
 		        criteria,
 		        entityName,
 		        getLoadQueryInfluencers()
@@ -584,14 +584,14 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 
 	public List list(CriteriaImpl criteria) throws HibernateException {
 		errorIfClosed();
-		String[] implementors = factory.getImplementors( criteria.getEntityOrClassName() );
+		String[] implementors = getFactory().getImplementors( criteria.getEntityOrClassName() );
 		int size = implementors.length;
 
 		CriteriaLoader[] loaders = new CriteriaLoader[size];
 		for( int i=0; i <size; i++ ) {
 			loaders[i] = new CriteriaLoader(
 					getOuterJoinLoadable( implementors[i] ),
-			        factory,
+			        getFactory(),
 			        criteria,
 			        implementors[i],
 			        getLoadQueryInfluencers()
@@ -617,7 +617,7 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 	}
 
 	private OuterJoinLoadable getOuterJoinLoadable(String entityName) throws MappingException {
-		EntityPersister persister = factory.getEntityPersister(entityName);
+		EntityPersister persister = getFactory().getEntityPersister(entityName);
 		if ( !(persister instanceof OuterJoinLoadable) ) {
 			throw new MappingException( "class persister is not OuterJoinLoadable: " + entityName );
 		}

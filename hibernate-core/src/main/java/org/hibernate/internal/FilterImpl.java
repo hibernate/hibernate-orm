@@ -33,6 +33,7 @@ import java.util.Map;
 import org.hibernate.Filter;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.FilterDefinition;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.Type;
 
 /**
@@ -48,7 +49,7 @@ public class FilterImpl implements Filter, Serializable {
 	private String filterName;
 	private Map<String,Object> parameters = new HashMap<String, Object>();
 	
-	void afterDeserialize(SessionFactoryImpl factory) {
+	void afterDeserialize(SessionFactoryImplementor factory) {
 		definition = factory.getFilterDefinition(filterName);
 		validate();
 	}

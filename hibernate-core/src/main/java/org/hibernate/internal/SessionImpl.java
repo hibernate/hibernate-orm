@@ -208,7 +208,7 @@ public final class SessionImpl
 	 */
 	SessionImpl(
 			final Connection connection,
-			final SessionFactoryImpl factory,
+			final SessionFactoryImplementor factory,
 			final TransactionCoordinatorImpl transactionCoordinator,
 			final boolean autoJoinTransactions,
 			final long timestamp,
@@ -271,8 +271,8 @@ public final class SessionImpl
 		}
 
 
-		if ( factory.getStatistics().isStatisticsEnabled() ) {
-			factory.getStatisticsImplementor().closeSession();
+		if ( getFactory().getStatistics().isStatisticsEnabled() ) {
+			getFactory().getStatisticsImplementor().closeSession();
 		}
 
 		try {
@@ -625,7 +625,7 @@ public final class SessionImpl
 	}
 
 	private <T> EventListenerGroup<T> eventListenerGroup(EventType<T> type) {
-		return factory.getServiceRegistry().getService( EventListenerRegistry.class ).getEventListenerGroup( type );
+		return getFactory().getServiceRegistry().getService( EventListenerRegistry.class ).getEventListenerGroup( type );
 	}
 
 
@@ -1215,7 +1215,7 @@ public final class SessionImpl
 	}
 
 	public Object instantiate(String entityName, Serializable id) throws HibernateException {
-		return instantiate( factory.getEntityPersister( entityName ), id );
+		return instantiate( getFactory().getEntityPersister( entityName ), id );
 	}
 
 	/**
@@ -1270,7 +1270,7 @@ public final class SessionImpl
 	public EntityPersister getEntityPersister(final String entityName, final Object object) {
 		errorIfClosed();
 		if (entityName==null) {
-			return factory.getEntityPersister( guessEntityName( object ) );
+			return getFactory().getEntityPersister( guessEntityName( object ) );
 		}
 		else {
 			// try block is a hack around fact that currently tuplizers are not
@@ -1279,7 +1279,7 @@ public final class SessionImpl
 			// influence this decision if we were not able to based on the
 			// given entityName
 			try {
-				return factory.getEntityPersister( entityName ).getSubclassEntityPersister( object, getFactory() );
+				return getFactory().getEntityPersister( entityName ).getSubclassEntityPersister( object, getFactory() );
 			}
 			catch( HibernateException e ) {
 				try {
@@ -1353,12 +1353,12 @@ public final class SessionImpl
 			if ( roleAfterFlush == null ) {
 				throw new QueryException( "The collection was unreferenced" );
 			}
-			plan = factory.getQueryPlanCache().getFilterQueryPlan( filter, roleAfterFlush.getRole(), shallow, getEnabledFilters() );
+			plan = getFactory().getQueryPlanCache().getFilterQueryPlan( filter, roleAfterFlush.getRole(), shallow, getEnabledFilters() );
 		}
 		else {
 			// otherwise, we only need to flush if there are in-memory changes
 			// to the queried tables
-			plan = factory.getQueryPlanCache().getFilterQueryPlan( filter, roleBeforeFlush.getRole(), shallow, getEnabledFilters() );
+			plan = getFactory().getQueryPlanCache().getFilterQueryPlan( filter, roleBeforeFlush.getRole(), shallow, getEnabledFilters() );
 			if ( autoFlushIfRequired( plan.getQuerySpaces() ) ) {
 				// might need to run a different filter entirely after the flush
 				// because the collection role may have changed
@@ -1368,7 +1368,7 @@ public final class SessionImpl
 					if ( roleAfterFlush == null ) {
 						throw new QueryException( "The collection was dereferenced" );
 					}
-					plan = factory.getQueryPlanCache().getFilterQueryPlan( filter, roleAfterFlush.getRole(), shallow, getEnabledFilters() );
+					plan = getFactory().getQueryPlanCache().getFilterQueryPlan( filter, roleAfterFlush.getRole(), shallow, getEnabledFilters() );
 				}
 			}
 		}
@@ -1439,7 +1439,7 @@ public final class SessionImpl
 		String entityName = criteria.getEntityOrClassName();
 		CriteriaLoader loader = new CriteriaLoader(
 				getOuterJoinLoadable(entityName),
-				factory,
+				getFactory(),
 				criteria,
 				entityName,
 				getLoadQueryInfluencers()
@@ -1457,7 +1457,7 @@ public final class SessionImpl
 	public List list(CriteriaImpl criteria) throws HibernateException {
 		errorIfClosed();
 		checkTransactionSynchStatus();
-		String[] implementors = factory.getImplementors( criteria.getEntityOrClassName() );
+		String[] implementors = getFactory().getImplementors( criteria.getEntityOrClassName() );
 		int size = implementors.length;
 
 		CriteriaLoader[] loaders = new CriteriaLoader[size];
@@ -1466,7 +1466,7 @@ public final class SessionImpl
 
 			loaders[i] = new CriteriaLoader(
 					getOuterJoinLoadable( implementors[i] ),
-					factory,
+					getFactory(),
 					criteria,
 					implementors[i],
 					getLoadQueryInfluencers()
@@ -1498,7 +1498,7 @@ public final class SessionImpl
 	}
 
 	private OuterJoinLoadable getOuterJoinLoadable(String entityName) throws MappingException {
-		EntityPersister persister = factory.getEntityPersister(entityName);
+		EntityPersister persister = getFactory().getEntityPersister(entityName);
 		if ( !(persister instanceof OuterJoinLoadable) ) {
 			throw new MappingException( "class persister is not OuterJoinLoadable: " + entityName );
 		}
@@ -1597,7 +1597,7 @@ public final class SessionImpl
 
 	public SessionFactoryImplementor getSessionFactory() {
 		checkTransactionSynchStatus();
-		return factory;
+		return getFactory();
 	}
 
 	public void initializeCollection(PersistentCollection collection, boolean writing)
@@ -1892,8 +1892,8 @@ public final class SessionImpl
 		flushBeforeCompletionEnabled = ois.readBoolean();
 		autoCloseSessionEnabled = ois.readBoolean();
 		interceptor = ( Interceptor ) ois.readObject();
-
-		factory = SessionFactoryImpl.deserialize( ois );
+		
+		setFactory(SessionFactoryImpl.deserialize( ois ));
 
 		transactionCoordinator = TransactionCoordinatorImpl.deserialize( ois, this );
 
@@ -1906,7 +1906,7 @@ public final class SessionImpl
 		// filter, which will fail when called before FilterImpl.afterDeserialize( factory );
 		// Instead lookup the filter by name and then call FilterImpl.afterDeserialize( factory ).
 		for ( String filterName : loadQueryInfluencers.getEnabledFilterNames() ) {
-			((FilterImpl) loadQueryInfluencers.getEnabledFilter( filterName )).afterDeserialize( factory );
+			((FilterImpl) loadQueryInfluencers.getEnabledFilter( filterName )).afterDeserialize( getFactory() );
 		}
 	}
 
@@ -1935,7 +1935,7 @@ public final class SessionImpl
 		// we need to writeObject() on this since interceptor is user defined
 		oos.writeObject( interceptor );
 
-		factory.serialize( oos );
+		getFactory().serialize( oos );
 
 		transactionCoordinator.serialize( oos );
 
@@ -2010,7 +2010,7 @@ public final class SessionImpl
 		private boolean shareTransactionContext;
 
 		private SharedSessionBuilderImpl(SessionImpl session) {
-			super( session.factory );
+			super( session.getFactory() );
 			this.session = session;
 			super.tenantIdentifier( session.getTenantIdentifier() );
 		}
@@ -2110,7 +2110,7 @@ public final class SessionImpl
 				return entityName;
 			}
 
-			for ( EntityNameResolver resolver : factory.iterateEntityNameResolvers() ) {
+			for ( EntityNameResolver resolver : getFactory().iterateEntityNameResolvers() ) {
 				entityName = resolver.resolveEntityName( entity );
 				if ( entityName != null ) {
 					break;

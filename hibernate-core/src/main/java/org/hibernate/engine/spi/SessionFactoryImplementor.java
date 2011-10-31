@@ -23,10 +23,13 @@
  */
 package org.hibernate.engine.spi;
 
+import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
+import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.MappingException;
@@ -44,6 +47,7 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.query.spi.QueryPlanCache;
+import org.hibernate.engine.transaction.spi.TransactionEnvironment;
 import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -238,4 +242,21 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	public ServiceRegistryImplementor getServiceRegistry();
 
 	public void addObserver(SessionFactoryObserver observer);
+	
+	/**
+	 * Obtain the {@link TransactionEnvironment} associated with this session factory.
+	 *
+	 * @return The transaction environment.
+	 */
+	public TransactionEnvironment getTransactionEnvironment();
+	
+	public Iterable<EntityNameResolver> iterateEntityNameResolvers() ;
+	
+	/**
+	 * Custom serialization hook used during Session serialization.
+	 *
+	 * @param oos The stream to which to write the factory
+	 * @throws IOException Indicates problems writing out the serial data stream
+	 */
+	void serialize(ObjectOutputStream oos) throws IOException;
 }

@@ -43,9 +43,9 @@ sourceSets {
     }
 }
 sourceSets.main {
-    originalJavaSrcDirs = java.srcDirs
     jaxbTargetDir = file( "${buildDir}/generated-src/jaxb/main" )
     java.srcDir jaxbTargetDir
+	originalJavaSrcDirs = java.srcDirs
 }
 
 // resources inherently exclude sources
@@ -113,6 +113,8 @@ task jaxb {
     }
 
 }
+generateMainLoggingClasses.dependsOn jaxb
+generateMainLoggingClasses.dependsOn generateGrammarSource
 compileJava.dependsOn jaxb
 
 

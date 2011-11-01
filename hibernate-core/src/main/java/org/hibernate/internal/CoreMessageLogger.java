@@ -214,7 +214,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	void deprecatedOracleDialect();
 
 	@LogMessage(level = WARN)
-	@Message(value = "DEPRECATED : use {} instead with custom {} implementation", id = 65)
+	@Message(value = "DEPRECATED : use [%s] instead with custom [%s] implementation", id = 65)
 	void deprecatedUuidGenerator(String name,
 								 String name2);
 
@@ -1234,7 +1234,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	void unableToRemoveBagJoinFetch();
 
 	@LogMessage(level = INFO)
-	@Message(value = "Could not resolve aggregate function {}; using standard definition", id = 359)
+	@Message(value = "Could not resolve aggregate function [%s]; using standard definition", id = 359)
 	void unableToResolveAggregateFunction(String name);
 
 	@LogMessage(level = INFO)
@@ -1498,7 +1498,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	void disablingContextualLOBCreationSinceCreateClobFailed(Throwable t);
 
 	@LogMessage(level = INFO)
-	@Message(value = "Could not close session; swallowing exception as transaction completed", id = 425)
+	@Message(value = "Could not close session; swallowing exception[%s] as transaction completed", id = 425)
 	void unableToCloseSessionButSwallowingError(HibernateException e);
 
 	@LogMessage(level = WARN)

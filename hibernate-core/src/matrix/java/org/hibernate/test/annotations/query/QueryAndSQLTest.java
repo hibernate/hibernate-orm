@@ -39,6 +39,7 @@ import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.stat.Statistics;
 import org.hibernate.test.annotations.A320;
 import org.hibernate.test.annotations.A320b;
@@ -62,10 +63,16 @@ import static org.junit.Assert.fail;
 public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 
     @Test
-    @SkipForDialect(value = {SQLServerDialect.class})
 	public void testNativeQueryWithFormulaAttribute() {
-		String sql = "select t.table_name as {t.tableName}, sysdate() as {t.daysOld} from ALL_TABLES t  where t.table_name = 'AUDIT_ACTIONS' ";
-		String sql2 = "select table_name as t_name, sysdate() as t_time from ALL_TABLES   where table_name = 'AUDIT_ACTIONS' ";
+        String sql,sql2;
+        if ( getDialect() instanceof SQLServerDialect || getDialect() instanceof SybaseASE15Dialect ) {
+            sql = "select t.table_name as {t.tableName}, getdate() as {t.daysOld} from ALL_TABLES t  where t.table_name = 'AUDIT_ACTIONS' ";
+            sql2 = "select table_name as t_name, getdate() as t_time from ALL_TABLES   where table_name = 'AUDIT_ACTIONS' ";
+        }
+        else {
+            sql = "select t.table_name as {t.tableName}, sysdate() as {t.daysOld} from ALL_TABLES t  where t.table_name = 'AUDIT_ACTIONS' ";
+            sql2 = "select table_name as t_name, sysdate() as t_time from ALL_TABLES   where table_name = 'AUDIT_ACTIONS' ";
+        }
 		Session s = openSession();
 		s.beginTransaction();
 		s.createSQLQuery( sql ).addEntity( "t", AllTables.class ).list();
@@ -76,22 +83,6 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 	}
-
-	@Test
-	@RequiresDialect(value = {SQLServerDialect.class})
-    public void testNativeQueryWithFormulaAttributeSqlServer() {
-        String sql = "select t.table_name as {t.tableName}, getdate() as {t.daysOld} from ALL_TABLES t  where t.table_name = 'AUDIT_ACTIONS' ";
-        String sql2 = "select table_name as t_name, getdate() as t_time from ALL_TABLES   where table_name = 'AUDIT_ACTIONS' ";
-        Session s = openSession();
-        s.beginTransaction();
-        s.createSQLQuery( sql ).addEntity( "t", AllTables.class ).list();
-        s.createSQLQuery( sql2 ).setResultSetMapping( "all" ).list();
-        SQLQuery q = s.createSQLQuery( sql2 );
-        q.addRoot( "t", AllTables.class ).addProperty( "tableName", "t_name" ).addProperty( "daysOld", "t_time" );
-        q.list();
-        s.getTransaction().commit();
-        s.close();
-    }
 
     @Test
 	@FailureExpected( jiraKey = "HHH-2225")

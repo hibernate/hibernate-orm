@@ -32,6 +32,8 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.jdbc.Work;
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.type.descriptor.JdbcTypeNameMapper;
 
@@ -41,6 +43,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Steve Ebersole
  */
+@RequiresDialectFeature( DialectChecks.SupportsExpectedLobUsagePattern.class )
 public class BasicOperationsTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

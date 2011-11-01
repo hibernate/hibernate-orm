@@ -31,6 +31,8 @@ import org.junit.Test;
 import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.dialect.SybaseASE15Dialect;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -75,6 +77,7 @@ public class CompositeUserTypeTest extends BaseCoreFunctionalTestCase {
 	}
 	
 	@Test
+    @SkipForDialect( value = SybaseASE15Dialect.class, jiraKey = "HHH-6788")
 	public void testCustomColumnReadAndWrite() {
 		Session s = openSession();
 		org.hibernate.Transaction t = s.beginTransaction();
@@ -84,7 +87,7 @@ public class CompositeUserTypeTest extends BaseCoreFunctionalTestCase {
 		f.setHoldings( new MonetoryAmount( AMOUNT, Currency.getInstance("USD") ) );
 		s.persist(f);
 		s.flush();
-		
+
 		// Test value conversion during insert
 		BigDecimal amountViaSql = (BigDecimal)s.createSQLQuery("select amount_millions from MutualFund").uniqueResult();
 		assertEquals(AMOUNT_MILLIONS.doubleValue(), amountViaSql.doubleValue(), 0.01d);

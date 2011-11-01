@@ -1687,6 +1687,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+    @SkipForDialect( value = SybaseASE15Dialect.class, jiraKey = "HHH-6424")
 	@SuppressWarnings( {"UnnecessaryUnboxing"})
 	public void testAggregation() {
 		Session s = openSession();

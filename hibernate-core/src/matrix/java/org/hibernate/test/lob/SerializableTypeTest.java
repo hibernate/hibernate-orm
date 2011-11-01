@@ -26,6 +26,8 @@ package org.hibernate.test.lob;
 import org.junit.Test;
 
 import org.hibernate.Session;
+import org.hibernate.dialect.SybaseASE15Dialect;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -46,6 +48,7 @@ public class SerializableTypeTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+    @SkipForDialect( value = SybaseASE15Dialect.class, jiraKey = "HHH-6425")
 	public void testNewSerializableType() {
 		final String initialPayloadText = "Initial payload";
 		final String changedPayloadText = "Changed payload";

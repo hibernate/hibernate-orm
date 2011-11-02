@@ -118,10 +118,10 @@ public class ProxyFactoryFactoryImpl implements ProxyFactoryFactory {
 				return proxiedClassName + "@" + System.identityHashCode( object );
 			}
 			else if ( "equals".equals( name ) ) {
-				return proxiedObject == object ? Boolean.TRUE : Boolean.FALSE;
+				return proxiedObject == object;
 			}
 			else if ( "hashCode".equals( name ) ) {
-				return new Integer( System.identityHashCode( object ) );
+				return System.identityHashCode( object );
 			}
 			boolean hasGetterSignature = method.getParameterTypes().length == 0 && method.getReturnType() != null;
 			boolean hasSetterSignature = method.getParameterTypes().length == 1 && ( method.getReturnType() == null || method.getReturnType() == void.class );

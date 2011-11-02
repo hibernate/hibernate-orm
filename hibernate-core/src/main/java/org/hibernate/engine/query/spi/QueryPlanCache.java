@@ -265,7 +265,7 @@ public class QueryPlanCache implements Serializable {
 					final String key = (String) entry.getKey();
 					final Integer valueCount;
 					if ( Collection.class.isInstance( entry.getValue() ) ) {
-						valueCount = new Integer( ( (Collection) entry.getValue() ).size() );
+						valueCount = ( (Collection) entry.getValue() ).size();
 					}
 					else {
 						valueCount = 1;

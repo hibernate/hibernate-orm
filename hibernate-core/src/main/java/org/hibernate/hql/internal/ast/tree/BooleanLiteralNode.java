@@ -42,7 +42,7 @@ public class BooleanLiteralNode extends LiteralNode implements ExpectedTypeAware
 	}
 
 	public Boolean getValue() {
-		return getType() == TRUE ? Boolean.TRUE : Boolean.FALSE;
+		return getType() == TRUE ;
 	}
 
 	@Override

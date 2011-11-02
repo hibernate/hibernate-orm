@@ -133,7 +133,7 @@ public class ASTPrinter {
 	 *         or just the integer as a string if none exists.
 	 */
 	public String getTokenTypeName(int type) {
-		final Integer typeInteger = new Integer( type );
+		final Integer typeInteger = type;
 		String value = null;
 		if ( tokenTypeNameCache != null ) {
 			value = ( String ) tokenTypeNameCache.get( typeInteger );

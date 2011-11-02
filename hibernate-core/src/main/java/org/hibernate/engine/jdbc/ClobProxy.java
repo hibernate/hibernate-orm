@@ -162,7 +162,7 @@ public class ClobProxy implements InvocationHandler {
 			return Boolean.valueOf( proxy == args[0] );
 		}
 		if ( "hashCode".equals( methodName ) && argCount == 0 ) {
-			return new Integer( this.hashCode() );
+			return this.hashCode();
 		}
 
 		throw new UnsupportedOperationException( "Clob may not be manipulated from creating session" );

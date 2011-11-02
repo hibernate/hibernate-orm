@@ -61,7 +61,7 @@ public class StructuredCacheEntry implements CacheEntryStructure {
 		Map map = new HashMap(names.length+2);
 		map.put( "_subclass", entry.getSubclass() );
 		map.put( "_version", entry.getVersion() );
-		map.put( "_lazyPropertiesUnfetched", entry.areLazyPropertiesUnfetched() ? Boolean.TRUE : Boolean.FALSE );
+		map.put( "_lazyPropertiesUnfetched", entry.areLazyPropertiesUnfetched() );
 		for ( int i=0; i<names.length; i++ ) {
 			map.put( names[i], entry.getDisassembledState()[i] );
 		}

@@ -62,9 +62,9 @@ public class NamedSQLQuerySecondPass extends ResultSetMappingBinder implements Q
 		boolean cacheable = "true".equals( queryElem.attributeValue( "cacheable" ) );
 		String region = queryElem.attributeValue( "cache-region" );
 		Attribute tAtt = queryElem.attribute( "timeout" );
-		Integer timeout = tAtt == null ? null : new Integer( tAtt.getValue() );
+		Integer timeout = tAtt == null ? null : Integer.valueOf( tAtt.getValue() );
 		Attribute fsAtt = queryElem.attribute( "fetch-size" );
-		Integer fetchSize = fsAtt == null ? null : new Integer( fsAtt.getValue() );
+		Integer fetchSize = fsAtt == null ? null : Integer.valueOf( fsAtt.getValue() );
 		Attribute roAttr = queryElem.attribute( "read-only" );
 		boolean readOnly = roAttr != null && "true".equals( roAttr.getValue() );
 		Attribute cacheModeAtt = queryElem.attribute( "cache-mode" );

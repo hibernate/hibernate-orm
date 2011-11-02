@@ -511,39 +511,39 @@ public abstract class AbstractQueryImpl implements Query {
 	}
 
 	public Query setBoolean(int position, boolean val) {
-		Boolean valueToUse = val ? Boolean.TRUE : Boolean.FALSE;
+		Boolean valueToUse = val;
 		Type typeToUse = determineType( position, valueToUse, StandardBasicTypes.BOOLEAN );
 		setParameter( position, valueToUse, typeToUse );
 		return this;
 	}
 
 	public Query setByte(int position, byte val) {
-		setParameter(position, new Byte(val), StandardBasicTypes.BYTE);
+		setParameter(position, val, StandardBasicTypes.BYTE);
 		return this;
 	}
 
 	public Query setShort(int position, short val) {
-		setParameter(position, new Short(val), StandardBasicTypes.SHORT);
+		setParameter(position, val, StandardBasicTypes.SHORT);
 		return this;
 	}
 
 	public Query setInteger(int position, int val) {
-		setParameter(position, new Integer(val), StandardBasicTypes.INTEGER);
+		setParameter(position, val, StandardBasicTypes.INTEGER);
 		return this;
 	}
 
 	public Query setLong(int position, long val) {
-		setParameter(position, new Long(val), StandardBasicTypes.LONG);
+		setParameter(position, val, StandardBasicTypes.LONG);
 		return this;
 	}
 
 	public Query setFloat(int position, float val) {
-		setParameter(position, new Float(val), StandardBasicTypes.FLOAT);
+		setParameter(position, val, StandardBasicTypes.FLOAT);
 		return this;
 	}
 
 	public Query setDouble(int position, double val) {
-		setParameter(position, new Double(val), StandardBasicTypes.DOUBLE);
+		setParameter(position, val, StandardBasicTypes.DOUBLE);
 		return this;
 	}
 
@@ -615,19 +615,19 @@ public abstract class AbstractQueryImpl implements Query {
 	}
 
 	public Query setBoolean(String name, boolean val) {
-		Boolean valueToUse = val ? Boolean.TRUE : Boolean.FALSE;
+		Boolean valueToUse = val;
 		Type typeToUse = determineType( name, valueToUse, StandardBasicTypes.BOOLEAN );
 		setParameter( name, valueToUse, typeToUse );
 		return this;
 	}
 
 	public Query setByte(String name, byte val) {
-		setParameter(name, new Byte(val), StandardBasicTypes.BYTE);
+		setParameter(name, val, StandardBasicTypes.BYTE);
 		return this;
 	}
 
 	public Query setCharacter(String name, char val) {
-		setParameter(name, new Character(val), StandardBasicTypes.CHARACTER);
+		setParameter(name, val, StandardBasicTypes.CHARACTER);
 		return this;
 	}
 
@@ -637,7 +637,7 @@ public abstract class AbstractQueryImpl implements Query {
 	}
 
 	public Query setDouble(String name, double val) {
-		setParameter(name, new Double(val), StandardBasicTypes.DOUBLE);
+		setParameter(name, val, StandardBasicTypes.DOUBLE);
 		return this;
 	}
 
@@ -647,12 +647,12 @@ public abstract class AbstractQueryImpl implements Query {
 	}
 
 	public Query setFloat(String name, float val) {
-		setParameter(name, new Float(val), StandardBasicTypes.FLOAT);
+		setParameter(name, val, StandardBasicTypes.FLOAT);
 		return this;
 	}
 
 	public Query setInteger(String name, int val) {
-		setParameter(name, new Integer(val), StandardBasicTypes.INTEGER);
+		setParameter(name, val, StandardBasicTypes.INTEGER);
 		return this;
 	}
 
@@ -672,7 +672,7 @@ public abstract class AbstractQueryImpl implements Query {
 	}
 
 	public Query setLong(String name, long val) {
-		setParameter(name, new Long(val), StandardBasicTypes.LONG);
+		setParameter(name, val, StandardBasicTypes.LONG);
 		return this;
 	}
 
@@ -682,7 +682,7 @@ public abstract class AbstractQueryImpl implements Query {
 	}
 
 	public Query setShort(String name, short val) {
-		setParameter(name, new Short(val), StandardBasicTypes.SHORT);
+		setParameter(name, val, StandardBasicTypes.SHORT);
 		return this;
 	}
 

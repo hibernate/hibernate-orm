@@ -72,7 +72,7 @@ public class ShortType
 	}
 
 	public Short stringToObject(String xml) throws Exception {
-		return new Short(xml);
+		return Short.valueOf( xml );
 	}
 
 	@SuppressWarnings({ "UnnecessaryBoxing", "UnnecessaryUnboxing" })

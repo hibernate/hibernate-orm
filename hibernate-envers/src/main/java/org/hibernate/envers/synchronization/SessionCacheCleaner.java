@@ -20,7 +20,9 @@ public class SessionCacheCleaner {
     public void scheduleAuditDataRemoval(final Session session, final Object data) {
         ((EventSource) session).getActionQueue().registerProcess(new AfterTransactionCompletionProcess() {
             public void doAfterTransactionCompletion(boolean success, SessionImplementor session) {
-                ((Session) session).evict(data);
+                if (!session.isClosed()) {
+                    ((Session) session).evict(data);
+                }
             }
         });
     }

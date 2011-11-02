@@ -365,6 +365,11 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		sessionFactory.close();
 		sessionFactory = null;
 		configuration = null;
+        if(serviceRegistry == null){
+            return;
+        }
+        serviceRegistry.destroy();
+        serviceRegistry=null;
 	}
 
 	@OnFailure

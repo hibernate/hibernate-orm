@@ -252,7 +252,7 @@ public abstract class AbstractServiceRegistryImpl implements ServiceRegistryImpl
 			);
 		}
 	}
-
+    @Override
 	public void destroy() {
 		ListIterator<Service> serviceIterator = serviceList.listIterator( serviceList.size() );
 		while ( serviceIterator.hasPrevious() ) {

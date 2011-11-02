@@ -229,7 +229,7 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 
 		@Override
 		public void releaseConnection(Connection connection) throws SQLException {
-			connection.close();
+			connectionProvider.closeConnection( connection );
 		}
 	}
 
@@ -247,7 +247,7 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 
 		@Override
 		public void releaseConnection(Connection connection) throws SQLException {
-			connection.close();
+			connectionProvider.releaseAnyConnection( connection );
 		}
 	}
 

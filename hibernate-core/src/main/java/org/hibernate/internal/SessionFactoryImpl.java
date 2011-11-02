@@ -290,7 +290,7 @@ public final class SessionFactoryImpl
 
 		final IntegratorObserver integratorObserver = new IntegratorObserver();
 		this.observer.addObserver( integratorObserver );
-		for ( Integrator integrator : serviceRegistry.getService( IntegratorService.class ).getIntegrators() ) {
+		for ( Integrator integrator : this.serviceRegistry.getService( IntegratorService.class ).getIntegrators() ) {
 			integrator.integrate( cfg, this, this.serviceRegistry );
 			integratorObserver.integrators.add( integrator );
 		}
@@ -342,7 +342,7 @@ public final class SessionFactoryImpl
 					allCacheRegions.put( cacheRegionName, entityRegion );
 				}
 			}
-			EntityPersister cp = serviceRegistry.getService( PersisterFactory.class ).createEntityPersister(
+			EntityPersister cp = this.serviceRegistry.getService( PersisterFactory.class ).createEntityPersister(
 					model,
 					accessStrategy,
 					this,
@@ -371,7 +371,7 @@ public final class SessionFactoryImpl
 				entityAccessStrategies.put( cacheRegionName, accessStrategy );
 				allCacheRegions.put( cacheRegionName, collectionRegion );
 			}
-			CollectionPersister persister = serviceRegistry.getService( PersisterFactory.class ).createCollectionPersister(
+			CollectionPersister persister = this.serviceRegistry.getService( PersisterFactory.class ).createCollectionPersister(
 					cfg,
 					model,
 					accessStrategy,
@@ -436,21 +436,21 @@ public final class SessionFactoryImpl
 		catch (Exception e) {
 			throw new AssertionFailure("Could not generate UUID");
 		}
-		SessionFactoryRegistry.INSTANCE.addSessionFactory( uuid, name, this, serviceRegistry.getService( JndiService.class ) );
+		SessionFactoryRegistry.INSTANCE.addSessionFactory( uuid, name, this, this.serviceRegistry.getService( JndiService.class ) );
 
 		LOG.debugf( "Instantiated session factory" );
 
 		if ( settings.isAutoCreateSchema() ) {
-			new SchemaExport( serviceRegistry, cfg ).create( false, true );
+			new SchemaExport( this.serviceRegistry, cfg ).create( false, true );
 		}
 		if ( settings.isAutoUpdateSchema() ) {
-			new SchemaUpdate( serviceRegistry, cfg ).execute( false, true );
+			new SchemaUpdate( this.serviceRegistry, cfg ).execute( false, true );
 		}
 		if ( settings.isAutoValidateSchema() ) {
-			new SchemaValidator( serviceRegistry, cfg ).validate();
+			new SchemaValidator( this.serviceRegistry, cfg ).validate();
 		}
 		if ( settings.isAutoDropSchema() ) {
-			schemaExport = new SchemaExport( serviceRegistry, cfg );
+			schemaExport = new SchemaExport( this.serviceRegistry, cfg );
 		}
 
 		currentSessionContext = buildCurrentSessionContext();

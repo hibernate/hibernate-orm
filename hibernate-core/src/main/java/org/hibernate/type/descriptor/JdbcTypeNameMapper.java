@@ -53,10 +53,7 @@ public class JdbcTypeNameMapper {
 		for ( Field field : fields ) {
 			try {
 				final int code = field.getInt( null );
-				String old = map.put(
-						Integer.valueOf( code ),
-						field.getName()
-				);
+				String old = map.put( code, field.getName() );
                 if (old != null) LOG.JavaSqlTypesMappedSameCodeMultipleTimes(code, old, field.getName());
 			}
 			catch ( IllegalAccessException e ) {
@@ -64,10 +61,6 @@ public class JdbcTypeNameMapper {
 			}
 		}
 		return Collections.unmodifiableMap( map );
-	}
-
-	public static String getTypeName(int code) {
-		return getTypeName( Integer.valueOf( code ) );
 	}
 
 	public static String getTypeName(Integer code) {

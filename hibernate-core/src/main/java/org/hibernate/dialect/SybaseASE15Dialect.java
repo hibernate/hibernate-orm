@@ -30,6 +30,9 @@ import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.descriptor.sql.SmallIntTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.sql.TinyIntTypeDescriptor;
 
 /**
  * An SQL dialect targeting Sybase Adaptive Server Enterprise (ASE) 15 and higher.
@@ -427,4 +430,9 @@ public class SybaseASE15Dialect extends AbstractTransactSQLDialect {
 	public String getCrossJoinSeparator() {
 		return ", ";
 	}
+
+    @Override
+    protected SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
+        return sqlCode == Types.BOOLEAN ? TinyIntTypeDescriptor.INSTANCE : super.getSqlTypeDescriptorOverride( sqlCode );
+    }
 }

@@ -116,4 +116,9 @@ public class BootstrapServiceRegistryImpl
 		throw new ServiceException( "Boot-strap registry should only contain directly built services" );
 	}
 
+	@Override
+	public <R extends Service> void configureService(R service) {
+		//nothing do to for bootstrap style services
+	}
+
 }

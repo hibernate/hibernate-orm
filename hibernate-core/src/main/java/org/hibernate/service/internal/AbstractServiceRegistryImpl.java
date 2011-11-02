@@ -43,6 +43,7 @@ import org.hibernate.service.spi.Manageable;
 import org.hibernate.service.spi.ServiceBinding;
 import org.hibernate.service.spi.ServiceException;
 import org.hibernate.service.spi.ServiceInitiator;
+import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Startable;
 import org.hibernate.service.spi.Stoppable;
@@ -156,13 +157,24 @@ public abstract class AbstractServiceRegistryImpl implements ServiceRegistryImpl
 			return null;
 		}
 
-		// PHASE 2 : configure service (***potentially recursive***)
-		configureService( service );
+		// PHASE 2 : inject service (***potentially recursive***)
+		injectService( service );
 
-		// PHASE 3 : Start service
+		// PHASE 3 : configure service
+		serviceBinding.getServiceRegistry().configureService( service );
+
+		// PHASE 4 : Start service
 		startService( serviceBinding );
 
 		return service;
+	}
+
+	protected <T extends Service> void injectService(T service) {
+		applyInjections( service );
+
+		if ( ServiceRegistryAwareService.class.isInstance( service ) ) {
+			( (ServiceRegistryAwareService) service ).injectServices( this );
+		}
 	}
 
 	@SuppressWarnings( {"unchecked"})
@@ -187,8 +199,6 @@ public abstract class AbstractServiceRegistryImpl implements ServiceRegistryImpl
 			throw new ServiceException( "Unable to create requested service [" + serviceBinding.getServiceRole().getName() + "]", e );
 		}
 	}
-
-	protected abstract <T extends Service> void configureService(T service);
 
 	protected <T extends Service> void applyInjections(T service) {
 		try {

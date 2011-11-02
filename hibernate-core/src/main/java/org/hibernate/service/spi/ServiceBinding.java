@@ -37,6 +37,7 @@ public final class ServiceBinding<R extends Service> {
 
 	public static interface OwningRegistry {
 		public <R extends Service> R initiateService(ServiceInitiator<R> serviceInitiator);
+		public <R extends Service> void configureService(R service);
 	}
 
 	private final OwningRegistry serviceRegistry;

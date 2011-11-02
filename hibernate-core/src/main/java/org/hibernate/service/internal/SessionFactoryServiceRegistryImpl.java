@@ -96,11 +96,7 @@ public class SessionFactoryServiceRegistryImpl extends AbstractServiceRegistryIm
 	}
 
 	@Override
-	protected <T extends Service> void configureService(T service) {
-		applyInjections( service );
-
-		if ( ServiceRegistryAwareService.class.isInstance( service ) ) {
-			( (ServiceRegistryAwareService) service ).injectServices( this );
-		}
+	public <T extends Service> void configureService(T service) {
+		//TODO nothing to do here or should we inject SessionFactory properties?
 	}
 }

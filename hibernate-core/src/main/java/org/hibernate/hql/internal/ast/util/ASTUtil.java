@@ -448,11 +448,11 @@ public final class ASTUtil {
 				rtn = ( Integer ) value;
 			}
 			else if ( value instanceof Short ) {
-				rtn = new Integer( ( ( Short ) value ).intValue() );
+				rtn =  ( ( Short ) value ).intValue();
 			}
 			else if ( value instanceof Long ) {
 				if ( ( ( Long ) value ).longValue() <= Integer.MAX_VALUE ) {
-					rtn = new Integer( ( ( Long ) value ).intValue() );
+					rtn = ( ( Long ) value ).intValue();
 				}
 			}
 		}

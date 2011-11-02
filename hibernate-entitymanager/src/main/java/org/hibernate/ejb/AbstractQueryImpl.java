@@ -206,7 +206,7 @@ public abstract class AbstractQueryImpl<X> implements TypedQuery<X> {
 			else if ( SPEC_HINT_TIMEOUT.equals( hintName ) ) {
 				// convert milliseconds to seconds
 				int timeout = (int)Math.round(ConfigurationHelper.getInteger( value ).doubleValue() / 1000.0 );
-				applyTimeout( new Integer(timeout) );
+				applyTimeout( timeout );
 			}
 			else if ( HINT_COMMENT.equals( hintName ) ) {
 				applyComment( (String) value );

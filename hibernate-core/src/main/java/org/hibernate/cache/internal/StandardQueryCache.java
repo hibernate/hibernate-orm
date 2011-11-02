@@ -91,7 +91,7 @@ public class StandardQueryCache implements QueryCache {
 			boolean isNaturalKeyLookup,
 			SessionImplementor session) throws HibernateException {
         if (isNaturalKeyLookup && result.size() == 0) return false;
-        Long ts = new Long(session.getFactory().getSettings().getRegionFactory().nextTimestamp());
+        Long ts = session.getFactory().getSettings().getRegionFactory().nextTimestamp();
 
 		LOG.debugf( "Caching query results in region: %s; timestamp=%s", cacheRegion.getName(), ts );
 

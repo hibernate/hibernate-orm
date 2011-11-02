@@ -73,7 +73,7 @@ public class UpdateTimestampsCache {
 		readWriteLock.writeLock().lock();
 
 		try {
-			Long ts = new Long( region.nextTimestamp() + region.getTimeout() );
+			Long ts = region.nextTimestamp() + region.getTimeout();
 			for ( Serializable space : spaces ) {
 				LOG.debugf( "Pre-invalidating space [%s]", space );
 				//put() has nowait semantics, is this really appropriate?
@@ -94,7 +94,7 @@ public class UpdateTimestampsCache {
 		readWriteLock.writeLock().lock();
 
 		try {
-			Long ts = new Long( region.nextTimestamp() );
+			Long ts = region.nextTimestamp();
 			for (Serializable space : spaces) {
 				LOG.debugf( "Invalidating space [%s], timestamp: %s", space, ts );
 				//put() has nowait semantics, is this really appropriate?

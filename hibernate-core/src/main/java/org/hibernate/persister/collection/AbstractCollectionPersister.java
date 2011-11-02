@@ -771,7 +771,7 @@ public abstract class AbstractCollectionPersister
 
 	protected Object decrementIndexByBase(Object index) {
 		if ( baseIndex != 0 ) {
-			index = new Integer( ( (Integer) index ).intValue() - baseIndex );
+            index = (Integer)index - baseIndex;
 		}
 		return index;
 	}
@@ -824,7 +824,7 @@ public abstract class AbstractCollectionPersister
 
 	protected Object incrementIndexByBase(Object index) {
 		if ( baseIndex != 0 ) {
-			index = new Integer( ( (Integer) index ).intValue() + baseIndex );
+            index = (Integer)index + baseIndex;
 		}
 		return index;
 	}

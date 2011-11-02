@@ -114,13 +114,13 @@ public final class IdentifierGeneratorHelper {
 
 		Class clazz = type.getReturnedClass();
 		if ( clazz == Long.class ) {
-			return new Long( rs.getLong( 1 ) );
+			return rs.getLong( 1 );
 		}
 		else if ( clazz == Integer.class ) {
-			return new Integer( rs.getInt( 1 ) );
+			return rs.getInt( 1 );
 		}
 		else if ( clazz == Short.class ) {
-			return new Short( rs.getShort( 1 ) );
+			return rs.getShort( 1 );
 		}
 		else if ( clazz == String.class ) {
 			return rs.getString( 1 );
@@ -153,13 +153,13 @@ public final class IdentifierGeneratorHelper {
 	@Deprecated
     public static Number createNumber(long value, Class clazz) throws IdentifierGenerationException {
 		if ( clazz == Long.class ) {
-			return new Long( value );
+			return value;
 		}
 		else if ( clazz == Integer.class ) {
-			return new Integer( ( int ) value );
+			return ( int ) value;
 		}
 		else if ( clazz == Short.class ) {
-			return new Short( ( short ) value );
+			return ( short ) value;
 		}
 		else {
 			throw new IdentifierGenerationException( "unrecognized id type : " + clazz.getName() );
@@ -345,13 +345,13 @@ public final class IdentifierGeneratorHelper {
 			// TODO : should we check for truncation?
 			checkInitialized();
 			if ( exactType == Long.class ) {
-				return new Long( value );
+				return value;
 			}
 			else if ( exactType == Integer.class ) {
-				return new Integer( ( int ) value );
+				return ( int ) value;
 			}
 			else {
-				return new Short( ( short ) value );
+				return ( short ) value;
 			}
 		}
 

@@ -87,7 +87,7 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 		beforeInitialize( persister, size );
 		for ( int i = 0; i < size; i+=2 ) {
 			identifiers.put(
-				new Integer(i/2),
+				(i/2),
 				persister.getIdentifierType().assemble( array[i], getSession(), owner )
 			);
 			values.add( persister.getElementType().assemble( array[i+1], getSession(), owner ) );
@@ -95,7 +95,7 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 	}
 
 	public Object getIdentifier(Object entry, int i) {
-		return identifiers.get( new Integer(i) );
+		return identifiers.get( i );
 	}
 
 	public boolean isWrapper(Object collection) {
@@ -200,7 +200,7 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 		int i=0;
 		for (int j=0; j< values.size(); j++) {
 			Object value = values.get(j);
-			result[i++] = persister.getIdentifierType().disassemble( identifiers.get( new Integer(j) ), getSession(), null );
+			result[i++] = persister.getIdentifierType().disassemble( identifiers.get( j ), getSession(), null );
 			result[i++] = persister.getElementType().disassemble( value, getSession(), null );
 		}
 		return result;
@@ -224,7 +224,7 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 		if ( snap.size()!= values.size() ) return false;
 		for ( int i=0; i<values.size(); i++ ) {
 			Object value = values.get(i);
-			Object id = identifiers.get( new Integer(i) );
+			Object id = identifiers.get( i );
 			if (id==null) return false;
 			Object old = snap.get(id);
 			if ( elementType.isDirty( old, value, getSession() ) ) return false;
@@ -240,7 +240,7 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 		Map snap = (Map) getSnapshot();
 		List deletes = new ArrayList( snap.keySet() );
 		for ( int i=0; i<values.size(); i++ ) {
-			if ( values.get(i)!=null ) deletes.remove( identifiers.get( new Integer(i) ) );
+			if ( values.get(i)!=null ) deletes.remove( identifiers.get( i ) );
 		}
 		return deletes.iterator();
 	}
@@ -255,7 +255,7 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 
 	public Object getSnapshotElement(Object entry, int i) {
 		Map snap = (Map) getSnapshot();
-		Object id = identifiers.get( new Integer(i) );
+		Object id = identifiers.get( i );
 		return snap.get(id);
 	}
 
@@ -263,7 +263,7 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 		throws HibernateException {
 
 		Map snap = (Map) getSnapshot();
-		Object id = identifiers.get( new Integer(i) );
+		Object id = identifiers.get( i );
 		return entry!=null && ( id==null || snap.get(id)==null );
 	}
 
@@ -271,7 +271,7 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 
 		if (entry==null) return false;
 		Map snap = (Map) getSnapshot();
-		Object id = identifiers.get( new Integer(i) );
+		Object id = identifiers.get( i );
 		if (id==null) return false;
 		Object old = snap.get(id);
 		return old!=null && elemType.isDirty( old, entry, getSession() );
@@ -287,7 +287,7 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 
 		Object element = persister.readElement( rs, owner, descriptor.getSuffixedElementAliases(), getSession() );
 		Object old = identifiers.put(
-			new Integer( values.size() ),
+			values.size(),
 			persister.readIdentifier( rs, descriptor.getSuffixedIdentifierAlias(), getSession() )
 		);
 		if ( old==null ) values.add(element); //maintain correct duplication if loaded in a cartesian product
@@ -301,7 +301,7 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 		while ( iter.hasNext() ) {
 			Object value = iter.next();
 			map.put(
-				identifiers.get( new Integer(i++) ),
+				identifiers.get( i++ ),
 				persister.getElementType().deepCopy(value, persister.getFactory())
 			);
 		}
@@ -318,7 +318,7 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 		int i=0;
 		while ( iter.hasNext() ) {
 			Object entry = iter.next();
-			Integer loc = new Integer(i++);
+			Integer loc = i++;
 			if ( !identifiers.containsKey(loc) ) { //TODO: native ids
 				Serializable id = persister.getIdentifierGenerator().generate( getSession(), entry );
 				identifiers.put(loc, id);
@@ -371,25 +371,25 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 	}
 
 	private void beforeRemove(int index) {
-		Object removedId = identifiers.get( new Integer(index) );
+		Object removedId = identifiers.get( index );
 		int last = values.size()-1;
 		for ( int i=index; i<last; i++ ) {
-			Object id = identifiers.get( new Integer(i+1) );
+			Object id = identifiers.get( i+1 );
 	        if ( id==null ) {
-				identifiers.remove( new Integer(i) );
+				identifiers.remove( i );
 	        }
 	        else {
-				identifiers.put( new Integer(i), id );
+				identifiers.put( i, id );
 	        }
 		}
-		identifiers.put( new Integer(last), removedId );
+		identifiers.put( last, removedId );
 	}
 
 	private void beforeAdd(int index) {
 		for ( int i=index; i<values.size(); i++ ) {
-			identifiers.put( new Integer(i+1), identifiers.get( new Integer(i) ) );
+			identifiers.put( i+1, identifiers.get( i ) );
 		}
-		identifiers.remove( new Integer(index) );
+		identifiers.remove( index );
 	}
 
 	public Object remove(int index) {

@@ -290,7 +290,7 @@ public class PersistentList extends AbstractPersistentCollection implements List
 		if (index<0) {
 			throw new ArrayIndexOutOfBoundsException("negative index");
 		}
-		Object result = readElementByIndex( new Integer(index) );
+		Object result = readElementByIndex( index );
 		return result==UNKNOWN ? list.get(index) : result;
 	}
 
@@ -301,7 +301,7 @@ public class PersistentList extends AbstractPersistentCollection implements List
 		if (index<0) {
 			throw new ArrayIndexOutOfBoundsException("negative index");
 		}
-		Object old = isPutQueueEnabled() ? readElementByIndex( new Integer(index) ) : UNKNOWN;
+		Object old = isPutQueueEnabled() ? readElementByIndex( index ) : UNKNOWN;
 		if ( old==UNKNOWN ) {
 			write();
 			return list.set(index, value);
@@ -336,7 +336,7 @@ public class PersistentList extends AbstractPersistentCollection implements List
 			throw new ArrayIndexOutOfBoundsException("negative index");
 		}
 		Object old = isPutQueueEnabled() ?
-				readElementByIndex( new Integer(index) ) : UNKNOWN;
+				readElementByIndex( index ) : UNKNOWN;
 		if ( old==UNKNOWN ) {
 			write();
 			return list.remove(index);
@@ -442,7 +442,7 @@ public class PersistentList extends AbstractPersistentCollection implements List
 		int end;
 		if ( sn.size() > list.size() ) {
 			for ( int i=list.size(); i<sn.size(); i++ ) {
-				deletes.add( indexIsFormula ? sn.get(i) : new Integer(i) );
+				deletes.add( indexIsFormula ? sn.get(i) : i );
 			}
 			end = list.size();
 		}
@@ -451,7 +451,7 @@ public class PersistentList extends AbstractPersistentCollection implements List
 		}
 		for ( int i=0; i<end; i++ ) {
 			if ( list.get(i)==null && sn.get(i)!=null ) {
-				deletes.add( indexIsFormula ? sn.get(i) : new Integer(i) );
+				deletes.add( indexIsFormula ? sn.get(i) : i );
 			}
 		}
 		return deletes.iterator();
@@ -469,7 +469,7 @@ public class PersistentList extends AbstractPersistentCollection implements List
 	}
 
 	public Object getIndex(Object entry, int i, CollectionPersister persister) {
-		return new Integer(i);
+		return i;
 	}
 
 	public Object getElement(Object entry) {

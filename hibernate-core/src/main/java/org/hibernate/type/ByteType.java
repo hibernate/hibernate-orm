@@ -44,7 +44,7 @@ public class ByteType
 
 	public static final ByteType INSTANCE = new ByteType();
 
-	private static final Byte ZERO = new Byte( (byte) 0 );
+	private static final Byte ZERO = Byte.valueOf( (byte)0 );
 
 	public ByteType() {
 		super( TinyIntTypeDescriptor.INSTANCE, ByteTypeDescriptor.INSTANCE );

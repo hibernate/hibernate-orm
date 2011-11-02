@@ -660,7 +660,7 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 			}
 
 			if ( ! overridenDatasource && ( info.getJtaDataSource() != null || info.getNonJtaDataSource() != null ) ) {
-				isJTA = info.getJtaDataSource() != null ? Boolean.TRUE : Boolean.FALSE;
+				isJTA = info.getJtaDataSource() != null;
 				this.setDataSource(
 						isJTA ? info.getJtaDataSource() : info.getNonJtaDataSource()
 				);

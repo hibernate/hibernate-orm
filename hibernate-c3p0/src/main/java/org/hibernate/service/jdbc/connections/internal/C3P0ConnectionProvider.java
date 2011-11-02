@@ -212,8 +212,8 @@ public class C3P0ConnectionProvider implements ConnectionProvider, Configurable,
 		String i = (String) props.get( Environment.ISOLATION );
         if (i == null) isolation = null;
 		else {
-			isolation = new Integer( i );
-            LOG.jdbcIsolationLevel(Environment.isolationLevelToString(isolation.intValue()));
+			isolation = Integer.valueOf( i );
+            LOG.jdbcIsolationLevel(Environment.isolationLevelToString(isolation));
 		}
 
 	}

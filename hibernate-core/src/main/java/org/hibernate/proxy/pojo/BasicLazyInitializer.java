@@ -88,7 +88,7 @@ public abstract class BasicLazyInitializer extends AbstractLazyInitializer {
 		}
 		else if ( params==1 ) {
 			if ( !overridesEquals && "equals".equals(methodName) ) {
-				return args[0]==proxy ? Boolean.TRUE : Boolean.FALSE;
+				return args[0]==proxy;
 			}
 			else if ( method.equals(setIdentifierMethod) ) {
 				initialize();

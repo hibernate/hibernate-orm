@@ -104,7 +104,7 @@ public class ParameterParser {
 						String param = sqlString.substring( indx + 1, chopLocation );
 						// make sure this "name" is an integral
 						try {
-							new Integer( param );
+                            Integer.valueOf( param );
 						}
 						catch( NumberFormatException e ) {
 							throw new QueryException( "JPA-style positional param was not an integral ordinal" );

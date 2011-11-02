@@ -68,12 +68,12 @@ public class LongType
 	}
 
 	public Long stringToObject(String xml) throws Exception {
-		return new Long(xml);
+		return Long.valueOf( xml );
 	}
 
 	@SuppressWarnings({ "UnnecessaryBoxing", "UnnecessaryUnboxing" })
 	public Long next(Long current, SessionImplementor session) {
-		return Long.valueOf( current.longValue() + 1 );
+		return current + 1l;
 	}
 
 	public Long seed(SessionImplementor session) {

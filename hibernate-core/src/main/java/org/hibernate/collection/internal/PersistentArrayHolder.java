@@ -211,14 +211,14 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 		int arraySize = Array.getLength(array);
 		int end;
 		if ( snSize > arraySize ) {
-			for ( int i=arraySize; i<snSize; i++ ) deletes.add( new Integer(i) );
+			for ( int i=arraySize; i<snSize; i++ ) deletes.add( i );
 			end = arraySize;
 		}
 		else {
 			end = snSize;
 		}
 		for ( int i=0; i<end; i++ ) {
-			if ( Array.get(array, i)==null && Array.get(sn, i)!=null ) deletes.add( new Integer(i) );
+			if ( Array.get(array, i)==null && Array.get(sn, i)!=null ) deletes.add( i );
 		}
 		return deletes.iterator();
 	}
@@ -237,7 +237,7 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 	}
 
 	public Object getIndex(Object entry, int i, CollectionPersister persister) {
-		return new Integer(i);
+		return i;
 	}
 
 	public Object getElement(Object entry) {

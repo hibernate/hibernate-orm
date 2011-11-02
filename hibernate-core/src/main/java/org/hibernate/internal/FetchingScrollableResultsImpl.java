@@ -104,7 +104,7 @@ public class FetchingScrollableResultsImpl extends AbstractScrollableResults {
 		if ( afterLast ) {
 			if ( maxPosition == null ) {
 				// we just hit the last position
-				maxPosition = new Integer( currentPosition );
+				maxPosition = currentPosition;
 			}
 		}
 

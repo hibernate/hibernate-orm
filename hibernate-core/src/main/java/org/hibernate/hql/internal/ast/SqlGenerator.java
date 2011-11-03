@@ -111,9 +111,6 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 
 	@Override
     protected void out(String s) {
-               if(s.contains( "countaaa" )){
-            System.out.println("------------");
-        }
 		writer.clause( s );
 	}
 

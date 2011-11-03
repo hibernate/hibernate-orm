@@ -51,15 +51,20 @@ import org.hibernate.service.spi.Stoppable;
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractServiceRegistryImpl implements ServiceRegistryImplementor, ServiceBinding.OwningRegistry {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, AbstractServiceRegistryImpl.class.getName() );
+public abstract class AbstractServiceRegistryImpl
+		implements ServiceRegistryImplementor, ServiceBinding.ServiceLifecycleOwner {
+
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			AbstractServiceRegistryImpl.class.getName()
+	);
 
 	private final ServiceRegistryImplementor parent;
 
 	private ConcurrentHashMap<Class,ServiceBinding> serviceBindingMap;
 	// IMPL NOTE : the list used for ordered destruction.  Cannot used map above because we need to
 	// iterate it in reverse order which is only available through ListIterator
-	private List<Service> serviceList = new ArrayList<Service>();
+	private List<ServiceBinding> serviceBindingList = new ArrayList<ServiceBinding>();
 
 	@SuppressWarnings( {"UnusedDeclaration"})
 	protected AbstractServiceRegistryImpl() {
@@ -75,7 +80,7 @@ public abstract class AbstractServiceRegistryImpl implements ServiceRegistryImpl
 	private void prepare() {
 		// assume 20 services for initial sizing
 		this.serviceBindingMap = CollectionHelper.concurrentMap( 20 );
-		this.serviceList = CollectionHelper.arrayList( 20 );
+		this.serviceBindingList = CollectionHelper.arrayList( 20 );
 	}
 
 	public AbstractServiceRegistryImpl(BootstrapServiceRegistry bootstrapServiceRegistry) {
@@ -138,12 +143,8 @@ public abstract class AbstractServiceRegistryImpl implements ServiceRegistryImpl
 	}
 
 	protected <R extends Service> void registerService(ServiceBinding<R> serviceBinding, R service) {
-		R priorServiceInstance = serviceBinding.getService();
 		serviceBinding.setService( service );
-		if ( priorServiceInstance != null ) {
-			serviceList.remove( priorServiceInstance );
-		}
-		serviceList.add( service );
+		serviceBindingList.add( serviceBinding );
 	}
 
 	private <R extends Service> R initializeService(ServiceBinding<R> serviceBinding) {
@@ -158,23 +159,16 @@ public abstract class AbstractServiceRegistryImpl implements ServiceRegistryImpl
 		}
 
 		// PHASE 2 : inject service (***potentially recursive***)
-		injectService( service );
+		serviceBinding.getLifecycleOwner().injectDependencies( serviceBinding );
 
 		// PHASE 3 : configure service
-		serviceBinding.getServiceRegistry().configureService( service );
+		serviceBinding.getLifecycleOwner().configureService( serviceBinding );
 
 		// PHASE 4 : Start service
+		serviceBinding.getLifecycleOwner().startService( serviceBinding );
 		startService( serviceBinding );
 
 		return service;
-	}
-
-	protected <T extends Service> void injectService(T service) {
-		applyInjections( service );
-
-		if ( ServiceRegistryAwareService.class.isInstance( service ) ) {
-			( (ServiceRegistryAwareService) service ).injectServices( this );
-		}
 	}
 
 	@SuppressWarnings( {"unchecked"})
@@ -186,7 +180,7 @@ public abstract class AbstractServiceRegistryImpl implements ServiceRegistryImpl
 		}
 
 		try {
-			R service = serviceBinding.getServiceRegistry().initiateService( serviceInitiator );
+			R service = serviceBinding.getLifecycleOwner().initiateService( serviceInitiator );
 			// IMPL NOTE : the register call here is important to avoid potential stack overflow issues
 			//		from recursive calls through #configureService
 			registerService( serviceBinding, service );
@@ -200,7 +194,18 @@ public abstract class AbstractServiceRegistryImpl implements ServiceRegistryImpl
 		}
 	}
 
-	protected <T extends Service> void applyInjections(T service) {
+	@Override
+	public <R extends Service> void injectDependencies(ServiceBinding<R> serviceBinding) {
+		final R service = serviceBinding.getService();
+
+		applyInjections( service );
+
+		if ( ServiceRegistryAwareService.class.isInstance( service ) ) {
+			( (ServiceRegistryAwareService) service ).injectServices( this );
+		}
+	}
+
+	private <R extends Service> void applyInjections(R service) {
 		try {
 			for ( Method method : service.getClass().getMethods() ) {
 				InjectService injectService = method.getAnnotation( InjectService.class );
@@ -208,7 +213,7 @@ public abstract class AbstractServiceRegistryImpl implements ServiceRegistryImpl
 					continue;
 				}
 
-				applyInjection( service, method, injectService );
+				processInjection( service, method, injectService );
 			}
 		}
 		catch (NullPointerException e) {
@@ -217,7 +222,7 @@ public abstract class AbstractServiceRegistryImpl implements ServiceRegistryImpl
 	}
 
 	@SuppressWarnings({ "unchecked" })
-	private <T extends Service> void applyInjection(T service, Method injectionMethod, InjectService injectService) {
+	private <T extends Service> void processInjection(T service, Method injectionMethod, InjectService injectService) {
 		if ( injectionMethod.getParameterTypes() == null || injectionMethod.getParameterTypes().length != 1 ) {
 			throw new ServiceDependencyException(
 					"Encountered @InjectService on method with unexpected number of parameters"
@@ -249,8 +254,9 @@ public abstract class AbstractServiceRegistryImpl implements ServiceRegistryImpl
 		}
 	}
 
+	@Override
 	@SuppressWarnings({ "unchecked" })
-	protected <R extends Service> void startService(ServiceBinding<R> serviceBinding) {
+	public <R extends Service> void startService(ServiceBinding<R> serviceBinding) {
 		if ( Startable.class.isInstance( serviceBinding.getService() ) ) {
 			( (Startable) serviceBinding.getService() ).start();
 		}
@@ -262,24 +268,31 @@ public abstract class AbstractServiceRegistryImpl implements ServiceRegistryImpl
 			);
 		}
 	}
-    @Override
+
+	@Override
+    @SuppressWarnings( {"unchecked"})
 	public void destroy() {
-		ListIterator<Service> serviceIterator = serviceList.listIterator( serviceList.size() );
-		while ( serviceIterator.hasPrevious() ) {
-			final Service service = serviceIterator.previous();
-			if ( Stoppable.class.isInstance( service ) ) {
-				try {
-					( (Stoppable) service ).stop();
-				}
-				catch ( Exception e ) {
-					LOG.unableToStopService( service.getClass(), e.toString() );
-				}
-			}
+		ListIterator<ServiceBinding> serviceBindingsIterator = serviceBindingList.listIterator( serviceBindingList.size() );
+		while ( serviceBindingsIterator.hasPrevious() ) {
+			final ServiceBinding serviceBinding = serviceBindingsIterator.previous();
+			serviceBinding.getLifecycleOwner().stopService( serviceBinding );
 		}
-		serviceList.clear();
-		serviceList = null;
+		serviceBindingList.clear();
+		serviceBindingList = null;
 		serviceBindingMap.clear();
 		serviceBindingMap = null;
 	}
 
+	@Override
+	public <R extends Service> void stopService(ServiceBinding<R> binding) {
+		final Service service = binding.getService();
+		if ( Stoppable.class.isInstance( service ) ) {
+			try {
+				( (Stoppable) service ).stop();
+			}
+			catch ( Exception e ) {
+				LOG.unableToStopService( service.getClass(), e.toString() );
+			}
+		}
+	}
 }

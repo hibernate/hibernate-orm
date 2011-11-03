@@ -47,7 +47,7 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
  * @author Steve Ebersole
  */
 public class BootstrapServiceRegistryImpl
-		implements ServiceRegistryImplementor, BootstrapServiceRegistry, ServiceBinding.OwningRegistry {
+		implements ServiceRegistryImplementor, BootstrapServiceRegistry, ServiceBinding.ServiceLifecycleOwner {
 	private static final LinkedHashSet<Integrator> NO_INTEGRATORS = new LinkedHashSet<Integrator>();
 
 	private final ServiceBinding<ClassLoaderService> classLoaderServiceBinding;
@@ -112,13 +112,27 @@ public class BootstrapServiceRegistryImpl
 
 	@Override
 	public <R extends Service> R initiateService(ServiceInitiator<R> serviceInitiator) {
-		// the bootstrap registry should currently be made up of only directly built services.
-		throw new ServiceException( "Boot-strap registry should only contain directly built services" );
+		throw new ServiceException( "Boot-strap registry should only contain provided services" );
 	}
 
 	@Override
-	public <R extends Service> void configureService(R service) {
-		//nothing do to for bootstrap style services
+	public <R extends Service> void configureService(ServiceBinding<R> binding) {
+		throw new ServiceException( "Boot-strap registry should only contain provided services" );
+	}
+
+	@Override
+	public <R extends Service> void injectDependencies(ServiceBinding<R> binding) {
+		throw new ServiceException( "Boot-strap registry should only contain provided services" );
+	}
+
+	@Override
+	public <R extends Service> void startService(ServiceBinding<R> binding) {
+		throw new ServiceException( "Boot-strap registry should only contain provided services" );
+	}
+
+	@Override
+	public <R extends Service> void stopService(ServiceBinding<R> binding) {
+		throw new ServiceException( "Boot-strap registry should only contain provided services" );
 	}
 
 }

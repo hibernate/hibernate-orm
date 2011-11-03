@@ -123,7 +123,7 @@ public final class Hibernate {
 	public static LobCreator getLobCreator(SessionImplementor session) {
 		return session.getFactory()
 				.getJdbcServices()
-				.getLobCreator( ( LobCreationContext ) session );
+				.getLobCreator( session );
 	}
 
 	/**

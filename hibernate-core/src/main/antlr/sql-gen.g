@@ -361,7 +361,7 @@ arithmeticExpr
 	: additiveExpr
 	| multiplicativeExpr
 //	| #(CONCAT { out("("); } expr ( { out("||"); } expr )+ { out(")"); } )
-	| #(UNARY_MINUS { out("-"); } expr)
+	| #(UNARY_MINUS { out("-"); } nestedExprAfterMinusDiv)
 	| caseExpr
 	;
 

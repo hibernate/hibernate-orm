@@ -159,9 +159,7 @@ import org.hibernate.type.Type;
  *
  * @author Gavin King
  */
-public final class SessionImpl
-		extends AbstractSessionImpl
-		implements EventSource, org.hibernate.Session, TransactionContext, LobCreationContext {
+public final class SessionImpl extends AbstractSessionImpl implements EventSource {
 
 	// todo : need to find a clean way to handle the "event source" role
 	// a separate class responsible for generating/dispatching events just duplicates most of the Session methods...

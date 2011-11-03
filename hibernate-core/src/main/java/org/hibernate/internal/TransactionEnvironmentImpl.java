@@ -35,50 +35,48 @@ import org.hibernate.stat.spi.StatisticsImplementor;
  * @author Steve Ebersole
  */
 public class TransactionEnvironmentImpl implements TransactionEnvironment {
-	private final SessionFactoryImpl sessionFactory;
+    private final SessionFactoryImpl sessionFactory;
+    private final transient StatisticsImplementor statisticsImplementor;
+    private final transient ServiceRegistry serviceRegistry;
+    private final transient JdbcServices jdbcServices;
+    private final transient JtaPlatform jtaPlatform;
+    private final transient TransactionFactory transactionFactory;
 
-        private final transient StatisticsImplementor statisticsImplementor;
-        private final transient ServiceRegistry serviceRegistry;
-        private final transient JdbcServices jdbcServices;
-        private final transient JtaPlatform jtaPlatform;
-        private final transient TransactionFactory transactionFactory;
+    public TransactionEnvironmentImpl(SessionFactoryImpl sessionFactory) {
+        this.sessionFactory = sessionFactory;
+        this.statisticsImplementor = sessionFactory.getStatisticsImplementor();
+        this.serviceRegistry = sessionFactory.getServiceRegistry();
+        this.jdbcServices = serviceRegistry.getService( JdbcServices.class );
+        this.jtaPlatform = serviceRegistry.getService( JtaPlatform.class );
+        this.transactionFactory = serviceRegistry.getService( TransactionFactory.class );
+    }
 
-	public TransactionEnvironmentImpl(SessionFactoryImpl sessionFactory) {
-		this.sessionFactory = sessionFactory;
-                this.statisticsImplementor = sessionFactory.getStatisticsImplementor();
-                this.serviceRegistry = sessionFactory.getServiceRegistry();
-                this.jdbcServices = serviceRegistry.getService( JdbcServices.class );
-                this.jtaPlatform = serviceRegistry.getService( JtaPlatform.class );
-                this.transactionFactory = serviceRegistry.getService( TransactionFactory.class );
+    @Override
+    public SessionFactoryImplementor getSessionFactory() {
+        return sessionFactory;
+    }
 
-	}
+    protected ServiceRegistry serviceRegistry() {
+        return serviceRegistry;
+    }
 
-	@Override
-	public SessionFactoryImplementor getSessionFactory() {
-		return sessionFactory;
-	}
+    @Override
+    public JdbcServices getJdbcServices() {
+        return jdbcServices;
+    }
 
-	protected ServiceRegistry serviceRegistry() {
-                return serviceRegistry;
-	}
+    @Override
+    public JtaPlatform getJtaPlatform() {
+        return jtaPlatform;
+    }
 
-	@Override
-	public JdbcServices getJdbcServices() {
-                return jdbcServices;
-	}
+    @Override
+    public TransactionFactory getTransactionFactory() {
+        return transactionFactory;
+    }
 
-	@Override
-	public JtaPlatform getJtaPlatform() {
-                return jtaPlatform;
-	}
-
-	@Override
-	public TransactionFactory getTransactionFactory() {
-                return transactionFactory;
-	}
-
-	@Override
-	public StatisticsImplementor getStatisticsImplementor() {
-                return statisticsImplementor;
-	}
+    @Override
+    public StatisticsImplementor getStatisticsImplementor() {
+        return statisticsImplementor;
+    }
 }

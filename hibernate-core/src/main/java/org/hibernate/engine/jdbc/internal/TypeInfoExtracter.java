@@ -34,7 +34,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.ArrayHelper;
 
 /**
- * Helper to extract type innformation from {@link DatabaseMetaData JDBC metadata}
+ * Helper to extract type information from {@link DatabaseMetaData JDBC metadata}
  *
  * @author Steve Ebersole
  */

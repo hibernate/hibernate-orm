@@ -48,10 +48,10 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 	public AbstractTransactSQLDialect() {
 		super();
         registerColumnType( Types.BINARY, "binary($l)" );
-		registerColumnType( Types.BIT, "tinyint" ); //Sybase BIT type does not support null values
+		registerColumnType( Types.BIT, "tinyint" );
 		registerColumnType( Types.BIGINT, "numeric(19,0)" );
 		registerColumnType( Types.SMALLINT, "smallint" );
-		registerColumnType( Types.TINYINT, "tinyint" );
+		registerColumnType( Types.TINYINT, "smallint" );
 		registerColumnType( Types.INTEGER, "int" );
 		registerColumnType( Types.CHAR, "char(1)" );
 		registerColumnType( Types.VARCHAR, "varchar($l)" );

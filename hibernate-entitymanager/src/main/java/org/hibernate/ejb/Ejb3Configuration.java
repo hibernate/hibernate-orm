@@ -68,6 +68,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.MappingException;
 import org.hibernate.MappingNotFoundException;
+import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
@@ -92,6 +93,7 @@ import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.transaction.internal.jdbc.JdbcTransactionFactory;
 import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
 import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
+import org.hibernate.internal.SessionFactoryObserverChain;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -103,8 +105,9 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.secure.internal.JACCConfiguration;
 import org.hibernate.service.BootstrapServiceRegistryBuilder;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.ServiceRegistryBuilder;
-import org.hibernate.service.internal.BootstrapServiceRegistryImpl;
+import org.hibernate.service.internal.StandardServiceRegistryImpl;
 import org.hibernate.service.jdbc.connections.internal.DatasourceConnectionProviderImpl;
 
 /**
@@ -898,18 +901,13 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 		}
 
 		try {
-			final ServiceRegistryBuilder serviceRegistryBuilder = new ServiceRegistryBuilder(
-					builder.with( new JpaIntegrator() ).build()
-			);
-			serviceRegistryBuilder.applySettings( cfg.getProperties() );
-			configure( (Properties) null, null );
-			NamingHelper.bind( this );
+			final ServiceRegistry serviceRegistry = buildLifecycleControledServiceRegistry( builder );
 			return new EntityManagerFactoryImpl(
 					transactionType,
 					discardOnClose,
 					getSessionInterceptorClass( cfg.getProperties() ),
 					cfg,
-					serviceRegistryBuilder.buildServiceRegistry()
+					serviceRegistry
 			);
 		}
 		catch (HibernateException e) {
@@ -920,6 +918,36 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 				thread.setContextClassLoader( contextClassLoader );
 			}
 		}
+	}
+
+	private ServiceRegistry buildLifecycleControledServiceRegistry(BootstrapServiceRegistryBuilder builder) {
+		final ServiceRegistryBuilder serviceRegistryBuilder = new ServiceRegistryBuilder(
+				builder.with( new JpaIntegrator() ).build()
+		);
+		serviceRegistryBuilder.applySettings( cfg.getProperties() );
+		configure( (Properties ) null, null );
+		NamingHelper.bind( this );
+		final ServiceRegistry serviceRegistry = serviceRegistryBuilder.buildServiceRegistry();
+		SessionFactoryObserver serviceRegistryCloser = new SessionFactoryObserver() {
+			@Override
+			public void sessionFactoryCreated(SessionFactory factory) {
+			}
+
+			@Override
+			public void sessionFactoryClosed(SessionFactory factory) {
+				( ( StandardServiceRegistryImpl ) serviceRegistry ).destroy();
+			}
+		};
+		if ( cfg.getSessionFactoryObserver() != null ) {
+			SessionFactoryObserverChain aggregator = new SessionFactoryObserverChain();
+			aggregator.addObserver( cfg.getSessionFactoryObserver() );
+			aggregator.addObserver( serviceRegistryCloser );
+			cfg.setSessionFactoryObserver( aggregator );
+		}
+		else {
+			cfg.setSessionFactoryObserver( serviceRegistryCloser );
+		}
+		return serviceRegistry;
 	}
 
 	private Class getSessionInterceptorClass(Properties properties) {

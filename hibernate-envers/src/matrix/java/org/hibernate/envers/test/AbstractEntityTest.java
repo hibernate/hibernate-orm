@@ -121,7 +121,7 @@ public abstract class AbstractEntityTest extends AbstractEnversTest {
     public void close() {
         closeEntityManager();
         emf.close();
-		serviceRegistry.destroy();
+		//NOTE we don't build the service registry so we don't destroy it
     }
 
     public EntityManager getEntityManager() {

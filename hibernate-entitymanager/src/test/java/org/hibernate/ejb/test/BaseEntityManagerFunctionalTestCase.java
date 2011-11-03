@@ -205,10 +205,7 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 		if ( entityManagerFactory != null ) {
 			entityManagerFactory.close();
 		}
-
-		if ( serviceRegistry != null ) {
-			serviceRegistry.destroy();
-		}
+		// Note we don't destroy the service registry as we are not the ones creating it
 	}
 
 	private void releaseUnclosedEntityManagers() {

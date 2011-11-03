@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.annotations.target;
+import javax.persistence.Column;
 import javax.persistence.Embeddable;
 
 /**
@@ -29,6 +30,7 @@ import javax.persistence.Embeddable;
  */
 @Embeddable
 public class SizeImpl implements Size {
+    @Column(name = "name", nullable = false)
 	private String name;
 
 	public String getName() {

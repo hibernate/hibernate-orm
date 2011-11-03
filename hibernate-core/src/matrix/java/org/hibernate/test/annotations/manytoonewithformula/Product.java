@@ -59,7 +59,7 @@ public class Product implements Serializable
     public String description;
 
     @ManyToOne
-	@JoinFormula(value="SUBSTR(product_idnf, 1, 3)", 
+	@JoinFormula(value="SUBSTRING(product_idnf, 1, 3)",
 				 referencedColumnName="product_idnf")
 	@Fetch(FetchMode.JOIN)
     private Product productFamily;

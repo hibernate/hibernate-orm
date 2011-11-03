@@ -43,6 +43,7 @@ import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.Oracle10gDialect;
 import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.SkipForDialect;
 
 import org.junit.Test;
 
@@ -269,14 +270,11 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+    @SkipForDialect( value = HSQLDialect.class)
 	public void testContendedPessimisticLock() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		final EntityManager em2 = createIsolatedEntityManager();
-		// TODO:  replace dialect instanceof test with a Dialect.hasCapability (e.g. supportsPessimisticWriteLock)
-		if ( getDialect() instanceof HSQLDialect) {
-            log.info("skipping testContendedPessimisticLock");
-			return;
-		}
+
 		Lock lock = new Lock();
 		Thread t = null;
 		try {

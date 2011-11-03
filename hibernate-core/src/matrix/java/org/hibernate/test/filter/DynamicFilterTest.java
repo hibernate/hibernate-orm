@@ -95,7 +95,7 @@ public class DynamicFilterTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(IngresDialect.class)
+	@SkipForDialect( value = {SybaseASE15Dialect.class, IngresDialect.class})
 	public void testSqlSyntaxOfFiltersWithUnions() {
 		Session session = openSession();
 		session.enableFilter( "unioned" );

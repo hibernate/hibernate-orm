@@ -39,6 +39,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
+import org.hibernate.internal.util.StringHelper;
 import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
@@ -418,29 +419,19 @@ public class SchemaExport {
 
 	private void importScript(NamedReader namedReader, List<Exporter> exporters) throws Exception {
 		BufferedReader reader = new BufferedReader( namedReader.getReader() );
-		long lineNo = 0;
-		for ( String sql = reader.readLine(); sql != null; sql = reader.readLine() ) {
-			try {
-				lineNo++;
-				String trimmedSql = sql.trim();
-				if ( trimmedSql.length() == 0 ||
-						trimmedSql.startsWith( "--" ) ||
-						trimmedSql.startsWith( "//" ) ||
-						trimmedSql.startsWith( "/*" ) ) {
-					continue;
-				}
-                if ( trimmedSql.endsWith(";") ) {
-					trimmedSql = trimmedSql.substring(0, trimmedSql.length() - 1);
-				}
-                LOG.debugf( trimmedSql );
-				for ( Exporter exporter: exporters ) {
-					if ( exporter.acceptsImportScripts() ) {
-						exporter.export( trimmedSql );
+		List<String> statementList = new StatementExtractor().retrieveStatements( reader );
+		for ( String statement : statementList ) {
+			if ( !StringHelper.isEmpty( statement ) ) {
+				try {
+					for ( Exporter exporter : exporters ) {
+						if ( exporter.acceptsImportScripts() ) {
+							exporter.export( statement );
+						}
 					}
 				}
-			}
-			catch ( Exception e ) {
-				throw new ImportScriptException( "Error during import script execution at line " + lineNo, e );
+				catch ( Exception e ) {
+					throw new ImportScriptException( "Error during statement execution (file: '" + namedReader.getName() + "'): " + statement, e );
+				}
 			}
 		}
 	}

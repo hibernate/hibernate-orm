@@ -1658,7 +1658,7 @@ public abstract class Loader {
 	}
 
 	private static boolean hasMaxRows(RowSelection selection) {
-		return selection != null && selection.getMaxRows() != null;
+		return selection != null && selection.getMaxRows() != null && selection.getMaxRows() > 0;
 	}
 
 	private static int getFirstRow(RowSelection selection) {

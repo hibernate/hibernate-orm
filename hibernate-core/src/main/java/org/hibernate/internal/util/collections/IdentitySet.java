@@ -69,15 +69,15 @@ public class IdentitySet implements Set {
 	}
 
 	public Iterator iterator() {
-		return map.entrySet().iterator();
+		return map.keySet().iterator();
 	}
 
 	public Object[] toArray() {
-		return map.entrySet().toArray();
+		return map.keySet().toArray();
 	}
 
 	public Object[] toArray(Object[] a) {
-		return map.entrySet().toArray( a );
+		return map.keySet().toArray( a );
 	}
 
 	public boolean add(Object o) {

@@ -926,7 +926,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect</programlisting>
             also <classname>MultipleLinesSqlCommandExtractor</classname> which
             supports instructions/comments and quoted strings spread over
             multiple lines (mandatory semicolon at the end of each statement).
-            </para><para> <emphasis role="strong">e.g.</emphasis>
+            </para><para><emphasis role="strong">e.g.</emphasis>
             <literal>classname.of.ImportSqlCommandExtractor</literal></para></entry>
           </row>
 

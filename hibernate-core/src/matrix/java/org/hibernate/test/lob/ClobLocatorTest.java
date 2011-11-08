@@ -32,7 +32,7 @@ import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.type.descriptor.java.DataHelper;
-import org.hibernate.dialect.SybaseASE15Dialect;
+import org.hibernate.dialect.SybaseASE157Dialect;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -111,7 +111,7 @@ public class ClobLocatorTest extends BaseCoreFunctionalTestCase {
 		s.close();
 
 		// test empty clob
-		if ( !(getDialect() instanceof SybaseASE15Dialect) ) { // Sybase insert empty string as single space. HHH-6425
+		if ( !(getDialect() instanceof SybaseASE157Dialect) ) { // Skip for Sybase. HHH-6425
 			s = openSession();
 			s.beginTransaction();
 			entity = ( LobHolder ) s.get( LobHolder.class, entity.getId() );

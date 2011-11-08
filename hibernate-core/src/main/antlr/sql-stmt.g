@@ -40,23 +40,23 @@ options {
 
     public void throwExceptionIfErrorOccurred() {
         if ( errorHandler.hasErrors() ) {
-            throw new StatementParserException(errorHandler.getErrorMessage());
+            throw new StatementParserException( errorHandler.getErrorMessage() );
         }
     }
 
     /** List of all SQL statements. */
-	private List<String> statementList = new LinkedList<String>();
+    private List<String> statementList = new LinkedList<String>();
 
-	/** Currently processing SQL statement. */
-	private StringBuilder current = new StringBuilder();
+    /** Currently processing SQL statement. */
+    private StringBuilder current = new StringBuilder();
 
-	protected void out(String stmt) {
-		current.append( stmt );
-	}
+    protected void out(String stmt) {
+        current.append( stmt );
+    }
 
-	protected void out(Token token) {
-		out( token.getText() );
-	}
+    protected void out(Token token) {
+        out( token.getText() );
+    }
 
     public List<String> getStatementList() {
         return statementList;

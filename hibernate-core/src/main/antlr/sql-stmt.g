@@ -2,12 +2,15 @@ header
 {
 package org.hibernate.hql.internal.antlr;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.LinkedList;
+
+import org.hibernate.hql.internal.ast.ErrorReporter;
 }
 /**
- * Lexer and parser used to extract single statements from import SQL script. Supports single and multiple line
- * instructions/comments and quoted strings. Each statement should end with semicolon.
+ * Lexer and parser used to extract single statements from import SQL script. Supports instructions/comments and quoted
+ * strings spread over multiple lines. Each statement must end with semicolon.
  *
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
@@ -18,6 +21,29 @@ options {
 }
 
 {
+    private ErrorHandler errorHandler = new ErrorHandler();
+
+    @Override
+    public void reportError(RecognitionException e) {
+        errorHandler.reportError( e );
+    }
+
+    @Override
+    public void reportError(String s) {
+        errorHandler.reportError( s );
+    }
+
+    @Override
+    public void reportWarning(String s) {
+        errorHandler.reportWarning( s );
+    }
+
+    public void throwExceptionIfErrorOccurred() {
+        if ( errorHandler.hasErrors() ) {
+            throw new StatementParserException(errorHandler.getErrorMessage());
+        }
+    }
+
     /** List of all SQL statements. */
 	private List<String> statementList = new LinkedList<String>();
 
@@ -39,6 +65,45 @@ options {
     protected void statementEnd() {
         statementList.add( current.toString().trim() );
         current = new StringBuilder();
+    }
+
+    public class StatementParserException extends RuntimeException {
+        public StatementParserException(String message) {
+            super( message );
+        }
+    }
+
+    private class ErrorHandler implements ErrorReporter {
+        private List<String> errorList = new LinkedList<String>();
+
+        @Override
+        public void reportError(RecognitionException e) {
+            reportError( e.toString() );
+        }
+
+        @Override
+        public void reportError(String s) {
+            errorList.add( s );
+        }
+
+        @Override
+        public void reportWarning(String s) {
+        }
+
+        public boolean hasErrors() {
+            return !errorList.isEmpty();
+        }
+
+        public String getErrorMessage() {
+            StringBuffer buf = new StringBuffer();
+            for ( Iterator iterator = errorList.iterator(); iterator.hasNext(); ) {
+                buf.append( (String) iterator.next() );
+                if ( iterator.hasNext() ) {
+                    buf.append( "\n" );
+                }
+            }
+            return buf.toString();
+        }
     }
 }
 

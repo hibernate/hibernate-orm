@@ -60,6 +60,7 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.metamodel.source.MetadataImplementor;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.ServiceRegistryBuilder;
+import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.config.spi.ConfigurationService;
 import org.hibernate.service.internal.StandardServiceRegistryImpl;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
@@ -90,6 +91,7 @@ public class SchemaExport {
 		}
 	}
 
+	private final ServiceRegistry serviceRegistry;
 	private final ConnectionHelper connectionHelper;
 	private final SqlStatementLogger sqlStatementLogger;
 	private final SqlExceptionHelper sqlExceptionHelper;
@@ -106,6 +108,7 @@ public class SchemaExport {
 	private boolean haltOnError = false;
 
 	public SchemaExport(ServiceRegistry serviceRegistry, Configuration configuration) {
+		this.serviceRegistry = serviceRegistry;
 		this.connectionHelper = new SuppliedConnectionProviderConnectionHelper(
 				serviceRegistry.getService( ConnectionProvider.class )
 		);
@@ -125,7 +128,7 @@ public class SchemaExport {
 	}
 
 	public SchemaExport(MetadataImplementor metadata) {
-		ServiceRegistry serviceRegistry = metadata.getServiceRegistry();
+		this.serviceRegistry = metadata.getServiceRegistry();
 		this.connectionHelper = new SuppliedConnectionProviderConnectionHelper(
 				serviceRegistry.getService( ConnectionProvider.class )
 		);
@@ -186,6 +189,7 @@ public class SchemaExport {
 
 		this.dropSQL = configuration.generateDropSchemaScript( dialect );
 		this.createSQL = configuration.generateSchemaCreationScript( dialect );
+		this.serviceRegistry = createServiceRegistry( props );
 	}
 
 	/**
@@ -211,6 +215,7 @@ public class SchemaExport {
 		final Dialect dialect = Dialect.getDialect( configuration.getProperties() );
 		this.dropSQL = configuration.generateDropSchemaScript( dialect );
 		this.createSQL = configuration.generateSchemaCreationScript( dialect );
+		this.serviceRegistry = createServiceRegistry( configuration.getProperties() );
 	}
 
 	public SchemaExport(
@@ -224,6 +229,7 @@ public class SchemaExport {
 		this.sqlStatementLogger = new SqlStatementLogger( false, true );
 		this.sqlExceptionHelper = new SqlExceptionHelper();
 		this.formatter = FormatStyle.DDL.getFormatter();
+		this.serviceRegistry = createServiceRegistry( new Properties() );
 	}
 
 	/**
@@ -419,18 +425,26 @@ public class SchemaExport {
 
 	private void importScript(NamedReader namedReader, List<Exporter> exporters) throws Exception {
 		BufferedReader reader = new BufferedReader( namedReader.getReader() );
-		List<String> statementList = new StatementExtractor().retrieveStatements( reader );
-		for ( String statement : statementList ) {
-			if ( !StringHelper.isEmpty( statement ) ) {
-				try {
-					for ( Exporter exporter : exporters ) {
-						if ( exporter.acceptsImportScripts() ) {
-							exporter.export( statement );
+		String[] statements = serviceRegistry.getService( ImportSqlCommandExtractor.class ).extractCommands( reader );
+		if (statements != null) {
+			for ( String statement : statements ) {
+				if ( statement != null ) {
+					String trimmedSql = statement.trim();
+					if ( trimmedSql.endsWith( ";" )) {
+						trimmedSql = trimmedSql.substring( 0, statement.length() - 1 );
+					}
+					if ( !StringHelper.isEmpty( trimmedSql ) ) {
+						try {
+							for ( Exporter exporter : exporters ) {
+								if ( exporter.acceptsImportScripts() ) {
+									exporter.export( trimmedSql );
+								}
+							}
+						}
+						catch ( Exception e ) {
+							throw new ImportScriptException( "Error during statement execution (file: '" + namedReader.getName() + "'): " + trimmedSql, e );
 						}
 					}
-				}
-				catch ( Exception e ) {
-					throw new ImportScriptException( "Error during statement execution (file: '" + namedReader.getName() + "'): " + statement, e );
 				}
 			}
 		}

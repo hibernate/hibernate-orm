@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.importfile;
-import java.math.BigInteger;
 import java.util.List;
 
 import org.junit.Test;
@@ -34,16 +33,14 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 
 /**
  * @author Emmanuel Bernard
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-public class ImportFileTest extends BaseCoreFunctionalTestCase {
+public class SingleLineImportFileTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public void configure(Configuration cfg) {
-		cfg.setProperty( Environment.HBM2DDL_IMPORT_FILES, "/humans.sql,/dogs.sql,/multiline-stmt.sql" );
+		cfg.setProperty( Environment.HBM2DDL_IMPORT_FILES, "/humans.sql,/dogs.sql" );
 	}
 
 	@Override
@@ -55,7 +52,7 @@ public class ImportFileTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testSingleLineImportFile() throws Exception {
+	public void testImportFile() throws Exception {
 		Session s = openSession(  );
 		final Transaction tx = s.beginTransaction();
 		final List<?> humans = s.createQuery( "from " + Human.class.getName() ).list();
@@ -69,24 +66,6 @@ public class ImportFileTest extends BaseCoreFunctionalTestCase {
 		for (Object entity : humans) {
 			s.delete( entity );
 		}
-		tx.commit();
-		s.close();
-	}
-
-	@Test
-	public void testMultipleLineImportFile() throws Exception {
-		Session s = openSession();
-		final Transaction tx = s.beginTransaction();
-
-		BigInteger count = (BigInteger) s.createSQLQuery( "SELECT COUNT(*) FROM test_data" ).uniqueResult();
-		assertEquals( "incorrect row number", 3L, count.longValue() );
-
-		String multilineText = (String) s.createSQLQuery( "SELECT text FROM test_data WHERE id = 2" ).uniqueResult();
-		assertEquals( "multiline string inserted incorrectly", "Multiline comment line 1\r\n-- line 2'\r\n/* line 3 */", multilineText );
-
-		String empty = (String) s.createSQLQuery( "SELECT text FROM test_data WHERE id = 3" ).uniqueResult();
-		assertNull( "NULL value inserted incorrectly", empty );
-
 		tx.commit();
 		s.close();
 	}

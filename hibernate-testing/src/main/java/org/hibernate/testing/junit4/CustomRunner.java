@@ -251,11 +251,13 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 		// @RequiresDialectFeature
 		RequiresDialectFeature requiresDialectFeatureAnn = Helper.locateAnnotation( RequiresDialectFeature.class, frameworkMethod, getTestClass() );
 		if ( requiresDialectFeatureAnn != null ) {
-			Class<? extends DialectCheck> checkClass = requiresDialectFeatureAnn.value();
 			try {
-				DialectCheck check = checkClass.newInstance();
-				if ( !check.isMatch( dialect ) ) {
-					return buildIgnore( requiresDialectFeatureAnn );
+				boolean foundMatch = false;
+				for ( Class<? extends DialectCheck> checkClass : requiresDialectFeatureAnn.value() ) {
+					foundMatch = checkClass.newInstance().isMatch( dialect );
+					if ( !foundMatch ) {
+						return buildIgnore( requiresDialectFeatureAnn );
+					}
 				}
 			}
 			catch (RuntimeException e) {

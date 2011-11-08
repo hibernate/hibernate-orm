@@ -40,7 +40,7 @@ public @interface RequiresDialectFeature {
 	/**
 	 * @return Class which checks the necessary dialect feature
 	 */
-	Class<? extends DialectCheck> value();
+	Class<? extends DialectCheck>[] value();
 
 	/**
 	 * Comment describing the reason why the feature is required.

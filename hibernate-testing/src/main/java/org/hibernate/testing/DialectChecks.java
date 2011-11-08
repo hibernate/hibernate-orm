@@ -151,4 +151,10 @@ abstract public class DialectChecks {
 			return dialect.supportsExistsInSelect();
 		}
 	}
+	
+	public static class SupportsLobValueChangePropogation implements DialectCheck {
+		public boolean isMatch(Dialect dialect) {
+			return dialect.supportsLobValueChangePropogation();
+		}
+	}
 }

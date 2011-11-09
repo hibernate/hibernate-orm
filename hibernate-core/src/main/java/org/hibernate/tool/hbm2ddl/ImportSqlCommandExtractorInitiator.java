@@ -16,14 +16,14 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public class ImportSqlCommandExtractorInitiator implements BasicServiceInitiator<ImportSqlCommandExtractor> {
-	private static final String DEFAULT_EXTRACTOR = SingleLineSqlCommandExtractor.class.getName();
 	public static final ImportSqlCommandExtractorInitiator INSTANCE = new ImportSqlCommandExtractorInitiator();
+	public static final ImportSqlCommandExtractor DEFAULT_EXTRACTOR = new SingleLineSqlCommandExtractor();
 
 	@Override
 	public ImportSqlCommandExtractor initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
 		String extractorClassName = (String) configurationValues.get( Environment.HBM2DDL_IMPORT_FILES_SQL_EXTRACTOR );
 		if ( StringHelper.isEmpty( extractorClassName ) ) {
-			extractorClassName = DEFAULT_EXTRACTOR;
+			return DEFAULT_EXTRACTOR;
 		}
 		final ClassLoaderService classLoaderService = registry.getService( ClassLoaderService.class );
 		return instantiateExplicitCommandExtractor( extractorClassName, classLoaderService );

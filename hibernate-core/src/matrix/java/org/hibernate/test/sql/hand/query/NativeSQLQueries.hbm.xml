@@ -117,14 +117,14 @@
         <property name="length" column="flength"/>
     </class>
 
-    <class name="TextHolder">
+    <class name="TextHolder" table="TEXT_HOLDER">
         <id name="id" column="id">
             <generator class="increment"/>
         </id>
         <property name="description" type="text" length="15000"/>
     </class>
 
-    <class name="ImageHolder">
+    <class name="ImageHolder" table="IMAGE_HOLDER">
         <id name="id" column="id">
             <generator class="increment"/>
         </id>

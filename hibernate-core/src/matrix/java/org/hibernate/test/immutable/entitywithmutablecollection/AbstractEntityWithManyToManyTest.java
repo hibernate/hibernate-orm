@@ -71,6 +71,7 @@ public abstract class AbstractEntityWithManyToManyTest extends BaseCoreFunctiona
 		}
 		isPlanVersioned = sessionFactory().getEntityPersister( Plan.class.getName() ).isVersioned();
 		isContractVersioned = sessionFactory().getEntityPersister( Contract.class.getName() ).isVersioned();
+		sessionFactory().getStatistics().clear();
 	}
 
 	@Test

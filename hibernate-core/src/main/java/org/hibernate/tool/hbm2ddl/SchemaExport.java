@@ -39,6 +39,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
+import org.hibernate.internal.util.StringHelper;
 import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
@@ -59,6 +60,7 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.metamodel.source.MetadataImplementor;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.ServiceRegistryBuilder;
+import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.config.spi.ConfigurationService;
 import org.hibernate.service.internal.StandardServiceRegistryImpl;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
@@ -99,6 +101,7 @@ public class SchemaExport {
 	private final List<Exception> exceptions = new ArrayList<Exception>();
 
 	private Formatter formatter;
+	private ImportSqlCommandExtractor importSqlCommandExtractor = ImportSqlCommandExtractorInitiator.DEFAULT_EXTRACTOR;
 
 	private String outputFile = null;
 	private String delimiter;
@@ -255,6 +258,17 @@ public class SchemaExport {
 	 */
 	public SchemaExport setFormat(boolean format) {
 		this.formatter = ( format ? FormatStyle.DDL : FormatStyle.NONE ).getFormatter();
+		return this;
+	}
+
+	/**
+	 * Set <i>import.sql</i> command extractor. By default {@link SingleLineSqlCommandExtractor} is used.
+	 *
+	 * @param importSqlCommandExtractor <i>import.sql</i> command extractor.
+	 * @return this
+	 */
+	public SchemaExport setImportSqlCommandExtractor(ImportSqlCommandExtractor importSqlCommandExtractor) {
+		this.importSqlCommandExtractor = importSqlCommandExtractor;
 		return this;
 	}
 
@@ -418,29 +432,27 @@ public class SchemaExport {
 
 	private void importScript(NamedReader namedReader, List<Exporter> exporters) throws Exception {
 		BufferedReader reader = new BufferedReader( namedReader.getReader() );
-		long lineNo = 0;
-		for ( String sql = reader.readLine(); sql != null; sql = reader.readLine() ) {
-			try {
-				lineNo++;
-				String trimmedSql = sql.trim();
-				if ( trimmedSql.length() == 0 ||
-						trimmedSql.startsWith( "--" ) ||
-						trimmedSql.startsWith( "//" ) ||
-						trimmedSql.startsWith( "/*" ) ) {
-					continue;
-				}
-                if ( trimmedSql.endsWith(";") ) {
-					trimmedSql = trimmedSql.substring(0, trimmedSql.length() - 1);
-				}
-                LOG.debugf( trimmedSql );
-				for ( Exporter exporter: exporters ) {
-					if ( exporter.acceptsImportScripts() ) {
-						exporter.export( trimmedSql );
+		String[] statements = importSqlCommandExtractor.extractCommands( reader );
+		if (statements != null) {
+			for ( String statement : statements ) {
+				if ( statement != null ) {
+					String trimmedSql = statement.trim();
+					if ( trimmedSql.endsWith( ";" )) {
+						trimmedSql = trimmedSql.substring( 0, statement.length() - 1 );
+					}
+					if ( !StringHelper.isEmpty( trimmedSql ) ) {
+						try {
+							for ( Exporter exporter : exporters ) {
+								if ( exporter.acceptsImportScripts() ) {
+									exporter.export( trimmedSql );
+								}
+							}
+						}
+						catch ( Exception e ) {
+							throw new ImportScriptException( "Error during statement execution (file: '" + namedReader.getName() + "'): " + trimmedSql, e );
+						}
 					}
 				}
-			}
-			catch ( Exception e ) {
-				throw new ImportScriptException( "Error during import script execution at line " + lineNo, e );
 			}
 		}
 	}
@@ -581,7 +593,8 @@ public class SchemaExport {
 				SchemaExport se = new SchemaExport( serviceRegistry, cfg )
 						.setHaltOnError( halt )
 						.setOutputFile( outFile )
-						.setDelimiter( delim );
+						.setDelimiter( delim )
+						.setImportSqlCommandExtractor( serviceRegistry.getService( ImportSqlCommandExtractor.class ) );
 				if ( format ) {
 					se.setFormat( true );
 				}

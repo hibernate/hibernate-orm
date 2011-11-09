@@ -91,7 +91,6 @@ public class SchemaExport {
 		}
 	}
 
-	private final ServiceRegistry serviceRegistry;
 	private final ConnectionHelper connectionHelper;
 	private final SqlStatementLogger sqlStatementLogger;
 	private final SqlExceptionHelper sqlExceptionHelper;
@@ -102,13 +101,13 @@ public class SchemaExport {
 	private final List<Exception> exceptions = new ArrayList<Exception>();
 
 	private Formatter formatter;
+	private ImportSqlCommandExtractor importSqlCommandExtractor = ImportSqlCommandExtractorInitiator.DEFAULT_EXTRACTOR;
 
 	private String outputFile = null;
 	private String delimiter;
 	private boolean haltOnError = false;
 
 	public SchemaExport(ServiceRegistry serviceRegistry, Configuration configuration) {
-		this.serviceRegistry = serviceRegistry;
 		this.connectionHelper = new SuppliedConnectionProviderConnectionHelper(
 				serviceRegistry.getService( ConnectionProvider.class )
 		);
@@ -128,7 +127,7 @@ public class SchemaExport {
 	}
 
 	public SchemaExport(MetadataImplementor metadata) {
-		this.serviceRegistry = metadata.getServiceRegistry();
+		ServiceRegistry serviceRegistry = metadata.getServiceRegistry();
 		this.connectionHelper = new SuppliedConnectionProviderConnectionHelper(
 				serviceRegistry.getService( ConnectionProvider.class )
 		);
@@ -189,7 +188,6 @@ public class SchemaExport {
 
 		this.dropSQL = configuration.generateDropSchemaScript( dialect );
 		this.createSQL = configuration.generateSchemaCreationScript( dialect );
-		this.serviceRegistry = createServiceRegistry( props );
 	}
 
 	/**
@@ -215,7 +213,6 @@ public class SchemaExport {
 		final Dialect dialect = Dialect.getDialect( configuration.getProperties() );
 		this.dropSQL = configuration.generateDropSchemaScript( dialect );
 		this.createSQL = configuration.generateSchemaCreationScript( dialect );
-		this.serviceRegistry = createServiceRegistry( configuration.getProperties() );
 	}
 
 	public SchemaExport(
@@ -229,7 +226,6 @@ public class SchemaExport {
 		this.sqlStatementLogger = new SqlStatementLogger( false, true );
 		this.sqlExceptionHelper = new SqlExceptionHelper();
 		this.formatter = FormatStyle.DDL.getFormatter();
-		this.serviceRegistry = createServiceRegistry( new Properties() );
 	}
 
 	/**
@@ -262,6 +258,17 @@ public class SchemaExport {
 	 */
 	public SchemaExport setFormat(boolean format) {
 		this.formatter = ( format ? FormatStyle.DDL : FormatStyle.NONE ).getFormatter();
+		return this;
+	}
+
+	/**
+	 * Set <i>import.sql</i> command extractor. By default {@link SingleLineSqlCommandExtractor} is used.
+	 *
+	 * @param importSqlCommandExtractor <i>import.sql</i> command extractor.
+	 * @return this
+	 */
+	public SchemaExport setImportSqlCommandExtractor(ImportSqlCommandExtractor importSqlCommandExtractor) {
+		this.importSqlCommandExtractor = importSqlCommandExtractor;
 		return this;
 	}
 
@@ -425,7 +432,7 @@ public class SchemaExport {
 
 	private void importScript(NamedReader namedReader, List<Exporter> exporters) throws Exception {
 		BufferedReader reader = new BufferedReader( namedReader.getReader() );
-		String[] statements = serviceRegistry.getService( ImportSqlCommandExtractor.class ).extractCommands( reader );
+		String[] statements = importSqlCommandExtractor.extractCommands( reader );
 		if (statements != null) {
 			for ( String statement : statements ) {
 				if ( statement != null ) {
@@ -586,7 +593,8 @@ public class SchemaExport {
 				SchemaExport se = new SchemaExport( serviceRegistry, cfg )
 						.setHaltOnError( halt )
 						.setOutputFile( outFile )
-						.setDelimiter( delim );
+						.setDelimiter( delim )
+						.setImportSqlCommandExtractor( serviceRegistry.getService( ImportSqlCommandExtractor.class ) );
 				if ( format ) {
 					se.setFormat( true );
 				}

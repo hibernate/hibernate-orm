@@ -83,9 +83,9 @@ libraries = [
         jacc:           'org.jboss.spec.javax.security.jacc:jboss-jacc-api_1.4_spec:1.0.0.Final',
 
         // logging
-        logging:        'org.jboss.logging:jboss-logging:3.1.0.Beta3',
-        logging_generator:  'org.jboss.logging:jboss-logging-generator:1.0.0.CR3',
-        logging_processor:  'org.jboss.logging:jboss-logging-processor:1.0.0.CR3',
+        logging:        'org.jboss.logging:jboss-logging:3.1.0.CR1',
+        logging_generator:  'org.jboss.logging:jboss-logging-generator:1.0.0.CR4',
+        logging_processor:  'org.jboss.logging:jboss-logging-processor:1.0.0.CR4',
         slf4j_api:      'org.slf4j:slf4j-api:' + slf4jVersion,
         slf4j_log4j12:  'org.slf4j:slf4j-log4j12:' + slf4jVersion,
         jcl_slf4j:      'org.slf4j:jcl-over-slf4j:' + slf4jVersion,
@@ -177,7 +177,8 @@ subprojects { subProject ->
                             "-proc:only",
                             "-encoding", "UTF-8",
                             "-processor", "org.jboss.logging.generator.apt.LoggingToolsProcessor",
-                            "-s", "$sourceSets.main.generatedLoggingSrcDir.absolutePath"
+                            "-s", "$sourceSets.main.generatedLoggingSrcDir.absolutePath",
+                            "-AloggingVersion=3.0"
                     ]
             );
             outputs.dir sourceSets.main.generatedLoggingSrcDir;

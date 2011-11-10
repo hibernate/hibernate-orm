@@ -5,6 +5,36 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 4.0.0.CR6 (2011.11.10)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.onjira.com/browse/HHH/fixforversion/11652
+
+** Bug
+    * [HHH-3716] - Sybase - null values for columns mapped as "boolean" are persisted as 0 (zero) instead of NULL
+    * [HHH-5413] - null values for columns mapped as "boolean" cause exception when saving entity with Sybase jdbc4
+    * [HHH-6714] - Parentheses dissapear in HQL query where they should stay
+    * [HHH-6753] - Envers WorkUnits: Problems with merge
+    * [HHH-6779] - ByteType mapped to tinyint, but on sybase/ms sql server, tinyint is unsigned int
+    * [HHH-6784] - The REVINFO table is always added to Hibernate's configuration, even if there are no audit tables
+    * [HHH-6786] - DB2 v97 doesn't support define a boolean type column
+    * [HHH-6789] - StringIndexOutOfBoundsException at TemplatedViolatedConstraintNameExtracter.extractUsingTemplate
+    * [HHH-6792] - connection leaks due to service registry is not destroyed
+    * [HHH-6793] - SessionCacheCleaner doesn't accomodate for closed sessions
+    * [HHH-6795] - unsupported Boolean type null value on Sybase causes hangs forever when doing bind parameter
+    * [HHH-6796] - Services retrieved after SessionFactoryServiceRegistry has started are not configured (Configurable)
+    * [HHH-6799] - Hibernate EntityManager bootstrap does not ensure that ServiceRegistries are closed
+    * [HHH-6815] - ByteTest fails on SQL Server due to driver dropping negative sign due to TINYINT data type
+
+** Patch
+    * [HHH-5146] - org.hibernate.util.IdentitySet.iterator() return Map.Entry instances instead of actual elements
+
+** Task
+    * [HHH-6787] - upgrade to JBoss Logging tools 1.0.0.CR3
+    * [HHH-6791] - tiny improvement, in favor of java auto-box instead of create new instance
+    * [HHH-6798] - Upgrade to Hibernate Commons Annotations GA once it's released
+    * [HHH-6816] - Upgrade to jboss-logging 3.1.0.CR1
+
+
 Changes in version 4.0.0.CR5 (2011.10.27)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.onjira.com/browse/HHH/fixforversion/11550

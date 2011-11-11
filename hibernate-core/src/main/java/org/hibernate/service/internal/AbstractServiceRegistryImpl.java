@@ -136,7 +136,9 @@ public abstract class AbstractServiceRegistryImpl
 
 	protected <R extends Service> void registerService(ServiceBinding<R> serviceBinding, R service) {
 		serviceBinding.setService( service );
-		serviceBindingList.add( serviceBinding );
+		synchronized ( serviceBindingList ) {
+			serviceBindingList.add( serviceBinding );
+		}
 	}
 
 	private <R extends Service> R initializeService(ServiceBinding<R> serviceBinding) {
@@ -264,12 +266,14 @@ public abstract class AbstractServiceRegistryImpl
 	@Override
     @SuppressWarnings( {"unchecked"})
 	public void destroy() {
-		ListIterator<ServiceBinding> serviceBindingsIterator = serviceBindingList.listIterator( serviceBindingList.size() );
-		while ( serviceBindingsIterator.hasPrevious() ) {
-			final ServiceBinding serviceBinding = serviceBindingsIterator.previous();
-			serviceBinding.getLifecycleOwner().stopService( serviceBinding );
+		synchronized ( serviceBindingList ) {
+			ListIterator<ServiceBinding> serviceBindingsIterator = serviceBindingList.listIterator( serviceBindingList.size() );
+			while ( serviceBindingsIterator.hasPrevious() ) {
+				final ServiceBinding serviceBinding = serviceBindingsIterator.previous();
+				serviceBinding.getLifecycleOwner().stopService( serviceBinding );
+			}
+			serviceBindingList.clear();
 		}
-		serviceBindingList.clear();
 		serviceBindingMap.clear();
 	}
 

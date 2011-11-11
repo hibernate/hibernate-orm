@@ -24,7 +24,6 @@
 package org.hibernate.service.internal;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.concurrent.ConcurrentHashMap;
@@ -61,10 +60,12 @@ public abstract class AbstractServiceRegistryImpl
 
 	private final ServiceRegistryImplementor parent;
 
-	private ConcurrentHashMap<Class,ServiceBinding> serviceBindingMap;
+	private final ConcurrentHashMap<Class,ServiceBinding> serviceBindingMap = CollectionHelper.concurrentMap( 20 );
+
 	// IMPL NOTE : the list used for ordered destruction.  Cannot used map above because we need to
 	// iterate it in reverse order which is only available through ListIterator
-	private List<ServiceBinding> serviceBindingList = new ArrayList<ServiceBinding>();
+	// assume 20 services for initial sizing
+	private final List<ServiceBinding> serviceBindingList = CollectionHelper.arrayList( 20 );
 
 	@SuppressWarnings( {"UnusedDeclaration"})
 	protected AbstractServiceRegistryImpl() {
@@ -73,14 +74,6 @@ public abstract class AbstractServiceRegistryImpl
 
 	protected AbstractServiceRegistryImpl(ServiceRegistryImplementor parent) {
 		this.parent = parent;
-		prepare();
-
-	}
-
-	private void prepare() {
-		// assume 20 services for initial sizing
-		this.serviceBindingMap = CollectionHelper.concurrentMap( 20 );
-		this.serviceBindingList = CollectionHelper.arrayList( 20 );
 	}
 
 	public AbstractServiceRegistryImpl(BootstrapServiceRegistry bootstrapServiceRegistry) {
@@ -88,7 +81,6 @@ public abstract class AbstractServiceRegistryImpl
 			throw new IllegalArgumentException( "Boot-strap registry was not " );
 		}
 		this.parent = (ServiceRegistryImplementor) bootstrapServiceRegistry;
-		prepare();
 	}
 
 	@SuppressWarnings({ "unchecked" })
@@ -278,9 +270,7 @@ public abstract class AbstractServiceRegistryImpl
 			serviceBinding.getLifecycleOwner().stopService( serviceBinding );
 		}
 		serviceBindingList.clear();
-		serviceBindingList = null;
 		serviceBindingMap.clear();
-		serviceBindingMap = null;
 	}
 
 	@Override

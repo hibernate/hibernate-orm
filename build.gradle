@@ -62,15 +62,8 @@ libraries = [
         // Jakarta commons-collections  todo : get rid of commons-collections dependency
         commons_collections:
                         'commons-collections:commons-collections:3.2.1',
-
         // Dom4J
         dom4j:          'dom4j:dom4j:1.6.1@jar',
-        jaxb:           'com.sun.xml.bind:jaxb-xjc:2.1.6',
-        jaxb2_basics:   'org.jvnet.jaxb2_commons:jaxb2-basics:0.6.0',
-        jaxb2_ant:      'org.jvnet.jaxb2_commons:jaxb2-basics-ant:0.6.0',
-
-        // h2
-        h2:             'com.h2database:h2:1.2.145',
 
         // Javassist
         javassist:      'javassist:javassist:3.12.1.GA',
@@ -79,23 +72,32 @@ libraries = [
         jpa:            'org.hibernate.javax.persistence:hibernate-jpa-2.0-api:1.0.1.Final',
         jta:            'org.jboss.spec.javax.transaction:jboss-transaction-api_1.1_spec:1.0.0.Final',
         validation:     'javax.validation:validation-api:1.0.0.GA',
-        validator:      'org.hibernate:hibernate-validator:4.2.0.Final',
         jacc:           'org.jboss.spec.javax.security.jacc:jboss-jacc-api_1.4_spec:1.0.0.Final',
 
         // logging
         logging:        'org.jboss.logging:jboss-logging:3.1.0.CR1',
         logging_processor:  'org.jboss.logging:jboss-logging-processor:1.0.0.CR4',
+
+        // jaxb task
+        jaxb:           'com.sun.xml.bind:jaxb-xjc:2.1.6',
+        jaxb2_basics:   'org.jvnet.jaxb2_commons:jaxb2-basics:0.6.0',
+        jaxb2_ant:      'org.jvnet.jaxb2_commons:jaxb2-basics-ant:0.6.0',
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~ testing
+
+        // logging for testing
         slf4j_api:      'org.slf4j:slf4j-api:' + slf4jVersion,
         slf4j_log4j12:  'org.slf4j:slf4j-log4j12:' + slf4jVersion,
         jcl_slf4j:      'org.slf4j:jcl-over-slf4j:' + slf4jVersion,
         jcl_api:        'commons-logging:commons-logging-api:99.0-does-not-exist',
         jcl:            'commons-logging:commons-logging:99.0-does-not-exist',
 
-        // testing
+
         junit:          'junit:junit:4.8.2',
         jpa_modelgen:   'org.hibernate:hibernate-jpamodelgen:1.1.1.Final',
         shrinkwrap_api: 'org.jboss.shrinkwrap:shrinkwrap-api:1.0.0-beta-6',
-        shrinkwrap:     'org.jboss.shrinkwrap:shrinkwrap-impl-base:1.0.0-beta-6'
+        shrinkwrap:     'org.jboss.shrinkwrap:shrinkwrap-impl-base:1.0.0-beta-6',
+        validator:      'org.hibernate:hibernate-validator:4.2.0.Final',
+        h2:             'com.h2database:h2:1.2.145',
 ]
 
 

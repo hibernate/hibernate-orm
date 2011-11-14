@@ -31,14 +31,7 @@ dependencies {
    testCompile([group: 'org.jboss', name: 'jboss-common-core', version: '2.2.14.GA'])
    testCompile([group: 'org.jboss.naming', name: 'jnp-client', version: jnpVersion])
    testCompile([group: 'org.jboss.naming', name: 'jnpserver', version: jnpVersion])
-   testCompile([group: 'com.experlog', name: 'xapool', version: '1.5.0'])
-   testCompile([group: 'org.jboss.jbossts', name: 'jbossjta', version: '4.15.1.Final'])
-   testCompile(libraries.jta)
-   testCompile(libraries.h2)
-   // testCompile( [group: 'hsqldb', name: 'hsqldb', version: '1.8.0.2'] )
    testCompile([group: 'org.rhq.helpers', name: 'rhq-pluginAnnotations', version: '1.4.0.B01'])
-   testCompile([group: 'log4j', name: 'log4j', version: '1.2.16'])
-   testRuntime(libraries.javassist)
 }
 
 test {

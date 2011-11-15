@@ -9,7 +9,9 @@ dependencies {
     compile( libraries.dom4j ) {
         transitive = false
     }
-    compile( libraries.commons_annotations )
+    compile( libraries.commons_annotations ) {
+        transitive = false
+    }
     compile( libraries.jandex )
     compile( libraries.classmate )
     compile( libraries.jpa )

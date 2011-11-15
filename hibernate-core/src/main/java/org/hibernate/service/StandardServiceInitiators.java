@@ -45,6 +45,7 @@ import org.hibernate.service.jmx.internal.JmxServiceInitiator;
 import org.hibernate.service.jndi.internal.JndiServiceInitiator;
 import org.hibernate.service.jta.platform.internal.JtaPlatformInitiator;
 import org.hibernate.service.spi.BasicServiceInitiator;
+import org.hibernate.tool.hbm2ddl.ImportSqlCommandExtractorInitiator;
 
 /**
  * Central definition of the standard set of service initiators defined by Hibernate.
@@ -82,6 +83,8 @@ public class StandardServiceInitiators {
 		serviceInitiators.add( RegionFactoryInitiator.INSTANCE );
 
 		serviceInitiators.add( InstrumentationServiceInitiator.INSTANCE );
+		
+		serviceInitiators.add( ImportSqlCommandExtractorInitiator.INSTANCE );
 
 		return Collections.unmodifiableList( serviceInitiators );
 	}

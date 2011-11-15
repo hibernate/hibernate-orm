@@ -822,6 +822,49 @@
             </variablelist>
         </section>
 
+        <section id="services-ImportSqlCommandExtractor">
+            <title><interfacename>org.hibernate.tool.hbm2ddl.ImportSqlCommandExtractor</interfacename></title>
+            <variablelist>
+                <varlistentry>
+                    <term>Notes</term>
+                    <listitem>
+                        <para>
+                            Contract for extracting statements from <literal>import.sql</literal> scripts.
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term>Initiator</term>
+                    <listitem>
+                        <para>
+                            <classname>org.hibernate.tool.hbm2ddl.ImportSqlCommandExtractorInitiator</classname>
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term>Implementations</term>
+                    <listitem>
+                        <para>
+                            <classname>org.hibernate.tool.hbm2ddl.SingleLineSqlCommandExtractor</classname>
+                        </para>
+                        <para>
+                            Treads each line as a complete SQL statement. Comment lines shall start with
+                            <literal>--</literal>, <literal>//</literal> or <literal>/*</literal> character sequence.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            <classname>org.hibernate.tool.hbm2ddl.MultipleLinesSqlCommandExtractor</classname>
+                        </para>
+                        <para>
+                            Supports instructions/comments and quoted strings spread over multiple lines. Each
+                            statement must end with semicolon.
+                        </para>
+                    </listitem>
+                </varlistentry>
+            </variablelist>
+        </section>
+
     </section>
 
 

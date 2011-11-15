@@ -9,7 +9,7 @@
 
 <hibernate-mapping package="org.hibernate.test.tm">
 
-	<class entity-name="Item" table="Things">
+	<class entity-name="Item">
 		<id name="name" type="string"/>
 		<property name="description" type="string"/>		
 	</class>

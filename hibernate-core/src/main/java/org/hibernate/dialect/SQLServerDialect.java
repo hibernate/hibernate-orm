@@ -29,6 +29,8 @@ import org.hibernate.dialect.function.AnsiTrimEmulationFunction;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.descriptor.sql.SmallIntTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**
  * A dialect for Microsoft SQL Server 2000
@@ -57,7 +59,8 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		registerKeyword( "top" );
 	}
 
-	public String getNoColumnsInsertString() {
+	@Override
+    public String getNoColumnsInsertString() {
 		return "default values";
 	}
 
@@ -67,7 +70,8 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		return selectIndex + ( selectDistinctIndex == selectIndex ? 15 : 6 );
 	}
 
-	public String getLimitString(String querySelect, int offset, int limit) {
+	@Override
+    public String getLimitString(String querySelect, int offset, int limit) {
 		if ( offset > 0 ) {
 			throw new UnsupportedOperationException( "query result offset is not supported" );
 		}
@@ -80,38 +84,46 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	/**
 	 * Use <tt>insert table(...) values(...) select SCOPE_IDENTITY()</tt>
 	 */
-	public String appendIdentitySelectToInsert(String insertSQL) {
+	@Override
+    public String appendIdentitySelectToInsert(String insertSQL) {
 		return insertSQL + " select scope_identity()";
 	}
 
-	public boolean supportsLimit() {
+	@Override
+    public boolean supportsLimit() {
 		return true;
 	}
 
-	public boolean useMaxForLimit() {
+	@Override
+    public boolean useMaxForLimit() {
 		return true;
 	}
 
-	public boolean supportsLimitOffset() {
+	@Override
+    public boolean supportsLimitOffset() {
 		return false;
 	}
 
-	public boolean supportsVariableLimit() {
+	@Override
+    public boolean supportsVariableLimit() {
 		return false;
 	}
 
-	public char closeQuote() {
+	@Override
+    public char closeQuote() {
 		return ']';
 	}
 
-	public char openQuote() {
+	@Override
+    public char openQuote() {
 		return '[';
 	}
 
-	public String appendLockHint(LockMode mode, String tableName) {
+	@Override
+    public String appendLockHint(LockMode mode, String tableName) {
 		if ( ( mode == LockMode.UPGRADE ) ||
 			  ( mode == LockMode.UPGRADE_NOWAIT ) ||
-			  ( mode == LockMode.PESSIMISTIC_WRITE ) ||			
+			  ( mode == LockMode.PESSIMISTIC_WRITE ) ||
 			  ( mode == LockMode.WRITE ) ) {
 			return tableName + " with (updlock, rowlock)";
 		}
@@ -125,39 +137,55 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	// The current_timestamp is more accurate, but only known to be supported
 	// in SQL Server 7.0 and later (i.e., Sybase not known to support it at all)
-	public String getCurrentTimestampSelectString() {
+	@Override
+    public String getCurrentTimestampSelectString() {
 		return "select current_timestamp";
 	}
 
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	public boolean areStringComparisonsCaseInsensitive() {
+	@Override
+    public boolean areStringComparisonsCaseInsensitive() {
 		return true;
 	}
 
-	public boolean supportsResultSetPositionQueryMethodsOnForwardOnlyCursor() {
+	@Override
+    public boolean supportsResultSetPositionQueryMethodsOnForwardOnlyCursor() {
 		return false;
 	}
 
-	public boolean supportsCircularCascadeDeleteConstraints() {
+	@Override
+    public boolean supportsCircularCascadeDeleteConstraints() {
 		// SQL Server (at least up through 2005) does not support defining
 		// cascade delete constraints which can circle back to the mutating
 		// table
 		return false;
 	}
 
-	public boolean supportsLobValueChangePropogation() {
+	@Override
+    public boolean supportsLobValueChangePropogation() {
 		// note: at least my local SQL Server 2005 Express shows this not working...
 		return false;
 	}
 
-	public boolean doesReadCommittedCauseWritersToBlockReaders() {
+	@Override
+    public boolean doesReadCommittedCauseWritersToBlockReaders() {
 		return false; // here assume SQLServer2005 using snapshot isolation, which does not have this problem
 	}
 
-	public boolean doesRepeatableReadCauseReadersToBlockWriters() {
+	@Override
+    public boolean doesRepeatableReadCauseReadersToBlockWriters() {
 		return false; // here assume SQLServer2005 using snapshot isolation, which does not have this problem
 	}
 
+    /**
+     * {@inheritDoc}
+     *
+     * @see org.hibernate.dialect.Dialect#getSqlTypeDescriptorOverride(int)
+     */
+    @Override
+    protected SqlTypeDescriptor getSqlTypeDescriptorOverride( int sqlCode ) {
+        return sqlCode == Types.TINYINT ? SmallIntTypeDescriptor.INSTANCE : super.getSqlTypeDescriptorOverride(sqlCode);
+    }
 }
 

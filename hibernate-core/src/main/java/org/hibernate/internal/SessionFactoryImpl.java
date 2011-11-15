@@ -132,6 +132,7 @@ import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 import org.hibernate.service.spi.SessionFactoryServiceRegistryFactory;
 import org.hibernate.stat.Statistics;
 import org.hibernate.stat.spi.StatisticsImplementor;
+import org.hibernate.tool.hbm2ddl.ImportSqlCommandExtractor;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.hbm2ddl.SchemaValidator;
@@ -441,7 +442,9 @@ public final class SessionFactoryImpl
 		LOG.debugf( "Instantiated session factory" );
 
 		if ( settings.isAutoCreateSchema() ) {
-			new SchemaExport( serviceRegistry, cfg ).create( false, true );
+			new SchemaExport( serviceRegistry, cfg )
+					.setImportSqlCommandExtractor( serviceRegistry.getService( ImportSqlCommandExtractor.class ) )
+					.create( false, true );
 		}
 		if ( settings.isAutoUpdateSchema() ) {
 			new SchemaUpdate( serviceRegistry, cfg ).execute( false, true );
@@ -450,7 +453,8 @@ public final class SessionFactoryImpl
 			new SchemaValidator( serviceRegistry, cfg ).validate();
 		}
 		if ( settings.isAutoDropSchema() ) {
-			schemaExport = new SchemaExport( serviceRegistry, cfg );
+			schemaExport = new SchemaExport( serviceRegistry, cfg )
+					.setImportSqlCommandExtractor( serviceRegistry.getService( ImportSqlCommandExtractor.class ) );
 		}
 
 		currentSessionContext = buildCurrentSessionContext();
@@ -766,7 +770,9 @@ public final class SessionFactoryImpl
 		LOG.debugf("Instantiated session factory");
 
 		if ( settings.isAutoCreateSchema() ) {
-			new SchemaExport( metadata ).create( false, true );
+			new SchemaExport( metadata )
+					.setImportSqlCommandExtractor( serviceRegistry.getService( ImportSqlCommandExtractor.class ) )
+					.create( false, true );
 		}
 		/*
 		if ( settings.isAutoUpdateSchema() ) {
@@ -777,7 +783,8 @@ public final class SessionFactoryImpl
 		}
 		*/
 		if ( settings.isAutoDropSchema() ) {
-			schemaExport = new SchemaExport( metadata );
+			schemaExport = new SchemaExport( metadata )
+					.setImportSqlCommandExtractor( serviceRegistry.getService( ImportSqlCommandExtractor.class ) );
 		}
 
 		currentSessionContext = buildCurrentSessionContext();

@@ -107,11 +107,11 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 	}
 
 	protected String getDescriptionsSQL() {
-		return "select DESCRIPTION from TEXTHOLDER";
+		return "select DESCRIPTION from TEXT_HOLDER";
 	}
 
 	protected String getPhotosSQL() {
-		return "select PHOTO from IMAGEHOLDER";
+		return "select PHOTO from IMAGE_HOLDER";
 	}
 
 	@Test

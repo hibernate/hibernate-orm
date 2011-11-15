@@ -2,8 +2,8 @@
 -- Contains various SQL instructions with comments.
 
 CREATE TABLE test_data (
-  id    NUMBER        NOT NULL   PRIMARY KEY -- primary key
-, text  VARCHAR2(100)                        /* any other data */
+  id    NUMERIC        NOT NULL   PRIMARY KEY -- primary key
+, text  VARCHAR(100)                        /* any other data */
 );
 
 INSERT INTO test_data VALUES (1, 'sample');

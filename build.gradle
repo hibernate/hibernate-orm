@@ -76,7 +76,7 @@ libraries = [
 
         // logging
         logging:        'org.jboss.logging:jboss-logging:3.1.0.CR1',
-        logging_processor:  'org.jboss.logging:jboss-logging-processor:1.0.0.CR4',
+        logging_processor:  'org.jboss.logging:jboss-logging-processor:1.0.0.CR5',
 
         // jaxb task
         jaxb:           'com.sun.xml.bind:jaxb-xjc:2.1.6',

@@ -82,10 +82,4 @@ class BaseGeneralDataRegion extends BaseRegion implements GeneralDataRegion {
 		LOG.debug( "evict cache" );
 		cache.clear();
 	}
-
-
-
-
-
-
 }

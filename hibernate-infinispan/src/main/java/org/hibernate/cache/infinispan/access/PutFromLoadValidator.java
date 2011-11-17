@@ -39,7 +39,7 @@ import org.hibernate.cache.CacheException;
 
 /**
  * Encapsulates logic to allow a {@link TransactionalAccessDelegate} to determine
- * whether a {@link TransactionalAccessDelegate#putFromLoad(Object, Object, long, Object, boolean)
+ * whether a {@link TransactionalAccessDelegate#putFromLoad(Object, Object, long, Object, boolean)}
  * call should be allowed to update the cache. A <code>putFromLoad</code> has
  * the potential to store stale data, since the data may have been removed from the
  * database and the cache between the time when the data was read from the database 

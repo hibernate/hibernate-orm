@@ -25,6 +25,7 @@ package org.hibernate.testing.cache;
 
 import java.util.Comparator;
 
+import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.CollectionRegion;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 
@@ -60,5 +61,8 @@ class ReadWriteCollectionRegionAccessStrategy extends AbstractReadWriteAccessStr
 		return region;
 	}
 
+	@Override
+	public void remove(Object key) throws CacheException {
 
+	}
 }

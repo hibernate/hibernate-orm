@@ -24,8 +24,10 @@
 package org.hibernate.test.annotations.dataTypes;
 
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Date;
 
 import org.junit.Test;
@@ -43,8 +45,12 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Steve Ebersole
  */
-@RequiresDialectFeature( DialectChecks.SupportsExpectedLobUsagePattern.class )
+@RequiresDialectFeature(DialectChecks.SupportsExpectedLobUsagePattern.class)
 public class BasicOperationsTest extends BaseCoreFunctionalTestCase {
+
+	private static final String SOME_ENTITY_TABLE_NAME = "SOMEENTITY";
+	private static final String SOME_OTHER_ENTITY_TABLE_NAME = "SOMEOTHERENTITY";
+
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] { SomeEntity.class, SomeOtherEntity.class };
@@ -55,43 +61,95 @@ public class BasicOperationsTest extends BaseCoreFunctionalTestCase {
 		Date now = new Date();
 
 		Session s = openSession();
-		s.doWork(
-				new Work() {
-					public void execute(Connection connection) throws SQLException {
-						// id -> java.util.Date (DATE - becase of explicit TemporalType)
-						validateColumn( connection, "ID", java.sql.Types.DATE );
 
-						// timeData -> java.sql.Time (TIME)
-						validateColumn( connection, "TIMEDATA", java.sql.Types.TIME );
+		s.doWork( new ValidateSomeEntityColumns() );
+		s.doWork( new ValidateRowCount( SOME_ENTITY_TABLE_NAME, 0 ) );
+		s.doWork( new ValidateRowCount( SOME_OTHER_ENTITY_TABLE_NAME, 0 ) );
 
-						// tsData -> java.sql.Timestamp (TIMESTAMP)
-						validateColumn( connection, "TSDATA", java.sql.Types.TIMESTAMP );
-					}
-
-					private void validateColumn(Connection connection, String columnName, int expectedJdbcTypeCode)
-							throws SQLException {
-						ResultSet columnInfo = connection.getMetaData().getColumns( null, null, "SOMEENTITY", columnName );
-						assertTrue( columnInfo.next() );
-						int dataType = columnInfo.getInt( "DATA_TYPE" );
-						columnInfo.close();
-						assertEquals( columnName, JdbcTypeNameMapper.getTypeName(expectedJdbcTypeCode), JdbcTypeNameMapper.getTypeName(dataType) );
-					}
-
-				}
-		);
 		s.beginTransaction();
 		SomeEntity someEntity = new SomeEntity( now );
-		SomeOtherEntity someOtherEntity = new SomeOtherEntity(1);
+		SomeOtherEntity someOtherEntity = new SomeOtherEntity( 1 );
 		s.save( someEntity );
 		s.save( someOtherEntity );
 		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
+
+		s.doWork( new ValidateRowCount( SOME_ENTITY_TABLE_NAME, 1 ) );
+		s.doWork( new ValidateRowCount( SOME_OTHER_ENTITY_TABLE_NAME, 1 ) );
+
 		s.beginTransaction();
 		s.delete( someEntity );
 		s.delete( someOtherEntity );
 		s.getTransaction().commit();
+
+		s.doWork( new ValidateRowCount( SOME_ENTITY_TABLE_NAME, 0 ) );
+		s.doWork( new ValidateRowCount( SOME_OTHER_ENTITY_TABLE_NAME, 0 ) );
+
 		s.close();
 	}
+
+	// verify all the expected columns are created
+	class ValidateSomeEntityColumns implements Work {
+		public void execute(Connection connection) throws SQLException {
+			// id -> java.util.Date (DATE - becase of explicit TemporalType)
+			validateColumn( connection, "ID", java.sql.Types.DATE );
+
+			// timeData -> java.sql.Time (TIME)
+			validateColumn( connection, "TIMEDATA", java.sql.Types.TIME );
+
+			// tsData -> java.sql.Timestamp (TIMESTAMP)
+			validateColumn( connection, "TSDATA", java.sql.Types.TIMESTAMP );
+		}
+
+		private void validateColumn(Connection connection, String columnName, int expectedJdbcTypeCode)
+				throws SQLException {
+			DatabaseMetaData meta = connection.getMetaData();
+
+			// DBs treat the meta information differently, in particular case sensitivity.
+			// We need to use the meta information to find out how to treat names
+			String tableNamePattern = generateFinalNamePattern( meta, SOME_ENTITY_TABLE_NAME );
+			String columnNamePattern = generateFinalNamePattern( meta, columnName );
+
+			ResultSet columnInfo = meta.getColumns( null, null, tableNamePattern, columnNamePattern );
+			assertTrue( columnInfo.next() );
+			int dataType = columnInfo.getInt( "DATA_TYPE" );
+			columnInfo.close();
+			assertEquals(
+					columnName,
+					JdbcTypeNameMapper.getTypeName( expectedJdbcTypeCode ),
+					JdbcTypeNameMapper.getTypeName( dataType )
+			);
+		}
+
+		private String generateFinalNamePattern(DatabaseMetaData meta, String name) throws SQLException {
+			if ( meta.storesLowerCaseIdentifiers() ) {
+				return name.toLowerCase();
+			}
+			else {
+				return name;
+			}
+		}
+	}
+
+	// verify we have the right amount of columns
+	class ValidateRowCount implements Work {
+		private final int expectedRowCount;
+		private final String table;
+
+		public ValidateRowCount(String table, int count) {
+			this.expectedRowCount = count;
+			this.table = table;
+		}
+
+		public void execute(Connection connection) throws SQLException {
+			Statement st = connection.createStatement();
+			ResultSet result = st.executeQuery( "SELECT COUNT(*) FROM " + table );
+			result.next();
+			int rowCount = result.getInt( 1 );
+			assertEquals( "Unexpected row count", expectedRowCount, rowCount );
+		}
+	}
 }
+

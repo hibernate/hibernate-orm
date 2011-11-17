@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.annotations.dataTypes;
+
 import javax.persistence.Access;
 import javax.persistence.AccessType;
 import javax.persistence.Entity;
@@ -30,37 +31,36 @@ import javax.persistence.Enumerated;
 import javax.persistence.Id;
 
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
 @Entity
 @Access(AccessType.FIELD)
 public class SomeOtherEntity {
 	@Id
-    protected int id;
-    protected boolean booleanData;
-    protected byte byteData;
-    protected char characterData;
-    protected short shortData;
-    protected int integerData;
-    protected long longData;
-    protected double doubleData;
-    protected float floatData;
-    @Enumerated(EnumType.STRING)
-    protected Grade grade;
+	protected int id;
+	protected boolean booleanData;
+	protected byte byteData;
+	// setting a arbitrary character here to make this test also pass against PostgreSQL
+	// PostgreSQL throws otherwise an exception when persisting the null value
+	// org.postgresql.util.PSQLException: ERROR: invalid byte sequence for encoding "UTF8": 0x00
+	protected char characterData = 'a';
+	protected short shortData;
+	protected int integerData;
+	protected long longData;
+	protected double doubleData;
+	protected float floatData;
+	@Enumerated(EnumType.STRING)
+	protected Grade grade;
 
 
-    public SomeOtherEntity()
-    {
-    }
+	public SomeOtherEntity() {
+	}
 
-    public SomeOtherEntity(int id)
-    {
-	this.id = id;
-    }
+	public SomeOtherEntity(int id) {
+		this.id = id;
+	}
 
-    public SomeOtherEntity(
+	public SomeOtherEntity(
 			int id,
 			boolean booleanData,
 			byte byteData,
@@ -71,15 +71,15 @@ public class SomeOtherEntity {
 			double doubleData,
 			float floatData) {
 		this.id = id;
-    	this.booleanData = booleanData;
-        this.byteData = byteData;
-        this.characterData = characterData;
-        this.shortData = shortData;
-        this.integerData = integerData;
-        this.longData = longData;
-        this.doubleData = doubleData;
-        this.floatData = floatData;
-    }
+		this.booleanData = booleanData;
+		this.byteData = byteData;
+		this.characterData = characterData;
+		this.shortData = shortData;
+		this.integerData = integerData;
+		this.longData = longData;
+		this.doubleData = doubleData;
+		this.floatData = floatData;
+	}
 
 	public Integer getId() {
 		return id;
@@ -144,5 +144,4 @@ public class SomeOtherEntity {
 	public void setGrade(Grade grade) {
 		this.grade = grade;
 	}
-
 }

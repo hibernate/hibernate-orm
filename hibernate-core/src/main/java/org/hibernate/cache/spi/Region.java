@@ -97,5 +97,7 @@ public interface Region {
 	public Map toMap();
 
 	public long nextTimestamp();
+
+	//we really should change this return type to `long` instead of `int`
 	public int getTimeout();
 }

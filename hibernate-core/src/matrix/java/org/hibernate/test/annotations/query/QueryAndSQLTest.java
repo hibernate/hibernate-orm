@@ -38,14 +38,12 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.dialect.SybaseASE15Dialect;
+import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.stat.Statistics;
 import org.hibernate.test.annotations.A320;
 import org.hibernate.test.annotations.A320b;
 import org.hibernate.test.annotations.Plane;
 import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -62,17 +60,25 @@ import static org.junit.Assert.fail;
  */
 public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 
-    @Test
+	@Test
 	public void testNativeQueryWithFormulaAttribute() {
-        String sql,sql2;
-        if ( getDialect() instanceof SQLServerDialect || getDialect() instanceof SybaseASE15Dialect ) {
-            sql = "select t.table_name as {t.tableName}, getdate() as {t.daysOld} from ALL_TABLES t  where t.table_name = 'AUDIT_ACTIONS' ";
-            sql2 = "select table_name as t_name, getdate() as t_time from ALL_TABLES   where table_name = 'AUDIT_ACTIONS' ";
-        }
-        else {
-            sql = "select t.table_name as {t.tableName}, sysdate() as {t.daysOld} from ALL_TABLES t  where t.table_name = 'AUDIT_ACTIONS' ";
-            sql2 = "select table_name as t_name, sysdate() as t_time from ALL_TABLES   where table_name = 'AUDIT_ACTIONS' ";
-        }
+		SQLFunction dateFunction = getDialect().getFunctions().get( "current_date" );
+		String dateFunctionRendered = dateFunction.render(
+				null,
+				java.util.Collections.EMPTY_LIST,
+				sessionFactory()
+		);
+
+		String sql = String.format(
+				"select t.table_name as {t.tableName}, %s as {t.daysOld} from ALL_TABLES t  where t.table_name = 'AUDIT_ACTIONS' ",
+				dateFunctionRendered
+		);
+		String sql2 = String.format(
+				"select table_name as t_name, %s as t_time from ALL_TABLES   where table_name = 'AUDIT_ACTIONS' ",
+				dateFunctionRendered
+		);
+
+
 		Session s = openSession();
 		s.beginTransaction();
 		s.createSQLQuery( sql ).addEntity( "t", AllTables.class ).list();
@@ -84,8 +90,8 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 		s.close();
 	}
 
-    @Test
-	@FailureExpected( jiraKey = "HHH-2225")
+	@Test
+	@FailureExpected(jiraKey = "HHH-2225")
 	public void testNativeQueryWithFormulaAttributeWithoutAlias() {
 		String sql = "select table_name , sysdate() from all_tables  where table_name = 'AUDIT_ACTIONS' ";
 		Session s = openSession();
@@ -94,6 +100,7 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 	}
+
 	@Test
 	public void testPackageQueries() throws Exception {
 		Session s = openSession();
@@ -173,12 +180,12 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 		q.setParameter( 0, 9990 );
 		List result = q.list();
 		assertEquals( 1, result.size() );
-		Night n2 = ( Night ) result.get( 0 );
+		Night n2 = (Night) result.get( 0 );
 		assertEquals( n2.getDuration(), n.getDuration() );
 		List areas = s.getNamedQuery( "getAreaByNative" ).list();
 		assertTrue( 1 == areas.size() );
-		assertEquals( area.getName(), ( ( Area ) areas.get( 0 ) ).getName() );
-		s.delete( areas.get(0) );
+		assertEquals( area.getName(), ( (Area) areas.get( 0 ) ).getName() );
+		s.delete( areas.get( 0 ) );
 		s.delete( n2 );
 		tx.commit();
 		s.close();
@@ -188,10 +195,10 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 	/**
 	 * We are testing 2 things here:
 	 * 1. The query 'night.olderThan' is defined in a MappedSuperClass - Darkness.
-	 *    We are verifying that queries defined in a MappedSuperClass are processed.
+	 * We are verifying that queries defined in a MappedSuperClass are processed.
 	 * 2. There are 2 Entity classes that extend from Darkness - Night and Twilight.
-	 *    We are verifying that this does not cause any issues.eg. Double processing of the
-	 *    MappedSuperClass
+	 * We are verifying that this does not cause any issues.eg. Double processing of the
+	 * MappedSuperClass
 	 */
 	@Test
 	public void testImportQueryFromMappedSuperclass() {
@@ -199,8 +206,8 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 		try {
 			s.getNamedQuery( "night.olderThan" );
 		}
-		catch(MappingException ex) {
-			fail("Query imported from MappedSuperclass");
+		catch ( MappingException ex ) {
+			fail( "Query imported from MappedSuperclass" );
 		}
 		s.close();
 	}
@@ -236,7 +243,7 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 		assertEquals( 1, stats.getQueryCachePutCount() );
 		q.list();
 		assertEquals( 1, stats.getQueryCacheHitCount() );
-		Night n2 = ( Night ) ( ( Object[] ) result.get( 0 ) )[0];
+		Night n2 = (Night) ( (Object[]) result.get( 0 ) )[0];
 		assertEquals( n2.getDuration(), n.getDuration() );
 		s.delete( n2.getArea() );
 		s.delete( n2 );
@@ -262,7 +269,7 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 		Query q = s.getNamedQuery( "implicitSample" );
 		List result = q.list();
 		assertEquals( 1, result.size() );
-		assertEquals( ship.getModel(), ( ( SpaceShip ) result.get( 0 ) ).getModel() );
+		assertEquals( ship.getModel(), ( (SpaceShip) result.get( 0 ) ).getModel() );
 		s.delete( result.get( 0 ) );
 		tx.commit();
 		s.close();
@@ -293,8 +300,8 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 		Query q = s.getNamedQuery( "compositekey" );
 		List result = q.list();
 		assertEquals( 1, result.size() );
-		Object[] row = ( Object[] ) result.get( 0 );
-		SpaceShip spaceShip = ( SpaceShip ) row[0];
+		Object[] row = (Object[]) result.get( 0 );
+		SpaceShip spaceShip = (SpaceShip) row[0];
 		assertEquals( ship.getModel(), spaceShip.getModel() );
 		assertNotNull( spaceShip.getDimensions() );
 		assertEquals( ship.getDimensions().getWidth(), spaceShip.getDimensions().getWidth() );
@@ -340,7 +347,8 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(value = {PostgreSQLDialect.class}, comment = "postgresql jdbc driver does not implement the setQueryTimeout method")
+	@SkipForDialect(value = { PostgreSQLDialect.class },
+			comment = "postgresql jdbc driver does not implement the setQueryTimeout method")
 	public void testCache() throws Exception {
 		Session s;
 		Transaction tx;
@@ -356,9 +364,9 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		tx = s.beginTransaction();
 		Query query = s.getNamedQuery( "plane.byId" ).setParameter( "id", plane.getId() );
-		plane = ( Plane ) query.uniqueResult();
+		plane = (Plane) query.uniqueResult();
 		assertEquals( 1, sessionFactory().getStatistics().getQueryCachePutCount() );
-		plane = ( Plane ) s.getNamedQuery( "plane.byId" ).setParameter( "id", plane.getId() ).uniqueResult();
+		plane = (Plane) s.getNamedQuery( "plane.byId" ).setParameter( "id", plane.getId() ).uniqueResult();
 		assertEquals( 1, sessionFactory().getStatistics().getQueryCacheHitCount() );
 		tx.commit();
 		s.close();
@@ -391,7 +399,7 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 		s.clear();
 		s.getSessionFactory().evict( Chaos.class );
 
-		Chaos resultChaos = ( Chaos ) s.load( Chaos.class, chaos.getId() );
+		Chaos resultChaos = (Chaos) s.load( Chaos.class, chaos.getId() );
 		assertEquals( upperName, resultChaos.getName() );
 		assertEquals( "nickname", resultChaos.getNickname() );
 
@@ -423,14 +431,14 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 		s.clear();
 		s.getSessionFactory().evict( Chaos.class );
 
-		Chaos resultChaos = ( Chaos ) s.load( Chaos.class, chaos.getId() );
+		Chaos resultChaos = (Chaos) s.load( Chaos.class, chaos.getId() );
 		assertEquals( 2, resultChaos.getParticles().size() );
 		resultChaos.getParticles().remove( resultChaos.getParticles().iterator().next() );
 		resultChaos.getParticles().remove( resultChaos.getParticles().iterator().next() );
 		s.flush();
 
 		s.clear();
-		resultChaos = ( Chaos ) s.load( Chaos.class, chaos.getId() );
+		resultChaos = (Chaos) s.load( Chaos.class, chaos.getId() );
 		assertEquals( 0, resultChaos.getParticles().size() );
 
 		tx.rollback();

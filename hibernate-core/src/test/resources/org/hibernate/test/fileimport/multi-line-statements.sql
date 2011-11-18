@@ -14,7 +14,7 @@ DELETE
 /*
  * Data insertion...
  */
-INSERT INTO test_data VALUES (2, 'Multiline comment line 1
+INSERT INTO test_data VALUES (2, 'Multi-line comment line 1
 -- line 2''
 /* line 3 */');
 

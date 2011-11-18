@@ -1,4 +1,4 @@
-package org.hibernate.test.importfile;
+package org.hibernate.test.fileimport;
 
 
 /**

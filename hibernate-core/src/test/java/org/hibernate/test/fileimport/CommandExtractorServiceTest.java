@@ -21,52 +21,28 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.importfile;
-import java.util.List;
+package org.hibernate.test.fileimport;
 
-import org.junit.Test;
-
-import org.hibernate.Session;
-import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
+import org.hibernate.service.ServiceRegistryBuilder;
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.tool.hbm2ddl.ImportSqlCommandExtractor;
+import org.hibernate.tool.hbm2ddl.MultipleLinesSqlCommandExtractor;
 
 /**
- * @author Emmanuel Bernard
+ * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-public class SingleLineImportFileTest extends BaseCoreFunctionalTestCase {
+@TestForIssue( jiraKey = "HHH-2403" )
+public class CommandExtractorServiceTest extends MultiLineImportFileTest {
 	@Override
 	public void configure(Configuration cfg) {
-		cfg.setProperty( Environment.HBM2DDL_IMPORT_FILES, "/humans.sql,/dogs.sql" );
+		cfg.setProperty( Environment.HBM2DDL_IMPORT_FILES, "/org/hibernate/test/fileimport/multi-line-statements.sql" );
 	}
 
 	@Override
-	public String[] getMappings() {
-		return new String[] {
-				"importfile/Human.hbm.xml",
-				"importfile/Dog.hbm.xml"
-		};
-	}
-
-	@Test
-	public void testImportFile() throws Exception {
-		Session s = openSession(  );
-		final Transaction tx = s.beginTransaction();
-		final List<?> humans = s.createQuery( "from " + Human.class.getName() ).list();
-		assertEquals( "humans.sql not imported", 3, humans.size() );
-
-		final List<?> dogs = s.createQuery( "from " + Dog.class.getName() ).list();
-		assertEquals( "dogs.sql not imported", 3, dogs.size() );
-		for (Object entity : dogs) {
-			s.delete( entity );
-		}
-		for (Object entity : humans) {
-			s.delete( entity );
-		}
-		tx.commit();
-		s.close();
+	protected void prepareBasicRegistryBuilder(ServiceRegistryBuilder serviceRegistryBuilder) {
+		super.prepareBasicRegistryBuilder( serviceRegistryBuilder );
+		serviceRegistryBuilder.addService( ImportSqlCommandExtractor.class, new MultipleLinesSqlCommandExtractor() );
 	}
 }

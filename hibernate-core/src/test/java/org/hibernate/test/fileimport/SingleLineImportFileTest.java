@@ -21,56 +21,55 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.importfile;
+package org.hibernate.test.fileimport;
 
-import java.math.BigInteger;
+import java.util.List;
+
+import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.tool.hbm2ddl.MultipleLinesSqlCommandExtractor;
-
-import org.junit.Test;
-
-import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 
 /**
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Emmanuel Bernard
  */
-@TestForIssue( jiraKey = "HHH-2403" )
-public class MultiLineImportFileTest extends BaseCoreFunctionalTestCase {
+public class SingleLineImportFileTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public void configure(Configuration cfg) {
-		cfg.setProperty( Environment.HBM2DDL_IMPORT_FILES, "/multiline-stmt.sql" );
-		cfg.setProperty( Environment.HBM2DDL_IMPORT_FILES_SQL_EXTRACTOR, MultipleLinesSqlCommandExtractor.class.getName() );
+		cfg.setProperty(
+				Environment.HBM2DDL_IMPORT_FILES,
+				"/org/hibernate/test/fileimport/humans.sql,/org/hibernate/test/fileimport/dogs.sql"
+		);
 	}
 
 	@Override
-    public String[] getMappings() {
-		return NO_MAPPINGS;
+	public String[] getMappings() {
+		return new String[] {
+				"fileimport/Human.hbm.xml",
+				"fileimport/Dog.hbm.xml"
+		};
 	}
 
 	@Test
 	public void testImportFile() throws Exception {
 		Session s = openSession();
 		final Transaction tx = s.beginTransaction();
+		final List<?> humans = s.createQuery( "from " + Human.class.getName() ).list();
+		assertEquals( "humans.sql not imported", 3, humans.size() );
 
-		BigInteger count = (BigInteger) s.createSQLQuery( "SELECT COUNT(*) FROM test_data" ).uniqueResult();
-		assertEquals( "incorrect row number", 3L, count.longValue() );
-
-		final String multilineText = (String) s.createSQLQuery( "SELECT text FROM test_data WHERE id = 2" ).uniqueResult();
-		//  "Multiline comment line 1\r\n-- line 2'\r\n/* line 3 */"
-		final String expected = String.format( "Multiline comment line 1%n-- line 2'%n/* line 3 */" );
-		assertEquals( "multiline string inserted incorrectly", expected, multilineText );
-
-		String empty = (String) s.createSQLQuery( "SELECT text FROM test_data WHERE id = 3" ).uniqueResult();
-		assertNull( "NULL value inserted incorrectly", empty );
-
+		final List<?> dogs = s.createQuery( "from " + Dog.class.getName() ).list();
+		assertEquals( "dogs.sql not imported", 3, dogs.size() );
+		for ( Object entity : dogs ) {
+			s.delete( entity );
+		}
+		for ( Object entity : humans ) {
+			s.delete( entity );
+		}
 		tx.commit();
 		s.close();
 	}

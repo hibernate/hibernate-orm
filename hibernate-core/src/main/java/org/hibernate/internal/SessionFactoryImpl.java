@@ -194,7 +194,7 @@ public final class SessionFactoryImpl
 	private transient SchemaExport schemaExport;
 	private final transient QueryCache queryCache;
 	private final transient UpdateTimestampsCache updateTimestampsCache;
-	private final transient Map<String,QueryCache> queryCaches;
+	private final transient ConcurrentMap<String,QueryCache> queryCaches;
 	private final transient ConcurrentMap<String,Region> allCacheRegions = new ConcurrentHashMap<String, Region>();
 	private final transient CurrentSessionContext currentSessionContext;
 	private final transient SQLFunctionRegistry sqlFunctionRegistry;
@@ -463,7 +463,7 @@ public final class SessionFactoryImpl
 			updateTimestampsCache = new UpdateTimestampsCache(settings, properties, this);
 			queryCache = settings.getQueryCacheFactory()
 			        .getQueryCache(null, updateTimestampsCache, settings, properties);
-			queryCaches = new HashMap<String,QueryCache>();
+			queryCaches = new ConcurrentHashMap<String, QueryCache>();
 			allCacheRegions.put( updateTimestampsCache.getRegion().getName(), updateTimestampsCache.getRegion() );
 			allCacheRegions.put( queryCache.getRegion().getName(), queryCache.getRegion() );
 		}
@@ -793,7 +793,7 @@ public final class SessionFactoryImpl
 			updateTimestampsCache = new UpdateTimestampsCache( settings, properties, this );
 			queryCache = settings.getQueryCacheFactory()
 			        .getQueryCache( null, updateTimestampsCache, settings, properties );
-			queryCaches = new HashMap<String,QueryCache>();
+			queryCaches = new ConcurrentHashMap<String, QueryCache>();
 			allCacheRegions.put( updateTimestampsCache.getRegion().getName(), updateTimestampsCache.getRegion() );
 			allCacheRegions.put( queryCache.getRegion().getName(), queryCache.getRegion() );
 		}
@@ -1416,7 +1416,7 @@ public final class SessionFactoryImpl
 		}
 
 		public boolean containsQuery(String regionName) {
-			return queryCaches.get( regionName ) != null;
+			return queryCaches.containsKey( regionName );
 		}
 
 		public void evictDefaultQueryRegion() {
@@ -1502,11 +1502,18 @@ public final class SessionFactoryImpl
 
 		QueryCache currentQueryCache = queryCaches.get( regionName );
 		if ( currentQueryCache == null ) {
-			currentQueryCache = settings.getQueryCacheFactory().getQueryCache( regionName, updateTimestampsCache, settings, properties );
-			queryCaches.put( regionName, currentQueryCache );
-			allCacheRegions.put( currentQueryCache.getRegion().getName(), currentQueryCache.getRegion() );
+			synchronized ( allCacheRegions ) {
+				currentQueryCache = queryCaches.get( regionName );
+				if ( currentQueryCache == null ) {
+					currentQueryCache = settings.getQueryCacheFactory()
+							.getQueryCache( regionName, updateTimestampsCache, settings, properties );
+					queryCaches.put( regionName, currentQueryCache );
+					allCacheRegions.put( currentQueryCache.getRegion().getName(), currentQueryCache.getRegion() );
+				} else {
+					return currentQueryCache;
+				}
+			}
 		}
-
 		return currentQueryCache;
 	}
 

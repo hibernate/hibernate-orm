@@ -416,20 +416,8 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 
 		cleanupSession();
 
-		cleanupCache();
-
 		assertAllDataRemoved();
 	}
-
-	protected void cleanupCache() {
-		if ( sessionFactory != null ) {
-			sessionFactory.getCache().evictCollectionRegions();
-			sessionFactory.getCache().evictDefaultQueryRegion();
-			sessionFactory.getCache().evictEntityRegions();
-			sessionFactory.getCache().evictQueryRegions();
-		}
-	}
-
 
 	private void cleanupSession() {
 		if ( session != null && ! ( (SessionImplementor) session ).isClosed() ) {

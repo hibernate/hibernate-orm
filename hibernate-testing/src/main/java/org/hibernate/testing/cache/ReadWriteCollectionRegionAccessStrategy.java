@@ -60,9 +60,4 @@ class ReadWriteCollectionRegionAccessStrategy extends AbstractReadWriteAccessStr
 	public CollectionRegion getRegion() {
 		return region;
 	}
-
-	@Override
-	public void remove(Object key) throws CacheException {
-
-	}
 }

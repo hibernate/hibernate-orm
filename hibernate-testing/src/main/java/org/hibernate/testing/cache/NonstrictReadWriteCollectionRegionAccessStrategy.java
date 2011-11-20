@@ -33,10 +33,6 @@ import org.hibernate.internal.CoreMessageLogger;
  * @author Strong Liu
  */
 class NonstrictReadWriteCollectionRegionAccessStrategy extends BaseCollectionRegionAccessStrategy {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class, NonstrictReadWriteCollectionRegionAccessStrategy.class.getName()
-	);
-
 	NonstrictReadWriteCollectionRegionAccessStrategy(CollectionRegionImpl region) {
 		super( region );
 	}
@@ -45,4 +41,8 @@ class NonstrictReadWriteCollectionRegionAccessStrategy extends BaseCollectionReg
 		evict( key );
 	}
 
+	@Override
+	public void remove(Object key) throws CacheException {
+		evict( key );
+	}
 }

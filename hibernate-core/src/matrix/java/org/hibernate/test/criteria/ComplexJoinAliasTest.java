@@ -25,15 +25,6 @@
 package org.hibernate.test.criteria;
 
 import java.util.Arrays;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.Id;
-import javax.persistence.IdClass;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.MappedSuperclass;
-import javax.persistence.Table;
 
 import org.junit.Test;
 
@@ -104,45 +95,6 @@ import static org.junit.Assert.assertEquals;
  */
 
 public class ComplexJoinAliasTest extends BaseCoreFunctionalTestCase {
-	@MappedSuperclass
-	private static abstract class VersionedRecord implements java.io.Serializable {
-		Long recordVersion;
-		Boolean isDeleted;
-	}
-
-	@Entity
-	@IdClass(ListActionRole.class)
-	public static class ListActionRole extends VersionedRecord {
-		@Id
-		@Enumerated(EnumType.STRING)
-		Code roleCode;
-
-		@ManyToOne(targetEntity = Role.class)
-        @JoinColumn(nullable = false)
-		Role role;
-
-		@Override
-		public String toString() {
-			return "ListActionRole.Id(roleCode=" + roleCode + ")";
-		}
-
-		@Override
-		public int hashCode() {
-			return toString().hashCode();
-		}
-	}
-
-	@Entity
-	@Table(name = "roles")
-	public static class Role extends VersionedRecord {
-		@Id
-		@Enumerated(EnumType.STRING)
-		Code code;
-	}
-
-	public static enum Code {
-		ADM, CEN, RPA, RPP, PRJ, HUB, RQS, OAD, ORP, ORQ
-	}
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

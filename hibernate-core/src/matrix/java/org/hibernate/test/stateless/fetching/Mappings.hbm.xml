@@ -47,7 +47,7 @@
 		</id>
         <property name="description" type="string"/>
         <many-to-one name="user" column="`user`"/>
-        <many-to-one name="resource"/>
+        <many-to-one name="resource" column="`resource`"/>
         <property name="dueDate" type="timestamp"/>
         <property name="startDate" type="timestamp"/>
         <property name="completionDate" type="timestamp"/>

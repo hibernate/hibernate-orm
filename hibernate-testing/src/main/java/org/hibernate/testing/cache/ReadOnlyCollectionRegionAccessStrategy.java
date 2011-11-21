@@ -52,8 +52,6 @@ class ReadOnlyCollectionRegionAccessStrategy extends BaseCollectionRegionAccessS
 		throw new UnsupportedOperationException( "Can't write to a readonly object" );
 	}
 
-	@Override
-	public void remove(Object key) throws CacheException {
-	}
+
 
 }

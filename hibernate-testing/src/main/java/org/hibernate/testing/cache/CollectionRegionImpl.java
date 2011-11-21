@@ -63,8 +63,8 @@ class CollectionRegionImpl extends BaseTransactionalDataRegion implements Collec
 			case NONSTRICT_READ_WRITE:
 				return new NonstrictReadWriteCollectionRegionAccessStrategy( this );
 			case TRANSACTIONAL:
-
-				throw new UnsupportedOperationException( "doesn't support this access strategy" );
+				return new TransactionalCollectionRegionAccessStrategy( this );
+//				throw new UnsupportedOperationException( "doesn't support this access strategy" );
 			default:
 				throw new IllegalArgumentException( "unrecognized access strategy type [" + accessType + "]" );
 		}

@@ -67,7 +67,7 @@ class EntityRegionImpl extends BaseTransactionalDataRegion implements EntityRegi
 				return new NonstrictReadWriteEntityRegionAccessStrategy( this );
 			case TRANSACTIONAL:
 //				throw new UnsupportedOperationException( "doesn't support this access strategy" );
-				return new NonstrictReadWriteEntityRegionAccessStrategy( this );
+				return new TransactionalEntityRegionAccessStrategy( this );
 
 			default:
 				throw new IllegalArgumentException( "unrecognized access strategy type [" + accessType + "]" );

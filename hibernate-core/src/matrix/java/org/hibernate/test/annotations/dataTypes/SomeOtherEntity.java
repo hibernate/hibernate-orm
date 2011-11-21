@@ -29,12 +29,14 @@ import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.Id;
+import javax.persistence.Table;
 
 /**
  * @author Steve Ebersole
  */
 @Entity
 @Access(AccessType.FIELD)
+@Table(name = "SOMEOTHERENTITY")
 public class SomeOtherEntity {
 	@Id
 	protected int id;

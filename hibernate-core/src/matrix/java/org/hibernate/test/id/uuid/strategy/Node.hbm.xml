@@ -30,7 +30,7 @@
 
     <class name="Node">
     
-    	<id name="id">
+    	<id name="id" length="16">
     		<generator class="uuid2">
                 <!-- the "standard random" strategy gets tested in the other id.uuid tests -->
                 <param name="uuid_gen_strategy_class">org.hibernate.id.uuid.CustomVersionOneStrategy</param>

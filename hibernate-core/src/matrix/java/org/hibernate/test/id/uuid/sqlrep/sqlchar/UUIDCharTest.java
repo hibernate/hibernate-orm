@@ -41,4 +41,9 @@ public class UUIDCharTest extends UUIDBinaryTest {
 				}
 		);
 	}
+
+	@Override
+	public String[] getMappings() {
+		return new String[] { "id/uuid/sqlrep/Node2.hbm.xml" };
+	}
 }

@@ -29,8 +29,8 @@
 <hibernate-mapping package="org.hibernate.test.id.uuid.sqlrep">
 
     <class name="Node">
-    
-    	<id name="id" length="16">
+
+    	<id name="id" length="36">
     		<generator class="uuid2"/>
     	</id>
         <property name="name"/>

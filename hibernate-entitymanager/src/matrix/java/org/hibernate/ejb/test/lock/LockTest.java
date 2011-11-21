@@ -41,6 +41,7 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.Oracle10gDialect;
+import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.testing.SkipForDialect;
@@ -270,7 +271,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-    @SkipForDialect( value = HSQLDialect.class)
+    @SkipForDialect( value = {HSQLDialect.class,SybaseASE15Dialect.class}, jiraKey = "HHH-6820")
 	public void testContendedPessimisticLock() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		final EntityManager em2 = createIsolatedEntityManager();

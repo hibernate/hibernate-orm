@@ -281,8 +281,10 @@ public class ActionQueue {
 		beforeTransactionProcesses.register( executable.getBeforeTransactionCompletionProcess() );
 		if ( session.getFactory().getSettings().isQueryCacheEnabled() ) {
 			final String[] spaces = (String[]) executable.getPropertySpaces();
-			afterTransactionProcesses.addSpacesToInvalidate( spaces );
-			session.getFactory().getUpdateTimestampsCache().preinvalidate( spaces );
+			if ( spaces != null && spaces.length > 0 ) { //HHH-6286
+				afterTransactionProcesses.addSpacesToInvalidate( spaces );
+				session.getFactory().getUpdateTimestampsCache().preinvalidate( spaces );
+			}
 		}
 		afterTransactionProcesses.register( executable.getAfterTransactionCompletionProcess() );
 	}
@@ -577,11 +579,8 @@ public class ActionQueue {
 		}
 
 		public void addSpacesToInvalidate(String[] spaces) {
-			if ( spaces == null ) {
-				return;
-			}
-			for ( int i = 0, max = spaces.length; i < max; i++ ) {
-				addSpaceToInvalidate( spaces[i] );
+			for ( String space : spaces ) {
+				addSpaceToInvalidate( space );
 			}
 		}
 
@@ -597,10 +596,8 @@ public class ActionQueue {
 		}
 
 		public void afterTransactionCompletion(boolean success) {
-			final int size = processes.size();
-			for ( int i = 0; i < size; i++ ) {
+			for ( AfterTransactionCompletionProcess process : processes ) {
 				try {
-					AfterTransactionCompletionProcess process = processes.get( i );
 					process.doAfterTransactionCompletion( success, session );
 				}
 				catch ( CacheException ce ) {

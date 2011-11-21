@@ -193,6 +193,7 @@ subprojects { subProject ->
 
 		compileJava.dependsOn generateMainLoggingClasses
         compileJava.options.define(compilerArgs: ["-proc:none", "-encoding", "UTF-8"])
+	compileTestJava.options.define(compilerArgs: ["-proc:none", "-encoding", "UTF-8"])
 
         manifest.mainAttributes(
                 provider: 'gradle',

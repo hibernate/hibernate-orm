@@ -30,6 +30,7 @@ dependencies {
     testRuntime( 'jaxen:jaxen:1.1' )
     testRuntime( libraries.javassist )
 }
+compileMatrixJava.options.define(compilerArgs: ["-proc:none", "-encoding", "UTF-8"])
 
 manifest.mainAttributes(
         'Main-Class': 'org.hibernate.Version'

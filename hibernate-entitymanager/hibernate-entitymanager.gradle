@@ -26,6 +26,7 @@ sourceSets.test {
     generatedJpaMetamodelSrcDir = file( "${buildDir}/generated-src/jpamodelgen/${name}" )
     java.srcDir generatedJpaMetamodelSrcDir
 }
+compileMatrixJava.options.define(compilerArgs: ["-proc:none", "-encoding", "UTF-8"])
 sourceSets {
     matrix {
         java {

@@ -33,7 +33,10 @@ import java.util.Date;
 import org.junit.Test;
 
 import org.hibernate.Session;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.jdbc.Work;
+import org.hibernate.testing.DialectCheck;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -45,7 +48,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Steve Ebersole
  */
-@RequiresDialectFeature(DialectChecks.SupportsExpectedLobUsagePattern.class)
+@RequiresDialectFeature(value = {DialectChecks.SupportsExpectedLobUsagePattern.class, BasicOperationsTest.OracleDialectChecker.class}, jiraKey = "HHH-6834")
 public class BasicOperationsTest extends BaseCoreFunctionalTestCase {
 
 	private static final String SOME_ENTITY_TABLE_NAME = "SOMEENTITY";
@@ -54,6 +57,12 @@ public class BasicOperationsTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] { SomeEntity.class, SomeOtherEntity.class };
+	}
+	public static class OracleDialectChecker implements DialectCheck{
+		@Override
+		public boolean isMatch(Dialect dialect) {
+			return ! (dialect instanceof Oracle8iDialect);
+		}
 	}
 
 	@Test

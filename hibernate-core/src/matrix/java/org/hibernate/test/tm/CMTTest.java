@@ -69,6 +69,7 @@ public class CMTTest extends BaseCoreFunctionalTestCase {
 		cfg.setProperty( Environment.RELEASE_CONNECTIONS, ConnectionReleaseMode.AFTER_STATEMENT.toString() );
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
 		cfg.setProperty( Environment.USE_QUERY_CACHE, "true" );
+		cfg.setProperty( "hibernate.cache.region_prefix", "" );
 		cfg.setProperty( Environment.DEFAULT_ENTITY_MODE, EntityMode.MAP.toString() );
 	}
 
@@ -273,44 +274,62 @@ public class CMTTest extends BaseCoreFunctionalTestCase {
 		}
 
 		sessionFactory().getStatistics().clear();
+		cleanupCache();  // we need a clean 2L cache here.
 
-		sessionFactory().getCache().evictEntityRegion( "Item" );
-
+		// open a TX and suspend it
 		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		Session s4 = openSession();
 		Transaction tx4 = TestingJtaBootstrap.INSTANCE.getTransactionManager().suspend();
 
+		// open a new TX and execute a query, this would fill the query cache.
 		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		Session s1 = openSession();
 		List r1 = s1.createCriteria( "Item" ).addOrder( Order.asc( "description" ) )
 				.setCacheable( true ).list();
 		assertEquals( r1.size(), 2 );
 		foo = ( Map ) r1.get( 0 );
+		// update data and make query cache stale, but TX is suspended
 		foo.put( "description", "a big red foo" );
 		s1.flush();
 		Transaction tx1 = TestingJtaBootstrap.INSTANCE.getTransactionManager().suspend();
 
+		// open a new TX and run query again
+		// this TX is committed after query
 		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		Session s2 = openSession();
 		List r2 = s2.createCriteria( "Item" ).addOrder( Order.asc( "description" ) )
 				.setCacheable( true ).list();
 		assertEquals( r2.size(), 2 );
+
 		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
-		assertEquals( sessionFactory().getStatistics().getSecondLevelCacheHitCount(), 0 );
-		assertEquals( sessionFactory().getStatistics().getSecondLevelCacheMissCount(), 0 );
-		assertEquals( sessionFactory().getStatistics().getEntityLoadCount(), 4 );
-		assertEquals( sessionFactory().getStatistics().getEntityFetchCount(), 0 );
-		assertEquals( sessionFactory().getStatistics().getQueryExecutionCount(), 2 );
-		assertEquals( sessionFactory().getStatistics().getQueryCachePutCount(), 2 );
-		assertEquals( sessionFactory().getStatistics().getQueryCacheHitCount(), 0 );
-		assertEquals( sessionFactory().getStatistics().getQueryCacheMissCount(), 2 );
-		assertEquals( sessionFactory().getStatistics().getUpdateTimestampsCacheHitCount(), 4 );
-		assertEquals( sessionFactory().getStatistics().getUpdateTimestampsCachePutCount(), 2 );
+
+		assertEquals( 0, sessionFactory().getStatistics().getSecondLevelCacheHitCount() );
+		assertEquals( 0, sessionFactory().getStatistics().getSecondLevelCacheMissCount() );
+		assertEquals( 4, sessionFactory().getStatistics().getEntityLoadCount() );
+		assertEquals( 0, sessionFactory().getStatistics().getEntityFetchCount() );
+		assertEquals( 2, sessionFactory().getStatistics().getQueryExecutionCount() );
+		assertEquals( 2, sessionFactory().getStatistics().getQueryCachePutCount() );
+		assertEquals( 0, sessionFactory().getStatistics().getQueryCacheHitCount() );
+		assertEquals( 2, sessionFactory().getStatistics().getQueryCacheMissCount() );
+
+		// updateTimestampsCache put happens at two places
+		// 1. {@link org.hibernate.engine.spi.ActionQueue#registerCleanupActions} calls preinvalidate
+		// 2. {@link org.hibernate.engine.spi.ActionQueue.AfterTransactionCompletionProcessQueue#afterTransactionCompletion} calls invalidate
+		// but since the TX which the update action happened is not committed yet, so there should be only 1 updateTimestamps put.
+		assertEquals( 1, sessionFactory().getStatistics().getUpdateTimestampsCachePutCount() );
+
+		// updateTimestampsCache hit only happens when the query cache data's timestamp is newer
+		// than the timestamp of when update happens
+		// since there is only 1 update action
+		assertEquals( 1, sessionFactory().getStatistics().getUpdateTimestampsCacheHitCount() );
 
 		TestingJtaBootstrap.INSTANCE.getTransactionManager().resume( tx1 );
 		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
-		assertEquals( sessionFactory().getStatistics().getUpdateTimestampsCachePutCount(), 3 );
-		assertEquals( sessionFactory().getStatistics().getUpdateTimestampsCacheHitCount(), 5 );
+
+		// update action's TX committed, so, invalidate is called, put new timestamp into UpdateTimestampsCache
+		assertEquals( 2, sessionFactory().getStatistics().getUpdateTimestampsCachePutCount() );
+		// but no more query cache lookup here, so it should still 1
+		assertEquals( 1, sessionFactory().getStatistics().getUpdateTimestampsCacheHitCount() );
 
 		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		Session s3 = openSession();
@@ -318,15 +337,16 @@ public class CMTTest extends BaseCoreFunctionalTestCase {
 				.setCacheable( true ).list();
 		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
-		assertEquals( sessionFactory().getStatistics().getSecondLevelCacheHitCount(), 0 );
-		assertEquals( sessionFactory().getStatistics().getSecondLevelCacheMissCount(), 0 );
-		assertEquals( sessionFactory().getStatistics().getEntityLoadCount(), 6 );
-		assertEquals( sessionFactory().getStatistics().getEntityFetchCount(), 0 );
-		assertEquals( sessionFactory().getStatistics().getQueryExecutionCount(), 3 );
-		assertEquals( sessionFactory().getStatistics().getQueryCachePutCount(), 3 );
-		assertEquals( sessionFactory().getStatistics().getQueryCacheHitCount(), 0 );
-		assertEquals( sessionFactory().getStatistics().getQueryCacheMissCount(), 3 );
-		assertEquals( sessionFactory().getStatistics().getUpdateTimestampsCacheHitCount(), 6 );
+		assertEquals( 0, sessionFactory().getStatistics().getSecondLevelCacheHitCount() );
+		assertEquals( 0, sessionFactory().getStatistics().getSecondLevelCacheMissCount() );
+		assertEquals( 6, sessionFactory().getStatistics().getEntityLoadCount() );
+		assertEquals( 0, sessionFactory().getStatistics().getEntityFetchCount() );
+		assertEquals( 3, sessionFactory().getStatistics().getQueryExecutionCount() );
+		assertEquals( 3, sessionFactory().getStatistics().getQueryCachePutCount() );
+		assertEquals( 0, sessionFactory().getStatistics().getQueryCacheHitCount() );
+		assertEquals( 3, sessionFactory().getStatistics().getQueryCacheMissCount() );
+		// a new query cache hit and one more update timestamps cache hit, so should be 2
+		assertEquals( 2, sessionFactory().getStatistics().getUpdateTimestampsCacheHitCount() );
 
 		TestingJtaBootstrap.INSTANCE.getTransactionManager().resume( tx4 );
 		List r4 = s4.createCriteria( "Item" ).addOrder( Order.asc( "description" ) )
@@ -334,15 +354,15 @@ public class CMTTest extends BaseCoreFunctionalTestCase {
 		assertEquals( r4.size(), 2 );
 		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
-		assertEquals( sessionFactory().getStatistics().getSecondLevelCacheHitCount(), 2 );
-		assertEquals( sessionFactory().getStatistics().getSecondLevelCacheMissCount(), 0 );
-		assertEquals( sessionFactory().getStatistics().getEntityLoadCount(), 6 );
-		assertEquals( sessionFactory().getStatistics().getEntityFetchCount(), 0 );
-		assertEquals( sessionFactory().getStatistics().getQueryExecutionCount(), 3 );
-		assertEquals( sessionFactory().getStatistics().getQueryCachePutCount(), 3 );
-		assertEquals( sessionFactory().getStatistics().getQueryCacheHitCount(), 1 );
-		assertEquals( sessionFactory().getStatistics().getQueryCacheMissCount(), 3 );
-		assertEquals( sessionFactory().getStatistics().getUpdateTimestampsCacheHitCount(), 7 );
+		assertEquals( 2, sessionFactory().getStatistics().getSecondLevelCacheHitCount() );
+		assertEquals( 0, sessionFactory().getStatistics().getSecondLevelCacheMissCount() );
+		assertEquals( 6, sessionFactory().getStatistics().getEntityLoadCount() );
+		assertEquals( 0, sessionFactory().getStatistics().getEntityFetchCount() );
+		assertEquals( 3, sessionFactory().getStatistics().getQueryExecutionCount() );
+		assertEquals( 3, sessionFactory().getStatistics().getQueryCachePutCount() );
+		assertEquals( 1, sessionFactory().getStatistics().getQueryCacheHitCount() );
+		assertEquals( 3, sessionFactory().getStatistics().getQueryCacheMissCount() );
+		assertEquals( 3, sessionFactory().getStatistics().getUpdateTimestampsCacheHitCount() );
 
 		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = openSession();

@@ -2446,16 +2446,19 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	public void testCachedJoinedAndJoinFetchedManyToOne() throws Exception {
 		Animal a = new Animal();
 		a.setDescription( "an animal" );
+
 		Animal mother = new Animal();
 		mother.setDescription( "a mother" );
 		mother.addOffspring( a );
 		a.setMother( mother );
+
 		Animal offspring1 = new Animal();
 		offspring1.setDescription( "offspring1" );
-		Animal offspring2 = new Animal();
-		offspring1.setDescription( "offspring2" );
 		a.addOffspring( offspring1 );
 		offspring1.setMother( a );
+
+		Animal offspring2 = new Animal();
+		offspring2.setDescription( "offspring2" );
 		a.addOffspring( offspring2 );
 		offspring2.setMother( a );
 
@@ -2482,7 +2485,10 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		list = s.createQuery( "select a, m from Animal a left join a.mother m" ).setCacheable( true ).list();
 		assertEquals( 1, sessionFactory().getStatistics().getQueryCacheHitCount() );
 		assertEquals( 2, sessionFactory().getStatistics().getQueryCachePutCount() );
-		s.createQuery( "delete from Animal" ).executeUpdate();
+		list = s.createQuery( "from Animal" ).list();
+		for(Object obj : list){
+			s.delete( obj );
+		}
 		t.commit();
 		s.close();
 	}
@@ -2528,7 +2534,10 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		list = s.createQuery( "select a, o from Animal a left join a.offspring o" ).setCacheable( true ).list();
 		assertEquals( 1, sessionFactory().getStatistics().getQueryCacheHitCount() );
 		assertEquals( 2, sessionFactory().getStatistics().getQueryCachePutCount() );
-		s.createQuery( "delete from Animal" ).executeUpdate();
+		list = s.createQuery( "from Animal" ).list();
+		for ( Object obj : list ) {
+			s.delete( obj );
+		}
 		t.commit();
 		s.close();
 	}

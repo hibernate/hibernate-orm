@@ -139,7 +139,7 @@ public class CustomSQLTest extends LegacyTestCase {
 		Person p = new Person();
 		p.setName("Max");
 		p.setLastName("Andersen");
-		p.setNationalID("110974XYZ�");
+		p.setNationalID("110974XYZ");
 		p.setAddress("P. P. Street 8");
 
 		Session s = openSession();
@@ -166,11 +166,11 @@ public class CustomSQLTest extends LegacyTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		list = s.createQuery( "select p from Person as p where p.address = 'L�rkev�nget 1'" ).list();
+		list = s.createQuery( "select p from Person as p where p.address = 'Lrkevnget 1'" ).list();
 		assertTrue(list.size() == 0);
-		p.setAddress("L�rkev�nget 1");
+		p.setAddress("Lrkevnget 1");
 		s.update(p);
-		list = s.createQuery( "select p from Person as p where p.address = 'L�rkev�nget 1'" ).list();
+		list = s.createQuery( "select p from Person as p where p.address = 'Lrkevnget 1'" ).list();
 		assertTrue(list.size() == 1);
 		list = s.createQuery( "select p from Party as p where p.address = 'P. P. Street 8'" ).list();
 		assertTrue(list.size() == 0);

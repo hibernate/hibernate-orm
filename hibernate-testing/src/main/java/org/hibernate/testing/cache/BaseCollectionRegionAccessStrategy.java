@@ -24,7 +24,6 @@
 package org.hibernate.testing.cache;
 
 import org.hibernate.cache.spi.CollectionRegion;
-import org.hibernate.cache.spi.GeneralDataRegion;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 
 /**

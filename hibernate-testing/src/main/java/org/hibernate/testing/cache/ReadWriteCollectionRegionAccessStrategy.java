@@ -59,6 +59,4 @@ class ReadWriteCollectionRegionAccessStrategy extends AbstractReadWriteAccessStr
 	public CollectionRegion getRegion() {
 		return region;
 	}
-
-
 }

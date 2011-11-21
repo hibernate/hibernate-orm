@@ -217,7 +217,7 @@ public final class SessionFactoryImpl
 			SessionFactoryObserver observer) throws HibernateException {
 			LOG.debug( "Building session factory" );
 
-			sessionFactoryOptions = new SessionFactoryOptions() {
+		sessionFactoryOptions = new SessionFactoryOptions() {
 			private EntityNotFoundDelegate entityNotFoundDelegate;
 
 			@Override

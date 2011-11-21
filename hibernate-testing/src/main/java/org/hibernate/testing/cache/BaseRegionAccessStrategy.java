@@ -40,7 +40,9 @@ abstract class BaseRegionAccessStrategy implements RegionAccessStrategy {
 	);
 
 	protected abstract BaseGeneralDataRegion getInternalRegion();
+
 	protected abstract boolean isDefaultMinimalPutOverride();
+
 	@Override
 	public Object get(Object key, long txTimestamp) throws CacheException {
 		return getInternalRegion().get( key );
@@ -68,13 +70,32 @@ abstract class BaseRegionAccessStrategy implements RegionAccessStrategy {
 
 	}
 
+	/**
+	 * Region locks are not supported.
+	 *
+	 * @return <code>null</code>
+	 *
+	 * @see org.hibernate.cache.spi.access.EntityRegionAccessStrategy#lockRegion()
+	 * @see org.hibernate.cache.spi.access.CollectionRegionAccessStrategy#lockRegion()
+	 */
 	@Override
-	public SoftLock lockItem(Object key, Object version) throws CacheException {
+	public SoftLock lockRegion() throws CacheException {
 		return null;
 	}
 
+	/**
+	 * Region locks are not supported - perform a cache clear as a precaution.
+	 *
+	 * @see org.hibernate.cache.spi.access.EntityRegionAccessStrategy#unlockRegion(org.hibernate.cache.spi.access.SoftLock)
+	 * @see org.hibernate.cache.spi.access.CollectionRegionAccessStrategy#unlockRegion(org.hibernate.cache.spi.access.SoftLock)
+	 */
 	@Override
-	public SoftLock lockRegion() throws CacheException {
+	public void unlockRegion(SoftLock lock) throws CacheException {
+		evictAll();
+	}
+
+	@Override
+	public SoftLock lockItem(Object key, Object version) throws CacheException {
 		return null;
 	}
 
@@ -82,16 +103,23 @@ abstract class BaseRegionAccessStrategy implements RegionAccessStrategy {
 	public void unlockItem(Object key, SoftLock lock) throws CacheException {
 	}
 
-	@Override
-	public void unlockRegion(SoftLock lock) throws CacheException {
-		evictAll();
-	}
 
+	/**
+	 * A no-op since this is an asynchronous cache access strategy.
+	 *
+	 * @see org.hibernate.cache.spi.access.EntityRegionAccessStrategy#remove(java.lang.Object)
+	 * @see org.hibernate.cache.spi.access.CollectionRegionAccessStrategy#remove(java.lang.Object)
+	 */
 	@Override
 	public void remove(Object key) throws CacheException {
-		evict( key );
 	}
-
+		/**
+	 * Called to evict data from the entire region
+	 *
+	 * @throws CacheException Propogated from underlying {@link org.hibernate.cache.spi.Region}
+	 * @see org.hibernate.cache.spi.access.EntityRegionAccessStrategy#removeAll()
+	 * @see org.hibernate.cache.spi.access.CollectionRegionAccessStrategy#removeAll()
+	 */
 	@Override
 	public void removeAll() throws CacheException {
 		evictAll();

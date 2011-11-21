@@ -17,23 +17,23 @@ import javax.persistence.SqlResultSetMapping;
  * @author Gavin King
  */
 @Entity(name = "Item")
-	@SqlResultSetMapping(name = "getItem", entities =
-		@EntityResult(entityClass = org.hibernate.ejb.test.Item.class, fields = {
-			@FieldResult(name = "name", column = "itemname"),
-			@FieldResult(name = "descr", column = "itemdescription")
-			})
+@SqlResultSetMapping(name = "getItem", entities =
+	@EntityResult(entityClass = org.hibernate.ejb.test.Item.class, fields = {
+		@FieldResult(name = "name", column = "itemname"),
+		@FieldResult(name = "descr", column = "itemdescription")
+	})
 )
 @NamedNativeQueries({
-		@NamedNativeQuery(
-				name = "nativeItem1",
-				query = "select name as itemname, descr as itemdescription from Item",
-				resultSetMapping = "getItem"
-		),
-		@NamedNativeQuery(
-				name = "nativeItem2",
-				query = "select * from Item",
-				resultClass = Item.class
-		)
+	@NamedNativeQuery(
+		name = "nativeItem1",
+		query = "select name as itemname, descr as itemdescription from Item",
+		resultSetMapping = "getItem"
+	),
+	@NamedNativeQuery(
+		name = "nativeItem2",
+		query = "select * from Item",
+		resultClass = Item.class
+	)
 })
 //@Cache(region="Item", usage=NONSTRICT_READ_WRITE)
 public class Item implements Serializable {

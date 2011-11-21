@@ -40,11 +40,9 @@ class ReadOnlyEntityRegionAccessStrategy extends BaseEntityRegionAccessStrategy 
 	ReadOnlyEntityRegionAccessStrategy(EntityRegionImpl region) {
 		super( region );
 	}
-
-	@Override
-	public void remove(Object key) throws CacheException {
-	}
-
+	/**
+	 * This cache is asynchronous hence a no-op
+	 */
 	@Override
 	public boolean insert(Object key, Object value, Object version) throws CacheException {
 		return false; //wait until tx complete, see afterInsert().
@@ -56,7 +54,9 @@ class ReadOnlyEntityRegionAccessStrategy extends BaseEntityRegionAccessStrategy 
 		return true;
 	}
 
-
+	/**
+	 * This cache is asynchronous hence a no-op
+	 */
 	@Override
 	public void unlockItem(Object key, SoftLock lock) throws CacheException {
 		LOG.invalidEditOfReadOnlyItem( key );
@@ -68,6 +68,11 @@ class ReadOnlyEntityRegionAccessStrategy extends BaseEntityRegionAccessStrategy 
 		throw new UnsupportedOperationException( "Can't write to a readonly object" );
 	}
 
+	/**
+	 * Throws UnsupportedOperationException since this cache is read-only
+	 *
+	 * @throws UnsupportedOperationException always
+	 */
 	@Override
 	public boolean update(Object key, Object value, Object currentVersion, Object previousVersion)
 			throws CacheException {
@@ -75,6 +80,11 @@ class ReadOnlyEntityRegionAccessStrategy extends BaseEntityRegionAccessStrategy 
 		throw new UnsupportedOperationException( "Can't write to a readonly object" );
 	}
 
+	/**
+	 * Throws UnsupportedOperationException since this cache is read-only
+	 *
+	 * @throws UnsupportedOperationException always
+	 */
 	@Override
 	public boolean afterUpdate(Object key, Object value, Object currentVersion, Object previousVersion, SoftLock lock)
 			throws CacheException {

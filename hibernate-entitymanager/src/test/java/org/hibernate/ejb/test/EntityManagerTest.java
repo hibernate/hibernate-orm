@@ -88,7 +88,7 @@ public class EntityManagerTest extends BaseEntityManagerFunctionalTestCase {
 	@Override
 	public Map<String, String> getCachedCollections() {
 		Map<String, String> result = new HashMap<String, String>();
-		result.put( Item.class.getName() + ".distributors", "read-write, RegionName" );
+		result.put( Item.class.getName() + ".distributors", "read-write,"+Item.class.getName() + ".distributors" );
 		return result;
 	}
 

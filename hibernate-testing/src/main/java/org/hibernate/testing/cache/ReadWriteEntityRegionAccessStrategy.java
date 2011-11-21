@@ -53,10 +53,6 @@ class ReadWriteEntityRegionAccessStrategy extends AbstractReadWriteAccessStrateg
 	}
 
 	@Override
-	public void evict(Object key) throws CacheException {
-	}
-
-	@Override
 	public boolean afterInsert(Object key, Object value, Object version) throws CacheException {
 
 		try {

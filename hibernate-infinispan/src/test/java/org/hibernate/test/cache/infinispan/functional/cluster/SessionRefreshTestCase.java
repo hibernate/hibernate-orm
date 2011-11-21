@@ -92,8 +92,6 @@ public class SessionRefreshTestCase extends DualNodeTestCase {
 		SessionFactory localFactory = sessionFactory();
 
 		// Second session factory doesn't; just needs a transaction manager
-		// However, start at least the cache to avoid issues with replication and cache not being there
-		ClusterAwareRegionFactory.getCacheManager( DualNodeTestCase.REMOTE ).getCache( Account.class.getName() );
 		TransactionManager remoteTM = DualNodeJtaTransactionManagerImpl.getInstance( DualNodeTestCase.REMOTE );
 		SessionFactory remoteFactory = secondNodeEnvironment().getSessionFactory();
 

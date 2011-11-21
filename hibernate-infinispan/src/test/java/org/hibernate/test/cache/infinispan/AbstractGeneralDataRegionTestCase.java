@@ -83,8 +83,7 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
 				cfg,
 				getCacheTestSupport()
 		);
-		CacheAdapter localCache = getInfinispanCache( regionFactory );
-		boolean invalidation = localCache.isClusteredInvalidation();
+		boolean invalidation = false;
 
 		// Sleep a bit to avoid concurrent FLUSH problem
 		avoidConcurrentFlush();

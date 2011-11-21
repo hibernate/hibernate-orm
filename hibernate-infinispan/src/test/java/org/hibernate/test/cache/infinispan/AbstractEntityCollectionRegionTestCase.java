@@ -87,19 +87,19 @@ public abstract class AbstractEntityCollectionRegionTestCase extends AbstractReg
 		);
 		assertTrue( "Region is transaction-aware", region.isTransactionAware() );
 		CacheTestUtil.stopRegionFactory( regionFactory, getCacheTestSupport() );
-		cfg = CacheTestUtil.buildConfiguration( "test", InfinispanRegionFactory.class, true, false );
-		// Make it non-transactional
-		cfg.getProperties().remove( AvailableSettings.JTA_PLATFORM );
-		regionFactory = CacheTestUtil.startRegionFactory(
-				ServiceRegistryBuilder.buildServiceRegistry( cfg.getProperties() ),
-				cfg,
-				getCacheTestSupport()
-		);
-		region = (TransactionalDataRegion) createRegion(
-				regionFactory, "test/test", cfg.getProperties(), getCacheDataDescription()
-		);
-		assertFalse( "Region is not transaction-aware", region.isTransactionAware() );
-		CacheTestUtil.stopRegionFactory( regionFactory, getCacheTestSupport() );
+//		cfg = CacheTestUtil.buildConfiguration( "test", InfinispanRegionFactory.class, true, false );
+//		// Make it non-transactional
+//		cfg.getProperties().remove( AvailableSettings.JTA_PLATFORM );
+//		regionFactory = CacheTestUtil.startRegionFactory(
+//				ServiceRegistryBuilder.buildServiceRegistry( cfg.getProperties() ),
+//				cfg,
+//				getCacheTestSupport()
+//		);
+//		region = (TransactionalDataRegion) createRegion(
+//				regionFactory, "test/test", cfg.getProperties(), getCacheDataDescription()
+//		);
+//		assertFalse( "Region is not transaction-aware", region.isTransactionAware() );
+//		CacheTestUtil.stopRegionFactory( regionFactory, getCacheTestSupport() );
 	}
 
 	@Test

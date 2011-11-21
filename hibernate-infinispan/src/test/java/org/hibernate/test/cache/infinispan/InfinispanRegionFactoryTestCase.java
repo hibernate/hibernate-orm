@@ -28,13 +28,29 @@ import org.hibernate.cache.infinispan.collection.CollectionRegionImpl;
 import org.hibernate.cache.infinispan.entity.EntityRegionImpl;
 import org.hibernate.cache.infinispan.query.QueryResultsRegionImpl;
 import org.hibernate.cache.infinispan.timestamp.TimestampsRegionImpl;
+import org.hibernate.cache.infinispan.tm.HibernateTransactionManagerLookup;
 import org.hibernate.cache.infinispan.util.CacheAdapter;
+import org.hibernate.cfg.Settings;
+import org.hibernate.cfg.SettingsFactory;
+import org.hibernate.service.jta.platform.internal.AbstractJtaPlatform;
+import org.hibernate.service.jta.platform.internal.JBossStandAloneJtaPlatform;
+import org.hibernate.service.jta.platform.spi.JtaPlatform;
+import org.hibernate.testing.ServiceRegistryBuilder;
 import org.infinispan.config.Configuration;
 import org.infinispan.config.Configuration.CacheMode;
 import org.infinispan.eviction.EvictionStrategy;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.junit.Test;
+
+import javax.transaction.HeuristicMixedException;
+import javax.transaction.HeuristicRollbackException;
+import javax.transaction.InvalidTransactionException;
+import javax.transaction.NotSupportedException;
+import javax.transaction.RollbackException;
+import javax.transaction.SystemException;
+import javax.transaction.Transaction;
+import javax.transaction.TransactionManager;
 
 /**
  * InfinispanRegionFactoryTestCase.
@@ -114,10 +130,9 @@ public class InfinispanRegionFactoryTestCase  {
       p.setProperty("hibernate.cache.infinispan.collection.eviction.strategy", "LRU");
       p.setProperty("hibernate.cache.infinispan.collection.eviction.wake_up_interval", "3500");
       p.setProperty("hibernate.cache.infinispan.collection.eviction.max_entries", "25000");
-      InfinispanRegionFactory factory = new InfinispanRegionFactory();
+      InfinispanRegionFactory factory = createRegionFactory();
       factory.start(null, p);
       EmbeddedCacheManager manager = factory.getCacheManager();
-      manager.getGlobalConfiguration().setTransportClass(null);
       try {
          assertFalse(manager.getGlobalConfiguration().isExposeGlobalJmxStatistics());
          assertNotNull(factory.getTypeOverrides().get(person));
@@ -199,6 +214,7 @@ public class InfinispanRegionFactoryTestCase  {
          factory.stop();
       }
    }
+
    @Test
    public void testBuildEntityCollectionRegionOverridesOnly() {
       CacheAdapter cache = null;
@@ -209,7 +225,7 @@ public class InfinispanRegionFactoryTestCase  {
       p.setProperty("hibernate.cache.infinispan.collection.eviction.strategy", "LRU");
       p.setProperty("hibernate.cache.infinispan.collection.eviction.wake_up_interval", "3500");
       p.setProperty("hibernate.cache.infinispan.collection.eviction.max_entries", "35000");
-      InfinispanRegionFactory factory = new InfinispanRegionFactory();
+      InfinispanRegionFactory factory = createRegionFactory();
       factory.start(null, p);
       factory.getCacheManager();
       try {
@@ -246,10 +262,9 @@ public class InfinispanRegionFactoryTestCase  {
       p.setProperty("hibernate.cache.infinispan.entity.eviction.strategy", "FIFO");
       p.setProperty("hibernate.cache.infinispan.entity.eviction.wake_up_interval", "3000");
       p.setProperty("hibernate.cache.infinispan.entity.eviction.max_entries", "10000");
-      InfinispanRegionFactory factory = new InfinispanRegionFactory();
+      InfinispanRegionFactory factory = createRegionFactory();
       factory.start(null, p);
       EmbeddedCacheManager manager = factory.getCacheManager();
-      manager.getGlobalConfiguration().setTransportClass(null);
       try {
          assertNotNull(factory.getTypeOverrides().get(person));
          assertFalse(factory.getDefinedConfigurations().contains(person));
@@ -271,12 +286,7 @@ public class InfinispanRegionFactoryTestCase  {
    public void testTimestampValidation() {
       Properties p = new Properties();
       final DefaultCacheManager manager = new DefaultCacheManager();
-      InfinispanRegionFactory factory = new InfinispanRegionFactory() {
-         @Override
-         protected EmbeddedCacheManager createCacheManager(Properties properties) throws CacheException {
-            return manager;
-         }
-      };
+      InfinispanRegionFactory factory = createRegionFactory(manager);
       Configuration config = new Configuration();
       config.setCacheMode(CacheMode.INVALIDATION_SYNC);
       manager.defineConfiguration("timestamps", config);
@@ -290,7 +300,7 @@ public class InfinispanRegionFactoryTestCase  {
    public void testBuildDefaultTimestampsRegion() {
       final String timestamps = "org.hibernate.cache.spi.UpdateTimestampsCache";
       Properties p = new Properties();
-      InfinispanRegionFactory factory = new InfinispanRegionFactory();
+      InfinispanRegionFactory factory = createRegionFactory();
       factory.start(null, p);
       EmbeddedCacheManager manager = factory.getCacheManager();
       try {
@@ -315,7 +325,7 @@ public class InfinispanRegionFactoryTestCase  {
       final String timestamps = "org.hibernate.cache.spi.UpdateTimestampsCache";
       Properties p = new Properties();
       p.setProperty("hibernate.cache.infinispan.timestamps.cfg", "unrecommended-timestamps");
-      InfinispanRegionFactory factory = new InfinispanRegionFactory();
+      InfinispanRegionFactory factory = createRegionFactory();
       factory.start(null, p);
       EmbeddedCacheManager manager = factory.getCacheManager();
       try {
@@ -341,11 +351,9 @@ public class InfinispanRegionFactoryTestCase  {
    public void testBuildTimestamRegionWithCacheNameOverride() {
       final String timestamps = "org.hibernate.cache.spi.UpdateTimestampsCache";
       Properties p = new Properties();
-      InfinispanRegionFactory factory = new InfinispanRegionFactory();
+      InfinispanRegionFactory factory = createRegionFactory();
       p.setProperty("hibernate.cache.infinispan.timestamps.cfg", "mytimestamps-cache");
       factory.start(null, p);
-      EmbeddedCacheManager manager = factory.getCacheManager();
-      manager.getGlobalConfiguration().setTransportClass(null);
       try {
          factory.buildTimestampsRegion(timestamps, p);
          assertTrue(factory.getDefinedConfigurations().contains("mytimestamps-cache"));
@@ -357,15 +365,13 @@ public class InfinispanRegionFactoryTestCase  {
    public void testBuildTimestamRegionWithFifoEvictionOverride() {
       final String timestamps = "org.hibernate.cache.spi.UpdateTimestampsCache";
       Properties p = new Properties();
-      InfinispanRegionFactory factory = new InfinispanRegionFactory();
+      InfinispanRegionFactory factory = createRegionFactory();
       p.setProperty("hibernate.cache.infinispan.timestamps.cfg", "mytimestamps-cache");
       p.setProperty("hibernate.cache.infinispan.timestamps.eviction.strategy", "FIFO");
       p.setProperty("hibernate.cache.infinispan.timestamps.eviction.wake_up_interval", "3000");
       p.setProperty("hibernate.cache.infinispan.timestamps.eviction.max_entries", "10000");
       try {
          factory.start(null, p);
-         EmbeddedCacheManager manager = factory.getCacheManager();
-         manager.getGlobalConfiguration().setTransportClass(null);
          factory.buildTimestampsRegion(timestamps, p);
          assertTrue(factory.getDefinedConfigurations().contains("mytimestamps-cache"));
          fail("Should fail cos no eviction configurations are allowed for timestamp caches");
@@ -378,7 +384,7 @@ public class InfinispanRegionFactoryTestCase  {
    public void testBuildTimestamRegionWithNoneEvictionOverride() {
       final String timestamps = "org.hibernate.cache.spi.UpdateTimestampsCache";
       Properties p = new Properties();
-      InfinispanRegionFactory factory = new InfinispanRegionFactory();
+      InfinispanRegionFactory factory = createRegionFactory();
       p.setProperty("hibernate.cache.infinispan.timestamps.cfg", "timestamps-none-eviction");
       p.setProperty("hibernate.cache.infinispan.timestamps.eviction.strategy", "NONE");
       p.setProperty("hibernate.cache.infinispan.timestamps.eviction.wake_up_interval", "3000");
@@ -397,7 +403,7 @@ public class InfinispanRegionFactoryTestCase  {
    public void testBuildQueryRegion() {
       final String query = "org.hibernate.cache.internal.StandardQueryCache";
       Properties p = new Properties();
-      InfinispanRegionFactory factory = new InfinispanRegionFactory();
+      InfinispanRegionFactory factory = createRegionFactory();
       factory.start(null, p);
       EmbeddedCacheManager manager = factory.getCacheManager();
       manager.getGlobalConfiguration().setTransportClass(null);
@@ -416,7 +422,7 @@ public class InfinispanRegionFactoryTestCase  {
    public void testBuildQueryRegionWithCustomRegionName() {
       final String queryRegionName = "myquery";
       Properties p = new Properties();
-      InfinispanRegionFactory factory = new InfinispanRegionFactory();
+      InfinispanRegionFactory factory = createRegionFactory();
       p.setProperty("hibernate.cache.infinispan.myquery.cfg", "timestamps-none-eviction");
       p.setProperty("hibernate.cache.infinispan.myquery.eviction.strategy", "FIFO");
       p.setProperty("hibernate.cache.infinispan.myquery.eviction.wake_up_interval", "2222");
@@ -448,7 +454,7 @@ public class InfinispanRegionFactoryTestCase  {
       p.setProperty("hibernate.cache.infinispan.entity.eviction.strategy", "FIFO");
       p.setProperty("hibernate.cache.infinispan.entity.eviction.wake_up_interval", "3000");
       p.setProperty("hibernate.cache.infinispan.entity.eviction.max_entries", "10000");
-      InfinispanRegionFactory factory = new InfinispanRegionFactory();
+      InfinispanRegionFactory factory = createRegionFactory();
       factory.start(null, p);
       EmbeddedCacheManager manager = factory.getCacheManager();
       try {
@@ -496,7 +502,7 @@ public class InfinispanRegionFactoryTestCase  {
       p.setProperty("hibernate.cache.infinispan.entity.eviction.strategy", "FIFO");
       p.setProperty("hibernate.cache.infinispan.entity.eviction.wake_up_interval", "3000");
       p.setProperty("hibernate.cache.infinispan.entity.eviction.max_entries", "10000");
-      InfinispanRegionFactory factory = new InfinispanRegionFactory();
+      InfinispanRegionFactory factory = createRegionFactory();
       factory.start(null, p);
       EmbeddedCacheManager manager = factory.getCacheManager();
       try {
@@ -534,4 +540,33 @@ public class InfinispanRegionFactoryTestCase  {
          factory.stop();
       }
    }
+
+   private InfinispanRegionFactory createRegionFactory() {
+      return createRegionFactory(null);
+   }
+
+   private InfinispanRegionFactory createRegionFactory(final EmbeddedCacheManager manager) {
+      return new InfinispanRegionFactory() {
+         @Override
+         protected HibernateTransactionManagerLookup createTransactionManagerLookup(Settings settings, Properties properties) {
+            return new HibernateTransactionManagerLookup(null, null) {
+               @Override
+               public TransactionManager getTransactionManager() throws Exception {
+                  AbstractJtaPlatform jta = new JBossStandAloneJtaPlatform();
+                  jta.injectServices(ServiceRegistryBuilder.buildServiceRegistry());
+                  return jta.getTransactionManager();
+               }
+            };
+         }
+
+         @Override
+         protected EmbeddedCacheManager createCacheManager(Properties properties) throws CacheException {
+            if (manager != null)
+               return manager;
+            else
+               return super.createCacheManager(properties);
+         }
+      };
+   }
+
 }

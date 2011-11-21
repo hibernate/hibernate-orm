@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<infinispan xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:infinispan:config:4.0">
+<infinispan xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xmlns="urn:infinispan:config:5.1"
+            xsi:schemaLocation="urn:infinispan:config:5.1 http://www.infinispan.org/schemas/infinispan-config-5.1.xsd">
    <global>
-      <transport transportClass = "org.infinispan.remoting.transport.jgroups.JGroupsTransport" 
-            clusterName="infinispan-hibernate-cluster" distributedSyncTimeout="50000">
+      <transport
+            transportClass="org.infinispan.remoting.transport.jgroups.JGroupsTransport"
+            clusterName="infinispan-hibernate-cluster"
+            distributedSyncTimeout="50000">
          <!-- Note that the JGroups transport uses sensible defaults if no configuration property is defined. -->
          <properties>
             <!-- TODO: Change to udp.xml once streaming transfer requirement has been removed.  -->
@@ -15,6 +19,11 @@
    <default>
       <!-- Used to register JMX statistics in any available MBean server -->
       <jmxStatistics enabled="false"/>
+      <!-- autoCommit would be better configured to be false
+           but that would require redesigning evictAll handling -->
+      <transaction autoCommit="true" use1PcForAutoCommitTransactions="false"
+                   transactionManagerLookupClass="org.hibernate.cache.infinispan.tm.HibernateTransactionManagerLookup"
+                   lockingMode="OPTIMISTIC"/>
    </default>
 
    <!-- Default configuration is appropriate for entity/collection caching. -->
@@ -24,14 +33,14 @@
          <sync replTimeout="20000"/>
       </clustering>
       <locking isolationLevel="READ_COMMITTED" concurrencyLevel="1000"
-               lockAcquisitionTimeout="15000" useLockStriping="false" />
+               lockAcquisitionTimeout="15000" useLockStriping="false"/>
       <!-- Eviction configuration.  WakeupInterval defines how often the eviction thread runs, in milliseconds.  
            0 means the eviction thread will never run.  A separate executor is used for eviction in each cache. -->
       <eviction wakeUpInterval="5000" maxEntries="10000" strategy="LRU"/>
       <expiration maxIdle="100000"/>
       <lazyDeserialization enabled="true"/>
    </namedCache>
-   
+
    <!-- Default configuration is appropriate for entity/collection caching. -->
    <namedCache name="entity-repeatable">
       <clustering mode="invalidation">
@@ -52,7 +61,7 @@
       <expiration maxIdle="100000"/>
       <lazyDeserialization enabled="true"/>
    </namedCache>
-   
+
    <!-- An alternative configuration for entity/collection caching that uses replication instead of invalidation -->
    <namedCache name="replicated-entity">
       <clustering mode="replication">
@@ -67,8 +76,7 @@
       <expiration maxIdle="100000"/>
       <lazyDeserialization enabled="true"/>
    </namedCache>
-   
-   
+
    <!-- A config appropriate for query caching. Does not replicate queries. -->
    <namedCache name="local-query">
       <locking isolationLevel="READ_COMMITTED" concurrencyLevel="1000"
@@ -93,7 +101,8 @@
       <!-- State transfer forces all replication calls to be synchronous,
            so for calls to remain async, use a cluster cache loader instead -->
       <loaders passivation="false" shared="false" preload="false">
-         <loader class="org.infinispan.loaders.cluster.ClusterCacheLoader" fetchPersistentState="false"
+         <loader class="org.infinispan.loaders.cluster.ClusterCacheLoader"
+                 fetchPersistentState="false"
                  ignoreModifications="false" purgeOnStartup="false">
             <properties>
                <property name="remoteCallTimeout" value="20000"/>
@@ -117,7 +126,8 @@
       <!-- State transfer forces all replication calls to be synchronous,
            so for calls to remain async, use a cluster cache loader instead -->
       <loaders passivation="false" shared="false" preload="false">
-         <loader class="org.infinispan.loaders.cluster.ClusterCacheLoader" fetchPersistentState="false"
+         <loader class="org.infinispan.loaders.cluster.ClusterCacheLoader"
+                 fetchPersistentState="false"
                  ignoreModifications="false" purgeOnStartup="false">
             <properties>
                <property name="remoteCallTimeout" value="20000"/>

@@ -40,6 +40,7 @@ import static org.junit.Assert.fail;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import org.hibernate.test.cache.infinispan.functional.cluster.ClusterAwareRegionFactory;
@@ -70,6 +71,8 @@ public class IsolatedClassLoaderTest extends DualNodeTestCase {
 
    private static ClassLoader originalTCCL;
 
+   private static ClassLoader visibleClassesCl;
+
 	@BeforeClass
 	public static void prepareClassLoader() {
       final String packageName = IsolatedClassLoaderTest.class.getPackage().getName();
@@ -84,6 +87,8 @@ public class IsolatedClassLoaderTest extends DualNodeTestCase {
       // Now, make the class visible to the test driver
       SelectedClassnameClassLoader visible = new SelectedClassnameClassLoader(classes, null, null, selectedTCCL);
       Thread.currentThread().setContextClassLoader(visible);
+//      visibleClassesCl = new SelectedClassnameClassLoader(classes, null, null, selectedTCCL);
+//      Thread.currentThread().setContextClassLoader(selectedTCCL);
 	}
 
 	@AfterClass
@@ -130,6 +135,8 @@ public class IsolatedClassLoaderTest extends DualNodeTestCase {
 		}
 	}
 
+   @Ignore("Infinispan caches now use whichever classloader is associated on " +
+           "construction, i.e. deployment JPA app, so does not rely on TCCL.")
 	@Test
 	public void testIsolatedSetup() throws Exception {
 		// Bind a listener to the "local" cache
@@ -169,12 +176,16 @@ public class IsolatedClassLoaderTest extends DualNodeTestCase {
 		assertEquals( acct.getClass().getName(), remoteReplicatedCache.get( "isolated2" ).getClass().getName() );
 	}
 
+   @Ignore("Infinispan caches now use whichever classloader is associated on " +
+           "construction, i.e. deployment JPA app, so does not rely on TCCL.")
 	@Test
 	public void testClassLoaderHandlingNamedQueryRegion() throws Exception {
       rebuildSessionFactory();
 		queryTest( true );
 	}
 
+   @Ignore("Infinispan caches now use whichever classloader is associated on " +
+           "construction, i.e. deployment JPA app, so does not rely on TCCL.")
 	@Test
 	public void testClassLoaderHandlingStandardQueryCache() throws Exception {
       rebuildSessionFactory();

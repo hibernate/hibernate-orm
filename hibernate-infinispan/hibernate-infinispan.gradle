@@ -5,17 +5,12 @@ configurations {
 }
 
 dependencies {
-   infinispanVersion = '5.0.1.FINAL'
+   infinispanVersion = '5.1.0.CR1'
    jnpVersion = '5.0.3.GA'
 
    compile(project(':hibernate-core'))
-   compile([group: 'org.infinispan', name: 'infinispan-core', version: infinispanVersion]) {
-      artifact {
-         name = "infinispan-core"
-         type = 'jar'
-      }
-   }
-   // http://jira.codehaus.org/browse/GRADLE-739
+   compile([group: 'org.rhq.helpers', name: 'rhq-pluginAnnotations', version: '3.0.4'])
+   compile([group: 'org.infinispan', name: 'infinispan-core', version: infinispanVersion])
    testCompile([group: 'org.infinispan', name: 'infinispan-core', version: infinispanVersion]) {
       artifact {
          name = "infinispan-core"

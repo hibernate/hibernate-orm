@@ -263,7 +263,7 @@ public class InfinispanRegionFactory implements RegionFactory {
    public void start(Settings settings, Properties properties) throws CacheException {
       log.debug("Starting Infinispan region factory");
       try {
-         transactionManagerlookup = new HibernateTransactionManagerLookup(settings, properties);
+         transactionManagerlookup = createTransactionManagerLookup(settings, properties);
          transactionManager = transactionManagerlookup.getTransactionManager();
          manager = createCacheManager(properties);
          initGenericDataTypeOverrides();
@@ -281,6 +281,11 @@ public class InfinispanRegionFactory implements RegionFactory {
       } catch (Throwable t) {
           throw new CacheException("Unable to start region factory", t);
       }
+   }
+
+   protected HibernateTransactionManagerLookup createTransactionManagerLookup(
+            Settings settings, Properties properties) {
+      return new HibernateTransactionManagerLookup(settings, properties);
    }
 
    /**

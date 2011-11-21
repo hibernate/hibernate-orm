@@ -40,11 +40,13 @@ import static org.junit.Assert.*;
 import org.enhydra.jdbc.standard.StandardXADataSource;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.service.jta.platform.internal.JBossStandAloneJtaPlatform;
 import org.hibernate.stat.Statistics;
 import org.hibernate.test.cache.infinispan.functional.Item;
 import org.hibernate.testing.ServiceRegistryBuilder;
@@ -78,7 +80,6 @@ public class JBossStandaloneJtaExampleTest {
 
    @Before
    public void setUp() throws Exception {
-	   serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() );
       jndiServer = startJndiServer();
       ctx = createJndiContext();
       // Inject configuration to initialise transaction manager from config classloader
@@ -288,6 +289,11 @@ public class JBossStandaloneJtaExampleTest {
       cfg.setProperty(Environment.USE_SECOND_LEVEL_CACHE, "true");
       cfg.setProperty(Environment.USE_QUERY_CACHE, "true");
       cfg.setProperty(Environment.CACHE_REGION_FACTORY, "org.hibernate.cache.infinispan.InfinispanRegionFactory");
+
+      Properties envProps = Environment.getProperties();
+      envProps.put(AvailableSettings.JTA_PLATFORM, new JBossStandAloneJtaPlatform());
+      serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry(envProps);
+
       String[] mappings = new String[]{"org/hibernate/test/cache/infinispan/functional/Item.hbm.xml"};
       for (String mapping : mappings) {
          cfg.addResource(mapping, Thread.currentThread().getContextClassLoader());

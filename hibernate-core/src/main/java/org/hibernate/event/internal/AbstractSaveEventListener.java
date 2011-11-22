@@ -207,9 +207,9 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 		// Sub-insertions should occur before containing insertion so
 		// Try to do the callback now
 		if ( persister.implementsLifecycle() ) {
-			LOG.debugf( "Calling onSave()" );
+			LOG.debug( "Calling onSave()" );
 			if ( ( ( Lifecycle ) entity ).onSave( source ) ) {
-				LOG.debugf( "Insertion vetoed by onSave()" );
+				LOG.debug( "Insertion vetoed by onSave()" );
 				return true;
 			}
 		}
@@ -300,14 +300,14 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 					values, entity, persister, source, shouldDelayIdentityInserts
 			);
 			if ( !shouldDelayIdentityInserts ) {
-				LOG.debugf( "Executing identity-insert immediately" );
+				LOG.debug( "Executing identity-insert immediately" );
 				source.getActionQueue().execute( insert );
 				id = insert.getGeneratedId();
 				key = source.generateEntityKey( id, persister );
 				source.getPersistenceContext().checkUniqueness( key, entity );
 			}
 			else {
-				LOG.debugf( "Delaying identity-insert due to no transaction in progress" );
+				LOG.debug( "Delaying identity-insert due to no transaction in progress" );
 				source.getActionQueue().addAction( insert );
 				key = insert.getDelayedEntityKey();
 			}

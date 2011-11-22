@@ -61,7 +61,7 @@ import org.hibernate.persister.entity.EntityPersister;
 /**
  * A convenience base class for listeners whose functionality results in flushing.
  *
- * @author Steve Eberole
+ * @author Steve Ebersole
  */
 public abstract class AbstractFlushingEventListener implements Serializable {
 
@@ -143,7 +143,7 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 	 */
 	private void prepareEntityFlushes(EventSource session) throws HibernateException {
 
-		LOG.debugf( "Processing flush-time cascades" );
+		LOG.debug( "Processing flush-time cascades" );
 
 		final Map.Entry[] list = IdentityMap.concurrentEntries( session.getPersistenceContext().getEntityEntries() );
 		//safe from concurrent modification because of how entryList() is implemented on IdentityMap
@@ -186,7 +186,7 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 		// Initialize dirty flags for arrays + collections with composite elements
 		// and reset reached, doupdate, etc.
 
-		LOG.debugf( "Dirty checking collections" );
+		LOG.debug( "Dirty checking collections" );
 
 		final List list = IdentityMap.entries( session.getPersistenceContext().getCollectionEntries() );
 		final int size = list.size();

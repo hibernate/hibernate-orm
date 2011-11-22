@@ -55,9 +55,9 @@ public class DefaultDirtyCheckEventListener extends AbstractFlushingEventListene
 			flushEverythingToExecutions(event);
 			boolean wasNeeded = event.getSession().getActionQueue().hasAnyQueuedActions();
 			if ( wasNeeded )
-				LOG.debugf( "Session dirty" );
+				LOG.debug( "Session dirty" );
 			else
-				LOG.debugf( "Session not dirty" );
+				LOG.debug( "Session not dirty" );
 			event.setDirty( wasNeeded );
 		}
 		finally {

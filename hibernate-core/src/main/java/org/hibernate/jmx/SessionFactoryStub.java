@@ -122,10 +122,10 @@ public class SessionFactoryStub implements SessionFactory {
 			if ( result == null ) {
 				throw new InvalidObjectException( "Could not find a SessionFactory [uuid=" + uuid + ",name=" + name + "]" );
 			}
-            LOG.debugf("Resolved stub SessionFactory by name");
-        }
+			LOG.debug("Resolved stub SessionFactory by name");
+		}
 		else {
-			LOG.debugf("Resolved stub SessionFactory by UUID");
+			LOG.debug("Resolved stub SessionFactory by UUID");
 		}
 		return result;
 	}

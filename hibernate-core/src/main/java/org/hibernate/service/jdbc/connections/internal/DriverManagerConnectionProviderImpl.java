@@ -169,7 +169,7 @@ public class DriverManagerConnectionProviderImpl implements ConnectionProvider, 
 
 		// otherwise we open a new connection...
 
-		LOG.debugf( "Opening new JDBC connection" );
+		LOG.debug( "Opening new JDBC connection" );
 		Connection conn = DriverManager.getConnection( url, connectionProps );
 		if ( isolation != null ) {
 			conn.setTransactionIsolation( isolation.intValue() );
@@ -199,7 +199,7 @@ public class DriverManagerConnectionProviderImpl implements ConnectionProvider, 
 			}
 		}
 
-		LOG.debugf( "Closing JDBC connection" );
+		LOG.debug( "Closing JDBC connection" );
 		conn.close();
 	}
 

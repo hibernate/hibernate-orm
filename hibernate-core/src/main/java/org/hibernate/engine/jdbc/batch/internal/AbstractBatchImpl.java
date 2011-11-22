@@ -128,7 +128,7 @@ public abstract class AbstractBatchImpl implements Batch {
 			statements.put( sql, statement );
 		}
 		else {
-			LOG.debugf( "Reusing batch statement" );
+			LOG.debug( "Reusing batch statement" );
 			sqlStatementLogger().logStatement( sql );
 		}
 		return statement;

@@ -344,7 +344,7 @@ public class SettingsFactory implements Serializable {
 //			return new org.hibernate.bytecode.internal.javassist.BytecodeProviderImpl();
 //		}
 //		else {
-//            LOG.debugf("Using javassist as bytecode provider by default");
+//            LOG.debug("Using javassist as bytecode provider by default");
 //			return new org.hibernate.bytecode.internal.javassist.BytecodeProviderImpl();
 //		}
 //	}

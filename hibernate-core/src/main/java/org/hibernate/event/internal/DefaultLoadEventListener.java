@@ -394,11 +394,11 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 
 		Object entity = loadFromSessionCache( event, keyToLoad, options );
 		if ( entity == REMOVED_ENTITY_MARKER ) {
-			LOG.debugf( "Load request found matching entity in context, but it is scheduled for removal; returning null" );
+			LOG.debug( "Load request found matching entity in context, but it is scheduled for removal; returning null" );
 			return null;
 		}
 		if ( entity == INCONSISTENT_RTN_CLASS_MARKER ) {
-			LOG.debugf( "Load request found matching entity in context, but the matched entity was of an inconsistent return type; returning null" );
+			LOG.debug( "Load request found matching entity in context, but the matched entity was of an inconsistent return type; returning null" );
 			return null;
 		}
 		if ( entity != null ) {

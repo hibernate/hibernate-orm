@@ -439,7 +439,7 @@ public final class SessionFactoryImpl
 		}
 		SessionFactoryRegistry.INSTANCE.addSessionFactory( uuid, name, this, serviceRegistry.getService( JndiService.class ) );
 
-		LOG.debugf( "Instantiated session factory" );
+		LOG.debug( "Instantiated session factory" );
 
 		if ( settings.isAutoCreateSchema() ) {
 			new SchemaExport( serviceRegistry, cfg )
@@ -767,7 +767,7 @@ public final class SessionFactoryImpl
 		}
 		SessionFactoryRegistry.INSTANCE.addSessionFactory( uuid, name, this, serviceRegistry.getService( JndiService.class ) );
 
-		LOG.debugf("Instantiated session factory");
+		LOG.debug("Instantiated session factory");
 
 		if ( settings.isAutoCreateSchema() ) {
 			new SchemaExport( metadata )
@@ -1097,10 +1097,10 @@ public final class SessionFactoryImpl
 			if ( result == null ) {
 				throw new InvalidObjectException( "Could not find a SessionFactory [uuid=" + uuid + ",name=" + name + "]" );
 			}
-			LOG.debugf( "Resolved SessionFactory by name" );
+			LOG.debug( "Resolved SessionFactory by name" );
 		}
 		else {
-			LOG.debugf( "Resolved SessionFactory by UUID" );
+			LOG.debug( "Resolved SessionFactory by UUID" );
 		}
 		return result;
 	}

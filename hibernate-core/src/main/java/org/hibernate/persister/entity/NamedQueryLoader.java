@@ -54,7 +54,7 @@ public final class NamedQueryLoader implements UniqueEntityLoader {
 	}
 
 	public Object load(Serializable id, Object optionalObject, SessionImplementor session, LockOptions lockOptions) {
-        if (lockOptions != null) LOG.debugf("Ignoring lock-options passed to named query loader");
+		if (lockOptions != null) LOG.debug("Ignoring lock-options passed to named query loader");
 		return load( id, optionalObject, session );
 	}
 

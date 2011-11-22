@@ -206,8 +206,8 @@ public abstract class AbstractStatementExecutor implements StatementExecutor {
 
 		@Override
 		protected void logWarning(String description, String message) {
-			LOG.debugf( description );
-			LOG.debugf( message );
+			LOG.debug( description );
+			LOG.debug( message );
 		}
 	};
 

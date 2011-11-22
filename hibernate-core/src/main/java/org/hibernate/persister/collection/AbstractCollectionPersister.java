@@ -1123,7 +1123,7 @@ public abstract class AbstractCollectionPersister
 					}
 				}
 
-				LOG.debugf( "Done deleting collection" );
+				LOG.debug( "Done deleting collection" );
 			}
 			catch ( SQLException sqle ) {
 				throw sqlExceptionHelper.convert(
@@ -1233,7 +1233,7 @@ public abstract class AbstractCollectionPersister
 
 				}
 				else {
-					LOG.debugf( "Collection was empty" );
+					LOG.debug( "Collection was empty" );
 				}
 			}
 			catch ( SQLException sqle ) {
@@ -1341,7 +1341,7 @@ public abstract class AbstractCollectionPersister
 					}
 				}
 				else {
-					LOG.debugf( "No rows to delete" );
+					LOG.debug( "No rows to delete" );
 				}
 			}
 			catch ( SQLException sqle ) {

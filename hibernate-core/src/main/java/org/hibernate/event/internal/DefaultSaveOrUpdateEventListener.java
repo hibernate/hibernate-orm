@@ -337,9 +337,9 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 
 	protected boolean invokeUpdateLifecycle(Object entity, EntityPersister persister, EventSource source) {
 		if ( persister.implementsLifecycle() ) {
-			LOG.debugf( "Calling onUpdate()" );
+			LOG.debug( "Calling onUpdate()" );
 			if ( ( (Lifecycle) entity ).onUpdate( source ) ) {
-				LOG.debugf( "Update vetoed by onUpdate()" );
+				LOG.debug( "Update vetoed by onUpdate()" );
 				return true;
 			}
 		}

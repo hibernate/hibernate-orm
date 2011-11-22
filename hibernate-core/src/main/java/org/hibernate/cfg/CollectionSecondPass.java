@@ -77,7 +77,7 @@ public abstract class CollectionSecondPass implements SecondPass {
 			else {
 				msg += ", element: " + columns( collection.getElement() );
 			}
-			LOG.debugf( msg );
+			LOG.debug( msg );
 		}
 	}
 

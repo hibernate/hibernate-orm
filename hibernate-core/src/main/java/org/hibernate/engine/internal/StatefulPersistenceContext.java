@@ -894,7 +894,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	 */
 	public void initializeNonLazyCollections() throws HibernateException {
 		if ( loadCounter == 0 ) {
-			LOG.debugf( "Initializing non-lazy collections" );
+			LOG.debug( "Initializing non-lazy collections" );
 			//do this work only at the very highest level of the load
 			loadCounter++; //don't let this method be called recursively
 			try {

@@ -130,17 +130,17 @@ public class StandardQueryCache implements QueryCache {
 		logCachedResultDetails( key, spaces, returnTypes, cacheable );
 
 		if ( cacheable == null ) {
-			LOG.debugf( "Query results were not found in cache" );
+			LOG.debug( "Query results were not found in cache" );
 			return null;
 		}
 
 		Long timestamp = (Long) cacheable.get( 0 );
 		if ( !isNaturalKeyLookup && !isUpToDate( spaces, timestamp ) ) {
-			LOG.debugf( "Cached query results were not up-to-date" );
+			LOG.debug( "Cached query results were not up-to-date" );
 			return null;
 		}
 
-		LOG.debugf( "Returning cached query results" );
+		LOG.debug( "Returning cached query results" );
 		for ( int i = 1; i < cacheable.size(); i++ ) {
 			if ( returnTypes.length == 1 ) {
 				returnTypes[0].beforeAssemble( (Serializable) cacheable.get( i ), session );
@@ -170,7 +170,7 @@ public class StandardQueryCache implements QueryCache {
 					//      the uoe could occur while resolving
 					//      associations, leaving the PC in an
 					//      inconsistent state
-					LOG.debugf( "Unable to reassemble cached result set" );
+					LOG.debug( "Unable to reassemble cached result set" );
 					cacheRegion.evict( key );
 					return null;
 				}

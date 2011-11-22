@@ -145,7 +145,7 @@ public class FromElementFactory implements SqlTokenTypes {
 
 		// If the from element isn't in the same clause, create a new from element.
 		if ( fromElement.getFromClause() != fromClause ) {
-			LOG.debugf( "createFromElementInSubselect() : creating a new FROM element..." );
+			LOG.debug( "createFromElementInSubselect() : creating a new FROM element..." );
 			fromElement = createFromElement( entityPersister );
 			initializeAndAddFromElement( fromElement,
 					path,
@@ -254,7 +254,7 @@ public class FromElementFactory implements SqlTokenTypes {
 		EntityPersister entityPersister = elem.getEntityPersister();
 		int numberOfTables = entityPersister.getQuerySpaces().length;
 		if ( numberOfTables > 1 && implied && !elem.useFromFragment() ) {
-			LOG.debugf( "createEntityJoin() : Implied multi-table entity join" );
+			LOG.debug( "createEntityJoin() : Implied multi-table entity join" );
 			elem.setUseFromFragment( true );
 		}
 

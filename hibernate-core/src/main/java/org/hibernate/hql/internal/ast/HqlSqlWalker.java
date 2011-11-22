@@ -252,7 +252,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 				ASTUtil.createSibling( inputAstFactory, HqlTokenTypes.ALIAS, "this", fromElement );
 				fromClauseInput.addChild( fromElement );
 				// Show the modified AST.
-                LOG.debugf("prepareFromClauseInputTree() : Filter - Added 'this' as a from element...");
+                LOG.debug("prepareFromClauseInputTree() : Filter - Added 'this' as a from element...");
 				queryTranslatorImpl.showHqlAst( hqlParser.getAST() );
 
 				// Create a parameter specification for the collection filter...
@@ -349,7 +349,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		join.addCondition( fkTableAlias, keyColumnNames, " = ?" );
 		fromElement.setJoinSequence( join );
 		fromElement.setFilter( true );
-        LOG.debugf("createFromFilterElement() : processed filter FROM element.");
+        LOG.debug("createFromFilterElement() : processed filter FROM element.");
 		return fromElement;
 	}
 
@@ -872,7 +872,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		select.setNextSibling( sibling );
 		selectClause = ( SelectClause ) select;
 		selectClause.initializeDerivedSelectClause( currentFromClause );
-		LOG.debugf( "Derived SELECT clause created." );
+		LOG.debug( "Derived SELECT clause created." );
 	}
 
 	@Override

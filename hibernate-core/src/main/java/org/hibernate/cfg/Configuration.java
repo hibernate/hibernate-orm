@@ -1386,7 +1386,7 @@ public class Configuration implements Serializable {
 	 * an entity having a PK made of a ManyToOne ...).
 	 */
 	private void processFkSecondPassInOrder() {
-        LOG.debugf("Processing fk mappings (*ToOne and JoinedSubclass)");
+		LOG.debug("Processing fk mappings (*ToOne and JoinedSubclass)");
 		List<FkSecondPass> fkSecondPasses = getFKSecondPassesOnly();
 
 		if ( fkSecondPasses.size() == 0 ) {
@@ -1564,10 +1564,10 @@ public class Configuration implements Serializable {
 	}
 
 	private void originalSecondPassCompile() throws MappingException {
-		LOG.debugf( "Processing extends queue" );
+		LOG.debug( "Processing extends queue" );
 		processExtendsQueue();
 
-		LOG.debugf( "Processing collection mappings" );
+		LOG.debug( "Processing collection mappings" );
 		Iterator itr = secondPasses.iterator();
 		while ( itr.hasNext() ) {
 			SecondPass sp = (SecondPass) itr.next();
@@ -1577,7 +1577,7 @@ public class Configuration implements Serializable {
 			}
 		}
 
-		LOG.debugf( "Processing native query and ResultSetMapping mappings" );
+		LOG.debug( "Processing native query and ResultSetMapping mappings" );
 		itr = secondPasses.iterator();
 		while ( itr.hasNext() ) {
 			SecondPass sp = (SecondPass) itr.next();
@@ -1585,7 +1585,7 @@ public class Configuration implements Serializable {
 			itr.remove();
 		}
 
-		LOG.debugf( "Processing association property references" );
+		LOG.debug( "Processing association property references" );
 
 		itr = propertyReferences.iterator();
 		while ( itr.hasNext() ) {
@@ -1607,7 +1607,7 @@ public class Configuration implements Serializable {
 
 		//TODO: Somehow add the newly created foreign keys to the internal collection
 
-		LOG.debugf( "Processing foreign key constraints" );
+		LOG.debug( "Processing foreign key constraints" );
 
 		itr = getTableMappings();
 		Set done = new HashSet();
@@ -1618,7 +1618,7 @@ public class Configuration implements Serializable {
 	}
 
 	private int processExtendsQueue() {
-		LOG.debugf( "Processing extends queue" );
+		LOG.debug( "Processing extends queue" );
 		int added = 0;
 		ExtendsQueueEntry extendsQueueEntry = findPossibleExtends();
 		while ( extendsQueueEntry != null ) {
@@ -3352,7 +3352,7 @@ public class Configuration implements Serializable {
 		}
 
 		private void processHbmXmlQueue() {
-			LOG.debugf( "Processing hbm.xml files" );
+			LOG.debug( "Processing hbm.xml files" );
 			for ( Map.Entry<XmlDocument, Set<String>> entry : hbmMetadataToEntityNamesMap.entrySet() ) {
 				// Unfortunately we have to create a Mappings instance for each iteration here
 				processHbmXml( entry.getKey(), entry.getValue() );
@@ -3382,7 +3382,7 @@ public class Configuration implements Serializable {
 		}
 
 		private void processAnnotatedClassesQueue() {
-			LOG.debugf( "Process annotated classes" );
+			LOG.debug( "Process annotated classes" );
 			//bind classes in the correct order calculating some inheritance state
 			List<XClass> orderedClasses = orderAndFillHierarchy( annotatedClasses );
 			Mappings mappings = createMappings();

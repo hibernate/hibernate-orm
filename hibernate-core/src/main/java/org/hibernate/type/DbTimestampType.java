@@ -69,7 +69,7 @@ public class DbTimestampType extends TimestampType {
 			return super.seed( session );
 		}
 		else if ( !session.getFactory().getDialect().supportsCurrentTimestampSelection() ) {
-			LOG.debugf( "Falling back to vm-based timestamp, as dialect does not support current timestamp selection" );
+			LOG.debug( "Falling back to vm-based timestamp, as dialect does not support current timestamp selection" );
 			return super.seed( session );
 		}
 		else {

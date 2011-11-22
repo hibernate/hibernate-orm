@@ -111,14 +111,14 @@ public final class EntityPrinter {
 	// Cannot use Map as an argument because it clashes with the previous method (due to type erasure)
 	public void toString(Iterable<Map.Entry<EntityKey,Object>> entitiesByEntityKey) throws HibernateException {
         if ( ! LOG.isDebugEnabled() || ! entitiesByEntityKey.iterator().hasNext() ) return;
-        LOG.debugf( "Listing entities:" );
+        LOG.debug( "Listing entities:" );
 		int i=0;
 		for (  Map.Entry<EntityKey,Object> entityKeyAndEntity : entitiesByEntityKey ) {
 			if (i++>20) {
-                LOG.debugf("More......");
+                LOG.debug("More......");
 				break;
 			}
-            LOG.debugf( toString( entityKeyAndEntity.getKey().getEntityName(), entityKeyAndEntity.getValue() ) );
+            LOG.debug( toString( entityKeyAndEntity.getKey().getEntityName(), entityKeyAndEntity.getValue() ) );
 		}
 	}
 

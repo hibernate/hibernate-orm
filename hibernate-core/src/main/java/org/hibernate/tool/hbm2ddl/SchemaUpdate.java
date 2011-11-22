@@ -223,7 +223,7 @@ public class SchemaUpdate {
 						outputFileWriter.write( formatted + "\n" );
 					}
 					if ( target.doExport() ) {
-                        LOG.debugf( sql );
+                        LOG.debug( sql );
 						stmt.executeUpdate( formatted );
 					}
 				}

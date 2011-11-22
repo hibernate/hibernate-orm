@@ -465,14 +465,14 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	@Override
 	public Connection disconnect() throws HibernateException {
 		errorIfClosed();
-		LOG.debugf( "Disconnecting session" );
+		LOG.debug( "Disconnecting session" );
 		return transactionCoordinator.getJdbcCoordinator().getLogicalConnection().manualDisconnect();
 	}
 
 	@Override
 	public void reconnect(Connection conn) throws HibernateException {
 		errorIfClosed();
-		LOG.debugf( "Reconnecting session" );
+		LOG.debug( "Reconnecting session" );
 		checkTransactionSynchStatus();
 		transactionCoordinator.getJdbcCoordinator().getLogicalConnection().manualReconnect( conn );
 	}
@@ -1060,9 +1060,9 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	public boolean isDirty() throws HibernateException {
 		errorIfClosed();
 		checkTransactionSynchStatus();
-		LOG.debugf( "Checking session dirtiness" );
+		LOG.debug( "Checking session dirtiness" );
 		if ( actionQueue.areInsertionsOrDeletionsQueued() ) {
-			LOG.debugf( "Session dirty (scheduled updates and insertions)" );
+			LOG.debug( "Session dirty (scheduled updates and insertions)" );
 			return true;
 		}
 		DirtyCheckEvent event = new DirtyCheckEvent( this );

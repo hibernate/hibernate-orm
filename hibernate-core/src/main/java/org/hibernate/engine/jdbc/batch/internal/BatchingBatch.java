@@ -94,7 +94,7 @@ public class BatchingBatch extends AbstractBatchImpl {
 	@Override
 	protected void doExecuteBatch() {
 		if ( batchPosition == 0 ) {
-			LOG.debugf( "No batched statements to execute" );
+			LOG.debug( "No batched statements to execute" );
 		}
 		else {
 			LOG.debugf( "Executing batch size: %s", batchPosition );
@@ -110,7 +110,7 @@ public class BatchingBatch extends AbstractBatchImpl {
 					checkRowCounts( statement.executeBatch(), statement );
 				}
 				catch ( SQLException e ) {
-					LOG.debugf( "SQLException escaped proxy", e );
+					LOG.debug( "SQLException escaped proxy", e );
 					throw sqlExceptionHelper().convert( e, "could not perform addBatch", entry.getKey() );
 				}
 			}

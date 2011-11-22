@@ -118,7 +118,7 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 		}
 		else if ( connectionReleaseMode == ConnectionReleaseMode.AFTER_STATEMENT &&
 				! jdbcServices.getConnectionProvider().supportsAggressiveRelease() ) {
-			LOG.debugf( "Connection provider reports to not support aggressive release; overriding" );
+			LOG.debug( "Connection provider reports to not support aggressive release; overriding" );
 			return ConnectionReleaseMode.AFTER_TRANSACTION;
 		}
 		else {
@@ -236,11 +236,11 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 		LOG.tracev( "Starting after statement execution processing [{0}]", connectionReleaseMode );
 		if ( connectionReleaseMode == ConnectionReleaseMode.AFTER_STATEMENT ) {
 			if ( ! releasesEnabled ) {
-				LOG.debugf( "Skipping aggressive release due to manual disabling" );
+				LOG.debug( "Skipping aggressive release due to manual disabling" );
 				return;
 			}
 			if ( jdbcResourceRegistry.hasRegisteredResources() ) {
-				LOG.debugf( "Skipping aggressive release due to registered resources" );
+				LOG.debug( "Skipping aggressive release due to registered resources" );
 				return;
 			}
 			releaseConnection();
@@ -277,10 +277,10 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 	 */
 	public void aggressiveRelease() {
 		if ( isUserSuppliedConnection ) {
-			LOG.debugf( "Cannot aggressively release user-supplied connection; skipping" );
+			LOG.debug( "Cannot aggressively release user-supplied connection; skipping" );
 		}
 		else {
-			LOG.debugf( "Aggressively releasing JDBC connection" );
+			LOG.debug( "Aggressively releasing JDBC connection" );
 			if ( physicalConnection != null ) {
 				releaseConnection();
 			}
@@ -294,13 +294,13 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 	 * @throws org.hibernate.JDBCException Indicates problem opening a connection
 	 */
 	private void obtainConnection() throws JDBCException {
-		LOG.debugf( "Obtaining JDBC connection" );
+		LOG.debug( "Obtaining JDBC connection" );
 		try {
 			physicalConnection = jdbcConnectionAccess.obtainConnection();
 			for ( ConnectionObserver observer : observers ) {
 				observer.physicalConnectionObtained( physicalConnection );
 			}
-			LOG.debugf( "Obtained JDBC connection" );
+			LOG.debug( "Obtained JDBC connection" );
 		}
 		catch ( SQLException sqle) {
 			throw getJdbcServices().getSqlExceptionHelper().convert( sqle, "Could not open connection" );
@@ -313,7 +313,7 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 	 * @throws JDBCException Indicates problem closing a connection
 	 */
 	private void releaseConnection() throws JDBCException {
-		LOG.debugf( "Releasing JDBC connection" );
+		LOG.debug( "Releasing JDBC connection" );
 		if ( physicalConnection == null ) {
 			return;
 		}
@@ -331,7 +331,7 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 		finally {
 			physicalConnection = null;
 		}
-		LOG.debugf( "Released JDBC connection" );
+		LOG.debug( "Released JDBC connection" );
 		for ( ConnectionObserver observer : observers ) {
 			observer.physicalConnectionReleased();
 		}
@@ -380,7 +380,7 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 				);
 			}
 			physicalConnection = suppliedConnection;
-			LOG.debugf( "Reconnected JDBC connection" );
+			LOG.debug( "Reconnected JDBC connection" );
 		}
 	}
 

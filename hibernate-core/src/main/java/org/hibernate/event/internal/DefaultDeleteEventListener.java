@@ -300,9 +300,9 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 
 	protected boolean invokeDeleteLifecycle(EventSource session, Object entity, EntityPersister persister) {
 		if ( persister.implementsLifecycle() ) {
-			LOG.debugf( "Calling onDelete()" );
+			LOG.debug( "Calling onDelete()" );
 			if ( ( ( Lifecycle ) entity ).onDelete( session ) ) {
-				LOG.debugf( "Deletion vetoed by onDelete()" );
+				LOG.debug( "Deletion vetoed by onDelete()" );
 				return true;
 			}
 		}

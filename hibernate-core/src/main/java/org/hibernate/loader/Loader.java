@@ -2067,7 +2067,7 @@ public abstract class Loader {
 				);
 		}
 
-		LOG.debugf( "Done entity load" );
+		LOG.debug( "Done entity load" );
 
 		return result;
 
@@ -2085,7 +2085,7 @@ public abstract class Loader {
 	        final Type indexType,
 	        final EntityPersister persister) throws HibernateException {
 
-		LOG.debugf( "Loading collection element by index" );
+		LOG.debug( "Loading collection element by index" );
 
 		List result;
 		try {
@@ -2106,7 +2106,7 @@ public abstract class Loader {
 				);
 		}
 
-		LOG.debugf( "Done entity load" );
+		LOG.debug( "Done entity load" );
 
 		return result;
 
@@ -2152,7 +2152,7 @@ public abstract class Loader {
 				);
 		}
 
-		LOG.debugf( "Done entity batch load" );
+		LOG.debug( "Done entity batch load" );
 
 		return result;
 
@@ -2187,7 +2187,7 @@ public abstract class Loader {
 				);
 		}
 
-		LOG.debugf( "Done loading collection" );
+		LOG.debug( "Done loading collection" );
 
 	}
 
@@ -2221,7 +2221,7 @@ public abstract class Loader {
 				);
 		}
 
-		LOG.debugf( "Done batch load" );
+		LOG.debug( "Done batch load" );
 
 	}
 

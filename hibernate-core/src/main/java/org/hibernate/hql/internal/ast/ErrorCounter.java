@@ -60,7 +60,7 @@ public class ErrorCounter implements ParseErrorHandler {
 	}
 
 	public void reportWarning(String message) {
-        LOG.debugf(message);
+		LOG.debug(message);
 		warningList.add( message );
 	}
 
@@ -79,6 +79,6 @@ public class ErrorCounter implements ParseErrorHandler {
             if (recognitionExceptions.size() > 0) throw QuerySyntaxException.convert((RecognitionException)recognitionExceptions.get(0));
             throw new QueryException(getErrorString());
         }
-        LOG.debugf("throwQueryException() : no errors");
+		LOG.debug("throwQueryException() : no errors");
 	}
 }

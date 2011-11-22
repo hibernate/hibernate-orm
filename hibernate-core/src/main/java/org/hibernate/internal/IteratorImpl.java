@@ -84,7 +84,7 @@ public final class IteratorImpl implements HibernateIterator {
 	public void close() throws JDBCException {
 		if (ps!=null) {
 			try {
-                LOG.debugf("Closing iterator");
+				LOG.debug("Closing iterator");
 				ps.close();
 				ps = null;
 				rs = null;
@@ -110,12 +110,12 @@ public final class IteratorImpl implements HibernateIterator {
 	}
 
 	private void postNext() throws SQLException {
-        LOG.debugf("Attempting to retrieve next results");
+		LOG.debug("Attempting to retrieve next results");
 		this.hasNext = rs.next();
 		if (!hasNext) {
-            LOG.debugf("Exhausted results");
+			LOG.debug("Exhausted results");
 			close();
-        } else LOG.debugf("Retrieved next results");
+		} else LOG.debug("Retrieved next results");
 	}
 
 	public boolean hasNext() {

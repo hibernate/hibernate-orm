@@ -985,7 +985,7 @@ public final class AnnotationBinder {
 		SharedCacheMode mode;
 		final Object value = mappings.getConfigurationProperties().get( "javax.persistence.sharedCache.mode" );
 		if ( value == null ) {
-			LOG.debugf( "No value specified for 'javax.persistence.sharedCache.mode'; using UNSPECIFIED" );
+			LOG.debug( "No value specified for 'javax.persistence.sharedCache.mode'; using UNSPECIFIED" );
 			mode = SharedCacheMode.UNSPECIFIED;
 		}
 		else {

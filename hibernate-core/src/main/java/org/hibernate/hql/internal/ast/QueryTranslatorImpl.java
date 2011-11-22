@@ -164,7 +164,7 @@ public class QueryTranslatorImpl implements FilterTranslator {
 	private synchronized void doCompile(Map replacements, boolean shallow, String collectionRole) {
 		// If the query is already compiled, skip the compilation.
 		if ( compiled ) {
-			LOG.debugf( "compile() : The query is already compiled, skipping..." );
+			LOG.debug( "compile() : The query is already compiled, skipping..." );
 			return;
 		}
 

@@ -69,8 +69,9 @@ public class JavassistLazyInitializer extends BasicLazyInitializer implements Me
 	        final Method getIdentifierMethod,
 	        final Method setIdentifierMethod,
 	        final CompositeType componentIdType,
-	        final SessionImplementor session) {
-		super( entityName, persistentClass, id, getIdentifierMethod, setIdentifierMethod, componentIdType, session );
+	        final SessionImplementor session,
+	        final boolean overridesEquals) {
+		super( entityName, persistentClass, id, getIdentifierMethod, setIdentifierMethod, componentIdType, session, overridesEquals );
 		this.interfaces = interfaces;
 	}
 
@@ -93,7 +94,8 @@ public class JavassistLazyInitializer extends BasicLazyInitializer implements Me
 			        getIdentifierMethod,
 			        setIdentifierMethod,
 			        componentIdType,
-			        session
+			        session,
+			        ReflectHelper.overridesEquals(persistentClass)
 			);
 			ProxyFactory factory = new ProxyFactory();
 			factory.setSuperclass( interfaces.length == 1 ? persistentClass : null );
@@ -120,7 +122,8 @@ public class JavassistLazyInitializer extends BasicLazyInitializer implements Me
 	        final Method setIdentifierMethod,
 	        final CompositeType componentIdType,
 	        final Serializable id,
-	        final SessionImplementor session) throws HibernateException {
+	        final SessionImplementor session,
+	        final boolean classOverridesEquals) throws HibernateException {
 
 		final JavassistLazyInitializer instance = new JavassistLazyInitializer(
 				entityName,
@@ -129,7 +132,8 @@ public class JavassistLazyInitializer extends BasicLazyInitializer implements Me
 		        getIdentifierMethod,
 		        setIdentifierMethod,
 		        componentIdType,
-		        session
+		        session,
+		        classOverridesEquals
 		);
 
 		final HibernateProxy proxy;

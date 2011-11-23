@@ -28,6 +28,7 @@ import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.type.CompositeType;
@@ -47,6 +48,7 @@ public class JavassistProxyFactory implements ProxyFactory, Serializable {
 	private Method setIdentifierMethod;
 	private CompositeType componentIdType;
 	private Class factory;
+	private boolean overridesEquals;
 
 	public void postInstantiate(
 			final String entityName,
@@ -62,6 +64,7 @@ public class JavassistProxyFactory implements ProxyFactory, Serializable {
 		this.setIdentifierMethod = setIdentifierMethod;
 		this.componentIdType = componentIdType;
 		factory = JavassistLazyInitializer.getProxyFactory( persistentClass, this.interfaces );
+		overridesEquals = ReflectHelper.overridesEquals(persistentClass);
 	}
 
 	public HibernateProxy getProxy(
@@ -76,7 +79,8 @@ public class JavassistProxyFactory implements ProxyFactory, Serializable {
 				setIdentifierMethod,
 		        componentIdType,
 		        id,
-		        session
+		        session,
+		        overridesEquals
 		);
 	}
 

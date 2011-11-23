@@ -57,13 +57,14 @@ public abstract class BasicLazyInitializer extends AbstractLazyInitializer {
 	        Method getIdentifierMethod,
 	        Method setIdentifierMethod,
 	        CompositeType componentIdType,
-	        SessionImplementor session) {
+	        SessionImplementor session,
+	        boolean overridesEquals) {
 		super(entityName, id, session);
 		this.persistentClass = persistentClass;
 		this.getIdentifierMethod = getIdentifierMethod;
 		this.setIdentifierMethod = setIdentifierMethod;
 		this.componentIdType = componentIdType;
-		overridesEquals = ReflectHelper.overridesEquals(persistentClass);
+		this.overridesEquals = overridesEquals;
 	}
 
 	protected abstract Object serializableProxy();

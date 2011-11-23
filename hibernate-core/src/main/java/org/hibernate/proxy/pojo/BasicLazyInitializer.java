@@ -42,12 +42,13 @@ public abstract class BasicLazyInitializer extends AbstractLazyInitializer {
 
 	protected static final Object INVOKE_IMPLEMENTATION = new MarkerObject("INVOKE_IMPLEMENTATION");
 
-	protected Class persistentClass;
-	protected Method getIdentifierMethod;
-	protected Method setIdentifierMethod;
-	protected boolean overridesEquals;
+	protected final Class persistentClass;
+	protected final Method getIdentifierMethod;
+	protected final Method setIdentifierMethod;
+	protected final boolean overridesEquals;
+	protected final CompositeType componentIdType;
+
 	private Object replacement;
-	protected CompositeType componentIdType;
 
 	protected BasicLazyInitializer(
 			String entityName,

@@ -23,14 +23,6 @@
  */
 package org.hibernate.ejb.test.lock;
 
-import javax.persistence.EntityManager;
-import javax.persistence.LockModeType;
-import javax.persistence.LockTimeoutException;
-import javax.persistence.OptimisticLockException;
-import javax.persistence.Query;
-import javax.persistence.QueryTimeoutException;
-
-import java.lang.RuntimeException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,8 +30,15 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
+import javax.persistence.EntityManager;
+import javax.persistence.LockModeType;
+import javax.persistence.LockTimeoutException;
+import javax.persistence.OptimisticLockException;
+import javax.persistence.Query;
+import javax.persistence.QueryTimeoutException;
 
 import org.jboss.logging.Logger;
+import org.junit.Test;
 
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.Oracle10gDialect;
@@ -47,8 +46,6 @@ import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.testing.SkipForDialect;
-
-import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -178,8 +175,10 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 			// To get the same functionality as prior release, change the  LockModeType.READ lock to:
 			// em.lock(lock,LockModeType.PESSIMISTIC_READ);
 			em.lock( lock, LockModeType.READ );
-			fail("expected OptimisticLockException exception");
-		} catch(OptimisticLockException expected) {}
+			fail( "expected OptimisticLockException exception" );
+		}
+		catch ( OptimisticLockException expected ) {
+		}
 		em.getTransaction().rollback();
 
 		// the previous code block can be rewritten as follows (to get the previous behavior)
@@ -262,9 +261,13 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 		EntityManager em2 = createIsolatedEntityManager();
 		em2.getTransaction().begin();
 		lock = em2.find( Lock.class, lock.getId(), LockModeType.OPTIMISTIC );
-		assertEquals( "lock mode should be OPTIMISTIC ", LockModeType.OPTIMISTIC, em2.getLockMode(lock) );
+		assertEquals( "lock mode should be OPTIMISTIC ", LockModeType.OPTIMISTIC, em2.getLockMode( lock ) );
 		em2.lock( lock, LockModeType.OPTIMISTIC_FORCE_INCREMENT );
-		assertEquals( "lock mode should be OPTIMISTIC_FORCE_INCREMENT ", LockModeType.OPTIMISTIC_FORCE_INCREMENT, em2.getLockMode(lock) );
+		assertEquals(
+				"lock mode should be OPTIMISTIC_FORCE_INCREMENT ",
+				LockModeType.OPTIMISTIC_FORCE_INCREMENT,
+				em2.getLockMode( lock )
+		);
 		em2.getTransaction().commit();
 		em2.getTransaction().begin();
 		em2.remove( lock );
@@ -273,73 +276,117 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-    @SkipForDialect( value = {HSQLDialect.class,SybaseASE15Dialect.class}, jiraKey = "HHH-6820")
+	@SkipForDialect(value = { HSQLDialect.class, SybaseASE15Dialect.class }, jiraKey = "HHH-6820")
 	public void testContendedPessimisticLock() throws Exception {
-		EntityManager em = getOrCreateEntityManager();
-		final EntityManager em2 = createIsolatedEntityManager();
+		final EntityManager em = getOrCreateEntityManager();
+		Lock lock = createAndPersistLockInstance( em );
 
-		Lock lock = new Lock();
-		Thread t = null;
 		try {
-			lock.setName( "testContendedPessimisticLock" );
+			inFirstTransactionReloadAndModifyLockInstance( em, lock );
 
-			em.getTransaction().begin();
-			em.persist( lock );
-			em.getTransaction().commit();
-			em.clear();
+			final CountDownLatch latch = new CountDownLatch( 1 );
+			FutureTask<Boolean> future = inBackgroundThreadStartSecondTransactionAndReadLockInstance( latch );
 
-			em.getTransaction().begin();
-			lock = em.getReference( Lock.class, lock.getId() );
-			em.lock( lock, LockModeType.PESSIMISTIC_WRITE );
-			final Integer id = lock.getId();
-			lock.getName();		// force entity to be read
-            log.info("testContendedPessimisticLock: got write lock");
-			final CountDownLatch latch = new CountDownLatch(1);
+			// wait with timeout on the background thread
+			log.debug( "testContendedPessimisticLock:  wait on BG thread" );
+			boolean backGroundThreadCompleted = latch.await( 3, TimeUnit.SECONDS );
 
-			t = new Thread( new Runnable() {
-				public void run() {
-					try {
-						em2.getTransaction().begin();
-                        log.info("testContendedPessimisticLock: (BG) about to issue (PESSIMISTIC_READ) query against write-locked entity");
-						// we should block on the following read
-						Query query = em2.createQuery(
-								  "select L from Lock_ L where L.id < 10000 ");
-						query.setLockMode(LockModeType.PESSIMISTIC_READ);
-						List<Lock> resultList = query.getResultList();
-						resultList.get(0).getName(); //  force entity to be read
-					}
-					finally {
-						em2.getTransaction().commit();
-						latch.countDown();	// signal that we got the read lock
-					}
-				}
-			} );
-
-			t.setDaemon( true );
-			t.setName("LockTest read lock");
-			t.start();
-            log.info("testContendedPessimisticLock:  wait on BG thread");
-			boolean latchSet = latch.await( 10, TimeUnit.SECONDS );
-			// latchSet should be false (timeout) because the background thread
-			// shouldn't be able to get a read lock on write locked entity.
-            log.info("testContendedPessimisticLock:  BG thread completed transaction");
-			assertFalse( "shouldn't be able to get read lock while another transaction has write lock",latchSet );
-			em.getTransaction().commit();
+			if ( backGroundThreadCompleted ) {
+				// the background thread read a value. At the very least we need to assert that he did not see the
+				// changed value
+				boolean backgroundThreadHasReadNewValue = future.get();
+				assertFalse(
+						"The background thread is not allowed to see the updated value while the first transaction has not committed yet",
+						backgroundThreadHasReadNewValue
+				);
+				em.getTransaction().commit();
+			}
+			else {
+				log.debug( "The background thread was blocked" );
+				// commit first transaction so that background thread can continue
+				em.getTransaction().commit();
+				boolean backgroundThreadHasReadNewValue = future.get();
+				assertTrue(
+						"Background thread should read the new value after being unblocked",
+						backgroundThreadHasReadNewValue
+				);
+			}
 		}
 		finally {
-			if ( em.getTransaction().isActive() ) {
-				em.getTransaction().rollback();
-			}
-			if ( t != null) {	  // wait for background thread to finish before deleting entity
-				t.join();
-			}
-			em.getTransaction().begin();
-			lock = em.getReference( Lock.class, lock.getId() );
-			em.remove( lock );
-			em.getTransaction().commit();
-			em.close();
-			em2.close();
+			cleanup( em, lock );
 		}
+	}
+
+	private void cleanup(EntityManager em, Lock lock) throws InterruptedException {
+		if ( em.getTransaction().isActive() ) {
+			em.getTransaction().rollback();
+		}
+		em.getTransaction().begin();
+		lock = em.getReference( Lock.class, lock.getId() );
+		em.remove( lock );
+		em.getTransaction().commit();
+		em.close();
+	}
+
+	private FutureTask<Boolean> inBackgroundThreadStartSecondTransactionAndReadLockInstance(final CountDownLatch latch) {
+		final EntityManager isolatedEntityManager = createIsolatedEntityManager();
+
+		FutureTask<Boolean> bgTask = new FutureTask<Boolean>(
+				new Callable<Boolean>() {
+					public Boolean call() {
+						try {
+							isolatedEntityManager.getTransaction().begin();
+							log.debug(
+									"testContendedPessimisticLock: (BG) about to issue (PESSIMISTIC_READ) query against write-locked entity"
+							);
+							// we should block on the following read
+							Query query = isolatedEntityManager.createQuery(
+									"select L from Lock_ L where L.id < 10000 "
+							);
+							query.setLockMode( LockModeType.PESSIMISTIC_READ );
+							List<Lock> resultList = query.getResultList();
+							Lock lock = resultList.get( 0 );
+							return lock.getName().equals( "foo" );
+						}
+						catch ( RuntimeException e ) {
+							fail( "An error occurred waiting while attempting to read the entity: " + e.getMessage() );
+							throw e;
+						}
+						finally {
+							isolatedEntityManager.getTransaction().commit();
+							isolatedEntityManager.close();
+							latch.countDown();	// signal that we got the read lock
+						}
+					}
+				}
+		);
+
+		Thread thread = new Thread( bgTask );
+		thread.setDaemon( true );
+		thread.setName( "LockTest read lock" );
+		thread.start();
+
+		return bgTask;
+	}
+
+	private void inFirstTransactionReloadAndModifyLockInstance(EntityManager em, Lock lock) {
+		em.getTransaction().begin();
+		lock = em.getReference( Lock.class, lock.getId() );
+		em.lock( lock, LockModeType.PESSIMISTIC_WRITE );
+		// modify and flush, but don't commit the transaction
+		lock.setName( "foo" );
+		em.flush();
+		log.debug( "testContendedPessimisticLock: got write lock" );
+	}
+
+	private Lock createAndPersistLockInstance(EntityManager em) {
+		Lock lock = new Lock();
+		lock.setName( "testContendedPessimisticLock" );
+		em.getTransaction().begin();
+		em.persist( lock );
+		em.getTransaction().commit();
+		em.clear();
+		return lock;
 	}
 
 	@Test
@@ -347,14 +394,14 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 		EntityManager em = getOrCreateEntityManager();
 		final EntityManager em2 = createIsolatedEntityManager();
 		// TODO:  replace dialect instanceof test with a Dialect.hasCapability (e.g. supportsPessimisticLockTimeout)
-		if ( ! (getDialect() instanceof Oracle10gDialect)) {
-            log.info("skipping testContendedPessimisticReadLockTimeout");
+		if ( !( getDialect() instanceof Oracle10gDialect ) ) {
+			log.info( "skipping testContendedPessimisticReadLockTimeout" );
 			return;
 		}
 		Lock lock = new Lock();
 		Thread t = null;
 		FutureTask<Boolean> bgTask = null;
-		final CountDownLatch latch = new CountDownLatch(1);
+		final CountDownLatch latch = new CountDownLatch( 1 );
 		try {
 			lock.setName( "testContendedPessimisticReadLockTimeout" );
 
@@ -368,57 +415,65 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 			em.lock( lock, LockModeType.PESSIMISTIC_WRITE );
 			final Integer id = lock.getId();
 			lock.getName();		// force entity to be read
-            log.info("testContendedPessimisticReadLockTimeout: got write lock");
+			log.info( "testContendedPessimisticReadLockTimeout: got write lock" );
 
-			bgTask = new FutureTask<Boolean>( new Callable() {
-				public Boolean call() {
-					try {
-						boolean timedOut = false;	// true (success) if LockTimeoutException occurred
-						em2.getTransaction().begin();
-						log.info("testContendedPessimisticReadLockTimeout: (BG) about to read write-locked entity");
-						// we should block on the following read
-						Lock lock2 = em2.getReference( Lock.class, id );
-						lock2.getName();		//  force entity to be read
-						log.info("testContendedPessimisticReadLockTimeout: (BG) read write-locked entity");
-						Map<String,Object> props = new HashMap<String, Object>();
-						// timeout is in milliseconds
-						props.put("javax.persistence.lock.timeout", new Integer(1000));
-						try {
-							em2.lock( lock2, LockModeType.PESSIMISTIC_READ, props);
+			bgTask = new FutureTask<Boolean>(
+					new Callable<Boolean>() {
+						public Boolean call() {
+							try {
+								boolean timedOut = false;	// true (success) if LockTimeoutException occurred
+								em2.getTransaction().begin();
+								log.info(
+										"testContendedPessimisticReadLockTimeout: (BG) about to read write-locked entity"
+								);
+								// we should block on the following read
+								Lock lock2 = em2.getReference( Lock.class, id );
+								lock2.getName();		//  force entity to be read
+								log.info( "testContendedPessimisticReadLockTimeout: (BG) read write-locked entity" );
+								Map<String, Object> props = new HashMap<String, Object>();
+								// timeout is in milliseconds
+								props.put( "javax.persistence.lock.timeout", 1000 );
+								try {
+									em2.lock( lock2, LockModeType.PESSIMISTIC_READ, props );
+								}
+								catch ( LockTimeoutException e ) {
+									// success
+									log.info(
+											"testContendedPessimisticReadLockTimeout: (BG) got expected timeout exception"
+									);
+									timedOut = true;
+									em2.getTransaction().rollback();
+									return timedOut;
+								}
+								catch ( Throwable e ) {
+									log.info( "Expected LockTimeoutException but got unexpected exception", e );
+									throw new RuntimeException(
+											"Expected LockTimeoutException but got unexpected exception", e
+									);
+								}
+								em2.getTransaction().commit();
+								return timedOut;
+							}
+							finally {
+								latch.countDown();	// signal that we finished
+							}
 						}
-						catch( LockTimeoutException e) {
-							// success
-							log.info("testContendedPessimisticReadLockTimeout: (BG) got expected timeout exception");
-							 timedOut = true;
-							em2.getTransaction().rollback();
-							return new Boolean(timedOut);
-						}
-						catch ( Throwable e) {
-							log.info("Expected LockTimeoutException but got unexpected exception", e);
-							throw new RuntimeException("Expected LockTimeoutException but got unexpected exception",e);
-						}
-						em2.getTransaction().commit();
-						return new Boolean(timedOut);
 					}
-					finally {
-						latch.countDown();	// signal that we finished
-					}
-				}
-			} );
-			t = new Thread(bgTask);
+			);
+			t = new Thread( bgTask );
 			t.setDaemon( true );
-			t.setName("Lock timeout Test (bg)");
+			t.setName( "Lock timeout Test (bg)" );
 			t.start();
 			boolean latchSet = latch.await( 10, TimeUnit.SECONDS );  // should return quickly on success
-			assertTrue( "background test thread finished (lock timeout is broken)", latchSet);
-			assertTrue( "background test thread timed out on lock attempt", bgTask.get().booleanValue() );
+			assertTrue( "background test thread finished (lock timeout is broken)", latchSet );
+			assertTrue( "background test thread timed out on lock attempt", bgTask.get() );
 			em.getTransaction().commit();
 		}
 		finally {
 			if ( em.getTransaction().isActive() ) {
 				em.getTransaction().rollback();
 			}
-			if ( t != null) {	  // wait for background thread to finish before deleting entity
+			if ( t != null ) {	  // wait for background thread to finish before deleting entity
 				t.join();
 			}
 			em.getTransaction().begin();
@@ -436,14 +491,14 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 		EntityManager em = getOrCreateEntityManager();
 		final EntityManager em2 = createIsolatedEntityManager();
 		// TODO:  replace dialect instanceof test with a Dialect.hasCapability (e.g. supportsPessimisticLockTimeout)
-		if ( ! (getDialect() instanceof Oracle10gDialect)) {
-            log.info("skipping testContendedPessimisticWriteLockTimeout");
+		if ( !( getDialect() instanceof Oracle10gDialect ) ) {
+			log.info( "skipping testContendedPessimisticWriteLockTimeout" );
 			return;
 		}
 		Lock lock = new Lock();
 		Thread t = null;
-		FutureTask<Boolean> bgTask = null;
-		final CountDownLatch latch = new CountDownLatch(1);
+		FutureTask<Boolean> bgTask;
+		final CountDownLatch latch = new CountDownLatch( 1 );
 		try {
 			lock.setName( "testContendedPessimisticWriteLockTimeout" );
 
@@ -457,54 +512,60 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 			em.lock( lock, LockModeType.PESSIMISTIC_WRITE );
 			final Integer id = lock.getId();
 			lock.getName();		// force entity to be read
-            log.info("testContendedPessimisticWriteLockTimeout: got write lock");
+			log.info( "testContendedPessimisticWriteLockTimeout: got write lock" );
 
-			bgTask = new FutureTask<Boolean>( new Callable() {
-				public Boolean call() {
-					try {
-						boolean timedOut = false;	// true (success) if LockTimeoutException occurred
-						em2.getTransaction().begin();
-                        log.info("testContendedPessimisticWriteLockTimeout: (BG) about to read write-locked entity");
-						// we should block on the following read
-						Lock lock2 = em2.getReference( Lock.class, id );
-						lock2.getName();		//  force entity to be read
-                        log.info("testContendedPessimisticWriteLockTimeout: (BG) read write-locked entity");
-						Map<String,Object> props = new HashMap<String, Object>();
-						// timeout is in milliseconds
-						props.put("javax.persistence.lock.timeout", new Integer(1000));
-						try {
-							em2.lock( lock2, LockModeType.PESSIMISTIC_WRITE, props);
+			bgTask = new FutureTask<Boolean>(
+					new Callable<Boolean>() {
+						public Boolean call() {
+							try {
+								boolean timedOut = false;	// true (success) if LockTimeoutException occurred
+								em2.getTransaction().begin();
+								log.info(
+										"testContendedPessimisticWriteLockTimeout: (BG) about to read write-locked entity"
+								);
+								// we should block on the following read
+								Lock lock2 = em2.getReference( Lock.class, id );
+								lock2.getName();		//  force entity to be read
+								log.info( "testContendedPessimisticWriteLockTimeout: (BG) read write-locked entity" );
+								Map<String, Object> props = new HashMap<String, Object>();
+								// timeout is in milliseconds
+								props.put( "javax.persistence.lock.timeout", 1000 );
+								try {
+									em2.lock( lock2, LockModeType.PESSIMISTIC_WRITE, props );
+								}
+								catch ( LockTimeoutException e ) {
+									// success
+									log.info(
+											"testContendedPessimisticWriteLockTimeout: (BG) got expected timeout exception"
+									);
+									timedOut = true;
+								}
+								catch ( Throwable e ) {
+									log.info( "Expected LockTimeoutException but got unexpected exception", e );
+								}
+								em2.getTransaction().commit();
+								return timedOut;
+							}
+							finally {
+								latch.countDown();	// signal that we finished
+							}
 						}
-						catch( LockTimeoutException e) {
-							// success
-                            log.info("testContendedPessimisticWriteLockTimeout: (BG) got expected timeout exception");
-							 timedOut = true;
-						}
-						catch ( Throwable e) {
-                            log.info("Expected LockTimeoutException but got unexpected exception", e);
-						}
-						em2.getTransaction().commit();
-						return new Boolean(timedOut);
 					}
-					finally {
-						latch.countDown();	// signal that we finished
-					}
-				}
-			} );
-			t = new Thread(bgTask);
+			);
+			t = new Thread( bgTask );
 			t.setDaemon( true );
-			t.setName("Lock timeout Test (bg)");
+			t.setName( "Lock timeout Test (bg)" );
 			t.start();
 			boolean latchSet = latch.await( 10, TimeUnit.SECONDS );  // should return quickly on success
-			assertTrue( "background test thread finished (lock timeout is broken)", latchSet);
-			assertTrue( "background test thread timed out on lock attempt", bgTask.get().booleanValue() );
+			assertTrue( "background test thread finished (lock timeout is broken)", latchSet );
+			assertTrue( "background test thread timed out on lock attempt", bgTask.get() );
 			em.getTransaction().commit();
 		}
 		finally {
 			if ( em.getTransaction().isActive() ) {
 				em.getTransaction().rollback();
 			}
-			if ( t != null) {	  // wait for background thread to finish before deleting entity
+			if ( t != null ) {	  // wait for background thread to finish before deleting entity
 				t.join();
 			}
 			em.getTransaction().begin();
@@ -522,14 +583,14 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 		EntityManager em = getOrCreateEntityManager();
 		final EntityManager em2 = createIsolatedEntityManager();
 		// TODO:  replace dialect instanceof test with a Dialect.hasCapability (e.g. supportsPessimisticLockTimeout)
-		if ( ! (getDialect() instanceof Oracle10gDialect)) {
-            log.info("skipping testContendedPessimisticWriteLockNoWait");
+		if ( !( getDialect() instanceof Oracle10gDialect ) ) {
+			log.info( "skipping testContendedPessimisticWriteLockNoWait" );
 			return;
 		}
 		Lock lock = new Lock();
 		Thread t = null;
-		FutureTask<Boolean> bgTask = null;
-		final CountDownLatch latch = new CountDownLatch(1);
+		FutureTask<Boolean> bgTask;
+		final CountDownLatch latch = new CountDownLatch( 1 );
 		try {
 			lock.setName( "testContendedPessimisticWriteLockNoWait" );
 
@@ -543,54 +604,60 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 			em.lock( lock, LockModeType.PESSIMISTIC_WRITE );
 			final Integer id = lock.getId();
 			lock.getName();		// force entity to be read
-            log.info("testContendedPessimisticWriteLockNoWait: got write lock");
+			log.info( "testContendedPessimisticWriteLockNoWait: got write lock" );
 
-			bgTask = new FutureTask<Boolean>( new Callable() {
-				public Boolean call() {
-					try {
-						boolean timedOut = false;	// true (success) if LockTimeoutException occurred
-						em2.getTransaction().begin();
-                        log.info("testContendedPessimisticWriteLockNoWait: (BG) about to read write-locked entity");
-						// we should block on the following read
-						Lock lock2 = em2.getReference( Lock.class, id );
-						lock2.getName();		//  force entity to be read
-                        log.info("testContendedPessimisticWriteLockNoWait: (BG) read write-locked entity");
-						Map<String,Object> props = new HashMap<String, Object>();
-						// timeout of zero means no wait (for lock)
-						props.put("javax.persistence.lock.timeout", new Integer(0));
-						try {
-							em2.lock( lock2, LockModeType.PESSIMISTIC_WRITE, props);
+			bgTask = new FutureTask<Boolean>(
+					new Callable<Boolean>() {
+						public Boolean call() {
+							try {
+								boolean timedOut = false;	// true (success) if LockTimeoutException occurred
+								em2.getTransaction().begin();
+								log.info(
+										"testContendedPessimisticWriteLockNoWait: (BG) about to read write-locked entity"
+								);
+								// we should block on the following read
+								Lock lock2 = em2.getReference( Lock.class, id );
+								lock2.getName();		//  force entity to be read
+								log.info( "testContendedPessimisticWriteLockNoWait: (BG) read write-locked entity" );
+								Map<String, Object> props = new HashMap<String, Object>();
+								// timeout of zero means no wait (for lock)
+								props.put( "javax.persistence.lock.timeout", 0 );
+								try {
+									em2.lock( lock2, LockModeType.PESSIMISTIC_WRITE, props );
+								}
+								catch ( LockTimeoutException e ) {
+									// success
+									log.info(
+											"testContendedPessimisticWriteLockNoWait: (BG) got expected timeout exception"
+									);
+									timedOut = true;
+								}
+								catch ( Throwable e ) {
+									log.info( "Expected LockTimeoutException but got unexpected exception", e );
+								}
+								em2.getTransaction().commit();
+								return timedOut;
+							}
+							finally {
+								latch.countDown();	// signal that we finished
+							}
 						}
-						catch( LockTimeoutException e) {
-							// success
-                            log.info("testContendedPessimisticWriteLockNoWait: (BG) got expected timeout exception");
-							 timedOut = true;
-						}
-						catch ( Throwable e) {
-                            log.info("Expected LockTimeoutException but got unexpected exception", e);
-						}
-						em2.getTransaction().commit();
-						return new Boolean(timedOut);
 					}
-					finally {
-						latch.countDown();	// signal that we finished
-					}
-				}
-			} );
-			t = new Thread(bgTask);
+			);
+			t = new Thread( bgTask );
 			t.setDaemon( true );
-			t.setName("Lock timeout Test (bg)");
+			t.setName( "Lock timeout Test (bg)" );
 			t.start();
 			boolean latchSet = latch.await( 10, TimeUnit.SECONDS );  // should return quickly on success
-			assertTrue( "background test thread finished (lock timeout is broken)", latchSet);
-			assertTrue( "background test thread timed out on lock attempt", bgTask.get().booleanValue() );
+			assertTrue( "background test thread finished (lock timeout is broken)", latchSet );
+			assertTrue( "background test thread timed out on lock attempt", bgTask.get() );
 			em.getTransaction().commit();
 		}
 		finally {
 			if ( em.getTransaction().isActive() ) {
 				em.getTransaction().rollback();
 			}
-			if ( t != null) {	  // wait for background thread to finish before deleting entity
+			if ( t != null ) {	  // wait for background thread to finish before deleting entity
 				t.join();
 			}
 			em.getTransaction().begin();
@@ -608,14 +675,14 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 		EntityManager em = getOrCreateEntityManager();
 		final EntityManager em2 = createIsolatedEntityManager();
 		// TODO:  replace dialect instanceof test with a Dialect.hasCapability
-		if ( ! (getDialect() instanceof Oracle10gDialect)) {
-            log.info("skipping testQueryTimeout");
+		if ( !( getDialect() instanceof Oracle10gDialect ) ) {
+			log.info( "skipping testQueryTimeout" );
 			return;
 		}
 		Lock lock = new Lock();
 		Thread t = null;
-		FutureTask<Boolean> bgTask = null;
-		final CountDownLatch latch = new CountDownLatch(1);
+		FutureTask<Boolean> bgTask;
+		final CountDownLatch latch = new CountDownLatch( 1 );
 		try {
 			lock.setName( "testQueryTimeout" );
 
@@ -629,58 +696,64 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 			em.lock( lock, LockModeType.PESSIMISTIC_WRITE );
 			final Integer id = lock.getId();
 			lock.getName();		// force entity to be read
-            log.info("testQueryTimeout: got write lock");
+			log.info( "testQueryTimeout: got write lock" );
 
-			bgTask = new FutureTask<Boolean>( new Callable() {
-				public Boolean call() {
-					try {
-						boolean timedOut = false;	// true (success) if LockTimeoutException occurred
-						em2.getTransaction().begin();
-                        log.info("testQueryTimeout: (BG) about to read write-locked entity");
-						// we should block on the following read
-						Lock lock2 = em2.getReference( Lock.class, id );
-						lock2.getName();		//  force entity to be read
-                        log.info("testQueryTimeout: (BG) read write-locked entity");
-						try {
-							// we should block on the following read
-							Query query = em2.createQuery(
-									  "select L from Lock_ L where L.id < 10000 ");
-							query.setLockMode( LockModeType.PESSIMISTIC_READ );
-							query.setHint( "javax.persistence.query.timeout", new Integer(500) ); // 1 sec timeout
-							List<Lock> resultList = query.getResultList();
-							String name = resultList.get(0).getName(); //  force entity to be read
-                            log.info("testQueryTimeout: name read =" + name);
+			bgTask = new FutureTask<Boolean>(
+					new Callable<Boolean>() {
+						public Boolean call() {
+							try {
+								boolean timedOut = false;	// true (success) if LockTimeoutException occurred
+								em2.getTransaction().begin();
+								log.info( "testQueryTimeout: (BG) about to read write-locked entity" );
+								// we should block on the following read
+								Lock lock2 = em2.getReference( Lock.class, id );
+								lock2.getName();		//  force entity to be read
+								log.info( "testQueryTimeout: (BG) read write-locked entity" );
+								try {
+									// we should block on the following read
+									Query query = em2.createQuery(
+											"select L from Lock_ L where L.id < 10000 "
+									);
+									query.setLockMode( LockModeType.PESSIMISTIC_READ );
+									query.setHint( "javax.persistence.query.timeout", 500 ); // 1 sec timeout
+									List<Lock> resultList = query.getResultList();
+									String name = resultList.get( 0 ).getName(); //  force entity to be read
+									log.info( "testQueryTimeout: name read =" + name );
+								}
+								catch ( QueryTimeoutException e ) {
+									// success
+									log.info( "testQueryTimeout: (BG) got expected timeout exception" );
+									timedOut = true;
+								}
+								catch ( Throwable e ) {
+									log.info(
+											"testQueryTimeout: Expected LockTimeoutException but got unexpected exception",
+											e
+									);
+								}
+								em2.getTransaction().commit();
+								return timedOut;
+							}
+							finally {
+								latch.countDown();	// signal that we finished
+							}
 						}
-						catch( QueryTimeoutException e) {
-							// success
-                            log.info("testQueryTimeout: (BG) got expected timeout exception");
-							 timedOut = true;
-						}
-						catch ( Throwable e) {
-                            log.info("testQueryTimeout: Expected LockTimeoutException but got unexpected exception", e);
-						}
-						em2.getTransaction().commit();
-						return new Boolean( timedOut );
 					}
-					finally {
-						latch.countDown();	// signal that we finished
-					}
-				}
-			} );
-			t = new Thread(bgTask);
+			);
+			t = new Thread( bgTask );
 			t.setDaemon( true );
 			t.setName( "testQueryTimeout (bg)" );
 			t.start();
 			boolean latchSet = latch.await( 10, TimeUnit.SECONDS );  // should return quickly on success
-			assertTrue( "background test thread finished (lock timeout is broken)", latchSet);
-			assertTrue( "background test thread timed out on lock attempt", bgTask.get().booleanValue() );
+			assertTrue( "background test thread finished (lock timeout is broken)", latchSet );
+			assertTrue( "background test thread timed out on lock attempt", bgTask.get() );
 			em.getTransaction().commit();
 		}
 		finally {
 			if ( em.getTransaction().isActive() ) {
 				em.getTransaction().rollback();
 			}
-			if ( t != null) {	  // wait for background thread to finish before deleting entity
+			if ( t != null ) {	  // wait for background thread to finish before deleting entity
 				t.join();
 			}
 			em.getTransaction().begin();
@@ -695,18 +768,18 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	public void testQueryTimeoutEMProps() throws Exception {
 		// TODO:  replace dialect instanceof test with a Dialect.hasCapability
-		if ( ! (getDialect() instanceof Oracle10gDialect)) {
-            log.info("skipping testQueryTimeout");
+		if ( !( getDialect() instanceof Oracle10gDialect ) ) {
+			log.info( "skipping testQueryTimeout" );
 			return;
- 		}
+		}
 		EntityManager em = getOrCreateEntityManager();
-		Map queryTimeoutProps = new HashMap();
-		queryTimeoutProps.put("javax.persistence.query.timeout", new Integer(500) ); // 1 sec timeout (should round up)
-		final EntityManager em2 = createIsolatedEntityManager(queryTimeoutProps);
+		Map<String, Object> queryTimeoutProps = new HashMap<String, Object>();
+		queryTimeoutProps.put( "javax.persistence.query.timeout", 500 ); // 1 sec timeout (should round up)
+		final EntityManager em2 = createIsolatedEntityManager( queryTimeoutProps );
 		Lock lock = new Lock();
 		Thread t = null;
-		FutureTask<Boolean> bgTask = null;
-		final CountDownLatch latch = new CountDownLatch(1);
+		FutureTask<Boolean> bgTask;
+		final CountDownLatch latch = new CountDownLatch( 1 );
 		try {
 			lock.setName( "testQueryTimeout" );
 
@@ -720,57 +793,63 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 			em.lock( lock, LockModeType.PESSIMISTIC_WRITE );
 			final Integer id = lock.getId();
 			lock.getName();		// force entity to be read
-            log.info("testQueryTimeout: got write lock");
+			log.info( "testQueryTimeout: got write lock" );
 
-			bgTask = new FutureTask<Boolean>( new Callable() {
-				public Boolean call() {
-					try {
-						boolean timedOut = false;	// true (success) if LockTimeoutException occurred
-						em2.getTransaction().begin();
-                        log.info("testQueryTimeout: (BG) about to read write-locked entity");
-						// we should block on the following read
-						Lock lock2 = em2.getReference( Lock.class, id );
-						lock2.getName();		//  force entity to be read
-                        log.info("testQueryTimeout: (BG) read write-locked entity");
-						try {
-							// we should block on the following read
-							Query query = em2.createQuery(
-									  "select L from Lock_ L where L.id < 10000 ");
-							query.setLockMode( LockModeType.PESSIMISTIC_READ );
-							List<Lock> resultList = query.getResultList();
-							String name = resultList.get(0).getName(); //  force entity to be read
-                            log.info("testQueryTimeout: name read =" + name);
+			bgTask = new FutureTask<Boolean>(
+					new Callable<Boolean>() {
+						public Boolean call() {
+							try {
+								boolean timedOut = false;	// true (success) if LockTimeoutException occurred
+								em2.getTransaction().begin();
+								log.info( "testQueryTimeout: (BG) about to read write-locked entity" );
+								// we should block on the following read
+								Lock lock2 = em2.getReference( Lock.class, id );
+								lock2.getName();		//  force entity to be read
+								log.info( "testQueryTimeout: (BG) read write-locked entity" );
+								try {
+									// we should block on the following read
+									Query query = em2.createQuery(
+											"select L from Lock_ L where L.id < 10000 "
+									);
+									query.setLockMode( LockModeType.PESSIMISTIC_READ );
+									List<Lock> resultList = query.getResultList();
+									String name = resultList.get( 0 ).getName(); //  force entity to be read
+									log.info( "testQueryTimeout: name read =" + name );
+								}
+								catch ( QueryTimeoutException e ) {
+									// success
+									log.info( "testQueryTimeout: (BG) got expected timeout exception" );
+									timedOut = true;
+								}
+								catch ( Throwable e ) {
+									log.info(
+											"testQueryTimeout: Expected LockTimeoutException but got unexpected exception",
+											e
+									);
+								}
+								em2.getTransaction().commit();
+								return timedOut;
+							}
+							finally {
+								latch.countDown();	// signal that we finished
+							}
 						}
-						catch( QueryTimeoutException e) {
-							// success
-                            log.info("testQueryTimeout: (BG) got expected timeout exception");
-							 timedOut = true;
-						}
-						catch ( Throwable e) {
-                            log.info("testQueryTimeout: Expected LockTimeoutException but got unexpected exception", e);
-						}
-						em2.getTransaction().commit();
-						return new Boolean( timedOut );
 					}
-					finally {
-						latch.countDown();	// signal that we finished
-					}
-				}
-			} );
-			t = new Thread(bgTask);
+			);
+			t = new Thread( bgTask );
 			t.setDaemon( true );
 			t.setName( "testQueryTimeout (bg)" );
 			t.start();
 			boolean latchSet = latch.await( 10, TimeUnit.SECONDS );  // should return quickly on success
-			assertTrue( "background test thread finished (lock timeout is broken)", latchSet);
-			assertTrue( "background test thread timed out on lock attempt", bgTask.get().booleanValue() );
+			assertTrue( "background test thread finished (lock timeout is broken)", latchSet );
+			assertTrue( "background test thread timed out on lock attempt", bgTask.get() );
 			em.getTransaction().commit();
 		}
 		finally {
 			if ( em.getTransaction().isActive() ) {
 				em.getTransaction().rollback();
 			}
-			if ( t != null) {	  // wait for background thread to finish before deleting entity
+			if ( t != null ) {	  // wait for background thread to finish before deleting entity
 				t.join();
 			}
 			em.getTransaction().begin();
@@ -782,23 +861,22 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 		}
 	}
 
-
 	@Test
 	public void testLockTimeoutEMProps() throws Exception {
 
 		EntityManager em = getOrCreateEntityManager();
-		Map TimeoutProps = new HashMap();
-		TimeoutProps.put("javax.persistence.lock.timeout", new Integer(1000) ); // 1 second timeout
-		final EntityManager em2 = createIsolatedEntityManager(TimeoutProps);
+		Map<String, Object> TimeoutProps = new HashMap<String, Object>();
+		TimeoutProps.put( "javax.persistence.lock.timeout", 1000 ); // 1 second timeout
+		final EntityManager em2 = createIsolatedEntityManager( TimeoutProps );
 		// TODO:  replace dialect instanceof test with a Dialect.hasCapability (e.g. supportsPessimisticLockTimeout)
-		if ( ! (getDialect() instanceof Oracle10gDialect)) {
-            log.info("skipping testLockTimeoutEMProps");
+		if ( !( getDialect() instanceof Oracle10gDialect ) ) {
+			log.info( "skipping testLockTimeoutEMProps" );
 			return;
 		}
 		Lock lock = new Lock();
 		Thread t = null;
-		FutureTask<Boolean> bgTask = null;
-		final CountDownLatch latch = new CountDownLatch(1);
+		FutureTask<Boolean> bgTask;
+		final CountDownLatch latch = new CountDownLatch( 1 );
 		try {
 			lock.setName( "testLockTimeoutEMProps" );
 
@@ -812,52 +890,54 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 			em.lock( lock, LockModeType.PESSIMISTIC_WRITE );
 			final Integer id = lock.getId();
 			lock.getName();		// force entity to be read
-            log.info("testLockTimeoutEMProps: got write lock");
+			log.info( "testLockTimeoutEMProps: got write lock" );
 
-			bgTask = new FutureTask<Boolean>( new Callable() {
-				public Boolean call() {
-					try {
-						boolean timedOut = false;	// true (success) if LockTimeoutException occurred
-						em2.getTransaction().begin();
-                        log.info("testLockTimeoutEMProps: (BG) about to read write-locked entity");
-						// we should block on the following read
-						Lock lock2 = em2.getReference( Lock.class, id );
-						lock2.getName();		//  force entity to be read
-                        log.info("testLockTimeoutEMProps: (BG) read write-locked entity");
-						// em2 already has javax.persistence.lock.timeout of 1 second applied
-						try {
-							em2.lock( lock2, LockModeType.PESSIMISTIC_WRITE);
+			bgTask = new FutureTask<Boolean>(
+					new Callable<Boolean>() {
+						public Boolean call() {
+							try {
+								boolean timedOut = false;	// true (success) if LockTimeoutException occurred
+								em2.getTransaction().begin();
+								log.info( "testLockTimeoutEMProps: (BG) about to read write-locked entity" );
+								// we should block on the following read
+								Lock lock2 = em2.getReference( Lock.class, id );
+								lock2.getName();		//  force entity to be read
+								log.info( "testLockTimeoutEMProps: (BG) read write-locked entity" );
+								// em2 already has javax.persistence.lock.timeout of 1 second applied
+								try {
+									em2.lock( lock2, LockModeType.PESSIMISTIC_WRITE );
+								}
+								catch ( LockTimeoutException e ) {
+									// success
+									log.info( "testLockTimeoutEMProps: (BG) got expected timeout exception" );
+									timedOut = true;
+								}
+								catch ( Throwable e ) {
+									log.info( "Expected LockTimeoutException but got unexpected exception", e );
+								}
+								em2.getTransaction().commit();
+								return timedOut;
+							}
+							finally {
+								latch.countDown();	// signal that we finished
+							}
 						}
-						catch( LockTimeoutException e) {
-							// success
-                            log.info("testLockTimeoutEMProps: (BG) got expected timeout exception");
-							 timedOut = true;
-						}
-						catch ( Throwable e) {
-                            log.info("Expected LockTimeoutException but got unexpected exception", e);
-						}
-						em2.getTransaction().commit();
-						return new Boolean(timedOut);
 					}
-					finally {
-						latch.countDown();	// signal that we finished
-					}
-				}
-			} );
-			t = new Thread(bgTask);
+			);
+			t = new Thread( bgTask );
 			t.setDaemon( true );
-			t.setName("Lock timeout Test (bg)");
+			t.setName( "Lock timeout Test (bg)" );
 			t.start();
 			boolean latchSet = latch.await( 10, TimeUnit.SECONDS );  // should return quickly on success
-			assertTrue( "background test thread finished (lock timeout is broken)", latchSet);
-			assertTrue( "background test thread timed out on lock attempt", bgTask.get().booleanValue() );
+			assertTrue( "background test thread finished (lock timeout is broken)", latchSet );
+			assertTrue( "background test thread timed out on lock attempt", bgTask.get() );
 			em.getTransaction().commit();
 		}
 		finally {
 			if ( em.getTransaction().isActive() ) {
 				em.getTransaction().rollback();
 			}
-			if ( t != null) {	  // wait for background thread to finish before deleting entity
+			if ( t != null ) {	  // wait for background thread to finish before deleting entity
 				t.join();
 			}
 			em.getTransaction().begin();
@@ -871,7 +951,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override
 	public Class[] getAnnotatedClasses() {
-		return new Class[]{
+		return new Class[] {
 				Lock.class,
 				UnversionedLock.class
 		};

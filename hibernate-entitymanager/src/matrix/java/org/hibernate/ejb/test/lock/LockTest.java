@@ -279,13 +279,18 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	@SkipForDialect(value = { HSQLDialect.class, SybaseASE15Dialect.class }, jiraKey = "HHH-6820")
 	public void testContendedPessimisticLock() throws Exception {
 		final EntityManager em = getOrCreateEntityManager();
+		final EntityManager isolatedEntityManager = createIsolatedEntityManager();
+
 		Lock lock = createAndPersistLockInstance( em );
 
 		try {
 			inFirstTransactionReloadAndModifyLockInstance( em, lock );
 
 			final CountDownLatch latch = new CountDownLatch( 1 );
-			FutureTask<Boolean> future = inBackgroundThreadStartSecondTransactionAndReadLockInstance( latch );
+			FutureTask<Boolean> future = inBackgroundThreadStartSecondTransactionAndReadLockInstance(
+					latch,
+					isolatedEntityManager
+			);
 
 			// wait with timeout on the background thread
 			log.debug( "testContendedPessimisticLock:  wait on BG thread" );
@@ -313,14 +318,16 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 			}
 		}
 		finally {
-			cleanup( em, lock );
+			cleanup( em, isolatedEntityManager, lock );
 		}
 	}
 
-	private void cleanup(EntityManager em, Lock lock) throws InterruptedException {
-		if ( em.getTransaction().isActive() ) {
-			em.getTransaction().rollback();
-		}
+	private void cleanup(EntityManager em, EntityManager isolatedEntityManager, Lock lock) throws InterruptedException {
+		// only commit the second transaction after the first one completed
+		isolatedEntityManager.getTransaction().commit();
+		isolatedEntityManager.close();
+
+        // cleanup test data
 		em.getTransaction().begin();
 		lock = em.getReference( Lock.class, lock.getId() );
 		em.remove( lock );
@@ -328,9 +335,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
-	private FutureTask<Boolean> inBackgroundThreadStartSecondTransactionAndReadLockInstance(final CountDownLatch latch) {
-		final EntityManager isolatedEntityManager = createIsolatedEntityManager();
-
+	private FutureTask<Boolean> inBackgroundThreadStartSecondTransactionAndReadLockInstance(final CountDownLatch latch, final EntityManager isolatedEntityManager) {
 		FutureTask<Boolean> bgTask = new FutureTask<Boolean>(
 				new Callable<Boolean>() {
 					public Boolean call() {
@@ -353,8 +358,6 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 							throw e;
 						}
 						finally {
-							isolatedEntityManager.getTransaction().commit();
-							isolatedEntityManager.close();
 							latch.countDown();	// signal that we got the read lock
 						}
 					}

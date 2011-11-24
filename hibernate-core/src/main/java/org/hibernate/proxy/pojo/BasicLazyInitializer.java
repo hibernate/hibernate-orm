@@ -29,7 +29,6 @@ import java.lang.reflect.Method;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.MarkerObject;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.proxy.AbstractLazyInitializer;
 import org.hibernate.type.CompositeType;
 
@@ -42,12 +41,13 @@ public abstract class BasicLazyInitializer extends AbstractLazyInitializer {
 
 	protected static final Object INVOKE_IMPLEMENTATION = new MarkerObject("INVOKE_IMPLEMENTATION");
 
-	protected Class persistentClass;
-	protected Method getIdentifierMethod;
-	protected Method setIdentifierMethod;
-	protected boolean overridesEquals;
+	protected final Class persistentClass;
+	protected final Method getIdentifierMethod;
+	protected final Method setIdentifierMethod;
+	protected final boolean overridesEquals;
+	protected final CompositeType componentIdType;
+
 	private Object replacement;
-	protected CompositeType componentIdType;
 
 	protected BasicLazyInitializer(
 			String entityName,
@@ -56,13 +56,14 @@ public abstract class BasicLazyInitializer extends AbstractLazyInitializer {
 	        Method getIdentifierMethod,
 	        Method setIdentifierMethod,
 	        CompositeType componentIdType,
-	        SessionImplementor session) {
+	        SessionImplementor session,
+	        boolean overridesEquals) {
 		super(entityName, id, session);
 		this.persistentClass = persistentClass;
 		this.getIdentifierMethod = getIdentifierMethod;
 		this.setIdentifierMethod = setIdentifierMethod;
 		this.componentIdType = componentIdType;
-		overridesEquals = ReflectHelper.overridesEquals(persistentClass);
+		this.overridesEquals = overridesEquals;
 	}
 
 	protected abstract Object serializableProxy();

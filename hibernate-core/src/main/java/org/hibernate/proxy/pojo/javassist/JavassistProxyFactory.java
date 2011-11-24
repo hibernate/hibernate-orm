@@ -53,9 +53,9 @@ public class JavassistProxyFactory implements ProxyFactory, Serializable {
 	public void postInstantiate(
 			final String entityName,
 			final Class persistentClass,
-	        final Set interfaces,
+			final Set interfaces,
 			final Method getIdentifierMethod,
-	        final Method setIdentifierMethod,
+			final Method setIdentifierMethod,
 			CompositeType componentIdType) throws HibernateException {
 		this.entityName = entityName;
 		this.persistentClass = persistentClass;
@@ -69,18 +69,18 @@ public class JavassistProxyFactory implements ProxyFactory, Serializable {
 
 	public HibernateProxy getProxy(
 			Serializable id,
-	        SessionImplementor session) throws HibernateException {
+			SessionImplementor session) throws HibernateException {
 		return JavassistLazyInitializer.getProxy(
 				factory,
-		        entityName,
+				entityName,
 				persistentClass,
-		        interfaces,
-		        getIdentifierMethod,
+				interfaces,
+				getIdentifierMethod,
 				setIdentifierMethod,
-		        componentIdType,
-		        id,
-		        session,
-		        overridesEquals
+				componentIdType,
+				id,
+				session,
+				overridesEquals
 		);
 	}
 

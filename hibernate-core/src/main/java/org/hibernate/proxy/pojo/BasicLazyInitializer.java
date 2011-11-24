@@ -29,7 +29,6 @@ import java.lang.reflect.Method;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.MarkerObject;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.proxy.AbstractLazyInitializer;
 import org.hibernate.type.CompositeType;
 

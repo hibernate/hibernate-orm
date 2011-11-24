@@ -63,11 +63,11 @@ public interface ProxyFactory {
 	 */
 	public void postInstantiate(
 			String entityName,
-	        Class persistentClass,
-	        Set interfaces,
-	        Method getIdentifierMethod,
-	        Method setIdentifierMethod,
-	        CompositeType componentIdType) throws HibernateException;
+			Class persistentClass,
+			Set interfaces,
+			Method getIdentifierMethod,
+			Method setIdentifierMethod,
+			CompositeType componentIdType) throws HibernateException;
 
 	/**
 	 * Create a new proxy instance

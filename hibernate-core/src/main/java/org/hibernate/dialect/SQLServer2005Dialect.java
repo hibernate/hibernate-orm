@@ -194,6 +194,6 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 		int selectEndIndex = sql.indexOf( FROM );
 
 		// Insert after the select statement the row_number() function:
-		sql.insert( selectEndIndex, ", ROW_NUMBER() OVER (" + orderby + ") as __hibernate_row_nr__ " );
+		sql.insert( selectEndIndex - 1, ", ROW_NUMBER() OVER (" + orderby + ") as __hibernate_row_nr__" );
 	}
 }

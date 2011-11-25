@@ -311,6 +311,10 @@ public String getLimitString(String sql, int offset, int limit) {
 		return false;
 	}
 
+	public boolean supportsExistsInSelect() {
+		return false;
+	}
+
 	public String getSelectClauseNullString(int sqlType) {
 		String literal;
 		switch(sqlType) {

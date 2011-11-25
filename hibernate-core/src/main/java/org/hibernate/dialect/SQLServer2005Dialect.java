@@ -24,6 +24,8 @@
 package org.hibernate.dialect;
 
 import java.sql.Types;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.type.StandardBasicTypes;
@@ -38,6 +40,11 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 	private static final String FROM = "from";
 	private static final String DISTINCT = "distinct";
 	private static final int MAX_LENGTH = 8000;
+
+	/**
+	 * Regular expression for stripping alias
+	 */
+	private static final Pattern ALIAS_PATTERN = Pattern.compile( "\\sas[^,]+(,?)" );
 
 	public SQLServer2005Dialect() {
 		// HHH-3965 fix
@@ -172,7 +179,8 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 	 * @return a string without the as statements
 	 */
 	protected static String stripAliases(String str) {
-		return str.replaceAll( "\\sas[^,]+(,?)", "$1" );
+		Matcher matcher = ALIAS_PATTERN.matcher( str );
+		return matcher.replaceAll( "$1" );
 	}
 
 	/**
@@ -183,9 +191,9 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 	 */
 	protected static void insertRowNumberFunction(StringBuilder sql, CharSequence orderby) {
 		// Find the end of the select statement
-		int selectEndIndex = sql.indexOf( SELECT ) + SELECT.length();
+		int selectEndIndex = sql.indexOf( FROM );
 
 		// Insert after the select statement the row_number() function:
-		sql.insert( selectEndIndex, " ROW_NUMBER() OVER (" + orderby + ") as __hibernate_row_nr__," );
+		sql.insert( selectEndIndex, ", ROW_NUMBER() OVER (" + orderby + ") as __hibernate_row_nr__ " );
 	}
 }

@@ -107,4 +107,40 @@ public class DataPoint {
 	public void setY(BigDecimal y) {
 		this.y = y;
 	}
+
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+
+		DataPoint dataPoint = (DataPoint) o;
+
+		if ( sequence != dataPoint.sequence ) {
+			return false;
+		}
+		if ( description != null ? !description.equals( dataPoint.description ) : dataPoint.description != null ) {
+			return false;
+		}
+		if ( x != null ? !x.equals( dataPoint.x ) : dataPoint.x != null ) {
+			return false;
+		}
+		if ( y != null ? !y.equals( dataPoint.y ) : dataPoint.y != null ) {
+			return false;
+		}
+
+		return true;
+	}
+
+	@Override
+	public int hashCode() {
+		int result = sequence;
+		result = 31 * result + ( x != null ? x.hashCode() : 0 );
+		result = 31 * result + ( y != null ? y.hashCode() : 0 );
+		result = 31 * result + ( description != null ? description.hashCode() : 0 );
+		return result;
+	}
 }

@@ -137,8 +137,8 @@ public abstract class AbstractBatchImpl implements Batch {
 	}
 
 	@Override
-	public void setTransactionTimeOut(long timeOut) {
-		transactionTimeOut = timeOut;
+	public void setTransactionTimeOut(int seconds) {
+		transactionTimeOut = System.currentTimeMillis() + seconds * 1000;
 	}
 
 	@Override

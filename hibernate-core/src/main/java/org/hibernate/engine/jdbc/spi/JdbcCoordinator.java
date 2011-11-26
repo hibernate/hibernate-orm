@@ -93,9 +93,10 @@ public interface JdbcCoordinator extends Serializable {
 	public void cancelLastQuery();
 
 	/**
-	 * Set time at which timeout should occur.
-	 * @param timeout Number of milliseconds measured from midnight, January 1, 1970 UTC.
+	 * Set transaction timeout.
+	 *
+	 * @param seconds The number of seconds before a timeout.
 	 */
-	public void setTransactionTimeOut(long timeout);
+	public void setTransactionTimeOut(int seconds);
 
 }

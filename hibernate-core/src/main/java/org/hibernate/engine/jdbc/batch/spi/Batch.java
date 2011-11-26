@@ -76,10 +76,11 @@ public interface Batch {
 	public void release();
 
 	/**
-	 * Set time at which timeout should occur.
-	 * @param timeOut Number of milliseconds measured from midnight, January 1, 1970 UTC.
+	 * Set transaction timeout.
+	 * 
+	 * @param seconds The number of seconds before a timeout.
 	 */
-	public void setTransactionTimeOut(long timeOut);
+	public void setTransactionTimeOut(int seconds);
 
 	/**
 	 * Disable transaction timeout.

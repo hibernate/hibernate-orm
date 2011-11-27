@@ -1307,9 +1307,20 @@ public class Configuration implements Serializable {
 		{
 			if ( !isDefaultProcessed ) {
 				//use global delimiters if orm.xml declare it
-				final Object isDelimited = reflectionManager.getDefaults().get( "delimited-identifier" );
+				Map defaults = reflectionManager.getDefaults();
+				final Object isDelimited = defaults.get( "delimited-identifier" );
 				if ( isDelimited != null && isDelimited == Boolean.TRUE ) {
 					getProperties().put( Environment.GLOBALLY_QUOTED_IDENTIFIERS, "true" );
+				}
+				// Set default schema name if orm.xml declares it.
+				final String schema = (String) defaults.get( "schema" );
+				if ( StringHelper.isNotEmpty( schema ) ) {
+					getProperties().put( Environment.DEFAULT_SCHEMA, schema );
+				}
+				// Set default catalog name if orm.xml declares it.
+				final String catalog = (String) defaults.get( "catalog" );
+				if ( StringHelper.isNotEmpty( catalog ) ) {
+					getProperties().put( Environment.DEFAULT_CATALOG, catalog );
 				}
 
 				AnnotationBinder.bindDefaults( createMappings() );

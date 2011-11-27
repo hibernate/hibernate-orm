@@ -82,6 +82,8 @@ public class JPAMetadataProvider implements MetadataProvider, Serializable {
 			defaults = new HashMap<Object, Object>();
 			XMLContext.Default xmlDefaults = xmlContext.getDefault( null );
 
+			defaults.put( "schema", xmlDefaults.getSchema() );
+			defaults.put( "catalog", xmlDefaults.getCatalog() );
 			defaults.put( "delimited-identifier", xmlDefaults.getDelimitedIdentifier() );
 			List<Class> entityListeners = new ArrayList<Class>();
 			for ( String className : xmlContext.getDefaultEntityListeners() ) {

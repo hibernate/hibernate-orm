@@ -139,8 +139,7 @@ public class HQLTest extends QueryTranslatorTestCase {
     }
 
 	@Test
-	@RequiresDialectFeature( DialectChecks.SupportsRowValueConstructorSyntaxInInListCheck .class )
-    public void testRowValueConstructorSyntaxInInList() {
+    public void testRowValueConstructorSyntaxInInListBeingTranslated() {
 		QueryTranslatorImpl translator = createNewQueryTranslator("from LineItem l where l.id in (?)");
 		assertInExist("'in' should be translated to 'and'", false, translator);
 		translator = createNewQueryTranslator("from LineItem l where l.id in ?");
@@ -148,19 +147,36 @@ public class HQLTest extends QueryTranslatorTestCase {
 		translator = createNewQueryTranslator("from LineItem l where l.id in (('a1',1,'b1'),('a2',2,'b2'))");
 		assertInExist("'in' should be translated to 'and'", false, translator);
 		translator = createNewQueryTranslator("from Animal a where a.id in (?)");
-		assertInExist("only translate tuple with 'in' syntax", true, translator);
+		assertInExist("only translated tuple has 'in' syntax", true, translator);
 		translator = createNewQueryTranslator("from Animal a where a.id in ?");
-		assertInExist("only translate tuple with 'in' syntax", true, translator);
+		assertInExist("only translated tuple has 'in' syntax", true, translator);
 		translator = createNewQueryTranslator("from LineItem l where l.id in (select a1 from Animal a1 left join a1.offspring o where a1.id = 1)");
-		assertInExist("do not translate subqueries", true, translator);
+		assertInExist("do not translate sub-queries", true, translator);
+    }
 
+	@Test
+	@RequiresDialectFeature( DialectChecks.SupportsRowValueConstructorSyntaxInInListCheck.class )
+    public void testRowValueConstructorSyntaxInInList() {
+		QueryTranslatorImpl translator = createNewQueryTranslator("from LineItem l where l.id in (?)");
+		assertInExist(" 'in' should be kept, since the dialect supports this syntax", true, translator);
+		translator = createNewQueryTranslator("from LineItem l where l.id in ?");
+		assertInExist(" 'in' should be kept, since the dialect supports this syntax", true, translator);
+		translator = createNewQueryTranslator("from LineItem l where l.id in (('a1',1,'b1'),('a2',2,'b2'))");
+		assertInExist(" 'in' should be kept, since the dialect supports this syntax", true,translator);
+		translator = createNewQueryTranslator("from Animal a where a.id in (?)");
+		assertInExist("only translated tuple has 'in' syntax", true, translator);
+		translator = createNewQueryTranslator("from Animal a where a.id in ?");
+		assertInExist("only translated tuple has 'in' syntax", true, translator);
+		translator = createNewQueryTranslator("from LineItem l where l.id in (select a1 from Animal a1 left join a1.offspring o where a1.id = 1)");
+		assertInExist("do not translate sub-queries", true, translator);
     }
 
 	private void assertInExist( String message, boolean expected, QueryTranslatorImpl translator ) {
 		AST ast = translator.getSqlAST().getWalker().getAST();
 		QueryNode queryNode = (QueryNode) ast;
-		AST inNode = ASTUtil.findTypeInChildren( queryNode, HqlTokenTypes.IN );
-		assertEquals( message, expected, inNode != null );
+		AST whereNode = ASTUtil.findTypeInChildren( queryNode, HqlTokenTypes.WHERE );
+		AST inNode = whereNode.getFirstChild();
+		assertEquals( message, expected, inNode != null && inNode.getType() == HqlTokenTypes.IN );
 	}
     
 	@Test

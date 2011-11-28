@@ -92,6 +92,11 @@ public interface JdbcCoordinator extends Serializable {
 
 	public void cancelLastQuery();
 
-	public void setTransactionTimeOut(int timeout);
+	/**
+	 * Set transaction timeout.
+	 *
+	 * @param seconds The number of seconds before a timeout.
+	 */
+	public void setTransactionTimeOut(int seconds);
 
 }

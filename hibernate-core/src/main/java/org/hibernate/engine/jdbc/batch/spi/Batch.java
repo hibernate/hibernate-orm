@@ -32,6 +32,7 @@ import java.sql.PreparedStatement;
  * batch.
  *
  * @author Steve Ebersole
+ * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public interface Batch {
 	/**
@@ -73,5 +74,17 @@ public interface Batch {
 	 * resources.
 	 */
 	public void release();
+
+	/**
+	 * Set transaction timeout.
+	 * 
+	 * @param seconds The number of seconds before a timeout.
+	 */
+	public void setTransactionTimeOut(int seconds);
+
+	/**
+	 * Disable transaction timeout.
+	 */
+	public void unsetTransactionTimeOut();
 }
 

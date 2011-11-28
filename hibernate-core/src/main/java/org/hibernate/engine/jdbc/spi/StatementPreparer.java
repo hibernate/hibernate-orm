@@ -92,6 +92,15 @@ public interface StatementPreparer {
 	 */
 	public PreparedStatement prepareQueryStatement(String sql, boolean isCallable, ScrollMode scrollMode);
 
-	public void setTransactionTimeOut(int timeout);
+	/**
+	 * Set transaction timeout.
+	 *
+	 * @param seconds The number of seconds before a timeout.
+	 */
+	public void setTransactionTimeOut(int seconds);
+
+	/**
+	 * Disable transaction timeout.
+	 */
 	public void unsetTransactionTimeOut();
 }

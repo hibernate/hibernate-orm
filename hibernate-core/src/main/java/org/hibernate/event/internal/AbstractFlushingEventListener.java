@@ -45,7 +45,6 @@ import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
-import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.EventType;
@@ -213,6 +212,12 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 		// It is safe because of how IdentityMap implements entrySet()
 
 		final EventSource source = event.getSession();
+		final Iterable<FlushEntityEventListener> flushListeners = source
+				.getFactory()
+				.getServiceRegistry()
+				.getService( EventListenerRegistry.class )
+				.getEventListenerGroup( EventType.FLUSH_ENTITY )
+				.listeners();
 
 		final Map.Entry[] list = IdentityMap.concurrentEntries( source.getPersistenceContext().getEntityEntries() );
 		final int size = list.length;
@@ -226,12 +231,7 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 
 			if ( status != Status.LOADING && status != Status.GONE ) {
 				final FlushEntityEvent entityEvent = new FlushEntityEvent( source, me.getKey(), entry );
-				final EventListenerGroup<FlushEntityEventListener> listenerGroup = source
-						.getFactory()
-						.getServiceRegistry()
-						.getService( EventListenerRegistry.class )
-						.getEventListenerGroup( EventType.FLUSH_ENTITY );
-				for ( FlushEntityEventListener listener : listenerGroup.listeners() ) {
+				for ( FlushEntityEventListener listener : flushListeners ) {
 					listener.onFlushEntity( entityEvent );
 				}
 			}

@@ -1696,7 +1696,7 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 		session.close();
 	}
 
-        @Test
+    @Test
 	public void testCriteriaCollectionOfValue() {
 		Session session = openSession();
 		Transaction t = session.beginTransaction();
@@ -1806,7 +1806,7 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 		session.close();
 	}
 
-        @Test
+    @Test
 	public void testCriteriaCollectionOfComponent() {
 		Session session = openSession();
 		Transaction t = session.beginTransaction();

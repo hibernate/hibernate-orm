@@ -309,7 +309,12 @@ inList
 	;
 	
 simpleExprList
-	: { out("("); } (e:simpleExpr { separator(e," , "); } )* { out(")"); }
+	: { out("("); } (e:simpleExprWithVectorExpr { separator(e," , "); } )* { out(")"); }
+	;
+
+simpleExprWithVectorExpr
+	: simpleExpr
+	| #( VECTOR_EXPR { out("("); } (e:expr { separator(e," , "); } )*  { out(")"); } )
 	;
 
 // A simple expression, or a sub-select with parens around it.

@@ -36,6 +36,7 @@ import org.hibernate.MappingException;
 import org.hibernate.bytecode.instrumentation.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.service.spi.EventListenerRegistry;
@@ -460,6 +461,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 			final Type[] subTypes = virtualIdComponent.getSubtypes();
 			final Type[] copierSubTypes = mappedIdentifierType.getSubtypes();
 			final Iterable<PersistEventListener> persistEventListeners = persistEventListeners( session );
+			final PersistenceContext persistenceContext = session.getPersistenceContext();
 			final int length = subTypes.length;
 			for ( int i = 0 ; i < length; i++ ) {
 				if ( propertyValues[i] == null ) {
@@ -488,7 +490,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 							for ( PersistEventListener listener : persistEventListeners ) {
 								listener.onPersist( event );
 							}
-							pcEntry = session.getPersistenceContext().getEntry( propertyValues[i] );
+							pcEntry = persistenceContext.getEntry( propertyValues[i] );
 							if ( pcEntry == null || pcEntry.getId() == null ) {
 								throw new HibernateException( "Unable to process implicit derived identity cascade" );
 							}
@@ -507,6 +509,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 		public void setIdentifier(Object entity, Serializable id, EntityMode entityMode, SessionImplementor session) {
 			final Object[] extractedValues = mappedIdentifierType.getPropertyValues( id, entityMode );
 			final Object[] injectionValues = new Object[ extractedValues.length ];
+			final PersistenceContext persistenceContext = session.getPersistenceContext();
 			for ( int i = 0; i < virtualIdComponent.getSubtypes().length; i++ ) {
 				final Type virtualPropertyType = virtualIdComponent.getSubtypes()[i];
 				final Type idClassPropertyType = mappedIdentifierType.getSubtypes()[i];
@@ -522,10 +525,10 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 							session.getFactory().getEntityPersister( associatedEntityName )
 					);
 					// it is conceivable there is a proxy, so check that first
-					Object association = session.getPersistenceContext().getProxy( entityKey );
+					Object association = persistenceContext.getProxy( entityKey );
 					if ( association == null ) {
 						// otherwise look for an initialized version
-						association = session.getPersistenceContext().getEntity( entityKey );
+						association = persistenceContext.getEntity( entityKey );
 					}
 					injectionValues[i] = association;
 				}

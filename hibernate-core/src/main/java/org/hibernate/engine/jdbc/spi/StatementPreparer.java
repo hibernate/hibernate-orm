@@ -28,6 +28,8 @@ import java.sql.PreparedStatement;
 import org.hibernate.ScrollMode;
 
 /**
+ * Contracting for preparing SQL statements
+ *
  * @author Steve Ebersole
  */
 public interface StatementPreparer {
@@ -91,7 +93,4 @@ public interface StatementPreparer {
 	 * @return the prepared statement
 	 */
 	public PreparedStatement prepareQueryStatement(String sql, boolean isCallable, ScrollMode scrollMode);
-
-	public void setTransactionTimeOut(int timeout);
-	public void unsetTransactionTimeOut();
 }

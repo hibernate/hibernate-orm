@@ -80,11 +80,14 @@ public interface LogicalConnection extends Serializable {
 	 * Release the underlying connection and clean up any other resources associated
 	 * with this logical connection.
 	 * <p/>
-	 * This leaves the logical connection in a "no longer useable" state.
+	 * This leaves the logical connection in a "no longer usable" state.
 	 *
-	 * @return The physical connection which was being used.
+	 * @return The application-supplied connection, or {@code null} if Hibernate was managing connection.
 	 */
 	public Connection close();
 
+	/**
+	 * Signals the end of current transaction in which this logical connection operated.
+	 */
 	public void afterTransaction();
 }

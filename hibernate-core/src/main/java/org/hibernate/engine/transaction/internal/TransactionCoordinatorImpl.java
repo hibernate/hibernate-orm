@@ -66,8 +66,8 @@ public class TransactionCoordinatorImpl implements TransactionCoordinator {
 
 	private final transient TransactionContext transactionContext;
 	private final transient JdbcCoordinatorImpl jdbcCoordinator;
-        private final transient TransactionFactory transactionFactory;
-        private final transient TransactionEnvironment transactionEnvironment;
+	private final transient TransactionFactory transactionFactory;
+	private final transient TransactionEnvironment transactionEnvironment;
 
 	private final transient List<TransactionObserver> observers;
 	private final transient SynchronizationRegistryImpl synchronizationRegistry;

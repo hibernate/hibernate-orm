@@ -30,7 +30,6 @@ import java.sql.SQLException;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.ScrollMode;
-import org.hibernate.TransactionException;
 import org.hibernate.cfg.Settings;
 import org.hibernate.engine.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
@@ -41,7 +40,6 @@ import org.hibernate.engine.jdbc.spi.StatementPreparer;
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
 */
 class StatementPreparerImpl implements StatementPreparer {
-	private long transactionTimeOut = -1;
 	private JdbcCoordinatorImpl jdbcCoordinator;
 
 	StatementPreparerImpl(JdbcCoordinatorImpl jdbcCoordinator) {
@@ -156,16 +154,6 @@ class StatementPreparerImpl implements StatementPreparer {
 		}
 	}
 
-	@Override
-	public void setTransactionTimeOut(int timeOut) {
-		transactionTimeOut = timeOut;
-	}
-
-	@Override
-	public void unsetTransactionTimeOut() {
-		transactionTimeOut = -1;
-	}
-
 	private abstract class StatementPreparationTemplate {
 		protected final String sql;
 
@@ -191,17 +179,11 @@ class StatementPreparerImpl implements StatementPreparer {
 		}
 
 		private void setStatementTimeout(PreparedStatement preparedStatement) throws SQLException {
-			if ( transactionTimeOut > 0 ) {
-				int timeout = (int) ( transactionTimeOut - ( System.currentTimeMillis() / 1000 ) );
-				if ( timeout <= 0 ) {
-					throw new TransactionException( "transaction timeout expired" );
-				}
-				else {
-					preparedStatement.setQueryTimeout( timeout );
-				}
+			final int remainingTransactionTimeOutPeriod = jdbcCoordinator.determineRemainingTransactionTimeOutPeriod();
+			if ( remainingTransactionTimeOutPeriod > 0 ) {
+				preparedStatement.setQueryTimeout( remainingTransactionTimeOutPeriod );
 			}
 		}
-
 	}
 
 	private abstract class QueryStatementPreparationTemplate extends StatementPreparationTemplate {

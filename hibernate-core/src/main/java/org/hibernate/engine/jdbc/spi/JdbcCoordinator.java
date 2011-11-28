@@ -60,6 +60,14 @@ public interface JdbcCoordinator extends Serializable {
 	 */
 	public Batch getBatch(BatchKey key);
 
+	/**
+	 * Execute the currently managed batch (if any)
+	 */
+	public void executeBatch();
+
+	/**
+	 * Abort the currently managed batch (if any)
+	 */
 	public void abortBatch();
 
 	/**
@@ -82,16 +90,51 @@ public interface JdbcCoordinator extends Serializable {
 	 */
 	public void flushEnding();
 
+	/**
+	 * Close this coordinator and release and resources.
+	 *
+	 * @return The {@link Connection} associated with the managed {@link #getLogicalConnection() logical connection}
+	 *
+	 * @see {@link LogicalConnection#close()}
+	 */
 	public Connection close();
 
+	/**
+	 * Signals the end of transaction.
+	 * <p/>
+	 * Intended for use from the transaction coordinator, after local transaction completion.  Used to conditionally
+	 * release the JDBC connection aggressively if the configured release mode indicates.
+	 */
 	public void afterTransaction();
 
+	/**
+	 * Perform the requested work handling exceptions, coordinating and handling return processing.
+	 *
+	 * @param work The work to be performed.
+	 * @param <T> The result type.
+	 * @return The work result.
+	 */
 	public <T> T coordinateWork(WorkExecutorVisitable<T> work);
 
-	public void executeBatch();
-
+	/**
+	 * Attempt to cancel the last query sent to the JDBC driver.
+	 */
 	public void cancelLastQuery();
 
-	public void setTransactionTimeOut(int timeout);
+	/**
+	 * Set the effective transaction timeout period for the current transaction, in seconds.
+	 *
+	 * @param seconds The number of seconds before a time out should occur.
+	 */
+	public void setTransactionTimeOut(int seconds);
 
+    /**
+	 * Calculate the amount of time, in seconds, still remaining before transaction timeout occurs.
+	 *
+	 * @return The number of seconds remaining until until a transaction timeout occurs.  A negative value indicates
+	 * no timeout was requested.
+	 *
+	 * @throws org.hibernate.TransactionException Indicates the time out period has already been exceeded.
+	 */
+    public int determineRemainingTransactionTimeOutPeriod();
 }

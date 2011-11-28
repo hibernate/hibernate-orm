@@ -188,9 +188,7 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 		return buildConnectionProxy();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Connection close() {
 		LOG.trace( "Closing logical connection" );
 		Connection c = isUserSuppliedConnection ? physicalConnection : null;

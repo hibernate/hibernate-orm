@@ -459,6 +459,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 			final Object[] propertyValues = virtualIdComponent.getPropertyValues( entity, entityMode );
 			final Type[] subTypes = virtualIdComponent.getSubtypes();
 			final Type[] copierSubTypes = mappedIdentifierType.getSubtypes();
+			final Iterable<PersistEventListener> persistEventListeners = persistEventListeners( session );
 			final int length = subTypes.length;
 			for ( int i = 0 ; i < length; i++ ) {
 				if ( propertyValues[i] == null ) {
@@ -484,7 +485,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 						else {
 							LOG.debug( "Performing implicit derived identity cascade" );
 							final PersistEvent event = new PersistEvent( null, propertyValues[i], (EventSource) session );
-							for ( PersistEventListener listener : persistEventListeners( session ) ) {
+							for ( PersistEventListener listener : persistEventListeners ) {
 								listener.onPersist( event );
 							}
 							pcEntry = session.getPersistenceContext().getEntry( propertyValues[i] );

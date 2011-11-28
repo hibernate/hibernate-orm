@@ -87,19 +87,19 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
 		session.getInterceptor().preFlush( new LazyIterator( persistenceContext.getEntitiesByKey() ) );
 
-		prepareEntityFlushes(session);
+		prepareEntityFlushes( session, persistenceContext );
 		// we could move this inside if we wanted to
 		// tolerate collection initializations during
 		// collection dirty checking:
-		prepareCollectionFlushes(session);
+		prepareCollectionFlushes( persistenceContext );
 		// now, any collections that are initialized
 		// inside this block do not get updated - they
 		// are ignored until the next flush
 
 		persistenceContext.setFlushing(true);
 		try {
-			flushEntities(event);
-			flushCollections(session);
+			flushEntities( event, persistenceContext );
+			flushCollections( session, persistenceContext );
 		}
 		finally {
 			persistenceContext.setFlushing(false);
@@ -140,11 +140,11 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 	 * any newly referenced entity that must be passed to saveOrUpdate(),
 	 * and also apply orphan delete
 	 */
-	private void prepareEntityFlushes(EventSource session) throws HibernateException {
+	private void prepareEntityFlushes(EventSource session, PersistenceContext persistenceContext) throws HibernateException {
 
 		LOG.debug( "Processing flush-time cascades" );
 
-		final Map.Entry[] list = IdentityMap.concurrentEntries( session.getPersistenceContext().getEntityEntries() );
+		final Map.Entry[] list = IdentityMap.concurrentEntries( persistenceContext.getEntityEntries() );
 		//safe from concurrent modification because of how entryList() is implemented on IdentityMap
 		final int size = list.length;
 		final Object anything = getAnything();
@@ -180,14 +180,14 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 	 * Initialize the flags of the CollectionEntry, including the
 	 * dirty check.
 	 */
-	private void prepareCollectionFlushes(SessionImplementor session) throws HibernateException {
+	private void prepareCollectionFlushes(PersistenceContext persistenceContext) throws HibernateException {
 
 		// Initialize dirty flags for arrays + collections with composite elements
 		// and reset reached, doupdate, etc.
 
 		LOG.debug( "Dirty checking collections" );
 
-		final List list = IdentityMap.entries( session.getPersistenceContext().getCollectionEntries() );
+		final List list = IdentityMap.entries( persistenceContext.getCollectionEntries() );
 		final int size = list.size();
 		for ( int i = 0; i < size; i++ ) {
 			Map.Entry e = ( Map.Entry ) list.get( i );
@@ -200,7 +200,7 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 	 * 2. schedule any entity updates
 	 * 3. search out any reachable collections
 	 */
-	private void flushEntities(FlushEvent event) throws HibernateException {
+	private void flushEntities(final FlushEvent event, final PersistenceContext persistenceContext) throws HibernateException {
 
 		LOG.trace( "Flushing entities and processing referenced collections" );
 
@@ -219,7 +219,7 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 				.getEventListenerGroup( EventType.FLUSH_ENTITY )
 				.listeners();
 
-		final Map.Entry[] list = IdentityMap.concurrentEntries( source.getPersistenceContext().getEntityEntries() );
+		final Map.Entry[] list = IdentityMap.concurrentEntries( persistenceContext.getEntityEntries() );
 		final int size = list.length;
 		for ( int i = 0; i < size; i++ ) {
 
@@ -244,11 +244,11 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 	 * process any unreferenced collections and then inspect all known collections,
 	 * scheduling creates/removes/updates
 	 */
-	private void flushCollections(EventSource session) throws HibernateException {
+	private void flushCollections(final EventSource session, final PersistenceContext persistenceContext) throws HibernateException {
 
 		LOG.trace( "Processing unreferenced collections" );
 
-		List list = IdentityMap.entries( session.getPersistenceContext().getCollectionEntries() );
+		List list = IdentityMap.entries( persistenceContext.getCollectionEntries() );
 		int size = list.size();
 		for ( int i = 0; i < size; i++ ) {
 			Map.Entry me = ( Map.Entry ) list.get( i );
@@ -262,7 +262,7 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 
 		LOG.trace( "Scheduling collection removes/(re)creates/updates" );
 
-		list = IdentityMap.entries( session.getPersistenceContext().getCollectionEntries() );
+		list = IdentityMap.entries( persistenceContext.getCollectionEntries() );
 		size = list.size();
 		ActionQueue actionQueue = session.getActionQueue();
 		for ( int i = 0; i < size; i++ ) {

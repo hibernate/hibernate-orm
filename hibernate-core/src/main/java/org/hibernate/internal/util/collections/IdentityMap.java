@@ -86,16 +86,16 @@ public final class IdentityMap<K,V> implements Map<K,V> {
 	 * @param map The map of entries
 	 * @return Collection
 	 */
-	public static Map.Entry[] concurrentEntries(Map map) {
-		return ( (IdentityMap) map ).entryArray();
+	public static <K,V> Map.Entry<K,V>[] concurrentEntries(Map<K,V> map) {
+		return ( (IdentityMap<K,V>) map ).entryArray();
 	}
 
 	public static <K,V> List<Entry<K,V>> entries(Map<K,V> map) {
-		return ( (IdentityMap) map ).entryList();
+		return ( (IdentityMap<K,V>) map ).entryList();
 	}
 
-	public static Iterator keyIterator(Map map) {
-		return ( (IdentityMap) map ).keyIterator();
+	public static <K,V> Iterator<K> keyIterator(Map<K,V> map) {
+		return ( (IdentityMap<K,V>) map ).keyIterator();
 	}
 
 	public Iterator keyIterator() {

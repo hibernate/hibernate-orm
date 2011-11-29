@@ -186,10 +186,9 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 
 		LOG.debug( "Dirty checking collections" );
 
-		Iterator<Map.Entry<PersistentCollection,CollectionEntry>> entriesIterator = IdentityMap.entriesIterator( persistenceContext.getCollectionEntries() );
-		while ( entriesIterator.hasNext() ) {
-			Map.Entry<PersistentCollection,CollectionEntry> e = entriesIterator.next();
-			e.getValue().preFlush( e.getKey() );
+		for ( Map.Entry<PersistentCollection,CollectionEntry> entry :
+				IdentityMap.entriesIterable( (Map<PersistentCollection,CollectionEntry>) persistenceContext.getCollectionEntries() )) {
+			entry.getValue().preFlush( entry.getKey() );
 		}
 	}
 
@@ -246,9 +245,8 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 
 		LOG.trace( "Processing unreferenced collections" );
 
-		Iterator<Map.Entry<PersistentCollection,CollectionEntry>> entriesIterator = IdentityMap.entriesIterator( persistenceContext.getCollectionEntries() );
-		while ( entriesIterator.hasNext() ) {
-			Map.Entry<PersistentCollection,CollectionEntry> me = entriesIterator.next();
+		for ( Map.Entry<PersistentCollection,CollectionEntry> me :
+				IdentityMap.entriesIterable( (Map<PersistentCollection,CollectionEntry>) persistenceContext.getCollectionEntries() )) {
 			CollectionEntry ce = me.getValue();
 			if ( !ce.isReached() && !ce.isIgnore() ) {
 				Collections.processUnreachableCollection( me.getKey(), session );
@@ -259,10 +257,9 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 
 		LOG.trace( "Scheduling collection removes/(re)creates/updates" );
 
-		entriesIterator = IdentityMap.entriesIterator( persistenceContext.getCollectionEntries() );
 		ActionQueue actionQueue = session.getActionQueue();
-		while ( entriesIterator.hasNext() ) {
-			Map.Entry<PersistentCollection,CollectionEntry> me = entriesIterator.next();
+		for ( Map.Entry<PersistentCollection,CollectionEntry> me :
+			IdentityMap.entriesIterable( (Map<PersistentCollection,CollectionEntry>) persistenceContext.getCollectionEntries() )) {
 			PersistentCollection coll = me.getKey();
 			CollectionEntry ce = me.getValue();
 

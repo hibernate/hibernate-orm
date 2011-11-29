@@ -90,7 +90,7 @@ public final class IdentityMap<K,V> implements Map<K,V> {
 		return ( (IdentityMap<K,V>) map ).entryArray();
 	}
 
-	public static <K,V> Iterator<K> keyIterator(Map<K,V> map) {
+	public static <K,V> Iterator<K> keyIterator(IdentityMap<K,V> map) {
 		return ( (IdentityMap<K,V>) map ).keyIterator();
 	}
 

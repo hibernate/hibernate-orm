@@ -187,7 +187,7 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 		LOG.debug( "Dirty checking collections" );
 
 		for ( Map.Entry<PersistentCollection,CollectionEntry> entry :
-				IdentityMap.entriesIterable( (Map<PersistentCollection,CollectionEntry>) persistenceContext.getCollectionEntries() )) {
+				IdentityMap.concurrentEntries( (Map<PersistentCollection,CollectionEntry>) persistenceContext.getCollectionEntries() )) {
 			entry.getValue().preFlush( entry.getKey() );
 		}
 	}
@@ -246,7 +246,7 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 		LOG.trace( "Processing unreferenced collections" );
 
 		for ( Map.Entry<PersistentCollection,CollectionEntry> me :
-				IdentityMap.entriesIterable( (Map<PersistentCollection,CollectionEntry>) persistenceContext.getCollectionEntries() )) {
+				IdentityMap.concurrentEntries( (Map<PersistentCollection,CollectionEntry>) persistenceContext.getCollectionEntries() )) {
 			CollectionEntry ce = me.getValue();
 			if ( !ce.isReached() && !ce.isIgnore() ) {
 				Collections.processUnreachableCollection( me.getKey(), session );
@@ -259,7 +259,7 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 
 		ActionQueue actionQueue = session.getActionQueue();
 		for ( Map.Entry<PersistentCollection,CollectionEntry> me :
-			IdentityMap.entriesIterable( (Map<PersistentCollection,CollectionEntry>) persistenceContext.getCollectionEntries() )) {
+			IdentityMap.concurrentEntries( (Map<PersistentCollection,CollectionEntry>) persistenceContext.getCollectionEntries() )) {
 			PersistentCollection coll = me.getKey();
 			CollectionEntry ce = me.getValue();
 

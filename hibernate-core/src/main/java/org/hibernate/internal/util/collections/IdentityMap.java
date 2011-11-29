@@ -90,10 +90,6 @@ public final class IdentityMap<K,V> implements Map<K,V> {
 		return ( (IdentityMap<K,V>) map ).entryArray();
 	}
 
-	public static <K,V> Iterable<Map.Entry<K,V>> entriesIterable(Map<K,V> map) {
-		return ( (IdentityMap<K,V>) map ).entryList();
-	}
-
 	public static <K,V> Iterator<K> keyIterator(Map<K,V> map) {
 		return ( (IdentityMap<K,V>) map ).keyIterator();
 	}

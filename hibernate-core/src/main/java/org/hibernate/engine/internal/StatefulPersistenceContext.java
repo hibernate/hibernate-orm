@@ -1162,7 +1162,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 		//not found in case, proceed
 		// iterate all the entities currently associated with the persistence context.
-		Iterator<Entry<Object,EntityEntry>> entities = IdentityMap.entries(entityEntries).iterator();
+		Iterator<Entry<Object,EntityEntry>> entities = IdentityMap.entriesIterator( entityEntries );
 		while ( entities.hasNext() ) {
 			final Map.Entry<Object,EntityEntry> me = entities.next();
 			final EntityEntry entityEntry = me.getValue();
@@ -1286,7 +1286,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		}
 
 		//Not found in cache, proceed
-		Iterator<Entry<Object,EntityEntry>> entities = IdentityMap.entries(entityEntries).iterator();
+		Iterator<Entry<Object,EntityEntry>> entities = IdentityMap.entriesIterator( entityEntries );
 		while ( entities.hasNext() ) {
 			Map.Entry<Object,EntityEntry> me = entities.next();
 			EntityEntry ee = me.getValue();

@@ -25,7 +25,6 @@ package org.hibernate.event.internal;
 
 import java.io.Serializable;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 import org.jboss.logging.Logger;
@@ -187,11 +186,10 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 
 		LOG.debug( "Dirty checking collections" );
 
-		final List list = IdentityMap.entries( persistenceContext.getCollectionEntries() );
-		final int size = list.size();
-		for ( int i = 0; i < size; i++ ) {
-			Map.Entry e = ( Map.Entry ) list.get( i );
-			( (CollectionEntry) e.getValue() ).preFlush( (PersistentCollection) e.getKey() );
+		Iterator<Map.Entry<PersistentCollection,CollectionEntry>> entriesIterator = IdentityMap.entriesIterator( persistenceContext.getCollectionEntries() );
+		while ( entriesIterator.hasNext() ) {
+			Map.Entry<PersistentCollection,CollectionEntry> e = entriesIterator.next();
+			e.getValue().preFlush( e.getKey() );
 		}
 	}
 
@@ -248,13 +246,12 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 
 		LOG.trace( "Processing unreferenced collections" );
 
-		List list = IdentityMap.entries( persistenceContext.getCollectionEntries() );
-		int size = list.size();
-		for ( int i = 0; i < size; i++ ) {
-			Map.Entry me = ( Map.Entry ) list.get( i );
-			CollectionEntry ce = (CollectionEntry) me.getValue();
+		Iterator<Map.Entry<PersistentCollection,CollectionEntry>> entriesIterator = IdentityMap.entriesIterator( persistenceContext.getCollectionEntries() );
+		while ( entriesIterator.hasNext() ) {
+			Map.Entry<PersistentCollection,CollectionEntry> me = entriesIterator.next();
+			CollectionEntry ce = me.getValue();
 			if ( !ce.isReached() && !ce.isIgnore() ) {
-				Collections.processUnreachableCollection( (PersistentCollection) me.getKey(), session );
+				Collections.processUnreachableCollection( me.getKey(), session );
 			}
 		}
 
@@ -262,13 +259,12 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 
 		LOG.trace( "Scheduling collection removes/(re)creates/updates" );
 
-		list = IdentityMap.entries( persistenceContext.getCollectionEntries() );
-		size = list.size();
+		entriesIterator = IdentityMap.entriesIterator( persistenceContext.getCollectionEntries() );
 		ActionQueue actionQueue = session.getActionQueue();
-		for ( int i = 0; i < size; i++ ) {
-			Map.Entry me = (Map.Entry) list.get(i);
-			PersistentCollection coll = (PersistentCollection) me.getKey();
-			CollectionEntry ce = (CollectionEntry) me.getValue();
+		while ( entriesIterator.hasNext() ) {
+			Map.Entry<PersistentCollection,CollectionEntry> me = entriesIterator.next();
+			PersistentCollection coll = me.getKey();
+			CollectionEntry ce = me.getValue();
 
 			if ( ce.isDorecreate() ) {
 				session.getInterceptor().onCollectionRecreate( coll, ce.getCurrentKey() );

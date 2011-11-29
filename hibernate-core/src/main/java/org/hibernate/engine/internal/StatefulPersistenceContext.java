@@ -34,6 +34,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.commons.collections.map.AbstractReferenceMap;
 import org.apache.commons.collections.map.ReferenceMap;
@@ -98,7 +99,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	private Map entitiesByUniqueKey;
 
 	// Identity map of EntityEntry instances, by the entity instance
-	private Map entityEntries;
+	private Map<Object,EntityEntry> entityEntries;
 
 	// Entity proxies, by EntityKey
 	private Map proxiesByKey;
@@ -281,8 +282,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	public void afterTransactionCompletion() {
 		cleanUpInsertedKeysAfterTransaction();
 		// Downgrade locks
-		for ( Object o : entityEntries.values() ) {
-			((EntityEntry) o).setLockMode( LockMode.NONE );
+		for ( EntityEntry o : entityEntries.values() ) {
+			o.setLockMode( LockMode.NONE );
 		}
 	}
 
@@ -416,20 +417,20 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	/**
-	 * Retreive the EntityEntry representation of the given entity.
+	 * Retrieve the EntityEntry representation of the given entity.
 	 *
 	 * @param entity The entity for which to locate the EntityEntry.
 	 * @return The EntityEntry for the given entity.
 	 */
 	public EntityEntry getEntry(Object entity) {
-		return (EntityEntry) entityEntries.get(entity);
+		return entityEntries.get(entity);
 	}
 
 	/**
 	 * Remove an entity entry from the session cache
 	 */
 	public EntityEntry removeEntry(Object entity) {
-		return (EntityEntry) entityEntries.remove(entity);
+		return entityEntries.remove(entity);
 	}
 
 	/**
@@ -1148,7 +1149,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	    // try cache lookup first
 		Object parent = parentsByChild.get( childEntity );
 		if ( parent != null ) {
-			final EntityEntry entityEntry = ( EntityEntry ) entityEntries.get( parent );
+			final EntityEntry entityEntry = entityEntries.get( parent );
 			//there maybe more than one parent, filter by type
 			if ( 	persister.isSubclassEntityName(entityEntry.getEntityName() )
 					&& isFoundInParent( propertyName, childEntity, persister, collectionPersister, parent ) ) {
@@ -1161,10 +1162,10 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 		//not found in case, proceed
 		// iterate all the entities currently associated with the persistence context.
-		Iterator entities = IdentityMap.entries(entityEntries).iterator();
+		Iterator<Entry<Object,EntityEntry>> entities = IdentityMap.entries(entityEntries).iterator();
 		while ( entities.hasNext() ) {
-			final Map.Entry me = ( Map.Entry ) entities.next();
-			final EntityEntry entityEntry = ( EntityEntry ) me.getValue();
+			final Map.Entry<Object,EntityEntry> me = entities.next();
+			final EntityEntry entityEntry = me.getValue();
 			// does this entity entry pertain to the entity persister in which we are interested (owner)?
 			if ( persister.isSubclassEntityName( entityEntry.getEntityName() ) ) {
 				final Object entityEntryInstance = me.getKey();
@@ -1263,7 +1264,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	    // try cache lookup first
 	    Object parent = parentsByChild.get(childEntity);
 		if (parent != null) {
-			final EntityEntry entityEntry = (EntityEntry) entityEntries.get(parent);
+			final EntityEntry entityEntry = entityEntries.get(parent);
 			//there maybe more than one parent, filter by type
 			if ( persister.isSubclassEntityName( entityEntry.getEntityName() ) ) {
 				Object index = getIndexInParent(property, childEntity, persister, cp, parent);
@@ -1285,10 +1286,10 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		}
 
 		//Not found in cache, proceed
-		Iterator entities = IdentityMap.entries(entityEntries).iterator();
+		Iterator<Entry<Object,EntityEntry>> entities = IdentityMap.entries(entityEntries).iterator();
 		while ( entities.hasNext() ) {
-			Map.Entry me = (Map.Entry) entities.next();
-			EntityEntry ee = (EntityEntry) me.getValue();
+			Map.Entry<Object,EntityEntry> me = entities.next();
+			EntityEntry ee = me.getValue();
 			if ( persister.isSubclassEntityName( ee.getEntityName() ) ) {
 				Object instance = me.getKey();
 
@@ -1408,7 +1409,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	public void replaceDelayedEntityIdentityInsertKeys(EntityKey oldKey, Serializable generatedId) {
 		Object entity = entitiesByKey.remove( oldKey );
-		EntityEntry oldEntry = ( EntityEntry ) entityEntries.remove( entity );
+		EntityEntry oldEntry = entityEntries.remove( entity );
 		parentsByChild.clear();
 
 		final EntityKey newKey = session.generateEntityKey( generatedId, oldEntry.getPersister() );

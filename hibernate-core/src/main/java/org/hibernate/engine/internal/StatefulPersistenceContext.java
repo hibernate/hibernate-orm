@@ -1162,9 +1162,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 		//not found in case, proceed
 		// iterate all the entities currently associated with the persistence context.
-		Iterator<Entry<Object,EntityEntry>> entities = IdentityMap.entriesIterator( entityEntries );
-		while ( entities.hasNext() ) {
-			final Map.Entry<Object,EntityEntry> me = entities.next();
+		for ( Entry<Object,EntityEntry> me : IdentityMap.entriesIterable( entityEntries ) ) {
 			final EntityEntry entityEntry = me.getValue();
 			// does this entity entry pertain to the entity persister in which we are interested (owner)?
 			if ( persister.isSubclassEntityName( entityEntry.getEntityName() ) ) {
@@ -1286,9 +1284,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		}
 
 		//Not found in cache, proceed
-		Iterator<Entry<Object,EntityEntry>> entities = IdentityMap.entriesIterator( entityEntries );
-		while ( entities.hasNext() ) {
-			Map.Entry<Object,EntityEntry> me = entities.next();
+		for ( Entry<Object, EntityEntry> me : IdentityMap.entriesIterable( entityEntries ) ) {
 			EntityEntry ee = me.getValue();
 			if ( persister.isSubclassEntityName( ee.getEntityName() ) ) {
 				Object instance = me.getKey();

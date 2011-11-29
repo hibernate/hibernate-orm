@@ -90,7 +90,7 @@ public final class IdentityMap<K,V> implements Map<K,V> {
 		return ( (IdentityMap) map ).entryArray();
 	}
 
-	public static List entries(Map map) {
+	public static <K,V> List<Entry<K,V>> entries(Map<K,V> map) {
 		return ( (IdentityMap) map ).entryList();
 	}
 

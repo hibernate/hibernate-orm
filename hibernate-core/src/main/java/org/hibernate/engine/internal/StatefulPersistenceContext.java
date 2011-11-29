@@ -112,7 +112,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	private Map<Object, PersistentCollection> arrayHolders;
 
 	// Identity map of CollectionEntry instances, by the collection wrapper
-	private Map<PersistentCollection, CollectionEntry> collectionEntries;
+	private IdentityMap<PersistentCollection, CollectionEntry> collectionEntries;
 
 	// Collection wrappers, by the CollectionKey
 	private Map<CollectionKey, PersistentCollection> collectionsByKey;
@@ -223,8 +223,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			final LazyInitializer li = ((HibernateProxy) o).getHibernateLazyInitializer();
 			li.unsetSession();
 		}
-		Map.Entry<PersistentCollection, CollectionEntry>[] collectionEntryArray = IdentityMap.concurrentEntries( collectionEntries );
-		for ( Map.Entry<PersistentCollection, CollectionEntry> aCollectionEntryArray : collectionEntryArray ) {
+		for ( Map.Entry<PersistentCollection, CollectionEntry> aCollectionEntryArray : IdentityMap.concurrentEntries( collectionEntries ) ) {
 			aCollectionEntryArray.getKey().unsetSession( getSession() );
 		}
 		arrayHolders.clear();

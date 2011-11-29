@@ -23,51 +23,36 @@
  */
 package org.hibernate.test.criteria;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+ public class SubLine {
 
-public class OrderLine {
+  private int subId = 0;
 
-  private int lineId = 0;
-  
-  private Order order;
-  
-  private String articleId;
+  private OrderLine orderLine;
 
-  
-  public int getLineId() {
-    return lineId;
+  private String subProperty;
+
+
+  public int getSubId() {
+    return subId;
   }
 
-  public Order getOrder() {
-    return order;
-  }  
-
-  public String getArticleId() {
-    return articleId;
+  public OrderLine getOrderLine() {
+    return orderLine;
   }
 
-  public void setOrder(Order order) {
-    this.order = order;
+  public String getSubProperty() {
+    return subProperty;
   }
 
-  public void setArticleId(String articleId) {
-    this.articleId = articleId;
-  }
-  
-  private Set<SubLine> subLines = new HashSet<SubLine>();
-
-  public Set<SubLine> getSubLines() {
-    return Collections.unmodifiableSet(subLines);
+  public void setOrderLine(OrderLine orderLine) {
+    this.orderLine = orderLine;
   }
 
-  public void addSubLine(SubLine subLine){
-    subLine.setOrderLine(this);
-    this.subLines.add(subLine);
+  public void setSubProperty(String subProperty) {
+    this.subProperty = subProperty;
   }
-  
+
   public String toString() {
-    return "[" + getLineId() + ":" + getArticleId() + "]";
+    return "[" + getSubId() + ":" + getSubProperty() + "]";
   }
 }

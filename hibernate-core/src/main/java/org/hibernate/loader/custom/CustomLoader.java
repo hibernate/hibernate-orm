@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.loader.custom;
 
@@ -507,7 +506,7 @@ public class CustomLoader extends Loader {
 
 	private static interface ResultColumnProcessor {
 		public Object extract(Object[] data, ResultSet resultSet, SessionImplementor session) throws SQLException, HibernateException;
-		public void performDiscovery(Metadata metadata, List types, List aliases) throws SQLException, HibernateException;
+		public void performDiscovery(Metadata metadata, List<Type> types, List<String> aliases) throws SQLException, HibernateException;
 	}
 
 	public class NonScalarResultColumnProcessor implements ResultColumnProcessor {
@@ -517,6 +516,7 @@ public class CustomLoader extends Loader {
 			this.position = position;
 		}
 
+		@Override
 		public Object extract(
 				Object[] data,
 				ResultSet resultSet,
@@ -524,7 +524,8 @@ public class CustomLoader extends Loader {
 			return data[ position ];
 		}
 
-		public void performDiscovery(Metadata metadata, List types, List aliases) {
+		@Override
+		public void performDiscovery(Metadata metadata, List<Type> types, List<String> aliases) {
 		}
 
 	}
@@ -543,6 +544,7 @@ public class CustomLoader extends Loader {
 			this.type = type;
 		}
 
+		@Override
 		public Object extract(
 				Object[] data,
 				ResultSet resultSet,
@@ -550,7 +552,8 @@ public class CustomLoader extends Loader {
 			return type.nullSafeGet( resultSet, alias, session, null );
 		}
 
-		public void performDiscovery(Metadata metadata, List types, List aliases) throws SQLException {
+		@Override
+		public void performDiscovery(Metadata metadata, List<Type> types, List<String> aliases) throws SQLException {
 			if ( alias == null ) {
 				alias = metadata.getColumnName( position );
 			}
@@ -569,13 +572,30 @@ public class CustomLoader extends Loader {
     protected void autoDiscoverTypes(ResultSet rs) {
 		try {
 			Metadata metadata = new Metadata( getFactory(), rs );
-			List aliases = new ArrayList();
-			List types = new ArrayList();
-
 			rowProcessor.prepareForAutoDiscovery( metadata );
 
+			List<String> aliases = new ArrayList<String>();
+			List<Type> types = new ArrayList<Type>();
 			for ( int i = 0; i < rowProcessor.columnProcessors.length; i++ ) {
 				rowProcessor.columnProcessors[i].performDiscovery( metadata, types, aliases );
+			}
+
+			// lets make sure we did not end up with duplicate aliases.  this can occur when the user supplied query
+			// did not rename same-named columns.  e.g.:
+			//		select u.username, u2.username from t_user u, t_user u2 ...
+			//
+			// the above will lead to an unworkable situation in most cases (the difference is how the driver/db
+			// handle this situation.  But if the 'aliases' variable contains duplicate names, then we have that
+			// troublesome condition, so lets throw an error.  See HHH-5992
+			final HashSet<String> aliasesSet = new HashSet<String>();
+			for ( String alias : aliases ) {
+				boolean alreadyExisted = !aliasesSet.add( alias );
+				if ( alreadyExisted ) {
+					throw new NonUniqueDiscoveredSqlAliasException(
+							"Encountered a duplicated sql alias [" + alias +
+									"] during auto-discovery of a native-sql query"
+					);
+				}
 			}
 
 			resultTypes = ArrayHelper.toTypeArray( types );

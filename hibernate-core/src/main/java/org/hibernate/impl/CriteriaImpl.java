@@ -426,7 +426,7 @@ public class CriteriaImpl implements Criteria, Serializable {
 			this.parent = parent;
 			this.joinType = joinType;
 			this.withClause = withClause;
-			this.hasRestriction = withClause != null;
+			this.setHasRestriction( withClause != null );
 			CriteriaImpl.this.subcriteriaList.add( this );
 		}
 
@@ -484,11 +484,18 @@ public class CriteriaImpl implements Criteria, Serializable {
 		public boolean hasRestriction() {
 			return hasRestriction;
 		}
+    
+		private void setHasRestriction(boolean hasRestriction) {
+			this.hasRestriction = hasRestriction;
+			if(hasRestriction && this.parent instanceof Subcriteria) { // Propagate up
+				((Subcriteria)this.parent).setHasRestriction(hasRestriction);
+			}
+		}
 
 		// Criteria impl ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 		public Criteria add(Criterion expression) {
-			hasRestriction = true;
+			setHasRestriction( true );
 			CriteriaImpl.this.add(this, expression);
 			return this;
 		}

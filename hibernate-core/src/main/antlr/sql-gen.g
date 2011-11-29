@@ -309,24 +309,28 @@ inList
 	;
 	
 simpleExprList
-	: { out("("); } (e:simpleExprWithVectorExpr { separator(e," , "); } )* { out(")"); }
+	: { out("("); } (e:simpleOrTupleExpr { separator(e," , "); } )* { out(")"); }
 	;
 
-simpleExprWithVectorExpr
-	: simpleExpr
-	| #( VECTOR_EXPR { out("("); } (e:expr { separator(e," , "); } )*  { out(")"); } )
-	;
+simpleOrTupleExpr
+    : simpleExpr
+    | tupleExpr
+    ;
 
 // A simple expression, or a sub-select with parens around it.
 expr
 	: simpleExpr
-	| #( VECTOR_EXPR { out("("); } (e:expr { separator(e," , "); } )*  { out(")"); } )
+	| tupleExpr
 	| parenSelect
 	| #(ANY { out("any "); } quantified )
 	| #(ALL { out("all "); } quantified )
 	| #(SOME { out("some "); } quantified )
 	;
-	
+
+tupleExpr
+    : #( VECTOR_EXPR { out("("); } (e:expr { separator(e," , "); } )*  { out(")"); } )
+    ;
+
 quantified
 	: { out("("); } ( sqlToken | selectStatement ) { out(")"); } 
 	;

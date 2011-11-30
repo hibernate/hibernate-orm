@@ -83,6 +83,9 @@ import org.hibernate.TransientObjectException;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.UnresolvableObjectException;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.lock.LockingStrategyException;
+import org.hibernate.dialect.lock.OptimisticEntityLockException;
+import org.hibernate.dialect.lock.PessimisticEntityLockException;
 import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.ValueHandlerFactory;
 import org.hibernate.ejb.criteria.expression.CompoundSelectionImpl;
@@ -1301,7 +1304,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			handlePersistenceException( converted );
 			return converted;
 		}
-		else if ( e instanceof org.hibernate.OptimisticLockException ) {
+		else if ( e instanceof LockingStrategyException ) {
 			PersistenceException converted = wrapLockException( e, lockOptions );
 			handlePersistenceException( converted );
 			return converted;
@@ -1397,19 +1400,29 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	}
 
 	public PersistenceException wrapLockException(HibernateException e, LockOptions lockOptions) {
-		PersistenceException pe;
-		if ( e instanceof org.hibernate.OptimisticLockException ) {
-			org.hibernate.OptimisticLockException ole = ( org.hibernate.OptimisticLockException ) e;
-			pe = new OptimisticLockException( ole.getMessage(), ole, ole.getEntity() );
+		final PersistenceException pe;
+		if ( e instanceof OptimisticEntityLockException ) {
+			final OptimisticEntityLockException lockException = (OptimisticEntityLockException) e;
+			pe = new OptimisticLockException( lockException.getMessage(), lockException, lockException.getEntity() );
 		}
-		else if ( e instanceof org.hibernate.PessimisticLockException ) {
-			org.hibernate.PessimisticLockException ple = ( org.hibernate.PessimisticLockException ) e;
+		else if ( e instanceof PessimisticEntityLockException ) {
+			PessimisticEntityLockException lockException = (PessimisticEntityLockException) e;
 			if ( lockOptions != null && lockOptions.getTimeOut() > -1 ) {
 				// assume lock timeout occurred if a timeout or NO WAIT was specified
-				pe = new LockTimeoutException( ple.getMessage(), ple, ple.getEntity() );
+				pe = new LockTimeoutException( lockException.getMessage(), lockException, lockException.getEntity() );
 			}
 			else {
-				pe = new PessimisticLockException( ple.getMessage(), ple, ple.getEntity() );
+				pe = new PessimisticLockException( lockException.getMessage(), lockException, lockException.getEntity() );
+			}
+		}
+		else if ( e instanceof org.hibernate.PessimisticLockException ) {
+			org.hibernate.PessimisticLockException jdbcLockException = ( org.hibernate.PessimisticLockException ) e;
+			if ( lockOptions != null && lockOptions.getTimeOut() > -1 ) {
+				// assume lock timeout occurred if a timeout or NO WAIT was specified
+				pe = new LockTimeoutException( jdbcLockException.getMessage(), jdbcLockException, null );
+			}
+			else {
+				pe = new PessimisticLockException( jdbcLockException.getMessage(), jdbcLockException, null );
 			}
 		}
 		else {

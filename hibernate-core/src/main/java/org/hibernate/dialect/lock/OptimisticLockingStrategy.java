@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.dialect.lock;
+
 import java.io.Serializable;
 
 import org.hibernate.HibernateException;
@@ -40,9 +41,8 @@ import org.hibernate.persister.entity.Lockable;
  * <p/>
  * This strategy is valid for LockMode.OPTIMISTIC
  *
- * @since 3.5
- *
  * @author Scott Marlow
+ * @since 3.5
  */
 public class OptimisticLockingStrategy implements LockingStrategy {
 
@@ -53,7 +53,7 @@ public class OptimisticLockingStrategy implements LockingStrategy {
 	 * Construct locking strategy.
 	 *
 	 * @param lockable The metadata for the entity to be locked.
-	 * @param lockMode Indictates the type of lock to be acquired.
+	 * @param lockMode Indicates the type of lock to be acquired.
 	 */
 	public OptimisticLockingStrategy(Lockable lockable, LockMode lockMode) {
 		this.lockable = lockable;
@@ -63,16 +63,10 @@ public class OptimisticLockingStrategy implements LockingStrategy {
 		}
 	}
 
-   /**
-	 * @see org.hibernate.dialect.lock.LockingStrategy#lock
-	 */
-	public void lock(
-      Serializable id,
-      Object version,
-      Object object,
-      int timeout, SessionImplementor session) throws StaleObjectStateException, JDBCException {
+	@Override
+	public void lock(Serializable id, Object version, Object object, int timeout, SessionImplementor session) {
 		if ( !lockable.isVersioned() ) {
-			throw new OptimisticLockException( "[" + lockMode + "] not supported for non-versioned entities [" + lockable.getEntityName() + "]" );
+			throw new OptimisticLockException( object, "[" + lockMode + "] not supported for non-versioned entities [" + lockable.getEntityName() + "]" );
 		}
 		EntityEntry entry = session.getPersistenceContext().getEntry(object);
 		EventSource source = (EventSource)session;

@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.dialect.lock;
+
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -45,9 +46,9 @@ import org.hibernate.sql.SimpleSelect;
  *
  * @see org.hibernate.dialect.Dialect#getForUpdateString(org.hibernate.LockMode)
  * @see org.hibernate.dialect.Dialect#appendLockHint(org.hibernate.LockMode, String)
- * @since 3.2
  *
  * @author Steve Ebersole
+ * @since 3.2
  */
 public class SelectLockingStrategy extends AbstractSelectLockingStrategy {
 	/**

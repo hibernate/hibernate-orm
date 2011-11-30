@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.dialect.lock;
+
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -44,13 +45,15 @@ import org.hibernate.sql.Update;
  * <p/>
  * This strategy is not valid for read style locks.
  *
- * @since 3.2
- *
  * @author Steve Ebersole
+ * @since 3.2
  */
 public class UpdateLockingStrategy implements LockingStrategy {
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, UpdateLockingStrategy.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			UpdateLockingStrategy.class.getName()
+	);
 
 	private final Lockable lockable;
 	private final LockMode lockMode;
@@ -78,9 +81,7 @@ public class UpdateLockingStrategy implements LockingStrategy {
 		}
 	}
 
-	/**
-	 * @see LockingStrategy#lock
-	 */
+	@Override
 	public void lock(
 	        Serializable id,
 	        Object version,

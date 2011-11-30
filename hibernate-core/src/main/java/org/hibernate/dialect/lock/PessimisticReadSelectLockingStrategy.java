@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.dialect.lock;
+
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -50,8 +51,10 @@ import org.hibernate.sql.SimpleSelect;
  *
  * @author Steve Ebersole
  * @author Scott Marlow
+ *
  * @see org.hibernate.dialect.Dialect#getForUpdateString(org.hibernate.LockMode)
  * @see org.hibernate.dialect.Dialect#appendLockHint(org.hibernate.LockMode, String)
+ *
  * @since 3.5
  */
 public class PessimisticReadSelectLockingStrategy extends AbstractSelectLockingStrategy {
@@ -65,56 +68,53 @@ public class PessimisticReadSelectLockingStrategy extends AbstractSelectLockingS
 		super( lockable, lockMode );
 	}
 
-	/**
-	 * @see org.hibernate.dialect.lock.LockingStrategy#lock
-	 */
-	public void lock(
-			Serializable id,
-			Object version,
-			Object object,
-			int timeout,
-			SessionImplementor session) throws StaleObjectStateException, JDBCException {
+	@Override
+	public void lock(Serializable id, Object version, Object object, int timeout, SessionImplementor session) {
 		final String sql = determineSql( timeout );
 		SessionFactoryImplementor factory = session.getFactory();
 		try {
-			PreparedStatement st = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( sql );
 			try {
-				getLockable().getIdentifierType().nullSafeSet( st, id, 1, session );
-				if ( getLockable().isVersioned() ) {
-					getLockable().getVersionType().nullSafeSet(
-							st,
-							version,
-							getLockable().getIdentifierType().getColumnSpan( factory ) + 1,
-							session
-					);
-				}
-
-				ResultSet rs = st.executeQuery();
+				PreparedStatement st = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( sql );
 				try {
-					if ( !rs.next() ) {
-						if ( factory.getStatistics().isStatisticsEnabled() ) {
-							factory.getStatisticsImplementor()
-									.optimisticFailure( getLockable().getEntityName() );
+					getLockable().getIdentifierType().nullSafeSet( st, id, 1, session );
+					if ( getLockable().isVersioned() ) {
+						getLockable().getVersionType().nullSafeSet(
+								st,
+								version,
+								getLockable().getIdentifierType().getColumnSpan( factory ) + 1,
+								session
+						);
+					}
+
+					ResultSet rs = st.executeQuery();
+					try {
+						if ( !rs.next() ) {
+							if ( factory.getStatistics().isStatisticsEnabled() ) {
+								factory.getStatisticsImplementor()
+										.optimisticFailure( getLockable().getEntityName() );
+							}
+							throw new StaleObjectStateException( getLockable().getEntityName(), id );
 						}
-						throw new StaleObjectStateException( getLockable().getEntityName(), id );
+					}
+					finally {
+						rs.close();
 					}
 				}
 				finally {
-					rs.close();
+					st.close();
 				}
-			}
-			finally {
-				st.close();
-			}
 
+			}
+			catch ( SQLException e ) {
+				throw session.getFactory().getSQLExceptionHelper().convert(
+						e,
+						"could not lock: " + MessageHelper.infoString( getLockable(), id, session.getFactory() ),
+						sql
+				);
+			}
 		}
-		catch ( SQLException sqle ) {
-			JDBCException e = session.getFactory().getSQLExceptionHelper().convert(
-					sqle,
-					"could not lock: " + MessageHelper.infoString( getLockable(), id, session.getFactory() ),
-					sql
-			);
-			throw new PessimisticLockException( "could not obtain pessimistic lock", e, object );
+		catch (JDBCException e) {
+			throw new PessimisticEntityLockException( object, "could not obtain pessimistic lock", e );
 		}
 	}
 

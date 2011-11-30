@@ -52,6 +52,7 @@ public class EntityVerifyVersionProcess implements BeforeTransactionCompletionPr
 		Object latestVersion = persister.getCurrentVersion( entry.getId(), session );
 		if ( !entry.getVersion().equals( latestVersion ) ) {
 			throw new OptimisticLockException(
+					object,
 					"Newer version [" + latestVersion +
 							"] of entity [" + MessageHelper.infoString( entry.getEntityName(), entry.getId() ) +
 							"] found in database"

@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.dialect.lock;
+
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -47,15 +48,16 @@ import org.hibernate.sql.Update;
  *
  * This class is a clone of UpdateLockingStrategy.
  *
- * @since 3.5
- *
  * @author Steve Ebersole
  * @author Scott Marlow
+ * @since 3.5
  */
 public class PessimisticReadUpdateLockingStrategy implements LockingStrategy {
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
-                                                                       PessimisticReadUpdateLockingStrategy.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			PessimisticReadUpdateLockingStrategy.class.getName()
+	);
 
 	private final Lockable lockable;
 	private final LockMode lockMode;
@@ -65,7 +67,7 @@ public class PessimisticReadUpdateLockingStrategy implements LockingStrategy {
 	 * Construct a locking strategy based on SQL UPDATE statements.
 	 *
 	 * @param lockable The metadata for the entity to be locked.
-	 * @param lockMode Indictates the type of lock to be acquired.  Note that
+	 * @param lockMode Indicates the type of lock to be acquired.  Note that
 	 * read-locks are not valid for this strategy.
 	 */
 	public PessimisticReadUpdateLockingStrategy(Lockable lockable, LockMode lockMode) {
@@ -83,50 +85,48 @@ public class PessimisticReadUpdateLockingStrategy implements LockingStrategy {
 		}
 	}
 
-   /**
-	 * @see org.hibernate.dialect.lock.LockingStrategy#lock
-	 */
-	public void lock(
-      Serializable id,
-      Object version,
-      Object object,
-      int timeout, SessionImplementor session) throws StaleObjectStateException, JDBCException {
+	@Override
+	public void lock(Serializable id, Object version, Object object, int timeout, SessionImplementor session) {
 		if ( !lockable.isVersioned() ) {
 			throw new HibernateException( "write locks via update not supported for non-versioned entities [" + lockable.getEntityName() + "]" );
 		}
 		SessionFactoryImplementor factory = session.getFactory();
 		try {
-			PreparedStatement st = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( sql );
 			try {
-				lockable.getVersionType().nullSafeSet( st, version, 1, session );
-				int offset = 2;
+				PreparedStatement st = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( sql );
+				try {
+					lockable.getVersionType().nullSafeSet( st, version, 1, session );
+					int offset = 2;
 
-				lockable.getIdentifierType().nullSafeSet( st, id, offset, session );
-				offset += lockable.getIdentifierType().getColumnSpan( factory );
+					lockable.getIdentifierType().nullSafeSet( st, id, offset, session );
+					offset += lockable.getIdentifierType().getColumnSpan( factory );
 
-				if ( lockable.isVersioned() ) {
-					lockable.getVersionType().nullSafeSet( st, version, offset, session );
+					if ( lockable.isVersioned() ) {
+						lockable.getVersionType().nullSafeSet( st, version, offset, session );
+					}
+
+					int affected = st.executeUpdate();
+					if ( affected < 0 ) {  // todo:  should this instead check for exactly one row modified?
+						factory.getStatisticsImplementor().optimisticFailure( lockable.getEntityName() );
+						throw new StaleObjectStateException( lockable.getEntityName(), id );
+					}
+
 				}
-
-				int affected = st.executeUpdate();
-				if ( affected < 0 ) {  // todo:  should this instead check for exactly one row modified?
-					factory.getStatisticsImplementor().optimisticFailure( lockable.getEntityName() );
-					throw new StaleObjectStateException( lockable.getEntityName(), id );
+				finally {
+					st.close();
 				}
 
 			}
-			finally {
-				st.close();
-			}
-
-		}
-		catch ( SQLException sqle ) {
-			JDBCException e = session.getFactory().getSQLExceptionHelper().convert(
-					sqle,
-					"could not lock: " + MessageHelper.infoString( lockable, id, session.getFactory() ),
-					sql
+			catch ( SQLException e ) {
+				throw session.getFactory().getSQLExceptionHelper().convert(
+						e,
+						"could not lock: " + MessageHelper.infoString( lockable, id, session.getFactory() ),
+						sql
 				);
-			throw new PessimisticLockException("could not obtain pessimistic lock", e, object);
+			}
+		}
+		catch (JDBCException e) {
+			throw new PessimisticEntityLockException( object, "could not obtain pessimistic lock", e );
 		}
 	}
 

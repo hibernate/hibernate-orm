@@ -22,12 +22,11 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.dialect.lock;
+
 import java.io.Serializable;
 
 import org.hibernate.HibernateException;
-import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
-import org.hibernate.StaleObjectStateException;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.persister.entity.EntityPersister;
@@ -60,15 +59,8 @@ public class PessimisticForceIncrementLockingStrategy implements LockingStrategy
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
-	public void lock(
-			Serializable id,
-			Object version,
-			Object object,
-			int timeout,
-			SessionImplementor session) throws StaleObjectStateException, JDBCException {
+	@Override
+	public void lock(Serializable id, Object version, Object object, int timeout, SessionImplementor session) {
 		if ( !lockable.isVersioned() ) {
 			throw new HibernateException( "[" + lockMode + "] not supported for non-versioned entities [" + lockable.getEntityName() + "]" );
 		}

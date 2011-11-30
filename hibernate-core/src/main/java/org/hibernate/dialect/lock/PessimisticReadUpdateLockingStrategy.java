@@ -128,6 +128,14 @@ public class PessimisticReadUpdateLockingStrategy implements LockingStrategy {
 				);
 			throw new PessimisticLockException("could not obtain pessimistic lock", e, object);
 		}
+		catch ( JDBCException e ) {
+			if ( ! PessimisticLockException.class.isInstance( e ) ) {
+				throw new PessimisticLockException( "could not obtain pessimistic lock", e, object );
+			}
+			else {
+				throw e;
+			}
+		}
 	}
 
 	protected String generateLockString() {

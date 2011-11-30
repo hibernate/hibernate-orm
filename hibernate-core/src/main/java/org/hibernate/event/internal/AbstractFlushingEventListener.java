@@ -24,7 +24,6 @@
 package org.hibernate.event.internal;
 
 import java.io.Serializable;
-import java.util.Iterator;
 import java.util.Map;
 
 import org.jboss.logging.Logger;
@@ -143,12 +142,9 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 
 		LOG.debug( "Processing flush-time cascades" );
 
-		final Map.Entry[] list = IdentityMap.concurrentEntries( persistenceContext.getEntityEntries() );
-		//safe from concurrent modification because of how entryList() is implemented on IdentityMap
-		final int size = list.length;
 		final Object anything = getAnything();
-		for ( int i=0; i<size; i++ ) {
-			Map.Entry me = list[i];
+		//safe from concurrent modification because of how concurrentEntries() is implemented on IdentityMap
+		for ( Map.Entry me : IdentityMap.concurrentEntries( persistenceContext.getEntityEntries() ) ) {
 			EntityEntry entry = (EntityEntry) me.getValue();
 			Status status = entry.getStatus();
 			if ( status == Status.MANAGED || status == Status.SAVING || status == Status.READ_ONLY ) {
@@ -201,13 +197,6 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 
 		LOG.trace( "Flushing entities and processing referenced collections" );
 
-		// Among other things, updateReachables() will recursively load all
-		// collections that are moving roles. This might cause entities to
-		// be loaded.
-
-		// So this needs to be safe from concurrent modification problems.
-		// It is safe because of how IdentityMap implements entrySet()
-
 		final EventSource source = event.getSession();
 		final Iterable<FlushEntityEventListener> flushListeners = source
 				.getFactory()
@@ -216,13 +205,17 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 				.getEventListenerGroup( EventType.FLUSH_ENTITY )
 				.listeners();
 
-		final Map.Entry[] list = IdentityMap.concurrentEntries( persistenceContext.getEntityEntries() );
-		final int size = list.length;
-		for ( int i = 0; i < size; i++ ) {
+		// Among other things, updateReachables() will recursively load all
+		// collections that are moving roles. This might cause entities to
+		// be loaded.
+
+		// So this needs to be safe from concurrent modification problems.
+		// It is safe because of how IdentityMap implements entrySet()
+
+		for ( Map.Entry me : IdentityMap.concurrentEntries( persistenceContext.getEntityEntries() ) ) {
 
 			// Update the status of the object and if necessary, schedule an update
 
-			Map.Entry me = list[i];
 			EntityEntry entry = (EntityEntry) me.getValue();
 			Status status = entry.getStatus();
 
@@ -353,11 +346,9 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 		persistenceContext.getBatchFetchQueue()
 				.clearSubselects(); //the database has changed now, so the subselect results need to be invalidated
 
-		Iterator iter = persistenceContext.getCollectionEntries().entrySet().iterator();
-		while ( iter.hasNext() ) {
-			Map.Entry me = (Map.Entry) iter.next();
-			CollectionEntry collectionEntry = (CollectionEntry) me.getValue();
-			PersistentCollection persistentCollection = (PersistentCollection) me.getKey();
+		for ( Map.Entry<PersistentCollection, CollectionEntry> me : IdentityMap.concurrentEntries( persistenceContext.getCollectionEntries() ) ) {
+			CollectionEntry collectionEntry = me.getValue();
+			PersistentCollection persistentCollection = me.getKey();
 			collectionEntry.postFlush(persistentCollection);
 			if ( collectionEntry.getLoadedPersister() == null ) {
 				//if the collection is dereferenced, remove from the session cache

@@ -24,6 +24,7 @@
 package org.hibernate.test.jpa;
 
 import java.io.Serializable;
+import java.util.IdentityHashMap;
 import javax.persistence.EntityNotFoundException;
 
 import org.hibernate.cfg.Configuration;
@@ -166,7 +167,7 @@ public abstract class AbstractJPATest extends BaseCoreFunctionalTestCase {
 
 		@Override
         protected Object getAnything() {
-			return IdentityMap.instantiate( 10 );
+			return new IdentityHashMap( 10 );
 		}
 	}
 
@@ -181,7 +182,7 @@ public abstract class AbstractJPATest extends BaseCoreFunctionalTestCase {
 
 		@Override
         protected Object getAnything() {
-			return IdentityMap.instantiate( 10 );
+			return new IdentityHashMap( 10 );
 		}
 	}
 

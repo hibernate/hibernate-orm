@@ -24,6 +24,7 @@
 package org.hibernate.event.internal;
 
 import java.io.Serializable;
+import java.util.IdentityHashMap;
 import java.util.Map;
 
 import org.jboss.logging.Logger;
@@ -60,7 +61,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
                                                                        DefaultRefreshEventListener.class.getName());
 
 	public void onRefresh(RefreshEvent event) throws HibernateException {
-		onRefresh( event, IdentityMap.instantiate(10) );
+		onRefresh( event, new IdentityHashMap(10) );
 	}
 
 	/**

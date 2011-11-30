@@ -24,6 +24,7 @@
 package org.hibernate.event.internal;
 
 import java.util.Collection;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -51,11 +52,11 @@ import org.hibernate.internal.util.collections.IdentityMap;
  * @author Gail Badner
  */
 class EventCache implements Map {
-	private Map entityToCopyMap = IdentityMap.instantiate(10);
+	private Map entityToCopyMap = new IdentityHashMap(10);
 		// key is an entity involved with the operation performed by the listener;
 		// value can be either a copy of the entity or the entity itself
 
-	private Map entityToOperatedOnFlagMap = IdentityMap.instantiate( 10 );
+	private Map entityToOperatedOnFlagMap = new IdentityHashMap( 10 );
 	    // key is an entity involved with the operation performed by the listener;
 	    // value is a flag indicating if the listener explicitly operates on the entity
 
@@ -246,6 +247,10 @@ class EventCache implements Map {
 	 * @return the copy-entity mappings
 	 */
 	public Map invertMap() {
-		return IdentityMap.invert( entityToCopyMap );
+		Map result = new IdentityHashMap( entityToCopyMap.size() );
+		for ( Entry entry : (Set<Entry>)entityToCopyMap.entrySet() ) {
+			result.put( entry.getValue(), entry.getKey() );
+		}
+		return result;
 	}
 }

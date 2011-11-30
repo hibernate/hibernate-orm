@@ -23,6 +23,7 @@
  */
 package org.hibernate.event.internal;
 
+import java.util.IdentityHashMap;
 import java.util.Map;
 
 import org.jboss.logging.Logger;
@@ -61,7 +62,7 @@ public class DefaultPersistEventListener extends AbstractSaveEventListener imple
 	 * @throws HibernateException
 	 */
 	public void onPersist(PersistEvent event) throws HibernateException {
-		onPersist( event, IdentityMap.instantiate(10) );
+		onPersist( event, new IdentityHashMap(10) );
 	}
 
 

@@ -23,6 +23,8 @@
  */
 package org.hibernate.ejb.event;
 
+import java.util.IdentityHashMap;
+
 import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.event.spi.AutoFlushEventListener;
 import org.hibernate.event.internal.DefaultAutoFlushEventListener;
@@ -45,7 +47,7 @@ public class EJB3AutoFlushEventListener
 	}
 
 	protected Object getAnything() {
-		return IdentityMap.instantiate( 10 );
+		return new IdentityHashMap( 10 );
 	}
 
 }

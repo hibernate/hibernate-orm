@@ -26,6 +26,7 @@ package org.hibernate.engine.loading.internal;
 import java.io.Serializable;
 import java.sql.ResultSet;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -171,7 +172,7 @@ public class LoadContexts {
 	public CollectionLoadContext getCollectionLoadContext(ResultSet resultSet) {
 		CollectionLoadContext context = null;
 		if ( collectionLoadContexts == null ) {
-			collectionLoadContexts = IdentityMap.instantiate( 8 );
+			collectionLoadContexts = new IdentityHashMap<ResultSet, CollectionLoadContext>( 8 );
 		}
 		else {
 			context = collectionLoadContexts.get(resultSet);
@@ -300,7 +301,7 @@ public class LoadContexts {
 	public EntityLoadContext getEntityLoadContext(ResultSet resultSet) {
 		EntityLoadContext context = null;
 		if ( entityLoadContexts == null ) {
-			entityLoadContexts = IdentityMap.instantiate( 8 );
+			entityLoadContexts = new IdentityHashMap<ResultSet, EntityLoadContext>( 8 );
 		}
 		else {
 			context = entityLoadContexts.get( resultSet );

@@ -139,6 +139,7 @@ public class HQLTest extends QueryTranslatorTestCase {
     }
 
 	@Test
+	@SkipForDialect( Oracle8iDialect.class )
     public void testRowValueConstructorSyntaxInInListBeingTranslated() {
 		QueryTranslatorImpl translator = createNewQueryTranslator("from LineItem l where l.id in (?)");
 		assertInExist("'in' should be translated to 'and'", false, translator);

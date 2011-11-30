@@ -28,10 +28,12 @@ import org.junit.Test;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.TransactionException;
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.transaction.internal.jdbc.JdbcTransaction;
 
 import org.hibernate.test.jdbc.Person;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -42,6 +44,7 @@ import static org.junit.Assert.assertNotSame;
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @TestForIssue(jiraKey = "HHH-6780")
+@SkipForDialect( value = PostgreSQLDialect.class, comment = "PostgreSQL jdbc driver doesn't impl timeout method")
 public class TransactionTimeoutTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

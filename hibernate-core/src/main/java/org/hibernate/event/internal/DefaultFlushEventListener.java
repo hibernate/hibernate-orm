@@ -24,6 +24,7 @@
 package org.hibernate.event.internal;
 
 import org.hibernate.HibernateException;
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.FlushEvent;
 import org.hibernate.event.spi.FlushEventListener;
@@ -43,8 +44,9 @@ public class DefaultFlushEventListener extends AbstractFlushingEventListener imp
 	 */
 	public void onFlush(FlushEvent event) throws HibernateException {
 		final EventSource source = event.getSession();
-		if ( source.getPersistenceContext().getEntityEntries().size() > 0 ||
-				source.getPersistenceContext().getCollectionEntries().size() > 0 ) {
+		final PersistenceContext persistenceContext = source.getPersistenceContext();
+		if ( persistenceContext.getEntityEntries().size() > 0 ||
+				persistenceContext.getCollectionEntries().size() > 0 ) {
 
 			flushEverythingToExecutions(event);
 			performExecutions(source);

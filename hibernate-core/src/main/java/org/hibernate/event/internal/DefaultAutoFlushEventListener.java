@@ -52,7 +52,6 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 	public void onAutoFlush(AutoFlushEvent event) throws HibernateException {
 		final EventSource source = event.getSession();
 		if ( flushMightBeNeeded(source) ) {
-			final int oldSize = source.getActionQueue().numberOfCollectionRemovals();
 			flushEverythingToExecutions(event);
 			if ( flushIsReallyNeeded(event, source) ) {
 				LOG.trace( "Need to execute flush" );
@@ -68,6 +67,7 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 			}
 			else {
 				LOG.trace( "Don't need to execute flush" );
+				final int oldSize = source.getActionQueue().numberOfCollectionRemovals();
 				source.getActionQueue().clearFromFlushNeededCheck( oldSize );
 			}
 

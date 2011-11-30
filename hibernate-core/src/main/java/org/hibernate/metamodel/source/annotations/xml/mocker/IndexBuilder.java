@@ -288,17 +288,19 @@ public class IndexBuilder {
 
 	//merge source into target
 	private void mergeAnnotationMap(Map<DotName, List<AnnotationInstance>> source, Map<DotName, List<AnnotationInstance>> target) {
-		if ( source != null && !source.isEmpty() ) {
-			for ( DotName annotationName : source.keySet() ) {
-				if ( source.get( annotationName ).isEmpty() ) {
+		if ( source != null ) {
+			for ( Map.Entry<DotName, List<AnnotationInstance>> el : source.entrySet() ) {
+				if ( el.getValue().isEmpty() ) {
 					continue;
 				}
+				DotName annotationName = el.getKey();
+				List<AnnotationInstance> value = el.getValue();
 				List<AnnotationInstance> annotationInstanceList = target.get( annotationName );
 				if ( annotationInstanceList == null ) {
 					annotationInstanceList = new ArrayList<AnnotationInstance>();
 					target.put( annotationName, annotationInstanceList );
 				}
-				annotationInstanceList.addAll( source.get( annotationName ) );
+				annotationInstanceList.addAll( value );
 			}
 		}
 	}

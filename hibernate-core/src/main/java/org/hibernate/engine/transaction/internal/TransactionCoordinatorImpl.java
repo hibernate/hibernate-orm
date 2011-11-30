@@ -260,7 +260,6 @@ public class TransactionCoordinatorImpl implements TransactionCoordinator {
 	}
 
 	public void pulse() {
-		LOG.trace( "Starting transaction coordinator pulse" );
 		if ( transactionFactory().compatibleWithJtaSynchronization() ) {
 			// the configured transaction strategy says it supports callbacks via JTA synchronization, so attempt to
 			// register JTA synchronization if possible

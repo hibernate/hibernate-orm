@@ -24,7 +24,6 @@
 package org.hibernate.service.internal;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.concurrent.ConcurrentHashMap;
@@ -61,10 +60,12 @@ public abstract class AbstractServiceRegistryImpl
 
 	private final ServiceRegistryImplementor parent;
 
-	private ConcurrentHashMap<Class,ServiceBinding> serviceBindingMap;
+	private final ConcurrentHashMap<Class,ServiceBinding> serviceBindingMap = CollectionHelper.concurrentMap( 20 );
+
 	// IMPL NOTE : the list used for ordered destruction.  Cannot used map above because we need to
 	// iterate it in reverse order which is only available through ListIterator
-	private List<ServiceBinding> serviceBindingList = new ArrayList<ServiceBinding>();
+	// assume 20 services for initial sizing
+	private final List<ServiceBinding> serviceBindingList = CollectionHelper.arrayList( 20 );
 
 	@SuppressWarnings( {"UnusedDeclaration"})
 	protected AbstractServiceRegistryImpl() {
@@ -73,14 +74,6 @@ public abstract class AbstractServiceRegistryImpl
 
 	protected AbstractServiceRegistryImpl(ServiceRegistryImplementor parent) {
 		this.parent = parent;
-		prepare();
-
-	}
-
-	private void prepare() {
-		// assume 20 services for initial sizing
-		this.serviceBindingMap = CollectionHelper.concurrentMap( 20 );
-		this.serviceBindingList = CollectionHelper.arrayList( 20 );
 	}
 
 	public AbstractServiceRegistryImpl(BootstrapServiceRegistry bootstrapServiceRegistry) {
@@ -88,7 +81,6 @@ public abstract class AbstractServiceRegistryImpl
 			throw new IllegalArgumentException( "Boot-strap registry was not " );
 		}
 		this.parent = (ServiceRegistryImplementor) bootstrapServiceRegistry;
-		prepare();
 	}
 
 	@SuppressWarnings({ "unchecked" })
@@ -144,7 +136,9 @@ public abstract class AbstractServiceRegistryImpl
 
 	protected <R extends Service> void registerService(ServiceBinding<R> serviceBinding, R service) {
 		serviceBinding.setService( service );
-		serviceBindingList.add( serviceBinding );
+		synchronized ( serviceBindingList ) {
+			serviceBindingList.add( serviceBinding );
+		}
 	}
 
 	private <R extends Service> R initializeService(ServiceBinding<R> serviceBinding) {
@@ -272,15 +266,15 @@ public abstract class AbstractServiceRegistryImpl
 	@Override
     @SuppressWarnings( {"unchecked"})
 	public void destroy() {
-		ListIterator<ServiceBinding> serviceBindingsIterator = serviceBindingList.listIterator( serviceBindingList.size() );
-		while ( serviceBindingsIterator.hasPrevious() ) {
-			final ServiceBinding serviceBinding = serviceBindingsIterator.previous();
-			serviceBinding.getLifecycleOwner().stopService( serviceBinding );
+		synchronized ( serviceBindingList ) {
+			ListIterator<ServiceBinding> serviceBindingsIterator = serviceBindingList.listIterator( serviceBindingList.size() );
+			while ( serviceBindingsIterator.hasPrevious() ) {
+				final ServiceBinding serviceBinding = serviceBindingsIterator.previous();
+				serviceBinding.getLifecycleOwner().stopService( serviceBinding );
+			}
+			serviceBindingList.clear();
 		}
-		serviceBindingList.clear();
-		serviceBindingList = null;
 		serviceBindingMap.clear();
-		serviceBindingMap = null;
 	}
 
 	@Override

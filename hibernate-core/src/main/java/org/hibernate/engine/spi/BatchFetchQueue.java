@@ -33,6 +33,7 @@ import org.hibernate.EntityMode;
 import org.hibernate.cache.spi.CacheKey;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.internal.util.MarkerObject;
+import org.hibernate.internal.util.collections.IdentityMap;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 
@@ -173,12 +174,12 @@ public class BatchFetchQueue {
 		// this only works because collection entries are kept in a sequenced
 		// map by persistence context (maybe we should do like entities and
 		// keep a separate sequences set...)
-		Iterator iter = context.getCollectionEntries().entrySet().iterator(); //TODO: calling entrySet on an IdentityMap is SLOW!!
-		while ( iter.hasNext() ) {
-			Map.Entry me = (Map.Entry) iter.next();
 
-			CollectionEntry ce = (CollectionEntry) me.getValue();
-			PersistentCollection collection = (PersistentCollection) me.getKey();
+		for ( Map.Entry<PersistentCollection,CollectionEntry> me :
+			IdentityMap.concurrentEntries( (Map<PersistentCollection,CollectionEntry>) context.getCollectionEntries() )) {
+
+			CollectionEntry ce = me.getValue();
+			PersistentCollection collection = me.getKey();
 			if ( !collection.wasInitialized() && ce.getLoadedPersister() == collectionPersister ) {
 
 				if ( checkForEnd && i == end ) {

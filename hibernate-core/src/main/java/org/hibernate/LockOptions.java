@@ -24,6 +24,7 @@
  */
 package org.hibernate;
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -83,7 +84,7 @@ public class LockOptions implements Serializable {
 		return this;
 	}
 
-	private Map aliasSpecificLockModes = new HashMap();
+	private Map aliasSpecificLockModes = null; //initialize lazily as LockOptions is frequently created without needing this
 
 	/**
 	 * Specify the {@link LockMode} to be used for a specific query alias.
@@ -97,6 +98,9 @@ public class LockOptions implements Serializable {
 	 * @see Criteria#setLockMode(String, LockMode)
 	 */
 	public LockOptions setAliasSpecificLockMode(String alias, LockMode lockMode) {
+		if ( aliasSpecificLockModes == null ) {
+			aliasSpecificLockModes = new HashMap();
+		}
 		aliasSpecificLockModes.put( alias, lockMode );
 		return this;
 	}
@@ -113,6 +117,9 @@ public class LockOptions implements Serializable {
 	 * @return The explicit lock mode for that alias.
 	 */
 	public LockMode getAliasSpecificLockMode(String alias) {
+		if ( aliasSpecificLockModes == null ) {
+			return null;
+		}
 		return (LockMode) aliasSpecificLockModes.get( alias );
 	}
 
@@ -143,6 +150,9 @@ public class LockOptions implements Serializable {
 	 * @return the number of explicitly defined alias lock modes.
 	 */
 	public int getAliasLockCount() {
+		if ( aliasSpecificLockModes == null ) {
+			return 0;
+		}
 		return aliasSpecificLockModes.size();
 	}
 
@@ -152,6 +162,9 @@ public class LockOptions implements Serializable {
 	 * @return Iterator for accessing the Map.Entry's
 	 */
 	public Iterator getAliasLockIterator() {
+		if ( aliasSpecificLockModes == null ) {
+			return Collections.emptyList().iterator();
+		}
 		return aliasSpecificLockModes.entrySet().iterator();
 	}
 
@@ -234,7 +247,9 @@ public class LockOptions implements Serializable {
 		dest.setLockMode(from.getLockMode());
 		dest.setScope(from.getScope());
 		dest.setTimeOut(from.getTimeOut());
-		dest.aliasSpecificLockModes = new HashMap(from.aliasSpecificLockModes );
+		if ( from.aliasSpecificLockModes != null ) {
+			dest.aliasSpecificLockModes = new HashMap( from.aliasSpecificLockModes );
+		}
 		return dest;
 	}
 }

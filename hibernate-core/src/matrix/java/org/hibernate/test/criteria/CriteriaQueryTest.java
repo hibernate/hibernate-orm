@@ -1762,17 +1762,18 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 						                    .add( Projections.property( "height" ) ) )
 				.add( Restrictions.eq( "name", "Lukasz" )
 		);
-		
-		List result = session.createCriteria( Woman.class )
-				             .add( Subqueries.propertiesEq( new String[] { "weight", "height" }, sizeQuery ) )
-				             .list();
-		assertEquals( 1, result.size() );
-		assertEquals( kinga, result.get( 0 ) );
-
-		if (getDialect().supportsRowValueConstructorSyntaxInInList()) {
+		List result;
+		if ( getDialect().supportsRowValueConstructorSyntax() ) {
 			result = session.createCriteria( Woman.class )
-			                .add( Subqueries.propertiesIn( new String[] { "weight", "height" }, sizeQuery ) )
-			                .list();
+					.add( Subqueries.propertiesEq( new String[] { "weight", "height" }, sizeQuery ) )
+					.list();
+			assertEquals( 1, result.size() );
+			assertEquals( kinga, result.get( 0 ) );
+		}
+		if ( getDialect().supportsRowValueConstructorSyntaxInInList() ) {
+			result = session.createCriteria( Woman.class )
+					.add( Subqueries.propertiesIn( new String[] { "weight", "height" }, sizeQuery ) )
+					.list();
 			assertEquals( 1, result.size() );
 			assertEquals( kinga, result.get( 0 ) );
 		}
@@ -1782,18 +1783,20 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 
 		session = openSession();
 		tx = session.beginTransaction();
-		
-		sizeQuery = DetachedCriteria.forClass( Man.class ).setProjection(
-				Projections.projectionList().add( Projections.property( "weight" ) )
-						                    .add( Projections.property( "height" ) ) )
-				.add( Restrictions.ne( "name", "Lukasz" )
-		);
-		result = session.createCriteria( Woman.class )
-				        .add( Subqueries.propertiesNotEq( new String[] { "weight", "height" }, sizeQuery ) )
-				        .list();
-		assertEquals( 1, result.size() );
-		assertEquals( kinga, result.get( 0 ) );
-
+		if ( getDialect().supportsRowValueConstructorSyntax() ) {
+			sizeQuery = DetachedCriteria.forClass( Man.class ).setProjection(
+					Projections.projectionList().add( Projections.property( "weight" ) )
+							.add( Projections.property( "height" ) )
+			)
+					.add(
+							Restrictions.ne( "name", "Lukasz" )
+					);
+			result = session.createCriteria( Woman.class )
+					.add( Subqueries.propertiesNotEq( new String[] { "weight", "height" }, sizeQuery ) )
+					.list();
+			assertEquals( 1, result.size() );
+			assertEquals( kinga, result.get( 0 ) );
+		}
 		if (getDialect().supportsRowValueConstructorSyntaxInInList()) {
 			result = session.createCriteria( Woman.class )
 							.add( Subqueries.propertiesNotIn( new String[] { "weight", "height" }, sizeQuery ) )

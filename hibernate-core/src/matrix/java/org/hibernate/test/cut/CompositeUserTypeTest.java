@@ -30,6 +30,7 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.testing.SkipForDialect;
@@ -77,7 +78,7 @@ public class CompositeUserTypeTest extends BaseCoreFunctionalTestCase {
 	}
 	
 	@Test
-    @SkipForDialect( value = SybaseASE15Dialect.class, jiraKey = "HHH-6788")
+    @SkipForDialect( value = {SybaseASE15Dialect.class, DB2Dialect.class}, jiraKey = "HHH-6788,HHH-6867")
 	public void testCustomColumnReadAndWrite() {
 		Session s = openSession();
 		org.hibernate.Transaction t = s.beginTransaction();

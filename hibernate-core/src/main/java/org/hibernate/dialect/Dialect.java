@@ -1228,7 +1228,7 @@ public abstract class Dialect {
 	 * dialect given the aliases of the columns to be write locked.
 	 *
 	 * @param aliases The columns to be write locked.
-	 * @param lockOptions
+	 * @param lockOptions the lock options to apply
 	 * @return The appropriate <tt>FOR UPDATE OF column_list</tt> clause string.
 	 */
 	public String getForUpdateString(String aliases, LockOptions lockOptions) {
@@ -1595,7 +1595,8 @@ public abstract class Dialect {
 	}
 
 	/**
-	 * Does the underlying Database supports case insensitive like comparison.
+	 * @return {@code true} if the underlying Database supports case insensitive like comparison, {@code false} otherwise.
+	 * The default is {@code false}.
 	 */
 	public boolean supportsCaseInsensitiveLike(){
 		return false;
@@ -1764,7 +1765,7 @@ public abstract class Dialect {
 			String referencedTable,
 			String[] primaryKey,
 			boolean referencesPrimaryKey) {
-		StringBuffer res = new StringBuffer( 30 );
+		StringBuilder res = new StringBuilder( 30 );
 
 		res.append( " add constraint " )
 				.append( constraintName )
@@ -1873,7 +1874,7 @@ public abstract class Dialect {
 	}
 
 	/**
-	 * Get the separator to use for defining cross joins when translating HQL queries.
+	 * @return Returns the separator to use for defining cross joins when translating HQL queries.
 	 * <p/>
 	 * Typically this will be either [<tt> cross join </tt>] or [<tt>, </tt>]
 	 * <p/>
@@ -2155,7 +2156,8 @@ public abstract class Dialect {
 	 * Does this dialect support using a JDBC bind parameter as an argument
 	 * to a function or procedure call?
 	 *
-	 * @return True if the database supports accepting bind params as args; false otherwise.
+	 * @return Returns {@code true} if the database supports accepting bind params as args, {@code false} otherwise. The
+	 * default is {@code true}.
 	 */
 	public boolean supportsBindAsCallableArgument() {
 		return true;

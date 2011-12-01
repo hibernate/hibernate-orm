@@ -80,43 +80,4 @@ public class DB2DialectTestCase extends BaseUnitTestCase {
 				actual
 		);
 	}
-
-	@Test
-	@TestForIssue(jiraKey = "HHH-6866")
-	public void testGetDefaultCharTypeName() {
-		String actual = dialect.getTypeName( Types.CHAR );
-		assertEquals(
-				"The default column length is 255, but char length on DB2 is limited to 254",
-				"varchar($l)",
-				actual
-		);
-	}
-
-	@Test
-	@TestForIssue(jiraKey = "HHH-6866")
-	public void testGetExplicitCharTypeName() {
-		// lower bound
-		String actual = dialect.getTypeName( Types.CHAR, 1, Column.DEFAULT_PRECISION, Column.DEFAULT_SCALE );
-		assertEquals(
-				"Wrong char type",
-				"char(1)",
-				actual
-		);
-
-		// upper bound
-		actual = dialect.getTypeName( Types.CHAR, 254, Column.DEFAULT_PRECISION, Column.DEFAULT_SCALE );
-		assertEquals(
-				"Wrong char type. 254 is the max length in DB2",
-				"char(254)",
-				actual
-		);
-
-		// exceeding upper bound
-		actual = dialect.getTypeName( Types.CHAR, 255, Column.DEFAULT_PRECISION, Column.DEFAULT_SCALE );
-		assertEquals(
-				"Wrong char type. Should be varchar for length > 254",
-				"varchar(255)",
-				actual
-		);
-	}
 }

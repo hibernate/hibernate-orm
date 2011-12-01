@@ -5,6 +5,55 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 4.0.0.CR7 (2011.11.30)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.onjira.com/browse/HHH/fixforversion/11653
+
+** Bug
+    * [HHH-5222] - upgrade from READ to OPTIMISTIC_FORCE_INCREMENT fails
+    * [HHH-5945] - Race condition in building query cache
+    * [HHH-5992] - A query fails to return correct results silently
+    * [HHH-6068] - JPA-specified default schema ignored for Hibernate sequences
+    * [HHH-6425] - On Sybase ASE, insert a empty string '' to db, it stores it as single space ' '
+    * [HHH-6773] - test fails on sybase
+    * [HHH-6780] - Wrong Query timeout calculation
+    * [HHH-6806] - Auto scan for JPA entities does not work in exploded packages in JBoss AS < 7
+    * [HHH-6807] - org.hibernate.test.lob.LobMergeTest fail on Sybase ASE
+    * [HHH-6817] - Logging of strings containing the percent character broken
+    * [HHH-6819] - org.hibernate.test.importfile.CommandExtractorServiceTest/MultiLineImportFileTest fail
+    * [HHH-6820] - Skip test org.hibernate.ejb.test.lock.LockTest.testContendedPessimisticLock for Sybase ASE15.5
+    * [HHH-6827] - org.hibernate.test.tm.CMTTest#testConcurrentCachedDirtyQueries is falling
+    * [HHH-6828] - BasicOperationsTest does not take into account that databases can treat identifers differently when it come to lower or upper case
+    * [HHH-6830] - QueryAndSQLTest.testNativeQueryWithFormulaAttribute fails due to hard coded function names
+    * [HHH-6834] - skip test BasicOperationsTest on oracle due to a oracle jdbc driver issue
+    * [HHH-6842] - Skip org.hibernate.test.annotations.manytoonewithformula.ManyToOneWithFormulaTest#testManyToOneFromNonPkToNonPk for DB2
+    * [HHH-6843] - LockTest#testContendedPessimisticLock is too agressive in its assumptions
+    * [HHH-6849] - SQLServer2005Dialect changes the order of selected columns when using pagination
+    * [HHH-6850] - no Types.BINARY mapping in DB2 dialect
+    * [HHH-6851] - DB2 doesn't support NotNullUnique causes org.hibernate.test.annotations.uniqueconstraint.UniqueConstraintTest.testUniquenessConstraintWithSuperclassProperty fail
+    * [HHH-6852] - DB2 doesn't support exists in select
+    * [HHH-6856] - RowValueConstructorSyntax with In syntax is not working
+    * [HHH-6863] - serviceBindingList in AbstractServiceRegistryImpl needs synchronization
+    * [HHH-6865] - PessimisticLockException should be thrown when pessimistic read and write locking strategies fail
+    * [HHH-6867] - test data overflow causes org.hibernate.test.cut.CompositeUserTypeTest.testCustomColumnReadAndWrite fails on DB2
+
+** Improvement
+    * [HHH-4055] - make UpdateTimestampsCache pluggable, like QueryCache
+    * [HHH-6833] - Eable SQL logging for tests
+    * [HHH-6845] - Avoid repeated invocations of ReflectHelper.overridesEquals in proxy initializers
+    * [HHH-6858] - Minor performance improvements after hotspots analysis
+    * [HHH-6862] - Reuse cached entryArray of IdentityMap in StatefulPersistenceContext as much as possible
+    * [HHH-6868] - Lazily initialize HashMap in LockOptions
+
+** Patch
+    * [HHH-6286] - UpdateTimestampsCache should try to avoid acquiring lock if possible
+
+** Task
+    * [HHH-6818] - update dependencies management
+    * [HHH-6821] - Upgrade to jboss-logging-tools 1.0.0.CR5
+    * [HHH-6853] - upgrade to jboss-logging 3.1.0.CR2
+    * [HHH-6860] - Upgrade to Hibernate Commons Annotations 4.0.1 when released
+
 Changes in version 4.0.0.CR6 (2011.11.10)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.onjira.com/browse/HHH/fixforversion/11652

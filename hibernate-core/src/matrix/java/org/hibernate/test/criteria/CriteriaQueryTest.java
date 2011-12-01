@@ -1783,14 +1783,14 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 
 		session = openSession();
 		tx = session.beginTransaction();
-		if ( getDialect().supportsRowValueConstructorSyntax() ) {
-			sizeQuery = DetachedCriteria.forClass( Man.class ).setProjection(
+					sizeQuery = DetachedCriteria.forClass( Man.class ).setProjection(
 					Projections.projectionList().add( Projections.property( "weight" ) )
 							.add( Projections.property( "height" ) )
 			)
 					.add(
 							Restrictions.ne( "name", "Lukasz" )
 					);
+		if ( getDialect().supportsRowValueConstructorSyntax() ) {
 			result = session.createCriteria( Woman.class )
 					.add( Subqueries.propertiesNotEq( new String[] { "weight", "height" }, sizeQuery ) )
 					.list();

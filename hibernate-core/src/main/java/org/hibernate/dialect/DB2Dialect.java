@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.dialect;
+
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -38,6 +39,7 @@ import org.hibernate.type.StandardBasicTypes;
 
 /**
  * An SQL dialect for DB2.
+ *
  * @author Gavin King
  */
 public class DB2Dialect extends Dialect {
@@ -63,82 +65,88 @@ public class DB2Dialect extends Dialect {
 		registerColumnType( Types.LONGVARCHAR, "long varchar" );
 		registerColumnType( Types.LONGVARBINARY, "long varchar for bit data" );
 		registerColumnType( Types.BINARY, "char($l) for bit data" );
-        registerColumnType( Types.BOOLEAN, "smallint" );
+		registerColumnType( Types.BOOLEAN, "smallint" );
 
 		registerFunction( "avg", new AvgWithArgumentCastFunction( "double" ) );
 
-		registerFunction("abs", new StandardSQLFunction("abs") );
-		registerFunction("absval", new StandardSQLFunction("absval") );
-		registerFunction("sign", new StandardSQLFunction("sign", StandardBasicTypes.INTEGER) );
+		registerFunction( "abs", new StandardSQLFunction( "abs" ) );
+		registerFunction( "absval", new StandardSQLFunction( "absval" ) );
+		registerFunction( "sign", new StandardSQLFunction( "sign", StandardBasicTypes.INTEGER ) );
 
-		registerFunction("ceiling", new StandardSQLFunction("ceiling") );
-		registerFunction("ceil", new StandardSQLFunction("ceil") );
-		registerFunction("floor", new StandardSQLFunction("floor") );
-		registerFunction("round", new StandardSQLFunction("round") );
+		registerFunction( "ceiling", new StandardSQLFunction( "ceiling" ) );
+		registerFunction( "ceil", new StandardSQLFunction( "ceil" ) );
+		registerFunction( "floor", new StandardSQLFunction( "floor" ) );
+		registerFunction( "round", new StandardSQLFunction( "round" ) );
 
-		registerFunction("acos", new StandardSQLFunction("acos", StandardBasicTypes.DOUBLE) );
-		registerFunction("asin", new StandardSQLFunction("asin", StandardBasicTypes.DOUBLE) );
-		registerFunction("atan", new StandardSQLFunction("atan", StandardBasicTypes.DOUBLE) );
-		registerFunction("cos", new StandardSQLFunction("cos", StandardBasicTypes.DOUBLE) );
-		registerFunction("cot", new StandardSQLFunction("cot", StandardBasicTypes.DOUBLE) );
-		registerFunction("degrees", new StandardSQLFunction("degrees", StandardBasicTypes.DOUBLE) );
-		registerFunction("exp", new StandardSQLFunction("exp", StandardBasicTypes.DOUBLE) );
-		registerFunction("float", new StandardSQLFunction("float", StandardBasicTypes.DOUBLE) );
-		registerFunction("hex", new StandardSQLFunction("hex", StandardBasicTypes.STRING) );
-		registerFunction("ln", new StandardSQLFunction("ln", StandardBasicTypes.DOUBLE) );
-		registerFunction("log", new StandardSQLFunction("log", StandardBasicTypes.DOUBLE) );
-		registerFunction("log10", new StandardSQLFunction("log10", StandardBasicTypes.DOUBLE) );
-		registerFunction("radians", new StandardSQLFunction("radians", StandardBasicTypes.DOUBLE) );
-		registerFunction("rand", new NoArgSQLFunction("rand", StandardBasicTypes.DOUBLE) );
-		registerFunction("sin", new StandardSQLFunction("sin", StandardBasicTypes.DOUBLE) );
-		registerFunction("soundex", new StandardSQLFunction("soundex", StandardBasicTypes.STRING) );
-		registerFunction("sqrt", new StandardSQLFunction("sqrt", StandardBasicTypes.DOUBLE) );
-		registerFunction("stddev", new StandardSQLFunction("stddev", StandardBasicTypes.DOUBLE) );
-		registerFunction("tan", new StandardSQLFunction("tan", StandardBasicTypes.DOUBLE) );
-		registerFunction("variance", new StandardSQLFunction("variance", StandardBasicTypes.DOUBLE) );
+		registerFunction( "acos", new StandardSQLFunction( "acos", StandardBasicTypes.DOUBLE ) );
+		registerFunction( "asin", new StandardSQLFunction( "asin", StandardBasicTypes.DOUBLE ) );
+		registerFunction( "atan", new StandardSQLFunction( "atan", StandardBasicTypes.DOUBLE ) );
+		registerFunction( "cos", new StandardSQLFunction( "cos", StandardBasicTypes.DOUBLE ) );
+		registerFunction( "cot", new StandardSQLFunction( "cot", StandardBasicTypes.DOUBLE ) );
+		registerFunction( "degrees", new StandardSQLFunction( "degrees", StandardBasicTypes.DOUBLE ) );
+		registerFunction( "exp", new StandardSQLFunction( "exp", StandardBasicTypes.DOUBLE ) );
+		registerFunction( "float", new StandardSQLFunction( "float", StandardBasicTypes.DOUBLE ) );
+		registerFunction( "hex", new StandardSQLFunction( "hex", StandardBasicTypes.STRING ) );
+		registerFunction( "ln", new StandardSQLFunction( "ln", StandardBasicTypes.DOUBLE ) );
+		registerFunction( "log", new StandardSQLFunction( "log", StandardBasicTypes.DOUBLE ) );
+		registerFunction( "log10", new StandardSQLFunction( "log10", StandardBasicTypes.DOUBLE ) );
+		registerFunction( "radians", new StandardSQLFunction( "radians", StandardBasicTypes.DOUBLE ) );
+		registerFunction( "rand", new NoArgSQLFunction( "rand", StandardBasicTypes.DOUBLE ) );
+		registerFunction( "sin", new StandardSQLFunction( "sin", StandardBasicTypes.DOUBLE ) );
+		registerFunction( "soundex", new StandardSQLFunction( "soundex", StandardBasicTypes.STRING ) );
+		registerFunction( "sqrt", new StandardSQLFunction( "sqrt", StandardBasicTypes.DOUBLE ) );
+		registerFunction( "stddev", new StandardSQLFunction( "stddev", StandardBasicTypes.DOUBLE ) );
+		registerFunction( "tan", new StandardSQLFunction( "tan", StandardBasicTypes.DOUBLE ) );
+		registerFunction( "variance", new StandardSQLFunction( "variance", StandardBasicTypes.DOUBLE ) );
 
-		registerFunction("julian_day", new StandardSQLFunction("julian_day", StandardBasicTypes.INTEGER) );
-		registerFunction("microsecond", new StandardSQLFunction("microsecond", StandardBasicTypes.INTEGER) );
-		registerFunction("midnight_seconds", new StandardSQLFunction("midnight_seconds", StandardBasicTypes.INTEGER) );
-		registerFunction("minute", new StandardSQLFunction("minute", StandardBasicTypes.INTEGER) );
-		registerFunction("month", new StandardSQLFunction("month", StandardBasicTypes.INTEGER) );
-		registerFunction("monthname", new StandardSQLFunction("monthname", StandardBasicTypes.STRING) );
-		registerFunction("quarter", new StandardSQLFunction("quarter", StandardBasicTypes.INTEGER) );
-		registerFunction("hour", new StandardSQLFunction("hour", StandardBasicTypes.INTEGER) );
-		registerFunction("second", new StandardSQLFunction("second", StandardBasicTypes.INTEGER) );
-		registerFunction("current_date", new NoArgSQLFunction("current date", StandardBasicTypes.DATE, false) );
-		registerFunction("date", new StandardSQLFunction("date", StandardBasicTypes.DATE) );
-		registerFunction("day", new StandardSQLFunction("day", StandardBasicTypes.INTEGER) );
-		registerFunction("dayname", new StandardSQLFunction("dayname", StandardBasicTypes.STRING) );
-		registerFunction("dayofweek", new StandardSQLFunction("dayofweek", StandardBasicTypes.INTEGER) );
-		registerFunction("dayofweek_iso", new StandardSQLFunction("dayofweek_iso", StandardBasicTypes.INTEGER) );
-		registerFunction("dayofyear", new StandardSQLFunction("dayofyear", StandardBasicTypes.INTEGER) );
-		registerFunction("days", new StandardSQLFunction("days", StandardBasicTypes.LONG) );
-		registerFunction("current_time", new NoArgSQLFunction("current time", StandardBasicTypes.TIME, false) );
-		registerFunction("time", new StandardSQLFunction("time", StandardBasicTypes.TIME) );
-		registerFunction("current_timestamp", new NoArgSQLFunction("current timestamp", StandardBasicTypes.TIMESTAMP, false) );
-		registerFunction("timestamp", new StandardSQLFunction("timestamp", StandardBasicTypes.TIMESTAMP) );
-		registerFunction("timestamp_iso", new StandardSQLFunction("timestamp_iso", StandardBasicTypes.TIMESTAMP) );
-		registerFunction("week", new StandardSQLFunction("week", StandardBasicTypes.INTEGER) );
-		registerFunction("week_iso", new StandardSQLFunction("week_iso", StandardBasicTypes.INTEGER) );
-		registerFunction("year", new StandardSQLFunction("year", StandardBasicTypes.INTEGER) );
+		registerFunction( "julian_day", new StandardSQLFunction( "julian_day", StandardBasicTypes.INTEGER ) );
+		registerFunction( "microsecond", new StandardSQLFunction( "microsecond", StandardBasicTypes.INTEGER ) );
+		registerFunction(
+				"midnight_seconds",
+				new StandardSQLFunction( "midnight_seconds", StandardBasicTypes.INTEGER )
+		);
+		registerFunction( "minute", new StandardSQLFunction( "minute", StandardBasicTypes.INTEGER ) );
+		registerFunction( "month", new StandardSQLFunction( "month", StandardBasicTypes.INTEGER ) );
+		registerFunction( "monthname", new StandardSQLFunction( "monthname", StandardBasicTypes.STRING ) );
+		registerFunction( "quarter", new StandardSQLFunction( "quarter", StandardBasicTypes.INTEGER ) );
+		registerFunction( "hour", new StandardSQLFunction( "hour", StandardBasicTypes.INTEGER ) );
+		registerFunction( "second", new StandardSQLFunction( "second", StandardBasicTypes.INTEGER ) );
+		registerFunction( "current_date", new NoArgSQLFunction( "current date", StandardBasicTypes.DATE, false ) );
+		registerFunction( "date", new StandardSQLFunction( "date", StandardBasicTypes.DATE ) );
+		registerFunction( "day", new StandardSQLFunction( "day", StandardBasicTypes.INTEGER ) );
+		registerFunction( "dayname", new StandardSQLFunction( "dayname", StandardBasicTypes.STRING ) );
+		registerFunction( "dayofweek", new StandardSQLFunction( "dayofweek", StandardBasicTypes.INTEGER ) );
+		registerFunction( "dayofweek_iso", new StandardSQLFunction( "dayofweek_iso", StandardBasicTypes.INTEGER ) );
+		registerFunction( "dayofyear", new StandardSQLFunction( "dayofyear", StandardBasicTypes.INTEGER ) );
+		registerFunction( "days", new StandardSQLFunction( "days", StandardBasicTypes.LONG ) );
+		registerFunction( "current_time", new NoArgSQLFunction( "current time", StandardBasicTypes.TIME, false ) );
+		registerFunction( "time", new StandardSQLFunction( "time", StandardBasicTypes.TIME ) );
+		registerFunction(
+				"current_timestamp",
+				new NoArgSQLFunction( "current timestamp", StandardBasicTypes.TIMESTAMP, false )
+		);
+		registerFunction( "timestamp", new StandardSQLFunction( "timestamp", StandardBasicTypes.TIMESTAMP ) );
+		registerFunction( "timestamp_iso", new StandardSQLFunction( "timestamp_iso", StandardBasicTypes.TIMESTAMP ) );
+		registerFunction( "week", new StandardSQLFunction( "week", StandardBasicTypes.INTEGER ) );
+		registerFunction( "week_iso", new StandardSQLFunction( "week_iso", StandardBasicTypes.INTEGER ) );
+		registerFunction( "year", new StandardSQLFunction( "year", StandardBasicTypes.INTEGER ) );
 
-		registerFunction("double", new StandardSQLFunction("double", StandardBasicTypes.DOUBLE) );
-		registerFunction("varchar", new StandardSQLFunction("varchar", StandardBasicTypes.STRING) );
-		registerFunction("real", new StandardSQLFunction("real", StandardBasicTypes.FLOAT) );
-		registerFunction("bigint", new StandardSQLFunction("bigint", StandardBasicTypes.LONG) );
-		registerFunction("char", new StandardSQLFunction("char", StandardBasicTypes.CHARACTER) );
-		registerFunction("integer", new StandardSQLFunction("integer", StandardBasicTypes.INTEGER) );
-		registerFunction("smallint", new StandardSQLFunction("smallint", StandardBasicTypes.SHORT) );
+		registerFunction( "double", new StandardSQLFunction( "double", StandardBasicTypes.DOUBLE ) );
+		registerFunction( "varchar", new StandardSQLFunction( "varchar", StandardBasicTypes.STRING ) );
+		registerFunction( "real", new StandardSQLFunction( "real", StandardBasicTypes.FLOAT ) );
+		registerFunction( "bigint", new StandardSQLFunction( "bigint", StandardBasicTypes.LONG ) );
+		registerFunction( "char", new StandardSQLFunction( "char", StandardBasicTypes.CHARACTER ) );
+		registerFunction( "integer", new StandardSQLFunction( "integer", StandardBasicTypes.INTEGER ) );
+		registerFunction( "smallint", new StandardSQLFunction( "smallint", StandardBasicTypes.SHORT ) );
 
-		registerFunction("digits", new StandardSQLFunction("digits", StandardBasicTypes.STRING) );
-		registerFunction("chr", new StandardSQLFunction("chr", StandardBasicTypes.CHARACTER) );
-		registerFunction("upper", new StandardSQLFunction("upper") );
-		registerFunction("lower", new StandardSQLFunction("lower") );
-		registerFunction("ucase", new StandardSQLFunction("ucase") );
-		registerFunction("lcase", new StandardSQLFunction("lcase") );
-		registerFunction("ltrim", new StandardSQLFunction("ltrim") );
-		registerFunction("rtrim", new StandardSQLFunction("rtrim") );
+		registerFunction( "digits", new StandardSQLFunction( "digits", StandardBasicTypes.STRING ) );
+		registerFunction( "chr", new StandardSQLFunction( "chr", StandardBasicTypes.CHARACTER ) );
+		registerFunction( "upper", new StandardSQLFunction( "upper" ) );
+		registerFunction( "lower", new StandardSQLFunction( "lower" ) );
+		registerFunction( "ucase", new StandardSQLFunction( "ucase" ) );
+		registerFunction( "lcase", new StandardSQLFunction( "lcase" ) );
+		registerFunction( "ltrim", new StandardSQLFunction( "ltrim" ) );
+		registerFunction( "rtrim", new StandardSQLFunction( "rtrim" ) );
 		registerFunction( "substr", new StandardSQLFunction( "substr", StandardBasicTypes.STRING ) );
 		registerFunction( "posstr", new StandardSQLFunction( "posstr", StandardBasicTypes.INTEGER ) );
 
@@ -146,20 +154,20 @@ public class DB2Dialect extends Dialect {
 		registerFunction( "bit_length", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "length(?1)*8" ) );
 		registerFunction( "trim", new AnsiTrimEmulationFunction() );
 
-		registerFunction( "concat", new VarArgsSQLFunction(StandardBasicTypes.STRING, "", "||", "") );
+		registerFunction( "concat", new VarArgsSQLFunction( StandardBasicTypes.STRING, "", "||", "" ) );
 
 		registerFunction( "str", new SQLFunctionTemplate( StandardBasicTypes.STRING, "rtrim(char(?1))" ) );
 
-		registerKeyword("current");
-		registerKeyword("date");
-		registerKeyword("time");
-		registerKeyword("timestamp");
-		registerKeyword("fetch");
-		registerKeyword("first");
-		registerKeyword("rows");
-		registerKeyword("only");
+		registerKeyword( "current" );
+		registerKeyword( "date" );
+		registerKeyword( "time" );
+		registerKeyword( "timestamp" );
+		registerKeyword( "fetch" );
+		registerKeyword( "first" );
+		registerKeyword( "rows" );
+		registerKeyword( "only" );
 
-		getDefaultProperties().setProperty(Environment.STATEMENT_BATCH_SIZE, NO_BATCH);
+		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, NO_BATCH );
 	}
 
 	public String getLowercaseFunction() {
@@ -169,18 +177,23 @@ public class DB2Dialect extends Dialect {
 	public String getAddColumnString() {
 		return "add column";
 	}
+
 	public boolean dropConstraints() {
 		return false;
 	}
+
 	public boolean supportsIdentityColumns() {
 		return true;
 	}
+
 	public String getIdentitySelectString() {
 		return "values identity_val_local()";
 	}
+
 	public String getIdentityColumnString() {
 		return "generated by default as identity"; //not null ... (start with 1) is implicit
 	}
+
 	public String getIdentityInsertString() {
 		return "default";
 	}
@@ -188,9 +201,11 @@ public class DB2Dialect extends Dialect {
 	public String getSequenceNextValString(String sequenceName) {
 		return "values nextval for " + sequenceName;
 	}
+
 	public String getCreateSequenceString(String sequenceName) {
 		return "create sequence " + sequenceName;
 	}
+
 	public String getDropSequenceString(String sequenceName) {
 		return "drop sequence " + sequenceName + " restrict";
 	}
@@ -210,74 +225,27 @@ public class DB2Dialect extends Dialect {
 	public boolean supportsLimit() {
 		return true;
 	}
+
 	public boolean supportsVariableLimit() {
 		return false;
 	}
 
-//	/**
-//	 * Render the <tt>rownumber() over ( .... ) as rownumber_,</tt>
-//	 * bit, that goes in the select list
-//	 */
-//	private String getRowNumber(String sql) {
-//		StringBuffer rownumber = new StringBuffer(50)
-//			.append("rownumber() over(");
-//
-//		int orderByIndex = sql.toLowerCase().indexOf("order by");
-//
-//		if ( orderByIndex>0 && !hasDistinct(sql) ) {
-//			rownumber.append( sql.substring(orderByIndex) );
-//		}
-//
-//		rownumber.append(") as rownumber_,");
-//
-//		return rownumber.toString();
-//	}
-//
-//	public String getLimitString(String sql, boolean hasOffset) {
-//		int startOfSelect = sql.toLowerCase().indexOf("select");
-//
-//		StringBuffer pagingSelect = new StringBuffer( sql.length()+100 )
-//				.append( sql.substring(0, startOfSelect) )	// add the comment
-//				.append("select * from ( select ") 			// nest the main query in an outer select
-//				.append( getRowNumber(sql) ); 				// add the rownnumber bit into the outer query select list
-//
-//		if ( hasDistinct(sql) ) {
-//			pagingSelect.append(" row_.* from ( ")			// add another (inner) nested select
-//					.append( sql.substring(startOfSelect) ) // add the main query
-//					.append(" ) as row_"); 					// close off the inner nested select
-//		}
-//		else {
-//			pagingSelect.append( sql.substring( startOfSelect + 6 ) ); // add the main query
-//		}
-//
-//		pagingSelect.append(" ) as temp_ where rownumber_ ");
-//
-//		//add the restriction to the outer select
-//		if (hasOffset) {
-//			pagingSelect.append("between ?+1 and ?");
-//		}
-//		else {
-//			pagingSelect.append("<= ?");
-//		}
-//
-//		return pagingSelect.toString();
-//	}
-public String getLimitString(String sql, int offset, int limit) {
-	if ( offset == 0 ) {
-		return sql + " fetch first " + limit + " rows only";
+	public String getLimitString(String sql, int offset, int limit) {
+		if ( offset == 0 ) {
+			return sql + " fetch first " + limit + " rows only";
+		}
+		StringBuilder pagingSelect = new StringBuilder( sql.length() + 200 )
+				.append(
+						"select * from ( select inner2_.*, rownumber() over(order by order of inner2_) as rownumber_ from ( "
+				)
+				.append( sql )  //nest the main query in an outer select
+				.append( " fetch first " )
+				.append( limit )
+				.append( " rows only ) as inner2_ ) as inner1_ where rownumber_ > " )
+				.append( offset )
+				.append( " order by rownumber_" );
+		return pagingSelect.toString();
 	}
-	StringBuilder pagingSelect = new StringBuilder( sql.length() + 200 )
-			.append(
-					"select * from ( select inner2_.*, rownumber() over(order by order of inner2_) as rownumber_ from ( "
-			)
-			.append( sql )  //nest the main query in an outer select
-			.append( " fetch first " )
-			.append( limit )
-			.append( " rows only ) as inner2_ ) as inner1_ where rownumber_ > " )
-			.append( offset )
-			.append( " order by rownumber_" );
-	return pagingSelect.toString();
-}
 
 	/**
 	 * DB2 does have a one-based offset, however this was actually already handled in the limit string building
@@ -290,10 +258,6 @@ public String getLimitString(String sql, int offset, int limit) {
 	public int convertToFirstRowValue(int zeroBasedFirstResult) {
 		return zeroBasedFirstResult;
 	}
-//
-//	private static boolean hasDistinct(String sql) {
-//		return sql.toLowerCase().indexOf("select distinct")>=0;
-//	}
 
 	public String getForUpdateString() {
 		return " for read only with rs";
@@ -317,7 +281,7 @@ public String getLimitString(String sql, int offset, int limit) {
 
 	public String getSelectClauseNullString(int sqlType) {
 		String literal;
-		switch(sqlType) {
+		switch ( sqlType ) {
 			case Types.VARCHAR:
 			case Types.CHAR:
 				literal = "'x'";
@@ -338,10 +302,22 @@ public String getLimitString(String sql, int offset, int limit) {
 	}
 
 	public static void main(String[] args) {
-		System.out.println( new DB2Dialect().getLimitString("/*foo*/ select * from foos", true) );
-		System.out.println( new DB2Dialect().getLimitString("/*foo*/ select distinct * from foos", true) );
-		System.out.println( new DB2Dialect().getLimitString("/*foo*/ select * from foos foo order by foo.bar, foo.baz", true) );
-		System.out.println( new DB2Dialect().getLimitString("/*foo*/ select distinct * from foos foo order by foo.bar, foo.baz", true) );
+		System.out.println( new DB2Dialect().getLimitString( "/*foo*/ select * from foos", true ) );
+		System.out.println( new DB2Dialect().getLimitString( "/*foo*/ select distinct * from foos", true ) );
+		System.out
+				.println(
+						new DB2Dialect().getLimitString(
+								"/*foo*/ select * from foos foo order by foo.bar, foo.baz",
+								true
+						)
+				);
+		System.out
+				.println(
+						new DB2Dialect().getLimitString(
+								"/*foo*/ select distinct * from foos foo order by foo.bar, foo.baz",
+								true
+						)
+				);
 	}
 
 	public boolean supportsUnionAll() {
@@ -355,8 +331,8 @@ public String getLimitString(String sql, int offset, int limit) {
 	public ResultSet getResultSet(CallableStatement ps) throws SQLException {
 		boolean isResultSet = ps.execute();
 		// This assumes you will want to ignore any update counts 
-		while (!isResultSet && ps.getUpdateCount() != -1) {
-		    isResultSet = ps.getMoreResults();
+		while ( !isResultSet && ps.getUpdateCount() != -1 ) {
+			isResultSet = ps.getMoreResults();
 		}
 		ResultSet rs = ps.getResultSet();
 		// You may still have other ResultSets or update counts left to process here 
@@ -381,7 +357,7 @@ public String getLimitString(String sql, int offset, int limit) {
 	}
 
 	public String generateTemporaryTableName(String baseTableName) {
-		return "session." + super.generateTemporaryTableName(baseTableName);
+		return "session." + super.generateTemporaryTableName( baseTableName );
 	}
 
 	public boolean supportsCurrentTimestampSelection() {

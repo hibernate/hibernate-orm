@@ -27,6 +27,7 @@ import org.junit.Test;
 import org.hibernate.QueryException;
 import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
+import org.hibernate.StaleStateException;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
@@ -53,7 +54,6 @@ public abstract class AbstractEntityWithOneToManyTest extends BaseCoreFunctional
 	private boolean isContractVersioned;
 	public void configure(Configuration cfg) {
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true");
-		cfg.setProperty( Environment.STATEMENT_BATCH_SIZE, "0" );
 	}
 
 	protected boolean checkUpdateCountsAfterAddingExistingElement() {
@@ -1181,9 +1181,12 @@ public abstract class AbstractEntityWithOneToManyTest extends BaseCoreFunctional
 			t.commit();
 			assertFalse( isContractVersioned );
 		}
-		catch (StaleObjectStateException ex) {
-			assertTrue( isContractVersioned);
+		catch (StaleStateException ex) {
 			t.rollback();
+			assertTrue( isContractVersioned );
+			if ( ! sessionFactory().getSettings().isJdbcBatchVersionedData() ) {
+				assertTrue( StaleObjectStateException.class.isInstance( ex ) );
+			}
 		}
 		s.close();
 

@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2010, 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -39,6 +39,7 @@ import org.hibernate.type.StandardBasicTypes;
  * Seems to work with Informix Dynamic Server Version 7.31.UD3,  Informix JDBC driver version 2.21JC3.
  *
  * @author Steve Molitor
+ * @author Laird Nelson
  */
 public class InformixDialect extends Dialect {
 
@@ -239,5 +240,9 @@ public class InformixDialect extends Dialect {
 
 	public String getCurrentTimestampSelectString() {
 		return "select distinct current timestamp from informix.systables";
+	}
+
+	public String toBooleanValueString(boolean bool) {
+		return bool ? "'t'" : "'f'";
 	}
 }

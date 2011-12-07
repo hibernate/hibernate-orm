@@ -160,7 +160,7 @@ public class JarVisitorFactory {
 		if ( "jar".equals( protocol ) ) {
 			return new JarProtocolVisitor( jarUrl, filters, entry );
 		}
-		else if ( StringHelper.isEmpty( protocol ) || "file".equals( protocol ) ) {
+		else if ( StringHelper.isEmpty( protocol ) || "file".equals( protocol ) || "vfszip".equals( protocol ) || "vfsfile".equals( protocol ) ) {
 			File file;
 			try {
 				final String filePart = jarUrl.getFile();

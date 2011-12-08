@@ -240,4 +240,35 @@ public class InformixDialect extends Dialect {
 	public String getCurrentTimestampSelectString() {
 		return "select distinct current timestamp from informix.systables";
 	}
+
+	/**
+	 * Overrides {@link Dialect#supportsTemporaryTables()} to return
+	 * {@code true} when invoked.
+	 *
+	 * @return {@code true} when invoked
+	 */
+	public boolean supportsTemporaryTables() {
+		return true;
+	}
+
+	/**
+	 * Overrides {@link Dialect#getCreateTemporaryTableString()} to
+	 * return "{@code create temp table}" when invoked.
+	 *
+	 * @return "{@code create temp table}" when invoked
+	 */
+	public String getCreateTemporaryTableString() {
+		return "create temp table";
+	}
+
+	/**
+	 * Overrides {@link Dialect#getCreateTemporaryTablePostfix()} to
+	 * return "{@code with no log}" when invoked.
+	 *
+	 * @return "{@code with no log}" when invoked
+	 */
+	public String getCreateTemporaryTablePostfix() {
+		return "with no log";
+	}
+
 }

@@ -44,7 +44,7 @@ public class DBAllocationHelper {
     //DBAllocator supports the following DBs
     private static def supportedDB = ["oracle9i", "oracle10g", "oracle11gR1", "oracle11gR2",
             "oracle11gR2RAC", "oracle11gR1RAC",
-            "postgresql82", "postgresql83", "postgresql84", "mysql50", "mysql51",
+            "postgresql82", "postgresql83", "postgresql84", "postgresql91",  "mysql50", "mysql51","mysql55",
             "db2-91", "db2-97", "mssql2005", "mssql2008R1", "mssql2008R2", "sybase155"];
     private static final Map<MatrixNode, Map<String, String>> cache = new HashMap<MatrixNode, Map<String, String>>();
 

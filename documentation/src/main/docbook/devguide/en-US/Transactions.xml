@@ -63,10 +63,20 @@
                     are used to allow applications to manage and check the state of transactions.
                     <interfacename>org.hibernate.Transaction</interfacename> is Hibernate's notion of a logical
                     transaction.  JPA has a similar notion in the
-                    <interfacename>javax.persistence.EntityTransaction</interfacename> interface.
+                    <interfacename>javax.persistence.EntityTransaction</interfacename> interface although it is only
+                    available when using resource-local transactions, whereas access to
+                    <interfacename>org.hibernate.Transaction</interfacename> is always allowed.
                 </para>
             </listitem>
         </itemizedlist>
+
+        <note>
+            <para>
+                <interfacename>javax.persistence.EntityTransaction</interfacename> is only available when using
+                resource-local transactions.  Hibernate allows access to
+                <interfacename>org.hibernate.Transaction</interfacename> regardless of environment.
+            </para>
+        </note>
 
         <para>
             <interfacename>org.hibernate.engine.transaction.spi.TransactionFactory</interfacename> is a standard

@@ -14,7 +14,6 @@ import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.entities.collection.MultipleCollectionEntity;
 import org.hibernate.envers.test.entities.collection.MultipleCollectionRefEntity1;
 import org.hibernate.envers.test.entities.collection.MultipleCollectionRefEntity2;
-import org.hibernate.testing.tm.SimpleJtaTransactionManagerImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
@@ -45,31 +44,28 @@ public class DetachedMultipleCollectionChangeTest extends AbstractEntityTest {
 		cfg.addAnnotatedClass(MultipleCollectionEntity.class);
 		cfg.addAnnotatedClass(MultipleCollectionRefEntity1.class);
 		cfg.addAnnotatedClass(MultipleCollectionRefEntity2.class);
-
-		addJTAConfig(cfg);
 	}
 
 	@Test
 	public void initData() throws Exception {
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
 
 		newEntityManager();
 		EntityManager em = getEntityManager();
+		em.getTransaction().begin();
 		em.joinTransaction();
 		MultipleCollectionEntity mce = new MultipleCollectionEntity();
 		mce.setText("MultipleCollectionEntity-1");
 		em.persist(mce);
 		mceId1 = mce.getId();
 
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		em.getTransaction().commit();
 		assert mceId1 != null;
 
 		//
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
-
 		newEntityManager();
 		em = getEntityManager();
+		em.getTransaction().begin();
 		em.joinTransaction();
 
 		// mce = em.find(MultipleCollectionEntity.class, mceId1);
@@ -99,7 +95,7 @@ public class DetachedMultipleCollectionChangeTest extends AbstractEntityTest {
 
 		mce = em.merge(mce);
 
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		em.getTransaction().commit();
 
 		// re1Id1 = re1_1.getId();
 		// re1Id2 = re1_2.getId();
@@ -133,10 +129,9 @@ public class DetachedMultipleCollectionChangeTest extends AbstractEntityTest {
 
 		//
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
-
 		newEntityManager();
 		em = getEntityManager();
+		em.getTransaction().begin();
 		em.joinTransaction();
 
 		// mce = em.find(MultipleCollectionEntity.class, mceId1);
@@ -178,7 +173,7 @@ public class DetachedMultipleCollectionChangeTest extends AbstractEntityTest {
 
 		mce = em.merge(mce);
 
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		em.getTransaction().commit();
 
 		// re1Id3 = re1_3.getId();
 		// re2Id3 = re2_3.getId();
@@ -298,10 +293,9 @@ public class DetachedMultipleCollectionChangeTest extends AbstractEntityTest {
 
 		String query = qryBuilder.toString();
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
-
 		newEntityManager();
 		EntityManager em = getEntityManager();
+		em.getTransaction().begin();
 		Query qry = em.createQuery(query);
 
 		@SuppressWarnings("unchecked")

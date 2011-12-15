@@ -5,6 +5,17 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 3.6.9 (2011.12.14)
+-------------------------------------------
+https://hibernate.onjira.com/browse/HHH/fixforversion/11752
+
+** Bug
+    * [HHH-6714] - Parentheses dissapear in HQL query where they should stay
+    * [HHH-6784] - The REVINFO table is always added to Hibernate's configuration, even if there are no audit tables
+    * [HHH-6793] - SessionCacheCleaner doesn't accomodate for closed sessions
+    * [HHH-6806] - Auto scan for JPA entities does not work in exploded packages in JBoss AS < 7
+
+
 Changes in version 3.6.8 (2011.10.26)
 -------------------------------------------
 https://hibernate.onjira.com/browse/HHH/fixforversion/11354

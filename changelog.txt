@@ -5,6 +5,23 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 4.0.0.Final (2011.12.14)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.onjira.com/browse/HHH/fixforversion/11656
+
+** Bug
+    * [HHH-6836] - some test failures on Oracle
+    * [HHH-6866] - UUID wrongly mapped as 'char(255) for bit data' on DB2
+    * [HHH-6867] - test data overflow causes org.hibernate.test.cut.CompositeUserTypeTest.testCustomColumnReadAndWrite fails on DB2
+    * [HHH-6870] - sysdate function in oracle dialect is a non argu and no parentheses function
+
+** Improvement
+    * [HHH-6729] - Upgrade to Infinispan 5.1 and update default second level cache config file
+
+** Task
+    * [HHH-6423] - Add JoinedIterable<T>
+
+
 Changes in version 4.0.0.CR7 (2011.11.30)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.onjira.com/browse/HHH/fixforversion/11653

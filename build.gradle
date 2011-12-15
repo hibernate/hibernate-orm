@@ -66,7 +66,7 @@ libraries = [
         dom4j:          'dom4j:dom4j:1.6.1@jar',
 
         // Javassist
-        javassist:      'javassist:javassist:3.12.1.GA',
+        javassist:      'org.javassist:javassist:3.15.0-GA',
 
         // javax
         jpa:            'org.hibernate.javax.persistence:hibernate-jpa-2.0-api:1.0.1.Final',

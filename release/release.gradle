@@ -104,7 +104,7 @@ aggregateJavadocs.doLast {
 // release bundles ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 releaseBuildDir = dir( buildDirName )
-task prepareReleaseBundles( dependsOn: [parent.project( 'documentation' ).tasks.buildDocs,aggregateJavadocs] )
+task prepareReleaseBundles( dependsOn: [parent.project( 'documentation' ).tasks.buildDocs,parent.project('hibernate-entitymanager' ).tasks.buildDocs,aggregateJavadocs] )
 
 
 releaseCopySpec = copySpec {
@@ -158,6 +158,10 @@ releaseCopySpec = copySpec {
 
         into('documentation') {
             from new File( parent.project( 'documentation' ).buildDir, 'docbook/publish' )
+        }
+
+        into('documentation/hem') {
+            from new File( parent.project( 'hibernate-entitymanager' ).buildDir, 'docbook/publish' )
         }
 
         into('documentation/javadocs') {

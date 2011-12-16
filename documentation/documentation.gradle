@@ -39,10 +39,10 @@ jdocbook {
 		masterSourceDocumentName = 'Hibernate_Development_Guide.xml'
 	}
 // todo : need to remove this once all content moved to devguide
-//	manual {
-//		masterSourceDocumentName = 'HIBERNATE_-_Relational_Persistence_for_Idiomatic_Java.xml'
+	manual {
+		masterSourceDocumentName = 'HIBERNATE_-_Relational_Persistence_for_Idiomatic_Java.xml'
 //		translation = ['de-DE','es-ES','fr-FR','ja-JP','pt-BR','zh-CN']
-//	}
+	}
 }
 
 task buildTutorialZip(type: Zip) {

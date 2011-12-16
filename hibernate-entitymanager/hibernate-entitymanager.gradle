@@ -1,5 +1,35 @@
 import org.apache.tools.ant.filters.ReplaceTokens
 
+apply plugin: "jdocbook"
+
+buildscript {
+  repositories {
+      mavenCentral()
+      mavenLocal()
+      mavenRepo name: "jboss", urls: "http://repository.jboss.org/nexus/content/groups/public/"
+  }
+  dependencies {
+      classpath 'org.jboss.jdocbook:gradle-jdocbook:1.1.0'
+  }
+}
+
+dependencies {
+	jdocbookStyles "org.hibernate:hibernate-jdocbook-style:2.0.1"
+}
+
+jdocbook {
+    format('html_single') {
+		finalName = "index.html"
+		stylesheet = "classpath:/xslt/org/hibernate/jdocbook/xslt/xhtml-single.xsl"
+	}
+	format('html') {
+		finalName = "index.html"
+		stylesheet = "classpath:/xslt/org/hibernate/jdocbook/xslt/xhtml.xsl"
+	}
+    masterSourceDocumentName="master.xml"
+    masterLanguage="en"
+}
+
 apply plugin: 'java'
 apply plugin: org.hibernate.gradle.testing.matrix.MatrixTestingPlugin
 

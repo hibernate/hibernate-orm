@@ -13,10 +13,45 @@ ideaModule {
 javadocBuildDir = dir( buildDirName + "/documentation/javadocs" )
 
 def List subProjectsToSkipForJavadoc = ['release','documentation'];
+def List sourceSetsToSkipForJavadoc = ['test','matrix'];
 
 def copyRightYear = new java.util.GregorianCalendar().get( java.util.Calendar.YEAR );
 
 task aggregateJavadocs(type: Javadoc) {
+    Set<String> apiPackages = new HashSet<String>()
+    Set<String> spiPackages = new HashSet<String>()
+    Set<String> internalPackages = new HashSet<String>()
+
+    parent.subprojects.each{ subProject->
+        if ( !subProjectsToSkipForJavadoc.contains( subProject.name ) ) {
+            subProject.sourceSets.each { sourceSet ->
+                if ( !sourceSetsToSkipForJavadoc.contains( sourceSet.name ) ) {
+                    source sourceSet.java
+
+                    if( classpath ) {
+                        classpath += sourceSet.classes + sourceSet.compileClasspath
+                    }
+                    else {
+                        classpath = sourceSet.classes + sourceSet.compileClasspath
+                    }
+
+                    sourceSet.java.each { javaFile ->
+                        final String packageName = determinePackageName( sourceSet.java, javaFile );
+                        if ( packageName.endsWith( ".internal" ) || packageName.contains( ".internal." ) ) {
+                            internalPackages.add( packageName );
+                        }
+                        else if ( packageName.endsWith( ".spi" ) || packageName.contains( ".spi." ) ) {
+                            spiPackages.add( packageName );
+                        }
+                        else {
+                            apiPackages.add( packageName );
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     description = "Build the aggregated JavaDocs for all modules"
     maxMemory = '512m'
     destinationDir = javadocBuildDir.dir
@@ -28,70 +63,26 @@ task aggregateJavadocs(type: Javadoc) {
         bottom = "Copyright &copy; 2001-$copyRightYear <a href=\"http://redhat.com\">Red Hat, Inc.</a>  All Rights Reserved."
         use = true
         links = [ 'http://download.oracle.com/javase/6/docs/api/', 'http://download.oracle.com/javaee/6/api/' ]
-        group(
-            'Core API', [
-                'org.hibernate',
-                'org.hibernate.classic',
-                'org.hibernate.criterion',
-                'org.hibernate.mapping',
-                'org.hibernate.metadata',
-                'org.hibernate.cfg',
-                'org.hibernate.stat'
-            ]
-        )
-        group(
-            'Extension SPI', [
-                'org.hibernate.id*',
-                'org.hibernate.connection',
-                'org.hibernate.transaction',
-                'org.hibernate.type',
-                'org.hibernate.dialect*',
-                'org.hibernate.cache*',
-                'org.hibernate.event*',
-                'org.hibernate.property',
-                'org.hibernate.loader*',
-                'org.hibernate.persister*',
-                'org.hibernate.proxy',
-                'org.hibernate.tuple',
-                'org.hibernate.transform',
-                'org.hibernate.collection',
-                'org.hibernate.jdbc',
-                'org.hibernate.usertype'
-            ]
-        )
-        group(
-            'Bytecode providers', [
-                 'org.hibernate.bytecode*',
-                 'org.hibernate.intercept*'
-            ]
-        )
-        group (
-            'Infinispan Integration', ['org.hibernate.cache.infinispan*']
-        )
-        group (
-            'JBossCache Integration', ['org.hibernate.cache.jbc*']
-        )
-        group (
-            'Testing Support', ['org.hibernate.junit*']
-        )
+        group( 'API', apiPackages.asList() )
+        group( 'SPI', spiPackages.asList() )
+        group( 'Internal', internalPackages.asList() )
+        group ( 'Testing Support', ['org.hibernate.testing*'] )
     }
+}
 
-    parent.subprojects.each{ subProject->
-        if ( !subProjectsToSkipForJavadoc.contains( subProject.name ) ) {
-            subProject.sourceSets.each { set ->
-                if ( !"test".equals( set.name ) ) {
-                    source set.java
-
-                    if( classpath ) {
-                        classpath += set.classes + set.compileClasspath
-                    }
-                    else {
-                        classpath = set.classes + set.compileClasspath
-                    }
-                }
-            }
+String determinePackageName(SourceDirectorySet sourceDirectorySet, File javaFile) {
+    final javaFileAbsolutePath = javaFile.absolutePath;
+    for ( File sourceDirectory : sourceDirectorySet.srcDirs ) {
+        final String sourceDirectoryAbsolutePath = sourceDirectory.absolutePath;
+        if ( javaFileAbsolutePath.startsWith( sourceDirectoryAbsolutePath ) ) {
+            final String javaFileRelativePath = javaFileAbsolutePath.substring(
+                    sourceDirectoryAbsolutePath.length() + 1,
+                    javaFileAbsolutePath.lastIndexOf( '/' )
+            );
+            return javaFileRelativePath.replace( '/', '.' );
         }
     }
+    throw new RuntimeException( "ugh" );
 }
 
 aggregateJavadocs.doLast {

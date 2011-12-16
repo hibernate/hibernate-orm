@@ -27,20 +27,21 @@
 
 Hibernate provides both<ul>
     <li>
-        a native API comprised mainly of {@link org.hibernate.SessionFactory} and {@link org.hibernate.Session}
+        a native API comprised centrally around {@link org.hibernate.SessionFactory} and {@link org.hibernate.Session}
     </li>
     <li>
-        an implementation of the <a href="">JSR-317</a> Java Persistence API (JPA) specification comprised mainly of
-        {@link org.hibernate.ejb.EntityManagerFactoryImpl} and {@link org.hibernate.ejb.EntityManagerImpl}
+        an implementation of the <a href="http://jcp.org/en/jsr/detail?id=317">JSR-317</a> Java Persistence API (JPA)
+        specification comprised centrally around {@link org.hibernate.ejb.EntityManagerFactoryImpl} and
+        {@link org.hibernate.ejb.EntityManagerImpl} (the Hibernate implementations of
+        {@link javax.persistence.EntityManager} and{@link javax.persistence.EntityManagerFactory}, respectively)
     </li>
 </ul>
 <hr/>
 
 <h3>Native API</h3>
-In addition to  {@link org.hibernate.SessionFactory} and {@link org.hibernate.Session}, applications using the
-native API will often need to utilize the following interfaces:<ul>
+In addition to SessionFactory and Session, applications using the native API will often utilize the following
+interfaces:<ul>
     <li>{@link org.hibernate.cfg.Configuration}</li>
-    <li>{@link org.hibernate.Hibernate}</li>
     <li>{@link org.hibernate.Transaction}</li>
     <li>{@link org.hibernate.Query}</li>
     <li>{@link org.hibernate.Criteria}</li>
@@ -58,36 +59,23 @@ These interfaces are fully intended to be exposed to application code.
 The JPA interfaces are all defined by the JPA specification.  For details see {@link javax.persistence}
 <hr/>
 
-<h3>Extensions</h3>
-Hibernate defines a number of interfaces that are completely intended to be extendable by application programmers and/or
-integrators.  Listed below is a (not necessarily exhaustive) list of the most commonly utilized extension points:<ul>
-    <li>{@link org.hibernate.EntityNameResolver}</li>
-    <li>{@link org.hibernate.Interceptor} / {@link org.hibernate.EmptyInterceptor}</li>
-    <li>{@link org.hibernate.Transaction} / {@link org.hibernate.transaction.TransactionFactory}</li>
-    <li>{@link org.hibernate.context.CurrentSessionContext}</li>
-    <li>{@link org.hibernate.dialect.Dialect}</li>
-    <li>{@link org.hibernate.dialect.resolver.DialectResolver}</li>
-    <li>{@link org.hibernate.event event listener} interfaces</li>
-    <li>{@link org.hibernate.id.IdentifierGenerator}</li>
-    <li>{@link org.hibernate.tuple.entity.EntityTuplizer} / {@link org.hibernate.tuple.component.ComponentTuplizer}</li>
-    <li>{@link org.hibernate.type.Type} / {@link org.hibernate.usertype}</li>
+<h3>Package Groups</h3>
+This documentation groups packages into the following 3 categories:<ul>
+    <li>
+        <strong>API</strong> - classes to which application code will generally bind directly.
+    </li>
+    <li>
+        <strong>SPI</strong> - classes to which application developers or integrators will commonly bind directly in
+        order to develop extensions to Hibernate, or to alter its behavior in some way.
+    </li>
+    <li>
+        <strong>Internal</strong> - classes which are intended only to be used by Hibernate.  Use of these classes
+        outside of Hibernate specific use cases is not supported.  Moreover, these contracts can change frequently
+        between releases whereas APIs and SPIs are more stable.
+    </li>
 </ul>
-Note that there is a large degree of crossover between the notion of extension points and that of an integration SPI (below).
 <hr/>
 
-<h3>Integration SPI</h3>
-Hibernate provides a number of SPIs intended to integrate itself with various third party frameworks or application code to provide
-additional capabilities.   The SPIs fall mainly into 2 categories:<ul>
-    <li>Caching - {@link org.hibernate.cache.RegionFactory}</li>
-    <li>JDBC Connection management - {@link org.hibernate.connection.ConnectionProvider}
-</ul>
-Certainly {@link org.hibernate.dialect.Dialect} could fit in here as well, though we chose to list it under extensions since application
-developers tend to provide extended dialects rather frequently for various reasons.
-<br/>
-Another SPI that is not yet exposed but is planned for such is the <em>bytecode provider</em> SPI.  See {@link org.hibernate.bytecode}
-for details.
-<hr/>
-
-Complete Hibernate documentation may be found online at <a href="http://docs.jboss.org/hibernate/">http://docs.jboss.org/hibernate/</a>.
+Complete Hibernate documentation may be found online at <a href="http://docs.jboss.org/hibernate/">http://docs.jboss.org/hibernate/</a>
 
 </body>

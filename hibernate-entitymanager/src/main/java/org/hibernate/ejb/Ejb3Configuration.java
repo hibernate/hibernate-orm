@@ -23,19 +23,6 @@
  */
 package org.hibernate.ejb;
 
-import javax.naming.BinaryRefAddr;
-import javax.naming.NamingException;
-import javax.naming.Reference;
-import javax.naming.Referenceable;
-import javax.persistence.Embeddable;
-import javax.persistence.Entity;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.EntityNotFoundException;
-import javax.persistence.MappedSuperclass;
-import javax.persistence.PersistenceException;
-import javax.persistence.spi.PersistenceUnitInfo;
-import javax.persistence.spi.PersistenceUnitTransactionType;
-import javax.sql.DataSource;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -58,12 +45,21 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
+import javax.naming.BinaryRefAddr;
+import javax.naming.NamingException;
+import javax.naming.Reference;
+import javax.naming.Referenceable;
+import javax.persistence.Embeddable;
+import javax.persistence.Entity;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityNotFoundException;
+import javax.persistence.MappedSuperclass;
+import javax.persistence.PersistenceException;
+import javax.persistence.spi.PersistenceUnitInfo;
+import javax.persistence.spi.PersistenceUnitTransactionType;
+import javax.sql.DataSource;
 
 import org.dom4j.Element;
-import org.jboss.logging.Logger;
-import org.xml.sax.EntityResolver;
-import org.xml.sax.InputSource;
-
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.MappingException;
@@ -109,6 +105,9 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.service.internal.StandardServiceRegistryImpl;
 import org.hibernate.service.jdbc.connections.internal.DatasourceConnectionProviderImpl;
+import org.jboss.logging.Logger;
+import org.xml.sax.EntityResolver;
+import org.xml.sax.InputSource;
 
 /**
  * Allow a fine tuned configuration of an EJB 3.0 EntityManagerFactory
@@ -902,12 +901,13 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 
 		try {
 			final ServiceRegistry serviceRegistry = buildLifecycleControledServiceRegistry( builder );
-			return new EntityManagerFactoryImpl(
+			return  new EntityManagerFactoryImpl(
 					transactionType,
 					discardOnClose,
 					getSessionInterceptorClass( cfg.getProperties() ),
 					cfg,
-					serviceRegistry
+					serviceRegistry,
+					persistenceUnitName
 			);
 		}
 		catch (HibernateException e) {

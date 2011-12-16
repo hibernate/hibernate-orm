@@ -1547,4 +1547,9 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "update timestamps cache misses: %s", id = 435)
 	void timestampCacheMisses(long updateTimestampsCachePutCount);
 
+	@LogMessage(level = WARN)
+	@Message(value = "Entity manager factory name (%s) is already registered.  If entity manager will be clustered "+
+			"or passivated, specify a unique value for property '%s'", id = 436)
+	void entityManagerFactoryAlreadyRegistered(String emfName, String propertyName);
+
 }

@@ -63,7 +63,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.jboss.logging.Logger;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.CacheMode;
@@ -114,6 +113,8 @@ import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.service.jta.platform.spi.JtaPlatform;
 import org.hibernate.transform.BasicTransformerAdapter;
 import org.hibernate.type.Type;
+import org.jboss.logging.Logger;
+
 
 /**
  * @author <a href="mailto:gavin@hibernate.org">Gavin King</a>
@@ -138,7 +139,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		entityManagerSpecificProperties.add( QueryHints.SPEC_HINT_TIMEOUT );
 	}
 
-	private EntityManagerFactoryImpl entityManagerFactory;
+	private transient EntityManagerFactoryImpl entityManagerFactory;
 	protected transient TransactionImpl tx = new TransactionImpl( this );
 	protected PersistenceContextType persistenceContextType;
 	private PersistenceUnitTransactionType transactionType;
@@ -1235,10 +1236,12 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 
 	private void writeObject(ObjectOutputStream oos) throws IOException {
 		oos.defaultWriteObject();
+		entityManagerFactory.serialize(oos);
 	}
 
 	private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException {
 		ois.defaultReadObject();
+		entityManagerFactory = (EntityManagerFactoryImpl)EntityManagerFactoryImpl.deserialize(ois);
 		tx = new TransactionImpl( this );
 	}
 

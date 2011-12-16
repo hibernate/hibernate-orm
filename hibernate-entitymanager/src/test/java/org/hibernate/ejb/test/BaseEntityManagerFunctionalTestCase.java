@@ -23,18 +23,12 @@
  */
 package org.hibernate.ejb.test;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
-
-import org.jboss.logging.Logger;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
 
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
@@ -46,11 +40,10 @@ import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.service.BootstrapServiceRegistryBuilder;
 import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.service.internal.StandardServiceRegistryImpl;
-
+import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.jboss.logging.Logger;
 import org.junit.After;
 import org.junit.Before;
-
-import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 /**
  * A base class for all ejb tests.
@@ -116,7 +109,9 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 		}
 		ejb3Configuration
 				.getHibernateConfiguration()
-				.setProperty( org.hibernate.cfg.AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
+				.setProperty( org.hibernate.cfg.AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS, "true")
+				.setProperty( AvailableSettings.ENTITY_MANAGER_FACTORY_NAME, "EMF_BaseEntityManagerFunctionalTestCase");
+
 		ejb3Configuration
 				.getHibernateConfiguration()
 				.setProperty( Environment.DIALECT, getDialect().getClass().getName() );

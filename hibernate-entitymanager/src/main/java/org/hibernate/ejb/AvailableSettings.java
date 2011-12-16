@@ -308,6 +308,11 @@ public class AvailableSettings {
 	public static final String PACKAGE_NAMES = "hibernate.ejb.packages";
 
 	/**
+	 * EntityManagerFactory name
+	 */
+	public static final String ENTITY_MANAGER_FACTORY_NAME = "hibernate.ejb.entitymanager_factory_name";
+
+	/**
 	 * List of classes names
 	 * Internal use only
 	 */
@@ -318,4 +323,5 @@ public class AvailableSettings {
 	public static final String JACC_PREFIX = "hibernate.jacc";
 	public static final String JACC_ENABLED = "hibernate.jacc.enabled";
 	public static final String PERSISTENCE_UNIT_NAME = "hibernate.ejb.persistenceUnitName";
+
 }

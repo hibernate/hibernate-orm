@@ -21,25 +21,31 @@
  */
 package org.hibernate.ejb;
 
-import javax.persistence.Cache;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContextType;
-import javax.persistence.PersistenceUnitUtil;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.metamodel.Metamodel;
-import javax.persistence.spi.LoadState;
-import javax.persistence.spi.PersistenceUnitTransactionType;
+import java.io.IOException;
+import java.io.InvalidObjectException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
+import javax.persistence.Cache;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.PersistenceContextType;
+import javax.persistence.PersistenceUnitUtil;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.metamodel.Metamodel;
+import javax.persistence.spi.LoadState;
+import javax.persistence.spi.PersistenceUnitTransactionType;
 
 import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
+import org.hibernate.ejb.internal.EntityManagerFactoryRegistry;
 import org.hibernate.ejb.metamodel.MetamodelImpl;
 import org.hibernate.ejb.util.PersistenceUtilHelper;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -63,6 +69,7 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 	private final Metamodel metamodel;
 	private final HibernatePersistenceUnitUtil util;
 	private final Map<String,Object> properties;
+	private final String entityManagerFactoryName;
 
 	private final PersistenceUtilHelper.MetadataCache cache = new PersistenceUtilHelper.MetadataCache();
 
@@ -72,7 +79,8 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 			boolean discardOnClose,
 			Class sessionInterceptorClass,
 			Configuration cfg,
-			ServiceRegistry serviceRegistry) {
+			ServiceRegistry serviceRegistry,
+			String persistenceUnitName) {
 		this.sessionFactory = cfg.buildSessionFactory( serviceRegistry );
 		this.transactionType = transactionType;
 		this.discardOnClose = discardOnClose;
@@ -92,6 +100,12 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 		addAll( props, ( (SessionFactoryImplementor) sessionFactory ).getProperties() );
 		addAll( props, cfg.getProperties() );
 		this.properties = Collections.unmodifiableMap( props );
+		String entityManagerFactoryName = (String)this.properties.get(AvailableSettings.ENTITY_MANAGER_FACTORY_NAME);
+		if (entityManagerFactoryName == null) {
+			entityManagerFactoryName = persistenceUnitName;
+		}
+		this.entityManagerFactoryName = entityManagerFactoryName;
+		EntityManagerFactoryRegistry.INSTANCE.addEntityManagerFactory(entityManagerFactoryName, this);
 	}
 
 	private static void addAll(HashMap<String, Object> propertyMap, Properties properties) {
@@ -124,6 +138,7 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 
 	public void close() {
 		sessionFactory.close();
+		EntityManagerFactoryRegistry.INSTANCE.removeEntityManagerFactory(entityManagerFactoryName, this);
 	}
 
 	public Map<String, Object> getProperties() {
@@ -153,6 +168,10 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 		return sessionFactory;
 	}
 
+	public String getEntityManagerFactoryName() {
+		return entityManagerFactoryName;
+	}
+
 	private static class JPACache implements Cache {
 		private SessionFactory sessionFactory;
 
@@ -179,6 +198,39 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 //			sessionFactory.getCache().evictQueryRegions();
 		}
 	}
+
+	/**
+	 * Custom serialization hook used during EntityManager serialization.
+	 *
+	 * @param oos The stream to which to write the factory
+	 * @throws IOException Indicates problems writing out the serial data stream
+	 */
+	void serialize(ObjectOutputStream oos) throws IOException {
+		if (entityManagerFactoryName == null) {
+			throw new InvalidObjectException( "could not serialize entity manager factory with null entityManagerFactoryName" );
+		}
+		oos.writeUTF( entityManagerFactoryName );
+	}
+
+	/**
+	 * Custom deserialization hook used during EntityManager deserialization.
+	 *
+	 * @param ois The stream from which to "read" the factory
+	 * @return The deserialized factory
+	 * @throws IOException indicates problems reading back serial data stream
+	 * @throws ClassNotFoundException indicates problems reading back serial data stream
+	 */
+	static EntityManagerFactory deserialize(ObjectInputStream ois) throws IOException, ClassNotFoundException {
+		final String entityManagerFactoryName = ois.readUTF();
+		Object result = EntityManagerFactoryRegistry.INSTANCE.getNamedEntityManagerFactory(entityManagerFactoryName);
+
+		if ( result == null ) {
+			throw new InvalidObjectException( "could not resolve entity manager factory during entity manager deserialization [name=" + entityManagerFactoryName + "]" );
+		}
+
+		return (EntityManagerFactory)result;
+	}
+
 
 	private static class HibernatePersistenceUnitUtil implements PersistenceUnitUtil, Serializable {
 		private final HibernateEntityManagerFactory emf;

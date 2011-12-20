@@ -24,6 +24,20 @@
  */
 package org.hibernate.spatial.dialect.oracle;
 
+import org.hibernate.HibernateException;
+import org.hibernate.QueryException;
+import org.hibernate.dialect.Oracle10gDialect;
+import org.hibernate.dialect.function.StandardSQLFunction;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.spatial.*;
+import org.hibernate.spatial.dialect.oracle.criterion.OracleSpatialAggregate;
+import org.hibernate.spatial.helper.PropertyFileReader;
+import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
@@ -32,25 +46,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.hibernate.QueryException;
-import org.hibernate.dialect.Oracle10gDialect;
-import org.hibernate.dialect.function.StandardSQLFunction;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.spatial.GeometryType;
-import org.hibernate.spatial.SpatialAnalysis;
-import org.hibernate.spatial.SpatialDialect;
-import org.hibernate.spatial.SpatialFunction;
-import org.hibernate.spatial.SpatialGeometrySqlTypeDescriptor;
-import org.hibernate.spatial.SpatialRelation;
-import org.hibernate.spatial.dialect.oracle.criterion.OracleSpatialAggregate;
-import org.hibernate.spatial.helper.PropertyFileReader;
-import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.Type;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**
  * Spatial Dialect for Oracle10g databases.
@@ -273,7 +268,13 @@ public class OracleSpatial10gDialect extends Oracle10gDialect implements
                 false, OracleSpatialAggregate.LRS_CONCAT));
     }
 
-	@Override
+    @Override
+    public String getTypeName(int code, long length, int precision, int scale) throws HibernateException {
+        if (code == 3000) return "SDO_GEOMETRY";
+        return super.getTypeName(code, length, precision, scale);    //To change body of overridden methods use File | Settings | File Templates.
+    }
+
+    @Override
 	public SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
 		if ( sqlTypeDescriptor instanceof SpatialGeometrySqlTypeDescriptor ) {
 			return SDOGeometryTypeDescriptor.INSTANCE;

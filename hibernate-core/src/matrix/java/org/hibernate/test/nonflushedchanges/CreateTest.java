@@ -125,7 +125,8 @@ public class CreateTest extends AbstractOperationTestCase {
 		root.addChild( child );
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		s.persist( root );
-		applyNonFlushedChangesToNewSessionCloseOldSession( s );
+		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
+		root = ( NumberedNode ) getOldToNewEntityRefMap().get( root );
 		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		assertInsertCount( 2 );
@@ -218,6 +219,7 @@ public class CreateTest extends AbstractOperationTestCase {
 		dupe = ( NumberedNode ) getOldToNewEntityRefMap().get( dupe );
 		s.persist( dupe );
 		applyNonFlushedChangesToNewSessionCloseOldSession( s );
+		dupe = ( NumberedNode ) getOldToNewEntityRefMap().get( dupe );
 		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
@@ -225,6 +227,7 @@ public class CreateTest extends AbstractOperationTestCase {
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		try {
 			s.persist( dupe );
+			s.flush();
 			assertFalse( true );
 		}
 		catch ( PersistentObjectException poe ) {

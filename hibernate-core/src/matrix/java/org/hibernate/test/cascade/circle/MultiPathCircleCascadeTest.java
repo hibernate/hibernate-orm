@@ -34,10 +34,6 @@ import org.hibernate.TransientObjectException;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.id.IncrementGenerator;
-import org.hibernate.id.SequenceGenerator;
-import org.hibernate.testing.SkipLog;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -58,17 +54,44 @@ import static org.junit.Assert.fail;
  *                      |  <-   ->                |
  *                      -- (1 : N) -- (delivery) --
  *
- *  Arrows indicate the direction of cascade-merge.
+ *  Arrows indicate the direction of cascade-merge, cascade-save, and cascade-save-or-update
  *
  * It reproduced the following issues:
  * http://opensource.atlassian.com/projects/hibernate/browse/HHH-3046
  * http://opensource.atlassian.com/projects/hibernate/browse/HHH-3810
  * <p/>
- * This tests that merge is cascaded properly from each entity.
+ * This tests that cascades are done properly from each entity.
  *
  * @author Pavol Zibrita, Gail Badner
  */
 public class MultiPathCircleCascadeTest extends BaseCoreFunctionalTestCase {
+	private static interface EntityOperation {
+		Object doEntityOperation(Object entity, Session s);
+	}
+	private static EntityOperation MERGE_OPERATION =
+			new EntityOperation() {
+				@Override
+				public Object doEntityOperation(Object entity, Session s) {
+					return s.merge( entity );
+				}
+			};
+	private static EntityOperation SAVE_OPERATION =
+			new EntityOperation() {
+				@Override
+				public Object doEntityOperation(Object entity, Session s) {
+					s.save( entity );
+					return entity;
+				}
+			};
+	private static EntityOperation SAVE_UPDATE_OPERATION =
+			new EntityOperation() {
+				@Override
+				public Object doEntityOperation(Object entity, Session s) {
+					s.saveOrUpdate( entity );
+					return entity;
+				}
+			};
+
 	@Override
 	public void configure(Configuration cfg) {
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
@@ -82,30 +105,19 @@ public class MultiPathCircleCascadeTest extends BaseCoreFunctionalTestCase {
 		};
 	}
 
-	protected void cleanupTest() {
-		Session s = openSession();
-		s.beginTransaction();
-		s.createQuery( "delete from Transport" );
-		s.createQuery( "delete from Tour" );
-		s.createQuery( "delete from Node" );
-		s.createQuery( "delete from Route" );
-	}
-
 	@Test
 	public void testMergeEntityWithNonNullableTransientEntity() {
-		// Skip if CHECK_NULLABILITY is false and route ID is a sequence or incrment generator (see HHH-6744)
-		IdentifierGenerator routeIdentifierGenerator = sessionFactory().getEntityPersister( Route.class.getName() ).getIdentifierGenerator();
-		if ( ! sessionFactory().getSettings().isCheckNullability() &&
-				( SequenceGenerator.class.isInstance( routeIdentifierGenerator) ||
-						IncrementGenerator.class.isInstance( routeIdentifierGenerator ) )
-				) {
-			SkipLog.reportSkip(
-					"delayed-insert without checking nullability",
-					"delayed-insert without checking nullability is known to fail when dirty-checking; see HHH-6744"
-			);
-			return;
-		}
-
+		testEntityWithNonNullableTransientEntity( MERGE_OPERATION );
+	}
+	@Test
+	public void testSaveEntityWithNonNullableTransientEntity() {
+		testEntityWithNonNullableTransientEntity( SAVE_OPERATION );
+	}
+	@Test
+	public void testSaveUpdateEntityWithNonNullableTransientEntity() {
+		testEntityWithNonNullableTransientEntity( SAVE_UPDATE_OPERATION );
+	}
+	private void testEntityWithNonNullableTransientEntity(EntityOperation operation) {
 
 		Route route = getUpdatedDetachedEntity();
 
@@ -121,7 +133,7 @@ public class MultiPathCircleCascadeTest extends BaseCoreFunctionalTestCase {
 		s.beginTransaction();
 
 		try {
-			s.merge( node );
+			operation.doEntityOperation( node, s );
 			s.getTransaction().commit();
 			fail( "should have thrown an exception" );
 		}
@@ -135,11 +147,23 @@ public class MultiPathCircleCascadeTest extends BaseCoreFunctionalTestCase {
 		finally {
 			s.getTransaction().rollback();
 			s.close();
+			cleanup();
 		}
 	}
 
 	@Test
 	public void testMergeEntityWithNonNullableEntityNull() {
+		testEntityWithNonNullableEntityNull( MERGE_OPERATION );
+	}
+	@Test
+	public void testSaveEntityWithNonNullableEntityNull() {
+		testEntityWithNonNullableEntityNull( SAVE_OPERATION );
+	}
+	@Test
+	public void testSaveUpdateEntityWithNonNullableEntityNull() {
+		testEntityWithNonNullableEntityNull( SAVE_UPDATE_OPERATION );
+	}
+	private void testEntityWithNonNullableEntityNull(EntityOperation operation) {
 		Route route = getUpdatedDetachedEntity();
 
 		Node node = (Node) route.getNodes().iterator().next();
@@ -150,7 +174,7 @@ public class MultiPathCircleCascadeTest extends BaseCoreFunctionalTestCase {
 		s.beginTransaction();
 
 		try {
-			s.merge( node );
+			operation.doEntityOperation( node, s );
 			s.getTransaction().commit();
 			fail( "should have thrown an exception" );
 		}
@@ -164,11 +188,23 @@ public class MultiPathCircleCascadeTest extends BaseCoreFunctionalTestCase {
 		finally {
 			s.getTransaction().rollback();
 			s.close();
+			cleanup();
 		}
 	}
 
 	@Test
 	public void testMergeEntityWithNonNullablePropSetToNull() {
+		testEntityWithNonNullablePropSetToNull( MERGE_OPERATION );
+	}
+	@Test
+	public void testSaveEntityWithNonNullablePropSetToNull() {
+		testEntityWithNonNullablePropSetToNull( SAVE_OPERATION );
+	}
+	@Test
+	public void testSaveUpdateEntityWithNonNullablePropSetToNull() {
+		testEntityWithNonNullablePropSetToNull( SAVE_UPDATE_OPERATION );
+	}
+	private void testEntityWithNonNullablePropSetToNull(EntityOperation operation) {
 		Route route = getUpdatedDetachedEntity();
 		Node node = (Node) route.getNodes().iterator().next();
 		node.setName( null );
@@ -177,7 +213,7 @@ public class MultiPathCircleCascadeTest extends BaseCoreFunctionalTestCase {
 		s.beginTransaction();
 
 		try {
-			s.merge( route );
+			operation.doEntityOperation( route, s );
 			s.getTransaction().commit();
 			fail( "should have thrown an exception" );
 		}
@@ -191,11 +227,20 @@ public class MultiPathCircleCascadeTest extends BaseCoreFunctionalTestCase {
 		finally {
 			s.getTransaction().rollback();
 			s.close();
+			cleanup();
 		}
 	}
 
 	@Test
 	public void testMergeRoute() {
+		testRoute( MERGE_OPERATION );
+	}
+	// skip SAVE_OPERATION since Route is not transient
+	@Test
+	public void testSaveUpdateRoute() {
+		testRoute( SAVE_UPDATE_OPERATION );
+	}
+	private void testRoute(EntityOperation operation) {
 
 		Route route = getUpdatedDetachedEntity();
 
@@ -204,7 +249,7 @@ public class MultiPathCircleCascadeTest extends BaseCoreFunctionalTestCase {
 		Session s = openSession();
 		s.beginTransaction();
 
-		s.merge( route );
+		operation.doEntityOperation( route, s );
 
 		s.getTransaction().commit();
 		s.close();
@@ -218,10 +263,23 @@ public class MultiPathCircleCascadeTest extends BaseCoreFunctionalTestCase {
 		checkResults( route, true );
 		s.getTransaction().commit();
 		s.close();
+
+		cleanup();
 	}
 
 	@Test
 	public void testMergePickupNode() {
+		testPickupNode( MERGE_OPERATION );
+	}
+	@Test
+	public void testSavePickupNode() {
+		testPickupNode( SAVE_OPERATION );
+	}
+	@Test
+	public void testSaveUpdatePickupNode() {
+		testPickupNode( SAVE_UPDATE_OPERATION );
+	}
+	private void testPickupNode(EntityOperation operation) {
 
 		Route route = getUpdatedDetachedEntity();
 
@@ -242,7 +300,7 @@ public class MultiPathCircleCascadeTest extends BaseCoreFunctionalTestCase {
 			pickupNode = node;
 		}
 
-		pickupNode = (Node) s.merge( pickupNode );
+		pickupNode = (Node) operation.doEntityOperation( pickupNode, s );
 
 		s.getTransaction().commit();
 		s.close();
@@ -256,10 +314,23 @@ public class MultiPathCircleCascadeTest extends BaseCoreFunctionalTestCase {
 		checkResults( route, false );
 		s.getTransaction().commit();
 		s.close();
+
+		cleanup();
 	}
 
 	@Test
 	public void testMergeDeliveryNode() {
+		testDeliveryNode( MERGE_OPERATION );
+	}
+	@Test
+	public void testSaveDeliveryNode() {
+		testDeliveryNode( SAVE_OPERATION );
+	}
+	@Test
+	public void testSaveUpdateDeliveryNode() {
+		testDeliveryNode( SAVE_UPDATE_OPERATION );
+	}
+	private void testDeliveryNode(EntityOperation operation) {
 
 		Route route = getUpdatedDetachedEntity();
 
@@ -280,7 +351,7 @@ public class MultiPathCircleCascadeTest extends BaseCoreFunctionalTestCase {
 			deliveryNode = node;
 		}
 
-		deliveryNode = (Node) s.merge( deliveryNode );
+		deliveryNode = (Node) operation.doEntityOperation( deliveryNode, s );
 
 		s.getTransaction().commit();
 		s.close();
@@ -294,10 +365,23 @@ public class MultiPathCircleCascadeTest extends BaseCoreFunctionalTestCase {
 		checkResults( route, false );
 		s.getTransaction().commit();
 		s.close();
+
+		cleanup();
 	}
 
 	@Test
 	public void testMergeTour() {
+		testTour( MERGE_OPERATION );
+	}
+	@Test
+	public void testSaveTour() {
+		testTour( SAVE_OPERATION );
+	}
+	@Test
+	public void testSaveUpdateTour() {
+		testTour( SAVE_UPDATE_OPERATION );
+	}
+	private void testTour(EntityOperation operation) {
 
 		Route route = getUpdatedDetachedEntity();
 
@@ -306,7 +390,7 @@ public class MultiPathCircleCascadeTest extends BaseCoreFunctionalTestCase {
 		Session s = openSession();
 		s.beginTransaction();
 
-		Tour tour = (Tour) s.merge( ((Node) route.getNodes().toArray()[0]).getTour() );
+		Tour tour = (Tour) operation.doEntityOperation( ((Node) route.getNodes().toArray()[0]).getTour(), s );
 
 		s.getTransaction().commit();
 		s.close();
@@ -320,10 +404,23 @@ public class MultiPathCircleCascadeTest extends BaseCoreFunctionalTestCase {
 		checkResults( route, false );
 		s.getTransaction().commit();
 		s.close();
+
+		cleanup();
 	}
 
 	@Test
 	public void testMergeTransport() {
+		testTransport( MERGE_OPERATION );
+	}
+	@Test
+	public void testSaveTransport() {
+		testTransport( SAVE_OPERATION );
+	}
+	@Test
+	public void testSaveUpdateTransport() {
+		testTransport( SAVE_UPDATE_OPERATION );
+	}
+	private void testTransport(EntityOperation operation) {
 
 		Route route = getUpdatedDetachedEntity();
 
@@ -341,7 +438,7 @@ public class MultiPathCircleCascadeTest extends BaseCoreFunctionalTestCase {
 			transport = (Transport) node.getDeliveryTransports().toArray()[0];
 		}
 
-		transport = (Transport) s.merge( transport );
+		transport = (Transport) operation.doEntityOperation( transport, s );
 
 		s.getTransaction().commit();
 		s.close();
@@ -355,6 +452,8 @@ public class MultiPathCircleCascadeTest extends BaseCoreFunctionalTestCase {
 		checkResults( route, false );
 		s.getTransaction().commit();
 		s.close();
+
+		cleanup();
 	}
 
 	private Route getUpdatedDetachedEntity() {
@@ -407,8 +506,19 @@ public class MultiPathCircleCascadeTest extends BaseCoreFunctionalTestCase {
 		return route;
 	}
 
+	private void cleanup() {
+		Session s = openSession();
+		s.beginTransaction();
+		s.createQuery( "delete from Transport" );
+		s.createQuery( "delete from Tour" );
+		s.createQuery( "delete from Node" );
+		s.createQuery( "delete from Route" );
+		s.getTransaction().commit();
+		s.close();
+	}
+
 	private void checkResults(Route route, boolean isRouteUpdated) {
-		// since merge is not cascaded to route, this method needs to
+		// since no cascaded to route, this method needs to
 		// know whether route is expected to be updated
 		if ( isRouteUpdated ) {
 			assertEquals( "new routeA", route.getName() );
@@ -465,6 +575,17 @@ public class MultiPathCircleCascadeTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testMergeData3Nodes() {
+		testData3Nodes( MERGE_OPERATION );
+	}
+	@Test
+	public void testSaveData3Nodes() {
+		testData3Nodes( SAVE_OPERATION );
+	}
+	@Test
+	public void testSaveUpdateData3Nodes() {
+		testData3Nodes( SAVE_UPDATE_OPERATION );
+	}
+	private void testData3Nodes(EntityOperation operation) {
 
 		Session s = openSession();
 		s.beginTransaction();
@@ -481,7 +602,7 @@ public class MultiPathCircleCascadeTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		s.beginTransaction();
 
-		route = (Route) s.get( Route.class, new Long( 1 ) );
+		route = (Route) s.get( Route.class, route.getRouteID() );
 		//System.out.println(route);
 		route.setName( "new routA" );
 
@@ -537,28 +658,30 @@ public class MultiPathCircleCascadeTest extends BaseCoreFunctionalTestCase {
 		transport2.setDeliveryNode( node3 );
 		transport2.setTransientField( "bbbbbbbbbbbbb" );
 
-		Route mergedRoute = (Route) s.merge( route );
+		operation.doEntityOperation( route, s );
 
 		s.getTransaction().commit();
 		s.close();
 
 		assertInsertCount( 6 );
 		assertUpdateCount( 1 );
+
+		cleanup();
 	}
 
 	protected void checkExceptionFromNullValueForNonNullable(
 			Exception ex, boolean checkNullability, boolean isNullValue
 	) {
-		if ( checkNullability ) {
-			if ( isNullValue ) {
+		if ( isNullValue ) {
+			if ( checkNullability ) {
 				assertTrue( ex instanceof PropertyValueException );
 			}
 			else {
-				assertTrue( ex instanceof TransientObjectException );
+				assertTrue( ex instanceof JDBCException );
 			}
 		}
 		else {
-			assertTrue( ex instanceof JDBCException );
+			assertTrue( ex instanceof TransientObjectException );
 		}
 	}
 

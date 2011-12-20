@@ -12,9 +12,9 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
  * @author Karel Maesen, Geovise BVBA
  *         creation-date: 7/27/11
  */
-public class SpatialGeometrySqlTypeDescriptor implements SqlTypeDescriptor {
+public class GeometrySqlTypeDescriptor implements SqlTypeDescriptor {
 
-	public static final SpatialGeometrySqlTypeDescriptor INSTANCE = new SpatialGeometrySqlTypeDescriptor();
+	public static final GeometrySqlTypeDescriptor INSTANCE = new GeometrySqlTypeDescriptor();
 
 	@Override
 	public int getSqlType() {

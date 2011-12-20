@@ -56,7 +56,7 @@ public class GeometryType extends AbstractSingleColumnStandardBasicType<Geometry
 	}
 
 	public GeometryType() {
-		super( SpatialGeometrySqlTypeDescriptor.INSTANCE, SpatialGeometryJavaTypeDescriptor.INSTANCE );
+		super( GeometrySqlTypeDescriptor.INSTANCE, GeometryJavaTypeDescriptor.INSTANCE );
 	}
 
 	@Override

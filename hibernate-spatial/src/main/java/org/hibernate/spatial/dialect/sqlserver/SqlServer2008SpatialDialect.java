@@ -31,7 +31,7 @@ import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.spatial.GeometryType;
 import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
-import org.hibernate.spatial.SpatialGeometrySqlTypeDescriptor;
+import org.hibernate.spatial.GeometrySqlTypeDescriptor;
 import org.hibernate.spatial.SpatialRelation;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
@@ -105,7 +105,7 @@ public class SqlServer2008SpatialDialect extends SQLServer2008Dialect implements
 
 	@Override
 	public SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
-		if ( sqlTypeDescriptor instanceof SpatialGeometrySqlTypeDescriptor ) {
+		if ( sqlTypeDescriptor instanceof GeometrySqlTypeDescriptor) {
 			return SqlServer2008GeometryTypeDescriptor.INSTANCE;
 		}
 		return super.remapSqlTypeDescriptor( sqlTypeDescriptor );

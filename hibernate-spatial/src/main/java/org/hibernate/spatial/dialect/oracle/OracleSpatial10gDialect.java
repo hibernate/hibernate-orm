@@ -276,7 +276,7 @@ public class OracleSpatial10gDialect extends Oracle10gDialect implements
 
     @Override
 	public SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
-		if ( sqlTypeDescriptor instanceof SpatialGeometrySqlTypeDescriptor ) {
+		if ( sqlTypeDescriptor instanceof GeometrySqlTypeDescriptor) {
 			return SDOGeometryTypeDescriptor.INSTANCE;
 		}
 		return super.remapSqlTypeDescriptor( sqlTypeDescriptor );

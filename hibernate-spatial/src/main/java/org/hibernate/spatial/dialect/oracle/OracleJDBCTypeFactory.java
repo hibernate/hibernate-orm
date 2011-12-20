@@ -1,5 +1,9 @@
 package org.hibernate.spatial.dialect.oracle;
 
+import org.hibernate.HibernateException;
+import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.spatial.helper.FinderException;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -7,10 +11,6 @@ import java.sql.Array;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Struct;
-
-import org.hibernate.HibernateException;
-import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.spatial.helper.FinderException;
 
 /**
  * Factory for Oracle JDBC extension types (ARRAY, STRUCT, ...).
@@ -21,7 +21,7 @@ import org.hibernate.spatial.helper.FinderException;
  * @author Karel Maesen, Geovise BVBA
  *         creation-date: Jul 3, 2010
  */
-public class OracleJDBCTypeFactory extends SQLTypeFactory {
+public class OracleJDBCTypeFactory implements SQLTypeFactory {
 
 	private static Class<?> datumClass;
 	private static Class<?> numberClass;

@@ -29,6 +29,7 @@
 package org.hibernate.spatial.dialect.postgis;
 
 
+import org.hibernate.HibernateException;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.spatial.GeometryType;
@@ -238,7 +239,28 @@ public class PostgisDialect extends PostgreSQLDialect implements SpatialDialect 
 		);
 	}
 
-	@Override
+    //TODO the getTypeName() override is necessary in the absence of HHH-6074
+    /**
+     * Get the name of the database type associated with the given
+	 * {@link java.sql.Types} typecode with the given storage specification
+	 * parameters. In the case of typecode == 3000, it returns this dialect's spatial type which is
+     * <code>GEOMETRY</code>.
+     *
+     *
+     * @param code The {@link java.sql.Types} typecode
+     * @param length The datatype length
+     * @param precision The datatype precision
+     * @param scale The datatype scale
+     * @return
+     * @throws HibernateException
+     */
+    @Override
+    public String getTypeName(int code, long length, int precision, int scale) throws HibernateException {
+        if (code == 3000 ) return "GEOMETRY";
+        return super.getTypeName(code, length, precision, scale);
+    }
+
+    @Override
 	public SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
 		if ( sqlTypeDescriptor instanceof SpatialGeometrySqlTypeDescriptor ) {
 			return PGGeometryTypeDescriptor.INSTANCE;

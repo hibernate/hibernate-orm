@@ -21,7 +21,7 @@ import org.hibernate.spatial.helper.FinderException;
  * @author Karel Maesen, Geovise BVBA
  *         creation-date: Jul 3, 2010
  */
-public class OracleJDBCTypeFactory implements SQLTypeFactory {
+public class OracleJDBCTypeFactory extends SQLTypeFactory {
 
 	private static Class<?> datumClass;
 	private static Class<?> numberClass;

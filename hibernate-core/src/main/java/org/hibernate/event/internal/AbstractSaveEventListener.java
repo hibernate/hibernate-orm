@@ -30,6 +30,7 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.LockMode;
 import org.hibernate.NonUniqueObjectException;
+import org.hibernate.action.internal.AbstractEntityInsertAction;
 import org.hibernate.action.internal.EntityIdentityInsertAction;
 import org.hibernate.action.internal.EntityInsertAction;
 import org.hibernate.bytecode.instrumentation.internal.FieldInterceptionHelper;
@@ -37,7 +38,6 @@ import org.hibernate.bytecode.instrumentation.spi.FieldInterceptor;
 import org.hibernate.classic.Lifecycle;
 import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.internal.ForeignKeys;
-import org.hibernate.engine.internal.Nullability;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.EntityEntry;
@@ -265,11 +265,6 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 
 		cascadeBeforeSave( source, persister, entity, anything );
 
-		if ( useIdentityColumn && !shouldDelayIdentityInserts ) {
-			LOG.trace( "Executing insertions" );
-			source.getActionQueue().executeInserts();
-		}
-
 		Object[] values = persister.getPropertyValuesToInsert( entity, getMergeMap( anything ), source );
 		Type[] types = persister.getPropertyTypes();
 
@@ -291,54 +286,50 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 				source
 		);
 
-		new ForeignKeys.Nullifier( entity, false, useIdentityColumn, source )
-				.nullifyTransientReferences( values, types );
-		new Nullability( source ).checkNullability( values, persister, false );
-
-		if ( useIdentityColumn ) {
-			EntityIdentityInsertAction insert = new EntityIdentityInsertAction(
-					values, entity, persister, source, shouldDelayIdentityInserts
-			);
-			if ( !shouldDelayIdentityInserts ) {
-				LOG.debug( "Executing identity-insert immediately" );
-				source.getActionQueue().execute( insert );
-				id = insert.getGeneratedId();
-				key = source.generateEntityKey( id, persister );
-				source.getPersistenceContext().checkUniqueness( key, entity );
-			}
-			else {
-				LOG.debug( "Delaying identity-insert due to no transaction in progress" );
-				source.getActionQueue().addAction( insert );
-				key = insert.getDelayedEntityKey();
-			}
-		}
-
-		Object version = Versioning.getVersion( values, persister );
-		source.getPersistenceContext().addEntity(
-				entity,
-				( persister.isMutable() ? Status.MANAGED : Status.READ_ONLY ),
-				values,
-				key,
-				version,
-				LockMode.WRITE,
-				useIdentityColumn,
-				persister,
-				isVersionIncrementDisabled(),
-				false
+		AbstractEntityInsertAction insert = addInsertAction(
+				values, id, entity, persister, useIdentityColumn, source, shouldDelayIdentityInserts
 		);
-		//source.getPersistenceContext().removeNonExist( new EntityKey( id, persister, source.getEntityMode() ) );
 
-		if ( !useIdentityColumn ) {
-			source.getActionQueue().addAction(
-					new EntityInsertAction( id, values, entity, version, persister, source )
-			);
-		}
-
+		// postpone initializing id in case the insert has non-nullable transient dependencies
+		// that are not resolved until cascadeAfterSave() is executed
 		cascadeAfterSave( source, persister, entity, anything );
+		if ( useIdentityColumn && insert.isEarlyInsert() ) {
+			if ( ! EntityIdentityInsertAction.class.isInstance( insert ) ) {
+				throw new IllegalStateException(
+						"Insert should be using an identity column, but action is of unexpected type: " +
+								insert.getClass().getName() );
+			}
+			id = ( ( EntityIdentityInsertAction ) insert ).getGeneratedId();
+		}
 
 		markInterceptorDirty( entity, persister, source );
 
 		return id;
+	}
+
+	private AbstractEntityInsertAction addInsertAction(
+			Object[] values,
+			Serializable id,
+			Object entity,
+			EntityPersister persister,
+			boolean useIdentityColumn,
+			EventSource source,
+			boolean shouldDelayIdentityInserts) {
+		if ( useIdentityColumn ) {
+			EntityIdentityInsertAction insert = new EntityIdentityInsertAction(
+					values, entity, persister, isVersionIncrementDisabled(), source, shouldDelayIdentityInserts
+			);
+			source.getActionQueue().addAction( insert );
+			return insert;
+		}
+		else {
+			Object version = Versioning.getVersion( values, persister );
+			EntityInsertAction insert = new EntityInsertAction(
+					id, values, entity, version, persister, isVersionIncrementDisabled(), source
+			);
+			source.getActionQueue().addAction( insert );
+			return insert;
+		}
 	}
 
 	private void markInterceptorDirty(Object entity, EntityPersister persister, EventSource source) {

@@ -27,6 +27,7 @@ import org.hibernate.Session;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import org.junit.Test;
@@ -34,11 +35,11 @@ import org.junit.Test;
 @RequiresDialectFeature(DialectChecks.SupportsSequences.class)
 public class CascadeCircleSequenceIdTest extends BaseCoreFunctionalTestCase {
 	@Test
-	@FailureExpected( jiraKey = "HHH-5472" )
+	@TestForIssue( jiraKey = "HHH-5472" )
 	public void testCascade() {
 		A a = new A();
-		org.hibernate.test.annotations.cascade.circle.sequence.B b = new org.hibernate.test.annotations.cascade.circle.sequence.B();
-		org.hibernate.test.annotations.cascade.circle.sequence.C c = new org.hibernate.test.annotations.cascade.circle.sequence.C();
+		B b = new B();
+		C c = new C();
 		D d = new D();
 		E e = new E();
 		F f = new F();
@@ -86,8 +87,8 @@ public class CascadeCircleSequenceIdTest extends BaseCoreFunctionalTestCase {
 	protected Class[] getAnnotatedClasses() {
 		return new Class[]{
 				A.class,
-				org.hibernate.test.annotations.cascade.circle.sequence.B.class,
-				org.hibernate.test.annotations.cascade.circle.sequence.C.class,
+				B.class,
+				C.class,
 				D.class,
 				E.class,
 				F.class,

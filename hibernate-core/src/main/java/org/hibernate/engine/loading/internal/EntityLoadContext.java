@@ -32,12 +32,11 @@ import org.jboss.logging.Logger;
 import org.hibernate.internal.CoreMessageLogger;
 
 /**
- * {@inheritDoc}
+ * Tracks information about loading of entities specific to a given result set.  These can be hierarchical.
  *
  * @author Steve Ebersole
  */
 public class EntityLoadContext {
-
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, EntityLoadContext.class.getName() );
 
 	private final LoadContexts loadContexts;
@@ -50,7 +49,9 @@ public class EntityLoadContext {
 	}
 
 	void cleanup() {
-		if ( !hydratingEntities.isEmpty() ) LOG.hydratingEntitiesCount( hydratingEntities.size() );
+		if ( !hydratingEntities.isEmpty() ) {
+			LOG.hydratingEntitiesCount( hydratingEntities.size() );
+		}
 		hydratingEntities.clear();
 	}
 

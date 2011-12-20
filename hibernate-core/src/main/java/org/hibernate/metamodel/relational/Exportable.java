@@ -41,7 +41,8 @@ public interface Exportable {
 	/**
 	 * Gets the SQL strings for creating the database object.
 	 *
-	 * @param dialect
+	 * @param dialect The dialect for which to generate the SQL creation strings
+	 *
 	 * @return the SQL strings for creating the database object.
 	 */
 	public String[] sqlCreateStrings(Dialect dialect);
@@ -49,7 +50,9 @@ public interface Exportable {
 	/**
 	 * Gets the SQL strings for dropping the database object.
 	 *
-	 * @param dialect@return the SQL strings for dropping the database object.
+	 * @param dialect The dialect for which to generate the SQL drop strings
+	 *
+	 * @return the SQL strings for dropping the database object.
 	 */
 	public String[] sqlDropStrings(Dialect dialect);
 

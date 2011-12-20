@@ -24,9 +24,8 @@
  */
 package org.hibernate.hql.internal.ast;
 
-
 /**
- * {@inheritDoc}
+ * Indicates an issue with the encountered with-clause.
  *
  * @author Steve Ebersole
  */

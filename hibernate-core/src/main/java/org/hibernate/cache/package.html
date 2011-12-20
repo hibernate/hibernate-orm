@@ -1,10 +1,10 @@
 <!--
   ~ Hibernate, Relational Persistence for Idiomatic Java
   ~
-  ~ Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+  ~ Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
   ~ indicated by the @author tags or express copyright attribution
   ~ statements applied by the authors.  All third-party contributions are
-  ~ distributed under license by Red Hat Middleware LLC.
+  ~ distributed under license by Red Hat Inc.
   ~
   ~ This copyrighted material is made available to anyone wishing to use, modify,
   ~ copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,43 +20,13 @@
   ~ Free Software Foundation, Inc.
   ~ 51 Franklin Street, Fifth Floor
   ~ Boston, MA  02110-1301  USA
-  ~
   -->
-
 <html>
-    <head>
-    </head>
-
     <body>
         <p>
-            This package defines Hibernate second level cache service.  {@link org.hibernate.cache.spi} defines the
-            SPI used to integrate with Hibernate internals.
-        </p>
-        <p>
-            The legacy (and now deprecated) approach to caching is defined by the {@link org.hibernate.cache.CacheProvider} and
-            {@link org.hibernate.cache.Cache} interfaces as well as the {@link org.hibernate.cache.CacheConcurrencyStrategy}
-            interface along with the various implementations of all these interfaces.  In that scheme, a
-            {@link org.hibernate.cache.CacheProvider} defined how to configure and perform lifecycle operations
-            in regards to a particular underlying caching library; it also defined how to build {@link org.hibernate.cache.Cache}
-            instances which in turn defined how to access the "regions" of the underlying cache instance.
-            For entity and collection data cache regions, {@link org.hibernate.cache.CacheConcurrencyStrategy} wrapped
-            access to those cache regions to apply transactional/concurrent access semantics.
-        </p>
-        <p>
-            The improved approach is based on {@link org.hibernate.cache.RegionFactory}, the various
-            {@link org.hibernate.cache.Region} specializations and the two access strategies contracts
-            ({@link org.hibernate.cache.access.EntityRegionAccessStrategy} and
-            {@link org.hibernate.cache.access.CollectionRegionAccessStrategy}).  The general approach here is that
-            {@link org.hibernate.cache.RegionFactory} defined how to configure and perform lifecycle operations
-            in regards to a particular underlying caching library (<b>or libraries</b>).
-            {@link org.hibernate.cache.RegionFactory} also defines how to build specialized
-            {@link org.hibernate.cache.Region} instances based on the type of data we will be storing in that given
-            region.  The fact that {@link org.hibernate.cache.RegionFactory} is asked to build <b>specialized</b>
-            regions (as opposed to just general access) is the first <i>improvement</i> over the legacy scheme.  The
-            second <i>improvement</i> is the fact that the regions (well the ones like entity and collection regions
-            that are responsible for storing {@link org.hibernate.cache.TransactionalDataRegion transactional} data) are
-            asked to build their own access strategies (see {@link org.hibernate.cache.EntityRegion#buildAccessStrategy}
-            and {@link org.hibernate.cache.CollectionRegion#buildAccessStrategy}).
+            This package defines API of the Hibernate second level cache service.  The
+            <a href="{@docRoot}/org/hibernate/cache/spi">org.hibernate.cache.spi</a> package defines the SPI used to
+            integrate with Hibernate internals.
         </p>
     </body>
 </html>

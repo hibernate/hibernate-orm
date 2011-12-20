@@ -95,7 +95,7 @@ public interface JdbcCoordinator extends Serializable {
 	 *
 	 * @return The {@link Connection} associated with the managed {@link #getLogicalConnection() logical connection}
 	 *
-	 * @see {@link LogicalConnection#close()}
+	 * @see LogicalConnection#close
 	 */
 	public Connection close();
 

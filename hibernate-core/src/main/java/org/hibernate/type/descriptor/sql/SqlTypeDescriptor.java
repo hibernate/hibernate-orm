@@ -45,7 +45,7 @@ public interface SqlTypeDescriptor extends Serializable {
 	/**
 	 * Is this descriptor available for remapping?
 	 *
-	 * @return
+	 * @return {@code true} indicates this descriptor can be remapped; otherwise, {@code false}
 	 *
 	 * @see org.hibernate.type.descriptor.WrapperOptions#remapSqlTypeDescriptor
 	 * @see org.hibernate.dialect.Dialect#remapSqlTypeDescriptor

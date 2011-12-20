@@ -31,9 +31,7 @@ import org.hibernate.sql.CaseFragment;
 /**
  * A dialect for Oracle 9i databases.
  * <p/>
- * Unlike the older (deprecated) {@link Oracle9Dialect), this version specifies
- * to not use "ANSI join syntax" because 9i does not seem to properly
- * handle it in all cases.
+ * Specifies to not use "ANSI join syntax" because 9i does not seem to properly handle it in all cases.
  *
  * @author Steve Ebersole
  */
@@ -67,7 +65,7 @@ public class Oracle9iDialect extends Oracle8iDialect {
 			isForUpdate = true;
 		}
 
-		StringBuffer pagingSelect = new StringBuffer( sql.length()+100 );
+		StringBuilder pagingSelect = new StringBuilder( sql.length() + 100 );
 		if (hasOffset) {
 			pagingSelect.append("select * from ( select row_.*, rownum rownum_ from ( ");
 		}

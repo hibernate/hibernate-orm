@@ -58,24 +58,12 @@ import org.hibernate.type.Type;
  * @author josh
  */
 public class LiteralProcessor implements HqlSqlTokenTypes {
-	/**
-	 * Indicates that Float and Double literal values should
-	 * be treated using the SQL "exact" format (i.e., '.001')
-	 */
-	public static final int EXACT = 0;
-	/**
-	 * Indicates that Float and Double literal values should
-	 * be treated using the SQL "approximate" format (i.e., '1E-3')
-	 */
-	public static final int APPROXIMATE = 1;
-	/**
-	 * In what format should Float and Double literal values be sent
-	 * to the database?
-	 * @see #EXACT, #APPROXIMATE
-	 */
-	public static int DECIMAL_LITERAL_FORMAT = EXACT;
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, LiteralProcessor.class.getName());
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, LiteralProcessor.class.getName());
+	/**
+	 * In what format should Float and Double literal values be sent to the database?
+	 */
+	public static DecimalLiteralFormat DECIMAL_LITERAL_FORMAT = DecimalLiteralFormat.EXACT;
 
 	private HqlSqlWalker walker;
 
@@ -186,6 +174,7 @@ public class LiteralProcessor implements HqlSqlTokenTypes {
 		try {
 			LiteralType literalType = ( LiteralType ) type;
 			Dialect dialect = walker.getSessionFactoryHelper().getFactory().getDialect();
+			//noinspection unchecked
 			node.setText( literalType.objectToSQLString( value, dialect ) );
 		}
 		catch ( Exception e ) {
@@ -279,7 +268,7 @@ public class LiteralProcessor implements HqlSqlTokenTypes {
 			}
 		}
 
-		BigDecimal number = null;
+		final BigDecimal number;
 		try {
 			number = new BigDecimal( literalValue );
 		}
@@ -287,7 +276,7 @@ public class LiteralProcessor implements HqlSqlTokenTypes {
 			throw new HibernateException( "Could not parse literal [" + text + "] as big-decimal", t );
 		}
 
-		return formatters[ DECIMAL_LITERAL_FORMAT ].format( number );
+		return DECIMAL_LITERAL_FORMAT.getFormatter().format( number );
 	}
 
 
@@ -296,13 +285,18 @@ public class LiteralProcessor implements HqlSqlTokenTypes {
 	}
 
 	private static class ExactDecimalFormatter implements DecimalFormatter {
+		public static final ExactDecimalFormatter INSTANCE = new ExactDecimalFormatter();
+
 		public String format(BigDecimal number) {
 			return number.toString();
 		}
 	}
 
 	private static class ApproximateDecimalFormatter implements DecimalFormatter {
+		public static final ApproximateDecimalFormatter INSTANCE = new ApproximateDecimalFormatter();
+
 		private static final String FORMAT_STRING = "#0.0E0";
+
 		public String format(BigDecimal number) {
 			try {
 				// TODO : what amount of significant digits need to be supported here?
@@ -319,8 +313,30 @@ public class LiteralProcessor implements HqlSqlTokenTypes {
 		}
 	}
 
-	private static final DecimalFormatter[] formatters = new DecimalFormatter[] {
-			new ExactDecimalFormatter(),
-			new ApproximateDecimalFormatter()
-	};
+	public static enum DecimalLiteralFormat {
+		/**
+		 * Indicates that Float and Double literal values should
+		 * be treated using the SQL "exact" format (i.e., '.001')
+		 */
+		EXACT {
+			@Override
+			public DecimalFormatter getFormatter() {
+				return ExactDecimalFormatter.INSTANCE;
+			}
+		},
+		/**
+		 * Indicates that Float and Double literal values should
+		 * be treated using the SQL "approximate" format (i.e., '1E-3')
+		 */
+		@SuppressWarnings( {"UnusedDeclaration"})
+		APPROXIMATE {
+			@Override
+			public DecimalFormatter getFormatter() {
+				return ApproximateDecimalFormatter.INSTANCE;
+			}
+		};
+
+		public abstract DecimalFormatter getFormatter();
+	}
+
 }

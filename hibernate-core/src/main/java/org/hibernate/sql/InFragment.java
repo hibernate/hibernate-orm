@@ -42,10 +42,12 @@ public class InFragment {
 	public static final String NOT_NULL = "not null";
 
 	private String columnName;
-	private List values = new ArrayList();
+	private List<Object> values = new ArrayList<Object>();
 
 	/**
-	 * @param value, an SQL literal, NULL, or NOT_NULL
+	 * @param value an SQL literal, NULL, or NOT_NULL
+	 *
+	 * @return {@code this}, for method chaining
 	 */
 	public InFragment addValue(Object value) {
 		values.add(value);
@@ -110,9 +112,7 @@ public class InFragment {
                 }
 
                 for (Object value : values) {
-                   if (NULL.equals(value)) {
-                      ;
-                   } else {
+                   if ( ! NULL.equals(value) ) {
                       buf.append(value);
                       buf.append(", ");
                    }

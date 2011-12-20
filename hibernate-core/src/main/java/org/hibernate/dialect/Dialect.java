@@ -337,20 +337,20 @@ public abstract class Dialect {
 	/**
 	 * Allows the dialect to override a {@link SqlTypeDescriptor}.
 	 * <p/>
-	 * If <code>sqlTypeDescriptor</code> is a "standard basic" SQL type
-	 * descriptor, then this method uses {@link #getSqlTypeDescriptorOverride}
-	 * to get an optional override based on the SQL code returned by
+	 * If the passed {@code sqlTypeDescriptor} allows itself to be remapped (per
+	 * {@link org.hibernate.type.descriptor.sql.SqlTypeDescriptor#canBeRemapped()}), then this method uses
+	 * {@link #getSqlTypeDescriptorOverride}  to get an optional override based on the SQL code returned by
 	 * {@link SqlTypeDescriptor#getSqlType()}.
 	 * <p/>
-	 * If this dialect does not provide an override, then this method
-	 * simply returns <code>sqlTypeDescriptor</code>
+	 * If this dialect does not provide an override or if the {@code sqlTypeDescriptor} doe not allow itself to be
+	 * remapped, then this method simply returns the original passed {@code sqlTypeDescriptor}
 	 *
 	 * @param sqlTypeDescriptor The {@link SqlTypeDescriptor} to override
 	 * @return The {@link SqlTypeDescriptor} that should be used for this dialect;
-	 *         if there is no override, then <code>sqlTypeDescriptor</code> is returned.
-	 * @throws IllegalArgumentException if <code>sqlTypeDescriptor</code> is null.
+	 *         if there is no override, then original {@code sqlTypeDescriptor} is returned.
+	 * @throws IllegalArgumentException if {@code sqlTypeDescriptor} is null.
 	 *
-	 * @see {@link #getSqlTypeDescriptorOverride}
+	 * @see #getSqlTypeDescriptorOverride
 	 */
 	public SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
 		if ( sqlTypeDescriptor == null ) {
@@ -365,13 +365,11 @@ public abstract class Dialect {
 	}
 
 	/**
-	 * Returns the {@link SqlTypeDescriptor} that should override the
-	 * "standard basic" SQL type descriptor for values of the specified
-	 * column type, or null, if there is no override.
+	 * Returns the {@link SqlTypeDescriptor} that should be used to handle the given JDBC type code.  Returns
+	 * {@code null} if there is no override.
 	 *
 	 * @param sqlCode A {@link Types} constant indicating the SQL column type
-	 * @return The {@link SqlTypeDescriptor} that should override the
-	 * "standard basic" SQL type descriptor, or null, if there is no override.
+	 * @return The {@link SqlTypeDescriptor} to use as an override, or {@code null} if there is no override.
 	 */
 	protected SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
 		SqlTypeDescriptor descriptor;
@@ -395,6 +393,7 @@ public abstract class Dialect {
 	/**
 	 * The legacy behavior of Hibernate.  LOBs are not processed by merge
 	 */
+	@SuppressWarnings( {"UnusedDeclaration"})
 	protected static final LobMergeStrategy LEGACY_LOB_MERGE_STRATEGY = new LobMergeStrategy() {
 		@Override
 		public Blob mergeBlob(Blob original, Blob target, SessionImplementor session) {
@@ -415,6 +414,7 @@ public abstract class Dialect {
 	/**
 	 * Merge strategy based on transferring contents based on streams.
 	 */
+	@SuppressWarnings( {"UnusedDeclaration"})
 	protected static final LobMergeStrategy STREAM_XFER_LOB_MERGE_STRATEGY = new LobMergeStrategy() {
 		@Override
 		public Blob mergeBlob(Blob original, Blob target, SessionImplementor session) {
@@ -533,12 +533,13 @@ public abstract class Dialect {
 
 	/**
 	 * Get the name of the Hibernate {@link org.hibernate.type.Type} associated with the given
-	 * {@link java.sql.Types} typecode.
+	 * {@link java.sql.Types} type code.
 	 *
-	 * @param code The {@link java.sql.Types} typecode
+	 * @param code The {@link java.sql.Types} type code
 	 * @return The Hibernate {@link org.hibernate.type.Type} name.
 	 * @throws HibernateException If no mapping was specified for that type.
 	 */
+	@SuppressWarnings( {"UnusedDeclaration"})
 	public String getHibernateTypeName(int code) throws HibernateException {
 		String result = hibernateTypeNames.get( code );
 		if ( result == null ) {
@@ -1046,8 +1047,8 @@ public abstract class Dialect {
 	 * Dialect a chance to convert that value based on what the underlying db or driver will expect.
 	 * <p/>
 	 * NOTE: what gets passed into {@link #getLimitString(String,int,int)} is the zero-based offset.  Dialects which
-	 * do not {@link #supportsVariableLimit} should take care to perform any needed {@link #convertToFirstRowValue}
-	 * calls prior to injecting the limit values into the SQL string.
+	 * do not {@link #supportsVariableLimit} should take care to perform any needed first-row-conversion calls prior
+	 * to injecting the limit values into the SQL string.
 	 *
 	 * @param zeroBasedFirstResult The user-supplied, zero-based first row offset.
 	 *
@@ -1128,7 +1129,8 @@ public abstract class Dialect {
         return getForUpdateString( lockMode, lockOptions.getTimeOut() );
 	}
 
-    private String getForUpdateString(LockMode lockMode, int timeout){
+    @SuppressWarnings( {"deprecation"})
+	private String getForUpdateString(LockMode lockMode, int timeout){
        switch ( lockMode ) {
             case UPGRADE:
                 return getForUpdateString();
@@ -2171,6 +2173,7 @@ public abstract class Dialect {
 	 * @return Returns {@code true} if the database supports accepting bind params as args, {@code false} otherwise. The
 	 * default is {@code true}.
 	 */
+	@SuppressWarnings( {"UnusedDeclaration"})
 	public boolean supportsBindAsCallableArgument() {
 		return true;
 	}

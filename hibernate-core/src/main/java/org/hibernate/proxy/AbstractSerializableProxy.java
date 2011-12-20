@@ -61,7 +61,7 @@ public abstract class AbstractSerializableProxy implements Serializable {
 	 * This method should only be called during deserialization, before associating the
 	 * AbstractLazyInitializer with a session.
 	 *
-	 * @param li, the read-only/modifiable setting to use when
+	 * @param li the read-only/modifiable setting to use when
 	 * associated with a session; null indicates that the default should be used.
 	 * @throws IllegalStateException if isReadOnlySettingAvailable() == true
 	 */

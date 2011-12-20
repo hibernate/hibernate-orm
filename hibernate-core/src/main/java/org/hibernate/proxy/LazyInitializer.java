@@ -117,12 +117,12 @@ public interface LazyInitializer {
 	 * detached or its associated session is closed.
 	 *
 	 * To check if the read-only/modifiable setting is available:
-	 * @see org.hibernate.proxy.LazyInitializer#isReadOnlySettingAvailable()
 	 *
 	 * @return true, if this proxy is read-only; false, otherwise
 	 * @throws org.hibernate.TransientObjectException if the proxy is detached (getSession() == null)
 	 * @throws org.hibernate.SessionException if the proxy is associated with a sesssion that is closed
 	 *
+	 * @see org.hibernate.proxy.LazyInitializer#isReadOnlySettingAvailable()
 	 * @see org.hibernate.Session#isReadOnly(Object entityOrProxy)
 	 */
 	public boolean isReadOnly();
@@ -141,9 +141,9 @@ public interface LazyInitializer {
 	 * @param readOnly if true, the associated proxy is made read-only;
 	 *                  if false, the associated proxy is made modifiable.
 	 * @throws org.hibernate.TransientObjectException if the proxy is not association with a session
-	 * @throws org.hibernate.SessionException if the proxy is associated with a sesssion that is closed
+	 * @throws org.hibernate.SessionException if the proxy is associated with a session that is closed
 	 * 
-	 * @see {@link org.hibernate.Session#setReadOnly(Object entityOrProxy, boolean readOnly)}
+	 * @see org.hibernate.Session#setReadOnly(Object entityOrProxy, boolean readOnly)
 	 */
 	public void setReadOnly(boolean readOnly);
 

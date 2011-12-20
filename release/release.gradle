@@ -12,20 +12,25 @@ ideaModule {
 
 javadocBuildDir = dir( buildDirName + "/documentation/javadocs" )
 
-def List subProjectsToSkipForJavadoc = ['release','documentation'];
-def List sourceSetsToSkipForJavadoc = ['test','matrix'];
-
 def copyRightYear = new java.util.GregorianCalendar().get( java.util.Calendar.YEAR );
 
 task aggregateJavadocs(type: Javadoc) {
+    // exclude any generated sources (this is not working: http://forums.gradle.org/gradle/topics/excluding_generated_source_from_javadoc)
+    exclude "**/generated-src/**"
+
+    // process each project, building up:
+    //      1) appropriate sources
+    //      2) classpath
+    //      3) the package list for groups
     Set<String> apiPackages = new HashSet<String>()
     Set<String> spiPackages = new HashSet<String>()
     Set<String> internalPackages = new HashSet<String>()
-
-    parent.subprojects.each{ subProject->
-        if ( !subProjectsToSkipForJavadoc.contains( subProject.name ) ) {
-            subProject.sourceSets.each { sourceSet ->
-                if ( !sourceSetsToSkipForJavadoc.contains( sourceSet.name ) ) {
+    parent.subprojects.each{ Project subProject->
+        // skip certain sub-projects
+        if ( ! ['release','documentation'].contains( subProject.name ) ) {
+            subProject.sourceSets.each { SourceSet sourceSet ->
+                // skip certain source sets
+                if ( ! ['test','matrix'].contains( sourceSet.name ) ) {
                     source sourceSet.java
 
                     if( classpath ) {
@@ -43,6 +48,9 @@ task aggregateJavadocs(type: Javadoc) {
                         else if ( packageName.endsWith( ".spi" ) || packageName.contains( ".spi." ) ) {
                             spiPackages.add( packageName );
                         }
+                        else if ( packageName.startsWith( "org.hibernate.testing" ) ) {
+                            // do nothing as testing support is already handled...
+                        }
                         else {
                             apiPackages.add( packageName );
                         }
@@ -52,11 +60,12 @@ task aggregateJavadocs(type: Javadoc) {
         }
     }
 
+    // apply standard config
     description = "Build the aggregated JavaDocs for all modules"
     maxMemory = '512m'
     destinationDir = javadocBuildDir.dir
     configure( options ) {
-        overview = new File( projectDir, 'src/javadoc/package.html' )
+        overview = new File( projectDir, 'src/javadoc/overview.html' )
         stylesheetFile = new File( projectDir, 'src/javadoc/stylesheet.css' )
         windowTitle = 'Hibernate JavaDocs'
         docTitle = "Hibernate JavaDoc ($project.version)"
@@ -67,6 +76,10 @@ task aggregateJavadocs(type: Javadoc) {
         group( 'SPI', spiPackages.asList() )
         group( 'Internal', internalPackages.asList() )
         group ( 'Testing Support', ['org.hibernate.testing*'] )
+// ugh, http://issues.gradle.org/browse/GRADLE-1563
+//        tags ["todo:X"]
+// work around:
+        addStringOption( "tag", "todo:X" )
     }
 }
 

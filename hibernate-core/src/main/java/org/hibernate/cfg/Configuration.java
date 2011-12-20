@@ -168,6 +168,7 @@ import org.hibernate.usertype.UserType;
  * @author Gavin King
  * @see org.hibernate.SessionFactory
  */
+@SuppressWarnings( {"UnusedDeclaration"})
 public class Configuration implements Serializable {
 
     private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, Configuration.class.getName());
@@ -1507,16 +1508,14 @@ public class Configuration implements Serializable {
 		RuntimeException originalException = null;
 		while ( !stopProcess ) {
 			List<FkSecondPass> failingSecondPasses = new ArrayList<FkSecondPass>();
-			Iterator<FkSecondPass> it = endOfQueueFkSecondPasses.listIterator();
-			while ( it.hasNext() ) {
-				final FkSecondPass pass = it.next();
+			for ( FkSecondPass pass : endOfQueueFkSecondPasses ) {
 				try {
 					pass.doSecondPass( classes );
 				}
-				catch ( RecoverableException e ) {
+				catch (RecoverableException e) {
 					failingSecondPasses.add( pass );
 					if ( originalException == null ) {
-						originalException = ( RuntimeException ) e.getCause();
+						originalException = (RuntimeException) e.getCause();
 					}
 				}
 			}
@@ -1621,7 +1620,7 @@ public class Configuration implements Serializable {
 		LOG.debug( "Processing foreign key constraints" );
 
 		itr = getTableMappings();
-		Set done = new HashSet();
+		Set<ForeignKey> done = new HashSet<ForeignKey>();
 		while ( itr.hasNext() ) {
 			secondPassCompileForeignKeys( (Table) itr.next(), done );
 		}
@@ -1639,7 +1638,7 @@ public class Configuration implements Serializable {
 
 		if ( extendsQueue.size() > 0 ) {
 			Iterator iterator = extendsQueue.keySet().iterator();
-			StringBuffer buf = new StringBuffer( "Following super classes referenced in extends not found: " );
+			StringBuilder buf = new StringBuilder( "Following super classes referenced in extends not found: " );
 			while ( iterator.hasNext() ) {
 				final ExtendsQueueEntry entry = ( ExtendsQueueEntry ) iterator.next();
 				buf.append( entry.getExplicitName() );
@@ -1670,7 +1669,7 @@ public class Configuration implements Serializable {
 		return null;
 	}
 
-	protected void secondPassCompileForeignKeys(Table table, Set done) throws MappingException {
+	protected void secondPassCompileForeignKeys(Table table, Set<ForeignKey> done) throws MappingException {
 		table.createForeignKeys();
 		Iterator iter = table.getForeignKeyIterator();
 		while ( iter.hasNext() ) {
@@ -1714,7 +1713,9 @@ public class Configuration implements Serializable {
 	 * {@link SessionFactory} will be immutable, so changes made to {@code this} {@link Configuration} after
 	 * building the {@link SessionFactory} will not affect it.
 	 *
-	 * @return The build {@link SessionFactory}
+	 * @param serviceRegistry The registry of services to be used in creating this session factory.
+	 *
+	 * @return The built {@link SessionFactory}
 	 *
 	 * @throws HibernateException usually indicates an invalid configuration or invalid mapping information
 	 */
@@ -1776,7 +1777,7 @@ public class Configuration implements Serializable {
 	}
 
 	/**
-	 * Rterieve the configured {@link Interceptor}.
+	 * Retrieve the configured {@link Interceptor}.
 	 *
 	 * @return The current {@link Interceptor}
 	 */
@@ -1787,7 +1788,7 @@ public class Configuration implements Serializable {
 	/**
 	 * Set the current {@link Interceptor}
 	 *
-	 * @param interceptor The {@link Interceptor} to use for the {@link #buildSessionFactory) built}
+	 * @param interceptor The {@link Interceptor} to use for the {@link #buildSessionFactory built}
 	 * {@link SessionFactory}.
 	 *
 	 * @return this for method chaining
@@ -2226,8 +2227,6 @@ public class Configuration implements Serializable {
 	 * @param collectionRole The name of the collection to which we should associate these cache settings
 	 * @param concurrencyStrategy The cache strategy to use
 	 * @param region The name of the cache region to use
-	 *
-	 * @return this for method chaining
 	 */
 	public void setCollectionCacheConcurrencyStrategy(String collectionRole, String concurrencyStrategy, String region) {
 		caches.add( new CacheHolder( collectionRole, concurrencyStrategy, region, false, false ) );
@@ -2253,6 +2252,8 @@ public class Configuration implements Serializable {
 
 	/**
 	 * Create an object-oriented view of the configuration properties
+	 *
+	 * @param serviceRegistry The registry of services to be used in building these settings.
 	 *
 	 * @return The build settings
 	 */
@@ -2442,6 +2443,7 @@ public class Configuration implements Serializable {
 	 * Internal implementation of the Mappings interface giving access to the Configuration's internal
 	 * <tt>metadata repository</tt> state ({@link Configuration#classes}, {@link Configuration#tables}, etc).
 	 */
+	@SuppressWarnings( {"deprecation", "unchecked"})
 	protected class MappingsImpl implements ExtendedMappings, Serializable {
 
 		private String schemaName;
@@ -2824,7 +2826,7 @@ public class Configuration implements Serializable {
 		}
 
 		private String buildTableNameKey(String schema, String catalog, String finalName) {
-			StringBuffer keyBuilder = new StringBuffer();
+			StringBuilder keyBuilder = new StringBuilder();
 			if (schema != null) keyBuilder.append( schema );
 			keyBuilder.append( ".");
 			if (catalog != null) keyBuilder.append( catalog );

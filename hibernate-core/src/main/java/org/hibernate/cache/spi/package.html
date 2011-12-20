@@ -1,7 +1,7 @@
 <!--
   ~ Hibernate, Relational Persistence for Idiomatic Java
   ~
-  ~ Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
+  ~ Copyright (c) 2011, Red Hat Inc. or third-party contributors as
   ~ indicated by the @author tags or express copyright attribution
   ~ statements applied by the authors.  All third-party contributions are
   ~ distributed under license by Red Hat Inc.
@@ -23,9 +23,15 @@
   -->
 
 <html>
-<body>
-<p>
-	This package defines formats for disassembled state kept in the second level cache.
-</p>
-</body>
+    <body>
+        <p>
+            Defines the Hibernate second level caching SPI.
+        </p>
+        <p>
+            The initial contract here is {@link org.hibernate.cache.spi.RegionFactory} whose implementations are
+            responsible for configuring and managing lifecycle operations in regards to the particular underlying
+            caching library.  Its other main purpose is to build specializations {@link org.hibernate.cache.spi.Region}
+            instances based on the type of data we will be storing in that given region.
+        </p>
+    </body>
 </html>

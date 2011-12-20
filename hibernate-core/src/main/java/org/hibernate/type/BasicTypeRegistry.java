@@ -126,8 +126,7 @@ public class BasicTypeRegistry implements Serializable {
 	@SuppressWarnings({ "UnusedDeclaration" })
 	private BasicTypeRegistry(Map<String, BasicType> registeredTypes) {
 		registry.putAll( registeredTypes );
-        //TODO - this is just a temporary work-around!
-//		locked = true;
+		locked = true;
 	}
 
 	public void register(BasicType type) {

@@ -36,7 +36,7 @@ import org.hibernate.spatial.GeometryType;
 import org.hibernate.spatial.SpatialAggregate;
 import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
-import org.hibernate.spatial.SpatialGeometrySqlTypeDescriptor;
+import org.hibernate.spatial.GeometrySqlTypeDescriptor;
 import org.hibernate.spatial.SpatialRelation;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
@@ -262,7 +262,7 @@ public class PostgisDialect extends PostgreSQLDialect implements SpatialDialect 
 
     @Override
 	public SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
-		if ( sqlTypeDescriptor instanceof SpatialGeometrySqlTypeDescriptor ) {
+		if ( sqlTypeDescriptor instanceof GeometrySqlTypeDescriptor) {
 			return PGGeometryTypeDescriptor.INSTANCE;
 		}
 		return super.remapSqlTypeDescriptor( sqlTypeDescriptor );

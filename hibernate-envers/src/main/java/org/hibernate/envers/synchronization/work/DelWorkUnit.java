@@ -42,8 +42,8 @@ public class DelWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
     private final String[] propertyNames;
 
     public DelWorkUnit(SessionImplementor sessionImplementor, String entityName, AuditConfiguration verCfg,
-					   Serializable id, EntityPersister entityPersister, Object[] state) {
-        super(sessionImplementor, entityName, verCfg, id, RevisionType.DEL);
+					   Serializable id, EntityPersister entityPersister, Object[] state, Object entity) {
+        super(sessionImplementor, entityName, verCfg, id, RevisionType.DEL, entity);
 
         this.state = state;
         this.entityPersister = entityPersister;
@@ -70,7 +70,7 @@ public class DelWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
         if (Tools.arraysEqual(second.getState(), state)) {
             return null; // Return null if object's state has not changed.
         }
-        return new ModWorkUnit(sessionImplementor, entityName, verCfg, id, entityPersister, second.getState(), state); 
+        return new ModWorkUnit(sessionImplementor, entityName, verCfg, id, entityPersister, second.getState(), state, second.getEntity()); 
     }
 
     public AuditWorkUnit merge(ModWorkUnit second) {

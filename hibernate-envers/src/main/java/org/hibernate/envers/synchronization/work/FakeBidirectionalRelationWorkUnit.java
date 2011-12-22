@@ -28,8 +28,8 @@ public class FakeBidirectionalRelationWorkUnit extends AbstractAuditWorkUnit imp
                                              String referencingPropertyName, Object owningEntity,
                                              RelationDescription rd, RevisionType revisionType,
                                              Object index,
-                                             AuditWorkUnit nestedWorkUnit) {
-        super(sessionImplementor, entityName, verCfg, id, revisionType);
+                                             AuditWorkUnit nestedWorkUnit, Object entity) {
+        super(sessionImplementor, entityName, verCfg, id, revisionType, entity);
         this.nestedWorkUnit = nestedWorkUnit;
 
         // Adding the change for the relation.
@@ -39,15 +39,15 @@ public class FakeBidirectionalRelationWorkUnit extends AbstractAuditWorkUnit imp
 
     public FakeBidirectionalRelationWorkUnit(FakeBidirectionalRelationWorkUnit original,
                                              Map<String, FakeRelationChange> fakeRelationChanges,
-                                             AuditWorkUnit nestedWorkUnit) {
-        super(original.sessionImplementor, original.entityName, original.verCfg, original.id, original.revisionType);
+                                             AuditWorkUnit nestedWorkUnit, Object entity) {
+        super(original.sessionImplementor, original.entityName, original.verCfg, original.id, original.revisionType, entity);
 
         this.fakeRelationChanges = fakeRelationChanges;
         this.nestedWorkUnit = nestedWorkUnit;
     }
 
-    public FakeBidirectionalRelationWorkUnit(FakeBidirectionalRelationWorkUnit original, AuditWorkUnit nestedWorkUnit) {
-        super(original.sessionImplementor, original.entityName, original.verCfg, original.id, original.revisionType);
+    public FakeBidirectionalRelationWorkUnit(FakeBidirectionalRelationWorkUnit original, AuditWorkUnit nestedWorkUnit, Object entity) {
+        super(original.sessionImplementor, original.entityName, original.verCfg, original.id, original.revisionType, entity);
 
         this.nestedWorkUnit = nestedWorkUnit;
 
@@ -112,7 +112,7 @@ public class FakeBidirectionalRelationWorkUnit extends AbstractAuditWorkUnit imp
                             secondFakeRelationChanges.get(propertyName)));
         }
 
-        return new FakeBidirectionalRelationWorkUnit(this, mergedFakeRelationChanges, mergedNested);
+        return new FakeBidirectionalRelationWorkUnit(this, mergedFakeRelationChanges, mergedNested, null);
     }
 
     public AuditWorkUnit dispatch(WorkUnitMergeVisitor first) {
@@ -124,7 +124,7 @@ public class FakeBidirectionalRelationWorkUnit extends AbstractAuditWorkUnit imp
         AuditWorkUnit nestedMerged = nestedSecond.dispatch(nestedFirst);
 
         // Creating a new fake relation work unit with the nested merged data
-        return new FakeBidirectionalRelationWorkUnit(frwu, nestedMerged);
+        return new FakeBidirectionalRelationWorkUnit(frwu, nestedMerged, null);
     }
 
     /**

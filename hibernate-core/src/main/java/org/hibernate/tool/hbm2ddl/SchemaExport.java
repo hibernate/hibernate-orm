@@ -336,7 +336,7 @@ public class SchemaExport {
 	}
 
 	public void execute(Target output, Type type) {
-		if ( output == Target.NONE || type == SchemaExport.Type.NONE ) {
+		if ( (outputFile == null && output == Target.NONE) || type == SchemaExport.Type.NONE ) {
 			return;
 		}
 		exceptions.clear();

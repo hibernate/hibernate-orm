@@ -292,8 +292,10 @@
         </para>
 
         <para>
-            If you'd like to override auditing behaviour of some fields/properties in an embedded component, you can use
-            the <literal>@AuditOverride(s)</literal> annotation on the usage site of the component.
+            If you'd like to override auditing behaviour of some fields/properties inherited from
+            <interfacename>@Mappedsuperclass</interfacename> or in an embedded component, you can
+            apply the <literal>@AuditOverride(s)</literal> annotation on the subtype or usage site
+            of the component.
         </para>
 
         <para>

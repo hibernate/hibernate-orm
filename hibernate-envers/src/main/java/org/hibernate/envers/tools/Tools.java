@@ -35,6 +35,8 @@ import java.util.Set;
 import javassist.util.proxy.ProxyFactory;
 
 import org.hibernate.Session;
+import org.hibernate.annotations.common.reflection.XClass;
+import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.persister.entity.EntityPersister;
@@ -214,5 +216,33 @@ public class Tools {
             ret[i] = data.get(keys[i]);
         }
         return ret;
+    }
+
+    /**
+     * @param clazz Source class.
+     * @param propertyName Property name.
+     * @return Property object or {@code null} if one with expected name has not been found.
+     */
+    public static XProperty getProperty(XClass clazz, String propertyName) {
+        XProperty property = getProperty(clazz, propertyName, "field");
+        if (property == null) {
+            property = getProperty(clazz, propertyName, "property");
+        }
+        return property;
+    }
+
+    /**
+     * @param clazz Source class.
+     * @param propertyName Property name.
+     * @param accessType Expected access type. Legal values are <i>field</i> and <i>property</i>.
+     * @return Property object or {@code null} if one with expected name and access type has not been found.
+     */
+    public static XProperty getProperty(XClass clazz, String propertyName, String accessType) {
+        for (XProperty property : clazz.getDeclaredProperties(accessType)) {
+            if (propertyName.equals(property.getName())) {
+                return property;
+            }
+        }
+        return null;
     }
 }

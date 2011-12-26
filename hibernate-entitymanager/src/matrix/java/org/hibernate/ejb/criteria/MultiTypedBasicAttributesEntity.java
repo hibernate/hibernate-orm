@@ -26,6 +26,7 @@ package org.hibernate.ejb.criteria;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Table;
 
 import org.hibernate.annotations.GenericGenerator;
 
@@ -36,6 +37,7 @@ import org.hibernate.annotations.GenericGenerator;
  * @author Steve Ebersole
  */
 @Entity
+@Table(name="ENT_W_MANY_COLS")
 public class MultiTypedBasicAttributesEntity {
 	@Id
 	@GeneratedValue( generator = "increment" )

@@ -22,25 +22,20 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb;
-import static org.hibernate.ejb.QueryHints.HINT_CACHEABLE;
-import static org.hibernate.ejb.QueryHints.HINT_CACHE_MODE;
-import static org.hibernate.ejb.QueryHints.HINT_CACHE_REGION;
-import static org.hibernate.ejb.QueryHints.HINT_COMMENT;
-import static org.hibernate.ejb.QueryHints.HINT_FETCH_SIZE;
-import static org.hibernate.ejb.QueryHints.HINT_FLUSH_MODE;
-import static org.hibernate.ejb.QueryHints.HINT_READONLY;
-import static org.hibernate.ejb.QueryHints.HINT_TIMEOUT;
-import static org.hibernate.ejb.QueryHints.SPEC_HINT_TIMEOUT;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+
 import javax.persistence.CacheRetrieveMode;
 import javax.persistence.CacheStoreMode;
 import javax.persistence.FlushModeType;
 import javax.persistence.Parameter;
 import javax.persistence.TransactionRequiredException;
 import javax.persistence.TypedQuery;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+
+import org.jboss.logging.Logger;
+
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
@@ -51,7 +46,16 @@ import org.hibernate.ejb.util.CacheModeHelper;
 import org.hibernate.ejb.util.ConfigurationHelper;
 import org.hibernate.ejb.util.LockModeTypeHelper;
 import org.hibernate.hql.internal.QueryExecutionRequestException;
-import org.jboss.logging.Logger;
+
+import static org.hibernate.ejb.QueryHints.HINT_CACHEABLE;
+import static org.hibernate.ejb.QueryHints.HINT_CACHE_MODE;
+import static org.hibernate.ejb.QueryHints.HINT_CACHE_REGION;
+import static org.hibernate.ejb.QueryHints.HINT_COMMENT;
+import static org.hibernate.ejb.QueryHints.HINT_FETCH_SIZE;
+import static org.hibernate.ejb.QueryHints.HINT_FLUSH_MODE;
+import static org.hibernate.ejb.QueryHints.HINT_READONLY;
+import static org.hibernate.ejb.QueryHints.HINT_TIMEOUT;
+import static org.hibernate.ejb.QueryHints.SPEC_HINT_TIMEOUT;
 
 /**
  * Intended as a base class providing convenience in implementing both {@link javax.persistence.Query} and
@@ -84,9 +88,7 @@ public abstract class AbstractQueryImpl<X> implements TypedQuery<X> {
 	 */
 	protected abstract int internalExecuteUpdate();
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "ThrowableInstanceNeverThrown" })
 	public int executeUpdate() {
 		try {
@@ -117,9 +119,7 @@ public abstract class AbstractQueryImpl<X> implements TypedQuery<X> {
 	 */
 	protected abstract void applyMaxResults(int maxResults);
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public TypedQuery<X> setMaxResults(int maxResult) {
 		if ( maxResult < 0 ) {
 			throw new IllegalArgumentException(
@@ -135,6 +135,7 @@ public abstract class AbstractQueryImpl<X> implements TypedQuery<X> {
 		return maxResults;
 	}
 
+	@Override
 	public int getMaxResults() {
 		return maxResults == -1
 				? Integer.MAX_VALUE // stupid spec... MAX_VALUE??
@@ -150,6 +151,7 @@ public abstract class AbstractQueryImpl<X> implements TypedQuery<X> {
 	 */
 	protected abstract void applyFirstResult(int firstResult);
 
+	@Override
 	public TypedQuery<X> setFirstResult(int firstResult) {
 		if ( firstResult < 0 ) {
 			throw new IllegalArgumentException(
@@ -161,15 +163,14 @@ public abstract class AbstractQueryImpl<X> implements TypedQuery<X> {
 		return this;
 	}
 
+	@Override
 	public int getFirstResult() {
 		return firstResult;
 	}
 
 	private Map<String, Object> hints;
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Map<String, Object> getHints() {
 		return hints;
 	}
@@ -194,9 +195,8 @@ public abstract class AbstractQueryImpl<X> implements TypedQuery<X> {
 
 	protected abstract void applyAliasSpecificLockMode(String alias, LockMode lockMode);
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
+	@SuppressWarnings( {"deprecation"})
 	public TypedQuery<X> setHint(String hintName, Object value) {
 		boolean skipped = false;
 		try {
@@ -294,16 +294,20 @@ public abstract class AbstractQueryImpl<X> implements TypedQuery<X> {
 		return this;
 	}
 
+	@SuppressWarnings( {"UnusedDeclaration"})
 	public Set<String> getSupportedHints() {
 		return QueryHints.getDefinedHints();
 	}
 
+	@Override
 	public abstract TypedQuery<X> setLockMode(javax.persistence.LockModeType lockModeType);
 
+	@Override
 	public abstract javax.persistence.LockModeType getLockMode();
 
 	private FlushModeType jpaFlushMode;
 
+	@Override
 	public TypedQuery<X> setFlushMode(FlushModeType jpaFlushMode) {
 		this.jpaFlushMode = jpaFlushMode;
 		// TODO : treat as hint?
@@ -316,10 +320,12 @@ public abstract class AbstractQueryImpl<X> implements TypedQuery<X> {
 		return this;
 	}
 
+	@SuppressWarnings( {"UnusedDeclaration"})
 	protected FlushModeType getSpecifiedFlushMode() {
 		return jpaFlushMode;
 	}
 
+	@Override
 	public FlushModeType getFlushMode() {
 		return jpaFlushMode != null
 				? jpaFlushMode
@@ -328,40 +334,13 @@ public abstract class AbstractQueryImpl<X> implements TypedQuery<X> {
 
 	private Map parameterBindings;
 
+	@SuppressWarnings( {"unchecked"})
 	protected void registerParameterBinding(Parameter parameter, Object value) {
-		if ( value != null && parameter.getParameterType() != null ) {
-			if ( Collection.class.isInstance( value ) ) {
-				final Collection collection = (Collection) value;
-				// validate the elements...
-				for ( Object element : collection ) {
-					if ( ! parameter.getParameterType().isInstance( element ) ) {
-						throw new IllegalArgumentException(
-								"Parameter value [" + element + "] was not matching type [" +
-										parameter.getParameterType().getName() + "]"
-						);
-					}
-				}
-			}
-			else if ( value.getClass().isArray() && value.getClass().equals( Object[].class ) ) {
-				final Object[] array = (Object[]) value;
-				for ( Object element : array ) {
-					if ( ! parameter.getParameterType().isInstance( element ) ) {
-						throw new IllegalArgumentException(
-								"Parameter value [" + element + "] was not matching type [" +
-										parameter.getParameterType().getName() + "]"
-						);
-					}
-				}
-			}
-			else {
-				if ( ! parameter.getParameterType().isInstance( value ) ) {
-					throw new IllegalArgumentException(
-							"Parameter value [" + value + "] was not matching type [" +
-									parameter.getParameterType().getName() + "]"
-					);
-				}
-			}
+		if ( parameter == null ) {
+			throw new IllegalArgumentException( "parameter cannot be null" );
 		}
+
+		validateParameterBinding( parameter, value );
 
 		if ( parameterBindings == null ) {
 			parameterBindings = new HashMap();
@@ -369,16 +348,98 @@ public abstract class AbstractQueryImpl<X> implements TypedQuery<X> {
 		parameterBindings.put( parameter, value );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	private void validateParameterBinding(Parameter parameter, Object value) {
+		if ( value == null || parameter.getParameterType() == null ) {
+			// nothing we can check
+			return;
+		}
+
+		if ( Collection.class.isInstance( value )
+				&& ! Collection.class.isAssignableFrom( parameter.getParameterType() ) ) {
+			// we have a collection passed in where we are expecting a non-collection.
+			// 		NOTE : this can happen in Hibernate's notion of "parameter list" binding
+			// 		NOTE2 : the case of a collection value and an expected collection (if that can even happen)
+			//			will fall through to the main check.
+			validateCollectionValuedParameterMultiBinding( parameter, (Collection) value );
+		}
+		else if ( value.getClass().isArray() ) {
+			validateArrayValuedParameterBinding( parameter, value );
+		}
+		else {
+			if ( ! parameter.getParameterType().isInstance( value ) ) {
+				throw new IllegalArgumentException(
+						String.format(
+								"Parameter value [%s] did not match expected type [%s]",
+								value,
+								parameter.getParameterType().getName()
+						)
+				);
+			}
+		}
+	}
+
+	private void validateCollectionValuedParameterMultiBinding(Parameter parameter, Collection value) {
+		// validate the elements...
+		for ( Object element : value ) {
+			if ( ! parameter.getParameterType().isInstance( element ) ) {
+				throw new IllegalArgumentException(
+						String.format(
+								"Parameter value element [%s] did not match expected type [%s]",
+								element,
+								parameter.getParameterType().getName()
+						)
+				);
+			}
+		}
+	}
+
+	private void validateArrayValuedParameterBinding(Parameter parameter, Object value) {
+		if ( ! parameter.getParameterType().isArray() ) {
+			throw new IllegalArgumentException(
+					String.format(
+							"Encountered array-valued parameter binding, but was expecting [%s]",
+							parameter.getParameterType().getName()
+					)
+			);
+		}
+
+		if ( value.getClass().getComponentType().isPrimitive() ) {
+			// we have a primitive array.  we validate that the actual array has the component type (type odf elements)
+			// we expect based on the component type of the parameter specification
+			if ( ! parameter.getParameterType().getComponentType().isAssignableFrom( value.getClass().getComponentType() ) ) {
+				throw new IllegalArgumentException(
+						String.format(
+								"Primitive array-valued parameter bind value type [%s] did not match expected type [%s]",
+								value.getClass().getComponentType().getName(),
+								parameter.getParameterType().getName()
+						)
+				);
+			}
+		}
+		else {
+			// we have an object array.  Here we loop over the array and physically check each element against
+			// the type we expect based on the component type of the parameter specification
+			final Object[] array = (Object[]) value;
+			for ( Object element : array ) {
+				if ( ! parameter.getParameterType().getComponentType().isInstance( element ) ) {
+					throw new IllegalArgumentException(
+							String.format(
+									"Array-valued parameter value element [%s] did not match expected type [%s]",
+									element,
+									parameter.getParameterType().getName()
+							)
+					);
+				}
+			}
+		}
+	}
+
+	@Override
     public boolean isBound(Parameter<?> param) {
 		return parameterBindings != null && parameterBindings.containsKey( param );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <T> T getParameterValue(Parameter<T> param) {
 		if ( parameterBindings == null ) {
@@ -396,16 +457,12 @@ public abstract class AbstractQueryImpl<X> implements TypedQuery<X> {
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Object getParameterValue(String name) {
 		return getParameterValue( getParameter( name ) );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Object getParameterValue(int position) {
 		return getParameterValue( getParameter( position ) );
 	}

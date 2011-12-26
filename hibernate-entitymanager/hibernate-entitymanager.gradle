@@ -1,6 +1,8 @@
 import org.apache.tools.ant.filters.ReplaceTokens
 
+apply plugin: 'java'
 apply plugin: "jdocbook"
+apply plugin: org.hibernate.gradle.testing.matrix.MatrixTestingPlugin
 
 buildscript {
   repositories {
@@ -14,27 +16,6 @@ buildscript {
 }
 
 dependencies {
-	jdocbookStyles "org.hibernate:hibernate-jdocbook-style:2.0.1"
-}
-
-jdocbook {
-    format('html_single') {
-		finalName = "index.html"
-		stylesheet = "classpath:/xslt/org/hibernate/jdocbook/xslt/xhtml-single.xsl"
-	}
-	format('html') {
-		finalName = "index.html"
-		stylesheet = "classpath:/xslt/org/hibernate/jdocbook/xslt/xhtml.xsl"
-	}
-    masterSourceDocumentName="master.xml"
-    masterLanguage="en"
-}
-
-apply plugin: 'java'
-apply plugin: org.hibernate.gradle.testing.matrix.MatrixTestingPlugin
-
-dependencies {
-
     compile( project(':hibernate-core') )
     compile( libraries.dom4j )
     compile( libraries.commons_annotations )
@@ -47,16 +28,9 @@ dependencies {
     testCompile( libraries.shrinkwrap )
     testCompile( libraries.validation )
     testRuntime( libraries.validator )
+    jdocbookStyles "org.hibernate:hibernate-jdocbook-style:2.0.1"
 }
 
-aptDumpDir = file( buildDirName + "/tmp/apt" )
-
-sourceSets.test {
-    originalJavaSrcDirs = java.srcDirs
-    generatedJpaMetamodelSrcDir = file( "${buildDir}/generated-src/jpamodelgen/${name}" )
-    java.srcDir generatedJpaMetamodelSrcDir
-}
-compileMatrixJava.options.define(compilerArgs: ["-proc:none", "-encoding", "UTF-8"])
 sourceSets {
     matrix {
         java {
@@ -67,13 +41,21 @@ sourceSets {
         }
     }
 }
-ideaModule {
-    excludeDirs += file("$buildDir/bundles")
-    testSourceDirs += file( 'src/matrix/java')
-    testSourceDirs += file( 'src/matrix/resources')
-}
 
-task generateJpaMetamodelClasses(type: Compile) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// JPA model-gen set up
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+aptDumpDir = file( buildDirName + "/tmp/apt" )
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// 'test' sourceSet specific JPA model-gen set up
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+sourceSets.test {
+    originalJavaSrcDirs = java.srcDirs
+    generatedJpaMetamodelSrcDir = file( "${buildDir}/generated-src/jpamodelgen/${name}" )
+    java.srcDir generatedJpaMetamodelSrcDir
+}
+task generateTestJpaMetamodelClasses(type: Compile) {
     classpath = compileTestJava.classpath + configurations.hibernateJpaModelGenTool
     source = sourceSets.test.originalJavaSrcDirs
     destinationDir = aptDumpDir
@@ -89,12 +71,40 @@ task generateJpaMetamodelClasses(type: Compile) {
         sourceSets.test.generatedJpaMetamodelSrcDir.mkdirs()
     }
 }
-
 // for the time being eat the annoying output from running the annotation processors
-generateJpaMetamodelClasses.logging.captureStandardError(LogLevel.INFO)
-
-compileTestJava.dependsOn generateJpaMetamodelClasses
+generateTestJpaMetamodelClasses.logging.captureStandardError(LogLevel.INFO)
+compileTestJava.dependsOn generateTestJpaMetamodelClasses
 compileTestJava.options.define(compilerArgs: ["-proc:none"])
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// 'matrix' sourceSet specific JPA model-gen set up
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+sourceSets.matrix {
+    originalJavaSrcDirs = java.srcDirs
+    generatedJpaMetamodelSrcDir = file( "${buildDir}/generated-src/jpamodelgen/${name}" )
+    java.srcDir generatedJpaMetamodelSrcDir
+}
+task generateMatrixJpaMetamodelClasses(type: Compile) {
+    classpath = compileMatrixJava.classpath + configurations.hibernateJpaModelGenTool
+    source = sourceSets.matrix.java
+    destinationDir = aptDumpDir
+    options.define(
+            compilerArgs: [
+                    "-proc:only",
+                    "-processor", "org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor",
+                    "-s", "$sourceSets.matrix.generatedJpaMetamodelSrcDir.absolutePath"
+            ]
+    );
+    outputs.dir sourceSets.matrix.generatedJpaMetamodelSrcDir;
+    doFirst {
+        sourceSets.matrix.generatedJpaMetamodelSrcDir.mkdirs()
+    }
+}
+// for the time being eat the annoying output from running the annotation processors
+generateMatrixJpaMetamodelClasses.logging.captureStandardError(LogLevel.INFO)
+compileMatrixJava.dependsOn generateMatrixJpaMetamodelClasses
+compileMatrixJava.options.define(compilerArgs: ["-proc:none", "-encoding", "UTF-8"])
+
 
 
 bundlesTargetDir = file( "$buildDirName/bundles" )
@@ -116,3 +126,22 @@ task copyBundleResources (type: Copy) {
 
 // make sure that the bundles for the packaged test (PackagingTestCase) are copied as well
 processTestResources.dependsOn copyBundleResources
+
+jdocbook {
+    format('html_single') {
+		finalName = "index.html"
+		stylesheet = "classpath:/xslt/org/hibernate/jdocbook/xslt/xhtml-single.xsl"
+	}
+	format('html') {
+		finalName = "index.html"
+		stylesheet = "classpath:/xslt/org/hibernate/jdocbook/xslt/xhtml.xsl"
+	}
+    masterSourceDocumentName="master.xml"
+    masterLanguage="en"
+}
+
+ideaModule {
+    excludeDirs += file("$buildDir/bundles")
+    testSourceDirs += file( 'src/matrix/java')
+    testSourceDirs += file( 'src/matrix/resources')
+}

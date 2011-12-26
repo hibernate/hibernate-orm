@@ -32,6 +32,8 @@ import java.util.Date;
 import java.util.List;
 
 import org.hibernate.Hibernate;
+import org.hibernate.criterion.CriteriaQuery;
+import org.hibernate.ejb.criteria.MultiTypedBasicAttributesEntity;
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.ejb.test.Distributor;
 import org.hibernate.ejb.test.Item;
@@ -571,7 +573,8 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 		return new Class[]{
 				Item.class,
 				Distributor.class,
-				Wallet.class
+				Wallet.class,
+				MultiTypedBasicAttributesEntity.class
 		};
 	}
 }

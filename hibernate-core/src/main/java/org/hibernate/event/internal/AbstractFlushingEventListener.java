@@ -299,30 +299,34 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 	}
 
 	/**
-	 * Execute all SQL and second-level cache updates, in a
-	 * special order so that foreign-key constraints cannot
-	 * be violated:
-	 * <ol>
+	 * Execute all SQL (and second-level cache updates) in a special order so that foreign-key constraints cannot
+	 * be violated: <ol>
 	 * <li> Inserts, in the order they were performed
 	 * <li> Updates
 	 * <li> Deletion of collection elements
 	 * <li> Insertion of collection elements
 	 * <li> Deletes, in the order they were performed
 	 * </ol>
+	 *
+	 * @param session The session being flushed
 	 */
-	protected void performExecutions(EventSource session) throws HibernateException {
-
+	protected void performExecutions(EventSource session) {
 		LOG.trace( "Executing flush" );
 
+		// IMPL NOTE : here we alter the flushing flag of the persistence context to allow
+		//		during-flush callbacks more leniency in regards to initializing proxies and
+		//		lazy collections during their processing.
+		// For more information, see HHH-2763
 		try {
 			session.getTransactionCoordinator().getJdbcCoordinator().flushBeginning();
-			// we need to lock the collection caches before
-			// executing entity inserts/updates in order to
-			// account for bidi associations
+			session.getPersistenceContext().setFlushing( true );
+			// we need to lock the collection caches before executing entity inserts/updates in order to
+			// account for bi-directional associations
 			session.getActionQueue().prepareActions();
 			session.getActionQueue().executeActions();
 		}
 		finally {
+			session.getPersistenceContext().setFlushing( false );
 			session.getTransactionCoordinator().getJdbcCoordinator().flushEnding();
 		}
 	}

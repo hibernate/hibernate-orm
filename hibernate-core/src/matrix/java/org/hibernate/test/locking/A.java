@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,24 +21,47 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.exception;
+package org.hibernate.test.locking;
 
-import java.sql.SQLException;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
-import org.hibernate.JDBCException;
+import org.hibernate.annotations.GenericGenerator;
 
 /**
- * Implementation of JDBCException indicating a problem acquiring lock
- * on the database.
- *
  * @author Steve Ebersole
  */
-public class LockAcquisitionException extends JDBCException {
-	public LockAcquisitionException(String string, SQLException root) {
-		super( string, root );
+@Entity
+@Table( name = "T_LOCK_A" )
+public class A {
+	private Integer id;
+	private String value;
+
+	public A() {
 	}
 
-	public LockAcquisitionException(String string, SQLException root, String sql) {
-		super( string, root, sql );
+	public A(String value) {
+		this.value = value;
+	}
+
+	@Id
+	@GeneratedValue( generator = "increment" )
+	@GenericGenerator( name = "increment", strategy = "increment" )
+	public Integer getId() {
+		return id;
+	}
+
+	public void setId(Integer id) {
+		this.id = id;
+	}
+
+	public String getValue() {
+		return value;
+	}
+
+	public void setValue(String value) {
+		this.value = value;
 	}
 }

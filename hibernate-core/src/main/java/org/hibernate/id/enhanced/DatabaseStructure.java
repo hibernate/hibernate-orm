@@ -87,4 +87,11 @@ public interface DatabaseStructure {
 	 * @return The drop commands.
 	 */
 	public String[] sqlDropStrings(Dialect dialect);
+
+	/**
+	 * Is the structure physically a sequence?
+	 *
+	 * @return {@code true} if the actual database structure is a sequence; {@code false} otherwise.
+	 */
+	public boolean isPhysicalSequence();
 }

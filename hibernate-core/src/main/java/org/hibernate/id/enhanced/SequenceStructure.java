@@ -66,39 +66,30 @@ public class SequenceStructure implements DatabaseStructure {
 		sql = dialect.getSequenceNextValString( sequenceName );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public String getName() {
 		return sequenceName;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public int getIncrementSize() {
 		return incrementSize;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public int getTimesAccessed() {
 		return accessCounter;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public int getInitialValue() {
 		return initialValue;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public AccessCallback buildCallback(final SessionImplementor session) {
 		return new AccessCallback() {
+			@Override
 			public IntegralDataTypeHolder getNextValue() {
 				accessCounter++;
 				try {
@@ -139,25 +130,24 @@ public class SequenceStructure implements DatabaseStructure {
 		};
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public void prepare(Optimizer optimizer) {
 		applyIncrementSizeToSourceValues = optimizer.applyIncrementSizeToSourceValues();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public String[] sqlCreateStrings(Dialect dialect) throws HibernateException {
 		int sourceIncrementSize = applyIncrementSizeToSourceValues ? incrementSize : 1;
 		return dialect.getCreateSequenceStrings( sequenceName, initialValue, sourceIncrementSize );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public String[] sqlDropStrings(Dialect dialect) throws HibernateException {
 		return dialect.getDropSequenceStrings( sequenceName );
+	}
+
+	@Override
+	public boolean isPhysicalSequence() {
+		return true;
 	}
 }

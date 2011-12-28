@@ -197,4 +197,9 @@ public class TableStructure implements DatabaseStructure {
 		}
 		return new String[] { sqlDropString.toString() };
 	}
+
+	@Override
+	public boolean isPhysicalSequence() {
+		return false;
+	}
 }

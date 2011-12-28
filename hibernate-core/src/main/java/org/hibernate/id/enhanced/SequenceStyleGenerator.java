@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.id.enhanced;
+
 import java.io.Serializable;
 import java.util.Properties;
 
@@ -33,6 +34,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.Configurable;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.internal.CoreMessageLogger;
@@ -95,10 +97,13 @@ import org.hibernate.type.Type;
  *
  * @author Steve Ebersole
  */
-public class SequenceStyleGenerator implements PersistentIdentifierGenerator, Configurable {
+public class SequenceStyleGenerator
+		implements PersistentIdentifierGenerator, BulkInsertionCapableIdentifierGenerator, Configurable {
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
-                                                                       SequenceStyleGenerator.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			SequenceStyleGenerator.class.getName()
+	);
 
 	// general purpose parameters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	public static final String SEQUENCE_PARAM = "sequence_name";
@@ -155,9 +160,7 @@ public class SequenceStyleGenerator implements PersistentIdentifierGenerator, Co
 
 	// Configurable implementation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public void configure(Type type, Properties params, Dialect dialect) throws MappingException {
 		this.identifierType = type;
 		boolean forceTableUse = ConfigurationHelper.getBoolean( FORCE_TBL_PARAM, params, false );
@@ -338,9 +341,7 @@ public class SequenceStyleGenerator implements PersistentIdentifierGenerator, Co
 
 	// IdentifierGenerator implementation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Serializable generate(SessionImplementor session, Object object) throws HibernateException {
 		return optimizer.generate( databaseStructure.buildCallback( session ) );
 	}
@@ -348,24 +349,35 @@ public class SequenceStyleGenerator implements PersistentIdentifierGenerator, Co
 
 	// PersistentIdentifierGenerator implementation ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Object generatorKey() {
 		return databaseStructure.getName();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public String[] sqlCreateStrings(Dialect dialect) throws HibernateException {
 		return databaseStructure.sqlCreateStrings( dialect );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public String[] sqlDropStrings(Dialect dialect) throws HibernateException {
 		return databaseStructure.sqlDropStrings( dialect );
+	}
+
+
+	// BulkInsertionCapableIdentifierGenerator implementation ~~~~~~~~~~~~~~~~~
+
+	@Override
+	public boolean supportsBulkInsertionIdentifierGeneration() {
+		// it does, as long as
+		// 		1) there is no (non-noop) optimizer in use
+		//		2) the underlying structure is a sequence
+		return OptimizerFactory.NoopOptimizer.class.isInstance( getOptimizer() )
+				&& getDatabaseStructure().isPhysicalSequence();
+	}
+
+	@Override
+	public String determineBulkInsertionIdentifierGenerationSelectFragment(Dialect dialect) {
+		return dialect.getSelectSequenceNextValString( getDatabaseStructure().getName() );
 	}
 }

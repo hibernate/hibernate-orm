@@ -85,6 +85,7 @@ import org.hibernate.hql.internal.ast.util.NodeTraverser;
 import org.hibernate.hql.internal.ast.util.SessionFactoryHelper;
 import org.hibernate.hql.internal.ast.util.SyntheticAndFactory;
 import org.hibernate.hql.spi.QueryTranslator;
+import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.PostInsertIdentifierGenerator;
 import org.hibernate.id.SequenceGenerator;
@@ -724,11 +725,6 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		postProcessDML( ( DeleteStatement ) delete );
 	}
 
-	public static boolean supportsIdGenWithBulkInsertion(IdentifierGenerator generator) {
-		return SequenceGenerator.class.isAssignableFrom( generator.getClass() )
-		        || PostInsertIdentifierGenerator.class.isAssignableFrom( generator.getClass() );
-	}
-
 	@Override
     protected void postProcessInsert(AST insert) throws SemanticException, QueryException {
 		InsertStatement insertStatement = ( InsertStatement ) insert;
@@ -738,37 +734,37 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		Queryable persister = insertStatement.getIntoClause().getQueryable();
 
 		if ( !insertStatement.getIntoClause().isExplicitIdInsertion() ) {
-			// We need to generate ids as part of this bulk insert.
-			//
-			// Note that this is only supported for sequence-style generators and
-			// post-insert-style generators; basically, only in-db generators
-			IdentifierGenerator generator = persister.getIdentifierGenerator();
-			if ( !supportsIdGenWithBulkInsertion( generator ) ) {
-				throw new QueryException( "can only generate ids as part of bulk insert with either sequence or post-insert style generators" );
+			// the insert did not explicitly reference the id.  See if
+			//		1) that is allowed
+			//		2) whether we need to alter the SQL tree to account for id
+			final IdentifierGenerator generator = persister.getIdentifierGenerator();
+			if ( !BulkInsertionCapableIdentifierGenerator.class.isInstance( generator ) ) {
+				throw new QueryException(
+						"Invalid identifier generator encountered for implicit id handling as part of bulk insertions"
+				);
+			}
+			final BulkInsertionCapableIdentifierGenerator capableGenerator =
+					BulkInsertionCapableIdentifierGenerator.class.cast( generator );
+			if ( ! capableGenerator.supportsBulkInsertionIdentifierGeneration() ) {
+				throw new QueryException(
+						"Identifier generator reported it does not support implicit id handling as part of bulk insertions"
+				);
 			}
 
-			AST idSelectExprNode = null;
-
-			if ( SequenceGenerator.class.isAssignableFrom( generator.getClass() ) ) {
-				String seqName = ( String ) ( ( SequenceGenerator ) generator ).generatorKey();
-				String nextval = sessionFactoryHelper.getFactory().getDialect().getSelectSequenceNextValString( seqName );
-				idSelectExprNode = getASTFactory().create( HqlSqlTokenTypes.SQL_TOKEN, nextval );
-			}
-			else {
-				//Don't need this, because we should never ever be selecting no columns in an insert ... select...
-				//and because it causes a bug on DB2
-				/*String idInsertString = sessionFactoryHelper.getFactory().getDialect().getIdentityInsertString();
-				if ( idInsertString != null ) {
-					idSelectExprNode = getASTFactory().create( HqlSqlTokenTypes.SQL_TOKEN, idInsertString );
-				}*/
-			}
-
-			if ( idSelectExprNode != null ) {
-				AST currentFirstSelectExprNode = selectClause.getFirstChild();
-				selectClause.setFirstChild( idSelectExprNode );
-				idSelectExprNode.setNextSibling( currentFirstSelectExprNode );
-
-				insertStatement.getIntoClause().prependIdColumnSpec();
+            final String fragment = capableGenerator.determineBulkInsertionIdentifierGenerationSelectFragment(
+					sessionFactoryHelper.getFactory().getDialect()
+			);
+			if ( fragment != null ) {
+                // we got a fragment from the generator, so alter the sql tree...
+                //
+                // first, wrap the fragment as a node
+                AST fragmentNode = getASTFactory().create( HqlSqlTokenTypes.SQL_TOKEN, fragment );
+                // next, rearrange the SQL tree to add the fragment node as the first select expression
+                AST originalFirstSelectExprNode = selectClause.getFirstChild();
+                selectClause.setFirstChild( fragmentNode );
+                fragmentNode.setNextSibling( originalFirstSelectExprNode );
+                // finally, prepend the id column name(s) to the insert-spec
+                insertStatement.getIntoClause().prependIdColumnSpec();
 			}
 		}
 

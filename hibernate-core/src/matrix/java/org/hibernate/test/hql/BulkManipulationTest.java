@@ -36,6 +36,7 @@ import org.hibernate.Transaction;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.hql.internal.ast.HqlSqlWalker;
+import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.testing.DialectChecks;
@@ -345,7 +346,8 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 	protected boolean supportsBulkInsertIdGeneration(Class entityClass) {
 		EntityPersister persister = sessionFactory().getEntityPersister( entityClass.getName() );
 		IdentifierGenerator generator = persister.getIdentifierGenerator();
-		return HqlSqlWalker.supportsIdGenWithBulkInsertion( generator );
+		return BulkInsertionCapableIdentifierGenerator.class.isInstance( generator )
+				&& BulkInsertionCapableIdentifierGenerator.class.cast( generator ).supportsBulkInsertionIdentifierGeneration();
 	}
 
 	@Test

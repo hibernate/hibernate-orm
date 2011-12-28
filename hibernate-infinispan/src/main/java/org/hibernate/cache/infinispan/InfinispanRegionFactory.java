@@ -427,7 +427,7 @@ public class InfinispanRegionFactory implements RegionFactory {
       return createCacheWrapper(cache.getAdvancedCache());
    }
 
-   protected ClassLoaderAwareCache createCacheWrapper(AdvancedCache cache) {
+   protected AdvancedCache createCacheWrapper(AdvancedCache cache) {
       return new ClassLoaderAwareCache(cache, Thread.currentThread().getContextClassLoader());
    }
 

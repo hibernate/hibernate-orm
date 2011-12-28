@@ -27,7 +27,6 @@ import java.io.IOException;
 import java.io.InvalidObjectException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.ObjectStreamException;
 import java.io.Serializable;
 import java.sql.Connection;
 import java.util.ArrayList;
@@ -174,10 +173,10 @@ public final class SessionFactoryImpl
 	private final String name;
 	private final String uuid;
 
-	private final transient Map entityPersisters;
+	private final transient Map<String,EntityPersister> entityPersisters;
 	private final transient Map<String,ClassMetadata> classMetadata;
-	private final transient Map collectionPersisters;
-	private final transient Map collectionMetadata;
+	private final transient Map<String,CollectionPersister> collectionPersisters;
+	private final transient Map<String,CollectionMetadata> collectionMetadata;
 	private final transient Map<String,Set<String>> collectionRolesByEntityParticipant;
 	private final transient Map<String,IdentifierGenerator> identifierGenerators;
 	private final transient Map<String, NamedQueryDefinition> namedQueries;
@@ -208,7 +207,7 @@ public final class SessionFactoryImpl
 	private final transient TransactionEnvironment transactionEnvironment;
 	private final transient SessionFactoryOptions sessionFactoryOptions;
 
-	@SuppressWarnings( {"unchecked"} )
+	@SuppressWarnings( {"unchecked", "ThrowableResultOfMethodCallIgnored"})
 	public SessionFactoryImpl(
 			final Configuration cfg,
 			Mapping mapping,
@@ -355,7 +354,8 @@ public final class SessionFactoryImpl
 		this.classMetadata = Collections.unmodifiableMap(classMeta);
 
 		Map<String,Set<String>> tmpEntityToCollectionRoleMap = new HashMap<String,Set<String>>();
-		collectionPersisters = new HashMap();
+		collectionPersisters = new HashMap<String,CollectionPersister>();
+		Map<String,CollectionMetadata> tmpCollectionMetadata = new HashMap<String,CollectionMetadata>();
 		Iterator collections = cfg.getCollectionMappings();
 		while ( collections.hasNext() ) {
 			Collection model = (Collection) collections.next();
@@ -378,7 +378,8 @@ public final class SessionFactoryImpl
 					accessStrategy,
 					this
 			) ;
-			collectionPersisters.put( model.getRole(), persister.getCollectionMetadata() );
+			collectionPersisters.put( model.getRole(), persister );
+			tmpCollectionMetadata.put( model.getRole(), persister.getCollectionMetadata() );
 			Type indexType = persister.getIndexType();
 			if ( indexType != null && indexType.isAssociationType() && !indexType.isAnyType() ) {
 				String entityName = ( ( AssociationType ) indexType ).getAssociatedEntityName( this );
@@ -400,7 +401,7 @@ public final class SessionFactoryImpl
 				roles.add( persister.getRole() );
 			}
 		}
-		collectionMetadata = Collections.unmodifiableMap(collectionPersisters);
+		collectionMetadata = Collections.unmodifiableMap( tmpCollectionMetadata );
 		Iterator itr = tmpEntityToCollectionRoleMap.entrySet().iterator();
 		while ( itr.hasNext() ) {
 			final Map.Entry entry = ( Map.Entry ) itr.next();
@@ -437,7 +438,13 @@ public final class SessionFactoryImpl
 		catch (Exception e) {
 			throw new AssertionFailure("Could not generate UUID");
 		}
-		SessionFactoryRegistry.INSTANCE.addSessionFactory( uuid, name, this, serviceRegistry.getService( JndiService.class ) );
+		SessionFactoryRegistry.INSTANCE.addSessionFactory(
+				uuid,
+				name,
+				settings.isSessionFactoryNameAlsoJndiName(),
+				this,
+				serviceRegistry.getService( JndiService.class )
+		);
 
 		LOG.debug( "Instantiated session factory" );
 
@@ -475,16 +482,14 @@ public final class SessionFactoryImpl
 
 		//checking for named queries
 		if ( settings.isNamedQueryStartupCheckingEnabled() ) {
-			Map errors = checkNamedQueries();
-			if ( !errors.isEmpty() ) {
-				Set keys = errors.keySet();
-				StringBuffer failingQueries = new StringBuffer( "Errors in named queries: " );
-				for ( Iterator iterator = keys.iterator() ; iterator.hasNext() ; ) {
-					String queryName = ( String ) iterator.next();
-					HibernateException e = ( HibernateException ) errors.get( queryName );
-					failingQueries.append( queryName );
-					if ( iterator.hasNext() ) failingQueries.append( ", " );
-					LOG.namedQueryError( queryName, e );
+			final Map<String,HibernateException> errors = checkNamedQueries();
+			if ( ! errors.isEmpty() ) {
+				StringBuilder failingQueries = new StringBuilder( "Errors in named queries: " );
+				String sep = "";
+				for ( Map.Entry<String,HibernateException> entry : errors.entrySet() ) {
+					LOG.namedQueryError( entry.getKey(), entry.getValue() );
+					failingQueries.append( entry.getKey() ).append( sep );
+					sep = ", ";
 				}
 				throw new HibernateException( failingQueries.toString() );
 			}
@@ -497,13 +502,12 @@ public final class SessionFactoryImpl
 			final org.hibernate.mapping.FetchProfile mappingProfile =
 					( org.hibernate.mapping.FetchProfile ) itr.next();
 			final FetchProfile fetchProfile = new FetchProfile( mappingProfile.getName() );
-			Iterator fetches = mappingProfile.getFetches().iterator();
-			while ( fetches.hasNext() ) {
-				final org.hibernate.mapping.FetchProfile.Fetch mappingFetch =
-						( org.hibernate.mapping.FetchProfile.Fetch ) fetches.next();
+			for ( org.hibernate.mapping.FetchProfile.Fetch mappingFetch : mappingProfile.getFetches() ) {
 				// resolve the persister owning the fetch
 				final String entityName = getImportedClassName( mappingFetch.getEntity() );
-				final EntityPersister owner = ( EntityPersister ) ( entityName == null ? null : entityPersisters.get( entityName ) );
+				final EntityPersister owner = entityName == null
+						? null
+						: entityPersisters.get( entityName );
 				if ( owner == null ) {
 					throw new HibernateException(
 							"Unable to resolve entity reference [" + mappingFetch.getEntity()
@@ -522,7 +526,7 @@ public final class SessionFactoryImpl
 
 				// then construct the fetch instance...
 				fetchProfile.addFetch( new Association( owner, mappingFetch.getAssociation() ), fetchStyle );
-				( ( Loadable ) owner ).registerAffectingFetchProfile( fetchProfile.getName() );
+				((Loadable) owner).registerAffectingFetchProfile( fetchProfile.getName() );
 			}
 			fetchProfiles.put( fetchProfile.getName(), fetchProfile );
 		}
@@ -531,6 +535,7 @@ public final class SessionFactoryImpl
 		this.observer.sessionFactoryCreated( this );
 	}
 
+	@SuppressWarnings( {"ThrowableResultOfMethodCallIgnored"})
 	public SessionFactoryImpl(
 			MetadataImplementor metadata,
 			SessionFactoryOptions sessionFactoryOptions,
@@ -630,7 +635,7 @@ public final class SessionFactoryImpl
 		}
 		final String cacheRegionPrefix = stringBuilder.toString();
 
-		entityPersisters = new HashMap();
+		entityPersisters = new HashMap<String,EntityPersister>();
 		Map<String, RegionAccessStrategy> entityAccessStrategies = new HashMap<String, RegionAccessStrategy>();
 		Map<String,ClassMetadata> classMeta = new HashMap<String,ClassMetadata>();
 		for ( EntityBinding model : metadata.getEntityBindings() ) {
@@ -667,7 +672,8 @@ public final class SessionFactoryImpl
 		this.classMetadata = Collections.unmodifiableMap(classMeta);
 
 		Map<String,Set<String>> tmpEntityToCollectionRoleMap = new HashMap<String,Set<String>>();
-		collectionPersisters = new HashMap();
+		collectionPersisters = new HashMap<String,CollectionPersister>();
+		Map<String, CollectionMetadata> tmpCollectionMetadata = new HashMap<String, CollectionMetadata>();
 		for ( PluralAttributeBinding model : metadata.getCollectionBindings() ) {
 			if ( model.getAttribute() == null ) {
 				throw new IllegalStateException( "No attribute defined for a AbstractPluralAttributeBinding: " +  model );
@@ -694,13 +700,14 @@ public final class SessionFactoryImpl
 			CollectionPersister persister = serviceRegistry
 					.getService( PersisterFactory.class )
 					.createCollectionPersister( metadata, model, accessStrategy, this );
-			collectionPersisters.put( model.getAttribute().getRole(), persister.getCollectionMetadata() );
+			collectionPersisters.put( model.getAttribute().getRole(), persister );
+			tmpCollectionMetadata.put( model.getAttribute().getRole(), persister.getCollectionMetadata() );
 			Type indexType = persister.getIndexType();
 			if ( indexType != null && indexType.isAssociationType() && !indexType.isAnyType() ) {
 				String entityName = ( ( AssociationType ) indexType ).getAssociatedEntityName( this );
-				Set roles = tmpEntityToCollectionRoleMap.get( entityName );
+				Set<String> roles = tmpEntityToCollectionRoleMap.get( entityName );
 				if ( roles == null ) {
-					roles = new HashSet();
+					roles = new HashSet<String>();
 					tmpEntityToCollectionRoleMap.put( entityName, roles );
 				}
 				roles.add( persister.getRole() );
@@ -708,19 +715,17 @@ public final class SessionFactoryImpl
 			Type elementType = persister.getElementType();
 			if ( elementType.isAssociationType() && !elementType.isAnyType() ) {
 				String entityName = ( ( AssociationType ) elementType ).getAssociatedEntityName( this );
-				Set roles = tmpEntityToCollectionRoleMap.get( entityName );
+				Set<String> roles = tmpEntityToCollectionRoleMap.get( entityName );
 				if ( roles == null ) {
-					roles = new HashSet();
+					roles = new HashSet<String>();
 					tmpEntityToCollectionRoleMap.put( entityName, roles );
 				}
 				roles.add( persister.getRole() );
 			}
 		}
-		collectionMetadata = Collections.unmodifiableMap(collectionPersisters);
-		Iterator itr = tmpEntityToCollectionRoleMap.entrySet().iterator();
-		while ( itr.hasNext() ) {
-			final Map.Entry entry = ( Map.Entry ) itr.next();
-			entry.setValue( Collections.unmodifiableSet( ( Set ) entry.getValue() ) );
+		collectionMetadata = Collections.unmodifiableMap( tmpCollectionMetadata );
+		for ( Map.Entry<String, Set<String>> entry : tmpEntityToCollectionRoleMap.entrySet() ) {
+			entry.setValue( Collections.unmodifiableSet( entry.getValue() ) );
 		}
 		collectionRolesByEntityParticipant = Collections.unmodifiableMap( tmpEntityToCollectionRoleMap );
 
@@ -765,7 +770,13 @@ public final class SessionFactoryImpl
 		catch (Exception e) {
 			throw new AssertionFailure("Could not generate UUID");
 		}
-		SessionFactoryRegistry.INSTANCE.addSessionFactory( uuid, name, this, serviceRegistry.getService( JndiService.class ) );
+		SessionFactoryRegistry.INSTANCE.addSessionFactory(
+				uuid, 
+				name,
+				settings.isSessionFactoryNameAlsoJndiName(),
+				this,
+				serviceRegistry.getService( JndiService.class )
+		);
 
 		LOG.debug("Instantiated session factory");
 
@@ -774,14 +785,7 @@ public final class SessionFactoryImpl
 					.setImportSqlCommandExtractor( serviceRegistry.getService( ImportSqlCommandExtractor.class ) )
 					.create( false, true );
 		}
-		/*
-		if ( settings.isAutoUpdateSchema() ) {
-			new SchemaUpdate( metadata ).execute( false, true );
-		}
-		if ( settings.isAutoValidateSchema() ) {
-			new SchemaValidator( metadata ).validate();
-		}
-		*/
+
 		if ( settings.isAutoDropSchema() ) {
 			schemaExport = new SchemaExport( metadata )
 					.setImportSqlCommandExtractor( serviceRegistry.getService( ImportSqlCommandExtractor.class ) );
@@ -805,16 +809,14 @@ public final class SessionFactoryImpl
 
 		//checking for named queries
 		if ( settings.isNamedQueryStartupCheckingEnabled() ) {
-			Map errors = checkNamedQueries();
+			final Map<String,HibernateException> errors = checkNamedQueries();
 			if ( ! errors.isEmpty() ) {
-				Set keys = errors.keySet();
-				StringBuffer failingQueries = new StringBuffer( "Errors in named queries: " );
-				for ( Iterator<String> iterator = keys.iterator() ; iterator.hasNext() ; ) {
-					String queryName = iterator.next();
-					HibernateException e = ( HibernateException ) errors.get( queryName );
-					failingQueries.append( queryName );
-                    if ( iterator.hasNext() ) failingQueries.append( ", " );
-					LOG.namedQueryError( queryName, e );
+				StringBuilder failingQueries = new StringBuilder( "Errors in named queries: " );
+				String sep = "";
+				for ( Map.Entry<String,HibernateException> entry : errors.entrySet() ) {
+					LOG.namedQueryError( entry.getKey(), entry.getValue() );
+					failingQueries.append( entry.getKey() ).append( sep );
+					sep = ", ";
 				}
 				throw new HibernateException( failingQueries.toString() );
 			}
@@ -827,7 +829,7 @@ public final class SessionFactoryImpl
 			for ( org.hibernate.metamodel.binding.FetchProfile.Fetch mappingFetch : mappingProfile.getFetches() ) {
 				// resolve the persister owning the fetch
 				final String entityName = getImportedClassName( mappingFetch.getEntity() );
-				final EntityPersister owner = ( EntityPersister ) ( entityName == null ? null : entityPersisters.get( entityName ) );
+				final EntityPersister owner = entityName == null ? null : entityPersisters.get( entityName );
 				if ( owner == null ) {
 					throw new HibernateException(
 							"Unable to resolve entity reference [" + mappingFetch.getEntity()
@@ -952,8 +954,9 @@ public final class SessionFactoryImpl
 		return queryPlanCache;
 	}
 
-	private Map checkNamedQueries() throws HibernateException {
-		Map errors = new HashMap();
+	@SuppressWarnings( {"ThrowableResultOfMethodCallIgnored"})
+	private Map<String,HibernateException> checkNamedQueries() throws HibernateException {
+		Map<String,HibernateException> errors = new HashMap<String,HibernateException>();
 
 		// Check named HQL queries
 		if ( LOG.isDebugEnabled() ) {
@@ -1023,16 +1026,16 @@ public final class SessionFactoryImpl
 	}
 
 	public EntityPersister getEntityPersister(String entityName) throws MappingException {
-		EntityPersister result = (EntityPersister) entityPersisters.get(entityName);
-		if (result==null) {
+		EntityPersister result = entityPersisters.get(entityName);
+		if ( result == null ) {
 			throw new MappingException( "Unknown entity: " + entityName );
 		}
 		return result;
 	}
 
 	public CollectionPersister getCollectionPersister(String role) throws MappingException {
-		CollectionPersister result = (CollectionPersister) collectionPersisters.get(role);
-		if (result==null) {
+		CollectionPersister result = collectionPersisters.get(role);
+		if ( result == null ) {
 			throw new MappingException( "Unknown collection role: " + role );
 		}
 		return result;
@@ -1086,25 +1089,6 @@ public final class SessionFactoryImpl
 		);
 	}
 
-	private Object readResolve() throws ObjectStreamException {
-		LOG.trace( "Resolving serialized SessionFactory" );
-		// look for the instance by uuid
-		Object result = SessionFactoryRegistry.INSTANCE.getSessionFactory( uuid );
-		if ( result == null ) {
-			// in case we were deserialized in a different JVM, look for an instance with the same name
-			// (alternatively we could do an actual JNDI lookup here....)
-			result = SessionFactoryRegistry.INSTANCE.getNamedSessionFactory( name );
-			if ( result == null ) {
-				throw new InvalidObjectException( "Could not find a SessionFactory [uuid=" + uuid + ",name=" + name + "]" );
-			}
-			LOG.debug( "Resolved SessionFactory by name" );
-		}
-		else {
-			LOG.debug( "Resolved SessionFactory by UUID" );
-		}
-		return result;
-	}
-
 	public NamedQueryDefinition getNamedQuery(String queryName) {
 		return namedQueries.get(queryName);
 	}
@@ -1124,18 +1108,6 @@ public final class SessionFactoryImpl
 		return getEntityPersister(className).getIdentifierPropertyName();
 	}
 
-	private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-		LOG.trace( "Deserializing" );
-		in.defaultReadObject();
-		LOG.debugf( "Deserialized: %s", uuid );
-	}
-
-	private void writeObject(ObjectOutputStream out) throws IOException {
-		LOG.debugf( "Serializing: %s", uuid );
-		out.defaultWriteObject();
-		LOG.trace( "Serialized" );
-	}
-
 	public Type[] getReturnTypes(String queryString) throws HibernateException {
 		return queryPlanCache.getHQLQueryPlan( queryString, false, CollectionHelper.EMPTY_MAP ).getReturnMetadata().getReturnTypes();
 	}
@@ -1149,15 +1121,19 @@ public final class SessionFactoryImpl
 	}
 
 	public CollectionMetadata getCollectionMetadata(String roleName) throws HibernateException {
-		return (CollectionMetadata) collectionMetadata.get(roleName);
+		return collectionMetadata.get(roleName);
 	}
 
 	public ClassMetadata getClassMetadata(String entityName) throws HibernateException {
-		return classMetadata.get(entityName);
+		return classMetadata.get( entityName );
 	}
 
 	/**
-     * @param className
+	 * Given the name of an entity class, determine all the class and interface names by which it can be
+	 * referenced in an HQL query.
+	 *
+     * @param className The name of the entity class
+	 *
 	 * @return the names of all persistent (mapped) classes that extend or implement the
 	 *     given class or interface, accounting for implicit/explicit polymorphism settings
 	 *     and excluding mapped subclasses/joined-subclasses of other classes in the result.
@@ -1173,44 +1149,42 @@ public final class SessionFactoryImpl
 			return new String[] { className }; //for a dynamic-class
 		}
 
-		ArrayList results = new ArrayList();
-		Iterator iter = entityPersisters.values().iterator();
-		while ( iter.hasNext() ) {
-			//test this entity to see if we must query it
-			EntityPersister testPersister = (EntityPersister) iter.next();
-			if ( testPersister instanceof Queryable ) {
-				Queryable testQueryable = (Queryable) testPersister;
-				String testClassName = testQueryable.getEntityName();
-				boolean isMappedClass = className.equals(testClassName);
-				if ( testQueryable.isExplicitPolymorphism() ) {
-					if ( isMappedClass ) {
-						return new String[] {className}; //NOTE EARLY EXIT
-					}
+		ArrayList<String> results = new ArrayList<String>();
+		for ( EntityPersister checkPersister : entityPersisters.values() ) {
+			if ( ! Queryable.class.isInstance( checkPersister ) ) {
+				continue;
+			}
+			final Queryable checkQueryable = Queryable.class.cast( checkPersister );
+			final String checkQueryableEntityName = checkQueryable.getEntityName();
+			final boolean isMappedClass = className.equals( checkQueryableEntityName );
+			if ( checkQueryable.isExplicitPolymorphism() ) {
+				if ( isMappedClass ) {
+					return new String[] { className }; //NOTE EARLY EXIT
+				}
+			}
+			else {
+				if ( isMappedClass ) {
+					results.add( checkQueryableEntityName );
 				}
 				else {
-					if (isMappedClass) {
-						results.add(testClassName);
-					}
-					else {
-						final Class mappedClass = testQueryable.getMappedClass();
-						if ( mappedClass!=null && clazz.isAssignableFrom( mappedClass ) ) {
-							final boolean assignableSuperclass;
-							if ( testQueryable.isInherited() ) {
-								Class mappedSuperclass = getEntityPersister( testQueryable.getMappedSuperclass() ).getMappedClass();
-								assignableSuperclass = clazz.isAssignableFrom(mappedSuperclass);
-							}
-							else {
-								assignableSuperclass = false;
-							}
-							if ( !assignableSuperclass ) {
-								results.add( testClassName );
-							}
+					final Class mappedClass = checkQueryable.getMappedClass();
+					if ( mappedClass != null && clazz.isAssignableFrom( mappedClass ) ) {
+						final boolean assignableSuperclass;
+						if ( checkQueryable.isInherited() ) {
+							Class mappedSuperclass = getEntityPersister( checkQueryable.getMappedSuperclass() ).getMappedClass();
+							assignableSuperclass = clazz.isAssignableFrom( mappedSuperclass );
+						}
+						else {
+							assignableSuperclass = false;
+						}
+						if ( !assignableSuperclass ) {
+							results.add( checkQueryableEntityName );
 						}
 					}
 				}
 			}
 		}
-		return (String[]) results.toArray( new String[ results.size() ] );
+		return results.toArray( new String[ results.size() ] );
 	}
 
 	public String getImportedClassName(String className) {
@@ -1306,7 +1280,10 @@ public final class SessionFactoryImpl
 		}
 
 		SessionFactoryRegistry.INSTANCE.removeSessionFactory(
-				uuid, name, serviceRegistry.getService( JndiService.class )
+				uuid,
+				name,
+				settings.isSessionFactoryNameAlsoJndiName(),
+				serviceRegistry.getService( JndiService.class )
 		);
 
 		observer.sessionFactoryClosed( this );
@@ -1364,9 +1341,8 @@ public final class SessionFactoryImpl
 		}
 
 		public void evictEntityRegions() {
-			Iterator entityNames = entityPersisters.keySet().iterator();
-			while ( entityNames.hasNext() ) {
-				evictEntityRegion( ( String ) entityNames.next() );
+			for ( String s : entityPersisters.keySet() ) {
+				evictEntityRegion( s );
 			}
 		}
 
@@ -1409,9 +1385,8 @@ public final class SessionFactoryImpl
 		}
 
 		public void evictCollectionRegions() {
-			Iterator collectionRoles = collectionPersisters.keySet().iterator();
-			while ( collectionRoles.hasNext() ) {
-				evictCollectionRegion( ( String ) collectionRoles.next() );
+			for ( String s : collectionPersisters.keySet() ) {
+				evictCollectionRegion( s );
 			}
 		}
 
@@ -1521,6 +1496,7 @@ public final class SessionFactoryImpl
 		return allCacheRegions.get( regionName );
 	}
 
+	@SuppressWarnings( {"unchecked"})
 	public Map getAllSecondLevelCacheRegions() {
 		return new HashMap( allCacheRegions );
 	}
@@ -1623,50 +1599,11 @@ public final class SessionFactoryImpl
 	}
 
 	public FetchProfile getFetchProfile(String name) {
-		return ( FetchProfile ) fetchProfiles.get( name );
+		return fetchProfiles.get( name );
 	}
 
 	public TypeHelper getTypeHelper() {
 		return typeHelper;
-	}
-
-	/**
-	 * Custom serialization hook used during Session serialization.
-	 *
-	 * @param oos The stream to which to write the factory
-	 * @throws IOException Indicates problems writing out the serial data stream
-	 */
-	void serialize(ObjectOutputStream oos) throws IOException {
-		oos.writeUTF( uuid );
-		oos.writeBoolean( name != null );
-		if ( name != null ) {
-			oos.writeUTF( name );
-		}
-	}
-
-	/**
-	 * Custom deserialization hook used during Session deserialization.
-	 *
-	 * @param ois The stream from which to "read" the factory
-	 * @return The deserialized factory
-	 * @throws IOException indicates problems reading back serial data stream
-	 * @throws ClassNotFoundException indicates problems reading back serial data stream
-	 */
-	static SessionFactoryImpl deserialize(ObjectInputStream ois) throws IOException, ClassNotFoundException {
-		final String uuid = ois.readUTF();
-		boolean isNamed = ois.readBoolean();
-		final String name = isNamed ? ois.readUTF() : null;
-		Object result = SessionFactoryRegistry.INSTANCE.getSessionFactory( uuid );
-		if ( result == null ) {
-			LOG.tracev( "Could not locate session factory by uuid [{0}] during session deserialization; trying name", uuid );
-			if ( isNamed ) {
-				result = SessionFactoryRegistry.INSTANCE.getNamedSessionFactory( name );
-			}
-			if ( result == null ) {
-				throw new InvalidObjectException( "could not resolve session factory during session deserialization [uuid=" + uuid + ", name=" + name + "]" );
-			}
-		}
-		return ( SessionFactoryImpl ) result;
 	}
 
 	static class SessionBuilderImpl implements SessionBuilder {
@@ -1784,5 +1721,99 @@ public final class SessionFactoryImpl
 			this.tenantIdentifier = tenantIdentifier;
 			return this;
 		}
+	}
+
+
+	// Serialization handling ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	/**
+	 * Custom serialization hook defined by Java spec.  Used when the factory is directly serialized
+	 *
+	 * @param out The stream into which the object is being serialized.
+	 *
+	 * @throws IOException Can be thrown by the stream
+	 */
+	private void writeObject(ObjectOutputStream out) throws IOException {
+		LOG.debugf( "Serializing: %s", uuid );
+		out.defaultWriteObject();
+		LOG.trace( "Serialized" );
+	}
+
+	/**
+	 * Custom serialization hook defined by Java spec.  Used when the factory is directly deserialized
+	 *
+	 * @param in The stream from which the object is being deserialized.
+	 *
+	 * @throws IOException Can be thrown by the stream
+	 * @throws ClassNotFoundException Again, can be thrown by the stream
+	 */
+	private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+		LOG.trace( "Deserializing" );
+		in.defaultReadObject();
+		LOG.debugf( "Deserialized: %s", uuid );
+	}
+
+	/**
+	 * Custom serialization hook defined by Java spec.  Used when the factory is directly deserialized.
+	 * Here we resolve the uuid/name read from the stream previously to resolve the SessionFactory
+	 * instance to use based on the registrations with the {@link SessionFactoryRegistry}
+	 *
+	 * @return The resolved factory to use.
+	 *
+	 * @throws InvalidObjectException Thrown if we could not resolve the factory by uuid/name.
+	 */
+	private Object readResolve() throws InvalidObjectException {
+		LOG.trace( "Resolving serialized SessionFactory" );
+		return locateSessionFactoryOnDeserialization( uuid, name );
+	}
+
+	private static SessionFactory locateSessionFactoryOnDeserialization(String uuid, String name) throws InvalidObjectException{
+		final SessionFactory uuidResult = SessionFactoryRegistry.INSTANCE.getSessionFactory( uuid );
+		if ( uuidResult != null ) {
+			LOG.debugf( "Resolved SessionFactory by UUID [%s]", uuid );
+			return uuidResult;
+		}
+
+		// in case we were deserialized in a different JVM, look for an instance with the same name
+		// (provided we were given a name)
+		if ( name != null ) {
+			final SessionFactory namedResult = SessionFactoryRegistry.INSTANCE.getNamedSessionFactory( name );
+			if ( namedResult != null ) {
+				LOG.debugf( "Resolved SessionFactory by name [%s]", name );
+				return namedResult;
+			}
+		}
+
+		throw new InvalidObjectException( "Could not find a SessionFactory [uuid=" + uuid + ",name=" + name + "]" );
+	}
+
+	/**
+	 * Custom serialization hook used during Session serialization.
+	 *
+	 * @param oos The stream to which to write the factory
+	 * @throws IOException Indicates problems writing out the serial data stream
+	 */
+	void serialize(ObjectOutputStream oos) throws IOException {
+		oos.writeUTF( uuid );
+		oos.writeBoolean( name != null );
+		if ( name != null ) {
+			oos.writeUTF( name );
+		}
+	}
+
+	/**
+	 * Custom deserialization hook used during Session deserialization.
+	 *
+	 * @param ois The stream from which to "read" the factory
+	 * @return The deserialized factory
+	 * @throws IOException indicates problems reading back serial data stream
+	 * @throws ClassNotFoundException indicates problems reading back serial data stream
+	 */
+	static SessionFactoryImpl deserialize(ObjectInputStream ois) throws IOException, ClassNotFoundException {
+		LOG.trace( "Deserializing SessionFactory from Session" );
+		final String uuid = ois.readUTF();
+		boolean isNamed = ois.readBoolean();
+		final String name = isNamed ? ois.readUTF() : null;
+		return (SessionFactoryImpl) locateSessionFactoryOnDeserialization( uuid, name );
 	}
 }

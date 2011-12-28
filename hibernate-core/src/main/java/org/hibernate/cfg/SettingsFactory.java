@@ -73,8 +73,11 @@ public class SettingsFactory implements Serializable {
 
 		//SessionFactory name:
 
-		String sessionFactoryName = props.getProperty(Environment.SESSION_FACTORY_NAME);
-		settings.setSessionFactoryName(sessionFactoryName);
+		String sessionFactoryName = props.getProperty( Environment.SESSION_FACTORY_NAME );
+		settings.setSessionFactoryName( sessionFactoryName );
+		settings.setSessionFactoryNameAlsoJndiName(
+				ConfigurationHelper.getBoolean( AvailableSettings.SESSION_FACTORY_NAME_IS_JNDI, props, true )
+		);
 
 		//JDBC and connection settings:
 

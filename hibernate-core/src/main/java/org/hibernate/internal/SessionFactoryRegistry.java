@@ -62,18 +62,28 @@ public class SessionFactoryRegistry {
 		LOG.debugf( "Initializing SessionFactoryRegistry : %s", this );
 	}
 
-	public void addSessionFactory(String uuid, String name, SessionFactory instance, JndiService jndiService) {
+	public void addSessionFactory(
+			String uuid,
+			String name,
+			boolean isNameAlsoJndiName,
+			SessionFactory instance,
+			JndiService jndiService) {
+		if ( uuid == null ) {
+			throw new IllegalArgumentException( "SessionFactory UUID cannot be null" );
+		}
+
         LOG.debugf( "Registering SessionFactory: %s (%s)", uuid, name == null ? "<unnamed>" : name );
 		sessionFactoryMap.put( uuid, instance );
+		if ( name != null ) {
+			nameUuidXref.put( name, uuid );
+		}
 
-		if ( name == null ) {
-			LOG.debug( "Not binding factory to JNDI, no JNDI name configured" );
+		if ( name == null || ! isNameAlsoJndiName ) {
+			LOG.debug( "Not binding SessionFactory to JNDI, no JNDI name configured" );
 			return;
 		}
 
-		nameUuidXref.put( name, uuid );
-
-		LOG.debugf( "SessionFactory name : %s, attempting to bind to JNDI", name );
+		LOG.debugf( "Attempting to bind SessionFactory [%s] to JNDI", name );
 
 		try {
 			jndiService.bind( name, instance );
@@ -93,21 +103,27 @@ public class SessionFactoryRegistry {
 		}
 	}
 
-	public void removeSessionFactory(String uuid, String name, JndiService jndiService) {
+	public void removeSessionFactory(
+			String uuid,
+			String name,
+			boolean isNameAlsoJndiName,
+			JndiService jndiService) {
 		if ( name != null ) {
-			try {
-				LOG.tracef( "Unbinding SessionFactory from JNDI : %s", name );
-				jndiService.unbind( name );
-				LOG.factoryUnboundFromJndiName( name );
-			}
-			catch ( JndiNameException e ) {
-				LOG.invalidJndiName( name, e );
-			}
-			catch ( JndiException e ) {
-				LOG.unableToUnbindFactoryFromJndi( e );
-			}
-
 			nameUuidXref.remove( name );
+
+			if ( isNameAlsoJndiName ) {
+				try {
+					LOG.tracef( "Unbinding SessionFactory from JNDI : %s", name );
+					jndiService.unbind( name );
+					LOG.factoryUnboundFromJndiName( name );
+				}
+				catch ( JndiNameException e ) {
+					LOG.invalidJndiName( name, e );
+				}
+				catch ( JndiException e ) {
+					LOG.unableToUnbindFactoryFromJndi( e );
+				}
+			}
 		}
 
 		sessionFactoryMap.remove( uuid );

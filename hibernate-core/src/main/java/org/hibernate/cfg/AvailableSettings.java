@@ -28,9 +28,20 @@ package org.hibernate.cfg;
  */
 public interface AvailableSettings {
 	/**
-	 * Names a {@literal JNDI} namespace into which the {@link org.hibernate.SessionFactory} should be bound.
+	 * Defines a name for the {@link org.hibernate.SessionFactory}.  Useful both to<ul>
+	 *     <li>allow serialization and deserialization to work across different jvms</li>
+	 *     <li>optionally allow the SessionFactory to be bound into JNDI</li>
+	 * </ul>
+	 *
+	 * @see #SESSION_FACTORY_NAME_IS_JNDI
 	 */
 	public static final String SESSION_FACTORY_NAME = "hibernate.session_factory_name";
+
+	/**
+	 * Does the value defined by {@link #SESSION_FACTORY_NAME} represent a {@literal JNDI} namespace into which
+	 * the {@link org.hibernate.SessionFactory} should be bound?
+	 */
+	public static final String SESSION_FACTORY_NAME_IS_JNDI = "hibernate.session_factory_name_is_jndi";
 
 	/**
 	 * Names the {@link org.hibernate.service.jdbc.connections.spi.ConnectionProvider} to use for obtaining

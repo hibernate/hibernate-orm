@@ -51,6 +51,7 @@ public final class Settings {
 	private String defaultCatalogName;
 	private Integer jdbcFetchSize;
 	private String sessionFactoryName;
+	private boolean sessionFactoryNameAlsoJndiName;
 	private boolean autoCreateSchema;
 	private boolean autoDropSchema;
 	private boolean autoUpdateSchema;
@@ -145,6 +146,10 @@ public final class Settings {
 
 	public String getSessionFactoryName() {
 		return sessionFactoryName;
+	}
+
+	public boolean isSessionFactoryNameAlsoJndiName() {
+		return sessionFactoryNameAlsoJndiName;
 	}
 
 	public boolean isAutoCreateSchema() {
@@ -303,6 +308,10 @@ public final class Settings {
 
 	void setSessionFactoryName(String string) {
 		sessionFactoryName = string;
+	}
+
+	void setSessionFactoryNameAlsoJndiName(boolean sessionFactoryNameAlsoJndiName) {
+		this.sessionFactoryNameAlsoJndiName = sessionFactoryNameAlsoJndiName;
 	}
 
 	void setAutoCreateSchema(boolean b) {

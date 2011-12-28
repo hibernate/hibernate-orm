@@ -44,11 +44,13 @@ import org.hibernate.SessionFactory;
 import org.hibernate.StatelessSession;
 import org.hibernate.StatelessSessionBuilder;
 import org.hibernate.TypeHelper;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.UUIDGenerator;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.SessionFactoryRegistry;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.service.jndi.internal.JndiServiceImpl;
@@ -65,6 +67,7 @@ import org.hibernate.stat.Statistics;
  * @deprecated See <a href="http://opensource.atlassian.com/projects/hibernate/browse/HHH-6190">HHH-6190</a> for details
  */
 @Deprecated
+@SuppressWarnings( {"deprecation"})
 public class SessionFactoryStub implements SessionFactory {
 	private static final IdentifierGenerator UUID_GENERATOR = UUIDGenerator.buildSessionFactoryUniqueIdentifierGenerator();
 
@@ -85,7 +88,17 @@ public class SessionFactoryStub implements SessionFactory {
 			throw new AssertionFailure("Could not generate UUID");
 		}
 
-		SessionFactoryRegistry.INSTANCE.addSessionFactory( uuid, name, this, new JndiServiceImpl( service.getProperties() )  );
+		SessionFactoryRegistry.INSTANCE.addSessionFactory(
+				uuid,
+				name,
+				ConfigurationHelper.getBoolean(
+						AvailableSettings.SESSION_FACTORY_NAME_IS_JNDI,
+						service.getProperties(),
+						true
+				),
+				this,
+				new JndiServiceImpl( service.getProperties() )
+		);
 	}
 
 	@Override

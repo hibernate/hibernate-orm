@@ -12,23 +12,26 @@ dependencies {
     compile( libraries.commons_annotations ) {
         transitive = false
     }
-    compile( libraries.jandex )
-    compile( libraries.classmate )
     compile( libraries.jpa )
     compile( libraries.javassist )
     compile( libraries.antlr )
     antlr( libraries.antlr )
+    provided( libraries.jandex )
+    provided( libraries.classmate )
     provided( libraries.ant )
     provided( libraries.jacc )
     provided( libraries.validation )
     testCompile( project(':hibernate-testing') )
     testCompile( libraries.validation )
+    testCompile( libraries.jandex )
+    testCompile( libraries.classmate )
     testCompile( libraries.validator ) {
         // for test runtime
         transitive = true
     }
     testRuntime( 'jaxen:jaxen:1.1' )
     testRuntime( libraries.javassist )
+
 }
 compileMatrixJava.options.define(compilerArgs: ["-proc:none", "-encoding", "UTF-8"])
 

@@ -83,29 +83,8 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 			assertNotNull( it );
 
 			// that initial transaction is still active and so the lock should still be held.
-			// Lets open another session/transaction and verify
-			Session s2 = sessionFactory().openSession();
-			s2.beginTransaction();
-			try {
-				s2.get( A.class, 1, LockMode.PESSIMISTIC_WRITE );
-				fail( "Pessimistic lock was not obtained/held" );
-			}
-			catch ( Exception e ) {
-				// grr, exception can be any number of types based on database
-				// 		see HHH-6887
-				if ( LockAcquisitionException.class.isInstance( e )
-						|| GenericJDBCException.class.isInstance( e )
-						|| PessimisticLockException.class.isInstance( e ) ) {
-					// "ok"
-				}
-				else {
-					fail( "Unexpected error type testing pessimistic locking : " + e.getClass().getName() );
-				}
-			}
-			finally {
-				s2.getTransaction().commit();
-				s2.close();
-			}
+			// Lets open another session/transaction and verify that we cannot update the row
+			nowAttemptToUpdateRow();
 		}
 		finally {
 			s1.getTransaction().commit();
@@ -127,32 +106,8 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 			assertNotNull( it );
 
 			// that initial transaction is still active and so the lock should still be held.
-			// Lets open another session/transaction and verify
-			Session s2 = sessionFactory().openSession();
-			s2.beginTransaction();
-			try {
-				s2.createCriteria( A.class )
-						.setLockMode( LockMode.PESSIMISTIC_WRITE )
-						.uniqueResult();
-
-				fail( "Pessimistic lock was not obtained/held" );
-			}
-			catch ( Exception e ) {
-				// grr, exception can be any number of types based on database
-				// 		see HHH-6887
-				if ( LockAcquisitionException.class.isInstance( e )
-						|| GenericJDBCException.class.isInstance( e )
-						|| PessimisticLockException.class.isInstance( e ) ) {
-					// "ok"
-				}
-				else {
-					fail( "Unexpected error type testing pessimistic locking : " + e.getClass().getName() );
-				}
-			}
-			finally {
-				s2.getTransaction().commit();
-				s2.close();
-			}
+			// Lets open another session/transaction and verify that we cannot update the row
+			nowAttemptToUpdateRow();
 		}
 		finally {
 			s1.getTransaction().commit();
@@ -174,32 +129,8 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 			assertNotNull( it );
 
 			// that initial transaction is still active and so the lock should still be held.
-			// Lets open another session/transaction and verify
-			Session s2 = sessionFactory().openSession();
-			s2.beginTransaction();
-			try {
-				s2.createCriteria( A.class )
-						.setLockMode( "this", LockMode.PESSIMISTIC_WRITE )
-						.uniqueResult();
-
-				fail( "Pessimistic lock was not obtained/held" );
-			}
-			catch ( Exception e ) {
-				// grr, exception can be any number of types based on database
-				// 		see HHH-6887
-				if ( LockAcquisitionException.class.isInstance( e )
-						|| GenericJDBCException.class.isInstance( e )
-						|| PessimisticLockException.class.isInstance( e ) ) {
-					// "ok"
-				}
-				else {
-					fail( "Unexpected error type testing pessimistic locking : " + e.getClass().getName() );
-				}
-			}
-			finally {
-				s2.getTransaction().commit();
-				s2.close();
-			}
+			// Lets open another session/transaction and verify that we cannot update the row
+			nowAttemptToUpdateRow();
 		}
 		finally {
 			s1.getTransaction().commit();
@@ -221,32 +152,8 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 			assertNotNull( it );
 
 			// that initial transaction is still active and so the lock should still be held.
-			// Lets open another session/transaction and verify
-			Session s2 = sessionFactory().openSession();
-			s2.beginTransaction();
-			try {
-				s2.createQuery( "from A a" )
-						.setLockMode( "a", LockMode.PESSIMISTIC_WRITE )
-						.uniqueResult();
-
-				fail( "Pessimistic lock was not obtained/held" );
-			}
-			catch ( Exception e ) {
-				// grr, exception can be any number of types based on database
-				// 		see HHH-6887
-				if ( LockAcquisitionException.class.isInstance( e )
-						|| GenericJDBCException.class.isInstance( e )
-						|| PessimisticLockException.class.isInstance( e ) ) {
-					// "ok"
-				}
-				else {
-					fail( "Unexpected error type testing pessimistic locking : " + e.getClass().getName() );
-				}
-			}
-			finally {
-				s2.getTransaction().commit();
-				s2.close();
-			}
+			// Lets open another session/transaction and verify that we cannot update the row
+			nowAttemptToUpdateRow();
 		}
 		finally {
 			s1.getTransaction().commit();
@@ -267,5 +174,31 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 				.uniqueResult();
 		s1.getTransaction().commit();
 		s1.close();
+	}
+
+	private void nowAttemptToUpdateRow() {
+		Session s = sessionFactory().openSession();
+		s.beginTransaction();
+		try {
+			A it2 = (A) s.get( A.class, 1 );
+			it2.setValue( "changed" );
+			s.flush();
+		}
+		catch ( Exception e ) {
+			// grr, exception can be any number of types based on database
+			// 		see HHH-6887
+			if ( LockAcquisitionException.class.isInstance( e )
+					|| GenericJDBCException.class.isInstance( e )
+					|| PessimisticLockException.class.isInstance( e ) ) {
+				// "ok"
+			}
+			else {
+				fail( "Unexpected error type testing pessimistic locking : " + e.getClass().getName() );
+			}
+		}
+		finally {
+			s.getTransaction().commit();
+			s.close();
+		}
 	}
 }

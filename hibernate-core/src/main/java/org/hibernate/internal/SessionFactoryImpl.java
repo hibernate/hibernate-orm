@@ -40,10 +40,9 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
-
-import org.jboss.logging.Logger;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.Cache;
@@ -140,6 +139,7 @@ import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeResolver;
+import org.jboss.logging.Logger;
 
 
 /**
@@ -1630,13 +1630,8 @@ public final class SessionFactoryImpl
 		return typeHelper;
 	}
 
-	/**
-	 * Custom serialization hook used during Session serialization.
-	 *
-	 * @param oos The stream to which to write the factory
-	 * @throws IOException Indicates problems writing out the serial data stream
-	 */
-	void serialize(ObjectOutputStream oos) throws IOException {
+	@Override
+	public void serialize(ObjectOutputStream oos) throws IOException {
 		oos.writeUTF( uuid );
 		oos.writeBoolean( name != null );
 		if ( name != null ) {
@@ -1670,7 +1665,7 @@ public final class SessionFactoryImpl
 	}
 
 	static class SessionBuilderImpl implements SessionBuilder {
-		private final SessionFactoryImpl sessionFactory;
+		private final SessionFactoryImplementor sessionFactory;
 		private Interceptor interceptor;
 		private Connection connection;
 		private ConnectionReleaseMode connectionReleaseMode;
@@ -1679,9 +1674,9 @@ public final class SessionFactoryImpl
 		private boolean flushBeforeCompletion;
 		private String tenantIdentifier;
 
-		SessionBuilderImpl(SessionFactoryImpl sessionFactory) {
+		SessionBuilderImpl(SessionFactoryImplementor sessionFactory) {
 			this.sessionFactory = sessionFactory;
-			final Settings settings = sessionFactory.settings;
+			final Settings settings = sessionFactory.getSettings();
 
 			// set up default builder values...
 			this.interceptor = sessionFactory.getInterceptor();
@@ -1701,7 +1696,7 @@ public final class SessionFactoryImpl
 					sessionFactory,
 					getTransactionCoordinator(),
 					autoJoinTransactions,
-					sessionFactory.settings.getRegionFactory().nextTimestamp(),
+					sessionFactory.getSettings().getRegionFactory().nextTimestamp(),
 					interceptor,
 					flushBeforeCompletion,
 					autoClose,

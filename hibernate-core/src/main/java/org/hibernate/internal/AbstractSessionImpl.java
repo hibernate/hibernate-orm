@@ -64,14 +64,14 @@ import org.hibernate.type.Type;
  */
 public abstract class AbstractSessionImpl implements Serializable, SharedSessionContract,
 													 SessionImplementor, TransactionContext {
-	protected transient SessionFactoryImpl factory;
+	private transient SessionFactoryImplementor factory;
 	private final String tenantIdentifier;
 	private boolean closed = false;
 
-	protected AbstractSessionImpl(SessionFactoryImpl factory, String tenantIdentifier) {
+	protected AbstractSessionImpl(SessionFactoryImplementor factory, String tenantIdentifier) {
 		this.factory = factory;
 		this.tenantIdentifier = tenantIdentifier;
-		if ( MultiTenancyStrategy.NONE == factory.getSettings().getMultiTenancyStrategy() ) {
+		if ( MultiTenancyStrategy.NONE == getFactory().getSettings().getMultiTenancyStrategy() ) {
 			if ( tenantIdentifier != null ) {
 				throw new HibernateException( "SessionFactory was not configured for multi-tenancy" );
 			}
@@ -86,10 +86,14 @@ public abstract class AbstractSessionImpl implements Serializable, SharedSession
 	public SessionFactoryImplementor getFactory() {
 		return factory;
 	}
+	
+	protected void setFactory(SessionFactoryImplementor newFactory) {
+		factory = newFactory;
+	}
 
 	@Override
 	public TransactionEnvironment getTransactionEnvironment() {
-		return factory.getTransactionEnvironment();
+		return getFactory().getTransactionEnvironment();
 	}
 
 	@Override
@@ -130,7 +134,7 @@ public abstract class AbstractSessionImpl implements Serializable, SharedSession
 	@Override
 	public Query getNamedQuery(String queryName) throws MappingException {
 		errorIfClosed();
-		NamedQueryDefinition nqd = factory.getNamedQuery( queryName );
+		NamedQueryDefinition nqd = getFactory().getNamedQuery( queryName );
 		final Query query;
 		if ( nqd != null ) {
 			String queryString = nqd.getQueryString();
@@ -143,14 +147,14 @@ public abstract class AbstractSessionImpl implements Serializable, SharedSession
 			query.setComment( "named HQL query " + queryName );
 		}
 		else {
-			NamedSQLQueryDefinition nsqlqd = factory.getNamedSQLQuery( queryName );
+			NamedSQLQueryDefinition nsqlqd = getFactory().getNamedSQLQuery( queryName );
 			if ( nsqlqd==null ) {
 				throw new MappingException( "Named query not known: " + queryName );
 			}
 			query = new SQLQueryImpl(
 					nsqlqd,
 			        this,
-			        factory.getQueryPlanCache().getSQLParameterMetadata( nsqlqd.getQueryString() )
+			        getFactory().getQueryPlanCache().getSQLParameterMetadata( nsqlqd.getQueryString() )
 			);
 			query.setComment( "named native SQL query " + queryName );
 			nqd = nsqlqd;
@@ -162,14 +166,14 @@ public abstract class AbstractSessionImpl implements Serializable, SharedSession
 	@Override
 	public Query getNamedSQLQuery(String queryName) throws MappingException {
 		errorIfClosed();
-		NamedSQLQueryDefinition nsqlqd = factory.getNamedSQLQuery( queryName );
+		NamedSQLQueryDefinition nsqlqd = getFactory().getNamedSQLQuery( queryName );
 		if ( nsqlqd==null ) {
 			throw new MappingException( "Named SQL query not known: " + queryName );
 		}
 		Query query = new SQLQueryImpl(
 				nsqlqd,
 		        this,
-		        factory.getQueryPlanCache().getSQLParameterMetadata( nsqlqd.getQueryString() )
+		        getFactory().getQueryPlanCache().getSQLParameterMetadata( nsqlqd.getQueryString() )
 		);
 		query.setComment( "named native SQL query " + queryName );
 		initQuery( query, nsqlqd );
@@ -204,18 +208,18 @@ public abstract class AbstractSessionImpl implements Serializable, SharedSession
 		SQLQueryImpl query = new SQLQueryImpl(
 				sql,
 		        this,
-		        factory.getQueryPlanCache().getSQLParameterMetadata( sql )
+		        getFactory().getQueryPlanCache().getSQLParameterMetadata( sql )
 		);
 		query.setComment( "dynamic native SQL query" );
 		return query;
 	}
 
 	protected HQLQueryPlan getHQLQueryPlan(String query, boolean shallow) throws HibernateException {
-		return factory.getQueryPlanCache().getHQLQueryPlan( query, shallow, getEnabledFilters() );
+		return getFactory().getQueryPlanCache().getHQLQueryPlan( query, shallow, getEnabledFilters() );
 	}
 
 	protected NativeSQLQueryPlan getNativeSQLQueryPlan(NativeSQLQuerySpecification spec) throws HibernateException {
-		return factory.getQueryPlanCache().getNativeSQLQueryPlan( spec );
+		return getFactory().getQueryPlanCache().getNativeSQLQueryPlan( spec );
 	}
 
 	@Override
@@ -250,14 +254,14 @@ public abstract class AbstractSessionImpl implements Serializable, SharedSession
 	@Override
 	public JdbcConnectionAccess getJdbcConnectionAccess() {
 		if ( jdbcConnectionAccess == null ) {
-			if ( MultiTenancyStrategy.NONE == factory.getSettings().getMultiTenancyStrategy() ) {
+			if ( MultiTenancyStrategy.NONE == getFactory().getSettings().getMultiTenancyStrategy() ) {
 				jdbcConnectionAccess = new NonContextualJdbcConnectionAccess(
-						factory.getServiceRegistry().getService( ConnectionProvider.class )
+						getFactory().getServiceRegistry().getService( ConnectionProvider.class )
 				);
 			}
 			else {
 				jdbcConnectionAccess = new ContextualJdbcConnectionAccess(
-						factory.getServiceRegistry().getService( MultiTenantConnectionProvider.class )
+						getFactory().getServiceRegistry().getService( MultiTenantConnectionProvider.class )
 				);
 			}
 		}

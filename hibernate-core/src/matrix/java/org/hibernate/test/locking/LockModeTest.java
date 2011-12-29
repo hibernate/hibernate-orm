@@ -183,6 +183,7 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 			A it2 = (A) s.get( A.class, 1 );
 			it2.setValue( "changed" );
 			s.flush();
+			fail( "Pessimistic lock not obtained/held" );
 		}
 		catch ( Exception e ) {
 			// grr, exception can be any number of types based on database

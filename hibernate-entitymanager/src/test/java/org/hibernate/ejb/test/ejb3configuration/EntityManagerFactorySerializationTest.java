@@ -29,8 +29,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.util.Date;
-import java.util.Map;
 import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
 
 import org.hibernate.ejb.HibernateEntityManager;
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
@@ -38,18 +38,27 @@ import org.hibernate.ejb.test.Cat;
 import org.hibernate.ejb.test.Distributor;
 import org.hibernate.ejb.test.Item;
 import org.hibernate.ejb.test.Kitten;
-import org.hibernate.ejb.test.NotSerializableClass;
 import org.hibernate.ejb.test.Wallet;
 import org.junit.Test;
 
 /**
  * @author Emmanuel Bernard
- * @author Scott Marlow
  */
-public class EntityManagerSerializationTest extends BaseEntityManagerFunctionalTestCase {
+public class EntityManagerFactorySerializationTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	public void testSerialization() throws Exception {
-		EntityManager em = entityManagerFactory().createEntityManager();
+		ByteArrayOutputStream stream = new ByteArrayOutputStream();
+		ObjectOutput out = new ObjectOutputStream( stream );
+		out.writeObject( entityManagerFactory() );
+		out.close();
+		byte[] serialized = stream.toByteArray();
+		stream.close();
+		ByteArrayInputStream byteIn = new ByteArrayInputStream( serialized );
+		ObjectInputStream in = new ObjectInputStream( byteIn );
+		EntityManagerFactory serializedFactory = (EntityManagerFactory) in.readObject();
+		in.close();
+		byteIn.close();
+		EntityManager em = serializedFactory.createEntityManager();
 		//em.getTransaction().begin();
 		//em.setFlushMode( FlushModeType.NEVER );
 		Cat cat = new Cat();
@@ -69,14 +78,14 @@ public class EntityManagerSerializationTest extends BaseEntityManagerFunctionalT
 
 		//fake the in container work
 		( (HibernateEntityManager) em ).getSession().disconnect();
-		ByteArrayOutputStream stream = new ByteArrayOutputStream();
-		ObjectOutput out = new ObjectOutputStream( stream );
+		stream = new ByteArrayOutputStream();
+		out = new ObjectOutputStream( stream );
 		out.writeObject( em );
 		out.close();
-		byte[] serialized = stream.toByteArray();
+		serialized = stream.toByteArray();
 		stream.close();
-		ByteArrayInputStream byteIn = new ByteArrayInputStream( serialized );
-		ObjectInputStream in = new ObjectInputStream( byteIn );
+		byteIn = new ByteArrayInputStream( serialized );
+		in = new ObjectInputStream( byteIn );
 		em = (EntityManager) in.readObject();
 		in.close();
 		byteIn.close();
@@ -93,18 +102,6 @@ public class EntityManagerSerializationTest extends BaseEntityManagerFunctionalT
 		em.getTransaction().commit();
 
 		em.close();
-	}
-
-	/**
-	 * Add a non-serializable object to the EMF to ensure that the EM can be serialized even if its EMF is not serializable.
-	 * This will ensure that the fix for HHH-6897 doesn't regress,
-	 * @return
-	 */
-	@Override
-	protected Map getConfig() {
-		Map result = super.getConfig();
-		result.put( "org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase.getConfig_addedNotSerializableObject", new NotSerializableClass());
-		return result;
 	}
 
 	@Override

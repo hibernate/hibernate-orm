@@ -29,7 +29,7 @@
     <parent>
         <groupId>org.hibernate.tutorials</groupId>
         <artifactId>hibernate-tutorials</artifactId>
-        <version>@VERSION@</version>
+        <version>$version</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 

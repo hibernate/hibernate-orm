@@ -49,10 +49,11 @@ task buildTutorialZip(type: Zip) {
     destinationDir = file( "target/work/tutorials" )
     archiveName = 'hibernate-tutorials.zip'
     from 'src/main/docbook/quickstart/tutorials'
-    // todo : this part does not work.  Asked on mailing list
-    filter(
-            org.apache.tools.ant.filters.ReplaceTokens,
-            tokens: [VERSION: project.version]
+    expand(
+            version: project.version,
+            slf4j: parent.slf4jVersion,
+            junit: parent.junitVersion,
+            h2: parent.h2Version
     )
 }
 

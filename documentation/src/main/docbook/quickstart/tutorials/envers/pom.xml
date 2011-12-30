@@ -29,7 +29,8 @@
     <parent>
         <groupId>org.hibernate.tutorials</groupId>
         <artifactId>hibernate-tutorials</artifactId>
-        <version>@VERSION@</version>
+        <version>$version</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>hibernate-tutorial-envers</artifactId>
@@ -45,12 +46,12 @@
         <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-envers</artifactId>
-            <version>@VERSION@</version>
+            <version>$version</version>
         </dependency>
         <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-entitymanager</artifactId>
-            <version>@VERSION@</version>
+            <version>$version</version>
         </dependency>
     </dependencies>
 

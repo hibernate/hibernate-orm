@@ -28,7 +28,7 @@
 
     <groupId>org.hibernate.tutorials</groupId>
     <artifactId>hibernate-tutorials</artifactId>
-    <version>@VERSION@</version>
+    <version>$version</version>
     <packaging>pom</packaging>
 
     <name>Hibernate Getting Started Guide Tutorials</name>
@@ -50,28 +50,28 @@
         <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-core</artifactId>
-            <version>@VERSION@</version>
+            <version>$version</version>
         </dependency>
 
         <!-- Hibernate uses jboss-logging for logging, for the tutorials we will use the sl4fj-simple backend -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
-            <version>1.6.1</version>
+            <version>$slf4j</version>
         </dependency>
 
         <!-- The tutorials use JUnit test cases to illustrate usage -->
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.8.1</version>
+            <version>$junit</version>
         </dependency>
 
         <!-- The tutorials use the H2 in-memory database -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
-            <version>1.2.140</version>
+            <version>$h2</version>
         </dependency>
     </dependencies>
 
@@ -79,13 +79,12 @@
         <testResources>
             <testResource>
                 <filtering>false</filtering>
-                <directory>src/main/java</directory>
+                <directory>src/test/java</directory>
                 <includes>
                     <include>**/*.xml</include>
                 </includes>
             </testResource>
             <testResource>
-                <filtering>true</filtering>
                 <directory>src/test/resources</directory>
             </testResource>
         </testResources>

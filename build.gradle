@@ -46,6 +46,9 @@ ideaModule {
 // build a map of the dependency artifacts to use.  Allows centralized definition of the version of artifacts to
 // use.  In that respect it serves a role similar to <dependencyManagement> in Maven
 slf4jVersion = '1.6.1'
+junitVersion = '4.8.2'
+h2Version = '1.2.145'
+
 libraries = [
         // Ant
         ant:            'org.apache.ant:ant:1.8.2',
@@ -92,12 +95,12 @@ libraries = [
         jcl:            'commons-logging:commons-logging:99.0-does-not-exist',
 
 
-        junit:          'junit:junit:4.8.2',
+        junit:          'junit:junit:' + junitVersion,
         jpa_modelgen:   'org.hibernate:hibernate-jpamodelgen:1.1.1.Final',
         shrinkwrap_api: 'org.jboss.shrinkwrap:shrinkwrap-api:1.0.0-beta-6',
         shrinkwrap:     'org.jboss.shrinkwrap:shrinkwrap-impl-base:1.0.0-beta-6',
         validator:      'org.hibernate:hibernate-validator:4.2.0.Final',
-        h2:             'com.h2database:h2:1.2.145',
+        h2:             'com.h2database:h2:' + h2Version,
 ]
 
 

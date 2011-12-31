@@ -303,10 +303,12 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 				hqlQuery.setResultTransformer( tupleTransformer  );
 			}
 			else {
-				final HQLQueryPlan queryPlan = unwrap( SessionImplementor.class )
-						.getFactory()
-						.getQueryPlanCache()
-						.getHQLQueryPlan( jpaqlString, false, null );
+				final SessionImplementor session = unwrap( SessionImplementor.class );
+				final HQLQueryPlan queryPlan = session.getFactory().getQueryPlanCache().getHQLQueryPlan(
+						jpaqlString,
+						false,
+						session.getLoadQueryInfluencers().getEnabledFilters()
+				);
 				final Class dynamicInstantiationClass = queryPlan.getDynamicInstantiationResultType();
 				if ( dynamicInstantiationClass != null ) {
 					if ( ! resultClass.isAssignableFrom( dynamicInstantiationClass ) ) {

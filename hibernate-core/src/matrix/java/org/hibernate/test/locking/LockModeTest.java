@@ -184,6 +184,7 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 			it2.setValue( "changed" );
 			s.flush();
 			fail( "Pessimistic lock not obtained/held" );
+			s.getTransaction().commit();
 		}
 		catch ( Exception e ) {
 			// grr, exception can be any number of types based on database
@@ -196,9 +197,9 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 			else {
 				fail( "Unexpected error type testing pessimistic locking : " + e.getClass().getName() );
 			}
+			s.getTransaction().rollback();
 		}
 		finally {
-			s.getTransaction().commit();
 			s.close();
 		}
 	}

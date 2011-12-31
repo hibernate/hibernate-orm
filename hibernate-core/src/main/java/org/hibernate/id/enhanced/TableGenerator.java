@@ -305,9 +305,11 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 		// if the increment size is greater than one, we prefer pooled optimization; but we
 		// need to see if the user prefers POOL or POOL_LO...
 		String defaultPooledOptimizerStrategy = ConfigurationHelper.getBoolean( Environment.PREFER_POOLED_VALUES_LO, params, false )
-				? OptimizerFactory.POOL_LO
-				: OptimizerFactory.POOL;
-		final String defaultOptimizerStrategy = incrementSize <= 1 ? OptimizerFactory.NONE : defaultPooledOptimizerStrategy;
+				? OptimizerFactory.StandardOptimizerDescriptor.POOLED_LO.getExternalName()
+				: OptimizerFactory.StandardOptimizerDescriptor.POOLED.getExternalName();
+		final String defaultOptimizerStrategy = incrementSize <= 1
+				? OptimizerFactory.StandardOptimizerDescriptor.NONE.getExternalName()
+				: defaultPooledOptimizerStrategy;
 		final String optimizationStrategy = ConfigurationHelper.getString( OPT_PARAM, params, defaultOptimizerStrategy );
 		optimizer = OptimizerFactory.buildOptimizer(
 				optimizationStrategy,
@@ -569,7 +571,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 
 	@Override
 	public String[] sqlDropStrings(Dialect dialect) throws HibernateException {
-		StringBuffer sqlDropString = new StringBuffer().append( "drop table " );
+		StringBuilder sqlDropString = new StringBuilder().append( "drop table " );
 		if ( dialect.supportsIfExistsBeforeTableName() ) {
 			sqlDropString.append( "if exists " );
 		}

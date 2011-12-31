@@ -32,6 +32,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.id.IntegralDataTypeHolder;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.internal.util.StringHelper;
 
 /**
  * Factory for {@link Optimizer} instances.
@@ -39,16 +40,70 @@ import org.hibernate.internal.util.ReflectHelper;
  * @author Steve Ebersole
  */
 public class OptimizerFactory {
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			OptimizerFactory.class.getName()
+	);
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, OptimizerFactory.class.getName());
+	public static enum StandardOptimizerDescriptor {
+		NONE( "none", NoopOptimizer.class ),
+		HILO( "hilo", HiLoOptimizer.class ),
+		LEGACY_HILO( "legacy-hilo", LegacyHiLoAlgorithmOptimizer.class ),
+		POOLED( "pooled", PooledOptimizer.class, true ),
+		POOLED_LO( "pooled-lo", PooledLoOptimizer.class, true );
 
-	public static final String NONE = "none";
-	public static final String HILO = "hilo";
-	public static final String LEGACY_HILO = "legacy-hilo";
-	public static final String POOL = "pooled";
-	public static final String POOL_LO = "pooled-lo";
+		private final String externalName;
+		private final Class<? extends Optimizer> optimizerClass;
+		private final boolean isPooled;
 
-	private static Class[] CTOR_SIG = new Class[] { Class.class, int.class };
+		StandardOptimizerDescriptor(String externalName, Class<? extends Optimizer> optimizerClass) {
+			this( externalName, optimizerClass, false );
+		}
+
+		StandardOptimizerDescriptor(String externalName, Class<? extends Optimizer> optimizerClass, boolean pooled) {
+			this.externalName = externalName;
+			this.optimizerClass = optimizerClass;
+			this.isPooled = pooled;
+		}
+
+		public String getExternalName() {
+			return externalName;
+		}
+
+		public Class<? extends Optimizer> getOptimizerClass() {
+			return optimizerClass;
+		}
+
+		public boolean isPooled() {
+			return isPooled;
+		}
+
+		public static StandardOptimizerDescriptor fromExternalName(String externalName) {
+			if ( StringHelper.isEmpty( externalName ) ) {
+				LOG.debug( "No optimizer specified, using NONE as default" );
+				return NONE;
+			}
+			else if ( NONE.externalName.equals( externalName ) ) {
+				return NONE;
+			}
+			else if ( HILO.externalName.equals( externalName ) ) {
+				return HILO;
+			}
+			else if ( LEGACY_HILO.externalName.equals( externalName ) ) {
+				return LEGACY_HILO;
+			}
+			else if ( POOLED.externalName.equals( externalName ) ) {
+				return POOLED;
+			}
+			else if ( POOLED_LO.externalName.equals( externalName ) ) {
+				return POOLED_LO;
+			}
+			else {
+				LOG.debugf( "Unknown optimizer key [%s]; returning null assuming Optimizer impl class name" );
+				return null;
+			}
+		}
+	}
 
 	/**
 	 * Marker interface for optimizer which wish to know the user-specified initial value.
@@ -68,6 +123,13 @@ public class OptimizerFactory {
 		public void injectInitialValue(long initialValue);
 	}
 
+	public static boolean isPooledOptimizer(String type) {
+		final StandardOptimizerDescriptor standardDescriptor = StandardOptimizerDescriptor.fromExternalName( type );
+		return standardDescriptor != null && standardDescriptor.isPooled();
+	}
+
+	private static Class[] CTOR_SIG = new Class[] { Class.class, int.class };
+
 	/**
 	 * Builds an optimizer
 	 *
@@ -80,41 +142,38 @@ public class OptimizerFactory {
 	 * @deprecated Use {@link #buildOptimizer(String, Class, int, long)} instead
 	 */
 	@Deprecated
-    @SuppressWarnings({ "UnnecessaryBoxing" })
+	@SuppressWarnings( {"UnnecessaryBoxing", "unchecked"})
 	public static Optimizer buildOptimizer(String type, Class returnClass, int incrementSize) {
-		String optimizerClassName;
-		if ( NONE.equals( type ) ) {
-			optimizerClassName = NoopOptimizer.class.getName();
-		}
-		else if ( HILO.equals( type ) ) {
-			optimizerClassName = HiLoOptimizer.class.getName();
-		}
-		else if ( LEGACY_HILO.equals( type ) ) {
-			optimizerClassName = LegacyHiLoAlgorithmOptimizer.class.getName();
-		}
-		else if ( POOL.equals( type ) ) {
-			optimizerClassName = PooledOptimizer.class.getName();
-		}
-		else if ( POOL_LO.equals( type ) ) {
-			optimizerClassName = PooledLoOptimizer.class.getName();
+		final Class<? extends Optimizer> optimizerClass;
+
+		final StandardOptimizerDescriptor standardDescriptor = StandardOptimizerDescriptor.fromExternalName( type );
+		if ( standardDescriptor != null ) {
+			optimizerClass = standardDescriptor.getOptimizerClass();
 		}
 		else {
-			optimizerClassName = type;
+			try {
+				optimizerClass = ReflectHelper.classForName( type );
+			}
+			catch( Throwable ignore ) {
+				LOG.unableToLocateCustomOptimizerClass( type );
+				return buildFallbackOptimizer( returnClass, incrementSize );
+			}
 		}
 
 		try {
-			Class optimizerClass = ReflectHelper.classForName( optimizerClassName );
 			Constructor ctor = optimizerClass.getConstructor( CTOR_SIG );
 			return ( Optimizer ) ctor.newInstance( returnClass, Integer.valueOf( incrementSize ) );
 		}
 		catch( Throwable ignore ) {
-            LOG.unableToInstantiateOptimizer(type);
+            LOG.unableToInstantiateOptimizer( type );
 		}
 
-		// the default...
-		return new NoopOptimizer( returnClass, incrementSize );
+		return buildFallbackOptimizer( returnClass, incrementSize );
 	}
 
+	private static Optimizer buildFallbackOptimizer(Class returnClass, int incrementSize) {
+		return new NoopOptimizer( returnClass, incrementSize );
+	}
 
 	/**
 	 * Builds an optimizer
@@ -162,13 +221,12 @@ public class OptimizerFactory {
 		 *
 		 * @return Value for property 'returnClass'.
 		 */
+		@SuppressWarnings( {"UnusedDeclaration"})
 		public final Class getReturnClass() {
 			return returnClass;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public final int getIncrementSize() {
 			return incrementSize;
 		}
@@ -185,9 +243,7 @@ public class OptimizerFactory {
 			super( returnClass, incrementSize );
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public Serializable generate(AccessCallback callback) {
 			// IMPL NOTE : it is incredibly important that the method-local variable be used here to
 			//		avoid concurrency issues.
@@ -199,16 +255,12 @@ public class OptimizerFactory {
 			return value.makeValue();
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public IntegralDataTypeHolder getLastSourceValue() {
 			return lastSourceValue;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public boolean applyIncrementSizeToSourceValues() {
 			return false;
 		}
@@ -261,9 +313,7 @@ public class OptimizerFactory {
 			}
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public synchronized Serializable generate(AccessCallback callback) {
 			if ( lastSourceValue == null ) {
 				// first call, so initialize ourselves.  we need to read the database
@@ -284,17 +334,12 @@ public class OptimizerFactory {
 			return value.makeValueThenIncrement();
 		}
 
-
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public IntegralDataTypeHolder getLastSourceValue() {
 			return lastSourceValue;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public boolean applyIncrementSizeToSourceValues() {
 			return false;
 		}
@@ -342,9 +387,7 @@ public class OptimizerFactory {
 			lo = maxLo+1;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public synchronized Serializable generate(AccessCallback callback) {
 			if ( lo > maxLo ) {
 				lastSourceValue = callback.getNextValue();
@@ -355,16 +398,12 @@ public class OptimizerFactory {
 			return value.makeValue();
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public IntegralDataTypeHolder getLastSourceValue() {
 			return lastSourceValue.copy();
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public boolean applyIncrementSizeToSourceValues() {
 			return false;
 		}
@@ -376,6 +415,7 @@ public class OptimizerFactory {
 		 *
 		 * @return Value for property 'lastValue'.
 		 */
+		@SuppressWarnings( {"UnusedDeclaration"})
 		public IntegralDataTypeHolder getLastValue() {
 			return value;
 		}
@@ -407,9 +447,7 @@ public class OptimizerFactory {
 			}
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public synchronized Serializable generate(AccessCallback callback) {
 			if ( hiValue == null ) {
 				value = callback.getNextValue();
@@ -432,16 +470,12 @@ public class OptimizerFactory {
 			return value.makeValueThenIncrement();
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public IntegralDataTypeHolder getLastSourceValue() {
 			return hiValue;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public boolean applyIncrementSizeToSourceValues() {
 			return true;
 		}
@@ -457,9 +491,7 @@ public class OptimizerFactory {
 			return value.copy().decrement();
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public void injectInitialValue(long initialValue) {
 			this.initialValue = initialValue;
 		}
@@ -479,6 +511,7 @@ public class OptimizerFactory {
 			}
 		}
 
+		@Override
 		public Serializable generate(AccessCallback callback) {
 			if ( lastSourceValue == null || ! value.lt( lastSourceValue.copy().add( incrementSize ) ) ) {
 				lastSourceValue = callback.getNextValue();
@@ -491,12 +524,49 @@ public class OptimizerFactory {
 			return value.makeValueThenIncrement();
 		}
 
+		@Override
 		public IntegralDataTypeHolder getLastSourceValue() {
 			return lastSourceValue;
 		}
 
+		@Override
 		public boolean applyIncrementSizeToSourceValues() {
 			return true;
 		}
 	}
+
+	/**
+	 * @deprecated Use {@link StandardOptimizerDescriptor#getExternalName()} via {@link StandardOptimizerDescriptor#NONE}
+	 */
+	@Deprecated
+	@SuppressWarnings( {"UnusedDeclaration"})
+	public static final String NONE = StandardOptimizerDescriptor.NONE.getExternalName();
+
+	/**
+	 * @deprecated Use {@link StandardOptimizerDescriptor#getExternalName()} via {@link StandardOptimizerDescriptor#HILO}
+	 */
+	@Deprecated
+	@SuppressWarnings( {"UnusedDeclaration"})
+	public static final String HILO = StandardOptimizerDescriptor.HILO.getExternalName();
+
+	/**
+	 * @deprecated Use {@link StandardOptimizerDescriptor#getExternalName()} via {@link StandardOptimizerDescriptor#LEGACY_HILO}
+	 */
+	@Deprecated
+	@SuppressWarnings( {"UnusedDeclaration"})
+	public static final String LEGACY_HILO = "legacy-hilo";
+
+	/**
+	 * @deprecated Use {@link StandardOptimizerDescriptor#getExternalName()} via {@link StandardOptimizerDescriptor#POOLED}
+	 */
+	@Deprecated
+	@SuppressWarnings( {"UnusedDeclaration"})
+	public static final String POOL = "pooled";
+
+	/**
+	 * @deprecated Use {@link StandardOptimizerDescriptor#getExternalName()} via {@link StandardOptimizerDescriptor#POOLED_LO}
+	 */
+	@Deprecated
+	@SuppressWarnings( {"UnusedDeclaration"})
+	public static final String POOL_LO = "pooled-lo";
 }

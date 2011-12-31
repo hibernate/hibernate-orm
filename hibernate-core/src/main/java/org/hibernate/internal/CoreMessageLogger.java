@@ -1096,6 +1096,10 @@ public interface CoreMessageLogger extends BasicLogger {
 														 String message);
 
 	@LogMessage(level = WARN)
+	@Message(value = "Unable to interpret specified optimizer [%s], falling back to noop", id = 321)
+	void unableToLocateCustomOptimizerClass(String type);
+
+	@LogMessage(level = WARN)
 	@Message(value = "Unable to instantiate specified optimizer [%s], falling back to noop", id = 322)
 	void unableToInstantiateOptimizer(String type);
 

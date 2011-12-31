@@ -44,7 +44,6 @@ import static org.junit.Assert.fail;
  *
  * @author Steve Ebersole
  */
-@SuppressWarnings({ "deprecation" })
 public class SequenceStyleConfigUnitTest extends BaseUnitTestCase {
 	private void assertClassAssignability(Class expected, Class actual) {
 		if ( ! expected.isAssignableFrom( actual ) ) {
@@ -169,7 +168,7 @@ public class SequenceStyleConfigUnitTest extends BaseUnitTestCase {
 
 		// optimizer=none w/ increment > 1 => should honor optimizer
 		Properties props = buildGeneratorPropertiesBase();
-		props.setProperty( SequenceStyleGenerator.OPT_PARAM, OptimizerFactory.NONE );
+		props.setProperty( SequenceStyleGenerator.OPT_PARAM, OptimizerFactory.StandardOptimizerDescriptor.NONE.getExternalName() );
 		props.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "20" );
 		SequenceStyleGenerator generator = new SequenceStyleGenerator();
 		generator.configure( StandardBasicTypes.LONG, props, dialect );
@@ -180,7 +179,7 @@ public class SequenceStyleConfigUnitTest extends BaseUnitTestCase {
 
 		// optimizer=hilo w/ increment > 1 => hilo
 		props = buildGeneratorPropertiesBase();
-		props.setProperty( SequenceStyleGenerator.OPT_PARAM, OptimizerFactory.HILO );
+		props.setProperty( SequenceStyleGenerator.OPT_PARAM, OptimizerFactory.StandardOptimizerDescriptor.HILO.getExternalName() );
 		props.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "20" );
 		generator = new SequenceStyleGenerator();
 		generator.configure( StandardBasicTypes.LONG, props, dialect );
@@ -191,7 +190,7 @@ public class SequenceStyleConfigUnitTest extends BaseUnitTestCase {
 
 		// optimizer=pooled w/ increment > 1 => hilo
 		props = buildGeneratorPropertiesBase();
-		props.setProperty( SequenceStyleGenerator.OPT_PARAM, OptimizerFactory.POOL );
+		props.setProperty( SequenceStyleGenerator.OPT_PARAM, OptimizerFactory.StandardOptimizerDescriptor.POOLED.getExternalName() );
 		props.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "20" );
 		generator = new SequenceStyleGenerator();
 		generator.configure( StandardBasicTypes.LONG, props, dialect );

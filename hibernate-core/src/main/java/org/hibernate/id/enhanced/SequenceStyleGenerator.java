@@ -174,7 +174,7 @@ public class SequenceStyleGenerator
 		incrementSize = determineAdjustedIncrementSize( optimizationStrategy, incrementSize );
 
 		if ( dialect.supportsSequences() && !forceTableUse ) {
-			if ( OptimizerFactory.POOL.equals( optimizationStrategy ) && !dialect.supportsPooledSequences() ) {
+			if ( !dialect.supportsPooledSequences() && OptimizerFactory.isPooledOptimizer( optimizationStrategy ) ) {
 				forceTableUse = true;
                 LOG.forcingTableUse();
 			}
@@ -282,12 +282,14 @@ public class SequenceStyleGenerator
 	 * @return The optimizer strategy (name)
 	 */
 	protected String determineOptimizationStrategy(Properties params, int incrementSize) {
-		// if the increment size is greater than one, we prefer pooled optimization; but we
+		// if the increment size is greater than one, we prefer pooled optimization; but we first
 		// need to see if the user prefers POOL or POOL_LO...
 		String defaultPooledOptimizerStrategy = ConfigurationHelper.getBoolean( Environment.PREFER_POOLED_VALUES_LO, params, false )
-				? OptimizerFactory.POOL_LO
-				: OptimizerFactory.POOL;
-		String defaultOptimizerStrategy = incrementSize <= 1 ? OptimizerFactory.NONE : defaultPooledOptimizerStrategy;
+				? OptimizerFactory.StandardOptimizerDescriptor.POOLED_LO.getExternalName()
+				: OptimizerFactory.StandardOptimizerDescriptor.POOLED.getExternalName();
+		String defaultOptimizerStrategy = incrementSize <= 1
+				? OptimizerFactory.StandardOptimizerDescriptor.NONE.getExternalName()
+				: defaultPooledOptimizerStrategy;
 		return ConfigurationHelper.getString( OPT_PARAM, params, defaultOptimizerStrategy );
 	}
 
@@ -300,8 +302,13 @@ public class SequenceStyleGenerator
 	 * @return The adjusted increment size.
 	 */
 	protected int determineAdjustedIncrementSize(String optimizationStrategy, int incrementSize) {
-		if ( OptimizerFactory.NONE.equals( optimizationStrategy ) && incrementSize > 1 ) {
-            LOG.honoringOptimizerSetting(OptimizerFactory.NONE, INCREMENT_PARAM, incrementSize);
+		if ( incrementSize > 1
+				&& OptimizerFactory.StandardOptimizerDescriptor.NONE.getExternalName().equals( optimizationStrategy ) ) {
+            LOG.honoringOptimizerSetting(
+					OptimizerFactory.StandardOptimizerDescriptor.NONE.getExternalName(),
+					INCREMENT_PARAM,
+					incrementSize
+			);
 			incrementSize = 1;
 		}
 		return incrementSize;

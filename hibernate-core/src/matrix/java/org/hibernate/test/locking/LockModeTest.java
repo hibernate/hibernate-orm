@@ -71,7 +71,7 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 		session.close();
 	}
 
-	@Test
+	@Test( timeout = 6000 )
 	@SuppressWarnings( {"deprecation"})
 	public void testLoading() {
 		// open a session, begin a transaction and lock row
@@ -92,7 +92,7 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 		}
 	}
 
-	@Test
+	@Test( timeout = 6000 )
 	@FailureExpected( jiraKey = "HHH-5275" )
 	public void testLegacyCriteria() {
 		// open a session, begin a transaction and lock row
@@ -115,7 +115,7 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 		}
 	}
 
-	@Test
+	@Test( timeout = 6000 )
 	@FailureExpected( jiraKey = "HHH-5275" )
 	public void testLegacyCriteriaAliasSpecific() {
 		// open a session, begin a transaction and lock row
@@ -138,7 +138,7 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 		}
 	}
 
-	@Test
+	@Test( timeout = 6000 )
 	@FailureExpected( jiraKey = "HHH-5275" )
 	public void testQuery() {
 		// open a session, begin a transaction and lock row
@@ -161,7 +161,7 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 		}
 	}
 
-	@Test
+	@Test( timeout = 6000 )
 	public void testQueryUsingLockOptions() {
 		// todo : need an association here to make sure the alias-specific lock modes are applied correctly
 		Session s1 = sessionFactory().openSession();

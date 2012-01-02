@@ -30,7 +30,7 @@ package org.hibernate.dialect;
 public class MySQLMyISAMDialect extends MySQLDialect {
 
 	public String getTableTypeString() {
-		return " type=MyISAM";
+		return " ENGINE=MyISAM";
 	}
 
 	public boolean dropConstraints() {

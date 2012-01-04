@@ -71,7 +71,7 @@ public class MatrixTestingPlugin implements Plugin<Project> {
     public void apply(Project project) {
         this.project = project;
 
-        project.plugins.apply( DatabaseProfilePlugin );
+        project.rootProject.plugins.apply( DatabaseProfilePlugin );
         List<MatrixNode> matrixNodes = locateMatrixNodes();
         if ( matrixNodes == null || matrixNodes.isEmpty() ) {
             // no db profiles defined

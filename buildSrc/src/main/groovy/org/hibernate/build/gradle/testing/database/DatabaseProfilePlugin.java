@@ -75,7 +75,7 @@ public class DatabaseProfilePlugin implements Plugin<Project> {
     }
 
 	private void processStandardProfiles(Map<String, DatabaseProfile> profileMap) {
-		final File standardDatabasesDirectory = getRootProject( project ).file( STANDARD_DATABASES_DIRECTORY );
+		final File standardDatabasesDirectory = project.file( STANDARD_DATABASES_DIRECTORY );
 		if ( standardDatabasesDirectory == null || ! standardDatabasesDirectory.exists() ) {
 			log.debug( "Standard databases directory [{}] did not exist", STANDARD_DATABASES_DIRECTORY );
 			return;
@@ -88,10 +88,6 @@ public class DatabaseProfilePlugin implements Plugin<Project> {
 
 		processProfiles( standardDatabasesDirectory, profileMap );
 	}
-
-	private Project getRootProject(Project project) {
-        return project.getParent() != null ? getRootProject( project.getParent() ) : project;
-    }
 
 	private void processProfiles(File directory, Map<String, DatabaseProfile> profileMap) {
 		// the directory itself is a "database directory" if it contains either:
@@ -124,11 +120,15 @@ public class DatabaseProfilePlugin implements Plugin<Project> {
 			return;
 		}
 
-		if ( profileMap.containsKey( databaseProfile.getName() ) ) {
-			throw new DuplicateDatabaseProfileException( "There is already a profile named " + profileName );
+		DatabaseProfile previousEntry = profileMap.put( profileName, databaseProfile );
+		if ( previousEntry != null ) {
+			log.lifecycle(
+					"Found duplicate profile definitions [name={}], [{}] taking precedence over [{}]",
+					profileName,
+					databaseProfile.getDirectory().getAbsolutePath(),
+					previousEntry.getDirectory().getAbsolutePath()
+			);
 		}
-
-		profileMap.put( profileName, databaseProfile );
 	}
 
 	private Set<String> ignored;

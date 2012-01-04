@@ -23,13 +23,11 @@
  */
 package org.hibernate.ejb;
 
+import java.util.Map;
 import javax.persistence.PersistenceContextType;
 import javax.persistence.PersistenceException;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 import javax.transaction.Synchronization;
-import java.util.Map;
-
-import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
@@ -39,6 +37,7 @@ import org.hibernate.annotations.common.util.ReflectHelper;
 import org.hibernate.cfg.Environment;
 import org.hibernate.ejb.internal.EntityManagerMessageLogger;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.jboss.logging.Logger;
 
 /**
  * Hibernate implementation of {@link javax.persistence.EntityManager}.
@@ -127,6 +126,7 @@ public class EntityManagerImpl extends AbstractEntityManagerImpl {
 	}
 
 	public void close() {
+		checkEntityManagerFactory();
 		if ( !open ) {
 			throw new IllegalStateException( "EntityManager is closed" );
 		}
@@ -157,6 +157,7 @@ public class EntityManagerImpl extends AbstractEntityManagerImpl {
 
 	public boolean isOpen() {
 		//adjustFlushMode(); //don't adjust, can't be done on closed EM
+		checkEntityManagerFactory();
 		try {
 			if ( open ) {
 				getSession().isOpen(); //to force enlistment in tx
@@ -169,4 +170,9 @@ public class EntityManagerImpl extends AbstractEntityManagerImpl {
 		}
 	}
 
+	private void checkEntityManagerFactory() {
+		if (! getEntityManagerFactory().isOpen()) {
+			open = false;
+		}
+	}
 }

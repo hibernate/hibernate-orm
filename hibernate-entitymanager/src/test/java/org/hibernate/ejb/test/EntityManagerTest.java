@@ -24,12 +24,6 @@
  */
 package org.hibernate.ejb.test;
 
-import javax.persistence.EntityExistsException;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityNotFoundException;
-import javax.persistence.FlushModeType;
-import javax.persistence.PersistenceException;
-import javax.persistence.Query;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
@@ -38,6 +32,12 @@ import java.io.ObjectOutputStream;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import javax.persistence.EntityExistsException;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityNotFoundException;
+import javax.persistence.FlushModeType;
+import javax.persistence.PersistenceException;
+import javax.persistence.Query;
 
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
@@ -46,11 +46,8 @@ import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.HibernateEntityManager;
 import org.hibernate.ejb.HibernateEntityManagerFactory;
 import org.hibernate.stat.Statistics;
-
-import org.junit.Before;
-import org.junit.Test;
-
 import org.hibernate.testing.TestForIssue;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -428,4 +425,23 @@ public class EntityManagerTest extends BaseEntityManagerFunctionalTestCase {
             em.close();
         }
     }
+
+	@Test
+	public void testFactoryClosed() throws Exception {
+		EntityManager em = createIsolatedEntityManager();
+		assertTrue( em.isOpen() );
+		assertTrue( em.getEntityManagerFactory().isOpen());
+
+		em.getEntityManagerFactory().close();	// closing the entity manager factory should close the EM
+		assertFalse(em.isOpen());
+
+		try {
+			em.close();
+			fail("closing entity manager that uses a closed session factory, must throw IllegalStateException");
+		}
+		catch( IllegalStateException expected) {
+			// success
+		}
+	}
+
 }

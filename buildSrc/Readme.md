@@ -59,7 +59,7 @@ Or
         │       └── hibernate.properties
 
 
-Either would result in a database profile name mysql50_
+Either would result in a database profile named _mysql50_
 
 Profiles can be ignored using the _hibernate-matrix-ignore_ setting which accepts either
 

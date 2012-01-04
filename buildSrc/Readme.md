@@ -29,15 +29,12 @@ Within these directories, the plugin looks for sub-directories which either:
 *    contain a file named _matrix.gradle_.  _matrix.gradle_ is a limited DSL Gradle file which currently understands
      just a specialized org.gradle.api.artifacts.Configuration reference named _jdbcDependency_.  All that is a fancy
      way to say that _matrix.gradle_ allows you to specify some dependencies this database profile needs (JDBC drivers,
-     etc).
-*    contain a directory named _jdbc_ which is assumed to hold jar file(s) needed for the profile.
-
-Here is an example of _matrix.gradle_ content 
+     etc).  Any dependency artifacts named here get resolved using whatever resolvers (Maven, etc) are associated with
+     the build.  For example
         jdbcDependency {
             "mysql:mysql-connector-java:5.1.17"
         }
-Any dependency artifacts named here get resolved using whatever resolvers (Maven, etc) are associated with 
-the build.
+*    contain a directory named _jdbc_ which is assumed to hold jar file(s) needed for the profile.
 
 Such directories become the basis of a database profile made available to the build.  The name of the profile
 (which becomes important when we discuss the next plugin) is taken from the directory name.  Database profiles can

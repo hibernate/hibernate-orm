@@ -71,7 +71,8 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 		session.close();
 	}
 
-	@Test( timeout = 6000 )
+//	@Test( timeout = 6000 )
+	@Test
 	@SuppressWarnings( {"deprecation"})
 	public void testLoading() {
 		// open a session, begin a transaction and lock row
@@ -92,7 +93,7 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 		}
 	}
 
-	@Test( timeout = 6000 )
+	@Test
 	@FailureExpected( jiraKey = "HHH-5275" )
 	public void testLegacyCriteria() {
 		// open a session, begin a transaction and lock row
@@ -115,7 +116,7 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 		}
 	}
 
-	@Test( timeout = 6000 )
+	@Test
 	@FailureExpected( jiraKey = "HHH-5275" )
 	public void testLegacyCriteriaAliasSpecific() {
 		// open a session, begin a transaction and lock row
@@ -138,7 +139,7 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 		}
 	}
 
-	@Test( timeout = 6000 )
+	@Test
 	@FailureExpected( jiraKey = "HHH-5275" )
 	public void testQuery() {
 		// open a session, begin a transaction and lock row
@@ -161,7 +162,7 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 		}
 	}
 
-	@Test( timeout = 6000 )
+	@Test
 	public void testQueryUsingLockOptions() {
 		// todo : need an association here to make sure the alias-specific lock modes are applied correctly
 		Session s1 = sessionFactory().openSession();
@@ -180,8 +181,14 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 		Session s = sessionFactory().openSession();
 		s.beginTransaction();
 		try {
-			A it2 = (A) s.get( A.class, 1 );
-			it2.setValue( "changed" );
+			// load with write lock to deal with databases that block (wait indefinitely) direct attempts
+			// to write a locked row
+			A it = (A) s.get(
+					A.class,
+					1,
+					new LockOptions( LockMode.PESSIMISTIC_WRITE ).setTimeOut( LockOptions.NO_WAIT )
+			);
+			it.setValue( "changed" );
 			s.flush();
 			fail( "Pessimistic lock not obtained/held" );
 		}

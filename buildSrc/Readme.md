@@ -61,7 +61,7 @@ Or
 
 Either would result in a database profile named _mysql50_
 
-Profiles can be ignored using the _hibernate-matrix-ignore_ setting which accepts either
+Profiles can be ignored using the *hibernate-matrix-ignore* setting which accepts either
 
 *   a comma-separated list of the database profile names to be skipped
 *   the magic value **all** which indicates to ignore all profiles
@@ -73,8 +73,8 @@ The MatrixTestingPlugin essentially generates a bunch of Gradle tasks dynamicall
 this based on all the database profiles found.  Running `gradle tasks --all` will list all tasks available to the build
 including these generated ones.
 
-For each database profile the plugin will generate a task named _matrix_{profile}_ that executes the tests against
-that particular database profile.  It also generates a task named _matrix_ that groups together all the
+For each database profile the plugin will generate a task named *matrix_{profile}* that executes the tests against
+that particular database profile.  It also generates a task named *matrix* that groups together all the
 profile-specific tasks so that running `gradle matrix` will run all the profiles.
 
 *see section below discussing SourceSet separation*
@@ -97,6 +97,7 @@ named _hibernate-matrix-dballcoation_ which accepts either
 
 For example, if you want to run matrix test on PostgreSQL 8.4, knowing that the database name for that is
 _postgresql84_, you can use this command:
+
         gradle matrix_postgresql84 -Dhibernate-matrix-dballocation=postgresql84
 
 which would

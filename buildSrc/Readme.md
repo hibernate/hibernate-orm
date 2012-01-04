@@ -23,7 +23,6 @@ These directories are searched recursively.  We leverage this in Hibernate to al
 to hold local profiles too.  That is achieved by a _.gitignore_ which says to ignore any directory named
 _local_ under the directory _databases_.  So one option to provide custom profiles is to drop them in there.  That
 has the benefit of not having to specify _hibernate-matrix-databases_
-
 Within these directories, the plugin looks for sub-directories which either:
 
 *    contain a file named _matrix.gradle_.  _matrix.gradle_ is a limited DSL Gradle file which currently understands
@@ -31,6 +30,7 @@ Within these directories, the plugin looks for sub-directories which either:
      way to say that _matrix.gradle_ allows you to specify some dependencies this database profile needs (JDBC drivers,
      etc).  Any dependency artifacts named here get resolved using whatever resolvers (Maven, etc) are associated with
      the build.  For example
+
         jdbcDependency {
             "mysql:mysql-connector-java:5.1.17"
         }

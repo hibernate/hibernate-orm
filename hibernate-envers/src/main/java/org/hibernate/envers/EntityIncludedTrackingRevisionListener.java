@@ -21,7 +21,7 @@ public interface EntityIncludedTrackingRevisionListener extends RevisionListener
      * @param entityId Identifier of modified entity.
      * @param revisionType Modification type (addition, update or removal).
      * @param revisionEntity An instance of the entity annotated with {@link RevisionEntity}.
-     * @param entity 
+     * @param entity The actual entity that has changed.
      */
     void entityChanged(Class entityClass, String entityName, Serializable entityId, RevisionType revisionType,
                        Object revisionEntity, Object entity);

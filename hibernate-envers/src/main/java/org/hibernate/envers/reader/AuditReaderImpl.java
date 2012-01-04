@@ -151,6 +151,7 @@ public class AuditReaderImpl implements AuditReaderImplementor {
 
         return createQuery().forRevisionsOfEntity(cls, entityName, false, true)
                 .addProjection(AuditEntity.revisionNumber())
+				.addOrder(AuditEntity.revisionNumber().asc())
                 .add(AuditEntity.id().eq(primaryKey))
                 .getResultList();
     }

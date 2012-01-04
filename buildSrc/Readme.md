@@ -15,8 +15,9 @@ not even reference it.  The reason for the split is historical and these 2 may g
 
 This plugin is responsible for determining which databases are available for testing in the given environment.  It
 does this by performing a directory search.  Well actually it can perform up to 2 directory searches:
-*   The standard profile directory is named _databases_ at the base directory of the root project
-*   A custom profile directory, which can be named by setting a system property named _hibernate-matrix-databases_
+
+*    The standard profile directory is named _databases_ at the base directory of the root project
+*    A custom profile directory, which can be named by setting a system property named _hibernate-matrix-databases_
 
 These directories are searched recursively.  We leverage this in Hibernate to allow the standard _databases_ directory
 to hold local profiles too.  That is achieved by a _.gitignore_ which says to ignore any directory named
@@ -24,38 +25,44 @@ _local_ under the directory _databases_.  So one option to provide custom profil
 has the benefit of not having to specify _hibernate-matrix-databases_
 
 Within these directories, the plugin looks for sub-directories which either:
-*   contain a file named _matrix.gradle_.  _matrix.gradle_ is a limited DSL Gradle file which currently understands
-    just a specialized org.gradle.api.artifacts.Configuration reference named _jdbcDependency_.  All that is a fancy
-    way to say that _matrix.gradle_ allows you to specify some dependencies this database profile needs (JDBC drivers,
-    etc).  For example:
+
+*    contain a file named _matrix.gradle_.  _matrix.gradle_ is a limited DSL Gradle file which currently understands
+     just a specialized org.gradle.api.artifacts.Configuration reference named _jdbcDependency_.  All that is a fancy
+     way to say that _matrix.gradle_ allows you to specify some dependencies this database profile needs (JDBC drivers,
+     etc).
+*    contain a directory named _jdbc_ which is assumed to hold jar file(s) needed for the profile.
+
+Here is an example of _matrix.gradle_ content 
         jdbcDependency {
             "mysql:mysql-connector-java:5.1.17"
         }
-
-    Any dependency artifacts named here get resolved using whatever resolvers (Maven, etc) are associated with the build.
-*   contain a directory named _jdbc_ which is assumed to hold jar file(s) needed for the profile.
+Any dependency artifacts named here get resolved using whatever resolvers (Maven, etc) are associated with 
+the build.
 
 Such directories become the basis of a database profile made available to the build.  The name of the profile
 (which becomes important when we discuss the next plugin) is taken from the directory name.  Database profiles can
 also contain a _resources_ directory.
 
 An example layout using _matrix.gradle_ might be
+
         ├── mysql50
-        │   ├── jdbc
-        │   │   └── mysql-connector-java-5.1.9.jar
-        │   └── resources
-        │       └── hibernate.properties
+        │   ├── jdbc
+        │   │   └── mysql-connector-java-5.1.9.jar
+        │   └── resources
+        │       └── hibernate.properties
 
 Or
+
         ├── mysql50
-        │   ├── matrix.gradle
-        │   └── resources
-        │       └── hibernate.properties
+        │   ├── matrix.gradle
+        │   └── resources
+        │       └── hibernate.properties
 
 
 Either would result in a database profile name mysql50_
 
 Profiles can be ignored using the _hibernate-matrix-ignore_ setting which accepts either
+
 *   a comma-separated list of the database profile names to be skipped
 *   the magic value **all** which indicates to ignore all profiles
 
@@ -70,8 +77,7 @@ For each database profile the plugin will generate a task named _matrix_{profile
 that particular database profile.  It also generates a task named _matrix_ that groups together all the
 profile-specific tasks so that running `gradle matrix` will run all the profiles.
 
-
-*see section below discussing SourceSet separation
+*see section below discussing SourceSet separation*
 
 
 ### Database Allocator (JBoss internally, VPN required)
@@ -84,6 +90,7 @@ The JBoss QA team developed a servlet to allow management of "database allocatio
 allocation be set up.  The MatrixTestingPlugin is able to play with that feature allowing you to ask the build
 to allocate the database for you.  This feature is disabled by default, to enable it, you need this system property
 named _hibernate-matrix-dballcoation_ which accepts either
+
 *   a comma-separate list of profile names
 *   the magic value **all** which indicates to allocate for all **supported** databases (see
     org.hibernate.build.qalab.DatabaseAllocator.SUPPORTED_DB_NAMES for details)
@@ -93,6 +100,7 @@ _postgresql84_, you can use this command:
         gradle matrix_postgresql84 -Dhibernate-matrix-dballocation=postgresql84
 
 which would
+
 1.  talk to the database allocator service and make a database instance available
 2.  use the information returned from the allocator service to properly set up the connection information
     Hibernate would need to connect to that instance.
@@ -114,6 +122,7 @@ If you are not familiar with Gradle's notion of
 
 The Hibernate build defines 2 different testing related SourceSets in a number of modules (currently hibernate-core,
 hibernate-entitymanager and hibernate-envers):
+
 *   _test_ - tests that **should not** be run against the profiles from the MatrixTestingPlugin
 *   _matrix_ - tests that **should** be run against the profiles from the MatrixTestingPlugin
 
@@ -122,38 +131,40 @@ database should not at all affect the outcome.  Tests in _matrix_ are functional
 are highly dependent on the database being used (how pessimistic locks are acquired, etc).
 
 As always, Wikipedia is a great source of information
+
 *   [Functional Testing](http://en.wikipedia.org/wiki/Functional_testing)
 *   [Unit Testing](http://en.wikipedia.org/wiki/Unit_testing)
 
 hibernate-core directory layout (for discussion):
+
     hibernate-core
     ├── hibernate-core.gradle
     ├── src
-        ├── main
-        │   ├── antlr
-        │   ├── java
-        │   ├── javadoc
-        │   ├── resources
-        │   └── xjb
-        ├── matrix
-        │   └── java
-        └── test
-            ├── java
-            └── resources
+        ├── main
+        │   ├── antlr
+        │   ├── java
+        │   ├── javadoc
+        │   ├── resources
+        │   └── xjb
+        ├── matrix
+        │   └── java
+        └── test
+            ├── java
+            └── resources
 
 The directories of interest include
-    * matrix/java
 
-        all functional tests go into this directory
+*   matrix/java
 
-    * test/java
+    all functional tests go into this directory
 
-        all unit tests go into this directory
+*   test/java
 
-    * test/resources
+    all unit tests go into this directory
 
-        all resources for ***functional tests and unit tests***, yes, resource files in this directory are shared for both, so you don't need to copy one file to both place, for example, log4j.properties.
+*   test/resources
 
+    all resources for **functional tests and unit tests**.  Yes, resource files in this directory are shared for both, so you don't need to copy one file to both place, for example, log4j.properties.
 
 To make _idea plugin_ (similar entries for _eclipse plugin_) works, we also have this defined in hibernate-core.gradle:
 
@@ -173,5 +184,3 @@ To make _idea plugin_ (similar entries for _eclipse plugin_) works, we also have
         testSourceDirs += file( 'src/matrix/java')
         testSourceDirs += file( 'src/matrix/resources')
     }
-
-

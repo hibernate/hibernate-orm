@@ -195,10 +195,13 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 	@After
 	@SuppressWarnings( {"UnusedDeclaration"})
 	public void releaseResources() {
-		releaseUnclosedEntityManagers();
-
-		if ( entityManagerFactory != null ) {
-			entityManagerFactory.close();
+		try {
+			releaseUnclosedEntityManagers();
+		}
+		finally {
+			if ( entityManagerFactory != null && entityManagerFactory.isOpen()) {
+				entityManagerFactory.close();
+			}
 		}
 		// Note we don't destroy the service registry as we are not the ones creating it
 	}

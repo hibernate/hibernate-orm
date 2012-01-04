@@ -22,15 +22,18 @@
  * Boston, MA  02110-1301  USA
  */
 
-package org.hibernate.gradle.testing.matrix;
+package org.hibernate.build.gradle.testing.database;
 
-import java.util.List;
+import org.hibernate.build.gradle.util.BuildException;
 
 /**
- * TODO : javadoc
+ * Indicates that we found multiple database profiles having the same name.
  *
+ * @author Strong Liu
  * @author Steve Ebersole
  */
-public interface MatrixNodeProvider {
-	public List<MatrixNode> getMatrixNodes();
+public class DuplicateDatabaseProfileException extends BuildException {
+	public DuplicateDatabaseProfileException(String message) {
+		super( message );
+	}
 }

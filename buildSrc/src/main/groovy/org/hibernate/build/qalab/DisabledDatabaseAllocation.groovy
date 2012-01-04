@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,46 +21,27 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
+package org.hibernate.build.qalab
 
-package org.hibernate.gradle.util;
+import org.hibernate.build.gradle.testing.database.DatabaseProfile
 
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
-public class JavaVersion {
-	public static enum Family {
-        JAVA7( 7 ),
-		JAVA6( 6 ),
-		JAVA5( 5 );
+class DisabledDatabaseAllocation implements DatabaseAllocation {
+    private final DatabaseProfile databaseProfile;
 
-		private final int code;
+    DisabledDatabaseAllocation(DatabaseProfile databaseProfile) {
+        this.databaseProfile = databaseProfile;
+    }
 
-		private Family(int code) {
-			this.code = code;
-		}
-	}
+    @Override
+    Map<String, String> getProperties() {
+        return databaseProfile.hibernateProperties;
+    }
 
-	private final String fullVersionString;
-	private final Family family;
-
-	public JavaVersion(String javaVersionString) {
-		this.fullVersionString = javaVersionString;
-		family = fullVersionString.startsWith( "1.6" )
-				? Family.JAVA6
-				: Family.JAVA5;
-	}
-
-	public String getFullVersionString() {
-		return fullVersionString;
-	}
-
-	public Family getFamily() {
-		return family;
-	}
-
-	public boolean isAtLeast(Family family) {
-		return getFamily().code >= family.code;
-	}
+    @Override
+    void release() {
+        // nothing to do
+    }
 }

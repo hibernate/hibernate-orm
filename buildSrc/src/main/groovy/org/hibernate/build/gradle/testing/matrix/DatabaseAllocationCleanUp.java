@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,31 +21,33 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
+package org.hibernate.build.gradle.testing.matrix;
 
-package org.hibernate.gradle.util;
+import java.util.HashSet;
+import java.util.Set;
 
-import java.util.List;
+import org.gradle.BuildAdapter;
+import org.gradle.BuildResult;
+
+import org.hibernate.build.qalab.DatabaseAllocation;
 
 /**
- * TODO : javadoc
+ * A Gradle {@link org.gradle.BuildListener} used to release all databases allocated when the build is finished.
  *
  * @author Steve Ebersole
  */
-public class ResolutionException extends BuildException {
-	private final String moduleDescriptor;
-	private final List<String> problemMessages;
+public class DatabaseAllocationCleanUp extends BuildAdapter {
+	private Set<DatabaseAllocation> databaseAllocations = new HashSet<DatabaseAllocation>();
 
-	public ResolutionException(String moduleDescriptor, List<String> problemMessages) {
-		super( "Problem performing resolution of module [" + moduleDescriptor + "]" );
-		this.moduleDescriptor = moduleDescriptor;
-		this.problemMessages = problemMessages;
+	public void addDatabaseAllocation(DatabaseAllocation databaseAllocation) {
+		databaseAllocations.add( databaseAllocation );
 	}
 
-	public String getModuleDescriptor() {
-		return moduleDescriptor;
-	}
-
-	public List<String> getProblemMessages() {
-		return problemMessages;
+	@Override
+	public void buildFinished(BuildResult result) {
+		super.buildFinished( result );
+		for ( DatabaseAllocation databaseAllocation : databaseAllocations ) {
+			databaseAllocation.release();
+		}
 	}
 }

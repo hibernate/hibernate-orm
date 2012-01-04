@@ -22,17 +22,29 @@
  * Boston, MA  02110-1301  USA
  */
 
-package org.hibernate.gradle.util;
+package org.hibernate.build.gradle.util;
+
+import java.io.File;
 
 /**
  * @author Strong Liu
  */
-public class DuplicatedDBConfigException extends RuntimeException {
-	public DuplicatedDBConfigException(String message) {
-		super( message );
-	}
+public class FileUtil {
+    private FileUtil() {
+    }
 
-	public DuplicatedDBConfigException(String message, Throwable cause) {
-		super( message, cause );
-	}
+    public static boolean isFile(File file) {
+        return file != null && file.exists() && file.isFile();
+    }
+
+    public static void mkdir(File file) {
+        if ( file == null || file.exists() ) {
+            return;
+        }
+        if ( !file.getParentFile().exists() ) {
+            mkdir( file.getParentFile() );
+        }
+        file.mkdir();
+
+    }
 }

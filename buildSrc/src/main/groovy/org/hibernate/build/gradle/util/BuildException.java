@@ -22,16 +22,19 @@
  * Boston, MA  02110-1301  USA
  */
 
-package org.hibernate.gradle.testing.database;
-
-import org.gradle.api.Project;
-import org.gradle.api.artifacts.Configuration;
+package org.hibernate.build.gradle.util;
 
 /**
- * @author Strong Liu
+ * And exception intended to fail the build.
+ *
+ * @author Steve Ebersole
  */
-public interface DependencyResolver {
-    Project getProject();
-    Configuration resolve();
+public class BuildException extends RuntimeException {
+	public BuildException(String message) {
+		super( message );
+	}
 
+	public BuildException(String message, Throwable cause) {
+		super( message, cause );
+	}
 }

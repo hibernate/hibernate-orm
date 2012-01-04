@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,20 +21,33 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
+package org.hibernate.build.gradle.testing.database;
 
-package org.hibernate.gradle.util;
+import java.io.File;
+
+import org.gradle.api.Project;
+import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.internal.artifacts.dependencies.DefaultSelfResolvingDependency;
 
 /**
- * TODO : javadoc
+ * Database profile as defined by a directory named {@code jdbc} containing JDBC drivers.
  *
  * @author Steve Ebersole
+ * @author Strong Liu
  */
-public class BuildException extends RuntimeException {
-	public BuildException(String message) {
-		super( message );
+public class JdbcDirectoryProfile extends AbstractDatabaseProfileImpl {
+	private final Configuration jdbcDependencies;
+
+	public JdbcDirectoryProfile(File jdbcDirectory, Project project) {
+		super( jdbcDirectory.getParentFile(), project );
+		jdbcDependencies = prepareConfiguration( getName() );
+		DefaultSelfResolvingDependency dependency =
+                new DefaultSelfResolvingDependency( project.files( jdbcDirectory.listFiles() ) );
+        jdbcDependencies.addDependency( dependency );
 	}
 
-	public BuildException(String message, Throwable cause) {
-		super( message, cause );
+	@Override
+	public Configuration getTestingRuntimeConfiguration() {
+		return jdbcDependencies;
 	}
 }

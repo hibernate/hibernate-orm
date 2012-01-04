@@ -1,0 +1,3 @@
+#Ignore any sub directory named 'local'.  these are used to define custom database profiles local
+# to the developer's machine
+/local

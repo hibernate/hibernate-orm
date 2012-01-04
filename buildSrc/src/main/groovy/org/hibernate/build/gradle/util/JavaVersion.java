@@ -22,40 +22,45 @@
  * Boston, MA  02110-1301  USA
  */
 
-package org.hibernate.gradle.testing.matrix;
-
-import java.io.File;
-import java.util.Map;
-
-import hudson.util.DBAllocation;
-import org.gradle.api.artifacts.Configuration;
-
-import org.hibernate.gradle.testing.database.DependencyResolver;
-import org.hibernate.gradle.util.Jdk;
+package org.hibernate.build.gradle.util;
 
 /**
- * Describes the various pieces of information being contributed to the matrix by a given node.
+ * TODO : javadoc
  *
  * @author Steve Ebersole
- * @author Strong Liu
  */
-public interface MatrixNode {
-    /**
-     * Get the name of this node.
-     *
-     * @return The node.
-     */
-    String getName();
+public class JavaVersion {
+	public static enum Family {
+        JAVA7( 7 ),
+		JAVA6( 6 ),
+		JAVA5( 5 );
 
-    Configuration getTestingRuntimeConfiguration();
+		private final int code;
 
-    Jdk getTestingRuntimeJdk();
+		private Family(int code) {
+			this.code = code;
+		}
+	}
 
-    DependencyResolver getDependencyResolver();
-    File getBaseOutputDirectory();
-    DBAllocation getDBAllocation();
-    Map<String,String> getProperties();
-    File getHibernatePropertyFile();
-    void setHibernatePropertyFile(File file);
-    void release();
+	private final String fullVersionString;
+	private final Family family;
+
+	public JavaVersion(String javaVersionString) {
+		this.fullVersionString = javaVersionString;
+		family = fullVersionString.startsWith( "1.6" )
+				? Family.JAVA6
+				: Family.JAVA5;
+	}
+
+	public String getFullVersionString() {
+		return fullVersionString;
+	}
+
+	public Family getFamily() {
+		return family;
+	}
+
+	public boolean isAtLeast(Family family) {
+		return getFamily().code >= family.code;
+	}
 }

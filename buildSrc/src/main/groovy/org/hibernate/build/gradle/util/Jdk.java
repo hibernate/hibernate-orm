@@ -22,7 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 
-package org.hibernate.gradle.util;
+package org.hibernate.build.gradle.util;
 
 import java.io.BufferedReader;
 import java.io.File;

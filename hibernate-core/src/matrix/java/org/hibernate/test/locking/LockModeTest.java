@@ -38,6 +38,8 @@ import org.junit.Test;
 
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.async.Executable;
+import org.hibernate.testing.async.TimedExecutor;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertNotNull;
@@ -184,7 +186,7 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 		// we are not allowed to acquire exclusive locks to that row and/or write to that row.  That may take
 		// one of two forms:
 		//		1) either the get-with-lock or the update fails immediately with a sql error
-		//		2) either the get-with-lock or the update blocks indef (in real world, it would block
+		//		2) either the get-with-lock or the update blocks indefinitely (in real world, it would block
 		//			until the txn in the calling method completed.
 		// To be able to cater to the second type, we run this block in a separate thread to be able to "time it out"
 
@@ -237,7 +239,7 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 						}
 
 						@Override
-						public void forceStop() {
+						public void timedOut() {
 							s.cancelQuery();
 							shutDown();
 						}
@@ -246,73 +248,6 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 		}
 		catch (TimeoutException e) {
 			// timeout is ok, see rule #2 above
-		}
-	}
-
-	interface Executable {
-		public void execute();
-		public void forceStop();
-	}
-
-	class TimedExecutor {
-		private final long timeOut;
-		private final int checkMilliSeconds;
-
-		TimedExecutor(long timeOut) {
-			this( timeOut, 1000 );
-		}
-
-		TimedExecutor(long timeOut, int checkMilliSeconds) {
-			this.timeOut = timeOut;
-			this.checkMilliSeconds = checkMilliSeconds;
-		}
-
-		public void execute(Executable executable) throws TimeoutException {
-			final ExecutableAdapter adapter = new ExecutableAdapter( executable );
-			final Thread separateThread = new Thread( adapter );
-			separateThread.start();
-
-			int runningTime = 0;
-			do {
-				if ( runningTime > timeOut ) {
-					try {
-						executable.forceStop();
-					}
-					catch (Exception ignore) {
-					}
-					throw new TimeoutException();
-				}
-				try {
-					Thread.sleep( checkMilliSeconds );
-					runningTime += checkMilliSeconds;
-				}
-				catch (InterruptedException ignore) {
-				}
-			} while ( !adapter.isDone() );
-		}
-	}
-
-	class ExecutableAdapter implements Runnable {
-		private final Executable executable;
-		private boolean isDone;
-
-		ExecutableAdapter(Executable executable) {
-			this.executable = executable;
-		}
-
-		public boolean isDone() {
-			return isDone;
-		}
-
-		@Override
-		public void run() {
-			isDone = false;
-			try {
-				executable.execute();
-			}
-			finally {
-				isDone = true;
-			}
 		}
 	}
 }

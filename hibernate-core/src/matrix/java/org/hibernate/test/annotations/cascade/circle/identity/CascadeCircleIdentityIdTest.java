@@ -30,12 +30,13 @@ import org.hibernate.testing.DialectCheck;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 @RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
 public class CascadeCircleIdentityIdTest extends BaseCoreFunctionalTestCase {
 	@Test
-	@FailureExpected( jiraKey = "HHH-5472" )
+	@TestForIssue( jiraKey = "HHH-5472" )
 	public void testCascade() {
 		A a = new A();
 		B b = new B();

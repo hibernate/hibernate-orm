@@ -36,6 +36,9 @@ import org.gradle.api.logging.Logging;
 
 import org.slf4j.Logger;
 
+import org.hibernate.build.qalab.DatabaseAllocation;
+import org.hibernate.build.qalab.DatabaseAllocator;
+
 /**
  * Basic support for {@link DatabaseProfile} implementations
  *
@@ -49,6 +52,7 @@ public abstract class AbstractDatabaseProfileImpl implements DatabaseProfile {
 	private final File profileDirectory;
 	private final Project project;
 	private final Map<String,String> hibernateProperties;
+	private final DatabaseAllocation databaseAllocation;
 
 	@SuppressWarnings( {"unchecked"})
 	protected AbstractDatabaseProfileImpl(File profileDirectory, Project project) {
@@ -83,6 +87,8 @@ public abstract class AbstractDatabaseProfileImpl implements DatabaseProfile {
 				hibernateProperties.put( propName, props.getProperty( propName ) );
 			}
 		}
+
+		this.databaseAllocation = DatabaseAllocator.locate( project ).getAllocation( this );
 	}
 
 	@Override
@@ -98,6 +104,11 @@ public abstract class AbstractDatabaseProfileImpl implements DatabaseProfile {
 	@Override
 	public Map<String, String> getHibernateProperties() {
 		return hibernateProperties;
+	}
+
+	@Override
+	public DatabaseAllocation getDatabaseAllocation() {
+		return databaseAllocation;
 	}
 
 	protected Configuration prepareConfiguration(String name) {

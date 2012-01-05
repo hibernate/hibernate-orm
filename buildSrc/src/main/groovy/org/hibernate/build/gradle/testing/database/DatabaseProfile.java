@@ -28,6 +28,8 @@ import java.util.Map;
 
 import org.gradle.api.artifacts.Configuration;
 
+import org.hibernate.build.qalab.DatabaseAllocation;
+
 /**
  * Contract for database "profiles".
  *
@@ -39,4 +41,5 @@ public interface DatabaseProfile {
 	public File getDirectory();
 	public Map<String,String> getHibernateProperties();
 	public Configuration getTestingRuntimeConfiguration();
+	public DatabaseAllocation getDatabaseAllocation();
 }

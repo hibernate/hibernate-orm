@@ -71,7 +71,13 @@ public class DatabaseProfilePlugin implements Plugin<Project> {
 		processStandardProfiles( profileMap );
 		processCustomProfiles( profileMap );
 		this.profiles = new ArrayList<DatabaseProfile>();
-		this.profiles.addAll( profileMap.values() );
+
+		DatabaseAllocationCleanUp listener = new DatabaseAllocationCleanUp();
+		project.getGradle().addBuildListener( listener );
+		for ( DatabaseProfile profile : profileMap.values() ) {
+			this.profiles.add( profile );
+			listener.addDatabaseAllocation( profile.getDatabaseAllocation() );
+		}
     }
 
 	private void processStandardProfiles(Map<String, DatabaseProfile> profileMap) {

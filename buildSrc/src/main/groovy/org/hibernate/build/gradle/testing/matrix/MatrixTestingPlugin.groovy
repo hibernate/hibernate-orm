@@ -40,8 +40,6 @@ import static org.gradle.api.plugins.JavaPlugin.COMPILE_CONFIGURATION_NAME
 import static org.gradle.api.plugins.JavaPlugin.RUNTIME_CONFIGURATION_NAME
 import static org.gradle.api.plugins.JavaPlugin.TEST_COMPILE_CONFIGURATION_NAME
 import static org.gradle.api.plugins.JavaPlugin.TEST_RUNTIME_CONFIGURATION_NAME
-import org.gradle.BuildAdapter
-import org.gradle.BuildResult
 
 /**
  * TODO : 1) add a base configuration of common attribute across all matrix node tasks (convention)
@@ -83,12 +81,9 @@ public class MatrixTestingPlugin implements Plugin<Project> {
         matrixSourceSet = prepareSourceSet();
 
 		matrixTask = prepareGroupingTask();
-		DatabaseAllocationCleanUp listener = new DatabaseAllocationCleanUp();
-		project.rootProject.gradle.addBuildListener( listener );
         for ( MatrixNode matrixNode: matrixNodes ) {
             Task matrixNodeTask = prepareNodeTask( matrixNode );
             matrixTask.dependsOn( matrixNodeTask );
-			listener.addDatabaseAllocation( matrixNode.databaseAllocation );
         }
 
         if ( !System.properties[SKIP_UNIT_TEST].equals('true') ) {
@@ -97,20 +92,8 @@ public class MatrixTestingPlugin implements Plugin<Project> {
     }
 
 	private List<MatrixNode> locateMatrixNodes() {
-        return locateMatrixNodes( this.project );
-    }
-
-    private List<MatrixNode> locateMatrixNodes(Project project) {
-        if ( project == null ) {
-            return null; // EARLY EXIT!!!
-        }
-
-        if ( ! project.plugins.hasPlugin(DatabaseProfilePlugin) ) {
-            return locateMatrixNodes( project.parent ); // EARLY EXIT!!!
-        }
-
         List<MatrixNode> matrixNodes = new ArrayList<MatrixNode>();
-		Iterable<DatabaseProfile> profiles = project.plugins[DatabaseProfilePlugin].databaseProfiles;
+		Iterable<DatabaseProfile> profiles = project.rootProject.plugins[DatabaseProfilePlugin].databaseProfiles;
 		if ( profiles != null ) {
 			for ( DatabaseProfile profile : profiles ) {
 				matrixNodes.add( new MatrixNode( project, profile, theJdk ) );

@@ -34,13 +34,14 @@ import org.hibernate.PersistentObjectException;
 import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PersistEvent;
 import org.hibernate.event.spi.PersistEventListener;
 import org.hibernate.id.ForeignGenerator;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.collections.IdentityMap;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 
@@ -52,8 +53,20 @@ import org.hibernate.proxy.LazyInitializer;
  */
 public class DefaultPersistEventListener extends AbstractSaveEventListener implements PersistEventListener {
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
-                                                                       DefaultPersistEventListener.class.getName());
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			DefaultPersistEventListener.class.getName()
+	);
+
+	@Override
+    protected CascadingAction getCascadeAction() {
+		return CascadingAction.PERSIST;
+	}
+
+	@Override
+    protected Boolean getAssumedUnsaved() {
+		return Boolean.TRUE;
+	}
 
 	/**
 	 * Handle the given create event.
@@ -64,7 +77,6 @@ public class DefaultPersistEventListener extends AbstractSaveEventListener imple
 	public void onPersist(PersistEvent event) throws HibernateException {
 		onPersist( event, new IdentityHashMap(10) );
 	}
-
 
 	/**
 	 * Handle the given create event.
@@ -125,27 +137,39 @@ public class DefaultPersistEventListener extends AbstractSaveEventListener imple
 		}
 
 		switch ( entityState ) {
-			case DETACHED:
+			case DETACHED: {
 				throw new PersistentObjectException(
 						"detached entity passed to persist: " +
 								getLoggableName( event.getEntityName(), entity )
 				);
-			case PERSISTENT:
+			}
+			case PERSISTENT: {
 				entityIsPersistent( event, createCache );
 				break;
-			case TRANSIENT:
+			}
+			case TRANSIENT: {
 				entityIsTransient( event, createCache );
 				break;
-			default:
+			}
+			case DELETED: {
+				entityEntry.setStatus( Status.MANAGED );
+				entityEntry.setDeletedState( null );
+				event.getSession().getActionQueue().unScheduleDeletion( entityEntry, event.getObject() );
+				entityIsDeleted( event, createCache );
+				break;
+			}
+			default: {
 				throw new ObjectDeletedException(
 						"deleted entity passed to persist",
 						null,
 						getLoggableName( event.getEntityName(), entity )
 				);
+			}
 		}
 
 	}
 
+	@SuppressWarnings( {"unchecked"})
 	protected void entityIsPersistent(PersistEvent event, Map createCache) {
 		LOG.trace( "Ignoring persistent instance" );
 		final EventSource source = event.getSession();
@@ -156,40 +180,53 @@ public class DefaultPersistEventListener extends AbstractSaveEventListener imple
 		final EntityPersister persister = source.getEntityPersister( event.getEntityName(), entity );
 
 		if ( createCache.put(entity, entity)==null ) {
-			//TODO: merge into one method!
-			cascadeBeforeSave(source, persister, entity, createCache);
-			cascadeAfterSave(source, persister, entity, createCache);
-		}
+			justCascade( createCache, source, entity, persister );
 
+		}
+	}
+
+	private void justCascade(Map createCache, EventSource source, Object entity, EntityPersister persister) {
+		//TODO: merge into one method!
+		cascadeBeforeSave(source, persister, entity, createCache);
+		cascadeAfterSave(source, persister, entity, createCache);
 	}
 
 	/**
 	 * Handle the given create event.
 	 *
 	 * @param event The save event to be handled.
-	 * @throws HibernateException
+	 * @param createCache The copy cache of entity instance to merge/copy instance.
 	 */
-	protected void entityIsTransient(PersistEvent event, Map createCache) throws HibernateException {
-
+	@SuppressWarnings( {"unchecked"})
+	protected void entityIsTransient(PersistEvent event, Map createCache) {
 		LOG.trace( "Saving transient instance" );
 
 		final EventSource source = event.getSession();
-
 		final Object entity = source.getPersistenceContext().unproxy( event.getObject() );
 
-		if ( createCache.put(entity, entity)==null ) {
+		if ( createCache.put( entity, entity ) == null ) {
 			saveWithGeneratedId( entity, event.getEntityName(), createCache, source, false );
 		}
-
 	}
 
-	@Override
-    protected CascadingAction getCascadeAction() {
-		return CascadingAction.PERSIST;
-	}
+	@SuppressWarnings( {"unchecked"})
+	private void entityIsDeleted(PersistEvent event, Map createCache) {
+		final EventSource source = event.getSession();
 
-	@Override
-    protected Boolean getAssumedUnsaved() {
-		return Boolean.TRUE;
+		final Object entity = source.getPersistenceContext().unproxy( event.getObject() );
+		final EntityPersister persister = source.getEntityPersister( event.getEntityName(), entity );
+
+		LOG.tracef(
+				"un-scheduling entity deletion [%s]",
+				MessageHelper.infoString(
+						persister,
+						persister.getIdentifier( entity, source ),
+						source.getFactory()
+				)
+		);
+
+		if ( createCache.put( entity, entity ) == null ) {
+			justCascade( createCache, source, entity, persister );
+		}
 	}
 }

@@ -75,7 +75,7 @@ public class ActionQueue {
 	// they must happen in the right order so as to respect referential
 	// integrity
 	private ArrayList insertions;
-	private ArrayList deletions;
+	private ArrayList<EntityDeleteAction> deletions;
 	private ArrayList updates;
 	// Actually the semantics of the next three are really "Bag"
 	// Note that, unlike objects, collection insertions, updates,
@@ -100,7 +100,7 @@ public class ActionQueue {
 
 	private void init() {
 		insertions = new ArrayList( INIT_QUEUE_LIST_SIZE );
-		deletions = new ArrayList( INIT_QUEUE_LIST_SIZE );
+		deletions = new ArrayList<EntityDeleteAction>( INIT_QUEUE_LIST_SIZE );
 		updates = new ArrayList( INIT_QUEUE_LIST_SIZE );
 
 		collectionCreations = new ArrayList( INIT_QUEUE_LIST_SIZE );
@@ -260,9 +260,8 @@ public class ActionQueue {
 	}
 
 	private void executeActions(List list) throws HibernateException {
-		int size = list.size();
-		for ( int i = 0; i < size; i++ ) {
-			execute( (Executable) list.get( i ) );
+		for ( Object aList : list ) {
+			execute( (Executable) aList );
 		}
 		list.clear();
 		session.getTransactionCoordinator().getJdbcCoordinator().executeBatch();
@@ -406,6 +405,17 @@ public class ActionQueue {
 				collectionCreations.size() > 0;
 	}
 
+	public void unScheduleDeletion(EntityEntry entry, Object rescuedEntity) {
+		for ( int i = 0; i < deletions.size(); i++ ) {
+			EntityDeleteAction action = deletions.get( i );
+			if ( action.getInstance() == rescuedEntity ) {
+				deletions.remove( i );
+				return;
+			}
+		}
+		throw new AssertionFailure( "Unable to perform un-delete for instance " + entry.getEntityName() );
+	}
+
 	/**
 	 * Used by the owning session to explicitly control serialization of the
 	 * action queue
@@ -490,9 +500,9 @@ public class ActionQueue {
 
 		queueSize = ois.readInt();
 		LOG.tracev( "Starting deserialization of [{0}] deletions entries", queueSize );
-		rtn.deletions = new ArrayList<Executable>( queueSize );
+		rtn.deletions = new ArrayList<EntityDeleteAction>( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
-			EntityAction action = ( EntityAction ) ois.readObject();
+			EntityDeleteAction action = ( EntityDeleteAction ) ois.readObject();
 			action.afterDeserialize( session );
 			rtn.deletions.add( action );
 		}
@@ -551,16 +561,14 @@ public class ActionQueue {
 		}
 
 		public void beforeTransactionCompletion() {
-			final int size = processes.size();
-			for ( int i = 0; i < size; i++ ) {
+			for ( BeforeTransactionCompletionProcess process : processes ) {
 				try {
-					BeforeTransactionCompletionProcess process = processes.get( i );
 					process.doBeforeTransactionCompletion( session );
 				}
-				catch ( HibernateException he ) {
+				catch (HibernateException he) {
 					throw he;
 				}
-				catch ( Exception e ) {
+				catch (Exception e) {
 					throw new AssertionFailure( "Unable to perform beforeTransactionCompletion callback", e );
 				}
 			}

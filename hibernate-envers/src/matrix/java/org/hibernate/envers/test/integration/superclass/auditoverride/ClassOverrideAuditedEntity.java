@@ -7,23 +7,23 @@ import org.hibernate.envers.Audited;
 import javax.persistence.Entity;
 
 /**
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Lukasz Antoniak (lukasz.antoniak at gmail dot com)
  */
 @Entity
-@AuditOverrides({@AuditOverride(forClass = NotAuditedBaseEntity.class, name = "str1", isAudited = true)})
-public class AuditedSpecialEntity extends NotAuditedBaseEntity {
+@AuditOverrides({@AuditOverride(forClass = NotAuditedBaseEntity.class, isAudited = true)})
+public class ClassOverrideAuditedEntity extends NotAuditedBaseEntity {
     @Audited
     private String str2;
 
-    public AuditedSpecialEntity() {
+    public ClassOverrideAuditedEntity() {
     }
 
-    public AuditedSpecialEntity(String str1, Integer number, String str2) {
+    public ClassOverrideAuditedEntity(String str1, Integer number, String str2) {
         super(str1, number);
         this.str2 = str2;
     }
 
-    public AuditedSpecialEntity(String str1, Integer number, Integer id, String str2) {
+    public ClassOverrideAuditedEntity(String str1, Integer number, Integer id, String str2) {
         super(str1, number, id);
         this.str2 = str2;
     }
@@ -31,10 +31,10 @@ public class AuditedSpecialEntity extends NotAuditedBaseEntity {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof AuditedSpecialEntity)) return false;
+        if (!(o instanceof ClassOverrideAuditedEntity)) return false;
         if (!super.equals(o)) return false;
 
-        AuditedSpecialEntity that = (AuditedSpecialEntity) o;
+        ClassOverrideAuditedEntity that = (ClassOverrideAuditedEntity) o;
 
         if (str2 != null ? !str2.equals(that.str2) : that.str2 != null) return false;
 
@@ -50,7 +50,7 @@ public class AuditedSpecialEntity extends NotAuditedBaseEntity {
 
     @Override
     public String toString() {
-        return "AuditedSpecialEntity(" + super.toString() + ", str2 = " + str2 + ")";
+        return "ClassOverrideAuditedEntity(" + super.toString() + ", str2 = " + str2 + ")";
     }
 
     public String getStr2() {

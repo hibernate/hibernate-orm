@@ -26,10 +26,11 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 public @interface AuditOverride {
 
 	/**
-	 * @return <strong>Required</strong> Name of the field (or property) whose mapping
-	 * is being overridden.
+	 * @return Name of the field (or property) whose mapping is being overridden. Allows empty value if
+	 * {@link AuditOverride} is used to change auditing behavior of all attributes inherited from
+	 * {@link MappedSuperclass} type.
 	 */
-	String name();
+	String name() default "";
 
 	/**
 	 * @return Indicates if the field (or property) is audited; defaults to {@code true}.
@@ -47,5 +48,5 @@ public @interface AuditOverride {
 	 * {@link AuditOverride} is used to change auditing behavior of attributes inherited from {@link MappedSuperclass}
 	 * type.
 	 */
-	Class relatedClass() default void.class;
+	Class forClass() default void.class;
 }

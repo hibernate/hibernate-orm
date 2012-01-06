@@ -7,35 +7,34 @@ import org.hibernate.envers.Audited;
 import javax.persistence.Entity;
 
 /**
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Lukasz Antoniak (lukasz.antoniak at gmail dot com)
  */
 @Entity
-@Audited
-@AuditOverrides({@AuditOverride(relatedClass = BaseEntity.class, name = "str1", isAudited = false),
-                 @AuditOverride(relatedClass = BaseEntity.class, name = "number1", isAudited = true)})
-public class PropertyOverrideTestEntity extends BaseEntity {
+@AuditOverrides({@AuditOverride(forClass = AuditedBaseEntity.class, isAudited = false)})
+public class ClassOverrideNotAuditedEntity extends AuditedBaseEntity {
+    @Audited
     private String str2;
 
-    public PropertyOverrideTestEntity() {
+    public ClassOverrideNotAuditedEntity() {
     }
 
-    public PropertyOverrideTestEntity(String str1, Integer number1, String str2) {
-        super(str1, number1);
+    public ClassOverrideNotAuditedEntity(String str1, Integer number, String str2) {
+        super(str1, number);
         this.str2 = str2;
     }
 
-    public PropertyOverrideTestEntity(String str1, Integer number1, Integer id, String str2) {
-        super(str1, number1, id);
+    public ClassOverrideNotAuditedEntity(String str1, Integer number, Integer id, String str2) {
+        super(str1, number, id);
         this.str2 = str2;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof PropertyOverrideTestEntity)) return false;
+        if (!(o instanceof ClassOverrideNotAuditedEntity)) return false;
         if (!super.equals(o)) return false;
 
-        PropertyOverrideTestEntity that = (PropertyOverrideTestEntity) o;
+        ClassOverrideNotAuditedEntity that = (ClassOverrideNotAuditedEntity) o;
 
         if (str2 != null ? !str2.equals(that.str2) : that.str2 != null) return false;
 
@@ -51,7 +50,7 @@ public class PropertyOverrideTestEntity extends BaseEntity {
 
     @Override
     public String toString() {
-        return "PropertyOverrideTestEntity(" + super.toString() + ", str2 = " + str2 + ")";
+        return "ClassOverrideNotAuditedEntity(" + super.toString() + ", str2 = " + str2 + ")";
     }
 
     public String getStr2() {

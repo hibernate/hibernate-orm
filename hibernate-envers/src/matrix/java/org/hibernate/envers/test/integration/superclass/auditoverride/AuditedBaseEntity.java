@@ -1,5 +1,7 @@
 package org.hibernate.envers.test.integration.superclass.auditoverride;
 
+import org.hibernate.envers.Audited;
+
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
@@ -8,8 +10,9 @@ import java.io.Serializable;
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
+@Audited
 @MappedSuperclass
-public class NotAnnotatedBaseEntity implements Serializable {
+public class AuditedBaseEntity implements Serializable {
     @Id
     @GeneratedValue
     private Integer id;
@@ -18,16 +21,16 @@ public class NotAnnotatedBaseEntity implements Serializable {
 
     private Integer number1;
 
-    public NotAnnotatedBaseEntity() {
+    public AuditedBaseEntity() {
     }
 
-    public NotAnnotatedBaseEntity(String str1, Integer number1, Integer id) {
+    public AuditedBaseEntity(String str1, Integer number1, Integer id) {
         this.id = id;
         this.str1 = str1;
         this.number1 = number1;
     }
 
-    public NotAnnotatedBaseEntity(String str1, Integer number1) {
+    public AuditedBaseEntity(String str1, Integer number1) {
         this.str1 = str1;
         this.number1 = number1;
     }
@@ -58,9 +61,9 @@ public class NotAnnotatedBaseEntity implements Serializable {
 
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof NotAnnotatedBaseEntity)) return false;
+        if (!(o instanceof AuditedBaseEntity)) return false;
 
-        NotAnnotatedBaseEntity that = (NotAnnotatedBaseEntity) o;
+        AuditedBaseEntity that = (AuditedBaseEntity) o;
 
         if (id != null ? !id.equals(that.id) : that.id != null) return false;
         if (number1 != null ? !number1.equals(that.number1) : that.number1 != null) return false;
@@ -78,6 +81,6 @@ public class NotAnnotatedBaseEntity implements Serializable {
     }
 
     public String toString() {
-        return "NotAnnotatedBaseEntity(id = " + id + ", str1 = " + str1 + ", number1 = " + number1 + ")";
+        return "AuditedBaseEntity(id = " + id + ", str1 = " + str1 + ", number1 = " + number1 + ")";
     }
 }

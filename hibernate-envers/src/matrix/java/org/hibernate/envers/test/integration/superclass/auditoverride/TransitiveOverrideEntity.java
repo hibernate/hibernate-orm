@@ -11,20 +11,20 @@ import javax.persistence.Entity;
  */
 @Entity
 @Audited
-@AuditOverrides({@AuditOverride(relatedClass = BaseEntity.class, name = "str1", isAudited = true),
-                 @AuditOverride(relatedClass = ExtendedBaseEntity.class, name = "number2", isAudited = true)})
-public class TransitiveOverrideTestEntity extends ExtendedBaseEntity {
+@AuditOverrides({@AuditOverride(forClass = BaseEntity.class, name = "str1", isAudited = true),
+                 @AuditOverride(forClass = ExtendedBaseEntity.class, name = "number2", isAudited = true)})
+public class TransitiveOverrideEntity extends ExtendedBaseEntity {
     private String str3;
 
-    public TransitiveOverrideTestEntity() {
+    public TransitiveOverrideEntity() {
     }
 
-    public TransitiveOverrideTestEntity(String str1, Integer number1, Integer id, String str2, Integer number2, String str3) {
+    public TransitiveOverrideEntity(String str1, Integer number1, Integer id, String str2, Integer number2, String str3) {
         super(str1, number1, id, str2, number2);
         this.str3 = str3;
     }
 
-    public TransitiveOverrideTestEntity(String str1, Integer number1, String str2, Integer number2, String str3) {
+    public TransitiveOverrideEntity(String str1, Integer number1, String str2, Integer number2, String str3) {
         super(str1, number1, str2, number2);
         this.str3 = str3;
     }
@@ -32,10 +32,10 @@ public class TransitiveOverrideTestEntity extends ExtendedBaseEntity {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof TransitiveOverrideTestEntity)) return false;
+        if (!(o instanceof TransitiveOverrideEntity)) return false;
         if (!super.equals(o)) return false;
 
-        TransitiveOverrideTestEntity that = (TransitiveOverrideTestEntity) o;
+        TransitiveOverrideEntity that = (TransitiveOverrideEntity) o;
 
         if (str3 != null ? !str3.equals(that.str3) : that.str3 != null) return false;
 
@@ -51,7 +51,7 @@ public class TransitiveOverrideTestEntity extends ExtendedBaseEntity {
 
     @Override
     public String toString() {
-        return "TransitiveOverrideTestEntity(" + super.toString() + ", str3 = " + str3 + ")";
+        return "TransitiveOverrideEntity(" + super.toString() + ", str3 = " + str3 + ")";
     }
 
     public String getStr3() {

@@ -313,9 +313,10 @@
 
         <para>
             If you'd like to audit properties of a superclass of an entity, which are not explicitly audited (which
-            don't have the <literal>@Audited</literal> annotation on any properties or on the class),
-            you can list the superclasses in the <literal>auditParents</literal> attribute of the
-            <interfacename>@Audited</interfacename> annotation.
+            don't have the <literal>@Audited</literal> annotation on any properties or on the class), you can list the
+            superclasses in the <literal>auditParents</literal> attribute of the <interfacename>@Audited</interfacename>
+            annotation. Please note that <literal>auditParents</literal> feature has been deprecated. Use
+            <literal>@AuditOverride(forClass = SomeEntity.class, isAudited = true/false)</literal> instead.
         </para>
     </section>
 

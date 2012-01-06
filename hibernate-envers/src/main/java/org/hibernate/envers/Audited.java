@@ -55,6 +55,8 @@ public @interface Audited {
      *
      * If a parent type lists any of its parent types using this attribute, all properties in the specified classes
      * will also be audited.
+     *
+     * @deprecated Use {@code @AuditOverride(forClass=SomeEntity.class)} instead.
      */
     Class[] auditParents() default {};
 }

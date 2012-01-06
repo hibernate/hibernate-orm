@@ -10,31 +10,32 @@ import javax.persistence.Entity;
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @Entity
-@AuditOverrides({@AuditOverride(forClass = NotAuditedBaseEntity.class, name = "str1", isAudited = true)})
-public class AuditedSpecialEntity extends NotAuditedBaseEntity {
-    @Audited
+@Audited
+@AuditOverrides({@AuditOverride(forClass = BaseEntity.class, name = "str1", isAudited = false),
+                 @AuditOverride(forClass = BaseEntity.class, name = "number1", isAudited = true)})
+public class PropertyOverrideEntity extends BaseEntity {
     private String str2;
 
-    public AuditedSpecialEntity() {
+    public PropertyOverrideEntity() {
     }
 
-    public AuditedSpecialEntity(String str1, Integer number, String str2) {
-        super(str1, number);
+    public PropertyOverrideEntity(String str1, Integer number1, String str2) {
+        super(str1, number1);
         this.str2 = str2;
     }
 
-    public AuditedSpecialEntity(String str1, Integer number, Integer id, String str2) {
-        super(str1, number, id);
+    public PropertyOverrideEntity(String str1, Integer number1, Integer id, String str2) {
+        super(str1, number1, id);
         this.str2 = str2;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof AuditedSpecialEntity)) return false;
+        if (!(o instanceof PropertyOverrideEntity)) return false;
         if (!super.equals(o)) return false;
 
-        AuditedSpecialEntity that = (AuditedSpecialEntity) o;
+        PropertyOverrideEntity that = (PropertyOverrideEntity) o;
 
         if (str2 != null ? !str2.equals(that.str2) : that.str2 != null) return false;
 
@@ -50,7 +51,7 @@ public class AuditedSpecialEntity extends NotAuditedBaseEntity {
 
     @Override
     public String toString() {
-        return "AuditedSpecialEntity(" + super.toString() + ", str2 = " + str2 + ")";
+        return "PropertyOverrideEntity(" + super.toString() + ", str2 = " + str2 + ")";
     }
 
     public String getStr2() {

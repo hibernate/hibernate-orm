@@ -15,7 +15,7 @@ import javax.persistence.EntityManager;
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @TestForIssue(jiraKey = "HHH-4439")
-public class AuditOverrideTest extends AbstractEntityTest {
+public class AuditPropertyOverrideTest extends AbstractEntityTest {
     private Integer propertyEntityId = null;
     private Integer transitiveEntityId = null;
     private Integer auditedEntityId = null;
@@ -25,8 +25,8 @@ public class AuditOverrideTest extends AbstractEntityTest {
 
     @Override
     public void configure(Ejb3Configuration cfg) {
-        cfg.addAnnotatedClass(PropertyOverrideTestEntity.class);
-        cfg.addAnnotatedClass(TransitiveOverrideTestEntity.class);
+        cfg.addAnnotatedClass(PropertyOverrideEntity.class);
+        cfg.addAnnotatedClass(TransitiveOverrideEntity.class);
         cfg.addAnnotatedClass(AuditedSpecialEntity.class);
     }
 
@@ -37,14 +37,14 @@ public class AuditOverrideTest extends AbstractEntityTest {
 
         // Revision 1
         em.getTransaction().begin();
-        PropertyOverrideTestEntity propertyEntity = new PropertyOverrideTestEntity("data 1", 1, "data 2");
+        PropertyOverrideEntity propertyEntity = new PropertyOverrideEntity("data 1", 1, "data 2");
         em.persist(propertyEntity);
         em.getTransaction().commit();
         propertyEntityId = propertyEntity.getId();
 
         // Revision 2
         em.getTransaction().begin();
-        TransitiveOverrideTestEntity transitiveEntity = new TransitiveOverrideTestEntity("data 1", 1, "data 2", 2, "data 3");
+        TransitiveOverrideEntity transitiveEntity = new TransitiveOverrideEntity("data 1", 1, "data 2", 2, "data 3");
         em.persist(transitiveEntity);
         em.getTransaction().commit();
         transitiveEntityId = transitiveEntity.getId();
@@ -56,8 +56,8 @@ public class AuditOverrideTest extends AbstractEntityTest {
         em.getTransaction().commit();
         auditedEntityId = auditedEntity.getId();
 
-        propertyTable = getCfg().getClassMapping("org.hibernate.envers.test.integration.superclass.auditoverride.PropertyOverrideTestEntity_AUD").getTable();
-        transitiveTable = getCfg().getClassMapping("org.hibernate.envers.test.integration.superclass.auditoverride.TransitiveOverrideTestEntity_AUD").getTable();
+        propertyTable = getCfg().getClassMapping("org.hibernate.envers.test.integration.superclass.auditoverride.PropertyOverrideEntity_AUD").getTable();
+        transitiveTable = getCfg().getClassMapping("org.hibernate.envers.test.integration.superclass.auditoverride.TransitiveOverrideEntity_AUD").getTable();
         auditedTable = getCfg().getClassMapping("org.hibernate.envers.test.integration.superclass.auditoverride.AuditedSpecialEntity_AUD").getTable();
     }
 
@@ -81,14 +81,14 @@ public class AuditOverrideTest extends AbstractEntityTest {
 
     @Test
     public void testHistoryOfPropertyOverrideEntity() {
-        PropertyOverrideTestEntity ver1 = new PropertyOverrideTestEntity(null, 1, propertyEntityId, "data 2");
-        Assert.assertEquals(ver1, getAuditReader().find(PropertyOverrideTestEntity.class, propertyEntityId, 1));
+        PropertyOverrideEntity ver1 = new PropertyOverrideEntity(null, 1, propertyEntityId, "data 2");
+        Assert.assertEquals(ver1, getAuditReader().find(PropertyOverrideEntity.class, propertyEntityId, 1));
     }
 
     @Test
     public void testHistoryOfTransitiveOverrideEntity() {
-        TransitiveOverrideTestEntity ver1 = new TransitiveOverrideTestEntity("data 1", 1, transitiveEntityId, "data 2", 2, "data 3");
-        Assert.assertEquals(ver1, getAuditReader().find(TransitiveOverrideTestEntity.class, transitiveEntityId, 2));
+        TransitiveOverrideEntity ver1 = new TransitiveOverrideEntity("data 1", 1, transitiveEntityId, "data 2", 2, "data 3");
+        Assert.assertEquals(ver1, getAuditReader().find(TransitiveOverrideEntity.class, transitiveEntityId, 2));
     }
 
     @Test

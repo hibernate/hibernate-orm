@@ -11,8 +11,8 @@ import javax.persistence.MappedSuperclass;
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @MappedSuperclass
-@AuditOverrides({@AuditOverride(relatedClass = BaseEntity.class, name = "str1", isAudited = false),
-                 @AuditOverride(relatedClass = BaseEntity.class, name = "number1", isAudited = true)})
+@AuditOverrides({@AuditOverride(forClass = BaseEntity.class, name = "str1", isAudited = false),
+                 @AuditOverride(forClass = BaseEntity.class, name = "number1", isAudited = true)})
 public class ExtendedBaseEntity extends BaseEntity {
     @Audited
     private String str2;

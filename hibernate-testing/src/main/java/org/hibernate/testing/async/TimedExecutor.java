@@ -25,10 +25,14 @@ package org.hibernate.testing.async;
 
 import java.util.concurrent.TimeoutException;
 
+import org.jboss.logging.Logger;
+
 /**
  * @author Steve Ebersole
  */
 public class TimedExecutor {
+	private static final Logger log = Logger.getLogger( TimedExecutor.class );
+
 	private final long timeOut;
 	private final int checkMilliSeconds;
 
@@ -63,5 +67,7 @@ public class TimedExecutor {
 			catch (InterruptedException ignore) {
 			}
 		} while ( !adapter.isDone() );
+
+		adapter.reThrowAnyErrors();
 	}
 }

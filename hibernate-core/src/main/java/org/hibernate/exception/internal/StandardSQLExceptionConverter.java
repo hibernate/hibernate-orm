@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -23,26 +23,32 @@
  */
 package org.hibernate.exception.internal;
 
-import org.hibernate.exception.spi.ConversionContext;
+import java.sql.SQLException;
+import java.util.ArrayList;
+
+import org.hibernate.JDBCException;
+import org.hibernate.exception.GenericJDBCException;
+import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.SQLExceptionConverter;
-import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 
 /**
- * @deprecated Use {@link StandardSQLExceptionConverter} with {@link SQLStateConversionDelegate}
- * instead
- *
  * @author Steve Ebersole
  */
-@Deprecated
-public class SQLStateConverter extends StandardSQLExceptionConverter implements SQLExceptionConverter {
-	public SQLStateConverter(final ViolatedConstraintNameExtracter extracter) {
-		super();
-		final ConversionContext conversionContext = new ConversionContext() {
-			@Override
-			public ViolatedConstraintNameExtracter getViolatedConstraintNameExtracter() {
-				return extracter;
+public class StandardSQLExceptionConverter implements SQLExceptionConverter {
+	private ArrayList<SQLExceptionConversionDelegate> delegates = new ArrayList<SQLExceptionConversionDelegate>();
+
+	public void addDelegate(SQLExceptionConversionDelegate delegate) {
+		this.delegates.add( delegate );
+	}
+
+	@Override
+	public JDBCException convert(SQLException sqlException, String message, String sql) {
+		for ( SQLExceptionConversionDelegate delegate : delegates ) {
+			final JDBCException jdbcException = delegate.convert( sqlException, message, sql );
+			if ( jdbcException != null ) {
+				return jdbcException;
 			}
-		};
-		addDelegate( new SQLStateConversionDelegate( conversionContext ) );
+		}
+		return new GenericJDBCException( message, sqlException, sql );
 	}
 }

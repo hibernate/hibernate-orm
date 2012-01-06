@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,28 +21,28 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.exception.internal;
+package org.hibernate.exception.spi;
 
-import org.hibernate.exception.spi.ConversionContext;
-import org.hibernate.exception.spi.SQLExceptionConverter;
-import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
+import java.sql.SQLException;
+
+import org.hibernate.JDBCException;
 
 /**
- * @deprecated Use {@link StandardSQLExceptionConverter} with {@link SQLStateConversionDelegate}
- * instead
+ * Allow a {@link SQLExceptionConverter} to work by chaining together multiple such delegates.  The main
+ * difference between a delegate and a full-fledged converter is that a delegate may return {@code null}.
  *
  * @author Steve Ebersole
  */
-@Deprecated
-public class SQLStateConverter extends StandardSQLExceptionConverter implements SQLExceptionConverter {
-	public SQLStateConverter(final ViolatedConstraintNameExtracter extracter) {
-		super();
-		final ConversionContext conversionContext = new ConversionContext() {
-			@Override
-			public ViolatedConstraintNameExtracter getViolatedConstraintNameExtracter() {
-				return extracter;
-			}
-		};
-		addDelegate( new SQLStateConversionDelegate( conversionContext ) );
-	}
+public interface SQLExceptionConversionDelegate {
+	/**
+	 * Convert the given SQLException into the Hibernate {@link org.hibernate.JDBCException} hierarchy.
+	 *
+	 * @param sqlException The SQLException to be converted.
+	 * @param message An (optional) error message.
+	 * @param sql The {@literal SQL} statement, if one, being performed when the exception occurred.
+	 *
+	 * @return The resulting JDBCException, can be {@code null}
+	 */
+	public JDBCException convert(SQLException sqlException, String message, String sql);
+
 }

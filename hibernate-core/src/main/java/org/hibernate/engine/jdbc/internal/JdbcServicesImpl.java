@@ -48,6 +48,12 @@ import org.hibernate.engine.jdbc.spi.ResultSetWrapper;
 import org.hibernate.engine.jdbc.spi.SchemaNameResolver;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
+import org.hibernate.exception.internal.SQLExceptionTypeDelegate;
+import org.hibernate.exception.internal.StandardSQLExceptionConverter;
+import org.hibernate.exception.internal.SQLStateConversionDelegate;
+import org.hibernate.exception.spi.ConversionContext;
+import org.hibernate.exception.spi.SQLExceptionConverter;
+import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
@@ -185,7 +191,7 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 		);
 
 		this.sqlStatementLogger =  new SqlStatementLogger( showSQL, formatSQL );
-		this.sqlExceptionHelper = new SqlExceptionHelper( dialect.buildSQLExceptionConverter() );
+
 		this.extractedMetaDataSupport = new ExtractedDatabaseMetaDataImpl(
 				metaSupportsScrollable,
 				metaSupportsGetGeneratedKeys,
@@ -199,6 +205,26 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 				catalogName,
 				typeInfoSet
 		);
+
+		SQLExceptionConverter sqlExceptionConverter = dialect.buildSQLExceptionConverter();
+		if ( sqlExceptionConverter == null ) {
+			final Dialect finalDialect = dialect;
+			final ConversionContext conversionContext = new ConversionContext() {
+				private final ViolatedConstraintNameExtracter extracter = finalDialect.getViolatedConstraintNameExtracter();
+
+				@Override
+				public ViolatedConstraintNameExtracter getViolatedConstraintNameExtracter() {
+					return extracter;
+				}
+			};
+			final StandardSQLExceptionConverter converter = new StandardSQLExceptionConverter();
+			sqlExceptionConverter = converter;
+			converter.addDelegate( new SQLExceptionTypeDelegate( conversionContext ) );
+			// todo : vary this based on extractedMetaDataSupport.getSqlStateType()
+			converter.addDelegate( new SQLStateConversionDelegate( conversionContext ) );
+			// todo : add Dialect#getSQLExceptionConversionDelegate method and add result here if non-null
+		}
+		this.sqlExceptionHelper = new SqlExceptionHelper( sqlExceptionConverter );
 	}
 
 	private JdbcConnectionAccess buildJdbcConnectionAccess(Map configValues) {

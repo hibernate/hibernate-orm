@@ -1500,7 +1500,8 @@ public abstract class Dialect {
 		// The default SQLExceptionConverter for all dialects is based on SQLState
 		// since SQLErrorCode is extremely vendor-specific.  Specific Dialects
 		// may override to return whatever is most appropriate for that vendor.
-		return new SQLStateConverter( getViolatedConstraintNameExtracter() );
+//		return new SQLStateConverter( getViolatedConstraintNameExtracter() );
+		return null;
 	}
 
 	private static final ViolatedConstraintNameExtracter EXTRACTER = new ViolatedConstraintNameExtracter() {

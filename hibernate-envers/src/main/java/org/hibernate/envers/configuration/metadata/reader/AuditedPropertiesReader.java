@@ -126,7 +126,7 @@ public class AuditedPropertiesReader {
                 checkSuperclass(clazz, overrideClass);
                 String propertyName = auditOverride.name();
                 if (!StringTools.isEmpty(propertyName)) {
-                    // Overridden @Audited annotation on property level.
+                    // Override @Audited annotation on property level.
                     XProperty property = getProperty(overrideClass, propertyName);
                     if (auditOverride.isAudited()) {
                         if (!overriddenNotAuditedProperties.contains(property)) {
@@ -140,7 +140,7 @@ public class AuditedPropertiesReader {
                         }
                     }
                 } else {
-                    // Overridden @Audited annotation on class level.
+                    // Override @Audited annotation on class level.
                     if (auditOverride.isAudited()) {
                         if (!overriddenNotAuditedClasses.contains(overrideClass)) {
                             // If the class has not been marked as not audited by the subclass.
@@ -426,7 +426,7 @@ public class AuditedPropertiesReader {
 		} else {
 			return false;
         }
-	}
+    }
 
     private void setPropertyAuditMappedBy(XProperty property, PropertyAuditingData propertyData) {
         AuditMappedBy auditMappedBy = property.getAnnotation(AuditMappedBy.class);

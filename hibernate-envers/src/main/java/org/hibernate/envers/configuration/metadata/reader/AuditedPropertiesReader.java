@@ -102,7 +102,7 @@ public class AuditedPropertiesReader {
 
     /**
      * Recursively constructs sets of audited and not audited properties and classes which behavior has been overridden
-     * using @AuditOverride annotation.
+     * using {@link AuditOverride} annotation.
      * @param clazz Class that is being processed. Currently mapped entity shall be passed during first invocation.
      */
     private void doReadOverrideAudited(XClass clazz) {
@@ -425,8 +425,8 @@ public class AuditedPropertiesReader {
 			return true;
 		} else {
 			return false;
-        }
-    }
+		}
+	}
 
     private void setPropertyAuditMappedBy(XProperty property, PropertyAuditingData propertyData) {
         AuditMappedBy auditMappedBy = property.getAnnotation(AuditMappedBy.class);

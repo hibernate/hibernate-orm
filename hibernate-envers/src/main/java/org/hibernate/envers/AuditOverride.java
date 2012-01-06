@@ -10,8 +10,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * The {@code AuditingOverride} annotation is used to override the auditing
- * behavior of a field (or property) inherited from {@link MappedSuperclass}
- * type or inside an embedded component.
+ * behavior of a superclass or single property inherited from {@link MappedSuperclass}
+ * type, or inside an embedded component.
  *
  * @author Erik-Berndt Scheper
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)

@@ -35,6 +35,7 @@ import java.util.Properties;
 
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.DB2400Dialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.DerbyTenFiveDialect;
@@ -148,6 +149,7 @@ public class DialectFactoryTest extends BaseUnitTestCase {
 		testDetermination( "DB2/SUN", DB2Dialect.class, resolver );
 		testDetermination( "DB2/LINUX390", DB2Dialect.class, resolver );
 		testDetermination( "DB2/AIX64", DB2Dialect.class, resolver );
+		testDetermination( "DB2 UDB for AS/400", DB2400Dialect.class, resolver );
 		testDetermination( "Oracle", 8, Oracle8iDialect.class, resolver );
 		testDetermination( "Oracle", 9, Oracle9iDialect.class, resolver );
 		testDetermination( "Oracle", 10, Oracle10gDialect.class, resolver );

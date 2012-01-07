@@ -27,6 +27,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 
 import org.hibernate.dialect.CUBRIDDialect;
+import org.hibernate.dialect.DB2400Dialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.DerbyTenFiveDialect;
@@ -148,6 +149,10 @@ public class StandardDialectResolver extends AbstractDialectResolver {
 
 		if ( "Informix Dynamic Server".equals( databaseName ) ) {
 			return new InformixDialect();
+		}
+		
+		if ( databaseName.equals("DB2 UDB for AS/400" ) ) {
+			return new DB2400Dialect();
 		}
 
 		if ( databaseName.startsWith( "DB2/" ) ) {

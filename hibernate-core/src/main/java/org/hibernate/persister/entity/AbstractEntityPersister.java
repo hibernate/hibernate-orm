@@ -2754,7 +2754,10 @@ public abstract class AbstractEntityPersister
 				return object;
 			}
 		};
-		return identityDelegate.performInsert( sql, session, binder );
+
+		String[] identifiers = getIdentifierColumnNames();
+
+		return identityDelegate.performInsert( sql, identifiers[0], session, binder );
 	}
 
 	public String getIdentitySelectString() {

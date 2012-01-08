@@ -92,13 +92,14 @@ public class IdentityGenerator extends AbstractPostInsertGenerator {
 					.prepareStatement( insertSQL, PreparedStatement.RETURN_GENERATED_KEYS );
 		}
 
-		public Serializable executeAndExtract(PreparedStatement insert) throws SQLException {
+		public Serializable executeAndExtract(PreparedStatement insert, String identifier) throws SQLException {
 			insert.executeUpdate();
 			ResultSet rs = null;
 			try {
 				rs = insert.getGeneratedKeys();
 				return IdentifierGeneratorHelper.getGeneratedIdentity(
 						rs,
+						identifier,
 						persister.getIdentifierType()
 				);
 			}
@@ -139,7 +140,7 @@ public class IdentityGenerator extends AbstractPostInsertGenerator {
 					.prepareStatement( insertSQL, PreparedStatement.NO_GENERATED_KEYS );
 		}
 
-		public Serializable executeAndExtract(PreparedStatement insert) throws SQLException {
+		public Serializable executeAndExtract(PreparedStatement insert, String identifier) throws SQLException {
 			if ( !insert.execute() ) {
 				while ( !insert.getMoreResults() && insert.getUpdateCount() != -1 ) {
 					// do nothing until we hit the rsult set containing the generated id
@@ -147,7 +148,7 @@ public class IdentityGenerator extends AbstractPostInsertGenerator {
 			}
 			ResultSet rs = insert.getResultSet();
 			try {
-				return IdentifierGeneratorHelper.getGeneratedIdentity( rs, persister.getIdentifierType() );
+				return IdentifierGeneratorHelper.getGeneratedIdentity( rs, identifier, persister.getIdentifierType() );
 			}
 			finally {
 				rs.close();
@@ -189,7 +190,7 @@ public class IdentityGenerator extends AbstractPostInsertGenerator {
 				SessionImplementor session,
 		        ResultSet rs,
 		        Object object) throws SQLException {
-			return IdentifierGeneratorHelper.getGeneratedIdentity( rs, persister.getIdentifierType() );
+			return IdentifierGeneratorHelper.getGeneratedIdentity( rs, null, persister.getIdentifierType() );
 		}
 	}
 

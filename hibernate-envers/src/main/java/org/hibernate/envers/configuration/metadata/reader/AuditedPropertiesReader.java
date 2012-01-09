@@ -94,7 +94,7 @@ public class AuditedPropertiesReader {
         // Retrieve classes and properties that are explicitly marked for auditing process by any superclass
         // of currently mapped entity or itself.
         XClass clazz = persistentPropertiesSource.getXClass();
-        doReadOverrideAudited(clazz);
+        readAuditOverrides(clazz);
 
         // Adding all properties from the given class.
         addPropertiesFromClass(clazz);
@@ -105,7 +105,7 @@ public class AuditedPropertiesReader {
      * using {@link AuditOverride} annotation.
      * @param clazz Class that is being processed. Currently mapped entity shall be passed during first invocation.
      */
-    private void doReadOverrideAudited(XClass clazz) {
+    private void readAuditOverrides(XClass clazz) {
         /* TODO: Code to remove with @Audited.auditParents - start. */
         Audited allClassAudited = clazz.getAnnotation(Audited.class);
         if (allClassAudited != null && allClassAudited.auditParents().length > 0) {
@@ -157,7 +157,7 @@ public class AuditedPropertiesReader {
         }
         XClass superclass = clazz.getSuperclass();
         if (!clazz.isInterface() && !Object.class.getName().equals(superclass.getName())) {
-            doReadOverrideAudited(superclass);
+            readAuditOverrides(superclass);
         }
     }
 
@@ -239,10 +239,10 @@ public class AuditedPropertiesReader {
     /**
      * @param clazz Class which properties are currently being added.
      * @return {@link Audited} annotation of specified class. If processed type hasn't been explicitly marked, method
-     *         checks whether given class exists in {@code overriddenAuditedClasses} collection. In case of success,
-     *         {@link Audited} configuration of currently mapped entity is returned (or the default if {@link Audited}
-     *         applied on property level), otherwise {@code null}. If processed type exists in
-     *         {@code overriddenNotAuditedClasses} collection, the result is also {@code null}.
+     *         checks whether given class exists in {@link AuditedPropertiesReader#overriddenAuditedClasses} collection.
+     *         In case of success, {@link Audited} configuration of currently mapped entity is returned, otherwise
+     *         {@code null}. If processed type exists in {@link AuditedPropertiesReader#overriddenNotAuditedClasses}
+     *         collection, the result is also {@code null}.
      */
     private Audited computeAuditConfiguration(XClass clazz) {
         Audited allClassAudited = clazz.getAnnotation(Audited.class);

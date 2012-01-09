@@ -47,6 +47,9 @@ public class MappedSuperclassWithEntityWithIdClassTest extends BaseUnitTestCase 
 		assertNotNull( "'ProductAttribute_.value' should not be null)", ProductAttribute_.value );
 		assertNotNull( "'ProductAttribute_.owner' should not be null)", ProductAttribute_.owner );
 		assertNotNull( "'ProductAttribute_.key' should not be null)", ProductAttribute_.key );
+
+		assertNotNull( "'AbstractAttribute_.owner' should not be null)", AbstractAttribute_.owner );
+		assertNotNull( "'AbstractAttribute_.key' should not be null)", AbstractAttribute_.key );
 	}
 
 }

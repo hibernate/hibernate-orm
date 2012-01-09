@@ -45,6 +45,9 @@ public class MappedSuperclassWithEmbeddedIdTest extends BaseUnitTestCase {
 
 		assertNotNull( "'Product_.description' should not be null)", Product_.description );
 		assertNotNull( "'Product_.id' should not be null)", Product_.id );
+
+		assertNotNull( "'Product_.id' should not be null)", AbstractProduct_.id );
+
 		assertNotNull( "'ProductId_.id' should not be null)", ProductId_.id );
 		assertNotNull( "'ProductId_.code' should not be null)", ProductId_.code );
 	}

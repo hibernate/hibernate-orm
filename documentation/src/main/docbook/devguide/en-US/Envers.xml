@@ -292,8 +292,10 @@
         </para>
 
         <para>
-            If you'd like to override auditing behaviour of some fields/properties in an embedded component, you can use
-            the <literal>@AuditOverride(s)</literal> annotation on the usage site of the component.
+            If you'd like to override auditing behaviour of some fields/properties inherited from
+            <interfacename>@Mappedsuperclass</interfacename> or in an embedded component, you can
+            apply the <literal>@AuditOverride(s)</literal> annotation on the subtype or usage site
+            of the component.
         </para>
 
         <para>
@@ -311,9 +313,10 @@
 
         <para>
             If you'd like to audit properties of a superclass of an entity, which are not explicitly audited (which
-            don't have the <literal>@Audited</literal> annotation on any properties or on the class),
-            you can list the superclasses in the <literal>auditParents</literal> attribute of the
-            <interfacename>@Audited</interfacename> annotation.
+            don't have the <literal>@Audited</literal> annotation on any properties or on the class), you can list the
+            superclasses in the <literal>auditParents</literal> attribute of the <interfacename>@Audited</interfacename>
+            annotation. Please note that <literal>auditParents</literal> feature has been deprecated. Use
+            <literal>@AuditOverride(forClass = SomeEntity.class, isAudited = true/false)</literal> instead.
         </para>
     </section>
 

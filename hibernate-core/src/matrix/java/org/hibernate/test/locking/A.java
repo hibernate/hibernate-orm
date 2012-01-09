@@ -36,7 +36,7 @@ import org.hibernate.annotations.GenericGenerator;
 @Entity
 @Table( name = "T_LOCK_A" )
 public class A {
-	private Integer id;
+	private Long id;
 	private String value;
 
 	public A() {
@@ -49,11 +49,11 @@ public class A {
 	@Id
 	@GeneratedValue( generator = "increment" )
 	@GenericGenerator( name = "increment", strategy = "increment" )
-	public Integer getId() {
+	public Long getId() {
 		return id;
 	}
 
-	public void setId(Integer id) {
+	public void setId(Long id) {
 		this.id = id;
 	}
 

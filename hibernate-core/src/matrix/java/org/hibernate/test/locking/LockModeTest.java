@@ -42,6 +42,7 @@ import org.hibernate.testing.async.Executable;
 import org.hibernate.testing.async.TimedExecutor;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
@@ -52,6 +53,8 @@ import static org.junit.Assert.fail;
  */
 @TestForIssue( jiraKey = "HHH-5275")
 public class LockModeTest extends BaseCoreFunctionalTestCase {
+	private Long id;
+
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return  new Class[] { A.class };
@@ -61,7 +64,7 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 	public void createData() {
 		Session session = sessionFactory().openSession();
 		session.beginTransaction();
-		session.save( new A( "it" ) );
+		id = (Long) session.save( new A( "it" ) );
 		session.getTransaction().commit();
 		session.close();
 	}
@@ -82,7 +85,7 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 		Session s1 = sessionFactory().openSession();
 		s1.beginTransaction();
 		try {
-			A it = (A) s1.get( A.class, 1, LockMode.PESSIMISTIC_WRITE );
+			A it = (A) s1.get( A.class, id, LockMode.PESSIMISTIC_WRITE );
 			// make sure we got it
 			assertNotNull( it );
 
@@ -200,7 +203,7 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 								// to write a locked row
 								A it = (A) s.get(
 										A.class,
-										1,
+										id,
 										new LockOptions( LockMode.PESSIMISTIC_WRITE ).setTimeOut( LockOptions.NO_WAIT )
 								);
 								it.setValue( "changed" );

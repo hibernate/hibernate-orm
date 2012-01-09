@@ -101,25 +101,31 @@
     </section>
     
     <section>
-      <title>Obtaining a JDBC connection</title>
-      <para>
-        After you configure the <xref linkend="hibernate-jdbc-properties" />, you can use method
-        <methodname>openSession</methodname> of class <classname>org.hibernate.SessionFactory</classname> to open
-        sessions.  <programlisting language="Java" role="JAVA"><xi:include href="extras/opening_a_session.java"
-        xmlns:xi="http://www.w3.org/2001/XInclude" parse="text" /></programlisting>
-      </para>
-      <itemizedlist id="hibernate-jdbc-properties">
-        <title>Most important Hibernate JDBC properties</title>
-        <listitem><para>hibernate.connection.driver_class</para></listitem>
-        <listitem><para>hibernate.connection.url</para></listitem>
-        <listitem><para>hibernate.connection.username</para></listitem>
-        <listitem><para>hibernate.connection.password</para></listitem>
-        <listitem><para>hibernate.connection.pool_size</para></listitem>
-      </itemizedlist>
-      <para>
-        All Hibernate property names and semantics are defined in class
-        <classname>org.hibernate.cfg.Environment</classname>. See the Javadoc for a complete listing.
-      </para>
+        <title>Obtaining a JDBC connection</title>
+        <para>
+            After you configure the <xref linkend="hibernate-jdbc-properties" />, you can use method
+            <methodname>openSession</methodname> of class <classname>org.hibernate.SessionFactory</classname> to open
+            sessions.  Sessions will obtain JDBC connections as needed based on the provided configuration.
+        </para>
+        <example>
+            <title>Specifying configuration properties</title>
+            <programlisting language="Java" role="JAVA">
+                <xi:include href="extras/opening_a_session.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text" />
+            </programlisting>
+        </example>
+        <itemizedlist id="hibernate-jdbc-properties">
+            <title>Most important Hibernate JDBC properties</title>
+            <listitem><para>hibernate.connection.driver_class</para></listitem>
+            <listitem><para>hibernate.connection.url</para></listitem>
+            <listitem><para>hibernate.connection.username</para></listitem>
+            <listitem><para>hibernate.connection.password</para></listitem>
+            <listitem><para>hibernate.connection.pool_size</para></listitem>
+        </itemizedlist>
+        <para>
+            All available Hibernate settings are defined as constants and discussed on the
+            <interfacename>org.hibernate.cfg.AvailableSettings</interfacename> interface.  See its source code or
+            JavaDoc for details.
+        </para>
     </section>
   </section>
   

@@ -75,7 +75,6 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 		session.close();
 	}
 
-//	@Test( timeout = 6000 )
 	@Test
 	@SuppressWarnings( {"deprecation"})
 	public void testLoading() {
@@ -98,7 +97,6 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-5275" )
 	public void testLegacyCriteria() {
 		// open a session, begin a transaction and lock row
 		Session s1 = sessionFactory().openSession();
@@ -121,7 +119,6 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-5275" )
 	public void testLegacyCriteriaAliasSpecific() {
 		// open a session, begin a transaction and lock row
 		Session s1 = sessionFactory().openSession();
@@ -144,7 +141,6 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-5275" )
 	public void testQuery() {
 		// open a session, begin a transaction and lock row
 		Session s1 = sessionFactory().openSession();

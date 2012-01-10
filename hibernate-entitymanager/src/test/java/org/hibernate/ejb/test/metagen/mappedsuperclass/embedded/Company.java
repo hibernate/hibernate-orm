@@ -21,27 +21,31 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.ejb.test.metadata.mappedsuperclass.idclass;
+package org.hibernate.ejb.test.metagen.mappedsuperclass.embedded;
 
-import java.io.Serializable;
-
-import javax.persistence.MappedSuperclass;
-
+import javax.persistence.Entity;
+import javax.persistence.Id;
 
 /**
- * @author Alexis Bataille
  * @author Steve Ebersole
  */
-@MappedSuperclass
-public abstract class AbstractAttributeId implements Serializable {
-	protected String key;
+@Entity
+public class Company extends AbstractAddressable {
+	private Long id;
 
-	public String getKey() {
-		return key;
+	public Company() {
 	}
 
-	public void setKey(String key) {
-		this.key = key;
+	public Company(Address address) {
+		super( address );
 	}
 
+	@Id
+	public Long getId() {
+		return id;
+	}
+
+	private void setId(Long id) {
+		this.id = id;
+	}
 }

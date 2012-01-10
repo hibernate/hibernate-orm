@@ -21,29 +21,27 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.ejb.test.metadata.mappedsuperclass.embeddedid;
+package org.hibernate.ejb.test.metagen.mappedsuperclass.idclass;
 
-import javax.persistence.EmbeddedId;
-import javax.persistence.MappedSuperclass;
 import java.io.Serializable;
 
+import javax.persistence.MappedSuperclass;
+
+
 /**
- * @author Justin Wesley
+ * @author Alexis Bataille
  * @author Steve Ebersole
  */
 @MappedSuperclass
-public class AbstractProduct implements Serializable {
-	private ProductId id;
+public abstract class AbstractAttributeId implements Serializable {
+	protected String key;
 
-	public AbstractProduct() {
+	public String getKey() {
+		return key;
 	}
 
-	@EmbeddedId
-	public ProductId getId() {
-		return id;
+	public void setKey(String key) {
+		this.key = key;
 	}
 
-	public void setId(ProductId id) {
-		this.id = id;
-	}
 }

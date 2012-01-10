@@ -21,60 +21,49 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.ejb.test.metadata.mappedsuperclass.idclass;
+package org.hibernate.ejb.test.metagen.mappedsuperclass.embedded;
+
+import javax.persistence.Embeddable;
 
 /**
- * @author Alexis Bataille
  * @author Steve Ebersole
  */
-public class ProductAttributeId extends AbstractAttributeId {
-	private String owner;
+@Embeddable
+public class Address {
+	private String street;
+	private String city;
+	private String state;
+	private String zip;
 
-	public String getOwner() {
-		return owner;
+	public String getStreet() {
+		return street;
 	}
 
-	public void setOwner(String owner) {
-		this.owner = owner;
+	public void setStreet(String street) {
+		this.street = street;
 	}
 
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((key == null) ? 0 : key.hashCode());
-		result = prime * result + ((owner == null) ? 0 : owner.hashCode());
-		return result;
+	public String getCity() {
+		return city;
 	}
 
-	@Override
-	public boolean equals(Object obj) {
-		if ( this == obj ) {
-			return true;
-		}
-		if ( obj == null ) {
-			return false;
-		}
-		if ( getClass() != obj.getClass() ) {
-			return false;
-		}
-		ProductAttributeId other = (ProductAttributeId) obj;
-		if ( key == null ) {
-			if ( other.getKey() != null ) {
-				return false;
-			}
-		}
-		else if ( !key.equals( other.getKey() ) ) {
-			return false;
-		}
-		if ( owner == null ) {
-			if ( other.getOwner() != null ) {
-				return false;
-			}
-		}
-		else if ( !owner.equals( other.getOwner() ) ) {
-			return false;
-		}
-		return true;
+	public void setCity(String city) {
+		this.city = city;
+	}
+
+	public String getState() {
+		return state;
+	}
+
+	public void setState(String state) {
+		this.state = state;
+	}
+
+	public String getZip() {
+		return zip;
+	}
+
+	public void setZip(String zip) {
+		this.zip = zip;
 	}
 }

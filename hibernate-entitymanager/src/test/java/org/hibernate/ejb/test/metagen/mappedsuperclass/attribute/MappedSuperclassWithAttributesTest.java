@@ -21,13 +21,12 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.ejb.test.metadata.mappedsuperclass.embeddedid;
+package org.hibernate.ejb.test.metagen.mappedsuperclass.attribute;
 
 import org.hibernate.ejb.Ejb3Configuration;
 
 import org.junit.Test;
 
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
@@ -36,19 +35,15 @@ import static org.junit.Assert.assertNotNull;
 /**
  * @author Steve Ebersole
  */
-public class MappedSuperclassWithEmbeddedIdTest extends BaseUnitTestCase {
+@TestForIssue( jiraKey = "HHH-5024" )
+public class MappedSuperclassWithAttributesTest extends BaseUnitTestCase {
 	@Test
-	@TestForIssue( jiraKey = "HHH-5024" )
-	@FailureExpected( jiraKey = "HHH-5024" )
 	public void testStaticMetamodel() {
 		new Ejb3Configuration().addAnnotatedClass( Product.class ).buildEntityManagerFactory();
 
-		assertNotNull( "'Product_.description' should not be null)", Product_.description );
 		assertNotNull( "'Product_.id' should not be null)", Product_.id );
+		assertNotNull( "'Product_.name' should not be null)", Product_.name );
 
-		assertNotNull( "'Product_.id' should not be null)", AbstractProduct_.id );
-
-		assertNotNull( "'ProductId_.id' should not be null)", ProductId_.id );
-		assertNotNull( "'ProductId_.code' should not be null)", ProductId_.code );
+		assertNotNull( "'AbstractNameable_.name' should not be null)", AbstractNameable_.name );
 	}
 }

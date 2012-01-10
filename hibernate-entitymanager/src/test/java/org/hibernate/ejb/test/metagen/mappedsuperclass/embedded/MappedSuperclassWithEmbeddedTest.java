@@ -21,40 +21,31 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.ejb.test.metadata.mappedsuperclass.embeddedid;
+package org.hibernate.ejb.test.metagen.mappedsuperclass.embedded;
 
-import javax.persistence.Column;
-import javax.persistence.Embeddable;
-import java.io.Serializable;
+import org.hibernate.ejb.Ejb3Configuration;
+
+import org.junit.Test;
+
+import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
+
+import static org.junit.Assert.assertNotNull;
 
 /**
- * @author Justin Wesley
  * @author Steve Ebersole
  */
-@Embeddable
-public class ProductId implements Serializable {
-	private Integer id;
-	private String code;
+public class MappedSuperclassWithEmbeddedTest extends BaseUnitTestCase {
+	@Test
+	@TestForIssue( jiraKey = "HHH-5024" )
+	@FailureExpected( jiraKey = "HHH-5024" )
+	public void testStaticMetamodel() {
+		new Ejb3Configuration().addAnnotatedClass( Company.class ).buildEntityManagerFactory();
 
-	public ProductId() {
+		assertNotNull( "'Company_.id' should not be null)", Company_.id );
+		assertNotNull( "'Company_.address' should not be null)", Company_.address );
+
+		assertNotNull( "'AbstractAddressable_.address' should not be null)", AbstractAddressable_.address );
 	}
-
-	@Column
-	public Integer getId() {
-		return id;
-	}
-
-	public void setId(Integer id) {
-		this.id = id;
-	}
-
-	@Column
-	public String getCode() {
-		return code;
-	}
-
-	public void setCode(String code) {
-		this.code = code;
-	}
-
 }

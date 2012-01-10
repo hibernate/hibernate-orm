@@ -21,44 +21,34 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.ejb.test.metadata.mappedsuperclass.idclass;
+package org.hibernate.ejb.test.metagen.mappedsuperclass.embeddedid;
 
-import java.io.Serializable;
+import org.hibernate.ejb.Ejb3Configuration;
 
-import javax.persistence.Column;
-import javax.persistence.MappedSuperclass;
+import org.junit.Test;
+
+import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
+
+import static org.junit.Assert.assertNotNull;
 
 /**
- * @author Alexis Bataille
  * @author Steve Ebersole
  */
-@MappedSuperclass
-public abstract class AbstractAttribute implements Serializable {
-	protected String key;
-	protected String value;
+public class MappedSuperclassWithEmbeddedIdTest extends BaseUnitTestCase {
+	@Test
+	@TestForIssue( jiraKey = "HHH-5024" )
+	@FailureExpected( jiraKey = "HHH-5024" )
+	public void testStaticMetamodel() {
+		new Ejb3Configuration().addAnnotatedClass( Product.class ).buildEntityManagerFactory();
 
-	public AbstractAttribute() {
-		super();
+		assertNotNull( "'Product_.description' should not be null)", Product_.description );
+		assertNotNull( "'Product_.id' should not be null)", Product_.id );
+
+		assertNotNull( "'AbstractProduct_.id' should not be null)", AbstractProduct_.id );
+
+		assertNotNull( "'ProductId_.id' should not be null)", ProductId_.id );
+		assertNotNull( "'ProductId_.code' should not be null)", ProductId_.code );
 	}
-
-	public abstract String getOwner();
-
-	@Column(name = "attribute_key")
-	public String getKey() {
-		return key;
-	}
-
-	public void setKey(String key) {
-		this.key = key;
-	}
-
-	@Column(name = "attribute_value")
-	public String getValue() {
-		return value;
-	}
-
-	public void setValue(String value) {
-		this.value = value;
-	}
-
 }

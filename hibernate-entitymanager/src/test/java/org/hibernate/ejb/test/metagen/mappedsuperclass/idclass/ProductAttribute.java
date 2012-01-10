@@ -21,28 +21,44 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.ejb.test.metadata.mappedsuperclass.embeddedid;
+package org.hibernate.ejb.test.metagen.mappedsuperclass.idclass;
+
+import java.io.Serializable;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.IdClass;
 
-/**
- * @author Justin Wesley
- * @author Steve Ebersole
- */
 @Entity
-public class Product extends AbstractProduct {
+@IdClass(value = ProductAttributeId.class)
+public class ProductAttribute extends AbstractAttribute implements Serializable {
+	private String owner;
 
-	private String description;
-
-	public Product() {
+	public ProductAttribute(String key, String value, String product) {
+		this.key = key;
+		this.value = value;
+		this.owner = product;
 	}
 
-	@Column
-	public String getDescription() {
-		return description;
+	public ProductAttribute() {
+		super();
 	}
-	public void setDescription(String description) {
-		this.description = description;
+
+	@Id
+	@Column(name = "owner")
+	public String getOwner() {
+		return owner;
 	}
+
+	public void setOwner(String owner) {
+		this.owner = owner;
+	}
+
+	@Id
+	@Column(name = "attribute_key")
+	public String getKey() {
+		return key;
+	}
+
 }

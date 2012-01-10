@@ -935,7 +935,25 @@
                 <section id="services-IntegratorService">
                     <title><interfacename>org.hibernate.integrator.spi.IntegratorService</interfacename></title>
                     <para>
-                        Coming soon...  See <ulink url="https://hibernate.onjira.com/browse/HHH-6657" />
+                        Applications, add-ons and others all need to integrate with Hibernate which used to require
+                        something, usually the application, to coordinate registering the pieces of each integration
+                        needed onm behalf of each integrator.  The intent of this service is to allow those integrators
+                        to be discovered and to have them integrate themselves with Hibernate.
+                    </para>
+                    <para>
+                        This service focuses on the discovery aspect.  It leverages the Java
+                        <classname>java.util.ServiceLoader</classname> capability provided by the
+                        <interfacename>org.hibernate.service.classloading.spi.ClassLoaderService</interfacename>
+                        in order to discover implementations of the
+                        <interfacename>org.hibernate.integrator.spi.Integrator</interfacename> contract.
+                        Integrators would simply define a file named
+                        <filename>/META-INF/services/org.hibernate.integrator.spi.Integrator</filename> and make it
+                        available on the classpath.  <classname>java.util.ServiceLoader</classname> covers the
+                        format of this file in detail, but essentially it list classes by FQN that implement the
+                        <interfacename>org.hibernate.integrator.spi.Integrator</interfacename> one per line.
+                    </para>
+                    <para>
+                        See <xref linkend="integrators"/>
                     </para>
                 </section>
             </section>
@@ -993,4 +1011,42 @@
         </para>
     </section>
 
+    <section id="integrators">
+        <title>Integrators</title>
+        <para>
+            The <interfacename>org.hibernate.integrator.spi.Integrator</interfacename> is intended to provide a simple
+            means for allowing developers to hook into the process of building a functioning SessionFactory.  The
+            The <interfacename>org.hibernate.integrator.spi.Integrator</interfacename> interface defines 2 methods of
+            interest: <methodname>integrate</methodname> allows us to hook into the building process;
+            <methodname>disintegrate</methodname> allows us to hook into a SessionFactory shutting down.
+        </para>
+        <note>
+            <para>
+                There is a 3rd method defined on <interfacename>org.hibernate.integrator.spi.Integrator</interfacename>,
+                an overloaded form of <methodname>integrate</methodname> accepting a
+                <interfacename>org.hibernate.metamodel.source.MetadataImplementor</interfacename> instead of
+                <classname>org.hibernate.cfg.Configuration</classname>.  This form is intended for use with the new
+                metamodel code scheduled for completion in 5.0
+            </para>
+        </note>
+        <para>
+            See <xref linkend="services-IntegratorService"/>
+        </para>
+
+        <section id="integrators-uses">
+            <title>Integrator use-cases</title>
+            <para>
+                The main use cases for an <interfacename>org.hibernate.integrator.spi.Integrator</interfacename> right
+                now are registering event listeners and providing services (see
+                <interfacename>org.hibernate.integrator.spi.ServiceContributingIntegrator</interfacename>).  With 5.0
+                we plan on expanding that to allow altering the metamodel describing the mapping between object and
+                relational models.
+            </para>
+
+            <example>
+                <title>Registering event listeners</title>
+                <programlisting><xi:include href="extras/register-event-listeners-example.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+            </example>
+        </section>
+    </section>
 </chapter>

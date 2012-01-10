@@ -171,15 +171,14 @@ public class AuditInterceptor extends EmptyInterceptor {
 
         <para>
             If you have to react to particular events in your persistence layer, you can
-            also use the Hibernate3 <emphasis>event</emphasis> architecture. The event
+            also use the Hibernate <emphasis>event</emphasis> architecture. The event
             system can be used in addition, or as a replacement, for interceptors.
         </para>
 
         <para>
-            All the methods of the <literal>Session</literal> interface correlate
-            to an event. You have a <literal>LoadEvent</literal>, a <literal>FlushEvent</literal>, etc.
-            Consult the XML configuration-file DTD or the <literal>org.hibernate.event</literal>
-            package for the full list of defined event types. When a request is made of one of
+            Many methods of the <literal>Session</literal> interface correlate to an event type.  The
+            full range of defined event types is declared as enum values on
+            <classname>org.hibernate.event.spi.EventType</classname>. When a request is made of one of
             these methods, the Hibernate <literal>Session</literal> generates an appropriate
             event and passes it to the configured event listeners for that type. Out-of-the-box,
             these listeners implement the same processing in which those methods always resulted.
@@ -190,19 +189,23 @@ public class AuditInterceptor extends EmptyInterceptor {
             made of the <literal>Session</literal>.
         </para>
 
+         <note>
+             <para>
+                 See the <citetitle pubwork="book">Hibernate Developer Guide</citetitle> for information on registering
+                 custom event listeners.
+             </para>
+         </note>
+
         <para>
-            The listeners should be considered singletons. This means they are shared between
-            requests, and should not save any state as instance variables.
+            The listeners should be considered stateless; they are shared between requests, and should not save any
+            state as instance variables.
         </para>
 
         <para>
             A custom listener implements the appropriate interface for the event it wants to
             process and/or extend one of the convenience base classes (or even the default event
             listeners used by Hibernate out-of-the-box as these are declared non-final for this
-            purpose). Custom listeners can either be registered programmatically through the
-            <literal>Configuration</literal> object, or specified in the Hibernate configuration
-            XML. Declarative configuration through the properties file is not supported. Here is an
-            example of a custom load event listener:
+            purpose). Here is an example of a custom load event listener:
         </para>
 
         <programlisting role="JAVA"><![CDATA[public class MyLoadListener implements LoadEventListener {
@@ -215,80 +218,34 @@ public class AuditInterceptor extends EmptyInterceptor {
     }
 }]]></programlisting>
 
-        <para>
-            You also need a configuration entry telling Hibernate to use the listener in addition
-            to the default listener:
-        </para>
-
-<programlisting role="XML"><![CDATA[<hibernate-configuration>
-    <session-factory>
-        ...
-        <event type="load">
-            <listener class="com.eg.MyLoadListener"/>
-            <listener class="org.hibernate.event.def.DefaultLoadEventListener"/>
-        </event>
-    </session-factory>
-</hibernate-configuration>]]></programlisting>
-
-        <para>
-            Instead, you can register it programmatically:
-        </para>
-
-        <programlisting role="JAVA"><![CDATA[Configuration cfg = new Configuration();
-LoadEventListener[] stack = { new MyLoadListener(), new DefaultLoadEventListener() };
-cfg.EventListeners().setLoadEventListeners(stack);]]></programlisting>
-
-        <para>
-            Listeners registered declaratively cannot share instances. If the same class name is
-            used in multiple <literal>&lt;listener/&gt;</literal> elements, each reference will
-            result in a separate instance of that class. If you need to share
-            listener instances between listener types you must use the programmatic registration
-            approach.
-        </para>
-
-        <para>
-            Why implement an interface and define the specific type during configuration? A
-            listener implementation could implement multiple event listener interfaces. Having the
-            type additionally defined during registration makes it easier to turn custom listeners on
-            or off during configuration.
-        </para>
-
     </section>
-    
+
     <section id="objectstate-decl-security" revision="2">
         <title>Hibernate declarative security</title>
         <para>
             Usually, declarative security in Hibernate applications is managed in a session facade
-            layer. Hibernate3 allows certain actions to be permissioned via JACC, and authorized 
+            layer. Hibernate allows certain actions to be permissioned via JACC, and authorized
             via JAAS. This is an optional functionality that is built on top of the event architecture.
         </para>
         
         <para>
-            First, you must configure the appropriate event listeners, to enable the use of JAAS
-            authorization.
-        </para>
-        
-        <programlisting role="XML"><![CDATA[<listener type="pre-delete" class="org.hibernate.secure.internal.JACCPreDeleteEventListener"/>
-<listener type="pre-update" class="org.hibernate.secure.internal.JACCPreUpdateEventListener"/>
-<listener type="pre-insert" class="org.hibernate.secure.internal.JACCPreInsertEventListener"/>
-<listener type="pre-load" class="org.hibernate.secure.internal.JACCPreLoadEventListener"/>]]></programlisting>
-
-        <para>
-            Note that <literal>&lt;listener type="..." class="..."/&gt;</literal> is shorthand
-            for <literal>&lt;event type="..."&gt;&lt;listener class="..."/&gt;&lt;/event&gt;</literal>
-            when there is exactly one listener for a particular event type.
+            First, you must configure the appropriate event listeners, to enable the use of JACC
+            authorization.  Again, see <citetitle pubwork="book">Hibernate Developer Guide</citetitle>
+            for the details.  Below is an example of an appropriate
+            <interfacename>org.hibernate.integrator.spi.Integrator</interfacename> implementation for this purpose.
         </para>
 
+        <programlisting role="JAVA"><xi:include href="../extras/jacc-event-reg-example.java" parse="text" xmlns:xi="http://www.w3.org/2001/XInclude" /></programlisting>
+
         <para>
-            Next, while still in <literal>hibernate.cfg.xml</literal>, bind the permissions to roles:
+            You must also decide how to configure your JACC provider.  One option is to tell Hibernate what permissions
+            to bind to what roles and have it configure the JACC provider.  This would be done in the
+            <literal>hibernate.cfg.xml</literal> file.
         </para>
-        
+
         <programlisting role="XML"><![CDATA[<grant role="admin" entity-name="User" actions="insert,update,read"/>
 <grant role="su" entity-name="User" actions="*"/>]]></programlisting>
         
-        <para>
-            The role names are the roles understood by your JACC provider.
-        </para>
        
     </section>
 

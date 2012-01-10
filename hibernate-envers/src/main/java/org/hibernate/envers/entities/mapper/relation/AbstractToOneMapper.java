@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Base class for property mappers that represent to-one relation.
+ * Base class for property mappers that manage to-one relation.
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public abstract class AbstractToOneMapper implements PropertyMapper {
@@ -26,10 +26,12 @@ public abstract class AbstractToOneMapper implements PropertyMapper {
         this.propertyData = propertyData;
     }
 
+    @Override
     public boolean mapToMapFromEntity(SessionImplementor session, Map<String, Object> data, Object newObj, Object oldObj) {
         return false;
     }
 
+    @Override
     public void mapToEntityFromMap(AuditConfiguration verCfg, Object obj, Map data, Object primaryKey,
                                    AuditReaderImplementor versionsReader, Number revision) {
         if (obj != null) {
@@ -37,6 +39,7 @@ public abstract class AbstractToOneMapper implements PropertyMapper {
         }
     }
 
+    @Override
     public List<PersistentCollectionChangeData> mapCollectionChanges(String referencingPropertyName,
                                                                      PersistentCollection newColl,
                                                                      Serializable oldColl, Serializable id) {

@@ -11,7 +11,7 @@ import java.io.Serializable;
 import java.util.Map;
 
 /**
- * Template class for property mappers that represent one-to-one relation.
+ * Template class for property mappers that manage one-to-one relation.
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public abstract class AbstractOneToOneMapper extends AbstractToOneMapper {
@@ -24,6 +24,7 @@ public abstract class AbstractOneToOneMapper extends AbstractToOneMapper {
         this.referencedEntityName = referencedEntityName;
     }
 
+    @Override
     public void nullSafeMapToEntityFromMap(AuditConfiguration verCfg, Object obj, Map data, Object primaryKey,
                                            AuditReaderImplementor versionsReader, Number revision) {
         RelationDescriptor relation = getRelationDescriptor(verCfg, referencedEntityName);

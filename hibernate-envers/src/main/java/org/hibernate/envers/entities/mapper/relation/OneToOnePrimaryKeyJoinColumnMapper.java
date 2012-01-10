@@ -41,7 +41,7 @@ public class OneToOnePrimaryKeyJoinColumnMapper extends AbstractOneToOneMapper {
      * of an entity.
      */
     private Object createNotAuditedEntityReference(AuditReaderImplementor versionsReader, Class<?> entityClass,
-                                                     String entityName, Serializable primaryKey) {
+                                                   String entityName, Serializable primaryKey) {
         EntityPersister entityPersister = versionsReader.getSessionImplementor().getFactory().getEntityPersister(entityName);
         if (entityPersister.hasProxy()) {
             // If possible create a proxy. Returning complete object may affect performance.

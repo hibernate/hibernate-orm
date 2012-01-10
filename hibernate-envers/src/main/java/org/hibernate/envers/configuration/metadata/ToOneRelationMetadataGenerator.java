@@ -133,8 +133,8 @@ public final class ToOneRelationMetadataGenerator {
 
         // Adding mapper for the id
         PropertyData propertyData = propertyAuditingData.getPropertyData();
-        mapper.addComposite(propertyData, new OneToOneNotOwningMapper(owningReferencePropertyName,
-                referencedEntityName, propertyData));
+        mapper.addComposite(propertyData, new OneToOneNotOwningMapper(entityName, referencedEntityName,
+                owningReferencePropertyName, propertyData));
     }
 
     @SuppressWarnings({"unchecked"})

@@ -35,6 +35,8 @@ test {
    systemProperties['jgroups.ping.num_initial_members'] = 1
    systemProperties['jgroups.udp.enable_bundling'] = false
    systemProperties['jgroups.bind_addr'] = 'localhost'
+   // Use Infinispan's test JGroups stack that uses TEST_PING
+   systemProperties['hibernate.cache.infinispan.jgroups_cfg'] = 'stacks/tcp.xml'
    //   systemProperties['log4j.configuration'] = 'file:/log4j/log4j-infinispan.xml'
    enabled = true
 }

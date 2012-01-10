@@ -35,8 +35,6 @@ import org.infinispan.notifications.cachelistener.event.CacheEntryModifiedEvent;
 import org.infinispan.notifications.cachelistener.event.CacheEntryVisitedEvent;
 import org.jboss.logging.Logger;
 
-import org.hibernate.cache.infinispan.util.CacheHelper;
-
 @Listener
 public class CacheAccessListener {
 	private static final Logger log = Logger.getLogger( CacheAccessListener.class );
@@ -51,7 +49,7 @@ public class CacheAccessListener {
 
     @CacheEntryModified
     public void nodeModified( CacheEntryModifiedEvent event ) {
-        if (!event.isPre() && !CacheHelper.isEvictAllNotification(event.getKey())) {
+        if (!event.isPre()) {
             Object key = event.getKey();
             log.info("Modified node " + key);
             modified.add(key.toString());
@@ -60,7 +58,7 @@ public class CacheAccessListener {
 
     @CacheEntryCreated
     public void nodeCreated( CacheEntryCreatedEvent event ) {
-        if (!event.isPre() && !CacheHelper.isEvictAllNotification(event.getKey())) {
+        if (!event.isPre()) {
             Object key = event.getKey();
             log.info("Created node " + key);
             modified.add(key.toString());
@@ -69,7 +67,7 @@ public class CacheAccessListener {
 
     @CacheEntryVisited
     public void nodeVisited( CacheEntryVisitedEvent event ) {
-        if (!event.isPre() && !CacheHelper.isEvictAllNotification(event.getKey())) {
+        if (!event.isPre()) {
             Object key = event.getKey();
             log.info("Visited node " + key);
             accessed.add(key.toString());

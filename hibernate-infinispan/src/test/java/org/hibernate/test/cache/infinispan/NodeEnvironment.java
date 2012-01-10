@@ -25,6 +25,7 @@ package org.hibernate.test.cache.infinispan;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
@@ -36,6 +37,8 @@ import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.service.internal.StandardServiceRegistryImpl;
 
 import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
+
+import static org.hibernate.cache.infinispan.util.CacheHelper.withinTx;
 
 /**
  * Defines the environment for a node.
@@ -117,15 +120,27 @@ public class NodeEnvironment {
 
 	public void release() throws Exception {
 		if ( entityRegionMap != null ) {
-			for ( EntityRegionImpl region : entityRegionMap.values() ) {
-				region.getCacheAdapter().withFlags( FlagAdapter.CACHE_MODE_LOCAL ).clear();
+			for ( final EntityRegionImpl region : entityRegionMap.values() ) {
+				withinTx(region.getTransactionManager(), new Callable<Void>() {
+               @Override
+               public Void call() throws Exception {
+                  region.getCacheAdapter().withFlags(FlagAdapter.CACHE_MODE_LOCAL).clear();
+                  return null;
+               }
+            });
 				region.getCacheAdapter().stop();
 			}
 			entityRegionMap.clear();
 		}
 		if ( collectionRegionMap != null ) {
-			for ( CollectionRegionImpl collectionRegion : collectionRegionMap.values() ) {
-				collectionRegion.getCacheAdapter().withFlags( FlagAdapter.CACHE_MODE_LOCAL ).clear();
+			for ( final CollectionRegionImpl collectionRegion : collectionRegionMap.values() ) {
+            withinTx(collectionRegion.getTransactionManager(), new Callable<Void>() {
+               @Override
+               public Void call() throws Exception {
+                  collectionRegion.getCacheAdapter().withFlags( FlagAdapter.CACHE_MODE_LOCAL ).clear();
+                  return null;
+               }
+            });
 				collectionRegion.getCacheAdapter().stop();
 			}
 			collectionRegionMap.clear();

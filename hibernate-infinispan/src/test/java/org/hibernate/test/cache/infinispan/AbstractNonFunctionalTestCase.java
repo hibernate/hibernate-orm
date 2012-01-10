@@ -29,7 +29,6 @@ import org.infinispan.Cache;
 import org.jboss.logging.Logger;
 
 import org.hibernate.cache.spi.RegionFactory;
-import org.hibernate.cache.infinispan.util.CacheHelper;
 
 import org.junit.After;
 import org.junit.Before;
@@ -106,13 +105,7 @@ public abstract class AbstractNonFunctionalTestCase extends org.hibernate.testin
     }
 
     protected int getValidKeyCount(Set keys) {
-       int result = 0;
-       for (Object key : keys) {
-          if (!(CacheHelper.isEvictAllNotification(key))) {
-             result++;
-          }
-       }
-       return result;
+       return keys.size();
    }
 
 }

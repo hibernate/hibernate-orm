@@ -1,10 +1,8 @@
 package org.hibernate.cache.infinispan.impl;
+
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.transaction.SystemException;
 import javax.transaction.Transaction;
@@ -13,17 +11,9 @@ import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.Region;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.infinispan.util.AddressAdapter;
-import org.hibernate.cache.infinispan.util.AddressAdapterImpl;
 import org.hibernate.cache.infinispan.util.CacheAdapter;
-import org.hibernate.cache.infinispan.util.CacheHelper;
 import org.hibernate.cache.infinispan.util.FlagAdapter;
 
-import org.infinispan.notifications.cachelistener.annotation.CacheEntryInvalidated;
-import org.infinispan.notifications.cachelistener.annotation.CacheEntryModified;
-import org.infinispan.notifications.cachelistener.event.CacheEntryInvalidatedEvent;
-import org.infinispan.notifications.cachelistener.event.CacheEntryModifiedEvent;
-import org.infinispan.notifications.cachemanagerlistener.annotation.ViewChanged;
-import org.infinispan.notifications.cachemanagerlistener.event.ViewChangedEvent;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 
@@ -37,12 +27,12 @@ import org.infinispan.util.logging.LogFactory;
  * @since 3.5
  */
 public abstract class BaseRegion implements Region {
+
    private enum InvalidateState { INVALID, CLEARING, VALID };
    private static final Log log = LogFactory.getLog(BaseRegion.class);
    private final String name;
    protected final CacheAdapter cacheAdapter;
    protected final AddressAdapter address;
-   protected final Set<AddressAdapter> currentView = new HashSet<AddressAdapter>();
    protected final TransactionManager transactionManager;
    protected final boolean replication;
    protected final Object invalidationMutex = new Object();
@@ -59,32 +49,6 @@ public abstract class BaseRegion implements Region {
       this.factory = factory;
    }
 
-   public void start() {
-      if (address != null) {
-         synchronized (currentView) {
-            List<AddressAdapter> view = cacheAdapter.getMembers();
-            if (view != null) {
-               currentView.addAll(view);
-               establishInternalNodes();
-            }
-         }
-      }
-   }
-
-   /**
-    * Calls to this method must be done from synchronized (currentView) blocks only!!
-    */
-   private void establishInternalNodes() {
-      Transaction tx = suspend();
-      try {
-         for (AddressAdapter member : currentView) {
-            CacheHelper.initInternalEvict(cacheAdapter, member);
-         }
-      } finally {
-         resume(tx);
-      }
-   }
-
    public String getName() {
       return name;
    }
@@ -94,13 +58,9 @@ public abstract class BaseRegion implements Region {
    }
 
    public long getElementCountInMemory() {
-      if (checkValid()) {
-         Set keySet = cacheAdapter.keySet();
-         int size = cacheAdapter.size();
-         if (CacheHelper.containsEvictAllNotification(keySet, address))
-            size--;
-         return size;
-      }
+      if (checkValid())
+         return cacheAdapter.size();
+
       return 0;
    }
 
@@ -131,25 +91,15 @@ public abstract class BaseRegion implements Region {
    }
 
    public Map toMap() {
-      if (checkValid()) {
-         // If copying causes issues, provide a lazily loaded Map
-         Map map = new HashMap();
-         Set<Map.Entry> entries = cacheAdapter.toMap().entrySet();
-         for (Map.Entry entry : entries) {
-            Object key = entry.getKey();
-            if (!CacheHelper.isEvictAllNotification(key)) {
-               map.put(key, entry.getValue());
-            }
-         }
-         return map;
-      }
+      if (checkValid())
+         return cacheAdapter.toMap();
+
       return Collections.EMPTY_MAP;
    }
 
    public void destroy() throws CacheException {
       try {
          cacheAdapter.stop();
-//         cacheAdapter.clear();
       } finally {
          cacheAdapter.removeListener(this);
       }
@@ -173,7 +123,15 @@ public abstract class BaseRegion implements Region {
             if (invalidateState.compareAndSet(InvalidateState.INVALID, InvalidateState.CLEARING)) {
                Transaction tx = suspend();
                try {
-                  cacheAdapter.withFlags(FlagAdapter.CACHE_MODE_LOCAL, FlagAdapter.ZERO_LOCK_ACQUISITION_TIMEOUT).clear();
+                  // Clear region in a separate transaction
+                  cacheAdapter.withinTx(new Callable<Void>() {
+                     @Override
+                     public Void call() throws Exception {
+                        cacheAdapter.withFlags(FlagAdapter.CACHE_MODE_LOCAL,
+                              FlagAdapter.ZERO_LOCK_ACQUISITION_TIMEOUT).clear();
+                        return null;
+                     }
+                  });
                   invalidateState.compareAndSet(InvalidateState.CLEARING, InvalidateState.VALID);
                }
                catch (Exception e) {
@@ -191,6 +149,8 @@ public abstract class BaseRegion implements Region {
       
       return valid;
    }
+
+
 
    protected boolean isValid() {
       return invalidateState.get() == InvalidateState.VALID;
@@ -261,44 +221,13 @@ public abstract class BaseRegion implements Region {
        }
    }
 
-   @CacheEntryModified
-   public void entryModified(CacheEntryModifiedEvent event) {
-      handleEvictAllModification(event);
+   public void invalidateRegion() {
+      if (log.isTraceEnabled()) log.trace("Invalidate region: " + name);
+      invalidateState.set(InvalidateState.INVALID);
    }
 
-   protected boolean handleEvictAllModification(CacheEntryModifiedEvent event) {
-      if (!event.isPre() && (replication || event.isOriginLocal()) && CacheHelper.isEvictAllNotification(event.getKey(), event.getValue())) {
-         if (log.isTraceEnabled()) log.tracef("Set invalid state because marker cache entry was put: {0}", event);
-         invalidateState.set(InvalidateState.INVALID);
-         return true;
-      }
-      return false;
-   }
-
-   @CacheEntryInvalidated
-   public void entryInvalidated(CacheEntryInvalidatedEvent event) {
-      if (log.isTraceEnabled()) log.tracef("Cache entry invalidated: {0}", event);
-      handleEvictAllInvalidation(event);
-   }
-
-   protected boolean handleEvictAllInvalidation(CacheEntryInvalidatedEvent event) {
-      if (!event.isPre() && CacheHelper.isEvictAllNotification(event.getKey())) {
-         if (log.isTraceEnabled()) log.tracef("Set invalid state because marker cache entry was invalidated: {0}", event);
-         invalidateState.set(InvalidateState.INVALID);
-         return true;
-      }
-      return false;
-   }
-
-   @ViewChanged
-   public void viewChanged(ViewChangedEvent event) {
-      synchronized (currentView) {
-         List<AddressAdapter> view = AddressAdapterImpl.toAddressAdapter(event.getNewMembers());
-         if (view != null) {
-            currentView.addAll(view);
-            establishInternalNodes();
-         }
-      }
+   public TransactionManager getTransactionManager() {
+      return transactionManager;
    }
 
 }

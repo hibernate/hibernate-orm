@@ -40,7 +40,6 @@ import org.jboss.util.collection.ConcurrentSet;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cache.spi.CacheKey;
-import org.hibernate.cache.infinispan.util.CacheHelper;
 
 import org.junit.Test;
 
@@ -340,13 +339,7 @@ public class EntityCollectionInvalidationTestCase extends DualNodeTestCase {
 	}
 
 	protected int getValidKeyCount(Set keys) {
-		int result = 0;
-		for ( Object key : keys ) {
-			if ( !(CacheHelper.isEvictAllNotification( key )) ) {
-				result++;
-			}
-		}
-		return result;
+      return keys.size();
 	}
 
 	@Listener

@@ -21,10 +21,14 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 package org.hibernate.cache.infinispan.util;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
+
 import org.hibernate.cache.CacheException;
+import org.infinispan.AdvancedCache;
 import org.infinispan.Cache;
 import org.infinispan.config.Configuration;
 import org.infinispan.context.Flag;
@@ -42,13 +46,18 @@ import org.infinispan.util.logging.LogFactory;
 public class CacheAdapterImpl implements CacheAdapter {
    private static final Log log = LogFactory.getLog(CacheAdapterImpl.class);
 
-   private final Cache cache;
+   private final AdvancedCache cache;
+   private final CacheCommandInitializer cacheCmdInitializer;
+   private final boolean isSync;
 
-   private CacheAdapterImpl(Cache cache) {
+   private CacheAdapterImpl(AdvancedCache cache) {
       this.cache = cache;
+      this.cacheCmdInitializer = cache.getComponentRegistry()
+            .getComponent(CacheCommandInitializer.class);
+      this.isSync = isSynchronous(cache.getConfiguration().getCacheMode());
    }
 
-   public static CacheAdapter newInstance(Cache cache) {
+   public static CacheAdapter newInstance(AdvancedCache cache) {
       return new CacheAdapterImpl(cache);
    }
 
@@ -61,7 +70,7 @@ public class CacheAdapterImpl implements CacheAdapter {
    }
 
    public boolean isSynchronous() {
-      return isSynchronous(cache.getConfiguration().getCacheMode());
+      return isSync;
    }
 
    public Set keySet() {
@@ -70,7 +79,7 @@ public class CacheAdapterImpl implements CacheAdapter {
 
    public CacheAdapter withFlags(FlagAdapter... flagAdapters) {
       Flag[] flags = FlagAdapter.toFlags(flagAdapters);
-      return newInstance(cache.getAdvancedCache().withFlags(flags));
+      return newInstance(cache.withFlags(flags));
    }
 
    public Object get(Object key) throws CacheException {
@@ -173,7 +182,7 @@ public class CacheAdapterImpl implements CacheAdapter {
    }
 
    public AddressAdapter getAddress() {
-      RpcManager rpc = cache.getAdvancedCache().getRpcManager();
+      RpcManager rpc = cache.getRpcManager();
       if (rpc != null) {
          return AddressAdapterImpl.newInstance(rpc.getTransport().getAddress());
       }
@@ -181,15 +190,11 @@ public class CacheAdapterImpl implements CacheAdapter {
    }
 
    public List<AddressAdapter> getMembers() {
-      RpcManager rpc = cache.getAdvancedCache().getRpcManager();
+      RpcManager rpc = cache.getRpcManager();
       if (rpc != null) {
          return AddressAdapterImpl.toAddressAdapter(rpc.getTransport().getMembers());
       }
       return null;
-   }
-
-   public RpcManager getRpcManager() {
-      return cache.getAdvancedCache().getRpcManager();
    }
 
    public int size() {
@@ -212,17 +217,28 @@ public class CacheAdapterImpl implements CacheAdapter {
       return cache.getConfiguration();
    }
 
+   @Override
+   public void broadcastEvictAll() {
+      EvictAllCommand cmd = cacheCmdInitializer.buildEvictAllCommand(cache.getName());
+      cache.getRpcManager().broadcastRpcCommand(cmd, isSync);
+   }
+
+   @Override
+   public <T> T withinTx(Callable<T> c) throws Exception {
+      return CacheHelper.withinTx(cache.getTransactionManager(), c);
+   }
+
    private Cache getFailSilentCache() {
-      return cache.getAdvancedCache().withFlags(Flag.FAIL_SILENTLY);
+      return cache.withFlags(Flag.FAIL_SILENTLY);
    }
 
    private Cache getSkipRemoteGetLoadCache() {
-      return cache.getAdvancedCache().withFlags(
+      return cache.withFlags(
             Flag.SKIP_CACHE_LOAD, Flag.SKIP_REMOTE_LOOKUP);
    }
 
    private Cache getFailSilentCacheSkipRemotes() {
-      return cache.getAdvancedCache().withFlags(
+      return cache.withFlags(
             Flag.FAIL_SILENTLY, Flag.SKIP_CACHE_LOAD, Flag.SKIP_REMOTE_LOOKUP);
    }
 

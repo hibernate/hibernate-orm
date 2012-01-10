@@ -76,7 +76,7 @@ public class TimestampsRegionImplTestCase extends AbstractGeneralDataRegionTestC
 
    @Override
    protected CacheAdapter getInfinispanCache(InfinispanRegionFactory regionFactory) {
-      return CacheAdapterImpl.newInstance(regionFactory.getCacheManager().getCache("timestamps"));
+      return CacheAdapterImpl.newInstance(regionFactory.getCacheManager().getCache("timestamps").getAdvancedCache());
    }
 
    public void testClearTimestampsRegionInIsolated() throws Exception {

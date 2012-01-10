@@ -24,9 +24,12 @@
 package org.hibernate.test.cache.infinispan.query;
 
 import java.util.Properties;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import org.hibernate.cache.infinispan.util.CacheHelper;
+import org.hibernate.cache.spi.GeneralDataRegion;
 import org.infinispan.notifications.Listener;
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryVisited;
 import org.infinispan.notifications.cachelistener.event.CacheEntryVisitedEvent;
@@ -76,9 +79,31 @@ public class QueryRegionImplTestCase extends AbstractGeneralDataRegionTestCase {
 		return regionPrefix + "/" + StandardQueryCache.class.getName();
 	}
 
-	@Override
+   @Override
+   protected void regionPut(final GeneralDataRegion region) throws Exception {
+      CacheHelper.withinTx(BatchModeTransactionManager.getInstance(), new Callable<Void>() {
+         @Override
+         public Void call() throws Exception {
+            region.put(KEY, VALUE1);
+            return null;
+         }
+      });
+   }
+
+   @Override
+   protected void regionEvict(final GeneralDataRegion region) throws Exception {
+      CacheHelper.withinTx(BatchModeTransactionManager.getInstance(), new Callable<Void>() {
+         @Override
+         public Void call() throws Exception {
+            region.evict(KEY);
+            return null;
+         }
+      });
+   }
+
+   @Override
 	protected CacheAdapter getInfinispanCache(InfinispanRegionFactory regionFactory) {
-		return CacheAdapterImpl.newInstance( regionFactory.getCacheManager().getCache( "local-query" ) );
+		return CacheAdapterImpl.newInstance(regionFactory.getCacheManager().getCache( "local-query" ).getAdvancedCache());
 	}
 
 	@Override

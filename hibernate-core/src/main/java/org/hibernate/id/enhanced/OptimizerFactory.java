@@ -282,9 +282,9 @@ public class OptimizerFactory {
 	 * <p/>
 	 * The general algorithms used to determine the bucket are:<ol>
 	 * <li>{@code upperLimit = (databaseValue * incrementSize) + 1}</li>
-	 * <li>{@code lowerLimit = upperLimit - 1}</li>
+	 * <li>{@code lowerLimit = upperLimit - incrementSize}</li>
 	 * </ol>
-	 * As an example, consider a case with incrementSize of 10.  Initially the
+	 * As an example, consider a case with incrementSize of 20.  Initially the
 	 * database holds 1:<ol>
 	 * <li>{@code upperLimit = (1 * 20) + 1 = 21}</li>
 	 * <li>{@code lowerLimit = 21 - 20 = 1}</li>
@@ -457,7 +457,9 @@ public class OptimizerFactory {
                 // we are using a sequence...
                 if (value.lt(1)) LOG.pooledOptimizerReportedInitialValue(value);
                 // the call to obtain next-value just gave us the initialValue
-                if ((initialValue == -1 && value.lt(incrementSize)) || value.eq(initialValue)) hiValue = callback.getNextValue();
+				if ( ( initialValue == -1 && value.lt( incrementSize ) ) || value.eq( initialValue ) ) {
+					hiValue = callback.getNextValue();
+				}
 				else {
 					hiValue = value;
 					value = hiValue.copy().subtract( incrementSize );

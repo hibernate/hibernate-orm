@@ -110,23 +110,31 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
 		assertNull( "local is clean", localRegion.get( KEY ) );
 		assertNull( "remote is clean", remoteRegion.get( KEY ) );
 
-		localRegion.put( KEY, VALUE1 );
-		assertEquals( VALUE1, localRegion.get( KEY ) );
+      regionPut(localRegion);
+      assertEquals( VALUE1, localRegion.get( KEY ) );
 
 		// allow async propagation
 		sleep( 250 );
 		Object expected = invalidation ? null : VALUE1;
 		assertEquals( expected, remoteRegion.get( KEY ) );
 
-		localRegion.evict( KEY );
+      regionEvict(localRegion);
 
-		// allow async propagation
+      // allow async propagation
 		sleep( 250 );
 		assertEquals( null, localRegion.get( KEY ) );
 		assertEquals( null, remoteRegion.get( KEY ) );
 	}
 
-	protected abstract String getStandardRegionName(String regionPrefix);
+   protected void regionEvict(GeneralDataRegion region) throws Exception {
+      region.evict(KEY);
+   }
+
+   protected void regionPut(GeneralDataRegion region) throws Exception {
+      region.put(KEY, VALUE1);
+   }
+
+   protected abstract String getStandardRegionName(String regionPrefix);
 
 	/**
 	 * Test method for {@link QueryResultsRegion#evictAll()}.
@@ -184,14 +192,14 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
 		assertNull( "local is clean", localRegion.get( KEY ) );
 		assertNull( "remote is clean", remoteRegion.get( KEY ) );
 
-		localRegion.put( KEY, VALUE1 );
-		assertEquals( VALUE1, localRegion.get( KEY ) );
+      regionPut(localRegion);
+      assertEquals( VALUE1, localRegion.get( KEY ) );
 
 		// Allow async propagation
 		sleep( 250 );
 
-		remoteRegion.put( KEY, VALUE1 );
-		assertEquals( VALUE1, remoteRegion.get( KEY ) );
+      regionPut(remoteRegion);
+      assertEquals( VALUE1, remoteRegion.get( KEY ) );
 
 		// Allow async propagation
 		sleep( 250 );

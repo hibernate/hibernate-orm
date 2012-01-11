@@ -1,4 +1,5 @@
 package org.hibernate.cache.infinispan.timestamp;
+
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -9,12 +10,10 @@ import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.TimestampsRegion;
 import org.hibernate.cache.infinispan.impl.BaseGeneralDataRegion;
 import org.hibernate.cache.infinispan.util.CacheAdapter;
-import org.hibernate.cache.infinispan.util.CacheHelper;
 import org.hibernate.cache.infinispan.util.FlagAdapter;
 import org.infinispan.notifications.Listener;
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryModified;
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryRemoved;
-import org.infinispan.notifications.cachelistener.event.CacheEntryInvalidatedEvent;
 import org.infinispan.notifications.cachelistener.event.CacheEntryModifiedEvent;
 import org.infinispan.notifications.cachelistener.event.CacheEntryRemovedEvent;
 
@@ -45,8 +44,8 @@ public class TimestampsRegionImpl extends BaseGeneralDataRegion implements Times
    public void evictAll() throws CacheException {
       // TODO Is this a valid operation on a timestamps cache?
       Transaction tx = suspend();
-      try {        
-         CacheHelper.sendEvictAllNotification(cacheAdapter, getAddress());
+      try {
+         cacheAdapter.broadcastEvictAll();
       } finally {
          resume(tx);
       }
@@ -74,18 +73,13 @@ public class TimestampsRegionImpl extends BaseGeneralDataRegion implements Times
       return value;
    }
 
-   public void put(Object key, Object value) throws CacheException {
-      // Don't hold the JBC node lock throughout the tx, as that
-      // prevents reads and other updates
-      Transaction tx = suspend();
+   public void put(final Object key, final Object value) throws CacheException {
       try {
          // We ensure ASYNC semantics (JBCACHE-1175) and make sure previous
          // value is not loaded from cache store cos it's not needed.
          cacheAdapter.withFlags(FlagAdapter.FORCE_ASYNCHRONOUS).put(key, value);
       } catch (Exception e) {
          throw new CacheException(e);
-      } finally {
-         resume(tx);
       }
    }
 
@@ -103,9 +97,8 @@ public class TimestampsRegionImpl extends BaseGeneralDataRegion implements Times
     */
    @CacheEntryModified
    public void nodeModified(CacheEntryModifiedEvent event) {
-      if (!handleEvictAllModification(event) && !event.isPre()) {
+      if (!event.isPre())
          localCache.put(event.getKey(), event.getValue());
-      }
    }
 
    /**
@@ -120,21 +113,9 @@ public class TimestampsRegionImpl extends BaseGeneralDataRegion implements Times
    }
 
    @Override
-   protected boolean handleEvictAllModification(CacheEntryModifiedEvent event) {
-      boolean result = super.handleEvictAllModification(event);
-      if (result) {
-         localCache.clear();
-      }
-      return result;
-   }
-
-   @Override
-   protected boolean handleEvictAllInvalidation(CacheEntryInvalidatedEvent event) {
-      boolean result = super.handleEvictAllInvalidation(event);
-      if (result) {
-         localCache.clear();
-      }
-      return result;
+   public void invalidateRegion() {
+      super.invalidateRegion(); // Invalidate first
+      localCache.clear();
    }
 
    /**

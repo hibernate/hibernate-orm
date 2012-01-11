@@ -26,6 +26,7 @@ import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
+
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -35,6 +36,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Settings;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.service.classloading.internal.ClassLoaderServiceImpl;
 
 /**
  * Utilities for cache testing.
@@ -80,9 +82,7 @@ public class CacheTestUtil {
       String factoryType = cfg.getProperty(Environment.CACHE_REGION_FACTORY);
       Class factoryClass = Thread.currentThread().getContextClassLoader().loadClass(factoryType);
       InfinispanRegionFactory regionFactory = (InfinispanRegionFactory) factoryClass.newInstance();
-
       regionFactory.start(settings, properties);
-
       return regionFactory;
    }
 

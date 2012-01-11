@@ -76,7 +76,7 @@ public class CollectionRegionImplTestCase extends AbstractEntityCollectionRegion
 
    @Override
    protected CacheAdapter getInfinispanCache(InfinispanRegionFactory regionFactory) {
-      return CacheAdapterImpl.newInstance(regionFactory.getCacheManager().getCache(InfinispanRegionFactory.DEF_ENTITY_RESOURCE));
+      return CacheAdapterImpl.newInstance(regionFactory.getCacheManager().getCache(InfinispanRegionFactory.DEF_ENTITY_RESOURCE).getAdvancedCache());
    }
 
    @Override

@@ -7,7 +7,6 @@ import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.infinispan.impl.BaseTransactionalDataRegion;
 import org.hibernate.cache.infinispan.util.CacheAdapter;
-import org.hibernate.cache.infinispan.util.CacheHelper;
 import org.hibernate.cache.infinispan.util.FlagAdapter;
 
 import org.infinispan.notifications.Listener;
@@ -38,7 +37,7 @@ public class QueryResultsRegionImpl extends BaseTransactionalDataRegion implemen
    public void evictAll() throws CacheException {
       Transaction tx = suspend();
       try {
-         CacheHelper.sendEvictAllNotification(cacheAdapter, getAddress());
+         cacheAdapter.broadcastEvictAll();
       } finally {
          resume(tx);
       }

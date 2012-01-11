@@ -6,11 +6,13 @@
       <transport
             transportClass="org.infinispan.remoting.transport.jgroups.JGroupsTransport"
             clusterName="infinispan-hibernate-cluster"
-            distributedSyncTimeout="50000">
+            distributedSyncTimeout="50000"
+            strictPeerToPeer="false">
          <!-- Note that the JGroups transport uses sensible defaults if no configuration property is defined. -->
          <properties>
-            <!-- TODO: Change to udp.xml once streaming transfer requirement has been removed.  -->
-            <property name="configurationFile" value="flush-udp.xml"/>
+            <!--<property name="configurationFile" value="jgroups-tcp.xml"/>-->
+            <property name="configurationFile"
+                      value="${hibernate.cache.infinispan.jgroups_cfg:tcp.xml}"/>
          </properties>
          <!-- See the JGroupsTransport javadocs for more flags -->
       </transport>
@@ -19,11 +21,6 @@
    <default>
       <!-- Used to register JMX statistics in any available MBean server -->
       <jmxStatistics enabled="false"/>
-      <!-- autoCommit would be better configured to be false
-           but that would require redesigning evictAll handling -->
-      <transaction autoCommit="true" use1PcForAutoCommitTransactions="false"
-                   transactionManagerLookupClass="org.hibernate.cache.infinispan.tm.HibernateTransactionManagerLookup"
-                   lockingMode="OPTIMISTIC"/>
    </default>
 
    <!-- Default configuration is appropriate for entity/collection caching. -->
@@ -36,9 +33,11 @@
                lockAcquisitionTimeout="15000" useLockStriping="false"/>
       <!-- Eviction configuration.  WakeupInterval defines how often the eviction thread runs, in milliseconds.  
            0 means the eviction thread will never run.  A separate executor is used for eviction in each cache. -->
-      <eviction wakeUpInterval="5000" maxEntries="10000" strategy="LRU"/>
-      <expiration maxIdle="100000"/>
+      <eviction maxEntries="10000" strategy="LRU"/>
+      <expiration maxIdle="100000" wakeUpInterval="5000"/>
       <lazyDeserialization enabled="true"/>
+      <transaction transactionMode="TRANSACTIONAL" autoCommit="false"
+                   lockingMode="OPTIMISTIC"/>
    </namedCache>
 
    <!-- Default configuration is appropriate for entity/collection caching. -->
@@ -57,9 +56,11 @@
                lockAcquisitionTimeout="15000" useLockStriping="false"/>
       <!-- Eviction configuration.  WakeupInterval defines how often the eviction thread runs, in milliseconds.  
            0 means the eviction thread will never run.  A separate executor is used for eviction in each cache. -->
-      <eviction wakeUpInterval="5000" maxEntries="10000" strategy="LRU"/>
-      <expiration maxIdle="100000"/>
+      <eviction maxEntries="10000" strategy="LRU"/>
+      <expiration maxIdle="100000" wakeUpInterval="5000"/>
       <lazyDeserialization enabled="true"/>
+      <transaction transactionMode="TRANSACTIONAL" autoCommit="false"
+                   lockingMode="OPTIMISTIC"/>
    </namedCache>
 
    <!-- An alternative configuration for entity/collection caching that uses replication instead of invalidation -->
@@ -72,9 +73,11 @@
                lockAcquisitionTimeout="15000" useLockStriping="false"/>
       <!-- Eviction configuration.  WakeupInterval defines how often the eviction thread runs, in milliseconds.  
            0 means the eviction thread will never run.  A separate executor is used for eviction in each cache. -->
-      <eviction wakeUpInterval="5000" maxEntries="10000" strategy="LRU"/>
-      <expiration maxIdle="100000"/>
+      <eviction maxEntries="10000" strategy="LRU"/>
+      <expiration maxIdle="100000" wakeUpInterval="5000"/>
       <lazyDeserialization enabled="true"/>
+      <transaction transactionMode="TRANSACTIONAL" autoCommit="false"
+                   lockingMode="OPTIMISTIC"/>
    </namedCache>
 
    <!-- A config appropriate for query caching. Does not replicate queries. -->
@@ -83,8 +86,10 @@
                lockAcquisitionTimeout="15000" useLockStriping="false"/>
       <!--Eviction configuration.  WakeupInterval defines how often the eviction thread runs, in milliseconds.  0 means
          the eviction thread will never run.  A separate executor is used for eviction in each cache. -->
-      <eviction wakeUpInterval="5000" maxEntries="10000" strategy="LRU"/>
-      <expiration maxIdle="100000"/>
+      <eviction maxEntries="10000" strategy="LRU"/>
+      <expiration maxIdle="100000" wakeUpInterval="5000"/>
+      <transaction transactionMode="TRANSACTIONAL" autoCommit="false"
+                   lockingMode="OPTIMISTIC"/>
    </namedCache>
 
    <!-- A query cache that replicates queries. Replication is asynchronous. -->
@@ -96,8 +101,10 @@
                lockAcquisitionTimeout="15000" useLockStriping="false"/>
       <!--Eviction configuration.  WakeupInterval defines how often the eviction thread runs, in milliseconds.  0 means
          the eviction thread will never run.  A separate executor is used for eviction in each cache. -->
-      <eviction wakeUpInterval="5000" maxEntries="10000" strategy="LRU"/>
-      <expiration maxIdle="100000"/>
+      <eviction maxEntries="10000" strategy="LRU"/>
+      <expiration maxIdle="100000" wakeUpInterval="5000"/>
+      <transaction transactionMode="TRANSACTIONAL" autoCommit="false"
+                   lockingMode="OPTIMISTIC"/>
       <!-- State transfer forces all replication calls to be synchronous,
            so for calls to remain async, use a cluster cache loader instead -->
       <loaders passivation="false" shared="false" preload="false">
@@ -122,7 +129,10 @@
                lockAcquisitionTimeout="15000" useLockStriping="false"/>
       <lazyDeserialization enabled="true"/>
       <!--  Don't ever evict modification timestamps -->
-      <eviction wakeUpInterval="0" strategy="NONE"/>
+      <eviction strategy="NONE"/>
+      <expiration wakeUpInterval="0"/>
+      <!-- Explicitly non transactional -->
+      <transaction transactionMode="NON_TRANSACTIONAL"/>
       <!-- State transfer forces all replication calls to be synchronous,
            so for calls to remain async, use a cluster cache loader instead -->
       <loaders passivation="false" shared="false" preload="false">

@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cache.infinispan.access;
+
 import javax.transaction.Transaction;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
@@ -29,7 +30,6 @@ import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.cache.infinispan.impl.BaseRegion;
 import org.hibernate.cache.infinispan.util.CacheAdapter;
-import org.hibernate.cache.infinispan.util.CacheHelper;
 import org.hibernate.cache.infinispan.util.FlagAdapter;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
@@ -162,7 +162,8 @@ public class TransactionalAccessDelegate {
       }
       Transaction tx = region.suspend();
       try {
-         CacheHelper.sendEvictAllNotification(cacheAdapter, region.getAddress());
+         region.invalidateRegion(); // Invalidate the local region and then go remote
+         cacheAdapter.broadcastEvictAll();
       } finally {
          region.resume(tx);
       }

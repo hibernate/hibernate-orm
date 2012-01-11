@@ -3390,7 +3390,7 @@ public abstract class AbstractEntityPersister
             if (sqlUpdateGeneratedValuesSelectString != null) LOG.debugf("Update-generated property select: %s",
                                                                          sqlUpdateGeneratedValuesSelectString);
             if (sqlEntityIdByNaturalIdString != null) LOG.debugf("Id by Natural Id: %s",
-                    sqlEntityIdByNaturalIdString);
+            													 sqlEntityIdByNaturalIdString);
 		}
 	}
 
@@ -4503,103 +4503,95 @@ public abstract class AbstractEntityPersister
 		}
 	}
     
-    /* (non-Javadoc)
-     * @see org.hibernate.persister.entity.EntityPersister#loadEntityIdByNaturalId(java.util.Map, org.hibernate.engine.spi.SessionImplementor)
-     */
-    @Override
-    public Serializable loadEntityIdByNaturalId(Map<String, ?> naturalIdParameters, LockOptions lockOptions, SessionImplementor session) {
-        if ( !hasNaturalIdentifier() ) {
-            throw new MappingException( "persistent class did not define a natural-id : " + MessageHelper.infoString( this ) );
-        }
-        if (LOG.isTraceEnabled()) LOG.trace("Getting entity id for natural-id for: "
-                                            + MessageHelper.infoString(this, naturalIdParameters, getFactory()));
+	@Override
+	public Serializable loadEntityIdByNaturalId(Map<String, ?> naturalIdParameters, LockOptions lockOptions,
+			SessionImplementor session) {
+		if ( !hasNaturalIdentifier() ) {
+			throw new MappingException( "persistent class did not define a natural-id : "
+					+ MessageHelper.infoString( this ) );
+		}
+		if ( LOG.isTraceEnabled() )
+			LOG.trace( "Getting entity id for natural-id for: "
+					+ MessageHelper.infoString( this, naturalIdParameters, getFactory() ) );
 
-        try {
-            PreparedStatement ps = session.getTransactionCoordinator()
-                    .getJdbcCoordinator()
-                    .getStatementPreparer()
-                    .prepareStatement( sqlEntityIdByNaturalIdString );
-            try {
-                int positions = 1;
-                final int[] naturalIdPropertyIndexes = this.getNaturalIdentifierProperties();
-                for (int propIdx = 0; propIdx < naturalIdPropertyIndexes.length; propIdx++) {
-                    final int naturalIdIdx = naturalIdPropertyIndexes[propIdx];
-                    
-                    final StandardProperty[] properties = entityMetamodel.getProperties();
-                    final StandardProperty property = properties[naturalIdIdx];
-                    
-                    final Object value = naturalIdParameters.get(property.getName());
-                    
-                    //TODO am I setting the positions var correctly here?
-                    final Type propertyType = property.getType();
-                    propertyType.nullSafeSet( ps, value, positions, session );
-                    positions += propertyType.getColumnSpan(session.getFactory());
-                }
-                ResultSet rs = ps.executeQuery();
-                try {
-                    //if there is no resulting row, return null
-                    if ( !rs.next() ) {
-                        return null;
-                    }
+		try {
+			PreparedStatement ps = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer()
+					.prepareStatement( sqlEntityIdByNaturalIdString );
+			try {
+				int positions = 1;
+				final int[] naturalIdPropertyIndexes = this.getNaturalIdentifierProperties();
+				for ( int propIdx = 0; propIdx < naturalIdPropertyIndexes.length; propIdx++ ) {
+					final int naturalIdIdx = naturalIdPropertyIndexes[propIdx];
 
-                    //entity ID has to be serializable right?
-                    return (Serializable) getIdentifierType().hydrate(rs, getIdentifierAliases(), session, null);
-                }
-                finally {
-                    rs.close();
-                }
-            }
-            finally {
-                ps.close();
-            }
-        }
-        catch ( SQLException e ) {
-            throw getFactory().getSQLExceptionHelper().convert(
-                    e,
-                    "could not retrieve entity id: " + MessageHelper.infoString( this, naturalIdParameters, getFactory() ),
-                    sqlEntityIdByNaturalIdString
-            );
-        }
-    }
+					final StandardProperty[] properties = entityMetamodel.getProperties();
+					final StandardProperty property = properties[naturalIdIdx];
 
-    /**
-     * @return
-     */
-    private String generateEntityIdByNaturalIdSql() {
-        Select select = new Select( getFactory().getDialect() );
-        if ( getFactory().getSettings().isCommentsEnabled() ) {
-            select.setComment( "get current natural-id->entity-id state " + getEntityName() );
-        }
-        
-        final String rootAlias = getRootAlias();
-        
-        select.setSelectClause( identifierSelectFragment(rootAlias, "") );
-        select.setFromClause( fromTableFragment( rootAlias ) + fromJoinFragment( rootAlias, true, false ) );
-        
-        final StringBuilder whereClause = new StringBuilder();
-        final int[] propertyTableNumbers = getPropertyTableNumbers();
-        final int[] naturalIdPropertyIndexes = this.getNaturalIdentifierProperties();
-        for (int propIdx = 0; propIdx < naturalIdPropertyIndexes.length; propIdx++) {
-            if (propIdx > 0) {
-                whereClause.append(" and ");
-            }
-            
-            final int naturalIdIdx = naturalIdPropertyIndexes[propIdx];
-            final String tableAlias = generateTableAlias( rootAlias, propertyTableNumbers[naturalIdIdx] );
-            
-            final String[] propertyColumnNames = getPropertyColumnNames(naturalIdIdx);
-            final String[] aliasedPropertyColumns = StringHelper.qualify( rootAlias, propertyColumnNames );
-            
-            whereClause.append( StringHelper.join( "=? and ", aliasedPropertyColumns ) ).append( "=?" );
-        }
-        
-        whereClause.append( whereJoinFragment( getRootAlias(), true, false ) );
-        
-        String sql = select.setOuterJoins( "", "" )
-                .setWhereClause( whereClause.toString() )
-                .toStatementString();
-        return sql;
-    }
+					final Object value = naturalIdParameters.get( property.getName() );
+
+					final Type propertyType = property.getType();
+					propertyType.nullSafeSet( ps, value, positions, session );
+					positions += propertyType.getColumnSpan( session.getFactory() );
+				}
+				ResultSet rs = ps.executeQuery();
+				try {
+					// if there is no resulting row, return null
+					if ( !rs.next() ) {
+						return null;
+					}
+
+					// entity ID has to be serializable right?
+					return (Serializable) getIdentifierType().hydrate( rs, getIdentifierAliases(), session, null );
+				}
+				finally {
+					rs.close();
+				}
+			}
+			finally {
+				ps.close();
+			}
+		}
+		catch ( SQLException e ) {
+			throw getFactory().getSQLExceptionHelper().convert(
+					e,
+					"could not retrieve entity id: "
+							+ MessageHelper.infoString( this, naturalIdParameters, getFactory() ),
+					sqlEntityIdByNaturalIdString );
+		}
+	}
+
+	private String generateEntityIdByNaturalIdSql() {
+		Select select = new Select( getFactory().getDialect() );
+		if ( getFactory().getSettings().isCommentsEnabled() ) {
+			select.setComment( "get current natural-id->entity-id state " + getEntityName() );
+		}
+
+		final String rootAlias = getRootAlias();
+
+		select.setSelectClause( identifierSelectFragment( rootAlias, "" ) );
+		select.setFromClause( fromTableFragment( rootAlias ) + fromJoinFragment( rootAlias, true, false ) );
+
+		final StringBuilder whereClause = new StringBuilder();
+		final int[] propertyTableNumbers = getPropertyTableNumbers();
+		final int[] naturalIdPropertyIndexes = this.getNaturalIdentifierProperties();
+		for ( int propIdx = 0; propIdx < naturalIdPropertyIndexes.length; propIdx++ ) {
+			if ( propIdx > 0 ) {
+				whereClause.append( " and " );
+			}
+
+			final int naturalIdIdx = naturalIdPropertyIndexes[propIdx];
+			final String tableAlias = generateTableAlias( rootAlias, propertyTableNumbers[naturalIdIdx] );
+
+			final String[] propertyColumnNames = getPropertyColumnNames( naturalIdIdx );
+			final String[] aliasedPropertyColumns = StringHelper.qualify( rootAlias, propertyColumnNames );
+
+			whereClause.append( StringHelper.join( "=? and ", aliasedPropertyColumns ) ).append( "=?" );
+		}
+
+		whereClause.append( whereJoinFragment( getRootAlias(), true, false ) );
+
+		String sql = select.setOuterJoins( "", "" ).setWhereClause( whereClause.toString() ).toStatementString();
+		return sql;
+	}
 
 	protected String concretePropertySelectFragmentSansLeadingComma(String alias, boolean[] include) {
 		String concretePropertySelectFragment = concretePropertySelectFragment( alias, include );

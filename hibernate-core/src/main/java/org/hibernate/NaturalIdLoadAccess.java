@@ -23,41 +23,42 @@
  */
 package org.hibernate;
 
-
 /**
  * Loads an entity by its natural identifier
  * 
  * @author Eric Dalquist
- * @version $Revision$
  * @see org.hibernate.annotations.NaturalId
  */
 public interface NaturalIdLoadAccess<T> {
-    /**
-     * Set the {@link LockOptions} to use when retrieving the entity.
-     */
-    public NaturalIdLoadAccess<T> with(LockOptions lockOptions);
+	/**
+	 * Set the {@link LockOptions} to use when retrieving the entity.
+	 */
+	public NaturalIdLoadAccess<T> with(LockOptions lockOptions);
 
-    /**
-     * Add a NaturalId attribute value.
-     * 
-     * @param attributeName The entity attribute name that is marked as a NaturalId
-     * @param value The value of the attribute
-     */
-    public NaturalIdLoadAccess<T> using(String attributeName, Object value);
+	/**
+	 * Add a NaturalId attribute value.
+	 * 
+	 * @param attributeName
+	 *            The entity attribute name that is marked as a NaturalId
+	 * @param value
+	 *            The value of the attribute
+	 */
+	public NaturalIdLoadAccess<T> using(String attributeName, Object value);
 
-    /**
-     * Same behavior as {@link Session#load(Class, java.io.Serializable)}
-     * 
-     * @return The entity 
-     * @throws HibernateException if the entity does not exist
-     */
-    public Object getReference();
+	/**
+	 * Same behavior as {@link Session#load(Class, java.io.Serializable)}
+	 * 
+	 * @return The entity
+	 * @throws HibernateException
+	 *             if the entity does not exist
+	 */
+	public Object getReference();
 
-    /**
-     * Same behavior as {@link Session#get(Class, java.io.Serializable)}
-     * 
-     * @return The entity or null if it does not exist
-     */
-    public Object load();
+	/**
+	 * Same behavior as {@link Session#get(Class, java.io.Serializable)}
+	 * 
+	 * @return The entity or null if it does not exist
+	 */
+	public Object load();
 
 }

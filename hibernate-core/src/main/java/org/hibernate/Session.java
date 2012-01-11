@@ -775,37 +775,45 @@ public interface Session extends SharedSessionContract {
 	 * Create an {@link IdentifierLoadAccess} instance to retrieve the specified entity by
 	 * primary key.
 	 * 
-	 * @param entityName The name of the entity that will be retrieved
-	 * @throws HibernateException If the specified entity name is not found
+	 * @param entityName
+	 *            The name of the entity that will be retrieved
+	 * @throws HibernateException
+	 *             If the specified entity name is not found
 	 */
 	public IdentifierLoadAccess<Object> byId(String entityName);
-	
+
 	/**
-     * Create an {@link IdentifierLoadAccess} instance to retrieve the specified entity by
-     * primary key.
-     * 
-     * @param entityClass The type of the entity that will be retrieved
-     * @throws HibernateException If the specified Class is not an entity
-     */
-    public <T> IdentifierLoadAccess<T> byId(Class<T> entityClass);
-    
-    /**
-     * Create an {@link NaturalIdLoadAccess} instance to retrieve the specified entity by
-     * its natural id.
-     * 
-     * @param entityName The name of the entity that will be retrieved
-     * @throws HibernateException If the specified entity name is not found or if the entity does not have a natural id specified
-     */
-    public NaturalIdLoadAccess<Object> byNaturalId(String entityName);
-    
-    /**
-     * Create an {@link NaturalIdLoadAccess} instance to retrieve the specified entity by
-     * its natural id.
-     * 
-     * @param entityClass The type of the entity that will be retrieved
-     * @throws HibernateException If the specified Class is not an entity or if the entity does not have a natural id specified 
-     */
-    public <T> NaturalIdLoadAccess<T> byNaturalId(Class<T> entityClass);
+	 * Create an {@link IdentifierLoadAccess} instance to retrieve the specified entity by
+	 * primary key.
+	 * 
+	 * @param entityClass
+	 *            The type of the entity that will be retrieved
+	 * @throws HibernateException
+	 *             If the specified Class is not an entity
+	 */
+	public <T> IdentifierLoadAccess<T> byId(Class<T> entityClass);
+
+	/**
+	 * Create an {@link NaturalIdLoadAccess} instance to retrieve the specified entity by
+	 * its natural id.
+	 * 
+	 * @param entityName
+	 *            The name of the entity that will be retrieved
+	 * @throws HibernateException
+	 *             If the specified entity name is not found or if the entity does not have a natural id specified
+	 */
+	public NaturalIdLoadAccess<Object> byNaturalId(String entityName);
+
+	/**
+	 * Create an {@link NaturalIdLoadAccess} instance to retrieve the specified entity by
+	 * its natural id.
+	 * 
+	 * @param entityClass
+	 *            The type of the entity that will be retrieved
+	 * @throws HibernateException
+	 *             If the specified Class is not an entity or if the entity does not have a natural id specified
+	 */
+	public <T> NaturalIdLoadAccess<T> byNaturalId(Class<T> entityClass);
 
 	/**
 	 * Enable the named filter for this current session.

@@ -29,17 +29,18 @@ import org.hibernate.HibernateException;
 
 /**
  * Defines the contract for handling of resolve natural id events generated from a session.
- *
- * @author Steve Ebersole
+ * 
+ * @author Eric Dalquist
  */
 public interface ResolveNaturalIdEventListener extends Serializable {
 
-	/** 
+	/**
 	 * Handle the given resolve natural id event.
-     *
-     * @param event The resolve natural id event to be handled.
-     * @throws HibernateException
-     */
+	 * 
+	 * @param event
+	 *            The resolve natural id event to be handled.
+	 * @throws HibernateException
+	 */
 	public void onResolveNaturalId(ResolveNaturalIdEvent event) throws HibernateException;
 
 }

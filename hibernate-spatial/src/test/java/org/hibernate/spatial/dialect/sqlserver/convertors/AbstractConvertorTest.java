@@ -25,21 +25,15 @@
 
 package org.hibernate.spatial.dialect.sqlserver.convertors;
 
+import com.vividsolutions.jts.geom.Geometry;
+
 import java.io.IOException;
-import java.sql.SQLException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-
-import com.vividsolutions.jts.geom.Geometry;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-
-import org.hibernate.spatial.dialect.sqlserver.SQLServerExpressionTemplate;
-import org.hibernate.spatial.dialect.sqlserver.SQLServerTestSupport;
-import org.hibernate.spatial.test.DataSourceUtils;
-import org.hibernate.spatial.test.TestData;
-import org.hibernate.spatial.test.TestSupport;
 
 import static org.junit.Assert.assertTrue;
 
@@ -49,45 +43,67 @@ import static org.junit.Assert.assertTrue;
  */
 public class AbstractConvertorTest {
 
-	private final static DataSourceUtils dataSourceUtils = new DataSourceUtils(
-			"hibernate-spatial-sqlserver-test.properties",
-			new SQLServerExpressionTemplate()
-	);
+    private final static String TEST_DATA = "sqlserver/sqlserver-2008-test-data.ser";
 
-	private final static TestSupport support = new SQLServerTestSupport();
-
-	Map<Integer, Geometry> decodedGeoms;
+    List<ConvertorTestData> testData = readTestData();
+	Map<Integer, Geometry> decodedGeoms = new HashMap<Integer, Geometry>();
 	Map<Integer, Object> rawResults;
 	Map<Integer, byte[]> encodedGeoms;
 	Map<Integer, Geometry> expectedGeoms;
 
-	@BeforeClass
-	public static void beforeClass() throws SQLException, IOException {
-		String sql = dataSourceUtils.parseSqlIn( "create-sqlserver-test-schema.sql" );
-		dataSourceUtils.executeStatement( sql );
-		TestData testData = support.createTestData( null );
-		dataSourceUtils.insertTestData( testData );
-	}
 
-	@AfterClass
-	public static void afterClass() throws SQLException, IOException {
-		String sql = dataSourceUtils.parseSqlIn( "drop-sqlserver-test-schema.sql" );
-		dataSourceUtils.executeStatement( sql );
-	}
+
+    public List<ConvertorTestData> readTestData(){
+        InputStream in = this.getClass().getClassLoader().getResourceAsStream(TEST_DATA);
+        if (in == null) {
+            throw new RuntimeException("Can't find file " + TEST_DATA);
+        }
+        try {
+            ObjectInputStream oin = new ObjectInputStream(in);
+            return (List<ConvertorTestData>)oin.readObject();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        } finally {
+            try {
+                in.close();
+            } catch (IOException e) {
+                // nothing to do
+            }
+        }
+    }
+
 
 	public void doDecoding(OpenGisType type) {
-		rawResults = dataSourceUtils.rawDbObjects( type.toString() );
-		TestData testData = support.createTestData( null );
-		expectedGeoms = dataSourceUtils.expectedGeoms( type.toString(), testData );
-		decodedGeoms = new HashMap<Integer, Geometry>();
-
+        List<ConvertorTestData> testData = readTestData();
+        rawResults = toRawResults(testData, type.toString());
+        expectedGeoms = toExpected(testData, type.toString());
 		for ( Integer id : rawResults.keySet() ) {
 			Geometry geometry = Decoders.decode( (byte[]) rawResults.get( id ) );
 			decodedGeoms.put( id, geometry );
 		}
 	}
 
-	public void doEncoding() {
+    private Map<Integer, Geometry> toExpected(List<ConvertorTestData> testData, String type) {
+        Map<Integer, Geometry> result = new HashMap<Integer, Geometry>();
+        for (ConvertorTestData item : testData) {
+            if (! item.type.equals(type)) continue;
+            result.put(item.id, item.geometry);
+        }
+        return result;
+    }
+
+    private Map<Integer, Object> toRawResults(List<ConvertorTestData> testData, String type) {
+        Map<Integer, Object> result = new HashMap<Integer, Object>();
+        for (ConvertorTestData item : testData) {
+            if (! item.type.equals(type)) continue;
+            result.put(item.id, item.bytes);
+        }
+        return result;
+    }
+
+    public void doEncoding() {
 		encodedGeoms = new HashMap<Integer, byte[]>();
 		for ( Integer id : decodedGeoms.keySet() ) {
 			Geometry geom = decodedGeoms.get( id );

@@ -29,6 +29,14 @@
             on the entity.
         </para>
 
+        <important>
+            <para>
+                Unlike in previous versions, you no longer need to specify listeners in the Hibernate configuration
+                file. Just putting the Envers jar on the classpath is enough - listeners will be registered
+                automatically.
+            </para>
+        </important>
+
         <para>
             And that's all - you can create, modify and delete the entites as always. If you look at the generated
             schema for your entities, or at the data persisted by Hibernate, you will notice that there are no changes.

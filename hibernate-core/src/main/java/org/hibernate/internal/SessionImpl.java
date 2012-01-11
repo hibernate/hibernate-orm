@@ -844,22 +844,22 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	}
 
 	public Object load(Class entityClass, Serializable id) throws HibernateException {
-		return this.byId(entityClass).getReference(id);
+		return this.byId( entityClass ).getReference( id );
 	}
 
 	public Object load(String entityName, Serializable id) throws HibernateException {
-		return this.byId(entityName).getReference(id);
+		return this.byId( entityName ).getReference( id );
 	}
 
 	public Object get(Class entityClass, Serializable id) throws HibernateException {
-        return this.byId(entityClass).load(id);
+		return this.byId( entityClass ).load( id );
 	}
 
 	public Object get(String entityName, Serializable id) throws HibernateException {
-        return this.byId(entityName).load(id);
+		return this.byId( entityName ).load( id );
 	}
 
-	/**
+	/**	
 	 * Load the data for the object with the specified id into a newly created object.
 	 * This is only called when lazily initializing a proxy.
 	 * Do NOT return a proxy.

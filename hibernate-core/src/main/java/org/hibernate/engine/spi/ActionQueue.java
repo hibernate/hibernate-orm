@@ -38,6 +38,7 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
+import org.hibernate.PropertyValueException;
 import org.hibernate.action.internal.AbstractEntityInsertAction;
 import org.hibernate.action.internal.BulkOperationCleanupAction;
 import org.hibernate.action.internal.CollectionAction;
@@ -212,12 +213,31 @@ public class ActionQueue {
 		}
 	}
 
+	/**
+	 * Are there unresolved entity insert actions that depend on non-nullable
+	 * associations with a transient entity?
+	 * @return true, if there are unresolved entity insert actions that depend on
+	 *               non-nullable associations with a transient entity;
+	 *         false, otherwise
+	 */
 	public boolean hasUnresolvedEntityInsertActions() {
 		return ! unresolvedInsertions.isEmpty();
 	}
 
-	public void checkNoUnresolvedEntityInsertActions() {
-		unresolvedInsertions.throwTransientObjectExceptionIfNotEmpty( session );
+	/**
+	 * Throws {@link org.hibernate.PropertyValueException} if there are any unresolved
+	 * entity insert actions that depend on non-nullable associations with
+	 * a transient entity. This method should be called on completion of
+	 * an operation (after all cascades are completed) that saves an entity.
+	 *
+	 * @throws org.hibernate.PropertyValueException if there are any unresolved entity
+	 * insert actions; {@link org.hibernate.PropertyValueException#getEntityName()}
+	 * and {@link org.hibernate.PropertyValueException#getPropertyName()} will
+	 * return the entity name and property value for the first unresolved
+	 * entity insert action.
+	 */
+	public void checkNoUnresolvedActionsAfterOperation() throws PropertyValueException {
+		unresolvedInsertions.checkNoUnresolvedActionsAfterOperation();
 	}
 
 	public void addAction(BulkOperationCleanupAction cleanupAction) {
@@ -247,7 +267,11 @@ public class ActionQueue {
 	 * @throws HibernateException error executing queued actions.
 	 */
 	public void executeActions() throws HibernateException {
-		checkNoUnresolvedEntityInsertActions();
+		if ( ! unresolvedInsertions.isEmpty() ) {
+			throw new IllegalStateException(
+					"About to execute actions, but there are unresolved entity insert actions."
+			);
+		}
 		executeActions( insertions );
 		executeActions( updates );
 		executeActions( collectionRemovals );

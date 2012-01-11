@@ -31,24 +31,25 @@ import java.util.Set;
 import org.hibernate.engine.spi.SessionImplementor;
 
 /**
+ * Tracks non-nullable transient entities that would cause a particular entity insert to fail.
+ *
  * @author Gail Badner
  */
 public class NonNullableTransientDependencies {
+
+	// Multiple property paths can refer to the same transient entity, so use Set<String>
+	// for the map value.
 	private final Map<Object,Set<String>> propertyPathsByTransientEntity =
 			new IdentityHashMap<Object,Set<String>>();
 
 	/* package-protected */
-	void add(String entityName, String propertyName, Object transientEntity) {
+	void add(String propertyName, Object transientEntity) {
 		Set<String> propertyPaths = propertyPathsByTransientEntity.get( transientEntity );
 		if ( propertyPaths == null ) {
 			propertyPaths = new HashSet<String>();
 			propertyPathsByTransientEntity.put( transientEntity, propertyPaths );
 		}
-		StringBuilder sb = new StringBuilder( entityName.length() + propertyName.length() + 1 )
-				.append( entityName )
-				.append( '.' )
-				.append( propertyName );
-		propertyPaths.add( sb.toString() );
+		propertyPaths.add( propertyName );
 	}
 
 	public Iterable<Object> getNonNullableTransientEntities() {

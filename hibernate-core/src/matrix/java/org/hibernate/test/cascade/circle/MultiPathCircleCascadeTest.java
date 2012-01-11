@@ -34,6 +34,7 @@ import org.hibernate.TransientObjectException;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.id.IdentityGenerator;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -681,7 +682,7 @@ public class MultiPathCircleCascadeTest extends BaseCoreFunctionalTestCase {
 			}
 		}
 		else {
-			assertTrue( ex instanceof TransientObjectException );
+			assertTrue( ex instanceof PropertyValueException );
 		}
 	}
 

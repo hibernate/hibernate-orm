@@ -606,15 +606,15 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		}
 	}
 
-	private void checkDelayedActionStatusBeforeOperation() {
+	private void checkNoUnresolvedActionsBeforeOperation() {
 		if ( persistenceContext.getCascadeLevel() == 0 && actionQueue.hasUnresolvedEntityInsertActions() ) {
 			throw new IllegalStateException( "There are delayed insert actions before operation as cascade level 0." );
 		}
 	}
 
-	private void checkDelayedActionStatusAfterOperation() {
+	private void checkNoUnresolvedActionsAfterOperation() {
 		if ( persistenceContext.getCascadeLevel() == 0 ) {
-			actionQueue.checkNoUnresolvedEntityInsertActions();
+			actionQueue.checkNoUnresolvedActionsAfterOperation();
 		}
 	}
 
@@ -631,11 +631,11 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	private void fireSaveOrUpdate(SaveOrUpdateEvent event) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
-		checkDelayedActionStatusBeforeOperation();
+		checkNoUnresolvedActionsBeforeOperation();
 		for ( SaveOrUpdateEventListener listener : listeners( EventType.SAVE_UPDATE ) ) {
 			listener.onSaveOrUpdate( event );
 		}
-		checkDelayedActionStatusAfterOperation();
+		checkNoUnresolvedActionsAfterOperation();
 	}
 
 	private <T> Iterable<T> listeners(EventType<T> type) {
@@ -660,11 +660,11 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	private Serializable fireSave(SaveOrUpdateEvent event) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
-		checkDelayedActionStatusBeforeOperation();
+		checkNoUnresolvedActionsBeforeOperation();
 		for ( SaveOrUpdateEventListener listener : listeners( EventType.SAVE ) ) {
 			listener.onSaveOrUpdate( event );
 		}
-		checkDelayedActionStatusAfterOperation();
+		checkNoUnresolvedActionsAfterOperation();
 		return event.getResultId();
 	}
 
@@ -682,11 +682,11 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	private void fireUpdate(SaveOrUpdateEvent event) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
-		checkDelayedActionStatusBeforeOperation();
+		checkNoUnresolvedActionsBeforeOperation();
 		for ( SaveOrUpdateEventListener listener : listeners( EventType.UPDATE ) ) {
 			listener.onSaveOrUpdate( event );
 		}
-		checkDelayedActionStatusAfterOperation();
+		checkNoUnresolvedActionsAfterOperation();
 	}
 
 
@@ -747,11 +747,11 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	private void firePersist(PersistEvent event) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
-		checkDelayedActionStatusBeforeOperation();
+		checkNoUnresolvedActionsBeforeOperation();
 		for ( PersistEventListener listener : listeners( EventType.PERSIST ) ) {
 			listener.onPersist( event );
 		}
-		checkDelayedActionStatusAfterOperation();
+		checkNoUnresolvedActionsAfterOperation();
 	}
 
 
@@ -782,11 +782,11 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	private void firePersistOnFlush(PersistEvent event) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
-		checkDelayedActionStatusBeforeOperation();
+		checkNoUnresolvedActionsBeforeOperation();
 		for ( PersistEventListener listener : listeners( EventType.PERSIST_ONFLUSH ) ) {
 			listener.onPersist( event );
 		}
-		checkDelayedActionStatusAfterOperation();
+		checkNoUnresolvedActionsAfterOperation();
 	}
 
 
@@ -807,11 +807,11 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	private Object fireMerge(MergeEvent event) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
-		checkDelayedActionStatusBeforeOperation();
+		checkNoUnresolvedActionsBeforeOperation();
 		for ( MergeEventListener listener : listeners( EventType.MERGE ) ) {
 			listener.onMerge( event );
 		}
-		checkDelayedActionStatusAfterOperation();
+		checkNoUnresolvedActionsAfterOperation();
 		return event.getResult();
 	}
 

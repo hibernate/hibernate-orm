@@ -71,9 +71,7 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 
 	@Override
 	public void execute() throws HibernateException {
-		if ( ! areTransientReferencesNullified() ) {
-			nullifyTransientReferences();
-		}
+		nullifyTransientReferencesIfNotAlready();
 
 		EntityPersister persister = getPersister();
 		SessionImplementor session = getSession();

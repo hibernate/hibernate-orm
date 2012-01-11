@@ -75,11 +75,11 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	/**
 	 * Returns the entity state.
 	 *
-	 * NOTE: calling {@link #nullifyTransientReferences()} can modify the
+	 * NOTE: calling {@link #nullifyTransientReferencesIfNotAlready} can modify the
 	 *       entity state.
 	 * @return the entity state.
 	 *
-	 * @see {@link #nullifyTransientReferences()}
+	 * @see {@link #nullifyTransientReferencesIfNotAlready}
 	 */
 	public Object[] getState() {
 		return state;
@@ -109,38 +109,31 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	}
 
 	/**
-	 * Have transient references been nullified?
-	 *
-	 * @return true, if transient references have been nullified; false, otherwise.
-	 *
-	 * @see {@link #nullifyTransientReferences()}
-	 */
-	protected final boolean areTransientReferencesNullified() {
-		return areTransientReferencesNullified;
-	}
-
-	/**
 	 * Nullifies any references to transient entities in the entity state
-	 * maintained by this action. This method must be called when an entity
-	 * is made "managed" or when this action is executed, whichever is first.
+	 * maintained by this action. References to transient entities
+	 * should be nullified when an entity is made "managed" or when this
+	 * action is executed, whichever is first.
+	 * <p/>
+	 * References will only be nullified the first time this method is
+	 * called for a this object, so it can safely be called both when
+	 * the entity is made "managed" and when this action is executed.
 	 *
-	 * @see {@link #areTransientReferencesNullified()}
 	 * @see {@link #makeEntityManaged() }
 	 */
-	protected final void nullifyTransientReferences() {
-		new ForeignKeys.Nullifier( getInstance(), false, isEarlyInsert(), getSession() )
-				.nullifyTransientReferences( getState(), getPersister().getPropertyTypes() );
-		new Nullability( getSession() ).checkNullability( getState(), getPersister(), false );
-		areTransientReferencesNullified = true;
+	protected final void nullifyTransientReferencesIfNotAlready() {
+		if ( ! areTransientReferencesNullified ) {
+			new ForeignKeys.Nullifier( getInstance(), false, isEarlyInsert(), getSession() )
+					.nullifyTransientReferences( getState(), getPersister().getPropertyTypes() );
+			new Nullability( getSession() ).checkNullability( getState(), getPersister(), false );
+			areTransientReferencesNullified = true;
+		}
 	}
 
 	/**
 	 * Make the entity "managed" by the persistence context.
 	 */
 	public final void makeEntityManaged() {
-		if ( !areTransientReferencesNullified ) {
-			nullifyTransientReferences();
-		}
+		nullifyTransientReferencesIfNotAlready();
 		Object version = Versioning.getVersion( getState(), getPersister() );
 		getSession().getPersistenceContext().addEntity(
 				getInstance(),

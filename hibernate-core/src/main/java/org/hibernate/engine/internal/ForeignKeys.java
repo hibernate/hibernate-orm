@@ -288,7 +288,6 @@ public final class ForeignKeys {
 		NonNullableTransientDependencies nonNullableTransientEntities = new NonNullableTransientDependencies();
 		for ( int i = 0; i < types.length; i++ ) {
 			collectNonNullableTransientEntities(
-					entityName,
 					nullifier,
 					i,
 					values[i],
@@ -303,7 +302,6 @@ public final class ForeignKeys {
 	}
 
 	private static void collectNonNullableTransientEntities(
-			String entityName,
 			Nullifier nullifier,
 			int i,
 			Object value,
@@ -320,13 +318,13 @@ public final class ForeignKeys {
 			if ( ! isNullable &&
 					! entityType.isOneToOne() &&
 					nullifier.isNullifiable( entityType.getAssociatedEntityName(), value ) ) {
-				nonNullableTransientEntities.add( entityName, propertyName, value );
+				nonNullableTransientEntities.add( propertyName, value );
 			}
 		}
 		else if ( type.isAnyType() ) {
 			if ( ! isNullable &&
 					nullifier.isNullifiable( null, value ) ) {
-				nonNullableTransientEntities.add( entityName, propertyName, value );
+				nonNullableTransientEntities.add( propertyName, value );
 			}
 		}
 		else if ( type.isComponentType() ) {
@@ -338,7 +336,6 @@ public final class ForeignKeys {
 				Type[] subtypes = actype.getSubtypes();
 				for ( int j = 0; j < subvalues.length; j++ ) {
 					collectNonNullableTransientEntities(
-							entityName,
 							nullifier,
 							j,
 							subvalues[j],

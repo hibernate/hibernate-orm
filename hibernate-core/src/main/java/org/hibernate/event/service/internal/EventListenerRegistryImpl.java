@@ -247,12 +247,12 @@ public class EventListenerRegistryImpl implements EventListenerRegistry {
 				workMap
 		);
 
-        // resolve natural-id listeners
-        prepareListeners(
-                RESOLVE_NATURAL_ID,
-                new DefaultResolveNaturalIdEventListener(),
-                workMap
-        );
+		// resolve natural-id listeners
+		prepareListeners( 
+				RESOLVE_NATURAL_ID, 
+				new DefaultResolveNaturalIdEventListener(), 
+				workMap 
+		);
 
 		// load-collection listeners
 		prepareListeners(

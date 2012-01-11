@@ -601,14 +601,14 @@ public class CustomPersister implements EntityPersister {
 	public Object[] getNaturalIdentifierSnapshot(Serializable id, SessionImplementor session) throws HibernateException {
 		return null;
 	}
-	
-    @Override
-    public Serializable loadEntityIdByNaturalId(Map<String, ?> naturalIdParameters, LockOptions lockOptions,
-            SessionImplementor session) {
-        return null;
-    }
 
-    @Override
+	@Override
+	public Serializable loadEntityIdByNaturalId(Map<String, ?> naturalIdParameters, LockOptions lockOptions,
+			SessionImplementor session) {
+		return null;
+	}
+
+	@Override
 	public Comparator getVersionComparator() {
 		return null;
 	}

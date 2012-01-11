@@ -31,9 +31,9 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 
 /**
- *  Defines an event class for the resolving of an entity id from the entity's natural-id
- *
- * @author Steve Ebersole
+ * Defines an event class for the resolving of an entity id from the entity's natural-id
+ * 
+ * @author Eric Dalquist
  */
 public class ResolveNaturalIdEvent extends AbstractEvent {
 	public static final LockMode DEFAULT_LOCK_MODE = LockMode.NONE;
@@ -44,29 +44,30 @@ public class ResolveNaturalIdEvent extends AbstractEvent {
 	private Serializable entityId;
 
 	public ResolveNaturalIdEvent(Map<String, Object> naturalId, String entityClassName, EventSource source) {
-	    this(naturalId, entityClassName, new LockOptions(), source);
+		this( naturalId, entityClassName, new LockOptions(), source );
 	}
-	
-	public ResolveNaturalIdEvent(Map<String, Object> naturalId, String entityClassName, LockOptions lockOptions, EventSource source) {
-		super(source);
+
+	public ResolveNaturalIdEvent(Map<String, Object> naturalId, String entityClassName, LockOptions lockOptions,
+			EventSource source) {
+		super( source );
 
 		if ( naturalId == null || naturalId.isEmpty() ) {
-			throw new IllegalArgumentException("id to load is required for loading");
+			throw new IllegalArgumentException( "id to load is required for loading" );
 		}
 
-        if ( lockOptions.getLockMode() == LockMode.WRITE ) {
-            throw new IllegalArgumentException("Invalid lock mode for loading");
-        }
-        else if ( lockOptions.getLockMode() == null ) {
-            lockOptions.setLockMode(DEFAULT_LOCK_MODE);
-        }
+		if ( lockOptions.getLockMode() == LockMode.WRITE ) {
+			throw new IllegalArgumentException( "Invalid lock mode for loading" );
+		}
+		else if ( lockOptions.getLockMode() == null ) {
+			lockOptions.setLockMode( DEFAULT_LOCK_MODE );
+		}
 
 		this.naturalId = naturalId;
 		this.entityClassName = entityClassName;
 	}
 
 	public Map<String, Object> getNaturalId() {
-		return Collections.unmodifiableMap(naturalId);
+		return Collections.unmodifiableMap( naturalId );
 	}
 
 	public void setNaturalId(Map<String, Object> naturalId) {
@@ -89,11 +90,11 @@ public class ResolveNaturalIdEvent extends AbstractEvent {
 		this.entityId = entityId;
 	}
 
-    public LockOptions getLockOptions() {
-        return lockOptions;
-    }
+	public LockOptions getLockOptions() {
+		return lockOptions;
+	}
 
-    public void setLockOptions(LockOptions lockOptions) {
-        this.lockOptions = lockOptions;
-    }
+	public void setLockOptions(LockOptions lockOptions) {
+		this.lockOptions = lockOptions;
+	}
 }

@@ -5,6 +5,51 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 4.0.1.Final (2012.01.11)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.onjira.com/browse/HHH/fixforversion/11754
+
+** Sub-task
+    * [HHH-2763] - Allow initialization during flush
+    * [HHH-6952] - Allow extensions of InfinispanRegionFactory to override classloader logic
+
+** Bug
+    * [HHH-4439] - In general it is impossible to override properties defined in @MappedSuperclass to change how they will be handled during auditing.
+    * [HHH-5275] - Criteria.setLockMode does not work correctly
+    * [HHH-5891] - AuditReaderImpl.getRevisions result is not ordered as specified in Javadoc
+    * [HHH-6854] - testSubsequentPooledLoOptimizerUsage doesn't actually test the PooledLo optimizer
+    * [HHH-6855] - SequenceStyleGenerator should force use of TableStructure when the optimizer is PooledLo
+    * [HHH-6902] - Create typed query in EntityManager throws NullPointerException when filters are present
+    * [HHH-6906] - Clean up javadoc warnings
+    * [HHH-6909] - "Getting Started Guide" example code cannot be run successfully
+    * [HHH-6916] - Improper handling of primitive arrays in AbstractQueryImpl.registerParameterBinding
+    * [HHH-6920] - HQL insert queries and identifier handling
+    * [HHH-6921] - jandex and classmate dependencies should not be exported to published pom
+    * [HHH-6933] - Developer's guide has strange markup in Chapter 1
+    * [HHH-6936] - EntityManagerImpl.close() and EntityManagerImpl.isOpen() should check if the session factory is closed
+
+** Improvement
+    * [HHH-6822] - Split notions of (1) "naming" a SessionFactory and (2) specifying a JNDI name to which to bind it
+    * [HHH-6840] - Add to_char function to HSQLDialect
+    * [HHH-6887] - Improve SQLStateConverter to take sql state type from the database metadata into account
+    * [HHH-6955] - Upgrade to Infinispan 5.1.0.CR3
+
+** New Feature
+    * [HHH-6931] - Provide local database hook
+    * [HHH-6940] - Ability (easier) to run bits of code in a timeout protected way
+
+** Patch
+    * [HHH-5124] - Removing an entity and persisting it again fails
+
+** Task
+    * [HHH-6657] - Document org.hibernate.integrator.spi.IntegratorService
+    * [HHH-6782] - define javadoc groups based on api/spi/internal
+    * [HHH-6897] - serialization of the EntityManager should be possible
+    * [HHH-6900] - upgrade to org.javassist:javassist:3.15.0-GA
+    * [HHH-6903] - add building of hem and manual docs
+    * [HHH-6937] - Process database profiles just once per build
+
+
 Changes in version 4.0.0.Final (2011.12.14)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.onjira.com/browse/HHH/fixforversion/11656

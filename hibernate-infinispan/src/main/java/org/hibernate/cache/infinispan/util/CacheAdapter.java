@@ -221,4 +221,6 @@ public interface CacheAdapter {
     */
    <T> T withinTx(Callable<T> c) throws Exception;
 
+   Cache getCache();
+
 }

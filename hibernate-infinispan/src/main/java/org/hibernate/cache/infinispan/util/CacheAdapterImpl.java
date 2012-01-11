@@ -228,6 +228,11 @@ public class CacheAdapterImpl implements CacheAdapter {
       return CacheHelper.withinTx(cache.getTransactionManager(), c);
    }
 
+   @Override
+   public Cache getCache() {
+      return cache;
+   }
+
    private Cache getFailSilentCache() {
       return cache.withFlags(Flag.FAIL_SILENTLY);
    }

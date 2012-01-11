@@ -23,11 +23,16 @@
  */
 package org.hibernate.test.cache.infinispan.entity;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import org.hibernate.cache.infinispan.util.CacheHelper;
+import org.infinispan.Cache;
+import org.infinispan.test.TestingUtil;
 import org.infinispan.transaction.tm.BatchModeTransactionManager;
 import org.jboss.logging.Logger;
 
@@ -107,7 +112,14 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
 
 		remoteEntityRegion = remoteEnvironment.getEntityRegion( REGION_NAME, getCacheDataDescription() );
 		remoteAccessStrategy = remoteEntityRegion.buildAccessStrategy( getAccessType() );
+
+      waitForClusterToForm(localEntityRegion.getCacheAdapter().getCache(),
+                           remoteEntityRegion.getCacheAdapter().getCache());
 	}
+
+   protected void waitForClusterToForm(Cache... caches) {
+      TestingUtil.blockUntilViewsReceived(10000, Arrays.asList(caches));
+   }
 
 	protected abstract String getConfigurationName();
 

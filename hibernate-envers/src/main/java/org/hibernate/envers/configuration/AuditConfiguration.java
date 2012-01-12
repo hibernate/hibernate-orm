@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.configuration;
+
 import java.util.Map;
 import java.util.Properties;
 import java.util.WeakHashMap;
@@ -46,68 +47,73 @@ import org.hibernate.service.classloading.spi.ClassLoaderService;
  * @author Stephanie Pau at Markit Group Plc
  */
 public class AuditConfiguration {
-    private final GlobalConfiguration globalCfg;
-    private final AuditEntitiesConfiguration auditEntCfg;
-    private final AuditProcessManager auditProcessManager;
-    private final AuditStrategy auditStrategy;
-    private final EntitiesConfigurations entCfg;
-    private final RevisionInfoQueryCreator revisionInfoQueryCreator;
-    private final RevisionInfoNumberReader revisionInfoNumberReader;
-    private final ModifiedEntityNamesReader modifiedEntityNamesReader;
+	private final GlobalConfiguration globalCfg;
+	private final AuditEntitiesConfiguration auditEntCfg;
+	private final AuditProcessManager auditProcessManager;
+	private final AuditStrategy auditStrategy;
+	private final EntitiesConfigurations entCfg;
+	private final RevisionInfoQueryCreator revisionInfoQueryCreator;
+	private final RevisionInfoNumberReader revisionInfoNumberReader;
+	private final ModifiedEntityNamesReader modifiedEntityNamesReader;
 	private final ClassLoaderService classLoaderService;
 
-    public AuditEntitiesConfiguration getAuditEntCfg() {
-        return auditEntCfg;
-    }
+	public AuditEntitiesConfiguration getAuditEntCfg() {
+		return auditEntCfg;
+	}
 
-    public AuditProcessManager getSyncManager() {
-        return auditProcessManager;
-    }
+	public AuditProcessManager getSyncManager() {
+		return auditProcessManager;
+	}
 
-    public GlobalConfiguration getGlobalCfg() {
-        return globalCfg;
-    }
+	public GlobalConfiguration getGlobalCfg() {
+		return globalCfg;
+	}
 
-    public EntitiesConfigurations getEntCfg() {
-        return entCfg;
-    }
+	public EntitiesConfigurations getEntCfg() {
+		return entCfg;
+	}
 
-    public RevisionInfoQueryCreator getRevisionInfoQueryCreator() {
-        return revisionInfoQueryCreator;
-    }
+	public RevisionInfoQueryCreator getRevisionInfoQueryCreator() {
+		return revisionInfoQueryCreator;
+	}
 
-    public RevisionInfoNumberReader getRevisionInfoNumberReader() {
-        return revisionInfoNumberReader;
-    }
+	public RevisionInfoNumberReader getRevisionInfoNumberReader() {
+		return revisionInfoNumberReader;
+	}
 
-    public ModifiedEntityNamesReader getModifiedEntityNamesReader() {
-        return modifiedEntityNamesReader;
-    }
+	public ModifiedEntityNamesReader getModifiedEntityNamesReader() {
+		return modifiedEntityNamesReader;
+	}
 
-    public AuditStrategy getAuditStrategy() {
-        return auditStrategy;
-    }
+	public AuditStrategy getAuditStrategy() {
+		return auditStrategy;
+	}
 
-    public AuditConfiguration(Configuration cfg) {
-        this(cfg, null);
-    }
+	public AuditConfiguration(Configuration cfg) {
+		this( cfg, null );
+	}
+
 	public AuditConfiguration(Configuration cfg, ClassLoaderService classLoaderService) {
 		Properties properties = cfg.getProperties();
 
 		ReflectionManager reflectionManager = cfg.getReflectionManager();
-		globalCfg = new GlobalConfiguration(properties);
-		RevisionInfoConfiguration revInfoCfg = new RevisionInfoConfiguration(globalCfg);
-		RevisionInfoConfigurationResult revInfoCfgResult = revInfoCfg.configure(cfg, reflectionManager);
-		auditEntCfg = new AuditEntitiesConfiguration(properties, revInfoCfgResult.getRevisionInfoEntityName());
-		auditProcessManager = new AuditProcessManager(revInfoCfgResult.getRevisionInfoGenerator());
+		globalCfg = new GlobalConfiguration( properties );
+		RevisionInfoConfiguration revInfoCfg = new RevisionInfoConfiguration( globalCfg );
+		RevisionInfoConfigurationResult revInfoCfgResult = revInfoCfg.configure( cfg, reflectionManager );
+		auditEntCfg = new AuditEntitiesConfiguration( properties, revInfoCfgResult.getRevisionInfoEntityName() );
+		auditProcessManager = new AuditProcessManager( revInfoCfgResult.getRevisionInfoGenerator() );
 		revisionInfoQueryCreator = revInfoCfgResult.getRevisionInfoQueryCreator();
 		revisionInfoNumberReader = revInfoCfgResult.getRevisionInfoNumberReader();
 		modifiedEntityNamesReader = revInfoCfgResult.getModifiedEntityNamesReader();
 		this.classLoaderService = classLoaderService;
-		auditStrategy = initializeAuditStrategy(revInfoCfgResult.getRevisionInfoClass(),
-				revInfoCfgResult.getRevisionInfoTimestampData());
-		entCfg = new EntitiesConfigurator().configure(cfg, reflectionManager, globalCfg, auditEntCfg, auditStrategy,
-				revInfoCfgResult.getRevisionInfoXmlMapping(), revInfoCfgResult.getRevisionInfoRelationMapping());
+		auditStrategy = initializeAuditStrategy(
+				revInfoCfgResult.getRevisionInfoClass(),
+				revInfoCfgResult.getRevisionInfoTimestampData()
+		);
+		entCfg = new EntitiesConfigurator().configure(
+				cfg, reflectionManager, globalCfg, auditEntCfg, auditStrategy,
+				revInfoCfgResult.getRevisionInfoXmlMapping(), revInfoCfgResult.getRevisionInfoRelationMapping()
+		);
 	}
 
 	private AuditStrategy initializeAuditStrategy(Class<?> revisionInfoClass, PropertyData revisionInfoTimestampData) {
@@ -115,43 +121,49 @@ public class AuditConfiguration {
 
 		try {
 
-            Class<?> auditStrategyClass = null;
-			if(classLoaderService!=null){
+			Class<?> auditStrategyClass = null;
+			if ( classLoaderService != null ) {
 				auditStrategyClass = classLoaderService.classForName( auditEntCfg.getAuditStrategyName() );
-			} else {
-				auditStrategyClass = Thread.currentThread().getContextClassLoader().loadClass(auditEntCfg.getAuditStrategyName());
+			}
+			else {
+				auditStrategyClass = Thread.currentThread()
+						.getContextClassLoader()
+						.loadClass( auditEntCfg.getAuditStrategyName() );
 			}
 
-            strategy = (AuditStrategy) auditStrategyClass.newInstance();
-        } catch (Exception e) {
-           throw new MappingException(
-                   String.format("Unable to create AuditStrategy[%s] instance." , auditEntCfg.getAuditStrategyName()),
-                   e);
-        }
+			strategy = (AuditStrategy) auditStrategyClass.newInstance();
+		}
+		catch ( Exception e ) {
+			throw new MappingException(
+					String.format( "Unable to create AuditStrategy[%s] instance.", auditEntCfg.getAuditStrategyName() ),
+					e
+			);
+		}
 
-        if (strategy instanceof ValidityAuditStrategy) {
-        	// further initialization required
-        	Getter revisionTimestampGetter = ReflectionTools.getGetter(revisionInfoClass, revisionInfoTimestampData);
-        	((ValidityAuditStrategy) strategy).setRevisionTimestampGetter(revisionTimestampGetter);
-        }
+		if ( strategy instanceof ValidityAuditStrategy ) {
+			// further initialization required
+			Getter revisionTimestampGetter = ReflectionTools.getGetter( revisionInfoClass, revisionInfoTimestampData );
+			( (ValidityAuditStrategy) strategy ).setRevisionTimestampGetter( revisionTimestampGetter );
+		}
 
-        return strategy;
+		return strategy;
 	}
 
-    //
+	//
 
-    private static Map<Configuration, AuditConfiguration> cfgs
-            = new WeakHashMap<Configuration, AuditConfiguration>();
+	private static Map<Configuration, AuditConfiguration> cfgs
+			= new WeakHashMap<Configuration, AuditConfiguration>();
 
-    public synchronized static AuditConfiguration getFor(Configuration cfg) {
-        return getFor( cfg, null );
-    }
+	public synchronized static AuditConfiguration getFor(Configuration cfg) {
+		return getFor( cfg, null );
+	}
+
 	public synchronized static AuditConfiguration getFor(Configuration cfg, ClassLoaderService classLoaderService) {
-		AuditConfiguration verCfg = cfgs.get(cfg);
+		AuditConfiguration verCfg = cfgs.get( cfg );
 
-		if (verCfg == null) {
-			verCfg = new AuditConfiguration(cfg, classLoaderService);
-			cfgs.put(cfg, verCfg);
+		if ( verCfg == null ) {
+			verCfg = new AuditConfiguration( cfg, classLoaderService );
+			cfgs.put( cfg, verCfg );
 
 			cfg.buildMappings();
 		}

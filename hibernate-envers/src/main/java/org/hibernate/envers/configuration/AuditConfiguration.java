@@ -111,7 +111,9 @@ public class AuditConfiguration {
             Class<?> auditStrategyClass = Thread.currentThread().getContextClassLoader().loadClass(auditEntCfg.getAuditStrategyName());
             strategy = (AuditStrategy) auditStrategyClass.newInstance();
         } catch (Exception e) {
-           throw new MappingException(String.format("Unable to create AuditStrategy[%s] instance." , auditEntCfg.getAuditStrategyName()));
+           throw new MappingException(
+                   String.format("Unable to create AuditStrategy[%s] instance." , auditEntCfg.getAuditStrategyName()),
+                   e);
         }
 
         if (strategy instanceof ValidityAuditStrategy) {

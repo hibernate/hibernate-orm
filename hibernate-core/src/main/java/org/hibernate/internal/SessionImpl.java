@@ -39,11 +39,10 @@ import java.sql.SQLException;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import org.jboss.logging.Logger;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.CacheMode;
@@ -54,11 +53,13 @@ import org.hibernate.EntityNameResolver;
 import org.hibernate.Filter;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
+import org.hibernate.IdentifierLoadAccess;
 import org.hibernate.Interceptor;
 import org.hibernate.LobHelper;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
+import org.hibernate.NaturalIdLoadAccess;
 import org.hibernate.ObjectDeletedException;
 import org.hibernate.Query;
 import org.hibernate.QueryException;
@@ -124,6 +125,8 @@ import org.hibernate.event.spi.RefreshEvent;
 import org.hibernate.event.spi.RefreshEventListener;
 import org.hibernate.event.spi.ReplicateEvent;
 import org.hibernate.event.spi.ReplicateEventListener;
+import org.hibernate.event.spi.ResolveNaturalIdEvent;
+import org.hibernate.event.spi.ResolveNaturalIdEventListener;
 import org.hibernate.event.spi.SaveOrUpdateEvent;
 import org.hibernate.event.spi.SaveOrUpdateEventListener;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -144,6 +147,7 @@ import org.hibernate.stat.SessionStatistics;
 import org.hibernate.stat.internal.SessionStatisticsImpl;
 import org.hibernate.type.SerializationException;
 import org.hibernate.type.Type;
+import org.jboss.logging.Logger;
 
 /**
  * Concrete implementation of a Session.
@@ -840,43 +844,22 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	}
 
 	public Object load(Class entityClass, Serializable id) throws HibernateException {
-		return load( entityClass.getName(), id );
+		return this.byId( entityClass ).getReference( id );
 	}
 
 	public Object load(String entityName, Serializable id) throws HibernateException {
-		LoadEvent event = new LoadEvent(id, entityName, false, this);
-		boolean success = false;
-		try {
-			fireLoad( event, LoadEventListener.LOAD );
-			if ( event.getResult() == null ) {
-				getFactory().getEntityNotFoundDelegate().handleEntityNotFound( entityName, id );
-			}
-			success = true;
-			return event.getResult();
-		}
-		finally {
-			afterOperation(success);
-		}
+		return this.byId( entityName ).getReference( id );
 	}
 
 	public Object get(Class entityClass, Serializable id) throws HibernateException {
-		return get( entityClass.getName(), id );
+		return this.byId( entityClass ).load( id );
 	}
 
 	public Object get(String entityName, Serializable id) throws HibernateException {
-		LoadEvent event = new LoadEvent(id, entityName, false, this);
-		boolean success = false;
-		try {
-			fireLoad(event, LoadEventListener.GET);
-			success = true;
-			return event.getResult();
-		}
-		finally {
-			afterOperation(success);
-		}
+		return this.byId( entityName ).load( id );
 	}
 
-	/**
+	/**	
 	 * Load the data for the object with the specified id into a newly created object.
 	 * This is only called when lazily initializing a proxy.
 	 * Do NOT return a proxy.
@@ -908,43 +891,55 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	}
 
 	public Object load(Class entityClass, Serializable id, LockMode lockMode) throws HibernateException {
-		return load( entityClass.getName(), id, lockMode );
+		return this.byId( entityClass ).with( lockMode ).getReference( id );
 	}
 
 	public Object load(Class entityClass, Serializable id, LockOptions lockOptions) throws HibernateException {
-		return load( entityClass.getName(), id, lockOptions );
+		return this.byId( entityClass ).with( lockOptions ).getReference( id );
 	}
 
 	public Object load(String entityName, Serializable id, LockMode lockMode) throws HibernateException {
-		LoadEvent event = new LoadEvent(id, entityName, lockMode, this);
-		fireLoad( event, LoadEventListener.LOAD );
-		return event.getResult();
+		return this.byId( entityName ).with( lockMode ).getReference( id );
 	}
 
 	public Object load(String entityName, Serializable id, LockOptions lockOptions) throws HibernateException {
-		LoadEvent event = new LoadEvent(id, entityName, lockOptions, this);
-		fireLoad( event, LoadEventListener.LOAD );
-		return event.getResult();
+		return this.byId( entityName ).with( lockOptions ).getReference( id );
 	}
 
 	public Object get(Class entityClass, Serializable id, LockMode lockMode) throws HibernateException {
-		return get( entityClass.getName(), id, lockMode );
+		return this.byId( entityClass ).with( lockMode ).load( id );
 	}
 
 	public Object get(Class entityClass, Serializable id, LockOptions lockOptions) throws HibernateException {
-		return get( entityClass.getName(), id, lockOptions );
+		return this.byId( entityClass ).with( lockOptions ).load( id );
 	}
 
 	public Object get(String entityName, Serializable id, LockMode lockMode) throws HibernateException {
-		LoadEvent event = new LoadEvent(id, entityName, lockMode, this);
-	   	fireLoad(event, LoadEventListener.GET);
-		return event.getResult();
+		return this.byId( entityName ).with( lockMode ).load( id );
 	}
 
 	public Object get(String entityName, Serializable id, LockOptions lockOptions) throws HibernateException {
-		LoadEvent event = new LoadEvent(id, entityName, lockOptions, this);
-	   	fireLoad( event, LoadEventListener.GET );
-		return event.getResult();
+		return this.byId( entityName ).with( lockOptions ).load( id );
+	}
+	
+	@Override
+	public IdentifierLoadAccessImpl<Object> byId(String entityName) {
+		return new IdentifierLoadAccessImpl<Object>( entityName, Object.class );
+	}
+
+	@Override
+	public <T> IdentifierLoadAccessImpl<T> byId(Class<T> entityClass) {
+		return new IdentifierLoadAccessImpl<T>( entityClass.getName(), entityClass );
+	}
+
+	@Override
+	public NaturalIdLoadAccess<Object> byNaturalId(String entityName) {
+		return new NaturalIdLoadAccessImpl<Object>( entityName, Object.class );
+	}
+
+	@Override
+	public <T> NaturalIdLoadAccess<T> byNaturalId(Class<T> entityClass) {
+		return new NaturalIdLoadAccessImpl<T>( entityClass.getName(), entityClass );
 	}
 
 	private void fireLoad(LoadEvent event, LoadType loadType) {
@@ -952,6 +947,14 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		checkTransactionSynchStatus();
 		for ( LoadEventListener listener : listeners( EventType.LOAD ) ) {
 			listener.onLoad( event, loadType );
+		}
+	}
+
+	private void fireResolveNaturalId(ResolveNaturalIdEvent event) {
+		errorIfClosed();
+		checkTransactionSynchStatus();
+		for ( ResolveNaturalIdEventListener listener : listeners( EventType.RESOLVE_NATURAL_ID ) ) {
+			listener.onResolveNaturalId( event );
 		}
 	}
 
@@ -2162,6 +2165,135 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		}
 		public void lock(Object object) throws HibernateException {
 			fireLock( object, lockOptions );
+		}
+	}
+    
+	private class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T> {
+		private final String entityName;
+		private final Class<T> entityClass;
+		private LockOptions lockOptions;
+
+		private IdentifierLoadAccessImpl(String entityName, Class<T> entityClass) {
+			this.entityName = entityName;
+			this.entityClass = entityClass;
+		}
+
+		@Override
+		public final IdentifierLoadAccessImpl<T> with(LockOptions lockOptions) {
+			this.lockOptions = lockOptions;
+			return this;
+		}
+
+		/**
+         * Support for legacy {@link Session#load(Class, Serializable, LockMode)} and {@link Session#load(String, Serializable, LockMode)
+         * @deprecated
+         */
+		@Deprecated
+		public final IdentifierLoadAccessImpl<T> with(LockMode lockMode) {
+			this.lockOptions = new LockOptions();
+			this.lockOptions.setLockMode( lockMode );
+			return this;
+		}
+
+		@Override
+		public final Object getReference(Serializable id) {
+			if ( this.lockOptions != null ) {
+				LoadEvent event = new LoadEvent( id, entityName, lockOptions, SessionImpl.this );
+				fireLoad( event, LoadEventListener.LOAD );
+				return event.getResult();
+			}
+
+			LoadEvent event = new LoadEvent( id, entityName, false, SessionImpl.this );
+			boolean success = false;
+			try {
+				fireLoad( event, LoadEventListener.LOAD );
+				if ( event.getResult() == null ) {
+					getFactory().getEntityNotFoundDelegate().handleEntityNotFound( entityName, id );
+				}
+				success = true;
+				return event.getResult();
+			}
+			finally {
+				afterOperation( success );
+			}
+		}
+
+		@Override
+		public final Object load(Serializable id) {
+			if ( this.lockOptions != null ) {
+				LoadEvent event = new LoadEvent( id, entityName, lockOptions, SessionImpl.this );
+				fireLoad( event, LoadEventListener.GET );
+				return event.getResult();
+			}
+
+			LoadEvent event = new LoadEvent( id, entityName, false, SessionImpl.this );
+			boolean success = false;
+			try {
+				fireLoad( event, LoadEventListener.GET );
+				success = true;
+				return event.getResult();
+			}
+			finally {
+				afterOperation( success );
+			}
+		}
+	}
+
+	private class NaturalIdLoadAccessImpl<T> implements NaturalIdLoadAccess<T> {
+		private final String entityName;
+		private final Class<T> entityClass;
+		private final Map<String, Object> naturalIdParameters = new LinkedHashMap<String, Object>();
+		private LockOptions lockOptions;
+
+		private NaturalIdLoadAccessImpl(String entityName, Class<T> entityClass) {
+			this.entityName = entityName;
+			this.entityClass = entityClass;
+		}
+
+		@Override
+		public final NaturalIdLoadAccess<T> with(LockOptions lockOptions) {
+			this.lockOptions = lockOptions;
+			return this;
+		}
+
+		@Override
+		public NaturalIdLoadAccess<T> using(String attributeName, Object value) {
+			naturalIdParameters.put( attributeName, value );
+			return this;
+		}
+
+		protected Serializable resolveNaturalId() {
+			final ResolveNaturalIdEvent event = new ResolveNaturalIdEvent( naturalIdParameters, entityName,
+					SessionImpl.this );
+			fireResolveNaturalId( event );
+			return event.getEntityId();
+		}
+
+		protected IdentifierLoadAccess<T> getIdentifierLoadAccess() {
+			final IdentifierLoadAccessImpl<T> identifierLoadAccess = new SessionImpl.IdentifierLoadAccessImpl<T>(
+					entityName, entityClass );
+			if ( this.lockOptions != null ) {
+				identifierLoadAccess.with( lockOptions );
+			}
+			return identifierLoadAccess;
+		}
+
+		@Override
+		public final Object getReference() {
+			final Serializable entityId = resolveNaturalId();
+			if ( entityId == null ) {
+				return null;
+			}
+			return this.getIdentifierLoadAccess().getReference( entityId );
+		}
+
+		@Override
+		public final Object load() {
+			final Serializable entityId = resolveNaturalId();
+			if ( entityId == null ) {
+				return null;
+			}
+			return this.getIdentifierLoadAccess().load( entityId );
 		}
 	}
 }

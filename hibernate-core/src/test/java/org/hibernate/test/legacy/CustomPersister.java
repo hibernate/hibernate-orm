@@ -603,6 +603,12 @@ public class CustomPersister implements EntityPersister {
 	}
 
 	@Override
+	public Serializable loadEntityIdByNaturalId(Map<String, ?> naturalIdParameters, LockOptions lockOptions,
+			SessionImplementor session) {
+		return null;
+	}
+
+	@Override
 	public Comparator getVersionComparator() {
 		return null;
 	}

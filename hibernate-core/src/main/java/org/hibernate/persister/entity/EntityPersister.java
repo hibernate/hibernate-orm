@@ -322,6 +322,12 @@ public interface EntityPersister extends OptimisticCacheSource {
 	public boolean hasLazyProperties();
 
 	/**
+	 * Load the id for the entity based on the natural id.
+	 */
+	public Serializable loadEntityIdByNaturalId(Map<String, ?> naturalIdParameters, LockOptions lockOptions,
+			SessionImplementor session);
+
+	/**
 	 * Load an instance of the persistent class.
 	 */
 	public Object load(Serializable id, Object optionalObject, LockMode lockMode, SessionImplementor session)

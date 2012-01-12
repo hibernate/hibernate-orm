@@ -40,6 +40,8 @@ import org.hibernate.HibernateException;
 public class EventType<T> {
 	public static final EventType<LoadEventListener> LOAD
 			= new EventType<LoadEventListener>( "load", LoadEventListener.class );
+	public static final EventType<ResolveNaturalIdEventListener> RESOLVE_NATURAL_ID
+			= new EventType<ResolveNaturalIdEventListener>( "resolve-natural-id", ResolveNaturalIdEventListener.class );
 	public static final EventType<InitializeCollectionEventListener> INIT_COLLECTION
 			= new EventType<InitializeCollectionEventListener>( "load-collection", InitializeCollectionEventListener.class );
 

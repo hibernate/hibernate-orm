@@ -34,6 +34,7 @@ import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.metamodel.source.MetadataImplementor;
+import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
 /**
@@ -60,7 +61,7 @@ public class EnversIntegrator implements Integrator {
 		EventListenerRegistry listenerRegistry = serviceRegistry.getService( EventListenerRegistry.class );
 		listenerRegistry.addDuplicationStrategy( EnversListenerDuplicationStrategy.INSTANCE );
 
-		final AuditConfiguration enversConfiguration = AuditConfiguration.getFor( configuration );
+		final AuditConfiguration enversConfiguration = AuditConfiguration.getFor( configuration, serviceRegistry.getService( ClassLoaderService.class ) );
 
         if (enversConfiguration.getEntCfg().hasAuditedEntities()) {
 		    listenerRegistry.appendListeners( EventType.POST_DELETE, new EnversPostDeleteEventListenerImpl( enversConfiguration ) );

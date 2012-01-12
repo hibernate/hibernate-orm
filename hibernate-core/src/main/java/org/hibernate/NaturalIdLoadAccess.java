@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -27,37 +27,48 @@ package org.hibernate;
  * Loads an entity by its natural identifier
  * 
  * @author Eric Dalquist
+ * @author Steve Ebersole
+ *
  * @see org.hibernate.annotations.NaturalId
  */
-public interface NaturalIdLoadAccess<T> {
+public interface NaturalIdLoadAccess {
 	/**
-	 * Set the {@link LockOptions} to use when retrieving the entity.
+	 * Specify the {@link LockOptions} to use when retrieving the entity.
+	 *
+	 * @param lockOptions The lock options to use.
+	 *
+	 * @return {@code this}, for method chaining
 	 */
-	public NaturalIdLoadAccess<T> with(LockOptions lockOptions);
+	public NaturalIdLoadAccess with(LockOptions lockOptions);
 
 	/**
 	 * Add a NaturalId attribute value.
 	 * 
-	 * @param attributeName
-	 *            The entity attribute name that is marked as a NaturalId
-	 * @param value
-	 *            The value of the attribute
+	 * @param attributeName The entity attribute name that is marked as a NaturalId
+	 * @param value The value of the attribute
+	 *
+	 * @return {@code this}, for method chaining
 	 */
-	public NaturalIdLoadAccess<T> using(String attributeName, Object value);
+	public NaturalIdLoadAccess using(String attributeName, Object value);
 
 	/**
-	 * Same behavior as {@link Session#load(Class, java.io.Serializable)}
-	 * 
-	 * @return The entity
-	 * @throws HibernateException
-	 *             if the entity does not exist
+	 * Return the persistent instance with the natural id value(s) defined by the call(s) to {@link #using}.  This
+	 * method might return a proxied instance that is initialized on-demand, when a non-identifier method is accessed.
+	 *
+	 * You should not use this method to determine if an instance exists; to check for existence, use {@link #load}
+	 * instead.  Use this only to retrieve an instance that you assume exists, where non-existence would be an
+	 * actual error.
+	 *
+	 * @return the persistent instance or proxy
 	 */
 	public Object getReference();
 
 	/**
-	 * Same behavior as {@link Session#get(Class, java.io.Serializable)}
-	 * 
-	 * @return The entity or null if it does not exist
+	 * Return the persistent instance with the natural id value(s) defined by the call(s) to {@link #using}, or
+	 * {@code null} if there is no such persistent instance.  If the instance is already associated with the session,
+	 * return that instance, initializing it if needed.  This method never returns an uninitialized instance.
+	 *
+	 * @return The persistent instance or {@code null} 
 	 */
 	public Object load();
 

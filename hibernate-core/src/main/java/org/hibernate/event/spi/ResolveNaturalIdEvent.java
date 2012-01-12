@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -29,29 +29,39 @@ import java.util.Map;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * Defines an event class for the resolving of an entity id from the entity's natural-id
  * 
  * @author Eric Dalquist
+ * @author Steve Ebersole
  */
 public class ResolveNaturalIdEvent extends AbstractEvent {
 	public static final LockMode DEFAULT_LOCK_MODE = LockMode.NONE;
 
-	private Map<String, Object> naturalId;
-	private LockOptions lockOptions;
-	private String entityClassName;
+	private final EntityPersister entityPersister;
+	private final Map<String, Object> naturalIdValues;
+	private final LockOptions lockOptions;
+
 	private Serializable entityId;
 
-	public ResolveNaturalIdEvent(Map<String, Object> naturalId, String entityClassName, EventSource source) {
-		this( naturalId, entityClassName, new LockOptions(), source );
+	public ResolveNaturalIdEvent(Map<String, Object> naturalIdValues, EntityPersister entityPersister, EventSource source) {
+		this( naturalIdValues, entityPersister, new LockOptions(), source );
 	}
 
-	public ResolveNaturalIdEvent(Map<String, Object> naturalId, String entityClassName, LockOptions lockOptions,
+	public ResolveNaturalIdEvent(
+			Map<String, Object> naturalIdValues,
+			EntityPersister entityPersister,
+			LockOptions lockOptions,
 			EventSource source) {
 		super( source );
 
-		if ( naturalId == null || naturalId.isEmpty() ) {
+		if ( entityPersister == null ) {
+			throw new IllegalArgumentException( "EntityPersister is required for loading" );
+		}
+
+		if ( naturalIdValues == null || naturalIdValues.isEmpty() ) {
 			throw new IllegalArgumentException( "id to load is required for loading" );
 		}
 
@@ -62,24 +72,25 @@ public class ResolveNaturalIdEvent extends AbstractEvent {
 			lockOptions.setLockMode( DEFAULT_LOCK_MODE );
 		}
 
-		this.naturalId = naturalId;
-		this.entityClassName = entityClassName;
+		this.entityPersister = entityPersister;
+		this.naturalIdValues = naturalIdValues;
+		this.lockOptions = lockOptions;
 	}
 
-	public Map<String, Object> getNaturalId() {
-		return Collections.unmodifiableMap( naturalId );
+	public Map<String, Object> getNaturalIdValues() {
+		return Collections.unmodifiableMap( naturalIdValues );
 	}
 
-	public void setNaturalId(Map<String, Object> naturalId) {
-		this.naturalId = naturalId;
+	public EntityPersister getEntityPersister() {
+		return entityPersister;
 	}
 
 	public String getEntityClassName() {
-		return entityClassName;
+		return getEntityPersister().getEntityName();
 	}
 
-	public void setEntityClassName(String entityClassName) {
-		this.entityClassName = entityClassName;
+	public LockOptions getLockOptions() {
+		return lockOptions;
 	}
 
 	public Serializable getEntityId() {
@@ -88,13 +99,5 @@ public class ResolveNaturalIdEvent extends AbstractEvent {
 
 	public void setEntityId(Serializable entityId) {
 		this.entityId = entityId;
-	}
-
-	public LockOptions getLockOptions() {
-		return lockOptions;
-	}
-
-	public void setLockOptions(LockOptions lockOptions) {
-		this.lockOptions = lockOptions;
 	}
 }

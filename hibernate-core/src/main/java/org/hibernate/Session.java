@@ -772,48 +772,52 @@ public interface Session extends SharedSessionContract {
 	public String getEntityName(Object object) throws HibernateException;
 	
 	/**
-	 * Create an {@link IdentifierLoadAccess} instance to retrieve the specified entity by
+	 * Create an {@link IdentifierLoadAccess} instance to retrieve the specified entity type by
 	 * primary key.
 	 * 
-	 * @param entityName
-	 *            The name of the entity that will be retrieved
-	 * @throws HibernateException
-	 *             If the specified entity name is not found
+	 * @param entityName The entity name of the entity type to be retrieved
+	 *
+	 * @return load delegate for loading the specified entity type by primary key
+	 *
+	 * @throws HibernateException If the specified entity name cannot be resolved as an entity name
 	 */
-	public IdentifierLoadAccess<Object> byId(String entityName);
+	public IdentifierLoadAccess byId(String entityName);
 
 	/**
 	 * Create an {@link IdentifierLoadAccess} instance to retrieve the specified entity by
 	 * primary key.
-	 * 
-	 * @param entityClass
-	 *            The type of the entity that will be retrieved
-	 * @throws HibernateException
-	 *             If the specified Class is not an entity
+	 *
+	 * @param entityClass The entity type to be retrieved
+	 *
+	 * @return load delegate for loading the specified entity type by primary key
+	 *
+	 * @throws HibernateException If the specified Class cannot be resolved as a mapped entity
 	 */
-	public <T> IdentifierLoadAccess<T> byId(Class<T> entityClass);
+	public IdentifierLoadAccess byId(Class entityClass);
 
 	/**
 	 * Create an {@link NaturalIdLoadAccess} instance to retrieve the specified entity by
 	 * its natural id.
 	 * 
-	 * @param entityName
-	 *            The name of the entity that will be retrieved
-	 * @throws HibernateException
-	 *             If the specified entity name is not found or if the entity does not have a natural id specified
+	 * @param entityName The entity name of the entity type to be retrieved
+	 *
+	 * @return load delegate for loading the specified entity type by natural id
+	 *
+	 * @throws HibernateException If the specified entity name cannot be resolved as an entity name
 	 */
-	public NaturalIdLoadAccess<Object> byNaturalId(String entityName);
+	public NaturalIdLoadAccess byNaturalId(String entityName);
 
 	/**
 	 * Create an {@link NaturalIdLoadAccess} instance to retrieve the specified entity by
 	 * its natural id.
 	 * 
-	 * @param entityClass
-	 *            The type of the entity that will be retrieved
-	 * @throws HibernateException
-	 *             If the specified Class is not an entity or if the entity does not have a natural id specified
+	 * @param entityClass The entity type to be retrieved
+	 *
+	 * @return load delegate for loading the specified entity type by natural id
+	 *
+	 * @throws HibernateException If the specified Class cannot be resolved as a mapped entity
 	 */
-	public <T> NaturalIdLoadAccess<T> byNaturalId(Class<T> entityClass);
+	public NaturalIdLoadAccess byNaturalId(Class entityClass);
 
 	/**
 	 * Enable the named filter for this current session.

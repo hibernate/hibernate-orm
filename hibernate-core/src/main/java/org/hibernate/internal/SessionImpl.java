@@ -366,7 +366,8 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 			try {
 				if (ois != null) ois.close();
 			}
-			catch (IOException ex) {}
+			catch (IOException ignore) {
+			}
 		}
 	}
 
@@ -385,7 +386,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 				try {
 					oos.close();
 				}
-				catch( IOException ex ) {
+				catch( IOException ignore ) {
 					//ignore
 				}
 			}
@@ -413,7 +414,8 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 			try {
 				if (ois != null) ois.close();
 			}
-			catch (IOException ex) {}
+			catch (IOException ignore) {
+			}
 		}
 	}
 
@@ -495,6 +497,8 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	 * if there is not, flush if necessary, make sure the connection has
 	 * been committed (if it is not in autocommit mode) and run the after
 	 * completion processing
+	 *
+	 * @param success Was the operation a success
 	 */
 	public void afterOperation(boolean success) {
 		if ( ! transactionCoordinator.isTransactionInProgress() ) {
@@ -891,7 +895,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	}
 
 	public Object load(Class entityClass, Serializable id, LockMode lockMode) throws HibernateException {
-		return this.byId( entityClass ).with( lockMode ).getReference( id );
+		return this.byId( entityClass ).with( new LockOptions( lockMode ) ).getReference( id );
 	}
 
 	public Object load(Class entityClass, Serializable id, LockOptions lockOptions) throws HibernateException {
@@ -899,7 +903,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	}
 
 	public Object load(String entityName, Serializable id, LockMode lockMode) throws HibernateException {
-		return this.byId( entityName ).with( lockMode ).getReference( id );
+		return this.byId( entityName ).with( new LockOptions( lockMode ) ).getReference( id );
 	}
 
 	public Object load(String entityName, Serializable id, LockOptions lockOptions) throws HibernateException {
@@ -907,7 +911,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	}
 
 	public Object get(Class entityClass, Serializable id, LockMode lockMode) throws HibernateException {
-		return this.byId( entityClass ).with( lockMode ).load( id );
+		return this.byId( entityClass ).with( new LockOptions( lockMode ) ).load( id );
 	}
 
 	public Object get(Class entityClass, Serializable id, LockOptions lockOptions) throws HibernateException {
@@ -915,7 +919,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	}
 
 	public Object get(String entityName, Serializable id, LockMode lockMode) throws HibernateException {
-		return this.byId( entityName ).with( lockMode ).load( id );
+		return this.byId( entityName ).with( new LockOptions( lockMode ) ).load( id );
 	}
 
 	public Object get(String entityName, Serializable id, LockOptions lockOptions) throws HibernateException {
@@ -923,23 +927,23 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	}
 	
 	@Override
-	public IdentifierLoadAccessImpl<Object> byId(String entityName) {
-		return new IdentifierLoadAccessImpl<Object>( entityName, Object.class );
+	public IdentifierLoadAccessImpl byId(String entityName) {
+		return new IdentifierLoadAccessImpl( entityName );
 	}
 
 	@Override
-	public <T> IdentifierLoadAccessImpl<T> byId(Class<T> entityClass) {
-		return new IdentifierLoadAccessImpl<T>( entityClass.getName(), entityClass );
+	public IdentifierLoadAccessImpl byId(Class entityClass) {
+		return new IdentifierLoadAccessImpl( entityClass );
 	}
 
 	@Override
-	public NaturalIdLoadAccess<Object> byNaturalId(String entityName) {
-		return new NaturalIdLoadAccessImpl<Object>( entityName, Object.class );
+	public NaturalIdLoadAccess byNaturalId(String entityName) {
+		return new NaturalIdLoadAccessImpl( entityName );
 	}
 
 	@Override
-	public <T> NaturalIdLoadAccess<T> byNaturalId(Class<T> entityClass) {
-		return new NaturalIdLoadAccessImpl<T>( entityClass.getName(), entityClass );
+	public NaturalIdLoadAccess byNaturalId(Class entityClass) {
+		return new NaturalIdLoadAccessImpl( entityClass );
 	}
 
 	private void fireLoad(LoadEvent event, LoadType loadType) {
@@ -2168,47 +2172,45 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		}
 	}
     
-	private class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T> {
-		private final String entityName;
-		private final Class<T> entityClass;
+	private class IdentifierLoadAccessImpl implements IdentifierLoadAccess {
+		private final EntityPersister entityPersister;
 		private LockOptions lockOptions;
 
-		private IdentifierLoadAccessImpl(String entityName, Class<T> entityClass) {
-			this.entityName = entityName;
-			this.entityClass = entityClass;
+		private IdentifierLoadAccessImpl(EntityPersister entityPersister) {
+			this.entityPersister = entityPersister;
+		}
+
+		private IdentifierLoadAccessImpl(String entityName) {
+			this( factory.getEntityPersister( entityName ) );
+			if ( entityPersister == null ) {
+				throw new HibernateException( "Unable to locate persister: " + entityName );
+			}
+		}
+
+		private IdentifierLoadAccessImpl(Class entityClass) {
+			this( entityClass.getName() );
 		}
 
 		@Override
-		public final IdentifierLoadAccessImpl<T> with(LockOptions lockOptions) {
+		public final IdentifierLoadAccessImpl with(LockOptions lockOptions) {
 			this.lockOptions = lockOptions;
-			return this;
-		}
-
-		/**
-         * Support for legacy {@link Session#load(Class, Serializable, LockMode)} and {@link Session#load(String, Serializable, LockMode)
-         * @deprecated
-         */
-		@Deprecated
-		public final IdentifierLoadAccessImpl<T> with(LockMode lockMode) {
-			this.lockOptions = new LockOptions();
-			this.lockOptions.setLockMode( lockMode );
 			return this;
 		}
 
 		@Override
 		public final Object getReference(Serializable id) {
 			if ( this.lockOptions != null ) {
-				LoadEvent event = new LoadEvent( id, entityName, lockOptions, SessionImpl.this );
+				LoadEvent event = new LoadEvent( id, entityPersister.getEntityName(), lockOptions, SessionImpl.this );
 				fireLoad( event, LoadEventListener.LOAD );
 				return event.getResult();
 			}
 
-			LoadEvent event = new LoadEvent( id, entityName, false, SessionImpl.this );
+			LoadEvent event = new LoadEvent( id, entityPersister.getEntityName(), false, SessionImpl.this );
 			boolean success = false;
 			try {
 				fireLoad( event, LoadEventListener.LOAD );
 				if ( event.getResult() == null ) {
-					getFactory().getEntityNotFoundDelegate().handleEntityNotFound( entityName, id );
+					getFactory().getEntityNotFoundDelegate().handleEntityNotFound( entityPersister.getEntityName(), id );
 				}
 				success = true;
 				return event.getResult();
@@ -2221,12 +2223,12 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		@Override
 		public final Object load(Serializable id) {
 			if ( this.lockOptions != null ) {
-				LoadEvent event = new LoadEvent( id, entityName, lockOptions, SessionImpl.this );
+				LoadEvent event = new LoadEvent( id, entityPersister.getEntityName(), lockOptions, SessionImpl.this );
 				fireLoad( event, LoadEventListener.GET );
 				return event.getResult();
 			}
 
-			LoadEvent event = new LoadEvent( id, entityName, false, SessionImpl.this );
+			LoadEvent event = new LoadEvent( id, entityPersister.getEntityName(), false, SessionImpl.this );
 			boolean success = false;
 			try {
 				fireLoad( event, LoadEventListener.GET );
@@ -2239,39 +2241,47 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		}
 	}
 
-	private class NaturalIdLoadAccessImpl<T> implements NaturalIdLoadAccess<T> {
-		private final String entityName;
-		private final Class<T> entityClass;
+	private class NaturalIdLoadAccessImpl implements NaturalIdLoadAccess {
+		private final EntityPersister entityPersister;
 		private final Map<String, Object> naturalIdParameters = new LinkedHashMap<String, Object>();
 		private LockOptions lockOptions;
 
-		private NaturalIdLoadAccessImpl(String entityName, Class<T> entityClass) {
-			this.entityName = entityName;
-			this.entityClass = entityClass;
+		private NaturalIdLoadAccessImpl(EntityPersister entityPersister) {
+			this.entityPersister = entityPersister;
+		}
+
+		private NaturalIdLoadAccessImpl(String entityName) {
+			this( factory.getEntityPersister( entityName ) );
+			if ( entityPersister == null ) {
+				throw new HibernateException( "Unable to locate persister: " + entityName );
+			}
+		}
+
+		private NaturalIdLoadAccessImpl(Class entityClass) {
+			this( entityClass.getName() );
 		}
 
 		@Override
-		public final NaturalIdLoadAccess<T> with(LockOptions lockOptions) {
+		public final NaturalIdLoadAccess with(LockOptions lockOptions) {
 			this.lockOptions = lockOptions;
 			return this;
 		}
 
 		@Override
-		public NaturalIdLoadAccess<T> using(String attributeName, Object value) {
+		public NaturalIdLoadAccess using(String attributeName, Object value) {
 			naturalIdParameters.put( attributeName, value );
 			return this;
 		}
 
 		protected Serializable resolveNaturalId() {
-			final ResolveNaturalIdEvent event = new ResolveNaturalIdEvent( naturalIdParameters, entityName,
-					SessionImpl.this );
+			final ResolveNaturalIdEvent event =
+					new ResolveNaturalIdEvent( naturalIdParameters, entityPersister, SessionImpl.this );
 			fireResolveNaturalId( event );
 			return event.getEntityId();
 		}
 
-		protected IdentifierLoadAccess<T> getIdentifierLoadAccess() {
-			final IdentifierLoadAccessImpl<T> identifierLoadAccess = new SessionImpl.IdentifierLoadAccessImpl<T>(
-					entityName, entityClass );
+		protected IdentifierLoadAccess getIdentifierLoadAccess() {
+			final IdentifierLoadAccessImpl identifierLoadAccess = new IdentifierLoadAccessImpl( entityPersister );
 			if ( this.lockOptions != null ) {
 				identifierLoadAccess.with( lockOptions );
 			}

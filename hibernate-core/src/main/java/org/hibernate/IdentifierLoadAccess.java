@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -29,46 +29,40 @@ import java.io.Serializable;
  * Loads an entity by its primary identifier
  * 
  * @author Eric Dalquist
- * @version $Revision$
+ * @author Steve Ebersole
  */
-public interface IdentifierLoadAccess<T> {
+public interface IdentifierLoadAccess {
 	/**
-	 * Set the {@link LockOptions} to use when retrieving the entity.
+	 * Specify the {@link LockOptions} to use when retrieving the entity.
+	 *
+	 * @param lockOptions The lock options to use.
+	 *
+	 * @return {@code this}, for method chaining
 	 */
-	public IdentifierLoadAccess<T> with(LockOptions lockOptions);
+	public IdentifierLoadAccess with(LockOptions lockOptions);
 
 	/**
-	 * Return the persistent instance of the given entity class with the given identifier,
-	 * assuming that the instance exists. This method might return a proxied instance that
-	 * is initialized on-demand, when a non-identifier method is accessed. <br>
-	 * <br>
-	 * You should not use this method to determine if an instance exists (use <tt>get()</tt> instead). Use this only to
-	 * retrieve an instance that you assume exists, where non-existence
-	 * would be an actual error. <br>
-	 * <br>
-	 * Due to the nature of the proxy functionality the return type of this method cannot use
-	 * the generic type.
-	 * 
-	 * @param theClass
-	 *            a persistent class
-	 * @param id
-	 *            a valid identifier of an existing persistent instance of the class
+	 * Return the persistent instance with the given identifier, assuming that the instance exists. This method
+	 * might return a proxied instance that is initialized on-demand, when a non-identifier method is accessed.
+	 *
+	 * You should not use this method to determine if an instance exists; to check for existence, use {@link #load}
+	 * instead.  Use this only to retrieve an instance that you assume exists, where non-existence would be an
+	 * actual error.
+	 *
+	 * @param id The identifier for which to obtain a reference
+	 *
 	 * @return the persistent instance or proxy
-	 * @throws HibernateException
 	 */
 	public Object getReference(Serializable id);
 
 	/**
-	 * Return the persistent instance of the given entity class with the given identifier,
-	 * or null if there is no such persistent instance. (If the instance is already associated
-	 * with the session, return that instance. This method never returns an uninitialized instance.)
-	 * 
-	 * @param clazz
-	 *            a persistent class
-	 * @param id
-	 *            an identifier
-	 * @return a persistent instance or null
-	 * @throws HibernateException
+	 * Return the persistent instance with the given identifier, or null if there is no such persistent instance.
+	 * If the instance is already associated with the session, return that instance, initializing it if needed.  This
+	 * method never returns an uninitialized instance.
+	 *
+	 * @param id The identifier
+	 *
+	 * @return The persistent instance or {@code null}
 	 */
 	public Object load(Serializable id);
 }

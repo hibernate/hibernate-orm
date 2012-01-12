@@ -39,15 +39,33 @@ public class LockOptions implements Serializable {
 	 * NONE represents LockMode.NONE (timeout + scope do not apply)
 	 */
 	public static final LockOptions NONE = new LockOptions(LockMode.NONE);
+
 	/**
 	 * READ represents LockMode.READ (timeout + scope do not apply)
 	 */
 	public static final LockOptions READ = new LockOptions(LockMode.READ);
+
 	/**
 	 * UPGRADE represents LockMode.UPGRADE (will wait forever for lock and
 	 * scope of false meaning only entity is locked)
 	 */
 	public static final LockOptions UPGRADE = new LockOptions(LockMode.UPGRADE);
+
+	/**
+	 * Indicates that the database should not wait at all to acquire the pessimistic lock.
+	 * @see #getTimeOut
+	 */
+	public static final int NO_WAIT = 0;
+
+	/**
+	 * Indicates that there is no timeout for the acquisition.
+	 * @see #getTimeOut
+	 */
+	public static final int WAIT_FOREVER = -1;
+
+	private LockMode lockMode = LockMode.NONE;
+	private int timeout = WAIT_FOREVER;
+	private Map aliasSpecificLockModes = null; //initialize lazily as LockOptions is frequently created without needing this
 
 	public LockOptions() {
 	}
@@ -56,7 +74,6 @@ public class LockOptions implements Serializable {
 		this.lockMode = lockMode;
 	}
 
-	private LockMode lockMode = LockMode.NONE;
 
 	/**
 	 * Retrieve the overall lock mode in effect for this set of options.
@@ -83,7 +100,6 @@ public class LockOptions implements Serializable {
 		return this;
 	}
 
-	private Map aliasSpecificLockModes = null; //initialize lazily as LockOptions is frequently created without needing this
 
 	/**
 	 * Specify the {@link LockMode} to be used for a specific query alias.
@@ -166,19 +182,6 @@ public class LockOptions implements Serializable {
 		}
 		return aliasSpecificLockModes.entrySet().iterator();
 	}
-
-	/**
-	 * Indicates that the database should not wait at all to acquire the pessimistic lock.
-	 * @see #getTimeOut
-	 */
-	public static final int NO_WAIT = 0;
-	/**
-	 * Indicates that there is no timeout for the acquisition.
-	 * @see #getTimeOut
-	 */
-	public static final int WAIT_FOREVER = -1;
-
-	private int timeout = WAIT_FOREVER;
 
 	/**
 	 * Retrieve the current timeout setting.

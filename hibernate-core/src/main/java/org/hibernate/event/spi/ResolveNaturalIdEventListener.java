@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -31,15 +31,16 @@ import org.hibernate.HibernateException;
  * Defines the contract for handling of resolve natural id events generated from a session.
  * 
  * @author Eric Dalquist
+ * @author Steve Ebersole
  */
 public interface ResolveNaturalIdEventListener extends Serializable {
 
 	/**
 	 * Handle the given resolve natural id event.
 	 * 
-	 * @param event
-	 *            The resolve natural id event to be handled.
-	 * @throws HibernateException
+	 * @param event The resolve natural id event to be handled.
+	 *
+	 * @throws HibernateException Indicates a problem resolving natural id to primary key
 	 */
 	public void onResolveNaturalId(ResolveNaturalIdEvent event) throws HibernateException;
 

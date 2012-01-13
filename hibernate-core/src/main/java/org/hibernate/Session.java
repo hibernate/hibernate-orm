@@ -825,6 +825,32 @@ public interface Session extends SharedSessionContract {
 	public NaturalIdLoadAccess byNaturalId(Class entityClass);
 
 	/**
+	 * Create an {@link SimpleNaturalIdLoadAccess} instance to retrieve the specified entity by
+	 * its natural id.
+	 *
+	 * @param entityName The entity name of the entity type to be retrieved
+	 *
+	 * @return load delegate for loading the specified entity type by natural id
+	 *
+	 * @throws HibernateException If the specified entityClass cannot be resolved as a mapped entity, or if the
+	 * entity does not define a natural-id or if its natural-id is made up of multiple attributes.
+	 */
+	public SimpleNaturalIdLoadAccess bySimpleNaturalId(String entityName);
+
+	/**
+	 * Create an {@link SimpleNaturalIdLoadAccess} instance to retrieve the specified entity by
+	 * its simple (single attribute) natural id.
+	 *
+	 * @param entityClass The entity type to be retrieved
+	 *
+	 * @return load delegate for loading the specified entity type by natural id
+	 *
+	 * @throws HibernateException If the specified entityClass cannot be resolved as a mapped entity, or if the
+	 * entity does not define a natural-id or if its natural-id is made up of multiple attributes.
+	 */
+	public SimpleNaturalIdLoadAccess bySimpleNaturalId(Class entityClass);
+
+	/**
 	 * Enable the named filter for this current session.
 	 *
 	 * @param filterName The name of the filter to be enabled.

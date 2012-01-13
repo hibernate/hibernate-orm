@@ -28,6 +28,7 @@ import java.util.StringTokenizer;
 
 import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
+import org.hibernate.NaturalIdMutability;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.Mapping;
@@ -45,7 +46,6 @@ import org.hibernate.type.Type;
  * @author Gavin King
  */
 public class Property implements Serializable, MetaAttributable {
-
 	private String name;
 	private Value value;
 	private String cascade;
@@ -61,6 +61,7 @@ public class Property implements Serializable, MetaAttributable {
 	private java.util.Map metaAttributes;
 	private PersistentClass persistentClass;
 	private boolean naturalIdentifier;
+	private NaturalIdMutability naturalIdMutability;
 
 	public boolean isBackRef() {
 		return false;
@@ -314,5 +315,13 @@ public class Property implements Serializable, MetaAttributable {
 
 	public void setNaturalIdentifier(boolean naturalIdentifier) {
 		this.naturalIdentifier = naturalIdentifier;
+	}
+
+	public NaturalIdMutability getNaturalIdMutability() {
+		return naturalIdMutability;
+	}
+
+	public void setNaturalIdMutability(NaturalIdMutability naturalIdMutability) {
+		this.naturalIdMutability = naturalIdMutability;
 	}
 }

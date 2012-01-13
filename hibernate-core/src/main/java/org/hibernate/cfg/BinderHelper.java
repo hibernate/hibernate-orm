@@ -104,6 +104,7 @@ public class BinderHelper {
 		clone.setName( property.getName() );
 		clone.setNodeName( property.getNodeName() );
 		clone.setNaturalIdentifier( property.isNaturalIdentifier() );
+		clone.setNaturalIdMutability( property.getNaturalIdMutability() );
 		clone.setOptimisticLocked( property.isOptimisticLocked() );
 		clone.setOptional( property.isOptional() );
 		clone.setPersistentClass( property.getPersistentClass() );

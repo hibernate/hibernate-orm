@@ -22,24 +22,41 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.annotations;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
+
+import org.hibernate.NaturalIdMutability;
 
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-
 /**
  * This specifies that a property is part of the natural id of the entity.
  *
  * @author Nicol�s Lichtmaier
+ * @author Steve Ebersole
  */
 @Target( { METHOD, FIELD } )
 @Retention( RUNTIME )
 public @interface NaturalId {
 	/**
-	 * If this natural id component is mutable or not.
+	 * @deprecated Use {@link #mutability()} instead.  For {@code mutable == false} (the default) use
+	 * {@link NaturalIdMutability#IMMUTABLE_CHECKED}; for {@code mutable == true} use
+	 * {@link NaturalIdMutability#MUTABLE}.
+	 *
+	 * Note however the difference between {@link NaturalIdMutability#IMMUTABLE_CHECKED} which mimics the old behavior
+	 * of {@code mutable == false} and the new behavior available via {@link NaturalIdMutability#IMMUTABLE}
 	 */
+	@Deprecated
+	@SuppressWarnings( {"JavaDoc"})
 	boolean mutable() default false;
+
+	/**
+	 * The mutability behavior of this natural id
+	 *
+	 * @return The mutability behavior.
+	 */
+	NaturalIdMutability mutability();
 }

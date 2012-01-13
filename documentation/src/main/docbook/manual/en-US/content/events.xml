@@ -147,11 +147,10 @@ public class AuditInterceptor extends EmptyInterceptor {
 
         <para>
             A <literal>Session</literal>-scoped interceptor is specified
-            when a session is opened using one of the overloaded SessionFactory.openSession()
-            methods accepting an <literal>Interceptor</literal>.
+            when a session is opened.
         </para>
 
-        <programlisting role="JAVA"><![CDATA[Session session = sf.openSession( new AuditInterceptor() );]]></programlisting>
+        <programlisting role="JAVA"><![CDATA[Session session = sf.withOptions( new AuditInterceptor() ).openSession();]]></programlisting>
 
         <para>
             A <literal>SessionFactory</literal>-scoped interceptor is registered with the <literal>Configuration</literal>

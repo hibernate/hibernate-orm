@@ -29,8 +29,9 @@ import com.vividsolutions.jts.geom.Geometry;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
+import org.hibernate.spatial.testing.SpatialDialectMatcher;
+import org.hibernate.spatial.testing.SpatialFunctionalTestCase;
 import org.hibernate.testing.Skip;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -48,49 +49,11 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 
 	private static Logger LOGGER = LoggerFactory.getLogger( TestSpatialFunctions.class );
 
-	public void prepareTest() {
-		super.prepareTest();
-		insertTestData();
-	}
-
-
 	protected Logger getLogger() {
 		return LOGGER;
 	}
 
-	@Test
-	public void testSpatialFunctions() throws Exception {
-        if (! (getDialect() instanceof SpatialDialect)) return;
-		dimension();
-		astext();
-		asbinary();
-		geometrytype();
-		srid();
-		issimple();
-		isempty();
-		boundary();
-		envelope();
-		within();
-		equals();
-		crosses();
-		contains();
-		disjoint();
-		intersects();
-		overlaps();
-		touches();
-		relate();
-		distance();
-		buffer();
-		convexhull();
-		intersection();
-		difference();
-		symdifference();
-		geomunion();
-		dwithin();
-		transform();
-	}
-
-
+    @Test
 	public void dimension() throws SQLException {
 		if ( !isSupportedByDialect( SpatialFunction.dimension ) ) {
 			return;
@@ -100,6 +63,7 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 		retrieveHQLResultsAndCompare( dbexpected, hql );
 	}
 
+    @Test
 	public void astext() throws SQLException {
 		if ( !isSupportedByDialect( SpatialFunction.astext ) ) {
 			return;
@@ -109,6 +73,7 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 		retrieveHQLResultsAndCompare( dbexpected, hql );
 	}
 
+    @Test
 	public void asbinary() throws SQLException {
 		if ( !isSupportedByDialect( SpatialFunction.asbinary ) ) {
 			return;
@@ -118,7 +83,7 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 		retrieveHQLResultsAndCompare( dbexpected, hql );
 	}
 
-
+    @Test
 	public void geometrytype() throws SQLException {
 		if ( !isSupportedByDialect( SpatialFunction.geometrytype ) ) {
 			return;
@@ -128,6 +93,7 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 		retrieveHQLResultsAndCompare( dbexpected, hql );
 	}
 
+    @Test
 	public void srid() throws SQLException {
 		if ( !isSupportedByDialect( SpatialFunction.srid ) ) {
 			return;
@@ -137,6 +103,7 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 		retrieveHQLResultsAndCompare( dbexpected, hql );
 	}
 
+    @Test
 	public void issimple() throws SQLException {
 		if ( !isSupportedByDialect( SpatialFunction.issimple ) ) {
 			return;
@@ -146,6 +113,7 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 		retrieveHQLResultsAndCompare( dbexpected, hql );
 	}
 
+    @Test
 	public void isempty() throws SQLException {
 		if ( !isSupportedByDialect( SpatialFunction.isempty ) ) {
 			return;
@@ -155,7 +123,7 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 		retrieveHQLResultsAndCompare( dbexpected, hql );
 	}
 
-
+    @Test
 	public void boundary() throws SQLException {
 		if ( !isSupportedByDialect( SpatialFunction.boundary ) ) {
 			return;
@@ -165,7 +133,7 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 		retrieveHQLResultsAndCompare( dbexpected, hql );
 	}
 
-
+    @Test
 	public void envelope() throws SQLException {
 		if ( !isSupportedByDialect( SpatialFunction.envelope ) ) {
 			return;
@@ -175,6 +143,7 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 		retrieveHQLResultsAndCompare( dbexpected, hql );
 	}
 
+    @Test
 	public void within() throws SQLException {
 		if ( !isSupportedByDialect( SpatialFunction.within ) ) {
 			return;
@@ -185,6 +154,7 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 		retrieveHQLResultsAndCompare( dbexpected, hql, params );
 	}
 
+    @Test
 	public void equals() throws SQLException {
 		if ( !isSupportedByDialect( SpatialFunction.equals ) ) {
 			return;
@@ -195,6 +165,7 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 		retrieveHQLResultsAndCompare( dbexpected, hql, params );
 	}
 
+    @Test
 	public void crosses() throws SQLException {
 		if ( !isSupportedByDialect( SpatialFunction.crosses ) ) {
 			return;
@@ -206,6 +177,7 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 
 	}
 
+    @Test
 	public void contains() throws SQLException {
 		if ( !isSupportedByDialect( SpatialFunction.contains ) ) {
 			return;
@@ -217,6 +189,7 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 	}
 
 
+    @Test
 	public void disjoint() throws SQLException {
 		if ( !isSupportedByDialect( SpatialFunction.disjoint ) ) {
 			return;
@@ -227,6 +200,7 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 		retrieveHQLResultsAndCompare( dbexpected, hql, params );
 	}
 
+    @Test
 	public void intersects() throws SQLException {
 		if ( !isSupportedByDialect( SpatialFunction.intersects ) ) {
 			return;
@@ -237,6 +211,7 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 		retrieveHQLResultsAndCompare( dbexpected, hql, params );
 	}
 
+    @Test
 	public void overlaps() throws SQLException {
 		if ( !isSupportedByDialect( SpatialFunction.overlaps ) ) {
 			return;
@@ -247,6 +222,7 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 		retrieveHQLResultsAndCompare( dbexpected, hql, params );
 	}
 
+    @Test
 	public void touches() throws SQLException {
 		if ( !isSupportedByDialect( SpatialFunction.touches ) ) {
 			return;
@@ -257,6 +233,7 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 		retrieveHQLResultsAndCompare( dbexpected, hql, params );
 	}
 
+    @Test
 	public void relate() throws SQLException {
 		if ( !isSupportedByDialect( SpatialFunction.relate ) ) {
 			return;
@@ -278,6 +255,7 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 
 	}
 
+    @Test
 	public void distance() throws SQLException {
 		if ( !isSupportedByDialect( SpatialFunction.distance ) ) {
 			return;
@@ -288,6 +266,7 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 		retrieveHQLResultsAndCompare( dbexpected, hql, params );
 	}
 
+    @Test
 	public void buffer() throws SQLException {
 		if ( !isSupportedByDialect( SpatialFunction.buffer ) ) {
 			return;
@@ -299,6 +278,7 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 
 	}
 
+    @Test
 	public void convexhull() throws SQLException {
 		if ( !isSupportedByDialect( SpatialFunction.convexhull ) ) {
 			return;
@@ -310,6 +290,7 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 
 	}
 
+    @Test
 	public void intersection() throws SQLException {
 		if ( !isSupportedByDialect( SpatialFunction.intersection ) ) {
 			return;
@@ -320,6 +301,7 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 		retrieveHQLResultsAndCompare( dbexpected, hql, params );
 	}
 
+    @Test
 	public void difference() throws SQLException {
 		if ( !isSupportedByDialect( SpatialFunction.difference ) ) {
 			return;
@@ -330,6 +312,7 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 		retrieveHQLResultsAndCompare( dbexpected, hql, params );
 	}
 
+    @Test
 	public void symdifference() throws SQLException {
 		if ( !isSupportedByDialect( SpatialFunction.symdifference ) ) {
 			return;
@@ -340,6 +323,7 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 		retrieveHQLResultsAndCompare( dbexpected, hql, params );
 	}
 
+    @Test
 	public void geomunion() throws SQLException {
 		if ( !isSupportedByDialect( SpatialFunction.geomunion ) ) {
 			return;
@@ -350,6 +334,7 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 		retrieveHQLResultsAndCompare( dbexpected, hql, params );
 	}
 
+    @Test
 	public void dwithin() throws SQLException {
 		if ( !isSupportedByDialect( SpatialFunction.dwithin ) ) {
 			return;
@@ -365,6 +350,7 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 		retrieveHQLResultsAndCompare( dbexpected, hql, params );
 	}
 
+    @Test
 	public void transform() throws SQLException {
 		if ( !isSupportedByDialect( SpatialFunction.transform ) ) {
 			return;

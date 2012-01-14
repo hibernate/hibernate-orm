@@ -29,8 +29,6 @@
 package org.hibernate.spatial.jts;
 
 import org.hibernate.spatial.jts.mgeom.MGeometryFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * A static utility class
@@ -38,8 +36,6 @@ import org.slf4j.LoggerFactory;
  * @author Karel Maesen
  */
 public class JTS {
-
-	private static final Logger log = LoggerFactory.getLogger( JTS.class );
 
 	private static MGeometryFactory defaultGeomFactory = new MGeometryFactory();
 

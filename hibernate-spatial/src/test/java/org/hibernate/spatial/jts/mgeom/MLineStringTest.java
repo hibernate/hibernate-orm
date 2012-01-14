@@ -82,7 +82,6 @@ public class MLineStringTest extends TestCase {
 
 		int l = (int) Math.round( Math.random() * 250.0 );
 		l = Math.max( 2, l );
-		System.out.println( "Size of arbitraryline ==" + l );
 		mcoar = new MCoordinate[l];
 		for ( int i = 0; i < mcoar.length; i++ ) {
 			double x = Math.random() * 100000.0;

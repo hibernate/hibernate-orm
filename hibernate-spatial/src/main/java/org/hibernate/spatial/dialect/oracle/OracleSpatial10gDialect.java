@@ -35,8 +35,6 @@ import org.hibernate.spatial.helper.PropertyFileReader;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -148,8 +146,7 @@ public class OracleSpatial10gDialect extends Oracle10gDialect implements
 
     private final static String CONNECTION_FINDER_PROPERTY = "CONNECTION-FINDER";
 
-    private final static Logger log = LoggerFactory
-            .getLogger(OracleSpatial10gDialect.class);
+    private final static Log LOG = LogFactory.make();
 
     private String OGC_STRICT = "OGC_STRICT";
 
@@ -271,7 +268,7 @@ public class OracleSpatial10gDialect extends Oracle10gDialect implements
     @Override
     public String getTypeName(int code, long length, int precision, int scale) throws HibernateException {
         if (code == 3000) return "SDO_GEOMETRY";
-        return super.getTypeName(code, length, precision, scale);    //To change body of overridden methods use File | Settings | File Templates.
+        return super.getTypeName(code, length, precision, scale);
     }
 
     @Override
@@ -533,7 +530,7 @@ public class OracleSpatial10gDialect extends Oracle10gDialect implements
         URL propfile = loader.getResource(propfileLoc);
         if (propfile != null) {
             InputStream is = null;
-            log.info("properties file found: " + propfile);
+            LOG.info("properties file found: " + propfile);
             try {
                 loader.getResource(getClass().getCanonicalName());
                 is = propfile.openStream();
@@ -549,15 +546,15 @@ public class OracleSpatial10gDialect extends Oracle10gDialect implements
                         ConnectionFinder cf = (ConnectionFinder) clazz
                                 .newInstance();
                         OracleJDBCTypeFactory.setConnectionFinder(cf);
-                        log.info("Setting ConnectionFinder to " + ccn);
+                        LOG.info("Setting ConnectionFinder to " + ccn);
                     } catch (ClassNotFoundException e) {
-                        log.warn("Tried to set ConnectionFinder to " + ccn
+                        LOG.warn("Tried to set ConnectionFinder to " + ccn
                                 + ", but class not found.");
                     } catch (InstantiationException e) {
-                        log.warn("Tried to set ConnectionFinder to " + ccn
+                        LOG.warn("Tried to set ConnectionFinder to " + ccn
                                 + ", but couldn't instantiate.");
                     } catch (IllegalAccessException e) {
-                        log
+                        LOG
                                 .warn("Tried to set ConnectionFinder to "
                                         + ccn
                                         + ", but got IllegalAcessException on instantiation.");
@@ -565,7 +562,7 @@ public class OracleSpatial10gDialect extends Oracle10gDialect implements
                 }
 
             } catch (IOException e) {
-                log.warn("Problem reading properties file " + e);
+                LOG.warn("Problem reading properties file " + e);
             } finally {
                 try {
                     is.close();

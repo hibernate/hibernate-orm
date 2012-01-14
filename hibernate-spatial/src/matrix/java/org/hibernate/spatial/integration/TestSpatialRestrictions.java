@@ -29,14 +29,14 @@ import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Criterion;
+import org.hibernate.spatial.Log;
+import org.hibernate.spatial.LogFactory;
 import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.spatial.criterion.SpatialRestrictions;
 import org.hibernate.spatial.testing.SpatialDialectMatcher;
 import org.hibernate.spatial.testing.SpatialFunctionalTestCase;
 import org.hibernate.testing.Skip;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -48,10 +48,10 @@ import static org.junit.Assert.fail;
 @Skip(condition = SpatialDialectMatcher.class,message = "No Spatial Dialect")
 public class TestSpatialRestrictions extends SpatialFunctionalTestCase {
 
-	private static Logger LOGGER = LoggerFactory.getLogger( TestSpatialRestrictions.class );
+	private static Log LOG = LogFactory.make();
 
-	protected Logger getLogger() {
-		return LOGGER;
+	protected Log getLogger() {
+		return LOG;
 	}
 
     @Test
@@ -222,7 +222,7 @@ public class TestSpatialRestrictions extends SpatialFunctionalTestCase {
 			}
 		}
 		assertEquals( cnt, list.size() );
-		LOGGER.info( String.format( "Found %d objects within testsuite-suite polygon.", cnt ) );
+		LOG.info( String.format( "Found %d objects within testsuite-suite polygon.", cnt ) );
 	}
 
 	private boolean findInList(Integer id, List<GeomEntity> list) {

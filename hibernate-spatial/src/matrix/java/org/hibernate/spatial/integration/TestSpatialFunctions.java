@@ -29,13 +29,13 @@ import com.vividsolutions.jts.geom.Geometry;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.spatial.Log;
+import org.hibernate.spatial.LogFactory;
 import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.spatial.testing.SpatialDialectMatcher;
 import org.hibernate.spatial.testing.SpatialFunctionalTestCase;
 import org.hibernate.testing.Skip;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -47,10 +47,10 @@ import java.util.Map;
 @Skip(condition = SpatialDialectMatcher.class,message = "No Spatial Dialect")
 public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 
-	private static Logger LOGGER = LoggerFactory.getLogger( TestSpatialFunctions.class );
+	private static Log LOG = LogFactory.make();
 
-	protected Logger getLogger() {
-		return LOGGER;
+	protected Log getLogger() {
+		return LOG;
 	}
 
     @Test

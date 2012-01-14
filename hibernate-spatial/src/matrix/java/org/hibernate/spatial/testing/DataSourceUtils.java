@@ -28,8 +28,8 @@ package org.hibernate.spatial.testing;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.io.ParseException;
 import org.apache.commons.dbcp.BasicDataSource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.hibernate.spatial.Log;
+import org.hibernate.spatial.LogFactory;
 
 import javax.sql.DataSource;
 import java.io.*;
@@ -46,7 +46,7 @@ import java.util.Properties;
 public class DataSourceUtils {
 
 
-	private static Logger LOGGER = LoggerFactory.getLogger( DataSourceUtils.class );
+	private static Log LOG = LogFactory.make();
 
 
 	private final SQLExpressionTemplate sqlExpressionTemplate;
@@ -180,7 +180,7 @@ public class DataSourceUtils {
 			PreparedStatement pmt = cn.prepareStatement( "delete from GEOMTEST" );
 			if ( !pmt.execute() ) {
 				int updateCount = pmt.getUpdateCount();
-				LOGGER.info( "Removing " + updateCount + " rows." );
+				LOG.info( "Removing " + updateCount + " rows." );
 			}
 			cn.commit();
 			pmt.close();
@@ -205,13 +205,13 @@ public class DataSourceUtils {
 			Statement stmt = cn.createStatement();
 			for ( TestDataElement testDataElement : testData ) {
 				String sql = sqlExpressionTemplate.toInsertSql( testDataElement );
-				LOGGER.debug( "adding stmt: " + sql );
+				LOG.debug( "adding stmt: " + sql );
 				stmt.addBatch( sql );
 			}
 			int[] insCounts = stmt.executeBatch();
 			cn.commit();
 			stmt.close();
-			LOGGER.info( "Loaded " + sum( insCounts ) + " rows." );
+			LOG.info( "Loaded " + sum( insCounts ) + " rows." );
 		}
 		finally {
 			try {
@@ -277,7 +277,7 @@ public class DataSourceUtils {
 			cn = getDataSource().getConnection();
 			cn.setAutoCommit( false );
 			PreparedStatement statement = cn.prepareStatement( sql );
-			LOGGER.info( "Executing statement: " + sql );
+			LOG.info( "Executing statement: " + sql );
 			statement.execute();
 			cn.commit();
 			statement.close();

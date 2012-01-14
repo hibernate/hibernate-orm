@@ -5,11 +5,11 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.spatial.Log;
 import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.slf4j.Logger;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -130,7 +130,7 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 		return dialect.supportsFiltering();
 	}
 
-	abstract protected Logger getLogger();
+	abstract protected Log getLogger();
 
 	/**
 	 * Adds the query results to a Map.

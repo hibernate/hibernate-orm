@@ -30,8 +30,8 @@ import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.io.ParseException;
 import com.vividsolutions.jts.io.WKTReader;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.hibernate.spatial.Log;
+import org.hibernate.spatial.LogFactory;
 
 import java.sql.*;
 import java.util.HashMap;
@@ -48,7 +48,7 @@ import java.util.Map;
  */
 public abstract class AbstractExpectationsFactory {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger( AbstractExpectationsFactory.class );
+	private static final Log LOG = LogFactory.make();
 
 	public final static String TEST_POLYGON_WKT = "POLYGON((0 0, 50 0, 100 100, 0 100, 0 0))";
 	public final static String TEST_POINT_WKT = "POINT(0 0)";
@@ -793,7 +793,7 @@ public abstract class AbstractExpectationsFactory {
 		try {
 			cn = createConnection();
 			preparedStatement = nativeSQLStatement.prepare( cn );
-			LOGGER.info( "Native SQL is: " + preparedStatement.toString() );
+			LOG.info( "Native SQL is: " + preparedStatement.toString() );
 			ResultSet results = preparedStatement.executeQuery();
 			while ( results.next() ) {
 				int id = results.getInt( 1 );

@@ -14,9 +14,6 @@ dependencies {
         transitive = false
     }
 
-    compile( libraries.slf4j_log4j12) {
-        transitive = true
-    }
 
     testCompile( libraries.junit )
     testCompile( project(':hibernate-testing') )

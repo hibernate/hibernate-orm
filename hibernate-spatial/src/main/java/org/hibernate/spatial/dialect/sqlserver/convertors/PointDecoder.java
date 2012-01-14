@@ -28,7 +28,7 @@ package org.hibernate.spatial.dialect.sqlserver.convertors;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Point;
 
-import org.hibernate.spatial.mgeom.MGeometryFactory;
+import org.hibernate.spatial.jts.mgeom.MGeometryFactory;
 
 /**
  * @author Karel Maesen, Geovise BVBA.

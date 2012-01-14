@@ -7,9 +7,9 @@ import java.sql.Types;
 
 import com.vividsolutions.jts.geom.Geometry;
 
-import org.hibernate.spatial.HBSpatialExtension;
+import org.hibernate.spatial.jts.JTS;
 import org.hibernate.spatial.dialect.sqlserver.convertors.Encoders;
-import org.hibernate.spatial.mgeom.MGeometryFactory;
+import org.hibernate.spatial.jts.mgeom.MGeometryFactory;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.WrapperOptions;
 
@@ -33,7 +33,7 @@ public class SqlServer2008GeometryValueBinder implements ValueBinder<Geometry> {
 	}
 
 	public MGeometryFactory getGeometryFactory() {
-		return HBSpatialExtension.getDefaultGeomFactory();
+		return JTS.getDefaultGeomFactory();
 	}
 
 	public Object toNative(Geometry geom, Connection connection) {

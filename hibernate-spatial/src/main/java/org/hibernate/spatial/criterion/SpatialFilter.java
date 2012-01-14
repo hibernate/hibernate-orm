@@ -30,7 +30,6 @@ package org.hibernate.spatial.criterion;
 
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
-
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.criterion.CriteriaQuery;
@@ -39,7 +38,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.spatial.SpatialDialect;
-import org.hibernate.spatial.helper.EnvelopeAdapter;
+import org.hibernate.spatial.jts.EnvelopeAdapter;
 
 /**
  * An implementation for a simple spatial filter. This <code>Criterion</code>
@@ -63,7 +62,7 @@ public class SpatialFilter implements Criterion {
 
 	public SpatialFilter(String propertyName, Envelope envelope, int SRID) {
 		this.propertyName = propertyName;
-		this.filter = EnvelopeAdapter.toPolygon( envelope, SRID );
+		this.filter = EnvelopeAdapter.toPolygon(envelope, SRID);
 
 	}
 

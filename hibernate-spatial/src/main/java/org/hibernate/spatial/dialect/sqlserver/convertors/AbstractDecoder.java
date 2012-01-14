@@ -27,7 +27,7 @@ package org.hibernate.spatial.dialect.sqlserver.convertors;
 
 import com.vividsolutions.jts.geom.Geometry;
 
-import org.hibernate.spatial.mgeom.MGeometryFactory;
+import org.hibernate.spatial.jts.mgeom.MGeometryFactory;
 
 abstract class AbstractDecoder<G extends Geometry> implements Decoder<G> {
 

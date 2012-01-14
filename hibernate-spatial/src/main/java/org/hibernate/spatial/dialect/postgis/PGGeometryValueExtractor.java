@@ -5,6 +5,7 @@ import java.sql.SQLException;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
+import org.hibernate.spatial.jts.JTS;
 import org.postgis.GeometryCollection;
 import org.postgis.MultiLineString;
 import org.postgis.MultiPoint;
@@ -14,10 +15,9 @@ import org.postgis.PGgeometry;
 import org.postgis.Point;
 import org.postgis.Polygon;
 
-import org.hibernate.spatial.HBSpatialExtension;
-import org.hibernate.spatial.mgeom.MCoordinate;
-import org.hibernate.spatial.mgeom.MGeometryFactory;
-import org.hibernate.spatial.mgeom.MLineString;
+import org.hibernate.spatial.jts.mgeom.MCoordinate;
+import org.hibernate.spatial.jts.mgeom.MGeometryFactory;
+import org.hibernate.spatial.jts.mgeom.MLineString;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 
@@ -34,7 +34,7 @@ public class PGGeometryValueExtractor implements ValueExtractor<Geometry> {
 	}
 
 	public MGeometryFactory getGeometryFactory() {
-		return HBSpatialExtension.getDefaultGeomFactory();
+		return JTS.getDefaultGeomFactory();
 	}
 
 	public Geometry toJTS(Object object) {
@@ -263,9 +263,9 @@ public class PGGeometryValueExtractor implements ValueExtractor<Geometry> {
 					pt.getX(), pt
 					.getY(), pt.getZ(), pt.getM()
 			) : MCoordinate.create3d(
-					pt
-							.getX(), pt.getY(), pt.getZ()
-			);
+                    pt
+                            .getX(), pt.getY(), pt.getZ()
+            );
 		}
 		return mc;
 	}

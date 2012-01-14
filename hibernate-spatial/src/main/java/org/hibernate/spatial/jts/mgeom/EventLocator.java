@@ -22,7 +22,7 @@
  *
  * For more information, visit: http://www.hibernatespatial.org/
  */
-package org.hibernate.spatial.mgeom;
+package org.hibernate.spatial.jts.mgeom;
 
 import java.util.ArrayList;
 import java.util.List;

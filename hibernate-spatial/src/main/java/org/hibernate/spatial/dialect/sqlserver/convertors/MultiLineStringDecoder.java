@@ -31,8 +31,8 @@ import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.LineString;
 import com.vividsolutions.jts.geom.MultiLineString;
 
-import org.hibernate.spatial.mgeom.MGeometryFactory;
-import org.hibernate.spatial.mgeom.MLineString;
+import org.hibernate.spatial.jts.mgeom.MGeometryFactory;
+import org.hibernate.spatial.jts.mgeom.MLineString;
 
 class MultiLineStringDecoder extends AbstractGeometryCollectionDecoder<MultiLineString> {
 

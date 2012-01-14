@@ -28,7 +28,7 @@ package org.hibernate.spatial.dialect.sqlserver.convertors;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.MultiPoint;
 
-import org.hibernate.spatial.mgeom.MCoordinate;
+import org.hibernate.spatial.jts.mgeom.MCoordinate;
 
 
 class MultiPointEncoder extends GeometryCollectionEncoder<MultiPoint> {

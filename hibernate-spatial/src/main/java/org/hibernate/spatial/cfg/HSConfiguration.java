@@ -27,21 +27,20 @@
  */
 package org.hibernate.spatial.cfg;
 
+import org.dom4j.Document;
+import org.dom4j.DocumentException;
+import org.dom4j.Element;
+import org.dom4j.io.SAXReader;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.spatial.Log;
+import org.hibernate.spatial.LogFactory;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Properties;
-
-import org.dom4j.Document;
-import org.dom4j.DocumentException;
-import org.dom4j.Element;
-import org.dom4j.io.SAXReader;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.hibernate.cfg.Configuration;
 
 /**
  * Configuration information for the Hibernate Spatial Extension.
@@ -55,7 +54,7 @@ public class HSConfiguration extends Properties {
 	 */
 	private static final long serialVersionUID = 1L;
 
-	private static Logger logger = LoggerFactory.getLogger( HSConfiguration.class );
+	private static Log logger = LogFactory.make();
 
 	private String source = "runtime configuration object";
 

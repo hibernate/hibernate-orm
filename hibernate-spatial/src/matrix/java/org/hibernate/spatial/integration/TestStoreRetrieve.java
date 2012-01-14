@@ -30,13 +30,13 @@ import com.vividsolutions.jts.io.ParseException;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.spatial.Log;
+import org.hibernate.spatial.LogFactory;
 import org.hibernate.spatial.testing.SpatialDialectMatcher;
 import org.hibernate.spatial.testing.SpatialFunctionalTestCase;
 import org.hibernate.spatial.testing.TestDataElement;
 import org.hibernate.testing.Skip;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.List;
@@ -53,10 +53,10 @@ import static org.junit.Assert.assertTrue;
 @Skip(condition = SpatialDialectMatcher.class, message = "No Spatial Dialect")
 public class TestStoreRetrieve extends SpatialFunctionalTestCase {
 
-    private static Logger LOGGER = LoggerFactory.getLogger(TestStoreRetrieve.class);
+    private static Log LOG = LogFactory.make();
 
-    protected Logger getLogger() {
-        return LOGGER;
+    protected Log getLogger() {
+        return LOG;
     }
 
     public void prepareTest(){

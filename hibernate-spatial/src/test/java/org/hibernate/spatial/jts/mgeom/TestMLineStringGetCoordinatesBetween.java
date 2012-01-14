@@ -31,12 +31,6 @@ import com.vividsolutions.jts.geom.PrecisionModel;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.hibernate.spatial.jts.mgeom.MCoordinate;
-import org.hibernate.spatial.jts.mgeom.MCoordinateSequenceFactory;
-import org.hibernate.spatial.jts.mgeom.MGeometryException;
-import org.hibernate.spatial.jts.mgeom.MGeometryFactory;
-import org.hibernate.spatial.jts.mgeom.MLineString;
-
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.fail;
 

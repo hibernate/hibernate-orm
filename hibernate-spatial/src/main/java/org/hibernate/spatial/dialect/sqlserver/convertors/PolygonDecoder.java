@@ -29,7 +29,7 @@ import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.LinearRing;
 import com.vividsolutions.jts.geom.Polygon;
 
-import org.hibernate.spatial.mgeom.MGeometryFactory;
+import org.hibernate.spatial.jts.mgeom.MGeometryFactory;
 
 /**
  * @author Karel Maesen, Geovise BVBA

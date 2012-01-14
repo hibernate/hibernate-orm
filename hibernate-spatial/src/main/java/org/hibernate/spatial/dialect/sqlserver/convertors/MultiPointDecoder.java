@@ -31,7 +31,7 @@ import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.MultiPoint;
 import com.vividsolutions.jts.geom.Point;
 
-import org.hibernate.spatial.mgeom.MGeometryFactory;
+import org.hibernate.spatial.jts.mgeom.MGeometryFactory;
 
 /**
  * <code>Decoder</code> for GeometryCollections.

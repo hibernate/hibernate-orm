@@ -26,18 +26,12 @@
  *
  * For more information, visit: http://www.hibernatespatial.org/
  */
-package org.hibernate.spatial.mgeom;
+package org.hibernate.spatial.jts.mgeom;
+
+import com.vividsolutions.jts.geom.*;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.CoordinateArrays;
-import com.vividsolutions.jts.geom.CoordinateSequence;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.LineSegment;
-import com.vividsolutions.jts.geom.LineString;
 
 /**
  * An implementation of the LineString class with the addition that the
@@ -256,11 +250,11 @@ public class MLineString extends LineString implements MGeometry {
 		else {
 			double[] measures = this.getMeasures();
 
-			if ( this.getMeasureDirection() == MGeometry.INCREASING ) {
+			if ( this.getMeasureDirection() == INCREASING) {
 				return measures[measures.length - 1];
 			}
-			else if ( this.getMeasureDirection() == MGeometry.DECREASING
-					|| this.getMeasureDirection() == MGeometry.CONSTANT ) {
+			else if ( this.getMeasureDirection() == DECREASING
+					|| this.getMeasureDirection() == CONSTANT) {
 				return measures[0];
 			}
 			else {
@@ -306,7 +300,7 @@ public class MLineString extends LineString implements MGeometry {
 					sseq.firstIndex = i;
 				}
 			}
-			if ( direction == MGeometry.INCREASING ) {
+			if ( direction == INCREASING) {
 				if ( m > toM ) {
 					break;
 				}
@@ -393,7 +387,7 @@ public class MLineString extends LineString implements MGeometry {
 
 	private void addInterpolatedEndPoints(double fromM, double toM, MCoordinate[] mcoordinates, CoordinateSubSequence subsequence) {
 
-		boolean increasing = this.getMeasureDirection() == MGeometry.INCREASING;
+		boolean increasing = this.getMeasureDirection() == INCREASING;
 		double fM, lM;
 		if ( increasing ) {
 			fM = fromM;
@@ -465,20 +459,20 @@ public class MLineString extends LineString implements MGeometry {
 	 */
 	public int getMeasureDirection() {
 		if ( !this.monotone ) {
-			return MGeometry.NON_MONOTONE;
+			return NON_MONOTONE;
 		}
 		MCoordinate c1 = (MCoordinate) this.getCoordinateN( 0 );
 		MCoordinate c2 = (MCoordinate) this
 				.getCoordinateN( this.getNumPoints() - 1 );
 
 		if ( c1.m < c2.m ) {
-			return MGeometry.INCREASING;
+			return INCREASING;
 		}
 		else if ( c1.m > c2.m ) {
-			return MGeometry.DECREASING;
+			return DECREASING;
 		}
 		else {
-			return MGeometry.CONSTANT;
+			return CONSTANT;
 		}
 	}
 
@@ -507,11 +501,11 @@ public class MLineString extends LineString implements MGeometry {
 		}
 		else {
 			double[] a = this.getMeasures();
-			if ( this.getMeasureDirection() == MGeometry.INCREASING ) {
+			if ( this.getMeasureDirection() == INCREASING) {
 				return a[0];
 			}
-			else if ( this.getMeasureDirection() == MGeometry.DECREASING
-					|| this.getMeasureDirection() == MGeometry.CONSTANT ) {
+			else if ( this.getMeasureDirection() == DECREASING
+					|| this.getMeasureDirection() == CONSTANT) {
 				return a[a.length - 1];
 			}
 			else {
@@ -712,11 +706,11 @@ public class MLineString extends LineString implements MGeometry {
 			);
 		}
 		Coordinate[] linecoar = l.getCoordinates();
-		if ( l.getMeasureDirection() == MGeometry.DECREASING ) {
+		if ( l.getMeasureDirection() == DECREASING) {
 			CoordinateArrays.reverse( linecoar );
 		}
 		Coordinate[] thiscoar = this.getCoordinates();
-		if ( this.getMeasureDirection() == MGeometry.DECREASING ) {
+		if ( this.getMeasureDirection() == DECREASING) {
 			CoordinateArrays.reverse( thiscoar );
 		}
 

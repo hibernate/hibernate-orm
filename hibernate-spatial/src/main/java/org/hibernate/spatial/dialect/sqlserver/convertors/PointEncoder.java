@@ -31,7 +31,7 @@ import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Point;
 
-import org.hibernate.spatial.mgeom.MCoordinate;
+import org.hibernate.spatial.jts.mgeom.MCoordinate;
 
 /**
  * @author Karel Maesen, Geovise BVBA.

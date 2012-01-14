@@ -61,9 +61,9 @@ import com.vividsolutions.jts.geom.PrecisionModel;
 import com.vividsolutions.jts.io.ParseException;
 import com.vividsolutions.jts.util.Assert;
 
-import org.hibernate.spatial.mgeom.MCoordinate;
-import org.hibernate.spatial.mgeom.MGeometryFactory;
-import org.hibernate.spatial.mgeom.MLineString;
+import org.hibernate.spatial.jts.mgeom.MCoordinate;
+import org.hibernate.spatial.jts.mgeom.MGeometryFactory;
+import org.hibernate.spatial.jts.mgeom.MLineString;
 
 /**
  * Converts a geometry in EWKT to a JTS-Geometry.

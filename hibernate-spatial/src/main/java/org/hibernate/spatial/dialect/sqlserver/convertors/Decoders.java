@@ -30,8 +30,8 @@ import java.util.List;
 
 import com.vividsolutions.jts.geom.Geometry;
 
-import org.hibernate.spatial.HBSpatialExtension;
-import org.hibernate.spatial.mgeom.MGeometryFactory;
+import org.hibernate.spatial.jts.JTS;
+import org.hibernate.spatial.jts.mgeom.MGeometryFactory;
 
 /**
  * Decodes SQL Server Geometry objects to JTS <code>Geometry</code>s.
@@ -43,7 +43,7 @@ public class Decoders {
 	final private static List<Decoder<? extends Geometry>> DECODERS = new ArrayList<Decoder<? extends Geometry>>();
 
 	static {
-		MGeometryFactory factory = HBSpatialExtension.getDefaultGeomFactory();
+		MGeometryFactory factory = JTS.getDefaultGeomFactory();
 
 		//Decoders
 		DECODERS.add( new PointDecoder( factory ) );

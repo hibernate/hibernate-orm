@@ -31,7 +31,7 @@ import java.util.List;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 
-import org.hibernate.spatial.mgeom.MGeometry;
+import org.hibernate.spatial.jts.mgeom.MGeometry;
 
 
 abstract class AbstractEncoder<G extends Geometry> implements Encoder<G> {

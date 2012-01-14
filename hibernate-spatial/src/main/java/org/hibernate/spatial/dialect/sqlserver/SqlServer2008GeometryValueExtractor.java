@@ -6,9 +6,9 @@ import java.sql.SQLException;
 
 import com.vividsolutions.jts.geom.Geometry;
 
-import org.hibernate.spatial.HBSpatialExtension;
+import org.hibernate.spatial.jts.JTS;
 import org.hibernate.spatial.dialect.sqlserver.convertors.Decoders;
-import org.hibernate.spatial.mgeom.MGeometryFactory;
+import org.hibernate.spatial.jts.mgeom.MGeometryFactory;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 
@@ -25,7 +25,7 @@ public class SqlServer2008GeometryValueExtractor implements ValueExtractor<Geome
 	}
 
 	public MGeometryFactory getGeometryFactory() {
-		return HBSpatialExtension.getDefaultGeomFactory();
+		return JTS.getDefaultGeomFactory();
 	}
 
 	public Geometry toJTS(Object obj) {

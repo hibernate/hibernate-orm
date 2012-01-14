@@ -29,8 +29,8 @@ import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.CoordinateSequence;
 import com.vividsolutions.jts.geom.LineString;
 
-import org.hibernate.spatial.mgeom.MCoordinate;
-import org.hibernate.spatial.mgeom.MGeometryFactory;
+import org.hibernate.spatial.jts.mgeom.MCoordinate;
+import org.hibernate.spatial.jts.mgeom.MGeometryFactory;
 
 class LineStringDecoder extends AbstractDecoder<LineString> {
 

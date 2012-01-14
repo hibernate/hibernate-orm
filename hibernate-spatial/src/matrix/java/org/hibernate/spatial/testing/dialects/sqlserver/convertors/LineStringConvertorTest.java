@@ -29,7 +29,7 @@ import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.LineString;
 import org.hibernate.spatial.dialect.sqlserver.SqlServer2008SpatialDialect;
 import org.hibernate.spatial.dialect.sqlserver.convertors.OpenGisType;
-import org.hibernate.spatial.mgeom.MCoordinate;
+import org.hibernate.spatial.jts.mgeom.MCoordinate;
 import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.RequiresDialect;
 import org.junit.Test;

@@ -30,7 +30,7 @@ import java.nio.ByteOrder;
 
 import com.vividsolutions.jts.geom.Coordinate;
 
-import org.hibernate.spatial.mgeom.MCoordinate;
+import org.hibernate.spatial.jts.mgeom.MCoordinate;
 
 /**
  * A <code>SqlServerGeometry</code> represents the native SQL Server database object.

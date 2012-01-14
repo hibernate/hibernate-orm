@@ -1,28 +1,19 @@
 package org.hibernate.spatial.dialect.oracle;
 
+import com.vividsolutions.jts.algorithm.CGAlgorithms;
+import com.vividsolutions.jts.geom.*;
+import org.hibernate.HibernateException;
+import org.hibernate.spatial.jts.JTS;
+import org.hibernate.spatial.helper.FinderException;
+import org.hibernate.spatial.jts.mgeom.MCoordinate;
+import org.hibernate.spatial.jts.mgeom.MGeometryFactory;
+import org.hibernate.type.descriptor.ValueBinder;
+import org.hibernate.type.descriptor.WrapperOptions;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Types;
-
-import com.vividsolutions.jts.algorithm.CGAlgorithms;
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryCollection;
-import com.vividsolutions.jts.geom.LineString;
-import com.vividsolutions.jts.geom.MultiLineString;
-import com.vividsolutions.jts.geom.MultiPoint;
-import com.vividsolutions.jts.geom.MultiPolygon;
-import com.vividsolutions.jts.geom.Point;
-import com.vividsolutions.jts.geom.Polygon;
-
-import org.hibernate.HibernateException;
-import org.hibernate.spatial.HBSpatialExtension;
-import org.hibernate.spatial.helper.FinderException;
-import org.hibernate.spatial.mgeom.MCoordinate;
-import org.hibernate.spatial.mgeom.MGeometryFactory;
-import org.hibernate.type.descriptor.ValueBinder;
-import org.hibernate.type.descriptor.WrapperOptions;
 
 /**
  * @author Karel Maesen, Geovise BVBA
@@ -43,7 +34,7 @@ public class SDOGeometryValueBinder implements ValueBinder<Geometry> {
 	}
 
 	public MGeometryFactory getGeometryFactory() {
-		return HBSpatialExtension.getDefaultGeomFactory();
+		return JTS.getDefaultGeomFactory();
 	}
 
 	private Object toNative(Geometry jtsGeom, Connection connection){
@@ -335,7 +326,7 @@ public class SDOGeometryValueBinder implements ValueBinder<Geometry> {
      * @return the lrs position for the SDOGeometry.SDOGType
      */
     private int getCoordinateLrsPosition(Geometry geom) {
-        MCoordinate c = MCoordinate.convertCoordinate( geom.getCoordinate() );
+        MCoordinate c = MCoordinate.convertCoordinate(geom.getCoordinate());
         int measurePos = 0;
         if (c != null && !Double.isNaN(c.m)) {
             measurePos = (Double.isNaN(c.z)) ? 3 : 4;

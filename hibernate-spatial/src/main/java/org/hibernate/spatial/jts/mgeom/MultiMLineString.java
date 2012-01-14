@@ -22,7 +22,7 @@
  *
  * For more information, visit: http://www.hibernatespatial.org/
  */
-package org.hibernate.spatial.mgeom;
+package org.hibernate.spatial.jts.mgeom;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.CoordinateSequence;
@@ -65,7 +65,7 @@ public class MultiMLineString extends MultiLineString implements MGeometry {
 		if ( this.isEmpty() ) {
 			return;
 		}
-		int mdir = MGeometry.CONSTANT;
+		int mdir = CONSTANT;
 		for ( int i = 0; i < this.geometries.length; i++ ) {
 			MLineString ml = (MLineString) this.geometries[0];
 			if ( !ml.isEmpty() ) {
@@ -83,7 +83,7 @@ public class MultiMLineString extends MultiLineString implements MGeometry {
 			// are monotone
 			if ( !ml.isMonotone( false )
 					|| ( ml.getMeasureDirection() != mdir && !( ml
-					.getMeasureDirection() == MGeometry.CONSTANT ) ) ) {
+					.getMeasureDirection() == CONSTANT) ) ) {
 				this.monotone = false;
 				break;
 			}
@@ -97,7 +97,7 @@ public class MultiMLineString extends MultiLineString implements MGeometry {
 			// are inconsistent with previous parts
 			if ( i > 0 ) {
 				MLineString mlp = (MLineString) this.geometries[i - 1];
-				if ( mdir == MGeometry.INCREASING ) {
+				if ( mdir == INCREASING) {
 					if ( mlp.getMaxM() > ml.getMinM() ) {
 						monotone = false;
 					}

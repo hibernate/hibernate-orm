@@ -23,7 +23,7 @@
  * For more information, visit: http://www.hibernatespatial.org/
  */
 
-package org.hibernate.spatial.mgeom;
+package org.hibernate.spatial.jts.mgeom;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.CoordinateSequence;
@@ -31,11 +31,11 @@ import com.vividsolutions.jts.geom.PrecisionModel;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.hibernate.spatial.mgeom.MCoordinate;
-import org.hibernate.spatial.mgeom.MCoordinateSequenceFactory;
-import org.hibernate.spatial.mgeom.MGeometryException;
-import org.hibernate.spatial.mgeom.MGeometryFactory;
-import org.hibernate.spatial.mgeom.MLineString;
+import org.hibernate.spatial.jts.mgeom.MCoordinate;
+import org.hibernate.spatial.jts.mgeom.MCoordinateSequenceFactory;
+import org.hibernate.spatial.jts.mgeom.MGeometryException;
+import org.hibernate.spatial.jts.mgeom.MGeometryFactory;
+import org.hibernate.spatial.jts.mgeom.MLineString;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.fail;

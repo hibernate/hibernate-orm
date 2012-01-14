@@ -30,7 +30,7 @@ import java.util.List;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryCollection;
 
-import org.hibernate.spatial.mgeom.MGeometryFactory;
+import org.hibernate.spatial.jts.mgeom.MGeometryFactory;
 
 /**
  * <code>Decoder</code> for GeometryCollections.

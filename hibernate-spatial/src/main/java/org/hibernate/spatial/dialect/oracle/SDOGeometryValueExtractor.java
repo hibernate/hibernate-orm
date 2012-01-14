@@ -19,10 +19,10 @@ import com.vividsolutions.jts.geom.Polygon;
 
 import org.hibernate.HibernateException;
 import org.hibernate.spatial.Circle;
-import org.hibernate.spatial.HBSpatialExtension;
-import org.hibernate.spatial.mgeom.MCoordinate;
-import org.hibernate.spatial.mgeom.MGeometryFactory;
-import org.hibernate.spatial.mgeom.MLineString;
+import org.hibernate.spatial.jts.JTS;
+import org.hibernate.spatial.jts.mgeom.MCoordinate;
+import org.hibernate.spatial.jts.mgeom.MGeometryFactory;
+import org.hibernate.spatial.jts.mgeom.MLineString;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 
@@ -40,7 +40,7 @@ public class SDOGeometryValueExtractor implements ValueExtractor<Geometry> {
 	}
 
 	public MGeometryFactory getGeometryFactory() {
-		return HBSpatialExtension.getDefaultGeomFactory();
+		return JTS.getDefaultGeomFactory();
 	}
 
 	public Geometry toJTS(Object struct) {
@@ -485,7 +485,7 @@ public class SDOGeometryValueExtractor implements ValueExtractor<Geometry> {
 				mcoord[lastIndex] = MCoordinate.create2dWithMeasure( x3, y3, m3 );
 				// convert the middle coordinates to MCoordinate
 				for ( int i = 1; i < lastIndex; i++ ) {
-					mcoord[i] = MCoordinate.convertCoordinate( coords[i] );
+					mcoord[i] = MCoordinate.convertCoordinate(coords[i]);
 					// if we happen to split on the middle measure, then
 					// assign it
 					if ( Double.compare( mcoord[i].x, x2 ) == 0

@@ -8,6 +8,7 @@ import java.sql.Types;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
+import org.hibernate.spatial.jts.JTS;
 import org.postgis.GeometryCollection;
 import org.postgis.LineString;
 import org.postgis.LinearRing;
@@ -18,10 +19,9 @@ import org.postgis.PGgeometry;
 import org.postgis.Point;
 import org.postgis.Polygon;
 
-import org.hibernate.spatial.HBSpatialExtension;
-import org.hibernate.spatial.mgeom.MCoordinate;
-import org.hibernate.spatial.mgeom.MGeometry;
-import org.hibernate.spatial.mgeom.MGeometryFactory;
+import org.hibernate.spatial.jts.mgeom.MCoordinate;
+import org.hibernate.spatial.jts.mgeom.MGeometry;
+import org.hibernate.spatial.jts.mgeom.MGeometryFactory;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.WrapperOptions;
 
@@ -45,7 +45,7 @@ public class PGGeometryValueBinder implements ValueBinder<Geometry> {
 	}
 
 	public MGeometryFactory getGeometryFactory() {
-		return HBSpatialExtension.getDefaultGeomFactory();
+		return JTS.getDefaultGeomFactory();
 	}
 
 
@@ -101,7 +101,7 @@ public class PGGeometryValueBinder implements ValueBinder<Geometry> {
 		if ( forced.isEmpty() ) {
 			GeometryFactory factory = jtsGeom.getFactory();
 			if ( factory == null ) {
-				factory = HBSpatialExtension.getDefaultGeomFactory();
+				factory = JTS.getDefaultGeomFactory();
 			}
 			forced = factory.createGeometryCollection( null );
 			forced.setSRID( jtsGeom.getSRID() );
@@ -197,7 +197,7 @@ public class PGGeometryValueBinder implements ValueBinder<Geometry> {
 			);
 		}
 		MultiLineString mls = new MultiLineString( lines );
-		if ( string instanceof MGeometry ) {
+		if ( string instanceof MGeometry) {
 			mls.haveMeasure = true;
 		}
 		mls.setSrid( string.getSRID() );

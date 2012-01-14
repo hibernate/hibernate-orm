@@ -28,6 +28,9 @@
  */
 package org.hibernate.spatial.helper;
 
+import org.hibernate.spatial.Log;
+import org.hibernate.spatial.LogFactory;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,9 +41,6 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * Helper class to read settings and properties files.
  *
@@ -48,7 +48,7 @@ import org.slf4j.LoggerFactory;
  */
 public class PropertyFileReader {
 
-	private static final Logger log = LoggerFactory.getLogger( PropertyFileReader.class );
+	private static final Log LOG = LogFactory.make();
 
 	/**
 	 * pattern for comment lines. If it matches, it is a comment.
@@ -97,7 +97,7 @@ public class PropertyFileReader {
 			this.is.close();
 		}
 		catch ( IOException e ) {
-			log.warn( "Exception when closing PropertyFileReader: " + e );
+			LOG.warn( "Exception when closing PropertyFileReader: " + e );
 		}
 	}
 

@@ -30,16 +30,17 @@ package org.hibernate.spatial.testing.dialects.sqlserver.convertors;
  */
 
 import com.vividsolutions.jts.geom.Geometry;
+import org.hibernate.spatial.Log;
+import org.hibernate.spatial.LogFactory;
 import org.hibernate.spatial.dialect.sqlserver.convertors.Decoders;
 import org.hibernate.spatial.dialect.sqlserver.convertors.Encoders;
 import org.hibernate.spatial.dialect.sqlserver.convertors.OpenGisType;
 import org.hibernate.spatial.testing.DataSourceUtils;
+import org.hibernate.spatial.testing.SpatialFunctionalTestCase;
 import org.hibernate.spatial.testing.TestData;
+import org.hibernate.spatial.testing.TestSupport;
 import org.hibernate.spatial.testing.dialects.sqlserver.SQLServerExpressionTemplate;
 import org.hibernate.spatial.testing.dialects.sqlserver.SQLServerTestSupport;
-import org.hibernate.spatial.testing.SpatialFunctionalTestCase;
-import org.hibernate.spatial.testing.TestSupport;
-import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -55,9 +56,11 @@ import static org.junit.Assert.assertTrue;
  */
 public abstract class AbstractConvertorTest extends SpatialFunctionalTestCase {
 
-    private DataSourceUtils dataSourceUtils;
+    private final static Log LOG = LogFactory.make();
 
     private final static TestSupport support = new SQLServerTestSupport();
+
+    private DataSourceUtils dataSourceUtils;
 
     Map<Integer, Geometry> decodedGeoms;
     Map<Integer, Object> rawResults;
@@ -131,9 +134,8 @@ public abstract class AbstractConvertorTest extends SpatialFunctionalTestCase {
         }
     }
 
-    //TODO -- add logger.
     @Override
-    protected Logger getLogger() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    protected Log getLogger() {
+        return LOG;
     }
 }

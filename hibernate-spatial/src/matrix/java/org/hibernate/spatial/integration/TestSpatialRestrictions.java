@@ -29,9 +29,10 @@ import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Criterion;
-import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.spatial.criterion.SpatialRestrictions;
+import org.hibernate.spatial.testing.SpatialDialectMatcher;
+import org.hibernate.spatial.testing.SpatialFunctionalTestCase;
 import org.hibernate.testing.Skip;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -49,39 +50,11 @@ public class TestSpatialRestrictions extends SpatialFunctionalTestCase {
 
 	private static Logger LOGGER = LoggerFactory.getLogger( TestSpatialRestrictions.class );
 
-
-	public void prepareTest() {
-		super.prepareTest();
-		try {
-			dataSourceUtils.insertTestData( testData );
-		}
-		catch ( SQLException e ) {
-			throw new RuntimeException( e );
-		}
-	}
-
 	protected Logger getLogger() {
 		return LOGGER;
 	}
 
-	@Test
-	public void testRestrictions() throws Exception {
-        if (! (getDialect() instanceof SpatialDialect)) return;
-		within();
-		filter();
-		contains();
-		crosses();
-		touches();
-		disjoint();
-		eq();
-		intersects();
-		overlaps();
-		dwithin();
-		havingSRID();
-		isEmpty();
-		isNotEmpty();
-	}
-
+    @Test
 	public void within() throws SQLException {
 		if ( !isSupportedByDialect( SpatialFunction.within ) ) {
 			return;
@@ -91,6 +64,7 @@ public class TestSpatialRestrictions extends SpatialFunctionalTestCase {
 		retrieveAndCompare( dbexpected, spatialCriterion );
 	}
 
+    @Test
 	public void filter() throws SQLException {
 		if ( !dialectSupportsFiltering() ) {
 			return;
@@ -100,6 +74,7 @@ public class TestSpatialRestrictions extends SpatialFunctionalTestCase {
 		retrieveAndCompare( dbexpected, spatialCriterion );
 	}
 
+    @Test
 	public void contains() throws SQLException {
 		if ( !isSupportedByDialect( SpatialFunction.contains ) ) {
 			return;
@@ -109,6 +84,7 @@ public class TestSpatialRestrictions extends SpatialFunctionalTestCase {
 		retrieveAndCompare( dbexpected, spatialCriterion );
 	}
 
+    @Test
 	public void crosses() throws SQLException {
 		if ( !isSupportedByDialect( SpatialFunction.crosses ) ) {
 			return;
@@ -118,6 +94,7 @@ public class TestSpatialRestrictions extends SpatialFunctionalTestCase {
 		retrieveAndCompare( dbexpected, spatialCriterion );
 	}
 
+    @Test
 	public void touches() throws SQLException {
 		if ( !isSupportedByDialect( SpatialFunction.touches ) ) {
 			return;
@@ -127,6 +104,7 @@ public class TestSpatialRestrictions extends SpatialFunctionalTestCase {
 		retrieveAndCompare( dbexpected, spatialCriterion );
 	}
 
+    @Test
 	public void disjoint() throws SQLException {
 		if ( !isSupportedByDialect( SpatialFunction.disjoint ) ) {
 			return;
@@ -136,6 +114,7 @@ public class TestSpatialRestrictions extends SpatialFunctionalTestCase {
 		retrieveAndCompare( dbexpected, spatialCriterion );
 	}
 
+    @Test
 	public void eq() throws SQLException {
 		if ( !isSupportedByDialect( SpatialFunction.equals ) ) {
 			return;
@@ -145,6 +124,7 @@ public class TestSpatialRestrictions extends SpatialFunctionalTestCase {
 		retrieveAndCompare( dbexpected, spatialCriterion );
 	}
 
+    @Test
 	public void intersects() throws SQLException {
 		if ( !isSupportedByDialect( SpatialFunction.intersects ) ) {
 			return;
@@ -154,6 +134,7 @@ public class TestSpatialRestrictions extends SpatialFunctionalTestCase {
 		retrieveAndCompare( dbexpected, spatialCriterion );
 	}
 
+    @Test
 	public void overlaps() throws SQLException {
 		if ( !isSupportedByDialect( SpatialFunction.overlaps ) ) {
 			return;
@@ -163,6 +144,7 @@ public class TestSpatialRestrictions extends SpatialFunctionalTestCase {
 		retrieveAndCompare( dbexpected, spatialCriterion );
 	}
 
+    @Test
 	public void dwithin() throws SQLException {
 		if ( !isSupportedByDialect( SpatialFunction.dwithin ) ) {
 			return;
@@ -176,6 +158,7 @@ public class TestSpatialRestrictions extends SpatialFunctionalTestCase {
 		retrieveAndCompare( dbexpected, spatialCriterion );
 	}
 
+    @Test
 	public void isEmpty() throws SQLException {
 		if ( !isSupportedByDialect( SpatialFunction.isempty ) ) {
 			return;
@@ -185,6 +168,7 @@ public class TestSpatialRestrictions extends SpatialFunctionalTestCase {
 		retrieveAndCompare( dbexpected, spatialCriterion );
 	}
 
+    @Test
 	public void isNotEmpty() throws SQLException {
 		if ( !isSupportedByDialect( SpatialFunction.isempty ) ) {
 			return;
@@ -194,7 +178,7 @@ public class TestSpatialRestrictions extends SpatialFunctionalTestCase {
 		retrieveAndCompare( dbexpected, spatialCriterion );
 	}
 
-
+    @Test
 	public void havingSRID() throws SQLException {
 		if ( !isSupportedByDialect( SpatialFunction.srid ) ) {
 			return;

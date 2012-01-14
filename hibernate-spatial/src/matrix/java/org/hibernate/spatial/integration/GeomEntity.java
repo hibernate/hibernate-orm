@@ -27,11 +27,13 @@ package org.hibernate.spatial.integration;
 
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.io.ParseException;
+import org.hibernate.spatial.testing.EWKTReader;
+import org.hibernate.spatial.testing.TestDataElement;
 
 /**
  * Test class used in unit testing.
  */
-public class GeomEntity implements TestFeature {
+public class GeomEntity {
 
 	private Integer id;
 

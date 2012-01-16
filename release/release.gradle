@@ -90,9 +90,9 @@ String determinePackageName(SourceDirectorySet sourceDirectorySet, File javaFile
         if ( javaFileAbsolutePath.startsWith( sourceDirectoryAbsolutePath ) ) {
             final String javaFileRelativePath = javaFileAbsolutePath.substring(
                     sourceDirectoryAbsolutePath.length() + 1,
-                    javaFileAbsolutePath.lastIndexOf( '/' )
+                    javaFileAbsolutePath.lastIndexOf( File.separator )
             );
-            return javaFileRelativePath.replace( '/', '.' );
+            return javaFileRelativePath.replace( File.separator, "." );
         }
     }
     throw new RuntimeException( "ugh" );

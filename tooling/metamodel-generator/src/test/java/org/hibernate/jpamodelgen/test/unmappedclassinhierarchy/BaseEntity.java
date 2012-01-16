@@ -1,6 +1,6 @@
 /*
  * JBoss, Home of Professional Open Source
- * Copyright 2010, Red Hat Middleware LLC, and individual contributors
+ * Copyright 2012, Red Hat Middleware LLC, and individual contributors
  * by the @authors tag. See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -14,23 +14,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.hibernate.jpamodelgen.test.usertype;
+package org.hibernate.jpamodelgen.test.unmappedclassinhierarchy;
 
+import javax.persistence.Access;
+import javax.persistence.AccessType;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.SequenceGenerator;
 
-import org.hibernate.annotations.Type;
-
-/**
- * @author Hardy Ferentschik
- */
 @Entity
-public class ContactDetails {
+@Access(AccessType.FIELD)
+public class BaseEntity {
 	@Id
-	private long id;
+	@SequenceGenerator(name = "test1_id_gen", sequenceName = "test1_seq")
+	@GeneratedValue(generator = "test1_id_gen", strategy = GenerationType.SEQUENCE)
+	protected Integer id;
 
-	@Type(type = "foo")
-	private PhoneNumber phoneNumber;
+	protected String name;
+
+	public BaseEntity() {
+	}
+
+	public Integer getId() {
+		return id;
+	}
+
+	public String getName() {
+		return name;
+	}
 }
-
-

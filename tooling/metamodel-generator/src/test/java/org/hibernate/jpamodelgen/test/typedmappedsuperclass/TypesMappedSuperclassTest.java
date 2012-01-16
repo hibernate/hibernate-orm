@@ -19,13 +19,14 @@ package org.hibernate.jpamodelgen.test.typedmappedsuperclass;
 import org.testng.annotations.Test;
 
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
+import org.hibernate.jpamodelgen.test.util.TestForIssue;
 
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 
 /**
  * @author Hardy Ferentschik
- * @see METAGEN-37
  */
+@TestForIssue(jiraKey = "METAGEN-37")
 public class TypesMappedSuperclassTest extends CompilationTest {
 	@Test
 	public void testExtractClosestRealType() {

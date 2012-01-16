@@ -61,6 +61,7 @@ public final class Context {
 
 	private boolean isPersistenceUnitCompletelyXmlConfigured;
 	private boolean addGeneratedAnnotation;
+	private boolean addSuppressWarningsAnnotation;
 	private AccessType persistenceUnitDefaultAccessType;
 
 	public Context(ProcessingEnvironment pe) {
@@ -105,6 +106,14 @@ public final class Context {
 
 	public void setAddGeneratedAnnotation(boolean addGeneratedAnnotation) {
 		this.addGeneratedAnnotation = addGeneratedAnnotation;
+	}
+
+	public boolean isAddSuppressWarningsAnnotation() {
+		return addSuppressWarningsAnnotation;
+	}
+
+	public void setAddSuppressWarningsAnnotation(boolean addSuppressWarningsAnnotation) {
+		this.addSuppressWarningsAnnotation = addSuppressWarningsAnnotation;
 	}
 
 	public Elements getElementUtils() {

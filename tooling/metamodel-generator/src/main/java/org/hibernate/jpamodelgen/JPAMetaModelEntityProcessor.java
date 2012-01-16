@@ -66,15 +66,17 @@ import org.hibernate.jpamodelgen.xml.XmlParser;
 		JPAMetaModelEntityProcessor.ORM_XML_OPTION,
 		JPAMetaModelEntityProcessor.FULLY_ANNOTATION_CONFIGURED_OPTION,
 		JPAMetaModelEntityProcessor.LAZY_XML_PARSING,
-		JPAMetaModelEntityProcessor.ADD_GENERATED_ANNOTATION
+		JPAMetaModelEntityProcessor.ADD_GENERATED_ANNOTATION,
+		JPAMetaModelEntityProcessor.ADD_SUPPRESS_WARNINGS_ANNOTATION
 })
 public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 	public static final String DEBUG_OPTION = "debug";
 	public static final String PERSISTENCE_XML_OPTION = "persistenceXml";
-	public static final String ORM_XML_OPTION = "ormXmlList";
+	public static final String ORM_XML_OPTION = "ormXml";
 	public static final String FULLY_ANNOTATION_CONFIGURED_OPTION = "fullyAnnotationConfigured";
 	public static final String LAZY_XML_PARSING = "lazyXmlParsing";
 	public static final String ADD_GENERATED_ANNOTATION = "addGeneratedAnnotation";
+	public static final String ADD_SUPPRESS_WARNINGS_ANNOTATION = "addSuppressWarningsAnnotation";
 
 	private static final Boolean ALLOW_OTHER_PROCESSORS_TO_CLAIM_ANNOTATIONS = Boolean.FALSE;
 
@@ -91,6 +93,10 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 		String tmp = env.getOptions().get( JPAMetaModelEntityProcessor.ADD_GENERATED_ANNOTATION );
 		boolean addGeneratedAnnotation = Boolean.parseBoolean( tmp );
 		context.setAddGeneratedAnnotation( addGeneratedAnnotation );
+
+		tmp = env.getOptions().get( JPAMetaModelEntityProcessor.ADD_SUPPRESS_WARNINGS_ANNOTATION );
+		boolean addSuppressWarningsAnnotation = Boolean.parseBoolean( tmp );
+		context.setAddSuppressWarningsAnnotation( addSuppressWarningsAnnotation );
 
 		tmp = env.getOptions().get( JPAMetaModelEntityProcessor.FULLY_ANNOTATION_CONFIGURED_OPTION );
 		boolean fullyAnnotationConfigured = Boolean.parseBoolean( tmp );

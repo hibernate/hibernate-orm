@@ -84,12 +84,20 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
             expectationsFactory = support.createExpectationsFactory( dataSourceUtils );
             testData = support.createTestData( this );
             geometryEquality = support.createGeometryEquality();
-            dataSourceUtils.afterCreateSchema();
         }
         catch ( Exception e ) {
             throw new RuntimeException( e );
         }
     }
+
+    /**
+     * Overwrites the afterSessionFactoryBuilt() method in BaseCoreFunctionalTestCase.
+     *
+     * Mostly used to register spatial metadata in databases such as Oracle Spatial.
+     */
+    protected void afterSessionFactoryBuilt() {
+        dataSourceUtils.afterCreateSchema();
+	}
 
     /**
      * Cleans up the dataSourceUtils

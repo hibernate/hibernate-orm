@@ -1,6 +1,6 @@
 /*
  * JBoss, Home of Professional Open Source
- * Copyright 2010, Red Hat Middleware LLC, and individual contributors
+ * Copyright 2012, Red Hat Middleware LLC, and individual contributors
  * by the @authors tag. See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -14,23 +14,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.hibernate.jpamodelgen.test.usertype;
+package org.hibernate.jpamodelgen.test.unmappedclassinhierarchy;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import java.util.Date;
+import javax.persistence.Access;
+import javax.persistence.AccessType;
+import javax.persistence.MappedSuperclass;
 
-import org.hibernate.annotations.Type;
+@MappedSuperclass
+@Access(AccessType.FIELD)
+public abstract class MappedBase {
+	private Date creationDate;
+	private Date updatedOn;
 
-/**
- * @author Hardy Ferentschik
- */
-@Entity
-public class ContactDetails {
-	@Id
-	private long id;
+	protected MappedBase(final Date date) {
+		this.creationDate = date;
+		this.updatedOn = date;
+	}
 
-	@Type(type = "foo")
-	private PhoneNumber phoneNumber;
+	protected MappedBase() {
+		this( new Date() );
+	}
 }
-
-

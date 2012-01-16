@@ -14,23 +14,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.hibernate.jpamodelgen.test.usertype;
+package org.hibernate.jpamodelgen.test.unmappedclassinhierarchy;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import org.testng.annotations.Test;
 
-import org.hibernate.annotations.Type;
+import org.hibernate.jpamodelgen.test.util.CompilationTest;
+
+import static org.hibernate.jpamodelgen.test.util.TestUtil.assertSuperClassRelationShipInMetamodel;
 
 /**
+ * @author Emmanuel Bernard
  * @author Hardy Ferentschik
  */
-@Entity
-public class ContactDetails {
-	@Id
-	private long id;
+public class UnmappedClassInHierarchyTest extends CompilationTest {
+	@Test
+	public void testUnmappedClassInHierarchy() throws Exception {
+		assertSuperClassRelationShipInMetamodel( SubA.class, BaseEntity.class );
+		assertSuperClassRelationShipInMetamodel( SubB.class, MappedBase.class );
+	}
 
-	@Type(type = "foo")
-	private PhoneNumber phoneNumber;
+	@Override
+	protected String getPackageNameOfCurrentTest() {
+		return UnmappedClassInHierarchyTest.class.getPackage().getName();
+	}
 }
-
-

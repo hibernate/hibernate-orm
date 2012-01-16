@@ -122,17 +122,27 @@ public final class ClassWriter {
 	private static void printClassDeclaration(MetaEntity entity, PrintWriter pw, Context context) {
 		pw.print( "public abstract class " + entity.getSimpleName() + META_MODEL_CLASS_NAME_SUFFIX );
 
-		final TypeMirror superClass = entity.getTypeElement().getSuperclass();
+		String superClassName = findMappedSuperClass(entity, context);
+		if(superClassName != null) {
+			pw.print( " extends " + superClassName + META_MODEL_CLASS_NAME_SUFFIX );
+		}
+
+		pw.println( " {" );
+	}
+
+	private static String findMappedSuperClass(MetaEntity entity, Context context) {
+		TypeMirror superClass = entity.getTypeElement().getSuperclass();
 		//superclass of Object is of NoType which returns some other kind
-		if ( superClass.getKind() == TypeKind.DECLARED ) {
+		while ( superClass.getKind() == TypeKind.DECLARED ) {
 			//F..king Ch...t Have those people used their horrible APIs even once?
 			final Element superClassElement = ( (DeclaredType) superClass ).asElement();
 			String superClassName = ( (TypeElement) superClassElement ).getQualifiedName().toString();
 			if ( extendsSuperMetaModel( superClassElement, entity.isMetaComplete(), context ) ) {
-				pw.print( " extends " + superClassName + META_MODEL_CLASS_NAME_SUFFIX );
+				return  superClassName;
 			}
+			superClass = ( (TypeElement) superClassElement ).getSuperclass();
 		}
-		pw.println( " {" );
+		return null;
 	}
 
 	/**

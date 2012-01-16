@@ -19,14 +19,15 @@ package org.hibernate.jpamodelgen.test.usertype;
 import org.testng.annotations.Test;
 
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
+import org.hibernate.jpamodelgen.test.util.TestForIssue;
 
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertPresenceOfFieldInMetamodelFor;
 
 /**
  * @author Hardy Ferentschik
- * @see METAGEN-28
  */
+@TestForIssue(jiraKey = "METAGEN-28")
 public class UserTypeTest extends CompilationTest {
 	@Test
 	public void testCustomUserTypeInMetaModel() {

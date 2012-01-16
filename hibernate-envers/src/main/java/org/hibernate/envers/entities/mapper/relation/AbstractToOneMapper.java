@@ -51,7 +51,7 @@ public abstract class AbstractToOneMapper implements PropertyMapper {
      * @param entityName Entity name.
      * @return Entity class, name and information whether it is audited or not.
      */
-    protected RelationDescriptor getRelationDescriptor(AuditConfiguration verCfg, String entityName) {
+    protected EntityInfo getEntityInfo(AuditConfiguration verCfg, String entityName) {
         EntityConfiguration entCfg = verCfg.getEntCfg().get(entityName);
         boolean isRelationAudited = true;
         if (entCfg == null) {
@@ -60,7 +60,7 @@ public abstract class AbstractToOneMapper implements PropertyMapper {
             isRelationAudited = false;
         }
         Class entityClass = ReflectionTools.loadClass(entCfg.getEntityClassName());
-        return new RelationDescriptor(entityClass, entityName, isRelationAudited);
+        return new EntityInfo(entityClass, entityName, isRelationAudited);
     }
 
     protected void setPropertyValue(Object targetObject, Object value) {
@@ -83,21 +83,21 @@ public abstract class AbstractToOneMapper implements PropertyMapper {
                                                     AuditReaderImplementor versionsReader, Number revision);
 
     /**
-     * Simple descriptor of managed relation.
+     * Simple descriptor of an entity.
      */
-    protected class RelationDescriptor {
-        private final Class referencedEntityClass;
-        private final String referencedEntityName;
+    protected class EntityInfo {
+        private final Class entityClass;
+        private final String entityName;
         private final boolean audited;
 
-        public RelationDescriptor(Class referencedEntityClass, String referencedEntityName, boolean audited) {
-            this.referencedEntityClass = referencedEntityClass;
-            this.referencedEntityName = referencedEntityName;
+        public EntityInfo(Class entityClass, String entityName, boolean audited) {
+            this.entityClass = entityClass;
+            this.entityName = entityName;
             this.audited = audited;
         }
 
-        public Class getReferencedEntityClass() { return referencedEntityClass; }
-        public String getReferencedEntityName() { return referencedEntityName; }
+        public Class getEntityClass() { return entityClass; }
+        public String getEntityName() { return entityName; }
         public boolean isAudited() { return audited; }
     }
 }

@@ -27,11 +27,11 @@ public abstract class AbstractOneToOneMapper extends AbstractToOneMapper {
     @Override
     public void nullSafeMapToEntityFromMap(AuditConfiguration verCfg, Object obj, Map data, Object primaryKey,
                                            AuditReaderImplementor versionsReader, Number revision) {
-        RelationDescriptor relation = getRelationDescriptor(verCfg, referencedEntityName);
+        EntityInfo referencedEntity = getEntityInfo(verCfg, referencedEntityName);
 
         Object value = null;
         try {
-            value = queryForReferencedEntity(versionsReader, relation, (Serializable) primaryKey, revision);
+            value = queryForReferencedEntity(versionsReader, referencedEntity, (Serializable) primaryKey, revision);
         } catch (NoResultException e) {
             value = null;
         } catch (NonUniqueResultException e) {
@@ -44,11 +44,11 @@ public abstract class AbstractOneToOneMapper extends AbstractToOneMapper {
 
     /**
      * @param versionsReader Audit reader.
-     * @param relation Relation descriptor.
-     * @param primaryKey Related entity identifier.
+     * @param referencedEntity Referenced entity descriptor.
+     * @param primaryKey Referenced entity identifier.
      * @param revision Revision number.
      * @return Referenced object or proxy of one-to-one relation.
      */
-    protected abstract Object queryForReferencedEntity(AuditReaderImplementor versionsReader, RelationDescriptor relation,
+    protected abstract Object queryForReferencedEntity(AuditReaderImplementor versionsReader, EntityInfo referencedEntity,
                                                        Serializable primaryKey, Number revision);
 }

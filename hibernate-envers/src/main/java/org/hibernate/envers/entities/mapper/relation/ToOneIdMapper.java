@@ -75,10 +75,10 @@ public class ToOneIdMapper extends AbstractToOneMapper {
             if (versionsReader.getFirstLevelCache().contains(referencedEntityName, revision, entityId)) {
                 value = versionsReader.getFirstLevelCache().get(referencedEntityName, revision, entityId);
             } else {
-                RelationDescriptor relationDescriptor = getRelationDescriptor(verCfg, referencedEntityName);
+                EntityInfo referencedEntity = getEntityInfo(verCfg, referencedEntityName);
 
                 value = versionsReader.getSessionImplementor().getFactory().getEntityPersister(referencedEntityName).
-                        createProxy((Serializable)entityId, new ToOneDelegateSessionImplementor(versionsReader, relationDescriptor.getReferencedEntityClass(),
+                        createProxy((Serializable)entityId, new ToOneDelegateSessionImplementor(versionsReader, referencedEntity.getEntityClass(),
                                                                                                 entityId, revision, verCfg));
             }
         }

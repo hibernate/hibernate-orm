@@ -20,18 +20,18 @@ public class OneToOnePrimaryKeyJoinColumnMapper extends AbstractOneToOneMapper {
     }
 
     @Override
-    protected Object queryForReferencedEntity(AuditReaderImplementor versionsReader, RelationDescriptor relation,
+    protected Object queryForReferencedEntity(AuditReaderImplementor versionsReader, EntityInfo referencedEntity,
                                               Serializable primaryKey, Number revision) {
-        if (relation.isAudited()) {
+        if (referencedEntity.isAudited()) {
             // Audited relation.
-            return versionsReader.createQuery().forEntitiesAtRevision(relation.getReferencedEntityClass(),
-                                                                      relation.getReferencedEntityName(), revision)
+            return versionsReader.createQuery().forEntitiesAtRevision(referencedEntity.getEntityClass(),
+                                                                      referencedEntity.getEntityName(), revision)
                                                .add(AuditEntity.id().eq(primaryKey))
                                                .getSingleResult();
         } else {
             // Not audited relation.
-            return createNotAuditedEntityReference(versionsReader, relation.getReferencedEntityClass(),
-                                                   relation.getReferencedEntityName(), primaryKey);
+            return createNotAuditedEntityReference(versionsReader, referencedEntity.getEntityClass(),
+                                                   referencedEntity.getEntityName(), primaryKey);
         }
     }
 

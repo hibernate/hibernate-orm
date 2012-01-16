@@ -2189,12 +2189,6 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 
 		private IdentifierLoadAccessImpl(EntityPersister entityPersister) {
 			this.entityPersister = entityPersister;
-
-			if ( ! entityPersister.hasNaturalIdentifier() ) {
-				throw new HibernateException(
-						String.format( "Entity [%s] did not define a natural id", entityPersister.getEntityName() )
-				);
-			}
 		}
 
 		private IdentifierLoadAccessImpl(String entityName) {

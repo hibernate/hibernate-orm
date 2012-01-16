@@ -16,7 +16,6 @@
  */
 
 // $Id: GenericsTest.java 20721 2010-09-27 12:40:10Z hardy.ferentschik $
-
 package org.hibernate.jpamodelgen.test.generatedannotation;
 
 import java.util.HashMap;

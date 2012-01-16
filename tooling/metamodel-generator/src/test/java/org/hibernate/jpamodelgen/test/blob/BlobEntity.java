@@ -16,7 +16,6 @@
  */
 
 // $Id: User.java 17903 2009-11-04 13:22:37Z hardy.ferentschik $
-
 package org.hibernate.jpamodelgen.test.blob;
 
 import java.sql.Blob;

@@ -23,14 +23,15 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
+import org.hibernate.jpamodelgen.test.util.TestForIssue;
 
 import static org.hibernate.jpamodelgen.test.util.TestUtil.getMetaModelSourceAsString;
 import static org.testng.Assert.assertTrue;
 
 /**
  * @author Hardy Ferentschik
- * @see METAGEN-35
  */
+@TestForIssue(jiraKey = "METAGEN-35")
 public class SeparateCompilationUnitsTest extends CompilationTest {
 	@Test
 	public void testInheritance() throws Exception {
@@ -52,10 +53,10 @@ public class SeparateCompilationUnitsTest extends CompilationTest {
 		List<File> sourceFiles = getCompilationUnits(
 				CompilationTest.getSourceBaseDir(), superClassPackageName
 		);
-		compile( sourceFiles, superClassPackageName );
+		compile( sourceFiles );
 
 		sourceFiles = getCompilationUnits( getSourceBaseDir(), getPackageNameOfCurrentTest() );
-		compile( sourceFiles, getPackageNameOfCurrentTest() );
+		compile( sourceFiles );
 	}
 
 	@Override

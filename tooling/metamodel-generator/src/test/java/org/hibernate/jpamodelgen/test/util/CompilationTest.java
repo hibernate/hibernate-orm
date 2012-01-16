@@ -88,18 +88,17 @@ public abstract class CompilationTest {
 		List<File> sourceFiles = getCompilationUnits( sourceBaseDir, getPackageNameOfCurrentTest() );
 		// make sure there are no relics from previous runs
 		TestUtil.deleteGeneratedSourceFiles( new File( outBaseDir ) );
-		compile( sourceFiles, getPackageNameOfCurrentTest() );
+		compile( sourceFiles );
 	}
 
 	/**
 	 * Compiles the specified Java classes and generated the meta model java files which in turn get also compiled.
 	 *
 	 * @param sourceFiles the files containing the java source files to compile.
-	 * @param packageName the package name of the source files
 	 *
 	 * @throws Exception in case the compilation fails
 	 */
-	protected void compile(List<File> sourceFiles, String packageName) throws Exception {
+	protected void compile(List<File> sourceFiles) throws Exception {
 		List<String> options = createJavaOptions();
 
 		JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
@@ -117,8 +116,8 @@ public abstract class CompilationTest {
 	protected List<File> getCompilationUnits(String baseDir, String packageName) {
 		List<File> javaFiles = new ArrayList<File>();
 		String packageDirName = baseDir;
-		if(packageName != null) {
-			packageDirName = packageDirName + PATH_SEPARATOR + packageName.replace( ".", PATH_SEPARATOR );	
+		if ( packageName != null ) {
+			packageDirName = packageDirName + PATH_SEPARATOR + packageName.replace( ".", PATH_SEPARATOR );
 		}
 
 		File packageDir = new File( packageDirName );

@@ -16,7 +16,7 @@
  */
 
 // $Id: GenericsTest.java 20721 2010-09-27 12:40:10Z hardy.ferentschik $
-package org.hibernate.jpamodelgen.test.generatedannotation;
+package org.hibernate.jpamodelgen.test.supresswarnings;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -25,6 +25,7 @@ import org.testng.annotations.Test;
 
 import org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor;
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
+import org.hibernate.jpamodelgen.test.util.TestForIssue;
 
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 import static org.hibernate.jpamodelgen.test.util.TestUtil.getMetaModelSourceAsString;
@@ -33,21 +34,25 @@ import static org.testng.Assert.assertTrue;
 /**
  * @author Hardy Ferentschik
  */
-public class GeneratedAnnotationTest2 extends CompilationTest {
+public class SuppressWarningsAnnotationGeneratedTest extends CompilationTest {
 	@Test
-	public void testGeneratedAnnotationGenerated() {
+	@TestForIssue(jiraKey = "METAGEN-50")
+	public void testSuppressedWarningsAnnotationGenerated() {
 		assertMetamodelClassGeneratedFor( TestEntity.class );
 
-		// need to check the source because @Generated is not a runtime annotation
+		// need to check the source because @SuppressWarnings is not a runtime annotation
 		String metaModelSource = getMetaModelSourceAsString( TestEntity.class );
-		assertTrue( metaModelSource.contains( "@Generated" ), "@Generated should be added to the metamodel." );
+		assertTrue(
+				metaModelSource.contains( "@SuppressWarnings(\"all\")" ),
+				"@SuppressWarnings should be added to the metamodel."
+		);
 	}
 
 	@Override
 	protected Map<String, String> getProcessorOptions() {
 		Map<String, String> properties = new HashMap<String, String>();
 		properties.put(
-				JPAMetaModelEntityProcessor.ADD_GENERATED_ANNOTATION,
+				JPAMetaModelEntityProcessor.ADD_SUPPRESS_WARNINGS_ANNOTATION,
 				"true"
 		);
 		return properties;
@@ -55,6 +60,6 @@ public class GeneratedAnnotationTest2 extends CompilationTest {
 
 	@Override
 	protected String getPackageNameOfCurrentTest() {
-		return GeneratedAnnotationTest2.class.getPackage().getName();
+		return SuppressWarningsAnnotationGeneratedTest.class.getPackage().getName();
 	}
 }

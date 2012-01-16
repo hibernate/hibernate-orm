@@ -98,6 +98,9 @@ public final class ClassWriter {
 			if ( context.isAddGeneratedAnnotation() ) {
 				pw.println( writeGeneratedAnnotation( entity ) );
 			}
+			if ( context.isAddSuppressWarningsAnnotation() ) {
+				pw.println( writeSuppressWarnings() );
+			}
 			pw.println( writeStaticMetaModelAnnotation( entity ) );
 			printClassDeclaration( entity, pw, context );
 			pw.println();
@@ -175,6 +178,10 @@ public final class ClassWriter {
 
 	private static String writeGeneratedAnnotation(MetaEntity entity) {
 		return "@" + entity.importType( Generated.class.getName() ) + "(\"JPA MetaModel for " + entity.getQualifiedName() + "\")";
+	}
+
+	private static String writeSuppressWarnings() {
+		return "@SuppressWarnings(\"all\")";
 	}
 
 	private static String writeStaticMetaModelAnnotation(MetaEntity entity) {

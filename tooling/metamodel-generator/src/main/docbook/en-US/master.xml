@@ -557,6 +557,16 @@ cq.where( cb.equal(itemNode.get(Item_.id), 5 ) ).distinct(true);
                 you are using a JDK 6 you can force the generation of this
                 annotation using this flag.</entry>
               </row>
+
+              <row>
+                <entry>addSuppressWarningsAnnotation</entry>
+
+                <entry>if set to <literal>true</literal> the processor will
+                add <emphasis>@SuppressWarnings("all")</emphasis> to the
+                generated Java source file. Per default this annotation is not
+                generated. See also <ulink
+                url="https://hibernate.onjira.com/browse/METAGEN-50">METAGEN-50</ulink>.</entry>
+              </row>
             </tbody>
           </tgroup>
         </table></para>

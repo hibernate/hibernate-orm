@@ -167,11 +167,11 @@ public class TestUtil {
 	public static void assertAttributeTypeInMetaModelFor(Class<?> clazz, String fieldName, Class<?> expectedType, String errorString) {
 		Field field = getFieldFromMetamodelFor( clazz, fieldName );
 		assertNotNull( field, "Cannot find field '" + fieldName + "' in " + clazz.getName() );
-		ParameterizedType type = ( ParameterizedType ) field.getGenericType();
+		ParameterizedType type = (ParameterizedType) field.getGenericType();
 		Type actualType = type.getActualTypeArguments()[1];
 		if ( expectedType.isArray() ) {
 			expectedType = expectedType.getComponentType();
-			actualType = ( ( GenericArrayType ) actualType ).getGenericComponentType();
+			actualType = getComponentType( actualType );
 		}
 		assertEquals(
 				actualType,
@@ -183,14 +183,13 @@ public class TestUtil {
 	public static void assertMapAttributesInMetaModelFor(Class<?> clazz, String fieldName, Class<?> expectedMapKey, Class<?> expectedMapValue, String errorString) {
 		Field field = getFieldFromMetamodelFor( clazz, fieldName );
 		assertNotNull( field );
-		ParameterizedType type = ( ParameterizedType ) field.getGenericType();
+		ParameterizedType type = (ParameterizedType) field.getGenericType();
 		Type actualMapKeyType = type.getActualTypeArguments()[1];
 		assertEquals( actualMapKeyType, expectedMapKey, errorString );
 
 		Type actualMapKeyValue = type.getActualTypeArguments()[2];
 		assertEquals( actualMapKeyValue, expectedMapValue, errorString );
 	}
-
 
 	public static void assertSuperClassRelationShipInMetamodel(Class<?> entityClass, Class<?> superEntityClass) {
 		String entityModelClassName = entityClass.getName() + META_MODEL_CLASS_POSTFIX;
@@ -236,6 +235,25 @@ public class TestUtil {
 
 	private static boolean hasFieldInMetamodelFor(Class<?> clazz, String fieldName) {
 		return getFieldFromMetamodelFor( clazz, fieldName ) != null;
+	}
+
+	private static Type getComponentType(Type actualType) {
+		if ( actualType instanceof Class ) {
+			Class<?> clazz = (Class<?>) actualType;
+			if ( clazz.isArray() ) {
+				return clazz.getComponentType();
+			}
+			else {
+				fail("Unexpected component type");
+			}
+		}
+
+		if ( actualType instanceof GenericArrayType ) {
+			return ( (GenericArrayType) actualType ).getGenericComponentType();
+		}  else {
+			fail("Unexpected component type");
+			return null; // making the compiler happy
+		}
 	}
 
 	private static class MetaModelFilenameFilter implements FileFilter {

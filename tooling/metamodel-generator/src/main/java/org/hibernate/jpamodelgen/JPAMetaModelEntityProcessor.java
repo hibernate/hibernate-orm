@@ -27,7 +27,7 @@ import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedOptions;
-import javax.annotation.processing.SupportedSourceVersion;
+import javax.lang.model.SourceVersion;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -51,8 +51,6 @@ import org.hibernate.jpamodelgen.util.StringUtil;
 import org.hibernate.jpamodelgen.util.TypeUtils;
 import org.hibernate.jpamodelgen.xml.XmlParser;
 
-import static javax.lang.model.SourceVersion.RELEASE_6;
-
 /**
  * Main annotation processor.
  *
@@ -63,7 +61,6 @@ import static javax.lang.model.SourceVersion.RELEASE_6;
 @SupportedAnnotationTypes({
 		"javax.persistence.Entity", "javax.persistence.MappedSuperclass", "javax.persistence.Embeddable"
 })
-@SupportedSourceVersion(RELEASE_6)
 @SupportedOptions({
 		JPAMetaModelEntityProcessor.DEBUG_OPTION,
 		JPAMetaModelEntityProcessor.PERSISTENCE_XML_OPTION,
@@ -84,6 +81,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 
 	private Context context;
 
+	@Override
 	public void init(ProcessingEnvironment env) {
 		super.init( env );
 		context = new Context( env );
@@ -108,9 +106,14 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 	}
 
 	@Override
+	public SourceVersion getSupportedSourceVersion() {
+		return SourceVersion.latestSupported();
+	}
+
+	@Override
 	public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnvironment) {
 		// see also METAGEN-45
-		if ( roundEnvironment.processingOver() || annotations.size() == 0) {
+		if ( roundEnvironment.processingOver() || annotations.size() == 0 ) {
 			return ALLOW_OTHER_PROCESSORS_TO_CLAIM_ANNOTATIONS;
 		}
 

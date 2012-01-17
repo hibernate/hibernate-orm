@@ -17,7 +17,6 @@
 package org.hibernate.jpamodelgen.model;
 
 import java.util.List;
-import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeElement;
 
 /**
@@ -37,8 +36,6 @@ public interface MetaEntity extends ImportContext {
 	String importType(String fqcn);
 
 	String staticImport(String fqcn, String member);
-
-	String importType(Name qualifiedName);
 
 	TypeElement getTypeElement();
 

@@ -161,10 +161,6 @@ public class XmlMetaEntity implements MetaEntity {
 		return importContext.staticImport( fqcn, member );
 	}
 
-	public String importType(Name qualifiedName) {
-		return importType( qualifiedName.toString() );
-	}
-
 	public TypeElement getTypeElement() {
 		return element;
 	}

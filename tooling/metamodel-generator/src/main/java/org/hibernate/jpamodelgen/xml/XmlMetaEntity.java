@@ -29,13 +29,13 @@ import javax.lang.model.type.ExecutableType;
 import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
 
-import org.hibernate.jpamodelgen.util.AccessTypeInformation;
 import org.hibernate.jpamodelgen.Context;
 import org.hibernate.jpamodelgen.ImportContextImpl;
 import org.hibernate.jpamodelgen.MetaModelGenerationException;
 import org.hibernate.jpamodelgen.model.ImportContext;
 import org.hibernate.jpamodelgen.model.MetaAttribute;
 import org.hibernate.jpamodelgen.model.MetaEntity;
+import org.hibernate.jpamodelgen.util.AccessTypeInformation;
 import org.hibernate.jpamodelgen.util.StringUtil;
 import org.hibernate.jpamodelgen.util.TypeUtils;
 import org.hibernate.jpamodelgen.xml.jaxb.Attributes;
@@ -44,6 +44,7 @@ import org.hibernate.jpamodelgen.xml.jaxb.ElementCollection;
 import org.hibernate.jpamodelgen.xml.jaxb.Embeddable;
 import org.hibernate.jpamodelgen.xml.jaxb.EmbeddableAttributes;
 import org.hibernate.jpamodelgen.xml.jaxb.Embedded;
+import org.hibernate.jpamodelgen.xml.jaxb.EmbeddedId;
 import org.hibernate.jpamodelgen.xml.jaxb.Entity;
 import org.hibernate.jpamodelgen.xml.jaxb.Id;
 import org.hibernate.jpamodelgen.xml.jaxb.ManyToMany;
@@ -346,6 +347,16 @@ public class XmlMetaEntity implements MetaEntity {
 			String type = getType( id.getName(), null, elementKind );
 			if ( type != null ) {
 				attribute = new XmlMetaSingleAttribute( this, id.getName(), type );
+				members.add( attribute );
+			}
+		}
+
+		if ( attributes.getEmbeddedId() != null ) {
+			EmbeddedId embeddedId = attributes.getEmbeddedId();
+			ElementKind elementKind = getElementKind( embeddedId.getAccess() );
+			String type = getType( embeddedId.getName(), null, elementKind );
+			if ( type != null ) {
+				attribute = new XmlMetaSingleAttribute( this, embeddedId.getName(), type );
 				members.add( attribute );
 			}
 		}

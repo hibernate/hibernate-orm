@@ -16,7 +16,6 @@
  */
 package org.hibernate.jpamodelgen.util;
 
-import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -122,21 +121,6 @@ public final class TypeUtils {
 	 * <a href="http://www.retep.org/2009/02/getting-class-values-from-annotations.html">getting-class-values-from-annotations</a>.
 	 *
 	 * @param annotationMirror The annotation mirror
-	 * @param clazz the class name to check against
-	 *
-	 * @return {@code true} if the provided annotation type is of the same type as the provided class, {@code false} otherwise.
-	 */
-	public static boolean isAnnotationMirrorOfType(AnnotationMirror annotationMirror, Class<? extends Annotation> clazz) {
-		assert clazz != null;
-		return isAnnotationMirrorOfType( annotationMirror, clazz.getName() );
-	}
-
-	/**
-	 * Returns {@code true} if the provided annotation type is of the same type as the provided class, {@code false} otherwise.
-	 * This method uses the string class names for comparison. See also
-	 * <a href="http://www.retep.org/2009/02/getting-class-values-from-annotations.html">getting-class-values-from-annotations</a>.
-	 *
-	 * @param annotationMirror The annotation mirror
 	 * @param fqcn the fully qualified class name to check against
 	 *
 	 * @return {@code true} if the provided annotation type is of the same type as the provided class, {@code false} otherwise.
@@ -170,20 +154,6 @@ public final class TypeUtils {
 			}
 		}
 		return mirror;
-	}
-
-	/**
-	 * Checks whether the {@code Element} hosts an annotation of the specified class.
-	 *
-	 * @param element the element to check for the hosted annotation
-	 * @param clazz the annotation class to check for
-	 *
-	 * @return the annotation mirror for the specified annotation class from the {@code Element} or {@code null} in case
-	 *         the {@code TypeElement} does not host the specified annotation.
-	 */
-	public static AnnotationMirror getAnnotationMirror(Element element, Class<? extends Annotation> clazz) {
-		assert clazz != null;
-		return getAnnotationMirror( element, clazz.getName() );
 	}
 
 	public static Object getAnnotationValue(AnnotationMirror annotationMirror, String parameterValue) {

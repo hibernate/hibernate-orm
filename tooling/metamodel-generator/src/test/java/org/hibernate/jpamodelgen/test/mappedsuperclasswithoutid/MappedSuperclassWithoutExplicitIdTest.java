@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.hibernate.jpamodelgen.test.manytoone;
+package org.hibernate.jpamodelgen.test.mappedsuperclasswithoutid;
 
 import org.testng.annotations.Test;
 
@@ -26,9 +26,9 @@ import static org.hibernate.jpamodelgen.test.util.TestUtil.assertPresenceOfField
 /**
  * @author Hardy Ferentschik
  */
-public class MappedSuperclassManyToOneTest extends CompilationTest {
+public class MappedSuperclassWithoutExplicitIdTest extends CompilationTest {
 	@Test
-	public void testExtractClosestRealType() {
+	public void testRightAccessTypeForMappedSuperclass() {
 		assertMetamodelClassGeneratedFor( ConcreteProduct.class );
 		assertMetamodelClassGeneratedFor( Product.class );
 		assertMetamodelClassGeneratedFor( Shop.class );
@@ -37,6 +37,6 @@ public class MappedSuperclassManyToOneTest extends CompilationTest {
 
 	@Override
 	protected String getPackageNameOfCurrentTest() {
-		return MappedSuperclassManyToOneTest.class.getPackage().getName();
+		return MappedSuperclassWithoutExplicitIdTest.class.getPackage().getName();
 	}
 }

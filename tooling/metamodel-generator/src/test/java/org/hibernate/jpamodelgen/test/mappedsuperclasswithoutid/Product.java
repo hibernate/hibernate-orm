@@ -14,16 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.hibernate.jpamodelgen.test.manytoone;
+package org.hibernate.jpamodelgen.test.mappedsuperclasswithoutid;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import javax.persistence.ManyToOne;
+import javax.persistence.MappedSuperclass;
+
+import org.hibernate.jpamodelgen.test.accesstype.Shop;
 
 /**
  * @author Hardy Ferentschik
  */
-@Entity
-public class ConcreteProduct extends Product {
-	@Id
-	long id;
+@MappedSuperclass
+public class Product {
+//	@Access(AccessType.FIELD)
+	@ManyToOne
+	Shop shop;
 }

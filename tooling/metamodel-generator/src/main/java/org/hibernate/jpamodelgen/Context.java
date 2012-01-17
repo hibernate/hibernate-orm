@@ -26,10 +26,11 @@ import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
-import javax.persistence.AccessType;
 import javax.tools.Diagnostic;
 
 import org.hibernate.jpamodelgen.model.MetaEntity;
+import org.hibernate.jpamodelgen.util.AccessType;
+import org.hibernate.jpamodelgen.util.AccessTypeInformation;
 import org.hibernate.jpamodelgen.util.Constants;
 
 /**

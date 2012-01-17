@@ -29,17 +29,11 @@ import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
 import javax.lang.model.util.SimpleTypeVisitor6;
-import javax.persistence.AccessType;
-import javax.persistence.ElementCollection;
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
-import javax.persistence.MapKeyClass;
-import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
 import javax.tools.Diagnostic;
 
-import org.hibernate.jpamodelgen.AccessTypeInformation;
 import org.hibernate.jpamodelgen.Context;
+import org.hibernate.jpamodelgen.util.AccessType;
+import org.hibernate.jpamodelgen.util.AccessTypeInformation;
 import org.hibernate.jpamodelgen.util.Constants;
 import org.hibernate.jpamodelgen.util.StringUtil;
 import org.hibernate.jpamodelgen.util.TypeUtils;
@@ -200,7 +194,7 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor6<Annotatio
 		if ( TypeUtils.containsAnnotation( element, Constants.MAP_KEY_CLASS ) ) {
 			TypeMirror typeMirror = (TypeMirror) TypeUtils.getAnnotationValue(
 					TypeUtils.getAnnotationMirror(
-							element, MapKeyClass.class
+							element, Constants.MAP_KEY_CLASS
 					), TypeUtils.DEFAULT_ANNOTATION_PARAMETER_NAME
 			);
 			keyType = typeMirror.toString();
@@ -249,13 +243,13 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor6<Annotatio
 	private String getTargetEntity(List<? extends AnnotationMirror> annotations) {
 		String fullyQualifiedTargetEntityName = null;
 		for ( AnnotationMirror mirror : annotations ) {
-			if ( TypeUtils.isAnnotationMirrorOfType( mirror, ElementCollection.class ) ) {
+			if ( TypeUtils.isAnnotationMirrorOfType( mirror, Constants.ELEMENT_COLLECTION ) ) {
 				fullyQualifiedTargetEntityName = getFullyQualifiedClassNameOfTargetEntity( mirror, "targetClass" );
 			}
-			else if ( TypeUtils.isAnnotationMirrorOfType( mirror, OneToMany.class )
-					|| TypeUtils.isAnnotationMirrorOfType( mirror, ManyToMany.class )
-					|| TypeUtils.isAnnotationMirrorOfType( mirror, ManyToOne.class )
-					|| TypeUtils.isAnnotationMirrorOfType( mirror, OneToOne.class ) ) {
+			else if ( TypeUtils.isAnnotationMirrorOfType( mirror, Constants.ONE_TO_MANY )
+					|| TypeUtils.isAnnotationMirrorOfType( mirror, Constants.MANY_TO_MANY )
+					|| TypeUtils.isAnnotationMirrorOfType( mirror, Constants.MANY_TO_ONE )
+					|| TypeUtils.isAnnotationMirrorOfType( mirror, Constants.ONE_TO_ONE ) ) {
 				fullyQualifiedTargetEntityName = getFullyQualifiedClassNameOfTargetEntity( mirror, "targetEntity" );
 			}
 			else if ( TypeUtils.isAnnotationMirrorOfType( mirror, ORG_HIBERNATE_ANNOTATIONS_TARGET ) ) {

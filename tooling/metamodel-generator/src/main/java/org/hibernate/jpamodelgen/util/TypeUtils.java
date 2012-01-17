@@ -36,14 +36,10 @@ import javax.lang.model.type.TypeVariable;
 import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.SimpleTypeVisitor6;
-import javax.persistence.AccessType;
 import javax.tools.Diagnostic;
 
-import org.hibernate.jpamodelgen.AccessTypeInformation;
 import org.hibernate.jpamodelgen.Context;
 import org.hibernate.jpamodelgen.MetaModelGenerationException;
-
-//import javax.persistence.EmbeddedId;
 
 /**
  * Utility class.

@@ -25,11 +25,11 @@
     </issueManagement>
 
     <scm>
-	    <connection>scm:git:git://github.com/hibernate/hibernate-metamodelgen.git</connection>
-	    <developerConnection>scm:git:git@github.com:hibernate/hibernate-metamodelgen.git</developerConnection>
+        <connection>scm:git:git://github.com/hibernate/hibernate-metamodelgen.git</connection>
+        <developerConnection>scm:git:git@github.com:hibernate/hibernate-metamodelgen.git</developerConnection>
         <url>http://github.com/hibernate/hibernate-metamodelgen</url>
     </scm>
-    
+
     <distributionManagement>
         <repository>
             <id>jboss-releases-repository</id>
@@ -64,20 +64,19 @@
             <url>http://in.relation.to/Bloggers/Max</url>
         </developer>
     </developers>
-    
-    <dependencies>
-        <dependency>
-            <groupId>org.hibernate.javax.persistence</groupId>
-            <artifactId>hibernate-jpa-2.0-api</artifactId>
-            <version>1.0.0.Final</version>
-        </dependency>
 
-        <!-- test dependencies -->
+    <dependencies>
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
             <version>5.8</version>
             <classifier>jdk15</classifier>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.hibernate.javax.persistence</groupId>
+            <artifactId>hibernate-jpa-2.0-api</artifactId>
+            <version>1.0.0.Final</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -98,7 +97,7 @@
             <version>3.6.0.Beta1</version>
             <scope>test</scope>
         </dependency>
-    </dependencies>    
+    </dependencies>
 
     <build>
         <defaultGoal>test</defaultGoal>

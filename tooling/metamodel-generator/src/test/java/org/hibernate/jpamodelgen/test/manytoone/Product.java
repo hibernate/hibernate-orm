@@ -28,7 +28,7 @@ import org.hibernate.jpamodelgen.test.accesstype.Shop;
  */
 @MappedSuperclass
 public class Product {
-	@Access(AccessType.FIELD)
+//	@Access(AccessType.FIELD)
 	@ManyToOne
 	Shop shop;
 }

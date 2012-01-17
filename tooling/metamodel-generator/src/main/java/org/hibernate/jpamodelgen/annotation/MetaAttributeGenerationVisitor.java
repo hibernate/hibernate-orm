@@ -30,9 +30,7 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
 import javax.lang.model.util.SimpleTypeVisitor6;
 import javax.persistence.AccessType;
-import javax.persistence.Basic;
 import javax.persistence.ElementCollection;
-import javax.persistence.Embeddable;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.MapKeyClass;
@@ -128,14 +126,17 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor6<Annotatio
 	}
 
 	private AnnotationMetaAttribute createMetaCollectionAttribute(DeclaredType declaredType, Element element, String fqNameOfReturnType, String collection, String targetEntity) {
-		if ( TypeUtils.containsAnnotation( element, ElementCollection.class ) ) {
+		if ( TypeUtils.containsAnnotation( element, Constants.ELEMENT_COLLECTION ) ) {
 			String explicitTargetEntity = getTargetEntity( element.getAnnotationMirrors() );
 			TypeMirror collectionElementType = TypeUtils.getCollectionElementType(
 					declaredType, fqNameOfReturnType, explicitTargetEntity, context
 			);
 			final TypeElement collectionElement = (TypeElement) context.getTypeUtils()
 					.asElement( collectionElementType );
-			AccessTypeInformation accessTypeInfo = context.getAccessTypeInfo( collectionElement.getQualifiedName().toString() );
+			AccessTypeInformation accessTypeInfo = context.getAccessTypeInfo(
+					collectionElement.getQualifiedName()
+							.toString()
+			);
 			if ( accessTypeInfo == null ) {
 				AccessType explicitAccessType = TypeUtils.determineAnnotationSpecifiedAccessType(
 						collectionElement
@@ -166,7 +167,7 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor6<Annotatio
 	@Override
 	public AnnotationMetaAttribute visitExecutable(ExecutableType t, Element p) {
 		if ( !p.getKind().equals( ElementKind.METHOD ) ) {
-			return null;                                                                                       
+			return null;
 		}
 
 		String string = p.getSimpleName().toString();
@@ -179,9 +180,9 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor6<Annotatio
 	}
 
 	private boolean isBasicAttribute(Element element, Element returnedElement) {
-		if ( TypeUtils.containsAnnotation( element, Basic.class )
-				|| TypeUtils.containsAnnotation( element, OneToOne.class )
-				|| TypeUtils.containsAnnotation( element, ManyToOne.class ) ) {
+		if ( TypeUtils.containsAnnotation( element, Constants.BASIC )
+				|| TypeUtils.containsAnnotation( element, Constants.ONE_TO_ONE )
+				|| TypeUtils.containsAnnotation( element, Constants.MANY_TO_ONE ) ) {
 			return true;
 		}
 
@@ -196,7 +197,7 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor6<Annotatio
 
 	private AnnotationMetaAttribute createAnnotationMetaAttributeForMap(DeclaredType declaredType, Element element, String collection, String targetEntity) {
 		String keyType;
-		if ( TypeUtils.containsAnnotation( element, MapKeyClass.class ) ) {
+		if ( TypeUtils.containsAnnotation( element, Constants.MAP_KEY_CLASS ) ) {
 			TypeMirror typeMirror = (TypeMirror) TypeUtils.getAnnotationValue(
 					TypeUtils.getAnnotationMirror(
 							element, MapKeyClass.class
@@ -317,7 +318,7 @@ class BasicAttributeVisitor extends SimpleTypeVisitor6<Boolean, Element> {
 			if ( Constants.BASIC_TYPES.contains( typeName ) ) {
 				return Boolean.TRUE;
 			}
-			if ( TypeUtils.containsAnnotation( element, Embeddable.class ) ) {
+			if ( TypeUtils.containsAnnotation( element, Constants.EMBEDDABLE ) ) {
 				return Boolean.TRUE;
 			}
 			for ( TypeMirror mirror : typeElement.getInterfaces() ) {

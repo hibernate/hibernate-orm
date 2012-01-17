@@ -28,7 +28,6 @@ import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.ElementFilter;
 import javax.persistence.AccessType;
-import javax.persistence.Transient;
 
 import org.hibernate.jpamodelgen.AccessTypeInformation;
 import org.hibernate.jpamodelgen.Context;
@@ -36,6 +35,7 @@ import org.hibernate.jpamodelgen.ImportContextImpl;
 import org.hibernate.jpamodelgen.model.ImportContext;
 import org.hibernate.jpamodelgen.model.MetaAttribute;
 import org.hibernate.jpamodelgen.model.MetaEntity;
+import org.hibernate.jpamodelgen.util.Constants;
 import org.hibernate.jpamodelgen.util.TypeUtils;
 
 /**
@@ -125,7 +125,7 @@ public class AnnotationMetaEntity implements MetaEntity {
 				continue;
 			}
 
-			if ( TypeUtils.containsAnnotation( memberOfClass, Transient.class )
+			if ( TypeUtils.containsAnnotation( memberOfClass, Constants.TRANSIENT )
 					|| memberOfClass.getModifiers().contains( Modifier.TRANSIENT )
 					|| memberOfClass.getModifiers().contains( Modifier.STATIC ) ) {
 				continue;

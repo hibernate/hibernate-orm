@@ -116,10 +116,6 @@ public class AnnotationMetaEntity implements MetaEntity {
 		return importContext.staticImport( fqcn, member );
 	}
 
-	public final String importType(Name qualifiedName) {
-		return importType( qualifiedName.toString() );
-	}
-
 	public final TypeElement getTypeElement() {
 		return element;
 	}

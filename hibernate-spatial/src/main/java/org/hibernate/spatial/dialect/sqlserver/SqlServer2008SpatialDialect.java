@@ -26,6 +26,7 @@
 package org.hibernate.spatial.dialect.sqlserver;
 
 
+import org.hibernate.HibernateException;
 import org.hibernate.dialect.SQLServer2008Dialect;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.spatial.GeometryType;
@@ -102,6 +103,13 @@ public class SqlServer2008SpatialDialect extends SQLServer2008Dialect implements
 		registerFunction( "centroid", new SQLFunctionTemplate( GeometryType.INSTANCE, "?1.STCentroid()" ) );
 		registerFunction( "pointonsurface", new SQLFunctionTemplate( GeometryType.INSTANCE, "?1.STPointOnSurface()" ) );
 	}
+
+    //Temporary Fix for HHH-6074
+    @Override
+    public String getTypeName(int code, long length, int precision, int scale) throws HibernateException {
+        if (code == 3000) return "GEOMETRY";
+        return super.getTypeName(code, length, precision, scale);
+    }
 
 	@Override
 	public SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {

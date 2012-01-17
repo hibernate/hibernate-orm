@@ -22,7 +22,7 @@
  *
  * For more information, visit: http://www.hibernatespatial.org/
  */
-package org.hibernate.spatial.testing.dialects.sqlserver.convertors;
+package org.hibernate.spatial.dialect.sqlserver.convertors;
 
 /**
  * @author Karel Maesen, Geovise BVBA.
@@ -32,9 +32,6 @@ package org.hibernate.spatial.testing.dialects.sqlserver.convertors;
 import com.vividsolutions.jts.geom.Geometry;
 import org.hibernate.spatial.Log;
 import org.hibernate.spatial.LogFactory;
-import org.hibernate.spatial.dialect.sqlserver.convertors.Decoders;
-import org.hibernate.spatial.dialect.sqlserver.convertors.Encoders;
-import org.hibernate.spatial.dialect.sqlserver.convertors.OpenGisType;
 import org.hibernate.spatial.testing.DataSourceUtils;
 import org.hibernate.spatial.testing.SpatialFunctionalTestCase;
 import org.hibernate.spatial.testing.TestData;
@@ -67,7 +64,6 @@ public abstract class AbstractConvertorTest extends SpatialFunctionalTestCase {
     Map<Integer, byte[]> encodedGeoms;
     Map<Integer, Geometry> expectedGeoms;
 
-
     public void beforeClass() {
         dataSourceUtils = new DataSourceUtils(
             "sqlserver/hibernate-spatial-sqlserver-test.properties",
@@ -84,17 +80,17 @@ public abstract class AbstractConvertorTest extends SpatialFunctionalTestCase {
             throw new RuntimeException(e);
         }
     }
-
-    public void afterClass() {
-        try {
-            String sql = dataSourceUtils.parseSqlIn("sqlserver/drop-sqlserver-test-schema.sql");
-            dataSourceUtils.executeStatement(sql);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
+//
+//    public void afterClass() {
+//        try {
+//            String sql = dataSourceUtils.parseSqlIn("sqlserver/drop-sqlserver-test-schema.sql");
+//            dataSourceUtils.executeStatement(sql);
+//        } catch (SQLException e) {
+//            throw new RuntimeException(e);
+//        } catch (IOException e) {
+//            throw new RuntimeException(e);
+//        }
+//    }
 
     public void doDecoding(OpenGisType type) {
         rawResults = dataSourceUtils.rawDbObjects(type.toString());

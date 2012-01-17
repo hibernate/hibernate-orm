@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.hibernate.jpamodelgen.test.onetomanysorted;
+package org.hibernate.jpamodelgen.test.sortedcollection;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;

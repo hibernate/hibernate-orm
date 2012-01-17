@@ -14,7 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.hibernate.jpamodelgen.test.xmlembeddable;
 
 import java.io.File;
@@ -26,6 +25,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
+import org.hibernate.jpamodelgen.test.util.TestForIssue;
 import org.hibernate.jpamodelgen.test.util.TestUtil;
 
 import static org.hibernate.jpamodelgen.test.util.TestUtil.getMetaModelSourceAsString;
@@ -36,6 +36,7 @@ import static org.testng.Assert.assertTrue;
  */
 public class EmbeddableConfiguredInXmlTest extends CompilationTest {
 	@Test
+	@TestForIssue(jiraKey = "METAGEN-66")
 	public void testAttributeForEmbeddableConfiguredInXmlExists() {
 		// need to work with the source file. BusinessEntity_.class won't get generated, because the business id won't
 		// be on the classpath
@@ -51,10 +52,10 @@ public class EmbeddableConfiguredInXmlTest extends CompilationTest {
 		List<File> sourceFiles = getCompilationUnits(
 				CompilationTest.getSourceBaseDir(), fooPackageName
 		);
-		compile( sourceFiles, fooPackageName );
+		compile( sourceFiles );
 
 		sourceFiles = getCompilationUnits( getSourceBaseDir(), getPackageNameOfCurrentTest() );
-		compile( sourceFiles, getPackageNameOfCurrentTest() );
+		compile( sourceFiles );
 	}
 
 	@Override

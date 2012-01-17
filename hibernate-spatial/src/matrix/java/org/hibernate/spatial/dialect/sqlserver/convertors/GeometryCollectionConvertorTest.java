@@ -1,10 +1,10 @@
 /*
- * $Id: PolygonConvertorTest.java 155 2010-01-13 21:00:35Z maesenka $
+ * $Id: GeometryCollectionConvertorTest.java 167 2010-03-11 22:26:10Z maesenka $
  *
  * This file is part of Hibernate Spatial, an extension to the
  * hibernate ORM solution for geographic data.
  *
- * Copyright © 2009 Geovise BVBA
+ * Copyright © 2007-2010 Geovise BVBA
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -23,21 +23,27 @@
  * For more information, visit: http://www.hibernatespatial.org/
  */
 
-package org.hibernate.spatial.testing.dialects.sqlserver.convertors;
+package org.hibernate.spatial.dialect.sqlserver.convertors;
 
 import org.hibernate.spatial.dialect.sqlserver.SqlServer2008SpatialDialect;
-import org.hibernate.spatial.dialect.sqlserver.convertors.OpenGisType;
 import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.RequiresDialect;
 import org.junit.Test;
 
-@RequiresDialect(SqlServer2008SpatialDialect.class)
-public class PolygonConvertorTest extends AbstractConvertorTest {
-
+/**
+ * Created by IntelliJ IDEA.
+ * User: maesenka
+ * Date: Jan 24, 2010
+ * Time: 5:33:19 PM
+ * To change this template use File | Settings | File Templates.
+ */
+@RequiresDialect(value=SqlServer2008SpatialDialect.class)
+public class GeometryCollectionConvertorTest extends AbstractConvertorTest {
 
 	@BeforeClassOnce
-	public void setUp() {
-		doDecoding( OpenGisType.POLYGON );
+	public void beforeClass() {
+        super.beforeClass();
+		doDecoding(OpenGisType.GEOMETRYCOLLECTION);
 		doEncoding();
 	}
 
@@ -50,6 +56,5 @@ public class PolygonConvertorTest extends AbstractConvertorTest {
 	public void test_decoding() {
 		super.test_decoding();
 	}
-
 
 }

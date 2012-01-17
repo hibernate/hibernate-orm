@@ -23,12 +23,11 @@
  * For more information, visit: http://www.hibernatespatial.org/
  */
 
-package org.hibernate.spatial.testing.dialects.sqlserver.convertors;
+package org.hibernate.spatial.dialect.sqlserver.convertors;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Point;
 import org.hibernate.spatial.dialect.sqlserver.SqlServer2008SpatialDialect;
-import org.hibernate.spatial.dialect.sqlserver.convertors.OpenGisType;
 import org.hibernate.spatial.jts.mgeom.MCoordinate;
 import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.RequiresDialect;
@@ -44,7 +43,8 @@ import static junit.framework.Assert.assertEquals;
 public class PointConvertorTest extends AbstractConvertorTest {
 
 	@BeforeClassOnce
-	public void setup() {
+	public void beforeClass() {
+        super.beforeClass();
 		doDecoding( OpenGisType.POINT );
 		doEncoding();
 	}

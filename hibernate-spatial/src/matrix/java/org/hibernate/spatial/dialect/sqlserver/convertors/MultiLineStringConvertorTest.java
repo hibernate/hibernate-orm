@@ -1,5 +1,5 @@
 /*
- * $Id: MultiPolygonConvertorTest.java 155 2010-01-13 21:00:35Z maesenka $
+ * $Id: MultiLineStringConvertorTest.java 155 2010-01-13 21:00:35Z maesenka $
  *
  * This file is part of Hibernate Spatial, an extension to the
  * hibernate ORM solution for geographic data.
@@ -23,20 +23,20 @@
  * For more information, visit: http://www.hibernatespatial.org/
  */
 
-package org.hibernate.spatial.testing.dialects.sqlserver.convertors;
+package org.hibernate.spatial.dialect.sqlserver.convertors;
 
 import org.hibernate.spatial.dialect.sqlserver.SqlServer2008SpatialDialect;
-import org.hibernate.spatial.dialect.sqlserver.convertors.OpenGisType;
 import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.RequiresDialect;
 import org.junit.Test;
 
 @RequiresDialect(SqlServer2008SpatialDialect.class)
-public class MultiPolygonConvertorTest extends AbstractConvertorTest {
+public class MultiLineStringConvertorTest extends AbstractConvertorTest {
 
 	@BeforeClassOnce
-	public void setUp() {
-		doDecoding( OpenGisType.MULTIPOLYGON );
+	public void beforeClass() {
+        super.beforeClass();
+		doDecoding( OpenGisType.MULTILINESTRING );
 		doEncoding();
 	}
 

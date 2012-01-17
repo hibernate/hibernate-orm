@@ -37,9 +37,6 @@ import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.SimpleTypeVisitor6;
-import javax.persistence.Embeddable;
-import javax.persistence.Entity;
-import javax.persistence.MappedSuperclass;
 import javax.tools.Diagnostic;
 
 import org.hibernate.jpamodelgen.annotation.AnnotationEmbeddable;
@@ -215,7 +212,12 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 	}
 
 	private boolean isJPAEntity(Element element) {
-		return TypeUtils.containsAnnotation( element, Entity.class, MappedSuperclass.class, Embeddable.class );
+		return TypeUtils.containsAnnotation(
+				element,
+				Constants.ENTITY,
+				Constants.MAPPED_SUPERCLASS,
+				Constants.EMBEDDABLE
+		);
 	}
 
 	private void handleRootElementAnnotationMirrors(final Element element) {
@@ -234,7 +236,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 			}
 
 			AnnotationMetaEntity metaEntity;
-			if ( TypeUtils.containsAnnotation( element, Embeddable.class ) ) {
+			if ( TypeUtils.containsAnnotation( element, Constants.EMBEDDABLE ) ) {
 				metaEntity = new AnnotationEmbeddable( (TypeElement) element, context );
 			}
 			else {
@@ -250,24 +252,24 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 
 	private MetaEntity tryGettingExistingEntityFromContext(AnnotationMirror mirror, String fqn) {
 		MetaEntity alreadyExistingMetaEntity = null;
-		if ( TypeUtils.isAnnotationMirrorOfType( mirror, Entity.class ) ) {
+		if ( TypeUtils.isAnnotationMirrorOfType( mirror, Constants.ENTITY ) ) {
 			alreadyExistingMetaEntity = context.getMetaEntity( fqn );
 		}
-		else if ( TypeUtils.isAnnotationMirrorOfType( mirror, MappedSuperclass.class )
-				|| TypeUtils.isAnnotationMirrorOfType( mirror, Embeddable.class ) ) {
+		else if ( TypeUtils.isAnnotationMirrorOfType( mirror, Constants.MAPPED_SUPERCLASS )
+				|| TypeUtils.isAnnotationMirrorOfType( mirror, Constants.EMBEDDABLE ) ) {
 			alreadyExistingMetaEntity = context.getMetaEmbeddable( fqn );
 		}
 		return alreadyExistingMetaEntity;
 	}
 
 	private void addMetaEntityToContext(AnnotationMirror mirror, AnnotationMetaEntity metaEntity) {
-		if ( TypeUtils.isAnnotationMirrorOfType( mirror, Entity.class ) ) {
+		if ( TypeUtils.isAnnotationMirrorOfType( mirror, Constants.ENTITY ) ) {
 			context.addMetaEntity( metaEntity.getQualifiedName(), metaEntity );
 		}
-		else if ( TypeUtils.isAnnotationMirrorOfType( mirror, MappedSuperclass.class ) ) {
+		else if ( TypeUtils.isAnnotationMirrorOfType( mirror, Constants.MAPPED_SUPERCLASS ) ) {
 			context.addMetaEntity( metaEntity.getQualifiedName(), metaEntity );
 		}
-		else if ( TypeUtils.isAnnotationMirrorOfType( mirror, Embeddable.class ) ) {
+		else if ( TypeUtils.isAnnotationMirrorOfType( mirror, Constants.EMBEDDABLE ) ) {
 			context.addMetaEmbeddable( metaEntity.getQualifiedName(), metaEntity );
 		}
 	}

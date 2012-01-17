@@ -28,13 +28,13 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
-import javax.persistence.Entity;
-import javax.persistence.MappedSuperclass;
 import javax.tools.Diagnostic;
 import javax.tools.FileObject;
 
 import org.hibernate.jpamodelgen.model.MetaAttribute;
 import org.hibernate.jpamodelgen.model.MetaEntity;
+import org.hibernate.jpamodelgen.util.Constants;
+import org.hibernate.jpamodelgen.util.TypeUtils;
 
 /**
  * Helper class to write the actual meta model class using the  {@link javax.annotation.processing.Filer} API.
@@ -122,8 +122,8 @@ public final class ClassWriter {
 	private static void printClassDeclaration(MetaEntity entity, PrintWriter pw, Context context) {
 		pw.print( "public abstract class " + entity.getSimpleName() + META_MODEL_CLASS_NAME_SUFFIX );
 
-		String superClassName = findMappedSuperClass(entity, context);
-		if(superClassName != null) {
+		String superClassName = findMappedSuperClass( entity, context );
+		if ( superClassName != null ) {
 			pw.print( " extends " + superClassName + META_MODEL_CLASS_NAME_SUFFIX );
 		}
 
@@ -138,7 +138,7 @@ public final class ClassWriter {
 			final Element superClassElement = ( (DeclaredType) superClass ).asElement();
 			String superClassName = ( (TypeElement) superClassElement ).getQualifiedName().toString();
 			if ( extendsSuperMetaModel( superClassElement, entity.isMetaComplete(), context ) ) {
-				return  superClassName;
+				return superClassName;
 			}
 			superClass = ( (TypeElement) superClassElement ).getSuperclass();
 		}
@@ -169,8 +169,8 @@ public final class ClassWriter {
 		// to allow for the case that the metamodel class for the super entity is for example contained in another
 		// jar file we use reflection. However, we need to consider the fact that there is xml configuration
 		// and annotations should be ignored
-		if ( !entityMetaComplete && ( superClassElement.getAnnotation( Entity.class ) != null
-				|| superClassElement.getAnnotation( MappedSuperclass.class ) != null ) ) {
+		if ( !entityMetaComplete && ( TypeUtils.containsAnnotation( superClassElement, Constants.ENTITY )
+				|| TypeUtils.containsAnnotation( superClassElement, Constants.MAPPED_SUPERCLASS ) ) ) {
 			return true;
 		}
 

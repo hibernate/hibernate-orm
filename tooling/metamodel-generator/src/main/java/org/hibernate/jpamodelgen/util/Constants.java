@@ -25,6 +25,20 @@ import java.util.Map;
  * @author Hardy Ferentschik
  */
 public final class Constants {
+	// we are trying to to reference jpa annotations directly
+	public static final String ENTITY = "javax.persistence.Entity";
+	public static final String MAPPED_SUPERCLASS = "javax.persistence.MappedSuperclass";
+	public static final String EMBEDDABLE = "javax.persistence.Embeddable";
+	public static final String ID = "javax.persistence.Id";
+	public static final String EMBEDDED_ID = "javax.persistence.EmbeddedId";
+	public static final String TRANSIENT = "javax.persistence.Transient";
+	public static final String BASIC = "javax.persistence.Basic";
+	public static final String ONE_TO_ONE = "javax.persistence.OneToOne";
+	public static final String MANY_TO_ONE = "javax.persistence.ManyToOne";
+	public static final String MAP_KEY_CLASS = "javax.persistence.MapKeyClass";
+	public static final String ELEMENT_COLLECTION = "javax.persistence.ElementCollection";
+	public static final String ACCESS = "javax.persistence.Access";
+
 	public static Map<String, String> COLLECTIONS = new HashMap<String, String>();
 
 	static {
@@ -36,8 +50,14 @@ public final class Constants {
 		COLLECTIONS.put( java.util.Map.class.getName(), javax.persistence.metamodel.MapAttribute.class.getName() );
 
 		// Hibernate also supports the SortedSet and SortedMap interfaces
-		COLLECTIONS.put( java.util.SortedSet.class.getName(), javax.persistence.metamodel.SetAttribute.class.getName() );
-		COLLECTIONS.put( java.util.SortedMap.class.getName(), javax.persistence.metamodel.MapAttribute.class.getName() );
+		COLLECTIONS.put(
+				java.util.SortedSet.class.getName(),
+				javax.persistence.metamodel.SetAttribute.class.getName()
+		);
+		COLLECTIONS.put(
+				java.util.SortedMap.class.getName(),
+				javax.persistence.metamodel.MapAttribute.class.getName()
+		);
 	}
 
 	public static List<String> BASIC_TYPES = new ArrayList<String>();

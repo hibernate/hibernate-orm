@@ -18,6 +18,7 @@ package org.hibernate.jpamodelgen.util;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,18 +36,14 @@ import javax.lang.model.type.TypeVariable;
 import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.SimpleTypeVisitor6;
-import javax.persistence.Access;
 import javax.persistence.AccessType;
-import javax.persistence.Embeddable;
-import javax.persistence.EmbeddedId;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.MappedSuperclass;
 import javax.tools.Diagnostic;
 
 import org.hibernate.jpamodelgen.AccessTypeInformation;
 import org.hibernate.jpamodelgen.Context;
 import org.hibernate.jpamodelgen.MetaModelGenerationException;
+
+//import javax.persistence.EmbeddedId;
 
 /**
  * Utility class.
@@ -107,14 +104,12 @@ public final class TypeUtils {
 		}
 	}
 
-	public static boolean containsAnnotation(Element element, Class<?>... annotations) {
+	public static boolean containsAnnotation(Element element, String... annotations) {
 		assert element != null;
 		assert annotations != null;
 
 		List<String> annotationClassNames = new ArrayList<String>();
-		for ( Class<?> clazz : annotations ) {
-			annotationClassNames.add( clazz.getName() );
-		}
+		Collections.addAll( annotationClassNames, annotations );
 
 		List<? extends AnnotationMirror> annotationMirrors = element.getAnnotationMirrors();
 		for ( AnnotationMirror mirror : annotationMirrors ) {
@@ -315,7 +310,7 @@ public final class TypeUtils {
 				if ( accessTypeInfo != null && accessTypeInfo.getDefaultAccessType() != null ) {
 					return accessTypeInfo.getDefaultAccessType();
 				}
-				if ( TypeUtils.containsAnnotation( superClass, Entity.class, MappedSuperclass.class ) ) {
+				if ( TypeUtils.containsAnnotation( superClass, Constants.ENTITY, Constants.MAPPED_SUPERCLASS ) ) {
 					defaultAccessType = getAccessTypeInCaseElementIsRoot( superClass, context );
 					if ( defaultAccessType != null ) {
 						accessTypeInfo = new AccessTypeInformation( fqcn, null, defaultAccessType );
@@ -359,12 +354,12 @@ public final class TypeUtils {
 	}
 
 	private static boolean isIdAnnotation(AnnotationMirror annotationMirror) {
-		return TypeUtils.isAnnotationMirrorOfType( annotationMirror, Id.class )
-				|| TypeUtils.isAnnotationMirrorOfType( annotationMirror, EmbeddedId.class );
+		return TypeUtils.isAnnotationMirrorOfType( annotationMirror, Constants.ID )
+				|| TypeUtils.isAnnotationMirrorOfType( annotationMirror, Constants.EMBEDDED_ID );
 	}
 
 	public static AccessType determineAnnotationSpecifiedAccessType(Element element) {
-		final AnnotationMirror accessAnnotationMirror = TypeUtils.getAnnotationMirror( element, Access.class );
+		final AnnotationMirror accessAnnotationMirror = TypeUtils.getAnnotationMirror( element, Constants.ACCESS );
 		AccessType forcedAccessType = null;
 		if ( accessAnnotationMirror != null ) {
 			Element accessElement = (Element) TypeUtils.getAnnotationValue(
@@ -411,7 +406,7 @@ public final class TypeUtils {
 		public String visitDeclared(DeclaredType declaredType, Element element) {
 			TypeElement returnedElement = (TypeElement) context.getTypeUtils().asElement( declaredType );
 			String fqNameOfReturnType = null;
-			if ( containsAnnotation( returnedElement, Embeddable.class ) ) {
+			if ( containsAnnotation( returnedElement, Constants.EMBEDDABLE ) ) {
 				fqNameOfReturnType = returnedElement.getQualifiedName().toString();
 			}
 			return fqNameOfReturnType;

@@ -23,12 +23,11 @@
  * For more information, visit: http://www.hibernatespatial.org/
  */
 
-package org.hibernate.spatial.testing.dialects.sqlserver.convertors;
+package org.hibernate.spatial.dialect.sqlserver.convertors;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.LineString;
 import org.hibernate.spatial.dialect.sqlserver.SqlServer2008SpatialDialect;
-import org.hibernate.spatial.dialect.sqlserver.convertors.OpenGisType;
 import org.hibernate.spatial.jts.mgeom.MCoordinate;
 import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.RequiresDialect;
@@ -41,9 +40,10 @@ import static org.junit.Assert.assertTrue;
 @RequiresDialect(SqlServer2008SpatialDialect.class)
 public class LineStringConvertorTest extends AbstractConvertorTest {
 
-	@BeforeClassOnce
-	public void setUp() {
-		doDecoding( OpenGisType.LINESTRING );
+    @BeforeClassOnce
+	public void beforeClass() {
+        super.beforeClass();
+		doDecoding(OpenGisType.LINESTRING);
 		doEncoding();
 	}
 

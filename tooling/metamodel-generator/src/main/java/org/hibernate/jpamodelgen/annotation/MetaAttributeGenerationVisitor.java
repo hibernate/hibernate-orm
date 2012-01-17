@@ -113,7 +113,6 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor6<Annotatio
 		TypeElement returnedElement = (TypeElement) context.getTypeUtils().asElement( declaredType );
 		// WARNING: .toString() is necessary here since Name equals does not compare to String
 		String fqNameOfReturnType = returnedElement.getQualifiedName().toString();
-		// TODO - need to fix METAGEN-62, need to check whether the specified type is a subtype of a collection type
 		String collection = Constants.COLLECTIONS.get( fqNameOfReturnType );
 		String targetEntity = getTargetEntity( element.getAnnotationMirrors() );
 		if ( collection != null ) {

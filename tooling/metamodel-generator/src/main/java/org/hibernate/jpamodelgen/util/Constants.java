@@ -36,6 +36,10 @@ public final class Constants {
 		COLLECTIONS.put( java.util.Set.class.getName(), javax.persistence.metamodel.SetAttribute.class.getName() );
 		COLLECTIONS.put( java.util.List.class.getName(), javax.persistence.metamodel.ListAttribute.class.getName() );
 		COLLECTIONS.put( java.util.Map.class.getName(), javax.persistence.metamodel.MapAttribute.class.getName() );
+
+		// Hibernate also supports the SortedSet and SortedMap interfaces
+		COLLECTIONS.put( java.util.SortedSet.class.getName(), javax.persistence.metamodel.SetAttribute.class.getName() );
+		COLLECTIONS.put( java.util.SortedMap.class.getName(), javax.persistence.metamodel.MapAttribute.class.getName() );
 	}
 
 	public static List<String> BASIC_TYPES = new ArrayList<String>();

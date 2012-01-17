@@ -14,31 +14,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
 package org.hibernate.jpamodelgen.test.onetomanysorted;
 
 import org.testng.annotations.Test;
 
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
+import org.hibernate.jpamodelgen.test.util.TestForIssue;
 
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertPresenceOfFieldInMetamodelFor;
 
 /**
- * @author Emmanuel Bernard
+ * @author Hardy Ferentschik
  */
-public class OneToManySortedTest extends CompilationTest {
+public class SortedCollectionTest extends CompilationTest {
 
 	@Test
+	@TestForIssue(jiraKey = "METAGEN-62")
 	public void testGenerics() {
 		assertMetamodelClassGeneratedFor( Printer.class );
 		assertMetamodelClassGeneratedFor( PrintJob.class );
-		assertPresenceOfFieldInMetamodelFor( Printer.class, "printQueue", "There one to many attribute is missing" );
+		assertPresenceOfFieldInMetamodelFor( Printer.class, "printQueue", "There sorted set attribute is missing" );
+		assertPresenceOfFieldInMetamodelFor( Printer.class, "printedJobs", "There sorted map attribute is missing" );
 	}
 
 	@Override
 	protected String getPackageNameOfCurrentTest() {
-		return OneToManySortedTest.class.getPackage().getName();
+		return SortedCollectionTest.class.getPackage().getName();
 	}
 }

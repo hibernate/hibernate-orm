@@ -14,8 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
 package org.hibernate.jpamodelgen.test.manytoone;
 
 import org.testng.annotations.Test;
@@ -34,7 +32,7 @@ public class MappedSuperclassManyToOneTest extends CompilationTest {
 		assertMetamodelClassGeneratedFor( ConcreteProduct.class );
 		assertMetamodelClassGeneratedFor( Product.class );
 		assertMetamodelClassGeneratedFor( Shop.class );
-		assertPresenceOfFieldInMetamodelFor( Product.class, "shop", "The many to one attribute shop shop is missing" );
+		assertPresenceOfFieldInMetamodelFor( Product.class, "shop", "The many to one attribute shop is missing" );
 	}
 
 	@Override

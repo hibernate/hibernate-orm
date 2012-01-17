@@ -14,12 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
 package org.hibernate.jpamodelgen.test.manytoone;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import javax.persistence.Access;
+import javax.persistence.AccessType;
 import javax.persistence.ManyToOne;
 import javax.persistence.MappedSuperclass;
 
@@ -30,9 +28,7 @@ import org.hibernate.jpamodelgen.test.accesstype.Shop;
  */
 @MappedSuperclass
 public class Product {
-	@Id
-	long id;
-
+	@Access(AccessType.FIELD)
 	@ManyToOne
 	Shop shop;
 }

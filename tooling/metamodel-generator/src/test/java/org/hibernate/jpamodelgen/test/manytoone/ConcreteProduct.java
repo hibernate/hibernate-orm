@@ -14,15 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
 package org.hibernate.jpamodelgen.test.manytoone;
 
 import javax.persistence.Entity;
+import javax.persistence.Id;
 
 /**
  * @author Hardy Ferentschik
  */
 @Entity
 public class ConcreteProduct extends Product {
+	@Id
+	long id;
 }

@@ -14,8 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
 package org.hibernate.jpamodelgen.util;
 
 import java.lang.annotation.Annotation;
@@ -74,7 +72,6 @@ public final class TypeUtils {
 
 		PRIMITIVES.put( "float", "Float" );
 		PRIMITIVES.put( "double", "Double" );
-
 	}
 
 	private TypeUtils() {
@@ -130,7 +127,8 @@ public final class TypeUtils {
 
 	/**
 	 * Returns {@code true} if the provided annotation type is of the same type as the provided class, {@code false} otherwise.
-	 * This method uses the string class names for comparison. See also {@link http://www.retep.org/2009/02/getting-class-values-from-annotations.html}.
+	 * This method uses the string class names for comparison. See also
+	 * <a href="http://www.retep.org/2009/02/getting-class-values-from-annotations.html">getting-class-values-from-annotations</a>.
 	 *
 	 * @param annotationMirror The annotation mirror
 	 * @param clazz the class name to check against
@@ -144,7 +142,8 @@ public final class TypeUtils {
 
 	/**
 	 * Returns {@code true} if the provided annotation type is of the same type as the provided class, {@code false} otherwise.
-	 * This method uses the string class names for comparison. See also {@link http://www.retep.org/2009/02/getting-class-values-from-annotations.html}.
+	 * This method uses the string class names for comparison. See also
+	 * <a href="http://www.retep.org/2009/02/getting-class-values-from-annotations.html">getting-class-values-from-annotations</a>.
 	 *
 	 * @param annotationMirror The annotation mirror
 	 * @param fqcn the fully qualified class name to check against
@@ -157,15 +156,6 @@ public final class TypeUtils {
 		String annotationClassName = annotationMirror.getAnnotationType().toString();
 
 		return annotationClassName.equals( fqcn );
-	}
-
-	public static boolean isTypeElementOfType(TypeElement element, Class<?> clazz) {
-		assert element != null;
-		assert clazz != null;
-		String elementClassName = element.getQualifiedName().toString();
-		String className = clazz.getName();
-
-		return elementClassName.equals( className );
 	}
 
 	/**

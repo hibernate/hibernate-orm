@@ -204,6 +204,7 @@ public final class TypeUtils {
 			accessTypeInfo = new AccessTypeInformation( fqcn, null, defaultAccessType );
 			context.addAccessTypeInformation( fqcn, accessTypeInfo );
 			updateEmbeddableAccessType( searchedElement, context, defaultAccessType );
+			setDefaultAccessTypeForMappedSuperclassesInHierarchy( searchedElement, defaultAccessType, context );
 			return;
 		}
 
@@ -281,7 +282,17 @@ public final class TypeUtils {
 					if ( defaultAccessType != null ) {
 						accessTypeInfo = new AccessTypeInformation( fqcn, null, defaultAccessType );
 						context.addAccessTypeInformation( fqcn, accessTypeInfo );
-						defaultAccessType = accessTypeInfo.getAccessType();
+
+						// we found an id within the class hierarchy and determined a default access type
+						// there cannot be any super entity classes (otherwise it would be a configuration error)
+						// but there might be mapped super classes
+						// Also note, that if two different class hierarchies with different access types ave a common
+						// mapped super class, the access type of the mapped super class will be the one of the last
+						// hierarchy processed. The result is not determined which is od with the spec
+						setDefaultAccessTypeForMappedSuperclassesInHierarchy( superClass, defaultAccessType, context );
+
+						// we found a default access type, o need to look further
+						break;
 					}
 					else {
 						defaultAccessType = getDefaultAccessForHierarchy( superClass, context );
@@ -293,6 +304,38 @@ public final class TypeUtils {
 		return defaultAccessType;
 	}
 
+	private static void setDefaultAccessTypeForMappedSuperclassesInHierarchy(TypeElement element, AccessType defaultAccessType, Context context) {
+		TypeElement superClass = element;
+		do {
+			superClass = TypeUtils.getSuperclassTypeElement( superClass );
+			if ( superClass != null ) {
+				String fqcn = superClass.getQualifiedName().toString();
+				if ( TypeUtils.containsAnnotation( superClass, Constants.MAPPED_SUPERCLASS ) ) {
+					AccessTypeInformation accessTypeInfo;
+					AccessType forcedAccessType = determineAnnotationSpecifiedAccessType( superClass );
+					if ( forcedAccessType != null ) {
+						accessTypeInfo = new AccessTypeInformation( fqcn, null, forcedAccessType );
+					}
+					else {
+						accessTypeInfo = new AccessTypeInformation( fqcn, null, defaultAccessType );
+					}
+					context.addAccessTypeInformation( fqcn, accessTypeInfo );
+				}
+			}
+		}
+		while ( superClass != null );
+	}
+
+	/**
+	 * Iterates all elements of a type to check whether they contain the id annotation. If so the placement of this
+	 * annotation determines the access type
+	 *
+	 * @param searchedElement the type to be searched
+	 * @param context The global execution context
+	 *
+	 * @return returns the access type of the element annotated with the id annotation. If no element is annotated
+	 *         {@code null} is returned.
+	 */
 	private static AccessType getAccessTypeInCaseElementIsRoot(TypeElement searchedElement, Context context) {
 		AccessType defaultAccessType = null;
 		List<? extends Element> myMembers = searchedElement.getEnclosedElements();

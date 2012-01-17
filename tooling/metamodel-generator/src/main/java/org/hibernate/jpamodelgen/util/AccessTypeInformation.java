@@ -14,9 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.hibernate.jpamodelgen;
-
-import javax.persistence.AccessType;
+package org.hibernate.jpamodelgen.util;
 
 /**
  * Encapsulates the access type information for a single class.

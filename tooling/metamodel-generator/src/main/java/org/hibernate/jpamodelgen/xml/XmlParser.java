@@ -31,7 +31,6 @@ import java.util.Collection;
 import java.util.List;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
-import javax.persistence.AccessType;
 import javax.tools.Diagnostic;
 import javax.tools.FileObject;
 import javax.tools.StandardLocation;
@@ -43,7 +42,8 @@ import javax.xml.validation.SchemaFactory;
 
 import org.xml.sax.SAXException;
 
-import org.hibernate.jpamodelgen.AccessTypeInformation;
+import org.hibernate.jpamodelgen.util.AccessType;
+import org.hibernate.jpamodelgen.util.AccessTypeInformation;
 import org.hibernate.jpamodelgen.Context;
 import org.hibernate.jpamodelgen.util.Constants;
 import org.hibernate.jpamodelgen.util.FileTimeStampChecker;

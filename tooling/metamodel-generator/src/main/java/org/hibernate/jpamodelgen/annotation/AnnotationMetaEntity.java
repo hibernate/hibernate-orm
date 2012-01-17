@@ -27,14 +27,14 @@ import javax.lang.model.element.Name;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.ElementFilter;
-import javax.persistence.AccessType;
 
-import org.hibernate.jpamodelgen.AccessTypeInformation;
 import org.hibernate.jpamodelgen.Context;
 import org.hibernate.jpamodelgen.ImportContextImpl;
 import org.hibernate.jpamodelgen.model.ImportContext;
 import org.hibernate.jpamodelgen.model.MetaAttribute;
 import org.hibernate.jpamodelgen.model.MetaEntity;
+import org.hibernate.jpamodelgen.util.AccessType;
+import org.hibernate.jpamodelgen.util.AccessTypeInformation;
 import org.hibernate.jpamodelgen.util.Constants;
 import org.hibernate.jpamodelgen.util.TypeUtils;
 
@@ -104,6 +104,26 @@ public class AnnotationMetaEntity implements MetaEntity {
 		}
 	}
 
+	public final String generateImports() {
+		return importContext.generateImports();
+	}
+
+	public final String importType(String fqcn) {
+		return importContext.importType( fqcn );
+	}
+
+	public final String staticImport(String fqcn, String member) {
+		return importContext.staticImport( fqcn, member );
+	}
+
+	public final String importType(Name qualifiedName) {
+		return importType( qualifiedName.toString() );
+	}
+
+	public final TypeElement getTypeElement() {
+		return element;
+	}
+
 	@Override
 	public String toString() {
 		final StringBuilder sb = new StringBuilder();
@@ -116,6 +136,17 @@ public class AnnotationMetaEntity implements MetaEntity {
 
 	protected TypeElement getElement() {
 		return element;
+	}
+
+	protected final void init() {
+		TypeUtils.determineAccessTypeForHierarchy( element, context );
+		entityAccessTypeInfo = context.getAccessTypeInfo( getQualifiedName() );
+
+		List<? extends Element> fieldsOfClass = ElementFilter.fieldsIn( element.getEnclosedElements() );
+		addPersistentMembers( fieldsOfClass, AccessType.FIELD );
+
+		List<? extends Element> methodsOfClass = ElementFilter.methodsIn( element.getEnclosedElements() );
+		addPersistentMembers( methodsOfClass, AccessType.PROPERTY );
 	}
 
 	private void addPersistentMembers(List<? extends Element> membersOfClass, AccessType membersKind) {
@@ -137,36 +168,5 @@ public class AnnotationMetaEntity implements MetaEntity {
 				members.put( result.getPropertyName(), result );
 			}
 		}
-	}
-
-	protected final void init() {
-		TypeUtils.determineAccessTypeForHierarchy( element, context );
-		entityAccessTypeInfo = context.getAccessTypeInfo( getQualifiedName() );
-
-		List<? extends Element> fieldsOfClass = ElementFilter.fieldsIn( element.getEnclosedElements() );
-		addPersistentMembers( fieldsOfClass, AccessType.FIELD );
-
-		List<? extends Element> methodsOfClass = ElementFilter.methodsIn( element.getEnclosedElements() );
-		addPersistentMembers( methodsOfClass, AccessType.PROPERTY );
-	}
-
-	public final String generateImports() {
-		return importContext.generateImports();
-	}
-
-	public final String importType(String fqcn) {
-		return importContext.importType( fqcn );
-	}
-
-	public final String staticImport(String fqcn, String member) {
-		return importContext.staticImport( fqcn, member );
-	}
-
-	public final String importType(Name qualifiedName) {
-		return importType( qualifiedName.toString() );
-	}
-
-	public final TypeElement getTypeElement() {
-		return element;
 	}
 }

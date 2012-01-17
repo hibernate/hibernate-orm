@@ -34,7 +34,9 @@ public final class Constants {
 	public static final String TRANSIENT = "javax.persistence.Transient";
 	public static final String BASIC = "javax.persistence.Basic";
 	public static final String ONE_TO_ONE = "javax.persistence.OneToOne";
+	public static final String ONE_TO_MANY = "javax.persistence.OneToMany";
 	public static final String MANY_TO_ONE = "javax.persistence.ManyToOne";
+	public static final String MANY_TO_MANY = "javax.persistence.ManyToMany";
 	public static final String MAP_KEY_CLASS = "javax.persistence.MapKeyClass";
 	public static final String ELEMENT_COLLECTION = "javax.persistence.ElementCollection";
 	public static final String ACCESS = "javax.persistence.Access";
@@ -42,22 +44,14 @@ public final class Constants {
 	public static Map<String, String> COLLECTIONS = new HashMap<String, String>();
 
 	static {
-		COLLECTIONS.put(
-				java.util.Collection.class.getName(), javax.persistence.metamodel.CollectionAttribute.class.getName()
-		);
-		COLLECTIONS.put( java.util.Set.class.getName(), javax.persistence.metamodel.SetAttribute.class.getName() );
-		COLLECTIONS.put( java.util.List.class.getName(), javax.persistence.metamodel.ListAttribute.class.getName() );
-		COLLECTIONS.put( java.util.Map.class.getName(), javax.persistence.metamodel.MapAttribute.class.getName() );
+		COLLECTIONS.put( java.util.Collection.class.getName(), "javax.persistence.metamodel.CollectionAttribute" );
+		COLLECTIONS.put( java.util.Set.class.getName(), "javax.persistence.metamodel.SetAttribute" );
+		COLLECTIONS.put( java.util.List.class.getName(), "javax.persistence.metamodel.ListAttribute" );
+		COLLECTIONS.put( java.util.Map.class.getName(), "javax.persistence.metamodel.MapAttribute" );
 
 		// Hibernate also supports the SortedSet and SortedMap interfaces
-		COLLECTIONS.put(
-				java.util.SortedSet.class.getName(),
-				javax.persistence.metamodel.SetAttribute.class.getName()
-		);
-		COLLECTIONS.put(
-				java.util.SortedMap.class.getName(),
-				javax.persistence.metamodel.MapAttribute.class.getName()
-		);
+		COLLECTIONS.put( java.util.SortedSet.class.getName(), "javax.persistence.metamodel.SetAttribute" );
+		COLLECTIONS.put( java.util.SortedMap.class.getName(), "javax.persistence.metamodel.MapAttribute" );
 	}
 
 	public static List<String> BASIC_TYPES = new ArrayList<String>();

@@ -16,6 +16,7 @@
  */
 package org.hibernate.jpamodelgen.test.onetomanysorted;
 
+import java.util.SortedMap;
 import java.util.SortedSet;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -36,6 +37,10 @@ public class Printer {
 	@OneToMany
 	@Sort
 	private SortedSet<PrintJob> printQueue;
+
+	@OneToMany
+	@Sort
+	private SortedMap<String, PrintJob> printedJobs;
 }
 
 

@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -24,9 +24,6 @@
 package org.hibernate.test.annotations.cascade;
 
 import java.io.Serializable;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -35,14 +32,11 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.Table;
-import javax.persistence.ElementCollection;
 import org.hibernate.annotations.ForeignKey;
 
 @Entity
 @Table(name = "CODED_PAIR_HOLDER")
 class CodedPairHolder implements Serializable {
-
-	private static final long serialVersionUID = 3757670856634990003L;
 
 	@Id
 	@GeneratedValue
@@ -52,19 +46,16 @@ class CodedPairHolder implements Serializable {
 	@Column(name = "CODE", nullable = false, unique = true, updatable = false, length = 256)
 	private String code;
 
-	@ElementCollection
-	@JoinTable(name = "CODED_PAIR_HOLDER_PAIR_SET", joinColumns = @JoinColumn(name = "CODED_PAIR_HOLDER_ID"))
-	@ForeignKey(name = "FK_PAIR_SET")
-	private final Set<PersonPair> pairs = new HashSet<PersonPair>(0);
+	private PersonPair pair;
 
 	CodedPairHolder() {
 		super();
 	}
 
-	CodedPairHolder(final String pCode, final Set<PersonPair> pPersonPairs) {
+	CodedPairHolder(final String pCode, PersonPair pair) {
 		super();
 		this.code = pCode;
-		this.pairs.addAll(pPersonPairs);
+		this.pair = pair;
 	}
 
 	Long getId() {
@@ -75,8 +66,8 @@ class CodedPairHolder implements Serializable {
 		return this.code;
 	}
 
-	Set<PersonPair> getPairs() {
-		return Collections.unmodifiableSet(this.pairs);
+	PersonPair getPair() {
+		return this.pair;
 	}
 
 	@Override
@@ -95,7 +86,7 @@ class CodedPairHolder implements Serializable {
 		if (pObject == null) {
 			return false;
 		}
-		if (!(pObject instanceof CodedPairHolder)) {
+		if (!(pObject instanceof CodedPairHolder )) {
 			return false;
 		}
 		final CodedPairHolder other = (CodedPairHolder) pObject;

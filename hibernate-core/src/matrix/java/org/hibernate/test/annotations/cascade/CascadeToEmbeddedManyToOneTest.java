@@ -30,22 +30,21 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 
-public class CascadeToElementCollectionEmbeddedManyToOneTest extends BaseCoreFunctionalTestCase {
+public class CascadeToEmbeddedManyToOneTest extends BaseCoreFunctionalTestCase {
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-3218" )
-	public void testPersistCascade() {
+	public void testPersistCascadeToSetOfEmbedded() {
 		Session sess = openSession();
 		try {
 			final Transaction trx  = sess.beginTransaction();
 			try {
 				final Set<PersonPair> setOfPairs = new HashSet<PersonPair>();
 				setOfPairs.add(new PersonPair(new Person("PERSON NAME 1"), new Person("PERSON NAME 2")));
-				sess.saveOrUpdate( new CodedPairHolder( "CODE", setOfPairs ) );
+				sess.persist( new CodedPairSetHolder( "CODE", setOfPairs ) );
 				sess.flush();
 			} finally {
 				trx.rollback();
@@ -55,9 +54,27 @@ public class CascadeToElementCollectionEmbeddedManyToOneTest extends BaseCoreFun
 		}
 	}
 
+	@Test
+	public void testPersistCascadeToEmbedded() {
+		Session sess = openSession();
+		try {
+			final Transaction trx  = sess.beginTransaction();
+			try {
+				PersonPair personPair = new PersonPair(new Person("PERSON NAME 1"), new Person("PERSON NAME 2"));
+				sess.persist( new CodedPairHolder( "CODE", personPair ) );
+				sess.flush();
+			} finally {
+				trx.rollback();
+			}
+		} finally {
+			sess.close();
+		}
+	}
+	
 	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[]{
+				CodedPairSetHolder.class,
 				CodedPairHolder.class,
 				Person.class,
 				PersonPair.class

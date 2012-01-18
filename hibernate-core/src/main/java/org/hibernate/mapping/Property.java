@@ -107,15 +107,41 @@ public class Property implements Serializable, MetaAttributable {
 
 	public CascadeStyle getCascadeStyle() throws MappingException {
 		Type type = value.getType();
-		if ( type.isComponentType() && !type.isAnyType() ) {
-			CompositeType actype = (CompositeType) type;
-			int length = actype.getSubtypes().length;
-			for ( int i=0; i<length; i++ ) {
-				if ( actype.getCascadeStyle(i)!=CascadeStyle.NONE ) return CascadeStyle.ALL;
-			}
-			return CascadeStyle.NONE;
+		if ( type.isComponentType() ) {
+			return getCompositeCascadeStyle( (CompositeType) type, cascade );
 		}
-		else if ( cascade==null || cascade.equals("none") ) {
+		else if ( type.isCollectionType() ) {
+			return getCollectionCascadeStyle( ( (Collection) value ).getElement().getType(), cascade );
+		}
+		else {
+			return getCascadeStyle( cascade );			
+		}
+	}
+
+	private static CascadeStyle getCompositeCascadeStyle(CompositeType compositeType, String cascade) {
+		if ( compositeType.isAnyType() ) {
+			return getCascadeStyle( cascade );
+		}
+		int length = compositeType.getSubtypes().length;
+		for ( int i=0; i<length; i++ ) {
+			if ( compositeType.getCascadeStyle(i) != CascadeStyle.NONE ) {
+				return CascadeStyle.ALL;
+			}
+		}
+		return getCascadeStyle( cascade );
+	}
+
+	private static CascadeStyle getCollectionCascadeStyle(Type elementType, String cascade) {
+		if ( elementType.isComponentType() ) {
+			return getCompositeCascadeStyle( (CompositeType) elementType, cascade );
+		}
+		else {
+			return getCascadeStyle( cascade );
+		}
+	}
+	
+	private static CascadeStyle getCascadeStyle(String cascade) {
+		if ( cascade==null || cascade.equals("none") ) {
 			return CascadeStyle.NONE;
 		}
 		else {
@@ -126,9 +152,9 @@ public class Property implements Serializable, MetaAttributable {
 				styles[i++] = CascadeStyle.getCascadeStyle( tokens.nextToken() );
 			}
 			return new CascadeStyle.MultipleCascadeStyle(styles);
-		}
+		}		
 	}
-
+	
 	public String getCascade() {
 		return cascade;
 	}

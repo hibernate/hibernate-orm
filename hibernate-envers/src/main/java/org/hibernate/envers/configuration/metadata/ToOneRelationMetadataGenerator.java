@@ -32,6 +32,7 @@ import org.hibernate.envers.entities.PropertyData;
 import org.hibernate.envers.entities.mapper.CompositeMapperBuilder;
 import org.hibernate.envers.entities.mapper.id.IdMapper;
 import org.hibernate.envers.entities.mapper.relation.OneToOneNotOwningMapper;
+import org.hibernate.envers.entities.mapper.relation.OneToOnePrimaryKeyJoinColumnMapper;
 import org.hibernate.envers.entities.mapper.relation.ToOneIdMapper;
 import org.hibernate.envers.tools.MappingTools;
 import org.hibernate.mapping.OneToOne;
@@ -41,6 +42,7 @@ import org.hibernate.mapping.Value;
 /**
  * Generates metadata for to-one relations (reference-valued properties).
  * @author Adam Warski (adam at warski dot org)
+ * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public final class ToOneRelationMetadataGenerator {
     private final AuditMetadataGenerator mainGenerator;
@@ -131,7 +133,29 @@ public final class ToOneRelationMetadataGenerator {
 
         // Adding mapper for the id
         PropertyData propertyData = propertyAuditingData.getPropertyData();
-        mapper.addComposite(propertyData, new OneToOneNotOwningMapper(owningReferencePropertyName,
-                referencedEntityName, propertyData));
+        mapper.addComposite(propertyData, new OneToOneNotOwningMapper(entityName, referencedEntityName,
+                owningReferencePropertyName, propertyData));
+    }
+
+    @SuppressWarnings({"unchecked"})
+    void addOneToOnePrimaryKeyJoinColumn(PropertyAuditingData propertyAuditingData, Value value,
+                                         CompositeMapperBuilder mapper, String entityName, boolean insertable) {
+        String referencedEntityName = ((ToOne) value).getReferencedEntityName();
+
+        IdMappingData idMapping = mainGenerator.getReferencedIdMappingData(entityName, referencedEntityName,
+                                                                           propertyAuditingData, true);
+
+        String lastPropertyPrefix = MappingTools.createToOneRelationPrefix(propertyAuditingData.getName());
+
+        // Generating the id mapper for the relation
+        IdMapper relMapper = idMapping.getIdMapper().prefixMappedProperties(lastPropertyPrefix);
+
+        // Storing information about this relation
+        mainGenerator.getEntitiesConfigurations().get(entityName).addToOneRelation(propertyAuditingData.getName(),
+                                                                                   referencedEntityName, relMapper, insertable);
+
+        // Adding mapper for the id
+        PropertyData propertyData = propertyAuditingData.getPropertyData();
+        mapper.addComposite(propertyData, new OneToOnePrimaryKeyJoinColumnMapper(entityName, referencedEntityName, propertyData));
     }
 }

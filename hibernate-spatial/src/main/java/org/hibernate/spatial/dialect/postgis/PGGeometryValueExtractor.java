@@ -1,41 +1,18 @@
 package org.hibernate.spatial.dialect.postgis;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
-import org.hibernate.spatial.jts.JTS;
-import org.postgis.GeometryCollection;
-import org.postgis.MultiLineString;
-import org.postgis.MultiPoint;
-import org.postgis.MultiPolygon;
-import org.postgis.PGboxbase;
-import org.postgis.PGgeometry;
-import org.postgis.Point;
-import org.postgis.Polygon;
-
+import org.hibernate.spatial.dialect.AbstractJTSGeometryValueExtractor;
 import org.hibernate.spatial.jts.mgeom.MCoordinate;
-import org.hibernate.spatial.jts.mgeom.MGeometryFactory;
 import org.hibernate.spatial.jts.mgeom.MLineString;
-import org.hibernate.type.descriptor.ValueExtractor;
-import org.hibernate.type.descriptor.WrapperOptions;
+import org.postgis.*;
 
 /**
  * @author Karel Maesen, Geovise BVBA
  *         creation-date: 7/27/11
  */
-public class PGGeometryValueExtractor implements ValueExtractor<Geometry> {
+public class PGGeometryValueExtractor extends AbstractJTSGeometryValueExtractor {
 
-	@Override
-	public Geometry extract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
-		Object geomObj = rs.getObject( name );
-		return toJTS( geomObj );
-	}
-
-	public MGeometryFactory getGeometryFactory() {
-		return JTS.getDefaultGeomFactory();
-	}
 
 	public Geometry toJTS(Object object) {
 		if ( object == null ) {
@@ -199,7 +176,7 @@ public class PGGeometryValueExtractor implements ValueExtractor<Geometry> {
 		return out;
 	}
 
-	protected com.vividsolutions.jts.geom.Geometry convertPolygon(
+	private com.vividsolutions.jts.geom.Geometry convertPolygon(
 			Polygon polygon) {
 		com.vividsolutions.jts.geom.LinearRing shell = getGeometryFactory()
 				.createLinearRing(
@@ -222,14 +199,14 @@ public class PGGeometryValueExtractor implements ValueExtractor<Geometry> {
 		return out;
 	}
 
-	protected com.vividsolutions.jts.geom.Point convertPoint(Point pnt) {
+	private com.vividsolutions.jts.geom.Point convertPoint(Point pnt) {
 		com.vividsolutions.jts.geom.Point g = getGeometryFactory().createPoint(
 				this.toJTSCoordinate( pnt )
 		);
 		return g;
 	}
 
-	protected com.vividsolutions.jts.geom.LineString convertLineString(
+	private com.vividsolutions.jts.geom.LineString convertLineString(
 			org.postgis.LineString lstr) {
 		com.vividsolutions.jts.geom.LineString out = lstr.haveMeasure ? getGeometryFactory()
 				.createMLineString( toJTSCoordinates( lstr.getPoints() ) )

@@ -1,32 +1,17 @@
 package org.hibernate.spatial.dialect.sqlserver;
 
-import java.sql.Blob;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
 import com.vividsolutions.jts.geom.Geometry;
-
-import org.hibernate.spatial.jts.JTS;
+import org.hibernate.spatial.dialect.AbstractJTSGeometryValueExtractor;
 import org.hibernate.spatial.dialect.sqlserver.convertors.Decoders;
-import org.hibernate.spatial.jts.mgeom.MGeometryFactory;
-import org.hibernate.type.descriptor.ValueExtractor;
-import org.hibernate.type.descriptor.WrapperOptions;
+
+import java.sql.Blob;
+import java.sql.SQLException;
 
 /**
  * @author Karel Maesen, Geovise BVBA
  *         creation-date: 8/23/11
  */
-public class SqlServer2008GeometryValueExtractor implements ValueExtractor<Geometry> {
-
-	@Override
-	public Geometry extract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
-		Object geomObj = rs.getObject( name );
-		return toJTS( geomObj );
-	}
-
-	public MGeometryFactory getGeometryFactory() {
-		return JTS.getDefaultGeomFactory();
-	}
+public class SqlServer2008GeometryValueExtractor extends AbstractJTSGeometryValueExtractor {
 
 	public Geometry toJTS(Object obj) {
 		byte[] raw = null;

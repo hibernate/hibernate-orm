@@ -1,52 +1,21 @@
 package org.hibernate.spatial.dialect.postgis;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Types;
-
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
+import org.hibernate.spatial.dialect.AbstractJTSGeometryValueBinder;
 import org.hibernate.spatial.jts.JTS;
-import org.postgis.GeometryCollection;
-import org.postgis.LineString;
-import org.postgis.LinearRing;
-import org.postgis.MultiLineString;
-import org.postgis.MultiPoint;
-import org.postgis.MultiPolygon;
-import org.postgis.PGgeometry;
-import org.postgis.Point;
-import org.postgis.Polygon;
-
 import org.hibernate.spatial.jts.mgeom.MCoordinate;
 import org.hibernate.spatial.jts.mgeom.MGeometry;
-import org.hibernate.spatial.jts.mgeom.MGeometryFactory;
-import org.hibernate.type.descriptor.ValueBinder;
-import org.hibernate.type.descriptor.WrapperOptions;
+import org.postgis.*;
+
+import java.sql.Connection;
 
 /**
  * @author Karel Maesen, Geovise BVBA
  *         creation-date: 7/27/11
  */
-public class PGGeometryValueBinder implements ValueBinder<Geometry> {
-
-
-	@Override
-	public void bind(PreparedStatement st, Geometry value, int index, WrapperOptions options) throws SQLException {
-		if ( value == null ) {
-			st.setNull( index, Types.STRUCT );
-		}
-		else {
-			Geometry jtsGeom = (Geometry) value;
-			Object dbGeom = toNative( jtsGeom, st.getConnection() );
-			st.setObject( index, dbGeom );
-		}
-	}
-
-	public MGeometryFactory getGeometryFactory() {
-		return JTS.getDefaultGeomFactory();
-	}
+public class PGGeometryValueBinder extends AbstractJTSGeometryValueBinder {
 
 
 	/**
@@ -57,7 +26,7 @@ public class PGGeometryValueBinder implements ValueBinder<Geometry> {
 	 *
 	 * @return native database geometry object corresponding to jtsGeom.
 	 */
-	private Object toNative(Geometry jtsGeom, Connection connection) {
+	protected Object toNative(Geometry jtsGeom, Connection connection) {
 		org.postgis.Geometry geom = null;
 		jtsGeom = forceEmptyToGeometryCollection( jtsGeom );
 		if ( jtsGeom instanceof com.vividsolutions.jts.geom.Point ) {

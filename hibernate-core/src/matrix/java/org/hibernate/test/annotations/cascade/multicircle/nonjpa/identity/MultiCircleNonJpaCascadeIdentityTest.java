@@ -29,6 +29,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import org.hibernate.Session;
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**
@@ -79,6 +81,7 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
  * Entities are inserted in the following order:
  * c, e, d, b, g, f.
  */
+@RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
 public class MultiCircleNonJpaCascadeIdentityTest extends BaseCoreFunctionalTestCase {
 	private B b;
 	private C c;

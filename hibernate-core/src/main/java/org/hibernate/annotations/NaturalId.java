@@ -54,9 +54,13 @@ public @interface NaturalId {
 	boolean mutable() default false;
 
 	/**
-	 * The mutability behavior of this natural id
+	 * The mutability behavior of this natural id.
+	 * 
+	 * Note: the current default value is the {@link NaturalIdMutability#UNSPECIFIED} value which was added
+	 * in deprecated form until the deprecated {@link #mutable()} attribute here can be removed.  This lets existing
+	 * applications continue to work seamlessly using their existing natural id annotations.
 	 *
 	 * @return The mutability behavior.
 	 */
-	NaturalIdMutability mutability();
+	NaturalIdMutability mutability() default NaturalIdMutability.UNSPECIFIED;
 }

@@ -27,6 +27,8 @@ package org.hibernate;
  * Possible values regarding the mutability of a natural id.
  *
  * @author Steve Ebersole
+ *
+ * @see org.hibernate.annotations.NaturalId
  */
 public enum NaturalIdMutability {
 	/**
@@ -34,12 +36,14 @@ public enum NaturalIdMutability {
 	 * the entity to the database.  Also, it will invalidate any caching when such a change is detected.
 	 */
 	MUTABLE,
+
 	/**
 	 * The natural id is immutable.  Hibernate will ignore any changes in the natural id value when flushing updates
 	 * to the entity to the database.  Additionally Hibernate <b>will not</b> check with the database to check if the
 	 * natural id values change there.  Essentially the user is assuring Hibernate that the values will not change.
 	 */
 	IMMUTABLE,
+
 	/**
 	 * The natural id is immutable.  Hibernate will ignore any changes in the natural id value when flushing updates
 	 * to the entity to the database.  However, Hibernate <b>will</b> check with the database to check if the natural
@@ -50,5 +54,12 @@ public enum NaturalIdMutability {
 	 * as such.  The overhead of maintaining caching of natural ids in these cases is far greater than the benefit
 	 * from such caching.  In such cases, a database index is a much better solution.
 	 */
-	IMMUTABLE_CHECKED
+	IMMUTABLE_CHECKED,
+
+	/**
+	 * @deprecated Added in deprecated form solely to allow seamless working until the deprecated attribute
+	 * {@link org.hibernate.annotations.NaturalId#mutable()} can be removed.
+	 */
+	@Deprecated
+	UNSPECIFIED
 }

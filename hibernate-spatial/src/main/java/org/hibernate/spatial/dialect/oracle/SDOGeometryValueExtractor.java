@@ -1,47 +1,21 @@
 package org.hibernate.spatial.dialect.oracle;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import com.vividsolutions.jts.geom.*;
+import org.hibernate.HibernateException;
+import org.hibernate.spatial.Circle;
+import org.hibernate.spatial.dialect.AbstractJTSGeometryValueExtractor;
+import org.hibernate.spatial.jts.mgeom.MCoordinate;
+import org.hibernate.spatial.jts.mgeom.MLineString;
+
 import java.sql.Struct;
 import java.util.ArrayList;
 import java.util.List;
-
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.CoordinateSequence;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.LineString;
-import com.vividsolutions.jts.geom.LinearRing;
-import com.vividsolutions.jts.geom.MultiLineString;
-import com.vividsolutions.jts.geom.MultiPoint;
-import com.vividsolutions.jts.geom.MultiPolygon;
-import com.vividsolutions.jts.geom.Point;
-import com.vividsolutions.jts.geom.Polygon;
-
-import org.hibernate.HibernateException;
-import org.hibernate.spatial.Circle;
-import org.hibernate.spatial.jts.JTS;
-import org.hibernate.spatial.jts.mgeom.MCoordinate;
-import org.hibernate.spatial.jts.mgeom.MGeometryFactory;
-import org.hibernate.spatial.jts.mgeom.MLineString;
-import org.hibernate.type.descriptor.ValueExtractor;
-import org.hibernate.type.descriptor.WrapperOptions;
 
 /**
  * @author Karel Maesen, Geovise BVBA
  *         creation-date: 8/22/11
  */
-public class SDOGeometryValueExtractor implements ValueExtractor<Geometry> {
-
-	@Override
-	public Geometry extract(ResultSet rs, String name, WrapperOptions options)
-			throws SQLException {
-		Object geomObj = rs.getObject( name );
-		return toJTS( geomObj );
-	}
-
-	public MGeometryFactory getGeometryFactory() {
-		return JTS.getDefaultGeomFactory();
-	}
+public class SDOGeometryValueExtractor extends AbstractJTSGeometryValueExtractor {
 
 	public Geometry toJTS(Object struct) {
 		if ( struct == null ) {

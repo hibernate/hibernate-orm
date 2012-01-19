@@ -1,6 +1,7 @@
 package org.hibernate.spatial.testing;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.spatial.testing.dialects.mysql.MySQLTestSupport;
 import org.hibernate.spatial.testing.dialects.oracle.OracleSDOTestSupport;
 import org.hibernate.spatial.testing.dialects.postgis.PostgisTestSupport;
 import org.hibernate.spatial.testing.dialects.sqlserver.SQLServerTestSupport;
@@ -39,6 +40,9 @@ public class TestSupportFactories {
         return this.getClass().getClassLoader();
     }
 
+    //TODO -- find a better way to initialize and inject the TestSupport class.
+    //This whole class can probably be made obsolete.
+
     private static Class<? extends TestSupport> getSupportFactoryClass(Dialect dialect) {
         String canonicalName = dialect.getClass().getCanonicalName();
         if ("org.hibernate.spatial.dialect.postgis.PostgisDialect".equals(canonicalName)) {
@@ -50,10 +54,10 @@ public class TestSupportFactories {
         if ("org.hibernate.spatial.dialect.sqlserver.SqlServer2008SpatialDialect".equals(canonicalName)) {
             return SQLServerTestSupport.class;
         }
-//        if ("org.hibernatespatial.mysql.MySQLSpatialDialect".equals(canonicalName) ||
-//                "org.hibernatespatial.mysql.MySQLSpatialInnoDBDialect".equals(canonicalName)) {
-//            return "org.hibernatespatial.mysql.MySQLTestSupport";
-//        }
+        if ("org.hibernate.spatial.dialect.mysql.MySQLSpatialDialect".equals(canonicalName) ||
+                "org.hibernate.spatial.dialect.mysql.MySQLSpatialInnoDBDialect".equals(canonicalName)) {
+            return MySQLTestSupport.class;
+        }
         if ("org.hibernate.spatial.dialect.oracle.OracleSpatial10gDialect".equals(canonicalName)) {
             return OracleSDOTestSupport.class;
         }

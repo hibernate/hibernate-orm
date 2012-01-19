@@ -20,6 +20,7 @@ dependencies {
     testCompile( [group: 'commons-dbcp', name: 'commons-dbcp', version: '1.4'])
 //    testCompile([group: 'com.oracle.jdbc', name:'ojdbc6', version:'11.1.0.7.0'])
 //    testCompile([group: 'com.microsoft', name: 'sqljdbc', version: '2.0'])
+//    testRuntime("mysql:mysql-connector-java:5.1.15")
 
     matrixRuntime( 'jaxen:jaxen:1.1' )
 }

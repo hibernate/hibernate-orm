@@ -96,7 +96,8 @@ public abstract class BaseEnversCollectionEventListener extends BaseEnversEventL
 						collectionEntry,
 						oldColl,
 						event.getAffectedOwnerIdOrNull(),
-						referencingPropertyName
+						referencingPropertyName,
+	                    event.getCollection()
 				);
 				auditProcess.addWorkUnit( workUnit );
 
@@ -190,7 +191,8 @@ public abstract class BaseEnversCollectionEventListener extends BaseEnversEventL
 							rd,
 							revType,
 							changeData.getChangedElementIndex(),
-							nestedWorkUnit
+							nestedWorkUnit,
+		                    event.getCollection()
 					)
 			);
         }

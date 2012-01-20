@@ -39,8 +39,8 @@ public class ModWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
     private final boolean changes;        
 
     public ModWorkUnit(SessionImplementor sessionImplementor, String entityName, AuditConfiguration verCfg, 
-					   Serializable id, EntityPersister entityPersister, Object[] newState, Object[] oldState) {
-        super(sessionImplementor, entityName, verCfg, id, RevisionType.MOD);
+					   Serializable id, EntityPersister entityPersister, Object[] newState, Object[] oldState, Object entity) {
+        super(sessionImplementor, entityName, verCfg, id, RevisionType.MOD, entity);
 
         data = new HashMap<String, Object>();
         changes = verCfg.getEntCfg().get(getEntityName()).getPropertyMapper().map(sessionImplementor, data,

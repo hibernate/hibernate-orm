@@ -53,7 +53,8 @@ public class EnversPostDeleteEventListenerImpl extends BaseEnversEventListener i
 					getAuditConfiguration(),
                     event.getId(),
 					event.getPersister(),
-					event.getDeletedState()
+					event.getDeletedState(),
+					event.getEntity()
 			);
             auditProcess.addWorkUnit( workUnit );
 

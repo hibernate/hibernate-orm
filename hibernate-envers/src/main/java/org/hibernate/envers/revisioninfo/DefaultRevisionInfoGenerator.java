@@ -28,6 +28,7 @@ import java.util.Date;
 
 import org.hibernate.MappingException;
 import org.hibernate.Session;
+import org.hibernate.envers.EntityIncludedTrackingRevisionListener;
 import org.hibernate.envers.EntityTrackingRevisionListener;
 import org.hibernate.envers.RevisionListener;
 import org.hibernate.envers.RevisionType;
@@ -99,10 +100,14 @@ public class DefaultRevisionInfoGenerator implements RevisionInfoGenerator {
     }
 
     public void entityChanged(Class entityClass, String entityName, Serializable entityId, RevisionType revisionType,
-                              Object revisionInfo) {
+                              Object revisionInfo, Object entity) {
         if (listener instanceof EntityTrackingRevisionListener) {
             ((EntityTrackingRevisionListener) listener).entityChanged(entityClass, entityName, entityId, revisionType,
                                                                       revisionInfo);
+        }
+        else if (listener instanceof EntityIncludedTrackingRevisionListener) {
+            ((EntityIncludedTrackingRevisionListener) listener).entityChanged(entityClass, entityName, entityId, revisionType,
+                                                                      revisionInfo, entity);
         }
     }
 }

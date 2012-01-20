@@ -36,8 +36,9 @@ public class EntityChangeNotifier {
             // Notify about a change in collection owner entity.
             entityId = ((PersistentCollectionChangeWorkUnit.PersistentCollectionChangeWorkUnitId) entityId).getOwnerId();
         }
+        
         Class entityClass = Tools.getEntityClass(sessionImplementor, session, vwu.getEntityName());
         revisionInfoGenerator.entityChanged(entityClass, vwu.getEntityName(), entityId, vwu.getRevisionType(),
-                                            currentRevisionData);
+                                                currentRevisionData, vwu.getEntity());
     }
 }

@@ -41,8 +41,8 @@ public class AddWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
     private final Map<String, Object> data;
 
     public AddWorkUnit(SessionImplementor sessionImplementor, String entityName, AuditConfiguration verCfg,
-					   Serializable id, EntityPersister entityPersister, Object[] state) {
-        super(sessionImplementor, entityName, verCfg, id, RevisionType.ADD);
+					   Serializable id, EntityPersister entityPersister, Object[] state, Object entity) {
+        super(sessionImplementor, entityName, verCfg, id, RevisionType.ADD, entity);
 
         this.data = new HashMap<String, Object>();
         this.state = state;
@@ -51,8 +51,8 @@ public class AddWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
     }
 
     public AddWorkUnit(SessionImplementor sessionImplementor, String entityName, AuditConfiguration verCfg,
-                       Serializable id, Map<String, Object> data) {
-        super(sessionImplementor, entityName, verCfg, id, RevisionType.ADD);
+                       Serializable id, Map<String, Object> data, Object entity) {
+        super(sessionImplementor, entityName, verCfg, id, RevisionType.ADD, entity);
 
         this.data = data;
         final String[] propertyNames = sessionImplementor.getFactory().getEntityPersister(getEntityName()).getPropertyNames();
@@ -77,7 +77,7 @@ public class AddWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
     }
 
     public AuditWorkUnit merge(ModWorkUnit second) {
-        return new AddWorkUnit(sessionImplementor, entityName, verCfg, id, second.getData());
+        return new AddWorkUnit(sessionImplementor, entityName, verCfg, id, second.getData(), second.getEntity());
     }
 
     public AuditWorkUnit merge(DelWorkUnit second) {

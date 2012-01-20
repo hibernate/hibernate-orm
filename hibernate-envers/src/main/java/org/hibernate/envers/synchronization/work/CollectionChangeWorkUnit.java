@@ -38,7 +38,7 @@ public class CollectionChangeWorkUnit extends AbstractAuditWorkUnit implements A
 
     public CollectionChangeWorkUnit(SessionImplementor session, String entityName, AuditConfiguration verCfg,
 									Serializable id, Object entity) {
-        super(session, entityName, verCfg, id, RevisionType.MOD);
+        super(session, entityName, verCfg, id, RevisionType.MOD, entity);
 
         this.entity = entity;
     }

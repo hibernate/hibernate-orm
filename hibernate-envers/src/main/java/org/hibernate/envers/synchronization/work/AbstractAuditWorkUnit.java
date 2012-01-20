@@ -46,16 +46,18 @@ public abstract class AbstractAuditWorkUnit implements AuditWorkUnit {
     protected final String entityName;
     protected final AuditStrategy auditStrategy;
     protected final RevisionType revisionType;
+    private final Object entity;
 
     private Object performedData;
 
     protected AbstractAuditWorkUnit(SessionImplementor sessionImplementor, String entityName, AuditConfiguration verCfg,
-									Serializable id, RevisionType revisionType) {
+									Serializable id, RevisionType revisionType, Object entity) {
 		this.sessionImplementor = sessionImplementor;
         this.verCfg = verCfg;
         this.id = id;
         this.entityName = entityName;
         this.revisionType = revisionType;
+        this.entity = entity;
         this.auditStrategy = verCfg.getAuditStrategy();
     }
 
@@ -103,5 +105,10 @@ public abstract class AbstractAuditWorkUnit implements AuditWorkUnit {
 
     public RevisionType getRevisionType() {
         return revisionType;
+    }
+
+    @Override
+    public Object getEntity() {
+        return entity;
     }
 }

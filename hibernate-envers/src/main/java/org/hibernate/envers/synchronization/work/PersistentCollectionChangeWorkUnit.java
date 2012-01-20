@@ -47,8 +47,8 @@ public class PersistentCollectionChangeWorkUnit extends AbstractAuditWorkUnit im
     public PersistentCollectionChangeWorkUnit(SessionImplementor sessionImplementor, String entityName,
 											  AuditConfiguration auditCfg, PersistentCollection collection,
 											  CollectionEntry collectionEntry, Serializable snapshot, Serializable id,
-                                              String referencingPropertyName) {
-        super(sessionImplementor, entityName, auditCfg, new PersistentCollectionChangeWorkUnitId(id, collectionEntry.getRole()), RevisionType.MOD);
+                                              String referencingPropertyName, Object entity) {
+        super(sessionImplementor, entityName, auditCfg, new PersistentCollectionChangeWorkUnitId(id, collectionEntry.getRole()), RevisionType.MOD, entity);
 
 		this.referencingPropertyName = referencingPropertyName;
 
@@ -59,8 +59,8 @@ public class PersistentCollectionChangeWorkUnit extends AbstractAuditWorkUnit im
     public PersistentCollectionChangeWorkUnit(SessionImplementor sessionImplementor, String entityName,
                                               AuditConfiguration verCfg, Serializable id,
                                               List<PersistentCollectionChangeData> collectionChanges,
-                                              String referencingPropertyName) {
-        super(sessionImplementor, entityName, verCfg, id, RevisionType.MOD);
+                                              String referencingPropertyName, Object entity) {
+        super(sessionImplementor, entityName, verCfg, id, RevisionType.MOD, entity);
 
         this.collectionChanges = collectionChanges;
         this.referencingPropertyName = referencingPropertyName;
@@ -156,7 +156,7 @@ public class PersistentCollectionChangeWorkUnit extends AbstractAuditWorkUnit im
             mergedChanges.addAll(newChangesIdMap.values());
 
             return new PersistentCollectionChangeWorkUnit(sessionImplementor, entityName, verCfg, id, mergedChanges, 
-                    referencingPropertyName);
+                    referencingPropertyName, null);
         } else {
             throw new RuntimeException("Trying to merge a " + first + " with a PersitentCollectionChangeWorkUnit. " +
                     "This is not really possible.");

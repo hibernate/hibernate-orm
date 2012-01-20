@@ -19,6 +19,7 @@ package org.hibernate.jpamodelgen.test.blob;
 import org.testng.annotations.Test;
 
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
+import org.hibernate.jpamodelgen.test.util.TestForIssue;
 
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertPresenceOfFieldInMetamodelFor;
@@ -27,10 +28,9 @@ import static org.hibernate.jpamodelgen.test.util.TestUtil.assertPresenceOfField
  * @author Hardy Ferentschik
  */
 public class BlobTest extends CompilationTest {
-	/**
-	 * METAGEN-38
-	 */
+
 	@Test
+	@TestForIssue(jiraKey = "METAGEN-38")
 	public void testBlobField() {
 		assertMetamodelClassGeneratedFor( BlobEntity.class );
 		assertPresenceOfFieldInMetamodelFor( BlobEntity.class, "blob", "the metamodel should have a member 'blob'" );

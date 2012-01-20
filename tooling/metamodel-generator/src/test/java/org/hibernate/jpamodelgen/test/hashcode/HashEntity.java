@@ -15,26 +15,49 @@
  * limitations under the License.
  */
 
-import org.testng.annotations.Test;
+// $Id:$
+package org.hibernate.jpamodelgen.test.hashcode;
 
-import org.hibernate.jpamodelgen.test.util.CompilationTest;
-import org.hibernate.jpamodelgen.test.util.TestForIssue;
-
-import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassGeneratedFor;
+import javax.persistence.Entity;
+import javax.persistence.Id;
 
 /**
  * @author Hardy Ferentschik
  */
-@TestForIssue(jiraKey = "METAGEN-40")
-public class DefaultPackageTest extends CompilationTest {
-	@Test
-	public void testMetaModelGeneratedForEntitiesInDefaultPackage() {
-		assertMetamodelClassGeneratedFor( DefaultPackageEntity.class );
+@Entity
+public class HashEntity {
+	private long id;
+
+	@Id
+	public long getId() {
+		return id;
+	}
+
+	public void setId(long id) {
+		this.id = id;
 	}
 
 	@Override
-	protected String getPackageNameOfCurrentTest() {
-		return null;
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+
+		HashEntity that = (HashEntity) o;
+
+		if ( id != that.id ) {
+			return false;
+		}
+
+		return true;
+	}
+
+	@Override
+	public int hashCode() {
+		return (int) ( id ^ ( id >>> 32 ) );
 	}
 }
 

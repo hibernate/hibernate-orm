@@ -19,6 +19,7 @@ package org.hibernate.jpamodelgen.test.arraytype;
 import org.testng.annotations.Test;
 
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
+import org.hibernate.jpamodelgen.test.util.TestForIssue;
 
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertAttributeTypeInMetaModelFor;
 
@@ -27,18 +28,14 @@ import static org.hibernate.jpamodelgen.test.util.TestUtil.assertAttributeTypeIn
  */
 public class ArrayTest extends CompilationTest {
 
-	/**
-	 * METAGEN-2
-	 */
 	@Test
+	@TestForIssue(jiraKey = "METAGEN-2")
 	public void testPrimitiveArray() {
 		assertAttributeTypeInMetaModelFor( Image.class, "data", byte[].class, "Wrong type for field." );
 	}
 
-	/**
-	 * METAGEN-2
-	 */
 	@Test
+	@TestForIssue(jiraKey = "METAGEN-2")
 	public void testIntegerArray() {
 		assertAttributeTypeInMetaModelFor(
 				TemperatureSamples.class, "samples", Integer[].class, "Wrong type for field."

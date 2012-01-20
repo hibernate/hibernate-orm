@@ -23,6 +23,7 @@ import java.util.List;
 import org.testng.annotations.Test;
 
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
+import org.hibernate.jpamodelgen.test.util.TestForIssue;
 import org.hibernate.jpamodelgen.test.util.TestUtil;
 
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMapAttributesInMetaModelFor;
@@ -33,10 +34,9 @@ import static org.hibernate.jpamodelgen.test.util.TestUtil.assertNoSourceFileGen
  * @author Hardy Ferentschik
  */
 public class ElementCollectionTest extends CompilationTest {
-	/**
-	 * METAGEN-8
-	 */
+
 	@Test
+	@TestForIssue(jiraKey = "METAGEN-8")
 	public void testElementCollectionOnMap() {
 		assertMetamodelClassGeneratedFor( House.class );
 		assertMetamodelClassGeneratedFor( Room.class );
@@ -44,10 +44,8 @@ public class ElementCollectionTest extends CompilationTest {
 		assertNoSourceFileGeneratedFor( String.class );
 	}
 
-	/**
-	 * METAGEN-19
-	 */
 	@Test
+	@TestForIssue(jiraKey = "METAGEN-19")
 	public void testMapKeyClass() {
 		assertMetamodelClassGeneratedFor( Hotel.class );
 		assertMapAttributesInMetaModelFor(
@@ -59,10 +57,8 @@ public class ElementCollectionTest extends CompilationTest {
 		);
 	}
 
-	/**
-	 * METAGEN-22
-	 */
 	@Test
+	@TestForIssue(jiraKey = "METAGEN-22")
 	public void testMapKeyClassXmlConfigured() {
 		assertMetamodelClassGeneratedFor( Hostel.class );
 		assertMapAttributesInMetaModelFor(

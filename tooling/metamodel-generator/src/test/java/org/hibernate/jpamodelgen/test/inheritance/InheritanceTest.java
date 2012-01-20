@@ -42,10 +42,16 @@ public class InheritanceTest extends CompilationTest {
 
 		// METAGEN-29
 		assertSuperClassRelationShipInMetamodel( Person.class, AbstractEntity.class );
+		assertPresenceOfFieldInMetamodelFor( AbstractEntity.class, "id", "Property 'id' should exist" );
 		assertPresenceOfFieldInMetamodelFor( AbstractEntity.class, "foo", "Property should exist - METAGEN-29" );
 		assertAttributeTypeInMetaModelFor(
-				AbstractEntity.class, "foo", Object.class, "Object is the upper bound of foo "
+				AbstractEntity.class,
+				"foo",
+				Object.class,
+				"Object is the upper bound of foo "
 		);
+
+		assertPresenceOfFieldInMetamodelFor( Person.class, "name", "Property 'name' should exist" );
 	}
 
 	@Override

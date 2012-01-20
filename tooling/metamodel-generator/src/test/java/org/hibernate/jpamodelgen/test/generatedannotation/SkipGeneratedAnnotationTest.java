@@ -25,36 +25,35 @@ import org.testng.annotations.Test;
 
 import org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor;
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
+import org.hibernate.jpamodelgen.test.util.TestForIssue;
 
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 import static org.hibernate.jpamodelgen.test.util.TestUtil.getMetaModelSourceAsString;
-import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.assertFalse;
 
 /**
  * @author Hardy Ferentschik
  */
-public class GeneratedAnnotationTest2 extends CompilationTest {
+public class SkipGeneratedAnnotationTest extends CompilationTest {
 	@Test
+	@TestForIssue(jiraKey = "METAGEN-79")
 	public void testGeneratedAnnotationGenerated() {
 		assertMetamodelClassGeneratedFor( TestEntity.class );
 
 		// need to check the source because @Generated is not a runtime annotation
 		String metaModelSource = getMetaModelSourceAsString( TestEntity.class );
-		assertTrue( metaModelSource.contains( "@Generated" ), "@Generated should be added to the metamodel." );
+		assertFalse( metaModelSource.contains( "@Generated" ), "@Generated should not be added to the metamodel." );
 	}
 
 	@Override
 	protected Map<String, String> getProcessorOptions() {
 		Map<String, String> properties = new HashMap<String, String>();
-		properties.put(
-				JPAMetaModelEntityProcessor.ADD_GENERATED_ANNOTATION,
-				"true"
-		);
+		properties.put( JPAMetaModelEntityProcessor.SKIP_GENERATED_ANNOTATION, "true" );
 		return properties;
 	}
 
 	@Override
 	protected String getPackageNameOfCurrentTest() {
-		return GeneratedAnnotationTest2.class.getPackage().getName();
+		return SkipGeneratedAnnotationTest.class.getPackage().getName();
 	}
 }

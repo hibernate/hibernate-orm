@@ -19,10 +19,11 @@ package org.hibernate.jpamodelgen.test.generatedannotation;
 import org.testng.annotations.Test;
 
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
+import org.hibernate.jpamodelgen.test.util.TestForIssue;
 
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 import static org.hibernate.jpamodelgen.test.util.TestUtil.getMetaModelSourceAsString;
-import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
 
 /**
  * @author Hardy Ferentschik
@@ -30,12 +31,13 @@ import static org.testng.Assert.assertFalse;
 public class GeneratedAnnotationTest extends CompilationTest {
 
 	@Test
+	@TestForIssue(jiraKey = "METAGEN-79")
 	public void testGeneratedAnnotationNotGenerated() {
 		assertMetamodelClassGeneratedFor( TestEntity.class );
 
 		// need to check the source because @Generated is not a runtime annotation
 		String metaModelSource = getMetaModelSourceAsString( TestEntity.class );
-		assertFalse( metaModelSource.contains( "@Generated" ), "@Generated should not be added to the metamodel." );
+		assertTrue( metaModelSource.contains( "@Generated" ), "@Generated should be added to the metamodel." );
 	}
 
 	@Override

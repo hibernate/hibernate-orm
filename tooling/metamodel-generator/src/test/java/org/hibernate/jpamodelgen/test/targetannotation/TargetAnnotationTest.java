@@ -21,6 +21,7 @@ package org.hibernate.jpamodelgen.test.targetannotation;
 import org.testng.annotations.Test;
 
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
+import org.hibernate.jpamodelgen.test.util.TestForIssue;
 
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertAttributeTypeInMetaModelFor;
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassGeneratedFor;
@@ -30,14 +31,18 @@ import static org.hibernate.jpamodelgen.test.util.TestUtil.assertPresenceOfField
  * @author Hardy Ferentschik
  */
 public class TargetAnnotationTest extends CompilationTest {
-	/**
-	 * METAGEN-30
-	 */
+
 	@Test
+	@TestForIssue(jiraKey = "METAGEN-30")
 	public void testEmbeddableWithTargetAnnotation() {
 		assertMetamodelClassGeneratedFor( House.class );
 		assertPresenceOfFieldInMetamodelFor( House.class, "address", "the metamodel should have a member 'address'" );
-		assertAttributeTypeInMetaModelFor( House.class, "address", AddressImpl.class, "The target annotation set the type to AddressImpl");
+		assertAttributeTypeInMetaModelFor(
+				House.class,
+				"address",
+				AddressImpl.class,
+				"The target annotation set the type to AddressImpl"
+		);
 	}
 
 	@Override

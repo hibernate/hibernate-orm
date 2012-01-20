@@ -23,6 +23,7 @@ import org.testng.annotations.Test;
 
 import org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor;
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
+import org.hibernate.jpamodelgen.test.util.TestForIssue;
 import org.hibernate.jpamodelgen.test.util.TestUtil;
 
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertAttributeTypeInMetaModelFor;
@@ -45,10 +46,8 @@ public class XmlMappingTest extends CompilationTest {
 		assertPresenceOfFieldInMetamodelFor( Building.class, "address", "address field should exist" );
 	}
 
-	/**
-	 * METAGEN-17
-	 */
 	@Test
+	@TestForIssue(jiraKey = "METAGEN-17")
 	public void testTargetEntityOnOneToOne() {
 		assertMetamodelClassGeneratedFor( Boy.class );
 		assertPresenceOfFieldInMetamodelFor( Boy.class, "favoriteSuperhero", "favoriteSuperhero field should exist" );
@@ -57,22 +56,18 @@ public class XmlMappingTest extends CompilationTest {
 		);
 	}
 
-	/**
-	 * METAGEN-17
-	 */
 	@Test
+	@TestForIssue(jiraKey = "METAGEN-17")
 	public void testTargetEntityOnOneToMany() {
 		assertMetamodelClassGeneratedFor( Boy.class );
-		assertPresenceOfFieldInMetamodelFor( Boy.class, "knowsHeros", "knowsHeros field should exist" );
+		assertPresenceOfFieldInMetamodelFor( Boy.class, "knowsHeroes", "knowsHeroes field should exist" );
 		assertAttributeTypeInMetaModelFor(
-				Boy.class, "knowsHeros", FakeHero.class, "target entity overridden in xml"
+				Boy.class, "knowsHeroes", FakeHero.class, "target entity overridden in xml"
 		);
 	}
 
-	/**
-	 * METAGEN-17
-	 */
 	@Test
+	@TestForIssue(jiraKey = "METAGEN-17")
 	public void testTargetEntityOnManyToMany() {
 		assertMetamodelClassGeneratedFor( Boy.class );
 		assertPresenceOfFieldInMetamodelFor( Boy.class, "savedBy", "savedBy field should exist" );

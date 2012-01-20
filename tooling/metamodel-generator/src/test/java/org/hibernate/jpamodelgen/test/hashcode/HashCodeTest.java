@@ -14,28 +14,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.hibernate.jpamodelgen.test.hashcode;
 
 import org.testng.annotations.Test;
 
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
 import org.hibernate.jpamodelgen.test.util.TestForIssue;
 
+import static org.hibernate.jpamodelgen.test.util.TestUtil.assertAbsenceOfFieldInMetamodelFor;
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassGeneratedFor;
+import static org.hibernate.jpamodelgen.test.util.TestUtil.assertPresenceOfFieldInMetamodelFor;
 
 /**
  * @author Hardy Ferentschik
  */
-@TestForIssue(jiraKey = "METAGEN-40")
-public class DefaultPackageTest extends CompilationTest {
+public class HashCodeTest extends CompilationTest {
+
 	@Test
-	public void testMetaModelGeneratedForEntitiesInDefaultPackage() {
-		assertMetamodelClassGeneratedFor( DefaultPackageEntity.class );
+	@TestForIssue(jiraKey = "METAGEN-76")
+	public void testHashCodeDoesNotCreateSingularAttribute() {
+		assertMetamodelClassGeneratedFor( HashEntity.class );
+
+		assertPresenceOfFieldInMetamodelFor( HashEntity.class, "id" );
+		assertAbsenceOfFieldInMetamodelFor( HashEntity.class, "hashCode", "hashCode is not a persistent property" );
 	}
 
 	@Override
 	protected String getPackageNameOfCurrentTest() {
-		return null;
+		return HashCodeTest.class.getPackage().getName();
 	}
 }
-
-

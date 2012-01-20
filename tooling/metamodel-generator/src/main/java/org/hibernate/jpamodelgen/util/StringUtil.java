@@ -50,9 +50,29 @@ public final class StringUtil {
 	}
 
 	public static boolean isPropertyName(String name) {
-		return name.startsWith( PROPERTY_PREFIX_GET ) || name.startsWith( PROPERTY_PREFIX_IS ) || name.startsWith(
-				PROPERTY_PREFIX_HAS
-		);
+		if ( name == null ) {
+			return false;
+		}
+		return checkPropertyName( name, PROPERTY_PREFIX_GET )
+				|| checkPropertyName( name, PROPERTY_PREFIX_IS )
+				|| checkPropertyName( name, PROPERTY_PREFIX_HAS );
+	}
+
+	private static boolean checkPropertyName(String name, String prefix) {
+		if ( !name.startsWith( prefix ) ) {
+			return false;
+		}
+
+		// the name has to start with the prefix and have at least one more character
+		if ( name.length() < prefix.length() + 1 ) {
+			return false;
+		}
+
+		if ( !Character.isUpperCase( name.charAt( prefix.length() ) ) ) {
+			return false;
+		}
+
+		return true;
 	}
 
 	public static String getPropertyName(String name) {
@@ -70,7 +90,7 @@ public final class StringUtil {
 		else if ( name.startsWith( PROPERTY_PREFIX_HAS ) ) {
 			tmp = name.replaceFirst( PROPERTY_PREFIX_HAS, "" );
 		}
-		return tmp.substring(0,1).toLowerCase() + tmp.substring(1);
+		return tmp.substring( 0, 1 ).toLowerCase() + tmp.substring( 1 );
 	}
 }
 

@@ -14,28 +14,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.hibernate.jpamodelgen.test;
 
 import org.testng.annotations.Test;
 
-import org.hibernate.jpamodelgen.test.util.CompilationTest;
 import org.hibernate.jpamodelgen.test.util.TestForIssue;
+import org.hibernate.jpamodelgen.util.StringUtil;
 
-import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassGeneratedFor;
+import static org.testng.Assert.assertFalse;
+import static org.testng.AssertJUnit.assertTrue;
 
 /**
  * @author Hardy Ferentschik
  */
-@TestForIssue(jiraKey = "METAGEN-40")
-public class DefaultPackageTest extends CompilationTest {
+public class StringUtilTest {
 	@Test
-	public void testMetaModelGeneratedForEntitiesInDefaultPackage() {
-		assertMetamodelClassGeneratedFor( DefaultPackageEntity.class );
+	public void testIsPropertyName() {
+		assertTrue( StringUtil.isPropertyName( "getFoo" ) );
+		assertTrue( StringUtil.isPropertyName( "isFoo" ) );
+		assertTrue( StringUtil.isPropertyName( "hasFoo" ) );
+
+		assertFalse( StringUtil.isPropertyName( "getfoo" ) );
+		assertFalse( StringUtil.isPropertyName( "isfoo" ) );
+		assertFalse( StringUtil.isPropertyName( "hasfoo" ) );
+
+		assertFalse( StringUtil.isPropertyName( "" ) );
+		assertFalse( StringUtil.isPropertyName( null ) );
 	}
 
-	@Override
-	protected String getPackageNameOfCurrentTest() {
-		return null;
+	@Test
+	@TestForIssue(jiraKey = "METAGEN-76")
+	public void testHashCodeNotAProperty() {
+		assertFalse( StringUtil.isPropertyName( "hashCode" ) );
 	}
 }
-
-

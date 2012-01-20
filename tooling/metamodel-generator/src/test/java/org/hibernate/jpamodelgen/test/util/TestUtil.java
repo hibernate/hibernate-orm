@@ -35,6 +35,7 @@ import org.testng.Assert;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
 import static org.testng.FileAssert.fail;
 
 /**
@@ -144,6 +145,11 @@ public class TestUtil {
 		return contents.toString();
 	}
 
+	public static void dumpMetaModelSourceFor(Class<?> clazz) {
+		log.info( "Dumping meta model source for " + clazz.getName() + ":" );
+		log.info( getMetaModelSourceAsString( clazz ) );
+	}
+
 	public static void assertNoSourceFileGeneratedFor(Class<?> clazz) {
 		assertNotNull( clazz, "Class parameter cannot be null" );
 		File sourceFile = getMetaModelSourceFileFor( clazz );
@@ -151,15 +157,27 @@ public class TestUtil {
 	}
 
 	public static void assertAbsenceOfFieldInMetamodelFor(Class<?> clazz, String fieldName) {
-		assertAbsenceOfFieldInMetamodelFor( clazz, fieldName, "field should not be persistent" );
+		assertAbsenceOfFieldInMetamodelFor(
+				clazz,
+				fieldName,
+				"'" + fieldName + "' should not appear in metamodel class"
+		);
 	}
 
 	public static void assertAbsenceOfFieldInMetamodelFor(Class<?> clazz, String fieldName, String errorString) {
-		Assert.assertFalse( hasFieldInMetamodelFor( clazz, fieldName ), errorString );
+		assertFalse( hasFieldInMetamodelFor( clazz, fieldName ), buildErrorString( errorString, clazz ) );
+	}
+
+	public static void assertPresenceOfFieldInMetamodelFor(Class<?> clazz, String fieldName) {
+		assertPresenceOfFieldInMetamodelFor(
+				clazz,
+				fieldName,
+				"'" + fieldName + "' should appear in metamodel class"
+		);
 	}
 
 	public static void assertPresenceOfFieldInMetamodelFor(Class<?> clazz, String fieldName, String errorString) {
-		Assert.assertTrue( hasFieldInMetamodelFor( clazz, fieldName ), errorString );
+		assertTrue( hasFieldInMetamodelFor( clazz, fieldName ), buildErrorString( errorString, clazz ) );
 	}
 
 	public static void assertAttributeTypeInMetaModelFor(Class<?> clazz, String fieldName, Class<?> expectedType, String errorString) {
@@ -174,7 +192,7 @@ public class TestUtil {
 		assertEquals(
 				actualType,
 				expectedType,
-				"Types do not match: " + errorString
+				"Types do not match: " + buildErrorString( errorString, clazz )
 		);
 	}
 
@@ -183,10 +201,10 @@ public class TestUtil {
 		assertNotNull( field );
 		ParameterizedType type = (ParameterizedType) field.getGenericType();
 		Type actualMapKeyType = type.getActualTypeArguments()[1];
-		assertEquals( actualMapKeyType, expectedMapKey, errorString );
+		assertEquals( actualMapKeyType, expectedMapKey, buildErrorString( errorString, clazz ) );
 
 		Type actualMapKeyValue = type.getActualTypeArguments()[2];
-		assertEquals( actualMapKeyValue, expectedMapValue, errorString );
+		assertEquals( actualMapKeyValue, expectedMapValue, buildErrorString( errorString, clazz ) );
 	}
 
 	public static void assertSuperClassRelationShipInMetamodel(Class<?> entityClass, Class<?> superEntityClass) {
@@ -235,6 +253,18 @@ public class TestUtil {
 		return getFieldFromMetamodelFor( clazz, fieldName ) != null;
 	}
 
+	private static String buildErrorString(String baseError, Class<?> clazz) {
+		StringBuilder builder = new StringBuilder();
+		builder.append( baseError );
+		builder.append( "\n" );
+		builder.append( "Source code for " );
+		builder.append( clazz.getName() );
+		builder.append( "_.java:" );
+		builder.append( "\n" );
+		builder.append( getMetaModelSourceAsString( clazz ) );
+		return builder.toString();
+	}
+
 	private static Type getComponentType(Type actualType) {
 		if ( actualType instanceof Class ) {
 			Class<?> clazz = (Class<?>) actualType;
@@ -242,14 +272,15 @@ public class TestUtil {
 				return clazz.getComponentType();
 			}
 			else {
-				fail("Unexpected component type");
+				fail( "Unexpected component type" );
 			}
 		}
 
 		if ( actualType instanceof GenericArrayType ) {
 			return ( (GenericArrayType) actualType ).getGenericComponentType();
-		}  else {
-			fail("Unexpected component type");
+		}
+		else {
+			fail( "Unexpected component type" );
 			return null; // making the compiler happy
 		}
 	}

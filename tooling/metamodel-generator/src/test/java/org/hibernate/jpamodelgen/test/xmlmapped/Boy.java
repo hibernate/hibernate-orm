@@ -26,11 +26,11 @@ public class Boy {
 
 	private String name;
 
-	private List nickNames;
+	private List<String> nickNames;
 
 	private Superhero favoriteSuperhero;
 
-	private List<Superhero> knowsHeros;
+	private List<Superhero> knowsHeroes;
 
 	private List<Superhero> savedBy;
 
@@ -50,12 +50,12 @@ public class Boy {
 		this.favoriteSuperhero = favoriteSuperhero;
 	}
 
-	public List<Superhero> getKnowsHeros() {
-		return knowsHeros;
+	public List<Superhero> getKnowsHeroes() {
+		return knowsHeroes;
 	}
 
-	public void setKnowsHeros(List<Superhero> knowsHeros) {
-		this.knowsHeros = knowsHeros;
+	public void setKnowsHeroes(List<Superhero> knowsHeroes) {
+		this.knowsHeroes = knowsHeroes;
 	}
 
 	public long getId() {

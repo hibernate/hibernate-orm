@@ -55,7 +55,6 @@ public class CollectionChangeWorkUnit extends AbstractAuditWorkUnit implements A
 
     public Map<String, Object> generateData(Object revisionData) {
         fillDataWithId(data, revisionData);
-		resolveProxyIfNeeded();
 		Map<String, Object> preGenerateData = new HashMap<String, Object>(data);
 		verCfg.getEntCfg().get(getEntityName()).getPropertyMapper()
 				.mapToMapFromEntity(sessionImplementor, data, entity, null);
@@ -66,12 +65,6 @@ public class CollectionChangeWorkUnit extends AbstractAuditWorkUnit implements A
 		data.putAll(preGenerateData);
         return data;
     }
-
-	private void resolveProxyIfNeeded() {
-		if (entity instanceof HibernateProxy) {
-            Tools.getTargetFromProxy(sessionImplementor.getFactory(), (HibernateProxy) entity);
-		}
-	}
 
 	public void mergeCollectionModifiedData(Map<String, Object> data) {
 		verCfg.getEntCfg().get(getEntityName()).getPropertyMapper()

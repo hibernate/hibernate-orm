@@ -36,9 +36,11 @@ import org.hibernate.mapping.Formula;
 /**
  * @author Adam Warski (adam at warski dot org)
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Michal Skowronek (mskowr at o2 dot pl)
  */
 public class MetadataTools {
-    public static Element addNativelyGeneratedId(Element parent, String name, String type) {
+
+	public static Element addNativelyGeneratedId(Element parent, String name, String type) {
         Element id_mapping = parent.addElement("id");
         id_mapping.addAttribute("name", name).addAttribute("type", type);
 
@@ -73,7 +75,15 @@ public class MetadataTools {
         return addProperty(parent, name, type, insertable, false, key);
     }
 
-    private static void addOrModifyAttribute(Element parent, String name, String value) {
+	public static Element addModifiedFlagProperty(Element parent, String propertyName, String suffix) {
+		return addProperty(parent, getModifiedFlagPropertyName(propertyName, suffix), "boolean", true, false, false);
+	}
+
+	public static String getModifiedFlagPropertyName(String propertyName, String suffix) {
+		return propertyName + suffix;
+	}
+
+	private static void addOrModifyAttribute(Element parent, String name, String value) {
         Attribute attribute = parent.attribute(name);
         if (attribute == null) {
             parent.addAttribute(name, value);

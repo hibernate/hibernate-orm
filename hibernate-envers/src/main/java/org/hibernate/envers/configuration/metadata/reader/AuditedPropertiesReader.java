@@ -23,6 +23,7 @@ import org.hibernate.envers.ModificationStore;
 import org.hibernate.envers.NotAudited;
 import org.hibernate.envers.RelationTargetAuditMode;
 import org.hibernate.envers.configuration.GlobalConfiguration;
+import org.hibernate.envers.configuration.metadata.MetadataTools;
 import org.hibernate.envers.tools.MappingTools;
 import org.hibernate.envers.tools.StringTools;
 import org.hibernate.envers.tools.Tools;
@@ -43,6 +44,7 @@ import static org.hibernate.envers.tools.Tools.newHashSet;
  * @author Erik-Berndt Scheper
  * @author Hern&aacut;n Chanfreau
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @author Michal Skowronek (mskowr at o2 dot pl)
  */
 public class AuditedPropertiesReader {
 	protected final ModificationStore defaultStore;
@@ -392,9 +394,13 @@ public class AuditedPropertiesReader {
 		if(!this.checkAudited(property, propertyData, allClassAudited)){
 			return false;
 		}
-	
 
-		propertyData.setName(propertyNamePrefix + property.getName());
+		String propertyName = propertyNamePrefix + property.getName();
+		propertyData.setName(propertyName);
+		propertyData.setModifiedFlagName(
+                MetadataTools.getModifiedFlagPropertyName(
+                        propertyName,
+                        globalCfg.getModifiedFlagSuffix()));
 		propertyData.setBeanName(property.getName());
 		propertyData.setAccessType(accessType);
 
@@ -409,7 +415,7 @@ public class AuditedPropertiesReader {
 		return true;
 	}
 
-	
+
 	protected boolean checkAudited(XProperty property,
 			PropertyAuditingData propertyData, Audited allClassAudited) {
 		// Checking if this property is explicitly audited or if all properties are.
@@ -422,13 +428,19 @@ public class AuditedPropertiesReader {
 		if (aud != null) {
 			propertyData.setStore(aud.modStore());
 			propertyData.setRelationTargetAuditMode(aud.targetAuditMode());
+			propertyData.setUsingModifiedFlag(checkUsingModifiedFlag(aud));
 			return true;
 		} else {
 			return false;
 		}
 	}
 
-    private void setPropertyAuditMappedBy(XProperty property, PropertyAuditingData propertyData) {
+	protected boolean checkUsingModifiedFlag(Audited aud) {
+		return globalCfg.hasSettingForUsingModifiedFlag() ?
+				globalCfg.isGlobalWithModifiedFlag() : aud.withModifiedFlag();
+	}
+
+	private void setPropertyAuditMappedBy(XProperty property, PropertyAuditingData propertyData) {
         AuditMappedBy auditMappedBy = property.getAnnotation(AuditMappedBy.class);
         if (auditMappedBy != null) {
 		    propertyData.setAuditMappedBy(auditMappedBy.mappedBy());
@@ -507,6 +519,7 @@ public class AuditedPropertiesReader {
         public ModificationStore modStore() { return ModificationStore.FULL; }
         public RelationTargetAuditMode targetAuditMode() { return RelationTargetAuditMode.AUDITED; }
         public Class[] auditParents() { return new Class[0]; }
+        public boolean withModifiedFlag() { return false; }
         public Class<? extends Annotation> annotationType() { return this.getClass(); }
     };
 

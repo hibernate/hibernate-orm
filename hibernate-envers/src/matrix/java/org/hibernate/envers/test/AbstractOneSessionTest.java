@@ -41,6 +41,7 @@ public abstract class AbstractOneSessionTest extends AbstractEnversTest  {
         if (auditStrategy != null && !"".equals(auditStrategy)) {
             config.setProperty("org.hibernate.envers.audit_strategy", auditStrategy);
         }
+		addProperties(config);
 
         this.initMappings();
 
@@ -49,6 +50,8 @@ public abstract class AbstractOneSessionTest extends AbstractEnversTest  {
     }
 
 	protected abstract void initMappings() throws MappingException, URISyntaxException ;
+
+	protected void addProperties(Configuration configuration) {}
 
 	protected String getHibernateConfigurationFileName(){
 		return "hibernate.test.session-cfg.xml";

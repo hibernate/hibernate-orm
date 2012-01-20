@@ -44,6 +44,7 @@ import org.hibernate.property.Setter;
 /**
  * @author Adam Warski (adam at warski dot org)
  * @author Hern�n Chanfreau
+ * @author Michal Skowronek (mskowr at o2 dot pl)
  */
 public class OneToOneNotOwningMapper implements PropertyMapper {
     private String owningReferencePropertyName;
@@ -61,7 +62,18 @@ public class OneToOneNotOwningMapper implements PropertyMapper {
         return false;
     }
 
-    public void mapToEntityFromMap(AuditConfiguration verCfg, Object obj, Map data, Object primaryKey, AuditReaderImplementor versionsReader, Number revision) {
+	@Override
+	public void mapModifiedFlagsToMapFromEntity(SessionImplementor session, Map<String, Object> data, Object newObj, Object oldObj) {
+	}
+
+	@Override
+	public void mapModifiedFlagsToMapForCollectionChange(String collectionPropertyName, Map<String, Object> data) {
+		if (propertyData.isUsingModifiedFlag()) {
+			data.put(propertyData.getModifiedFlagPropertyName(), collectionPropertyName.equals(propertyData.getName()));
+		}
+	}
+
+	public void mapToEntityFromMap(AuditConfiguration verCfg, Object obj, Map data, Object primaryKey, AuditReaderImplementor versionsReader, Number revision) {
         if (obj == null) {
             return;
         }

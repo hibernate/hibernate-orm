@@ -37,6 +37,7 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.configuration.AuditConfiguration;
+import org.hibernate.envers.entities.PropertyData;
 import org.hibernate.envers.entities.mapper.PersistentCollectionChangeData;
 import org.hibernate.envers.entities.mapper.PropertyMapper;
 import org.hibernate.envers.entities.mapper.relation.lazy.initializor.Initializor;
@@ -47,6 +48,7 @@ import org.hibernate.property.Setter;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Michal Skowronek (mskowr at o2 dot pl)
  */
 public abstract class AbstractCollectionMapper<T> implements PropertyMapper {
     protected final CommonCollectionMapperData commonCollectionMapperData;    
@@ -133,7 +135,39 @@ public abstract class AbstractCollectionMapper<T> implements PropertyMapper {
         return false;
     }
 
-    protected abstract Initializor<T> getInitializor(AuditConfiguration verCfg,
+	@Override
+	public void mapModifiedFlagsToMapFromEntity(SessionImplementor session, Map<String, Object> data, Object newObj, Object oldObj) {
+		PropertyData propertyData = commonCollectionMapperData.getCollectionReferencingPropertyData();
+		if (propertyData.isUsingModifiedFlag()) {
+			if(isFromNullToEmptyOrFromEmptyToNull((PersistentCollection) newObj, (Serializable) oldObj)){
+                data.put(propertyData.getModifiedFlagPropertyName(), true);
+			} else {
+				List<PersistentCollectionChangeData> changes = mapCollectionChanges(
+                        commonCollectionMapperData.getCollectionReferencingPropertyData().getName(),
+						(PersistentCollection) newObj, (Serializable) oldObj, null);
+                data.put(propertyData.getModifiedFlagPropertyName(), !changes.isEmpty());
+			}
+		}
+	}
+
+	private boolean isFromNullToEmptyOrFromEmptyToNull(PersistentCollection newColl, Serializable oldColl) {
+		// Comparing new and old collection content.
+        Collection newCollection = getNewCollectionContent(newColl);
+        Collection oldCollection = getOldCollectionContent(oldColl);
+
+		return oldCollection == null && newCollection != null && newCollection.isEmpty()
+				|| newCollection == null && oldCollection != null && oldCollection.isEmpty();
+	}
+
+	@Override
+	public void mapModifiedFlagsToMapForCollectionChange(String collectionPropertyName, Map<String, Object> data) {
+		PropertyData propertyData = commonCollectionMapperData.getCollectionReferencingPropertyData();
+		if (propertyData.isUsingModifiedFlag()) {
+            data.put(propertyData.getModifiedFlagPropertyName(), propertyData.getName().equals(collectionPropertyName));
+		}
+	}
+
+	protected abstract Initializor<T> getInitializor(AuditConfiguration verCfg,
                                                      AuditReaderImplementor versionsReader, Object primaryKey,
                                                      Number revision);
 

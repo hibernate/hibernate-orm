@@ -85,8 +85,9 @@ public class AddWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
     }
 
     public AuditWorkUnit merge(CollectionChangeWorkUnit second) {
-        return this;
-    }
+		second.mergeCollectionModifiedData(data);
+		return this;
+	}
 
     public AuditWorkUnit merge(FakeBidirectionalRelationWorkUnit second) {
         return FakeBidirectionalRelationWorkUnit.merge(second, this, second.getNestedWorkUnit());

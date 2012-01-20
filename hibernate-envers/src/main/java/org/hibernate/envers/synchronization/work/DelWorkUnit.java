@@ -61,6 +61,9 @@ public class DelWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit 
 		if (verCfg.getGlobalCfg().isStoreDataAtDelete()) {
 			verCfg.getEntCfg().get(getEntityName()).getPropertyMapper().map(sessionImplementor, data,
 					propertyNames, state, state);
+		} else {
+			verCfg.getEntCfg().get(getEntityName()).getPropertyMapper().map(sessionImplementor, data,
+					propertyNames, null, state);
 		}
 
         return data;

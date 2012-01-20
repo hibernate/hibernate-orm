@@ -31,12 +31,14 @@ import org.hibernate.envers.query.order.AuditOrder;
 import org.hibernate.envers.query.order.PropertyAuditOrder;
 import org.hibernate.envers.query.projection.AuditProjection;
 import org.hibernate.envers.query.projection.PropertyAuditProjection;
+import org.hibernate.envers.query.property.ModifiedFlagPropertyName;
 import org.hibernate.envers.query.property.PropertyNameGetter;
 import org.hibernate.envers.tools.Triple;
 
 /**
  * Create restrictions, projections and specify order for a property of an audited entity.
  * @author Adam Warski (adam at warski dot org)
+ * @author Michal Skowronek (mskowr at o2 dot pl)
  */
 @SuppressWarnings({"JavaDoc"})
 public class AuditProperty<T> implements AuditProjection {
@@ -46,7 +48,15 @@ public class AuditProperty<T> implements AuditProjection {
         this.propertyNameGetter = propertyNameGetter;
     }
 
-    /**
+	public AuditCriterion hasChanged() {
+		return new SimpleAuditExpression(new ModifiedFlagPropertyName(propertyNameGetter), true, "=");
+	}
+
+	public AuditCriterion hasNotChanged() {
+		return new SimpleAuditExpression(new ModifiedFlagPropertyName(propertyNameGetter), false, "=");
+	}
+
+	/**
 	 * Apply an "equal" constraint
 	 */
 	public AuditCriterion eq(T value) {

@@ -25,6 +25,7 @@ package org.hibernate.envers.entities.mapper;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -38,6 +39,7 @@ import org.hibernate.property.Setter;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Michal Skowronek (mskowr at o2 dot pl)
  */
 public class ComponentPropertyMapper implements PropertyMapper, CompositeMapperBuilder {
     private final PropertyData propertyData;
@@ -66,7 +68,29 @@ public class ComponentPropertyMapper implements PropertyMapper, CompositeMapperB
         return delegate.mapToMapFromEntity(session, data, newObj, oldObj);
     }
 
-    public void mapToEntityFromMap(AuditConfiguration verCfg, Object obj, Map data, Object primaryKey, AuditReaderImplementor versionsReader, Number revision) {
+	@Override
+	public void mapModifiedFlagsToMapFromEntity(SessionImplementor session, Map<String, Object> data, Object newObj, Object oldObj) {
+		if (propertyData.isUsingModifiedFlag()) {
+            data.put(propertyData.getModifiedFlagPropertyName(),
+                    delegate.mapToMapFromEntity(session, new HashMap<String, Object>(), newObj, oldObj));
+		}
+	}
+
+	@Override
+	public void mapModifiedFlagsToMapForCollectionChange(String collectionPropertyName, Map<String, Object> data) {
+		if (propertyData.isUsingModifiedFlag()) {
+			boolean hasModifiedCollection = false;
+			for (PropertyData propData : delegate.getProperties().keySet()) {
+				if (collectionPropertyName.equals(propData.getName())) {
+					hasModifiedCollection = true;
+					break;
+				}
+			}
+			data.put(propertyData.getModifiedFlagPropertyName(), hasModifiedCollection);
+		}
+	}
+
+	public void mapToEntityFromMap(AuditConfiguration verCfg, Object obj, Map data, Object primaryKey, AuditReaderImplementor versionsReader, Number revision) {
         if (data == null || obj == null) {
             return;
         }

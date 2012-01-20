@@ -284,12 +284,10 @@ public class PropertyBinder {
 				prop.setGeneration( PropertyGeneration.parse( generated.toString().toLowerCase() ) );
 			}
 		}
-		NaturalId naturalId = property != null ?
-				property.getAnnotation( NaturalId.class ) :
-				null;
+		NaturalId naturalId = property != null ? property.getAnnotation( NaturalId.class ) : null;
 		if ( naturalId != null ) {
 			NaturalIdMutability mutability = naturalId.mutability();
-			if ( mutability == null ) {
+			if ( mutability == NaturalIdMutability.UNSPECIFIED ) {
 				mutability = naturalId.mutable()
 						? NaturalIdMutability.MUTABLE
 						: NaturalIdMutability.IMMUTABLE_CHECKED;

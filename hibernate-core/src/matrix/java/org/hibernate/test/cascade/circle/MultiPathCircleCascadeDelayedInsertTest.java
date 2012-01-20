@@ -33,4 +33,5 @@ public class MultiPathCircleCascadeDelayedInsertTest extends MultiPathCircleCasc
 				"cascade/circle/MultiPathCircleCascadeDelayedInsert.hbm.xml"
 		};
 	}
+
 }

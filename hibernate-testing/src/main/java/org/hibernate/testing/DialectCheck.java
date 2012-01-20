@@ -36,8 +36,9 @@ public interface DialectCheck {
 	/**
 	 * Does the given dialect match the defined check?
 	 *
-	 * @param dialect
-	 * @return
+	 * @param dialect The dialect against which to check
+	 *
+	 * @return {@code true} if it matches; {@code false} otherwise.
 	 */
 	public boolean isMatch(Dialect dialect);
 }

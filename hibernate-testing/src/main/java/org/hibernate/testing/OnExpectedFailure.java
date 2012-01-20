@@ -32,7 +32,6 @@ import java.lang.annotation.Target;
  * Annotation used to identify a method as a callback to be executed whenever a {@link FailureExpected} is handled.
  *
  * @author Steve Ebersole
- * @see
  */
 @Retention( RetentionPolicy.RUNTIME )
 @Target( ElementType.METHOD )

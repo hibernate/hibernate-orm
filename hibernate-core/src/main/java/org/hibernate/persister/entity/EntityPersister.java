@@ -651,8 +651,8 @@ public interface EntityPersister extends OptimisticCacheSource {
 	 * Get the identifier of an instance (throw an exception if no identifier property)
 	 *
 	 * @deprecated Use {@link #getIdentifier(Object,SessionImplementor)} instead
-	 * @noinspection JavaDoc
 	 */
+	@SuppressWarnings( {"JavaDoc"})
 	public Serializable getIdentifier(Object object) throws HibernateException;
 
 	/**

@@ -167,14 +167,15 @@ public interface Type extends Serializable {
 	 */
 	public Class getReturnedClass();
 	
+	@SuppressWarnings( {"UnusedDeclaration"})
 	public boolean isXMLElement();
 
 	/**
 	 * Compare two instances of the class mapped by this type for persistence "equality" (equality of persistent
 	 * state) taking a shortcut for entity references.
 	 * <p/>
-	 * For most types this should equate to {@link #equals} check on the values.  For associations the implication
-	 * is a bit different.  For most types it is conceivable to simply delegate to {@link #isEqual}
+	 * For most types this should equate to an {@link Object#equals equals} check on the values.  For associations
+	 * the implication is a bit different.  For most types it is conceivable to simply delegate to {@link #isEqual}
 	 *
 	 * @param x The first value
 	 * @param y The second value
@@ -222,7 +223,7 @@ public interface Type extends Serializable {
 
 	/**
 	 * Get a hash code, consistent with persistence "equality".  Again for most types the normal usage is to
-	 * delegate to the value's {@link #hashCode}.
+	 * delegate to the value's {@link Object#hashCode hashCode}.
 	 *
 	 * @param x The value for which to retrieve a hash code
 	 * @return The hash code
@@ -233,7 +234,7 @@ public interface Type extends Serializable {
 
 	/**
 	 * Get a hash code, consistent with persistence "equality".  Again for most types the normal usage is to
-	 * delegate to the value's {@link #hashCode}.
+	 * delegate to the value's {@link Object#hashCode hashCode}.
 	 *
 	 * @param x The value for which to retrieve a hash code
 	 * @param factory The session factory
@@ -301,97 +302,109 @@ public interface Type extends Serializable {
 			throws HibernateException;
 
 	/**
-	 * Retrieve an instance of the mapped class from a JDBC resultset. Implementors
+	 * Extract a value of the {@link #getReturnedClass() mapped class} from the JDBC result set. Implementors
 	 * should handle possibility of null values.
 	 *
-	 * @see Type#hydrate(ResultSet, String[], SessionImplementor, Object) alternative, 2-phase property initialization
-	 * @param rs
-	 * @param names the column names
-	 * @param session
+	 * @param rs The result set from which to extract value.
+	 * @param names the column names making up this type value (use to read from result set)
+	 * @param session The originating session
 	 * @param owner the parent entity
-	 * @return Object
-	 * @throws HibernateException
-	 * @throws SQLException
+	 *
+	 * @return The extracted value
+	 *
+	 * @throws HibernateException An error from Hibernate
+	 * @throws SQLException An error from the JDBC driver
+	 *
+	 * @see Type#hydrate(ResultSet, String[], SessionImplementor, Object) alternative, 2-phase property initialization
 	 */
 	public Object nullSafeGet(ResultSet rs, String[] names, SessionImplementor session, Object owner)
 	throws HibernateException, SQLException;
 
 	/**
-	 * Retrieve an instance of the mapped class from a JDBC resultset. Implementations
-	 * should handle possibility of null values. This method might be called if the
-	 * type is known to be a single-column type.
+	 * Extract a value of the {@link #getReturnedClass() mapped class} from the JDBC result set. Implementors
+	 * should handle possibility of null values.  This form might be called if the type is known to be a
+	 * single-column type.
 	 *
-	 * @param rs
-	 * @param name the column name
-	 * @param session
+	 * @param rs The result set from which to extract value.
+	 * @param name the column name making up this type value (use to read from result set)
+	 * @param session The originating session
 	 * @param owner the parent entity
-	 * @return Object
-	 * @throws HibernateException
-	 * @throws SQLException
+	 *
+	 * @return The extracted value
+	 *
+	 * @throws HibernateException An error from Hibernate
+	 * @throws SQLException An error from the JDBC driver
 	 */
 	public Object nullSafeGet(ResultSet rs, String name, SessionImplementor session, Object owner)
 	throws HibernateException, SQLException;
 
 	/**
-	 * Write an instance of the mapped class to a prepared statement, ignoring some columns. 
-	 * Implementors should handle possibility of null values. A multi-column type should be 
-	 * written to parameters starting from <tt>index</tt>.
-	 * @param st
-	 * @param value the object to write
-	 * @param index statement parameter index
-	 * @param settable an array indicating which columns to ignore
-	 * @param session
+	 * Bind a value represented by an instance of the {@link #getReturnedClass() mapped class} to the JDBC prepared
+	 * statement, ignoring some columns as dictated by the 'settable' parameter.  Implementors should handle the
+	 * possibility of null values.  A multi-column type should bind parameters starting from <tt>index</tt>.
 	 *
-	 * @throws HibernateException
-	 * @throws SQLException
+	 * @param st The JDBC prepared statement to which to bind
+	 * @param value the object to write
+	 * @param index starting parameter bind index
+	 * @param settable an array indicating which columns to bind/ignore
+	 * @param session The originating session
+	 *
+	 * @throws HibernateException An error from Hibernate
+	 * @throws SQLException An error from the JDBC driver
 	 */
 	public void nullSafeSet(PreparedStatement st, Object value, int index, boolean[] settable, SessionImplementor session)
 	throws HibernateException, SQLException;
 
 	/**
-	 * Write an instance of the mapped class to a prepared statement. Implementors
-	 * should handle possibility of null values. A multi-column type should be written
-	 * to parameters starting from <tt>index</tt>.
-	 * @param st
-	 * @param value the object to write
-	 * @param index statement parameter index
-	 * @param session
+	 * Bind a value represented by an instance of the {@link #getReturnedClass() mapped class} to the JDBC prepared
+	 * statement.  Implementors should handle possibility of null values.  A multi-column type should bind parameters
+	 * starting from <tt>index</tt>.
 	 *
-	 * @throws HibernateException
-	 * @throws SQLException
+	 * @param st The JDBC prepared statement to which to bind
+	 * @param value the object to write
+	 * @param index starting parameter bind index
+	 * @param session The originating session
+	 *
+	 * @throws HibernateException An error from Hibernate
+	 * @throws SQLException An error from the JDBC driver
 	 */
 	public void nullSafeSet(PreparedStatement st, Object value, int index, SessionImplementor session)
 	throws HibernateException, SQLException;
 
 	/**
-	 * A representation of the value to be embedded in an XML element.
+	 * Generate a representation of the value for logging purposes.
 	 *
-	 * @param value
-	 * @param factory
-	 * @return String
-	 * @throws HibernateException
-	 */
-	public void setToXMLNode(Node node, Object value, SessionFactoryImplementor factory)
-	throws HibernateException;
-
-	/**
-	 * A representation of the value to be embedded in a log file.
+	 * @param value The value to be logged
+	 * @param factory The session factory
 	 *
-	 * @param value
-	 * @param factory
-	 * @return String
-	 * @throws HibernateException
+	 * @return The loggable representation
+	 *
+	 * @throws HibernateException An error from Hibernate
 	 */
 	public String toLoggableString(Object value, SessionFactoryImplementor factory)
 	throws HibernateException;
 
 	/**
-	 * Parse the XML representation of an instance.
-	 * @param xml
-	 * @param factory
+	 * A representation of the value to be embedded in an XML element.
 	 *
-	 * @return an instance of the type
-	 * @throws HibernateException
+	 * @param node The XML node to which to write the value
+	 * @param value The value to write
+	 * @param factory The session factory
+	 *
+	 * @throws HibernateException An error from Hibernate
+	 */
+	public void setToXMLNode(Node node, Object value, SessionFactoryImplementor factory)
+	throws HibernateException;
+
+	/**
+	 * Parse the XML representation of an instance.
+	 *
+	 * @param xml The XML node from which to read the value
+	 * @param factory The session factory
+	 *
+	 * @return an instance of the {@link #getReturnedClass() mapped class}
+	 *
+	 * @throws HibernateException An error from Hibernate
 	 */
 	public Object fromXMLNode(Node xml, Mapping factory) throws HibernateException;
 
@@ -403,12 +416,14 @@ public interface Type extends Serializable {
 	public String getName();
 
 	/**
-	 * Return a deep copy of the persistent state, stopping at entities and at
-	 * collections.
+	 * Return a deep copy of the persistent state, stopping at entities and at collections.
 	 *
-	 * @param value generally a collection element or entity field
-	 * @param factory
-	 * @return Object a copy
+	 * @param value The value to be copied
+	 * @param factory The session factory
+	 *
+	 * @return The deep copy
+	 *
+	 * @throws HibernateException An error from Hibernate
 	 */
 	public Object deepCopy(Object value, SessionFactoryImplementor factory)
 	throws HibernateException;
@@ -423,20 +438,30 @@ public interface Type extends Serializable {
 	public boolean isMutable();
 
 	/**
-	 * Return a cacheable "disassembled" representation of the object.
+	 * Return a disassembled representation of the object.  This is the value Hibernate will use in second level
+	 * caching, so care should be taken to break values down to their simplest forms; for entities especially, this
+	 * means breaking them down into their constituent parts.
+	 *
 	 * @param value the value to cache
-	 * @param session the session
+	 * @param session the originating session
 	 * @param owner optional parent entity object (needed for collections)
+	 *
 	 * @return the disassembled, deep cloned state
+	 *
+	 * @throws HibernateException An error from Hibernate
 	 */
 	public Serializable disassemble(Object value, SessionImplementor session, Object owner) throws HibernateException;
 
 	/**
-	 * Reconstruct the object from its cached "disassembled" state.
+	 * Reconstruct the object from its disassembled state.  This method is the reciprocal of {@link #disassemble}
+	 *
 	 * @param cached the disassembled state from the cache
-	 * @param session the session
+	 * @param session the originating session
 	 * @param owner the parent entity object
-	 * @return the the object
+	 *
+	 * @return the (re)assembled object
+	 *
+	 * @throws HibernateException An error from Hibernate
 	 */
 	public Object assemble(Serializable cached, SessionImplementor session, Object owner)
 	throws HibernateException;
@@ -444,49 +469,75 @@ public interface Type extends Serializable {
 	/**
 	 * Called before assembling a query result set from the query cache, to allow batch fetching
 	 * of entities missing from the second-level cache.
+	 *
+	 * @param cached The key
+	 * @param session The originating session
 	 */
 	public void beforeAssemble(Serializable cached, SessionImplementor session);
 
 	/**
-	 * Retrieve an instance of the mapped class, or the identifier of an entity or collection, 
-	 * from a JDBC resultset. This is useful for 2-phase property initialization - the second 
-	 * phase is a call to <tt>resolveIdentifier()</tt>.
+	 * Extract a value from the JDBC result set.  This is useful for 2-phase property initialization - the second
+	 * phase is a call to {@link #resolve}
+	 * This hydrated value will be either:<ul>
+	 *     <li>in the case of an entity or collection type, the key</li>
+	 *     <li>otherwise, the value itself</li>
+	 * </ul>
 	 * 
-	 * @see Type#resolve(Object, SessionImplementor, Object)
-	 * @param rs
-	 * @param names the column names
-	 * @param session the session
+	 * @param rs The JDBC result set
+	 * @param names the column names making up this type value (use to read from result set)
+	 * @param session The originating session
 	 * @param owner the parent entity
-	 * @return Object an identifier or actual value
-	 * @throws HibernateException
-	 * @throws SQLException
+	 *
+	 * @return An entity or collection key, or an actual value.
+	 *
+	 * @throws HibernateException An error from Hibernate
+	 * @throws SQLException An error from the JDBC driver
+	 *
+	 * @see #resolve
 	 */
 	public Object hydrate(ResultSet rs, String[] names, SessionImplementor session, Object owner)
 	throws HibernateException, SQLException;
 
 	/**
-	 * Map identifiers to entities or collections. This is the second phase of 2-phase property 
-	 * initialization.
+	 * The second phase of 2-phase loading.  Only really pertinent for entities and collections.  Here we resolve the
+	 * identifier to an entity or collection instance
 	 * 
-	 * @see Type#hydrate(ResultSet, String[], SessionImplementor, Object)
 	 * @param value an identifier or value returned by <tt>hydrate()</tt>
 	 * @param owner the parent entity
 	 * @param session the session
+	 * 
 	 * @return the given value, or the value associated with the identifier
-	 * @throws HibernateException
+	 *
+	 * @throws HibernateException An error from Hibernate
+	 *
+	 * @see #hydrate
 	 */
 	public Object resolve(Object value, SessionImplementor session, Object owner)
 	throws HibernateException;
 	
 	/**
-	 * Given a hydrated, but unresolved value, return a value that may be used to
-	 * reconstruct property-ref associations.
+	 * Given a hydrated, but unresolved value, return a value that may be used to reconstruct property-ref
+	 * associations.
+	 *
+	 * @param value The unresolved, hydrated value
+	 * @param session THe originating session
+	 * @param owner The value owner
+	 *
+	 * @return The semi-resolved value
+	 *
+	 * @throws HibernateException An error from Hibernate
 	 */
 	public Object semiResolve(Object value, SessionImplementor session, Object owner)
 	throws HibernateException;
 	
 	/**
-	 * Get the type of a semi-resolved value.
+	 * As part of 2-phase loading, when we perform resolving what is the resolved type for this type?  Generally
+	 * speaking the type and its semi-resolved type will be the same.  The main deviation from this is in the
+	 * case of an entity where the type would be the entity type and semi-resolved type would be its identifier type
+	 *
+	 * @param factory The session factory
+	 *
+	 * @return The semi-resolved type
 	 */
 	public Type getSemiResolvedType(SessionFactoryImplementor factory);
 
@@ -499,15 +550,20 @@ public interface Type extends Serializable {
 	 *
 	 * @param original the value from the detached entity being merged
 	 * @param target the value in the managed entity
+	 * @param session The originating session
+	 * @param owner The owner of the value
+	 * @param copyCache The cache of already copied/replaced values
+	 *
 	 * @return the value to be merged
+	 *
+	 * @throws HibernateException An error from Hibernate
 	 */
 	public Object replace(
 			Object original, 
 			Object target, 
 			SessionImplementor session, 
 			Object owner, 
-			Map copyCache)
-	throws HibernateException;
+			Map copyCache) throws HibernateException;
 	
 	/**
 	 * During merge, replace the existing (target) value in the entity we are merging to
@@ -518,7 +574,14 @@ public interface Type extends Serializable {
 	 *
 	 * @param original the value from the detached entity being merged
 	 * @param target the value in the managed entity
+	 * @param session The originating session
+	 * @param owner The owner of the value
+	 * @param copyCache The cache of already copied/replaced values
+	 * @param foreignKeyDirection For associations, which direction does the foreign key point?
+	 *
 	 * @return the value to be merged
+	 *
+	 * @throws HibernateException An error from Hibernate
 	 */
 	public Object replace(
 			Object original, 
@@ -526,14 +589,16 @@ public interface Type extends Serializable {
 			SessionImplementor session, 
 			Object owner, 
 			Map copyCache, 
-			ForeignKeyDirection foreignKeyDirection)
-	throws HibernateException;
+			ForeignKeyDirection foreignKeyDirection) throws HibernateException;
 	
 	/**
 	 * Given an instance of the type, return an array of boolean, indicating
 	 * which mapped columns would be null.
 	 * 
 	 * @param value an instance of the type
+	 * @param mapping The mapping abstraction
+	 *
+	 * @return array indicating column nullness for a value instance
 	 */
 	public boolean[] toColumnNullness(Object value, Mapping mapping);
 	

@@ -1556,4 +1556,10 @@ public interface CoreMessageLogger extends BasicLogger {
 			"or passivated, specify a unique value for property '%s'", id = 436)
 	void entityManagerFactoryAlreadyRegistered(String emfName, String propertyName);
 
+	@LogMessage(level = WARN)
+	@Message(value = "Attempting to save one or more entities that have a non-nullable association with an unsaved transient entity. The unsaved transient entity must be saved in an operation prior to saving these dependent entities.\n" +
+			"\tUnsaved transient entity: (%s)\n\tDependent entities: (%s)\n\tNon-nullable association(s): (%s)" , id = 437)
+	void cannotResolveNonNullableTransientDependencies(String transientEntityString,
+													   Set<String> dependentEntityStrings,
+													   Set<String> nonNullableAssociationPaths);
 }

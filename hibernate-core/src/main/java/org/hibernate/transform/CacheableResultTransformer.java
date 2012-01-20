@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 20102011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.transform;
 
@@ -32,7 +31,7 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.type.Type;
 
 /**
- * A ResultTransformer that is used to transfor tuples to a value(s)
+ * A ResultTransformer that is used to transform tuples to a value(s)
  * that can be cached.
  *
  * @author Gail Badner
@@ -74,16 +73,17 @@ public class CacheableResultTransformer implements ResultTransformer {
 	 *        included in the tuple; the number of true values equals
 	 *        the length of the tuple that will be transformed;
 	 *        must be non-null
+	 *
 	 * @return a CacheableResultTransformer that is used to transform
 	 *         tuples to a value(s) that can be cached.
 	 */
-	public static CacheableResultTransformer create(ResultTransformer transformer,
-													String[] aliases,
-													boolean[] includeInTuple) {
-		return transformer instanceof TupleSubsetResultTransformer ?
-				create( ( TupleSubsetResultTransformer ) transformer, aliases, includeInTuple ) :
-				create( includeInTuple )
-		;
+	public static CacheableResultTransformer create(
+			ResultTransformer transformer,
+			String[] aliases,
+			boolean[] includeInTuple) {
+		return transformer instanceof TupleSubsetResultTransformer
+				? create( ( TupleSubsetResultTransformer ) transformer, aliases, includeInTuple )
+				: create( includeInTuple );
 	}
 
 	/**
@@ -100,12 +100,14 @@ public class CacheableResultTransformer implements ResultTransformer {
 	 *        included in the tuple; the number of true values equals
 	 *        the length of the tuple that will be transformed;
 	 *        must be non-null
+	 *
 	 * @return a CacheableResultTransformer that is used to transform
 	 *         tuples to a value(s) that can be cached.
 	 */
-	private static CacheableResultTransformer create(TupleSubsetResultTransformer transformer,
-													 String[] aliases,
-													 boolean[] includeInTuple) {
+	private static CacheableResultTransformer create(
+			TupleSubsetResultTransformer transformer,
+			String[] aliases,
+			boolean[] includeInTuple) {
 		if ( transformer == null ) {
 			throw new IllegalArgumentException( "transformer cannot be null" );
 		}
@@ -131,6 +133,7 @@ public class CacheableResultTransformer implements ResultTransformer {
 	 *        included in the tuple; the number of true values equals
 	 *        the length of the tuple that will be transformed;
 	 *        must be non-null
+	 *
 	 * @return a CacheableResultTransformer that is used to transform
 	 *         tuples to a value(s) that can be cached.
 	 */
@@ -163,9 +166,7 @@ public class CacheableResultTransformer implements ResultTransformer {
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Object transformTuple(Object[] tuple, String aliases[]) {
 		if ( aliases != null && aliases.length != tupleLength ) {
 			throw new IllegalStateException(
@@ -191,12 +192,16 @@ public class CacheableResultTransformer implements ResultTransformer {
 	 * @param transformedResults - results that were previously transformed
 	 * @param aliases - the aliases that correspond to the untransformed tuple;
 	 * @param transformer - the transformer for the re-transformation
+	 * @param includeInTuple indicates the indexes of
+	 *
 	 * @return transformedResults, with each element re-transformed (if nececessary)
 	 */
-	public List retransformResults(List transformedResults,
-								   String aliases[],
-								   ResultTransformer transformer,
-								   boolean[] includeInTuple) {
+	@SuppressWarnings( {"unchecked"})
+	public List retransformResults(
+			List transformedResults,
+			String aliases[],
+			ResultTransformer transformer,
+			boolean[] includeInTuple) {
 		if ( transformer == null ) {
 			throw new IllegalArgumentException( "transformer cannot be null" );
 		}
@@ -244,6 +249,7 @@ public class CacheableResultTransformer implements ResultTransformer {
 	 * @param results - results that were previously transformed
 	 * @return results, with each element untransformed (if nececessary)
 	 */
+	@SuppressWarnings( {"unchecked"})
 	public List untransformToTuples(List results) {
 		if ( includeInTransformIndex == null ) {
 			results = ACTUAL_TRANSFORMER.untransformToTuples(
@@ -264,21 +270,13 @@ public class CacheableResultTransformer implements ResultTransformer {
 		return results;
 	}
 
-	/**
-	 * Returns the result types for the transformed value.
-	 * @param tupleResultTypes
-	 * @return
-	 */
 	public Type[] getCachedResultTypes(Type[] tupleResultTypes) {
-		return tupleLength != tupleSubsetLength ?
-				index( tupleResultTypes.getClass(), tupleResultTypes ) :
-				tupleResultTypes
-		;
+		return tupleLength != tupleSubsetLength
+				? index( tupleResultTypes.getClass(), tupleResultTypes )
+				: tupleResultTypes;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public List transformList(List list) {
 		return list;
 	}
@@ -320,20 +318,10 @@ public class CacheableResultTransformer implements ResultTransformer {
 
 		CacheableResultTransformer that = ( CacheableResultTransformer ) o;
 
-		if ( tupleLength != that.tupleLength ) {
-			return false;
-		}
-		if ( tupleSubsetLength != that.tupleSubsetLength ) {
-			return false;
-		}
-		if ( !Arrays.equals( includeInTuple, that.includeInTuple ) ) {
-			return false;
-		}
-		if ( !Arrays.equals( includeInTransformIndex, that.includeInTransformIndex ) ) {
-			return false;
-		}
-
-		return true;
+		return tupleLength == that.tupleLength
+				&& tupleSubsetLength == that.tupleSubsetLength
+				&& Arrays.equals( includeInTuple, that.includeInTuple )
+				&& Arrays.equals( includeInTransformIndex, that.includeInTransformIndex );
 	}
 
 	@Override

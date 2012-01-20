@@ -41,8 +41,8 @@ public interface UniqueEntityLoader {
 	 * load the entity state into the given (uninitialized) object.
 	 *
 	 * @deprecated use {@link #load(java.io.Serializable, Object, SessionImplementor, LockOptions)} instead.
-	 * @noinspection JavaDoc
 	 */
+	@SuppressWarnings( {"JavaDoc"})
 	public Object load(Serializable id, Object optionalObject, SessionImplementor session) throws HibernateException;
 
 	/**

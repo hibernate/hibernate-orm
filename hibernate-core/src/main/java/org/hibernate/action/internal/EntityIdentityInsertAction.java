@@ -27,7 +27,6 @@ import java.io.Serializable;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.service.spi.EventListenerGroup;
@@ -38,33 +37,37 @@ import org.hibernate.event.spi.PreInsertEvent;
 import org.hibernate.event.spi.PreInsertEventListener;
 import org.hibernate.persister.entity.EntityPersister;
 
-public final class EntityIdentityInsertAction extends EntityAction  {
+public final class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 
-	private transient Object[] state;
 	private final boolean isDelayed;
 	private final EntityKey delayedEntityKey;
+	private EntityKey entityKey;
 	//private CacheEntry cacheEntry;
 	private Serializable generatedId;
 
 	public EntityIdentityInsertAction(
 			Object[] state,
-	        Object instance,
-	        EntityPersister persister,
-	        SessionImplementor session,
-	        boolean isDelayed) throws HibernateException {
+			Object instance,
+			EntityPersister persister,
+			boolean isVersionIncrementDisabled,
+			SessionImplementor session,
+			boolean isDelayed) throws HibernateException {
 		super(
-				session,
 				( isDelayed ? generateDelayedPostInsertIdentifier() : null ),
+				state,
 				instance,
-				persister
+				isVersionIncrementDisabled,
+				persister,
+				session
 		);
-		this.state = state;
 		this.isDelayed = isDelayed;
 		this.delayedEntityKey = isDelayed ? generateDelayedEntityKey() : null;
 	}
 
 	@Override
 	public void execute() throws HibernateException {
+		nullifyTransientReferencesIfNotAlready();
+
 		final EntityPersister persister = getPersister();
 		final SessionImplementor session = getSession();
 		final Object instance = getInstance();
@@ -75,14 +78,16 @@ public final class EntityIdentityInsertAction extends EntityAction  {
 		// else inserted the same pk first, the insert would fail
 
 		if ( !veto ) {
-			generatedId = persister.insert( state, instance, session );
+			generatedId = persister.insert( getState(), instance, session );
 			if ( persister.hasInsertGeneratedProperties() ) {
-				persister.processInsertGeneratedProperties( generatedId, instance, state, session );
+				persister.processInsertGeneratedProperties( generatedId, instance, getState(), session );
 			}
 			//need to do that here rather than in the save event listener to let
 			//the post insert events to have a id-filled entity when IDENTITY is used (EJB3)
 			persister.setIdentifier( instance, generatedId, session );
-			getSession().getPersistenceContext().registerInsertedKey( getPersister(), generatedId );
+			session.getPersistenceContext().registerInsertedKey( getPersister(), generatedId );
+			entityKey = session.generateEntityKey( generatedId, persister );
+			session.getPersistenceContext().checkUniqueness( entityKey, getInstance() );
 		}
 
 
@@ -100,6 +105,7 @@ public final class EntityIdentityInsertAction extends EntityAction  {
 			session.getFactory().getStatisticsImplementor().insertEntity( getPersister().getEntityName() );
 		}
 
+		markExecuted();
 	}
 
 	@Override
@@ -135,7 +141,7 @@ public final class EntityIdentityInsertAction extends EntityAction  {
 		final PostInsertEvent event = new PostInsertEvent(
 				getInstance(),
 				generatedId,
-				state,
+				getState(),
 				getPersister(),
 				eventSource()
 		);
@@ -152,7 +158,7 @@ public final class EntityIdentityInsertAction extends EntityAction  {
 		final PostInsertEvent event = new PostInsertEvent(
 				getInstance(),
 				generatedId,
-				state,
+				getState(),
 				getPersister(),
 				eventSource()
 		);
@@ -167,7 +173,7 @@ public final class EntityIdentityInsertAction extends EntityAction  {
 			return false; // NO_VETO
 		}
 		boolean veto = false;
-		final PreInsertEvent event = new PreInsertEvent( getInstance(), null, state, getPersister(), eventSource() );
+		final PreInsertEvent event = new PreInsertEvent( getInstance(), null, getState(), getPersister(), eventSource() );
 		for ( PreInsertEventListener listener : listenerGroup.listeners() ) {
 			veto |= listener.onPreInsert( event );
 		}
@@ -178,8 +184,19 @@ public final class EntityIdentityInsertAction extends EntityAction  {
 		return generatedId;
 	}
 
+	// TODO: nothing seems to use this method; can it be renmoved?
 	public EntityKey getDelayedEntityKey() {
 		return delayedEntityKey;
+	}
+
+	@Override
+	public boolean isEarlyInsert() {
+		return !isDelayed;
+	}
+
+	@Override
+	protected EntityKey getEntityKey() {
+		return entityKey != null ? entityKey : delayedEntityKey;
 	}
 
 	private synchronized static DelayedPostInsertIdentifier generateDelayedPostInsertIdentifier() {
@@ -188,19 +205,8 @@ public final class EntityIdentityInsertAction extends EntityAction  {
 
 	private EntityKey generateDelayedEntityKey() {
 		if ( !isDelayed ) {
-			throw new AssertionFailure( "cannot request delayed entity-key for non-delayed post-insert-id generation" );
+			throw new AssertionFailure( "cannot request delayed entity-key for early-insert post-insert-id generation" );
 		}
 		return getSession().generateEntityKey( getDelayedId(), getPersister() );
-	}
-
-	@Override
-    public void afterDeserialize(SessionImplementor session) {
-		super.afterDeserialize( session );
-		// IMPL NOTE: non-flushed changes code calls this method with session == null...
-		// guard against NullPointerException
-		if ( session != null ) {
-			EntityEntry entityEntry = session.getPersistenceContext().getEntry( getInstance() );
-			this.state = entityEntry.getLoadedState();
-		}
 	}
 }

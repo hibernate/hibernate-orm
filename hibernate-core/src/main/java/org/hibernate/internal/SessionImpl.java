@@ -71,6 +71,7 @@ import org.hibernate.Session;
 import org.hibernate.SessionBuilder;
 import org.hibernate.SessionException;
 import org.hibernate.SharedSessionBuilder;
+import org.hibernate.SimpleNaturalIdLoadAccess;
 import org.hibernate.Transaction;
 import org.hibernate.TransientObjectException;
 import org.hibernate.TypeHelper;
@@ -605,6 +606,17 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		}
 	}
 
+	private void checkNoUnresolvedActionsBeforeOperation() {
+		if ( persistenceContext.getCascadeLevel() == 0 && actionQueue.hasUnresolvedEntityInsertActions() ) {
+			throw new IllegalStateException( "There are delayed insert actions before operation as cascade level 0." );
+		}
+	}
+
+	private void checkNoUnresolvedActionsAfterOperation() {
+		if ( persistenceContext.getCascadeLevel() == 0 ) {
+			actionQueue.checkNoUnresolvedActionsAfterOperation();
+		}
+	}
 
 	// saveOrUpdate() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -619,9 +631,11 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	private void fireSaveOrUpdate(SaveOrUpdateEvent event) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
+		checkNoUnresolvedActionsBeforeOperation();
 		for ( SaveOrUpdateEventListener listener : listeners( EventType.SAVE_UPDATE ) ) {
 			listener.onSaveOrUpdate( event );
 		}
+		checkNoUnresolvedActionsAfterOperation();
 	}
 
 	private <T> Iterable<T> listeners(EventType<T> type) {
@@ -646,9 +660,11 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	private Serializable fireSave(SaveOrUpdateEvent event) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
+		checkNoUnresolvedActionsBeforeOperation();
 		for ( SaveOrUpdateEventListener listener : listeners( EventType.SAVE ) ) {
 			listener.onSaveOrUpdate( event );
 		}
+		checkNoUnresolvedActionsAfterOperation();
 		return event.getResultId();
 	}
 
@@ -666,9 +682,11 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	private void fireUpdate(SaveOrUpdateEvent event) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
+		checkNoUnresolvedActionsBeforeOperation();
 		for ( SaveOrUpdateEventListener listener : listeners( EventType.UPDATE ) ) {
 			listener.onSaveOrUpdate( event );
 		}
+		checkNoUnresolvedActionsAfterOperation();
 	}
 
 
@@ -729,9 +747,11 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	private void firePersist(PersistEvent event) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
+		checkNoUnresolvedActionsBeforeOperation();
 		for ( PersistEventListener listener : listeners( EventType.PERSIST ) ) {
 			listener.onPersist( event );
 		}
+		checkNoUnresolvedActionsAfterOperation();
 	}
 
 
@@ -762,9 +782,11 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	private void firePersistOnFlush(PersistEvent event) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
+		checkNoUnresolvedActionsBeforeOperation();
 		for ( PersistEventListener listener : listeners( EventType.PERSIST_ONFLUSH ) ) {
 			listener.onPersist( event );
 		}
+		checkNoUnresolvedActionsAfterOperation();
 	}
 
 
@@ -785,9 +807,11 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	private Object fireMerge(MergeEvent event) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
+		checkNoUnresolvedActionsBeforeOperation();
 		for ( MergeEventListener listener : listeners( EventType.MERGE ) ) {
 			listener.onMerge( event );
 		}
+		checkNoUnresolvedActionsAfterOperation();
 		return event.getResult();
 	}
 
@@ -946,6 +970,16 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		return new NaturalIdLoadAccessImpl( entityClass );
 	}
 
+	@Override
+	public SimpleNaturalIdLoadAccess bySimpleNaturalId(String entityName) {
+		return new SimpleNaturalIdLoadAccessImpl( entityName );
+	}
+
+	@Override
+	public SimpleNaturalIdLoadAccess bySimpleNaturalId(Class entityClass) {
+		return new SimpleNaturalIdLoadAccessImpl( entityClass );
+	}
+
 	private void fireLoad(LoadEvent event, LoadType loadType) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
@@ -975,7 +1009,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	}
 
 	public void refresh(Object object, LockMode lockMode) throws HibernateException {
-		fireRefresh( new RefreshEvent(object, lockMode, this) );
+		fireRefresh( new RefreshEvent( object, lockMode, this ) );
 	}
 
 	public void refresh(Object object, LockOptions lockOptions) throws HibernateException {
@@ -1735,7 +1769,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	public void setReadOnly(Object entity, boolean readOnly) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
-		persistenceContext.setReadOnly(entity, readOnly);
+		persistenceContext.setReadOnly( entity, readOnly );
 	}
 
 	public void doWork(final Work work) throws HibernateException {
@@ -2171,7 +2205,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 			fireLock( object, lockOptions );
 		}
 	}
-    
+
 	private class IdentifierLoadAccessImpl implements IdentifierLoadAccess {
 		private final EntityPersister entityPersister;
 		private LockOptions lockOptions;
@@ -2181,10 +2215,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		}
 
 		private IdentifierLoadAccessImpl(String entityName) {
-			this( factory.getEntityPersister( entityName ) );
-			if ( entityPersister == null ) {
-				throw new HibernateException( "Unable to locate persister: " + entityName );
-			}
+			this( locateEntityPersister( entityName ) );
 		}
 
 		private IdentifierLoadAccessImpl(Class entityClass) {
@@ -2241,6 +2272,14 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		}
 	}
 
+	private EntityPersister locateEntityPersister(String entityName) {
+		final EntityPersister entityPersister = factory.getEntityPersister( entityName );
+		if ( entityPersister == null ) {
+			throw new HibernateException( "Unable to locate persister: " + entityName );
+		}
+		return entityPersister;
+	}
+
 	private class NaturalIdLoadAccessImpl implements NaturalIdLoadAccess {
 		private final EntityPersister entityPersister;
 		private final Map<String, Object> naturalIdParameters = new LinkedHashMap<String, Object>();
@@ -2248,13 +2287,16 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 
 		private NaturalIdLoadAccessImpl(EntityPersister entityPersister) {
 			this.entityPersister = entityPersister;
+
+			if ( ! entityPersister.hasNaturalIdentifier() ) {
+				throw new HibernateException(
+						String.format( "Entity [%s] did not define a natural id", entityPersister.getEntityName() )
+				);
+			}
 		}
 
 		private NaturalIdLoadAccessImpl(String entityName) {
-			this( factory.getEntityPersister( entityName ) );
-			if ( entityPersister == null ) {
-				throw new HibernateException( "Unable to locate persister: " + entityName );
-			}
+			this( locateEntityPersister( entityName ) );
 		}
 
 		private NaturalIdLoadAccessImpl(Class entityClass) {
@@ -2304,6 +2346,79 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 				return null;
 			}
 			return this.getIdentifierLoadAccess().load( entityId );
+		}
+	}
+
+	private class SimpleNaturalIdLoadAccessImpl implements SimpleNaturalIdLoadAccess {
+		private final EntityPersister entityPersister;
+		private final String naturalIdAttributeName;
+		private LockOptions lockOptions;
+
+		private SimpleNaturalIdLoadAccessImpl(EntityPersister entityPersister) {
+			this.entityPersister = entityPersister;
+
+			if ( ! entityPersister.hasNaturalIdentifier() ) {
+				throw new HibernateException(
+						String.format( "Entity [%s] did not define a natural id", entityPersister.getEntityName() )
+				);
+			}
+
+			if ( entityPersister.getNaturalIdentifierProperties().length != 1 ) {
+				throw new HibernateException(
+						String.format( "Entity [%s] did not define a simple natural id", entityPersister.getEntityName() )
+				);
+			}
+
+			final int naturalIdAttributePosition = entityPersister.getNaturalIdentifierProperties()[0];
+			this.naturalIdAttributeName = entityPersister.getPropertyNames()[ naturalIdAttributePosition ];
+		}
+
+		private SimpleNaturalIdLoadAccessImpl(String entityName) {
+			this( locateEntityPersister( entityName ) );
+		}
+
+		private SimpleNaturalIdLoadAccessImpl(Class entityClass) {
+			this( entityClass.getName() );
+		}
+
+		@Override
+		public final SimpleNaturalIdLoadAccessImpl with(LockOptions lockOptions) {
+			this.lockOptions = lockOptions;
+			return this;
+		}
+
+		@Override
+		public Object getReference(Object naturalIdValue) {
+			final Serializable entityId = resolveNaturalId( naturalIdValue );
+			if ( entityId == null ) {
+				return null;
+			}
+			return this.getIdentifierLoadAccess().getReference( entityId );
+		}
+
+		@Override
+		public Object load(Object naturalIdValue) {
+			final Serializable entityId = resolveNaturalId( naturalIdValue );
+			if ( entityId == null ) {
+				return null;
+			}
+			return this.getIdentifierLoadAccess().load( entityId );
+		}
+
+		private Serializable resolveNaturalId(Object naturalIdValue) {
+			final Map<String,Object> naturalIdValueMap = Collections.singletonMap( naturalIdAttributeName, naturalIdValue );
+			final ResolveNaturalIdEvent event =
+					new ResolveNaturalIdEvent( naturalIdValueMap, entityPersister, SessionImpl.this );
+			fireResolveNaturalId( event );
+			return event.getEntityId();
+		}
+
+		private IdentifierLoadAccess getIdentifierLoadAccess() {
+			final IdentifierLoadAccessImpl identifierLoadAccess = new IdentifierLoadAccessImpl( entityPersister );
+			if ( this.lockOptions != null ) {
+				identifierLoadAccess.with( lockOptions );
+			}
+			return identifierLoadAccess;
 		}
 	}
 }

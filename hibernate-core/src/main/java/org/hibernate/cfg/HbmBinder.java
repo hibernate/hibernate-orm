@@ -40,6 +40,7 @@ import org.hibernate.EntityMode;
 import org.hibernate.FetchMode;
 import org.hibernate.FlushMode;
 import org.hibernate.MappingException;
+import org.hibernate.NaturalIdMutability;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.FilterDefinition;
@@ -2223,8 +2224,15 @@ public final class HbmBinder {
 			if ( value != null ) {
 				Property property = createProperty( value, propertyName, persistentClass
 					.getClassName(), subnode, mappings, inheritedMetas );
-				if ( !mutable ) property.setUpdateable(false);
-				if ( naturalId ) property.setNaturalIdentifier(true);
+				if ( !mutable ) {
+					property.setUpdateable(false);
+				}
+				if ( naturalId ) {
+					property.setNaturalIdentifier(true);
+					property.setNaturalIdMutability(
+							mutable ? NaturalIdMutability.MUTABLE : NaturalIdMutability.IMMUTABLE_CHECKED
+					);
+				}
 				persistentClass.addProperty( property );
 				if ( uniqueKey!=null ) uniqueKey.addColumns( property.getColumnIterator() );
 			}

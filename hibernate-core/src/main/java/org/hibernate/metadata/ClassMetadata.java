@@ -36,6 +36,7 @@ import org.hibernate.type.Type;
  * @see org.hibernate.SessionFactory#getClassMetadata(Class)
  * @author Gavin King
  */
+@SuppressWarnings( {"JavaDoc"})
 public interface ClassMetadata {
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -135,7 +136,8 @@ public interface ClassMetadata {
 	/**
 	 * Return the values of the mapped properties of the object
 	 */
-	public Object[] getPropertyValuesToInsert(Object entity, Map mergeMap, SessionImplementor session) 
+	@SuppressWarnings( {"UnusedDeclaration"})
+	public Object[] getPropertyValuesToInsert(Object entity, Map mergeMap, SessionImplementor session)
 	throws HibernateException;
 
 
@@ -186,8 +188,8 @@ public interface ClassMetadata {
 	 * Get the identifier of an instance (throw an exception if no identifier property)
 	 *
 	 * @deprecated Use {@link #getIdentifier(Object,SessionImplementor)} instead
-	 * @noinspection JavaDoc
 	 */
+	@SuppressWarnings( {"JavaDoc"})
 	public Serializable getIdentifier(Object object) throws HibernateException;
 
 	/**
@@ -213,6 +215,7 @@ public interface ClassMetadata {
 	/**
 	 * Does the class implement the <tt>Lifecycle</tt> interface?
 	 */
+	@SuppressWarnings( {"UnusedDeclaration"})
 	public boolean implementsLifecycle();
 
 	/**

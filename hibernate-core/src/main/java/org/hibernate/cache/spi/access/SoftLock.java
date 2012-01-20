@@ -24,8 +24,7 @@
 package org.hibernate.cache.spi.access;
 
 /**
- * Moved up from inner definition on the now deprecated
- * {@link org.hibernate.cache.spi.CacheConcurrencyStrategy}.
+ * Marker object for use by synchronous concurrency strategies
  *
  * @author Steve Ebersole
  */

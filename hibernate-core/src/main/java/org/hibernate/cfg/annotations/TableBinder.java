@@ -259,18 +259,6 @@ public class TableBinder {
 	}
 
 	/**
-	 *
-	 * @param schema
-	 * @param catalog
-	 * @param realTableName
-	 * @param logicalName
-	 * @param isAbstract
-	 * @param uniqueConstraints
-	 * @param constraints
-	 * @param denormalizedSuperTable
-	 * @param mappings
-	 * @return
-	 *
 	 * @deprecated Use {@link #buildAndFillTable} instead.
 	 */
 	@Deprecated

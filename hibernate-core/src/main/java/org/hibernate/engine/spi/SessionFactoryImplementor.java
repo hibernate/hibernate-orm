@@ -106,7 +106,7 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	/**
 	 * Get the SQL dialect.
 	 * <p/>
-	 * Shorthand for {@link #getJdbcServices().getDialect()}.{@link JdbcServices#getDialect()}
+	 * Shorthand for {@code getJdbcServices().getDialect()}
 	 *
 	 * @return The dialect
 	 */

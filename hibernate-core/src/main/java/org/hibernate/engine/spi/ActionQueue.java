@@ -38,11 +38,14 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
+import org.hibernate.PropertyValueException;
+import org.hibernate.action.internal.AbstractEntityInsertAction;
 import org.hibernate.action.internal.BulkOperationCleanupAction;
 import org.hibernate.action.internal.CollectionAction;
 import org.hibernate.action.internal.CollectionRecreateAction;
 import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.action.internal.CollectionUpdateAction;
+import org.hibernate.action.internal.UnresolvedEntityInsertActions;
 import org.hibernate.action.internal.EntityAction;
 import org.hibernate.action.internal.EntityDeleteAction;
 import org.hibernate.action.internal.EntityIdentityInsertAction;
@@ -52,6 +55,7 @@ import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.action.spi.Executable;
 import org.hibernate.cache.CacheException;
+import org.hibernate.engine.internal.NonNullableTransientDependencies;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.type.Type;
 
@@ -63,6 +67,7 @@ import org.hibernate.type.Type;
  * until a flush forces them to be executed against the database.
  *
  * @author Steve Ebersole
+ * @author Gail Badner
  */
 public class ActionQueue {
 
@@ -74,6 +79,7 @@ public class ActionQueue {
 	// Object insertions, updates, and deletions have list semantics because
 	// they must happen in the right order so as to respect referential
 	// integrity
+	private UnresolvedEntityInsertActions unresolvedInsertions;
 	private ArrayList insertions;
 	private ArrayList<EntityDeleteAction> deletions;
 	private ArrayList updates;
@@ -99,7 +105,8 @@ public class ActionQueue {
 	}
 
 	private void init() {
-		insertions = new ArrayList( INIT_QUEUE_LIST_SIZE );
+		unresolvedInsertions = new UnresolvedEntityInsertActions();
+		insertions = new ArrayList<AbstractEntityInsertAction>( INIT_QUEUE_LIST_SIZE );
 		deletions = new ArrayList<EntityDeleteAction>( INIT_QUEUE_LIST_SIZE );
 		updates = new ArrayList( INIT_QUEUE_LIST_SIZE );
 
@@ -119,11 +126,14 @@ public class ActionQueue {
 		collectionCreations.clear();
 		collectionRemovals.clear();
 		collectionUpdates.clear();
+
+		unresolvedInsertions.clear();
 	}
 
 	@SuppressWarnings({ "unchecked" })
 	public void addAction(EntityInsertAction action) {
-		insertions.add( action );
+		LOG.tracev( "Adding an EntityInsertAction for [{0}] object", action.getEntityName() );
+		addInsertAction( action );
 	}
 
 	@SuppressWarnings({ "unchecked" })
@@ -153,7 +163,81 @@ public class ActionQueue {
 
 	@SuppressWarnings({ "unchecked" })
 	public void addAction(EntityIdentityInsertAction insert) {
-		insertions.add( insert );
+		LOG.tracev( "Adding an EntityIdentityInsertAction for [{0}] object", insert.getEntityName() );
+		addInsertAction( insert );
+	}
+
+	private void addInsertAction(AbstractEntityInsertAction insert) {
+		if ( insert.isEarlyInsert() ) {
+			// For early inserts, must execute inserts before finding non-nullable transient entities.
+			// TODO: find out why this is necessary
+			LOG.tracev(
+					"Executing inserts before finding non-nullable transient entities for early insert: [{0}]",
+					insert
+			);
+			executeInserts();
+		}
+		NonNullableTransientDependencies nonNullableTransientDependencies = insert.findNonNullableTransientEntities();
+		if ( nonNullableTransientDependencies == null ) {
+			LOG.tracev( "Adding insert with no non-nullable, transient entities: [{0}]", insert);
+			addResolvedEntityInsertAction( insert );
+		}
+		else {
+			if ( LOG.isTraceEnabled() ) {
+				LOG.tracev(
+						"Adding insert with non-nullable, transient entities; insert=[{0}], dependencies=[{1}]",
+						insert,
+						nonNullableTransientDependencies.toLoggableString( insert.getSession() )
+				);
+			}
+			unresolvedInsertions.addUnresolvedEntityInsertAction( insert, nonNullableTransientDependencies );
+		}
+	}
+
+	@SuppressWarnings({ "unchecked" })
+	private void addResolvedEntityInsertAction(AbstractEntityInsertAction insert) {
+		if ( insert.isEarlyInsert() ) {
+			LOG.trace( "Executing insertions before resolved early-insert" );
+			executeInserts();
+			LOG.debug( "Executing identity-insert immediately" );
+			execute( insert );
+		}
+		else {
+			LOG.trace( "Adding resolved non-early insert action." );
+			insertions.add( insert );
+		}
+		insert.makeEntityManaged();
+		for ( AbstractEntityInsertAction resolvedAction :
+				unresolvedInsertions.resolveDependentActions( insert.getInstance(), session ) ) {
+			addResolvedEntityInsertAction( resolvedAction );
+		}
+	}
+
+	/**
+	 * Are there unresolved entity insert actions that depend on non-nullable
+	 * associations with a transient entity?
+	 * @return true, if there are unresolved entity insert actions that depend on
+	 *               non-nullable associations with a transient entity;
+	 *         false, otherwise
+	 */
+	public boolean hasUnresolvedEntityInsertActions() {
+		return ! unresolvedInsertions.isEmpty();
+	}
+
+	/**
+	 * Throws {@link org.hibernate.PropertyValueException} if there are any unresolved
+	 * entity insert actions that depend on non-nullable associations with
+	 * a transient entity. This method should be called on completion of
+	 * an operation (after all cascades are completed) that saves an entity.
+	 *
+	 * @throws org.hibernate.PropertyValueException if there are any unresolved entity
+	 * insert actions; {@link org.hibernate.PropertyValueException#getEntityName()}
+	 * and {@link org.hibernate.PropertyValueException#getPropertyName()} will
+	 * return the entity name and property value for the first unresolved
+	 * entity insert action.
+	 */
+	public void checkNoUnresolvedActionsAfterOperation() throws PropertyValueException {
+		unresolvedInsertions.checkNoUnresolvedActionsAfterOperation();
 	}
 
 	public void addAction(BulkOperationCleanupAction cleanupAction) {
@@ -183,6 +267,11 @@ public class ActionQueue {
 	 * @throws HibernateException error executing queued actions.
 	 */
 	public void executeActions() throws HibernateException {
+		if ( ! unresolvedInsertions.isEmpty() ) {
+			throw new IllegalStateException(
+					"About to execute actions, but there are unresolved entity insert actions."
+			);
+		}
 		executeActions( insertions );
 		executeActions( updates );
 		executeActions( collectionRemovals );
@@ -230,6 +319,7 @@ public class ActionQueue {
 	public boolean areTablesToBeUpdated(Set tables) {
 		return areTablesToUpdated( updates, tables ) ||
 				areTablesToUpdated( insertions, tables ) ||
+				areTablesToUpdated( unresolvedInsertions.getDependentEntityInsertActions(), tables ) ||
 				areTablesToUpdated( deletions, tables ) ||
 				areTablesToUpdated( collectionUpdates, tables ) ||
 				areTablesToUpdated( collectionCreations, tables ) ||
@@ -242,12 +332,12 @@ public class ActionQueue {
 	 * @return True if insertions or deletions are currently queued; false otherwise.
 	 */
 	public boolean areInsertionsOrDeletionsQueued() {
-		return ( insertions.size() > 0 || deletions.size() > 0 );
+		return ( insertions.size() > 0 || ! unresolvedInsertions.isEmpty() || deletions.size() > 0 );
 	}
 
 	@SuppressWarnings({ "unchecked" })
-	private static boolean areTablesToUpdated(List actions, Set tableSpaces) {
-		for ( Executable action : (List<Executable>) actions ) {
+	private static boolean areTablesToUpdated(Iterable actions, Set tableSpaces) {
+		for ( Executable action : (Iterable<Executable>) actions ) {
 			final Serializable[] spaces = action.getPropertySpaces();
 			for ( Serializable space : spaces ) {
 				if ( tableSpaces.contains( space ) ) {
@@ -309,6 +399,7 @@ public class ActionQueue {
 				.append( " collectionCreations=" ).append( collectionCreations )
 				.append( " collectionRemovals=" ).append( collectionRemovals )
 				.append( " collectionUpdates=" ).append( collectionUpdates )
+				.append( " unresolvedInsertDependencies=" ).append( unresolvedInsertions )
 				.append( "]" )
 				.toString();
 	}
@@ -399,6 +490,7 @@ public class ActionQueue {
 	public boolean hasAnyQueuedActions() {
 		return updates.size() > 0 ||
 				insertions.size() > 0 ||
+				! unresolvedInsertions.isEmpty() ||
 				deletions.size() > 0 ||
 				collectionUpdates.size() > 0 ||
 				collectionRemovals.size() > 0 ||
@@ -426,6 +518,8 @@ public class ActionQueue {
 	 */
 	public void serialize(ObjectOutputStream oos) throws IOException {
 		LOG.trace( "Serializing action-queue" );
+
+		unresolvedInsertions.serialize( oos );
 
 		int queueSize = insertions.size();
 		LOG.tracev( "Starting serialization of [{0}] insertions entries", queueSize );
@@ -488,6 +582,8 @@ public class ActionQueue {
 			SessionImplementor session) throws IOException, ClassNotFoundException {
 		LOG.trace( "Dedeserializing action-queue" );
 		ActionQueue rtn = new ActionQueue( session );
+
+		rtn.unresolvedInsertions = UnresolvedEntityInsertActions.deserialize( ois, session );
 
 		int queueSize = ois.readInt();
 		LOG.tracev( "Starting deserialization of [{0}] insertions entries", queueSize );

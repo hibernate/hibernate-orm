@@ -29,6 +29,7 @@ package org.hibernate.metamodel.binding;
  * @author Gail Badner
  * @author Steve Ebersole
  */
+@SuppressWarnings( {"JavaDoc", "UnusedDeclaration"})
 public interface SingularAssociationAttributeBinding extends SingularAttributeBinding, AssociationAttributeBinding {
 	/**
 	 * Is this association based on a property reference (non PK column(s) as target of FK)?

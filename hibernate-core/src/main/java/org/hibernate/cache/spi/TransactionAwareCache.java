@@ -24,7 +24,7 @@
 package org.hibernate.cache.spi;
 
 /**
- * Marker interface for identifying {@link Cache} implementations which are aware of JTA transactions
+ * Marker interface for identifying {@link org.hibernate.Cache} implementations which are aware of JTA transactions
  *
  * @author Steve Ebersole
  */

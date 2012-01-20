@@ -41,7 +41,7 @@ public class Identifier {
 	 *
 	 * @param name The name
 	 *
-	 * @return
+	 * @return The identifier form of the name.
 	 */
 	public static Identifier toIdentifier(String name) {
 		if ( StringHelper.isEmpty( name ) ) {
@@ -101,9 +101,9 @@ public class Identifier {
 	 * enclosed in dialect-specific open- and end-quotes; otherwise,
 	 * simply return the identifier name.
 	 *
-	 * @param dialect
-	 * @return if quoted, identifier name enclosed in dialect-specific
-	 *         open- and end-quotes; otherwise, the identifier name.
+	 * @param dialect The dialect whose dialect-specific quoting should be used.
+	 * @return if quoted, identifier name enclosed in dialect-specific open- and end-quotes; otherwise, the
+	 * identifier name.
 	 */
 	public String encloseInQuotesIfQuoted(Dialect dialect) {
 		return isQuoted ?

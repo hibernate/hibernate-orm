@@ -31,6 +31,7 @@ import org.hibernate.cache.spi.CacheKey;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.service.spi.EventListenerGroup;
@@ -41,30 +42,37 @@ import org.hibernate.event.spi.PreInsertEvent;
 import org.hibernate.event.spi.PreInsertEventListener;
 import org.hibernate.persister.entity.EntityPersister;
 
-public final class EntityInsertAction extends EntityAction {
+public final class EntityInsertAction extends AbstractEntityInsertAction {
 
-	private Object[] state;
 	private Object version;
 	private Object cacheEntry;
 
 	public EntityInsertAction(
-	        Serializable id,
-	        Object[] state,
-	        Object instance,
-	        Object version,
-	        EntityPersister persister,
-	        SessionImplementor session) throws HibernateException {
-		super( session, id, instance, persister );
-		this.state = state;
+			Serializable id,
+			Object[] state,
+			Object instance,
+			Object version,
+			EntityPersister persister,
+			boolean isVersionIncrementDisabled,
+			SessionImplementor session) throws HibernateException {
+		super( id, state, instance, isVersionIncrementDisabled, persister, session );
 		this.version = version;
 	}
 
-	public Object[] getState() {
-		return state;
+	@Override
+	public boolean isEarlyInsert() {
+		return false;
+	}
+
+	@Override
+	protected EntityKey getEntityKey() {
+		return getSession().generateEntityKey( getId(), getPersister() );
 	}
 
 	@Override
 	public void execute() throws HibernateException {
+		nullifyTransientReferencesIfNotAlready();
+
 		EntityPersister persister = getPersister();
 		SessionImplementor session = getSession();
 		Object instance = getInstance();
@@ -77,7 +85,7 @@ public final class EntityInsertAction extends EntityAction {
 
 		if ( !veto ) {
 			
-			persister.insert( id, state, instance, session );
+			persister.insert( id, getState(), instance, session );
 		
 			EntityEntry entry = session.getPersistenceContext().getEntry( instance );
 			if ( entry == null ) {
@@ -87,11 +95,11 @@ public final class EntityInsertAction extends EntityAction {
 			entry.postInsert();
 	
 			if ( persister.hasInsertGeneratedProperties() ) {
-				persister.processInsertGeneratedProperties( id, instance, state, session );
+				persister.processInsertGeneratedProperties( id, instance, getState(), session );
 				if ( persister.isVersionPropertyGenerated() ) {
-					version = Versioning.getVersion( state, persister );
+					version = Versioning.getVersion( getState(), persister );
 				}
-				entry.postUpdate(instance, state, version);
+				entry.postUpdate(instance, getState(), version);
 			}
 
 			getSession().getPersistenceContext().registerInsertedKey( getPersister(), getId() );
@@ -102,7 +110,7 @@ public final class EntityInsertAction extends EntityAction {
 		if ( isCachePutEnabled( persister, session ) ) {
 			
 			CacheEntry ce = new CacheEntry(
-					state,
+					getState(),
 					persister, 
 					persister.hasUninitializedLazyProperties( instance ),
 					version,
@@ -127,6 +135,7 @@ public final class EntityInsertAction extends EntityAction {
 					.insertEntity( getPersister().getEntityName() );
 		}
 
+		markExecuted();
 	}
 
 	private void postInsert() {
@@ -137,7 +146,7 @@ public final class EntityInsertAction extends EntityAction {
 		final PostInsertEvent event = new PostInsertEvent(
 				getInstance(),
 				getId(),
-				state,
+				getState(),
 				getPersister(),
 				eventSource()
 		);
@@ -154,7 +163,7 @@ public final class EntityInsertAction extends EntityAction {
 		final PostInsertEvent event = new PostInsertEvent(
 				getInstance(),
 				getId(),
-				state,
+				getState(),
 				getPersister(),
 				eventSource()
 		);
@@ -170,7 +179,7 @@ public final class EntityInsertAction extends EntityAction {
 		if ( listenerGroup.isEmpty() ) {
 			return veto;
 		}
-		final PreInsertEvent event = new PreInsertEvent( getInstance(), getId(), state, getPersister(), eventSource() );
+		final PreInsertEvent event = new PreInsertEvent( getInstance(), getId(), getState(), getPersister(), eventSource() );
 		for ( PreInsertEventListener listener : listenerGroup.listeners() ) {
 			veto |= listener.onPreInsert( event );
 		}

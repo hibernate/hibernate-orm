@@ -34,8 +34,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.Test;
-
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
@@ -46,7 +44,6 @@ import org.hibernate.ReplicationMode;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.IngresDialect;
 import org.hibernate.dialect.MySQLDialect;
@@ -54,8 +51,11 @@ import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.internal.SessionImpl;
 import org.hibernate.jdbc.AbstractWork;
 import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.type.StandardBasicTypes;
+
+import org.junit.Test;
+
+import org.hibernate.testing.FailureExpected;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -167,7 +167,7 @@ public class ParentChildTest extends LegacyTestCase {
 		FooProxy foo2 = new Foo();
 		Serializable id = s.save(foo);
 		Serializable id2 = s.save(foo2);
-		foo2.setInt(1234567);
+		foo2.setInt( 1234567 );
 		foo.setInt(1234);
 		t.commit();
 		s.close();
@@ -176,11 +176,11 @@ public class ParentChildTest extends LegacyTestCase {
 		t = s.beginTransaction();
 		foo = (FooProxy) s.load(Foo.class, id);
 		foo2 = (FooProxy) s.load(Foo.class, id2);
-		assertFalse( Hibernate.isInitialized(foo) );
-		Hibernate.initialize(foo2);
+		assertFalse( Hibernate.isInitialized( foo ) );
+		Hibernate.initialize( foo2 );
 		Hibernate.initialize(foo);
 		assertTrue( foo.getComponent().getImportantDates().length==4 );
-		assertTrue( foo2.getComponent().getImportantDates().length==4 );
+		assertTrue( foo2.getComponent().getImportantDates().length == 4 );
 		t.commit();
 		s.close();
 
@@ -189,14 +189,14 @@ public class ParentChildTest extends LegacyTestCase {
 		foo.setKey( "xyzid" );
 		foo.setFloat( new Float( 1.2f ) );
 		foo2.setKey( (String) id ); //intentionally id, not id2!
-		foo2.setFloat( new Float(1.3f) );
+		foo2.setFloat( new Float( 1.3f ) );
 		foo2.getDependent().setKey( null );
 		foo2.getComponent().getSubcomponent().getFee().setKey(null);
 		assertFalse( foo2.getKey().equals( id ) );
 		s.save( foo );
 		s.update( foo2 );
 		assertEquals( foo2.getKey(), id );
-		assertTrue( foo2.getInt()==1234567 );
+		assertTrue( foo2.getInt() == 1234567 );
 		assertEquals( foo.getKey(), "xyzid" );
 		t.commit();
 		s.close();
@@ -204,11 +204,11 @@ public class ParentChildTest extends LegacyTestCase {
 		s = openSession();
 		t = s.beginTransaction();
 		foo = (FooProxy) s.load(Foo.class, id);
-		assertTrue( foo.getInt()==1234567 );
+		assertTrue( foo.getInt() == 1234567 );
 		assertTrue( foo.getComponent().getImportantDates().length==4 );
 		String feekey = foo.getDependent().getKey();
 		String fookey = foo.getKey();
-		s.delete(foo);
+		s.delete( foo );
 		s.delete( s.get(Foo.class, id2) );
 		s.delete( s.get(Foo.class, "xyzid") );
 // here is the issue (HHH-4092).  After the deletes above there are 2 Fees and a Glarch unexpectedly hanging around
@@ -218,14 +218,14 @@ public class ParentChildTest extends LegacyTestCase {
 		
 		//to account for new id rollback shit
 		foo.setKey(fookey);
-		foo.getDependent().setKey(feekey);
-		foo.getComponent().setGlarch(null);
+		foo.getDependent().setKey( feekey );
+		foo.getComponent().setGlarch( null );
 		foo.getComponent().setSubcomponent(null);
 		
 		s = openSession();
 		t = s.beginTransaction();
 		//foo.getComponent().setGlarch(null); //no id property!
-		s.replicate(foo, ReplicationMode.OVERWRITE);
+		s.replicate( foo, ReplicationMode.OVERWRITE );
 		t.commit();
 		s.close();
 
@@ -264,7 +264,7 @@ public class ParentChildTest extends LegacyTestCase {
 		baz.getFooSet().add(foo2);
 		baz.setFooArray( new FooProxy[] { foo1 } );
 
-		LockMode lockMode = (getDialect() instanceof DB2Dialect) ? LockMode.READ : LockMode.UPGRADE;
+		LockMode lockMode = supportsLockingNullableSideOfJoin( getDialect() ) ? LockMode.UPGRADE : LockMode.READ;
 
 		Criteria crit = s.createCriteria(Baz.class);
 		crit.createCriteria("topGlarchez")

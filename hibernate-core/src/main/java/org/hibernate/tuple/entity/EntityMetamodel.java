@@ -37,6 +37,7 @@ import org.jboss.logging.Logger;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.NaturalIdMutability;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.CascadeStyle;
@@ -154,7 +155,7 @@ public class EntityMetamodel implements Serializable {
 
 		propertySpan = persistentClass.getPropertyClosureSpan();
 		properties = new StandardProperty[propertySpan];
-		List naturalIdNumbers = new ArrayList();
+		List<Integer> naturalIdNumbers = new ArrayList<Integer>();
 		// temporary ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		propertyNames = new String[propertySpan];
 		propertyTypes = new Type[propertySpan];
@@ -195,7 +196,7 @@ public class EntityMetamodel implements Serializable {
 
 			if ( prop.isNaturalIdentifier() ) {
 				naturalIdNumbers.add( i );
-				if ( prop.isUpdateable() ) {
+				if ( prop.isUpdateable() && NaturalIdMutability.MUTABLE.equals( prop.getNaturalIdMutability() ) ) {
 					foundUpdateableNaturalIdProperty = true;
 				}
 			}

@@ -12,86 +12,90 @@ ideaModule {
 
 javadocBuildDir = dir( buildDirName + "/documentation/javadocs" )
 
-def List subProjectsToSkipForJavadoc = ['release','documentation'];
-
 def copyRightYear = new java.util.GregorianCalendar().get( java.util.Calendar.YEAR );
 
 task aggregateJavadocs(type: Javadoc) {
+    // exclude any generated sources (this is not working: http://forums.gradle.org/gradle/topics/excluding_generated_source_from_javadoc)
+    exclude "**/generated-src/**"
+
+    // process each project, building up:
+    //      1) appropriate sources
+    //      2) classpath
+    //      3) the package list for groups
+    Set<String> apiPackages = new HashSet<String>()
+    Set<String> spiPackages = new HashSet<String>()
+    Set<String> internalPackages = new HashSet<String>()
+    parent.subprojects.each{ Project subProject->
+        // skip certain sub-projects
+        if ( ! ['release','documentation'].contains( subProject.name ) ) {
+            subProject.sourceSets.each { SourceSet sourceSet ->
+                // skip certain source sets
+                if ( ! ['test','matrix'].contains( sourceSet.name ) ) {
+                    source sourceSet.java
+
+                    if( classpath ) {
+                        classpath += sourceSet.classes + sourceSet.compileClasspath
+                    }
+                    else {
+                        classpath = sourceSet.classes + sourceSet.compileClasspath
+                    }
+
+                    sourceSet.java.each { javaFile ->
+                        final String packageName = determinePackageName( sourceSet.java, javaFile );
+                        if ( packageName.endsWith( ".internal" ) || packageName.contains( ".internal." ) ) {
+                            internalPackages.add( packageName );
+                        }
+                        else if ( packageName.endsWith( ".spi" ) || packageName.contains( ".spi." ) ) {
+                            spiPackages.add( packageName );
+                        }
+                        else if ( packageName.startsWith( "org.hibernate.testing" ) ) {
+                            // do nothing as testing support is already handled...
+                        }
+                        else {
+                            apiPackages.add( packageName );
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // apply standard config
     description = "Build the aggregated JavaDocs for all modules"
     maxMemory = '512m'
     destinationDir = javadocBuildDir.dir
     configure( options ) {
-        overview = new File( projectDir, 'src/javadoc/package.html' )
+        overview = new File( projectDir, 'src/javadoc/overview.html' )
         stylesheetFile = new File( projectDir, 'src/javadoc/stylesheet.css' )
         windowTitle = 'Hibernate JavaDocs'
         docTitle = "Hibernate JavaDoc ($project.version)"
         bottom = "Copyright &copy; 2001-$copyRightYear <a href=\"http://redhat.com\">Red Hat, Inc.</a>  All Rights Reserved."
         use = true
         links = [ 'http://download.oracle.com/javase/6/docs/api/', 'http://download.oracle.com/javaee/6/api/' ]
-        group(
-            'Core API', [
-                'org.hibernate',
-                'org.hibernate.classic',
-                'org.hibernate.criterion',
-                'org.hibernate.mapping',
-                'org.hibernate.metadata',
-                'org.hibernate.cfg',
-                'org.hibernate.stat'
-            ]
-        )
-        group(
-            'Extension SPI', [
-                'org.hibernate.id*',
-                'org.hibernate.connection',
-                'org.hibernate.transaction',
-                'org.hibernate.type',
-                'org.hibernate.dialect*',
-                'org.hibernate.cache*',
-                'org.hibernate.event*',
-                'org.hibernate.property',
-                'org.hibernate.loader*',
-                'org.hibernate.persister*',
-                'org.hibernate.proxy',
-                'org.hibernate.tuple',
-                'org.hibernate.transform',
-                'org.hibernate.collection',
-                'org.hibernate.jdbc',
-                'org.hibernate.usertype'
-            ]
-        )
-        group(
-            'Bytecode providers', [
-                 'org.hibernate.bytecode*',
-                 'org.hibernate.intercept*'
-            ]
-        )
-        group (
-            'Infinispan Integration', ['org.hibernate.cache.infinispan*']
-        )
-        group (
-            'JBossCache Integration', ['org.hibernate.cache.jbc*']
-        )
-        group (
-            'Testing Support', ['org.hibernate.junit*']
-        )
+        group( 'API', apiPackages.asList() )
+        group( 'SPI', spiPackages.asList() )
+        group( 'Internal', internalPackages.asList() )
+        group ( 'Testing Support', ['org.hibernate.testing*'] )
+// ugh, http://issues.gradle.org/browse/GRADLE-1563
+//        tags ["todo:X"]
+// work around:
+        addStringOption( "tag", "todo:X" )
     }
+}
 
-    parent.subprojects.each{ subProject->
-        if ( !subProjectsToSkipForJavadoc.contains( subProject.name ) ) {
-            subProject.sourceSets.each { set ->
-                if ( !"test".equals( set.name ) ) {
-                    source set.java
-
-                    if( classpath ) {
-                        classpath += set.classes + set.compileClasspath
-                    }
-                    else {
-                        classpath = set.classes + set.compileClasspath
-                    }
-                }
-            }
+String determinePackageName(SourceDirectorySet sourceDirectorySet, File javaFile) {
+    final javaFileAbsolutePath = javaFile.absolutePath;
+    for ( File sourceDirectory : sourceDirectorySet.srcDirs ) {
+        final String sourceDirectoryAbsolutePath = sourceDirectory.absolutePath;
+        if ( javaFileAbsolutePath.startsWith( sourceDirectoryAbsolutePath ) ) {
+            final String javaFileRelativePath = javaFileAbsolutePath.substring(
+                    sourceDirectoryAbsolutePath.length() + 1,
+                    javaFileAbsolutePath.lastIndexOf( File.separator )
+            );
+            return javaFileRelativePath.replace( File.separator, "." );
         }
     }
+    throw new RuntimeException( "ugh" );
 }
 
 aggregateJavadocs.doLast {

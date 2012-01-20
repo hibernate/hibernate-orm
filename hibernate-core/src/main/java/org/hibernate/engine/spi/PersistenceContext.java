@@ -36,13 +36,23 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
- * Holds the state of the persistence context, including the 
- * first-level cache, entries, snapshots, proxies, etc.
+ * Represents the state of "stuff" Hibernate is tracking, including (not exhaustive):
+ * <ul>
+ *     <li>entities</li>
+ *     <li>collections</li>
+ *     <li>snapshots</li>
+ *     <li>proxies</li>
+ * </ul>
+ * <p/>
+ * Often referred to as the "first level cache".
  * 
  * @author Gavin King
+ * @author Steve Ebersole
  */
+@SuppressWarnings( {"JavaDoc"})
 public interface PersistenceContext {
 	
+	@SuppressWarnings( {"UnusedDeclaration"})
 	public boolean isStateless();
 
 	/**
@@ -61,18 +71,28 @@ public interface PersistenceContext {
 
 	/**
 	 * Add a collection which has no owner loaded
+	 *
+	 * @param key The collection key under which to add the collection
+	 * @param collection The collection to add
 	 */
 	public void addUnownedCollection(CollectionKey key, PersistentCollection collection);
 
 	/**
-	 * Get and remove a collection whose owner is not yet loaded,
-	 * when its owner is being loaded
+	 * Take ownership of a previously unowned collection, if one.  This method returns {@code null} if no such
+	 * collection was previous added () or was previously removed.
+	 * <p/>
+	 * This should indicate the owner is being loaded and we are ready to "link" them.
+	 *
+	 * @param key The collection key for which to locate a collection collection
+	 *
+	 * @return The unowned collection, or {@code null}
 	 */
 	public PersistentCollection useUnownedCollection(CollectionKey key);
 
 	/**
-	 * Get the <tt>BatchFetchQueue</tt>, instantiating one if
-	 * necessary.
+	 * Get the {@link BatchFetchQueue}, instantiating one if necessary.
+	 *
+	 * @return The batch fetch queue in effect for this persistence context
 	 */
 	public BatchFetchQueue getBatchFetchQueue();
 	
@@ -84,10 +104,14 @@ public interface PersistenceContext {
 	/**
 	 * @return false if we know for certain that all the entities are read-only
 	 */
+	@SuppressWarnings( {"UnusedDeclaration"})
 	public boolean hasNonReadOnlyEntities();
 
 	/**
 	 * Set the status of an entry
+	 *
+	 * @param entry The entry for which to set the status
+	 * @param status The new status
 	 */
 	public void setEntryStatus(EntityEntry entry, Status status);
 
@@ -97,94 +121,155 @@ public interface PersistenceContext {
 	public void afterTransactionCompletion();
 
 	/**
-	 * Get the current state of the entity as known to the underlying
-	 * database, or null if there is no corresponding row 
+	 * Get the current state of the entity as known to the underlying database, or null if there is no
+	 * corresponding row
+	 *
+	 * @param id The identifier of the entity for which to grab a snapshot
+	 * @param persister The persister of the entity.
+	 *
+	 * @return The entity's (non-cached) snapshot
+	 *
+	 * @see #getCachedDatabaseSnapshot
 	 */
-	public Object[] getDatabaseSnapshot(Serializable id, EntityPersister persister)
-			throws HibernateException;
+	public Object[] getDatabaseSnapshot(Serializable id, EntityPersister persister);
 
+	/**
+	 * Get the current database state of the entity, using the cached state snapshot if one is available.
+	 *
+	 * @param key The entity key
+	 *
+	 * @return The entity's (non-cached) snapshot
+	 */
 	public Object[] getCachedDatabaseSnapshot(EntityKey key);
 
 	/**
-	 * Get the values of the natural id fields as known to the underlying 
-	 * database, or null if the entity has no natural id or there is no 
-	 * corresponding row.
+	 * Get the values of the natural id fields as known to the underlying database, or null if the entity has no
+	 * natural id or there is no corresponding row.
+	 *
+	 * @param id The identifier of the entity for which to grab a snapshot
+	 * @param persister The persister of the entity.
+	 *
+	 * @return The current (non-cached) snapshot of the entity's natural id state.
 	 */
-	public Object[] getNaturalIdSnapshot(Serializable id, EntityPersister persister)
-	throws HibernateException;
+	public Object[] getNaturalIdSnapshot(Serializable id, EntityPersister persister);
 
 	/**
 	 * Add a canonical mapping from entity key to entity instance
+	 *
+	 * @param key The key under which to add an entity
+	 * @param entity The entity instance to add
 	 */
 	public void addEntity(EntityKey key, Object entity);
 
 	/**
-	 * Get the entity instance associated with the given 
-	 * <tt>EntityKey</tt>
+	 * Get the entity instance associated with the given key
+	 *
+	 * @param key The key under which to look for an entity
+	 *
+	 * @return The matching entity, or {@code null}
 	 */
 	public Object getEntity(EntityKey key);
 
 	/**
 	 * Is there an entity with the given key in the persistence context
+	 *
+	 * @param key The key under which to look for an entity
+	 *
+	 * @return {@code true} indicates an entity was found; otherwise {@code false}
 	 */
 	public boolean containsEntity(EntityKey key);
 
 	/**
-	 * Remove an entity from the session cache, also clear
-	 * up other state associated with the entity, all except
-	 * for the <tt>EntityEntry</tt>
+	 * Remove an entity.  Also clears up all other state associated with the entity aside from the {@link EntityEntry}
+	 *
+	 * @param key The key whose matching entity should be removed
+	 *
+	 * @return The matching entity
 	 */
 	public Object removeEntity(EntityKey key);
 
 	/**
-	 * Get an entity cached by unique key
-	 */
-	public Object getEntity(EntityUniqueKey euk);
-
-	/**
 	 * Add an entity to the cache by unique key
+	 *
+	 * @param euk The unique (non-primary) key under which to add an entity
+	 * @param entity The entity instance
 	 */
 	public void addEntity(EntityUniqueKey euk, Object entity);
 
 	/**
-	 * Retreive the EntityEntry representation of the given entity.
+	 * Get an entity cached by unique key
 	 *
-	 * @param entity The entity for which to locate the EntityEntry.
-	 * @return The EntityEntry for the given entity.
+	 * @param euk The unique (non-primary) key under which to look for an entity
+	 *
+	 * @return The located entity
+	 */
+	public Object getEntity(EntityUniqueKey euk);
+
+	/**
+	 * Retrieve the {@link EntityEntry} representation of the given entity.
+	 *
+	 * @param entity The entity instance for which to locate the corresponding entry
+	 * @return The entry
 	 */
 	public EntityEntry getEntry(Object entity);
 
 	/**
 	 * Remove an entity entry from the session cache
+	 *
+	 * @param entity The entity instance for which to remove the corresponding entry
+	 * @return The matching entry
 	 */
 	public EntityEntry removeEntry(Object entity);
 
 	/**
-	 * Is there an EntityEntry for this instance?
+	 * Is there an {@link EntityEntry} registration for this entity instance?
+	 *
+	 * @param entity The entity instance for which to check for an entry
+	 *
+	 * @return {@code true} indicates a matching entry was found.
 	 */
 	public boolean isEntryFor(Object entity);
 
 	/**
 	 * Get the collection entry for a persistent collection
+	 *
+	 * @param coll The persistent collection instance for which to locate the collection entry
+	 *
+	 * @return The matching collection entry
 	 */
 	public CollectionEntry getCollectionEntry(PersistentCollection coll);
 
 	/**
 	 * Adds an entity to the internal caches.
 	 */
-	public EntityEntry addEntity(final Object entity, final Status status,
-			final Object[] loadedState, final EntityKey entityKey, final Object version,
-			final LockMode lockMode, final boolean existsInDatabase,
-			final EntityPersister persister, final boolean disableVersionIncrement, boolean lazyPropertiesAreUnfetched);
+	public EntityEntry addEntity(
+			final Object entity,
+			final Status status,
+			final Object[] loadedState,
+			final EntityKey entityKey,
+			final Object version,
+			final LockMode lockMode,
+			final boolean existsInDatabase,
+			final EntityPersister persister,
+			final boolean disableVersionIncrement,
+			boolean lazyPropertiesAreUnfetched);
 
 	/**
 	 * Generates an appropriate EntityEntry instance and adds it 
 	 * to the event source's internal caches.
 	 */
-	public EntityEntry addEntry(final Object entity, final Status status,
-			final Object[] loadedState, final Object rowId, final Serializable id,
-			final Object version, final LockMode lockMode, final boolean existsInDatabase,
-			final EntityPersister persister, final boolean disableVersionIncrement, boolean lazyPropertiesAreUnfetched);
+	public EntityEntry addEntry(
+			final Object entity,
+			final Status status,
+			final Object[] loadedState,
+			final Object rowId,
+			final Serializable id,
+			final Object version,
+			final LockMode lockMode,
+			final boolean existsInDatabase,
+			final EntityPersister persister,
+			final boolean disableVersionIncrement,
+			boolean lazyPropertiesAreUnfetched);
 
 	/**
 	 * Is the given collection associated with this persistence context?
@@ -428,6 +513,7 @@ public interface PersistenceContext {
 	/**
 	 * Is a flush cycle currently in process?
 	 */
+	@SuppressWarnings( {"UnusedDeclaration"})
 	public boolean isFlushing();
 	
 	/**
@@ -526,13 +612,14 @@ public interface PersistenceContext {
 
 	/**
 	 * Is the entity or proxy read-only?
+	 * <p/>
+	 * To determine the default read-only/modifiable setting used for entities and proxies that are loaded into the
+	 * session use {@link org.hibernate.Session#isDefaultReadOnly}
 	 *
-	 * To get the default read-only/modifiable setting used for
-	 * entities and proxies that are loaded into the session:
-	 * @see org.hibernate.Session#isDefaultReadOnly()
+	 * @param entityOrProxy an entity or proxy
 	 *
-	 * @param entityOrProxy
-	 * @return true, the object is read-only; false, the object is modifiable.
+	 * @return {@code true} if the object is read-only; otherwise {@code false} to indicate that the object is
+	 * modifiable.
 	 */
 	public boolean isReadOnly(Object entityOrProxy);
 
@@ -551,35 +638,30 @@ public interface PersistenceContext {
 	 * If the entity or proxy already has the specified read-only/modifiable
 	 * setting, then this method does nothing.
 	 *
-	 * To set the default read-only/modifiable setting used for
-	 * entities and proxies that are loaded into this persistence context:
-	 * @see PersistenceContext#setDefaultReadOnly(boolean)
-	 * @see org.hibernate.Session#setDefaultReadOnly(boolean)
+	 * @param entityOrProxy an entity or proxy
+	 * @param readOnly if {@code true}, the entity or proxy is made read-only; otherwise, the entity or proxy is made
+	 * modifiable.
 	 *
-	 * To override this persistence context's read-only/modifiable setting
-	 * for entities and proxies loaded by a Query:
-	 * @see org.hibernate.Query#setReadOnly(boolean)
-	 *
-	 * @param entityOrProxy, an entity or HibernateProxy
-	 * @param readOnly, if true, the entity or proxy is made read-only;
-	 *                  if false, the entity or proxy is made modifiable.
-	 *
-	 * @see org.hibernate.Session#setReadOnly(Object, boolean)
+	 * @see org.hibernate.Session#setDefaultReadOnly
+	 * @see org.hibernate.Session#setReadOnly
+	 * @see org.hibernate.Query#setReadOnly
 	 */
 	public void setReadOnly(Object entityOrProxy, boolean readOnly);
 
 	void replaceDelayedEntityIdentityInsertKeys(EntityKey oldKey, Serializable generatedId);
 
 	/**
-	 * Put child/parent relation to cache for cascading op
-	 * @param parent
-	 * @param child
+	 * Add a child/parent relation to cache for cascading op
+	 *
+	 * @param child The child of the relationship
+	 * @param parent The parent of the relationship
 	 */
-	public void addChildParent(Object parent, Object child);
+	public void addChildParent(Object child, Object parent);
 
 	/**
-	 * Remove child/parent relation from cache 
-	 * @param parent
+	 * Remove child/parent relation from cache
+	 *
+	 * @param child The child to be removed.
 	 */
 	public void removeChildParent(Object child);
 

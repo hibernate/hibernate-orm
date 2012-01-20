@@ -22,90 +22,47 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.entities.mapper.relation;
-import java.io.Serializable;
-import java.util.List;
-import java.util.Map;
-import javax.persistence.NoResultException;
 
-import org.hibernate.NonUniqueResultException;
-import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.envers.configuration.AuditConfiguration;
-import org.hibernate.envers.entities.EntityConfiguration;
 import org.hibernate.envers.entities.PropertyData;
-import org.hibernate.envers.entities.mapper.PersistentCollectionChangeData;
-import org.hibernate.envers.entities.mapper.PropertyMapper;
-import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.reader.AuditReaderImplementor;
-import org.hibernate.envers.tools.reflection.ReflectionTools;
-import org.hibernate.property.Setter;
+
+import javax.persistence.OneToOne;
+import java.io.Serializable;
 
 /**
+ * Property mapper for not owning side of {@link OneToOne} relation.
  * @author Adam Warski (adam at warski dot org)
  * @author Hern�n Chanfreau
- * @author Michal Skowronek (mskowr at o2 dot pl)
+ * @author Michal Skowronek (mskowr at o2 dot pl)  
+ * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-public class OneToOneNotOwningMapper implements PropertyMapper {
-    private String owningReferencePropertyName;
-    private String owningEntityName;
-    private PropertyData propertyData;
+public class OneToOneNotOwningMapper extends AbstractOneToOneMapper {
+    private final String owningReferencePropertyName;
 
-    public OneToOneNotOwningMapper(String owningReferencePropertyName, String owningEntityName,
+    public OneToOneNotOwningMapper(String notOwningEntityName, String owningEntityName, String owningReferencePropertyName,
                                    PropertyData propertyData) {
+        super(notOwningEntityName, owningEntityName, propertyData);
         this.owningReferencePropertyName = owningReferencePropertyName;
-        this.owningEntityName = owningEntityName;
-        this.propertyData = propertyData;
     }
 
-    public boolean mapToMapFromEntity(SessionImplementor session, Map<String, Object> data, Object newObj, Object oldObj) {
-        return false;
+    @Override
+    protected Object queryForReferencedEntity(AuditReaderImplementor versionsReader, EntityInfo referencedEntity,
+                                              Serializable primaryKey, Number revision) {
+        return versionsReader.createQuery().forEntitiesAtRevision(referencedEntity.getEntityClass(),
+                                                                  referencedEntity.getEntityName(), revision)
+                                           .add(AuditEntity.relatedId(owningReferencePropertyName).eq(primaryKey))
+                                           .getSingleResult();
     }
 
-	@Override
-	public void mapModifiedFlagsToMapFromEntity(SessionImplementor session, Map<String, Object> data, Object newObj, Object oldObj) {
-	}
+    @Override
+    public void mapModifiedFlagsToMapFromEntity(SessionImplementor session, Map<String, Object> data, Object newObj, Object oldObj) {
+    }
 
-	@Override
-	public void mapModifiedFlagsToMapForCollectionChange(String collectionPropertyName, Map<String, Object> data) {
-		if (propertyData.isUsingModifiedFlag()) {
-			data.put(propertyData.getModifiedFlagPropertyName(), collectionPropertyName.equals(propertyData.getName()));
-		}
-	}
-
-	public void mapToEntityFromMap(AuditConfiguration verCfg, Object obj, Map data, Object primaryKey, AuditReaderImplementor versionsReader, Number revision) {
-        if (obj == null) {
-            return;
+    @Override
+    public void mapModifiedFlagsToMapForCollectionChange(String collectionPropertyName, Map<String, Object> data) {
+        if (propertyData.isUsingModifiedFlag()) {
+            data.put(propertyData.getModifiedFlagPropertyName(), collectionPropertyName.equals(propertyData.getName()));
         }
-
-    	EntityConfiguration entCfg = verCfg.getEntCfg().get(owningEntityName);
-    	if(entCfg == null) {
-    		// a relation marked as RelationTargetAuditMode.NOT_AUDITED 
-    		entCfg = verCfg.getEntCfg().getNotVersionEntityConfiguration(owningEntityName);
-    	}
-
-        Class<?> entityClass = ReflectionTools.loadClass(entCfg.getEntityClassName());
-
-        Object value;
-
-        try {
-            value = versionsReader.createQuery().forEntitiesAtRevision(entityClass, owningEntityName, revision)
-                    .add(AuditEntity.relatedId(owningReferencePropertyName).eq(primaryKey)).getSingleResult();
-        } catch (NoResultException e) {
-            value = null;
-        } catch (NonUniqueResultException e) {
-            throw new AuditException("Many versions results for one-to-one relationship: (" + owningEntityName +
-                    ", " + owningReferencePropertyName + ")");
-        }
-
-        Setter setter = ReflectionTools.getSetter(obj.getClass(), propertyData);
-        setter.set(obj, value, null);
-    }
-
-    public List<PersistentCollectionChangeData> mapCollectionChanges(String referencingPropertyName,
-                                                                                    PersistentCollection newColl,
-                                                                                    Serializable oldColl,
-                                                                                    Serializable id) {
-        return null;
     }
 }

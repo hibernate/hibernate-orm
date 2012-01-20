@@ -56,7 +56,7 @@ public interface AssociationAttributeBinding extends AttributeBinding {
 
 
 	/**
-	 * Temporary.  Needed for integration with legacy {@link org.hibernate.mapping} configuration of persisters.
+	 * Temporary.  Needed for integration with legacy org.hibernate.mapping configuration of persisters.
 	 *
 	 * @deprecated
 	 */

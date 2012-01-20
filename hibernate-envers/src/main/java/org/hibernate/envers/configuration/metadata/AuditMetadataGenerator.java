@@ -49,6 +49,7 @@ import org.hibernate.envers.tools.StringTools;
 import org.hibernate.envers.tools.Triple;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Join;
+import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
@@ -206,8 +207,15 @@ public final class AuditMetadataGenerator {
 			toOneRelationMetadataGenerator.addToOne(parent, propertyAuditingData, value, currentMapper,
 					entityName, insertable);
 		} else if (type instanceof OneToOneType) {
-			toOneRelationMetadataGenerator.addOneToOneNotOwning(propertyAuditingData, value,
-					currentMapper, entityName);
+            OneToOne oneToOne = (OneToOne) value;
+            if (oneToOne.getReferencedPropertyName() != null) {
+                toOneRelationMetadataGenerator.addOneToOneNotOwning(propertyAuditingData, value,
+                        currentMapper, entityName);
+            } else {
+                // @OneToOne relation marked with @PrimaryKeyJoinColumn
+                toOneRelationMetadataGenerator.addOneToOnePrimaryKeyJoinColumn(propertyAuditingData, value,
+                        currentMapper, entityName, insertable);
+            }
 		} else if (type instanceof CollectionType) {
 			CollectionMetadataGenerator collectionMetadataGenerator = new CollectionMetadataGenerator(this,
 					(Collection) value, currentMapper, entityName, xmlMappingData,

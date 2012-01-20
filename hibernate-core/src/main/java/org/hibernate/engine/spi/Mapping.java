@@ -40,7 +40,9 @@ import org.hibernate.type.Type;
 public interface Mapping {
 	/**
 	 * Allow access to the id generator factory, though this is only needed/allowed from configuration.
-	 * @return
+	 *
+	 * @return Access to the identifier generator factory
+	 *
 	 * @deprecated temporary solution 
 	 */
 	public IdentifierGeneratorFactory getIdentifierGeneratorFactory();

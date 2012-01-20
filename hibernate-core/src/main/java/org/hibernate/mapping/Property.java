@@ -28,6 +28,7 @@ import java.util.StringTokenizer;
 
 import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
+import org.hibernate.NaturalIdMutability;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.Mapping;
@@ -45,7 +46,6 @@ import org.hibernate.type.Type;
  * @author Gavin King
  */
 public class Property implements Serializable, MetaAttributable {
-
 	private String name;
 	private Value value;
 	private String cascade;
@@ -61,6 +61,7 @@ public class Property implements Serializable, MetaAttributable {
 	private java.util.Map metaAttributes;
 	private PersistentClass persistentClass;
 	private boolean naturalIdentifier;
+	private NaturalIdMutability naturalIdMutability;
 
 	public boolean isBackRef() {
 		return false;
@@ -149,10 +150,12 @@ public class Property implements Serializable, MetaAttributable {
 		// if the property mapping consists of all formulas, 
 		// make it non-updateable
 		final boolean[] columnUpdateability = value.getColumnUpdateability();
-		return updateable && ( 
-				//columnUpdateability.length==0 ||
-				!ArrayHelper.isAllFalse(columnUpdateability)
-			);
+		final boolean isImmutableNaturalId = isNaturalIdentifier()
+				&& ( NaturalIdMutability.IMMUTABLE.equals( getNaturalIdMutability() )
+						|| NaturalIdMutability.IMMUTABLE_CHECKED.equals( getNaturalIdMutability() ) );
+		return updateable
+				&& !isImmutableNaturalId
+				&& !ArrayHelper.isAllFalse(columnUpdateability);
 	}
 
 	public boolean isInsertable() {
@@ -173,7 +176,8 @@ public class Property implements Serializable, MetaAttributable {
         this.generation = generation;
     }
 
-    public void setUpdateable(boolean mutable) {
+    public void setUpdateable(
+			boolean mutable) {
 		this.updateable = mutable;
 	}
 
@@ -315,4 +319,13 @@ public class Property implements Serializable, MetaAttributable {
 	public void setNaturalIdentifier(boolean naturalIdentifier) {
 		this.naturalIdentifier = naturalIdentifier;
 	}
+
+	public NaturalIdMutability getNaturalIdMutability() {
+		return naturalIdMutability;
+	}
+
+	public void setNaturalIdMutability(NaturalIdMutability naturalIdMutability) {
+		this.naturalIdMutability = naturalIdMutability;
+	}
+
 }

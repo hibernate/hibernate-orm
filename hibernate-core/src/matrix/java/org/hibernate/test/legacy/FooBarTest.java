@@ -43,7 +43,6 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 import org.jboss.logging.Logger;
-import org.junit.Test;
 
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
@@ -84,11 +83,14 @@ import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.jdbc.AbstractWork;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.type.StandardBasicTypes;
+
+import org.junit.Test;
+
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.env.ConnectionProviderBuilder;
-import org.hibernate.type.StandardBasicTypes;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -1394,7 +1396,7 @@ public class FooBarTest extends LegacyTestCase {
 		baz.setFoo(bar);
 		s.save(baz);
 		Query q = s.createQuery("from Foo foo, Bar bar");
-		if ( !(getDialect() instanceof DB2Dialect) ) {
+		if ( supportsLockingNullableSideOfJoin( getDialect() ) ) {
 			q.setLockMode("bar", LockMode.UPGRADE);
 		}
 		Object[] result = (Object[]) q.uniqueResult();
@@ -1423,12 +1425,12 @@ public class FooBarTest extends LegacyTestCase {
 		s = openSession();
 		tx = s.beginTransaction();
 		q = s.createQuery("from Foo foo, Bar bar, Bar bar2");
-		if ( !(getDialect() instanceof DB2Dialect) ) {
+		if ( supportsLockingNullableSideOfJoin( getDialect() ) ) {
 			q.setLockMode("bar", LockMode.UPGRADE);
 		}
 		q.setLockMode("bar2", LockMode.READ);
 		result = (Object[]) q.list().get(0);
-		if ( !(getDialect() instanceof DB2Dialect) ) {
+		if ( supportsLockingNullableSideOfJoin( getDialect() ) ) {
 			assertTrue( s.getCurrentLockMode( result[0] )==LockMode.UPGRADE && s.getCurrentLockMode( result[1] )==LockMode.UPGRADE );
 		}
 		s.delete( result[0] );

@@ -35,6 +35,7 @@ import org.hibernate.engine.jdbc.internal.TypeInfo;
  *
  * @author Steve Ebersole
  */
+@SuppressWarnings( {"UnusedDeclaration"})
 public interface ExtractedDatabaseMetaData {
 
 	public enum SQLStateType {
@@ -47,6 +48,7 @@ public interface ExtractedDatabaseMetaData {
 	 * Did the driver report to supporting scrollable result sets?
 	 *
 	 * @return True if the driver reported to support {@link java.sql.ResultSet#TYPE_SCROLL_INSENSITIVE}.
+	 *
 	 * @see java.sql.DatabaseMetaData#supportsResultSetType
 	 */
 	public boolean supportsScrollableResults();
@@ -55,6 +57,7 @@ public interface ExtractedDatabaseMetaData {
 	 * Did the driver report to supporting retrieval of generated keys?
 	 *
 	 * @return True if the if the driver reported to support calls to {@link java.sql.Statement#getGeneratedKeys}
+	 *
 	 * @see java.sql.DatabaseMetaData#supportsGetGeneratedKeys
 	 */
 	public boolean supportsGetGeneratedKeys();
@@ -63,6 +66,7 @@ public interface ExtractedDatabaseMetaData {
 	 * Did the driver report to supporting batched updates?
 	 *
 	 * @return True if the driver supports batched updates
+	 *
 	 * @see java.sql.DatabaseMetaData#supportsBatchUpdates
 	 */
 	public boolean supportsBatchUpdates();
@@ -71,6 +75,7 @@ public interface ExtractedDatabaseMetaData {
 	 * Did the driver report to support performing DDL within transactions?
 	 *
 	 * @return True if the drivers supports DDL statements within transactions.
+	 *
 	 * @see java.sql.DatabaseMetaData#dataDefinitionIgnoredInTransactions
 	 */
 	public boolean supportsDataDefinitionInTransaction();
@@ -81,6 +86,7 @@ public interface ExtractedDatabaseMetaData {
 	 *
 	 * @return True if the driver/database performs an implicit commit of transaction when DDL statement is
 	 * performed
+	 *
 	 * @see java.sql.DatabaseMetaData#dataDefinitionCausesTransactionCommit()
 	 */
 	public boolean doesDataDefinitionCauseTransactionCommit();
@@ -89,6 +95,7 @@ public interface ExtractedDatabaseMetaData {
 	 * Get the list of extra keywords (beyond standard SQL92 keywords) reported by the driver.
 	 *
 	 * @return The extra keywords used by this database.
+	 *
 	 * @see java.sql.DatabaseMetaData#getSQLKeywords()
 	 */
 	public Set<String> getExtraKeywords();
@@ -98,6 +105,7 @@ public interface ExtractedDatabaseMetaData {
 	 * the X/Open standard or the SQL92 standard.
 	 *
 	 * @return The SQLState strategy reportedly used by this driver/database.
+	 *
 	 * @see java.sql.DatabaseMetaData#getSQLStateType()
 	 */
 	public SQLStateType getSqlStateType();
@@ -106,6 +114,7 @@ public interface ExtractedDatabaseMetaData {
 	 * Did the driver report that updates to a LOB locator affect a copy of the LOB?
 	 *
 	 * @return True if updates to the state of a LOB locator update only a copy.
+	 *
 	 * @see java.sql.DatabaseMetaData#locatorsUpdateCopy()
 	 */
 	public boolean doesLobLocatorUpdateCopy();
@@ -127,7 +136,9 @@ public interface ExtractedDatabaseMetaData {
 	/**
 	 * Set of type info reported by the driver.
 	 *
-	 * @return
+	 * @return The type information obtained from the driver.
+	 *
+	 * @see java.sql.DatabaseMetaData#getTypeInfo()
 	 */
 	public LinkedHashSet<TypeInfo> getTypeInfoSet();
 }

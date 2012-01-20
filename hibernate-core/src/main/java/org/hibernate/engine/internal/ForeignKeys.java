@@ -72,7 +72,7 @@ public final class ForeignKeys {
 				values[i] = nullifyTransientReferences( values[i], types[i] );
 			}
 		}
-	
+
 		/**
 		 * Return null if the argument is an "unsaved" entity (ie. 
 		 * one with no existing database row), or the input argument 
@@ -169,9 +169,9 @@ public final class ForeignKeys {
 			}
 	
 		}
-		
+
 	}
-	
+
 	/**
 	 * Is this instance persistent or detached?
 	 * If <tt>assumed</tt> is non-null, don't hit the database to make the 
@@ -257,4 +257,96 @@ public final class ForeignKeys {
 		}
 	}
 
+	/**
+	 * Find all non-nullable references to entities that have not yet
+	 * been inserted in the database, where the foreign key
+	 * is a reference to an unsaved transient entity. .
+	 *
+	 * @param entityName - the entity name
+	 * @param entity - the entity instance
+	 * @param values - insertable properties of the object (including backrefs),
+	 *                 possibly with substitutions
+	 * @param isEarlyInsert - true if the entity needs to be executed as soon as possible
+	 *                        (e.g., to generate an ID)
+	 * @param session - the session
+	 *
+	 * @return the transient unsaved entity dependencies that are non-nullable,
+	 *         or null if there are none.
+	 */
+	public static NonNullableTransientDependencies findNonNullableTransientEntities(
+			String entityName,
+			Object entity,
+			Object[] values,
+			boolean isEarlyInsert,
+			SessionImplementor session
+	) {
+		Nullifier nullifier = new Nullifier( entity, false, isEarlyInsert, session );
+		final EntityPersister persister = session.getEntityPersister( entityName, entity );
+		final String[] propertyNames = persister.getPropertyNames();
+		final Type[] types = persister.getPropertyTypes();
+		final boolean[] nullability = persister.getPropertyNullability();
+		NonNullableTransientDependencies nonNullableTransientEntities = new NonNullableTransientDependencies();
+		for ( int i = 0; i < types.length; i++ ) {
+			collectNonNullableTransientEntities(
+					nullifier,
+					i,
+					values[i],
+					propertyNames[i],
+					types[i],
+					nullability[i],
+					session,
+					nonNullableTransientEntities
+			);
+		}
+		return nonNullableTransientEntities.isEmpty() ? null : nonNullableTransientEntities;
+	}
+
+	private static void collectNonNullableTransientEntities(
+			Nullifier nullifier,
+			int i,
+			Object value,
+			String propertyName,
+			Type type,
+			boolean isNullable,
+			SessionImplementor session,
+			NonNullableTransientDependencies nonNullableTransientEntities) {
+		if ( value == null ) {
+			return; // EARLY RETURN
+		}
+		if ( type.isEntityType()  ) {
+			EntityType entityType = (EntityType) type;
+			if ( ! isNullable &&
+					! entityType.isOneToOne() &&
+					nullifier.isNullifiable( entityType.getAssociatedEntityName(), value ) ) {
+				nonNullableTransientEntities.add( propertyName, value );
+			}
+		}
+		else if ( type.isAnyType() ) {
+			if ( ! isNullable &&
+					nullifier.isNullifiable( null, value ) ) {
+				nonNullableTransientEntities.add( propertyName, value );
+			}
+		}
+		else if ( type.isComponentType() ) {
+			CompositeType actype = (CompositeType) type;
+			boolean[] subValueNullability = actype.getPropertyNullability();
+			if ( subValueNullability != null ) {
+				String[] subPropertyNames = actype.getPropertyNames();
+				Object[] subvalues = actype.getPropertyValues(value, session);
+				Type[] subtypes = actype.getSubtypes();
+				for ( int j = 0; j < subvalues.length; j++ ) {
+					collectNonNullableTransientEntities(
+							nullifier,
+							j,
+							subvalues[j],
+							subPropertyNames[j],
+							subtypes[j],
+							subValueNullability[j],
+							session,
+							nonNullableTransientEntities
+					);
+				}
+			}
+		}
+	}
 }

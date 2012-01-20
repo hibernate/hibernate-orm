@@ -143,8 +143,7 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 
 	/**
 	 * Utility method that checks if the given sql query is a select distinct one and if so replaces the distinct select
-	 * with an equivalent simple select with a group by clause. See
-	 * {@link SQLServer2005DialectTestCase#testReplaceDistinctWithGroupBy()}
+	 * with an equivalent simple select with a group by clause.
 	 *
 	 * @param sql an sql query
 	 */
@@ -158,7 +157,7 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 
 	/**
 	 * This utility method searches the given sql query for the fields of the select statement and returns them without
-	 * the aliases. See {@link SQLServer2005DialectTestCase#testGetSelectFieldsWithoutAliases()}
+	 * the aliases.
 	 *
 	 * @param sql sql query
 	 *
@@ -172,7 +171,7 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 	}
 
 	/**
-	 * Utility method that strips the aliases. See {@link SQLServer2005DialectTestCase#testStripAliases()}
+	 * Utility method that strips the aliases.
 	 *
 	 * @param str string to replace the as statements
 	 *

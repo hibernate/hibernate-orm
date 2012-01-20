@@ -88,17 +88,12 @@ public abstract class AbstractFromImpl<Z,X>
 		return getAlias();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	protected boolean canBeDereferenced() {
 		return true;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public void prepareAlias(CriteriaQueryCompiler.RenderingContext renderingContext) {
 		if ( getAlias() == null ) {
 			if ( isCorrelated() ) {
@@ -121,23 +116,16 @@ public abstract class AbstractFromImpl<Z,X>
 		return renderProjection( renderingContext );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Attribute<?, ?> getAttribute() {
 		return null;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public From<?, Z> getParent() {
 		return null;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	protected Attribute<X, ?> locateAttributeInternal(String name) {
 		return (Attribute<X, ?>) locateManagedType().getAttribute( name );
@@ -170,6 +158,7 @@ public abstract class AbstractFromImpl<Z,X>
 	}
 
 	protected class BasicJoinScope implements JoinScope<X> {
+		@Override
 		public void addJoin(Join<X, ?> join) {
 			if ( joins == null ) {
 				joins = new LinkedHashSet<Join<X,?>>();
@@ -177,6 +166,7 @@ public abstract class AbstractFromImpl<Z,X>
 			joins.add( join );
 		}
 
+		@Override
 		public void addFetch(Fetch<X, ?> fetch) {
 			if ( fetches == null ) {
 				fetches = new LinkedHashSet<Fetch<X,?>>();
@@ -186,6 +176,7 @@ public abstract class AbstractFromImpl<Z,X>
 	}
 
 	protected class CorrelationJoinScope implements JoinScope<X> {
+		@Override
 		public void addJoin(Join<X, ?> join) {
 			if ( joins == null ) {
 				joins = new LinkedHashSet<Join<X,?>>();
@@ -193,28 +184,23 @@ public abstract class AbstractFromImpl<Z,X>
 			joins.add( join );
 		}
 
+		@Override
 		public void addFetch(Fetch<X, ?> fetch) {
 			throw new UnsupportedOperationException( "Cannot define fetch from a subquery correlation" );
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public boolean isCorrelated() {
 		return getCorrelationParent() != null;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public FromImplementor<Z,X> getCorrelationParent() {
 		return correlationParent;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public FromImplementor<Z, X> correlateTo(CriteriaSubqueryImpl subquery) {
 		final FromImplementor<Z, X> correlationDelegate = createCorrelationDelegate();
@@ -224,6 +210,7 @@ public abstract class AbstractFromImpl<Z,X>
 
 	protected abstract FromImplementor<Z, X> createCorrelationDelegate();
 
+	@Override
 	public void prepareCorrelationDelegate(FromImplementor<Z, X> parent) {
 		this.joinScope = new CorrelationJoinScope();
 		this.correlationParent = parent;
@@ -244,9 +231,7 @@ public abstract class AbstractFromImpl<Z,X>
 		);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public Set<Join<X, ?>> getJoins() {
 		return joins == null
@@ -254,16 +239,12 @@ public abstract class AbstractFromImpl<Z,X>
 				: joins;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public <Y> Join<X, Y> join(SingularAttribute<? super X, Y> singularAttribute) {
 		return join( singularAttribute, DEFAULT_JOIN_TYPE );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public <Y> Join<X, Y> join(SingularAttribute<? super X, Y> attribute, JoinType jt) {
 		if ( ! canBeJoinSource() ) {
 			throw illegalJoin();
@@ -294,16 +275,13 @@ public abstract class AbstractFromImpl<Z,X>
 				jt
 		);
 	}
-	/**
-	 * {@inheritDoc}
-	 */
+
+	@Override
 	public <Y> CollectionJoin<X, Y> join(CollectionAttribute<? super X, Y> collection) {
 		return join( collection, DEFAULT_JOIN_TYPE );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public <Y> CollectionJoin<X, Y> join(CollectionAttribute<? super X, Y> collection, JoinType jt) {
 		if ( ! canBeJoinSource() ) {
 			throw illegalJoin();
@@ -331,16 +309,12 @@ public abstract class AbstractFromImpl<Z,X>
 		);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public <Y> SetJoin<X, Y> join(SetAttribute<? super X, Y> set) {
 		return join( set, DEFAULT_JOIN_TYPE );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public <Y> SetJoin<X, Y> join(SetAttribute<? super X, Y> set, JoinType jt) {
 		if ( ! canBeJoinSource() ) {
 			throw illegalJoin();
@@ -362,16 +336,12 @@ public abstract class AbstractFromImpl<Z,X>
 		return new SetAttributeJoin<X,Y>( criteriaBuilder(), attributeType, this, set, jt );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public <Y> ListJoin<X, Y> join(ListAttribute<? super X, Y> list) {
 		return join( list, DEFAULT_JOIN_TYPE );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public <Y> ListJoin<X, Y> join(ListAttribute<? super X, Y> list, JoinType jt) {
 		if ( ! canBeJoinSource() ) {
 			throw illegalJoin();
@@ -393,16 +363,12 @@ public abstract class AbstractFromImpl<Z,X>
 		return new ListAttributeJoin<X,Y>( criteriaBuilder(), attributeType, this, list, jt );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public <K, V> MapJoin<X, K, V> join(MapAttribute<? super X, K, V> map) {
 		return join( map, DEFAULT_JOIN_TYPE );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public <K, V> MapJoin<X, K, V> join(MapAttribute<? super X, K, V> map, JoinType jt) {
 		if ( ! canBeJoinSource() ) {
 			throw illegalJoin();
@@ -424,16 +390,12 @@ public abstract class AbstractFromImpl<Z,X>
 		return new MapAttributeJoin<X, K, V>( criteriaBuilder(), attributeType, this, map, jt );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public <X,Y> Join<X, Y> join(String attributeName) {
 		return join( attributeName, DEFAULT_JOIN_TYPE );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <X,Y> Join<X, Y> join(String attributeName, JoinType jt) {
 		if ( ! canBeJoinSource() ) {
@@ -465,16 +427,12 @@ public abstract class AbstractFromImpl<Z,X>
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public <X,Y> CollectionJoin<X, Y> joinCollection(String attributeName) {
 		return joinCollection( attributeName, DEFAULT_JOIN_TYPE );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <X,Y> CollectionJoin<X, Y> joinCollection(String attributeName, JoinType jt) {
 		final Attribute<X,?> attribute = (Attribute<X, ?>) locateAttribute( attributeName );
@@ -490,16 +448,12 @@ public abstract class AbstractFromImpl<Z,X>
 		return (CollectionJoin<X,Y>) join( (CollectionAttribute) attribute, jt );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public <X,Y> SetJoin<X, Y> joinSet(String attributeName) {
 		return joinSet( attributeName, DEFAULT_JOIN_TYPE );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <X,Y> SetJoin<X, Y> joinSet(String attributeName, JoinType jt) {
 		final Attribute<X,?> attribute = (Attribute<X, ?>) locateAttribute( attributeName );
@@ -515,16 +469,12 @@ public abstract class AbstractFromImpl<Z,X>
 		return (SetJoin<X,Y>) join( (SetAttribute) attribute, jt );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public <X,Y> ListJoin<X, Y> joinList(String attributeName) {
 		return joinList( attributeName, DEFAULT_JOIN_TYPE );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <X,Y> ListJoin<X, Y> joinList(String attributeName, JoinType jt) {
 		final Attribute<X,?> attribute = (Attribute<X, ?>) locateAttribute( attributeName );
@@ -540,16 +490,12 @@ public abstract class AbstractFromImpl<Z,X>
 		return (ListJoin<X,Y>) join( (ListAttribute) attribute, jt );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public <X, K, V> MapJoin<X, K, V> joinMap(String attributeName) {
 		return joinMap( attributeName, DEFAULT_JOIN_TYPE );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <X, K, V> MapJoin<X, K, V> joinMap(String attributeName, JoinType jt) {
 		final Attribute<X,?> attribute = (Attribute<X, ?>) locateAttribute( attributeName );
@@ -579,9 +525,7 @@ public abstract class AbstractFromImpl<Z,X>
 		);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public Set<Fetch<X, ?>> getFetches() {
 		return fetches == null
@@ -589,10 +533,12 @@ public abstract class AbstractFromImpl<Z,X>
 				: fetches;
 	}
 
+	@Override
 	public <Y> Fetch<X, Y> fetch(SingularAttribute<? super X, Y> singularAttribute) {
 		return fetch( singularAttribute, DEFAULT_JOIN_TYPE );
 	}
 
+	@Override
 	public <Y> Fetch<X, Y> fetch(SingularAttribute<? super X, Y> attribute, JoinType jt) {
 		if ( ! canBeFetchSource() ) {
 			throw illegalFetch();
@@ -603,10 +549,12 @@ public abstract class AbstractFromImpl<Z,X>
 		return fetch;
 	}
 
+	@Override
 	public <Y> Fetch<X, Y> fetch(PluralAttribute<? super X, ?, Y> pluralAttribute) {
 		return fetch( pluralAttribute, DEFAULT_JOIN_TYPE );
 	}
 
+	@Override
 	public <Y> Fetch<X, Y> fetch(PluralAttribute<? super X, ?, Y> pluralAttribute, JoinType jt) {
 		if ( ! canBeFetchSource() ) {
 			throw illegalFetch();
@@ -630,10 +578,12 @@ public abstract class AbstractFromImpl<Z,X>
 		return fetch;
 	}
 
+	@Override
 	public <X,Y> Fetch<X, Y> fetch(String attributeName) {
 		return fetch( attributeName, DEFAULT_JOIN_TYPE );
 	}
 
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <X,Y> Fetch<X, Y> fetch(String attributeName, JoinType jt) {
 		if ( ! canBeFetchSource() ) {

@@ -42,18 +42,15 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.pretty.MessageHelper;
 
 /**
- * Maps {@link ResultSet result-sets} to specific contextual data
- * related to processing that {@link ResultSet result-sets}.
+ * Maps {@link ResultSet result-sets} to specific contextual data related to processing that result set
  * <p/>
- * Implementation note: internally an {@link IdentityMap} is used to maintain
- * the mappings; {@link IdentityMap} was chosen because I'd rather not be
- * dependent upon potentially bad {@link ResultSet#equals} and {ResultSet#hashCode}
- * implementations.
+ * Implementation note: internally an {@link IdentityMap} is used to maintain the mappings mainly because I'd
+ * rather not be dependent upon potentially bad {@link Object#equals} and {@link Object#hashCode} implementations on
+ * the JDBC result sets
  * <p/>
- * Considering the JDBC-redesign work, would further like this contextual info
- * not mapped seperately, but available based on the result set being processed.
- * This would also allow maintaining a single mapping as we could reliably get
- * notification of the result-set closing...
+ * Considering the JDBC-redesign work, would further like this contextual info not mapped separately, but available
+ * based on the result set being processed.  This would also allow maintaining a single mapping as we could reliably
+ * get notification of the result-set closing...
  *
  * @author Steve Ebersole
  */
@@ -257,7 +254,8 @@ public class LoadContexts {
 		xrefLoadingCollectionEntries.remove(key);
 	 }
 
-	/*package*/Map getLoadingCollectionXRefs() {
+	@SuppressWarnings( {"UnusedDeclaration"})
+	Map getLoadingCollectionXRefs() {
  		return xrefLoadingCollectionEntries;
  	}
 
@@ -298,6 +296,7 @@ public class LoadContexts {
 	// Entity load contexts ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// 	* currently, not yet used...
 
+	@SuppressWarnings( {"UnusedDeclaration"})
 	public EntityLoadContext getEntityLoadContext(ResultSet resultSet) {
 		EntityLoadContext context = null;
 		if ( entityLoadContexts == null ) {

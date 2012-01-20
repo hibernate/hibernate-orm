@@ -34,25 +34,24 @@ public interface CacheDataDescription {
 	/**
 	 * Is the data marked as being mutable?
 	 *
-	 * @return True if the data is mutable; false otherwise.
+	 * @return {@code true} if the data is mutable; {@code false} otherwise.
 	 */
 	public boolean isMutable();
 
 	/**
 	 * Is the data to be cached considered versioned?
-	 * <p/>
-	 * If true, it is illegal for {@link #getVersionComparator} to return
-	 * null.
 	 *
-	 * @return True if the data is versioned; false otherwise.
+	 * If {@code true}, it is illegal for {@link #getVersionComparator} to return {@code null}.
+	 *
+	 * @return {@code true} if the data is versioned; {@code false} otherwise.
 	 */
 	public boolean isVersioned();
 
 	/**
-	 * Get the comparator used to compare two different version values.
-	 * <p/>
-	 * May return null <b>if</b> {@link #isVersioned()} returns false.
-	 * @return
+	 * Get the comparator used to compare two different version values.  May return {@code null} <b>if</b>
+	 * {@link #isVersioned()} returns false.
+	 *
+	 * @return The comparator for versions, or {@code null}
 	 */
 	public Comparator getVersionComparator();
 }

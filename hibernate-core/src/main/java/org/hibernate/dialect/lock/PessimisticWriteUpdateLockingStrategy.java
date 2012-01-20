@@ -27,12 +27,9 @@ import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
-import org.hibernate.PessimisticLockException;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -40,6 +37,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.sql.Update;
+import org.jboss.logging.Logger;
 
 /**
  * A pessimistic locking strategy where the locks are obtained through update statements.
@@ -106,7 +104,9 @@ public class PessimisticWriteUpdateLockingStrategy implements LockingStrategy {
 
 					int affected = st.executeUpdate();
 					if ( affected < 0 ) {  // todo:  should this instead check for exactly one row modified?
-						factory.getStatisticsImplementor().optimisticFailure( lockable.getEntityName() );
+						if (factory.getStatistics().isStatisticsEnabled()) {
+							factory.getStatisticsImplementor().optimisticFailure( lockable.getEntityName() );
+						}
 						throw new StaleObjectStateException( lockable.getEntityName(), id );
 					}
 

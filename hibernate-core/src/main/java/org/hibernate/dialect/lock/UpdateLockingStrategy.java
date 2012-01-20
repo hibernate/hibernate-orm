@@ -108,7 +108,9 @@ public class UpdateLockingStrategy implements LockingStrategy {
 
 				int affected = st.executeUpdate();
 				if ( affected < 0 ) {
-					factory.getStatisticsImplementor().optimisticFailure( lockable.getEntityName() );
+					if (factory.getStatistics().isStatisticsEnabled()) {
+						factory.getStatisticsImplementor().optimisticFailure( lockable.getEntityName() );
+					}
 					throw new StaleObjectStateException( lockable.getEntityName(), id );
 				}
 

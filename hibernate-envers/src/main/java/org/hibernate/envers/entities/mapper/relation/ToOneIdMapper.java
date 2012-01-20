@@ -69,19 +69,19 @@ public class ToOneIdMapper extends AbstractToOneMapper {
 
     @Override
     public void mapModifiedFlagsToMapFromEntity(SessionImplementor session, Map<String, Object> data, Object newObj, Object oldObj) {
-        if (propertyData.isUsingModifiedFlag()) {
-            data.put(propertyData.getModifiedFlagPropertyName(), checkModified(session, newObj, oldObj));
+        if (getPropertyData().isUsingModifiedFlag()) {
+            data.put(getPropertyData().getModifiedFlagPropertyName(), checkModified(session, newObj, oldObj));
         }
     }
 
     @Override
     public void mapModifiedFlagsToMapForCollectionChange(String collectionPropertyName, Map<String, Object> data) {
-        if (propertyData.isUsingModifiedFlag()) {
-            data.put(propertyData.getModifiedFlagPropertyName(), collectionPropertyName.equals(propertyData.getName()));
+        if (getPropertyData().isUsingModifiedFlag()) {
+            data.put(getPropertyData().getModifiedFlagPropertyName(), collectionPropertyName.equals(getPropertyData().getName()));
         }
     }
 
-    private boolean checkModified(SessionImplementor session, Object newObj, Object oldObj) {
+    protected boolean checkModified(SessionImplementor session, Object newObj, Object oldObj) {
         //noinspection SimplifiableConditionalExpression
         return nonInsertableFake ? false : !Tools.entitiesEqual(session, referencedEntityName, newObj, oldObj);
     }

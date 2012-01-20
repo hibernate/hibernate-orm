@@ -1,6 +1,7 @@
 package org.hibernate.envers.entities.mapper.relation;
 
 import org.hibernate.NonUniqueResultException;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.entities.PropertyData;
 import org.hibernate.envers.exception.AuditException;
@@ -51,4 +52,17 @@ public abstract class AbstractOneToOneMapper extends AbstractToOneMapper {
      */
     protected abstract Object queryForReferencedEntity(AuditReaderImplementor versionsReader, EntityInfo referencedEntity,
                                                        Serializable primaryKey, Number revision);
+
+
+
+    @Override
+    public void mapModifiedFlagsToMapFromEntity(SessionImplementor session, Map<String, Object> data, Object newObj, Object oldObj) {
+    }
+
+    @Override
+    public void mapModifiedFlagsToMapForCollectionChange(String collectionPropertyName, Map<String, Object> data) {
+        if (getPropertyData().isUsingModifiedFlag()) {
+            data.put(getPropertyData().getModifiedFlagPropertyName(), collectionPropertyName.equals(getPropertyData().getName()));
+        }
+    }
 }

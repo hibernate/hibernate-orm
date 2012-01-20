@@ -54,15 +54,4 @@ public class OneToOneNotOwningMapper extends AbstractOneToOneMapper {
                                            .add(AuditEntity.relatedId(owningReferencePropertyName).eq(primaryKey))
                                            .getSingleResult();
     }
-
-    @Override
-    public void mapModifiedFlagsToMapFromEntity(SessionImplementor session, Map<String, Object> data, Object newObj, Object oldObj) {
-    }
-
-    @Override
-    public void mapModifiedFlagsToMapForCollectionChange(String collectionPropertyName, Map<String, Object> data) {
-        if (propertyData.isUsingModifiedFlag()) {
-            data.put(propertyData.getModifiedFlagPropertyName(), collectionPropertyName.equals(propertyData.getName()));
-        }
-    }
 }

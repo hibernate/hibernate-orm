@@ -63,6 +63,7 @@ import org.hibernate.jpamodelgen.xml.XmlParser;
 		JPAMetaModelEntityProcessor.ORM_XML_OPTION,
 		JPAMetaModelEntityProcessor.FULLY_ANNOTATION_CONFIGURED_OPTION,
 		JPAMetaModelEntityProcessor.LAZY_XML_PARSING,
+		JPAMetaModelEntityProcessor.SKIP_GENERATED_ANNOTATION,
 		JPAMetaModelEntityProcessor.ADD_GENERATED_ANNOTATION,
 		JPAMetaModelEntityProcessor.ADD_SUPPRESS_WARNINGS_ANNOTATION
 })
@@ -72,6 +73,10 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 	public static final String ORM_XML_OPTION = "ormXml";
 	public static final String FULLY_ANNOTATION_CONFIGURED_OPTION = "fullyAnnotationConfigured";
 	public static final String LAZY_XML_PARSING = "lazyXmlParsing";
+	public static final String SKIP_GENERATED_ANNOTATION = "skipGeneratedAnnotation";
+	/**
+	 * @deprecated since 1.2
+	 */
 	public static final String ADD_GENERATED_ANNOTATION = "addGeneratedAnnotation";
 	public static final String ADD_SUPPRESS_WARNINGS_ANNOTATION = "addSuppressWarningsAnnotation";
 
@@ -87,9 +92,9 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 				Diagnostic.Kind.NOTE, "Hibernate JPA 2 Static-Metamodel Generator " + Version.getVersionString()
 		);
 
-		String tmp = env.getOptions().get( JPAMetaModelEntityProcessor.ADD_GENERATED_ANNOTATION );
+		String tmp = env.getOptions().get( JPAMetaModelEntityProcessor.SKIP_GENERATED_ANNOTATION );
 		boolean addGeneratedAnnotation = Boolean.parseBoolean( tmp );
-		context.setAddGeneratedAnnotation( addGeneratedAnnotation );
+		context.setSkipGeneratedAnnotation( addGeneratedAnnotation );
 
 		tmp = env.getOptions().get( JPAMetaModelEntityProcessor.ADD_SUPPRESS_WARNINGS_ANNOTATION );
 		boolean addSuppressWarningsAnnotation = Boolean.parseBoolean( tmp );

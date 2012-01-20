@@ -550,12 +550,22 @@ cq.where( cb.equal(itemNode.get(Item_.id), 5 ) ).distinct(true);
               <row>
                 <entry>addGeneratedAnnotation</entry>
 
+                <entry>this option is deprecated and has no effect. The
+                <classname>@Generation</classname> annotation is added per
+                default.</entry>
+              </row>
+
+              <row>
+                <entry>skipGeneratedAnnotation</entry>
+
                 <entry>if set to <literal>true</literal> the processor will
-                add the <classname>@Generated</classname> to the generated
-                Java source file. Per default this annotation is not
-                generated, because the code would not compile under JDK 5. If
-                you are using a JDK 6 you can force the generation of this
-                annotation using this flag.</entry>
+                not the <classname>@Generated</classname> to the generated
+                Java source file. The default for this option is
+                <constant>false</constant> and the
+                <classname>@Generated</classname> annotation is added to the
+                source code. Adding this annotation using JDK 5will cause a
+                compilation error. In this case set the flag to
+                <constant>true</constant>.</entry>
               </row>
 
               <row>

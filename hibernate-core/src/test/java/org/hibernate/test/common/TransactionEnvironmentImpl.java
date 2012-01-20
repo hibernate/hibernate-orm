@@ -23,7 +23,8 @@
  */
 package org.hibernate.test.common;
 
-import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.transaction.spi.TransactionEnvironment;
@@ -39,14 +40,22 @@ import org.hibernate.stat.spi.StatisticsImplementor;
 public class TransactionEnvironmentImpl implements TransactionEnvironment {
 	private final ServiceRegistry serviceRegistry;
 	private final ConcurrentStatisticsImpl statistics = new ConcurrentStatisticsImpl();
+	private final SessionFactoryImplementor sessionFactory;
+
+	public static final String NAME = "TransactionEnvironmentImpl_testSF";
 
 	public TransactionEnvironmentImpl(ServiceRegistry serviceRegistry) {
 		this.serviceRegistry = serviceRegistry;
+
+		Configuration cfg = new Configuration()
+				.setProperty( AvailableSettings.SESSION_FACTORY_NAME, NAME )
+				.setProperty( AvailableSettings.SESSION_FACTORY_NAME_IS_JNDI, "false" ); // default is true
+		sessionFactory = (SessionFactoryImplementor) cfg.buildSessionFactory(serviceRegistry);
 	}
 
 	@Override
 	public SessionFactoryImplementor getSessionFactory() {
-		throw new NotYetImplementedException( "Not available in this context" );
+		return sessionFactory;
 	}
 
 	@Override

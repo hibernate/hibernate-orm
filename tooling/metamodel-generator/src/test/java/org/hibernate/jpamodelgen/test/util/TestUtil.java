@@ -211,7 +211,7 @@ public class TestUtil {
 		Class<?> metaModelClass = getMetamodelClassFor( entityClass );
 		Field field;
 		try {
-			field = metaModelClass.getField( fieldName );
+			field = metaModelClass.getDeclaredField( fieldName );
 		}
 		catch ( NoSuchFieldException e ) {
 			field = null;

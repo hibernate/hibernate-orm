@@ -324,7 +324,7 @@ public interface EntityPersister extends OptimisticCacheSource {
 	/**
 	 * Load the id for the entity based on the natural id.
 	 */
-	public Serializable loadEntityIdByNaturalId(Map<String, ?> naturalIdParameters, LockOptions lockOptions,
+	public Serializable loadEntityIdByNaturalId(Object[] naturalIdValues, LockOptions lockOptions,
 			SessionImplementor session);
 
 	/**

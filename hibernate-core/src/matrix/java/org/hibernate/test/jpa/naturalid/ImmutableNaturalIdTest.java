@@ -172,10 +172,12 @@ public class ImmutableNaturalIdTest extends AbstractJPATest {
 		s.beginTransaction();
 		u = (User) s.byNaturalId( User.class ).using( "userName", "steve" ).load();
 		assertNotNull( u );
+		assertEquals( 1, sessionFactory().getStatistics().getEntityLoadCount() );
 		assertEquals( sessionFactory().getStatistics().getQueryExecutionCount(), 0 );
 		assertEquals( sessionFactory().getStatistics().getQueryCacheHitCount(), 0 );
 		u = (User) s.byNaturalId( User.class ).using( "userName", "steve" ).load();
 		assertNotNull( u );
+		assertEquals( 1, sessionFactory().getStatistics().getEntityLoadCount() );
 		assertEquals( sessionFactory().getStatistics().getQueryExecutionCount(), 0 );
 		assertEquals( sessionFactory().getStatistics().getQueryCacheHitCount(), 0 );
 		s.getTransaction().commit();

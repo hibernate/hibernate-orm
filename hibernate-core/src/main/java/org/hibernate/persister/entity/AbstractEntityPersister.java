@@ -4505,28 +4505,9 @@ public abstract class AbstractEntityPersister
     
 	@Override
 	public Serializable loadEntityIdByNaturalId(
-			Map<String, ?> naturalIdValues,
+			Object[] naturalIdValues,
 			LockOptions lockOptions,
 			SessionImplementor session) {
-
-		if ( ! entityMetamodel.hasNaturalIdentifier() ) {
-			throw new HibernateException(
-					String.format( "Entity [%s] does not define a natural-id", getEntityName() )
-			);
-		}
-
-		final int[] naturalIdPropertyIndexes = this.getNaturalIdentifierProperties();
-		if ( naturalIdPropertyIndexes.length != naturalIdValues.size() ) {
-			throw new HibernateException(
-					String.format(
-						"Entity [%s] defines its natural-id with %d properties but only %d were specified",
-						getEntityName(),
-						naturalIdPropertyIndexes.length,
-						naturalIdValues.size()
-					)
-			);
-		}
-
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracef(
 					"Resolving natural-id [%s] to id : %s ",
@@ -4542,25 +4523,11 @@ public abstract class AbstractEntityPersister
 					.prepareStatement( sqlEntityIdByNaturalIdString );
 			try {
 				int positions = 1;
-				for ( int naturalIdIdx : naturalIdPropertyIndexes ) {
-					final StandardProperty property = entityMetamodel.getProperties()[naturalIdIdx];
-					if ( ! naturalIdValues.containsKey( property.getName() ) ) {
-						throw new HibernateException(
-								String.format(
-										"No value specified for natural-id property %s#%s",
-										getEntityName(),
-										property.getName()
-								)
-						);
-					}
-					final Object value = naturalIdValues.get( property.getName() );
-					if ( value == null ) {
-
-					}
-
-					final Type propertyType = property.getType();
-					propertyType.nullSafeSet( ps, value, positions, session );
-					positions += propertyType.getColumnSpan( session.getFactory() );
+				int loop = 0;
+				for ( int idPosition : getNaturalIdentifierProperties() ) {
+					final Type type = getPropertyTypes()[idPosition];
+					type.nullSafeSet( ps, naturalIdValues[loop++], positions, session );
+					positions += type.getColumnSpan( session.getFactory() );
 				}
 				ResultSet rs = ps.executeQuery();
 				try {

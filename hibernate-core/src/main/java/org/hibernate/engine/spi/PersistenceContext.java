@@ -684,4 +684,10 @@ public interface PersistenceContext {
 	public boolean wasInsertedDuringTransaction(EntityPersister persister, Serializable id);
 
 	public void loadedStateUpdatedNotification(EntityEntry entityEntry);
+
+	public Object[] findCachedNaturalId(EntityPersister persister, Serializable pk);
+
+	public Serializable findCachedNaturalIdResolution(EntityPersister persister, Object[] naturalId);
+
+	public void cacheNaturalIdResolution(EntityPersister persister, Serializable pk, Object[] naturalId);
 }

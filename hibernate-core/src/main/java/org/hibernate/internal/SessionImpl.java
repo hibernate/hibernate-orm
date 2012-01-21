@@ -161,6 +161,7 @@ import org.jboss.logging.Logger;
  * This class is not thread-safe.
  *
  * @author Gavin King
+ * @author Steve Ebersole
  */
 public final class SessionImpl extends AbstractSessionImpl implements EventSource {
 

@@ -39,6 +39,7 @@ import org.hibernate.pretty.MessageHelper;
  * in response to generated load events.
  * 
  * @author Eric Dalquist
+ * @author Steve Ebersole
  */
 public class DefaultResolveNaturalIdEventListener
 		extends AbstractLockUpgradeEventListener
@@ -81,16 +82,6 @@ public class DefaultResolveNaturalIdEventListener
 		}
 
 		Serializable entityId = resolveFromSessionCache( event );
-		if ( entityId == REMOVED_ENTITY_MARKER ) {
-			LOG.debug( "Load request found matching entity in context, but it is scheduled for removal; returning null" );
-			return null;
-		}
-		if ( entityId == INCONSISTENT_RTN_CLASS_MARKER ) {
-			LOG.debug(
-					"Load request found matching entity in context, but the matched entity was of an inconsistent return type; returning null"
-			);
-			return null;
-		}
 		if ( entityId != null ) {
 			if ( LOG.isTraceEnabled() ) {
 				LOG.trace(
@@ -136,29 +127,10 @@ public class DefaultResolveNaturalIdEventListener
 	 * @return The entity from the session-level cache, or null.
 	 */
 	protected Serializable resolveFromSessionCache(final ResolveNaturalIdEvent event) {
-		// SessionImplementor session = event.getSession();
-		// Object old = session.getEntityUsingInterceptor( keyToLoad );
-		//
-		// if ( old != null ) {
-		// // this object was already loaded
-		// EntityEntry oldEntry = session.getPersistenceContext().getEntry( old );
-		// if ( options.isCheckDeleted() ) {
-		// Status status = oldEntry.getStatus();
-		// if ( status == Status.DELETED || status == Status.GONE ) {
-		// return REMOVED_ENTITY_MARKER;
-		// }
-		// }
-		// if ( options.isAllowNulls() ) {
-		// final EntityPersister persister = event.getSession().getFactory().getEntityPersister(
-		// keyToLoad.getEntityName() );
-		// if ( ! persister.isInstance( old ) ) {
-		// return INCONSISTENT_RTN_CLASS_MARKER;
-		// }
-		// }
-		// upgradeLock( old, oldEntry, event.getLockOptions(), event.getSession() );
-		// }
-
-		return null;
+		return event.getSession().getPersistenceContext().findCachedNaturalIdResolution(
+				event.getEntityPersister(),
+				event.getOrderedNaturalIdValues()
+		);
 	}
 
 	/**
@@ -223,10 +195,16 @@ public class DefaultResolveNaturalIdEventListener
 	 * @return The object loaded from the datasource, or null if not found.
 	 */
 	protected Serializable loadFromDatasource(final ResolveNaturalIdEvent event) {
-		return event.getEntityPersister().loadEntityIdByNaturalId(
-				event.getNaturalIdValues(),
+		final Serializable pk = event.getEntityPersister().loadEntityIdByNaturalId(
+				event.getOrderedNaturalIdValues(),
 				event.getLockOptions(),
 				event.getSession()
 		);
+		event.getSession().getPersistenceContext().cacheNaturalIdResolution(
+				event.getEntityPersister(),
+				pk,
+				event.getOrderedNaturalIdValues()
+		);
+		return pk;
 	}
 }

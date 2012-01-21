@@ -338,7 +338,7 @@ public final class EntityEntry implements Serializable {
 
 	private void notifyLoadedStateUpdated() {
 		if ( persistenceContext == null ) {
-			throw new HibernateException( "PersistenceContext was null on an empty to update loaded state; indicates mis-use of EntityEntry as non-flushed change handling" );
+			throw new HibernateException( "PersistenceContext was null on attempt to update loaded state" );
 		}
 
 		persistenceContext.loadedStateUpdatedNotification( this );
@@ -374,7 +374,7 @@ public final class EntityEntry implements Serializable {
 	 * Session/PersistenceContext for increased performance.
 	 *
 	 * @param ois The stream from which to read the entry.
-	 * @param session The session being deserialized.
+	 * @param persistenceContext The context being deserialized.
 	 *
 	 * @return The deserialized EntityEntry
 	 *
@@ -384,10 +384,11 @@ public final class EntityEntry implements Serializable {
 	 */
 	public static EntityEntry deserialize(
 			ObjectInputStream ois,
-	        SessionImplementor session) throws IOException, ClassNotFoundException {
-		String previousStatusString = null;
+	        PersistenceContext persistenceContext) throws IOException, ClassNotFoundException {
+		String previousStatusString;
 		return new EntityEntry(
-				( session == null ? null : session.getFactory() ),
+				// this complexity comes from non-flushed changes, should really look at how that reattaches entries
+				( persistenceContext.getSession() == null ? null : persistenceContext.getSession().getFactory() ),
 		        (String) ois.readObject(),
 				( Serializable ) ois.readObject(),
 	            EntityMode.parse( (String) ois.readObject() ),
@@ -404,7 +405,7 @@ public final class EntityEntry implements Serializable {
 	            ois.readBoolean(),
 	            ois.readBoolean(),
 	            ois.readBoolean(),
-				( session == null ? null : session.getPersistenceContext() ) // ugh, need to redo how this particular bit works for non-flushed changes
+				persistenceContext
 		);
 	}
 }

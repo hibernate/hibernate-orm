@@ -1600,7 +1600,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			rtn.entityEntries = IdentityMap.instantiateSequenced( count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count );
 			for ( int i = 0; i < count; i++ ) {
 				Object entity = ois.readObject();
-				EntityEntry entry = EntityEntry.deserialize( ois, session );
+				EntityEntry entry = EntityEntry.deserialize( ois, rtn );
 				rtn.entityEntries.put( entity, entry );
 			}
 
@@ -1764,6 +1764,10 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 		private NaturalIdResolutionCache(EntityPersister persister) {
 			this.persister = persister;
+		}
+
+		public EntityPersister getPersister() {
+			return persister;
 		}
 
 		private Map<Serializable,NaturalId> pkToNaturalIdMap = new ConcurrentHashMap<Serializable, NaturalId>();

@@ -1701,6 +1701,22 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public void loadedStateUpdatedNotification(EntityEntry entityEntry) {
+		final EntityPersister persister = entityEntry.getPersister();
+		if ( ! persister.hasNaturalIdentifier() ) {
+			// nothing to do
+			return;
+		}
+
+		// extract the natural id values
+		final int[] naturalIdPropertyIndexes = persister.getNaturalIdentifierProperties();
+		final Object[] naturalIdValues = new Object[ naturalIdPropertyIndexes.length ];
+		int i = 0;
+		for ( int naturalIdPropertyIndex : naturalIdPropertyIndexes ) {
+			naturalIdValues[i++] = entityEntry.getLoadedState()[ naturalIdPropertyIndex ];
+		}
+
+		// re-cache
+		cacheNaturalIdResolution( persister, entityEntry.getId(), naturalIdValues );
 	}
 
 	private class NaturalId {

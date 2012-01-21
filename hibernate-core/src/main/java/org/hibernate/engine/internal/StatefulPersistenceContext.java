@@ -520,7 +520,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 				persister.getEntityMode(),
 				session.getTenantIdentifier(),
 				disableVersionIncrement,
-				lazyPropertiesAreUnfetched
+				lazyPropertiesAreUnfetched,
+				this
 		);
 		entityEntries.put(entity, e);
 
@@ -1688,5 +1689,9 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		if ( insertedKeysMap != null ) {
 			insertedKeysMap.clear();
 		}
+	}
+
+	@Override
+	public void loadedStateUpdatedNotification(EntityEntry entityEntry) {
 	}
 }

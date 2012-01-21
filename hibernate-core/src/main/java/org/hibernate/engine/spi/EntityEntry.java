@@ -59,6 +59,7 @@ public final class EntityEntry implements Serializable {
 	private boolean isBeingReplicated;
 	private boolean loadedWithLazyPropertiesUnfetched; //NOTE: this is not updated when properties are fetched lazily!
 	private final transient Object rowId;
+	private final transient PersistenceContext persistenceContext;
 
 	public EntityEntry(
 			final Status status,
@@ -72,11 +73,14 @@ public final class EntityEntry implements Serializable {
 			final EntityMode entityMode,
 			final String tenantId,
 			final boolean disableVersionIncrement,
-			final boolean lazyPropertiesAreUnfetched) {
-		this.status=status;
+			final boolean lazyPropertiesAreUnfetched,
+			final PersistenceContext persistenceContext) {
+		this.status = status;
 		this.previousStatus = null;
 		// only retain loaded state if the status is not Status.READ_ONLY
-		if ( status != Status.READ_ONLY ) { this.loadedState = loadedState; }
+		if ( status != Status.READ_ONLY ) {
+			this.loadedState = loadedState;
+		}
 		this.id=id;
 		this.rowId=rowId;
 		this.existsInDatabase=existsInDatabase;
@@ -88,8 +92,13 @@ public final class EntityEntry implements Serializable {
 		this.entityMode = entityMode;
 		this.tenantId = tenantId;
 		this.entityName = persister == null ? null : persister.getEntityName();
+		this.persistenceContext = persistenceContext;
 	}
 
+	/**
+	 * This for is used during custom deserialization handling
+	 */
+	@SuppressWarnings( {"JavaDoc"})
 	private EntityEntry(
 			final SessionFactoryImplementor factory,
 			final String entityName,
@@ -104,8 +113,8 @@ public final class EntityEntry implements Serializable {
 			final LockMode lockMode,
 			final boolean existsInDatabase,
 			final boolean isBeingReplicated,
-			final boolean loadedWithLazyPropertiesUnfetched) {
-		// Used during custom deserialization
+			final boolean loadedWithLazyPropertiesUnfetched,
+			final PersistenceContext persistenceContext) {
 		this.entityName = entityName;
 		this.persister = ( factory == null ? null : factory.getEntityPersister( entityName ) );
 		this.id = id;
@@ -121,6 +130,7 @@ public final class EntityEntry implements Serializable {
 		this.isBeingReplicated = isBeingReplicated;
 		this.loadedWithLazyPropertiesUnfetched = loadedWithLazyPropertiesUnfetched;
 		this.rowId = null; // this is equivalent to the old behavior...
+		this.persistenceContext = persistenceContext;
 	}
 
 	public LockMode getLockMode() {
@@ -221,6 +231,8 @@ public final class EntityEntry implements Serializable {
 		if ( getPersister().getFactory().getServiceRegistry().getService( InstrumentationService.class ).isInstrumented( entity ) ) {
 			FieldInterceptionHelper.clearDirty( entity );
 		}
+
+		notifyLoadedStateUpdated();
 	}
 
 	/**
@@ -310,6 +322,7 @@ public final class EntityEntry implements Serializable {
 			}
 			setStatus( Status.MANAGED );
 			loadedState = getPersister().getPropertyValues( entity );
+			notifyLoadedStateUpdated();
 		}
 	}
 	
@@ -321,6 +334,14 @@ public final class EntityEntry implements Serializable {
 
 	public boolean isLoadedWithLazyPropertiesUnfetched() {
 		return loadedWithLazyPropertiesUnfetched;
+	}
+
+	private void notifyLoadedStateUpdated() {
+		if ( persistenceContext == null ) {
+			throw new HibernateException( "PersistenceContext was null on an empty to update loaded state; indicates mis-use of EntityEntry as non-flushed change handling" );
+		}
+
+		persistenceContext.loadedStateUpdatedNotification( this );
 	}
 
 	/**
@@ -382,7 +403,8 @@ public final class EntityEntry implements Serializable {
 	            LockMode.valueOf( (String) ois.readObject() ),
 	            ois.readBoolean(),
 	            ois.readBoolean(),
-	            ois.readBoolean()
+	            ois.readBoolean(),
+				( session == null ? null : session.getPersistenceContext() ) // ugh, need to redo how this particular bit works for non-flushed changes
 		);
 	}
 }

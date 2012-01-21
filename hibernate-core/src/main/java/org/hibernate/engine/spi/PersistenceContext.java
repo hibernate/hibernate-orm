@@ -682,4 +682,6 @@ public interface PersistenceContext {
 	 * @return True if inserted during this transaction, false otherwise.
 	 */
 	public boolean wasInsertedDuringTransaction(EntityPersister persister, Serializable id);
+
+	public void loadedStateUpdatedNotification(EntityEntry entityEntry);
 }

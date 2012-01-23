@@ -1,9 +1,9 @@
 public class MyIntegrator implements org.hibernate.integrator.spi.Integrator {
 
-	public void integrate(
-			Configuration configuration,
-			SessionFactoryImplementor sessionFactory,
-			SessionFactoryServiceRegistry serviceRegistry) {
+    public void integrate(
+            Configuration configuration,
+            SessionFactoryImplementor sessionFactory,
+            SessionFactoryServiceRegistry serviceRegistry) {
         // As you might expect, an EventListenerRegistry is the thing with which event listeners are registered  It is a
         // service so we look it up using the service registry
         final EventListenerRegistry eventListenerRegistry = serviceRegistry.getService( EventListenerRegistry.class );
@@ -19,5 +19,5 @@ public class MyIntegrator implements org.hibernate.integrator.spi.Integrator {
         eventListenerRegistry.prependListeners( EventType.AUTO_FLUSH, myListenersToBeCalledFirst );
         //     3) This form adds the specified listener(s) to the end of the listener chain
         eventListenerRegistry.prependListeners( EventType.AUTO_FLUSH, myListenersToBeCalledLast );
-	}
+    }
 }

@@ -12,7 +12,7 @@
   <xi:include href="Batch_Processing.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
   <xi:include href="Locking.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
   <xi:include href="Caching.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-  <xi:include href="Services.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+  <xi:include href="chapters/services/Services.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
   <xi:include href="Data_Categorizations.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
   <xi:include href="Mapping_Entities.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
   <xi:include href="Mapping_Association.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />

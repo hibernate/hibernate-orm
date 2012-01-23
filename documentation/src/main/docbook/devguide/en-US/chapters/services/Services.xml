@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8' ?>
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-<!ENTITY % BOOK_ENTITIES SYSTEM "Hibernate_Development_Guide.ent">
+<!ENTITY % BOOK_ENTITIES SYSTEM "../../Hibernate_Development_Guide.ent">
 %BOOK_ENTITIES;
 ]>
 
@@ -844,22 +844,23 @@
                 <varlistentry>
                     <term>Implementations</term>
                     <listitem>
-                        <para>
-                            <classname>org.hibernate.tool.hbm2ddl.SingleLineSqlCommandExtractor</classname>
-                        </para>
-                        <para>
-                            Treads each line as a complete SQL statement. Comment lines shall start with
-                            <literal>--</literal>, <literal>//</literal> or <literal>/*</literal> character sequence.
-                        </para>
-                    </listitem>
-                    <listitem>
-                        <para>
-                            <classname>org.hibernate.tool.hbm2ddl.MultipleLinesSqlCommandExtractor</classname>
-                        </para>
-                        <para>
-                            Supports instructions/comments and quoted strings spread over multiple lines. Each
-                            statement must end with semicolon.
-                        </para>
+                        <itemizedlist>
+                            <listitem>
+                                <para>
+                                    <classname>org.hibernate.tool.hbm2ddl.SingleLineSqlCommandExtractor</classname>
+                                    treats each line as a complete SQL statement. Comment lines shall start with
+                                    <literal>--</literal>, <literal>//</literal> or <literal>/*</literal> character
+                                    sequence.
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    <classname>org.hibernate.tool.hbm2ddl.MultipleLinesSqlCommandExtractor</classname>
+                                    supports instructions/comments and quoted strings spread over multiple lines. Each
+                                    statement must end with semicolon.
+                                </para>
+                            </listitem>
+                        </itemizedlist>
                     </listitem>
                 </varlistentry>
             </variablelist>
@@ -920,16 +921,58 @@
 
             <para>
                 Instances of boot-strap registries are built using the
-                <classname>org.hibernate.service.BootstrapServiceRegistryBuilder</classname> builder.
+                <classname>org.hibernate.service.BootstrapServiceRegistryBuilder</classname> class.
             </para>
 
+            <example id="BootstrapServiceRegistryBuilder-example">
+                <title>Using BootstrapServiceRegistryBuilder</title>
+                <programlisting role="JAVA"><xi:include href="extras/BootstrapServiceRegistryBuilder-example.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+            </example>
+
             <section id="services-registry-bootstrap-services">
-                <title>Boot-strap registry services</title>
+                <title>Bootstrap registry services</title>
                 <section id="services-ClassLoaderService">
                     <title><interfacename>org.hibernate.service.classloading.spi.ClassLoaderService</interfacename></title>
                     <para>
-                        Coming soon...  See <ulink url="https://hibernate.onjira.com/browse/HHH-6656" />
+                        Hibernate needs to interact with ClassLoaders.  However, the manner in which Hibernate
+                        (or any library) should interact with ClassLoaders varies based on the runtime environment
+                        which is hosting the application.  Application servers, OSGi containers, and other modular
+                        class loading systems impose very specific class-loading requirements.  This service is provides
+                        Hibernate an abstraction from this environmental complexity.  And just as importantly, it does
+                        so in a single-swappable-component manner.
                     </para>
+                    <para>
+                        In terms of interacting with a ClassLoader, Hibernate needs the following capabilities:
+                        <itemizedlist>
+                            <listitem>
+                                <para>
+                                    the ability to locate application classes
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    the ability to locate integration classes
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    the ability to locate resources (properties files, xml files, etc)
+                                </para>
+                            </listitem>
+                            <listitem>
+                                <para>
+                                    the ability to load <classname>java.util.ServiceLoader</classname>
+                                </para>
+                            </listitem>
+                        </itemizedlist>
+                    </para>
+                    <note>
+                        <para>
+                            Currently, the ability to load application classes and the ability to load integration
+                            classes are combined into a single "load class" capability on the service.  That may
+                            change in a later release.
+                        </para>
+                    </note>
                 </section>
 
                 <section id="services-IntegratorService">
@@ -937,11 +980,11 @@
                     <para>
                         Applications, add-ons and others all need to integrate with Hibernate which used to require
                         something, usually the application, to coordinate registering the pieces of each integration
-                        needed onm behalf of each integrator.  The intent of this service is to allow those integrators
+                        needed on behalf of each integrator.  The intent of this service is to allow those integrators
                         to be discovered and to have them integrate themselves with Hibernate.
                     </para>
                     <para>
-                        This service focuses on the discovery aspect.  It leverages the Java
+                        This service focuses on the discovery aspect.  It leverages the standard Java
                         <classname>java.util.ServiceLoader</classname> capability provided by the
                         <interfacename>org.hibernate.service.classloading.spi.ClassLoaderService</interfacename>
                         in order to discover implementations of the
@@ -1032,6 +1075,11 @@
         <para>
             See <xref linkend="services-IntegratorService"/>
         </para>
+        <para>
+            In addition to the discovery approach provided by the IntegratorService, applications can manually
+            register Integrator implementations when building the BootstrapServiceRegistry.
+            See <xref linkend="BootstrapServiceRegistryBuilder-example"/>
+        </para>
 
         <section id="integrators-uses">
             <title>Integrator use-cases</title>
@@ -1045,7 +1093,7 @@
 
             <example>
                 <title>Registering event listeners</title>
-                <programlisting><xi:include href="extras/register-event-listeners-example.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+                <programlisting role="JAVA"><xi:include href="extras/register-event-listeners-example.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
             </example>
         </section>
     </section>

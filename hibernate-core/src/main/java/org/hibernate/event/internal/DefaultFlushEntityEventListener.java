@@ -96,33 +96,56 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 	        Object[] loaded,
 	        SessionImplementor session) {
 		if ( persister.hasNaturalIdentifier() && entry.getStatus() != Status.READ_ONLY ) {
- 			Object[] snapshot = null;
-			Type[] types = persister.getPropertyTypes();
-			int[] props = persister.getNaturalIdentifierProperties();
-			boolean[] updateable = persister.getPropertyUpdateability();
-			for ( int i=0; i<props.length; i++ ) {
-				int prop = props[i];
-				if ( !updateable[prop] ) {
- 					Object loadedVal;
- 					if ( loaded == null ) {
- 						if ( snapshot == null) {
- 							snapshot = session.getPersistenceContext().getNaturalIdSnapshot( entry.getId(), persister );
- 						}
- 						loadedVal = snapshot[i];
- 					} else {
- 						loadedVal = loaded[prop];
- 					}
- 					if ( !types[prop].isEqual( current[prop], loadedVal ) ) {
-						throw new HibernateException(
-								"immutable natural identifier of an instance of " +
-								persister.getEntityName() +
-								" was altered"
-							);
-					}
+			if ( ! persister.getEntityMetamodel().hasImmutableNaturalId() ) {
+				// SHORT-CUT: if the natural id is mutable (!immutable), no need to do the below checks
+				// EARLY EXIT!!!
+				return;
+			}
+
+			final int[] naturalIdentifierPropertiesIndexes = persister.getNaturalIdentifierProperties();
+			final Type[] propertyTypes = persister.getPropertyTypes();
+			final boolean[] propertyUpdateability = persister.getPropertyUpdateability();
+
+			final Object[] snapshot = loaded == null
+					? session.getPersistenceContext().getNaturalIdSnapshot( entry.getId(), persister )
+					: extractNaturalIdValues( loaded, naturalIdentifierPropertiesIndexes );
+
+			for ( int i=0; i<naturalIdentifierPropertiesIndexes.length; i++ ) {
+				final int naturalIdentifierPropertyIndex = naturalIdentifierPropertiesIndexes[i];
+				if ( propertyUpdateability[ naturalIdentifierPropertyIndex ] ) {
+					// if the given natural id property is updatable (mutable), there is nothing to check
+					continue;
 				}
+
+				final Type propertyType = propertyTypes[naturalIdentifierPropertyIndex];
+				if ( ! propertyType.isEqual( current[naturalIdentifierPropertyIndex], snapshot[i] ) ) {
+					throw new HibernateException(
+							String.format(
+									"An immutable natural identifier of entity %s was altered from %s to %s",
+									persister.getEntityName(),
+									propertyTypes[naturalIdentifierPropertyIndex].toLoggableString(
+											snapshot[i],
+											session.getFactory()
+									),
+									propertyTypes[naturalIdentifierPropertyIndex].toLoggableString(
+											current[naturalIdentifierPropertyIndex],
+											session.getFactory()
+									)
+							)
+					);
+			   }
 			}
 		}
 	}
+
+	public Object[] extractNaturalIdValues(Object[] entitySnapshot, int[] naturalIdPropertyIndexes) {
+		final Object[] naturalIdSnapshotSubSet = new Object[ naturalIdPropertyIndexes.length ];
+		for ( int i = 0; i < naturalIdPropertyIndexes.length; i++ ) {
+			naturalIdSnapshotSubSet[i] = entitySnapshot[ naturalIdPropertyIndexes[i] ];
+		}
+		return naturalIdSnapshotSubSet;
+	}
+
 
 	/**
 	 * Flushes a single entity's state to the database, by scheduling

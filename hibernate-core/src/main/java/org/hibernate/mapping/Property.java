@@ -22,13 +22,13 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.mapping;
+
 import java.io.Serializable;
 import java.util.Iterator;
 import java.util.StringTokenizer;
 
 import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
-import org.hibernate.NaturalIdMutability;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.Mapping;
@@ -61,7 +61,6 @@ public class Property implements Serializable, MetaAttributable {
 	private java.util.Map metaAttributes;
 	private PersistentClass persistentClass;
 	private boolean naturalIdentifier;
-	private NaturalIdMutability naturalIdMutability;
 
 	public boolean isBackRef() {
 		return false;
@@ -147,20 +146,14 @@ public class Property implements Serializable, MetaAttributable {
 	}
 
 	public boolean isUpdateable() {
-		// if the property mapping consists of all formulas, 
+		// if the property mapping consists of all formulas,
 		// make it non-updateable
-		final boolean[] columnUpdateability = value.getColumnUpdateability();
-		final boolean isImmutableNaturalId = isNaturalIdentifier()
-				&& ( NaturalIdMutability.IMMUTABLE.equals( getNaturalIdMutability() )
-						|| NaturalIdMutability.IMMUTABLE_CHECKED.equals( getNaturalIdMutability() ) );
-		return updateable
-				&& !isImmutableNaturalId
-				&& !ArrayHelper.isAllFalse(columnUpdateability);
+		return updateable && !ArrayHelper.isAllFalse( value.getColumnUpdateability() );
 	}
 
 	public boolean isInsertable() {
 		// if the property mapping consists of all formulas, 
-		// make it insertable
+		// make it non-insertable
 		final boolean[] columnInsertability = value.getColumnInsertability();
 		return insertable && (
 				columnInsertability.length==0 ||
@@ -176,8 +169,7 @@ public class Property implements Serializable, MetaAttributable {
         this.generation = generation;
     }
 
-    public void setUpdateable(
-			boolean mutable) {
+    public void setUpdateable(boolean mutable) {
 		this.updateable = mutable;
 	}
 
@@ -299,7 +291,7 @@ public class Property implements Serializable, MetaAttributable {
 
 	// todo : remove
 	public Getter getGetter(Class clazz) throws PropertyNotFoundException, MappingException {
-		return getPropertyAccessor(clazz).getGetter(clazz, name);
+		return getPropertyAccessor(clazz).getGetter( clazz, name );
 	}
 
 	// todo : remove
@@ -318,14 +310,6 @@ public class Property implements Serializable, MetaAttributable {
 
 	public void setNaturalIdentifier(boolean naturalIdentifier) {
 		this.naturalIdentifier = naturalIdentifier;
-	}
-
-	public NaturalIdMutability getNaturalIdMutability() {
-		return naturalIdMutability;
-	}
-
-	public void setNaturalIdMutability(NaturalIdMutability naturalIdMutability) {
-		this.naturalIdMutability = naturalIdMutability;
 	}
 
 }

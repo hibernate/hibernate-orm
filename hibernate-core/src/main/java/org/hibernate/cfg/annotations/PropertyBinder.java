@@ -30,7 +30,6 @@ import javax.persistence.Id;
 import org.jboss.logging.Logger;
 
 import org.hibernate.AnnotationException;
-import org.hibernate.NaturalIdMutability;
 import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.GenerationTime;
 import org.hibernate.annotations.Immutable;
@@ -286,20 +285,14 @@ public class PropertyBinder {
 		}
 		NaturalId naturalId = property != null ? property.getAnnotation( NaturalId.class ) : null;
 		if ( naturalId != null ) {
-			NaturalIdMutability mutability = naturalId.mutability();
-			if ( mutability == NaturalIdMutability.UNSPECIFIED ) {
-				mutability = naturalId.mutable()
-						? NaturalIdMutability.MUTABLE
-						: NaturalIdMutability.IMMUTABLE_CHECKED;
-			}
-			if ( mutability != NaturalIdMutability.MUTABLE ) {
+			if ( ! naturalId.mutable() ) {
 				updatable = false;
 			}
 			prop.setNaturalIdentifier( true );
-			prop.setNaturalIdMutability( mutability );
 		}
 		prop.setInsertable( insertable );
 		prop.setUpdateable( updatable );
+
 		OptimisticLock lockAnn = property != null ?
 				property.getAnnotation( OptimisticLock.class ) :
 				null;

@@ -26,8 +26,6 @@ package org.hibernate.annotations;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
-import org.hibernate.NaturalIdMutability;
-
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
@@ -36,31 +34,14 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * This specifies that a property is part of the natural id of the entity.
  *
  * @author Nicol�s Lichtmaier
- * @author Steve Ebersole
  */
 @Target( { METHOD, FIELD } )
 @Retention( RUNTIME )
 public @interface NaturalId {
 	/**
-	 * @deprecated Use {@link #mutability()} instead.  For {@code mutable == false} (the default) use
-	 * {@link NaturalIdMutability#IMMUTABLE_CHECKED}; for {@code mutable == true} use
-	 * {@link NaturalIdMutability#MUTABLE}.
+	 * Is this natural id mutable (or immutable)?
 	 *
-	 * Note however the difference between {@link NaturalIdMutability#IMMUTABLE_CHECKED} which mimics the old behavior
-	 * of {@code mutable == false} and the new behavior available via {@link NaturalIdMutability#IMMUTABLE}
+	 * @return {@code true} indicates the natural id is mutable; {@code false} (the default) that it is immutable.
 	 */
-	@Deprecated
-	@SuppressWarnings( {"JavaDoc"})
 	boolean mutable() default false;
-
-	/**
-	 * The mutability behavior of this natural id.
-	 * 
-	 * Note: the current default value is the {@link NaturalIdMutability#UNSPECIFIED} value which was added
-	 * in deprecated form until the deprecated {@link #mutable()} attribute here can be removed.  This lets existing
-	 * applications continue to work seamlessly using their existing natural id annotations.
-	 *
-	 * @return The mutability behavior.
-	 */
-	NaturalIdMutability mutability() default NaturalIdMutability.UNSPECIFIED;
 }

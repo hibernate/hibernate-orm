@@ -37,7 +37,6 @@ import org.jboss.logging.Logger;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.NaturalIdMutability;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.CascadeStyle;
@@ -196,7 +195,7 @@ public class EntityMetamodel implements Serializable {
 
 			if ( prop.isNaturalIdentifier() ) {
 				naturalIdNumbers.add( i );
-				if ( prop.isUpdateable() && NaturalIdMutability.MUTABLE.equals( prop.getNaturalIdMutability() ) ) {
+				if ( prop.isUpdateable() ) {
 					foundUpdateableNaturalIdProperty = true;
 				}
 			}

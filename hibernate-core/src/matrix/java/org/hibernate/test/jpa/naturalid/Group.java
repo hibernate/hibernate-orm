@@ -27,7 +27,6 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
-import org.hibernate.NaturalIdMutability;
 import org.hibernate.annotations.NaturalId;
 
 /**
@@ -56,7 +55,7 @@ public class Group {
 		this.id = id;
 	}
 
-	@NaturalId(mutability = NaturalIdMutability.MUTABLE)
+	@NaturalId(mutable = true)
 	public String getName() {
 		return name;
 	}

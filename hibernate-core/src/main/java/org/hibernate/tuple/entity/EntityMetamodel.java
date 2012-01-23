@@ -37,6 +37,8 @@ import org.jboss.logging.Logger;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.bytecode.spi.EntityInstrumentationMetadata;
+import org.hibernate.cfg.Environment;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.CascadeStyle;
@@ -54,7 +56,6 @@ import org.hibernate.metamodel.binding.BasicAttributeBinding;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.domain.Attribute;
 import org.hibernate.metamodel.domain.SingularAttribute;
-import org.hibernate.service.instrumentation.spi.InstrumentationService;
 import org.hibernate.tuple.IdentifierProperty;
 import org.hibernate.tuple.PropertyFactory;
 import org.hibernate.tuple.StandardProperty;
@@ -131,7 +132,7 @@ public class EntityMetamodel implements Serializable {
 
 	private final EntityMode entityMode;
 	private final EntityTuplizer entityTuplizer;
-	private boolean lazyAvailable;
+	private final EntityInstrumentationMetadata instrumentationMetadata;
 
 	public EntityMetamodel(PersistentClass persistentClass, SessionFactoryImplementor sessionFactory) {
 		this.sessionFactory = sessionFactory;
@@ -147,9 +148,10 @@ public class EntityMetamodel implements Serializable {
 
 		versioned = persistentClass.isVersioned();
 
-		InstrumentationService instrumentationService = sessionFactory.getServiceRegistry().getService( InstrumentationService.class );
-		lazyAvailable = persistentClass.hasPojoRepresentation() &&
-		                        instrumentationService.isInstrumented( persistentClass.getMappedClass() );
+		instrumentationMetadata = persistentClass.hasPojoRepresentation()
+				? Environment.getBytecodeProvider().getEntityInstrumentationMetadata( persistentClass.getMappedClass() )
+				: new NonPojoInstrumentationMetadata( persistentClass.getEntityName() );
+
 		boolean hasLazy = false;
 
 		propertySpan = persistentClass.getPropertyClosureSpan();
@@ -187,10 +189,10 @@ public class EntityMetamodel implements Serializable {
 
 			if ( prop == persistentClass.getVersion() ) {
 				tempVersionProperty = i;
-				properties[i] = PropertyFactory.buildVersionProperty( prop, lazyAvailable );
+				properties[i] = PropertyFactory.buildVersionProperty( prop, instrumentationMetadata.isInstrumented() );
 			}
 			else {
-				properties[i] = PropertyFactory.buildStandardProperty( prop, lazyAvailable );
+				properties[i] = PropertyFactory.buildStandardProperty( prop, instrumentationMetadata.isInstrumented() );
 			}
 
 			if ( prop.isNaturalIdentifier() ) {
@@ -205,7 +207,7 @@ public class EntityMetamodel implements Serializable {
 			}
 
 			// temporary ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-			boolean lazy = prop.isLazy() && lazyAvailable;
+			boolean lazy = prop.isLazy() && instrumentationMetadata.isInstrumented();
 			if ( lazy ) hasLazy = true;
 			propertyLaziness[i] = lazy;
 
@@ -375,15 +377,12 @@ public class EntityMetamodel implements Serializable {
 		boolean hasPojoRepresentation = false;
 		Class<?> mappedClass = null;
 		Class<?> proxyInterfaceClass = null;
-		lazyAvailable = false;
 		if ( entityBinding.getEntity().getClassReferenceUnresolved() != null ) {
 			hasPojoRepresentation = true;
 			mappedClass = entityBinding.getEntity().getClassReference();
 			proxyInterfaceClass = entityBinding.getProxyInterfaceType().getValue();
-			InstrumentationService instrumentationService = sessionFactory.getServiceRegistry()
-					.getService( InstrumentationService.class );
-			lazyAvailable = instrumentationService.isInstrumented( mappedClass );
 		}
+		instrumentationMetadata = Environment.getBytecodeProvider().getEntityInstrumentationMetadata( mappedClass );
 
 		boolean hasLazy = false;
 
@@ -432,11 +431,12 @@ public class EntityMetamodel implements Serializable {
 			if ( attributeBinding == entityBinding.getHierarchyDetails().getVersioningAttributeBinding() ) {
 				tempVersionProperty = i;
 				properties[i] = PropertyFactory.buildVersionProperty(
-						entityBinding.getHierarchyDetails().getVersioningAttributeBinding(), lazyAvailable
+						entityBinding.getHierarchyDetails().getVersioningAttributeBinding(),
+						instrumentationMetadata.isInstrumented()
 				);
 			}
 			else {
-				properties[i] = PropertyFactory.buildStandardProperty( attributeBinding, lazyAvailable );
+				properties[i] = PropertyFactory.buildStandardProperty( attributeBinding, instrumentationMetadata.isInstrumented() );
 			}
 
 			// TODO: fix when natural IDs are added (HHH-6354)
@@ -452,7 +452,7 @@ public class EntityMetamodel implements Serializable {
 			}
 
 			// temporary ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-			boolean lazy = attributeBinding.isLazy() && lazyAvailable;
+			boolean lazy = attributeBinding.isLazy() && instrumentationMetadata.isInstrumented();
 			if ( lazy ) hasLazy = true;
 			propertyLaziness[i] = lazy;
 
@@ -944,6 +944,10 @@ public class EntityMetamodel implements Serializable {
 	 * Whether or not this class can be lazy (ie intercepted)
 	 */
 	public boolean isInstrumented() {
-		return lazyAvailable;
+		return instrumentationMetadata.isInstrumented();
+	}
+
+	public EntityInstrumentationMetadata getInstrumentationMetadata() {
+		return instrumentationMetadata;
 	}
 }

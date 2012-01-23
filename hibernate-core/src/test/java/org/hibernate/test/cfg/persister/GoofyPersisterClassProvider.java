@@ -31,6 +31,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
+import org.hibernate.bytecode.spi.EntityInstrumentationMetadata;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
@@ -52,6 +53,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.spi.PersisterClassResolver;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
+import org.hibernate.tuple.entity.NonPojoInstrumentationMetadata;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.Type;
 import org.hibernate.type.VersionType;
@@ -97,6 +99,11 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		@Override
 		public EntityTuplizer getEntityTuplizer() {
 			return null;
+		}
+
+		@Override
+		public EntityInstrumentationMetadata getInstrumentationMetadata() {
+			return new NonPojoInstrumentationMetadata( null );
 		}
 
 		@Override

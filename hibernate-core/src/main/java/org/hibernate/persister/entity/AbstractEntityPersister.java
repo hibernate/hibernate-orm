@@ -37,6 +37,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.jboss.logging.Logger;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.FetchMode;
@@ -47,9 +49,9 @@ import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.StaleStateException;
-import org.hibernate.bytecode.instrumentation.internal.FieldInterceptionHelper;
 import org.hibernate.bytecode.instrumentation.spi.FieldInterceptor;
 import org.hibernate.bytecode.instrumentation.spi.LazyPropertyInitializer;
+import org.hibernate.bytecode.spi.EntityInstrumentationMetadata;
 import org.hibernate.cache.spi.CacheKey;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.entry.CacheEntry;
@@ -102,7 +104,6 @@ import org.hibernate.metamodel.relational.DerivedValue;
 import org.hibernate.metamodel.relational.Value;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.property.BackrefPropertyAccessor;
-import org.hibernate.service.instrumentation.spi.InstrumentationService;
 import org.hibernate.sql.Alias;
 import org.hibernate.sql.Delete;
 import org.hibernate.sql.Insert;
@@ -113,7 +114,6 @@ import org.hibernate.sql.SelectFragment;
 import org.hibernate.sql.SimpleSelect;
 import org.hibernate.sql.Template;
 import org.hibernate.sql.Update;
-import org.hibernate.tuple.StandardProperty;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.AssociationType;
@@ -122,7 +122,6 @@ import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 import org.hibernate.type.VersionType;
-import org.jboss.logging.Logger;
 
 /**
  * Basic functionality for persisting an entity via JDBC
@@ -3964,16 +3963,13 @@ public abstract class AbstractEntityPersister
 
 	public void afterReassociate(Object entity, SessionImplementor session) {
 		//if ( hasLazyProperties() ) {
-		InstrumentationService instrumentationService = session.getFactory()
-				.getServiceRegistry()
-				.getService( InstrumentationService.class );
-		if ( instrumentationService.isInstrumented( entity ) ) {
-			FieldInterceptor interceptor = FieldInterceptionHelper.extractFieldInterceptor( entity );
+		if ( getEntityMetamodel().getInstrumentationMetadata().isInstrumented() ) {
+			FieldInterceptor interceptor = getEntityMetamodel().getInstrumentationMetadata().extractInterceptor( entity );
 			if ( interceptor != null ) {
 				interceptor.setSession( session );
 			}
 			else {
-				FieldInterceptor fieldInterceptor = FieldInterceptionHelper.injectFieldInterceptor(
+				FieldInterceptor fieldInterceptor = getEntityMetamodel().getInstrumentationMetadata().injectInterceptor(
 						entity,
 						getEntityName(),
 						null,
@@ -4153,7 +4149,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	public boolean isInstrumented() {
-		return getEntityTuplizer().isInstrumented();
+		return entityMetamodel.isInstrumented();
 	}
 
 	public boolean hasInsertGeneratedProperties() {
@@ -4617,5 +4613,10 @@ public abstract class AbstractEntityPersister
 	@Override
 	public EntityTuplizer getEntityTuplizer() {
 		return entityTuplizer;
+	}
+
+	@Override
+	public EntityInstrumentationMetadata getInstrumentationMetadata() {
+		return entityMetamodel.getInstrumentationMetadata();
 	}
 }

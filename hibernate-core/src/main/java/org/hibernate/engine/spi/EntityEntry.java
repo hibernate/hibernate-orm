@@ -31,11 +31,10 @@ import java.io.Serializable;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
-import org.hibernate.bytecode.instrumentation.internal.FieldInterceptionHelper;
+import org.hibernate.bytecode.instrumentation.spi.FieldInterceptor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.service.instrumentation.spi.InstrumentationService;
 
 /**
  * We need an entry to tell us all about the current state of an object with respect to its persistent state
@@ -228,8 +227,11 @@ public final class EntityEntry implements Serializable {
 			this.version = nextVersion;
 			getPersister().setPropertyValue( entity, getPersister().getVersionProperty(), nextVersion );
 		}
-		if ( getPersister().getFactory().getServiceRegistry().getService( InstrumentationService.class ).isInstrumented( entity ) ) {
-			FieldInterceptionHelper.clearDirty( entity );
+		if ( getPersister().getInstrumentationMetadata().isInstrumented() ) {
+			final FieldInterceptor interceptor = getPersister().getInstrumentationMetadata().extractInterceptor( entity );
+			if ( interceptor != null ) {
+				interceptor.clearDirty();
+			}
 		}
 
 		notifyLoadedStateUpdated();
@@ -270,8 +272,8 @@ public final class EntityEntry implements Serializable {
 	public boolean requiresDirtyCheck(Object entity) {		
 		return isModifiableEntity() && (
 				getPersister().hasMutableProperties() ||
-				!getPersister().getFactory().getServiceRegistry().getService( InstrumentationService.class ).isInstrumented(entity) ||
-				FieldInterceptionHelper.extractFieldInterceptor(entity).isDirty()
+				!getPersister().getInstrumentationMetadata().isInstrumented() ||
+				getPersister().getInstrumentationMetadata().extractInterceptor( entity ).isDirty()
 			);
 	}
 

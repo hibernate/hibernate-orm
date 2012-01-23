@@ -33,7 +33,6 @@ import org.hibernate.NonUniqueObjectException;
 import org.hibernate.action.internal.AbstractEntityInsertAction;
 import org.hibernate.action.internal.EntityIdentityInsertAction;
 import org.hibernate.action.internal.EntityInsertAction;
-import org.hibernate.bytecode.instrumentation.internal.FieldInterceptionHelper;
 import org.hibernate.bytecode.instrumentation.spi.FieldInterceptor;
 import org.hibernate.classic.Lifecycle;
 import org.hibernate.engine.internal.Cascade;
@@ -50,7 +49,6 @@ import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.service.instrumentation.spi.InstrumentationService;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 
@@ -61,7 +59,7 @@ import org.hibernate.type.TypeHelper;
  */
 public abstract class AbstractSaveEventListener extends AbstractReassociateEventListener {
     public enum EntityState{
-        PERSISTENT, TRANSIENT, DETACHED, DELETED;
+        PERSISTENT, TRANSIENT, DETACHED, DELETED
     }
 
     private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
@@ -333,11 +331,8 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 	}
 
 	private void markInterceptorDirty(Object entity, EntityPersister persister, EventSource source) {
-		InstrumentationService instrumentationService = persister.getFactory()
-				.getServiceRegistry()
-				.getService( InstrumentationService.class );
-		if ( instrumentationService.isInstrumented( entity ) ) {
-			FieldInterceptor interceptor = FieldInterceptionHelper.injectFieldInterceptor(
+		if ( persister.getInstrumentationMetadata().isInstrumented() ) {
+			FieldInterceptor interceptor = persister.getInstrumentationMetadata().injectInterceptor(
 					entity,
 					persister.getEntityName(),
 					null,

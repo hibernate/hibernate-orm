@@ -68,4 +68,14 @@ public interface BytecodeProvider {
 	 * @return The appropriate ClassTransformer.
 	 */
 	public ClassTransformer getTransformer(ClassFilter classFilter, FieldFilter fieldFilter);
+
+	/**
+	 * Retrieve the interception metadata for the particular entity type.
+	 *
+	 * @param entityClass The entity class.  Note: we pass class here instead of the usual "entity name" because
+	 * only real classes can be instrumented.
+	 *
+	 * @return The metadata
+	 */
+	public EntityInstrumentationMetadata getEntityInstrumentationMetadata(Class entityClass);
 }

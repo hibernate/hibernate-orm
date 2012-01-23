@@ -24,15 +24,21 @@
 package org.hibernate.bytecode.internal.javassist;
 
 import java.lang.reflect.Modifier;
+import java.util.Set;
 
 import org.jboss.logging.Logger;
 
 import org.hibernate.bytecode.buildtime.spi.ClassFilter;
 import org.hibernate.bytecode.buildtime.spi.FieldFilter;
+import org.hibernate.bytecode.instrumentation.internal.javassist.JavassistHelper;
+import org.hibernate.bytecode.instrumentation.spi.FieldInterceptor;
 import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.bytecode.spi.ClassTransformer;
+import org.hibernate.bytecode.spi.EntityInstrumentationMetadata;
+import org.hibernate.bytecode.spi.NotInstrumentedException;
 import org.hibernate.bytecode.spi.ProxyFactoryFactory;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 
@@ -45,10 +51,12 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 
     private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, BytecodeProviderImpl.class.getName());
 
+	@Override
 	public ProxyFactoryFactory getProxyFactoryFactory() {
 		return new ProxyFactoryFactoryImpl();
 	}
 
+	@Override
 	public ReflectionOptimizer getReflectionOptimizer(
 			Class clazz,
 	        String[] getterNames,
@@ -97,7 +105,71 @@ public class BytecodeProviderImpl implements BytecodeProvider {
         return null;
 	}
 
+	@Override
 	public ClassTransformer getTransformer(ClassFilter classFilter, FieldFilter fieldFilter) {
 		return new JavassistClassTransformer( classFilter, fieldFilter );
+	}
+
+	@Override
+	public EntityInstrumentationMetadata getEntityInstrumentationMetadata(Class entityClass) {
+		return new EntityInstrumentationMetadataImpl( entityClass );
+	}
+
+	private class EntityInstrumentationMetadataImpl implements EntityInstrumentationMetadata {
+		private final Class entityClass;
+		private final boolean isInstrumented;
+
+		private EntityInstrumentationMetadataImpl(Class entityClass) {
+			this.entityClass = entityClass;
+			this.isInstrumented = FieldHandled.class.isAssignableFrom( entityClass );
+		}
+
+		@Override
+		public String getEntityName() {
+			return entityClass.getName();
+		}
+
+		@Override
+		public boolean isInstrumented() {
+			return isInstrumented;
+		}
+
+		@Override
+		public FieldInterceptor extractInterceptor(Object entity) throws NotInstrumentedException {
+			if ( !entityClass.isInstance( entity ) ) {
+				throw new IllegalArgumentException(
+						String.format(
+								"Passed entity instance [%s] is not of expected type [%s]",
+								entity,
+								getEntityName()
+						)
+				);
+			}
+			if ( ! isInstrumented() ) {
+				throw new NotInstrumentedException( String.format( "Entity class [%s] is not instrumented", getEntityName() ) );
+			}
+			return JavassistHelper.extractFieldInterceptor( entity );
+		}
+
+		@Override
+		public FieldInterceptor injectInterceptor(
+				Object entity,
+				String entityName,
+				Set uninitializedFieldNames,
+				SessionImplementor session) throws NotInstrumentedException {
+			if ( !entityClass.isInstance( entity ) ) {
+				throw new IllegalArgumentException(
+						String.format(
+								"Passed entity instance [%s] is not of expected type [%s]",
+								entity,
+								getEntityName()
+						)
+				);
+			}
+			if ( ! isInstrumented() ) {
+				throw new NotInstrumentedException( String.format( "Entity class [%s] is not instrumented", getEntityName() ) );
+			}
+			return JavassistHelper.injectFieldInterceptor( entity, entityName, uninitializedFieldNames, session );
+		}
 	}
 }

@@ -31,6 +31,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
+import org.hibernate.bytecode.spi.EntityInstrumentationMetadata;
 import org.hibernate.cache.spi.OptimisticCacheSource;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
@@ -733,4 +734,6 @@ public interface EntityPersister extends OptimisticCacheSource {
 
 	public EntityMode getEntityMode();
 	public EntityTuplizer getEntityTuplizer();
+
+	public EntityInstrumentationMetadata getInstrumentationMetadata();
 }

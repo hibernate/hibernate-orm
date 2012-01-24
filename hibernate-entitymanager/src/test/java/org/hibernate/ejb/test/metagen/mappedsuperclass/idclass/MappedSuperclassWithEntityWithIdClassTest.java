@@ -29,7 +29,6 @@ import org.hibernate.ejb.Ejb3Configuration;
 
 import org.junit.Test;
 
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
@@ -40,7 +39,6 @@ import org.hibernate.testing.junit4.BaseUnitTestCase;
 public class MappedSuperclassWithEntityWithIdClassTest extends BaseUnitTestCase {
 	@Test
 	@TestForIssue( jiraKey = "HHH-5024" )
-	@FailureExpected( jiraKey = "HHH-5024" )
 	public void testStaticMetamodel() {
 		new Ejb3Configuration().addAnnotatedClass( ProductAttribute.class ).buildEntityManagerFactory();
 
@@ -48,8 +46,7 @@ public class MappedSuperclassWithEntityWithIdClassTest extends BaseUnitTestCase 
 		assertNotNull( "'ProductAttribute_.owner' should not be null)", ProductAttribute_.owner );
 		assertNotNull( "'ProductAttribute_.key' should not be null)", ProductAttribute_.key );
 
-		assertNotNull( "'AbstractAttribute_.owner' should not be null)", AbstractAttribute_.owner );
-		assertNotNull( "'AbstractAttribute_.key' should not be null)", AbstractAttribute_.key );
+		assertNotNull( "'AbstractAttribute_.value' should not be null)", AbstractAttribute_.value );
 	}
 
 }

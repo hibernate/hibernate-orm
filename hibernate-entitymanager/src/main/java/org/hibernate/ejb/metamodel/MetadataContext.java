@@ -370,7 +370,17 @@ class MetadataContext {
 	private <X> void registerAttribute(Class metamodelClass, Attribute<X, ?> attribute) {
 		final String name = attribute.getName();
 		try {
-			Field field = metamodelClass.getDeclaredField( name );
+			// there is a shortcoming in the existing Hibernate code in terms of the way MappedSuperclass
+			// support was bolted on which comes to bear right here when the attribute is an embeddable type
+			// defined on a MappedSuperclass.  We do not have the correct information to determine the
+			// appropriate attribute declarer in such cases and so the incoming metamodelClass most likely
+			// does not represent the declarer in such cases.
+			//
+			// As a result, in the case of embeddable classes we simply use getField rather than get
+			// getDeclaredField
+			final Field field = attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.EMBEDDED
+					? metamodelClass.getField( name )
+					: metamodelClass.getDeclaredField( name );
 			try {
 				if ( ! field.isAccessible() ) {
 					// should be public anyway, but to be sure...

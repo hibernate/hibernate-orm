@@ -27,6 +27,7 @@ import java.io.Serializable;
 
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
+import javax.persistence.Transient;
 
 /**
  * @author Alexis Bataille
@@ -41,12 +42,9 @@ public abstract class AbstractAttribute implements Serializable {
 		super();
 	}
 
-	public abstract String getOwner();
+	@Transient public abstract String getOwner();
 
-	@Column(name = "attribute_key")
-	public String getKey() {
-		return key;
-	}
+	@Transient public String getKey() { return key; }
 
 	public void setKey(String key) {
 		this.key = key;

@@ -39,7 +39,6 @@ import static org.junit.Assert.assertNotNull;
 public class MappedSuperclassWithEmbeddedTest extends BaseUnitTestCase {
 	@Test
 	@TestForIssue( jiraKey = "HHH-5024" )
-	@FailureExpected( jiraKey = "HHH-5024" )
 	public void testStaticMetamodel() {
 		new Ejb3Configuration().addAnnotatedClass( Company.class ).buildEntityManagerFactory();
 

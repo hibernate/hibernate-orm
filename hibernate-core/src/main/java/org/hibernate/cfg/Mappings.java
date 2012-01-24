@@ -754,4 +754,6 @@ public interface Mappings {
 	public PropertyData getPropertyAnnotatedWithIdAndToOne(XClass entityType, String propertyName);
 
 	void addToOneAndIdProperty(XClass entity, PropertyData property);
+
+	public boolean forceDiscriminatorInSelectsByDefault();
 }

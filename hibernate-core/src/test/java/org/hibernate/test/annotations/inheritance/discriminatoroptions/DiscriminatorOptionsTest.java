@@ -25,6 +25,7 @@ package org.hibernate.test.annotations.inheritance.discriminatoroptions;
 
 import org.junit.Test;
 
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
@@ -53,5 +54,34 @@ public class DiscriminatorOptionsTest extends BaseUnitTestCase {
 		RootClass root = ( RootClass ) persistentClass;
 		assertTrue( "Discriminator should be forced", root.isForceDiscriminator() );
 		assertFalse( "Discriminator should not be insertable", root.isDiscriminatorInsertable() );
+	}
+
+	@Test
+	public void testBaseline() throws Exception {
+		Configuration configuration = new Configuration()
+				.addAnnotatedClass( BaseClass2.class )
+				.addAnnotatedClass( SubClass2.class );
+		configuration.buildMappings();
+		PersistentClass persistentClass = configuration.getClassMapping( BaseClass2.class.getName() );
+		assertNotNull( persistentClass );
+		assertTrue( persistentClass instanceof RootClass );
+
+		RootClass root = ( RootClass ) persistentClass;
+		assertFalse( "Discriminator should not be forced by default", root.isForceDiscriminator() );
+	}
+
+	@Test
+	public void testPropertyBasedDiscriminatorForcing() throws Exception {
+		Configuration configuration = new Configuration()
+				.setProperty( AvailableSettings.FORCE_DISCRIMINATOR_IN_SELECTS_BY_DEFAULT, "true" )
+				.addAnnotatedClass( BaseClass2.class )
+				.addAnnotatedClass( SubClass2.class );
+		configuration.buildMappings();
+		PersistentClass persistentClass = configuration.getClassMapping( BaseClass2.class.getName() );
+		assertNotNull( persistentClass );
+		assertTrue( persistentClass instanceof RootClass );
+
+		RootClass root = ( RootClass ) persistentClass;
+		assertTrue( "Discriminator should be forced by property", root.isForceDiscriminator() );
 	}
 }

@@ -542,10 +542,14 @@ public final class HbmBinder {
 			// ( (Column) discrim.getColumnIterator().next() ).setType(type);
 		}
 		entity.setPolymorphic( true );
-		if ( "true".equals( subnode.attributeValue( "force" ) ) )
-			entity.setForceDiscriminator( true );
-		if ( "false".equals( subnode.attributeValue( "insert" ) ) )
+		final String explicitForceValue = subnode.attributeValue( "force" );
+		boolean forceDiscriminatorInSelects = explicitForceValue == null
+				? mappings.forceDiscriminatorInSelectsByDefault()
+				: "true".equals( explicitForceValue );
+		entity.setForceDiscriminator( forceDiscriminatorInSelects );
+		if ( "false".equals( subnode.attributeValue( "insert" ) ) ) {
 			entity.setDiscriminatorInsertable( false );
+		}
 	}
 
 	public static void bindClass(Element node, PersistentClass persistentClass, Mappings mappings,

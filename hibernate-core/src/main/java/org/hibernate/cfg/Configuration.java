@@ -3002,9 +3002,6 @@ public class Configuration implements Serializable {
 			return properties;
 		}
 
-
-		private Boolean useNewGeneratorMappings;
-
 		public void addDefaultGenerator(IdGenerator generator) {
 			this.addGenerator( generator );
 			defaultNamedGenerators.add( generator.getName() );
@@ -3055,13 +3052,29 @@ public class Configuration implements Serializable {
 			map.put( property.getPropertyName(), property );
 		}
 
+		private Boolean useNewGeneratorMappings;
+
 		@SuppressWarnings({ "UnnecessaryUnboxing" })
 		public boolean useNewGeneratorMappings() {
 			if ( useNewGeneratorMappings == null ) {
-				final String booleanName = getConfigurationProperties().getProperty( AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS );
+				final String booleanName = getConfigurationProperties()
+						.getProperty( AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS );
 				useNewGeneratorMappings = Boolean.valueOf( booleanName );
 			}
 			return useNewGeneratorMappings.booleanValue();
+		}
+
+		private Boolean forceDiscriminatorInSelectsByDefault;
+
+		@Override
+		@SuppressWarnings( {"UnnecessaryUnboxing"})
+		public boolean forceDiscriminatorInSelectsByDefault() {
+			if ( forceDiscriminatorInSelectsByDefault == null ) {
+				final String booleanName = getConfigurationProperties()
+						.getProperty( AvailableSettings.FORCE_DISCRIMINATOR_IN_SELECTS_BY_DEFAULT );
+				forceDiscriminatorInSelectsByDefault = Boolean.valueOf( booleanName );
+			}
+			return forceDiscriminatorInSelectsByDefault.booleanValue();
 		}
 
 		public IdGenerator getGenerator(String name) {

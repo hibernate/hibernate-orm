@@ -230,9 +230,10 @@ public class EntityBinder {
 				rootClass.setCacheRegionName( cacheRegion );
 				rootClass.setLazyPropertiesCacheable( cacheLazyProperty );
 			}
-			if(forceDiscriminator != null) {
-				rootClass.setForceDiscriminator( forceDiscriminator );
-			}
+			boolean forceDiscriminatorInSelects = forceDiscriminator == null
+					? mappings.forceDiscriminatorInSelectsByDefault()
+					: forceDiscriminator;
+			rootClass.setForceDiscriminator( forceDiscriminatorInSelects );
 			if( insertableDiscriminator != null) {
 				rootClass.setDiscriminatorInsertable( insertableDiscriminator );
 			}

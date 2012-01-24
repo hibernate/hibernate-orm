@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
+import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.MappingException;
@@ -238,4 +239,6 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	public ServiceRegistryImplementor getServiceRegistry();
 
 	public void addObserver(SessionFactoryObserver observer);
+
+	public CustomEntityDirtinessStrategy getCustomEntityDirtinessStrategy();
 }

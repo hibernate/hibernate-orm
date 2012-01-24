@@ -47,6 +47,7 @@ import org.jboss.logging.Logger;
 import org.hibernate.AssertionFailure;
 import org.hibernate.Cache;
 import org.hibernate.ConnectionReleaseMode;
+import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
@@ -72,6 +73,7 @@ import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.RegionAccessStrategy;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Settings;
@@ -122,6 +124,7 @@ import org.hibernate.persister.spi.PersisterFactory;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.config.spi.ConfigurationService;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.jndi.spi.JndiService;
@@ -206,6 +209,7 @@ public final class SessionFactoryImpl
 	private final transient TypeHelper typeHelper;
 	private final transient TransactionEnvironment transactionEnvironment;
 	private final transient SessionFactoryOptions sessionFactoryOptions;
+	private final transient CustomEntityDirtinessStrategy customEntityDirtinessStrategy;
 
 	@SuppressWarnings( {"unchecked", "ThrowableResultOfMethodCallIgnored"})
 	public SessionFactoryImpl(
@@ -531,8 +535,62 @@ public final class SessionFactoryImpl
 			fetchProfiles.put( fetchProfile.getName(), fetchProfile );
 		}
 
+		this.customEntityDirtinessStrategy = determineCustomEntityDirtinessStrategy( properties );
 		this.transactionEnvironment = new TransactionEnvironmentImpl( this );
 		this.observer.sessionFactoryCreated( this );
+	}
+
+	@SuppressWarnings( {"unchecked"})
+	private CustomEntityDirtinessStrategy determineCustomEntityDirtinessStrategy(Properties properties) {
+		final Object value = properties.get( AvailableSettings.CUSTOM_ENTITY_DIRTINESS_STRATEGY );
+		if ( value != null ) {
+			if ( CustomEntityDirtinessStrategy.class.isInstance( value ) ) {
+				return CustomEntityDirtinessStrategy.class.cast( value );
+			}
+			Class<CustomEntityDirtinessStrategy> customEntityDirtinessStrategyClass;
+			if ( Class.class.isInstance( value ) ) {
+				customEntityDirtinessStrategyClass = Class.class.cast( customEntityDirtinessStrategy );
+			}
+			else {
+				try {
+					customEntityDirtinessStrategyClass = serviceRegistry.getService( ClassLoaderService.class )
+							.classForName( value.toString() );
+				}
+				catch (Exception e) {
+					LOG.debugf(
+							"Unable to locate CustomEntityDirtinessStrategy implementation class %s",
+							value.toString()
+					);
+					customEntityDirtinessStrategyClass = null;
+				}
+			}
+			try {
+				return customEntityDirtinessStrategyClass.newInstance();
+			}
+			catch (Exception e) {
+				LOG.debugf(
+						"Unable to instantiate CustomEntityDirtinessStrategy class %s",
+						customEntityDirtinessStrategyClass.getName()
+				);
+			}
+		}
+
+		// last resort
+		return new CustomEntityDirtinessStrategy() {
+			@Override
+			public boolean canDirtyCheck(Object entity, Session session) {
+				return false;
+			}
+
+			@Override
+			public boolean isDirty(Object entity, Session session) {
+				return false;
+			}
+
+			@Override
+			public void resetDirty(Object entity, Session session) {
+			}
+		};
 	}
 
 	@SuppressWarnings( {"ThrowableResultOfMethodCallIgnored"})
@@ -853,6 +911,7 @@ public final class SessionFactoryImpl
 			fetchProfiles.put( fetchProfile.getName(), fetchProfile );
 		}
 
+		this.customEntityDirtinessStrategy = determineCustomEntityDirtinessStrategy( properties );
 		this.transactionEnvironment = new TransactionEnvironmentImpl( this );
 		this.observer.sessionFactoryCreated( this );
 	}
@@ -1721,6 +1780,10 @@ public final class SessionFactoryImpl
 			this.tenantIdentifier = tenantIdentifier;
 			return this;
 		}
+	}
+
+	public CustomEntityDirtinessStrategy getCustomEntityDirtinessStrategy() {
+		return customEntityDirtinessStrategy;
 	}
 
 

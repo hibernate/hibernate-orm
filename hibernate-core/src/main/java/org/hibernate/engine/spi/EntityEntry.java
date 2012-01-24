@@ -28,9 +28,11 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
+import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
+import org.hibernate.Session;
 import org.hibernate.bytecode.instrumentation.spi.FieldInterceptor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.UniqueKeyLoadable;
@@ -269,12 +271,37 @@ public final class EntityEntry implements Serializable {
 		return loadedState[propertyIndex];
 	}
 
-	public boolean requiresDirtyCheck(Object entity) {		
-		return isModifiableEntity() && (
-				getPersister().hasMutableProperties() ||
-				!getPersister().getInstrumentationMetadata().isInstrumented() ||
-				getPersister().getInstrumentationMetadata().extractInterceptor( entity ).isDirty()
-			);
+	/**
+	 * Not sure this is the best method name, but the general idea here is to return {@code true} if the entity can
+	 * possibly be dirty.  This can only be the case if it is in a modifiable state (not read-only/deleted) and it
+	 * either has mutable properties or field-interception is not telling us it is dirty.  Clear as mud? :/
+	 *
+	 * A name like canPossiblyBeDirty might be better
+	 *
+	 * @param entity The entity to test
+	 *
+	 * @return {@code true} indicates that the entity could possibly be dirty and that dirty check
+	 * should happen; {@code false} indicates there is no way the entity can be dirty
+	 */
+	public boolean requiresDirtyCheck(Object entity) {
+		return isModifiableEntity()
+				&& ( getPersister().hasMutableProperties() || ! isUnequivocallyNonDirty( entity ) );
+	}
+
+	@SuppressWarnings( {"SimplifiableIfStatement"})
+	private boolean isUnequivocallyNonDirty(Object entity) {
+		if ( getPersister().getInstrumentationMetadata().isInstrumented() ) {
+			// the entity must be instrumented (otherwise we cant check dirty flag) and the dirty flag is false
+			return ! getPersister().getInstrumentationMetadata().extractInterceptor( entity ).isDirty();
+		}
+
+		final CustomEntityDirtinessStrategy customEntityDirtinessStrategy =
+				persistenceContext.getSession().getFactory().getCustomEntityDirtinessStrategy();
+		if ( customEntityDirtinessStrategy.canDirtyCheck( entity, (Session) persistenceContext.getSession() ) ) {
+			return ! customEntityDirtinessStrategy.isDirty( entity, (Session) persistenceContext.getSession() );
+		}
+
+		return false;
 	}
 
 	/**
@@ -289,9 +316,9 @@ public final class EntityEntry implements Serializable {
 	 * @return true, if the entity is modifiable; false, otherwise,
 	 */
 	public boolean isModifiableEntity() {
-		return ( status != Status.READ_ONLY ) &&
-				! ( status == Status.DELETED && previousStatus == Status.READ_ONLY ) &&
-				getPersister().isMutable();
+		return getPersister().isMutable()
+				&& status != Status.READ_ONLY
+				&& ! ( status == Status.DELETED && previousStatus == Status.READ_ONLY );
 	}
 
 	public void forceLocked(Object entity, Object nextVersion) {

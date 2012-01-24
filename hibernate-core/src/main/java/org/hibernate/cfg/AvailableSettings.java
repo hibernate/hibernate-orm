@@ -540,4 +540,10 @@ public interface AvailableSettings {
 	 * Default to false to keep backward compatibility.
 	 */
 	public static final String USE_NEW_ID_GENERATOR_MAPPINGS = "hibernate.id.new_generator_mappings";
+
+	/**
+	 * Setting to identify a {@link org.hibernate.CustomEntityDirtinessStrategy} to use.  May point to
+	 * either a class name or instance.
+	 */
+	public static final String CUSTOM_ENTITY_DIRTINESS_STRATEGY = "hibernate.entity_dirtiness_strategy";
 }

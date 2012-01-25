@@ -48,7 +48,7 @@ public class SkipGeneratedAnnotationTest extends CompilationTest {
 	@Override
 	protected Map<String, String> getProcessorOptions() {
 		Map<String, String> properties = new HashMap<String, String>();
-		properties.put( JPAMetaModelEntityProcessor.SKIP_GENERATED_ANNOTATION, "true" );
+		properties.put( JPAMetaModelEntityProcessor.ADD_GENERATED_ANNOTATION, "false" );
 		return properties;
 	}
 

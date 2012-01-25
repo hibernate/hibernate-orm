@@ -90,6 +90,7 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor6<Annotatio
 		return new AnnotationMetaSingleAttribute( entity, element, TypeUtils.toTypeString( t ) );
 	}
 
+	@Override
 	public AnnotationMetaAttribute visitTypeVariable(TypeVariable t, Element element) {
 		// METAGEN-29 - for a type variable we use the upper bound
 		TypeMirror mirror = t.getUpperBound();

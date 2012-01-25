@@ -107,11 +107,12 @@ public class SequenceIdentityGenerator
 		}
 
 		@Override
-		protected Serializable executeAndExtract(PreparedStatement insert, String identifier) throws SQLException {
+		protected Serializable executeAndExtract(PreparedStatement insert) throws SQLException {
 			insert.executeUpdate();
 			return IdentifierGeneratorHelper.getGeneratedIdentity(
 					insert.getGeneratedKeys(),
-					identifier, getPersister().getIdentifierType()
+					getPersister().getIdentifierColumnNames()[0],
+					getPersister().getIdentifierType()
 			);
 		}
 	}

@@ -46,13 +46,16 @@ public abstract class AbstractReturningDelegate implements InsertGeneratedIdenti
 		this.persister = persister;
 	}
 
-	public final Serializable performInsert(String insertSQL, String identifiers, SessionImplementor session, Binder binder) {
+	public final Serializable performInsert(
+			String insertSQL,
+			SessionImplementor session,
+			Binder binder) {
 		try {
 			// prepare and execute the insert
 			PreparedStatement insert = prepare( insertSQL, session );
 			try {
 				binder.bindValues( insert );
-				return executeAndExtract( insert, identifiers );
+				return executeAndExtract( insert );
 			}
 			finally {
 				releaseStatement( insert, session );
@@ -73,7 +76,7 @@ public abstract class AbstractReturningDelegate implements InsertGeneratedIdenti
 
 	protected abstract PreparedStatement prepare(String insertSQL, SessionImplementor session) throws SQLException;
 
-	protected abstract Serializable executeAndExtract(PreparedStatement insert, String identifiers) throws SQLException;
+	protected abstract Serializable executeAndExtract(PreparedStatement insert) throws SQLException;
 
 	protected void releaseStatement(PreparedStatement insert, SessionImplementor session) throws SQLException {
 		insert.close();

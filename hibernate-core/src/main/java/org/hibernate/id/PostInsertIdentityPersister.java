@@ -50,6 +50,8 @@ public interface PostInsertIdentityPersister extends EntityPersister {
 	 */
 	public String getIdentitySelectString();
 
+	public String[] getIdentifierColumnNames();
+
 	/**
 	 * The names of the primary key columns in the root table.
 	 *

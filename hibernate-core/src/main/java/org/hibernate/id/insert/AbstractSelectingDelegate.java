@@ -46,7 +46,10 @@ public abstract class AbstractSelectingDelegate implements InsertGeneratedIdenti
 		this.persister = persister;
 	}
 
-	public final Serializable performInsert(String insertSQL, String identifier, SessionImplementor session, Binder binder) {
+	public final Serializable performInsert(
+			String insertSQL,
+			SessionImplementor session,
+			Binder binder) {
 		try {
 			// prepare and execute the insert
 			PreparedStatement insert = session.getTransactionCoordinator()

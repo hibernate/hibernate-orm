@@ -50,12 +50,13 @@ public interface InsertGeneratedIdentifierDelegate {
 	 * Perform the indicated insert SQL statement and determine the identifier value
 	 * generated.
 	 *
+	 *
 	 * @param insertSQL The INSERT statement string
-	 * @param identifiers
 	 * @param session The session in which we are operating
 	 * @param binder The param binder
+	 * 
 	 * @return The generated identifier value.
 	 */
-	public Serializable performInsert(String insertSQL, String identifiers, SessionImplementor session, Binder binder);
+	public Serializable performInsert(String insertSQL, SessionImplementor session, Binder binder);
 
 }

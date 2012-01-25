@@ -77,9 +77,11 @@ public final class IdentifierGeneratorHelper {
 	 * Get the generated identifier when using identity columns
 	 *
 	 * @param rs The result set from which to extract the the generated identity.
-	 * @param identifier
+	 * @param identifier The name of the identifier column
 	 * @param type The expected type mapping for the identity value.
+	 *
 	 * @return The generated identity value
+	 *
 	 * @throws SQLException Can be thrown while accessing the result set
 	 * @throws HibernateException Indicates a problem reading back a generated identity value.
 	 */
@@ -97,9 +99,11 @@ public final class IdentifierGeneratorHelper {
 	 * and wrp it in the appropriate Java numeric type.
 	 *
 	 * @param rs The result set from which to extract the value.
-	 * @param identifier
+	 * @param identifier The name of the identifier column
 	 * @param type The expected type of the value.
+	 *
 	 * @return The extracted value.
+	 *
 	 * @throws SQLException Indicates problems access the result set
 	 * @throws IdentifierGenerationException Indicates an unknown type.
 	 */
@@ -139,7 +143,8 @@ public final class IdentifierGeneratorHelper {
 						"unrecognized id type : " + type.getName() + " -> " + clazz.getName()
 				);
 			}
-		} else {
+		}
+		else {
 			if ( clazz == Long.class ) {
 				return rs.getLong(identifier);
 			}

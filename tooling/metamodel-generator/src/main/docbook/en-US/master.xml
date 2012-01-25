@@ -500,7 +500,7 @@ cq.where( cb.equal(itemNode.get(Item_.id), 5 ) ).distinct(true);
               <row>
                 <entry>debug</entry>
 
-                <entry>if set to <literal>true</literal> additional trace
+                <entry>If set to <literal>true</literal> additional trace
                 information will be outputted by the processor</entry>
               </row>
 
@@ -542,7 +542,7 @@ cq.where( cb.equal(itemNode.get(Item_.id), 5 ) ).distinct(true);
               <row>
                 <entry>fullyAnnotationConfigured</entry>
 
-                <entry>if set to <literal>true</literal> the processor will
+                <entry>If set to <literal>true</literal> the processor will
                 ignore <filename>orm.xml</filename> and
                 <filename>persistence.xml.</filename></entry>
               </row>
@@ -558,7 +558,7 @@ cq.where( cb.equal(itemNode.get(Item_.id), 5 ) ).distinct(true);
               <row>
                 <entry>skipGeneratedAnnotation</entry>
 
-                <entry>if set to <literal>true</literal> the processor will
+                <entry>If set to <literal>true</literal> the processor will
                 not the <classname>@Generated</classname> to the generated
                 Java source file. The default for this option is
                 <constant>false</constant> and the
@@ -569,9 +569,20 @@ cq.where( cb.equal(itemNode.get(Item_.id), 5 ) ).distinct(true);
               </row>
 
               <row>
+                <entry>addGenerationDate</entry>
+
+                <entry>If set to <constant>true</constant> the generation date
+                of the metamodel class will be inserted in the date parameter
+                of the <classname>@Generated</classname> annotation. The
+                default is <constant>false</constant>. This parameter is
+                ignored if <constant>skipGeneratedAnnotation</constant> is
+                specified.</entry>
+              </row>
+
+              <row>
                 <entry>addSuppressWarningsAnnotation</entry>
 
-                <entry>if set to <literal>true</literal> the processor will
+                <entry>If set to <literal>true</literal> the processor will
                 add <emphasis>@SuppressWarnings("all")</emphasis> to the
                 generated Java source file. Per default this annotation is not
                 generated. See also <ulink

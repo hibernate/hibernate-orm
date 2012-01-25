@@ -62,6 +62,7 @@ public final class Context {
 
 	private boolean isPersistenceUnitCompletelyXmlConfigured;
 	private boolean skipGeneratedAnnotation;
+	private boolean addGenerationDate;
 	private boolean addSuppressWarningsAnnotation;
 	private AccessType persistenceUnitDefaultAccessType;
 
@@ -107,6 +108,14 @@ public final class Context {
 
 	public void setSkipGeneratedAnnotation(boolean skipGeneratedAnnotation) {
 		this.skipGeneratedAnnotation = skipGeneratedAnnotation;
+	}
+
+	public boolean addGeneratedDate() {
+		return addGenerationDate;
+	}
+
+	public void setAddGenerationDate(boolean addGenerationDate) {
+		this.addGenerationDate = addGenerationDate;
 	}
 
 	public boolean isAddSuppressWarningsAnnotation() {

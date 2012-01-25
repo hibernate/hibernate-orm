@@ -74,6 +74,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 	public static final String FULLY_ANNOTATION_CONFIGURED_OPTION = "fullyAnnotationConfigured";
 	public static final String LAZY_XML_PARSING = "lazyXmlParsing";
 	public static final String SKIP_GENERATED_ANNOTATION = "skipGeneratedAnnotation";
+	public static final String ADD_GENERATION_DATE = "addGenerationDate";
 	/**
 	 * @deprecated since 1.2
 	 */
@@ -95,6 +96,10 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 		String tmp = env.getOptions().get( JPAMetaModelEntityProcessor.SKIP_GENERATED_ANNOTATION );
 		boolean addGeneratedAnnotation = Boolean.parseBoolean( tmp );
 		context.setSkipGeneratedAnnotation( addGeneratedAnnotation );
+
+		tmp = env.getOptions().get( JPAMetaModelEntityProcessor.ADD_GENERATION_DATE );
+		boolean addGenerationDate = Boolean.parseBoolean( tmp );
+		context.setAddGenerationDate( addGenerationDate );
 
 		tmp = env.getOptions().get( JPAMetaModelEntityProcessor.ADD_SUPPRESS_WARNINGS_ANNOTATION );
 		boolean addSuppressWarningsAnnotation = Boolean.parseBoolean( tmp );

@@ -20,6 +20,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import javax.annotation.Generated;
 import javax.annotation.processing.FilerException;
@@ -44,6 +46,12 @@ import org.hibernate.jpamodelgen.util.TypeUtils;
  */
 public final class ClassWriter {
 	private static final String META_MODEL_CLASS_NAME_SUFFIX = "_";
+	private static final ThreadLocal<SimpleDateFormat> SIMPLE_DATE_FORMAT = new ThreadLocal<SimpleDateFormat>() {
+		@Override
+		public SimpleDateFormat initialValue() {
+			return new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss.SSSZ" );
+		}
+	};
 
 	private ClassWriter() {
 	}
@@ -51,7 +59,9 @@ public final class ClassWriter {
 	public static void writeFile(MetaEntity entity, Context context) {
 		try {
 			String metaModelPackage = entity.getPackageName();
-			StringBuffer body = generateBody( entity, context );
+			// need to generate the body first, since this will also update the required imports which need to
+			// be written out first
+			String body = generateBody( entity, context ).toString();
 
 			FileObject fo = context.getProcessingEnvironment().getFiler().createSourceFile(
 					getFullyQualifiedClassName( entity, metaModelPackage )
@@ -95,19 +105,25 @@ public final class ClassWriter {
 		PrintWriter pw = null;
 		try {
 			pw = new PrintWriter( sw );
+
 			if ( !context.skipGeneratedAnnotation() ) {
-				pw.println( writeGeneratedAnnotation( entity ) );
+				pw.println( writeGeneratedAnnotation( entity, context ) );
 			}
 			if ( context.isAddSuppressWarningsAnnotation() ) {
 				pw.println( writeSuppressWarnings() );
 			}
+
 			pw.println( writeStaticMetaModelAnnotation( entity ) );
+
 			printClassDeclaration( entity, pw, context );
+
 			pw.println();
+
 			List<MetaAttribute> members = entity.getMembers();
 			for ( MetaAttribute metaMember : members ) {
 				pw.println( "	" + metaMember.getDeclarationString() );
 			}
+
 			pw.println();
 			pw.println( "}" );
 			return sw.getBuffer();
@@ -186,8 +202,21 @@ public final class ClassWriter {
 		return fullyQualifiedClassName;
 	}
 
-	private static String writeGeneratedAnnotation(MetaEntity entity) {
-		return "@" + entity.importType( Generated.class.getName() ) + "(\"JPA MetaModel for " + entity.getQualifiedName() + "\")";
+	private static String writeGeneratedAnnotation(MetaEntity entity, Context context) {
+		StringBuilder generatedAnnotation = new StringBuilder();
+		generatedAnnotation.append( "@" )
+				.append( entity.importType( Generated.class.getName() ) )
+				.append( "(value = \"" )
+				.append( JPAMetaModelEntityProcessor.class.getName() );
+		if ( context.addGeneratedDate() ) {
+			generatedAnnotation.append( "\", date = \"" )
+					.append( SIMPLE_DATE_FORMAT.get().format( new Date() ) )
+					.append( "\")" );
+		}
+		else {
+			generatedAnnotation.append( "\")" );
+		}
+		return generatedAnnotation.toString();
 	}
 
 	private static String writeSuppressWarnings() {

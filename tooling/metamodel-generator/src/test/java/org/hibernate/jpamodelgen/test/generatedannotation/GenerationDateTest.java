@@ -14,35 +14,51 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+// $Id: GenericsTest.java 20721 2010-09-27 12:40:10Z hardy.ferentschik $
 package org.hibernate.jpamodelgen.test.generatedannotation;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import org.testng.annotations.Test;
 
+import org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor;
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
 import org.hibernate.jpamodelgen.test.util.TestForIssue;
 
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassGeneratedFor;
+import static org.hibernate.jpamodelgen.test.util.TestUtil.dumpMetaModelSourceFor;
 import static org.hibernate.jpamodelgen.test.util.TestUtil.getMetaModelSourceAsString;
 import static org.testng.Assert.assertTrue;
 
 /**
  * @author Hardy Ferentschik
  */
-public class GeneratedAnnotationTest extends CompilationTest {
-
+public class GenerationDateTest extends CompilationTest {
 	@Test
-	@TestForIssue(jiraKey = "METAGEN-79")
-	public void testGeneratedAnnotationNotGenerated() {
+	@TestForIssue(jiraKey = "METAGEN-73")
+	public void testGeneratedAnnotationGenerated() {
 		assertMetamodelClassGeneratedFor( TestEntity.class );
 
 		// need to check the source because @Generated is not a runtime annotation
 		String metaModelSource = getMetaModelSourceAsString( TestEntity.class );
-		String generatedString = "@Generated(value = \"org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor\")";
-		assertTrue( metaModelSource.contains( generatedString ), "@Generated should be added to the metamodel." );
+
+		dumpMetaModelSourceFor( TestEntity.class );
+		String generatedString = "@Generated(value = \"org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor\", date = \"";
+
+		assertTrue( metaModelSource.contains( generatedString ), "@Generated should also contain the date parameter." );
+	}
+
+	@Override
+	protected Map<String, String> getProcessorOptions() {
+		Map<String, String> properties = new HashMap<String, String>();
+		properties.put( JPAMetaModelEntityProcessor.ADD_GENERATION_DATE, "true" );
+		return properties;
 	}
 
 	@Override
 	protected String getPackageNameOfCurrentTest() {
-		return GeneratedAnnotationTest.class.getPackage().getName();
+		return GenerationDateTest.class.getPackage().getName();
 	}
 }

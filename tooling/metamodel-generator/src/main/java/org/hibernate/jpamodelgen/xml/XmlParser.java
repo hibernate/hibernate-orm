@@ -42,9 +42,9 @@ import javax.xml.validation.SchemaFactory;
 
 import org.xml.sax.SAXException;
 
+import org.hibernate.jpamodelgen.Context;
 import org.hibernate.jpamodelgen.util.AccessType;
 import org.hibernate.jpamodelgen.util.AccessTypeInformation;
-import org.hibernate.jpamodelgen.Context;
 import org.hibernate.jpamodelgen.util.Constants;
 import org.hibernate.jpamodelgen.util.FileTimeStampChecker;
 import org.hibernate.jpamodelgen.util.StringUtil;
@@ -64,6 +64,7 @@ public class XmlParser {
 	private static final String PERSISTENCE_XML_XSD = "persistence_2_0.xsd";
 	private static final String ORM_XSD = "orm_2_0.xsd";
 	private static final String SERIALIZATION_FILE_NAME = "Hibernate-Static-Metamodel-Generator.tmp";
+	private static final String PATH_SEPARATOR = "/";
 
 	private Context context;
 	private List<EntityMappings> entityMappings;
@@ -189,7 +190,7 @@ public class XmlParser {
 			file = getSerializationTmpFile();
 			if ( file.exists() ) {
 				ObjectInputStream in = new ObjectInputStream( new FileInputStream( file ) );
-				serializedTimeStampCheck = ( FileTimeStampChecker ) in.readObject();
+				serializedTimeStampCheck = (FileTimeStampChecker) in.readObject();
 				in.close();
 			}
 		}
@@ -338,6 +339,11 @@ public class XmlParser {
 	}
 
 	private InputStream getInputStreamForResource(String resource) {
+		// METAGEN-75
+		if ( !resource.startsWith( PATH_SEPARATOR ) ) {
+			resource = PATH_SEPARATOR + resource;
+		}
+
 		String pkg = getPackage( resource );
 		String name = getRelativeName( resource );
 		InputStream ormStream;

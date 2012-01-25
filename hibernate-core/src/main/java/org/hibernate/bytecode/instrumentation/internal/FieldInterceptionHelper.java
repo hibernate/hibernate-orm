@@ -33,8 +33,12 @@ import org.hibernate.engine.spi.SessionImplementor;
 /**
  * Helper class for dealing with enhanced entity classes.
  *
- * These operations are expensive. When under a SessionFactory, try and use (or guard with)
- * {@link org.hibernate.service.instrumentation.spi.InstrumentationService#isInstrumented}
+ * These operations are expensive.  They are only meant to be used when code does not have access to a
+ * SessionFactory (namely from the instrumentation tasks).  When code has access to a SessionFactory,
+ * {@link org.hibernate.bytecode.spi.EntityInstrumentationMetadata} should be used instead to query the
+ * instrumentation state.  EntityInstrumentationMetadata is accessed from the
+ * {@link org.hibernate.persister.entity.EntityPersister} via the
+ * {@link org.hibernate.persister.entity.EntityPersister#getInstrumentationMetadata()} method.
  *
  * @author Steve Ebersole
  */
@@ -94,20 +98,6 @@ public class FieldInterceptionHelper {
 			}
 		}
 		return interceptor;
-	}
-
-	public static void clearDirty(Object entity) {
-		FieldInterceptor interceptor = extractFieldInterceptor( entity );
-		if ( interceptor != null ) {
-			interceptor.clearDirty();
-		}
-	}
-
-	public static void markDirty(Object entity) {
-		FieldInterceptor interceptor = extractFieldInterceptor( entity );
-		if ( interceptor != null ) {
-			interceptor.dirty();
-		}
 	}
 
 	private static interface Delegate {

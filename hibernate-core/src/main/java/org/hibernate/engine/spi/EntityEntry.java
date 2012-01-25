@@ -223,7 +223,7 @@ public final class EntityEntry implements Serializable {
 	 */
 	public void postUpdate(Object entity, Object[] updatedState, Object nextVersion) {
 		this.loadedState = updatedState;
-		setLockMode(LockMode.WRITE);
+		setLockMode( LockMode.WRITE );
 
 		if ( getPersister().isVersioned() ) {
 			this.version = nextVersion;
@@ -234,6 +234,10 @@ public final class EntityEntry implements Serializable {
 			if ( interceptor != null ) {
 				interceptor.clearDirty();
 			}
+			persistenceContext.getSession()
+					.getFactory()
+					.getCustomEntityDirtinessStrategy()
+					.resetDirty( entity, (Session) persistenceContext.getSession() );
 		}
 
 		notifyLoadedStateUpdated();

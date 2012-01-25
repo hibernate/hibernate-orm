@@ -249,6 +249,10 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 							.extractInterceptor( event.getEntity() )
 							.clearDirty();
 				}
+				event.getSession()
+						.getFactory()
+						.getCustomEntityDirtinessStrategy()
+						.resetDirty( event.getEntity(), event.getSession() );
 				return false;
 			}
 		}

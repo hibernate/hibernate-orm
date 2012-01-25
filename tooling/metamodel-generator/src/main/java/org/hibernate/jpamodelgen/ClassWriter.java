@@ -106,7 +106,7 @@ public final class ClassWriter {
 		try {
 			pw = new PrintWriter( sw );
 
-			if ( !context.skipGeneratedAnnotation() ) {
+			if ( context.addGeneratedAnnotation() ) {
 				pw.println( writeGeneratedAnnotation( entity, context ) );
 			}
 			if ( context.isAddSuppressWarningsAnnotation() ) {

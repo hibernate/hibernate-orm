@@ -61,7 +61,7 @@ public final class Context {
 	private final List<String> ormXmlFiles;
 
 	private boolean isPersistenceUnitCompletelyXmlConfigured;
-	private boolean skipGeneratedAnnotation;
+	private boolean addGeneratedAnnotation = true;
 	private boolean addGenerationDate;
 	private boolean addSuppressWarningsAnnotation;
 	private AccessType persistenceUnitDefaultAccessType;
@@ -102,12 +102,12 @@ public final class Context {
 		return pe;
 	}
 
-	public boolean skipGeneratedAnnotation() {
-		return skipGeneratedAnnotation;
+	public boolean addGeneratedAnnotation() {
+		return addGeneratedAnnotation;
 	}
 
-	public void setSkipGeneratedAnnotation(boolean skipGeneratedAnnotation) {
-		this.skipGeneratedAnnotation = skipGeneratedAnnotation;
+	public void setAddGeneratedAnnotation(boolean addGeneratedAnnotation) {
+		this.addGeneratedAnnotation = addGeneratedAnnotation;
 	}
 
 	public boolean addGeneratedDate() {

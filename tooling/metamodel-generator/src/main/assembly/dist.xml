@@ -59,7 +59,7 @@
             <includes>
                 <include>pom.xml</include>
                 <include>license.txt</include>
-                <include>readme.txt</include>
+                <include>README.md</include>
                 <include>changelog.txt</include>
                 <include>src/**</include>
             </includes>

@@ -86,10 +86,14 @@ public class MatrixTestingPlugin implements Plugin<Project> {
             matrixTask.dependsOn( matrixNodeTask );
         }
 
-        if ( !System.properties[SKIP_UNIT_TEST].equals('true') ) {
+		if ( ! shouldSkipMatrixTestsAgainstDefaultDb() ) {
 			createTestTaskForMatrixSourceSet();
 		}
     }
+
+	private boolean shouldSkipMatrixTestsAgainstDefaultDb() {
+		return "true".equals( project.properties[SKIP_UNIT_TEST] ) || "true".equals( System.properties[SKIP_UNIT_TEST] );
+	}
 
 	private List<MatrixNode> locateMatrixNodes() {
         List<MatrixNode> matrixNodes = new ArrayList<MatrixNode>();

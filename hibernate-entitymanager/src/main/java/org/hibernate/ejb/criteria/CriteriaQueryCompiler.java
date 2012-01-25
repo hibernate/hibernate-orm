@@ -209,14 +209,7 @@ public class CriteriaQueryCompiler implements Serializable {
 							"Could not convert java type [" + javaType.getName() + "] to Hibernate type"
 					);
 				}
-				int[] sqlTypeCodes = hibernateType.sqlTypes( factory );
-				if ( sqlTypeCodes.length != 1 ) {
-					throw new IllegalArgumentException(
-							"Invalid Hibernate Type [" + hibernateType.getName() +
-									"] for cast : more than one column spanned"
-					);
-				}
-				return factory.getDialect().getCastTypeName( sqlTypeCodes[0] );
+				return hibernateType.getName();
 			}
 		};
 

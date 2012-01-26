@@ -25,6 +25,7 @@ package org.hibernate.property;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
+import java.util.Locale;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
@@ -44,6 +45,9 @@ public class DirectPropertyAccessor implements PropertyAccessor {
 		private final transient Field field;
 		private final Class clazz;
 		private final String name;
+		private transient Method method;
+		private transient boolean methodLookedUp = false;
+		
 		DirectGetter(Field field, Class clazz, String name) {
 			this.field = field;
 			this.clazz = clazz;
@@ -80,14 +84,25 @@ public class DirectPropertyAccessor implements PropertyAccessor {
 		 * {@inheritDoc}
 		 */
 		public Method getMethod() {
-			return null;
+			if ( !methodLookedUp ) {
+				//HHH-3718: Return method for identifier access to prevent initialization
+				try {
+					String readMethodName = "get" + 
+							name.substring(0, 1).toUpperCase( Locale.ENGLISH ) +
+							name.substring(1);
+					method = clazz.getMethod(readMethodName);
+				} catch (Exception ex) { /* ignore */ }
+				methodLookedUp = true;
+			}
+			return method;
 		}
 
 		/**
 		 * {@inheritDoc}
 		 */
 		public String getMethodName() {
-			return null;
+			Method method = getMethod();
+			return method == null ? null : method.getName();
 		}
 
 		/**

@@ -39,15 +39,14 @@ import org.hibernate.ejb.metamodel.Product_;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class CastTest extends AbstractMetamodelSpecificTest {
-	
-	private static final int QUANTITY = 2;
-	private CriteriaBuilder builder;
+import org.hibernate.testing.TestForIssue;
 
-	@Override
-	public void buildEntityManagerFactory() throws Exception {
-		super.buildEntityManagerFactory();
-		builder = entityManagerFactory().getCriteriaBuilder();
+public class CastTest extends AbstractMetamodelSpecificTest {
+	private static final int QUANTITY = 2;
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-5755" )
+	public void testCastToString() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 		Product product = new Product();
@@ -61,17 +60,21 @@ public class CastTest extends AbstractMetamodelSpecificTest {
 		em.persist( product );
 		em.getTransaction().commit();
 		em.close();
-	}
 
-	@Test
-	public void testCastToString() {
-		EntityManager em = getOrCreateEntityManager();
+		em = getOrCreateEntityManager();
 		em.getTransaction().begin();
+		CriteriaBuilder builder = em.getCriteriaBuilder();
 		CriteriaQuery<Product> criteria = builder.createQuery( Product.class );
 		Root<Product> root = criteria.from( Product.class );
-		criteria.where( builder.equal(root.get(Product_.quantity).as(String.class), builder.literal(String.valueOf(QUANTITY))) );
+		criteria.where( builder.equal(root.get(Product_.quantity).as( String.class ), builder.literal(String.valueOf(QUANTITY))) );
 		List<Product> result = em.createQuery( criteria ).getResultList();
 		Assert.assertEquals( 1, result.size() );
+		em.getTransaction().commit();
+		em.close();
+
+		em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		em.createQuery( "delete Product" ).executeUpdate();
 		em.getTransaction().commit();
 		em.close();
 	}

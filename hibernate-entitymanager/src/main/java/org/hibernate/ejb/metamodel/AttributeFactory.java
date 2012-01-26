@@ -90,7 +90,7 @@ public class AttributeFactory {
 		final AttributeContext<X> attributeContext = wrap( ownerType, property );
 		final AttributeMetadata<X,Y> attributeMetadata =
 				determineAttributeMetadata( attributeContext, NORMAL_MEMBER_RESOLVER );
-
+        if (attributeMetadata == null) return null;
         if (attributeMetadata.isPlural()) return buildPluralAttribute((PluralAttributeMetadata)attributeMetadata);
         final SingularAttributeMetadata<X, Y> singularAttributeMetadata = (SingularAttributeMetadata<X, Y>)attributeMetadata;
         final Type<Y> metaModelType = getMetaModelType(singularAttributeMetadata.getValueContext());
@@ -428,7 +428,12 @@ public class AttributeFactory {
         LOG.trace("    Determined type [name=" + type.getName() + ", class=" + type.getClass().getName() + "]");
 
 		if ( type.isAnyType() ) {
-			throw new UnsupportedOperationException( "any not supported yet" );
+            if ( context.isIgnoreUnsupported() ) {
+                // HHH-6589 Support "Any" mappings when building metamodel
+                return null;
+            } else {
+                throw new UnsupportedOperationException( "any not supported yet" );
+            }
 		}
 		else if ( type.isAssociationType() ) {
 			// collection or entity

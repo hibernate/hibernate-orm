@@ -61,6 +61,7 @@ class MetadataContext {
                                                                            MetadataContext.class.getName());
 
 	private final SessionFactoryImplementor sessionFactory;
+    private final boolean ignoreUnsupported;
 	private final AttributeFactory attributeFactory = new AttributeFactory( this );
 
 	private Map<Class<?>,EntityTypeImpl<?>> entityTypes
@@ -84,15 +85,20 @@ class MetadataContext {
 	private Map<MappedSuperclassTypeImpl<?>, PersistentClass> mappedSuperClassTypeToPersistentClass
 			= new HashMap<MappedSuperclassTypeImpl<?>, PersistentClass>();
 
-	public MetadataContext(SessionFactoryImplementor sessionFactory) {
+	public MetadataContext(SessionFactoryImplementor sessionFactory, boolean ignoreUnsupported) {
 		this.sessionFactory = sessionFactory;
+        this.ignoreUnsupported = ignoreUnsupported;
 	}
 
 	/*package*/ SessionFactoryImplementor getSessionFactory() {
 		return sessionFactory;
 	}
 
-	/**
+    /*package*/ boolean isIgnoreUnsupported() {
+        return ignoreUnsupported;
+    }
+
+    /**
 	 * Retrieves the {@linkplain Class java type} to {@link EntityTypeImpl} map.
 	 *
 	 * @return The {@linkplain Class java type} to {@link EntityTypeImpl} map.

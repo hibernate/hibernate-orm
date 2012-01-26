@@ -33,6 +33,12 @@ import javax.persistence.Entity;
 @Entity
 @DiscriminatorValue("1")
 public class InheritingEntity extends ParentEntity {
+	public InheritingEntity() {
+	}
+
+	public InheritingEntity(String someValue) {
+		this.someValue = someValue;
+	}
 
 	@Column(name = "dupa")
 	private String someValue;

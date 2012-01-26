@@ -331,44 +331,102 @@ public abstract class AbstractQueryImpl<X> implements TypedQuery<X> {
 	private Map parameterBindings;
 
 	protected void registerParameterBinding(Parameter parameter, Object value) {
-		if ( value != null && parameter.getParameterType() != null ) {
-			if ( Collection.class.isInstance( value ) ) {
-				final Collection collection = (Collection) value;
-				// validate the elements...
-				for ( Object element : collection ) {
-					if ( ! parameter.getParameterType().isInstance( element ) ) {
-						throw new IllegalArgumentException(
-								"Parameter value [" + element + "] was not matching type [" +
-										parameter.getParameterType().getName() + "]"
-						);
-					}
-				}
-			}
-			else if ( value.getClass().isArray() && value.getClass().equals( Object[].class ) ) {
-				final Object[] array = (Object[]) value;
-				for ( Object element : array ) {
-					if ( ! parameter.getParameterType().isInstance( element ) ) {
-						throw new IllegalArgumentException(
-								"Parameter value [" + element + "] was not matching type [" +
-										parameter.getParameterType().getName() + "]"
-						);
-					}
-				}
-			}
-			else {
-				if ( ! parameter.getParameterType().isInstance( value ) ) {
-					throw new IllegalArgumentException(
-							"Parameter value [" + value + "] was not matching type [" +
-									parameter.getParameterType().getName() + "]"
-					);
-				}
-			}
+		if ( parameter == null ) {
+			throw new IllegalArgumentException( "parameter cannot be null" );
 		}
+
+		validateParameterBinding( parameter, value );
 
 		if ( parameterBindings == null ) {
 			parameterBindings = new HashMap();
 		}
 		parameterBindings.put( parameter, value );
+	}
+
+	private void validateParameterBinding(Parameter parameter, Object value) {
+		if ( value == null || parameter.getParameterType() == null ) {
+			// nothing we can check
+			return;
+		}
+
+		if ( Collection.class.isInstance( value )
+				&& ! Collection.class.isAssignableFrom( parameter.getParameterType() ) ) {
+			// we have a collection passed in where we are expecting a non-collection.
+			// 		NOTE : this can happen in Hibernate's notion of "parameter list" binding
+			// 		NOTE2 : the case of a collection value and an expected collection (if that can even happen)
+			//			will fall through to the main check.
+			validateCollectionValuedParameterMultiBinding( parameter, (Collection) value );
+		}
+		else if ( value.getClass().isArray() ) {
+			validateArrayValuedParameterBinding( parameter, value );
+		}
+		else {
+			if ( ! parameter.getParameterType().isInstance( value ) ) {
+				throw new IllegalArgumentException(
+						String.format(
+								"Parameter value [%s] did not match expected type [%s]",
+								value,
+								parameter.getParameterType().getName()
+						)
+				);
+			}
+		}
+	}
+
+	private void validateCollectionValuedParameterMultiBinding(Parameter parameter, Collection value) {
+		// validate the elements...
+		for ( Object element : value ) {
+			if ( ! parameter.getParameterType().isInstance( element ) ) {
+				throw new IllegalArgumentException(
+						String.format(
+								"Parameter value element [%s] did not match expected type [%s]",
+								element,
+								parameter.getParameterType().getName()
+						)
+				);
+			}
+		}
+	}
+
+	private void validateArrayValuedParameterBinding(Parameter parameter, Object value) {
+		if ( ! parameter.getParameterType().isArray() ) {
+			throw new IllegalArgumentException(
+					String.format(
+							"Encountered array-valued parameter binding, but was expecting [%s]",
+							parameter.getParameterType().getName()
+					)
+			);
+		}
+
+		if ( value.getClass().getComponentType().isPrimitive() ) {
+			// we have a primitive array.  we validate that the actual array has the component type (type odf elements)
+			// we expect based on the component type of the parameter specification
+			if ( ! parameter.getParameterType().getComponentType().isAssignableFrom( value.getClass().getComponentType() ) ) {
+				throw new IllegalArgumentException(
+						String.format(
+								"Primitive array-valued parameter bind value type [%s] did not match expected type [%s]",
+								value.getClass().getComponentType().getName(),
+								parameter.getParameterType().getName()
+						)
+				);
+			}
+		}
+		else {
+			// we have an object array.  Here we loop over the array and physically check each element against
+			// the type we expect based on the component type of the parameter specification
+			final Object[] array = (Object[]) value;
+			for ( Object element : array ) {
+				if ( ! parameter.getParameterType().getComponentType().isInstance( element ) ) {
+					throw new IllegalArgumentException(
+							String.format(
+									"Array-valued parameter value element [%s] did not match expected type [%s]",
+									element,
+									parameter.getParameterType().getName()
+							)
+					);
+				}
+			}
+		}
 	}
 
 	/**

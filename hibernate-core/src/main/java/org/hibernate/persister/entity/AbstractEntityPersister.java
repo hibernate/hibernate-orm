@@ -2342,6 +2342,7 @@ public abstract class AbstractEntityPersister
 				return object;
 			}
 		};
+
 		return identityDelegate.performInsert( sql, session, binder );
 	}
 

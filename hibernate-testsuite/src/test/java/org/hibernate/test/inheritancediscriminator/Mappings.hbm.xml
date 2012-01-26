@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.test.inheritancediscriminator">
+    <class name="ParentEntity" table="PARENT_ENTITY" abstract="true" discriminator-value="-1">
+        <id name="id" column="ajdik">
+            <generator class="identity"/>
+        </id>
+        <discriminator column="CLASS_ID" type="integer"/>
+
+        <subclass name="InheritingEntity" discriminator-value="1">
+            <property name="someValue" column="dupa" />
+        </subclass>
+    </class>
+</hibernate-mapping>

@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.id.IntegralDataTypeHolder;
 import org.hibernate.util.ReflectHelper;
+import org.hibernate.util.StringHelper;
 
 /**
  * Factory for {@link Optimizer} instances.
@@ -41,11 +42,70 @@ import org.hibernate.util.ReflectHelper;
 public class OptimizerFactory {
 	private static final Logger log = LoggerFactory.getLogger( OptimizerFactory.class );
 
-	public static final String NONE = "none";
-	public static final String HILO = "hilo";
-	public static final String LEGACY_HILO = "legacy-hilo";
-	public static final String POOL = "pooled";
-	public static final String POOL_LO = "pooled-lo";
+	public static enum StandardOptimizerDescriptor {
+		NONE( "none", NoopOptimizer.class ),
+		HILO( "hilo", HiLoOptimizer.class ),
+		LEGACY_HILO( "legacy-hilo", LegacyHiLoAlgorithmOptimizer.class ),
+		POOLED( "pooled", PooledOptimizer.class, true ),
+		POOLED_LO( "pooled-lo", PooledLoOptimizer.class, true );
+
+		private final String externalName;
+		private final Class<? extends Optimizer> optimizerClass;
+		private final boolean isPooled;
+
+		StandardOptimizerDescriptor(String externalName, Class<? extends Optimizer> optimizerClass) {
+			this( externalName, optimizerClass, false );
+		}
+
+		StandardOptimizerDescriptor(String externalName, Class<? extends Optimizer> optimizerClass, boolean pooled) {
+			this.externalName = externalName;
+			this.optimizerClass = optimizerClass;
+			this.isPooled = pooled;
+		}
+
+		public String getExternalName() {
+			return externalName;
+		}
+
+		public Class<? extends Optimizer> getOptimizerClass() {
+			return optimizerClass;
+		}
+
+		public boolean isPooled() {
+			return isPooled;
+		}
+
+		public static StandardOptimizerDescriptor fromExternalName(String externalName) {
+			if ( StringHelper.isEmpty( externalName ) ) {
+				log.debug( "No optimizer specified, using NONE as default" );
+				return NONE;
+			}
+			else if ( NONE.externalName.equals( externalName ) ) {
+				return NONE;
+			}
+			else if ( HILO.externalName.equals( externalName ) ) {
+				return HILO;
+			}
+			else if ( LEGACY_HILO.externalName.equals( externalName ) ) {
+				return LEGACY_HILO;
+			}
+			else if ( POOLED.externalName.equals( externalName ) ) {
+				return POOLED;
+			}
+			else if ( POOLED_LO.externalName.equals( externalName ) ) {
+				return POOLED_LO;
+			}
+			else {
+				log.debug( "Unknown optimizer key [{}]; returning null assuming Optimizer impl class name" );
+				return null;
+			}
+		}
+	}
+
+	public static boolean isPooledOptimizer(String type) {
+		final StandardOptimizerDescriptor standardDescriptor = StandardOptimizerDescriptor.fromExternalName( type );
+		return standardDescriptor != null && standardDescriptor.isPooled();
+	}
 
 	private static Class[] CTOR_SIG = new Class[] { Class.class, int.class };
 
@@ -78,30 +138,25 @@ public class OptimizerFactory {
 	 *
 	 * @deprecated Use {@link #buildOptimizer(String, Class, int, long)} instead
 	 */
-	@SuppressWarnings({ "UnnecessaryBoxing" })
+	@SuppressWarnings( {"UnnecessaryBoxing", "unchecked"})
 	public static Optimizer buildOptimizer(String type, Class returnClass, int incrementSize) {
-		String optimizerClassName;
-		if ( NONE.equals( type ) ) {
-			optimizerClassName = NoopOptimizer.class.getName();
-		}
-		else if ( HILO.equals( type ) ) {
-			optimizerClassName = HiLoOptimizer.class.getName();
-		}
-		else if ( LEGACY_HILO.equals( type ) ) {
-			optimizerClassName = LegacyHiLoAlgorithmOptimizer.class.getName();
-		}
-		else if ( POOL.equals( type ) ) {
-			optimizerClassName = PooledOptimizer.class.getName();
-		}
-		else if ( POOL_LO.equals( type ) ) {
-			optimizerClassName = PooledLoOptimizer.class.getName();
+		final Class<? extends Optimizer> optimizerClass;
+
+		final StandardOptimizerDescriptor standardDescriptor = StandardOptimizerDescriptor.fromExternalName( type );
+		if ( standardDescriptor != null ) {
+			optimizerClass = standardDescriptor.getOptimizerClass();
 		}
 		else {
-			optimizerClassName = type;
+			try {
+				optimizerClass = ReflectHelper.classForName( type );
+			}
+			catch( Throwable ignore ) {
+				log.warn( "Unable to interpret specified optimizer [{}], falling back to noop", type );
+				return buildFallbackOptimizer( returnClass, incrementSize );
+			}
 		}
 
 		try {
-			Class optimizerClass = ReflectHelper.classForName( optimizerClassName );
 			Constructor ctor = optimizerClass.getConstructor( CTOR_SIG );
 			return ( Optimizer ) ctor.newInstance( returnClass, Integer.valueOf( incrementSize ) );
 		}
@@ -109,7 +164,10 @@ public class OptimizerFactory {
 			log.warn( "Unable to instantiate specified optimizer [{}], falling back to noop", type );
 		}
 
-		// the default...
+		return buildFallbackOptimizer( returnClass, incrementSize );
+	}
+
+	private static Optimizer buildFallbackOptimizer(Class returnClass, int incrementSize) {
 		return new NoopOptimizer( returnClass, incrementSize );
 	}
 
@@ -160,6 +218,7 @@ public class OptimizerFactory {
 		 *
 		 * @return Value for property 'returnClass'.
 		 */
+		@SuppressWarnings( {"UnusedDeclaration"})
 		public final Class getReturnClass() {
 			return returnClass;
 		}
@@ -377,6 +436,7 @@ public class OptimizerFactory {
 		 *
 		 * @return Value for property 'lastValue'.
 		 */
+		@SuppressWarnings( {"UnusedDeclaration"})
 		public IntegralDataTypeHolder getLastValue() {
 			return value;
 		}

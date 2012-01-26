@@ -37,6 +37,8 @@ import org.hibernate.MappingException;
 import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.cfg.NamingStrategy;
 
+import static org.hibernate.id.enhanced.OptimizerFactory.StandardOptimizerDescriptor.*;
+
 /**
  * Tests that SequenceStyleGenerator configures itself as expected
  * in various scenarios
@@ -170,7 +172,7 @@ public class SequenceStyleConfigUnitTest extends TestCase {
 
 		// optimizer=none w/ increment > 1 => should honor optimizer
 		Properties props = buildGeneratorPropertiesBase();
-		props.setProperty( SequenceStyleGenerator.OPT_PARAM, OptimizerFactory.NONE );
+		props.setProperty( SequenceStyleGenerator.OPT_PARAM, NONE.getExternalName() );
 		props.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "20" );
 		SequenceStyleGenerator generator = new SequenceStyleGenerator();
 		generator.configure( Hibernate.LONG, props, dialect );
@@ -181,7 +183,7 @@ public class SequenceStyleConfigUnitTest extends TestCase {
 
 		// optimizer=hilo w/ increment > 1 => hilo
 		props = buildGeneratorPropertiesBase();
-		props.setProperty( SequenceStyleGenerator.OPT_PARAM, OptimizerFactory.HILO );
+		props.setProperty( SequenceStyleGenerator.OPT_PARAM, HILO.getExternalName() );
 		props.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "20" );
 		generator = new SequenceStyleGenerator();
 		generator.configure( Hibernate.LONG, props, dialect );
@@ -192,7 +194,7 @@ public class SequenceStyleConfigUnitTest extends TestCase {
 
 		// optimizer=pooled w/ increment > 1 => hilo
 		props = buildGeneratorPropertiesBase();
-		props.setProperty( SequenceStyleGenerator.OPT_PARAM, OptimizerFactory.POOL );
+		props.setProperty( SequenceStyleGenerator.OPT_PARAM, POOLED.getExternalName() );
 		props.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "20" );
 		generator = new SequenceStyleGenerator();
 		generator.configure( Hibernate.LONG, props, dialect );

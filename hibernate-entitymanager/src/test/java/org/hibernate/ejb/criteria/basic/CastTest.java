@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -34,20 +34,11 @@ import javax.persistence.criteria.Root;
 
 import org.hibernate.ejb.metamodel.AbstractMetamodelSpecificTest;
 import org.hibernate.ejb.metamodel.Product;
-import org.hibernate.ejb.metamodel.Product_;
-
-import org.junit.Assert;
-import org.junit.Test;
 
 public class CastTest extends AbstractMetamodelSpecificTest {
-	
 	private static final int QUANTITY = 2;
-	private CriteriaBuilder builder;
 
-	@Override
-	public void buildEntityManagerFactory() throws Exception {
-		super.buildEntityManagerFactory();
-		builder = entityManagerFactory().getCriteriaBuilder();
+	public void testCastToString() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 		Product product = new Product();
@@ -61,17 +52,21 @@ public class CastTest extends AbstractMetamodelSpecificTest {
 		em.persist( product );
 		em.getTransaction().commit();
 		em.close();
-	}
 
-	@Test
-	public void testCastToString() {
-		EntityManager em = getOrCreateEntityManager();
+		em = getOrCreateEntityManager();
 		em.getTransaction().begin();
+		CriteriaBuilder builder = em.getCriteriaBuilder();
 		CriteriaQuery<Product> criteria = builder.createQuery( Product.class );
 		Root<Product> root = criteria.from( Product.class );
-		criteria.where( builder.equal(root.get(Product_.quantity).as(String.class), builder.literal(String.valueOf(QUANTITY))) );
+		criteria.where( builder.equal(root.get("quantity").as(String.class), builder.literal(String.valueOf(QUANTITY))) );
 		List<Product> result = em.createQuery( criteria ).getResultList();
-		Assert.assertEquals( 1, result.size() );
+		assertEquals( 1, result.size() );
+		em.getTransaction().commit();
+		em.close();
+
+		em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		em.createQuery( "delete Product" ).executeUpdate();
 		em.getTransaction().commit();
 		em.close();
 	}

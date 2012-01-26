@@ -26,20 +26,17 @@ package org.hibernate.ejb.test.hibernateFilters;
 import javax.persistence.EntityManager;
 
 import org.hibernate.Session;
-import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
-
-import org.junit.Test;
+import org.hibernate.ejb.test.TestCase;
 
 /**
  * @author Steve Ebersole
  */
-public class EntityManagerWithFilteredSessionTest extends BaseEntityManagerFunctionalTestCase {
+public class EntityManagerWithFilteredSessionTest extends TestCase  {
 	@Override
 	public Class[] getAnnotatedClasses() {
 		return new Class[] { Account.class };
 	}
 
-	@Test
 	public void testTypedQueryCreation() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();

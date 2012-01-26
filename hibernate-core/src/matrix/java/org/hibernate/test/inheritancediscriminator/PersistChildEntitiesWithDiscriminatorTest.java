@@ -41,21 +41,20 @@ public class PersistChildEntitiesWithDiscriminatorTest extends BaseCoreFunctiona
 	}
 
 	@Test
-	public void shouldPersistTwoEntities() {
+	public void doIt() {
 		Session session = openSession();
 		session.beginTransaction();
-		InheritingEntity child1 = new InheritingEntity();
-		InheritingEntity child2 = new InheritingEntity();
-		child1.setSomeValue("blabla");
-		session.save(child1);
+		InheritingEntity child = new InheritingEntity();
+		child.setSomeValue("blabla");
+		session.save(child);
+		session.getTransaction().commit();
+		session.close();
 
-		session.flush();
-		session.clear();
-		InheritingEntity loaded = (InheritingEntity) session.load(InheritingEntity.class, child1.getId());
-		loaded.getId();
-
-		session.save(child2);
-		session.getTransaction().rollback();
+		session = openSession();
+		session.beginTransaction();
+		session.delete( child );
+		session.getTransaction().commit();
+		session.close();
 	}
 
 }

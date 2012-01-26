@@ -32,12 +32,14 @@ import org.hibernate.ObjectDeletedException;
 import org.hibernate.PersistentObjectException;
 import org.hibernate.engine.CascadingAction;
 import org.hibernate.engine.EntityEntry;
+import org.hibernate.engine.Status;
 import org.hibernate.event.EventSource;
 import org.hibernate.event.PersistEvent;
 import org.hibernate.event.PersistEventListener;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.id.ForeignGenerator;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.util.IdentityMap;
@@ -50,6 +52,14 @@ import org.hibernate.util.IdentityMap;
  */
 public class DefaultPersistEventListener extends AbstractSaveEventListener implements PersistEventListener {
 	private static final Logger log = LoggerFactory.getLogger(DefaultPersistEventListener.class);
+
+	protected CascadingAction getCascadeAction() {
+		return CascadingAction.PERSIST;
+	}
+
+	protected Boolean getAssumedUnsaved() {
+		return Boolean.TRUE;
+	}
 
 	/** 
 	 * Handle the given create event.
@@ -123,25 +133,35 @@ public class DefaultPersistEventListener extends AbstractSaveEventListener imple
 		}
 
 		switch ( entityState ) {
-			case DETACHED:
+			case DETACHED: {
 				throw new PersistentObjectException(
 						"detached entity passed to persist: " +
 								getLoggableName( event.getEntityName(), entity )
 				);
-			case PERSISTENT:
+			}
+			case PERSISTENT: {
 				entityIsPersistent( event, createCache );
 				break;
-			case TRANSIENT:
+			}
+			case TRANSIENT: {
 				entityIsTransient( event, createCache );
 				break;
-			default:
+			}
+			case DELETED: {
+				entityEntry.setStatus( Status.MANAGED );
+				entityEntry.setDeletedState( null );
+				event.getSession().getActionQueue().unScheduleDeletion( entityEntry, event.getObject() );
+				entityIsDeleted( event, createCache );
+				break;
+			}
+			default: {
 				throw new ObjectDeletedException(
 						"deleted entity passed to persist",
 						null,
 						getLoggableName( event.getEntityName(), entity )
 				);
+			}
 		}
-
 	}
 		
 	protected void entityIsPersistent(PersistEvent event, Map createCache) {
@@ -154,11 +174,13 @@ public class DefaultPersistEventListener extends AbstractSaveEventListener imple
 		final EntityPersister persister = source.getEntityPersister( event.getEntityName(), entity );
 		
 		if ( createCache.put(entity, entity)==null ) {
-			//TODO: merge into one method!
-			cascadeBeforeSave(source, persister, entity, createCache);
-			cascadeAfterSave(source, persister, entity, createCache);
+			justCascade( createCache, source, entity, persister );
 		}
+	}
 
+	private void justCascade(Map createCache, EventSource source, Object entity, EntityPersister persister) {
+		cascadeBeforeSave(source, persister, entity, createCache);
+		cascadeAfterSave(source, persister, entity, createCache);
 	}
 	
 	/** 
@@ -181,12 +203,24 @@ public class DefaultPersistEventListener extends AbstractSaveEventListener imple
 
 	}
 
-	protected CascadingAction getCascadeAction() {
-		return CascadingAction.PERSIST;
-	}
-	
-	protected Boolean getAssumedUnsaved() {
-		return Boolean.TRUE;
+	@SuppressWarnings( {"unchecked"})
+	private void entityIsDeleted(PersistEvent event, Map createCache) {
+		final EventSource source = event.getSession();
+		final Object entity = source.getPersistenceContext().unproxy( event.getObject() );
+		final EntityPersister persister = source.getEntityPersister( event.getEntityName(), entity );
+
+		log.trace(
+				"un-scheduling entity deletion [{}]",
+				MessageHelper.infoString(
+						persister,
+						persister.getIdentifier( entity, source ),
+						source.getFactory()
+				)
+		);
+
+		if ( createCache.put( entity, entity ) == null ) {
+			justCascade( createCache, source, entity, persister );
+		}
 	}
 
 }

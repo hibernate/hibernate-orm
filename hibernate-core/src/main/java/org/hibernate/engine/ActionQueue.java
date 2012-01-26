@@ -403,6 +403,17 @@ public class ActionQueue {
 				collectionCreations.size() > 0;
 	}
 
+	public void unScheduleDeletion(EntityEntry entry, Object rescuedEntity) {
+		for ( int i = 0; i < deletions.size(); i++ ) {
+			EntityDeleteAction action = (EntityDeleteAction) deletions.get( i );
+			if ( action.getInstance() == rescuedEntity ) {
+				deletions.remove( i );
+				return;
+			}
+		}
+		throw new AssertionFailure( "Unable to perform un-delete for instance " + entry.getEntityName() );
+	}
+
 	/**
 	 * Used by the owning session to explicitly control serialization of the
 	 * action queue

@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,28 +21,30 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.annotations;
+package org.hibernate.cache.spi.access;
 
-import static java.lang.annotation.ElementType.FIELD;
-import static java.lang.annotation.ElementType.METHOD;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
+import org.hibernate.cache.spi.NaturalIdRegion;
 
 /**
- * This specifies that a property is part of the natural id of the entity.
+ * Contract for managing transactional and concurrent access to cached naturalId
+ * data.  For cached naturalId data, all modification actions actually just
+ * invalidate the entry(s).  The call sequence here is:
+ * {@link #lockItem} -> {@link #remove} -> {@link #unlockItem}
+ * <p/>
+ * There is another usage pattern that is used to invalidate entries
+ * after performing "bulk" HQL/SQL operations:
+ * {@link #lockRegion} -> {@link #removeAll} -> {@link #unlockRegion}
  *
- * @author Nicol�s Lichtmaier
- * @see NaturalIdCache
+ * @author Gavin King
+ * @author Steve Ebersole
+ * @author Eric Dalquist
  */
-@Target( { METHOD, FIELD } )
-@Retention( RUNTIME )
-public @interface NaturalId {
+public interface NaturalIdRegionAccessStrategy extends RegionAccessStrategy{
+
 	/**
-	 * Is this natural id mutable (or immutable)?
+	 * Get the wrapped naturalId cache region
 	 *
-	 * @return {@code true} indicates the natural id is mutable; {@code false} (the default) that it is immutable.
+	 * @return The underlying region
 	 */
-	boolean mutable() default false;
+	public NaturalIdRegion getRegion();
 }

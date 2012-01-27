@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,28 +21,27 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.annotations;
+package org.hibernate.cache.spi;
 
-import static java.lang.annotation.ElementType.FIELD;
-import static java.lang.annotation.ElementType.METHOD;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
+import org.hibernate.cache.CacheException;
+import org.hibernate.cache.spi.access.AccessType;
+import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 
 /**
- * This specifies that a property is part of the natural id of the entity.
+ * Defines the contract for a cache region which will specifically be used to
+ * store naturalId data.
  *
- * @author Nicol�s Lichtmaier
- * @see NaturalIdCache
+ * @author Eric Dalquist
  */
-@Target( { METHOD, FIELD } )
-@Retention( RUNTIME )
-public @interface NaturalId {
+public interface NaturalIdRegion extends TransactionalDataRegion {
+
 	/**
-	 * Is this natural id mutable (or immutable)?
+	 * Build an access strategy for the requested access type.
 	 *
-	 * @return {@code true} indicates the natural id is mutable; {@code false} (the default) that it is immutable.
+	 * @param accessType The type of access strategy to build; never null.
+	 * @return The appropriate strategy contract for accessing this region
+	 * for the requested type of access.
+	 * @throws org.hibernate.cache.CacheException Usually indicates mis-configuration.
 	 */
-	boolean mutable() default false;
+	public NaturalIdRegionAccessStrategy buildAccessStrategy(AccessType accessType) throws CacheException;
 }

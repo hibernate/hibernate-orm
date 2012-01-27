@@ -27,8 +27,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.cache.spi.Region;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreMessageLogger;
@@ -36,9 +34,11 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.service.Service;
 import org.hibernate.stat.CollectionStatistics;
 import org.hibernate.stat.EntityStatistics;
+import org.hibernate.stat.NaturalIdCacheStatistics;
 import org.hibernate.stat.QueryStatistics;
 import org.hibernate.stat.SecondLevelCacheStatistics;
 import org.hibernate.stat.spi.StatisticsImplementor;
+import org.jboss.logging.Logger;
 
 /**
  * Implementation of {@link org.hibernate.stat.Statistics} based on the {@link java.util.concurrent} package.
@@ -76,6 +76,10 @@ public class ConcurrentStatisticsImpl implements StatisticsImplementor, Service 
 	private AtomicLong secondLevelCacheHitCount = new AtomicLong();
 	private AtomicLong secondLevelCacheMissCount = new AtomicLong();
 	private AtomicLong secondLevelCachePutCount = new AtomicLong();
+	
+	private AtomicLong naturalIdCacheHitCount = new AtomicLong();
+	private AtomicLong naturalIdCacheMissCount = new AtomicLong();
+	private AtomicLong naturalIdCachePutCount = new AtomicLong();
 
 	private AtomicLong queryExecutionCount = new AtomicLong();
 	private AtomicLong queryExecutionMaxTime = new AtomicLong();
@@ -93,6 +97,10 @@ public class ConcurrentStatisticsImpl implements StatisticsImplementor, Service 
 
 	private AtomicLong optimisticFailureCount = new AtomicLong();
 
+	/**
+	 * natural id cache statistics per region
+	 */
+	private final ConcurrentMap naturalIdCacheStatistics = new ConcurrentHashMap();
 	/**
 	 * second level cache statistics per region
 	 */
@@ -127,6 +135,10 @@ public class ConcurrentStatisticsImpl implements StatisticsImplementor, Service 
 		secondLevelCacheHitCount.set( 0 );
 		secondLevelCacheMissCount.set( 0 );
 		secondLevelCachePutCount.set( 0 );
+		
+		naturalIdCacheHitCount.set( 0 );
+		naturalIdCacheMissCount.set( 0 );
+		naturalIdCachePutCount.set( 0 );
 
 		sessionCloseCount.set( 0 );
 		sessionOpenCount.set( 0 );
@@ -282,6 +294,31 @@ public class ConcurrentStatisticsImpl implements StatisticsImplementor, Service 
 		collectionRemoveCount.getAndIncrement();
 		( (ConcurrentCollectionStatisticsImpl) getCollectionStatistics( role ) ).incrementRemoveCount();
 	}
+	
+
+	@Override
+	public NaturalIdCacheStatistics getNaturalIdCacheStatistics(String regionName) {
+		ConcurrentNaturalIdCacheStatisticsImpl nics =
+				(ConcurrentNaturalIdCacheStatisticsImpl) naturalIdCacheStatistics.get( regionName );
+		
+		if ( nics == null ) {
+			if ( sessionFactory == null ) {
+				return null;
+			}
+			Region region = sessionFactory.getNaturalIdCacheRegion( regionName );
+			if ( region == null ) {
+				return null;
+			}
+			nics = new ConcurrentNaturalIdCacheStatisticsImpl( region );
+			ConcurrentNaturalIdCacheStatisticsImpl previous;
+			if ( ( previous = (ConcurrentNaturalIdCacheStatisticsImpl) naturalIdCacheStatistics.putIfAbsent(
+					regionName, nics
+			) ) != null ) {
+				nics = previous;
+			}
+		}
+		return nics;
+	}
 
 	/**
 	 * Second level cache statistics per region
@@ -325,6 +362,24 @@ public class ConcurrentStatisticsImpl implements StatisticsImplementor, Service 
 	public void secondLevelCacheMiss(String regionName) {
 		secondLevelCacheMissCount.getAndIncrement();
 		( (ConcurrentSecondLevelCacheStatisticsImpl) getSecondLevelCacheStatistics( regionName ) ).incrementMissCount();
+	}
+	
+	@Override
+	public void naturalIdCachePut(String regionName) {
+		naturalIdCachePutCount.getAndIncrement();
+		( (ConcurrentNaturalIdCacheStatisticsImpl) getNaturalIdCacheStatistics( regionName ) ).incrementPutCount();
+	}
+
+	@Override
+	public void naturalIdCacheHit(String regionName) {
+		naturalIdCacheHitCount.getAndIncrement();
+		( (ConcurrentNaturalIdCacheStatisticsImpl) getNaturalIdCacheStatistics( regionName ) ).incrementHitCount();
+	}
+
+	@Override
+	public void naturalIdCacheMiss(String regionName) {
+		naturalIdCacheMissCount.getAndIncrement();
+		( (ConcurrentNaturalIdCacheStatisticsImpl) getNaturalIdCacheStatistics( regionName ) ).incrementMissCount();
 	}
 
 	@SuppressWarnings({ "UnnecessaryBoxing" })
@@ -514,6 +569,21 @@ public class ConcurrentStatisticsImpl implements StatisticsImplementor, Service 
 	 */
 	public long getSecondLevelCachePutCount() {
 		return secondLevelCachePutCount.get();
+	}
+	
+	@Override
+	public long getNaturalIdCacheHitCount() {
+		return naturalIdCacheHitCount.get();
+	}
+
+	@Override
+	public long getNaturalIdCacheMissCount() {
+		return naturalIdCacheMissCount.get();
+	}
+
+	@Override
+	public long getNaturalIdCachePutCount() {
+		return naturalIdCachePutCount.get();
 	}
 
 	/**

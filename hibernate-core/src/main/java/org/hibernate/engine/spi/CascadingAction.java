@@ -34,6 +34,7 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.ReplicationMode;
 import org.hibernate.TransientObjectException;
+import org.hibernate.TransientPropertyValueException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.event.spi.EventSource;
@@ -377,10 +378,11 @@ public abstract class CascadingAction {
 						&& ForeignKeys.isTransient( childEntityName, child, null, session ) ) {
 					String parentEntiytName = persister.getEntityName();
 					String propertyName = persister.getPropertyNames()[propertyIndex];
-					throw new TransientObjectException(
-							"object references an unsaved transient instance - " +
-							"save the transient instance before flushing: " +
-							parentEntiytName + "." + propertyName + " -> " + childEntityName
+					throw new TransientPropertyValueException(
+							"object references an unsaved transient instance - save the transient instance before flushing",
+							childEntityName,
+							parentEntiytName,
+							propertyName
 					);
 
 				}
@@ -393,7 +395,7 @@ public abstract class CascadingAction {
 
 		private boolean isInManagedState(Object child, EventSource session) {
 			EntityEntry entry = session.getPersistenceContext().getEntry( child );
-			return entry != null && 
+			return entry != null &&
 					(
 							entry.getStatus() == Status.MANAGED ||
 							entry.getStatus() == Status.READ_ONLY ||

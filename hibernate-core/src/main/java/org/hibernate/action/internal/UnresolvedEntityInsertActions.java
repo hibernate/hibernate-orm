@@ -36,6 +36,7 @@ import java.util.TreeSet;
 import org.jboss.logging.Logger;
 
 import org.hibernate.PropertyValueException;
+import org.hibernate.TransientPropertyValueException;
 import org.hibernate.engine.internal.NonNullableTransientDependencies;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -131,8 +132,9 @@ public class UnresolvedEntityInsertActions {
 					nonNullableTransientDependencies.getNonNullableTransientEntities().iterator().next();
 			String firstPropertyPath =
 					nonNullableTransientDependencies.getNonNullableTransientPropertyPaths( firstTransientDependency ).iterator().next();
-			throw new PropertyValueException(
+			throw new TransientPropertyValueException(
 					"Not-null property references a transient value - transient instance must be saved before current operation",
+					firstDependentAction.getSession().guessEntityName( firstTransientDependency ),
 					firstDependentAction.getEntityName(),
 					firstPropertyPath
 			);

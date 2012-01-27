@@ -31,6 +31,7 @@ import org.hibernate.JDBCException;
 import org.hibernate.PropertyValueException;
 import org.hibernate.Session;
 import org.hibernate.TransientObjectException;
+import org.hibernate.TransientPropertyValueException;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -682,7 +683,7 @@ public class MultiPathCircleCascadeTest extends BaseCoreFunctionalTestCase {
 			}
 		}
 		else {
-			assertTrue( ex instanceof PropertyValueException );
+			assertTrue( ex instanceof TransientPropertyValueException );
 		}
 	}
 

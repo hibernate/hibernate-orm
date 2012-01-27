@@ -117,6 +117,7 @@ public class EntityManagerImpl extends AbstractEntityManagerImpl {
 	}
 
 	public void close() {
+		checkEntityManagerFactory();
 		if ( !open ) {
 			throw new IllegalStateException( "EntityManager is closed" );
 		}
@@ -155,6 +156,7 @@ public class EntityManagerImpl extends AbstractEntityManagerImpl {
 
 	public boolean isOpen() {
 		//adjustFlushMode(); //don't adjust, can't be done on closed EM
+		checkEntityManagerFactory();
 		try {
 			if ( open ) {
 				getSession().isOpen(); //to force enlistment in tx
@@ -167,4 +169,9 @@ public class EntityManagerImpl extends AbstractEntityManagerImpl {
 		}
 	}
 
+	private void checkEntityManagerFactory() {
+	    if (! getEntityManagerFactory().isOpen()) {
+	        open = false;
+	    }
+	}
 }

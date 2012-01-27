@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
 import javax.persistence.Access;
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
@@ -34,8 +35,6 @@ import javax.persistence.JoinTable;
 import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.SecondaryTable;
 import javax.persistence.SecondaryTables;
-
-import org.jboss.logging.Logger;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
@@ -47,6 +46,7 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.Loader;
+import org.hibernate.annotations.NaturalIdCache;
 import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.annotations.Persister;
 import org.hibernate.annotations.PolymorphismType;
@@ -89,6 +89,7 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.TableOwner;
 import org.hibernate.mapping.Value;
+import org.jboss.logging.Logger;
 
 /**
  * Stateful holder and processor for binding Entity information
@@ -97,7 +98,8 @@ import org.hibernate.mapping.Value;
  */
 public class EntityBinder {
     private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, EntityBinder.class.getName());
-
+    private static final String NATURAL_ID_CACHE_SUFFIX = "##NaturalId";
+	
 	private String name;
 	private XClass annotatedClass;
 	private PersistentClass persistentClass;
@@ -119,6 +121,7 @@ public class EntityBinder {
 	private java.util.Map<String, Object> secondaryTableJoins = new HashMap<String, Object>();
 	private String cacheConcurrentStrategy;
 	private String cacheRegion;
+	private String naturalIdCacheRegion;
 	private java.util.Map<String, String> filters = new HashMap<String, String>();
 	private InheritanceState inheritanceState;
 	private boolean ignoreIdAnnotations;
@@ -230,6 +233,7 @@ public class EntityBinder {
 				rootClass.setCacheRegionName( cacheRegion );
 				rootClass.setLazyPropertiesCacheable( cacheLazyProperty );
 			}
+			rootClass.setNaturalIdCacheRegionName( naturalIdCacheRegion );
 			boolean forceDiscriminatorInSelects = forceDiscriminator == null
 					? mappings.forceDiscriminatorInSelectsByDefault()
 					: forceDiscriminator;
@@ -824,6 +828,25 @@ public class EntityBinder {
 			cacheConcurrentStrategy = null;
 			cacheRegion = null;
 			cacheLazyProperty = true;
+		}
+	}
+	
+	public void setNaturalIdCache(NaturalIdCache naturalIdCacheAnn) {
+		if ( naturalIdCacheAnn != null ) {
+			if ( BinderHelper.isEmptyAnnotationValue( naturalIdCacheAnn.region() ) ) {
+				if (cacheRegion != null) {
+					naturalIdCacheRegion = cacheRegion + NATURAL_ID_CACHE_SUFFIX;
+				}
+				else {
+					naturalIdCacheRegion = persistentClass.getEntityName() + NATURAL_ID_CACHE_SUFFIX;
+				}
+			}
+			else {
+				naturalIdCacheRegion = naturalIdCacheAnn.region();
+			}
+		}
+		else {
+			naturalIdCacheRegion = null;
 		}
 	}
 

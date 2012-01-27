@@ -263,7 +263,7 @@ public class EntityMetamodel implements Serializable {
 		else {
 			naturalIdPropertyNumbers = ArrayHelper.toIntArray(naturalIdNumbers);
 			hasImmutableNaturalId = !foundUpdateableNaturalIdProperty;
-			hasCacheableNaturalId = true; //TODO how to read the annotation here?
+			hasCacheableNaturalId = persistentClass.getNaturalIdCacheRegionName() != null;
 		}
 
 		hasInsertGeneratedValues = foundInsertGeneratedValue;
@@ -510,7 +510,7 @@ public class EntityMetamodel implements Serializable {
 		else {
 			naturalIdPropertyNumbers = ArrayHelper.toIntArray(naturalIdNumbers);
 			hasImmutableNaturalId = !foundUpdateableNaturalIdProperty;
-			hasCacheableNaturalId = true; //TODO how to read the annotation here?
+			hasCacheableNaturalId = false; //See previous TODO and HHH-6354
 		}
 
 		hasInsertGeneratedValues = foundInsertGeneratedValue;

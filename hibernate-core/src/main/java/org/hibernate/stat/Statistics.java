@@ -60,6 +60,14 @@ public interface Statistics {
 	public SecondLevelCacheStatistics getSecondLevelCacheStatistics(String regionName);
 
     /**
+	 * Natural id cache statistics per region
+	 * 
+	 * @param regionName region name
+	 * @return NaturalIdCacheStatistics
+	 */
+	public NaturalIdCacheStatistics getNaturalIdCacheStatistics(String regionName);
+
+    /**
 	 * Query statistics from query string (HQL or SQL)
 	 * 
 	 * @param queryString query string
@@ -123,6 +131,18 @@ public interface Statistics {
      * Get the global number of cacheable queries put in cache
      */
 	public long getQueryCachePutCount();
+    /**
+     * Get the global number of cached naturalId lookups successfully retrieved from cache
+     */
+	public long getNaturalIdCacheHitCount();
+    /**
+     * Get the global number of cached naturalId lookups *not* found in cache
+     */
+	public long getNaturalIdCacheMissCount();
+    /**
+     * Get the global number of cacheable naturalId lookups put in cache
+     */
+	public long getNaturalIdCachePutCount();
     /**
      * Get the global number of timestamps successfully retrieved from cache
      */

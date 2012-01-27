@@ -32,6 +32,7 @@ import org.jboss.logging.Logger;
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.SingletonIterator;
 
@@ -52,6 +53,7 @@ public class RootClass extends PersistentClass implements TableOwner {
 	private boolean polymorphic;
 	private String cacheConcurrencyStrategy;
 	private String cacheRegionName;
+	private String naturalIdCacheRegionName;
 	private boolean lazyPropertiesCacheable = true;
 	private Value discriminator; //may be final
 	private boolean mutable = true;
@@ -307,7 +309,15 @@ public class RootClass extends PersistentClass implements TableOwner {
 	public void setCacheRegionName(String cacheRegionName) {
 		this.cacheRegionName = cacheRegionName;
 	}
-
+	
+	@Override
+	public String getNaturalIdCacheRegionName() {
+		return naturalIdCacheRegionName;
+	}
+	public void setNaturalIdCacheRegionName(String naturalIdCacheRegionName) {
+		this.naturalIdCacheRegionName = naturalIdCacheRegionName;
+	}
+	
 	@Override
     public boolean isLazyPropertiesCacheable() {
 		return lazyPropertiesCacheable;

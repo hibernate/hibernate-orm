@@ -26,6 +26,10 @@ package org.hibernate.test.dirtiness;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Transient;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import org.hibernate.annotations.GenericGenerator;
 
@@ -61,6 +65,11 @@ public class Thing {
 	}
 
 	public void setName(String name) {
+		// intentionally simple dirty tracking (i.e. no checking against previous state)
+		changedValues.put( "name", this.name );
 		this.name = name;
 	}
+
+	@Transient
+	Map<String,Object> changedValues = new HashMap<String, Object>();
 }

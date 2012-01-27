@@ -229,16 +229,17 @@ public final class EntityEntry implements Serializable {
 			this.version = nextVersion;
 			getPersister().setPropertyValue( entity, getPersister().getVersionProperty(), nextVersion );
 		}
+
 		if ( getPersister().getInstrumentationMetadata().isInstrumented() ) {
 			final FieldInterceptor interceptor = getPersister().getInstrumentationMetadata().extractInterceptor( entity );
 			if ( interceptor != null ) {
 				interceptor.clearDirty();
 			}
-			persistenceContext.getSession()
-					.getFactory()
-					.getCustomEntityDirtinessStrategy()
-					.resetDirty( entity, (Session) persistenceContext.getSession() );
 		}
+		persistenceContext.getSession()
+				.getFactory()
+				.getCustomEntityDirtinessStrategy()
+				.resetDirty( entity, getPersister(), (Session) persistenceContext.getSession() );
 
 		notifyLoadedStateUpdated();
 	}
@@ -301,8 +302,8 @@ public final class EntityEntry implements Serializable {
 
 		final CustomEntityDirtinessStrategy customEntityDirtinessStrategy =
 				persistenceContext.getSession().getFactory().getCustomEntityDirtinessStrategy();
-		if ( customEntityDirtinessStrategy.canDirtyCheck( entity, (Session) persistenceContext.getSession() ) ) {
-			return ! customEntityDirtinessStrategy.isDirty( entity, (Session) persistenceContext.getSession() );
+		if ( customEntityDirtinessStrategy.canDirtyCheck( entity, getPersister(), (Session) persistenceContext.getSession() ) ) {
+			return ! customEntityDirtinessStrategy.isDirty( entity, getPersister(), (Session) persistenceContext.getSession() );
 		}
 
 		return false;

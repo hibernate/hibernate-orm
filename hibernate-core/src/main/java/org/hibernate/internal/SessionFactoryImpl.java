@@ -578,17 +578,21 @@ public final class SessionFactoryImpl
 		// last resort
 		return new CustomEntityDirtinessStrategy() {
 			@Override
-			public boolean canDirtyCheck(Object entity, Session session) {
+			public boolean canDirtyCheck(Object entity, EntityPersister persister, Session session) {
 				return false;
 			}
 
 			@Override
-			public boolean isDirty(Object entity, Session session) {
+			public boolean isDirty(Object entity, EntityPersister persister, Session session) {
 				return false;
 			}
 
 			@Override
-			public void resetDirty(Object entity, Session session) {
+			public void resetDirty(Object entity, EntityPersister persister, Session session) {
+			}
+
+			@Override
+			public void findDirty(Object entity, DirtyCheckContext dirtyCheckContext) {
 			}
 		};
 	}

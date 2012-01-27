@@ -24,11 +24,14 @@
 package org.hibernate.event.internal;
 
 import java.io.Serializable;
+import java.util.Arrays;
 
 import org.jboss.logging.Logger;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.HibernateException;
+import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.action.internal.DelayedPostInsertIdentifier;
 import org.hibernate.action.internal.EntityUpdateAction;
@@ -252,7 +255,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 				event.getSession()
 						.getFactory()
 						.getCustomEntityDirtinessStrategy()
-						.resetDirty( event.getEntity(), event.getSession() );
+						.resetDirty( event.getEntity(), event.getEntityEntry().getPersister(), event.getSession() );
 				return false;
 			}
 		}
@@ -477,7 +480,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 	/**
 	 * Perform a dirty check, and attach the results to the event
 	 */
-	protected void dirtyCheck(FlushEntityEvent event) throws HibernateException {
+	protected void dirtyCheck(final FlushEntityEvent event) throws HibernateException {
 
 		final Object entity = event.getEntity();
 		final Object[] values = event.getPropertyValues();
@@ -494,7 +497,29 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 				loadedState,
 				persister.getPropertyNames(),
 				persister.getPropertyTypes()
+		);
+
+		if ( dirtyProperties == null ) {
+			// see if the custom dirtiness strategy can tell us...
+			class DirtyCheckContextImpl implements CustomEntityDirtinessStrategy.DirtyCheckContext {
+				int[] found = null;
+				@Override
+				public void doDirtyChecking(CustomEntityDirtinessStrategy.AttributeChecker attributeChecker) {
+					found = new DirtyCheckAttributeInfoImpl( event ).visitAttributes( attributeChecker );
+					if ( found != null && found.length == 0 ) {
+						found = null;
+					}
+				}
+			}
+			DirtyCheckContextImpl context = new DirtyCheckContextImpl();
+			session.getFactory().getCustomEntityDirtinessStrategy().findDirty(
+					entity,
+					persister,
+					(Session) session,
+					context
 			);
+			dirtyProperties = context.found;
+		}
 
 		event.setDatabaseSnapshot(null);
 
@@ -552,6 +577,68 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		event.setDirtyCheckHandledByInterceptor(interceptorHandledDirtyCheck);
 		event.setDirtyCheckPossible(!cannotDirtyCheck);
 
+	}
+
+	private class DirtyCheckAttributeInfoImpl implements CustomEntityDirtinessStrategy.AttributeInformation {
+		private final FlushEntityEvent event;
+		private final EntityPersister persister;
+		private final int numberOfAttributes;
+		private int index = 0;
+
+		private DirtyCheckAttributeInfoImpl(FlushEntityEvent event) {
+			this.event = event;
+			this.persister = event.getEntityEntry().getPersister();
+			this.numberOfAttributes = persister.getPropertyNames().length;
+		}
+
+		@Override
+		public EntityPersister getContainingPersister() {
+			return persister;
+		}
+
+		@Override
+		public int getAttributeIndex() {
+			return index;
+		}
+
+		@Override
+		public String getName() {
+			return persister.getPropertyNames()[ index ];
+		}
+
+		@Override
+		public Type getType() {
+			return persister.getPropertyTypes()[ index ];
+		}
+
+		@Override
+		public Object getCurrentValue() {
+			return event.getPropertyValues()[ index ];
+		}
+
+		Object[] databaseSnapshot;
+
+		@Override
+		public Object getLoadedValue() {
+			if ( databaseSnapshot == null ) {
+				databaseSnapshot = getDatabaseSnapshot( event.getSession(), persister, event.getEntityEntry().getId() );
+			}
+			return databaseSnapshot[ index ];
+		}
+
+		public int[] visitAttributes(CustomEntityDirtinessStrategy.AttributeChecker attributeChecker) {
+			databaseSnapshot = null;
+			index = 0;
+
+			final int[] indexes = new int[ numberOfAttributes ];
+			int count = 0;
+			for ( ; index < numberOfAttributes; index++ ) {
+				if ( attributeChecker.isDirty( this ) ) {
+					indexes[ count++ ] = index;
+				}
+			}
+			return Arrays.copyOf( indexes, count );
+		}
 	}
 
 	private void logDirtyProperties(Serializable id, int[] dirtyProperties, EntityPersister persister) {

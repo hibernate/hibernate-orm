@@ -31,6 +31,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
+import org.hibernate.annotations.NaturalId;
 import org.hibernate.bytecode.spi.EntityInstrumentationMetadata;
 import org.hibernate.cache.spi.OptimisticCacheSource;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
@@ -288,6 +289,13 @@ public interface EntityPersister extends OptimisticCacheSource {
 	 * @return True if the entity defines a natural id; false otherwise.
 	 */
 	public boolean hasNaturalIdentifier();
+	
+	/**
+	 * Determine whether this entity's natural identifier is cacheable. {@link NaturalId#cache()}
+	 * 
+	 * @return True if the natural id is cacheable, false if it is not cacheable or no natural id is defined
+	 */
+	public boolean isNatrualIdentifierCached();
 
 	/**
 	 * If the entity defines a natural id ({@link #hasNaturalIdentifier()}), which

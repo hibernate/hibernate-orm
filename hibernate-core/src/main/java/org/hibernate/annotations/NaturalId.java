@@ -44,4 +44,11 @@ public @interface NaturalId {
 	 * @return {@code true} indicates the natural id is mutable; {@code false} (the default) that it is immutable.
 	 */
 	boolean mutable() default false;
+	
+	/**
+	 * Should the mapping of this natural id to the primary id be cached 
+	 * 
+	 * @return {@code true} (the default) indicates the natural id mapping should be cached; {@code false} that the mapping should not be cached.
+	 */
+	boolean cache() default true;
 }

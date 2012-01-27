@@ -235,6 +235,11 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		public boolean hasNaturalIdentifier() {
 			return false;
 		}
+		
+		@Override
+		public boolean isNatrualIdentifierCached() {
+			return false;
+		}
 
 		@Override
 		public int[] getNaturalIdentifierProperties() {

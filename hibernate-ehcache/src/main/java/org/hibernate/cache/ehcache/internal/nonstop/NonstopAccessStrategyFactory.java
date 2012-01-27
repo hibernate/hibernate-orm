@@ -25,10 +25,12 @@ package org.hibernate.cache.ehcache.internal.nonstop;
 
 import org.hibernate.cache.ehcache.internal.regions.EhcacheCollectionRegion;
 import org.hibernate.cache.ehcache.internal.regions.EhcacheEntityRegion;
+import org.hibernate.cache.ehcache.internal.regions.EhcacheNaturalIdRegion;
 import org.hibernate.cache.ehcache.internal.strategy.EhcacheAccessStrategyFactory;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
+import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 
 /**
  * Implementation of {@link org.hibernate.cache.ehcache.internal.strategy.EhcacheAccessStrategyFactory} that takes care of Nonstop cache exceptions using
@@ -60,7 +62,18 @@ public class NonstopAccessStrategyFactory implements EhcacheAccessStrategyFactor
         );
     }
 
-    /**
+    @Override
+	public NaturalIdRegionAccessStrategy createNaturalIdRegionAccessStrategy(EhcacheNaturalIdRegion naturalIdRegion,
+			AccessType accessType) {
+        return new NonstopAwareNaturalIdRegionAccessStrategy(
+        		actualFactory.createNaturalIdRegionAccessStrategy( 
+        				naturalIdRegion, 
+        				accessType
+				), HibernateNonstopCacheExceptionHandler.getInstance()
+        );
+	}
+
+	/**
      * {@inheritDoc}
      */
     public CollectionRegionAccessStrategy createCollectionRegionAccessStrategy(EhcacheCollectionRegion collectionRegion,

@@ -26,6 +26,7 @@ import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.CollectionRegion;
 import org.hibernate.cache.spi.EntityRegion;
+import org.hibernate.cache.spi.NaturalIdRegion;
 import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.TimestampsRegion;
@@ -101,6 +102,12 @@ public class ClusterAwareRegionFactory implements RegionFactory {
             CacheDataDescription metadata) throws CacheException {
       return delegate.buildEntityRegion(regionName, properties, metadata);
    }
+   
+   @Override
+	public NaturalIdRegion buildNaturalIdRegion(String regionName, Properties properties, CacheDataDescription metadata)
+			throws CacheException {
+		return delegate.buildNaturalIdRegion( regionName, properties, metadata );
+	}
 
    public QueryResultsRegion buildQueryResultsRegion(String regionName, Properties properties)
             throws CacheException {

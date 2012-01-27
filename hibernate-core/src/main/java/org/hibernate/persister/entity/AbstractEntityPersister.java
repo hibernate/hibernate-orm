@@ -4601,6 +4601,11 @@ public abstract class AbstractEntityPersister
 	public boolean hasNaturalIdentifier() {
 		return entityMetamodel.hasNaturalIdentifier();
 	}
+	
+	@Override
+	public boolean isNatrualIdentifierCached() {
+		return entityMetamodel.isNatrualIdentifierCached();
+	}
 
 	public void setPropertyValue(Object object, String propertyName, Object value) {
 		getEntityTuplizer().setPropertyValue( object, propertyName, value );

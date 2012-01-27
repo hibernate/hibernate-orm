@@ -563,6 +563,11 @@ public class CustomPersister implements EntityPersister {
 	public boolean hasNaturalIdentifier() {
 		return false;
 	}
+	
+	@Override
+	public boolean isNatrualIdentifierCached() {
+		return false;
+	}
 
 	@Override
 	public boolean hasMutableProperties() {

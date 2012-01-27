@@ -257,8 +257,13 @@ public class PersisterClassProviderTest {
 		public boolean hasNaturalIdentifier() {
 			return false;
 		}
-
+		
 		@Override
+        public boolean isNatrualIdentifierCached() {
+            return false;
+        }
+
+        @Override
 		public int[] getNaturalIdentifierProperties() {
 			return new int[0];
 		}

@@ -66,12 +66,14 @@ import org.hibernate.cache.internal.CacheDataDescriptionImpl;
 import org.hibernate.cache.spi.CacheKey;
 import org.hibernate.cache.spi.CollectionRegion;
 import org.hibernate.cache.spi.EntityRegion;
+import org.hibernate.cache.spi.NaturalIdRegion;
 import org.hibernate.cache.spi.QueryCache;
 import org.hibernate.cache.spi.Region;
 import org.hibernate.cache.spi.UpdateTimestampsCache;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
+import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 import org.hibernate.cache.spi.access.RegionAccessStrategy;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
@@ -171,7 +173,8 @@ import org.hibernate.type.TypeResolver;
 public final class SessionFactoryImpl
 		implements SessionFactoryImplementor {
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, SessionFactoryImpl.class.getName());
+	private static final String NATURAL_ID_CACHE_SUFFIX = "##NaturalId";
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, SessionFactoryImpl.class.getName());
 	private static final IdentifierGenerator UUID_GENERATOR = UUIDGenerator.buildSessionFactoryUniqueIdentifierGenerator();
 
 	private final String name;
@@ -356,6 +359,18 @@ public final class SessionFactoryImpl
 			);
 			entityPersisters.put( model.getEntityName(), cp );
 			classMeta.put( model.getEntityName(), cp.getClassMetadata() );
+			
+			if ( cp.hasNaturalIdentifier() && cp.isNatrualIdentifierCached() ) {
+				final String naturalIdCacheRegionName = cacheRegionPrefix + model.getRootClass().getCacheRegionName() + NATURAL_ID_CACHE_SUFFIX;
+				NaturalIdRegionAccessStrategy naturalIdAccessStrategy = ( NaturalIdRegionAccessStrategy ) entityAccessStrategies.get( naturalIdCacheRegionName );
+				
+				if ( naturalIdAccessStrategy == null && settings.isSecondLevelCacheEnabled() ) {
+					final NaturalIdRegion naturalIdRegion = settings.getRegionFactory().buildNaturalIdRegion( naturalIdCacheRegionName, properties, CacheDataDescriptionImpl.decode( cp ) );
+					naturalIdAccessStrategy = naturalIdRegion.buildAccessStrategy( settings.getRegionFactory().getDefaultAccessType() );
+					entityAccessStrategies.put( naturalIdCacheRegionName, naturalIdAccessStrategy );
+					allCacheRegions.put( naturalIdCacheRegionName, naturalIdRegion );
+				}
+			}
 		}
 		this.classMetadata = Collections.unmodifiableMap(classMeta);
 
@@ -790,6 +805,14 @@ public final class SessionFactoryImpl
 			);
 			entityPersisters.put( model.getEntity().getName(), cp );
 			classMeta.put( model.getEntity().getName(), cp.getClassMetadata() );
+			
+			if ( settings.isSecondLevelCacheEnabled() && cp.hasNaturalIdentifier() && cp.isNatrualIdentifierCached() ) {
+				final String naturalIdCacheRegionName = cacheRegionPrefix + rootEntityBinding.getHierarchyDetails().getCaching().getRegion() + NATURAL_ID_CACHE_SUFFIX;
+				final NaturalIdRegion naturalIdRegion = settings.getRegionFactory().buildNaturalIdRegion( naturalIdCacheRegionName, properties, CacheDataDescriptionImpl.decode( cp ) );
+				final NaturalIdRegionAccessStrategy naturalIdAccessStrategy = naturalIdRegion.buildAccessStrategy( settings.getRegionFactory().getDefaultAccessType() );
+				entityAccessStrategies.put( naturalIdCacheRegionName, naturalIdAccessStrategy );
+				allCacheRegions.put( naturalIdCacheRegionName, naturalIdRegion );
+			}
 		}
 		this.classMetadata = Collections.unmodifiableMap(classMeta);
 

@@ -30,6 +30,7 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.PluralAttributeBinding;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.VersionType;
 
 /**
@@ -89,6 +90,14 @@ public class CacheDataDescriptionImpl implements CacheDataDescription {
 				getVersionComparator( model.getContainer().seekEntityBinding() )
 		);
 	}
+
+    public static CacheDataDescriptionImpl decode(EntityPersister persister) {
+        return new CacheDataDescriptionImpl(
+                !persister.getEntityMetamodel().hasImmutableNaturalId(),
+                false,
+                null
+        );
+    }
 
 	private static Comparator getVersionComparator(EntityBinding model ) {
 		Comparator versionComparator = null;

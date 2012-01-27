@@ -25,14 +25,17 @@ package org.hibernate.event.internal;
 
 import java.io.Serializable;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.HibernateException;
+import org.hibernate.cache.spi.CacheKey;
+import org.hibernate.cache.spi.entry.CacheEntry;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.ResolveNaturalIdEvent;
 import org.hibernate.event.spi.ResolveNaturalIdEventListener;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
+import org.jboss.logging.Logger;
 
 /**
  * Defines the default load event listeners used by hibernate for loading entities
@@ -141,48 +144,37 @@ public class DefaultResolveNaturalIdEventListener
 	 * @return The entity from the second-level cache, or null.
 	 */
 	protected Serializable loadFromSecondLevelCache(final ResolveNaturalIdEvent event) {
-
-		// final SessionImplementor source = event.getSession();
-		//
-		// final boolean useCache = persister.hasCache()
-		// && source.getCacheMode().isGetEnabled();
-		//
-		// if ( useCache ) {
-		//
-		// final SessionFactoryImplementor factory = source.getFactory();
-		//
-		// final CacheKey ck = source.generateCacheKey(
-		// event.getNaturalIdValues(),
-		// persister.getIdentifierType(),
-		// persister.getRootEntityName()
-		// );
-		// Object ce = persister.getCacheAccessStrategy().get( ck, source.getTimestamp() );
-		// if ( factory.getStatistics().isStatisticsEnabled() ) {
-		// if ( ce == null ) {
-		// factory.getStatisticsImplementor().secondLevelCacheMiss(
-		// persister.getCacheAccessStrategy().getRegion().getName()
-		// );
-		// }
-		// else {
-		// factory.getStatisticsImplementor().secondLevelCacheHit(
-		// persister.getCacheAccessStrategy().getRegion().getName()
-		// );
-		// }
-		// }
-		//
-		// if ( ce != null ) {
-		// CacheEntry entry = (CacheEntry) persister.getCacheEntryStructure().destructure( ce, factory );
-		//
-		// // Entity was found in second-level cache...
-		// return assembleCacheEntry(
-		// entry,
-		// event.getEntityId(),
-		// persister,
-		// event
-		// );
-		// }
-		// }
-
+//		final SessionImplementor source = event.getSession();
+//		
+//		EntityPersister persister = event.getEntityPersister();
+//
+//		final boolean useCache = persister.hasCache() && source.getCacheMode().isGetEnabled();
+//
+//		if ( useCache ) {
+//
+//			final SessionFactoryImplementor factory = source.getFactory();
+//
+//			final CacheKey ck = source.generateCacheKey( event.getNaturalIdValues(), persister.getIdentifierType(),
+//					persister.getRootEntityName() );
+//			Object ce = persister.getCacheAccessStrategy().get( ck, source.getTimestamp() );
+//			if ( factory.getStatistics().isStatisticsEnabled() ) {
+//				if ( ce == null ) {
+//					factory.getStatisticsImplementor().secondLevelCacheMiss(
+//							persister.getCacheAccessStrategy().getRegion().getName() );
+//				}
+//				else {
+//					factory.getStatisticsImplementor().secondLevelCacheHit(
+//							persister.getCacheAccessStrategy().getRegion().getName() );
+//				}
+//			}
+//
+//			if ( ce != null ) {
+//				CacheEntry entry = (CacheEntry) persister.getCacheEntryStructure().destructure( ce, factory );
+//
+//				// Entity was found in second-level cache...
+//				return assembleCacheEntry( entry, event.getEntityId(), persister, event );
+//			}
+//		}
 		return null;
 	}
 

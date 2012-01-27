@@ -393,7 +393,12 @@ public abstract class CascadingAction {
 
 		private boolean isInManagedState(Object child, EventSource session) {
 			EntityEntry entry = session.getPersistenceContext().getEntry( child );
-			return entry != null && (entry.getStatus() == Status.MANAGED || entry.getStatus() == Status.READ_ONLY);
+			return entry != null && 
+					(
+							entry.getStatus() == Status.MANAGED ||
+							entry.getStatus() == Status.READ_ONLY ||
+							entry.getStatus() == Status.SAVING
+					);
 		}
 
 		@Override

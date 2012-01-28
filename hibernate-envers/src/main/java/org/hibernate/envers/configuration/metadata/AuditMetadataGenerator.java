@@ -163,7 +163,7 @@ public final class AuditMetadataGenerator {
             	// add a column for the timestamp of the end revision
             	String revisionInfoTimestampSqlType = TimestampType.INSTANCE.getName();
             	Element timestampProperty = MetadataTools.addProperty(any_mapping, verEntCfg.getRevisionEndTimestampFieldName(), revisionInfoTimestampSqlType, true, true, false);
-            	MetadataTools.addColumn(timestampProperty, verEntCfg.getRevisionEndTimestampFieldName(), 0, 0, 0, null, null, null);
+            	MetadataTools.addColumn(timestampProperty, verEntCfg.getRevisionEndTimestampFieldName(), null, null, null, null, null, null);
             }
         }
     }
@@ -337,7 +337,7 @@ public final class AuditMetadataGenerator {
 
             Element joinKey = joinElement.addElement("key");
             MetadataTools.addColumns(joinKey, join.getKey().getColumnIterator());
-            MetadataTools.addColumn(joinKey, verEntCfg.getRevisionFieldName(), null, 0, 0, null, null, null);
+            MetadataTools.addColumn(joinKey, verEntCfg.getRevisionFieldName(), null, null, null, null, null, null);
         }
     }
 

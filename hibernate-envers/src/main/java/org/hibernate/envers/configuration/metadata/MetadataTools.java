@@ -99,7 +99,7 @@ public class MetadataTools {
         Element column_mapping = parent.element("column");
 
         if (column_mapping == null) {
-            return addColumn(parent, name, null, 0, 0, null, null, null);
+            return addColumn(parent, name, null, null, null, null, null, null);
         }
 
         if (!StringTools.isEmpty(name)) {
@@ -127,10 +127,10 @@ public class MetadataTools {
         if (length != null) {
             column_mapping.addAttribute("length", length.toString());
         }
-		if (scale != 0) {
+		if (scale != null) {
 			column_mapping.addAttribute("scale", Integer.toString(scale));
 		}
-		if (precision != 0) {
+		if (precision != null) {
 			column_mapping.addAttribute("precision", Integer.toString(precision));
 		}
 		if (!StringTools.isEmpty(sqlType)) {

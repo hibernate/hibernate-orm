@@ -94,11 +94,11 @@ public class RevisionInfoConfiguration {
 
         Element idProperty = MetadataTools.addNativelyGeneratedId(class_mapping, revisionInfoIdData.getName(),
                 revisionPropType);
-        MetadataTools.addColumn(idProperty, "REV", null, 0, 0, null, null, null, false);
+        MetadataTools.addColumn(idProperty, "REV", null, null, null, null, null, null, false);
 
         Element timestampProperty = MetadataTools.addProperty(class_mapping, revisionInfoTimestampData.getName(),
                 revisionInfoTimestampType.getName(), true, false);
-        MetadataTools.addColumn(timestampProperty, "REVTSTMP", null, 0, 0, null, null, null, false);
+        MetadataTools.addColumn(timestampProperty, "REVTSTMP", null, null, null, null, null, null, false);
 
         if (globalCfg.isTrackEntitiesChangedInRevisionEnabled()) {
             generateEntityNamesTrackingTableMapping(class_mapping, "modifiedEntityNames",
@@ -149,7 +149,7 @@ public class RevisionInfoConfiguration {
 
         if (revisionPropSqlType != null) {
             // Putting a fake name to make Hibernate happy. It will be replaced later anyway.
-            MetadataTools.addColumn(rev_rel_mapping, "*" , null, 0, 0, revisionPropSqlType, null, null, false);
+            MetadataTools.addColumn(rev_rel_mapping, "*" , null, null, null, revisionPropSqlType, null, null, false);
         }
 
         return rev_rel_mapping;

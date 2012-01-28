@@ -592,7 +592,12 @@ public final class SessionFactoryImpl
 			}
 
 			@Override
-			public void findDirty(Object entity, DirtyCheckContext dirtyCheckContext) {
+			public void findDirty(
+					Object entity,
+					EntityPersister persister,
+					Session session,
+					DirtyCheckContext dirtyCheckContext) {
+				// todo : implement proper method body
 			}
 		};
 	}

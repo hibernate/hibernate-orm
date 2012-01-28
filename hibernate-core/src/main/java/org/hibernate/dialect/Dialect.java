@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -1064,10 +1065,20 @@ public abstract class Dialect {
 	 * @param lockOptions 
 	 * @return The appropriate <tt>FOR UPDATE OF column_list</tt> clause string.
 	 */
+	@SuppressWarnings( {"unchecked"})
 	public String getForUpdateString(String aliases, LockOptions lockOptions) {
-		// by default we simply return the getForUpdateString() result since
-		// the default is to say no support for "FOR UPDATE OF ..."
-		return getForUpdateString(lockOptions);
+		LockMode lockMode = lockOptions.getLockMode();
+		Iterator<Map.Entry<String, LockMode>> itr = lockOptions.getAliasLockIterator();
+		while ( itr.hasNext() ) {
+		// seek the highest lock mode
+			final Map.Entry<String, LockMode>entry = itr.next();
+			final LockMode lm = entry.getValue();
+			if ( lm.greaterThan(lockMode) ) {
+				lockMode = lm;
+			}
+		}
+		lockOptions.setLockMode( lockMode );
+		return getForUpdateString( lockOptions );
 	}
 
 	/**
@@ -1085,7 +1096,7 @@ public abstract class Dialect {
 	 * for this dialect given the aliases of the columns to be write locked.
 	 *
 	 * @param aliases The columns to be write locked.
-	 * @return The appropriate <tt>FOR UPDATE colunm_list NOWAIT</tt> clause string.
+	 * @return The appropriate <tt>FOR UPDATE OF colunm_list NOWAIT</tt> clause string.
 	 */
 	public String getForUpdateNowaitString(String aliases) {
 		return getForUpdateString( aliases );

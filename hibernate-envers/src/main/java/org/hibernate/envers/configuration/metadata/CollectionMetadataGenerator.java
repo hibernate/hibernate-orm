@@ -76,6 +76,7 @@ import org.hibernate.envers.tools.StringTools;
 import org.hibernate.envers.tools.Tools;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.IndexedCollection;
+import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -148,12 +149,14 @@ public final class CollectionMetadataGenerator {
 
     void addCollection() {
         Type type = propertyValue.getType();
+        Value value = propertyValue.getElement();
 
         boolean oneToManyAttachedType = type instanceof BagType || type instanceof SetType || type instanceof MapType || type instanceof ListType;
-        boolean inverseOneToMany = (propertyValue.getElement() instanceof OneToMany) && (propertyValue.isInverse());
-        boolean fakeOneToManyBidirectional = (propertyValue.getElement() instanceof OneToMany) && (propertyAuditingData.getAuditMappedBy() != null);
+        boolean inverseOneToMany = (value instanceof OneToMany) && (propertyValue.isInverse());
+        boolean owningManyToOneWithJoinTableBidirectional = (value instanceof ManyToOne) && (propertyAuditingData.getAuditMappedBy() != null);
+        boolean fakeOneToManyBidirectional = (value instanceof OneToMany) && (propertyAuditingData.getAuditMappedBy() != null);
 
-        if (oneToManyAttachedType && (inverseOneToMany || fakeOneToManyBidirectional)) {
+        if (oneToManyAttachedType && (inverseOneToMany || fakeOneToManyBidirectional || owningManyToOneWithJoinTableBidirectional)) {
             // A one-to-many relation mapped using @ManyToOne and @OneToMany(mappedBy="...")
             addOneToManyAttached(fakeOneToManyBidirectional);
         } else {
@@ -550,7 +553,15 @@ public final class CollectionMetadataGenerator {
     }
 
     private String getMappedBy(Collection collectionValue) {
-        PersistentClass referencedClass = ((OneToMany) collectionValue.getElement()).getAssociatedClass();
+        PersistentClass referencedClass = null;
+        if (collectionValue.getElement() instanceof OneToMany) {
+            OneToMany oneToManyValue = (OneToMany) collectionValue.getElement();
+            referencedClass = oneToManyValue.getAssociatedClass();
+        } else if (collectionValue.getElement() instanceof ManyToOne) {
+            // Case for bi-directional relation with @JoinTable on the owning @ManyToOne side.
+            ManyToOne manyToOneValue = (ManyToOne) collectionValue.getElement();
+            referencedClass = manyToOneValue.getMappings().getClass(manyToOneValue.getReferencedEntityName());
+        }
 
         // If there's an @AuditMappedBy specified, returning it directly.
         String auditMappedBy = propertyAuditingData.getAuditMappedBy();

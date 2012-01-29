@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Set;
 import javax.persistence.JoinColumn;
 import javax.persistence.MapKey;
+import javax.persistence.OneToMany;
 import javax.persistence.Version;
 
 import org.hibernate.MappingException;
@@ -441,6 +442,10 @@ public class AuditedPropertiesReader {
 	}
 
 	private void setPropertyAuditMappedBy(XProperty property, PropertyAuditingData propertyData) {
+        OneToMany oneToMany = property.getAnnotation(OneToMany.class);
+        if (oneToMany != null && !"".equals(oneToMany.mappedBy())) {
+            propertyData.setAuditMappedBy(oneToMany.mappedBy());
+        }
         AuditMappedBy auditMappedBy = property.getAnnotation(AuditMappedBy.class);
         if (auditMappedBy != null) {
 		    propertyData.setAuditMappedBy(auditMappedBy.mappedBy());

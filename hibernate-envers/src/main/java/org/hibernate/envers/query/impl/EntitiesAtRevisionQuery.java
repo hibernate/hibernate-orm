@@ -87,7 +87,7 @@ public class EntitiesAtRevisionQuery extends AbstractAuditQuery {
 				revisionPropertyPath, originalIdPropertyName, "e", "e2");
         
          // e.revision_type != DEL
-         qb.getRootParameters().addWhereWithParam(verEntCfg.getRevisionTypePropName(), "<>", RevisionType.DEL);
+         qb.getRootParameters().addWhereWithParam(verEntCfg.getRevisionTypePropName(), "<>", RevisionType.DEL.getRepresentation());
 
         // all specified conditions
         for (AuditCriterion criterion : criterions) {

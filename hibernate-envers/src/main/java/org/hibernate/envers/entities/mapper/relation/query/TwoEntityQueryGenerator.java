@@ -126,7 +126,7 @@ public final class TwoEntityQueryGenerator implements RelationQueryGenerator {
     public Query getQuery(AuditReaderImplementor versionsReader, Object primaryKey, Number revision) {
         Query query = versionsReader.getSession().createQuery(queryString);
         query.setParameter("revision", revision);
-        query.setParameter("delrevisiontype", RevisionType.DEL);
+        query.setParameter("delrevisiontype", RevisionType.DEL.getRepresentation());
         for (QueryParameterData paramData: referencingIdData.getPrefixedMapper().mapToQueryParametersFromId(primaryKey)) {
             paramData.setParameterValue(query);
         }

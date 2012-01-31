@@ -22,8 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.entities.mapper.relation.query;
-import java.util.Collections;
 
+import static org.hibernate.envers.entities.mapper.relation.query.QueryConstants.*;
+import java.util.Collections;
 import org.hibernate.Query;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.configuration.AuditEntitiesConfiguration;
@@ -75,17 +76,17 @@ public final class TwoEntityOneAuditedQueryGenerator implements RelationQueryGen
         String revisionPropertyPath = verEntCfg.getRevisionNumberPath();
         String originalIdPropertyName = verEntCfg.getOriginalIdPropName();
 
-        String eeOriginalIdPropertyPath = "ee." + originalIdPropertyName;
+        String eeOriginalIdPropertyPath = MIDDLE_ENTITY_ALIAS + "." + originalIdPropertyName;
 
         // SELECT new list(ee) FROM middleEntity ee
-        QueryBuilder qb = new QueryBuilder(versionsMiddleEntityName, "ee");
-        qb.addFrom(referencedIdData.getEntityName(), "e");
-        qb.addProjection("new list", "ee, e", false, false);
+        QueryBuilder qb = new QueryBuilder(versionsMiddleEntityName, MIDDLE_ENTITY_ALIAS);
+        qb.addFrom(referencedIdData.getEntityName(), REFERENCED_ENTITY_ALIAS);
+        qb.addProjection("new list", MIDDLE_ENTITY_ALIAS + ", " + REFERENCED_ENTITY_ALIAS, false, false);
         // WHERE
         Parameters rootParameters = qb.getRootParameters();
         // ee.id_ref_ed = e.id_ref_ed
         referencedIdData.getPrefixedMapper().addIdsEqualToQuery(rootParameters, eeOriginalIdPropertyPath,
-                referencedIdData.getOriginalMapper(), "e");
+                referencedIdData.getOriginalMapper(), REFERENCED_ENTITY_ALIAS);
         // ee.originalId.id_ref_ing = :id_ref_ing
         referencingIdData.getPrefixedMapper().addNamedIdEqualsToQuery(rootParameters, originalIdPropertyName, true);
 
@@ -96,7 +97,7 @@ public final class TwoEntityOneAuditedQueryGenerator implements RelationQueryGen
         		eeOriginalIdPropertyPath, revisionPropertyPath, originalIdPropertyName, componentDatas);
 
         // ee.revision_type != DEL
-        rootParameters.addWhereWithNamedParam(verEntCfg.getRevisionTypePropName(), "!=", "delrevisiontype");
+        rootParameters.addWhereWithNamedParam(verEntCfg.getRevisionTypePropName(), "!=", DEL_REVISION_TYPE_PARAMETER);
 
         StringBuilder sb = new StringBuilder();
         qb.build(sb, Collections.<String, Object>emptyMap());
@@ -105,8 +106,8 @@ public final class TwoEntityOneAuditedQueryGenerator implements RelationQueryGen
 
     public Query getQuery(AuditReaderImplementor versionsReader, Object primaryKey, Number revision) {
         Query query = versionsReader.getSession().createQuery(queryString);
-        query.setParameter("revision", revision);
-        query.setParameter("delrevisiontype", RevisionType.DEL);
+        query.setParameter(REVISION_PARAMETER, revision);
+        query.setParameter(DEL_REVISION_TYPE_PARAMETER, RevisionType.DEL);
         for (QueryParameterData paramData: referencingIdData.getPrefixedMapper().mapToQueryParametersFromId(primaryKey)) {
             paramData.setParameterValue(query);
         }

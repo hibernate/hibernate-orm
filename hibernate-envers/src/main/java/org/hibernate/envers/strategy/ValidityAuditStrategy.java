@@ -1,9 +1,10 @@
 package org.hibernate.envers.strategy;
+
+import static org.hibernate.envers.entities.mapper.relation.query.QueryConstants.*;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.envers.RevisionType;
@@ -64,7 +65,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
              select e from audited_ent e where e.end_rev is null and e.id = :id
              */
 
-            QueryBuilder qb = new QueryBuilder(auditedEntityName, "e");
+            QueryBuilder qb = new QueryBuilder(auditedEntityName, MIDDLE_ENTITY_ALIAS);
 
             // e.id = :id
             IdMapper idMapper = auditCfg.getEntCfg().get(entityName).getIdMapper();
@@ -87,7 +88,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
     public void performCollectionChange(Session session, AuditConfiguration auditCfg,
                                         PersistentCollectionChangeData persistentCollectionChangeData, Object revision) {
 
-        final QueryBuilder qb = new QueryBuilder(persistentCollectionChangeData.getEntityName(), "e");
+        final QueryBuilder qb = new QueryBuilder(persistentCollectionChangeData.getEntityName(), MIDDLE_ENTITY_ALIAS);
 
         // Adding a parameter for each id component, except the rev number
         final String originalIdPropName = auditCfg.getAuditEntCfg().getOriginalIdPropName();
@@ -146,8 +147,8 @@ public class ValidityAuditStrategy implements AuditStrategy {
     	
 		// e.revision <= _revision and (e.endRevision > _revision or e.endRevision is null)
 		Parameters subParm = rootParameters.addSubParameters("or");
-		rootParameters.addWhereWithNamedParam(revisionProperty, addAlias, "<=", "revision");
-		subParm.addWhereWithNamedParam(revisionEndProperty + ".id", addAlias, ">", "revision");
+		rootParameters.addWhereWithNamedParam(revisionProperty, addAlias, "<=", REVISION_PARAMETER);
+		subParm.addWhereWithNamedParam(revisionEndProperty + ".id", addAlias, ">", REVISION_PARAMETER);
 		subParm.addWhere(revisionEndProperty, addAlias, "is", "null", false);
 	}
 

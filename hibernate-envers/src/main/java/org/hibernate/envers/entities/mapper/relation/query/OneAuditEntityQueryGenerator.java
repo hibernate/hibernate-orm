@@ -22,8 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.entities.mapper.relation.query;
-import java.util.Collections;
 
+import static org.hibernate.envers.entities.mapper.relation.query.QueryConstants.*;
+import java.util.Collections;
 import org.hibernate.Query;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.configuration.AuditEntitiesConfiguration;
@@ -73,8 +74,8 @@ public final class OneAuditEntityQueryGenerator implements RelationQueryGenerato
         String versionsReferencedEntityName = verEntCfg.getAuditEntityName(referencedEntityName);
 
         // SELECT e FROM versionsEntity e
-        QueryBuilder qb = new QueryBuilder(versionsReferencedEntityName, "e");
-        qb.addProjection(null, "e", false, false);
+        QueryBuilder qb = new QueryBuilder(versionsReferencedEntityName, REFERENCED_ENTITY_ALIAS);
+        qb.addProjection(null, REFERENCED_ENTITY_ALIAS, false, false);
         // WHERE
         Parameters rootParameters = qb.getRootParameters();
         // e.id_ref_ed = :id_ref_ed
@@ -84,10 +85,10 @@ public final class OneAuditEntityQueryGenerator implements RelationQueryGenerato
         // --> based on auditStrategy (see above)
         auditStrategy.addEntityAtRevisionRestriction(globalCfg, qb, revisionPropertyPath,
         		verEntCfg.getRevisionEndFieldName(), true, referencedIdData, 
-				revisionPropertyPath, originalIdPropertyName, "e", "e2");
+				revisionPropertyPath, originalIdPropertyName, REFERENCED_ENTITY_ALIAS, REFERENCED_ENTITY_ALIAS_DEF_AUD_STR);
 
         // e.revision_type != DEL
-        rootParameters.addWhereWithNamedParam(verEntCfg.getRevisionTypePropName(), false, "!=", "delrevisiontype");
+        rootParameters.addWhereWithNamedParam(verEntCfg.getRevisionTypePropName(), false, "!=", DEL_REVISION_TYPE_PARAMETER);
 
         StringBuilder sb = new StringBuilder();
         qb.build(sb, Collections.<String, Object>emptyMap());
@@ -96,8 +97,8 @@ public final class OneAuditEntityQueryGenerator implements RelationQueryGenerato
 
     public Query getQuery(AuditReaderImplementor versionsReader, Object primaryKey, Number revision) {
         Query query = versionsReader.getSession().createQuery(queryString);
-        query.setParameter("revision", revision);
-        query.setParameter("delrevisiontype", RevisionType.DEL);
+        query.setParameter(REVISION_PARAMETER, revision);
+        query.setParameter(DEL_REVISION_TYPE_PARAMETER, RevisionType.DEL);
         for (QueryParameterData paramData: referencingIdData.getPrefixedMapper().mapToQueryParametersFromId(primaryKey)) {
             paramData.setParameterValue(query);
         }

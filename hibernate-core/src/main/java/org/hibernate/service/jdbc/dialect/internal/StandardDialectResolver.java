@@ -45,6 +45,7 @@ import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.Oracle10gDialect;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.Oracle9iDialect;
+import org.hibernate.dialect.PostgreSQL82Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServer2005Dialect;
 import org.hibernate.dialect.SQLServer2008Dialect;
@@ -85,6 +86,10 @@ public class StandardDialectResolver extends AbstractDialectResolver {
 		}
 
 		if ( "PostgreSQL".equals( databaseName ) ) {
+			final int databaseMinorVersion = metaData.getDatabaseMinorVersion();
+			if (databaseMajorVersion >= 8 && databaseMinorVersion >= 2) {
+				return new PostgreSQL82Dialect();
+			}
 			return new PostgreSQLDialect();
 		}
 

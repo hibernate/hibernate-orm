@@ -396,11 +396,6 @@ public class PostgreSQLDialect extends Dialect {
 //	}
 
 
-    @Override
-    public boolean supportsIfExistsBeforeTableName() {
-        return true;
-    }
-
     public boolean supportsEmptyInList() {
 		return false;
 	}

@@ -547,5 +547,7 @@ public interface AvailableSettings {
 	 */
 	public static final String CUSTOM_ENTITY_DIRTINESS_STRATEGY = "hibernate.entity_dirtiness_strategy";
 
+	public static final String TENANT_IDENTIFIER_RESOLVER = "hibernate.tenant_identifier_resolver";
+
 	public static final String FORCE_DISCRIMINATOR_IN_SELECTS_BY_DEFAULT = "hibernate.discriminator.force_in_select";
 }

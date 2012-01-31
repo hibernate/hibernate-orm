@@ -41,6 +41,7 @@ import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.context.spi.AbstractCurrentSessionContext;
 import org.hibernate.context.spi.CurrentSessionContext;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -75,7 +76,7 @@ import org.hibernate.internal.CoreMessageLogger;
  *
  * @author Steve Ebersole
  */
-public class ThreadLocalSessionContext implements CurrentSessionContext {
+public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 
     private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
                                                                        ThreadLocalSessionContext.class.getName());
@@ -95,18 +96,14 @@ public class ThreadLocalSessionContext implements CurrentSessionContext {
 	 */
 	private static final ThreadLocal<Map> context = new ThreadLocal<Map>();
 
-	protected final SessionFactoryImplementor factory;
-
 	public ThreadLocalSessionContext(SessionFactoryImplementor factory) {
-		this.factory = factory;
+		super( factory );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public final Session currentSession() throws HibernateException {
-		Session current = existingSession( factory );
-		if (current == null) {
+		Session current = existingSession( factory() );
+		if ( current == null ) {
 			current = buildOrObtainSession();
 			// register a cleanup sync
 			current.getTransaction().registerSynchronization( buildCleanupSynch() );
@@ -115,7 +112,10 @@ public class ThreadLocalSessionContext implements CurrentSessionContext {
 				current = wrap( current );
 			}
 			// then bind it
-			doBind( current, factory );
+			doBind( current, factory() );
+		}
+		else {
+			validateExistingSession( current );
 		}
 		return current;
 	}
@@ -134,7 +134,7 @@ public class ThreadLocalSessionContext implements CurrentSessionContext {
 	 * @return Value for property 'factory'.
 	 */
 	protected SessionFactoryImplementor getFactory() {
-		return factory;
+		return factory();
 	}
 
 	/**
@@ -146,7 +146,7 @@ public class ThreadLocalSessionContext implements CurrentSessionContext {
 	 * @return the built or (re)obtained session.
 	 */
 	protected Session buildOrObtainSession() {
-		return factory.withOptions()
+		return baseSessionBuilder()
 				.autoClose( isAutoCloseEnabled() )
 				.connectionReleaseMode( getConnectionReleaseMode() )
 				.flushBeforeCompletion( isAutoFlushEnabled() )
@@ -154,7 +154,7 @@ public class ThreadLocalSessionContext implements CurrentSessionContext {
 	}
 
 	protected CleanupSynch buildCleanupSynch() {
-		return new CleanupSynch( factory );
+		return new CleanupSynch( factory() );
 	}
 
 	/**
@@ -181,7 +181,7 @@ public class ThreadLocalSessionContext implements CurrentSessionContext {
 	 * @return The connection release mode for any built sessions.
 	 */
 	protected ConnectionReleaseMode getConnectionReleaseMode() {
-		return factory.getSettings().getConnectionReleaseMode();
+		return factory().getSettings().getConnectionReleaseMode();
 	}
 
 	protected Session wrap(Session session) {
@@ -240,7 +240,9 @@ public class ThreadLocalSessionContext implements CurrentSessionContext {
 
 	private static Session existingSession(SessionFactory factory) {
 		Map sessionMap = sessionMap();
-		if ( sessionMap == null ) return null;
+		if ( sessionMap == null ) {
+			return null;
+		}
 		return (Session) sessionMap.get( factory );
 	}
 
@@ -372,8 +374,8 @@ public class ThreadLocalSessionContext implements CurrentSessionContext {
 			// serialized, to be completely correct, we need to make sure
 			// that unbinding of that session occurs.
 			oos.defaultWriteObject();
-			if ( existingSession( factory ) == wrappedSession ) {
-				unbind( factory );
+			if ( existingSession( factory() ) == wrappedSession ) {
+				unbind( factory() );
 			}
 		}
 
@@ -383,7 +385,7 @@ public class ThreadLocalSessionContext implements CurrentSessionContext {
 			// the ThreadLocalSessionContext session map.
 			ois.defaultReadObject();
 			realSession.getTransaction().registerSynchronization( buildCleanupSynch() );
-			doBind( wrappedSession, factory );
+			doBind( wrappedSession, factory() );
 		}
 	}
 }

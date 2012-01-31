@@ -82,6 +82,7 @@ import org.hibernate.context.internal.JTASessionContext;
 import org.hibernate.context.internal.ManagedSessionContext;
 import org.hibernate.context.internal.ThreadLocalSessionContext;
 import org.hibernate.context.spi.CurrentSessionContext;
+import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.dialect.function.SQLFunctionRegistry;
@@ -210,6 +211,7 @@ public final class SessionFactoryImpl
 	private final transient TransactionEnvironment transactionEnvironment;
 	private final transient SessionFactoryOptions sessionFactoryOptions;
 	private final transient CustomEntityDirtinessStrategy customEntityDirtinessStrategy;
+	private final transient CurrentTenantIdentifierResolver currentTenantIdentifierResolver;
 
 	@SuppressWarnings( {"unchecked", "ThrowableResultOfMethodCallIgnored"})
 	public SessionFactoryImpl(
@@ -536,6 +538,10 @@ public final class SessionFactoryImpl
 		}
 
 		this.customEntityDirtinessStrategy = determineCustomEntityDirtinessStrategy( properties );
+		this.currentTenantIdentifierResolver = determineCurrentTenantIdentifierResolver(
+				cfg.getCurrentTenantIdentifierResolver(),
+				properties
+		);
 		this.transactionEnvironment = new TransactionEnvironmentImpl( this );
 		this.observer.sessionFactoryCreated( this );
 	}
@@ -564,14 +570,16 @@ public final class SessionFactoryImpl
 					customEntityDirtinessStrategyClass = null;
 				}
 			}
-			try {
-				return customEntityDirtinessStrategyClass.newInstance();
-			}
-			catch (Exception e) {
-				LOG.debugf(
-						"Unable to instantiate CustomEntityDirtinessStrategy class %s",
-						customEntityDirtinessStrategyClass.getName()
-				);
+			if ( customEntityDirtinessStrategyClass != null ) {
+				try {
+					return customEntityDirtinessStrategyClass.newInstance();
+				}
+				catch (Exception e) {
+					LOG.debugf(
+							"Unable to instantiate CustomEntityDirtinessStrategy class %s",
+							customEntityDirtinessStrategyClass.getName()
+					);
+				}
 			}
 		}
 
@@ -600,6 +608,53 @@ public final class SessionFactoryImpl
 				// todo : implement proper method body
 			}
 		};
+	}
+
+	@SuppressWarnings( {"unchecked"})
+	private CurrentTenantIdentifierResolver determineCurrentTenantIdentifierResolver(
+			CurrentTenantIdentifierResolver explicitResolver,
+			Properties properties) {
+		if ( explicitResolver != null ) {
+			return explicitResolver;
+		}
+
+		final Object value = properties.get( AvailableSettings.TENANT_IDENTIFIER_RESOLVER );
+		if ( value == null ) {
+			return null;
+		}
+
+		if ( CurrentTenantIdentifierResolver.class.isInstance( value ) ) {
+			return CurrentTenantIdentifierResolver.class.cast( value );
+		}
+
+		Class<CurrentTenantIdentifierResolver> implClass;
+		if ( Class.class.isInstance( value ) ) {
+			implClass = Class.class.cast( customEntityDirtinessStrategy );
+		}
+		else {
+			try {
+				implClass = serviceRegistry.getService( ClassLoaderService.class ).classForName( value.toString() );
+			}
+			catch (Exception e) {
+				LOG.debugf(
+						"Unable to locate CurrentTenantIdentifierResolver implementation class %s",
+						value.toString()
+				);
+				return null;
+			}
+		}
+
+		try {
+			return implClass.newInstance();
+		}
+		catch (Exception e) {
+			LOG.debugf(
+					"Unable to instantiate CurrentTenantIdentifierResolver class %s",
+					implClass.getName()
+			);
+		}
+
+		return null;
 	}
 
 	@SuppressWarnings( {"ThrowableResultOfMethodCallIgnored"})
@@ -921,6 +976,7 @@ public final class SessionFactoryImpl
 		}
 
 		this.customEntityDirtinessStrategy = determineCustomEntityDirtinessStrategy( properties );
+		this.currentTenantIdentifierResolver = determineCurrentTenantIdentifierResolver( null, properties );
 		this.transactionEnvironment = new TransactionEnvironmentImpl( this );
 		this.observer.sessionFactoryCreated( this );
 	}
@@ -1791,8 +1847,14 @@ public final class SessionFactoryImpl
 		}
 	}
 
+	@Override
 	public CustomEntityDirtinessStrategy getCustomEntityDirtinessStrategy() {
 		return customEntityDirtinessStrategy;
+	}
+
+	@Override
+	public CurrentTenantIdentifierResolver getCurrentTenantIdentifierResolver() {
+		return currentTenantIdentifierResolver;
 	}
 
 

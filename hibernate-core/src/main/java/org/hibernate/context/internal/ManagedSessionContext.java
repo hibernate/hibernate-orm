@@ -29,7 +29,7 @@ import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.context.spi.CurrentSessionContext;
+import org.hibernate.context.spi.AbstractCurrentSessionContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 /**
@@ -56,20 +56,22 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
  *
  * @author Steve Ebersole
  */
-public class ManagedSessionContext implements CurrentSessionContext {
+public class ManagedSessionContext extends AbstractCurrentSessionContext {
 
 	private static final ThreadLocal<Map<SessionFactory,Session>> context = new ThreadLocal<Map<SessionFactory,Session>>();
-	private final SessionFactoryImplementor factory;
 
 	public ManagedSessionContext(SessionFactoryImplementor factory) {
-		this.factory = factory;
+		super( factory );
 	}
 
 	@Override
 	public Session currentSession() {
-		Session current = existingSession( factory );
+		Session current = existingSession( factory() );
 		if ( current == null ) {
 			throw new HibernateException( "No session currently bound to execution context" );
+		}
+		else {
+			validateExistingSession( current );
 		}
 		return current;
 	}

@@ -120,12 +120,12 @@ public class ThreadLocalCurrentSessionTest extends ConnectionManagementTestCase 
 		}
 
 		public static boolean isSessionBound(Session session) {
-			return sessionMap() != null && sessionMap().containsKey( me.factory )
-					&& sessionMap().get( me.factory ) == session;
+			return sessionMap() != null && sessionMap().containsKey( me.factory() )
+					&& sessionMap().get( me.factory() ) == session;
 		}
 
 		public static boolean hasBind() {
-			return sessionMap() != null && sessionMap().containsKey( me.factory );
+			return sessionMap() != null && sessionMap().containsKey( me.factory() );
 		}
 	}
 }

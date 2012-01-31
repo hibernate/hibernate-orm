@@ -98,7 +98,7 @@ public final class TwoEntityQueryGenerator implements RelationQueryGenerator {
         Parameters rootParameters = qb.getRootParameters();
         // ee.id_ref_ed = e.id_ref_ed
         referencedIdData.getPrefixedMapper().addIdsEqualToQuery(rootParameters, eeOriginalIdPropertyPath,
-        referencedIdData.getOriginalMapper(), REFERENCED_ENTITY_ALIAS + "." + originalIdPropertyName);
+        		referencedIdData.getOriginalMapper(), REFERENCED_ENTITY_ALIAS + "." + originalIdPropertyName);
         // ee.originalId.id_ref_ing = :id_ref_ing
         referencingIdData.getPrefixedMapper().addNamedIdEqualsToQuery(rootParameters, originalIdPropertyName, true);
 

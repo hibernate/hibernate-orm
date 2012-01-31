@@ -92,7 +92,7 @@ public class RevisionsOfEntityQuery extends AbstractAuditQuery {
          */      
         if (!selectDeletedEntities) {
             // e.revision_type != DEL AND
-            qb.getRootParameters().addWhereWithParam(verEntCfg.getRevisionTypePropName(), "<>", RevisionType.DEL);
+            qb.getRootParameters().addWhereWithParam(verEntCfg.getRevisionTypePropName(), "<>", RevisionType.DEL.getRepresentation());
         }
 
         // all specified conditions, transformed

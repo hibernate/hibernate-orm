@@ -1,0 +1,117 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "../../Hibernate_Development_Guide.ent">
+%BOOK_ENTITIES;
+]>
+<chapter id="query-ql">
+    <title>HQL and JPQL</title>
+
+    <para>
+        The Hibernate Query Language (HQL) and Java Persistence Query Language (JPQL) are both object model
+        focused query languages similar in nature to SQL.  JPQL is a heavily-inspired-by subset of HQL.  A JPQL
+        query is always a valid HQL query, the reverse is not true however.
+    </para>
+
+    <para>
+        Both HQL and JPQL are non-type-safe ways to perform query operations.  Criteria queries offer a
+        type-safe approach to querying.  See <xref linkend="query-criteria" /> for more information.
+    </para>
+
+    <section>
+        <title>Case Sensitivity</title>
+
+        <para>
+            With the exception of names of Java classes and properties, queries are case-insensitive.
+            So <literal>SeLeCT</literal> is the same as <literal>sELEct</literal> is the same as
+            <literal>SELECT</literal>, but
+            <literal>org.hibernate.eg.FOO</literal> and <literal>org.hibernate.eg.Foo</literal> are different, as are
+            <literal>foo.barSet</literal> and <literal>foo.BARSET</literal>.
+        </para>
+
+        <note>
+            <para>
+                This documentation uses lowercase keywords as its convention.
+            </para>
+        </note>
+    </section>
+
+    <section>
+        <title>Statement types</title>
+        <para>
+            Both HQL and JPQL allow <literal>SELECT</literal>, <literal>UPDATE</literal> and <literal>DELETE</literal>
+            statements to be performed.  HQL additionally allows <literal>INSERT</literal> statements, in a form
+            similar to SQL's <literal>INSERT-SELECT</literal>.
+        </para>
+
+        <important>
+            <para>
+                Care should be taken as to when a <literal>UPDATE</literal> or <literal>DELETE</literal> statement is
+                executed.
+            </para>
+            <blockquote>
+                <attribution><citetitle pubwork="section">Section 4.10 of the JPA 2.0 Specification</citetitle></attribution>
+                <para>
+                    Caution should be used when executing bulk update or delete operations because they may result in
+                    inconsistencies between the database and the entities in the active persistence context. In general, bulk
+                    update and delete operations should only be performed within a transaction in a new persistence con-
+                    text or before fetching or accessing entities whose state might be affected by such operations.
+                </para>
+            </blockquote>
+        </important>
+
+        <section>
+            <title>Select statements</title>
+            <para>
+                The BNF for <literal>SELECT</literal> statements in HQL is:
+            </para>
+            <programlisting>select_statement :: = [select_clause] from_clause [where_clause] [groupby_clause] [having_clause] [orderby_clause]</programlisting>
+            <para>
+                The simplest possible HQL <literal>SELECT</literal> statement is of the form:
+            </para>
+            <programlisting>from com.acme.Cat</programlisting>
+            <para>
+                Even though HQL does not require the presence of a <literal>select_clause</literal>, it is generally
+                good practice to include one.  For simple queries like above, the intent is clear and so the
+                <literal>select_clause</literal> is really not needed.  But on more complex queries it is usually better
+                to explicitly specify intent.
+            </para>
+            <para>
+                The BNF for <literal>SELECT</literal> statements in JPQL is
+            </para>
+            <programlisting>select_statement :: = select_clause from_clause [where_clause] [groupby_clause] [having_clause] [orderby_clause]</programlisting>
+            <para>
+                The important distinction is that JPQL requires a <literal>select_clause</literal>, whereas HQL does not.
+                Hibernate does not actually enforce that a <literal>select_clause</literal> be present even when
+                parsing JPQL queries, however applications interested in JPA portability should take heed of this.
+            </para>
+        </section>
+
+        <section>
+            <title>Update statements</title>
+            <para>
+                The BNF for <literal>UPDATE</literal> statements is the same in HQL and JPQL:
+            </para>
+            <programlisting role="JAVA"><xi:include href="extras/update_statement_bnf.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+        </section>
+
+        <section>
+            <title>Delete statements</title>
+            <para>
+                The BNF for <literal>DELETE</literal> statements is the same in HQL and JPQL:
+            </para>
+            <programlisting role="JAVA"><xi:include href="extras/delete_statement_bnf.txt" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+        </section>
+
+        <section>
+            <title>Insert statements</title>
+        </section>
+    </section>
+
+    <section>
+        <title>The <literal>FROM</literal> clause</title>
+    </section>
+
+    <section>
+        <title>The <literal>SELECT</literal> clause</title>
+    </section>
+</chapter>

@@ -37,11 +37,24 @@ jdocbook {
     }
 	devguide {
 		masterSourceDocumentName = 'Hibernate_Development_Guide.xml'
+		useRelativeImageUris = false
 	}
 // todo : need to remove this once all content moved to devguide
 	manual {
 		masterSourceDocumentName = 'HIBERNATE_-_Relational_Persistence_for_Idiomatic_Java.xml'
 //		translation = ['de-DE','es-ES','fr-FR','ja-JP','pt-BR','zh-CN']
+	}
+}
+
+// todo : make this part of gradle-jdocbook.
+// 		specifically the ability to supply ant-style resource for images (dir + include/exclude patterns)
+stageStyles_devguide.doLast {
+	copy {
+		into project.file( 'target/docbook/stage/devguide/images' )
+		from project.file( 'src/main/docbook/devguide/en-US' )
+		include '**/images/*.png'
+		include '**/images/*.svg'
+		includeEmptyDirs = false
 	}
 }
 

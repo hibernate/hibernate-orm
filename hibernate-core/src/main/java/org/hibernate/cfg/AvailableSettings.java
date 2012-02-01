@@ -467,14 +467,6 @@ public interface AvailableSettings {
 	public static final String NON_CONTEXTUAL_LOB_CREATION = "hibernate.jdbc.lob.non_contextual_creation";
 
 	/**
-	 * Strategy for multi-tenancy.
-
-	 * @see org.hibernate.MultiTenancyStrategy
-	 * @since 4.0
-	 */
-	public static final String MULTI_TENANT = "hibernate.multiTenancy";
-
-	/**
 	 * Names the {@link ClassLoader} used to load user application classes.
 	 * @since 4.0
 	 */
@@ -547,7 +539,35 @@ public interface AvailableSettings {
 	 */
 	public static final String CUSTOM_ENTITY_DIRTINESS_STRATEGY = "hibernate.entity_dirtiness_strategy";
 
-	public static final String TENANT_IDENTIFIER_RESOLVER = "hibernate.tenant_identifier_resolver";
+	/**
+	 * Strategy for multi-tenancy.
+
+	 * @see org.hibernate.MultiTenancyStrategy
+	 * @since 4.0
+	 */
+	public static final String MULTI_TENANT = "hibernate.multiTenancy";
+
+	/**
+	 * Names a {@link org.hibernate.service.jdbc.connections.spi.MultiTenantConnectionProvider} implementation to
+	 * use.  As MultiTenantConnectionProvider is also a service, can be configured directly through the
+	 * {@link org.hibernate.service.ServiceRegistryBuilder}
+	 *
+	 * @since 4.1
+	 */
+	public static final String MULTI_TENANT_CONNECTION_PROVIDER = "hibernate.multi_tenant_connection_provider";
+
+	/**
+	 * Names a {@link org.hibernate.context.spi.CurrentTenantIdentifierResolver} implementation to use.
+	 * <p/>
+	 * Can be<ul>
+	 *     <li>CurrentTenantIdentifierResolver instance</li>
+	 *     <li>CurrentTenantIdentifierResolver implementation {@link Class} reference</li>
+	 *     <li>CurrentTenantIdentifierResolver implementation class name</li>
+	 * </ul>
+	 *
+	 * @since 4.1
+	 */
+	public static final String MULTI_TENANT_IDENTIFIER_RESOLVER = "hibernate.tenant_identifier_resolver";
 
 	public static final String FORCE_DISCRIMINATOR_IN_SELECTS_BY_DEFAULT = "hibernate.discriminator.force_in_select";
 }

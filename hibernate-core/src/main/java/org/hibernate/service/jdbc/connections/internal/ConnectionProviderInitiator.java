@@ -100,8 +100,10 @@ public class ConnectionProviderInitiator implements BasicServiceInitiator<Connec
 
 	@Override
 	public ConnectionProvider initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
-		if ( MultiTenancyStrategy.determineMultiTenancyStrategy( configurationValues ) != MultiTenancyStrategy.NONE ) {
+		final MultiTenancyStrategy strategy = MultiTenancyStrategy.determineMultiTenancyStrategy(  configurationValues );
+		if ( strategy == MultiTenancyStrategy.DATABASE || strategy == MultiTenancyStrategy.SCHEMA ) {
 			// nothing to do, but given the separate hierarchies have to handle this here.
+			return null;
 		}
 
 		final ClassLoaderService classLoaderService = registry.getService( ClassLoaderService.class );

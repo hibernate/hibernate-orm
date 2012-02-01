@@ -21,6 +21,7 @@
   <xi:include href="Native_SQL.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
   <xi:include href="JMX.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
   <xi:include href="Envers.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+  <xi:include href="chapters/multi-tenancy/Multi_Tenancy.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
   <xi:include href="appendix-Configuration_Properties.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
   <xi:include href="Revision_History.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
   <index />

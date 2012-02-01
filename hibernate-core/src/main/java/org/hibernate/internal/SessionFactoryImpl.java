@@ -618,7 +618,7 @@ public final class SessionFactoryImpl
 			return explicitResolver;
 		}
 
-		final Object value = properties.get( AvailableSettings.TENANT_IDENTIFIER_RESOLVER );
+		final Object value = properties.get( AvailableSettings.MULTI_TENANT_IDENTIFIER_RESOLVER );
 		if ( value == null ) {
 			return null;
 		}
